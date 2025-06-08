@@ -21,36 +21,43 @@ This section outlines the general strategy for deploying services within the Ari
     - It then fetches its required operational secrets (e.g., database connection strings, API keys for external services, TLS certificates for dependencies) from its designated paths in OpenBao.
     - The service uses these fetched secrets to configure itself and connect to other services or backends.
 
-### Testing on Kubernetes with GitHub Actions
+### Efficient CI/CD Testing with Docker Compose on GitHub Actions
 
-Testing the Aria Character Core system on Kubernetes within a GitHub Actions workflow typically involves the following steps:
+For a balance of speed, resource efficiency, and ease of modification in CI/CD pipelines, using Docker Compose directly on GitHub Actions runners is a highly effective strategy. This approach mirrors local development setups and avoids the overhead of spinning up a Kubernetes cluster for every test run.
 
-1.  **Ephemeral Kubernetes Cluster**:
+1.  **GitHub Actions Workflow Trigger**: Configure workflows to run on pushes to main branches, pull requests, or specific tags.
 
-    - Set up a temporary Kubernetes cluster for each test run. Tools like **KinD (Kubernetes in Docker)** are well-suited for this, as they can create a lightweight, local Kubernetes cluster within the GitHub Actions runner environment.
+2.  **Runner Environment**: Utilize standard GitHub-hosted Linux runners (e.g., `ubuntu-latest`). These runners come with Docker and Docker Compose pre-installed.
 
-2.  **Secrets Management for CI**:
+3.  **Checkout Code**: Use the `actions/checkout` action to get the source code.
 
-    - **OpenBao Deployment**: Deploy OpenBao to the test cluster. For CI, you might use a simplified configuration or a pre-configured Docker image.
-    - **Bootstrap Secrets**: The initial secrets required to unseal OpenBao or for services to authenticate to OpenBao (e.g., AppRole RoleID & SecretID) must be securely provided. This often means starting with a "root" or initial bootstrap secret.
-      - **Initial Secure Injection**: Use **GitHub Actions encrypted secrets** to store and inject this foundational secret (e.g., an initial admin token for OpenBao, or credentials for a script that can create AppRoles). This is the "constant" you provide to kickstart the process.
-      - **Dynamic Credentials for Services**: Once OpenBao is accessible and authenticated (using the initial secret if necessary), subsequent credentials for individual services (like their specific AppRole RoleID & SecretID) can often be dynamically generated or retrieved by the services themselves during their startup or by CI scripts.
-      - These secrets (both the initial bootstrap ones and any dynamically generated ones passed around) can be exposed as environment variables to your deployment scripts or directly to Kubernetes secrets that are then mounted into your application pods.
-    - **Service Configuration**: Ensure your service deployment manifests (e.g., Kubernetes YAML) are configured to fetch their operational secrets from the OpenBao instance running in the test cluster.
+4.  **Secrets Management for CI with Docker Compose**:
+    *   **OpenBao in Docker Compose**: Define OpenBao as a service in your `docker-compose.yml` file. Include a health check to ensure it's ready before other services start.
+    *   **Initial OpenBao Secrets**: Store critical OpenBao bootstrap secrets (e.g., initial root token for development/CI, or pre-generated AppRole credentials for a CI-specific role that can create other roles/secrets) as **GitHub Actions encrypted secrets**.
+    *   **Injecting Bootstrap Secrets**: Pass these GitHub Actions secrets as environment variables to a script or directly to the OpenBao container in `docker-compose.yml` to initialize or unseal it. This script/entrypoint can then configure necessary AppRoles and policies for other services.
+    *   **Service Configuration**: Configure your Aria services (also defined in `docker-compose.yml`) to fetch their operational secrets from the OpenBao service within the Docker Compose network (e.g., `http://openbao:8200`).
 
-3.  **Service Deployment**:
+5.  **Service Orchestration with Docker Compose**:
+    *   Maintain a `docker-compose.yml` (and potentially `docker-compose.override.yml` for CI-specific tweaks) in your repository.
+    *   This file will define all Aria services, OpenBao, CockroachDB, and any other dependencies.
+    *   Use Docker health checks within your `docker-compose.yml` to ensure services are ready before tests run.
 
-    - Use Kubernetes manifests (YAML files) or Helm charts to deploy your Aria services and their dependencies (like CockroachDB) to the test cluster.
-    - These manifests should be parameterized or configured to work within the CI environment, pointing to the in-cluster OpenBao service.
+6.  **Building and Running Services**:
+    *   In your GitHub Actions workflow, use `docker-compose up -d --build` to build (if necessary) and start all services in the background.
+    *   Ensure your Dockerfiles are optimized for build caching to speed up this step.
 
-4.  **Running Tests**:
+7.  **Running Tests**:
+    *   Once all services are reported healthy by Docker Compose, execute your integration, end-to-end, or contract tests.
+    *   These tests can be run from a script in the workflow or from another container defined in your Docker Compose setup that has access to the other services.
 
-    - Once all services are deployed and healthy, execute your integration or end-to-end tests.
-    - These tests could be scripts that run `kubectl exec` commands, or dedicated test containers that run within the cluster and interact with the services.
+8.  **Cleanup**:
+    *   After tests complete (success or failure), use `docker-compose down -v --remove-orphans` to stop and remove all containers, networks, and volumes created by the compose setup. This ensures a clean environment for the next run.
 
-5.  **Cleanup**:
-    - Ensure that the ephemeral Kubernetes cluster (if using KinD) is destroyed at the end of the workflow.
+**Benefits of this Approach**:
+*   **Speed**: Significantly faster startup and execution times compared to initializing a Kubernetes cluster (like KinD) within a GitHub Action.
+*   **Simplicity**: `docker-compose.yml` files are generally simpler to write and maintain than Kubernetes manifests, especially for CI environments where full production parity might not be the primary goal.
+*   **Resource Efficiency**: Consumes fewer resources on the GitHub Actions runner compared to running Kubernetes.
+*   **Consistency**: Aligns CI testing environment closely with local Docker Compose-based development environments.
+*   **Ease of Modification**: Quickly change service configurations, add new services, or modify test setups by editing the Docker Compose files.
 
-This approach allows for comprehensive testing of service interactions, secret management, and deployment configurations in an environment that closely mirrors a production Kubernetes setup.
-
-Refer to the `apps/aria_security/README.md` for detailed information on setting up and managing OpenBao itself. For other services, consult their individual READMEs for specific deployment and secrets integration steps.
+For most CI scenarios focusing on application logic, service interaction, and secrets management integration, Docker Compose provides an optimal balance.
