@@ -2,6 +2,9 @@
 ARG OPENBAO_VERSION=latest
 FROM openbao/openbao:${OPENBAO_VERSION}
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Example: Add custom scripts, plugins, or configurations if needed
 # COPY my-custom-plugin /usr/local/bin/my-custom-plugin
 # COPY my-openbao-config-template.hcl /openbao/config/config-template.hcl
