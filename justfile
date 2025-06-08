@@ -34,8 +34,6 @@ build-foundation-core:
     @echo "Building foundation services (softhsm-setup, openbao) using docker compose..."
     @docker compose -f docker-compose.yml build softhsm-setup openbao
 
-# Step 2: Start specific core foundation services
-
 # Depends on CockroachDB image being loaded and core services being built.
 start-foundation-core: build-foundation-core load-cockroach-docker
     @echo "Starting core foundation services..."
@@ -54,12 +52,12 @@ check-foundation-core-health: start-foundation-core
     @echo "--- Recent logs (CockroachDB) ---"
     @docker compose -f docker-compose.yml logs --tail=20 cockroachdb
     @timeout 120s bash -c \
-      'until docker compose -f docker-compose.yml exec openbao curl -sf http://localhost:8200/v1/sys/health; do \
+      'until docker compose -f docker-compose.yml exec -T openbao curl -sf http://localhost:8200/v1/sys/health; do \
         echo "Waiting for OpenBao health..."; \
         sleep 5; \
       done || (echo "Error: OpenBao health check failed." && exit 1)'
     @timeout 120s bash -c \
-      'until docker compose -f docker-compose.yml exec cockroachdb /cockroach/cockroach node status --insecure --host=localhost:26257; do \
+      'until docker compose -f docker-compose.yml exec -T cockroachdb /cockroach/cockroach node status --insecure --host=localhost:26257; do \
         echo "Waiting for CockroachDB health..."; \
         sleep 5; \
       done || (echo "Error: CockroachDB health check failed." && exit 1)'
@@ -82,8 +80,8 @@ foundation-status:
     @docker compose -f docker-compose.yml ps softhsm-setup openbao cockroachdb
 
 foundation-logs:
-    @echo "Tailing logs for openbao and cockroachdb. Press Ctrl+C to stop."
-    @docker compose -f docker-compose.yml logs -f softhsm-setup openbao cockroachdb
+    @echo "Showing recent logs for openbao and cockroachdb..."
+    @docker compose -f docker-compose.yml logs --tail=50 softhsm-setup openbao cockroachdb
 
 foundation-stop:
     @echo "Stopping core foundation services (softhsm-setup, openbao, cockroachdb)..."
@@ -131,6 +129,7 @@ install-elixir-erlang-env:
 test-security-service:
     @echo "Running Security Service (AriaSecurity) tests..."
     @if [ -f .ci/openbao_root_token.txt ]; then \
+        { \
         export VAULT_TOKEN=$$(cat .ci/openbao_root_token.txt) && \
         export VAULT_ADDR="http://localhost:8200" && \
         echo "Using OpenBao token: $$VAULT_TOKEN" && \
@@ -139,7 +138,9 @@ test-security-service:
         mix deps.get && \
         mix compile --force --warnings-as-errors && \
         mix test; \
+        } \
     else \
+        { \
         export VAULT_ADDR="http://localhost:8200" && \
         echo "No OpenBao token found, using default VAULT_ADDR" && \
         cd apps/aria_security && \
@@ -147,5 +148,6 @@ test-security-service:
         mix deps.get && \
         mix compile --force --warnings-as-errors && \
         mix test; \
+        } \
     fi
     @echo "Security Service tests finished."
