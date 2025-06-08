@@ -1,12 +1,4 @@
-# Copy  def project do
-    [
-      app: :aria_security,
-      version: "0.1.0",
-      build_path: "../../_build",
-      config_path: "../../config/config.exs",
-      deps_path: "../../deps",
-      lockfile: "../../mix.lock",
-      elixir: "~> 1.15", 2025-present K. S. Ernest (iFire) Lee
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSecurity.MixProject do

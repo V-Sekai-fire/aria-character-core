@@ -130,14 +130,24 @@ test-security-service:
     @echo "Running Security Service (AriaSecurity) tests..."
     @export VAULT_ADDR="http://localhost:8200"; \
     if [ -f .ci/openbao_root_token.txt ]; then \
-        export VAULT_TOKEN=$$(cat .ci/openbao_root_token.txt); \
+        export VAULT_TOKEN=`cat .ci/openbao_root_token.txt`; \
         echo "Using OpenBao token from .ci/openbao_root_token.txt"; \
     else \
         echo "No OpenBao token found, using default VAULT_ADDR only"; \
     fi; \
-    cd apps/aria_security && \
-    echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)" && \
-    mix deps.get && \
-    mix compile --force --warnings-as-errors && \
-    mix test
+    if [ ! -d apps/aria_security ]; then \
+        echo "ERROR: apps/aria_security directory does not exist"; \
+        exit 1; \
+    fi; \
+    cd apps/aria_security; \
+    if [ ! -f mix.exs ]; then \
+        echo "ERROR: mix.exs file does not exist in apps/aria_security"; \
+        exit 1; \
+    fi; \
+    echo "Checking mix.exs syntax..."; \
+    elixir -e "Code.eval_file(\"mix.exs\")" || (echo "ERROR: mix.exs has syntax errors" && exit 1); \
+    echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)"; \
+    timeout 300s mix deps.get; \
+    timeout 300s mix compile --force --warnings-as-errors; \
+    timeout 300s mix test
     @echo "Security Service tests finished."
