@@ -28,9 +28,21 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set up asdf
+        run: |
+          git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
+          # Add asdf to PATH for subsequent steps
+          echo "$HOME/.asdf/bin" >> $GITHUB_PATH
+          echo "$HOME/.asdf/shims" >> $GITHUB_PATH
+
       - name: Install just
         run: |
+          sudo apt-get update
           sudo apt-get install -y just
+
+      - name: Install Erlang and Elixir
+        run: |
+          just install-elixir-erlang-env
 
       - name: Start Foundation Layer Services using Docker Compose
         env:
@@ -40,3 +52,7 @@ jobs:
           GIT_SHA: ${{ github.sha }} # Or a fixed known good SHA for cockroachdb if preferred
         run: |
           just foundation-startup
+
+      - name: Run Security Service Tests
+        run: |
+          just test-security-service

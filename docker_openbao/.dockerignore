@@ -1,0 +1,10 @@
+# Ignore common files that shouldn't be in Docker context
+.git
+.gitignore
+README.md
+*.md
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db

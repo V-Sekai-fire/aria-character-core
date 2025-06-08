@@ -2,92 +2,171 @@
 
 A distributed character generation and AI planning system built with Elixir umbrella applications.
 
-## 🚀 Quick Start
+## 🎯 Development Progress
 
-> ⚠️ **Nothing works yet!** These commands will fail until services are implemented.
+This project follows Test-Driven Development (TDD). Each checkbox represents a feature with corresponding test coverage. Check off items as tests pass and features are implemented.
 
-**Platform Recommendation:**
-*   **Linux/macOS:** The instructions below are primarily tailored for Linux-based environments (including macOS).
-*   **Windows Users:** It is **highly recommended to use Windows Subsystem for Linux (WSL) 2**. See platform details below.
+### 🚀 Core Infrastructure
 
-This project uses `asdf-vm` to manage Erlang and Elixir versions. 
+- [ ] **Project Setup & Dependencies**
+  - [ ] Umbrella application structure with proper supervision trees
+  - [ ] Database connectivity and migrations (PostgreSQL)
+  - [ ] Inter-service communication via message passing
+  - [ ] Configuration management across environments
+  - [ ] Logging and observability setup
 
-**Step 1: Install `asdf-vm`**
-   - If you don't have `asdf-vm` installed, follow our **[asdf-vm Installation Guide](docs/SETUP_ASDF.md)**.
-   - Ensure `asdf` is active in your current terminal session (you may need to open a new terminal or source your shell config).
+- [ ] **Security Foundation (AriaSecurity)**
+  - [x] OpenBao integration for secrets management
+  - [x] Vaultex client configuration and API integration  
+  - [ ] JWT token generation and validation
+  - [ ] Role-based access control (RBAC)
+  - [ ] API authentication middleware
+  - [ ] Zero-trust security policies
 
-**Step 2: Add Erlang & Elixir Plugins**
+### 🧠 AI & Machine Learning Core
+
+- [ ] **Character AI Planning (AriaPlanning)**
+  - [ ] Goal-oriented action planning (GOAP) engine
+  - [ ] Behavior tree execution
+  - [ ] State management for character decisions
+  - [ ] Action cost calculation and optimization
+  - [ ] Multi-character coordination algorithms
+
+- [ ] **Neural Network Integration (AriaNeuralNetwork)**
+  - [ ] PyTorch model loading and inference
+  - [ ] GRPO (Goal-Relabeled Policy Optimization) training pipeline
+  - [ ] Model versioning and A/B testing
+  - [ ] GPU acceleration support
+  - [ ] Distributed training coordination
+
+- [ ] **Recommendation System (AriaRecommendation)**
+  - [ ] DIN (Deep Interest Network) integration from LibRecommender
+  - [ ] Character trait and behavior pattern analysis
+  - [ ] Content-based character attribute recommendations
+  - [ ] Collaborative filtering for character generation
+  - [ ] Real-time recommendation serving via API
+
+### 🎮 Character Generation
+
+- [ ] **Character Creation (AriaCharacter)**
+  - [ ] Character template system
+  - [ ] Trait and attribute generation
+  - [ ] Personality modeling
+  - [ ] Character validation and constraints
+  - [ ] Character evolution over time
+
+- [ ] **Asset Management (AriaAssets)**
+  - [ ] Content-addressed storage (CAS) implementation
+  - [ ] Asset deduplication and compression
+  - [ ] Version control for character assets
+  - [ ] Distributed asset synchronization
+  - [ ] Asset garbage collection
+
+### 🌐 Coordination & Communication
+
+- [ ] **Service Coordination (AriaCoordinate)**
+  - [ ] Service discovery and registration
+  - [ ] Health check monitoring
+  - [ ] Load balancing algorithms
+  - [ ] Circuit breaker patterns
+  - [ ] Graceful degradation handling
+
+- [ ] **External Interfaces (AriaInterface)**
+  - [ ] REST API endpoints
+  - [ ] WebSocket real-time communication
+  - [ ] WebRTC peer-to-peer connections
+  - [ ] Rate limiting and throttling
+  - [ ] API documentation generation
+
+### 📊 Data & Analytics
+
+- [ ] **Database Layer (AriaDatabase)**
+  - [ ] Schema design and migrations
+  - [ ] Query optimization
+  - [ ] Connection pooling
+  - [ ] Backup and recovery procedures
+  - [ ] Data archival strategies
+
+- [ ] **Analytics & Metrics**
+  - [ ] Performance monitoring
+  - [ ] Business metrics collection
+  - [ ] Error tracking and alerting
+  - [ ] Usage analytics
+  - [ ] Cost optimization insights
+
+### 🛠️ Development Tooling
+
+- [ ] **Quality Assurance**
+  - [x] Pre-commit hooks for code quality
+  - [ ] Automated testing pipeline
+  - [ ] Code coverage reporting
+  - [ ] Performance benchmarking
+  - [ ] Security vulnerability scanning
+
+- [ ] **Deployment & Operations**
+  - [ ] Containerization (Docker)
+  - [ ] Kubernetes manifests
+  - [ ] CI/CD pipeline configuration
+  - [ ] Environment-specific configurations
+  - [ ] Monitoring and alerting setup
+
+## 🔧 Quick Start
+
+**Prerequisites:** This project uses `asdf-vm` for version management.
+
 ```bash
+# Install dependencies
 asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
 asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
-```
-
-**Step 3: Install Project Versions**
-   (Ensure you are in the project root directory)
-```bash
 asdf install
-```
 
-**Step 4: Project Setup**
-   (Run after `asdf install` is complete)
-```bash
-# If you haven't cloned the project yet:
-# git clone https://github.com/V-Sekai-fire/aria-character-core.git aria-character-core
-# cd aria-character-core
-
+# Project setup
 mix deps.get
 mix ecto.setup
+
+# Run tests to check progress
+mix test.all
+
+# Start development server
 mix phx.server
 ```
 
-> ⚠️ **Work in Progress**: This project is in early development. Nothing is functional yet - we're building from the ground up using TDD principles.
+## 📈 Testing Strategy
 
-### Detailed Platform Recommendations
+Each feature is developed using TDD:
 
-*   **Linux/macOS:** The instructions are primarily tailored for these environments, which generally offer the smoothest experience for Elixir development and the tooling used in this project.
-*   **Windows Users (WSL2 Recommended):** 
-    *   **Why WSL2 over Native Windows for this project?**
-        *   **`asdf-vm` Compatibility:** `asdf-vm` is primarily designed for Unix-like systems. Native Windows support can be less straightforward.
-        *   **Tooling & Scripting:** Many development tools and scripts assume a Unix-like environment.
-        *   **Dependency Compilation:** Some Elixir dependencies compile more reliably in a Linux environment.
-        *   **Community & Support:** More community examples are geared towards Linux/macOS.
-        *   **Consistency:** WSL2 provides a consistent Linux environment for all contributors.
-    *   **Setup:** Install WSL2 and a Linux distribution (e.g., Ubuntu) from the Microsoft Store, then follow the Linux instructions within your WSL2 terminal.
-
-## 🔧 Development
+1. **Write failing tests** that define the expected behavior
+2. **Implement minimal code** to make tests pass
+3. **Refactor** while keeping tests green
+4. **Check off the task** when tests provide adequate coverage
 
 ```bash
-# Run tests across all apps
+# Run all tests
 mix test.all
 
-# Format code across all apps
-mix format
+# Run tests for specific service
+mix test apps/aria_security
+
+# Run tests with coverage
+mix test --cover
 
 # Quality checks
 mix quality
-
-# Start with specific services only
-mix run --no-halt -e "Application.ensure_all_started([:aria_coordinate, :aria_interface])"
 ```
 
-## 📖 Documentation
+## 📖 Service Documentation
 
-Each service has detailed documentation in its respective `apps/*/README.md` file. See the individual service READMEs for:
-
-- Service-specific responsibilities
-- Technology stack details
-- Inter-service interactions
-- Deployment considerations
-
-## 🏛️ System Principles
-
-- **Zero Trust Architecture**: Every request authenticated and authorized
-- **AI-Core**: Key features are designed with AI/ML models (For example: GRPO for training) at their heart, enabling sophisticated and dynamic capabilities.
-- **Microservices**: Independent development, testing, and deployment
-- **Observability**: Comprehensive monitoring and debugging tools
-- **Content-Addressed Storage**: Efficient asset management with deduplication
-- **OTP-Native Process Management for Elixir Services**: Leveraging Elixir/OTP's supervisor trees for the lifecycle and fault tolerance of processes _within each Elixir application_. This provides highly efficient, built-in mechanisms for managing these internal processes. For managing external standalone services (like databases or OpenBao if run independently) or containerized workloads (like Python ML tasks), other tools (e.g., systemd, Docker, Kubernetes, as outlined in the Deployment section) are typically used in conjunction with the Elixir applications.
+- [AriaSecurity](apps/aria_security/README.md) - Authentication & authorization
+- [AriaPlanning](apps/aria_planning/README.md) - AI planning algorithms
+- [AriaNeuralNetwork](apps/aria_neural_network/README.md) - ML model integration
+- [AriaCharacter](apps/aria_character/README.md) - Character generation
+- [AriaAssets](apps/aria_assets/README.md) - Asset management
+- [AriaCoordinate](apps/aria_coordinate/README.md) - Service coordination
+- [AriaInterface](apps/aria_interface/README.md) - External APIs
+- [AriaDatabase](apps/aria_database/README.md) - Data layer
 
 ---
+
+**Platform Recommendation:** Linux/macOS preferred. Windows users should use WSL2 for optimal compatibility.
 
 Built with ❤️ by [Chibifire](https://chibifire.com) • Powered by Elixir & OTP

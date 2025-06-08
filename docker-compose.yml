@@ -1,167 +1,63 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
+version: '3.8'
+
 services:
   softhsm-setup:
     build:
       context: ./docker_softhsm
       dockerfile: Dockerfile
     environment:
-      - OPENBAO_PKCS11_PIN # Provided by GitHub Actions secrets
-      - OPENBAO_PKCS11_SO_PIN # Provided by GitHub Actions secrets
-      - OPENBAO_PKCS11_KEY_LABEL=openbao-key # Example key label
+      - OPENBAO_PKCS11_PIN=${OPENBAO_PKCS11_PIN:-1234}
+      - OPENBAO_PKCS11_SO_PIN=${OPENBAO_PKCS11_SO_PIN:-5678}
+      - OPENBAO_PKCS11_SLOT=${OPENBAO_PKCS11_SLOT:-0}
     volumes:
       - softhsm_tokens:/var/lib/softhsm/tokens
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
+    # This is a one-time setup service, not a long-running service
+    restart: "no"
 
   openbao:
     build:
-      context: ./docker_custom_openbao
+      context: ./docker_openbao
       dockerfile: Dockerfile
-      args:
-        OPENBAO_VERSION: latest
     ports:
       - "8200:8200"
     environment:
-      # PKCS#11 Auto-Unseal Configuration (Zero Trust Principle: Secure Unsealing)
-      # These variables are critical for OpenBao's secure auto-unseal mechanism.
-      # MUST be provided securely via GitHub Actions secrets in a CI environment.
-      - OPENBAO_PKCS11_SLOT # e.g., '0' or the specific slot ID for the SoftHSM token
-      - OPENBAO_PKCS11_PIN # The user PIN for the PKCS#11 token
-      - OPENBAO_PKCS11_KEY_LABEL # The label of the encryption key on the token that OpenBao uses
-      # - OPENBAO_PKCS11_HMAC_KEY_LABEL # Optional but recommended for an additional layer of security
-
-      # Note on Service Authentication (Zero Trust Principle: Authenticated & Authorized Requests):
-      # Client services (Aria services) should authenticate to OpenBao using a strong mechanism
-      # like AppRole. AppRoles and associated policies should be configured in OpenBao
-      # after its initial unseal to grant services least-privilege access to their required secrets.
+      - BAO_DEV_ROOT_TOKEN_ID=root
+      - BAO_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+      - OPENBAO_PKCS11_PIN=${OPENBAO_PKCS11_PIN:-1234}
+      - OPENBAO_PKCS11_SO_PIN=${OPENBAO_PKCS11_SO_PIN:-5678}
+      - OPENBAO_PKCS11_SLOT=${OPENBAO_PKCS11_SLOT:-0}
+    volumes:
+      - openbao_data:/vault/data
+      - softhsm_tokens:/var/lib/softhsm/tokens:ro
+    command: ["bao", "server", "-dev", "-dev-listen-address=0.0.0.0:8200"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8200/v1/sys/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    volumes:
-      - openbao_data:/openbao/data
-      - ./openbao-softhsm.hcl:/openbao/config/openbao-softhsm.hcl:ro
-      - softhsm_tokens:/var/lib/softhsm/tokens
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     depends_on:
-      softhsm-setup:
-        condition: service_completed_successfully
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
+      - softhsm-setup
 
   cockroachdb:
-    image: v-sekai/cockroach:latest # Ensure this matches the loaded image tag
-    container_name: cockroachdb-1 # Optional: for consistent naming
+    image: v-sekai/cockroach:latest
     ports:
       - "26257:26257"
       - "8080:8080"
+    command: start-single-node --insecure
     volumes:
-      - cockroachdb_data:/cockroach/cockroach-data # Path used by --store
-    # No explicit entrypoint, use the image's default
-    command: ["start-single-node", "--insecure", "--store=/cockroach/cockroach-data", "--http-addr=0.0.0.0:8080", "--advertise-addr=localhost"]
+      - cockroachdb_data:/cockroach/cockroach-data
     healthcheck:
-      # This test assumes /cockroach/cockroach is the binary path within the image
       test: ["CMD", "/cockroach/cockroach", "node", "status", "--insecure", "--host=localhost:26257"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0' # Example limit
-          memory: 2G   # Example limit
-
-  s3-config-generator:
-    build:
-      context: ./docker_s3_config_generator
-      dockerfile: Dockerfile
-    environment:
-      - OPENBAO_ADDR=http://openbao:8200
-      - OPENBAO_APPROLE_ROLE_ID # Must be provided by GitHub Actions secrets
-      - OPENBAO_APPROLE_SECRET_ID # Must be provided by GitHub Actions secrets
-      - OPENBAO_S3_CRED_PATH=secret/data/seaweedfs/s3config # Path in OpenBao holding the s3.json content
-    volumes:
-      - seaweedfs_config_volume:/etc/seaweedfs # Volume to share s3.json with SeaweedFS
-    depends_on:
-      openbao:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 256M
-
-  seaweedfs:
-    image: chrislusf/seaweedfs:latest
-    ports:
-      - "9333:9333" # Master port
-      - "8081:8080" # Volume server port (mapped to host 8081 to avoid conflict with CockroachDB UI)
-      - "8333:8333" # S3 gateway port
-    command: server -master.port=9333 -volume.port=8080 -s3 -s3.port=8333 -dir=/data -s3.config=/etc/seaweedfs/s3.json
-    volumes:
-      - seaweedfs_data:/data
-      - seaweedfs_config_volume:/etc/seaweedfs:ro
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8333"] # Basic check for S3 API
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    depends_on:
-      s3-config-generator:
-        condition: service_completed_successfully
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: 2G
-
-  aria-service-placeholder:
-    build: ./docker_seaweedfs/Dockerfile
-    ports:
-      - "4001:4000" # Standardized to host_port:container_port, replaced placeholder
-    environment:
-      - OPENBAO_ADDR=http://openbao:8200
-      - OPENBAO_S3_ACCESS_KEY_PATH=secret/data/aria_storage/s3_access_key
-      - OPENBAO_S3_SECRET_KEY_PATH=secret/data/aria_storage/s3_secret_key
-      - OPENBAO_S3_BUCKET_NAME_PATH=secret/data/aria_storage/s3_bucket_name
-      # Other S3 related config (static or less sensitive):
-      - S3_ENDPOINT_URL=http://seaweedfs:8333
-      - S3_REGION=us-east-1 # Often a placeholder for S3-compatible stores
-      - S3_USE_PATH_STYLE_ENDPOINT=true
-      - DATABASE_URL_PATH_IN_OPENBAO=secret/data/aria_storage/db_url
-      - OPENBAO_APPROLE_ROLE_ID # To be provided by GitHub Actions secrets
-      - OPENBAO_APPROLE_SECRET_ID # To be provided by GitHub Actions secrets
-    depends_on:
-      openbao:
-        condition: service_healthy
-      cockroachdb:
-        condition: service_healthy
-      seaweedfs:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/health"] # Use the actual container port
-      interval: 10s
-      timeout: 5s
+      interval: 30s
+      timeout: 10s
       retries: 3
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
+      start_period: 40s
 
 volumes:
   openbao_data:
-  cockroachdb_data: # Ensure this volume is defined
   softhsm_tokens:
-  seaweedfs_data:
-  seaweedfs_config_volume:
+  cockroachdb_data:
