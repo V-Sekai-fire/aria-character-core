@@ -37,23 +37,63 @@ Aria Character Core is organized as an Elixir umbrella application with 14 speci
 > ⚠️ **Nothing works yet!** These commands will fail until services are implemented.
 
 ```bash
-# For Debian/Ubuntu (using apt):
-sudo apt-get install erlang-dev
+# This project uses asdf-vm to manage Erlang and Elixir versions.
+# Follow these steps carefully to set up your environment.
 
-# For Fedora/CentOS/RHEL (using dnf or yum):
-sudo dnf install erlang-devel
+# --- Step 1: Install asdf-vm (version manager) ---
+# Prerequisite: Ensure 'git' is installed on your system.
 
-# Clone and setup
+# Clone the asdf-vm repository (v0.14.0 specific to these instructions).
+# If you have asdf already installed, you might skip this or see an error if the directory exists.
+git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
+
+# Add asdf to your shell. Execute the commands for YOUR shell.
+# After this, you MUST open a new terminal or source your shell config file (e.g., source ~/.bashrc).
+
+# For Bash users (append to ~/.bashrc):
+echo '' >> ~/.bashrc # Adds a newline for better separation
+echo '# Initialize asdf version manager' >> ~/.bashrc
+echo '. "$HOME/.asdf/asdf.sh"' >> ~/.bashrc
+echo '. "$HOME/.asdf/completions/asdf.bash"' >> ~/.bashrc
+
+# For Zsh users (append to ~/.zshrc - uncomment and run):
+# echo '' >> ~/.zshrc
+# echo '# Initialize asdf version manager' >> ~/.zshrc
+# echo '. "$HOME/.asdf/asdf.sh"' >> ~/.zshrc
+
+# For Fish users (create a symlink - uncomment and run):
+# mkdir -p ~/.config/fish/completions
+# ln -s ~/.asdf/completions/asdf.fish ~/.config/fish/completions
+
+# --- Step 2: Activate asdf in your CURRENT terminal session ---
+# If you haven't already, open a NEW terminal window/tab,
+# OR source your shell's configuration file in the CURRENT terminal.
+# Example for Bash:
+#   source ~/.bashrc
+# Example for Zsh:
+#   source ~/.zshrc
+# The 'asdf' command should now be recognized.
+
+# --- Step 3: Add asdf plugins for Erlang & Elixir ---
+# (Requires 'asdf' command to be active from Step 2).
+asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
+asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
+
+# --- Step 4: Install Erlang & Elixir versions ---
+# This command uses asdf to install the specific versions listed in the
+# '.tool-versions' file located in the project root.
+# Ensure you are in the project root directory before running this.
+asdf install
+
+# --- Setup Complete ---
+# Your environment should now be set up with the correct Erlang and Elixir versions.
+# You can now proceed with project-specific commands.
+
+# Project setup commands (run after asdf setup is complete and you are in the project directory):
 git clone https://github.com/V-Sekai-fire/aria-character-core.git aria-character-core
 cd aria-character-core
-
-# Install dependencies
 mix deps.get
-
-# Setup database
 mix ecto.setup
-
-# Start all services
 mix phx.server
 ```
 
