@@ -62,18 +62,10 @@ check-foundation-core-health:
     @docker compose -f docker-compose.yml logs --tail=20 openbao
     @echo "--- Recent logs (CockroachDB) ---"
     @docker compose -f docker-compose.yml logs --tail=20 cockroachdb
-    @echo "Waiting for OpenBao to become healthy..."
-    @timeout 30s bash -c \
-      'until docker compose -f docker-compose.yml exec -T openbao curl -sf http://localhost:8200/v1/sys/health; do \
-        echo "Waiting for OpenBao health..."; \
-        sleep 5; \
-      done || (echo "Error: OpenBao health check failed." && exit 1)'
-    @echo "Waiting for CockroachDB to become healthy..."
-    @timeout 30s bash -c \
-      'until curl -sf http://localhost:8080/health; do \
-        echo "Waiting for CockroachDB health..."; \
-        sleep 5; \
-      done || (echo "Error: CockroachDB health check failed." && exit 1)'
+    @echo "Checking OpenBao health..."
+    @curl -sf http://localhost:8200/v1/sys/health > /dev/null && echo "OpenBao is healthy" || (echo "Error: OpenBao health check failed." && exit 1)
+    @echo "Checking CockroachDB health..."
+    @curl -sf http://localhost:8080/health > /dev/null && echo "CockroachDB is healthy" || (echo "Error: CockroachDB health check failed." && exit 1)
     @echo "OpenBao and CockroachDB health checks passed."
 
 # Foundation startup: build, start, and check health
@@ -143,7 +135,7 @@ install-elixir-erlang-env:
     asdf install
     @echo "asdf, Erlang and Elixir environment setup complete."
 
-test-security-service: install-elixir-erlang-env
+test-security-service: foundation-startup
     #/usr/bin/env bash
     echo "Running Security Service (AriaSecurity) tests..."
     export PATH=".asdf/bin:$PATH"; \
