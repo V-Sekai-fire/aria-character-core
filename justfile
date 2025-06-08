@@ -8,7 +8,13 @@ download-cockroach-tar:
 
 load-cockroach-docker:
     @echo "Loading CockroachDB image..."
-    @docker compose -f docker-compose.yml up -d cockroachdb
+    @if [ ! -f cockroachdb.tar ]; then \
+        echo "CockroachDB tar file not found, downloading..."; \
+        just download-cockroach-tar; \
+    fi
+    @echo "Loading CockroachDB image from tar file..."
+    @docker load -i cockroachdb.tar
+    @echo "CockroachDB image loaded successfully"
 
 up: load-cockroach-docker
     @echo "Starting all services defined in docker-compose.yml..."
@@ -143,5 +149,4 @@ test-security-service: install-elixir-erlang-env
     mix deps.get && \
     mix compile --force --warnings-as-errors && \
     mix test
-    )'
     @echo "Security Service tests finished."
