@@ -11,6 +11,11 @@ services:
       - OPENBAO_PKCS11_KEY_LABEL=openbao-key # Example key label
     volumes:
       - softhsm_tokens:/var/lib/softhsm/tokens
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
 
   openbao:
     build:
@@ -46,6 +51,11 @@ services:
     depends_on:
       softhsm-setup:
         condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
 
   cockroachdb:
     build:
@@ -66,6 +76,11 @@ services:
       start_period: 20s
     volumes:
       - cockroachdb_data:/cockroach-data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
 
   s3-config-generator:
     build:
@@ -81,6 +96,11 @@ services:
     depends_on:
       openbao:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
 
   seaweedfs:
     image: chrislusf/seaweedfs:latest
@@ -101,6 +121,11 @@ services:
     depends_on:
       s3-config-generator:
         condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2G
 
   aria-service-placeholder:
     build: ./docker_seaweedfs/Dockerfile
@@ -130,6 +155,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
 
 volumes:
   openbao_data:
