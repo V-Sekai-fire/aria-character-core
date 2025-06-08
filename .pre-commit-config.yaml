@@ -12,7 +12,7 @@ repos:
           - "LICENSE_HEADER.md"
           - "--comment-style"
           - "#"
-        files: \.(yaml|yml|py|sh|Dockerfile.*|rb|pl|ex|exs)$
+        files: ^(Justfile|justfile)$|\\.(yaml|yml|py|sh|Dockerfile.*|rb|pl|ex|exs)$
         exclude: ^(thirdparty/|deps/|_build/|LICENSE\.md$|LICENSE_HEADER\.txt$|.*\.md$|\.gitignore|\.gitattributes|\.tool-versions|.*\.json|.*\.html|.*\.css|.*\.js)
 
       - id: insert-license

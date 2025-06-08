@@ -1,8 +1,6 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-version: '3.8'
-
 services:
   softhsm-setup:
     build:
@@ -61,29 +59,26 @@ services:
           memory: 1G
 
   cockroachdb:
-    build:
-      context: ./docker_cockroachdb
-      dockerfile: Dockerfile
-      args:
-        GIT_SHA: 865aff1595e494c2ce95030c7a2f20c4370b5ff8 # Default SHA, can be overridden
+    image: v-sekai/cockroach:latest # Ensure this matches the loaded image tag
+    container_name: cockroachdb-1 # Optional: for consistent naming
     ports:
       - "26257:26257"
-      - "8080:8080" # CockroachDB UI
-    environment:
-      - COCKROACH_INSECURE=true # For development/CI; use secure mode for production
+      - "8080:8080"
+    volumes:
+      - cockroachdb_data:/cockroach/cockroach-data # Path used by --store
+    # No explicit entrypoint, use the image's default
+    command: ["start-single-node", "--insecure", "--store=/cockroach/cockroach-data", "--http-addr=0.0.0.0:8080", "--advertise-addr=localhost"]
     healthcheck:
-      test: ["CMD", "/usr/local/bin/cockroach", "node", "status", "--insecure", "--host=localhost:26257"]
+      # This test assumes /cockroach/cockroach is the binary path within the image
+      test: ["CMD", "/cockroach/cockroach", "node", "status", "--insecure", "--host=localhost:26257"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
-    volumes:
-      - cockroachdb_data:/cockroach-data
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 4G
+          cpus: '1.0' # Example limit
+          memory: 2G   # Example limit
 
   s3-config-generator:
     build:
@@ -133,7 +128,7 @@ services:
   aria-service-placeholder:
     build: ./docker_seaweedfs/Dockerfile
     ports:
-      - "YOUR_ARIA_SERVICE_PORT:YOUR_ARIA_SERVICE_PORT" # Expose necessary ports
+      - "4001:4000" # Standardized to host_port:container_port, replaced placeholder
     environment:
       - OPENBAO_ADDR=http://openbao:8200
       - OPENBAO_S3_ACCESS_KEY_PATH=secret/data/aria_storage/s3_access_key
@@ -154,7 +149,7 @@ services:
       seaweedfs:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:YOUR_ARIA_SERVICE_PORT/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"] # Use the actual container port
       interval: 10s
       timeout: 5s
       retries: 3
@@ -166,7 +161,7 @@ services:
 
 volumes:
   openbao_data:
-  cockroachdb_data:
+  cockroachdb_data: # Ensure this volume is defined
   softhsm_tokens:
   seaweedfs_data:
   seaweedfs_config_volume:
