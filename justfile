@@ -124,15 +124,16 @@ up-all-and-check: start-all
 install-elixir-erlang-env:
     @echo "Setting up asdf, Erlang and Elixir environment..."
     @echo "Installing asdf if not present..."
-    @if [ ! -d "$HOME/.asdf" ]; then \
+    @if [ ! -d "$$HOME/.asdf" ]; then \
         echo "Installing asdf..."; \
-        git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf --branch v0.14.0; \
+        git clone https://github.com/asdf-vm/asdf.git $$HOME/.asdf --branch v0.14.0; \
     else \
         echo "asdf already installed"; \
     fi
     @echo "Sourcing asdf and setting up environment..."
-    @export PATH="$HOME/.asdf/bin:$PATH"; \
-    . $HOME/.asdf/asdf.sh; \
+    @export ASDF_DIR="$$HOME/.asdf"; \
+    export PATH="$$HOME/.asdf/bin:$$PATH"; \
+    . $$HOME/.asdf/asdf.sh; \
     echo "Adding asdf plugins..."; \
     asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git || true; \
     asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true; \
@@ -150,8 +151,8 @@ install-elixir-erlang-env:
 
 test-security-service:
     @echo "Running Security Service (AriaSecurity) tests..."
-    @export PATH="$HOME/.asdf/bin:$PATH"; \
-    . $(HOME)/.asdf/asdf.sh || true; \
+    @export PATH="$$HOME/.asdf/bin:$$PATH"; \
+    . $$HOME/.asdf/asdf.sh || true; \
     export VAULT_ADDR="http://localhost:8200"; \
     if [ -f .ci/openbao_root_token.txt ]; then \
         export VAULT_TOKEN=`cat .ci/openbao_root_token.txt`; \
