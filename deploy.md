@@ -46,7 +46,6 @@ Testing the Aria Character Core system on Kubernetes within a GitHub Actions wor
 
 5.  **Cleanup**:
     *   Ensure that the ephemeral Kubernetes cluster (if using KinD) is destroyed at the end of the workflow.
-    *   If using a shared cluster, ensure all deployed resources are deleted to avoid interference and unnecessary costs.
 
 This approach allows for comprehensive testing of service interactions, secret management, and deployment configurations in an environment that closely mirrors a production Kubernetes setup.
 
