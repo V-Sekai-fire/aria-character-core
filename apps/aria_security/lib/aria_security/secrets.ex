@@ -73,22 +73,31 @@ defmodule AriaSecurity.Secrets do
   """
   def init(_) do
     # Initialize OpenBao/Vault connection using Vaultex
-    vault_config = [
-      host: System.get_env("VAULT_ADDR", "http://localhost:8200"),
-      auth_method: :token,
-      token: System.get_env("VAULT_TOKEN", ""),
-      timeout: 5000
-    ]
+    vault_addr = System.get_env("VAULT_ADDR", "http://localhost:8200")
+    vault_token = System.get_env("VAULT_TOKEN", "")
     
-    case Vaultex.start_link(vault_config) do
-      {:ok, _pid} ->
-        # Test connection by reading a test secret using proper Vaultex.Client API
-        case Vaultex.Client.read(:client, "secret/test", %{}) do
-          {:ok, _} -> {:ok, %{vault_connected: true}}
-          {:error, _} -> {:ok, %{vault_connected: false}}
+    # Configure Vaultex through application environment
+    Application.put_env(:vaultex, :vault_addr, vault_addr)
+    
+    # Start the Vaultex application if not already started
+    case Application.ensure_all_started(:vaultex) do
+      {:ok, _} ->
+        # Authenticate with the token if provided
+        if vault_token != "" do
+          case Vaultex.Client.auth(:token, {vault_token}) do
+            {:ok, _} ->
+              Logger.info("Successfully authenticated with OpenBao")
+              {:ok, %{vault_connected: true}}
+            {:error, reason} ->
+              Logger.error("Failed to authenticate with OpenBao: #{inspect(reason)}")
+              {:ok, %{vault_connected: false}}
+          end
+        else
+          Logger.warning("No VAULT_TOKEN provided, connection may be limited")
+          {:ok, %{vault_connected: false}}
         end
       {:error, reason} ->
-        Logger.error("Failed to connect to OpenBao: #{inspect(reason)}")
+        Logger.error("Failed to start Vaultex application: #{inspect(reason)}")
         {:ok, %{vault_connected: false}}
     end
   end
