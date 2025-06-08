@@ -122,18 +122,17 @@ up-all-and-check: start-all
     @echo "All key services checked. Review logs if any issues."
 
 install-elixir-erlang-env:
-    @echo "Setting up asdf, Erlang and Elixir environment..."
-    @echo "Installing asdf if not present..."
-    @bash -c 'if [ ! -d "$$HOME/.asdf" ]; then \
-        echo "Installing asdf..."; \
-        git clone https://github.com/asdf-vm/asdf.git $$HOME/.asdf --branch v0.14.0; \
+    @echo "Installing asdf in the project root..."
+    @bash -c 'if [ ! -d "./.asdf" ]; then \
+        echo "Cloning asdf into ./.asdf..."; \
+        git clone https://github.com/asdf-vm/asdf.git ./.asdf --branch v0.14.0; \
     else \
-        echo "asdf already installed"; \
+        echo ".asdf already exists in the project root"; \
     fi'
-    @echo "Sourcing asdf and setting up environment..."
-    @bash -c 'export ASDF_DIR="$$HOME/.asdf"; \
-    export PATH="$$HOME/.asdf/bin:$$PATH"; \
-    . $$HOME/.asdf/asdf.sh; \
+    @echo "Sourcing asdf and setting up environment for project-specific tools..."
+    @bash -c 'export ASDF_DIR="./.asdf"; \
+    export PATH="./.asdf/bin:$$PATH"; \
+    . ./.asdf/asdf.sh; \
     echo "Adding asdf plugins..."; \
     asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git || true; \
     asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true; \

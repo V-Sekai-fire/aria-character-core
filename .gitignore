@@ -58,3 +58,5 @@ result
 cockroachdb.tar
 
 /.ci/
+
+/.asdf
