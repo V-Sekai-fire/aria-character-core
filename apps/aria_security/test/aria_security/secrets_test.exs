@@ -75,8 +75,14 @@ defmodule AriaSecurity.SecretsTest do
   
   defp valid_config do
     # Try to read the actual OpenBao root token from CI environment
-    token = case File.read(".ci/openbao_root_token.txt") do
-      {:ok, content} -> String.trim(content)
+    token = case File.read("../../.ci/openbao_root_token.txt") do
+      {:ok, content} -> 
+        # Extract token from "openbao-1  | Root Token: root" format
+        content
+        |> String.trim()
+        |> String.split("Root Token: ")
+        |> List.last()
+        |> String.trim()
       {:error, _} -> System.get_env("OPENBAO_TOKEN", "dev-token")
     end
     
