@@ -51,13 +51,13 @@ check-foundation-core-health: start-foundation-core
     @docker compose -f docker-compose.yml logs --tail=20 openbao
     @echo "--- Recent logs (CockroachDB) ---"
     @docker compose -f docker-compose.yml logs --tail=20 cockroachdb
-    @timeout 120s bash -c \
-      'until docker compose -f docker-compose.yml exec -T openbao curl -sf http://localhost:8200/v1/sys/health; do \
+    @timeout 20s bash -c \
+      'until curl -sf http://localhost:8200/v1/sys/health; do \
         echo "Waiting for OpenBao health..."; \
         sleep 5; \
       done || (echo "Error: OpenBao health check failed." && exit 1)'
-    @timeout 120s bash -c \
-      'until docker compose -f docker-compose.yml exec -T cockroachdb /cockroach/cockroach node status --insecure --host=localhost:26257; do \
+    @timeout 20s bash -c \
+      'until curl -sf http://localhost:26257/health?ready=1; do \
         echo "Waiting for CockroachDB health..."; \
         sleep 5; \
       done || (echo "Error: CockroachDB health check failed." && exit 1)'
@@ -128,26 +128,16 @@ install-elixir-erlang-env:
 
 test-security-service:
     @echo "Running Security Service (AriaSecurity) tests..."
-    @if [ -f .ci/openbao_root_token.txt ]; then \
-        { \
-        export VAULT_TOKEN=$$(cat .ci/openbao_root_token.txt) && \
-        export VAULT_ADDR="http://localhost:8200" && \
-        echo "Using OpenBao token: $$VAULT_TOKEN" && \
-        cd apps/aria_security && \
-        echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)" && \
-        mix deps.get && \
-        mix compile --force --warnings-as-errors && \
-        mix test; \
-        } \
+    @export VAULT_ADDR="http://localhost:8200"; \
+    if [ -f .ci/openbao_root_token.txt ]; then \
+        export VAULT_TOKEN=$$(cat .ci/openbao_root_token.txt); \
+        echo "Using OpenBao token from .ci/openbao_root_token.txt"; \
     else \
-        { \
-        export VAULT_ADDR="http://localhost:8200" && \
-        echo "No OpenBao token found, using default VAULT_ADDR" && \
-        cd apps/aria_security && \
-        echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)" && \
-        mix deps.get && \
-        mix compile --force --warnings-as-errors && \
-        mix test; \
-        } \
-    fi
+        echo "No OpenBao token found, using default VAULT_ADDR only"; \
+    fi; \
+    cd apps/aria_security && \
+    echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)" && \
+    mix deps.get && \
+    mix compile --force --warnings-as-errors && \
+    mix test
     @echo "Security Service tests finished."
