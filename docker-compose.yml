@@ -6,9 +6,13 @@ services:
     ports:
       - "8200:8200"
     environment:
-      # These would typically be populated by GitHub Actions secrets in a CI environment
-      # For local development, you might use a .env file or set them directly
-      - OPENBAO_BOOTSTRAP_SECRET_PLACEHOLDER_TOKEN=your_initial_root_token_or_bootstrap_secret
+      # CRITICAL: DO NOT hardcode secrets here, especially for CI/CD.
+      # This token MUST be injected securely, e.g., via GitHub Actions secrets.
+      # Example GitHub Actions workflow:
+      # env:
+      #   OPENBAO_BOOTSTRAP_SECRET_TOKEN: ${{ secrets.OPENBAO_BOOTSTRAP_TOKEN_FROM_GITHUB }}
+      # ... then docker-compose up will pick it up if the variable name matches.
+      - OPENBAO_BOOTSTRAP_SECRET_PLACEHOLDER_TOKEN # Value to be provided by CI environment variable
       # Add other necessary OpenBao configuration environment variables
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8200/v1/sys/health"]
