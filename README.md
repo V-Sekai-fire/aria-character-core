@@ -161,7 +161,7 @@ Refer to the `apps/aria_security/README.md` for detailed information on setting 
 - **Microservices**: Independent development, testing, and deployment
 - **Observability**: Comprehensive monitoring and debugging tools
 - **Content-Addressed Storage**: Efficient asset management with deduplication
-- **OTP-Native Process Management**: Utilizing Elixir/OTP's supervisor trees for service lifecycle and fault tolerance. This approach provides lightweight, built-in mechanisms for managing processes within the application, which can simplify deployment and reduce the need for external orchestration tools for these specific concerns. This is favored for in-application process orchestration due to its efficiency and integration with the Erlang VM's capabilities.
+- **OTP-Native Process Management for Elixir Services**: Leveraging Elixir/OTP's supervisor trees for the lifecycle and fault tolerance of processes *within each Elixir application*. This provides highly efficient, built-in mechanisms for managing these internal processes. For managing external standalone services (like databases or OpenBao if run independently) or containerized workloads (like Python ML tasks), other tools (e.g., systemd, Docker, Kubernetes, as outlined in the Deployment section) are typically used in conjunction with the Elixir applications.
 
 ---
 
