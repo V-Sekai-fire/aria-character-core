@@ -2,82 +2,59 @@
 
 A distributed character generation and AI planning system built with Elixir umbrella applications.
 
-> ⚠️ **Work in Progress**: This project is in early development. Nothing is functional yet - we're building from the ground up using TDD principles.
-
 ## 🚀 Quick Start
 
 > ⚠️ **Nothing works yet!** These commands will fail until services are implemented.
 
 **Platform Recommendation:**
-
 *   **Linux/macOS:** The instructions below are primarily tailored for Linux-based environments (including macOS).
-*   **Windows Users:** It is **highly recommended to use Windows Subsystem for Linux (WSL) 2**. WSL2 provides a Linux environment directly on Windows, ensuring compatibility with the project's tooling (`asdf-vm`, shell scripts, etc.) and a smoother development experience. Install WSL2 and a Linux distribution (e.g., Ubuntu) from the Microsoft Store, then follow the Linux instructions within your WSL2 terminal.
-    *   Native Windows development for Elixir can have more setup hurdles with tools like `asdf-vm`. Using WSL2 is the preferred path for this project.
+*   **Windows Users:** It is **highly recommended to use Windows Subsystem for Linux (WSL) 2**. See platform details below.
 
+This project uses `asdf-vm` to manage Erlang and Elixir versions. 
+
+**Step 1: Install `asdf-vm`**
+   - If you don't have `asdf-vm` installed, follow our **[asdf-vm Installation Guide](docs/SETUP_ASDF.md)**.
+   - Ensure `asdf` is active in your current terminal session (you may need to open a new terminal or source your shell config).
+
+**Step 2: Add Erlang & Elixir Plugins**
 ```bash
-# This project uses asdf-vm to manage Erlang and Elixir versions.
-# Follow these steps carefully to set up your environment.
-
-# --- Step 1: Install asdf-vm (version manager) ---
-# Prerequisite: Ensure 'git' is installed on your system.
-
-# Clone the asdf-vm repository (v0.14.0 specific to these instructions).
-# If you have asdf already installed, you might skip this or see an error if the directory exists.
-git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
-
-# Add asdf to your shell. Execute the commands for YOUR shell.
-# After this, you MUST open a new terminal or source your shell config file (e.g., source ~/.bashrc).
-
-# For Bash users (append to ~/.bashrc):
-echo '' >> ~/.bashrc # Adds a newline for better separation
-echo '# Initialize asdf version manager' >> ~/.bashrc
-echo '. "$HOME/.asdf/asdf.sh"' >> ~/.bashrc
-echo '. "$HOME/.asdf/completions/asdf.bash"' >> ~/.bashrc
-
-# For Zsh users (append to ~/.zshrc - uncomment and run):
-# echo '' >> ~/.zshrc
-# echo '# Initialize asdf version manager' >> ~/.zshrc
-# echo '. "$HOME/.asdf/asdf.sh"' >> ~/.zshrc
-
-# For Fish users (create a symlink - uncomment and run):
-# mkdir -p ~/.config/fish/completions
-# ln -s ~/.asdf/completions/asdf.fish ~/.config/fish/completions
-
-# --- Step 2: Activate asdf in your CURRENT terminal session ---
-# If you haven't already, open a NEW terminal window/tab,
-# OR source your shell's configuration file in the CURRENT terminal.
-# Example for Bash:
-#   source ~/.bashrc
-# Example for Zsh:
-#   source ~/.zshrc
-# The 'asdf' command should now be recognized.
-
-# --- Step 3: Add asdf plugins for Erlang & Elixir ---
-# (Requires 'asdf' command to be active from Step 2).
 asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
 asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
+```
 
-# --- Step 4: Install Erlang & Elixir versions ---
-# This command uses asdf to install the specific versions listed in the
-# '.tool-versions' file located in the project root.
-# Ensure you are in the project root directory before running this.
+**Step 3: Install Project Versions**
+   (Ensure you are in the project root directory)
+```bash
 asdf install
+```
 
-# --- Setup Complete ---
-# Your environment should now be set up with the correct Erlang and Elixir versions.
-# You can now proceed with project-specific commands.
+**Step 4: Project Setup**
+   (Run after `asdf install` is complete)
+```bash
+# If you haven't cloned the project yet:
+# git clone https://github.com/V-Sekai-fire/aria-character-core.git aria-character-core
+# cd aria-character-core
 
-# Project setup commands (run after asdf setup is complete and you are in the project directory):
-git clone https://github.com/V-Sekai-fire/aria-character-core.git aria-character-core
-cd aria-character-core
 mix deps.get
 mix ecto.setup
 mix phx.server
 ```
 
-## 🔧 Development
+> ⚠️ **Work in Progress**: This project is in early development. Nothing is functional yet - we're building from the ground up using TDD principles.
 
-> ⚠️ **TDD in Progress** - Most commands will fail until core functionality is implemented.
+### Detailed Platform Recommendations
+
+*   **Linux/macOS:** The instructions are primarily tailored for these environments, which generally offer the smoothest experience for Elixir development and the tooling used in this project.
+*   **Windows Users (WSL2 Recommended):** 
+    *   **Why WSL2 over Native Windows for this project?**
+        *   **`asdf-vm` Compatibility:** `asdf-vm` is primarily designed for Unix-like systems. Native Windows support can be less straightforward.
+        *   **Tooling & Scripting:** Many development tools and scripts assume a Unix-like environment.
+        *   **Dependency Compilation:** Some Elixir dependencies compile more reliably in a Linux environment.
+        *   **Community & Support:** More community examples are geared towards Linux/macOS.
+        *   **Consistency:** WSL2 provides a consistent Linux environment for all contributors.
+    *   **Setup:** Install WSL2 and a Linux distribution (e.g., Ubuntu) from the Microsoft Store, then follow the Linux instructions within your WSL2 terminal.
+
+## 🔧 Development
 
 ```bash
 # Run tests across all apps
