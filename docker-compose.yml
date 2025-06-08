@@ -3,7 +3,7 @@ version: '3.8'
 services:
   softhsm-setup:
     build:
-      context: ./softhsm # Path to the directory containing the Dockerfile and script
+      context: ./docker_softhsm # Path to the directory containing the Dockerfile and script
       dockerfile: Dockerfile
     environment:
       - OPENBAO_PKCS11_PIN # Provided by GitHub Actions secrets
@@ -16,7 +16,11 @@ services:
     # OpenBao will then use the token store.
 
   openbao:
-    image: openbao/openbao:latest # Replace with your desired OpenBao image
+    build:
+      context: ./docker_custom_openbao
+      dockerfile: Dockerfile
+      args:
+        OPENBAO_VERSION: latest # Or specify a particular version
     ports:
       - "8200:8200"
     environment:
@@ -43,7 +47,11 @@ services:
         condition: service_completed_successfully # Wait for setup to finish
 
   cockroachdb:
-    image: v-sekai/cockroach:cockroach
+    build:
+      context: ./docker_cockroachdb
+      dockerfile: Dockerfile
+      args:
+        GIT_SHA: 865aff1595e494c2ce95030c7a2f20c4370b5ff8 # Default SHA, can be overridden
     ports:
       - "26257:26257"
       - "8080:8080" # CockroachDB UI
