@@ -105,7 +105,7 @@ Each service has detailed documentation in its respective `apps/*/README.md` fil
 ## 🏛️ System Principles
 
 - **Zero Trust Architecture**: Every request authenticated and authorized
-- **AI-First Design**: Centralized character generation with GRPO training
+- **AI-Core**: Key features are designed with AI/ML models (For example: GRPO for training) at their heart, enabling sophisticated and dynamic capabilities.
 - **Microservices**: Independent development, testing, and deployment
 - **Observability**: Comprehensive monitoring and debugging tools
 - **Content-Addressed Storage**: Efficient asset management with deduplication
