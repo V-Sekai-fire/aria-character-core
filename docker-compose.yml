@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  openbao:
+    image: openbao/openbao:latest # Replace with your desired OpenBao image
+    ports:
+      - "8200:8200"
+    environment:
+      # These would typically be populated by GitHub Actions secrets in a CI environment
+      # For local development, you might use a .env file or set them directly
+      - OPENBAO_BOOTSTRAP_SECRET_PLACEHOLDER_TOKEN=your_initial_root_token_or_bootstrap_secret
+      # Add other necessary OpenBao configuration environment variables
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8200/v1/sys/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s # Give OpenBao time to initialize
+    volumes:
+      - openbao_data:/openbao/data # Persist OpenBao data
+      # - ./openbao_config:/openbao/config # Optional: Mount custom config files
+
+  cockroachdb:
+    image: v-sekai/cockroach:cockroach
+    ports:
+      - "26257:26257"
+      - "8080:8080" # CockroachDB UI
+    environment:
+      # Add any necessary CockroachDB environment variables
+      - COCKROACH_INSECURE=true # For development/CI; use secure mode for production
+    healthcheck:
+      test: ["CMD", "/cockroach/cockroach", "node", "status", "--insecure", "--host=localhost:26257"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    volumes:
+      - cockroachdb_data:/cockroach/cockroach-data
+
+  # Placeholder for your Aria services
+  # You will need to define each of your Aria services similarly
+  aria-service-placeholder:
+    # build: ./path-to-your-aria-service-dockerfile # If building from a Dockerfile
+    image: your-aria-service-image:latest # Or use a pre-built image
+    ports:
+      - "YOUR_ARIA_SERVICE_PORT:YOUR_ARIA_SERVICE_PORT" # Expose necessary ports
+    environment:
+      - OPENBAO_ADDR=http://openbao:8200
+      # Add other environment variables your service needs,
+      # including those for CockroachDB connection if applicable
+      - DATABASE_URL=postgresql://root@cockroachdb:26257/defaultdb?sslmode=disable # Example for CockroachDB
+    depends_on:
+      openbao:
+        condition: service_healthy
+      cockroachdb:
+        condition: service_healthy
+    healthcheck:
+      # Define a health check appropriate for your Aria service
+      test: ["CMD", "curl", "-f", "http://localhost:YOUR_ARIA_SERVICE_PORT/health"] # Example
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  openbao_data:
+  cockroachdb_data:
+
+# Potentially use a docker-compose.override.yml for CI-specific tweaks
+# or local development overrides.
