@@ -63,14 +63,14 @@ check-foundation-core-health:
     @echo "--- Recent logs (CockroachDB) ---"
     @docker compose -f docker-compose.yml logs --tail=20 cockroachdb
     @echo "Waiting for OpenBao to become healthy..."
-    @timeout 20s bash -c \
+    @timeout 30s bash -c \
       'until docker compose -f docker-compose.yml exec -T openbao curl -sf http://localhost:8200/v1/sys/health; do \
         echo "Waiting for OpenBao health..."; \
         sleep 5; \
       done || (echo "Error: OpenBao health check failed." && exit 1)'
     @echo "Waiting for CockroachDB to become healthy..."
-    @timeout 20s bash -c \
-      'until docker compose -f docker-compose.yml exec -T cockroachdb /cockroach/cockroach node status --insecure --host=localhost:26257; do \
+    @timeout 30s bash -c \
+      'until curl -sf http://localhost:8080/health; do \
         echo "Waiting for CockroachDB health..."; \
         sleep 5; \
       done || (echo "Error: CockroachDB health check failed." && exit 1)'
