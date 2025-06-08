@@ -34,4 +34,3 @@ Stateful (stores applied configurations and tweaks in the System Data Persistenc
 - **System Data Persistence Service**: To persist configurations and diagnostic records
 - **Monitor Service**: For system state data and performance metrics
 - **All Aria Services**: To inspect state and apply adjustments
-- **Kubernetes API**: If directly managing K8s resources (requires secure RBAC)

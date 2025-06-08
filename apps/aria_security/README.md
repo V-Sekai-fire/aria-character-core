@@ -11,7 +11,7 @@ To act as the 'Guardian of Secrets,' carefully protecting and controlling access
 ## Key Responsibilities
 
 - Secure secret storage with encryption at rest for API keys, passwords, certificates, and other sensitive data
-- Generate dynamic secrets on-demand for systems like Kubernetes or SQL databases with automatic revocation
+- Generate dynamic secrets on-demand for systems like system orchestration platforms or SQL databases with automatic revocation
 - Provide encryption as a service with centralized key management for data in transit and at rest
 - Manage identity-based access control with unified ACL system across different clouds and services
 - Handle secret leasing, renewal, and revocation with built-in lifecycle management
@@ -34,5 +34,4 @@ Stateful (stores encrypted secrets, certificates, and access policies)
 - **All Aria Services**: Provides secure credentials and certificates via OpenBao's native HTTP API
 - **System Data Persistence Service**: For persistent backend storage of encrypted secret metadata
 - **Coordinate Service**: For authentication and authorization of service requests
-- **Kubernetes API**: For dynamic service account token generation and management
 - **Monitor Service**: For security audit logging and access pattern analysis

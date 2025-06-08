@@ -99,7 +99,7 @@ Each service has detailed documentation in its respective `apps/*/README.md` fil
 - **Microservices**: Independent development, testing, and deployment
 - **Observability**: Comprehensive monitoring and debugging tools
 - **Content-Addressed Storage**: Efficient asset management with deduplication
-- **OTP-Native Process Management**: Utilizing Elixir/OTP's supervisor trees for service lifecycle and fault tolerance. This approach provides lightweight, built-in mechanisms for managing processes within the application, which can simplify deployment and reduce the need for external orchestration tools like Kubernetes or systemd for these specific concerns. This is favored for in-application process orchestration due to its efficiency and integration with the Erlang VM's capabilities.
+- **OTP-Native Process Management**: Utilizing Elixir/OTP's supervisor trees for service lifecycle and fault tolerance. This approach provides lightweight, built-in mechanisms for managing processes within the application, which can simplify deployment and reduce the need for external orchestration tools for these specific concerns. This is favored for in-application process orchestration due to its efficiency and integration with the Erlang VM's capabilities.
 
 ---
 
