@@ -122,13 +122,37 @@ up-all-and-check: start-all
     @echo "All key services checked. Review logs if any issues."
 
 install-elixir-erlang-env:
-    @echo "Setting up Erlang and Elixir environment using shared script..."
-    @chmod +x scripts/setup-asdf-env.sh
-    @./scripts/setup-asdf-env.sh
+    @echo "Setting up asdf, Erlang and Elixir environment..."
+    @echo "Installing asdf if not present..."
+    @if [ ! -d "$HOME/.asdf" ]; then \
+        echo "Installing asdf..."; \
+        git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf --branch v0.14.0; \
+    else \
+        echo "asdf already installed"; \
+    fi
+    @echo "Sourcing asdf and setting up environment..."
+    @export PATH="$HOME/.asdf/bin:$PATH"; \
+    . $HOME/.asdf/asdf.sh; \
+    echo "Adding asdf plugins..."; \
+    asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git || true; \
+    asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true; \
+    echo "Installing Erlang 26.2.5..."; \
+    asdf install erlang 26.2.5; \
+    echo "Installing Elixir 1.15.7-otp-26..."; \
+    asdf install elixir 1.15.7-otp-26; \
+    echo "Setting global versions..."; \
+    asdf global erlang 26.2.5; \
+    asdf global elixir 1.15.7-otp-26; \
+    echo "Verification:"; \
+    asdf current erlang; \
+    asdf current elixir
+    @echo "asdf, Erlang and Elixir environment setup complete."
 
 test-security-service:
     @echo "Running Security Service (AriaSecurity) tests..."
-    @export VAULT_ADDR="http://localhost:8200"; \
+    @export PATH="$HOME/.asdf/bin:$PATH"; \
+    . $(HOME)/.asdf/asdf.sh || true; \
+    export VAULT_ADDR="http://localhost:8200"; \
     if [ -f .ci/openbao_root_token.txt ]; then \
         export VAULT_TOKEN=`cat .ci/openbao_root_token.txt`; \
         echo "Using OpenBao token from .ci/openbao_root_token.txt"; \
@@ -144,8 +168,8 @@ test-security-service:
         echo "ERROR: mix.exs file does not exist in apps/aria_security"; \
         exit 1; \
     fi; \
-    echo "Checking mix.exs syntax..."; \
-    elixir -e "Code.eval_file(\"mix.exs\")" || (echo "ERROR: mix.exs has syntax errors" && exit 1); \
+    echo "Checking Elixir version..."; \
+    elixir --version || (echo "ERROR: Elixir not found" && exit 1); \
     echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)"; \
     timeout 300s mix deps.get; \
     timeout 300s mix compile --force --warnings-as-errors; \
