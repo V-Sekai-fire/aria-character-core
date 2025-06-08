@@ -100,6 +100,7 @@ up-all-and-check: start-all
     @echo "All key services checked. Review logs if any issues."
 
 install-elixir-erlang-env:
+    #/usr/bin/env bash
     @echo "Installing asdf in the project root..."
     @if [ ! -d "./.asdf" ]; then \
         echo "Cloning asdf into ./.asdf..."; \
