@@ -116,7 +116,7 @@ up-all-and-check: start-all
     @echo "All key services checked. Review logs if any issues."
 
 install-elixir-erlang-env:
-    #/usr/bin/env bash
+    #!/usr/bin/env bash
     @echo "Installing asdf in the project root..."
     @if [ ! -d "./.asdf" ]; then \
         echo "Cloning asdf into ./.asdf..."; \
@@ -133,30 +133,109 @@ install-elixir-erlang-env:
     asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true; \
     echo "Installing Erlang and Elixir versions (as per .tool-versions)..."
     asdf install
-    @echo "asdf, Erlang and Elixir environment setup complete."
 
 test-security-service: foundation-startup
-    #/usr/bin/env bash
+    #!/usr/bin/env bash
     echo "Running Security Service (AriaSecurity) tests..."
-    export PATH=".asdf/bin:$PATH"; \
-    . ./.asdf/asdf.sh || true; \
-    export VAULT_ADDR="http://localhost:8200"; \
-    if [ -f .ci/openbao_root_token.txt ]; then \
-        export VAULT_TOKEN=$(<.ci/openbao_root_token.txt); \
-    fi; \
-    if [ ! -d apps/aria_security ]; then \
-        echo "ERROR: apps/aria_security directory does not exist"; \
-        exit 1; \
-    fi; \
-    cd apps/aria_security; \
-    if [ ! -f mix.exs ]; then \
-        echo "ERROR: mix.exs file does not exist in apps/aria_security"; \
-        exit 1; \
-    fi; \
-    echo "Checking Elixir version..."; \
-    elixir --version || (echo "ERROR: Elixir not found" && exit 1); \
-    echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)"; \
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:/usr/bin:/bin:/sbin:/usr/sbin:$${PATH}"
+    . ./.asdf/asdf.sh || true
+    export VAULT_ADDR="http://localhost:8200"
+    
+    # Extract the root token dynamically from OpenBao logs or token file
+    if [ -f .ci/openbao_root_token.txt ]; then
+        TOKEN_FROM_FILE=`grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r'`
+        if [ -n "$$TOKEN_FROM_FILE" ]; then
+            export VAULT_TOKEN="$$TOKEN_FROM_FILE"
+            echo "Using OpenBao token from file: $$VAULT_TOKEN"
+        else
+            echo "Could not extract token from file, checking OpenBao logs..."
+            LIVE_TOKEN=`docker compose logs openbao 2>/dev/null | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo ""`
+            if [ -n "$$LIVE_TOKEN" ]; then
+                export VAULT_TOKEN="$$LIVE_TOKEN"
+                echo "Using OpenBao token from logs: $$VAULT_TOKEN"
+            else
+                echo "WARNING: Could not extract token, using fallback"
+                export VAULT_TOKEN="root"
+            fi
+        fi
+    else
+        echo "Token file not found, checking OpenBao logs..."
+        LIVE_TOKEN=`docker compose logs openbao 2>/dev/null | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo ""`
+        if [ -n "$$LIVE_TOKEN" ]; then
+            export VAULT_TOKEN="$$LIVE_TOKEN"
+            echo "Using OpenBao token from logs: $$VAULT_TOKEN"
+        else
+            echo "WARNING: Could not extract token, using fallback"
+            export VAULT_TOKEN="root"
+        fi
+    fi
+    
+    echo "Verifying OpenBao connection..."
+    curl -sf -H "X-Vault-Token: $$VAULT_TOKEN" "$$VAULT_ADDR/v1/sys/health" > /dev/null || \
+    (echo "ERROR: Cannot connect to OpenBao at $$VAULT_ADDR with token $$VAULT_TOKEN" && exit 1)
+    
+    if [ ! -d apps/aria_security ]; then
+        echo "ERROR: apps/aria_security directory does not exist"
+        exit 1
+    fi
+    cd apps/aria_security
+    if [ ! -f mix.exs ]; then
+        echo "ERROR: mix.exs file does not exist in apps/aria_security"
+        exit 1
+    fi
+    echo "Checking Elixir version..."
+    elixir --version || (echo "ERROR: Elixir not found" && exit 1)
+    echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)"
     mix deps.get && \
     mix compile --force --warnings-as-errors && \
     mix test
-    @echo "Security Service tests finished."
+    echo "Security Service tests finished."
+
+# Generate a new varying root token for OpenBao
+generate-new-root-token:
+    #!/usr/bin/env bash
+    echo "Generating a new varying root token for OpenBao..."
+    export BAO_ADDR="http://localhost:8200"
+    export PATH="/usr/bin:/bin:/sbin:/usr/sbin:$$PATH"
+    
+    # First, get the current token to use for authentication
+    CURRENT_TOKEN=""
+    if [ -f .ci/openbao_root_token.txt ]; then
+        grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' > /tmp/current_token
+        CURRENT_TOKEN=`cat /tmp/current_token`
+    fi
+    
+    if [ -z "$$CURRENT_TOKEN" ]; then
+        echo "Getting token from OpenBao logs..."
+        docker compose logs openbao 2>/dev/null | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' > /tmp/current_token || echo "root" > /tmp/current_token
+        CURRENT_TOKEN=`cat /tmp/current_token`
+    fi
+    
+    echo "Using current token for authentication: $$CURRENT_TOKEN"
+    
+    # Generate new root token
+    docker exec -e BAO_ADDR="$$BAO_ADDR" -e VAULT_TOKEN="$$CURRENT_TOKEN" aria-character-core-openbao-1 bao token create -policy=root -format=json > /tmp/new_token_response
+    NEW_TOKEN=`cat /tmp/new_token_response | grep '"token"' | cut -d'"' -f4`
+    
+    if [ -n "$$NEW_TOKEN" ]; then
+        echo "Generated new root token: $$NEW_TOKEN"
+        
+        # Update the token file with new token, preserving unseal key
+        grep "Unseal Key:" .ci/openbao_root_token.txt | sed 's/.*Unseal Key: //' | tr -d ' \t\n\r' > /tmp/unseal_key || echo "" > /tmp/unseal_key
+        UNSEAL_KEY=`cat /tmp/unseal_key`
+        
+        echo "openbao-1  | Root Token: $$NEW_TOKEN" > .ci/openbao_root_token.txt
+        if [ -n "$$UNSEAL_KEY" ]; then
+            echo "openbao-1  | Unseal Key: $$UNSEAL_KEY" >> .ci/openbao_root_token.txt
+        fi
+        
+        echo "Token file updated with new varying root token"
+        echo "New token: $$NEW_TOKEN"
+        
+        # Clean up temp files
+        rm -f /tmp/current_token /tmp/new_token_response /tmp/unseal_key
+    else
+        echo "ERROR: Failed to generate new root token"
+        exit 1
+    fi

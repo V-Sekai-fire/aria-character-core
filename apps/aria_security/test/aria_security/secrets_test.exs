@@ -74,28 +74,51 @@ defmodule AriaSecurity.SecretsTest do
   end
   
   defp valid_config do
-    # Try to read the actual OpenBao root token from CI environment
-    token = case File.read("../../.ci/openbao_root_token.txt") do
-      {:ok, content} -> 
-        # Extract token from "openbao-1  | Root Token: root" format
-        content
-        |> String.trim()
-        |> String.split("Root Token: ")
-        |> List.last()
-        |> String.trim()
-      {:error, _} -> System.get_env("OPENBAO_TOKEN", "dev-token")
-    end
+    # Try multiple paths to find the token file
+    token_paths = [
+      "../../.ci/openbao_root_token.txt",
+      ".ci/openbao_root_token.txt",
+      "/tmp/openbao_root_token.txt"
+    ]
     
-    %{
+    token = Enum.find_value(token_paths, fn path ->
+      case File.read(path) do
+        {:ok, content} -> 
+          IO.puts("DEBUG: Found token file at #{path}")
+          IO.puts("DEBUG: Token file content: #{inspect(content)}")
+          
+          # Extract token from "openbao-1  | Root Token: root" format
+          extracted = content
+          |> String.trim()
+          |> String.split("Root Token: ")
+          |> List.last()
+          |> String.trim()
+          
+          IO.puts("DEBUG: Extracted token: #{inspect(extracted)}")
+          extracted
+        {:error, reason} -> 
+          IO.puts("DEBUG: Failed to read #{path}: #{inspect(reason)}")
+          nil
+      end
+    end)
+    
+    # Fallback to environment variable or default
+    final_token = token || System.get_env("OPENBAO_TOKEN", "dev-token")
+    IO.puts("DEBUG: Final token to use: #{inspect(final_token)}")
+    
+    config = %{
       host: System.get_env("OPENBAO_HOST", "localhost"),
       port: String.to_integer(System.get_env("OPENBAO_PORT", "8200")),
       scheme: System.get_env("OPENBAO_SCHEME", "http"),
       auth: %{
         method: :token, 
         credentials: %{
-          token: token
+          token: final_token
         }
       }
     }
+    
+    IO.puts("DEBUG: Final config: #{inspect(config)}")
+    config
   end
 end
