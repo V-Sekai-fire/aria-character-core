@@ -8,6 +8,12 @@ A distributed character generation and AI planning system built with Elixir umbr
 
 > ⚠️ **Nothing works yet!** These commands will fail until services are implemented.
 
+**Platform Recommendation:**
+
+*   **Linux/macOS:** The instructions below are primarily tailored for Linux-based environments (including macOS).
+*   **Windows Users:** It is **highly recommended to use Windows Subsystem for Linux (WSL) 2**. WSL2 provides a Linux environment directly on Windows, ensuring compatibility with the project's tooling (`asdf-vm`, shell scripts, etc.) and a smoother development experience. Install WSL2 and a Linux distribution (e.g., Ubuntu) from the Microsoft Store, then follow the Linux instructions within your WSL2 terminal.
+    *   Native Windows development for Elixir can have more setup hurdles with tools like `asdf-vm`. Using WSL2 is the preferred path for this project.
+
 ```bash
 # This project uses asdf-vm to manage Erlang and Elixir versions.
 # Follow these steps carefully to set up your environment.
