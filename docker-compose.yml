@@ -1,6 +1,20 @@
 version: '3.8'
 
 services:
+  softhsm-setup:
+    build:
+      context: ./softhsm # Path to the directory containing the Dockerfile and script
+      dockerfile: Dockerfile
+    environment:
+      - OPENBAO_PKCS11_PIN # Provided by GitHub Actions secrets
+      - OPENBAO_PKCS11_SO_PIN # Provided by GitHub Actions secrets
+      - OPENBAO_PKCS11_KEY_LABEL=openbao-key # Example key label
+      # TOKEN_DIRECTORY & TOKEN_LABEL can also be passed if defaults in script are not desired
+    volumes:
+      - softhsm_tokens:/var/lib/softhsm/tokens # Persist tokens
+    # This service should run to completion to set up SoftHSM.
+    # OpenBao will then use the token store.
+
   openbao:
     image: openbao/openbao:latest # Replace with your desired OpenBao image
     ports:
@@ -21,8 +35,12 @@ services:
       retries: 5
       start_period: 30s # Give OpenBao time to initialize
     volumes:
-      - openbao_data:/openbao/data # Persist OpenBao data
-      # - ./openbao_config:/openbao/config # Optional: Mount custom config files
+      - openbao_data:/openbao/data
+      - ./openbao-softhsm.hcl:/openbao/config/openbao-softhsm.hcl:ro
+      - softhsm_tokens:/var/lib/softhsm/tokens # Mount the shared token volume
+    depends_on:
+      softhsm-setup:
+        condition: service_completed_successfully # Wait for setup to finish
 
   cockroachdb:
     image: v-sekai/cockroach:cockroach
@@ -68,6 +86,7 @@ services:
 volumes:
   openbao_data:
   cockroachdb_data:
+  softhsm_tokens:
 
 # Potentially use a docker-compose.override.yml for CI-specific tweaks
 # or local development overrides.
