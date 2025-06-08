@@ -32,8 +32,8 @@ defmodule AriaTune.MixProject do
       {:nx, "~> 0.6"},
       {:scholar, "~> 0.2"},
       
-      # Character AI for optimization suggestions
-      {:aria_character_ai, in_umbrella: true},
+      # Character shaping for optimization suggestions
+      {:aria_shape, in_umbrella: true},
       
       # Monitor service for performance data
       {:aria_monitor, in_umbrella: true},

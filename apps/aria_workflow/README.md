@@ -29,7 +29,7 @@ Stateful (SOP definitions and execution state are persisted via the System Data 
 
 ## Key Interactions
 
-- **Character AI Service**: For AI-assisted SOP drafting and decision support
+- **Shape Service**: For workflow orchestration and decision support involving character shaping
 - **System Data Persistence Service**: For persistent SOP storage and state management
 - **Coordinate Service**: To initiate, manage, and monitor workflow executions
 - **Engine Service**: For planning and decision-making within SOPs

@@ -31,7 +31,7 @@ Stateful (stores learned parameters, optimized configurations, and performance h
 
 ## Key Interactions
 
-- **Character AI Service**: For AI-driven performance analysis and optimization suggestions
+- **Shape Service**: For performance analysis and optimization suggestions involving character generation
 - **System Data Persistence Service**: To persist learned parameters and configurations
 - **Monitor Service**: To gather performance data and system metrics
 - **All Aria Services**: To apply optimized configurations or parameters

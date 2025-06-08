@@ -31,8 +31,8 @@ defmodule AriaDebugger.MixProject do
       {:recon, "~> 2.5"},
       {:observer_cli, "~> 1.7"},
       
-      # Character AI for diagnostics
-      {:aria_character_ai, in_umbrella: true},
+      # Character shaping for diagnostics
+      {:aria_shape, in_umbrella: true},
       
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},

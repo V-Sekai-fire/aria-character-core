@@ -30,7 +30,7 @@ Stateful (stores applied configurations and tweaks in the System Data Persistenc
 
 ## Key Interactions
 
-- **Character AI Service**: For AI-driven diagnostics and configuration suggestions
+- **Shape Service**: For diagnostics and configuration suggestions involving character generation
 - **System Data Persistence Service**: To persist configurations and diagnostic records
 - **Monitor Service**: For system state data and performance metrics
 - **All Aria Services**: To inspect state and apply adjustments

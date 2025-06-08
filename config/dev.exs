@@ -44,8 +44,8 @@ config :aria_interpret,
   gpu_enabled: System.get_env("ARIA_GPU_ENABLED") == "true",
   batch_size: 1
 
-# Character AI Service development configuration  
-config :aria_character_ai,
+# Shape Service development configuration  
+config :aria_shape,
   qwen_model_path: "/models/qwen3.onnx",
   gpu_enabled: System.get_env("ARIA_GPU_ENABLED") == "true",
   batch_size: 1,

@@ -42,8 +42,8 @@ defmodule AriaInterface.MixProject do
       {:grpc, "~> 0.7"},
       {:protobuf, "~> 0.12"},
       
-      # Character AI for data characterization
-      {:aria_character_ai, in_umbrella: true},
+      # Character shaping for data characterization
+      {:aria_shape, in_umbrella: true},
       
       # Interpret service for analysis
       {:aria_interpret, in_umbrella: true},

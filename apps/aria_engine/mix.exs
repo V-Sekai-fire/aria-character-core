@@ -33,8 +33,8 @@ defmodule AriaEngine.MixProject do
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
       
-      # Character AI integration
-      {:aria_character_ai, in_umbrella: true},
+      # Character shaping integration
+      {:aria_shape, in_umbrella: true},
       
       # JSON handling
       {:jason, "~> 1.4"},

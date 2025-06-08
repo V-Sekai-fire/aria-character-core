@@ -29,7 +29,7 @@ Stateless
 
 ## Key Interactions
 
-- **Character AI Service**: For character behavior consistency validation
+- **Shape Service**: For character behavior consistency validation
 - **System Data Persistence Service**: For storing character plans, goals, and decision trees
 - **Architext Dataset**: For validating planning solutions against known puzzle scenarios
 - **Workflow Service**: For integrating character planning into larger game narratives

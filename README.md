@@ -14,7 +14,7 @@ Aria Character Core is organized as an Elixir umbrella application with 14 speci
 - **[aria_queue](apps/aria_queue/)** - Background job processing (Oban)
 
 ### **Data & Intelligence Services**
-- **[aria_character_ai](apps/aria_character_ai/)** - Character generation AI (Qwen3/GRPO)
+- **[aria_shape](apps/aria_shape/)** - Character generation & shaping (Qwen3/GRPO)
 - **[aria_engine](apps/aria_engine/)** - Planning algorithm (ported from C++)
 - **[aria_interpret](apps/aria_interpret/)** - Data interpretation & analysis
 - **[aria_workflow](apps/aria_workflow/)** - SOP management & execution

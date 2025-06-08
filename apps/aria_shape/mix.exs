@@ -1,14 +1,14 @@
-defmodule AriaCharacterAi.MixProject do
+defmodule AriaShape.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :aria_character_ai,
+      app: :aria_shape,
       version: "0.1.0",
-      build_path: "../../_build", 
+      build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
-      lockfile: "../../mix.lock", 
+      lockfile: "../../mix.lock",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -18,20 +18,26 @@ defmodule AriaCharacterAi.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {AriaCharacterAi.Application, []}
+      mod: {AriaShape.Application, []}
     ]
   end
 
   defp deps do
     [
-      # AI and ML libraries for character generation
-      {:nx, "~> 0.6"},
+      # ONNX model execution
       {:ortex, "~> 0.1"},
+      {:nx, "~> 0.6"},
+      
+      # Machine learning for GRPO training
+      {:scholar, "~> 0.2"},
       
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
       
-      # Background job processing (dependency on aria_queue) 
+      # Storage for models and assets
+      {:aria_storage, in_umbrella: true},
+      
+      # Background processing
       {:aria_queue, in_umbrella: true},
       
       # JSON handling

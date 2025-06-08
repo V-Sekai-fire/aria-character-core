@@ -32,7 +32,7 @@ Primarily Stateless (transient connection-specific state)
 
 ## Key Interactions
 
-- **Character AI Service**: For AI-powered data characterization
+- **Shape Service**: For advanced data characterization involving character generation
 - **Engine Service**: Forwards data for further processing
 - **Interpret Service**: May route data recognized as needing deep interpretation
 - **Coordinate Service**: Signals data arrival or readiness for further processing

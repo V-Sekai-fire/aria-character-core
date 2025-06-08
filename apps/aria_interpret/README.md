@@ -28,7 +28,7 @@ Stateless
 
 ## Key Interactions
 
-- **Character AI Service**: Relies on this central service for executing all core AI-driven analysis
+- **Shape Service**: Relies on this central service for executing all core AI-driven analysis
 - **Interface Service**: May provide data that this service helps to make sense of
 - **Workflow Service**: Can utilize its structured interpretations within SOPs
 - **Coordinate Service**: Exposes its interpretation capabilities system-wide
