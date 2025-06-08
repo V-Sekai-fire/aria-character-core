@@ -124,14 +124,14 @@ up-all-and-check: start-all
 install-elixir-erlang-env:
     @echo "Setting up asdf, Erlang and Elixir environment..."
     @echo "Installing asdf if not present..."
-    @if [ ! -d "$$HOME/.asdf" ]; then \
+    @bash -c 'if [ ! -d "$$HOME/.asdf" ]; then \
         echo "Installing asdf..."; \
         git clone https://github.com/asdf-vm/asdf.git $$HOME/.asdf --branch v0.14.0; \
     else \
         echo "asdf already installed"; \
-    fi
+    fi'
     @echo "Sourcing asdf and setting up environment..."
-    @export ASDF_DIR="$$HOME/.asdf"; \
+    @bash -c 'export ASDF_DIR="$$HOME/.asdf"; \
     export PATH="$$HOME/.asdf/bin:$$PATH"; \
     . $$HOME/.asdf/asdf.sh; \
     echo "Adding asdf plugins..."; \
@@ -146,12 +146,12 @@ install-elixir-erlang-env:
     asdf global elixir 1.15.7-otp-26; \
     echo "Verification:"; \
     asdf current erlang; \
-    asdf current elixir
+    asdf current elixir'
     @echo "asdf, Erlang and Elixir environment setup complete."
 
 test-security-service:
     @echo "Running Security Service (AriaSecurity) tests..."
-    @export PATH="$$HOME/.asdf/bin:$$PATH"; \
+    @bash -c 'export PATH="$$HOME/.asdf/bin:$$PATH"; \
     . $$HOME/.asdf/asdf.sh || true; \
     export VAULT_ADDR="http://localhost:8200"; \
     if [ -f .ci/openbao_root_token.txt ]; then \
@@ -174,5 +174,5 @@ test-security-service:
     echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)"; \
     timeout 300s mix deps.get; \
     timeout 300s mix compile --force --warnings-as-errors; \
-    timeout 300s mix test
+    timeout 300s mix test'
     @echo "Security Service tests finished."
