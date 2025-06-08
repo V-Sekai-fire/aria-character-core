@@ -54,9 +54,27 @@ start-foundation-core: build-foundation-core
 
 # Check health of foundation core services
 check-foundation-core-health:
-    @echo "Checking health of foundation core services..."
-    @docker compose -f docker-compose.yml ps
-    @curl -sf http://localhost:8080/health
+    @echo "Waiting for foundation core services to initialize (initial 20-second delay)..."
+    @sleep 20
+    @echo "Checking current status of foundation services..."
+    @docker compose -f docker-compose.yml ps softhsm-setup openbao cockroachdb
+    @echo "--- Recent logs (OpenBao) ---"
+    @docker compose -f docker-compose.yml logs --tail=20 openbao
+    @echo "--- Recent logs (CockroachDB) ---"
+    @docker compose -f docker-compose.yml logs --tail=20 cockroachdb
+    @echo "Waiting for OpenBao to become healthy..."
+    @timeout 20s bash -c \
+      'until docker compose -f docker-compose.yml exec -T openbao curl -sf http://localhost:8200/v1/sys/health; do \
+        echo "Waiting for OpenBao health..."; \
+        sleep 5; \
+      done || (echo "Error: OpenBao health check failed." && exit 1)'
+    @echo "Waiting for CockroachDB to become healthy..."
+    @timeout 20s bash -c \
+      'until docker compose -f docker-compose.yml exec -T cockroachdb /cockroach/cockroach node status --insecure --host=localhost:26257; do \
+        echo "Waiting for CockroachDB health..."; \
+        sleep 5; \
+      done || (echo "Error: CockroachDB health check failed." && exit 1)'
+    @echo "OpenBao and CockroachDB health checks passed."
 
 # Foundation startup: build, start, and check health
 foundation-startup: start-foundation-core check-foundation-core-health
