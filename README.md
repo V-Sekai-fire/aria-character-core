@@ -4,53 +4,6 @@ A distributed character generation and AI planning system built with Elixir umbr
 
 > ⚠️ **Work in Progress**: This project is in early development. Nothing is functional yet - we're building from the ground up using TDD principles.
 
-## 🏗️ Architecture Overview
-
-Aria Character Core is organized as an Elixir umbrella application with 14 specialized services in **cold boot order**:
-
-### **1. Foundation Layer** (Boot First)
-
-1.  - [ ] **[aria_security](apps/aria_security/)** - OpenBao secrets management
-    - Dependencies: (Core infrastructure, provides secrets to others); External: OpenBao (bundled)
-2.  - [ ] **[aria_data](apps/aria_data/)** - System data persistence (PostgreSQL/Ecto)
-    - Dependencies: `aria_security` (for DB credentials); External: CockroachDB 22.1 (or PostgreSQL)
-
-### **2. Core Services Layer** (Boot Second)
-
-3.  - [ ] **[aria_auth](apps/aria_auth/)** - Authentication & authorization (JWT, OAuth2, WebRTC)
-    - Dependencies: `aria_security` (for secrets/certs), `aria_data` (for user/token storage)
-4.  - [ ] **[aria_storage](apps/aria_storage/)** - Bulk asset storage (S3, SFTP, CDN)
-    - Dependencies: `aria_security` (for storage credentials), `aria_auth` (for access authorization); External: Desync, S3/SFTP/CDN backends
-5.  - [ ] **[aria_queue](apps/aria_queue/)** - Background job processing (Oban)
-    - Dependencies: `aria_data` (for Oban persistence), `aria_security` (for Oban's DB credentials)
-
-### **3. Intelligence Layer** (Boot Third)
-
-6.  - [ ] **[aria_shape](apps/aria_shape/)** - Character generation & shaping (Qwen3/GRPO)
-    - Dependencies: `aria_security` (for model/API credentials), `aria_data` (for templates/results), `aria_storage` (for assets), `aria_queue` (for async tasks); External: Python, PyTorch, Qwen3/GRPO models
-7.  - [ ] **[aria_engine](apps/aria_engine/)** - Planning algorithm (ported from C++)
-    - Dependencies: `aria_security` (for secure config), `aria_data` (for state/plans), `aria_queue` (for async tasks)
-8.  - [ ] **[aria_interpret](apps/aria_interpret/)** - Data interpretation & analysis
-    - Dependencies: `aria_security` (for model/API credentials), `aria_data` (for data/results), `aria_storage` (for large datasets), `aria_queue` (for async tasks); External: Python, PyTorch
-
-### **4. Orchestration Layer** (Boot Fourth)
-
-9.  - [ ] **[aria_workflow](apps/aria_workflow/)** - SOP management & execution
-    - Dependencies: `aria_security`, `aria_data` (for definitions/state), `aria_queue`, and various services it orchestrates (e.g., `aria_shape`, `aria_engine`).
-10. - [ ] **[aria_interface](apps/aria_interface/)** - Data ingestion & web UI (Phoenix)
-    - Dependencies: `aria_security`, `aria_auth`, `aria_data`, `aria_storage`, `aria_queue`, `aria_workflow`, and other intelligence/engine services for UI interaction.
-
-### **5. Gateway & Ops Layer** (Boot Last)
-
-11. - [ ] **[aria_coordinate](apps/aria_coordinate/)** - API gateway & routing
-    - Dependencies: `aria_security` (for certs/config), `aria_auth` (for route protection); Routes to most other services.
-12. - [ ] **[aria_monitor](apps/aria_monitor/)** - System observability (Prometheus, LiveDashboard)
-    - Dependencies: `aria_security` (for secure scraping if needed); Connects to most services for metrics; External: Prometheus.
-13. - [ ] **[aria_debugger](apps/aria_debugger/)** - System inspection & configuration
-    - Dependencies: `aria_security` (for access credentials), `aria_auth` (to secure debugger access); Interacts with most services.
-14. - [ ] **[aria_tune](apps/aria_tune/)** - Performance optimization & ML tuning
-    - Dependencies: `aria_security`, `aria_data`, `aria_monitor`, `aria_queue`, and potentially AI services like `aria_shape` for model tuning.
-
 ## 🚀 Quick Start
 
 > ⚠️ **Nothing works yet!** These commands will fail until services are implemented.
@@ -142,31 +95,6 @@ Each service has detailed documentation in its respective `apps/*/README.md` fil
 - Technology stack details
 - Inter-service interactions
 - Deployment considerations
-
-## 🌐 Deployment & Service Management
-
-This section outlines the general strategy for deploying services within the Aria Character Core system, keeping them operational, and securing them, with a primary focus on leveraging OpenBao for secrets management.
-
-### Core Principles
-
-1.  **Process Supervision**: Each service, including third-party dependencies like OpenBao and CockroachDB, requires a supervision strategy to ensure it's running and restarts on failure. This can range from Docker Compose locally, Dokku or systemd on single servers, to Kubernetes in clustered environments.
-2.  **Secrets Management with OpenBao (`aria_security`)**:
-    - OpenBao is the central source for all secrets (database credentials, API keys, certificates).
-    - Services must securely authenticate to OpenBao to retrieve secrets, typically using the **AppRole auth method**.
-    - Avoid hardcoding secrets; fetch them dynamically from OpenBao at startup or runtime.
-    - The secure bootstrapping of initial credentials for services to connect to OpenBao is critical and depends on the deployment environment.
-3.  **Service-Specific Strategies**: Detailed deployment, supervision, and secrets management instructions for each core service and its direct dependencies (like CockroachDB for `aria_data`) are documented within their respective `apps/<service_name>/README.md` files.
-
-### General Workflow for Services Using OpenBao
-
-1.  **OpenBao Deployment**: The `aria_security` service (or a standalone OpenBao instance) must be deployed, initialized, unsealed, and configured with appropriate auth methods (e.g., AppRole for other Aria services) and secrets paths.
-2.  **Service Deployment**: When an Aria service (e.g., `aria_data`, `aria_storage`) is deployed:
-    - It receives its initial bootstrap credentials (e.g., AppRole RoleID & SecretID) to authenticate with OpenBao. This injection method varies by environment (e.g., secure environment variables, init containers, manual setup for first run).
-    - The service starts and uses its OpenBao client to authenticate.
-    - It then fetches its required operational secrets (e.g., database connection strings, API keys for external services, TLS certificates for dependencies) from its designated paths in OpenBao.
-    - The service uses these fetched secrets to configure itself and connect to other services or backends.
-
-Refer to the `apps/aria_security/README.md` for detailed information on setting up and managing OpenBao itself. For other services, consult their individual READMEs for specific deployment and secrets integration steps.
 
 ## 🏛️ System Principles
 
