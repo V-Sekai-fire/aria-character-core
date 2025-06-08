@@ -59,7 +59,7 @@ services:
 
   cockroachdb:
     build:
-      context: ./custom-cockroachdb
+      context: ./docker_cockroachdb
       dockerfile: Dockerfile
       args:
         GIT_SHA: 865aff1595e494c2ce95030c7a2f20c4370b5ff8 # Default SHA, can be overridden
@@ -84,7 +84,7 @@ services:
 
   s3-config-generator:
     build:
-      context: ./s3-config-generator
+      context: ./docker_s3_config_generator
       dockerfile: Dockerfile
     environment:
       - OPENBAO_ADDR=http://openbao:8200
