@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 set -e
 
 # Environment variables to be provided by docker-compose, sourced from GitHub Actions secrets

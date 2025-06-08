@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 set -e
 
 # Default values - can be overridden by environment variables
