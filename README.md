@@ -37,6 +37,12 @@ Aria Character Core is organized as an Elixir umbrella application with 14 speci
 > ⚠️ **Nothing works yet!** These commands will fail until services are implemented.
 
 ```bash
+# For Debian/Ubuntu (using apt):
+sudo apt-get install erlang-dev
+
+# For Fedora/CentOS/RHEL (using dnf or yum):
+sudo dnf install erlang-devel
+
 # Clone and setup
 git clone <repo-url> aria-character-core
 cd aria-character-core
