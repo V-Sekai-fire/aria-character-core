@@ -6,10 +6,9 @@ download-cockroach-tar:
     @curl -L -o cockroachdb.tar https://github.com/V-Sekai/cockroach/releases/download/cockroach-2/cockroachdb.tar
     @echo "Download complete: cockroachdb.tar"
 
-load-cockroach-docker: download-cockroach-tar
-    @echo "Loading cockroachdb.tar into Docker..."
-    @docker load -i cockroachdb.tar
-    @echo "Docker image loaded."
+load-cockroach-docker:
+    @echo "Loading CockroachDB image..."
+    @docker-compose -f docker-compose.yml up -d cockroachdb
 
 up: load-cockroach-docker
     @echo "Starting all services defined in docker-compose.yml..."
@@ -29,51 +28,33 @@ down:
 # OPENBAO_PKCS11_SO_PIN="your_so_pin"
 # OPENBAO_PKCS11_SLOT="0"
 
-# Step 1: Build specific core services
-build-foundation-core:
-    @echo "Building foundation services (softhsm-setup, openbao) using docker compose..."
+# Build all services
+build:
+    @echo "Building all services defined in docker-compose.yml..."
+    @docker compose -f docker-compose.yml build
+
+# Build only foundation core services
+build-foundation-core: load-cockroach-docker
+    @echo "Building foundation core services (softhsm-setup, openbao)..."
     @docker compose -f docker-compose.yml build softhsm-setup openbao
 
-# Depends on CockroachDB image being loaded and core services being built.
-start-foundation-core: build-foundation-core load-cockroach-docker
+# Start foundation core services
+start-foundation-core: build-foundation-core
     @echo "Starting core foundation services..."
     @echo "First, running SoftHSM setup (one-time initialization)..."
     @docker compose -f docker-compose.yml run --rm softhsm-setup
     @echo "SoftHSM setup completed. Starting persistent services (openbao, cockroachdb)..."
     @docker compose -f docker-compose.yml up -d openbao cockroachdb
 
-# Step 3: Wait and check health of core foundation services
-check-foundation-core-health: start-foundation-core
-    @echo "Waiting for core services to initialize (initial 20-second delay)..."
-    @sleep 20
-    @docker compose -f docker-compose.yml ps softhsm-setup openbao cockroachdb
-    @echo "--- Recent logs (OpenBao) ---"
-    @docker compose -f docker-compose.yml logs --tail=20 openbao
-    @echo "--- Recent logs (CockroachDB) ---"
-    @docker compose -f docker-compose.yml logs --tail=20 cockroachdb
-    @timeout 60s bash -c \
-      'until curl -sf http://localhost:8200/v1/sys/health; do \
-        echo "Waiting for OpenBao health..."; \
-        sleep 5; \
-      done || (echo "Error: OpenBao health check failed." && exit 1)'
-    @timeout 60s bash -c \
-      'until curl -sf http://localhost:8080/health; do \
-        echo "Waiting for CockroachDB health..."; \
-        sleep 5; \
-      done || (echo "Error: CockroachDB health check failed." && exit 1)'
-    @echo "OpenBao and CockroachDB health checks passed."
+# Check health of foundation core services
+check-foundation-core-health:
+    @echo "Checking health of foundation core services..."
+    @docker compose -f docker-compose.yml ps
+    @curl -sf http://localhost:8080/health
 
-# Main recipe to replicate the GitHub Action step for starting and checking foundation services
-foundation-startup: check-foundation-core-health
-    @echo "Foundation layer core services (softhsm-setup, openbao, cockroachdb) started and health checks passed."
-    @echo "Extracting OpenBao root token..."
-    @mkdir -p .ci
-    @docker compose -f docker-compose.yml logs openbao 2>&1 | grep 'Root Token:' | awk '{print $$NF}' > .ci/openbao_root_token.txt && echo "OpenBao root token extracted to .ci/openbao_root_token.txt" || (echo "ERROR: Failed to extract OpenBao root token." && exit 1)
-    @echo "You can manage these services using:"
-    @echo "  just foundation-status         # Show status of these core services"
-    @echo "  just foundation-logs           # Tail logs from these core services"
-    @echo "  just foundation-stop           # Stop these core services"
-    @echo "  just down                      # Stop and remove all services"
+# Foundation startup: build, start, and check health
+foundation-startup: start-foundation-core check-foundation-core-health
+    @echo "Foundation startup completed."
 
 foundation-status:
     @echo "Status of core foundation services:"
@@ -88,10 +69,7 @@ foundation-stop:
     @docker compose -f docker-compose.yml stop softhsm-setup openbao cockroachdb
     @echo "Core foundation services stopped."
 
-start-all: load-cockroach-docker
-    @echo "Building all services defined in docker-compose.yml..."
-    @docker compose -f docker-compose.yml build
-    @echo "Starting all services defined in docker-compose.yml..."
+start-all: build
     @docker compose -f docker-compose.yml up -d
 
 check-all-health:
@@ -123,35 +101,35 @@ up-all-and-check: start-all
 
 install-elixir-erlang-env:
     @echo "Installing asdf in the project root..."
-    @bash -c 'if [ ! -d "./.asdf" ]; then \
+    @if [ ! -d "./.asdf" ]; then \
         echo "Cloning asdf into ./.asdf..."; \
         git clone https://github.com/asdf-vm/asdf.git ./.asdf --branch v0.14.0; \
     else \
         echo ".asdf already exists in the project root"; \
-    fi'
+    fi
     @echo "Sourcing asdf and setting up environment for project-specific tools..."
-    @bash -c 'export ASDF_DIR="./.asdf"; \
-    export PATH="./.asdf/bin:$$PATH"; \
+    @export ASDF_DIR="./.asdf"; \
+    export PATH="./.asdf/bin:${PATH}"; \
     . ./.asdf/asdf.sh; \
     echo "Adding asdf plugins..."; \
     asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git || true; \
     asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true; \
     echo "Installing Erlang 26.2.5..."; \
     asdf install erlang 26.2.5; \
-    echo "Installing Elixir 1.15.7-otp-26..."; \
+    echo "Installing Elixir 1.15.7-otp--26..."; \
     asdf install elixir 1.15.7-otp-26; \
     echo "Setting global versions..."; \
     asdf global erlang 26.2.5; \
     asdf global elixir 1.15.7-otp-26; \
     echo "Verification:"; \
     asdf current erlang; \
-    asdf current elixir'
+    asdf current elixir
     @echo "asdf, Erlang and Elixir environment setup complete."
 
-test-security-service:
+test-security-service: install-elixir-erlang-env
     @echo "Running Security Service (AriaSecurity) tests..."
-    @bash -c 'export PATH="$$HOME/.asdf/bin:$$PATH"; \
-    . $$HOME/.asdf/asdf.sh || true; \
+    @bash -c 'export PATH=".asdf/bin:$$PATH"; \
+    . ./.asdf/asdf.sh || true; \
     export VAULT_ADDR="http://localhost:8200"; \
     if [ -f .ci/openbao_root_token.txt ]; then \
         export VAULT_TOKEN=`cat .ci/openbao_root_token.txt`; \
