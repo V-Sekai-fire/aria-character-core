@@ -32,6 +32,15 @@ Aria Character Core is organized as an Elixir umbrella application with 14 speci
 13. - [ ] **[aria_debugger](apps/aria_debugger/)** - System inspection & configuration
 14. - [ ] **[aria_tune](apps/aria_tune/)** - Performance optimization & ML tuning
 
+## 🛠️ Technology Strategy
+
+Our core strategy focuses on a robust, scalable, and secure foundation:
+
+- **Bundled OpenBao**: We will bundle OpenBao directly within the `aria_security` service for integrated secrets management, simplifying deployment and enhancing security.
+- **CockroachDB 22.1**: `aria_data` will utilize CockroachDB 22.1, offering distributed SQL, data resilience, and horizontal scalability. This specific version is chosen for its stability and feature set.
+- **Desync for Storage**: The `aria_storage` service will leverage Desync for chunk-based, content-addressed storage. This approach optimizes storage efficiency, data integrity, and allows for fast, resumable transfers.
+- **Future Python Integration**: While the core system is Elixir-based, we plan to incorporate Python for specialized AI/ML tasks within services like `aria_shape` and `aria_interpret`, leveraging its extensive libraries and ecosystem.
+
 ## 🚀 Quick Start
 
 > ⚠️ **Nothing works yet!** These commands will fail until services are implemented.
