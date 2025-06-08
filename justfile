@@ -114,21 +114,14 @@ install-elixir-erlang-env:
     echo "Adding asdf plugins..."; \
     asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git || true; \
     asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true; \
-    echo "Installing Erlang 26.2.5..."; \
-    asdf install erlang 26.2.5; \
-    echo "Installing Elixir 1.15.7-otp--26..."; \
-    asdf install elixir 1.15.7-otp-26; \
-    echo "Setting global versions..."; \
-    asdf global erlang 26.2.5; \
-    asdf global elixir 1.15.7-otp-26; \
-    echo "Verification:"; \
-    asdf current erlang; \
-    asdf current elixir
+    echo "Installing Erlang and Elixir versions (as per .tool-versions)..."
+    asdf install
     @echo "asdf, Erlang and Elixir environment setup complete."
 
 test-security-service: install-elixir-erlang-env
-    @echo "Running Security Service (AriaSecurity) tests..."
-    @bash -c 'export PATH=".asdf/bin:$$PATH"; \
+    #/usr/bin/env bash
+    echo "Running Security Service (AriaSecurity) tests..."
+    export PATH=".asdf/bin:$PATH"; \
     . ./.asdf/asdf.sh || true; \
     export VAULT_ADDR="http://localhost:8200"; \
     if [ -f .ci/openbao_root_token.txt ]; then \
@@ -148,5 +141,6 @@ test-security-service: install-elixir-erlang-env
     echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)"; \
     mix deps.get && \
     mix compile --force --warnings-as-errors && \
-    mix test'
+    mix test
+    )'
     @echo "Security Service tests finished."
