@@ -25,6 +25,11 @@ To act as the 'Living Library,' lovingly organizing and caring for the system's 
 - **CockroachDB Vector Extension**: For embedding vectors and similarity search
 - **Postgrex**: PostgreSQL driver for Elixir
 
+## Technology Choices
+
+- **CockroachDB 22.1**: This service will utilize CockroachDB version 22.1. This specific version is chosen for its stability, feature set, distributed SQL capabilities, data resilience, and horizontal scalability, which are critical for system data persistence.
+  - Download: <https://buildomat.eng.oxide.computer/public/file/oxidecomputer/cockroach/linux-amd64/865aff1595e494c2ce95030c7a2f20c4370b5ff8/cockroach.tgz>
+
 ## Service Type
 
 Stateful

@@ -25,6 +25,12 @@ To act as the 'Archive Vault,' carefully preserving and organizing large treasur
 - **Casync Native Compression**: Built-in compression optimized for chunk deduplication
 - **Finch**: HTTP client for CDN sync
 
+## Technology Choices
+
+- **Desync for Storage**: This service will leverage Desync for chunk-based, content-addressed storage. This approach is chosen to optimize storage efficiency and data integrity, and it allows for fast, resumable transfers of bulk assets.
+  - Desync version: v0.9.6
+  - Download: <https://github.com/folbricht/desync/releases/download/v0.9.6/desync_0.9.6_linux_amd64.tar.gz>
+
 ## Service Type
 
 Stateful

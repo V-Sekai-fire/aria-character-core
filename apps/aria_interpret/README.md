@@ -22,6 +22,12 @@ To act as the 'Sense-Maker,' bringing clarity from complexity by expertly guidin
 - **Ortex**: ONNX model execution for interpretation tasks
 - **Application logic**: Data handling, prompt engineering, and managing the lifecycle of interpretation tasks
 
+## Technology Choices
+
+- **Python Integration**: While the core system is Elixir-based, this service plans to incorporate Python for specialized AI/ML tasks, leveraging its extensive libraries and ecosystem. This allows for the use of powerful tools like PyTorch and integration with ML frameworks like FLAME.
+  - PyTorch: <https://pytorch.org/get-started/locally/>
+  - FLAME: <https://github.com/phoenixframework/flame>
+
 ## Service Type
 
 Stateless
