@@ -10,7 +10,7 @@ Aria Character Core is organized as an Elixir umbrella application with 14 speci
 
 ### **1. Foundation Layer** (Boot First)
 1. - [ ] **[aria_security](apps/aria_security/)** - OpenBao secrets management
-2. - [ ] **[aria_data](apps/aria_data/)** - System data persistence (CockroachDB/Ecto)
+2. - [ ] **[aria_data](apps/aria_data/)** - System data persistence (PostgreSQL/Ecto)
 
 ### **2. Core Services Layer** (Boot Second)
 3. - [ ] **[aria_auth](apps/aria_auth/)** - Authentication & authorization (JWT, OAuth2, WebRTC)

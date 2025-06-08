@@ -25,12 +25,9 @@ defmodule AriaData.MixProject do
 
   defp deps do
     [
-      # Database
+      # Database ORM with PostgreSQL adapter (CockroachDB compatible)
       {:ecto_sql, "~> 3.10"},
-      {:postgrex, "~> 0.17"},
-      
-      # CockroachDB specific (for production)
-      {:ecto_cockroachdb, "~> 0.2", optional: true},
+      {:postgrex, "~> 0.20.0"},
       
       # JSON handling
       {:jason, "~> 1.4"},

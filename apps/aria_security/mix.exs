@@ -24,14 +24,14 @@ defmodule AriaSecurity.MixProject do
 
   defp deps do
     [
-      # HTTP client for OpenBao API
-      {:req, "~> 0.4"},
+      # OpenBao/Vault client (compatible with OpenBao)
+      {:vaultex, "~> 1.0"},
       
-      # JSON handling
-      {:jason, "~> 1.4"},
+      # HTTP client (used by vaultex)
+      {:httpoison, "~> 1.8"},
       
-      # Configuration and secrets management  
-      {:vault, "~> 0.2"},
+      # JSON handling (used by vaultex)
+      {:poison, "~> 4.0"},
       
       # Shared dependencies
       {:telemetry, "~> 1.2"}

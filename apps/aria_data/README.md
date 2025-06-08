@@ -19,8 +19,9 @@ To act as the 'Living Library,' lovingly organizing and caring for the system's 
 
 ## Core Technologies
 
-- **CockroachDB**: Distributed SQL database for operational data
-- **Ecto**: Database wrapper and query generator for Elixir
+- **PostgreSQL**: Primary development database (Ecto.Adapters.Postgres)
+- **CockroachDB**: Production-ready distributed SQL database (PostgreSQL-compatible)
+- **Ecto**: Database ORM and query builder for Elixir
 - **CockroachDB Vector Extension**: For embedding vectors and similarity search
 - **Postgrex**: PostgreSQL driver for Elixir
 

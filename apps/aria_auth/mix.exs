@@ -31,7 +31,7 @@ defmodule AriaAuth.MixProject do
       
       # OAuth2 and OIDC
       {:oauth2, "~> 2.1"},
-      {:oidc, "~> 0.7"},
+      {:oidc, "~> 0.5.0"},
       
       # WebRTC for real-time identity verification
       {:ex_webrtc, "~> 0.3"},

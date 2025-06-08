@@ -3,7 +3,7 @@ import Config
 # Development environment configuration
 config :logger, level: :debug
 
-# Configure development database (shared across data services)
+# Configure development database (PostgreSQL adapter, CockroachDB compatible)
 config :aria_data, AriaData.Repo,
   username: "postgres",
   password: "postgres", 
@@ -11,7 +11,8 @@ config :aria_data, AriaData.Repo,
   database: "aria_character_core_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  pool_size: 10,
+  adapter: Ecto.Adapters.Postgres
 
 # Development Phoenix configuration for coordinate service
 config :aria_coordinate, AriaCoordinateWeb.Endpoint,
