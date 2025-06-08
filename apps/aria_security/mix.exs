@@ -32,6 +32,9 @@ defmodule AriaSecurity.MixProject do
       
       # JSON handling (used by vaultex)
       {:poison, "~> 4.0"},
+
+      # For managing external OS processes (like OpenBao server)
+      {:porcelain, "~> 2.0"},
       
       # Shared dependencies
       {:telemetry, "~> 1.2"}
