@@ -12,7 +12,6 @@ repos:
           - "LICENSE_HEADER.md"
           - "--comment-style"
           - "#"
-          - "--use-current-year"
         files: \.(yaml|yml|py|sh|Dockerfile.*|rb|pl|ex|exs)$
         exclude: ^(thirdparty/|deps/|_build/|LICENSE\.md$|LICENSE_HEADER\.txt$|.*\.md$|\.gitignore|\.gitattributes|\.tool-versions|.*\.json|.*\.html|.*\.css|.*\.js)
 
@@ -23,6 +22,5 @@ repos:
           - "LICENSE_HEADER.md"
           - "--comment-style"
           - "//"
-          - "--use-current-year"
         files: \.(cpp|hpp|h|cc|cxx|c)$
         exclude: ^(thirdparty/|deps/|_build/|LICENSE\.md$|LICENSE_HEADER\.txt$|.*\.md$|\.gitignore|\.gitattributes|\.tool-versions|.*\.json|.*\.html|.*\.css|.*\.js)
