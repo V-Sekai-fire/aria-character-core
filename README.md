@@ -44,7 +44,7 @@ sudo apt-get install erlang-dev
 sudo dnf install erlang-devel
 
 # Clone and setup
-git clone <repo-url> aria-character-core
+git clone https://github.com/V-Sekai-fire/aria-character-core.git aria-character-core
 cd aria-character-core
 
 # Install dependencies
