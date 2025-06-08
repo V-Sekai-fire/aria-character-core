@@ -1,6 +1,53 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
+# Default recipe - main entry point for development workflow
+default: dev-setup
+    @echo "Development environment ready! Available commands:"
+    @echo ""
+    @echo "Main Workflows:"
+    @echo "  just dev-setup        - Set up development environment"
+    @echo "  just full-dev-setup   - Complete development setup including environment"
+    @echo "  just test-all         - Run all tests"
+    @echo "  just prod-deploy      - Deploy production environment"
+    @echo ""
+    @echo "Status & Monitoring:"
+    @echo "  just status           - Check foundation service status"
+    @echo "  just extended-status  - Extended status including all services"
+    @echo "  just logs             - View service logs"
+    @echo ""
+    @echo "Management:"
+    @echo "  just setup-env        - Set up Elixir/Erlang environment"
+    @echo "  just manage-tokens    - Generate new OpenBao tokens"
+    @echo "  just destroy-bao      - Destroy and reinitialize OpenBao and SoftHSM (DESTRUCTIVE)"
+    @echo "  just rekey-bao        - Rekey OpenBao unseal keys and optionally SoftHSM"
+    @echo "  just rekey-softhsm    - Regenerate SoftHSM tokens (DESTRUCTIVE)"
+    @echo "  just clean            - Clean up all services"
+    @echo ""
+    @echo "Low-level:"
+    @echo "  just foundation-startup    - Start foundation services only"
+    @echo "  just up-all-and-check     - Start and verify all services"
+
+# Development workflow entry point
+dev-setup: install-elixir-erlang-env foundation-startup
+    @echo "Development environment setup complete!"
+
+# Testing workflow entry point  
+test-all: test-security-service
+    @echo "All tests completed!"
+
+# Production deployment workflow
+prod-deploy: up-all-and-check
+    @echo "Production deployment complete!"
+
+# Status check workflow
+status: foundation-status
+    @echo "Status check complete!"
+
+# Clean up workflow
+clean: down foundation-stop
+    @echo "Cleanup complete!"
+
 download-cockroach-tar:
     @echo "Downloading CockroachDB tarball..."
     @curl -L -o cockroachdb.tar https://github.com/V-Sekai/cockroach/releases/download/cockroach-2/cockroachdb.tar
@@ -53,9 +100,9 @@ start-foundation-core: build-foundation-core
     @docker compose -f docker-compose.yml up -d openbao cockroachdb
 
 # Check health of foundation core services
-check-foundation-core-health:
-    @echo "Waiting for foundation core services to initialize (initial 20-second delay)..."
-    @sleep 20
+check-foundation-core-health: start-foundation-core
+    @echo "Waiting for foundation core services to initialize (initial 10-second delay)..."
+    @sleep 10
     @echo "Checking current status of foundation services..."
     @docker compose -f docker-compose.yml ps softhsm-setup openbao cockroachdb
     @echo "--- Recent logs (OpenBao) ---"
@@ -72,11 +119,11 @@ check-foundation-core-health:
 foundation-startup: start-foundation-core check-foundation-core-health
     @echo "Foundation startup completed."
 
-foundation-status:
+foundation-status: foundation-startup
     @echo "Status of core foundation services:"
     @docker compose -f docker-compose.yml ps softhsm-setup openbao cockroachdb
 
-foundation-logs:
+foundation-logs: foundation-startup
     @echo "Showing recent logs for openbao and cockroachdb..."
     @docker compose -f docker-compose.yml logs --tail=50 softhsm-setup openbao cockroachdb
 
@@ -88,7 +135,7 @@ foundation-stop:
 start-all: build
     @docker compose -f docker-compose.yml up -d
 
-check-all-health:
+check-all-health: up-all-and-check
     @echo "Checking health of all running services with healthchecks..."
     @echo "This might take some time. Services are checked based on their docker-compose healthcheck definitions."
     @echo "Services and their status (based on docker ps --filter health=healthy/unhealthy):"
@@ -99,7 +146,7 @@ check-all-health:
     # Add specific checks if needed, similar to foundation ones, for other critical services.
     @echo "Run 'docker compose ps' for detailed status of all services."
 
-up-all-and-check: start-all
+up-all-and-check: start-all check-foundation-core-health
     @echo "Waiting for all services to initialize (e.g., 90 seconds)..."
     @sleep 90 # Adjust as needed
     @echo "--- Current status of all Docker services: ---"
@@ -115,58 +162,86 @@ up-all-and-check: start-all
     @echo "SeaweedFS S3 gateway is responding."
     @echo "All key services checked. Review logs if any issues."
 
+# Environment setup and management
+setup-env: install-elixir-erlang-env
+    @echo "Environment setup complete!"
+
+# Token management workflow
+manage-tokens: generate-new-root-token
+    @echo "Token management complete!"
+
+# Complete development workflow
+full-dev-setup: setup-env dev-setup
+    @echo "Full development setup complete!"
+
+# Logs workflow
+logs: foundation-logs
+    @echo "Logs displayed!"
+
+# Extended status workflow
+extended-status: status check-all-health
+    @echo "Extended status check complete!"
+
 install-elixir-erlang-env:
     #!/usr/bin/env bash
-    @echo "Installing asdf in the project root..."
-    @if [ ! -d "./.asdf" ]; then \
-        echo "Cloning asdf into ./.asdf..."; \
-        git clone https://github.com/asdf-vm/asdf.git ./.asdf --branch v0.14.0; \
-    else \
-        echo ".asdf already exists in the project root"; \
+    echo "Installing asdf in the project root..."
+    if [ ! -d "./.asdf" ]; then
+        echo "Cloning asdf into ./.asdf..."
+        git clone https://github.com/asdf-vm/asdf.git ./.asdf --branch v0.14.0
+    else
+        echo ".asdf already exists in the project root"
     fi
-    @echo "Sourcing asdf and setting up environment for project-specific tools..."
-    @export ASDF_DIR="./.asdf"; \
-    export PATH="./.asdf/bin:${PATH}"; \
-    . ./.asdf/asdf.sh; \
-    echo "Adding asdf plugins..."; \
-    asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git || true; \
-    asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true; \
+    echo "Sourcing asdf and setting up environment for project-specific tools..."
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:${PATH}"
+    . ./.asdf/asdf.sh
+    echo "Adding asdf plugins..."
+    asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git || true
+    asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true
     echo "Installing Erlang and Elixir versions (as per .tool-versions)..."
     asdf install
 
-test-security-service: foundation-startup
+test-security-service: install-elixir-erlang-env foundation-startup
     #!/usr/bin/env bash
     echo "Running Security Service (AriaSecurity) tests..."
     export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:/usr/bin:/bin:/sbin:/usr/sbin:$${PATH}"
+    export PATH="./.asdf/bin:/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
     . ./.asdf/asdf.sh || true
     export VAULT_ADDR="http://localhost:8200"
     
-    # Since OpenBao runs in dev mode, try to get the live token first
-    echo "Extracting OpenBao token from container logs..."
-    LIVE_TOKEN=`docker logs aria-character-core-openbao-1 | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo ""`
+    # Try to get the persistent token from container storage first
+    echo "Extracting OpenBao token from container storage..."
+    PERSISTENT_TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
     
-    if [ -n "$$LIVE_TOKEN" ]; then
-        export VAULT_TOKEN="$$LIVE_TOKEN"
-        echo "Using OpenBao token from live logs: $$VAULT_TOKEN"
+    if [ -n "$PERSISTENT_TOKEN" ]; then
+        export VAULT_TOKEN="$PERSISTENT_TOKEN"
+        echo "Using OpenBao token from container storage: $VAULT_TOKEN"
     elif [ -f .ci/openbao_root_token.txt ]; then
-        echo "Live token not found, trying token file..."
-        TOKEN_FROM_FILE=`grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r'`
-        if [ -n "$$TOKEN_FROM_FILE" ]; then
-            export VAULT_TOKEN="$$TOKEN_FROM_FILE"
-            echo "Using OpenBao token from file: $$VAULT_TOKEN"
+        echo "Container token not found, trying token file..."
+        TOKEN_FROM_FILE=$(grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r')
+        if [ -n "$TOKEN_FROM_FILE" ]; then
+            export VAULT_TOKEN="$TOKEN_FROM_FILE"
+            echo "Using OpenBao token from file: $VAULT_TOKEN"
         else
             echo "WARNING: Using fallback token"
             export VAULT_TOKEN="root"
         fi
     else
-        echo "WARNING: No token sources found, using fallback"
-        export VAULT_TOKEN="root"
+        # Fallback to extracting from logs
+        echo "No persistent token sources found, trying container logs..."
+        LIVE_TOKEN=$(docker logs aria-character-core-openbao-1 | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo "")
+        if [ -n "$LIVE_TOKEN" ]; then
+            export VAULT_TOKEN="$LIVE_TOKEN"
+            echo "Using OpenBao token from logs: $VAULT_TOKEN"
+        else
+            echo "WARNING: No token sources found, using fallback"
+            export VAULT_TOKEN="root"
+        fi
     fi
     
     echo "Verifying OpenBao connection..."
-    curl -sf -H "X-Vault-Token: $$VAULT_TOKEN" "$$VAULT_ADDR/v1/sys/health" > /dev/null || \
-    (echo "ERROR: Cannot connect to OpenBao at $$VAULT_ADDR with token $$VAULT_TOKEN" && exit 1)
+    curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/sys/health" > /dev/null || \
+    (echo "ERROR: Cannot connect to OpenBao at $VAULT_ADDR with token $VAULT_TOKEN" && exit 1)
     
     if [ ! -d apps/aria_security ]; then
         echo "ERROR: apps/aria_security directory does not exist"
@@ -186,49 +261,213 @@ test-security-service: foundation-startup
     echo "Security Service tests finished."
 
 # Generate a new varying root token for OpenBao
-generate-new-root-token:
+generate-new-root-token: foundation-startup
     #!/usr/bin/env bash
     echo "Generating a new varying root token for OpenBao..."
     export BAO_ADDR="http://localhost:8200"
-    export PATH="/usr/bin:/bin:/sbin:/usr/sbin:$$PATH"
+    export PATH="/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
     
     # First, get the current token to use for authentication
     CURRENT_TOKEN=""
-    if [ -f .ci/openbao_root_token.txt ]; then
-        grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' > /tmp/current_token
-        CURRENT_TOKEN=`cat /tmp/current_token`
-    fi
     
-    if [ -z "$$CURRENT_TOKEN" ]; then
-        echo "Getting token from OpenBao logs..."
-        docker compose logs openbao 2>/dev/null | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' > /tmp/current_token || echo "root" > /tmp/current_token
-        CURRENT_TOKEN=`cat /tmp/current_token`
-    fi
-    
-    echo "Using current token for authentication: $$CURRENT_TOKEN"
-    
-    # Generate new root token
-    docker exec -e BAO_ADDR="$$BAO_ADDR" -e VAULT_TOKEN="$$CURRENT_TOKEN" aria-character-core-openbao-1 bao token create -policy=root -format=json > /tmp/new_token_response
-    NEW_TOKEN=`cat /tmp/new_token_response | grep '"token"' | cut -d'"' -f4`
-    
-    if [ -n "$$NEW_TOKEN" ]; then
-        echo "Generated new root token: $$NEW_TOKEN"
-        
-        # Update the token file with new token, preserving unseal key
-        grep "Unseal Key:" .ci/openbao_root_token.txt | sed 's/.*Unseal Key: //' | tr -d ' \t\n\r' > /tmp/unseal_key || echo "" > /tmp/unseal_key
-        UNSEAL_KEY=`cat /tmp/unseal_key`
-        
-        echo "openbao-1  | Root Token: $$NEW_TOKEN" > .ci/openbao_root_token.txt
-        if [ -n "$$UNSEAL_KEY" ]; then
-            echo "openbao-1  | Unseal Key: $$UNSEAL_KEY" >> .ci/openbao_root_token.txt
+    # Try to get token from container's persistent storage first
+    CONTAINER_TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
+    if [ -n "$CONTAINER_TOKEN" ]; then
+        CURRENT_TOKEN="$CONTAINER_TOKEN"
+        echo "Using token from container storage: $CURRENT_TOKEN"
+    elif [ -f .ci/openbao_root_token.txt ]; then
+        TOKEN_FROM_FILE=$(grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r')
+        if [ -n "$TOKEN_FROM_FILE" ]; then
+            CURRENT_TOKEN="$TOKEN_FROM_FILE"
+            echo "Using token from file: $CURRENT_TOKEN"
         fi
-        
-        echo "Token file updated with new varying root token"
-        echo "New token: $$NEW_TOKEN"
-        
-        # Clean up temp files
-        rm -f /tmp/current_token /tmp/new_token_response /tmp/unseal_key
-    else
-        echo "ERROR: Failed to generate new root token"
+    fi
+    
+    if [ -z "$CURRENT_TOKEN" ]; then
+        echo "❌ ERROR: Could not find valid OpenBao token"
         exit 1
     fi
+    
+    echo "Using current token for authentication: $CURRENT_TOKEN"
+    
+    # Generate new root token
+    echo "🔄 Generating new root token..."
+    docker exec -e BAO_ADDR="$BAO_ADDR" -e VAULT_TOKEN="$CURRENT_TOKEN" aria-character-core-openbao-1 bao token create -policy=root -format=json > /tmp/new_token_response
+    NEW_TOKEN=$(cat /tmp/new_token_response | grep '"token"' | cut -d'"' -f4)
+    
+    if [ -n "$NEW_TOKEN" ]; then
+        echo "✅ Generated new root token: $NEW_TOKEN"
+        
+        # Update container's token file
+        docker exec aria-character-core-openbao-1 bash -c "echo '$NEW_TOKEN' > /vault/data/root_token.txt"
+        
+        # Update the token file with new token, preserving unseal key
+        UNSEAL_KEY=$(docker exec aria-character-core-openbao-1 cat /vault/data/unseal_key.txt 2>/dev/null || echo "")
+        
+        echo "openbao-1  | Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
+        if [ -n "$UNSEAL_KEY" ]; then
+            echo "openbao-1  | Unseal Key: $UNSEAL_KEY" >> .ci/openbao_root_token.txt
+        fi
+        
+        echo "📝 Token file updated with new varying root token"
+        echo "🔑 New token: $NEW_TOKEN"
+        
+        # Clean up temp files
+        rm -f /tmp/new_token_response
+    else
+        echo "❌ ERROR: Failed to generate new root token"
+        exit 1
+    fi
+
+# Destroy and reinitialize OpenBao and SoftHSM (DESTRUCTIVE OPERATION)
+destroy-bao:
+    #!/usr/bin/env bash
+    echo "⚠️  WARNING: This will DESTROY all OpenBao data, secrets, and SoftHSM tokens!"
+    echo "⚠️  This operation is IRREVERSIBLE!"
+    echo "⚠️  All HSM keys and OpenBao data will be permanently lost!"
+    echo ""
+    read -p "Are you sure you want to destroy OpenBao and SoftHSM? Type 'DESTROY' to confirm: " confirmation
+    if [ "$confirmation" != "DESTROY" ]; then
+        echo "❌ Operation cancelled."
+        exit 0
+    fi
+    
+    echo "🔥 Destroying OpenBao and SoftHSM..."
+    
+    # Stop all foundation services
+    echo "🛑 Stopping foundation services..."
+    docker compose -f docker-compose.yml stop openbao softhsm-setup || true
+    
+    # Remove containers
+    echo "🗑️  Removing containers..."
+    docker compose -f docker-compose.yml rm -f openbao softhsm-setup || true
+    
+    # Remove OpenBao data volumes
+    echo "💾 Removing OpenBao volumes..."
+    docker volume rm aria-character-core_openbao_data 2>/dev/null || true
+    docker volume rm aria-character-core_openbao_config 2>/dev/null || true
+    
+    # Remove SoftHSM token volume (this destroys all HSM keys)
+    echo "🔑 Removing SoftHSM tokens volume..."
+    docker volume rm aria-character-core_softhsm_tokens 2>/dev/null || true
+    
+    # Remove token files
+    echo "📄 Removing token files..."
+    rm -f .ci/openbao_root_token.txt
+    
+    echo "💥 OpenBao and SoftHSM destroyed successfully!"
+    echo "📝 Run 'just foundation-startup' to reinitialize with completely new HSM and OpenBao setup"
+
+# Rekey OpenBao unseal keys and optionally regenerate SoftHSM tokens
+rekey-bao: foundation-startup
+    #!/usr/bin/env bash
+    echo "🔐 Rekeying OpenBao unseal keys..."
+    export BAO_ADDR="http://localhost:8200"
+    export PATH="/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
+    
+    # Get current token
+    CURRENT_TOKEN=""
+    
+    # Try to get token from container's persistent storage
+    CONTAINER_TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
+    if [ -n "$CONTAINER_TOKEN" ]; then
+        CURRENT_TOKEN="$CONTAINER_TOKEN"
+        echo "Using token from container storage: $CURRENT_TOKEN"
+    elif [ -f .ci/openbao_root_token.txt ]; then
+        TOKEN_FROM_FILE=$(grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r')
+        if [ -n "$TOKEN_FROM_FILE" ]; then
+            CURRENT_TOKEN="$TOKEN_FROM_FILE"
+            echo "Using token from file: $CURRENT_TOKEN"
+        fi
+    fi
+    
+    if [ -z "$CURRENT_TOKEN" ]; then
+        echo "❌ ERROR: Could not find valid OpenBao token"
+        exit 1
+    fi
+    
+    echo "⚠️  WARNING: Rekeying will generate new unseal keys!"
+    echo "⚠️  You must save the new unseal keys securely!"
+    echo ""
+    read -p "Do you also want to regenerate SoftHSM tokens? (y/N): " regen_hsm
+    read -p "Continue with rekeying? (y/N): " confirm
+    if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+        echo "❌ Rekey cancelled"
+        exit 0
+    fi
+    
+    # Optionally regenerate SoftHSM tokens first
+    if [ "$regen_hsm" = "y" ] || [ "$regen_hsm" = "Y" ]; then
+        echo "🔄 Regenerating SoftHSM tokens..."
+        just rekey-softhsm
+    fi
+    
+    # Initialize rekey
+    echo "🔄 Initializing OpenBao rekey process..."
+    REKEY_INIT=$(docker exec -e BAO_ADDR="$BAO_ADDR" -e VAULT_TOKEN="$CURRENT_TOKEN" aria-character-core-openbao-1 bao operator rekey -init -key-shares=1 -key-threshold=1 -format=json)
+    REKEY_NONCE=$(echo "$REKEY_INIT" | grep -o '"nonce":"[^"]*"' | cut -d'"' -f4)
+    
+    if [ -z "$REKEY_NONCE" ]; then
+        echo "❌ ERROR: Failed to initialize rekey"
+        exit 1
+    fi
+    
+    echo "📋 Rekey initialized with nonce: $REKEY_NONCE"
+    
+    # Get current unseal key
+    CURRENT_UNSEAL_KEY=$(docker exec aria-character-core-openbao-1 cat /vault/data/unseal_key.txt 2>/dev/null || echo "")
+    if [ -z "$CURRENT_UNSEAL_KEY" ]; then
+        echo "❌ ERROR: Could not find current unseal key"
+        exit 1
+    fi
+    
+    # Provide the current unseal key for rekeying
+    echo "🔑 Providing current unseal key for rekey..."
+    REKEY_RESULT=$(docker exec -e BAO_ADDR="$BAO_ADDR" -e VAULT_TOKEN="$CURRENT_TOKEN" aria-character-core-openbao-1 bao operator rekey -nonce="$REKEY_NONCE" -format=json "$CURRENT_UNSEAL_KEY")
+    
+    # Extract new keys
+    NEW_UNSEAL_KEY=$(echo "$REKEY_RESULT" | grep -o '"keys":\["[^"]*"' | cut -d'"' -f4)
+    
+    if [ -n "$NEW_UNSEAL_KEY" ]; then
+        echo "✅ Rekey completed successfully!"
+        echo "🔑 New unseal key: $NEW_UNSEAL_KEY"
+        
+        # Update the container's unseal key file
+        docker exec aria-character-core-openbao-1 bash -c "echo '$NEW_UNSEAL_KEY' > /vault/data/unseal_key.txt"
+        
+        # Update token file with new unseal key
+        echo "openbao-1  | Root Token: $CURRENT_TOKEN" > .ci/openbao_root_token.txt
+        echo "openbao-1  | Unseal Key: $NEW_UNSEAL_KEY" >> .ci/openbao_root_token.txt
+        
+        echo "📝 Token file updated with new unseal key"
+        echo "⚠️  IMPORTANT: Save the new unseal key securely: $NEW_UNSEAL_KEY"
+    else
+        echo "❌ ERROR: Failed to complete rekey operation"
+        exit 1
+    fi
+
+# Regenerate SoftHSM tokens (DESTRUCTIVE for HSM keys)
+rekey-softhsm:
+    #!/usr/bin/env bash
+    echo "🔐 Regenerating SoftHSM tokens..."
+    echo "⚠️  WARNING: This will destroy all existing SoftHSM tokens and keys!"
+    echo "⚠️  OpenBao will need to be reinitialized after this operation!"
+    echo ""
+    read -p "Are you sure you want to regenerate SoftHSM tokens? Type 'REGENERATE' to confirm: " confirmation
+    if [ "$confirmation" != "REGENERATE" ]; then
+        echo "❌ Operation cancelled."
+        exit 0
+    fi
+    
+    echo "🛑 Stopping services that use SoftHSM..."
+    docker compose -f docker-compose.yml stop openbao || true
+    
+    echo "🗑️  Removing existing SoftHSM tokens..."
+    docker volume rm aria-character-core_softhsm_tokens 2>/dev/null || true
+    
+    echo "🔄 Recreating SoftHSM tokens..."
+    docker compose -f docker-compose.yml run --rm softhsm-setup
+    
+    echo "✅ SoftHSM tokens regenerated successfully!"
+    echo "⚠️  IMPORTANT: OpenBao must be reinitialized since HSM keys changed"
+    echo "📝 Run 'just destroy-bao' then 'just foundation-startup' to reinitialize OpenBao"

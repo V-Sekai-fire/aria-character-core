@@ -3,14 +3,22 @@
 
 FROM openbao/openbao:latest
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Install curl for health checks and bash for scripts
+RUN apk add --no-cache curl bash
 
 # Set working directory
 WORKDIR /vault
 
-# Copy any additional configuration files here if needed
-# COPY vault-config.hcl /vault/config/
+# Create necessary directories
+RUN mkdir -p /vault/config /vault/data
+
+# Copy configuration files
+COPY vault-config.hcl /vault/config/
+COPY vault-dev-persistent.hcl /vault/config/
+COPY init-and-start.sh /vault/
+
+# Make script executable
+RUN chmod +x /vault/init-and-start.sh
 
 # Default command will be overridden by docker-compose
-CMD ["bao", "server", "-dev"]
+CMD ["/vault/init-and-start.sh"]

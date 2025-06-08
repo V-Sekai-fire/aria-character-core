@@ -22,21 +22,19 @@ services:
     ports:
       - "8200:8200"
     environment:
-      - BAO_DEV_ROOT_TOKEN_ID=root
-      - BAO_DEV_LISTEN_ADDRESS=0.0.0.0:8200
       - OPENBAO_PKCS11_PIN=${OPENBAO_PKCS11_PIN:-1234}
       - OPENBAO_PKCS11_SO_PIN=${OPENBAO_PKCS11_SO_PIN:-5678}
       - OPENBAO_PKCS11_SLOT=${OPENBAO_PKCS11_SLOT:-0}
     volumes:
       - openbao_data:/vault/data
+      - openbao_config:/vault/config
       - softhsm_tokens:/var/lib/softhsm/tokens:ro
-    command: ["bao", "server", "-dev", "-dev-listen-address=0.0.0.0:8200"]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8200/v1/sys/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8200/v1/sys/health?standbyok=true"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
     depends_on:
       - softhsm-setup
 
@@ -57,5 +55,6 @@ services:
 
 volumes:
   openbao_data:
+  openbao_config:
   softhsm_tokens:
   cockroachdb_data:
