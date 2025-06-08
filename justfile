@@ -142,33 +142,26 @@ test-security-service: foundation-startup
     . ./.asdf/asdf.sh || true
     export VAULT_ADDR="http://localhost:8200"
     
-    # Extract the root token dynamically from OpenBao logs or token file
-    if [ -f .ci/openbao_root_token.txt ]; then
+    # Since OpenBao runs in dev mode, try to get the live token first
+    echo "Extracting OpenBao token from container logs..."
+    LIVE_TOKEN=`docker logs aria-character-core-openbao-1 | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo ""`
+    
+    if [ -n "$$LIVE_TOKEN" ]; then
+        export VAULT_TOKEN="$$LIVE_TOKEN"
+        echo "Using OpenBao token from live logs: $$VAULT_TOKEN"
+    elif [ -f .ci/openbao_root_token.txt ]; then
+        echo "Live token not found, trying token file..."
         TOKEN_FROM_FILE=`grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r'`
         if [ -n "$$TOKEN_FROM_FILE" ]; then
             export VAULT_TOKEN="$$TOKEN_FROM_FILE"
             echo "Using OpenBao token from file: $$VAULT_TOKEN"
         else
-            echo "Could not extract token from file, checking OpenBao logs..."
-            LIVE_TOKEN=`docker compose logs openbao 2>/dev/null | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo ""`
-            if [ -n "$$LIVE_TOKEN" ]; then
-                export VAULT_TOKEN="$$LIVE_TOKEN"
-                echo "Using OpenBao token from logs: $$VAULT_TOKEN"
-            else
-                echo "WARNING: Could not extract token, using fallback"
-                export VAULT_TOKEN="root"
-            fi
-        fi
-    else
-        echo "Token file not found, checking OpenBao logs..."
-        LIVE_TOKEN=`docker compose logs openbao 2>/dev/null | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo ""`
-        if [ -n "$$LIVE_TOKEN" ]; then
-            export VAULT_TOKEN="$$LIVE_TOKEN"
-            echo "Using OpenBao token from logs: $$VAULT_TOKEN"
-        else
-            echo "WARNING: Could not extract token, using fallback"
+            echo "WARNING: Using fallback token"
             export VAULT_TOKEN="root"
         fi
+    else
+        echo "WARNING: No token sources found, using fallback"
+        export VAULT_TOKEN="root"
     fi
     
     echo "Verifying OpenBao connection..."
@@ -185,11 +178,11 @@ test-security-service: foundation-startup
         exit 1
     fi
     echo "Checking Elixir version..."
-    elixir --version || (echo "ERROR: Elixir not found" && exit 1)
+    bash -l -c "elixir --version" || (echo "ERROR: Elixir not found" && exit 1)
     echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)"
-    mix deps.get && \
-    mix compile --force --warnings-as-errors && \
-    mix test
+    bash -l -c "mix deps.get" && \
+    bash -l -c "mix compile --force --warnings-as-errors" && \
+    bash -l -c "mix test"
     echo "Security Service tests finished."
 
 # Generate a new varying root token for OpenBao
