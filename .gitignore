@@ -56,3 +56,5 @@ result
 .elixir_ls
 .elixir-tools
 cockroachdb.tar
+
+/.ci/

@@ -1,1 +1,0 @@
-openbao-1  | Root Token: root
