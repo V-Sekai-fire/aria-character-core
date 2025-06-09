@@ -1,0 +1,56 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+name: Unit Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y just libncurses-dev libtinfo-dev autoconf cargo pkg-config
+        
+      - name: Install Erlang and Elixir
+        run: |
+          just install-elixir-erlang-env
+
+      - name: Run fast CI test suite
+        run: |
+          just test-ci-fast
+
+  compile-check:
+    name: Compilation Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y just libncurses-dev libtinfo-dev autoconf cargo pkg-config
+        
+      - name: Install Erlang and Elixir
+        run: |
+          just install-elixir-erlang-env
+
+      - name: Test compilation
+        run: |
+          just test-elixir-compile

@@ -36,6 +36,30 @@ dev-setup: install-ubuntu-deps install-elixir-erlang-env foundation-startup
 test-all: test-elixir-compile test-elixir-unit test-openbao-connection test-basic-secrets
     @echo "All tests completed!"
 
+# CI/CD unit testing workflow (no external dependencies)
+test-unit-ci: test-elixir-compile
+    #!/usr/bin/env bash
+    echo "🧪 Running CI unit tests (no external dependencies)..."
+    
+    # Setup asdf environment
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    # Set environment variables for testing
+    export MIX_ENV=test
+    export CI_UNIT_TESTS=true
+    
+    echo "🧪 Running ExUnit tests (excluding external dependencies)..."
+    mix test --exclude integration --exclude external || (echo "❌ CI unit tests failed" && exit 1)
+    
+    echo "✅ All CI unit tests passed!"
+
+# Fast CI test suite (compile + unit tests only)
+test-ci-fast: test-elixir-compile test-unit-ci test-aria-security test-aria-auth
+    @echo "Fast CI test suite completed!"
+
 # Production deployment workflow
 prod-deploy: up-all-and-check
     @echo "Production deployment complete!"
@@ -570,7 +594,7 @@ show-all-logs:
     tail -30 /var/log/seaweedfs/master.log 2>/dev/null || echo "No SeaweedFS master logs available"
     echo ""
     echo "=== SeaweedFS S3 Logs ==="
-    tail -30 /var/log/seaweedfs/s3.log 2>/dev/null || echo "No SeaweedFS S3 logs available"
+    tail -30 /var/log/seaweedfs/s3.log 2>/dev/null || echo "No SeaweedFS logs available"
     echo ""
     echo "=== Elixir Application Logs ==="
     tail -30 aria_app.log 2>/dev/null || echo "No Elixir app logs available"
@@ -741,7 +765,7 @@ test-elixir-unit: start-cockroach test-elixir-compile
     export DATABASE_URL="postgresql://root@localhost:26257/aria_character_core_test?sslmode=disable"
     
     echo "🧪 Running ExUnit tests..."
-    mix test --exclude external_deps || (echo "❌ Unit tests failed" && exit 1)
+    mix test --exclude integration --exclude external || (echo "❌ Unit tests failed" && exit 1)
     
     echo "✅ All unit tests passed!"
 
@@ -839,7 +863,7 @@ test-aria-security: test-elixir-compile
     mix compile --force --warnings-as-errors || (echo "❌ Compilation failed" && exit 1)
     
     echo "🧪 Running aria_security tests..."
-    mix test --exclude external_deps || (echo "❌ Tests failed" && exit 1)
+    mix test --exclude integration --exclude external || (echo "❌ Tests failed" && exit 1)
     
     cd ../..
     echo "✅ aria_security tests passed!"
@@ -868,7 +892,7 @@ test-aria-auth: test-elixir-compile
     mix compile --force --warnings-as-errors || (echo "❌ Compilation failed" && exit 1)
     
     echo "🧪 Running aria_auth tests..."
-    mix test --exclude external_deps || (echo "❌ Tests failed" && exit 1)
+    mix test --exclude integration --exclude external || (echo "❌ Tests failed" && exit 1)
     
     cd ../..
     echo "✅ aria_auth tests passed!"

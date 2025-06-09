@@ -84,3 +84,14 @@ config :aria_interpret,
 # Test Hammer rate limiting configuration
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}
+
+# For CI environments - skip database-dependent repositories if DATABASE_URL is not set
+if System.get_env("CI_UNIT_TESTS") == "true" do
+  # In CI unit test mode, we disable database-dependent features
+  config :aria_data, AriaData.Repo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
+  config :aria_data, AriaData.AuthRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
+  config :aria_data, AriaData.QueueRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
+  config :aria_data, AriaData.StorageRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
+  config :aria_data, AriaData.MonitorRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
+  config :aria_data, AriaData.EngineRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
+end
