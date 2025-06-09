@@ -2,6 +2,11 @@ defmodule AriaEngine.CharacterGeneratorTest do
   use ExUnit.Case
   alias AriaEngine.{Domain, State}
 
+  # Generate a unique character ID using UUID
+  defp generate_character_id do
+    UUID.uuid4()
+  end
+
   # Character Generation Sliders Data (ported from Python GTPyhop system)
   @character_sliders %{
     "species" => %{
@@ -702,9 +707,12 @@ defmodule AriaEngine.CharacterGeneratorTest do
     test "generates character with verbose planning - level 1" do
       domain = build_character_generation_domain()
 
+      # Generate a unique character ID for this test
+      char_id = generate_character_id()
+
       initial_state = AriaEngine.create_state()
       |> AriaEngine.set_fact("generation_session", "active", true)
-      |> AriaEngine.set_fact("character_id", "current", "char_001")
+      |> AriaEngine.set_fact("character_id", "current", char_id)
       |> AriaEngine.set_fact("random_seed", "current", 12345)
 
       IO.puts("\n#{String.duplicate("=", 80)}")
@@ -715,7 +723,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
       IO.inspect(initial_state.data, label: "State")
 
       # High-level task: generate a complete character
-      tasks = [{"generate_character", ["char_001", "fantasy_cyber_preset"]}]
+      tasks = [{"generate_character", [char_id, "fantasy_cyber_preset"]}]
 
       IO.puts("\nTasks: #{inspect(tasks)}")
 
@@ -745,7 +753,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
               end)
 
               # Show the final prompt if generated
-              prompt = AriaEngine.get_fact(final_state, "generated_prompt", "char_001")
+              prompt = AriaEngine.get_fact(final_state, "generated_prompt", char_id)
               if prompt do
                 IO.puts("\nGenerated Character Prompt:")
                 IO.puts("#{prompt}")
@@ -762,10 +770,13 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
     test "generates character with verbose planning - level 2" do
       domain = build_character_generation_domain()
+      
+      # Generate a unique character ID for this test
+      char_id = generate_character_id()
 
       initial_state = AriaEngine.create_state()
       |> AriaEngine.set_fact("generation_session", "active", true)
-      |> AriaEngine.set_fact("character_id", "current", "char_002")
+      |> AriaEngine.set_fact("character_id", "current", char_id)
       |> AriaEngine.set_fact("random_seed", "current", 67890)
 
       IO.puts("\n#{String.duplicate("=", 80)}")
@@ -774,8 +785,8 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
       # More complex task: generate character with specific customizations
       tasks = [
-        {"configure_character_presets", ["char_002", "cyber_cat_person"]},
-        {"generate_detailed_prompt", ["char_002"]}
+        {"configure_character_presets", [char_id, "cyber_cat_person"]},
+        {"generate_detailed_prompt", [char_id]}
       ]
 
       IO.puts("Tasks: #{inspect(tasks)}")
@@ -792,10 +803,13 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
     test "demonstrates character customization workflow" do
       domain = build_character_generation_domain()
+      
+      # Generate a unique character ID for this test
+      char_id = generate_character_id()
 
       initial_state = AriaEngine.create_state()
       |> AriaEngine.set_fact("generation_session", "active", true)
-      |> AriaEngine.set_fact("character_id", "current", "char_custom")
+      |> AriaEngine.set_fact("character_id", "current", char_id)
 
       IO.puts("\n#{String.duplicate("=", 80)}")
       IO.puts("CHARACTER CUSTOMIZATION WORKFLOW")
@@ -831,10 +845,10 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
       # Test customization task
       customization_tasks = [
-        {"customize_species", ["char_custom", "SPECIES_BASE_SEMI_HUMANOID"]},
-        {"customize_archetype", ["char_custom", "HUMANOID_ARCHETYPE_CAT_PERSON"]},
-        {"customize_theme", ["char_custom", "PRIMARY_THEME_PASTEL_CYBER"]},
-        {"finalize_character_prompt", ["char_custom"]}
+        {"customize_species", [char_id, "SPECIES_BASE_SEMI_HUMANOID"]},
+        {"customize_archetype", [char_id, "HUMANOID_ARCHETYPE_CAT_PERSON"]},
+        {"customize_theme", [char_id, "PRIMARY_THEME_PASTEL_CYBER"]},
+        {"finalize_character_prompt", [char_id]}
       ]
 
       IO.puts("\nCustomization workflow:")
