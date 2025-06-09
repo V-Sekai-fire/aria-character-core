@@ -674,8 +674,6 @@ install-elixir-erlang-env:
     echo "Installing Erlang and Elixir versions (as per .tool-versions)..."
     asdf install
 
-# === SIMPLE, FOCUSED TESTS ===
-
 # Test 1: Basic Elixir compilation for all apps
 test-elixir-compile: install-elixir-erlang-env
     #!/usr/bin/env bash
