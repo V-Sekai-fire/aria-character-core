@@ -13,16 +13,11 @@ INIT_FILE="/vault/data/vault_initialized"
 echo "Starting OpenBao initialization script..."
 
 # Set up SoftHSM configuration
-export SOFTHSM2_CONF="/usr/lib/softhsm/softhsm2.conf"
+export SOFTHSM2_CONF="/etc/softhsm2.conf"
 echo "SoftHSM configuration set to: $SOFTHSM2_CONF"
 
-# Wait for SoftHSM configuration to be available
-echo "Waiting for SoftHSM configuration..."
-while [ ! -f "$SOFTHSM2_CONF" ]; do
-    echo "Waiting for SoftHSM configuration file..."
-    sleep 2
-done
-echo "SoftHSM configuration found!"
+# Initialize SoftHSM if needed
+echo "Setting up SoftHSM..."
 
 # Fix permissions while running as root
 if [ "$(id -u)" = "0" ]; then
@@ -33,115 +28,40 @@ if [ "$(id -u)" = "0" ]; then
     
     # Fix SoftHSM permissions - critical for PKCS#11 access
     echo "Fixing SoftHSM permissions..."
-    chown -R vault:vault /var/lib/softhsm 2>/dev/null || {
-        echo "WARNING: Cannot fix SoftHSM permissions"
-    }
+    chown -R vault:vault /var/lib/softhsm 2>/dev/null || true
+    chown -R vault:vault /etc/softhsm2.conf 2>/dev/null || true
     
     # Ensure the tokens directory is accessible
     chmod -R 755 /var/lib/softhsm 2>/dev/null || true
     chmod -R 777 /var/lib/softhsm/tokens 2>/dev/null || true  # Make tokens fully writable
-    
-    # For additional security libraries that might be needed
-    chown -R vault:vault /usr/lib/softhsm 2>/dev/null || true
     
     echo "Permissions fixed. Switching to vault user..."
     exec su vault -c "$0 $*"
 fi
 
 # Verify SoftHSM library is available
-if [ ! -f "/usr/lib/softhsm/libsofthsm2.so" ]; then
-    echo "ERROR: SoftHSM library not found at /usr/lib/softhsm/libsofthsm2.so"
+if [ ! -f "/usr/lib64/libsofthsm2.so" ]; then
+    echo "ERROR: SoftHSM library not found at /usr/lib64/libsofthsm2.so"
     exit 1
 fi
 echo "SoftHSM library found!"
 
-# Test SoftHSM access before starting OpenBao
-echo "Testing SoftHSM access..."
-echo "SoftHSM config: $SOFTHSM2_CONF"
-echo "Tokens directory permissions:"
-ls -la /var/lib/softhsm/tokens/ || echo "Cannot access tokens directory"
+# Initialize SoftHSM token if it doesn't exist
+echo "Checking for existing OpenBao Token..."
+EXISTING_TOKEN=$(softhsm2-util --show-slots 2>/dev/null | grep -A 10 "Label:" | grep "OpenBao Token" || echo "")
 
-# Test PKCS#11 library access
-echo "Testing PKCS#11 library access with softhsm2-util..."
-softhsm2-util --show-slots || {
-    echo "WARNING: Cannot access SoftHSM slots - this may cause PKCS#11 errors"
-}
-
-# Detect the OpenBao Token slot dynamically using comprehensive slot pairing
-echo "Detecting OpenBao Token slot with robust parsing..."
-
-# Create a comprehensive slot parser that pairs all attributes correctly
-parse_slots() {
-    local slots_output="$1"
-    local current_slot=""
-    local current_label=""
-    local current_serial=""
-    local is_initialized="no"
-    local token_present="no"
+if [ -z "$EXISTING_TOKEN" ]; then
+    echo "No existing OpenBao Token found - initializing new token..."
     
-    echo "$slots_output" | while IFS= read -r line; do
-        # Detect start of new slot
-        if echo "$line" | grep -q "^Slot [0-9]"; then
-            # Output previous slot if it was complete and initialized
-            if [ -n "$current_slot" ] && [ "$is_initialized" = "yes" ] && [ "$token_present" = "yes" ] && [ -n "$current_label" ]; then
-                echo "SLOT:$current_slot|LABEL:$current_label|SERIAL:$current_serial"
-            fi
-            
-            # Reset for new slot
-            current_slot=$(echo "$line" | sed 's/^Slot \([0-9]\+\).*$/\1/')
-            current_label=""
-            current_serial=""
-            is_initialized="no"
-            token_present="no"
-        elif echo "$line" | grep -q "Token present:.*yes"; then
-            token_present="yes"
-        elif echo "$line" | grep -q "Initialized:.*yes"; then
-            is_initialized="yes"
-        elif echo "$line" | grep -q "Label:"; then
-            current_label=$(echo "$line" | sed 's/^[[:space:]]*Label:[[:space:]]*//' | sed 's/[[:space:]]*$//')
-        elif echo "$line" | grep -q "Serial number:"; then
-            current_serial=$(echo "$line" | sed 's/^[[:space:]]*Serial number:[[:space:]]*//' | sed 's/[[:space:]]*$//')
-        fi
-    done
-    
-    # Handle the last slot
-    if [ -n "$current_slot" ] && [ "$is_initialized" = "yes" ] && [ "$token_present" = "yes" ] && [ -n "$current_label" ]; then
-        echo "SLOT:$current_slot|LABEL:$current_label|SERIAL:$current_serial"
-    fi
-}
-
-# Get slots output and parse it
-echo "Retrieving SoftHSM slot information..."
-slots_output=$(softhsm2-util --show-slots 2>/dev/null)
-echo "Full slots output:"
-echo "$slots_output"
-
-# Parse slots comprehensively
-echo "Parsing slots with attribute pairing..."
-parsed_slots=$(parse_slots "$slots_output")
-echo "Parsed slot information:"
-echo "$parsed_slots"
-
-# Find OpenBao Token specifically
-openbao_slot_lines=$(echo "$parsed_slots" | grep "LABEL:OpenBao Token" || true)
-openbao_slot_count=$(echo "$openbao_slot_lines" | grep -c "LABEL:OpenBao Token" || echo "0")
-
-if [ "$openbao_slot_count" -eq 0 ]; then
-    echo "No existing OpenBao Token found in any initialized slot"
-    # Use the first available slot (slot 0 is typically available)
+    # Initialize a new token with label "OpenBao Token"
+    softhsm2-util --init-token --slot 0 --label "OpenBao Token" --so-pin 1234 --pin 1234
+    echo "OpenBao Token initialized in slot 0"
     OPENBAO_SLOT="0"
-    echo "Will use slot 0 for OpenBao Token initialization"
-elif [ "$openbao_slot_count" -eq 1 ]; then
-    openbao_slot_line=$(echo "$openbao_slot_lines" | head -1)
-    OPENBAO_SLOT=$(echo "$openbao_slot_line" | sed 's/^SLOT:\([0-9]\+\)|.*$/\1/')
-    SERIAL_NUMBER=$(echo "$openbao_slot_line" | sed 's/.*SERIAL:\([^|]*\).*$/\1/' | sed 's/[[:space:]]*$//')
-    echo "Found unique OpenBao Token in slot: $OPENBAO_SLOT (Serial: $SERIAL_NUMBER)"
 else
-    echo "ERROR: Multiple slots found with 'OpenBao Token' label ($openbao_slot_count slots)"
-    echo "Slot details:"
-    echo "$openbao_slot_lines"
-    echo "This indicates a configuration issue - each token should have a unique label"
-    exit 1
+    echo "Found existing OpenBao Token"
+    # Find the slot number for the existing token
+    OPENBAO_SLOT=$(softhsm2-util --show-slots 2>/dev/null | grep -B 20 "OpenBao Token" | grep "^Slot [0-9]" | tail -1 | grep -o "[0-9]\+")
+    echo "OpenBao Token found in slot: $OPENBAO_SLOT"
 fi
 
 # Validate that the slot number is numeric
@@ -161,8 +81,10 @@ if [ "$RESET_HSM_KEYS" = "true" ]; then
     softhsm2-util --delete-object --slot "$OPENBAO_SLOT" --label "openbao-hmac-key" --pin 1234 2>/dev/null || echo "No existing HMAC key to delete"
     
     # Also remove the OpenBao storage to force complete reinitialization
+    rm -rf /vault/data/core 2>/dev/null || true
     rm -rf /vault/data/vault 2>/dev/null || true
     rm -f /vault/data/root_token.txt /vault/data/vault_initialized 2>/dev/null || true
+    rm -f /vault/data/hsm_seal_issue 2>/dev/null || true
     
     echo "Existing keys and storage cleaned up for fresh start"
 fi
@@ -190,7 +112,7 @@ listener "tcp" {
 
 # HSM seal configuration using SoftHSM PKCS#11
 seal "pkcs11" {
-  lib = "/usr/lib/softhsm/libsofthsm2.so"
+  lib = "/usr/lib64/libsofthsm2.so"
   slot = "$OPENBAO_PKCS11_SLOT"
   pin = "$OPENBAO_PKCS11_PIN"
   key_label = "openbao-seal-key"
@@ -289,8 +211,10 @@ if [ "$IS_INITIALIZED" = "true" ]; then
             softhsm2-util --delete-object --slot "$OPENBAO_SLOT" --label "openbao-seal-key" --pin 1234 2>/dev/null || echo "No seal key to delete"
             softhsm2-util --delete-object --slot "$OPENBAO_SLOT" --label "openbao-hmac-key" --pin 1234 2>/dev/null || echo "No HMAC key to delete"
             # Also remove the OpenBao storage to force reinitialization
+            rm -rf /vault/data/core 2>/dev/null || true
             rm -rf /vault/data/vault 2>/dev/null || true
             rm -f /vault/data/root_token.txt /vault/data/vault_initialized 2>/dev/null || true
+            rm -f /vault/data/hsm_seal_issue 2>/dev/null || true
             echo "Storage cleared. Restarting OpenBao process to reinitialize..."
             kill $BAO_PID 2>/dev/null || true
             sleep 2

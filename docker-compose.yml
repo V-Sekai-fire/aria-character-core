@@ -2,20 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 services:
-  softhsm-setup:
-    build:
-      context: ./docker_softhsm
-      dockerfile: Dockerfile
-    environment:
-      - OPENBAO_PKCS11_PIN=${OPENBAO_PKCS11_PIN:-1234}
-      - OPENBAO_PKCS11_SO_PIN=${OPENBAO_PKCS11_SO_PIN:-5678}
-      - OPENBAO_PKCS11_SLOT=${OPENBAO_PKCS11_SLOT:-0}
-    volumes:
-      - softhsm_tokens:/var/lib/softhsm/tokens
-      - softhsm_libs:/usr/lib/softhsm
-    # This is a one-time setup service, not a long-running service
-    restart: "no"
-
   openbao:
     build:
       context: ./docker_openbao
@@ -25,22 +11,19 @@ services:
       - "8200:8200"
     environment:
       - OPENBAO_PKCS11_PIN=${OPENBAO_PKCS11_PIN:-1234}
-      - OPENBAO_PKCS11_SO_PIN=${OPENBAO_PKCS11_SO_PIN:-5678}
+      - OPENBAO_PKCS11_SO_PIN=${OPENBAO_PKCS11_SO_PIN:-1234}
       - OPENBAO_PKCS11_SLOT=${OPENBAO_PKCS11_SLOT:-0}
-      - RESET_HSM_KEYS=${RESET_HSM_KEYS:-false}  # Set to true to reset HSM keys
+      - RESET_HSM_KEYS=${RESET_HSM_KEYS:-true}  # Force clean initialization
     volumes:
       - openbao_data:/vault/data
       - openbao_config:/vault/config
       - softhsm_tokens:/var/lib/softhsm/tokens
-      - softhsm_libs:/usr/lib/softhsm
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8200/v1/sys/health?standbyok=true || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8200/v1/sys/health"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 60s
-    depends_on:
-      - softhsm-setup
+      retries: 3
+      start_period: 40s
 
   cockroachdb:
     image: v-sekai/cockroach:latest
@@ -61,5 +44,4 @@ volumes:
   openbao_data:
   openbao_config:
   softhsm_tokens:
-  softhsm_libs:
   cockroachdb_data:

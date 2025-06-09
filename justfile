@@ -88,15 +88,13 @@ build:
 
 # Build only foundation core services
 build-foundation-core: load-cockroach-docker
-    @echo "Building foundation core services (softhsm-setup, openbao)..."
-    @docker compose -f docker-compose.yml build softhsm-setup openbao
+    @echo "Building foundation core services (openbao)..."
+    @docker compose -f docker-compose.yml build openbao
 
 # Start foundation core services
 start-foundation-core: build-foundation-core
     @echo "Starting core foundation services..."
-    @echo "First, running SoftHSM setup (one-time initialization)..."
-    @docker compose -f docker-compose.yml run --rm softhsm-setup
-    @echo "SoftHSM setup completed. Starting persistent services (openbao, cockroachdb)..."
+    @echo "Starting persistent services (openbao, cockroachdb)..."
     @docker compose -f docker-compose.yml up -d openbao cockroachdb
 
 # Check health of foundation core services
@@ -104,7 +102,7 @@ check-foundation-core-health: start-foundation-core
     @echo "Waiting for foundation core services to initialize (initial 10-second delay)..."
     @sleep 10
     @echo "Checking current status of foundation services..."
-    @docker compose -f docker-compose.yml ps softhsm-setup openbao cockroachdb
+    @docker compose -f docker-compose.yml ps openbao cockroachdb
     @echo "--- Recent logs (OpenBao) ---"
     @docker compose -f docker-compose.yml logs --tail=20 openbao
     @echo "--- Recent logs (CockroachDB) ---"
@@ -121,15 +119,15 @@ foundation-startup: start-foundation-core check-foundation-core-health
 
 foundation-status: foundation-startup
     @echo "Status of core foundation services:"
-    @docker compose -f docker-compose.yml ps softhsm-setup openbao cockroachdb
+    @docker compose -f docker-compose.yml ps openbao cockroachdb
 
 foundation-logs: foundation-startup
     @echo "Showing recent logs for openbao and cockroachdb..."
-    @docker compose -f docker-compose.yml logs --tail=50 softhsm-setup openbao cockroachdb
+    @docker compose -f docker-compose.yml logs --tail=50 openbao cockroachdb
 
 foundation-stop:
-    @echo "Stopping core foundation services (softhsm-setup, openbao, cockroachdb)..."
-    @docker compose -f docker-compose.yml stop softhsm-setup openbao cockroachdb
+    @echo "Stopping core foundation services (openbao, cockroachdb)..."
+    @docker compose -f docker-compose.yml stop openbao cockroachdb
     @echo "Core foundation services stopped."
 
 start-all: build
@@ -301,7 +299,8 @@ test-security-service: install-elixir-erlang-env foundation-startup
         echo "🔑 Testing SoftHSM rekey operation..."
         docker compose -f docker-compose.yml stop openbao || true
         docker volume rm aria-character-core_softhsm_tokens 2>/dev/null || true
-        docker compose -f docker-compose.yml run --rm softhsm-setup
+        # With merged container, just restart OpenBao (which reinitializes SoftHSM internally)
+        docker compose -f docker-compose.yml up -d openbao
         
         if [ $? -eq 0 ]; then
             echo "✅ SoftHSM rekey operation completed successfully"
@@ -329,8 +328,8 @@ test-security-service: install-elixir-erlang-env foundation-startup
         
         # Test destroy operation (without waiting for user input)
         echo "🗑️  Testing destroy operation..."
-        docker compose -f docker-compose.yml stop openbao softhsm-setup || true
-        docker compose -f docker-compose.yml rm -f openbao softhsm-setup || true
+        docker compose -f docker-compose.yml stop openbao || true
+        docker compose -f docker-compose.yml rm -f openbao || true
         docker volume rm aria-character-core_openbao_data 2>/dev/null || true
         docker volume rm aria-character-core_openbao_config 2>/dev/null || true
         docker volume rm aria-character-core_softhsm_tokens 2>/dev/null || true
@@ -550,11 +549,11 @@ destroy-bao:
     
     # Stop all foundation services
     echo "🛑 Stopping foundation services..."
-    docker compose -f docker-compose.yml stop openbao softhsm-setup || true
+    docker compose -f docker-compose.yml stop openbao || true
     
     # Remove containers
     echo "🗑️  Removing containers..."
-    docker compose -f docker-compose.yml rm -f openbao softhsm-setup || true
+    docker compose -f docker-compose.yml rm -f openbao || true
     
     # Remove OpenBao data volumes
     echo "💾 Removing OpenBao volumes..."
@@ -584,11 +583,11 @@ destroy-bao:
     
     # Stop all foundation services
     echo "🛑 Stopping foundation services..."
-    docker compose -f docker-compose.yml stop openbao softhsm-setup || true
+    docker compose -f docker-compose.yml stop openbao || true
     
     # Remove containers
     echo "🗑️  Removing containers..."
-    docker compose -f docker-compose.yml rm -f openbao softhsm-setup || true
+    docker compose -f docker-compose.yml rm -f openbao || true
     
     # Remove OpenBao data volumes
     echo "💾 Removing OpenBao volumes..."
@@ -742,8 +741,8 @@ rekey-softhsm:
     echo "🗑️  Removing existing SoftHSM tokens (destroys all HSM seal keys)..."
     docker volume rm aria-character-core_softhsm_tokens 2>/dev/null || true
     
-    echo "🔄 Recreating SoftHSM tokens..."
-    docker compose -f docker-compose.yml run --rm softhsm-setup
+    echo "🔄 Restarting OpenBao (which reinitializes SoftHSM internally)..."
+    docker compose -f docker-compose.yml up -d openbao
     
     echo "✅ SoftHSM tokens regenerated successfully!"
     echo "🔐 New HSM seal keys will be generated automatically"
@@ -763,8 +762,8 @@ rekey-softhsm:
     echo "🗑️  Removing existing SoftHSM tokens..."
     docker volume rm aria-character-core_softhsm_tokens 2>/dev/null || true
     
-    echo "🔄 Recreating SoftHSM tokens..."
-    docker compose -f docker-compose.yml run --rm softhsm-setup
+    echo "🔄 Restarting OpenBao (which reinitializes SoftHSM internally)..."
+    docker compose -f docker-compose.yml up -d openbao
     
     echo "✅ SoftHSM tokens regenerated successfully!"
     echo "⚠️  IMPORTANT: OpenBao must be reinitialized since HSM keys changed"

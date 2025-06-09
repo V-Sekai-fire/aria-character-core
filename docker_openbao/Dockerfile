@@ -31,6 +31,19 @@ WORKDIR /vault
 RUN mkdir -p /vault/config /vault/data /vault/logs && \
     chown -R vault:vault /vault
 
+# Set up SoftHSM directories and configuration
+RUN mkdir -p /var/lib/softhsm/tokens /etc/softhsm2.d && \
+    chown -R vault:vault /var/lib/softhsm && \
+    chmod -R 755 /var/lib/softhsm
+
+# Create SoftHSM configuration
+RUN echo "# SoftHSM v2 configuration file" > /etc/softhsm2.conf && \
+    echo "directories.tokendir = /var/lib/softhsm/tokens" >> /etc/softhsm2.conf && \
+    echo "objectstore.backend = file" >> /etc/softhsm2.conf && \
+    echo "log.level = INFO" >> /etc/softhsm2.conf && \
+    echo "slots.removable = false" >> /etc/softhsm2.conf && \
+    chown vault:vault /etc/softhsm2.conf
+
 # Set SoftHSM configuration path
 ENV SOFTHSM2_CONF=/etc/softhsm2.conf
 
