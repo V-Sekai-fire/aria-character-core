@@ -9,6 +9,7 @@ default: dev-setup
     @echo "  just dev-setup        - Set up development environment"
     @echo "  just full-dev-setup   - Complete development setup including environment"
     @echo "  just test-all         - Run all tests"
+    @echo "  just test-security-service-dev - Quick security tests with OpenBao dev mode"
     @echo "  just prod-deploy      - Deploy production environment"
     @echo ""
     @echo "Status & Monitoring:"
@@ -199,7 +200,7 @@ install-elixir-erlang-env:
     echo "Installing Erlang and Elixir versions (as per .tool-versions)..."
     asdf install
 
-test-security-service: install-elixir-erlang-env foundation-startup
+test-security-service: install-elixir-erlang-env start-foundation-core
     #!/usr/bin/env bash
     echo "🧪 Running comprehensive Security Service tests including SoftHSM rekey and destroy operations..."
     export ASDF_DIR="./.asdf"
@@ -237,6 +238,58 @@ test-security-service: install-elixir-erlang-env foundation-startup
                 echo "⚠️  WARNING: No token sources found, using fallback"
                 export VAULT_TOKEN="root"
             fi
+        fi
+    }
+    
+    # Function to check if OpenBao is initialized
+    check_openbao_initialization() {
+        echo "🔍 Checking OpenBao initialization status..."
+        INIT_STATUS=$(curl -sf "$VAULT_ADDR/v1/sys/init" 2>/dev/null || echo "")
+        if [ -n "$INIT_STATUS" ]; then
+            INITIALIZED=$(echo "$INIT_STATUS" | grep -o '"initialized":[^,}]*' | cut -d':' -f2 | tr -d ' ')
+            if [ "$INITIALIZED" = "true" ]; then
+                echo "✅ OpenBao is already initialized"
+                return 0
+            else
+                echo "⚠️  OpenBao is not initialized"
+                return 1
+            fi
+        else
+            echo "❌ Cannot check OpenBao initialization status"
+            return 1
+        fi
+    }
+    
+    # Function to initialize OpenBao if not already initialized
+    initialize_openbao() {
+        echo "🔧 Initializing OpenBao..."
+        
+        # Initialize OpenBao with HSM seal (auto-unseal)
+        INIT_RESPONSE=$(curl -sf -X POST -d '{"secret_shares":1,"secret_threshold":1}' "$VAULT_ADDR/v1/sys/init" 2>/dev/null || echo "")
+        
+        if [ -n "$INIT_RESPONSE" ]; then
+            # Extract root token from response
+            NEW_TOKEN=$(echo "$INIT_RESPONSE" | grep -o '"root_token":"[^"]*"' | cut -d'"' -f4)
+            
+            if [ -n "$NEW_TOKEN" ]; then
+                echo "✅ OpenBao initialized successfully"
+                echo "🔑 Root token: $NEW_TOKEN"
+                
+                # Store token in container and file
+                docker exec aria-character-core-openbao-1 bash -c "mkdir -p /vault/data && echo '$NEW_TOKEN' > /vault/data/root_token.txt" 2>/dev/null || true
+                mkdir -p .ci
+                echo "openbao-1  | Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
+                echo "openbao-1  | Seal Type: HSM (SoftHSM PKCS#11)" >> .ci/openbao_root_token.txt
+                
+                export VAULT_TOKEN="$NEW_TOKEN"
+                return 0
+            else
+                echo "❌ Failed to extract root token from initialization response"
+                return 1
+            fi
+        else
+            echo "❌ Failed to initialize OpenBao"
+            return 1
         fi
     }
     
@@ -362,6 +415,28 @@ test-security-service: install-elixir-erlang-env foundation-startup
     # Main test execution
     echo "🚀 Starting comprehensive security service tests..."
     
+    # Check if OpenBao is initialized first
+    echo ""
+    echo "=== INITIALIZATION CHECK ==="
+    echo "🔍 Checking if OpenBao is ready and initialized..."
+    
+    # Check if OpenBao API is ready
+    if curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1; then
+        echo "✅ OpenBao API is ready"
+        
+        # Check initialization status
+        if ! check_openbao_initialization; then
+            echo "🔧 OpenBao ready but not initialized, performing initialization..."
+            if ! initialize_openbao; then
+                echo "❌ Failed to initialize OpenBao, aborting"
+                exit 1
+            fi
+        fi
+    else
+        echo "❌ OpenBao API is not ready yet, aborting"
+        exit 1
+    fi
+    
     # Test 1: Basic functionality
     echo ""
     echo "=== TEST 1: Basic Security Service Functionality ==="
@@ -422,6 +497,159 @@ test-security-service: install-elixir-erlang-env foundation-startup
     echo "✅ SoftHSM rekey: PASSED"
     echo "✅ Destroy and recovery: PASSED"
     echo "✅ Post-operation functionality: PASSED"
+
+# Quick test using OpenBao in dev mode (simpler, faster testing)
+test-security-service-dev: install-elixir-erlang-env start-foundation-core
+    #!/usr/bin/env bash
+    echo "🧪 Running Security Service tests with OpenBao in dev mode..."
+    
+    # Setup asdf environment properly (copied from test-security-service)
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    export VAULT_ADDR="http://localhost:8200"
+    export VAULT_TOKEN="dev-only-token"
+    
+    # Stop any existing OpenBao containers
+    echo "🛑 Stopping any existing OpenBao containers..."
+    docker compose -f docker-compose.yml stop openbao 2>/dev/null || true
+    
+    # Start OpenBao in dev mode
+    echo "🚀 Starting OpenBao in dev mode..."
+    docker run -d --name openbao-dev \
+        -p 8200:8200 \
+        --cap-add=IPC_LOCK \
+        openbao/openbao:latest \
+        bao server -dev -dev-root-token-id="dev-only-token" -dev-listen-address="0.0.0.0:8200"
+    
+    # Wait for OpenBao to be ready
+    echo "⏳ Waiting for OpenBao dev server to be ready..."
+    timeout 30s bash -c 'until curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ OpenBao dev server not ready" && exit 1)
+    
+    echo "✅ OpenBao dev server is ready"
+    echo "🔑 Using dev token: $VAULT_TOKEN"
+    
+    # Function to verify OpenBao connection
+    verify_dev_connection() {
+        echo "🔐 Verifying OpenBao dev connection..."
+        if curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/sys/health" > /dev/null; then
+            echo "✅ OpenBao dev connection verified"
+            return 0
+        else
+            echo "❌ Cannot connect to OpenBao dev server"
+            return 1
+        fi
+    }
+    
+    # Function to test basic secret operations
+    test_secret_operations() {
+        echo "🧪 Testing basic secret operations..."
+        
+        # Test writing a secret
+        echo "📝 Writing test secret..."
+        SECRET_DATA='{"password":"test123","api_key":"secret456"}'
+        if curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
+               -H "Content-Type: application/json" \
+               -X POST \
+               -d "{\"data\":$SECRET_DATA}" \
+               "$VAULT_ADDR/v1/secret/data/test-secret" > /dev/null; then
+            echo "✅ Secret written successfully"
+        else
+            echo "❌ Failed to write secret"
+            return 1
+        fi
+        
+        # Test reading the secret
+        echo "📖 Reading test secret..."
+        RESPONSE=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/secret/data/test-secret")
+        if echo "$RESPONSE" | grep -q "test123"; then
+            echo "✅ Secret read successfully"
+        else
+            echo "❌ Failed to read secret or content mismatch"
+            return 1
+        fi
+        
+        return 0
+    }
+    
+    # Function to run basic security tests
+    run_basic_security_tests() {
+        echo "🧪 Running basic security service tests..."
+        
+        if [ ! -d apps/aria_security ]; then
+            echo "❌ ERROR: apps/aria_security directory does not exist"
+            return 1
+        fi
+        
+        cd apps/aria_security
+        if [ ! -f mix.exs ]; then
+            echo "❌ ERROR: mix.exs file does not exist in apps/aria_security"
+            return 1
+        fi
+        
+        echo "🔍 Checking Elixir version..."
+        bash -l -c "elixir --version" || (echo "❌ ERROR: Elixir not found" && return 1)
+        
+        echo "📦 Running: mix deps.get, mix compile, mix test (in apps/aria_security)"
+        # Set environment variables for tests to use dev OpenBao
+        export VAULT_ADDR="http://localhost:8200"
+        export VAULT_TOKEN="dev-only-token"
+        
+        bash -l -c "mix deps.get" && \
+        bash -l -c "mix compile --force --warnings-as-errors" && \
+        bash -l -c "mix test"
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ Basic security service tests passed"
+            cd ../..
+            return 0
+        else
+            echo "❌ Basic security service tests failed"
+            cd ../..
+            return 1
+        fi
+    }
+    
+    # Cleanup function
+    cleanup_dev_server() {
+        echo "🧹 Cleaning up dev server..."
+        docker stop openbao-dev 2>/dev/null || true
+        docker rm openbao-dev 2>/dev/null || true
+    }
+    
+    # Trap to ensure cleanup on exit
+    trap cleanup_dev_server EXIT
+    
+    # Main test execution
+    echo ""
+    echo "=== OpenBao Dev Mode Tests ==="
+    
+    # Test 1: Verify connection
+    if ! verify_dev_connection; then
+        echo "❌ Dev connection test failed"
+        exit 1
+    fi
+    
+    # Test 2: Basic secret operations
+    if ! test_secret_operations; then
+        echo "❌ Secret operations test failed"
+        exit 1
+    fi
+    
+    # Test 3: Run Elixir security tests
+    if ! run_basic_security_tests; then
+        echo "❌ Elixir security tests failed"
+        exit 1
+    fi
+    
+    echo ""
+    echo "🎉 All dev mode security tests completed successfully!"
+    echo "✅ OpenBao dev connection: PASSED"
+    echo "✅ Secret operations: PASSED"
+    echo "✅ Elixir security tests: PASSED"
+    
+    # Cleanup will happen automatically via trap
 
 # Generate a new varying root token for OpenBao
 generate-new-root-token: foundation-startup
