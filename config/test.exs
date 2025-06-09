@@ -34,10 +34,3 @@ config :aria_interpret,
   qwen_model_path: "test/fixtures/mock_model.onnx",
   gpu_enabled: false,
   batch_size: 1
-
-# Test Character AI configuration (use mock models)
-config :aria_character_ai,
-  qwen_model_path: "test/fixtures/mock_model.onnx", 
-  gpu_enabled: false,
-  batch_size: 1,
-  grpo_enabled: false

@@ -50,10 +50,3 @@ config :aria_interpret,
   qwen_model_path: System.get_env("QWEN_MODEL_PATH"),
   gpu_enabled: System.get_env("ARIA_GPU_ENABLED") == "true",
   batch_size: String.to_integer(System.get_env("AI_BATCH_SIZE") || "4")
-
-# Production Character AI Service configuration
-config :aria_character_ai,
-  qwen_model_path: System.get_env("QWEN_MODEL_PATH"),
-  gpu_enabled: System.get_env("ARIA_GPU_ENABLED") == "true",
-  batch_size: String.to_integer(System.get_env("AI_BATCH_SIZE") || "4"),
-  grpo_enabled: true

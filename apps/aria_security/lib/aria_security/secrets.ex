@@ -237,9 +237,6 @@ defmodule AriaSecurity.Secrets do
       {:error, {:read_error, error}}
   end
 
-  @doc """
-  Check if OpenBao server is reachable and healthy.
-  """
   defp check_vault_health(vault_addr) do
     # Use HTTPoison to check the /v1/sys/health endpoint
     case HTTPoison.get("#{vault_addr}/v1/sys/health") do
