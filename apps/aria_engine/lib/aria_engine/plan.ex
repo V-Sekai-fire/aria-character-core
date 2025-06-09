@@ -4,23 +4,23 @@
 defmodule AriaEngine.Plan do
   @moduledoc """
   The main GTPyhop planning algorithm implementation.
-  
+
   This module contains the core planning logic that finds sequences of actions
   to achieve goals through hierarchical task decomposition.
-  
+
   Example:
   ```elixir
   # Create domain with actions and methods
   domain = AriaEngine.Domain.new("example")
   |> AriaEngine.Domain.add_action(:move, &move_action/2)
-  
+
   # Create initial state
   initial_state = AriaEngine.State.new()
   |> AriaEngine.State.set_object("location", "robot", "room1")
-  
+
   # Create goals
   goals = [{"location", "robot", "room2"}]
-  
+
   # Plan
   case AriaEngine.Plan.plan(domain, initial_state, goals) do
     {:ok, result_plan} -> IO.puts("Found plan: \#{inspect(result_plan)}")
@@ -42,13 +42,13 @@ defmodule AriaEngine.Plan do
 
   @doc """
   Main planning function that finds a plan to achieve the given todos.
-  
+
   ## Parameters
   - `domain`: The planning domain containing actions and methods
   - `state`: The initial world state
   - `todos`: List of goals, tasks, or multigoals to achieve
   - `options`: Planning options (max_depth, verbose, etc.)
-  
+
   ## Returns
   - `{:ok, plan}`: A list of action steps that achieve the goals
   - `{:error, reason}`: Planning failure reason
@@ -57,13 +57,13 @@ defmodule AriaEngine.Plan do
   def plan(%Domain{} = domain, %State{} = state, todos, opts \\ []) do
     max_depth = Keyword.get(opts, :max_depth, @default_max_depth)
     verbose = Keyword.get(opts, :verbose, @default_verbose)
-    
+
     if verbose > 0 do
       IO.puts("Starting planning with #{length(todos)} todos")
     end
-    
+
     case find_plan(domain, state, todos, [], 0, max_depth, verbose) do
-      {:ok, plan} -> 
+      {:ok, plan} ->
         if verbose > 0 do
           IO.puts("Planning succeeded with #{length(plan)} steps")
         end
@@ -93,44 +93,44 @@ defmodule AriaEngine.Plan do
         # Continue planning with updated state and todos
         combined_todos = new_todos ++ rest_todos
         find_plan(domain, new_state, combined_todos, plan, depth + 1, max_depth, verbose)
-        
+
       {:action, action_name, args, new_state} ->
         # Execute action and continue
         action_step = {action_name, args}
         find_plan(domain, new_state, rest_todos, [action_step | plan], depth + 1, max_depth, verbose)
-        
+
       {:error, _} = error ->
         error
     end
   end
 
   # Process a single todo item
-  @spec process_todo(Domain.t(), State.t(), todo_item(), integer(), integer()) :: 
-    {:ok, State.t(), [todo_item()]} | 
-    {:action, atom(), list(), State.t()} | 
+  @spec process_todo(Domain.t(), State.t(), todo_item(), integer(), integer()) ::
+    {:ok, State.t(), [todo_item()]} |
+    {:action, atom(), list(), State.t()} |
     {:error, String.t()}
   defp process_todo(%Domain{} = domain, %State{} = state, todo, depth, verbose) do
     case todo do
       # Handle task decomposition
       {task_name, args} when is_binary(task_name) ->
         process_task(domain, state, task_name, args, depth, verbose)
-        
+
       # Handle action tuple with atom name
       {action_name, args} when is_atom(action_name) ->
         process_action(domain, state, action_name, args, depth, verbose)
-        
+
       # Handle single goal
       {predicate, subject, object} ->
         process_goal(domain, state, predicate, subject, object, depth, verbose)
-        
+
       # Handle multigoal
       %Multigoal{} = multigoal ->
         process_multigoal(domain, state, multigoal, depth, verbose)
-        
+
       # Handle action (if it's actually an action reference)
       action_name when is_atom(action_name) ->
         process_action(domain, state, action_name, [], depth, verbose)
-        
+
       _ ->
         {:error, "Unknown todo type: #{inspect(todo)}"}
     end
@@ -141,7 +141,7 @@ defmodule AriaEngine.Plan do
     {:ok, State.t(), [todo_item()]} | {:error, String.t()}
   defp process_task(%Domain{} = domain, %State{} = state, task_name, args, depth, verbose) do
     methods = Domain.get_task_methods(domain, task_name)
-    
+
     if Enum.empty?(methods) do
       {:error, "No methods found for task: #{task_name}"}
     else
@@ -161,11 +161,11 @@ defmodule AriaEngine.Plan do
       false ->
         # Method failed, try next one
         try_task_methods(domain, state, rest_methods, args, depth, verbose)
-        
+
       result when is_list(result) ->
         # Method succeeded, return new todos
         {:ok, state, result}
-        
+
       _ ->
         # Invalid method result
         try_task_methods(domain, state, rest_methods, args, depth, verbose)
@@ -181,11 +181,11 @@ defmodule AriaEngine.Plan do
       ^object ->
         # Goal already satisfied
         {:ok, state, []}
-        
+
       _ ->
         # Try unigoal methods for this predicate
         methods = Domain.get_unigoal_methods(domain, predicate)
-        
+
         if Enum.empty?(methods) do
           {:error, "No methods found for goal: #{predicate}"}
         else
@@ -205,10 +205,10 @@ defmodule AriaEngine.Plan do
     case method.(state, args) do
       false ->
         try_unigoal_methods(domain, state, rest_methods, args, depth, verbose)
-        
+
       result when is_list(result) ->
         {:ok, state, result}
-        
+
       _ ->
         try_unigoal_methods(domain, state, rest_methods, args, depth, verbose)
     end
@@ -224,7 +224,7 @@ defmodule AriaEngine.Plan do
     else
       # Try multigoal methods
       methods = Domain.get_multigoal_methods(domain)
-      
+
       if Enum.empty?(methods) do
         # Fall back to processing individual goals
         unsatisfied = Multigoal.unsatisfied_goals(multigoal, state)
@@ -246,10 +246,10 @@ defmodule AriaEngine.Plan do
     case method.(state, args) do
       false ->
         try_multigoal_methods(domain, state, rest_methods, args, depth, verbose)
-        
+
       result when is_list(result) ->
         {:ok, state, result}
-        
+
       _ ->
         try_multigoal_methods(domain, state, rest_methods, args, depth, verbose)
     end
@@ -262,7 +262,13 @@ defmodule AriaEngine.Plan do
     case Domain.execute_action(domain, state, action_name, args) do
       false ->
         {:error, "Action failed: #{action_name}"}
-        
+
+      {:ok, %State{} = new_state} ->
+        if verbose > 1 do
+          IO.puts("Executed action: #{action_name}(#{inspect(args)})")
+        end
+        {:action, action_name, args, new_state}
+
       %State{} = new_state ->
         if verbose > 1 do
           IO.puts("Executed action: #{action_name}(#{inspect(args)})")
@@ -273,7 +279,7 @@ defmodule AriaEngine.Plan do
 
   @doc """
   Validates a plan by executing it step by step.
-  
+
   Returns the final state if successful, or an error if any step fails.
   """
   @spec validate_plan(Domain.t(), State.t(), [plan_step()]) :: {:ok, State.t()} | {:error, String.t()}
@@ -282,7 +288,10 @@ defmodule AriaEngine.Plan do
       case Domain.execute_action(domain, state, action_name, args) do
         false ->
           {:halt, {:error, "Action #{action_name} failed during validation"}}
-          
+
+        {:ok, %State{} = new_state} ->
+          {:cont, {:ok, new_state}}
+
         %State{} = new_state ->
           {:cont, {:ok, new_state}}
       end
