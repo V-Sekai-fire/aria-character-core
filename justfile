@@ -9,7 +9,6 @@ default: dev-setup
     @echo "  just dev-setup        - Set up development environment"
     @echo "  just full-dev-setup   - Complete development setup including environment"
     @echo "  just test-all         - Run all tests"
-    @echo "  just test-security-service-dev - Quick security tests with OpenBao dev mode"
     @echo "  just prod-deploy      - Deploy production environment"
     @echo ""
     @echo "Status & Monitoring:"
@@ -30,7 +29,7 @@ default: dev-setup
     @echo "  just up-all-and-check     - Start and verify all services"
 
 # Development workflow entry point
-dev-setup: install-elixir-erlang-env foundation-startup
+dev-setup: install-ubuntu-deps install-elixir-erlang-env foundation-startup
     @echo "Development environment setup complete!"
 
 # Testing workflow entry point  
@@ -46,122 +45,525 @@ status: foundation-status
     @echo "Status check complete!"
 
 # Clean up workflow
-clean: down foundation-stop
+clean: stop-all-services
     @echo "Cleanup complete!"
 
-download-cockroach-tar:
-    @echo "Downloading CockroachDB tarball..."
-    @curl -L -o cockroachdb.tar https://github.com/V-Sekai/cockroach/releases/download/cockroach-2/cockroachdb.tar
-    @echo "Download complete: cockroachdb.tar"
+# Install Ubuntu dependencies for native setup
+install-ubuntu-deps:
+    #!/usr/bin/env bash
+    echo "📦 Installing Ubuntu dependencies for native setup..."
+    
+    # Update package lists
+    sudo apt update
+    
+    # Install essential packages
+    sudo apt install -y \
+        curl \
+        wget \
+        git \
+        build-essential \
+        pkg-config \
+        libssl-dev \
+        libpcsc-lite-dev \
+        autoconf \
+        automake \
+        libtool \
+        softhsm2 \
+        opensc \
+        unzip \
+        jq \
+        postgresql-client \
+        systemd \
+        daemon
+    
+    echo "✅ Ubuntu dependencies installed!"
 
-load-cockroach-docker:
-    @echo "Loading CockroachDB image..."
-    @if [ ! -f cockroachdb.tar ]; then \
-        echo "CockroachDB tar file not found, downloading..."; \
-        just download-cockroach-tar; \
+# Download and install CockroachDB natively
+install-cockroach:
+    #!/usr/bin/env bash
+    echo "🗄️  Installing CockroachDB natively..."
+    
+    if command -v cockroach >/dev/null 2>&1; then
+        echo "✅ CockroachDB already installed"
+        cockroach version
+        exit 0
     fi
-    @echo "Loading CockroachDB image from tar file..."
-    @docker load -i cockroachdb.tar
-    @echo "CockroachDB image loaded successfully"
+    
+    # Download CockroachDB from Oxide Computer
+    echo "📥 Downloading CockroachDB from Oxide Computer..."
+    cd /tmp
+    wget -O cockroach.tgz "https://buildomat.eng.oxide.computer/public/file/oxidecomputer/cockroach/linux-amd64/865aff1595e494c2ce95030c7a2f20c4370b5ff8/cockroach.tgz"
+    
+    # Extract and install
+    tar -xzf cockroach.tgz
+    sudo cp cockroach /usr/local/bin/
+    sudo chmod +x /usr/local/bin/cockroach
+    
+    # Create cockroach user and directories
+    sudo useradd --system --home /var/lib/cockroach --shell /bin/false cockroach || true
+    sudo mkdir -p /var/lib/cockroach /var/log/cockroach
+    sudo chown cockroach:cockroach /var/lib/cockroach /var/log/cockroach
+    
+    # Clean up
+    rm -f cockroach.tgz cockroach
+    
+    echo "✅ CockroachDB installed!"
+    cockroach version
 
-up: load-cockroach-docker
-    @echo "Starting all services defined in docker-compose.yml..."
-    # This will start all services. For specific foundation services, use 'just foundation-startup'.
-    # Ensure necessary environment variables (e.g., for OpenBao PKCS#11) are set in your environment or a .env file.
-    @docker compose -f docker-compose.yml up -d
+# Download and install OpenBao HSM natively
+install-openbao:
+    #!/usr/bin/env bash
+    echo "🔐 Installing OpenBao HSM natively..."
+    
+    if command -v bao >/dev/null 2>&1; then
+        echo "✅ OpenBao already installed"
+        bao version
+        exit 0
+    fi
+    
+    # Check if the .deb file already exists
+    if [ -f bao-hsm_2.2.2_linux_amd64.deb ]; then
+        echo "📦 Using existing OpenBao .deb file..."
+    else
+        echo "📥 Downloading OpenBao HSM..."
+        wget -O bao-hsm_2.2.2_linux_amd64.deb \
+            "https://github.com/openbao/openbao/releases/download/v2.2.2/bao-hsm_2.2.2_linux_amd64.deb"
+    fi
+    
+    # Install the .deb package
+    sudo dpkg -i bao-hsm_2.2.2_linux_amd64.deb || sudo apt-get install -f -y
+    
+    # Create bao user and directories
+    sudo useradd --system --home /opt/bao --shell /bin/false bao || true
+    sudo mkdir -p /opt/bao/data /opt/bao/config /opt/bao/logs /var/lib/softhsm/tokens
+    sudo chown -R bao:bao /opt/bao /var/lib/softhsm
+    
+    echo "✅ OpenBao HSM installed!"
+    bao version
 
-down:
-    @echo "Stopping and removing all services defined in docker-compose.yml..."
-    @docker compose -f docker-compose.yml down
+# Download and install SeaweedFS natively
+install-seaweedfs:
+    #!/usr/bin/env bash
+    echo "🌱 Installing SeaweedFS natively..."
+    
+    if command -v weed >/dev/null 2>&1; then
+        echo "✅ SeaweedFS already installed"
+        weed version
+        exit 0
+    fi
+    
+    # Download SeaweedFS
+    echo "📥 Downloading SeaweedFS..."
+    cd /tmp
+    
+    # Get the latest version
+    SEAWEEDFS_VERSION=$(curl -s https://api.github.com/repos/seaweedfs/seaweedfs/releases/latest | jq -r .tag_name)
+    echo "📦 Downloading SeaweedFS $SEAWEEDFS_VERSION..."
+    
+    wget -O seaweedfs.tar.gz \
+        "https://github.com/seaweedfs/seaweedfs/releases/download/${SEAWEEDFS_VERSION}/linux_amd64.tar.gz"
+    
+    # Extract and install
+    tar -xzf seaweedfs.tar.gz
+    sudo cp weed /usr/local/bin/
+    sudo chmod +x /usr/local/bin/weed
+    
+    # Create seaweedfs user and directories
+    sudo useradd --system --home /var/lib/seaweedfs --shell /bin/false seaweedfs || true
+    sudo mkdir -p /var/lib/seaweedfs/{master,volume,filer,s3} /var/log/seaweedfs
+    sudo chown -R seaweedfs:seaweedfs /var/lib/seaweedfs /var/log/seaweedfs
+    
+    # Clean up
+    rm -f seaweedfs.tar.gz weed
+    
+    echo "✅ SeaweedFS installed!"
+    weed version
 
-# Note on Environment Variables for foundation services:
-# The following recipes require OPENBAO_PKCS11_PIN, OPENBAO_PKCS11_SO_PIN, and OPENBAO_PKCS11_SLOT
-# to be set in your environment. You can use a .env file (e.g., `just --dotenv-path .env foundation-startup`)
-# or export them in your shell. Example .env content:
-# OPENBAO_PKCS11_PIN="your_pin"
-# OPENBAO_PKCS11_SO_PIN="your_so_pin"
-# OPENBAO_PKCS11_SLOT="0"
+# Configure SoftHSM for OpenBao
+configure-softhsm:
+    #!/usr/bin/env bash
+    echo "🔧 Configuring SoftHSM for OpenBao..."
+    
+    # Create SoftHSM configuration
+    sudo tee /etc/softhsm2.conf > /dev/null << 'EOF'
+# SoftHSM v2 configuration file
+directories.tokendir = /var/lib/softhsm/tokens
+objectstore.backend = file
+log.level = INFO
+slots.removable = false
+EOF
+    
+    # Set environment variable for SoftHSM config
+    export SOFTHSM2_CONF=/etc/softhsm2.conf
+    
+    # Initialize SoftHSM slot if it doesn't exist
+    if ! softhsm2-util --show-slots | grep -q "Slot 0"; then
+        echo "🔑 Initializing SoftHSM slot 0..."
+        softhsm2-util --init-token --slot 0 --label "openbao-token" --pin 1234 --so-pin 1234
+    else
+        echo "✅ SoftHSM slot 0 already initialized"
+    fi
+    
+    echo "✅ SoftHSM configured successfully!"
 
-# Build all services
-build:
-    @echo "Building all services defined in docker-compose.yml..."
-    @docker compose -f docker-compose.yml build
+# Start CockroachDB natively
+start-cockroach: install-cockroach
+    #!/usr/bin/env bash
+    echo "🗄️  Starting CockroachDB..."
+    
+    # Check if CockroachDB is already running
+    if pgrep -f "cockroach start" > /dev/null; then
+        echo "✅ CockroachDB is already running"
+        exit 0
+    fi
+    
+    # Create data directory
+    sudo mkdir -p /var/lib/cockroach/data
+    sudo chown cockroach:cockroach /var/lib/cockroach/data
+    
+    # Start CockroachDB in the background
+    echo "🚀 Starting CockroachDB in single-node mode..."
+    sudo -u cockroach nohup cockroach start-single-node \
+        --insecure \
+        --store=/var/lib/cockroach/data \
+        --listen-addr=localhost:26257 \
+        --http-addr=localhost:8080 \
+        --background \
+        --log-config-file=""
+    
+    # Wait for CockroachDB to be ready
+    echo "⏳ Waiting for CockroachDB to be ready..."
+    timeout 30s bash -c 'until curl -sf http://localhost:8080/health >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ CockroachDB failed to start" && exit 1)
+    
+    echo "✅ CockroachDB started successfully!"
 
-# Build only foundation core services
-build-foundation-core: load-cockroach-docker
-    @echo "Building foundation core services (aria-app with integrated OpenBao)..."
-    @docker compose -f docker-compose.yml build aria-app
+# Start OpenBao natively
+start-openbao: install-openbao configure-softhsm
+    #!/usr/bin/env bash
+    echo "🔐 Starting OpenBao with SoftHSM..."
+    
+    # Check if OpenBao is already running
+    if pgrep -f "bao server" > /dev/null; then
+        echo "✅ OpenBao is already running"
+        exit 0
+    fi
+    
+    # Set environment variables
+    export SOFTHSM2_CONF=/etc/softhsm2.conf
+    export OPENBAO_PKCS11_PIN=${OPENBAO_PKCS11_PIN:-1234}
+    export OPENBAO_PKCS11_SO_PIN=${OPENBAO_PKCS11_SO_PIN:-1234}
+    export OPENBAO_PKCS11_SLOT=${OPENBAO_PKCS11_SLOT:-0}
+    
+    # Create OpenBao configuration
+    sudo mkdir -p /opt/bao/config
+    sudo tee /opt/bao/config/openbao.hcl > /dev/null << EOF
+# OpenBao configuration for production with SoftHSM seal protection
+storage "file" {
+  path = "/opt/bao/data"
+}
 
-# Start foundation core services
-start-foundation-core: build-foundation-core
-    @echo "Starting core foundation services..."
-    @echo "Starting persistent services (aria-app with OpenBao, cockroachdb)..."
-    @docker compose -f docker-compose.yml up -d aria-app cockroachdb
+listener "tcp" {
+  address = "0.0.0.0:8200"
+  tls_disable = 1
+}
+
+# HSM seal configuration using SoftHSM PKCS#11
+seal "pkcs11" {
+  lib = "/usr/lib/softhsm/libsofthsm2.so"
+  slot = "${OPENBAO_PKCS11_SLOT}"
+  pin = "${OPENBAO_PKCS11_PIN}"
+  key_label = "openbao-seal-key"
+  hmac_key_label = "openbao-hmac-key"
+  generate_key = "true"
+}
+
+# API address
+api_addr = "http://0.0.0.0:8200"
+
+# Cluster address
+cluster_addr = "http://0.0.0.0:8201"
+
+# UI enabled
+ui = true
+
+# Logging
+log_level = "Info"
+
+# Disable mlock for development
+disable_mlock = true
+
+# Default lease TTL
+default_lease_ttl = "168h"
+
+# Maximum lease TTL
+max_lease_ttl = "720h"
+EOF
+    
+    sudo chown bao:bao /opt/bao/config/openbao.hcl
+    
+    # Start OpenBao in the background
+    echo "🚀 Starting OpenBao with PKCS#11 seal..."
+    sudo -u bao nohup bao server -config=/opt/bao/config/openbao.hcl > /opt/bao/logs/openbao.log 2>&1 &
+    
+    # Wait for OpenBao to be ready
+    echo "⏳ Waiting for OpenBao to be ready..."
+    timeout 30s bash -c 'until curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ OpenBao failed to start" && exit 1)
+    
+    echo "✅ OpenBao started successfully!"
+
+# Start SeaweedFS natively
+start-seaweedfs: install-seaweedfs
+    #!/usr/bin/env bash
+    echo "🌱 Starting SeaweedFS..."
+    
+    # Check if SeaweedFS is already running
+    if pgrep -f "weed" > /dev/null; then
+        echo "✅ SeaweedFS is already running"
+        exit 0
+    fi
+    
+    # Start SeaweedFS master
+    echo "🚀 Starting SeaweedFS master..."
+    sudo -u seaweedfs nohup weed master \
+        -dir=/var/lib/seaweedfs/master \
+        -port=9333 \
+        > /var/log/seaweedfs/master.log 2>&1 &
+    
+    # Start SeaweedFS volume server
+    echo "🚀 Starting SeaweedFS volume server..."
+    sudo -u seaweedfs nohup weed volume \
+        -dir=/var/lib/seaweedfs/volume \
+        -port=8080 \
+        -mserver=localhost:9333 \
+        > /var/log/seaweedfs/volume.log 2>&1 &
+    
+    # Start SeaweedFS filer
+    echo "🚀 Starting SeaweedFS filer..."
+    sudo -u seaweedfs nohup weed filer \
+        -dir=/var/lib/seaweedfs/filer \
+        -port=8888 \
+        -master=localhost:9333 \
+        > /var/log/seaweedfs/filer.log 2>&1 &
+    
+    # Start SeaweedFS S3 gateway
+    echo "🚀 Starting SeaweedFS S3 gateway..."
+    sudo -u seaweedfs nohup weed s3 \
+        -dir=/var/lib/seaweedfs/s3 \
+        -port=8333 \
+        -filer=localhost:8888 \
+        > /var/log/seaweedfs/s3.log 2>&1 &
+    
+    # Wait for S3 gateway to be ready
+    echo "⏳ Waiting for SeaweedFS S3 gateway to be ready..."
+    timeout 30s bash -c 'until curl -sf http://localhost:8333 >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ SeaweedFS S3 gateway failed to start" && exit 1)
+    
+    echo "✅ SeaweedFS started successfully!"
+
+# Start Elixir application
+start-elixir-app: install-elixir-erlang-env
+    #!/usr/bin/env bash
+    echo "🚀 Starting Elixir application..."
+    
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    # Set environment variables for production
+    export MIX_ENV=prod
+    export PHX_SERVER=true
+    export DATABASE_URL="postgresql://root@localhost:26257/aria_character_core?sslmode=disable"
+    export VAULT_ADDR="http://localhost:8200"
+    
+    # Get dependencies and compile
+    echo "📦 Getting dependencies..."
+    mix deps.get --only prod
+    
+    echo "🔨 Compiling application..."
+    mix compile
+    
+    # Run database migrations
+    echo "🗄️  Running database migrations..."
+    mix ecto.create || true
+    mix ecto.migrate
+    
+    # Start the application in the background
+    echo "🚀 Starting Phoenix application..."
+    nohup mix phx.server > aria_app.log 2>&1 &
+    
+    # Wait for the application to be ready
+    echo "⏳ Waiting for Aria App to be ready..."
+    timeout 60s bash -c 'until curl -sf http://localhost:4000/health >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ Aria App failed to start" && exit 1)
+    
+    echo "✅ Elixir application started successfully!"
+
+# Stop all native services
+stop-all-services:
+    #!/usr/bin/env bash
+    echo "🛑 Stopping all native services..."
+    
+    echo "Stopping Elixir application..."
+    pkill -f "mix phx.server" 2>/dev/null || true
+    
+    echo "Stopping SeaweedFS services..."
+    pkill -f "weed s3" 2>/dev/null || true
+    pkill -f "weed filer" 2>/dev/null || true
+    pkill -f "weed volume" 2>/dev/null || true
+    pkill -f "weed master" 2>/dev/null || true
+    
+    echo "Stopping OpenBao..."
+    pkill -f "bao server" 2>/dev/null || true
+    
+    echo "Stopping CockroachDB..."
+    pkill -f "cockroach start" 2>/dev/null || true
+    
+    echo "✅ All native services stopped!"
+
+# Show status of all native services
+show-services-status:
+    #!/usr/bin/env bash
+    echo "📊 Native Services Status:"
+    echo ""
+    echo "CockroachDB: $(pgrep -f 'cockroach start' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "OpenBao: $(pgrep -f 'bao server' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "SeaweedFS Master: $(pgrep -f 'weed master' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "SeaweedFS Volume: $(pgrep -f 'weed volume' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "SeaweedFS Filer: $(pgrep -f 'weed filer' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "SeaweedFS S3: $(pgrep -f 'weed s3' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "Elixir App: $(pgrep -f 'mix phx.server' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo ""
+    echo "🔍 Health Check Results:"
+    echo "CockroachDB Health: $(curl -sf http://localhost:8080/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+    echo "OpenBao Health: $(curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+    echo "SeaweedFS S3 Health: $(curl -sf http://localhost:8333 >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+    echo "Elixir App Health: $(curl -sf http://localhost:4000/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+
+# Show logs for all native services
+show-all-logs:
+    #!/usr/bin/env bash
+    echo "📋 Native Services Logs:"
+    echo ""
+    echo "=== CockroachDB Logs ==="
+    tail -30 /var/log/cockroach/cockroach.log 2>/dev/null || echo "No CockroachDB logs available"
+    echo ""
+    echo "=== OpenBao Logs ==="
+    tail -30 /opt/bao/logs/openbao.log 2>/dev/null || echo "No OpenBao logs available"
+    echo ""
+    echo "=== SeaweedFS Master Logs ==="
+    tail -30 /var/log/seaweedfs/master.log 2>/dev/null || echo "No SeaweedFS master logs available"
+    echo ""
+    echo "=== SeaweedFS S3 Logs ==="
+    tail -30 /var/log/seaweedfs/s3.log 2>/dev/null || echo "No SeaweedFS S3 logs available"
+    echo ""
+    echo "=== Elixir Application Logs ==="
+    tail -30 aria_app.log 2>/dev/null || echo "No Elixir app logs available"
 
 # Check health of foundation core services
 check-foundation-core-health: start-foundation-core
-    @echo "Waiting for foundation core services to initialize (initial 5-second delay)..."
-    @sleep 5
-    @echo "Checking current status of foundation services..."
-    @docker compose -f docker-compose.yml ps aria-app cockroachdb
-    @echo "--- Recent logs (Aria App with OpenBao) ---"
-    @docker compose -f docker-compose.yml logs --tail=20 aria-app
-    @echo "--- Recent logs (CockroachDB) ---"
-    @docker compose -f docker-compose.yml logs --tail=20 cockroachdb
-    @echo "Checking Aria App health..."
-    @curl -sf http://localhost:4000/health > /dev/null && echo "Aria App is healthy" || (echo "Error: Aria App health check failed." && exit 1)
-    @echo "Checking OpenBao health..."
-    @curl -sf http://localhost:8200/v1/sys/health > /dev/null && echo "OpenBao is healthy" || (echo "Error: OpenBao health check failed." && exit 1)
-    @echo "Checking CockroachDB health..."
-    @curl -sf http://localhost:8080/health > /dev/null && echo "CockroachDB is healthy" || (echo "Error: CockroachDB health check failed." && exit 1)
-    @echo "OpenBao and CockroachDB health checks passed."
+    #!/usr/bin/env bash
+    echo "Waiting for foundation core services to initialize (initial 5-second delay)..."
+    sleep 5
+    echo "Checking current status of foundation services..."
+    echo "--- Foundation Services Status ---"
+    echo "CockroachDB: $(pgrep -f 'cockroach start' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "OpenBao: $(pgrep -f 'bao server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "Elixir App: $(pgrep -f 'mix phx.server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    
+    echo "--- Recent logs (CockroachDB) ---"
+    tail -20 /var/log/cockroach/cockroach.log 2>/dev/null || echo "No CockroachDB logs available"
+    
+    echo "--- Recent logs (OpenBao) ---"
+    tail -20 /opt/bao/logs/openbao.log 2>/dev/null || echo "No OpenBao logs available"
+    
+    echo "--- Recent logs (Elixir App) ---"
+    tail -20 aria_app.log 2>/dev/null || echo "No Elixir app logs available"
+    
+    echo "Checking Aria App health..."
+    curl -sf http://localhost:4000/health > /dev/null && echo "Aria App is healthy" || (echo "Error: Aria App health check failed." && exit 1)
+    echo "Checking OpenBao health..."
+    curl -sf http://localhost:8200/v1/sys/health > /dev/null && echo "OpenBao is healthy" || (echo "Error: OpenBao health check failed." && exit 1)
+    echo "Checking CockroachDB health..."
+    curl -sf http://localhost:8080/health > /dev/null && echo "CockroachDB is healthy" || (echo "Error: CockroachDB health check failed." && exit 1)
+    echo "OpenBao and CockroachDB health checks passed."
 
 # Foundation startup: build, start, and check health
 foundation-startup: start-foundation-core check-foundation-core-health
     @echo "Foundation startup completed."
 
+# Start foundation core services natively
+start-foundation-core: start-cockroach start-openbao start-elixir-app
+    @echo "Foundation core services started."
+
 foundation-status: foundation-startup
-    @echo "Status of core foundation services:"
-    @docker compose -f docker-compose.yml ps aria-app cockroachdb
+    #!/usr/bin/env bash
+    echo "Status of core foundation services:"
+    echo "CockroachDB: $(pgrep -f 'cockroach start' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "OpenBao: $(pgrep -f 'bao server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "Elixir App: $(pgrep -f 'mix phx.server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
 
 foundation-logs: foundation-startup
-    @echo "Showing recent logs for aria-app and cockroachdb..."
-    @docker compose -f docker-compose.yml logs --tail=50 aria-app cockroachdb
+    #!/usr/bin/env bash
+    echo "Showing recent logs for foundation services..."
+    echo "--- CockroachDB logs ---"
+    tail -50 /var/log/cockroach/cockroach.log 2>/dev/null || echo "No CockroachDB logs available"
+    echo ""
+    echo "--- OpenBao logs ---"
+    tail -50 /opt/bao/logs/openbao.log 2>/dev/null || echo "No OpenBao logs available"
+    echo ""
+    echo "--- Elixir App logs ---"
+    tail -50 aria_app.log 2>/dev/null || echo "No Elixir app logs available"
 
 foundation-stop:
-    @echo "Stopping core foundation services (aria-app, cockroachdb)..."
-    @docker compose -f docker-compose.yml stop aria-app cockroachdb
-    @echo "Core foundation services stopped."
+    #!/usr/bin/env bash
+    echo "Stopping core foundation services..."
+    pkill -f "mix phx.server" 2>/dev/null || true
+    pkill -f "bao server" 2>/dev/null || true
+    pkill -f "cockroach start" 2>/dev/null || true
+    echo "Core foundation services stopped."
 
-start-all: build
-    @docker compose -f docker-compose.yml up -d
+# Start all services natively
+start-all: start-cockroach start-openbao start-seaweedfs start-elixir-app
+    @echo "All services started natively."
 
+# Check health of all services
 check-all-health: up-all-and-check
-    @echo "Checking health of all running services with healthchecks..."
-    @echo "This might take some time. Services are checked based on their docker-compose healthcheck definitions."
-    @echo "Services and their status (based on docker ps --filter health=healthy/unhealthy):"
-    @echo "Healthy services:"
-    @docker ps --filter "health=healthy" --format "table {{{{.Names}}}}\\t{{{{.Status}}}}"
-    @echo "Unhealthy or starting services:"
-    @docker ps --filter "health=unhealthy" --filter "health=starting" --format "table {{{{.Names}}}}\\t{{{{.Status}}}}"
-    # Add specific checks if needed, similar to foundation ones, for other critical services.
-    @echo "Run 'docker compose ps' for detailed status of all services."
+    #!/usr/bin/env bash
+    echo "Checking health of all running services..."
+    echo "This might take some time. Services are checked based on their native status."
+    echo ""
+    echo "Service Status:"
+    echo "CockroachDB: $(pgrep -f 'cockroach start' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "OpenBao: $(pgrep -f 'bao server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "SeaweedFS Master: $(pgrep -f 'weed master' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "SeaweedFS Volume: $(pgrep -f 'weed volume' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "SeaweedFS Filer: $(pgrep -f 'weed filer' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "SeaweedFS S3: $(pgrep -f 'weed s3' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "Elixir App: $(pgrep -f 'mix phx.server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo ""
+    echo "Health Check Results:"
+    echo "CockroachDB Health: $(curl -sf http://localhost:8080/health >/dev/null 2>&1 && echo 'HEALTHY' || echo 'UNHEALTHY')"
+    echo "OpenBao Health: $(curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1 && echo 'HEALTHY' || echo 'UNHEALTHY')"
+    echo "SeaweedFS S3 Health: $(curl -sf http://localhost:8333 >/dev/null 2>&1 && echo 'HEALTHY' || echo 'UNHEALTHY')"
+    echo "Elixir App Health: $(curl -sf http://localhost:4000/health >/dev/null 2>&1 && echo 'HEALTHY' || echo 'UNHEALTHY')"
 
 up-all-and-check: start-all check-foundation-core-health
-    @echo "Waiting for all services to initialize (e.g., 90 seconds)..."
-    @sleep 90 # Adjust as needed
-    @echo "--- Current status of all Docker services: ---"
-    @docker compose -f docker-compose.yml ps
-    @echo "--- Performing basic health checks for key services (OpenBao, CockroachDB, SeaweedFS S3) ---"
-    @just check-foundation-core-health # Re-run to ensure foundation is still good
-    @echo "Checking SeaweedFS S3 gateway health..."
-    @timeout 60s bash -c \
-      'until curl -sf http://localhost:8333; do \
+    #!/usr/bin/env bash
+    echo "Waiting for all services to initialize (90 seconds)..."
+    sleep 90
+    echo "--- Current status of all native services: ---"
+    echo "CockroachDB: $(pgrep -f 'cockroach start' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "OpenBao: $(pgrep -f 'bao server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "SeaweedFS: $(pgrep -f 'weed' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "Elixir App: $(pgrep -f 'mix phx.server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "--- Performing basic health checks for key services (OpenBao, CockroachDB, SeaweedFS S3) ---"
+    just check-foundation-core-health
+    echo "Checking SeaweedFS S3 gateway health..."
+    timeout 60s bash -c \
+      'until curl -sf http://localhost:8333 >/dev/null 2>&1; do \
         echo "Waiting for SeaweedFS S3 gateway to be healthy..."; \
         sleep 5; \
       done || (echo "Error: SeaweedFS S3 gateway health check failed or timed out." && exit 1)'
-    @echo "SeaweedFS S3 gateway is responding."
-    @echo "All key services checked. Review logs if any issues."
+    echo "SeaweedFS S3 gateway is responding."
+    echo "All key services checked. Review logs if any issues."
 
 # Environment setup and management
 setup-env: install-elixir-erlang-env
@@ -221,12 +623,16 @@ test-elixir-compile: install-elixir-erlang-env
     echo "✅ All apps compiled successfully!"
 
 # Test 2: Run unit tests for Elixir apps (no external dependencies)
-test-elixir-unit: foundation-startup test-elixir-compile
+test-elixir-unit: start-cockroach test-elixir-compile
     #!/usr/bin/env bash
     echo "🧪 Running unit tests for all Elixir apps..."
     export ASDF_DIR="./.asdf"
     export PATH="./.asdf/bin:${PATH}"
     . ./.asdf/asdf.sh || true
+    
+    # Set environment variables for testing
+    export MIX_ENV=test
+    export DATABASE_URL="postgresql://root@localhost:26257/aria_character_core_test?sslmode=disable"
     
     echo "🧪 Running ExUnit tests..."
     mix test --exclude external_deps || (echo "❌ Unit tests failed" && exit 1)
@@ -234,7 +640,7 @@ test-elixir-unit: foundation-startup test-elixir-compile
     echo "✅ All unit tests passed!"
 
 # Test 3: Test OpenBao connection (basic connectivity only)
-test-openbao-connection: start-foundation-core
+test-openbao-connection: start-cockroach start-openbao
     #!/usr/bin/env bash
     echo "🔐 Testing basic OpenBao connection..."
     export VAULT_ADDR="http://localhost:8200"
@@ -253,13 +659,15 @@ test-basic-secrets: test-openbao-connection
     echo "🔑 Testing basic secret operations..."
     export VAULT_ADDR="http://localhost:8200"
     
-    # Get token from container storage or initialize if needed
+    # Get token from native storage or initialize if needed
     get_vault_token() {
-        # Try container storage first
-        TOKEN=$(docker exec aria-character-core-aria-app-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
-        if [ -n "$TOKEN" ]; then
-            echo "$TOKEN"
-            return 0
+        # Try native storage first
+        if [ -f /opt/bao/data/root_token.txt ]; then
+            TOKEN=$(cat /opt/bao/data/root_token.txt 2>/dev/null || echo "")
+            if [ -n "$TOKEN" ]; then
+                echo "$TOKEN"
+                return 0
+            fi
         fi
         
         # Check if initialized
@@ -269,7 +677,9 @@ test-basic-secrets: test-openbao-connection
             INIT_RESPONSE=$(curl -sf -X POST -d '{"secret_shares":1,"secret_threshold":1}' "$VAULT_ADDR/v1/sys/init" 2>/dev/null)
             NEW_TOKEN=$(echo "$INIT_RESPONSE" | grep -o '"root_token":"[^"]*"' | cut -d'"' -f4)
             if [ -n "$NEW_TOKEN" ]; then
-                docker exec aria-character-core-aria-app-1 bash -c "mkdir -p /vault/data && echo '$NEW_TOKEN' > /vault/data/root_token.txt" 2>/dev/null || true
+                sudo mkdir -p /opt/bao/data
+                echo "$NEW_TOKEN" | sudo tee /opt/bao/data/root_token.txt >/dev/null
+                sudo chown bao:bao /opt/bao/data/root_token.txt
                 echo "$NEW_TOKEN"
                 return 0
             fi
@@ -650,7 +1060,7 @@ test-security-service-legacy: install-elixir-erlang-env start-foundation-core
     echo "✅ Post-operation functionality: PASSED"
 
 # Generate a new varying root token for OpenBao
-generate-new-root-token: foundation-startup
+generate-new-root-token: start-openbao
     #!/usr/bin/env bash
     echo "Generating a new varying root token for OpenBao..."
     export BAO_ADDR="http://localhost:8200"
@@ -659,12 +1069,15 @@ generate-new-root-token: foundation-startup
     # Get the current token to use for authentication
     CURRENT_TOKEN=""
     
-    # Try to get token from container's persistent storage first
-    CONTAINER_TOKEN=$(docker exec aria-character-core-aria-app-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
-    if [ -n "$CONTAINER_TOKEN" ]; then
-        CURRENT_TOKEN="$CONTAINER_TOKEN"
-        echo "Using token from container storage: $CURRENT_TOKEN"
-    elif [ -f .ci/openbao_root_token.txt ]; then
+    # Try to get token from native storage first
+    if [ -f /opt/bao/data/root_token.txt ]; then
+        CURRENT_TOKEN=$(cat /opt/bao/data/root_token.txt 2>/dev/null || echo "")
+        if [ -n "$CURRENT_TOKEN" ]; then
+            echo "Using token from native storage: $CURRENT_TOKEN"
+        fi
+    fi
+    
+    if [ -z "$CURRENT_TOKEN" ] && [ -f .ci/openbao_root_token.txt ]; then
         TOKEN_FROM_FILE=$(grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r')
         if [ -n "$TOKEN_FROM_FILE" ]; then
             CURRENT_TOKEN="$TOKEN_FROM_FILE"
@@ -681,81 +1094,25 @@ generate-new-root-token: foundation-startup
     
     # Generate new root token
     echo "🔄 Generating new root token..."
-    docker exec -e BAO_ADDR="$BAO_ADDR" -e VAULT_TOKEN="$CURRENT_TOKEN" aria-character-core-aria-app-1 bao token create -policy=root -format=json > /tmp/new_token_response
-    NEW_TOKEN=$(cat /tmp/new_token_response | grep '"token"' | cut -d'"' -f4)
+    NEW_TOKEN_RESPONSE=$(VAULT_TOKEN="$CURRENT_TOKEN" bao token create -address="$BAO_ADDR" -policy=root -format=json 2>/dev/null || echo "")
+    NEW_TOKEN=$(echo "$NEW_TOKEN_RESPONSE" | jq -r '.auth.client_token' 2>/dev/null || echo "")
     
-    if [ -n "$NEW_TOKEN" ]; then
+    if [ -n "$NEW_TOKEN" ] && [ "$NEW_TOKEN" != "null" ]; then
         echo "✅ Generated new root token: $NEW_TOKEN"
         
-        # Update container's token file
-        docker exec aria-character-core-aria-app-1 bash -c "echo '$NEW_TOKEN' > /vault/data/root_token.txt"
+        # Update native token file
+        sudo mkdir -p /opt/bao/data
+        echo "$NEW_TOKEN" | sudo tee /opt/bao/data/root_token.txt >/dev/null
+        sudo chown bao:bao /opt/bao/data/root_token.txt
         
         # Update the token file (no unseal keys with HSM seal)
-        echo "aria-app-1  | Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
-        echo "aria-app-1  | Seal Type: HSM (SoftHSM PKCS#11)" >> .ci/openbao_root_token.txt
+        mkdir -p .ci
+        echo "Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
+        echo "Seal Type: HSM (SoftHSM PKCS#11)" >> .ci/openbao_root_token.txt
         
         echo "📝 Token file updated with new varying root token"
         echo "🔑 New token: $NEW_TOKEN"
         echo "🔐 Seal keys are securely stored in SoftHSM"
-        
-        # Clean up temp files
-        rm -f /tmp/new_token_response
-    else
-        echo "❌ ERROR: Failed to generate new root token"
-        exit 1
-    fi
-    #!/usr/bin/env bash
-    echo "Generating a new varying root token for OpenBao..."
-    export BAO_ADDR="http://localhost:8200"
-    export PATH="/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
-    
-    # First, get the current token to use for authentication
-    CURRENT_TOKEN=""
-    
-    # Try to get token from container's persistent storage first
-    CONTAINER_TOKEN=$(docker exec aria-character-core-aria-app-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
-    if [ -n "$CONTAINER_TOKEN" ]; then
-        CURRENT_TOKEN="$CONTAINER_TOKEN"
-        echo "Using token from container storage: $CURRENT_TOKEN"
-    elif [ -f .ci/openbao_root_token.txt ]; then
-        TOKEN_FROM_FILE=$(grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r')
-        if [ -n "$TOKEN_FROM_FILE" ]; then
-            CURRENT_TOKEN="$TOKEN_FROM_FILE"
-            echo "Using token from file: $CURRENT_TOKEN"
-        fi
-    fi
-    
-    if [ -z "$CURRENT_TOKEN" ]; then
-        echo "❌ ERROR: Could not find valid OpenBao token"
-        exit 1
-    fi
-    
-    echo "Using current token for authentication: $CURRENT_TOKEN"
-    
-    # Generate new root token
-    echo "🔄 Generating new root token..."
-    docker exec -e BAO_ADDR="$BAO_ADDR" -e VAULT_TOKEN="$CURRENT_TOKEN" aria-character-core-aria-app-1 bao token create -policy=root -format=json > /tmp/new_token_response
-    NEW_TOKEN=$(cat /tmp/new_token_response | grep '"token"' | cut -d'"' -f4)
-    
-    if [ -n "$NEW_TOKEN" ]; then
-        echo "✅ Generated new root token: $NEW_TOKEN"
-        
-        # Update container's token file
-        docker exec aria-character-core-aria-app-1 bash -c "echo '$NEW_TOKEN' > /vault/data/root_token.txt"
-        
-        # Update the token file with new token, preserving unseal key
-        UNSEAL_KEY=$(docker exec aria-character-core-aria-app-1 cat /vault/data/unseal_key.txt 2>/dev/null || echo "")
-        
-        echo "aria-app-1  | Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
-        if [ -n "$UNSEAL_KEY" ]; then
-            echo "aria-app-1  | Unseal Key: $UNSEAL_KEY" >> .ci/openbao_root_token.txt
-        fi
-        
-        echo "📝 Token file updated with new varying root token"
-        echo "🔑 New token: $NEW_TOKEN"
-        
-        # Clean up temp files
-        rm -f /tmp/new_token_response
     else
         echo "❌ ERROR: Failed to generate new root token"
         exit 1

@@ -60,3 +60,5 @@ cockroachdb.tar
 /.ci/
 
 /.asdf
+
+bao-*.deb

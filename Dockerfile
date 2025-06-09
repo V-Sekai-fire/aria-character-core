@@ -4,24 +4,29 @@
 # Multi-stage Dockerfile for Aria Character Core with integrated OpenBao and SoftHSM
 
 # Build stage
-FROM hexpm/elixir:1.16.3-erlang-26.2.5-alpine-3.19.1 AS builder
+FROM almalinux:9 AS builder
 
-# Install build dependencies
-RUN apk add --no-cache \
-    build-base \
+# Install EPEL and development tools
+RUN dnf install -y epel-release && \
+    dnf groupinstall -y "Development Tools" && \
+    dnf install -y --allowerasing \
     git \
     curl \
     wget \
     bash \
-    openssl-dev \
-    pcsc-lite-dev \
-    automake \
+    openssl-devel \
+    pcsc-lite-devel \
     autoconf \
+    automake \
     libtool \
-    pkgconfig
+    pkgconfig \
+    rust \
+    cargo \
+    softhsm \
+    unzip
 
-# Install SoftHSM2 from Alpine package
-RUN apk add --no-cache softhsm
+# Install Erlang and Elixir
+RUN dnf install -y erlang elixir
 
 # Set up working directory
 WORKDIR /app
@@ -64,34 +69,40 @@ RUN mix compile
 RUN mix release
 
 # Runtime stage
-FROM quay.io/openbao/openbao:2.2.2 AS runtime
+FROM almalinux:9 AS runtime
+
+# Install EPEL repository first
+RUN dnf install -y epel-release
 
 # Install runtime dependencies
-RUN apk add --no-cache \
+RUN dnf install -y --allowerasing \
     bash \
     curl \
     openssl \
     ncurses \
     sqlite \
-    botan \
     pcsc-lite \
-    opensc \
     ca-certificates \
-    dumb-init \
+    softhsm \
     rust \
     cargo \
-    su-exec
+    unzip \
+    dumb-init \
+    && dnf clean all
 
-# Install SoftHSM2 from Alpine package
-RUN apk add --no-cache softhsm
+# Install OpenBao HSM from RPM package
+RUN curl -fsSL https://github.com/openbao/openbao/releases/download/v2.2.2/bao-hsm_2.2.2_linux_amd64.rpm -o /tmp/bao-hsm.rpm && \
+    dnf install -y /tmp/bao-hsm.rpm && \
+    rm -f /tmp/bao-hsm.rpm
 
 # Create application user (avoiding conflicts with existing groups)
-RUN addgroup -g 1001 aria && \
-    adduser -u 1001 -G aria -s /bin/bash -D aria
+RUN groupadd -g 1001 aria && \
+    useradd -u 1001 -g aria -s /bin/bash -m aria
 
 # Create necessary directories
-RUN mkdir -p /app && \
-    chown -R aria:aria /app
+RUN mkdir -p /app /vault/config /vault/data /vault/logs /var/lib/softhsm/tokens /etc/softhsm2.d && \
+    chown -R aria:aria /app /vault /var/lib/softhsm && \
+    chmod -R 755 /var/lib/softhsm
 
 # Set environment variables
 ENV SOFTHSM2_CONF=/etc/softhsm2.conf
@@ -142,7 +153,7 @@ init_softhsm() {
     
     # Generate RSA key pair for OpenBao seal
     echo "🔑 Generating RSA-2048 key pair for OpenBao seal..."
-    pkcs11-tool --module /usr/lib/softhsm/libsofthsm2.so --login --pin 1234 --slot $ASSIGNED_SLOT --keypairgen --key-type rsa:2048 --label "openbao-seal-key"
+    pkcs11-tool --module /usr/lib64/pkcs11/libsofthsm2.so --login --pin 1234 --slot $ASSIGNED_SLOT --keypairgen --key-type rsa:2048 --label "openbao-seal-key"
     
     # Create OpenBao configuration with the actual slot number
     cat > /vault/config/openbao.hcl << EOC
@@ -156,7 +167,7 @@ listener "tcp" {
 }
 
 seal "pkcs11" {
-  lib = "/usr/lib/softhsm/libsofthsm2.so"
+  lib = "/usr/lib64/pkcs11/libsofthsm2.so"
   slot = "$ASSIGNED_SLOT"
   pin = "1234"
   key_label = "openbao-seal-key"
