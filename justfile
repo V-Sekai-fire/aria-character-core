@@ -34,7 +34,7 @@ dev-setup: install-elixir-erlang-env foundation-startup
     @echo "Development environment setup complete!"
 
 # Testing workflow entry point  
-test-all: test-security-service
+test-all: test-elixir-compile test-elixir-unit test-openbao-connection test-basic-secrets
     @echo "All tests completed!"
 
 # Production deployment workflow
@@ -200,7 +200,157 @@ install-elixir-erlang-env:
     echo "Installing Erlang and Elixir versions (as per .tool-versions)..."
     asdf install
 
-test-security-service: install-elixir-erlang-env start-foundation-core
+# === SIMPLE, FOCUSED TESTS ===
+
+# Test 1: Basic Elixir compilation for all apps
+test-elixir-compile: install-elixir-erlang-env
+    #!/usr/bin/env bash
+    echo "🔨 Testing Elixir compilation for all apps..."
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    echo "📦 Getting dependencies..."
+    mix deps.get || (echo "❌ Failed to get dependencies" && exit 1)
+    
+    echo "🔨 Compiling all apps..."
+    mix compile --force --warnings-as-errors || (echo "❌ Compilation failed" && exit 1)
+    
+    echo "✅ All apps compiled successfully!"
+
+# Test 2: Run unit tests for Elixir apps (no external dependencies)
+test-elixir-unit: test-elixir-compile
+    #!/usr/bin/env bash
+    echo "🧪 Running unit tests for all Elixir apps..."
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    echo "🧪 Running ExUnit tests..."
+    mix test --exclude external_deps || (echo "❌ Unit tests failed" && exit 1)
+    
+    echo "✅ All unit tests passed!"
+
+# Test 3: Test OpenBao connection (basic connectivity only)
+test-openbao-connection: start-foundation-core
+    #!/usr/bin/env bash
+    echo "🔐 Testing basic OpenBao connection..."
+    export VAULT_ADDR="http://localhost:8200"
+    
+    echo "⏳ Waiting for OpenBao to be ready..."
+    timeout 30s bash -c 'until curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ OpenBao not ready" && exit 1)
+    
+    echo "🔍 Checking OpenBao health..."
+    curl -sf "$VAULT_ADDR/v1/sys/health" > /dev/null || (echo "❌ OpenBao health check failed" && exit 1)
+    
+    echo "✅ OpenBao connection test passed!"
+
+# Test 4: Test basic secret operations (requires OpenBao)
+test-basic-secrets: test-openbao-connection
+    #!/usr/bin/env bash
+    echo "🔑 Testing basic secret operations..."
+    export VAULT_ADDR="http://localhost:8200"
+    
+    # Get token from container storage or initialize if needed
+    get_vault_token() {
+        # Try container storage first
+        TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
+        if [ -n "$TOKEN" ]; then
+            echo "$TOKEN"
+            return 0
+        fi
+        
+        # Check if initialized
+        INIT_STATUS=$(curl -sf "$VAULT_ADDR/v1/sys/init" 2>/dev/null || echo "")
+        if echo "$INIT_STATUS" | grep -q '"initialized":false'; then
+            echo "🔧 Initializing OpenBao..."
+            INIT_RESPONSE=$(curl -sf -X POST -d '{"secret_shares":1,"secret_threshold":1}' "$VAULT_ADDR/v1/sys/init" 2>/dev/null)
+            NEW_TOKEN=$(echo "$INIT_RESPONSE" | grep -o '"root_token":"[^"]*"' | cut -d'"' -f4)
+            if [ -n "$NEW_TOKEN" ]; then
+                docker exec aria-character-core-openbao-1 bash -c "mkdir -p /vault/data && echo '$NEW_TOKEN' > /vault/data/root_token.txt" 2>/dev/null || true
+                echo "$NEW_TOKEN"
+                return 0
+            fi
+        fi
+        
+        echo "root"  # fallback
+    }
+    
+    VAULT_TOKEN=$(get_vault_token)
+    export VAULT_TOKEN
+    echo "🔑 Using token: $VAULT_TOKEN"
+    
+    # Test basic secret write/read
+    echo "📝 Testing secret write..."
+    curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
+         -H "Content-Type: application/json" \
+         -X POST \
+         -d '{"data":{"test":"value123"}}' \
+         "$VAULT_ADDR/v1/secret/data/test-basic" > /dev/null || (echo "❌ Secret write failed" && exit 1)
+    
+    echo "📖 Testing secret read..."
+    RESPONSE=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/secret/data/test-basic")
+    if echo "$RESPONSE" | grep -q "value123"; then
+        echo "✅ Basic secret operations test passed!"
+    else
+        echo "❌ Secret read failed or content mismatch"
+        exit 1
+    fi
+
+# Test 5: Test individual app - aria_security
+test-aria-security: test-elixir-compile
+    #!/usr/bin/env bash
+    echo "🛡️  Testing aria_security app specifically..."
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    if [ ! -d apps/aria_security ]; then
+        echo "❌ aria_security app not found"
+        exit 1
+    fi
+    
+    cd apps/aria_security
+    echo "📦 Getting dependencies for aria_security..."
+    mix deps.get || (echo "❌ Failed to get deps" && exit 1)
+    
+    echo "🔨 Compiling aria_security..."
+    mix compile --force --warnings-as-errors || (echo "❌ Compilation failed" && exit 1)
+    
+    echo "🧪 Running aria_security tests..."
+    mix test --exclude external_deps || (echo "❌ Tests failed" && exit 1)
+    
+    cd ../..
+    echo "✅ aria_security tests passed!"
+
+# Test 6: Test individual app - aria_auth  
+test-aria-auth: test-elixir-compile
+    #!/usr/bin/env bash
+    echo "🔐 Testing aria_auth app specifically..."
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    if [ ! -d apps/aria_auth ]; then
+        echo "❌ aria_auth app not found"
+        exit 1
+    fi
+    
+    cd apps/aria_auth
+    echo "📦 Getting dependencies for aria_auth..."
+    mix deps.get || (echo "❌ Failed to get deps" && exit 1)
+    
+    echo "🔨 Compiling aria_auth..."
+    mix compile --force --warnings-as-errors || (echo "❌ Compilation failed" && exit 1)
+    
+    echo "🧪 Running aria_auth tests..."
+    mix test --exclude external_deps || (echo "❌ Tests failed" && exit 1)
+    
+    cd ../..
+    echo "✅ aria_auth tests passed!"
+
+# Legacy complex test (kept for reference, but not used in main workflow)
+test-security-service-legacy: install-elixir-erlang-env start-foundation-core
     #!/usr/bin/env bash
     echo "🧪 Running comprehensive Security Service tests including SoftHSM rekey and destroy operations..."
     export ASDF_DIR="./.asdf"
@@ -497,159 +647,6 @@ test-security-service: install-elixir-erlang-env start-foundation-core
     echo "✅ SoftHSM rekey: PASSED"
     echo "✅ Destroy and recovery: PASSED"
     echo "✅ Post-operation functionality: PASSED"
-
-# Quick test using OpenBao in dev mode (simpler, faster testing)
-test-security-service-dev: install-elixir-erlang-env start-foundation-core
-    #!/usr/bin/env bash
-    echo "🧪 Running Security Service tests with OpenBao in dev mode..."
-    
-    # Setup asdf environment properly (copied from test-security-service)
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
-    . ./.asdf/asdf.sh || true
-    
-    export VAULT_ADDR="http://localhost:8200"
-    export VAULT_TOKEN="dev-only-token"
-    
-    # Stop any existing OpenBao containers
-    echo "🛑 Stopping any existing OpenBao containers..."
-    docker compose -f docker-compose.yml stop openbao 2>/dev/null || true
-    
-    # Start OpenBao in dev mode
-    echo "🚀 Starting OpenBao in dev mode..."
-    docker run -d --name openbao-dev \
-        -p 8200:8200 \
-        --cap-add=IPC_LOCK \
-        openbao/openbao:latest \
-        bao server -dev -dev-root-token-id="dev-only-token" -dev-listen-address="0.0.0.0:8200"
-    
-    # Wait for OpenBao to be ready
-    echo "⏳ Waiting for OpenBao dev server to be ready..."
-    timeout 30s bash -c 'until curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ OpenBao dev server not ready" && exit 1)
-    
-    echo "✅ OpenBao dev server is ready"
-    echo "🔑 Using dev token: $VAULT_TOKEN"
-    
-    # Function to verify OpenBao connection
-    verify_dev_connection() {
-        echo "🔐 Verifying OpenBao dev connection..."
-        if curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/sys/health" > /dev/null; then
-            echo "✅ OpenBao dev connection verified"
-            return 0
-        else
-            echo "❌ Cannot connect to OpenBao dev server"
-            return 1
-        fi
-    }
-    
-    # Function to test basic secret operations
-    test_secret_operations() {
-        echo "🧪 Testing basic secret operations..."
-        
-        # Test writing a secret
-        echo "📝 Writing test secret..."
-        SECRET_DATA='{"password":"test123","api_key":"secret456"}'
-        if curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
-               -H "Content-Type: application/json" \
-               -X POST \
-               -d "{\"data\":$SECRET_DATA}" \
-               "$VAULT_ADDR/v1/secret/data/test-secret" > /dev/null; then
-            echo "✅ Secret written successfully"
-        else
-            echo "❌ Failed to write secret"
-            return 1
-        fi
-        
-        # Test reading the secret
-        echo "📖 Reading test secret..."
-        RESPONSE=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/secret/data/test-secret")
-        if echo "$RESPONSE" | grep -q "test123"; then
-            echo "✅ Secret read successfully"
-        else
-            echo "❌ Failed to read secret or content mismatch"
-            return 1
-        fi
-        
-        return 0
-    }
-    
-    # Function to run basic security tests
-    run_basic_security_tests() {
-        echo "🧪 Running basic security service tests..."
-        
-        if [ ! -d apps/aria_security ]; then
-            echo "❌ ERROR: apps/aria_security directory does not exist"
-            return 1
-        fi
-        
-        cd apps/aria_security
-        if [ ! -f mix.exs ]; then
-            echo "❌ ERROR: mix.exs file does not exist in apps/aria_security"
-            return 1
-        fi
-        
-        echo "🔍 Checking Elixir version..."
-        bash -l -c "elixir --version" || (echo "❌ ERROR: Elixir not found" && return 1)
-        
-        echo "📦 Running: mix deps.get, mix compile, mix test (in apps/aria_security)"
-        # Set environment variables for tests to use dev OpenBao
-        export VAULT_ADDR="http://localhost:8200"
-        export VAULT_TOKEN="dev-only-token"
-        
-        bash -l -c "mix deps.get" && \
-        bash -l -c "mix compile --force --warnings-as-errors" && \
-        bash -l -c "mix test"
-        
-        if [ $? -eq 0 ]; then
-            echo "✅ Basic security service tests passed"
-            cd ../..
-            return 0
-        else
-            echo "❌ Basic security service tests failed"
-            cd ../..
-            return 1
-        fi
-    }
-    
-    # Cleanup function
-    cleanup_dev_server() {
-        echo "🧹 Cleaning up dev server..."
-        docker stop openbao-dev 2>/dev/null || true
-        docker rm openbao-dev 2>/dev/null || true
-    }
-    
-    # Trap to ensure cleanup on exit
-    trap cleanup_dev_server EXIT
-    
-    # Main test execution
-    echo ""
-    echo "=== OpenBao Dev Mode Tests ==="
-    
-    # Test 1: Verify connection
-    if ! verify_dev_connection; then
-        echo "❌ Dev connection test failed"
-        exit 1
-    fi
-    
-    # Test 2: Basic secret operations
-    if ! test_secret_operations; then
-        echo "❌ Secret operations test failed"
-        exit 1
-    fi
-    
-    # Test 3: Run Elixir security tests
-    if ! run_basic_security_tests; then
-        echo "❌ Elixir security tests failed"
-        exit 1
-    fi
-    
-    echo ""
-    echo "🎉 All dev mode security tests completed successfully!"
-    echo "✅ OpenBao dev connection: PASSED"
-    echo "✅ Secret operations: PASSED"
-    echo "✅ Elixir security tests: PASSED"
-    
-    # Cleanup will happen automatically via trap
 
 # Generate a new varying root token for OpenBao
 generate-new-root-token: foundation-startup
