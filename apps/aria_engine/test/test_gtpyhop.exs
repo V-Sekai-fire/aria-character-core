@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Simple standalone test for GTPyhop without application dependencies
 IO.puts("Starting GTPyhop test...")
 
