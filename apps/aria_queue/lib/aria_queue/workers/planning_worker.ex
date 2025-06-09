@@ -9,7 +9,7 @@ defmodule AriaQueue.Workers.PlanningWorker do
   use Oban.Worker, queue: :planning, max_attempts: 5
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"type" => "workflow_planning", "workflow_id" => workflow_id} = args}) do
+  def perform(%Oban.Job{args: %{"type" => "workflow_planning", "workflow_id" => workflow_id} = _args}) do
     require Logger
     Logger.info("Processing workflow planning for workflow #{workflow_id}")
     
@@ -20,7 +20,7 @@ defmodule AriaQueue.Workers.PlanningWorker do
     :ok
   end
 
-  def perform(%Oban.Job{args: %{"type" => "resource_allocation", "resources" => resources} = args}) do
+  def perform(%Oban.Job{args: %{"type" => "resource_allocation", "resources" => resources} = _args}) do
     require Logger
     Logger.info("Processing resource allocation for #{length(resources)} resources")
     

@@ -448,7 +448,7 @@ defmodule AriaEngine.TestDomains do
       cash >= fare
     end) do
       nil -> false
-      _taxi ->
+      taxi ->
         [
           {"call_taxi", person, taxi},
           {"ride_taxi", person, taxi, destination},
@@ -568,7 +568,7 @@ defmodule AriaEngine.TestDomains do
       cash >= fare
     end) do
       nil -> false
-      _taxi ->
+      taxi ->
         [
           {"call_taxi", person, taxi},
           {"ride_taxi", person, taxi, destination},

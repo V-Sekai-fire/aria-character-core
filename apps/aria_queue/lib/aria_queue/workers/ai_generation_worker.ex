@@ -22,7 +22,7 @@ defmodule AriaQueue.Workers.AIGenerationWorker do
     :ok
   end
 
-  def perform(%Oban.Job{args: %{"type" => "story_generation", "user_id" => user_id, "context" => context} = args}) do
+  def perform(%Oban.Job{args: %{"type" => "story_generation", "user_id" => user_id, "context" => _context} = _args}) do
     require Logger
     Logger.info("Processing story generation for user #{user_id}")
     
