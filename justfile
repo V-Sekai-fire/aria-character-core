@@ -210,8 +210,9 @@ init-softhsm-elixir: install-elixir-erlang-env configure-softhsm
     echo "🔧 Initializing SoftHSM using AriaSecurity.SoftHSM module..."
     
     # Setup asdf environment
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:${PATH}"
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
     . ./.asdf/asdf.sh || true
     
     # Set SoftHSM environment
@@ -220,11 +221,6 @@ init-softhsm-elixir: install-elixir-erlang-env configure-softhsm
     
     # Use Elixir module to initialize SoftHSM
     echo "🔑 Using AriaSecurity.SoftHSM to initialize token..."
-    
-    # Ensure asdf environment is available for mix command
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:${PATH}"
-    . ./.asdf/asdf.sh || true
     
     mix run -e '
     config = %{
@@ -411,8 +407,10 @@ start-elixir-app: install-elixir-erlang-env
     #!/usr/bin/env bash
     echo "🚀 Starting Elixir application..."
     
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:${PATH}"
+    # Setup asdf environment
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
     . ./.asdf/asdf.sh || true
     
     # Set environment variables for production
@@ -710,9 +708,8 @@ install-elixir-erlang-env:
     #!/usr/bin/env bash
     echo "Installing asdf in the project root..."
     
-    # Ensure we're in the project directory
+    # Ensure we're in the project directory (just sets cwd to the justfile directory)
     cd "$(dirname "$0")" || exit 1
-    
     if [ ! -d "./.asdf" ]; then
         echo "Cloning asdf into ./.asdf..."
         git clone https://github.com/asdf-vm/asdf.git ./.asdf --branch v0.14.0
@@ -736,8 +733,14 @@ install-elixir-erlang-env:
     asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git || true
     asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true
     
-    echo "Installing Erlang and Elixir versions (as per .tool-versions)..."
-    asdf install
+    # Check if versions are already installed
+    if asdf current erlang 2>/dev/null && asdf current elixir 2>/dev/null; then
+        echo "Erlang and Elixir are already installed!"
+        asdf current
+    else
+        echo "Installing Erlang and Elixir versions (as per .tool-versions)..."
+        asdf install
+    fi
 
 # Test 1: Basic Elixir compilation for all apps
 test-elixir-compile: install-elixir-erlang-env
@@ -762,8 +765,11 @@ test-elixir-compile: install-elixir-erlang-env
 test-elixir-unit: start-cockroach test-elixir-compile
     #!/usr/bin/env bash
     echo "🧪 Running unit tests for all Elixir apps..."
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:${PATH}"
+    
+    # Setup asdf environment
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
     . ./.asdf/asdf.sh || true
     
     # Set environment variables for testing
@@ -849,8 +855,11 @@ test-basic-secrets: test-openbao-connection
 test-aria-security: test-elixir-compile
     #!/usr/bin/env bash
     echo "🛡️  Testing aria_security app specifically..."
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:${PATH}"
+    
+    # Setup asdf environment
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
     . ./.asdf/asdf.sh || true
     
     if [ ! -d apps/aria_security ]; then
@@ -875,8 +884,11 @@ test-aria-security: test-elixir-compile
 test-aria-auth: test-elixir-compile
     #!/usr/bin/env bash
     echo "🔐 Testing aria_auth app specifically..."
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:${PATH}"
+    
+    # Setup asdf environment
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
     . ./.asdf/asdf.sh || true
     
     if [ ! -d apps/aria_auth ]; then
@@ -903,8 +915,9 @@ test-softhsm-elixir: init-softhsm-elixir
     echo "🔧 Testing SoftHSM integration via AriaSecurity.SoftHSM module..."
     
     # Setup asdf environment
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:${PATH}"
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
     . ./.asdf/asdf.sh || true
     
     # Set SoftHSM environment
@@ -962,8 +975,11 @@ test-softhsm-elixir: init-softhsm-elixir
 test-security-service-legacy: install-elixir-erlang-env start-foundation-core
     #!/usr/bin/env bash
     echo "🧪 Running comprehensive Security Service tests including SoftHSM rekey and destroy operations..."
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
+    
+    # Setup asdf environment
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
     . ./.asdf/asdf.sh || true
     export VAULT_ADDR="http://localhost:8200"
     
