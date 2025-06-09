@@ -7,22 +7,22 @@ default: dev-setup
     @echo ""
     @echo "Main Workflows:"
     @echo "  just dev-setup        - Set up development environment"
-    @echo "  just full-dev-setup   - Complete development setup including environment"
+    @echo "  just setup-env dev-setup - Complete development setup including environment"
     @echo "  just test-all         - Run all tests"
-    @echo "  just prod-deploy      - Deploy production environment"
+    @echo "  just up-all-and-check - Deploy production environment"
     @echo ""
     @echo "Status & Monitoring:"
-    @echo "  just status           - Check foundation service status"
-    @echo "  just extended-status  - Extended status including all services"
-    @echo "  just logs             - View service logs"
+    @echo "  just foundation-status - Check foundation service status"
+    @echo "  just foundation-status check-all-health - Extended status including all services"
+    @echo "  just foundation-logs  - View service logs"
     @echo ""
     @echo "Management:"
-    @echo "  just setup-env        - Set up Elixir/Erlang environment"
-    @echo "  just manage-tokens    - Generate new OpenBao tokens"
+    @echo "  just install-elixir-erlang-env - Set up Elixir/Erlang environment"
+    @echo "  just generate-new-root-token - Generate new OpenBao tokens"
     @echo "  just destroy-bao      - Destroy and reinitialize OpenBao and SoftHSM (DESTRUCTIVE)"
     @echo "  just rekey-bao        - Rekey OpenBao unseal keys and optionally SoftHSM"
     @echo "  just rekey-softhsm    - Regenerate SoftHSM tokens (DESTRUCTIVE)"
-    @echo "  just clean            - Clean up all services"
+    @echo "  just stop-all-services - Clean up all services"
     @echo ""
     @echo "Low-level:"
     @echo "  just foundation-startup    - Start foundation services only"
@@ -62,27 +62,6 @@ test-unit-ci: test-elixir-compile
 
 # Fast CI test suite (compile + unit tests only)
 test-ci-fast: test-elixir-compile test-unit-ci test-aria-security test-aria-auth
-    #!/usr/bin/env bash
-    echo "⚡ Running fast CI test suite (compile + unit tests for all apps)..."
-    echo "✅ Fast CI test suite completed!"
-
-# Production deployment workflow
-prod-deploy: up-all-and-check
-    #!/usr/bin/env bash
-    echo "🚀 Deploying production environment (start all + verify)..."
-    echo "✅ Production deployment complete!"
-
-# Status check workflow
-status: foundation-status
-    #!/usr/bin/env bash
-    echo "📊 Checking foundation service status..."
-    echo "✅ Status check complete!"
-
-# Clean up workflow
-clean: stop-all-services
-    #!/usr/bin/env bash
-    echo "🧹 Cleaning up all services..."
-    echo "✅ Cleanup complete!"
 
 # Install Ubuntu dependencies for native setup
 install-ubuntu-deps:
@@ -727,33 +706,6 @@ up-all-and-check: start-all check-foundation-core-health
 
 # Environment setup and management
 setup-env: install-elixir-erlang-env
-    #!/usr/bin/env bash
-    echo "🚀 Setting up environment for development..."
-    echo "✅ Environment setup complete!"
-
-# Token management workflow
-manage-tokens: generate-new-root-token
-    #!/usr/bin/env bash
-    echo "🔑 Managing OpenBao tokens..."
-    echo "✅ Token management complete!"
-
-# Complete development workflow
-full-dev-setup: setup-env dev-setup
-    #!/usr/bin/env bash
-    echo "🚀 Running full development setup (environment + foundation)..."
-    echo "✅ Full development setup complete!"
-
-# Logs workflow
-logs: foundation-logs
-    #!/usr/bin/env bash
-    echo "📋 Displaying foundation service logs..."
-    echo "✅ Logs displayed!"
-
-# Extended status workflow
-extended-status: status check-all-health
-    #!/usr/bin/env bash
-    echo "📊 Running extended status check (foundation + all services)..."
-    echo "✅ Extended status check complete!"
 
 install-elixir-erlang-env:
     ./scripts/install-elixir-erlang.sh
