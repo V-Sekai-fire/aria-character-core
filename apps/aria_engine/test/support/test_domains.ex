@@ -12,6 +12,76 @@ defmodule AriaEngine.TestDomains do
 
   import AriaEngine
   alias AriaEngine.{State, SimpleTravelActions, SimpleTravelMethods}
+  alias AriaEngine.{CharacterGenerationActions, CharacterGenerationMethods}
+
+  @doc """
+  Builds a character generation domain for testing.
+
+  This creates a domain with comprehensive character generation capabilities
+  including constraint-aware generation with automatic backtracking, preset
+  configurations, and hierarchical task planning.
+  """
+  @spec build_character_generation_domain() :: AriaEngine.domain()
+  def build_character_generation_domain do
+    domain = create_domain("character_generation")
+
+    # Add basic actions for character generation
+    domain = domain
+    |> add_action(:set_character_attribute, &CharacterGenerationActions.set_character_attribute/2)
+    |> add_action(:randomize_attribute, &CharacterGenerationActions.randomize_attribute/2)
+    |> add_action(:generate_text_prompt, &CharacterGenerationActions.generate_text_prompt/2)
+    |> add_action(:log_generation_step, &CharacterGenerationActions.log_generation_step/2)
+    |> add_action(:validate_constraints, &CharacterGenerationActions.validate_constraints/2)
+    |> add_action(:resolve_dependency, &CharacterGenerationActions.resolve_dependency/2)
+    |> add_action(:auto_correct_conflicts, &CharacterGenerationActions.auto_correct_conflicts/2)
+
+    # Add hierarchical task methods with constraint checking and backtracking
+    domain = domain
+    |> add_task_method("generate_character_with_constraints", 
+        &CharacterGenerationMethods.generate_character_with_constraints/2)
+    |> add_task_method("generate_character_with_constraints",
+        &CharacterGenerationMethods.generate_character_with_constraints_fallback/2)
+    |> add_task_method("generate_character",
+        &CharacterGenerationMethods.generate_character/2)
+    |> add_task_method("configure_character_presets",
+        &CharacterGenerationMethods.configure_character_presets/2)
+    |> add_task_method("validate_and_resolve_constraints",
+        &CharacterGenerationMethods.validate_and_resolve_constraints/2)
+    |> add_task_method("validate_and_resolve_constraints",
+        &CharacterGenerationMethods.validate_and_resolve_constraints_reset/2)
+    |> add_task_method("randomize_remaining_attributes_safely",
+        &CharacterGenerationMethods.randomize_remaining_attributes_safely/2)
+    |> add_task_method("randomize_remaining_attributes_safely",
+        &CharacterGenerationMethods.randomize_remaining_attributes_safely_fallback/2)
+    |> add_task_method("check_attribute_constraints",
+        &CharacterGenerationMethods.check_attribute_constraints/2)
+    |> add_task_method("check_attribute_constraints",
+        &CharacterGenerationMethods.check_attribute_constraints_fallback/2)
+    |> add_task_method("final_constraint_validation",
+        &CharacterGenerationMethods.final_constraint_validation/2)
+    |> add_task_method("configure_simple_preset",
+        &CharacterGenerationMethods.configure_simple_preset/2)
+    |> add_task_method("reset_conflicting_attributes",
+        &CharacterGenerationMethods.reset_conflicting_attributes/2)
+    |> add_task_method("randomize_remaining_attributes",
+        &CharacterGenerationMethods.randomize_remaining_attributes/2)
+    |> add_task_method("generate_detailed_prompt",
+        &CharacterGenerationMethods.generate_detailed_prompt/2)
+    |> add_task_method("customize_species",
+        &CharacterGenerationMethods.customize_species/2)
+    |> add_task_method("customize_archetype",
+        &CharacterGenerationMethods.customize_archetype/2)
+    |> add_task_method("customize_theme",
+        &CharacterGenerationMethods.customize_theme/2)
+    |> add_task_method("finalize_character_prompt",
+        &CharacterGenerationMethods.finalize_character_prompt/2)
+    |> add_task_method("resolve_feature_dependencies",
+        &CharacterGenerationMethods.resolve_feature_dependencies/2)
+    |> add_task_method("resolve_thematic_conflicts",
+        &CharacterGenerationMethods.resolve_thematic_conflicts/2)
+
+    domain
+  end
 
   @doc """
   Builds a logistics domain for testing.
