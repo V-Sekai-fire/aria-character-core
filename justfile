@@ -94,19 +94,19 @@ install-cockroach:
     cd /tmp
     wget -O cockroach.tgz "https://buildomat.eng.oxide.computer/public/file/oxidecomputer/cockroach/linux-amd64/865aff1595e494c2ce95030c7a2f20c4370b5ff8/cockroach.tgz"
     
-    # Extract and install
+    # Extract and install (one layer)
     tar -xzf cockroach.tgz
-    sudo cp cockroach /usr/local/bin/
+    sudo cp cockroach/cockroach /usr/local/bin/
     sudo chmod +x /usr/local/bin/cockroach
-    
+
     # Create cockroach user and directories
     sudo useradd --system --home /var/lib/cockroach --shell /bin/false cockroach || true
     sudo mkdir -p /var/lib/cockroach /var/log/cockroach
     sudo chown cockroach:cockroach /var/lib/cockroach /var/log/cockroach
-    
+
     # Clean up
-    rm -f cockroach.tgz cockroach
-    
+    rm -rf cockroach cockroach.tgz
+
     echo "✅ CockroachDB installed!"
     cockroach version
 
@@ -204,6 +204,57 @@ configure-softhsm:
     
     echo "✅ SoftHSM configured successfully!"
 
+# Initialize SoftHSM using Elixir module for better integration
+init-softhsm-elixir: install-elixir-erlang-env configure-softhsm
+    #!/usr/bin/env bash
+    echo "🔧 Initializing SoftHSM using AriaSecurity.SoftHSM module..."
+    
+    # Setup asdf environment
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    # Set SoftHSM environment
+    export SOFTHSM2_CONF=/etc/softhsm2.conf
+    export MIX_ENV=dev
+    
+    # Use Elixir module to initialize SoftHSM
+    echo "🔑 Using AriaSecurity.SoftHSM to initialize token..."
+    
+    # Ensure asdf environment is available for mix command
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    mix run -e '
+    config = %{
+      slot_id: 0,
+      token_label: "openbao-token", 
+      user_pin: "1234",
+      so_pin: "1234"
+    }
+    
+    case AriaSecurity.SoftHSM.initialize_token(config) do
+      {:ok, _} -> 
+        IO.puts("✅ SoftHSM token initialized successfully via Elixir module")
+        
+        # List slots to verify
+        case AriaSecurity.SoftHSM.list_slots(config) do
+          {:ok, slots} -> 
+            IO.puts("📋 Available slots:")
+            IO.inspect(slots)
+          {:error, reason} -> 
+            IO.puts("⚠️  Could not list slots: #{inspect(reason)}")
+        end
+        
+      {:error, reason} -> 
+        IO.puts("❌ Failed to initialize SoftHSM token: #{inspect(reason)}")
+        System.halt(1)
+    end
+    '
+    
+    echo "✅ SoftHSM initialized via Elixir module!"
+
 # Start CockroachDB natively
 start-cockroach: install-cockroach
     #!/usr/bin/env bash
@@ -236,7 +287,7 @@ start-cockroach: install-cockroach
     echo "✅ CockroachDB started successfully!"
 
 # Start OpenBao natively
-start-openbao: install-openbao configure-softhsm
+start-openbao: install-openbao init-softhsm-elixir
     #!/usr/bin/env bash
     echo "🔐 Starting OpenBao with SoftHSM..."
     
@@ -828,6 +879,67 @@ test-aria-auth: test-elixir-compile
     
     cd ../..
     echo "✅ aria_auth tests passed!"
+
+# Test 7: Test SoftHSM integration using Elixir module
+test-softhsm-elixir: init-softhsm-elixir
+    #!/usr/bin/env bash
+    echo "🔧 Testing SoftHSM integration via AriaSecurity.SoftHSM module..."
+    
+    # Setup asdf environment
+    export ASDF_DIR="./.asdf"
+    export PATH="./.asdf/bin:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    # Set SoftHSM environment
+    export SOFTHSM2_CONF=/etc/softhsm2.conf
+    export MIX_ENV=test
+    
+    echo "🔑 Testing SoftHSM operations via Elixir..."
+    mix run -e '
+    config = %{
+      slot_id: 0,
+      token_label: "openbao-token", 
+      user_pin: "1234",
+      so_pin: "1234"
+    }
+    
+    # Test 1: List slots
+    IO.puts("📋 Testing slot listing...")
+    case AriaSecurity.SoftHSM.list_slots(config) do
+      {:ok, slots} -> 
+        IO.puts("✅ Successfully listed #{length(slots)} slots")
+        IO.inspect(slots, label: "Available slots")
+      {:error, reason} -> 
+        IO.puts("❌ Failed to list slots: #{inspect(reason)}")
+        System.halt(1)
+    end
+    
+    # Test 2: Generate RSA keypair
+    IO.puts("🔐 Testing RSA keypair generation...")
+    case AriaSecurity.SoftHSM.generate_rsa_keypair(config, "test-key") do
+      {:ok, result} -> 
+        IO.puts("✅ Successfully generated RSA keypair")
+        IO.inspect(result, label: "Keypair result")
+      {:error, reason} -> 
+        IO.puts("❌ Failed to generate keypair: #{inspect(reason)}")
+        System.halt(1)
+    end
+    
+    # Test 3: List objects
+    IO.puts("📦 Testing object listing...")
+    case AriaSecurity.SoftHSM.list_objects(config) do
+      {:ok, objects} -> 
+        IO.puts("✅ Successfully listed #{length(objects)} objects")
+        IO.inspect(objects, label: "HSM objects")
+      {:error, reason} -> 
+        IO.puts("❌ Failed to list objects: #{inspect(reason)}")
+        System.halt(1)
+    end
+    
+    IO.puts("✅ All SoftHSM tests passed!")
+    '
+    
+    echo "✅ SoftHSM Elixir integration tests completed successfully!"
 
 # Legacy complex test (kept for reference, but not used in main workflow)
 test-security-service-legacy: install-elixir-erlang-env start-foundation-core
