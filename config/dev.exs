@@ -6,15 +6,71 @@ import Config
 # Development environment configuration
 config :logger, level: :debug
 
-# Configure development database (PostgreSQL adapter, CockroachDB compatible)
+# Configure development databases (PostgreSQL adapter, CockroachDB compatible)
+# Main repository for general data
 config :aria_data, AriaData.Repo,
   username: "postgres",
   password: "postgres", 
   hostname: "localhost",
-  database: "aria_character_core_dev",
+  database: "aria_data_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10,
+  adapter: Ecto.Adapters.Postgres
+
+# Authentication repository for user data
+config :aria_data, AriaData.AuthRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost", 
+  database: "aria_auth_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 8,
+  adapter: Ecto.Adapters.Postgres
+
+# Queue repository for background jobs
+config :aria_data, AriaData.QueueRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "aria_queue_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 8,
+  adapter: Ecto.Adapters.Postgres
+
+# Storage repository for file metadata
+config :aria_data, AriaData.StorageRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "aria_storage_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 8,
+  adapter: Ecto.Adapters.Postgres
+
+# Monitor repository for telemetry data
+config :aria_data, AriaData.MonitorRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "aria_monitor_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 6,
+  adapter: Ecto.Adapters.Postgres
+
+# Engine repository for planning data
+config :aria_data, AriaData.EngineRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "aria_engine_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 6,
   adapter: Ecto.Adapters.Postgres
 
 # Development Phoenix configuration for coordinate service
@@ -28,7 +84,7 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
 
 # Configure Oban for development (used by queue service)
 config :aria_queue, Oban,
-  repo: AriaData.Repo,
+  repo: AriaData.QueueRepo,
   plugins: [Oban.Plugins.Pruner],
   queues: [
     ai_generation: 5,

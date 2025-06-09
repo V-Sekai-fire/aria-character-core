@@ -33,6 +33,7 @@ services:
     command: start-single-node --insecure
     volumes:
       - cockroachdb_data:/cockroach/cockroach-data
+      - ./scripts:/scripts
     healthcheck:
       test: ["CMD", "/cockroach/cockroach", "node", "status", "--insecure", "--host=localhost:26257"]
       interval: 30s

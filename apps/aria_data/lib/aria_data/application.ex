@@ -11,8 +11,15 @@ defmodule AriaData.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Start the database supervisor when needed
-      # {AriaData.Repo, []}
+      # Main repository for general data
+      {AriaData.Repo, []},
+      
+      # Specialized repositories for different services
+      {AriaData.AuthRepo, []},
+      {AriaData.QueueRepo, []},
+      {AriaData.StorageRepo, []},
+      {AriaData.MonitorRepo, []},
+      {AriaData.EngineRepo, []}
     ]
 
     opts = [strategy: :one_for_one, name: AriaData.Supervisor]

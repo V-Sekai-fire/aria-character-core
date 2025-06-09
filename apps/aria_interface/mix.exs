@@ -41,10 +41,6 @@ defmodule AriaInterface.MixProject do
       # WebSocket and real-time communication
       {:phoenix_pubsub, "~> 2.1"},
       
-      # gRPC support
-      {:grpc, "~> 0.7"},
-      {:protobuf, "~> 0.12"},
-      
       # Character shaping for data characterization
       {:aria_shape, in_umbrella: true},
       

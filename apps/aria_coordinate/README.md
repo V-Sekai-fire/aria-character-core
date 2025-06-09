@@ -10,7 +10,7 @@ To serve as the 'Grand Entrance Hall,' efficiently directing visitors to their d
 
 ## Key Responsibilities
 
-- Route HTTP/3, WebSocket, and gRPC requests to appropriate backend services
+- Route HTTP/3, WebSocket, and Webrtc requests to appropriate backend services
 - Enforce authentication and authorization policies by validating tokens from the Authentication Service
 - Implement rate limiting, circuit breaking, and retry logic for resilient service interactions
 - Provide protocol translation between different communication protocols

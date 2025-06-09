@@ -35,6 +35,15 @@ defmodule AriaStorage.MixProject do
       
       # File handling and compression
       {:ex_crypto, "~> 0.10"},
+      {:ezstd, "~> 1.0"},  # zstd compression for desync compatibility
+      
+      # File upload and storage with Waffle
+      {:waffle, "~> 1.1"},
+      {:waffle_ecto, "~> 0.0"},
+      {:ex_image_info, "~> 0.2.4"},  # Image metadata for Waffle
+      
+      # Casync/desync format parsing
+      {:nimble_parsec, "~> 1.4"},  # Parser combinator for casync formats
       
       # SFTP support
       {:sftp_ex, "~> 0.2"},
