@@ -104,15 +104,17 @@ This project follows Test-Driven Development (TDD). Each checkbox represents a f
   - [ ] Security vulnerability scanning
 
 - [ ] **Deployment & Operations**
-  - [ ] Containerization (Docker)
-  - [ ] Kubernetes manifests
+  - [x] Native systemd service deployment
+  - [x] Production setup automation scripts
   - [ ] CI/CD pipeline configuration
   - [ ] Environment-specific configurations
   - [ ] Monitoring and alerting setup
 
 ## 🔧 Quick Start
 
-**Prerequisites:** This project uses `asdf-vm` for version management.
+**Prerequisites:** This project uses `asdf-vm` for version management and `just` for task automation.
+
+### Development Setup
 
 ```bash
 # Install dependencies
@@ -130,6 +132,41 @@ mix test.all
 # Start development server
 mix phx.server
 ```
+
+### Production Deployment
+
+The project uses native systemd services for production deployment (Docker setup moved to `legacy/docker/`):
+
+```bash
+# Automated production setup (recommended)
+just setup-production
+
+# Manual setup if needed
+sudo ./scripts/setup-production.sh
+
+# Production service management
+just start-production     # Start all services
+just stop-production      # Stop all services
+just status-production    # Check service status
+just logs-production      # View application logs
+just restart-production   # Restart all services
+```
+
+**Production Components:**
+- **CockroachDB**: Distributed SQL database
+- **OpenBao**: Secrets management (HSM-enabled)
+- **SeaweedFS**: Distributed file storage
+- **Aria Application**: Main Elixir umbrella app
+
+All services run as systemd units under the `aria` user with proper security isolation.
+
+### Migration from Docker
+
+🎉 **Migration Complete!** This project has been successfully migrated from Docker-based deployment to native systemd services for better performance and resource utilization.
+
+- **Legacy Docker files** are preserved in `legacy/docker/` for reference
+- **Migration documentation** available in `legacy/MIGRATION.md`
+- **Production setup** now uses native installation with full automation
 
 ## 📈 Testing Strategy
 

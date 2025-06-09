@@ -1,0 +1,40 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+[Unit]
+Description=SeaweedFS distributed storage for Aria Character Core
+Documentation=https://github.com/seaweedfs/seaweedfs
+After=network.target
+Wants=network.target
+
+[Service]
+Type=exec
+User=aria
+Group=aria
+Environment=WEED_MASTER_DIR=/opt/aria/data/seaweed/master
+Environment=WEED_VOLUME_DIR=/opt/aria/data/seaweed/volume
+Environment=WEED_FILER_DIR=/opt/aria/data/seaweed/filer
+ExecStartPre=/bin/bash -c 'mkdir -p /opt/aria/data/seaweed/{master,volume,filer} /opt/aria/logs'
+ExecStart=/bin/bash -c '/usr/local/bin/weed server -master.dir=/opt/aria/data/seaweed/master -volume.dir=/opt/aria/data/seaweed/volume -filer.dir=/opt/aria/data/seaweed/filer -s3 -s3.port=8333'
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=10s
+TimeoutStartSec=60s
+TimeoutStopSec=30s
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=32768
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/aria/data/seaweed
+ReadWritePaths=/opt/aria/logs
+ReadWritePaths=/tmp
+
+[Install]
+WantedBy=multi-user.target

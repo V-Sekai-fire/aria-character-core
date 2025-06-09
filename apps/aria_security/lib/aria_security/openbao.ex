@@ -272,20 +272,22 @@ defmodule AriaSecurity.OpenBao do
       {:ok, "hvs.1234567890"}
   """
   def get_root_token(%__MODULE__{} = bao) do
-    # Try to get token from container storage
-    case System.cmd("docker", ["exec", "aria-character-core-openbao-1", "cat", "/vault/data/root_token.txt"], stderr_to_stdout: true) do
-      {token, 0} ->
+    # Try to get token from native OpenBao storage
+    token_file = "/opt/bao/data/root_token.txt"
+
+    case File.read(token_file) do
+      {:ok, token} ->
         clean_token = String.trim(token)
         if String.length(clean_token) > 0 do
-          Logger.info("Retrieved OpenBao root token from container storage")
+          Logger.info("Retrieved OpenBao root token from native storage")
           {:ok, clean_token}
         else
           {:error, :empty_token}
         end
 
-      {error, exit_code} ->
-        Logger.warn("Could not retrieve token from container: #{error}")
-        {:error, {:container_access_failed, exit_code, error}}
+      {:error, reason} ->
+        Logger.warn("Could not retrieve token from file #{token_file}: #{reason}")
+        {:error, {:file_access_failed, reason}}
     end
   end
 

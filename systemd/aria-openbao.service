@@ -1,0 +1,41 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+[Unit]
+Description=OpenBao server for Aria Character Core
+Documentation=https://openbao.org/docs/
+After=network.target aria-cockroachdb.service
+Wants=aria-cockroachdb.service
+
+[Service]
+Type=exec
+User=aria
+Group=aria
+Environment=VAULT_ADDR=http://localhost:8200
+Environment=OPENBAO_DISABLE_MLOCK=true
+Environment=SOFTHSM2_CONF=/opt/aria/softhsm/softhsm2.conf
+ExecStartPre=/bin/bash -c 'mkdir -p /opt/aria/data/openbao /opt/aria/logs'
+ExecStart=/usr/local/bin/bao server -config=/opt/aria/config/openbao.hcl
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=10s
+TimeoutStartSec=60s
+TimeoutStopSec=30s
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=32768
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/aria/data/openbao
+ReadWritePaths=/opt/aria/logs
+ReadWritePaths=/opt/aria/softhsm
+ReadWritePaths=/tmp
+
+[Install]
+WantedBy=multi-user.target

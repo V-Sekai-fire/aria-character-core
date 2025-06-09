@@ -1,0 +1,47 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+[Unit]
+Description=Aria Character Core Elixir Application
+Documentation=https://github.com/fire/aria-character-core
+After=network.target aria-cockroachdb.service aria-openbao.service aria-seaweedfs.service
+Wants=aria-cockroachdb.service aria-openbao.service aria-seaweedfs.service
+
+[Service]
+Type=exec
+User=aria
+Group=aria
+WorkingDirectory=/opt/aria/app
+Environment=MIX_ENV=prod
+Environment=PHX_SERVER=true
+Environment=DATABASE_URL=postgresql://root@localhost:26257/aria_character_core?sslmode=disable
+Environment=VAULT_ADDR=http://localhost:8200
+Environment=RELEASE_COOKIE=aria_character_core_production_cookie
+Environment=RELEASE_NODE=aria@localhost
+Environment=ASDF_DIR=/opt/aria/.asdf
+Environment=PATH=/opt/aria/.asdf/bin:/opt/aria/.asdf/shims:/usr/local/bin:/usr/bin:/bin
+ExecStartPre=/bin/bash -c 'source /opt/aria/.asdf/asdf.sh && cd /opt/aria/app && mix ecto.migrate'
+ExecStart=/bin/bash -c 'source /opt/aria/.asdf/asdf.sh && cd /opt/aria/app && mix phx.server'
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+Restart=on-failure
+RestartSec=10s
+TimeoutStartSec=120s
+TimeoutStopSec=30s
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=32768
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/aria/app
+ReadWritePaths=/opt/aria/data
+ReadWritePaths=/opt/aria/logs
+ReadWritePaths=/tmp
+
+[Install]
+WantedBy=multi-user.target

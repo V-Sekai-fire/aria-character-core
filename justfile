@@ -185,13 +185,11 @@ configure-softhsm:
     echo "🔧 Configuring SoftHSM for OpenBao..."
     
     # Create SoftHSM configuration
-    sudo tee /etc/softhsm2.conf > /dev/null << 'EOF'
-# SoftHSM v2 configuration file
-directories.tokendir = /var/lib/softhsm/tokens
-objectstore.backend = file
-log.level = INFO
-slots.removable = false
-EOF
+    sudo sh -c 'echo "# SoftHSM v2 configuration file" > /etc/softhsm2.conf'
+    sudo sh -c 'echo "directories.tokendir = /var/lib/softhsm/tokens" >> /etc/softhsm2.conf'
+    sudo sh -c 'echo "objectstore.backend = file" >> /etc/softhsm2.conf'
+    sudo sh -c 'echo "log.level = INFO" >> /etc/softhsm2.conf'
+    sudo sh -c 'echo "slots.removable = false" >> /etc/softhsm2.conf'
     
     # Set environment variable for SoftHSM config
     export SOFTHSM2_CONF=/etc/softhsm2.conf
@@ -256,48 +254,46 @@ start-openbao: install-openbao configure-softhsm
     
     # Create OpenBao configuration
     sudo mkdir -p /opt/bao/config
-    sudo tee /opt/bao/config/openbao.hcl > /dev/null << EOF
-# OpenBao configuration for production with SoftHSM seal protection
-storage "file" {
-  path = "/opt/bao/data"
-}
-
-listener "tcp" {
-  address = "0.0.0.0:8200"
-  tls_disable = 1
-}
-
-# HSM seal configuration using SoftHSM PKCS#11
-seal "pkcs11" {
-  lib = "/usr/lib/softhsm/libsofthsm2.so"
-  slot = "${OPENBAO_PKCS11_SLOT}"
-  pin = "${OPENBAO_PKCS11_PIN}"
-  key_label = "openbao-seal-key"
-  hmac_key_label = "openbao-hmac-key"
-  generate_key = "true"
-}
-
-# API address
-api_addr = "http://0.0.0.0:8200"
-
-# Cluster address
-cluster_addr = "http://0.0.0.0:8201"
-
-# UI enabled
-ui = true
-
-# Logging
-log_level = "Info"
-
-# Disable mlock for development
-disable_mlock = true
-
-# Default lease TTL
-default_lease_ttl = "168h"
-
-# Maximum lease TTL
-max_lease_ttl = "720h"
-EOF
+    sudo sh -c 'echo "# OpenBao configuration for production with SoftHSM seal protection" > /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "storage \"file\" {" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "  path = \"/opt/bao/data\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "}" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "listener \"tcp\" {" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "  address = \"0.0.0.0:8200\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "  tls_disable = 1" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "}" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "# HSM seal configuration using SoftHSM PKCS#11" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "seal \"pkcs11\" {" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "  lib = \"/usr/lib/softhsm/libsofthsm2.so\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "  slot = \"${OPENBAO_PKCS11_SLOT}\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "  pin = \"${OPENBAO_PKCS11_PIN}\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "  key_label = \"openbao-seal-key\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "  hmac_key_label = \"openbao-hmac-key\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "  generate_key = \"true\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "}" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "# API address" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "api_addr = \"http://0.0.0.0:8200\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "# Cluster address" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "cluster_addr = \"http://0.0.0.0:8201\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "# UI enabled" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "ui = true" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "# Logging" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "log_level = \"Info\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "# Disable mlock for development" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "disable_mlock = true" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "# Default lease TTL" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "default_lease_ttl = \"168h\"" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "# Maximum lease TTL" >> /opt/bao/config/openbao.hcl'
+    sudo sh -c 'echo "max_lease_ttl = \"720h\"" >> /opt/bao/config/openbao.hcl'
     
     sudo chown bao:bao /opt/bao/config/openbao.hcl
     
@@ -417,6 +413,80 @@ stop-all-services:
     pkill -f "cockroach start" 2>/dev/null || true
     
     echo "✅ All native services stopped!"
+
+# === PRODUCTION SYSTEMD SERVICE MANAGEMENT ===
+
+# Setup production environment with systemd services
+setup-production:
+    #!/usr/bin/env bash
+    echo "🚀 Setting up production environment with systemd services..."
+    if [ "$EUID" -ne 0 ]; then
+        echo "❌ Please run with sudo for production setup"
+        exit 1
+    fi
+    ./scripts/setup-production.sh
+
+# Start all services via systemd
+start-production:
+    #!/usr/bin/env bash
+    echo "🚀 Starting all Aria services via systemd..."
+    sudo systemctl start aria.target
+    echo "✅ All services started! Use 'just status-production' to check status"
+
+# Stop all services via systemd  
+stop-production:
+    #!/usr/bin/env bash
+    echo "🛑 Stopping all Aria services via systemd..."
+    sudo systemctl stop aria.target
+    echo "✅ All services stopped!"
+
+# Check production service status
+status-production:
+    #!/usr/bin/env bash
+    echo "📊 Checking production service status..."
+    echo ""
+    echo "=== Aria Stack Status ==="
+    sudo systemctl status aria.target --no-pager -l
+    echo ""
+    echo "=== Individual Services ==="
+    for service in aria-cockroachdb aria-openbao aria-seaweedfs aria-app; do
+        echo "--- $service ---"
+        sudo systemctl status $service.service --no-pager -l | head -10
+        echo ""
+    done
+
+# View production logs
+logs-production:
+    #!/usr/bin/env bash
+    echo "📋 Viewing Aria application logs..."
+    sudo journalctl -u aria-app.service -f
+
+# View all production logs
+logs-all-production:
+    #!/usr/bin/env bash
+    echo "📋 Viewing all Aria service logs..."
+    sudo journalctl -u aria-cockroachdb.service -u aria-openbao.service -u aria-seaweedfs.service -u aria-app.service -f
+
+# Restart production services
+restart-production:
+    #!/usr/bin/env bash
+    echo "🔄 Restarting all Aria services..."
+    sudo systemctl restart aria.target
+    echo "✅ All services restarted!"
+
+# Enable services to start on boot
+enable-production:
+    #!/usr/bin/env bash
+    echo "⚡ Enabling services to start on boot..."
+    sudo systemctl enable aria.target
+    echo "✅ Services will start automatically on boot"
+
+# Disable services from starting on boot
+disable-production:
+    #!/usr/bin/env bash
+    echo "⚡ Disabling services from starting on boot..."
+    sudo systemctl disable aria.target
+    echo "✅ Services will not start automatically on boot"
 
 # Show status of all native services
 show-services-status:

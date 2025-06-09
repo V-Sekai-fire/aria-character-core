@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-name: Foundation Layer Startup (Local)
+name: Foundation Layer Startup (Native)
 
 on:
   workflow_dispatch:
@@ -14,19 +14,12 @@ on:
 
 jobs:
   build-and-start-foundation:
-    name: Build and Start Foundation Layer Locally
+    name: Build and Start Foundation Layer Natively
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Set up asdf
         run: |
@@ -44,14 +37,22 @@ jobs:
         run: |
           just install-elixir-erlang-env
 
-      - name: Start Foundation Layer Services using Docker Compose
+      - name: Start Foundation Layer Services Natively
         env:
           OPENBAO_PKCS11_PIN: ${{ secrets.OPENBAO_PKCS11_PIN }}
           OPENBAO_PKCS11_SO_PIN: ${{ secrets.OPENBAO_PKCS11_SO_PIN }}
           OPENBAO_PKCS11_SLOT: ${{ secrets.OPENBAO_PKCS11_SLOT }}
-          GIT_SHA: ${{ github.sha }} # Or a fixed known good SHA for cockroachdb if preferred
         run: |
-          just foundation-startup
+          # Install native dependencies
+          just install-ubuntu-deps
+          
+          # Install and start foundation services
+          just install-cockroach
+          just install-openbao
+          just install-seaweedfs
+          
+          # Start services
+          just start-foundation-core
 
       - name: Run Security Service Tests
         run: |
