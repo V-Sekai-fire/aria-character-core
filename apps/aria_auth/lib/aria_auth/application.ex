@@ -9,8 +9,8 @@ defmodule AriaAuth.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # The auth repository
-      AriaData.AuthRepo
+      # AriaData.AuthRepo is started by AriaData.Application
+      # Add other AriaAuth-specific supervised processes here if needed
     ]
 
     opts = [strategy: :one_for_one, name: AriaAuth.Supervisor]

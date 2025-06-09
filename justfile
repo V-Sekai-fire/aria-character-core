@@ -273,8 +273,7 @@ start-cockroach: install-cockroach
         --store=/var/lib/cockroach/data \
         --listen-addr=localhost:26257 \
         --http-addr=localhost:8080 \
-        --background \
-        --log-config-file=""
+        --background
     
     # Wait for CockroachDB to be ready
     echo "⏳ Waiting for CockroachDB to be ready..."

@@ -6,51 +6,57 @@ import Config
 # Test environment configuration
 config :logger, level: :warning
 
-# Test database configuration
+# Test database configuration - using CockroachDB
 config :aria_data, AriaData.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost", 
+  username: "root",
+  password: "",
+  hostname: "localhost",
+  port: 26257,
   database: "aria_data_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10
 
 config :aria_data, AriaData.AuthRepo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_auth_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 8
 
 config :aria_data, AriaData.QueueRepo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_queue_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 8
 
 config :aria_data, AriaData.StorageRepo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_storage_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 8
 
 config :aria_data, AriaData.MonitorRepo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_monitor_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 6
 
 config :aria_data, AriaData.EngineRepo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_engine_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 6
@@ -74,3 +80,7 @@ config :aria_interpret,
   qwen_model_path: "test/fixtures/mock_model.onnx",
   gpu_enabled: false,
   batch_size: 1
+
+# Test Hammer rate limiting configuration
+config :hammer,
+  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}

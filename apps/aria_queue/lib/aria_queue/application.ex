@@ -9,9 +9,7 @@ defmodule AriaQueue.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # The queue repository
-      AriaData.QueueRepo,
-      # Oban supervisor
+      # Oban supervisor (QueueRepo is started by AriaData.Application)
       {Oban, Application.fetch_env!(:aria_queue, Oban)}
     ]
 
