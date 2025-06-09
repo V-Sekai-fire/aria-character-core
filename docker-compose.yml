@@ -2,28 +2,34 @@
 # SPDX-License-Identifier: MIT
 
 services:
-  openbao:
+  aria-app:
     build:
-      context: ./docker_openbao
+      context: .
       dockerfile: Dockerfile
-    user: "0:0"  # Run as root to fix permissions
     ports:
-      - "8200:8200"
+      - "4000:4000"  # Phoenix app
+      - "8200:8200"  # OpenBao
     environment:
+      - MIX_ENV=prod
+      - PHX_SERVER=true
+      - DATABASE_URL=postgresql://root@cockroachdb:26257/aria_character_core?sslmode=disable
+      - VAULT_ADDR=http://localhost:8200
       - OPENBAO_PKCS11_PIN=${OPENBAO_PKCS11_PIN:-1234}
       - OPENBAO_PKCS11_SO_PIN=${OPENBAO_PKCS11_SO_PIN:-1234}
       - OPENBAO_PKCS11_SLOT=${OPENBAO_PKCS11_SLOT:-0}
-      - RESET_HSM_KEYS=${RESET_HSM_KEYS:-true}  # Force clean initialization
+      - RESET_HSM_KEYS=${RESET_HSM_KEYS:-true}
     volumes:
+      - aria_data:/app/data
       - openbao_data:/vault/data
-      - openbao_config:/vault/config
       - softhsm_tokens:/var/lib/softhsm/tokens
+    depends_on:
+      - cockroachdb
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8200/v1/sys/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health", "&&", "curl", "-f", "http://localhost:8200/v1/sys/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   cockroachdb:
     image: v-sekai/cockroach:latest
@@ -42,7 +48,7 @@ services:
       start_period: 40s
 
 volumes:
+  aria_data:
   openbao_data:
-  openbao_config:
   softhsm_tokens:
   cockroachdb_data:

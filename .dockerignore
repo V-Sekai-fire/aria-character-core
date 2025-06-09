@@ -1,0 +1,40 @@
+# Build artifacts and dependencies
+_build/
+deps/
+.elixir_ls/
+erl_crash.dump
+
+# Git and CI files
+.git/
+.github/
+.ci/
+.gitignore
+.pre-commit-config.yaml
+
+# Documentation and development files
+docs/
+README.md
+*.md
+LICENSE*
+
+# Test files
+test/
+tests/
+
+# Docker related files that are not needed in build context
+docker_s3_config_generator/
+cockroachdb.tar
+
+# Development tools
+.tool-versions
+.asdf/
+
+# OS and editor files
+.DS_Store
+.vscode/
+*.swp
+*.swo
+*~
+
+# Log files
+*.log

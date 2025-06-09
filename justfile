@@ -89,25 +89,27 @@ build:
 
 # Build only foundation core services
 build-foundation-core: load-cockroach-docker
-    @echo "Building foundation core services (openbao)..."
-    @docker compose -f docker-compose.yml build openbao
+    @echo "Building foundation core services (aria-app with integrated OpenBao)..."
+    @docker compose -f docker-compose.yml build aria-app
 
 # Start foundation core services
 start-foundation-core: build-foundation-core
     @echo "Starting core foundation services..."
-    @echo "Starting persistent services (openbao, cockroachdb)..."
-    @docker compose -f docker-compose.yml up -d openbao cockroachdb
+    @echo "Starting persistent services (aria-app with OpenBao, cockroachdb)..."
+    @docker compose -f docker-compose.yml up -d aria-app cockroachdb
 
 # Check health of foundation core services
 check-foundation-core-health: start-foundation-core
     @echo "Waiting for foundation core services to initialize (initial 5-second delay)..."
     @sleep 5
     @echo "Checking current status of foundation services..."
-    @docker compose -f docker-compose.yml ps openbao cockroachdb
-    @echo "--- Recent logs (OpenBao) ---"
-    @docker compose -f docker-compose.yml logs --tail=20 openbao
+    @docker compose -f docker-compose.yml ps aria-app cockroachdb
+    @echo "--- Recent logs (Aria App with OpenBao) ---"
+    @docker compose -f docker-compose.yml logs --tail=20 aria-app
     @echo "--- Recent logs (CockroachDB) ---"
     @docker compose -f docker-compose.yml logs --tail=20 cockroachdb
+    @echo "Checking Aria App health..."
+    @curl -sf http://localhost:4000/health > /dev/null && echo "Aria App is healthy" || (echo "Error: Aria App health check failed." && exit 1)
     @echo "Checking OpenBao health..."
     @curl -sf http://localhost:8200/v1/sys/health > /dev/null && echo "OpenBao is healthy" || (echo "Error: OpenBao health check failed." && exit 1)
     @echo "Checking CockroachDB health..."
@@ -120,15 +122,15 @@ foundation-startup: start-foundation-core check-foundation-core-health
 
 foundation-status: foundation-startup
     @echo "Status of core foundation services:"
-    @docker compose -f docker-compose.yml ps openbao cockroachdb
+    @docker compose -f docker-compose.yml ps aria-app cockroachdb
 
 foundation-logs: foundation-startup
-    @echo "Showing recent logs for openbao and cockroachdb..."
-    @docker compose -f docker-compose.yml logs --tail=50 openbao cockroachdb
+    @echo "Showing recent logs for aria-app and cockroachdb..."
+    @docker compose -f docker-compose.yml logs --tail=50 aria-app cockroachdb
 
 foundation-stop:
-    @echo "Stopping core foundation services (openbao, cockroachdb)..."
-    @docker compose -f docker-compose.yml stop openbao cockroachdb
+    @echo "Stopping core foundation services (aria-app, cockroachdb)..."
+    @docker compose -f docker-compose.yml stop aria-app cockroachdb
     @echo "Core foundation services stopped."
 
 start-all: build
@@ -254,7 +256,7 @@ test-basic-secrets: test-openbao-connection
     # Get token from container storage or initialize if needed
     get_vault_token() {
         # Try container storage first
-        TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
+        TOKEN=$(docker exec aria-character-core-aria-app-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
         if [ -n "$TOKEN" ]; then
             echo "$TOKEN"
             return 0
@@ -267,7 +269,7 @@ test-basic-secrets: test-openbao-connection
             INIT_RESPONSE=$(curl -sf -X POST -d '{"secret_shares":1,"secret_threshold":1}' "$VAULT_ADDR/v1/sys/init" 2>/dev/null)
             NEW_TOKEN=$(echo "$INIT_RESPONSE" | grep -o '"root_token":"[^"]*"' | cut -d'"' -f4)
             if [ -n "$NEW_TOKEN" ]; then
-                docker exec aria-character-core-openbao-1 bash -c "mkdir -p /vault/data && echo '$NEW_TOKEN' > /vault/data/root_token.txt" 2>/dev/null || true
+                docker exec aria-character-core-aria-app-1 bash -c "mkdir -p /vault/data && echo '$NEW_TOKEN' > /vault/data/root_token.txt" 2>/dev/null || true
                 echo "$NEW_TOKEN"
                 return 0
             fi
@@ -362,7 +364,7 @@ test-security-service-legacy: install-elixir-erlang-env start-foundation-core
     get_openbao_token() {
         # Try to get the root token from container storage (HSM-sealed OpenBao)
         echo "🔑 Extracting OpenBao token from container storage..."
-        PERSISTENT_TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
+        PERSISTENT_TOKEN=$(docker exec aria-character-core-aria-app-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
         
         if [ -n "$PERSISTENT_TOKEN" ]; then
             export VAULT_TOKEN="$PERSISTENT_TOKEN"
@@ -380,7 +382,7 @@ test-security-service-legacy: install-elixir-erlang-env start-foundation-core
         else
             # Fallback to extracting from logs
             echo "🔍 No persistent token sources found, trying container logs..."
-            LIVE_TOKEN=$(docker logs aria-character-core-openbao-1 | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo "")
+            LIVE_TOKEN=$(docker logs aria-character-core-aria-app-1 | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo "")
             if [ -n "$LIVE_TOKEN" ]; then
                 export VAULT_TOKEN="$LIVE_TOKEN"
                 echo "✅ Using OpenBao token from logs: $VAULT_TOKEN"
@@ -426,10 +428,10 @@ test-security-service-legacy: install-elixir-erlang-env start-foundation-core
                 echo "🔑 Root token: $NEW_TOKEN"
                 
                 # Store token in container and file
-                docker exec aria-character-core-openbao-1 bash -c "mkdir -p /vault/data && echo '$NEW_TOKEN' > /vault/data/root_token.txt" 2>/dev/null || true
+                docker exec aria-character-core-aria-app-1 bash -c "mkdir -p /vault/data && echo '$NEW_TOKEN' > /vault/data/root_token.txt" 2>/dev/null || true
                 mkdir -p .ci
-                echo "openbao-1  | Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
-                echo "openbao-1  | Seal Type: HSM (SoftHSM PKCS#11)" >> .ci/openbao_root_token.txt
+                echo "aria-app-1  | Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
+                echo "aria-app-1  | Seal Type: HSM (SoftHSM PKCS#11)" >> .ci/openbao_root_token.txt
                 
                 export VAULT_TOKEN="$NEW_TOKEN"
                 return 0
@@ -495,15 +497,15 @@ test-security-service-legacy: install-elixir-erlang-env start-foundation-core
         
         # Store original state for comparison
         echo "📊 Capturing initial SoftHSM state..."
-        INITIAL_SLOTS=$(docker exec aria-character-core-openbao-1 softhsm2-util --show-slots 2>/dev/null || echo "No slots available")
+        INITIAL_SLOTS=$(docker exec aria-character-core-aria-app-1 softhsm2-util --show-slots 2>/dev/null || echo "No slots available")
         echo "Initial slots: $INITIAL_SLOTS"
         
         # Test rekey operation (without waiting for user input)
         echo "🔑 Testing SoftHSM rekey operation..."
-        docker compose -f docker-compose.yml stop openbao || true
+        docker compose -f docker-compose.yml stop aria-app || true
         docker volume rm aria-character-core_softhsm_tokens 2>/dev/null || true
-        # With merged container, just restart OpenBao (which reinitializes SoftHSM internally)
-        docker compose -f docker-compose.yml up -d openbao
+        # With integrated container, restart aria-app (which reinitializes SoftHSM internally)
+        docker compose -f docker-compose.yml up -d aria-app
         
         if [ $? -eq 0 ]; then
             echo "✅ SoftHSM rekey operation completed successfully"
@@ -515,7 +517,7 @@ test-security-service-legacy: install-elixir-erlang-env start-foundation-core
             
             # Verify new SoftHSM state
             echo "📊 Capturing post-rekey SoftHSM state..."
-            NEW_SLOTS=$(docker exec aria-character-core-openbao-1 softhsm2-util --show-slots 2>/dev/null || echo "No slots available")
+            NEW_SLOTS=$(docker exec aria-character-core-aria-app-1 softhsm2-util --show-slots 2>/dev/null || echo "No slots available")
             echo "New slots: $NEW_SLOTS"
             
             return 0
@@ -531,10 +533,9 @@ test-security-service-legacy: install-elixir-erlang-env start-foundation-core
         
         # Test destroy operation (without waiting for user input)
         echo "🗑️  Testing destroy operation..."
-        docker compose -f docker-compose.yml stop openbao || true
-        docker compose -f docker-compose.yml rm -f openbao || true
+        docker compose -f docker-compose.yml stop aria-app || true
+        docker compose -f docker-compose.yml rm -f aria-app || true
         docker volume rm aria-character-core_openbao_data 2>/dev/null || true
-        docker volume rm aria-character-core_openbao_config 2>/dev/null || true
         docker volume rm aria-character-core_softhsm_tokens 2>/dev/null || true
         rm -f .ci/openbao_root_token.txt
         
@@ -659,7 +660,7 @@ generate-new-root-token: foundation-startup
     CURRENT_TOKEN=""
     
     # Try to get token from container's persistent storage first
-    CONTAINER_TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
+    CONTAINER_TOKEN=$(docker exec aria-character-core-aria-app-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
     if [ -n "$CONTAINER_TOKEN" ]; then
         CURRENT_TOKEN="$CONTAINER_TOKEN"
         echo "Using token from container storage: $CURRENT_TOKEN"
@@ -680,18 +681,18 @@ generate-new-root-token: foundation-startup
     
     # Generate new root token
     echo "🔄 Generating new root token..."
-    docker exec -e BAO_ADDR="$BAO_ADDR" -e VAULT_TOKEN="$CURRENT_TOKEN" aria-character-core-openbao-1 bao token create -policy=root -format=json > /tmp/new_token_response
+    docker exec -e BAO_ADDR="$BAO_ADDR" -e VAULT_TOKEN="$CURRENT_TOKEN" aria-character-core-aria-app-1 bao token create -policy=root -format=json > /tmp/new_token_response
     NEW_TOKEN=$(cat /tmp/new_token_response | grep '"token"' | cut -d'"' -f4)
     
     if [ -n "$NEW_TOKEN" ]; then
         echo "✅ Generated new root token: $NEW_TOKEN"
         
         # Update container's token file
-        docker exec aria-character-core-openbao-1 bash -c "echo '$NEW_TOKEN' > /vault/data/root_token.txt"
+        docker exec aria-character-core-aria-app-1 bash -c "echo '$NEW_TOKEN' > /vault/data/root_token.txt"
         
         # Update the token file (no unseal keys with HSM seal)
-        echo "openbao-1  | Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
-        echo "openbao-1  | Seal Type: HSM (SoftHSM PKCS#11)" >> .ci/openbao_root_token.txt
+        echo "aria-app-1  | Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
+        echo "aria-app-1  | Seal Type: HSM (SoftHSM PKCS#11)" >> .ci/openbao_root_token.txt
         
         echo "📝 Token file updated with new varying root token"
         echo "🔑 New token: $NEW_TOKEN"
@@ -712,7 +713,7 @@ generate-new-root-token: foundation-startup
     CURRENT_TOKEN=""
     
     # Try to get token from container's persistent storage first
-    CONTAINER_TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
+    CONTAINER_TOKEN=$(docker exec aria-character-core-aria-app-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
     if [ -n "$CONTAINER_TOKEN" ]; then
         CURRENT_TOKEN="$CONTAINER_TOKEN"
         echo "Using token from container storage: $CURRENT_TOKEN"
@@ -733,21 +734,21 @@ generate-new-root-token: foundation-startup
     
     # Generate new root token
     echo "🔄 Generating new root token..."
-    docker exec -e BAO_ADDR="$BAO_ADDR" -e VAULT_TOKEN="$CURRENT_TOKEN" aria-character-core-openbao-1 bao token create -policy=root -format=json > /tmp/new_token_response
+    docker exec -e BAO_ADDR="$BAO_ADDR" -e VAULT_TOKEN="$CURRENT_TOKEN" aria-character-core-aria-app-1 bao token create -policy=root -format=json > /tmp/new_token_response
     NEW_TOKEN=$(cat /tmp/new_token_response | grep '"token"' | cut -d'"' -f4)
     
     if [ -n "$NEW_TOKEN" ]; then
         echo "✅ Generated new root token: $NEW_TOKEN"
         
         # Update container's token file
-        docker exec aria-character-core-openbao-1 bash -c "echo '$NEW_TOKEN' > /vault/data/root_token.txt"
+        docker exec aria-character-core-aria-app-1 bash -c "echo '$NEW_TOKEN' > /vault/data/root_token.txt"
         
         # Update the token file with new token, preserving unseal key
-        UNSEAL_KEY=$(docker exec aria-character-core-openbao-1 cat /vault/data/unseal_key.txt 2>/dev/null || echo "")
+        UNSEAL_KEY=$(docker exec aria-character-core-aria-app-1 cat /vault/data/unseal_key.txt 2>/dev/null || echo "")
         
-        echo "openbao-1  | Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
+        echo "aria-app-1  | Root Token: $NEW_TOKEN" > .ci/openbao_root_token.txt
         if [ -n "$UNSEAL_KEY" ]; then
-            echo "openbao-1  | Unseal Key: $UNSEAL_KEY" >> .ci/openbao_root_token.txt
+            echo "aria-app-1  | Unseal Key: $UNSEAL_KEY" >> .ci/openbao_root_token.txt
         fi
         
         echo "📝 Token file updated with new varying root token"
