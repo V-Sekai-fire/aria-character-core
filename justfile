@@ -709,19 +709,33 @@ extended-status: status check-all-health
 install-elixir-erlang-env:
     #!/usr/bin/env bash
     echo "Installing asdf in the project root..."
+    
+    # Ensure we're in the project directory
+    cd "$(dirname "$0")" || exit 1
+    
     if [ ! -d "./.asdf" ]; then
         echo "Cloning asdf into ./.asdf..."
         git clone https://github.com/asdf-vm/asdf.git ./.asdf --branch v0.14.0
     else
         echo ".asdf already exists in the project root"
     fi
-    echo "Sourcing asdf and setting up environment for project-specific tools..."
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:${PATH}"
+    
+    echo "Setting up project-local asdf environment..."
+    # Unset any global asdf environment
+    unset ASDF_DIR ASDF_DATA_DIR
+    
+    # Set project-local asdf environment
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
+    
+    echo "Sourcing asdf from project directory: $ASDF_DIR"
     . ./.asdf/asdf.sh
+    
     echo "Adding asdf plugins..."
     asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git || true
     asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true
+    
     echo "Installing Erlang and Elixir versions (as per .tool-versions)..."
     asdf install
 
@@ -729,8 +743,11 @@ install-elixir-erlang-env:
 test-elixir-compile: install-elixir-erlang-env
     #!/usr/bin/env bash
     echo "🔨 Testing Elixir compilation for all apps..."
-    export ASDF_DIR="./.asdf"
-    export PATH="./.asdf/bin:${PATH}"
+    
+    # Setup asdf environment
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
     . ./.asdf/asdf.sh || true
     
     echo "📦 Getting dependencies..."
