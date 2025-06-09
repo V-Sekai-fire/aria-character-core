@@ -705,10 +705,15 @@ extended-status: status check-all-health
 
 install-elixir-erlang-env:
     #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Get the directory where the justfile is located
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    echo "Working in directory: $SCRIPT_DIR"
+    cd "$SCRIPT_DIR"
+    
     echo "Installing asdf in the project root..."
     
-    # Ensure we're in the project directory (just sets cwd to the justfile directory)
-    cd "$(dirname "$0")" || exit 1
     if [ ! -d "./.asdf" ]; then
         echo "Cloning asdf into ./.asdf..."
         git clone https://github.com/asdf-vm/asdf.git ./.asdf --branch v0.14.0
@@ -718,7 +723,7 @@ install-elixir-erlang-env:
     
     echo "Setting up project-local asdf environment..."
     # Unset any global asdf environment
-    unset ASDF_DIR ASDF_DATA_DIR
+    unset ASDF_DIR ASDF_DATA_DIR || true
     
     # Set project-local asdf environment
     export ASDF_DIR="$(pwd)/.asdf"
@@ -731,6 +736,17 @@ install-elixir-erlang-env:
     echo "Adding asdf plugins..."
     asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git || true
     asdf plugin add elixir https://github.com/asdf-vm/asdf-elixir.git || true
+    
+    # Verify .tool-versions exists
+    if [ ! -f ".tool-versions" ]; then
+        echo "❌ Error: .tool-versions file not found in $(pwd)"
+        echo "Current directory contents:"
+        ls -la
+        exit 1
+    fi
+    
+    echo "Found .tool-versions file:"
+    cat .tool-versions
     
     # Check if versions are already installed
     if asdf current erlang 2>/dev/null && asdf current elixir 2>/dev/null; then
