@@ -442,13 +442,13 @@ defmodule AriaEngine.TestDomains do
     current_loc = State.get_object(state, "loc", person)
     taxis = ["taxi1", "taxi2"]
 
-    case Enum.find(taxis, fn taxi ->
+    case Enum.find(taxis, fn _taxi ->
       cash = State.get_object(state, "cash", person)
       fare = taxi_fare(current_loc, destination)
       cash >= fare
     end) do
       nil -> false
-      taxi ->
+      _taxi ->
         [
           {"call_taxi", person, taxi},
           {"ride_taxi", person, taxi, destination},
@@ -562,13 +562,13 @@ defmodule AriaEngine.TestDomains do
     current_loc = State.get_object(state, "loc", person)
     taxis = ["taxi1", "taxi2"]
 
-    case Enum.find(taxis, fn taxi ->
+    case Enum.find(taxis, fn _taxi ->
       cash = State.get_object(state, "cash", person)
       fare = taxi_fare(current_loc, destination)
       cash >= fare
     end) do
       nil -> false
-      taxi ->
+      _taxi ->
         [
           {"call_taxi", person, taxi},
           {"ride_taxi", person, taxi, destination},

@@ -271,7 +271,7 @@ defmodule AriaSecurity.OpenBao do
       iex> AriaSecurity.OpenBao.get_root_token(bao)
       {:ok, "hvs.1234567890"}
   """
-  def get_root_token(%__MODULE__{} = bao) do
+  def get_root_token(%__MODULE__{} = _bao) do
     # Try to get token from native OpenBao storage
     token_file = "/opt/bao/data/root_token.txt"
 
@@ -286,7 +286,7 @@ defmodule AriaSecurity.OpenBao do
         end
 
       {:error, reason} ->
-        Logger.warn("Could not retrieve token from file #{token_file}: #{reason}")
+        Logger.warning("Could not retrieve token from file #{token_file}: #{reason}")
         {:error, {:file_access_failed, reason}}
     end
   end
@@ -321,7 +321,7 @@ defmodule AriaSecurity.OpenBao do
     case HTTPoison.put("#{bao.address}/v1/sys/init", Jason.encode!(payload), headers) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         case Jason.decode(body) do
-          {:ok, %{"root_token" => root_token, "recovery_keys" => recovery_keys} = response} ->
+          {:ok, %{"root_token" => root_token, "recovery_keys" => recovery_keys} = _response} ->
             Logger.info("OpenBao initialized with HSM seal successfully")
 
             {:ok, %{

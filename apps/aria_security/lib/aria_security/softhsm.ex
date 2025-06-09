@@ -234,7 +234,7 @@ defmodule AriaSecurity.SoftHSM do
       {:ok, %{message: "SoftHSM reset successfully"}}
   """
   def reset_hsm(%__MODULE__{} = hsm) do
-    Logger.warn("Resetting SoftHSM - this will destroy all existing tokens and keys!")
+    Logger.warning("Resetting SoftHSM - this will destroy all existing tokens and keys!")
 
     # Remove all tokens
     case File.rm_rf(hsm.token_dir) do
