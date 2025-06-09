@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-name: Layer Startup
+name: Integration Tests
 
 on:
   workflow_dispatch:
@@ -11,6 +11,10 @@ on:
   pull_request:
     branches:
       - main
+
+concurrency:
+  group: integration-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-start-foundation:

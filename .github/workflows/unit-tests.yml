@@ -12,6 +12,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: aria-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit-tests:
     name: Run Unit Tests
