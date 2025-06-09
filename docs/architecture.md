@@ -16,6 +16,8 @@ Each service is listed in boot order with dependencies, development progress, an
     - [x] OpenBao integration for secrets management
     - [x] Vaultex client configuration and API integration
     - [x] SoftHSM PKCS#11 HSM seal configuration
+    - [x] Code quality improvements (deprecated Logger.warn → Logger.warning)
+    - [x] Unused variable warnings resolution
     - [ ] Automated secret rotation and lifecycle management
   - [ ] **Authentication & Authorization Core**
     - [ ] JWT token generation and validation
@@ -86,6 +88,10 @@ Each service is listed in boot order with dependencies, development progress, an
 - **Dependencies:** `aria_data` (Oban persistence), `aria_security` (DB credentials)
 - **External:** Oban, Redis (optional)
 - **Development Status:**
+  - [x] **Code Quality & Infrastructure**
+    - [x] Unused variable warnings resolved in worker modules
+    - [x] Worker supervision tree structure established
+    - [x] Background job infrastructure foundation
   - [ ] **Job Processing**
     - [ ] Oban-based background job system
     - [ ] Priority queue management
@@ -122,6 +128,13 @@ Each service is listed in boot order with dependencies, development progress, an
 - **Dependencies:** `aria_security`, `aria_data`, `aria_queue`
 - **External:** GTPyhop integration
 - **Development Status:**
+  - [x] **Test Infrastructure & Code Quality**
+    - [x] Test code organization into support modules
+    - [x] Domain builders centralized in test/support/test_domains.ex
+    - [x] Actions and methods extracted to dedicated support files
+    - [x] Code quality improvements (unused variable warnings fixed)
+    - [x] Deprecated API usage updated (Logger.warn → Logger.warning)
+    - [x] Test structure analysis and optimization
   - [ ] **AI Planning Systems**
     - [ ] Goal-oriented action planning (GOAP) engine
     - [ ] GTPyhop hierarchical task planning integration
@@ -253,6 +266,9 @@ Each service is listed in boot order with dependencies, development progress, an
 ### **Quality Assurance & Testing**
 - [x] **Code Quality**
   - [x] Pre-commit hooks for code quality
+  - [x] Code organization and test structure optimization (aria_engine)
+  - [x] Unused variable warnings resolution across services
+  - [x] Deprecated API usage updates (Logger.warn → Logger.warning)
   - [ ] Automated testing pipeline
   - [ ] Code coverage reporting (target: >90%)
   - [ ] Performance benchmarking

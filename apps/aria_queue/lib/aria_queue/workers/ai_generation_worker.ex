@@ -14,10 +14,10 @@ defmodule AriaQueue.Workers.AIGenerationWorker do
     # For now, we'll just log the job
     require Logger
     Logger.info("Processing character generation for user #{user_id} with prompt: #{prompt}")
-    
+
     # Simulate processing time
     Process.sleep(1000)
-    
+
     # Return success
     :ok
   end
@@ -25,10 +25,10 @@ defmodule AriaQueue.Workers.AIGenerationWorker do
   def perform(%Oban.Job{args: %{"type" => "story_generation", "user_id" => user_id, "context" => _context} = _args}) do
     require Logger
     Logger.info("Processing story generation for user #{user_id}")
-    
+
     # Simulate processing time
     Process.sleep(2000)
-    
+
     :ok
   end
 

@@ -12,20 +12,20 @@ defmodule AriaQueue.Workers.PlanningWorker do
   def perform(%Oban.Job{args: %{"type" => "workflow_planning", "workflow_id" => workflow_id} = _args}) do
     require Logger
     Logger.info("Processing workflow planning for workflow #{workflow_id}")
-    
+
     # This would interface with aria_engine service
     # Simulate processing time
     Process.sleep(500)
-    
+
     :ok
   end
 
   def perform(%Oban.Job{args: %{"type" => "resource_allocation", "resources" => resources} = _args}) do
     require Logger
     Logger.info("Processing resource allocation for #{length(resources)} resources")
-    
+
     Process.sleep(300)
-    
+
     :ok
   end
 

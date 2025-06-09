@@ -22,10 +22,10 @@ defmodule AriaEngine.PlanningTest do
 
       # This will fail without proper task methods, but let's test the structure
       case AriaEngine.plan(domain, initial_state, goals, verbose: 1) do
-        {:ok, _plan} -> 
+        {:ok, _plan} ->
           # Planning succeeded
           :ok
-        {:error, reason} -> 
+        {:error, reason} ->
           # Expected to fail without proper methods
           assert String.contains?(reason, "No methods found")
       end
@@ -65,12 +65,12 @@ defmodule AriaEngine.PlanningTest do
           assert length(plan) == 2
           assert {:move, ["room2"]} in plan
           assert {:pickup, ["sword"]} in plan
-          
+
           # Verify plan works
           {:ok, final_state} = AriaEngine.execute_plan(domain, initial_state, plan)
           assert AriaEngine.get_fact(final_state, "has", "player") == "sword"
           assert AriaEngine.get_fact(final_state, "location", "player") == "room2"
-          
+
         {:error, reason} ->
           flunk("Planning failed: #{reason}")
       end

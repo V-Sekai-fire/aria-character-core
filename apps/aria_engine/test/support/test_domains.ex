@@ -291,7 +291,7 @@ defmodule AriaEngine.TestDomains do
     pickup_action = fn state, [item] ->
       player_location = get_fact(state, "location", "player")
       item_location = get_fact(state, "location", item)
-      
+
       if player_location == item_location do
         set_fact(state, "has", "player", item)
       else
@@ -320,7 +320,7 @@ defmodule AriaEngine.TestDomains do
     pickup_action = fn state, [item] ->
       player_location = get_fact(state, "location", "player")
       item_location = get_fact(state, "location", item)
-      
+
       if player_location == item_location do
         set_fact(state, "has", "player", item)
       else
@@ -332,7 +332,7 @@ defmodule AriaEngine.TestDomains do
     get_item_method = fn state, [item] ->
       player_location = get_fact(state, "location", "player")
       item_location = get_fact(state, "location", item)
-      
+
       if player_location == item_location do
         # Already in same room, just pickup
         [{:pickup, [item]}]
