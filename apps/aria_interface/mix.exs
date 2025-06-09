@@ -30,32 +30,31 @@ defmodule AriaInterface.MixProject do
       # Phoenix for web interface
       {:phoenix, "~> 1.7"},
       {:phoenix_live_view, "~> 0.20"},
-      
+
       # HTTP server
       {:bandit, "~> 1.0"},
-      
+
       # File handling and uploads
-      {:upload, "~> 0.3"},
       {:mime, "~> 2.0"},
-      
+
       # WebSocket and real-time communication
       {:phoenix_pubsub, "~> 2.1"},
-      
+
       # Character shaping for data characterization
       {:aria_shape, in_umbrella: true},
-      
+
       # Interpret service for analysis
       {:aria_interpret, in_umbrella: true},
-      
+
       # Engine service for processing
       {:aria_engine, in_umbrella: true},
-      
+
       # Storage for large assets
       {:aria_storage, in_umbrella: true},
-      
+
       # JSON handling
       {:jason, "~> 1.4"},
-      
+
       # Shared dependencies
       {:telemetry, "~> 1.2"}
     ]
