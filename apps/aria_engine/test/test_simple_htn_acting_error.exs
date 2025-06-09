@@ -224,60 +224,6 @@ defmodule AriaEngine.SimpleHtnActingErrorTest do
     end
   end
 
-  # Build the domain with actions (for planning)
-  defp build_action_domain do
-    AriaEngine.create_domain("simple_htn_acting_error_actions")
-    |> AriaEngine.add_action(:walk, &walk_action/2)
-    |> AriaEngine.add_action(:call_taxi, &call_taxi_action/2)
-    |> AriaEngine.add_action(:ride_taxi, &ride_taxi_action/2)
-    |> AriaEngine.add_action(:pay_driver, &pay_driver_action/2)
-    |> AriaEngine.add_task_method("travel", &do_nothing/2)
-    |> AriaEngine.add_task_method("travel", &travel_by_foot/2)
-    |> AriaEngine.add_task_method("travel", &travel_by_taxi/2)
-  end
-
-  # Build the domain with commands (for execution)
-  defp build_command_domain do
-    AriaEngine.create_domain("simple_htn_acting_error_commands")
-    |> AriaEngine.add_action(:walk, &walk_command/2)
-    |> AriaEngine.add_action(:call_taxi, &call_taxi_command/2)
-    |> AriaEngine.add_action(:ride_taxi, &ride_taxi_command/2)
-    |> AriaEngine.add_action(:pay_driver, &pay_driver_command/2)
-    |> AriaEngine.add_task_method("travel", &do_nothing/2)
-    |> AriaEngine.add_task_method("travel", &travel_by_foot/2)
-    |> AriaEngine.add_task_method("travel", &travel_by_taxi/2)
-  end
-
-  # Create initial state with good taxis
-  defp create_good_state do
-    AriaEngine.create_state()
-    |> State.set_object("loc", "alice", "home_a")
-    |> State.set_object("loc", "bob", "home_b")
-    |> State.set_object("loc", "taxi1", "park")
-    |> State.set_object("loc", "taxi2", "station")
-    |> State.set_object("cash", "alice", 20)
-    |> State.set_object("cash", "bob", 15)
-    |> State.set_object("owe", "alice", 0)
-    |> State.set_object("owe", "bob", 0)
-    |> State.set_object("taxi_condition", "taxi1", "good")
-    |> State.set_object("taxi_condition", "taxi2", "good")
-  end
-
-  # Create initial state with bad taxis
-  defp create_bad_state do
-    AriaEngine.create_state()
-    |> State.set_object("loc", "alice", "home_a")
-    |> State.set_object("loc", "bob", "home_b")
-    |> State.set_object("loc", "taxi1", "park")
-    |> State.set_object("loc", "taxi2", "station")
-    |> State.set_object("cash", "alice", 20)
-    |> State.set_object("cash", "bob", 15)
-    |> State.set_object("owe", "alice", 0)
-    |> State.set_object("owe", "bob", 0)
-    |> State.set_object("taxi_condition", "taxi1", "bad")
-    |> State.set_object("taxi_condition", "taxi2", "bad")
-  end
-
   describe "Simple HTN Acting Error domain" do
     setup do
       action_domain = TestDomains.build_simple_htn_acting_error_actions_domain()

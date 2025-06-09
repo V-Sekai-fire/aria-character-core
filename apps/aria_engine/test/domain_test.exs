@@ -5,17 +5,11 @@ defmodule AriaEngine.DomainTest do
   use ExUnit.Case
   doctest AriaEngine.Domain
 
-  alias AriaEngine.Domain
+  alias AriaEngine.{Domain, TestDomains}
 
   describe "Domain and action management" do
     test "creates domain and adds actions" do
-      domain = AriaEngine.create_domain("test")
-      |> AriaEngine.add_action(:move, fn state, [_from, to] ->
-        AriaEngine.set_fact(state, "location", "player", to)
-      end)
-      |> AriaEngine.add_action(:pickup, fn state, [item] ->
-        AriaEngine.set_fact(state, "has", "player", item)
-      end)
+      domain = TestDomains.build_test_domain()
 
       summary = AriaEngine.domain_summary(domain)
       assert summary.name == "test"
@@ -24,13 +18,7 @@ defmodule AriaEngine.DomainTest do
     end
 
     test "executes actions correctly" do
-      move_action = fn state, [_from, to] ->
-        state
-        |> AriaEngine.set_fact("location", "player", to)
-      end
-
-      domain = AriaEngine.create_domain("test")
-      |> AriaEngine.add_action(:move, move_action)
+      domain = TestDomains.build_test_domain()
 
       initial_state = AriaEngine.create_state()
       |> AriaEngine.set_fact("location", "player", "room1")

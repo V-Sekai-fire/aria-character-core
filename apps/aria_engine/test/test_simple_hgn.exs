@@ -153,30 +153,6 @@ defmodule AriaEngine.SimpleHgnTest do
     end
   end
 
-  # Build the domain
-  defp build_simple_hgn_domain do
-    AriaEngine.create_domain("simple_hgn")
-    |> AriaEngine.add_action(:walk, &walk_action/2)
-    |> AriaEngine.add_action(:call_taxi, &call_taxi_action/2)
-    |> AriaEngine.add_action(:ride_taxi, &ride_taxi_action/2)
-    |> AriaEngine.add_action(:pay_driver, &pay_driver_action/2)
-    |> AriaEngine.add_unigoal_method("loc", &travel_by_foot/2)
-    |> AriaEngine.add_unigoal_method("loc", &travel_by_taxi/2)
-  end
-
-  # Create initial state
-  defp create_initial_state do
-    AriaEngine.create_state()
-    |> State.set_object("loc", "alice", "home_a")
-    |> State.set_object("loc", "bob", "home_b")
-    |> State.set_object("loc", "taxi1", "park")
-    |> State.set_object("loc", "taxi2", "station")
-    |> State.set_object("cash", "alice", 20)
-    |> State.set_object("cash", "bob", 15)
-    |> State.set_object("owe", "alice", 0)
-    |> State.set_object("owe", "bob", 0)
-  end
-
   describe "Simple HGN domain" do
     setup do
       domain = TestDomains.build_simple_hgn_domain()

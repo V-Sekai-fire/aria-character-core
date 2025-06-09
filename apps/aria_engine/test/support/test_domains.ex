@@ -6,8 +6,8 @@ defmodule AriaEngine.TestDomains do
   Test domain builders for AriaEngine testing.
 
   This module provides domain builders for logistics, blocks world,
-  simple travel, backtracking, simple HGN, and acting error domains
-  used in testing scenarios.
+  simple travel, backtracking, simple HGN, simple RPG, RPG, test domain,
+  and acting error domains used in testing scenarios.
   """
 
   import AriaEngine
@@ -274,6 +274,98 @@ defmodule AriaEngine.TestDomains do
     |> add_task_method("travel", &do_nothing_htn/2)
     |> add_task_method("travel", &travel_by_foot_htn/2)
     |> add_task_method("travel", &travel_by_taxi_htn/2)
+  end
+
+  @doc """
+  Builds a simple RPG domain for basic planning tests.
+
+  This creates a domain with move and pickup actions for simple planning scenarios.
+  """
+  @spec build_simple_rpg_domain() :: AriaEngine.domain()
+  def build_simple_rpg_domain do
+    # Define simple actions
+    move_action = fn state, [to] ->
+      set_fact(state, "location", "player", to)
+    end
+
+    pickup_action = fn state, [item] ->
+      player_location = get_fact(state, "location", "player")
+      item_location = get_fact(state, "location", item)
+      
+      if player_location == item_location do
+        set_fact(state, "has", "player", item)
+      else
+        false  # Can't pickup item not in same location
+      end
+    end
+
+    # Create domain with actions
+    create_domain("simple_rpg")
+    |> add_action(:move, move_action)
+    |> add_action(:pickup, pickup_action)
+  end
+
+  @doc """
+  Builds an RPG domain with task methods for planning tests.
+
+  This creates a domain with move, pickup actions and a get_item task method.
+  """
+  @spec build_rpg_domain() :: AriaEngine.domain()
+  def build_rpg_domain do
+    # Actions
+    move_action = fn state, [to] ->
+      set_fact(state, "location", "player", to)
+    end
+
+    pickup_action = fn state, [item] ->
+      player_location = get_fact(state, "location", "player")
+      item_location = get_fact(state, "location", item)
+      
+      if player_location == item_location do
+        set_fact(state, "has", "player", item)
+      else
+        false
+      end
+    end
+
+    # Task method: get item from another room
+    get_item_method = fn state, [item] ->
+      player_location = get_fact(state, "location", "player")
+      item_location = get_fact(state, "location", item)
+      
+      if player_location == item_location do
+        # Already in same room, just pickup
+        [{:pickup, [item]}]
+      else
+        # Need to move then pickup
+        [{:move, [item_location]}, {:pickup, [item]}]
+      end
+    end
+
+    create_domain("rpg")
+    |> add_action(:move, move_action)
+    |> add_action(:pickup, pickup_action)
+    |> add_task_method("get_item", get_item_method)
+  end
+
+  @doc """
+  Builds a simple test domain for domain tests.
+
+  This creates a basic domain with move and pickup actions for testing domain functionality.
+  """
+  @spec build_test_domain() :: AriaEngine.domain()
+  def build_test_domain do
+    move_action = fn state, [_from, to] ->
+      set_fact(state, "location", "player", to)
+    end
+
+    pickup_action = fn state, [item] ->
+      set_fact(state, "has", "player", item)
+    end
+
+    create_domain("test")
+    |> add_action(:move, move_action)
+    |> add_action(:pickup, pickup_action)
   end
 
   # Helper functions for state creation

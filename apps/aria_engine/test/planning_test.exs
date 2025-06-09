@@ -5,28 +5,12 @@ defmodule AriaEngine.PlanningTest do
   use ExUnit.Case
   doctest AriaEngine
 
+  alias AriaEngine.TestDomains
+
   describe "Basic planning" do
     test "plans simple action sequence" do
-      # Define simple actions
-      move_action = fn state, [to] ->
-        AriaEngine.set_fact(state, "location", "player", to)
-      end
-
-      pickup_action = fn state, [item] ->
-        player_location = AriaEngine.get_fact(state, "location", "player")
-        item_location = AriaEngine.get_fact(state, "location", item)
-        
-        if player_location == item_location do
-          AriaEngine.set_fact(state, "has", "player", item)
-        else
-          false  # Can't pickup item not in same location
-        end
-      end
-
-      # Create domain with actions
-      domain = AriaEngine.create_domain("simple_rpg")
-      |> AriaEngine.add_action(:move, move_action)
-      |> AriaEngine.add_action(:pickup, pickup_action)
+      # Use domain from TestDomains
+      domain = TestDomains.build_simple_rpg_domain()
 
       # Set up initial state
       initial_state = AriaEngine.create_state()
@@ -48,13 +32,7 @@ defmodule AriaEngine.PlanningTest do
     end
 
     test "validates plan execution" do
-      # Simple move action
-      move_action = fn state, [to] ->
-        AriaEngine.set_fact(state, "location", "player", to)
-      end
-
-      domain = AriaEngine.create_domain("test")
-      |> AriaEngine.add_action(:move, move_action)
+      domain = TestDomains.build_test_domain()
 
       initial_state = AriaEngine.create_state()
       |> AriaEngine.set_fact("location", "player", "room1")
@@ -73,40 +51,7 @@ defmodule AriaEngine.PlanningTest do
 
   describe "Task decomposition" do
     test "decomposes tasks into actions" do
-      # Actions
-      move_action = fn state, [to] ->
-        AriaEngine.set_fact(state, "location", "player", to)
-      end
-
-      pickup_action = fn state, [item] ->
-        player_location = AriaEngine.get_fact(state, "location", "player")
-        item_location = AriaEngine.get_fact(state, "location", item)
-        
-        if player_location == item_location do
-          AriaEngine.set_fact(state, "has", "player", item)
-        else
-          false
-        end
-      end
-
-      # Task method: get item from another room
-      get_item_method = fn state, [item] ->
-        player_location = AriaEngine.get_fact(state, "location", "player")
-        item_location = AriaEngine.get_fact(state, "location", item)
-        
-        if player_location == item_location do
-          # Already in same room, just pickup
-          [{:pickup, [item]}]
-        else
-          # Need to move then pickup
-          [{:move, [item_location]}, {:pickup, [item]}]
-        end
-      end
-
-      domain = AriaEngine.create_domain("rpg")
-      |> AriaEngine.add_action(:move, move_action)
-      |> AriaEngine.add_action(:pickup, pickup_action)
-      |> AriaEngine.add_task_method("get_item", get_item_method)
+      domain = TestDomains.build_rpg_domain()
 
       initial_state = AriaEngine.create_state()
       |> AriaEngine.set_fact("location", "player", "room1")
