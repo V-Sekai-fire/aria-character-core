@@ -37,7 +37,7 @@ mix phx.server
 
 ### Production Deployment
 
-The project uses native systemd services for production deployment (Docker setup moved to `legacy/docker/`):
+The project uses native systemd services for production deployment:
 
 ```bash
 # Automated production setup (recommended)
