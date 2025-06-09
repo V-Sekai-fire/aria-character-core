@@ -38,7 +38,7 @@ jobs:
       - name: Install just
         run: |
           sudo apt-get update
-          sudo apt-get install -y just libncurses-dev libtinfo-dev autoconf cargo
+          sudo apt-get install -y just libncurses-dev libtinfo-dev autoconf cargo pkg-config
         
       - name: Install Erlang and Elixir
         run: |
