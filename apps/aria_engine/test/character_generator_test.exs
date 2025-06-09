@@ -770,7 +770,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
     test "generates character with verbose planning - level 2" do
       domain = build_character_generation_domain()
-      
+
       # Generate a unique character ID for this test
       char_id = generate_character_id()
 
@@ -803,7 +803,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
     test "demonstrates character customization workflow" do
       domain = build_character_generation_domain()
-      
+
       # Generate a unique character ID for this test
       char_id = generate_character_id()
 
