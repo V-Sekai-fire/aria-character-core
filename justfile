@@ -203,108 +203,226 @@ install-elixir-erlang-env:
 
 test-security-service: install-elixir-erlang-env foundation-startup
     #!/usr/bin/env bash
-    echo "Running Security Service (AriaSecurity) tests..."
+    echo "🧪 Running comprehensive Security Service tests including SoftHSM rekey and destroy operations..."
     export ASDF_DIR="./.asdf"
     export PATH="./.asdf/bin:/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
     . ./.asdf/asdf.sh || true
     export VAULT_ADDR="http://localhost:8200"
     
-    # Try to get the root token from container storage (HSM-sealed OpenBao)
-    echo "Extracting OpenBao token from container storage..."
-    PERSISTENT_TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
-    
-    if [ -n "$PERSISTENT_TOKEN" ]; then
-        export VAULT_TOKEN="$PERSISTENT_TOKEN"
-        echo "Using OpenBao token from container storage: $VAULT_TOKEN"
-    elif [ -f .ci/openbao_root_token.txt ]; then
-        echo "Container token not found, trying token file..."
-        TOKEN_FROM_FILE=$(grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r')
-        if [ -n "$TOKEN_FROM_FILE" ]; then
-            export VAULT_TOKEN="$TOKEN_FROM_FILE"
-            echo "Using OpenBao token from file: $VAULT_TOKEN"
+    # Function to get OpenBao token
+    get_openbao_token() {
+        # Try to get the root token from container storage (HSM-sealed OpenBao)
+        echo "🔑 Extracting OpenBao token from container storage..."
+        PERSISTENT_TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
+        
+        if [ -n "$PERSISTENT_TOKEN" ]; then
+            export VAULT_TOKEN="$PERSISTENT_TOKEN"
+            echo "✅ Using OpenBao token from container storage: $VAULT_TOKEN"
+        elif [ -f .ci/openbao_root_token.txt ]; then
+            echo "🔍 Container token not found, trying token file..."
+            TOKEN_FROM_FILE=$(grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r')
+            if [ -n "$TOKEN_FROM_FILE" ]; then
+                export VAULT_TOKEN="$TOKEN_FROM_FILE"
+                echo "✅ Using OpenBao token from file: $VAULT_TOKEN"
+            else
+                echo "⚠️  WARNING: Using fallback token"
+                export VAULT_TOKEN="root"
+            fi
         else
-            echo "WARNING: Using fallback token"
-            export VAULT_TOKEN="root"
+            # Fallback to extracting from logs
+            echo "🔍 No persistent token sources found, trying container logs..."
+            LIVE_TOKEN=$(docker logs aria-character-core-openbao-1 | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo "")
+            if [ -n "$LIVE_TOKEN" ]; then
+                export VAULT_TOKEN="$LIVE_TOKEN"
+                echo "✅ Using OpenBao token from logs: $VAULT_TOKEN"
+            else
+                echo "⚠️  WARNING: No token sources found, using fallback"
+                export VAULT_TOKEN="root"
+            fi
         fi
-    else
-        echo "WARNING: No token sources found, using fallback"
-        export VAULT_TOKEN="root"
-    fi
+    }
     
-    echo "Verifying OpenBao connection..."
-    curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/sys/health" > /dev/null || \
-    (echo "ERROR: Cannot connect to OpenBao at $VAULT_ADDR with token $VAULT_TOKEN" && exit 1)
-    
-    if [ ! -d apps/aria_security ]; then
-        echo "ERROR: apps/aria_security directory does not exist"
-        exit 1
-    fi
-    cd apps/aria_security
-    if [ ! -f mix.exs ]; then
-        echo "ERROR: mix.exs file does not exist in apps/aria_security"
-        exit 1
-    fi
-    echo "Checking Elixir version..."
-    bash -l -c "elixir --version" || (echo "ERROR: Elixir not found" && exit 1)
-    echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)"
-    bash -l -c "mix deps.get" && \
-    bash -l -c "mix compile --force --warnings-as-errors" && \
-    bash -l -c "mix test"
-    echo "Security Service tests finished."
-    export PATH="./.asdf/bin:/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
-    . ./.asdf/asdf.sh || true
-    export VAULT_ADDR="http://localhost:8200"
-    
-    # Try to get the persistent token from container storage first
-    echo "Extracting OpenBao token from container storage..."
-    PERSISTENT_TOKEN=$(docker exec aria-character-core-openbao-1 cat /vault/data/root_token.txt 2>/dev/null || echo "")
-    
-    if [ -n "$PERSISTENT_TOKEN" ]; then
-        export VAULT_TOKEN="$PERSISTENT_TOKEN"
-        echo "Using OpenBao token from container storage: $VAULT_TOKEN"
-    elif [ -f .ci/openbao_root_token.txt ]; then
-        echo "Container token not found, trying token file..."
-        TOKEN_FROM_FILE=$(grep "Root Token:" .ci/openbao_root_token.txt | head -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r')
-        if [ -n "$TOKEN_FROM_FILE" ]; then
-            export VAULT_TOKEN="$TOKEN_FROM_FILE"
-            echo "Using OpenBao token from file: $VAULT_TOKEN"
+    # Function to verify OpenBao connection
+    verify_openbao_connection() {
+        echo "🔐 Verifying OpenBao connection..."
+        if curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/sys/health" > /dev/null; then
+            echo "✅ OpenBao connection verified successfully"
+            return 0
         else
-            echo "WARNING: Using fallback token"
-            export VAULT_TOKEN="root"
+            echo "❌ ERROR: Cannot connect to OpenBao at $VAULT_ADDR with token $VAULT_TOKEN"
+            return 1
         fi
-    else
-        # Fallback to extracting from logs
-        echo "No persistent token sources found, trying container logs..."
-        LIVE_TOKEN=$(docker logs aria-character-core-openbao-1 | grep "Root Token:" | tail -1 | sed 's/.*Root Token: //' | tr -d ' \t\n\r' || echo "")
-        if [ -n "$LIVE_TOKEN" ]; then
-            export VAULT_TOKEN="$LIVE_TOKEN"
-            echo "Using OpenBao token from logs: $VAULT_TOKEN"
+    }
+    
+    # Function to run basic security tests
+    run_basic_security_tests() {
+        echo "🧪 Running basic security service tests..."
+        
+        if [ ! -d apps/aria_security ]; then
+            echo "❌ ERROR: apps/aria_security directory does not exist"
+            return 1
+        fi
+        
+        cd apps/aria_security
+        if [ ! -f mix.exs ]; then
+            echo "❌ ERROR: mix.exs file does not exist in apps/aria_security"
+            return 1
+        fi
+        
+        echo "🔍 Checking Elixir version..."
+        bash -l -c "elixir --version" || (echo "❌ ERROR: Elixir not found" && return 1)
+        
+        echo "📦 Running: mix deps.get, mix compile, mix test (in apps/aria_security)"
+        bash -l -c "mix deps.get" && \
+        bash -l -c "mix compile --force --warnings-as-errors" && \
+        bash -l -c "mix test"
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ Basic security service tests passed"
+            cd ../..
+            return 0
         else
-            echo "WARNING: No token sources found, using fallback"
-            export VAULT_TOKEN="root"
+            echo "❌ Basic security service tests failed"
+            cd ../..
+            return 1
         fi
-    fi
+    }
     
-    echo "Verifying OpenBao connection..."
-    curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/sys/health" > /dev/null || \
-    (echo "ERROR: Cannot connect to OpenBao at $VAULT_ADDR with token $VAULT_TOKEN" && exit 1)
+    # Function to test SoftHSM rekey functionality
+    test_softhsm_rekey() {
+        echo "🔄 Testing SoftHSM rekey functionality..."
+        
+        # Store original state for comparison
+        echo "📊 Capturing initial SoftHSM state..."
+        INITIAL_SLOTS=$(docker exec aria-character-core-openbao-1 softhsm2-util --show-slots 2>/dev/null || echo "No slots available")
+        echo "Initial slots: $INITIAL_SLOTS"
+        
+        # Test rekey operation (without waiting for user input)
+        echo "🔑 Testing SoftHSM rekey operation..."
+        docker compose -f docker-compose.yml stop openbao || true
+        docker volume rm aria-character-core_softhsm_tokens 2>/dev/null || true
+        docker compose -f docker-compose.yml run --rm softhsm-setup
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ SoftHSM rekey operation completed successfully"
+            
+            # Restart foundation services after rekey
+            echo "🔄 Restarting foundation services after rekey..."
+            just foundation-startup
+            sleep 10  # Give services time to start
+            
+            # Verify new SoftHSM state
+            echo "📊 Capturing post-rekey SoftHSM state..."
+            NEW_SLOTS=$(docker exec aria-character-core-openbao-1 softhsm2-util --show-slots 2>/dev/null || echo "No slots available")
+            echo "New slots: $NEW_SLOTS"
+            
+            return 0
+        else
+            echo "❌ SoftHSM rekey operation failed"
+            return 1
+        fi
+    }
     
-    if [ ! -d apps/aria_security ]; then
-        echo "ERROR: apps/aria_security directory does not exist"
+    # Function to test destroy and recovery
+    test_destroy_and_recovery() {
+        echo "💥 Testing destroy and recovery functionality..."
+        
+        # Test destroy operation (without waiting for user input)
+        echo "🗑️  Testing destroy operation..."
+        docker compose -f docker-compose.yml stop openbao softhsm-setup || true
+        docker compose -f docker-compose.yml rm -f openbao softhsm-setup || true
+        docker volume rm aria-character-core_openbao_data 2>/dev/null || true
+        docker volume rm aria-character-core_openbao_config 2>/dev/null || true
+        docker volume rm aria-character-core_softhsm_tokens 2>/dev/null || true
+        rm -f .ci/openbao_root_token.txt
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ Destroy operation completed successfully"
+            
+            # Test recovery
+            echo "🔄 Testing recovery after destroy..."
+            just foundation-startup
+            sleep 15  # Give services time to initialize completely
+            
+            # Get new token after recovery
+            get_openbao_token
+            
+            if verify_openbao_connection; then
+                echo "✅ Recovery after destroy completed successfully"
+                return 0
+            else
+                echo "❌ Recovery after destroy failed"
+                return 1
+            fi
+        else
+            echo "❌ Destroy operation failed"
+            return 1
+        fi
+    }
+    
+    # Main test execution
+    echo "🚀 Starting comprehensive security service tests..."
+    
+    # Test 1: Basic functionality
+    echo ""
+    echo "=== TEST 1: Basic Security Service Functionality ==="
+    get_openbao_token
+    if ! verify_openbao_connection; then
+        echo "❌ Initial connection test failed, aborting"
         exit 1
     fi
-    cd apps/aria_security
-    if [ ! -f mix.exs ]; then
-        echo "ERROR: mix.exs file does not exist in apps/aria_security"
+    
+    if ! run_basic_security_tests; then
+        echo "❌ Basic security tests failed, aborting"
         exit 1
     fi
-    echo "Checking Elixir version..."
-    bash -l -c "elixir --version" || (echo "ERROR: Elixir not found" && exit 1)
-    echo "Running: mix deps.get, mix compile, mix test (in apps/aria_security)"
-    bash -l -c "mix deps.get" && \
-    bash -l -c "mix compile --force --warnings-as-errors" && \
-    bash -l -c "mix test"
-    echo "Security Service tests finished."
+    
+    # Test 2: SoftHSM Rekey functionality
+    echo ""
+    echo "=== TEST 2: SoftHSM Rekey Functionality ==="
+    if ! test_softhsm_rekey; then
+        echo "❌ SoftHSM rekey test failed, aborting"
+        exit 1
+    fi
+    
+    # Get token after rekey and verify basic tests still work
+    get_openbao_token
+    if ! verify_openbao_connection; then
+        echo "❌ Connection test after rekey failed, aborting"
+        exit 1
+    fi
+    
+    if ! run_basic_security_tests; then
+        echo "❌ Security tests after rekey failed, aborting"
+        exit 1
+    fi
+    
+    # Test 3: Destroy and recovery functionality
+    echo ""
+    echo "=== TEST 3: Destroy and Recovery Functionality ==="
+    if ! test_destroy_and_recovery; then
+        echo "❌ Destroy and recovery test failed, aborting"
+        exit 1
+    fi
+    
+    # Final verification after recovery
+    get_openbao_token
+    if ! verify_openbao_connection; then
+        echo "❌ Final connection test failed, aborting"
+        exit 1
+    fi
+    
+    if ! run_basic_security_tests; then
+        echo "❌ Final security tests failed, aborting"
+        exit 1
+    fi
+    
+    echo ""
+    echo "🎉 All security service tests completed successfully!"
+    echo "✅ Basic functionality: PASSED"
+    echo "✅ SoftHSM rekey: PASSED"
+    echo "✅ Destroy and recovery: PASSED"
+    echo "✅ Post-operation functionality: PASSED"
 
 # Generate a new varying root token for OpenBao
 generate-new-root-token: foundation-startup

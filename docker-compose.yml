@@ -20,17 +20,19 @@ services:
     build:
       context: ./docker_openbao
       dockerfile: Dockerfile
+    user: "0:0"  # Run as root to fix permissions
     ports:
       - "8200:8200"
     environment:
       - OPENBAO_PKCS11_PIN=${OPENBAO_PKCS11_PIN:-1234}
       - OPENBAO_PKCS11_SO_PIN=${OPENBAO_PKCS11_SO_PIN:-5678}
       - OPENBAO_PKCS11_SLOT=${OPENBAO_PKCS11_SLOT:-0}
+      - RESET_HSM_KEYS=${RESET_HSM_KEYS:-false}  # Set to true to reset HSM keys
     volumes:
       - openbao_data:/vault/data
       - openbao_config:/vault/config
-      - softhsm_tokens:/var/lib/softhsm/tokens:ro
-      - softhsm_libs:/usr/lib/softhsm:ro
+      - softhsm_tokens:/var/lib/softhsm/tokens
+      - softhsm_libs:/usr/lib/softhsm
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8200/v1/sys/health?standbyok=true || exit 1"]
       interval: 30s
