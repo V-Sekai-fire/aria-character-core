@@ -71,3 +71,19 @@ else
 fi
 
 echo "SoftHSM setup complete."
+
+# Copy SoftHSM libraries and configuration to shared volume for OpenBao container
+echo "Copying SoftHSM libraries to shared volume..."
+mkdir -p /usr/lib/softhsm
+# Find and copy all SoftHSM libraries
+find /usr -name "*softhsm*" -type f -exec cp {} /usr/lib/softhsm/ \; 2>/dev/null || true
+# Also copy from specific paths
+cp -r /usr/lib/softhsm/* /usr/lib/softhsm/ 2>/dev/null || true
+
+# Copy the SoftHSM configuration to the shared volume
+echo "Copying SoftHSM configuration to shared volume..."
+cp /etc/softhsm2.conf /usr/lib/softhsm/softhsm2.conf
+echo "SoftHSM configuration copied to /usr/lib/softhsm/softhsm2.conf"
+
+ls -la /usr/lib/softhsm/
+echo "Library and configuration copying complete."

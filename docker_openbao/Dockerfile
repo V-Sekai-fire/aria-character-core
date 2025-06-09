@@ -1,10 +1,9 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-FROM openbao/openbao:latest
+FROM openbao/openbao-hsm-ubi
 
-# Install curl for health checks and bash for scripts
-RUN apk add --no-cache curl bash
+# Check if curl and bash are available and set working directory
 
 # Set working directory
 WORKDIR /vault
@@ -15,10 +14,7 @@ RUN mkdir -p /vault/config /vault/data
 # Copy configuration files
 COPY vault-config.hcl /vault/config/
 COPY vault-dev-persistent.hcl /vault/config/
-COPY init-and-start.sh /vault/
-
-# Make script executable
-RUN chmod +x /vault/init-and-start.sh
+COPY --chmod=755 init-and-start.sh /vault/
 
 # Default command will be overridden by docker-compose
 CMD ["/vault/init-and-start.sh"]

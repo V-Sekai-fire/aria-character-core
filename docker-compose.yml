@@ -12,6 +12,7 @@ services:
       - OPENBAO_PKCS11_SLOT=${OPENBAO_PKCS11_SLOT:-0}
     volumes:
       - softhsm_tokens:/var/lib/softhsm/tokens
+      - softhsm_libs:/usr/lib/softhsm
     # This is a one-time setup service, not a long-running service
     restart: "no"
 
@@ -29,8 +30,9 @@ services:
       - openbao_data:/vault/data
       - openbao_config:/vault/config
       - softhsm_tokens:/var/lib/softhsm/tokens:ro
+      - softhsm_libs:/usr/lib/softhsm:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8200/v1/sys/health?standbyok=true"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8200/v1/sys/health?standbyok=true || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -57,4 +59,5 @@ volumes:
   openbao_data:
   openbao_config:
   softhsm_tokens:
+  softhsm_libs:
   cockroachdb_data:

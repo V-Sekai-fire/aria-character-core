@@ -1,10 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-FROM alpine:latest
+FROM almalinux:latest
 
 # Install SoftHSM and OpenSC
-RUN apk add --no-cache softhsm opensc
+RUN dnf install -y epel-release && \
+    dnf install -y softhsm opensc && \
+    dnf clean all
 
 # Create directories
 RUN mkdir -p /var/lib/softhsm/tokens /etc/softhsm2.d
