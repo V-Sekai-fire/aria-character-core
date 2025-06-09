@@ -298,4 +298,102 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   def detect_format(<<0xCA, 0x1D, 0x5C, _rest::binary>>), do: {:ok, :caidx}
   def detect_format(<<0xCA, 0x1A, 0x52, _rest::binary>>), do: {:ok, :catar}
   def detect_format(_), do: {:error, :unknown_format}
+
+  # Encoding functions
+
+  @doc """
+  Encodes a parsed index structure back to binary format.
+  """
+  def encode_index(%{format: format, header: header, chunks: chunks}) do
+    magic = case format do
+      :caibx -> <<0xCA, 0x1B, 0x5C>>
+      :caidx -> <<0xCA, 0x1D, 0x5C>>
+    end
+
+    encoded_header = encode_index_header(header)
+    encoded_chunks = Enum.map(chunks, &encode_chunk_entry/1) |> Enum.join()
+
+    {:ok, magic <> encoded_header <> encoded_chunks}
+  end
+
+  @doc """
+  Encodes a parsed chunk structure back to binary format.
+  """
+  def encode_chunk(%{header: header, data: data}) do
+    encoded_header = encode_chunk_header(header)
+    {:ok, encoded_header <> data}
+  end
+
+  @doc """
+  Encodes a parsed archive structure back to binary format.
+  """
+  def encode_archive(%{format: :catar, entries: entries}) do
+    magic = <<0xCA, 0x1A, 0x52>>
+    encoded_entries = Enum.map(entries, &encode_catar_entry/1) |> Enum.join()
+    {:ok, magic <> encoded_entries}
+  end
+
+  # Private encoding helper functions
+
+  defp encode_index_header(%{version: version, total_size: total_size, chunk_count: chunk_count}) do
+    <<version::little-32>> <>
+    <<total_size::little-64>> <>
+    <<chunk_count::little-32>> <>
+    <<0::little-32>>  # reserved
+  end
+
+  defp encode_chunk_entry(%{chunk_id: chunk_id, offset: offset, size: size, flags: flags}) do
+    chunk_id <>
+    <<offset::little-64>> <>
+    <<size::little-32>> <>
+    <<flags::little-32>>
+  end
+
+  defp encode_chunk_header(%{compressed_size: compressed_size, uncompressed_size: uncompressed_size, compression: compression, flags: flags}) do
+    compression_type = case compression do
+      :none -> 0
+      :zstd -> 1
+      :unknown -> 0
+    end
+
+    <<compressed_size::little-32>> <>
+    <<uncompressed_size::little-32>> <>
+    <<compression_type::little-32>> <>
+    <<flags::little-32>>
+  end
+
+  defp encode_catar_entry(%{type: type, header: header} = entry) do
+    encoded_header = encode_catar_entry_header(header)
+
+    case type do
+      :file -> encoded_header <> encode_catar_metadata(entry)
+      :directory -> encoded_header <> encode_catar_metadata(entry)
+      :symlink -> encoded_header <> encode_catar_metadata(entry)
+      _ -> encoded_header
+    end
+  end
+
+  defp encode_catar_entry_header(%{size: size, type: type, flags: flags}) do
+    type_code = case type do
+      :file -> 1
+      :directory -> 2
+      :symlink -> 3
+      :device -> 4
+      :fifo -> 5
+      :socket -> 6
+      :unknown -> 0
+    end
+
+    <<size::little-64>> <>
+    <<type_code::little-64>> <>
+    <<flags::little-64>> <>
+    <<0::little-64>>  # padding
+  end
+
+  defp encode_catar_metadata(%{mode: mode, uid: uid, gid: gid, mtime: mtime}) do
+    <<mode::little-64>> <>
+    <<uid::little-64>> <>
+    <<gid::little-64>> <>
+    <<mtime::little-64>>
+  end
 end
