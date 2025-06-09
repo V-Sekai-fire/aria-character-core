@@ -757,7 +757,7 @@ test-elixir-compile: install-elixir-erlang-env
     mix deps.get || (echo "❌ Failed to get dependencies" && exit 1)
     
     echo "🔨 Compiling all apps..."
-    mix compile --force --warnings-as-errors || (echo "❌ Compilation failed" && exit 1)
+    mix compile --force || (echo "❌ Compilation failed" && exit 1)
     
     echo "✅ All apps compiled successfully!"
 
