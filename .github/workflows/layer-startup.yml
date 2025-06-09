@@ -36,15 +36,10 @@ jobs:
           OPENBAO_PKCS11_SO_PIN: ${{ secrets.OPENBAO_PKCS11_SO_PIN }}
           OPENBAO_PKCS11_SLOT: ${{ secrets.OPENBAO_PKCS11_SLOT }}
         run: |
-          # Install native dependencies
           just install-ubuntu-deps
-          
-          # Install and start foundation services
           just install-cockroach
           just install-openbao
           just install-seaweedfs
-          
-          # Start services
           just start-foundation-core
 
       - name: Run Unit Tests
