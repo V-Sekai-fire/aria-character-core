@@ -30,11 +30,15 @@ default: dev-setup
 
 # Development workflow entry point
 dev-setup: install-ubuntu-deps install-elixir-erlang-env foundation-startup
-    @echo "Development environment setup complete!"
+    #!/usr/bin/env bash
+    echo "🚀 Setting up development environment (deps + environment + foundation)..."
+    echo "✅ Development environment setup complete!"
 
 # Testing workflow entry point  
 test-all: test-elixir-compile test-elixir-unit test-openbao-connection test-basic-secrets
-    @echo "All tests completed!"
+    #!/usr/bin/env bash
+    echo "🧪 Running all tests (compile + unit + openbao + secrets)..."
+    echo "✅ All tests completed!"
 
 # CI/CD unit testing workflow (no external dependencies)
 test-unit-ci: test-elixir-compile
@@ -58,19 +62,27 @@ test-unit-ci: test-elixir-compile
 
 # Fast CI test suite (compile + unit tests only)
 test-ci-fast: test-elixir-compile test-unit-ci test-aria-security test-aria-auth
-    @echo "Fast CI test suite completed!"
+    #!/usr/bin/env bash
+    echo "⚡ Running fast CI test suite (compile + unit tests for all apps)..."
+    echo "✅ Fast CI test suite completed!"
 
 # Production deployment workflow
 prod-deploy: up-all-and-check
-    @echo "Production deployment complete!"
+    #!/usr/bin/env bash
+    echo "🚀 Deploying production environment (start all + verify)..."
+    echo "✅ Production deployment complete!"
 
 # Status check workflow
 status: foundation-status
-    @echo "Status check complete!"
+    #!/usr/bin/env bash
+    echo "📊 Checking foundation service status..."
+    echo "✅ Status check complete!"
 
 # Clean up workflow
 clean: stop-all-services
-    @echo "Cleanup complete!"
+    #!/usr/bin/env bash
+    echo "🧹 Cleaning up all services..."
+    echo "✅ Cleanup complete!"
 
 # Install Ubuntu dependencies for native setup
 install-ubuntu-deps:
@@ -629,11 +641,15 @@ check-foundation-core-health: start-foundation-core
 
 # Foundation startup: build, start, and check health
 foundation-startup: start-foundation-core check-foundation-core-health
-    @echo "Foundation startup completed."
+    #!/usr/bin/env bash
+    echo "🚀 Foundation startup process completed!"
+    echo "✅ All foundation services are running and healthy!"
 
 # Start foundation core services natively
 start-foundation-core: start-cockroach start-openbao start-elixir-app
-    @echo "Foundation core services started."
+    #!/usr/bin/env bash
+    echo "🚀 Starting foundation core services..."
+    echo "✅ Foundation core services started!"
 
 foundation-status: foundation-startup
     #!/usr/bin/env bash
@@ -664,7 +680,9 @@ foundation-stop:
 
 # Start all services natively
 start-all: start-cockroach start-openbao start-seaweedfs start-elixir-app
-    @echo "All services started natively."
+    #!/usr/bin/env bash
+    echo "🚀 Starting all services (CockroachDB + OpenBao + SeaweedFS + Elixir app)..."
+    echo "✅ All services started natively!"
 
 # Check health of all services
 check-all-health: up-all-and-check
@@ -709,23 +727,33 @@ up-all-and-check: start-all check-foundation-core-health
 
 # Environment setup and management
 setup-env: install-elixir-erlang-env
-    @echo "Environment setup complete!"
+    #!/usr/bin/env bash
+    echo "🚀 Setting up environment for development..."
+    echo "✅ Environment setup complete!"
 
 # Token management workflow
 manage-tokens: generate-new-root-token
-    @echo "Token management complete!"
+    #!/usr/bin/env bash
+    echo "🔑 Managing OpenBao tokens..."
+    echo "✅ Token management complete!"
 
 # Complete development workflow
 full-dev-setup: setup-env dev-setup
-    @echo "Full development setup complete!"
+    #!/usr/bin/env bash
+    echo "🚀 Running full development setup (environment + foundation)..."
+    echo "✅ Full development setup complete!"
 
 # Logs workflow
 logs: foundation-logs
-    @echo "Logs displayed!"
+    #!/usr/bin/env bash
+    echo "📋 Displaying foundation service logs..."
+    echo "✅ Logs displayed!"
 
 # Extended status workflow
 extended-status: status check-all-health
-    @echo "Extended status check complete!"
+    #!/usr/bin/env bash
+    echo "📊 Running extended status check (foundation + all services)..."
+    echo "✅ Extended status check complete!"
 
 install-elixir-erlang-env:
     ./scripts/install-elixir-erlang.sh
