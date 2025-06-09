@@ -9,7 +9,7 @@ defmodule AriaQueue.Workers.AIGenerationWorker do
   use Oban.Worker, queue: :ai_generation, max_attempts: 3
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"type" => "character_generation", "user_id" => user_id, "prompt" => prompt} = args}) do
+  def perform(%Oban.Job{args: %{"type" => "character_generation", "user_id" => user_id, "prompt" => prompt} = _args}) do
     # This would interface with aria_interpret or aria_shape services
     # For now, we'll just log the job
     require Logger
