@@ -4,7 +4,7 @@
 defmodule AriaStorage.Archives do
   @moduledoc """
   Archive support for desync-compatible .catar format.
-  
+
   Handles:
   - Directory tree archiving to .catar format
   - Archive extraction from .catar files
@@ -14,7 +14,7 @@ defmodule AriaStorage.Archives do
   """
 
   alias AriaStorage.{Chunks, Index, Storage}
-  
+
   @catar_magic_header <<0xCA, 0x7A, 0x52>>
   @catar_version 1
 
@@ -40,7 +40,7 @@ defmodule AriaStorage.Archives do
 
   @doc """
   Creates a .catar archive from a directory tree.
-  
+
   Options:
   - `:output_path` - Where to write the archive
   - `:chunk` - Whether to chunk the archive (creates .caidx)
@@ -51,7 +51,7 @@ defmodule AriaStorage.Archives do
     output_path = Keyword.get(opts, :output_path, "#{source_dir}.catar")
     should_chunk = Keyword.get(opts, :chunk, false)
     exclude_patterns = Keyword.get(opts, :exclude_patterns, [])
-    
+
     with {:ok, entries} <- scan_directory(source_dir, exclude_patterns),
          {:ok, archive} <- create_archive_struct(source_dir, entries),
          {:ok, archive_path} <- write_catar_file(archive, output_path),
@@ -62,7 +62,7 @@ defmodule AriaStorage.Archives do
 
   @doc """
   Extracts a .catar archive to a directory.
-  
+
   Options:
   - `:preserve_permissions` - Preserve file permissions (default: true)
   - `:preserve_timestamps` - Preserve file timestamps (default: true)
@@ -72,16 +72,21 @@ defmodule AriaStorage.Archives do
     preserve_perms = Keyword.get(opts, :preserve_permissions, true)
     preserve_timestamps = Keyword.get(opts, :preserve_timestamps, true)
     overwrite = Keyword.get(opts, :overwrite, false)
-    
+
     case archive_source do
       # Direct .catar file
-      path when is_binary(path) and Path.extname(path) == ".catar" ->
-        extract_catar_file(path, output_dir, preserve_perms, preserve_timestamps, overwrite)
-      
+      path when is_binary(path) ->
+        case Path.extname(path) do
+          ".catar" ->
+            extract_catar_file(path, output_dir, preserve_perms, preserve_timestamps, overwrite)
+          _ ->
+            {:error, :not_catar_file}
+        end
+
       # Index reference for chunked archive
       %Index{format: :caidx} = index ->
         extract_chunked_archive(index, output_dir, opts)
-      
+
       _ ->
         {:error, :invalid_archive_source}
     end
@@ -94,15 +99,17 @@ defmodule AriaStorage.Archives do
     case archive_source do
       path when is_binary(path) ->
         read_catar_entries(path)
-      
+
       %Index{format: :caidx} = index ->
         # For chunked archives, we'd need to reconstruct first
-        with {:ok, temp_file} <- extract_archive_to_temp(index),
-             {:ok, entries} <- read_catar_entries(temp_file),
-             :ok <- File.rm(temp_file) do
-          {:ok, entries}
-        end
-      
+        {:error, :not_implemented}
+        # TODO: Implement archive extraction
+        # with {:ok, temp_file} <- extract_archive_to_temp(index),
+        #      {:ok, entries} <- read_catar_entries(temp_file),
+        #      :ok <- File.rm(temp_file) do
+        #   {:ok, entries}
+        # end
+
       _ ->
         {:error, :invalid_archive_source}
     end
@@ -122,7 +129,7 @@ defmodule AriaStorage.Archives do
           created_at: DateTime.utc_now() # Would be read from archive metadata
         }
         {:ok, info}
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -135,10 +142,10 @@ defmodule AriaStorage.Archives do
     case archive_source do
       path when is_binary(path) ->
         verify_catar_file(path)
-      
+
       %Index{format: :caidx} = index ->
         verify_chunked_archive(index)
-      
+
       _ ->
         {:error, :invalid_archive_source}
     end
@@ -153,9 +160,9 @@ defmodule AriaStorage.Archives do
         |> Enum.reject(&should_exclude?(&1, exclude_patterns))
         |> Enum.map(&scan_entry(Path.join(source_dir, &1), source_dir))
         |> Enum.filter(&(!is_nil(&1)))
-        
+
         {:ok, List.flatten(entries)}
-      
+
       {:error, reason} ->
         {:error, {:directory_scan, reason}}
     end
@@ -166,10 +173,10 @@ defmodule AriaStorage.Archives do
       case pattern do
         regex when is_struct(regex, Regex) ->
           Regex.match?(regex, filename)
-        
+
         string when is_binary(string) ->
           String.contains?(filename, string)
-        
+
         _ ->
           false
       end
@@ -178,7 +185,7 @@ defmodule AriaStorage.Archives do
 
   defp scan_entry(full_path, base_dir) do
     relative_path = Path.relative_to(full_path, base_dir)
-    
+
     case File.stat(full_path) do
       {:ok, stat} ->
         entry = %{
@@ -191,21 +198,21 @@ defmodule AriaStorage.Archives do
           uid: stat.uid,
           gid: stat.gid
         }
-        
+
         case stat.type do
           :directory ->
             case scan_directory(full_path, []) do
               {:ok, children} ->
                 [entry | children]
-              
+
               {:error, _} ->
                 [entry]
             end
-          
+
           _ ->
             [entry]
         end
-      
+
       {:error, _} ->
         nil
     end
@@ -224,7 +231,7 @@ defmodule AriaStorage.Archives do
       total_size: calculate_total_size(entries),
       entry_count: length(entries)
     }
-    
+
     {:ok, archive}
   end
 
@@ -235,7 +242,7 @@ defmodule AriaStorage.Archives do
         :ok = write_catar_entries(file, archive.entries)
         :ok = File.close(file)
         {:ok, output_path}
-      
+
       {:error, reason} ->
         {:error, {:file_write, reason}}
     end
@@ -243,7 +250,7 @@ defmodule AriaStorage.Archives do
 
   defp write_catar_header(file, archive) do
     timestamp = DateTime.to_unix(archive.created_at)
-    
+
     header = @catar_magic_header <>
       <<
         @catar_version::32-big,
@@ -251,7 +258,7 @@ defmodule AriaStorage.Archives do
         archive.total_size::64-big,
         timestamp::64-big
       >>
-    
+
     IO.binwrite(file, header)
   end
 
@@ -265,7 +272,7 @@ defmodule AriaStorage.Archives do
     # Simplified catar entry format
     path_bytes = entry.path
     path_len = byte_size(path_bytes)
-    
+
     entry_header = <<
       entry.size::64-big,
       DateTime.to_unix(entry.mtime)::64-big,
@@ -274,16 +281,16 @@ defmodule AriaStorage.Archives do
       entry.gid::32-big,
       path_len::32-big
     >>
-    
+
     IO.binwrite(file, entry_header)
     IO.binwrite(file, path_bytes)
-    
+
     # Write file content for regular files
     if entry.type == :regular do
       case File.read(entry.full_path) do
         {:ok, content} ->
           IO.binwrite(file, content)
-        
+
         {:error, _} ->
           # Skip files that can't be read
           :ok
@@ -301,15 +308,15 @@ defmodule AriaStorage.Archives do
               case Index.save_to_file(index, index_path) do
                 :ok ->
                   {:ok, %{archive: archive_path, index: index_path, chunks: chunks}}
-                
+
                 {:error, reason} ->
                   {:error, reason}
               end
-            
+
             {:error, reason} ->
               {:error, reason}
           end
-        
+
         {:error, reason} ->
           {:error, reason}
       end
@@ -323,7 +330,7 @@ defmodule AriaStorage.Archives do
       {:ok, entries} ->
         File.mkdir_p!(output_dir)
         extract_entries(entries, output_dir, preserve_perms, preserve_timestamps, overwrite)
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -333,7 +340,7 @@ defmodule AriaStorage.Archives do
     # In a real implementation, we'd reconstruct the archive from chunks
     # and then extract it
     with {:ok, temp_archive} <- reconstruct_archive_from_chunks(index),
-         {:ok, _} <- extract_catar_file(temp_archive, output_dir, 
+         {:ok, _} <- extract_catar_file(temp_archive, output_dir,
                                        Keyword.get(opts, :preserve_permissions, true),
                                        Keyword.get(opts, :preserve_timestamps, true),
                                        Keyword.get(opts, :overwrite, false)),
@@ -349,11 +356,11 @@ defmodule AriaStorage.Archives do
         case parse_catar_header(binary_data) do
           {:ok, header, entries_data} ->
             parse_catar_entries(entries_data, header.entry_count)
-          
+
           {:error, reason} ->
             {:error, reason}
         end
-      
+
       {:error, reason} ->
         {:error, {:file_read, reason}}
     end
@@ -361,7 +368,7 @@ defmodule AriaStorage.Archives do
 
   defp parse_catar_header(binary_data) do
     case binary_data do
-      <<@catar_magic_header, version::32-big, entry_count::32-big, 
+      <<@catar_magic_header, version::32-big, entry_count::32-big,
         total_size::64-big, timestamp::64-big, rest::binary>> ->
         header = %{
           version: version,
@@ -370,7 +377,7 @@ defmodule AriaStorage.Archives do
           timestamp: timestamp
         }
         {:ok, header, rest}
-      
+
       _ ->
         {:error, :invalid_catar_format}
     end
@@ -390,24 +397,24 @@ defmodule AriaStorage.Archives do
 
   defp extract_entry(entry, output_dir, preserve_perms, preserve_timestamps, overwrite) do
     target_path = Path.join(output_dir, entry.path)
-    
+
     case entry.type do
       :directory ->
         File.mkdir_p!(target_path)
-      
+
       :regular ->
         if overwrite or not File.exists?(target_path) do
           File.write!(target_path, entry.content || "")
-          
+
           if preserve_perms do
             File.chmod!(target_path, entry.mode)
           end
-          
+
           if preserve_timestamps do
             File.touch!(target_path, entry.mtime)
           end
         end
-      
+
       _ ->
         # Handle other file types (symlinks, devices, etc.)
         :ok
@@ -417,14 +424,14 @@ defmodule AriaStorage.Archives do
   defp reconstruct_archive_from_chunks(index) do
     # In a real implementation, this would use the chunk store to reconstruct
     temp_path = Path.join(System.tmp_dir!(), "catar_#{:rand.uniform(1000000)}")
-    
+
     case Storage.get_chunks_for_index(index) do
       {:ok, chunks} ->
         case Chunks.assemble_file(chunks, index, temp_path) do
           {:ok, _} -> {:ok, temp_path}
           {:error, reason} -> {:error, reason}
         end
-      
+
       {:error, reason} ->
         {:error, reason}
     end

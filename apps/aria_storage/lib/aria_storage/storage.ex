@@ -4,7 +4,7 @@
 defmodule AriaStorage.Storage do
   @moduledoc """
   Storage context for managing chunk stores and indexes.
-  
+
   Handles:
   - Multiple chunk store backends (local, S3, SFTP, HTTP)
   - Chunk store routing and failover
@@ -15,10 +15,11 @@ defmodule AriaStorage.Storage do
 
   alias AriaStorage.{Chunks, Index, ChunkStore}
   alias AriaData.StorageRepo
+  import Ecto.Query
 
   @doc """
   Stores chunks in the configured chunk stores.
-  
+
   Options:
   - `:stores` - List of chunk store configurations
   - `:cache` - Cache store configuration
@@ -28,16 +29,16 @@ defmodule AriaStorage.Storage do
     stores = get_chunk_stores(opts)
     cache = get_cache_store(opts)
     verify = Keyword.get(opts, :verify, true)
-    
+
     results = Enum.map(chunks, fn chunk ->
       store_single_chunk(chunk, stores, cache, verify)
     end)
-    
+
     case Enum.find(results, &match?({:error, _}, &1)) do
       nil ->
         stored_chunks = Enum.map(results, fn {:ok, chunk} -> chunk end)
         {:ok, stored_chunks}
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -48,7 +49,7 @@ defmodule AriaStorage.Storage do
   """
   def store_index(index, opts \\ []) do
     index_store = get_index_store(opts)
-    
+
     case generate_index_reference(index) do
       {:ok, index_ref} ->
         case store_index_in_store(index, index_ref, index_store) do
@@ -62,19 +63,19 @@ defmodule AriaStorage.Storage do
               created_at: index.created_at,
               checksum: index.checksum
             }
-            
+
             case create_file_record(metadata) do
               {:ok, file_record} ->
                 {:ok, %{index_ref: index_ref, file_id: file_record.id}}
-              
+
               {:error, reason} ->
                 {:error, {:database_error, reason}}
             end
-          
+
           {:error, reason} ->
             {:error, reason}
         end
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -88,7 +89,7 @@ defmodule AriaStorage.Storage do
       {:ok, file_record} ->
         index_store = get_index_store([])
         get_index_from_store(index_ref, index_store)
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -100,16 +101,16 @@ defmodule AriaStorage.Storage do
   def get_chunks_for_index(index, opts \\ []) do
     stores = get_chunk_stores(opts)
     cache = get_cache_store(opts)
-    
+
     chunk_results = Enum.map(index.chunks, fn chunk ->
       get_single_chunk(chunk.id, stores, cache)
     end)
-    
+
     case Enum.find(chunk_results, &match?({:error, _}, &1)) do
       nil ->
         chunks = Enum.map(chunk_results, fn {:ok, chunk} -> chunk end)
         {:ok, chunks}
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -121,16 +122,16 @@ defmodule AriaStorage.Storage do
   def list_files(opts \\ []) do
     limit = Keyword.get(opts, :limit, 100)
     offset = Keyword.get(opts, :offset, 0)
-    
-    query = from f in AriaStorage.File,
+
+    query = from f in AriaStorage.FileRecord,
             order_by: [desc: f.inserted_at],
             limit: ^limit,
             offset: ^offset
-    
+
     case StorageRepo.all(query) do
       files when is_list(files) ->
         {:ok, files}
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -138,13 +139,13 @@ defmodule AriaStorage.Storage do
 
   @doc """
   Deletes a file and its associated chunks.
-  
+
   Options:
   - `:force` - Force deletion even if chunks are referenced by other files
   """
   def delete_file(file_id, opts \\ []) do
     force = Keyword.get(opts, :force, false)
-    
+
     case get_file_record(file_id) do
       {:ok, file_record} ->
         with {:ok, index} <- get_index(file_record.index_ref),
@@ -153,7 +154,7 @@ defmodule AriaStorage.Storage do
              {:ok, _} <- StorageRepo.delete(file_record) do
           {:ok, :deleted}
         end
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -164,10 +165,10 @@ defmodule AriaStorage.Storage do
   """
   def prune_chunks(opts \\ []) do
     stores = get_chunk_stores(opts)
-    
+
     # Get all chunk IDs referenced by existing files
     referenced_chunks = get_all_referenced_chunks()
-    
+
     # Get all chunks in stores
     case get_all_stored_chunks(stores) do
       {:ok, stored_chunks} ->
@@ -175,9 +176,9 @@ defmodule AriaStorage.Storage do
           MapSet.new(stored_chunks),
           MapSet.new(referenced_chunks)
         )
-        
+
         delete_unreferenced_chunks(MapSet.to_list(unreferenced), stores)
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -189,22 +190,22 @@ defmodule AriaStorage.Storage do
   def verify_chunks(opts \\ []) do
     stores = get_chunk_stores(opts)
     repair = Keyword.get(opts, :repair, false)
-    
+
     case get_all_stored_chunks(stores) do
       {:ok, chunk_ids} ->
         results = Enum.map(chunk_ids, fn chunk_id ->
           verify_single_chunk(chunk_id, stores, repair)
         end)
-        
+
         {valid, invalid} = Enum.split_with(results, &match?({:ok, _}, &1))
-        
+
         {:ok, %{
           total: length(results),
           valid: length(valid),
           invalid: length(invalid),
           invalid_chunks: Enum.map(invalid, fn {:error, {chunk_id, _}} -> chunk_id end)
         }}
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -218,9 +219,9 @@ defmodule AriaStorage.Storage do
          {:ok, total_size} <- calculate_total_size(),
          {:ok, chunk_count} <- count_unique_chunks(),
          {:ok, compressed_size} <- calculate_compressed_size() do
-      
+
       compression_ratio = if total_size > 0, do: compressed_size / total_size, else: 0.0
-      
+
       {:ok, %{
         file_count: file_count,
         total_size: total_size,
@@ -255,13 +256,13 @@ defmodule AriaStorage.Storage do
     # Try cache first
     result = case cache do
       nil -> store_in_primary_stores(chunk, stores)
-      cache_store -> 
+      cache_store ->
         case ChunkStore.store_chunk(cache_store, chunk) do
           :ok -> store_in_primary_stores(chunk, stores)
           {:error, _} -> store_in_primary_stores(chunk, stores)
         end
     end
-    
+
     if verify and result == :ok do
       verify_stored_chunk(chunk, stores)
     else
@@ -280,7 +281,7 @@ defmodule AriaStorage.Storage do
           {:error, reason} ->
             {:error, reason}
         end
-      
+
       [] ->
         {:error, :no_stores_available}
     end
@@ -294,7 +295,7 @@ defmodule AriaStorage.Storage do
         else
           {:error, {:verification_failed, chunk.id}}
         end
-      
+
       {:error, reason} ->
         {:error, {:verification_failed, reason}}
     end
@@ -322,7 +323,7 @@ defmodule AriaStorage.Storage do
           {:error, reason} ->
             {:error, reason}
         end
-      
+
       [] ->
         {:error, :chunk_not_found}
     end
@@ -338,7 +339,7 @@ defmodule AriaStorage.Storage do
     case Index.serialize(index) do
       {:ok, binary_data} ->
         ChunkStore.store_data(index_store, index_ref, binary_data)
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -348,29 +349,35 @@ defmodule AriaStorage.Storage do
     case ChunkStore.get_data(index_store, index_ref) do
       {:ok, binary_data} ->
         Index.deserialize(binary_data)
-      
+
       {:error, reason} ->
         {:error, reason}
     end
   end
 
   defp create_file_record(metadata) do
-    changeset = AriaStorage.File.changeset(%AriaStorage.File{}, metadata)
-    StorageRepo.insert(changeset)
+    # TODO: Implement database integration
+    # changeset = AriaStorage.File.changeset(%AriaStorage.File{}, metadata)
+    # StorageRepo.insert(changeset)
+    {:ok, %{id: "stub_file_id", metadata: metadata}}
   end
 
   defp get_file_record(file_id) do
-    case StorageRepo.get(AriaStorage.File, file_id) do
-      nil -> {:error, :file_not_found}
-      file -> {:ok, file}
-    end
+    # TODO: Implement database integration
+    # case StorageRepo.get(AriaStorage.File, file_id) do
+    #   nil -> {:error, :file_not_found}
+    #   file -> {:ok, file}
+    # end
+    {:error, :not_implemented}
   end
 
   defp get_file_record_by_ref(index_ref) do
-    case StorageRepo.get_by(AriaStorage.File, index_ref: index_ref) do
-      nil -> {:error, :file_not_found}
-      file -> {:ok, file}
-    end
+    # TODO: Implement database integration
+    # case StorageRepo.get_by(AriaStorage.File, index_ref: index_ref) do
+    #   nil -> {:error, :file_not_found}
+    #   file -> {:ok, file}
+    # end
+    {:error, :not_implemented}
   end
 
   defp maybe_delete_chunks(chunks, force) do
@@ -387,7 +394,7 @@ defmodule AriaStorage.Storage do
       chunks_to_delete = Enum.reject(chunks, fn chunk ->
         chunk.id in referenced_chunks
       end)
-      
+
       stores = get_chunk_stores([])
       Enum.each(chunks_to_delete, fn chunk ->
         delete_chunk_from_stores(chunk.id, stores)
@@ -438,7 +445,7 @@ defmodule AriaStorage.Storage do
           end
           {:error, {chunk_id, :checksum_mismatch}}
         end
-      
+
       {:error, reason} ->
         {:error, {chunk_id, reason}}
     end

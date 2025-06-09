@@ -4,7 +4,7 @@
 defmodule AriaStorage.WaffleChunkStore do
   @moduledoc """
   Waffle-based chunk store for desync compatibility.
-  
+
   This module integrates Waffle's file storage capabilities with our
   desync chunking system, providing a flexible storage backend that
   can work with local filesystem, S3, or other Waffle-supported backends.
@@ -143,7 +143,7 @@ defmodule AriaStorage.WaffleChunkStore do
   """
   def delete_chunk(chunk_id) when is_binary(chunk_id) do
     scope = %{chunk_id: chunk_id}
-    
+
     case delete({nil, scope}) do
       :ok -> :ok
       {:error, reason} -> {:error, {:delete_failed, reason}}
@@ -156,7 +156,7 @@ defmodule AriaStorage.WaffleChunkStore do
   def chunk_exists?(chunk_id) when is_binary(chunk_id) do
     scope = %{chunk_id: chunk_id}
     file_path = url({nil, scope})
-    
+
     case get_storage_backend() do
       :s3 -> chunk_exists_s3?(file_path)
       :local -> chunk_exists_local?(file_path)
@@ -169,9 +169,9 @@ defmodule AriaStorage.WaffleChunkStore do
   defp create_temp_chunk_file(%Chunks{} = chunk) do
     # Create temporary file with chunk data (compressed if available)
     data = chunk.compressed || chunk.data
-    temp_path = System.tmp_dir!() 
+    temp_path = System.tmp_dir!()
       |> Path.join("chunk_#{System.unique_integer([:positive])}.tmp")
-    
+
     File.write!(temp_path, data)
     temp_path
   end
@@ -197,7 +197,7 @@ defmodule AriaStorage.WaffleChunkStore do
   defp list_chunks_s3(opts) do
     bucket = bucket()
     prefix = Keyword.get(opts, :prefix, "chunks/")
-    
+
     case ExAws.S3.list_objects(bucket, prefix: prefix) |> ExAws.request() do
       {:ok, %{body: %{contents: objects}}} ->
         chunk_ids = objects
@@ -205,7 +205,7 @@ defmodule AriaStorage.WaffleChunkStore do
           |> Enum.filter(&String.ends_with?(&1, ".cacnk"))
           |> Enum.map(&extract_chunk_id_from_path/1)
           |> Enum.reject(&is_nil/1)
-        
+
         {:ok, chunk_ids}
 
       {:error, reason} ->
@@ -216,7 +216,7 @@ defmodule AriaStorage.WaffleChunkStore do
   defp chunk_exists_s3?(file_path) do
     bucket = bucket()
     key = extract_s3_key(file_path)
-    
+
     case ExAws.S3.head_object(bucket, key) |> ExAws.request() do
       {:ok, _} -> true
       {:error, _} -> false
@@ -226,7 +226,7 @@ defmodule AriaStorage.WaffleChunkStore do
   defp download_chunk_s3(file_path) do
     bucket = bucket()
     key = extract_s3_key(file_path)
-    
+
     case ExAws.S3.get_object(bucket, key) |> ExAws.request() do
       {:ok, %{body: data}} -> {:ok, data}
       {:error, reason} -> {:error, reason}
@@ -244,14 +244,14 @@ defmodule AriaStorage.WaffleChunkStore do
     storage_path = get_local_storage_path()
     prefix = Keyword.get(opts, :prefix, "chunks")
     search_path = Path.join(storage_path, prefix)
-    
+
     case File.ls(search_path) do
       {:ok, files} ->
         chunk_ids = files
           |> Enum.filter(&String.ends_with?(&1, ".cacnk"))
           |> Enum.map(&extract_chunk_id_from_path/1)
           |> Enum.reject(&is_nil/1)
-        
+
         {:ok, chunk_ids}
 
       {:error, reason} ->

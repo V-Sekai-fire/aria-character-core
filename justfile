@@ -100,8 +100,8 @@ start-foundation-core: build-foundation-core
 
 # Check health of foundation core services
 check-foundation-core-health: start-foundation-core
-    @echo "Waiting for foundation core services to initialize (initial 10-second delay)..."
-    @sleep 10
+    @echo "Waiting for foundation core services to initialize (initial 5-second delay)..."
+    @sleep 5
     @echo "Checking current status of foundation services..."
     @docker compose -f docker-compose.yml ps openbao cockroachdb
     @echo "--- Recent logs (OpenBao) ---"
@@ -219,7 +219,7 @@ test-elixir-compile: install-elixir-erlang-env
     echo "✅ All apps compiled successfully!"
 
 # Test 2: Run unit tests for Elixir apps (no external dependencies)
-test-elixir-unit: test-elixir-compile
+test-elixir-unit: foundation-startup test-elixir-compile
     #!/usr/bin/env bash
     echo "🧪 Running unit tests for all Elixir apps..."
     export ASDF_DIR="./.asdf"

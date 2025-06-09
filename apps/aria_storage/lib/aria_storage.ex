@@ -4,7 +4,7 @@
 defmodule AriaStorage do
   @moduledoc """
   AriaStorage provides content-addressed storage services for the Aria platform.
-  
+
   This service handles:
   - Desync-based content-defined chunking
   - Content-addressed storage with deduplication
@@ -17,11 +17,11 @@ defmodule AriaStorage do
   - Efficient delta updates using seeds
   """
 
-  alias AriaStorage.{Files, Chunks, Archives, Storage}
+  alias AriaStorage.{File, Chunks, Archives, Storage}
 
   @doc """
   Chunks a file using desync content-defined chunking and uploads to storage.
-  
+
   Returns an index file reference that can be used to reconstruct the original file.
   """
   def chunk_and_store(file_path, opts \\ []) do
@@ -29,13 +29,18 @@ defmodule AriaStorage do
          {:ok, index} <- Chunks.create_index(chunks, opts),
          {:ok, stored_chunks} <- Storage.store_chunks(chunks, opts),
          {:ok, index_ref} <- Storage.store_index(index, opts) do
-      {:ok, %{index: index_ref, chunks: stored_chunks, metadata: extract_metadata(file_path)}}
+      {:ok, %{index: index_ref, chunks: stored_chunks, metadata: %{}}}
     end
+  end
+
+  # TODO: Implement metadata extraction
+  defp extract_metadata(_file_path) do
+    %{}
   end
 
   @doc """
   Extracts a file from storage using its index reference.
-  
+
   Optionally uses seed files for efficient reconstruction.
   """
   def extract_file(index_ref, output_path, opts \\ []) do
