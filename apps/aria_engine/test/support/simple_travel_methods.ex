@@ -105,4 +105,56 @@ defmodule AriaEngine.SimpleTravelMethods do
 
     distances[{x, y}] || distances[{y, x}] || 0
   end
+
+  # Simple versions for Pyhop compatibility
+
+  @doc """
+  Simple travel by foot method for Pyhop compatibility.
+  """
+  def travel_by_foot_simple(state, ["travel", p, y]) do
+    x = State.get_object(state, "loc", p)
+
+    cond do
+      not is_person(p) -> false
+      not is_location(y) -> false
+      x == y -> false
+      distance(x, y) <= 2 -> [{"walk", p, x, y}]
+      true -> false
+    end
+  end
+
+  @doc """
+  Simple travel by taxi method for Pyhop compatibility.
+  """
+  def travel_by_taxi_simple(state, ["travel", p, y]) do
+    x = State.get_object(state, "loc", p)
+    cash = State.get_object(state, "cash", p)
+    fare = taxi_rate(distance(x, y))
+
+    cond do
+      not is_person(p) -> false
+      not is_location(y) -> false
+      x == y -> false
+      cash < fare -> false
+      true ->
+        # Find an available taxi
+        taxi = find_available_taxi(state, x)
+        if taxi do
+          [
+            {"call_taxi", p, taxi},
+            {"ride_taxi", p, taxi, y},
+            {"pay_driver", p, taxi}
+          ]
+        else
+          false
+        end
+    end
+  end
+
+  defp find_available_taxi(state, location) do
+    taxis = ["taxi1", "taxi2"]
+    Enum.find(taxis, fn taxi ->
+      State.get_object(state, "loc", taxi) == location
+    end) || Enum.at(taxis, 0)  # Default to first taxi if none at location
+  end
 end

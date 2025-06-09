@@ -74,6 +74,93 @@ defmodule AriaEngine.TestDomains do
   end
 
   @doc """
+  Builds a blocks world Goal-Task-Network (GTN) domain for testing.
+
+  This creates a blocks world domain that uses both goals and tasks,
+  implementing the near-optimal algorithm from Gupta & Nau (1992).
+  """
+  @spec build_blocks_gtn_domain() :: AriaEngine.domain()
+  def build_blocks_gtn_domain do
+    domain = create_domain("blocks_gtn")
+
+    # Add basic blocks world actions
+    domain
+    |> add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
+    |> add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
+    |> add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
+    |> add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+
+    # Add task methods for take and put
+    |> add_task_method("take", &AriaEngine.BlocksWorldMethods.take_from_table/2)
+    |> add_task_method("take", &AriaEngine.BlocksWorldMethods.take_from_block/2)
+    |> add_task_method("put", &AriaEngine.BlocksWorldMethods.put_on_table/2)
+    |> add_task_method("put", &AriaEngine.BlocksWorldMethods.put_on_block/2)
+
+    # Add unigoal methods for blocks positioning
+    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
+    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
+    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
+
+    # Add multigoal methods
+    |> add_multigoal_method(&AriaEngine.BlocksWorldMethods.achieve_blocks_multigoal/2)
+  end
+
+  @doc """
+  Builds a blocks world Hierarchical Goal Network (HGN) domain for testing.
+
+  This creates a blocks world domain that uses only goals (no tasks),
+  implementing the near-optimal algorithm from Gupta & Nau (1992).
+  """
+  @spec build_blocks_hgn_domain() :: AriaEngine.domain()
+  def build_blocks_hgn_domain do
+    domain = create_domain("blocks_hgn")
+
+    # Add basic blocks world actions
+    domain
+    |> add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
+    |> add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
+    |> add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
+    |> add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+
+    # Add unigoal methods only (no task methods)
+    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
+    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
+    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
+
+    # Add multigoal methods for complex goals
+    |> add_multigoal_method(&AriaEngine.BlocksWorldMethods.achieve_blocks_multigoal/2)
+  end
+
+  @doc """
+  Builds a blocks world Goal Splitting domain for testing.
+
+  This creates a blocks world domain that demonstrates goal splitting,
+  using GTPyhop's built-in method to split multigoals into unigoals
+  and achieve them sequentially.
+  """
+  @spec build_blocks_goal_splitting_domain() :: AriaEngine.domain()
+  def build_blocks_goal_splitting_domain do
+    domain = create_domain("blocks_goal_splitting")
+
+    # Add basic blocks world actions
+    domain
+    |> add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
+    |> add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
+    |> add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
+    |> add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+
+    # Add only basic unigoal methods (relies on built-in goal splitting)
+    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
+    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
+    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
+    |> add_unigoal_method("clear", &AriaEngine.BlocksWorldMethods.clear_block/2)
+    |> add_unigoal_method("holding", &AriaEngine.BlocksWorldMethods.holding_state/2)
+
+    # Use built-in goal splitting method
+    |> add_multigoal_method(&AriaEngine.Multigoal.split_multigoal/2)
+  end
+
+  @doc """
   Builds a simple travel domain for testing.
 
   This creates a domain with basic travel actions (walk, call_taxi, ride_taxi, pay_driver)
@@ -90,6 +177,28 @@ defmodule AriaEngine.TestDomains do
     |> add_task_method("travel", &SimpleTravelMethods.travel_by_foot/2)
     |> add_task_method("travel", &SimpleTravelMethods.travel_by_taxi/2)
     |> add_unigoal_method("loc", &SimpleTravelMethods.loc_unigoal/2)
+  end
+
+  @doc """
+  Builds a Pyhop Simple Travel domain for testing backward compatibility.
+
+  This creates a simpler version of the travel domain that maintains
+  compatibility with the original Pyhop planner interface.
+  """
+  @spec build_pyhop_simple_travel_domain() :: AriaEngine.domain()
+  def build_pyhop_simple_travel_domain do
+    domain = create_domain("pyhop_simple_travel")
+
+    # Add basic travel actions
+    domain
+    |> add_action(:walk, &AriaEngine.SimpleTravelActions.walk/2)
+    |> add_action(:call_taxi, &AriaEngine.SimpleTravelActions.call_taxi/2)
+    |> add_action(:ride_taxi, &AriaEngine.SimpleTravelActions.ride_taxi_simple/2)
+    |> add_action(:pay_driver, &AriaEngine.SimpleTravelActions.pay_driver_simple/2)
+
+    # Add task methods for travel
+    |> add_task_method("travel", &AriaEngine.SimpleTravelMethods.travel_by_foot_simple/2)
+    |> add_task_method("travel", &AriaEngine.SimpleTravelMethods.travel_by_taxi_simple/2)
   end
 
   @doc """

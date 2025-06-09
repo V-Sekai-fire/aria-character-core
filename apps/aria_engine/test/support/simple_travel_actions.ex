@@ -152,4 +152,41 @@ defmodule AriaEngine.SimpleTravelActions do
 
     distances[{x, y}] || distances[{y, x}] || 0
   end
+
+  # Simple versions for Pyhop compatibility
+
+  @doc """
+  Simple ride taxi action for Pyhop compatibility.
+  """
+  def ride_taxi_simple(state, [p, taxi, y]) do
+    cond do
+      not is_person(p) -> false
+      not is_taxi(taxi) -> false
+      not is_location(y) -> false
+      State.get_object(state, "loc", p) != State.get_object(state, "loc", taxi) -> false
+      true ->
+        state
+        |> State.set_object("loc", p, y)
+        |> State.set_object("loc", taxi, y)
+    end
+  end
+
+  @doc """
+  Simple pay driver action for Pyhop compatibility.
+  """
+  def pay_driver_simple(state, [p, taxi]) do
+    cond do
+      not is_person(p) -> false
+      not is_taxi(taxi) -> false
+      true ->
+        # For simple version, just deduct a fixed amount
+        cash = State.get_object(state, "cash", p)
+        fare = 5  # Fixed fare for simplicity
+        if cash >= fare do
+          State.set_object(state, "cash", p, cash - fare)
+        else
+          false
+        end
+    end
+  end
 end

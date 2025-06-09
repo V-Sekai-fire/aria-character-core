@@ -56,9 +56,12 @@ test-unit-ci: test-elixir-compile
     export CI_UNIT_TESTS=true
     
     echo "🧪 Running ExUnit tests (excluding external dependencies)..."
-    mix test --exclude integration --exclude external || (echo "❌ CI unit tests failed" && exit 1)
-    
-    echo "✅ All CI unit tests passed!"
+    if mix test --exclude integration --exclude external; then
+        echo "✅ All CI unit tests passed!"
+    else
+        echo "❌ CI unit tests failed"
+        exit 1
+    fi
 
 # Fast CI test suite (compile + unit tests only)
 test-ci-fast: test-elixir-compile test-unit-ci test-aria-security test-aria-auth
@@ -745,9 +748,12 @@ test-elixir-unit: start-cockroach test-elixir-compile
     export DATABASE_URL="postgresql://root@localhost:26257/aria_character_core_test?sslmode=disable"
     
     echo "🧪 Running ExUnit tests..."
-    mix test --exclude integration --exclude external || (echo "❌ Unit tests failed" && exit 1)
-    
-    echo "✅ All unit tests passed!"
+    if mix test --exclude integration --exclude external; then
+        echo "✅ All unit tests passed!"
+    else
+        echo "❌ Unit tests failed"
+        exit 1
+    fi
 
 # Test 3: Test OpenBao connection (basic connectivity only)
 test-openbao-connection: start-cockroach start-openbao

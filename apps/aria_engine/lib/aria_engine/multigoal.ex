@@ -4,16 +4,16 @@
 defmodule AriaEngine.Multigoal do
   @moduledoc """
   Represents a collection of goals in the GTPyhop planner.
-  
+
   A multigoal is essentially a desired state represented as a collection of
   predicate-subject-object triples that should be true in the world state.
-  
+
   Example:
   ```elixir
   multigoal = AriaEngine.Multigoal.new()
   |> AriaEngine.Multigoal.add_goal("location", "player", "treasure_room")
   |> AriaEngine.Multigoal.add_goal("has", "player", "treasure")
-  
+
   # Check if goals are satisfied in current state
   satisfied? = AriaEngine.Multigoal.satisfied?(multigoal, current_state)
   ```
@@ -177,4 +177,46 @@ defmodule AriaEngine.Multigoal do
     transformed_goals = Enum.map(goals, transform_fn)
     %__MODULE__{goals: transformed_goals}
   end
+
+  @doc """
+  Built-in method to split a multigoal into individual unigoals.
+
+  This method takes a list of goals and returns them as individual
+  unigoals to be achieved sequentially. This is useful when no
+  domain-specific multigoal method is available.
+
+  ## Parameters
+  - state: The current planning state
+  - goals: A list of goal specifications
+
+  ## Returns
+  - A list of individual goals to be achieved in order
+  - `false` if the goals cannot be split or are invalid
+
+  ## Examples
+
+      iex> state = AriaEngine.create_state()
+      iex> goals = [["on", "a", "b"], ["on", "b", "table"]]
+      iex> AriaEngine.Multigoal.split_multigoal(state, goals)
+      [["on", "a", "b"], ["on", "b", "table"]]
+  """
+  def split_multigoal(%State{} = _state, goals) when is_list(goals) do
+    # Filter out any nil or invalid goals
+    valid_goals = Enum.filter(goals, &valid_goal?/1)
+
+    case valid_goals do
+      [] -> []
+      _ -> valid_goals
+    end
+  end
+
+  def split_multigoal(%State{} = _state, _goals), do: false
+
+  @doc """
+  Check if a goal specification is valid.
+
+  A valid goal should be a list with at least one element.
+  """
+  def valid_goal?(goal) when is_list(goal) and length(goal) > 0, do: true
+  def valid_goal?(_), do: false
 end
