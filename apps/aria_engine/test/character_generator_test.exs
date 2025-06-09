@@ -725,8 +725,8 @@ defmodule AriaEngine.CharacterGeneratorTest do
       IO.puts("Initial state:")
       IO.inspect(initial_state.data, label: "State")
 
-      # High-level task: generate a complete character
-      tasks = [{"generate_character", [char_id, "fantasy_cyber_preset"]}]
+      # High-level task: generate a complete character WITH CONSTRAINTS
+      tasks = [{"generate_character_with_constraints", [char_id, "fantasy_cyber_preset"]}]
 
       IO.puts("\nTasks: #{inspect(tasks)}")
 
@@ -1144,8 +1144,73 @@ defmodule AriaEngine.CharacterGeneratorTest do
           {:ok, state}
         end)
 
-    # Add hierarchical task methods
+    |> AriaEngine.add_action(:validate_constraints,
+        fn state, [char_id] ->
+          # Get all character attributes
+          attributes = get_character_attributes(state, char_id)
+          violations = check_constraint_violations(attributes)
+
+          if length(violations) > 0 do
+            {:error, "Constraint violations: #{Enum.join(violations, ", ")}"}
+          else
+            {:ok, state}
+          end
+        end)
+
+    |> AriaEngine.add_action(:resolve_dependency,
+        fn state, [char_id, dependent_attr, dependency_attr, required_value] ->
+          current_value = AriaEngine.get_fact(state, "character_#{dependency_attr}", char_id)
+          if current_value == required_value do
+            {:ok, state}
+          else
+            # Set the dependency to the required value
+            new_state = AriaEngine.set_fact(state, "character_#{dependency_attr}", char_id, required_value)
+            {:ok, new_state}
+          end
+        end)
+
+    |> AriaEngine.add_action(:auto_correct_conflicts,
+        fn state, [char_id] ->
+          attributes = get_character_attributes(state, char_id)
+          corrected_attributes = resolve_conflicts(attributes)
+
+          # Apply corrections
+          new_state = Enum.reduce(corrected_attributes, state, fn {attr, value}, acc_state ->
+            AriaEngine.set_fact(acc_state, "character_#{attr}", char_id, value)
+          end)
+
+          {:ok, new_state}
+        end)
+
+    # Add hierarchical task methods with constraint checking
     domain = domain
+    |> AriaEngine.add_task_method("generate_character_with_constraints",
+        fn _state, [char_id, preset] ->
+          [
+            {:log_generation_step, [char_id, "Starting constraint-aware character generation"]},
+            {"configure_character_presets", [char_id, preset]},
+            {"validate_and_resolve_constraints", [char_id]},
+            {"randomize_remaining_attributes_safely", [char_id]},
+            {"final_constraint_validation", [char_id]},
+            {"generate_detailed_prompt", [char_id]},
+            {:log_generation_step, [char_id, "Constraint-aware character generation complete"]}
+          ]
+        end)
+
+    # Fallback method for generate_character_with_constraints if constraints fail
+    |> AriaEngine.add_task_method("generate_character_with_constraints",
+        fn state, [char_id, preset] ->
+          # This method will be tried if the first one fails due to constraints
+          [
+            {:log_generation_step, [char_id, "Retrying character generation with simpler preset"]},
+            {"configure_simple_preset", [char_id]},
+            {"validate_and_resolve_constraints", [char_id]},
+            {"randomize_remaining_attributes_safely", [char_id]},
+            {"generate_detailed_prompt", [char_id]},
+            {:log_generation_step, [char_id, "Fallback character generation complete"]}
+          ]
+        end)
+
     |> AriaEngine.add_task_method("generate_character",
         fn _state, [char_id, preset] ->
           [
@@ -1183,6 +1248,171 @@ defmodule AriaEngine.CharacterGeneratorTest do
                 {:log_generation_step, [char_id, "Applied default preset"]}
               ]
           end
+        end)
+
+    |> AriaEngine.add_task_method("validate_and_resolve_constraints",
+        fn state, [char_id] ->
+          attributes = get_character_attributes(state, char_id)
+          violations = check_constraint_violations(attributes)
+
+          if length(violations) > 0 do
+            # Try to auto-resolve conflicts first
+            [
+              {:log_generation_step, [char_id, "Found #{length(violations)} constraint violations - attempting resolution"]},
+              {:auto_correct_conflicts, [char_id]},
+              {:validate_constraints, [char_id]}
+            ]
+          else
+            [
+              {:log_generation_step, [char_id, "All constraints validated successfully"]}
+            ]
+          end
+        end)
+
+    # Alternative method for validate_and_resolve_constraints that fails if conflicts can't be resolved
+    |> AriaEngine.add_task_method("validate_and_resolve_constraints",
+        fn state, [char_id] ->
+          # This method will be tried if auto-correction fails
+          # It forces a complete reset of problematic attributes
+          [
+            {:log_generation_step, [char_id, "Auto-correction failed - resetting problematic attributes"]},
+            {"reset_conflicting_attributes", [char_id]},
+            {:validate_constraints, [char_id]}
+          ]
+        end)
+
+    |> AriaEngine.add_task_method("randomize_remaining_attributes_safely",
+        fn state, [char_id] ->
+          # Find attributes that haven't been set yet
+          set_attributes = state.data
+          |> Enum.filter(fn {{category, id}, _} ->
+            String.starts_with?(category, "character_") and id == char_id
+          end)
+          |> Enum.map(fn {{category, _id}, _value} ->
+            String.replace(category, "character_", "")
+          end)
+          |> MapSet.new()
+
+          available_attributes = @character_sliders
+          |> Map.keys()
+          |> MapSet.new()
+
+          unset_attributes = MapSet.difference(available_attributes, set_attributes)
+          |> Enum.take(8)  # Randomize more attributes but safely
+
+          # Build randomization actions with constraint checks
+          randomize_actions = Enum.flat_map(unset_attributes, fn attr ->
+            [
+              {:randomize_attribute, [char_id, attr]},
+              {"check_attribute_constraints", [char_id, attr]}
+            ]
+          end)
+
+          randomize_actions ++ [
+            {:log_generation_step, [char_id, "Safely randomized #{length(unset_attributes)} attributes"]}
+          ]
+        end)
+
+    # Alternative method for randomize_remaining_attributes_safely if constraint checking fails
+    |> AriaEngine.add_task_method("randomize_remaining_attributes_safely",
+        fn state, [char_id] ->
+          # Fallback: only randomize safe attributes that rarely cause conflicts
+          safe_attributes = ["detail_level", "age", "avatar_gender_appearance", "emotion"]
+
+          set_attributes = state.data
+          |> Enum.filter(fn {{category, id}, _} ->
+            String.starts_with?(category, "character_") and id == char_id
+          end)
+          |> Enum.map(fn {{category, _id}, _value} ->
+            String.replace(category, "character_", "")
+          end)
+          |> MapSet.new()
+
+          unset_safe_attributes = safe_attributes
+          |> Enum.reject(fn attr -> MapSet.member?(set_attributes, attr) end)
+
+          randomize_actions = Enum.map(unset_safe_attributes, fn attr ->
+            {:randomize_attribute, [char_id, attr]}
+          end)
+
+          randomize_actions ++ [
+            {:log_generation_step, [char_id, "Fallback: randomized #{length(unset_safe_attributes)} safe attributes"]}
+          ]
+        end)
+
+    |> AriaEngine.add_task_method("check_attribute_constraints",
+        fn state, [char_id, attribute] ->
+          # Check if the newly set attribute causes any constraint violations
+          # If it does, this method will fail and backtrack
+          attributes = get_character_attributes(state, char_id)
+          violations = check_constraint_violations(attributes)
+
+          if length(violations) > 0 do
+            # Check if any violation involves the attribute we just set
+            attribute_violations = Enum.filter(violations, fn violation ->
+              String.contains?(String.downcase(violation), String.downcase(attribute))
+            end)
+
+            if length(attribute_violations) > 0 do
+              # This will cause the GTN planner to backtrack and try alternatives
+              []  # Return empty task list - this will fail the method
+            else
+              [
+                {:log_generation_step, [char_id, "Attribute #{attribute} constraints OK"]}
+              ]
+            end
+          else
+            [
+              {:log_generation_step, [char_id, "Attribute #{attribute} constraints OK"]}
+            ]
+          end
+        end)
+
+    # Alternative method for check_attribute_constraints - just log and continue
+    |> AriaEngine.add_task_method("check_attribute_constraints",
+        fn _state, [char_id, attribute] ->
+          [
+            {:log_generation_step, [char_id, "Skipping constraint check for #{attribute} (fallback mode)"]}
+          ]
+        end)
+
+    |> AriaEngine.add_task_method("final_constraint_validation",
+        fn state, [char_id] ->
+          # Final validation that must pass - if it fails, the whole generation fails
+          [
+            {:validate_constraints, [char_id]},
+            {:log_generation_step, [char_id, "Final constraint validation passed"]}
+          ]
+        end)
+
+    |> AriaEngine.add_task_method("configure_simple_preset",
+        fn _state, [char_id] ->
+          # A very simple preset that's unlikely to cause conflicts
+          [
+            {:set_character_attribute, [char_id, "species", "SPECIES_HUMANOID"]},
+            {:set_character_attribute, [char_id, "style_kei", "STYLE_KEI_ANIME"]},
+            {:set_character_attribute, [char_id, "emotion", "EMOTION_NEUTRAL"]},
+            {:log_generation_step, [char_id, "Applied safe simple preset"]}
+          ]
+        end)
+
+    |> AriaEngine.add_task_method("reset_conflicting_attributes",
+        fn state, [char_id] ->
+          # Reset attributes that commonly cause conflicts
+          conflicting_attrs = [
+            "kemonomimi_animal_ears_presence",
+            "kemonomimi_animal_tail_presence",
+            "cyber_visible_cybernetics_presence",
+            "fantasy_magical_talismans_presence"
+          ]
+
+          reset_actions = Enum.map(conflicting_attrs, fn attr ->
+            {:set_character_attribute, [char_id, attr, nil]}
+          end)
+
+          reset_actions ++ [
+            {:log_generation_step, [char_id, "Reset #{length(conflicting_attrs)} conflicting attributes"]}
+          ]
         end)
 
     |> AriaEngine.add_task_method("randomize_remaining_attributes",
@@ -1251,6 +1481,107 @@ defmodule AriaEngine.CharacterGeneratorTest do
             {"generate_detailed_prompt", [char_id]},
             {:log_generation_step, [char_id, "Character finalized"]}
           ]
+        end)
+
+    |> AriaEngine.add_task_method("generate_character_with_constraints",
+        fn state, [char_id, preset_name] ->
+          [
+            {"configure_character_presets", [char_id, preset_name]},
+            {"validate_and_resolve_constraints", [char_id]},
+            {"generate_detailed_prompt", [char_id]}
+          ]
+        end)
+
+    |> AriaEngine.add_task_method("validate_and_resolve_constraints",
+        fn state, [char_id] ->
+          [
+            {:validate_constraints, [char_id]},
+            {"resolve_feature_dependencies", [char_id]},
+            {"resolve_thematic_conflicts", [char_id]},
+            {:auto_correct_conflicts, [char_id]},
+            {:validate_constraints, [char_id]}  # Final validation
+          ]
+        end)
+
+    |> AriaEngine.add_task_method("resolve_feature_dependencies",
+        fn state, [char_id] ->
+          # Handle kemonomimi feature dependencies
+          actions = []
+
+          # If we have animal ears/tail but human archetype, fix archetype
+          ears = AriaEngine.get_fact(state, "character_kemonomimi_animal_ears_presence", char_id)
+          tail = AriaEngine.get_fact(state, "character_kemonomimi_animal_tail_presence", char_id)
+          archetype = AriaEngine.get_fact(state, "character_humanoid_archetype", char_id)
+
+          actions = if (ears == "KEMONOMIMI_EARS_TRUE" or tail == "KEMONOMIMI_TAIL_TRUE") and
+                       archetype == "HUMANOID_ARCHETYPE_HUMAN_FEATURED" do
+            [
+              {:set_character_attribute, [char_id, "humanoid_archetype", "HUMANOID_ARCHETYPE_CAT_PERSON"]},
+              {:log_generation_step, [char_id, "Auto-corrected archetype for kemonomimi features"]} | actions
+            ]
+          else
+            actions
+          end
+
+          # Handle presence flags vs specific types
+          fantasy_presence = AriaEngine.get_fact(state, "character_fantasy_magical_talismans_presence", char_id)
+          actions = if fantasy_presence == "FANTASY_TALISMANS_FALSE" do
+            [
+              {:set_character_attribute, [char_id, "fantasy_magical_talismans_type", nil]},
+              {:log_generation_step, [char_id, "Cleared talisman type (no talismans present)"]} | actions
+            ]
+          else
+            actions
+          end
+
+          cyber_presence = AriaEngine.get_fact(state, "character_cyber_tech_accessories_presence", char_id)
+          actions = if cyber_presence == "CYBER_TECH_ACCESSORIES_FALSE" do
+            [
+              {:set_character_attribute, [char_id, "cyber_tech_accessories_type", nil]},
+              {:log_generation_step, [char_id, "Cleared cyber accessory type (no accessories present)"]} | actions
+            ]
+          else
+            actions
+          end
+
+          Enum.reverse(actions)
+        end)
+
+    |> AriaEngine.add_task_method("resolve_thematic_conflicts",
+        fn state, [char_id] ->
+          # Handle style/theme conflicts
+          style_kei = AriaEngine.get_fact(state, "character_style_kei", char_id)
+          primary_theme = AriaEngine.get_fact(state, "character_primary_theme", char_id)
+          species = AriaEngine.get_fact(state, "character_species", char_id)
+
+          actions = []
+
+          # Fix robotic + furry conflicts
+          actions = if style_kei == "STYLE_KEI_ROBOTIC_CYBORG" and species == "SPECIES_ANIMAL" do
+            [
+              {:set_character_attribute, [char_id, "species", "SPECIES_HUMANOID_ROBOT_OR_CYBORG"]},
+              {:log_generation_step, [char_id, "Resolved robotic style + animal species conflict"]} | actions
+            ]
+          else
+            actions
+          end
+
+          # Fix traditional theme + cyber elements conflicts
+          actions = if primary_theme == "PRIMARY_THEME_TRADITIONAL_SHRINE_MAIDEN" do
+            cyber_presence = AriaEngine.get_fact(state, "character_cyber_visible_cybernetics_presence", char_id)
+            if cyber_presence == "CYBER_CYBERNETICS_TRUE" do
+              [
+                {:set_character_attribute, [char_id, "cyber_visible_cybernetics_presence", "CYBER_CYBERNETICS_FALSE"]},
+                {:log_generation_step, [char_id, "Disabled cybernetics for traditional theme"]} | actions
+              ]
+            else
+              actions
+            end
+          else
+            actions
+          end
+
+          Enum.reverse(actions)
         end)
 
     domain
@@ -1467,5 +1798,200 @@ defmodule AriaEngine.CharacterGeneratorTest do
   # Run prompt-only pipeline (ported from Python m_run_prompt_only_pipeline)
   defp run_prompt_only_pipeline(num_prompts) do
     workflow_generate_prompt_batch(num_prompts)
+  end
+
+  # Helper function to get all character attributes from state
+  defp get_character_attributes(state, char_id) do
+    state.data
+    |> Enum.filter(fn {{category, id}, _} ->
+      String.starts_with?(category, "character_") and id == char_id
+    end)
+    |> Enum.into(%{}, fn {{category, _id}, value} ->
+      attr_name = String.replace(category, "character_", "")
+      {attr_name, value}
+    end)
+  end
+
+  # Check for constraint violations
+  defp check_constraint_violations(attributes) do
+    violations = []
+
+    # Check kemonomimi feature consistency
+    violations = check_kemonomimi_consistency(attributes, violations)
+
+    # Check presence/type consistency
+    violations = check_presence_type_consistency(attributes, violations)
+
+    # Check thematic conflicts
+    violations = check_thematic_conflicts(attributes, violations)
+
+    # Check species/style consistency
+    violations = check_species_style_consistency(attributes, violations)
+
+    violations
+  end
+
+  defp check_kemonomimi_consistency(attributes, violations) do
+    ears = Map.get(attributes, "kemonomimi_animal_ears_presence")
+    tail = Map.get(attributes, "kemonomimi_animal_tail_presence")
+    archetype = Map.get(attributes, "humanoid_archetype")
+    tail_style = Map.get(attributes, "kemonomimi_animal_tail_style")
+
+    violations = if (ears == "KEMONOMIMI_EARS_TRUE" or tail == "KEMONOMIMI_TAIL_TRUE") and
+                    archetype == "HUMANOID_ARCHETYPE_HUMAN_FEATURED" do
+      ["Animal features with human archetype" | violations]
+    else
+      violations
+    end
+
+    violations = if tail == "KEMONOMIMI_TAIL_FALSE" and tail_style != nil do
+      ["Tail style set but no tail present" | violations]
+    else
+      violations
+    end
+
+    violations
+  end
+
+  defp check_presence_type_consistency(attributes, violations) do
+    violations = check_feature_presence_type(attributes, violations,
+      "fantasy_magical_talismans_presence", "FANTASY_TALISMANS_FALSE",
+      "fantasy_magical_talismans_type", "Fantasy talisman type set but no talismans present")
+
+    violations = check_feature_presence_type(attributes, violations,
+      "cyber_tech_accessories_presence", "CYBER_TECH_ACCESSORIES_FALSE",
+      "cyber_tech_accessories_type", "Cyber accessory type set but no accessories present")
+
+    violations = check_feature_presence_type(attributes, violations,
+      "cyber_visible_cybernetics_presence", "CYBER_CYBERNETICS_FALSE",
+      "cyber_visible_cybernetics_placement", "Cybernetics placement set but no cybernetics present")
+
+    violations
+  end
+
+  defp check_feature_presence_type(attributes, violations, presence_key, false_value, type_key, error_message) do
+    presence = Map.get(attributes, presence_key)
+    type_value = Map.get(attributes, type_key)
+
+    if presence == false_value and type_value != nil do
+      [error_message | violations]
+    else
+      violations
+    end
+  end
+
+  defp check_thematic_conflicts(attributes, violations) do
+    style_kei = Map.get(attributes, "style_kei")
+    primary_theme = Map.get(attributes, "primary_theme")
+    cyber_presence = Map.get(attributes, "cyber_visible_cybernetics_presence")
+    fantasy_presence = Map.get(attributes, "fantasy_magical_talismans_presence")
+
+    violations = if primary_theme == "PRIMARY_THEME_TRADITIONAL_SHRINE_MAIDEN" and
+                    cyber_presence == "CYBER_CYBERNETICS_TRUE" do
+      ["Traditional shrine maiden theme conflicts with cybernetics" | violations]
+    else
+      violations
+    end
+
+    violations = if style_kei == "STYLE_KEI_ROBOTIC_CYBORG" and
+                    fantasy_presence == "FANTASY_TALISMANS_TRUE" do
+      ["Robotic style conflicts with fantasy talismans" | violations]
+    else
+      violations
+    end
+
+    violations
+  end
+
+  defp check_species_style_consistency(attributes, violations) do
+    species = Map.get(attributes, "species")
+    style_kei = Map.get(attributes, "style_kei")
+
+    violations = if species == "SPECIES_ANIMAL" and style_kei == "STYLE_KEI_ROBOTIC_CYBORG" do
+      ["Animal species conflicts with robotic style" | violations]
+    else
+      violations
+    end
+
+    violations = if species == "SPECIES_HUMANOID_ROBOT_OR_CYBORG" and style_kei == "STYLE_KEI_FURRY" do
+      ["Robot/cyborg species conflicts with furry style" | violations]
+    else
+      violations
+    end
+
+    violations
+  end
+
+  # Resolve conflicts automatically
+  defp resolve_conflicts(attributes) do
+    corrected = Map.new(attributes)
+
+    # Apply resolution rules
+    corrected = resolve_kemonomimi_conflicts(corrected)
+    corrected = resolve_presence_type_conflicts(corrected)
+    corrected = resolve_thematic_conflicts(corrected)
+    corrected = resolve_species_style_conflicts(corrected)
+
+    corrected
+  end
+
+  defp resolve_kemonomimi_conflicts(attributes) do
+    ears = Map.get(attributes, "kemonomimi_animal_ears_presence")
+    tail = Map.get(attributes, "kemonomimi_animal_tail_presence")
+    archetype = Map.get(attributes, "humanoid_archetype")
+
+    # If we have animal features but human archetype, change to cat person
+    if (ears == "KEMONOMIMI_EARS_TRUE" or tail == "KEMONOMIMI_TAIL_TRUE") and
+       archetype == "HUMANOID_ARCHETYPE_HUMAN_FEATURED" do
+      Map.put(attributes, "humanoid_archetype", "HUMANOID_ARCHETYPE_CAT_PERSON")
+    else
+      attributes
+    end
+  end
+
+  defp resolve_presence_type_conflicts(attributes) do
+    attributes
+    |> clear_type_if_not_present("fantasy_magical_talismans_presence", "FANTASY_TALISMANS_FALSE", "fantasy_magical_talismans_type")
+    |> clear_type_if_not_present("cyber_tech_accessories_presence", "CYBER_TECH_ACCESSORIES_FALSE", "cyber_tech_accessories_type")
+    |> clear_type_if_not_present("cyber_visible_cybernetics_presence", "CYBER_CYBERNETICS_FALSE", "cyber_visible_cybernetics_placement")
+  end
+
+  defp clear_type_if_not_present(attributes, presence_key, false_value, type_key) do
+    if Map.get(attributes, presence_key) == false_value do
+      Map.put(attributes, type_key, nil)
+    else
+      attributes
+    end
+  end
+
+  defp resolve_thematic_conflicts(attributes) do
+    primary_theme = Map.get(attributes, "primary_theme")
+
+    # If traditional theme, disable conflicting modern elements
+    if primary_theme == "PRIMARY_THEME_TRADITIONAL_SHRINE_MAIDEN" do
+      attributes
+      |> Map.put("cyber_visible_cybernetics_presence", "CYBER_CYBERNETICS_FALSE")
+      |> Map.put("cyber_tech_accessories_presence", "CYBER_TECH_ACCESSORIES_FALSE")
+    else
+      attributes
+    end
+  end
+
+  defp resolve_species_style_conflicts(attributes) do
+    species = Map.get(attributes, "species")
+    style_kei = Map.get(attributes, "style_kei")
+
+    cond do
+      species == "SPECIES_ANIMAL" and style_kei == "STYLE_KEI_ROBOTIC_CYBORG" ->
+        # Prioritize style, change species to match
+        Map.put(attributes, "species", "SPECIES_HUMANOID_ROBOT_OR_CYBORG")
+
+      species == "SPECIES_HUMANOID_ROBOT_OR_CYBORG" and style_kei == "STYLE_KEI_FURRY" ->
+        # Prioritize species, change style to match
+        Map.put(attributes, "style_kei", "STYLE_KEI_ROBOTIC_CYBORG")
+
+      true ->
+        attributes
+    end
   end
 end
