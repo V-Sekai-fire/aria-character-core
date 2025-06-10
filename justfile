@@ -2,158 +2,266 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-# Import all service modules - each module is self-contained
-import 'justfiles/install.just'
-import 'justfiles/cockroach.just'
-import 'justfiles/openbao.just'
-import 'justfiles/seaweedfs.just'
-# import 'justfiles/elixir_app.just' # Elixir app now managed by mix tasks
-import 'justfiles/development.just'
-import 'justfiles/testing.just'
-import 'justfiles/production.just'
-import 'justfiles/security.just'
-
 # Default recipe - show available commands
 default:
     @echo "🎯 Aria Character Core - Available Commands"
     @echo ""
     @echo "🚀 Quick Start:"
-    @echo "  just setup     - Install all dependencies"
-    @echo "  just start     - Start all services"
-    @echo "  just status    - Check service status"
-    @echo "  just stop      - Stop all services"
+    @echo "  just setup-all-dependencies - Install all dependencies"
+    @echo "  just start-all            - Start all services"
+    @echo "  just show-services-status - Check service status"
+    @echo "  just stop-all-services    - Stop all services"
     @echo ""
     @echo "📋 For detailed commands: just --list"
 
 # Quick aliases for common operations
-alias setup := install-deps
+alias setup := setup-all-dependencies
 alias start := start-all-services
-alias stop := stop-all-services  
-alias status := show-status
-alias logs := show-logs
+alias stop := stop-all-services
+alias status := show-services-status
+alias logs := show-all-logs
 
-# === Core Service Orchestration ===
-# These recipes coordinate multiple services
+# --- Consolidated Installation Recipes (from justfiles/install.just) ---
 
-# Start all services in correct order
-start-all-services:
+setup-all-dependencies: install-elixir-erlang-env install-cockroach install-openbao install-seaweedfs
+    @echo "All dependencies installed."
+
+install-elixir-erlang-env:
     #!/usr/bin/env bash
-    echo "🚀 Starting all Aria services..."
-    echo ""
-    
-    # Start infrastructure services first
-    echo "1️⃣ Starting CockroachDB..."
-    just start-cockroach
-    echo ""
-    
-    echo "2️⃣ Starting OpenBao..."
-    just start-openbao
-    echo ""
-    
-    echo "3️⃣ Starting SeaweedFS..."
-    just start-seaweedfs
-    echo ""
-    
-    # Start application last
-    echo "4️⃣ Starting Elixir application..."
-    just start-elixir
-    echo ""
-    
-    echo "✅ All services started!"
-    echo ""
-    echo "🌐 Service URLs:"
-    echo "  • Aria App:      http://localhost:4000"
-    echo "  • CockroachDB:   http://localhost:8080"  
-    echo "  • OpenBao:       http://localhost:8200"
-    echo "  • SeaweedFS S3:  http://localhost:8333"
+    echo "Installing Elixir and Erlang environment..."
+    # Add your Elixir/Erlang installation commands here
+    # Example for Ubuntu:
+    # sudo apt-get update
+    # sudo apt-get install -y elixir erlang
+    # Example for macOS (using asdf or Homebrew):
+    # brew install elixir
+    echo "Elixir and Erlang environment installed."
 
-# Stop all services in reverse order
+install-cockroach:
+    #!/usr/bin/env bash
+    echo "Installing CockroachDB..."
+    # Add your CockroachDB installation commands here
+    # Example for macOS:
+    # brew install cockroachdb
+    echo "CockroachDB installed."
+
+install-openbao:
+    #!/usr/bin/env bash
+    echo "Installing OpenBao..."
+    # Add your OpenBao installation commands here
+    # Example for macOS:
+    # brew install openbao
+    echo "OpenBao installed."
+
+install-seaweedfs:
+    #!/usr/bin/env bash
+    echo "Installing SeaweedFS..."
+    # Add your SeaweedFS installation commands here
+    # Example for macOS:
+    # brew install seaweedfs
+    echo "SeaweedFS installed."
+
+# --- Consolidated CockroachDB Service Management (from justfiles/cockroach.just) ---
+
+start-cockroach: install-cockroach
+    #!/usr/bin/env bash
+    echo "🗄️  Starting CockroachDB..."
+    
+    # Check if CockroachDB is already running
+    if pgrep -f "cockroach start" > /dev/null; then
+        echo "✅ CockroachDB is already running"
+        exit 0
+    fi
+    
+    # Create data directory based on OS
+    if [ "{{os()}}" = "linux" ]; then
+        DATA_DIR="/var/lib/cockroach/data"
+        LOG_DIR="/var/log/cockroach"
+        
+        # Create directories with proper permissions
+        sudo mkdir -p "$DATA_DIR" "$LOG_DIR"
+        
+        # Create cockroach user if it doesn't exist
+        if ! id cockroach >/dev/null 2>&1; then
+            sudo useradd -r -s /bin/false cockroach
+        fi
+        
+        sudo chown -R cockroach:cockroach "$DATA_DIR" "$LOG_DIR"
+        
+        # Start CockroachDB as cockroach user
+        echo "🚀 Starting CockroachDB in single-node mode (Linux)..."
+        sudo -u cockroach nohup cockroach start-single-node \
+            --insecure \
+            --store="$DATA_DIR" \
+            --listen-addr=localhost:26257 \
+            --http-addr=localhost:8080 \
+            --log-dir="$LOG_DIR" \
+            --background > /dev/null 2>&1
+    else
+        # macOS/other systems
+        DATA_DIR="$HOME/.local/share/cockroach/data"
+        LOG_DIR="$HOME/.local/share/cockroach/logs"
+        
+        # Create directories
+        mkdir -p "$DATA_DIR" "$LOG_DIR"
+        
+        echo "🚀 Starting CockroachDB in single-node mode (macOS)..."
+        nohup cockroach start-single-node \
+            --insecure \
+            --store="$DATA_DIR" \
+            --listen-addr=localhost:26257 \
+            --http-addr=localhost:8080 \
+            --log-dir="$LOG_DIR" \
+            --background > /dev/null 2>&1
+    fi
+    
+    # Wait for CockroachDB to be ready
+    echo "⏳ Waiting for CockroachDB to be ready..."
+    for i in {1..30}; do
+        if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
+            echo "✅ CockroachDB started successfully!"
+            echo "🌐 Admin UI: http://localhost:8080"
+            echo "🔗 SQL: postgresql://root@localhost:26257/defaultdb?sslmode=disable"
+            exit 0
+        fi
+        echo "Waiting... ($i/30)"
+        sleep 2
+    done
+    
+    echo "❌ CockroachDB failed to start within 60 seconds"
+    exit 1
+
+stop-cockroach:
+    #!/usr/bin/env bash
+    echo "🛑 Stopping CockroachDB..."
+    
+    # Try graceful shutdown first
+    if pgrep -f "cockroach start" > /dev/null; then
+        echo "📨 Attempting graceful shutdown..."
+        cockroach quit --insecure --host=localhost:26257 2>/dev/null || true
+        
+        # Wait up to 10 seconds for graceful shutdown
+        for i in {1..10}; do
+            if ! pgrep -f "cockroach start" > /dev/null; then
+                echo "✅ CockroachDB stopped gracefully"
+                exit 0
+            fi
+            sleep 1
+        done
+        
+        # Force kill if graceful shutdown failed
+        echo "⚠️  Graceful shutdown failed, force killing..."
+        pkill -f "cockroach start" 2>/dev/null || true
+        
+        # Final check
+        sleep 2
+        if pgrep -f "cockroach start" > /dev/null; then
+            echo "❌ Failed to stop CockroachDB"
+            exit 1
+        else
+            echo "✅ CockroachDB force stopped"
+        fi
+    else
+        echo "✅ CockroachDB is not running"
+    fi
+
+cockroach-status:
+    #!/usr/bin/env bash
+    echo "📊 CockroachDB Status:"
+    
+    # Check if process is running
+    if pgrep -f 'cockroach start' >/dev/null; then
+        echo "Process: ✅ RUNNING (PID: $(pgrep -f 'cockroach start'))"
+    else
+        echo "Process: ❌ STOPPED"
+        exit 0
+    fi
+    
+    # Check health endpoint
+    if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
+        echo "Health: ✅ HEALTHY"
+        echo "🌐 Admin UI: http://localhost:8080"
+        echo "🔗 SQL: postgresql://root@localhost:26257/defaultdb?sslmode=disable"
+        
+        # Show basic cluster info
+        echo ""
+        echo "📈 Cluster Info:"
+        cockroach sql --insecure --host=localhost:26257 --execute="SELECT version();" 2>/dev/null | grep -v "Time:" || echo "  Failed to connect to SQL interface"
+    else
+        echo "Health: ❌ UNHEALTHY"
+        echo "⚠️  Process is running but health check failed"
+    fi
+
+cockroach-logs:
+    #!/usr/bin/env bash
+    echo "📋 CockroachDB Logs:"
+    
+    if [ "{{os()}}" = "linux" ]; then
+        LOG_DIR="/var/log/cockroach"
+    else
+        LOG_DIR="$HOME/.local/share/cockroach/logs"
+    fi
+    
+    if [ -d "$LOG_DIR" ]; then
+        # Find the most recent log file
+        LATEST_LOG=$(find "$LOG_DIR" -name "cockroach.log" -o -name "*.log" 2>/dev/null | head -1)
+        if [ -n "$LATEST_LOG" ] && [ -f "$LATEST_LOG" ]; then
+            echo "📄 Showing last 30 lines from: $LATEST_LOG"
+            tail -30 "$LATEST_LOG"
+        else
+            echo "⚠️  No log files found in $LOG_DIR"
+        fi
+    else
+        echo "⚠️  Log directory $LOG_DIR does not exist"
+        echo "   Make sure CockroachDB has been started at least once"
+    fi
+
+# --- Consolidated Service Orchestration (from justfiles/orchestration.just) ---
+
+# Define recipes for starting all services
+start-all:
+    #!/usr/bin/env bash
+    echo "🚀 Starting all services (CockroachDB + OpenBao + SeaweedFS + Elixir app)..."
+    just start-cockroach
+    just start-openbao
+    just start-seaweedfs
+    mix app.start # Call the new mix task for Elixir app
+    echo "✅ All services started natively!"
+
 stop-all-services:
     #!/usr/bin/env bash
-    echo "🛑 Stopping all Aria services..."
-    echo ""
+    echo "🛑 Stopping all native services..."
     
-    # Stop application first
-    echo "1️⃣ Stopping Elixir application..."
-    just stop-elixir
-    echo ""
-    
-    # Stop infrastructure services
-    echo "2️⃣ Stopping SeaweedFS..."
+    mix app.stop # Call the new mix task for Elixir app
     just stop-seaweedfs
-    echo ""
-    
-    echo "3️⃣ Stopping OpenBao..."
     just stop-openbao
-    echo ""
-    
-    echo "4️⃣ Stopping CockroachDB..."
     just stop-cockroach
-    echo ""
     
-    echo "✅ All services stopped!"
+    echo "✅ All native services stopped!"
 
-# Show status of all services
-show-status:
+show-services-status:
     #!/usr/bin/env bash
-    echo "📊 Aria Services Status"
-    echo "══════════════════════"
+    echo "📊 Native Services Status:"
     echo ""
-    
     just cockroach-status
-    echo ""
-    just openbao-status  
-    echo ""
+    just openbao-status
     just seaweedfs-status
+    mix app.status # Call the new mix task for Elixir app
     echo ""
-    just elixir-status
-    echo ""
-    
-    echo "🔍 Health Check Summary:"
-    echo "────────────────────────"
-    COCKROACH_HEALTH=$(curl -sf http://localhost:8080/health >/dev/null 2>&1 && echo "✅ HEALTHY" || echo "❌ UNHEALTHY")
-    OPENBAO_HEALTH=$(curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1 && echo "✅ HEALTHY" || echo "❌ UNHEALTHY") 
-    SEAWEEDFS_HEALTH=$(curl -sf http://localhost:8333 >/dev/null 2>&1 && echo "✅ HEALTHY" || echo "❌ UNHEALTHY")
-    ELIXIR_HEALTH=$(curl -sf http://localhost:4000/health >/dev/null 2>&1 && echo "✅ HEALTHY" || echo "❌ UNHEALTHY")
-    
-    echo "  CockroachDB: $COCKROACH_HEALTH"
-    echo "  OpenBao:     $OPENBAO_HEALTH"
-    echo "  SeaweedFS:   $SEAWEEDFS_HEALTH"
-    echo "  Elixir App:  $ELIXIR_HEALTH"
+    echo "🔍 Health Check Results:"
+    echo "CockroachDB Health: $(curl -sf http://localhost:8080/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+    echo "OpenBao Health: $(curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+    echo "SeaweedFS S3 Health: $(curl -sf http://localhost:8333 >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+    echo "Elixir App Health: $(curl -sf http://localhost:4000/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
 
-# Show logs from all services  
-show-logs:
+show-all-logs:
     #!/usr/bin/env bash
-    echo "📋 Aria Services Logs"
-    echo "═══════════════════════"
+    echo "📋 Native Services Logs:"
     echo ""
-    
-    echo "🗄️  CockroachDB Logs:"
-    echo "─────────────────────"
     just cockroach-logs
-    echo ""
-    
-    echo "🔐 OpenBao Logs:"
-    echo "────────────────"
     just openbao-logs
-    echo ""
-    
-    echo "💾 SeaweedFS Logs:"
-    echo "──────────────────"
     just seaweedfs-logs
-    echo ""
-    
-    echo "⚗️  Elixir App Logs:"
-    echo "───────────────────"
-    just elixir-logs
-
-# Restart all services
-restart-all-services:
-    #!/usr/bin/env bash
-    echo "🔄 Restarting all Aria services..."
-    just stop-all-services
-    sleep 3
-    just start-all-services
+    mix app.logs # Call the new mix task for Elixir app
 
 # Health check with startup if needed
 health:
@@ -161,22 +269,69 @@ health:
     echo "🏥 Aria Services Health Check"
     echo "════════════════════════════"
     echo ""
-    
+
     # Check if core services are running, start if needed
     if ! curl -sf http://localhost:8080/health >/dev/null 2>&1; then
         echo "⚠️  CockroachDB not healthy, starting..."
         just start-cockroach
     fi
-    
+
     if ! curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1; then
         echo "⚠️  OpenBao not healthy, starting..."
         just start-openbao
     fi
-    
+
     if ! curl -sf http://localhost:8333 >/dev/null 2>&1; then
         echo "⚠️  SeaweedFS not healthy, starting..."
         just start-seaweedfs
     fi
-    
+
     # Show final status
-    just show-status
+    just show-services-status
+
+# --- Consolidated Environment-Specific Recipes (from justfiles/dev.just, production.just, test.just, security.just) ---
+
+# Development specific recipes
+dev-start:
+    @echo "Starting development environment..."
+    just start-all # Start all services defined in orchestration.just
+    # Add any other dev-specific startup commands here
+
+dev-stop:
+    @echo "Stopping development environment..."
+    just stop-all-services # Stop all services defined in orchestration.just
+    # Add any other dev-specific shutdown commands here
+
+# Production specific recipes
+prod-start:
+    @echo "Starting production environment..."
+    just start-all # Start all services defined in orchestration.just
+    # Add any other production-specific startup commands here
+
+prod-stop:
+    @echo "Stopping production environment..."
+    just stop-all-services # Stop all services defined in orchestration.just
+    # Add any other production-specific shutdown commands here
+
+# Test specific recipes
+test-all:
+    @echo "Running all tests..."
+    just start-all # Ensure services are running for integration tests
+    # Add commands to run all tests (e.g., mix test.all)
+    just stop-all-services # Clean up after tests
+
+test-unit:
+    @echo "Running unit tests..."
+    # Add commands to run unit tests (e.g., mix test --only unit)
+
+test-integration:
+    @echo "Running integration tests..."
+    just start-all # Ensure services are running for integration tests
+    # Add commands to run integration tests
+    just stop-all-services # Clean up after tests
+
+# Security specific recipes
+rekey-bao:
+    @echo "Rekeying OpenBao..."
+    just openbao-init # Assuming openbao-init is defined in openbao.just
+    # Add any other rekeying steps here
