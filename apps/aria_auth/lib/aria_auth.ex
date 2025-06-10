@@ -9,12 +9,12 @@ defmodule AriaAuth do
   - User authentication (login/logout)
   - Session management
   - OAuth2/OIDC integration
-  - JWT token management
+  - Macaroon token management
   - WebRTC-based identity verification
   - User profile management
   """
 
-  alias AriaAuth.{Accounts, Sessions, Tokens}
+  alias AriaAuth.{Accounts, Sessions}
 
   @doc """
   Authenticates a user with email and password.
@@ -57,12 +57,12 @@ defmodule AriaAuth do
   defdelegate invalidate_session(token), to: Sessions
 
   @doc """
-  Generates a JWT token for a user.
+  Generates a macaroon token for the given user.
   """
-  defdelegate generate_token(user), to: Tokens
+  defdelegate generate_token(user), to: AriaAuth.Macaroons
 
   @doc """
-  Verifies a JWT token.
+  Verifies a macaroon token.
   """
-  defdelegate verify_token(token), to: Tokens
+  defdelegate verify_token(token), to: AriaAuth.Macaroons
 end
