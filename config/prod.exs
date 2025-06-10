@@ -31,10 +31,6 @@ config :aria_data, AriaData.EngineRepo,
   database: "aria_engine_prod.sqlite3",
   pool_size: 10
 
-config :aria_security, AriaSecurity.SecretsRepo,
-  database: "aria_security_prod.sqlite3",
-  pool_size: 5
-
 # Production Phoenix configuration
 config :aria_coordinate, AriaCoordinateWeb.Endpoint,
   url: [host: System.get_env("PHX_HOST") || "localhost", port: 443, scheme: "https"],

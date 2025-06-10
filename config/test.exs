@@ -37,11 +37,6 @@ config :aria_data, AriaData.EngineRepo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10
 
-config :aria_security, AriaSecurity.SecretsRepo,
-  database: "aria_security_test.sqlite3",
-  pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 5
-
 # Test Phoenix configuration
 config :aria_coordinate, AriaCoordinateWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
@@ -68,8 +63,6 @@ config :aria_interpret,
 # Test Hammer rate limiting configuration
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}
-
-# Configure vaultex to use MockVaultex in test.exs
 
 # For CI environments - skip database-dependent repositories if DATABASE_URL is not set
 if System.get_env("CI_UNIT_TESTS") == "true" do

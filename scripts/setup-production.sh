@@ -31,8 +31,8 @@ fi
 
 # Create directory structure
 echo "📁 Creating directory structure..."
-mkdir -p "$ARIA_APP_DIR" "$ARIA_DATA_DIR"/seaweed/{master,volume,filer} "$ARIA_CONFIG_DIR" "$ARIA_LOGS_DIR"
-mkdir -p "$ARIA_HOME"/.asdf
+mkdir -p "$ARIA_APP_DIR" "$ARIA_DATA_DIR"/{cockroach,openbao,seaweed/{master,volume,filer}} "$ARIA_CONFIG_DIR" "$ARIA_LOGS_DIR"
+mkdir -p "$ARIA_HOME"/{.asdf,softhsm}
 
 # Set ownership
 chown -R "$ARIA_USER:$ARIA_USER" "$ARIA_HOME"

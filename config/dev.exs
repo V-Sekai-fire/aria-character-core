@@ -128,10 +128,6 @@ config :aria_security,
   openbao_url: "http://localhost:8200",
   openbao_token: System.get_env("OPENBAO_DEV_TOKEN") || "dev-token"
 
-config :aria_security, AriaSecurity.SecretsRepo,
-  database: "aria_security_dev.sqlite3",
-  pool_size: 5
-
 # AI Service development configuration
 config :aria_interpret,
   qwen_model_path: "/models/qwen3.onnx",
@@ -174,4 +170,3 @@ config :aria_monitor,
 # Development Hammer rate limiting configuration
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}
-
