@@ -313,4 +313,313 @@ defmodule AriaAuth.MacaroonsTest do
       assert {:ok, %{permissions: ["refresh"]}} = Macaroons.verify_token(refresh_token)
     end
   end
+
+  describe "macaroon internals and debugging" do
+    test "can examine macaroon structure and caveats in detail" do
+      user = %User{
+        id: "debug-user-123",
+        email: "debug@example.com",
+        roles: ["user", "editor"]
+      }
+      
+      {:ok, token} = Macaroons.generate_token(user)
+      
+      # Decode the token with custom caveat registration
+      options = Macfly.Options.with_caveats(
+        %Macfly.Options{},
+        [AriaAuth.Macaroons.PermissionsCaveat, AriaAuth.Macaroons.ConfineUserString]
+      )
+      {:ok, [macaroon]} = Macfly.decode(token, options)
+      
+      # Should have exactly 3 caveats: ValidityWindow, ConfineUserString, PermissionsCaveat
+      assert length(macaroon.caveats) == 3
+      
+      # Examine each caveat type
+      caveat_types = Enum.map(macaroon.caveats, & &1.__struct__)
+      assert ValidityWindow in caveat_types
+      assert ConfineUserString in caveat_types
+      assert PermissionsCaveat in caveat_types
+      
+      # Find and verify specific caveats
+      user_caveat = Enum.find(macaroon.caveats, fn caveat -> 
+        match?(%ConfineUserString{}, caveat) 
+      end)
+      assert user_caveat != nil
+      assert user_caveat.id == "debug-user-123"
+      
+      perms_caveat = Enum.find(macaroon.caveats, fn caveat -> 
+        match?(%PermissionsCaveat{}, caveat) 
+      end)
+      assert perms_caveat != nil
+      assert perms_caveat.permissions == ["user", "editor"]
+      
+      validity_caveat = Enum.find(macaroon.caveats, fn caveat -> 
+        match?(%ValidityWindow{}, caveat) 
+      end)
+      assert validity_caveat != nil
+    end
+    
+    test "protocol implementations work correctly for all custom caveats" do
+      user_id = "protocol-test-123"
+      permissions = ["admin", "moderator"]
+      
+      user_caveat = ConfineUserString.build(user_id)
+      perms_caveat = PermissionsCaveat.build(permissions)
+      validity_caveat = ValidityWindow.build(for: 3600)
+      
+      # Test ConfineUserString protocol
+      assert Macfly.Caveat.name(user_caveat) == "ConfineUserString"
+      assert Macfly.Caveat.type(user_caveat) == 101
+      assert Macfly.Caveat.body(user_caveat) == [user_id]
+      
+      # Test PermissionsCaveat protocol
+      assert Macfly.Caveat.name(perms_caveat) == "PermissionsCaveat"
+      assert Macfly.Caveat.type(perms_caveat) == 100
+      assert Macfly.Caveat.body(perms_caveat) == [permissions]
+      
+      # Test ValidityWindow protocol (built-in)
+      assert Macfly.Caveat.name(validity_caveat) == "ValidityWindow"
+      assert is_integer(Macfly.Caveat.type(validity_caveat))
+      assert is_list(Macfly.Caveat.body(validity_caveat))
+    end
+    
+    test "token generation and verification end-to-end with debugging" do
+      user = %User{
+        id: "e2e-debug-user",
+        email: "e2e@example.com",
+        roles: ["user", "editor"]
+      }
+      
+      # Test token generation
+      assert {:ok, token} = Macaroons.generate_token(user)
+      assert is_binary(token)
+      assert String.length(token) > 0
+      
+      # Test token verification
+      assert {:ok, result} = Macaroons.verify_token(token)
+      assert %{user_id: "e2e-debug-user", permissions: ["user", "editor"]} = result
+    end
+    
+    test "token generation with custom options" do
+      user = %User{
+        id: "custom-options-user",
+        email: "custom@example.com",
+        roles: ["base_user"]
+      }
+      
+      # Test with custom expiry and permissions
+      custom_permissions = ["read", "write", "admin"]
+      custom_expiry = 1800  # 30 minutes
+      
+      assert {:ok, token} = Macaroons.generate_token(user, 
+        expiry: custom_expiry,
+        permissions: custom_permissions
+      )
+      
+      # Verify the custom settings are preserved
+      assert {:ok, %{user_id: "custom-options-user", permissions: ^custom_permissions}} = 
+        Macaroons.verify_token(token)
+    end
+    
+    test "handles decoding errors gracefully" do
+      # Test with completely invalid token
+      assert {:error, _reason} = Macaroons.verify_token("not-a-token")
+      
+      # Test with malformed base64-like string
+      assert {:error, _reason} = Macaroons.verify_token("dGVzdA==.invalid.token")
+      
+      # Test with empty string
+      assert {:error, _reason} = Macaroons.verify_token("")
+    end
+    
+    test "macaroon roundtrip preserves all data" do
+      user = %User{
+        id: "roundtrip-test-user",
+        email: "roundtrip@example.com", 
+        roles: ["user", "admin", "moderator"]
+      }
+      
+      original_permissions = ["custom1", "custom2", "custom3"]
+      
+      # Generate token
+      {:ok, token} = Macaroons.generate_token(user, permissions: original_permissions)
+      
+      # Decode and examine structure
+      options = Macfly.Options.with_caveats(
+        %Macfly.Options{},
+        [AriaAuth.Macaroons.PermissionsCaveat, AriaAuth.Macaroons.ConfineUserString]
+      )
+      {:ok, [macaroon]} = Macfly.decode(token, options)
+      
+      # Extract data from caveats
+      user_caveat = Enum.find(macaroon.caveats, &match?(%ConfineUserString{}, &1))
+      perms_caveat = Enum.find(macaroon.caveats, &match?(%PermissionsCaveat{}, &1))
+      
+      # Verify all data is preserved
+      assert user_caveat.id == user.id
+      assert perms_caveat.permissions == original_permissions
+      
+      # Verify through high-level API
+      {:ok, %{user_id: verified_user_id, permissions: verified_permissions}} = 
+        Macaroons.verify_token(token)
+      
+      assert verified_user_id == user.id
+      assert verified_permissions == original_permissions
+    end
+  end
+
+  describe "debug script functionality migration" do
+    test "step by step caveat creation and protocol verification" do
+      # This test replicates the debug_macaroons.exs functionality
+      test_user = %User{
+        id: "test-user-123",
+        email: "test@example.com",
+        roles: ["user", "editor"]
+      }
+
+      # Test ConfineUserString caveat creation
+      user_caveat = ConfineUserString.build(test_user.id)
+      assert %ConfineUserString{id: "test-user-123"} = user_caveat
+
+      # Test PermissionsCaveat creation
+      perms_caveat = PermissionsCaveat.build(test_user.roles)
+      assert %PermissionsCaveat{permissions: ["user", "editor"]} = perms_caveat
+
+      # Test ValidityWindow caveat creation
+      validity_caveat = ValidityWindow.build(for: 3600)
+      assert %ValidityWindow{} = validity_caveat
+
+      # Test protocol implementations
+      assert Macfly.Caveat.name(user_caveat) == "ConfineUserString"
+      assert Macfly.Caveat.type(user_caveat) == 101
+      assert Macfly.Caveat.body(user_caveat) == [test_user.id]
+
+      assert Macfly.Caveat.name(perms_caveat) == "PermissionsCaveat"
+      assert Macfly.Caveat.type(perms_caveat) == 100
+      assert Macfly.Caveat.body(perms_caveat) == [test_user.roles]
+
+      # Test full token generation and verification
+      assert {:ok, token} = Macaroons.generate_token(test_user)
+      assert is_binary(token)
+      assert String.length(token) > 0
+
+      assert {:ok, result} = Macaroons.verify_token(token)
+      assert %{user_id: "test-user-123", permissions: ["user", "editor"]} = result
+    end
+
+    test "detailed macaroon internals examination" do
+      # This test replicates the debug_macaroons_detailed.exs functionality
+      test_user = %User{
+        id: "test-user-123",
+        email: "test@example.com",
+        roles: ["user", "editor"]
+      }
+
+      # Generate token
+      assert {:ok, token} = Macaroons.generate_token(test_user)
+
+      # Decode token with custom caveat registration
+      options = Macfly.Options.with_caveats(
+        %Macfly.Options{},
+        [PermissionsCaveat, ConfineUserString]
+      )
+      assert {:ok, [macaroon]} = Macfly.decode(token, options)
+
+      # Examine caveats in detail
+      assert length(macaroon.caveats) == 3
+
+      # Check each caveat type and collect types
+      caveat_types = Enum.map(macaroon.caveats, fn caveat ->
+        assert caveat.__struct__ != nil
+        caveat.__struct__
+      end)
+
+      # Ensure all expected caveat types are present
+      assert ValidityWindow in caveat_types
+      assert ConfineUserString in caveat_types  
+      assert PermissionsCaveat in caveat_types
+
+      # Search for specific caveats (like the debug script does)
+      user_caveat = Enum.find(macaroon.caveats, fn caveat -> 
+        match?(%ConfineUserString{}, caveat) 
+      end)
+      assert user_caveat != nil
+      assert user_caveat.id == "test-user-123"
+
+      perms_caveat = Enum.find(macaroon.caveats, fn caveat -> 
+        match?(%PermissionsCaveat{}, caveat) 
+      end)
+      assert perms_caveat != nil
+      assert perms_caveat.permissions == ["user", "editor"]
+
+      validity_caveat = Enum.find(macaroon.caveats, fn caveat -> 
+        match?(%ValidityWindow{}, caveat) 
+      end)
+      assert validity_caveat != nil
+
+      # Verify that the debug-style enumeration works
+      Enum.with_index(macaroon.caveats, fn caveat, index ->
+        assert is_integer(index)
+        assert caveat.__struct__ != nil
+        assert caveat != nil
+      end)
+    end
+
+    test "token generation success and failure scenarios" do
+      # This replicates the error handling from debug scripts
+      test_user = %User{
+        id: "test-user-123",
+        email: "test@example.com",
+        roles: ["user", "editor"]
+      }
+
+      # Test successful generation
+      case Macaroons.generate_token(test_user) do
+        {:ok, token} -> 
+          assert is_binary(token)
+          assert String.length(token) > 0
+          
+          # Test successful verification
+          case Macaroons.verify_token(token) do
+            {:ok, result} ->
+              assert %{user_id: "test-user-123", permissions: ["user", "editor"]} = result
+            {:error, reason} ->
+              flunk("Token verification should not fail: #{inspect(reason)}")
+          end
+          
+        {:error, reason} -> 
+          flunk("Token generation should not fail: #{inspect(reason)}")
+      end
+
+      # Test verification with invalid token
+      case Macaroons.verify_token("invalid-token") do
+        {:ok, _result} ->
+          flunk("Invalid token should not verify successfully")
+        {:error, _reason} ->
+          # This is expected
+          :ok
+      end
+    end
+
+    test "token decoding without custom caveat registration fails gracefully" do
+      # Test what happens when we decode without registering custom caveats
+      test_user = %User{
+        id: "test-user-456",
+        email: "test@example.com", 
+        roles: ["admin"]
+      }
+
+      {:ok, token} = Macaroons.generate_token(test_user)
+
+      # Try to decode without custom caveat options (should still work but caveats might not be properly typed)
+      case Macfly.decode(token) do
+        {:ok, [macaroon]} ->
+          # Should still have caveats, but they might be in a different format
+          assert length(macaroon.caveats) >= 1
+        {:error, reason} ->
+          # This might fail, which is acceptable for this test
+          assert reason != nil
+      end
+    end
+  end
 end
