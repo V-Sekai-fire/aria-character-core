@@ -4,8 +4,8 @@
 [Unit]
 Description=Aria Character Core Elixir Application
 Documentation=https://github.com/fire/aria-character-core
-After=network.target aria-cockroachdb.service aria-openbao.service aria-seaweedfs.service
-Wants=aria-cockroachdb.service aria-openbao.service aria-seaweedfs.service
+After=network.target aria-seaweedfs.service
+Wants=aria-seaweedfs.service
 
 [Service]
 Type=exec
@@ -14,8 +14,6 @@ Group=aria
 WorkingDirectory=/opt/aria/app
 Environment=MIX_ENV=prod
 Environment=PHX_SERVER=true
-Environment=DATABASE_URL=postgresql://root@localhost:26257/aria_character_core?sslmode=disable
-Environment=VAULT_ADDR=http://localhost:8200
 Environment=RELEASE_COOKIE=aria_character_core_production_cookie
 Environment=RELEASE_NODE=aria@localhost
 Environment=ASDF_DIR=/opt/aria/.asdf

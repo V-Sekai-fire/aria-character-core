@@ -8,14 +8,14 @@ Each service is listed in boot order with dependencies, development progress, an
 
 ### **1. Foundation Layer** (Boot First)
 
-#### **[aria_security](../apps/aria_security/)** - OpenBao Secrets Management
+#### **[aria_security](../apps/aria_security/)** - Secret Management
 - **Dependencies:** Core infrastructure, provides secrets to others
-- **External:** OpenBao (bundled), SoftHSM PKCS#11
+- **External:** Ecto, SQLite, Ecto.Cloak, ex_crypto (optional for HSM)
 - **Development Status:**
-  - [x] **OpenBao Integration**
-    - [x] OpenBao integration for secrets management
-    - [x] Vaultex client configuration and API integration
-    - [x] SoftHSM PKCS#11 HSM seal configuration
+  - [x] **Secret Backend Integration**
+    - [x] Ecto/SQLite backend for secrets management
+    - [x] Ecto.Cloak for encryption at rest
+    - [x] `ex_crypto` integration for cryptographic operations
     - [x] Code quality improvements (deprecated Logger.warn → Logger.warning)
     - [x] Unused variable warnings resolution
     - [ ] Automated secret rotation and lifecycle management
@@ -32,11 +32,11 @@ Each service is listed in boot order with dependencies, development progress, an
 
 #### **[aria_data](../apps/aria_data/)** - System Data Persistence
 - **Dependencies:** `aria_security` (for DB credentials)
-- **External:** CockroachDB 22.1 (or PostgreSQL)
-- **Development Status:**
+- **External:** SQLite
+- **Development Status:
   - [ ] **Database Foundation**
     - [ ] Umbrella application structure with proper supervision trees
-    - [ ] Database connectivity and migrations (PostgreSQL)
+    - [ ] Database connectivity and migrations (SQLite)
     - [ ] Connection pooling and performance optimization
     - [ ] Schema design and migrations
     - [ ] Query optimization and indexing strategies
