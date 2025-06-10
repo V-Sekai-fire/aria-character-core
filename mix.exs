@@ -43,7 +43,8 @@ defmodule AriaCharacterCore.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       format: ["format", "cmd --app aria_* mix format"],
-      quality: ["format", "credo --strict", "dialyzer"]
+      quality: ["format", "credo --strict", "dialyzer"],
+      app: ["app"]
     ]
   end
 end
