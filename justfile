@@ -5,13 +5,13 @@
 # Import all service modules - each module is self-contained
 import 'justfiles/install.just'
 import 'justfiles/cockroach.just'
-# TODO: Add back as modules are created
-# import 'justfiles/openbao.just'
-# import 'justfiles/seaweedfs.just'
-# import 'justfiles/elixir.just'
-# import 'justfiles/development.just'
-# import 'justfiles/testing.just'
-# import 'justfiles/production.just'
+import 'justfiles/openbao.just'
+import 'justfiles/seaweedfs.just'
+# import 'justfiles/elixir_app.just' # Elixir app now managed by mix tasks
+import 'justfiles/development.just'
+import 'justfiles/testing.just'
+import 'justfiles/production.just'
+import 'justfiles/security.just'
 
 # Default recipe - show available commands
 default:
