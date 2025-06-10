@@ -47,7 +47,9 @@ services:
       start_period: 60s
 
   cockroachdb:
-    image: v-sekai/cockroach:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.cockroachdb
     ports:
       - "26257:26257"
       - "8080:8080"

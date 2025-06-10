@@ -24,9 +24,15 @@ RUN mix release --overwrite
 # --- Runtime Stage ---
 FROM alpine:3.18
 
-# Install runtime dependencies for Elixir
+# Install runtime dependencies for Elixir and CockroachDB client
 RUN apk add --no-cache openssl libstdc++ curl bash \
     && rm -rf /var/cache/apk/*
+
+# Download and install CockroachDB client for ARM64 Linux from Oxide's Buildomat
+RUN ARCH=arm64 && \
+    COMMIT_HASH=865aff1595e494c2ce95030c7a2f20c4370b5ff8 && \
+    wget -qO- "https://buildomat.eng.oxide.computer/public/file/oxidecomputer/cockroach/linux-${ARCH}/${COMMIT_HASH}/cockroach.tgz" | tar  xvz -C /usr/local --strip-components 1 cockroach && \
+    chmod +x /usr/local/bin/cockroach
 
 # Set working directory
 WORKDIR /app

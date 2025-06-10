@@ -1,0 +1,18 @@
+FROM ubuntu:22.04
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and install CockroachDB
+RUN curl https://binaries.cockroachdb.com/cockroach-v23.2.3.linux-amd64.tgz | tar -xz && \
+    cp -i cockroach-v23.2.3.linux-amd64/cockroach /usr/local/bin && \
+    rm -rf cockroach-v23.2.3.linux-amd64
+
+# Set the entrypoint to the CockroachDB binary
+ENTRYPOINT ["cockroach"]
+
+# Default command to start a single node
+CMD ["start-single-node", "--insecure"]
