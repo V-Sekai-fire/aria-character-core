@@ -7,6 +7,7 @@ import Config
 config :logger, level: :warning
 
 # Test database configuration - using CockroachDB
+# CockroachDB doesn't support migration locks, so we disable them
 config :aria_data, AriaData.Repo,
   username: "root",
   password: "",
@@ -14,7 +15,8 @@ config :aria_data, AriaData.Repo,
   port: 26257,
   database: "aria_data_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 10,
+  migration_lock: false
 
 config :aria_data, AriaData.AuthRepo,
   username: "root",
@@ -23,7 +25,8 @@ config :aria_data, AriaData.AuthRepo,
   port: 26257,
   database: "aria_auth_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 8
+  pool_size: 8,
+  migration_lock: false
 
 config :aria_data, AriaData.QueueRepo,
   username: "root",
@@ -32,7 +35,8 @@ config :aria_data, AriaData.QueueRepo,
   port: 26257,
   database: "aria_queue_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 8
+  pool_size: 8,
+  migration_lock: false
 
 config :aria_data, AriaData.StorageRepo,
   username: "root",
@@ -41,7 +45,8 @@ config :aria_data, AriaData.StorageRepo,
   port: 26257,
   database: "aria_storage_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 8
+  pool_size: 8,
+  migration_lock: false
 
 config :aria_data, AriaData.MonitorRepo,
   username: "root",
@@ -50,7 +55,8 @@ config :aria_data, AriaData.MonitorRepo,
   port: 26257,
   database: "aria_monitor_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 6
+  pool_size: 6,
+  migration_lock: false
 
 config :aria_data, AriaData.EngineRepo,
   username: "root",
@@ -59,7 +65,8 @@ config :aria_data, AriaData.EngineRepo,
   port: 26257,
   database: "aria_engine_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 6
+  pool_size: 6,
+  migration_lock: false
 
 # Test Phoenix configuration
 config :aria_coordinate, AriaCoordinateWeb.Endpoint,
@@ -67,8 +74,11 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
   secret_key_base: "test_secret_key_base_for_testing_only",
   server: false
 
-# Test Oban configuration (disable in tests)
-config :aria_queue, Oban, testing: :inline, repo: AriaData.QueueRepo
+# Test Oban configuration (disable automatic migrations and use explicit ones)
+config :aria_queue, Oban,
+  testing: :inline,
+  repo: AriaData.QueueRepo,
+  queues: []
 
 # Test security configuration (mock OpenBao)
 config :aria_security,

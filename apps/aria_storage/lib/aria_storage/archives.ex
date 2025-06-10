@@ -100,7 +100,7 @@ defmodule AriaStorage.Archives do
       path when is_binary(path) ->
         read_catar_entries(path)
 
-      %Index{format: :caidx} = index ->
+      %Index{format: :caidx} = _index ->
         # For chunked archives, we'd need to reconstruct first
         {:error, :not_implemented}
         # TODO: Implement archive extraction
@@ -383,7 +383,7 @@ defmodule AriaStorage.Archives do
     end
   end
 
-  defp parse_catar_entries(binary_data, entry_count) do
+  defp parse_catar_entries(_binary_data, _entry_count) do
     # Simplified implementation
     {:ok, []}
   end

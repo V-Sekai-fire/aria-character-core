@@ -13,7 +13,7 @@ defmodule AriaStorage.Chunks do
   - Parallel chunking for performance
   """
 
-  alias AriaStorage.{ChunkStore, Index}
+  alias AriaStorage.Index
 
   @default_min_chunk_size 16 * 1024      # 16KB
   @default_avg_chunk_size 64 * 1024      # 64KB
@@ -130,10 +130,16 @@ defmodule AriaStorage.Chunks do
   def compress_chunk(data, algorithm \\ :zstd) do
     case algorithm do
       :zstd ->
-        case Ezstd.compress(data) do
-          {:ok, compressed} -> {:ok, compressed}
-          compressed when is_binary(compressed) -> {:ok, compressed}
-          {:error, reason} -> {:error, {:compression_failed, reason}}
+        try do
+          # Use Erlang module directly with compression level 1
+          compressed = :ezstd.compress(data, 1)
+          {:ok, compressed}
+        rescue
+          UndefinedFunctionError ->
+            {:error, :compression_not_available}
+        catch
+          :error, reason ->
+            {:error, {:compression_failed, reason}}
         end
 
       :none ->
@@ -150,10 +156,16 @@ defmodule AriaStorage.Chunks do
   def decompress_chunk(compressed_data, algorithm \\ :zstd) do
     case algorithm do
       :zstd ->
-        case Ezstd.decompress(compressed_data) do
-          {:ok, decompressed} -> {:ok, decompressed}
-          decompressed when is_binary(decompressed) -> {:ok, decompressed}
-          {:error, reason} -> {:error, {:decompression_failed, reason}}
+        try do
+          # Use Erlang module directly
+          decompressed = :ezstd.decompress(compressed_data)
+          {:ok, decompressed}
+        rescue
+          UndefinedFunctionError ->
+            {:error, :compression_not_available}
+        catch
+          :error, reason ->
+            {:error, {:decompression_failed, reason}}
         end
 
       :none ->

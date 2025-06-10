@@ -17,7 +17,8 @@ defmodule AriaStorage do
   - Efficient delta updates using seeds
   """
 
-  alias AriaStorage.{File, Chunks, Archives, Storage}
+  alias AriaStorage.{Chunks, Archives, Storage}
+  alias AriaStorage.Files
 
   @doc """
   Chunks a file using desync content-defined chunking and uploads to storage.
@@ -34,9 +35,9 @@ defmodule AriaStorage do
   end
 
   # TODO: Implement metadata extraction
-  defp extract_metadata(_file_path) do
-    %{}
-  end
+  # defp extract_metadata(_file_path) do
+  #   %{}
+  # end
 
   @doc """
   Extracts a file from storage using its index reference.

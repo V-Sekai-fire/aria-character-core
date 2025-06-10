@@ -10,7 +10,7 @@ config :logger, level: :debug
 # Main repository for general data
 config :aria_data, AriaData.Repo,
   username: "postgres",
-  password: "postgres", 
+  password: "postgres",
   hostname: "localhost",
   database: "aria_data_dev",
   stacktrace: true,
@@ -22,7 +22,7 @@ config :aria_data, AriaData.Repo,
 config :aria_data, AriaData.AuthRepo,
   username: "postgres",
   password: "postgres",
-  hostname: "localhost", 
+  hostname: "localhost",
   database: "aria_auth_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
@@ -104,7 +104,7 @@ config :aria_interpret,
   gpu_enabled: System.get_env("ARIA_GPU_ENABLED") == "true",
   batch_size: 1
 
-# Shape Service development configuration  
+# Shape Service development configuration
 config :aria_shape,
   qwen_model_path: "/models/qwen3.onnx",
   gpu_enabled: System.get_env("ARIA_GPU_ENABLED") == "true",

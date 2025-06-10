@@ -9,8 +9,8 @@ defmodule AriaStorage.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # The storage repository
-      AriaData.StorageRepo
+      # Add any aria_storage specific processes here
+      # Note: AriaData.StorageRepo is started by AriaData.Application
     ]
 
     opts = [strategy: :one_for_one, name: AriaStorage.Supervisor]

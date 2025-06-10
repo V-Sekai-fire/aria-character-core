@@ -86,7 +86,7 @@ defmodule AriaStorage.Storage do
   """
   def get_index(index_ref) do
     case get_file_record_by_ref(index_ref) do
-      {:ok, file_record} ->
+      {:ok, _file_record} ->
         index_store = get_index_store([])
         get_index_from_store(index_ref, index_store)
 
@@ -362,7 +362,7 @@ defmodule AriaStorage.Storage do
     {:ok, %{id: "stub_file_id", metadata: metadata}}
   end
 
-  defp get_file_record(file_id) do
+  defp get_file_record(_file_id) do
     # TODO: Implement database integration
     # case StorageRepo.get(AriaStorage.File, file_id) do
     #   nil -> {:error, :file_not_found}
@@ -371,7 +371,7 @@ defmodule AriaStorage.Storage do
     {:error, :not_implemented}
   end
 
-  defp get_file_record_by_ref(index_ref) do
+  defp get_file_record_by_ref(_index_ref) do
     # TODO: Implement database integration
     # case StorageRepo.get_by(AriaStorage.File, index_ref: index_ref) do
     #   nil -> {:error, :file_not_found}
@@ -414,7 +414,7 @@ defmodule AriaStorage.Storage do
     []
   end
 
-  defp get_all_stored_chunks(stores) do
+  defp get_all_stored_chunks(_stores) do
     # This would list all chunks in the stores
     # Simplified implementation
     {:ok, []}

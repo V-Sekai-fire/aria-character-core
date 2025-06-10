@@ -52,7 +52,7 @@ config :aria_queue, Oban,
   repo: AriaData.QueueRepo,
   plugins: [
     Oban.Plugins.Pruner,
-    {Oban.Plugins.Cron, 
+    {Oban.Plugins.Cron,
      crontab: [
        {"0 2 * * *", AriaData.Workers.DatabaseCleanup},
        {"*/15 * * * *", AriaStorage.Workers.CDNSync}

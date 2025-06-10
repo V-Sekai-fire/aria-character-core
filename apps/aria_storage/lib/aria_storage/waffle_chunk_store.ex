@@ -67,7 +67,7 @@ defmodule AriaStorage.WaffleChunkStore do
   @doc """
   Stores a chunk using Waffle with proper metadata.
   """
-  def store_chunk(%Chunks{} = chunk, opts \\ []) do
+  def store_chunk(%Chunks{} = chunk, _opts \\ []) do
     scope = %{
       chunk_id: Base.encode16(chunk.id, case: :lower),
       size: chunk.size,
@@ -99,7 +99,7 @@ defmodule AriaStorage.WaffleChunkStore do
   @doc """
   Retrieves a chunk from Waffle storage.
   """
-  def retrieve_chunk(chunk_id, opts \\ []) when is_binary(chunk_id) do
+  def retrieve_chunk(chunk_id, _opts \\ []) when is_binary(chunk_id) do
     scope = %{chunk_id: chunk_id}
     file_path = url({nil, scope}, signed: true)
 

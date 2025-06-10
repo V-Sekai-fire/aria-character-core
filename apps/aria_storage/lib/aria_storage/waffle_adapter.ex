@@ -155,7 +155,7 @@ defmodule AriaStorage.WaffleAdapter do
   end
 
   @impl true
-  def list_chunks(%__MODULE__{} = adapter, opts \\ []) do
+  def list_chunks(%__MODULE__{} = _adapter, _opts \\ []) do
     # This would depend on the backend implementation
     # For now, return empty list with a warning
     require Logger
@@ -252,7 +252,7 @@ defmodule AriaStorage.WaffleAdapter do
 
   defp build_s3_key(chunk_id) do
     chunk_id_hex = Base.encode16(chunk_id, case: :lower)
-    <<a::binary-size(2), b::binary-size(2), rest::binary>> = chunk_id_hex
+    <<a::binary-size(2), b::binary-size(2), _rest::binary>> = chunk_id_hex
     "chunks/#{a}/#{b}/#{chunk_id_hex}.cacnk"
   end
 
