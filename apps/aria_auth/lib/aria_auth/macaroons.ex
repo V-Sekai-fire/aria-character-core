@@ -13,11 +13,11 @@ defmodule AriaAuth.Macaroons do
   """
 
   alias AriaAuth.Accounts.User
+  alias Macfly.Caveat.{ValidityWindow, ConfineUser}
 
   @secret_key Application.compile_env(:aria_auth, :macaroon_secret, "development_macaroon_secret_key")
   @default_expiry 3600 # 1 hour
   @issuer "aria-auth"
-  @audience "aria-platform"
 
   @doc """
   Generates a macaroon token for a user.
@@ -32,45 +32,30 @@ defmodule AriaAuth.Macaroons do
   """
   def generate_token(%User{} = user, opts \\ []) do
     expiry = Keyword.get(opts, :expiry, @default_expiry)
-    permissions = Keyword.get(opts, :permissions, user.roles)
+    _permissions = Keyword.get(opts, :permissions, user.roles)
     location = Keyword.get(opts, :location, nil)
-    
-    now = DateTime.utc_now() |> DateTime.to_unix()
-    expires_at = now + expiry
 
     try do
       # Create base macaroon with user information
-      macaroon = Macfly.create_macaroon(
-        location || @issuer,
+      macaroon = Macfly.Macaroon.new(
+        @secret_key,
         "user:#{user.id}",  # identifier
-        @secret_key
+        location || @issuer
       )
       
-      # Add first-party caveats (permissions and constraints)
-      macaroon = macaroon
-      |> add_caveat("user_id = #{user.id}")
-      |> add_caveat("email = #{user.email}")
-      |> add_caveat("issued_at = #{now}")
-      |> add_caveat("expires_at = #{expires_at}")
-      |> add_caveat("issuer = #{@issuer}")
-      |> add_caveat("audience = #{@audience}")
+      # Add built-in caveats using Macfly's structured types
+      caveats = [
+        ValidityWindow.build(for: expiry),
+        %ConfineUser{id: user.id}
+      ]
       
-      # Add permission caveats
-      macaroon = Enum.reduce(permissions, macaroon, fn permission, acc ->
-        add_caveat(acc, "permission = #{permission}")
-      end)
-      
-      # Add location caveat if specified
-      macaroon = if location do
-        add_caveat(macaroon, "location = #{location}")
-      else
-        macaroon
-      end
+      # Create attenuated macaroon with caveats
+      attenuated_macaroon = Macfly.Macaroon.attenuate(macaroon, caveats)
       
       # Serialize the macaroon
-      case Macfly.encode([macaroon]) do
-        {:ok, token} -> {:ok, token}
-        {:error, reason} -> {:error, reason}
+      case Macfly.encode([attenuated_macaroon]) do
+        token when is_binary(token) -> {:ok, token}
+        error -> {:error, error}
       end
     rescue
       error -> {:error, {:macaroon_creation_failed, error}}
@@ -85,14 +70,14 @@ defmodule AriaAuth.Macaroons do
       case Macfly.decode(token) do
         {:ok, [macaroon]} ->
           case verify_macaroon_caveats(macaroon) do
-            {:ok, caveats} -> {:ok, caveats}
+            {:ok, user_id} -> {:ok, %{user_id: user_id}}
             {:error, reason} -> {:error, reason}
           end
         
         {:ok, macaroons} when is_list(macaroons) ->
           # Handle multiple macaroons (discharge macaroons)
           case verify_macaroon_chain(macaroons) do
-            {:ok, caveats} -> {:ok, caveats}
+            {:ok, user_id} -> {:ok, %{user_id: user_id}}
             {:error, reason} -> {:error, reason}
           end
         
@@ -108,15 +93,10 @@ defmodule AriaAuth.Macaroons do
   """
   def verify_token_and_get_user(token) when is_binary(token) do
     case verify_token(token) do
-      {:ok, caveats} ->
-        case extract_user_id(caveats) do
-          {:ok, user_id} ->
-            case AriaAuth.Accounts.get_user(user_id) do
-              %User{} = user -> {:ok, user}
-              nil -> {:error, :user_not_found}
-            end
-          
-          {:error, reason} -> {:error, reason}
+      {:ok, %{user_id: user_id}} ->
+        case AriaAuth.Accounts.get_user(user_id) do
+          %User{} = user -> {:ok, user}
+          nil -> {:error, :user_not_found}
         end
       
       {:error, reason} -> {:error, reason}
@@ -131,9 +111,7 @@ defmodule AriaAuth.Macaroons do
   
   ## Example
       {:ok, restricted_token} = AriaAuth.Macaroons.attenuate_token(token, [
-        "resource = /api/users/123",
-        "action = read",
-        "expires_at = #{DateTime.utc_now() |> DateTime.add(300) |> DateTime.to_unix()}"
+        %Macfly.Caveat.ValidityWindow{not_before: now, not_after: now + 300}
       ])
   """
   def attenuate_token(token, additional_caveats) when is_binary(token) and is_list(additional_caveats) do
@@ -141,13 +119,11 @@ defmodule AriaAuth.Macaroons do
       {:ok, [macaroon]} ->
         try do
           # Add additional caveats to restrict the token
-          attenuated_macaroon = Enum.reduce(additional_caveats, macaroon, fn caveat, acc ->
-            add_caveat(acc, caveat)
-          end)
+          attenuated_macaroon = Macfly.Macaroon.attenuate(macaroon, additional_caveats)
           
           case Macfly.encode([attenuated_macaroon]) do
-            {:ok, new_token} -> {:ok, new_token}
-            {:error, reason} -> {:error, reason}
+            new_token when is_binary(new_token) -> {:ok, new_token}
+            error -> {:error, error}
           end
         rescue
           error -> {:error, {:attenuation_failed, error}}
@@ -171,24 +147,14 @@ defmodule AriaAuth.Macaroons do
 
   # Private helper functions
 
-  defp add_caveat(macaroon, caveat_string) do
-    case Macfly.Macaroon.add_first_party_caveat(macaroon, caveat_string) do
-      {:ok, updated_macaroon} -> updated_macaroon
-      {:error, _reason} -> macaroon  # Return original if caveat addition fails
-    end
-  end
-
-  defp verify_macaroon_caveats(macaroon) do
+  defp verify_macaroon_caveats(%Macfly.Macaroon{caveats: caveats}) do
     try do
-      # Extract caveats from the macaroon
-      caveats = extract_caveats_from_macaroon(macaroon)
+      # Extract user ID from ConfineUser caveat
+      user_id = extract_user_id_from_caveats(caveats)
       
-      # Verify basic constraints
-      with {:ok, _} <- verify_expiration(caveats),
-           {:ok, _} <- verify_issuer(caveats),
-           {:ok, _} <- verify_audience(caveats) do
-        {:ok, caveats}
-      else
+      # Verify validity window
+      case verify_validity_window(caveats) do
+        :ok -> {:ok, user_id}
         {:error, reason} -> {:error, reason}
       end
     rescue
@@ -207,59 +173,24 @@ defmodule AriaAuth.Macaroons do
     end
   end
 
-  defp extract_caveats_from_macaroon(macaroon) do
-    # This is a simplified caveat extraction
-    # In practice, you'd use Macfly's API to get caveats
-    # For now, we'll return a basic structure
-    %{
-      "user_id" => nil,
-      "email" => nil,
-      "issued_at" => nil,
-      "expires_at" => nil,
-      "issuer" => nil,
-      "audience" => nil,
-      "permissions" => []
-    }
+  defp extract_user_id_from_caveats(caveats) do
+    case Enum.find(caveats, fn caveat -> match?(%ConfineUser{}, caveat) end) do
+      %ConfineUser{id: id} -> id
+      nil -> raise "No ConfineUser caveat found"
+    end
   end
 
-  defp verify_expiration(caveats) do
-    case Map.get(caveats, "expires_at") do
-      nil -> {:error, :no_expiration}
-      expires_at when is_integer(expires_at) ->
-        now = DateTime.utc_now() |> DateTime.to_unix()
-        if now < expires_at do
-          {:ok, :valid}
+  defp verify_validity_window(caveats) do
+    case Enum.find(caveats, fn caveat -> match?(%ValidityWindow{}, caveat) end) do
+      %ValidityWindow{not_before: not_before, not_after: not_after} ->
+        now = System.os_time(:second)
+        if now >= not_before and now <= not_after do
+          :ok
         else
           {:error, :token_expired}
         end
-      _ -> {:error, :invalid_expiration}
-    end
-  end
-
-  defp verify_issuer(caveats) do
-    case Map.get(caveats, "issuer") do
-      @issuer -> {:ok, :valid}
-      _ -> {:error, :invalid_issuer}
-    end
-  end
-
-  defp verify_audience(caveats) do
-    case Map.get(caveats, "audience") do
-      @audience -> {:ok, :valid}
-      _ -> {:error, :invalid_audience}
-    end
-  end
-
-  defp extract_user_id(caveats) do
-    case Map.get(caveats, "user_id") do
-      nil -> {:error, :no_user_id}
-      user_id when is_integer(user_id) -> {:ok, user_id}
-      user_id when is_binary(user_id) ->
-        case Integer.parse(user_id) do
-          {id, ""} -> {:ok, id}
-          _ -> {:error, :invalid_user_id}
-        end
-      _ -> {:error, :invalid_user_id}
+      
+      nil -> {:error, :no_validity_window}
     end
   end
 end
