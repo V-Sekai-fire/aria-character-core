@@ -1,0 +1,69 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+services:
+  aria-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.aria-app
+    ports:
+      - "4000:4000"  # Phoenix app
+    environment:
+      - MIX_ENV=prod
+      - PHX_SERVER=true
+      - DATABASE_URL=postgresql://root@cockroachdb:26257/aria_character_core?sslmode=disable
+      - VAULT_ADDR=http://openbao:8200 # Reference the openbao service
+    volumes:
+      - aria_data:/app/data
+    depends_on:
+      - cockroachdb
+      - openbao # Add dependency on openbao service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"] # Only check Phoenix app health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  openbao:
+    build:
+      context: .
+      dockerfile: Dockerfile.openbao
+    ports:
+      - "8200:8200" # OpenBao port
+    environment:
+      - OPENBAO_PKCS11_PIN=${OPENBAO_PKCS11_PIN:-1234}
+      - OPENBAO_PKCS11_SO_PIN=${OPENBAO_PKCS11_SO_PIN:-1234}
+      - OPENBAO_PKCS11_SLOT=${OPENBAO_PKCS11_SLOT:-0}
+      - RESET_HSM_KEYS=${RESET_HSM_KEYS:-true}
+    volumes:
+      - openbao_data:/vault/data
+      - softhsm_tokens:/var/lib/softhsm/tokens
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8200/v1/sys/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  cockroachdb:
+    image: v-sekai/cockroach:latest
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    command: start-single-node --insecure
+    volumes:
+      - cockroachdb_data:/cockroach/cockroach-data
+      - ./scripts:/scripts
+    healthcheck:
+      test: ["CMD", "/cockroach/cockroach", "node", "status", "--insecure", "--host=localhost:26257"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  aria_data:
+  openbao_data:
+  softhsm_tokens:
+  cockroachdb_data:

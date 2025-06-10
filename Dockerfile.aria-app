@@ -1,0 +1,41 @@
+# --- Build Stage ---
+FROM elixir:1.16.0-alpine as builder
+
+# Install build dependencies
+RUN apk add --no-cache build-base git
+
+# Set the working directory
+WORKDIR /app
+
+# Copy application files
+COPY . .
+
+# Install Hex and Rebar
+RUN mix local.hex --force && \
+    mix local.rebar --force
+
+# Fetch and compile dependencies
+RUN mix deps.get --only prod
+RUN mix compile
+
+# Create a release
+RUN mix release --overwrite
+
+# --- Runtime Stage ---
+FROM alpine:3.18
+
+# Install runtime dependencies for Elixir
+RUN apk add --no-cache openssl libstdc++ curl bash \
+    && rm -rf /var/cache/apk/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy the compiled release from the builder stage
+COPY --from=builder /app/_build/prod/rel/aria_queue /app
+
+# Expose the port your Phoenix app runs on (e.g., 4000)
+EXPOSE 4000
+
+# Command to run the application
+CMD ["/app/_build/prod/rel/aria_queue/bin/aria_queue", "start"]
