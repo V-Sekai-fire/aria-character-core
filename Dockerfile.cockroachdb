@@ -4,12 +4,14 @@ FROM ubuntu:22.04
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and install CockroachDB
-RUN curl https://binaries.cockroachdb.com/cockroach-v23.2.3.linux-amd64.tgz | tar -xz && \
-    cp -i cockroach-v23.2.3.linux-amd64/cockroach /usr/local/bin && \
-    rm -rf cockroach-v23.2.3.linux-amd64
+# Download and install CockroachDB from Oxide's Buildomat
+RUN ARCH=amd64 && \
+    COMMIT_HASH=865aff1595e494c2ce95030c7a2f20c4370b5ff8 && \
+    wget -qO- "https://buildomat.eng.oxide.computer/public/file/oxidecomputer/cockroach/linux-${ARCH}/${COMMIT_HASH}/cockroach.tgz" | tar  xvz -C /usr/local --strip-components 1 cockroach && \
+    chmod +x /usr/local/bin/cockroach
 
 # Set the entrypoint to the CockroachDB binary
 ENTRYPOINT ["cockroach"]
