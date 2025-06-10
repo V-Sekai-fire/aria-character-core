@@ -60,7 +60,7 @@ defmodule AriaEngine.PlanningTest do
       # Task: get the sword
       tasks = [{"get_item", ["sword"]}]
 
-      case AriaEngine.plan(domain, initial_state, tasks, verbose:0) do
+      case AriaEngine.plan(domain, initial_state, tasks, 0) do
         {:ok, plan} ->
           assert length(plan) == 2
           assert {:move, ["room2"]} in plan
