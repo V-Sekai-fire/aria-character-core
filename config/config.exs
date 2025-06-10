@@ -32,5 +32,9 @@ config :telemetry_poller, :default,
     {:process_info, name: :queue_metrics, event: [:vm, :total_run_queue_lengths], keys: [:cpu, :io]}
   ]
 
+# Configure Hammer rate limiting for all environments
+config :hammer,
+  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}
+
 # Import environment specific config files
 import_config "#{config_env()}.exs"

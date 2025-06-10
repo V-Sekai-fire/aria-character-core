@@ -142,3 +142,7 @@ config :aria_interface, AriaInterfaceWeb.Endpoint,
 config :aria_monitor,
   prometheus_enabled: false,
   live_dashboard_enabled: true
+
+# Development Hammer rate limiting configuration
+config :hammer,
+  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}

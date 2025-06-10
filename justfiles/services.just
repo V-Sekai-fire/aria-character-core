@@ -1,0 +1,475 @@
+# Service management recipes for Aria Character Core
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+import "install.just"
+
+configure-softhsm:
+    #!/usr/bin/env bash
+    echo "🔧 Configuring SoftHSM for OpenBao..."
+    
+    if [ "{{os()}}" = "linux" ]; then
+        # Create SoftHSM configuration
+        sudo sh -c 'echo "# SoftHSM v2 configuration file" > /etc/softhsm2.conf'
+        sudo sh -c 'echo "directories.tokendir = /var/lib/softhsm/tokens" >> /etc/softhsm2.conf'
+        sudo sh -c 'echo "objectstore.backend = file" >> /etc/softhsm2.conf'
+        sudo sh -c 'echo "log.level = INFO" >> /etc/softhsm2.conf'
+        sudo sh -c 'echo "slots.removable = false" >> /etc/softhsm2.conf'
+        
+        # Set environment variable for SoftHSM config
+        export SOFTHSM2_CONF=/etc/softhsm2.conf
+        
+        # Initialize SoftHSM slot if it doesn't exist
+        if ! softhsm2-util --show-slots | grep -q "Slot 0"; then
+            echo "🔑 Initializing SoftHSM slot 0..."
+            softhsm2-util --init-token --slot 0 --label "openbao-token" --pin 1234 --so-pin 1234
+        else
+            echo "✅ SoftHSM slot 0 already initialized"
+        fi
+        
+        echo "✅ SoftHSM configured successfully!"
+    else
+        echo "⚠️  SoftHSM configuration only supported on Linux"
+        echo "   On macOS, SoftHSM may need different configuration paths"
+    fi
+
+init-softhsm-elixir: install-elixir-erlang-env configure-softhsm
+    #!/usr/bin/env bash
+    echo "🔧 Initializing SoftHSM using AriaSecurity.SoftHSM module..."
+    
+    # Setup asdf environment
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    # Set SoftHSM environment
+    export SOFTHSM2_CONF=/etc/softhsm2.conf
+    export MIX_ENV=dev
+    
+    # Use Elixir module to initialize SoftHSM
+    echo "🔑 Using AriaSecurity.SoftHSM to initialize token..."
+    
+    mix run -e '
+    config = %{
+      slot_id: 0,
+      token_label: "openbao-token", 
+      user_pin: "1234",
+      so_pin: "1234"
+    }
+    
+    case AriaSecurity.SoftHSM.initialize_token(config) do
+      {:ok, _} -> 
+        IO.puts("✅ SoftHSM token initialized successfully via Elixir module")
+        
+        # List slots to verify
+        case AriaSecurity.SoftHSM.list_slots(config) do
+          {:ok, slots} -> 
+            IO.puts("📋 Available slots:")
+            IO.inspect(slots)
+          {:error, reason} -> 
+            IO.puts("⚠️  Could not list slots: #{inspect(reason)}")
+        end
+        
+      {:error, reason} -> 
+        IO.puts("❌ Failed to initialize SoftHSM token: #{inspect(reason)}")
+        System.halt(1)
+    end
+    '
+    
+    echo "✅ SoftHSM initialized via Elixir module!"
+
+start-cockroach: install-cockroach
+    #!/usr/bin/env bash
+    echo "🗄️  Starting CockroachDB..."
+    
+    if [ "{{os()}}" = "linux" ]; then
+        # Check if CockroachDB is already running
+        if pgrep -f "cockroach start" > /dev/null; then
+            echo "✅ CockroachDB is already running"
+            exit 0
+        fi
+        
+        # Create data directory
+        sudo mkdir -p /var/lib/cockroach/data
+        sudo chown cockroach:cockroach /var/lib/cockroach/data
+        
+        # Start CockroachDB in the background
+        echo "🚀 Starting CockroachDB in single-node mode..."
+        sudo -u cockroach nohup cockroach start-single-node \
+            --insecure \
+            --store=/var/lib/cockroach/data \
+            --listen-addr=localhost:26257 \
+            --http-addr=localhost:8080 \
+            --background
+        
+        # Wait for CockroachDB to be ready
+        echo "⏳ Waiting for CockroachDB to be ready..."
+        timeout 30s bash -c 'until curl -sf http://localhost:8080/health >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ CockroachDB failed to start" && exit 1)
+        
+        echo "✅ CockroachDB started successfully!"
+    else
+        echo "⚠️  CockroachDB service management only supported on Linux"
+        echo "   On macOS, consider using 'cockroach start-single-node' manually"
+    fi
+
+start-openbao: install-openbao install-softhsm
+    #!/usr/bin/env bash
+    echo "🔐 Starting OpenBao..."
+    
+    # Check if OpenBao is already running
+    if pgrep -f "bao server" > /dev/null; then
+        echo "✅ OpenBao is already running"
+        exit 0
+    fi
+    
+    if [ "{{os()}}" = "macos" ]; then
+        echo "🍎 Starting OpenBao on macOS..."
+        
+        # Set SoftHSM environment for macOS
+        export SOFTHSM2_CONF="$HOME/.config/softhsm2/softhsm2.conf"
+        
+        # Ensure directories exist
+        mkdir -p /opt/bao/{data,config,logs}
+        mkdir -p ~/.config/softhsm2/tokens
+        
+        # Create OpenBao configuration for macOS
+        cat > /opt/bao/config/openbao.hcl << 'EOF'
+# OpenBao configuration for macOS development with SoftHSM seal protection
+storage "file" {
+  path = "/opt/bao/data"
+}
+
+listener "tcp" {
+  address = "localhost:8200"
+  tls_disable = true
+}
+
+seal "pkcs11" {
+  lib = "/opt/homebrew/lib/softhsm/libsofthsm2.so"
+  slot = "0"
+  pin = "1234"
+  key_label = "openbao-seal-key"
+  hmac_key_label = "openbao-seal-hmac-key"
+  generate_key = "true"
+}
+
+api_addr = "http://localhost:8200"
+cluster_addr = "http://localhost:8201"
+ui = true
+disable_mlock = true
+
+log_level = "INFO"
+log_file = "/opt/bao/logs/"
+log_rotate_duration = "24h"
+log_rotate_max_files = "30"
+EOF
+        
+        # Initialize SoftHSM token if needed
+        softhsm2-util --show-slots | grep -q "Slot 0" || {
+            echo "🔑 Initializing SoftHSM slot..."
+            softhsm2-util --init-token --slot 0 --label "openbao-token" --pin 1234 --so-pin 1234
+        }
+        
+        # Start OpenBao in the background
+        echo "🚀 Starting OpenBao server..."
+        nohup bao server -config=/opt/bao/config/openbao.hcl > /opt/bao/logs/openbao.log 2>&1 &
+        
+        # Wait a moment for startup
+        sleep 3
+        
+        # Check if it's running
+        if pgrep -f "bao server" > /dev/null; then
+            echo "✅ OpenBao started successfully!"
+            echo "🌐 Web UI: http://localhost:8200"
+            echo "📋 Logs: /opt/bao/logs/openbao.log"
+        else
+            echo "❌ Failed to start OpenBao"
+            echo "📋 Check logs: tail -f /opt/bao/logs/openbao.log"
+            exit 1
+        fi
+        
+    elif [ "{{os()}}" = "linux" ]; then
+        echo "🐧 Starting OpenBao on Linux..."
+        
+        # Use systemctl for Linux
+        sudo systemctl start aria-openbao.service
+        sudo systemctl enable aria-openbao.service
+        
+        echo "✅ OpenBao service started!"
+        
+    else
+        echo "❌ Unsupported operating system: {{os()}}"
+        exit 1
+    fi
+
+stop-openbao:
+    #!/usr/bin/env bash
+    echo "🛑 Stopping OpenBao..."
+    
+    if [ "{{os()}}" = "macos" ]; then
+        # Stop OpenBao process on macOS
+        pkill -f "bao server" 2>/dev/null || true
+        echo "✅ OpenBao stopped"
+        
+    elif [ "{{os()}}" = "linux" ]; then
+        # Stop OpenBao service on Linux
+        sudo systemctl stop aria-openbao.service 2>/dev/null || true
+        echo "✅ OpenBao service stopped"
+        
+    else
+        echo "❌ Unsupported operating system: {{os()}}"
+        exit 1
+    fi
+
+test-openbao-connection:
+    #!/usr/bin/env bash
+    echo "🔍 Testing OpenBao connection..."
+    
+    # Wait for OpenBao to be ready
+    max_attempts=30
+    attempt=1
+    
+    while [ $attempt -le $max_attempts ]; do
+        if curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1; then
+            echo "✅ OpenBao is healthy and responding!"
+            
+            # Show basic status
+            echo ""
+            echo "📊 OpenBao Status:"
+            curl -s http://localhost:8200/v1/sys/health | jq . 2>/dev/null || echo "OpenBao is running but jq not available for JSON parsing"
+            
+            exit 0
+        fi
+        
+        echo "⏳ Attempt $attempt/$max_attempts: Waiting for OpenBao to be ready..."
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+    
+    echo "❌ OpenBao failed to start or is not responding after $max_attempts attempts"
+    echo "📋 Check logs:"
+    echo "   - tail -f /opt/bao/logs/openbao.log"
+    echo "   - Check if SoftHSM is properly configured"
+    exit 1
+
+init-openbao: start-openbao test-openbao-connection
+    #!/usr/bin/env bash
+    echo "🔐 Initializing OpenBao..."
+    
+    export VAULT_ADDR="http://localhost:8200"
+    
+    # Check if already initialized
+    if curl -sf http://localhost:8200/v1/sys/init | jq -r .initialized 2>/dev/null | grep -q true; then
+        echo "✅ OpenBao is already initialized"
+        
+        # Try to read existing root token
+        if [ -f /opt/bao/data/root_token.txt ]; then
+            echo "🔑 Root token found: /opt/bao/data/root_token.txt"
+        else
+            echo "⚠️  OpenBao is initialized but root token file not found"
+            echo "   If you have the root token, save it to: /opt/bao/data/root_token.txt"
+        fi
+        
+        exit 0
+    fi
+    
+    echo "🚀 Initializing OpenBao for the first time..."
+    
+    # Initialize OpenBao
+    bao operator init -key-shares=1 -key-threshold=1 -format=json > /tmp/bao_init.json
+    
+    if [ $? -eq 0 ]; then
+        echo "✅ OpenBao initialized successfully!"
+        
+        # Extract and save root token and unseal key
+        jq -r .root_token /tmp/bao_init.json > /opt/bao/data/root_token.txt
+        jq -r .unseal_keys_hex[0] /tmp/bao_init.json > /opt/bao/data/unseal_key.txt
+        
+        # Set permissions
+        chmod 600 /opt/bao/data/root_token.txt /opt/bao/data/unseal_key.txt
+        
+        echo "🔑 Root token saved to: /opt/bao/data/root_token.txt"
+        echo "🗝️  Unseal key saved to: /opt/bao/data/unseal_key.txt"
+        echo ""
+        echo "⚠️  IMPORTANT: Store these securely! They cannot be recovered if lost."
+        
+        # Clean up temp file
+        rm -f /tmp/bao_init.json
+        
+        # The server should unseal automatically with PKCS#11 seal
+        echo "🔓 OpenBao should unseal automatically with SoftHSM seal"
+        
+    else
+        echo "❌ Failed to initialize OpenBao"
+        rm -f /tmp/bao_init.json
+        exit 1
+    fi
+
+foundation-startup: install-openbao init-openbao
+    #!/usr/bin/env bash
+    echo "🏗️  Foundation startup complete!"
+    echo ""
+    echo "✅ OpenBao is running and initialized"
+    echo "🌐 Web UI: http://localhost:8200"
+    echo "🔑 Root token: /opt/bao/data/root_token.txt"
+    echo ""
+    echo "🔐 Your OpenBao foundation is ready for development!"
+
+start-seaweedfs: install-seaweedfs
+    #!/usr/bin/env bash
+    echo "🌱 Starting SeaweedFS..."
+    
+    if [ "{{os()}}" = "linux" ]; then
+        # Check if SeaweedFS is already running
+        if pgrep -f "weed" > /dev/null; then
+            echo "✅ SeaweedFS is already running"
+            exit 0
+        fi
+        
+        # Start SeaweedFS master
+        echo "🚀 Starting SeaweedFS master..."
+        sudo -u seaweedfs nohup weed master \
+            -dir=/var/lib/seaweedfs/master \
+            -port=9333 \
+            > /var/log/seaweedfs/master.log 2>&1 &
+        
+        # Start SeaweedFS volume server
+        echo "🚀 Starting SeaweedFS volume server..."
+        sudo -u seaweedfs nohup weed volume \
+            -dir=/var/lib/seaweedfs/volume \
+            -port=8080 \
+            -mserver=localhost:9333 \
+            > /var/log/seaweedfs/volume.log 2>&1 &
+        
+        # Start SeaweedFS filer
+        echo "🚀 Starting SeaweedFS filer..."
+        sudo -u seaweedfs nohup weed filer \
+            -dir=/var/lib/seaweedfs/filer \
+            -port=8888 \
+            -master=localhost:9333 \
+            > /var/log/seaweedfs/filer.log 2>&1 &
+        
+        # Start SeaweedFS S3 gateway
+        echo "🚀 Starting SeaweedFS S3 gateway..."
+        sudo -u seaweedfs nohup weed s3 \
+            -dir=/var/lib/seaweedfs/s3 \
+            -port=8333 \
+            -filer=localhost:8888 \
+            > /var/log/seaweedfs/s3.log 2>&1 &
+        
+        # Wait for S3 gateway to be ready
+        echo "⏳ Waiting for SeaweedFS S3 gateway to be ready..."
+        timeout 30s bash -c 'until curl -sf http://localhost:8333 >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ SeaweedFS S3 gateway failed to start" && exit 1)
+        
+        echo "✅ SeaweedFS started successfully!"
+    else
+        echo "⚠️  SeaweedFS service management only supported on Linux"
+    fi
+
+start-elixir-app: install-elixir-erlang-env
+    #!/usr/bin/env bash
+    echo "🚀 Starting Elixir application..."
+    
+    # Setup asdf environment
+    export ASDF_DIR="$(pwd)/.asdf"
+    export ASDF_DATA_DIR="$(pwd)/.asdf"
+    export PATH="$(pwd)/.asdf/bin:$(pwd)/.asdf/shims:${PATH}"
+    . ./.asdf/asdf.sh || true
+    
+    # Set environment variables for production
+    export MIX_ENV=prod
+    export PHX_SERVER=true
+    export DATABASE_URL="postgresql://root@localhost:26257/aria_character_core?sslmode=disable"
+    export VAULT_ADDR="http://localhost:8200"
+    
+    # Get dependencies and compile
+    echo "📦 Getting dependencies..."
+    mix deps.get --only prod
+    
+    echo "🔨 Compiling application..."
+    mix compile
+    
+    # Run database migrations
+    echo "🗄️  Running database migrations..."
+    mix ecto.create || true
+    mix ecto.migrate
+    
+    # Start the application in the background
+    echo "🚀 Starting Phoenix application..."
+    nohup mix phx.server > aria_app.log 2>&1 &
+    
+    # Wait for the application to be ready
+    echo "⏳ Waiting for Aria App to be ready..."
+    timeout 60s bash -c 'until curl -sf http://localhost:4000/health >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ Aria App failed to start" && exit 1)
+    
+    echo "✅ Elixir application started successfully!"
+
+stop-all-services:
+    #!/usr/bin/env bash
+    echo "🛑 Stopping all native services..."
+    
+    echo "Stopping Elixir application..."
+    pkill -f "mix phx.server" 2>/dev/null || true
+    
+    echo "Stopping SeaweedFS services..."
+    pkill -f "weed s3" 2>/dev/null || true
+    pkill -f "weed filer" 2>/dev/null || true
+    pkill -f "weed volume" 2>/dev/null || true
+    pkill -f "weed master" 2>/dev/null || true
+    
+    echo "Stopping OpenBao..."
+    pkill -f "bao server" 2>/dev/null || true
+    
+    echo "Stopping CockroachDB..."
+    pkill -f "cockroach start" 2>/dev/null || true
+    
+    echo "✅ All native services stopped!"
+
+start-all: start-cockroach start-openbao start-seaweedfs start-elixir-app
+    #!/usr/bin/env bash
+    echo "🚀 Starting all services (CockroachDB + OpenBao + SeaweedFS + Elixir app)..."
+    echo "✅ All services started natively!"
+
+show-services-status:
+    #!/usr/bin/env bash
+    echo "📊 Native Services Status:"
+    echo ""
+    echo "CockroachDB: $(pgrep -f 'cockroach start' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "OpenBao: $(pgrep -f 'bao server' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "SeaweedFS Master: $(pgrep -f 'weed master' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "SeaweedFS Volume: $(pgrep -f 'weed volume' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "SeaweedFS Filer: $(pgrep -f 'weed filer' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "SeaweedFS S3: $(pgrep -f 'weed s3' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "Elixir App: $(pgrep -f 'mix phx.server' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo ""
+    echo "🔍 Health Check Results:"
+    echo "CockroachDB Health: $(curl -sf http://localhost:8080/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+    echo "OpenBao Health: $(curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+    echo "SeaweedFS S3 Health: $(curl -sf http://localhost:8333 >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+    echo "Elixir App Health: $(curl -sf http://localhost:4000/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+
+show-all-logs:
+    #!/usr/bin/env bash
+    echo "📋 Native Services Logs:"
+    echo ""
+    echo "=== CockroachDB Logs ==="
+    tail -30 /var/log/cockroach/cockroach.log 2>/dev/null || echo "No CockroachDB logs available"
+    echo ""
+    echo "=== OpenBao Logs ==="
+    tail -30 /opt/bao/logs/openbao.log 2>/dev/null || echo "No OpenBao logs available"
+    echo ""
+    echo "=== SeaweedFS Master Logs ==="
+    tail -30 /var/log/seaweedfs/master.log 2>/dev/null || echo "No SeaweedFS master logs available"
+    echo ""
+    echo "=== SeaweedFS Volume Logs ==="
+    tail -30 /var/log/seaweedfs/volume.log 2>/dev/null || echo "No SeaweedFS volume logs available"
+    echo ""
+    echo "=== SeaweedFS Filer Logs ==="
+    tail -30 /var/log/seaweedfs/filer.log 2>/dev/null || echo "No SeaweedFS filer logs available"
+    echo ""
+    echo "=== SeaweedFS S3 Logs ==="
+    tail -30 /var/log/seaweedfs/s3.log 2>/dev/null || echo "No SeaweedFS S3 logs available"
+    echo ""
+    echo "=== Elixir App Logs ==="
+    tail -30 aria_app.log 2>/dev/null || echo "No Elixir app logs available"

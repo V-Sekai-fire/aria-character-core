@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: MIT
 
 # Import all modular justfiles
-import 'justfiles/install'
-import 'justfiles/services'
-import 'justfiles/test'
-import 'justfiles/dev'
-import 'justfiles/production'
-import 'justfiles/security'
+import 'justfiles/install.just'
+import 'justfiles/services.just'
+import 'justfiles/test.just'
+import 'justfiles/dev.just'
+import 'justfiles/production.just'
+import 'justfiles/security.just'
 
 default: 
     @just --list

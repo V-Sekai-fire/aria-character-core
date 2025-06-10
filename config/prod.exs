@@ -75,3 +75,7 @@ config :aria_interpret,
   qwen_model_path: System.get_env("QWEN_MODEL_PATH"),
   gpu_enabled: System.get_env("ARIA_GPU_ENABLED") == "true",
   batch_size: String.to_integer(System.get_env("AI_BATCH_SIZE") || "4")
+
+# Production Hammer rate limiting configuration
+config :hammer,
+  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}
