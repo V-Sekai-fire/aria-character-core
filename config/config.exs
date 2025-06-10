@@ -15,7 +15,8 @@ config :aria_data, ecto_repos: [
   AriaData.QueueRepo,
   AriaData.StorageRepo,
   AriaData.MonitorRepo,
-  AriaData.EngineRepo
+  AriaData.EngineRepo,
+  AriaSecurity.SecretsRepo # Add SecretsRepo here
 ]
 
 # Other apps that don't use Ecto don't need repo configuration

@@ -27,23 +27,9 @@ defmodule AriaSecurity.MixProject do
 
   defp deps do
     [
-      # OpenBao/Vault client (compatible with OpenBao)
-      {:vaultex, "~> 1.0"},
-
-      # HTTP client (used by vaultex)
-      {:httpoison, "~> 1.8"},
-
-      # JSON handling (used by vaultex)
-      {:poison, "~> 4.0"},
-
-      # For managing external OS processes (like OpenBao server)
-      {:porcelain, "~> 2.0"},
-
-      # Cryptographic operations and PKCS#11 integration
-      {:ex_crypto, "~> 0.10"},
-
-      # For NIF integration (needed for PKCS#11 bindings)
-      {:rustler, "~> 0.36", optional: true},
+      # Database ORM with SQLite adapter for secrets
+      {:ecto_sql, "~> 3.10"},
+      {:ecto_sqlite3, "~> 0.12"},
 
       # Shared dependencies
       {:telemetry, "~> 1.2"}
