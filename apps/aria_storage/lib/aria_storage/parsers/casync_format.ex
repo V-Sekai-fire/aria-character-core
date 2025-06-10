@@ -21,11 +21,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   # Basic types
   defparsec :uint32le,
     times(ascii_char([0..255]), 4)
-    |> map({__MODULE__, :decode_uint32le, []})
+    |> reduce({__MODULE__, :decode_uint32le, []})
 
   defparsec :uint64le,
     times(ascii_char([0..255]), 8)
-    |> map({__MODULE__, :decode_uint64le, []})
+    |> reduce({__MODULE__, :decode_uint64le, []})
 
   defparsec :sha512_256_hash,
     times(ascii_char([0..255]), 32)
