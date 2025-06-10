@@ -9,11 +9,12 @@ For detailed system architecture, service dependencies, and development progress
 **Key Features:**
 - **14 specialized Elixir services** organized in dependency-aware boot layers
 - **Test-Driven Development (TDD)** with comprehensive progress tracking
-- **Ecto Cloak for encrypted secrets management**
+- **HSM-secured secrets management** via OpenBao
 - **Native systemd deployment** for production environments
 
 **Production Components:**
-- **SQLite**: Lightweight, file-based database for data persistence and secret management
+- **CockroachDB**: Distributed SQL database
+- **OpenBao**: Secrets management (HSM-enabled)
 - **SeaweedFS**: Distributed file storage
 - **Aria Application**: Main Elixir umbrella app
 

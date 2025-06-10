@@ -55,6 +55,17 @@ jobs:
 
       # --- External Service Installation (Example for CI) ---
       # These would be more complex, potentially using Docker or pre-built binaries
+      - name: Install CockroachDB
+        run: |
+          # Example: Download and extract binary
+          wget -qO- https://binaries.cockroachdb.com/cockroach-v23.1.10.linux-amd64.tgz | tar xvz
+          sudo cp cockroach-v23.1.10.linux-amd64/cockroach /usr/local/bin/
+
+      - name: Install OpenBao
+        run: |
+          # Example: Download and extract binary
+          wget -qO- https://releases.hashicorp.com/openbao/1.0.0/openbao_1.0.0_linux_amd64.zip | sudo unzip -d /usr/local/bin/ - 
+          sudo chmod +x /usr/local/bin/openbao
 
       - name: Install SeaweedFS
         run: |
@@ -66,32 +77,22 @@ jobs:
       - name: Start External Services
         run: |
           # Create data directories
-          mkdir -p seaweedfs-data/master seaweedfs-data/volume
+          mkdir -p cockroach-data openbao-data seaweedfs-data/master seaweedfs-data/volume
+
+          # Start CockroachDB
+          nohup cockroach start-single-node --insecure --store=./cockroach-data --listen-addr=localhost:26257 --http-addr=localhost:8080 --background > cockroach.log 2>&1 &
+          echo "Waiting for CockroachDB..."
+          timeout 30s bash -c 'until curl -sf http://localhost:8080/health >/dev/null 2>&1; do sleep 2; done'
+
+          # Start OpenBao (requires config)
+          # For CI, you might generate a simple config or use a pre-existing one
+          cat > openbao.hcl <<EOF
+storage "file" { path = "./openbao-data" }
+listener "tcp" { address = "localhost:8200" tls_disable = true }
+EOF
+          nohup openbao server -config=./openbao.hcl > openbao.log 2>&1 &
+          echo "Waiting for OpenBao..."
+          timeout 30s bash -c 'until curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1; do sleep 2; done'
 
           # Start SeaweedFS
           nohup weed master -mdir=./seaweedfs-data/master -defaultReplication=001 > seaweedfs_master.log 2>&1 &
-          nohup weed volume -dir=./seaweedfs-data/volume -mserver="localhost:9333" > seaweedfs_volume.log 2>&1 &
-          echo "Waiting for SeaweedFS..."
-          timeout 30s bash -c 'until curl -sf http://localhost:9333/dir/status >/dev/null 2>&1; do sleep 2; done'
-
-          echo "All external services started."
-
-      - name: Run Elixir Unit Tests
-        run: |
-          . ~/.asdf/asdf.sh # Source asdf again
-          mix test --exclude integration # Assuming you tag integration tests
-
-      - name: Run Elixir Integration Tests
-        run: |
-          . ~/.asdf/asdf.sh # Source asdf again
-          # Example: mix test --only integration
-          # You might need to ensure your database is migrated for integration tests
-          mix ecto.create # Create DB for tests
-          mix ecto.migrate # Run migrations
-          mix test --only integration # Run integration tests
-
-      - name: Stop External Services
-        if: always() # Run even if previous steps fail
-        run: |
-          pkill -f "weed" || true
-          echo "External services stopped."

@@ -5,7 +5,7 @@
 Description=Aria Character Core Complete Stack
 Documentation=https://github.com/fire/aria-character-core
 After=network.target
-Wants=aria-seaweedfs.service aria-app.service
+Wants=aria-cockroachdb.service aria-openbao.service aria-seaweedfs.service aria-app.service
 
 [Install]
 WantedBy=multi-user.target
