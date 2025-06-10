@@ -1,32 +1,8 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-# Default recipe - main entry point for development workflow
-default: dev-setup
-    @echo "Development environment ready! Available commands:"
-    @echo ""
-    @echo "Main Workflows:"
-    @echo "  just dev-setup        - Set up development environment"
-    @echo "  just setup-env dev-setup - Complete development setup including environment"
-    @echo "  just test-all         - Run all tests"
-    @echo "  just up-all-and-check - Deploy production environment"
-    @echo ""
-    @echo "Status & Monitoring:"
-    @echo "  just foundation-status - Check foundation service status"
-    @echo "  just foundation-status check-all-health - Extended status including all services"
-    @echo "  just foundation-logs  - View service logs"
-    @echo ""
-    @echo "Management:"
-    @echo "  just install-elixir-erlang-env - Set up Elixir/Erlang environment"
-    @echo "  just generate-new-root-token - Generate new OpenBao tokens"
-    @echo "  just destroy-bao      - Destroy and reinitialize OpenBao and SoftHSM (DESTRUCTIVE)"
-    @echo "  just rekey-bao        - Rekey OpenBao unseal keys and optionally SoftHSM"
-    @echo "  just rekey-softhsm    - Regenerate SoftHSM tokens (DESTRUCTIVE)"
-    @echo "  just stop-all-services - Clean up all services"
-    @echo ""
-    @echo "Low-level:"
-    @echo "  just foundation-startup    - Start foundation services only"
-    @echo "  just up-all-and-check     - Start and verify all services"
+default: 
+    @just --list
 
 # Development workflow entry point
 dev-setup: install-ubuntu-deps install-elixir-erlang-env foundation-startup
