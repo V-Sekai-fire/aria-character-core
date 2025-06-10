@@ -14,7 +14,7 @@ test-all: test-elixir-compile test-elixir-unit test-openbao-connection test-basi
     echo "🧪 Running all tests (compile + unit + openbao + secrets)..."
     echo "✅ All tests completed!"
 
-test-unit-ci: test-elixir-compile
+test-unit-ci: start-cockroach start-openbao start-seaweedfs start-elixir-app
     #!/usr/bin/env bash
     echo "🧪 Running CI unit tests (no external dependencies)..."
     
@@ -92,34 +92,50 @@ install-deps:
 
 install-cockroach:
     #!/usr/bin/env bash
-    echo "🗄️  Installing CockroachDB natively..."
-    
-    if command -v cockroach >/dev/null 2>&1; then
-        echo "✅ CockroachDB already installed"
+    if [ "{{os()}}" = "macos" ]; then
+        echo "🗄️  Installing CockroachDB natively on macOS..."
+        if command -v cockroach >/dev/null 2>&1; then
+            echo "✅ CockroachDB already installed"
+            cockroach version
+            exit 0
+        fi
+        echo "📥 Downloading CockroachDB for macOS..."
+        cd /tmp
+        ARCH=$(uname -m)
+        if [ "$ARCH" = "arm64" ]; then
+            URL="https://binaries.cockroachdb.com/cockroach-v23.1.11.darwin-arm64.tgz"
+            DIR="cockroach-v23.1.11.darwin-arm64"
+        else
+            URL="https://binaries.cockroachdb.com/cockroach-v23.1.11.darwin-amd64.tgz"
+            DIR="cockroach-v23.1.11.darwin-amd64"
+        fi
+        curl -L -o cockroach.tgz "$URL"
+        tar -xzf cockroach.tgz
+        sudo cp "$DIR/cockroach" /usr/local/bin/
+        sudo chmod +x /usr/local/bin/cockroach
+        rm -rf "$DIR" cockroach.tgz
+        echo "✅ CockroachDB installed!"
         cockroach version
-        exit 0
+    elif [ "{{os()}}" = "linux" ]; then
+        echo "🗄️  Installing CockroachDB natively on Linux..."
+        if command -v cockroach >/dev/null 2>&1; then
+            echo "✅ CockroachDB already installed"
+            cockroach version
+            exit 0
+        fi
+        echo "📥 Downloading CockroachDB from Oxide Computer..."
+        cd /tmp
+        wget -O cockroach.tgz "https://buildomat.eng.oxide.computer/public/file/oxidecomputer/cockroach/linux-amd64/865aff1595e494c2ce95030c7a2f20c4370b5ff8/cockroach.tgz"
+        tar -xzf cockroach.tgz
+        sudo cp cockroach/cockroach /usr/local/bin/
+        sudo chmod +x /usr/local/bin/cockroach
+        rm -rf cockroach cockroach.tgz
+        echo "✅ CockroachDB installed!"
+        cockroach version
+    else
+        echo "❌ Unsupported OS: {{os()}}"
+        exit 1
     fi
-    
-    # Download CockroachDB from Oxide Computer
-    echo "📥 Downloading CockroachDB from Oxide Computer..."
-    cd /tmp
-    wget -O cockroach.tgz "https://buildomat.eng.oxide.computer/public/file/oxidecomputer/cockroach/linux-amd64/865aff1595e494c2ce95030c7a2f20c4370b5ff8/cockroach.tgz"
-    
-    # Extract and install (one layer)
-    tar -xzf cockroach.tgz
-    sudo cp cockroach/cockroach /usr/local/bin/
-    sudo chmod +x /usr/local/bin/cockroach
-
-    # Create cockroach user and directories
-    sudo useradd --system --home /var/lib/cockroach --shell /bin/false cockroach || true
-    sudo mkdir -p /var/lib/cockroach /var/log/cockroach
-    sudo chown cockroach:cockroach /var/lib/cockroach /var/log/cockroach
-
-    # Clean up
-    rm -rf cockroach cockroach.tgz
-
-    echo "✅ CockroachDB installed!"
-    cockroach version
 
 install-openbao:
     #!/usr/bin/env bash
