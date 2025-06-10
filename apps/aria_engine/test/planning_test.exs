@@ -38,9 +38,9 @@ defmodule AriaEngine.PlanningTest do
       |> AriaEngine.set_fact("location", "player", "room1")
 
       # Manual plan
-      plan = [{:move, ["room2"]}, {:move, ["room3"]}]
+      plan = [{:move, ["room1", "room2"]}, {:move, ["room2", "room3"]}]
 
-      case AriaEngine.execute_plan(domain, initial_state, plan, 0) do
+      case AriaEngine.execute_plan(domain, initial_state, plan) do
         {:ok, final_state} ->
           assert AriaEngine.get_fact(final_state, "location", "player") == "room3"
         {:error, reason} ->
@@ -60,7 +60,7 @@ defmodule AriaEngine.PlanningTest do
       # Task: get the sword
       tasks = [{"get_item", ["sword"]}]
 
-      case AriaEngine.plan(domain, initial_state, tasks, 0) do
+      case AriaEngine.plan(domain, initial_state, tasks, verbose: 0) do
         {:ok, plan} ->
           assert length(plan) == 2
           assert {:move, ["room2"]} in plan
