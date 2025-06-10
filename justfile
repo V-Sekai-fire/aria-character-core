@@ -4,19 +4,16 @@
 default: 
     @just --list
 
-# Development workflow entry point
-dev-setup: install-ubuntu-deps install-elixir-erlang-env foundation-startup
+dev-setup: install-deps install-elixir-erlang-env foundation-startup
     #!/usr/bin/env bash
     echo "🚀 Setting up development environment (deps + environment + foundation)..."
     echo "✅ Development environment setup complete!"
 
-# Testing workflow entry point  
 test-all: test-elixir-compile test-elixir-unit test-openbao-connection test-basic-secrets
     #!/usr/bin/env bash
     echo "🧪 Running all tests (compile + unit + openbao + secrets)..."
     echo "✅ All tests completed!"
 
-# CI/CD unit testing workflow (no external dependencies)
 test-unit-ci: test-elixir-compile
     #!/usr/bin/env bash
     echo "🧪 Running CI unit tests (no external dependencies)..."
@@ -39,40 +36,59 @@ test-unit-ci: test-elixir-compile
         exit 1
     fi
 
-# Fast CI test suite (compile + unit tests only)
 test-ci-fast: test-elixir-compile test-unit-ci test-aria-security test-aria-auth
 
-# Install Ubuntu dependencies for native setup
-install-ubuntu-deps:
-    #!/usr/bin/env bash
-    echo "📦 Installing Ubuntu dependencies for native setup..."
-    
-    # Update package lists
-    sudo apt update
-    
-    # Install essential packages
-    sudo apt install -y \
-        curl \
-        wget \
-        git \
-        build-essential \
-        pkg-config \
-        libssl-dev \
-        libpcsc-lite-dev \
-        autoconf \
-        automake \
-        libtool \
-        softhsm2 \
-        opensc \
-        unzip \
-        jq \
-        postgresql-client \
-        systemd \
-        daemon
-    
-    echo "✅ Ubuntu dependencies installed!"
+install-deps:
+    if [ "{{os()}}" = "macos" ]; then
+        echo "📦 Installing dependencies for macOS..."
+        if ! command -v brew >/dev/null 2>&1; then
+            echo "Homebrew not found. Installing Homebrew..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        fi
+        brew update
+        brew install \
+            curl \
+            wget \
+            git \
+            openssl \
+            pkg-config \
+            autoconf \
+            automake \
+            libtool \
+            softhsm \
+            opensc \
+            jq \
+            postgresql \
+            coreutils \
+            unzip
+        echo "✅ macOS dependencies installed!"
+    elif [ "{{os()}}" = "linux" ]; then
+        echo "📦 Installing Ubuntu dependencies for native setup..."
+        sudo apt update
+        sudo apt install -y \
+            curl \
+            wget \
+            git \
+            build-essential \
+            pkg-config \
+            libssl-dev \
+            libpcsc-lite-dev \
+            autoconf \
+            automake \
+            libtool \
+            softhsm2 \
+            opensc \
+            unzip \
+            jq \
+            postgresql-client \
+            systemd \
+            daemon
+        echo "✅ Ubuntu dependencies installed!"
+    else
+        echo "❌ Unsupported OS: {{os()}}"
+        exit 1
+    fi
 
-# Download and install CockroachDB natively
 install-cockroach:
     #!/usr/bin/env bash
     echo "🗄️  Installing CockroachDB natively..."
@@ -104,7 +120,6 @@ install-cockroach:
     echo "✅ CockroachDB installed!"
     cockroach version
 
-# Download and install OpenBao HSM natively
 install-openbao:
     #!/usr/bin/env bash
     echo "🔐 Installing OpenBao HSM natively..."
@@ -135,7 +150,6 @@ install-openbao:
     echo "✅ OpenBao HSM installed!"
     bao version
 
-# Download and install SeaweedFS natively
 install-seaweedfs:
     #!/usr/bin/env bash
     echo "🌱 Installing SeaweedFS natively..."
@@ -173,7 +187,6 @@ install-seaweedfs:
     echo "✅ SeaweedFS installed!"
     weed version
 
-# Configure SoftHSM for OpenBao
 configure-softhsm:
     #!/usr/bin/env bash
     echo "🔧 Configuring SoftHSM for OpenBao..."
@@ -198,7 +211,6 @@ configure-softhsm:
     
     echo "✅ SoftHSM configured successfully!"
 
-# Initialize SoftHSM using Elixir module for better integration
 init-softhsm-elixir: install-elixir-erlang-env configure-softhsm
     #!/usr/bin/env bash
     echo "🔧 Initializing SoftHSM using AriaSecurity.SoftHSM module..."
@@ -245,7 +257,6 @@ init-softhsm-elixir: install-elixir-erlang-env configure-softhsm
     
     echo "✅ SoftHSM initialized via Elixir module!"
 
-# Start CockroachDB natively
 start-cockroach: install-cockroach
     #!/usr/bin/env bash
     echo "🗄️  Starting CockroachDB..."
@@ -275,7 +286,6 @@ start-cockroach: install-cockroach
     
     echo "✅ CockroachDB started successfully!"
 
-# Start OpenBao natively
 start-openbao: install-openbao init-softhsm-elixir
     #!/usr/bin/env bash
     echo "🔐 Starting OpenBao with SoftHSM..."
@@ -347,7 +357,6 @@ start-openbao: install-openbao init-softhsm-elixir
     
     echo "✅ OpenBao started successfully!"
 
-# Start SeaweedFS natively
 start-seaweedfs: install-seaweedfs
     #!/usr/bin/env bash
     echo "🌱 Starting SeaweedFS..."
@@ -395,7 +404,6 @@ start-seaweedfs: install-seaweedfs
     
     echo "✅ SeaweedFS started successfully!"
 
-# Start Elixir application
 start-elixir-app: install-elixir-erlang-env
     #!/usr/bin/env bash
     echo "🚀 Starting Elixir application..."
@@ -434,7 +442,6 @@ start-elixir-app: install-elixir-erlang-env
     
     echo "✅ Elixir application started successfully!"
 
-# Stop all native services
 stop-all-services:
     #!/usr/bin/env bash
     echo "🛑 Stopping all native services..."
@@ -456,9 +463,6 @@ stop-all-services:
     
     echo "✅ All native services stopped!"
 
-# === PRODUCTION SYSTEMD SERVICE MANAGEMENT ===
-
-# Setup production environment with systemd services
 setup-production:
     #!/usr/bin/env bash
     echo "🚀 Setting up production environment with systemd services..."
@@ -468,21 +472,18 @@ setup-production:
     fi
     ./scripts/setup-production.sh
 
-# Start all services via systemd
 start-production:
     #!/usr/bin/env bash
     echo "🚀 Starting all Aria services via systemd..."
     sudo systemctl start aria.target
     echo "✅ All services started! Use 'just status-production' to check status"
 
-# Stop all services via systemd  
 stop-production:
     #!/usr/bin/env bash
     echo "🛑 Stopping all Aria services via systemd..."
     sudo systemctl stop aria.target
     echo "✅ All services stopped!"
 
-# Check production service status
 status-production:
     #!/usr/bin/env bash
     echo "📊 Checking production service status..."
@@ -497,40 +498,34 @@ status-production:
         echo ""
     done
 
-# View production logs
 logs-production:
     #!/usr/bin/env bash
     echo "📋 Viewing Aria application logs..."
     sudo journalctl -u aria-app.service -f
 
-# View all production logs
 logs-all-production:
     #!/usr/bin/env bash
     echo "📋 Viewing all Aria service logs..."
     sudo journalctl -u aria-cockroachdb.service -u aria-openbao.service -u aria-seaweedfs.service -u aria-app.service -f
 
-# Restart production services
 restart-production:
     #!/usr/bin/env bash
     echo "🔄 Restarting all Aria services..."
     sudo systemctl restart aria.target
     echo "✅ All services restarted!"
 
-# Enable services to start on boot
 enable-production:
     #!/usr/bin/env bash
     echo "⚡ Enabling services to start on boot..."
     sudo systemctl enable aria.target
     echo "✅ Services will start automatically on boot"
 
-# Disable services from starting on boot
 disable-production:
     #!/usr/bin/env bash
     echo "⚡ Disabling services from starting on boot..."
     sudo systemctl disable aria.target
     echo "✅ Services will not start automatically on boot"
 
-# Show status of all native services
 show-services-status:
     #!/usr/bin/env bash
     echo "📊 Native Services Status:"
@@ -549,7 +544,6 @@ show-services-status:
     echo "SeaweedFS S3 Health: $(curl -sf http://localhost:8333 >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
     echo "Elixir App Health: $(curl -sf http://localhost:4000/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
 
-# Show logs for all native services
 show-all-logs:
     #!/usr/bin/env bash
     echo "📋 Native Services Logs:"
@@ -569,7 +563,6 @@ show-all-logs:
     echo "=== Elixir Application Logs ==="
     tail -30 aria_app.log 2>/dev/null || echo "No Elixir app logs available"
 
-# Check health of foundation core services
 check-foundation-core-health: start-foundation-core
     #!/usr/bin/env bash
     echo "Waiting for foundation core services to initialize (initial 5-second delay)..."
@@ -597,13 +590,11 @@ check-foundation-core-health: start-foundation-core
     curl -sf http://localhost:8080/health > /dev/null && echo "CockroachDB is healthy" || (echo "Error: CockroachDB health check failed." && exit 1)
     echo "OpenBao and CockroachDB health checks passed."
 
-# Foundation startup: build, start, and check health
 foundation-startup: start-foundation-core check-foundation-core-health
     #!/usr/bin/env bash
     echo "🚀 Foundation startup process completed!"
     echo "✅ All foundation services are running and healthy!"
 
-# Start foundation core services natively
 start-foundation-core: start-cockroach start-openbao start-elixir-app
     #!/usr/bin/env bash
     echo "🚀 Starting foundation core services..."
@@ -636,13 +627,11 @@ foundation-stop:
     pkill -f "cockroach start" 2>/dev/null || true
     echo "Core foundation services stopped."
 
-# Start all services natively
 start-all: start-cockroach start-openbao start-seaweedfs start-elixir-app
     #!/usr/bin/env bash
     echo "🚀 Starting all services (CockroachDB + OpenBao + SeaweedFS + Elixir app)..."
     echo "✅ All services started natively!"
 
-# Check health of all services
 check-all-health: up-all-and-check
     #!/usr/bin/env bash
     echo "Checking health of all running services..."
@@ -683,13 +672,11 @@ up-all-and-check: start-all check-foundation-core-health
     echo "SeaweedFS S3 gateway is responding."
     echo "All key services checked. Review logs if any issues."
 
-# Environment setup and management
 setup-env: install-elixir-erlang-env
 
 install-elixir-erlang-env:
     ./scripts/install-elixir-erlang.sh
 
-# Test 1: Basic Elixir compilation for all apps
 test-elixir-compile: install-elixir-erlang-env
     #!/usr/bin/env bash
     echo "🔨 Testing Elixir compilation for all apps..."
@@ -708,7 +695,6 @@ test-elixir-compile: install-elixir-erlang-env
     
     echo "✅ All apps compiled successfully!"
 
-# Test 2: Run unit tests for Elixir apps (no external dependencies)
 test-elixir-unit: start-cockroach test-elixir-compile
     #!/usr/bin/env bash
     echo "🧪 Running unit tests for all Elixir apps..."
@@ -731,7 +717,6 @@ test-elixir-unit: start-cockroach test-elixir-compile
         exit 1
     fi
 
-# Test 3: Test OpenBao connection (basic connectivity only)
 test-openbao-connection: start-cockroach start-openbao
     #!/usr/bin/env bash
     echo "🔐 Testing basic OpenBao connection..."
@@ -745,7 +730,6 @@ test-openbao-connection: start-cockroach start-openbao
     
     echo "✅ OpenBao connection test passed!"
 
-# Test 4: Test basic secret operations (requires OpenBao)
 test-basic-secrets: test-openbao-connection
     #!/usr/bin/env bash
     echo "🔑 Testing basic secret operations..."
@@ -801,7 +785,6 @@ test-basic-secrets: test-openbao-connection
         exit 1
     fi
 
-# Test 5: Test individual app - aria_security
 test-aria-security: test-elixir-compile
     #!/usr/bin/env bash
     echo "🛡️  Testing aria_security app specifically..."
@@ -830,7 +813,6 @@ test-aria-security: test-elixir-compile
     cd ../..
     echo "✅ aria_security tests passed!"
 
-# Test 6: Test individual app - aria_auth  
 test-aria-auth: test-elixir-compile
     #!/usr/bin/env bash
     echo "🔐 Testing aria_auth app specifically..."
@@ -859,7 +841,6 @@ test-aria-auth: test-elixir-compile
     cd ../..
     echo "✅ aria_auth tests passed!"
 
-# Test 7: Test SoftHSM integration using Elixir module
 test-softhsm-elixir: init-softhsm-elixir
     #!/usr/bin/env bash
     echo "🔧 Testing SoftHSM integration via AriaSecurity.SoftHSM module..."
@@ -921,7 +902,6 @@ test-softhsm-elixir: init-softhsm-elixir
     
     echo "✅ SoftHSM Elixir integration tests completed successfully!"
 
-# Generate a new varying root token for OpenBao
 generate-new-root-token: start-openbao
     #!/usr/bin/env bash
     echo "Generating a new varying root token for OpenBao..."
@@ -980,7 +960,6 @@ generate-new-root-token: start-openbao
         exit 1
     fi
 
-# Destroy and reinitialize OpenBao and SoftHSM (DESTRUCTIVE OPERATION)
 destroy-bao:
     #!/usr/bin/env bash
     echo "⚠️  WARNING: This will DESTROY all OpenBao data, secrets, and SoftHSM tokens!"
@@ -1050,7 +1029,6 @@ destroy-bao:
     echo "💥 OpenBao and SoftHSM destroyed successfully!"
     echo "📝 Run 'just foundation-startup' to reinitialize with completely new HSM and OpenBao setup"
 
-# Rekey OpenBao unseal keys and optionally regenerate SoftHSM tokens
 rekey-bao: foundation-startup
     #!/usr/bin/env bash
     echo "🔐 Rekeying OpenBao with HSM seal..."
@@ -1169,7 +1147,6 @@ rekey-bao: foundation-startup
         exit 1
     fi
 
-# Regenerate SoftHSM tokens (DESTRUCTIVE for HSM keys)
 rekey-softhsm:
     #!/usr/bin/env bash
     echo "🔐 Regenerating SoftHSM tokens..."
