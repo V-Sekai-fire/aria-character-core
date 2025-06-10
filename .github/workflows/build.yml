@@ -32,7 +32,7 @@ jobs:
         
       - name: Install Erlang and Elixir
         run: |
-          just install-elixir-erlang-env
+          just install-deps
 
       - name: Start Foundation Layer Services Natively
         env:
@@ -40,10 +40,7 @@ jobs:
           OPENBAO_PKCS11_SO_PIN: ${{ secrets.OPENBAO_PKCS11_SO_PIN }}
           OPENBAO_PKCS11_SLOT: ${{ secrets.OPENBAO_PKCS11_SLOT }}
         run: |
-          just install-ubuntu-deps
-          just install-cockroach
-          just install-openbao
-          just install-seaweedfs
+          # All installations are handled by 'just install-deps'
           just start-foundation-core
 
       - name: Run Unit Tests
