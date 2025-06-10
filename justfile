@@ -39,6 +39,7 @@ test-unit-ci: test-elixir-compile
 test-ci-fast: test-elixir-compile test-unit-ci test-aria-security test-aria-auth
 
 install-deps:
+    #!/usr/bin/env bash
     if [ "{{os()}}" = "macos" ]; then
         echo "📦 Installing dependencies for macOS..."
         if ! command -v brew >/dev/null 2>&1; then
