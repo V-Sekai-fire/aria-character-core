@@ -40,7 +40,7 @@ defmodule AriaEngine.PlanningTest do
       # Manual plan
       plan = [{:move, ["room2"]}, {:move, ["room3"]}]
 
-      case AriaEngine.execute_plan(domain, initial_state, plan) do
+      case AriaEngine.execute_plan(domain, initial_state, plan, 0) do
         {:ok, final_state} ->
           assert AriaEngine.get_fact(final_state, "location", "player") == "room3"
         {:error, reason} ->
