@@ -6,12 +6,13 @@ import Config
 # Development environment configuration
 config :logger, level: :debug
 
-# Configure development databases (PostgreSQL adapter, CockroachDB compatible)
+# Configure development databases (PostgreSQL adapter for CockroachDB compatibility)
 # Main repository for general data
 config :aria_data, AriaData.Repo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_data_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
@@ -20,9 +21,10 @@ config :aria_data, AriaData.Repo,
 
 # Authentication repository for user data
 config :aria_data, AriaData.AuthRepo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_auth_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
@@ -31,9 +33,10 @@ config :aria_data, AriaData.AuthRepo,
 
 # Queue repository for background jobs
 config :aria_data, AriaData.QueueRepo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_queue_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
@@ -42,9 +45,10 @@ config :aria_data, AriaData.QueueRepo,
 
 # Storage repository for file metadata
 config :aria_data, AriaData.StorageRepo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_storage_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
@@ -53,9 +57,10 @@ config :aria_data, AriaData.StorageRepo,
 
 # Monitor repository for telemetry data
 config :aria_data, AriaData.MonitorRepo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_monitor_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
@@ -64,9 +69,10 @@ config :aria_data, AriaData.MonitorRepo,
 
 # Engine repository for planning data
 config :aria_data, AriaData.EngineRepo,
-  username: "postgres",
-  password: "postgres",
+  username: "root",
+  password: "",
   hostname: "localhost",
+  port: 26257,
   database: "aria_engine_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
@@ -120,7 +126,7 @@ config :aria_storage,
 
 # Authentication Service development configuration
 config :aria_auth,
-  jwt_secret: "development_jwt_secret_key",
+  macaroon_secret: "development_macaroon_secret_key",
   session_ttl: 3600,
   webrtc_enabled: false
 

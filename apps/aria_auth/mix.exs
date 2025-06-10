@@ -27,19 +27,16 @@ defmodule AriaAuth.MixProject do
 
   defp deps do
     [
-      # Authentication and authorization
-      {:guardian, "~> 2.3"},
-      {:joken, "~> 2.6"},
+      # Macaroon-based authentication (replacing JWT)
+      {:macfly, "~> 0.2.20"},
+      
+      # Simple password hashing
       {:bcrypt_elixir, "~> 3.0"},
       
-      # OAuth2 and OIDC
-      {:oauth2, "~> 2.1"},
-      {:oidc, "~> 0.5.0"},
-      
-      # WebRTC for real-time identity verification
+      # WebRTC for real-time identity verification  
       {:ex_webrtc, "~> 0.3"},
       
-      # HTTP client for external identity providers
+      # HTTP client for external providers
       {:req, "~> 0.4"},
       
       # Data persistence (dependency on aria_data)

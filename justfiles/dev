@@ -1,0 +1,237 @@
+# Development environment recipes for Aria Character Core
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+import "install"
+import "services"
+
+setup-env: install-elixir-erlang-env
+
+dev-setup: install-deps install-elixir-erlang-env foundation-startup
+    #!/usr/bin/env bash
+    echo "🚀 Setting up development environment (deps + environment + foundation)..."
+    echo "✅ Development environment setup complete!"
+
+foundation-startup: start-foundation-core check-foundation-core-health
+
+start-foundation-core: start-cockroach start-openbao start-elixir-app
+
+foundation-status: foundation-startup
+    #!/usr/bin/env bash
+    echo "📊 Foundation services status:"
+    echo ""
+    echo "CockroachDB: $(pgrep -f 'cockroach start' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "OpenBao: $(pgrep -f 'bao server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "Elixir App: $(pgrep -f 'mix phx.server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+
+foundation-logs: foundation-startup
+    #!/usr/bin/env bash
+    echo "Showing recent logs for foundation services..."
+    echo "--- CockroachDB logs ---"
+    tail -50 /var/log/cockroach/cockroach.log 2>/dev/null || echo "No CockroachDB logs available"
+    echo ""
+    echo "--- OpenBao logs ---"
+    tail -50 /opt/bao/logs/openbao.log 2>/dev/null || echo "No OpenBao logs available"
+    echo ""
+    echo "--- Elixir App logs ---"
+    tail -50 aria_app.log 2>/dev/null || echo "No Elixir app logs available"
+
+foundation-stop:
+    #!/usr/bin/env bash
+    echo "Stopping core foundation services..."
+    pkill -f "mix phx.server" 2>/dev/null || true
+    pkill -f "bao server" 2>/dev/null || true
+    pkill -f "cockroach start" 2>/dev/null || true
+    echo "Core foundation services stopped."
+
+check-foundation-core-health: start-foundation-core
+    #!/usr/bin/env bash
+    echo "Checking Aria App health..."
+    curl -sf http://localhost:4000/health > /dev/null && echo "Aria App is healthy" || (echo "Error: Aria App health check failed." && exit 1)
+    echo "Checking OpenBao health..."
+    curl -sf http://localhost:8200/v1/sys/health > /dev/null && echo "OpenBao is healthy" || (echo "Error: OpenBao health check failed." && exit 1)
+    echo "Checking CockroachDB health..."
+    curl -sf http://localhost:8080/health > /dev/null && echo "CockroachDB is healthy" || (echo "Error: CockroachDB health check failed." && exit 1)
+    echo "--- Recent logs (CockroachDB) ---"
+    tail -20 /var/log/cockroach/cockroach.log 2>/dev/null || echo "No CockroachDB logs available"
+    echo "--- Recent logs (OpenBao) ---"
+    tail -20 /opt/bao/logs/openbao.log 2>/dev/null || echo "No OpenBao logs available"
+    echo "--- Recent logs (Elixir App) ---"
+    tail -20 aria_app.log 2>/dev/null || echo "No Elixir app logs available"
+
+check-all-health: up-all-and-check
+    #!/usr/bin/env bash
+    echo "Checking health of all running services..."
+    echo "This might take some time. Services are checked based on their native status."
+    echo ""
+    echo "Service Status:"
+    echo "CockroachDB: $(pgrep -f 'cockroach start' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "OpenBao: $(pgrep -f 'bao server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "SeaweedFS: $(pgrep -f 'weed' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "Elixir App: $(pgrep -f 'mix phx.server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "--- Performing basic health checks for key services (OpenBao, CockroachDB, SeaweedFS S3) ---"
+    just check-foundation-core-health
+    echo "Checking SeaweedFS S3 gateway health..."
+    timeout 60s bash -c \
+      'until curl -sf http://localhost:8333 >/dev/null 2>&1; do \
+        echo "Waiting for SeaweedFS S3 gateway to be healthy..."; \
+        sleep 5; \
+      done || (echo "Error: SeaweedFS S3 gateway health check failed or timed out." && exit 1)'
+    echo "SeaweedFS S3 gateway is responding."
+    echo "All key services checked. Review logs if any issues."
+
+up-all-and-check: start-all check-foundation-core-health
+    #!/usr/bin/env bash
+    echo "Waiting for all services to initialize (90 seconds)..."
+    sleep 90
+    echo "--- Current status of all native services: ---"
+    echo "CockroachDB: $(pgrep -f 'cockroach start' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "OpenBao: $(pgrep -f 'bao server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "SeaweedFS Master: $(pgrep -f 'weed master' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "SeaweedFS Volume: $(pgrep -f 'weed volume' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "SeaweedFS Filer: $(pgrep -f 'weed filer' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "SeaweedFS S3: $(pgrep -f 'weed s3' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo "Elixir App: $(pgrep -f 'mix phx.server' >/dev/null && echo 'RUNNING' || echo 'STOPPED')"
+    echo ""
+    echo "Health Check Results:"
+    echo "CockroachDB Health: $(curl -sf http://localhost:8080/health >/dev/null 2>&1 && echo 'HEALTHY' || echo 'UNHEALTHY')"
+    echo "OpenBao Health: $(curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1 && echo 'HEALTHY' || echo 'UNHEALTHY')"
+    echo "SeaweedFS S3 Health: $(curl -sf http://localhost:8333 >/dev/null 2>&1 && echo 'HEALTHY' || echo 'UNHEALTHY')"
+    echo "Elixir App Health: $(curl -sf http://localhost:4000/health >/dev/null 2>&1 && echo 'HEALTHY' || echo 'UNHEALTHY')"
+
+generate-new-root-token: start-openbao
+    #!/usr/bin/env bash
+    echo "Generating a new varying root token for OpenBao..."
+    export BAO_ADDR="http://localhost:8200"
+    export PATH="/usr/bin:/bin:/sbin:/usr/sbin:${PATH}"
+    
+    # Get the current token to use for authentication
+    CURRENT_TOKEN=""
+    if [ -f /opt/bao/data/root_token.txt ]; then
+        CURRENT_TOKEN=$(cat /opt/bao/data/root_token.txt 2>/dev/null || echo "")
+    fi
+    
+    if [ -z "$CURRENT_TOKEN" ]; then
+        CURRENT_TOKEN="root"
+    fi
+    
+    echo "🔄 Generating new root token with current token: $CURRENT_TOKEN"
+    
+    # Generate a new root token
+    NEW_TOKEN=$(curl -sf -H "X-Vault-Token: $CURRENT_TOKEN" \
+                     -X PUT \
+                     "$BAO_ADDR/v1/auth/token/create" \
+                     -d '{"policies":["root"],"ttl":"8760h","renewable":true}' | \
+                jq -r '.auth.client_token' 2>/dev/null || echo "")
+    
+    if [ -n "$NEW_TOKEN" ] && [ "$NEW_TOKEN" != "null" ]; then
+        echo "✅ New root token generated: $NEW_TOKEN"
+        
+        # Save the new token
+        sudo mkdir -p /opt/bao/data
+        echo "$NEW_TOKEN" | sudo tee /opt/bao/data/root_token.txt >/dev/null
+        sudo chown bao:bao /opt/bao/data/root_token.txt
+        
+        echo "💾 Token saved to /opt/bao/data/root_token.txt"
+        echo "🔧 Set BAO_TOKEN=$NEW_TOKEN to use this token"
+    else
+        echo "❌ Failed to generate new root token"
+        echo "   Current token may be invalid or OpenBao may not be properly initialized"
+        exit 1
+    fi
+
+# Start CockroachDB manually on macOS (alternative to start-cockroach)
+start-cockroach-macos:
+    #!/usr/bin/env bash
+    echo "🗄️  Starting CockroachDB on macOS..."
+    
+    # Check if CockroachDB is already running
+    if pgrep -f "cockroach start" > /dev/null; then
+        echo "✅ CockroachDB is already running"
+        exit 0
+    fi
+    
+    # Create data directory
+    mkdir -p cockroach-data
+    
+    # Start CockroachDB in the background
+    echo "🚀 Starting CockroachDB in single-node mode..."
+    cockroach start-single-node \
+        --insecure \
+        --store=cockroach-data \
+        --listen-addr=localhost:26257 \
+        --http-addr=localhost:8080 \
+        --background
+    
+    # Wait for CockroachDB to be ready
+    echo "⏳ Waiting for CockroachDB to be ready..."
+    timeout 30s bash -c 'until curl -sf http://localhost:8080/health >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ CockroachDB failed to start" && exit 1)
+    
+    echo "✅ CockroachDB started successfully!"
+    
+    # Initialize databases
+    echo "🗄️  Initializing databases..."
+    cockroach sql --insecure --host=localhost:26257 --file=scripts/init_databases.sql
+    echo "✅ Databases initialized!"
+
+# Stop CockroachDB on macOS
+stop-cockroach-macos:
+    #!/usr/bin/env bash
+    echo "🛑 Stopping CockroachDB on macOS..."
+    pkill -f "cockroach start" || echo "CockroachDB was not running"
+    echo "✅ CockroachDB stopped!"
+
+# Database information helper
+show-db-info:
+    #!/usr/bin/env bash
+    echo "🗄️  Database Configuration:"
+    echo "   Database: CockroachDB v21.1 (Oxide Computing fork)"
+    echo "   Protocol: PostgreSQL-compatible"
+    echo "   Connection: postgresql://root@localhost:26257/aria_character_core"
+    echo ""
+    if command -v cockroach >/dev/null 2>&1; then
+        echo "📋 Checking installed CockroachDB version..."
+        if cockroach version 2>/dev/null; then
+            echo "✅ CockroachDB is properly installed and working"
+        else
+            echo "❌ CockroachDB binary found but not working (architecture mismatch?)"
+            echo "   Try running 'just install-cockroach' to reinstall the correct version"
+        fi
+    else
+        echo "❌ CockroachDB not installed. Run 'just install-cockroach' to install."
+    fi
+
+# Test database connectivity and show database info
+test-db:
+    @echo "=== Testing CockroachDB Connectivity ==="
+    @echo "Expected: CockroachDB running on localhost:26257"
+    @echo "User: root (no password)"
+    @echo ""
+    @if command -v cockroach >/dev/null 2>&1; then \
+        echo "✓ CockroachDB CLI found"; \
+        echo "Testing connection..."; \
+        cockroach sql --insecure --host=localhost:26257 --execute="SELECT version();" 2>/dev/null || echo "✗ Cannot connect to CockroachDB"; \
+    else \
+        echo "✗ CockroachDB CLI not found"; \
+    fi
+    @echo ""
+    @echo "Current Elixir database configuration:"
+    @echo "Port: 26257 (CockroachDB)"
+    @echo "Adapter: Ecto.Adapters.Postgres (PostgreSQL-compatible)"
+    @echo "Databases: aria_data_dev, aria_auth_dev, aria_queue_dev, aria_storage_dev, aria_monitor_dev, aria_engine_dev"
+
+# Show database configuration summary
+show-db-config:
+    @echo "=== Database Configuration Summary ==="
+    @echo "Database: CockroachDB (PostgreSQL-compatible)"
+    @echo "Host: localhost:26257"
+    @echo "User: root (no password)"
+    @echo "Protocol: PostgreSQL wire protocol"
+    @echo ""
+    @echo "Development Databases:"
+    @echo "  - aria_data_dev (main data)"
+    @echo "  - aria_auth_dev (authentication)" 
+    @echo "  - aria_queue_dev (background jobs)"
+    @echo "  - aria_storage_dev (file metadata)"
+    @echo "  - aria_monitor_dev (telemetry)"
+    @echo "  - aria_engine_dev (planning data)"
