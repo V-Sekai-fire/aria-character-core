@@ -3,74 +3,122 @@
 
 defmodule AriaSecurity.SecretsTest do
   use ExUnit.Case, async: true
-
+  
   alias AriaSecurity.Secrets
-  alias AriaSecurity.SecretsRepo
-  alias AriaSecurity.Secret
-  alias Jason # Needed for encoding/decoding test data
-
-  setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(SecretsRepo)
-    on_exit fn -> Ecto.Adapters.SQL.Sandbox.checkin(SecretsRepo) end
+  
+  describe "Security Service - OpenBao integration via Vaultex" do
+    test "can initialize connection to OpenBao" do
+      # Given: OpenBao is configured via valid_config (uses ENV variables)
+      config = valid_config()
+      
+      # When: We attempt to initialize the connection
+      result = Secrets.init(config)
+      
+      # Then: The connection should be established successfully
+      assert {:ok, _status} = result
+    end
+    
+    test "fails gracefully when OpenBao is unavailable" do
+      # Given: OpenBao is not running or unreachable
+      config = %{
+        host: "localhost",
+        port: 9999,  # Wrong port
+        scheme: "http",
+        auth: %{method: :token, credentials: %{token: "test-token"}}
+      }
+      
+      # When: We attempt to initialize the connection
+      result = Secrets.init(config)
+      
+      # Then: It should return a connection error
+      assert {:error, _reason} = result
+    end
+    
+    test "can store and retrieve a secret" do
+      # Given: A connected OpenBao instance
+      config = valid_config()
+      {:ok, _status} = Secrets.init(config)
+      
+      secret_path = "secret/aria/test/database"
+      secret_data = %{
+        username: "test_user",
+        password: "super_secret_password"
+      }
+      
+      # When: We store a secret
+      store_result = Secrets.write(secret_path, secret_data)
+      
+      # Then: The secret should be stored successfully
+      assert {:ok, _response} = store_result
+      
+      # And When: We retrieve the secret
+      get_result = Secrets.read(secret_path)
+      
+      # Then: We should get back the same data
+      assert {:ok, retrieved_data} = get_result
+      assert retrieved_data["username"] == "test_user"
+      assert retrieved_data["password"] == "super_secret_password"
+    end
+    
+    test "returns error for non-existent secret" do
+      # Given: A connected OpenBao instance
+      config = valid_config()
+      {:ok, _status} = Secrets.init(config)
+      
+      # When: We try to get a non-existent secret
+      result = Secrets.read("secret/aria/nonexistent/secret")
+      
+      # Then: It should return not found
+      assert {:error, _reason} = result
+    end
   end
-
-  describe "Secret management with EctoBackend mimicking Vaultex API" do
-    test "can write and read a secret" do
-      path = "secret/data/my_app/api_key"
-      data = %{api_key: "mock_api_key", other_data: "value"}
-
-      # Write the secret
-      assert :ok = Secrets.write(path, data)
-
-      # Read the secret
-      assert {:ok, %{"data" => ^data}} = Secrets.read(path)
-    end
-
-    test "returns :not_found for a non-existent secret" do
-      assert {:error, :not_found} = Secrets.read("non_existent_path")
-    end
-
-    test "can update an existing secret" do
-      path = "secret/data/update_key"
-      initial_data = %{field1: "initial_value"}
-      updated_data = %{field1: "new_value", field2: "added"}
-
-      # Write initial secret
-      assert :ok = Secrets.write(path, initial_data)
-      assert {:ok, %{"data" => ^initial_data}} = Secrets.read(path)
-
-      # Update the secret
-      assert :ok = Secrets.write(path, updated_data)
-      assert {:ok, %{"data" => ^updated_data}} = Secrets.read(path)
-    end
-
-    test "can delete a secret" do
-      path = "secret/data/delete_key"
-      data = %{to_delete: "value"}
-
-      # Write the secret
-      assert :ok = Secrets.write(path, data)
-      assert {:ok, %{"data" => ^data}} = Secrets.read(path)
-
-      # Delete the secret
-      assert :ok = Secrets.delete(path)
-      assert {:error, :not_found} = Secrets.read(path)
-    end
-
-    test "returns :not_found when deleting a non-existent secret" do
-      assert {:error, :not_found} = Secrets.delete("non_existent_delete_path")
-    end
-
-    test "can list secrets" do
-      # Clear existing secrets for a clean test
-      SecretsRepo.delete_all(Secret)
-
-      assert :ok = Secrets.write("secret/data/key1", %{val: 1})
-      assert :ok = Secrets.write("secret/data/key2", %{val: 2})
-      assert :ok = Secrets.write("secret/data/key3", %{val: 3})
-
-      {:ok, %{"keys" => listed_keys}} = Secrets.list("secret/data")
-      assert Enum.sort(listed_keys) == ["secret/data/key1", "secret/data/key2", "secret/data/key3"]
-    end
+  
+  defp valid_config do
+    # Try multiple paths to find the token file
+    token_paths = [
+      "../../.ci/openbao_root_token.txt",
+      ".ci/openbao_root_token.txt",
+      "/tmp/openbao_root_token.txt"
+    ]
+    
+    token = Enum.find_value(token_paths, fn path ->
+      case File.read(path) do
+        {:ok, content} -> 
+          IO.puts("DEBUG: Found token file at #{path}")
+          IO.puts("DEBUG: Token file content: #{inspect(content)}")
+          
+          # Extract token from "openbao-1  | Root Token: root" format
+          extracted = content
+          |> String.trim()
+          |> String.split("Root Token: ")
+          |> List.last()
+          |> String.trim()
+          
+          IO.puts("DEBUG: Extracted token: #{inspect(extracted)}")
+          extracted
+        {:error, reason} -> 
+          IO.puts("DEBUG: Failed to read #{path}: #{inspect(reason)}")
+          nil
+      end
+    end)
+    
+    # Fallback to environment variable or default
+    final_token = token || System.get_env("OPENBAO_TOKEN", "dev-token")
+    IO.puts("DEBUG: Final token to use: #{inspect(final_token)}")
+    
+    config = %{
+      host: System.get_env("OPENBAO_HOST", "localhost"),
+      port: String.to_integer(System.get_env("OPENBAO_PORT", "8200")),
+      scheme: System.get_env("OPENBAO_SCHEME", "http"),
+      auth: %{
+        method: :token, 
+        credentials: %{
+          token: final_token
+        }
+      }
+    }
+    
+    IO.puts("DEBUG: Final config: #{inspect(config)}")
+    config
   end
 end

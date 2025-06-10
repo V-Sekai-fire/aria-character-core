@@ -36,9 +36,5 @@ config :telemetry_poller, :default,
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}
 
-# Configure Ecto.Cloak for aria_security
-config :aria_security, Ecto.Cloak,
-  cipher: {Ecto.Cloak.Ciphers.AES256GCM, tag: "AriaSecurity", key: "your-super-secret-key-of-32-bytes-"}
-
 # Import environment specific config files
 import_config "#{config_env()}.exs"
