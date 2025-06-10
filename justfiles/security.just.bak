@@ -2,8 +2,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-import "install"
-import "services"
+import "orchestration.just"
 
 destroy-bao:
     #!/usr/bin/env bash
@@ -36,8 +35,9 @@ destroy-bao:
     echo "🔐 All seal keys have been securely destroyed in SoftHSM"
     echo "📝 Run 'just foundation-startup' to reinitialize with completely new HSM and OpenBao setup"
 
-rekey-bao: foundation-startup
+rekey-bao:
     #!/usr/bin/env bash
+    just foundation-startup
     echo "🔐 Rekeying OpenBao with new HSM seal keys..."
     export VAULT_ADDR="http://localhost:8200"
     

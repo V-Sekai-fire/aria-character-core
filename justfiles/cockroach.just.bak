@@ -1,0 +1,60 @@
+# CockroachDB service management for Aria Character Core
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+import "install.just"
+
+start-cockroach: install-cockroach
+    #!/usr/bin/env bash
+    echo "🗄️  Starting CockroachDB..."
+    
+    if [ "{{os()}}" = "linux" ]; then
+        # Check if CockroachDB is already running
+        if pgrep -f "cockroach start" > /dev/null; then
+            echo "✅ CockroachDB is already running"
+            exit 0
+        fi
+        
+        # Create data directory
+        sudo mkdir -p /var/lib/cockroach/data
+        sudo chown cockroach:cockroach /var/lib/cockroach/data
+        
+        # Start CockroachDB in the background
+        echo "🚀 Starting CockroachDB in single-node mode..."
+        sudo -u cockroach nohup cockroach start-single-node \
+            --insecure \
+            --store=/var/lib/cockroach/data \
+            --listen-addr=localhost:26257 \
+            --http-addr=localhost:8080 \
+            --background
+        
+        # Wait for CockroachDB to be ready
+        echo "⏳ Waiting for CockroachDB to be ready..."
+        timeout 30s bash -c 'until curl -sf http://localhost:8080/health >/dev/null 2>&1; do echo "Waiting..."; sleep 2; done' || (echo "❌ CockroachDB failed to start" && exit 1)
+        
+        echo "✅ CockroachDB started successfully!"
+    else
+        echo "⚠️  CockroachDB service management only supported on Linux"
+        echo "   On macOS, consider using 'cockroach start-single-node' manually"
+    fi
+
+stop-cockroach:
+    #!/usr/bin/env bash
+    echo "🛑 Stopping CockroachDB..."
+    pkill -f "cockroach start" 2>/dev/null || true
+    echo "✅ CockroachDB stopped"
+
+cockroach-status:
+    #!/usr/bin/env bash
+    echo "📊 CockroachDB Status:"
+    echo "Process: $(pgrep -f 'cockroach start' >/dev/null && echo '✅ RUNNING' || echo '❌ STOPPED')"
+    echo "Health: $(curl -sf http://localhost:8080/health >/dev/null 2>&1 && echo '✅ HEALTHY' || echo '❌ UNHEALTHY')"
+    if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
+        echo "🌐 Admin UI: http://localhost:8080"
+        echo "🔗 SQL: postgresql://root@localhost:26257/defaultdb?sslmode=disable"
+    fi
+
+cockroach-logs:
+    #!/usr/bin/env bash
+    echo "📋 CockroachDB Logs:"
+    tail -30 /var/log/cockroach/cockroach.log 2>/dev/null || echo "No CockroachDB logs available"

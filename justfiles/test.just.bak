@@ -2,8 +2,8 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-import "install"
-import "services"
+import "install.just"
+import "orchestration.just"
 
 test-elixir-compile: install-elixir-erlang-env
     #!/usr/bin/env bash
