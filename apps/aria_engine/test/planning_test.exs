@@ -21,7 +21,7 @@ defmodule AriaEngine.PlanningTest do
       goals = [{"has", "player", "sword"}]
 
       # This will fail without proper task methods, but let's test the structure
-      case AriaEngine.plan(domain, initial_state, goals, verbose: 1) do
+      case AriaEngine.plan(domain, initial_state, goals, verbose: 0) do
         {:ok, _plan} ->
           # Planning succeeded
           :ok
@@ -60,7 +60,7 @@ defmodule AriaEngine.PlanningTest do
       # Task: get the sword
       tasks = [{"get_item", ["sword"]}]
 
-      case AriaEngine.plan(domain, initial_state, tasks, verbose: 1) do
+      case AriaEngine.plan(domain, initial_state, tasks, verbose:0) do
         {:ok, plan} ->
           assert length(plan) == 2
           assert {:move, ["room2"]} in plan

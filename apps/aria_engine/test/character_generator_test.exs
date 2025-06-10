@@ -3,14 +3,10 @@
 
 defmodule AriaEngine.CharacterGeneratorTest do
   use ExUnit.Case
-  alias AriaEngine.{Domain, State}
-
-  # Generate a unique character ID using UUID
   defp generate_character_id do
     UUID.uuid4()
   end
 
-  # Character Generation Sliders Data (ported from Python GTPyhop system)
   @character_sliders %{
     "species" => %{
       type: "categorical",
@@ -117,18 +113,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
         "AVATAR_GENDER_APPEARANCE_OTHER"
       ],
       default: "AVATAR_GENDER_APPEARANCE_FEMININE"
-    },
-    # Legacy sliders from previous implementation (keeping for compatibility)
-    "species_base_type" => %{
-      type: "categorical",
-      options: [
-        "SPECIES_BASE_HUMANOID",
-        "SPECIES_BASE_SEMI_HUMANOID",
-        "SPECIES_BASE_ANIMAL",
-        "SPECIES_BASE_ROBOTIC_CYBORG",
-        "SPECIES_BASE_OTHER"
-      ],
-      default: "SPECIES_BASE_HUMANOID"
     },
     "humanoid_archetype" => %{
       type: "categorical",
@@ -700,11 +684,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
       # Verify domain has the necessary actions and methods
       assert map_size(domain.actions) > 0
       assert map_size(domain.task_methods) > 0
-
-      IO.puts("\n=== CHARACTER GENERATION DOMAIN BUILT ===")
-      IO.puts("Actions: #{map_size(domain.actions)}")
-      IO.puts("Methods: #{map_size(domain.task_methods)}")
-      IO.puts("Sliders available: #{map_size(@character_sliders)}")
     end
 
     test "generates character with verbose planning - level 1" do
@@ -718,56 +697,36 @@ defmodule AriaEngine.CharacterGeneratorTest do
       |> AriaEngine.set_fact("character_id", "current", char_id)
       |> AriaEngine.set_fact("random_seed", "current", 12345)
 
-      IO.puts("\n#{String.duplicate("=", 80)}")
-      IO.puts("CHARACTER GENERATION - VERBOSE LEVEL 1")
-      IO.puts("#{String.duplicate("=", 80)}")
-
-      IO.puts("Initial state:")
-      IO.inspect(initial_state.data, label: "State")
-
       # High-level task: generate a complete character WITH CONSTRAINTS
       tasks = [{"generate_character_with_constraints", [char_id, "fantasy_cyber_preset"]}]
 
-      IO.puts("\nTasks: #{inspect(tasks)}")
-
       case AriaEngine.plan(domain, initial_state, tasks, verbose: 0) do
         {:ok, plan} ->
-          IO.puts("✓ Character generation plan created with #{length(plan)} steps:")
-          Enum.with_index(plan, 1)
-          |> Enum.each(fn {step, index} ->
-            IO.puts("  #{index}. #{inspect(step)}")
-          end)
-
           # Execute the plan
-          IO.puts("\nExecuting character generation plan...")
           case AriaEngine.execute_plan(domain, initial_state, plan) do
             {:ok, final_state} ->
-              IO.puts("✓ Character generation completed successfully!")
-
               # Show character attributes that were set
               character_facts = final_state.data
               |> Enum.filter(fn {{category, _}, _} ->
                 String.starts_with?(category, "character_")
               end)
 
-              IO.puts("\nGenerated Character Attributes:")
-              Enum.each(character_facts, fn {{category, attribute}, value} ->
-                IO.puts("  #{category}.#{attribute}: #{value}")
-              end)
+              # Verify we have character attributes
+              assert length(character_facts) > 0
 
               # Show the final prompt if generated
               prompt = AriaEngine.get_fact(final_state, "generated_prompt", char_id)
               if prompt do
-                IO.puts("\nGenerated Character Prompt:")
-                IO.puts("#{prompt}")
+                assert is_binary(prompt)
+                assert String.length(prompt) > 0
               end
 
             {:error, reason} ->
-              IO.puts("✗ Character generation failed: #{reason}")
+              flunk("Character generation failed: #{reason}")
           end
 
         {:error, reason} ->
-          IO.puts("✗ Planning failed: #{reason}")
+          flunk("Planning failed: #{reason}")
       end
     end
 
@@ -782,25 +741,19 @@ defmodule AriaEngine.CharacterGeneratorTest do
       |> AriaEngine.set_fact("character_id", "current", char_id)
       |> AriaEngine.set_fact("random_seed", "current", 67890)
 
-      IO.puts("\n#{String.duplicate("=", 80)}")
-      IO.puts("CHARACTER GENERATION - VERBOSE LEVEL 2 (DETAILED)")
-      IO.puts("#{String.duplicate("=", 80)}")
-
       # More complex task: generate character with specific customizations
       tasks = [
         {"configure_character_presets", [char_id, "cyber_cat_person"]},
         {"generate_detailed_prompt", [char_id]}
       ]
 
-      IO.puts("Tasks: #{inspect(tasks)}")
-
       case AriaEngine.plan(domain, initial_state, tasks, verbose: 0) do
         {:ok, plan} ->
-          IO.puts("\n✓ Detailed character generation plan created!")
-          IO.puts("Plan steps: #{inspect(plan)}")
+          assert is_list(plan)
+          assert length(plan) > 0
 
         {:error, reason} ->
-          IO.puts("✗ Detailed planning failed: #{reason}")
+          flunk("Detailed planning failed: #{reason}")
       end
     end
 
@@ -814,12 +767,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
       |> AriaEngine.set_fact("generation_session", "active", true)
       |> AriaEngine.set_fact("character_id", "current", char_id)
 
-      IO.puts("\n#{String.duplicate("=", 80)}")
-      IO.puts("CHARACTER CUSTOMIZATION WORKFLOW")
-      IO.puts("#{String.duplicate("=", 80)}")
-
-      # Show available slider categories
-      IO.puts("Available character configuration categories:")
+      # Group sliders by category for validation
       slider_categories = @character_sliders
       |> Enum.group_by(fn {key, _} ->
         cond do
@@ -837,14 +785,8 @@ defmodule AriaEngine.CharacterGeneratorTest do
         end
       end)
 
-      Enum.each(slider_categories, fn {category, sliders} ->
-        IO.puts("  #{category}: #{length(sliders)} options")
-        if length(sliders) <= 5 do
-          Enum.each(sliders, fn {key, config} ->
-            IO.puts("    - #{key}: #{length(config.options)} choices (default: #{config.default})")
-          end)
-        end
-      end)
+      # Verify we have slider categories
+      assert map_size(slider_categories) > 0
 
       # Test customization task
       customization_tasks = [
@@ -854,20 +796,12 @@ defmodule AriaEngine.CharacterGeneratorTest do
         {"finalize_character_prompt", [char_id]}
       ]
 
-      IO.puts("\nCustomization workflow:")
-      Enum.with_index(customization_tasks, 1)
-      |> Enum.each(fn {task, index} ->
-        IO.puts("  #{index}. #{inspect(task)}")
-      end)
-
       case AriaEngine.plan(domain, initial_state, customization_tasks, verbose: 0) do
         {:ok, plan} ->
-          IO.puts("\n✓ Customization plan created with #{length(plan)} steps")
+          assert length(plan) > 0
 
           case AriaEngine.execute_plan(domain, initial_state, plan) do
             {:ok, final_state} ->
-              IO.puts("✓ Character customization completed!")
-
               # Show configured attributes
               configured_attrs = final_state.data
               |> Enum.filter(fn {{category, _}, _} ->
@@ -875,17 +809,15 @@ defmodule AriaEngine.CharacterGeneratorTest do
               end)
               |> Enum.sort()
 
-              IO.puts("\nConfigured Character Attributes:")
-              Enum.each(configured_attrs, fn {{category, attribute}, value} ->
-                IO.puts("  #{String.replace(category, "character_", "")}.#{attribute}: #{value}")
-              end)
+              # Verify we have configured attributes
+              assert length(configured_attrs) > 0
 
             {:error, reason} ->
-              IO.puts("✗ Customization execution failed: #{reason}")
+              flunk("Customization execution failed: #{reason}")
           end
 
         {:error, reason} ->
-          IO.puts("✗ Customization planning failed: #{reason}")
+          flunk("Customization planning failed: #{reason}")
       end
     end
 
@@ -1021,7 +953,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
       assert prompt1 == prompt2
 
       # Different seeds should produce different results (high probability)
-      {attrs3, prompt3} = workflow_generate_prompt_only(1000)
+      {attrs3, _prompt3} = workflow_generate_prompt_only(1000)
       assert attrs1 != attrs3  # Very likely to be different
     end
 
@@ -1055,42 +987,21 @@ defmodule AriaEngine.CharacterGeneratorTest do
     end
 
     test "end-to-end text prompt generation workflow" do
-      # This is the main integration test showing complete prompt-only functionality
-      IO.puts("\n=== AriaEngine Character Prompt Generation Demo ===")
-
-      # Generate a single prompt
       {attributes, prompt} = workflow_generate_prompt_only()
-
-      IO.puts("\nGenerated Character Attributes:")
       for {key, value} <- attributes do
         description = if key == "detail_level" do
           to_string(value)
         else
           Map.get(@option_descriptions, value, value)
         end
-        IO.puts("  #{key}: #{value} (#{description})")
       end
-
-      IO.puts("\nGenerated Prompt:")
-      IO.puts("  #{prompt}")
-
-      # Generate a batch of prompts
-      IO.puts("\n=== Batch Generation Demo ===")
       batch_results = workflow_generate_prompt_batch(3)
-
-      for {result, index} <- Enum.with_index(batch_results, 1) do
-        IO.puts("\nPrompt #{index} (ID: #{result.prompt_id}, Seed: #{result.seed}):")
-        IO.puts("  #{result.prompt}")
-      end
-
       # Verify all results are valid
       assert length(batch_results) == 3
       assert Enum.all?(batch_results, fn result ->
         String.contains?(result.prompt, "Full body shot") and
         String.contains?(result.prompt, "3D modeling concept art")
       end)
-
-      IO.puts("\n=== Prompt Generation Test Completed Successfully ===")
     end
   end
 
@@ -1137,13 +1048,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
           new_state = AriaEngine.set_fact(state, "generated_prompt", char_id, prompt)
           {:ok, new_state}
         end)
-
-    |> AriaEngine.add_action(:log_generation_step,
-        fn state, [char_id, step_name] ->
-          IO.puts("  📝 Character Generation Step: #{step_name} for #{char_id}")
-          {:ok, state}
-        end)
-
     |> AriaEngine.add_action(:validate_constraints,
         fn state, [char_id] ->
           # Get all character attributes
@@ -1187,13 +1091,11 @@ defmodule AriaEngine.CharacterGeneratorTest do
     |> AriaEngine.add_task_method("generate_character_with_constraints",
         fn _state, [char_id, preset] ->
           [
-            {:log_generation_step, [char_id, "Starting constraint-aware character generation"]},
             {"configure_character_presets", [char_id, preset]},
             {"validate_and_resolve_constraints", [char_id]},
             {"randomize_remaining_attributes_safely", [char_id]},
             {"final_constraint_validation", [char_id]},
             {"generate_detailed_prompt", [char_id]},
-            {:log_generation_step, [char_id, "Constraint-aware character generation complete"]}
           ]
         end)
 
@@ -1202,23 +1104,19 @@ defmodule AriaEngine.CharacterGeneratorTest do
         fn state, [char_id, preset] ->
           # This method will be tried if the first one fails due to constraints
           [
-            {:log_generation_step, [char_id, "Retrying character generation with simpler preset"]},
             {"configure_simple_preset", [char_id]},
             {"validate_and_resolve_constraints", [char_id]},
             {"randomize_remaining_attributes_safely", [char_id]},
             {"generate_detailed_prompt", [char_id]},
-            {:log_generation_step, [char_id, "Fallback character generation complete"]}
           ]
         end)
 
     |> AriaEngine.add_task_method("generate_character",
         fn _state, [char_id, preset] ->
           [
-            {:log_generation_step, [char_id, "Starting character generation"]},
             {"configure_character_presets", [char_id, preset]},
             {"randomize_remaining_attributes", [char_id]},
             {"generate_detailed_prompt", [char_id]},
-            {:log_generation_step, [char_id, "Character generation complete"]}
           ]
         end)
 
@@ -1231,7 +1129,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
                 {:set_character_attribute, [char_id, "primary_theme", "PRIMARY_THEME_PASTEL_CYBER"]},
                 {:set_character_attribute, [char_id, "cyber_tech_accessories_presence", "CYBER_TECH_ACCESSORIES_TRUE"]},
                 {:set_character_attribute, [char_id, "fantasy_magical_talismans_presence", "FANTASY_TALISMANS_TRUE"]},
-                {:log_generation_step, [char_id, "Applied fantasy cyber preset"]}
               ]
             "cyber_cat_person" ->
               [
@@ -1240,12 +1137,10 @@ defmodule AriaEngine.CharacterGeneratorTest do
                 {:set_character_attribute, [char_id, "kemonomimi_animal_ears_presence", "KEMONOMIMI_EARS_TRUE"]},
                 {:set_character_attribute, [char_id, "kemonomimi_animal_tail_presence", "KEMONOMIMI_TAIL_TRUE"]},
                 {:set_character_attribute, [char_id, "primary_theme", "PRIMARY_THEME_CYBERPREP_TECHWEAR"]},
-                {:log_generation_step, [char_id, "Applied cyber cat person preset"]}
               ]
             _ ->
               [
                 {:set_character_attribute, [char_id, "species_base_type", "SPECIES_BASE_HUMANOID"]},
-                {:log_generation_step, [char_id, "Applied default preset"]}
               ]
           end
         end)
@@ -1258,13 +1153,8 @@ defmodule AriaEngine.CharacterGeneratorTest do
           if length(violations) > 0 do
             # Try to auto-resolve conflicts first
             [
-              {:log_generation_step, [char_id, "Found #{length(violations)} constraint violations - attempting resolution"]},
               {:auto_correct_conflicts, [char_id]},
               {:validate_constraints, [char_id]}
-            ]
-          else
-            [
-              {:log_generation_step, [char_id, "All constraints validated successfully"]}
             ]
           end
         end)
@@ -1275,7 +1165,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
           # This method will be tried if auto-correction fails
           # It forces a complete reset of problematic attributes
           [
-            {:log_generation_step, [char_id, "Auto-correction failed - resetting problematic attributes"]},
             {"reset_conflicting_attributes", [char_id]},
             {:validate_constraints, [char_id]}
           ]
@@ -1304,13 +1193,8 @@ defmodule AriaEngine.CharacterGeneratorTest do
           randomize_actions = Enum.flat_map(unset_attributes, fn attr ->
             [
               {:randomize_attribute, [char_id, attr]},
-              {"check_attribute_constraints", [char_id, attr]}
             ]
           end)
-
-          randomize_actions ++ [
-            {:log_generation_step, [char_id, "Safely randomized #{length(unset_attributes)} attributes"]}
-          ]
         end)
 
     # Alternative method for randomize_remaining_attributes_safely if constraint checking fails
@@ -1334,46 +1218,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
           randomize_actions = Enum.map(unset_safe_attributes, fn attr ->
             {:randomize_attribute, [char_id, attr]}
           end)
-
-          randomize_actions ++ [
-            {:log_generation_step, [char_id, "Fallback: randomized #{length(unset_safe_attributes)} safe attributes"]}
-          ]
-        end)
-
-    |> AriaEngine.add_task_method("check_attribute_constraints",
-        fn state, [char_id, attribute] ->
-          # Check if the newly set attribute causes any constraint violations
-          # If it does, this method will fail and backtrack
-          attributes = get_character_attributes(state, char_id)
-          violations = check_constraint_violations(attributes)
-
-          if length(violations) > 0 do
-            # Check if any violation involves the attribute we just set
-            attribute_violations = Enum.filter(violations, fn violation ->
-              String.contains?(String.downcase(violation), String.downcase(attribute))
-            end)
-
-            if length(attribute_violations) > 0 do
-              # This will cause the GTN planner to backtrack and try alternatives
-              []  # Return empty task list - this will fail the method
-            else
-              [
-                {:log_generation_step, [char_id, "Attribute #{attribute} constraints OK"]}
-              ]
-            end
-          else
-            [
-              {:log_generation_step, [char_id, "Attribute #{attribute} constraints OK"]}
-            ]
-          end
-        end)
-
-    # Alternative method for check_attribute_constraints - just log and continue
-    |> AriaEngine.add_task_method("check_attribute_constraints",
-        fn _state, [char_id, attribute] ->
-          [
-            {:log_generation_step, [char_id, "Skipping constraint check for #{attribute} (fallback mode)"]}
-          ]
         end)
 
     |> AriaEngine.add_task_method("final_constraint_validation",
@@ -1381,7 +1225,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
           # Final validation that must pass - if it fails, the whole generation fails
           [
             {:validate_constraints, [char_id]},
-            {:log_generation_step, [char_id, "Final constraint validation passed"]}
           ]
         end)
 
@@ -1392,7 +1235,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
             {:set_character_attribute, [char_id, "species", "SPECIES_HUMANOID"]},
             {:set_character_attribute, [char_id, "style_kei", "STYLE_KEI_ANIME"]},
             {:set_character_attribute, [char_id, "emotion", "EMOTION_NEUTRAL"]},
-            {:log_generation_step, [char_id, "Applied safe simple preset"]}
           ]
         end)
 
@@ -1409,10 +1251,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
           reset_actions = Enum.map(conflicting_attrs, fn attr ->
             {:set_character_attribute, [char_id, attr, nil]}
           end)
-
-          reset_actions ++ [
-            {:log_generation_step, [char_id, "Reset #{length(conflicting_attrs)} conflicting attributes"]}
-          ]
         end)
 
     |> AriaEngine.add_task_method("randomize_remaining_attributes",
@@ -1437,17 +1275,12 @@ defmodule AriaEngine.CharacterGeneratorTest do
           randomize_actions = Enum.map(unset_attributes, fn attr ->
             {:randomize_attribute, [char_id, attr]}
           end)
-
-          randomize_actions ++ [
-            {:log_generation_step, [char_id, "Randomized #{length(unset_attributes)} attributes"]}
-          ]
         end)
 
     |> AriaEngine.add_task_method("generate_detailed_prompt",
         fn _state, [char_id] ->
           [
             {:generate_text_prompt, [char_id]},
-            {:log_generation_step, [char_id, "Generated text prompt"]}
           ]
         end)
 
@@ -1455,7 +1288,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
         fn _state, [char_id, species_type] ->
           [
             {:set_character_attribute, [char_id, "species_base_type", species_type]},
-            {:log_generation_step, [char_id, "Set species to #{species_type}"]}
           ]
         end)
 
@@ -1463,7 +1295,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
         fn _state, [char_id, archetype] ->
           [
             {:set_character_attribute, [char_id, "humanoid_archetype", archetype]},
-            {:log_generation_step, [char_id, "Set archetype to #{archetype}"]}
           ]
         end)
 
@@ -1471,7 +1302,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
         fn _state, [char_id, theme] ->
           [
             {:set_character_attribute, [char_id, "primary_theme", theme]},
-            {:log_generation_step, [char_id, "Set theme to #{theme}"]}
           ]
         end)
 
@@ -1479,7 +1309,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
         fn _state, [char_id] ->
           [
             {"generate_detailed_prompt", [char_id]},
-            {:log_generation_step, [char_id, "Character finalized"]}
           ]
         end)
 
@@ -1517,7 +1346,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
                        archetype == "HUMANOID_ARCHETYPE_HUMAN_FEATURED" do
             [
               {:set_character_attribute, [char_id, "humanoid_archetype", "HUMANOID_ARCHETYPE_CAT_PERSON"]},
-              {:log_generation_step, [char_id, "Auto-corrected archetype for kemonomimi features"]} | actions
             ]
           else
             actions
@@ -1528,7 +1356,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
           actions = if fantasy_presence == "FANTASY_TALISMANS_FALSE" do
             [
               {:set_character_attribute, [char_id, "fantasy_magical_talismans_type", nil]},
-              {:log_generation_step, [char_id, "Cleared talisman type (no talismans present)"]} | actions
             ]
           else
             actions
@@ -1538,7 +1365,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
           actions = if cyber_presence == "CYBER_TECH_ACCESSORIES_FALSE" do
             [
               {:set_character_attribute, [char_id, "cyber_tech_accessories_type", nil]},
-              {:log_generation_step, [char_id, "Cleared cyber accessory type (no accessories present)"]} | actions
             ]
           else
             actions
@@ -1560,7 +1386,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
           actions = if style_kei == "STYLE_KEI_ROBOTIC_CYBORG" and species == "SPECIES_ANIMAL" do
             [
               {:set_character_attribute, [char_id, "species", "SPECIES_HUMANOID_ROBOT_OR_CYBORG"]},
-              {:log_generation_step, [char_id, "Resolved robotic style + animal species conflict"]} | actions
             ]
           else
             actions
@@ -1572,7 +1397,6 @@ defmodule AriaEngine.CharacterGeneratorTest do
             if cyber_presence == "CYBER_CYBERNETICS_TRUE" do
               [
                 {:set_character_attribute, [char_id, "cyber_visible_cybernetics_presence", "CYBER_CYBERNETICS_FALSE"]},
-                {:log_generation_step, [char_id, "Disabled cybernetics for traditional theme"]} | actions
               ]
             else
               actions
