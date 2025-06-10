@@ -6,36 +6,67 @@ import Config
 # Test environment configuration
 config :logger, level: :warning
 
-# Test database configuration - using SQLite
+# Test database configuration - using CockroachDB
+# CockroachDB doesn't support migration locks, so we disable them
 config :aria_data, AriaData.Repo,
-  database: "aria_data_test.sqlite3",
+  username: "root",
+  password: "",
+  hostname: "localhost",
+  port: 26257,
+  database: "aria_data_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 10,
+  migration_lock: false
 
 config :aria_data, AriaData.AuthRepo,
-  database: "aria_auth_test.sqlite3",
+  username: "root",
+  password: "",
+  hostname: "localhost",
+  port: 26257,
+  database: "aria_auth_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 8,
+  migration_lock: false
 
 config :aria_data, AriaData.QueueRepo,
-  database: "aria_queue_test.sqlite3",
+  username: "root",
+  password: "",
+  hostname: "localhost",
+  port: 26257,
+  database: "aria_queue_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 8,
+  migration_lock: false
 
 config :aria_data, AriaData.StorageRepo,
-  database: "aria_storage_test.sqlite3",
+  username: "root",
+  password: "",
+  hostname: "localhost",
+  port: 26257,
+  database: "aria_storage_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 8,
+  migration_lock: false
 
 config :aria_data, AriaData.MonitorRepo,
-  database: "aria_monitor_test.sqlite3",
+  username: "root",
+  password: "",
+  hostname: "localhost",
+  port: 26257,
+  database: "aria_monitor_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 6,
+  migration_lock: false
 
 config :aria_data, AriaData.EngineRepo,
-  database: "aria_engine_test.sqlite3",
+  username: "root",
+  password: "",
+  hostname: "localhost",
+  port: 26257,
+  database: "aria_engine_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 6,
+  migration_lock: false
 
 # Test Phoenix configuration
 config :aria_coordinate, AriaCoordinateWeb.Endpoint,
