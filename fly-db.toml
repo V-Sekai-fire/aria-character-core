@@ -1,0 +1,60 @@
+# Fly.io Database Configuration
+# CockroachDB cluster for Aria Character Core
+
+app = "aria-character-core-db"
+primary_region = "ord"
+
+[build]
+  image = "cockroachdb/cockroach:v22.1.22"
+
+[deploy]
+  strategy = "immediate"
+
+[env]
+  COCKROACH_DATABASE = "aria_data_prod"
+  COCKROACH_USER = "aria_user"
+
+[[mounts]]
+  source = "cockroach_data"
+  destination = "/cockroach/cockroach-data"
+
+[[services]]
+  internal_port = 26257
+  protocol = "tcp"
+  auto_stop_machines = false
+  auto_start_machines = true
+
+  [[services.ports]]
+    port = 26257
+    handlers = ["tcp"]
+
+  [[services.tcp_checks]]
+    grace_period = "30s"
+    interval = "15s"
+    restart_limit = 0
+    timeout = "10s"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 8080
+    handlers = ["http"]
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/"
+    protocol = "http"
+    restart_limit = 0
+    timeout = "10s"
+
+[processes]
+  db = "cockroach start-single-node --insecure --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080"
+
+[[vm]]
+  memory = "4gb"
+  cpu_kind = "shared"
+  cpus = 4

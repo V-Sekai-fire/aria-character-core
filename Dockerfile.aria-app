@@ -19,7 +19,7 @@ RUN mix deps.get --only prod
 RUN mix compile
 
 # Create a release
-RUN mix release --overwrite
+RUN MIX_ENV=prod mix release aria_coordinate --overwrite
 
 # --- Runtime Stage ---
 FROM alpine:3.18
@@ -38,7 +38,13 @@ RUN ARCH=arm64 && \
 WORKDIR /app
 
 # Copy the compiled release from the builder stage
-COPY --from=builder /app/_build/prod/rel/aria_queue /app
+COPY --from=builder /app/_build/prod/rel/aria_coordinate /app
+
+# Copy the migration script
+COPY scripts/migrate.sh /app/bin/migrate
+
+# Make migration script executable
+RUN chmod +x /app/bin/migrate
 
 # Expose the port your Phoenix app runs on (e.g., 4000)
 EXPOSE 4000

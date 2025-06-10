@@ -1,0 +1,67 @@
+# Aria Character Core - Main Application
+# Fly.io configuration for the umbrella application
+
+app = "aria-character-core"
+primary_region = "ord"
+
+[build]
+  builder = "hexpm/elixir:1.16.3-erlang-26.2.5-alpine-3.19.1"
+
+[deploy]
+  release_command = "/app/bin/migrate"
+
+[env]
+  PHX_HOST = "aria-character-core.fly.dev"
+  PORT = "4000"
+  MIX_ENV = "prod"
+  ERL_AFLAGS = "-proto_dist inet6_tcp"
+
+[experimental]
+  auto_rollback = true
+
+[[mounts]]
+  source = "aria_data"
+  destination = "/app/data"
+
+[[services]]
+  internal_port = 4000
+  protocol = "tcp"
+  auto_stop_machines = false
+  auto_start_machines = true
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["http", "tls"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 200
+
+  [[services.tcp_checks]]
+    grace_period = "30s"
+    interval = "15s"
+    restart_limit = 0
+    timeout = "10s"
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/health"
+    protocol = "http"
+    restart_limit = 0
+    timeout = "10s"
+
+[processes]
+  app = "aria_character_core"
+
+[[vm]]
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 2
