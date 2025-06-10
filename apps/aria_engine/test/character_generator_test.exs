@@ -730,7 +730,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
       IO.puts("\nTasks: #{inspect(tasks)}")
 
-      case AriaEngine.plan(domain, initial_state, tasks, verbose: 1) do
+      case AriaEngine.plan(domain, initial_state, tasks, verbose: 0) do
         {:ok, plan} ->
           IO.puts("✓ Character generation plan created with #{length(plan)} steps:")
           Enum.with_index(plan, 1)
@@ -794,7 +794,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
       IO.puts("Tasks: #{inspect(tasks)}")
 
-      case AriaEngine.plan(domain, initial_state, tasks, verbose: 2) do
+      case AriaEngine.plan(domain, initial_state, tasks, verbose: 0) do
         {:ok, plan} ->
           IO.puts("\n✓ Detailed character generation plan created!")
           IO.puts("Plan steps: #{inspect(plan)}")
@@ -860,7 +860,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
         IO.puts("  #{index}. #{inspect(task)}")
       end)
 
-      case AriaEngine.plan(domain, initial_state, customization_tasks, verbose: 1) do
+      case AriaEngine.plan(domain, initial_state, customization_tasks, verbose: 0) do
         {:ok, plan} ->
           IO.puts("\n✓ Customization plan created with #{length(plan)} steps")
 
