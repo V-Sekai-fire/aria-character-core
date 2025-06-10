@@ -1,0 +1,98 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+name: Build and Test Aria Character Core
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # Or self-hosted runners if specific hardware/OS is needed
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies for asdf
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl git build-essential # Add build-essential for Erlang compilation
+
+      - name: Install asdf
+        run: |
+          git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
+          echo ". ~/.asdf/asdf.sh" >> ~/.bashrc
+          echo ". ~/.asdf/completions/asdf.bash" >> ~/.bashrc
+          # Source asdf for the current session
+          . ~/.asdf/asdf.sh
+
+      - name: Install Erlang and Elixir (from .tool-versions)
+        run: |
+          . ~/.asdf/asdf.sh # Source asdf again for the current step
+          asdf plugin add erlang || true
+          asdf plugin add elixir || true
+          asdf install erlang
+          asdf install elixir
+          asdf reshim erlang
+          asdf reshim elixir
+
+      - name: Install Elixir dependencies
+        run: |
+          . ~/.asdf/asdf.sh # Source asdf again
+          mix deps.get
+          mix deps.compile
+
+      # --- External Service Installation (Example for CI) ---
+      # These would be more complex, potentially using Docker or pre-built binaries
+      - name: Install CockroachDB
+        run: |
+          # Example: Download and extract binary
+          wget -qO- https://binaries.cockroachdb.com/cockroach-v23.1.10.linux-amd64.tgz | tar xvz
+          sudo cp cockroach-v23.1.10.linux-amd64/cockroach /usr/local/bin/
+
+      - name: Install OpenBao
+        run: |
+          # Example: Download and extract binary
+          wget -qO- https://releases.hashicorp.com/openbao/1.0.0/openbao_1.0.0_linux_amd64.zip | sudo unzip -d /usr/local/bin/ - 
+          sudo chmod +x /usr/local/bin/openbao
+
+      - name: Install SeaweedFS
+        run: |
+          # Example: Download and extract binary
+          wget -qO- https://github.com/seaweedfs/seaweedfs/releases/download/2.80/linux_amd64.tar.gz | tar xvz
+          sudo cp weed /usr/local/bin/
+
+      # --- Start Services for Integration Tests ---
+      - name: Start External Services
+        run: |
+          # Create data directories
+          mkdir -p cockroach-data openbao-data seaweedfs-data/master seaweedfs-data/volume
+
+          # Start CockroachDB
+          nohup cockroach start-single-node --insecure --store=./cockroach-data --listen-addr=localhost:26257 --http-addr=localhost:8080 --background > cockroach.log 2>&1 &
+          echo "Waiting for CockroachDB..."
+          timeout 30s bash -c 'until curl -sf http://localhost:8080/health >/dev/null 2>&1; do sleep 2; done'
+
+          # Start OpenBao (requires config)
+          # For CI, you might generate a simple config or use a pre-existing one
+          cat > openbao.hcl <<EOF
+storage "file" { path = "./openbao-data" }
+listener "tcp" { address = "localhost:8200" tls_disable = true }
+EOF
+          nohup openbao server -config=./openbao.hcl > openbao.log 2>&1 &
+          echo "Waiting for OpenBao..."
+          timeout 30s bash -c 'until curl -sf http://localhost:8200/v1/sys/health >/dev/null 2>&1; do sleep 2; done'
+
+          # Start SeaweedFS
+          nohup weed master -mdir=./seaweedfs-data/master -defaultReplication=001 > seaweedfs_master.log 2>&1 &

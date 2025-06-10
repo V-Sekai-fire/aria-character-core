@@ -8,34 +8,28 @@ config :logger, level: :info
 
 # Production database configuration
 config :aria_data, AriaData.Repo,
-  url: System.get_env("DATABASE_URL") || System.get_env("CRDB_URL_MAIN"),
-  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-  ssl: true
+  database: "aria_data_prod.sqlite3",
+  pool_size: 10
 
 config :aria_data, AriaData.AuthRepo,
-  url: System.get_env("CRDB_URL_AUTH") || "#{System.get_env("CRDB_BASE_URL")}/aria_auth",
-  pool_size: String.to_integer(System.get_env("AUTH_POOL_SIZE") || "8"),
-  ssl: true
+  database: "aria_auth_prod.sqlite3",
+  pool_size: 10
 
 config :aria_data, AriaData.QueueRepo,
-  url: System.get_env("CRDB_URL_QUEUE") || "#{System.get_env("CRDB_BASE_URL")}/aria_queue",
-  pool_size: String.to_integer(System.get_env("QUEUE_POOL_SIZE") || "8"),
-  ssl: true
+  database: "aria_queue_prod.sqlite3",
+  pool_size: 10
 
 config :aria_data, AriaData.StorageRepo,
-  url: System.get_env("CRDB_URL_STORAGE") || "#{System.get_env("CRDB_BASE_URL")}/aria_storage",
-  pool_size: String.to_integer(System.get_env("STORAGE_POOL_SIZE") || "8"),
-  ssl: true
+  database: "aria_storage_prod.sqlite3",
+  pool_size: 10
 
 config :aria_data, AriaData.MonitorRepo,
-  url: System.get_env("CRDB_URL_MONITOR") || "#{System.get_env("CRDB_BASE_URL")}/aria_monitor",
-  pool_size: String.to_integer(System.get_env("MONITOR_POOL_SIZE") || "6"),
-  ssl: true
+  database: "aria_monitor_prod.sqlite3",
+  pool_size: 10
 
 config :aria_data, AriaData.EngineRepo,
-  url: System.get_env("CRDB_URL_ENGINE") || "#{System.get_env("CRDB_BASE_URL")}/aria_engine",
-  pool_size: String.to_integer(System.get_env("ENGINE_POOL_SIZE") || "6"),
-  ssl: true
+  database: "aria_engine_prod.sqlite3",
+  pool_size: 10
 
 # Production Phoenix configuration
 config :aria_coordinate, AriaCoordinateWeb.Endpoint,

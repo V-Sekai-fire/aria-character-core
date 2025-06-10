@@ -19,6 +19,10 @@ config :aria_data, AriaData.Repo,
   pool_size: 10,
   adapter: Ecto.Adapters.Postgres
 
+config :aria_data, AriaData.Repo,
+  database: "aria_data_dev.sqlite3",
+  pool_size: 10
+
 # Authentication repository for user data
 config :aria_data, AriaData.AuthRepo,
   username: "root",
@@ -30,6 +34,10 @@ config :aria_data, AriaData.AuthRepo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 8,
   adapter: Ecto.Adapters.Postgres
+
+config :aria_data, AriaData.AuthRepo,
+  database: "aria_auth_dev.sqlite3",
+  pool_size: 10
 
 # Queue repository for background jobs
 config :aria_data, AriaData.QueueRepo,
@@ -43,6 +51,10 @@ config :aria_data, AriaData.QueueRepo,
   pool_size: 8,
   adapter: Ecto.Adapters.Postgres
 
+config :aria_data, AriaData.QueueRepo,
+  database: "aria_queue_dev.sqlite3",
+  pool_size: 10
+
 # Storage repository for file metadata
 config :aria_data, AriaData.StorageRepo,
   username: "root",
@@ -54,6 +66,10 @@ config :aria_data, AriaData.StorageRepo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 8,
   adapter: Ecto.Adapters.Postgres
+
+config :aria_data, AriaData.StorageRepo,
+  database: "aria_storage_dev.sqlite3",
+  pool_size: 10
 
 # Monitor repository for telemetry data
 config :aria_data, AriaData.MonitorRepo,
@@ -67,6 +83,10 @@ config :aria_data, AriaData.MonitorRepo,
   pool_size: 6,
   adapter: Ecto.Adapters.Postgres
 
+config :aria_data, AriaData.MonitorRepo,
+  database: "aria_monitor_dev.sqlite3",
+  pool_size: 10
+
 # Engine repository for planning data
 config :aria_data, AriaData.EngineRepo,
   username: "root",
@@ -78,6 +98,10 @@ config :aria_data, AriaData.EngineRepo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 6,
   adapter: Ecto.Adapters.Postgres
+
+config :aria_data, AriaData.EngineRepo,
+  database: "aria_engine_dev.sqlite3",
+  pool_size: 10
 
 # Development Phoenix configuration for coordinate service
 config :aria_coordinate, AriaCoordinateWeb.Endpoint,
