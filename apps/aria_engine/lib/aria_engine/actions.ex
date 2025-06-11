@@ -17,6 +17,11 @@ defmodule AriaEngine.Actions do
 
   Updates state with execution results including exit code, output, and timing.
   """
+  def execute_command(state, [command, args_list, _opts]) when is_list(args_list) do
+    # Handle test format: [command, [args], options]
+    execute_command(state, [command | args_list])
+  end
+
   def execute_command(state, [command | args]) do
     Logger.info("Executing command: #{command} #{Enum.join(args, " ")}")
 
@@ -70,7 +75,21 @@ defmodule AriaEngine.Actions do
   Copy a file from source to destination using external cp command.
   """
   def copy_file(state, [source, destination]) do
-    execute_command(state, ["cp", source, destination])
+    case execute_command(state, ["cp", source, destination]) do
+      false -> false  # Command failed
+      new_state ->
+        # Update state to record successful copy
+        new_state
+        |> State.set_object("file_exists", destination, true)
+        |> State.set_object("file_copied_from", destination, source)
+        |> State.set_object("last_copy", "source", source)
+        |> State.set_object("last_copy", "destination", destination)
+    end
+  end
+
+  def copy_file(state, [source, destination, _opts]) do
+    # For now, ignore options and use the basic copy
+    copy_file(state, [source, destination])
   end
 
   @doc """
@@ -91,7 +110,19 @@ defmodule AriaEngine.Actions do
   Create a directory using external mkdir command.
   """
   def create_directory(state, [dir_path]) do
-    execute_command(state, ["mkdir", "-p", dir_path])
+    case execute_command(state, ["mkdir", "-p", dir_path]) do
+      false -> false  # Command failed
+      new_state ->
+        # Update state to record successful directory creation
+        new_state
+        |> State.set_object("directory_exists", dir_path, true)
+        |> State.set_object("last_mkdir", "path", dir_path)
+    end
+  end
+
+  def create_directory(state, [dir_path, _opts]) do
+    # For now, ignore options and use the basic mkdir with -p flag
+    create_directory(state, [dir_path])
   end
 
   @doc """
@@ -118,11 +149,29 @@ defmodule AriaEngine.Actions do
   Download a file using curl.
   """
   def download_file(state, [url, destination]) do
-    execute_command(state, ["curl", "-o", destination, url])
+    case execute_command(state, ["curl", "-o", destination, url]) do
+      false -> false  # Command failed
+      new_state ->
+        # Update state to record successful download
+        new_state
+        |> State.set_object("file_exists", destination, true)
+        |> State.set_object("file_downloaded_from", destination, url)
+        |> State.set_object("last_download", "url", url)
+        |> State.set_object("last_download", "destination", destination)
+    end
   end
 
   def download_file(state, [url, destination, _options]) do
-    execute_command(state, ["curl", "-o", destination, url])
+    case execute_command(state, ["curl", "-o", destination, url]) do
+      false -> false  # Command failed
+      new_state ->
+        # Update state to record successful download
+        new_state
+        |> State.set_object("file_exists", destination, true)
+        |> State.set_object("file_downloaded_from", destination, url)
+        |> State.set_object("last_download", "url", url)
+        |> State.set_object("last_download", "destination", destination)
+    end
   end
 
   @doc """

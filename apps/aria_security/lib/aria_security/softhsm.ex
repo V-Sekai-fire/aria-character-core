@@ -238,7 +238,7 @@ defmodule AriaSecurity.SoftHSM do
 
     # Remove all tokens
     case File.rm_rf(hsm.token_dir) do
-      {:ok, _} ->
+      {:ok, _files} ->
         Logger.info("Removed all SoftHSM tokens from #{hsm.token_dir}")
 
         # Recreate token directory
@@ -252,7 +252,7 @@ defmodule AriaSecurity.SoftHSM do
             {:error, {:directory_creation_failed, reason}}
         end
 
-      {:error, reason} ->
+      {:error, reason, _file} ->
         Logger.error("Failed to remove token directory: #{reason}")
         {:error, {:directory_removal_failed, reason}}
     end

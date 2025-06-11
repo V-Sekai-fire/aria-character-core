@@ -229,7 +229,7 @@ defmodule AriaEngine.DomainDefinitionTest do
       assert summary.completed_todos == 2
       assert summary.failed_todos == 0
       assert is_binary(summary.trace_id)
-      assert summary.total_spans == 2
+      assert summary.total_spans == 3  # 3 todos = 3 spans (2 completed, 1 started but not completed)
       assert summary.completed_spans == 2
       assert is_float(summary.average_span_duration)
       assert is_integer(summary.duration_ms)

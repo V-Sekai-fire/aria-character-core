@@ -40,12 +40,8 @@ defmodule AriaEngine.Domains.FileManagement do
       &cleanup_by_age/2,
       &cleanup_by_pattern/2
     ])
-    |> Domain.add_unigoal_method("file_exists", [
-      &ensure_file_exists/2
-    ])
-    |> Domain.add_unigoal_method("directory_exists", [
-      &ensure_directory_exists/2
-    ])
+    |> Domain.add_unigoal_method("file_exists", &ensure_file_exists/2)
+    |> Domain.add_unigoal_method("directory_exists", &ensure_directory_exists/2)
   end
 
   # Task methods that decompose complex file operations
@@ -199,7 +195,7 @@ defmodule AriaEngine.Domains.FileManagement do
       full_path = Path.join(base_path, subdir)
       {:create_directory, [full_path]}
     end)
-    
+
     create_actions ++ [
       {:echo, ["Created directory structure with subdirs: #{Enum.join(subdirs, ", ")}"]}
     ]
@@ -225,6 +221,18 @@ defmodule AriaEngine.Domains.FileManagement do
       {:create_directory, [Path.join(workspace_path, "docs")]},
       {:create_directory, [Path.join(workspace_path, "tests")]},
       {:echo, ["Workspace setup complete at #{workspace_path}"]}
+    ]
+  end
+
+  def setup_workspace(_state, [workspace_path, project_name]) do
+    full_path = Path.join(workspace_path, project_name)
+    [
+      {:create_directory, [full_path]},
+      {:create_directory, [Path.join(full_path, "src")]},
+      {:create_directory, [Path.join(full_path, "test")]},
+      {:create_directory, [Path.join(full_path, "docs")]},
+      {:create_directory, [Path.join(full_path, "config")]},
+      {:execute_command, ["touch", Path.join(full_path, "README.md")]}
     ]
   end
 

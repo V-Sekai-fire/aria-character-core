@@ -35,7 +35,7 @@ defmodule AriaWorkflow.Tasks.CommandTracing do
     new_traces = Map.put(traces, trace_id, trace_info)
     new_state = Map.put(state, :command_traces, new_traces)
     
-    {:ok, new_state, trace_id}
+    {:ok, new_state, trace_info}
   end
 
   @doc """

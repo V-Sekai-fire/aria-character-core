@@ -1,6 +1,8 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
+Code.require_file("../support/casync_fixtures.ex", __DIR__)
+
 defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
   use ExUnit.Case
 
@@ -98,7 +100,7 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
 
         # Benchmark multiple runs
         times = for _i <- 1..5 do
-          {time_micro, _result} = :timer.tc(CasyncFormat.parse_index, [data])
+          {time_micro, _result} = :timer.tc(CasyncFormat, :parse_index, [data])
           time_micro
         end
 
@@ -206,7 +208,7 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
         # Create tasks
         tasks = for _i <- 1..concurrency do
           Task.async(fn ->
-            {time_micro, _result} = :timer.tc(CasyncFormat.parse_index, [data])
+            {time_micro, _result} = :timer.tc(CasyncFormat, :parse_index, [data])
             time_micro
           end)
         end
@@ -260,7 +262,7 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
       # Test with very large chunk counts
       large_data = CasyncFixtures.create_multi_chunk_caibx(2000)
 
-      {time_micro, result} = :timer.tc(CasyncFormat.parse_index, [large_data])
+      {time_micro, result} = :timer.tc(CasyncFormat, :parse_index, [large_data])
 
       case result do
         {:ok, parsed} ->

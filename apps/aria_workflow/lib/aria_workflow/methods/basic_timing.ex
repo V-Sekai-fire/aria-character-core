@@ -25,7 +25,7 @@ defmodule AriaWorkflow.Methods.BasicTiming do
 
     Logger.info("Starting timed execution: #{operation}")
 
-    with {:ok, state1} <- BasicTiming.start_timer(state, %{timer_id: timer_id, command: operation}),
+    with {:ok, state1, _timer_result} <- BasicTiming.start_timer(state, %{timer_id: timer_id, command: operation}),
          {:ok, state2, result} <- execute_operation(state1, args),
          {:ok, state3, timer_result} <- BasicTiming.stop_timer(state2, %{timer_id: timer_id, status: :completed}) do
 
@@ -54,6 +54,7 @@ defmodule AriaWorkflow.Methods.BasicTiming do
       {:ok, final_state_with_last, %{
         timer_id: timer_id,
         duration_seconds: duration,
+        duration_ms: duration * 1000,
         operation: operation,
         result: result,
         exit_code: result.exit_code,
@@ -80,7 +81,7 @@ defmodule AriaWorkflow.Methods.BasicTiming do
     Logger.info("Starting sequential timing session: #{session_id}")
 
     # Start session timer
-    {:ok, state1} = BasicTiming.start_timer(state, %{timer_id: session_id, command: "sequential_operations"})
+    {:ok, state1, _start_result} = BasicTiming.start_timer(state, %{timer_id: session_id, command: "sequential_operations"})
 
     # Execute each operation with timing
     {final_state, results} = Enum.reduce_while(operations, {state1, []}, fn operation, {current_state, acc_results} ->

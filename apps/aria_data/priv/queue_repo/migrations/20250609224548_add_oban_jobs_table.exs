@@ -27,7 +27,7 @@ defmodule AriaData.QueueRepo.Migrations.AddObanJobsTable do
       add :worker, :text, null: false
       add :args, :jsonb, null: false
       add :tags, {:array, :text}, null: false, default: []
-      # Change errors from {:array, :jsonb} to :jsonb for CockroachDB compatibility
+      # Use JSONB instead of array of JSONB for CockroachDB compatibility
       add :errors, :jsonb, null: false, default: "[]"
       add :attempt, :integer, null: false, default: 0
       add :max_attempts, :integer, null: false, default: 20

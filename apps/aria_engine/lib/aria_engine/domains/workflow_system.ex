@@ -35,12 +35,8 @@ defmodule AriaEngine.Domains.WorkflowSystem do
       &debug_with_tracing/2,
       &debug_with_logging/2
     ])
-    |> Domain.add_unigoal_method("workflow_completed", [
-      &ensure_workflow_completed/2
-    ])
-    |> Domain.add_unigoal_method("command_executed", [
-      &ensure_command_executed/2
-    ])
+    |> Domain.add_unigoal_method("workflow_completed", &ensure_workflow_completed/2)
+    |> Domain.add_unigoal_method("command_executed", &ensure_command_executed/2)
   end
 
   # Action implementations for workflow operations
@@ -235,6 +231,17 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     ]
   end
 
+  def setup_dev_environment(_state, [project_path, services]) when is_list(services) do
+    docker_commands = Enum.map(services, fn service ->
+      {:execute_command, ["docker", ["run", "-d", "--name", service, service], %{}]}
+    end)
+
+    [
+      {:create_directory, [project_path, %{parents: true}]},
+      {:execute_command, ["git", ["init"], %{working_dir: project_path}]}
+    ] ++ docker_commands
+  end
+
   @doc """
   Run tests with coverage analysis.
   """
@@ -312,7 +319,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     service_checks = Enum.map(services, fn service ->
       {:echo, ["Checking service: #{service}"]}
     end)
-    
+
     service_checks ++ [
       {:execute_command, ["ps", "aux"]},
       {:execute_command, ["df", "-h"]},
@@ -324,7 +331,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     service_checks = Enum.map(services, fn service ->
       {:echo, ["Checking service with health config: #{service}"]}
     end)
-    
+
     service_checks ++ [
       {:execute_command, ["ps", "aux"]},
       {:execute_command, ["df", "-h"]},

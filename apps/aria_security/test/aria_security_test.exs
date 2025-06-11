@@ -17,7 +17,15 @@ defmodule AriaSecurityTest do
     test "module has correct documentation" do
       {:docs_v1, _, :elixir, _, moduledoc, _, _} = Code.fetch_docs(AriaSecurity)
       assert moduledoc != :none
-      assert String.contains?(moduledoc, "Security service")
+
+      # Extract the documentation string from the map
+      doc_string = case moduledoc do
+        %{"en" => content} -> content
+        content when is_binary(content) -> content
+        _ -> ""
+      end
+
+      assert String.contains?(doc_string, "Security service")
     end
   end
 end

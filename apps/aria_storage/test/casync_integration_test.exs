@@ -1,6 +1,8 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
+Code.require_file("support/casync_fixtures.ex", __DIR__)
+
 defmodule AriaStorage.CasyncIntegrationTest do
   use ExUnit.Case
 
@@ -223,7 +225,7 @@ defmodule AriaStorage.CasyncIntegrationTest do
       # Test that parser and uploader together perform reasonably
       synthetic_data = CasyncFixtures.create_multi_chunk_caibx(50)
 
-      {parse_time, {:ok, parsed}} = :timer.tc(CasyncFormat.parse_index, [synthetic_data])
+      {parse_time, {:ok, parsed}} = :timer.tc(CasyncFormat, :parse_index, [synthetic_data])
 
       {process_time, processed_chunks} = :timer.tc(fn ->
         Enum.map(parsed.chunks, fn chunk ->
