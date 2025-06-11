@@ -3,101 +3,23 @@
 # Advanced CAIDX decoder using AriaStorage.Parsers.CasyncFormat
 # Usage: elixir decode_caidx_advanced.exs
 
+# Add the project to the load path so we can use AriaStorage modules
+Code.append_path("apps/aria_storage/lib")
+
 Mix.install([
   {:req, "~> 0.4.0"},
   {:jason, "~> 1.4"},
   {:ezstd, "~> 1.0"}
 ])
 
-defmodule SimpleCasyncFormat do
+# Import the real parser module
+alias AriaStorage.Parsers.CasyncFormat
+
+defmodule ChunkDownloader do
   @moduledoc """
-  Simplified CasyncFormat parser for testing
+  Helper module for downloading and decompressing chunks
   """
   
-  # Constants from desync source code
-  @ca_format_index 0x96824d9c7b129ff9
-  @ca_format_table 0xe75b9e112f17417d
-  @ca_format_table_tail_marker 0x4b4f050e5549ecd1
-  
-  def detect_format(<<format_header_size::little-64, format_type::little-64, feature_flags::little-64, _rest::binary>>) do
-    case {format_header_size, format_type} do
-      {48, @ca_format_index} -> 
-        # More flexible detection: if it's an index file, try to determine based on context
-        # The feature flags indicate capabilities, not necessarily the type
-        if feature_flags == 0 do
-          {:ok, :caidx}  # Basic CAIDX format
-        else
-          # Could be CAIBX (blob index) or CAIDX with extended features
-          # For now, let's call it CAIBX as that's more common with feature flags
-          {:ok, :caibx}
-        end
-      _ ->
-        {:error, :unknown_format}
-    end
-  end
-  def detect_format(_), do: {:error, :unknown_format}
-  
-  def parse_index(binary_data) when is_binary(binary_data) do
-    case binary_data do
-      <<size_field::little-64, type_field::little-64, feature_flags::little-64,
-        chunk_size_min::little-64, chunk_size_avg::little-64, chunk_size_max::little-64,
-        remaining_data::binary>> -> 
-        if size_field == 48 and type_field == @ca_format_index do
-          format_type = if feature_flags == 0, do: :caidx, else: :caibx
-          
-          case remaining_data do
-            <<>> ->
-              result = %{
-                format: format_type,
-                header: %{version: 1, total_size: 0, chunk_count: 0},
-                chunks: [],
-                feature_flags: feature_flags,
-                chunk_size_min: chunk_size_min,
-                chunk_size_avg: chunk_size_avg,
-                chunk_size_max: chunk_size_max
-              }
-              {:ok, result}
-              
-            _ ->
-              case parse_format_table_with_items_binary(remaining_data) do
-                {:ok, table_items} ->
-                  result = %{
-                    format: format_type,
-                    header: %{
-                      version: 1,
-                      total_size: calculate_total_size(table_items),
-                      chunk_count: length(table_items)
-                    },
-                    chunks: convert_table_to_chunks(table_items),
-                    feature_flags: feature_flags,
-                    chunk_size_min: chunk_size_min,
-                    chunk_size_avg: chunk_size_avg,
-                    chunk_size_max: chunk_size_max
-                  }
-                  {:ok, result}
-                  
-                {:error, reason} ->
-                  {:error, reason}
-              end
-          end
-        else
-          {:error, "Invalid FormatIndex header"}
-        end
-      _ -> {:error, "Invalid binary data"}
-    end
-  end
-  
-  def to_json_safe(result) when is_map(result) do
-    result
-    |> Map.update(:chunks, [], fn chunks ->
-      Enum.map(chunks, fn chunk ->
-        chunk
-        |> Map.update(:chunk_id, nil, &Base.encode64/1)
-      end)
-    end)
-  end
-  def to_json_safe(result), do: result
-
   def download_and_decompress_chunk(chunk_id_hex, base_url) do
     chunk_dir = String.slice(chunk_id_hex, 0, 4)  # First 4 chars: "31cd"
     chunk_file = "#{chunk_id_hex}.cacnk"  # Full chunk ID with .cacnk extension
@@ -113,12 +35,12 @@ defmodule SimpleCasyncFormat do
         IO.puts("  Saved raw CACNK to: #{debug_file}")
         
         # Parse CACNK file format first
-        case parse_cacnk_file(cacnk_data) do
-          {:ok, %{compression: compression, data: chunk_data}} ->
-            IO.puts("  CACNK compression: #{compression}")
+        case CasyncFormat.parse_chunk(cacnk_data) do
+          {:ok, %{header: header, data: chunk_data}} ->
+            IO.puts("  CACNK compression: #{header.compression}")
             IO.puts("  Compressed data size: #{byte_size(chunk_data)} bytes")
             
-            case compression do
+            case header.compression do
               :zstd ->
                 # Try to decompress with ezstd
                 case :ezstd.decompress(chunk_data) do
@@ -131,7 +53,7 @@ defmodule SimpleCasyncFormat do
                 # Data is not compressed
                 {:ok, chunk_data}
               _ ->
-                {:error, {:unsupported_compression, compression}}
+                {:error, {:unsupported_compression, header.compression}}
             end
           {:error, reason} ->
             {:error, {:cacnk_parse_failed, reason}}
@@ -144,125 +66,6 @@ defmodule SimpleCasyncFormat do
   rescue
     e -> {:error, {:exception, e}}
   end
-  
-  defp parse_cacnk_file(binary_data) do
-    # Debug: show first 16 bytes of the file
-    debug_bytes = binary_data |> :binary.bin_to_list() |> Enum.take(16)
-    IO.puts("  First 16 bytes: #{inspect(debug_bytes)}")
-    
-    case binary_data do
-      # CACNK header: 3-byte magic + 4*4 bytes (16 bytes total header)
-      <<0xCA, 0xC4, 0x4E, compressed_size::little-32, uncompressed_size::little-32,
-        compression_type::little-32, flags::little-32, remaining_data::binary>> ->
-
-        compression = case compression_type do
-          0 -> :none
-          1 -> :zstd
-          _ -> :unknown
-        end
-
-        result = %{
-          magic: :cacnk,
-          compressed_size: compressed_size,
-          uncompressed_size: uncompressed_size,
-          compression: compression,
-          flags: flags,
-          data: remaining_data
-        }
-
-        {:ok, result}
-
-      # Try to detect if it's just raw compressed data (no CACNK header)
-      _ when byte_size(binary_data) > 0 ->
-        IO.puts("  No CACNK header found, treating as raw compressed data")
-        {:ok, %{
-          magic: :raw,
-          compressed_size: byte_size(binary_data),
-          uncompressed_size: 0,
-          compression: :zstd,  # Assume ZSTD compression
-          flags: 0,
-          data: binary_data
-        }}
-
-      _ ->
-        {:error, "Invalid CACNK file format"}
-    end
-  end
-  
-  defp parse_format_table_with_items_binary(binary_data) do
-    IO.puts("  Parsing format table from #{byte_size(binary_data)} bytes of data")
-    case binary_data do
-      <<table_marker::little-64, table_type::little-64, remaining_data::binary>> ->
-        IO.puts("  Table marker: 0x#{Integer.to_string(table_marker, 16)}")
-        IO.puts("  Table type: 0x#{Integer.to_string(table_type, 16)}")
-        IO.puts("  Expected table type: 0x#{Integer.to_string(@ca_format_table, 16)}")
-        IO.puts("  Remaining data for items: #{byte_size(remaining_data)} bytes")
-        
-        if table_marker == 0xFFFFFFFFFFFFFFFF and table_type == @ca_format_table do
-          parse_table_items_binary(remaining_data, [])
-        else
-          {:error, "Invalid FormatTable header"}
-        end
-      _ ->
-        {:error, "Invalid binary data"}
-    end
-  end
-  
-  defp parse_table_items_binary(binary_data, acc) do
-    if rem(length(acc), 100) == 0 and length(acc) > 0 do
-      IO.puts("  Processing chunk #{length(acc)}...")
-    end
-    
-    case binary_data do
-      # Check for table tail marker first (40 bytes total: 8+8+8+8+8)
-      <<zero1::little-64, zero2::little-64, size_field::little-64, _table_size::little-64, tail_marker::little-64, _rest::binary>>
-      when zero1 == 0 and zero2 == 0 and size_field == 48 and tail_marker == @ca_format_table_tail_marker ->
-        IO.puts("  Found table tail marker, parsed #{length(acc)} items")
-        {:ok, Enum.reverse(acc)}
-        
-      # Parse table item (40 bytes: 8 offset + 32 chunk_id)
-      <<item_offset::little-64, chunk_id::binary-size(32), remaining_data::binary>> when byte_size(remaining_data) >= 0 ->
-        item = %{offset: item_offset, chunk_id: chunk_id}
-        parse_table_items_binary(remaining_data, [item | acc])
-        
-      # Not enough data for a complete item, might be at the tail
-      data when byte_size(data) < 40 ->
-        IO.puts("  Insufficient data for item (#{byte_size(data)} bytes), checking for tail...")
-        case data do
-          <<zero1::little-64, zero2::little-64, size_field::little-64, _table_size::little-64, tail_marker::little-64, _rest::binary>>
-          when zero1 == 0 and zero2 == 0 and size_field == 48 and tail_marker == @ca_format_table_tail_marker ->
-            IO.puts("  Found table tail marker at end, parsed #{length(acc)} items")
-            {:ok, Enum.reverse(acc)}
-          _ ->
-            IO.puts("  Invalid table data at end: #{byte_size(data)} bytes remaining")
-            {:error, "Invalid table data - insufficient bytes for item or tail"}
-        end
-        
-      _ ->
-        IO.puts("  Invalid table data format, #{byte_size(binary_data)} bytes remaining")
-        {:error, "Invalid table data format"}
-    end
-  end
-  
-  defp calculate_total_size(items) when length(items) > 0 do
-    List.last(items).offset
-  end
-  defp calculate_total_size(_), do: 0
-  
-  defp convert_table_to_chunks(items) do
-    items
-    |> Enum.with_index()
-    |> Enum.map(fn {item, index} ->
-      previous_offset = if index == 0, do: 0, else: Enum.at(items, index - 1).offset
-      
-      %{
-        chunk_id: item.chunk_id,
-        offset: previous_offset,
-        size: item.offset - previous_offset,
-        flags: 0
-      }
-    end)
-  end
 end
 
 defmodule AdvancedCaidxDecoder do
@@ -274,17 +77,48 @@ defmodule AdvancedCaidxDecoder do
     IO.puts("V-Sekai CAIDX Advanced Decoder")
     IO.puts("==============================")
     
-    # Try multiple possible URLs for the CAIDX file including CDN services
-    # Focus on Windows executable which should be the larger ~300MB file
-    urls = [
-      "https://raw.githack.com/V-Sekai/casync-v-sekai-game/main/vsekai_game_windows_x86_64.caidx",
-      "https://cdn.jsdelivr.net/gh/V-Sekai/casync-v-sekai-game@main/vsekai_game_windows_x86_64.caidx",
-      "https://github.com/V-Sekai/casync-v-sekai-game/raw/main/vsekai_game_windows_x86_64.caidx",
-      "https://github.com/V-Sekai/casync-v-sekai-game/raw/refs/heads/main/vsekai_game_windows_x86_64.caidx",
-      "https://raw.githubusercontent.com/V-Sekai/casync-v-sekai-game/main/vsekai_game_windows_x86_64.caidx"
-    ]
+    # First, try to use local test data if available
+    testdata_path = "apps/aria_storage/test/support/testdata"
+    local_store_path = "apps/aria_storage/test/support/store"
     
+    if File.exists?(testdata_path) do
+      IO.puts("Found local testdata directory: #{testdata_path}")
+      process_local_testdata(testdata_path, local_store_path)
+    else
+      IO.puts("No local testdata found, trying remote URLs...")
+      process_remote_data()
+    end
+  end
+  
+  defp process_local_testdata(testdata_path, store_path) do
     output_dir = "/tmp/vsekai_decode_advanced"
+    File.mkdir_p!(output_dir)
+    
+    # Look for CAIBX and CAIDX files in testdata
+    index_files = Path.wildcard(Path.join(testdata_path, "*.{caibx,caidx}"))
+    
+    if length(index_files) == 0 do
+      IO.puts("No .caibx or .caidx files found in testdata, trying remote...")
+      process_remote_data()
+    else
+      IO.puts("Found #{length(index_files)} index file(s) in testdata:")
+      Enum.each(index_files, &IO.puts("  - #{Path.basename(&1)}"))
+      
+      # Process the first available file
+      first_file = List.first(index_files)
+      IO.puts("\nProcessing: #{Path.basename(first_file)}")
+      
+      case File.read(first_file) do
+        {:ok, binary_data} ->
+          process_index_file(binary_data, first_file, output_dir, store_path)
+        {:error, reason} ->
+          IO.puts("Failed to read #{first_file}: #{inspect(reason)}")
+          process_remote_data()
+      end
+    end
+  end
+  
+  defp process_remote_data do
     
     # Create output directory
     File.mkdir_p!(output_dir)
