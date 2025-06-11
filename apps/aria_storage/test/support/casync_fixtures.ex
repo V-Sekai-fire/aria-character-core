@@ -10,43 +10,52 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   Compatible with casync/desync (.caibx/.caidx/.catar/.cacnk) formats.
   """
 
+  # Constants from desync source (matching parser)
+  @ca_format_index 0x96824d9c7b129ff9
+  @ca_format_table 0xe75b9e112f17417d
+  @ca_format_table_tail_marker 0x4b4f050e5549ecd1
+  @ca_format_sha512_256 0x2000000000000000
+
   @doc """
   Creates a synthetic multi-chunk ARCX (caibx-compatible) file with the specified number of chunks.
+  Generates proper desync FormatIndex/FormatTable structure.
   """
   def create_multi_chunk_caibx(chunk_count) when is_integer(chunk_count) and chunk_count > 0 do
-    # Create a synthetic ARCX file with specified chunk count
-    # ARCX file format:
-    # - Magic: 3 bytes (0xCA, 0x1B, 0x5C)
-    # - Header: version (4), total_size (8), chunk_count (4), reserved (4)
-    # - Chunk entries: each 48 bytes (32-byte ID + 8-byte offset + 4-byte size + 4-byte flags)
-
-    magic = <<0xCA, 0x1B, 0x5C>>  # ARCX magic bytes
-
-    # Calculate total size based on chunk count
-    chunk_entry_size = 48  # 32 + 8 + 4 + 4
-    total_data_size = chunk_count * 1024  # Assume 1KB per chunk
-    
-    # Create header
-    header = <<
-      1::little-32,                    # version
-      total_data_size::little-64,      # total_size
-      chunk_count::little-32,          # chunk_count
-      0::little-32                     # reserved
+    # Create desync-compatible binary format
+    # FormatIndex (48 bytes): 8-byte size + 8-byte type + 32 bytes of fields
+    format_index = <<
+      48::little-64,                    # Size of FormatIndex
+      @ca_format_index::little-64,      # Magic for FormatIndex
+      @ca_format_sha512_256::little-64, # Feature flags (SHA512-256 for blobs)
+      1024::little-64,                  # chunk_size_min
+      1024::little-64,                  # chunk_size_avg
+      1024::little-64                   # chunk_size_max
     >>
 
-    # Create chunk entries (each is 48 bytes)
-    chunks = for i <- 1..chunk_count do
-      # Generate a consistent 32-byte chunk ID
+    # FormatTable header (16 bytes)
+    table_header = <<
+      0xFFFFFFFFFFFFFFFF::little-64,    # Table marker
+      @ca_format_table::little-64       # Table type
+    >>
+
+    # Create table items (40 bytes each: 8-byte offset + 32-byte chunk_id)
+    table_items = for i <- 1..chunk_count do
       chunk_id = :crypto.hash(:sha256, "test_chunk_#{i}")
       offset = (i - 1) * 1024  # Each chunk starts at 1KB intervals
-      size = 1024             # Each chunk is 1KB
-      flags = 0               # No special flags
-      
-      <<chunk_id::binary-size(32), offset::little-64, size::little-32, flags::little-32>>
+      <<offset::little-64, chunk_id::binary-size(32)>>
     end
 
+    # Table tail marker (40 bytes)
+    table_tail = <<
+      0::little-64,                     # Zero offset
+      0::little-64,                     # Zero pad
+      48::little-64,                    # Size field
+      0::little-64,                     # Table size (simplified)
+      @ca_format_table_tail_marker::little-64 # Tail marker
+    >>
+
     # Combine all parts
-    magic <> header <> Enum.join(chunks)
+    format_index <> table_header <> Enum.join(table_items) <> table_tail
   end
 
   @doc """
@@ -62,18 +71,16 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   def create_invalid_data(corruption_type) do
     case corruption_type do
       :wrong_magic ->
-        # Invalid magic header - use incorrect bytes
-        <<0xFF, 0xFF, 0xFF>> <> (create_multi_chunk_caibx(1) |> binary_part(3, 50))
+        # Invalid magic header - corrupt the FormatIndex magic
+        <<48::little-64, 0xFFFFFFFFFFFFFFFF::little-64>> <> :crypto.strong_rand_bytes(32)
 
       :truncated ->
-        # Truncated file
-        create_multi_chunk_caibx(5) |> binary_part(0, 10)
+        # Truncated file - cut off in the middle of FormatIndex
+        create_multi_chunk_caibx(5) |> binary_part(0, 20)
 
       :corrupted_header ->
-        # Valid magic but corrupted header
-        magic = <<0xCA, 0x1B, 0x5C>>
-        corrupted_header = <<255, 255, 255, 255>> <> :crypto.strong_rand_bytes(16)
-        magic <> corrupted_header
+        # Valid size but corrupted FormatIndex magic
+        <<48::little-64, 0xDEADBEEFDEADBEEF::little-64>> <> :crypto.strong_rand_bytes(32)
 
       _ ->
         # Default to random binary data
@@ -85,15 +92,15 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   Creates a complex catar (Casync archive) file for testing.
   """
   def create_complex_catar do
-    # CATAR file format is more complex, containing file system metadata
-    # This is a simplified version for testing
-
-    # CATAR magic: 3 bytes (0xCA, 0x1A, 0x52)
+    # CATAR file format starts with magic bytes
+    # Magic: 0xCA, 0x1A, 0x52 (from parser detection)
     magic = <<0xCA, 0x1A, 0x52>>
 
-    # Since the current parser is basic and just returns empty entries,
-    # we only need the magic bytes for format detection
-    magic
+    # Add minimal content to make it look like a real archive
+    # This is a simplified version for testing format detection
+    dummy_content = :crypto.strong_rand_bytes(100)
+
+    magic <> dummy_content
   end
 
   @doc """

@@ -1,5 +1,9 @@
 # ARCANA Format Specification
 
+> **⚠️ PROTOTYPE STATUS WARNING**  
+> ARCANA is currently in **prototype development** and is **NOT READY FOR PRODUCTION USE**.  
+> The implementation is incomplete and may contain bugs. Use only for development and testing purposes.
+
 **ARCANA** (Aria Content Archive and Network Architecture) is a **fully compatible implementation** of the casync binary format specification. ARCANA maintains perfect binary compatibility with casync/desync tools while providing enhanced features for distributed storage and content delivery.
 
 ## Version
@@ -118,17 +122,17 @@ Offset | Size | Field              | Description
 
 ### Compression Types
 
+Based on desync source code analysis, the primary compression algorithm is ZSTD:
+
 ```
-Value | Algorithm
-------|----------
-0     | None (raw)
-1     | ZSTD
-2     | XZ/LZMA2
-3     | GZIP
-4     | LZ4
-5     | BROTLI
-6-255 | Reserved
+Value | Algorithm        | Status
+------|------------------|------------------
+0     | None (raw)       | Standard
+1     | ZSTD             | Primary/Standard
+2-255 | Reserved         | Future use
 ```
+
+**Note**: While the casync format theoretically supports multiple compression types, the desync implementation only uses ZSTD compression. ARCANA follows this practice for maximum compatibility.
 
 ## CATAR Format (Archive Container)
 
@@ -194,6 +198,57 @@ Offset | Size | Field  | Description
 ```
 
 ## Implementation Notes
+
+### Parser Architecture
+
+ARCANA uses **ABNF parsec** (Augmented Backus-Naur Form parser combinator) in binary mode for robust parsing of the structured binary formats. This approach provides:
+
+- **Formal grammar specification**: Each format is defined using precise ABNF rules
+- **Composable parsers**: Complex structures built from simpler parsing primitives
+- **Binary mode parsing**: Native support for little-endian multi-byte integers
+- **Error handling**: Detailed error reporting with context information
+- **Maintainability**: Self-documenting parser definitions
+
+### ABNF Parser Definitions
+
+The binary format is parsed using these ABNF parsec definitions:
+
+```elixir
+# Format Index structure (48 bytes total)
+defparsec :format_index,
+  binary(8, :little, :unsigned)    # Size field
+  |> binary(8, :little, :unsigned) # Type/Magic field  
+  |> binary(8, :little, :unsigned) # Feature flags
+  |> binary(8, :little, :unsigned) # Chunk size min
+  |> binary(8, :little, :unsigned) # Chunk size avg
+  |> binary(8, :little, :unsigned) # Chunk size max
+  |> tag(:format_index)
+
+# Format Table header (16 bytes)
+defparsec :format_table_header,
+  binary(8, :little, :unsigned)    # Table marker
+  |> binary(8, :little, :unsigned) # Table type
+  |> tag(:format_table_header)
+
+# Table Item (40 bytes each)
+defparsec :table_item,
+  binary(8, :little, :unsigned)    # Offset
+  |> binary(32)                    # Chunk ID (32 bytes)
+  |> tag(:table_item)
+```
+
+### Desync Compatibility Constants
+
+ARCANA uses the exact constants from the desync source code to ensure perfect binary compatibility:
+
+```elixir
+@ca_format_index 0x96824d9c7b129ff9
+@ca_format_table 0xe75b9e112f17417d  
+@ca_format_table_tail_marker 0x4b4f050e5549ecd1
+@ca_format_sha512_256 0x2000000000000000
+```
+
+These constants are embedded in the binary format headers rather than using simple magic bytes, following the desync approach exactly.
 
 ### Endianness
 
@@ -276,20 +331,6 @@ Files created with ARCANA tools can be read by standard casync/desync implementa
 ## Reference Implementation
 
 The reference implementation is available in the AriaStorage module of the Aria Character Core project, written in Elixir with ABNF parsing support.
-
-## Future Extensions
-
-### Planned Features
-
-- Multi-hash support (BLAKE3, SHA-3)
-- Advanced compression algorithms
-- Encryption at rest
-- Distributed storage metadata
-- Incremental synchronization optimization
-
-### Reserved Fields
-
-All reserved fields and flag bits are reserved for future specification versions and MUST be set to zero in version 1.0 implementations.
 
 ---
 
