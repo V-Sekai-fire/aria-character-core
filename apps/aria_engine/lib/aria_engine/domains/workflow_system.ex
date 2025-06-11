@@ -189,10 +189,13 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Execute a traced command with monitoring.
   """
-  def execute_traced_command(_state, [command | args]) do
+  def execute_traced_command(_state, [command, args, workflow_id]) do
     [
-      {:echo, ["Executing traced command: #{command} #{Enum.join(args, " ")}"]},
-      {:execute_command, [command | args]}
+      {:execute_command, [command, args, %{
+        timeout: 60_000,
+        env: %{"WORKFLOW_ID" => workflow_id},
+        fail_on_error: false
+      }]}
     ]
   end
 
@@ -247,9 +250,8 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   """
   def run_tests_with_coverage(_state, []) do
     [
-      {:echo, ["Running tests with coverage"]},
       {:execute_command, ["mix", "test", "--cover"]},
-      {:echo, ["Test coverage analysis complete"]}
+      {:execute_command, ["mix", "coveralls.html"]}
     ]
   end
 
@@ -261,11 +263,16 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     ]
   end
 
-  def run_tests_with_coverage(_state, [project_path, test_command]) do
+  def run_tests_with_coverage(_state, [project_path, _test_command]) do
     [
-      {:echo, ["Running tests with coverage in #{project_path}"]},
-      {:execute_command, [test_command]},
-      {:echo, ["Test coverage analysis complete"]}
+      {:execute_command, ["mix", ["test", "--cover"], %{
+        working_dir: project_path,
+        env: %{"MIX_ENV" => "test"}
+      }]},
+      {:execute_command, ["mix", ["coveralls.html"], %{
+        working_dir: project_path,
+        fail_on_error: false
+      }]}
     ]
   end
 
@@ -283,22 +290,24 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   def build_and_package(_state, [project_path, package_format]) do
     case package_format do
       "docker" ->
+        project_name = Path.basename(project_path)
         [
-          {:echo, ["Building Docker package for #{project_path}"]},
-          {:execute_command, ["docker", "build", "-t", Path.basename(project_path), project_path]},
-          {:echo, ["Docker package built successfully"]}
+          {:execute_command, ["docker", ["build", "-t", "#{project_name}:latest", "."], %{
+            working_dir: project_path
+          }]}
         ]
       "release" ->
         [
-          {:echo, ["Building release package for #{project_path}"]},
-          {:execute_command, ["mix", "release"]},
-          {:echo, ["Release package built successfully"]}
+          {:execute_command, ["mix", ["deps.get"], %{working_dir: project_path}]},
+          {:execute_command, ["mix", ["compile"], %{working_dir: project_path}]},
+          {:execute_command, ["mix", ["release"], %{
+            working_dir: project_path,
+            env: %{"MIX_ENV" => "prod"}
+          }]}
         ]
       _ ->
         [
-          {:echo, ["Building package with format #{package_format} for #{project_path}"]},
-          {:execute_command, ["mix", "release"]},
-          {:echo, ["Package built successfully"]}
+          {:execute_command, ["mix", "release"]}
         ]
     end
   end
@@ -308,10 +317,8 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   """
   def monitor_system_health(_state, []) do
     [
-      {:echo, ["Monitoring system health"]},
       {:execute_command, ["ps", "aux"]},
-      {:execute_command, ["df", "-h"]},
-      {:echo, ["System health check complete"]}
+      {:execute_command, ["df", "-h"]}
     ]
   end
 
@@ -327,16 +334,17 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     ]
   end
 
-  def monitor_system_health(_state, [services, _health_checks]) when is_list(services) do
-    service_checks = Enum.map(services, fn service ->
-      {:echo, ["Checking service with health config: #{service}"]}
+  def monitor_system_health(_state, [services, health_checks]) when is_list(services) and is_map(health_checks) do
+    Enum.map(services, fn service ->
+      case Map.get(health_checks, service) do
+        %{"type" => "http", "url" => url} ->
+          {:execute_command, ["curl", ["-f", "-s", url], %{}]}
+        %{"type" => "tcp", "host" => host, "port" => port} ->
+          {:execute_command, ["nc", ["-z", host, to_string(port)], %{}]}
+        _ ->
+          {:execute_command, ["echo", ["No health check defined for #{service}"], %{}]}
+      end
     end)
-
-    service_checks ++ [
-      {:execute_command, ["ps", "aux"]},
-      {:execute_command, ["df", "-h"]},
-      {:echo, ["System health check complete with health configs"]}
-    ]
   end
 
   @doc """

@@ -25,7 +25,7 @@ defmodule AriaCharacterCore.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
-      
+
       # Shared utilities that all apps might need
       {:jason, "~> 1.4"},
       {:telemetry, "~> 1.2"},
@@ -44,7 +44,9 @@ defmodule AriaCharacterCore.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       format: ["format", "cmd --app aria_* mix format"],
       quality: ["format", "credo --strict", "dialyzer"],
-      app: ["app"]
+      app: ["app"],
+      "cycle.analyze": ["run scripts/analyze_commit_cycles.exs"],
+      "cycle.format": ["cmd", "sh", "-c", "elixir scripts/analyze_commit_cycles.exs --format-commit"]
     ]
   end
 end

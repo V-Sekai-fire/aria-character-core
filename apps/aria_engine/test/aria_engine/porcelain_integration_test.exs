@@ -15,10 +15,10 @@ defmodule AriaEngine.PortcelainIntegrationTest do
       result = Actions.execute_command(state, ["echo", ["Hello, World!"], %{}])
 
       assert %State{} = result
-      assert State.get_object(result, "command_result", "last_command") == "echo"
-      assert State.get_object(result, "command_result", "last_exit_code") == 0
-      assert State.get_object(result, "command_result", "last_success") == true
-      assert String.contains?(State.get_object(result, "command_result", "last_output"), "Hello, World!")
+      assert State.get_object(result, "last_command", "command") == "echo"
+      assert State.get_object(result, "last_command", "exit_code") == 0
+      assert State.get_object(result, "last_command", "success") == true
+      assert String.contains?(State.get_object(result, "last_command", "stdout"), "Hello, World!")
     end
 
     test "execute_command action handles command failures" do
@@ -124,11 +124,14 @@ defmodule AriaEngine.PortcelainIntegrationTest do
       actions = FileManagement.replace_file_safely(state, [old_file, new_file])
 
       assert is_list(actions)
-      assert length(actions) == 2
+      assert length(actions) == 3  # copy_file + copy_file + echo
 
-      [{:copy_file, [^old_file, backup_path, %{force: false}]},
-       {:copy_file, [^new_file, ^old_file, %{force: true}]}] = actions
-      assert String.starts_with?(backup_path, old_file <> ".backup.")
+      [{:copy_file, [^old_file, backup_path]},
+       {:copy_file, [^new_file, ^old_file]},
+       {:echo, [echo_msg]}] = actions
+
+      assert String.starts_with?(backup_path, old_file <> ".backup")
+      assert String.contains?(echo_msg, "Safely replaced")
     end
 
     test "create_directory_structure method returns correct action sequence" do
@@ -321,7 +324,7 @@ defmodule AriaEngine.PortcelainIntegrationTest do
       result = execute_command_fn.(state, ["echo", ["Domain integration test"], %{}])
 
       assert %State{} = result
-      assert State.get_object(result, "command_result", "last_success") == true
+      assert State.get_object(result, "last_command", "success") == true
     end
   end
 

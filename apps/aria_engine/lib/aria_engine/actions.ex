@@ -17,12 +17,19 @@ defmodule AriaEngine.Actions do
 
   Updates state with execution results including exit code, output, and timing.
   """
-  def execute_command(state, [command, args_list, _opts]) when is_list(args_list) do
+  def execute_command(state, [command, args_list, opts]) when is_list(args_list) do
     # Handle test format: [command, [args], options]
-    execute_command(state, [command | args_list])
+    execute_command_with_opts(state, command, args_list, opts)
   end
 
   def execute_command(state, [command | args]) do
+    # Handle simple format: [command, arg1, arg2, ...]
+    execute_command_with_opts(state, command, args, %{})
+  end
+
+  defp execute_command_with_opts(state, command, args, opts) do
+    fail_on_error = Map.get(opts, :fail_on_error, true)
+
     Logger.info("Executing command: #{command} #{Enum.join(args, " ")}")
 
     start_time = System.monotonic_time(:millisecond)
@@ -55,7 +62,14 @@ defmodule AriaEngine.Actions do
         new_state
       else
         Logger.warning("Command failed with exit code #{result.status}")
-        false
+        if fail_on_error do
+          false
+        else
+          # Continue on error - update state with failure info but don't fail
+          new_state
+          |> State.set_object("command_result", "last_exit_code", result.status)
+          |> State.set_object("command_result", "last_success", false)
+        end
       end
 
     rescue
@@ -63,11 +77,16 @@ defmodule AriaEngine.Actions do
         Logger.error("Command execution failed: #{inspect(error)}")
 
         # Update state with error information
-        state
+        error_state = state
         |> State.set_object("last_command", "command", command)
         |> State.set_object("last_command", "error", inspect(error))
         |> State.set_object("last_command", "success", false)
-        |> then(fn _ -> false end)
+
+        if fail_on_error do
+          false
+        else
+          error_state
+        end
     end
   end
 

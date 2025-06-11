@@ -163,8 +163,7 @@ defmodule AriaEngine.Domains.FileManagement do
     timestamp = DateTime.utc_now() |> DateTime.to_iso8601(:basic)
     backup_name = "#{source}.backup.#{timestamp}"
     [
-      {:copy_file, [source, backup_name]},
-      {:echo, ["Backed up #{source} to #{backup_name}"]}
+      {:copy_file, [source, backup_name, %{force: false}]}
     ]
   end
 
@@ -172,11 +171,11 @@ defmodule AriaEngine.Domains.FileManagement do
   Replace a file safely by creating a backup first.
   """
   def replace_file_safely(_state, [source, destination]) do
-    backup_dest = destination <> ".backup"
+    backup_dest = source <> ".backup"
     [
-      {:copy_file, [destination, backup_dest]},
-      {:copy_file, [source, destination]},
-      {:echo, ["Safely replaced #{destination} (backup at #{backup_dest})"]}
+      {:copy_file, [source, backup_dest]},
+      {:copy_file, [destination, source]},
+      {:echo, ["Safely replaced #{source} (backup at #{backup_dest})"]}
     ]
   end
 
@@ -191,14 +190,14 @@ defmodule AriaEngine.Domains.FileManagement do
   end
 
   def create_directory_structure(_state, [base_path, subdirs]) when is_list(subdirs) do
+    base_action = {:create_directory, [base_path, %{parents: true}]}
+
     create_actions = Enum.map(subdirs, fn subdir ->
       full_path = Path.join(base_path, subdir)
-      {:create_directory, [full_path]}
+      {:create_directory, [full_path, %{parents: true}]}
     end)
 
-    create_actions ++ [
-      {:echo, ["Created directory structure with subdirs: #{Enum.join(subdirs, ", ")}"]}
-    ]
+    [base_action | create_actions]
   end
 
   @doc """
@@ -227,12 +226,12 @@ defmodule AriaEngine.Domains.FileManagement do
   def setup_workspace(_state, [workspace_path, project_name]) do
     full_path = Path.join(workspace_path, project_name)
     [
-      {:create_directory, [full_path]},
-      {:create_directory, [Path.join(full_path, "src")]},
-      {:create_directory, [Path.join(full_path, "test")]},
-      {:create_directory, [Path.join(full_path, "docs")]},
-      {:create_directory, [Path.join(full_path, "config")]},
-      {:execute_command, ["touch", Path.join(full_path, "README.md")]}
+      {:create_directory, [full_path, %{parents: true}]},
+      {:create_directory, [Path.join(full_path, "src"), %{parents: true}]},
+      {:create_directory, [Path.join(full_path, "test"), %{parents: true}]},
+      {:create_directory, [Path.join(full_path, "docs"), %{parents: true}]},
+      {:create_directory, [Path.join(full_path, "config"), %{parents: true}]},
+      {:execute_command, ["touch", [Path.join(full_path, "README.md")], %{}]}
     ]
   end
 
