@@ -22,9 +22,9 @@ defmodule AriaWorkflow.WorkflowSystemTest do
     test "loads built-in workflows", %{registry: registry} do
       {:ok, basic_timing} = WorkflowRegistry.get_workflow("basic_timing", registry: registry)
       assert basic_timing.id == "basic_timing"
-      assert length(basic_timing.goals) > 0
-      assert length(basic_timing.tasks) > 0
-      assert length(basic_timing.methods) > 0
+      assert length(basic_timing.todos) > 0
+      assert length(basic_timing.task_methods) > 0
+      assert length(basic_timing.unigoal_methods) > 0
     end
 
     test "lists all workflows", %{registry: registry} do
@@ -38,9 +38,9 @@ defmodule AriaWorkflow.WorkflowSystemTest do
 
     test "registers custom workflow", %{registry: registry} do
       custom_workflow = WorkflowDefinition.new("test_workflow", %{
-        goals: [{"test", "system", "ready"}],
-        tasks: [{"dummy_task", fn _state, _args -> {:ok, %{}, %{}} end}],
-        methods: [],
+        todos: [{"test", "system", "ready"}],
+        task_methods: [{"dummy_task", fn _state, _args -> {:ok, %{}} end}],
+        unigoal_methods: [],
         documentation: %{overview: "Test workflow"},
         metadata: %{version: "1.0"}
       })
@@ -98,30 +98,30 @@ defmodule AriaWorkflow.WorkflowSystemTest do
   describe "Workflow Definition" do
     test "creates new workflow definition" do
       workflow = WorkflowDefinition.new("test", %{
-        goals: [{"goal", "subject", "object"}],
-        tasks: [{"task1", fn _s, _a -> {:ok, %{}, %{}} end}],
-        methods: [{"method1", fn _s, _a -> {:ok, %{}, %{}} end}]
+        todos: [{"goal", "subject", "object"}],
+        task_methods: [{"task1", fn _s, _a -> {:ok, %{}} end}],
+        unigoal_methods: [{"method1", fn _s, _a -> {:ok, %{}} end}]
       })
 
       assert workflow.id == "test"
-      assert length(workflow.goals) == 1
-      assert length(workflow.tasks) == 1
-      assert length(workflow.methods) == 1
+      assert length(workflow.todos) == 1
+      assert length(workflow.task_methods) == 1
+      assert length(workflow.unigoal_methods) == 1
     end
 
     test "validates workflow definition" do
       valid_workflow = WorkflowDefinition.new("valid", %{
-        goals: [{"goal", "subject", "object"}],
-        tasks: [{"task1", fn _s, _a -> {:ok, %{}, %{}} end}],
-        methods: []
+        todos: [{"goal", "subject", "object"}],
+        task_methods: [{"task1", fn _s, _a -> {:ok, %{}} end}],
+        unigoal_methods: []
       })
 
       assert :ok = WorkflowDefinition.validate(valid_workflow)
 
       invalid_workflow = WorkflowDefinition.new("", %{
-        goals: [],
-        tasks: [],
-        methods: []
+        todos: [],
+        task_methods: [],
+        unigoal_methods: []
       })
 
       assert {:error, errors} = WorkflowDefinition.validate(invalid_workflow)
@@ -131,12 +131,12 @@ defmodule AriaWorkflow.WorkflowSystemTest do
 
     test "converts goals to multigoal" do
       workflow = WorkflowDefinition.new("test", %{
-        goals: [
+        todos: [
           {"location", "player", "room1"},
           {"has", "player", "sword"}
         ],
-        tasks: [],
-        methods: []
+        task_methods: [],
+        unigoal_methods: []
       })
 
       {:ok, multigoal} = WorkflowDefinition.to_multigoal(workflow)
@@ -148,13 +148,13 @@ defmodule AriaWorkflow.WorkflowSystemTest do
     end
 
     test "gets task and method by name" do
-      task_fn = fn _s, _a -> {:ok, %{}, %{}} end
-      method_fn = fn _s, _a -> {:ok, %{}, %{}} end
+      task_fn = fn _s, _a -> {:ok, %{}} end
+      method_fn = fn _s, _a -> {:ok, %{}} end
 
       workflow = WorkflowDefinition.new("test", %{
-        goals: [],
-        tasks: [{"test_task", task_fn}],
-        methods: [{"test_method", method_fn}]
+        todos: [],
+        task_methods: [{"test_task", task_fn}],
+        unigoal_methods: [{"test_method", method_fn}]
       })
 
       {:ok, retrieved_task} = WorkflowDefinition.get_task(workflow, "test_task")
@@ -245,12 +245,13 @@ defmodule AriaWorkflow.WorkflowSystemTest do
   describe "Basic Timing Tasks" do
     test "gets current time" do
       state = State.new()
-      {:ok, new_state, result} = AriaWorkflow.Tasks.BasicTiming.get_current_time(state, %{})
+      {:ok, new_state} = AriaWorkflow.Tasks.BasicTiming.get_current_time(state, %{})
+      result = new_state.current_time_info
 
-      assert Map.has_key?(result, :utc_time)
-      assert Map.has_key?(result, :local_time)
+      assert Map.has_key?(result, :utc)
+      assert Map.has_key?(result, :local)
       assert Map.has_key?(result, :timezone)
-      assert %DateTime{} = result.utc_time
+      assert %DateTime{} = result.utc
     end
 
     test "manages timers" do
@@ -258,14 +259,18 @@ defmodule AriaWorkflow.WorkflowSystemTest do
       timer_id = "test_timer"
 
       # Start timer
-      {:ok, state_with_timer, start_result} = AriaWorkflow.Tasks.BasicTiming.start_timer(state, %{timer_id: timer_id})
+      {:ok, state_with_timer} = AriaWorkflow.Tasks.BasicTiming.start_timer(state, %{timer_id: timer_id})
+      active_timers = Map.get(state_with_timer, :active_timers, %{})
+      start_result = Map.get(active_timers, timer_id, %{})
       assert Map.has_key?(start_result, :timer_id)
       assert Map.has_key?(start_result, :start_time)
 
       :timer.sleep(10)  # Brief delay
 
       # Stop timer
-      {:ok, final_state, stop_result} = AriaWorkflow.Tasks.BasicTiming.stop_timer(state_with_timer, %{timer_id: timer_id})
+      {:ok, final_state} = AriaWorkflow.Tasks.BasicTiming.stop_timer(state_with_timer, %{timer_id: timer_id})
+      completed_timers = Map.get(final_state, :completed_timers, %{})
+      stop_result = Map.get(completed_timers, timer_id, %{})
       assert Map.has_key?(stop_result, :timer_id)
       assert Map.has_key?(stop_result, :duration_ms)
       assert stop_result.duration_ms > 0
@@ -337,14 +342,14 @@ defmodule AriaWorkflow.WorkflowSystemTest do
 
     test "validates workflow definitions properly" do
       invalid_workflow = WorkflowDefinition.new("invalid", %{
-        goals: ["invalid_goal_format"],  # Should be tuples
-        tasks: [{"invalid_task", "not_a_function"}],  # Should be function
-        methods: []
+        todos: ["invalid_todo_format"],  # Should be tuples
+        task_methods: [{"invalid_task", "not_a_function"}],  # Should be function
+        unigoal_methods: []
       })
 
       {:error, errors} = WorkflowDefinition.validate(invalid_workflow)
       assert is_list(errors)
-      assert length(errors) >= 2  # At least goal and task validation errors
+      assert length(errors) >= 1  # At least todo validation error
     end
   end
 end

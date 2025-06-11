@@ -33,7 +33,7 @@ defmodule AriaWorkflow.Tasks.BasicTiming do
 
     # Update state with timing info
     new_state = Map.put(state_with_tz, :current_time_info, time_info)
-    {:ok, new_state, time_info}
+    {:ok, new_state}
   end
 
   @doc """
@@ -79,7 +79,7 @@ defmodule AriaWorkflow.Tasks.BasicTiming do
     new_active_timers = Map.put(active_timers, timer_id, timer_info)
     new_state = Map.put(state, :active_timers, new_active_timers)
 
-    {:ok, new_state, timer_info}
+    {:ok, new_state}
   end
 
   @doc """
@@ -120,7 +120,7 @@ defmodule AriaWorkflow.Tasks.BasicTiming do
         |> Map.put(:active_timers, new_active_timers)
         |> Map.put(:completed_timers, new_completed)
 
-        {:ok, new_state, completed_timer}
+        {:ok, new_state}
     end
   end
 

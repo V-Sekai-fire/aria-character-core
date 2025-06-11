@@ -48,7 +48,7 @@ defmodule AriaWorkflow.Methods.CommandTracing do
          {state3, execution_result} <- execute_command_safely(state2, command, command_args, trace_id),
 
          # Stop timing
-         {:ok, state4, _timer_result} <- BasicTiming.stop_timer(state3, %{
+         {:ok, state4} <- BasicTiming.stop_timer(state3, %{
            timer_id: trace_id,
            status: get_execution_status(execution_result)
          }),

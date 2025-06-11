@@ -25,9 +25,13 @@ defmodule AriaWorkflow.Methods.BasicTiming do
 
     Logger.info("Starting timed execution: #{operation}")
 
-    with {:ok, state1, _timer_result} <- BasicTiming.start_timer(state, %{timer_id: timer_id, command: operation}),
+    with {:ok, state1} <- BasicTiming.start_timer(state, %{timer_id: timer_id, command: operation}),
          {:ok, state2, result} <- execute_operation(state1, args),
-         {:ok, state3, timer_result} <- BasicTiming.stop_timer(state2, %{timer_id: timer_id, status: :completed}) do
+         {:ok, state3} <- BasicTiming.stop_timer(state2, %{timer_id: timer_id, status: :completed}) do
+
+      # Get timer result from completed timers in state
+      completed_timers = Map.get(state3, :completed_timers, %{})
+      timer_result = Map.get(completed_timers, timer_id, %{})
 
       # Calculate duration from timer result
       duration = Map.get(timer_result, :duration_seconds, 0)
@@ -81,7 +85,7 @@ defmodule AriaWorkflow.Methods.BasicTiming do
     Logger.info("Starting sequential timing session: #{session_id}")
 
     # Start session timer
-    {:ok, state1, _start_result} = BasicTiming.start_timer(state, %{timer_id: session_id, command: "sequential_operations"})
+    {:ok, state1} = BasicTiming.start_timer(state, %{timer_id: session_id, command: "sequential_operations"})
 
     # Execute each operation with timing
     {final_state, results} = Enum.reduce_while(operations, {state1, []}, fn operation, {current_state, acc_results} ->
@@ -100,7 +104,11 @@ defmodule AriaWorkflow.Methods.BasicTiming do
 
       _ ->
         # Stop session timer
-        {:ok, state2, session_result} = BasicTiming.stop_timer(final_state, %{timer_id: session_id, status: :completed})
+        {:ok, state2} = BasicTiming.stop_timer(final_state, %{timer_id: session_id, status: :completed})
+
+        # Get session result from completed timers in state
+        completed_timers = Map.get(state2, :completed_timers, %{})
+        session_result = Map.get(completed_timers, session_id, %{})
 
         total_duration = Map.get(session_result, :duration_seconds, 0)
         operation_count = length(results)
