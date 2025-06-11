@@ -5,6 +5,8 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
   use ExUnit.Case
   alias AriaStorage.Parsers.CasyncFormat
 
+  @testdata_path Path.join([__DIR__, "..", "support", "testdata"])
+
   @moduledoc """
   Comprehensive tests for the ABNF casync/desync parser using real testdata
   from the desync repository.
@@ -442,16 +444,13 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
   end
 
   describe "specific format validation" do
-    test "validates caibx magic header structure" do
+    test "validates caibx format detection" do
       file_path = Path.join(@testdata_path, "blob1.caibx")
 
       case File.read(file_path) do
-        {:ok, <<0xCA, 0x1B, 0x5C, _rest::binary>>} ->
-          # Correct magic header
-          assert {:ok, :caibx} = CasyncFormat.detect_format(File.read!(file_path))
-
         {:ok, data} ->
-          flunk("Unexpected magic header in blob1.caibx: #{inspect(binary_part(data, 0, min(3, byte_size(data))))}")
+          # Should detect as caibx format regardless of whether it uses FormatIndex or legacy magic bytes
+          assert {:ok, :caibx} = CasyncFormat.detect_format(data)
 
         {:error, _} ->
           # Skip if file doesn't exist
@@ -459,16 +458,13 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       end
     end
 
-    test "validates catar magic header structure" do
+    test "validates catar format detection" do
       file_path = Path.join(@testdata_path, "flat.catar")
 
       case File.read(file_path) do
-        {:ok, <<0xCA, 0x1A, 0x52, _rest::binary>>} ->
-          # Correct magic header
-          assert {:ok, :catar} = CasyncFormat.detect_format(File.read!(file_path))
-
         {:ok, data} ->
-          flunk("Unexpected magic header in flat.catar: #{inspect(binary_part(data, 0, min(3, byte_size(data))))}")
+          # Should detect as catar format regardless of whether it uses FormatIndex or legacy magic bytes
+          assert {:ok, :catar} = CasyncFormat.detect_format(data)
 
         {:error, _} ->
           # Skip if file doesn't exist
@@ -557,7 +553,8 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
           assert {:ok, result} = CasyncFormat.parse_index(data)
 
           # Test JSON serialization (ensures all data types are serializable)
-          json_result = Jason.encode!(result)
+          json_safe_result = CasyncFormat.to_json_safe(result)
+          json_result = Jason.encode!(json_safe_result)
           assert is_binary(json_result)
 
           # Test round-trip

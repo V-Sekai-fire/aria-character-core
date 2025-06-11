@@ -47,9 +47,6 @@ defmodule AriaStorage.MixProject do
       # CDN integration
       {:finch, "~> 0.16"},
 
-      # Parsing libraries
-      {:abnf_parsec, "~> 2.0", runtime: false},
-
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
 
