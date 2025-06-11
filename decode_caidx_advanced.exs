@@ -275,12 +275,13 @@ defmodule AdvancedCaidxDecoder do
     IO.puts("==============================")
     
     # Try multiple possible URLs for the CAIDX file including CDN services
+    # Focus on Windows executable which should be the larger ~300MB file
     urls = [
       "https://raw.githack.com/V-Sekai/casync-v-sekai-game/main/vsekai_game_windows_x86_64.caidx",
       "https://cdn.jsdelivr.net/gh/V-Sekai/casync-v-sekai-game@main/vsekai_game_windows_x86_64.caidx",
-#      "https://github.com/V-Sekai/casync-v-sekai-game/raw/main/vsekai_game_macos_x86_64.caidx",
-#      "https://github.com/V-Sekai/casync-v-sekai-game/raw/refs/heads/main/vsekai_game_macos_x86_64.caidx",
-#      "https://raw.githubusercontent.com/V-Sekai/casync-v-sekai-game/main/vsekai_game_macos_x86_64.caidx"
+      "https://github.com/V-Sekai/casync-v-sekai-game/raw/main/vsekai_game_windows_x86_64.caidx",
+      "https://github.com/V-Sekai/casync-v-sekai-game/raw/refs/heads/main/vsekai_game_windows_x86_64.caidx",
+      "https://raw.githubusercontent.com/V-Sekai/casync-v-sekai-game/main/vsekai_game_windows_x86_64.caidx"
     ]
     
     output_dir = "/tmp/vsekai_decode_advanced"
@@ -325,7 +326,7 @@ defmodule AdvancedCaidxDecoder do
         end
         
         # Save original file
-        original_file = Path.join(output_dir, "vsekai_game_macos_x86_64.caidx")
+        original_file = Path.join(output_dir, "vsekai_game_windows_x86_64.caidx")
         File.write!(original_file, binary_data)
         IO.puts("Saved original file: #{original_file}")
         
@@ -350,6 +351,9 @@ defmodule AdvancedCaidxDecoder do
                 
                 # Test downloading and decompressing a chunk
                 test_chunk_download(parsed_data, output_dir)
+                
+                # Download all chunks and assemble the final executable
+                assemble_executable(parsed_data, output_dir)
                 
                 # Test encoding roundtrip
                 test_roundtrip(parsed_data, output_dir)
@@ -384,7 +388,8 @@ defmodule AdvancedCaidxDecoder do
   
   defp print_detailed_info(data) do
     IO.puts("\n=== DETAILED ANALYSIS ===")
-    IO.puts("Format: #{data.format} (Note: Based on feature flags, this appears to be CAIBX)")
+    archive_type = if data.format == :caibx, do: "blob (single file)", else: "directory tree"
+    IO.puts("Format: #{data.format} - #{archive_type}")
     IO.puts("Header Version: #{data.header.version}")
     IO.puts("Feature Flags: 0x#{Integer.to_string(data.feature_flags, 16)} (#{data.feature_flags})")
     
@@ -394,6 +399,7 @@ defmodule AdvancedCaidxDecoder do
     IO.puts("  Maximum: #{format_bytes(data.chunk_size_max)}")
     
     IO.puts("\nArchive Information:")
+    IO.puts("  Type: #{archive_type}")
     IO.puts("  Total Size: #{format_bytes(data.header.total_size)}")
     IO.puts("  Chunk Count: #{data.header.chunk_count}")
     
@@ -570,6 +576,119 @@ defmodule AdvancedCaidxDecoder do
       end
     else
       IO.puts("No chunks available to test download")
+    end
+  end
+
+  defp assemble_executable(data, output_dir) do
+    IO.puts("\n=== ASSEMBLING COMPLETE EXECUTABLE ===")
+    
+    if length(data.chunks) == 0 do
+      IO.puts("No chunks to assemble")
+      :ok
+    else
+      output_file = Path.join(output_dir, "vsekai_game.exe")
+      total_chunks = length(data.chunks)
+      IO.puts("Assembling #{total_chunks} chunks into #{output_file}")
+      IO.puts("Expected final size: #{format_bytes(data.header.total_size)}")
+      
+      # Try multiple CDN URLs for better access
+      base_urls = [
+        "https://raw.githack.com/V-Sekai/casync-v-sekai-game/main/store",
+        "https://cdn.jsdelivr.net/gh/V-Sekai/casync-v-sekai-game@main/store"
+      ]
+      
+      # Open output file for writing
+      {:ok, output_handle} = File.open(output_file, [:write, :binary])
+      
+      try do
+        {_final_offset, successful_chunks, failed_chunks} = 
+          data.chunks
+          |> Enum.with_index()
+          |> Enum.reduce({0, 0, 0}, fn {chunk, index}, {current_offset, successful_chunks, failed_chunks} ->
+            chunk_id_hex = Base.encode16(chunk.chunk_id, case: :lower)
+            
+            # Progress indicator
+            if rem(index, 10) == 0 or index == total_chunks - 1 do
+              progress = Float.round((index + 1) / total_chunks * 100, 1)
+              IO.puts("Progress: #{progress}% (#{index + 1}/#{total_chunks}) - Processing chunk #{String.slice(chunk_id_hex, 0, 8)}...")
+            end
+            
+            # Verify offset alignment
+            updated_offset = if current_offset != chunk.offset do
+              IO.puts("⚠️  Offset mismatch at chunk #{index}: expected #{chunk.offset}, current #{current_offset}")
+              # Pad with zeros if we're behind
+              if current_offset < chunk.offset do
+                padding_size = chunk.offset - current_offset
+                IO.puts("   Padding with #{padding_size} zeros")
+                IO.binwrite(output_handle, :binary.copy(<<0>>, padding_size))
+                chunk.offset
+              else
+                current_offset
+              end
+            else
+              current_offset
+            end
+            
+            # Try to download and decompress this chunk
+            result = Enum.find_value(base_urls, fn base_url ->
+              case SimpleCasyncFormat.download_and_decompress_chunk(chunk_id_hex, base_url) do
+                {:ok, decompressed_data} -> {:ok, decompressed_data}
+                {:error, {:http_error, 404}} -> nil  # Try next URL
+                {:error, _reason} -> nil  # Try next URL
+              end
+            end)
+            
+            case result do
+              {:ok, decompressed_data} ->
+                # Verify chunk size matches expected
+                actual_size = byte_size(decompressed_data)
+                if actual_size != chunk.size do
+                  IO.puts("⚠️  Size mismatch for chunk #{String.slice(chunk_id_hex, 0, 8)}: expected #{chunk.size}, got #{actual_size}")
+                end
+                
+                # Write chunk data to output file
+                IO.binwrite(output_handle, decompressed_data)
+                {updated_offset + actual_size, successful_chunks + 1, failed_chunks}
+                
+              nil ->
+                IO.puts("✗ Failed to download chunk #{String.slice(chunk_id_hex, 0, 8)} from any URL")
+                # Write zeros as placeholder
+                IO.binwrite(output_handle, :binary.copy(<<0>>, chunk.size))
+                {updated_offset + chunk.size, successful_chunks, failed_chunks + 1}
+            end
+          end)
+        
+        File.close(output_handle)
+        
+        # Get final file size
+        final_size = File.stat!(output_file).size
+        
+        IO.puts("\n=== ASSEMBLY COMPLETE ===")
+        IO.puts("Output file: #{output_file}")
+        IO.puts("Final size: #{format_bytes(final_size)}")
+        IO.puts("Expected size: #{format_bytes(data.header.total_size)}")
+        IO.puts("Successful chunks: #{successful_chunks}/#{total_chunks}")
+        IO.puts("Failed chunks: #{failed_chunks}/#{total_chunks}")
+        
+        if final_size == data.header.total_size do
+          IO.puts("✓ File size matches expected size!")
+        else
+          IO.puts("⚠️  File size mismatch - assembly may be incomplete")
+        end
+        
+        if failed_chunks > 0 do
+          IO.puts("⚠️  Some chunks failed to download - the executable may not work correctly")
+          IO.puts("   Failed chunks were filled with zeros as placeholders")
+        else
+          IO.puts("✓ All chunks downloaded successfully!")
+          IO.puts("✓ The assembled executable should be complete and functional")
+        end
+        
+      rescue
+        e ->
+          File.close(output_handle)
+          IO.puts("✗ Error during assembly: #{inspect(e)}")
+      end
     end
   end
 
