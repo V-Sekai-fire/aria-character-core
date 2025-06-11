@@ -68,6 +68,8 @@ defmodule AriaWorkflow.WorkflowDefinition do
   def new(id, definition) do
     # Support legacy :goals field for backward compatibility
     todos = case {Map.get(definition, :todos), Map.get(definition, :goals)} do
+      {nil, nil} -> []
+      {nil, goals} when is_list(goals) -> goals  # Legacy support
       {[], nil} -> []
       {[], goals} when is_list(goals) -> goals  # Legacy support
       {todos, _} when is_list(todos) -> todos   # New format
@@ -111,8 +113,22 @@ defmodule AriaWorkflow.WorkflowDefinition do
         _ -> false
       end)
 
-      multigoal = Multigoal.new(goals)
-      {:ok, multigoal}
+      # Check specifically for malformed goal tuples (not tasks or actions)
+      malformed_goals = Enum.filter(todos, fn
+        {pred, subj, obj} when is_binary(pred) and is_binary(subj) and is_binary(obj) -> false  # Valid goal
+        {task_name, args} when is_binary(task_name) and is_list(args) -> false  # Valid task
+        {action_name, args} when is_atom(action_name) and is_list(args) -> false  # Valid action
+        {_, _} -> true  # 2-tuple that's not a valid task or action - this is malformed
+        tuple when is_tuple(tuple) and tuple_size(tuple) > 3 -> true  # More than 3 elements - malformed
+        _ -> false  # Other formats are acceptable (might be extensions)
+      end)
+
+      if length(malformed_goals) > 0 do
+        {:error, "Malformed goal tuples found: #{inspect(malformed_goals)}"}
+      else
+        multigoal = Multigoal.new(goals)
+        {:ok, multigoal}
+      end
     rescue
       error -> {:error, error}
     end

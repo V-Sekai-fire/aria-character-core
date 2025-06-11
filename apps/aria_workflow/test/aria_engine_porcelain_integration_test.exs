@@ -129,20 +129,16 @@ defmodule AriaEnginePortelainIntegrationTest do
           {:execute_command, ["echo", "From task"]}
         ]
       end)
-      |> Domain.add_unigoal_method("test_goal", fn state, [pred, subj, obj] ->
-        if pred == "test_goal" and obj == "achieved" do
-          [{"test_task", []}]
-        else
-          false
-        end
-      end)
+      # Add unigoal method for "test_goal" predicate
+      # (method name matches the predicate it handles)
+      |> Domain.add_unigoal_method("test_goal", &achieve_test_goal/2)
 
       state = State.new()
 
       # Mixed todos: action, goal, task, action
       todos = [
         {:echo, ["Starting mixed workflow"]},           # action
-        {"test_goal", "system", "achieved"},            # goal
+        {"test_goal", "system", "achieved"},            # goal (predicate: test_goal, subject: system, object: achieved)
         {"test_task", []},                              # task
         {:execute_command, ["echo", "Workflow done"]}   # action
       ]
@@ -297,6 +293,15 @@ defmodule AriaEnginePortelainIntegrationTest do
 
       # Cleanup
       Actions.execute_command(state, ["rm", "-rf", test_file, backup_dir])
+    end
+  end
+
+  # Helper method for test_goal predicate
+  defp achieve_test_goal(_state, [_subj, obj]) do
+    if obj == "achieved" do
+      [{"test_task", []}]
+    else
+      false
     end
   end
 end

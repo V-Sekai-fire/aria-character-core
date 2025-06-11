@@ -133,11 +133,15 @@ defmodule AriaEngine.Actions do
   end
 
   @doc """
-  Check if a file exists using external test command.
+  Check if a file exists using external ls command.
   """
   def file_exists(state, [file_path]) do
-    case execute_command(state, ["test", "-f", file_path]) do
-      false -> false  # Command failed, file doesn't exist
+    # Use ls instead of test -f as it's more reliable with Porcelain
+    case execute_command(state, ["ls", file_path]) do
+      false ->
+        # Command failed, file doesn't exist - still return state with the result
+        state
+        |> State.set_object("file_exists", file_path, false)
       new_state ->
         # Update state to record file existence
         new_state

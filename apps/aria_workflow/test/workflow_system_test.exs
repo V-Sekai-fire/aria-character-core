@@ -280,7 +280,7 @@ defmodule AriaWorkflow.WorkflowSystemTest do
   describe "Basic Timing Methods" do
     test "times command execution" do
       state = State.new()
-      {:ok, final_state, result} = AriaWorkflow.Methods.BasicTiming.time_command_execution(state, %{
+      {:ok, _final_state, result} = AriaWorkflow.Methods.BasicTiming.time_command_execution(state, %{
         command: "echo",
         args: ["Hello, World!"]
       })
@@ -305,13 +305,12 @@ defmodule AriaWorkflow.WorkflowSystemTest do
         args: ["test"]
       })
 
-      assert Map.has_key?(start_result, :trace_id)
-      assert start_result.trace_id == trace_id
+      assert start_result == trace_id
 
       :timer.sleep(10)  # Brief delay
 
       # End trace
-      {:ok, final_state, end_result} = AriaWorkflow.Tasks.CommandTracing.trace_command_end(state_with_trace, %{
+      {:ok, _final_state, end_result} = AriaWorkflow.Tasks.CommandTracing.trace_command_end(state_with_trace, %{
         trace_id: trace_id,
         exit_code: 0,
         output: "test output"
@@ -324,10 +323,10 @@ defmodule AriaWorkflow.WorkflowSystemTest do
   end
 
   describe "Performance and Reliability" do
-    test "handles concurrent registry access" do
+    test "handles concurrent registry access", %{registry: registry} do
       tasks = for _i <- 1..10 do
         Task.async(fn ->
-          {:ok, workflow} = WorkflowEngine.get_workflow("basic_timing")
+          {:ok, workflow} = WorkflowEngine.get_workflow("basic_timing", registry: registry)
           assert workflow.id == "basic_timing"
         end)
       end
@@ -336,8 +335,8 @@ defmodule AriaWorkflow.WorkflowSystemTest do
       assert length(results) == 10
     end
 
-    test "handles missing workflow gracefully" do
-      assert {:error, :not_found} = WorkflowEngine.get_workflow("nonexistent_workflow")
+    test "handles missing workflow gracefully", %{registry: registry} do
+      assert {:error, :not_found} = WorkflowEngine.get_workflow("nonexistent_workflow", registry: registry)
     end
 
     test "validates workflow definitions properly" do

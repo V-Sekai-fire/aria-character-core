@@ -117,8 +117,8 @@ defmodule AriaEngine.Domains.FileManagement do
   @doc """
   Ensure a file exists (create if missing).
   """
-  def ensure_file_exists(state, [predicate, subject, object]) do
-    if predicate == "file_exists" and object == true do
+  def ensure_file_exists(state, [subject, object]) do
+    if object == true do
       case State.get_object(state, "file_exists", subject) do
         true -> []  # File already exists
         _ -> [
@@ -133,8 +133,8 @@ defmodule AriaEngine.Domains.FileManagement do
   @doc """
   Ensure a directory exists (create if missing).
   """
-  def ensure_directory_exists(state, [predicate, subject, object]) do
-    if predicate == "directory_exists" and object == true do
+  def ensure_directory_exists(state, [subject, object]) do
+    if object == true do
       case State.get_object(state, "directory_exists", subject) do
         true -> []  # Directory already exists
         _ -> [

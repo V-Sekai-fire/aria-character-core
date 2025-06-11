@@ -5,27 +5,39 @@ defmodule AriaWorkflow.WorkflowEngineTest do
   use ExUnit.Case, async: true
 
   alias AriaEngine.State
-  alias AriaWorkflow.{WorkflowEngine, WorkflowDefinition, WorkflowExecution}
+  alias AriaWorkflow.{WorkflowEngine, WorkflowDefinition, WorkflowExecution, WorkflowRegistry}
+
+  setup do
+    # Start the workflow registry for testing
+    {:ok, registry} = start_supervised({WorkflowRegistry, name: :"test_registry_#{:rand.uniform(1000)}"})
+
+    {:ok, registry: registry}
+  end
 
   describe "Workflow Engine Core" do
-    test "defines and registers new workflow" do
+    test "defines and registers new workflow", %{registry: registry} do
       workflow_definition = %{
-        goals: [{"test", "system", "ready"}],
-        tasks: [{"test_task", fn _state, _args -> {:ok, %{}, %{result: "success"}} end}],
-        methods: [],
+        todos: [{"test", "system", "ready"}],
+        task_methods: [{"test_task", fn _state, _args -> {:ok, %{}} end}],
+        unigoal_methods: [],
         documentation: %{overview: "Test workflow for engine testing"},
         metadata: %{version: "1.0", test: true}
       }
 
-      {:ok, workflow} = WorkflowEngine.define_workflow("engine_test_workflow", workflow_definition)
+      # Create workflow and register it manually with the test registry
+      workflow = WorkflowDefinition.new("engine_test_workflow", workflow_definition)
+      :ok = WorkflowRegistry.register(workflow, registry: registry)
 
-      assert workflow.id == "engine_test_workflow"
-      assert length(workflow.goals) == 1
-      assert length(workflow.tasks) == 1
+      # Verify registration worked
+      {:ok, retrieved_workflow} = WorkflowRegistry.get_workflow("engine_test_workflow", registry: registry)
+
+      assert retrieved_workflow.id == "engine_test_workflow"
+      assert length(retrieved_workflow.todos) == 1
+      assert length(retrieved_workflow.task_methods) == 1
     end
 
-    test "plans workflow with AriaEngine integration" do
-      {:ok, workflow} = WorkflowEngine.get_workflow("basic_timing")
+    test "plans workflow with AriaEngine integration", %{registry: registry} do
+      {:ok, workflow} = WorkflowEngine.get_workflow("basic_timing", registry: registry)
       initial_state = State.new()
 
       case WorkflowEngine.plan_workflow(workflow, initial_state) do
@@ -61,8 +73,8 @@ defmodule AriaWorkflow.WorkflowEngineTest do
       end
     end
 
-    test "lists available workflows" do
-      workflows = WorkflowEngine.list_workflows()
+    test "lists available workflows", %{registry: registry} do
+      workflows = WorkflowEngine.list_workflows(registry: registry)
       workflow_ids = Enum.map(workflows, & &1.id)
 
       assert "basic_timing" in workflow_ids
@@ -100,8 +112,8 @@ defmodule AriaWorkflow.WorkflowEngineTest do
   end
 
   describe "Error Handling" do
-    test "handles nonexistent workflow gracefully" do
-      assert {:error, :not_found} = WorkflowEngine.get_workflow("nonexistent_workflow")
+    test "handles nonexistent workflow gracefully", %{registry: registry} do
+      assert {:error, :not_found} = WorkflowEngine.get_workflow("nonexistent_workflow", registry: registry)
     end
 
     test "handles invalid workflow definition" do
