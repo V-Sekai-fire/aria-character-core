@@ -3,10 +3,22 @@
 
 defmodule AriaWorkflow.Span do
   @moduledoc """
-  OpenTelemetry-inspired spans for workflow execution tracking.
+  [DEPRECATED] Use AriaEngine.DomainDefinition span context instead.
 
-  A span represents a unit of work or operation within a workflow execution.
-  Spans can be nested to form traces that show the complete execution path.
+  This module is being replaced by the span context built into AriaEngine.DomainDefinition.
+  The key insight is that separate span infrastructure is redundant - todo execution
+  IS the tracing:
+
+  - Todo items = Spans
+  - Todo execution = Span lifecycle
+  - Todo state = Span context
+  - Todo completion = Span finish
+
+  AriaEngine.DomainDefinition provides built-in span context as part of todo execution
+  state, eliminating the need for separate span management.
+
+  OpenTelemetry-inspired spans for workflow execution tracking.
+  Use AriaEngine.DomainDefinition for new span-based tracing.
   """
 
   defstruct [

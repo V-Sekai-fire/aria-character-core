@@ -121,6 +121,10 @@ defmodule AriaEngine.Actions do
     execute_command(state, ["curl", "-o", destination, url])
   end
 
+  def download_file(state, [url, destination, _options]) do
+    execute_command(state, ["curl", "-o", destination, url])
+  end
+
   @doc """
   Archive files using tar.
   """
@@ -201,5 +205,19 @@ defmodule AriaEngine.Actions do
         state
         |> State.set_object("env", var_name, value)
     end
+  end
+
+  @doc """
+  Remove a file or directory path using external rm command.
+  """
+  def remove_path(state, [path]) do
+    execute_command(state, ["rm", "-rf", path])
+  end
+
+  @doc """
+  Change permissions of a file or directory using external chmod command.
+  """
+  def change_permissions(state, [mode, path]) do
+    execute_command(state, ["chmod", mode, path])
   end
 end

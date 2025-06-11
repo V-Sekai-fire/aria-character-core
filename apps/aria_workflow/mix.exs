@@ -14,6 +14,7 @@ defmodule AriaWorkflow.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
+      elixirc_options: [warnings_as_errors: true],
       deps: deps()
     ]
   end
@@ -35,6 +36,9 @@ defmodule AriaWorkflow.MixProject do
 
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
+
+      # Planning engine for workflow execution
+      {:aria_engine, in_umbrella: true},
 
       # Character shaping for SOP assistance
       {:aria_shape, in_umbrella: true},

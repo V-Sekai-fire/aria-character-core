@@ -4,7 +4,7 @@
 defmodule AriaWorkflow.Methods.CommandTracing do
   @moduledoc """
   Command tracing methods for SOP execution.
-  
+
   Provides compound operations that combine multiple command tracing tasks
   to achieve higher-level command execution monitoring goals.
   """
@@ -14,7 +14,7 @@ defmodule AriaWorkflow.Methods.CommandTracing do
 
   @doc """
   Executes a command with full tracing capabilities.
-  
+
   This method combines command tracing, timing, and error handling
   to provide comprehensive command execution monitoring.
   """
@@ -22,45 +22,45 @@ defmodule AriaWorkflow.Methods.CommandTracing do
     command = Map.get(args, :command)
     command_args = Map.get(args, :args, [])
     timeout_ms = Map.get(args, :timeout_ms, 30_000)
-    
+
     unless command do
       {:error, :missing_command}
     end
-    
+
     Logger.info("Executing with tracing: #{command}")
-    
+
     # Add timeout to state for use in execute_command_safely
     state_with_timeout = Map.put(state, :timeout_ms, timeout_ms)
-    
+
     # Start command trace
     with {:ok, state1, trace_id} <- CommandTracing.trace_command_start(state_with_timeout, %{
            command: command,
            args: command_args
          }),
-         
+
          # Start timing
          {:ok, state2} <- BasicTiming.start_timer(state1, %{
            timer_id: trace_id,
            command: command
          }),
-         
+
          # Execute command
          {state3, execution_result} <- execute_command_safely(state2, command, command_args, trace_id),
-         
+
          # Stop timing
          {:ok, state4, _timer_result} <- BasicTiming.stop_timer(state3, %{
            timer_id: trace_id,
            status: get_execution_status(execution_result)
          }),
-         
+
          # End trace
          {:ok, final_state, trace_result} <- CommandTracing.trace_command_end(state4, %{
            trace_id: trace_id,
            exit_code: get_exit_code(execution_result)
          }) do
-      
+
       Logger.info("Command tracing completed: #{trace_id}")
-      
+
       # Create a properly formatted execution result
       formatted_execution_result = %{
         duration_seconds: trace_result.duration_seconds,
@@ -68,9 +68,9 @@ defmodule AriaWorkflow.Methods.CommandTracing do
         status: Map.get(execution_result, :status, trace_result.status),
         output: execution_result.output || ""
       }
-      
+
       {:ok, final_state, %{
-        trace_id: trace_id, 
+        trace_id: trace_id,
         execution_result: formatted_execution_result
       }}
     else
@@ -83,31 +83,31 @@ defmodule AriaWorkflow.Methods.CommandTracing do
   @doc """
   Generates an execution summary from traced commands.
   """
-  def generate_execution_summary(state, args \\ %{}) do
+  def generate_execution_summary(state, _args \\ %{}) do
     Logger.info("Generating execution summary")
-    
+
     completed_traces = Map.get(state, :completed_traces, %{})
     active_traces = Map.get(state, :command_traces, %{})
-    
+
     # Analyze completed traces
     success_count = completed_traces
     |> Map.values()
     |> Enum.count(&(&1.status == :success))
-    
+
     failure_count = completed_traces
     |> Map.values()
     |> Enum.count(&(&1.status == :failed))
-    
+
     error_count = completed_traces
     |> Map.values()
     |> Enum.count(&(&1.status == :error))
-    
+
     # Calculate timing statistics
     durations = completed_traces
     |> Map.values()
     |> Enum.map(&Map.get(&1, :duration_seconds))
     |> Enum.filter(&is_number/1)
-    
+
     timing_stats = case durations do
       [] -> %{count: 0}
       _ ->
@@ -119,7 +119,7 @@ defmodule AriaWorkflow.Methods.CommandTracing do
           max_duration: Enum.max(durations)
         }
     end
-    
+
     # Find recent failures
     recent_failures = completed_traces
     |> Map.values()
@@ -127,7 +127,7 @@ defmodule AriaWorkflow.Methods.CommandTracing do
     |> Enum.filter(&Map.has_key?(&1, :end_datetime))  # Only include traces with end_datetime
     |> Enum.sort_by(&(&1.end_datetime), {:desc, DateTime})
     |> Enum.take(5)
-    
+
     # Create summary
     summary = %{
       generated_at: DateTime.utc_now(),
@@ -151,17 +151,17 @@ defmodule AriaWorkflow.Methods.CommandTracing do
       most_used_commands: get_command_usage_stats(completed_traces),
       execution_details: Map.values(completed_traces)
     }
-    
+
     # Log summary
     total = summary.statistics.total_executions
     success_rate = summary.statistics.success_rate
     Logger.info("Execution summary: #{total} total, #{success_rate}% success rate")
-    
+
     # Store summary in state
     summaries = Map.get(state, :execution_summaries, [])
     new_summaries = [summary | summaries]
     new_state = Map.put(state, :execution_summaries, new_summaries)
-    
+
     {:ok, new_state, summary}
   end
 
@@ -169,12 +169,12 @@ defmodule AriaWorkflow.Methods.CommandTracing do
 
   defp execute_command_safely(state, command, args, trace_id) do
     timeout_ms = Map.get(state, :timeout_ms, 30_000)  # Default 30 seconds
-    
+
     try do
       task = Task.async(fn ->
         System.cmd(command, args, stderr_to_stdout: true)
       end)
-      
+
       case Task.yield(task, timeout_ms) do
         {:ok, {output, exit_code}} ->
           # Capture output
@@ -182,27 +182,27 @@ defmodule AriaWorkflow.Methods.CommandTracing do
             trace_id: trace_id,
             stdout: output
           })
-          
+
           execution_result = %{
             status: if(exit_code == 0, do: :success, else: :failed),
             exit_code: exit_code,
             output: output
           }
-          
+
           {state_with_output, execution_result}
-          
+
         nil ->
           # Timeout occurred
           Task.shutdown(task, :brutal_kill)
-          
+
           execution_result = %{
             status: :timeout,
             exit_code: 124,  # Standard timeout exit code
             output: "Command timed out after #{timeout_ms}ms"
           }
-          
+
           {state, execution_result}
-          
+
         {:exit, reason} ->
           # Task exited abnormally
           execution_result = %{
@@ -210,7 +210,7 @@ defmodule AriaWorkflow.Methods.CommandTracing do
             exit_code: 124,
             output: "Command failed with exit reason: #{inspect(reason)}"
           }
-          
+
           {state, execution_result}
       end
     rescue
@@ -221,13 +221,13 @@ defmodule AriaWorkflow.Methods.CommandTracing do
           error: error,
           error_type: :execution_exception
         })
-        
+
         execution_result = %{
           status: :error,
           exit_code: -1,
           output: "Error: #{inspect(error)}"
         }
-        
+
         {state_with_error, execution_result}
     end
   end
@@ -264,7 +264,7 @@ defmodule AriaWorkflow.Methods.CommandTracing do
     durations = traces
     |> Enum.map(&Map.get(&1, :duration_seconds))
     |> Enum.filter(&is_number/1)
-    
+
     case durations do
       [] -> 0.0
       _ -> Enum.sum(durations) / length(durations)

@@ -22,7 +22,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
 
   # Helper methods for unigoal processing - defined first for use in module attributes
 
-  def ensure_timing_system(state, [predicate, subject, object]) do
+  def ensure_timing_system(_state, [predicate, _subject, object]) do
     if predicate == "timing_system" and object == "enabled" do
       [{"get_current_time", []}]
     else
@@ -30,7 +30,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
     end
   end
 
-  def ensure_timezone_info(state, [predicate, subject, object]) do
+  def ensure_timezone_info(_state, [predicate, _subject, object]) do
     if predicate == "timezone_info" and object == "captured" do
       [{"get_timezone_info", []}]
     else
@@ -38,7 +38,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
     end
   end
 
-  def ensure_execution_log(state, [predicate, subject, object]) do
+  def ensure_execution_log(_state, [predicate, _subject, object]) do
     if predicate == "execution_log" and object == "created" do
       [{"log_execution", []}]
     else
@@ -46,7 +46,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
     end
   end
 
-  def backup_files_method(state, [source, destination]) do
+  def backup_files_method(_state, [source, destination]) do
     [
       {:echo, ["Backing up #{source} to #{destination}"]},
       {:copy_file, [source, destination]},
@@ -54,7 +54,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
     ]
   end
 
-  def create_workspace_method(state, [workspace_path]) do
+  def create_workspace_method(_state, [workspace_path]) do
     [
       {:echo, ["Creating workspace at #{workspace_path}"]},
       {:create_directory, [workspace_path]},
@@ -64,7 +64,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
     ]
   end
 
-  def ensure_file_exists_method(state, [predicate, subject, object]) do
+  def ensure_file_exists_method(_state, [predicate, subject, object]) do
     if predicate == "file_exists" and object == true do
       [
         {:execute_command, ["test", "-e", subject]}
@@ -74,7 +74,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
     end
   end
 
-  def ensure_command_executed_method(state, [predicate, subject, object]) do
+  def ensure_command_executed_method(_state, [predicate, subject, object]) do
     if predicate == "command_executed" and object == true do
       [
         {:execute_command, String.split(subject, " ")}
@@ -84,7 +84,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
     end
   end
 
-  def ensure_archive_created_method(state, [predicate, subject, object]) do
+  def ensure_archive_created_method(_state, [predicate, subject, object]) do
     if predicate == "archive_created" and object == true do
       [
         {:create_archive, [subject, "/tmp"]}

@@ -149,4 +149,124 @@ defmodule AriaEngine.Domains.FileManagement do
       false
     end
   end
+
+  # Task methods for file operations
+
+  @doc """
+  Backup a single file to a specified location.
+  """
+  def backup_file(_state, [source, destination]) do
+    [
+      {:copy_file, [source, destination]},
+      {:echo, ["Backed up #{source} to #{destination}"]}
+    ]
+  end
+
+  def backup_file(_state, [source]) do
+    # Generate backup destination with timestamp
+    timestamp = DateTime.utc_now() |> DateTime.to_iso8601(:basic)
+    backup_name = "#{source}.backup.#{timestamp}"
+    [
+      {:copy_file, [source, backup_name]},
+      {:echo, ["Backed up #{source} to #{backup_name}"]}
+    ]
+  end
+
+  @doc """
+  Replace a file safely by creating a backup first.
+  """
+  def replace_file_safely(_state, [source, destination]) do
+    backup_dest = destination <> ".backup"
+    [
+      {:copy_file, [destination, backup_dest]},
+      {:copy_file, [source, destination]},
+      {:echo, ["Safely replaced #{destination} (backup at #{backup_dest})"]}
+    ]
+  end
+
+  @doc """
+  Create a directory structure recursively.
+  """
+  def create_directory_structure(_state, [path]) do
+    [
+      {:create_directory, [path]},
+      {:echo, ["Created directory structure: #{path}"]}
+    ]
+  end
+
+  def create_directory_structure(_state, [base_path, subdirs]) when is_list(subdirs) do
+    create_actions = Enum.map(subdirs, fn subdir ->
+      full_path = Path.join(base_path, subdir)
+      {:create_directory, [full_path]}
+    end)
+    
+    create_actions ++ [
+      {:echo, ["Created directory structure with subdirs: #{Enum.join(subdirs, ", ")}"]}
+    ]
+  end
+
+  @doc """
+  Download and verify a file (placeholder implementation).
+  """
+  def download_and_verify(_state, [url, destination]) do
+    [
+      {:execute_command, ["curl", "-o", destination, url]},
+      {:echo, ["Downloaded #{url} to #{destination}"]}
+    ]
+  end
+
+  @doc """
+  Set up a workspace directory with common subdirectories.
+  """
+  def setup_workspace(_state, [workspace_path]) do
+    [
+      {:create_directory, [workspace_path]},
+      {:create_directory, [Path.join(workspace_path, "src")]},
+      {:create_directory, [Path.join(workspace_path, "docs")]},
+      {:create_directory, [Path.join(workspace_path, "tests")]},
+      {:echo, ["Workspace setup complete at #{workspace_path}"]}
+    ]
+  end
+
+  @doc """
+  Clean up temporary files in a directory.
+  """
+  def cleanup_temp_files(_state, [directory]) do
+    [
+      {:execute_command, ["find", directory, "-name", "*.tmp", "-delete"]},
+      {:execute_command, ["find", directory, "-name", ".DS_Store", "-delete"]},
+      {:echo, ["Cleaned up temporary files in #{directory}"]}
+    ]
+  end
+
+  @doc """
+  Compress a directory into an archive.
+  """
+  def compress_directory(_state, [directory, archive_path]) do
+    [
+      {:execute_command, ["tar", "-czf", archive_path, "-C", Path.dirname(directory), Path.basename(directory)]},
+      {:echo, ["Compressed #{directory} to #{archive_path}"]}
+    ]
+  end
+
+  @doc """
+  Extract an archive to a directory.
+  """
+  def extract_archive(_state, [archive_path, destination]) do
+    [
+      {:create_directory, [destination]},
+      {:execute_command, ["tar", "-xzf", archive_path, "-C", destination]},
+      {:echo, ["Extracted #{archive_path} to #{destination}"]}
+    ]
+  end
+
+  @doc """
+  Sync directories (wrapper for the sync methods).
+  """
+  def sync_directories(_state, [source, destination]) do
+    [
+      {:create_directory, [destination]},
+      {:execute_command, ["rsync", "-av", source, destination]}
+    ]
+  end
 end

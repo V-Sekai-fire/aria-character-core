@@ -15,6 +15,7 @@ defmodule AriaEngine.MixProject do
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
+      elixirc_options: [warnings_as_errors: true],
       deps: deps()
     ]
   end
@@ -34,19 +35,19 @@ defmodule AriaEngine.MixProject do
     [
       # Numerical computing for planning algorithms
       {:nx, "~> 0.6"},
-      
+
       # Planning and decision-making libraries
       {:libgraph, "~> 0.16"},
-      
+
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
-      
+
       # Character shaping integration
       {:aria_shape, in_umbrella: true},
-      
+
       # JSON handling
       {:jason, "~> 1.4"},
-      
+
       # Shared dependencies
       {:telemetry, "~> 1.2"}
     ]

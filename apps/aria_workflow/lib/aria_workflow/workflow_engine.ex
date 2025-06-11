@@ -3,29 +3,39 @@
 
 defmodule AriaWorkflow.WorkflowEngine do
   @moduledoc """
-  Workflow execution engine using AriaEngine for goal-task-network planning.
+  [DEPRECATED] Use AriaEngine.DomainDefinition for workflow execution.
 
-  This module provides a meta-framework for creating and executing workflows as goal-task networks,
-  where each workflow is defined as a collection of goals, tasks, and methods that can be planned
-  and executed by the AriaEngine planner with OpenTelemetry-inspired tracing.
+  This module is being replaced by AriaEngine.DomainDefinition which provides
+  a more elegant approach to workflow execution by treating todo execution as
+  span tracing directly, eliminating redundant infrastructure.
+
+  The key insight is that separate workflow execution infrastructure is unnecessary
+  when todo execution state can serve as the trace itself.
+
+  Migration path:
+  - Old: WorkflowEngine.get_workflow + plan_workflow + execute_plan
+  - New: DomainDefinition.new + start + todo execution with built-in tracing
+
+  Workflow execution engine using AriaEngine for goal-task-network planning.
+  Use AriaEngine.DomainDefinition for new workflow execution needs.
 
   ## Architecture Integration
 
   This service operates as part of the Orchestration Layer and depends on:
-  - `aria_engine` (planning and goal reasoning)
-  - `aria_security` (secrets management)
-  - `aria_data` (workflow persistence)
-  - `aria_queue` (background execution)
+  - aria_engine (planning and goal reasoning)
+  - aria_security (secrets management)
+  - aria_data (workflow persistence)
+  - aria_queue (background execution)
 
   ## Workflow Structure
 
   A workflow consists of:
-  - **Goals**: Desired end states (using AriaEngine.Multigoal)
-  - **Tasks**: Atomic operations that can be executed
-  - **Methods**: Compound operations that decompose into sub-goals/tasks
-  - **Documentation**: Human-readable procedures
-  - **Metadata**: Version, approval, contacts, etc.
-  - **Spans**: OpenTelemetry-inspired tracing for execution monitoring
+  - Goals: Desired end states (using AriaEngine.Multigoal)
+  - Tasks: Atomic operations that can be executed
+  - Methods: Compound operations that decompose into sub-goals/tasks
+  - Documentation: Human-readable procedures
+  - Metadata: Version, approval, contacts, etc.
+  - Spans: OpenTelemetry-inspired tracing for execution monitoring
 
   ## Example Usage
 
@@ -55,7 +65,7 @@ defmodule AriaWorkflow.WorkflowEngine do
   ```
   """
 
-  alias AriaEngine.{State, Multigoal}
+  alias AriaEngine.State
   alias AriaWorkflow.{WorkflowDefinition, WorkflowExecution, WorkflowRegistry, Span}
 
   require Logger
@@ -134,13 +144,13 @@ defmodule AriaWorkflow.WorkflowEngine do
 
         # Create execution with successful planning
         execution = WorkflowExecution.new(workflow, plan, initial_state)
-        finished_span = Span.finish(planning_span, status: :ok)
+        _finished_span = Span.finish(planning_span, status: :ok)
 
         Logger.info("Successfully planned workflow: #{workflow.id}")
         {:ok, execution}
       else
         error ->
-          failed_span = planning_span
+          _failed_span = planning_span
           |> Span.add_event("planning.failed", %{"error" => inspect(error)})
           |> Span.finish(status: :error)
 
@@ -149,7 +159,7 @@ defmodule AriaWorkflow.WorkflowEngine do
       end
     rescue
       exception ->
-        failed_span = planning_span
+        _failed_span = planning_span
         |> Span.record_exception(exception)
         |> Span.finish(status: :error)
 
@@ -182,7 +192,7 @@ defmodule AriaWorkflow.WorkflowEngine do
   """
   @spec get_execution_status(reference()) ::
     {:ok, WorkflowExecution.t()} | {:error, :not_found}
-  def get_execution_status(execution_ref) do
+  def get_execution_status(_execution_ref) do
     # TODO: Integrate with execution registry when available
     {:error, :not_implemented}
   end
@@ -191,17 +201,22 @@ defmodule AriaWorkflow.WorkflowEngine do
   Monitors workflow execution with a callback function.
   """
   @spec monitor_execution(reference(), function()) :: :ok
-  def monitor_execution(execution_ref, callback_fn) do
+  def monitor_execution(_execution_ref, _callback_fn) do
     # TODO: Integrate with execution registry when available
-    Logger.warn("Workflow execution monitoring not yet implemented")
+    Logger.warning("Workflow execution monitoring not yet implemented")
     :ok
   end
 
   # Private functions
 
-  defp create_simple_plan(initial_state, %Multigoal{} = multigoal) do
+  defp create_simple_plan(initial_state, multigoal) do
     # Simple planning implementation until AriaEngine integration is complete
-    goals = Multigoal.get_goals(multigoal)
+    # [DEPRECATED] This function is deprecated in favor of DomainDefinition
+    goals = case multigoal do
+      %{goals: goals} when is_list(goals) -> goals
+      goals when is_list(goals) -> goals
+      _ -> []
+    end
 
     steps = goals
     |> Enum.with_index()
@@ -276,7 +291,7 @@ defmodule AriaWorkflow.WorkflowEngine do
 
         execution_with_span
         |> WorkflowExecution.finish_step_span(failed_span, status: :error)
-        |> then(fn exec ->
+        |> then(fn _exec ->
           Logger.error("Step failed: #{step_name} - #{Exception.message(exception)}")
           raise exception
         end)

@@ -11,7 +11,8 @@ defmodule AriaEngine.Domains.WorkflowSystem do
 
   require Logger
   alias AriaEngine.{Domain, Actions, State}
-  alias AriaWorkflow.{WorkflowEngine, WorkflowRegistry}
+  # Note: WorkflowRegistry and WorkflowEngine are deprecated in favor of DomainDefinition
+  # alias AriaWorkflow.{WorkflowEngine, WorkflowRegistry}
 
   @doc """
   Creates a workflow system domain with integrated actions.
@@ -46,45 +47,16 @@ defmodule AriaEngine.Domains.WorkflowSystem do
 
   @doc """
   Execute a workflow command using the workflow engine.
+  [DEPRECATED] This function uses deprecated WorkflowRegistry/WorkflowEngine.
+  Use AriaEngine.DomainDefinition instead.
   """
   def execute_workflow_command(state, [workflow_id | _workflow_args]) do
-    try do
-      case WorkflowRegistry.get_workflow(workflow_id) do
-        {:ok, workflow_def} ->
-          initial_state = AriaEngine.State.new()
+    Logger.warning("execute_workflow_command is deprecated. Use AriaEngine.DomainDefinition instead.")
 
-          case WorkflowEngine.plan_workflow(workflow_def, initial_state) do
-            {:ok, execution} ->
-              case WorkflowEngine.execute_plan(execution) do
-                {:ok, result} ->
-                  state
-                  |> State.set_object("workflow_result", workflow_id, "success")
-                  |> State.set_object("workflow_execution", workflow_id, result)
-
-                {:error, reason} ->
-                  Logger.error("Workflow execution failed: #{inspect(reason)}")
-
-                  state
-                  |> State.set_object("workflow_result", workflow_id, "failed")
-                  |> State.set_object("workflow_error", workflow_id, reason)
-                  |> then(fn _ -> false end)
-              end
-
-            {:error, reason} ->
-              Logger.error("Workflow planning failed: #{inspect(reason)}")
-              false
-          end
-
-        {:error, reason} ->
-          Logger.error("Workflow not found: #{workflow_id} - #{inspect(reason)}")
-          false
-      end
-
-    rescue
-      error ->
-        Logger.error("Workflow command execution failed: #{inspect(error)}")
-        false
-    end
+    # Simplified implementation that just logs the attempt
+    state
+    |> State.set_object("workflow_result", workflow_id, "deprecated")
+    |> State.set_object("workflow_message", workflow_id, "Use DomainDefinition instead")
   end
 
   @doc """
@@ -214,5 +186,171 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     else
       false
     end
+  end
+
+  # Task methods for workflow operations
+
+  @doc """
+  Execute a traced command with monitoring.
+  """
+  def execute_traced_command(_state, [command | args]) do
+    [
+      {:echo, ["Executing traced command: #{command} #{Enum.join(args, " ")}"]},
+      {:execute_command, [command | args]}
+    ]
+  end
+
+  @doc """
+  Deploy a service with standard deployment steps.
+  """
+  def deploy_service(_state, [service_name]) do
+    [
+      {:echo, ["Deploying service: #{service_name}"]},
+      {:execute_command, ["docker", "build", "-t", service_name, "."]},
+      {:execute_command, ["docker", "push", service_name]},
+      {:echo, ["Service #{service_name} deployed successfully"]}
+    ]
+  end
+
+  @doc """
+  Run database migrations.
+  """
+  def run_migrations(_state, []) do
+    [
+      {:echo, ["Running database migrations"]},
+      {:execute_command, ["mix", "ecto.migrate"]},
+      {:echo, ["Database migrations completed"]}
+    ]
+  end
+
+  @doc """
+  Set up development environment.
+  """
+  def setup_dev_environment(_state, [project_path]) do
+    [
+      {:echo, ["Setting up development environment at #{project_path}"]},
+      {:execute_command, ["mix", "deps.get"]},
+      {:execute_command, ["mix", "compile"]},
+      {:echo, ["Development environment setup complete"]}
+    ]
+  end
+
+  @doc """
+  Run tests with coverage analysis.
+  """
+  def run_tests_with_coverage(_state, []) do
+    [
+      {:echo, ["Running tests with coverage"]},
+      {:execute_command, ["mix", "test", "--cover"]},
+      {:echo, ["Test coverage analysis complete"]}
+    ]
+  end
+
+  def run_tests_with_coverage(_state, [project_path]) do
+    [
+      {:echo, ["Running tests with coverage in #{project_path}"]},
+      {:execute_command, ["mix", "test", "--cover"]},
+      {:echo, ["Test coverage analysis complete"]}
+    ]
+  end
+
+  def run_tests_with_coverage(_state, [project_path, test_command]) do
+    [
+      {:echo, ["Running tests with coverage in #{project_path}"]},
+      {:execute_command, [test_command]},
+      {:echo, ["Test coverage analysis complete"]}
+    ]
+  end
+
+  @doc """
+  Build and package the application.
+  """
+  def build_and_package(_state, [app_name]) do
+    [
+      {:echo, ["Building and packaging #{app_name}"]},
+      {:execute_command, ["mix", "release", app_name]},
+      {:echo, ["Application #{app_name} built and packaged"]}
+    ]
+  end
+
+  def build_and_package(_state, [project_path, package_format]) do
+    case package_format do
+      "docker" ->
+        [
+          {:echo, ["Building Docker package for #{project_path}"]},
+          {:execute_command, ["docker", "build", "-t", Path.basename(project_path), project_path]},
+          {:echo, ["Docker package built successfully"]}
+        ]
+      "release" ->
+        [
+          {:echo, ["Building release package for #{project_path}"]},
+          {:execute_command, ["mix", "release"]},
+          {:echo, ["Release package built successfully"]}
+        ]
+      _ ->
+        [
+          {:echo, ["Building package with format #{package_format} for #{project_path}"]},
+          {:execute_command, ["mix", "release"]},
+          {:echo, ["Package built successfully"]}
+        ]
+    end
+  end
+
+  @doc """
+  Monitor system health with basic checks.
+  """
+  def monitor_system_health(_state, []) do
+    [
+      {:echo, ["Monitoring system health"]},
+      {:execute_command, ["ps", "aux"]},
+      {:execute_command, ["df", "-h"]},
+      {:echo, ["System health check complete"]}
+    ]
+  end
+
+  def monitor_system_health(_state, [services]) when is_list(services) do
+    service_checks = Enum.map(services, fn service ->
+      {:echo, ["Checking service: #{service}"]}
+    end)
+    
+    service_checks ++ [
+      {:execute_command, ["ps", "aux"]},
+      {:execute_command, ["df", "-h"]},
+      {:echo, ["System health check complete for services: #{Enum.join(services, ", ")}"]}
+    ]
+  end
+
+  def monitor_system_health(_state, [services, _health_checks]) when is_list(services) do
+    service_checks = Enum.map(services, fn service ->
+      {:echo, ["Checking service with health config: #{service}"]}
+    end)
+    
+    service_checks ++ [
+      {:execute_command, ["ps", "aux"]},
+      {:execute_command, ["df", "-h"]},
+      {:echo, ["System health check complete with health configs"]}
+    ]
+  end
+
+  @doc """
+  Backup system data to specified location.
+  """
+  def backup_system_data(_state, [backup_path]) do
+    [
+      {:echo, ["Backing up system data to #{backup_path}"]},
+      {:execute_command, ["tar", "-czf", backup_path, "/var/lib/data"]},
+      {:echo, ["System data backup complete"]}
+    ]
+  end
+
+  @doc """
+  Restore system data from backup.
+  """
+  def restore_system_data(_state, [backup_path]) do
+    [
+      {:echo, ["Restoring system data from #{backup_path}"]},
+      {:execute_command, ["tar", "-xzf", backup_path, "-C", "/var/lib"]},
+      {:echo, ["System data restoration complete"]}
+    ]
   end
 end

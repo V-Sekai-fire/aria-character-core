@@ -3,11 +3,22 @@
 
 defmodule AriaWorkflow.WorkflowExecution do
   @moduledoc """
-  Represents an executing instance of a workflow with span-based tracing.
+  [DEPRECATED] Use AriaEngine.DomainDefinition instead.
 
-  This module tracks the execution state, progress, and results of a workflow
-  as it runs through the planning and execution phases, using OpenTelemetry-inspired
-  spans for detailed tracing.
+  This module is being replaced by AriaEngine.DomainDefinition which unifies
+  domain capabilities with execution state and span-based tracing.
+
+  The key insight is that span-based tracing IS just todo execution tracking:
+  - Spans = Todo items being executed
+  - Span hierarchy = Todo dependencies
+  - Span context = State flow through execution
+  - Trace = Complete todo execution path
+
+  AriaEngine.DomainDefinition provides this functionality more elegantly by
+  treating todo execution as the trace itself, eliminating redundant infrastructure.
+
+  This module represents an executing instance of a workflow with span-based tracing.
+  Use AriaEngine.DomainDefinition for new code.
   """
 
   alias AriaEngine.State

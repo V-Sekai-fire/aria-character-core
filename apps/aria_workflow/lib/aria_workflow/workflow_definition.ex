@@ -3,13 +3,32 @@
 
 defmodule AriaWorkflow.WorkflowDefinition do
   @moduledoc """
-  Represents a workflow definition.
+  [DEPRECATED] Use AriaEngine.DomainDefinition instead.
 
-  A workflow definition contains all the information needed to plan and execute
-  a workflow, including goals, tasks, methods, documentation, and metadata.
+  This module is being replaced by AriaEngine.DomainDefinition which provides
+  a unified approach to domain capabilities, todo planning, and execution state
+  with built-in span-based tracing.
+
+  Key advantages of AriaEngine.DomainDefinition:
+  - Unified structure combining capabilities and execution state
+  - Built-in span tracing where todo execution IS the trace
+  - No redundant infrastructure between planning and execution
+  - Cleaner architecture with less conceptual overhead
+
+  Migration path:
+  ```elixir
+  # Old WorkflowDefinition
+  workflow = AriaWorkflow.WorkflowDefinition.new(id, definition)
+
+  # New DomainDefinition
+  domain_def = AriaEngine.DomainDefinition.new(id, definition)
+  ```
+
+  Represents a workflow definition.
+  Use AriaEngine.DomainDefinition for new code.
   """
 
-  alias AriaEngine.{Multigoal, State}
+  alias AriaEngine.Multigoal
 
   @type t :: %__MODULE__{
     id: String.t(),
@@ -47,9 +66,17 @@ defmodule AriaWorkflow.WorkflowDefinition do
   """
   @spec new(String.t(), map()) :: t()
   def new(id, definition) do
+    # Support legacy :goals field for backward compatibility
+    todos = case {Map.get(definition, :todos), Map.get(definition, :goals)} do
+      {[], nil} -> []
+      {[], goals} when is_list(goals) -> goals  # Legacy support
+      {todos, _} when is_list(todos) -> todos   # New format
+      {_, _} -> []
+    end
+
     %__MODULE__{
       id: id,
-      todos: Map.get(definition, :todos, []),
+      todos: todos,
       actions: Map.get(definition, :actions, []),
       task_methods: Map.get(definition, :task_methods, []),
       unigoal_methods: Map.get(definition, :unigoal_methods, []),
@@ -67,6 +94,25 @@ defmodule AriaWorkflow.WorkflowDefinition do
     try do
       # AriaEngine accepts mixed todos - goals, tasks, and actions
       {:ok, todos}
+    rescue
+      error -> {:error, error}
+    end
+  end
+
+  @doc """
+  Converts workflow definition to a multigoal for planning.
+  """
+  @spec to_multigoal(t()) :: {:ok, Multigoal.t()} | {:error, term()}
+  def to_multigoal(%__MODULE__{todos: todos}) do
+    try do
+      # Extract goal specs from todos (filter out tasks and actions)
+      goals = Enum.filter(todos, fn
+        {pred, subj, obj} when is_binary(pred) and is_binary(subj) and is_binary(obj) -> true
+        _ -> false
+      end)
+
+      multigoal = Multigoal.new(goals)
+      {:ok, multigoal}
     rescue
       error -> {:error, error}
     end
@@ -103,6 +149,17 @@ defmodule AriaWorkflow.WorkflowDefinition do
       nil -> {:error, :not_found}
       doc -> {:ok, doc}
     end
+  end
+
+  @doc """
+  Gets goals for backward compatibility (maps to todos that are goal specs).
+  """
+  @spec goals(t()) :: [goal_spec()]
+  def goals(%__MODULE__{todos: todos}) do
+    Enum.filter(todos, fn
+      {pred, subj, obj} when is_binary(pred) and is_binary(subj) and is_binary(obj) -> true
+      _ -> false
+    end)
   end
 
   @doc """
