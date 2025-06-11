@@ -30,59 +30,8 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   See: docs/ARCANA_FORMAT_SPEC.md for complete specification.
   """
 
-  use AbnfParsec,
-    mode: :byte,
-    abnf: """
-    ; ARCANA/Casync Binary Format Grammar
-    ; Based on desync source code analysis
-
-    ; Format Index - 48 bytes total
-    format-index = size-field type-field feature-flags chunk-size-min chunk-size-avg chunk-size-max
-    size-field = 8OCTET           ; 8 bytes little-endian
-    type-field = 8OCTET           ; 8 bytes little-endian
-    feature-flags = 8OCTET        ; 8 bytes little-endian
-    chunk-size-min = 8OCTET       ; 8 bytes little-endian
-    chunk-size-avg = 8OCTET       ; 8 bytes little-endian
-    chunk-size-max = 8OCTET       ; 8 bytes little-endian
-
-    ; Format Table header - 16 bytes
-    format-table-header = table-marker table-type
-    table-marker = 8OCTET         ; 8 bytes little-endian
-    table-type = 8OCTET           ; 8 bytes little-endian
-
-    ; Table Item - 40 bytes each
-    table-item = item-offset chunk-id
-    item-offset = 8OCTET          ; 8 bytes little-endian
-    chunk-id = 32OCTET            ; 32 bytes (SHA-256)
-
-    ; Table Tail - 40 bytes
-    table-tail = zero1 zero2 size-field table-size tail-marker
-    zero1 = 8OCTET                ; 8 bytes zero
-    zero2 = 8OCTET                ; 8 bytes zero
-    table-size = 8OCTET           ; 8 bytes little-endian
-    tail-marker = 8OCTET          ; 8 bytes little-endian
-
-    ; Chunk header for CACNK files - 19 bytes total
-    chunk-header = chunk-magic compressed-size uncompressed-size compression-type chunk-flags
-    chunk-magic = 3OCTET          ; 3 bytes: 0xCA 0xC4 0x4E
-    compressed-size = 4OCTET      ; 4 bytes little-endian
-    uncompressed-size = 4OCTET    ; 4 bytes little-endian
-    compression-type = 4OCTET     ; 4 bytes little-endian
-    chunk-flags = 4OCTET          ; 4 bytes little-endian
-
-    ; Complete index file structure
-    index-file = format-index format-table-header *table-item table-tail
-
-    ; Complete chunk file structure
-    chunk-file = chunk-header *OCTET ; header + variable data
-    """,
-    parse: :index_file,
-    parse: :chunk_file,
-    parse: :format_index,
-    parse: :format_table_header,
-    parse: :table_item,
-    parse: :table_tail,
-    parse: :chunk_header
+  # Direct binary parsing - no longer using AbnfParsec
+  # We now use binary pattern matching for better performance and reliability
 
   # Constants from desync source code (const.go)
   @ca_format_index 0x96824d9c7b129ff9
@@ -90,10 +39,61 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   @ca_format_table_tail_marker 0x4b4f050e5549ecd1
   @ca_format_sha512_256 0x2000000000000000
   @ca_format_exclude_no_dump 0x8000000000000000
+  
+  # CATAR format constants (reserved for future CATAR parsing implementation)
+  @ca_format_entry 0x1396FABCEA5BBB51
+  @ca_format_user 0xf453131aaeeaccb3
+  @ca_format_group 0x25eb6ac969396a52
+  @ca_format_xattr 0xb8157091f80bc486
+  @ca_format_acl_user 0x297dc88bf2ef12f8
+  @ca_format_acl_group 0x36f2acb56cb3dd0b
+  @ca_format_acl_group_obj 0x23047110441f38f3
+  @ca_format_acl_default 0xfe3eeda6823c8cd0
+  @ca_format_acl_default_user 0xbdf03df9bd010a91
+  @ca_format_acl_default_group 0xa0cb1168782d1f51
+  @ca_format_acl_default_mask 0x16078cf53bea9502
+  @ca_format_acl_default_other 0x5a3a75ceb8b5fa4f
+  @ca_format_fcaps 0xf7267db0a1e6d6a7
+  @ca_format_selinux 0x99ae9d6bb4de6b57
+  @ca_format_symlink 0x664a6fb6830e0d6c
+  @ca_format_device 0xac0d5c0d73969ade
+  @ca_format_payload 0x8bdab8cbf9e7b8cd
+  @ca_format_filename 0x6dbb6ebcb3161f0b
+  @ca_format_goodbye 0x57446fa533702943
+
+  # Hash algorithm flags (reserved for future format variations)
+  @ca_format_sha256 0x0000000000000000
+  @ca_format_sha512_256 0x2000000000000000
+
+  # Feature flags (reserved for future format capabilities)
+  @ca_format_feature_flags_mask 0x00000000FFFFFFFF
+  @ca_format_with_16bit_uids 0x0000000000000001
+  @ca_format_with_32bit_uids 0x0000000000000002
+  @ca_format_with_user_names 0x0000000000000004
+  @ca_format_with_sec_time 0x0000000000000008
+  @ca_format_with_usec_time 0x0000000000000010
+  @ca_format_with_nsec_time 0x0000000000000020
+  @ca_format_with_2sec_time 0x0000000000000040
+  @ca_format_with_read_only 0x0000000000000080
+  @ca_format_with_permissions 0x0000000000000100
+  @ca_format_with_symlinks 0x0000000000000200
+  @ca_format_with_device_nodes 0x0000000000000400
+  @ca_format_with_fifos 0x0000000000000800
+  @ca_format_with_sockets 0x0000000000001000
 
   # Compression types (based on desync - only ZSTD is actually used)
   @compression_none 0
   @compression_zstd 1
+
+  # Default chunk sizes (reserved for validation and recommendations)
+  @default_min_chunk_size 16_384    # 16KB
+  @default_avg_chunk_size 65_536    # 64KB  
+  @default_max_chunk_size 262_144   # 256KB
+
+  # Magic numbers for file format detection (reserved for format detection)
+  @caibx_magic_bytes <<0xCA, 0x1B, 0x5C>>
+  @caidx_magic_bytes <<0xCA, 0x1D, 0x5C>>
+  @catar_magic_bytes <<0xCA, 0x1A, 0x52>>
 
   @doc """
   Convert parser result to JSON-safe format by encoding binary data as base64.
@@ -127,26 +127,32 @@ defmodule AriaStorage.Parsers.CasyncFormat do
 
         # Validate the format index values
         if size_field == 48 and type_field == @ca_format_index do
-          case parse_format_table_with_items_binary(remaining_data) do
-            {:ok, table_items} ->
-              # Convert to internal format
-              result = %{
-                format: determine_format(feature_flags),
-                header: %{
-                  version: 1,  # Standard version
-                  total_size: calculate_total_size(table_items),
-                  chunk_count: length(table_items)
-                },
-                chunks: convert_table_to_chunks(table_items),
-                feature_flags: feature_flags,
-                chunk_size_min: chunk_size_min,
-                chunk_size_avg: chunk_size_avg,
-                chunk_size_max: chunk_size_max
-              }
-              {:ok, result}
+          # Check if this is CAIDX format (not implemented yet)
+          format = determine_format(feature_flags)
+          if format == :caidx do
+            {:error, "CAIDX format parsing not yet implemented"}
+          else
+            case parse_format_table_with_items_binary(remaining_data) do
+              {:ok, table_items} ->
+                # Convert to internal format (CAIBX only)
+                result = %{
+                  format: :caibx,
+                  header: %{
+                    version: 1,  # Standard version
+                    total_size: calculate_total_size(table_items),
+                    chunk_count: length(table_items)
+                  },
+                  chunks: convert_table_to_chunks(table_items),
+                  feature_flags: feature_flags,
+                  chunk_size_min: chunk_size_min,
+                  chunk_size_avg: chunk_size_avg,
+                  chunk_size_max: chunk_size_max
+                }
+                {:ok, result}
 
-            {:error, reason} ->
-              {:error, reason}
+              {:error, reason} ->
+                {:error, reason}
+            end
           end
         else
           {:error, "Invalid FormatIndex header: size=#{size_field}, type=0x#{Integer.to_string(type_field, 16)}"}
@@ -161,54 +167,34 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   Parse a cacnk chunk file from binary data.
   """
   def parse_chunk(binary_data) when is_binary(binary_data) do
-    case chunk_header(binary_data) do
-      {:ok, parsed_list, remaining_data, _context, _position, _consumed} ->
-        # AbnfParsec returns a nested keyword list structure
-        # Extract the chunk_header field which contains our data
-        chunk_header_data = Keyword.get(parsed_list, :chunk_header, [])
+    case binary_data do
+      # CACNK header: 3-byte magic + 4*4 bytes (16 bytes total header)
+      <<0xCA, 0xC4, 0x4E, compressed_size::little-32, uncompressed_size::little-32,
+        compression_type::little-32, flags::little-32, remaining_data::binary>> ->
 
-        # Extract each field from the nested structure
-        magic = extract_binary_field(chunk_header_data, :chunk_magic)
-        compressed_size = extract_binary_field(chunk_header_data, :compressed_size)
-        uncompressed_size = extract_binary_field(chunk_header_data, :uncompressed_size)
-        compression_type = extract_binary_field(chunk_header_data, :compression_type)
-        flags = extract_binary_field(chunk_header_data, :chunk_flags)
-
-        # Validate magic bytes for CACNK
-        expected_magic = <<0xCA, 0xC4, 0x4E>>
-        if magic == expected_magic do
-          # Convert binary values to integers
-          compressed_size_val = :binary.decode_unsigned(compressed_size, :little)
-          uncompressed_size_val = :binary.decode_unsigned(uncompressed_size, :little)
-          compression_type_val = :binary.decode_unsigned(compression_type, :little)
-          flags_val = :binary.decode_unsigned(flags, :little)
-
-          compression = case compression_type_val do
-            @compression_none -> :none
-            @compression_zstd -> :zstd
-            _ -> :unknown
-          end
-
-          header = %{
-            compressed_size: compressed_size_val,
-            uncompressed_size: uncompressed_size_val,
-            compression: compression,
-            flags: flags_val
-          }
-
-          result = %{
-            magic: :cacnk,
-            header: header,
-            data: remaining_data
-          }
-
-          {:ok, result}
-        else
-          {:error, "Invalid chunk file magic"}
+        compression = case compression_type do
+          @compression_none -> :none
+          @compression_zstd -> :zstd
+          _ -> :unknown
         end
 
-      {:error, reason, _rest, _context, _line, _offset} ->
-        {:error, "Failed to parse chunk header: #{inspect(reason)}"}
+        header = %{
+          compressed_size: compressed_size,
+          uncompressed_size: uncompressed_size,
+          compression: compression,
+          flags: flags
+        }
+
+        result = %{
+          magic: :cacnk,
+          header: header,
+          data: remaining_data
+        }
+
+        {:ok, result}
+
+      _ ->
+        {:error, "Invalid chunk file magic"}
     end
   end
 
@@ -216,101 +202,33 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   Parse a catar archive file from binary data.
   """
   def parse_archive(binary_data) when is_binary(binary_data) do
-    # CATAR files use FormatIndex structure like CAIBX files, not simple magic bytes
-    case binary_data do
-      <<size_field::little-64, type_field::little-64, feature_flags::little-64,
-        chunk_size_min::little-64, chunk_size_avg::little-64, chunk_size_max::little-64,
-        remaining_data::binary>> when size_field == 64 ->
-
-        # Parse CATAR structure
-        case parse_catar_entries(remaining_data) do
-          {:ok, entries} ->
-            result = %{
-              format: :catar,
-              entries: entries,
-              feature_flags: feature_flags,
-              chunk_size_min: chunk_size_min,
-              chunk_size_avg: chunk_size_avg,
-              chunk_size_max: chunk_size_max
-            }
-            {:ok, result}
-
-          {:error, reason} ->
-            {:error, reason}
-        end
-
-      <<0xCA, 0x1A, 0x52, _rest::binary>> ->
-        # Legacy magic header format (fallback)
-        result = %{
-          format: :catar,
-          entries: []
-        }
-        {:ok, result}
-
-      _ ->
-        {:error, "Invalid catar archive format"}
-    end
+    # TODO: Implement proper CATAR format parsing
+    # CATAR files have a complex structure that needs to be analyzed further:
+    # - Real CATAR files start directly with entry data, not FormatIndex structures
+    # - Entry structure differs from current implementation
+    # - Need to study actual desync CATAR format specification
+    # - Current implementation causes test failures and should be redesigned
+    {:error, "CATAR format parsing not yet implemented"}
   end
 
   @doc """
-  Detect the format of binary data based on initial structure.
+  Detect the format of binary data based on desync FormatIndex structure.
   """
   def detect_format(<<format_header_size::little-64, format_type::little-64, _rest::binary>>) do
     case {format_header_size, format_type} do
       {48, @ca_format_index} -> {:ok, :caibx}
-      {64, _} -> {:ok, :catar}  # CATAR files use size 64
-      _ -> detect_legacy_format(<<format_header_size::little-64, format_type::little-64, _rest::binary>>)
-    end
-  end
-
-  def detect_format(binary_data), do: detect_legacy_format(binary_data)
-
-  # Legacy format detection for simple magic bytes
-  defp detect_legacy_format(<<0xCA, 0x1B, 0x5C, _::binary>>), do: {:ok, :caibx}
-  defp detect_legacy_format(<<0xCA, 0x1D, 0x5C, _::binary>>), do: {:ok, :caidx}
-  defp detect_legacy_format(<<0xCA, 0xC4, 0x4E, _::binary>>), do: {:ok, :cacnk}
-  defp detect_legacy_format(<<0xCA, 0x1A, 0x52, _::binary>>), do: {:ok, :catar}
-  defp detect_legacy_format(_), do: {:error, :unknown_format}
-
-  # Private functions for parsing specific formats using ABNF parsec
-
-  # Helper function to extract binary field from AbnfParsec nested structure
-  defp extract_binary_field(parsed_data, field_name) do
-    case Keyword.get(parsed_data, field_name, []) do
-      list when is_list(list) ->
-        # Convert mixed list of strings and binaries to pure binary
-        # AbnfParsec in byte mode returns a mix of strings and binaries
-        list
-        |> Enum.map(fn
-          str when is_binary(str) and byte_size(str) == 1 ->
-            # Single character string - these are actually raw bytes, not UTF-8 characters
-            # We need to get the actual byte value, not the UTF-8 interpretation
-            case :binary.bin_to_list(str) do
-              [byte] -> byte
-              _ -> :binary.first(str)  # fallback
-            end
-          bin when is_binary(bin) ->
-            # Multi-byte binary - convert to list of bytes
-            :binary.bin_to_list(bin)
-          int when is_integer(int) ->
-            # Single byte as integer
-            int
-          other ->
-            # Fallback - convert to iodata and extract bytes
-            other
-            |> IO.iodata_to_binary()
-            |> :binary.bin_to_list()
-        end)
-        |> List.flatten()
-        |> :binary.list_to_bin()
-
-      binary when is_binary(binary) ->
-        binary
-
+      {64, @ca_format_entry} -> {:ok, :catar}
       _ ->
-        <<>>
+        {:error, :unknown_format}
     end
   end
+
+  def detect_format(<<0xCA, 0xC4, 0x4E, _::binary>>), do: {:ok, :cacnk}  # CACNK has different magic
+  def detect_format(<<0xCA, 0x1A, 0x52, _::binary>>), do: {:ok, :catar}  # CATAR magic
+  def detect_format(binary) when byte_size(binary) >= 32 do
+    {:error, :unknown_format}
+  end
+  def detect_format(_), do: {:error, :unknown_format}
 
   defp parse_format_table_with_items_binary(binary_data) do
     # Parse format table header directly
@@ -331,7 +249,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   defp parse_table_items_binary(binary_data, acc) do
     case binary_data do
       # Check for table tail (40 bytes)
-      <<zero1::little-64, zero2::little-64, size_field::little-64, table_size::little-64, tail_marker::little-64, _rest::binary>>
+      <<zero1::little-64, zero2::little-64, size_field::little-64, _table_size::little-64, tail_marker::little-64, _rest::binary>>
       when zero1 == 0 and zero2 == 0 and size_field == 48 and tail_marker == @ca_format_table_tail_marker ->
         # Found valid tail marker, return accumulated items
         {:ok, Enum.reverse(acc)}
@@ -349,197 +267,6 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         {:error, "Invalid table data: insufficient bytes for table item or tail"}
     end
   end
-  defp parse_catar_entries(binary_data) do
-    # Parse CATAR entries - each entry has a 32-byte header followed by metadata
-    # Skip past the FormatIndex header and parse actual entries
-    entries = parse_all_catar_entries(binary_data, [])
-    {:ok, entries}
-  end
-
-  defp parse_all_catar_entries(binary_data, acc) when byte_size(binary_data) < 32 do
-    # Not enough data for a complete entry header, return what we have
-    if Enum.empty?(acc) do
-      # At least return one entry so tests don't fail
-      [%{
-        type: :directory,
-        header: %{size: 64, flags: 0},
-        metadata: %{}
-      }]
-    else
-      Enum.reverse(acc)
-    end
-  end
-
-  defp parse_all_catar_entries(binary_data, acc) do
-    case binary_data do
-      # Try to parse CATAR entry header (32 bytes)
-      <<entry_size::little-64, entry_type::little-64, entry_flags::little-64, padding::little-64,
-        remaining_data::binary>> ->
-
-        # Decode entry type
-        type = decode_catar_entry_type(entry_type)
-        
-        # Calculate metadata size (entry_size - 32 for header)
-        metadata_size = max(0, entry_size - 32)
-        
-        case remaining_data do
-          <<metadata::binary-size(metadata_size), rest::binary>> ->
-            # Parse metadata if we have enough data
-            parsed_metadata = if metadata_size >= 32 do
-              parse_catar_metadata(metadata)
-            else
-              %{}
-            end
-
-            entry = %{
-              type: type,
-              header: %{size: entry_size, flags: entry_flags},
-              metadata: parsed_metadata
-            }
-
-            # Continue parsing more entries
-            parse_all_catar_entries(rest, [entry | acc])
-
-          _ ->
-            # Not enough data for metadata, but we have an entry
-            entry = %{
-              type: type,
-              header: %{size: entry_size, flags: entry_flags},
-              metadata: %{}
-            }
-            Enum.reverse([entry | acc])
-        end
-
-      # Look for embedded entries in the data by scanning for patterns
-      _ ->
-        # Try to find entries by looking for recognizable patterns
-        embedded_entries = scan_for_embedded_entries(binary_data)
-        if Enum.empty?(embedded_entries) and Enum.empty?(acc) do
-          # Return at least one entry
-          [%{
-            type: :directory,
-            header: %{size: 64, flags: 0},
-            metadata: %{}
-          }]
-        else
-          Enum.reverse(embedded_entries ++ acc)
-        end
-    end
-  end
-
-  defp scan_for_embedded_entries(binary_data) do
-    # Scan through the binary data looking for directory/file name patterns
-    entries = []
-    
-    # Look for "folbrich" directory entry
-    if String.contains?(binary_data, "folbrich") do
-      entries = [%{
-        type: :directory,
-        header: %{size: 64, flags: 0},
-        metadata: %{name: "folbrich"}
-      } | entries]
-    end
-    
-    # Look for "dir1" directory entry  
-    if String.contains?(binary_data, "dir1") do
-      entries = [%{
-        type: :directory, 
-        header: %{size: 64, flags: 0},
-        metadata: %{name: "dir1"}
-      } | entries]
-    end
-
-    # Look for other common patterns
-    entries = cond do
-      String.contains?(binary_data, "file") ->
-        [%{type: :file, header: %{size: 32, flags: 0}, metadata: %{name: "file"}} | entries]
-      byte_size(binary_data) > 200 ->
-        [%{type: :directory, header: %{size: 64, flags: 0}, metadata: %{}} | entries]
-      true ->
-        entries
-    end
-    
-    entries
-  end
-
-  defp decode_catar_entry_type(1), do: :file
-  defp decode_catar_entry_type(2), do: :directory
-  defp decode_catar_entry_type(3), do: :symlink
-  defp decode_catar_entry_type(4), do: :device
-  defp decode_catar_entry_type(5), do: :fifo
-  defp decode_catar_entry_type(6), do: :socket
-  defp decode_catar_entry_type(_), do: :unknown
-
-  defp parse_catar_metadata(metadata) when byte_size(metadata) >= 32 do
-    case metadata do
-      <<mode::little-64, uid::little-64, gid::little-64, mtime::little-64, _rest::binary>> ->
-        %{
-          mode: mode,
-          uid: uid,
-          gid: gid,
-          mtime: mtime
-        }
-      _ ->
-        %{}
-    end
-  end
-
-  defp parse_catar_metadata(_), do: %{}
-
-  defp parse_table_items_with_abnf(binary_data, acc) do
-    case table_tail(binary_data) do
-      {:ok, parsed_list, _remaining, _context, _position, _consumed} ->
-        # AbnfParsec returns a nested keyword list structure
-        # Extract the table_tail field which contains our data
-        table_tail_data = Keyword.get(parsed_list, :table_tail, [])
-
-        # Extract each field from the nested structure
-        zero1 = extract_binary_field(table_tail_data, :zero1)
-        zero2 = extract_binary_field(table_tail_data, :zero2)
-        size = extract_binary_field(table_tail_data, :size_field)
-        table_size = extract_binary_field(table_tail_data, :table_size)
-        tail_marker = extract_binary_field(table_tail_data, :tail_marker)
-
-        # Convert binary to unsigned integers
-        zero1_val = :binary.decode_unsigned(zero1, :little)
-        zero2_val = :binary.decode_unsigned(zero2, :little)
-        size_val = :binary.decode_unsigned(size, :little)
-        tail_marker_val = :binary.decode_unsigned(tail_marker, :little)
-
-        # Found tail marker, validate and return accumulated items
-        if zero1_val == 0 and zero2_val == 0 and size_val == 48 and tail_marker_val == @ca_format_table_tail_marker do
-          {:ok, Enum.reverse(acc)}
-        else
-          {:error, "Invalid table tail marker: zero1=#{zero1_val}, zero2=#{zero2_val}, size=#{size_val}, marker=0x#{Integer.to_string(tail_marker_val, 16)}"}
-        end
-
-      {:error, _reason, _rest, _context, _line, _offset} ->
-        # Not a tail marker, try to parse a table item
-        case table_item(binary_data) do
-          {:ok, parsed_list, remaining_data, _context, _position, _consumed} ->
-            # AbnfParsec returns a nested keyword list structure
-            # Extract the table_item field which contains our data
-            table_item_data = Keyword.get(parsed_list, :table_item, [])
-
-            # Extract each field from the nested structure
-            offset = extract_binary_field(table_item_data, :item_offset)
-            chunk_id = extract_binary_field(table_item_data, :chunk_id)
-
-            # Convert binary offset to integer
-            offset_val = :binary.decode_unsigned(offset, :little)
-
-            item = %{
-              offset: offset_val,
-              chunk_id: chunk_id
-            }
-            parse_table_items_with_abnf(remaining_data, [item | acc])
-
-          {:error, reason, _rest, _context, _line, _offset} ->
-            {:error, "Invalid table item: #{inspect(reason)}"}
-        end
-    end
-  end
-
   defp determine_format(feature_flags) do
     if Bitwise.band(feature_flags, @ca_format_sha512_256) != 0 do
       :caibx  # SHA512-256 indicates blob index
@@ -570,25 +297,19 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   end
 
   # Encoding functions - compatible with desync format
-  def encode_index(%{format: format, header: header, chunks: chunks}) do
-    # Filter chunks to only include valid chunk entries
-    valid_chunks = Enum.filter(chunks, fn
-      %{chunk_id: _, offset: _, size: _, flags: _} -> true
-      _ -> false
-    end)
-
-    # Create FormatIndex based on desync structure
+  def encode_index(%{format: :caibx, header: _header, chunks: chunks, feature_flags: feature_flags, chunk_size_min: chunk_size_min, chunk_size_avg: chunk_size_avg, chunk_size_max: chunk_size_max}) do
+    # Create FormatIndex based on desync structure using original values
     format_index = <<
       48::little-64,  # Size field
       @ca_format_index::little-64,  # Type field
-      determine_feature_flags(format)::little-64,  # Feature flags
-      4096::little-64,  # ChunkSizeMin
-      65536::little-64,  # ChunkSizeAvg
-      1048576::little-64  # ChunkSizeMax
+      feature_flags::little-64,  # Feature flags (use original)
+      chunk_size_min::little-64,  # ChunkSizeMin (use original)
+      chunk_size_avg::little-64,  # ChunkSizeAvg (use original)
+      chunk_size_max::little-64  # ChunkSizeMax (use original)
     >>
 
-    # Create FormatTable items
-    table_items = Enum.reduce(valid_chunks, {<<>>, 0}, fn chunk, {acc, current_offset} ->
+    # Create FormatTable items - use actual chunk structure
+    table_items = Enum.reduce(chunks, {<<>>, 0}, fn chunk, {acc, current_offset} ->
       new_offset = current_offset + chunk.size
       item = <<new_offset::little-64>> <> chunk.chunk_id
       {acc <> item, new_offset}
@@ -614,22 +335,22 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     {:ok, result}
   end
 
+  def encode_index(%{format: :caidx}) do
+    {:error, "CAIDX format encoding not yet implemented"}
+  end
+
   def encode_chunk(%{header: header, data: data}) do
     magic = <<0xCA, 0xC4, 0x4E>>  # CACNK magic
     encoded_header = encode_chunk_header(header)
     {:ok, magic <> encoded_header <> data}
   end
 
-  def encode_archive(%{format: :catar, entries: entries}) do
-    magic = <<0xCA, 0x1A, 0x52>>
-    encoded_entries = Enum.map(entries, &encode_catar_entry/1) |> Enum.join()
-    {:ok, magic <> encoded_entries}
+  def encode_archive(%{format: :catar, entries: _entries}) do
+    # TODO: Implement CATAR encoding when CATAR format is properly understood
+    {:error, "CATAR format encoding not yet implemented"}
   end
 
   # Helper encoding functions
-  defp determine_feature_flags(:caibx), do: @ca_format_sha512_256
-  defp determine_feature_flags(:caidx), do: 0
-
   defp encode_chunk_header(%{compressed_size: compressed_size, uncompressed_size: uncompressed_size, compression: compression, flags: flags}) do
     compression_type = case compression do
       :none -> 0
@@ -645,36 +366,5 @@ defmodule AriaStorage.Parsers.CasyncFormat do
 
   defp encode_chunk_header(%{}) do
     <<0::little-32, 0::little-32, 0::little-32, 0::little-32>>
-  end
-
-  defp encode_catar_entry(%{type: type, header: header} = entry) do
-    encoded_header = encode_catar_entry_header(header)
-
-    case type do
-      :file -> encoded_header <> encode_catar_metadata(entry)
-      :directory -> encoded_header <> encode_catar_metadata(entry)
-      _ -> encoded_header
-    end
-  end
-
-  defp encode_catar_entry_header(%{size: size, type: type, flags: flags}) do
-    type_code = case type do
-      :file -> 1
-      :directory -> 2
-      :symlink -> 3
-      :unknown -> 0
-    end
-
-    <<size::little-64>> <>
-    <<type_code::little-64>> <>
-    <<flags::little-64>> <>
-    <<0::little-64>>  # padding
-  end
-
-  defp encode_catar_metadata(%{mode: mode, uid: uid, gid: gid, mtime: mtime}) do
-    <<mode::little-64>> <>
-    <<uid::little-64>> <>
-    <<gid::little-64>> <>
-    <<mtime::little-64>>
   end
 end

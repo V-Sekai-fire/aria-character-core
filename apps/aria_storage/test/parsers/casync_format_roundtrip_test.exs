@@ -430,9 +430,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
   end
 
   defp create_synthetic_catar do
-    # Create a simple catar with one file entry
-    magic = <<0xCA, 0x1A, 0x52>>
-
+    # Create a simple catar with one file entry - no magic bytes, starts with entry data
     # File entry
     entry_header = <<64::little-64>> <>   # size
                    <<1::little-64>> <>    # type (file)
@@ -444,7 +442,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
                <<1000::little-64>> <>     # gid
                <<1234567890::little-64>>  # mtime
 
-    magic <> entry_header <> metadata
+    entry_header <> metadata
   end
 
   defp create_synthetic_chunk do

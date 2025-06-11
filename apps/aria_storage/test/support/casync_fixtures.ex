@@ -41,21 +41,24 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
     # Create table items (40 bytes each: 8-byte offset + 32-byte chunk_id)
     table_items = for i <- 1..chunk_count do
       chunk_id = :crypto.hash(:sha256, "test_chunk_#{i}")
-      offset = (i - 1) * 1024  # Each chunk starts at 1KB intervals
+      offset = i * 1024  # Each chunk ends at 1KB intervals (cumulative offsets)
       <<offset::little-64, chunk_id::binary-size(32)>>
     end
+
+    table_items_binary = Enum.join(table_items)
+    table_size = byte_size(table_items_binary) + 48  # 16 bytes header + 40 bytes tail
 
     # Table tail marker (40 bytes)
     table_tail = <<
       0::little-64,                     # Zero offset
-      0::little-64,                     # Zero pad
+      0::little-64,                     # Zero pad  
       48::little-64,                    # Size field
-      0::little-64,                     # Table size (simplified)
+      table_size::little-64,            # Table size
       @ca_format_table_tail_marker::little-64 # Tail marker
     >>
 
     # Combine all parts
-    format_index <> table_header <> Enum.join(table_items) <> table_tail
+    format_index <> table_header <> table_items_binary <> table_tail
   end
 
   @doc """
@@ -92,15 +95,19 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   Creates a complex catar (Casync archive) file for testing.
   """
   def create_complex_catar do
-    # CATAR file format starts with magic bytes
-    # Magic: 0xCA, 0x1A, 0x52 (from parser detection)
-    magic = <<0xCA, 0x1A, 0x52>>
+    # CATAR files start directly with entry data, no magic bytes
+    # Create a simple directory entry
+    entry_header = <<64::little-64>> <>   # size
+                   <<2::little-64>> <>    # type (directory)
+                   <<0::little-64>> <>    # flags
+                   <<0::little-64>>       # padding
 
-    # Add minimal content to make it look like a real archive
-    # This is a simplified version for testing format detection
-    dummy_content = :crypto.strong_rand_bytes(100)
+    metadata = <<0o755::little-64>> <>    # mode (directory permissions)
+               <<1000::little-64>> <>     # uid
+               <<1000::little-64>> <>     # gid
+               <<1640995200::little-64>>  # mtime
 
-    magic <> dummy_content
+    entry_header <> metadata
   end
 
   @doc """
@@ -108,14 +115,19 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   """
   def validate_index_structure(parsed_result) do
     case parsed_result do
-      {:ok, %{chunks: chunks, metadata: _metadata}} when is_list(chunks) ->
-        # Validate that all chunks have required fields
-        Enum.all?(chunks, fn chunk ->
+      %{chunks: chunks, header: header} when is_list(chunks) and is_map(header) ->
+        # Validate that all chunks have required fields and header is present
+        has_valid_chunks = Enum.all?(chunks, fn chunk ->
           is_map(chunk) and
-          Map.has_key?(chunk, :id) and
+          Map.has_key?(chunk, :chunk_id) and
           Map.has_key?(chunk, :size) and
           Map.has_key?(chunk, :offset)
         end)
+        
+        has_valid_header = Map.has_key?(header, :chunk_count) and 
+                          Map.has_key?(header, :total_size)
+        
+        has_valid_chunks and has_valid_header
 
       _ ->
         false
