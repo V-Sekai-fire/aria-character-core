@@ -37,62 +37,27 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   @ca_format_index 0x96824d9c7b129ff9
   @ca_format_table 0xe75b9e112f17417d
   @ca_format_table_tail_marker 0x4b4f050e5549ecd1
-  @_ca_format_exclude_no_dump 0x8000000000000000
+  # Suppressing warnings for reserved constant by commenting out unused one
+  # @_ca_format_exclude_no_dump 0x8000000000000000
   
-  # CATAR format constants (reserved for future CATAR parsing implementation)
-  @_ca_format_entry 0x1396FABCEA5BBB51
-  @_ca_format_user 0xf453131aaeeaccb3
-  @_ca_format_group 0x25eb6ac969396a52
-  @_ca_format_xattr 0xb8157091f80bc486
-  @_ca_format_acl_user 0x297dc88bf2ef12f8
-  @_ca_format_acl_group 0x36f2acb56cb3dd0b
-  @_ca_format_acl_group_obj 0x23047110441f38f3
-  @_ca_format_acl_default 0xfe3eeda6823c8cd0
-  @_ca_format_acl_default_user 0xbdf03df9bd010a91
-  @_ca_format_acl_default_group 0xa0cb1168782d1f51
-  @_ca_format_acl_default_mask 0x16078cf53bea9502
-  @_ca_format_acl_default_other 0x5a3a75ceb8b5fa4f
-  @_ca_format_fcaps 0xf7267db0a1e6d6a7
-  @_ca_format_selinux 0x99ae9d6bb4de6b57
-  @_ca_format_symlink 0x664a6fb6830e0d6c
-  @_ca_format_device 0xac0d5c0d73969ade
-  @_ca_format_payload 0x8bdab8cbf9e7b8cd
-  @_ca_format_filename 0x6dbb6ebcb3161f0b
-  @_ca_format_goodbye 0x57446fa533702943
-
-  # Hash algorithm flags (reserved for future format variations)
-  @_ca_format_sha256 0x0000000000000000
-  @_ca_format_sha512_256 0x2000000000000000
-
-  # Feature flags (reserved for future format capabilities)
-  @_ca_format_feature_flags_mask 0x00000000FFFFFFFF
-  @_ca_format_with_16bit_uids 0x0000000000000001
-  @_ca_format_with_32bit_uids 0x0000000000000002
-  @_ca_format_with_user_names 0x0000000000000004
-  @_ca_format_with_sec_time 0x0000000000000008
-  @_ca_format_with_usec_time 0x0000000000000010
-  @_ca_format_with_nsec_time 0x0000000000000020
-  @_ca_format_with_2sec_time 0x0000000000000040
-  @_ca_format_with_read_only 0x0000000000000080
-  @_ca_format_with_permissions 0x0000000000000100
-  @_ca_format_with_symlinks 0x0000000000000200
-  @_ca_format_with_device_nodes 0x0000000000000400
-  @_ca_format_with_fifos 0x0000000000000800
-  @_ca_format_with_sockets 0x0000000000001000
+  # CATAR format constants (currently unused but reserved for future implementation)
+  # Suppressing warnings for reserved constants by prefixing with underscore
 
   # Compression types (based on desync - only ZSTD is actually used)
   @compression_none 0
   @compression_zstd 1
 
-  # Default chunk sizes (reserved for validation and recommendations)
-  @_default_min_chunk_size 16_384    # 16KB
-  @_default_avg_chunk_size 65_536    # 64KB  
-  @_default_max_chunk_size 262_144   # 256KB
+  # Default chunk sizes (currently unused but reserved for validation and recommendations)
+  # Suppressing warnings for reserved constants by commenting out unused ones
+  # @_default_min_chunk_size 16_384    # 16KB
+  # @_default_avg_chunk_size 65_536    # 64KB  
+  # @_default_max_chunk_size 262_144   # 256KB
 
-  # Magic numbers for file format detection (reserved for format detection)
-  @_caibx_magic_bytes <<0xCA, 0x1B, 0x5C>>
-  @_caidx_magic_bytes <<0xCA, 0x1D, 0x5C>>
-  @_catar_magic_bytes <<0xCA, 0x1A, 0x52>>
+  # Magic numbers for file format detection (currently unused but reserved for format detection)
+  # Suppressing warnings for reserved constants by commenting out unused ones
+  # @_caibx_magic_bytes <<0xCA, 0x1B, 0x5C>>
+  # @_caidx_magic_bytes <<0xCA, 0x1D, 0x5C>>
+  # @_catar_magic_bytes <<0xCA, 0x1A, 0x52>>
 
   # Public accessor functions for constants (needed by tests)
   def ca_format_index, do: @ca_format_index
@@ -310,12 +275,9 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         {:error, "Invalid table data: insufficient bytes for table item or tail"}
     end
   end
-  defp determine_format(_feature_flags) do
-    # For now, assume all FormatIndex structures are CAIBX (blob index) format
-    # CAIDX (directory index) format can be added later when needed
-    :caibx
-  end
 
+  # Removed unused function: determine_format/1
+  
   defp calculate_total_size(items) when is_list(items) and length(items) > 0 do
     List.last(items).offset
   end

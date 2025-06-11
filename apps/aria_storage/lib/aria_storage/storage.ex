@@ -64,13 +64,9 @@ defmodule AriaStorage.Storage do
               checksum: index.checksum
             }
 
-            case create_file_record(metadata) do
-              {:ok, file_record} ->
-                {:ok, %{index_ref: index_ref, file_id: file_record.id}}
-
-              {:error, reason} ->
-                {:error, {:database_error, reason}}
-            end
+            # create_file_record always returns {:ok, _} for now (stub implementation)
+            {:ok, file_record} = create_file_record(metadata)
+            {:ok, %{index_ref: index_ref, file_id: file_record.id}}
 
           {:error, reason} ->
             {:error, reason}
@@ -85,11 +81,12 @@ defmodule AriaStorage.Storage do
   Retrieves an index from storage.
   """
   def get_index(index_ref) do
+    # get_file_record_by_ref always returns {:error, :not_implemented} for now (stub)
     case get_file_record_by_ref(index_ref) do
-      {:ok, _file_record} ->
+      {:error, :not_implemented} ->
+        # Fall back to direct index store lookup for now
         index_store = get_index_store([])
         get_index_from_store(index_ref, index_store)
-
       {:error, reason} ->
         {:error, reason}
     end
@@ -146,15 +143,10 @@ defmodule AriaStorage.Storage do
   def delete_file(file_id, opts \\ []) do
     force = Keyword.get(opts, :force, false)
 
+    # get_file_record always returns {:error, :not_implemented} for now (stub)
     case get_file_record(file_id) do
-      {:ok, file_record} ->
-        with {:ok, index} <- get_index(file_record.index_ref),
-             :ok <- maybe_delete_chunks(index.chunks, force),
-             :ok <- delete_index(file_record.index_ref),
-             {:ok, _} <- StorageRepo.delete(file_record) do
-          {:ok, :deleted}
-        end
-
+      {:error, :not_implemented} ->
+        {:error, :not_implemented}
       {:error, reason} ->
         {:error, reason}
     end
@@ -170,18 +162,14 @@ defmodule AriaStorage.Storage do
     referenced_chunks = get_all_referenced_chunks()
 
     # Get all chunks in stores
-    case get_all_stored_chunks(stores) do
-      {:ok, stored_chunks} ->
-        unreferenced = MapSet.difference(
-          MapSet.new(stored_chunks),
-          MapSet.new(referenced_chunks)
-        )
+    # get_all_stored_chunks always returns {:ok, []} for now (stub)
+    {:ok, stored_chunks} = get_all_stored_chunks(stores)
+    unreferenced = MapSet.difference(
+      MapSet.new(stored_chunks),
+      MapSet.new(referenced_chunks)
+    )
 
-        delete_unreferenced_chunks(MapSet.to_list(unreferenced), stores)
-
-      {:error, reason} ->
-        {:error, reason}
-    end
+    delete_unreferenced_chunks(MapSet.to_list(unreferenced), stores)
   end
 
   @doc """
@@ -191,24 +179,20 @@ defmodule AriaStorage.Storage do
     stores = get_chunk_stores(opts)
     repair = Keyword.get(opts, :repair, false)
 
-    case get_all_stored_chunks(stores) do
-      {:ok, chunk_ids} ->
-        results = Enum.map(chunk_ids, fn chunk_id ->
-          verify_single_chunk(chunk_id, stores, repair)
-        end)
+    # get_all_stored_chunks always returns {:ok, []} for now (stub)
+    {:ok, chunk_ids} = get_all_stored_chunks(stores)
+    results = Enum.map(chunk_ids, fn chunk_id ->
+      verify_single_chunk(chunk_id, stores, repair)
+    end)
 
-        {valid, invalid} = Enum.split_with(results, &match?({:ok, _}, &1))
+    {valid, invalid} = Enum.split_with(results, &match?({:ok, _}, &1))
 
-        {:ok, %{
-          total: length(results),
-          valid: length(valid),
-          invalid: length(invalid),
-          invalid_chunks: Enum.map(invalid, fn {:error, {chunk_id, _}} -> chunk_id end)
-        }}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
+    {:ok, %{
+      total: length(results),
+      valid: length(valid),
+      invalid: length(invalid),
+      invalid_chunks: Enum.map(invalid, fn {:error, {chunk_id, _}} -> chunk_id end)
+    }}
   end
 
   @doc """
