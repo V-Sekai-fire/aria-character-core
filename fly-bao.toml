@@ -1,0 +1,48 @@
+# Fly.io OpenBao Configuration  
+# Secrets management for Aria Character Core
+
+app = "aria-character-core-bao"
+primary_region = "ord"
+
+[build]
+  dockerfile = "Dockerfile.openbao"
+
+[deploy]
+  strategy = "immediate"
+
+[env]
+  OPENBAO_ADDR = "http://0.0.0.0:8200"
+  VAULT_ADDR = "http://0.0.0.0:8200"
+  SOFTHSM2_CONF = "/vault/softhsm/softhsm2.conf"
+
+[[mounts]]
+  source = "bao_storage"
+  destination = "/vault"
+
+[[services]]
+  processes = ["bao"]
+  internal_port = 8200
+  protocol = "tcp"
+  auto_stop_machines = false
+  auto_start_machines = true
+
+  [[services.ports]]
+    port = 8200
+    handlers = ["http"]
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/v1/sys/health"
+    protocol = "http"
+    restart_limit = 0
+    timeout = "10s"
+
+[processes]
+  bao = "/usr/local/bin/start-bao.sh"
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

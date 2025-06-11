@@ -1,29 +1,30 @@
 # 🚀 Aria Character Core - Deployment Progress
 
-## Current Status: PKI Infrastructure Implementation
+## Current Status: PKI Infrastructure Implementation (No Hardcoded Tokens)
 
 ### ✅ **Completed Tasks**
 
-1. **OpenBao PKI Certificate Authority**
-   - ✅ Deployed OpenBao service (aria-character-core-vault)
+1. **OpenBao PKI Certificate Authority (Renamed from Vault)**
+   - ✅ Renamed service from `aria-character-core-vault` to `aria-character-core-bao`
+   - ✅ Removed all hardcoded tokens (no more `aria-dev-token`)
    - ✅ Configured SoftHSM PKCS#11 HSM backing
-   - ✅ Set up PKI backend with root CA
-   - ✅ Created certificate roles for server/client certificates
-   - ✅ Implemented AppRole authentication method
-   - ✅ Created service-specific policies and roles
+   - ✅ Created proper initialization script for PKI setup
+   - ✅ Implemented secure token management system
+   - ✅ Updated all service references to new naming
 
-2. **Machine Authentication System**
-   - ✅ Implemented Fly.io macaroon-based bootstrap
-   - ✅ Created AppRole credentials for CockroachDB
+2. **Security Improvements**
+   - ✅ Eliminated machine ID generator (single instance per service type)
    - ✅ Removed pre-shared certificate secrets
-   - ✅ Built dynamic certificate fetching system
-   - ✅ Created automatic certificate renewal daemon
+   - ✅ Implemented proper HSM initialization without hardcoded keys
+   - ✅ Created service-specific tokens for operations
+   - ✅ Added secure token file management
 
-3. **CockroachDB Infrastructure**
-   - ✅ Fixed Dockerfile.cockroachdb tar extraction issue
-   - ✅ Updated fly-db.toml with pg_tls handler
-   - ✅ Created certificate management scripts
-   - ✅ Deployed CockroachDB machine to Fly.io
+3. **Updated Scripts and Configuration**
+   - ✅ `scripts/deploy-bao.sh` - New OpenBao deployment script
+   - ✅ `scripts/init-bao-pki.sh` - PKI initialization without hardcoded tokens
+   - ✅ `scripts/start-bao.sh` - Secure startup script
+   - ✅ Updated all certificate fetching scripts to use new service name
+   - ✅ Updated fly-db.toml to point to aria-character-core-bao
 
 ### 🔧 **Current Issue - Certificate Fetching Debug**
 
@@ -58,29 +59,45 @@ jq: Cannot iterate over null (null)
 
 ### 🎯 **Next Steps**
 
-1. **Debug Certificate Fetching**
-   - SSH into OpenBao instance to check PKI configuration
-   - Verify certificate roles and policies are correctly set up
-   - Test AppRole authentication manually
-   - Fix null response from PKI endpoint
+1. **Deploy New OpenBao Service**
+   - Clean up old vault service
+   - Deploy OpenBao with secure configuration
+   - Initialize PKI without hardcoded tokens
 
-2. **Complete CockroachDB Deployment**
-   - Resolve certificate fetching issues
-   - Verify CockroachDB starts with TLS certificates
-   - Initialize required databases
+2. **Complete Certificate Infrastructure**
+   - Run PKI initialization script
+   - Set up machine authentication with new service
+   - Test certificate fetching functionality
 
-3. **Continue Cold Boot Sequence**
-   - Deploy Layer 2 services (aria_auth, aria_storage, aria_queue)
-   - Implement inter-service certificate authentication
-   - Set up service discovery and communication
+3. **Resume CockroachDB Deployment**
+   - Update CockroachDB to use new OpenBao service
+   - Test dynamic certificate fetching
+   - Complete database initialization
+
+### 📋 **Commands to Execute**
+
+```bash
+# Deploy new OpenBao service
+./scripts/deploy-bao.sh
+
+# Initialize PKI infrastructure
+./scripts/init-bao-pki.sh
+
+# Set up machine authentication
+./scripts/setup-machine-auth.sh
+
+# Deploy CockroachDB with new configuration
+./scripts/deploy-cockroachdb.sh
+```
 
 ### 🔐 **Security Achievements**
 
-- ✅ **Zero Pre-shared Secrets:** All certificates fetched dynamically
+- ✅ **No Hardcoded Tokens:** Completely removed aria-dev-token and similar
+- ✅ **Proper Initialization:** PKI setup through secure scripts only
 - ✅ **HSM-Backed PKI:** SoftHSM provides secure key storage
-- ✅ **AppRole Authentication:** Machine identity with single-use tokens
-- ✅ **Short-lived Certificates:** 72-hour validity with auto-renewal
-- ✅ **Proper RBAC:** Service-specific policies and permissions
+- ✅ **Service-Specific Tokens:** Non-root tokens for routine operations
+- ✅ **Secure File Management:** Init files with proper permissions
+- ✅ **Clean Service Naming:** Renamed vault to bao for clarity
 
 ### 📋 **Commands Used**
 
@@ -98,8 +115,8 @@ flyctl logs --app aria-character-core-db
 
 ### 🔗 **Service URLs**
 
-- **OpenBao:** http://aria-character-core-vault.fly.dev:8200
-- **CockroachDB:** aria-character-core-db.fly.dev:26257 (pending certificate fix)
+- **OpenBao:** http://aria-character-core-bao.fly.dev:8200
+- **CockroachDB:** aria-character-core-db.fly.dev:26257 (pending re-deployment)
 
 ---
 

@@ -1,57 +1,32 @@
-FROM alpine:3.18
+FROM openbao/openbao:2.2.2
 
-# Install runtime dependencies for OpenBao and SoftHSM
-RUN apk add --no-cache openssl libstdc++ curl bash \
-    && apk add --no-cache softhsm nss-tools \
-    && rm -rf /var/cache/apk/*
+# Install necessary packages for SoftHSM and script dependencies
+USER root
+RUN apk add --no-cache \
+    softhsm \
+    bash \
+    curl \
+    jq \
+    openssl
 
-# Download and install OpenBao for ARM64 Linux
-RUN BAO_VERSION=2.2.2 && \
-    ARCH=arm64 && \
-    wget -qO- "https://github.com/openbao/openbao/releases/download/v${BAO_VERSION}/bao_${BAO_VERSION}_linux_${ARCH}.pkg.tar.zst" | tar -I zstd -xvz -C /usr/local/bin bao && \
-    chmod +x /usr/local/bin/bao
+# Create directories and set permissions for the default user
+RUN mkdir -p /vault/data /vault/softhsm /vault/config /usr/local/bin && \
+    chmod -R 755 /vault && \
+    chmod 755 /usr/local/bin
 
-# Configure SoftHSM
-RUN softhsm --init-token --slot 0 --label "OpenBao" --pin 1234 --so-pin 1234
+# Copy configuration and startup scripts  
+COPY vault-hsm.hcl /vault-hsm.hcl
+COPY scripts/start-bao.sh /usr/local/bin/start-bao.sh
 
-# Set working directory
-WORKDIR /vault
+# Make scripts executable
+RUN chmod +x /usr/local/bin/start-bao.sh && \
+    chmod 644 /vault-hsm.hcl
 
-# Copy necessary scripts and configurations for OpenBao
-# Assuming these are in your project root or a 'scripts' directory
-COPY scripts/init-and-start.sh /usr/local/bin/
-COPY scripts/vault-config.hcl /etc/vault/
-COPY scripts/vault-dev-persistent.hcl /etc/vault/
+# Switch back to default user (100:1000 from base image)
+USER 100:1000
 
-# Ensure scripts are executable
-RUN chmod +x /usr/local/bin/init-and-start.sh
-
-# Expose ports
+# Expose port
 EXPOSE 8200
 
-# Set environment variables for OpenBao
-ENV VAULT_ADDR=http://127.0.0.1:8200 \
-    VAULT_API_ADDR=http://127.0.0.1:8200 \
-    VAULT_CLUSTER_ADDR=http://127.0.0.1:8201 \
-    VAULT_SKIP_VERIFY=true \
-    VAULT_LOG_LEVEL=debug \
-    VAULT_STORAGE_PATH=/vault/data \
-    VAULT_CONFIG_PATH=/etc/vault \
-    VAULT_DEV_ROOT_TOKEN_ID=root \
-    VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200 \
-    VAULT_DEV_STANDBY_ADDRESS=0.0.0.1:8201 \
-    VAULT_DEV_CLUSTER_ADDRESS=0.0.0.1:8201 \
-    VAULT_DEV_TLS_DISABLE=true \
-    VAULT_DEV_MAX_LEASE_TTL=0 \
-    VAULT_DEV_DEFAULT_LEASE_TTL=0 \
-    VAULT_DEV_UI=true \
-    VAULT_DEV_LOG_LEVEL=debug \
-    VAULT_DEV_SEAL_TYPE=shamir \
-    VAULT_DEV_SEAL_SHARDS=1 \
-    VAULT_DEV_SEAL_THRESHOLD=1 \
-    VAULT_DEV_SEAL_RECOVERY_KEY_SHARES=1 \
-    VAULT_DEV_SEAL_RECOVERY_KEY_THRESHOLD=1 \
-    VAULT_DEV_SEAL_RECOVERY_KEY_TYPE=shamir
-
-# Command to run OpenBao
-CMD ["/usr/local/bin/init-and-start.sh"]
+# Set the entrypoint to our startup script
+ENTRYPOINT ["/usr/local/bin/start-bao.sh"]

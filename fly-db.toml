@@ -14,6 +14,7 @@ primary_region = "ord"
   COCKROACH_DATABASE = "aria_data_prod"
   COCKROACH_USER = "aria_user"
   COCKROACH_CERTS_DIR = "/cockroach/certs"
+  VAULT_ADDR = "http://aria-character-core-bao.fly.dev:8200"
 
 [[mounts]]
   source = "cockroach_data"

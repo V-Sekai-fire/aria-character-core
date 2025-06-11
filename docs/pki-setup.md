@@ -7,14 +7,15 @@ Successfully configured a complete PKI (Public Key Infrastructure) infrastructur
 ## 🏗️ Infrastructure Components
 
 ### **OpenBao PKI Certificate Authority**
-- **Service:** `aria-character-core-vault` (aria_security)
+- **Service:** `aria-character-core-bao` (aria_security)
 - **Status:** ✅ **DEPLOYED & OPERATIONAL**
-- **URL:** http://aria-character-core-vault.fly.dev:8200
+- **URL:** http://aria-character-core-bao.fly.dev:8200
 - **Features:**
   - SoftHSM PKCS#11 HSM backing for secure key storage
   - Automated certificate generation and management
   - 72-hour certificate validity with auto-renewal capability
   - REST API for programmatic certificate management
+  - No hardcoded tokens - proper initialization process
 
 ### **Generated Certificates**
 
@@ -98,6 +99,8 @@ Background daemon monitors certificate expiry and renews automatically:
 
 ## 🛠️ Available Scripts
 
+- **`scripts/deploy-bao.sh`** - Deploy OpenBao security service
+- **`scripts/init-bao-pki.sh`** - Initialize PKI infrastructure without hardcoded tokens
 - **`scripts/setup-machine-auth.sh`** - Configure AppRole authentication and machine credentials
 - **`scripts/fetch-certificates.sh`** - Dynamic certificate fetching script for machines
 - **`scripts/renew-certificates.sh`** - Automatic certificate renewal daemon

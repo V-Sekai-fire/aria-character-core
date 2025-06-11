@@ -6,7 +6,7 @@
 set -e
 
 # Configuration from environment
-VAULT_ADDR="${VAULT_ADDR:-http://aria-character-core-vault.fly.dev:8200}"
+VAULT_ADDR="${VAULT_ADDR:-http://aria-character-core-bao.fly.dev:8200}"
 VAULT_ROLE_ID="${VAULT_ROLE_ID:-}"
 VAULT_SECRET_ID="${VAULT_SECRET_ID:-}"
 SERVICE_TYPE="${SERVICE_TYPE:-cockroachdb-server}"

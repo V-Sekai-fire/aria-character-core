@@ -28,13 +28,23 @@ print_error() {
 }
 
 # Configuration
-VAULT_ADDR="http://aria-character-core-vault.fly.dev:8200"
+VAULT_ADDR="http://aria-character-core-bao.fly.dev:8200"
 VAULT_TOKEN="${VAULT_TOKEN:-}"
 
 if [ -z "$VAULT_TOKEN" ]; then
-    print_error "VAULT_TOKEN environment variable is required"
-    print_error "This should be the initial root token from OpenBao setup"
-    exit 1
+    # Try to read from service token file
+    if [ -f "./bao-service-token.json" ]; then
+        VAULT_TOKEN=$(jq -r '.service_token' ./bao-service-token.json)
+    elif [ -f "./bao-init.json" ]; then
+        print_warning "Using root token from init file - consider using service token"
+        VAULT_TOKEN=$(jq -r '.root_token' ./bao-init.json)
+    fi
+    
+    if [ -z "$VAULT_TOKEN" ] || [ "$VAULT_TOKEN" = "null" ]; then
+        print_error "VAULT_TOKEN environment variable is required"
+        print_error "Or run ./scripts/init-bao-pki.sh first to create tokens"
+        exit 1
+    fi
 fi
 
 print_step "Setting up machine authentication system"
