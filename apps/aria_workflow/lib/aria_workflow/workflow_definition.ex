@@ -1,27 +1,25 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
-defmodule AriaWorkflow.SOPDefinition do
+defmodule AriaWorkflow.WorkflowDefinition do
   @moduledoc """
-  Represents a Standard Operating Procedure (SOP) definition.
+  Represents a workflow definition.
 
-  An SOP definition contains all the information needed to plan and execute
-  a standard operating procedure, including goals, tasks, methods, documentation,
-  and metadata.
+  A workflow definition contains all the information needed to plan and execute
+  a workflow, including goals, tasks, methods, documentation, and metadata.
   """
 
-  alias AriaWorkflow.Multigoal
+  alias AriaEngine.{Multigoal, State}
 
   @type t :: %__MODULE__{
     id: String.t(),
     goals: [goal_spec()],
-    tasks: %{String.t() => function()},
-    methods: %{String.t() => function()},
+    tasks: [task_spec()],
+    methods: [method_spec()],
     documentation: %{atom() => String.t()},
     metadata: %{atom() => term()}
   }
 
   @type goal_spec :: {String.t(), String.t(), String.t()}
+  @type task_spec :: {String.t(), function()}
+  @type method_spec :: {String.t(), function()}
 
   defstruct [
     :id,
@@ -33,7 +31,7 @@ defmodule AriaWorkflow.SOPDefinition do
   ]
 
   @doc """
-  Creates a new SOP definition.
+  Creates a new workflow definition.
   """
   @spec new(String.t(), map()) :: t()
   def new(id, definition) do
@@ -48,15 +46,15 @@ defmodule AriaWorkflow.SOPDefinition do
   end
 
   @doc """
-  Converts SOP goals to an AriaWorkflow.Multigoal.
+  Converts workflow goals to an AriaEngine.Multigoal.
   """
-  @spec to_multigoal(t()) :: {:ok, AriaWorkflow.Multigoal.t()} | {:error, term()}
+  @spec to_multigoal(t()) :: {:ok, Multigoal.t()} | {:error, term()}
   def to_multigoal(%__MODULE__{goals: goals}) do
     try do
       multigoal = 
         goals
-        |> Enum.reduce(AriaWorkflow.Multigoal.new(), fn {pred, subj, obj}, acc ->
-          AriaWorkflow.Multigoal.add_goal(acc, pred, subj, obj)
+        |> Enum.reduce(Multigoal.new(), fn {pred, subj, obj}, acc ->
+          Multigoal.add_goal(acc, pred, subj, obj)
         end)
       
       {:ok, multigoal}
@@ -70,9 +68,9 @@ defmodule AriaWorkflow.SOPDefinition do
   """
   @spec get_task(t(), String.t()) :: {:ok, function()} | {:error, :not_found}
   def get_task(%__MODULE__{tasks: tasks}, task_name) do
-    case Map.get(tasks, task_name) do
+    case Enum.find(tasks, fn {name, _func} -> name == task_name end) do
       nil -> {:error, :not_found}
-      task_fn -> {:ok, task_fn}
+      {_name, task_fn} -> {:ok, task_fn}
     end
   end
 
@@ -81,9 +79,9 @@ defmodule AriaWorkflow.SOPDefinition do
   """
   @spec get_method(t(), String.t()) :: {:ok, function()} | {:error, :not_found}
   def get_method(%__MODULE__{methods: methods}, method_name) do
-    case Map.get(methods, method_name) do
+    case Enum.find(methods, fn {name, _func} -> name == method_name end) do
       nil -> {:error, :not_found}
-      method_fn -> {:ok, method_fn}
+      {_name, method_fn} -> {:ok, method_fn}
     end
   end
 
@@ -99,17 +97,17 @@ defmodule AriaWorkflow.SOPDefinition do
   end
 
   @doc """
-  Validates the SOP definition for completeness and correctness.
+  Validates the workflow definition for completeness and correctness.
   """
   @spec validate(t()) :: :ok | {:error, [String.t()]}
-  def validate(%__MODULE__{} = sop) do
+  def validate(%__MODULE__{} = workflow) do
     errors = []
     
-    errors = if String.trim(sop.id) == "", do: ["SOP ID cannot be empty" | errors], else: errors
-    errors = if Enum.empty?(sop.goals), do: ["SOP must have at least one goal" | errors], else: errors
-    errors = validate_goals(sop.goals, errors)
-    errors = validate_tasks(sop.tasks, errors)
-    errors = validate_methods(sop.methods, errors)
+    errors = if String.trim(workflow.id) == "", do: ["Workflow ID cannot be empty" | errors], else: errors
+    errors = if Enum.empty?(workflow.goals), do: ["Workflow must have at least one goal" | errors], else: errors
+    errors = validate_goals(workflow.goals, errors)
+    errors = validate_tasks(workflow.tasks, errors)
+    errors = validate_methods(workflow.methods, errors)
     
     case errors do
       [] -> :ok
@@ -118,57 +116,49 @@ defmodule AriaWorkflow.SOPDefinition do
   end
 
   @doc """
-  Adds a goal to the SOP definition.
+  Adds a goal to the workflow definition.
   """
   @spec add_goal(t(), String.t(), String.t(), String.t()) :: t()
-  def add_goal(%__MODULE__{goals: goals} = sop, predicate, subject, object) do
+  def add_goal(%__MODULE__{goals: goals} = workflow, predicate, subject, object) do
     new_goal = {predicate, subject, object}
-    %{sop | goals: [new_goal | goals]}
+    %{workflow | goals: [new_goal | goals]}
   end
 
   @doc """
-  Adds a task to the SOP definition.
+  Adds a task to the workflow definition.
   """
   @spec add_task(t(), String.t(), function()) :: t()
-  def add_task(%__MODULE__{tasks: tasks} = sop, name, task_fn) do
-    %{sop | tasks: Map.put(tasks, name, task_fn)}
+  def add_task(%__MODULE__{tasks: tasks} = workflow, name, task_fn) do
+    new_task = {name, task_fn}
+    %{workflow | tasks: [new_task | tasks]}
   end
 
   @doc """
-  Adds a method to the SOP definition.
+  Adds a method to the workflow definition.
   """
   @spec add_method(t(), String.t(), function()) :: t()
-  def add_method(%__MODULE__{methods: methods} = sop, name, method_fn) do
-    %{sop | methods: Map.put(methods, name, method_fn)}
+  def add_method(%__MODULE__{methods: methods} = workflow, name, method_fn) do
+    new_method = {name, method_fn}
+    %{workflow | methods: [new_method | methods]}
   end
 
   @doc """
-  Adds documentation to the SOP definition.
+  Adds documentation to the workflow definition.
   """
   @spec add_documentation(t(), atom(), String.t()) :: t()
-  def add_documentation(%__MODULE__{documentation: docs} = sop, key, content) do
-    %{sop | documentation: Map.put(docs, key, content)}
+  def add_documentation(%__MODULE__{documentation: docs} = workflow, key, content) do
+    %{workflow | documentation: Map.put(docs, key, content)}
   end
 
   @doc """
-  Updates metadata for the SOP definition.
+  Updates metadata for the workflow definition.
   """
   @spec put_metadata(t(), atom(), term()) :: t()
-  def put_metadata(%__MODULE__{metadata: meta} = sop, key, value) do
-    %{sop | metadata: Map.put(meta, key, value)}
+  def put_metadata(%__MODULE__{metadata: meta} = workflow, key, value) do
+    %{workflow | metadata: Map.put(meta, key, value)}
   end
 
   # Private helpers
-
-  defp tasks_to_map(tasks) when is_list(tasks) do
-    Enum.into(tasks, %{})
-  end
-  defp tasks_to_map(tasks) when is_map(tasks), do: tasks
-
-  defp methods_to_map(methods) when is_list(methods) do
-    Enum.into(methods, %{})
-  end
-  defp methods_to_map(methods) when is_map(methods), do: methods
 
   defp validate_goals(goals, errors) do
     Enum.reduce(goals, errors, fn goal, acc ->
