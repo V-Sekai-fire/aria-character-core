@@ -1,32 +1,50 @@
-FROM openbao/openbao:2.2.2
+# Build stage - download and prepare OpenBao
+FROM almalinux:9-minimal AS builder
 
-# Install necessary packages for SoftHSM and script dependencies
-USER root
-RUN apk add --no-cache \
-    softhsm \
-    bash \
-    curl \
-    jq \
-    openssl
+# Install build dependencies
+RUN microdnf update -y && \
+    microdnf install -y \
+        rpm \
+        wget && \
+    microdnf clean all
 
-# Create directories and set permissions for the default user
-RUN mkdir -p /vault/data /vault/softhsm /vault/config /usr/local/bin && \
-    chmod -R 755 /vault && \
-    chmod 755 /usr/local/bin
+# Download OpenBao HSM-enabled version from GitHub releases
+ARG OPENBAO_VERSION=2.2.2
+RUN wget -O openbao-hsm.rpm "https://github.com/openbao/openbao/releases/download/v2.2.2/bao-hsm_2.2.2_linux_amd64.rpm"
+
+# Runtime stage - minimal image with only runtime dependencies
+FROM almalinux:9-minimal AS runtime
+
+# Install runtime dependencies including SoftHSM and utilities
+RUN microdnf update -y && \
+    microdnf install -y \
+        bash \
+        jq \
+        openssl \
+        softhsm && \
+    microdnf clean all
+
+# Copy and install OpenBao from build stage
+COPY --from=builder /openbao-hsm.rpm /tmp/openbao-hsm.rpm
+RUN rpm -ivh /tmp/openbao-hsm.rpm && \
+    rm /tmp/openbao-hsm.rpm && \
+    ln -s /usr/bin/bao /usr/local/bin/openbao && \
+    ln -s /usr/bin/bao /usr/local/bin/bao
 
 # Copy configuration and startup scripts  
 COPY vault-hsm.hcl /vault-hsm.hcl
+COPY vault-fallback.hcl /vault-fallback.hcl
 COPY scripts/start-bao.sh /usr/local/bin/start-bao.sh
 
 # Make scripts executable
 RUN chmod +x /usr/local/bin/start-bao.sh && \
-    chmod 644 /vault-hsm.hcl
+    chmod 644 /vault-hsm.hcl /vault-fallback.hcl
 
-# Switch back to default user (100:1000 from base image)
-USER 100:1000
+# Stay as root to handle volume permissions at runtime
 
 # Expose port
 EXPOSE 8200
 
 # Set the entrypoint to our startup script
 ENTRYPOINT ["/usr/local/bin/start-bao.sh"]
+

@@ -175,6 +175,11 @@ if [[ "$SERVICE_TYPE" == cockroachdb-* ]]; then
             cp "$CERT_DIR/${SERVICE_TYPE}.key" "$CERT_DIR/node.key"
             chmod 644 "$CERT_DIR/node.crt"
             chmod 600 "$CERT_DIR/node.key"
+            
+            # Verify certificate for CockroachDB compatibility
+            if ! openssl x509 -in "$CERT_DIR/node.crt" -noout -text | grep -q "Digital Signature.*Key Encipherment"; then
+                log_warning "Certificate may not have required key usage extensions for CockroachDB"
+            fi
             ;;
         "cockroachdb-client")
             cp "$CERT_DIR/${SERVICE_TYPE}.crt" "$CERT_DIR/client.root.crt"
@@ -183,6 +188,11 @@ if [[ "$SERVICE_TYPE" == cockroachdb-* ]]; then
             chmod 600 "$CERT_DIR/client.root.key"
             ;;
     esac
+    
+    # Set proper ownership for CockroachDB (if running as non-root)
+    if [ "$(id -u)" -eq 0 ] && getent passwd cockroach > /dev/null 2>&1; then
+        chown cockroach:cockroach "$CERT_DIR"/*.{crt,key} 2>/dev/null || true
+    fi
 fi
 
 # Step 5: Clean up authentication token (security best practice)

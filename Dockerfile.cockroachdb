@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     wget \
     jq \
+    openssl \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install CockroachDB from Oxide's Buildomat
@@ -21,7 +23,11 @@ RUN ARCH=amd64 && \
 COPY scripts/cockroach-start.sh /usr/local/bin/start-cockroach.sh
 COPY scripts/fetch-certificates.sh /usr/local/bin/fetch-certificates.sh
 COPY scripts/renew-certificates.sh /usr/local/bin/renew-certificates.sh
-RUN chmod +x /usr/local/bin/start-cockroach.sh /usr/local/bin/fetch-certificates.sh /usr/local/bin/renew-certificates.sh
+COPY scripts/cockroach-health.sh /usr/local/bin/cockroach-health.sh
+RUN chmod +x /usr/local/bin/start-cockroach.sh \
+             /usr/local/bin/fetch-certificates.sh \
+             /usr/local/bin/renew-certificates.sh \
+             /usr/local/bin/cockroach-health.sh
 
 # Create directories
 RUN mkdir -p /cockroach/cockroach-data /cockroach/certs

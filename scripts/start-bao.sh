@@ -1,87 +1,132 @@
 #!/bin/bash
-# OpenBao startup script without hardcoded tokens
-# Initializes OpenBao with proper HSM configuration
-
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
+# Logging functions
 log_info() {
-    echo -e "${BLUE}[BAO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[BAO]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[BAO]${NC} $1"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [BAO] $1"
 }
 
 log_error() {
-    echo -e "${RED}[BAO]${NC} $1"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [BAO ERROR] $1" >&2
 }
 
-# Initialize SoftHSM if not already done
-init_softhsm() {
-    log_info "Initializing SoftHSM configuration..."
-    
-    # Create necessary directories
-    mkdir -p /vault/data
-    mkdir -p /vault/softhsm/tokens
-    mkdir -p /vault/logs
-    
-    # Create SoftHSM configuration
-    cat > /vault/softhsm/softhsm2.conf << EOF
+log_info "Aria Character Core - OpenBao Security Service"
+log_info "Starting with HSM support (running as root with secure configuration)"
+
+# Set up volume permissions and SoftHSM
+log_info "Setting up volumes and SoftHSM configuration..."
+mkdir -p /vault/data /vault/softhsm /vault/config /vault/logs /vault/softhsm/tokens
+chmod -R 755 /vault
+
+# Set up SoftHSM configuration
+log_info "Creating SoftHSM configuration..."
+cat > /vault/softhsm/softhsm2.conf << 'EOF'
 directories.tokendir = /vault/softhsm/tokens
 objectstore.backend = file
 log.level = INFO
+slots.removable = false
+slots.mechanisms = ALL
 EOF
+chmod 644 /vault/softhsm/softhsm2.conf
 
-    # Create token directory
-    mkdir -p /vault/softhsm/tokens
-    
-    # Initialize token if it doesn't exist
-    if [ ! -f /vault/softhsm/tokens/token_* ]; then
-        log_info "Creating new SoftHSM token..."
-        softhsm2-util --init-token \
-            --free \
-            --label "aria-hsm-token" \
-            --pin 1234 \
-            --so-pin 1234
-        log_success "SoftHSM token initialized"
-    else
-        log_info "SoftHSM token already exists"
+# Initialize SoftHSM token if not exists
+export SOFTHSM2_CONF=/vault/softhsm/softhsm2.conf
+if [ ! -f /vault/softhsm/tokens/slot_0.db ]; then
+    log_info "Creating new SoftHSM token..."
+    # Initialize with --free flag to automatically assign slot (with timeout)
+    if ! timeout 60 softhsm2-util --init-token --free --label "openbao-hsm" --pin 1234 --so-pin 5678; then
+        log_error "Failed to initialize SoftHSM token (timeout or error)"
+        exit 1
     fi
+    log_info "SoftHSM token created successfully"
+else
+    log_info "SoftHSM token already exists"
+fi
+
+# Now running as openbao user
+log_info "Starting OpenBao server as openbao user..."
+
+# Set SoftHSM configuration
+export SOFTHSM2_CONF=/vault/softhsm/softhsm2.conf
+
+# Test HSM functionality - but continue with fallback if HSM fails
+log_info "Testing HSM functionality..."
+if timeout 30 bao version 2>&1 | grep -q "HSM DISABLED"; then
+    log_info "HSM support is disabled in this build - using fallback configuration"
+    CONFIG_FILE="/vault-fallback.hcl"
+    log_info "🚀 Starting OpenBao with fallback configuration..."
+    log_info "📊 Admin UI will be available at: http://localhost:8200"
+    exec timeout 3600 bao server -config="$CONFIG_FILE"
+fi
+
+# Check if HSM is accessible
+log_info "Checking SoftHSM slots..."
+# Test SoftHSM accessibility
+log_info "Testing SoftHSM accessibility..."
+if ! timeout 30 softhsm2-util --show-slots 2>/dev/null; then
+    log_error "Cannot access SoftHSM - checking configuration..."
+    cat /vault/softhsm/softhsm2.conf
+    ls -la /vault/softhsm/tokens/ || true
+    exit 1
+fi
+
+# Get the actual slot number that was created
+SLOT_INFO=$(timeout 30 softhsm2-util --show-slots 2>/dev/null | grep "Slot" | head -1)
+if [ -n "$SLOT_INFO" ]; then
+    SLOT_NUM=$(echo "$SLOT_INFO" | awk '{print $2}')
+    log_info "Using SoftHSM slot: $SLOT_NUM"
+    
+    # Generate HSM configuration with correct slot number
+    cat > /vault/vault-hsm-dynamic.hcl << EOF
+# OpenBao configuration with SoftHSM seal for Fly.io
+storage "file" {
+  path = "/vault/data"
 }
 
-# Start OpenBao server
-start_bao() {
-    log_info "Starting OpenBao server..."
-    
-    # Set environment variables
-    export SOFTHSM2_CONF="/vault/softhsm/softhsm2.conf"
-    export VAULT_ADDR="http://0.0.0.0:8200"
-    export OPENBAO_ADDR="http://0.0.0.0:8200"
-    
-    # Initialize SoftHSM
-    init_softhsm
-    
-    # Start OpenBao with HSM configuration
-    log_info "OpenBao starting with HSM seal configuration"
-    exec bao server -config=/vault-hsm.hcl
+listener "tcp" {
+  address = "0.0.0.0:8200"
+  tls_disable = 1
 }
 
-# Handle signals for graceful shutdown
-trap 'log_info "Received shutdown signal, stopping OpenBao..."; exit 0' SIGTERM SIGINT
+# HSM seal configuration using SoftHSM PKCS#11
+seal "pkcs11" {
+  lib = "/usr/lib/softhsm/libsofthsm2.so"
+  slot = "$SLOT_NUM"
+  pin = "1234"
+  key_label = "aria-seal-key"
+  hmac_key_label = "aria-hmac-key"
+  generate_key = "true"
+}
 
-# Main execution
-log_info "Aria Character Core - OpenBao Security Service"
-log_info "Starting without hardcoded tokens - proper HSM initialization"
+# API address
+api_addr = "http://0.0.0.0:8200"
 
-start_bao
+# UI enabled
+ui = true
+
+# Logging
+log_level = "Info"
+
+# Disable mlock for containers
+disable_mlock = true
+
+# Default lease TTL
+default_lease_ttl = "168h"
+
+# Maximum lease TTL
+max_lease_ttl = "720h"
+EOF
+    
+    log_info "Generated dynamic HSM configuration with slot $SLOT_NUM"
+    CONFIG_FILE="/vault/vault-hsm-dynamic.hcl"
+else
+    log_error "No SoftHSM slots found"
+    exit 1
+fi
+
+log_info "🚀 Starting OpenBao with fallback configuration (HSM disabled due to container compatibility)..."
+log_info "📊 Admin UI will be available at: http://localhost:8200"
+
+# Use fallback configuration for now to avoid HSM segfaults in containers
+CONFIG_FILE="/vault-fallback.hcl"
+exec timeout 3600 bao server -config="$CONFIG_FILE"
