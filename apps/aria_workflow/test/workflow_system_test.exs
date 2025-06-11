@@ -424,7 +424,7 @@ defmodule AriaWorkflow.WorkflowSystemTest do
       command_start = System.monotonic_time(:millisecond)
 
       # Simulate timed command execution
-      {:ok, final_state, result} = AriaWorkflow.Methods.BasicTiming.time_command_execution(state, %{
+      {:ok, _final_state, result} = AriaWorkflow.Methods.BasicTiming.time_command_execution(state, %{
         command: "echo",
         args: ["Cycle time measurement test"]
       })
@@ -497,7 +497,7 @@ defmodule AriaWorkflow.WorkflowSystemTest do
 
     test "tracks development velocity over time" do
       # Simulate development session with multiple cycles
-      session_start = System.monotonic_time(:millisecond)
+      _session_start = System.monotonic_time(:millisecond)
 
       development_cycles = [
         %{cycle: 1, type: "initial_implementation", start_offset: 0},

@@ -39,62 +39,75 @@ All multi-byte integers are stored in little-endian format unless otherwise spec
 - `hash256` - 256-bit hash digest (32 bytes)
 - `blob` - Variable-length binary data
 
+## Implementation Constants
+
+ARCANA uses specific constants from desync source code for binary compatibility:
+
+- `CA_FORMAT_INDEX`: `0x96824d9c7b129ff9`
+- `CA_FORMAT_TABLE`: `0xe75b9e112f17417d`
+- `CA_FORMAT_TABLE_TAIL_MARKER`: `0x4b4f050e5549ecd1`
+- `CA_FORMAT_ENTRY`: `0x1396fabfa5dd7d47` (for CATAR format detection)
+
 ## CAIBX Format (Content Archive Index for Blobs)
 
-Content Archive Index for Blobs files contain metadata and chunk references for blob content.
+Content Archive Index for Blobs files contain metadata and chunk references for blob content using the desync FormatIndex + FormatTable structure.
 
 ### Structure
 
 ```
 CAIBX File:
-┌─────────────────┬──────────────────┬─────────────────────┐
-│ Magic (3 bytes) │ Header (20 bytes)│ Chunk Entries (var) │
-└─────────────────┴──────────────────┴─────────────────────┘
+┌─────────────────┬─────────────────┬─────────────────────┐
+│ FormatIndex     │ FormatTable     │ Table Items + Tail  │
+│ (48 bytes)      │ Header (16 bytes│ (variable)          │
+└─────────────────┴─────────────────┴─────────────────────┘
 ```
 
-### Header Format
+### FormatIndex Header (48 bytes)
 
 ```
-Offset | Size | Field        | Description
--------|------|--------------|---------------------------
-0      | 4    | version      | Format version (uint32)
-4      | 8    | total_size   | Total content size (uint64)
-12     | 4    | chunk_count  | Number of chunks (uint32)
-16     | 4    | reserved     | Reserved for future use
+Offset | Size | Field           | Description
+-------|------|-----------------|---------------------------
+0      | 8    | size_field      | Always 48 (uint64)
+8      | 8    | type_field      | CA_FORMAT_INDEX constant
+16     | 8    | feature_flags   | Feature flags (uint64)
+24     | 8    | chunk_size_min  | Minimum chunk size (uint64)
+32     | 8    | chunk_size_avg  | Average chunk size (uint64)
+40     | 8    | chunk_size_max  | Maximum chunk size (uint64)
 ```
 
-### Chunk Entry Format
+### FormatTable Header (16 bytes)
 
-Each chunk entry is 48 bytes:
+```
+Offset | Size | Field         | Description
+-------|------|---------------|---------------------------
+0      | 8    | table_marker  | Always 0xFFFFFFFFFFFFFFFF
+8      | 8    | table_type    | CA_FORMAT_TABLE constant
+```
+
+### Table Item Format (40 bytes each)
 
 ```
 Offset | Size | Field      | Description
 -------|------|------------|---------------------------
-0      | 32   | chunk_id   | SHA-256 hash of chunk data
-32     | 8    | offset     | Offset in original content
-40     | 4    | size       | Size of chunk in bytes
-44     | 4    | flags      | Chunk flags (see below)
+0      | 8    | offset     | End offset of chunk (uint64)
+8      | 32   | chunk_id   | SHA-256 hash of chunk data
 ```
 
-### Chunk Flags
+### Table Tail Marker (40 bytes)
 
 ```
-Bit | Description
-----|------------------
-0   | Compressed chunk
-1   | Encrypted chunk
-2   | Sparse chunk
-3   | Deduplicated
-4-31| Reserved
+Offset | Size | Field         | Description
+-------|------|---------------|---------------------------
+0      | 8    | zero1         | Always 0
+8      | 8    | zero2         | Always 0  
+16     | 8    | size_field    | Always 48
+24     | 8    | table_size    | Size of table data
+32     | 8    | tail_marker   | CA_FORMAT_TABLE_TAIL_MARKER
 ```
 
 ## CAIDX Format (Content Archive Index)
 
-Content Archive Index files reference CATAR archive chunks.
-
-### Structure
-
-Similar to CAIBX but with different magic number (`0xCA 0x1D 0x5C`) and specialized for archive content.
+Content Archive Index files reference CATAR archive chunks. Uses identical structure to CAIBX but with different magic detection and specialized for archive content.
 
 ## CACNK Format (Compressed Chunk)
 
@@ -143,23 +156,12 @@ Archive container files store filesystem metadata and file content.
 ```
 CATAR File:
 ┌─────────────────┬─────────────────────────────────────┐
-│ Magic (3 bytes) │ Archive Entries (variable length)   │
+│ Entry Header    │ Entry Metadata + Content (variable) │
+│ (64 bytes)      │                                     │
 └─────────────────┴─────────────────────────────────────┘
 ```
 
-### Entry Structure
-
-Each entry contains a header followed by metadata and optional content:
-
-```
-Entry:
-┌─────────────────┬─────────────────┬─────────────────┐
-│ Entry Header    │ Entry Metadata  │ Entry Content   │
-│ (32 bytes)      │ (32 bytes)      │ (variable)      │
-└─────────────────┴─────────────────┴─────────────────┘
-```
-
-### Entry Header Format
+### Entry Header Format (64 bytes)
 
 ```
 Offset | Size | Field         | Description
@@ -168,6 +170,10 @@ Offset | Size | Field         | Description
 8      | 8    | entry_type    | Type of filesystem object
 16     | 8    | entry_flags   | Entry-specific flags
 24     | 8    | padding       | Reserved padding
+32     | 8    | mode          | Unix file mode/permissions
+40     | 8    | uid           | User ID
+48     | 8    | gid           | Group ID
+56     | 8    | mtime         | Modification time (Unix timestamp)
 ```
 
 ### Entry Types
@@ -186,56 +192,40 @@ Value | Type
 8-255 | Reserved
 ```
 
-### Entry Metadata Format
-
-```
-Offset | Size | Field  | Description
--------|------|--------|---------------------------
-0      | 8    | mode   | Unix file mode/permissions
-8      | 8    | uid    | User ID
-16     | 8    | gid    | Group ID
-24     | 8    | mtime  | Modification time (Unix timestamp)
-```
-
 ## Implementation Notes
 
 ### Parser Architecture
 
-ARCANA uses **ABNF parsec** (Augmented Backus-Naur Form parser combinator) in binary mode for robust parsing of the structured binary formats. This approach provides:
+ARCANA uses **direct binary pattern matching** for robust parsing of the structured binary formats. This approach provides:
 
-- **Formal grammar specification**: Each format is defined using precise ABNF rules
-- **Composable parsers**: Complex structures built from simpler parsing primitives
-- **Binary mode parsing**: Native support for little-endian multi-byte integers
+- **Performance**: Direct binary pattern matching without parser overhead
+- **Reliability**: Avoids UTF-8 encoding issues with binary data
+- **Maintainability**: Clear and readable binary parsing logic
 - **Error handling**: Detailed error reporting with context information
-- **Maintainability**: Self-documenting parser definitions
+- **Binary precision**: Exact byte-level control over parsing
 
-### ABNF Parser Definitions
+### Binary Pattern Matching
 
-The binary format is parsed using these ABNF parsec definitions:
+The binary format is parsed using direct Elixir binary pattern matching:
 
 ```elixir
-# Format Index structure (48 bytes total)
-defparsec :format_index,
-  binary(8, :little, :unsigned)    # Size field
-  |> binary(8, :little, :unsigned) # Type/Magic field  
-  |> binary(8, :little, :unsigned) # Feature flags
-  |> binary(8, :little, :unsigned) # Chunk size min
-  |> binary(8, :little, :unsigned) # Chunk size avg
-  |> binary(8, :little, :unsigned) # Chunk size max
-  |> tag(:format_index)
+# FormatIndex structure parsing (48 bytes total)
+<<size_field::little-64, type_field::little-64, feature_flags::little-64,
+  chunk_size_min::little-64, chunk_size_avg::little-64, chunk_size_max::little-64,
+  remaining_data::binary>>
 
-# Format Table header (16 bytes)
-defparsec :format_table_header,
-  binary(8, :little, :unsigned)    # Table marker
-  |> binary(8, :little, :unsigned) # Table type
-  |> tag(:format_table_header)
+# FormatTable header parsing (16 bytes)
+<<table_marker::little-64, table_type::little-64, remaining_data::binary>>
 
-# Table Item (40 bytes each)
-defparsec :table_item,
-  binary(8, :little, :unsigned)    # Offset
-  |> binary(32)                    # Chunk ID (32 bytes)
-  |> tag(:table_item)
+# Table Item parsing (40 bytes each)
+<<item_offset::little-64, chunk_id::binary-size(32), remaining_data::binary>>
+
+# CACNK header parsing (3-byte magic + 16-byte header)
+<<0xCA, 0xC4, 0x4E, compressed_size::little-32, uncompressed_size::little-32,
+  compression_type::little-32, flags::little-32, remaining_data::binary>>
 ```
+
+**Note**: Some constants and magic numbers are commented out in the implementation to avoid compiler warnings about unused constants. These are reserved for future implementation or format detection features.
 
 ### Desync Compatibility Constants
 
@@ -245,7 +235,6 @@ ARCANA uses the exact constants from the desync source code to ensure perfect bi
 @ca_format_index 0x96824d9c7b129ff9
 @ca_format_table 0xe75b9e112f17417d  
 @ca_format_table_tail_marker 0x4b4f050e5549ecd1
-@ca_format_sha512_256 0x2000000000000000
 ```
 
 These constants are embedded in the binary format headers rather than using simple magic bytes, following the desync approach exactly.
@@ -330,7 +319,7 @@ Files created with ARCANA tools can be read by standard casync/desync implementa
 
 ## Reference Implementation
 
-The reference implementation is available in the AriaStorage module of the Aria Character Core project, written in Elixir with ABNF parsing support.
+The reference implementation is available in the AriaStorage module of the Aria Character Core project, written in Elixir.
 
 ---
 

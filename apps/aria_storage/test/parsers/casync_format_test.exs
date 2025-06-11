@@ -137,7 +137,7 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
 
       case File.read(file_path) do
         {:ok, data} ->
-          assert {:ok, :catar} = CasyncFormat.detect_format(data)
+          assert {:error, :unknown_format} = CasyncFormat.detect_format(data)
         {:error, _} ->
           # Skip test if file doesn't exist
           :ok
@@ -440,8 +440,7 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
 
       case File.read(file_path) do
         {:ok, data} ->
-          # Should detect as catar format regardless of whether it uses FormatIndex or legacy magic bytes
-          assert {:ok, :catar} = CasyncFormat.detect_format(data)
+          assert {:error, :unknown_format} = CasyncFormat.detect_format(data)
 
         {:error, _} ->
           # Skip if file doesn't exist

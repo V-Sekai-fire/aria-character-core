@@ -41,7 +41,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   # @_ca_format_exclude_no_dump 0x8000000000000000
   
   # CATAR format constants (currently unused but reserved for future implementation)
-  # Suppressing warnings for reserved constants by prefixing with underscore
+  @_ca_format_entry 0x1396fabfa5dd7d47
 
   # Compression types (based on desync - only ZSTD is actually used)
   @compression_none 0
