@@ -62,3 +62,5 @@ cockroachdb.tar
 /.asdf
 
 bao-*.deb
+
+certs

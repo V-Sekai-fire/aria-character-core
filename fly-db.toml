@@ -5,7 +5,7 @@ app = "aria-character-core-db"
 primary_region = "ord"
 
 [build]
-  image = "cockroachdb/cockroach:v22.1.22"
+  dockerfile = "Dockerfile.cockroachdb"
 
 [deploy]
   strategy = "immediate"
@@ -13,12 +13,14 @@ primary_region = "ord"
 [env]
   COCKROACH_DATABASE = "aria_data_prod"
   COCKROACH_USER = "aria_user"
+  COCKROACH_CERTS_DIR = "/cockroach/certs"
 
 [[mounts]]
   source = "cockroach_data"
   destination = "/cockroach/cockroach-data"
 
 [[services]]
+  processes = ["db"]
   internal_port = 26257
   protocol = "tcp"
   auto_stop_machines = false
@@ -26,7 +28,7 @@ primary_region = "ord"
 
   [[services.ports]]
     port = 26257
-    handlers = ["tcp"]
+    handlers = ["pg_tls"]
 
   [[services.tcp_checks]]
     grace_period = "30s"
@@ -35,6 +37,7 @@ primary_region = "ord"
     timeout = "10s"
 
 [[services]]
+  processes = ["db"]
   internal_port = 8080
   protocol = "tcp"
 
@@ -52,7 +55,7 @@ primary_region = "ord"
     timeout = "10s"
 
 [processes]
-  db = "cockroach start-single-node --insecure --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080"
+  db = "/usr/local/bin/start-cockroach.sh"
 
 [[vm]]
   memory = "4gb"
