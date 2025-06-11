@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/folbricht/desync.git
+	branch = master
+	commit = b340c05578d41e2a3fabc0b3037947eaa28382f3
+	parent = f0e83b045eac537a498ef1f48d6a4bee6fe2c01d
+	method = merge
+	cmdver = 0.4.9
