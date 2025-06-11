@@ -28,7 +28,7 @@ defmodule AriaWorkflow.TestHelpers do
     goals = Keyword.get(opts, :goals, [{"test", "system", "ready"}])
     tasks = Keyword.get(opts, :tasks, [{"test_task", &test_task/2}])
     methods = Keyword.get(opts, :methods, [])
-    
+
     WorkflowDefinition.new(id, %{
       goals: goals,
       tasks: tasks,
@@ -43,7 +43,7 @@ defmodule AriaWorkflow.TestHelpers do
   """
   def create_test_state(facts \\ []) do
     state = State.new()
-    
+
     Enum.reduce(facts, state, fn {pred, subj, obj}, acc ->
       State.set_object(acc, pred, subj, obj)
     end)
@@ -71,7 +71,7 @@ defmodule AriaWorkflow.TestHelpers do
   def create_test_span(name, opts \\ []) do
     attributes = Keyword.get(opts, :attributes, %{"test" => true})
     kind = Keyword.get(opts, :kind, :internal)
-    
+
     Span.new(name, kind: kind, attributes: attributes)
   end
 

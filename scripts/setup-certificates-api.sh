@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Certificate Authority and CockroachDB Certificate Setup via REST API
 # Uses OpenBao REST API to generate root CA and server certificates
 

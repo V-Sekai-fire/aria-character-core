@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Simple command tracer with timestamps for macOS
 # Usage: ./trace-cmd.sh [timeout_seconds] command [args...]
 

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Setup secure token-based authentication for OpenBao
 # Creates service-specific tokens with minimal required permissions
 

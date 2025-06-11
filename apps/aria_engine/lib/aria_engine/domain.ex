@@ -4,13 +4,13 @@
 defmodule AriaEngine.Domain do
   @moduledoc """
   Represents a planning domain in the GTPyhop planner.
-  
+
   A domain contains:
   - Actions: Functions that modify the world state
   - Task methods: Functions that decompose tasks into subtasks
   - Unigoal methods: Functions that achieve single goals
   - Multigoal methods: Functions that achieve multiple goals simultaneously
-  
+
   Example:
   ```elixir
   domain = AriaEngine.Domain.new("logistics")
@@ -51,13 +51,13 @@ defmodule AriaEngine.Domain do
 
   @doc """
   Adds an action to the domain.
-  
+
   Actions are functions that take a state and arguments, returning either:
   - A new state (success)
   - false (failure)
   """
   @spec add_action(t(), action_name(), action_fn()) :: t()
-  def add_action(%__MODULE__{actions: actions} = domain, name, action_fn) 
+  def add_action(%__MODULE__{actions: actions} = domain, name, action_fn)
       when is_atom(name) and is_function(action_fn, 2) do
     %{domain | actions: Map.put(actions, name, action_fn)}
   end
@@ -72,11 +72,11 @@ defmodule AriaEngine.Domain do
 
   @doc """
   Adds a task method to the domain.
-  
+
   Task methods decompose tasks into subtasks/actions/goals.
   """
   @spec add_task_method(t(), task_name(), task_method_fn()) :: t()
-  def add_task_method(%__MODULE__{task_methods: methods} = domain, task_name, method_fn) 
+  def add_task_method(%__MODULE__{task_methods: methods} = domain, task_name, method_fn)
       when is_binary(task_name) and is_function(method_fn, 2) do
     current_methods = Map.get(methods, task_name, [])
     updated_methods = [method_fn | current_methods]
@@ -87,7 +87,7 @@ defmodule AriaEngine.Domain do
   Adds multiple task methods for a task.
   """
   @spec add_task_methods(t(), task_name(), [task_method_fn()]) :: t()
-  def add_task_methods(%__MODULE__{} = domain, task_name, method_fns) 
+  def add_task_methods(%__MODULE__{} = domain, task_name, method_fns)
       when is_binary(task_name) and is_list(method_fns) do
     Enum.reduce(method_fns, domain, fn method_fn, acc_domain ->
       add_task_method(acc_domain, task_name, method_fn)
@@ -96,11 +96,11 @@ defmodule AriaEngine.Domain do
 
   @doc """
   Adds a unigoal method to the domain.
-  
+
   Unigoal methods achieve single predicate-based goals.
   """
   @spec add_unigoal_method(t(), String.t(), goal_method_fn()) :: t()
-  def add_unigoal_method(%__MODULE__{unigoal_methods: methods} = domain, goal_type, method_fn) 
+  def add_unigoal_method(%__MODULE__{unigoal_methods: methods} = domain, goal_type, method_fn)
       when is_binary(goal_type) and is_function(method_fn, 2) do
     current_methods = Map.get(methods, goal_type, [])
     updated_methods = [method_fn | current_methods]
@@ -111,7 +111,7 @@ defmodule AriaEngine.Domain do
   Adds multiple unigoal methods for a goal type.
   """
   @spec add_unigoal_methods(t(), String.t(), [goal_method_fn()]) :: t()
-  def add_unigoal_methods(%__MODULE__{} = domain, goal_type, method_fns) 
+  def add_unigoal_methods(%__MODULE__{} = domain, goal_type, method_fns)
       when is_binary(goal_type) and is_list(method_fns) do
     Enum.reduce(method_fns, domain, fn method_fn, acc_domain ->
       add_unigoal_method(acc_domain, goal_type, method_fn)
@@ -120,11 +120,11 @@ defmodule AriaEngine.Domain do
 
   @doc """
   Adds a multigoal method to the domain.
-  
+
   Multigoal methods work on achieving multiple goals simultaneously.
   """
   @spec add_multigoal_method(t(), goal_method_fn()) :: t()
-  def add_multigoal_method(%__MODULE__{multigoal_methods: methods} = domain, method_fn) 
+  def add_multigoal_method(%__MODULE__{multigoal_methods: methods} = domain, method_fn)
       when is_function(method_fn, 2) do
     %{domain | multigoal_methods: [method_fn | methods]}
   end
@@ -216,7 +216,7 @@ defmodule AriaEngine.Domain do
 
   @doc """
   Validates that a goal is satisfied in the given state.
-  
+
   This is used for goal verification during planning.
   """
   @spec verify_goal(State.t(), String.t(), String.t(), list(), any(), integer(), integer()) :: any()
@@ -247,5 +247,82 @@ defmodule AriaEngine.Domain do
       unigoal_methods: Map.keys(domain.unigoal_methods),
       multigoal_method_count: length(domain.multigoal_methods)
     }
+  end
+
+  @doc """
+  Adds Porcelain-based actions to the domain.
+
+  This convenience method adds all the external process actions from AriaEngine.Actions.
+  """
+  @spec add_porcelain_actions(t()) :: t()
+  def add_porcelain_actions(%__MODULE__{} = domain) do
+    alias AriaEngine.Actions
+
+    porcelain_actions = %{
+      execute_command: &Actions.execute_command/2,
+      copy_file: &Actions.copy_file/2,
+      move_file: &Actions.move_file/2,
+      create_directory: &Actions.create_directory/2,
+      remove_path: &Actions.remove_path/2,
+      download_file: &Actions.download_file/2,
+      change_permissions: &Actions.change_permissions/2
+    }
+
+    add_actions(domain, porcelain_actions)
+  end
+
+  @doc """
+  Adds file management methods to the domain.
+
+  This convenience method adds all the file management task methods.
+  """
+  @spec add_file_management_methods(t()) :: t()
+  def add_file_management_methods(%__MODULE__{} = domain) do
+    alias AriaEngine.Domains.FileManagement
+
+    domain
+    |> add_task_method("backup_file", &FileManagement.backup_file/2)
+    |> add_task_method("replace_file_safely", &FileManagement.replace_file_safely/2)
+    |> add_task_method("create_directory_structure", &FileManagement.create_directory_structure/2)
+    |> add_task_method("download_and_verify", &FileManagement.download_and_verify/2)
+    |> add_task_method("setup_workspace", &FileManagement.setup_workspace/2)
+    |> add_task_method("cleanup_temp_files", &FileManagement.cleanup_temp_files/2)
+    |> add_task_method("compress_directory", &FileManagement.compress_directory/2)
+    |> add_task_method("extract_archive", &FileManagement.extract_archive/2)
+    |> add_task_method("sync_directories", &FileManagement.sync_directories/2)
+  end
+
+  @doc """
+  Adds workflow system methods to the domain.
+
+  This convenience method adds all the workflow system task methods.
+  """
+  @spec add_workflow_system_methods(t()) :: t()
+  def add_workflow_system_methods(%__MODULE__{} = domain) do
+    alias AriaEngine.Domains.WorkflowSystem
+
+    domain
+    |> add_task_method("execute_traced_command", &WorkflowSystem.execute_traced_command/2)
+    |> add_task_method("deploy_service", &WorkflowSystem.deploy_service/2)
+    |> add_task_method("run_migrations", &WorkflowSystem.run_migrations/2)
+    |> add_task_method("setup_dev_environment", &WorkflowSystem.setup_dev_environment/2)
+    |> add_task_method("run_tests_with_coverage", &WorkflowSystem.run_tests_with_coverage/2)
+    |> add_task_method("build_and_package", &WorkflowSystem.build_and_package/2)
+    |> add_task_method("monitor_system_health", &WorkflowSystem.monitor_system_health/2)
+    |> add_task_method("backup_system_data", &WorkflowSystem.backup_system_data/2)
+    |> add_task_method("restore_system_data", &WorkflowSystem.restore_system_data/2)
+  end
+
+  @doc """
+  Creates a complete domain with all Porcelain-based actions and methods.
+
+  This is a convenience method for creating a fully-featured domain.
+  """
+  @spec create_complete_domain(String.t()) :: t()
+  def create_complete_domain(name \\ "complete") do
+    new(name)
+    |> add_porcelain_actions()
+    |> add_file_management_methods()
+    |> add_workflow_system_methods()
   end
 end

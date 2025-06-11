@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Deploy OpenBao (renamed from vault) without hardcoded tokens
 # Part of Aria Character Core secure infrastructure
 

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # CockroachDB startup script with dynamic certificate fetching
 set -e
 

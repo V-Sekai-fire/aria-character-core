@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Deploy CockroachDB with dynamic certificate fetching from OpenBao
 # Part of Aria Character Core cold boot order deployment
 

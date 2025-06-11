@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Certificate fetching script for Aria services
 # Authenticates to OpenBao using AppRole and fetches certificates
 # This script runs on each machine at startup

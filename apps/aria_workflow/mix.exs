@@ -29,22 +29,25 @@ defmodule AriaWorkflow.MixProject do
     [
       # SOP execution planning
       {:libgraph, "~> 0.16"},
-      
+
       # State machines and workflow management
       {:gen_state_machine, "~> 3.0"},
-      
+
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
-      
+
       # Character shaping for SOP assistance
       {:aria_shape, in_umbrella: true},
-      
+
       # Interpret service for analysis
       {:aria_interpret, in_umbrella: true},
-      
+
+      # External process execution
+      {:porcelain, "~> 2.0"},
+
       # JSON handling
       {:jason, "~> 1.4"},
-      
+
       # Shared dependencies
       {:telemetry, "~> 1.2"}
     ]

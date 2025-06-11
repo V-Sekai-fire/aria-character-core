@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaWorkflow.WorkflowDefinition do
   @moduledoc """
   Represents a workflow definition.
@@ -10,22 +13,31 @@ defmodule AriaWorkflow.WorkflowDefinition do
 
   @type t :: %__MODULE__{
     id: String.t(),
-    goals: [goal_spec()],
-    tasks: [task_spec()],
-    methods: [method_spec()],
+    todos: [todo_item()],
+    actions: [action_spec()],
+    task_methods: [task_method_spec()],
+    unigoal_methods: [unigoal_method_spec()],
+    multigoal_methods: [multigoal_method_spec()],
     documentation: %{atom() => String.t()},
     metadata: %{atom() => term()}
   }
 
+  # AriaEngine todo items can be goals, tasks, or actions in any order
+  @type todo_item :: goal_spec() | task_spec() | action_spec()
   @type goal_spec :: {String.t(), String.t(), String.t()}
-  @type task_spec :: {String.t(), function()}
-  @type method_spec :: {String.t(), function()}
+  @type task_spec :: {String.t(), list()}
+  @type action_spec :: {atom(), list()}
+  @type task_method_spec :: {String.t(), function()}
+  @type unigoal_method_spec :: {String.t(), function()}
+  @type multigoal_method_spec :: function()
 
   defstruct [
     :id,
-    goals: [],
-    tasks: [],
-    methods: [],
+    todos: [],
+    actions: [],
+    task_methods: [],
+    unigoal_methods: [],
+    multigoal_methods: [],
     documentation: %{},
     metadata: %{}
   ]
@@ -37,27 +49,24 @@ defmodule AriaWorkflow.WorkflowDefinition do
   def new(id, definition) do
     %__MODULE__{
       id: id,
-      goals: Map.get(definition, :goals, []),
-      tasks: Map.get(definition, :tasks, []),
-      methods: Map.get(definition, :methods, []),
+      todos: Map.get(definition, :todos, []),
+      actions: Map.get(definition, :actions, []),
+      task_methods: Map.get(definition, :task_methods, []),
+      unigoal_methods: Map.get(definition, :unigoal_methods, []),
+      multigoal_methods: Map.get(definition, :multigoal_methods, []),
       documentation: Map.get(definition, :documentation, %{}),
       metadata: Map.get(definition, :metadata, %{})
     }
   end
 
   @doc """
-  Converts workflow goals to an AriaEngine.Multigoal.
+  Converts workflow todos to AriaEngine planning format.
   """
-  @spec to_multigoal(t()) :: {:ok, Multigoal.t()} | {:error, term()}
-  def to_multigoal(%__MODULE__{goals: goals}) do
+  @spec to_planning_todos(t()) :: {:ok, [todo_item()]} | {:error, term()}
+  def to_planning_todos(%__MODULE__{todos: todos}) do
     try do
-      multigoal = 
-        goals
-        |> Enum.reduce(Multigoal.new(), fn {pred, subj, obj}, acc ->
-          Multigoal.add_goal(acc, pred, subj, obj)
-        end)
-      
-      {:ok, multigoal}
+      # AriaEngine accepts mixed todos - goals, tasks, and actions
+      {:ok, todos}
     rescue
       error -> {:error, error}
     end
@@ -67,8 +76,8 @@ defmodule AriaWorkflow.WorkflowDefinition do
   Gets a task function by name.
   """
   @spec get_task(t(), String.t()) :: {:ok, function()} | {:error, :not_found}
-  def get_task(%__MODULE__{tasks: tasks}, task_name) do
-    case Enum.find(tasks, fn {name, _func} -> name == task_name end) do
+  def get_task(%__MODULE__{task_methods: task_methods}, task_name) do
+    case Enum.find(task_methods, fn {name, _func} -> name == task_name end) do
       nil -> {:error, :not_found}
       {_name, task_fn} -> {:ok, task_fn}
     end
@@ -78,8 +87,8 @@ defmodule AriaWorkflow.WorkflowDefinition do
   Gets a method function by name.
   """
   @spec get_method(t(), String.t()) :: {:ok, function()} | {:error, :not_found}
-  def get_method(%__MODULE__{methods: methods}, method_name) do
-    case Enum.find(methods, fn {name, _func} -> name == method_name end) do
+  def get_method(%__MODULE__{unigoal_methods: unigoal_methods}, method_name) do
+    case Enum.find(unigoal_methods, fn {name, _func} -> name == method_name end) do
       nil -> {:error, :not_found}
       {_name, method_fn} -> {:ok, method_fn}
     end
@@ -102,13 +111,13 @@ defmodule AriaWorkflow.WorkflowDefinition do
   @spec validate(t()) :: :ok | {:error, [String.t()]}
   def validate(%__MODULE__{} = workflow) do
     errors = []
-    
+
     errors = if String.trim(workflow.id) == "", do: ["Workflow ID cannot be empty" | errors], else: errors
-    errors = if Enum.empty?(workflow.goals), do: ["Workflow must have at least one goal" | errors], else: errors
-    errors = validate_goals(workflow.goals, errors)
-    errors = validate_tasks(workflow.tasks, errors)
-    errors = validate_methods(workflow.methods, errors)
-    
+    errors = if Enum.empty?(workflow.todos), do: ["Workflow must have at least one todo item" | errors], else: errors
+    errors = validate_todos(workflow.todos, errors)
+    errors = validate_task_methods(workflow.task_methods, errors)
+    errors = validate_unigoal_methods(workflow.unigoal_methods, errors)
+
     case errors do
       [] -> :ok
       _ -> {:error, Enum.reverse(errors)}
@@ -119,27 +128,27 @@ defmodule AriaWorkflow.WorkflowDefinition do
   Adds a goal to the workflow definition.
   """
   @spec add_goal(t(), String.t(), String.t(), String.t()) :: t()
-  def add_goal(%__MODULE__{goals: goals} = workflow, predicate, subject, object) do
+  def add_goal(%__MODULE__{todos: todos} = workflow, predicate, subject, object) do
     new_goal = {predicate, subject, object}
-    %{workflow | goals: [new_goal | goals]}
+    %{workflow | todos: [new_goal | todos]}
   end
 
   @doc """
   Adds a task to the workflow definition.
   """
   @spec add_task(t(), String.t(), function()) :: t()
-  def add_task(%__MODULE__{tasks: tasks} = workflow, name, task_fn) do
+  def add_task(%__MODULE__{task_methods: task_methods} = workflow, name, task_fn) do
     new_task = {name, task_fn}
-    %{workflow | tasks: [new_task | tasks]}
+    %{workflow | task_methods: [new_task | task_methods]}
   end
 
   @doc """
   Adds a method to the workflow definition.
   """
   @spec add_method(t(), String.t(), function()) :: t()
-  def add_method(%__MODULE__{methods: methods} = workflow, name, method_fn) do
+  def add_method(%__MODULE__{unigoal_methods: unigoal_methods} = workflow, name, method_fn) do
     new_method = {name, method_fn}
-    %{workflow | methods: [new_method | methods]}
+    %{workflow | unigoal_methods: [new_method | unigoal_methods]}
   end
 
   @doc """
@@ -160,32 +169,36 @@ defmodule AriaWorkflow.WorkflowDefinition do
 
   # Private helpers
 
-  defp validate_goals(goals, errors) do
-    Enum.reduce(goals, errors, fn goal, acc ->
-      case goal do
+  defp validate_todos(todos, errors) do
+    Enum.reduce(todos, errors, fn todo, acc ->
+      case todo do
         {pred, subj, obj} when is_binary(pred) and is_binary(subj) and is_binary(obj) ->
-          acc
+          acc  # Valid goal
+        {task_name, args} when is_binary(task_name) and is_list(args) ->
+          acc  # Valid task
+        {action_name, args} when is_atom(action_name) and is_list(args) ->
+          acc  # Valid action
         _ ->
-          ["Invalid goal format: #{inspect(goal)}" | acc]
+          ["Invalid todo format: #{inspect(todo)}" | acc]
       end
     end)
   end
 
-  defp validate_tasks(tasks, errors) do
-    Enum.reduce(tasks, errors, fn {name, task_fn}, acc ->
+  defp validate_task_methods(task_methods, errors) do
+    Enum.reduce(task_methods, errors, fn {name, task_fn}, acc ->
       cond do
-        not is_binary(name) -> ["Task name must be string: #{inspect(name)}" | acc]
-        not is_function(task_fn, 2) -> ["Task must be function/2: #{name}" | acc]
+        not is_binary(name) -> ["Task method name must be string: #{inspect(name)}" | acc]
+        not is_function(task_fn, 2) -> ["Task method must be function/2: #{name}" | acc]
         true -> acc
       end
     end)
   end
 
-  defp validate_methods(methods, errors) do
-    Enum.reduce(methods, errors, fn {name, method_fn}, acc ->
+  defp validate_unigoal_methods(unigoal_methods, errors) do
+    Enum.reduce(unigoal_methods, errors, fn {name, method_fn}, acc ->
       cond do
-        not is_binary(name) -> ["Method name must be string: #{inspect(name)}" | acc]
-        not is_function(method_fn, 2) -> ["Method must be function/2: #{name}" | acc]
+        not is_binary(name) -> ["Unigoal method name must be string: #{inspect(name)}" | acc]
+        not is_function(method_fn, 2) -> ["Unigoal method must be function/2: #{name}" | acc]
         true -> acc
       end
     end)

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Windows-style machine ID generator
 # Generates identifiers like DESKTOP-ABC123, LAPTOP-XYZ789, etc.
 

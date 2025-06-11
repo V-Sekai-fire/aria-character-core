@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaWorkflow.Span do
   @moduledoc """
   OpenTelemetry-inspired spans for workflow execution tracking.
@@ -92,7 +95,7 @@ defmodule AriaWorkflow.Span do
   def finish(%__MODULE__{start_time: start_time} = span, opts \\ []) do
     end_time = Keyword.get(opts, :end_time, DateTime.utc_now())
     status = Keyword.get(opts, :status, :ok)
-    
+
     duration_us = DateTime.diff(end_time, start_time, :microsecond)
 
     %{span |

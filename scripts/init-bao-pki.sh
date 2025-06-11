@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # OpenBao initialization script for PKI setup
 # Run this after OpenBao is deployed to set up PKI infrastructure
 
