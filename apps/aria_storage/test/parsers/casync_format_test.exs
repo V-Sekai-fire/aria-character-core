@@ -144,10 +144,12 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       end
     end
 
-    test "detects CAIDX format but returns not implemented" do
+    test "detects and parses CAIDX format successfully" do
       # Create CAIDX test data
       caidx_data = create_caidx_test_data()
-      assert {:error, "CAIDX format parsing not yet implemented"} = CasyncFormat.parse_index(caidx_data)
+      assert {:ok, result} = CasyncFormat.parse_index(caidx_data)
+      assert result.format == :caidx
+      assert result.feature_flags == 0  # CAIDX has feature_flags == 0
     end
 
     test "rejects unknown formats" do

@@ -75,6 +75,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         |> Map.update(:chunk_id, nil, &Base.encode64/1)
       end)
     end)
+    |> Map.update(:_original_table_data, nil, fn
+      nil -> nil
+      binary_data when is_binary(binary_data) -> Base.encode64(binary_data)
+      other -> other
+    end)
   end
 
   def to_json_safe(result), do: result
@@ -95,54 +100,57 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         # Validate the format index values
         remaining_data::binary>> -> 
         if size_field == 48 and type_field == @ca_format_index do
-          # For now, assume all FormatIndex structures are CAIBX (blob index) format
-          # CAIDX (directory index) format can be added later when needed
-          # Handle empty index (no table data)
-          case remaining_data do
-              <<>> ->
-                  # Empty index file - no chunks
-                  result = %{
-                    format: :caibx,
-                    header: %{
-                      version: 1,  # Standard version
-                      total_size: 0,
-                      chunk_count: 0
-                    },
-                    chunks: [],
-                    feature_flags: feature_flags,
-                    chunk_size_min: chunk_size_min,
-                    chunk_size_avg: chunk_size_avg,
-                    chunk_size_max: chunk_size_max,
-                    # Empty index has no table data
-                    _original_table_data: <<>>
-                  }
-                  {:ok, result}
-                  
-                _ ->
-                  case parse_format_table_with_items_binary(remaining_data) do
-                    {:ok, table_items} ->
-                      # Convert to internal format (CAIBX only)
-                      result = %{
-                        format: :caibx,
-                        header: %{
-                          version: 1,  # Standard version
-                          total_size: calculate_total_size(table_items),
-                          chunk_count: length(table_items)
-                        },
-                        chunks: convert_table_to_chunks(table_items),
-                        feature_flags: feature_flags,
-                        chunk_size_min: chunk_size_min,
-                        chunk_size_avg: chunk_size_avg,
-                        chunk_size_max: chunk_size_max,
-                        # Preserve original binary table data for bit-exact roundtrip
-                        _original_table_data: remaining_data
-                      }
-                      {:ok, result}
+          # Both CAIBX and CAIDX formats use the same parsing logic
+          # The feature_flags field differentiates them but both are supported
+          format_type = if feature_flags == 0, do: :caidx, else: :caibx
+          
+          # Both CAIBX (blob index) and CAIDX (directory index) formats - proceed with parsing
+            # Handle empty index (no table data)
+            case remaining_data do
+                <<>> ->
+                    # Empty index file - no chunks
+                    result = %{
+                      format: format_type,
+                      header: %{
+                        version: 1,  # Standard version
+                        total_size: 0,
+                        chunk_count: 0
+                      },
+                      chunks: [],
+                      feature_flags: feature_flags,
+                      chunk_size_min: chunk_size_min,
+                      chunk_size_avg: chunk_size_avg,
+                      chunk_size_max: chunk_size_max,
+                      # Empty index has no table data
+                      _original_table_data: <<>>
+                    }
+                    {:ok, result}
+                    
+                  _ ->
+                    case parse_format_table_with_items_binary(remaining_data) do
+                      {:ok, table_items} ->
+                        # Convert to internal format (both CAIBX and CAIDX)
+                        result = %{
+                          format: format_type,
+                          header: %{
+                            version: 1,  # Standard version
+                            total_size: calculate_total_size(table_items),
+                            chunk_count: length(table_items)
+                          },
+                          chunks: convert_table_to_chunks(table_items),
+                          feature_flags: feature_flags,
+                          chunk_size_min: chunk_size_min,
+                          chunk_size_avg: chunk_size_avg,
+                          chunk_size_max: chunk_size_max,
+                          # Preserve original binary table data for bit-exact roundtrip
+                          _original_table_data: remaining_data
+                        }
+                        {:ok, result}
 
-                    {:error, reason} ->
-                      {:error, reason}
-                  end
-          end
+                      {:error, reason} ->
+                        {:error, reason}
+                    end
+            end
         else
           {:error, "Invalid FormatIndex header: size=#{size_field}, type=0x#{Integer.to_string(type_field, 16)}"}
         end
@@ -195,24 +203,8 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         _entry_padding::little-64, mode::little-64, uid::little-64, gid::little-64, 
         mtime::little-64, remaining_data::binary>> ->
         
-        # Parse the entry based on desync CATAR format
-        entry = %{
-          size: entry_size,
-          type: entry_type,
-          flags: entry_flags,
-          mode: mode,
-          uid: uid,
-          gid: gid,
-          mtime: mtime
-        }
-        
-        result = %{
-          format: :catar,
-          entries: [entry],
-          remaining_data: remaining_data
-        }
-        
-        {:ok, result}
+        # CATAR format parsing is not yet implemented
+        {:error, "CATAR format parsing not yet implemented"}
         
       _ ->
         {:error, "Invalid CATAR format: insufficient data for entry header"}
@@ -222,9 +214,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   @doc """
   Detect the format of binary data based on desync FormatIndex structure.
   """
-  def detect_format(<<format_header_size::little-64, format_type::little-64, _rest::binary>>) do
+  def detect_format(<<format_header_size::little-64, format_type::little-64, feature_flags::little-64, _rest::binary>>) do
     case {format_header_size, format_type} do
-      {48, @ca_format_index} -> {:ok, :caibx}
+      {48, @ca_format_index} -> 
+        # Differentiate between CAIBX and CAIDX based on feature_flags
+        if feature_flags == 0, do: {:ok, :caidx}, else: {:ok, :caibx}
       {64, @_ca_format_entry} -> {:ok, :catar}
       _ ->
         {:error, :unknown_format}
@@ -360,6 +354,66 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     end
   end
 
+  def encode_index(%{format: :caidx, _original_table_data: original_table_data, feature_flags: feature_flags, chunk_size_min: chunk_size_min, chunk_size_avg: chunk_size_avg, chunk_size_max: chunk_size_max}) do
+    # Use original table data for bit-exact roundtrip
+    format_index = <<
+      48::little-64,  # Size field
+      @ca_format_index::little-64,  # Type field
+      feature_flags::little-64,  # Feature flags (use original)
+      chunk_size_min::little-64,  # ChunkSizeMin (use original)
+      chunk_size_avg::little-64,  # ChunkSizeAvg (use original)
+      chunk_size_max::little-64  # ChunkSizeMax (use original)
+    >>
+
+    result = format_index <> original_table_data
+    {:ok, result}
+  end
+
+  def encode_index(%{format: :caidx, header: _header, chunks: chunks, feature_flags: feature_flags, chunk_size_min: chunk_size_min, chunk_size_avg: chunk_size_avg, chunk_size_max: chunk_size_max}) do
+    # Create FormatIndex based on desync structure using original values
+    format_index = <<
+      48::little-64,  # Size field
+      @ca_format_index::little-64,  # Type field
+      feature_flags::little-64,  # Feature flags (use original)
+      chunk_size_min::little-64,  # ChunkSizeMin (use original)
+      chunk_size_avg::little-64,  # ChunkSizeAvg (use original)
+      chunk_size_max::little-64  # ChunkSizeMax (use original)
+    >>
+
+    # Handle empty chunk list - return just the FormatIndex header
+    case chunks do
+      [] ->
+        {:ok, format_index}
+        
+      _ ->
+        # Create FormatTable items - use actual chunk structure
+        table_items = Enum.reduce(chunks, {<<>>, 0}, fn chunk, {acc, current_offset} ->
+          new_offset = current_offset + chunk.size
+          item = <<new_offset::little-64>> <> chunk.chunk_id
+          {acc <> item, new_offset}
+        end) |> elem(0)
+
+        # Create FormatTable header
+        table_size = byte_size(table_items) + 48  # 48 bytes for table header + tail
+        format_table_header = <<
+          0xFFFFFFFFFFFFFFFF::little-64,  # Size field (special marker)
+          @ca_format_table::little-64     # Type field
+        >>
+
+        # Create table tail marker
+        table_tail = <<
+          0::little-64,  # Offset
+          0::little-64,  # Chunk ID part 1
+          48::little-64,  # Size
+          table_size::little-64,  # Table size
+          @ca_format_table_tail_marker::little-64  # Tail marker
+        >>
+
+        result = format_index <> format_table_header <> table_items <> table_tail
+        {:ok, result}
+    end
+  end
+
   def encode_index(%{format: :caidx}) do
     {:error, "CAIDX format encoding not yet implemented"}
   end
@@ -393,7 +447,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   end
 
   def encode_archive(%{format: :catar}) do
-    {:error, "CATAR format encoding requires entries and remaining_data"}
+    {:error, "CATAR format encoding not yet implemented"}
   end
 
   # Helper encoding functions
