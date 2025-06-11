@@ -1,0 +1,21 @@
+; ABNF grammar for casync/desync binary formats
+; Based on the casync/desync format specifications
+
+; Main entry point for index files
+index-file = magic index-header *chunk-entry
+
+; Magic headers (3 bytes each)
+magic = caibx-magic / caidx-magic
+caibx-magic = %xCA.1B.5C      ; CAIBX magic bytes
+caidx-magic = %xCA.1D.5C      ; CAIDX magic bytes
+
+; Index header: version (4), total_size (8), chunk_count (4), reserved (4)
+index-header = uint32le uint64le uint32le uint32le
+
+; Chunk entry: chunk_id (32 bytes), offset (8), size (4), flags (4)  
+chunk-entry = 32byte uint64le uint32le uint32le
+
+; Basic data types
+uint32le = 4byte    ; 32-bit little-endian unsigned integer
+uint64le = 8byte    ; 64-bit little-endian unsigned integer  
+byte = OCTET        ; Single byte

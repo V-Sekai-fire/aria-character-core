@@ -448,7 +448,9 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
   end
 
   defp create_synthetic_chunk do
-    # Create a simple uncompressed chunk
+    # Create a simple uncompressed chunk with proper magic header
+    magic = <<0xCA, 0xC4, 0x4E>>  # CACNK magic
+
     header = <<100::little-32>> <>        # compressed_size
              <<100::little-32>> <>        # uncompressed_size
              <<0::little-32>> <>          # compression_type (none)
@@ -456,6 +458,6 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
 
     data = :crypto.strong_rand_bytes(100)
 
-    header <> data
+    magic <> header <> data
   end
 end
