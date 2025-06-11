@@ -18,10 +18,14 @@ defmodule AriaSecurity.SecretsTest do
     SecretsMock.clear_all()
 
     on_exit(fn ->
-      # Only stop if the process exists
+      # Only stop if the process exists and is alive
       case GenServer.whereis(SecretsMock) do
         nil -> :ok
-        _pid -> SecretsMock.stop()
+        pid when is_pid(pid) -> 
+          if Process.alive?(pid) do
+            SecretsMock.stop()
+          end
+        _ -> :ok
       end
     end)
 
