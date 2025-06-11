@@ -15,8 +15,8 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
   """
 
   # Test data paths
-  @aria_testdata_path "/home/fire/aria-character-core/apps/aria_storage/test/support/testdata"
-  @desync_testdata_path "/home/fire/desync/testdata"
+  @aria_testdata_path Path.join([__DIR__, "..", "support", "testdata"])
+  @desync_testdata_path Path.join([__DIR__, "..", "support", "testdata"])
 
   describe "caibx roundtrip tests" do
     test "aria-storage blob1.caibx roundtrip is bit-exact" do

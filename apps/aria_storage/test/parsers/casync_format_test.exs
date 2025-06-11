@@ -16,8 +16,98 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
   - .cacnk (compressed chunk files)
   """
 
-  # Path to desync testdata directory
-  @testdata_path "/home/fire/desync/testdata"
+  # Generate synthetic test data for testing
+  def create_caibx_test_data() do
+    # CAIBX magic header: 0xCA 0x1B 0x5C
+    magic = <<0xCA, 0x1B, 0x5C>>
+    
+    # Header: version(4) + total_size(8) + chunk_count(4) + reserved(4) = 20 bytes
+    version = 1
+    total_size = 1024
+    chunk_count = 2
+    reserved = 0
+    
+    header = <<version::little-32, total_size::little-64, chunk_count::little-32, reserved::little-32>>
+    
+    # Create two test chunks (each 48 bytes: 32 + 8 + 4 + 4)
+    chunk1_id = :crypto.strong_rand_bytes(32)  # SHA256 hash
+    chunk1_offset = 0
+    chunk1_size = 512
+    chunk1_flags = 0
+    
+    chunk2_id = :crypto.strong_rand_bytes(32)  # SHA256 hash
+    chunk2_offset = 512
+    chunk2_size = 512
+    chunk2_flags = 0
+    
+    chunk1 = chunk1_id <> <<chunk1_offset::little-64, chunk1_size::little-32, chunk1_flags::little-32>>
+    chunk2 = chunk2_id <> <<chunk2_offset::little-64, chunk2_size::little-32, chunk2_flags::little-32>>
+    
+    magic <> header <> chunk1 <> chunk2
+  end
+
+  def create_caidx_test_data() do
+    # CAIDX magic header: 0xCA 0x1D 0x5C
+    magic = <<0xCA, 0x1D, 0x5C>>
+    
+    # Similar structure to CAIBX
+    version = 1
+    total_size = 2048
+    chunk_count = 1
+    reserved = 0
+    
+    header = <<version::little-32, total_size::little-64, chunk_count::little-32, reserved::little-32>>
+    
+    # Single chunk
+    chunk_id = :crypto.strong_rand_bytes(32)
+    chunk_offset = 0
+    chunk_size = 2048
+    chunk_flags = 0
+    
+    chunk = chunk_id <> <<chunk_offset::little-64, chunk_size::little-32, chunk_flags::little-32>>
+    
+    magic <> header <> chunk
+  end
+
+  def create_catar_test_data() do
+    # CATAR magic header: 0xCA 0x1A 0x52
+    magic = <<0xCA, 0x1A, 0x52>>
+    
+    # Simple single-file entry
+    entry_size = 64  # Total entry size including header
+    entry_type = 1   # File type
+    entry_flags = 0
+    entry_padding = 0
+    
+    # Metadata
+    mode = 0o100644    # Regular file permissions
+    uid = 1000
+    gid = 1000
+    mtime = 1640995200  # Unix timestamp
+    
+    entry_header = <<entry_size::little-64, entry_type::little-64, entry_flags::little-64, entry_padding::little-64>>
+    entry_metadata = <<mode::little-64, uid::little-64, gid::little-64, mtime::little-64>>
+    
+    magic <> entry_header <> entry_metadata
+  end
+
+  def create_cacnk_test_data() do
+    # CACNK magic header: 0xCA 0xC4 0x4E
+    magic = <<0xCA, 0xC4, 0x4E>>
+    
+    # Chunk header
+    compressed_size = 100
+    uncompressed_size = 200
+    compression_type = 1  # zstd
+    flags = 0
+    
+    header = <<compressed_size::little-32, uncompressed_size::little-32, compression_type::little-32, flags::little-32>>
+    
+    # Dummy compressed data
+    data = :crypto.strong_rand_bytes(100)
+    
+    magic <> header <> data
+  end
 
   describe "format detection" do
     test "detects .caibx files correctly" do

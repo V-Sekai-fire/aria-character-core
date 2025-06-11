@@ -26,9 +26,6 @@ defmodule AriaCharacterCore.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
 
-      # Parsing libraries
-      {:abnf_parsec, "~> 2.0"},
-
       # Shared utilities that all apps might need
       {:jason, "~> 1.4"},
       {:telemetry, "~> 1.2"},

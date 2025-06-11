@@ -16,7 +16,7 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
   and complexity levels to ensure the parser scales appropriately.
   """
 
-  @testdata_path "/home/fire/desync/testdata"
+  @testdata_path Path.join([__DIR__, "..", "support", "testdata"])
 
   describe "performance benchmarks" do
     test "benchmark parsing speed on real testdata" do

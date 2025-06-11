@@ -41,14 +41,14 @@ defmodule AriaStorage.MixProject do
       {:waffle, "~> 1.1"},
       {:waffle_ecto, "~> 0.0.11"},
 
-      # Casync/desync format parsing
-      {:nimble_parsec, "~> 1.4"},  # Parser combinator for casync formats
-
       # SFTP support
       {:sftp_ex, "~> 0.2"},
 
       # CDN integration
       {:finch, "~> 0.16"},
+
+      # Parsing libraries
+      {:abnf_parsec, "~> 2.0", runtime: false},
 
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
