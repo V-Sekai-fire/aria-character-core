@@ -105,7 +105,7 @@ defmodule AriaEngine.CharacterGenerator.Config do
     "age" => %{
       type: "categorical",
       options: ["AGE_CHIBI", "AGE_YOUNG_ADULT", "AGE_ADULT"],
-      default: "AGE_ADULT"
+      default: "AGE_YOUNG_ADULT"
     },
     "avatar_gender_appearance" => %{
       type: "categorical",
@@ -525,9 +525,9 @@ defmodule AriaEngine.CharacterGenerator.Config do
     "AGE_YOUNG_ADULT" => "A character appearing to be in their late teens to early twenties, often exuding youthfulness and energy.",
     "AGE_ADULT" => "A character appearing to be a mature individual, typically from mid-twenties onwards, conveying experience or established presence.",
     "AGE_CHIBI" => "A super-deformed, childlike or cartoonish appearance with exaggerated proportions, typically large head and small body, often used for cute or comedic effect.",
-    "AVATAR_GENDER_APPEARANCE_MASCULINE" => "An appearance characterized by features typically associated with male individuals.",
-    "AVATAR_GENDER_APPEARANCE_FEMININE" => "An appearance characterized by features typically associated with female individuals.",
-    "AVATAR_GENDER_APPEARANCE_OTHER" => "An appearance that is androgynous, non-binary, or otherwise does not strictly conform to typical masculine or feminine presentations.",
+    "AVATAR_GENDER_APPEARANCE_MASCULINE" => "A character with a masculine appearance, featuring traits or presentation commonly associated with men or boys.",
+    "AVATAR_GENDER_APPEARANCE_FEMININE" => "A character with a feminine appearance, featuring traits or presentation commonly associated with women or girls.",
+    "AVATAR_GENDER_APPEARANCE_OTHER" => "A character with an androgynous, non-binary, or otherwise gender-nonconforming appearance, not strictly masculine or feminine.",
     "FOOTWEAR_CUTE_TRUE" => "Footwear designed with adorable and charming aesthetic elements, often featuring kawaii-inspired details, soft colors, or playful shapes.",
     "FOOTWEAR_CUTE_FALSE" => "Footwear with a more standard or practical design, without specifically cute or kawaii aesthetic elements.",
     "HANDS_STYLE_NORMAL_HUMAN" => "Standard human hands with natural proportions and skin texture.",
