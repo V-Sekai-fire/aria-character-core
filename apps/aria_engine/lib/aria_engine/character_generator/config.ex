@@ -104,7 +104,7 @@ defmodule AriaEngine.CharacterGenerator.Config do
     },
     "age" => %{
       type: "categorical",
-      options: ["AGE_YOUNG_ADULT", "AGE_ADULT"],
+      options: ["AGE_CHIBI", "AGE_YOUNG_ADULT", "AGE_ADULT"],
       default: "AGE_ADULT"
     },
     "avatar_gender_appearance" => %{
@@ -430,7 +430,7 @@ defmodule AriaEngine.CharacterGenerator.Config do
     "color_palette" => [0.15, 0.2, 0.15, 0.1, 0.1, 0.05, 0.05, 0.2],
     "key_motifs" => [0.1, 0.15, 0.2, 0.05, 0.15, 0.05, 0.05, 0.1, 0.05, 0.1],
     "layering_style" => [0.25, 0.15, 0.05, 0.1, 0.05, 0.1, 0.25, 0.05],
-    "age" => [0.4, 0.6],
+    "age" => [0.1, 0.4, 0.5],
     "humanoid_archetype" => [0.5, 0.25, 0.15, 0.1],
     "kemonomimi_animal_ears_presence" => [0.3, 0.7],
     "kemonomimi_animal_tail_presence" => [0.4, 0.6],
@@ -522,6 +522,7 @@ defmodule AriaEngine.CharacterGenerator.Config do
     "LAYERING_STYLE_FRAGMENTED_PIECES" => "An avant-garde style where clothing appears deconstructed, asymmetrical, or composed of detached elements.",
     "AGE_YOUNG_ADULT" => "A character appearing to be in their late teens to early twenties, often exuding youthfulness and energy.",
     "AGE_ADULT" => "A character appearing to be a mature individual, typically from mid-twenties onwards, conveying experience or established presence.",
+    "AGE_CHIBI" => "A super-deformed, childlike or cartoonish appearance with exaggerated proportions, typically large head and small body, often used for cute or comedic effect.",
     "AVATAR_GENDER_APPEARANCE_MASCULINE" => "An appearance characterized by features typically associated with male individuals.",
     "AVATAR_GENDER_APPEARANCE_FEMININE" => "An appearance characterized by features typically associated with female individuals.",
     "AVATAR_GENDER_APPEARANCE_OTHER" => "An appearance that is androgynous, non-binary, or otherwise does not strictly conform to typical masculine or feminine presentations.",
