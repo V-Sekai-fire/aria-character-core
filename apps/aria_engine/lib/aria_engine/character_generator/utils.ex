@@ -112,10 +112,10 @@ defmodule AriaEngine.CharacterGenerator.Utils do
     end)
 
     "#{descriptions["age"]} #{descriptions["avatar_gender_appearance"]} #{descriptions["emotion"]} #{descriptions["species"]} " <>
-    "in #{descriptions["style_kei"]} style. Color palette: #{descriptions["color_palette"]}. " <>
-    "Key motifs: #{descriptions["key_motifs"]}. Layering: #{descriptions["layering_style"]}. " <>
+    "#{descriptions["style_kei"]} #{descriptions["color_palette"]} " <>
+    "#{descriptions["key_motifs"]} #{descriptions["layering_style"]} " <>
     "Detail level #{descriptions["detail_level"]}. " <>
-    "Full body shot, arms slightly down, A-Pose, clear view of hands and feet."
+    Config.prompt_suffix()
   end
 
   @doc """

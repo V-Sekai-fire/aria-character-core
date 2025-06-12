@@ -421,6 +421,8 @@ defmodule AriaEngine.CharacterGenerator.Config do
     }
   }
 
+  @prompt_suffix "Full-body shot, arms slightly lowered in an A-pose, with a clear view of both hands and feet."
+
   # Slider weights map (ported from Python op_complex_randomize_sliders)
   @slider_weights %{
     "species" => [0.35, 0.54, 0.02, 0.02, 0.01, 0.06],
@@ -485,12 +487,12 @@ defmodule AriaEngine.CharacterGenerator.Config do
     "EMOTION_CONFIDENT" => "An expression of self-assurance and poise.",
     "EMOTION_SHY" => "A reserved or timid expression, possibly with averted gaze.",
     "EMOTION_MYSTERIOUS" => "An enigmatic expression that hints at hidden knowledge or intentions.",
-    "STYLE_KEI_E_GIRL_E_BOY" => "A style characterized by elements of emo, punk, and goth, often with dyed hair, chains, and layered clothing, popular in online communities.",
+    "STYLE_KEI_E_GIRL_E_BOY" => "A style characterized by elements of emo, punk, and goth, often with dyed hair, chains, and layered clothing. Popular in online communities.",
     "STYLE_KEI_ANIME" => "Inspired by Japanese animation, featuring distinct aesthetics like large expressive eyes, vibrant hair colors, and often stylized outfits.",
     "STYLE_KEI_FURRY" => "Avatars representing anthropomorphic animals, with a wide range of species and artistic interpretations.",
     "STYLE_KEI_ROBOTIC_CYBORG" => "Mechanical or partially mechanical beings, ranging from sleek futuristic designs to rugged industrial looks.",
-    "STYLE_KEI_CUTE_KAWAII" => "An aesthetic emphasizing cuteness, with soft features, pastel colors, and charming accessories, originating from Japanese culture.",
-    "STYLE_KEI_GOTHIC_DARK_FANTASY" => "A style drawing from gothic art and dark fantasy themes, often featuring dark colors, elaborate or tattered clothing, and mystical elements.",
+    "STYLE_KEI_CUTE_KAWAII" => "An aesthetic emphasizing cuteness, with soft features, pastel colors, and charming accessories. Originating from Japanese culture.",
+    "STYLE_KEI_GOTHIC_DARK_FANTASY" => "In a style drawing from gothic art and dark fantasy themes, often featuring dark colors, elaborate or tattered clothing, and mystical elements.",
     "STYLE_KEI_SCI_FI_FUTURISTIC" => "Characters designed with advanced technology, sleek lines, and elements suggesting a future setting.",
     "STYLE_KEI_STEAMPUNK" => "A retrofuturistic style blending Victorian aesthetics with steam-powered technology, often featuring gears, goggles, and brass elements.",
     "STYLE_KEI_CASUAL_STREETWEAR" => "Modern, everyday clothing styles, including hoodies, jeans, sneakers, and contemporary fashion trends.",
@@ -662,6 +664,9 @@ defmodule AriaEngine.CharacterGenerator.Config do
 
   @doc "Returns human-readable descriptions for character options"
   def option_descriptions, do: @option_descriptions
+
+  @doc "Returns the default prompt suffix for character prompts."
+  def prompt_suffix, do: @prompt_suffix
 
   @doc "Gets configuration for a specific slider"
   def get_slider_config(attribute), do: Map.get(@character_sliders, attribute)
