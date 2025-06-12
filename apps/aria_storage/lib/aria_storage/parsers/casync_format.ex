@@ -266,7 +266,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     case binary_data do
       # CaFormatEntry (64 bytes)
       <<size::little-64, type::little-64, feature_flags::little-64, mode::little-64,
-        uid::little-64, gid::little-64, mtime::little-64, _reserved::little-64,
+        _field5::little-64, gid::little-64, uid::little-64, mtime::little-64,
         remaining::binary>> when type == @ca_format_entry ->
         
         element = %{
@@ -597,7 +597,8 @@ defmodule AriaStorage.Parsers.CasyncFormat do
       _ ->
         # Skip metadata elements (user, group, selinux, xattr, etc.)
         group_catar_elements_sequential(rest, acc, current_entry, pending_name)
-    end  end
+    end
+  end
 
   @doc """
   Detect the format of binary data based on desync FormatIndex structure.
@@ -802,18 +803,25 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     end
   end
 
-  def encode_index(%{format: :caidx}) do
-    {:error, "CAIDX format encoding not yet implemented"}
-  end
-
   def encode_chunk(%{header: header, data: data}) do
     magic = <<0xCA, 0xC4, 0x4E>>  # CACNK magic
     encoded_header = encode_chunk_header(header)
     {:ok, magic <> encoded_header <> data}
   end
 
+  def encode_archive(%{format: :catar, elements: elements}) when is_list(elements) do
+    # Encode CATAR format based on elements structure (like desync FormatEncoder)
+    # Each element is encoded in sequence following the desync format spec
+    encoded_data = Enum.reduce(elements, <<>>, fn element, acc ->
+      encoded_element = encode_catar_element(element)
+      acc <> encoded_element
+    end)
+    
+    {:ok, encoded_data}
+  end
+
   def encode_archive(%{format: :catar, entries: entries, remaining_data: remaining_data}) do
-    # Encode CATAR format - reconstruct the original structure
+    # Legacy structure support - encode CATAR format - reconstruct the original structure
     case entries do
       [entry | _] ->
         encoded_entry = <<
@@ -835,7 +843,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   end
 
   def encode_archive(%{format: :catar}) do
-    {:error, "CATAR format encoding not yet implemented"}
+    {:error, "CATAR format encoding requires 'elements' field"}
   end
 
   # Helper encoding functions
@@ -854,5 +862,443 @@ defmodule AriaStorage.Parsers.CasyncFormat do
 
   defp encode_chunk_header(%{}) do
     <<0::little-32, 0::little-32, 0::little-32, 0::little-32>>
+  end
+
+  # CATAR element encoding functions
+  defp encode_catar_element(%{type: :entry, size: size, feature_flags: feature_flags, mode: mode, uid: uid, gid: gid, mtime: mtime}) do
+    # CaFormatEntry (64 bytes)
+    <<
+      size::little-64,
+      @ca_format_entry::little-64,
+      feature_flags::little-64,
+      mode::little-64,
+      0::little-64,  # field5 (unknown, set to 0)
+      gid::little-64,
+      uid::little-64,
+      mtime::little-64
+    >>
+  end
+
+  defp encode_catar_element(%{type: :filename, name: name}) do
+    # CaFormatFilename (variable length)
+    # Ensure name is null-terminated
+    name_data = name <> <<0>>
+    name_size = byte_size(name_data)
+    total_size = 16 + name_size  # Header (16 bytes) + name data
+    
+    # Pad to 8-byte boundary
+    padding_size = rem(8 - rem(total_size, 8), 8)
+    padding = <<0::size(padding_size * 8)>>
+    
+    <<
+      (total_size + padding_size)::little-64,
+      @ca_format_filename::little-64
+    >> <> name_data <> padding
+  end
+
+  defp encode_catar_element(%{type: :payload, size: size, data: data}) do
+    # CaFormatPayload (variable length)
+    total_size = 16 + size  # Header (16 bytes) + payload data
+    
+    # Pad to 8-byte boundary
+    padding_size = rem(8 - rem(total_size, 8), 8)
+    padding = <<0::size(padding_size * 8)>>
+    
+    <<
+      (total_size + padding_size)::little-64,
+      @ca_format_payload::little-64
+    >> <> data <> padding
+  end
+
+  defp encode_catar_element(%{type: :symlink, target: target}) do
+    # CaFormatSymlink (variable length)
+    # Ensure target is null-terminated
+    target_data = target <> <<0>>
+    target_size = byte_size(target_data)
+    total_size = 16 + target_size  # Header (16 bytes) + target data
+    
+    # Pad to 8-byte boundary
+    padding_size = rem(8 - rem(total_size, 8), 8)
+    padding = <<0::size(padding_size * 8)>>
+    
+    <<
+      (total_size + padding_size)::little-64,
+      @ca_format_symlink::little-64
+    >> <> target_data <> padding
+  end
+
+  defp encode_catar_element(%{type: :device, major: major, minor: minor}) do
+    # CaFormatDevice (32 bytes)
+    <<
+      32::little-64,
+      @ca_format_device::little-64,
+      major::little-64,
+      minor::little-64
+    >>
+  end
+
+  defp encode_catar_element(%{type: :goodbye, items: items}) do
+    # CaFormatGoodbye (variable length)
+    # Each item is 24 bytes: offset (8) + size (8) + hash (8)
+    items_data = Enum.reduce(items, <<>>, fn item, acc ->
+      acc <> <<
+        item.offset::little-64,
+        item.size::little-64,
+        item.hash::little-64
+      >>
+    end)
+    
+    items_size = byte_size(items_data)
+    total_size = 16 + items_size  # Header (16 bytes) + items data
+    
+    <<
+      total_size::little-64,
+      @ca_format_goodbye::little-64
+    >> <> items_data
+  end
+
+  defp encode_catar_element(%{type: :user, name: name}) do
+    # CaFormatUser (variable length)
+    # Ensure name is null-terminated
+    name_data = name <> <<0>>
+    name_size = byte_size(name_data)
+    total_size = 16 + name_size  # Header (16 bytes) + name data
+    
+    # Pad to 8-byte boundary
+    padding_size = rem(8 - rem(total_size, 8), 8)
+    padding = <<0::size(padding_size * 8)>>
+    
+    <<
+      (total_size + padding_size)::little-64,
+      @ca_format_user::little-64
+    >> <> name_data <> padding
+  end
+
+  defp encode_catar_element(%{type: :group, name: name}) do
+    # CaFormatGroup (variable length)
+    # Ensure name is null-terminated
+    name_data = name <> <<0>>
+    name_size = byte_size(name_data)
+    total_size = 16 + name_size  # Header (16 bytes) + name data
+    
+    # Pad to 8-byte boundary
+    padding_size = rem(8 - rem(total_size, 8), 8)
+    padding = <<0::size(padding_size * 8)>>
+    
+    <<
+      (total_size + padding_size)::little-64,
+      @ca_format_group::little-64
+    >> <> name_data <> padding
+  end
+
+  defp encode_catar_element(%{type: :selinux, context: context}) do
+    # CaFormatSELinux (variable length)
+    # Ensure context is null-terminated
+    context_data = context <> <<0>>
+    context_size = byte_size(context_data)
+    total_size = 16 + context_size  # Header (16 bytes) + context data
+    
+    # Pad to 8-byte boundary
+    padding_size = rem(8 - rem(total_size, 8), 8)
+    padding = <<0::size(padding_size * 8)>>
+    
+    <<
+      (total_size + padding_size)::little-64,
+      @ca_format_selinux::little-64
+    >> <> context_data <> padding
+  end
+
+  defp encode_catar_element(%{type: :xattr, data: data}) do
+    # CaFormatXAttr (variable length)
+    data_size = byte_size(data)
+    total_size = 16 + data_size  # Header (16 bytes) + attribute data
+    
+    # Pad to 8-byte boundary
+    padding_size = rem(8 - rem(total_size, 8), 8)
+    padding = <<0::size(padding_size * 8)>>
+    
+    <<
+      (total_size + padding_size)::little-64,
+      @ca_format_xattr::little-64
+    >> <> data <> padding
+  end
+
+  defp encode_catar_element(%{type: :metadata, format: format_type, size: data_size}) do
+    # Generic metadata elements (ACL, capabilities, etc.)
+    # These elements are skipped during parsing but we preserve them for roundtrip
+    total_size = 16 + data_size  # Header (16 bytes) + data
+    
+    # Pad to 8-byte boundary  
+    padding_size = rem(8 - rem(total_size, 8), 8)
+    padding = <<0::size(padding_size * 8)>>
+    
+    <<
+      (total_size + padding_size)::little-64,
+      format_type::little-64
+    >> <> <<0::size(data_size * 8)>> <> padding  # Zero-filled data since we don't parse it
+  end
+
+  # Fallback for unknown element types
+  defp encode_catar_element(%{type: unknown_type} = element) do
+    raise "Unknown CATAR element type: #{inspect(unknown_type)} in element: #{inspect(element)}"
+  end
+
+  @doc """
+  Compare two binary data chunks byte-by-byte and return hex diff information.
+  Useful for verifying bit-exact encoding roundtrips.
+  """
+  def hex_compare(original, encoded) when is_binary(original) and is_binary(encoded) do
+    original_size = byte_size(original)
+    encoded_size = byte_size(encoded)
+    
+    size_match = original_size == encoded_size
+    
+    if size_match do
+      case compare_bytes(original, encoded, 0, []) do
+        [] -> 
+          %{
+            match: true,
+            size_original: original_size,
+            size_encoded: encoded_size,
+            differences: []
+          }
+        differences ->
+          %{
+            match: false,
+            size_original: original_size,
+            size_encoded: encoded_size,
+            differences: differences
+          }
+      end
+    else
+      %{
+        match: false,
+        size_original: original_size,
+        size_encoded: encoded_size,
+        differences: [{:size_mismatch, original_size, encoded_size}]
+      }
+    end
+  end
+
+  @doc """
+  Print hex dump comparison of two binary data chunks.
+  """
+  def print_hex_diff(original, encoded) do
+    comparison = hex_compare(original, encoded)
+    
+    IO.puts("=== HEX COMPARISON ===")
+    IO.puts("Original size: #{comparison.size_original} bytes")
+    IO.puts("Encoded size:  #{comparison.size_encoded} bytes")
+    IO.puts("Match: #{comparison.match}")
+    
+    if not comparison.match do
+      IO.puts("\n=== DIFFERENCES ===")
+      Enum.each(comparison.differences, fn
+        {:size_mismatch, orig_size, enc_size} ->
+          IO.puts("Size mismatch: original=#{orig_size}, encoded=#{enc_size}")
+        
+        {:byte_diff, offset, orig_byte, enc_byte} ->
+          IO.puts("Offset 0x#{Integer.to_string(offset, 16) |> String.pad_leading(8, "0")}: " <>
+                  "original=0x#{Integer.to_string(orig_byte, 16) |> String.pad_leading(2, "0")} " <>
+                  "encoded=0x#{Integer.to_string(enc_byte, 16) |> String.pad_leading(2, "0")}")
+      end)
+      
+      # Print hex dumps around first difference
+      if length(comparison.differences) > 0 do
+        first_diff = hd(comparison.differences)
+        case first_diff do
+          {:byte_diff, offset, _, _} ->
+            print_hex_context(original, encoded, offset)
+          _ -> :ok
+        end
+      end
+    else
+      IO.puts("✓ Binary data matches exactly!")
+    end
+    
+    comparison
+  end
+
+  # Private helper functions for hex comparison
+  defp compare_bytes(<<>>, <<>>, _offset, acc), do: Enum.reverse(acc)
+  defp compare_bytes(<<>>, _encoded, _offset, acc), do: Enum.reverse(acc)
+  defp compare_bytes(_original, <<>>, _offset, acc), do: Enum.reverse(acc)
+  
+  defp compare_bytes(<<orig_byte, orig_rest::binary>>, <<enc_byte, enc_rest::binary>>, offset, acc) do
+    if orig_byte == enc_byte do
+      compare_bytes(orig_rest, enc_rest, offset + 1, acc)
+    else
+      diff = {:byte_diff, offset, orig_byte, enc_byte}
+      compare_bytes(orig_rest, enc_rest, offset + 1, [diff | acc])
+    end
+  end
+
+  defp print_hex_context(original, encoded, offset) do
+    # Print 32 bytes before and after the difference
+    start_offset = max(0, offset - 16)
+    length = min(32, byte_size(original) - start_offset)
+    
+    IO.puts("\n=== HEX CONTEXT AROUND OFFSET 0x#{Integer.to_string(offset, 16) |> String.upcase()} ===")
+    
+    orig_chunk = binary_part(original, start_offset, length)
+    enc_chunk = if byte_size(encoded) >= start_offset + length do
+      binary_part(encoded, start_offset, length)
+    else
+      <<>>
+    end
+    
+    IO.puts("Original:")
+    print_hex_dump(orig_chunk, start_offset)
+    
+    IO.puts("\nEncoded:")
+    print_hex_dump(enc_chunk, start_offset)
+  end
+
+  defp print_hex_dump(binary, base_offset \\ 0) do
+    binary
+    |> :binary.bin_to_list()
+    |> Enum.chunk_every(16)
+    |> Enum.with_index()
+    |> Enum.each(fn {bytes, row} ->
+      offset = base_offset + row * 16
+      hex_part = bytes 
+        |> Enum.map(&(Integer.to_string(&1, 16) |> String.pad_leading(2, "0")))
+        |> Enum.join(" ")
+        |> String.pad_trailing(47)  # 16 * 3 - 1 = 47
+      
+      ascii_part = bytes
+        |> Enum.map(fn b -> if b >= 32 and b <= 126, do: <<b>>, else: "." end)
+        |> Enum.join()
+      
+      IO.puts("#{Integer.to_string(offset, 16) |> String.pad_leading(8, "0") |> String.upcase()}: #{hex_part} |#{ascii_part}|")
+    end)
+  end
+
+  @doc """
+  Test roundtrip encoding for a given binary data and format.
+  Returns detailed comparison results.
+  """
+  def test_roundtrip_encoding(binary_data, format_type) do
+    IO.puts("=== TESTING ROUNDTRIP FOR #{String.upcase(to_string(format_type))} ===")
+    IO.puts("Original size: #{byte_size(binary_data)} bytes")
+    
+    case format_type do
+      :caibx -> test_index_roundtrip(binary_data)
+      :caidx -> test_index_roundtrip(binary_data)
+      :cacnk -> test_chunk_roundtrip(binary_data)
+      :catar -> test_archive_roundtrip(binary_data)
+      _ -> {:error, "Unknown format type: #{format_type}"}
+    end
+  end
+
+  defp test_index_roundtrip(binary_data) do
+    case parse_index(binary_data) do
+      {:ok, parsed} ->
+        IO.puts("✓ Parsing successful")
+        IO.puts("  Format: #{parsed.format}")
+        IO.puts("  Chunks: #{length(parsed.chunks)}")
+        
+        case encode_index(parsed) do
+          {:ok, encoded} ->
+            IO.puts("✓ Encoding successful")
+            comparison = print_hex_diff(binary_data, encoded)
+            {:ok, comparison}
+            
+          {:error, reason} ->
+            IO.puts("✗ Encoding failed: #{reason}")
+            {:error, reason}
+        end
+        
+      {:error, reason} ->
+        IO.puts("✗ Parsing failed: #{reason}")
+        {:error, reason}
+    end
+  end
+
+  defp test_chunk_roundtrip(binary_data) do
+    case parse_chunk(binary_data) do
+      {:ok, parsed} ->
+        IO.puts("✓ Parsing successful")
+        IO.puts("  Magic: #{parsed.magic}")
+        IO.puts("  Compression: #{parsed.header.compression}")
+        
+        case encode_chunk(parsed) do
+          {:ok, encoded} ->
+            IO.puts("✓ Encoding successful")
+            comparison = print_hex_diff(binary_data, encoded)
+            {:ok, comparison}
+            
+          {:error, reason} ->
+            IO.puts("✗ Encoding failed: #{reason}")
+            {:error, reason}
+        end
+        
+      {:error, reason} ->
+        IO.puts("✗ Parsing failed: #{reason}")
+        {:error, reason}
+    end
+  end
+
+  defp test_archive_roundtrip(binary_data) do
+    case parse_archive(binary_data) do
+      {:ok, parsed} ->
+        IO.puts("✓ Parsing successful")
+        IO.puts("  Format: #{parsed.format}")
+        IO.puts("  Elements: #{length(parsed.elements)}")
+        IO.puts("  Files: #{length(parsed.files)}")
+        IO.puts("  Directories: #{length(parsed.directories)}")
+        
+        case encode_archive(parsed) do
+          {:ok, encoded} ->
+            IO.puts("✓ Encoding successful")
+            comparison = print_hex_diff(binary_data, encoded)
+            {:ok, comparison}
+            
+          {:error, reason} ->
+            IO.puts("✗ Encoding failed: #{reason}")
+            {:error, reason}
+        end
+        
+      {:error, reason} ->
+        IO.puts("✗ Parsing failed: #{reason}")
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Test roundtrip encoding for a given file path and parsed data.
+  Returns detailed comparison results.
+  """
+  def test_file_roundtrip_encoding(file_path, parsed) do
+    filename = Path.basename(file_path)
+    IO.puts("=== TESTING ROUNDTRIP FOR #{filename} ===")
+    
+    case File.read(file_path) do
+      {:ok, original_data} ->
+        IO.puts("Original size: #{byte_size(original_data)} bytes")
+        
+        case encode_archive(parsed) do
+          {:ok, encoded_data} ->
+            IO.puts("✓ Encoding successful")
+            IO.puts("Encoded size: #{byte_size(encoded_data)} bytes")
+            
+            if original_data == encoded_data do
+              IO.puts("✓ Perfect bit-exact roundtrip!")
+              {:ok, :perfect_match}
+            else
+              IO.puts("⚠ Size or content differences detected")
+              comparison = print_hex_diff(original_data, encoded_data)
+              {:ok, {:differences, comparison}}
+            end
+            
+          {:error, reason} ->
+            IO.puts("✗ Encoding failed: #{reason}")
+            {:error, reason}
+        end
+        
+      {:error, reason} ->
+        IO.puts("✗ File read failed: #{reason}")
+        {:error, reason}
+    end
   end
 end
