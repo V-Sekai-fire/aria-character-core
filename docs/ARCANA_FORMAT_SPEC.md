@@ -224,8 +224,6 @@ ARCANA uses **direct binary pattern matching** for robust parsing of the structu
 - **Error handling**: Detailed error reporting with context information
 - **Binary precision**: Exact byte-level control over parsing
 
-This replaced the original ABNF parsec approach for better performance and reliability.
-
 ### Binary Pattern Matching
 
 The binary format is parsed using direct Elixir binary pattern matching:
