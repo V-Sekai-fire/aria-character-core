@@ -46,7 +46,7 @@ ARCANA uses specific constants from desync source code for binary compatibility:
 - `CA_FORMAT_INDEX`: `0x96824d9c7b129ff9`
 - `CA_FORMAT_TABLE`: `0xe75b9e112f17417d`
 - `CA_FORMAT_TABLE_TAIL_MARKER`: `0x4b4f050e5549ecd1`
-- `CA_FORMAT_ENTRY`: `0x1396fabfa5dd7d47` (for CATAR format detection)
+- `CA_FORMAT_ENTRY`: `0x1396fabcea5bbb51` (for CATAR format detection)
 
 ## CAIBX Format (Content Archive Index for Blobs)
 
@@ -149,47 +149,67 @@ Value | Algorithm        | Status
 
 ## CATAR Format (Archive Container)
 
-Archive container files store filesystem metadata and file content.
+Archive container files store filesystem metadata and file content using a type-length-value (TLV) structure.
+
+CATAR files can be detected in two ways:
+1. **Magic-based detection**: Files starting with `0xCA 0x1A 0x52` magic bytes
+2. **Structure-based detection**: Files starting with a 64-byte CA_FORMAT_ENTRY element
 
 ### Structure
 
 ```
 CATAR File:
-┌─────────────────┬─────────────────────────────────────┐
-│ Entry Header    │ Entry Metadata + Content (variable) │
-│ (64 bytes)      │                                     │
-└─────────────────┴─────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────┐
+│ [Optional Magic: 0xCA 0x1A 0x52]                         │
+│ Sequence of TLV Elements (variable length)               │
+│ ┌─────────────┬─────────────┬───────────────────────────┐ │
+│ │ Size (8)    │ Type (8)    │ Data (variable)           │ │
+│ └─────────────┴─────────────┴───────────────────────────┘ │
+└───────────────────────────────────────────────────────────┘
 ```
 
-### Entry Header Format (64 bytes)
+### TLV Element Header Format (16 bytes)
 
 ```
 Offset | Size | Field         | Description
 -------|------|---------------|---------------------------
-0      | 8    | entry_size    | Total size of this entry
-8      | 8    | entry_type    | Type of filesystem object
-16     | 8    | entry_flags   | Entry-specific flags
-24     | 8    | padding       | Reserved padding
-32     | 8    | mode          | Unix file mode/permissions
-40     | 8    | uid           | User ID
-48     | 8    | gid           | Group ID
-56     | 8    | mtime         | Modification time (Unix timestamp)
+0      | 8    | size          | Total size including header
+8      | 8    | type          | Element type (CA_FORMAT_*)
 ```
 
-### Entry Types
+### Entry Element Format (Variable length)
+
+The CA_FORMAT_ENTRY element has variable length depending on UID/GID size:
 
 ```
-Value | Type
-------|----------
-0     | Unknown
-1     | Regular file
-2     | Directory
-3     | Symbolic link
-4     | Block device
-5     | Character device
-6     | FIFO
-7     | Socket
-8-255 | Reserved
+Offset | Size | Field         | Description
+-------|------|---------------|---------------------------
+0      | 8    | size          | Total size including header
+8      | 8    | type          | CA_FORMAT_ENTRY constant
+16     | 8    | feature_flags | Feature flags for UID format
+24     | 8    | mode          | Unix file mode/permissions
+32     | 8    | field5        | Reserved field
+40     | 2-8  | gid           | Group ID (16/32/64-bit)
+42-48  | 2-8  | uid           | User ID (16/32/64-bit)
+44-56  | 8    | mtime         | Modification time (Unix timestamp)
+```
+
+### Element Types
+
+Based on CA_FORMAT_* constants:
+
+```
+Constant                | Value               | Description
+------------------------|---------------------|---------------------------
+CA_FORMAT_ENTRY         | 0x1396fabcea5bbb51  | File/directory entry
+CA_FORMAT_FILENAME      | 0x6dbb6ebcb3161f0b  | Filename string
+CA_FORMAT_PAYLOAD       | 0x8b9e1d93d6dcffc9  | File content data
+CA_FORMAT_SYMLINK       | 0x664a6fb6830e0d6c  | Symbolic link target
+CA_FORMAT_DEVICE        | 0xac3dace369dfe643  | Device major/minor
+CA_FORMAT_USER          | 0xf453131aaeeaccb3  | User name string
+CA_FORMAT_GROUP         | 0x25eb6ac969396a52  | Group name string
+CA_FORMAT_SELINUX       | 0x46faf0602fd26c59  | SELinux context
+CA_FORMAT_GOODBYE       | 0xdfd35c5e8327c403  | Directory end marker
 ```
 
 ## Implementation Notes
@@ -203,6 +223,8 @@ ARCANA uses **direct binary pattern matching** for robust parsing of the structu
 - **Maintainability**: Clear and readable binary parsing logic
 - **Error handling**: Detailed error reporting with context information
 - **Binary precision**: Exact byte-level control over parsing
+
+This replaced the original ABNF parsec approach for better performance and reliability.
 
 ### Binary Pattern Matching
 
@@ -223,6 +245,10 @@ The binary format is parsed using direct Elixir binary pattern matching:
 # CACNK header parsing (3-byte magic + 16-byte header)
 <<0xCA, 0xC4, 0x4E, compressed_size::little-32, uncompressed_size::little-32,
   compression_type::little-32, flags::little-32, remaining_data::binary>>
+
+# CATAR format detection (two methods)
+<<0xCA, 0x1A, 0x52, _::binary>>  # Magic-based detection
+<<64::little-64, @ca_format_entry::little-64, _::binary>>  # Structure-based detection
 ```
 
 **Note**: Some constants and magic numbers are commented out in the implementation to avoid compiler warnings about unused constants. These are reserved for future implementation or format detection features.

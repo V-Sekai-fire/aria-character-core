@@ -6,8 +6,8 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   ARCANA (Aria Content Archive and Network Architecture) format parser.
 
   This module implements parsers for the casync binary formats that are
-  fully compatible with the casync/desync ecosystem using ABNF parsec
-  for robust binary parsing:
+  fully compatible with the casync/desync ecosystem using direct binary
+  pattern matching for robust parsing:
 
   - .caibx (Content Archive Index for Blobs)
   - .caidx (Content Archive Index for Directories)
@@ -16,7 +16,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
 
   ARCANA maintains perfect binary compatibility with casync/desync tools
   using identical structures, magic numbers, and behaviors with
-  ABNF-based parsing for better maintainability and correctness.
+  direct binary pattern matching for better maintainability and correctness.
 
   Based on desync source code analysis:
   - FormatIndex: 48 bytes (16 header + 8 flags + 8 min + 8 avg + 8 max)
@@ -24,7 +24,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   - Compression: ZSTD (type 1) is primary compression
   - Magic numbers are embedded in structured format headers
 
-  Uses ABNF parsec in binary mode for reliable parsing of the structured
+  Uses direct binary pattern matching for reliable parsing of the structured
   binary format as defined in the ARCANA specification.
 
   See: docs/ARCANA_FORMAT_SPEC.md for complete specification.
