@@ -270,22 +270,56 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   
   defp parse_next_catar_element(binary_data) do
     case binary_data do
-      # CaFormatEntry (64 bytes)
+      # CaFormatEntry - determine UID format based on element size, not just feature flags
       <<size::little-64, type::little-64, feature_flags::little-64, mode::little-64,
-        _field5::little-64, gid::little-64, uid::little-64, mtime::little-64,
-        remaining::binary>> when type == @ca_format_entry ->
-
-        element = %{
-          type: :entry,
-          size: size,
-          feature_flags: feature_flags,
-          mode: mode,
-          uid: uid,
-          gid: gid,
-          mtime: mtime
-        }
-
-        {:ok, element, remaining}
+        _field5::little-64, rest::binary>> when type == @ca_format_entry ->
+        
+        # Calculate the expected UID/GID data size based on total element size
+        uid_gid_data_size = size - 16 - 8 - 8 - 8 - 8  # total - header - feature_flags - mode - field5 - mtime
+        
+        case uid_gid_data_size do
+          4 -> # 16-bit UIDs (2 + 2 bytes)
+            <<gid::little-16, uid::little-16, mtime::little-64, remaining::binary>> = rest
+            element = %{
+              type: :entry,
+              size: size,
+              feature_flags: feature_flags,
+              mode: mode,
+              uid: uid,
+              gid: gid,
+              mtime: mtime
+            }
+            {:ok, element, remaining}
+            
+          8 -> # 32-bit UIDs (4 + 4 bytes)
+            <<gid::little-32, uid::little-32, mtime::little-64, remaining::binary>> = rest
+            element = %{
+              type: :entry,
+              size: size,
+              feature_flags: feature_flags,
+              mode: mode,
+              uid: uid,
+              gid: gid,
+              mtime: mtime
+            }
+            {:ok, element, remaining}
+            
+          16 -> # 64-bit UIDs (8 + 8 bytes) - default/most common
+            <<gid::little-64, uid::little-64, mtime::little-64, remaining::binary>> = rest
+            element = %{
+              type: :entry,
+              size: size,
+              feature_flags: feature_flags,
+              mode: mode,
+              uid: uid,
+              gid: gid,
+              mtime: mtime
+            }
+            {:ok, element, remaining}
+            
+          _ ->
+            {:error, "Invalid entry size: #{size}, UID/GID data size: #{uid_gid_data_size}"}
+        end
 
       <<size::little-64, type::little-64, feature_flags::little-64, mode::little-64,
         _field5::little-64, gid::little-16, uid::little-16, mtime::little-64,
@@ -905,8 +939,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
 
   # CATAR element encoding functions
   defp encode_catar_element(%{type: :entry, size: size, feature_flags: feature_flags, mode: mode, uid: uid, gid: gid, mtime: mtime}) do
-    cond do
-      Bitwise.band(feature_flags, @ca_format_with_16_bit_uids) != 0 ->
+    # Determine UID format based on the actual element size, not just feature flags
+    uid_gid_data_size = size - 16 - 8 - 8 - 8 - 8  # total - header - feature_flags - mode - field5 - mtime
+    
+    case uid_gid_data_size do
+      4 -> # 16-bit UIDs
         <<
           size::little-64,
           @ca_format_entry::little-64,
@@ -917,7 +954,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
           uid::little-16,
           mtime::little-64
         >>
-      Bitwise.band(feature_flags, @ca_format_with_32_bit_uids) != 0 ->
+      8 -> # 32-bit UIDs
         <<
           size::little-64,
           @ca_format_entry::little-64,
@@ -928,7 +965,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
           uid::little-32,
           mtime::little-64
         >>
-      true ->
+      16 -> # 64-bit UIDs
         <<
           size::little-64,
           @ca_format_entry::little-64,
@@ -939,6 +976,43 @@ defmodule AriaStorage.Parsers.CasyncFormat do
           uid::little-64,
           mtime::little-64
         >>
+      _ ->
+        # Fallback: use feature flags if size-based detection fails
+        cond do
+          Bitwise.band(feature_flags, @ca_format_with_16_bit_uids) != 0 ->
+            <<
+              52::little-64,  # calculated size for 16-bit UIDs
+              @ca_format_entry::little-64,
+              feature_flags::little-64,
+              mode::little-64,
+              0::little-64,
+              gid::little-16,
+              uid::little-16,
+              mtime::little-64
+            >>
+          Bitwise.band(feature_flags, @ca_format_with_32_bit_uids) != 0 ->
+            <<
+              56::little-64,  # calculated size for 32-bit UIDs
+              @ca_format_entry::little-64,
+              feature_flags::little-64,
+              mode::little-64,
+              0::little-64,
+              gid::little-32,
+              uid::little-32,
+              mtime::little-64
+            >>
+          true ->
+            <<
+              64::little-64,  # calculated size for 64-bit UIDs
+              @ca_format_entry::little-64,
+              feature_flags::little-64,
+              mode::little-64,
+              0::little-64,
+              gid::little-64,
+              uid::little-64,
+              mtime::little-64
+            >>
+        end
     end
   end
 

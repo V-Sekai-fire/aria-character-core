@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 def decode_index_file([magic, header, chunks]) do
     # Determine format from magic
     format = case magic do

@@ -1,29 +1,37 @@
-defmodule Mix.Tasks.DecodeCaidx do
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+defmodule Mix.Tasks.CasyncDecode do
   @moduledoc """
-  Advanced CAIDX/CAIBX/CATAR decoder task with mandatory store directories
+  Advanced casync file decoder and analyzer.
+
+  This task provides comprehensive decoding and analysis capabilities for all casync file formats:
+  - .caibx (Content Archive Index for Blobs)
+  - .caidx (Content Archive Index for Directories)
+  - .catar (Archive Container format)
+  - .cacnk (Compressed Chunk files)
 
   Usage:
-    mix decode_caidx                          # Process all files with stores in testdata
-    mix decode_caidx --file blob1.caibx       # Process specific file (auto-find store)
-    mix decode_caidx --file blob1.caibx --store blob1.store  # Process with specific store
-    mix decode_caidx --output /tmp/output     # Custom output directory
+    mix casync_decode                          # Process all files with stores in testdata
+    mix casync_decode --file blob1.caibx       # Process specific file (auto-find store)
+    mix casync_decode --file blob1.caibx --store blob1.store  # Process with specific store
+    mix casync_decode --output /tmp/output     # Custom output directory
 
   Options:
-    --file     Specific CAIDX/CAIBX/CATAR file to process (relative to testdata)
+    --file     Specific casync file to process (relative to testdata)
     --store    Store directory to use (relative to testdata, auto-detected if not specified)
-    --output   Output directory (default: /tmp/vsekai_decode_advanced)
+    --output   Output directory (default: /tmp/aria_storage_decode)
     --help     Show this help
 
-  Note: A corresponding .store directory is REQUIRED for each file to be processed.
-  Files without stores will be skipped when processing all files, or cause an error 
-  when processing a specific file.
+  Note: Index files (.caibx/.caidx) require a corresponding .store directory.
+  Archive files (.catar) can be processed independently.
   """
 
   use Mix.Task
   import Bitwise
   alias AriaStorage.Parsers.CasyncFormat
 
-  @shortdoc "Decode and analyze CAIDX/CAIBX/CATAR files"
+  @shortdoc "Decode and analyze casync files"
 
   def run(args) do
     Mix.Task.run("app.start")
@@ -42,7 +50,7 @@ defmodule Mix.Tasks.DecodeCaidx do
     IO.puts("==============================")
     
     testdata_path = "apps/aria_storage/test/support/testdata"
-    output_dir = opts[:output] || "/tmp/vsekai_decode_advanced"
+    output_dir = opts[:output] || "/tmp/aria_storage_decode"
     
     unless File.exists?(testdata_path) do
       IO.puts("❌ No testdata directory found at: #{testdata_path}")
@@ -52,6 +60,9 @@ defmodule Mix.Tasks.DecodeCaidx do
 
     File.mkdir_p!(output_dir)
     IO.puts("📁 Output directory: #{output_dir}")
+
+    IO.puts("AriaStorage Casync Decoder")
+    IO.puts("==========================")
 
     case opts[:file] do
       nil ->

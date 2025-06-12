@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Simple script to test the roundtrip without requiring the full Mix environment
 
 Mix.install([

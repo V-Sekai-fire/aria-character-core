@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Simple CLI test script for CasyncFormat parser
 # Usage: elixir -S mix run test_parser.exs
 

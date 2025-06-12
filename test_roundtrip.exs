@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Add the project to the code path
 Code.prepend_path("_build/dev/lib/aria_storage/ebin")
 Code.prepend_path("_build/dev/lib/ezstd/ebin")
