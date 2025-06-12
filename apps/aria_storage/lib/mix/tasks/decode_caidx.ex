@@ -16,15 +16,20 @@ defmodule Mix.Tasks.CasyncDecode do
     mix casync_decode --file blob1.caibx       # Process specific file (auto-find store)
     mix casync_decode --file blob1.caibx --store blob1.store  # Process with specific store
     mix casync_decode --output /tmp/output     # Custom output directory
+    mix casync_decode --uri https://example.com/file.caidx    # Process remote file
+    mix casync_decode --uri https://example.com/file.caidx --store-uri https://example.com/store  # Remote file with remote store
 
   Options:
-    --file     Specific casync file to process (relative to testdata)
-    --store    Store directory to use (relative to testdata, auto-detected if not specified)
-    --output   Output directory (default: /tmp/aria_storage_decode)
-    --help     Show this help
+    --file       Specific casync file to process (relative to testdata)
+    --uri        HTTP/HTTPS URI to casync file to download and process
+    --store      Store directory to use (relative to testdata, auto-detected if not specified)
+    --store-uri  HTTP/HTTPS URI to store directory for remote chunk access
+    --output     Output directory (default: /tmp/aria_storage_decode)
+    --help       Show this help
 
   Note: Index files (.caibx/.caidx) require a corresponding .store directory.
   Archive files (.catar) can be processed independently.
+  Remote files are downloaded to temporary locations before processing.
   """
 
   use Mix.Task
@@ -37,8 +42,8 @@ defmodule Mix.Tasks.CasyncDecode do
     Mix.Task.run("app.start")
     
     {opts, _, _} = OptionParser.parse(args, 
-      switches: [file: :string, store: :string, output: :string, help: :boolean],
-      aliases: [f: :file, s: :store, o: :output, h: :help]
+      switches: [file: :string, uri: :string, store: :string, store_uri: :string, output: :string, help: :boolean],
+      aliases: [f: :file, u: :uri, s: :store, o: :output, h: :help]
     )
 
     if opts[:help] do
@@ -64,11 +69,13 @@ defmodule Mix.Tasks.CasyncDecode do
     IO.puts("AriaStorage Casync Decoder")
     IO.puts("==========================")
 
-    case opts[:file] do
-      nil ->
+    cond do
+      opts[:uri] ->
+        process_uri(opts[:uri], opts[:store_uri], output_dir)
+      opts[:file] ->
+        process_specific_file(testdata_path, opts[:file], opts[:store], output_dir)
+      true ->
         process_all_files(testdata_path, output_dir)
-      filename ->
-        process_specific_file(testdata_path, filename, opts[:store], output_dir)
     end
   end
 
@@ -158,6 +165,90 @@ defmodule Mix.Tasks.CasyncDecode do
     end
   end
 
+  defp process_uri(file_uri, store_uri, output_dir) do
+    IO.puts("🌐 Processing remote URI: #{file_uri}")
+    
+    # Download the main file
+    case download_file(file_uri) do
+      {:ok, binary_data} ->
+        # Extract filename from URI
+        filename = URI.parse(file_uri).path |> Path.basename()
+        temp_file_path = Path.join(System.tmp_dir!(), filename)
+        
+        # Save to temporary location for processing
+        File.write!(temp_file_path, binary_data)
+        IO.puts("📥 Downloaded file: #{format_bytes(byte_size(binary_data))}")
+        
+        file_ext = Path.extname(filename) |> String.downcase()
+        
+        if file_ext == ".catar" do
+          # CATAR files don't need stores
+          IO.puts("🗂️  CATAR file - no store required")
+          process_index_file(binary_data, temp_file_path, output_dir, nil)
+        else
+          # Index files need stores - handle remote store
+          store_context = if store_uri do
+            IO.puts("🌐 Using remote store: #{store_uri}")
+            {:remote, store_uri}
+          else
+            IO.puts("⚠️  No store URI provided for index file")
+            nil
+          end
+          
+          process_index_file(binary_data, temp_file_path, output_dir, store_context)
+        end
+        
+        # Clean up temporary file
+        File.rm(temp_file_path)
+        
+      {:error, reason} ->
+        IO.puts("❌ Failed to download file from #{file_uri}: #{inspect(reason)}")
+        System.halt(1)
+    end
+  end
+
+  defp download_file(url) do
+    IO.puts("📡 Downloading: #{url}")
+    
+    # Start HTTPoison application
+    Application.ensure_all_started(:hackney)
+    Application.ensure_all_started(:ssl)
+    
+    case HTTPoison.get(url, [], [
+      timeout: 300_000,      # 5 minutes
+      recv_timeout: 300_000, # 5 minutes
+      follow_redirect: true,
+      max_redirect: 5
+    ]) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        {:ok, body}
+      {:ok, %HTTPoison.Response{status_code: status_code}} ->
+        {:error, "HTTP #{status_code}"}
+      {:error, %HTTPoison.Error{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  defp download_chunk_from_store(store_uri, chunk_id_hex) when is_binary(store_uri) do
+    chunk_dir = String.slice(chunk_id_hex, 0, 4)
+    chunk_file = "#{chunk_id_hex}.cacnk"
+    
+    # Remove trailing slash from store_uri if present
+    base_store_uri = String.trim_trailing(store_uri, "/")
+    chunk_url = "#{base_store_uri}/#{chunk_dir}/#{chunk_file}"
+    
+    IO.puts("📡 Downloading chunk from: #{chunk_url}")
+    
+    case download_file(chunk_url) do
+      {:ok, chunk_data} ->
+        IO.puts("✅ Downloaded chunk: #{format_bytes(byte_size(chunk_data))}")
+        {:ok, chunk_data}
+      {:error, reason} ->
+        IO.puts("❌ Failed to download chunk: #{inspect(reason)}")
+        {:error, reason}    
+    end
+  end
+
   defp find_store_for_file(file_path) do
     # Try to find store by replacing extension with .store
     base_name = Path.basename(file_path, Path.extname(file_path))
@@ -217,10 +308,13 @@ defmodule Mix.Tasks.CasyncDecode do
     IO.puts("📁 Processing: #{Path.basename(file_path)}")
     IO.puts("📊 File size: #{format_bytes(byte_size(binary_data))}")
     
-    if store_path do
-      IO.puts("🗄️  Store: #{Path.basename(store_path)}")
-    else
-      IO.puts("🗄️  Store: Not required")
+    case store_path do
+      {:remote, store_uri} ->
+        IO.puts("🗄️  Store: Remote (#{store_uri})")
+      store_path when is_binary(store_path) ->
+        IO.puts("🗄️  Store: #{Path.basename(store_path)}")
+      nil ->
+        IO.puts("🗄️  Store: Not required")
     end
 
     # Check if this looks like a Git LFS pointer file
@@ -299,7 +393,18 @@ defmodule Mix.Tasks.CasyncDecode do
     end
   end
 
-  defp test_local_chunk_access(data, store_path, output_dir) do
+  defp test_local_chunk_access(data, store_context, output_dir) do
+    case store_context do
+      {:remote, store_uri} ->
+        test_remote_chunk_access(data, store_uri, output_dir)
+      store_path when is_binary(store_path) ->
+        test_local_chunk_access_impl(data, store_path, output_dir)
+      nil ->
+        IO.puts("⚠️  No store available for chunk testing")
+    end
+  end
+
+  defp test_local_chunk_access_impl(data, store_path, output_dir) do
     IO.puts("\n=== TESTING LOCAL CHUNK ACCESS ===")
     
     if length(data.chunks) == 0 do
@@ -400,6 +505,79 @@ defmodule Mix.Tasks.CasyncDecode do
             _ -> IO.puts("  (error reading store)")
           end
         end
+      end
+    end
+  end
+
+  defp test_remote_chunk_access(data, store_uri, output_dir) do
+    IO.puts("\n=== TESTING REMOTE CHUNK ACCESS ===")
+    
+    if length(data.chunks) == 0 do
+      IO.puts("No chunks to test")
+    else
+      # Test the first chunk
+      first_chunk = List.first(data.chunks)
+      chunk_id_hex = Base.encode16(first_chunk.chunk_id, case: :lower)
+      
+      IO.puts("🔍 Testing remote chunk: #{chunk_id_hex}")
+      IO.puts("🌐 Store URI: #{store_uri}")
+      
+      case download_chunk_from_store(store_uri, chunk_id_hex) do
+        {:ok, chunk_data} ->
+          IO.puts("✅ Successfully downloaded remote chunk!")
+          IO.puts("📊 Chunk size: #{format_bytes(byte_size(chunk_data))}")
+          
+          # Check if this is a CACNK wrapped chunk or raw compressed data
+          case CasyncFormat.parse_chunk(chunk_data) do
+            {:ok, %{header: header, data: compressed_data}} ->
+              # Standard CACNK format with wrapper header
+              IO.puts("🗜️  Compression: #{header.compression}")
+              
+              case decompress_chunk_data(compressed_data, header.compression) do
+                {:ok, decompressed_data} ->
+                  IO.puts("✅ Successfully decompressed!")
+                  IO.puts("📊 Decompressed size: #{format_bytes(byte_size(decompressed_data))}")
+                  
+                  # Save for inspection
+                  chunk_output = Path.join(output_dir, "remote_chunk_#{String.slice(chunk_id_hex, 0, 8)}.bin")
+                  File.write!(chunk_output, decompressed_data)
+                  IO.puts("💾 Saved to: #{chunk_output}")
+                  
+                {:error, reason} ->
+                  IO.puts("❌ Decompression failed: #{inspect(reason)}")
+              end
+              
+            {:error, "Invalid chunk file magic"} ->
+              # Try direct ZSTD decompression (raw compressed data without CACNK wrapper)
+              IO.puts("🔍 No CACNK header found, trying raw ZSTD decompression...")
+              
+              case decompress_chunk_data(chunk_data, :zstd) do
+                {:ok, decompressed_data} ->
+                  IO.puts("✅ Successfully decompressed raw ZSTD data!")
+                  IO.puts("📊 Compressed size: #{format_bytes(byte_size(chunk_data))}")
+                  IO.puts("📊 Decompressed size: #{format_bytes(byte_size(decompressed_data))}")
+                  
+                  # Save for inspection
+                  chunk_output = Path.join(output_dir, "remote_chunk_#{String.slice(chunk_id_hex, 0, 8)}.bin")
+                  File.write!(chunk_output, decompressed_data)
+                  IO.puts("💾 Saved to: #{chunk_output}")
+                  
+                {:error, reason} ->
+                  IO.puts("❌ Raw ZSTD decompression failed: #{inspect(reason)}")
+                  
+                  # Try as uncompressed data
+                  IO.puts("🔍 Trying as uncompressed data...")
+                  chunk_output = Path.join(output_dir, "remote_chunk_#{String.slice(chunk_id_hex, 0, 8)}_raw.bin")
+                  File.write!(chunk_output, chunk_data)
+                  IO.puts("💾 Saved raw data to: #{chunk_output}")
+              end
+              
+            {:error, reason} ->
+              IO.puts("❌ Failed to parse chunk: #{inspect(reason)}")
+          end
+          
+        {:error, reason} ->
+          IO.puts("❌ Failed to download remote chunk: #{inspect(reason)}")
       end
     end
   end
