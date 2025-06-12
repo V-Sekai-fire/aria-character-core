@@ -750,103 +750,51 @@ defmodule Mix.Tasks.CasyncDecode do
     
     if length(data.chunks) == 0 do
       IO.puts("No chunks to test")
+      :ok
     else
-      # Test the first chunk
-      first_chunk = List.first(data.chunks)
-      chunk_id_hex = Base.encode16(first_chunk.chunk_id, case: :lower)
+      IO.puts("🗄️  Testing local store: #{Path.basename(store_path)}")
       
-      # Look for chunk in store using casync naming convention
-      chunk_dir = String.slice(chunk_id_hex, 0, 4)
-      chunk_file = "#{chunk_id_hex}.cacnk"
-      chunk_path = Path.join([store_path, chunk_dir, chunk_file])
+      # Test access to first few chunks
+      test_chunks = Enum.take(data.chunks, min(5, length(data.chunks)))
       
-      IO.puts("🔍 Looking for chunk: #{chunk_id_hex}")
-      IO.puts("📍 Expected path: #{chunk_path}")
+      IO.puts("🔍 Testing #{length(test_chunks)} chunks...")
       
-      if File.exists?(chunk_path) do
+      Enum.with_index(test_chunks)
+      |> Enum.each(fn {chunk, index} ->
+        chunk_id_hex = Base.encode16(chunk.chunk_id, case: :lower)
+        short_id = String.slice(chunk_id_hex, 0, 8)
+        
+        # Look for chunk in store
+        chunk_dir = String.slice(chunk_id_hex, 0, 4)
+        chunk_file = "#{chunk_id_hex}.cacnk"
+        chunk_path = Path.join([store_path, chunk_dir, chunk_file])
+        
         case File.read(chunk_path) do
           {:ok, chunk_data} ->
-            IO.puts("✅ Found local chunk!")
-            IO.puts("📊 Chunk size: #{format_bytes(byte_size(chunk_data))}")
+            IO.puts("  #{index + 1}. Chunk #{short_id}: Found (#{format_bytes(byte_size(chunk_data))})")
             
-            # Check if this is a CACNK wrapped chunk or raw compressed data
-            case CasyncFormat.parse_chunk(chunk_data) do
-              {:ok, %{header: header, data: compressed_data}} ->
-                # Standard CACNK format with wrapper header
-                IO.puts("🗜️  Compression: #{header.compression}")
+            # Try to decompress and verify
+            case decompress_and_verify_chunk(chunk_data, chunk, chunk_id_hex) do
+              {:ok, decompressed_data} ->
+                IO.puts("     ✅ Decompressed successfully (#{format_bytes(byte_size(decompressed_data))})")
                 
-                case decompress_chunk_data(compressed_data, header.compression) do
-                  {:ok, decompressed_data} ->
-                    IO.puts("✅ Successfully decompressed!")
-                    IO.puts("📊 Decompressed size: #{format_bytes(byte_size(decompressed_data))}")
-                    
-                    # Save for inspection
-                    chunk_output = Path.join(output_dir, "chunk_#{String.slice(chunk_id_hex, 0, 8)}.bin")
-                    File.write!(chunk_output, decompressed_data)
-                    IO.puts("💾 Saved to: #{chunk_output}")
-                    
-                  {:error, reason} ->
-                    IO.puts("❌ Decompression failed: #{inspect(reason)}")
-                end
-                
-              {:error, "Invalid chunk file magic"} ->
-                # Try direct ZSTD decompression (raw compressed data without CACNK wrapper)
-                IO.puts("🔍 No CACNK header found, trying raw ZSTD decompression...")
-                
-                case decompress_chunk_data(chunk_data, :zstd) do
-                  {:ok, decompressed_data} ->
-                    IO.puts("✅ Successfully decompressed raw ZSTD data!")
-                    IO.puts("📊 Compressed size: #{format_bytes(byte_size(chunk_data))}")
-                    IO.puts("📊 Decompressed size: #{format_bytes(byte_size(decompressed_data))}")
-                    
-                    # Save for inspection
-                    chunk_output = Path.join(output_dir, "chunk_#{String.slice(chunk_id_hex, 0, 8)}.bin")
-                    File.write!(chunk_output, decompressed_data)
-                    IO.puts("💾 Saved to: #{chunk_output}")
-                    
-                  {:error, reason} ->
-                    IO.puts("❌ Raw ZSTD decompression failed: #{inspect(reason)}")
-                    
-                    # Try as uncompressed data
-                    IO.puts("🔍 Trying as uncompressed data...")
-                    chunk_output = Path.join(output_dir, "chunk_#{String.slice(chunk_id_hex, 0, 8)}_raw.bin")
-                    File.write!(chunk_output, chunk_data)
-                    IO.puts("💾 Saved raw data to: #{chunk_output}")
-                end
+                # Save for inspection
+                chunk_output = Path.join(output_dir, "chunk_#{short_id}.bin")
+                File.write!(chunk_output, decompressed_data)
+                IO.puts("     💾 Saved to: #{chunk_output}")
                 
               {:error, reason} ->
-                IO.puts("❌ Failed to parse chunk: #{inspect(reason)}")
+                IO.puts("     ❌ Decompression failed: #{inspect(reason)}")
             end
             
+          {:error, :enoent} ->
+            IO.puts("  #{index + 1}. Chunk #{short_id}: ❌ NOT FOUND")
+            IO.puts("     Expected path: #{chunk_path}")
+            
           {:error, reason} ->
-            IO.puts("❌ Failed to read chunk: #{inspect(reason)}")
+            IO.puts("  #{index + 1}. Chunk #{short_id}: ❌ Read error: #{inspect(reason)}")
         end
-      else
-        IO.puts("❌ Chunk not found in local store")
-        
-        # List what's actually in the store
-        if File.exists?(store_path) do
-          IO.puts("\n📋 Store contents:")
-          case File.ls(store_path) do
-            {:ok, entries} ->
-              entries 
-              |> Enum.sort()
-              |> Enum.take(10)
-              |> Enum.each(fn entry ->
-                entry_path = Path.join(store_path, entry)
-                if File.dir?(entry_path) do
-                  case File.ls(entry_path) do
-                    {:ok, files} -> IO.puts("  📁 #{entry}/ (#{length(files)} files)")
-                    _ -> IO.puts("  📁 #{entry}/ (error reading)")
-                  end
-                else
-                  IO.puts("  📄 #{entry}")
-                end
-              end)
-            _ -> IO.puts("  (error reading store)")
-          end
-        end
-      end
+      end)
     end
   end
 
