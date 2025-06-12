@@ -950,17 +950,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + name_size  # Size field includes header + data
     
-    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
-    padding_needed = case rem(total_size, 8) do
-      0 -> 0
-      remainder -> 8 - remainder
-    end
-    padding = <<0::size(padding_needed * 8)>>
-    
+    # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
       @ca_format_filename::little-64
-    >> <> name_data <> padding
+    >> <> name_data
   end
 
   defp encode_catar_element(%{type: :payload, size: size, data: data}) do
@@ -968,17 +962,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + size  # Size field includes header + data
     
-    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
-    padding_needed = case rem(total_size, 8) do
-      0 -> 0
-      remainder -> 8 - remainder
-    end
-    padding = <<0::size(padding_needed * 8)>>
-    
+    # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
       @ca_format_payload::little-64
-    >> <> data <> padding
+    >> <> data
   end
 
   defp encode_catar_element(%{type: :symlink, target: target}) do
@@ -989,17 +977,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + target_size  # Size field includes header + data
     
-    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
-    padding_needed = case rem(total_size, 8) do
-      0 -> 0
-      remainder -> 8 - remainder
-    end
-    padding = <<0::size(padding_needed * 8)>>
-    
+    # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
       @ca_format_symlink::little-64
-    >> <> target_data <> padding
+    >> <> target_data
   end
 
   defp encode_catar_element(%{type: :device, major: major, minor: minor}) do
@@ -1040,17 +1022,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + name_size  # Size field includes header + data
     
-    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
-    padding_needed = case rem(total_size, 8) do
-      0 -> 0
-      remainder -> 8 - remainder
-    end
-    padding = <<0::size(padding_needed * 8)>>
-    
+    # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
       @ca_format_user::little-64
-    >> <> name_data <> padding
+    >> <> name_data
   end
 
   defp encode_catar_element(%{type: :group, name: name}) do
@@ -1061,17 +1037,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + name_size  # Size field includes header + data
     
-    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
-    padding_needed = case rem(total_size, 8) do
-      0 -> 0
-      remainder -> 8 - remainder
-    end
-    padding = <<0::size(padding_needed * 8)>>
-    
+    # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
       @ca_format_group::little-64
-    >> <> name_data <> padding
+    >> <> name_data
   end
 
   defp encode_catar_element(%{type: :selinux, context: context}) do
@@ -1082,17 +1052,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + context_size  # Size field includes header + data
     
-    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
-    padding_needed = case rem(total_size, 8) do
-      0 -> 0
-      remainder -> 8 - remainder
-    end
-    padding = <<0::size(padding_needed * 8)>>
-    
+    # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
       @ca_format_selinux::little-64
-    >> <> context_data <> padding
+    >> <> context_data
   end
 
   defp encode_catar_element(%{type: :xattr, data: data}) do
@@ -1101,17 +1065,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + data_size  # Size field includes header + data
     
-    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
-    padding_needed = case rem(total_size, 8) do
-      0 -> 0
-      remainder -> 8 - remainder
-    end
-    padding = <<0::size(padding_needed * 8)>>
-    
+    # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
       @ca_format_xattr::little-64
-    >> <> data <> padding
+    >> <> data
   end
 
   defp encode_catar_element(%{type: :metadata, format: format_type, size: data_size, data: data}) do
@@ -1120,17 +1078,11 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + data_size  # Size field includes header + data
     
-    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
-    padding_needed = case rem(total_size, 8) do
-      0 -> 0
-      remainder -> 8 - remainder
-    end
-    padding = <<0::size(padding_needed * 8)>>
-    
+    # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
       format_type::little-64
-    >> <> data <> padding  # Use original data instead of zero-filled
+    >> <> data  # Use original data
   end
 
   # Fallback for unknown element types
