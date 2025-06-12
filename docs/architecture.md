@@ -13,14 +13,7 @@ Each service is listed in boot order with dependencies, development progress, an
 - **External:** OpenBao (bundled), SoftHSM PKCS#11
 - **Test Coverage:** 9.92% (8 tests passing, 1 doctest)
 - **Development Status:**
-  - [x] **OpenBao Integration**
-    - [x] OpenBao integration for secrets management (basic functionality working)
-    - [x] Vaultex client configuration and API integration (connection tests passing)
-    - [x] SoftHSM PKCS#11 HSM seal configuration (interface in place)
-    - [x] Code quality improvements (deprecated Logger.warn → Logger.warning)
-    - [x] Unused variable warnings resolution
-    - [x] Basic secret storage and retrieval functionality
-    - [x] Error handling for unavailable OpenBao instances
+  - [ ] **OpenBao Integration**
     - [ ] Automated secret rotation and lifecycle management
   - [ ] **Authentication & Authorization Core** (⚠️ Low Coverage)
     - [ ] SSO authentication (Github oidc)
@@ -38,11 +31,7 @@ Each service is listed in boot order with dependencies, development progress, an
 - **External:** CockroachDB 22.1 (or PostgreSQL)
 - **Test Coverage:** 42.86% (1 test passing - Oban migration)
 - **Development Status:**
-  - [x] **Database Foundation** (Basic Infrastructure)
-    - [x] Umbrella application structure with proper supervision trees
-    - [x] Database connectivity and migrations (Oban integration working)
-    - [x] Repository modules defined for different data domains
-    - [x] Oban job queue database setup and migration
+  - [ ] **Database Foundation** (Basic Infrastructure)
     - [ ] Connection pooling and performance optimization
     - [ ] Schema design and migrations (beyond Oban)
     - [ ] Query optimization and indexing strategies
@@ -60,19 +49,12 @@ Each service is listed in boot order with dependencies, development progress, an
 - **External:** OAuth2 providers, WebRTC STUN/TURN servers
 - **Test Coverage:** 35.93% (36 tests passing, macaroon-based auth working)
 - **Development Status:**
-  - [x] **Authentication Systems** (Macaroon Implementation Complete)
-    - [x] Macaroon-based token generation and validation (comprehensive tests)
-    - [x] Custom caveat system (PermissionsCaveat, ConfineUserString)
-    - [x] Token attenuation and permission restriction
-    - [x] Macaroon encoding/decoding with custom caveat serialization
-    - [x] Session management and token validation (basic implementation)
-    - [x] Token pair generation (access and refresh tokens)
+  - [ ] **Authentication Systems** (Macaroon Implementation Complete)
     - [ ] Multi-factor authentication (MFA)
     - [ ] OAuth2 and OpenID Connect integration
     - [ ] WebRTC peer authentication and authorization
     - [ ] Biometric authentication support
   - [ ] **Authorization Framework** (⚠️ Limited Coverage)
-    - [x] Fine-grained permission system (via macaroon caveats)
     - [ ] Dynamic role assignment
     - [ ] Resource-based access control
     - [ ] API endpoint protection
@@ -83,24 +65,12 @@ Each service is listed in boot order with dependencies, development progress, an
 - **External:** aria_storage content-addressed system, optional golang desync client (verification only)
 - **Test Coverage:** 12.75% (129 tests passing - most comprehensive test suite)
 - **Development Status:**
-  - [x] **Storage Backends** (Core Implementation Complete)
-    - [x] Content-addressed storage (CAS) implementation (working with casync format)
-    - [x] Desync-based content deduplication (full compatibility achieved)
-    - [x] Chunk storage and retrieval system (multiple backends)
-    - [x] Index parsing and generation (CAIBX, CAIDX, CATAR formats)
-    - [x] File assembly from chunks with integrity verification
-    - [x] Hash verification (SHA512/256) and compression (ZSTD)
-    - [x] Rolling hash chunking algorithm (matches desync exactly)
+  - [ ] **Storage Backends** (Core Implementation Complete)
     - [ ] **Single-Tier Storage System** (⚠️ Planned Enhancement): Unified storage with aria_storage as primary backend for OAuth user favorites
     - [ ] Optional desync client verification for accuracy checking
     - [ ] SFTP and traditional file system support
     - [ ] CDN integration for global distribution
-  - [x] **Asset Management** (Core Features Working)
-    - [x] Asset deduplication and compression (via casync)
-    - [x] Chunk-based version control foundation
-    - [x] Content integrity verification and validation
-    - [x] Asset format parsing and roundtrip encoding
-    - [x] Performance benchmarking and stress testing
+  - [ ] **Asset Management** (Core Features Working)
     - [ ] Distributed asset synchronization
     - [ ] Asset garbage collection
     - [ ] Metadata indexing and search
@@ -111,13 +81,7 @@ Each service is listed in boot order with dependencies, development progress, an
 - **External:** Oban
 - **Test Coverage:** 0.00% (3 tests passing - infrastructure only)
 - **Development Status:**
-  - [x] **Code Quality & Infrastructure**
-    - [x] Unused variable warnings resolved in worker modules
-    - [x] Worker supervision tree structure established
-    - [x] Background job infrastructure foundation
-    - [x] Oban v2.19.4 module availability confirmed
-    - [x] Worker job struct creation without database
-    - [x] Worker module definitions (AI Generation, Monitoring, Planning, Storage Sync)
+  - [ ] **Code Quality & Infrastructure**
     - [ ] Job processing implementation
   - [ ] **Job Processing** (⚠️ No Implementation)
     - [ ] Oban-based background job system
@@ -204,20 +168,10 @@ Each service is listed in boot order with dependencies, development progress, an
 - **Dependencies:** `aria_security`, `aria_data`, `aria_queue`, orchestrated services
 - **Test Coverage:** 72.94% (73 tests passing - highest coverage)
 - **Development Status:**
-  - [x] **Workflow Engine** (Core Implementation Complete)
-    - [x] Standard Operating Procedure (SOP) definition and validation
-    - [x] Workflow execution and state management with span tracking
-    - [x] Multi-service orchestration foundation
-    - [x] Workflow registry and definition management
-    - [x] Task execution with timing and command tracing
-    - [x] Error handling and span-based monitoring
+  - [ ] **Workflow Engine** (Core Implementation Complete)
     - [ ] Dynamic workflow adaptation
     - [ ] Workflow versioning and rollback
-  - [x] **Process Management** (Foundation Working)
-    - [x] Sequential task execution with span tracking
-    - [x] Command execution and tracing
-    - [x] Timer-based task management
-    - [x] Workflow validation and error reporting
+  - [ ] **Process Management** (Foundation Working)
     - [ ] Parallel task execution
     - [ ] Conditional workflow branching
     - [ ] Advanced error handling and recovery
@@ -512,16 +466,8 @@ Each service is listed in boot order with dependencies, development progress, an
 ## 🛠️ Development Infrastructure
 
 ### **Quality Assurance & Testing**
-- [x] **Code Quality**
-  - [x] Pre-commit hooks for code quality
-  - [x] Code organization and test structure optimization (aria_engine)
-  - [x] Unused variable warnings resolution across services
-  - [x] Deprecated API usage updates (Logger.warn → Logger.warning)
-  - [x] Critical bug fixes (decode_caidx.ex compilation error resolved)
-  - [x] Comprehensive test coverage in core services (377 tests passing)
+- [ ] **Code Quality**
   - [ ] Automated testing pipeline
-  - [x] Code coverage reporting (current: 12.75% - 72.94% across services)
-  - [x] Performance benchmarking (aria_storage comprehensive benchmarks)
   - [ ] Security vulnerability scanning
   - [ ] Static code analysis with Credo
   - [ ] Type checking with Dialyzer
@@ -532,9 +478,7 @@ Each service is listed in boot order with dependencies, development progress, an
 - 🚫 **No Coverage**: 6 services need initial test implementation
 
 ### **Deployment & Operations**
-- [x] **Production Infrastructure**
-  - [x] Native systemd service deployment (Linux)
-  - [x] Production setup automation scripts
+- [ ] **Production Infrastructure**
   - [ ] macOS launchd service configuration
   - [ ] Tailscale network setup and configuration
   - [ ] Tailscale Funnel configuration for web interface
