@@ -16,7 +16,7 @@ defmodule Mix.Tasks.GenerateCharacter do
                                traditional_shrine_maiden, casual_tech)
       --seed SEED              Use a specific seed for reproducible generation
       --count COUNT            Generate multiple characters (default: 1, max: 10)
-      --format FORMAT          Output format: json, yaml, prompt (default: json)
+      --format FORMAT          Output format: json, prompt (default: json)
       --output FILE            Save output to file instead of stdout
       --randomize              Use completely random generation (ignores preset)
       --stats                  Show system statistics and available options
@@ -31,8 +31,8 @@ defmodule Mix.Tasks.GenerateCharacter do
       # Generate a single character with fantasy_cyber preset
       mix generate_character --preset fantasy_cyber
 
-      # Generate 3 random characters and save as YAML
-      mix generate_character --count 3 --format yaml --randomize
+      # Generate 3 random characters and save as JSON
+      mix generate_character --count 3 --format json --randomize
 
       # Generate reproducible character with specific seed
       mix generate_character --seed 12345
@@ -55,7 +55,6 @@ defmodule Mix.Tasks.GenerateCharacter do
   ## Output Formats
 
   - **json**: Complete character data structure (default)
-  - **yaml**: Human-readable YAML format
   - **prompt**: AI-ready text prompt for character generation
 
   ## Presets
@@ -198,12 +197,6 @@ defmodule Mix.Tasks.GenerateCharacter do
     Jason.encode!(data, pretty: true)
   end
 
-  defp format_output(characters, "yaml", single?) do
-    # YamlElixir not available, fallback to formatted JSON
-    data = if single?, do: hd(characters), else: characters
-    Jason.encode!(data, pretty: true)
-  end
-
   defp format_output(characters, "prompt", single?) do
     if single? do
       character = hd(characters)
@@ -219,8 +212,13 @@ defmodule Mix.Tasks.GenerateCharacter do
     end
   end
 
+  defp format_output(characters, "yaml", single?) do
+    Mix.shell().error("YAML output is not supported. Supported formats: json, prompt")
+    exit({:shutdown, 1})
+  end
+
   defp format_output(characters, format, _) do
-    Mix.shell().error("Unknown format: #{format}. Supported formats: json, yaml, prompt")
+    Mix.shell().error("Unknown format: #{format}. Supported formats: json, prompt")
     exit({:shutdown, 1})
   end
 
@@ -387,72 +385,22 @@ defmodule Mix.Tasks.GenerateCharacter do
     end
   end
 
-  # Build a minimal character generation domain for demonstration
-  # This shows how the planner works with RDF triples and TODO lists
-  defp build_demo_character_domain do
-    AriaEngine.create_domain("character_generation_demo")
-    |> AriaEngine.add_action(:set_character_attribute, fn state, params ->
-      # Action that updates RDF triples: predicate-subject-object
-      %{char_id: char_id, attribute: attribute, value: value} = params
-      predicate = "character:#{attribute}"
-      new_state = AriaEngine.set_fact(state, predicate, char_id, value)
-      {:ok, new_state}
+  # Expose a function for plan-based testing in Mix.Tasks.GenerateCharacter
+  def plan_character_with(attrs_or_opts) do
+    domain = AriaEngine.CharacterGenerator.Domain.build_demo_character_domain()
+    char_id = UUID.uuid4(:default)
+    preset = Map.get(attrs_or_opts, :preset) || Map.get(attrs_or_opts, "preset")
+    todos = [
+      {"generate_character_with_constraints", %{char_id: char_id, preset: preset}},
+      {"validate_character_coherence", %{char_id: char_id}},
+      {"generate_character_prompt", %{char_id: char_id}}
+    ]
+    state = AriaEngine.create_state()
+    attrs = if is_map(attrs_or_opts), do: attrs_or_opts, else: %{}
+    state = Enum.reduce(attrs, state, fn {k, v}, acc ->
+      AriaEngine.set_fact(acc, "character:" <> k, char_id, v)
     end)
-    |> AriaEngine.add_action(:generate_text_prompt, fn state, params ->
-      # Action that creates a character prompt from accumulated RDF facts
-      %{char_id: char_id} = params
-      
-      # In real implementation, this would query RDF triples to build prompt
-      prompt = build_character_prompt_from_triples(state, char_id)
-      new_state = AriaEngine.set_fact(state, "generated:prompt", char_id, prompt)
-      {:ok, new_state}
-    end)
-    |> AriaEngine.add_task_method("generate_character_with_constraints", fn _state, params ->
-      # Task method that decomposes into TODO list
-      %{char_id: char_id, preset: preset} = params
-      [
-        {"configure_character_attributes", %{char_id: char_id, preset: preset}},
-        {"validate_character_coherence", %{char_id: char_id}},
-        {"generate_character_prompt", %{char_id: char_id}}
-      ]
-    end)
-    |> AriaEngine.add_task_method("configure_character_attributes", fn _state, params ->
-      # Task method that sets multiple RDF triples for character attributes
-      %{char_id: char_id, preset: _preset} = params
-      [
-        {:set_character_attribute, %{char_id: char_id, attribute: "species", value: "SPECIES_HUMANOID"}},
-        {:set_character_attribute, %{char_id: char_id, attribute: "style", value: "STYLE_KEI_SCI_FI_FUTURISTIC"}},
-        {:set_character_attribute, %{char_id: char_id, attribute: "emotion", value: "EMOTION_CONFIDENT"}},
-        {:set_character_attribute, %{char_id: char_id, attribute: "palette", value: "COLOR_PALETTE_CYBERPUNK_GLOW"}}
-      ]
-    end)
-    |> AriaEngine.add_task_method("validate_character_coherence", fn _state, params ->
-      # Task method that validates RDF triples are consistent
-      %{char_id: char_id} = params
-      [
-        {:validate_attribute_consistency, %{char_id: char_id}},
-        {:check_preset_compliance, %{char_id: char_id}}
-      ]
-    end)
-    |> AriaEngine.add_task_method("generate_character_prompt", fn _state, params ->
-      # Task method that generates final prompt from RDF state
-      %{char_id: char_id} = params
-      [
-        {:generate_text_prompt, %{char_id: char_id}}
-      ]
-    end)
-    |> AriaEngine.add_action(:validate_attribute_consistency, fn state, params ->
-      # Placeholder validation action
-      %{char_id: char_id} = params
-      new_state = AriaEngine.set_fact(state, "validation:consistency", char_id, "passed")
-      {:ok, new_state}
-    end)
-    |> AriaEngine.add_action(:check_preset_compliance, fn state, params ->
-      # Placeholder preset compliance check
-      %{char_id: char_id} = params
-      new_state = AriaEngine.set_fact(state, "validation:preset_compliance", char_id, "passed")
-      {:ok, new_state}
-    end)
+    AriaEngine.plan(domain, state, todos, verbose: 0)
   end
 
   # Helper function to build character prompt from RDF triples
