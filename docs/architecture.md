@@ -373,6 +373,44 @@ Each service is listed in boot order with dependencies, development progress, an
 5. **Job Processing** (`aria_queue`): Implement actual background job execution
 6. **Data Analysis** (`aria_interpret`): Character behavior analysis and recommendations
 
+## 📋 Queued Work
+
+### **Immediate Tasks**
+- [ ] **Local Infrastructure Testing**: Verify Mac development environment before deployment
+  - [ ] Test OpenBao functionality on macOS (secret storage and retrieval)
+  - [ ] Verify CockroachDB connectivity and migration execution
+  - [ ] Confirm Elixir umbrella application boot sequence
+  - [ ] Validate service-to-service communication in local environment
+  - [ ] Test SSL certificate generation and validation locally
+- [ ] **System Service Deployment**: Deploy umbrella application with native service management
+  - [ ] Configure launchd service files for macOS (`~/Library/LaunchAgents/`)
+  - [ ] Set up systemd service files for Linux deployment (`/etc/systemd/system/`)
+  - [ ] Configure Tailscale network for secure service communication
+  - [ ] Set up Tailscale Funnel for public web interface exposure
+  - [ ] Test service startup, shutdown, and auto-restart functionality
+  - [ ] Verify inter-service communication over Tailscale network
+
+### **Development Queue**
+- [ ] **Phoenix LiveView UI** (`aria_interface`): Create web interface for system interaction
+  - [ ] Authentication dashboard with macaroon token management
+  - [ ] Storage browser for asset management
+  - [ ] Workflow execution monitor with real-time updates
+  - [ ] System health dashboard
+- [ ] **Background Job Processing** (`aria_queue`): Implement actual Oban job execution
+- [ ] **System Monitoring** (`aria_monitor`): Production observability with Prometheus/Grafana
+- [ ] **API Gateway** (`aria_coordinate`): Service coordination and request routing
+- [ ] **Character Generation** (`aria_shape`): Neural network integration with PyTorch
+
+### **Infrastructure Improvements**
+- [ ] **CI/CD Pipeline**: Automated testing and deployment
+- [ ] **Security Hardening**: Vulnerability scanning and compliance
+- [ ] **Performance Optimization**: Load testing and benchmarking
+- [ ] **Documentation**: API documentation and deployment guides
+- [ ] **Cloud Deployment** (Future): Consider Fly.io or other cloud platforms for scaling
+  - [ ] Evaluate cloud provider options (Fly.io, AWS, GCP, Azure)
+  - [ ] Design cloud migration strategy from Tailscale network
+  - [ ] Plan for multi-region deployment and data replication
+
 ## 🛠️ Development Infrastructure
 
 ### **Quality Assurance & Testing**
@@ -397,11 +435,15 @@ Each service is listed in boot order with dependencies, development progress, an
 
 ### **Deployment & Operations**
 - [x] **Production Infrastructure**
-  - [x] Native systemd service deployment
+  - [x] Native systemd service deployment (Linux)
   - [x] Production setup automation scripts
+  - [ ] macOS launchd service configuration
+  - [ ] Tailscale network setup and configuration
+  - [ ] Tailscale Funnel configuration for web interface
+  - [ ] Service monitoring and health checks
+  - [ ] Automated service restart and recovery
   - [ ] CI/CD pipeline configuration
   - [ ] Environment-specific configurations
-  - [ ] Monitoring and alerting setup
   - [ ] Blue-green deployment strategy
   - [ ] Automated rollback procedures
 
@@ -426,6 +468,68 @@ Each service is listed in boot order with dependencies, development progress, an
   - [ ] Performance metrics dashboard
 
 This project follows Test-Driven Development (TDD). Each checkbox represents a feature with corresponding test coverage. Check off items as tests pass and features are implemented.
+
+## 🚀 Deployment Architecture
+
+### **Native Service Management**
+The system deploys using native OS service managers for reliability and integration:
+
+#### **macOS (Development/Local)**
+- **Service Manager**: `launchd` with `.plist` files in `~/Library/LaunchAgents/`
+- **Database**: CockroachDB as user service
+- **Secrets**: OpenBao as user service  
+- **Application**: Elixir umbrella app as user service
+- **Networking**: Tailscale for secure inter-service communication
+
+#### **Linux (Production)**
+- **Service Manager**: `systemd` with service files in `/etc/systemd/system/`
+- **Database**: CockroachDB as system service
+- **Secrets**: OpenBao as system service
+- **Application**: Elixir umbrella app as system service
+- **Networking**: Tailscale for secure networking
+
+### **Network Architecture with Tailscale**
+
+#### **Tailscale Network Benefits**
+- **Zero-config VPN**: Automatic mesh networking between services
+- **End-to-end encryption**: All inter-service communication encrypted
+- **Access Control**: Fine-grained ACLs for service-to-service communication
+- **Multi-platform**: Works seamlessly on macOS, Linux, and cloud instances
+- **NAT traversal**: Services can communicate regardless of network topology
+
+#### **Tailscale Funnel for Public Access**
+- **Public web interface**: Expose `aria_interface` Phoenix app via Tailscale Funnel
+- **HTTPS termination**: Automatic SSL/TLS certificates from Tailscale
+- **Rate limiting**: Built-in DDoS protection and rate limiting
+- **Global CDN**: Content delivery through Tailscale's global network
+- **Access logs**: Comprehensive logging and analytics
+
+#### **Service Communication Pattern**
+```
+Internet → Tailscale Funnel → aria_interface (Phoenix)
+                                      ↓
+Tailscale Network → aria_coordinate (API Gateway)
+                                      ↓
+                    ┌─────────────────┼─────────────────┐
+                    ↓                 ↓                 ↓
+            aria_auth        aria_storage      aria_workflow
+                    ↓                 ↓                 ↓
+            aria_security    aria_queue       aria_engine
+                    ↓                 ↓                 ↓
+             aria_data    aria_monitor     aria_shape
+```
+
+### **Deployment Benefits**
+1. **Simplified Operations**: No cloud vendor lock-in, deploy anywhere
+2. **Cost Effective**: Run on your own hardware or VPS
+3. **Enhanced Security**: Private Tailscale network with minimal public exposure
+4. **Easy Scaling**: Add new nodes to Tailscale network as needed
+5. **Development Parity**: Same deployment model for dev/staging/prod
+
+### **Future Cloud Migration Path**
+- Current Fly.io configurations (`fly.toml`, `fly-db.toml`, `fly-bao.toml`) preserved
+- Migration path available when scaling requirements justify cloud deployment
+- Tailscale network can extend to cloud instances for hybrid deployments
 
 ## 📈 Testing Strategy
 
