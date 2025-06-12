@@ -22,14 +22,23 @@ defmodule Mix.Tasks.GenerateCharacter do
       --stats                  Show system statistics and available options
       --list-presets           List all available presets
       --list-attributes        List all character attributes
+      --use-planner            Use the new planning system (default: true)
+      --legacy                 Use legacy generation system (fallback mode)
+      --workflow WORKFLOW      Use specific planning workflow (basic, comprehensive, demo)
       --help                   Show this help message
       --show-planning          Show planning TODO list and steps
       --verbose-planning LEVEL Set verbosity level for planning (0-3)
 
   ## Examples
 
-      # Generate a single character with fantasy_cyber preset
-      mix generate_character --preset fantasy_cyber
+      # Generate with planning system (default)
+      mix generate_character --preset cyber_cat_person
+
+      # Generate using legacy system
+      mix generate_character --preset fantasy_cyber --legacy
+
+      # Generate using specific planning workflow
+      mix generate_character --workflow comprehensive
 
       # Generate 3 random characters and save as JSON
       mix generate_character --count 3 --format json --randomize
@@ -94,6 +103,9 @@ defmodule Mix.Tasks.GenerateCharacter do
     stats: :boolean,
     list_presets: :boolean,
     list_attributes: :boolean,
+    use_planner: :boolean,
+    legacy: :boolean,
+    workflow: :string,
     help: :boolean,
     show_planning: :boolean,
     verbose_planning: :integer
@@ -106,6 +118,8 @@ defmodule Mix.Tasks.GenerateCharacter do
     f: :format,
     o: :output,
     r: :randomize,
+    w: :workflow,
+    l: :legacy,
     h: :help,
     P: :show_planning,
     v: :verbose_planning
@@ -154,42 +168,79 @@ defmodule Mix.Tasks.GenerateCharacter do
   end
 
   defp generate_single_character(options) do
+    use_planner = !options[:legacy] && Keyword.get(options, :use_planner, true)
+    
+    generation_opts = [
+      seed: options[:seed],
+      preset: options[:preset],
+      use_planner: use_planner
+    ]
+    
     cond do
+      # Use specific planning workflow
+      options[:workflow] ->
+        workflow = case options[:workflow] do
+          "basic" -> :basic
+          "comprehensive" -> :comprehensive
+          "demo" -> :demo
+          "validation" -> :validation_only
+          "preset" -> :preset_application
+          _ -> :basic
+        end
+        
+        result = CharacterGenerator.generate_with_plan(workflow, generation_opts)
+        case result do
+          {:error, reason} -> 
+            Mix.shell().error("Planning workflow failed: #{reason}")
+            Mix.shell().info("Falling back to standard generation...")
+            CharacterGenerator.generate(generation_opts)
+          character when is_map(character) -> 
+            character
+          other -> 
+            raise "Unexpected return value from generate_with_plan: #{inspect(other)}"
+        end
+      
+      # Standard generation with planning or legacy mode
       options[:randomize] ->
-        generate_with_seed(options[:seed])
+        generate_with_seed(options[:seed], use_planner)
       
       options[:preset] ->
-        result = CharacterGenerator.generate(preset: options[:preset], seed: options[:seed])
+        result = CharacterGenerator.generate(generation_opts)
         case result do
           {:ok, character} -> character
           {:error, reason} -> raise "Failed to generate character: #{reason}"
-          # Handle case where generator returns a map directly
           character when is_map(character) -> character
-          # Handle any other unexpected return value
           other -> raise "Unexpected return value from CharacterGenerator.generate: #{inspect(other)}"
         end
       
       true ->
-        generate_with_seed(options[:seed])
+        generate_with_seed(options[:seed], use_planner)
     end
   end
 
   defp generate_multiple_characters(count, options) do
     base_seed = options[:seed] || :os.system_time(:microsecond)
+    use_planner = !options[:legacy] && Keyword.get(options, :use_planner, true)
     
     if options[:randomize] do
       Enum.map(1..count, fn i ->
-        generate_with_seed(base_seed + i)
+        generate_with_seed(base_seed + i, use_planner)
       end)
     else
       preset = options[:preset] || "fantasy_cyber"
       
-      CharacterGenerator.generate_batch(count, preset: preset, seed: base_seed)
+      batch_opts = [
+        preset: preset, 
+        seed: base_seed,
+        use_planner: use_planner
+      ]
+      
+      CharacterGenerator.generate_batch(count, batch_opts)
     end
   end
 
-  defp generate_with_seed(seed) do
-    CharacterGenerator.generate(seed: seed)
+  defp generate_with_seed(seed, use_planner \\ true) do
+    CharacterGenerator.generate(seed: seed, use_planner: use_planner)
   end
 
   defp format_output(characters, "json", single?) do
