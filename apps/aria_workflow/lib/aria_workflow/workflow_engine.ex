@@ -154,7 +154,7 @@ defmodule AriaWorkflow.WorkflowEngine do
           |> Span.add_event("planning.failed", %{"error" => inspect(error)})
           |> Span.finish(status: :error)
 
-          Logger.error("Failed to plan workflow #{workflow.id}: #{inspect(error)}")
+          Logger.info("Failed to plan workflow #{workflow.id}: #{inspect(error)}")
           error
       end
     rescue

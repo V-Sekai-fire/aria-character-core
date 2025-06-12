@@ -150,7 +150,7 @@ defmodule AriaWorkflow.Tasks.CommandTracing do
             error: error_info
           })
 
-          Logger.error("Command error in trace #{trace_id}: #{inspect(error)}")
+          Logger.warning("Command error in trace #{trace_id}: #{inspect(error)}")
 
           new_traces = Map.put(traces, trace_id, updated_trace)
           new_state = Map.put(state, :command_traces, new_traces)

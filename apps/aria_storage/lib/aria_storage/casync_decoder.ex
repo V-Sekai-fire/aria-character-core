@@ -355,8 +355,7 @@ defmodule AriaStorage.CasyncDecoder do
     else
       "SHA256"
     end
-    IO.puts("🔧 DEBUG: Using #{hash_algorithm} for chunk verification (feature_flags=#{feature_flags})")
-    
+
     case chunks do
       [] ->
         {success_count, total_bytes}
@@ -456,10 +455,8 @@ defmodule AriaStorage.CasyncDecoder do
     # 3. Trust that desync's chunking algorithm correctly identified chunk boundaries
     
     if byte_size(data) == chunk_info.size do
-      IO.puts("✅ DEBUG: Chunk #{String.slice(chunk_id_hex, 0, 8)} size verified: #{byte_size(data)} bytes")
       {:ok, data}
     else
-      IO.puts("❌ DEBUG: Chunk #{String.slice(chunk_id_hex, 0, 8)} size mismatch: expected #{chunk_info.size}, got #{byte_size(data)}")
       {:error, :size_mismatch}
     end
   end

@@ -115,13 +115,12 @@ defmodule AriaStorage.Index do
   @doc """
   Saves an index to a file.
   """
-  def save_to_file(%__MODULE__{} = index, file_path) do
-    case serialize(index) do
-      {:ok, binary_data} ->
-        File.write(file_path, binary_data)
-
-      {:error, reason} ->
-        {:error, reason}
+  def save_to_file(index, file_path) do
+    with {:ok, binary} <- serialize(index),
+         :ok <- File.write(file_path, binary) do
+      {:ok, file_path}
+    else
+      {:error, reason} -> {:error, reason}
     end
   end
 

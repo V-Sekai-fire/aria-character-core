@@ -17,7 +17,6 @@ defmodule Mix.Tasks.CasyncIntegrity do
   import Bitwise
   
   alias AriaStorage.Parsers.CasyncFormat
-  alias AriaStorage.CasyncDecoder
 
   @ca_format_sha512_256 0x2000000000000000
 

@@ -987,9 +987,9 @@ defmodule AriaEngine.CharacterGeneratorTest do
     end
 
     test "end-to-end text prompt generation workflow" do
-      {attributes, prompt} = workflow_generate_prompt_only()
+      {attributes, _prompt} = workflow_generate_prompt_only()
       for {key, value} <- attributes do
-        description = if key == "detail_level" do
+        _description = if key == "detail_level" do
           to_string(value)
         else
           Map.get(@option_descriptions, value, value)
@@ -1062,7 +1062,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
         end)
 
     |> AriaEngine.add_action(:resolve_dependency,
-        fn state, [char_id, dependent_attr, dependency_attr, required_value] ->
+        fn state, [char_id, _dependent_attr, dependency_attr, required_value] ->
           current_value = AriaEngine.get_fact(state, "character_#{dependency_attr}", char_id)
           if current_value == required_value do
             {:ok, state}
@@ -1101,7 +1101,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
     # Fallback method for generate_character_with_constraints if constraints fail
     |> AriaEngine.add_task_method("generate_character_with_constraints",
-        fn state, [char_id, preset] ->
+        fn _state, [char_id, _preset] ->
           # This method will be tried if the first one fails due to constraints
           [
             {"configure_simple_preset", [char_id]},
@@ -1161,7 +1161,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
     # Alternative method for validate_and_resolve_constraints that fails if conflicts can't be resolved
     |> AriaEngine.add_task_method("validate_and_resolve_constraints",
-        fn state, [char_id] ->
+        fn _state, [char_id] ->
           # This method will be tried if auto-correction fails
           # It forces a complete reset of problematic attributes
           [
@@ -1190,7 +1190,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
           |> Enum.take(8)  # Randomize more attributes but safely
 
           # Build randomization actions with constraint checks
-          randomize_actions = Enum.flat_map(unset_attributes, fn attr ->
+          Enum.flat_map(unset_attributes, fn attr ->
             [
               {:randomize_attribute, [char_id, attr]},
             ]
@@ -1215,13 +1215,13 @@ defmodule AriaEngine.CharacterGeneratorTest do
           unset_safe_attributes = safe_attributes
           |> Enum.reject(fn attr -> MapSet.member?(set_attributes, attr) end)
 
-          randomize_actions = Enum.map(unset_safe_attributes, fn attr ->
+          Enum.map(unset_safe_attributes, fn attr ->
             {:randomize_attribute, [char_id, attr]}
           end)
         end)
 
     |> AriaEngine.add_task_method("final_constraint_validation",
-        fn state, [char_id] ->
+        fn _state, [char_id] ->
           # Final validation that must pass - if it fails, the whole generation fails
           [
             {:validate_constraints, [char_id]},
@@ -1239,7 +1239,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
         end)
 
     |> AriaEngine.add_task_method("reset_conflicting_attributes",
-        fn state, [char_id] ->
+        fn _state, [char_id] ->
           # Reset attributes that commonly cause conflicts
           conflicting_attrs = [
             "kemonomimi_animal_ears_presence",
@@ -1248,7 +1248,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
             "fantasy_magical_talismans_presence"
           ]
 
-          reset_actions = Enum.map(conflicting_attrs, fn attr ->
+           Enum.map(conflicting_attrs, fn attr ->
             {:set_character_attribute, [char_id, attr, nil]}
           end)
         end)
@@ -1272,7 +1272,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
           unset_attributes = MapSet.difference(available_attributes, set_attributes)
           |> Enum.take(5)  # Limit to 5 for demo
 
-          randomize_actions = Enum.map(unset_attributes, fn attr ->
+          Enum.map(unset_attributes, fn attr ->
             {:randomize_attribute, [char_id, attr]}
           end)
         end)
@@ -1313,7 +1313,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
         end)
 
     |> AriaEngine.add_task_method("generate_character_with_constraints",
-        fn state, [char_id, preset_name] ->
+        fn _state, [char_id, preset_name] ->
           [
             {"configure_character_presets", [char_id, preset_name]},
             {"validate_and_resolve_constraints", [char_id]},
@@ -1322,7 +1322,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
         end)
 
     |> AriaEngine.add_task_method("validate_and_resolve_constraints",
-        fn state, [char_id] ->
+        fn _state, [char_id] ->
           [
             {:validate_constraints, [char_id]},
             {"resolve_feature_dependencies", [char_id]},
@@ -1443,18 +1443,22 @@ defmodule AriaEngine.CharacterGeneratorTest do
     end
 
     # Physical features
-    if attributes["kemonomimi_animal_ears_presence"] == "KEMONOMIMI_EARS_TRUE" do
-      prompt_parts = ["with animal ears" | prompt_parts]
+    prompt_parts = if attributes["kemonomimi_animal_ears_presence"] == "KEMONOMIMI_EARS_TRUE" do
+      ["with animal ears" | prompt_parts]
+    else
+      prompt_parts
     end
 
-    if attributes["kemonomimi_animal_tail_presence"] == "KEMONOMIMI_TAIL_TRUE" do
+    prompt_parts = if attributes["kemonomimi_animal_tail_presence"] == "KEMONOMIMI_TAIL_TRUE" do
       tail_style = case attributes["kemonomimi_animal_tail_style"] do
         "KEMONOMIMI_TAIL_STYLE_FLUFFY" -> "fluffy tail"
         "KEMONOMIMI_TAIL_STYLE_SLEEK" -> "sleek tail"
         "KEMONOMIMI_TAIL_STYLE_LONG_FLOWING" -> "long flowing tail"
         _ -> "tail"
       end
-      prompt_parts = ["with #{tail_style}" | prompt_parts]
+      ["with #{tail_style}" | prompt_parts]
+    else
+      prompt_parts
     end
 
     # Theme and style
@@ -1488,12 +1492,16 @@ defmodule AriaEngine.CharacterGeneratorTest do
     end
 
     # Accessories and elements
-    if attributes["cyber_tech_accessories_presence"] == "CYBER_TECH_ACCESSORIES_TRUE" do
-      prompt_parts = ["with cyber tech accessories" | prompt_parts]
+    prompt_parts = if attributes["cyber_tech_accessories_presence"] == "CYBER_TECH_ACCESSORIES_TRUE" do
+      ["with cyber tech accessories" | prompt_parts]
+    else
+      prompt_parts
     end
 
-    if attributes["fantasy_magical_talismans_presence"] == "FANTASY_TALISMANS_TRUE" do
-      prompt_parts = ["carrying magical talismans" | prompt_parts]
+    prompt_parts = if attributes["fantasy_magical_talismans_presence"] == "FANTASY_TALISMANS_TRUE" do
+      ["carrying magical talismans" | prompt_parts]
+    else
+      prompt_parts
     end
 
     # Build final prompt

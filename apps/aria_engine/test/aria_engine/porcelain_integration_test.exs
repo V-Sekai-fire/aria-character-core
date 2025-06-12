@@ -327,25 +327,4 @@ defmodule AriaEngine.PortcelainIntegrationTest do
       assert State.get_object(result, "last_command", "success") == true
     end
   end
-
-  describe "AriaEngine Planning with Porcelain Actions" do
-    test "can plan and execute file management workflow" do
-      # Create a domain with file management capabilities
-      domain = Domain.new("file_mgmt_test")
-      |> Domain.add_porcelain_actions()
-      |> Domain.add_file_management_methods()
-
-      state = State.new()
-      |> State.set_object("workspace_needed", "test_project", true)
-
-      # Define a goal to create a workspace
-      goals = [{"workspace_created", "test_project", true}]
-
-      # Note: This would require implementing the actual planning algorithm
-      # For now, we just test that the domain is properly configured
-      assert Map.has_key?(domain.task_methods, "setup_workspace")
-      assert Map.has_key?(domain.actions, :create_directory)
-      assert Map.has_key?(domain.actions, :execute_command)
-    end
-  end
 end

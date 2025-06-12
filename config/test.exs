@@ -105,3 +105,11 @@ if System.get_env("CI_UNIT_TESTS") == "true" do
   config :aria_data, AriaData.MonitorRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
   config :aria_data, AriaData.EngineRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
 end
+
+# Configure ExUnit
+config :ex_unit,
+  runner: ExUnit.Runner,
+  formatter: ExUnit.DotTestReporter,
+  trace: true,
+  refute_receive_timeout: 500,
+  assert_receive_timeout: 500

@@ -6,7 +6,7 @@ defmodule AriaEnginePortelainIntegrationTest do
 
   alias AriaEngine.{Domain, State, Plan}
   alias AriaEngine.{Actions, Domains}
-  alias AriaWorkflow.{WorkflowDefinition, WorkflowEngine, WorkflowRegistry}
+  alias AriaWorkflow.{WorkflowDefinition, WorkflowRegistry}
 
   require Logger
 
@@ -180,7 +180,7 @@ defmodule AriaEnginePortelainIntegrationTest do
           end)
 
           has_goal = Enum.any?(workflow.todos, fn
-            {pred, subj, obj} when is_binary(pred) and is_binary(subj) -> true
+            {pred, subj, _obj} when is_binary(pred) and is_binary(subj) -> true
             _ -> false
           end)
 

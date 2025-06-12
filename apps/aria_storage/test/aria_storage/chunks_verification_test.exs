@@ -48,17 +48,17 @@ defmodule AriaStorage.ChunksVerificationTest do
 
         # Check chunk is contiguous with previous
         assert chunk.offset == prev_offset,
-          "Chunk #{i+1} offset #{chunk.offset} doesn't follow previous chunk end #{prev_offset}"
+          "Chunk #{i + 1} offset #{chunk.offset} doesn't follow previous chunk end #{prev_offset}"
 
         # Check offset matches expected
         assert chunk.offset == expected_chunk.offset,
-          "Chunk #{i+1} offset #{chunk.offset} doesn't match expected #{expected_chunk.offset}"
+          "Chunk #{i + 1} offset #{chunk.offset} doesn't match expected #{expected_chunk.offset}"
 
         # Check size matches expected
         assert chunk.size == expected_chunk.size,
-          "Chunk #{i+1} size #{chunk.size} doesn't match expected #{expected_chunk.size}"
+          "Chunk #{i + 1} size #{chunk.size} doesn't match expected #{expected_chunk.size}"
 
-        prev_offset = chunk.offset + chunk.size
+        prev_offset = prev_offset + chunk.size
       end)
 
       # Verify total size matches input

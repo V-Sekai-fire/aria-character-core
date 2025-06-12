@@ -603,22 +603,23 @@ defmodule Mix.Tasks.CasyncDecode do
         case decompress_chunk_data(compressed_data, header.compression) do
           {:ok, decompressed_data} ->
             verify_chunk_hash_and_size(decompressed_data, chunk_info, chunk_id_hex)
-            
-          {:error, reason} ->
-            {:error, {:decompression_failed, reason}}
+
+          {:error, _reason} ->
+            # Try as uncompressed data
+            verify_chunk_hash_and_size(chunk_data, chunk_info, chunk_id_hex)
         end
-        
+
       {:error, "Invalid chunk file magic"} ->
         # Try direct ZSTD decompression (raw compressed data without CACNK wrapper)
         case decompress_chunk_data(chunk_data, :zstd) do
           {:ok, decompressed_data} ->
             verify_chunk_hash_and_size(decompressed_data, chunk_info, chunk_id_hex)
-            
+
           {:error, reason} ->
             # Try as uncompressed data
             verify_chunk_hash_and_size(chunk_data, chunk_info, chunk_id_hex)
         end
-        
+
       {:error, reason} ->
         {:error, {:parse_failed, reason}}
     end
@@ -693,8 +694,6 @@ defmodule Mix.Tasks.CasyncDecode do
     sorted_chunks = Enum.sort_by(data.chunks, & &1.offset)
     
     {consistent, issues} = Enum.reduce(sorted_chunks, {true, []}, fn chunk, {consistent_so_far, issues_so_far} ->
-      expected_size = chunk.size
-      
       # Check if this chunk starts where the previous one ended
       case issues_so_far do
         [] ->

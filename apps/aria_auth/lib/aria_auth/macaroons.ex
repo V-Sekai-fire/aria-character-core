@@ -76,10 +76,6 @@ defmodule AriaAuth.Macaroons do
     def from_body(_, _, _), do: {:error, "bad PermissionsCaveat format"}
   end
 
-  # Add JSON encoder for PermissionsCaveat
-  require Macfly.Caveat.JSON
-  Macfly.Caveat.JSON.defimpl_jason_encoder(PermissionsCaveat)
-
   # Implement the Macfly.Caveat protocol for ConfineUserString
   defimpl Macfly.Caveat, for: ConfineUserString do
     def name(_), do: "ConfineUserString"
@@ -96,7 +92,9 @@ defmodule AriaAuth.Macaroons do
     def from_body(_, _, _), do: {:error, "bad ConfineUserString format"}
   end
 
-  # Add JSON encoder for ConfineUserString
+  # Add JSON encoder for caveats
+  require Macfly.Caveat.JSON
+  Macfly.Caveat.JSON.defimpl_jason_encoder(PermissionsCaveat)
   Macfly.Caveat.JSON.defimpl_jason_encoder(ConfineUserString)
 
   @doc """

@@ -133,21 +133,6 @@ defmodule AriaStorage.Chunks do
   @doc """
   Calculates SHA512/256 hash for chunk identification.
   """
-  @doc """
-  Calculates a unique chunk ID using SHA512/256 hash.
-
-  This follows the same algorithm as desync:
-  1. Computes the full SHA512 hash of the chunk data
-  2. Takes the first 32 bytes (256 bits) of the hash as the chunk ID
-
-  This is equivalent to SHA512/256 as defined in FIPS 180-4.
-
-  ## Parameters
-    - data: Binary data to hash
-
-  ## Returns
-    - 32-byte binary representing the SHA512/256 hash
-  """
   def calculate_chunk_id(data) when is_binary(data) do
     :crypto.hash(:sha512, data)
     |> binary_part(0, 32)  # Use first 256 bits for SHA512/256
@@ -190,9 +175,6 @@ defmodule AriaStorage.Chunks do
     end
   end
 
-  @doc """
-  Decompresses chunk data.
-  """
   @doc """
   Decompresses chunk data that was previously compressed with compress_chunk/2.
 
@@ -441,7 +423,7 @@ defmodule AriaStorage.Chunks do
   end
 
   # Continue the rolling hash search with corrected positioning
-  defp rolling_search_v2(data, pos, max_end, hash, discriminator) when pos > max_end or pos >= byte_size(data) do
+  defp rolling_search_v2(data, pos, max_end, _hash, _discriminator) when pos > max_end or pos >= byte_size(data) do
     max_end
   end
 
