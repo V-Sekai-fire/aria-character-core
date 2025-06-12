@@ -171,7 +171,6 @@ Each service is listed in boot order with dependencies, development progress, an
     - [x] Domain definition and conversion systems
     - [x] Character generation workflow planning
     - [x] Porcelain integration for system commands
-    - [ ] GTPyhop hierarchical task planning integration
     - [ ] Action cost calculation and optimization
     - [ ] Multi-character coordination algorithms
   - [x] **Planning Intelligence** (Foundational Features)
@@ -370,7 +369,7 @@ Each service is listed in boot order with dependencies, development progress, an
 1. **User Interface** (`aria_interface`): Phoenix LiveView for system interaction
 2. **System Monitoring** (`aria_monitor`): Production observability and health checks
 3. **API Gateway** (`aria_coordinate`): Service coordination and request routing
-4. **Character Generation** (`aria_shape`): Core ML-based character creation
+4. **Character Generation** (`aria_shape`): Neural network-based character creation
 5. **Job Processing** (`aria_queue`): Implement actual background job execution
 6. **Data Analysis** (`aria_interpret`): Character behavior analysis and recommendations
 
