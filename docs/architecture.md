@@ -80,7 +80,7 @@ Each service is listed in boot order with dependencies, development progress, an
 
 #### **[aria_storage](../apps/aria_storage/)** - Bulk Asset Storage
 - **Dependencies:** `aria_security` (storage credentials), `aria_auth` (access authorization)
-- **External:** Desync, S3/SFTP/CDN backends, Waffle file uploads
+- **External:** aria_storage content-addressed system, optional golang desync client (verification only)
 - **Test Coverage:** 12.75% (129 tests passing - most comprehensive test suite)
 - **Development Status:**
   - [x] **Storage Backends** (Core Implementation Complete)
@@ -91,9 +91,8 @@ Each service is listed in boot order with dependencies, development progress, an
     - [x] File assembly from chunks with integrity verification
     - [x] Hash verification (SHA512/256) and compression (ZSTD)
     - [x] Rolling hash chunking algorithm (matches desync exactly)
-    - [x] Waffle integration infrastructure (`WaffleAdapter`, `WaffleChunkStore`, `ChunkUploader`)
-    - [ ] **Dual-Storage Safety System** (⚠️ Planned Enhancement): Waffle local storage alongside desync algorithm
-    - [ ] S3-compatible object storage integration
+    - [ ] **Single-Tier Storage System** (⚠️ Planned Enhancement): Unified storage with aria_storage as primary backend for OAuth user favorites
+    - [ ] Optional desync client verification for accuracy checking
     - [ ] SFTP and traditional file system support
     - [ ] CDN integration for global distribution
   - [x] **Asset Management** (Core Features Working)
@@ -155,7 +154,6 @@ Each service is listed in boot order with dependencies, development progress, an
 
 #### **[aria_engine](../apps/aria_engine/)** - Classical AI Planning
 - **Dependencies:** `aria_security`, `aria_data`, `aria_queue`
-- **External:** GTPyhop integration
 - **Test Coverage:** 33.82% (78 tests passing including 1 doctest)
 - **Development Status:**
   - [x] **Test Infrastructure & Code Quality**
@@ -343,7 +341,7 @@ Each service is listed in boot order with dependencies, development progress, an
 - **aria_workflow**: Complete SOP execution engine with 72.94% coverage
 - **aria_auth**: Robust macaroon-based authentication system
 - **aria_engine**: AI planning system with comprehensive domain support
-- **aria_storage**: Advanced content-addressed storage with desync compatibility
+- **aria_storage**: Advanced content-addressed storage with optional desync verification
 
 #### **🟡 Foundation Complete (3 services)**
 - **aria_data**: Database infrastructure with Oban integration
@@ -371,17 +369,29 @@ Each service is listed in boot order with dependencies, development progress, an
 
 ### **Priority Demo** 🎯
 - [ ] **Character Generator LiveView Demo**: Create interactive demo for community feedback and GitHub sponsorship
-  - [ ] **Phoenix LiveView Setup** (`aria_interface`): Minimal UI for character generator demo
-    - [ ] Basic Phoenix LiveView application with routing
+  - [ ] **Phoenix LiveView Setup** (`aria_interface`): **TOP PRIORITY** - Minimal UI for character generator demo
+    - [ ] Basic Phoenix LiveView application with routing and layout
     - [ ] Integrate existing character generator logic from `apps/aria_engine/test/character_generator_test.exs`
     - [ ] Create real-time character generation interface with sliders and controls
-    - [ ] Live preview of generated character parameters
+    - [ ] Live preview of generated character parameters and prompt text
+    - [ ] **OAuth Integration**: GitHub OAuth for user authentication and favorites storage
+  - [ ] **Macaroon Cookie Authentication**: Implement stateless authentication for character demo
+    - [ ] Configure HTTP-only secure cookie handling for macaroon tokens
+    - [ ] Create Phoenix plug for automatic macaroon token verification from cookies
+    - [ ] Implement GitHub OAuth callback to generate and set macaroon cookies
+    - [ ] Add cookie-based user identification for LiveView sessions
+    - [ ] Configure cookie security settings (HTTP-only, Secure, SameSite protection)
+    - [ ] Test macaroon cookie authentication flow with character generator demo
   - [ ] **Interactive Slider Controls**: Port test sliders to LiveView components
-    - [ ] Categorical sliders (species, emotion, style_kei, color_palette, etc.), age ranges [chibi, young adult, adult]
-    - [ ] Boolean toggles (kemonomimi features, presence flags)
-    - [ ] Numeric range sliders (detail_level)
-    - [ ] Real-time parameter updates with LiveView events
-    - [ ] Character preview panel showing current configuration
+    - [ ] Categorical sliders (species, emotion, style_kei, color_palette) with live updates
+    - [ ] Age ranges (chibi, young_adult, adult) and avatar masculine/feminine appearance controls
+    - [ ] Boolean toggles (kemonomimi features, fantasy elements, cyber accessories)
+    - [ ] Numeric range sliders (detail_level 1-10) with real-time feedback
+    - [ ] Character configuration preview panel with generated prompt display
+  - [ ] **User Favorites System**: Implement OAuth user character storage via single-tier architecture
+    - [ ] Save/load user favorite character configurations (authenticated users only)
+    - [ ] Character gallery view for saved favorites with thumbnails
+    - [ ] Share character configurations via URL parameters (public/private toggle)
   - [ ] **Demo Features for Feedback & Sponsorship**
     - [ ] Export generated character configurations (JSON/YAML)
     - [ ] Share generated characters via URL parameters
@@ -395,31 +405,50 @@ Each service is listed in boot order with dependencies, development progress, an
     - [ ] Social sharing features for character creations
 
 ### **Immediate Infrastructure Tasks**
-- [ ] **Waffle Dual-Storage Integration**: Implement Waffle local storage alongside existing desync algorithm
-  - [ ] **Parallel Storage Architecture**: Run both storage systems simultaneously for safety
-    - [ ] Configure Waffle adapter (`WaffleAdapter`) as secondary storage backend
-    - [ ] Maintain existing `aria_storage` desync chunking as primary system
-    - [ ] Implement dual-write pattern: write to both desync chunks and Waffle storage
-    - [ ] Configure fallback reads: primary from desync, fallback to Waffle if chunk missing
-    - [ ] Add storage consistency verification between both systems
-  - [ ] **Waffle Local Storage Configuration**: Set up local filesystem Waffle backend
-    - [ ] Configure `WaffleChunkStore` for local filesystem storage (`.cacnk` format)
-    - [ ] Set up directory structure: `uploads/chunks/{prefix}/{chunk_id}.cacnk`
-    - [ ] Implement chunk deduplication across both storage systems
-    - [ ] Configure `ChunkUploader` for seamless integration with existing workflow
-    - [ ] Add Waffle storage monitoring and health checks
-  - [ ] **Safety and Verification Features**
-    - [ ] Implement cross-storage integrity verification (compare chunk hashes)
-    - [ ] Add automated chunk migration between systems (repair missing chunks)
-    - [ ] Configure storage backend failover (automatic fallback on errors)
-    - [ ] Add dual-storage metrics and monitoring (storage usage, consistency checks)
-    - [ ] Implement storage cleanup and garbage collection for both systems
-  - [ ] **Integration Testing**
-    - [ ] Test dual-write operations with both successful and failed scenarios
-    - [ ] Verify chunk retrieval from both primary (desync) and fallback (Waffle) storage
-    - [ ] Test storage consistency verification and repair procedures
-    - [ ] Validate performance impact of dual-storage operations
-    - [ ] Test storage backend failover and recovery scenarios
+- [ ] **Single-Tier Storage Architecture**: Implement unified storage with database metadata and aria_storage primary backend for OAuth user favorites
+  - [ ] **Database Metadata Layer**: Store user favorite metadata and references
+    - [ ] Create `user_favorites` table schema with character configuration metadata and aria_storage references
+    - [ ] Implement database storage for OAuth authenticated users (GitHub OAuth integration)
+    - [ ] Add user authentication integration with character configuration persistence
+    - [ ] Store character configuration metadata, chunk references, and user associations
+    - [ ] Add database indexing for efficient user favorite retrieval and search
+    - [ ] Maintain chunk-to-user mapping for favorite management and cleanup
+  - [ ] **Primary aria_storage Backend**: Content-addressed storage as single source of truth
+    - [ ] Store user favorites directly through aria_storage content-addressed system
+    - [ ] Use aria_storage's SHA512/256 hashing for character configuration integrity
+    - [ ] Implement chunk deduplication across users for common character patterns
+    - [ ] Enable efficient sharing of character configuration components
+    - [ ] Configure aria_storage for optimal performance and reliability
+    - [ ] Implement chunk assembly and verification within aria_storage
+  - [ ] **Optional Verification System**: golang desync client for accuracy checking
+    - [ ] Install and configure golang desync client for verification purposes
+    - [ ] Implement verification checks that compare aria_storage chunks with desync client
+    - [ ] Add verification as optional accuracy check, not required for operation
+    - [ ] Use desync client to validate chunk integrity and detect any discrepancies
+    - [ ] Log verification results for monitoring and debugging purposes
+    - [ ] Ensure system functions fully without desync client dependency
+  - [ ] **Storage Testing and Validation**: Verify single-tier storage reliability
+    - [ ] **Database Metadata Operations**: Test user favorite metadata storage and retrieval
+    - [ ] **aria_storage Content Operations**: Test character configuration storage and assembly
+    - [ ] **Verification System**: Test optional desync client accuracy checking
+    - [ ] **Character Configuration Integrity**: Verify complete attribute storage and retrieval
+    - [ ] **OAuth User Context**: Test user association and permission handling
+    - [ ] **Deduplication Efficiency**: Verify chunk sharing across users works correctly
+  - [ ] **Performance and Reliability Features**: Ensure production-ready operation
+    - [ ] **Storage Performance Monitoring**: Monitor aria_storage performance and capacity
+    - [ ] **Chunk Management**: Implement garbage collection and cleanup for unused chunks
+    - [ ] **Error Handling**: Robust error handling for storage operations
+    - [ ] **User Privacy Protection**: Ensure proper handling of OAuth user data
+    - [ ] **Backup and Recovery**: Implement backup strategies for aria_storage data
+    - [ ] **Scalability Planning**: Design for growth in user favorites and chunk storage
+  - [ ] **Integration Testing**: Validate single-tier storage with character generator demo
+    - [ ] **Character Generator Demo Integration**: Test saving/loading favorites during demo usage
+    - [ ] **OAuth User Flow Testing**: Test user authentication and character favorite persistence
+    - [ ] **Storage Write Operations**: Verify character configurations are stored via aria_storage
+    - [ ] **Retrieval Performance Testing**: Test character favorite loading speed from aria_storage
+    - [ ] **Storage Consistency**: Ensure character attributes are correctly stored and retrieved
+    - [ ] **Demo Performance Impact**: Validate minimal latency impact on character generator UX
+    - [ ] **Verification Integration**: Test optional desync client verification in demo environment
 - [ ] **Local Infrastructure Testing**: Verify Mac development environment before deployment
   - [ ] Test OpenBao functionality on macOS (secret storage and retrieval)
   - [ ] Verify CockroachDB connectivity and migration execution
