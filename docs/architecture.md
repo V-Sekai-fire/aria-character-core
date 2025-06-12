@@ -260,7 +260,7 @@ Each service is listed in boot order with dependencies, development progress, an
 
 #### **[aria_monitor](../apps/aria_monitor/)** - System Observability
 - **Dependencies:** `aria_security`, connects to most services
-- **External:** Prometheus, Grafana
+- **External:** Prometheus, LiveDashboard
 - **Test Coverage:** 0.00% (⚠️ No tests implemented)
 - **Development Status:**
   - [ ] **Monitoring & Observability** (⚠️ No Implementation)
@@ -388,7 +388,7 @@ Each service is listed in boot order with dependencies, development progress, an
   - [ ] Storage browser for asset management
   - [ ] Workflow execution monitor with real-time updates
   - [ ] System health dashboard
-- [ ] **System Monitoring** (`aria_monitor`): Production observability with Prometheus/Grafana
+- [ ] **System Monitoring** (`aria_monitor`): Production observability with Prometheus/LiveDashboard
   - [ ] Prometheus metrics collection and dashboard setup
   - [ ] LiveDashboard integration for real-time system insights
   - [ ] Error tracking and alerting system
