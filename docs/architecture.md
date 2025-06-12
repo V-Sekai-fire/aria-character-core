@@ -107,7 +107,7 @@ Each service is listed in boot order with dependencies, development progress, an
 
 #### **[aria_queue](../apps/aria_queue/)** - Background Job Processing
 - **Dependencies:** `aria_data` (Oban persistence), `aria_security` (DB credentials)
-- **External:** Oban, Redis (optional)
+- **External:** Oban
 - **Test Coverage:** 0.00% (3 tests passing - infrastructure only)
 - **Development Status:**
   - [x] **Code Quality & Infrastructure**
@@ -439,33 +439,24 @@ Each feature is developed using TDD methodology:
 
 ### **Test Commands**
 ```bash
-# Run all tests across umbrella (✅ Currently: 377 tests, 0 failures)
-mix test --cover
+# Run all tests across umbrella
+mix test.all
 
 # Run tests for specific service
 mix test apps/aria_security
 
-# Run tests with coverage reporting (individual service)
-cd apps/aria_workflow && mix test --cover
+# Run tests with coverage reporting
+mix test --cover
 
 # Quality checks (Credo, Dialyzer, etc.)
 mix quality
 ```
 
-### **Coverage Goals & Current Status**
+### **Coverage Goals**
 - **Unit Tests:** >95% line coverage per service
-  - 🎯 **Achieved:** aria_workflow (72.94%)
-  - 🔄 **In Progress:** aria_auth (35.93%), aria_engine (33.82%), aria_data (42.86%)
-  - 🚧 **Needs Work:** aria_storage (12.75%), aria_security (9.92%)
-  - ❌ **Not Started:** 6 services (0.00% coverage)
 - **Integration Tests:** Critical service interactions
-  - ✅ **Implemented:** aria_storage (casync integration), aria_engine (porcelain integration)
-  - 🔄 **Partial:** aria_workflow (command execution), aria_auth (macaroon validation)
 - **End-to-End Tests:** Complete workflow validation
-  - 🔄 **In Progress:** Character generation workflow (aria_engine)
 - **Performance Tests:** Load and stress testing
-  - ✅ **Comprehensive:** aria_storage (benchmarks, stress tests, property-based testing)
-  - 🔄 **Basic:** aria_engine (performance characteristics)
 
 ## 📈 Testing Strategy
 

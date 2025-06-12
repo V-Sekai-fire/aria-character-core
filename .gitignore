@@ -41,7 +41,6 @@ npm-debug.log
 
 cockroach-data
 postgres
-redis
 
 priv/waffle/private/uploads/
 

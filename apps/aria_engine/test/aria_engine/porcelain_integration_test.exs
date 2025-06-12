@@ -203,12 +203,12 @@ defmodule AriaEngine.PortcelainIntegrationTest do
     test "setup_dev_environment method returns correct action sequence" do
       state = State.new()
       project_path = "/tmp/dev_project"
-      services = ["postgres", "redis"]
+      services = ["postgres"]
 
       actions = WorkflowSystem.setup_dev_environment(state, [project_path, services])
 
       assert is_list(actions)
-      assert length(actions) >= 4  # base actions + service actions
+      assert length(actions) >= 3  # base actions + service actions
 
       # Check base actions
       [{:create_directory, [^project_path, %{parents: true}]},
@@ -220,7 +220,7 @@ defmodule AriaEngine.PortcelainIntegrationTest do
         _ -> false
       end)
 
-      assert length(docker_commands) == 2  # postgres + redis
+      assert length(docker_commands) == 1  # postgres only
     end
 
     test "run_tests_with_coverage method returns correct action sequence" do
