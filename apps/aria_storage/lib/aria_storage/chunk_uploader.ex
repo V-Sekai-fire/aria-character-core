@@ -107,7 +107,7 @@ defmodule AriaStorage.ChunkUploader do
     # Create a temporary file for Waffle to process
     temp_path = System.tmp_dir!() |> Path.join("chunk_#{System.unique_integer([:positive])}")
     :ok = File.write!(temp_path, data)
-    %Plug.Upload{
+    %{
       path: temp_path,
       content_type: "application/octet-stream",
       filename: Path.basename(temp_path)

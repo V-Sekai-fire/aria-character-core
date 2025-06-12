@@ -136,9 +136,7 @@ Each service is listed in boot order with dependencies, development progress, an
     - [x] Deprecated API usage updated (Logger.warn → Logger.warning)
     - [x] Test structure analysis and optimization
   - [ ] **AI Planning Systems**
-    - [ ] Goal-oriented action planning (GOAP) engine
     - [ ] GTPyhop hierarchical task planning integration
-    - [ ] Behavior tree execution
     - [ ] State management for character decisions
     - [ ] Action cost calculation and optimization
     - [ ] Multi-character coordination algorithms

@@ -6,7 +6,7 @@ defmodule AriaStorage.Chunks do
   Content-defined chunking implementation compatible with desync/casync.
 
   This module implements content-defined chunking using a rolling hash algorithm (buzhash)
-  that's fully compatible with the Go implementation of desync/casync. It uses the same 
+  that's fully compatible with the Go implementation of desync/casync. It uses the same
   boundary detection algorithm, hash table values, and chunk size calculations to produce
   identical chunking results for the same input data.
 
@@ -22,14 +22,13 @@ defmodule AriaStorage.Chunks do
   2. Detecting chunk boundaries when hash % discriminator == discriminator - 1
   3. Creating chunks according to defined min/avg/max size constraints
   4. Calculating a SHA512/256 hash for each chunk as its unique ID
-  - Chunk assembly and file reconstruction
-  - Parallel chunking for performance
   """
 
   alias AriaStorage.Index
   alias AriaStorage.Utils
   import Bitwise
 
+  # Default chunk sizes - these can be overridden when calling create_chunks/2
   @default_min_chunk_size 16 * 1024      # 16KB
   @default_avg_chunk_size 64 * 1024      # 64KB
   @default_max_chunk_size 256 * 1024     # 256KB
@@ -136,16 +135,16 @@ defmodule AriaStorage.Chunks do
   """
   @doc """
   Calculates a unique chunk ID using SHA512/256 hash.
-  
+
   This follows the same algorithm as desync:
   1. Computes the full SHA512 hash of the chunk data
   2. Takes the first 32 bytes (256 bits) of the hash as the chunk ID
-  
+
   This is equivalent to SHA512/256 as defined in FIPS 180-4.
-  
+
   ## Parameters
     - data: Binary data to hash
-    
+
   ## Returns
     - 32-byte binary representing the SHA512/256 hash
   """
@@ -156,14 +155,14 @@ defmodule AriaStorage.Chunks do
 
   @doc """
   Compresses chunk data using the specified compression algorithm.
-  
+
   Supports zstd compression (default) and no compression. The compressed
   data format includes a small header indicating the compression algorithm used.
-  
+
   ## Parameters
     - data: Binary data to compress
     - algorithm: Compression algorithm to use (:zstd, :none)
-    
+
   ## Returns
     - {:ok, binary} - Successfully compressed data with header
     - {:error, :compression_not_available} - Compression algorithm not available
@@ -196,11 +195,11 @@ defmodule AriaStorage.Chunks do
   """
   @doc """
   Decompresses chunk data that was previously compressed with compress_chunk/2.
-  
+
   ## Parameters
     - compressed_data: Binary data to decompress
     - algorithm: Compression algorithm used (:zstd, :none)
-    
+
   ## Returns
     - {:ok, binary} - Successfully decompressed data
     - {:error, :compression_not_available} - Decompression algorithm not available
@@ -230,7 +229,7 @@ defmodule AriaStorage.Chunks do
   end
 
   # Rolling hash chunking implementation (based on desync/buzhash)
-  
+
   # Buzhash hash table (from desync)
   @hash_table [
     0x458be752, 0xc10748cc, 0xfbbcdbb8, 0x6ded5b68,
@@ -299,9 +298,23 @@ defmodule AriaStorage.Chunks do
     0x7bf7cabc, 0xf9c18d66, 0x593ade65, 0xd95ddf11
   ]
 
+  @doc """
+  Test function to expose buzhash calculation for debugging.
+  """
+  def calculate_buzhash_test(window_data) do
+    calculate_buzhash(window_data)
+  end
+
+  @doc """
+  Test function to expose buzhash update for debugging.
+  """
+  def update_buzhash_test(hash, out_byte, in_byte) do
+    update_buzhash(hash, out_byte, in_byte)
+  end
+
   defp create_rolling_hash_chunks(file_path, min_size, avg_size, max_size, compression) do
     discriminator = discriminator_from_avg(avg_size)
-    
+
     case File.open(file_path, [:read, :binary]) do
       {:ok, file} ->
         try do
@@ -338,130 +351,135 @@ defmodule AriaStorage.Chunks do
 
   @doc """
   Finds all chunks in a binary data using the rolling hash algorithm.
-  
+
   This function is exported for testing and verification purposes.
-  
+
   ## Parameters
     - data: Binary data to chunk
     - min_size: Minimum chunk size
     - max_size: Maximum chunk size
     - discriminator: Boundary discriminator value
     - compression: Compression algorithm to use for chunks
-  
+
   ## Returns
     - List of chunk structs
   """
   def find_all_chunks_in_data(data, min_size, max_size, discriminator, compression) do
-    find_chunks_with_rolling_hash_fixed(data, min_size, max_size, discriminator, compression, 0, 0, [])
+    find_chunks_recursively(data, min_size, max_size, discriminator, compression, 0, [])
   end
 
-  defp find_chunks_with_rolling_hash_fixed(data, _min_size, _max_size, _discriminator, compression, start_offset, pos, acc) when pos >= byte_size(data) do
-    # Reached end of data - create final chunk if there's remaining data
-    if pos > start_offset do
-      remaining_data = binary_part(data, start_offset, pos - start_offset)
-      case create_chunk_from_data(remaining_data, start_offset, compression) do
-        {:ok, chunk} -> Enum.reverse([chunk | acc])
-        {:error, _} -> Enum.reverse(acc)
-      end
-    else
-      Enum.reverse(acc)
-    end
+  # Helper function to find chunks recursively with proper offsets
+  defp find_chunks_recursively(data, _min_size, _max_size, _discriminator, _compression, current_offset, chunks)
+       when current_offset >= byte_size(data) do
+    # We've processed all the data, return the chunks in original order
+    Enum.reverse(chunks)
   end
 
-  defp find_chunks_with_rolling_hash_fixed(data, min_size, max_size, discriminator, compression, start_offset, _pos, acc) do
-    remaining = byte_size(data) - start_offset
-    
-    if remaining <= min_size do
+  defp find_chunks_recursively(data, min_size, max_size, discriminator, compression, current_offset, chunks) do
+    remaining_size = byte_size(data) - current_offset
+
+    if remaining_size <= min_size do
       # Create final chunk with remaining data
-      final_data = binary_part(data, start_offset, remaining)
-      case create_chunk_from_data(final_data, start_offset, compression) do
-        {:ok, chunk} -> Enum.reverse([chunk | acc])
-        {:error, _} -> Enum.reverse(acc)
+      chunk_data = binary_part(data, current_offset, remaining_size)
+      case create_chunk_from_data(chunk_data, current_offset, compression) do
+        {:ok, chunk} -> Enum.reverse([chunk | chunks])
+        _ -> Enum.reverse(chunks)
       end
     else
       # Find next chunk boundary using rolling hash
-      chunk_end = find_chunk_boundary_fixed(data, start_offset, min_size, max_size, discriminator)
-      chunk_size = chunk_end - start_offset
-      chunk_data = binary_part(data, start_offset, chunk_size)
-      
-      case create_chunk_from_data(chunk_data, start_offset, compression) do
+      chunk_end = find_chunk_boundary(data, current_offset, min_size, max_size, discriminator)
+      chunk_size = chunk_end - current_offset
+      chunk_data = binary_part(data, current_offset, chunk_size)
+
+      case create_chunk_from_data(chunk_data, current_offset, compression) do
         {:ok, chunk} ->
-          find_chunks_with_rolling_hash_fixed(data, min_size, max_size, discriminator, compression, chunk_end, chunk_end, [chunk | acc])
-        {:error, _} ->
-          find_chunks_with_rolling_hash_fixed(data, min_size, max_size, discriminator, compression, chunk_end, chunk_end, acc)
+          find_chunks_recursively(data, min_size, max_size, discriminator, compression, chunk_end, [chunk | chunks])
+        _ ->
+          find_chunks_recursively(data, min_size, max_size, discriminator, compression, chunk_end, chunks)
       end
     end
   end
 
-  defp find_chunk_boundary_fixed(data, start_pos, min_size, max_size, discriminator) do
+  defp find_chunk_boundary(data, start_pos, min_size, max_size, discriminator) do
     data_size = byte_size(data)
     min_end = start_pos + min_size
     max_end = min(start_pos + max_size, data_size)
-    
+
     if min_end >= data_size do
-      # Not enough data for min chunk size
       data_size
     else
-      # Start rolling hash from min_end position
       if min_end + @rolling_hash_window_size > data_size do
-        # Not enough data for rolling hash window
         data_size
       else
-        # Initialize rolling hash window at min_end
-        window_data = binary_part(data, min_end, @rolling_hash_window_size)
-        hash_value = calculate_buzhash(window_data)
-        
-        find_boundary_with_buzhash(data, min_end + @rolling_hash_window_size, max_end, hash_value, discriminator)
+        # In desync, the rolling hash starts from the minimum position
+        # and we look for boundaries byte by byte
+        find_boundary_starting_at(data, min_end, max_end, discriminator)
       end
     end
   end
 
-  defp find_boundary_with_buzhash(_data, pos, max_end, _hash_value, _discriminator) when pos >= max_end do
-    # Reached max size without finding boundary
+  # Start the rolling hash algorithm from the minimum position
+  defp find_boundary_starting_at(data, start_pos, max_end, discriminator) do
+    data_size = byte_size(data)
+    
+    # In desync, we need to have a full window before we can start checking for boundaries
+    # The window ends at start_pos, so it starts at (start_pos - window_size + 1)
+    window_start = start_pos - @rolling_hash_window_size + 1
+    
+    if window_start < 0 or start_pos >= data_size do
+      # Can't form a proper window, return max_end
+      max_end
+    else
+      # Get the initial window ending at start_pos
+      window_data = binary_part(data, window_start, @rolling_hash_window_size)
+      initial_hash = calculate_buzhash(window_data)
+      
+      # Check if the current position (start_pos) is already a boundary
+      if rem(initial_hash, discriminator) == discriminator - 1 do
+        start_pos
+      else
+        # Continue rolling the hash forward
+        rolling_search_v2(data, start_pos + 1, max_end, initial_hash, discriminator)
+      end
+    end
+  end
+
+  # Continue the rolling hash search with corrected positioning
+  defp rolling_search_v2(data, pos, max_end, hash, discriminator) when pos > max_end or pos >= byte_size(data) do
     max_end
   end
 
-  defp find_boundary_with_buzhash(data, pos, _max_end, _hash_value, _discriminator) when pos >= byte_size(data) do
-    # Reached end of data
-    byte_size(data)
-  end
-
-  defp find_boundary_with_buzhash(data, pos, max_end, hash_value, discriminator) do
-    # Check if we found a boundary at current position
-    # Use modulo operation as desync does: hash % discriminator == discriminator - 1
-    if rem(hash_value, discriminator) == discriminator - 1 do
+  defp rolling_search_v2(data, pos, max_end, hash, discriminator) do
+    # Check if current position is a boundary
+    if rem(hash, discriminator) == discriminator - 1 do
       pos
     else
-      # Update rolling hash for next position
-      if pos >= byte_size(data) do
-        byte_size(data)
+      # Roll the hash forward by one position
+      # The window currently ends at pos, next window will end at pos+1
+      # Current window: [pos - window_size + 1 .. pos]
+      # Next window:    [pos - window_size + 2 .. pos + 1]
+      
+      if pos + 1 > max_end or pos + 1 >= byte_size(data) do
+        max_end
       else
-        # Get bytes for rolling hash update
-        out_pos = pos - @rolling_hash_window_size
-        out_byte = :binary.at(data, out_pos)
-        in_byte = :binary.at(data, pos)
+        # Get the bytes that are leaving and entering the window
+        out_byte = :binary.at(data, pos - @rolling_hash_window_size + 1)  # Byte leaving the window (old start)
+        in_byte = :binary.at(data, pos + 1)                              # Byte entering the window (new end)
         
-        # Update hash using buzhash algorithm
-        new_hash = update_buzhash(hash_value, out_byte, in_byte)
-        find_boundary_with_buzhash(data, pos + 1, max_end, new_hash, discriminator)
+        # Update the hash
+        new_hash = update_buzhash(hash, out_byte, in_byte)
+        rolling_search_v2(data, pos + 1, max_end, new_hash, discriminator)
       end
     end
   end
 
-    # Calculate the initial buzhash value for a given data window.
-  
-  # This implements the buzhash algorithm as defined by the original algorithm
-  # and matches the implementation in desync/casync. The hash is calculated over
-  # a fixed-size window (default 64 bytes) using a precomputed hash table of
-  # random 32-bit values.
-  #
-  # Parameters:
-  #   - window_data: Binary data (should be exactly @rolling_hash_window_size bytes)
-  #
-  # Returns:
-  #   - 32-bit integer hash value
-  defp calculate_buzhash(window_data) do
-    window_data
+
+
+
+
+  # Calculate buzhash same as desync
+  defp calculate_buzhash(window) when byte_size(window) == @rolling_hash_window_size do
+    window
     |> :binary.bin_to_list()
     |> Enum.with_index()
     |> Enum.reduce(0, fn {byte, idx}, acc ->
@@ -472,8 +490,12 @@ defmodule AriaStorage.Chunks do
     end)
   end
 
+
+
+
+
   # Updates an existing buzhash value by removing one byte and adding another.
-  
+
   # This efficiently updates the rolling hash when the window slides forward:
   # 1. Rotate the entire hash left by 1 bit
   # 2. XOR out the influence of the byte that left the window
@@ -489,13 +511,13 @@ defmodule AriaStorage.Chunks do
   defp update_buzhash(hash, out_byte, in_byte) do
     out_table_value = Enum.at(@hash_table, out_byte)
     in_table_value = Enum.at(@hash_table, in_byte)
-    
+
     # Roll hash left by 1
     rolled_hash = rol32(hash, 1)
-    
+
     # Remove influence of outgoing byte (rolled by window size)
     rolled_out = rol32(out_table_value, @rolling_hash_window_size)
-    
+
     # Add influence of incoming byte and combine
     rolled_hash |> Bitwise.bxor(rolled_out) |> Bitwise.bxor(in_table_value)
   end
@@ -508,14 +530,19 @@ defmodule AriaStorage.Chunks do
 
   @doc """
   Calculates the discriminator value from the average chunk size.
-  
+
   This uses the exact formula from desync/casync to ensure compatible chunking.
   The discriminator determines boundary frequency and therefore average chunk size.
+
+  From desync Go code:
+  `math.Round(float64(avgChunkSize) / (1.0 + float64(-0.0000001428888521*avgChunkSize+1.3323751522)))`
+
   Exported for testing purposes.
   """
   def discriminator_from_avg(avg) do
-    # Match desync's discriminator calculation exactly
-    round(avg / (-1.42888852e-7 * avg + 1.33237515))
+    # Implement the exact formula from desync/casync for all chunk sizes
+    # The math.Round in Go is equivalent to Elixir's round/1 function
+    round(avg / (1.0 + (-0.0000001428888521 * avg + 1.3323751522)))
   end
 
   defp create_chunk_from_data(data, offset, compression) do
