@@ -336,8 +336,22 @@ defmodule AriaStorage.Chunks do
     end
   end
 
-  # Add the missing function that was referenced but not implemented
-  defp find_all_chunks_in_data(data, min_size, max_size, discriminator, compression) do
+  @doc """
+  Finds all chunks in a binary data using the rolling hash algorithm.
+  
+  This function is exported for testing and verification purposes.
+  
+  ## Parameters
+    - data: Binary data to chunk
+    - min_size: Minimum chunk size
+    - max_size: Maximum chunk size
+    - discriminator: Boundary discriminator value
+    - compression: Compression algorithm to use for chunks
+  
+  ## Returns
+    - List of chunk structs
+  """
+  def find_all_chunks_in_data(data, min_size, max_size, discriminator, compression) do
     find_chunks_with_rolling_hash_fixed(data, min_size, max_size, discriminator, compression, 0, 0, [])
   end
 
@@ -492,7 +506,14 @@ defmodule AriaStorage.Chunks do
     ((value <<< shift) ||| (value >>> (32 - shift))) &&& mask32
   end
 
-  defp discriminator_from_avg(avg) do
+  @doc """
+  Calculates the discriminator value from the average chunk size.
+  
+  This uses the exact formula from desync/casync to ensure compatible chunking.
+  The discriminator determines boundary frequency and therefore average chunk size.
+  Exported for testing purposes.
+  """
+  def discriminator_from_avg(avg) do
     # Match desync's discriminator calculation exactly
     round(avg / (-1.42888852e-7 * avg + 1.33237515))
   end
