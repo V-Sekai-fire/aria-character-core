@@ -41,9 +41,8 @@ defmodule AriaStorage.ChunksVerificationTest do
         "Chunk count mismatch: expected #{length(expected_chunks)}, got #{length(our_chunks)}"
 
       # Verify chunk boundaries are contiguous
-      prev_offset = 0
-
-      Enum.with_index(our_chunks) |> Enum.each(fn {chunk, i} ->
+      Enum.with_index(our_chunks) 
+      |> Enum.reduce(0, fn {chunk, i}, prev_offset ->
         expected_chunk = Enum.at(expected_chunks, i)
 
         # Check chunk is contiguous with previous
@@ -58,7 +57,7 @@ defmodule AriaStorage.ChunksVerificationTest do
         assert chunk.size == expected_chunk.size,
           "Chunk #{i + 1} size #{chunk.size} doesn't match expected #{expected_chunk.size}"
 
-        prev_offset = prev_offset + chunk.size
+        prev_offset + chunk.size
       end)
 
       # Verify total size matches input
