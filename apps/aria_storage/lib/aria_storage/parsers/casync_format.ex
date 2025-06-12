@@ -744,12 +744,17 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     items
     |> Enum.with_index()
     |> Enum.map(fn {item, index} ->
+      # Previous offset is the end of the previous chunk (or 0 for first chunk)
       previous_offset = if index == 0, do: 0, else: Enum.at(items, index - 1).offset
+      
+      # Current item.offset is the END of this chunk (cumulative)
+      # So chunk size = current_end - previous_end
+      chunk_size = item.offset - previous_offset
 
       %{
         chunk_id: item.chunk_id,
-        offset: previous_offset,
-        size: item.offset - previous_offset,
+        offset: previous_offset,  # Start offset of this chunk
+        size: chunk_size,         # Size = end - start
         flags: 0
       }
     end)
