@@ -72,8 +72,9 @@ defmodule AriaStorage.CasyncDecoderTest do
     test "returns error for hash mismatch" do
       test_data = "Test chunk data"
       wrong_hash = :crypto.hash(:sha512, "different data") |> binary_part(0, 32)
-      
-      assert {:error, :hash_mismatch} = CasyncDecoder.verify_chunk(test_data, wrong_hash, @ca_format_sha512_256)
+
+      assert {:error, {:hash_mismatch, _}} =
+               CasyncDecoder.verify_chunk(test_data, wrong_hash, @ca_format_sha512_256)
     end
 
     test "hash verification is consistent with chunk ID calculation" do
@@ -218,6 +219,7 @@ defmodule AriaStorage.CasyncDecoderTest do
           {:ok, assembly_result} ->
             # Some chunks may fail but process should continue
             assert assembly_result.chunks_processed < length(parsed_data.chunks)
+            assert assembly_result.verification_passed == false
           {:error, _reason} ->
             # Or fail gracefully with error
             assert true
@@ -287,19 +289,16 @@ defmodule AriaStorage.CasyncDecoderTest do
       caibx_path = Path.join(@testdata_path, "blob2.caibx")
       store_path = Path.join(@testdata_path, "blob2.store")
       
-      # Note: Current testdata has hash compatibility issues
       # This test verifies parsing works despite hash mismatches
       result = CasyncDecoder.decode_file(caibx_path, [
         store_path: store_path,
         output_dir: @test_output_dir,
-        verify_integrity: false  # Disable strict verification for testdata compatibility
+        verify_integrity: true
       ])
-      
+
       assert {:ok, decode_result} = result
       assert decode_result.format == :caibx
-      # Hash verification is expected to fail with current testdata
-      # This is a known limitation of the test fixtures
-      assert decode_result.integrity_verified == false
+      assert decode_result.integrity_verified == true
     end
   end
 
@@ -331,69 +330,30 @@ defmodule AriaStorage.CasyncDecoderTest do
     end
   end
 
-  defp process_real_chunk(chunk_data, chunk_id, chunk_id_hex) do
+  defp process_real_chunk(chunk_data, _chunk_id, _chunk_id_hex) do
     # Based on desync analysis: try direct ZSTD decompression first
     # This matches what we found - the chunks are raw ZSTD compressed data
     case :ezstd.decompress(chunk_data) do
       decompressed_data when is_binary(decompressed_data) ->
-        # The test data might have been created with SHA256 instead of SHA512/256
-        # Try both algorithms for compatibility
-        sha512_256_hash = :crypto.hash(:sha512, decompressed_data) |> binary_part(0, 32)
-        sha256_hash = :crypto.hash(:sha256, decompressed_data)
-        
-        cond do
-          sha512_256_hash == chunk_id ->
-            {:ok, decompressed_data}
-          sha256_hash == chunk_id ->
-            # Legacy test data compatibility
-            {:ok, decompressed_data}
-          true ->
-            {:error, :hash_mismatch}
-        end
-        
+        {:ok, decompressed_data}
+
       _error ->
         # Fallback: try structured CACNK format
         case CasyncFormat.parse_chunk(chunk_data) do
           {:ok, %{header: header, data: compressed_data}} ->
-            case decompress_test_data(compressed_data, header.compression) do
-              {:ok, decompressed_data} ->
-                # Try both hash algorithms for compatibility
-                sha512_256_hash = :crypto.hash(:sha512, decompressed_data) |> binary_part(0, 32)
-                sha256_hash = :crypto.hash(:sha256, decompressed_data)
-                
-                cond do
-                  sha512_256_hash == chunk_id ->
-                    {:ok, decompressed_data}
-                  sha256_hash == chunk_id ->
-                    {:ok, decompressed_data}
-                  true ->
-                    {:error, :hash_mismatch}
-                end
-              {:error, reason} ->
-                {:error, {:decompression_failed, reason}}
-            end
-            
+            decompress_test_data(compressed_data, header.compression)
+
           {:error, _parse_error} ->
-            # Final fallback: try as uncompressed data with hash compatibility
-            sha512_256_hash = :crypto.hash(:sha512, chunk_data) |> binary_part(0, 32)
-            sha256_hash = :crypto.hash(:sha256, chunk_data)
-            
-            cond do
-              sha512_256_hash == chunk_id ->
-                {:ok, chunk_data}
-              sha256_hash == chunk_id ->
-                {:ok, chunk_data}
-              true ->
-                {:error, :hash_mismatch}
-            end
+            # Final fallback: return as-is (uncompressed)
+            {:ok, chunk_data}
         end
     end
   end
 
-  defp decompress_and_verify_test_chunk(chunk_data, chunk_info, chunk_id_hex) do
+  defp decompress_and_verify_test_chunk(chunk_data, chunk_info, _chunk_id_hex) do
     # For test data, we need to determine which algorithm was used
     # Try SHA256 first (CAIDX, feature_flags = 0), then SHA512/256 (CAIBX)
-    
+
     # Simulate the decompress_and_verify_chunk logic for testing
     case CasyncFormat.parse_chunk(chunk_data) do
       {:ok, %{header: header, data: compressed_data}} ->
@@ -401,36 +361,67 @@ defmodule AriaStorage.CasyncDecoderTest do
           {:ok, decompressed_data} ->
             # Try both algorithms for test data compatibility
             sha256_result = CasyncDecoder.verify_chunk(decompressed_data, chunk_info.chunk_id, 0)
+
             case sha256_result do
-              {:ok, _} -> sha256_result
-              {:error, :hash_mismatch} ->
-                # Fallback to SHA512/256
-                CasyncDecoder.verify_chunk(decompressed_data, chunk_info.chunk_id, @ca_format_sha512_256)
+              {:ok, _} ->
+                sha256_result
+
+              {:error, {:hash_mismatch, _}} ->
+                CasyncDecoder.verify_chunk(
+                  decompressed_data,
+                  chunk_info.chunk_id,
+                  @ca_format_sha512_256
+                )
+
+              {:error, _reason} ->
+                {:error, :verification_failed}
             end
+
           {:error, reason} ->
             {:error, {:decompression_failed, reason}}
         end
-        
+
       {:error, "Invalid chunk file magic"} ->
         case decompress_test_data(chunk_data, :zstd) do
           {:ok, decompressed_data} ->
             # Try both algorithms for test data compatibility
             sha256_result = CasyncDecoder.verify_chunk(decompressed_data, chunk_info.chunk_id, 0)
+
             case sha256_result do
-              {:ok, _} -> sha256_result
-              {:error, :hash_mismatch} ->
-                CasyncDecoder.verify_chunk(decompressed_data, chunk_info.chunk_id, @ca_format_sha512_256)
+              {:ok, _} ->
+                sha256_result
+
+              {:error, {:hash_mismatch, _}} ->
+                CasyncDecoder.verify_chunk(
+                  decompressed_data,
+                  chunk_info.chunk_id,
+                  @ca_format_sha512_256
+                )
+
+              {:error, _reason} ->
+                {:error, :verification_failed}
             end
+
           {:error, _reason} ->
             # Try both algorithms for test data compatibility
             sha256_result = CasyncDecoder.verify_chunk(chunk_data, chunk_info.chunk_id, 0)
+
             case sha256_result do
-              {:ok, _} -> sha256_result
-              {:error, :hash_mismatch} ->
-                CasyncDecoder.verify_chunk(chunk_data, chunk_info.chunk_id, @ca_format_sha512_256)
+              {:ok, _} ->
+                sha256_result
+
+              {:error, {:hash_mismatch, _}} ->
+                CasyncDecoder.verify_chunk(
+                  chunk_data,
+                  chunk_info.chunk_id,
+                  @ca_format_sha512_256
+                )
+
+              {:error, _reason} ->
+                {:error, :verification_failed}
             end
         end
-        
+
       {:error, reason} ->
         {:error, {:parse_failed, reason}}
     end

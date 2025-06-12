@@ -165,16 +165,19 @@ defmodule AriaStorage.CasyncDecoder do
   """
   @spec verify_chunk(binary(), binary(), integer()) :: {:ok, binary()} | {:error, any()}
   def verify_chunk(chunk_data, expected_hash, feature_flags) do
-    calculated_hash = if (feature_flags &&& @ca_format_sha512_256) != 0 do
-      :crypto.hash(:sha512, chunk_data) |> binary_part(0, 32)  # SHA512/256
-    else
-      :crypto.hash(:sha256, chunk_data)  # SHA256
-    end
-    
+    calculated_hash =
+      if (feature_flags &&& @ca_format_sha512_256) != 0 do
+        # Use SHA512/256 for CAIBX format
+        :crypto.hash(:sha512, chunk_data) |> binary_part(0, 32)
+      else
+        # Default to SHA256 for CAIDX format
+        :crypto.hash(:sha256, chunk_data)
+      end
+
     if calculated_hash == expected_hash do
       {:ok, chunk_data}
     else
-      {:error, :hash_mismatch}
+      {:error, {:hash_mismatch, %{id: expected_hash, sum: calculated_hash}}}
     end
   end
 

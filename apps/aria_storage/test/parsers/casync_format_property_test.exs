@@ -88,8 +88,16 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
         # Generate a valid catar structure
         binary_data = generate_valid_catar(entry_types)
 
-        # CATAR parsing is not yet implemented - should return appropriate error
-        assert {:error, "CATAR format parsing not yet implemented"} = CasyncFormat.parse_archive(binary_data)
+        assert {
+              :ok,
+              %{
+                format: :catar,
+                files: [],
+                total_size: 64,
+                elements: [%{size: 64, type: :entry, mode: 493, gid: 1000, mtime: 1640995200, uid: 1000, feature_flags: 0}],
+                directories: []
+              }
+            } = CasyncFormat.parse_archive(binary_data)
       end
     end
 

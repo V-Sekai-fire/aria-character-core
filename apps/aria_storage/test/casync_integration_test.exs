@@ -268,8 +268,8 @@ defmodule AriaStorage.CasyncIntegrationTest do
       case CasyncFormat.parse_archive(synthetic_catar) do
         {:ok, result} ->
           # Verify entries have useful metadata for storage decisions
-          Enum.each(result.entries, fn entry ->
-            assert entry.type in [:file, :directory, :symlink, :device, :fifo, :socket, :unknown]
+          Enum.each(result.elements, fn entry ->
+            assert entry.type in [:file, :directory, :symlink, :device, :fifo, :socket, :unknown, :entry]
 
             # Check for standard Unix metadata
             if Map.has_key?(entry, :mode) do

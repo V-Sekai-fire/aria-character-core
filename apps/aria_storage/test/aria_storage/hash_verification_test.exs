@@ -10,7 +10,9 @@ defmodule AriaStorage.HashVerificationTest do
   use ExUnit.Case, async: true
   alias AriaStorage.Chunks
   alias AriaStorage.CasyncDecoder
-  
+
+  @ca_format_sha512_256 0x2000000000000000
+
   describe "SHA512/256 hash consistency" do
     test "chunk ID calculation uses SHA512/256" do
       test_data = "Test data for hash verification"
@@ -71,14 +73,16 @@ defmodule AriaStorage.HashVerificationTest do
       test_data = "Verification test data"
       expected_hash = Chunks.calculate_chunk_id(test_data)
       
-      assert {:ok, ^test_data} = CasyncDecoder.verify_chunk(test_data, expected_hash)
+      assert {:ok, ^test_data} =
+               CasyncDecoder.verify_chunk(test_data, expected_hash, @ca_format_sha512_256)
     end
     
     test "rejects incorrect hash" do
       test_data = "Test data"
       wrong_hash = Chunks.calculate_chunk_id("Different data")
       
-      assert {:error, :hash_mismatch} = CasyncDecoder.verify_chunk(test_data, wrong_hash)
+      assert {:error, {:hash_mismatch, _}} =
+               CasyncDecoder.verify_chunk(test_data, wrong_hash, @ca_format_sha512_256)
     end
     
     test "verification is consistent with chunk ID calculation" do
@@ -88,7 +92,8 @@ defmodule AriaStorage.HashVerificationTest do
       chunk_id = Chunks.calculate_chunk_id(test_data)
       
       # Verification should succeed with the same hash function
-      assert {:ok, ^test_data} = CasyncDecoder.verify_chunk(test_data, chunk_id)
+      assert {:ok, ^test_data} =
+               CasyncDecoder.verify_chunk(test_data, chunk_id, @ca_format_sha512_256)
     end
     
     test "handles binary data correctly" do
@@ -96,7 +101,8 @@ defmodule AriaStorage.HashVerificationTest do
       binary_data = <<0, 1, 2, 3, 255, 254, 253, 252>>
       expected_hash = Chunks.calculate_chunk_id(binary_data)
       
-      assert {:ok, ^binary_data} = CasyncDecoder.verify_chunk(binary_data, expected_hash)
+      assert {:ok, ^binary_data} =
+               CasyncDecoder.verify_chunk(binary_data, expected_hash, @ca_format_sha512_256)
     end
     
     test "handles large data efficiently" do
@@ -105,7 +111,7 @@ defmodule AriaStorage.HashVerificationTest do
       expected_hash = Chunks.calculate_chunk_id(large_data)
       
       {time_microseconds, result} = :timer.tc(fn ->
-        CasyncDecoder.verify_chunk(large_data, expected_hash)
+        CasyncDecoder.verify_chunk(large_data, expected_hash, @ca_format_sha512_256)
       end)
       
       assert {:ok, ^large_data} = result
@@ -152,21 +158,23 @@ defmodule AriaStorage.HashVerificationTest do
       malformed_hash = "not a valid hash"
       
       # This should return an error, not raise an exception
-      assert {:error, :hash_mismatch} = CasyncDecoder.verify_chunk(test_data, malformed_hash)
+      assert {:error, {:hash_mismatch, _}} =
+               CasyncDecoder.verify_chunk(test_data, malformed_hash, @ca_format_sha512_256)
     end
     
     test "handles wrong hash length" do
       test_data = "Wrong length test"
       short_hash = <<1, 2, 3, 4>>  # Too short
       
-      assert {:error, :hash_mismatch} = CasyncDecoder.verify_chunk(test_data, short_hash)
+      assert {:error, {:hash_mismatch, _}} =
+               CasyncDecoder.verify_chunk(test_data, short_hash, @ca_format_sha512_256)
     end
     
     test "handles nil data" do
       valid_hash = Chunks.calculate_chunk_id("test")
       
       assert_raise ArgumentError, fn ->
-        CasyncDecoder.verify_chunk(nil, valid_hash)
+        CasyncDecoder.verify_chunk(nil, valid_hash, @ca_format_sha512_256)
       end
     end
   end
@@ -179,7 +187,8 @@ defmodule AriaStorage.HashVerificationTest do
       chunk_id = Chunks.calculate_chunk_id(test_data)
       
       # CasyncDecoder verification should succeed
-      assert {:ok, ^test_data} = CasyncDecoder.verify_chunk(test_data, chunk_id)
+      assert {:ok, ^test_data} =
+               CasyncDecoder.verify_chunk(test_data, chunk_id, @ca_format_sha512_256)
       
       # Create actual chunk and verify its ID
       chunks = Chunks.find_all_chunks_in_data(test_data, 1, 1000, 100, :none)
@@ -188,7 +197,8 @@ defmodule AriaStorage.HashVerificationTest do
       assert chunk.id == chunk_id, "Chunk creation should use same hash function"
       
       # Verify the chunk data against its stored ID
-      assert {:ok, ^test_data} = CasyncDecoder.verify_chunk(chunk.data, chunk.id)
+      assert {:ok, ^test_data} =
+               CasyncDecoder.verify_chunk(chunk.data, chunk.id, @ca_format_sha512_256)
     end
     
     test "compression doesn't affect hash calculation" do
