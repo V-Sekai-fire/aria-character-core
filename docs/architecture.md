@@ -380,6 +380,10 @@ Each service is listed in boot order with dependencies, development progress, an
     - [ ] Create Phoenix plug for automatic macaroon token verification from cookies
     - [ ] Implement GitHub OAuth callback to generate and set macaroon cookies
     - [ ] Add cookie-based user identification for LiveView sessions
+    - [ ] **Character Generator Storage Strategy**: 
+      - [ ] **Authenticated Users**: Database storage with OAuth user favorites via single-tier aria_storage backend
+      - [ ] **Unauthenticated Users**: Browser `localStorage` with macaroon-signed checksums (character config ~6-12KB exceeds 4KB cookie limit)
+      - [ ] **Preset References**: Compressed cookie storage for preset IDs (~50-100 bytes) with server-side expansion
     - [ ] Configure cookie security settings (HTTP-only, Secure, SameSite protection)
     - [ ] Test macaroon cookie authentication flow with character generator demo
   - [ ] **Interactive Slider Controls**: Port test sliders to LiveView components
