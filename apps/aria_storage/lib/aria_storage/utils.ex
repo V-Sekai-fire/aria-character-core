@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.Utils do
   def calculate_index_checksum(chunks) do
     chunk_ids = Enum.map(chunks, & &1.id)

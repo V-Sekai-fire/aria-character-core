@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.ChunksVerificationTest do
   @moduledoc """
   Integration test for verifying our chunking implementation matches desync/casync exactly.

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.RollingHashTest do
   @moduledoc """
   Comprehensive test suite for rolling hash functionality in chunking algorithm.

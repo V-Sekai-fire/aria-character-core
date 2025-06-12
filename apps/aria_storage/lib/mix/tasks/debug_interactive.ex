@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Mix.Tasks.CasyncDebugInteractive do
   @moduledoc """
   Interactive Mix task for debugging casync files parser.
