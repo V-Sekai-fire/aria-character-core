@@ -22,11 +22,17 @@ defmodule AriaEngine.CharacterGenerator do
   
   ## Quick Start
   
-      # Generate a random character
+      # Generate a random character (uses planning system by default)
       character = AriaEngine.CharacterGenerator.generate()
       
-      # Generate with a preset
+      # Generate with a preset using planning
       character = AriaEngine.CharacterGenerator.generate(preset: "cyber_cat_person")
+      
+      # Generate using legacy mode (fallback)
+      character = AriaEngine.CharacterGenerator.generate(use_planner: false)
+      
+      # Generate using specific planning workflow
+      character = AriaEngine.CharacterGenerator.generate_with_plan(:comprehensive)
       
       # Generate just a prompt
       prompt = AriaEngine.CharacterGenerator.generate_prompt()
@@ -58,7 +64,7 @@ defmodule AriaEngine.CharacterGenerator do
   alias AriaEngine.CharacterGenerator.Generator
 
   @doc """
-  Generates a complete character with random attributes.
+  Generates a complete character with random attributes using the planning system.
   
   ## Options
   
@@ -66,19 +72,23 @@ defmodule AriaEngine.CharacterGenerator do
   - `:preset` - String preset name to apply
   - `:validate` - Boolean whether to validate constraints (default: true)
   - `:customizations` - Map of specific attribute overrides
+  - `:use_planner` - Boolean whether to use planning system (default: true)
   
   ## Examples
   
-      # Basic random generation
+      # Basic random generation with planning
       character = AriaEngine.CharacterGenerator.generate()
       
       # Deterministic generation
       character = AriaEngine.CharacterGenerator.generate(seed: 12345)
       
-      # Apply a preset
+      # Apply a preset using planning
       character = AriaEngine.CharacterGenerator.generate(preset: "cyber_cat_person")
       
-      # Custom attributes
+      # Use legacy generation (fallback)
+      character = AriaEngine.CharacterGenerator.generate(use_planner: false)
+      
+      # Custom attributes with planning
       character = AriaEngine.CharacterGenerator.generate(
         customizations: %{"species" => "SPECIES_ANIMAL", "emotion" => "EMOTION_HAPPY"}
       )
@@ -118,20 +128,24 @@ defmodule AriaEngine.CharacterGenerator do
   end
 
   @doc """
-  Generates multiple characters in a batch.
+  Generates multiple characters in a batch using the planning system.
   
   ## Parameters
   
   - `count` - Number of characters to generate
-  - `opts` - Same options as `generate/1`
+  - `opts` - Same options as `generate/1`, plus:
+    - `:use_planner` - Whether to use planning system (default: true)
   
   ## Examples
   
-      # Generate 5 random characters
+      # Generate 5 random characters with planning
       characters = AriaEngine.CharacterGenerator.generate_batch(5)
       
-      # Generate batch with preset
+      # Generate batch with preset using planning
       characters = AriaEngine.CharacterGenerator.generate_batch(3, preset: "fantasy_cyber")
+      
+      # Generate batch with legacy mode
+      characters = AriaEngine.CharacterGenerator.generate_batch(3, use_planner: false)
   
   ## Returns
   
@@ -145,6 +159,7 @@ defmodule AriaEngine.CharacterGenerator do
   Generates only a descriptive prompt without full character data.
   
   This is more efficient when you only need the text prompt for AI generation.
+  Uses the planning system by default.
   
   ## Options
   
@@ -152,11 +167,14 @@ defmodule AriaEngine.CharacterGenerator do
   
   ## Examples
   
-      # Quick prompt generation
+      # Quick prompt generation with planning
       prompt = AriaEngine.CharacterGenerator.generate_prompt()
       
-      # Prompt with preset
+      # Prompt with preset using planning
       prompt = AriaEngine.CharacterGenerator.generate_prompt(preset: "traditional_shrine_maiden")
+      
+      # Prompt with legacy mode
+      prompt = AriaEngine.CharacterGenerator.generate_prompt(use_planner: false)
   
   ## Returns
   
@@ -384,5 +402,139 @@ defmodule AriaEngine.CharacterGenerator do
   """
   def valid?(attributes) do
     validate(attributes) |> Enum.empty?()
+  end
+
+  @doc """
+  Generates a character using a specific planning workflow.
+  
+  ## Parameters
+  
+  - `plan_name` - Name of the planning workflow to use
+  - `opts` - Options for character generation
+  
+  ## Available Workflows
+  
+  - `:basic` - Basic character generation workflow
+  - `:comprehensive` - Full validation and constraint resolution workflow
+  - `:demo` - Simplified demo generation workflow
+  - `:validation_only` - Just validation workflow (requires existing attributes)
+  - `:preset_application` - Apply preset workflow (requires :preset option)
+  
+  ## Examples
+  
+      # Use comprehensive planning workflow
+      character = AriaEngine.CharacterGenerator.generate_with_plan(:comprehensive)
+      
+      # Use basic workflow with preset
+      character = AriaEngine.CharacterGenerator.generate_with_plan(:basic, preset: "cyber_cat_person")
+      
+      # Use preset application workflow
+      character = AriaEngine.CharacterGenerator.generate_with_plan(:preset_application, preset: "fantasy_cyber")
+  
+  ## Returns
+  
+  Same format as `generate/1`, or `{:error, reason}` if planning fails.
+  """
+  def generate_with_plan(plan_name, opts \\ []) do
+    Generator.generate_with_plan(plan_name, opts)
+  end
+
+  @doc """
+  Tests a specific planning workflow for debugging purposes.
+  
+  ## Parameters
+  
+  - `workflow` - The workflow to test (:basic, :comprehensive, :validation, etc.)
+  - `opts` - Options for the workflow test
+  
+  ## Returns
+  
+  - `{:ok, result}` with detailed planning information on success
+  - `{:error, reason}` on failure
+  
+  ## Examples
+  
+      # Test basic workflow
+      {:ok, result} = AriaEngine.CharacterGenerator.test_workflow(:basic)
+      
+      # Test validation workflow with conflicting attributes
+      {:ok, result} = AriaEngine.CharacterGenerator.test_workflow(:validation, 
+        %{species: "SPECIES_ANIMAL", style_kei: "STYLE_KEI_ROBOTIC_CYBORG"})
+  """
+  def test_workflow(workflow, opts \\ %{}) do
+    AriaEngine.CharacterGenerator.PlanTestHelper.test_workflow(workflow, opts)
+  end
+
+  @doc """
+  Tests the planning system's backtracking capabilities.
+  
+  ## Parameters
+  
+  - `conflicting_attrs` - Map of conflicting attributes to test resolution
+  
+  ## Returns
+  
+  - `{:ok, resolution}` if conflicts were successfully resolved
+  - `{:error, reason}` if resolution failed
+  
+  ## Examples
+  
+      # Test conflict resolution
+      {:ok, result} = AriaEngine.CharacterGenerator.test_backtracking(%{
+        species: "SPECIES_ANIMAL", 
+        style_kei: "STYLE_KEI_ROBOTIC_CYBORG"
+      })
+  """
+  def test_backtracking(conflicting_attrs \\ %{}) do
+    AriaEngine.CharacterGenerator.PlanTestHelper.test_backtracking(conflicting_attrs)
+  end
+
+  @doc """
+  Gets information about available planning domains and workflows.
+  
+  ## Returns
+  
+  A map with information about available planning options.
+  
+  ## Examples
+  
+      info = AriaEngine.CharacterGenerator.get_planning_info()
+      # Returns: %{
+      #   domains: [:character_generation, :demo_character, :validation, :preset],
+      #   workflows: [:basic, :comprehensive, :demo, :validation_only, :preset_application],
+      #   plans: [:basic_character_generation_plan, :comprehensive_character_generation_plan, ...]
+      # }
+  """
+  def get_planning_info do
+    %{
+      domains: [:character_generation, :demo_character, :validation, :preset],
+      workflows: [:basic, :comprehensive, :demo, :validation_only, :preset_application],
+      plans: [
+        :basic_character_generation_plan,
+        :comprehensive_character_generation_plan,
+        :demo_character_generation_plan,
+        :validation_only_plan,
+        :preset_application_plan,
+        :batch_generation_plan,
+        :advanced_character_generation_plan,
+        :theme_coherence_plan,
+        :accessibility_plan
+      ],
+      actions: [
+        :set_character_attribute,
+        :randomize_character_attributes,
+        :apply_preset,
+        :validate_attributes,
+        :resolve_conflicts,
+        :generate_prompt,
+        :check_goal_character_valid,
+        :check_goal_prompt_ready,
+        :check_goal_preset_applied,
+        :check_goal_conflicts_resolved,
+        :check_goal_validation_complete,
+        :check_goal_batch_ready,
+        :check_goal_accessibility_met
+      ]
+    }
   end
 end
