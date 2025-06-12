@@ -40,8 +40,25 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   # Suppressing warnings for reserved constant by commenting out unused one
   # @_ca_format_exclude_no_dump 0x8000000000000000
   
-  # CATAR format constants (currently unused but reserved for future implementation)
-  @_ca_format_entry 0x1396fabfa5dd7d47
+  # CATAR format constants
+  @ca_format_entry 0x1396fabcea5bbb51
+  @ca_format_user 0xf453131aaeeaccb3
+  @ca_format_group 0x25eb6ac969396a52
+  @ca_format_xattr 0xb8157091f80bc486
+  @ca_format_acl_user 0x297dc88b2ef12faf
+  @ca_format_acl_group 0x36f2acb56cb3dd0b
+  @ca_format_acl_group_obj 0x23047110441f38f3
+  @ca_format_acl_default 0xfe3eeda6823c8cd0
+  @ca_format_acl_default_user 0xbdf03df9bd010a91
+  @ca_format_acl_default_group 0xa0cb1168782d1f51
+  @ca_format_fcaps 0xf7267db0afed0629
+  @ca_format_selinux 0x46faf0602fd26c59
+  @ca_format_filename 0x6dbb6ebcb3161f0b
+  @ca_format_symlink 0x664a6fb6830e0d6c
+  @ca_format_device 0xac3dace369dfe643
+  @ca_format_payload 0x8b9e1d93d6dcffc9
+  @ca_format_goodbye 0xdfd35c5e8327c403
+  @ca_format_goodbye_tail_marker 0x57446fa533702943
 
   # Compression types (based on desync - only ZSTD is actually used)
   @compression_none 0
@@ -195,21 +212,392 @@ defmodule AriaStorage.Parsers.CasyncFormat do
 
   @doc """
   Parse a catar archive file from binary data.
+  
+  CATAR format is a structured archive format similar to tar but with casync-specific
+  enhancements. It contains a directory tree with filenames, permissions, and file data.
   """
   def parse_archive(binary_data) when is_binary(binary_data) do
-    case binary_data do
-      # CATAR format starts with entry data directly (64-byte header minimum)
-      <<entry_size::little-64, entry_type::little-64, entry_flags::little-64, 
-        _entry_padding::little-64, mode::little-64, uid::little-64, gid::little-64, 
-        mtime::little-64, remaining_data::binary>> ->
-        
-        # CATAR format parsing is not yet implemented
-        {:error, "CATAR format parsing not yet implemented"}
-        
-      _ ->
-        {:error, "Invalid CATAR format: insufficient data for entry header"}
+    try do
+      case parse_catar_elements(binary_data, []) do
+        {:ok, elements} ->
+          # Extract directory structure and file information
+          {files, directories} = process_catar_elements(elements)
+          
+          result = %{
+            format: :catar,
+            files: files,
+            directories: directories,
+            elements: elements,
+            total_size: byte_size(binary_data)
+          }
+          
+          {:ok, result}
+          
+        {:error, reason} ->
+          {:error, reason}
+      end
+    rescue
+      error -> {:error, "CATAR parsing failed: #{inspect(error)}"}
     end
   end
+  
+  # Parse CATAR elements recursively
+  defp parse_catar_elements(<<>>, acc), do: {:ok, Enum.reverse(acc)}
+  
+  defp parse_catar_elements(binary_data, acc) do
+    case parse_next_catar_element(binary_data) do
+      {:ok, element, remaining} ->
+        parse_catar_elements(remaining, [element | acc])
+        
+      {:error, :end_of_data} ->
+        {:ok, Enum.reverse(acc)}
+        
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+  
+  # Parse individual CATAR format elements
+  defp parse_next_catar_element(<<>>) do
+    {:error, :end_of_data}
+  end
+  
+  defp parse_next_catar_element(binary_data) do
+    case binary_data do
+      # CaFormatEntry (64 bytes)
+      <<size::little-64, type::little-64, feature_flags::little-64, mode::little-64,
+        uid::little-64, gid::little-64, mtime::little-64, _reserved::little-64,
+        remaining::binary>> when type == @ca_format_entry ->
+        
+        element = %{
+          type: :entry,
+          size: size,
+          feature_flags: feature_flags,
+          mode: mode,
+          uid: uid,
+          gid: gid,
+          mtime: mtime
+        }
+        
+        {:ok, element, remaining}
+      
+      # CaFormatFilename (variable length)
+      <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_filename ->
+        name_size = size - 16  # Subtract header size
+        
+        case remaining do
+          <<name_data::binary-size(name_size), rest::binary>> ->
+            # Remove null terminator
+            name = String.trim_trailing(name_data, <<0>>)
+            
+            element = %{
+              type: :filename,
+              name: name
+            }
+            
+            {:ok, element, rest}
+            
+          _ ->
+            {:error, "Insufficient data for filename"}
+        end
+      
+      # CaFormatPayload (variable length)
+      <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_payload ->
+        payload_size = size - 16
+        
+        case remaining do
+          <<payload_data::binary-size(payload_size), rest::binary>> ->
+            element = %{
+              type: :payload,
+              size: payload_size,
+              data: payload_data
+            }
+            
+            {:ok, element, rest}
+            
+          _ ->
+            {:error, "Insufficient data for payload"}
+        end
+      
+      # CaFormatSymlink (variable length)
+      <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_symlink ->
+        target_size = size - 16
+        
+        case remaining do
+          <<target_data::binary-size(target_size), rest::binary>> ->
+            target = String.trim_trailing(target_data, <<0>>)
+            
+            element = %{
+              type: :symlink,
+              target: target
+            }
+            
+            {:ok, element, rest}
+            
+          _ ->
+            {:error, "Insufficient data for symlink"}
+        end
+      
+      # CaFormatDevice (32 bytes)
+      <<size::little-64, type::little-64, major::little-64, minor::little-64,
+        remaining::binary>> when type == @ca_format_device and size == 32 ->
+        
+        element = %{
+          type: :device,
+          major: major,
+          minor: minor
+        }
+        
+        {:ok, element, remaining}
+      
+      # CaFormatGoodbye (variable length)
+      <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_goodbye ->
+        items_size = size - 16
+        
+        case parse_goodbye_items(remaining, items_size) do
+          {:ok, items, rest} ->
+            element = %{
+              type: :goodbye,
+              items: items
+            }
+            
+            {:ok, element, rest}
+            
+          {:error, reason} ->
+            {:error, reason}
+        end
+      
+      # CaFormatUser (variable length)
+      <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_user ->
+        name_size = size - 16
+        
+        case remaining do
+          <<name_data::binary-size(name_size), rest::binary>> ->
+            name = String.trim_trailing(name_data, <<0>>)
+            
+            element = %{
+              type: :user,
+              name: name
+            }
+            
+            {:ok, element, rest}
+            
+          _ ->
+            {:error, "Insufficient data for user"}
+        end
+      
+      # CaFormatGroup (variable length)
+      <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_group ->
+        name_size = size - 16
+        
+        case remaining do
+          <<name_data::binary-size(name_size), rest::binary>> ->
+            name = String.trim_trailing(name_data, <<0>>)
+            
+            element = %{
+              type: :group,
+              name: name
+            }
+            
+            {:ok, element, rest}
+            
+          _ ->
+            {:error, "Insufficient data for group"}
+        end
+      
+      # CaFormatSELinux (variable length)
+      <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_selinux ->
+        context_size = size - 16
+        
+        case remaining do
+          <<context_data::binary-size(context_size), rest::binary>> ->
+            context = String.trim_trailing(context_data, <<0>>)
+            
+            element = %{
+              type: :selinux,
+              context: context
+            }
+            
+            {:ok, element, rest}
+            
+          _ ->
+            {:error, "Insufficient data for SELinux context"}
+        end
+      
+      # CaFormatXAttr (variable length)  
+      <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_xattr ->
+        attr_size = size - 16
+        
+        case remaining do
+          <<attr_data::binary-size(attr_size), rest::binary>> ->
+            element = %{
+              type: :xattr,
+              data: attr_data
+            }
+            
+            {:ok, element, rest}
+            
+          _ ->
+            {:error, "Insufficient data for extended attribute"}
+        end
+      
+      # Skip other ACL and capability formats for now - just consume them
+      <<size::little-64, type::little-64, remaining::binary>> when type in [
+        @ca_format_acl_user, @ca_format_acl_group, @ca_format_acl_group_obj,
+        @ca_format_acl_default, @ca_format_acl_default_user, @ca_format_acl_default_group,
+        @ca_format_fcaps
+      ] ->
+        data_size = size - 16
+        
+        case remaining do
+          <<_data::binary-size(data_size), rest::binary>> ->
+            element = %{
+              type: :metadata,
+              format: type,
+              size: data_size
+            }
+            
+            {:ok, element, rest}
+            
+          _ ->
+            {:error, "Insufficient data for metadata element"}
+        end
+      
+      # Unknown or malformed element
+      <<size::little-64, type::little-64, _remaining::binary>> ->
+        {:error, "Unknown CATAR element type: 0x#{Integer.to_string(type, 16) |> String.upcase()}, size: #{size}"}
+      
+      _ ->
+        {:error, "Insufficient data for CATAR element header"}
+    end
+  end
+  
+  # Parse goodbye items (directory entries)
+  defp parse_goodbye_items(binary_data, items_size) do
+    case binary_data do
+      <<items_data::binary-size(items_size), rest::binary>> ->
+        items = parse_goodbye_items_data(items_data, [])
+        {:ok, items, rest}
+        
+      _ ->
+        {:error, "Insufficient data for goodbye items"}
+    end
+  end
+  
+  defp parse_goodbye_items_data(<<>>, acc), do: Enum.reverse(acc)
+  
+  defp parse_goodbye_items_data(binary_data, acc) do
+    case binary_data do
+      # Each goodbye item is 24 bytes
+      <<offset::little-64, size::little-64, hash::little-64, remaining::binary>> ->
+        item = %{
+          offset: offset,
+          size: size,
+          hash: hash
+        }
+        
+        # Check for tail marker
+        if hash == @ca_format_goodbye_tail_marker do
+          Enum.reverse([item | acc])
+        else
+          parse_goodbye_items_data(remaining, [item | acc])
+        end
+        
+      _ ->
+        Enum.reverse(acc)
+    end
+  end
+  
+  # Process CATAR elements to extract file and directory structure
+  defp process_catar_elements(elements) do
+    # Group related elements (entry + filename + payload/symlink/device)
+    grouped_files = group_catar_elements(elements)
+    
+    # Separate files and directories from the grouped results
+    {files, directories} = Enum.reduce(grouped_files, {[], []}, fn item, {files_acc, dirs_acc} ->
+      case item.type do
+        :directory ->
+          {files_acc, [item | dirs_acc]}
+        _ ->
+          {[item | files_acc], dirs_acc}
+      end
+    end)
+    
+    {Enum.reverse(files), Enum.reverse(directories)}
+  end
+  
+  # Group CATAR elements into logical file/directory structures
+  # Based on desync format: Entry -> [User/Group/SELinux/etc] -> Filename -> [Payload/Symlink/Device/Goodbye]
+  defp group_catar_elements(elements) do
+    # Use a different approach - scan for patterns and group them properly
+    group_catar_elements_sequential(elements, [], nil, nil)
+  end
+  
+  # Sequential grouping that follows desync's actual format
+  # Based on format_test.go: Filename comes BEFORE Entry, Goodbye marks end of directories
+  defp group_catar_elements_sequential([], acc, _current_entry, _pending_name) do
+    Enum.reverse(acc)
+  end
+  
+  defp group_catar_elements_sequential([element | rest], acc, current_entry, pending_name) do
+    case element do
+      %{type: :filename, name: name} ->
+        # Filename comes BEFORE the entry - store it for the next entry
+        group_catar_elements_sequential(rest, acc, current_entry, name)
+        
+      %{type: :entry} = entry when not is_nil(pending_name) ->
+        # Entry after filename - update entry with the filename
+        updated_entry = entry |> Map.put(:name, pending_name) |> Map.put(:path, pending_name)
+        group_catar_elements_sequential(rest, acc, updated_entry, nil)
+        
+      %{type: :entry} = entry ->
+        # Entry without preceding filename - use as current entry
+        group_catar_elements_sequential(rest, acc, entry, pending_name)
+        
+      %{type: :payload, data: data} when not is_nil(current_entry) ->
+        # File content - finalize the file
+        filename = Map.get(current_entry, :name, "unnamed_file")
+        file = current_entry
+        |> Map.put(:content, data)
+        |> Map.put(:type, :file)
+        |> Map.put(:name, filename)
+        |> Map.put(:path, filename)
+        group_catar_elements_sequential(rest, [file | acc], nil, nil)
+        
+      %{type: :symlink, target: target} when not is_nil(current_entry) ->
+        # Symlink - finalize the symlink
+        filename = Map.get(current_entry, :name, "unnamed_symlink")
+        file = current_entry
+        |> Map.put(:target, target)
+        |> Map.put(:type, :symlink)
+        |> Map.put(:name, filename)
+        |> Map.put(:path, filename)
+        group_catar_elements_sequential(rest, [file | acc], nil, nil)
+        
+      %{type: :device, major: major, minor: minor} when not is_nil(current_entry) ->
+        # Device - finalize the device
+        filename = Map.get(current_entry, :name, "unnamed_device")
+        file = current_entry
+        |> Map.put(:major, major)
+        |> Map.put(:minor, minor)
+        |> Map.put(:type, :device)
+        |> Map.put(:name, filename)
+        |> Map.put(:path, filename)
+        group_catar_elements_sequential(rest, [file | acc], nil, nil)
+        
+      %{type: :goodbye} when not is_nil(current_entry) ->
+        # Directory end marker - finalize the directory
+        filename = Map.get(current_entry, :name, "unnamed_directory")
+        file = current_entry
+        |> Map.put(:type, :directory)
+        |> Map.put(:name, filename)
+        |> Map.put(:path, filename)
+        group_catar_elements_sequential(rest, [file | acc], nil, nil)
+        
+      _ ->
+        # Skip metadata elements (user, group, selinux, xattr, etc.)
+        group_catar_elements_sequential(rest, acc, current_entry, pending_name)
+    end  end
 
   @doc """
   Detect the format of binary data based on desync FormatIndex structure.
@@ -219,7 +607,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
       {48, @ca_format_index} -> 
         # Differentiate between CAIBX and CAIDX based on feature_flags
         if feature_flags == 0, do: {:ok, :caidx}, else: {:ok, :caibx}
-      {64, @_ca_format_entry} -> {:ok, :catar}
+      {64, @ca_format_entry} -> {:ok, :catar}
       _ ->
         {:error, :unknown_format}
     end
