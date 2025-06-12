@@ -92,10 +92,7 @@ defmodule AriaAuth.Macaroons do
     def from_body(_, _, _), do: {:error, "bad ConfineUserString format"}
   end
 
-  # Add JSON encoder for caveats
-  require Macfly.Caveat.JSON
-  Macfly.Caveat.JSON.defimpl_jason_encoder(PermissionsCaveat)
-  Macfly.Caveat.JSON.defimpl_jason_encoder(ConfineUserString)
+  # JSON encoders are automatically generated via @derive Jason.Encoder
 
   @doc """
   Generates a macaroon token for a user.

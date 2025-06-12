@@ -1,0 +1,108 @@
+name: Build and Test Elixir
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.16'
+          otp-version: '26.2'
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+
+      - name: Install OpenBao
+        run: |
+          OPENBAO_VERSION=2.2.2
+          wget -O openbao-hsm.deb "https://github.com/openbao/openbao/releases/download/v${OPENBAO_VERSION}/bao-hsm_${OPENBAO_VERSION}_linux_amd64.deb"
+          sudo dpkg -i openbao-hsm.deb
+          sudo ln -sf /usr/bin/bao /usr/local/bin/openbao
+          sudo ln -sf /usr/bin/bao /usr/local/bin/bao
+          rm openbao-hsm.deb
+
+      - name: Install CockroachDB
+        run: |
+          ARCH=amd64
+          COMMIT_HASH=865aff1595e494c2ce95030c7a2f20c4370b5ff8
+          # Download and extract to a temporary directory first
+          mkdir -p /tmp/cockroach-install
+          wget -qO- "https://buildomat.eng.oxide.computer/public/file/oxidecomputer/cockroach/linux-${ARCH}/${COMMIT_HASH}/cockroach.tgz" | tar xvz -C /tmp/cockroach-install
+          # Move the binary and libraries to the correct locations
+          sudo mv /tmp/cockroach-install/cockroach/cockroach /usr/local/bin/cockroach
+          sudo mv /tmp/cockroach-install/cockroach/lib/* /usr/local/lib/
+          sudo chmod +x /usr/local/bin/cockroach
+          # Clean up temporary directory
+          rm -rf /tmp/cockroach-install
+          # Create symlink for crdb alias
+          sudo ln -sf /usr/local/bin/cockroach /usr/local/bin/crdb
+
+      - name: Start CockroachDB
+        run: |
+          # Create data directory
+          mkdir -p /tmp/cockroach-data
+          
+          # Start CockroachDB in insecure mode for CI (no certificates needed)
+          cockroach start-single-node \
+            --insecure \
+            --listen-addr=127.0.0.1:26257 \
+            --http-addr=127.0.0.1:8080 \
+            --store=/tmp/cockroach-data \
+            --cluster-name="aria-character-core-ci" \
+            --cache=512MB \
+            --max-sql-memory=512MB \
+            --background
+          
+          # Wait for CockroachDB to be ready
+          timeout 30s bash -c 'until cockroach node status --insecure --host=127.0.0.1:26257 >/dev/null 2>&1; do sleep 1; done'
+          
+          echo "CockroachDB started successfully"
+
+      - name: Initialize test databases
+        run: |
+          # Create test databases that match the test configuration
+          cockroach sql --insecure --host=127.0.0.1:26257 --execute="
+            CREATE DATABASE IF NOT EXISTS aria_data_test;
+            CREATE DATABASE IF NOT EXISTS aria_auth_test;
+            CREATE DATABASE IF NOT EXISTS aria_queue_test;
+            CREATE DATABASE IF NOT EXISTS aria_storage_test;
+            CREATE DATABASE IF NOT EXISTS aria_monitor_test;
+            CREATE DATABASE IF NOT EXISTS aria_engine_test;
+          "
+          
+          echo "Test databases created successfully"
+
+      - name: Verify installations
+        run: |
+          echo "Verifying OpenBao installation..."
+          bao version || echo "OpenBao not found in PATH"
+          openbao version || echo "OpenBao alias not found in PATH"
+          echo "Verifying CockroachDB installation..."
+          cockroach version || echo "CockroachDB not found in PATH"
+          crdb version || echo "CockroachDB alias not found in PATH"
+          echo "Verifying CockroachDB connectivity..."
+          cockroach sql --insecure --host=127.0.0.1:26257 --execute="SELECT 1;" || echo "CockroachDB not responding"
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile
+        run: mix compile
+
+      - name: Run tests
+        run: mix test
