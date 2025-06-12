@@ -304,13 +304,17 @@ defmodule AriaStorage.CasyncIntegrationTest do
     end
 
     test "catar parsing supports storage planning" do
-      # Test that CATAR format parsing is not yet implemented
+      # Test that CATAR format parsing is now implemented
       synthetic_catar = CasyncFixtures.create_complex_catar()
 
-      assert {:error, "CATAR format parsing not yet implemented"} = CasyncFormat.parse_archive(synthetic_catar)
+      assert {:ok, result} = CasyncFormat.parse_archive(synthetic_catar)
+      assert result.format == :catar
+      assert is_list(result.elements)
+      assert length(result.elements) > 0
 
-      # Skip storage planning analysis since CATAR parsing is not implemented
-      # When CATAR is implemented, this test should verify storage planning features
+      # Verify basic structure for storage planning
+      assert is_list(result.files)
+      assert is_list(result.directories)
     end
   end
 end

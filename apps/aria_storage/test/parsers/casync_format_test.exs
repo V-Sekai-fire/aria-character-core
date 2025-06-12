@@ -475,6 +475,70 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
           :ok
       end
     end
+
+    test "roundtrips CATAR with 16-bit UIDs/GIDs" do
+      feature_flags = 0x1 # CaFormatWith16BitUIDs
+      mode = 0o755
+      uid = 1000
+      gid = 1000
+      mtime = 1678886400
+
+      # Create a CATAR element structure to encode
+      element = %{
+        type: :entry,
+        size: 52,  # Size for 16-bit UIDs/GIDs
+        feature_flags: feature_flags,
+        mode: mode,
+        uid: uid,
+        gid: gid,
+        mtime: mtime
+      }
+
+      # Create archive structure
+      archive = %{format: :catar, elements: [element], files: [], directories: []}
+      
+      # Test encoding and parsing roundtrip
+      {:ok, encoded_data} = CasyncFormat.encode_archive(archive)
+      {:ok, parsed} = CasyncFormat.parse_archive(encoded_data)
+      
+      assert parsed.format == :catar
+      assert length(parsed.elements) == 1
+      assert parsed.elements |> hd |> Map.get(:uid) == uid
+      assert parsed.elements |> hd |> Map.get(:gid) == gid
+      assert parsed.elements |> hd |> Map.get(:feature_flags) == feature_flags
+    end
+
+    test "roundtrips CATAR with 32-bit UIDs/GIDs" do
+      feature_flags = 0x2 # CaFormatWith32BitUIDs
+      mode = 0o755
+      uid = 1000
+      gid = 1000
+      mtime = 1678886400
+
+      # Create a CATAR element structure to encode
+      element = %{
+        type: :entry,
+        size: 56,  # Size for 32-bit UIDs/GIDs
+        feature_flags: feature_flags,
+        mode: mode,
+        uid: uid,
+        gid: gid,
+        mtime: mtime
+      }
+
+      # Create archive structure
+      archive = %{format: :catar, elements: [element], files: [], directories: []}
+      
+      # Test encoding and parsing roundtrip
+      {:ok, encoded_data} = CasyncFormat.encode_archive(archive)
+      {:ok, parsed} = CasyncFormat.parse_archive(encoded_data)
+      
+      assert parsed.format == :catar
+      assert length(parsed.elements) == 1
+      assert parsed.elements |> hd |> Map.get(:uid) == uid
+      assert parsed.elements |> hd |> Map.get(:gid) == gid
+      assert parsed.elements |> hd |> Map.get(:feature_flags) == feature_flags
+    end
   end
 
   describe "round-trip consistency" do

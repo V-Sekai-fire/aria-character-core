@@ -10,23 +10,26 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   Compatible with casync/desync (.caibx/.caidx/.catar/.cacnk) formats.
   """
 
+  import Bitwise
+
   # Constants from desync source (matching parser)
   @ca_format_index 0x96824d9c7b129ff9
   @ca_format_table 0xe75b9e112f17417d
   @ca_format_table_tail_marker 0x4b4f050e5549ecd1
   @ca_format_sha512_256 0x2000000000000000
+  @ca_format_entry 0x1396fabcea5bbb51
 
   @doc """
   Creates a synthetic multi-chunk ARCX (caibx-compatible) file with the specified number of chunks.
   Generates proper desync FormatIndex/FormatTable structure.
   """
-  def create_multi_chunk_caibx(chunk_count) when is_integer(chunk_count) and chunk_count > 0 do
+  def create_multi_chunk_caibx(chunk_count, feature_flags \\ @ca_format_sha512_256) when is_integer(chunk_count) and chunk_count > 0 do
     # Create desync-compatible binary format
     # FormatIndex (48 bytes): 8-byte size + 8-byte type + 32 bytes of fields
     format_index = <<
       48::little-64,                    # Size of FormatIndex
       @ca_format_index::little-64,      # Magic for FormatIndex
-      @ca_format_sha512_256::little-64, # Feature flags (SHA512-256 for blobs)
+      feature_flags::little-64,         # Feature flags (SHA512-256 for blobs)
       1024::little-64,                  # chunk_size_min
       1024::little-64,                  # chunk_size_avg
       1024::little-64                   # chunk_size_max
@@ -96,18 +99,61 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   """
   def create_complex_catar do
     # CATAR files start directly with entry data, no magic bytes
-    # Create a simple directory entry
-    entry_header = <<64::little-64>> <>   # size
-                   <<2::little-64>> <>    # type (directory)
-                   <<0::little-64>> <>    # flags
-                   <<0::little-64>>       # padding
+    # Create a simple directory entry using proper CATAR format constants
+    entry_header = <<64::little-64>> <>                      # size
+                   <<@ca_format_entry::little-64>> <>        # type (CaFormatEntry)
+                   <<0::little-64>> <>                       # feature_flags
+                   <<0o755::little-64>> <>                   # mode (directory permissions)
+                   <<0::little-64>> <>                       # field5 (unknown, set to 0)
+                   <<1000::little-64>> <>                    # gid
+                   <<1000::little-64>> <>                    # uid
+                   <<1640995200::little-64>>                 # mtime
 
-    metadata = <<0o755::little-64>> <>    # mode (directory permissions)
-               <<1000::little-64>> <>     # uid
-               <<1000::little-64>> <>     # gid
-               <<1640995200::little-64>>  # mtime
+    entry_header
+  end
 
-    entry_header <> metadata
+  @doc """
+  Creates a catar entry with specified parameters.
+  """
+  def create_catar_entry(feature_flags, mode, uid, gid, mtime) do
+    cond do
+      Bitwise.band(feature_flags, 0x1) != 0 ->  # CaFormatWith16BitUIDs
+        size = 52  # Size for 16-bit UIDs/GIDs
+        <<
+          size::little-64,
+          @ca_format_entry::little-64,
+          feature_flags::little-64,
+          mode::little-64,
+          0::little-64,  # field5 (unknown, set to 0)
+          gid::little-16,
+          uid::little-16,
+          mtime::little-64
+        >>
+      Bitwise.band(feature_flags, 0x2) != 0 ->  # CaFormatWith32BitUIDs  
+        size = 56  # Size for 32-bit UIDs/GIDs
+        <<
+          size::little-64,
+          @ca_format_entry::little-64,
+          feature_flags::little-64,
+          mode::little-64,
+          0::little-64,  # field5 (unknown, set to 0)
+          gid::little-32,
+          uid::little-32,
+          mtime::little-64
+        >>
+      true ->
+        size = 64  # Size for 64-bit UIDs/GIDs (default)
+        <<
+          size::little-64,
+          @ca_format_entry::little-64,
+          feature_flags::little-64,
+          mode::little-64,
+          0::little-64,  # field5 (unknown, set to 0)
+          gid::little-64,
+          uid::little-64,
+          mtime::little-64
+        >>
+    end
   end
 
   @doc """

@@ -33,6 +33,8 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   # Direct binary parsing - no longer using AbnfParsec
   # We now use binary pattern matching for better performance and reliability
 
+  import Bitwise
+
   # Constants from desync source code (const.go)
   @ca_format_index 0x96824d9c7b129ff9
   @ca_format_table 0xe75b9e112f17417d
@@ -63,6 +65,10 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   # Compression types (based on desync - only ZSTD is actually used)
   @compression_none 0
   @compression_zstd 1
+
+  # Feature flags for UID/GID encoding
+  @ca_format_with_16_bit_uids 0x1
+  @ca_format_with_32_bit_uids 0x2
 
   # Default chunk sizes (currently unused but reserved for validation and recommendations)
   # Suppressing warnings for reserved constants by commenting out unused ones
@@ -268,7 +274,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
       <<size::little-64, type::little-64, feature_flags::little-64, mode::little-64,
         _field5::little-64, gid::little-64, uid::little-64, mtime::little-64,
         remaining::binary>> when type == @ca_format_entry ->
-        
+
         element = %{
           type: :entry,
           size: size,
@@ -278,9 +284,41 @@ defmodule AriaStorage.Parsers.CasyncFormat do
           gid: gid,
           mtime: mtime
         }
-        
+
         {:ok, element, remaining}
-      
+
+      <<size::little-64, type::little-64, feature_flags::little-64, mode::little-64,
+        _field5::little-64, gid::little-16, uid::little-16, mtime::little-64,
+        remaining::binary>> when type == @ca_format_entry and Bitwise.band(feature_flags, @ca_format_with_16_bit_uids) != 0 ->
+
+        element = %{
+          type: :entry,
+          size: size,
+          feature_flags: feature_flags,
+          mode: mode,
+          uid: uid,
+          gid: gid,
+          mtime: mtime
+        }
+
+        {:ok, element, remaining}
+
+      <<size::little-64, type::little-64, feature_flags::little-64, mode::little-64,
+        _field5::little-64, gid::little-32, uid::little-32, mtime::little-64,
+        remaining::binary>> when type == @ca_format_entry and Bitwise.band(feature_flags, @ca_format_with_32_bit_uids) != 0 ->
+
+        element = %{
+          type: :entry,
+          size: size,
+          feature_flags: feature_flags,
+          mode: mode,
+          uid: uid,
+          gid: gid,
+          mtime: mtime
+        }
+
+        {:ok, element, remaining}
+
       # CaFormatFilename (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_filename ->
         name_size = size - 16  # Subtract header size
@@ -450,11 +488,12 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         data_size = size - 16
         
         case remaining do
-          <<_data::binary-size(data_size), rest::binary>> ->
+          <<data::binary-size(data_size), rest::binary>> ->
             element = %{
               type: :metadata,
               format: type,
-              size: data_size
+              size: data_size,
+              data: data  # Preserve original binary data for roundtrip
             }
             
             {:ok, element, rest}
@@ -866,17 +905,41 @@ defmodule AriaStorage.Parsers.CasyncFormat do
 
   # CATAR element encoding functions
   defp encode_catar_element(%{type: :entry, size: size, feature_flags: feature_flags, mode: mode, uid: uid, gid: gid, mtime: mtime}) do
-    # CaFormatEntry (64 bytes)
-    <<
-      size::little-64,
-      @ca_format_entry::little-64,
-      feature_flags::little-64,
-      mode::little-64,
-      0::little-64,  # field5 (unknown, set to 0)
-      gid::little-64,
-      uid::little-64,
-      mtime::little-64
-    >>
+    cond do
+      Bitwise.band(feature_flags, @ca_format_with_16_bit_uids) != 0 ->
+        <<
+          size::little-64,
+          @ca_format_entry::little-64,
+          feature_flags::little-64,
+          mode::little-64,
+          0::little-64,  # field5 (unknown, set to 0)
+          gid::little-16,
+          uid::little-16,
+          mtime::little-64
+        >>
+      Bitwise.band(feature_flags, @ca_format_with_32_bit_uids) != 0 ->
+        <<
+          size::little-64,
+          @ca_format_entry::little-64,
+          feature_flags::little-64,
+          mode::little-64,
+          0::little-64,  # field5 (unknown, set to 0)
+          gid::little-32,
+          uid::little-32,
+          mtime::little-64
+        >>
+      true ->
+        <<
+          size::little-64,
+          @ca_format_entry::little-64,
+          feature_flags::little-64,
+          mode::little-64,
+          0::little-64,  # field5 (unknown, set to 0)
+          gid::little-64,
+          uid::little-64,
+          mtime::little-64
+        >>
+    end
   end
 
   defp encode_catar_element(%{type: :filename, name: name}) do
@@ -884,28 +947,36 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     # Ensure name is null-terminated
     name_data = name <> <<0>>
     name_size = byte_size(name_data)
-    total_size = 16 + name_size  # Header (16 bytes) + name data
+    header_size = 16  # Header is always 16 bytes
+    total_size = header_size + name_size  # Size field includes header + data
     
-    # Pad to 8-byte boundary
-    padding_size = rem(8 - rem(total_size, 8), 8)
-    padding = <<0::size(padding_size * 8)>>
+    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
+    padding_needed = case rem(total_size, 8) do
+      0 -> 0
+      remainder -> 8 - remainder
+    end
+    padding = <<0::size(padding_needed * 8)>>
     
     <<
-      (total_size + padding_size)::little-64,
+      total_size::little-64,
       @ca_format_filename::little-64
     >> <> name_data <> padding
   end
 
   defp encode_catar_element(%{type: :payload, size: size, data: data}) do
     # CaFormatPayload (variable length)
-    total_size = 16 + size  # Header (16 bytes) + payload data
+    header_size = 16  # Header is always 16 bytes
+    total_size = header_size + size  # Size field includes header + data
     
-    # Pad to 8-byte boundary
-    padding_size = rem(8 - rem(total_size, 8), 8)
-    padding = <<0::size(padding_size * 8)>>
+    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
+    padding_needed = case rem(total_size, 8) do
+      0 -> 0
+      remainder -> 8 - remainder
+    end
+    padding = <<0::size(padding_needed * 8)>>
     
     <<
-      (total_size + padding_size)::little-64,
+      total_size::little-64,
       @ca_format_payload::little-64
     >> <> data <> padding
   end
@@ -915,14 +986,18 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     # Ensure target is null-terminated
     target_data = target <> <<0>>
     target_size = byte_size(target_data)
-    total_size = 16 + target_size  # Header (16 bytes) + target data
+    header_size = 16  # Header is always 16 bytes
+    total_size = header_size + target_size  # Size field includes header + data
     
-    # Pad to 8-byte boundary
-    padding_size = rem(8 - rem(total_size, 8), 8)
-    padding = <<0::size(padding_size * 8)>>
+    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
+    padding_needed = case rem(total_size, 8) do
+      0 -> 0
+      remainder -> 8 - remainder
+    end
+    padding = <<0::size(padding_needed * 8)>>
     
     <<
-      (total_size + padding_size)::little-64,
+      total_size::little-64,
       @ca_format_symlink::little-64
     >> <> target_data <> padding
   end
@@ -962,14 +1037,18 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     # Ensure name is null-terminated
     name_data = name <> <<0>>
     name_size = byte_size(name_data)
-    total_size = 16 + name_size  # Header (16 bytes) + name data
+    header_size = 16  # Header is always 16 bytes
+    total_size = header_size + name_size  # Size field includes header + data
     
-    # Pad to 8-byte boundary
-    padding_size = rem(8 - rem(total_size, 8), 8)
-    padding = <<0::size(padding_size * 8)>>
+    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
+    padding_needed = case rem(total_size, 8) do
+      0 -> 0
+      remainder -> 8 - remainder
+    end
+    padding = <<0::size(padding_needed * 8)>>
     
     <<
-      (total_size + padding_size)::little-64,
+      total_size::little-64,
       @ca_format_user::little-64
     >> <> name_data <> padding
   end
@@ -979,14 +1058,18 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     # Ensure name is null-terminated
     name_data = name <> <<0>>
     name_size = byte_size(name_data)
-    total_size = 16 + name_size  # Header (16 bytes) + name data
+    header_size = 16  # Header is always 16 bytes
+    total_size = header_size + name_size  # Size field includes header + data
     
-    # Pad to 8-byte boundary
-    padding_size = rem(8 - rem(total_size, 8), 8)
-    padding = <<0::size(padding_size * 8)>>
+    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
+    padding_needed = case rem(total_size, 8) do
+      0 -> 0
+      remainder -> 8 - remainder
+    end
+    padding = <<0::size(padding_needed * 8)>>
     
     <<
-      (total_size + padding_size)::little-64,
+      total_size::little-64,
       @ca_format_group::little-64
     >> <> name_data <> padding
   end
@@ -996,14 +1079,18 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     # Ensure context is null-terminated
     context_data = context <> <<0>>
     context_size = byte_size(context_data)
-    total_size = 16 + context_size  # Header (16 bytes) + context data
+    header_size = 16  # Header is always 16 bytes
+    total_size = header_size + context_size  # Size field includes header + data
     
-    # Pad to 8-byte boundary
-    padding_size = rem(8 - rem(total_size, 8), 8)
-    padding = <<0::size(padding_size * 8)>>
+    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
+    padding_needed = case rem(total_size, 8) do
+      0 -> 0
+      remainder -> 8 - remainder
+    end
+    padding = <<0::size(padding_needed * 8)>>
     
     <<
-      (total_size + padding_size)::little-64,
+      total_size::little-64,
       @ca_format_selinux::little-64
     >> <> context_data <> padding
   end
@@ -1011,31 +1098,39 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   defp encode_catar_element(%{type: :xattr, data: data}) do
     # CaFormatXAttr (variable length)
     data_size = byte_size(data)
-    total_size = 16 + data_size  # Header (16 bytes) + attribute data
+    header_size = 16  # Header is always 16 bytes
+    total_size = header_size + data_size  # Size field includes header + data
     
-    # Pad to 8-byte boundary
-    padding_size = rem(8 - rem(total_size, 8), 8)
-    padding = <<0::size(padding_size * 8)>>
+    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
+    padding_needed = case rem(total_size, 8) do
+      0 -> 0
+      remainder -> 8 - remainder
+    end
+    padding = <<0::size(padding_needed * 8)>>
     
     <<
-      (total_size + padding_size)::little-64,
+      total_size::little-64,
       @ca_format_xattr::little-64
     >> <> data <> padding
   end
 
-  defp encode_catar_element(%{type: :metadata, format: format_type, size: data_size}) do
+  defp encode_catar_element(%{type: :metadata, format: format_type, size: data_size, data: data}) do
     # Generic metadata elements (ACL, capabilities, etc.)
-    # These elements are skipped during parsing but we preserve them for roundtrip
-    total_size = 16 + data_size  # Header (16 bytes) + data
+    # Use the preserved original binary data for bit-exact roundtrip
+    header_size = 16  # Header is always 16 bytes
+    total_size = header_size + data_size  # Size field includes header + data
     
-    # Pad to 8-byte boundary  
-    padding_size = rem(8 - rem(total_size, 8), 8)
-    padding = <<0::size(padding_size * 8)>>
+    # Calculate padding to 8-byte boundary (padding is NOT included in total_size)
+    padding_needed = case rem(total_size, 8) do
+      0 -> 0
+      remainder -> 8 - remainder
+    end
+    padding = <<0::size(padding_needed * 8)>>
     
     <<
-      (total_size + padding_size)::little-64,
+      total_size::little-64,
       format_type::little-64
-    >> <> <<0::size(data_size * 8)>> <> padding  # Zero-filled data since we don't parse it
+    >> <> data <> padding  # Use original data instead of zero-filled
   end
 
   # Fallback for unknown element types
