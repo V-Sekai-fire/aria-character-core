@@ -365,14 +365,6 @@ Each service is listed in boot order with dependencies, development progress, an
 5. **Workflow Orchestration**: Developed complete SOP execution engine
 6. **Quality Foundation**: Established testing patterns and code quality standards
 
-### **Next Development Priorities**
-1. **User Interface** (`aria_interface`): Phoenix LiveView for system interaction
-2. **System Monitoring** (`aria_monitor`): Production observability and health checks
-3. **API Gateway** (`aria_coordinate`): Service coordination and request routing
-4. **Character Generation** (`aria_shape`): Neural network-based character creation
-5. **Job Processing** (`aria_queue`): Implement actual background job execution
-6. **Data Analysis** (`aria_interpret`): Character behavior analysis and recommendations
-
 ## 📋 Queued Work
 
 ### **Immediate Tasks**
@@ -390,16 +382,37 @@ Each service is listed in boot order with dependencies, development progress, an
   - [ ] Test service startup, shutdown, and auto-restart functionality
   - [ ] Verify inter-service communication over Tailscale network
 
-### **Development Queue**
+### **Next Development Priorities**
 - [ ] **Phoenix LiveView UI** (`aria_interface`): Create web interface for system interaction
   - [ ] Authentication dashboard with macaroon token management
   - [ ] Storage browser for asset management
   - [ ] Workflow execution monitor with real-time updates
   - [ ] System health dashboard
-- [ ] **Background Job Processing** (`aria_queue`): Implement actual Oban job execution
 - [ ] **System Monitoring** (`aria_monitor`): Production observability with Prometheus/Grafana
+  - [ ] Prometheus metrics collection and dashboard setup
+  - [ ] LiveDashboard integration for real-time system insights
+  - [ ] Error tracking and alerting system
+  - [ ] Performance monitoring and bottleneck identification
 - [ ] **API Gateway** (`aria_coordinate`): Service coordination and request routing
-- [ ] **Character Generation** (`aria_shape`): Neural network integration with PyTorch
+  - [ ] Service discovery and registration system
+  - [ ] Request routing and load balancing
+  - [ ] Circuit breaker patterns and graceful degradation
+  - [ ] API versioning and compatibility management
+- [ ] **Character Generation** (`aria_shape`): Neural network-based character creation
+  - [ ] PyTorch model integration and inference pipeline
+  - [ ] Character template system and trait generation
+  - [ ] Model versioning and A/B testing framework
+  - [ ] GPU acceleration support
+- [ ] **Background Job Processing** (`aria_queue`): Implement actual Oban job execution
+  - [ ] Priority queue management and job scheduling
+  - [ ] Job retry and failure handling with dead letter queues
+  - [ ] Cross-service job coordination and monitoring
+  - [ ] Dynamic queue scaling based on load
+- [ ] **Data Analysis** (`aria_interpret`): Character behavior analysis and recommendations
+  - [ ] Natural language processing for character descriptions
+  - [ ] Behavioral pattern analysis and statistical modeling
+  - [ ] DIN (Deep Interest Network) integration for recommendations
+  - [ ] Real-time recommendation serving via API
 
 ### **Infrastructure Improvements**
 - [ ] **CI/CD Pipeline**: Automated testing and deployment
