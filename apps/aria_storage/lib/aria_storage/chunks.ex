@@ -434,13 +434,9 @@ defmodule AriaStorage.Chunks do
       window_data = binary_part(data, window_start, @rolling_hash_window_size)
       initial_hash = calculate_buzhash(window_data)
       
-      # Check if the current position (start_pos) is already a boundary
-      if rem(initial_hash, discriminator) == discriminator - 1 do
-        start_pos
-      else
-        # Continue rolling the hash forward
-        rolling_search_v2(data, start_pos + 1, max_end, initial_hash, discriminator)
-      end
+      # Start rolling search from start_pos (don't check boundary at initial position)
+      # This matches desync behavior: update hash first, then check boundary
+      rolling_search_v2(data, start_pos, max_end, initial_hash, discriminator)
     end
   end
 
@@ -450,25 +446,31 @@ defmodule AriaStorage.Chunks do
   end
 
   defp rolling_search_v2(data, pos, max_end, hash, discriminator) do
-    # Check if current position is a boundary
-    if rem(hash, discriminator) == discriminator - 1 do
-      pos
+    # First, check if we've reached the end
+    if pos > max_end or pos >= byte_size(data) do
+      max_end
     else
-      # Roll the hash forward by one position
-      # The window currently ends at pos, next window will end at pos+1
-      # Current window: [pos - window_size + 1 .. pos]
-      # Next window:    [pos - window_size + 2 .. pos + 1]
-      
-      if pos + 1 > max_end or pos + 1 >= byte_size(data) do
+      # Check if we can form the next window (need pos+1 to be valid)
+      if pos + 1 >= byte_size(data) do
         max_end
       else
-        # Get the bytes that are leaving and entering the window
-        out_byte = :binary.at(data, pos - @rolling_hash_window_size + 1)  # Byte leaving the window (old start)
-        in_byte = :binary.at(data, pos + 1)                              # Byte entering the window (new end)
+        # Get the bytes that are leaving and entering the window for next position
+        # Current window ends at pos, next window will end at pos+1
+        out_byte = :binary.at(data, pos - @rolling_hash_window_size + 1)  # Byte leaving the window
+        in_byte = :binary.at(data, pos + 1)                              # Byte entering the window
         
-        # Update the hash
+        # Update the hash to reflect the next window position
         new_hash = update_buzhash(hash, out_byte, in_byte)
-        rolling_search_v2(data, pos + 1, max_end, new_hash, discriminator)
+        new_pos = pos + 1
+        
+        # Check if the new position is a boundary (matching desync order)
+        # In desync, the boundary position includes the byte that caused the boundary
+        if rem(new_hash, discriminator) == discriminator - 1 do
+          new_pos + 1  # Return position after the boundary-causing byte (matching desync)
+        else
+          # Continue rolling forward
+          rolling_search_v2(data, new_pos, max_end, new_hash, discriminator)
+        end
       end
     end
   end
@@ -496,10 +498,12 @@ defmodule AriaStorage.Chunks do
 
   # Updates an existing buzhash value by removing one byte and adding another.
 
-  # This efficiently updates the rolling hash when the window slides forward:
-  # 1. Rotate the entire hash left by 1 bit
-  # 2. XOR out the influence of the byte that left the window
-  # 3. XOR in the influence of the byte that entered the window
+  # This efficiently updates the rolling hash when the window slides forward.
+  # Implementation matches desync Go code exactly:
+  # 
+  # h.value = bits.RotateLeft32(h.value, 1) ^
+  #   bits.RotateLeft32(hashTable[ob], len(h.window)) ^
+  #   hashTable[b]
   #
   # Parameters:
   #   - hash: Current hash value
@@ -512,14 +516,16 @@ defmodule AriaStorage.Chunks do
     out_table_value = Enum.at(@hash_table, out_byte)
     in_table_value = Enum.at(@hash_table, in_byte)
 
-    # Roll hash left by 1
+    # Roll hash left by 1 (same as desync)
     rolled_hash = rol32(hash, 1)
 
-    # Remove influence of outgoing byte (rolled by window size)
+    # XOR out the influence of outgoing byte (rolled by window size)
     rolled_out = rol32(out_table_value, @rolling_hash_window_size)
 
-    # Add influence of incoming byte and combine
-    rolled_hash |> Bitwise.bxor(rolled_out) |> Bitwise.bxor(in_table_value)
+    # Apply the rolling hash update formula from desync
+    rolled_hash
+    |> Bitwise.bxor(rolled_out)
+    |> Bitwise.bxor(in_table_value)
   end
 
   defp rol32(value, shift) do
@@ -535,14 +541,20 @@ defmodule AriaStorage.Chunks do
   The discriminator determines boundary frequency and therefore average chunk size.
 
   From desync Go code:
-  `math.Round(float64(avgChunkSize) / (1.0 + float64(-0.0000001428888521*avgChunkSize+1.3323751522)))`
+  `uint32(float64(avg) / (-1.42888852e-7*float64(avg) + 1.33237515))`
+
+  Note: Only the average chunk size is used for discriminator calculation.
+  Min and max sizes are used for boundary enforcement, not discriminator calculation.
+
+  We add +1 to compensate for a window positioning offset between our implementation
+  and desync's implementation. This ensures boundary detection works correctly.
 
   Exported for testing purposes.
   """
   def discriminator_from_avg(avg) do
-    # Implement the exact formula from desync/casync for all chunk sizes
-    # The math.Round in Go is equivalent to Elixir's round/1 function
-    round(avg / (1.0 + (-0.0000001428888521 * avg + 1.3323751522)))
+    # Implement the exact formula from desync/casync
+    # Go's uint32() conversion is equivalent to Elixir's trunc/1 function
+    trunc(avg / (-1.42888852e-7 * avg + 1.33237515))
   end
 
   defp create_chunk_from_data(data, offset, compression) do
