@@ -23,7 +23,7 @@ Each service is listed in boot order with dependencies, development progress, an
     - [x] Error handling for unavailable OpenBao instances
     - [ ] Automated secret rotation and lifecycle management
   - [ ] **Authentication & Authorization Core** (⚠️ Low Coverage)
-    - [ ] JWT token generation and validation
+    - [ ] SSO authentication (Github oidc)
     - [ ] Role-based access control (RBAC)
     - [ ] API authentication middleware
     - [ ] Zero-trust security policies
@@ -80,7 +80,7 @@ Each service is listed in boot order with dependencies, development progress, an
 
 #### **[aria_storage](../apps/aria_storage/)** - Bulk Asset Storage
 - **Dependencies:** `aria_security` (storage credentials), `aria_auth` (access authorization)
-- **External:** Desync, S3/SFTP/CDN backends
+- **External:** Desync, S3/SFTP/CDN backends, Waffle file uploads
 - **Test Coverage:** 12.75% (129 tests passing - most comprehensive test suite)
 - **Development Status:**
   - [x] **Storage Backends** (Core Implementation Complete)
@@ -91,6 +91,8 @@ Each service is listed in boot order with dependencies, development progress, an
     - [x] File assembly from chunks with integrity verification
     - [x] Hash verification (SHA512/256) and compression (ZSTD)
     - [x] Rolling hash chunking algorithm (matches desync exactly)
+    - [x] Waffle integration infrastructure (`WaffleAdapter`, `WaffleChunkStore`, `ChunkUploader`)
+    - [ ] **Dual-Storage Safety System** (⚠️ Planned Enhancement): Waffle local storage alongside desync algorithm
     - [ ] S3-compatible object storage integration
     - [ ] SFTP and traditional file system support
     - [ ] CDN integration for global distribution
@@ -367,7 +369,57 @@ Each service is listed in boot order with dependencies, development progress, an
 
 ## 📋 Queued Work
 
-### **Immediate Tasks**
+### **Priority Demo** 🎯
+- [ ] **Character Generator LiveView Demo**: Create interactive demo for community feedback and GitHub sponsorship
+  - [ ] **Phoenix LiveView Setup** (`aria_interface`): Minimal UI for character generator demo
+    - [ ] Basic Phoenix LiveView application with routing
+    - [ ] Integrate existing character generator logic from `apps/aria_engine/test/character_generator_test.exs`
+    - [ ] Create real-time character generation interface with sliders and controls
+    - [ ] Live preview of generated character parameters
+  - [ ] **Interactive Slider Controls**: Port test sliders to LiveView components
+    - [ ] Categorical sliders (species, emotion, style_kei, color_palette, etc.), age ranges [chibi, young adult, adult]
+    - [ ] Boolean toggles (kemonomimi features, presence flags)
+    - [ ] Numeric range sliders (detail_level)
+    - [ ] Real-time parameter updates with LiveView events
+    - [ ] Character preview panel showing current configuration
+  - [ ] **Demo Features for Feedback & Sponsorship**
+    - [ ] Export generated character configurations (JSON/YAML)
+    - [ ] Share generated characters via URL parameters
+    - [ ] GitHub Sponsors integration and course promotion
+    - [ ] Feedback collection system for community input
+    - [ ] Performance metrics display (generation time, complexity)
+  - [ ] **Deployment for Public Demo**
+    - [ ] Configure Tailscale Funnel for public access to demo
+    - [ ] Simple authentication (optional GitHub OAuth for sponsors)
+    - [ ] Mobile-responsive design for broader accessibility
+    - [ ] Social sharing features for character creations
+
+### **Immediate Infrastructure Tasks**
+- [ ] **Waffle Dual-Storage Integration**: Implement Waffle local storage alongside existing desync algorithm
+  - [ ] **Parallel Storage Architecture**: Run both storage systems simultaneously for safety
+    - [ ] Configure Waffle adapter (`WaffleAdapter`) as secondary storage backend
+    - [ ] Maintain existing `aria_storage` desync chunking as primary system
+    - [ ] Implement dual-write pattern: write to both desync chunks and Waffle storage
+    - [ ] Configure fallback reads: primary from desync, fallback to Waffle if chunk missing
+    - [ ] Add storage consistency verification between both systems
+  - [ ] **Waffle Local Storage Configuration**: Set up local filesystem Waffle backend
+    - [ ] Configure `WaffleChunkStore` for local filesystem storage (`.cacnk` format)
+    - [ ] Set up directory structure: `uploads/chunks/{prefix}/{chunk_id}.cacnk`
+    - [ ] Implement chunk deduplication across both storage systems
+    - [ ] Configure `ChunkUploader` for seamless integration with existing workflow
+    - [ ] Add Waffle storage monitoring and health checks
+  - [ ] **Safety and Verification Features**
+    - [ ] Implement cross-storage integrity verification (compare chunk hashes)
+    - [ ] Add automated chunk migration between systems (repair missing chunks)
+    - [ ] Configure storage backend failover (automatic fallback on errors)
+    - [ ] Add dual-storage metrics and monitoring (storage usage, consistency checks)
+    - [ ] Implement storage cleanup and garbage collection for both systems
+  - [ ] **Integration Testing**
+    - [ ] Test dual-write operations with both successful and failed scenarios
+    - [ ] Verify chunk retrieval from both primary (desync) and fallback (Waffle) storage
+    - [ ] Test storage consistency verification and repair procedures
+    - [ ] Validate performance impact of dual-storage operations
+    - [ ] Test storage backend failover and recovery scenarios
 - [ ] **Local Infrastructure Testing**: Verify Mac development environment before deployment
   - [ ] Test OpenBao functionality on macOS (secret storage and retrieval)
   - [ ] Verify CockroachDB connectivity and migration execution
@@ -399,7 +451,7 @@ Each service is listed in boot order with dependencies, development progress, an
   - [ ] Circuit breaker patterns and graceful degradation
   - [ ] API versioning and compatibility management
 - [ ] **Character Generation** (`aria_shape`): Neural network-based character creation
-  - [ ] PyTorch model integration and inference pipeline
+  - [ ] PyTorch-ONNX model integration and inference pipeline
   - [ ] Character template system and trait generation
   - [ ] Model versioning and A/B testing framework
   - [ ] GPU acceleration support
