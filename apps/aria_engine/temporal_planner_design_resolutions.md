@@ -737,25 +737,38 @@ config :aria_data, AriaData.QueueRepo,
 config :aria_security, :secrets_module, AriaSecurity.SecretsMock
 ```
 
-**Implementation Strategy**: Focus weekend entirely on temporal planner logic, not infrastructure complexity.
+## Resolution 25: Zero External Dependencies (Beyond Base OS)
 
-## Open Questions
+**Decision**: Achieve zero external dependencies beyond what comes with a base Windows 11 or macOS installation (excluding standard development tools like GPU drivers).
 
-### Q23: Are We Zero Dependencies Yet?
+**Details**:
 
-**Question**: Can a user download the repository and run the temporal planner on a base Windows 11 or macOS install without external dependencies?
+- **Zero External Services**: No database servers, no secret management servers, no additional infrastructure
+  - **Database**: Use SQLite (single file, bundled with system or Elixir)
+  - **Secrets**: Use `AriaSecurity.SecretsMock` (in-memory, already implemented)
+  - **No External Processes**: Everything runs within the Elixir application
+- **Acceptable Base Requirements** (standard for any development):
+  - **Elixir/Erlang**: Development environment (like any language runtime)
+  - **GPU Drivers**: Standard hardware drivers (like any application)
+  - **Git**: Source control (standard development tool)
+  - **Terminal/Shell**: Built into all operating systems
+- **Automatic Dependencies** (downloaded by tooling):
+  - **Mix Dependencies**: All Elixir packages downloaded automatically by `mix deps.get`
+  - **No Manual Installation**: User never runs external installers
+- **Zero Setup Workflow**:
+  1. `git clone https://github.com/user/aria-character-core`
+  2. `cd aria-character-core`
+  3. `mix deps.get` (automatic download of all dependencies)
+  4. `mix aria_engine.conviction_crisis` (runs immediately)
+- **Benefits for Weekend Development**:
+  - **Immediate Demo**: Anyone can run the temporal planner instantly
+  - **No Infrastructure Failures**: Eliminates servers as potential failure points
+  - **Cross-Platform**: Works identically on Windows, macOS, Linux
+  - **Streamable**: Easy to demonstrate on streams without complex setup
+- **Implementation Requirements**:
+  - SQLite configuration for all Ecto repos used by temporal planner
+  - SecretsMock configuration for all secret management
+  - Self-contained file storage (no external S3/blob storage)
+  - In-memory caching (no external Redis)
 
-**Context**: Currently the system requires CockroachDB server + OpenBao setup which creates significant barriers for weekend development and demonstration. For the temporal planner MVP, we should consider if we can achieve zero external dependencies.
-
-**Current Dependencies Analysis**:
-- **Database**: CockroachDB requires separate server installation and complex certificate setup
-- **Secrets**: OpenBao requires server installation, SoftHSM, PKCS#11 configuration
-- **Elixir/Erlang**: Must be installed on host system (reasonable requirement)
-- **Mix Dependencies**: Automatically downloaded by Mix (acceptable)
-
-**Zero Dependency Goal**:
-- **Database**: Use SQLite (single file, no server needed)
-- **Secrets**: Use existing `AriaSecurity.SecretsMock` (in-memory, no server needed)
-- **Result**: `git clone` → `mix deps.get` → `mix aria_engine.conviction_crisis` → works immediately
-
-**Resolution Needed**: Decide if weekend scope should prioritize zero dependencies for easy demonstration and development.
+**Success Criteria**: A new developer can go from `git clone` to running temporal planner demo in under 2 minutes on a fresh Windows 11 or macOS machine with only Elixir installed.
