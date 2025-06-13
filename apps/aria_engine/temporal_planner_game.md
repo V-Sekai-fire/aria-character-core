@@ -1,10 +1,10 @@
-# Design Document: "Conviction in Crisis"
+# Design Document: "TimeStrike"
 
 A Real-Time Tactical Unit Test for a Temporal Goal-Task-Network Planner
 
 ## 1. Introduction
 
-**"Conviction in Crisis"** is a self-contained, real-time tactical scenario designed to serve as a robust unit test for a temporal, re-entrant, goal-task-network (GTN) planner. It models a critical choice-driven encounter inspired by the game "Triangle Strategy."
+**"TimeStrike"** is a self-contained, real-time tactical scenario designed to serve as a robust unit test for a temporal, re-entrant, goal-task-network (GTN) planner. It models a critical choice-driven encounter inspired by the game "Triangle Strategy."
 
 The primary purpose is to validate the planner's ability to:
 
@@ -129,7 +129,7 @@ To run the test and visualize the planner's decisions, a simple, interactive com
 The CLI provides a real-time view of the game state, the planner's current goal, and the list of scheduled actions.
 
 ```
-=== Conviction in Crisis - Temporal Planner Test ===
+=== TimeStrike - Temporal Planner Test ===
 Time: 00:05.2s | Goal: rescue_hostage | Plan Status: Executing
 
 Current State:
@@ -153,7 +153,7 @@ Scheduled Actions:
 
 ### **5.2. Core CLI Functionality**
 
-The CLI task (mix aria_engine.play_conviction_crisis) will demonstrate:
+The CLI task (mix aria_engine.play_timestrike) will demonstrate:
 
 1. **Temporal Planning**: Showing how the planner schedules actions over time.
 2. **Re-entrant Behavior**: Allowing the user to trigger the "Conviction Choice" mid-game and observing the planner generate a new plan.

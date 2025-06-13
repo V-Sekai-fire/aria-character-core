@@ -310,7 +310,7 @@ The game world contains static objects, environmental elements, and the map layo
 }
 ```
 
-**Example world_state (ConvictionCrisis):**
+**Example world_state (TimeStrike):**
 
 ```elixir
 %{
@@ -400,7 +400,7 @@ The game world contains static objects, environmental elements, and the map layo
   ],
   environmental_effects: [],
   metadata: %{
-    scenario: "conviction_crisis",
+    scenario: "timestrike",
     hostage_execution_time: 30.0,
     reinforcement_arrival_time: 45.0
   }

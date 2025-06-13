@@ -72,7 +72,7 @@ This document captures the finalized design decisions for the temporal, re-entra
 2. ✅ **Queue Design**: Time-ordered queues (sequential/parallel/instant)
 3. ✅ **Engine Separation**: Clear separation between GameEngine and planner
 4. ✅ **Stability**: Mandatory verification with Lyapunov functions
-5. ✅ **Test Domain**: ConvictionCrisis as validation scenario
+5. ✅ **Test Domain**: TimeStrike as validation scenario
 6. ✅ **Game Engine Integration**: Tick-based loop with Oban scheduling
 7. ✅ **Conviction Choice**: User input triggers immediate re-planning
 8. ✅ **Web Interface**: LiveView with interactive SVG and real-time updates
@@ -197,13 +197,13 @@ config :aria_queue, Oban,
 - Stability verification is a core requirement, not an optional optimization
 - Every plan must pass stability checks before execution
 
-## Resolution 5: ConvictionCrisis as Test Domain
+## Resolution 5: TimeStrike as Test Domain
 
-**Decision**: Treat ConvictionCrisis as a test domain for the temporal planner.
+**Decision**: Treat TimeStrike as a test domain for the temporal planner.
 
 **Details**:
 
-- ConvictionCrisis serves as the primary test case and validation domain
+- TimeStrike serves as the primary test case and validation domain
 - Use it to demonstrate and validate all temporal planning features
 - Design the domain to exercise all aspects of the temporal planner
 
@@ -266,7 +266,7 @@ config :aria_queue, Oban,
 
 **Details**:
 
-- **2D Grid Foundation**: Map stored as simple 2D grid (25×10 for ConvictionCrisis)
+- **2D Grid Foundation**: Map stored as simple 2D grid (25×10 for TimeStrike)
 - **Coordinate System**: {x, y} coordinates with optional :z metadata for future expansion
 - **Voxel Properties**: Each grid cell has properties: `:walkable`, `:cover`, `:chasm`, `:escape_zone`
 - **Simple Movement**: Euclidean distance calculation in 2D plane
@@ -404,12 +404,12 @@ config :aria_queue, Oban,
 - **MUST HAVE (Core MVP)**:
   - Basic temporal state architecture and data structures
   - Simple Oban job scheduling and execution
-  - Minimal ConvictionCrisis scenario (fixed map, 2 agents, 1 enemy)
+  - Minimal TimeStrike scenario (fixed map, 2 agents, 1 enemy)
   - Basic CLI with real-time display (no fancy animations)
   - Core stability verification (simplified Lyapunov functions)
   - Essential player input (SPACEBAR interrupt, basic hotkeys)
 - **SHOULD HAVE (If Time Permits)**:
-  - Full ConvictionCrisis scenario with all agents and enemies
+  - Full TimeStrike scenario with all agents and enemies
   - Polished CLI with smooth animations and visual effects
   - Complete opportunity window mechanics with timing challenges
   - Comprehensive error handling and edge cases
@@ -430,7 +430,7 @@ config :aria_queue, Oban,
 **Implementation Strategy**:
 
 - **Friday**: Core temporal planner architecture and basic Oban integration
-- **Saturday**: ConvictionCrisis game logic and basic CLI interface
+- **Saturday**: TimeStrike game logic and basic CLI interface
 - **Sunday**: Player input system and opportunity mechanics integration
 - **Buffer**: Use simplified implementations that can be enhanced post-weekend
 
@@ -456,7 +456,7 @@ config :aria_queue, Oban,
 - **Success Metrics**: Define success by working demonstrations, not feature completeness
   - **Core Success**: Temporal planner schedules and executes one action via Oban
   - **Enhanced Success**: Player can interrupt and redirect actions in real-time
-  - **Full Success**: Complete ConvictionCrisis scenario with all player intervention mechanics
+  - **Full Success**: Complete TimeStrike scenario with all player intervention mechanics
 - **Learning Adaptation**: Use weekend as experiment to understand LLM development patterns
   - Track which tasks are accelerated vs remain difficult
   - Document where LLM assistance is most/least effective
@@ -487,10 +487,10 @@ config :aria_queue, Oban,
 
   - **Base**: Existing `AriaEngine.State`, `AriaEngine.Domain`, `AriaEngine.Plan`
   - **Extensions**: `TemporalState` (extends State), `GameActionJob` (Oban worker)
-  - **New Modules**: `ConvictionCrisis.LiveView`, `ConvictionCrisis.GameEngine`
+  - **New Modules**: `TimeStrike.LiveView`, `TimeStrike.GameEngine`
   - **Infrastructure**: Existing `AriaQueue`, `AriaData.QueueRepo`, Oban setup
 
-- **MVP ConvictionCrisis Scenario (Ultra-Minimal)**:
+- **MVP TimeStrike Scenario (Ultra-Minimal)**:
 
   - **Map**: 10×6 grid, Alex starts at {2,3}, goal: reach {8,3}
   - **Action**: `move_to` only - no combat, skills, or enemies
@@ -528,7 +528,7 @@ end
 
 - **Weekend Acceptance Test (10-minute demo)**:
 
-  1. Navigate to: `http://localhost:4000/conviction-crisis`
+  1. Navigate to: `http://localhost:4000/timestrike`
   2. See: Interactive SVG grid with Alex ('A') at position {2,3}
   3. Click: Target position {8,3} - shows "Planning movement - ETA: 2.0s"
   4. Watch: Alex position updates in real-time across grid
@@ -551,7 +551,7 @@ end
   - **X-axis**: Points right (positive = east, negative = west)
   - **Y-axis**: Points up (positive = up/north, negative = down/south)
   - **Z-axis**: Points toward camera (positive = forward/out, negative = backward/into screen)
-- **2D Movement on Z=0 Plane**: All ConvictionCrisis action happens on Z=0 for simplicity
+- **2D Movement on Z=0 Plane**: All TimeStrike action happens on Z=0 for simplicity
   - Agents move in X-Y plane only: `{x, y, 0}`
   - Map coordinates: X=0-24 (width), Y=0-9 (height), Z=0 (ground level)
   - Distance calculation: `sqrt((x2-x1)² + (y2-y1)²)` (Z difference always 0)
@@ -646,7 +646,7 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
   - ✅ Euclidean distance calculations (Resolution 9) work with Z=0 plane movement
   - ✅ LLM development uncertainty (Resolution 17) addressed by flexible MVP scope (Resolution 16, 18)
 - **Domain Integration Consistency Check**:
-  - ✅ ConvictionCrisis test domain (Resolution 5) exercises all temporal planner features
+  - ✅ TimeStrike test domain (Resolution 5) exercises all temporal planner features
   - ✅ Web interface implementation (Resolution 8) supports all required player interactions
   - ✅ Stability verification (Resolution 4) integrates with real-time execution constraints
 
@@ -727,8 +727,8 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
 - **Implementation Order Driven by Test**:
   1. `TemporalState` - As test needs state management
   2. `GameActionJob` - As test needs action execution
-  3. `ConvictionCrisis.CLI` - As test needs terminal display
-  4. `ConvictionCrisis.GameEngine` - As test needs game loop
+  3. `TimeStrike.CLI` - As test needs terminal display
+  4. `TimeStrike.GameEngine` - As test needs game loop
   5. Mix task - As test needs entry point
 
 **First Test Structure**:
@@ -863,7 +863,7 @@ end
 
 # R2: Non-blocking input
 test "async keyboard input" do
-  {:ok, pid} = ConvictionCrisis.CLI.start_link()
+  {:ok, pid} = TimeStrike.CLI.start_link()
 
   # Simulate keypress
   send(pid, {:test_input, "space"})
