@@ -42,146 +42,214 @@ The system consists of three main components: the **Game Engine**, the **Game St
                              +---------------+
 ```
 
-## 3. Game State Representation (The Domain)
+The scenario unfolds on a 25x10 grid. While the map is 2D, the system uses 3D coordinates for future extensibility (e.g., flying units, multi-level terrain).
 
-This section defines the precise data structures and constants for the "Bridge of Betrayal" scenario.
-
-### 3.1. World & Map
-
-- **`grid_map_size`**: `{width: 25, height: 10, depth: 1}` representing coordinates `(x: 0-24, y: 0-9, z: 0)`.
-- **`map_layout`**: A 3D array where each cell has properties:
-  - `walkable`: (boolean)
-  - `cover_value`: (integer, e.g., 25% damage reduction)
-  - `is_chasm`: (boolean)
-  - `is_escape_zone`: (boolean, true if `x >= 24`)
-
-**Note**: While this scenario uses a 2D tactical map (z=0 for all entities), the system uses 3D coordinates to ensure future extensibility for multi-level scenarios, aerial units, and vertical movement mechanics.
-
+- **Grid Size**: {width: 25, height: 10, depth: 1}
+- **Map Properties**: Each cell can be walkable, provide cover, be a chasm, or be part of the escape_zone.
 - **Key Locations**:
-  - **Bridge Area**: `x` from 3 to 21 inclusive.
-  - **Pillars**:
-    - `pillar_1`: `{position: (10, 3, 0), hp: 150}`
-    - `pillar_2`: `{position: (10, 7, 0), hp: 150}`
-  - **Hostage**: `(20, 5, 0)`
-- **World Timers & Flags** (values in seconds):
-  - `world_time`: (float) Starts at 0.0, advanced by the Game Engine.
-  - `hostage_execution_timer`: `30.0`
-  - `enemy_reinforcement_timer`: `45.0`
+  - **Bridge Pillars**: (10, 3, 0) and (10, 7, 0), each with 150 HP.
+  - **Hostage**: (20, 5, 0).
+  - **Escape Zone**: Any tile where x >= 24.
+- **Scenario Timers**:
+  - **Hostage Execution**: The hostage is lost at 30.0 seconds.
+  - **Enemy Reinforcements**: Arrive at 45.0 seconds.
 
-### 3.2. Agent State (Characters & Enemies)
+### **3.2. Factions & Agents**
 
-A list of agent structs, each with the following properties:
+There are two teams: :player and :enemy. Each agent is defined by a consistent set of properties.
 
-| Property         | Type                       | Description                                                    |
-| ---------------- | -------------------------- | -------------------------------------------------------------- |
-| `id`             | Atom/Symbol                | Unique identifier (e.g., `:alex`, `:enemy_1`)                  |
-| `team`           | Atom/Symbol                | `:player` or `:enemy`                                          |
-| `position`       | `{x: int, y: int, z: int}` | Current grid coordinates.                                      |
-| `hp`             | Integer                    | Current health points.                                         |
-| `max_hp`         | Integer                    | Maximum health points.                                         |
-| `attack_power`   | Integer                    | Base damage dealt by the `attack` task.                        |
-| `defense`        | Integer                    | Flat damage reduction from incoming attacks.                   |
-| `move_speed`     | Integer                    | Squares per second the agent can move.                         |
-| `skills`         | List of Skill Structs      | The agent's available special abilities.                       |
-| `active_effects` | List of Effect Structs     | Active buffs/debuffs (e.g., `{effect: :slow, duration: 5.0}`). |
-| `current_task`   | Task Struct or `nil`       | The task the agent is currently executing.                     |
+| ID         | Team    | HP  | Atk | Def | Move | Position   | Skills          |
+| :--------- | :------ | :-- | :-- | :-- | :--- | :--------- | :-------------- |
+| **Alex**   | :player | 120 | 25  | 15  | 4    | (4, 4, 0)  | Delaying Strike |
+| **Maya**   | :player | 80  | 35  | 5   | 3    | (3, 5, 0)  | Scorch          |
+| **Jordan** | :player | 95  | 10  | 10  | 3    | (4, 6, 0)  | Now!            |
+| Soldier 1  | :enemy  | 70  | 20  | 10  | 3    | (15, 4, 0) | -               |
+| Soldier 2  | :enemy  | 70  | 20  | 10  | 3    | (15, 5, 0) | -               |
+| Soldier 3  | :enemy  | 70  | 20  | 10  | 3    | (15, 6, 0) | -               |
+| Archer 1   | :enemy  | 50  | 18  | 5   | 3    | (18, 3, 0) | -               |
+| Archer 2   | :enemy  | 50  | 18  | 5   | 3    | (18, 7, 0) | -               |
 
-### 3.3. Initial Scenario Constants
+### **3.3. Planner's Action Library**
 
-| Character | ID         | HP  | Atk | Def | Move Speed | Position     | Skills            |
-| --------- | ---------- | --- | --- | --- | ---------- | ------------ | ----------------- |
-| Alex      | `:alex`    | 120 | 25  | 15  | 4          | `(4, 4, 0)`  | `Delaying Strike` |
-| Maya      | `:maya`    | 80  | 35  | 5   | 3          | `(3, 5, 0)`  | `Scorch`          |
-| Jordan    | `:jordan`  | 95  | 10  | 10  | 3          | `(4, 6, 0)`  | `Now!`            |
-| Soldier 1 | `:enemy_1` | 70  | 20  | 10  | 3          | `(15, 4, 0)` | N/A               |
-| Soldier 2 | `:enemy_2` | 70  | 20  | 10  | 3          | `(15, 5, 0)` | N/A               |
-| Soldier 3 | `:enemy_3` | 70  | 20  | 10  | 3          | `(15, 6, 0)` | N/A               |
-| Archer 1  | `:enemy_4` | 50  | 18  | 5   | 3          | `(18, 3, 0)` | N/A               |
-| Archer 2  | `:enemy_5` | 50  | 18  | 5   | 3          | `(18, 7, 0)` | N/A               |
+These are the primitive tasks the Planner can use to build a plan.
 
-## 4. Agent Tasks (Planner's Action Library)
+| Task / Skill    | Caster | Duration / Cast Time | Cooldown | Description & Effects                                                                    |
+| :-------------- | :----- | :------------------- | :------- | :--------------------------------------------------------------------------------------- |
+| move_to         | Any    | distance / move      | -        | Moves agent to a target position                                                         |
+| attack          | Any    | 1.5s                 | -        | Standard attack. Deals (attacker.atk - target.def) damage                                |
+| interact        | Any    | 2.0s                 | -        | Interact with a world object (e.g., a pillar)                                            |
+| defend          | Any    | 1.0s (to activate)   | -        | Gain 50% damage reduction for 5s                                                         |
+| wait            | Any    | duration             | -        | Agent does nothing for a set time                                                        |
+| Delaying Strike | Alex   | 0.0s (instant)       | 10.0s    | Deals 1.5x damage and applies a slow effect for 5.0s                                     |
+| Scorch          | Maya   | 2.0s                 | 8.0s     | Deals AoE damage in a 3x3 square at a target location                                    |
+| Now!            | Jordan | 0.5s                 | 20.0s    | **Key Re-entrant Test**: Resets an ally's action, allowing them to act again immediately |
 
-These are the primitive actions the planner can assign to agents.
+## **4. The Core Test: The "Conviction Choice"**
 
-| Task Name       | Parameters                        | Duration (s)            | Description & Effects                                                                                             |
-| --------------- | --------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **`move_to`**   | `agent_id`, `position`            | `distance / move_speed` | Moves agent. Precondition: Path is walkable. Effect: Updates agent `position`.                                    |
-| **`attack`**    | `attacker_id`, `target_id`        | `1.5`                   | Perform a melee/ranged attack. Precondition: Target in range. Effect: `target.hp -= (attacker.atk - target.def)`. |
-| **`use_skill`** | `caster_id`, `skill_id`, `target` | Varies (see below)      | Uses a special ability.                                                                                           |
-| **`interact`**  | `agent_id`, `object_id`           | `2.0`                   | Interact with a world object (e.g., a pillar). Effect: `object.hp -= agent.atk`.                                  |
-| **`defend`**    | `agent_id`                        | `1.0` (to activate)     | Agent gains 50% damage reduction for 5s. Effect: Adds `:defending` to `active_effects`.                           |
-| **`wait`**      | `agent_id`, `duration`            | `duration`              | Agent does nothing.                                                                                               |
-
-### 4.1. Skill Definitions
-
-| Skill Name        | Caster | Cast Time | Cooldown | Description                                                                                |
-| ----------------- | ------ | --------- | -------- | ------------------------------------------------------------------------------------------ |
-| `Delaying Strike` | Alex   | `0.0s`    | `10.0s`  | Deals 1.5x damage and applies `{effect: :slow, duration: 5.0s}`.                           |
-| `Scorch`          | Maya   | `2.0s`    | `8.0s`   | Deals AoE damage in a 3x3 square at the target location.                                   |
-| `Now!`            | Jordan | `0.5s`    | `20.0s`  | Resets an ally's action, allowing them to act again immediately. **(Key Re-entrant Test)** |
-
-## 5. The "Conviction Choice" Problem
-
-The test begins. The planner is given the initial high-level goal: **`survive_the_encounter`**. The engine immediately presents the "Conviction Choice," forcing the planner to re-evaluate and adopt one of the four more specific goals.
+The test begins with the vague goal: **survive_the_encounter**. Immediately, the game engine forces the Planner to commit to one of four specific, mutually exclusive goals. This is the crucial re-planning event.
 
 ### **Choice 1: Morality (rescue_hostage)**
 
-_"Our allies are our strength. We leave no one behind\!"_
+_"Our allies are our strength. We leave no one behind!"_
 
 - **Goal:** Move a player agent to the hostage's tile before the execution timer runs out.
-- **Success Condition:** alex.position \== hostage.position AND world_time \<= 30.0.
-- **Likely Plan:** A direct rush. Maya uses Scorch to clear a path, Alex uses Delaying Strike to disable a key defender, and Jordan uses Now\! on Alex to maximize forward movement.
+- **Success Condition:** alex.position == hostage.position AND world_time <= 30.0.
+- **Likely Plan:** A direct rush. Maya uses Scorch to clear a path, Alex uses Delaying Strike to disable a key defender, and Jordan uses Now! on Alex to maximize forward movement.
 
 ### **Choice 2: Utility (destroy_bridge)**
 
 _"This bridge is their only path. A hard choice now saves countless lives later."_
 
 - **Goal:** Destroy the two bridge pillars to prevent enemy reinforcements.
-- **Success Condition:** pillar_1.hp \+ pillar_2.hp \<= 0\.
-- **Likely Plan:** A split operation. Alex and Jordan form a defensive line to intercept enemies while Maya moves into position to interact with and cast Scorch on the pillars. Jordan may use Now\! on Maya to accelerate the destruction.
+- **Success Condition:** pillar_1.hp + pillar_2.hp <= 0.
+- **Likely Plan:** A split operation. Alex and Jordan form a defensive line to intercept enemies while Maya moves into position to interact with and cast Scorch on the pillars. Jordan may use Now! on Maya to accelerate the destruction.
 
 ### **Choice 3: Liberty (escape_scenario)**
 
 _"To fight tomorrow, we must survive today. We will retreat and choose our next battlefield."_
 
 - **Goal:** Move all surviving player agents into the designated escape zone.
-- **Success Condition:** All surviving agents on :player team have position.x \>= 24\.
+- **Success Condition:** All surviving agents on :player team have position.x >= 24.
 - **Likely Plan:** A fighting retreat. Maya uses Scorch to create chokepoints, Alex uses Delaying Strike on the fastest pursuers, and Jordan uses defend to protect the most threatened ally while the team moves toward the map edge.
 
 ### **Choice 4: Valor (eliminate_all_enemies)**
 
-_"We will make our stand here\! Show them the iron will of our house\!"_
+_"We will make our stand here! Show them the iron will of our house!"_
 
-- **Goal:** Reduce the HP of all agents on the :enemy team to 0\.
+- **Goal:** Reduce the HP of all agents on the :enemy team to 0.
 - **Success Condition:** The list of agents on the :enemy team is empty.
-- **Likely Plan:** A coordinated assault. The planner should identify the highest threats (e.g., archers) and focus fire. Maya uses Scorch for maximum AoE damage, Alex targets key enemies, and Jordan uses Now\! on whichever ally can secure a kill or deal the most effective damage.
+- **Likely Plan:** A coordinated assault. The planner should identify the highest threats (e.g., archers) and focus fire. Maya uses Scorch for maximum AoE damage, Alex targets key enemies, and Jordan uses Now! on whichever ally can secure a kill or deal the most effective damage.
 
-## 6. Technical Architecture & Implementation
+## **5. Technical API Specification**
 
 This section outlines the Elixir-based implementation, focusing on the temporal extensions required to handle time-sensitive actions and goals. The architecture relies on Oban for scheduling, ensuring that actions are executed at the correct time.
 
-### 6.1. Temporal Planning Architecture
+### **5.1. Core Temporal State API (AriaEngine)**
 
-The core of the implementation is the integration between the **Temporal GTN Planner** and an **Oban Job Queue**.
+#### **AriaEngine.TemporalState**
 
-1. The Game Loop provides the current state and a goal to the Planner.
-2. The Planner generates a **Temporal Plan**, which is a sequence of actions with specific start times and durations.
-3. Each action in the plan is scheduled as a timed **Oban Job** (e.g., MoveJob, SkillJob).
-4. When a job executes, it updates the Game State.
-5. If the goal changes, the Planner **cancels pending jobs** from the old plan and schedules new jobs for the new plan.
+Handles time-aware facts. It can query the state of an object (e.g., alex.hp) at any point in time.
 
-### 6.2. Key Implementation Components
+```elixir
+defmodule AriaEngine.TemporalState do
+  # Creates a new temporal state, optionally setting the current time.
+  @spec new(float()) :: t()
+  # Sets a fact that is true starting at a specific timestamp.
+  @spec set_temporal_object(t(), String.t(), String.t(), any(), float()) :: t()
+  # Gets the value of a fact at a specific time.
+  @spec get_temporal_object(t(), String.t(), String.t(), float()) :: any() | nil
+  # Adds a temporal constraint to the state.
+  @spec add_temporal_constraint(t(), temporal_constraint()) :: t()
+end
+```
 
-- **AriaEngine.TemporalState**: Extends the core State module to handle temporal facts. It can query the state of an object (e.g., alex.hp) at any given point in time.
-- **AriaEngine.TemporalDomain**: Defines actions and methods with temporal properties like duration and time-based preconditions.
-- **AriaEngine.TemporalPlanner**: The main planning engine. It contains the logic for plan(...) and replan(...), which handles plan invalidation and generation.
-- **AriaEngine.TemporalPlan**: A data structure representing the plan itself, containing a list of timed actions and the temporal constraints between them (e.g., "Action A must finish before Action B starts").
-- **AriaEngine.Jobs.GameActionJob**: An Oban worker that executes a single game action. It takes the action details (e.g., {agent: "alex", action: :move_to, target: {8, 4, 0}}) and performs the necessary state update.
-- **ConvictionCrisis.GameState**: Manages the specific state for this scenario, including initialization, win/loss condition checks, and applying action effects.
+#### **AriaEngine.TemporalDomain**
+
+Defines actions and methods with temporal properties like duration and time-based preconditions.
+
+```elixir
+defmodule AriaEngine.TemporalDomain do
+  # Adds a temporal action with its execution logic function.
+  @spec add_temporal_action(t(), atom(), temporal_action_fn()) :: t()
+  # Adds a method for decomposing a high-level task.
+  @spec add_temporal_task_method(t(), String.t(), temporal_method_fn()) :: t()
+  # Executes a temporal action, returning the new state and action duration.
+  @spec execute_temporal_action(t(), atom(), AriaEngine.TemporalState.t(), list(), float()) :: {:ok, AriaEngine.TemporalState.t(), float()} | {:error, String.t()}
+end
+```
+
+### **5.2. Temporal Planning API (AriaEngine)**
+
+#### **AriaEngine.TemporalPlanner**
+
+The main planning engine. It contains the logic for plan(...) and replan(...), which handles plan invalidation and generation.
+
+```elixir
+defmodule AriaEngine.TemporalPlanner do
+  # Generates a plan for a given goal from a starting state and time.
+  @spec plan(AriaEngine.TemporalDomain.t(), AriaEngine.TemporalState.t(), goal(), float()) :: {:ok, AriaEngine.TemporalPlan.t()} | {:error, String.t()}
+  # Cancels an old plan and generates a new one for a new goal.
+  @spec replan(AriaEngine.TemporalDomain.t(), AriaEngine.TemporalState.t(), goal(), AriaEngine.TemporalPlan.t(), float()) :: {:ok, AriaEngine.TemporalPlan.t()} | {:error, String.t()}
+  # Returns the next set of actions that should be executed at the current time.
+  @spec get_next_actions(AriaEngine.TemporalPlan.t(), float()) :: [timed_action()]
+end
+```
+
+#### **AriaEngine.TemporalPlan**
+
+A data structure representing the plan itself, containing a list of timed actions and the temporal constraints between them.
+
+```elixir
+defmodule AriaEngine.TemporalPlan do
+  # Adds a timed action to the plan.
+  @spec add_action(t(), timed_action()) :: t()
+  # Adds a constraint between actions (e.g., precedence).
+  @spec add_constraint(t(), temporal_constraint()) :: t()
+  # Checks for temporal conflicts in the plan.
+  @spec check_conflicts(t()) :: {:ok, []} | {:error, [conflict()]}
+  # Cancels all actions scheduled after a given timestamp.
+  @spec cancel_after(t(), float()) :: t()
+end
+```
+
+### **5.3. Action Execution API (Oban)**
+
+#### **AriaEngine.Jobs.GameActionJob**
+
+An Oban worker that executes a single game action. It takes the action details (e.g., {agent: "alex", action: :move_to, target: {8, 4, 0}}) and performs the necessary state update.
+
+```elixir
+defmodule AriaEngine.Jobs.GameActionJob do
+  use Oban.Worker, queue: :game_actions, max_attempts: 1
+
+  # Schedules a game action job to run at its specified start_time.
+  @spec schedule_action(timed_action(), DateTime.t()) :: {:ok, Oban.Job.t()} | {:error, any()}
+  # Cancels a scheduled Oban job by its unique action ID.
+  @spec cancel_action(String.t()) :: :ok | {:error, any()}
+  # The `perform` callback that executes when the job runs.
+  @spec perform(Oban.Job.t()) :: :ok | {:error, any()}
+end
+```
+
+### **5.4. Scenario-Specific API (ConvictionCrisis)**
+
+#### **ConvictionCrisis.GameState**
+
+Manages the specific state for this scenario, including initialization, win/loss condition checks, and applying action effects.
+
+```elixir
+defmodule ConvictionCrisis.GameState do
+  # Initializes the game state with the starting layout.
+  @spec initialize() :: t()
+  # Updates the state of a specific agent.
+  @spec update_agent(t(), String.t(), map()) :: t()
+  # Applies the effects of a completed action to the state.
+  @spec apply_action_effects(t(), timed_action(), float()) :: t()
+  # Checks if the current state meets the win/loss condition for the active goal.
+  @spec check_win_condition(t(), goal()) :: :win | :lose | :ongoing
+end
+```
+
+#### **ConvictionCrisis.Actions**
+
+Implements the specific temporal logic for each action in the scenario's domain (move, attack, skills, etc.).
+
+```elixir
+defmodule ConvictionCrisis.Actions do
+  # Contains the implementation for all temporal actions, e.g.:
+  @spec temporal_move(state, args, start_time) :: {:ok, new_state, duration} | :error
+  @spec temporal_attack(state, args, start_time) :: {:ok, new_state, duration} | :error
+  @spec temporal_skill(state, args, start_time) :: {:ok, new_state, duration} | :error
+end
+```
+
+## **6. Test Interface & Demonstration (CLI)**
+
+To run the test and visualize the planner's decisions, a simple, interactive command-line interface will be used.
 
 ### **6.1. UI Mockup & Flow**
 
-### 6.1. User Interface Design
+The CLI provides a real-time view of the game state, the planner's current goal, and the list of scheduled actions.
 
 ```
 === Conviction in Crisis - Temporal Planner Test ===
@@ -206,14 +274,11 @@ Scheduled Actions:
 [Press SPACE to pause | Q to quit | C to change conviction]
 ```
 
-### 6.2. CLI Implementation Requirements
+### **6.2. Core CLI Functionality**
 
-The CLI task (`mix aria_engine.play_conviction_crisis`) should demonstrate:
+The CLI task (mix aria_engine.play_conviction_crisis) will demonstrate:
 
-1. **Temporal Planning**: Show how the planner schedules actions over time
-2. **Re-entrant Behavior**: Allow mid-game goal changes and observe re-planning
-3. **Real-time Execution**: Use Oban to execute actions at precise times
-4. **Conflict Resolution**: Handle temporal constraints and resource conflicts
-5. **Performance Metrics**: Display planning time, plan quality, execution accuracy
-
-This implementation will serve as both a unit test for the temporal planner and a demonstration of how Aria components work together in a real-time, decision-making system.
+1. **Temporal Planning**: Showing how the planner schedules actions over time.
+2. **Re-entrant Behavior**: Allowing the user to trigger the "Conviction Choice" mid-game and observing the planner generate a new plan.
+3. **Real-time Execution**: Using Oban to execute actions at their precise scheduled times, reflected in the UI.
+4. **Performance Metrics**: Displaying key metrics like planning time and plan execution accuracy.
