@@ -94,8 +94,7 @@ This document captures the finalized design decisions for the temporal, re-entra
 24. ✅ **Minimum Success Criteria**: Clear demonstration requirements for weekend
 25. ✅ **Research Strategy**: Address unknowns through rapid prototyping
 26. ✅ **Risk Mitigation**: Fallback plans if temporal precision fails
-27. ✅ **Web Interface**: Phoenix LiveView with Godot WebRTC stretch goal
-27. ✅ **Web Interface**: Phoenix LiveView web interface for real-time interaction
+27. ✅ **Web Interface**: Phoenix LiveView web interface replaces CLI (phx.server is standard)
 
 ## Implementation Status
 
@@ -727,7 +726,7 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
 - **Implementation Order Driven by Test**:
   1. `TemporalState` - As test needs state management
   2. `GameActionJob` - As test needs action execution
-  3. `TimeStrike.CLI` - As test needs terminal display
+  3. `TimeStrike.WebInterface` - As test needs real-time display
   4. `TimeStrike.GameEngine` - As test needs game loop
   5. Mix task - As test needs entry point
 
