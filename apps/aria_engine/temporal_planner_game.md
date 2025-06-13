@@ -196,7 +196,7 @@ end
 
 #### **AriaEngine.Jobs.GameActionJob**
 
-An Oban worker that executes a single game action. It takes the action details (e.g., {agent: "alex", action: :move_to, target: {8, 4, 0}}) and performs the necessary state update.
+An Oban worker that executes a single game action. It takes the action details (e.g., `{agent: "alex", action: :move_to, target: {8, 4, 0}}`) and performs the necessary state update.
 
 ```elixir
 defmodule AriaEngine.Jobs.GameActionJob do
