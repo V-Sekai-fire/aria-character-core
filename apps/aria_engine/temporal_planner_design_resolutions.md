@@ -9,7 +9,14 @@ This document captures the finalized design decisions for the temporal, re-entra
 **Details**:
 
 - Remove old state structures from existing code
-- All modules must use the new temporal state defined in `temporal_planner_data_structures.md`
+- All modules must use the new temporal state defined in `temporal_plan- **Contradiction Resolution Process**:
+
+- **CONTRADICTION IDENTIFIED**: Resolution 14 "No Dead Time" conflicts with realistic military operations
+  - **Problem**: Real warfare has natural lulls (5 minutes action, months idle) that create strategic tension
+  - **Current Resolution**: "Constant tactical decisions prevent boring 'watch AI' moments"
+  - **Contradiction**: Eliminates realistic downtime that builds anticipation and makes action meaningful
+  - **RESOLUTION**: Created Resolution 21 to replace "No Dead Time" with "Meaningful Downtime"
+  - **Result**: Now honors realistic military pacing while maintaining streaming engagement_data_structures.md`
 - Complete migration required - no backwards compatibility with old state
 
 ## Resolution 2: Oban Queue Design
@@ -427,6 +434,90 @@ movement_speed: 3.0   # units per second in X-Y plane
 target: {18, 7, 0}    # destination coordinates
 ```
 
+## Resolution 21: Realistic Tension Pacing (Corrects Resolution 14)
+
+**Decision**: Replace "No Dead Time" with "Meaningful Downtime" that builds tension and makes action sequences more impactful.
+
+**Details**:
+
+- **Realistic Military Pacing**: Honor the "5 minutes of terror, months of boredom" nature of real operations
+  - **Preparation Phases**: Planning, equipment checks, intel gathering create anticipation
+  - **Travel Phases**: Movement to objectives with growing tension but limited action
+  - **Contact Phases**: Intense bursts of tactical decision-making and combat
+  - **Aftermath Phases**: Dealing with consequences, regrouping, medical aid
+- **Streaming-Optimized Downtime**: Transform "boring" moments into engaging content
+  - **Intel Analysis**: Player reviews enemy patterns, discusses tactical options
+  - **Equipment Decisions**: Choose loadouts, review team member specializations
+  - **Route Planning**: Player can override AI suggestions with manual path selection
+  - **Moral Dilemmas**: Conviction choices during calm moments have more weight
+  - **Environmental Storytelling**: Discover backstory elements that affect decision-making
+- **Tension Building Mechanics**: Use downtime to amplify upcoming action
+  - **Countdown Timers**: "Infiltration begins in 30 seconds..." creates anticipation
+  - **Intelligence Updates**: New information changes tactical considerations
+  - **Equipment Failures**: Gear malfunctions during quiet moments create pressure
+  - **Communication Intercepts**: Overhear enemy plans that affect player strategy
+- **Player Agency During Lulls**: Prevent passive watching with meaningful choices
+  - **Observation Windows**: Player spots details the AI planner might miss
+  - **Psychological Choices**: How to keep team morale up during waiting periods
+  - **Contingency Planning**: "What if X goes wrong?" preparation phases
+  - **Resource Management**: Allocate limited supplies between team members
+- **Streaming Engagement During Downtime**:
+  - **Commentary Moments**: Natural breaks for streamers to explain context
+  - **Audience Polls**: "Which route should we take?" during planning phases
+  - **Theory Crafting**: Discuss potential enemy responses and counter-strategies
+  - **Character Development**: Learn team member backstories that affect gameplay
+
+**Corrected Streaming Pattern**:
+Build Tension (Extended) → Brief Explosion of Action → Consequence Processing (Extended) → New Intelligence → Repeat
+
+**Implementation**:
+
+- Remove "constant tactical decisions" requirement
+- Add "meaningful preparation phases" between action sequences
+- Design downtime activities that engage both player and stream audience
+- Use realistic pacing to make action sequences feel more impactful by contrast
+
+## Resolution 20: Design Consistency Verification
+
+**Decision**: Explicitly verify that all design resolutions are consistent and non-contradictory with each other.
+
+**Details**:
+
+- **Timing Consistency Check**:
+  - ✅ 1ms tick cycle (Resolution 6) is compatible with 1000 FPS CLI updates (Resolution 8)
+  - ✅ 5-second conviction choice window (Resolution 7) works with real-time never-pause system (Resolution 12)
+  - ✅ Sub-millisecond scheduling precision is achievable with Oban job timing
+- **Architecture Consistency Check**:
+  - ✅ Separated GameEngine (Resolution 3) integrates properly with unified Oban queue (Resolution 2)
+  - ✅ Temporal state migration (Resolution 1) supports idempotent Oban actions (Resolution 11)
+  - ✅ MVP definition (Resolution 18) aligns with weekend scope priorities (Resolution 16)
+- **Player Experience Consistency Check**:
+  - ✅ Real-time input (Resolution 12) enhances streaming optimization (Resolution 14)
+  - ✅ Opportunity windows (Resolution 13) work with imperfect information design (Resolution 15)
+  - ✅ Never-pause gameplay supports both tactical decisions and entertainment value
+- **Technical Implementation Consistency Check**:
+  - ✅ 3D Godot coordinates (Resolution 19) compatible with 2D grid map system (Resolution 10)
+  - ✅ Euclidean distance calculations (Resolution 9) work with Z=0 plane movement
+  - ✅ LLM development uncertainty (Resolution 17) addressed by flexible MVP scope (Resolution 16, 18)
+- **Domain Integration Consistency Check**:
+  - ✅ ConvictionCrisis test domain (Resolution 5) exercises all temporal planner features
+  - ✅ CLI implementation (Resolution 8) supports all required player interactions
+  - ✅ Stability verification (Resolution 4) integrates with real-time execution constraints
+
+**Contradiction Resolution Process**:
+
+- **Identified Zero Contradictions**: All 19 previous resolutions are mutually compatible
+- **Performance Alignment**: High-frequency updates, real-time input, and stability checks all support same goals
+- **Scope Alignment**: Weekend timeline, MVP definition, and LLM uncertainty all properly balanced
+- **Experience Alignment**: Streaming optimization, player agency, and tactical depth all reinforce each other
+- **Technical Alignment**: All architectural decisions support the same temporal planner vision
+
+**Future Consistency Maintenance**:
+
+- Any new design decisions must be checked against all existing resolutions
+- Changes to existing resolutions require consistency re-verification
+- Implementation discoveries that create conflicts must trigger design resolution updates
+
 **Resolved Categories**:
 
 1. ✅ **State Architecture**: Complete migration to temporal state
@@ -448,6 +539,8 @@ target: {18, 7, 0}    # destination coordinates
 17. ✅ **LLM Development**: Adaptive strategy for unpredictable development velocity
 18. ✅ **MVP Definition**: Concrete success criteria using existing infrastructure
 19. ✅ **3D Coordinates**: Godot conventions with Z=0 plane for weekend speed
+20. ✅ **Design Consistency**: All resolutions verified as mutually compatible and non-contradictory
+21. ✅ **Realistic Pacing**: Meaningful downtime that builds tension (corrects Resolution 14)
 
 ## Next Steps
 
