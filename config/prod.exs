@@ -60,6 +60,11 @@ config :aria_queue, Oban,
      ]}
   ],
   queues: [
+    # Temporal planner queues (Resolution 2)
+    sequential_actions: 1,    # Single worker for strict temporal ordering
+    parallel_actions: String.to_integer(System.get_env("PARALLEL_ACTIONS_SIZE") || "5"),
+    instant_actions: String.to_integer(System.get_env("INSTANT_ACTIONS_SIZE") || "3"),
+    # Legacy application queues
     ai_generation: String.to_integer(System.get_env("AI_QUEUE_SIZE") || "10"),
     planning: String.to_integer(System.get_env("PLANNING_QUEUE_SIZE") || "20"),
     storage_sync: String.to_integer(System.get_env("STORAGE_QUEUE_SIZE") || "5"),

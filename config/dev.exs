@@ -70,6 +70,11 @@ config :aria_queue, Oban,
   notifier: Oban.Notifiers.PG,
   plugins: [Oban.Plugins.Pruner],
   queues: [
+    # Temporal planner queues (Resolution 2)
+    sequential_actions: 1,    # Single worker for strict temporal ordering
+    parallel_actions: 5,      # Multi-worker for concurrent execution
+    instant_actions: 3,       # High-priority immediate responses
+    # Legacy application queues
     ai_generation: 5,
     planning: 10,
     storage_sync: 3,

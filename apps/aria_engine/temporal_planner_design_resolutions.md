@@ -21,13 +21,59 @@ This document captures the finalized design decisions for the temporal, re-entra
 
 ## Resolution 2: Oban Queue Design
 
-**Decision**: Use a unified Oban queue for all actions (not separate queues for temporal actions).
+**Decision**: Use separate Oban queues based on time ordering constraints - sequential operations use single-worker queues, parallel operations use multi-worker queues.
 
 **Details**:
 
-- Single queue handles both temporal and non-temporal actions
-- Simpler architecture and easier to manage
-- Actions differentiated by their payload/metadata, not by queue separation
+**Queue Architecture by Ordering Requirements**:
+
+- **`sequential_actions` Queue**: Single worker (concurrency: 1) for time-dependent operations
+  - **Use Case**: Actions that must execute in exact temporal order
+  - **Examples**: Agent movement chains, skill combos with timing dependencies, dialog sequences
+  - **Guarantee**: Actions execute one at a time in scheduled order
+  - **Worker Count**: 1 (prevents race conditions and timing conflicts)
+
+- **`parallel_actions` Queue**: Multi-worker (concurrency: 5) for order-independent operations  
+  - **Use Case**: Actions that can execute simultaneously without conflicts
+  - **Examples**: Independent agent movements, environmental effects, UI updates
+  - **Guarantee**: Actions execute as soon as scheduled time arrives
+  - **Worker Count**: 5 (allows concurrent execution for performance)
+
+- **`instant_actions` Queue**: High-priority (concurrency: 3) for immediate responses
+  - **Use Case**: Player interruptions, emergency re-planning triggers, system events
+  - **Examples**: SPACEBAR interrupts, goal changes, error handling
+  - **Guarantee**: Near-instant execution regardless of other queue states
+  - **Worker Count**: 3 (responsive but controlled)
+
+**Queue Selection Logic**:
+```elixir
+def select_queue(action) do
+  case action.constraints do
+    %{ordering: :sequential} -> :sequential_actions
+    %{ordering: :parallel} -> :parallel_actions  
+    %{priority: :instant} -> :instant_actions
+    _ -> :parallel_actions  # default to parallel for performance
+  end
+end
+```
+
+**Configuration**:
+```elixir
+config :aria_queue, Oban,
+  repo: AriaData.QueueRepo,
+  notifier: Oban.Notifiers.PG,
+  queues: [
+    sequential_actions: 1,    # Single worker for strict ordering
+    parallel_actions: 5,      # Multi-worker for concurrency
+    instant_actions: 3        # High-priority immediate responses
+  ]
+```
+
+**Benefits**:
+- **Temporal Correctness**: Sequential queue prevents timing race conditions
+- **Performance**: Parallel queue allows concurrent execution where safe
+- **Responsiveness**: Instant queue ensures immediate player feedback
+- **Predictability**: Clear ordering guarantees for each action type
 
 ## Resolution 3: Game Engine Separation
 

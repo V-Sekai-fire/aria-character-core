@@ -54,7 +54,12 @@ config :aria_queue, Oban,
   testing: :inline,
   repo: AriaData.QueueRepo,
   notifier: Oban.Notifiers.PG,
-  queues: []
+  queues: [
+    # Temporal planner queues (disabled in test - inline execution)
+    sequential_actions: 0,
+    parallel_actions: 0, 
+    instant_actions: 0
+  ]
 
 # Test security configuration (using mock)
 config :aria_security,
