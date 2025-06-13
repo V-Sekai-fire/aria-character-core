@@ -58,16 +58,16 @@ The scenario unfolds on a 25x10 grid. While the map is 2D, the system uses 3D co
 
 There are two teams: :player and :enemy. Each agent is defined by a consistent set of properties.
 
-| ID         | Team    | HP  | Atk | Def | Move | Position   | Skills          |
-| :--------- | :------ | :-- | :-- | :-- | :--- | :--------- | :-------------- |
-| **Alex**   | :player | 120 | 25  | 15  | 4    | (4, 4, 0)  | Delaying Strike |
-| **Maya**   | :player | 80  | 35  | 5   | 3    | (3, 5, 0)  | Scorch          |
-| **Jordan** | :player | 95  | 10  | 10  | 3    | (4, 6, 0)  | Now!            |
-| Soldier 1  | :enemy  | 70  | 20  | 10  | 3    | (15, 4, 0) | -               |
-| Soldier 2  | :enemy  | 70  | 20  | 10  | 3    | (15, 5, 0) | -               |
-| Soldier 3  | :enemy  | 70  | 20  | 10  | 3    | (15, 6, 0) | -               |
-| Archer 1   | :enemy  | 50  | 18  | 5   | 3    | (18, 3, 0) | -               |
-| Archer 2   | :enemy  | 50  | 18  | 5   | 3    | (18, 7, 0) | -               |
+| ID         | Team    | HP  | Atk | Def | Move Speed | Position   | Skills          |
+| :--------- | :------ | :-- | :-- | :-- | :--------- | :--------- | :-------------- |
+| **Alex**   | :player | 120 | 25  | 15  | 4.0 u/s    | (4, 4, 0)  | Delaying Strike |
+| **Maya**   | :player | 80  | 35  | 5   | 3.0 u/s    | (3, 5, 0)  | Scorch          |
+| **Jordan** | :player | 95  | 10  | 10  | 3.0 u/s    | (4, 6, 0)  | Now!            |
+| Soldier 1  | :enemy  | 70  | 20  | 10  | 3.0 u/s    | (15, 4, 0) | -               |
+| Soldier 2  | :enemy  | 70  | 20  | 10  | 3.0 u/s    | (15, 5, 0) | -               |
+| Soldier 3  | :enemy  | 70  | 20  | 10  | 3.0 u/s    | (15, 6, 0) | -               |
+| Archer 1   | :enemy  | 50  | 18  | 5   | 3.0 u/s    | (18, 3, 0) | -               |
+| Archer 2   | :enemy  | 50  | 18  | 5   | 3.0 u/s    | (18, 7, 0) | -               |
 
 ### **3.3. Planner's Action Library**
 
@@ -75,7 +75,7 @@ These are the primitive tasks the Planner can use to build a plan.
 
 | Task / Skill    | Caster | Duration / Cast Time | Cooldown | Description & Effects                                                                    |
 | :-------------- | :----- | :------------------- | :------- | :--------------------------------------------------------------------------------------- |
-| move_to         | Any    | distance / move      | -        | Moves agent to a target position                                                         |
+| move_to         | Any    | distance / agent.move_speed | -   | Moves agent to a target position. Duration = euclidean_distance / agent.move_speed      |
 | attack          | Any    | 1.5s                 | -        | Standard attack. Deals (attacker.atk - target.def) damage                                |
 | interact        | Any    | 2.0s                 | -        | Interact with a world object (e.g., a pillar)                                            |
 | defend          | Any    | 1.0s (to activate)   | -        | Gain 50% damage reduction for 5s                                                         |

@@ -248,12 +248,12 @@ config :aria_queue, Oban,
 
 ## Resolution 9: Action Duration & Movement Calculations
 
-**Decision**: Use Euclidean distance with fixed movement speed.
+**Decision**: Use Euclidean distance with per-agent movement speed from agent stats.
 
 **Details**:
 
-- Movement speed: 3 units per second for all agents
-- Duration formula: `distance = sqrt((x2-x1)² + (y2-y1)² + (z2-z1)²)`, time = distance / 3.0
+- Movement speed: Variable per agent (Alex: 4, Maya: 3, Jordan: 3 units per second)
+- Duration formula: `distance = sqrt((x2-x1)² + (y2-y1)² + (z2-z1)²)`, time = distance / agent.move_speed
 - Interrupted actions: store progress and resume from current position
 - Cooldowns are absolute timers - remain active during re-planning
 - Actions validate cooldown availability before being added to plan
@@ -492,7 +492,7 @@ config :aria_queue, Oban,
 
   - **Map**: 10×6 grid, Alex starts at {2,3}, goal: reach {8,3}
   - **Action**: `move_to` only - no combat, skills, or enemies
-  - **Duration**: Movement takes `distance / 3.0` seconds (existing calculation pattern)
+  - **Duration**: Movement takes `distance / agent.move_speed` seconds (existing calculation pattern)
   - **Display**: ASCII grid updated every 100ms showing Alex's position as 'A'
 
 - **MVP Data Structures (Minimal Extensions)**:
@@ -755,7 +755,7 @@ end
 **Details**:
 
 - **Simple Distance Formula**: `time = distance / speed` where distance = `sqrt((x2-x1)² + (y2-y1)²)`
-- **Fixed Movement Speed**: 3.0 units per second for all agents (from Resolution 9)
+- **Variable Movement Speed**: Per-agent movement speed (Alex: 4.0, Maya: 3.0, Jordan: 3.0 u/s from Resolution 9)
 - **Deterministic Duration**: Same movement always takes exactly the same time
 - **Test-Driven Validation**: Automated tests verify timing accuracy within 10ms tolerance
 - **Progress Tracking**: Linear interpolation between start and end positions over duration
