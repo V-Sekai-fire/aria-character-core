@@ -180,7 +180,7 @@ This document captures the finalized design decisions for the temporal, re-entra
 
 **Details**:
 
-- **Opportunity Prompts**: "Press E NOW!" appears for 1.5 seconds with countdown timer
+- **Opportunity Prompts**: "Press F NOW!" appears for 1.5 seconds with countdown timer
 - **Frame-Perfect Timing**: Optimal interventions require 50-100ms precision windows
 - **Risk/Reward Moments**: Narrow timing windows where input determines success/failure
 - **Focus Burst**: Hold SHIFT during actions for 25% speed boost (limited energy)
