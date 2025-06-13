@@ -68,11 +68,13 @@ defmodule Mix.Tasks.AriaStorage.TestWaffle do
 
     if opts[:help] do
       IO.puts(@moduledoc)
-      return(:ok)
+    else
+      Mix.Task.run("app.start")
+      run_test(opts)
     end
+  end
 
-    Mix.Task.run("app.start")
-
+  defp run_test(opts) do
     backend = String.to_atom(opts[:backend] || "local")
     test_file = opts[:test_file]
     chunk_size = opts[:chunk_size] || 65536

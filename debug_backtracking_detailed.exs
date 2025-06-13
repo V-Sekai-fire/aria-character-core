@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Add the lib directories to the path
 Code.prepend_path("apps/aria_engine/lib")
 Code.prepend_path("apps/aria_storage/lib")

@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script to test RPG planning directly
 
 # Load the project

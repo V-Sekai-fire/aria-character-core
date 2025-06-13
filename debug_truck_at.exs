@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Test script to debug truck_at planning issue
 ExUnit.start()
 

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule RescueDomainTest do
   @moduledoc """
   Test the rescue domain with IPyHOP planning to validate Run-Lazy-Refineahead implementation.
