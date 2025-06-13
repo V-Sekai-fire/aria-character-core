@@ -410,29 +410,156 @@ The main planning engine. It contains the logic for plan(...) and replan(...), w
 
 ```elixir
 defmodule AriaEngine.TemporalPlanner do
-  # Generates a plan for a given goal from a starting state and time.
-  @spec plan(AriaEngine.TemporalDomain.t(), AriaEngine.TemporalState.t(), goal(), float()) :: {:ok, AriaEngine.TemporalPlan.t()} | {:error, String.t()}
-  # Cancels an old plan and generates a new one for a new goal.
-  @spec replan(AriaEngine.TemporalDomain.t(), AriaEngine.TemporalState.t(), goal(), AriaEngine.TemporalPlan.t(), float()) :: {:ok, AriaEngine.TemporalPlan.t()} | {:error, String.t()}
-  # Returns the next set of actions that should be executed at the current time.
-  @spec get_next_actions(AriaEngine.TemporalPlan.t(), float()) :: [timed_action()]
-end
-```
+  @moduledoc """
+  Core temporal planner for AriaEngine.
+  It directly constructs a temporally valid plan (a sequence of timed_actions)
+  by decomposing goals into tasks and actions, considering their durations,
+  start times, end times, and temporal constraints.
+  This module does not rely on a separate non-temporal HTN planner for its core logic.
+  """
 
-#### **AriaEngine.TemporalPlan**
+  alias AriaEngine.{TemporalState, TemporalDomain, TemporalPlan}
+  # alias AriaEngine.ConvictionCrisis # May not be needed if goal structure is generic enough
 
-A data structure representing the plan itself, containing a list of timed actions and the temporal constraints between them.
+  @type goal :: map() # Using the rich goal structure defined in section 5.2
+  @type timed_action :: map() # Using the timed_action structure from section 5.1
+  @type planning_method :: map() # As defined in section 5.5
 
-```elixir
-defmodule AriaEngine.TemporalPlan do
-  # Adds a timed action to the plan.
-  @spec add_action(t(), timed_action()) :: t()
-  # Adds a constraint between actions (e.g., precedence).
-  @spec add_constraint(t(), temporal_constraint()) :: t()
-  # Checks for temporal conflicts in the plan.
-  @spec check_conflicts(t()) :: {:ok, []} | {:error, [conflict()]}
-  # Cancels all actions scheduled after a given timestamp.
-  @spec cancel_after(t(), float()) :: t()
+  def plan(temporal_domain, initial_temporal_state, goals, current_time, _opts \\\\ []) do
+    # Core temporal planning algorithm:
+    # 1. Goal Selection: Prioritize and select goal(s) from the `goals` list.
+    #    For simplicity, we'll process the first goal that has a defined planning strategy.
+    # 2. Method Selection & Decomposition: For the selected goal, find applicable `planning_method`s
+    #    from `temporal_domain.temporal_methods`. A method defines how to break down a complex task
+    #    (or goal) into sub-tasks or primitive actions.
+    # 3. Scheduling: For primitive actions, calculate duration, assign start/end times, check preconditions
+    #    against `initial_temporal_state`, and respect temporal constraints.
+    # 4. Plan Construction: Assemble `timed_action`s into a `TemporalPlan.t()`.
+
+    # Illustrative example for a single goal:
+    case goals do
+      [%{type: :destroy_bridge, agents: [agent_id | _], metadata: %{pillar_locations: [pillar1_pos | _]}, deadline: deadline} = goal] ->
+        # This is a simplified, direct planning sketch for one agent attacking one pillar.
+        # A real planner would handle multiple agents, multiple pillars, resource allocation,
+        # pathfinding, dynamic precondition checking, and more sophisticated method application.
+
+        IO.inspect(goal, label: "Planning for :destroy_bridge")
+        actions_for_plan = [] # Accumulator for timed_actions
+        current_plan_time = current_time
+
+        # Step 1: Move agent to the first pillar
+        # Assume a method or task decomposition led to this primitive action.
+        move_action_name = :move_to
+        move_args = [agent_id, pillar1_pos]
+
+        # Check preconditions for move_to (e.g., agent is alive, path is clear - simplified here)
+        # precond_check_result = TemporalDomain.check_preconditions(temporal_domain, move_action_name, initial_temporal_state, move_args, current_plan_time)
+        # if precond_check_result == :ok do
+
+        move_duration = TemporalDomain.get_action_duration(temporal_domain, move_action_name, initial_temporal_state, move_args)
+        move_action = %{
+          id: "destroy_bridge_move_#{:erlang.unique_integer()}",
+          agent_id: agent_id,
+          action: move_action_name,
+          args: move_args,
+          start_time: current_plan_time,
+          duration: move_duration,
+          end_time: current_plan_time + move_duration,
+          prerequisites: [], # In a real plan, this could be an ID of a prior action
+          effects: [], # Effects are typically applied by TemporalDomain.execute_temporal_action
+          status: :scheduled
+        }
+        actions_for_plan = [move_action | actions_for_plan]
+        current_plan_time = move_action.end_time # Advance plan time
+
+        # Step 2: Attack the first pillar (assuming agent is now at the pillar)
+        # This would typically be part of a loop or further method decomposition if pillar has HP.
+        attack_action_name = :attack # Or a specific :attack_pillar action
+        # Args might include the pillar_id or its properties if needed by the attack action.
+        attack_args = [agent_id, "pillar_1_id"] # Assuming pillar_1_id is known
+
+        # Check preconditions for attack (e.g., agent is at pillar, pillar is attackable)
+        # For this, the `initial_temporal_state` would need to be projected forward to `current_plan_time`
+        # or `get_temporal_object` would be used with `current_plan_time`.
+        # projected_state_at_attack = TemporalState.project(initial_temporal_state, current_plan_time)
+        # if TemporalDomain.check_preconditions(..., projected_state_at_attack, ...) == :ok do
+
+        attack_duration = TemporalDomain.get_action_duration(temporal_domain, attack_action_name, initial_temporal_state, attack_args)
+        attack_action = %{
+          id: "destroy_bridge_attack_#{:erlang.unique_integer()}",
+          agent_id: agent_id,
+          action: attack_action_name,
+          args: attack_args,
+          start_time: current_plan_time,
+          duration: attack_duration,
+          end_time: current_plan_time + attack_duration,
+          prerequisites: [move_action.id], # Depends on the move action completing
+          effects: [],
+          status: :scheduled
+        }
+        actions_for_plan = [attack_action | actions_for_plan]
+        current_plan_time = attack_action.end_time
+
+        # end (precondition check for attack)
+        # end (precondition check for move)
+
+        # Ensure plan respects the overall goal deadline
+        if current_plan_time > deadline do
+          IO.puts("Warning: Plan for :destroy_bridge might exceed deadline.")
+          # This could trigger replanning or selection of a different method.
+        end
+
+        temporal_plan = %TemporalPlan{actions: Enum.reverse(actions_for_plan), start_time: current_time, constraints: []}
+        {:ok, temporal_plan}
+
+      [_ | _] = goals -> # Handle other goals or multiple goals
+        # A more sophisticated planner would iterate through goals, select methods,
+        # resolve conflicts, and interleave actions if pursuing multiple goals in parallel.
+        first_goal = List.first(goals)
+        IO.puts("Warning: No specific planning logic implemented for goal type: #{first_goal.type}. Returning empty plan.")
+        {:ok, %TemporalPlan{actions: [], start_time: current_time, constraints: []}}
+
+      [] -> # No goals
+        IO.puts("No goals provided to planner.")
+        {:ok, %TemporalPlan{actions: [], start_time: current_time, constraints: []}}
+    end
+  end
+
+  def replan(temporal_domain, current_temporal_state, new_goals, old_plan, current_time, opts \\\\ []) do
+    # 1. Cancel or adjust future actions in the old_plan.
+    #    - Actions already completed or in progress might be kept.
+    #    - Actions scheduled for the future that conflict with new_goals are removed.
+    updated_old_plan = TemporalPlan.cancel_after(old_plan, current_time)
+
+    # 2. Generate a new plan for the new_goals from the current_temporal_state and current_time.
+    case plan(temporal_domain, current_temporal_state, new_goals, current_time, opts) do
+      {:ok, new_partial_plan} ->
+        # 3. Merge the kept actions from updated_old_plan with new_partial_plan.
+        #    This merge logic needs to be careful about dependencies and potential conflicts.
+        merged_actions =
+          (updated_old_plan.actions ++ new_partial_plan.actions)
+          |> Enum.sort_by(& &1.start_time) # Simple sort, might need more complex merging
+          |> Enum.uniq_by(& &1.id)
+
+        merged_plan = %{new_partial_plan | actions: merged_actions}
+        {:ok, merged_plan}
+
+      error ->
+        error
+    end
+  end
+
+  def get_next_actions(plan, current_time) do
+    # Get actions that should start now or very soon.
+    # The window (e.g., current_time + 0.1) might need to be configurable or based on game tick rate.
+    plan.actions
+    |> Enum.filter(fn action ->
+      action.status == :scheduled and
+      action.start_time >= current_time and
+      action.start_time < current_time + 0.1 # Small window for "now"
+    end)
+    |> Enum.sort_by(&(&1.start_time))
+  end
 end
 ```
 
@@ -638,27 +765,37 @@ defmodule AriaEngine.TemporalDomain do
   alias AriaEngine.{Domain, TemporalState}
 
   defstruct base_domain: %Domain{},
-            temporal_actions: %{},
-            temporal_methods: %{}
+            temporal_actions: %{},      # %{action_name :: atom() => temporal_action_meta()}
+            temporal_methods: %{}       # %{task_name :: String.t() => [planning_method()]}
 
-  def new(name \\ "temporal_domain") do
+  @type temporal_action_meta :: %{
+    duration_fn: (state :: TemporalState.t(), args :: list() -> duration :: float()),
+    effects_fn: (state :: TemporalState.t(), args :: list(), start_time :: float(), duration :: float() -> [AriaEngine.TemporalState.temporal_effect()]) | nil,
+    preconditions: [AriaEngine.TemporalState.condition()]
+  }
+  @type planning_method :: map() # As defined in section 5.5
+
+  def new(name \\\\ "temporal_domain") do
     %__MODULE__{base_domain: Domain.new(name)}
   end
 
-  def add_temporal_action(domain, action_name, action_fn, duration_fn, preconditions \\ []) do
-    # Add to base domain
+  # `effects_fn` is now optional. If nil, effects are assumed to be handled by the base `action_fn` directly modifying the base_state.
+  def add_temporal_action(domain, action_name, action_fn, duration_fn, effects_fn \\\\ nil, preconditions \\\\ []) do
     updated_base = Domain.add_action(domain.base_domain, action_name, action_fn)
-
-    # Add temporal metadata
-    temporal_action = %{
-      duration_fn: duration_fn,  # fn(state, args) -> duration
-      preconditions: preconditions,
-      effects: []
+    temporal_action_meta = %{
+      duration_fn: duration_fn,
+      effects_fn: effects_fn,
+      preconditions: preconditions
     }
-
-    temporal_actions = Map.put(domain.temporal_actions, action_name, temporal_action)
-
+    temporal_actions = Map.put(domain.temporal_actions, action_name, temporal_action_meta)
     %{domain | base_domain: updated_base, temporal_actions: temporal_actions}
+  end
+
+  def add_temporal_task_method(domain, task_name, planning_method) do
+    # `planning_method` should be the rich structure defined in section 5.5
+    methods = Map.get(domain.temporal_methods, task_name, [])
+    updated_methods = Map.put(domain.temporal_methods, task_name, [planning_method | methods])
+    %{domain | temporal_methods: updated_methods}
   end
 
   def get_action_duration(domain, action_name, state, args) do
@@ -670,29 +807,50 @@ defmodule AriaEngine.TemporalDomain do
 
   def execute_temporal_action(domain, action_name, state, args, start_time) do
     with action_fn when not is_nil(action_fn) <- Domain.get_action(domain.base_domain, action_name),
-         duration <- get_action_duration(domain, action_name, state, args),
-         new_base_state <- action_fn.(state.base_state, args) do
+         action_meta = Map.get(domain.temporal_actions, action_name),
+         not is_nil(action_meta) <- true,
+         duration <- action_meta.duration_fn.(state, args),
+         # Execute the base action function. It might modify the `state.base_state`.
+         new_base_state_after_action_fn <- action_fn.(state.base_state, args) do
 
-      if new_base_state == false do
-        {:error, "Action #{action_name} failed"}
+      if new_base_state_after_action_fn == false do
+        {:error, "Action #{action_name} failed during base execution"}
       else
-        # Apply effects at start_time
-        new_temporal_state = apply_action_effects(state, new_base_state, start_time)
-        {:ok, new_temporal_state, duration}
+        # Create a new temporal state reflecting the changes from action_fn
+        # This assumes action_fn returns the *entire new* base_state.
+        # If action_fn mutates the passed state, this logic needs adjustment.
+        state_after_base_action = %{state | base_state: new_base_state_after_action_fn}
+
+        # Apply declared temporal effects, if any
+        final_temporal_state =
+          if action_meta.effects_fn do
+            effects = action_meta.effects_fn.(state_after_base_action, args, start_time, duration)
+            Enum.reduce(effects, state_after_base_action, fn effect, acc_state ->
+              TemporalState.set_temporal_object(
+                acc_state,
+                effect.property, # Assuming effect.property maps to predicate
+                effect.object,   # Assuming effect.object maps to subject
+                effect.value,
+                effect.start_time,
+                if(effect.duration == :permanent, do: :permanent, else: effect.duration)
+              )
+            end)
+          else
+            # If no explicit effects_fn, we need to ensure changes from action_fn (to base_state)
+            # are correctly reflected as temporal facts starting at `start_time`.
+            # This part is tricky if action_fn just returns a new base_state without explicit effect declarations.
+            # For simplicity, we assume `TemporalState.advance_time` or a similar mechanism will handle this
+            # by snapshotting the `base_state` at `start_time` if it was modified.
+            # A more robust way is to require effects_fn or derive effects from base_state changes.
+            state_after_base_action # Or derive effects from diffing state.base_state and new_base_state_after_action_fn
+          end
+
+        {:ok, final_temporal_state, duration}
       end
     else
-      _ -> {:error, "Action #{action_name} not found"}
+      _ when is_nil(Domain.get_action(domain.base_domain, action_name)) -> {:error, "Action #{action_name} not found in base domain"}
+      _ -> {:error, "Temporal metadata for action #{action_name} not found"}
     end
-  end
-
-  defp apply_action_effects(temporal_state, new_base_state, start_time) do
-    # Convert base state changes to temporal facts
-    old_triples = AriaEngine.State.to_triples(temporal_state.base_state)
-    new_triples = AriaEngine.State.to_triples(new_base_state)
-
-    Enum.reduce(new_triples, temporal_state, fn {pred, subj, obj}, acc_state ->
-      TemporalState.set_temporal_object(acc_state, pred, subj, obj, start_time)
-    end)
   end
 end
 ```
@@ -704,36 +862,137 @@ end
 ```elixir
 defmodule AriaEngine.TemporalPlanner do
   @moduledoc """
-  Temporal planner that extends AriaEngine.Plan with time-awareness and re-entrancy.
+  Core temporal planner for AriaEngine.
+  It directly constructs a temporally valid plan (a sequence of timed_actions)
+  by decomposing goals into tasks and actions, considering their durations,
+  start times, end times, and temporal constraints.
+  This module does not rely on a separate non-temporal HTN planner for its core logic.
   """
 
-  alias AriaEngine.{Plan, TemporalState, TemporalDomain, TemporalPlan}
+  alias AriaEngine.{TemporalState, TemporalDomain, TemporalPlan}
+  # alias AriaEngine.ConvictionCrisis # May not be needed if goal structure is generic enough
 
-  def plan(temporal_domain, temporal_state, goals, current_time, opts \\ []) do
-    # Convert temporal goals to HTN goals for existing planner
-    htn_goals = convert_temporal_goals_to_htn(goals, current_time)
+  @type goal :: map() # Using the rich goal structure defined in section 5.2
+  @type timed_action :: map() # Using the timed_action structure from section 5.1
+  @type planning_method :: map() # As defined in section 5.5
 
-    # Use existing HTN planner
-    case Plan.plan(temporal_domain.base_domain, temporal_state.base_state, htn_goals, opts) do
-      {:ok, solution_tree} ->
-        # Convert HTN solution to temporal plan
-        temporal_plan = convert_solution_to_temporal_plan(solution_tree, temporal_domain, temporal_state, current_time)
+  def plan(temporal_domain, initial_temporal_state, goals, current_time, _opts \\\\ []) do
+    # Core temporal planning algorithm:
+    # 1. Goal Selection: Prioritize and select goal(s) from the `goals` list.
+    #    For simplicity, we'll process the first goal that has a defined planning strategy.
+    # 2. Method Selection & Decomposition: For the selected goal, find applicable `planning_method`s
+    #    from `temporal_domain.temporal_methods`. A method defines how to break down a complex task
+    #    (or goal) into sub-tasks or primitive actions.
+    # 3. Scheduling: For primitive actions, calculate duration, assign start/end times, check preconditions
+    #    against `initial_temporal_state`, and respect temporal constraints.
+    # 4. Plan Construction: Assemble `timed_action`s into a `TemporalPlan.t()`.
+
+    # Illustrative example for a single goal:
+    case goals do
+      [%{type: :destroy_bridge, agents: [agent_id | _], metadata: %{pillar_locations: [pillar1_pos | _]}, deadline: deadline} = goal] ->
+        # This is a simplified, direct planning sketch for one agent attacking one pillar.
+        # A real planner would handle multiple agents, multiple pillars, resource allocation,
+        # pathfinding, dynamic precondition checking, and more sophisticated method application.
+
+        IO.inspect(goal, label: "Planning for :destroy_bridge")
+        actions_for_plan = [] # Accumulator for timed_actions
+        current_plan_time = current_time
+
+        # Step 1: Move agent to the first pillar
+        # Assume a method or task decomposition led to this primitive action.
+        move_action_name = :move_to
+        move_args = [agent_id, pillar1_pos]
+
+        # Check preconditions for move_to (e.g., agent is alive, path is clear - simplified here)
+        # precond_check_result = TemporalDomain.check_preconditions(temporal_domain, move_action_name, initial_temporal_state, move_args, current_plan_time)
+        # if precond_check_result == :ok do
+
+        move_duration = TemporalDomain.get_action_duration(temporal_domain, move_action_name, initial_temporal_state, move_args)
+        move_action = %{
+          id: "destroy_bridge_move_#{:erlang.unique_integer()}",
+          agent_id: agent_id,
+          action: move_action_name,
+          args: move_args,
+          start_time: current_plan_time,
+          duration: move_duration,
+          end_time: current_plan_time + move_duration,
+          prerequisites: [], # In a real plan, this could be an ID of a prior action
+          effects: [], # Effects are typically applied by TemporalDomain.execute_temporal_action
+          status: :scheduled
+        }
+        actions_for_plan = [move_action | actions_for_plan]
+        current_plan_time = move_action.end_time # Advance plan time
+
+        # Step 2: Attack the first pillar (assuming agent is now at the pillar)
+        # This would typically be part of a loop or further method decomposition if pillar has HP.
+        attack_action_name = :attack # Or a specific :attack_pillar action
+        # Args might include the pillar_id or its properties if needed by the attack action.
+        attack_args = [agent_id, "pillar_1_id"] # Assuming pillar_1_id is known
+
+        # Check preconditions for attack (e.g., agent is at pillar, pillar is attackable)
+        # For this, the `initial_temporal_state` would need to be projected forward to `current_plan_time`
+        # or `get_temporal_object` would be used with `current_plan_time`.
+        # projected_state_at_attack = TemporalState.project(initial_temporal_state, current_plan_time)
+        # if TemporalDomain.check_preconditions(..., projected_state_at_attack, ...) == :ok do
+
+        attack_duration = TemporalDomain.get_action_duration(temporal_domain, attack_action_name, initial_temporal_state, attack_args)
+        attack_action = %{
+          id: "destroy_bridge_attack_#{:erlang.unique_integer()}",
+          agent_id: agent_id,
+          action: attack_action_name,
+          args: attack_args,
+          start_time: current_plan_time,
+          duration: attack_duration,
+          end_time: current_plan_time + attack_duration,
+          prerequisites: [move_action.id], # Depends on the move action completing
+          effects: [],
+          status: :scheduled
+        }
+        actions_for_plan = [attack_action | actions_for_plan]
+        current_plan_time = attack_action.end_time
+
+        # end (precondition check for attack)
+        # end (precondition check for move)
+
+        # Ensure plan respects the overall goal deadline
+        if current_plan_time > deadline do
+          IO.puts("Warning: Plan for :destroy_bridge might exceed deadline.")
+          # This could trigger replanning or selection of a different method.
+        end
+
+        temporal_plan = %TemporalPlan{actions: Enum.reverse(actions_for_plan), start_time: current_time, constraints: []}
         {:ok, temporal_plan}
 
-      {:error, reason} ->
-        {:error, reason}
+      [_ | _] = goals -> # Handle other goals or multiple goals
+        # A more sophisticated planner would iterate through goals, select methods,
+        # resolve conflicts, and interleave actions if pursuing multiple goals in parallel.
+        first_goal = List.first(goals)
+        IO.puts("Warning: No specific planning logic implemented for goal type: #{first_goal.type}. Returning empty plan.")
+        {:ok, %TemporalPlan{actions: [], start_time: current_time, constraints: []}}
+
+      [] -> # No goals
+        IO.puts("No goals provided to planner.")
+        {:ok, %TemporalPlan{actions: [], start_time: current_time, constraints: []}}
     end
   end
 
-  def replan(temporal_domain, temporal_state, new_goals, old_plan, current_time, opts \\ []) do
-    # Cancel future actions in old plan
-    updated_plan = TemporalPlan.cancel_after(old_plan, current_time)
+  def replan(temporal_domain, current_temporal_state, new_goals, old_plan, current_time, opts \\\\ []) do
+    # 1. Cancel or adjust future actions in the old_plan.
+    #    - Actions already completed or in progress might be kept.
+    #    - Actions scheduled for the future that conflict with new_goals are removed.
+    updated_old_plan = TemporalPlan.cancel_after(old_plan, current_time)
 
-    # Plan for new goals from current state and time
-    case plan(temporal_domain, temporal_state, new_goals, current_time, opts) do
-      {:ok, new_plan} ->
-        # Merge plans: keep completed actions, add new actions
-        merged_plan = merge_temporal_plans(updated_plan, new_plan, current_time)
+    # 2. Generate a new plan for the new_goals from the current_temporal_state and current_time.
+    case plan(temporal_domain, current_temporal_state, new_goals, current_time, opts) do
+      {:ok, new_partial_plan} ->
+        # 3. Merge the kept actions from updated_old_plan with new_partial_plan.
+        #    This merge logic needs to be careful about dependencies and potential conflicts.
+        merged_actions =
+          (updated_old_plan.actions ++ new_partial_plan.actions)
+          |> Enum.sort_by(& &1.start_time) # Simple sort, might need more complex merging
+          |> Enum.uniq_by(& &1.id)
+
+        merged_plan = %{new_partial_plan | actions: merged_actions}
         {:ok, merged_plan}
 
       error ->
@@ -742,72 +1001,15 @@ defmodule AriaEngine.TemporalPlanner do
   end
 
   def get_next_actions(plan, current_time) do
+    # Get actions that should start now or very soon.
+    # The window (e.g., current_time + 0.1) might need to be configurable or based on game tick rate.
     plan.actions
     |> Enum.filter(fn action ->
-      action.start_time >= current_time and action.start_time < current_time + 0.1
+      action.status == :scheduled and
+      action.start_time >= current_time and
+      action.start_time < current_time + 0.1 # Small window for "now"
     end)
     |> Enum.sort_by(&(&1.start_time))
-  end
-
-  # Private helper functions
-
-  defp convert_temporal_goals_to_htn(goals, current_time) do
-    Enum.map(goals, fn goal ->
-      case goal do
-        %{type: :rescue_hostage} ->
-          {"rescue_hostage", [goal.agents, goal.deadline - current_time]}
-
-        %{type: :destroy_bridge} ->
-          {"destroy_bridge", [goal.agents]}
-
-        %{type: :escape_scenario} ->
-          {"escape_scenario", [goal.agents]}
-
-        %{type: :eliminate_all_enemies} ->
-          {"eliminate_enemies", [goal.agents]}
-
-        # Simple goal format
-        {predicate, subject, object} ->
-          {predicate, subject, object}
-      end
-    end)
-  end
-
-  defp convert_solution_to_temporal_plan(solution_tree, temporal_domain, temporal_state, start_time) do
-    # Extract primitive actions from solution tree
-    primitive_actions = Plan.get_primitive_actions_dfs(solution_tree)
-
-    # Add timing to actions
-    {timed_actions, _} = Enum.reduce(primitive_actions, {[], start_time}, fn {action_name, args}, {actions, time} ->
-      duration = TemporalDomain.get_action_duration(temporal_domain, action_name, temporal_state, args)
-
-      timed_action = %{
-        id: "action_#{length(actions)}",
-        action: action_name,
-        args: args,
-        start_time: time,
-        duration: duration,
-        end_time: time + duration,
-        status: :scheduled
-      }
-
-      {[timed_action | actions], time + duration}
-    end)
-
-    %TemporalPlan{
-      actions: Enum.reverse(timed_actions),
-      start_time: start_time
-    }
-  end
-
-  defp merge_temporal_plans(old_plan, new_plan, current_time) do
-    # Keep completed and in-progress actions from old plan
-    kept_actions = Enum.filter(old_plan.actions, fn action ->
-      action.start_time < current_time
-    end)
-
-    # Add new actions, adjusting their timing
-    %{new_plan | actions: kept_actions ++ new_plan.actions}
   end
 end
 ```
