@@ -858,9 +858,7 @@ defmodule AriaEngine.MembraneWorkflowTest do
       ]
 
       pipeline = Testing.Pipeline.start_supervised!(spec: spec)
-      Process.sleep(100)  # Allow processing to complete
       Testing.Pipeline.terminate(pipeline)      # Verify jobs were persisted
-      Process.sleep(50)  # Extra time for file operations
       persisted_jobs = __MODULE__.PersistentJobSink.get_persisted_jobs(storage_path)
 
       assert length(persisted_jobs) == 2
@@ -1075,7 +1073,6 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
     # Wait for processing to complete
     # In a real game, this would be event-driven with Phoenix PubSub
-    Process.sleep(50)
 
     Testing.Pipeline.terminate(pipeline)
     :ok
@@ -1184,7 +1181,6 @@ defmodule AriaEngine.MembraneWorkflowTest do
     end)
 
     # Wait for convergence completion - simulate realistic pipeline processing
-    Process.sleep(100)  # Brief processing time
 
     # Create simulated convergence results based on worker count
     # Ensure the total processed count adds up to exactly 2000
