@@ -570,4 +570,123 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
 - **Dependency Chain**: Which starting point has the fewest external dependencies?
 - **MVP Alignment**: Which most directly advances toward the 10-minute demo acceptance criteria?
 
+**Risk Analysis (Highest to Lowest Risk)**:
+
+1. **🔴 HIGHEST RISK - Start with CLI**: 
+   - **Integration Complexity**: Requires understanding ANSI codes, async input, terminal control
+   - **No Validation**: Can build elaborate interface that doesn't connect to actual game logic
+   - **Wasted Effort**: Visual polish effort without core functionality underneath
+   - **Debugging Difficulty**: Hard to test terminal interactions in isolation
+
+2. **🟡 HIGH RISK - Start with Existing Code Review**:
+   - **Analysis Paralysis**: Can spend entire weekend reading code without building anything
+   - **Overwhelming Context**: AriaEngine codebase is large and complex
+   - **No Progress**: Pure analysis doesn't advance toward working demo
+   - **Integration Assumptions**: May make wrong assumptions about how existing code works
+
+3. **🟡 MEDIUM-HIGH RISK - Start with Mix Task**:
+   - **Integration Dependencies**: Requires CLI + GameEngine + TemporalState to be meaningful
+   - **Entry Point Only**: Creates shell without substance
+   - **Coordination Complexity**: Must coordinate multiple subsystems immediately
+
+4. **🟢 MEDIUM RISK - Start with Data Structures**:
+   - **Over-Engineering Risk**: Can build elaborate structures not needed for MVP
+   - **Abstraction Without Usage**: May create interfaces that don't match actual needs
+   - **Foundation Approach**: Solid but may delay seeing working behavior
+
+5. **🟢 LOW-MEDIUM RISK - Start with Oban Job**:
+   - **Core Mechanism**: Gets to heart of temporal execution quickly
+   - **Concrete Behavior**: Can test actual job scheduling and execution
+   - **Integration Point**: Natural place where temporal planning meets execution
+
+6. **🟢 LOWEST RISK - Start with Tests**:
+   - **TDD Best Practice**: Drives out exactly what's needed, no more
+   - **Clear Success Criteria**: Test passes = feature works
+   - **Incremental Progress**: Each test adds concrete functionality
+   - **Integration Validation**: Tests force integration issues to surface early
+   - **MVP Focused**: Can write test for exact 10-minute demo acceptance criteria
+
+**Recommended First Step**: Start with Tests (Lowest Risk)
+- Write failing test for: "Alex moves from {2,3} to {8,3} in real-time with terminal display"
+- Forces creation of minimal TemporalState, GameActionJob, and CLI integration
+- Provides immediate feedback on what works vs what doesn't
+- Aligns perfectly with TDD approach and MVP demo requirements
+
 **Resolution Needed**: Choose the specific first step and create an implementation sequence that builds momentum while following TDD principles.
+
+## Resolution 22: First Implementation Step
+
+**Decision**: Start with writing tests - specifically the MVP acceptance test that drives out all required components.
+
+**Details**:
+
+- **First Test**: Write failing integration test for complete MVP demo scenario
+  - Test file: `test/aria_engine/conviction_crisis_integration_test.exs`
+  - Test scenario: "Alex moves from {2,3} to {8,3} with real-time terminal display and SPACEBAR interruption"
+  - Acceptance criteria: Matches exact 10-minute demo requirements from Resolution 18
+- **TDD Sequence**: Let failing test drive out exactly what's needed
+  1. **Test Fails**: No modules exist yet
+  2. **Create Minimal**: Add just enough code to improve error messages
+  3. **Iterate**: Each test run reveals next missing piece
+  4. **Integrate**: Test forces all components to work together
+- **Risk Mitigation**: Test-first approach prevents over-engineering and ensures integration
+- **Momentum Building**: Each test pass provides concrete progress milestone
+- **Implementation Order Driven by Test**:
+  1. `TemporalState` - As test needs state management
+  2. `GameActionJob` - As test needs action execution
+  3. `ConvictionCrisis.CLI` - As test needs terminal display
+  4. `ConvictionCrisis.GameEngine` - As test needs game loop
+  5. Mix task - As test needs entry point
+
+**First Test Structure**:
+```elixir
+test "MVP demo: Alex moves from {2,3} to {8,3} with real-time display and interruption" do
+  # 1. Start game
+  # 2. Verify Alex at {2,3}
+  # 3. Verify auto-plan to {8,3}
+  # 4. Watch real-time movement
+  # 5. Interrupt at {5,3}
+  # 6. Verify replanning
+  # 7. Complete movement to {8,3}
+  # 8. Verify "Mission Complete!"
+end
+```
+
+**Implementation Strategy**: Write comprehensive failing test first, then implement just enough to make it pass - no more, no less.
+
+## Resolution 23: Intent vs Action Architecture
+
+**Decision**: Establish clear distinction between Intents (immediate planning commands) and Actions (scheduled executable tasks).
+
+**Details**:
+
+- **Actions** (scheduled in Oban queue with duration and state effects):
+  - `move_to` - Agent movement with travel time
+  - `attack` - Combat action with cooldown
+  - `use_item` - Equipment usage with resource consumption
+  - `wait` - Deliberate pause for timing coordination
+  - **Properties**: Duration, resource cost, can fail, queued execution, state changes
+- **Intents** (immediate commands that modify the planning system):
+  - `interrupt` - Cancel current action, trigger replanning
+  - `replan` - Recalculate optimal plan from current state
+  - `cancel_action` - Remove specific scheduled action
+  - `change_goal` - Update objective, trigger full replanning
+  - `emergency_stop` - Halt all actions immediately
+  - **Properties**: Instantaneous, no duration, modify plan queue, trigger replanning
+- **Interruption Flow**:
+  1. Player presses SPACEBAR → `interrupt` intent sent
+  2. Intent processor cancels current executing action
+  3. Agent position updated to current location
+  4. Replanning triggered from new position
+  5. New actions scheduled to achieve goal
+- **Architecture Separation**:
+  - **ActionQueue**: Handles scheduled actions with Oban jobs
+  - **IntentProcessor**: Handles immediate planning modifications
+  - **TemporalPlanner**: Responds to intents by generating new actions
+  - **GameEngine**: Processes both intents and action completions
+- **Test Implementation**:
+  - Actions tested for duration, effects, and completion
+  - Intents tested for immediate response and plan modification
+  - Integration tested for intent → action → replanning flow
+
+**Critical Design Point**: Interruption is NOT an action that takes time - it's an intent that immediately modifies the temporal plan.
