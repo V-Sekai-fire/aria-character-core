@@ -6,30 +6,35 @@ Each service's role and dependencies are documented in their respective README f
 
 ## 📋 Queued Work
 
-- [ ] **Character Generator LiveView Demo**: Create interactive demo for community feedback and GitHub sponsorship
-  - [ ] **Minimal UI for character generator demo** (`aria_interface`): 
-    - [ ] Basic Phoenix LiveView application with routing and layout
-    - [ ] Create real-time character generation interface with sliders and controls
-    - [ ] Live preview of generated character parameters and prompt text
-    - [ ] **OAuth Integration**: GitHub OAuth for user authentication and favorites storage
-  - [ ] **Macaroon Cookie Authentication**: Implement stateless authentication for character demo
+- [ ] **Character Generator Interactive Demo**: Create interactive demo for community feedback and GitHub sponsorship
+  - [ ] **Demo Implementation Options**:
+    - [ ] **Option A: Livebook + Kino Components** (Recommended for rapid prototyping)
+      - [ ] Create Livebook notebook with Kino.Input components (sliders, selects, checkboxes)
+      - [ ] Use `Kino.Input.range/2` for numeric attributes
+      - [ ] Use `Kino.Input.select/3` for categorical choices
+      - [ ] Use `Kino.Input.checkbox/2` for boolean options and feature toggles
+      - [ ] Implement real-time character preview with `Kino.listen/2` for live updates
+      - [ ] Render character sheets with `Kino.Markdown.new/1` for rich formatting
+      - [ ] Use `Kino.Layout` for organizing input components and output display
+      - [ ] Create shareable `.livemd` notebooks for easy distribution and collaboration
+      - [ ] **OAuth Integration**: GitHub OAuth for user authentication and favorites storage
+  - [ ] **Character Generator Features**
+    - [ ] Interactive controls for all character attributes
+    - [ ] Real-time character preview with live updates
+    - [ ] Character configuration export/import capabilities
+    - [ ] Generated character prompt display and formatting
+    - [ ] **Macaroon Cookie Authentication**
     - [ ] Configure HTTP-only secure cookie handling for macaroon tokens
     - [ ] Create Phoenix plug for automatic macaroon token verification from cookies
     - [ ] Implement GitHub OAuth callback to generate and set macaroon cookies
     - [ ] Add cookie-based user identification for LiveView sessions
-    - [ ] **Character Generator Storage Strategy**: 
+    - [ ] **Character Generator Storage Strategy**
       - [ ] **Authenticated Users**: Database storage with OAuth user favorites via single-tier aria_storage backend
       - [ ] **Unauthenticated Users**: Browser `localStorage` with macaroon-signed checksums (character config ~6-12KB exceeds 4KB cookie limit)
       - [ ] **Preset References**: Compressed cookie storage for preset IDs (~50-100 bytes) with server-side expansion
     - [ ] Configure cookie security settings (HTTP-only, Secure, SameSite protection)
     - [ ] Test macaroon cookie authentication flow with character generator demo
-  - [ ] **Interactive Slider Controls**: Port test sliders to LiveView components
-    - [ ] Sliders with live updates
-    - [ ] Categorical sliders
-    - [ ] Boolean toggles
-    - [ ] Numeric range sliders with real-time feedback
-    - [ ] Character configuration preview panel with generated prompt display
-  - [ ] **User Favorites System**: Implement OAuth user character storage via single-tier architecture
+    - [ ] **User Favorites System**
     - [ ] Save/load user favorite character configurations (authenticated users only)
     - [ ] Character gallery view for saved favorites with thumbnails
     - [ ] Share character configurations via URL parameters (public/private toggle)
@@ -39,8 +44,6 @@ Each service's role and dependencies are documented in their respective README f
     - [ ] GitHub Sponsors integration and course promotion
     - [ ] Feedback collection system for community input
     - [ ] Performance metrics display (generation time, complexity)
-  - [ ] **Deployment for Public Demo**
-    - [ ] Configure public access to demo
-    - [ ] Simple authentication (optional GitHub OAuth for sponsors)
-    - [ ] Mobile-responsive design for broader accessibility
+  - [ ] **Deployment Options**
+    - [ ] **Livebook Deployment**: Deploy shareable notebooks via Livebook Cloud or GitHub
     - [ ] Social sharing features for character creations
