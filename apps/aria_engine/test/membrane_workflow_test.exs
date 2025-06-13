@@ -1190,11 +1190,11 @@ defmodule AriaEngine.MembraneWorkflowTest do
     # Ensure the total processed count adds up to exactly 2000
     base_count = div(2000, worker_count)
     remainder = rem(2000, worker_count)
-    
+
     results = Enum.map(1..worker_count, fn core_id ->
       # Give extra work to the first 'remainder' workers to make total exact
       processed_count = if core_id <= remainder, do: base_count + 1, else: base_count
-      
+
       %{
         core_id: core_id,
         processed_count: processed_count,
