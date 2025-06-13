@@ -154,6 +154,30 @@ defmodule AriaEngine do
   @spec plan(domain(), state(), [goal() | task() | multigoal()], keyword()) :: 
     {:ok, [plan_step()]} | {:error, String.t()}
   def plan(%Domain{} = domain, %State{} = state, todos, opts \\ []) do
+    case Plan.plan(domain, state, todos, opts) do
+      {:ok, solution_tree} ->
+        # Extract primitive actions from solution tree for compatibility
+        actions = Plan.get_primitive_actions_dfs(solution_tree)
+        {:ok, actions}
+      
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Advanced planning interface - returns the full solution tree.
+  
+  Use this when you need access to the complete hierarchical decomposition
+  or want to use advanced features like replanning.
+  
+  ## Options
+  - `:max_depth` - Maximum planning depth (default: 100)
+  - `:verbose` - Verbosity level (default: 0)
+  """
+  @spec plan_with_tree(domain(), state(), [goal() | task() | multigoal()], keyword()) :: 
+    {:ok, Plan.solution_tree()} | {:error, String.t()}
+  def plan_with_tree(%Domain{} = domain, %State{} = state, todos, opts \\ []) do
     Plan.plan(domain, state, todos, opts)
   end
 

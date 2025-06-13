@@ -214,8 +214,10 @@ defmodule AriaEngine.Domain do
 
       action_fn ->
         case action_fn.(state, args) do
-          false -> false
-          %State{} = new_state -> {:ok, new_state}
+          false ->
+            false
+          %State{} = new_state ->
+            {:ok, new_state}
         end
     end
   end

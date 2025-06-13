@@ -135,12 +135,13 @@ defmodule AriaEngine.LogisticsMethods do
         truck = AriaEngine.LogisticsActions.find_truck(state, object)
         
         if truck do
-          [
-            {"truck_at", [truck, object_at]},
-            {"at", [object, truck]},
-            {"truck_at", [truck, location]},
-            {"at", [object, location]}
-          ]
+          # Return as multigoal - multiple goals that need to be achieved
+          {:multigoal, [
+            {"truck_at", truck, object_at},
+            {"at", object, truck},
+            {"truck_at", truck, location},
+            {"at", object, location}
+          ]}
         else
           false
         end
@@ -164,12 +165,13 @@ defmodule AriaEngine.LogisticsMethods do
         plane = AriaEngine.LogisticsActions.find_plane(state, object)
         
         if plane do
-          [
-            {"plane_at", [plane, object_at]},
-            {"at", [object, plane]},
-            {"plane_at", [plane, airport]},
-            {"at", [object, airport]}
-          ]
+          # Return as multigoal - multiple goals that need to be achieved in sequence
+          {:multigoal, [
+            {"plane_at", plane, object_at},
+            {"at", object, plane},
+            {"plane_at", plane, airport},
+            {"at", object, airport}
+          ]}
         else
           false
         end
@@ -193,11 +195,12 @@ defmodule AriaEngine.LogisticsMethods do
         airport2 = AriaEngine.LogisticsActions.find_airport(state, location)
         
         if airport1 && airport2 do
-          [
-            {"at", [object, airport1]},
-            {"at", [object, airport2]},
-            {"at", [object, location]}
-          ]
+          # Return as multigoal - multiple goals that need to be achieved in sequence
+          {:multigoal, [
+            {"at", object, airport1},
+            {"at", object, airport2},
+            {"at", object, location}
+          ]}
         else
           false
         end
