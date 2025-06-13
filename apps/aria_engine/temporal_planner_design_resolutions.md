@@ -544,6 +544,7 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
 22. ✅ **First Implementation Step**: Start with tests - write MVP acceptance test first
 23. ✅ **Intent vs Action Architecture**: Clear distinction between immediate intents and scheduled actions
 24. ✅ **Infrastructure Simplification**: SQLite + SecretsMock for zero dependencies (weekend scope)
+25. ✅ **Zero External Dependencies**: No servers required beyond base OS + Elixir (2-minute setup)
 
 ## Next Steps
 
