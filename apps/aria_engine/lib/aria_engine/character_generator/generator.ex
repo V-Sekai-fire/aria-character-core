@@ -31,7 +31,6 @@ defmodule AriaEngine.CharacterGenerator.Generator do
     - `:seed` - Random seed for deterministic generation
     - `:preset` - Preset configuration to apply
     - `:validate` - Whether to validate and resolve constraints (default: true)
-    - `:use_planner` - Whether to use the planning system (default: true)
   
   ## Returns
   A generation result map with character data and prompt.
@@ -48,13 +47,7 @@ defmodule AriaEngine.CharacterGenerator.Generator do
       }
   """
   def generate_character(opts \\ []) do
-    use_planner = Keyword.get(opts, :use_planner, true)
-    
-    if use_planner do
-      generate_character_with_planner(opts)
-    else
-      generate_character_legacy(opts)
-    end
+    generate_character_with_planner(opts)
   end
 
   # New planning-based generation
@@ -92,59 +85,14 @@ defmodule AriaEngine.CharacterGenerator.Generator do
           {:ok, final_state} ->
             extract_generation_result(final_state, character_id, seed)
           {:error, reason} ->
-            # Fallback to legacy generation
-            generate_character_legacy(opts)
+            {:error, "Plan execution failed: #{inspect(reason)}"}
           {:fail, reason} ->
-            # Fallback to legacy generation
-            generate_character_legacy(opts)
+            {:error, "Plan execution failed: #{inspect(reason)}"}
         end
-      _ ->
-        # Fallback to legacy generation
-        generate_character_legacy(opts)
+      {:error, reason} ->
+        {:error, "Planning failed: #{inspect(reason)}"}
     end
-  end
-
-  # Legacy generation method (preserved for fallback)
-  defp generate_character_legacy(opts) do
-    seed = Keyword.get(opts, :seed)
-    preset = Keyword.get(opts, :preset)
-    validate = Keyword.get(opts, :validate, true)
-    character_id = UUID.uuid4(:default)
-    
-    # Start with randomized attributes
-    attributes = Utils.randomize_character_sliders(seed)
-    
-    # Apply preset if specified
-    attributes = if preset do
-      apply_preset(attributes, preset)
-    else
-      attributes
     end
-    
-    # Validate and resolve conflicts if requested
-    {attributes, violations} = if validate do
-      violations = Utils.check_constraint_violations(attributes)
-      if length(violations) > 0 do
-        corrected_attributes = Utils.resolve_conflicts(attributes)
-        final_violations = Utils.check_constraint_violations(corrected_attributes)
-        {corrected_attributes, final_violations}
-      else
-        {attributes, []}
-      end
-    else
-      {attributes, []}
-    end
-    
-    # Generate descriptive prompt
-    prompt = Utils.construct_character_prompt(attributes)
-    
-    %{
-      character_id: character_id,
-      attributes: attributes,
-      prompt: prompt,
-      seed: seed,
-      violations: violations
-    }
   end
 
   # Extract results from planning system state
@@ -192,19 +140,12 @@ defmodule AriaEngine.CharacterGenerator.Generator do
   ## Parameters
   - `count`: Number of characters to generate
   - `opts`: Keyword list of options (same as generate_character/1)
-    - `:use_planner` - Whether to use planning system (default: true)
   
   ## Returns
   A list of generation result maps.
   """
   def generate_character_batch(count, opts \\ []) do
-    use_planner = Keyword.get(opts, :use_planner, true)
-    
-    if use_planner do
-      generate_batch_with_planner(count, opts)
-    else
-      generate_batch_legacy(count, opts)
-    end
+    generate_batch_with_planner(count, opts)
   end
 
   # Planning-based batch generation
@@ -230,34 +171,24 @@ defmodule AriaEngine.CharacterGenerator.Generator do
         case AriaEngine.execute_plan(domain, state, plan) do
           {:ok, final_state} ->
             extract_batch_results(final_state, count, opts)
-          _ ->
-            # Fallback to legacy batch generation
-            generate_batch_legacy(count, opts)
+          {:error, reason} ->
+            {:error, "Batch plan execution failed: #{inspect(reason)}"}
         end
-      _ ->
-        # Fallback to legacy batch generation
-        generate_batch_legacy(count, opts)
+      {:error, reason} ->
+        {:error, "Batch planning failed: #{inspect(reason)}"}
     end
-  end
-
-  # Legacy batch generation
-  defp generate_batch_legacy(count, opts) do
-    Enum.map(1..count, fn _i ->
-      # Use different seeds for each character if base seed provided
-      batch_opts = case Keyword.get(opts, :seed) do
-        nil -> opts
-        base_seed -> Keyword.put(opts, :seed, base_seed + :rand.uniform(100_000))
-      end
-      
-      generate_character_legacy(batch_opts)
-    end)
+    end
   end
 
   # Extract batch results from planning state
   defp extract_batch_results(state, count, opts) do
-    # For now, fallback to legacy generation per character
-    # This could be optimized to extract multiple characters from the planning state
-    generate_batch_legacy(count, opts)
+    # Extract character IDs from the planning state
+    # For now, we'll need to implement proper batch extraction
+    # This is a placeholder that generates characters individually
+    Enum.map(1..count, fn i ->
+      character_id = "batch_char_#{i}_#{UUID.uuid4()}"
+      extract_generation_result(state, character_id, Keyword.get(opts, :seed))
+    end)
   end
 
   @doc """
@@ -358,19 +289,12 @@ defmodule AriaEngine.CharacterGenerator.Generator do
   
   ## Parameters
   - `opts`: Same options as generate_character/1
-    - `:use_planner` - Whether to use planning system (default: true)
   
   ## Returns
   A map with `:prompt`, `:attributes`, and `:seed` keys.
   """
   def generate_prompt_only(opts \\ []) do
-    use_planner = Keyword.get(opts, :use_planner, true)
-    
-    if use_planner do
-      generate_prompt_with_planner(opts)
-    else
-      generate_prompt_legacy(opts)
-    end
+    generate_prompt_with_planner(opts)
   end
 
   # Planning-based prompt generation
@@ -412,36 +336,13 @@ defmodule AriaEngine.CharacterGenerator.Generator do
               attributes: attributes,
               seed: seed
             }
-          _ ->
-            generate_prompt_legacy(opts)
+          {:error, reason} ->
+            {:error, "Prompt generation execution failed: #{inspect(reason)}"}
         end
-      _ ->
-        generate_prompt_legacy(opts)
+      {:error, reason} ->
+        {:error, "Prompt generation planning failed: #{inspect(reason)}"}
     end
-  end
-
-  # Legacy prompt generation
-  defp generate_prompt_legacy(opts) do
-    seed = Keyword.get(opts, :seed)
-    preset = Keyword.get(opts, :preset)
-    
-    attributes = Utils.randomize_character_sliders(seed)
-    
-    attributes = if preset do
-      apply_preset(attributes, preset)
-    else
-      attributes
     end
-    
-    # Auto-resolve conflicts for prompt generation
-    attributes = Utils.resolve_conflicts(attributes)
-    prompt = Utils.construct_character_prompt(attributes)
-    
-    %{
-      prompt: prompt,
-      attributes: attributes,
-      seed: seed
-    }
   end
 
   @doc """

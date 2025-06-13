@@ -22,14 +22,11 @@ defmodule AriaEngine.CharacterGenerator do
   
   ## Quick Start
   
-      # Generate a random character (uses planning system by default)
+      # Generate a random character
       character = AriaEngine.CharacterGenerator.generate()
       
-      # Generate with a preset using planning
+      # Generate with a preset
       character = AriaEngine.CharacterGenerator.generate(preset: "cyber_cat_person")
-      
-      # Generate using legacy mode (fallback)
-      character = AriaEngine.CharacterGenerator.generate(use_planner: false)
       
       # Generate using specific planning workflow
       character = AriaEngine.CharacterGenerator.generate_with_plan(:comprehensive)
@@ -72,23 +69,19 @@ defmodule AriaEngine.CharacterGenerator do
   - `:preset` - String preset name to apply
   - `:validate` - Boolean whether to validate constraints (default: true)
   - `:customizations` - Map of specific attribute overrides
-  - `:use_planner` - Boolean whether to use planning system (default: true)
   
   ## Examples
   
-      # Basic random generation with planning
+      # Basic random generation
       character = AriaEngine.CharacterGenerator.generate()
       
       # Deterministic generation
       character = AriaEngine.CharacterGenerator.generate(seed: 12345)
       
-      # Apply a preset using planning
+      # Apply a preset
       character = AriaEngine.CharacterGenerator.generate(preset: "cyber_cat_person")
       
-      # Use legacy generation (fallback)
-      character = AriaEngine.CharacterGenerator.generate(use_planner: false)
-      
-      # Custom attributes with planning
+      # Custom attributes
       character = AriaEngine.CharacterGenerator.generate(
         customizations: %{"species" => "SPECIES_ANIMAL", "emotion" => "EMOTION_HAPPY"}
       )
@@ -133,19 +126,15 @@ defmodule AriaEngine.CharacterGenerator do
   ## Parameters
   
   - `count` - Number of characters to generate
-  - `opts` - Same options as `generate/1`, plus:
-    - `:use_planner` - Whether to use planning system (default: true)
+  - `opts` - Same options as `generate/1`
   
   ## Examples
   
-      # Generate 5 random characters with planning
+      # Generate 5 random characters
       characters = AriaEngine.CharacterGenerator.generate_batch(5)
       
-      # Generate batch with preset using planning
+      # Generate batch with preset
       characters = AriaEngine.CharacterGenerator.generate_batch(3, preset: "fantasy_cyber")
-      
-      # Generate batch with legacy mode
-      characters = AriaEngine.CharacterGenerator.generate_batch(3, use_planner: false)
   
   ## Returns
   
@@ -159,7 +148,6 @@ defmodule AriaEngine.CharacterGenerator do
   Generates only a descriptive prompt without full character data.
   
   This is more efficient when you only need the text prompt for AI generation.
-  Uses the planning system by default.
   
   ## Options
   
@@ -167,14 +155,11 @@ defmodule AriaEngine.CharacterGenerator do
   
   ## Examples
   
-      # Quick prompt generation with planning
+      # Quick prompt generation
       prompt = AriaEngine.CharacterGenerator.generate_prompt()
       
-      # Prompt with preset using planning
+      # Prompt with preset
       prompt = AriaEngine.CharacterGenerator.generate_prompt(preset: "traditional_shrine_maiden")
-      
-      # Prompt with legacy mode
-      prompt = AriaEngine.CharacterGenerator.generate_prompt(use_planner: false)
   
   ## Returns
   

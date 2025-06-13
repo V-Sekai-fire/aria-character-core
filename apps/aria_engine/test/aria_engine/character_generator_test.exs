@@ -49,8 +49,8 @@ defmodule AriaEngine.CharacterGeneratorTest do
       assert is_binary(character.prompt)
     end
 
-    test "falls back to legacy system when planning fails" do
-      character = CharacterGenerator.generate(use_planner: false)
+    test "generates character using planning system" do
+      character = CharacterGenerator.generate()
       
       assert is_map(character)
       assert is_binary(character.character_id)
