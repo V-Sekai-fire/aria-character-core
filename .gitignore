@@ -63,3 +63,14 @@ cockroachdb.tar
 bao-*.deb
 
 certs
+
+# Debug and temporary files
+*.tmp
+*.temp
+*.backup
+*.bak
+*.orig
+*.old
+.DS_Store
+*~
+.#*
