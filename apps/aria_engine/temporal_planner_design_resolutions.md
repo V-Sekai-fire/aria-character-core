@@ -553,51 +553,39 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
 3. ✅ **COMPLETED**: Infrastructure simplified for zero dependencies
 4. 🚀 **READY**: Begin TDD implementation with complete design clarity and zero setup barriers
 
-## Open Questions
+## Resolution 22: First Implementation Step - Test-Driven Oban Job
 
-### Q22: What Should Be the Very First Implementation Step?
+**Decision**: Start with the `GameActionJob` Oban worker as the first implementation step, driven by a simple failing test.
 
-**Question**: With all design decisions locked in, what concrete action should we take as the absolute first step to begin implementation?
+**Details**:
 
-**Context**: We have comprehensive design resolutions but need to decide the specific starting point for TDD implementation. Should we:
+- **Chosen Approach**: Begin with `GameActionJob` because it has the lowest risk and highest MVP alignment
+- **TDD Starting Point**: Write failing test that schedules a simple action and verifies execution
+- **Risk Mitigation**: Oban worker is isolated, testable, and builds on existing infrastructure
+- **Progressive Complexity**: Start with simplest possible action (move from A to B) and expand
 
-1. **Start with Data Structures**: Create `TemporalState` module first to establish the foundation?
-2. **Start with Tests**: Write the first failing test that drives out the MVP demo?
-3. **Start with Oban Job**: Create `GameActionJob` worker as the core execution mechanism?
-4. **Start with CLI**: Build the terminal interface to visualize progress?
-5. **Start with Mix Task**: Create the entry point `mix aria_engine.conviction_crisis`?
-6. **Start with Existing Code Review**: Examine current AriaEngine modules to understand integration points?
+**Implementation Sequence**:
 
-**Decision Factors**:
-- **TDD Approach**: Which starting point best supports test-driven development?
-- **Risk Mitigation**: Which approach identifies integration issues earliest?
-- **Momentum Building**: Which creates the most encouraging early progress?
-- **Dependency Chain**: Which starting point has the fewest external dependencies?
-- **MVP Alignment**: Which most directly advances toward the 10-minute demo acceptance criteria?
+1. **First Test**: `test "can schedule and execute simple move action"`
+2. **First Implementation**: Basic `GameActionJob.perform/1` that updates agent position
+3. **First Integration**: Verify Oban job executes at correct time via test
+4. **First Expansion**: Add action duration and completion callbacks
+5. **Foundation Complete**: Working temporal action execution pipeline
 
-**Risk Analysis (Highest to Lowest Risk)**:
+**Rationale Analysis**:
 
-1. **🔴 HIGHEST RISK - Start with CLI**: 
-   - **Integration Complexity**: Requires understanding ANSI codes, async input, terminal control
-   - **No Validation**: Can build elaborate interface that doesn't connect to actual game logic
-   - **Wasted Effort**: Visual polish effort without core functionality underneath
-   - **Debugging Difficulty**: Hard to test terminal interactions in isolation
+- **✅ LOWEST RISK - Start with Oban Job + Test**:
+  - **Existing Infrastructure**: Builds on already-configured Oban setup
+  - **Isolated Testing**: Can test job execution without CLI or game loop dependencies
+  - **Immediate Validation**: Tests prove temporal scheduling works from day one
+  - **Clear Success Criteria**: Job either executes at right time or doesn't
+  - **Foundation Building**: Every other component depends on reliable action execution
 
-2. **🟡 HIGH RISK - Start with Existing Code Review**:
-   - **Analysis Paralysis**: Can spend entire weekend reading code without building anything
-   - **Overwhelming Context**: AriaEngine codebase is large and complex
-   - **No Progress**: Pure analysis doesn't advance toward working demo
-   - **Integration Assumptions**: May make wrong assumptions about how existing code works
-
-3. **🟡 MEDIUM-HIGH RISK - Start with Mix Task**:
-   - **Integration Dependencies**: Requires CLI + GameEngine + TemporalState to be meaningful
-   - **Entry Point Only**: Creates shell without substance
-   - **Coordination Complexity**: Must coordinate multiple subsystems immediately
-
-4. **🟢 MEDIUM RISK - Start with Data Structures**:
-   - **Over-Engineering Risk**: Can build elaborate structures not needed for MVP
-   - **Abstraction Without Usage**: May create interfaces that don't match actual needs
-   - **Foundation Approach**: Solid but may delay seeing working behavior
+**Why Not Other Approaches**:
+- **Data Structures**: Abstract without proof they work in practice
+- **CLI**: Complex integration without core functionality
+- **Mix Task**: Shell without substance
+- **Code Review**: Analysis paralysis without progress
 
 5. **🟢 LOW-MEDIUM RISK - Start with Oban Job**:
    - **Core Mechanism**: Gets to heart of temporal execution quickly
@@ -659,7 +647,168 @@ end
 
 **Implementation Strategy**: Write comprehensive failing test first, then implement just enough to make it pass - no more, no less.
 
-## Resolution 23: Intent vs Action Architecture
+## Resolution 23: MVP Timing Implementation Strategy
+
+**Decision**: Implement deterministic action timing using simple Euclidean distance calculation with constant movement speed, verified through automated testing.
+
+**Details**:
+
+- **Simple Distance Formula**: `time = distance / speed` where distance = `sqrt((x2-x1)² + (y2-y1)²)`
+- **Fixed Movement Speed**: 3.0 units per second for all agents (from Resolution 9)
+- **Deterministic Duration**: Same movement always takes exactly the same time
+- **Test-Driven Validation**: Automated tests verify timing accuracy within 10ms tolerance
+- **Progress Tracking**: Linear interpolation between start and end positions over duration
+- **Interruption Support**: Store current position when action interrupted, resume from there
+
+**Implementation Pattern**:
+
+```elixir
+def calculate_move_duration(from_pos, to_pos, speed \\ 3.0) do
+  distance = :math.sqrt(:math.pow(to_pos.x - from_pos.x, 2) + :math.pow(to_pos.y - from_pos.y, 2))
+  distance / speed
+end
+
+def calculate_current_position(start_pos, end_pos, start_time, duration, current_time) do
+  progress = (current_time - start_time) / duration
+  progress = max(0.0, min(1.0, progress))  # Clamp to [0, 1]
+  
+  %{
+    x: start_pos.x + progress * (end_pos.x - start_pos.x),
+    y: start_pos.y + progress * (end_pos.y - start_pos.y),
+    z: 0.0
+  }
+end
+```
+
+**Timing Reliability Requirements**:
+- **Deterministic Calculation**: Identical inputs always produce identical timing
+- **Sub-second Precision**: Duration calculations accurate to 0.1 second
+- **Measurable Performance**: Automated tests verify real vs expected completion times
+- **Graceful Interruption**: Actions can be stopped cleanly at any point with accurate position
+
+**Test Coverage Strategy**:
+- Unit tests for duration calculation formulas
+- Integration tests for Oban job timing accuracy  
+- Property-based tests for movement interpolation
+- Performance tests for timing precision under load
+
+## Resolution 24: Absolute Minimum Success Criteria
+
+**Decision**: Define the smallest possible demonstration that proves the temporal planner concept works.
+
+**Details**:
+
+**Core Success Criteria (All Must Work)**:
+1. **Temporal State**: Store "Alex is at {2,3} at time 10.5s"
+2. **Scheduled Action**: Create "Move Alex to {5,3} starting at 12.0s" 
+3. **Oban Execution**: Action executes automatically at scheduled time
+4. **State Update**: Alex's position updates correctly when action completes
+5. **Simple CLI**: Terminal shows "Alex moving from {2,3} to {5,3} - ETA: 1.2s"
+6. **Manual Verification**: Human can observe system working correctly
+
+**Fallback Criteria** (if real-time proves too complex):
+1. **Static Planning**: Print out a complete plan without executing it
+2. **Timing Calculation**: Show estimated durations for each action  
+3. **State Display**: Show current state and planned future state
+4. **Proof of Concept**: Demonstrate temporal planning logic without real-time execution
+
+**Success Validation**:
+- **Demonstrable**: Can show working system to others in 5 minutes
+- **Temporal**: Involves time-based scheduling and execution
+- **Plannable**: Shows intelligent sequencing of actions
+- **Extensible**: Foundation for adding complexity later
+
+**Weekend Acceptance Test**:
+- Run `mix aria_engine.conviction_crisis`
+- See Alex move across terminal display in real-time
+- Press SPACEBAR to interrupt movement
+- Observe replanning and continuation
+- Complete with "Mission Complete!" message
+
+## Resolution 25: Research Question Resolution Strategy
+
+**Decision**: Address critical research questions through rapid prototyping during implementation rather than separate investigation phases.
+
+**Details**:
+
+**Research-Through-Implementation Approach**:
+- **Question R1 (Oban Precision)**: Test during first GameActionJob implementation
+- **Question R2 (Real-time Input)**: Test during CLI development
+- **Question R3 (SQLite Performance)**: Monitor during development, optimize if needed
+
+**Rapid Validation Tests**:
+```elixir
+# R1: Oban timing precision
+test "oban scheduling accuracy" do
+  scheduled_time = DateTime.utc_now() |> DateTime.add(1, :second)
+  start_time = System.monotonic_time(:millisecond)
+  
+  {:ok, _job} = GameActionJob.new(%{test_timing: true}) 
+    |> Oban.insert(scheduled_at: scheduled_time)
+  
+  # Verify execution within 100ms tolerance
+  assert_receive {:job_executed, execution_time}, 2000
+  actual_delay = execution_time - start_time
+  assert actual_delay < 1100  # 1000ms + 100ms tolerance
+end
+
+# R2: Non-blocking input
+test "async keyboard input" do
+  {:ok, pid} = ConvictionCrisis.CLI.start_link()
+  
+  # Simulate keypress
+  send(pid, {:test_input, "space"})
+  
+  # Verify received without blocking
+  assert_receive {:input_received, "space"}, 50
+end
+
+# R3: SQLite performance sampling
+test "basic sqlite performance" do
+  {time, _result} = :timer.tc(fn ->
+    Enum.each(1..100, fn i ->
+      TemporalState.update_agent_position("alex", {i, 3, 0})
+    end)
+  end)
+  
+  # Should handle 100 updates quickly (100µs per update max)
+  assert time < 10_000  # 10ms total for 100 updates
+end
+```
+
+**Implementation-First Philosophy**:
+- Build working code immediately and measure performance
+- Adjust design based on actual capabilities discovered
+- Fail fast if fundamental assumptions prove wrong
+- Use simple implementations first, optimize later if needed
+
+## Resolution Status Summary
+
+✅ **ALL OPEN QUESTIONS RESOLVED**
+
+**Design Questions (All Resolved)**:
+1. ✅ **Resolution 1-21**: Core architectural and design decisions locked in
+2. ✅ **Resolution 22**: First implementation step decided (Test-driven Oban Job)  
+3. ✅ **Resolution 23**: MVP timing implementation strategy defined
+4. ✅ **Resolution 24**: Absolute minimum success criteria established
+5. ✅ **Resolution 25**: Research questions converted to implementation tests
+6. ✅ **Resolution 26**: Implementation risk mitigation strategies prepared
+
+**Critical Dependencies Addressed**:
+- ✅ **Infrastructure**: SQLite + SecretsMock setup complete (previous work)
+- ✅ **Architecture**: Temporal state, Oban jobs, CLI interface design finalized
+- ✅ **Implementation Strategy**: TDD approach with clear first steps
+- ✅ **Risk Mitigation**: Fallback plans if temporal precision fails
+- ✅ **Success Criteria**: Clear definition of MVP demonstration requirements
+
+**Ready for Implementation**:
+- 🚀 **First Step**: Write failing integration test for MVP demo
+- 🚀 **Test-Driven**: Let tests drive out exactly what's needed
+- 🚀 **Incremental**: Build working system piece by piece
+- 🚀 **Measurable**: Validate timing assumptions through real code
+- 🚀 **Demonstrable**: Target 10-minute working demo
+
+**No Remaining Open Questions**: All architectural decisions made, implementation strategy defined, risk mitigation prepared. Ready to begin coding the temporal planner with complete design clarity.
 
 **Decision**: Establish clear distinction between Intents (immediate planning commands) and Actions (scheduled executable tasks).
 
@@ -776,51 +925,38 @@ config :aria_security, :secrets_module, AriaSecurity.SecretsMock
 
 ## Resolution 26: Implementation Capability Crisis
 
-**Decision**: If we cannot successfully implement a working temporal planner, the entire game concept fails because it depends on reliable action timing estimation.
+## Resolution 26: Implementation Risk Mitigation
+
+**Decision**: Accept that temporal planner success is critical to game viability, and implement comprehensive risk mitigation through fallback strategies.
 
 **Details**:
 
-- **Fundamental Dependency**: The "Conviction in Crisis" game concept requires:
-  - **Precise Action Duration Estimates**: "Moving from A to B takes 3.2 seconds"
-  - **Reliable Completion Prediction**: "Action will complete at 14:32:15.432"
-  - **Interruptible Progress Tracking**: "Currently 60% through movement"
-  - **Real-time ETA Updates**: "Arrival in 1.8 seconds... 1.7... 1.6..."
-- **Implementation-Estimation Paradox**: 
-  - **Cannot Estimate Without Implementation**: Time estimation requires working code to measure
-  - **Cannot Plan Without Estimation**: Game design requires known action durations
-  - **Cannot Test Without Planning**: Validation requires predictable timing
-  - **Circular Dependency**: Each element depends on the others working
-- **Game Design Brittleness**: 
-  - **Streaming Entertainment**: Requires precise timing for tension and viewer engagement
-  - **Player Agency**: Interruption windows must be predictable and fair
-  - **Tactical Decision**: Player needs accurate time information to make meaningful choices
-  - **Real-time Feedback**: CLI display depends on accurate progress calculations
-- **Failure Modes Without Working Implementation**:
-  - **Arbitrary Timing**: Made-up durations that don't match reality
-  - **Inconsistent Experience**: Actions take random amounts of time
-  - **Broken Interruption**: Can't interrupt actions reliably
-  - **No Player Agency**: Unpredictable timing eliminates meaningful decisions
-  - **Undemonstrable**: Cannot show working game to others
-- **Success Criteria for Game Viability**:
-  - **Deterministic Action Duration**: Same action always takes same time
-  - **Sub-second Precision**: Timing accurate to 100ms or better
-  - **Reliable Interruption**: SPACEBAR always stops action cleanly
-  - **Accurate Progress Display**: Visual progress matches actual completion
-  - **Consistent Replanning**: Interrupted actions resume from correct position
-- **Implementation-First Approach**: 
-  - **Measure Real Performance**: Use actual code execution time for estimates
-  - **Iterate Based on Reality**: Adjust game design to match implementation capabilities
-  - **Validate Through Testing**: Prove timing reliability through automated tests
-  - **Build Confidence Through Demos**: Working code enables convincing demonstrations
-- **Risk Mitigation Strategy**:
-  - **Start with MVP**: Simplest possible working temporal planner
-  - **Measure Everything**: Instrument all action durations and progress tracking
-  - **Test Thoroughly**: Automated tests for timing reliability and interruption
-  - **Fail Fast**: If basic temporal planning doesn't work, pivot immediately
+**Critical Success Dependencies**:
+- **Precise Action Duration Estimates**: "Moving from A to B takes 3.2 seconds"
+- **Reliable Completion Prediction**: "Action will complete at 14:32:15.432"
+- **Interruptible Progress Tracking**: "Currently 60% through movement"
+- **Real-time ETA Updates**: "Arrival in 1.8 seconds... 1.7... 1.6..."
+
+**Failure Modes Without Working Implementation**:
+- **Arbitrary Timing**: Made-up durations that don't match reality
+- **Inconsistent Experience**: Actions take random amounts of time
+- **Broken Interruption**: Can't interrupt actions reliably
+- **No Player Agency**: Unpredictable timing eliminates meaningful decisions
+- **Undemonstrable**: Cannot show working game to others
+
+**Risk Mitigation Strategy**:
+- **Start with MVP**: Simplest possible working temporal planner
+- **Measure Everything**: Instrument all action durations and progress tracking
+- **Test Thoroughly**: Automated tests for timing reliability and interruption
+- **Fail Fast**: If basic temporal planning doesn't work, pivot immediately
+
+**Fallback Options** (in order of preference):
+1. **Simplified Timing**: Use integer seconds instead of sub-second precision
+2. **Turn-Based Mode**: Convert to discrete turn system if real-time fails
+3. **No-Interruption Mode**: Remove interruption mechanics if timing proves unreliable
+4. **Pure Demonstration**: Focus on showing planning concepts rather than real-time gameplay
 
 **Critical Insight**: The temporal planner is not just a feature - it's the foundational technology that makes the entire game concept possible. Without it working reliably, there is no game.
-
-## Resolution 27: Implementation Capability Crisis
 
 **Decision**: If we cannot successfully implement a working temporal planner, the entire game concept fails because it depends on reliable action timing estimation.
 
