@@ -71,7 +71,7 @@ A list of agent structs, each with the following properties:
 
 | Property         | Type                   | Description                                                    |
 | ---------------- | ---------------------- | -------------------------------------------------------------- |
-| `id`             | Atom/Symbol            | Unique identifier (e.g., `:alex`, `:enemy_1`)               |
+| `id`             | Atom/Symbol            | Unique identifier (e.g., `:alex`, `:enemy_1`)                  |
 | `team`           | Atom/Symbol            | `:player` or `:enemy`                                          |
 | `position`       | `{x: int, y: int}`     | Current grid coordinates.                                      |
 | `hp`             | Integer                | Current health points.                                         |
@@ -85,16 +85,16 @@ A list of agent structs, each with the following properties:
 
 ### 3.3. Initial Scenario Constants
 
-| Character | ID       | HP  | Atk | Def | Move Speed | Position  | Skills            |
-| --------- | -------- | --- | --- | --- | ---------- | --------- | ----------------- |
-| Alex      | `:alex`  | 120 | 25  | 15  | 4          | `(4, 4)`  | `Delaying Strike` |
-| Maya      | `:maya`  | 80  | 35  | 5   | 3          | `(3, 5)`  | `Scorch`          |
-| Jordan    | `:jordan`| 95  | 10  | 10  | 3          | `(4, 6)`  | `Now!`            |
-| Soldier 1 | `:enemy_1`   | 70  | 20  | 10  | 3          | `(15, 4)` | N/A               |
-| Soldier 2 | `:enemy_2`   | 70  | 20  | 10  | 3          | `(15, 5)` | N/A               |
-| Soldier 3 | `:enemy_3`   | 70  | 20  | 10  | 3          | `(15, 6)` | N/A               |
-| Archer 1  | `:enemy_4`   | 50  | 18  | 5   | 3          | `(18, 3)` | N/A               |
-| Archer 2  | `:enemy_5`   | 50  | 18  | 5   | 3          | `(18, 7)` | N/A               |
+| Character | ID         | HP  | Atk | Def | Move Speed | Position  | Skills            |
+| --------- | ---------- | --- | --- | --- | ---------- | --------- | ----------------- |
+| Alex      | `:alex`    | 120 | 25  | 15  | 4          | `(4, 4)`  | `Delaying Strike` |
+| Maya      | `:maya`    | 80  | 35  | 5   | 3          | `(3, 5)`  | `Scorch`          |
+| Jordan    | `:jordan`  | 95  | 10  | 10  | 3          | `(4, 6)`  | `Now!`            |
+| Soldier 1 | `:enemy_1` | 70  | 20  | 10  | 3          | `(15, 4)` | N/A               |
+| Soldier 2 | `:enemy_2` | 70  | 20  | 10  | 3          | `(15, 5)` | N/A               |
+| Soldier 3 | `:enemy_3` | 70  | 20  | 10  | 3          | `(15, 6)` | N/A               |
+| Archer 1  | `:enemy_4` | 50  | 18  | 5   | 3          | `(18, 3)` | N/A               |
+| Archer 2  | `:enemy_5` | 50  | 18  | 5   | 3          | `(18, 7)` | N/A               |
 
 ## 4. Agent Tasks (Planner's Action Library)
 
@@ -167,3 +167,199 @@ The test begins. The planner is given the initial high-level goal: **`survive_th
   4. Jordan uses `Now!` on the agent who can deal the most effective damage next.
   5. Focus-fire continues until all enemies are defeated.
 - **Success Condition**: The list of agents on the `:enemy` team is empty.
+
+## 6. Temporal Goal-Task-Network (GTN) Planner Design
+
+This section outlines how to modify the existing re-entrant GTN planner in `aria_engine` to become a temporal planner capable of handling time-sensitive goals and actions.
+
+### 6.1. Core Temporal Extensions
+
+#### 6.1.1. Temporal State Representation
+
+The existing `AriaEngine.State` needs temporal extensions:
+
+```elixir
+# Temporal facts in state
+temporal_state = AriaEngine.State.new()
+|> AriaEngine.State.set_temporal_object("location", "alex", "bridge_start", 0.0)
+|> AriaEngine.State.set_temporal_object("hp", "alex", 120, 0.0)
+|> AriaEngine.State.set_temporal_object("cooldown", "alex_delaying_strike", 0.0, 0.0)
+|> AriaEngine.State.set_temporal_object("world_time", "game", 0.0, 0.0)
+```
+
+#### 6.1.2. Temporal Domain Actions
+
+Actions in `AriaEngine.Domain` must include temporal constraints:
+
+```elixir
+# Example temporal action
+def temporal_move_action(state, [agent_id, target_pos], start_time) do
+  agent_pos = State.get_temporal_object(state, "location", agent_id, start_time)
+  move_speed = State.get_temporal_object(state, "move_speed", agent_id, start_time)
+
+  distance = calculate_distance(agent_pos, target_pos)
+  duration = distance / move_speed
+  end_time = start_time + duration
+
+  # Check temporal preconditions
+  if path_clear_during(state, agent_pos, target_pos, start_time, end_time) do
+    state
+    |> State.set_temporal_object("location", agent_id, target_pos, end_time)
+    |> State.add_temporal_constraint({:occupies_path, agent_id, agent_pos, target_pos, start_time, end_time})
+  else
+    false
+  end
+end
+```
+
+### 6.2. Temporal Plan Generation Architecture
+
+```
++------------------+     (1) Current State + Goal     +-------------------+
+|                  | ----------------------------->   |                   |
+|   Game Loop      |                                 |  Temporal GTN     |
+| (Oban Scheduler) |     (2) Temporal Plan           |    Planner        |
+|                  | <-----------------------------   |                   |
++--------+---------+                                 +----------+--------+
+         |                                                      |
+         | (3) Schedule Timed Actions                          | (4) Re-plan on
+         |     via Oban Jobs                                   |    Goal Change
+         v                                                      |
++------------------+                                           |
+|                  |                                           |
+|  Oban Job Queue  |                                           |
+| - MoveJob        |                                           |
+| - AttackJob      | <-----------------------------------------+
+| - SkillJob       |     (5) Action Execution Updates State
+| - InteractJob    |
++------------------+
+```
+
+### 6.3. Implementation Components
+
+#### 6.3.1. Temporal Planning Algorithm
+
+The planner uses a modified GTPyhop approach with temporal reasoning:
+
+1. **Temporal Goal Decomposition**: Break high-level goals into time-bounded tasks
+2. **Temporal Method Selection**: Choose methods based on temporal constraints
+3. **Temporal Conflict Resolution**: Resolve resource and scheduling conflicts
+4. **Re-entrant Planning**: Dynamically re-plan when goals change mid-execution
+
+#### 6.3.2. Oban Integration for Action Scheduling
+
+Each planned action becomes an Oban job scheduled at the precise execution time:
+
+```elixir
+# Schedule a temporal action
+%{
+  agent_id: "alex",
+  action: :move_to,
+  target: {10, 5},
+  start_time: 5.2,
+  duration: 2.0
+}
+|> AriaEngine.Jobs.GameActionJob.new(scheduled_at: game_start_time + 5.2)
+|> Oban.insert()
+```
+
+### 6.4. Re-entrant Planning Mechanics
+
+#### 6.4.1. Plan Invalidation
+
+When a new goal is selected (Conviction Choice), the planner must:
+
+1. Cancel pending Oban jobs for the old plan
+2. Preserve currently executing actions if they're still beneficial
+3. Generate a new temporal plan for the new goal
+4. Schedule new Oban jobs for the new plan
+
+#### 6.4.2. Temporal Constraint Propagation
+
+The planner maintains temporal constraints between actions:
+
+- **Precedence**: Action A must complete before Action B starts
+- **Resource Conflicts**: Two actions can't use the same agent simultaneously
+- **World State Dependencies**: Action effects must be available when needed
+
+## 7. CLI Implementation Using Aria Components
+
+### 7.1. Mix Task Structure
+
+Create a Mix task that provides an interactive text-based game interface:
+
+```bash
+mix aria_engine.play_conviction_crisis
+```
+
+### 7.2. Game Components Integration
+
+#### 7.2.1. AriaQueue (Oban) - Action Scheduling
+
+- Schedule timed actions as Oban jobs
+- Handle action execution at precise timestamps
+- Manage job cancellation for re-planning
+
+#### 7.2.2. AriaEngine - Planning Logic
+
+- Temporal state management
+- Goal-task network planning
+- Re-entrant plan generation
+
+#### 7.2.3. AriaStorage - Game State Persistence
+
+- Save/load game sessions
+- Store planning history
+- Cache computed plans
+
+#### 7.2.4. AriaMonitor - Performance Tracking
+
+- Track planner performance metrics
+- Monitor action execution timing
+- Collect planning statistics
+
+### 7.3. Text-Based Game Flow
+
+1. **Initialization**: Setup game state, start Oban, load scenario
+2. **Planning Phase**: Generate initial plan for `survive_the_encounter`
+3. **Conviction Choice**: Present 4 choices, trigger re-planning
+4. **Execution Loop**: Execute scheduled actions, update display
+5. **Monitoring**: Show real-time game state and planner decisions
+6. **Win/Lose Conditions**: Evaluate success based on chosen goal
+
+### 7.4. User Interface Design
+
+```
+=== Conviction in Crisis - Temporal Planner Test ===
+Time: 00:05.2s | Goal: rescue_hostage | Plan Status: Executing
+
+Current State:
+- Alex: (6,4) HP:120/120 [Moving to (8,4), ETA: 00:06.1s]
+- Maya: (3,5) HP:80/80 [Casting Scorch at (15,5), ETA: 00:07.0s]
+- Jordan: (4,6) HP:95/95 [Ready]
+
+Enemies:
+- Soldier1: (15,4) HP:70/70
+- Soldier2: (15,5) HP:70/70 [Will take 45 damage from Scorch]
+- Archer1: (18,3) HP:50/50
+
+Scheduled Actions:
+00:06.1s - Alex reaches (8,4)
+00:06.1s - Jordan uses "Now!" on Alex
+00:07.0s - Maya's Scorch hits (15,5)
+00:07.1s - Alex moves to (10,4)
+
+[Press SPACE to pause | Q to quit | R to replan]
+```
+
+### 7.5. CLI Implementation Requirements
+
+The CLI task should demonstrate:
+
+1. **Temporal Planning**: Show how the planner schedules actions over time
+2. **Re-entrant Behavior**: Allow mid-game goal changes and observe re-planning
+3. **Real-time Execution**: Use Oban to execute actions at precise times
+4. **Conflict Resolution**: Handle temporal constraints and resource conflicts
+5. **Performance Metrics**: Display planning time, plan quality, execution accuracy
+
+This implementation will serve as both a unit test for the temporal planner and a demonstration of how Aria components work together in a real-time, decision-making system.
