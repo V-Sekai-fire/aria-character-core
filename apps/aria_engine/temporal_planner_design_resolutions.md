@@ -690,3 +690,58 @@ end
   - Integration tested for intent → action → replanning flow
 
 **Critical Design Point**: Interruption is NOT an action that takes time - it's an intent that immediately modifies the temporal plan.
+
+## Resolution 24: Infrastructure Simplification for Weekend Scope
+
+**Decision**: Switch from CockroachDB + OpenBao to SQLite + SecretsMock for weekend temporal planner implementation.
+
+**Details**:
+
+- **Database Change**: Use SQLite instead of CockroachDB for weekend scope
+  - **Rationale**: CockroachDB setup requires complex certificate management, distributed configuration, and external services
+  - **SQLite Benefits**: Single file database, no setup required, perfect for development and testing
+  - **Oban Compatibility**: Oban works perfectly with SQLite via `ecto_sqlite3` adapter
+  - **Migration Path**: Can upgrade to CockroachDB post-weekend without code changes (just configuration)
+- **Secrets Management Change**: Use existing `AriaSecurity.SecretsMock` instead of OpenBao
+  - **Existing Mock Found**: `apps/aria_security/lib/aria_security/secrets_mock.ex` already exists and works
+  - **OpenBao Complexity**: Requires PKCS#11 setup, SoftHSM, certificate management, Fly.io deployment
+  - **Mock Benefits**: Zero setup, immediate availability, perfect for development
+  - **Interface Compatibility**: `AriaSecurity.SecretsInterface` already supports switching between real and mock
+- **Configuration Changes**:
+  - **Development**: Use SQLite + SecretsMock (zero setup)
+  - **Production**: Can use CockroachDB + OpenBao (full security)
+  - **Weekend Focus**: Temporal planner logic, not infrastructure management
+- **Dependency Updates**:
+  - Add `ecto_sqlite3` to mix.exs dependencies
+  - Configure SQLite as default database adapter for development
+  - Set `:secrets_module` to `AriaSecurity.SecretsMock` in dev config
+  - Remove complex certificate and HSM setup from weekend scope
+- **Database Schema Compatibility**:
+  - Oban migrations work identically with SQLite
+  - All existing Ecto schemas remain unchanged
+  - Just change the adapter configuration
+- **Infrastructure Footprint**:
+  - **Before**: CockroachDB + OpenBao + Certificates + HSM + Fly.io deployment
+  - **After**: Single SQLite file + in-memory mock secrets
+  - **Setup Time**: From hours to seconds
+
+**Weekend Implementation Benefits**:
+- **Zero Infrastructure Setup**: No external services, certificates, or deployment
+- **Fast Iteration**: Database changes apply immediately without migration complexity
+- **Focus on Logic**: Spend time on temporal planning, not infrastructure debugging
+- **Reliable Testing**: No network dependencies or external service failures
+- **Portable**: Entire development environment in a single repository
+
+**Post-Weekend Migration Strategy**:
+- All code designed to work with both SQLite and CockroachDB
+- Configuration-only changes to switch to production infrastructure
+- No temporal planner logic changes required
+- Infrastructure complexity deferred until after core functionality proven
+
+**Updated MVP Infrastructure**:
+- **Database**: SQLite (single file: `aria_data_dev.db`)
+- **Secrets**: `AriaSecurity.SecretsMock` (in-memory)
+- **Queue**: Oban with SQLite backend
+- **No External Dependencies**: Everything runs locally
+
+**Resolved Contradiction**: Removes infrastructure complexity that conflicts with weekend timeline and LLM development uncertainty.
