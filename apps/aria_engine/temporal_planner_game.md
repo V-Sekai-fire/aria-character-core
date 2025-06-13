@@ -120,11 +120,11 @@ _"We will make our stand here! Show them the iron will of our house!"_
 - **Success Condition:** The list of agents on the :enemy team is empty.
 - **Likely Plan:** A coordinated assault. The planner should identify the highest threats (e.g., archers) and focus fire. Maya uses Scorch for maximum AoE damage, Alex targets key enemies, and Jordan uses Now! on whichever ally can secure a kill or deal the most effective damage.
 
-## **7. Test Interface & Demonstration (CLI)**
+## **5. Test Interface & Demonstration (CLI)**
 
 To run the test and visualize the planner's decisions, a simple, interactive command-line interface will be used.
 
-### **7.1. UI Mockup & Flow**
+### **5.1. UI Mockup & Flow**
 
 The CLI provides a real-time view of the game state, the planner's current goal, and the list of scheduled actions.
 
@@ -151,7 +151,7 @@ Scheduled Actions:
 [Press SPACE to pause | Q to quit | C to change conviction]
 ```
 
-### **7.2. Core CLI Functionality**
+### **5.2. Core CLI Functionality**
 
 The CLI task (mix aria_engine.play_conviction_crisis) will demonstrate:
 
