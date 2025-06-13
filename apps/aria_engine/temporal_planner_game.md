@@ -119,3 +119,43 @@ _"We will make our stand here! Show them the iron will of our house!"_
 - **Goal:** Reduce the HP of all agents on the :enemy team to 0.
 - **Success Condition:** The list of agents on the :enemy team is empty.
 - **Likely Plan:** A coordinated assault. The planner should identify the highest threats (e.g., archers) and focus fire. Maya uses Scorch for maximum AoE damage, Alex targets key enemies, and Jordan uses Now! on whichever ally can secure a kill or deal the most effective damage.
+
+## **7. Test Interface & Demonstration (CLI)**
+
+To run the test and visualize the planner's decisions, a simple, interactive command-line interface will be used.
+
+### **7.1. UI Mockup & Flow**
+
+The CLI provides a real-time view of the game state, the planner's current goal, and the list of scheduled actions.
+
+```
+=== Conviction in Crisis - Temporal Planner Test ===
+Time: 00:05.2s | Goal: rescue_hostage | Plan Status: Executing
+
+Current State:
+- Alex: (6,4,0) HP:120/120 [Moving to (8,4,0), ETA: 00:06.1s]
+- Maya: (3,5,0) HP:80/80 [Casting Scorch at (15,5,0), ETA: 00:07.0s]
+- Jordan: (4,6,0) HP:95/95 [Ready]
+
+Enemies:
+- Soldier1: (15,4,0) HP:70/70
+- Soldier2: (15,5,0) HP:70/70 [Will take 45 damage from Scorch]
+- Archer1: (18,3,0) HP:50/50
+
+Scheduled Actions:
+00:06.1s - Alex reaches (8,4,0)
+00:06.1s - Jordan uses "Now!" on Alex
+00:07.0s - Maya's Scorch hits (15,5,0)
+00:07.1s - Alex moves to (10,4,0)
+
+[Press SPACE to pause | Q to quit | C to change conviction]
+```
+
+### **7.2. Core CLI Functionality**
+
+The CLI task (mix aria_engine.play_conviction_crisis) will demonstrate:
+
+1. **Temporal Planning**: Showing how the planner schedules actions over time.
+2. **Re-entrant Behavior**: Allowing the user to trigger the "Conviction Choice" mid-game and observing the planner generate a new plan.
+3. **Real-time Execution**: Using Oban to execute actions at their precise scheduled times, reflected in the UI.
+4. **Performance Metrics**: Displaying key metrics like planning time and plan execution accuracy.
