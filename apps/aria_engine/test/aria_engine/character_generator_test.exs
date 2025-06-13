@@ -41,7 +41,7 @@ defmodule AriaEngine.CharacterGeneratorTest do
 
   describe "planning system integration" do
     test "generates character using planning system by default" do
-      character = CharacterGenerator.generate(use_planner: true)
+      character = CharacterGenerator.generate()
       
       assert is_map(character)
       assert is_binary(character.character_id)
