@@ -106,7 +106,9 @@ defmodule AriaEnginePortelainIntegrationTest do
       todos = [{"file_exists", "/tmp/test_file", true}]
 
       case Plan.plan(domain, state, todos, verbose: 1) do
-        {:ok, plan} ->
+        {:ok, solution_tree} ->
+          # Extract primitive actions from the solution tree
+          plan = Plan.get_primitive_actions_dfs(solution_tree)
           assert is_list(plan)
           assert length(plan) > 0
           Logger.info("File management plan: #{inspect(plan)}")
@@ -144,7 +146,9 @@ defmodule AriaEnginePortelainIntegrationTest do
       ]
 
       case Plan.plan(domain, state, todos, max_depth: 20, verbose: 1) do
-        {:ok, plan} ->
+        {:ok, solution_tree} ->
+          # Extract primitive actions from the solution tree
+          plan = Plan.get_primitive_actions_dfs(solution_tree)
           assert is_list(plan)
           Logger.info("Mixed todo plan: #{inspect(plan)}")
 
@@ -269,7 +273,9 @@ defmodule AriaEnginePortelainIntegrationTest do
       ]
 
       case Plan.plan(domain, state, todos, max_depth: 10, verbose: 1) do
-        {:ok, plan} ->
+        {:ok, solution_tree} ->
+          # Extract primitive actions from the solution tree
+          plan = Plan.get_primitive_actions_dfs(solution_tree)
           Logger.info("Backup plan: #{inspect(plan)}")
 
           # Validate the plan

@@ -615,7 +615,7 @@ defmodule Mix.Tasks.CasyncDecode do
           {:ok, decompressed_data} ->
             verify_chunk_hash_and_size(decompressed_data, chunk_info, chunk_id_hex)
 
-          {:error, reason} ->
+          {:error, _reason} ->
             # Try as uncompressed data
             verify_chunk_hash_and_size(chunk_data, chunk_info, chunk_id_hex)
         end
@@ -850,9 +850,8 @@ defmodule Mix.Tasks.CasyncDecode do
                   chunk_output = Path.join(output_dir, "remote_chunk_#{String.slice(chunk_id_hex, 0, 8)}.bin")
                   File.write!(chunk_output, decompressed_data)
                   IO.puts("💾 Saved to: #{chunk_output}")
-                  
-                {:error, reason} ->
-                  IO.puts("❌ Raw ZSTD decompression failed: #{inspect(reason)}")
+                  {:error, reason} ->
+                    IO.puts("❌ Raw ZSTD decompression failed: #{inspect(reason)}")
                   
                   # Try as uncompressed data
                   IO.puts("🔍 Trying as uncompressed data...")

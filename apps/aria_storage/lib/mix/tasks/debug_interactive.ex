@@ -604,7 +604,7 @@ defmodule Mix.Tasks.CasyncDebugInteractive do
     (lines ++ analysis_lines) |> Enum.join("\n")
   end
 
-  defp print_hex_dump(binary, base_offset \\ 0) do
+  defp print_hex_dump(binary, base_offset) do
     binary
     |> :binary.bin_to_list()
     |> Enum.chunk_every(16)
