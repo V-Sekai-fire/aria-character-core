@@ -819,3 +819,87 @@ config :aria_security, :secrets_module, AriaSecurity.SecretsMock
   - **Fail Fast**: If basic temporal planning doesn't work, pivot immediately
 
 **Critical Insight**: The temporal planner is not just a feature - it's the foundational technology that makes the entire game concept possible. Without it working reliably, there is no game.
+
+## Resolution 27: Reverse Resolution Order (Newest First)
+
+**Decision**: Organize all resolutions in reverse chronological order (newest at top) to prevent LLM assistant weight bias during document processing.
+
+**Details**:
+
+- **LLM Processing Bias**: LLM assistants give more weight to content that appears earlier in documents
+  - **Top Content**: Receives highest attention and influences responses most strongly
+  - **Bottom Content**: May be truncated, skipped, or given less consideration
+  - **VSCode Apply**: Processes document from top to bottom, making early content more influential
+- **Current Problem**: Resolution 1 at top gets disproportionate weight compared to Resolution 26
+  - **Outdated Decisions**: Earlier resolutions may contain superseded or refined thinking
+  - **Latest Insights**: Most recent resolutions contain best current understanding
+  - **Design Evolution**: Later resolutions often correct or improve earlier ones
+- **Reverse Order Solution**:
+  - **Resolution 27 (newest)** → appears at top
+  - **Resolution 26** → second from top
+  - **...continuing down...**
+  - **Resolution 1 (oldest)** → appears at bottom
+- **Implementation Strategy**:
+  - **Maintain Content**: Keep all resolution content exactly the same
+  - **Reorder Only**: Change only the physical order in the document
+  - **Update References**: Ensure cross-references still work correctly
+  - **Preserve Numbering**: Keep resolution numbers for historical tracking
+- **Benefits**:
+  - **Latest Thinking First**: Most current and refined decisions get highest LLM attention
+  - **Reduced Bias**: Prevents outdated early decisions from dominating responses
+  - **Better Assistance**: LLM helpers work with best available information first
+  - **Evolution Visibility**: Shows design progression from refined to initial thinking
+- **Document Restructure Required**:
+  - Move Resolution 27 to top (after header)
+  - Move Resolution 26 second
+  - Continue until Resolution 1 is at bottom
+  - Update table of contents if present
+  - Verify all internal links still work
+
+**Meta-Resolution**: This resolution demonstrates the principle by being placed at the top once implemented.
+
+## Resolution 26: Implementation Capability Crisis
+
+**Decision**: If we cannot successfully implement a working temporal planner, the entire game concept fails because it depends on reliable action timing estimation.
+
+**Details**:
+
+- **Fundamental Dependency**: The "Conviction in Crisis" game concept requires:
+  - **Precise Action Duration Estimates**: "Moving from A to B takes 3.2 seconds"
+  - **Reliable Completion Prediction**: "Action will complete at 14:32:15.432"
+  - **Interruptible Progress Tracking**: "Currently 60% through movement"
+  - **Real-time ETA Updates**: "Arrival in 1.8 seconds... 1.7... 1.6..."
+- **Implementation-Estimation Paradox**: 
+  - **Cannot Estimate Without Implementation**: Time estimation requires working code to measure
+  - **Cannot Plan Without Estimation**: Game design requires known action durations
+  - **Cannot Test Without Planning**: Validation requires predictable timing
+  - **Circular Dependency**: Each element depends on the others working
+- **Game Design Brittleness**: 
+  - **Streaming Entertainment**: Requires precise timing for tension and viewer engagement
+  - **Player Agency**: Interruption windows must be predictable and fair
+  - **Tactical Decision**: Player needs accurate time information to make meaningful choices
+  - **Real-time Feedback**: CLI display depends on accurate progress calculations
+- **Failure Modes Without Working Implementation**:
+  - **Arbitrary Timing**: Made-up durations that don't match reality
+  - **Inconsistent Experience**: Actions take random amounts of time
+  - **Broken Interruption**: Can't interrupt actions reliably
+  - **No Player Agency**: Unpredictable timing eliminates meaningful decisions
+  - **Undemonstrable**: Cannot show working game to others
+- **Success Criteria for Game Viability**:
+  - **Deterministic Action Duration**: Same action always takes same time
+  - **Sub-second Precision**: Timing accurate to 100ms or better
+  - **Reliable Interruption**: SPACEBAR always stops action cleanly
+  - **Accurate Progress Display**: Visual progress matches actual completion
+  - **Consistent Replanning**: Interrupted actions resume from correct position
+- **Implementation-First Approach**: 
+  - **Measure Real Performance**: Use actual code execution time for estimates
+  - **Iterate Based on Reality**: Adjust game design to match implementation capabilities
+  - **Validate Through Testing**: Prove timing reliability through automated tests
+  - **Build Confidence Through Demos**: Working code enables convincing demonstrations
+- **Risk Mitigation Strategy**:
+  - **Start with MVP**: Simplest possible working temporal planner
+  - **Measure Everything**: Instrument all action durations and progress tracking
+  - **Test Thoroughly**: Automated tests for timing reliability and interruption
+  - **Fail Fast**: If basic temporal planning doesn't work, pivot immediately
+
+**Critical Insight**: The temporal planner is not just a feature - it's the foundational technology that makes the entire game concept possible. Without it working reliably, there is no game.
