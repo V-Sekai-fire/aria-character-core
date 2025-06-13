@@ -50,6 +50,7 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
 # Production Oban configuration
 config :aria_queue, Oban,
   repo: AriaData.QueueRepo,
+  notifier: Oban.Notifiers.PG,
   plugins: [
     Oban.Plugins.Pruner,
     {Oban.Plugins.Cron,

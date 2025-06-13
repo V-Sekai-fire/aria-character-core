@@ -6,67 +6,42 @@ import Config
 # Test environment configuration
 config :logger, level: :warning
 
-# Test database configuration - using CockroachDB
-# CockroachDB doesn't support migration locks, so we disable them
+# Test database configuration - using SQLite for simplicity
 config :aria_data, AriaData.Repo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_data_test#{System.get_env("MIX_TEST_PARTITION")}",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "tmp/aria_data_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10,
-  migration_lock: false
+  pool_size: 10
 
 config :aria_data, AriaData.AuthRepo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_auth_test#{System.get_env("MIX_TEST_PARTITION")}",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "tmp/aria_auth_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 8,
-  migration_lock: false
+  pool_size: 8
 
 config :aria_data, AriaData.QueueRepo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_queue_test#{System.get_env("MIX_TEST_PARTITION")}",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "tmp/aria_queue_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 8,
-  migration_lock: false
+  pool_size: 8
 
 config :aria_data, AriaData.StorageRepo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_storage_test#{System.get_env("MIX_TEST_PARTITION")}",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "tmp/aria_storage_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 8,
-  migration_lock: false
+  pool_size: 8
 
 config :aria_data, AriaData.MonitorRepo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_monitor_test#{System.get_env("MIX_TEST_PARTITION")}",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "tmp/aria_monitor_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 6,
-  migration_lock: false
+  pool_size: 6
 
 config :aria_data, AriaData.EngineRepo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_engine_test#{System.get_env("MIX_TEST_PARTITION")}",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "tmp/aria_engine_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 6,
-  migration_lock: false
+  pool_size: 6
 
 # Test Phoenix configuration
 config :aria_coordinate, AriaCoordinateWeb.Endpoint,
@@ -78,10 +53,12 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
 config :aria_queue, Oban,
   testing: :inline,
   repo: AriaData.QueueRepo,
+  notifier: Oban.Notifiers.PG,
   queues: []
 
-# Test security configuration (mock OpenBao)
+# Test security configuration (using mock)
 config :aria_security,
+  secrets_module: AriaSecurity.SecretsMock,
   openbao_url: "http://localhost:8200",
   openbao_token: "test-token"
 
@@ -94,17 +71,6 @@ config :aria_interpret,
 # Test Hammer rate limiting configuration
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}
-
-# For CI environments - skip database-dependent repositories if DATABASE_URL is not set
-if System.get_env("CI_UNIT_TESTS") == "true" do
-  # In CI unit test mode, we disable database-dependent features
-  config :aria_data, AriaData.Repo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
-  config :aria_data, AriaData.AuthRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
-  config :aria_data, AriaData.QueueRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
-  config :aria_data, AriaData.StorageRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
-  config :aria_data, AriaData.MonitorRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
-  config :aria_data, AriaData.EngineRepo, adapter: Ecto.Adapters.SQL.Sandbox, pool: Ecto.Adapters.SQL.Sandbox
-end
 
 # Configure ExUnit
 config :ex_unit,

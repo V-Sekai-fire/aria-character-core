@@ -7,10 +7,10 @@ defmodule AriaData.MixProject do
   def project do
     [
       app: :aria_data,
-      version: "0.1.0", 
+      version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
-      deps_path: "../../deps", 
+      deps_path: "../../deps",
       lockfile: "../../mix.lock",
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
@@ -28,13 +28,14 @@ defmodule AriaData.MixProject do
 
   defp deps do
     [
-      # Database ORM with PostgreSQL adapter (CockroachDB compatible)
+      # Database ORM with both PostgreSQL and SQLite adapters
       {:ecto_sql, "~> 3.10"},
       {:postgrex, "~> 0.20.0"},
-      
+      {:ecto_sqlite3, "~> 0.9"},
+
       # JSON handling
       {:jason, "~> 1.4"},
-      
+
       # Shared dependencies
       {:telemetry, "~> 1.2"}
     ]

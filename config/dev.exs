@@ -6,78 +6,54 @@ import Config
 # Development environment configuration
 config :logger, level: :debug
 
-# Configure development databases (PostgreSQL adapter for CockroachDB compatibility)
+# Configure development databases (SQLite for weekend simplification)
 # Main repository for general data
 config :aria_data, AriaData.Repo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_data_dev",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "priv/aria_data_dev.db",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10,
-  adapter: Ecto.Adapters.Postgres
+  pool_size: 10
 
 # Authentication repository for user data
 config :aria_data, AriaData.AuthRepo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_auth_dev",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "priv/aria_auth_dev.db",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 8,
-  adapter: Ecto.Adapters.Postgres
+  pool_size: 8
 
 # Queue repository for background jobs
 config :aria_data, AriaData.QueueRepo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_queue_dev",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "priv/aria_queue_dev.db",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 8,
-  adapter: Ecto.Adapters.Postgres
+  pool_size: 8
 
 # Storage repository for file metadata
 config :aria_data, AriaData.StorageRepo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_storage_dev",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "priv/aria_storage_dev.db",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 8,
-  adapter: Ecto.Adapters.Postgres
+  pool_size: 8
 
 # Monitor repository for telemetry data
 config :aria_data, AriaData.MonitorRepo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_monitor_dev",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "priv/aria_monitor_dev.db",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 6,
-  adapter: Ecto.Adapters.Postgres
+  pool_size: 6
 
 # Engine repository for planning data
 config :aria_data, AriaData.EngineRepo,
-  username: "root",
-  password: "",
-  hostname: "localhost",
-  port: 26257,
-  database: "aria_engine_dev",
+  adapter: Ecto.Adapters.SQLite3,
+  database: "priv/aria_engine_dev.db",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 6,
-  adapter: Ecto.Adapters.Postgres
+  pool_size: 6
 
 # Development Phoenix configuration for coordinate service
 config :aria_coordinate, AriaCoordinateWeb.Endpoint,
@@ -91,6 +67,7 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
 # Configure Oban for development (used by queue service)
 config :aria_queue, Oban,
   repo: AriaData.QueueRepo,
+  notifier: Oban.Notifiers.PG,
   plugins: [Oban.Plugins.Pruner],
   queues: [
     ai_generation: 5,
@@ -99,8 +76,9 @@ config :aria_queue, Oban,
     monitoring: 2
   ]
 
-# OpenBao development configuration (security service)
+# Security Service development configuration (using mock for simplicity)
 config :aria_security,
+  secrets_module: AriaSecurity.SecretsMock,
   openbao_url: "http://localhost:8200",
   openbao_token: System.get_env("OPENBAO_DEV_TOKEN") || "dev-token"
 

@@ -4,15 +4,15 @@
 defmodule AriaData.QueueRepo do
   @moduledoc """
   Repository for background job queue data.
-  
+
   Handles Oban job persistence, queue management, and job state tracking.
   Uses a separate database for queue isolation and performance.
   """
-  
+
   use Ecto.Repo,
     otp_app: :aria_data,
-    adapter: Ecto.Adapters.Postgres
-    
+    adapter: Ecto.Adapters.SQLite3
+
   def migrations_path do
     Application.app_dir(:aria_data, "priv/queue_repo/migrations")
   end

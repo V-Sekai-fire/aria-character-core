@@ -14,15 +14,19 @@ defmodule AriaData.QueueRepo.Migrations.ObanMigrationTest do
 
     content = File.read!(migration_file)
 
-    # Check for CockroachDB-compatible features
-    assert String.contains?(content, "oban_job_state AS ENUM"), "Should create enum type"
-    assert String.contains?(content, "add :errors, :jsonb"), "Should use JSONB for errors"
-    assert String.contains?(content, "add :attempted_by, :jsonb"), "Should use JSONB for attempted_by"
-    assert String.contains?(content, "'cancelled'"), "Should include cancelled state for v2.19.4"
-    assert String.contains?(content, "add :conf, :jsonb"), "Should include conf field for v2.19.4"
+    # Check for SQLite-compatible features
+    assert String.contains?(content, "add :state, :text"), "Should use TEXT for state field"
+    assert String.contains?(content, "add :errors, :text"), "Should use TEXT for errors (JSON as TEXT)"
+    assert String.contains?(content, "add :attempted_by, :text"), "Should use TEXT for attempted_by (JSON as TEXT)"
+    assert String.contains?(content, "cancelled_at"), "Should include cancelled_at field for v2.19.4"
+    assert String.contains?(content, "add :conf, :text"), "Should include conf field for v2.19.4"
     assert String.contains?(content, "create table(:oban_peers"), "Should create oban_peers table"
+    assert String.contains?(content, "add :args, :text"), "Should use TEXT for args (JSON as TEXT)"
+    assert String.contains?(content, "add :meta, :text"), "Should use TEXT for meta (JSON as TEXT)"
 
-    # Ensure array types are not used for problematic fields
-    refute String.contains?(content, "{:array, :jsonb}"), "Should not use array of JSONB"
+    # Ensure SQLite-incompatible types are not used
+    refute String.contains?(content, "oban_job_state AS ENUM"), "Should not use PostgreSQL ENUM types"
+    refute String.contains?(content, ":jsonb"), "Should not use PostgreSQL JSONB type"
+    refute String.contains?(content, ":bigserial"), "Should not use PostgreSQL BIGSERIAL type"
   end
 end
