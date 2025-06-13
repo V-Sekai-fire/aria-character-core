@@ -51,17 +51,13 @@ defmodule RescueDomainTest do
   
   # Create rescue domain with actions and methods
   defp create_rescue_domain do
-    domain = Domain.new("rescue")
-    
-    # Add actions
+    Domain.new("rescue")
     |> Domain.add_action(:a_move_euclidean, &a_move_euclidean/2)
     |> Domain.add_action(:a_move_manhattan, &a_move_manhattan/2)
     |> Domain.add_action(:a_move_curved, &a_move_curved/2)
     |> Domain.add_action(:a_move_fly, &a_move_fly/2)
     |> Domain.add_action(:a_move_alt_fly, &a_move_alt_fly/2)
     |> Domain.add_action(:a_free_robot, &a_free_robot/2)
-    
-    # Add task methods
     |> Domain.add_task_method("move_task", &tm1_move/2)
     |> Domain.add_task_method("move_task", &tm2_move/2)
     |> Domain.add_task_method("move_task", &tm3_move/2)
