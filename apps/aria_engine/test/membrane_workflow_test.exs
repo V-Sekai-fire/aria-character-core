@@ -30,6 +30,34 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
   alias Membrane.Testing
 
+  # Custom source with auto flow control to replace Testing.Source
+  # This fixes the flow control mismatch error between :manual and :auto modes
+  defmodule AutoFlowSource do
+    use Membrane.Source
+
+    defstruct output: []
+
+    def_output_pad :output,
+      accepted_format: %Membrane.RemoteStream{type: :bytestream},
+      flow_control: :push
+
+    @impl true
+    def handle_init(_ctx, %__MODULE__{output: output}) do
+      {[], %{buffers: output, sent: false}}
+    end
+
+    @impl true
+    def handle_playing(_ctx, state) do
+      if not state.sent do
+        actions = Enum.map(state.buffers, &{:buffer, {:output, &1}})
+        actions = actions ++ [{:end_of_stream, :output}]
+        {actions, %{state | sent: true}}
+      else
+        {[], state}
+      end
+    end
+  end
+
   # Membrane element for persistent job storage
   defmodule PersistentJobSink do
     use Membrane.Sink
@@ -37,7 +65,8 @@ defmodule AriaEngine.MembraneWorkflowTest do
     defstruct storage_path: "priv/membrane_jobs"
 
     def_input_pad :input,
-      accepted_format: %Membrane.RemoteStream{type: :bytestream}
+      accepted_format: %Membrane.RemoteStream{type: :bytestream},
+      flow_control: :auto
 
     @impl true
     def handle_init(_ctx, %__MODULE__{storage_path: storage_path}) do
@@ -90,16 +119,15 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
     def_input_pad :input,
       accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :manual,
-      demand_unit: :buffers
+      flow_control: :auto
 
     def_output_pad :output,
       accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :manual
+      flow_control: :auto
 
     def_output_pad :error_output,
       accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :manual
+      flow_control: :auto
 
     @impl true
     def handle_init(_ctx, %__MODULE__{workflow_type: workflow_type}) do
@@ -270,23 +298,6 @@ defmodule AriaEngine.MembraneWorkflowTest do
     defp calculate_priority(%{action: :attack}), do: 3
     defp calculate_priority(%{action: :use_skill}), do: 2
     defp calculate_priority(_), do: 1
-
-    @impl true
-    def handle_demand(:output, size, :buffers, _ctx, state) do
-      {[demand: {:input, size}], state}
-    end
-
-    @impl true  
-    def handle_demand(:error_output, size, :buffers, _ctx, state) do
-      # Error output doesn't need to demand from input
-      {[], state}
-    end
-
-    @impl true
-    def handle_playing(_ctx, state) do
-      # Start demand chain by requesting initial data from input
-      {[demand: {:input, 10}], state}
-    end
   end
 
   # Result collector for successful workflows
@@ -297,17 +308,11 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
     def_input_pad :input,
       accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :manual,
-      demand_unit: :buffers
+      flow_control: :auto
 
     @impl true
     def handle_init(_ctx, %__MODULE__{parent_pid: parent_pid}) do
       {[], %{parent_pid: parent_pid, results: []}}
-    end
-
-    @impl true
-    def handle_playing(_ctx, state) do
-      {[demand: {:input, 10}], state}
     end
 
     @impl true
@@ -316,7 +321,7 @@ defmodule AriaEngine.MembraneWorkflowTest do
       send(state.parent_pid, {:workflow_result, result})
 
       new_state = %{state | results: [result | state.results]}
-      {[demand: {:input, 1}], new_state}
+      {[], new_state}
     end
   end
 
@@ -328,7 +333,8 @@ defmodule AriaEngine.MembraneWorkflowTest do
     defstruct parent_pid: nil, batch_size: 50
 
     def_input_pad :input,
-      accepted_format: %Membrane.RemoteStream{type: :bytestream}
+      accepted_format: %Membrane.RemoteStream{type: :bytestream},
+      flow_control: :auto
 
     @impl true
     def handle_init(_ctx, %__MODULE__{parent_pid: parent_pid, batch_size: batch_size}) do
@@ -368,17 +374,11 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
     def_input_pad :input,
       accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :manual,
-      demand_unit: :buffers
+      flow_control: :auto
 
     @impl true
     def handle_init(_ctx, %__MODULE__{parent_pid: parent_pid}) do
       {[], %{parent_pid: parent_pid, errors: []}}
-    end
-
-    @impl true
-    def handle_playing(_ctx, state) do
-      {[demand: {:input, 10}], state}
     end
 
     @impl true
@@ -387,7 +387,7 @@ defmodule AriaEngine.MembraneWorkflowTest do
       send(state.parent_pid, {:error_recovered, error_data})
 
       new_state = %{state | errors: [error_data | state.errors]}
-      {[demand: {:input, 1}], new_state}
+      {[], new_state}
     end
   end
 
@@ -399,7 +399,8 @@ defmodule AriaEngine.MembraneWorkflowTest do
     defstruct subsystems: %{}
 
     def_input_pad :input,
-      accepted_format: %Membrane.RemoteStream{type: :bytestream}
+      accepted_format: %Membrane.RemoteStream{type: :bytestream},
+      flow_control: :auto
 
     @impl true
     def handle_init(_ctx, %__MODULE__{subsystems: subsystems}) do
@@ -859,7 +860,7 @@ defmodule AriaEngine.MembraneWorkflowTest do
       end)
 
       spec = [
-        child(:source, %Membrane.Testing.Source{output: buffers})
+        child(:source, %__MODULE__.AutoFlowSource{output: buffers})
         |> child(:processor, %__MODULE__.WorkflowProcessor{workflow_type: :temporal_planning})
         |> via_out(:output)
         |> child(:sink, %__MODULE__.WorkflowResultCollector{parent_pid: self()}),
@@ -900,7 +901,7 @@ defmodule AriaEngine.MembraneWorkflowTest do
       end)
 
       spec = [
-        child(:source, %Membrane.Testing.Source{output: buffers})
+        child(:source, %__MODULE__.AutoFlowSource{output: buffers})
         |> child(:persistent_sink, %__MODULE__.PersistentJobSink{storage_path: storage_path})
       ]
 
@@ -1196,7 +1197,7 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
     # Single pipeline that routes results to game subsystems
     spec = [
-      child(:source, %Membrane.Testing.Source{output: buffers})
+      child(:source, %__MODULE__.AutoFlowSource{output: buffers})
       |> child(:processor, %__MODULE__.WorkflowProcessor{workflow_type: :concurrent_processing})
       |> via_out(:output)
       |> child(:game_router, %__MODULE__.GameSubsystemRouter{subsystems: subsystems}),
@@ -1274,7 +1275,7 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
     # Create pipeline
     spec = [
-      child(:source, %Membrane.Testing.Source{output: buffers})
+      child(:source, %__MODULE__.AutoFlowSource{output: buffers})
       |> child(:processor, %__MODULE__.OptimizedBackflowProcessor{
         core_id: core_id,
         workflow_type: :direct_processing
@@ -1691,7 +1692,7 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
     # Create pipeline: ticks -> random movement processor -> FPS collector
     spec = [
-      child(:source, %Membrane.Testing.Source{output: buffers})
+      child(:source, %__MODULE__.AutoFlowSource{output: buffers})
       |> child(:processor, %__MODULE__.RandomMovementProcessor{
         board_size: board_size,
         agent_count: agent_count
