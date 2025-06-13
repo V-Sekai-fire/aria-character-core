@@ -4,11 +4,11 @@ This document captures the finalized design decisions for the temporal, re-entra
 
 ## Contradiction Resolution Process
 
-**Comprehensive Analysis Completed (June 13, 2025)**: All 26 resolutions verified against codebase and each other
+**Comprehensive Analysis Completed (June 13, 2025)**: All 27 resolutions verified against codebase and each other
 
 ### Contradiction Check Results: ✅ ALL CLEAR
 
-**Summary**: All 26 design resolutions are mutually compatible and consistent with the current codebase implementation.
+**Summary**: All 27 design resolutions are mutually compatible and consistent with the current codebase implementation.
 
 **Key Consistency Verifications**:
 
@@ -26,7 +26,7 @@ This document captures the finalized design decisions for the temporal, re-entra
 
 3. **✅ Temporal Design Coherence**:
 
-   - **Resolution 6** (1ms ticks) ↔ **Resolution 8** (1000 FPS CLI) ✅ **ALIGNED**
+   - **Resolution 6** (1ms ticks) ↔ **Resolution 8** (LiveView updates) ✅ **ALIGNED**
    - **Resolution 7** (5-second choices) ↔ **Resolution 12** (real-time input) ✅ **COMPATIBLE**
    - **Resolution 9** (Euclidean distance) ↔ **Resolution 23** (deterministic timing) ✅ **CONSISTENT**
 
@@ -75,7 +75,7 @@ This document captures the finalized design decisions for the temporal, re-entra
 5. ✅ **Test Domain**: ConvictionCrisis as validation scenario
 6. ✅ **Game Engine Integration**: Tick-based loop with Oban scheduling
 7. ✅ **Conviction Choice**: User input triggers immediate re-planning
-8. ✅ **CLI Implementation**: ANSI terminal with async input handling
+8. ✅ **Web Interface**: LiveView with interactive SVG and real-time updates
 9. ✅ **Action Calculations**: Euclidean distance with fixed movement speed
 10. ✅ **Map System**: 2D grid-based with future 3D extensibility
 11. ✅ **Queue Idempotency**: All actions are idempotent intents that can be rejected
@@ -94,6 +94,8 @@ This document captures the finalized design decisions for the temporal, re-entra
 24. ✅ **Minimum Success Criteria**: Clear demonstration requirements for weekend
 25. ✅ **Research Strategy**: Address unknowns through rapid prototyping
 26. ✅ **Risk Mitigation**: Fallback plans if temporal precision fails
+27. ✅ **Web Interface**: Phoenix LiveView with Godot WebRTC stretch goal
+27. ✅ **Web Interface**: Phoenix LiveView web interface for real-time interaction
 
 ## Implementation Status
 
@@ -233,18 +235,18 @@ config :aria_queue, Oban,
 - Time pressure creates realistic tactical decision-making stress
 - Alternative: Add "slow-motion mode" option (0.5x speed) during choice for tactical consideration
 
-## Resolution 8: CLI Implementation Details
+## Resolution 8: Web Interface Implementation Details
 
-**Decision**: Use terminal control sequences with async input handling and ultra-high-frequency updates.
+**Decision**: Use Phoenix LiveView with WebSocket updates and interactive SVG visualization.
 
 **Details**:
 
-- Use ANSI escape codes to clear/update terminal display
-- Async process handles keyboard input without blocking game loop
-- Display updates every 1ms synchronized with game ticks for ultra-smooth real-time feedback
+- Phoenix LiveView handles real-time WebSocket communication with minimal latency
+- Interactive SVG grid provides smooth visual feedback for agent positions and movements
+- LiveView updates synchronized with game ticks for ultra-smooth real-time feedback
 - ETA calculations based on current time + remaining action duration with sub-millisecond precision
-- User input (SPACE/Q/C) sends messages to main game process with minimal latency
-- 1000 FPS refresh rate provides true VR-style responsiveness for temporal planning visualization
+- User input (clicks, hotkeys) sends messages to LiveView process with minimal latency
+- Real-time updates provide responsive feedback for temporal planning visualization
 
 ## Resolution 9: Action Duration & Movement Calculations
 
@@ -477,15 +479,15 @@ config :aria_queue, Oban,
 
   1. **Temporal State Extension**: Extend existing `AriaEngine.State` to include time and action scheduling
   2. **Oban Job Integration**: One `GameActionJob` schedules and executes a timed action
-  3. **Real-Time CLI**: Terminal display shows action progress with timestamps
-  4. **Player Interruption**: SPACEBAR cancels scheduled action, triggers re-planning
+  3. **Real-Time Web Interface**: Phoenix LiveView shows action progress with timestamps
+  4. **Player Interruption**: Web button/hotkey cancels scheduled action, triggers re-planning
   5. **Basic Stability**: Simple Lyapunov function validates action reduces distance to goal
 
 - **MVP Technical Stack (Leveraging Existing Code)**:
 
   - **Base**: Existing `AriaEngine.State`, `AriaEngine.Domain`, `AriaEngine.Plan`
   - **Extensions**: `TemporalState` (extends State), `GameActionJob` (Oban worker)
-  - **New Modules**: `ConvictionCrisis.CLI`, `ConvictionCrisis.GameEngine`
+  - **New Modules**: `ConvictionCrisis.LiveView`, `ConvictionCrisis.GameEngine`
   - **Infrastructure**: Existing `AriaQueue`, `AriaData.QueueRepo`, Oban setup
 
 - **MVP ConvictionCrisis Scenario (Ultra-Minimal)**:
@@ -493,7 +495,7 @@ config :aria_queue, Oban,
   - **Map**: 10×6 grid, Alex starts at {2,3}, goal: reach {8,3}
   - **Action**: `move_to` only - no combat, skills, or enemies
   - **Duration**: Movement takes `distance / agent.move_speed` seconds (existing calculation pattern)
-  - **Display**: ASCII grid updated every 100ms showing Alex's position as 'A'
+  - **Display**: Interactive SVG grid updated in real-time showing Alex's position as 'A'
 
 - **MVP Data Structures (Minimal Extensions)**:
 
@@ -521,20 +523,18 @@ end
   1. `lib/aria_engine/temporal_state.ex` - Temporal state wrapper
   2. `lib/aria_engine/jobs/game_action_job.ex` - Oban worker
   3. `lib/aria_engine/conviction_crisis/game_engine.ex` - Game loop
-  4. `lib/aria_engine/conviction_crisis/cli.ex` - Terminal interface
-  5. `lib/mix/tasks/aria_engine.conviction_crisis.ex` - Mix task entry point
+  4. `lib/aria_engine/conviction_crisis/live_view.ex` - Phoenix LiveView interface  
+  5. `lib/aria_engine/conviction_crisis/router.ex` - Web routes
 
 - **Weekend Acceptance Test (10-minute demo)**:
 
-  1. Run: `mix aria_engine.conviction_crisis`
-  2. See: ASCII grid with Alex ('A') at position {2,3}
-  3. Game: Auto-plans movement to {8,3}, shows "Moving to {8,3} - ETA: 2.0s"
+  1. Navigate to: `http://localhost:4000/conviction-crisis`
+  2. See: Interactive SVG grid with Alex ('A') at position {2,3}
+  3. Click: Target position {8,3} - shows "Planning movement - ETA: 2.0s"
   4. Watch: Alex position updates in real-time across grid
-  5. Interrupt: Press SPACEBAR at {5,3} - Alex stops, shows "Replanning from {5,3}"
+  5. Click: "Cancel Action" button at {5,3} - Alex stops, shows "Replanning from {5,3}"
   6. Continue: New plan generated, Alex continues to {8,3}
   7. Success: "Mission Complete!" when Alex reaches goal
-
-- **Success Definition**: If this 10-minute demo runs reliably using existing AriaEngine infrastructure with minimal new code, the temporal planner MVP is complete.
 
 - **Post-MVP Extensions (If Time Permits)**:
   - Add simple enemy at {6,3} that Alex must avoid
@@ -630,13 +630,13 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
 **Details**:
 
 - **Timing Consistency Check**:
-  - ✅ 1ms tick cycle (Resolution 6) is compatible with 1000 FPS CLI updates (Resolution 8)
+  - ✅ 1ms tick cycle (Resolution 6) is compatible with LiveView real-time updates (Resolution 8)
   - ✅ 5-second conviction choice window (Resolution 7) works with real-time never-pause system (Resolution 12)
   - ✅ Sub-millisecond scheduling precision is achievable with Oban job timing
 - **Architecture Consistency Check**:
   - ✅ Separated GameEngine (Resolution 3) integrates properly with unified Oban queue (Resolution 2)
   - ✅ Temporal state migration (Resolution 1) supports idempotent Oban actions (Resolution 11)
-  - ✅ MVP definition (Resolution 18) aligns with weekend scope priorities (Resolution 16)
+  - ✅ MVP definition (Resolution 18) aligns with weekend scope priorities (Resolution 16, 18)
 - **Player Experience Consistency Check**:
   - ✅ Real-time input (Resolution 12) enhances streaming optimization (Resolution 14)
   - ✅ Opportunity windows (Resolution 13) work with imperfect information design (Resolution 15)
@@ -647,7 +647,7 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
   - ✅ LLM development uncertainty (Resolution 17) addressed by flexible MVP scope (Resolution 16, 18)
 - **Domain Integration Consistency Check**:
   - ✅ ConvictionCrisis test domain (Resolution 5) exercises all temporal planner features
-  - ✅ CLI implementation (Resolution 8) supports all required player interactions
+  - ✅ Web interface implementation (Resolution 8) supports all required player interactions
   - ✅ Stability verification (Resolution 4) integrates with real-time execution constraints
 
 ## Resolution 22: First Implementation Step - Test-Driven Oban Job
@@ -892,151 +892,6 @@ end
 - Fail fast if fundamental assumptions prove wrong
 - Use simple implementations first, optimize later if needed
 
-## Resolution Status Summary
-
-✅ **ALL OPEN QUESTIONS RESOLVED**
-
-**Design Questions (All Resolved)**:
-
-1. ✅ **Resolution 1-21**: Core architectural and design decisions locked in
-2. ✅ **Resolution 22**: First implementation step decided (Test-driven Oban Job)
-3. ✅ **Resolution 23**: MVP timing implementation strategy defined
-4. ✅ **Resolution 24**: Absolute minimum success criteria established
-5. ✅ **Resolution 25**: Research questions converted to implementation tests
-6. ✅ **Resolution 26**: Implementation risk mitigation strategies prepared
-
-**Critical Dependencies Addressed**:
-
-- ✅ **Infrastructure**: SQLite + SecretsMock setup complete (previous work)
-- ✅ **Architecture**: Temporal state, Oban jobs, CLI interface design finalized
-- ✅ **Implementation Strategy**: TDD approach with clear first steps
-- ✅ **Risk Mitigation**: Fallback plans if temporal precision fails
-- ✅ **Success Criteria**: Clear definition of MVP demonstration requirements
-
-**Ready for Implementation**:
-
-- 🚀 **First Step**: Write failing integration test for MVP demo
-- 🚀 **Test-Driven**: Let tests drive out exactly what's needed
-- 🚀 **Incremental**: Build working system piece by piece
-- 🚀 **Measurable**: Validate timing assumptions through real code
-- 🚀 **Demonstrable**: Target 10-minute working demo
-
-**No Remaining Open Questions**: All architectural decisions made, implementation strategy defined, risk mitigation prepared. Ready to begin coding the temporal planner with complete design clarity.
-
-**Decision**: Establish clear distinction between Intents (immediate planning commands) and Actions (scheduled executable tasks).
-
-**Details**:
-
-- **Actions** (scheduled in Oban queue with duration and state effects):
-  - `move_to` - Agent movement with travel time
-  - `attack` - Combat action with cooldown
-  - `use_item` - Equipment usage with resource consumption
-  - `wait` - Deliberate pause for timing coordination
-  - **Properties**: Duration, resource cost, can fail, queued execution, state changes
-- **Intents** (immediate commands that modify the planning system):
-  - `interrupt` - Cancel current action, trigger replanning
-  - `replan` - Recalculate optimal plan from current state
-  - `cancel_action` - Remove specific scheduled action
-  - `change_goal` - Update objective, trigger full replanning
-  - `emergency_stop` - Halt all actions immediately
-  - **Properties**: Instantaneous, no duration, modify plan queue, trigger replanning
-- **Interruption Flow**:
-  1. Player presses SPACEBAR → `interrupt` intent sent
-  2. Intent processor cancels current executing action
-  3. Agent position updated to current location
-  4. Replanning triggered from new position
-  5. New actions scheduled to achieve goal
-- **Architecture Separation**:
-  - **ActionQueue**: Handles scheduled actions with Oban jobs
-  - **IntentProcessor**: Handles immediate planning modifications
-  - **TemporalPlanner**: Responds to intents by generating new actions
-  - **GameEngine**: Processes both intents and action completions
-- **Test Implementation**:
-  - Actions tested for duration, effects, and completion
-  - Intents tested for immediate response and plan modification
-  - Integration tested for intent → action → replanning flow
-
-**Critical Design Point**: Interruption is NOT an action that takes time - it's an intent that immediately modifies the temporal plan.
-
-## Resolution 24: Infrastructure Simplification for Weekend Scope
-
-**Decision**: Switch from CockroachDB + OpenBao to SQLite + SecretsMock for weekend temporal planner implementation.
-
-**Details**:
-
-- **Database Change**: Use SQLite instead of CockroachDB for weekend scope
-  - **Rationale**: CockroachDB setup requires complex certificate management, distributed configuration, and external services
-  - **SQLite Benefits**: Single file database, no setup required, perfect for development and testing
-  - **Oban Compatibility**: Oban works perfectly with SQLite via `ecto_sqlite3` adapter
-  - **Migration Path**: Can upgrade to CockroachDB post-weekend without code changes (just configuration)
-- **Secrets Management Change**: Use existing `AriaSecurity.SecretsMock` instead of OpenBao
-  - **Existing Mock Found**: `apps/aria_security/lib/aria_security/secrets_mock.ex` already exists and works
-  - **OpenBao Complexity**: Requires PKCS#11 setup, SoftHSM, certificate management, Fly.io deployment
-  - **Mock Benefits**: In-memory storage, no external dependencies, perfect for development
-  - **Test Configuration**: Already configured to use mock in `config/test.exs`
-- **Zero Dependencies Achievement**:
-  - **Download**: `git clone https://github.com/user/aria-character-core`
-  - **Setup**: `mix deps.get` (downloads all Elixir dependencies automatically)
-  - **Run**: `mix aria_engine.conviction_crisis` (works immediately)
-  - **No External Services**: No database servers, no secret management servers
-- **Weekend Implementation Benefits**:
-  - **Faster Development**: No time spent on infrastructure setup
-  - **Easier Testing**: No complex server startup/teardown
-  - **Portable Demos**: Works on any machine with Elixir installed
-  - **Reduced Risk**: Eliminates infrastructure as failure point
-- **Post-Weekend Upgrade Path**:
-  - **Database**: Change config to CockroachDB, run migrations (zero code changes)
-  - **Secrets**: Switch to real OpenBao implementation (same interface)
-  - **Infrastructure**: Add complexity only when core functionality proven
-
-**Configuration Changes Required**:
-
-```elixir
-# config/dev.exs - Switch to SQLite
-config :aria_data, AriaData.QueueRepo,
-  adapter: Ecto.Adapters.SQLite3,
-  database: "tmp/aria_queue_dev.db"
-
-# config/dev.exs - Use secrets mock
-config :aria_security, :secrets_module, AriaSecurity.SecretsMock
-```
-
-## Resolution 25: Zero External Dependencies (Beyond Base OS)
-
-**Decision**: Achieve zero external dependencies beyond what comes with a base Windows 11 or macOS installation (excluding standard development tools like GPU drivers).
-
-**Details**:
-
-- **Zero External Services**: No database servers, no secret management servers, no additional infrastructure
-  - **Database**: Use SQLite (single file, bundled with system or Elixir)
-  - **Secrets**: Use `AriaSecurity.SecretsMock` (in-memory, already implemented)
-  - **No External Processes**: Everything runs within the Elixir application
-- **Acceptable Base Requirements** (standard for any development):
-  - **Elixir/Erlang**: Development environment (like any language runtime)
-  - **GPU Drivers**: Standard hardware drivers (like any application)
-  - **Git**: Source control (standard development tool)
-  - **Terminal/Shell**: Built into all operating systems
-- **Automatic Dependencies** (downloaded by tooling):
-  - **Mix Dependencies**: All Elixir packages downloaded automatically by `mix deps.get`
-  - **No Manual Installation**: User never runs external installers
-- **Zero Setup Workflow**:
-  1. `git clone https://github.com/user/aria-character-core`
-  2. `cd aria-character-core`
-  3. `mix deps.get` (automatic download of all dependencies)
-  4. `mix aria_engine.conviction_crisis` (runs immediately)
-- **Benefits for Weekend Development**:
-  - **Immediate Demo**: Anyone can run the temporal planner instantly
-  - **No Infrastructure Failures**: Eliminates servers as potential failure points
-  - **Cross-Platform**: Works identically on Windows, macOS, Linux
-  - **Streamable**: Easy to demonstrate on streams without complex setup
-- **Implementation Requirements**:
-  - SQLite configuration for all Ecto repos used by temporal planner
-  - SecretsMock configuration for all secret management
-  - Self-contained file storage (no external S3/blob storage)
-  - In-memory caching (no external Redis)
-
-**Success Criteria**: A new developer can go from `git clone` to running temporal planner demo in under 2 minutes on a fresh Windows 11 or macOS machine with only Elixir installed.
-
 ## Resolution 26: Implementation Capability Crisis
 
 ## Resolution 26: Implementation Risk Mitigation
@@ -1112,10 +967,3 @@ config :aria_security, :secrets_module, AriaSecurity.SecretsMock
   - **Iterate Based on Reality**: Adjust game design to match implementation capabilities
   - **Validate Through Testing**: Prove timing reliability through automated tests
   - **Build Confidence Through Demos**: Working code enables convincing demonstrations
-- **Risk Mitigation Strategy**:
-  - **Start with MVP**: Simplest possible working temporal planner
-  - **Measure Everything**: Instrument all action durations and progress tracking
-  - **Test Thoroughly**: Automated tests for timing reliability and interruption
-  - **Fail Fast**: If basic temporal planning doesn't work, pivot immediately
-
-**Critical Insight**: The temporal planner is not just a feature - it's the foundational technology that makes the entire game concept possible. Without it working reliably, there is no game.
