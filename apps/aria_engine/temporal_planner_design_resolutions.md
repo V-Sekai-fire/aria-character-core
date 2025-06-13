@@ -9,15 +9,10 @@ This document captures the finalized design decisions for the temporal, re-entra
 **Details**:
 
 - Remove old state structures from existing code
-- All modules must use the new temporal state defined in `temporal_plan- **Contradiction Resolution Process**:
-
-- **CONTRADICTION IDENTIFIED**: Resolution 14 "No Dead Time" conflicts with realistic military operations
-  - **Problem**: Real warfare has natural lulls (5 minutes action, months idle) that create strategic tension
-  - **Current Resolution**: "Constant tactical decisions prevent boring 'watch AI' moments"
-  - **Contradiction**: Eliminates realistic downtime that builds anticipation and makes action meaningful
-  - **RESOLUTION**: Created Resolution 21 to replace "No Dead Time" with "Meaningful Downtime"
-  - **Result**: Now honors realistic military pacing while maintaining streaming engagement_data_structures.md`
+- All modules must use the new temporal state defined in `temporal_planner_data_structures.md`
 - Complete migration required - no backwards compatibility with old state
+- Temporal state must support time-based queries and scheduling
+- All game entities (agents, actions, effects) must work with temporal state system
 
 ## Resolution 2: Oban Queue Design
 
