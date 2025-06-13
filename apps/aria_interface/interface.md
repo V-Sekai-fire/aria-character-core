@@ -1,12 +1,6 @@
-# 🏗️ Architecture & Development Progress
+# Demo Implementation Options
 
-Aria Character Core is organized as an Elixir umbrella application with 14 specialized services.
-
-Each service's role and dependencies are documented in their respective README files in the `apps/` directory.
-
-- [ ] **Demo Implementation Options**:
-  - [ ] **Option A: Livebook + Kino Components** (Recommended for rapid prototyping)
-    - [ ] Create Livebook notebook with Kino.Input components (sliders, selects, checkboxes)
+- [ ] Create Livebook notebook with Kino.Input components (sliders, selects, checkboxes)
     - [ ] Use `Kino.Input.range/2` for numeric attributes
     - [ ] Use `Kino.Input.select/3` for categorical choices
     - [ ] Use `Kino.Input.checkbox/2` for boolean options and feature toggles
@@ -41,6 +35,4 @@ Each service's role and dependencies are documented in their respective README f
   - [ ] GitHub Sponsors integration and course promotion
   - [ ] Feedback collection system for community input
   - [ ] Performance metrics display (generation time, complexity)
-- [ ] **Deployment Options**
-  - [ ] **Livebook Deployment**: Deploy shareable notebooks via Livebook Cloud or GitHub
   - [ ] Social sharing features for character creations
