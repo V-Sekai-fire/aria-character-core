@@ -39,6 +39,9 @@ defmodule AriaEngine.MixProject do
       # Planning and decision-making libraries
       {:libgraph, "~> 0.16"},
 
+      # Real-time multimedia processing framework
+      {:membrane_core, "~> 1.0"},
+
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
 

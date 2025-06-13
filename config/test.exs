@@ -49,16 +49,17 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
   secret_key_base: "test_secret_key_base_for_testing_only",
   server: false
 
-# Test Oban configuration (disable automatic migrations and use explicit ones)
+# Test Oban configuration (use real database operations for testing)
 config :aria_queue, Oban,
-  testing: :inline,
   repo: AriaData.QueueRepo,
-  notifier: Oban.Notifiers.PG,
+  notifier: Oban.Notifiers.PG,  # Process Groups notifier
+  plugins: false,  # Disable plugins in test
+  prefix: false,   # Disable table prefixes for SQLite
   queues: [
-    # Temporal planner queues (disabled in test - inline execution)
-    sequential_actions: 0,
-    parallel_actions: 0,
-    instant_actions: 0
+    # Temporal planner queues (set to 1 for testing)
+    sequential_actions: 1,
+    parallel_actions: 1,
+    instant_actions: 1
   ]
 
 # Test security configuration (using mock)
