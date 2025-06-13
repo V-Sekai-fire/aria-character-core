@@ -541,12 +541,16 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
 19. ✅ **3D Coordinates**: Godot conventions with Z=0 plane for weekend speed
 20. ✅ **Design Consistency**: All resolutions verified as mutually compatible and non-contradictory
 21. ✅ **Realistic Pacing**: Meaningful downtime that builds tension (corrects Resolution 14)
+22. ✅ **First Implementation Step**: Start with tests - write MVP acceptance test first
+23. ✅ **Intent vs Action Architecture**: Clear distinction between immediate intents and scheduled actions
+24. ✅ **Infrastructure Simplification**: SQLite + SecretsMock for zero dependencies (weekend scope)
 
 ## Next Steps
 
 1. ✅ **COMPLETED**: All design questions identified and resolved
 2. ✅ **COMPLETED**: All design decisions documented and locked in
-3. 🚀 **READY**: Begin TDD implementation with complete design clarity
+3. ✅ **COMPLETED**: Infrastructure simplified for zero dependencies
+4. 🚀 **READY**: Begin TDD implementation with complete design clarity and zero setup barriers
 
 ## Open Questions
 
@@ -705,43 +709,53 @@ end
 - **Secrets Management Change**: Use existing `AriaSecurity.SecretsMock` instead of OpenBao
   - **Existing Mock Found**: `apps/aria_security/lib/aria_security/secrets_mock.ex` already exists and works
   - **OpenBao Complexity**: Requires PKCS#11 setup, SoftHSM, certificate management, Fly.io deployment
-  - **Mock Benefits**: Zero setup, immediate availability, perfect for development
-  - **Interface Compatibility**: `AriaSecurity.SecretsInterface` already supports switching between real and mock
-- **Configuration Changes**:
-  - **Development**: Use SQLite + SecretsMock (zero setup)
-  - **Production**: Can use CockroachDB + OpenBao (full security)
-  - **Weekend Focus**: Temporal planner logic, not infrastructure management
-- **Dependency Updates**:
-  - Add `ecto_sqlite3` to mix.exs dependencies
-  - Configure SQLite as default database adapter for development
-  - Set `:secrets_module` to `AriaSecurity.SecretsMock` in dev config
-  - Remove complex certificate and HSM setup from weekend scope
-- **Database Schema Compatibility**:
-  - Oban migrations work identically with SQLite
-  - All existing Ecto schemas remain unchanged
-  - Just change the adapter configuration
-- **Infrastructure Footprint**:
-  - **Before**: CockroachDB + OpenBao + Certificates + HSM + Fly.io deployment
-  - **After**: Single SQLite file + in-memory mock secrets
-  - **Setup Time**: From hours to seconds
+  - **Mock Benefits**: In-memory storage, no external dependencies, perfect for development
+  - **Test Configuration**: Already configured to use mock in `config/test.exs`
+- **Zero Dependencies Achievement**:
+  - **Download**: `git clone https://github.com/user/aria-character-core`
+  - **Setup**: `mix deps.get` (downloads all Elixir dependencies automatically)
+  - **Run**: `mix aria_engine.conviction_crisis` (works immediately)
+  - **No External Services**: No database servers, no secret management servers
+- **Weekend Implementation Benefits**:
+  - **Faster Development**: No time spent on infrastructure setup
+  - **Easier Testing**: No complex server startup/teardown
+  - **Portable Demos**: Works on any machine with Elixir installed
+  - **Reduced Risk**: Eliminates infrastructure as failure point
+- **Post-Weekend Upgrade Path**:
+  - **Database**: Change config to CockroachDB, run migrations (zero code changes)
+  - **Secrets**: Switch to real OpenBao implementation (same interface)
+  - **Infrastructure**: Add complexity only when core functionality proven
 
-**Weekend Implementation Benefits**:
-- **Zero Infrastructure Setup**: No external services, certificates, or deployment
-- **Fast Iteration**: Database changes apply immediately without migration complexity
-- **Focus on Logic**: Spend time on temporal planning, not infrastructure debugging
-- **Reliable Testing**: No network dependencies or external service failures
-- **Portable**: Entire development environment in a single repository
+**Configuration Changes Required**:
+```elixir
+# config/dev.exs - Switch to SQLite
+config :aria_data, AriaData.QueueRepo,
+  adapter: Ecto.Adapters.SQLite3,
+  database: "tmp/aria_queue_dev.db"
 
-**Post-Weekend Migration Strategy**:
-- All code designed to work with both SQLite and CockroachDB
-- Configuration-only changes to switch to production infrastructure
-- No temporal planner logic changes required
-- Infrastructure complexity deferred until after core functionality proven
+# config/dev.exs - Use secrets mock
+config :aria_security, :secrets_module, AriaSecurity.SecretsMock
+```
 
-**Updated MVP Infrastructure**:
-- **Database**: SQLite (single file: `aria_data_dev.db`)
-- **Secrets**: `AriaSecurity.SecretsMock` (in-memory)
-- **Queue**: Oban with SQLite backend
-- **No External Dependencies**: Everything runs locally
+**Implementation Strategy**: Focus weekend entirely on temporal planner logic, not infrastructure complexity.
 
-**Resolved Contradiction**: Removes infrastructure complexity that conflicts with weekend timeline and LLM development uncertainty.
+## Open Questions
+
+### Q23: Are We Zero Dependencies Yet?
+
+**Question**: Can a user download the repository and run the temporal planner on a base Windows 11 or macOS install without external dependencies?
+
+**Context**: Currently the system requires CockroachDB server + OpenBao setup which creates significant barriers for weekend development and demonstration. For the temporal planner MVP, we should consider if we can achieve zero external dependencies.
+
+**Current Dependencies Analysis**:
+- **Database**: CockroachDB requires separate server installation and complex certificate setup
+- **Secrets**: OpenBao requires server installation, SoftHSM, PKCS#11 configuration
+- **Elixir/Erlang**: Must be installed on host system (reasonable requirement)
+- **Mix Dependencies**: Automatically downloaded by Mix (acceptable)
+
+**Zero Dependency Goal**:
+- **Database**: Use SQLite (single file, no server needed)
+- **Secrets**: Use existing `AriaSecurity.SecretsMock` (in-memory, no server needed)
+- **Result**: `git clone` → `mix deps.get` → `mix aria_engine.conviction_crisis` → works immediately
+
+**Resolution Needed**: Decide if weekend scope should prioritize zero dependencies for easy demonstration and development.
