@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/YashBansod/IPyHOP.git
+	branch = main
+	commit = bdda21012b2396aed9a91980af8fbb71dbcb7075
+	parent = 98b9b962e0eefd360aef2e595f7a706fc8ff6b8a
+	method = merge
+	cmdver = 0.4.9
