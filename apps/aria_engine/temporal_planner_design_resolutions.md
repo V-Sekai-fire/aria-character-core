@@ -2,6 +2,55 @@
 
 This document captures the finalized design decisions for the temporal, re-entrant goal-task-network (GTN) planner implementation.
 
+## Contradiction Resolution Process
+
+**Identified Zero Contradictions**: All 26 resolutions are mutually compatible
+- **Performance Alignment**: High-frequency updates, real-time input, and stability checks all support same goals
+- **Scope Alignment**: Weekend timeline, MVP definition, and LLM uncertainty all properly balanced
+- **Experience Alignment**: Streaming optimization, player agency, and tactical depth all reinforce each other
+- **Technical Alignment**: All architectural decisions support the same temporal planner vision
+
+**Future Consistency Maintenance**:
+- Any new design decisions must be checked against all existing resolutions
+- Changes to existing resolutions require consistency re-verification
+- Implementation discoveries that create conflicts must trigger design resolution updates
+
+**Resolved Categories**:
+
+1. ✅ **State Architecture**: Complete migration to temporal state
+2. ✅ **Queue Design**: Time-ordered queues (sequential/parallel/instant)
+3. ✅ **Engine Separation**: Clear separation between GameEngine and planner
+4. ✅ **Stability**: Mandatory verification with Lyapunov functions
+5. ✅ **Test Domain**: ConvictionCrisis as validation scenario
+6. ✅ **Game Engine Integration**: Tick-based loop with Oban scheduling
+7. ✅ **Conviction Choice**: User input triggers immediate re-planning
+8. ✅ **CLI Implementation**: ANSI terminal with async input handling
+9. ✅ **Action Calculations**: Euclidean distance with fixed movement speed
+10. ✅ **Map System**: 2D grid-based with future 3D extensibility
+11. ✅ **Queue Idempotency**: All actions are idempotent intents that can be rejected
+12. ✅ **Real-Time Input**: Never-pause input system for streaming compatibility
+13. ✅ **Opportunity Windows**: Time-pressured decision points requiring skill
+14. ✅ **Streaming Optimization**: Designed for Twitch entertainment and engagement
+15. ✅ **Imperfect Information**: Uncertainty and dynamics create genuine opportunities
+16. ✅ **Weekend Scope**: Prioritized implementation plan for Friday-Sunday timeline
+17. ✅ **LLM Development**: Adaptive strategy for unpredictable development velocity
+18. ✅ **MVP Definition**: Concrete success criteria using existing infrastructure
+19. ✅ **3D Coordinates**: Godot conventions with Z=0 plane for weekend speed
+20. ✅ **Design Consistency**: All resolutions verified as mutually compatible and non-contradictory
+21. ✅ **Realistic Pacing**: Meaningful downtime that builds tension (corrects Resolution 14)
+22. ✅ **First Implementation Step**: Start with tests - write MVP acceptance test first
+23. ✅ **MVP Timing**: Deterministic calculation with simple distance formulas
+24. ✅ **Minimum Success Criteria**: Clear demonstration requirements for weekend
+25. ✅ **Research Strategy**: Address unknowns through rapid prototyping
+26. ✅ **Risk Mitigation**: Fallback plans if temporal precision fails
+
+## Implementation Status
+
+1. ✅ **COMPLETED**: All design questions identified and resolved
+2. ✅ **COMPLETED**: All design decisions documented and locked in
+3. ✅ **COMPLETED**: Infrastructure simplified for zero dependencies
+4. 🚀 **READY**: Begin TDD implementation with complete design clarity and zero setup barriers
+
 ## Resolution 1: State Architecture Migration
 
 **Decision**: Do NOT keep existing state. Migrate all code to use the new temporal state architecture.
@@ -544,55 +593,6 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
   - ✅ ConvictionCrisis test domain (Resolution 5) exercises all temporal planner features
   - ✅ CLI implementation (Resolution 8) supports all required player interactions
   - ✅ Stability verification (Resolution 4) integrates with real-time execution constraints
-
-**Contradiction Resolution Process**:
-
-- **Identified Zero Contradictions**: All 19 previous resolutions are mutually compatible
-- **Performance Alignment**: High-frequency updates, real-time input, and stability checks all support same goals
-- **Scope Alignment**: Weekend timeline, MVP definition, and LLM uncertainty all properly balanced
-- **Experience Alignment**: Streaming optimization, player agency, and tactical depth all reinforce each other
-- **Technical Alignment**: All architectural decisions support the same temporal planner vision
-
-**Future Consistency Maintenance**:
-
-- Any new design decisions must be checked against all existing resolutions
-- Changes to existing resolutions require consistency re-verification
-- Implementation discoveries that create conflicts must trigger design resolution updates
-
-**Resolved Categories**:
-
-1. ✅ **State Architecture**: Complete migration to temporal state
-2. ✅ **Queue Design**: Unified Oban queue for all actions
-3. ✅ **Engine Separation**: Clear separation between GameEngine and planner
-4. ✅ **Stability**: Mandatory verification with Lyapunov functions
-5. ✅ **Test Domain**: ConvictionCrisis as validation scenario
-6. ✅ **Game Engine Integration**: Tick-based loop with Oban scheduling
-7. ✅ **Conviction Choice**: User input triggers immediate re-planning
-8. ✅ **CLI Implementation**: ANSI terminal with async input handling
-9. ✅ **Action Calculations**: Euclidean distance with fixed movement speed
-10. ✅ **Map System**: 2D grid-based with future 3D extensibility
-11. ✅ **Queue Idempotency**: All actions are idempotent intents that can be rejected
-12. ✅ **Real-Time Input**: Never-pause input system for streaming compatibility
-13. ✅ **Opportunity Windows**: Time-pressured decision points requiring skill
-14. ✅ **Streaming Optimization**: Designed for Twitch entertainment and engagement
-15. ✅ **Imperfect Information**: Uncertainty and dynamics create genuine opportunities
-16. ✅ **Weekend Scope**: Prioritized implementation plan for Friday-Sunday timeline
-17. ✅ **LLM Development**: Adaptive strategy for unpredictable development velocity
-18. ✅ **MVP Definition**: Concrete success criteria using existing infrastructure
-19. ✅ **3D Coordinates**: Godot conventions with Z=0 plane for weekend speed
-20. ✅ **Design Consistency**: All resolutions verified as mutually compatible and non-contradictory
-21. ✅ **Realistic Pacing**: Meaningful downtime that builds tension (corrects Resolution 14)
-22. ✅ **First Implementation Step**: Start with tests - write MVP acceptance test first
-23. ✅ **Intent vs Action Architecture**: Clear distinction between immediate intents and scheduled actions
-24. ✅ **Infrastructure Simplification**: SQLite + SecretsMock for zero dependencies (weekend scope)
-25. ✅ **Zero External Dependencies**: No servers required beyond base OS + Elixir (2-minute setup)
-
-## Next Steps
-
-1. ✅ **COMPLETED**: All design questions identified and resolved
-2. ✅ **COMPLETED**: All design decisions documented and locked in
-3. ✅ **COMPLETED**: Infrastructure simplified for zero dependencies
-4. 🚀 **READY**: Begin TDD implementation with complete design clarity and zero setup barriers
 
 ## Resolution 22: First Implementation Step - Test-Driven Oban Job
 
