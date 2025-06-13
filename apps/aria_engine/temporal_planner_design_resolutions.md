@@ -547,3 +547,27 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
 1. ✅ **COMPLETED**: All design questions identified and resolved
 2. ✅ **COMPLETED**: All design decisions documented and locked in
 3. 🚀 **READY**: Begin TDD implementation with complete design clarity
+
+## Open Questions
+
+### Q22: What Should Be the Very First Implementation Step?
+
+**Question**: With all design decisions locked in, what concrete action should we take as the absolute first step to begin implementation?
+
+**Context**: We have comprehensive design resolutions but need to decide the specific starting point for TDD implementation. Should we:
+
+1. **Start with Data Structures**: Create `TemporalState` module first to establish the foundation?
+2. **Start with Tests**: Write the first failing test that drives out the MVP demo?
+3. **Start with Oban Job**: Create `GameActionJob` worker as the core execution mechanism?
+4. **Start with CLI**: Build the terminal interface to visualize progress?
+5. **Start with Mix Task**: Create the entry point `mix aria_engine.conviction_crisis`?
+6. **Start with Existing Code Review**: Examine current AriaEngine modules to understand integration points?
+
+**Decision Factors**:
+- **TDD Approach**: Which starting point best supports test-driven development?
+- **Risk Mitigation**: Which approach identifies integration issues earliest?
+- **Momentum Building**: Which creates the most encouraging early progress?
+- **Dependency Chain**: Which starting point has the fewest external dependencies?
+- **MVP Alignment**: Which most directly advances toward the 10-minute demo acceptance criteria?
+
+**Resolution Needed**: Choose the specific first step and create an implementation sequence that builds momentum while following TDD principles.
