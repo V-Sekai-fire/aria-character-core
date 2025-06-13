@@ -4,6 +4,12 @@
 
 The Interface Service manages the ingestion of all external and internal data streams, performing initial validation, characterization (potentially AI-assisted), and routing of data to appropriate downstream services.
 
+## System Role
+
+**Boot Order:** Orchestration Layer (Boot Fourth)
+**Dependencies:** `aria_security`, `aria_auth`, `aria_data`, `aria_storage`, `aria_queue`, `aria_workflow`
+**External Systems:** Phoenix, LiveView
+
 ## Purpose
 
 To act as the 'Welcomer & First Impressionist,' perceptively greeting incoming information and ensuring it's understood well enough (sometimes with AI help) for smooth and safe integration.

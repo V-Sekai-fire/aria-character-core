@@ -4,6 +4,11 @@
 
 The Debugger Service provides controlled mechanisms for inspecting, configuring, and fine-tuning Aria Character Core components post-deployment, utilizing AI-generated insights for diagnostics and potential adjustments.
 
+## System Role
+
+**Boot Order:** Gateway & Ops Layer (Boot Last)
+**Dependencies:** `aria_security`, `aria_auth`
+
 ## Purpose
 
 To act as the 'Resource Steward & System Balancer,' thoughtfully ensuring fair resource use and system harmony, making gentle adjustments with AI counsel to restore well-being.

@@ -4,6 +4,12 @@
 
 The Security Service manages, stores, and distributes sensitive data including secrets, certificates, and keys across the Aria Character Core system using OpenBao, an open source, community-driven fork of HashiCorp Vault managed by the Linux Foundation.
 
+## System Role
+
+**Boot Order:** Foundation Layer (Boot First)
+**Dependencies:** Core infrastructure, provides secrets to others
+**External Systems:** OpenBao (bundled), SoftHSM PKCS#11
+
 ## Purpose
 
 To act as the 'Guardian of Secrets,' carefully protecting and controlling access to sensitive information, ensuring that only authorized services and users can access what they need when they need it.

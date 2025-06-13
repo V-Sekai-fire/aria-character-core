@@ -4,6 +4,12 @@
 
 The Bulk Data Persistence Service provides content-addressed storage for large, immutable assets including GLTF models, ONNX files, training datasets, and multimedia content with automatic deduplication and efficient delta sync capabilities.
 
+## System Role
+
+**Boot Order:** Core Services Layer (Boot Second)
+**Dependencies:** `aria_security` (storage credentials), `aria_auth` (access authorization)
+**External Systems:** aria_storage content-addressed system, optional golang desync client (verification only)
+
 ## Purpose
 
 To act as the 'Archive Vault,' carefully preserving and organizing large treasures using smart chunking and deduplication, making efficient use of space while ensuring everything remains accessible.

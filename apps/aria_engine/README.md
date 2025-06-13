@@ -4,6 +4,11 @@
 
 The Engine Service executes classical AI planning using GTPyhop (hierarchical task planner) ported to Elixir, handling character AI decision-making, goal planning, and task execution for generated characters.
 
+## System Role
+
+**Boot Order:** Intelligence Layer (Boot Third)
+**Dependencies:** `aria_security`, `aria_data`, `aria_queue`
+
 ## Purpose
 
 To serve as the 'Strategic Mind,' implementing the GTPyhop planning algorithm that drives character behavior and decision-making in the RPG world through hierarchical task decomposition.

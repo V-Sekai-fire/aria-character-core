@@ -11,8 +11,6 @@ defmodule AriaEngine.Domains.WorkflowSystem do
 
   require Logger
   alias AriaEngine.{Domain, Actions, State}
-  # Note: WorkflowRegistry and WorkflowEngine are deprecated in favor of DomainDefinition
-  # alias AriaWorkflow.{WorkflowEngine, WorkflowRegistry}
 
   @doc """
   Creates a workflow system domain with integrated actions.

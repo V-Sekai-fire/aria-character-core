@@ -4,6 +4,12 @@
 
 The Authentication Service provides centralized identity verification, session management, and role-based access control (RBAC) for all Aria Character Core services and users, enforcing zero trust principles where every request must be authenticated and authorized.
 
+## System Role
+
+**Boot Order:** Core Services Layer (Boot Second)
+**Dependencies:** `aria_security` (secrets/certs), `aria_data` (user/token storage)
+**External Systems:** OAuth2 providers, WebRTC STUN/TURN servers
+
 ## Purpose
 
 To act as the 'Identity Gatekeeper,' ensuring that every entity in the system proves who they are and what they're allowed to do, maintaining trust through continuous verification.

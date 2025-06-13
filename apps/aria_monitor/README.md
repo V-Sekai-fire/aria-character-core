@@ -4,6 +4,11 @@
 
 The Monitor Service provides comprehensive observability into the system's state, component health, and operational metrics, aiding diagnostics and improvement efforts.
 
+## System Role
+
+**Boot Order:** Gateway & Ops Layer (Boot Last)
+**Dependencies:** `aria_security`, connects to most services
+
 ## Purpose
 
 To serve as the 'Watchful Guardian,' vigilantly and caringly observing the system's well-being, providing awareness to support health and vitality.

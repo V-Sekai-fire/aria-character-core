@@ -4,6 +4,12 @@
 
 The Interpret Service manages and fulfills system-wide requests for understanding complex, unfamiliar, or multimodal data. It achieves this by preparing, contextualizing, and dispatching analysis tasks to the Character AI Service, and then processing the results into actionable insights.
 
+## System Role
+
+**Boot Order:** Intelligence Layer (Boot Third)
+**Dependencies:** `aria_security`, `aria_data`, `aria_storage`, `aria_queue`
+**External Systems:** Python, PyTorch, Analysis libraries
+
 ## Purpose
 
 To act as the 'Sense-Maker,' bringing clarity from complexity by expertly guiding the process of interpretation.

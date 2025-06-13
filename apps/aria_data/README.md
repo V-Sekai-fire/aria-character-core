@@ -4,6 +4,12 @@
 
 The System Data Persistence Service provides robust, distributed persistence for structured system data, including operational entities, schemas, configurations, and transactional records using CockroachDB.
 
+## System Role
+
+**Boot Order:** Foundation Layer (Boot First)
+**Dependencies:** `aria_security` (for DB credentials)
+**External Systems:** CockroachDB 22.1 (or PostgreSQL)
+
 ## Purpose
 
 To act as the 'Living Library,' lovingly organizing and caring for the system's structured knowledge and operational data, ensuring fast access and strong consistency for critical system functions.

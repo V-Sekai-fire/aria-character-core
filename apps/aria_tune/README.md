@@ -4,6 +4,11 @@
 
 The Tune Service proactively and reactively optimizes the overall system performance and resource utilization by analyzing operational data, generating improvement strategies with AI assistance, and managing the application of learned optimizations.
 
+## System Role
+
+**Boot Order:** Gateway & Ops Layer (Boot Last)
+**Dependencies:** `aria_security`, `aria_data`, `aria_monitor`, `aria_queue`, AI services
+
 ## Purpose
 
 To serve as the 'Efficiency Coach & Growth Facilitator,' encouraging continuous improvement by discovering and applying smarter ways for the system to operate, often with AI collaboration.

@@ -4,6 +4,11 @@
 
 The Coordinate Service provides a unified entry point for all external and internal API requests, handling routing, load balancing, rate limiting, authentication enforcement, and protocol translation across the Aria Character Core system.
 
+## System Role
+
+**Boot Order:** Gateway & Ops Layer (Boot Last)
+**Dependencies:** `aria_security`, `aria_auth`
+
 ## Purpose
 
 To serve as the 'Grand Entrance Hall,' efficiently directing visitors to their destinations while ensuring security, performance, and proper protocol handling.

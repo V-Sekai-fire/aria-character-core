@@ -4,6 +4,12 @@
 
 The Queue Service manages asynchronous service requests and background jobs, ensuring reliable and scalable task execution using Oban with CockroachDB as the persistent backend.
 
+## System Role
+
+**Boot Order:** Core Services Layer (Boot Second)
+**Dependencies:** `aria_data` (Oban persistence), `aria_security` (DB credentials)
+**External Systems:** Oban
+
 ## Purpose
 
 To serve as the 'Director of Flow,' patiently and orderly managing tasks to prevent overwhelm and ensure every request is addressed, fostering resilience and fairness in processing.

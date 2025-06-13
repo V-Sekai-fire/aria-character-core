@@ -4,6 +4,11 @@
 
 The Workflow Service governs the lifecycle of Standard Operating Procedures (SOPs), including their AI-assisted creation, definition, persistent storage, and orchestrated execution across the system.
 
+## System Role
+
+**Boot Order:** Orchestration Layer (Boot Fourth)
+**Dependencies:** `aria_security`, `aria_data`, `aria_queue`, orchestrated services
+
 ## Purpose
 
 To serve as the 'Master Planner,' creating clear, step-by-step plans for complex goals, believing that good planning and inspired design (with AI assistance) lead to harmony and success.

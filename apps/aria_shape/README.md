@@ -4,6 +4,12 @@
 
 The Shape Service provides centralized character generation, training data synthesis, and multimodal content creation using advanced reasoning models. This service combines the Qwen3 ONNX model with GRPO training to generate coherent RPG characters, their backstories, abilities, and associated assets.
 
+## System Role
+
+**Boot Order:** Intelligence Layer (Boot Third)
+**Dependencies:** `aria_security`, `aria_data`, `aria_storage`, `aria_queue`
+**External Systems:** Python, PyTorch, Qwen3/GRPO models
+
 ## Purpose
 
 To act as the 'Character Shaper & Master Storyteller,' molding digital beings into existence through advanced reasoning and creative generation, iteratively refining them through machine learning feedback loops.
