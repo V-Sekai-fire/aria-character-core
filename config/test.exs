@@ -57,7 +57,7 @@ config :aria_queue, Oban,
   queues: [
     # Temporal planner queues (disabled in test - inline execution)
     sequential_actions: 0,
-    parallel_actions: 0, 
+    parallel_actions: 0,
     instant_actions: 0
   ]
 
