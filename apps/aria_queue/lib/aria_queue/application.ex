@@ -9,8 +9,8 @@ defmodule AriaQueue.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Oban supervisor (QueueRepo is started by AriaData.Application)
-      {Oban, Application.fetch_env!(:aria_queue, Oban)}
+      # Membrane-based job processor to replace Oban
+      {AriaQueue.MembraneJobProcessor, []}
     ]
 
     opts = [strategy: :one_for_one, name: AriaQueue.Supervisor]

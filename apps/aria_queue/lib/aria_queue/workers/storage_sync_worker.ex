@@ -6,10 +6,10 @@ defmodule AriaQueue.Workers.StorageSyncWorker do
   Worker for storage synchronization tasks.
   """
 
-  use Oban.Worker, queue: :storage_sync, max_attempts: 3
+  use AriaQueue.MembraneWorker, queue: :storage_sync, max_attempts: 3
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"type" => "file_upload", "file_id" => file_id, "user_id" => user_id} = _args}) do
+  @impl AriaQueue.MembraneWorker
+  def perform(%{"type" => "file_upload", "file_id" => file_id, "user_id" => user_id} = _args) do
     require Logger
     Logger.info("Processing file upload sync for file #{file_id}, user #{user_id}")
 
@@ -19,7 +19,7 @@ defmodule AriaQueue.Workers.StorageSyncWorker do
     :ok
   end
 
-  def perform(%Oban.Job{args: %{"type" => "file_delete", "file_id" => file_id} = _args}) do
+  def perform(%{"type" => "file_delete", "file_id" => file_id} = _args) do
     require Logger
     Logger.info("Processing file deletion for file #{file_id}")
 
@@ -28,7 +28,7 @@ defmodule AriaQueue.Workers.StorageSyncWorker do
     :ok
   end
 
-  def perform(%Oban.Job{args: %{"type" => "backup_sync", "backup_id" => backup_id} = _args}) do
+  def perform(%{"type" => "backup_sync", "backup_id" => backup_id} = _args) do
     require Logger
     Logger.info("Processing backup sync for backup #{backup_id}")
 
@@ -37,7 +37,7 @@ defmodule AriaQueue.Workers.StorageSyncWorker do
     :ok
   end
 
-  def perform(%Oban.Job{args: args}) do
+  def perform(args) do
     {:error, "Unknown storage sync job type: #{inspect(args)}"}
   end
 end

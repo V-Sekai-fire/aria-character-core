@@ -9,37 +9,37 @@ config :logger, level: :warning
 # Test database configuration - using SQLite for simplicity
 config :aria_data, AriaData.Repo,
   adapter: Ecto.Adapters.SQLite3,
-  database: "tmp/aria_data_test#{System.get_env("MIX_TEST_PARTITION")}.db",
+  database: "priv/aria_data_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10
 
 config :aria_data, AriaData.AuthRepo,
   adapter: Ecto.Adapters.SQLite3,
-  database: "tmp/aria_auth_test#{System.get_env("MIX_TEST_PARTITION")}.db",
+  database: "priv/aria_auth_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 8
 
 config :aria_data, AriaData.QueueRepo,
   adapter: Ecto.Adapters.SQLite3,
-  database: "tmp/aria_queue_test#{System.get_env("MIX_TEST_PARTITION")}.db",
+  database: "priv/aria_queue_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 8
 
 config :aria_data, AriaData.StorageRepo,
   adapter: Ecto.Adapters.SQLite3,
-  database: "tmp/aria_storage_test#{System.get_env("MIX_TEST_PARTITION")}.db",
+  database: "priv/aria_storage_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 8
 
 config :aria_data, AriaData.MonitorRepo,
   adapter: Ecto.Adapters.SQLite3,
-  database: "tmp/aria_monitor_test#{System.get_env("MIX_TEST_PARTITION")}.db",
+  database: "priv/aria_monitor_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 6
 
 config :aria_data, AriaData.EngineRepo,
   adapter: Ecto.Adapters.SQLite3,
-  database: "tmp/aria_engine_test#{System.get_env("MIX_TEST_PARTITION")}.db",
+  database: "priv/aria_engine_test#{System.get_env("MIX_TEST_PARTITION")}.db",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 6
 
@@ -49,18 +49,14 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
   secret_key_base: "test_secret_key_base_for_testing_only",
   server: false
 
-# Test Oban configuration (use real database operations for testing)
-config :aria_queue, Oban,
-  repo: AriaData.QueueRepo,
-  notifier: Oban.Notifiers.PG,  # Process Groups notifier
-  plugins: false,  # Disable plugins in test
-  prefix: false,   # Disable table prefixes for SQLite
-  queues: [
+# Test Membrane Job Processor configuration (replaces Oban for testing)
+config :aria_queue, AriaQueue.MembraneJobProcessor,
+  queues: %{
     # Temporal planner queues (set to 1 for testing)
     sequential_actions: 1,
     parallel_actions: 1,
     instant_actions: 1
-  ]
+  }
 
 # Test security configuration (using mock)
 config :aria_security,

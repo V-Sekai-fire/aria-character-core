@@ -64,12 +64,9 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
   secret_key_base: "development_secret_key_base_replace_in_production",
   watchers: []
 
-# Configure Oban for development (used by queue service)
-config :aria_queue, Oban,
-  repo: AriaData.QueueRepo,
-  notifier: Oban.Notifiers.PG,
-  plugins: [Oban.Plugins.Pruner],
-  queues: [
+# Configure Membrane Job Processor for development (replaces Oban)
+config :aria_queue, AriaQueue.MembraneJobProcessor,
+  queues: %{
     # Temporal planner queues (Resolution 2)
     sequential_actions: 1,    # Single worker for strict temporal ordering
     parallel_actions: 5,      # Multi-worker for concurrent execution
@@ -79,7 +76,7 @@ config :aria_queue, Oban,
     planning: 10,
     storage_sync: 3,
     monitoring: 2
-  ]
+  }
 
 # Security Service development configuration (using mock for simplicity)
 config :aria_security,

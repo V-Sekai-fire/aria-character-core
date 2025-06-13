@@ -4,21 +4,23 @@
 defmodule AriaQueue.JobsTest do
   use ExUnit.Case, async: true
 
-  alias AriaQueue.Workers.AIGenerationWorker
+  alias AriaQueue.Oban
 
   describe "job creation" do
     test "can create worker job structs without database" do
-      # Test that we can create job structs for Oban v2.19.4
-      changeset = AIGenerationWorker.new(%{
-        type: "character_generation",
-        user_id: 123,
-        context: %{name: "test"}
-      })
+      # Test that we can create job structs for our Membrane-based system
+      job_data = %{
+        worker: "AriaQueue.Workers.AIGenerationWorker",
+        args: %{
+          type: "character_generation",
+          user_id: 123,
+          context: %{name: "test"}
+        },
+        queue: "ai_generation"
+      }
 
-      assert changeset.changes.worker == "AriaQueue.Workers.AIGenerationWorker"
-      assert changeset.changes.args == %{context: %{name: "test"}, type: "character_generation", user_id: 123}
-      assert changeset.changes.queue == "ai_generation"
-      assert changeset.valid?
+      result = Oban.insert(job_data)
+      assert {:ok, _} = result
     end
 
     test "worker modules are available" do
@@ -35,13 +37,13 @@ defmodule AriaQueue.JobsTest do
       end)
     end
 
-    test "oban v2.19.4 modules are available" do
-      # Test that required Oban v2.19.4 modules are available
+    test "membrane-based job processing system is available" do
+      # Test that our Membrane-based replacement modules are available
       modules = [
-        Oban,
-        Oban.Job,
-        Oban.Worker,
-        Oban.Plugins.Pruner
+        AriaQueue.Oban,
+        AriaQueue.Oban.Job,
+        AriaQueue.MembraneWorker,
+        AriaQueue.MembraneJobProcessor
       ]
 
       Enum.each(modules, fn module ->

@@ -6,10 +6,10 @@ defmodule AriaQueue.Workers.PlanningWorker do
   Worker for planning and coordination tasks.
   """
 
-  use Oban.Worker, queue: :planning, max_attempts: 5
+  use AriaQueue.MembraneWorker, queue: :planning, max_attempts: 5
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"type" => "workflow_planning", "workflow_id" => workflow_id} = _args}) do
+  @impl AriaQueue.MembraneWorker
+  def perform(%{"type" => "workflow_planning", "workflow_id" => workflow_id} = _args) do
     require Logger
     Logger.info("Processing workflow planning for workflow #{workflow_id}")
 
@@ -20,7 +20,7 @@ defmodule AriaQueue.Workers.PlanningWorker do
     :ok
   end
 
-  def perform(%Oban.Job{args: %{"type" => "resource_allocation", "resources" => resources} = _args}) do
+  def perform(%{"type" => "resource_allocation", "resources" => resources} = _args) do
     require Logger
     Logger.info("Processing resource allocation for #{length(resources)} resources")
 
@@ -29,7 +29,7 @@ defmodule AriaQueue.Workers.PlanningWorker do
     :ok
   end
 
-  def perform(%Oban.Job{args: args}) do
+  def perform(args) do
     {:error, "Unknown planning job type: #{inspect(args)}"}
   end
 end

@@ -16,9 +16,9 @@ defmodule AriaQueue.Jobs do
     queue = Keyword.get(opts, :queue, :default)
     priority = Keyword.get(opts, :priority, 0)
     max_attempts = Keyword.get(opts, :max_attempts, 3)
-    
+
     worker_module.new(args, queue: queue, priority: priority, max_attempts: max_attempts)
-    |> Oban.insert()
+    |> AriaQueue.Oban.insert()
   end
 
   @doc """
@@ -28,28 +28,28 @@ defmodule AriaQueue.Jobs do
     queue = Keyword.get(opts, :queue, :default)
     priority = Keyword.get(opts, :priority, 0)
     max_attempts = Keyword.get(opts, :max_attempts, 3)
-    
-    worker_module.new(args, 
-      queue: queue, 
-      priority: priority, 
+
+    worker_module.new(args,
+      queue: queue,
+      priority: priority,
       max_attempts: max_attempts,
       scheduled_at: scheduled_at
     )
-    |> Oban.insert()
+    |> AriaQueue.Oban.insert()
   end
 
   @doc """
   Cancels a scheduled job.
   """
   def cancel_job(job_id) when is_integer(job_id) do
-    Oban.cancel_job(job_id)
+    AriaQueue.Oban.cancel_job(job_id)
   end
 
   @doc """
   Gets job status.
   """
   def get_job_status(job_id) when is_integer(job_id) do
-    case QueueRepo.get(Oban.Job, job_id) do
+    case QueueRepo.get(AriaQueue.Oban.Job, job_id) do
       nil -> {:error, :not_found}
       job -> {:ok, job}
     end
@@ -59,7 +59,7 @@ defmodule AriaQueue.Jobs do
   Lists jobs by queue.
   """
   def list_jobs_by_queue(queue_name, limit \\ 50) do
-    Oban.Job
+    AriaQueue.Oban.Job
     |> where([j], j.queue == ^to_string(queue_name))
     |> order_by([j], desc: j.inserted_at)
     |> limit(^limit)
@@ -70,7 +70,7 @@ defmodule AriaQueue.Jobs do
   Lists jobs by state.
   """
   def list_jobs_by_state(state, limit \\ 50) when state in [:available, :scheduled, :executing, :retryable, :completed, :discarded, :cancelled] do
-    Oban.Job
+    AriaQueue.Oban.Job
     |> where([j], j.state == ^to_string(state))
     |> order_by([j], desc: j.inserted_at)
     |> limit(^limit)
@@ -81,7 +81,7 @@ defmodule AriaQueue.Jobs do
   Retries a failed job.
   """
   def retry_job(job_id) when is_integer(job_id) do
-    Oban.retry_job(job_id)
+    AriaQueue.Oban.retry_job(job_id)
   end
 
   @doc """
@@ -89,18 +89,18 @@ defmodule AriaQueue.Jobs do
   """
   def get_queue_stats(queue_name) do
     queue_str = to_string(queue_name)
-    
+
     states = [:available, :scheduled, :executing, :retryable, :completed, :discarded, :cancelled]
-    
+
     stats = Enum.reduce(states, %{}, fn state, acc ->
-      count = 
-        Oban.Job
+      count =
+        AriaQueue.Oban.Job
         |> where([j], j.queue == ^queue_str and j.state == ^to_string(state))
         |> QueueRepo.aggregate(:count, :id)
-      
+
       Map.put(acc, state, count)
     end)
-    
+
     {:ok, stats}
   end
 
@@ -109,8 +109,8 @@ defmodule AriaQueue.Jobs do
   """
   def prune_jobs(max_age_seconds \\ 86400) do
     cutoff = DateTime.add(DateTime.utc_now(), -max_age_seconds, :second)
-    
-    Oban.Job
+
+    AriaQueue.Oban.Job
     |> where([j], j.state in ["completed", "discarded"] and j.completed_at < ^cutoff)
     |> QueueRepo.delete_all()
   end

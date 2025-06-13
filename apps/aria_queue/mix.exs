@@ -27,9 +27,6 @@ defmodule AriaQueue.MixProject do
 
   defp deps do
     [
-      # Background job processing
-      {:oban, "~> 2.19.4"},
-
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
 

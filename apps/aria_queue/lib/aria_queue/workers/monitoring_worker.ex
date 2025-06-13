@@ -6,10 +6,10 @@ defmodule AriaQueue.Workers.MonitoringWorker do
   Worker for monitoring and telemetry tasks.
   """
 
-  use Oban.Worker, queue: :monitoring, max_attempts: 2
+  use AriaQueue.MembraneWorker, queue: :monitoring, max_attempts: 2
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"type" => "metrics_collection", "service" => service} = _args}) do
+  @impl AriaQueue.MembraneWorker
+  def perform(%{"type" => "metrics_collection", "service" => service} = _args) do
     require Logger
     Logger.info("Collecting metrics for service #{service}")
 
@@ -19,7 +19,7 @@ defmodule AriaQueue.Workers.MonitoringWorker do
     :ok
   end
 
-  def perform(%Oban.Job{args: %{"type" => "health_check", "services" => services} = _args}) do
+  def perform(%{"type" => "health_check", "services" => services} = _args) do
     require Logger
     Logger.info("Performing health check for #{length(services)} services")
 
@@ -28,7 +28,7 @@ defmodule AriaQueue.Workers.MonitoringWorker do
     :ok
   end
 
-  def perform(%Oban.Job{args: %{"type" => "alert_notification", "alert_id" => alert_id} = _args}) do
+  def perform(%{"type" => "alert_notification", "alert_id" => alert_id} = _args) do
     require Logger
     Logger.info("Processing alert notification #{alert_id}")
 
@@ -37,7 +37,7 @@ defmodule AriaQueue.Workers.MonitoringWorker do
     :ok
   end
 
-  def perform(%Oban.Job{args: args}) do
+  def perform(args) do
     {:error, "Unknown monitoring job type: #{inspect(args)}"}
   end
 end
