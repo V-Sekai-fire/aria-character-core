@@ -820,45 +820,7 @@ config :aria_security, :secrets_module, AriaSecurity.SecretsMock
 
 **Critical Insight**: The temporal planner is not just a feature - it's the foundational technology that makes the entire game concept possible. Without it working reliably, there is no game.
 
-## Resolution 27: Reverse Resolution Order (Newest First)
-
-**Decision**: Organize all resolutions in reverse chronological order (newest at top) to prevent LLM assistant weight bias during document processing.
-
-**Details**:
-
-- **LLM Processing Bias**: LLM assistants give more weight to content that appears earlier in documents
-  - **Top Content**: Receives highest attention and influences responses most strongly
-  - **Bottom Content**: May be truncated, skipped, or given less consideration
-  - **VSCode Apply**: Processes document from top to bottom, making early content more influential
-- **Current Problem**: Resolution 1 at top gets disproportionate weight compared to Resolution 26
-  - **Outdated Decisions**: Earlier resolutions may contain superseded or refined thinking
-  - **Latest Insights**: Most recent resolutions contain best current understanding
-  - **Design Evolution**: Later resolutions often correct or improve earlier ones
-- **Reverse Order Solution**:
-  - **Resolution 27 (newest)** → appears at top
-  - **Resolution 26** → second from top
-  - **...continuing down...**
-  - **Resolution 1 (oldest)** → appears at bottom
-- **Implementation Strategy**:
-  - **Maintain Content**: Keep all resolution content exactly the same
-  - **Reorder Only**: Change only the physical order in the document
-  - **Update References**: Ensure cross-references still work correctly
-  - **Preserve Numbering**: Keep resolution numbers for historical tracking
-- **Benefits**:
-  - **Latest Thinking First**: Most current and refined decisions get highest LLM attention
-  - **Reduced Bias**: Prevents outdated early decisions from dominating responses
-  - **Better Assistance**: LLM helpers work with best available information first
-  - **Evolution Visibility**: Shows design progression from refined to initial thinking
-- **Document Restructure Required**:
-  - Move Resolution 27 to top (after header)
-  - Move Resolution 26 second
-  - Continue until Resolution 1 is at bottom
-  - Update table of contents if present
-  - Verify all internal links still work
-
-**Meta-Resolution**: This resolution demonstrates the principle by being placed at the top once implemented.
-
-## Resolution 26: Implementation Capability Crisis
+## Resolution 27: Implementation Capability Crisis
 
 **Decision**: If we cannot successfully implement a working temporal planner, the entire game concept fails because it depends on reliable action timing estimation.
 
