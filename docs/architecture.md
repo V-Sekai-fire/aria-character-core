@@ -1,6 +1,6 @@
 # 🏗️ Architecture & Development Progress
 
-Aria Character Core is organized as an Elixir umbrella application with 14 specialized services in **cold boot order**.
+Aria Character Core is organized as an Elixir umbrella application with 14 specialized services.
 
 Each service's role and dependencies are documented in their respective README files in the `apps/` directory.
 
