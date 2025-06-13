@@ -314,9 +314,118 @@ This document captures the finalized design decisions for the temporal, re-entra
 - Always maintain working state for demonstration purposes
 - Be prepared to pivot implementation approach if complexity exceeds LLM capability
 
-## Status: All Design Questions Resolved ✅
+## Resolution 18: Concrete MVP Definition
 
-**Complete Design Coverage**: All architectural and game design questions have been identified and resolved with specific implementation decisions.
+**Decision**: Define exactly what constitutes success for the weekend project, leveraging existing AriaEngine infrastructure and focusing on temporal extensions.
+
+**Details**:
+
+- **MVP Success Criteria (All Must Work)**:
+
+  1. **Temporal State Extension**: Extend existing `AriaEngine.State` to include time and action scheduling
+  2. **Oban Job Integration**: One `GameActionJob` schedules and executes a timed action
+  3. **Real-Time CLI**: Terminal display shows action progress with timestamps
+  4. **Player Interruption**: SPACEBAR cancels scheduled action, triggers re-planning
+  5. **Basic Stability**: Simple Lyapunov function validates action reduces distance to goal
+
+- **MVP Technical Stack (Leveraging Existing Code)**:
+
+  - **Base**: Existing `AriaEngine.State`, `AriaEngine.Domain`, `AriaEngine.Plan`
+  - **Extensions**: `TemporalState` (extends State), `GameActionJob` (Oban worker)
+  - **New Modules**: `ConvictionCrisis.CLI`, `ConvictionCrisis.GameEngine`
+  - **Infrastructure**: Existing `AriaQueue`, `AriaData.QueueRepo`, Oban setup
+
+- **MVP ConvictionCrisis Scenario (Ultra-Minimal)**:
+
+  - **Map**: 10×6 grid, Alex starts at {2,3}, goal: reach {8,3}
+  - **Action**: `move_to` only - no combat, skills, or enemies
+  - **Duration**: Movement takes `distance / 3.0` seconds (existing calculation pattern)
+  - **Display**: ASCII grid updated every 100ms showing Alex's position as 'A'
+
+- **MVP Data Structures (Minimal Extensions)**:
+
+```elixir
+# Extend existing AriaEngine.State
+defmodule TemporalState do
+  @enforce_keys [:state, :current_time, :scheduled_actions]
+  defstruct [:state, :current_time, scheduled_actions: []]
+end
+
+# Simple timed action
+@type timed_action :: %{
+  id: String.t(),
+  agent: String.t(),
+  action: atom(),
+  args: list(),
+  start_time: DateTime.t(),
+  duration: float(),
+  status: :scheduled | :executing | :completed
+}
+```
+
+- **MVP Implementation Files (5 new files maximum)**:
+
+  1. `lib/aria_engine/temporal_state.ex` - Temporal state wrapper
+  2. `lib/aria_engine/jobs/game_action_job.ex` - Oban worker
+  3. `lib/aria_engine/conviction_crisis/game_engine.ex` - Game loop
+  4. `lib/aria_engine/conviction_crisis/cli.ex` - Terminal interface
+  5. `lib/mix/tasks/aria_engine.conviction_crisis.ex` - Mix task entry point
+
+- **Weekend Acceptance Test (10-minute demo)**:
+
+  1. Run: `mix aria_engine.conviction_crisis`
+  2. See: ASCII grid with Alex ('A') at position {2,3}
+  3. Game: Auto-plans movement to {8,3}, shows "Moving to {8,3} - ETA: 2.0s"
+  4. Watch: Alex position updates in real-time across grid
+  5. Interrupt: Press SPACEBAR at {5,3} - Alex stops, shows "Replanning from {5,3}"
+  6. Continue: New plan generated, Alex continues to {8,3}
+  7. Success: "Mission Complete!" when Alex reaches goal
+
+- **Success Definition**: If this 10-minute demo runs reliably using existing AriaEngine infrastructure with minimal new code, the temporal planner MVP is complete.
+
+- **Post-MVP Extensions (If Time Permits)**:
+  - Add simple enemy at {6,3} that Alex must avoid
+  - Add conviction choice: "1: Stealth, 2: Combat, 3: Diplomacy"
+  - Add basic action cooldowns and stamina
+
+## Resolution 19: 3D Coordinates with Godot Conventions
+
+**Decision**: Use 3D coordinates with Godot engine conventions for future compatibility, but keep all movement on Z=0 for weekend implementation speed.
+
+**Details**:
+
+- **Godot Coordinate System**: Follow Godot's right-handed 3D coordinate system
+  - **X-axis**: Points right (positive = east, negative = west)
+  - **Y-axis**: Points up (positive = up/north, negative = down/south)
+  - **Z-axis**: Points toward camera (positive = forward/out, negative = backward/into screen)
+- **2D Movement on Z=0 Plane**: All ConvictionCrisis action happens on Z=0 for simplicity
+  - Agents move in X-Y plane only: `{x, y, 0}`
+  - Map coordinates: X=0-24 (width), Y=0-9 (height), Z=0 (ground level)
+  - Distance calculation: `sqrt((x2-x1)² + (y2-y1)²)` (Z difference always 0)
+- **Future 3D Extensibility**: Data structures ready for multi-level expansion
+  - Z coordinate stored in all position data
+  - Distance function can handle full 3D when needed
+  - Map system designed to add Z-levels without code rewrite
+- **Godot-Compatible Movement**: Positions translate directly to Godot Vector3
+  - AriaEngine `{5, 3, 0}` → Godot `Vector3(5, 3, 0)`
+  - No coordinate transformation needed for future Godot integration
+  - Camera perspective and physics align with Godot conventions
+
+**Weekend Implementation Benefits**:
+
+- **Speed**: 2D pathfinding and collision is much faster to implement
+- **Debugging**: Easier to visualize and debug in 2D ASCII display
+- **Compatibility**: Future upgrade to 3D Godot frontend requires no coordinate changes
+- **Mathematical Simplicity**: Distance calculations avoid Z-axis complexity
+
+**Data Structure Pattern**:
+
+```elixir
+# All positions use 3D coordinates with Z=0
+position: {12, 5, 0}  # Godot-compatible Vector3
+movement_speed: 3.0   # units per second in X-Y plane
+target: {18, 7, 0}    # destination coordinates
+```
 
 **Resolved Categories**:
 
@@ -337,6 +446,8 @@ This document captures the finalized design decisions for the temporal, re-entra
 15. ✅ **Imperfect Information**: Uncertainty and dynamics create genuine opportunities
 16. ✅ **Weekend Scope**: Prioritized implementation plan for Friday-Sunday timeline
 17. ✅ **LLM Development**: Adaptive strategy for unpredictable development velocity
+18. ✅ **MVP Definition**: Concrete success criteria using existing infrastructure
+19. ✅ **3D Coordinates**: Godot conventions with Z=0 plane for weekend speed
 
 ## Next Steps
 
