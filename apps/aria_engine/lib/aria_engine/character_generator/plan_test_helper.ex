@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.CharacterGenerator.PlanTestHelper do
   @moduledoc """
   Helper for testing plan-based character generation and backtracking.
@@ -5,7 +8,7 @@ defmodule AriaEngine.CharacterGenerator.PlanTestHelper do
   Updated to use the new hierarchical planning architecture.
   """
   alias AriaEngine
-  alias AriaEngine.CharacterGenerator.{Generator, Domain, Plans}
+  alias AriaEngine.CharacterGenerator.{Domain, Plans}
 
   @doc """
   Runs the full plan for character generation with given attributes (or preset).

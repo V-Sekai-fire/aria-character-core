@@ -33,7 +33,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
     end
   end
 
-  def generate_character_with_constraints(state, [char_id, preset_name]) when is_binary(preset_name) do
+  def generate_character_with_constraints(_state, [char_id, preset_name]) when is_binary(preset_name) do
     # Basic precondition check (char_id should be a string, for example)
     # This is illustrative; more robust checks might be needed.
     if is_binary(char_id) do
@@ -47,7 +47,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
     end
   end
 
-  def generate_character_with_constraints(state, [char_id, _preset]) do
+  def generate_character_with_constraints(_state, [char_id, _preset]) do
     # No preset provided, just randomize and validate
     if is_binary(char_id) do
       [
@@ -87,7 +87,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   ## Returns
   List of prompt generation subtasks.
   """
-  def generate_character_prompt(state, [char_id]) do
+  def generate_character_prompt(_state, [char_id]) do
     [
       {:generate_prompt, [char_id]}
     ]
@@ -103,7 +103,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   ## Returns
   List of preset application subtasks.
   """
-  def apply_character_preset(state, [char_id, preset_name]) do
+  def apply_character_preset(_state, [char_id, preset_name]) do
     [
       {:apply_preset, [char_id, preset_name]},
       {:validate_attributes, [char_id]}
@@ -120,7 +120,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   ## Returns
   List of randomization subtasks.
   """
-  def randomize_character(state, [char_id]) do
+  def randomize_character(_state, [char_id]) do
     [
       {:randomize_character_attributes, [char_id]}
     ]
@@ -216,7 +216,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   ## Returns
   List of comprehensive validation subtasks.
   """
-  def validate_all_constraints(state, [char_id]) do
+  def validate_all_constraints(_state, [char_id]) do
     [
       {:check_constraint_violations, [char_id]},
       {:validate_attributes, [char_id]}
@@ -233,7 +233,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   ## Returns
   List of conflict resolution subtasks.
   """
-  def resolve_all_conflicts(state, [char_id]) do
+  def resolve_all_conflicts(_state, [char_id]) do
     [
       {:resolve_conflicts, [char_id]},
       {:validate_attributes, [char_id]}  # Re-validate after resolution
@@ -250,7 +250,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   ## Returns
   List of actions to satisfy the constraint.
   """
-  def achieve_constraint_satisfied(state, [char_id, constraint_name]) do
+  def achieve_constraint_satisfied(_state, [char_id, _constraint_name]) do
     # This is a simplified implementation - could be expanded for specific constraints
     [
       {:validate_attributes, [char_id]},
@@ -268,7 +268,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   ## Returns
   List of preset application and validation subtasks.
   """
-  def apply_preset_with_validation(state, [char_id, preset_name]) do
+  def apply_preset_with_validation(_state, [char_id, preset_name]) do
     [
       {:apply_preset_attributes, [char_id, preset_name]},
       {:validate_preset_compliance, [char_id, preset_name]},
@@ -286,7 +286,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   ## Returns
   List of customization subtasks.
   """
-  def customize_preset(state, [char_id, customizations]) do
+  def customize_preset(_state, [char_id, customizations]) do
     [
       {:merge_customizations, [char_id, customizations]},
       {:validate_attributes, [char_id]}
@@ -328,7 +328,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   ## Returns
   List of actions to achieve customization application.
   """
-  def achieve_customization_applied(state, [char_id, customizations]) do
+  def achieve_customization_applied(_state, [char_id, customizations]) do
     [{:merge_customizations, [char_id, customizations]}]
   end
 
@@ -337,7 +337,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   @doc """
   Demo method for character generation - simplified workflow.
   """
-  def demo_generate_character(state, [char_id, preset]) do
+  def demo_generate_character(_state, [char_id, preset]) do
     preset_name = case preset do
       %{preset: name} -> name
       name when is_binary(name) -> name
@@ -357,7 +357,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   @doc """
   Demo method for character validation - simplified workflow.
   """
-  def demo_validate_character(state, [char_id]) do
+  def demo_validate_character(_state, [char_id]) do
     [
       {:validate_attributes, [char_id]}
     ]
@@ -366,7 +366,7 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   @doc """
   Demo method for prompt generation - simplified workflow.
   """
-  def demo_generate_prompt(state, [char_id]) do
+  def demo_generate_prompt(_state, [char_id]) do
     [
       {:generate_prompt, [char_id]}
     ]

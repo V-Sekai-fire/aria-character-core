@@ -532,7 +532,7 @@ defmodule AriaEngine.Plan do
   # Expand task node using methods
   @spec expand_task_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), list(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | :failure
-  defp expand_task_node(domain, state, solution_tree, node_id, task_name, args, verbose) do
+  defp expand_task_node(domain, _state, solution_tree, node_id, task_name, args, verbose) do
     node = solution_tree.nodes[node_id]
     methods = Domain.get_task_methods(domain, task_name)
     
@@ -565,7 +565,7 @@ defmodule AriaEngine.Plan do
           end
           
           # Create child nodes for subtasks and execute primitive actions immediately
-          {new_tree, child_ids, final_state} = Enum.reduce(subtasks, {solution_tree, [], node.state}, fn subtask, {tree, ids, current_state} ->
+          {new_tree, child_ids, _final_state} = Enum.reduce(subtasks, {solution_tree, [], node.state}, fn subtask, {tree, ids, current_state} ->
             child_id = generate_node_id()
             is_primitive = is_primitive_task?(subtask)
             
@@ -719,7 +719,7 @@ defmodule AriaEngine.Plan do
   # Expand multigoal node
   @spec expand_multigoal_node(Domain.t(), State.t(), solution_tree(), node_id(), Multigoal.t(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | :failure
-  defp expand_multigoal_node(domain, state, solution_tree, node_id, multigoal, verbose) do
+  defp expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
     node = solution_tree.nodes[node_id]
     
     # Check if multigoal is already satisfied
@@ -829,7 +829,7 @@ defmodule AriaEngine.Plan do
                   nil ->
                     {:error, "No alternative methods available - no complete solution found"}
                   
-                  grandparent_id ->
+                  _grandparent_id ->
                     # Try backtracking to grandparent
                     backtrack_and_retry(domain, state, solution_tree, parent_id, depth, max_depth, verbose)
                 end
@@ -844,7 +844,7 @@ defmodule AriaEngine.Plan do
   # Backtrack to try alternative method at a node
   @spec backtrack_to_alternative_method(solution_tree(), node_id(), node_id(), integer()) ::
     {:ok, solution_tree()} | :no_alternatives | {:error, String.t()}
-  defp backtrack_to_alternative_method(solution_tree, parent_id, failed_child_id, verbose) do
+  defp backtrack_to_alternative_method(solution_tree, parent_id, _failed_child_id, verbose) do
     case solution_tree.nodes[parent_id] do
       nil ->
         {:error, "Parent node not found: #{parent_id}"}
@@ -869,7 +869,7 @@ defmodule AriaEngine.Plan do
   # Try the next available method for a task node
   @spec try_next_task_method(solution_tree(), node_id(), String.t(), list(), integer()) ::
     {:ok, solution_tree()} | :no_alternatives | {:error, String.t()}
-  defp try_next_task_method(solution_tree, node_id, task_name, args, verbose) do
+  defp try_next_task_method(solution_tree, node_id, _task_name, _args, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
         {:error, "Node not found: #{node_id}"}
@@ -911,7 +911,7 @@ defmodule AriaEngine.Plan do
   # Try the next available method for a goal node
   @spec try_next_goal_method(solution_tree(), node_id(), String.t(), String.t(), any(), integer()) ::
     {:ok, solution_tree()} | :no_alternatives | {:error, String.t()}
-  defp try_next_goal_method(solution_tree, node_id, predicate, subject, object, verbose) do
+  defp try_next_goal_method(solution_tree, node_id, _predicate, _subject, _object, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
         {:error, "Node not found: #{node_id}"}
@@ -963,31 +963,6 @@ defmodule AriaEngine.Plan do
     %{solution_tree | nodes: updated_nodes}
   end
 
-  # Backtrack from a failure point
-  @spec backtrack(solution_tree(), node_id()) :: solution_tree()
-  defp backtrack(solution_tree, fail_node_id) do
-    # Reset the failed node and its descendants
-    # This is a simplified implementation
-    case solution_tree.nodes[fail_node_id] do
-      nil -> solution_tree
-      node ->
-        # Reset this node
-        reset_node = %{node | 
-          expanded: false,
-          children_ids: [],
-          method_tried: nil
-        }
-        
-        # Remove descendant nodes
-        descendant_ids = get_all_descendants(solution_tree, fail_node_id)
-        remaining_nodes = Map.drop(solution_tree.nodes, descendant_ids)
-        
-        %{solution_tree | 
-          nodes: Map.put(remaining_nodes, fail_node_id, reset_node)
-        }
-    end
-  end
-
   # Get all descendant node IDs
   @spec get_all_descendants(solution_tree(), node_id()) :: [node_id()]
   defp get_all_descendants(solution_tree, node_id) do
@@ -1022,7 +997,7 @@ defmodule AriaEngine.Plan do
   # Execute actions with lazy failure checking and replanning
   @spec execute_actions_lazily(Domain.t(), State.t(), [plan_step()], solution_tree(), keyword()) ::
     {:ok, State.t()} | {:error, String.t()}
-  defp execute_actions_lazily(domain, state, [], _solution_tree, _opts) do
+  defp execute_actions_lazily(_domain, state, [], _solution_tree, _opts) do
     {:ok, state}
   end
   

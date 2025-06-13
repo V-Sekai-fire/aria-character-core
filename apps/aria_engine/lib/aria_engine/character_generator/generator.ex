@@ -12,7 +12,6 @@ defmodule AriaEngine.CharacterGenerator.Generator do
   """
 
   alias AriaEngine.CharacterGenerator.{Config, Utils, Domain, Plans}
-  alias AriaEngine.State
 
   @type character_attributes :: %{String.t() => any()}
   @type generation_result :: %{
@@ -224,7 +223,7 @@ defmodule AriaEngine.CharacterGenerator.Generator do
       {:ok, plan} ->
         case AriaEngine.execute_plan(domain, state, plan) do
           {:ok, final_state} ->
-            extract_batch_results(final_state, character_configs, opts)
+            extract_batch_results(final_state, count, opts)
           {:error, reason} ->
             {:error, "Batch plan execution failed: #{inspect(reason)}"}
         end
@@ -247,12 +246,13 @@ defmodule AriaEngine.CharacterGenerator.Generator do
   end
 
   # Extract batch results from planning state
-  defp extract_batch_results(state, character_configs, opts) do
-    # Extract results for each character using their actual IDs from the planning state
-    Enum.map(character_configs, fn config ->
-      character_id = Map.get(config, :char_id)
-      seed = Keyword.get(opts, :seed)
-      extract_generation_result(state, character_id, seed)
+  defp extract_batch_results(state, count, opts) do
+    # Extract character IDs from the planning state
+    # For now, we'll need to implement proper batch extraction
+    # This is a placeholder that generates characters individually
+    Enum.map(1..count, fn i ->
+      character_id = "batch_char_#{i}_#{UUID.uuid4()}"
+      extract_generation_result(state, character_id, Keyword.get(opts, :seed))
     end)
   end
 

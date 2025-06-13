@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Mix.Tasks.GenerateCharacter do
   @moduledoc """
   Generate characters using the AriaEngine character generator system.
@@ -88,6 +91,17 @@ defmodule Mix.Tasks.GenerateCharacter do
 
   @shortdoc "Generate characters using AriaEngine"
 
+  # Type definitions
+  @type character :: map()
+  @type preset_name :: String.t()
+  @type workflow_type :: :basic | :comprehensive | :demo | :validation_only | :preset_application
+  @type output_format :: String.t()
+  @type generation_options :: keyword()
+  @type parsed_options :: keyword()
+  @type planning_todo :: {String.t(), map()}
+  @type rdf_triple :: {String.t(), String.t(), String.t()}
+  @type plan_action :: {atom(), map()}
+
   @switches [
     preset: :string,
     seed: :integer,
@@ -117,6 +131,7 @@ defmodule Mix.Tasks.GenerateCharacter do
     v: :verbose_planning
   ]
 
+  @spec run([String.t()]) :: :ok
   def run(args) do
     {parsed, _, _} = OptionParser.parse(args, switches: @switches, aliases: @aliases)
 
@@ -130,6 +145,7 @@ defmodule Mix.Tasks.GenerateCharacter do
     end
   end
 
+  @spec generate_characters(parsed_options()) :: :ok
   defp generate_characters(options) do
     try do
       count = min(options[:count] || 1, 10)
@@ -159,6 +175,7 @@ defmodule Mix.Tasks.GenerateCharacter do
     end
   end
 
+  @spec generate_single_character(parsed_options()) :: character()
   defp generate_single_character(options) do
     generation_opts = [
       seed: options[:seed],
@@ -207,6 +224,7 @@ defmodule Mix.Tasks.GenerateCharacter do
     end
   end
 
+  @spec generate_multiple_characters(pos_integer(), parsed_options()) :: [character()]
   defp generate_multiple_characters(count, options) do
     base_seed = options[:seed] || :os.system_time(:microsecond)
     
@@ -226,10 +244,12 @@ defmodule Mix.Tasks.GenerateCharacter do
     end
   end
 
-  defp generate_with_seed(seed \\ nil) do
+  @spec generate_with_seed(integer() | nil) :: character()
+  defp generate_with_seed(seed) do
     CharacterGenerator.generate(seed: seed)
   end
 
+  @spec format_output([character()], output_format(), boolean()) :: String.t()
   defp format_output(characters, "json", single?) do
     data = if single?, do: hd(characters), else: characters
     Jason.encode!(data, pretty: true)
@@ -250,16 +270,17 @@ defmodule Mix.Tasks.GenerateCharacter do
     end
   end
 
-  defp format_output(characters, "yaml", single?) do
+  defp format_output(_characters, "yaml", _single?) do
     Mix.shell().error("YAML output is not supported. Supported formats: json, prompt")
     exit({:shutdown, 1})
   end
 
-  defp format_output(characters, format, _) do
+  defp format_output(_characters, format, _) do
     Mix.shell().error("Unknown format: #{format}. Supported formats: json, prompt")
     exit({:shutdown, 1})
   end
 
+  @spec show_help() :: :ok
   defp show_help do
     IO.puts(@moduledoc)
   end
@@ -439,13 +460,5 @@ defmodule Mix.Tasks.GenerateCharacter do
       AriaEngine.set_fact(acc, "character:" <> k, char_id, v)
     end)
     AriaEngine.plan(domain, state, todos, verbose: 0)
-  end
-
-  # Helper function to build character prompt from RDF triples
-  defp build_character_prompt_from_triples(state, char_id) do
-    # In real implementation, this would query the RDF state for character triples
-    # For demo, we return a sample prompt
-    "A confident humanoid character with sci-fi futuristic styling and cyberpunk glow color palette. " <>
-    "This character embodies the fantasy-cyber aesthetic with advanced technological elements."
   end
 end

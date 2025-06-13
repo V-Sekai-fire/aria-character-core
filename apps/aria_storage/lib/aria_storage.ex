@@ -101,4 +101,44 @@ defmodule AriaStorage do
   Lists file versions.
   """
   defdelegate list_file_versions(file_id), to: Files
+
+  # Waffle Integration
+
+  @doc """
+  Stores a file using Waffle with chunking and compression.
+
+  Options:
+  - `:backend` - Storage backend (:local, :s3, :gcs)
+  - `:bucket` - Bucket name for cloud storage
+  - `:chunk_size` - Chunk size in bytes
+  - `:compress` - Enable compression
+
+  Returns `{:ok, %{index_ref: ref, chunks_stored: count}}` or `{:error, reason}`.
+  """
+  defdelegate store_with_waffle(file_path, opts \\ []), to: Storage, as: :store_file_with_waffle
+
+  @doc """
+  Retrieves a file from Waffle storage using the index reference.
+  """
+  defdelegate get_with_waffle(index_ref, opts \\ []), to: Storage, as: :get_file_with_waffle
+
+  @doc """
+  Lists files stored with Waffle, optionally filtered by backend.
+  """
+  defdelegate list_waffle_files(opts \\ []), to: Storage
+
+  @doc """
+  Configures Waffle storage for the application.
+  """
+  defdelegate configure_waffle(config \\ %{}), to: Storage, as: :configure_waffle_storage
+
+  @doc """
+  Tests Waffle storage connectivity and functionality.
+  """
+  defdelegate test_waffle(backend \\ :local, opts \\ []), to: Storage, as: :test_waffle_storage
+
+  @doc """
+  Migrates existing chunks to Waffle storage.
+  """
+  defdelegate migrate_to_waffle(target_backend, opts \\ []), to: Storage
 end

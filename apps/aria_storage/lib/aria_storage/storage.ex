@@ -13,7 +13,7 @@ defmodule AriaStorage.Storage do
   - Storage optimization and deduplication
   """
 
-  alias AriaStorage.{Chunks, Index, ChunkStore}
+  alias AriaStorage.{Chunks, Index, ChunkStore, WaffleAdapter, WaffleChunkStore}
   alias AriaData.StorageRepo
   import Ecto.Query
 
@@ -216,10 +216,123 @@ defmodule AriaStorage.Storage do
     end
   end
 
+  @doc """
+  Configures Waffle storage for the application.
+  """
+  def configure_waffle_storage(config \\ %{}) do
+    default_config = %{
+      storage: :local,
+      bucket: "aria-chunks",
+      storage_dir_prefix: "uploads/chunks",
+      asset_host: nil,
+      secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
+      access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
+      region: System.get_env("AWS_REGION", "us-east-1")
+    }
+
+    merged_config = Map.merge(default_config, config)
+
+    # Set Waffle configuration
+    Application.put_env(:waffle, :storage, merged_config.storage)
+    Application.put_env(:waffle, :bucket, merged_config.bucket)
+    Application.put_env(:waffle, :storage_dir_prefix, merged_config.storage_dir_prefix)
+    Application.put_env(:waffle, :asset_host, merged_config.asset_host)
+
+    # Set AWS configuration if using S3
+    if merged_config.storage == :s3 do
+      Application.put_env(:ex_aws, :access_key_id, merged_config.access_key_id)
+      Application.put_env(:ex_aws, :secret_access_key, merged_config.secret_access_key)
+      Application.put_env(:ex_aws, :region, merged_config.region)
+    end
+
+    {:ok, merged_config}
+  end
+
+  @doc """
+  Gets the current Waffle configuration.
+  """
+  def get_waffle_config do
+    %{
+      storage: Application.get_env(:waffle, :storage, :local),
+      bucket: Application.get_env(:waffle, :bucket, "aria-chunks"),
+      storage_dir_prefix: Application.get_env(:waffle, :storage_dir_prefix, "uploads/chunks"),
+      asset_host: Application.get_env(:waffle, :asset_host),
+      aws_config: %{
+        access_key_id: Application.get_env(:ex_aws, :access_key_id),
+        region: Application.get_env(:ex_aws, :region, "us-east-1")
+      }
+    }
+  end
+
+  @doc """
+  Tests Waffle storage connectivity.
+  """
+  def test_waffle_storage(backend \\ :local, opts \\ []) do
+    test_data = "Aria Storage Waffle Test - #{DateTime.utc_now() |> DateTime.to_string()}"
+    test_filename = "test_#{:rand.uniform(10000)}.txt"
+
+    with {:ok, waffle_adapter} <- create_waffle_adapter(backend, opts),
+         {:ok, temp_file} <- create_test_file(test_data, test_filename),
+         {:ok, _result} <- test_store_and_retrieve(temp_file, waffle_adapter, test_data) do
+
+      File.rm(temp_file)
+      {:ok, %{
+        backend: backend,
+        status: :healthy,
+        test_completed_at: DateTime.utc_now(),
+        message: "Waffle storage test successful"
+      }}
+    else
+      {:error, reason} ->
+        {:error, %{
+          backend: backend,
+          status: :unhealthy,
+          error: reason,
+          test_failed_at: DateTime.utc_now()
+        }}
+    end
+  end
+
+  defp create_test_file(data, filename) do
+    temp_path = Path.join(System.tmp_dir!(), filename)
+    case File.write(temp_path, data) do
+      :ok -> {:ok, temp_path}
+      error -> error
+    end
+  end
+
+  defp test_store_and_retrieve(temp_file, waffle_adapter, expected_data) do
+    scope = %{test: true, timestamp: DateTime.utc_now()}
+
+    with {:ok, stored_result} <- WaffleChunkStore.store({temp_file, scope}),
+         {:ok, retrieved_data} <- download_from_waffle_url(WaffleChunkStore.url({stored_result, scope})) do
+
+      if retrieved_data == expected_data do
+        {:ok, %{stored: stored_result, verified: true}}
+      else
+        {:error, :data_mismatch}
+      end
+    else
+      error -> error
+    end
+  end
+
   # Private functions
 
   defp get_chunk_stores(opts) do
-    opts[:stores] || Application.get_env(:aria_storage, :chunk_stores) || []
+    stores = opts[:stores] || Application.get_env(:aria_storage, :chunk_stores) || []
+    
+    # Add Waffle adapter if configured
+    waffle_config = get_waffle_config()
+    if waffle_config.storage != :local or opts[:force_waffle] do
+      waffle_adapter = case create_waffle_adapter(waffle_config.storage, waffle_config) do
+        {:ok, adapter} -> [adapter]
+        {:error, _} -> []
+      end
+      waffle_adapter ++ stores
+    else
+      stores
+    end
   end
 
   defp get_cache_store(opts) do
@@ -439,11 +552,309 @@ defmodule AriaStorage.Storage do
     {:ok, 0}
   end
 
-  defp get_index_ref(path, index_store) do
+  defp get_index_ref(path, _index_store) do
     # For now, we assume a simple mapping from path to index ref
     # In a real system, this would involve a lookup in a database
     # or a specific file naming convention.
     index_ref = :crypto.hash(:sha256, path) |> Base.encode16(case: :lower)
     {:ok, index_ref}
+  end
+
+  @doc """
+  Stores files using Waffle with support for multiple backends.
+
+  Options:
+  - `:backend` - Waffle backend (:local, :s3, :gcs)
+  - `:bucket` - Storage bucket name (for cloud backends)
+  - `:directory` - Local directory (for local backend)
+  - `:chunk_size` - Chunk size for large file splitting
+  - `:compress` - Whether to compress chunks
+  """
+  def store_file_with_waffle(file_path, opts \\ []) do
+    backend = Keyword.get(opts, :backend, :local)
+    chunk_size = Keyword.get(opts, :chunk_size, 64 * 1024)  # 64KB default
+    compress = Keyword.get(opts, :compress, true)
+
+    with {:ok, file_data} <- File.read(file_path),
+         {:ok, chunks} <- Chunks.chunk_data(file_data, chunk_size: chunk_size, compress: compress),
+         {:ok, index} <- Index.create_index(chunks, format: :caidx),
+         {:ok, waffle_adapter} <- create_waffle_adapter(backend, opts),
+         {:ok, stored_chunks} <- store_chunks_with_waffle(chunks, waffle_adapter),
+         {:ok, index_result} <- store_index_with_waffle(index, waffle_adapter) do
+
+      {:ok, %{
+        index_ref: index_result.index_ref,
+        chunks_stored: length(stored_chunks),
+        total_size: byte_size(file_data),
+        compressed_size: Enum.sum(Enum.map(chunks, & &1.size)),
+        backend: backend
+      }}
+    else
+      error -> error
+    end
+  end
+
+  @doc """
+  Retrieves a file from Waffle storage and reconstructs it.
+  """
+  def get_file_with_waffle(index_ref, opts \\ []) do
+    backend = Keyword.get(opts, :backend, :local)
+
+    with {:ok, waffle_adapter} <- create_waffle_adapter(backend, opts),
+         {:ok, index} <- get_index_with_waffle(index_ref, waffle_adapter),
+         {:ok, chunks} <- get_chunks_with_waffle(index.chunks, waffle_adapter),
+         {:ok, file_data} <- reconstruct_file_from_chunks(chunks) do
+
+      {:ok, %{
+        data: file_data,
+        size: byte_size(file_data),
+        chunks_count: length(chunks),
+        format: index.format
+      }}
+    else
+      error -> error
+    end
+  end
+
+  @doc """
+  Lists files stored with Waffle, optionally filtered by backend.
+  """
+  def list_waffle_files(opts \\ []) do
+    backend = Keyword.get(opts, :backend)
+    limit = Keyword.get(opts, :limit, 100)
+    offset = Keyword.get(opts, :offset, 0)
+
+    query = from f in AriaStorage.FileRecord,
+            order_by: [desc: f.inserted_at],
+            limit: ^limit,
+            offset: ^offset
+
+    query = case backend do
+      nil -> query
+      backend -> from f in query, where: fragment("metadata->>'backend' = ?", ^to_string(backend))
+    end
+
+    case StorageRepo.all(query) do
+      files when is_list(files) ->
+        waffle_files = Enum.map(files, &format_waffle_file_info/1)
+        {:ok, waffle_files}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Migrates existing chunks to Waffle storage.
+  """
+  def migrate_to_waffle(target_backend, opts \\ []) do
+    source_stores = get_chunk_stores(opts)
+    batch_size = Keyword.get(opts, :batch_size, 50)
+
+    with {:ok, waffle_adapter} <- create_waffle_adapter(target_backend, opts),
+         {:ok, chunk_ids} <- get_all_stored_chunks(source_stores) do
+
+      results = chunk_ids
+      |> Enum.chunk_every(batch_size)
+      |> Enum.map(fn batch -> migrate_chunk_batch(batch, source_stores, waffle_adapter) end)
+
+      {successful, failed} = Enum.split_with(results, &match?({:ok, _}, &1))
+
+      {:ok, %{
+        total_chunks: length(chunk_ids),
+        migrated: length(successful),
+        failed: length(failed),
+        target_backend: target_backend
+      }}
+    else
+      error -> error
+    end
+  end
+
+  # Private functions for Waffle integration
+
+  defp create_waffle_adapter(backend, opts) do
+    config = %{
+      bucket: Keyword.get(opts, :bucket, "aria-chunks"),
+      directory: Keyword.get(opts, :directory, "/tmp/aria-chunks"),
+      region: Keyword.get(opts, :region, "us-east-1"),
+      access_key: Keyword.get(opts, :access_key),
+      secret_key: Keyword.get(opts, :secret_key)
+    }
+
+    case WaffleAdapter.configure_waffle(backend, config) do
+      {:ok, _} ->
+        adapter = WaffleAdapter.new(
+          backend: backend,
+          config: config,
+          uploader: WaffleChunkStore
+        )
+        {:ok, adapter}
+
+      error -> error
+    end
+  end
+
+  defp store_chunks_with_waffle(chunks, waffle_adapter) do
+    results = Enum.map(chunks, fn chunk ->
+      ChunkStore.store_chunk(waffle_adapter, chunk)
+    end)
+
+    case Enum.find(results, &match?({:error, _}, &1)) do
+      nil ->
+        stored_chunks = Enum.map(results, fn {:ok, metadata} -> metadata end)
+        {:ok, stored_chunks}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp store_index_with_waffle(index, waffle_adapter) do
+    # Generate a unique reference for the index
+    index_ref = generate_waffle_index_ref(index)
+
+    case Index.serialize(index) do
+      {:ok, binary_data} ->
+        # Create a temporary file for the index
+        temp_file = "/tmp/index_#{index_ref}.caidx"
+        File.write!(temp_file, binary_data)
+
+        scope = %{
+          index_ref: index_ref,
+          format: index.format,
+          chunk_count: index.chunk_count
+        }
+
+        try do
+          case WaffleChunkStore.store({temp_file, scope}) do
+            {:ok, stored_path} ->
+              # Store metadata in database
+              metadata = %{
+                index_ref: index_ref,
+                format: index.format,
+                chunk_count: index.chunk_count,
+                total_size: index.total_size,
+                created_at: index.created_at,
+                checksum: index.checksum,
+                backend: waffle_adapter.backend,
+                stored_path: stored_path
+              }
+
+              {:ok, file_record} = create_waffle_file_record(metadata)
+              {:ok, %{index_ref: index_ref, file_id: file_record.id}}
+
+            {:error, reason} ->
+              {:error, reason}
+          end
+        after
+          File.rm(temp_file)
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp get_index_with_waffle(index_ref, waffle_adapter) do
+    scope = %{index_ref: index_ref}
+
+    case WaffleChunkStore.url({nil, scope}) do
+      nil -> {:error, :index_not_found}
+      url ->
+        case download_from_waffle_url(url) do
+          {:ok, binary_data} -> Index.deserialize(binary_data)
+          error -> error
+        end
+    end
+  end
+
+  defp get_chunks_with_waffle(chunk_specs, waffle_adapter) do
+    results = Enum.map(chunk_specs, fn chunk_spec ->
+      ChunkStore.get_chunk(waffle_adapter, chunk_spec.chunk_id)
+    end)
+
+    case Enum.find(results, &match?({:error, _}, &1)) do
+      nil ->
+        chunks = Enum.map(results, fn {:ok, chunk} -> chunk end)
+        {:ok, chunks}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp reconstruct_file_from_chunks(chunks) do
+    # Sort chunks by offset and concatenate data
+    sorted_chunks = Enum.sort_by(chunks, & &1.offset)
+    
+    file_data = sorted_chunks
+    |> Enum.map(& &1.data)
+    |> Enum.join()
+
+    {:ok, file_data}
+  end
+
+  defp generate_waffle_index_ref(index) do
+    timestamp = DateTime.to_unix(index.created_at)
+    checksum = Base.encode16(index.checksum, case: :lower) |> String.slice(0, 8)
+    "#{index.format}_#{timestamp}_#{checksum}"
+  end
+
+  defp create_waffle_file_record(metadata) do
+    # Enhanced file record with Waffle-specific metadata
+    record = %{
+      id: "waffle_#{:rand.uniform(1000000)}",
+      metadata: Map.merge(metadata, %{
+        storage_type: "waffle",
+        created_at: DateTime.utc_now()
+      })
+    }
+    {:ok, record}
+  end
+
+  defp format_waffle_file_info(file_record) do
+    metadata = file_record.metadata
+    
+    %{
+      id: file_record.id,
+      index_ref: metadata["index_ref"],
+      backend: metadata["backend"],
+      format: metadata["format"],
+      size: metadata["total_size"],
+      chunk_count: metadata["chunk_count"],
+      created_at: metadata["created_at"],
+      storage_type: metadata["storage_type"]
+    }
+  end
+
+  defp download_from_waffle_url(url) do
+    case HTTPoison.get(url) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        {:ok, body}
+      {:ok, %HTTPoison.Response{status_code: status_code}} ->
+        {:error, {:http_error, status_code}}
+      {:error, reason} ->
+        {:error, {:download_failed, reason}}
+    end
+  end
+
+  defp migrate_chunk_batch(chunk_ids, source_stores, waffle_adapter) do
+    results = Enum.map(chunk_ids, fn chunk_id ->
+      with {:ok, chunk} <- get_single_chunk(chunk_id, source_stores, nil),
+           {:ok, metadata} <- ChunkStore.store_chunk(waffle_adapter, chunk) do
+        {:ok, {chunk_id, metadata}}
+      else
+        error -> {:error, {chunk_id, error}}
+      end
+    end)
+
+    {successful, failed} = Enum.split_with(results, &match?({:ok, _}, &1))
+    
+    if length(failed) == 0 do
+      {:ok, length(successful)}
+    else
+      {:partial, %{successful: length(successful), failed: failed}}
+    end
   end
 end
