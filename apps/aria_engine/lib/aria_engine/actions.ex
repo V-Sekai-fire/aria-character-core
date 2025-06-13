@@ -12,11 +12,31 @@ defmodule AriaEngine.Actions do
   alias AriaEngine.State
   require Logger
 
+  # Type definitions
+  @type command :: String.t()
+  @type args :: [String.t()]
+  @type execution_opts :: %{
+    optional(:timeout) => non_neg_integer(),
+    optional(:working_dir) => String.t(),
+    optional(:env) => %{String.t() => String.t()},
+    optional(:capture_output) => boolean()
+  }
+  @type execution_result :: %{
+    exit_code: non_neg_integer(),
+    stdout: String.t(),
+    stderr: String.t(),
+    duration_ms: non_neg_integer()
+  }
+  @type file_path :: String.t()
+  @type permissions :: String.t()
+  @type url :: String.t()
+
   @doc """
   Execute a shell command using Porcelain.
 
   Updates state with execution results including exit code, output, and timing.
   """
+  @spec execute_command(State.t(), [command() | args() | execution_opts()]) :: State.t() | false
   def execute_command(state, [command, args_list, opts]) when is_list(args_list) do
     # Handle test format: [command, [args], options]
     execute_command_with_opts(state, command, args_list, opts)
@@ -26,6 +46,8 @@ defmodule AriaEngine.Actions do
     # Handle simple format: [command, arg1, arg2, ...]
     execute_command_with_opts(state, command, args, %{})
   end
+
+  @spec execute_command_with_opts(State.t(), command(), args(), execution_opts()) :: State.t() | false
 
   defp execute_command_with_opts(state, command, args, opts) do
     fail_on_error = Map.get(opts, :fail_on_error, true)
@@ -91,8 +113,9 @@ defmodule AriaEngine.Actions do
   end
 
   @doc """
-  Copy a file from source to destination using external cp command.
+  Copy a file from source to destination.
   """
+  @spec copy_file(State.t(), {file_path(), file_path()}) :: State.t() | false
   def copy_file(state, [source, destination]) do
     case execute_command(state, ["cp", source, destination]) do
       false -> false  # Command failed, ensure false is returned
@@ -112,15 +135,17 @@ defmodule AriaEngine.Actions do
   end
 
   @doc """
-  Move/rename a file using external mv command.
+  Move a file from source to destination.
   """
+  @spec move_file(State.t(), {file_path(), file_path()}) :: State.t() | false
   def move_file(state, [source, destination]) do
     execute_command(state, ["mv", source, destination])
   end
 
   @doc """
-  Delete a file using external rm command.
+  Delete a file.
   """
+  @spec delete_file(State.t(), [file_path()]) :: State.t() | false
   def delete_file(state, [file_path]) do
     execute_command(state, ["rm", file_path])
   end
@@ -128,6 +153,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Create a directory using external mkdir command.
   """
+  @spec create_directory(State.t(), [file_path()]) :: State.t() | false
   def create_directory(state, [dir_path]) do
     case execute_command(state, ["mkdir", "-p", dir_path]) do
       false -> false  # Command failed, ensure false is returned
@@ -169,8 +195,9 @@ defmodule AriaEngine.Actions do
   end
 
   @doc """
-  Download a file using curl.
+  Download a file from a URL.
   """
+  @spec download_file(State.t(), {url(), file_path()}) :: State.t() | false
   def download_file(state, [url, destination]) do
     case execute_command(state, ["curl", "-o", destination, url]) do
       false -> false  # Command failed, ensure false is returned
@@ -251,8 +278,9 @@ defmodule AriaEngine.Actions do
   end
 
   @doc """
-  Echo a message (useful for testing and logging).
+  Echo a message and update state.
   """
+  @spec echo(State.t(), [String.t()]) :: State.t()
   def echo(state, [message]) do
     execute_command(state, ["echo", message])
   end

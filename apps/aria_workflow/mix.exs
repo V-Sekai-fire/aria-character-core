@@ -40,6 +40,11 @@ defmodule AriaWorkflow.MixProject do
       # Planning engine for workflow execution
       {:aria_engine, in_umbrella: true},
 
+      # Domain apps
+      {:aria_file_management, in_umbrella: true},
+      {:aria_workflow_system, in_umbrella: true},
+      {:aria_timestrike, in_umbrella: true},
+
       # Character shaping for SOP assistance
       {:aria_shape, in_umbrella: true},
 

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Domains.WorkflowSystem do
+defmodule AriaWorkflowSystem do
   @moduledoc """
   Workflow system domain that integrates AriaEngine planning with AriaWorkflow execution.
 
@@ -15,6 +15,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Creates a workflow system domain with integrated actions.
   """
+  @spec create_domain() :: Domain.t()
   def create_domain do
     Domain.new("workflow_system")
     |> Domain.add_actions(%{
@@ -44,6 +45,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   [DEPRECATED] This function uses deprecated WorkflowRegistry/WorkflowEngine.
   Use AriaEngine.DomainDefinition instead.
   """
+  @spec execute_workflow_command(State.t(), [String.t()]) :: State.t()
   def execute_workflow_command(state, [workflow_id | _workflow_args]) do
     Logger.warning("execute_workflow_command is deprecated. Use AriaEngine.DomainDefinition instead.")
 
@@ -56,6 +58,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Trace workflow execution with detailed logging.
   """
+  @spec trace_workflow_execution(State.t(), [String.t()]) :: State.t() | false
   def trace_workflow_execution(state, [workflow_id]) do
     case State.get_object(state, "workflow_execution", workflow_id) do
       nil ->
@@ -82,6 +85,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Monitor workflow progress and report status.
   """
+  @spec monitor_workflow_progress(State.t(), [String.t()]) :: State.t()
   def monitor_workflow_progress(state, [workflow_id]) do
     case State.get_object(state, "workflow_execution", workflow_id) do
       nil ->
@@ -105,6 +109,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Execute workflow with comprehensive monitoring.
   """
+  @spec execute_workflow_with_monitoring(State.t(), [String.t()]) :: [tuple()]
   def execute_workflow_with_monitoring(_state, [workflow_id]) do
     [
       {:echo, ["Starting workflow: #{workflow_id}"]},
@@ -118,6 +123,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Execute workflow with minimal overhead.
   """
+  @spec execute_workflow_simple(State.t(), [String.t()]) :: [tuple()]
   def execute_workflow_simple(_state, [workflow_id]) do
     [
       {:execute_workflow_command, [workflow_id]}
@@ -127,6 +133,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Debug workflow with detailed tracing.
   """
+  @spec debug_with_tracing(State.t(), [String.t()]) :: [tuple()]
   def debug_with_tracing(_state, [workflow_id]) do
     [
       {:echo, ["Debugging workflow: #{workflow_id}"]},
@@ -139,6 +146,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Debug workflow with enhanced logging.
   """
+  @spec debug_with_logging(State.t(), [String.t()]) :: [tuple()]
   def debug_with_logging(_state, [workflow_id]) do
     [
       {:echo, ["Starting debug session for: #{workflow_id}"]},
@@ -153,6 +161,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Ensure a workflow is completed successfully.
   """
+  @spec ensure_workflow_completed(State.t(), [String.t()]) :: [tuple()] | false
   def ensure_workflow_completed(state, [predicate, subject, object]) do
     if predicate == "workflow_completed" and object == true do
       case State.get_object(state, "workflow_result", subject) do
@@ -169,6 +178,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Ensure a command is executed.
   """
+  @spec ensure_command_executed(State.t(), [String.t()]) :: [tuple()] | false
   def ensure_command_executed(state, [predicate, subject, object]) do
     if predicate == "command_executed" and object == true do
       case State.get_object(state, "last_command", "command") do
@@ -187,6 +197,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Execute a traced command with monitoring.
   """
+  @spec execute_traced_command(State.t(), [String.t()]) :: [tuple()]
   def execute_traced_command(_state, [command, args, workflow_id]) do
     [
       {:execute_command, [command, args, %{
@@ -200,6 +211,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Deploy a service with standard deployment steps.
   """
+  @spec deploy_service(State.t(), [String.t()]) :: [tuple()]
   def deploy_service(_state, [service_name]) do
     [
       {:echo, ["Deploying service: #{service_name}"]},
@@ -212,6 +224,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Run database migrations.
   """
+  @spec run_migrations(State.t(), []) :: [tuple()]
   def run_migrations(_state, []) do
     [
       {:echo, ["Running database migrations"]},
@@ -223,6 +236,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Set up development environment.
   """
+  @spec setup_dev_environment(State.t(), [String.t()]) :: [tuple()]
   def setup_dev_environment(_state, [project_path]) do
     [
       {:echo, ["Setting up development environment at #{project_path}"]},
@@ -232,6 +246,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     ]
   end
 
+  @spec setup_dev_environment(State.t(), {String.t(), [String.t()]}) :: [tuple()]
   def setup_dev_environment(_state, [project_path, services]) when is_list(services) do
     docker_commands = Enum.map(services, fn service ->
       {:execute_command, ["docker", ["run", "-d", "--name", service, service], %{}]}
@@ -246,6 +261,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Run tests with coverage analysis.
   """
+  @spec run_tests_with_coverage(State.t(), []) :: [tuple()]
   def run_tests_with_coverage(_state, []) do
     [
       {:execute_command, ["mix", "test", "--cover"]},
@@ -253,6 +269,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     ]
   end
 
+  @spec run_tests_with_coverage(State.t(), [String.t()]) :: [tuple()]
   def run_tests_with_coverage(_state, [project_path]) do
     [
       {:echo, ["Running tests with coverage in #{project_path}"]},
@@ -261,6 +278,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     ]
   end
 
+  @spec run_tests_with_coverage(State.t(), {String.t(), String.t()}) :: [tuple()]
   def run_tests_with_coverage(_state, [project_path, _test_command]) do
     [
       {:execute_command, ["mix", ["test", "--cover"], %{
@@ -277,6 +295,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Build and package the application.
   """
+  @spec build_and_package(State.t(), [String.t()]) :: [tuple()]
   def build_and_package(_state, [app_name]) do
     [
       {:echo, ["Building and packaging #{app_name}"]},
@@ -285,6 +304,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     ]
   end
 
+  @spec build_and_package(State.t(), {String.t(), String.t()}) :: [tuple()]
   def build_and_package(_state, [project_path, package_format]) do
     case package_format do
       "docker" ->
@@ -313,6 +333,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Monitor system health with basic checks.
   """
+  @spec monitor_system_health(State.t(), []) :: [tuple()]
   def monitor_system_health(_state, []) do
     [
       {:execute_command, ["ps", "aux"]},
@@ -320,6 +341,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     ]
   end
 
+  @spec monitor_system_health(State.t(), [String.t()]) :: [tuple()]
   def monitor_system_health(_state, [services]) when is_list(services) do
     service_checks = Enum.map(services, fn service ->
       {:echo, ["Checking service: #{service}"]}
@@ -332,6 +354,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
     ]
   end
 
+  @spec monitor_system_health(State.t(), {[String.t()], map()}) :: [tuple()]
   def monitor_system_health(_state, [services, health_checks]) when is_list(services) and is_map(health_checks) do
     Enum.map(services, fn service ->
       case Map.get(health_checks, service) do
@@ -348,6 +371,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Backup system data to specified location.
   """
+  @spec backup_system_data(State.t(), [String.t()]) :: [tuple()]
   def backup_system_data(_state, [backup_path]) do
     [
       {:echo, ["Backing up system data to #{backup_path}"]},
@@ -359,6 +383,7 @@ defmodule AriaEngine.Domains.WorkflowSystem do
   @doc """
   Restore system data from backup.
   """
+  @spec restore_system_data(State.t(), [String.t()]) :: [tuple()]
   def restore_system_data(_state, [backup_path]) do
     [
       {:echo, ["Restoring system data from #{backup_path}"]},

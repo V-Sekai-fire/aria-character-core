@@ -192,15 +192,15 @@ defmodule AriaWorkflow.WorkflowRegistry do
         {"backup_system", "files", "protected"}
       ],
       tasks: [
-        {"backup_file", &AriaEngine.Domains.FileManagement.backup_file/2},
-        {"replace_file_safely", &AriaEngine.Domains.FileManagement.replace_file_safely/2},
-        {"create_directory_structure", &AriaEngine.Domains.FileManagement.create_directory_structure/2},
-        {"download_and_verify", &AriaEngine.Domains.FileManagement.download_and_verify/2},
-        {"setup_workspace", &AriaEngine.Domains.FileManagement.setup_workspace/2},
-        {"cleanup_temp_files", &AriaEngine.Domains.FileManagement.cleanup_temp_files/2},
-        {"compress_directory", &AriaEngine.Domains.FileManagement.compress_directory/2},
-        {"extract_archive", &AriaEngine.Domains.FileManagement.extract_archive/2},
-        {"sync_directories", &AriaEngine.Domains.FileManagement.sync_directories/2}
+        {"backup_file", &AriaFileManagement.backup_file/2},
+        {"replace_file_safely", &AriaFileManagement.replace_file_safely/2},
+        {"create_directory_structure", &AriaFileManagement.create_directory_structure/2},
+        {"download_and_verify", &AriaFileManagement.download_and_verify/2},
+        {"setup_workspace", &AriaFileManagement.setup_workspace/2},
+        {"cleanup_temp_files", &AriaFileManagement.cleanup_temp_files/2},
+        {"compress_directory", &AriaFileManagement.compress_directory/2},
+        {"extract_archive", &AriaFileManagement.extract_archive/2},
+        {"sync_directories", &AriaFileManagement.sync_directories/2}
       ],
       methods: [
         {"execute_file_operations", &AriaWorkflow.Methods.CommandTracing.execute_with_tracing/2}
@@ -237,15 +237,15 @@ defmodule AriaWorkflow.WorkflowRegistry do
         {"monitoring", "health_checks", "active"}
       ],
       tasks: [
-        {"execute_traced_command", &AriaEngine.Domains.WorkflowSystem.execute_traced_command/2},
-        {"deploy_service", &AriaEngine.Domains.WorkflowSystem.deploy_service/2},
-        {"run_migrations", &AriaEngine.Domains.WorkflowSystem.run_migrations/2},
-        {"setup_dev_environment", &AriaEngine.Domains.WorkflowSystem.setup_dev_environment/2},
-        {"run_tests_with_coverage", &AriaEngine.Domains.WorkflowSystem.run_tests_with_coverage/2},
-        {"build_and_package", &AriaEngine.Domains.WorkflowSystem.build_and_package/2},
-        {"monitor_system_health", &AriaEngine.Domains.WorkflowSystem.monitor_system_health/2},
-        {"backup_system_data", &AriaEngine.Domains.WorkflowSystem.backup_system_data/2},
-        {"restore_system_data", &AriaEngine.Domains.WorkflowSystem.restore_system_data/2}
+        {"execute_traced_command", &AriaWorkflowSystem.execute_traced_command/2},
+        {"deploy_service", &AriaWorkflowSystem.deploy_service/2},
+        {"run_migrations", &AriaWorkflowSystem.run_migrations/2},
+        {"setup_dev_environment", &AriaWorkflowSystem.setup_dev_environment/2},
+        {"run_tests_with_coverage", &AriaWorkflowSystem.run_tests_with_coverage/2},
+        {"build_and_package", &AriaWorkflowSystem.build_and_package/2},
+        {"monitor_system_health", &AriaWorkflowSystem.monitor_system_health/2},
+        {"backup_system_data", &AriaWorkflowSystem.backup_system_data/2},
+        {"restore_system_data", &AriaWorkflowSystem.restore_system_data/2}
       ],
       methods: [
         {"execute_deployment_pipeline", &AriaWorkflow.Methods.CommandTracing.execute_with_tracing/2},

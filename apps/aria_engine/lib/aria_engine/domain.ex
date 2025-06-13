@@ -279,58 +279,37 @@ defmodule AriaEngine.Domain do
     add_actions(domain, porcelain_actions)
   end
 
-  @doc """
-  Adds file management methods to the domain.
+  # These convenience methods are commented out to avoid hard dependencies on domain modules
+  # Domain-specific modules should define their own methods in their create_domain/0 functions
 
-  This convenience method adds all the file management task methods.
-  """
-  @spec add_file_management_methods(t()) :: t()
-  def add_file_management_methods(%__MODULE__{} = domain) do
-    alias AriaEngine.Domains.FileManagement
+  # @doc """
+  # Adds file management methods to the domain.
+  # This convenience method adds all the file management task methods.
+  # """
+  # @spec add_file_management_methods(t()) :: t()
+  # def add_file_management_methods(%__MODULE__{} = domain) do
+  #   # Implementation moved to AriaFileManagement.create_domain/0
+  # end
 
-    domain
-    |> add_task_method("backup_file", &FileManagement.backup_file/2)
-    |> add_task_method("replace_file_safely", &FileManagement.replace_file_safely/2)
-    |> add_task_method("create_directory_structure", &FileManagement.create_directory_structure/2)
-    |> add_task_method("download_and_verify", &FileManagement.download_and_verify/2)
-    |> add_task_method("setup_workspace", &FileManagement.setup_workspace/2)
-    |> add_task_method("cleanup_temp_files", &FileManagement.cleanup_temp_files/2)
-    |> add_task_method("compress_directory", &FileManagement.compress_directory/2)
-    |> add_task_method("extract_archive", &FileManagement.extract_archive/2)
-    |> add_task_method("sync_directories", &FileManagement.sync_directories/2)
-  end
-
-  @doc """
-  Adds workflow system methods to the domain.
-
-  This convenience method adds all the workflow system task methods.
-  """
-  @spec add_workflow_system_methods(t()) :: t()
-  def add_workflow_system_methods(%__MODULE__{} = domain) do
-    alias AriaEngine.Domains.WorkflowSystem
-
-    domain
-    |> add_task_method("execute_traced_command", &WorkflowSystem.execute_traced_command/2)
-    |> add_task_method("deploy_service", &WorkflowSystem.deploy_service/2)
-    |> add_task_method("run_migrations", &WorkflowSystem.run_migrations/2)
-    |> add_task_method("setup_dev_environment", &WorkflowSystem.setup_dev_environment/2)
-    |> add_task_method("run_tests_with_coverage", &WorkflowSystem.run_tests_with_coverage/2)
-    |> add_task_method("build_and_package", &WorkflowSystem.build_and_package/2)
-    |> add_task_method("monitor_system_health", &WorkflowSystem.monitor_system_health/2)
-    |> add_task_method("backup_system_data", &WorkflowSystem.backup_system_data/2)
-    |> add_task_method("restore_system_data", &WorkflowSystem.restore_system_data/2)
-  end
+  # @doc """
+  # Adds workflow system methods to the domain.
+  # This convenience method adds all the workflow system task methods.
+  # """
+  # @spec add_workflow_system_methods(t()) :: t()
+  # def add_workflow_system_methods(%__MODULE__{} = domain) do
+  #   # Implementation moved to AriaWorkflowSystem.create_domain/0
+  # end
 
   @doc """
   Creates a complete domain with all Porcelain-based actions and methods.
 
-  This is a convenience method for creating a fully-featured domain.
+  This is a convenience method for creating a fully-featured domain with basic actions.
+  Domain-specific methods should be added by the respective domain modules.
   """
   @spec create_complete_domain(String.t()) :: t()
   def create_complete_domain(name \\ "complete") do
     new(name)
     |> add_porcelain_actions()
-    |> add_file_management_methods()
-    |> add_workflow_system_methods()
+    # Domain-specific methods are added by each domain module in their create_domain/0 functions
   end
 end
