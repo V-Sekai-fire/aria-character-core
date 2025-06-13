@@ -67,13 +67,7 @@ defmodule AriaStorage.Storage do
             # create_file_record always returns {:ok, _} for now (stub implementation)
             {:ok, file_record} = create_file_record(metadata)
             {:ok, %{index_ref: index_ref, file_id: file_record.id}}
-
-          {:error, reason} ->
-            {:error, reason}
         end
-
-      {:error, reason} ->
-        {:error, reason}
     end
   end
 
@@ -308,7 +302,7 @@ defmodule AriaStorage.Storage do
       # Debug what the URL returns
       url_result = WaffleChunkStore.url({stored_result, scope})
       IO.puts("DEBUG URL result: #{inspect(url_result)}")
-      
+
       # Try to get the URL and download if it's available
       case url_result do
         url when is_binary(url) and url != "" ->
@@ -334,7 +328,7 @@ defmodule AriaStorage.Storage do
               base_path = System.get_env("WAFFLE_UPLOADS_DIR") || System.tmp_dir()
               full_path = Path.join(base_path, String.trim_leading(url, "/"))
               IO.puts("DEBUG: Checking file at: #{full_path}")
-              
+
               case File.read(full_path) do
                 {:ok, retrieved_data} ->
                   if retrieved_data == expected_data do
@@ -365,7 +359,7 @@ defmodule AriaStorage.Storage do
 
   defp get_chunk_stores(opts) do
     stores = opts[:stores] || Application.get_env(:aria_storage, :chunk_stores) || []
-    
+
     # Add Waffle adapter if configured
     waffle_config = get_waffle_config()
     if waffle_config.storage != :local or opts[:force_waffle] do
@@ -398,11 +392,10 @@ defmodule AriaStorage.Storage do
       cache_store ->
         case ChunkStore.store_chunk(cache_store, chunk) do
           :ok -> store_in_primary_stores(chunk, stores)
-          {:error, _} -> store_in_primary_stores(chunk, stores)
         end
     end
 
-    if verify and result == :ok do
+    if verify do
       verify_stored_chunk(chunk, stores)
     else
       result
@@ -412,13 +405,9 @@ defmodule AriaStorage.Storage do
   defp store_in_primary_stores(chunk, stores) do
     # Store in first available store
     case stores do
-      [primary | fallback] ->
+      [primary | _fallback] ->
         case ChunkStore.store_chunk(primary, chunk) do
           :ok -> {:ok, chunk}
-          {:error, _} when fallback != [] ->
-            store_in_primary_stores(chunk, fallback)
-          {:error, reason} ->
-            {:error, reason}
         end
 
       [] ->
@@ -446,7 +435,6 @@ defmodule AriaStorage.Storage do
       nil -> get_from_primary_stores(chunk_id, stores)
       cache_store ->
         case ChunkStore.get_chunk(cache_store, chunk_id) do
-          {:ok, chunk} -> {:ok, chunk}
           {:error, _} -> get_from_primary_stores(chunk_id, stores)
         end
     end
@@ -456,7 +444,6 @@ defmodule AriaStorage.Storage do
     case stores do
       [primary | fallback] ->
         case ChunkStore.get_chunk(primary, chunk_id) do
-          {:ok, chunk} -> {:ok, chunk}
           {:error, _} when fallback != [] ->
             get_from_primary_stores(chunk_id, fallback)
           {:error, reason} ->
@@ -478,17 +465,11 @@ defmodule AriaStorage.Storage do
     case Index.serialize(index) do
       {:ok, binary_data} ->
         ChunkStore.store_data(index_store, index_ref, binary_data)
-
-      {:error, reason} ->
-        {:error, reason}
     end
   end
 
   defp get_index_from_store(index_ref, index_store) do
     case ChunkStore.get_data(index_store, index_ref) do
-      {:ok, binary_data} ->
-        Index.deserialize(binary_data)
-
       {:error, reason} ->
         {:error, reason}
     end
@@ -501,15 +482,6 @@ defmodule AriaStorage.Storage do
     {:ok, %{id: "stub_file_id", metadata: metadata}}
   end
 
-  defp get_file_record(_file_id) do
-    # TODO: Implement database integration
-    # case StorageRepo.get(AriaStorage.File, file_id) do
-    #   nil -> {:error, :file_not_found}
-    #   file -> {:ok, file}
-    # end
-    {:error, :not_implemented}
-  end
-
   defp get_file_record_by_ref(_index_ref) do
     # TODO: Implement database integration
     # case StorageRepo.get_by(AriaStorage.File, index_ref: index_ref) do
@@ -517,18 +489,6 @@ defmodule AriaStorage.Storage do
     #   file -> {:ok, file}
     # end
     {:error, :not_implemented}
-  end
-
-  defp maybe_delete_chunks(_chunks, _force) do
-    # TODO: Implement chunk deletion with force option
-    # For now, this is a no-op
-    :ok
-  end
-
-  defp delete_index(_index_ref) do
-    # TODO: Implement index deletion
-    # For now, this is a no-op
-    :ok
   end
 
   defp get_all_referenced_chunks do
@@ -743,8 +703,6 @@ defmodule AriaStorage.Storage do
     results = Enum.map(chunks, fn chunk ->
       case ChunkStore.store_chunk(waffle_adapter, chunk) do
         :ok -> {:ok, %{chunk_id: chunk.id, stored: true}}
-        {:error, reason} -> {:error, reason}
-        other -> {:ok, other}  # Handle other return formats
       end
     end)
 
@@ -752,7 +710,6 @@ defmodule AriaStorage.Storage do
       nil ->
         stored_chunks = Enum.map(results, fn {:ok, metadata} -> metadata end)
         {:ok, stored_chunks}
-
       {:error, reason} ->
         {:error, reason}
     end
@@ -798,9 +755,6 @@ defmodule AriaStorage.Storage do
         after
           File.rm(temp_file)
         end
-
-      {:error, reason} ->
-        {:error, reason}
     end
   end
 
@@ -808,7 +762,7 @@ defmodule AriaStorage.Storage do
     scope = %{index_ref: index_ref}
 
     case WaffleChunkStore.url({nil, scope}) do
-      nil -> 
+      nil ->
         {:error, :index_not_found}
       url when is_binary(url) ->
         cond do
@@ -822,7 +776,7 @@ defmodule AriaStorage.Storage do
             # Local file path - read directly from filesystem
             base_path = System.get_env("WAFFLE_UPLOADS_DIR") || System.tmp_dir()
             full_path = Path.join(base_path, String.trim_leading(url, "/"))
-            
+
             case File.read(full_path) do
               {:ok, binary_data} -> Index.deserialize(binary_data)
               {:error, reason} -> {:error, {:file_read_failed, reason}}
@@ -853,7 +807,7 @@ defmodule AriaStorage.Storage do
   defp reconstruct_file_from_chunks(chunks) do
     # Sort chunks by offset and concatenate data
     sorted_chunks = Enum.sort_by(chunks, & &1.offset)
-    
+
     file_data = sorted_chunks
     |> Enum.map(& &1.data)
     |> Enum.join()
@@ -881,7 +835,7 @@ defmodule AriaStorage.Storage do
 
   defp format_waffle_file_info(file_record) do
     metadata = file_record.metadata
-    
+
     %{
       id: file_record.id,
       index_ref: metadata["index_ref"],
@@ -916,7 +870,7 @@ defmodule AriaStorage.Storage do
     end)
 
     {successful, failed} = Enum.split_with(results, &match?({:ok, _}, &1))
-    
+
     if length(failed) == 0 do
       {:ok, length(successful)}
     else
@@ -930,7 +884,7 @@ defmodule AriaStorage.Storage do
     max_size = chunk_size * 4
     discriminator = Chunks.discriminator_from_avg(chunk_size)
     compression = if compress, do: :zstd, else: :none
-    
+
     try do
       chunks = Chunks.find_all_chunks_in_data(data, min_size, max_size, discriminator, compression)
       {:ok, chunks}

@@ -13,7 +13,6 @@ defmodule AriaStorage.ChunksTest do
   # @tag :integration
 
   @input_file_path Path.join([__DIR__, "..", "..", "..", "..", "thirdparty", "desync", "testdata", "chunker.input"])
-  @index_file_path Path.join([__DIR__, "..", "..", "..", "..", "thirdparty", "desync", "testdata", "chunker.index"])
 
   @tag :integration
   test "chunking produces the same boundaries as desync/casync" do

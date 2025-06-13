@@ -107,8 +107,7 @@ defmodule AriaStorage.WaffleChunkStore do
       {:ok, compressed_data} ->
         # Decompress the chunk data
         case Chunks.decompress_chunk(compressed_data, :zstd) do
-          {:error, _} = error -> error
-          data ->
+          {:ok, data} ->
             chunk_id_binary = Base.decode16!(chunk_id, case: :lower)
             {:ok, %Chunks{
               id: chunk_id_binary,
@@ -117,6 +116,8 @@ defmodule AriaStorage.WaffleChunkStore do
               compressed: compressed_data,
               checksum: :crypto.hash(:sha256, data)
             }}
+          {:error, _} = error ->
+            error
         end
 
       {:error, reason} ->
@@ -146,7 +147,6 @@ defmodule AriaStorage.WaffleChunkStore do
 
     case delete({nil, scope}) do
       :ok -> :ok
-      {:error, reason} -> {:error, {:delete_failed, reason}}
     end
   end
 

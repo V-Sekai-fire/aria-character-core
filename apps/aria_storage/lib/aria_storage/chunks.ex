@@ -321,7 +321,6 @@ defmodule AriaStorage.Chunks do
         # Small remaining data, create final chunk
         case create_chunk_from_data(data, offset, compression) do
           {:ok, chunk} -> [chunk | acc]
-          {:error, _} -> acc
         end
 
       data ->
@@ -403,11 +402,11 @@ defmodule AriaStorage.Chunks do
   # Start the rolling hash algorithm from the minimum position
   defp find_boundary_starting_at(data, start_pos, max_end, discriminator) do
     data_size = byte_size(data)
-    
+
     # In desync, we need to have a full window before we can start checking for boundaries
     # The window ends at start_pos, so it starts at (start_pos - window_size + 1)
     window_start = start_pos - @rolling_hash_window_size + 1
-    
+
     if window_start < 0 or start_pos >= data_size do
       # Can't form a proper window, return max_end
       max_end
@@ -415,7 +414,7 @@ defmodule AriaStorage.Chunks do
       # Get the initial window ending at start_pos
       window_data = binary_part(data, window_start, @rolling_hash_window_size)
       initial_hash = calculate_buzhash(window_data)
-      
+
       # Start rolling search from start_pos (don't check boundary at initial position)
       # This matches desync behavior: update hash first, then check boundary
       rolling_search_v2(data, start_pos, max_end, initial_hash, discriminator)
@@ -440,11 +439,11 @@ defmodule AriaStorage.Chunks do
         # Current window ends at pos, next window will end at pos+1
         out_byte = :binary.at(data, pos - @rolling_hash_window_size + 1)  # Byte leaving the window
         in_byte = :binary.at(data, pos + 1)                              # Byte entering the window
-        
+
         # Update the hash to reflect the next window position
         new_hash = update_buzhash(hash, out_byte, in_byte)
         new_pos = pos + 1
-        
+
         # Check if the new position is a boundary (matching desync order)
         # In desync, the boundary position includes the byte that caused the boundary
         if rem(new_hash, discriminator) == discriminator - 1 do
@@ -482,7 +481,7 @@ defmodule AriaStorage.Chunks do
 
   # This efficiently updates the rolling hash when the window slides forward.
   # Implementation matches desync Go code exactly:
-  # 
+  #
   # h.value = bits.RotateLeft32(h.value, 1) ^
   #   bits.RotateLeft32(hashTable[ob], len(h.window)) ^
   #   hashTable[b]
@@ -595,7 +594,6 @@ defmodule AriaStorage.Chunks do
       {:ok, data} ->
         case create_chunk_from_data(data, 0, compression) do
           {:ok, chunk} -> {:ok, [chunk]}
-          {:error, reason} -> {:error, reason}
         end
 
       {:error, reason} ->

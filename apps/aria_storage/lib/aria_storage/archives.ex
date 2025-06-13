@@ -312,9 +312,6 @@ defmodule AriaStorage.Archives do
                 {:error, reason} ->
                   {:error, reason}
               end
-
-            {:error, reason} ->
-              {:error, reason}
           end
 
         {:error, reason} ->

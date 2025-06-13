@@ -33,15 +33,13 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   # Direct binary parsing - no longer using AbnfParsec
   # We now use binary pattern matching for better performance and reliability
 
-  import Bitwise
-
   # Constants from desync source code (const.go)
   @ca_format_index 0x96824d9c7b129ff9
   @ca_format_table 0xe75b9e112f17417d
   @ca_format_table_tail_marker 0x4b4f050e5549ecd1
   # Suppressing warnings for reserved constant by commenting out unused one
   # @_ca_format_exclude_no_dump 0x8000000000000000
-  
+
   # CATAR format constants
   @ca_format_entry 0x1396fabcea5bbb51
   @ca_format_user 0xf453131aaeeaccb3
@@ -73,7 +71,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   # Default chunk sizes (currently unused but reserved for validation and recommendations)
   # Suppressing warnings for reserved constants by commenting out unused ones
   # @_default_min_chunk_size 16_384    # 16KB
-  # @_default_avg_chunk_size 65_536    # 64KB  
+  # @_default_avg_chunk_size 65_536    # 64KB
   # @_default_max_chunk_size 262_144   # 256KB
 
   # Magic numbers for file format detection (currently unused but reserved for format detection)
@@ -84,7 +82,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
 
   # Public accessor functions for constants (needed by tests)
   def ca_format_index, do: @ca_format_index
-  def ca_format_table, do: @ca_format_table  
+  def ca_format_table, do: @ca_format_table
   def ca_format_table_tail_marker, do: @ca_format_table_tail_marker
 
   @doc """
@@ -121,12 +119,12 @@ defmodule AriaStorage.Parsers.CasyncFormat do
       <<size_field::little-64, type_field::little-64, feature_flags::little-64,
         chunk_size_min::little-64, chunk_size_avg::little-64, chunk_size_max::little-64,
         # Validate the format index values
-        remaining_data::binary>> -> 
+        remaining_data::binary>> ->
         if size_field == 48 and type_field == @ca_format_index do
           # Both CAIBX and CAIDX formats use the same parsing logic
           # The feature_flags field differentiates them but both are supported
           format_type = if feature_flags == 0, do: :caidx, else: :caibx
-          
+
           # Both CAIBX (blob index) and CAIDX (directory index) formats - proceed with parsing
             # Handle empty index (no table data)
             case remaining_data do
@@ -148,7 +146,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
                       _original_table_data: <<>>
                     }
                     {:ok, result}
-                    
+
                   _ ->
                     case parse_format_table_with_items_binary(remaining_data) do
                       {:ok, table_items} ->
@@ -218,7 +216,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
 
   @doc """
   Parse a catar archive file from binary data.
-  
+
   CATAR format is a structured archive format similar to tar but with casync-specific
   enhancements. It contains a directory tree with filenames, permissions, and file data.
   """
@@ -228,7 +226,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         {:ok, elements} ->
           # Extract directory structure and file information
           {files, directories} = process_catar_elements(elements)
-          
+
           result = %{
             format: :catar,
             files: files,
@@ -236,9 +234,9 @@ defmodule AriaStorage.Parsers.CasyncFormat do
             elements: elements,
             total_size: byte_size(binary_data)
           }
-          
+
           {:ok, result}
-          
+
         {:error, reason} ->
           {:error, reason}
       end
@@ -246,37 +244,37 @@ defmodule AriaStorage.Parsers.CasyncFormat do
       error -> {:error, "CATAR parsing failed: #{inspect(error)}"}
     end
   end
-  
+
   # Parse CATAR elements recursively
   defp parse_catar_elements(<<>>, acc), do: {:ok, Enum.reverse(acc)}
-  
+
   defp parse_catar_elements(binary_data, acc) do
     case parse_next_catar_element(binary_data) do
       {:ok, element, remaining} ->
         parse_catar_elements(remaining, [element | acc])
-        
+
       {:error, :end_of_data} ->
         {:ok, Enum.reverse(acc)}
-        
+
       {:error, reason} ->
         {:error, reason}
     end
   end
-  
+
   # Parse individual CATAR format elements
   defp parse_next_catar_element(<<>>) do
     {:error, :end_of_data}
   end
-  
+
   defp parse_next_catar_element(binary_data) do
     case binary_data do
       # CaFormatEntry - determine UID format based on element size, not just feature flags
       <<size::little-64, type::little-64, feature_flags::little-64, mode::little-64,
         _field5::little-64, rest::binary>> when type == @ca_format_entry ->
-        
+
         # Calculate the expected UID/GID data size based on total element size
         uid_gid_data_size = size - 16 - 8 - 8 - 8 - 8  # total - header - feature_flags - mode - field5 - mtime
-        
+
         case uid_gid_data_size do
           4 -> # 16-bit UIDs (2 + 2 bytes)
             <<gid::little-16, uid::little-16, mtime::little-64, remaining::binary>> = rest
@@ -290,7 +288,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
               mtime: mtime
             }
             {:ok, element, remaining}
-            
+
           8 -> # 32-bit UIDs (4 + 4 bytes)
             <<gid::little-32, uid::little-32, mtime::little-64, remaining::binary>> = rest
             element = %{
@@ -303,7 +301,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
               mtime: mtime
             }
             {:ok, element, remaining}
-            
+
           16 -> # 64-bit UIDs (8 + 8 bytes) - default/most common
             <<gid::little-64, uid::little-64, mtime::little-64, remaining::binary>> = rest
             element = %{
@@ -316,7 +314,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
               mtime: mtime
             }
             {:ok, element, remaining}
-            
+
           _ ->
             {:error, "Invalid entry size: #{size}, UID/GID data size: #{uid_gid_data_size}"}
         end
@@ -356,27 +354,27 @@ defmodule AriaStorage.Parsers.CasyncFormat do
       # CaFormatFilename (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_filename ->
         name_size = size - 16  # Subtract header size
-        
+
         case remaining do
           <<name_data::binary-size(name_size), rest::binary>> ->
             # Remove null terminator
             name = String.trim_trailing(name_data, <<0>>)
-            
+
             element = %{
               type: :filename,
               name: name
             }
-            
+
             {:ok, element, rest}
-            
+
           _ ->
             {:error, "Insufficient data for filename"}
         end
-      
+
       # CaFormatPayload (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_payload ->
         payload_size = size - 16
-        
+
         case remaining do
           <<payload_data::binary-size(payload_size), rest::binary>> ->
             element = %{
@@ -384,135 +382,135 @@ defmodule AriaStorage.Parsers.CasyncFormat do
               size: payload_size,
               data: payload_data
             }
-            
+
             {:ok, element, rest}
-            
+
           _ ->
             {:error, "Insufficient data for payload"}
         end
-      
+
       # CaFormatSymlink (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_symlink ->
         target_size = size - 16
-        
+
         case remaining do
           <<target_data::binary-size(target_size), rest::binary>> ->
             target = String.trim_trailing(target_data, <<0>>)
-            
+
             element = %{
               type: :symlink,
               target: target
             }
-            
+
             {:ok, element, rest}
-            
+
           _ ->
             {:error, "Insufficient data for symlink"}
         end
-      
+
       # CaFormatDevice (32 bytes)
       <<size::little-64, type::little-64, major::little-64, minor::little-64,
         remaining::binary>> when type == @ca_format_device and size == 32 ->
-        
+
         element = %{
           type: :device,
           major: major,
           minor: minor
         }
-        
+
         {:ok, element, remaining}
-      
+
       # CaFormatGoodbye (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_goodbye ->
         items_size = size - 16
-        
+
         case parse_goodbye_items(remaining, items_size) do
           {:ok, items, rest} ->
             element = %{
               type: :goodbye,
               items: items
             }
-            
+
             {:ok, element, rest}
-            
+
           {:error, reason} ->
             {:error, reason}
         end
-      
+
       # CaFormatUser (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_user ->
         name_size = size - 16
-        
+
         case remaining do
           <<name_data::binary-size(name_size), rest::binary>> ->
             name = String.trim_trailing(name_data, <<0>>)
-            
+
             element = %{
               type: :user,
               name: name
             }
-            
+
             {:ok, element, rest}
-            
+
           _ ->
             {:error, "Insufficient data for user"}
         end
-      
+
       # CaFormatGroup (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_group ->
         name_size = size - 16
-        
+
         case remaining do
           <<name_data::binary-size(name_size), rest::binary>> ->
             name = String.trim_trailing(name_data, <<0>>)
-            
+
             element = %{
               type: :group,
               name: name
             }
-            
+
             {:ok, element, rest}
-            
+
           _ ->
             {:error, "Insufficient data for group"}
         end
-      
+
       # CaFormatSELinux (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_selinux ->
         context_size = size - 16
-        
+
         case remaining do
           <<context_data::binary-size(context_size), rest::binary>> ->
             context = String.trim_trailing(context_data, <<0>>)
-            
+
             element = %{
               type: :selinux,
               context: context
             }
-            
+
             {:ok, element, rest}
-            
+
           _ ->
             {:error, "Insufficient data for SELinux context"}
         end
-      
-      # CaFormatXAttr (variable length)  
+
+      # CaFormatXAttr (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == @ca_format_xattr ->
         attr_size = size - 16
-        
+
         case remaining do
           <<attr_data::binary-size(attr_size), rest::binary>> ->
             element = %{
               type: :xattr,
               data: attr_data
             }
-            
+
             {:ok, element, rest}
-            
+
           _ ->
             {:error, "Insufficient data for extended attribute"}
         end
-      
+
       # Skip other ACL and capability formats for now - just consume them
       <<size::little-64, type::little-64, remaining::binary>> when type in [
         @ca_format_acl_user, @ca_format_acl_group, @ca_format_acl_group_obj,
@@ -520,7 +518,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         @ca_format_fcaps
       ] ->
         data_size = size - 16
-        
+
         case remaining do
           <<data::binary-size(data_size), rest::binary>> ->
             element = %{
@@ -529,36 +527,36 @@ defmodule AriaStorage.Parsers.CasyncFormat do
               size: data_size,
               data: data  # Preserve original binary data for roundtrip
             }
-            
+
             {:ok, element, rest}
-            
+
           _ ->
             {:error, "Insufficient data for metadata element"}
         end
-      
+
       # Unknown or malformed element
       <<size::little-64, type::little-64, _remaining::binary>> ->
         {:error, "Unknown CATAR element type: 0x#{Integer.to_string(type, 16) |> String.upcase()}, size: #{size}"}
-      
+
       _ ->
         {:error, "Insufficient data for CATAR element header"}
     end
   end
-  
+
   # Parse goodbye items (directory entries)
   defp parse_goodbye_items(binary_data, items_size) do
     case binary_data do
       <<items_data::binary-size(items_size), rest::binary>> ->
         items = parse_goodbye_items_data(items_data, [])
         {:ok, items, rest}
-        
+
       _ ->
         {:error, "Insufficient data for goodbye items"}
     end
   end
-  
+
   defp parse_goodbye_items_data(<<>>, acc), do: Enum.reverse(acc)
-  
+
   defp parse_goodbye_items_data(binary_data, acc) do
     case binary_data do
       # Each goodbye item is 24 bytes
@@ -568,24 +566,24 @@ defmodule AriaStorage.Parsers.CasyncFormat do
           size: size,
           hash: hash
         }
-        
+
         # Check for tail marker
         if hash == @ca_format_goodbye_tail_marker do
           Enum.reverse([item | acc])
         else
           parse_goodbye_items_data(remaining, [item | acc])
         end
-        
+
       _ ->
         Enum.reverse(acc)
     end
   end
-  
+
   # Process CATAR elements to extract file and directory structure
   defp process_catar_elements(elements) do
     # Group related elements (entry + filename + payload/symlink/device)
     grouped_files = group_catar_elements(elements)
-    
+
     # Separate files and directories from the grouped results
     {files, directories} = Enum.reduce(grouped_files, {[], []}, fn item, {files_acc, dirs_acc} ->
       case item.type do
@@ -595,38 +593,38 @@ defmodule AriaStorage.Parsers.CasyncFormat do
           {[item | files_acc], dirs_acc}
       end
     end)
-    
+
     {Enum.reverse(files), Enum.reverse(directories)}
   end
-  
+
   # Group CATAR elements into logical file/directory structures
   # Based on desync format: Entry -> [User/Group/SELinux/etc] -> Filename -> [Payload/Symlink/Device/Goodbye]
   defp group_catar_elements(elements) do
     # Use a different approach - scan for patterns and group them properly
     group_catar_elements_sequential(elements, [], nil, nil)
   end
-  
+
   # Sequential grouping that follows desync's actual format
   # Based on format_test.go: Filename comes BEFORE Entry, Goodbye marks end of directories
   defp group_catar_elements_sequential([], acc, _current_entry, _pending_name) do
     Enum.reverse(acc)
   end
-  
+
   defp group_catar_elements_sequential([element | rest], acc, current_entry, pending_name) do
     case element do
       %{type: :filename, name: name} ->
         # Filename comes BEFORE the entry - store it for the next entry
         group_catar_elements_sequential(rest, acc, current_entry, name)
-        
+
       %{type: :entry} = entry when not is_nil(pending_name) ->
         # Entry after filename - update entry with the filename
         updated_entry = entry |> Map.put(:name, pending_name) |> Map.put(:path, pending_name)
         group_catar_elements_sequential(rest, acc, updated_entry, nil)
-        
+
       %{type: :entry} = entry ->
         # Entry without preceding filename - use as current entry
         group_catar_elements_sequential(rest, acc, entry, pending_name)
-        
+
       %{type: :payload, data: data} when not is_nil(current_entry) ->
         # File content - finalize the file
         filename = Map.get(current_entry, :name, "unnamed_file")
@@ -636,7 +634,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         |> Map.put(:name, filename)
         |> Map.put(:path, filename)
         group_catar_elements_sequential(rest, [file | acc], nil, nil)
-        
+
       %{type: :symlink, target: target} when not is_nil(current_entry) ->
         # Symlink - finalize the symlink
         filename = Map.get(current_entry, :name, "unnamed_symlink")
@@ -646,7 +644,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         |> Map.put(:name, filename)
         |> Map.put(:path, filename)
         group_catar_elements_sequential(rest, [file | acc], nil, nil)
-        
+
       %{type: :device, major: major, minor: minor} when not is_nil(current_entry) ->
         # Device - finalize the device
         filename = Map.get(current_entry, :name, "unnamed_device")
@@ -657,7 +655,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         |> Map.put(:name, filename)
         |> Map.put(:path, filename)
         group_catar_elements_sequential(rest, [file | acc], nil, nil)
-        
+
       %{type: :goodbye} when not is_nil(current_entry) ->
         # Directory end marker - finalize the directory
         filename = Map.get(current_entry, :name, "unnamed_directory")
@@ -666,7 +664,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         |> Map.put(:name, filename)
         |> Map.put(:path, filename)
         group_catar_elements_sequential(rest, [file | acc], nil, nil)
-        
+
       _ ->
         # Skip metadata elements (user, group, selinux, xattr, etc.)
         group_catar_elements_sequential(rest, acc, current_entry, pending_name)
@@ -678,7 +676,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   """
   def detect_format(<<format_header_size::little-64, format_type::little-64, feature_flags::little-64, _rest::binary>>) do
     case {format_header_size, format_type} do
-      {48, @ca_format_index} -> 
+      {48, @ca_format_index} ->
         # Differentiate between CAIBX and CAIDX based on feature_flags
         if feature_flags == 0, do: {:ok, :caidx}, else: {:ok, :caibx}
       {64, @ca_format_entry} -> {:ok, :catar}
@@ -733,7 +731,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   end
 
   # Removed unused function: determine_format/1
-  
+
   defp calculate_total_size(items) when is_list(items) and length(items) > 0 do
     List.last(items).offset
   end
@@ -746,7 +744,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     |> Enum.map(fn {item, index} ->
       # Previous offset is the end of the previous chunk (or 0 for first chunk)
       previous_offset = if index == 0, do: 0, else: Enum.at(items, index - 1).offset
-      
+
       # Current item.offset is the END of this chunk (cumulative)
       # So chunk size = current_end - previous_end
       chunk_size = item.offset - previous_offset
@@ -791,7 +789,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     case chunks do
       [] ->
         {:ok, format_index}
-        
+
       _ ->
         # Create FormatTable items - use actual chunk structure
         table_items = Enum.reduce(chunks, {<<>>, 0}, fn chunk, {acc, current_offset} ->
@@ -851,7 +849,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     case chunks do
       [] ->
         {:ok, format_index}
-        
+
       _ ->
         # Create FormatTable items - use actual chunk structure
         table_items = Enum.reduce(chunks, {<<>>, 0}, fn chunk, {acc, current_offset} ->
@@ -894,7 +892,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
       encoded_element = encode_catar_element(element)
       acc <> encoded_element
     end)
-    
+
     {:ok, encoded_data}
   end
 
@@ -912,9 +910,9 @@ defmodule AriaStorage.Parsers.CasyncFormat do
           entry.gid::little-64,
           entry.mtime::little-64
         >>
-        
+
         {:ok, encoded_entry <> remaining_data}
-        
+
       [] ->
         {:ok, remaining_data}
     end
@@ -946,7 +944,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   defp encode_catar_element(%{type: :entry, size: size, feature_flags: feature_flags, mode: mode, uid: uid, gid: gid, mtime: mtime}) do
     # Determine UID format based on the actual element size, not just feature flags
     uid_gid_data_size = size - 16 - 8 - 8 - 8 - 8  # total - header - feature_flags - mode - field5 - mtime
-    
+
     case uid_gid_data_size do
       4 -> # 16-bit UIDs
         <<
@@ -1028,7 +1026,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     name_size = byte_size(name_data)
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + name_size  # Size field includes header + data
-    
+
     # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
@@ -1040,7 +1038,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     # CaFormatPayload (variable length)
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + size  # Size field includes header + data
-    
+
     # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
@@ -1055,7 +1053,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     target_size = byte_size(target_data)
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + target_size  # Size field includes header + data
-    
+
     # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
@@ -1083,10 +1081,10 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         item.hash::little-64
       >>
     end)
-    
+
     items_size = byte_size(items_data)
     total_size = 16 + items_size  # Header (16 bytes) + items data
-    
+
     <<
       total_size::little-64,
       @ca_format_goodbye::little-64
@@ -1100,7 +1098,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     name_size = byte_size(name_data)
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + name_size  # Size field includes header + data
-    
+
     # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
@@ -1115,7 +1113,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     name_size = byte_size(name_data)
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + name_size  # Size field includes header + data
-    
+
     # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
@@ -1130,7 +1128,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     context_size = byte_size(context_data)
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + context_size  # Size field includes header + data
-    
+
     # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
@@ -1143,7 +1141,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     data_size = byte_size(data)
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + data_size  # Size field includes header + data
-    
+
     # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
@@ -1156,7 +1154,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     # Use the preserved original binary data for bit-exact roundtrip
     header_size = 16  # Header is always 16 bytes
     total_size = header_size + data_size  # Size field includes header + data
-    
+
     # CATAR format does NOT use padding - elements are stored consecutively
     <<
       total_size::little-64,
@@ -1176,12 +1174,12 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   def hex_compare(original, encoded) when is_binary(original) and is_binary(encoded) do
     original_size = byte_size(original)
     encoded_size = byte_size(encoded)
-    
+
     size_match = original_size == encoded_size
-    
+
     if size_match do
       case compare_bytes(original, encoded, 0, []) do
-        [] -> 
+        [] ->
           %{
             match: true,
             size_original: original_size,
@@ -1211,24 +1209,24 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   """
   def print_hex_diff(original, encoded) do
     comparison = hex_compare(original, encoded)
-    
+
     IO.puts("=== HEX COMPARISON ===")
     IO.puts("Original size: #{comparison.size_original} bytes")
     IO.puts("Encoded size:  #{comparison.size_encoded} bytes")
     IO.puts("Match: #{comparison.match}")
-    
+
     if not comparison.match do
       IO.puts("\n=== DIFFERENCES ===")
       Enum.each(comparison.differences, fn
         {:size_mismatch, orig_size, enc_size} ->
           IO.puts("Size mismatch: original=#{orig_size}, encoded=#{enc_size}")
-        
+
         {:byte_diff, offset, orig_byte, enc_byte} ->
           IO.puts("Offset 0x#{Integer.to_string(offset, 16) |> String.pad_leading(8, "0")}: " <>
                   "original=0x#{Integer.to_string(orig_byte, 16) |> String.pad_leading(2, "0")} " <>
                   "encoded=0x#{Integer.to_string(enc_byte, 16) |> String.pad_leading(2, "0")}")
       end)
-      
+
       # Print hex dumps around first difference
       if length(comparison.differences) > 0 do
         first_diff = hd(comparison.differences)
@@ -1241,7 +1239,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     else
       IO.puts("✓ Binary data matches exactly!")
     end
-    
+
     comparison
   end
 
@@ -1249,7 +1247,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   defp compare_bytes(<<>>, <<>>, _offset, acc), do: Enum.reverse(acc)
   defp compare_bytes(<<>>, _encoded, _offset, acc), do: Enum.reverse(acc)
   defp compare_bytes(_original, <<>>, _offset, acc), do: Enum.reverse(acc)
-  
+
   defp compare_bytes(<<orig_byte, orig_rest::binary>>, <<enc_byte, enc_rest::binary>>, offset, acc) do
     if orig_byte == enc_byte do
       compare_bytes(orig_rest, enc_rest, offset + 1, acc)
@@ -1263,39 +1261,39 @@ defmodule AriaStorage.Parsers.CasyncFormat do
     # Print 32 bytes before and after the difference
     start_offset = max(0, offset - 16)
     length = min(32, byte_size(original) - start_offset)
-    
+
     IO.puts("\n=== HEX CONTEXT AROUND OFFSET 0x#{Integer.to_string(offset, 16) |> String.upcase()} ===")
-    
+
     orig_chunk = binary_part(original, start_offset, length)
     enc_chunk = if byte_size(encoded) >= start_offset + length do
       binary_part(encoded, start_offset, length)
     else
       <<>>
     end
-    
+
     IO.puts("Original:")
     print_hex_dump(orig_chunk, start_offset)
-    
+
     IO.puts("\nEncoded:")
     print_hex_dump(enc_chunk, start_offset)
   end
 
-  defp print_hex_dump(binary, base_offset \\ 0) do
+  defp print_hex_dump(binary, base_offset) do
     binary
     |> :binary.bin_to_list()
     |> Enum.chunk_every(16)
     |> Enum.with_index()
     |> Enum.each(fn {bytes, row} ->
       offset = base_offset + row * 16
-      hex_part = bytes 
+      hex_part = bytes
         |> Enum.map(&(Integer.to_string(&1, 16) |> String.pad_leading(2, "0")))
         |> Enum.join(" ")
         |> String.pad_trailing(47)  # 16 * 3 - 1 = 47
-      
+
       ascii_part = bytes
         |> Enum.map(fn b -> if b >= 32 and b <= 126, do: <<b>>, else: "." end)
         |> Enum.join()
-      
+
       IO.puts("#{Integer.to_string(offset, 16) |> String.pad_leading(8, "0") |> String.upcase()}: #{hex_part} |#{ascii_part}|")
     end)
   end
@@ -1307,7 +1305,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   def test_roundtrip_encoding(binary_data, format_type) do
     IO.puts("=== TESTING ROUNDTRIP FOR #{String.upcase(to_string(format_type))} ===")
     IO.puts("Original size: #{byte_size(binary_data)} bytes")
-    
+
     case format_type do
       :caibx -> test_index_roundtrip(binary_data)
       :caidx -> test_index_roundtrip(binary_data)
@@ -1323,18 +1321,14 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         IO.puts("✓ Parsing successful")
         IO.puts("  Format: #{parsed.format}")
         IO.puts("  Chunks: #{length(parsed.chunks)}")
-        
+
         case encode_index(parsed) do
           {:ok, encoded} ->
             IO.puts("✓ Encoding successful")
             comparison = print_hex_diff(binary_data, encoded)
             {:ok, comparison}
-            
-          {:error, reason} ->
-            IO.puts("✗ Encoding failed: #{reason}")
-            {:error, reason}
         end
-        
+
       {:error, reason} ->
         IO.puts("✗ Parsing failed: #{reason}")
         {:error, reason}
@@ -1347,18 +1341,14 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         IO.puts("✓ Parsing successful")
         IO.puts("  Magic: #{parsed.magic}")
         IO.puts("  Compression: #{parsed.header.compression}")
-        
+
         case encode_chunk(parsed) do
           {:ok, encoded} ->
             IO.puts("✓ Encoding successful")
             comparison = print_hex_diff(binary_data, encoded)
             {:ok, comparison}
-            
-          {:error, reason} ->
-            IO.puts("✗ Encoding failed: #{reason}")
-            {:error, reason}
         end
-        
+
       {:error, reason} ->
         IO.puts("✗ Parsing failed: #{reason}")
         {:error, reason}
@@ -1373,18 +1363,18 @@ defmodule AriaStorage.Parsers.CasyncFormat do
         IO.puts("  Elements: #{length(parsed.elements)}")
         IO.puts("  Files: #{length(parsed.files)}")
         IO.puts("  Directories: #{length(parsed.directories)}")
-        
+
         case encode_archive(parsed) do
           {:ok, encoded} ->
             IO.puts("✓ Encoding successful")
             comparison = print_hex_diff(binary_data, encoded)
             {:ok, comparison}
-            
+
           {:error, reason} ->
             IO.puts("✗ Encoding failed: #{reason}")
             {:error, reason}
         end
-        
+
       {:error, reason} ->
         IO.puts("✗ Parsing failed: #{reason}")
         {:error, reason}
@@ -1398,16 +1388,16 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   def test_file_roundtrip_encoding(file_path, parsed) do
     filename = Path.basename(file_path)
     IO.puts("=== TESTING ROUNDTRIP FOR #{filename} ===")
-    
+
     case File.read(file_path) do
       {:ok, original_data} ->
         IO.puts("Original size: #{byte_size(original_data)} bytes")
-        
+
         case encode_archive(parsed) do
           {:ok, encoded_data} ->
             IO.puts("✓ Encoding successful")
             IO.puts("Encoded size: #{byte_size(encoded_data)} bytes")
-            
+
             if original_data == encoded_data do
               IO.puts("✓ Perfect bit-exact roundtrip!")
               {:ok, :perfect_match}
@@ -1416,12 +1406,12 @@ defmodule AriaStorage.Parsers.CasyncFormat do
               comparison = print_hex_diff(original_data, encoded_data)
               {:ok, {:differences, comparison}}
             end
-            
+
           {:error, reason} ->
             IO.puts("✗ Encoding failed: #{reason}")
             {:error, reason}
         end
-        
+
       {:error, reason} ->
         IO.puts("✗ File read failed: #{reason}")
         {:error, reason}

@@ -98,7 +98,7 @@ defmodule Mix.Tasks.AriaStorage.TestWaffle do
 
     # Step 1: Configure Waffle
     verbose_log(verbose, "🔧 Configuring Waffle storage...")
-    
+
     config = %{
       storage: backend,
       bucket: opts[:bucket] || "aria-chunks",
@@ -109,14 +109,11 @@ defmodule Mix.Tasks.AriaStorage.TestWaffle do
     case Storage.configure_waffle_storage(config) do
       {:ok, _config} ->
         verbose_log(verbose, "✅ Waffle configured successfully")
-      {:error, reason} ->
-        IO.puts("❌ Failed to configure Waffle: #{inspect(reason)}")
-        System.halt(1)
     end
 
     # Step 2: Test connectivity
     IO.puts("🔍 Testing storage connectivity...")
-    
+
     case Storage.test_waffle_storage(backend, storage_opts) do
       {:ok, result} ->
         IO.puts("✅ Storage connectivity test passed")
@@ -130,12 +127,12 @@ defmodule Mix.Tasks.AriaStorage.TestWaffle do
 
     # Step 3: Prepare test file
     {test_file_path, cleanup_needed} = prepare_test_file(test_file, verbose)
-    
+
     try do
       # Step 4: Store file with Waffle
       IO.puts("📤 Storing file with Waffle...")
       start_time = System.monotonic_time(:millisecond)
-      
+
       case Storage.store_file_with_waffle(test_file_path, storage_opts) do
         {:ok, store_result} ->
           end_time = System.monotonic_time(:millisecond)
@@ -146,21 +143,21 @@ defmodule Mix.Tasks.AriaStorage.TestWaffle do
           IO.puts("   Chunks: #{store_result.chunks_stored}")
           IO.puts("   Original size: #{format_bytes(store_result.total_size)}")
           IO.puts("   Compressed size: #{format_bytes(store_result.compressed_size)}")
-          
+
           compression_ratio = if store_result.total_size > 0 do
             (1 - store_result.compressed_size / store_result.total_size) * 100
           else
             0
           end
-          
+
           IO.puts("   Compression: #{Float.round(compression_ratio, 2)}%")
           IO.puts("   Duration: #{duration}ms")
-          
+
           # Step 5: Retrieve file with Waffle
           IO.puts("")
           IO.puts("📥 Retrieving file with Waffle...")
           retrieve_start_time = System.monotonic_time(:millisecond)
-          
+
           case Storage.get_file_with_waffle(store_result.index_ref, storage_opts) do
             {:ok, retrieve_result} ->
               retrieve_end_time = System.monotonic_time(:millisecond)
@@ -196,7 +193,7 @@ defmodule Mix.Tasks.AriaStorage.TestWaffle do
       # Step 7: List stored files
       IO.puts("")
       IO.puts("📋 Listing Waffle files...")
-      
+
       case Storage.list_waffle_files(backend: backend, limit: 10) do
         {:ok, files} ->
           IO.puts("✅ Found #{length(files)} files")
@@ -222,10 +219,10 @@ defmodule Mix.Tasks.AriaStorage.TestWaffle do
     # Create a test file with random data
     test_data = generate_test_data(1024 * 100)  # 100KB
     test_file = Path.join(System.tmp_dir!(), "aria_waffle_test_#{:rand.uniform(10000)}.bin")
-    
+
     File.write!(test_file, test_data)
     verbose_log(verbose, "📝 Created test file: #{test_file} (#{format_bytes(byte_size(test_data))})")
-    
+
     {test_file, true}
   end
 
@@ -245,10 +242,10 @@ defmodule Mix.Tasks.AriaStorage.TestWaffle do
     # Generate semi-random data that compresses reasonably well
     base_pattern = "AriaStorage Waffle Test Data - "
     repeated_pattern = String.duplicate(base_pattern, div(size, byte_size(base_pattern)) + 1)
-    
+
     # Add some randomness
     random_suffix = :crypto.strong_rand_bytes(100)
-    
+
     (repeated_pattern <> random_suffix)
     |> binary_part(0, size)
   end

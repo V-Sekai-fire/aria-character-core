@@ -17,9 +17,6 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
   to ensure the parser handles edge cases robustly.
   """
 
-  # Constants for testing (matching the main parser module)
-  @ca_format_index 0x96824d9c7b129ff9
-  
   describe "property-based parsing tests" do
     property "parser never crashes on random binary input" do
       check all binary_data <- binary(min_length: 0, max_length: 1000) do

@@ -10,8 +10,6 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   Compatible with casync/desync (.caibx/.caidx/.catar/.cacnk) formats.
   """
 
-  import Bitwise
-
   # Constants from desync source (matching parser)
   @ca_format_index 0x96824d9c7b129ff9
   @ca_format_table 0xe75b9e112f17417d
@@ -54,7 +52,7 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
     # Table tail marker (40 bytes)
     table_tail = <<
       0::little-64,                     # Zero offset
-      0::little-64,                     # Zero pad  
+      0::little-64,                     # Zero pad
       48::little-64,                    # Size field
       table_size::little-64,            # Table size
       @ca_format_table_tail_marker::little-64 # Tail marker
@@ -129,7 +127,7 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
           uid::little-16,
           mtime::little-64
         >>
-      Bitwise.band(feature_flags, 0x2) != 0 ->  # CaFormatWith32BitUIDs  
+      Bitwise.band(feature_flags, 0x2) != 0 ->  # CaFormatWith32BitUIDs
         size = 56  # Size for 32-bit UIDs/GIDs
         <<
           size::little-64,
@@ -169,10 +167,10 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
           Map.has_key?(chunk, :size) and
           Map.has_key?(chunk, :offset)
         end)
-        
-        has_valid_header = Map.has_key?(header, :chunk_count) and 
+
+        has_valid_header = Map.has_key?(header, :chunk_count) and
                           Map.has_key?(header, :total_size)
-        
+
         has_valid_chunks and has_valid_header
 
       _ ->

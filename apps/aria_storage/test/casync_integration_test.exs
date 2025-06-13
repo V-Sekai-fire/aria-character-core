@@ -17,8 +17,6 @@ defmodule AriaStorage.CasyncIntegrationTest do
   the storage and upload infrastructure.
   """
 
-  @testdata_path Path.join([__DIR__, "support", "testdata"])
-
   describe "parser and uploader integration" do
     test "parsed chunk IDs match expected format for uploader" do
       # Use synthetic data instead of potentially invalid test files
