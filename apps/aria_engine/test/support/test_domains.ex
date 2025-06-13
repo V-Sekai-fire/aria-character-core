@@ -458,28 +458,28 @@ defmodule AriaEngine.TestDomains do
     if current_flag == flag_val do
       state
     else
-      nil
+      false
     end
   end
 
-  defp m_err(_state, ["put_it"]) do
-    [{"putv", 0}, {"getv", 1}]
+  defp m_err(_state, []) do
+    [{"putv", [0]}, {"getv", [1]}]
   end
 
-  defp m0(_state, ["put_it"]) do
-    [{"putv", 0}, {"getv", 0}]
+  defp m0(_state, []) do
+    [{"putv", [0]}, {"getv", [0]}]
   end
 
-  defp m1(_state, ["put_it"]) do
-    [{"putv", 1}, {"getv", 1}]
+  defp m1(_state, []) do
+    [{"putv", [1]}, {"getv", [1]}]
   end
 
-  defp m_need0(_state, task) when task in [["need0"], ["need01"], ["need10"]] do
-    [{"getv", 0}]
+  defp m_need0(_state, []) do
+    [{"getv", [0]}]
   end
 
-  defp m_need1(_state, task) when task in [["need1"], ["need01"], ["need10"]] do
-    [{"getv", 1}]
+  defp m_need1(_state, []) do
+    [{"getv", [1]}]
   end
 
   # Private helper functions for simple HGN domain
@@ -607,32 +607,24 @@ defmodule AriaEngine.TestDomains do
   end
 
   defp ride_taxi_command_htn(state, [person, taxi, to]) do
+    person_loc = State.get_object(state, "loc", person)
+    taxi_loc = State.get_object(state, "loc", taxi)
     taxi_condition = State.get_object(state, "taxi_condition", taxi)
-    if taxi_condition == "good" do
-      person_loc = State.get_object(state, "loc", person)
-      taxi_loc = State.get_object(state, "loc", taxi)
-      if person_loc == taxi_loc do
-        state
-        |> State.set_object("loc", person, to)
-        |> State.set_object("loc", taxi, to)
-      else
-        false
-      end
+
+    if person_loc == taxi_loc and taxi_condition == "good" do
+      state
+      |> State.set_object("loc", person, to)
+      |> State.set_object("loc", taxi, to)
     else
       false
     end
   end
 
   defp pay_driver_command_htn(state, [person, taxi]) do
-    taxi_condition = State.get_object(state, "taxi_condition", taxi)
-    if taxi_condition == "good" do
-      fare = taxi_fare(State.get_object(state, "loc", person), State.get_object(state, "loc", taxi))
-      cash = State.get_object(state, "cash", person)
-      if cash >= fare do
-        State.set_object(state, "cash", person, cash - fare)
-      else
-        false
-      end
+    fare = taxi_fare(State.get_object(state, "loc", person), State.get_object(state, "loc", taxi))
+    cash = State.get_object(state, "cash", person)
+    if cash >= fare do
+      State.set_object(state, "cash", person, cash - fare)
     else
       false
     end

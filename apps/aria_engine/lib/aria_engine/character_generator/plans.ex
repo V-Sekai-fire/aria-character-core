@@ -25,9 +25,9 @@ defmodule AriaEngine.CharacterGenerator.Plans do
   """
   def basic_character_generation_plan(char_id, preset \\ nil, seed \\ nil) do
     base_todos = [
-      {"generate_character_with_constraints", %{char_id: char_id, preset: preset}},
-      {"validate_character_coherence", %{char_id: char_id}},
-      {"generate_character_prompt", %{char_id: char_id}}
+      {"generate_character_with_constraints", [char_id, preset]},
+      {"validate_character_coherence", [char_id]},
+      {"generate_character_prompt", [char_id]}
     ]
 
     # Add seed setup if provided
@@ -53,29 +53,29 @@ defmodule AriaEngine.CharacterGenerator.Plans do
   """
   def comprehensive_character_generation_plan(char_id, preset \\ nil, customizations \\ %{}) do
     todos = [
-      {"randomize_character", %{char_id: char_id}},
-      {"validate_all_constraints", %{char_id: char_id}}
+      {"randomize_character", [char_id]},
+      {"validate_all_constraints", [char_id]}
     ]
 
     # Add preset application if provided
     todos = if preset do
-      todos ++ [{"apply_character_preset", %{char_id: char_id, preset: preset}}]
+      todos ++ [{"apply_character_preset", [char_id, preset]}]
     else
       todos
     end
 
     # Add customizations if provided
-    todos = if map_size(customizations) > 0 do
-      todos ++ [{"customize_preset", %{char_id: char_id, customizations: customizations}}]
+    todos = if is_map(customizations) and map_size(customizations) > 0 do
+      todos ++ [{"customize_preset", [char_id, customizations]}]
     else
       todos
     end
 
     # Add final validation and prompt generation
     todos ++ [
-      {"resolve_all_conflicts", %{char_id: char_id}},
-      {"validate_character_coherence", %{char_id: char_id}},
-      {"generate_character_prompt", %{char_id: char_id}}
+      {"resolve_all_conflicts", [char_id]},
+      {"validate_character_coherence", [char_id]},
+      {"generate_character_prompt", [char_id]}
     ]
   end
 
@@ -92,9 +92,9 @@ defmodule AriaEngine.CharacterGenerator.Plans do
   """
   def validation_only_plan(char_id) do
     [
-      {"validate_all_constraints", %{char_id: char_id}},
-      {"resolve_all_conflicts", %{char_id: char_id}},
-      {"validate_character_coherence", %{char_id: char_id}}
+      {"validate_all_constraints", [char_id]},
+      {"resolve_all_conflicts", [char_id]},
+      {"validate_character_coherence", [char_id]}
     ]
   end
 
@@ -113,17 +113,17 @@ defmodule AriaEngine.CharacterGenerator.Plans do
   """
   def preset_application_plan(char_id, preset_name, validate \\ true) do
     base_todos = [
-      {"apply_preset_with_validation", %{char_id: char_id, preset: preset_name}}
+      {"apply_preset_with_validation", [char_id, preset_name]}
     ]
 
     if validate do
       base_todos ++ [
-        {"validate_character_coherence", %{char_id: char_id}},
-        {"generate_character_prompt", %{char_id: char_id}}
+        {"validate_character_coherence", [char_id]},
+        {"generate_character_prompt", [char_id]}
       ]
     else
       base_todos ++ [
-        {"generate_character_prompt", %{char_id: char_id}}
+        {"generate_character_prompt", [char_id]}
       ]
     end
   end
@@ -143,17 +143,17 @@ defmodule AriaEngine.CharacterGenerator.Plans do
   """
   def customization_plan(char_id, customizations, validate \\ true) do
     base_todos = [
-      {"customize_preset", %{char_id: char_id, customizations: customizations}}
+      {"customize_preset", [char_id, customizations]}
     ]
 
     if validate do
       base_todos ++ [
-        {"validate_character_coherence", %{char_id: char_id}},
-        {"generate_character_prompt", %{char_id: char_id}}
+        {"validate_character_coherence", [char_id]},
+        {"generate_character_prompt", [char_id]}
       ]
     else
       base_todos ++ [
-        {"generate_character_prompt", %{char_id: char_id}}
+        {"generate_character_prompt", [char_id]}
       ]
     end
   end
@@ -194,9 +194,9 @@ defmodule AriaEngine.CharacterGenerator.Plans do
   """
   def demo_character_generation_plan(char_id, preset \\ "fantasy_cyber") do
     [
-      {"generate_character_with_constraints", %{char_id: char_id, preset: preset}},
-      {"validate_character_coherence", %{char_id: char_id}},
-      {"generate_character_prompt", %{char_id: char_id}}
+      {"generate_character_with_constraints", [char_id, preset]},
+      {"validate_character_coherence", [char_id]},
+      {"generate_character_prompt", [char_id]}
     ]
   end
 
@@ -213,7 +213,7 @@ defmodule AriaEngine.CharacterGenerator.Plans do
   """
   def prompt_regeneration_plan(char_id) do
     [
-      {"generate_character_prompt", %{char_id: char_id}}
+      {"generate_character_prompt", [char_id]}
     ]
   end
 
@@ -230,10 +230,10 @@ defmodule AriaEngine.CharacterGenerator.Plans do
   """
   def quality_assurance_plan(char_id) do
     [
-      {"validate_all_constraints", %{char_id: char_id}},
-      {"resolve_all_conflicts", %{char_id: char_id}},
-      {"validate_character_coherence", %{char_id: char_id}},
-      {"generate_character_prompt", %{char_id: char_id}},
+      {"validate_all_constraints", [char_id]},
+      {"resolve_all_conflicts", [char_id]},
+      {"validate_character_coherence", [char_id]},
+      {"generate_character_prompt", [char_id]},
       # Quality checks
       {:validate_attributes, [char_id]},
       {:mark_character_valid, [char_id]}

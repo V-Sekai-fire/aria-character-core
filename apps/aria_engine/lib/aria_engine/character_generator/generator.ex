@@ -71,19 +71,19 @@ defmodule AriaEngine.CharacterGenerator.Generator do
     
     # Set seed if provided
     state = if seed do
-      AriaEngine.set_fact(state, "generation:seed", character_id, seed)
+      AriaEngine.set_fact(state, "random:seed", character_id, seed)
     else
       state
     end
     
     # Choose appropriate plan based on options
     plan_opts = %{
+      char_id: character_id,
       preset: preset,
-      validate: validate,
-      character_id: character_id
+      validate: validate
     }
     
-    todos = Plans.plan_from_options(plan_opts)
+    {_char_id, todos} = Plans.plan_from_options(plan_opts)
     
     # Execute the plan
     case AriaEngine.plan(domain, state, todos, verbose: 0) do
@@ -154,13 +154,13 @@ defmodule AriaEngine.CharacterGenerator.Generator do
     
     # Extract prompt
     prompt = case AriaEngine.get_fact(state, "generated:prompt", character_id) do
-      {:ok, prompt_text} -> prompt_text
-      _ -> Utils.construct_character_prompt(attributes)
+      nil -> Utils.construct_character_prompt(attributes)
+      prompt_text -> prompt_text
     end
     
     # Extract validation status
     violations = case AriaEngine.get_fact(state, "validation:violations", character_id) do
-      {:ok, violation_list} when is_list(violation_list) -> violation_list
+      violation_list when is_list(violation_list) -> violation_list
       _ -> []
     end
     
@@ -180,8 +180,8 @@ defmodule AriaEngine.CharacterGenerator.Generator do
     |> Map.keys()
     |> Enum.reduce(%{}, fn attr_name, acc ->
       case AriaEngine.get_fact(state, "character:#{attr_name}", character_id) do
-        {:ok, value} -> Map.put(acc, attr_name, value)
-        _ -> acc
+        nil -> acc
+        value -> Map.put(acc, attr_name, value)
       end
     end)
   end
@@ -213,8 +213,17 @@ defmodule AriaEngine.CharacterGenerator.Generator do
     domain = Domain.build_character_generation_domain()
     state = AriaEngine.create_state()
     
+    # Create character configurations from count and options
+    character_configs = Enum.map(1..count, fn _i ->
+      %{
+        char_id: UUID.uuid4(),
+        preset: Keyword.get(opts, :preset),
+        customizations: Keyword.get(opts, :customizations, %{})
+      }
+    end)
+    
     # Create batch plan
-    todos = Plans.batch_generation_plan(count)
+    todos = Plans.batch_generation_plan(character_configs)
     
     case AriaEngine.plan(domain, state, todos, verbose: 0) do
       {:ok, plan} ->
@@ -382,10 +391,10 @@ defmodule AriaEngine.CharacterGenerator.Generator do
     
     # Create a simple plan for prompt generation only
     todos = [
-      {"randomize_character_attributes", %{char_id: character_id}},
-      {"apply_preset", %{char_id: character_id, preset: preset}},
-      {"resolve_conflicts", %{char_id: character_id}},
-      {"generate_prompt", %{char_id: character_id}}
+      {"randomize_character_attributes", [character_id]},
+      {"apply_preset", [character_id, preset]},
+      {"resolve_conflicts", [character_id]},
+      {"generate_prompt", [character_id]}
     ]
     
     case AriaEngine.plan(domain, state, todos, verbose: 0) do
@@ -394,8 +403,8 @@ defmodule AriaEngine.CharacterGenerator.Generator do
           {:ok, final_state} ->
             attributes = extract_character_attributes(final_state, character_id)
             prompt = case AriaEngine.get_fact(final_state, "generated:prompt", character_id) do
-              {:ok, prompt_text} -> prompt_text
-              _ -> Utils.construct_character_prompt(attributes)
+              nil -> Utils.construct_character_prompt(attributes)
+              prompt_text -> prompt_text
             end
             
             %{

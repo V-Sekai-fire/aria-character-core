@@ -25,7 +25,13 @@ defmodule AriaEngine.DomainTest do
 
       result_state = Domain.execute_action(domain, initial_state, :move, ["room1", "room2"])
 
-      assert AriaEngine.get_fact(result_state, "location", "player") == "room2"
+      case result_state do
+        {:ok, final_state} ->
+          final_state = final_state
+          assert AriaEngine.get_fact(final_state, "location", "player") == "room2"
+        false ->
+          flunk("Action execution failed")
+      end
     end
   end
 end

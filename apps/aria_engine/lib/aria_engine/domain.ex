@@ -79,7 +79,7 @@ defmodule AriaEngine.Domain do
   def add_task_method(%__MODULE__{task_methods: methods} = domain, task_name, method_fn)
       when is_binary(task_name) and is_function(method_fn, 2) do
     current_methods = Map.get(methods, task_name, [])
-    updated_methods = [method_fn | current_methods]
+    updated_methods = current_methods ++ [method_fn]
     %{domain | task_methods: Map.put(methods, task_name, updated_methods)}
   end
 
@@ -103,7 +103,7 @@ defmodule AriaEngine.Domain do
   def add_unigoal_method(%__MODULE__{unigoal_methods: methods} = domain, goal_type, method_fn)
       when is_binary(goal_type) and is_function(method_fn, 2) do
     current_methods = Map.get(methods, goal_type, [])
-    updated_methods = [method_fn | current_methods]
+    updated_methods = current_methods ++ [method_fn]
     %{domain | unigoal_methods: Map.put(methods, goal_type, updated_methods)}
   end
 
@@ -206,11 +206,17 @@ defmodule AriaEngine.Domain do
   @doc """
   Executes an action with the given state and arguments.
   """
-  @spec execute_action(t(), State.t(), action_name(), list()) :: State.t() | false
+  @spec execute_action(t(), State.t(), action_name(), list()) :: {:ok, State.t()} | false
   def execute_action(%__MODULE__{} = domain, %State{} = state, action_name, args) do
     case get_action(domain, action_name) do
-      nil -> false
-      action_fn -> action_fn.(state, args)
+      nil ->
+        false
+
+      action_fn ->
+        case action_fn.(state, args) do
+          false -> false
+          %State{} = new_state -> {:ok, new_state}
+        end
     end
   end
 

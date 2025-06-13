@@ -95,7 +95,7 @@ defmodule AriaEngine.CharacterGenerator.Utils do
     required_keys = [
       "species", "emotion", "style_kei", "color_palette",
       "key_motifs", "layering_style", "detail_level",
-      "age", "avatar_gender_appearance"
+      "age", "avatar_gender_appearance", "primary_theme"
     ]
 
     # Build descriptions map
@@ -113,7 +113,7 @@ defmodule AriaEngine.CharacterGenerator.Utils do
 
     "#{descriptions["age"]} #{descriptions["avatar_gender_appearance"]} #{descriptions["emotion"]} #{descriptions["species"]} " <>
     "#{descriptions["style_kei"]} #{descriptions["color_palette"]} " <>
-    "#{descriptions["key_motifs"]} #{descriptions["layering_style"]} " <>
+    "#{descriptions["primary_theme"]} #{descriptions["key_motifs"]} #{descriptions["layering_style"]} " <>
     "Detail level #{descriptions["detail_level"]}. " <>
     Config.prompt_suffix()
   end

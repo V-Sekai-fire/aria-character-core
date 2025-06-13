@@ -29,12 +29,22 @@ defmodule AriaEngine.LogisticsTest do
       |> AriaEngine.set_fact("at", "package1", "cityA")
 
       # Test drive action
-      result_state = Domain.execute_action(domain, initial_state, :drive, ["truck1", "cityA", "cityB"])
-      assert AriaEngine.get_fact(result_state, "at", "truck1") == "cityB"
+      result_state_drive = Domain.execute_action(domain, initial_state, :drive, ["truck1", "cityA", "cityB"])
+      case result_state_drive do
+        {:ok, final_state_drive} ->
+          assert AriaEngine.get_fact(final_state_drive, "at", "truck1") == "cityB"
+        false ->
+          flunk("Drive action failed")
+      end
 
       # Test load action
-      load_state = Domain.execute_action(domain, initial_state, :load, ["package1", "truck1"])
-      assert AriaEngine.get_fact(load_state, "at", "package1") == "truck1"
+      result_state_load = Domain.execute_action(domain, initial_state, :load, ["package1", "truck1"])
+      case result_state_load do
+        {:ok, final_state_load} ->
+          assert AriaEngine.get_fact(final_state_load, "at", "package1") == "truck1"
+        false ->
+          flunk("Load action failed")
+      end
     end
   end
 
@@ -94,24 +104,55 @@ defmodule AriaEngine.LogisticsTest do
       # Test individual action execution
       
       # Test drive_truck
-      new_state = Domain.execute_action(domain, state, :drive_truck, ["truck1", "location1"])
-      assert AriaEngine.get_fact(new_state, "truck_at", "truck1") == "location1"
+      drive_truck_result = Domain.execute_action(domain, state, :drive_truck, ["truck1", "location1"])
+      case drive_truck_result do
+        {:ok, new_state_drive} ->
+          assert AriaEngine.get_fact(new_state_drive, "truck_at", "truck1") == "location1"
+        false ->
+          flunk("drive_truck action failed")
+      end
       
       # Test fly_plane 
-      new_state = Domain.execute_action(domain, state, :fly_plane, ["plane2", "airport1"])
-      assert AriaEngine.get_fact(new_state, "plane_at", "plane2") == "airport1"
+      fly_plane_result = Domain.execute_action(domain, state, :fly_plane, ["plane2", "airport1"])
+      case fly_plane_result do
+        {:ok, new_state_fly} ->
+          assert AriaEngine.get_fact(new_state_fly, "plane_at", "plane2") == "airport1"
+        false -> 
+          flunk("fly_plane action failed")
+      end
       
       # Test load_truck
       # First move truck1 to location1 where package1 is
-      state_with_truck = Domain.execute_action(domain, state, :drive_truck, ["truck1", "location1"])
-      loaded_state = Domain.execute_action(domain, state_with_truck, :load_truck, ["package1", "truck1"])
-      assert AriaEngine.get_fact(loaded_state, "at", "package1") == "truck1"
-      
-      # Test unload_truck
-      # Move the truck to location2
-      moved_state = Domain.execute_action(domain, loaded_state, :drive_truck, ["truck1", "location2"])
-      unloaded_state = Domain.execute_action(domain, moved_state, :unload_truck, ["package1", "location2"])
-      assert AriaEngine.get_fact(unloaded_state, "at", "package1") == "location2"
+      drive_for_load_result = Domain.execute_action(domain, state, :drive_truck, ["truck1", "location1"])
+      case drive_for_load_result do
+        {:ok, state_after_first_drive} ->
+          # Now load the truck
+          load_result = Domain.execute_action(domain, state_after_first_drive, :load_truck, ["package1", "truck1"])
+          case load_result do
+            {:ok, state_after_load} ->
+              assert AriaEngine.get_fact(state_after_load, "at", "package1") == "truck1"
+
+              # Test unload_truck: requires state_after_load
+              # Move the truck to location2
+              drive_for_unload_result = Domain.execute_action(domain, state_after_load, :drive_truck, ["truck1", "location2"])
+              case drive_for_unload_result do
+                {:ok, state_after_second_drive} ->
+                  unload_result = Domain.execute_action(domain, state_after_second_drive, :unload_truck, ["package1", "location2"])
+                  case unload_result do
+                    {:ok, state_after_unload} ->
+                      assert AriaEngine.get_fact(state_after_unload, "at", "package1") == "location2"
+                    false ->
+                      flunk("unload_truck action failed")
+                  end
+                false ->
+                  flunk("drive_truck (for unload) action failed")
+              end
+            false ->
+              flunk("load_truck action failed")
+          end
+        false ->
+          flunk("drive_truck (for load) action failed")
+      end
     end
   end
 end

@@ -16,49 +16,49 @@ defmodule AriaEngine.SimpleTravelMethods do
   @doc """
   Do nothing if already at destination.
   """
-  def do_nothing(state, ["travel", p, y]) do
+  def do_nothing(state, {"travel", [p, y]}) do
     x = State.get_object(state, "loc", p)
 
     cond do
-      not is_person(p) -> nil
-      not is_location(y) -> nil
+      not is_person(p) -> false
+      not is_location(y) -> false
       x == y -> []
-      true -> nil
+      true -> false
     end
   end
 
   @doc """
   Travel by foot if destination is close enough.
   """
-  def travel_by_foot(state, ["travel", p, y]) do
+  def travel_by_foot(state, {"travel", [p, y]}) do
     x = State.get_object(state, "loc", p)
 
     cond do
-      not is_person(p) -> nil
-      not is_location(y) -> nil
-      x == y -> nil
-      distance(x, y) <= 2 -> [{"walk", p, x, y}]
-      true -> nil
+      not is_person(p) -> false
+      not is_location(y) -> false
+      x == y -> false
+      distance(x, y) <= 2 -> [{"walk", [p, x, y]}]
+      true -> false
     end
   end
 
   @doc """
   Travel by taxi if person has enough money.
   """
-  def travel_by_taxi(state, ["travel", p, y]) do
+  def travel_by_taxi(state, {"travel", [p, y]}) do
     x = State.get_object(state, "loc", p)
     cash = State.get_object(state, "cash", p)
     fare = taxi_rate(distance(x, y))
 
     cond do
-      not is_person(p) -> nil
-      not is_location(y) -> nil
-      x == y -> nil
-      cash < fare -> nil
+      not is_person(p) -> false
+      not is_location(y) -> false
+      x == y -> false
+      cash < fare -> false
       true -> [
-        {"call_taxi", p, x},
-        {"ride_taxi", p, y},
-        {"pay_driver", p, y}
+        {"call_taxi", [p, x]},
+        {"ride_taxi", [p, y]},
+        {"pay_driver", [p, y]}
       ]
     end
   end
@@ -73,7 +73,7 @@ defmodule AriaEngine.SimpleTravelMethods do
 
     cond do
       current_loc == y -> []  # Already there
-      true -> [["travel", p, y]]  # Need to travel
+      true -> [{"travel", [p, y]}]  # Need to travel
     end
   end
 
@@ -111,14 +111,14 @@ defmodule AriaEngine.SimpleTravelMethods do
   @doc """
   Simple travel by foot method for Pyhop compatibility.
   """
-  def travel_by_foot_simple(state, ["travel", p, y]) do
+  def travel_by_foot_simple(state, {"travel", [p, y]}) do
     x = State.get_object(state, "loc", p)
 
     cond do
       not is_person(p) -> false
       not is_location(y) -> false
       x == y -> false
-      distance(x, y) <= 2 -> [{"walk", p, x, y}]
+      distance(x, y) <= 2 -> [{"walk", [p, x, y]}]
       true -> false
     end
   end
@@ -126,7 +126,7 @@ defmodule AriaEngine.SimpleTravelMethods do
   @doc """
   Simple travel by taxi method for Pyhop compatibility.
   """
-  def travel_by_taxi_simple(state, ["travel", p, y]) do
+  def travel_by_taxi_simple(state, {"travel", [p, y]}) do
     x = State.get_object(state, "loc", p)
     cash = State.get_object(state, "cash", p)
     fare = taxi_rate(distance(x, y))
@@ -141,9 +141,9 @@ defmodule AriaEngine.SimpleTravelMethods do
         taxi = find_available_taxi(state, x)
         if taxi do
           [
-            {"call_taxi", p, taxi},
-            {"ride_taxi", p, taxi, y},
-            {"pay_driver", p, taxi}
+            {"call_taxi", [p, taxi]},
+            {"ride_taxi", [p, taxi, y]},
+            {"pay_driver", [p, taxi]}
           ]
         else
           false

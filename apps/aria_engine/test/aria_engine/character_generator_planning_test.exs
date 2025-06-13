@@ -2,7 +2,7 @@ defmodule AriaEngine.CharacterGenerator.PlanningIntegrationTest do
   use ExUnit.Case, async: true
   
   alias AriaEngine.CharacterGenerator.{Domain, Plans, Actions, Methods, PlanTestHelper}
-  alias AriaEngine.{State, Domain, Plan}
+  alias AriaEngine.{State, Plan}
 
   describe "domain creation" do
     test "builds character generation domain" do
@@ -57,8 +57,9 @@ defmodule AriaEngine.CharacterGenerator.PlanningIntegrationTest do
 
     test "generates plan from options" do
       opts = %{preset: "fantasy_cyber", validate: true, character_id: UUID.uuid4()}
-      plan = Plans.plan_from_options(opts)
+      {char_id, plan} = Plans.plan_from_options(opts)
       
+      assert is_binary(char_id)
       assert is_list(plan)
       assert length(plan) > 0
     end
@@ -71,14 +72,11 @@ defmodule AriaEngine.CharacterGenerator.PlanningIntegrationTest do
       
       result = Actions.set_character_attribute(state, [char_id, "species", "SPECIES_HUMANOID"])
       
-      case result do
-        {:ok, new_state} ->
-          case AriaEngine.get_fact(new_state, "character:species", char_id) do
-            {:ok, value} -> assert value == "SPECIES_HUMANOID"
-            _ -> assert false, "Attribute not set"
-          end
-        _ -> 
-          assert false, "Action failed"
+      if result do
+        value = AriaEngine.get_fact(result, "character:species", char_id)
+        assert value == "SPECIES_HUMANOID"
+      else
+        assert false, "Action failed"
       end
     end
 
@@ -88,13 +86,12 @@ defmodule AriaEngine.CharacterGenerator.PlanningIntegrationTest do
       
       result = Actions.randomize_character_attributes(state, [char_id])
       
-      case result do
-        {:ok, new_state} -> 
-          # Check that some attributes were set
-          species_result = AriaEngine.get_fact(new_state, "character:species", char_id)
-          assert {:ok, _} = species_result
-        _ ->
-          assert false, "Randomization failed"
+      if result do
+        # Check that some attributes were set
+        species_result = AriaEngine.get_fact(result, "character:species", char_id)
+        assert species_result != nil
+      else
+        assert false, "Randomization failed"
       end
     end
   end
@@ -183,8 +180,8 @@ defmodule AriaEngine.CharacterGenerator.PlanningIntegrationTest do
       state = AriaEngine.set_fact(state, "character:emotion", char_id, "EMOTION_HAPPY")
       
       # Verify we can retrieve them
-      assert {:ok, "SPECIES_HUMANOID"} = AriaEngine.get_fact(state, "character:species", char_id)
-      assert {:ok, "EMOTION_HAPPY"} = AriaEngine.get_fact(state, "character:emotion", char_id)
+      assert "SPECIES_HUMANOID" = AriaEngine.get_fact(state, "character:species", char_id)
+      assert "EMOTION_HAPPY" = AriaEngine.get_fact(state, "character:emotion", char_id)
     end
   end
 end

@@ -25,11 +25,11 @@ defmodule AriaEngine.SimpleTravelActions do
   """
   def walk(state, [p, x, y]) do
     cond do
-      not is_person(p) -> nil
-      not is_location(x) -> nil
-      not is_location(y) -> nil
-      x == y -> nil
-      State.get_object(state, "loc", p) != x -> nil
+      not is_person(p) -> false
+      not is_location(x) -> false
+      not is_location(y) -> false
+      x == y -> false
+      State.get_object(state, "loc", p) != x -> false
       true ->
         State.set_object(state, "loc", p, y)
     end
@@ -48,8 +48,8 @@ defmodule AriaEngine.SimpleTravelActions do
   """
   def call_taxi(state, [p, x]) do
     cond do
-      not is_person(p) -> nil
-      not is_location(x) -> nil
+      not is_person(p) -> false
+      not is_location(x) -> false
       true ->
         state
         |> State.set_object("loc", "taxi1", x)
@@ -74,16 +74,16 @@ defmodule AriaEngine.SimpleTravelActions do
     person_loc = State.get_object(state, "loc", p)
 
     cond do
-      not is_person(p) -> nil
-      not is_taxi(person_loc) -> nil
-      not is_location(y) -> nil
+      not is_person(p) -> false
+      not is_taxi(person_loc) -> false
+      not is_location(y) -> false
       true ->
         taxi = person_loc
         x = State.get_object(state, "loc", taxi)
 
         cond do
-          not is_location(x) -> nil
-          x == y -> nil
+          not is_location(x) -> false
+          x == y -> false
           true ->
             fare = taxi_rate(distance(x, y))
             state
@@ -110,8 +110,8 @@ defmodule AriaEngine.SimpleTravelActions do
     owe = State.get_object(state, "owe", p)
 
     cond do
-      not is_person(p) -> nil
-      cash < owe -> nil
+      not is_person(p) -> false
+      cash < owe -> false
       true ->
         state
         |> State.set_object("cash", p, cash - owe)

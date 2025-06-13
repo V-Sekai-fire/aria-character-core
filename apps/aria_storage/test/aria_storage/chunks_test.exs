@@ -12,8 +12,8 @@ defmodule AriaStorage.ChunksTest do
   # Not using tags to ensure test always runs
   # @tag :integration
 
-  @input_file_path "/Users/setup/Developer/aria-character-core/thirdparty/desync/testdata/chunker.input"
-  @index_file_path "/Users/setup/Developer/aria-character-core/thirdparty/desync/testdata/chunker.index"
+  @input_file_path Path.join([__DIR__, "..", "..", "..", "..", "thirdparty", "desync", "testdata", "chunker.input"])
+  @index_file_path Path.join([__DIR__, "..", "..", "..", "..", "thirdparty", "desync", "testdata", "chunker.index"])
 
   @tag :integration
   test "chunking produces the same boundaries as desync/casync" do

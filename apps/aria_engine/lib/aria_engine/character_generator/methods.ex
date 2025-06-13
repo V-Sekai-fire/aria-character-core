@@ -24,23 +24,39 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   def generate_character_with_constraints(state, [char_id, preset]) when is_map(preset) do
     # If preset is provided as a map, extract the preset name
     preset_name = Map.get(preset, :preset) || Map.get(preset, "preset")
-    generate_character_with_constraints(state, [char_id, preset_name])
+    # Ensure it returns a list or false
+    if preset_name do
+      generate_character_with_constraints(state, [char_id, preset_name])
+    else
+      # If preset_name is nil (not found in map), it's a precondition failure
+      false
+    end
   end
 
   def generate_character_with_constraints(state, [char_id, preset_name]) when is_binary(preset_name) do
-    [
-      {"randomize_character", [char_id]},
-      {"apply_character_preset", [char_id, preset_name]},
-      {"validate_character_coherence", [char_id]}
-    ]
+    # Basic precondition check (char_id should be a string, for example)
+    # This is illustrative; more robust checks might be needed.
+    if is_binary(char_id) do
+      [
+        {"randomize_character", [char_id]},
+        {"apply_character_preset", [char_id, preset_name]},
+        {"validate_character_coherence", [char_id]}
+      ]
+    else
+      false
+    end
   end
 
   def generate_character_with_constraints(state, [char_id, _preset]) do
     # No preset provided, just randomize and validate
-    [
-      {"randomize_character", [char_id]},
-      {"validate_character_coherence", [char_id]}
-    ]
+    if is_binary(char_id) do
+      [
+        {"randomize_character", [char_id]},
+        {"validate_character_coherence", [char_id]}
+      ]
+    else
+      false
+    end
   end
 
   @doc """
@@ -124,10 +140,15 @@ defmodule AriaEngine.CharacterGenerator.Methods do
     # Check if attribute is already set to the desired value
     current_value = State.get_object(state, "character:#{attribute}", char_id)
     
-    if current_value == value do
-      []  # Goal already achieved
+    # Precondition: char_id and attribute should be valid
+    if not (is_binary(char_id) and is_binary(attribute)) do
+      false
     else
-      [{:set_character_attribute, [char_id, attribute, value]}]
+      if current_value == value do
+        []  # Goal already achieved
+      else
+        [{:set_character_attribute, [char_id, attribute, value]}]
+      end
     end
   end
 
@@ -145,14 +166,18 @@ defmodule AriaEngine.CharacterGenerator.Methods do
     # Check current validation status
     validation_status = State.get_object(state, "validation:status", char_id)
     
-    if validation_status == "valid" do
-      []  # Already valid
+    if not is_binary(char_id) do
+      false
     else
-      [
-        {:validate_attributes, [char_id]},
-        {:resolve_conflicts, [char_id]},
-        {:mark_character_valid, [char_id]}
-      ]
+      if validation_status == "valid" do
+        []  # Already valid
+      else
+        [
+          {:validate_attributes, [char_id]},
+          {:resolve_conflicts, [char_id]},
+          {:mark_character_valid, [char_id]}
+        ]
+      end
     end
   end
 
@@ -170,10 +195,14 @@ defmodule AriaEngine.CharacterGenerator.Methods do
     # Check if prompt already exists
     existing_prompt = State.get_object(state, "generated:prompt", char_id)
     
-    if existing_prompt && String.length(existing_prompt) > 0 do
-      []  # Prompt already ready
+    if not is_binary(char_id) do
+      false
     else
-      [{:generate_prompt, [char_id]}]
+      if existing_prompt && String.length(existing_prompt) > 0 do
+        []  # Prompt already ready
+      else
+        [{:generate_prompt, [char_id]}]
+      end
     end
   end
 
@@ -278,10 +307,14 @@ defmodule AriaEngine.CharacterGenerator.Methods do
     # Check if preset is already applied
     current_preset = State.get_object(state, "preset:name", char_id)
     
-    if current_preset == preset_name do
-      []  # Preset already applied
+    if not (is_binary(char_id) and is_binary(preset_name)) do
+      false
     else
-      [{:apply_preset_attributes, [char_id, preset_name]}]
+      if current_preset == preset_name do
+        []  # Preset already applied
+      else
+        [{:apply_preset_attributes, [char_id, preset_name]}]
+      end
     end
   end
 
@@ -305,10 +338,20 @@ defmodule AriaEngine.CharacterGenerator.Methods do
   Demo method for character generation - simplified workflow.
   """
   def demo_generate_character(state, [char_id, preset]) do
-    [
-      {:randomize_character_attributes, [char_id]},
-      {:apply_preset, [char_id, preset[:preset] || "fantasy_cyber"]}
-    ]
+    preset_name = case preset do
+      %{preset: name} -> name
+      name when is_binary(name) -> name
+      _ -> "fantasy_cyber" # default or could be a failure point if preset is mandatory
+    end
+    
+    if is_binary(char_id) do
+      [
+        {:randomize_character_attributes, [char_id]},
+        {:apply_preset, [char_id, preset_name]}
+      ]
+    else
+      false # char_id precondition failed
+    end
   end
 
   @doc """

@@ -59,14 +59,14 @@ defmodule AriaEngine.SimpleTravelTest do
     test "planning alice to park by taxi" do
       domain = TestDomains.build_simple_travel_domain()
       state = TestDomains.create_simple_travel_state()
-      goals = [["travel", "alice", "park"]]
+      goals = [{"travel", ["alice", "park"]}]
 
-      case AriaEngine.find_plan(domain, state, goals) do
+      case AriaEngine.plan(domain, state, goals) do
         {:ok, plan} ->
           expected = [
-            {"call_taxi", "alice", "home_a"},
-            {"ride_taxi", "alice", "park"},
-            {"pay_driver", "alice", "park"}
+            {"call_taxi", ["alice", "home_a"]},
+            {"ride_taxi", ["alice", "park"]},
+            {"pay_driver", ["alice", "park"]}
           ]
           assert plan == expected
 
@@ -78,11 +78,11 @@ defmodule AriaEngine.SimpleTravelTest do
     test "planning bob to park by walking" do
       domain = TestDomains.build_simple_travel_domain()
       state = TestDomains.create_simple_travel_state()
-      goals = [["travel", "bob", "park"]]
+      goals = [{"travel", ["bob", "park"]}]
 
-      case AriaEngine.find_plan(domain, state, goals) do
+      case AriaEngine.plan(domain, state, goals) do
         {:ok, plan} ->
-          expected = [{"walk", "bob", "home_b", "park"}]
+          expected = [{"walk", ["bob", "home_b", "park"]}]
           assert plan == expected
 
         {:error, reason} ->
@@ -95,7 +95,7 @@ defmodule AriaEngine.SimpleTravelTest do
       state = TestDomains.create_simple_travel_state()
       goals = [{"loc", "alice", "park"}]  # Unigoal format
 
-      case AriaEngine.find_plan(domain, state, goals) do
+      case AriaEngine.plan(domain, state, goals) do
         {:ok, plan} ->
           # Should produce a plan to get Alice to the park
           assert length(plan) > 0
@@ -108,9 +108,9 @@ defmodule AriaEngine.SimpleTravelTest do
     test "multiple travelers" do
       domain = TestDomains.build_simple_travel_domain()
       state = TestDomains.create_simple_travel_state()
-      goals = [["travel", "alice", "park"], ["travel", "bob", "park"]]
+      goals = [{"travel", ["alice", "park"]}, {"travel", ["bob", "park"]}]
 
-      case AriaEngine.find_plan(domain, state, goals) do
+      case AriaEngine.plan(domain, state, goals) do
         {:ok, plan} ->
           # Should produce a plan for both Alice and Bob
           assert length(plan) > 0

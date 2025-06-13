@@ -63,7 +63,7 @@ defmodule AriaEngine.Actions do
       else
         Logger.warning("Command failed with exit code #{result.status}")
         if fail_on_error do
-          false
+          false # Ensure this returns false
         else
           # Continue on error - update state with failure info but don't fail
           new_state
@@ -83,7 +83,7 @@ defmodule AriaEngine.Actions do
         |> State.set_object("last_command", "success", false)
 
         if fail_on_error do
-          false
+          false # Ensure this returns false
         else
           error_state
         end
@@ -95,7 +95,7 @@ defmodule AriaEngine.Actions do
   """
   def copy_file(state, [source, destination]) do
     case execute_command(state, ["cp", source, destination]) do
-      false -> false  # Command failed
+      false -> false  # Command failed, ensure false is returned
       new_state ->
         # Update state to record successful copy
         new_state
@@ -130,7 +130,7 @@ defmodule AriaEngine.Actions do
   """
   def create_directory(state, [dir_path]) do
     case execute_command(state, ["mkdir", "-p", dir_path]) do
-      false -> false  # Command failed
+      false -> false  # Command failed, ensure false is returned
       new_state ->
         # Update state to record successful directory creation
         new_state
@@ -173,7 +173,7 @@ defmodule AriaEngine.Actions do
   """
   def download_file(state, [url, destination]) do
     case execute_command(state, ["curl", "-o", destination, url]) do
-      false -> false  # Command failed
+      false -> false  # Command failed, ensure false is returned
       new_state ->
         # Update state to record successful download
         new_state
@@ -186,7 +186,7 @@ defmodule AriaEngine.Actions do
 
   def download_file(state, [url, destination, _options]) do
     case execute_command(state, ["curl", "-o", destination, url]) do
-      false -> false  # Command failed
+      false -> false  # Command failed, ensure false is returned
       new_state ->
         # Update state to record successful download
         new_state

@@ -27,7 +27,7 @@ defmodule AriaEngine.PortcelainIntegrationTest do
       # Execute a command that should fail
       result = Actions.execute_command(state, ["false", [], %{fail_on_error: true}])
 
-      assert result == false
+      assert result == false # Changed from nil to false
     end
 
     test "execute_command action can continue on error" do

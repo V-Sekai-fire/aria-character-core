@@ -132,9 +132,9 @@ defmodule AriaEngine.CharacterGenerator.PlanTestHelper do
       
       # Create a plan that will require backtracking
       todos = [
-        {"validate_attributes", %{char_id: char_id}},
-        {"resolve_conflicts", %{char_id: char_id}},
-        {"validate_attributes", %{char_id: char_id}}
+        {"validate_attributes", [char_id]},
+        {"resolve_conflicts", [char_id]},
+        {"validate_attributes", [char_id]}
       ]
       
       case AriaEngine.plan(domain, state, todos, verbose: 1) do

@@ -19,7 +19,7 @@ defmodule AriaEngine.CharacterGenerator.Domain do
   validation, and prompt creation.
   """
   @spec build_character_generation_domain() :: AriaEngine.domain()
-  def build_character_generation_domain do
+  def build_character_generation_domain() do
     create_domain("character_generation")
     # Character attribute actions
     |> add_action(:set_character_attribute, &Actions.set_character_attribute/2)
@@ -28,6 +28,8 @@ defmodule AriaEngine.CharacterGenerator.Domain do
     |> add_action(:validate_attributes, &Actions.validate_attributes/2)
     |> add_action(:resolve_conflicts, &Actions.resolve_conflicts/2)
     |> add_action(:generate_prompt, &Actions.generate_prompt/2)
+    |> add_action(:check_constraint_violations, &Actions.check_constraint_violations/2)
+    |> add_action(:mark_character_valid, &Actions.mark_character_valid/2)
     
     # Task methods for hierarchical planning
     |> add_task_method("generate_character_with_constraints", &Methods.generate_character_with_constraints/2)
@@ -35,6 +37,10 @@ defmodule AriaEngine.CharacterGenerator.Domain do
     |> add_task_method("generate_character_prompt", &Methods.generate_character_prompt/2)
     |> add_task_method("apply_character_preset", &Methods.apply_character_preset/2)
     |> add_task_method("randomize_character", &Methods.randomize_character/2)
+    |> add_task_method("validate_all_constraints", &Methods.validate_all_constraints/2)
+    |> add_task_method("resolve_all_conflicts", &Methods.resolve_all_conflicts/2)
+    |> add_task_method("customize_preset", &Methods.customize_preset/2)
+    |> add_task_method("apply_preset_with_validation", &Methods.apply_preset_with_validation/2)
     
     # Goal methods for achieving character properties
     |> add_unigoal_method("character_attribute", &Methods.achieve_character_attribute/2)
@@ -48,7 +54,7 @@ defmodule AriaEngine.CharacterGenerator.Domain do
   This is a simplified version of the main domain for demonstration purposes.
   """
   @spec build_demo_character_domain() :: AriaEngine.domain()
-  def build_demo_character_domain do
+  def build_demo_character_domain() do
     create_domain("demo_character_generation")
     # Essential actions for demo
     |> add_action(:set_character_attribute, &Actions.set_character_attribute/2)
@@ -67,7 +73,7 @@ defmodule AriaEngine.CharacterGenerator.Domain do
   This domain is specialized for validation workflows and conflict resolution.
   """
   @spec build_validation_domain() :: AriaEngine.domain()
-  def build_validation_domain do
+  def build_validation_domain() do
     create_domain("character_validation")
     |> add_action(:check_constraint_violations, &Actions.check_constraint_violations/2)
     |> add_action(:resolve_conflicts, &Actions.resolve_conflicts/2)
@@ -86,7 +92,7 @@ defmodule AriaEngine.CharacterGenerator.Domain do
   This domain handles preset application and customization workflows.
   """
   @spec build_preset_domain() :: AriaEngine.domain()
-  def build_preset_domain do
+  def build_preset_domain() do
     create_domain("character_presets")
     |> add_action(:apply_preset_attributes, &Actions.apply_preset_attributes/2)
     |> add_action(:merge_customizations, &Actions.merge_customizations/2)
