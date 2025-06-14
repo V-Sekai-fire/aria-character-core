@@ -1,7 +1,10 @@
 # ADR-027: Web Interface Implementation
 
 ## Status
-Accepted
+Superseded by ADR-030 (Console TUI Implementation)
+
+**Superseded Date**: June 14, 2025
+**Reason**: Three.js complexity exceeded weekend implementation capacity. Reverting to console TUI for reliable demonstration.
 
 ## Context
 The final temporal planner demonstration requires a modern, professional interface that showcases 3D visualization capabilities while supporting real-time updates and user interaction.

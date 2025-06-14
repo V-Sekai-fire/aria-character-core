@@ -44,7 +44,7 @@ These ADRs document all design decisions for the temporal, re-entrant goal-task-
 - **017**: LLM-Assisted Development Time Uncertainty
 - **018**: Concrete MVP Definition
 
-### Technical Infrastructure (019-020, 023-029)
+### Technical Infrastructure (019-020, 022-030)
 - **019**: 3D Coordinates with Godot Conventions
 - **020**: Design Consistency Verification
 - **022**: First Implementation Step - Test-Driven Development
@@ -52,9 +52,10 @@ These ADRs document all design decisions for the temporal, re-entrant goal-task-
 - **024**: Absolute Minimum Success Criteria
 - **025**: Research Question Resolution Strategy
 - **026**: Implementation Risk Mitigation
-- **027**: Web Interface Implementation
-- **028**: Three.js 3D Visualization Architecture
+- **027**: Web Interface Implementation *(Superseded by ADR-030)*
+- **028**: Three.js 3D Visualization Architecture *(Superseded by ADR-030)*
 - **029**: MCP Integration for GitHub Copilot
+- **030**: Console TUI Implementation *(Supersedes ADR-027, ADR-028)*
 
 ## Design Consistency
 

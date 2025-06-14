@@ -1,7 +1,10 @@
 # ADR-028: Three.js 3D Visualization Architecture
 
 ## Status
-Accepted
+Superseded by ADR-030 (Console TUI Implementation)
+
+**Superseded Date**: June 14, 2025
+**Reason**: Three.js 3D visualization complexity exceeded weekend timeline constraints. Console TUI provides more reliable path to working demonstration.
 
 ## Context
 The temporal planner web interface requires sophisticated 3D visualization to showcase tactical gameplay and provide professional streaming appeal, replacing simpler SVG approaches.
