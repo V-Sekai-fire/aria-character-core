@@ -1,0 +1,91 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [],
+  "dictionaryDefinitions": [
+    {
+      "name": "project-dictionary",
+      "path": "./.project-dictionary.txt",
+      "description": "Project-specific technical terms and vocabulary"
+    }
+  ],
+  "dictionaries": [
+    "project-dictionary"
+  ],
+  "ignorePaths": [
+    "thirdparty/**",
+    "deps/**",
+    "_build/**",
+    "node_modules/**",
+    ".git/**",
+    "*.log",
+    "*.tmp"
+  ],
+  "ignoreWords": [
+    "TODO",
+    "FIXME",
+    "XXX",
+    "HACK",
+    "NOTE"
+  ],
+  "patterns": [
+    {
+      "name": "code-blocks",
+      "pattern": "/^```[\\s\\S]*?^```/gm"
+    },
+    {
+      "name": "inline-code", 
+      "pattern": "/`[^`]*`/g"
+    },
+    {
+      "name": "urls",
+      "pattern": "/https?:\\/\\/[^\\s]*/g"
+    },
+    {
+      "name": "hex-colors",
+      "pattern": "/#[0-9a-fA-F]{3,8}/g"
+    },
+    {
+      "name": "hex-values",
+      "pattern": "/0x[0-9a-fA-F]+/g"
+    },
+    {
+      "name": "uuids",
+      "pattern": "/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g"
+    },
+    {
+      "name": "version-numbers",
+      "pattern": "/\\d+\\.\\d+\\.\\d+/g"
+    },
+    {
+      "name": "coordinate-triplets",
+      "pattern": "/\\{\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*\\}/g"
+    },
+    {
+      "name": "elixir-atoms",
+      "pattern": "/:[a-z_][a-zA-Z0-9_]*/g"
+    },
+    {
+      "name": "elixir-modules",
+      "pattern": "/[A-Z][a-zA-Z0-9]*\\.[A-Z][a-zA-Z0-9]*/g"
+    }
+  ],
+  "ignoreRegExpList": [
+    "code-blocks",
+    "inline-code",
+    "urls",
+    "hex-colors", 
+    "hex-values",
+    "uuids",
+    "version-numbers",
+    "coordinate-triplets",
+    "elixir-atoms",
+    "elixir-modules"
+  ],
+  "allowCompoundWords": true,
+  "caseSensitive": false,
+  "flagWords": [],
+  "minWordLength": 3,
+  "maxNumberOfProblems": 100,
+  "numSuggestions": 5
+}
