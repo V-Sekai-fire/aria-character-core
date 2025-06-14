@@ -55,11 +55,13 @@ defmodule AriaEngine.GameActionJob do
   @doc """
   Creates a new job with the given parameters.
   """
-  def new(params) when is_map(params) do
+  def new(params, opts \\ []) when is_map(params) do
+    queue_name = Keyword.get(opts, :queue, "sequential_actions")
+
     %{
       id: generate_job_id(),
       args: params,
-      queue: "sequential_actions",
+      queue: queue_name,
       worker: "AriaEngine.GameActionJob",
       state: "available",
       inserted_at: DateTime.utc_now()
@@ -70,14 +72,27 @@ defmodule AriaEngine.GameActionJob do
   Schedules an action using Membrane pipeline.
   """
   def schedule_action(game_state, agent_id, action) do
-    action_data = %{
-      id: generate_job_id(),
-      agent_id: agent_id,
-      action_type: elem(action, 0),
-      target_position: elem(action, 1),
-      game_state_id: game_state.id,
-      scheduled_at: DateTime.utc_now()
-    }
+    action_data = case action do
+      {:travel_to_location, destination} ->
+        %{
+          id: generate_job_id(),
+          agent_id: agent_id,
+          intent_type: "travel_to_location",
+          destination: destination,
+          game_state_id: game_state.id,
+          scheduled_at: DateTime.utc_now()
+        }
+
+      {action_type, target_position} ->
+        %{
+          id: generate_job_id(),
+          agent_id: agent_id,
+          action_type: action_type,
+          target_position: target_position,
+          game_state_id: game_state.id,
+          scheduled_at: DateTime.utc_now()
+        }
+    end
 
     # For MVP, simulate immediate execution
     case process_game_action(action_data) do
@@ -104,12 +119,56 @@ defmodule AriaEngine.GameActionJob do
 
   # Private helper functions
 
+  defp process_game_action(%{intent_type: intent_type} = action_data) when is_binary(intent_type) do
+    handle_intent_action(intent_type, action_data)
+  end
+
   defp process_game_action(%{action_type: action_type, agent_id: agent_id, target_position: target_position} = action_data) do
     case action_type do
       :move_to -> handle_move_action(agent_id, target_position, action_data)
       "move_to" -> handle_move_action(agent_id, target_position, action_data)
       _ -> {:error, :unknown_action_type}
     end
+  end
+
+  defp handle_intent_action("travel_to_location", %{agent_id: agent_id, destination: destination} = action_data) do
+    # For travel_to_location intent, execute the movement to the destination
+    case handle_move_action(agent_id, destination, action_data) do
+      {:ok, result} ->
+        # After completing the travel, trigger completion handling for continuous movement
+        game_state = get_current_game_state(action_data["game_state_id"] || action_data[:game_state_id])
+
+        # Simulate the completed action
+        completed_action = %{type: :move_to, to: destination}
+
+        # This will trigger the next goal selection and queue the next intent job
+        case AriaTimestrike.GameEngine.handle_action_completion(game_state, agent_id, completed_action) do
+          {:ok, _updated_state, _next_actions} ->
+            {:ok, Map.merge(result, %{continuous_movement_triggered: true})}
+          error ->
+            error
+        end
+
+      error ->
+        error
+    end
+  end
+
+  defp handle_intent_action(intent_type, _action_data) do
+    {:error, {:unknown_intent_type, intent_type}}
+  end
+
+  defp get_current_game_state(game_state_id) do
+    # For now, return a basic game state structure
+    # In a full implementation, this would fetch from a state store or database
+    %{
+      id: game_state_id,
+      agents: %{
+        "Alex" => %{position: {2, 0, 3}, speed: 4.0, status: :alive}
+      },
+      mission_status: :active,
+      started_at: System.monotonic_time(:millisecond)
+    }
   end
 
   defp handle_move_action(agent_id, target_position, _action_data) do

@@ -81,6 +81,79 @@ defmodule AriaTimestrike.GameEngine do
   end
 
   @doc """
+  Generates a new random goal for an agent to move to.
+  This creates the looping behavior where agents continuously pick new destinations.
+  """
+  def generate_next_goal(game_state, agent_id) do
+    # Define possible movement destinations
+    possible_destinations = [
+      {2, 0, 3},  # Starting position
+      {8, 0, 3},  # Forward destination
+      {5, 0, 7},  # Side destination
+      {3, 0, 1},  # Back destination
+      {7, 0, 5},  # Diagonal destination
+      {1, 0, 6},  # Corner destination
+    ]
+
+    agent = game_state.agents[agent_id]
+    current_pos = agent.position
+
+    # Filter out current position to avoid standing still
+    available_destinations = Enum.reject(possible_destinations, fn pos -> pos == current_pos end)
+
+    # Pick a random destination
+    if length(available_destinations) > 0 do
+      destination = Enum.random(available_destinations)
+      {:ok, destination}
+    else
+      # Fallback destination if somehow no options available
+      {:ok, {5, 0, 5}}
+    end
+  end
+
+  @doc """
+  Handles completion of a movement action and automatically plans the next goal.
+  This implements the continuous movement loop.
+  """
+  def handle_action_completion(game_state, agent_id, completed_action) do
+    case completed_action.type do
+      :move_to ->
+        # Agent reached destination, now pick a new goal
+        {:ok, next_goal} = generate_next_goal(game_state, agent_id)
+
+        # Update agent position to the completed destination
+        updated_game_state = put_in(game_state.agents[agent_id].position, completed_action.to)
+
+        # Plan to the new goal
+        {:ok, next_actions} = plan_to_goal(updated_game_state, agent_id, next_goal)
+
+        # Schedule an intent job using Membrane for the next movement
+        schedule_intent_job_membrane(updated_game_state, agent_id, next_goal, next_actions)
+
+        {:ok, updated_game_state, next_actions}
+
+      _ ->
+        # For other action types, just update state without replanning
+        {:ok, game_state, []}
+    end
+  end
+
+  @doc """
+  Schedules an intent job using Membrane pipeline for traveling to another place.
+  This creates the continuous movement loop by automatically processing the next movement.
+  """
+  def schedule_intent_job_membrane(game_state, agent_id, destination, _planned_actions) do
+    # Use the Membrane-based GameActionJob to process the intent
+    case AriaEngine.GameActionJob.schedule_action(game_state, agent_id, {:travel_to_location, destination}) do
+      {:ok, job} ->
+        {:ok, job}
+
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
+  @doc """
   Replans after an interruption occurs.
   """
   def replan_after_interruption(game_state, agent_id, target_position) do
