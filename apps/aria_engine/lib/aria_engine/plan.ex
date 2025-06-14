@@ -383,11 +383,11 @@ defmodule AriaEngine.Plan do
             node_id
 
           Enum.empty?(node.children_ids) ->
-            # Leaf node, check if primitive
-            if node.is_primitive do
-              nil  # Primitive action, no expansion needed
+            # Leaf node, check if it's primitive or already expanded
+            if node.is_primitive or node.expanded do
+              nil  # Primitive action or already expanded leaf, no expansion needed
             else
-              node_id  # Non-primitive leaf needs expansion
+              node_id  # Non-primitive, non-expanded leaf needs expansion
             end
 
           true ->
@@ -746,8 +746,10 @@ defmodule AriaEngine.Plan do
   @spec solution_complete?(solution_tree()) :: boolean()
   defp solution_complete?(solution_tree) do
     # All nodes should be expanded and all leaves should be primitive actions
-    Enum.all?(solution_tree.nodes, fn {_id, node} ->
-      node.expanded and (node.is_primitive or not Enum.empty?(node.children_ids))
+    # Root node is complete if expanded (even with no children for empty goals)
+    Enum.all?(solution_tree.nodes, fn {id, node} ->
+      is_root = (id == solution_tree.root_id)
+      node.expanded and (node.is_primitive or not Enum.empty?(node.children_ids) or is_root)
     end)
   end
 

@@ -69,7 +69,7 @@ defmodule AriaTimestrike do
   - Target HP is reduced by damage amount
   - Agent cooldowns may be applied
   """
-  @spec attack(State.t(), [String.t()]) :: State.t() | false
+  @spec attack(State.t(), list()) :: State.t() | false
   def attack(state, [agent_id, target_id]) do
     agent_attack = State.get_object(state, "attack", agent_id) || 10
     agent_pos = State.get_object(state, "position", agent_id)
@@ -89,6 +89,12 @@ defmodule AriaTimestrike do
     else
       false
     end
+  end
+
+  @spec attack(State.t(), [String.t()]) :: State.t() | false
+  def attack(state, [agent_id, target_id, skill_id]) do
+    target_pos = State.get_object(state, "position", target_id)
+    {"skill_cast", [agent_id, skill_id, target_pos]}
   end
 
   @doc """
