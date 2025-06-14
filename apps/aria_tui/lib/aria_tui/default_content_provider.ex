@@ -18,7 +18,7 @@ defmodule AriaTui.DefaultContentProvider do
   @impl AriaTui.ContentProvider
   def get_main_content(state, width, height) do
     test_mode = Map.get(state, :test_mode, "overview")
-    
+
     case test_mode do
       "colors" -> get_color_test_content(width, height)
       "layout" -> get_layout_test_content(width, height)
@@ -32,7 +32,7 @@ defmodule AriaTui.DefaultContentProvider do
   def get_left_panel_content(state, width, height) do
     current_test = Map.get(state, :test_mode, "overview")
     breakpoint = Grid.get_breakpoint(width)
-    
+
     content = [
       " #{Colors.colorize("🧪 TUI Test Suite", :bright_cyan)}",
       "",
@@ -46,7 +46,7 @@ defmodule AriaTui.DefaultContentProvider do
       "",
       " #{Colors.colorize("Grid System:", :bright_white)}",
       " • XS: < 60 cols",
-      " • SM: 60-79 cols", 
+      " • SM: 60-79 cols",
       " • MD: 80-119 cols",
       " • LG: 120-159 cols",
       " • XL: ≥ 160 cols",
@@ -61,13 +61,13 @@ defmodule AriaTui.DefaultContentProvider do
   @impl AriaTui.ContentProvider
   def get_right_panel_content(state, width, height) do
     tick_count = Map.get(state, :tick_count, 0)
-    
+
     content = [
       " #{Colors.colorize("🎮 Test Controls", :bright_yellow)}",
       "",
       " #{Colors.colorize("Navigation:", :bright_white)}",
       " 1: Color Tests",
-      " 2: Layout Tests", 
+      " 2: Layout Tests",
       " 3: Responsive Tests",
       " 4: Component Tests",
       " 0: Overview",
@@ -92,7 +92,7 @@ defmodule AriaTui.DefaultContentProvider do
   def get_header_content(state, layout) do
     test_mode = Map.get(state, :test_mode, "overview")
     breakpoint = Map.get(layout, :breakpoint, :unknown)
-    
+
     [
       "#{Colors.colorize("🎯 Aria TUI Component Test Suite", :bright_white)} | #{Colors.colorize("Mode: #{test_mode}", :bright_cyan)} | #{Colors.colorize("Layout: #{breakpoint}", :bright_green)}"
     ]
@@ -106,7 +106,7 @@ defmodule AriaTui.DefaultContentProvider do
   end
 
   # Test content generators
-  
+
   defp get_overview_test_content(_state, width, height) do
     content = [
       " #{Colors.colorize("🎯 TUI Component Test Suite", :bright_white)}",
@@ -137,7 +137,7 @@ defmodule AriaTui.DefaultContentProvider do
 
     pad_content_lines(content, width, height)
   end
-  
+
   defp get_color_test_content(width, height) do
     content = [
       " #{Colors.colorize("🎨 Color System Test", :bright_white)}",
@@ -165,10 +165,10 @@ defmodule AriaTui.DefaultContentProvider do
 
     pad_content_lines(content, width, height)
   end
-  
+
   defp get_layout_test_content(width, height) do
     layout = Grid.create_layout({width, height})
-    
+
     content = [
       " #{Colors.colorize("📐 Layout Engine Test", :bright_white)}",
       "",
@@ -199,10 +199,10 @@ defmodule AriaTui.DefaultContentProvider do
 
     pad_content_lines(content, width, height)
   end
-  
+
   defp get_responsive_test_content(width, height) do
     breakpoint = Grid.get_breakpoint(width)
-    
+
     [
       " #{Colors.colorize("📱 Responsive Design Test", :bright_white)}",
       "",
@@ -219,7 +219,7 @@ defmodule AriaTui.DefaultContentProvider do
     |> List.flatten()
     |> pad_content_lines(width, height)
   end
-  
+
   defp get_component_test_content(width, height) do
     content = [
       " #{Colors.colorize("🧩 Component Library Test", :bright_white)}",
@@ -252,7 +252,7 @@ defmodule AriaTui.DefaultContentProvider do
   end
 
   # Helper functions
-  
+
   defp get_column_width_display(layout) do
     if layout.columns == 1 do
       " Single column: #{layout.total_width} chars"
@@ -261,7 +261,7 @@ defmodule AriaTui.DefaultContentProvider do
       " Left: #{Enum.at(widths, 0)} | Right: #{Enum.at(widths, 1)} chars"
     end
   end
-  
+
   defp get_xs_responsive_content do
     [
       " #{Colors.colorize("Extra Small Layout", :bright_yellow)}",
@@ -271,7 +271,7 @@ defmodule AriaTui.DefaultContentProvider do
       " • Essential info only"
     ]
   end
-  
+
   defp get_sm_responsive_content do
     [
       " #{Colors.colorize("Small Layout", :bright_yellow)}",
@@ -281,7 +281,7 @@ defmodule AriaTui.DefaultContentProvider do
       " • Simple navigation"
     ]
   end
-  
+
   defp get_md_responsive_content do
     [
       " #{Colors.colorize("Medium Layout", :bright_yellow)}",
@@ -291,7 +291,7 @@ defmodule AriaTui.DefaultContentProvider do
       " • Full feature set available"
     ]
   end
-  
+
   defp get_lg_responsive_content do
     [
       " #{Colors.colorize("Large Layout", :bright_yellow)}",
@@ -301,7 +301,7 @@ defmodule AriaTui.DefaultContentProvider do
       " • Advanced controls visible"
     ]
   end
-  
+
   defp get_xl_responsive_content do
     [
       " #{Colors.colorize("Extra Large Layout", :bright_yellow)}",
@@ -311,26 +311,26 @@ defmodule AriaTui.DefaultContentProvider do
       " • Desktop-optimized experience"
     ]
   end
-  
+
   defp get_progress_bar(percentage, width) do
     filled = trunc(percentage * width / 100)
     empty = width - filled
-    
+
     "#{Colors.colorize(String.duplicate("█", filled), :bright_green)}#{Colors.colorize(String.duplicate("░", empty), :gray)}"
   end
-  
+
   defp get_column_count(width) do
     layout = Grid.create_layout({width, 20})
     layout.columns
   end
-  
+
   defp format_timestamp do
     DateTime.utc_now()
     |> DateTime.to_time()
     |> Time.to_string()
     |> String.slice(0, 8)
   end
-  
+
   defp get_test_status(state) do
     case Map.get(state, :test_mode, "overview") do
       "colors" -> "#{Colors.colorize("✓", :green)} Color system"

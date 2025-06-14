@@ -28,7 +28,10 @@ defmodule AriaTui.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # Pure TUI system should not depend on specific game implementations
+      # Engine for state management and calculations
+      {:aria_engine, in_umbrella: true},
+      # Workflow system for observability data
+      {:aria_workflow_system, in_umbrella: true}
     ]
   end
 end

@@ -201,7 +201,8 @@ defmodule AriaStorage.CasyncIntegrationTest do
 
       # Uploader should handle missing chunk_id gracefully
       try do
-        ChunkUploader.filename(:original, {nil, %{}})
+        mock_chunk = %AriaStorage.Chunks{id: nil}
+        ChunkUploader.filename(:original, {mock_chunk, %{}})
         flunk("Should have raised an error for missing chunk_id")
       rescue
         _ -> :ok  # Expected to fail

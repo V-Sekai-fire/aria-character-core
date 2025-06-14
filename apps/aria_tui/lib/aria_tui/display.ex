@@ -40,9 +40,9 @@ defmodule AriaTui.Display do
   end
 
   @doc """
-  Display the complete game state with responsive layout.
+  Display the complete application state with responsive layout.
   """
-  def display_game_state(state) do
+  def display_state(state) do
     # Move cursor to home position instead of clearing screen to reduce flickering
     IO.write("\e[H")
 
@@ -193,15 +193,15 @@ defmodule AriaTui.Display do
   end
 
   @doc """
-  Get agent color (legacy compatibility).
+  Get agent color (legacy compatibility - now using generic names).
   """
   def get_agent_color(agent_name) do
     colors = Colors.colors()
     case agent_name do
-      "Alex" -> colors.bright_green
-      "Jace" -> colors.bright_yellow  # Changed from bright_blue to bright_yellow
-      "Maya" -> colors.bright_blue    # Added Maya
-      "Riley" -> colors.bright_blue   # Changed from bright_yellow to bright_blue
+      "Agent_A" -> colors.bright_green
+      "Agent_B" -> colors.bright_yellow
+      "Agent_C" -> colors.bright_blue
+      "Agent_D" -> colors.bright_red
       _ -> colors.white
     end
   end
@@ -220,12 +220,12 @@ defmodule AriaTui.Display do
           _ -> "·"
         end
       agent_name when is_binary(agent_name) ->
-        # Enhanced symbols with emojis for specific agents
+        # Enhanced symbols with generic agents
         case agent_name do
-          "Alex" -> "⚡"  # Special symbol for Alex
-          "Jace" -> "◆"   # Changed from "🔥" to "◆"
-          "Maya" -> "⭐"  # Added Maya
-          "Riley" -> "❄️"  # Special symbol for Riley
+          "Agent_A" -> "⚡"  # Special symbol for Agent A
+          "Agent_B" -> "◆"   # Special symbol for Agent B  
+          "Agent_C" -> "⭐"  # Special symbol for Agent C
+          "Agent_D" -> "❄️"  # Special symbol for Agent D
           _ ->
             first_char = String.first(agent_name) |> String.upcase()
             color = get_agent_color(agent_name)

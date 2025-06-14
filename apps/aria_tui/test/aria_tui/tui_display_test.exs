@@ -153,14 +153,14 @@ defmodule AriaTui.DisplayTest do
 
   describe "agent color assignment" do
     test "assigns specific colors to known agents" do
-      alex_color = Display.get_agent_color("Alex")
-      assert String.contains?(alex_color, "\e[92m")  # bright_green
+      agent_a_color = Display.get_agent_color("Agent_A")
+      assert String.contains?(agent_a_color, "\e[92m")  # bright_green
 
-      jace_color = Display.get_agent_color("Jace")
-      assert String.contains?(jace_color, "\e[93m")  # bright_yellow
+      agent_b_color = Display.get_agent_color("Agent_B")
+      assert String.contains?(agent_b_color, "\e[93m")  # bright_yellow
 
-      maya_color = Display.get_agent_color("Maya")
-      assert String.contains?(maya_color, "\e[94m")  # bright_blue
+      agent_c_color = Display.get_agent_color("Agent_C")
+      assert String.contains?(agent_c_color, "\e[94m")  # bright_blue
     end
 
     test "assigns default color to unknown agents" do
@@ -171,25 +171,25 @@ defmodule AriaTui.DisplayTest do
 
   describe "map symbol generation" do
     test "generates enhanced map symbols for agents" do
-      symbol = Display.get_enhanced_map_symbol("Alex", {5, 5})
+      symbol = Display.get_enhanced_map_symbol("Agent_A", {5, 5})
       assert String.contains?(symbol, "⚡")
 
-      symbol = Display.get_enhanced_map_symbol("Jace", {3, 3})
+      symbol = Display.get_enhanced_map_symbol("Agent_B", {3, 3})
       assert String.contains?(symbol, "◆")
 
-      symbol = Display.get_enhanced_map_symbol("Maya", {7, 7})
+      symbol = Display.get_enhanced_map_symbol("Agent_C", {7, 7})
       assert String.contains?(symbol, "⭐")
     end
 
     test "generates compact map symbols for agents" do
-      symbol = Display.get_compact_map_symbol(%{name: "Alex"}, {5, 5})
+      symbol = Display.get_compact_map_symbol(%{name: "Agent_A"}, {5, 5})
       assert String.contains?(symbol, "A")
 
-      symbol = Display.get_compact_map_symbol(%{name: "Jace"}, {3, 3})
-      assert String.contains?(symbol, "J")
+      symbol = Display.get_compact_map_symbol(%{name: "Agent_B"}, {3, 3})
+      assert String.contains?(symbol, "A")
 
-      symbol = Display.get_compact_map_symbol(%{name: "Maya"}, {7, 7})
-      assert String.contains?(symbol, "M")
+      symbol = Display.get_compact_map_symbol(%{name: "Agent_C"}, {7, 7})
+      assert String.contains?(symbol, "A")
     end
 
     test "generates terrain symbols for empty positions" do

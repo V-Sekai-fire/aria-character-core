@@ -167,30 +167,30 @@ defmodule AriaTui.Display.Renderer do
 
   defp get_default_content(state, content_type, width, height) do
     case content_type do
-      :main_content -> get_main_content(state, width, height)
-      :left_panel -> get_left_panel_content(state, width, height)
-      :right_panel -> get_right_panel_content(state, width, height)
+      :main_content -> get_generic_main_content(state, width, height)
+      :left_panel -> get_generic_left_panel_content(state, width, height)
+      :right_panel -> get_generic_right_panel_content(state, width, height)
       _ -> ["Unknown content type: #{content_type}"]
     end
   end
 
-  defp get_main_content(state, width, height) do
+  defp get_generic_main_content(state, width, height) do
     content = [
-      " Agents",  # Removed emoji for test compatibility
+      " TUI System Status",
       "",
-      " Current Phase: #{get_phase_display(state)}",
-      " Player Status: #{get_player_status(state)}",
-      " Resources: #{get_resources_display(state)}",
+      " Current State: #{get_system_status(state)}",
+      " System Load: #{get_system_load(state)}%",
+      " Uptime: #{get_uptime(state)}",
       "",
-      " Map",  # Removed emoji for test compatibility
-      " • Complete the current mission",
-      " • Maintain resource balance",
-      " • Adapt to changing conditions",
+      " Components",
+      " • TUI renderer operational",
+      " • Content provider active",
+      " • Terminal interface ready",
       "",
-      " Statistics",  # Removed emoji for test compatibility
-      " Turns Completed: #{Map.get(state, :turns_completed, 0)}",
-      " Actions Taken: #{Map.get(state, :actions_taken, 0)}",
-      " Efficiency Rating: #{get_efficiency_rating(state)}"
+      " Information",
+      " This is a generic TUI system.",
+      " Use a content provider for custom display.",
+      " Press Q to quit."
     ]
 
     # Pad content to fit available space
@@ -199,43 +199,44 @@ defmodule AriaTui.Display.Renderer do
     |> pad_content_lines(width, height)
   end
 
-  defp get_left_panel_content(state, width, height) do
+  defp get_generic_left_panel_content(state, width, height) do
     content = [
-      " Game Status",  # Removed emoji for test compatibility
+      " System Info",
       "",
-      " Turn: #{Map.get(state, :current_turn, 1)}",
-      " Phase: #{get_phase_display(state)}",
-      " Time: #{Map.get(state, :game_time, "00:00")}",
+      " Status: #{get_system_status(state)}",
+      " Mode: #{Map.get(state, :mode, "default")}",
+      " Tick: #{Map.get(state, :tick_count, 0)}",
       "",
-      " Character",  # Removed emoji for test compatibility
-      " Health: #{Map.get(state, :health, 100)}%",
-      " Energy: #{Map.get(state, :energy, 100)}%",
-      " Level: #{Map.get(state, :level, 1)}",
+      " Resources",
+      " Memory: Good",
+      " CPU: Normal",
+      " I/O: Ready",
       "",
-      " Progress",  # Removed emoji for test compatibility
-      " Score: #{Map.get(state, :score, 0)}",
-      " Achievements: #{Map.get(state, :achievements, 0)}/10"
+      " Metrics",
+      " Redraws: #{Map.get(state, :redraws, 0)}",
+      " Updates: #{Map.get(state, :updates, 0)}"
     ]
 
     pad_content_lines(content, width, height)
   end
 
-  defp get_right_panel_content(state, width, height) do
+  defp get_generic_right_panel_content(_state, width, height) do
     content = [
-      " Environment",  # Removed emoji for test compatibility
+      " Controls",
       "",
-      " Location: #{Map.get(state, :location, "Unknown")}",
-      " Weather: #{Map.get(state, :weather, "Clear")}",
-      " Visibility: #{Map.get(state, :visibility, "Good")}",
+      " Navigation:",
+      " • Use arrow keys",
+      " • Press SPACE to interact",
+      " • Press Q to quit",
       "",
-      " Combat",  # Removed emoji for test compatibility
-      " Enemies Nearby: #{Map.get(state, :enemies_nearby, 0)}",
-      " Threat Level: #{get_threat_level(state)}",
-      " Last Action: #{Map.get(state, :last_action, "None")}",
+      " System",
+      " Terminal: #{get_terminal_info()}",
+      " Display: Active",
+      " Input: Ready",
       "",
-      " Inventory",  # Removed emoji for test compatibility
-      " Items: #{Map.get(state, :item_count, 0)}/20",
-      " Weight: #{Map.get(state, :weight, 0)}/100 kg"
+      " Help",
+      " This is a fallback display.",
+      " Configure a content provider."
     ]
 
     pad_content_lines(content, width, height)
@@ -262,50 +263,31 @@ defmodule AriaTui.Display.Renderer do
     end
   end
 
-  defp get_phase_display(state) do
-    phase = Map.get(state, :phase, "planning")
-    case phase do
-      "planning" -> Colors.colorize("Planning", :bright_blue)
-      "action" -> Colors.colorize("Action", :bright_green)
-      "resolution" -> Colors.colorize("Resolution", :bright_yellow)
-      _ -> Colors.colorize(String.capitalize(phase), :white)
-    end
-  end
-
-  defp get_player_status(state) do
-    case Map.get(state, :status, :active) do
-      :active -> Colors.colorize("Active", :bright_green)
-      :paused -> Colors.colorize("Paused", :bright_yellow)
-      :ended -> Colors.colorize("Finished", :bright_red)
+  defp get_system_status(state) do
+    case Map.get(state, :status, "active") do
+      "active" -> Colors.colorize("Active", :bright_green)
+      "paused" -> Colors.colorize("Paused", :bright_yellow)
+      "stopped" -> Colors.colorize("Stopped", :bright_red)
       _ -> Colors.colorize("Unknown", :gray)
     end
   end
 
-  defp get_resources_display(state) do
-    resources = Map.get(state, :resources, %{})
-    gold = Map.get(resources, :gold, 0)
-    mana = Map.get(resources, :mana, 0)
-    "#{Colors.colorize("#{gold}g", :bright_yellow)} #{Colors.colorize("#{mana}m", :bright_blue)}"
+  defp get_system_load(state) do
+    Map.get(state, :system_load, 15)
   end
 
-  defp get_efficiency_rating(state) do
-    rating = Map.get(state, :efficiency, 85)
-    cond do
-      rating >= 90 -> Colors.colorize("Excellent", :bright_green)
-      rating >= 75 -> Colors.colorize("Good", :green)
-      rating >= 60 -> Colors.colorize("Fair", :yellow)
-      true -> Colors.colorize("Poor", :red)
-    end
+  defp get_uptime(state) do
+    uptime_seconds = Map.get(state, :uptime_seconds, 0)
+    minutes = div(uptime_seconds, 60)
+    seconds = rem(uptime_seconds, 60)
+    "#{minutes}:#{String.pad_leading("#{seconds}", 2, "0")}"
   end
 
-  defp get_threat_level(state) do
-    level = Map.get(state, :threat_level, :low)
-    case level do
-      :low -> Colors.colorize("Low", :green)
-      :medium -> Colors.colorize("Medium", :yellow)
-      :high -> Colors.colorize("High", :red)
-      :critical -> Colors.colorize("Critical", :bright_red)
-      _ -> Colors.colorize("Unknown", :gray)
+  defp get_terminal_info do
+    case :os.type() do
+      {:unix, _} -> "Unix Terminal"
+      {:win32, _} -> "Windows Terminal"
+      _ -> "Terminal"
     end
   end
 end

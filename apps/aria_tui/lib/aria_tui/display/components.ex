@@ -8,6 +8,7 @@ defmodule AriaTui.Display.Components do
   """
 
   alias AriaTui.Display.Colors
+  alias AriaTui.Display.Grid
 
   @doc """
   Draw a responsive header based on layout configuration.
@@ -226,29 +227,47 @@ defmodule AriaTui.Display.Components do
 
   defp get_time_info(state) do
     colors = Colors.colors()
-    turn = Map.get(state, :current_turn, 1)
-    time = Map.get(state, :game_time, "00:00")
+    runtime = Map.get(state, :runtime_seconds, 0)
     tick_count = Map.get(state, :tick_count, 0)
-    "#{colors.bright_blue}Turn #{turn}#{colors.reset} │ #{colors.cyan}#{time}#{colors.reset} │ #{colors.bright_white}Tick: #{tick_count}#{colors.reset}"
+    uptime = format_uptime(runtime)
+    "#{colors.cyan}Uptime: #{uptime}#{colors.reset} │ #{colors.bright_white}Tick: #{tick_count}#{colors.reset}"
   end
 
   defp get_turn_info(state) do
     colors = Colors.colors()
-    phase = Map.get(state, :phase, "planning")
-    "#{colors.bright_white}Phase: #{String.capitalize(phase)}#{colors.reset}"
+    test_mode = Map.get(state, :test_mode, "overview")
+    "#{colors.bright_white}Mode: #{String.capitalize(test_mode)}#{colors.reset}"
   end
 
   defp get_stats_text(state) do
     colors = Colors.colors()
-    health = Map.get(state, :health, 100)
-    energy = Map.get(state, :energy, 100)
-    score = Map.get(state, :score, 0)
-    " #{colors.bright_red}❤ #{health}#{colors.reset} │ #{colors.bright_yellow}⚡ #{energy}#{colors.reset} │ #{colors.bright_white}Score: #{score}#{colors.reset}"
+    components = get_component_count(state)
+    memory = get_memory_usage()
+    "#{colors.bright_green}Components: #{components}#{colors.reset} │ #{colors.bright_blue}Memory: #{memory}MB#{colors.reset}"
+  end
+
+  # Helper functions for generic system info
+  defp format_uptime(seconds) do
+    minutes = div(seconds, 60)
+    remaining_seconds = rem(seconds, 60)
+    "#{String.pad_leading("#{minutes}", 2, "0")}:#{String.pad_leading("#{remaining_seconds}", 2, "0")}"
+  end
+
+  defp get_component_count(state) do
+    case Map.get(state, :application_state) do
+      %{data: data} when is_map(data) -> map_size(data)
+      _ -> 0
+    end
+  end
+
+  defp get_memory_usage do
+    # Get approximate memory usage in MB
+    :erlang.memory(:total) |> div(1024 * 1024)
   end
 
   defp get_extra_info(state) do
-    location = Map.get(state, :location, "Unknown")
-    difficulty = Map.get(state, :difficulty, "Normal")
-    "  Location: #{location} │ Difficulty: #{difficulty}"
+    test_mode = Map.get(state, :test_mode, "overview")
+    breakpoint = Grid.get_breakpoint({80, 24})  # Default terminal size estimate
+    "  Test Mode: #{test_mode} │ Breakpoint: #{breakpoint}"
   end
 end

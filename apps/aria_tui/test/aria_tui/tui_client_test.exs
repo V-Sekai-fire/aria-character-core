@@ -19,7 +19,7 @@ defmodule AriaTui.TuiClientTest do
       # The client should start with a basic state
       state = :sys.get_state(pid)
 
-      assert Map.has_key?(state, :game_state)
+      assert Map.has_key?(state, :application_state)
       assert Map.has_key?(state, :tick_count)
       assert Map.has_key?(state, :last_update)
       assert Map.has_key?(state, :paused)
@@ -82,27 +82,25 @@ defmodule AriaTui.TuiClientTest do
     end
   end
 
-  describe "game state integration" do
-    test "handles game state updates" do
+  describe "application state integration" do
+    test "handles application state updates" do
       {:ok, pid} = TuiClient.start_link([])
 
-      # Mock game state
-      game_state = %{
-        agents: [
-          %{name: "Alex", position: {5.0, 3.0}, status: :alive, speed: 1.2},
-          %{name: "Jace", position: {8.0, 2.0}, status: :alive, speed: 0.8},
-          %{name: "Maya", position: {5.0, 5.0}, status: :alive, speed: 1.0}
-        ],
-        map: %{width: 12, height: 6},
-        tick: 42
+      # Mock application state
+      application_state = %{
+        status: "active",
+        data: %{
+          "component_1" => %{value: 42, status: :operational},
+          "component_2" => %{value: 73, status: :operational}
+        }
       }
 
-      # Update game state
-      TuiClient.handle_message(pid, {:game_update, game_state})
+      # Update application state
+      TuiClient.handle_message(pid, {:state_update, application_state})
       :timer.sleep(10)
 
       state = TuiClient.get_state(pid)
-      assert state.game_state == game_state
+      assert state.application_state == application_state
 
       GenServer.stop(pid)
     end

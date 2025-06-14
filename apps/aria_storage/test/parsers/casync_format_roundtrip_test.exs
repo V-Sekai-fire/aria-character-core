@@ -122,8 +122,6 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
 
                           flunk("Roundtrip failed for #{filename}")
                         end
-                      {:error, reason} ->
-                        flunk("Failed to encode #{filename}: #{inspect(reason)}")
                     end
                   {:error, _reason} ->
                     # Skip files that don't parse (might be corrupted test data)
@@ -517,8 +515,6 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
 
                         flunk("Roundtrip failed for #{filename}")
                       end
-                    {:error, reason} ->
-                      flunk("Failed to encode #{filename}: #{inspect(reason)}")
                   end
                 {:error, _reason} ->
                   # Skip files that don't parse (might be corrupted test data)
@@ -648,6 +644,8 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
       assert original_data == re_encoded_data
     end
   end
+
+  # Last attempted fix for test/parsers/casync_format_roundtrip_test.exs infinite loop: June 14, 2025
 
   # Helper functions
 

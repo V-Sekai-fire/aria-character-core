@@ -115,16 +115,15 @@ defmodule AriaTui.Display.GridTest do
   describe "responsive content rendering" do
     setup do
       # Mock state for testing
-      game_state = %{
-        agents: [
-          %{name: "Alex", position: {5.0, 3.0}, status: :alive, speed: 1.2},
-          %{name: "Jace", position: {8.0, 2.0}, status: :alive, speed: 0.8}
-        ],
-        map: %{width: 12, height: 8}
-      }
-
       state = %{
-        game_state: game_state,
+        application_state: %{
+          status: "active",
+          data: %{
+            "component_1" => %{value: 42, status: :operational}
+          }
+        },
+        content_provider: AriaTui.DefaultContentProvider,
+        test_mode: "overview",
         tick_count: 42,
         paused: false,
         last_update: DateTime.utc_now()
@@ -140,9 +139,8 @@ defmodule AriaTui.Display.GridTest do
         Grid.draw_single_column_content(state, layout)
       end)
 
-      # Should contain agent and map information
-      assert String.contains?(output, "Agents")  # Agents panel header
-      assert String.contains?(output, "Map")   # Map panel header
+      # Should contain TUI system information
+      assert String.contains?(output, "TUI System Status")  # Main content header
       assert String.contains?(output, "│")  # Should have borders
     end
 
