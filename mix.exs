@@ -14,7 +14,8 @@ defmodule AriaCharacterCore.MixProject do
       preferred_cli_env: [
         "test.all": :test,
         "test.watch": :test
-      ]
+      ],
+      elixirc_options: [warnings_as_errors: false],
     ]
   end
 
