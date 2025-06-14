@@ -18,6 +18,7 @@ defmodule AriaEngine.DomainRegistry do
   """
 
   alias AriaEngine.{Domain, Planner}
+  alias AriaEngine.Actions
 
   @domains_table :aria_domains_registry
 

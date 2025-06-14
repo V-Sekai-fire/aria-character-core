@@ -110,6 +110,8 @@ defmodule AriaWorkflow.WorkflowEngine do
     {:ok, WorkflowDefinition.t()} | {:error, :not_found}
   def get_workflow(workflow_id, opts \\ []) do
     WorkflowRegistry.get_workflow(workflow_id, opts)
+    # Example usage:
+    # warn_if_verbose("Some warning message", opts)
   end
 
   @doc """
@@ -200,11 +202,20 @@ defmodule AriaWorkflow.WorkflowEngine do
   @doc """
   Monitors workflow execution with a callback function.
   """
-  @spec monitor_execution(reference(), function()) :: :ok
-  def monitor_execution(_execution_ref, _callback_fn) do
-    # TODO: Integrate with execution registry when available
-    Logger.warning("Workflow execution monitoring not yet implemented")
-    :ok
+  @spec monitor_execution(reference(), function(), keyword()) :: :ok | :not_implemented
+  def monitor_execution(_execution_ref, _callback_fn, opts \\ []) do
+    warn_if_verbose("Workflow execution monitoring not yet implemented", opts)
+    :not_implemented
+  end
+
+  @doc """
+  Logs a warning only if verbose is true or not set to false in opts.
+  """
+  def warn_if_verbose(message, opts \\ []) do
+    verbose = Keyword.get(opts, :verbose, true)
+    if verbose do
+      Logger.warning(message)
+    end
   end
 
   # Private functions

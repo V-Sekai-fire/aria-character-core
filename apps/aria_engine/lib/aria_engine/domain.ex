@@ -16,9 +16,17 @@ defmodule AriaEngine.Domain do
   domain = AriaEngine.Domain.new("logistics")
   |> AriaEngine.Domain.add_action(:move, &move_action/2)
   |> AriaEngine.Domain.add_task_method("transport", [&transport_by_truck/2, &transport_by_plane/2])
+  ```
+
+  ## Aliases
+
+  - `AriaFileManagement`: For file management actions and methods.
+  - `AriaWorkflowSystem`: For workflow system actions and methods.
   """
 
+  require Logger
   alias AriaEngine.State
+  alias AriaEngine.Actions
 
   @type action_name :: atom()
   @type task_name :: String.t()
@@ -257,15 +265,13 @@ defmodule AriaEngine.Domain do
     }
   end
 
-  @doc """
+  @doc  """
   Adds Porcelain-based actions to the domain.
 
   This convenience method adds all the external process actions from AriaEngine.Actions.
   """
   @spec add_porcelain_actions(t()) :: t()
   def add_porcelain_actions(%__MODULE__{} = domain) do
-    alias AriaEngine.Actions
-
     porcelain_actions = %{
       execute_command: &Actions.execute_command/2,
       copy_file: &Actions.copy_file/2,
@@ -279,27 +285,6 @@ defmodule AriaEngine.Domain do
     add_actions(domain, porcelain_actions)
   end
 
-  # These convenience methods are commented out to avoid hard dependencies on domain modules
-  # Domain-specific modules should define their own methods in their create_domain/0 functions
-
-  # @doc """
-  # Adds file management methods to the domain.
-  # This convenience method adds all the file management task methods.
-  # """
-  # @spec add_file_management_methods(t()) :: t()
-  # def add_file_management_methods(%__MODULE__{} = domain) do
-  #   # Implementation moved to AriaFileManagement.create_domain/0
-  # end
-
-  # @doc """
-  # Adds workflow system methods to the domain.
-  # This convenience method adds all the workflow system task methods.
-  # """
-  # @spec add_workflow_system_methods(t()) :: t()
-  # def add_workflow_system_methods(%__MODULE__{} = domain) do
-  #   # Implementation moved to AriaWorkflowSystem.create_domain/0
-  # end
-
   @doc """
   Creates a complete domain with all Porcelain-based actions and methods.
 
@@ -310,7 +295,8 @@ defmodule AriaEngine.Domain do
   def create_complete_domain(name \\ "complete") do
     new(name)
     |> add_porcelain_actions()
-    # Domain-specific methods are added by each domain module in their create_domain/0 functions
+    |> add_file_management_methods()
+    |> add_workflow_system_methods()
   end
 
   @doc """
@@ -342,4 +328,18 @@ defmodule AriaEngine.Domain do
   end
 
   def validate(_), do: {:error, "Not a valid domain struct"}
+
+  defp add_file_management_methods(%__MODULE__{} = domain) do
+    # File management methods would be added by the respective apps
+    # that depend on aria_engine, not the other way around
+    Logger.debug("File management methods should be added by dependent apps")
+    domain
+  end
+
+  defp add_workflow_system_methods(%__MODULE__{} = domain) do
+    # Workflow system methods would be added by the respective apps
+    # that depend on aria_engine, not the other way around
+    Logger.debug("Workflow system methods should be added by dependent apps")
+    domain
+  end
 end

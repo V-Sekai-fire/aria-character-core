@@ -51,6 +51,9 @@ defmodule AriaEngine.MixProject do
       # JSON handling
       {:jason, "~> 1.4"},
 
+      # External process execution for actions
+      {:porcelain, "~> 2.0"},
+
       # UUID generation for character IDs
       {:elixir_uuid, "~> 1.2"},
 

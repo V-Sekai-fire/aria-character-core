@@ -52,6 +52,7 @@ defmodule AriaEngine.Planner do
   """
   @spec plan(domain_interface(), State.t(), [Plan.todo_item()], planner_opts()) :: planner_result()
   def plan(domain_interface, %State{} = initial_state, goals, opts \\ []) do
+    set_logger_level_from_opts(opts)
     # Convert domain interface to Domain struct for compatibility with Plan module
     domain = interface_to_domain(domain_interface)
 
@@ -76,6 +77,7 @@ defmodule AriaEngine.Planner do
   """
   @spec execute(domain_interface(), State.t(), Plan.solution_tree(), planner_opts()) :: execution_result()
   def execute(domain_interface, %State{} = initial_state, solution_tree, opts \\ []) do
+    set_logger_level_from_opts(opts)
     # Convert domain interface to Domain struct
     domain = interface_to_domain(domain_interface)
 
@@ -100,6 +102,7 @@ defmodule AriaEngine.Planner do
   """
   @spec replan(domain_interface(), State.t(), Plan.solution_tree(), String.t(), planner_opts()) :: replan_result()
   def replan(domain_interface, %State{} = current_state, solution_tree, fail_node_id, opts \\ []) do
+    set_logger_level_from_opts(opts)
     # Convert domain interface to Domain struct
     domain = interface_to_domain(domain_interface)
 
@@ -202,5 +205,17 @@ defmodule AriaEngine.Planner do
       unigoal_methods: Map.get(interface, :unigoal_methods, %{}),
       multigoal_methods: Map.get(interface, :multigoal_methods, [])
     }
+  end
+
+  # Set Logger level from opts (internal planner verbosity)
+  defp set_logger_level_from_opts(opts) do
+    cond do
+      Keyword.has_key?(opts, :log_level) ->
+        Logger.configure(level: Keyword.get(opts, :log_level))
+      Keyword.get(opts, :verbose, false) ->
+        Logger.configure(level: :debug)
+      true ->
+        Logger.configure(level: :info)
+    end
   end
 end

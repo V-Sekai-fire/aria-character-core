@@ -1,22 +1,14 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaFileManagement do
+defmodule AriaFileManagement.Domain do
   @moduledoc """
-  File management domain for AriaEngine with Porcelain-based external process actions.
-
-  This domain provides file and directory operations using external system commands
-  through Porcelain, allowing for robust file system interactions.
+  Prepackaged file management domain for AriaEngine.
   """
-
-  # We can now directly use AriaEngine modules since we're using explicit dependencies
   alias AriaEngine.{Domain, State}
 
-  @doc """
-  Creates a file management domain with Porcelain-based actions.
-  """
-  @spec create_domain() :: Domain.t()
-  def create_domain do
+  @spec domain() :: Domain.t()
+  def domain do
     Domain.new("file_management")
     |> Domain.add_actions(%{
       copy_file: &copy_file/2,
@@ -41,6 +33,30 @@ defmodule AriaFileManagement do
     |> Domain.add_task_methods("cleanup_directory", [
       &cleanup_by_age/2,
       &cleanup_by_pattern/2
+    ])
+    |> Domain.add_task_methods("backup_file", [
+      &backup_file/2
+    ])
+    |> Domain.add_task_methods("setup_workspace", [
+      &setup_workspace/2
+    ])
+    |> Domain.add_task_methods("create_directory_structure", [
+      &create_directory_structure/2
+    ])
+    |> Domain.add_task_methods("replace_file_safely", [
+      &replace_file_safely/2
+    ])
+    |> Domain.add_task_methods("download_and_verify", [
+      &download_and_verify/2
+    ])
+    |> Domain.add_task_methods("cleanup_temp_files", [
+      &cleanup_temp_files/2
+    ])
+    |> Domain.add_task_methods("compress_directory", [
+      &compress_directory/2
+    ])
+    |> Domain.add_task_methods("sync_directories", [
+      &sync_directories/2
     ])
     |> Domain.add_unigoal_method("file_exists", &ensure_file_exists/2)
     |> Domain.add_unigoal_method("directory_exists", &ensure_directory_exists/2)
@@ -310,4 +326,43 @@ defmodule AriaFileManagement do
       {:execute_command, ["rsync", "-av", source, destination]}
     ]
   end
+end
+
+# Main module just references the prepackaged domain
+
+defmodule AriaFileManagement do
+  @moduledoc """
+  File management domain for AriaEngine with Porcelain-based external process actions.
+  """
+
+  def domain, do: AriaFileManagement.Domain.domain()
+
+  # Delegate all public API functions to the Domain submodule for compatibility
+  defdelegate create_domain(), to: AriaFileManagement.Domain, as: :domain
+  defdelegate copy_file(state, args), to: AriaFileManagement.Domain
+  defdelegate move_file(state, args), to: AriaFileManagement.Domain
+  defdelegate delete_file(state, args), to: AriaFileManagement.Domain
+  defdelegate create_directory(state, args), to: AriaFileManagement.Domain
+  defdelegate list_directory(state, args), to: AriaFileManagement.Domain
+  defdelegate file_exists(state, args), to: AriaFileManagement.Domain
+  defdelegate download_file(state, args), to: AriaFileManagement.Domain
+  defdelegate create_archive(state, args), to: AriaFileManagement.Domain
+  defdelegate extract_archive(state, args), to: AriaFileManagement.Domain
+  defdelegate execute_command(state, args), to: AriaFileManagement.Domain
+  defdelegate backup_files_local(state, args), to: AriaFileManagement.Domain
+  defdelegate backup_files_archive(state, args), to: AriaFileManagement.Domain
+  defdelegate sync_directory_rsync(state, args), to: AriaFileManagement.Domain
+  defdelegate sync_directory_basic(state, args), to: AriaFileManagement.Domain
+  defdelegate cleanup_by_age(state, args), to: AriaFileManagement.Domain
+  defdelegate cleanup_by_pattern(state, args), to: AriaFileManagement.Domain
+  defdelegate ensure_file_exists(state, args), to: AriaFileManagement.Domain
+  defdelegate ensure_directory_exists(state, args), to: AriaFileManagement.Domain
+  defdelegate backup_file(state, args), to: AriaFileManagement.Domain
+  defdelegate replace_file_safely(state, args), to: AriaFileManagement.Domain
+  defdelegate create_directory_structure(state, args), to: AriaFileManagement.Domain
+  defdelegate download_and_verify(state, args), to: AriaFileManagement.Domain
+  defdelegate setup_workspace(state, args), to: AriaFileManagement.Domain
+  defdelegate cleanup_temp_files(state, args), to: AriaFileManagement.Domain
+  defdelegate compress_directory(state, args), to: AriaFileManagement.Domain
+  defdelegate sync_directories(state, args), to: AriaFileManagement.Domain
 end

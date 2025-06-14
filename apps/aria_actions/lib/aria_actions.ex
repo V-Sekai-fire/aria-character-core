@@ -1,7 +1,8 @@
+
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Actions do
+defmodule AriaActions do
   @moduledoc """
   A library of actions that can execute external processes via Porcelain.
 
@@ -9,11 +10,11 @@ defmodule AriaEngine.Actions do
   and can interact with external systems through command execution.
   """
 
-  alias AriaEngine.State
+  alias AriaActions.StateProvider
   require Logger
 
   # Type definitions
-  @type state :: State.t()
+  @type state :: StateProvider.state()
   @type command :: String.t()
   @type args :: [String.t()]
   @type execution_opts :: %{
@@ -49,6 +50,7 @@ defmodule AriaEngine.Actions do
   end
 
   @spec execute_command_with_opts(state(), command(), args(), execution_opts()) :: state() | false
+
   defp execute_command_with_opts(state, command, args, opts) do
     fail_on_error = Map.get(opts, :fail_on_error, true)
 
@@ -69,15 +71,15 @@ defmodule AriaEngine.Actions do
       end_time = System.monotonic_time(:millisecond)
       duration_ms = end_time - start_time
 
-      # Update state with execution results using direct state operations
+      # Update state with execution results
       new_state = state
-      |> State.set_object("last_command", "command", command)
-      |> State.set_object("last_command", "args", args)
-      |> State.set_object("last_command", "exit_code", result.status)
-      |> State.set_object("last_command", "stdout", result.out || "")
-      |> State.set_object("last_command", "stderr", result.err || "")
-      |> State.set_object("last_command", "duration_ms", duration_ms)
-      |> State.set_object("last_command", "success", result.status == 0)
+      |> StateProvider.set_object("last_command", "command", command)
+      |> StateProvider.set_object("last_command", "args", args)
+      |> StateProvider.set_object("last_command", "exit_code", result.status)
+      |> StateProvider.set_object("last_command", "stdout", result.out || "")
+      |> StateProvider.set_object("last_command", "stderr", result.err || "")
+      |> StateProvider.set_object("last_command", "duration_ms", duration_ms)
+      |> StateProvider.set_object("last_command", "success", result.status == 0)
 
       if result.status == 0 do
         Logger.info("Command succeeded (#{duration_ms}ms)")
@@ -89,8 +91,8 @@ defmodule AriaEngine.Actions do
         else
           # Continue on error - update state with failure info but don't fail
           new_state
-          |> State.set_object("command_result", "last_exit_code", result.status)
-          |> State.set_object("command_result", "last_success", false)
+          |> StateProvider.set_object("command_result", "last_exit_code", result.status)
+          |> StateProvider.set_object("command_result", "last_success", false)
         end
       end
 
@@ -100,9 +102,9 @@ defmodule AriaEngine.Actions do
 
         # Update state with error information
         error_state = state
-        |> State.set_object("last_command", "command", command)
-        |> State.set_object("last_command", "error", inspect(error))
-        |> State.set_object("last_command", "success", false)
+        |> StateProvider.set_object("last_command", "command", command)
+        |> StateProvider.set_object("last_command", "error", inspect(error))
+        |> StateProvider.set_object("last_command", "success", false)
 
         if fail_on_error do
           false # Ensure this returns false
@@ -122,10 +124,10 @@ defmodule AriaEngine.Actions do
       new_state ->
         # Update state to record successful copy
         new_state
-        |> State.set_object("file_exists", destination, true)
-        |> State.set_object("file_copied_from", destination, source)
-        |> State.set_object("last_copy", "source", source)
-        |> State.set_object("last_copy", "destination", destination)
+        |> StateProvider.set_object("file_exists", destination, true)
+        |> StateProvider.set_object("file_copied_from", destination, source)
+        |> StateProvider.set_object("last_copy", "source", source)
+        |> StateProvider.set_object("last_copy", "destination", destination)
     end
   end
 
@@ -160,8 +162,8 @@ defmodule AriaEngine.Actions do
       new_state ->
         # Update state to record successful directory creation
         new_state
-        |> State.set_object("directory_exists", dir_path, true)
-        |> State.set_object("last_mkdir", "path", dir_path)
+        |> StateProvider.set_object("directory_exists", dir_path, true)
+        |> StateProvider.set_object("last_mkdir", "path", dir_path)
     end
   end
 
@@ -197,7 +199,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Download a file from a URL.
   """
-  @spec download_file(state(), {url(), file_path()}) :: state() | false
+  @spec download_file(State.t(), {url(), file_path()}) :: State.t() | false
   def download_file(state, [url, destination]) do
     case execute_command(state, ["curl", "-o", destination, url]) do
       false -> false  # Command failed, ensure false is returned
@@ -280,7 +282,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Echo a message and update state.
   """
-  @spec echo(state(), [String.t()]) :: state()
+  @spec echo(State.t(), [String.t()]) :: State.t()
   def echo(state, [message]) do
     execute_command(state, ["echo", message])
   end

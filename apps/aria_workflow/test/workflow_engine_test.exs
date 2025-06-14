@@ -176,7 +176,7 @@ defmodule AriaWorkflow.WorkflowEngineTest do
       execution_ref = make_ref()
       callback = fn _status -> :ok end
 
-      assert :ok = WorkflowEngine.monitor_execution(execution_ref, callback)
+      assert :not_implemented = WorkflowEngine.monitor_execution(execution_ref, callback, verbose: false)
     end
   end
 end

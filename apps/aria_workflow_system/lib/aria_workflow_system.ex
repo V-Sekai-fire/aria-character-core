@@ -34,6 +34,30 @@ defmodule AriaWorkflowSystem do
       &debug_with_tracing/2,
       &debug_with_logging/2
     ])
+    |> Domain.add_task_methods("deploy_service", [
+      &deploy_service/2
+    ])
+    |> Domain.add_task_methods("run_migrations", [
+      &run_migrations/2
+    ])
+    |> Domain.add_task_methods("setup_dev_environment", [
+      &setup_dev_environment/2
+    ])
+    |> Domain.add_task_methods("run_tests_with_coverage", [
+      &run_tests_with_coverage/2
+    ])
+    |> Domain.add_task_methods("build_and_package", [
+      &build_and_package/2
+    ])
+    |> Domain.add_task_methods("monitor_system_health", [
+      &monitor_system_health/2
+    ])
+    |> Domain.add_task_methods("backup_system_data", [
+      &backup_system_data/2
+    ])
+    |> Domain.add_task_methods("restore_system_data", [
+      &restore_system_data/2
+    ])
     |> Domain.add_unigoal_method("workflow_completed", &ensure_workflow_completed/2)
     |> Domain.add_unigoal_method("command_executed", &ensure_command_executed/2)
   end

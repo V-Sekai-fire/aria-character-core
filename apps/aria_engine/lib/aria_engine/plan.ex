@@ -91,11 +91,8 @@ defmodule AriaEngine.Plan do
   """
   @spec plan(Domain.t(), State.t(), [todo_item()], keyword()) :: plan_result()
   def plan(%Domain{} = domain, %State{} = state, todos, opts \\ []) do
-    verbose = Keyword.get(opts, :verbose, @default_verbose)
-
-    if verbose > 0 do
-      IO.puts("Starting IPyHOP planning for #{length(todos)} todos")
-    end
+    # IO.puts("Starting IPyHOP planning for ", length(todos), " todos")
+    # Commented out to reduce test output noise
 
     # Create initial solution tree with goal-task network
     solution_tree = create_initial_solution_tree(todos, state)
