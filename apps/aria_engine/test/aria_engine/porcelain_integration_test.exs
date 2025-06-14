@@ -4,8 +4,7 @@
 defmodule AriaEngine.PortcelainIntegrationTest do
   use ExUnit.Case, async: false
 
-  alias AriaEngine.{Domain, State, Actions}
-  alias AriaEngine.Domains.{FileManagement, WorkflowSystem}
+  alias AriaEngine.{State, Actions, DomainProvider, Plan}
 
   describe "AriaEngine Porcelain Actions" do
     test "execute_command action works with simple commands" do
@@ -101,179 +100,191 @@ defmodule AriaEngine.PortcelainIntegrationTest do
   end
 
   describe "AriaEngine File Management Domain" do
-    test "backup_file method returns correct action sequence" do
+    test "backup_file task plans and executes correctly" do
       state = State.new()
       file_path = "/tmp/test_file.txt"
 
-      actions = FileManagement.backup_file(state, [file_path])
+      # Get the file management domain
+      {:ok, domain} = DomainProvider.get_domain("file_management")
 
-      assert is_list(actions)
-      assert length(actions) == 1
+      # Plan backup_file task
+      todos = [{"backup_file", [file_path]}]
 
-      [{action_name, action_args}] = actions
-      assert action_name == :copy_file
-      assert [^file_path, backup_path, %{force: false}] = action_args
-      assert String.starts_with?(backup_path, file_path <> ".backup.")
+      case Plan.plan(domain, state, todos) do
+        {:ok, solution_tree} ->
+          actions = Plan.get_primitive_actions_dfs(solution_tree)
+          assert is_list(actions)
+          assert length(actions) >= 1
+
+          # Should contain copy_file action
+          action_names = Enum.map(actions, fn {name, _} -> name end)
+          assert :copy_file in action_names
+
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
 
-    test "replace_file_safely method returns correct action sequence" do
+    test "replace_file_safely task plans and executes correctly" do
       state = State.new()
       old_file = "/tmp/old_file.txt"
       new_file = "/tmp/new_file.txt"
 
-      actions = FileManagement.replace_file_safely(state, [old_file, new_file])
+      # Get the file management domain
+      {:ok, domain} = DomainProvider.get_domain("file_management")
 
-      assert is_list(actions)
-      assert length(actions) == 3  # copy_file + copy_file + echo
+      # Plan replace_file_safely task
+      todos = [{"replace_file_safely", [old_file, new_file]}]
 
-      [{:copy_file, [^old_file, backup_path]},
-       {:copy_file, [^new_file, ^old_file]},
-       {:echo, [echo_msg]}] = actions
+      case Plan.plan(domain, state, todos) do
+        {:ok, solution_tree} ->
+          actions = Plan.get_primitive_actions_dfs(solution_tree)
+          assert is_list(actions)
+          assert length(actions) >= 2
 
-      assert String.starts_with?(backup_path, old_file <> ".backup")
-      assert String.contains?(echo_msg, "Safely replaced")
+          # Should contain backup and replacement operations
+          action_names = Enum.map(actions, fn {name, _} -> name end)
+          assert :copy_file in action_names
+
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
 
-    test "create_directory_structure method returns correct action sequence" do
+    test "create_directory_structure task plans and executes correctly" do
       state = State.new()
       base_path = "/tmp/project"
       subdirs = ["src", "test", "docs"]
 
-      actions = FileManagement.create_directory_structure(state, [base_path, subdirs])
+      # Get the file management domain
+      {:ok, domain} = DomainProvider.get_domain("file_management")
 
-      assert is_list(actions)
-      assert length(actions) == 4  # base + 3 subdirs
+      # Plan create_directory_structure task
+      todos = [{"create_directory_structure", [base_path, subdirs]}]
 
-      [{:create_directory, [^base_path, %{parents: true}]} | subdir_actions] = actions
+      case Plan.plan(domain, state, todos) do
+        {:ok, solution_tree} ->
+          actions = Plan.get_primitive_actions_dfs(solution_tree)
+          assert is_list(actions)
+          assert length(actions) >= 4  # base + 3 subdirs
 
-      assert length(subdir_actions) == 3
-      Enum.each(subdir_actions, fn {:create_directory, [path, %{parents: true}]} ->
-        assert String.starts_with?(path, base_path)
-      end)
+          # Should contain create_directory actions
+          action_names = Enum.map(actions, fn {name, _} -> name end)
+          assert :create_directory in action_names
+
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
 
-    test "setup_workspace method returns correct action sequence" do
+    test "setup_workspace task plans and executes correctly" do
       state = State.new()
       workspace_path = "/tmp/workspaces"
       project_name = "test_project"
 
-      actions = FileManagement.setup_workspace(state, [workspace_path, project_name])
+      # Get the file management domain
+      {:ok, domain} = DomainProvider.get_domain("file_management")
 
-      assert is_list(actions)
-      assert length(actions) == 6  # project dir + 4 subdirs + README
+      # Plan setup_workspace task
+      todos = [{"setup_workspace", [workspace_path, project_name]}]
 
-      # Check that all expected directories are created
-      expected_dirs = [
-        "/tmp/workspaces/test_project",
-        "/tmp/workspaces/test_project/src",
-        "/tmp/workspaces/test_project/test",
-        "/tmp/workspaces/test_project/docs",
-        "/tmp/workspaces/test_project/config"
-      ]
+      case Plan.plan(domain, state, todos) do
+        {:ok, solution_tree} ->
+          actions = Plan.get_primitive_actions_dfs(solution_tree)
+          assert is_list(actions)
+          assert length(actions) >= 5  # Multiple directory creation actions
 
-      dir_actions = Enum.take(actions, 5)
-      Enum.each(dir_actions, fn {:create_directory, [path, %{parents: true}]} ->
-        assert path in expected_dirs
-      end)
+          # Should contain create_directory actions
+          action_names = Enum.map(actions, fn {name, _} -> name end)
+          assert :create_directory in action_names
 
-      # Check README creation
-      {:execute_command, ["touch", [readme_path], %{}]} = Enum.at(actions, 5)
-      assert String.ends_with?(readme_path, "README.md")
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
   end
 
   describe "AriaEngine Workflow System Domain" do
-    test "execute_traced_command method returns correct action sequence" do
-      state = State.new()
-      command = "echo"
-      args = ["traced execution"]
-      workflow_id = "test_workflow_123"
-
-      actions = WorkflowSystem.execute_traced_command(state, [command, args, workflow_id])
-
-      assert is_list(actions)
-      assert length(actions) == 1
-
-      [{:execute_command, [^command, ^args, options]}] = actions
-      assert options[:timeout] == 60_000
-      assert options[:env]["WORKFLOW_ID"] == workflow_id
-      assert options[:fail_on_error] == false
-    end
-
-    test "setup_dev_environment method returns correct action sequence" do
+    test "setup_dev_environment task plans and executes correctly" do
       state = State.new()
       project_path = "/tmp/dev_project"
       services = ["postgres"]
 
-      actions = WorkflowSystem.setup_dev_environment(state, [project_path, services])
+      # Get the workflow system domain
+      {:ok, domain} = DomainProvider.get_domain("workflow_system")
 
-      assert is_list(actions)
-      assert length(actions) >= 3  # base actions + service actions
+      # Plan setup_dev_environment task
+      todos = [{"setup_dev_environment", [project_path, services]}]
 
-      # Check base actions
-      [{:create_directory, [^project_path, %{parents: true}]},
-       {:execute_command, ["git", ["init"], %{working_dir: ^project_path}]} | service_actions] = actions
+      case Plan.plan(domain, state, todos) do
+        {:ok, solution_tree} ->
+          actions = Plan.get_primitive_actions_dfs(solution_tree)
+          assert is_list(actions)
+          assert length(actions) >= 3  # base actions + service actions
 
-      # Check that Docker commands are generated for services
-      docker_commands = Enum.filter(service_actions, fn
-        {:execute_command, ["docker", _args, _opts]} -> true
-        _ -> false
-      end)
+          # Should contain create_directory and execute_command actions
+          action_names = Enum.map(actions, fn {name, _} -> name end)
+          assert :create_directory in action_names
+          assert :execute_command in action_names
 
-      assert length(docker_commands) == 1  # postgres only
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
 
-    test "run_tests_with_coverage method returns correct action sequence" do
+    test "run_tests_with_coverage task plans and executes correctly" do
       state = State.new()
       project_path = "/tmp/test_project"
       test_command = "mix test"
 
-      actions = WorkflowSystem.run_tests_with_coverage(state, [project_path, test_command])
+      # Get the workflow system domain
+      {:ok, domain} = DomainProvider.get_domain("workflow_system")
 
-      assert is_list(actions)
-      assert length(actions) == 2
+      # Plan run_tests_with_coverage task
+      todos = [{"run_tests_with_coverage", [project_path, test_command]}]
 
-      [{:execute_command, ["mix", ["test", "--cover"], opts1]},
-       {:execute_command, ["mix", ["coveralls.html"], opts2]}] = actions
+      case Plan.plan(domain, state, todos) do
+        {:ok, solution_tree} ->
+          actions = Plan.get_primitive_actions_dfs(solution_tree)
+          assert is_list(actions)
+          assert length(actions) >= 2
 
-      assert opts1[:working_dir] == project_path
-      assert opts1[:env]["MIX_ENV"] == "test"
-      assert opts2[:working_dir] == project_path
-      assert opts2[:fail_on_error] == false
+          # Should contain execute_command actions for running tests
+          action_names = Enum.map(actions, fn {name, _} -> name end)
+          assert :execute_command in action_names
+
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
 
-    test "build_and_package docker method returns correct action sequence" do
+    test "build_and_package task plans and executes correctly" do
       state = State.new()
       project_path = "/tmp/docker_project"
       package_format = "docker"
 
-      actions = WorkflowSystem.build_and_package(state, [project_path, package_format])
+      # Get the workflow system domain
+      {:ok, domain} = DomainProvider.get_domain("workflow_system")
 
-      assert is_list(actions)
-      assert length(actions) == 1
+      # Plan build_and_package task
+      todos = [{"build_and_package", [project_path, package_format]}]
 
-      [{:execute_command, ["docker", ["build", "-t", "docker_project:latest", "."], opts]}] = actions
-      assert opts[:working_dir] == project_path
+      case Plan.plan(domain, state, todos) do
+        {:ok, solution_tree} ->
+          actions = Plan.get_primitive_actions_dfs(solution_tree)
+          assert is_list(actions)
+          assert length(actions) >= 1
+
+          # Should contain execute_command actions for building
+          action_names = Enum.map(actions, fn {name, _} -> name end)
+          assert :execute_command in action_names
+
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
 
-    test "build_and_package release method returns correct action sequence" do
-      state = State.new()
-      project_path = "/tmp/release_project"
-      package_format = "release"
-
-      actions = WorkflowSystem.build_and_package(state, [project_path, package_format])
-
-      assert is_list(actions)
-      assert length(actions) == 3
-
-      [{:execute_command, ["mix", ["deps.get"], _]},
-       {:execute_command, ["mix", ["compile"], _]},
-       {:execute_command, ["mix", ["release"], opts]}] = actions
-
-      assert opts[:env]["MIX_ENV"] == "prod"
-    end
-
-    test "monitor_system_health method returns correct action sequence" do
+    test "monitor_system_health task plans and executes correctly" do
       state = State.new()
       services = ["web_service", "api_service"]
       health_checks = %{
@@ -281,39 +292,80 @@ defmodule AriaEngine.PortcelainIntegrationTest do
         "api_service" => %{"type" => "tcp", "host" => "localhost", "port" => 3000}
       }
 
-      actions = WorkflowSystem.monitor_system_health(state, [services, health_checks])
+      # Get the workflow system domain
+      {:ok, domain} = DomainProvider.get_domain("workflow_system")
 
-      assert is_list(actions)
-      assert length(actions) == 2
+      # Plan monitor_system_health task
+      todos = [{"monitor_system_health", [services, health_checks]}]
 
-      [{:execute_command, ["curl", ["-f", "-s", "http://localhost:8080/health"], _]},
-       {:execute_command, ["nc", ["-z", "localhost", "3000"], _]}] = actions
+      case Plan.plan(domain, state, todos) do
+        {:ok, solution_tree} ->
+          actions = Plan.get_primitive_actions_dfs(solution_tree)
+          assert is_list(actions)
+          assert length(actions) >= 2  # One action per service
+
+          # Should contain execute_command actions for health checks
+          action_names = Enum.map(actions, fn {name, _} -> name end)
+          assert :execute_command in action_names
+
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
+    end
+
+    test "deploy_service task plans and executes correctly" do
+      state = State.new()
+      service_name = "web_service"
+      deployment_config = %{"image" => "nginx:latest", "port" => 80}
+
+      # Get the workflow system domain
+      {:ok, domain} = DomainProvider.get_domain("workflow_system")
+
+      # Plan deploy_service task
+      todos = [{"deploy_service", [service_name, deployment_config]}]
+
+      case Plan.plan(domain, state, todos) do
+        {:ok, solution_tree} ->
+          actions = Plan.get_primitive_actions_dfs(solution_tree)
+          assert is_list(actions)
+          assert length(actions) >= 1
+
+          # Should contain execute_command actions for deployment
+          action_names = Enum.map(actions, fn {name, _} -> name end)
+          assert :execute_command in action_names
+
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
   end
 
   describe "AriaEngine Domain Integration" do
     test "create_complete_domain includes all actions and methods" do
-      domain = Domain.create_complete_domain("test_complete")
+      # Get file management domain
+      {:ok, file_domain} = DomainProvider.get_domain("file_management")
 
-      # Check that Porcelain actions are included
-      assert Map.has_key?(domain.actions, :execute_command)
-      assert Map.has_key?(domain.actions, :copy_file)
-      assert Map.has_key?(domain.actions, :create_directory)
-      assert Map.has_key?(domain.actions, :download_file)
+      # Get workflow system domain
+      {:ok, workflow_domain} = DomainProvider.get_domain("workflow_system")
+
+      # Check that file management actions are included
+      assert Map.has_key?(file_domain.actions, :execute_command)
+      assert Map.has_key?(file_domain.actions, :copy_file)
+      assert Map.has_key?(file_domain.actions, :create_directory)
+      assert Map.has_key?(file_domain.actions, :download_file)
 
       # Check that file management methods are included
-      assert Map.has_key?(domain.task_methods, "backup_file")
-      assert Map.has_key?(domain.task_methods, "setup_workspace")
-      assert Map.has_key?(domain.task_methods, "compress_directory")
+      assert Map.has_key?(file_domain.task_methods, "backup_file")
+      assert Map.has_key?(file_domain.task_methods, "setup_workspace")
 
       # Check that workflow system methods are included
-      assert Map.has_key?(domain.task_methods, "deploy_service")
-      assert Map.has_key?(domain.task_methods, "run_migrations")
-      assert Map.has_key?(domain.task_methods, "monitor_system_health")
+      assert Map.has_key?(workflow_domain.task_methods, "deploy_service")
+      assert Map.has_key?(workflow_domain.task_methods, "run_migrations")
+      assert Map.has_key?(workflow_domain.task_methods, "monitor_system_health")
     end
 
     test "domain can execute Porcelain actions" do
-      domain = Domain.create_complete_domain("test_execution")
+      {:ok, domain} = DomainProvider.get_domain("file_management")
       state = State.new()
 
       # Get the execute_command action

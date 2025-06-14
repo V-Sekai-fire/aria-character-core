@@ -4,8 +4,8 @@
 defmodule AriaEnginePortelainIntegrationTest do
   use ExUnit.Case, async: false
 
-  alias AriaEngine.{Domain, State, Plan}
-  alias AriaEngine.{Actions, Domains}
+  alias AriaEngine.{Domain, State, Plan, DomainProvider}
+  alias AriaEngine.Actions
   alias AriaWorkflow.{WorkflowDefinition, WorkflowRegistry}
 
   require Logger
@@ -80,7 +80,7 @@ defmodule AriaEnginePortelainIntegrationTest do
 
   describe "AriaEngine Domains with Porcelain" do
     test "file management domain creation" do
-      domain = Domains.FileManagement.create_domain()
+      {:ok, domain} = DomainProvider.get_domain("file_management")
 
       assert domain.name == "file_management"
       assert Map.has_key?(domain.actions, :copy_file)
@@ -90,7 +90,7 @@ defmodule AriaEnginePortelainIntegrationTest do
     end
 
     test "workflow system domain creation" do
-      domain = Domains.WorkflowSystem.create_domain()
+      {:ok, domain} = DomainProvider.get_domain("workflow_system")
 
       assert domain.name == "workflow_system"
       assert Map.has_key?(domain.actions, :execute_workflow_command)
@@ -99,7 +99,7 @@ defmodule AriaEnginePortelainIntegrationTest do
     end
 
     test "file management domain planning" do
-      domain = Domains.FileManagement.create_domain()
+      {:ok, domain} = DomainProvider.get_domain("file_management")
       state = State.new()
 
       # Plan to ensure a file exists

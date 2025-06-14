@@ -247,6 +247,17 @@ defmodule AriaWorkflowSystem do
     ]
   end
 
+  def deploy_service(_state, [service_name, config]) when is_map(config) do
+    image = Map.get(config, "image", service_name)
+    port = Map.get(config, "port", 80)
+
+    [
+      {:echo, ["Deploying service: #{service_name} with image #{image} on port #{port}"]},
+      {:execute_command, ["docker", "run", "-d", "-p", "#{port}:#{port}", "--name", service_name, image]},
+      {:echo, ["Service #{service_name} deployed successfully"]}
+    ]
+  end
+
   @doc """
   Run database migrations.
   """

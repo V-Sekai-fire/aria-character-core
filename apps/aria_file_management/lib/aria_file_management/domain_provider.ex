@@ -52,6 +52,30 @@ defmodule AriaFileManagement.DomainProvider do
       &AriaFileManagement.cleanup_by_age/2,
       &AriaFileManagement.cleanup_by_pattern/2
     ])
+    |> Domain.add_task_methods("backup_file", [
+      &AriaFileManagement.backup_file/2
+    ])
+    |> Domain.add_task_methods("setup_workspace", [
+      &AriaFileManagement.setup_workspace/2
+    ])
+    |> Domain.add_task_methods("create_directory_structure", [
+      &AriaFileManagement.create_directory_structure/2
+    ])
+    |> Domain.add_task_methods("replace_file_safely", [
+      &AriaFileManagement.replace_file_safely/2
+    ])
+    |> Domain.add_task_methods("download_and_verify", [
+      &AriaFileManagement.download_and_verify/2
+    ])
+    |> Domain.add_task_methods("cleanup_temp_files", [
+      &AriaFileManagement.cleanup_temp_files/2
+    ])
+    |> Domain.add_task_methods("compress_directory", [
+      &AriaFileManagement.compress_directory/2
+    ])
+    |> Domain.add_task_methods("sync_directories", [
+      &AriaFileManagement.sync_directories/2
+    ])
     |> Domain.add_unigoal_method("file_exists", &AriaFileManagement.ensure_file_exists/2)
     |> Domain.add_unigoal_method("directory_exists", &AriaFileManagement.ensure_directory_exists/2)
   end

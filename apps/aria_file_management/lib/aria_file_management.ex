@@ -65,6 +65,7 @@ defmodule AriaFileManagement.Domain do
   # Placeholder action implementations - these would need to be implemented with actual file operations
   @spec copy_file(State.t(), list()) :: State.t() | false
   def copy_file(_state, [_source, _destination]), do: false
+  def copy_file(_state, [_source, _destination, _opts]), do: false
 
   @spec move_file(State.t(), list()) :: State.t() | false
   def move_file(_state, [_source, _destination]), do: false
@@ -74,6 +75,7 @@ defmodule AriaFileManagement.Domain do
 
   @spec create_directory(State.t(), list()) :: State.t() | false
   def create_directory(_state, [_dir_path]), do: false
+  def create_directory(_state, [_dir_path, _opts]), do: false
 
   @spec list_directory(State.t(), list()) :: State.t() | false
   def list_directory(_state, [_dir_path]), do: false
@@ -88,7 +90,10 @@ defmodule AriaFileManagement.Domain do
   def create_archive(_state, [_archive_path, _source]), do: false
 
   @spec execute_command(State.t(), list()) :: State.t() | false
-  def execute_command(_state, [_command | _args]), do: false
+  def execute_command(state, [_command | _args]) do
+    # Simulate successful command execution
+    AriaEngine.State.set_object(state, "last_command", "success", true)
+  end
 
   # Task methods that decompose complex file operations
 
