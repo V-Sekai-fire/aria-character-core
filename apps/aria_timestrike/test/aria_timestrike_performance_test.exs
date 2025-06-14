@@ -33,10 +33,13 @@ defmodule AriaTimestrike.PerformanceTest do
       # All actions should complete (even if they return false placeholders)
       assert length(results) == action_count
 
-      IO.puts("\n🎮 TIMESTRIKE ACTION PERFORMANCE:")
-      IO.puts("   Actions: #{action_count}")
-      IO.puts("   Time: #{Float.round(time_ms, 2)}ms")
-      IO.puts("   Actions/sec: #{Float.round(actions_per_second, 2)}")
+      # Performance logging only on verbose mode or failure
+      if System.get_env("VERBOSE_TESTS") == "true" or actions_per_second <= 1000 do
+        IO.puts("\n🎮 TIMESTRIKE ACTION PERFORMANCE:")
+        IO.puts("   Actions: #{action_count}")
+        IO.puts("   Time: #{Float.round(time_ms, 2)}ms")
+        IO.puts("   Actions/sec: #{Float.round(actions_per_second, 2)}")
+      end
 
       # Should handle at least 1000 actions per second
       assert actions_per_second > 1000
@@ -75,11 +78,14 @@ defmodule AriaTimestrike.PerformanceTest do
 
       assert length(results) == action_count
 
-      IO.puts("\n🚀 CONCURRENT TIMESTRIKE PERFORMANCE:")
-      IO.puts("   Actions: #{action_count}")
-      IO.puts("   Workers: #{worker_count}")
-      IO.puts("   Time: #{Float.round(time_ms, 2)}ms")
-      IO.puts("   Actions/sec: #{Float.round(actions_per_second, 2)}")
+      # Performance logging only on verbose mode or failure
+      if System.get_env("VERBOSE_TESTS") == "true" or actions_per_second <= 2000 do
+        IO.puts("\n🚀 CONCURRENT TIMESTRIKE PERFORMANCE:")
+        IO.puts("   Actions: #{action_count}")
+        IO.puts("   Workers: #{worker_count}")
+        IO.puts("   Time: #{Float.round(time_ms, 2)}ms")
+        IO.puts("   Actions/sec: #{Float.round(actions_per_second, 2)}")
+      end
 
       # Concurrent processing should be faster
       assert actions_per_second > 2000
@@ -110,10 +116,13 @@ defmodule AriaTimestrike.PerformanceTest do
       time_ms = time_us / 1000
       fps = action_count / (time_ms / 1000)
 
-      IO.puts("\n🎮 GAME SUBSYSTEM INTEGRATION TEST:")
-      IO.puts("   Actions: #{action_count}")
-      IO.puts("   Time: #{Float.round(time_ms, 2)}ms")
-      IO.puts("   Effective FPS: #{Float.round(fps, 2)}")
+      # Performance logging only on verbose mode or failure
+      if System.get_env("VERBOSE_TESTS") == "true" or fps <= 60 do
+        IO.puts("\n🎮 GAME SUBSYSTEM INTEGRATION TEST:")
+        IO.puts("   Actions: #{action_count}")
+        IO.puts("   Time: #{Float.round(time_ms, 2)}ms")
+        IO.puts("   Effective FPS: #{Float.round(fps, 2)}")
+      end
 
       # Should maintain reasonable frame rates
       assert fps > 60  # 60 FPS minimum for real-time gaming
