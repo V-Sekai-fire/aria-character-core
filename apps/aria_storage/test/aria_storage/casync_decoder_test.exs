@@ -172,7 +172,7 @@ defmodule AriaStorage.CasyncDecoderTest do
       assert {:ok, parsed_data} = CasyncFormat.parse_index(caibx_data)
       
       # Assemble the file
-      output_path = Path.join(@test_output_dir, "assembled_blob1.bin")
+      _output_path = Path.join(@test_output_dir, "assembled_blob1.bin")
       
       result = CasyncDecoder.assemble_file(parsed_data, [
         store_path: store_path,

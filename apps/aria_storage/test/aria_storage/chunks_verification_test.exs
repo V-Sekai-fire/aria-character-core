@@ -10,8 +10,8 @@ defmodule AriaStorage.ChunksVerificationTest do
   alias AriaStorage.Chunks
   alias AriaStorage.Parsers.CasyncFormat
 
-  @tag :integration
-  @tag timeout: 30_000
+  @describetag :integration
+  @describetag timeout: 30_000
   describe "chunking verification against desync/casync" do
     test "chunks match desync reference implementation exactly" do
       # Configure paths

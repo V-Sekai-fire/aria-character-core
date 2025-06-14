@@ -30,9 +30,9 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
   # Suppress warnings for helper functions kept for future reference
   @compile {:no_warn_unused_function, [
-    :work_stealing_coordinator, :extract_work_batch, :create_work_stealing_pipelines,
-    :hierarchical_result_convergence, :reduce_pairwise, :merge_results,
-    :calculate_work_distribution_variance
+    {:work_stealing_coordinator, 3}, {:extract_work_batch, 3}, {:create_work_stealing_pipelines, 2},
+    {:hierarchical_result_convergence, 1}, {:reduce_pairwise, 1}, {:merge_results, 2},
+    {:calculate_work_distribution_variance, 1}
   ]}
 
   alias Membrane.Testing
