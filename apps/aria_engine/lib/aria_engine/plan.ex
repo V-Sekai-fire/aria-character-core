@@ -120,7 +120,7 @@ defmodule AriaEngine.Plan do
   def replan(%Domain{} = domain, %State{} = state, solution_tree, fail_node_id, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
 
-    if verbose > 0 do
+    if verbose > 2 do
       IO.puts("Replanning from failure node: #{fail_node_id}")
     end
 
@@ -130,7 +130,7 @@ defmodule AriaEngine.Plan do
         {:error, "Could not find responsible task node for failed action"}
 
       task_node_id ->
-        if verbose > 0 do
+        if verbose > 2 do
           IO.puts("Found responsible task node: #{task_node_id}")
         end
 
@@ -185,7 +185,7 @@ defmodule AriaEngine.Plan do
   def run_lazy_refineahead(%Domain{} = domain, %State{} = initial_state, solution_tree, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
 
-    if verbose > 0 do
+    if verbose > 2 do
       IO.puts("Starting Run-Lazy-Refineahead execution")
     end
 
@@ -271,7 +271,7 @@ defmodule AriaEngine.Plan do
         case node.task do
           {task_name, _args} when is_binary(task_name) ->
             # This is a task node - this is what we're looking for
-            if verbose > 1 do
+            if verbose > 2 do
               IO.puts("Found task node: #{node_id} with task: #{task_name}")
             end
             node_id
@@ -306,7 +306,7 @@ defmodule AriaEngine.Plan do
               node.blacklisted_methods
             end
 
-            if verbose > 1 do
+            if verbose > 2 do
               IO.puts("Blacklisting method for task #{task_name}: #{inspect(current_method)}")
               IO.puts("Total blacklisted methods: #{inspect(blacklisted_methods)}")
             end
@@ -405,7 +405,7 @@ defmodule AriaEngine.Plan do
         {:error, "Node not found: #{node_id}"}
 
       node ->
-        if verbose > 1 do
+        if verbose > 2 do
           IO.puts("Expanding node #{node_id}: #{inspect(node.task)}")
         end
 
@@ -494,7 +494,7 @@ defmodule AriaEngine.Plan do
     end)
 
     if Enum.empty?(available_methods) do
-      if verbose > 1 do
+      if verbose > 2 do
         IO.puts("No methods available for task: #{task_name}")
       end
       {:error, "No methods found for task: #{task_name}"}
@@ -505,13 +505,13 @@ defmodule AriaEngine.Plan do
 
       case method.(node.state, args) do
         false ->
-          if verbose > 1 do
+          if verbose > 2 do
             IO.puts("Method failed preconditions for task: #{task_name}")
           end
           {:error, "Method preconditions failed for task: #{task_name}"}
 
         subtasks when is_list(subtasks) ->
-          if verbose > 1 do
+          if verbose > 2 do
             IO.puts("Method succeeded, created #{length(subtasks)} subtasks")
           end
 
@@ -532,7 +532,7 @@ defmodule AriaEngine.Plan do
                   end
                   new_state
                 false ->
-                  if verbose > 1 do
+                  if verbose > 2 do
                     IO.puts("Primitive action #{action_name}(#{inspect(args)}) failed")
                   end
                   current_state  # Keep current state if action failed
@@ -599,7 +599,7 @@ defmodule AriaEngine.Plan do
         end)
 
         if Enum.empty?(available_methods) do
-          if verbose > 1 do
+          if verbose > 2 do
             IO.puts("No methods available for goal: #{predicate}")
           end
           {:error, "No methods found for goal: #{predicate}"}
@@ -610,13 +610,13 @@ defmodule AriaEngine.Plan do
 
           case method.(node.state, [subject, object]) do
             false ->
-              if verbose > 1 do
+              if verbose > 2 do
                 IO.puts("Method failed preconditions for goal: #{predicate}")
               end
               :failure
 
             subtasks when is_list(subtasks) ->
-              if verbose > 1 do
+              if verbose > 2 do
                 IO.puts("Goal method succeeded, created #{length(subtasks)} subtasks")
               end
 
@@ -652,7 +652,7 @@ defmodule AriaEngine.Plan do
               {:ok, final_tree}
 
             {:multigoal, goals} ->
-              if verbose > 1 do
+              if verbose > 2 do
                 IO.puts("Goal method returned multigoal with #{length(goals)} goals")
               end
 
@@ -683,7 +683,7 @@ defmodule AriaEngine.Plan do
       # Get unsatisfied goals and create subtasks
       unsatisfied = Multigoal.unsatisfied_goals(multigoal, node.state)
 
-      if verbose > 1 do
+      if verbose > 2 do
         IO.puts("Multigoal has #{length(unsatisfied)} unsatisfied goals")
       end
 
@@ -754,7 +754,7 @@ defmodule AriaEngine.Plan do
   @spec backtrack_and_retry(Domain.t(), State.t(), solution_tree(), node_id(), integer(), integer(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()}
   defp backtrack_and_retry(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
-    if verbose > 1 do
+    if verbose > 2 do
       IO.puts("Backtracking from failed node: #{failed_node_id}")
     end
 
@@ -853,7 +853,7 @@ defmodule AriaEngine.Plan do
           nodes: Map.put(remaining_nodes, node_id, reset_node)
         }
 
-        if verbose > 1 do
+        if verbose > 2 do
           IO.puts("Reset node #{node_id} for alternative method, blacklisted: #{inspect(blacklisted_methods)}")
         end
 
@@ -895,7 +895,7 @@ defmodule AriaEngine.Plan do
           nodes: Map.put(remaining_nodes, node_id, reset_node)
         }
 
-        if verbose > 1 do
+        if verbose > 2 do
           IO.puts("Reset goal node #{node_id} for alternative method, blacklisted: #{inspect(blacklisted_methods)}")
         end
 
@@ -939,7 +939,7 @@ defmodule AriaEngine.Plan do
     # Get primitive actions from the solution tree
     actions = get_primitive_actions_dfs(solution_tree)
 
-    if verbose > 0 do
+    if verbose > 1 do
       IO.puts("Executing #{length(actions)} primitive actions")
     end
 
@@ -960,7 +960,7 @@ defmodule AriaEngine.Plan do
     {action_name, args} = action
     action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 
-    if verbose > 1 do
+    if verbose > 2 do
       IO.puts("Executing action: #{action_name}(#{inspect(args)})")
     end
 
@@ -971,7 +971,7 @@ defmodule AriaEngine.Plan do
 
       false ->
         # Action failed - trigger replanning (Run-Lazy-Refineahead core feature)
-        if verbose > 0 do
+        if verbose > 2 do
           IO.puts("Action failed: #{action_name}, attempting replanning...")
         end
 
@@ -990,7 +990,7 @@ defmodule AriaEngine.Plan do
                 # Get new action sequence from replanned tree
                 new_actions = get_primitive_actions_dfs(new_solution_tree)
 
-                if verbose > 0 do
+                if verbose > 1 do
                   IO.puts("Replanning succeeded, executing #{length(new_actions)} new actions")
                 end
 

@@ -105,7 +105,7 @@ defmodule AriaEnginePortelainIntegrationTest do
       # Plan to ensure a file exists
       todos = [{"file_exists", "/tmp/test_file", true}]
 
-      case Plan.plan(domain, state, todos, verbose: 1) do
+      case Plan.plan(domain, state, todos, verbose: 0) do
         {:ok, solution_tree} ->
           # Extract primitive actions from the solution tree
           plan = Plan.get_primitive_actions_dfs(solution_tree)
@@ -145,7 +145,7 @@ defmodule AriaEnginePortelainIntegrationTest do
         {:execute_command, ["echo", "Workflow done"]}   # action
       ]
 
-      case Plan.plan(domain, state, todos, max_depth: 20, verbose: 1) do
+      case Plan.plan(domain, state, todos, max_depth: 20, verbose: 0) do
         {:ok, solution_tree} ->
           # Extract primitive actions from the solution tree
           plan = Plan.get_primitive_actions_dfs(solution_tree)
@@ -272,7 +272,7 @@ defmodule AriaEnginePortelainIntegrationTest do
         {:echo, ["Backup completed"]}
       ]
 
-      case Plan.plan(domain, state, todos, max_depth: 10, verbose: 1) do
+      case Plan.plan(domain, state, todos, max_depth: 10, verbose: 0) do
         {:ok, solution_tree} ->
           # Extract primitive actions from the solution tree
           plan = Plan.get_primitive_actions_dfs(solution_tree)

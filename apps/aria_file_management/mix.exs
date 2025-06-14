@@ -28,8 +28,6 @@ defmodule AriaFileManagement.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # Internal dependencies
-      {:aria_engine, in_umbrella: true},
       # Development and testing
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]

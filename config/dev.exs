@@ -14,7 +14,7 @@ config :aria_engine,
   ]
 
 # Development environment configuration
-config :logger, level: :debug
+config :logger, level: :info
 
 # Configure development databases (SQLite for weekend simplification)
 # Main repository for general data

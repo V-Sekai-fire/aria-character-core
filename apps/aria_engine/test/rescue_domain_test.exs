@@ -24,7 +24,7 @@ defmodule RescueDomainTest do
     todos = [{"move_task", ["r1", {5, 5}]}]
     
     # Plan using IPyHOP
-    case Plan.plan(domain, initial_state, todos, verbose: 1) do
+    case Plan.plan(domain, initial_state, todos, verbose: 0) do
       {:ok, solution_tree} ->
         IO.puts("Planning succeeded!")
         IO.inspect(Plan.tree_stats(solution_tree))
@@ -34,7 +34,7 @@ defmodule RescueDomainTest do
         assert length(actions) > 0
         
         # Test Run-Lazy-Refineahead execution
-        case Plan.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 1) do
+        case Plan.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 0) do
           {:ok, final_state} ->
             # Verify the robot moved to the target location
             robot_location = State.get_object(final_state, "loc", "r1")

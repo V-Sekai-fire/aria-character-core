@@ -82,7 +82,7 @@ defmodule AriaEngine.BacktrackingTest do
       state = TestDomains.create_backtracking_state()
       goals = [{"put_it", []}, {"need01", []}]
 
-      case AriaEngine.plan(domain, state, goals, verbose: 1) do
+      case AriaEngine.plan(domain, state, goals, verbose: 0) do
         {:ok, plan} ->
           # Should backtrack to find compatible solution
           expected = [{"putv", [0]}, {"getv", [0]}, {"getv", [0]}]

@@ -52,7 +52,7 @@ defmodule AriaEngine.Actions do
   defp execute_command_with_opts(state, command, args, opts) do
     fail_on_error = Map.get(opts, :fail_on_error, true)
 
-    Logger.info("Executing command: #{command} #{Enum.join(args, " ")}")
+    Logger.debug("Executing command: #{command} #{Enum.join(args, " ")}")
 
     start_time = System.monotonic_time(:millisecond)
 
@@ -80,10 +80,10 @@ defmodule AriaEngine.Actions do
       |> State.set_object("last_command", "success", result.status == 0)
 
       if result.status == 0 do
-        Logger.info("Command succeeded (#{duration_ms}ms)")
+        Logger.debug("Command succeeded (#{duration_ms}ms)")
         new_state
       else
-        Logger.warning("Command failed with exit code #{result.status}")
+        Logger.debug("Command failed with exit code #{result.status}")
         if fail_on_error do
           false # Ensure this returns false
         else
@@ -96,7 +96,7 @@ defmodule AriaEngine.Actions do
 
     rescue
       error ->
-        Logger.error("Command execution failed: #{inspect(error)}")
+        Logger.debug("Command execution failed: #{inspect(error)}")
 
         # Update state with error information
         error_state = state

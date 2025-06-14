@@ -33,7 +33,7 @@ defmodule RunLazyRefineaheadTest do
         IO.puts("Initial plan: #{inspect(initial_actions)}")
         
         # Execute with Run-Lazy-Refineahead (this should trigger replanning)
-        case Plan.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 2) do
+        case Plan.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 0) do
           {:ok, final_state} ->
             # Verify we reached the goal despite initial failures
             robot_location = State.get_object(final_state, "location", "robot")
