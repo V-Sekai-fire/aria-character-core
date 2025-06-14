@@ -1,32 +1,40 @@
 # ADR-025: Research Question Resolution Strategy
 
 ## Status
+
 Accepted
 
 ## Context
+
 The temporal planner implementation involves several critical research questions about Oban precision, real-time input, and SQLite performance that cannot be answered theoretically.
 
 ## Decision
+
 Address critical research questions through rapid prototyping during implementation rather than separate investigation phases.
 
 ## Rationale
+
 - **Implementation-Driven Discovery**: Build working code immediately and measure actual performance
 - **Rapid Validation**: Test critical assumptions as part of development process
 - **Fail Fast Strategy**: Discover fundamental limitations early in development
 - **Practical Knowledge**: Real performance data more valuable than theoretical analysis
 
 ## Implementation
+
 ### Research Questions to Address
+
 - **R1 (Oban Precision)**: Can Oban schedule actions with sub-second precision?
 - **R2 (Real-time Input)**: Can we handle keyboard input without blocking game execution?
 - **R3 (SQLite Performance)**: Is SQLite fast enough for real-time state updates?
 
 ### Research-Through-Implementation Approach
+
 - **Question R1**: Test during first GameActionJob implementation
 - **Question R2**: Test during CLI development with async input handling
 - **Question R3**: Monitor during development, optimize if needed
 
 ### Rapid Validation Tests
+
 ```elixir
 # R1: Oban timing precision
 test "oban scheduling accuracy" do
@@ -67,49 +75,63 @@ end
 ```
 
 ### Implementation-First Philosophy
+
 - **Build and Measure**: Create working implementations and measure actual performance
 - **Adjust Based on Reality**: Modify design based on discovered capabilities
 - **Simple First**: Use straightforward implementations, optimize later if needed
 - **Early Detection**: Identify fundamental blockers as soon as possible
 
 ## Research Integration Strategy
+
 ### During Development
+
 - **Continuous Measurement**: Instrument all performance-critical operations
 - **Reality-Based Decisions**: Adjust scope based on actual measured performance
 - **Document Discoveries**: Record what works and what doesn't for future projects
 - **Pivot Quickly**: Change approach if fundamental assumptions prove wrong
 
 ### Performance Benchmarks
+
 - **Oban Precision**: Actions should execute within 100ms of scheduled time
 - **Input Latency**: Keyboard input processed within 50ms
 - **SQLite Performance**: State updates under 100µs each
 - **Overall Latency**: End-to-end response under 200ms
 
 ## Risk Mitigation Through Discovery
+
 ### If Research Questions Fail
+
 - **R1 Failure**: Use simplified timing with second-precision
 - **R2 Failure**: Remove real-time input, use turn-based approach
 - **R3 Failure**: Use in-memory state only, no persistence
 
 ### Success Adaptation
+
 - **Better Than Expected**: Expand scope to use enhanced capabilities
 - **As Expected**: Continue with planned implementation
 - **Worse Than Expected**: Reduce scope to match actual performance
 
 ## Consequences
+
 ### Positive
+
 - Quick discovery of system capabilities and limitations
 - Implementation-driven knowledge more reliable than theory
 - Rapid identification of fundamental blockers
 - Practical performance data for future projects
 
 ### Negative
+
 - May discover limitations too late to adjust overall approach
 - Research time integrated into development may slow initial progress
 - Could lead to multiple implementation attempts if discoveries require changes
 - Performance assumptions may not hold under full system load
 
 ## Related Decisions
+
 - Links to ADR-017 (LLM Development Uncertainty) for adaptive strategy
 - Supports ADR-024 (Minimum Success Criteria) with fallback planning
+- Implements ADR-022 (Test-Driven Development) for iterative discovery
+- Builds on ADR-020 (Design Consistency Verification) for validated foundation
 - Enables ADR-026 (Risk Mitigation) through early discovery
+- Supports ADR-029 (MCP Integration) for development tooling assistance

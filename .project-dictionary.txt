@@ -499,3 +499,5 @@ configurability
 extensibility
 modularity
 reusability
+Plannable
+reimplementation

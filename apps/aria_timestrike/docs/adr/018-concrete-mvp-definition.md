@@ -1,22 +1,28 @@
 # ADR-018: Concrete MVP Definition
 
 ## Status
+
 Accepted
 
 ## Context
+
 The weekend project needs exact success criteria that leverage existing AriaEngine infrastructure while focusing on temporal extensions and modern 3D visualization.
 
 ## Decision
+
 Define exactly what constitutes success for the weekend project, leveraging existing AriaEngine infrastructure and focusing on temporal extensions with Three.js 3D visualization.
 
 ## Rationale
+
 - **Clear Success Criteria**: All components must work together for demonstrable temporal planning
 - **Infrastructure Leverage**: Build on existing AriaEngine components rather than starting from scratch
 - **Modern Visualization**: Three.js 3D interface provides professional demonstration capability
 - **Temporal Focus**: Core value is temporal planning, not general game development
 
 ## Implementation
+
 ### MVP Success Criteria (All Must Work)
+
 1. **Temporal State Extension**: Extend existing `AriaEngine.State` to include time and action scheduling
 2. **Membrane Job Integration**: One `GameActionJob` schedules and executes a timed action
 3. **Real-Time 3D Web Interface**: Phoenix LiveView with Three.js shows action progress with 3D positions
@@ -24,6 +30,7 @@ Define exactly what constitutes success for the weekend project, leveraging exis
 5. **Basic Stability**: Simple Lyapunov function validates action reduces distance to goal
 
 ### MVP Technical Stack
+
 - **Base**: Existing `AriaEngine.State`, `AriaEngine.Domain`, `AriaEngine.Plan`
 - **Extensions**: `TemporalState` (extends State), `GameActionJob` (Membrane worker)
 - **New Modules**: `TimeStrike.LiveView`, `TimeStrike.GameEngine`
@@ -31,12 +38,14 @@ Define exactly what constitutes success for the weekend project, leveraging exis
 - **Infrastructure**: Existing `AriaQueue`, `AriaData.QueueRepo`, Membrane setup
 
 ### MVP TimeStrike Scenario (Ultra-Minimal)
+
 - **3D Map**: 25×10×1 grid space, Alex starts at {2,3,0}, goal: reach {8,3,0}
 - **Action**: `move_to` only - no combat, skills, or enemies
 - **Duration**: Movement takes `distance / agent.move_speed` seconds
 - **Display**: Three.js 3D scene updated in real-time showing Alex's 3D position
 
 ### Weekend Acceptance Test (10-minute demo)
+
 1. Navigate to: `http://localhost:4000/timestrike`
 2. See: Three.js 3D tactical map with Alex ('A') at position {2,3,0}
 3. Click: Target position {8,3,0} - shows "Planning movement - ETA: 2.0s"
@@ -46,12 +55,14 @@ Define exactly what constitutes success for the weekend project, leveraging exis
 7. Success: "Mission Complete!" with cinematic camera celebration
 
 ### Post-MVP Extensions (If Time Permits)
+
 - Add simple enemy at {6,3,0} that Alex must avoid
 - Add conviction choice: "1: Stealth, 2: Combat, 3: Diplomacy"
 - Add basic action cooldowns and stamina
 - Camera angle controls for enhanced streaming visualization
 
 ## Technical Details
+
 ```elixir
 # Minimal data structures
 defmodule TemporalState do
@@ -73,20 +84,25 @@ end
 ```
 
 ## Consequences
+
 ### Positive
+
 - Clear, measurable success criteria
 - Leverages existing infrastructure for rapid development
 - Professional 3D demonstration capability
 - Foundation for future feature expansion
 
 ### Negative
+
 - Limited scenario may not fully showcase temporal planning power
 - Requires web development expertise in addition to backend logic
 - 3D visualization adds complexity to minimum viable demonstration
 - May not satisfy players expecting full game experience
 
 ## Related Decisions
+
 - Links to ADR-016 (Weekend Implementation Scope) for realistic feature set
-- Supports ADR-027 (Web Interface Implementation) for final interface choice
-- Implements ADR-019 (3D Coordinates) through Three.js integration
-- Enables ADR-028 (Three.js 3D Visualization) for professional presentation
+- Superseded by ADR-030 (Console TUI Implementation) for interface approach
+- Implements ADR-019 (3D Coordinates) through coordinate display
+- Supports ADR-024 (Minimum Success Criteria) with concrete validation
+- Enables ADR-025 (Research Strategy) with practical demonstration

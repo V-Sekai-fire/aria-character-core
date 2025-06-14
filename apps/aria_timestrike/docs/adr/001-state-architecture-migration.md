@@ -45,3 +45,10 @@ Do NOT keep existing state. Migrate all code to use the new temporal state archi
 - Complete migration required - no backwards compatibility with old state
 - Temporal state must support time-based queries and scheduling
 - All game entities (agents, actions, effects) must work with temporal state system
+
+## Related Decisions
+
+- **Enables**: ADR-002 (Oban Queue Design) - temporal state supports time-ordered action queues
+- **Links to**: ADR-006 (Game Engine Integration) - temporal state integrates with real-time execution
+- **Supports**: ADR-018 (MVP Definition) - extends existing AriaEngine.State for temporal capabilities
+- **Links to**: ADR-022 (Test-Driven Development) - temporal state extensions drive test scenarios
