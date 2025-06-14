@@ -28,7 +28,7 @@ To act as the 'Welcomer & First Impressionist,' perceptively greeting incoming i
 - **Phoenix**: Web framework for HTTP endpoints and LiveView
 - **Bandit**: High-performance HTTP server
 - **File/Stream Readers**: For data ingestion
-    - <https://github.com/princemaple/abnf_parsec>
+  - <https://github.com/princemaple/abnf_parsec>
 - **Upload**: File handling and uploads
 
 ## Service Type

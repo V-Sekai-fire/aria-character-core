@@ -73,16 +73,16 @@ There are two teams: :player and :enemy. Each agent is defined by a consistent s
 
 These are the primitive tasks the Planner can use to build a plan.
 
-| Task / Skill    | Caster | Duration / Cast Time | Cooldown | Description & Effects                                                                    |
-| :-------------- | :----- | :------------------- | :------- | :--------------------------------------------------------------------------------------- |
-| move_to         | Any    | distance / agent.move_speed | -   | Moves agent to a target position. Duration = euclidean_distance / agent.move_speed      |
-| attack          | Any    | 1.5s                 | -        | Standard attack. Deals (attacker.atk - target.def) damage                                |
-| interact        | Any    | 2.0s                 | -        | Interact with a world object (e.g., a pillar)                                            |
-| defend          | Any    | 1.0s (to activate)   | -        | Gain 50% damage reduction for 5s                                                         |
-| wait            | Any    | duration             | -        | Agent does nothing for a set time                                                        |
-| Delaying Strike | Alex   | 0.0s (instant)       | 10.0s    | Deals 1.5x damage and applies a slow effect for 5.0s                                     |
-| Scorch          | Maya   | 2.0s                 | 8.0s     | Deals AoE damage in a 3x3 square at a target location                                    |
-| Now!            | Jordan | 0.5s                 | 20.0s    | **Key Re-entrant Test**: Resets an ally's action, allowing them to act again immediately |
+| Task / Skill    | Caster | Duration / Cast Time        | Cooldown | Description & Effects                                                                    |
+| :-------------- | :----- | :-------------------------- | :------- | :--------------------------------------------------------------------------------------- |
+| move_to         | Any    | distance / agent.move_speed | -        | Moves agent to a target position. Duration = euclidean_distance / agent.move_speed       |
+| attack          | Any    | 1.5s                        | -        | Standard attack. Deals (attacker.atk - target.def) damage                                |
+| interact        | Any    | 2.0s                        | -        | Interact with a world object (e.g., a pillar)                                            |
+| defend          | Any    | 1.0s (to activate)          | -        | Gain 50% damage reduction for 5s                                                         |
+| wait            | Any    | duration                    | -        | Agent does nothing for a set time                                                        |
+| Delaying Strike | Alex   | 0.0s (instant)              | 10.0s    | Deals 1.5x damage and applies a slow effect for 5.0s                                     |
+| Scorch          | Maya   | 2.0s                        | 8.0s     | Deals AoE damage in a 3x3 square at a target location                                    |
+| Now!            | Jordan | 0.5s                        | 20.0s    | **Key Re-entrant Test**: Resets an ally's action, allowing them to act again immediately |
 
 ## **4. The Core Test: The "Conviction Choice"**
 

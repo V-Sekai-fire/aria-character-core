@@ -19,7 +19,7 @@ This error occurs when trying to connect elements with incompatible flow control
 
 Membrane supports two main flow control modes with different terminology for input vs output pads:
 
-### 1. Push (Auto) Flow Control 
+### 1. Push (Auto) Flow Control
 
 **Input Pads:** Use `flow_control: :auto` or `flow_control: :push`
 **Output Pads:** Use `flow_control: :push` (`:auto` is not valid for outputs)
@@ -41,6 +41,7 @@ Membrane supports two main flow control modes with different terminology for inp
 ### Key Discovery: Pad-Specific Terminology
 
 **Critical Finding:** Flow control terminology differs between input and output pads:
+
 - **Input pads:** Accept both `:auto` and `:push` (equivalent)
 - **Output pads:** Only accept `:push` and `:manual` (`:auto` causes compile errors)
 
@@ -99,7 +100,7 @@ Since `Membrane.Testing.Source` forces `:manual` flow control, we created a cust
 ```elixir
 defmodule AutoFlowSource do
   use Membrane.Source
-  
+
   defstruct output: []
 
   def_output_pad :output,
@@ -205,7 +206,7 @@ def_output_pad :output,
 Before implementing Membrane pipelines:
 
 - [ ] All element pads have explicit flow control modes
-- [ ] Flow control modes are compatible across connections  
+- [ ] Flow control modes are compatible across connections
 - [ ] Input pads use `:push` or `:auto` (equivalent)
 - [ ] Output pads use `:push` only (never `:auto`)
 - [ ] Source elements match downstream expectations
@@ -289,22 +290,26 @@ mix test apps/aria_engine/test/membrane_workflow_test.exs --max-cases 1
 ### Implementation Status
 
 **Phase 1:** ✅ Identified flow control mismatches
+
 - Located `Membrane.Testing.Source` using `:manual` by default
 - Found missing flow control specifications in sink elements
 - Discovered `:auto` invalid for output pads
 
 **Phase 2:** ✅ Created custom AutoFlowSource
+
 - Implemented source with `:push` flow control
 - Replaced all Testing.Source instances in pipeline tests
 
 **Phase 3:** 🔄 In Progress - Element Updates
+
 - Updated all sink input pads to use `:push` flow control
-- Fixed output pads to use `:push` instead of `:auto`  
+- Fixed output pads to use `:push` instead of `:auto`
 - Verifying pipeline compatibility
 
 ### Test Results
 
 Current pipeline validation status:
+
 - AutoFlowSource creation: ✅ Successful
 - Flow control specification: ✅ Corrected
 - Pipeline connection: 🔄 Testing in progress
@@ -348,6 +353,7 @@ Establish team standards for documenting flow control decisions in element modul
 1. **Testing.Source Limitation**: `Membrane.Testing.Source` hardcodes `:manual` flow control and cannot be configured for `:push` mode, requiring custom source implementations.
 
 2. **Asymmetric Flow Control API**: Input and output pads have different valid flow control values:
+
    - Input: `:auto`, `:push`, `:manual`
    - Output: `:push`, `:manual` (`:auto` invalid)
 
@@ -359,20 +365,20 @@ Establish team standards for documenting flow control decisions in element modul
 
 ### Flow Control Compatibility Matrix
 
-| Source Output | Target Input | Compatible | Notes |
-|---------------|--------------|------------|-------|
-| `:push`       | `:push`      | ✅ Yes     | Recommended |
-| `:push`       | `:auto`      | ✅ Yes     | Equivalent |
-| `:manual`     | `:manual`    | ✅ Yes     | Requires demand handling |
+| Source Output | Target Input | Compatible | Notes                            |
+| ------------- | ------------ | ---------- | -------------------------------- |
+| `:push`       | `:push`      | ✅ Yes     | Recommended                      |
+| `:push`       | `:auto`      | ✅ Yes     | Equivalent                       |
+| `:manual`     | `:manual`    | ✅ Yes     | Requires demand handling         |
 | `:manual`     | `:push`      | ❌ No      | **Error:** Flow control mismatch |
 | `:push`       | `:manual`    | ❌ No      | **Error:** Flow control mismatch |
 
 ### Valid Flow Control Values
 
-| Pad Type | Valid Values | Invalid Values |
-|----------|--------------|----------------|
-| Input    | `:push`, `:auto`, `:manual` | - |
-| Output   | `:push`, `:manual` | `:auto` |
+| Pad Type | Valid Values                | Invalid Values |
+| -------- | --------------------------- | -------------- |
+| Input    | `:push`, `:auto`, `:manual` | -              |
+| Output   | `:push`, `:manual`          | `:auto`        |
 
 ### Common Fixes
 
@@ -382,7 +388,7 @@ def_input_pad :input,
   accepted_format: %Membrane.RemoteStream{type: :bytestream},
   flow_control: :push
 
-# ✅ Correct output pad  
+# ✅ Correct output pad
 def_output_pad :output,
   accepted_format: %Membrane.RemoteStream{type: :bytestream},
   flow_control: :push

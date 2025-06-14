@@ -1,14 +1,14 @@
 # Demo Implementation Options
 
 - [ ] Create Livebook notebook with Kino.Input components (sliders, selects, checkboxes)
-    - [ ] Use `Kino.Input.range/2` for numeric attributes
-    - [ ] Use `Kino.Input.select/3` for categorical choices
-    - [ ] Use `Kino.Input.checkbox/2` for boolean options and feature toggles
-    - [ ] Implement real-time character preview with `Kino.listen/2` for live updates
-    - [ ] Render character sheets with `Kino.Markdown.new/1` for rich formatting
-    - [ ] Use `Kino.Layout` for organizing input components and output display
-    - [ ] Create shareable `.livemd` notebooks for easy distribution and collaboration
-    - [ ] **OAuth Integration**: GitHub OAuth for user authentication and favorites storage
+  - [ ] Use `Kino.Input.range/2` for numeric attributes
+  - [ ] Use `Kino.Input.select/3` for categorical choices
+  - [ ] Use `Kino.Input.checkbox/2` for boolean options and feature toggles
+  - [ ] Implement real-time character preview with `Kino.listen/2` for live updates
+  - [ ] Render character sheets with `Kino.Markdown.new/1` for rich formatting
+  - [ ] Use `Kino.Layout` for organizing input components and output display
+  - [ ] Create shareable `.livemd` notebooks for easy distribution and collaboration
+  - [ ] **OAuth Integration**: GitHub OAuth for user authentication and favorites storage
 - [ ] **Character Generator Features**
   - [ ] Interactive controls for all character attributes
   - [ ] Real-time character preview with live updates

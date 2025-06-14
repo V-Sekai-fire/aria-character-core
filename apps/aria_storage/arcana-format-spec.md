@@ -101,7 +101,7 @@ Offset | Size | Field      | Description
 Offset | Size | Field         | Description
 -------|------|---------------|---------------------------
 0      | 8    | zero1         | Always 0
-8      | 8    | zero2         | Always 0  
+8      | 8    | zero2         | Always 0
 16     | 8    | size_field    | Always 48
 24     | 8    | table_size    | Size of table data
 32     | 8    | tail_marker   | CA_FORMAT_TABLE_TAIL_MARKER
@@ -154,6 +154,7 @@ Value | Algorithm        | Status
 Archive container files store filesystem metadata and file content using a type-length-value (TLV) structure.
 
 CATAR files can be detected in two ways:
+
 1. **Magic-based detection**: Files starting with `0xCA 0x1A 0x52` magic bytes
 2. **Structure-based detection**: Files starting with a 64-byte CA_FORMAT_ENTRY element
 
@@ -198,7 +199,7 @@ Offset | Size | Field         | Description
 
 ### Element Types
 
-Based on CA_FORMAT_* constants:
+Based on CA*FORMAT*\* constants:
 
 ```
 Constant                | Value               | Description
@@ -293,7 +294,7 @@ ARCANA uses the exact constants from the desync source code to ensure perfect bi
 
 ```elixir
 @ca_format_index 0x96824d9c7b129ff9
-@ca_format_table 0xe75b9e112f17417d  
+@ca_format_table 0xe75b9e112f17417d
 @ca_format_table_tail_marker 0x4b4f050e5549ecd1
 ```
 
@@ -362,14 +363,14 @@ Default compression algorithm is ZSTD with adaptive compression levels based on 
 ARCANA uses the **exact same** file extensions as casync:
 
 - `.caibx` - Content Archive Index for Blobs
-- `.caidx` - Content Archive Index for Directories  
+- `.caidx` - Content Archive Index for Directories
 - `.cacnk` - Compressed Chunk files
 - `.catar` - Archive Container files
 
 ## MIME Types
 
 - `application/x-casync-index` - For .caibx and .caidx files
-- `application/x-casync-chunk` - For .cacnk files  
+- `application/x-casync-chunk` - For .cacnk files
 - `application/x-casync-archive` - For .catar files
 
 ## Compatibility
@@ -395,5 +396,6 @@ The reference implementation is available in the AriaStorage module of the Aria 
 **Specification Maintainer**: Aria Character Core Project
 
 **Changelog**:
+
 - **v1.1 (June 12, 2025)**: Critical clarification - Chunk IDs are boundary identifiers, not content hashes
 - **v1.0 (June 11, 2025)**: Initial specification

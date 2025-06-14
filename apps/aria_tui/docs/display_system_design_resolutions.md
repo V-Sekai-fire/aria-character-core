@@ -5,6 +5,7 @@ This document records key architectural decisions made during the refactoring of
 ## Context
 
 The original `tui_display.ex` file had grown to over 1200 lines with significant code duplication, corruption, and maintainability issues. The monolithic structure made it difficult to:
+
 - Locate and fix bugs
 - Add new display features
 - Maintain consistent code quality
@@ -15,6 +16,7 @@ The original `tui_display.ex` file had grown to over 1200 lines with significant
 **Decision Date**: June 14, 2025
 
 ### Decision
+
 Split the monolithic display system into focused, single-responsibility modules organized under `lib/aria_tui/display/`:
 
 ```
@@ -37,6 +39,7 @@ display/
 ### Trade-offs Considered
 
 **Pros:**
+
 - Dramatically improved code organization and readability
 - Eliminated 300+ lines of duplicate/corrupted code
 - Better separation of display logic from business logic
@@ -44,6 +47,7 @@ display/
 - Individual modules can be tested and modified independently
 
 **Cons:**
+
 - Slight increase in module overhead (more files to manage)
 - Need to maintain backward compatibility for existing tests
 - Potential for over-modularization if taken too far
@@ -53,21 +57,25 @@ display/
 #### Module Responsibilities
 
 1. **`AriaTui.Display.Colors`**
+
    - ANSI escape sequence management
    - Semantic color definitions (agent colors, status colors, etc.)
    - Color utility functions (colorize, visual length calculation)
 
 2. **`AriaTui.Display.Grid`**
+
    - Responsive breakpoint calculations
    - Layout configuration and column width calculations
    - Terminal size detection and adaptation
 
 3. **`AriaTui.Display.Components`**
+
    - Basic drawing primitives (borders, headers, panels)
    - Agent display functions (status, symbols, colors)
    - Reusable UI components
 
 4. **`AriaTui.Display.Renderer`**
+
    - Complex content rendering logic
    - Multi-column layout rendering
    - Panel content generation and formatting
@@ -98,6 +106,7 @@ The main `AriaTui.Display` module serves as a facade, delegating calls to approp
 ### Related Decisions
 
 This refactoring enables future enhancements such as:
+
 - Dynamic theme switching
 - Plugin-based display extensions
 - Better testing of individual display components

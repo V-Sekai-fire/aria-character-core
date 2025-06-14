@@ -5,18 +5,21 @@ A general-purpose Terminal User Interface (TUI) system featuring a fully respons
 ## Features
 
 ### 🎯 Responsive Grid System
+
 - **Breakpoint-based layouts**: XS, SM, MD, LG, XL with automatic detection
 - **Dynamic column allocation**: 1-3 columns based on terminal width
 - **Adaptive panel sizing**: Compact and expanded modes for different screen sizes
 - **Professional borders**: Clean box-drawing characters with proper alignment
 
 ### 🏗️ Clean Architecture
+
 - **Separation of concerns**: Data/model layer separate from display logic
 - **Modular design**: Independent TUI client and display modules
 - **Content provider pattern**: Pluggable content system for different applications
 - **Mix task integration**: Simple `mix tui` command to launch
 
 ### 🎨 Enhanced Display
+
 - **Rich ANSI colors**: Professional color scheme with semantic highlighting
 - **Unicode support**: Emojis and special characters for better UX
 - **Real-time updates**: 100ms tick interval with smooth terminal refresh
@@ -74,8 +77,9 @@ The responsive grid system automatically adapts to terminal dimensions:
 ### Layout Configuration
 
 Each breakpoint defines:
+
 - **Header height**: Title and status bar space
-- **Controls height**: Input/control panel space  
+- **Controls height**: Input/control panel space
 - **Status height**: Message/feedback panel space
 - **Content height**: Remaining space for game content
 - **Panel distribution**: How content is split across columns
@@ -102,11 +106,13 @@ aria_tui/
 The TUI renders different panel layouts based on screen size:
 
 **XS/SM (1-2 columns)**: Stacked compact panels
+
 - Agents panel (compact format)
 - Map/Game state panel
 - Combined status and controls
 
 **MD/LG/XL (2-3 columns)**: Side-by-side expanded panels
+
 - Left: Agents panel (detailed format)
 - Center: Map panel (if 3 columns)
 - Right: Game state and status panels
@@ -122,6 +128,7 @@ The TUI renders different panel layouts based on screen size:
 ### Color Scheme
 
 The TUI uses a professional color palette:
+
 - **Bright Cyan**: Borders and structural elements
 - **Bright White**: Headers and important text
 - **Bright Yellow**: Interactive controls and highlights
@@ -147,6 +154,7 @@ mix docs
 ### Code Quality
 
 This app enforces strict code quality:
+
 - **Warnings as errors**: All compilation warnings must be fixed
 - **Clean module boundaries**: No circular dependencies
 - **Consistent naming**: Following Elixir conventions
@@ -197,11 +205,13 @@ For more information about the Aria Character Core project, see the main project
 The TUI system has been completely refactored to improve maintainability and code quality:
 
 ### 🔄 Modular Structure
+
 - **Split from monolithic file**: Broke down 1200+ line `tui_display.ex` into focused modules
 - **Separation of concerns**: Each module has a single, clear responsibility
 - **Clean interfaces**: Well-defined public APIs between modules
 
 ### 📁 Module Organization
+
 ```
 lib/aria_tui/display/
 ├── colors.ex              # ANSI color utilities and palettes
@@ -212,13 +222,14 @@ lib/aria_tui/display/
 ```
 
 ### ✅ Quality Improvements
+
 - **Removed duplicate code**: Eliminated 300+ lines of corrupted/duplicate functions
 - **Fixed warnings**: All unused variables and coding standard issues resolved
 - **Test compatibility**: Maintained 100% test pass rate (51/51 tests)
 - **Performance**: Cleaner code with better separation leads to easier maintenance
 
 ### 🧪 Testing
+
 - **Comprehensive coverage**: All grid calculations, rendering, and display functions tested
 - **Real-world scenarios**: Tests cover various terminal sizes and edge cases
 - **Regression prevention**: Tests ensure consistent behavior across refactoring
-

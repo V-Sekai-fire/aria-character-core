@@ -358,7 +358,7 @@ The game world contains static objects, environmental elements, and the map layo
       ]
     },
     %{
-      id: "bridge_pillar_2", 
+      id: "bridge_pillar_2",
       type: :pillar,
       position: {10, 7, 0},
       hp: 150,
@@ -367,7 +367,7 @@ The game world contains static objects, environmental elements, and the map layo
       interactions: [
         %{
           id: :interact,
-          name: "Attack Pillar", 
+          name: "Attack Pillar",
           duration: 2.0,
           requirements: [],
           effects: [
@@ -405,4 +405,4 @@ The game world contains static objects, environmental elements, and the map layo
     reinforcement_arrival_time: 45.0
   }
 }
-````
+```

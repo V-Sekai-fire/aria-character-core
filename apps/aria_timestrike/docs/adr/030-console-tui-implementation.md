@@ -1,18 +1,22 @@
 # ADR-030: Console TUI Implementation
 
 ## Status
+
 Accepted
 
 **Date**: June 14, 2025
 **Supersedes**: ADR-027 (Web Interface Implementation), ADR-028 (Three.js 3D Visualization Architecture)
 
 ## Context
+
 During weekend implementation, Three.js 3D visualization and Phoenix LiveView web interface proved too complex for the available timeline. The temporal planner needs a working demonstration interface that can be implemented reliably within weekend constraints while still showcasing core temporal planning capabilities.
 
 ## Decision
+
 Implement a console-based Terminal User Interface (TUI) for the temporal planner demonstration, abandoning the web interface approach.
 
 ## Rationale
+
 - **Implementation Speed**: Console TUI can be implemented much faster than web interface
 - **Weekend Viability**: Proven terminal interface patterns reduce implementation risk
 - **Focus on Core**: Removes frontend complexity to focus on temporal planning logic
@@ -20,19 +24,23 @@ Implement a console-based Terminal User Interface (TUI) for the temporal planner
 - **Existing Expertise**: Project already has TUI experience from aria_tui application
 
 ## Implementation
+
 ### Console Interface Design
+
 - **Real-time Display**: Terminal-based real-time updates showing agent positions and actions
 - **ASCII Grid**: Simple ASCII representation of the battlefield grid
 - **Status Information**: Current agent positions, action progress, and timing information
 - **Input Handling**: Keyboard input for interruption and tactical commands
 
 ### Technical Stack
+
 - **Elixir Console**: Native Elixir terminal I/O for cross-platform compatibility
 - **ASCII Rendering**: Simple character-based grid display
 - **Real-time Updates**: Terminal screen refresh for animation effects
 - **Keyboard Input**: Asynchronous input handling for real-time interaction
 
 ### Display Format
+
 ```
 TimeStrike - Temporal Planner Demo
 ================================
@@ -54,6 +62,7 @@ Press SPACEBAR to interrupt Alex | Press Q to quit
 ```
 
 ### Weekend Implementation Scope
+
 - **Basic Grid**: ASCII battlefield representation
 - **Agent Movement**: Real-time position updates
 - **Action Display**: Current actions and timing information
@@ -61,6 +70,7 @@ Press SPACEBAR to interrupt Alex | Press Q to quit
 - **Status Updates**: ETA and progress indicators
 
 ## Benefits Over Web Interface
+
 - **Rapid Implementation**: No frontend JavaScript development required
 - **Cross-Platform**: Works on any terminal without browser dependencies
 - **Lower Complexity**: Fewer moving parts and integration points
@@ -68,12 +78,14 @@ Press SPACEBAR to interrupt Alex | Press Q to quit
 - **Resource Efficiency**: No web server or browser overhead
 
 ## Limitations Accepted
+
 - **Visual Appeal**: Less polished than 3D web interface
 - **Streaming Quality**: Terminal interface less engaging for stream viewers
 - **Mobile Access**: Not accessible on mobile devices
 - **Future Expansion**: Limited scalability compared to web platform
 
 ## Implementation Plan
+
 1. **Terminal Setup**: Basic terminal screen management and input handling
 2. **Grid Display**: ASCII battlefield rendering with agent positions
 3. **Real-time Updates**: Screen refresh system for movement animation
@@ -81,19 +93,23 @@ Press SPACEBAR to interrupt Alex | Press Q to quit
 5. **Status Display**: Action progress and timing information
 
 ## Consequences
+
 ### Positive
+
 - **Achievable Timeline**: Can be implemented within weekend constraints
 - **Focus on Core Logic**: Removes frontend distractions from temporal planning
 - **Reliable Demonstration**: Terminal interface has fewer failure modes
 - **Development Speed**: Faster iteration cycle for temporal planner logic
 
 ### Negative
+
 - **Reduced Visual Impact**: Less impressive than 3D web interface
 - **Limited Streaming Appeal**: Terminal interface less engaging for viewers
 - **Platform Limitations**: Terminal capabilities vary across systems
 - **Future Migration Cost**: Eventually need to rebuild interface for production
 
 ## Related Decisions
+
 - **Supersedes**: ADR-027 (Web Interface Implementation)
 - **Supersedes**: ADR-028 (Three.js 3D Visualization Architecture)
 - **Links to**: ADR-016 (Weekend Implementation Scope) - prioritizes achievable functionality

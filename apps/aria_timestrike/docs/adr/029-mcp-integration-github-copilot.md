@@ -66,6 +66,7 @@ Implement an MCP server that exposes key Aria functionality as tools that can be
 - **Library Integration**: Use Hermes MCP's proven stdio implementation
 - **Transport Layer**: Stdio transport for GitHub Copilot compatibility
 - **Security**: Proper authentication and authorization for MCP tools
+- **Completion Criteria**: See ADR-033 for comprehensive TDD objectives and acceptance criteria
 
 ## Related Decisions
 
