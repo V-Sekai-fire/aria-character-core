@@ -16,15 +16,18 @@ These ADRs document all design decisions for the temporal, re-entrant goal-task-
 ## ADR Index
 
 ### Core Architecture (001-004)
+
 - **001**: State Architecture Migration
 - **002**: Oban Queue Design
 - **003**: Game Engine Separation
 - **004**: Mandatory Stability Verification
 
 ### Domain & Testing (005)
+
 - **005**: TimeStrike as Test Domain
 
 ### Real-time Systems (006-013)
+
 - **006**: Game Engine Integration & Real-time Execution
 - **007**: Conviction Choice Mechanics
 - **008**: Web Interface Implementation Details
@@ -35,16 +38,19 @@ These ADRs document all design decisions for the temporal, re-entrant goal-task-
 - **013**: Opportunity Window Mechanics
 
 ### User Experience (014-015, 021)
+
 - **014**: Twitch Streaming Optimization
 - **015**: Imperfect Information & Dynamic Opportunities
 - **021**: Realistic Tension Pacing (Corrects ADR-014)
 
 ### Project Management (016-018)
+
 - **016**: Friday-Sunday Implementation Scope
 - **017**: LLM-Assisted Development Time Uncertainty
 - **018**: Concrete MVP Definition
 
 ### Technical Infrastructure (019-020, 022-030)
+
 - **019**: 3D Coordinates with Godot Conventions
 - **020**: Design Consistency Verification
 - **022**: First Implementation Step - Test-Driven Development
@@ -52,10 +58,10 @@ These ADRs document all design decisions for the temporal, re-entrant goal-task-
 - **024**: Absolute Minimum Success Criteria
 - **025**: Research Question Resolution Strategy
 - **026**: Implementation Risk Mitigation
-- **027**: Web Interface Implementation *(Superseded by ADR-030)*
-- **028**: Three.js 3D Visualization Architecture *(Superseded by ADR-030)*
+- **027**: Web Interface Implementation _(Superseded by ADR-030)_
+- **028**: Three.js 3D Visualization Architecture _(Superseded by ADR-030)_
 - **029**: MCP Integration for GitHub Copilot
-- **030**: Console TUI Implementation *(Supersedes ADR-027, ADR-028)*
+- **030**: Console TUI Implementation _(Supersedes ADR-027, ADR-028)_
 
 ## Design Consistency
 
@@ -69,6 +75,7 @@ All ADRs have been verified for mutual consistency and compatibility. Key design
 ## Maintenance
 
 When adding new ADRs:
+
 1. Check consistency against all existing decisions
 2. Update cross-references in related ADRs
 3. Follow the established numbering scheme

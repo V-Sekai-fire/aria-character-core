@@ -84,3 +84,4 @@ priv/*.db*
 *.db-shm
 *.db-wal
 **/priv/*.db*
+node_modules/.cache/prettier/.prettier-caches
