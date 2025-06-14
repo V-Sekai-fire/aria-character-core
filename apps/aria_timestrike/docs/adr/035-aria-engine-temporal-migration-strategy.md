@@ -351,7 +351,12 @@ defmodule AriaEngine.TemporalState.DynamicProgramming do
       value_function: computed_value_function,
       policy_function: computed_policy,
       convergence_proof: convergence_analysis,
-      optimality_proof: optimality_analysis
+      optimality_proof: optimality_analysis,
+      computation_metadata: %{
+        iterations: non_neg_integer(),
+        convergence_time: float(),
+        numerical_precision: float()
+      }
     }
   end
   
@@ -655,3 +660,43 @@ end
 ---
 
 *This ADR defines the migration path from traditional AriaEngine to temporal AriaEngine while maintaining backward compatibility, enabling incremental adoption across the ecosystem, and enforcing rigorous control theory-based verification for stability and optimality guarantees. All temporal planner data structures have been consolidated into this ADR from the original `temporal_planner_data_structures.md` document.*
+
+## Temporal Backtracking Problem Definition
+
+The temporal planner must demonstrate true temporal reasoning and backtracking capabilities through a concrete test problem that requires replanning when initial solutions fail due to temporal conflicts.
+
+### Canonical Backtracking Problem: Blocking Enemy Scenario
+
+**Problem Setup**:
+- Alex starts at position {4,4,0} with movement speed 2.0 units/second
+- Goal: Reach position {8,4,0} before deadline at t=5.0 seconds
+- Enemy blocks position {6,4,0} from t=1.0 to t=3.0 seconds
+- Direct path distance: 4 units, requiring 2.0 seconds travel time
+
+**Temporal Conflict**:
+- Initial plan: Direct movement from {4,4,0} → {6,4,0} → {8,4,0}
+- Alex would reach {6,4,0} at t=1.0 seconds (4 units ÷ 2.0 speed ÷ 2 = 1.0)
+- Enemy blocks {6,4,0} from t=1.0 to t=3.0, creating temporal conflict
+- Planner must backtrack and generate alternative solution
+
+**Required Backtracking Solutions**:
+
+1. **Wait Strategy**: 
+   - Move to {5,4,0} at t=0.5 seconds
+   - Wait until t=3.0 when enemy clears blocking position
+   - Continue to {8,4,0}, completing at t=4.5 seconds
+   - Total time: 4.5 seconds (vs 2.0 direct)
+
+2. **Detour Strategy**:
+   - Route via {4,3,0} → {8,3,0} → {8,4,0}
+   - Alternative path avoids blocked position entirely
+   - Total distance: ~5.66 units, completion at ~2.83 seconds
+   - Faster than wait strategy but requires spatial reasoning
+
+**Verification Requirements**:
+- Solution must complete before t=5.0 deadline
+- No temporal conflicts (Alex never at {6,4,0} during blocking period)
+- Plan execution time > 2.0 seconds (proves backtracking occurred)
+- Either wait or detour strategy correctly implemented
+
+This canonical problem validates that the temporal planner implements true temporal reasoning rather than simple sequential action planning.
