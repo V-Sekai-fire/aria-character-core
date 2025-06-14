@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed
+Superseded by ADR-033
+
+**Note**: This ADR has been superseded by ADR-033, which provides complete TDD completion criteria and focuses on AriaEngine.Domain planning capabilities rather than generic character management.
 
 ## Date
 
