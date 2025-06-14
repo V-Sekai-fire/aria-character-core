@@ -1,12 +1,30 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaTimestrike.MixProject do
+# Cdefmodule AriaTimestrikeCore.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :aria_timestrike,
+      app: :aria_timestrike_core,
+      version: "0.1.0",
+      build_path: "../../_build",
+      config_path: "../../config/config.exs",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock",
+      elixir: "~> 1.17",
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
+  end5-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+defmodule AriaTimestrikeLegacy.MixProject do
+  use Mix.Project
+
+  def project do
+    [
+      app: :aria_timestrike_legacy,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",

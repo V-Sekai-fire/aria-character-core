@@ -20,10 +20,6 @@ defmodule AriaEngine.MixProject do
     ]
   end
 
-  # Specifies which paths to compile per environment
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
-
   def application do
     [
       extra_applications: [:logger],
@@ -31,34 +27,18 @@ defmodule AriaEngine.MixProject do
     ]
   end
 
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   defp deps do
     [
-      # Numerical computing for planning algorithms
-      {:nx, "~> 0.6"},
-
-      # Planning and decision-making libraries
-      {:libgraph, "~> 0.16"},
-
-      # Real-time multimedia processing framework
-      {:membrane_core, "~> 1.0"},
-
-      # Data persistence (dependency on aria_data)
-      {:aria_data, in_umbrella: true},
-
-      # Character shaping integration
-      {:aria_shape, in_umbrella: true},
-
-      # JSON handling
-      {:jason, "~> 1.4"},
-
-      # External process execution for actions
-      {:porcelain, "~> 2.0"},
-
-      # UUID generation for character IDs
-      {:elixir_uuid, "~> 1.2"},
-
-      # Shared dependencies
-      {:telemetry, "~> 1.2"}
+      # Core engine dependency
+      {:aria_engine_core, in_umbrella: true},
+      
+      # Development dependencies
+      {:ex_doc, "~> 0.27", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
 end

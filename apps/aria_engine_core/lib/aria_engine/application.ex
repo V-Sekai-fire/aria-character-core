@@ -2,14 +2,17 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngine.Application do
-  @moduledoc false
+  @moduledoc """
+  The AriaEngine application supervises the classical AI planning and GTPyhop services.
+  """
 
   use Application
 
   @impl true
   def start(_type, _args) do
     children = [
-      # Start any temporal-specific processes here
+      # Planner supervisor for managing planning processes
+      {DynamicSupervisor, strategy: :one_for_one, name: AriaEngine.PlannerSupervisor}
     ]
 
     opts = [strategy: :one_for_one, name: AriaEngine.Supervisor]
