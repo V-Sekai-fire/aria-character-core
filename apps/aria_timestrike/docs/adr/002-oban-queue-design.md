@@ -2,13 +2,18 @@
 
 ## Status
 
-Accepted
+**Deprecated** - Replaced by ADR-032 (Membrane Workflow Migration)
 
 ## Date
 
 2025-06-13
 
 ## Context
+
+**DEPRECATION NOTICE**: This ADR has been superseded by ADR-032 (Membrane Workflow Migration).
+The Oban-based queue design was replaced with a Membrane-based workflow system due to SQLite compatibility issues and performance requirements.
+
+---
 
 The temporal planner requires different queuing strategies based on time ordering constraints.
 Some operations must execute sequentially to maintain temporal correctness, while others can execute in parallel for performance.
