@@ -9,7 +9,7 @@ defmodule Mix.Tasks.Tui do
 
       mix tui
 
-  This will start the Terminal User Interface for the Timestrike game
+  This will start the Terminal User Interface
   with enhanced grid-based layout and responsive controls.
   """
 

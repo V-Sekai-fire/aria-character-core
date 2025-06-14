@@ -4,9 +4,23 @@
 defmodule AriaTui.Display do
   @moduledoc """
   Main display module for the Aria TUI system with responsive grid layout.
-  
+
   This module provides the primary interface for rendering the TUI display,
   coordinating between the grid system, components, and renderer modules.
+
+  ## Content Providers
+
+  The TUI system supports configurable content providers through the
+  `AriaTui.ContentProvider` behaviour. To use a custom content provider,
+  include a `:content_provider` key in your state map:
+
+      state = %{
+        content_provider: MyApp.TuiContentProvider,
+        # ... other state data
+      }
+
+  Content providers must implement the `AriaTui.ContentProvider` behaviour
+  to provide domain-specific formatting for different types of applications.
   """
 
   alias AriaTui.Display.{Grid, Colors, Components, Renderer}
@@ -29,12 +43,13 @@ defmodule AriaTui.Display do
   Display the complete game state with responsive layout.
   """
   def display_game_state(state) do
-    clear_screen()
-    
+    # Move cursor to home position instead of clearing screen to reduce flickering
+    IO.write("\e[H")
+
     # Get current terminal size and create layout
     terminal_size = get_terminal_size()
     layout = Grid.create_layout(terminal_size)
-    
+
     # Draw the complete interface
     Components.draw_responsive_header(state, layout)
     Renderer.draw_responsive_content(state, layout)
@@ -85,7 +100,7 @@ defmodule AriaTui.Display do
     left_width = Enum.at(layout.column_widths, 0, 30)
     right_width = Enum.at(layout.column_widths, 1, 30)
     height = Map.get(layout, :content_height, length(left_content))
-    
+
     draw_side_by_side_panels(left_content, right_content, left_width, right_width, height)
   end
 
@@ -138,10 +153,10 @@ defmodule AriaTui.Display do
   """
   def extract_panel_content(panel_text, width) do
     content = extract_panel_content(panel_text)
-    
+
     # Ensure at least one line even for empty content
     content = if Enum.empty?(content), do: [""], else: content
-    
+
     # Pad to specified width
     Enum.map(content, fn line ->
       current_length = Colors.visual_length(line)
@@ -196,7 +211,7 @@ defmodule AriaTui.Display do
   """
   def get_enhanced_map_symbol(agent_or_nil, {x, y}) do
     case agent_or_nil do
-      nil -> 
+      nil ->
         # Terrain symbol based on position
         case rem(x + y, 4) do
           0 -> "▪"  # Changed from "." to "▪"

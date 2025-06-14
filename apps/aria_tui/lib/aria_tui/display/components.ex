@@ -29,15 +29,15 @@ defmodule AriaTui.Display.Components do
   def draw_compact_header(state, layout) do
     colors = Colors.colors()
     width = layout.total_width
-    
+
     # Top border
     IO.puts("#{colors.bright_cyan}┌#{String.duplicate("─", width - 2)}┐#{colors.reset}")
-    
-    # Title line
-    title = " 🎯 Timestrike"  # Changed from "Aria Timestrike"
+
+    # Title line - use configurable title from state or default
+    title = Map.get(state, :title, " 🎯 Aria TUI")
     title_padding = width - Colors.visual_length(title) - 2
     IO.puts("#{colors.bright_cyan}│#{colors.bright_white}#{title}#{String.duplicate(" ", max(0, title_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     # Status line with tick count and play status
     tick_count = Map.get(state, :tick_count, 0)
     paused = Map.get(state, :paused, false)
@@ -45,7 +45,7 @@ defmodule AriaTui.Display.Components do
     status = " T:#{tick_count} #{play_symbol}"
     status_padding = width - Colors.visual_length(status) - 2
     IO.puts("#{colors.bright_cyan}│#{status}#{String.duplicate(" ", max(0, status_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     # Bottom border
     IO.puts("#{colors.bright_cyan}├#{String.duplicate("─", width - 2)}┤#{colors.reset}")
   end
@@ -56,27 +56,27 @@ defmodule AriaTui.Display.Components do
   def draw_enhanced_header(state, layout) do
     colors = Colors.colors()
     width = layout.total_width
-    
+
     # Top border
     IO.puts("#{colors.bright_cyan}┌#{String.duplicate("─", width - 2)}┐#{colors.reset}")
-    
-    # Title line with emoji
-    title = " 🎯 Aria Timestrike - Interactive Strategy"
+
+    # Title line with emoji - use configurable title from state or default
+    title = Map.get(state, :title, " 🎯 Aria TUI - Interactive Interface")
     title_padding = width - Colors.visual_length(title) - 2
     IO.puts("#{colors.bright_cyan}│#{colors.bright_white}#{title}#{String.duplicate(" ", max(0, title_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     # Status and time line
     status = get_status_text(state)
     time_info = get_time_info(state)
     combined = " #{status} │ #{time_info}"
     combined_padding = width - Colors.visual_length(combined) - 2
     IO.puts("#{colors.bright_cyan}│#{combined}#{String.duplicate(" ", max(0, combined_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     # Stats line
     stats = get_stats_text(state)
     stats_padding = width - Colors.visual_length(stats) - 2
     IO.puts("#{colors.bright_cyan}│#{stats}#{String.duplicate(" ", max(0, stats_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     # Bottom border
     IO.puts("#{colors.bright_cyan}├#{String.duplicate("─", width - 2)}┤#{colors.reset}")
   end
@@ -87,15 +87,15 @@ defmodule AriaTui.Display.Components do
   def draw_full_header(state, layout) do
     colors = Colors.colors()
     width = layout.total_width
-    
+
     # Top border
     IO.puts("#{colors.bright_cyan}┌#{String.duplicate("─", width - 2)}┐#{colors.reset}")
-    
-    # Main title line
-    title = " 🎯 Aria Timestrike - Interactive Strategy Game"
+
+    # Main title line - use configurable title from state or default
+    title = Map.get(state, :title, " 🎯 Aria TUI - Interactive Interface")
     title_padding = width - Colors.visual_length(title) - 2
     IO.puts("#{colors.bright_cyan}│#{colors.bright_white}#{title}#{String.duplicate(" ", max(0, title_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     # Status and game info line
     status = get_status_text(state)
     time_info = get_time_info(state)
@@ -103,19 +103,19 @@ defmodule AriaTui.Display.Components do
     info_line = " #{status} │ #{time_info} │ #{turn_info}"
     info_padding = width - Colors.visual_length(info_line) - 2
     IO.puts("#{colors.bright_cyan}│#{info_line}#{String.duplicate(" ", max(0, info_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     # Stats line
     stats = get_stats_text(state)
     stats_padding = width - Colors.visual_length(stats) - 2
     IO.puts("#{colors.bright_cyan}│#{stats}#{String.duplicate(" ", max(0, stats_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     if layout.header_height >= 5 do
       # Additional info line for very large screens
       extra_info = get_extra_info(state)
       extra_padding = width - Colors.visual_length(extra_info) - 2
       IO.puts("#{colors.bright_cyan}│#{colors.gray}#{extra_info}#{String.duplicate(" ", max(0, extra_padding))}#{colors.bright_cyan}│#{colors.reset}")
     end
-    
+
     # Bottom border
     IO.puts("#{colors.bright_cyan}├#{String.duplicate("─", width - 2)}┤#{colors.reset}")
   end
@@ -140,16 +140,16 @@ defmodule AriaTui.Display.Components do
   def draw_compact_controls(layout) do
     colors = Colors.colors()
     width = layout.total_width
-    
+
     # Controls header
     IO.puts("#{colors.bright_cyan}│#{colors.bright_white} Controls#{String.duplicate(" ", width - 11)}#{colors.bright_cyan}│#{colors.reset}")
     IO.puts("#{colors.bright_cyan}├#{String.duplicate("─", width - 2)}┤#{colors.reset}")
-    
+
     # Compact controls
     controls = " #{colors.bright_yellow}SPC#{colors.reset}-Int│#{colors.bright_yellow}P#{colors.reset}-Pause│#{colors.bright_yellow}Q#{colors.reset}-Quit│#{colors.bright_yellow}C#{colors.reset}-Conv"
     controls_padding = width - Colors.visual_length(controls) - 2
     IO.puts("#{colors.bright_cyan}│#{controls}#{String.duplicate(" ", max(0, controls_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     # Bottom border
     IO.puts("#{colors.bright_cyan}├#{String.duplicate("─", width - 2)}┤#{colors.reset}")
   end
@@ -160,16 +160,16 @@ defmodule AriaTui.Display.Components do
   def draw_standard_controls(layout) do
     colors = Colors.colors()
     width = layout.total_width
-    
+
     # Controls header
     IO.puts("#{colors.bright_cyan}│#{colors.bright_white} 🎮 Controls#{String.duplicate(" ", width - 14)}#{colors.bright_cyan}│#{colors.reset}")
     IO.puts("#{colors.bright_cyan}├#{String.duplicate("─", width - 2)}┤#{colors.reset}")
-    
+
     # Standard controls
     controls = "  #{colors.bright_yellow}SPACE#{colors.reset}-Int│#{colors.bright_yellow}P#{colors.reset}-Pause│#{colors.bright_yellow}Q#{colors.reset}-Quit│#{colors.bright_yellow}C#{colors.reset}-Conviction"
     controls_padding = width - Colors.visual_length(controls) - 2
     IO.puts("#{colors.bright_cyan}│#{controls}#{String.duplicate(" ", max(0, controls_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     # Bottom border
     IO.puts("#{colors.bright_cyan}├#{String.duplicate("─", width - 2)}┤#{colors.reset}")
   end
@@ -180,11 +180,11 @@ defmodule AriaTui.Display.Components do
   def draw_full_controls(layout) do
     colors = Colors.colors()
     width = layout.total_width
-    
+
     # Controls header
     IO.puts("#{colors.bright_cyan}│#{colors.bright_white} 🎮 Controls#{String.duplicate(" ", width - 14)}#{colors.bright_cyan}│#{colors.reset}")
     IO.puts("#{colors.bright_cyan}├#{String.duplicate("─", width - 2)}┤#{colors.reset}")
-    
+
     # Full controls
     base_controls = "#{colors.bright_yellow}SPACE#{colors.reset}-Interrupt/Replan │ #{colors.bright_yellow}P#{colors.reset}-Pause/Resume │ #{colors.bright_yellow}Q#{colors.reset}-Quit │ #{colors.bright_yellow}C#{colors.reset}-Conviction"
     controls = if width >= 120 do # lg, xl might have Refresh
@@ -192,16 +192,16 @@ defmodule AriaTui.Display.Components do
     else # md
       "  #{base_controls}"
     end
-    
+
     controls_padding = width - Colors.visual_length(controls) - 2
     IO.puts("#{colors.bright_cyan}│#{controls}#{String.duplicate(" ", max(0, controls_padding))}#{colors.bright_cyan}│#{colors.reset}")
-    
+
     if layout.controls_height >= 4 do # Typically for lg, xl
       help_text = "  Use keyboard shortcuts for real-time game control"
       help_padding = width - String.length(help_text) - 2
       IO.puts("#{colors.bright_cyan}│#{colors.gray}#{help_text}#{String.duplicate(" ", max(0, help_padding))}#{colors.bright_cyan}│#{colors.reset}")
     end
-    
+
     # Bottom border
     IO.puts("#{colors.bright_cyan}├#{String.duplicate("─", width - 2)}┤#{colors.reset}")
   end
@@ -212,7 +212,7 @@ defmodule AriaTui.Display.Components do
     colors = Colors.colors()
     paused = Map.get(state, :paused, false)
     case Map.get(state, :status, :active) do
-      :active -> 
+      :active ->
         if paused do
           "#{colors.bright_yellow}⏸#{colors.reset} Paused"
         else

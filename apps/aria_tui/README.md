@@ -1,6 +1,6 @@
 # Aria TUI
 
-A dedicated Terminal User Interface (TUI) application for the Aria Timestrike game, featuring a fully responsive grid system, clean separation of concerns, and professional terminal display.
+A general-purpose Terminal User Interface (TUI) system featuring a fully responsive grid system, clean separation of concerns, and professional terminal display. Designed to be content-agnostic and reusable across different applications.
 
 ## Features
 
@@ -13,24 +13,23 @@ A dedicated Terminal User Interface (TUI) application for the Aria Timestrike ga
 ### 🏗️ Clean Architecture
 - **Separation of concerns**: Data/model layer separate from display logic
 - **Modular design**: Independent TUI client and display modules
-- **Umbrella app**: Completely isolated from game engine and timestrike logic
+- **Content provider pattern**: Pluggable content system for different applications
 - **Mix task integration**: Simple `mix tui` command to launch
 
 ### 🎨 Enhanced Display
 - **Rich ANSI colors**: Professional color scheme with semantic highlighting
 - **Unicode support**: Emojis and special characters for better UX
 - **Real-time updates**: 100ms tick interval with smooth terminal refresh
-- **Interactive controls**: Keyboard shortcuts for game control
+- **Interactive controls**: Keyboard shortcuts for system control
 
 ## Installation
 
-This is an umbrella app within the Aria Character Core project. The TUI depends on:
+This is an umbrella app within the Aria Character Core project. The TUI has minimal dependencies and is designed to be reusable.
 
 ```elixir
 def deps do
   [
-    {:aria_timestrike, path: "../aria_timestrike"},
-    {:aria_engine, path: "../aria_engine"}
+    # Add any application-specific dependencies here
   ]
 end
 ```

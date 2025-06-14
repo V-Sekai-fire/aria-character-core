@@ -11,6 +11,7 @@ defmodule AriaTui.Display.Renderer do
 
   @doc """
   Draw responsive content based on layout configuration.
+  Uses content provider module if specified in state, otherwise falls back to default.
   """
   def draw_responsive_content(state, layout) do
     case layout.columns do
@@ -27,15 +28,15 @@ defmodule AriaTui.Display.Renderer do
     colors = Colors.colors()
     width = layout.total_width
     content_height = layout.content_height
-    
-    # Main content area
-    content_lines = get_main_content(state, width - 2, content_height)
-    
+
+    # Main content area - use configurable content provider
+    content_lines = get_content_from_provider(state, :main_content, width - 2, content_height)
+
     Enum.each(content_lines, fn line ->
       line_padding = width - Colors.visual_length(line) - 2
       IO.puts("#{colors.bright_cyan}│#{line}#{String.duplicate(" ", max(0, line_padding))}#{colors.bright_cyan}│#{colors.reset}")
     end)
-    
+
     # Fill remaining lines
     remaining_lines = content_height - length(content_lines)
     if remaining_lines > 0 do
@@ -53,17 +54,17 @@ defmodule AriaTui.Display.Renderer do
     colors = Colors.colors()
     content_height = layout.content_height
     [left_width, right_width] = layout.column_widths
-    
+
     # Draw top border with column separator
     IO.puts("#{colors.bright_cyan}┌#{String.duplicate("─", left_width)}┬#{String.duplicate("─", right_width)}┐#{colors.reset}")
-    
-    # Get content for both columns
-    left_content = get_left_panel_content(state, left_width, content_height - 2) # -2 for borders
-    right_content = get_right_panel_content(state, right_width, content_height - 2)
-    
+
+    # Get content for both columns using configurable providers
+    left_content = get_content_from_provider(state, :left_panel, left_width, content_height - 2) # -2 for borders
+    right_content = get_content_from_provider(state, :right_panel, right_width, content_height - 2)
+
     # Draw side by side
     draw_side_by_side_panels(left_content, right_content, left_width, right_width, content_height - 2)
-    
+
     # Draw bottom border
     IO.puts("#{colors.bright_cyan}└#{String.duplicate("─", left_width)}┴#{String.duplicate("─", right_width)}┘#{colors.reset}")
   end
@@ -81,19 +82,19 @@ defmodule AriaTui.Display.Renderer do
   """
   def draw_side_by_side_panels(left_content, right_content, left_width, right_width, height) do
     colors = Colors.colors()
-    
+
     # Ensure both content arrays have the same length
     max_lines = max(length(left_content), length(right_content))
     left_padded = pad_content_lines(left_content, left_width, max_lines)
     right_padded = pad_content_lines(right_content, right_width, max_lines)
-    
+
     # Draw each line
     left_padded
     |> Enum.zip(right_padded)
     |> Enum.each(fn {left_line, right_line} ->
       IO.puts("#{colors.bright_cyan}│#{left_line}│#{right_line}│#{colors.reset}")
     end)
-    
+
     # Fill remaining height if needed
     lines_drawn = max_lines
     remaining_lines = height - lines_drawn
@@ -126,6 +127,53 @@ defmodule AriaTui.Display.Renderer do
 
   # Private helper functions
 
+  # Get content from a configurable content provider.
+  defp get_content_from_provider(state, content_type, width, height) do
+    # Check if state has a content provider module specified
+    content_provider = Map.get(state, :content_provider)
+
+    case content_provider do
+      nil ->
+        # Use default content provider
+        get_default_content(state, content_type, width, height)
+
+      module when is_atom(module) ->
+        # Use specified module implementing ContentProvider behaviour
+        if Code.ensure_loaded?(module) do
+          case content_type do
+            :main_content ->
+              apply(module, :get_main_content, [state, width, height])
+            :left_panel ->
+              apply(module, :get_left_panel_content, [state, width, height])
+            :right_panel ->
+              apply(module, :get_right_panel_content, [state, width, height])
+            _ ->
+              get_default_content(state, content_type, width, height)
+          end
+        else
+          get_default_content(state, content_type, width, height)
+        end
+
+      _ ->
+        get_default_content(state, content_type, width, height)
+    end
+  rescue
+    # If provider module doesn't implement the required function, fall back to default
+    UndefinedFunctionError ->
+      get_default_content(state, content_type, width, height)
+    _ ->
+      get_default_content(state, content_type, width, height)
+  end
+
+  defp get_default_content(state, content_type, width, height) do
+    case content_type do
+      :main_content -> get_main_content(state, width, height)
+      :left_panel -> get_left_panel_content(state, width, height)
+      :right_panel -> get_right_panel_content(state, width, height)
+      _ -> ["Unknown content type: #{content_type}"]
+    end
+  end
+
   defp get_main_content(state, width, height) do
     content = [
       " Agents",  # Removed emoji for test compatibility
@@ -144,7 +192,7 @@ defmodule AriaTui.Display.Renderer do
       " Actions Taken: #{Map.get(state, :actions_taken, 0)}",
       " Efficiency Rating: #{get_efficiency_rating(state)}"
     ]
-    
+
     # Pad content to fit available space
     content
     |> Enum.take(height)
@@ -168,7 +216,7 @@ defmodule AriaTui.Display.Renderer do
       " Score: #{Map.get(state, :score, 0)}",
       " Achievements: #{Map.get(state, :achievements, 0)}/10"
     ]
-    
+
     pad_content_lines(content, width, height)
   end
 
@@ -189,7 +237,7 @@ defmodule AriaTui.Display.Renderer do
       " Items: #{Map.get(state, :item_count, 0)}/20",
       " Weight: #{Map.get(state, :weight, 0)}/100 kg"
     ]
-    
+
     pad_content_lines(content, width, height)
   end
 
@@ -199,11 +247,11 @@ defmodule AriaTui.Display.Renderer do
       padding = width - visual_len
       line <> String.duplicate(" ", max(0, padding))
     end)
-    
+
     # Ensure we have exactly target_height lines
     current_length = length(padded_lines)
     empty_line = String.duplicate(" ", width)
-    
+
     cond do
       current_length < target_height ->
         padded_lines ++ List.duplicate(empty_line, target_height - current_length)

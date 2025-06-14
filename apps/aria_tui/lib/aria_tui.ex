@@ -6,7 +6,7 @@ defmodule AriaTui do
   AriaTui provides a modern Terminal User Interface for the Aria Character Core system.
 
   This module serves as the main entry point for TUI functionality, providing
-  a clean, grid-based interface for interacting with the Timestrike game.
+  a clean, grid-based interface for interactive applications.
   """
 
   alias AriaTui.Client

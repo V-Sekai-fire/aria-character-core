@@ -76,3 +76,9 @@ certs
 .#*
 
 priv/*.db*
+
+# SQLite database files - should never be committed
+*.db
+*.db-shm
+*.db-wal
+**/priv/*.db*

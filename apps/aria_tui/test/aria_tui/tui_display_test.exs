@@ -229,7 +229,7 @@ defmodule AriaTui.DisplayTest do
         Display.draw_compact_header(state, 60)
       end)
 
-      assert String.contains?(output, "Timestrike")
+      assert String.contains?(output, "Aria TUI")
       assert String.contains?(output, "T:42")
       assert String.contains?(output, "▶")
     end
@@ -242,7 +242,7 @@ defmodule AriaTui.DisplayTest do
         Display.draw_enhanced_header(state, 120, layout)
       end)
 
-      assert String.contains?(output, "Aria Timestrike")
+      assert String.contains?(output, "Aria TUI - Interactive Interface")
       assert String.contains?(output, "Tick: 100")
       assert String.contains?(output, "⏸")
     end

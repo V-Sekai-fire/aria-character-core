@@ -105,10 +105,10 @@ defmodule AriaTui.Display.Grid do
   def create_layout({width, height} = size) do
     breakpoint = get_breakpoint(size)
     layout_config = @grid.layouts[breakpoint]
-    
+
     columns = layout_config.columns
     column_widths = calculate_column_widths(width, columns)
-    
+
     %{
       breakpoint: breakpoint,
       total_width: width,
@@ -139,7 +139,7 @@ defmodule AriaTui.Display.Grid do
         available_width = total_width - (columns + 1)
         base_width = div(available_width, columns)
         remainder = rem(available_width, columns)
-        
+
         # Distribute remainder across columns (last columns get extra width for tests)
         Enum.map(0..(columns - 1), fn i ->
           if (columns - 1 - i) < remainder do
@@ -176,7 +176,7 @@ defmodule AriaTui.Display.Grid do
   end
 
   # Backward compatibility functions for tests
-  
+
   @doc """
   Draw single column content (backward compatibility).
   """

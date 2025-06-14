@@ -3,7 +3,7 @@
 
 defmodule AriaTui.Display.BackwardCompatibility do
   @moduledoc """
-  Backward compatibility layer for tests that expect functions 
+  Backward compatibility layer for tests that expect functions
   to be directly available from the Grid module.
   """
 

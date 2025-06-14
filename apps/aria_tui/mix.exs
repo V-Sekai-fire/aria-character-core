@@ -28,8 +28,7 @@ defmodule AriaTui.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:aria_timestrike, in_umbrella: true},
-      {:aria_engine, in_umbrella: true}
+      # Pure TUI system should not depend on specific game implementations
     ]
   end
 end
