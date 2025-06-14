@@ -1104,180 +1104,54 @@ agent.position.set(position.x, position.y, position.z);
 - Previous {x, z, y} or other coordinate mappings must be converted
 - Any hardcoded position values need Godot coordinate review
 
-## Implementation Progress & Findings
+# Temporal Planner Design Resolutions
 
-**Status**: 🚀 **ACTIVE IMPLEMENTATION** - Core MVP components implemented, critical integration issues identified
+This document captures design decisions and resolutions for the temporal planner component of aria_timestrike.
 
-### Completed Implementation (December 2024)
+## Resolution 001: Basic Temporal Planning Architecture
+**Date:** Initial implementation
+**Status:** Implemented
 
-**✅ Core Components Implemented**:
-1. **Temporal State Extension**: `AriaEngine.TemporalState` with time-based action tracking
-2. **Membrane Job System**: `AriaEngine.GameActionJob` using Membrane workflow (replacing Oban per architecture)
-3. **Phoenix Web Interface**: Complete LiveView implementation at `/timestrike` with interactive SVG
-4. **Game Engine**: `AriaTimestrike.GameEngine` with real-time state management
-5. **Integration Tests**: Complete TDD test suite following Resolution 22
+The temporal planner uses a hierarchical task network (HTN) approach with time-aware constraints to handle character planning with temporal considerations.
 
-**✅ Web Interface Demo Working**:
-- Phoenix LiveView at `http://localhost:4000/timestrike` 
-- Interactive SVG grid showing agent positions
-- Real-time WebSocket updates
-- Player input handling for movement commands
-- Fixed all initial compilation and runtime errors
+## Resolution 002: MCP Integration for GitHub Copilot Access
+**Date:** 2025-01-14
+**Status:** Proposed
 
-### Critical Integration Discoveries
+### Problem Statement
+Aria character core needs to be accessible from GitHub Copilot within VS Code to enable developers to interact with the character system directly from their development environment. This requires exposing Aria through the Model Context Protocol (MCP) which allows language models to access external tools and services.
 
-**⚠️ Architecture Shift: Membrane vs Oban**:
-- **Discovery**: AriaEngine uses Membrane workflows, not Oban queues
-- **Impact**: Resolutions 2, 6, 11, 18, 22 reference Oban but system uses Membrane
-- **Status**: Code updated to use `AriaEngine.GameActionJob` with Membrane
-- **Remaining Work**: Update remaining test references from Oban to Membrane
+### Design Decision
+Implement an MCP server that exposes key Aria functionality as tools that can be invoked by GitHub Copilot. This will create a bridge between the VS Code environment and the Aria character system.
 
-**✅ 3D Coordinate Convention Enforced (Resolution 19)**:
-- **Implementation**: All agent positions now use `{x, y, 0}` tuples consistently
-- **Fixed**: GameEngine, LiveView, and all test code expect 3D coordinates
-- **Verified**: Integration tests pass with 3D position handling
-- **Status**: Resolution 19 fully implemented and working
+### Technical Implementation
+1. **MCP Server Module**: Create a new application `aria_mcp_server` within the umbrella project
+2. **Hermes MCP Integration**: Leverage the existing [Hermes MCP](https://github.com/cloudwalk/hermes-mcp) library which provides stdio support for Elixir MCP servers
+3. **Protocol Compliance**: Use Hermes MCP's stdio transport to implement MCP specification for tool registration and execution
+4. **Core Functionality Exposure**: Expose essential Aria capabilities as MCP tools:
+   - Character creation and management
+   - Workflow planning and execution
+   - File system operations with character context
+   - Temporal planning capabilities
+5. **VS Code Integration**: Configure as an MCP server using stdio transport that GitHub Copilot can discover and use
 
-**🔍 Test Integration Issues Identified**:
-1. **Fixed**: Test expected `{2,3}` but got `{2,3,0}` - updated test to expect 3D
-2. **Pending**: Replace remaining Oban test references with Membrane workflow
-3. **Investigating**: One test case showing empty position updates - needs debugging
+### Benefits
+- Enables natural language interaction with Aria from within VS Code
+- Provides contextual character assistance during development
+- Leverages existing Aria capabilities without reimplementation
+- Creates a reusable integration pattern for other development environments
 
-### Updated Implementation Status
+### Implementation Phases
+1. **Phase 1**: Basic MCP server using Hermes MCP stdio transport with core character operations
+2. **Phase 2**: Advanced workflow and planning tool exposure with stdio message handling
+3. **Phase 3**: Context-aware development assistance tools with optimized stdio communication
 
-**✅ Working Components**:
-- Phoenix web interface fully functional
-- 3D coordinate system working throughout
-- Real-time agent position updates
-- Membrane-based workflow system
-- TDD integration test framework
+### Considerations
+- **Library Integration**: Leverage Hermes MCP's proven stdio implementation to avoid reinventing protocol handling
+- **Transport Layer**: Use stdio transport for seamless GitHub Copilot integration without network complexity
+- **Security**: Ensure proper authentication and authorization for MCP tool access
+- **Performance**: Minimize latency for real-time development assistance using efficient stdio communication
+- **Compatibility**: Maintain backward compatibility with existing Aria interfaces
+- **Documentation**: Provide clear examples and usage patterns for developers
 
-**🔧 Remaining Work**:
-- Complete Oban→Membrane migration in remaining test code
-- Debug empty position update issue in integration tests
-- Finalize all MVP demo requirements per Resolution 18
-- Verify complete end-to-end demo workflow
-
-### Current Technical State
-
-**Web Interface**: ✅ Fully working at `http://localhost:4000/timestrike`
-**Core Engine**: ✅ GameEngine with 3D positions and Membrane jobs
-**Integration Tests**: 🔧 Mostly working, some Oban references need updating
-**MVP Demo**: 🔧 Core functionality working, final integration pending
-
-### Next Implementation Steps
-
-1. **Complete Architecture Migration**: Replace all remaining Oban references with Membrane
-2. **Debug Position Updates**: Investigate and fix empty position update test case
-3. **Final Integration**: Ensure all Resolution 18 MVP requirements are met
-4. **Demo Verification**: Complete 10-minute demo workflow end-to-end
-5. **Documentation Update**: Reflect actual Membrane-based implementation
-
-### Architectural Discovery: Membrane vs Oban & WebRTC vs WebSocket
-
-**Major Discovery During Implementation**: The original design called for Oban-based job queues and WebSocket-based real-time communication, but implementation revealed that Membrane and WebRTC are better architectural choices for the TimeStrike system.
-
-#### Oban → Membrane Architecture Shift
-
-**Original Plan (Resolutions 2, 6, 11, 22)**:
-- Use Oban job queues for sequential, parallel, and instant action processing
-- Rely on Oban's worker concurrency controls for temporal ordering
-- Implement game actions as Oban jobs with database persistence
-
-**Implementation Discovery**:
-- **Membrane workflows** provide better fit for real-time game processing
-- **Direct process messaging** eliminates database overhead for temporal actions
-- **Membrane.Element** architecture maps naturally to game entity behaviors
-- **Streaming data processing** aligns with continuous temporal state updates
-
-**Architectural Benefits Realized**:
-```elixir
-# Membrane-based game action processing
-defmodule AriaEngine.GameActionJob do
-  use Membrane.Filter
-  
-  @impl true
-  def handle_process(action, state) do
-    # Direct state transformation without database roundtrip
-    new_state = AriaEngine.TemporalState.apply_action(state.temporal_state, action)
-    {:ok, new_state}
-  end
-end
-```
-
-**Key Advantages of Membrane over Oban**:
-1. **Lower Latency**: No database serialization for temporal actions
-2. **Better Streaming**: Natural fit for continuous time-based processing  
-3. **Memory Efficiency**: Process-to-process communication vs database I/O
-4. **Real-time Guarantee**: Direct message passing ensures temporal precision
-5. **Simpler Architecture**: Fewer moving parts than Oban + database persistence
-
-#### WebSocket → WebRTC Communication Shift
-
-**Original Plan (Resolution 8)**:
-- Use Phoenix LiveView with WebSocket for real-time updates
-- Rely on WebSocket bidirectional communication for user input
-- Implement real-time map updates via WebSocket messages
-
-**Implementation Discovery**:
-- **WebRTC** provides superior real-time performance for continuous updates
-- **Data channels** eliminate WebSocket message overhead
-- **Peer-to-peer** architecture reduces server load for temporal streaming
-- **Lower latency** critical for 1ms tick precision requirements
-
-**Technical Implementation**:
-```elixir
-# WebRTC-based real-time communication
-defmodule AriaTimestrike.WebRTCChannel do
-  # Direct peer-to-peer data channels for temporal updates
-  def broadcast_state_update(state) do
-    # Sub-millisecond latency for position updates
-    WebRTC.DataChannel.send(state.channel, encode_temporal_state(state))
-  end
-end
-```
-
-**Key Advantages of WebRTC over WebSocket**:
-1. **Ultra-Low Latency**: Critical for 1ms tick requirements (Resolution 6)
-2. **Bandwidth Efficiency**: Binary data channels vs JSON WebSocket messages
-3. **Peer-to-Peer**: Reduces server bottleneck for multiple concurrent games
-4. **Media Integration**: Future voice/video streaming for enhanced gameplay
-5. **Network Resilience**: Better handling of network fluctuations
-
-#### Impact on Design Resolutions
-
-**Resolutions Requiring Updates**:
-- **Resolution 2**: Update queue design to reference Membrane workflows
-- **Resolution 6**: Replace Oban scheduling with Membrane pipeline processing
-- **Resolution 8**: Update WebSocket references to WebRTC data channels
-- **Resolution 11**: Apply idempotency concepts to Membrane elements
-- **Resolution 18**: Update MVP technical stack description
-- **Resolution 22**: Reflect actual Membrane-based implementation approach
-
-**Resolutions Strengthened by Discovery**:
-- **Resolution 6 (1ms ticks)**: WebRTC latency better supports precision timing
-- **Resolution 12 (Real-time input)**: WebRTC data channels improve responsiveness
-- **Resolution 14 (Streaming)**: Both architectures better support live streaming
-- **Resolution 21 (Realistic pacing)**: Lower latency improves timing precision
-
-#### Current Implementation Status
-
-**Membrane Integration**: ✅ Core GameActionJob implemented with Membrane.Filter
-**WebRTC Planning**: 🔧 Currently using Phoenix LiveView, WebRTC implementation planned
-**Architecture Migration**: 🔧 Updating remaining Oban references to Membrane
-**Performance Validation**: 🔧 Pending WebRTC implementation for latency testing
-
-### Architectural Resolution Updates Needed
-
-**Resolution 2 (Oban Queues)**: Should reference AriaEngine's Membrane workflow system
-**Resolution 6 (Game Engine Integration)**: Update Oban references to Membrane jobs
-**Resolution 8 (Web Interface)**: Update WebSocket references to WebRTC data channels
-**Resolution 11 (Queue Idempotency)**: Apply to Membrane jobs instead of Oban
-**Resolution 18 (MVP Definition)**: Update technical stack to reflect Membrane + WebRTC usage
-**Resolution 22 (First Implementation)**: Reflect actual Membrane-based job implementation
-
----
-
-*Document Status: Active Implementation - Core MVP Working, Final Integration In Progress*
-*Last Updated: December 2024*
-*Implementation: Phoenix web interface working, Membrane jobs active, final integration pending*
+This resolution enables Aria to become a natural part of the development workflow while maintaining its architectural integrity.
