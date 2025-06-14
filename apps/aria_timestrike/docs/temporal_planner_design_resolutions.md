@@ -926,3 +926,48 @@ end
   - **Iterate Based on Reality**: Adjust game design to match implementation capabilities
   - **Validate Through Testing**: Prove timing reliability through automated tests
   - **Build Confidence Through Demos**: Working code enables convincing demonstrations
+
+## Resolution 27: Web Interface Implementation
+
+**Decision**: Phoenix LiveView web interface replaces CLI for the final implementation (phx.server is standard).
+
+**Details**:
+
+- **Web-First Approach**: Use Phoenix LiveView instead of terminal CLI for better demonstration
+- **Real-time Updates**: WebSocket connections provide smoother real-time feedback than terminal
+- **Interactive SVG**: Grid-based game visualization with clickable movement targets
+- **Standard Phoenix Patterns**: Follow existing AriaEngine web interface conventions
+- **Streaming Compatibility**: Web interface is inherently more streaming-friendly than CLI
+- **Easy Demonstration**: `mix phx.server` and navigate to `/timestrike` for instant demo
+- **Touch/Mobile Ready**: Web interface works on tablets and phones for broader accessibility
+
+**Implementation Benefits**:
+
+- **Familiar Technology**: Builds on existing Phoenix LiveView expertise
+- **Better Visualization**: SVG graphics superior to ASCII terminal display
+- **Easier Sharing**: Web URL easier to share than terminal application
+- **Professional Appearance**: Web interface looks more polished for demonstrations
+- **Future Extensibility**: Web platform supports advanced features like chat integration
+
+## Final Implementation Readiness
+
+**Status**: ✅ **COMPLETE** - All design decisions finalized and verified for consistency
+
+**Next Steps**:
+1. Begin implementation with TDD approach (Resolution 22)
+2. Start with failing integration test for MVP demo scenario
+3. Implement components as driven by test requirements
+4. Validate timing precision through automated testing
+5. Complete weekend MVP demo with web interface
+
+**Weekend Timeline**:
+- **Friday**: Core temporal state and Oban job implementation
+- **Saturday**: Web interface and basic game loop
+- **Sunday**: Player input system and final integration
+- **Demo Ready**: Complete working temporal planner demonstration
+
+---
+
+*Document Status: Complete and Implementation-Ready*
+*Last Updated: June 13, 2025*
+*All 27 resolutions verified for consistency and technical feasibility*
