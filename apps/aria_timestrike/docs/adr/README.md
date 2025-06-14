@@ -6,7 +6,9 @@ This directory contains Architecture Decision Records for the temporal planner c
 
 **All temporal planner architectural decisions are now consolidated in [ADR-034: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md).**
 
-ADRs 001-033 have been superseded and serve as historical records of the architectural evolution process. For current implementation guidance, reference ADR-034 exclusively.
+**The migration strategy from current AriaEngine to temporal AriaEngine is defined in [ADR-035: AriaEngine Temporal Migration Strategy with Control Theory Verification](035-aria-engine-temporal-migration-strategy.md).**
+
+ADRs 001-033 have been superseded by ADR-034 and serve as historical records of the architectural evolution process. For current implementation guidance, reference ADR-034 and ADR-035 exclusively.
 
 ## Overview
 
@@ -24,6 +26,8 @@ These ADRs document the evolution of design decisions for the temporal, re-entra
 ### Current Architecture
 
 - **034**: **Definitive Temporal Planner Architecture** _(Supersedes ADR-001 through ADR-033)_
+- **035**: **AriaEngine Temporal Migration Strategy with Control Theory Verification** _(Migration path and verification framework)_
+- **035**: **AriaEngine to Temporal AriaEngine Migration Strategy**
 
 ### Historical Evolution (Superseded)
 
