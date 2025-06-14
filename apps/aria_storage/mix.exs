@@ -63,7 +63,7 @@ defmodule AriaStorage.MixProject do
       {:telemetry, "~> 1.2"},
 
       # Test dependencies
-      {:stream_data, "~> 0.5", only: :test},
+      {:stream_data, "~> 1.2", only: :test},
       {:ex_unit_notifier, "~> 1.3", only: :test},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]

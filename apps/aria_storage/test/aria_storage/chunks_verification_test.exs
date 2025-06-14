@@ -10,9 +10,9 @@ defmodule AriaStorage.ChunksVerificationTest do
   alias AriaStorage.Chunks
   alias AriaStorage.Parsers.CasyncFormat
 
-  @describetag :integration
-  @describetag timeout: 30_000
   describe "chunking verification against desync/casync" do
+    @describetag :integration
+    @describetag timeout: 30_000
     test "chunks match desync reference implementation exactly" do
       # Configure paths
       input_path = Path.join(__DIR__, "../support/testdata/chunker.input")
@@ -44,7 +44,7 @@ defmodule AriaStorage.ChunksVerificationTest do
         "Chunk count mismatch: expected #{length(expected_chunks)}, got #{length(our_chunks)}"
 
       # Verify chunk boundaries are contiguous
-      Enum.with_index(our_chunks) 
+      Enum.with_index(our_chunks)
       |> Enum.reduce(0, fn {chunk, i}, prev_offset ->
         expected_chunk = Enum.at(expected_chunks, i)
 
