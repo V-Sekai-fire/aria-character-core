@@ -62,6 +62,7 @@ These ADRs document all design decisions for the temporal, re-entrant goal-task-
 - **028**: Three.js 3D Visualization Architecture _(Superseded by ADR-030)_
 - **029**: MCP Integration for GitHub Copilot
 - **030**: Console TUI Implementation _(Supersedes ADR-027, ADR-028)_
+- **031**: Strategic Focus - TimeStrike vs Tool Integration
 
 ## Design Consistency
 
