@@ -668,45 +668,7 @@ Build Tension (Extended) → Brief Explosion of Action → Consequence Processin
 4. **First Expansion**: Add action duration and completion callbacks
 5. **Foundation Complete**: Working temporal action execution pipeline
 
-**Rationale Analysis**:
-
-- **✅ LOWEST RISK - Start with Oban Job + Test**:
-  - **Existing Infrastructure**: Builds on already-configured Oban setup
-  - **Isolated Testing**: Can test job execution without CLI or game loop dependencies
-  - **Immediate Validation**: Tests prove temporal scheduling works from day one
-  - **Clear Success Criteria**: Job either executes at right time or doesn't
-  - **Foundation Building**: Every other component depends on reliable action execution
-
-**Why Not Other Approaches**:
-
-- **Data Structures**: Abstract without proof they work in practice
-- **CLI**: Complex integration without core functionality
-- **Mix Task**: Shell without substance
-- **Code Review**: Analysis paralysis without progress
-
-5. **🟢 LOW-MEDIUM RISK - Start with Oban Job**:
-
-   - **Core Mechanism**: Gets to heart of temporal execution quickly
-   - **Concrete Behavior**: Can test actual job scheduling and execution
-   - **Integration Point**: Natural place where temporal planning meets execution
-
-6. **🟢 LOWEST RISK - Start with Tests**:
-   - **TDD Best Practice**: Drives out exactly what's needed, no more
-   - **Clear Success Criteria**: Test passes = feature works
-   - **Incremental Progress**: Each test adds concrete functionality
-   - **Integration Validation**: Tests force integration issues to surface early
-   - **MVP Focused**: Can write test for exact 10-minute demo acceptance criteria
-
-**Recommended First Step**: Start with Tests (Lowest Risk)
-
-- Write failing test for: "Alex moves from {2,3} to {8,3} in real-time with terminal display"
-- Forces creation of minimal TemporalState, GameActionJob, and CLI integration
-- Provides immediate feedback on what works vs what doesn't
-- Aligns perfectly with TDD approach and MVP demo requirements
-
-**Resolution Needed**: Choose the specific first step and create an implementation sequence that builds momentum while following TDD principles.
-
-## Resolution 22: First Implementation Step
+## Resolution 22: First Implementation Step - Test-Driven Development
 
 **Decision**: Start with writing tests - specifically the MVP acceptance test that drives out all required components.
 
@@ -890,8 +852,6 @@ end
 - Adjust design based on actual capabilities discovered
 - Fail fast if fundamental assumptions prove wrong
 - Use simple implementations first, optimize later if needed
-
-## Resolution 26: Implementation Capability Crisis
 
 ## Resolution 26: Implementation Risk Mitigation
 
