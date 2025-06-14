@@ -46,8 +46,8 @@ defmodule AriaEngine.DomainRegistry do
     case :ets.lookup(@domains_table, domain_type) do
       [{^domain_type, domain}] -> {:ok, domain}
       [] ->
-        # Try to dynamically load domain from available modules
-        case try_load_domain(domain_type) do
+        # Try to load built-in domain if no external domain registered
+        case try_load_builtin_domain(domain_type) do
           {:ok, domain} ->
             :ets.insert(@domains_table, {domain_type, domain})
             {:ok, domain}
@@ -57,19 +57,85 @@ defmodule AriaEngine.DomainRegistry do
   end
 
   @doc """
-  List all available domain types.
+  Register a domain in the registry.
+
+  This function allows external applications to inject their domains
+  into the registry to avoid cyclic dependencies.
+
+  ## Parameters
+  - `domain_type`: Type identifier for the domain
+  - `domain`: Domain struct to register
+
+  ## Returns
+  - `:ok`: Successfully registered
+  - `{:error, reason}`: Registration failed
+  """
+  @spec register_domain(domain_type(), Domain.t()) :: :ok | {:error, String.t()}
+  def register_domain(domain_type, domain) do
+    case Domain.validate(domain) do
+      {:ok, _} ->
+        :ets.insert(@domains_table, {domain_type, domain})
+        :ok
+      {:error, reason} ->
+        {:error, "Invalid domain: #{reason}"}
+    end
+  end
+
+  @doc """
+  Remove a domain from the registry.
+
+  ## Parameters
+  - `domain_type`: Type of domain to remove
+
+  ## Returns
+  - `:ok`: Successfully removed or not found
+  """
+  @spec unregister_domain(domain_type()) :: :ok
+  def unregister_domain(domain_type) do
+    :ets.delete(@domains_table, domain_type)
+    :ok
+  end
+
+  @doc """
+  List all available built-in domain types.
+
+  ## Returns
+  List of built-in domain type strings
+  """
+  @spec list_builtin_domain_types() :: [domain_type()]
+  def list_builtin_domain_types do
+    [
+      "basic_actions"
+    ]
+  end
+
+  @doc """
+  List all currently registered domain types.
+
+  ## Returns
+  List of all registered domain type strings
+  """
+  @spec list_registered_domain_types() :: [domain_type()]
+  def list_registered_domain_types do
+    case :ets.whereis(@domains_table) do
+      :undefined -> []
+      _ ->
+        :ets.tab2list(@domains_table)
+        |> Enum.map(fn {domain_type, _} -> domain_type end)
+    end
+  end
+
+  @doc """
+  List all available domain types (built-in + registered).
 
   ## Returns
   List of available domain type strings
   """
   @spec list_domain_types() :: [domain_type()]
   def list_domain_types do
-    [
-      "file_management",
-      "workflow_system",
-      "timestrike",
-      "basic_actions"
-    ]
+    builtin = list_builtin_domain_types()
+    registered = list_registered_domain_types()
+    Enum.uniq(builtin ++ registered)
   end
 
   @doc """
@@ -241,35 +307,14 @@ defmodule AriaEngine.DomainRegistry do
     })
   end
 
-  # Private helper to try loading domain dynamically
-  @spec try_load_domain(String.t()) :: {:ok, Domain.t()} | {:error, String.t()}
-  defp try_load_domain(domain_type) do
+  # Private helper to try loading built-in domain (no external dependencies)
+  @spec try_load_builtin_domain(String.t()) :: {:ok, Domain.t()} | {:error, String.t()}
+  defp try_load_builtin_domain(domain_type) do
     case domain_type do
-      "file_management" ->
-        try do
-          {:ok, AriaFileManagement.create_domain()}
-        rescue
-          UndefinedFunctionError -> {:error, "AriaFileManagement module not available"}
-          error -> {:error, "Failed to load file_management domain: #{inspect(error)}"}
-        end
-      "workflow_system" ->
-        try do
-          {:ok, AriaWorkflowSystem.create_domain()}
-        rescue
-          UndefinedFunctionError -> {:error, "AriaWorkflowSystem module not available"}
-          error -> {:error, "Failed to load workflow_system domain: #{inspect(error)}"}
-        end
-      "timestrike" ->
-        try do
-          {:ok, AriaTimestrike.create_domain()}
-        rescue
-          UndefinedFunctionError -> {:error, "AriaTimestrike module not available"}
-          error -> {:error, "Failed to load timestrike domain: #{inspect(error)}"}
-        end
       "basic_actions" ->
         {:ok, create_basic_actions_domain()}
       _ ->
-        {:error, "Unknown domain type: #{domain_type}"}
+        {:error, "Domain type '#{domain_type}' not found. External domains should register themselves via register_domain/2."}
     end
   end
 

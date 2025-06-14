@@ -11,9 +11,6 @@ defmodule AriaEngine.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # GTPyhop domain registry for managing planning domains
-      {Registry, keys: :unique, name: AriaEngine.DomainRegistry},
-      
       # Planner supervisor for managing planning processes
       {DynamicSupervisor, strategy: :one_for_one, name: AriaEngine.PlannerSupervisor}
     ]

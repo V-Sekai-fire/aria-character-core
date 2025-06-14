@@ -312,4 +312,34 @@ defmodule AriaEngine.Domain do
     |> add_porcelain_actions()
     # Domain-specific methods are added by each domain module in their create_domain/0 functions
   end
+
+  @doc """
+  Validates a domain structure.
+
+  ## Parameters
+  - `domain`: Domain to validate
+
+  ## Returns
+  - `{:ok, domain}`: Valid domain
+  - `{:error, reason}`: Invalid domain with reason
+  """
+  @spec validate(t()) :: {:ok, t()} | {:error, String.t()}
+  def validate(%__MODULE__{} = domain) do
+    cond do
+      domain.name == "" or domain.name == nil ->
+        {:error, "Domain name cannot be empty"}
+      not is_map(domain.actions) ->
+        {:error, "Actions must be a map"}
+      not is_map(domain.task_methods) ->
+        {:error, "Task methods must be a map"}
+      not is_map(domain.unigoal_methods) ->
+        {:error, "Unigoal methods must be a map"}
+      not is_list(domain.multigoal_methods) ->
+        {:error, "Multigoal methods must be a list"}
+      true ->
+        {:ok, domain}
+    end
+  end
+
+  def validate(_), do: {:error, "Not a valid domain struct"}
 end

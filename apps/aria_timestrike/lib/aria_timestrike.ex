@@ -40,7 +40,7 @@ defmodule AriaTimestrike do
   - Movement duration is calculated based on distance and agent speed
   """
   @spec move_to(State.t(), [String.t() | tuple()]) :: State.t() | false
-  def move_to(%State{} = state, [agent_id, target_pos]) do
+  def move_to(state, [agent_id, target_pos]) do
     current_pos = State.get_object(state, "position", agent_id)
     agent_speed = State.get_object(state, "move_speed", agent_id) || 3.0
 
@@ -70,7 +70,7 @@ defmodule AriaTimestrike do
   - Agent cooldowns may be applied
   """
   @spec attack(State.t(), [String.t()]) :: State.t() | false
-  def attack(%State{} = state, [agent_id, target_id]) do
+  def attack(state, [agent_id, target_id]) do
     agent_attack = State.get_object(state, "attack", agent_id) || 10
     agent_pos = State.get_object(state, "position", agent_id)
     target_pos = State.get_object(state, "position", target_id)
@@ -105,7 +105,7 @@ defmodule AriaTimestrike do
   - Cooldown is applied
   """
   @spec skill_cast(State.t(), [String.t() | tuple()]) :: State.t() | false
-  def skill_cast(%State{} = state, [agent_id, skill_name, target_pos]) do
+  def skill_cast(state, [agent_id, skill_name, target_pos]) do
     agent_mana = State.get_object(state, "mana", agent_id) || 50
     skill_cost = get_skill_cost(skill_name)
     skill_cooldown = get_skill_cooldown(skill_name)
@@ -135,7 +135,7 @@ defmodule AriaTimestrike do
   - Agent may gain items or trigger events
   """
   @spec interact(State.t(), [String.t()]) :: State.t() | false
-  def interact(%State{} = state, [agent_id, object_id, interaction_type]) do
+  def interact(state, [agent_id, object_id, interaction_type]) do
     agent_pos = State.get_object(state, "position", agent_id)
     object_pos = State.get_object(state, "position", object_id)
     object_hp = State.get_object(state, "hp", object_id)

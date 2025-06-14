@@ -3,6 +3,16 @@
 
 import Config
 
+# Configure AriaEngine domain providers for development
+config :aria_engine,
+  domain_providers: [
+    AriaEngine.BasicActionsDomainProvider,
+    # Add more providers as needed in development
+    AriaFileManagement.DomainProvider
+    # AriaWorkflowSystem.DomainProvider,
+    # AriaTimestrike.DomainProvider
+  ]
+
 # Development environment configuration
 config :logger, level: :debug
 

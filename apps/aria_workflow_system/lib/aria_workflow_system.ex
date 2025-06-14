@@ -38,8 +38,6 @@ defmodule AriaWorkflowSystem do
     |> Domain.add_unigoal_method("command_executed", &ensure_command_executed/2)
   end
 
-  # Action implementations for workflow operations
-
   @doc """
   Execute a workflow command using the workflow engine.
   [DEPRECATED] This function uses deprecated WorkflowRegistry/WorkflowEngine.
@@ -48,6 +46,8 @@ defmodule AriaWorkflowSystem do
   @spec execute_workflow_command(State.t(), [String.t()]) :: State.t()
   def execute_workflow_command(state, [workflow_id | _workflow_args]) do
     Logger.warning("execute_workflow_command is deprecated. Use AriaEngine.DomainDefinition instead.")
+
+    # Get runtime module reference to avoid cyclic dependency
 
     # Simplified implementation that just logs the attempt
     state
@@ -60,6 +60,7 @@ defmodule AriaWorkflowSystem do
   """
   @spec trace_workflow_execution(State.t(), [String.t()]) :: State.t() | false
   def trace_workflow_execution(state, [workflow_id]) do
+
     case State.get_object(state, "workflow_execution", workflow_id) do
       nil ->
         Logger.warning("No execution found for workflow: #{workflow_id}")
@@ -87,6 +88,7 @@ defmodule AriaWorkflowSystem do
   """
   @spec monitor_workflow_progress(State.t(), [String.t()]) :: State.t()
   def monitor_workflow_progress(state, [workflow_id]) do
+
     case State.get_object(state, "workflow_execution", workflow_id) do
       nil ->
         state

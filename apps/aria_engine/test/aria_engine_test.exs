@@ -4,7 +4,7 @@
 defmodule AriaEngineTest do
   use ExUnit.Case, async: true
 
-  alias AriaEngine.{Domain, State, Actions, DomainRegistry}
+  alias AriaEngine.{Domain, State, Actions}
 
   describe "AriaEngine initialization" do
     test "initializes the engine and domain registry" do
@@ -159,7 +159,7 @@ defmodule AriaEngineTest do
 
     test "gets domain from registry" do
       # Test basic_actions domain (should always be available)
-      case DomainRegistry.get_domain("basic_actions") do
+      case AriaEngine.DomainProvider.get_domain("basic_actions") do
         {:ok, domain} ->
           assert %Domain{} = domain
           assert domain.name == "basic_actions"
@@ -169,9 +169,9 @@ defmodule AriaEngineTest do
     end
 
     test "handles unknown domain gracefully" do
-      case DomainRegistry.get_domain("nonexistent_domain") do
+      case AriaEngine.DomainProvider.get_domain("nonexistent_domain") do
         {:error, reason} ->
-          assert String.contains?(reason, "Unknown domain type")
+          assert String.contains?(reason, "not found")
         {:ok, _} ->
           flunk("Expected error for nonexistent domain")
       end
@@ -189,15 +189,15 @@ defmodule AriaEngineTest do
       domain_types = ["file_management", "workflow_system", "timestrike"]
 
       for domain_type <- domain_types do
-        case DomainRegistry.get_domain(domain_type) do
+        case AriaEngine.DomainProvider.get_domain(domain_type) do
           {:ok, domain} ->
             # Domain may be a struct or map depending on implementation
             assert is_map(domain)
             assert Map.get(domain, :name) == domain_type or domain.name == domain_type
           {:error, reason} ->
             # Expected if domain module is not available
-            assert String.contains?(reason, "module not available") or
-                   String.contains?(reason, "Failed to load")
+            assert String.contains?(reason, "not found") or
+                   String.contains?(reason, "Failed to create")
         end
       end
     end

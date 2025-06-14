@@ -10,8 +10,7 @@ defmodule AriaEngine.TestDomains do
   and acting error domains used in testing scenarios.
   """
 
-  import AriaEngine
-  alias AriaEngine.{State, SimpleTravelActions, SimpleTravelMethods}
+  alias AriaEngine.{Domain, State, SimpleTravelActions, SimpleTravelMethods}
 
   @doc """
   Builds a logistics domain for testing.
@@ -20,28 +19,28 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_logistics_domain() :: AriaEngine.domain()
   def build_logistics_domain do
-    domain = create_domain("logistics")
+    domain = Domain.new("logistics")
 
     # Add basic movement actions (with both naming conventions for compatibility)
     domain
-    |> add_action(:drive, &AriaEngine.LogisticsActions.drive_truck/2)
-    |> add_action(:drive_truck, &AriaEngine.LogisticsActions.drive_truck/2)
-    |> add_action(:fly, &AriaEngine.LogisticsActions.fly_plane/2)
-    |> add_action(:fly_plane, &AriaEngine.LogisticsActions.fly_plane/2)
-    |> add_action(:load, &AriaEngine.LogisticsActions.load_truck/2)
-    |> add_action(:load_truck, &AriaEngine.LogisticsActions.load_truck/2)
-    |> add_action(:unload, &AriaEngine.LogisticsActions.unload_truck/2)
-    |> add_action(:unload_truck, &AriaEngine.LogisticsActions.unload_truck/2)
-    |> add_action(:load_plane, &AriaEngine.LogisticsActions.load_plane/2)
-    |> add_action(:unload_plane, &AriaEngine.LogisticsActions.unload_plane/2)
+    |> Domain.add_action(:drive, &AriaEngine.LogisticsActions.drive_truck/2)
+    |> Domain.add_action(:drive_truck, &AriaEngine.LogisticsActions.drive_truck/2)
+    |> Domain.add_action(:fly, &AriaEngine.LogisticsActions.fly_plane/2)
+    |> Domain.add_action(:fly_plane, &AriaEngine.LogisticsActions.fly_plane/2)
+    |> Domain.add_action(:load, &AriaEngine.LogisticsActions.load_truck/2)
+    |> Domain.add_action(:load_truck, &AriaEngine.LogisticsActions.load_truck/2)
+    |> Domain.add_action(:unload, &AriaEngine.LogisticsActions.unload_truck/2)
+    |> Domain.add_action(:unload_truck, &AriaEngine.LogisticsActions.unload_truck/2)
+    |> Domain.add_action(:load_plane, &AriaEngine.LogisticsActions.load_plane/2)
+    |> Domain.add_action(:unload_plane, &AriaEngine.LogisticsActions.unload_plane/2)
 
     # Add task methods
-    |> add_task_method("transport", &AriaEngine.LogisticsMethods.transport/2)
+    |> Domain.add_task_method("transport", &AriaEngine.LogisticsMethods.transport/2)
 
     # Add unigoal methods
-    |> add_unigoal_method("truck_at", &AriaEngine.LogisticsMethods.truck_at/2)
-    |> add_unigoal_method("plane_at", &AriaEngine.LogisticsMethods.plane_at/2)
-    |> add_unigoal_method("at", &AriaEngine.LogisticsMethods.at_unigoal/2)
+    |> Domain.add_unigoal_method("truck_at", &AriaEngine.LogisticsMethods.truck_at/2)
+    |> Domain.add_unigoal_method("plane_at", &AriaEngine.LogisticsMethods.plane_at/2)
+    |> Domain.add_unigoal_method("at", &AriaEngine.LogisticsMethods.at_unigoal/2)
   end
 
   @doc """
@@ -52,25 +51,25 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_blocks_world_domain() :: AriaEngine.domain()
   def build_blocks_world_domain do
-    domain = create_domain("blocks_world")
+    domain = Domain.new("blocks_world")
 
     # Add basic blocks world actions
     domain
-    |> add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
-    |> add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
-    |> add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
-    |> add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+    |> Domain.add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
+    |> Domain.add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
+    |> Domain.add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
+    |> Domain.add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
 
     # Add task methods
-    |> add_task_method("move_block", &AriaEngine.BlocksWorldMethods.move_block/2)
-    |> add_task_method("get_block", &AriaEngine.BlocksWorldMethods.get_block/2)
-    |> add_task_method("clear_block", &AriaEngine.BlocksWorldMethods.clear_block/2)
-    |> add_task_method("build_tower", &AriaEngine.BlocksWorldMethods.build_tower/2)
+    |> Domain.add_task_method("move_block", &AriaEngine.BlocksWorldMethods.move_block/2)
+    |> Domain.add_task_method("get_block", &AriaEngine.BlocksWorldMethods.get_block/2)
+    |> Domain.add_task_method("clear_block", &AriaEngine.BlocksWorldMethods.clear_block/2)
+    |> Domain.add_task_method("build_tower", &AriaEngine.BlocksWorldMethods.build_tower/2)
 
     # Add unigoal methods
-    |> add_unigoal_method("on", &AriaEngine.BlocksWorldMethods.on_unigoal/2)
-    |> add_unigoal_method("on_table", &AriaEngine.BlocksWorldMethods.on_table_unigoal/2)
-    |> add_unigoal_method("clear", &AriaEngine.BlocksWorldMethods.clear_unigoal/2)
+    |> Domain.add_unigoal_method("on", &AriaEngine.BlocksWorldMethods.on_unigoal/2)
+    |> Domain.add_unigoal_method("on_table", &AriaEngine.BlocksWorldMethods.on_table_unigoal/2)
+    |> Domain.add_unigoal_method("clear", &AriaEngine.BlocksWorldMethods.clear_unigoal/2)
   end
 
   @doc """
@@ -81,28 +80,28 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_blocks_gtn_domain() :: AriaEngine.domain()
   def build_blocks_gtn_domain do
-    domain = create_domain("blocks_gtn")
+    domain = Domain.new("blocks_gtn")
 
     # Add basic blocks world actions
     domain
-    |> add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
-    |> add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
-    |> add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
-    |> add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+    |> Domain.add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
+    |> Domain.add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
+    |> Domain.add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
+    |> Domain.add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
 
     # Add task methods for take and put
-    |> add_task_method("take", &AriaEngine.BlocksWorldMethods.take_from_table/2)
-    |> add_task_method("take", &AriaEngine.BlocksWorldMethods.take_from_block/2)
-    |> add_task_method("put", &AriaEngine.BlocksWorldMethods.put_on_table/2)
-    |> add_task_method("put", &AriaEngine.BlocksWorldMethods.put_on_block/2)
+    |> Domain.add_task_method("take", &AriaEngine.BlocksWorldMethods.take_from_table/2)
+    |> Domain.add_task_method("take", &AriaEngine.BlocksWorldMethods.take_from_block/2)
+    |> Domain.add_task_method("put", &AriaEngine.BlocksWorldMethods.put_on_table/2)
+    |> Domain.add_task_method("put", &AriaEngine.BlocksWorldMethods.put_on_block/2)
 
     # Add unigoal methods for blocks positioning
-    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
-    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
-    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
+    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
+    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
+    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
 
     # Add multigoal methods
-    |> add_multigoal_method(&AriaEngine.BlocksWorldMethods.achieve_blocks_multigoal/2)
+    |> Domain.add_multigoal_method(&AriaEngine.BlocksWorldMethods.achieve_blocks_multigoal/2)
   end
 
   @doc """
@@ -113,22 +112,22 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_blocks_hgn_domain() :: AriaEngine.domain()
   def build_blocks_hgn_domain do
-    domain = create_domain("blocks_hgn")
+    domain = Domain.new("blocks_hgn")
 
     # Add basic blocks world actions
     domain
-    |> add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
-    |> add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
-    |> add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
-    |> add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+    |> Domain.add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
+    |> Domain.add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
+    |> Domain.add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
+    |> Domain.add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
 
     # Add unigoal methods only (no task methods)
-    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
-    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
-    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
+    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
+    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
+    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
 
     # Add multigoal methods for complex goals
-    |> add_multigoal_method(&AriaEngine.BlocksWorldMethods.achieve_blocks_multigoal/2)
+    |> Domain.add_multigoal_method(&AriaEngine.BlocksWorldMethods.achieve_blocks_multigoal/2)
   end
 
   @doc """
@@ -140,24 +139,24 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_blocks_goal_splitting_domain() :: AriaEngine.domain()
   def build_blocks_goal_splitting_domain do
-    domain = create_domain("blocks_goal_splitting")
+    domain = Domain.new("blocks_goal_splitting")
 
     # Add basic blocks world actions
     domain
-    |> add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
-    |> add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
-    |> add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
-    |> add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+    |> Domain.add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
+    |> Domain.add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
+    |> Domain.add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
+    |> Domain.add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
 
     # Add only basic unigoal methods (relies on built-in goal splitting)
-    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
-    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
-    |> add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
-    |> add_unigoal_method("clear", &AriaEngine.BlocksWorldMethods.clear_block/2)
-    |> add_unigoal_method("holding", &AriaEngine.BlocksWorldMethods.holding_state/2)
+    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
+    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
+    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
+    |> Domain.add_unigoal_method("clear", &AriaEngine.BlocksWorldMethods.clear_block/2)
+    |> Domain.add_unigoal_method("holding", &AriaEngine.BlocksWorldMethods.holding_state/2)
 
     # Use built-in goal splitting method
-    |> add_multigoal_method(&AriaEngine.Multigoal.split_multigoal/2)
+    |> Domain.add_multigoal_method(&AriaEngine.Multigoal.split_multigoal/2)
   end
 
   @doc """
@@ -168,15 +167,15 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_simple_travel_domain() :: AriaEngine.domain()
   def build_simple_travel_domain do
-    create_domain("simple_travel")
-    |> add_action(:walk, &SimpleTravelActions.walk/2)
-    |> add_action(:call_taxi, &SimpleTravelActions.call_taxi/2)
-    |> add_action(:ride_taxi, &SimpleTravelActions.ride_taxi/2)
-    |> add_action(:pay_driver, &SimpleTravelActions.pay_driver/2)
-    |> add_task_method("travel", &SimpleTravelMethods.do_nothing/2)
-    |> add_task_method("travel", &SimpleTravelMethods.travel_by_foot/2)
-    |> add_task_method("travel", &SimpleTravelMethods.travel_by_taxi/2)
-    |> add_unigoal_method("loc", &SimpleTravelMethods.loc_unigoal/2)
+    Domain.new("simple_travel")
+    |> Domain.add_action(:walk, &SimpleTravelActions.walk/2)
+    |> Domain.add_action(:call_taxi, &SimpleTravelActions.call_taxi/2)
+    |> Domain.add_action(:ride_taxi, &SimpleTravelActions.ride_taxi/2)
+    |> Domain.add_action(:pay_driver, &SimpleTravelActions.pay_driver/2)
+    |> Domain.add_task_method("travel", &SimpleTravelMethods.do_nothing/2)
+    |> Domain.add_task_method("travel", &SimpleTravelMethods.travel_by_foot/2)
+    |> Domain.add_task_method("travel", &SimpleTravelMethods.travel_by_taxi/2)
+    |> Domain.add_unigoal_method("loc", &SimpleTravelMethods.loc_unigoal/2)
   end
 
   @doc """
@@ -187,18 +186,18 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_pyhop_simple_travel_domain() :: AriaEngine.domain()
   def build_pyhop_simple_travel_domain do
-    domain = create_domain("pyhop_simple_travel")
+    domain = Domain.new("pyhop_simple_travel")
 
     # Add basic travel actions
     domain
-    |> add_action(:walk, &AriaEngine.SimpleTravelActions.walk/2)
-    |> add_action(:call_taxi, &AriaEngine.SimpleTravelActions.call_taxi/2)
-    |> add_action(:ride_taxi, &AriaEngine.SimpleTravelActions.ride_taxi_simple/2)
-    |> add_action(:pay_driver, &AriaEngine.SimpleTravelActions.pay_driver_simple/2)
+    |> Domain.add_action(:walk, &AriaEngine.SimpleTravelActions.walk/2)
+    |> Domain.add_action(:call_taxi, &AriaEngine.SimpleTravelActions.call_taxi/2)
+    |> Domain.add_action(:ride_taxi, &AriaEngine.SimpleTravelActions.ride_taxi_simple/2)
+    |> Domain.add_action(:pay_driver, &AriaEngine.SimpleTravelActions.pay_driver_simple/2)
 
     # Add task methods for travel
-    |> add_task_method("travel", &AriaEngine.SimpleTravelMethods.travel_by_foot_simple/2)
-    |> add_task_method("travel", &AriaEngine.SimpleTravelMethods.travel_by_taxi_simple/2)
+    |> Domain.add_task_method("travel", &AriaEngine.SimpleTravelMethods.travel_by_foot_simple/2)
+    |> Domain.add_task_method("travel", &AriaEngine.SimpleTravelMethods.travel_by_taxi_simple/2)
   end
 
   @doc """
@@ -209,18 +208,18 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_backtracking_domain() :: AriaEngine.domain()
   def build_backtracking_domain do
-    create_domain("backtracking")
-    |> add_action(:putv, &putv_action/2)
-    |> add_action(:getv, &getv_action/2)
-    |> add_task_method("put_it", &m_err/2)
-    |> add_task_method("put_it", &m0/2)
-    |> add_task_method("put_it", &m1/2)
-    |> add_task_method("need0", &m_need0/2)
-    |> add_task_method("need1", &m_need1/2)
-    |> add_task_method("need01", &m_need0/2)
-    |> add_task_method("need01", &m_need1/2)
-    |> add_task_method("need10", &m_need1/2)
-    |> add_task_method("need10", &m_need0/2)
+    Domain.new("backtracking")
+    |> Domain.add_action(:putv, &putv_action/2)
+    |> Domain.add_action(:getv, &getv_action/2)
+    |> Domain.add_task_method("put_it", &m_err/2)
+    |> Domain.add_task_method("put_it", &m0/2)
+    |> Domain.add_task_method("put_it", &m1/2)
+    |> Domain.add_task_method("need0", &m_need0/2)
+    |> Domain.add_task_method("need1", &m_need1/2)
+    |> Domain.add_task_method("need01", &m_need0/2)
+    |> Domain.add_task_method("need01", &m_need1/2)
+    |> Domain.add_task_method("need10", &m_need1/2)
+    |> Domain.add_task_method("need10", &m_need0/2)
   end
 
   @doc """
@@ -231,13 +230,13 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_simple_hgn_domain() :: AriaEngine.domain()
   def build_simple_hgn_domain do
-    create_domain("simple_hgn")
-    |> add_action(:walk, &walk_action/2)
-    |> add_action(:call_taxi, &call_taxi_action/2)
-    |> add_action(:ride_taxi, &ride_taxi_action/2)
-    |> add_action(:pay_driver, &pay_driver_action/2)
-    |> add_unigoal_method("loc", &travel_by_foot/2)
-    |> add_unigoal_method("loc", &travel_by_taxi/2)
+    Domain.new("simple_hgn")
+    |> Domain.add_action(:walk, &walk_action/2)
+    |> Domain.add_action(:call_taxi, &call_taxi_action/2)
+    |> Domain.add_action(:ride_taxi, &ride_taxi_action/2)
+    |> Domain.add_action(:pay_driver, &pay_driver_action/2)
+    |> Domain.add_unigoal_method("loc", &travel_by_foot/2)
+    |> Domain.add_unigoal_method("loc", &travel_by_taxi/2)
   end
 
   @doc """
@@ -248,14 +247,14 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_simple_htn_acting_error_actions_domain() :: AriaEngine.domain()
   def build_simple_htn_acting_error_actions_domain do
-    create_domain("simple_htn_acting_error_actions")
-    |> add_action(:walk, &walk_action_htn/2)
-    |> add_action(:call_taxi, &call_taxi_action_htn/2)
-    |> add_action(:ride_taxi, &ride_taxi_action_htn/2)
-    |> add_action(:pay_driver, &pay_driver_action_htn/2)
-    |> add_task_method("travel", &do_nothing_htn/2)
-    |> add_task_method("travel", &travel_by_foot_htn/2)
-    |> add_task_method("travel", &travel_by_taxi_htn/2)
+    Domain.new("simple_htn_acting_error_actions")
+    |> Domain.add_action(:walk, &walk_action_htn/2)
+    |> Domain.add_action(:call_taxi, &call_taxi_action_htn/2)
+    |> Domain.add_action(:ride_taxi, &ride_taxi_action_htn/2)
+    |> Domain.add_action(:pay_driver, &pay_driver_action_htn/2)
+    |> Domain.add_task_method("travel", &do_nothing_htn/2)
+    |> Domain.add_task_method("travel", &travel_by_foot_htn/2)
+    |> Domain.add_task_method("travel", &travel_by_taxi_htn/2)
   end
 
   @doc """
@@ -266,14 +265,14 @@ defmodule AriaEngine.TestDomains do
   """
   @spec build_simple_htn_acting_error_commands_domain() :: AriaEngine.domain()
   def build_simple_htn_acting_error_commands_domain do
-    create_domain("simple_htn_acting_error_commands")
-    |> add_action(:walk, &walk_command_htn/2)
-    |> add_action(:call_taxi, &call_taxi_command_htn/2)
-    |> add_action(:ride_taxi, &ride_taxi_command_htn/2)
-    |> add_action(:pay_driver, &pay_driver_command_htn/2)
-    |> add_task_method("travel", &do_nothing_htn/2)
-    |> add_task_method("travel", &travel_by_foot_htn/2)
-    |> add_task_method("travel", &travel_by_taxi_htn/2)
+    Domain.new("simple_htn_acting_error_commands")
+    |> Domain.add_action(:walk, &walk_command_htn/2)
+    |> Domain.add_action(:call_taxi, &call_taxi_command_htn/2)
+    |> Domain.add_action(:ride_taxi, &ride_taxi_command_htn/2)
+    |> Domain.add_action(:pay_driver, &pay_driver_command_htn/2)
+    |> Domain.add_task_method("travel", &do_nothing_htn/2)
+    |> Domain.add_task_method("travel", &travel_by_foot_htn/2)
+    |> Domain.add_task_method("travel", &travel_by_taxi_htn/2)
   end
 
   @doc """
@@ -285,24 +284,24 @@ defmodule AriaEngine.TestDomains do
   def build_simple_rpg_domain do
     # Define simple actions
     move_action = fn state, [to] ->
-      set_fact(state, "location", "player", to)
+      State.set_object(state, "location", "player", to)
     end
 
     pickup_action = fn state, [item] ->
-      player_location = get_fact(state, "location", "player")
-      item_location = get_fact(state, "location", item)
+      player_location = State.get_object(state, "location", "player")
+      item_location = State.get_object(state, "location", item)
 
       if player_location == item_location do
-        set_fact(state, "has", "player", item)
+        State.set_object(state, "has", "player", item)
       else
         false  # Can't pickup item not in same location
       end
     end
 
     # Create domain with actions
-    create_domain("simple_rpg")
-    |> add_action(:move, move_action)
-    |> add_action(:pickup, pickup_action)
+    Domain.new("simple_rpg")
+    |> Domain.add_action(:move, move_action)
+    |> Domain.add_action(:pickup, pickup_action)
   end
 
   @doc """
@@ -314,15 +313,15 @@ defmodule AriaEngine.TestDomains do
   def build_rpg_domain do
     # Actions
     move_action = fn state, [to] ->
-      set_fact(state, "location", "player", to)
+      State.set_object(state, "location", "player", to)
     end
 
     pickup_action = fn state, [item] ->
-      player_location = get_fact(state, "location", "player")
-      item_location = get_fact(state, "location", item)
+      player_location = State.get_object(state, "location", "player")
+      item_location = State.get_object(state, "location", item)
 
       if player_location == item_location do
-        set_fact(state, "has", "player", item)
+        State.set_object(state, "has", "player", item)
       else
         false
       end
@@ -330,8 +329,8 @@ defmodule AriaEngine.TestDomains do
 
     # Task method: get item from another room
     get_item_method = fn state, [item] ->
-      player_location = get_fact(state, "location", "player")
-      item_location = get_fact(state, "location", item)
+      player_location = State.get_object(state, "location", "player")
+      item_location = State.get_object(state, "location", item)
 
       if player_location == item_location do
         # Already in same room, just pickup
@@ -342,10 +341,10 @@ defmodule AriaEngine.TestDomains do
       end
     end
 
-    create_domain("rpg")
-    |> add_action(:move, move_action)
-    |> add_action(:pickup, pickup_action)
-    |> add_task_method("get_item", get_item_method)
+    Domain.new("rpg")
+    |> Domain.add_action(:move, move_action)
+    |> Domain.add_action(:pickup, pickup_action)
+    |> Domain.add_task_method("get_item", get_item_method)
   end
 
   @doc """
@@ -356,16 +355,16 @@ defmodule AriaEngine.TestDomains do
   @spec build_test_domain() :: AriaEngine.domain()
   def build_test_domain do
     move_action = fn state, [_from, to] ->
-      set_fact(state, "location", "player", to)
+      State.set_object(state, "location", "player", to)
     end
 
     pickup_action = fn state, [item] ->
-      set_fact(state, "has", "player", item)
+      State.set_object(state, "has", "player", item)
     end
 
-    create_domain("test")
-    |> add_action(:move, move_action)
-    |> add_action(:pickup, pickup_action)
+    Domain.new("test")
+    |> Domain.add_action(:move, move_action)
+    |> Domain.add_action(:pickup, pickup_action)
   end
 
   # Helper functions for state creation
@@ -375,15 +374,15 @@ defmodule AriaEngine.TestDomains do
   """
   @spec create_simple_travel_state() :: AriaEngine.state()
   def create_simple_travel_state do
-    create_state()
-    |> set_fact("loc", "alice", "home_a")
-    |> set_fact("loc", "bob", "home_b")
-    |> set_fact("loc", "taxi1", "park")
-    |> set_fact("loc", "taxi2", "station")
-    |> set_fact("cash", "alice", 20)
-    |> set_fact("cash", "bob", 15)
-    |> set_fact("owe", "alice", 0)
-    |> set_fact("owe", "bob", 0)
+    State.new()
+    |> State.set_object("loc", "alice", "home_a")
+    |> State.set_object("loc", "bob", "home_b")
+    |> State.set_object("loc", "taxi1", "park")
+    |> State.set_object("loc", "taxi2", "station")
+    |> State.set_object("cash", "alice", 20)
+    |> State.set_object("cash", "bob", 15)
+    |> State.set_object("owe", "alice", 0)
+    |> State.set_object("owe", "bob", 0)
   end
 
   @doc """
@@ -391,8 +390,8 @@ defmodule AriaEngine.TestDomains do
   """
   @spec create_backtracking_state() :: AriaEngine.state()
   def create_backtracking_state do
-    create_state()
-    |> set_fact("flag", "system", -1)
+    State.new()
+    |> State.set_object("flag", "system", -1)
   end
 
   @doc """
@@ -400,7 +399,7 @@ defmodule AriaEngine.TestDomains do
   """
   @spec create_simple_hgn_state() :: AriaEngine.state()
   def create_simple_hgn_state do
-    create_state()
+    State.new()
     |> State.set_object("loc", "alice", "home_a")
     |> State.set_object("loc", "bob", "home_b")
     |> State.set_object("loc", "taxi1", "park")
@@ -416,7 +415,7 @@ defmodule AriaEngine.TestDomains do
   """
   @spec create_good_taxi_state() :: AriaEngine.state()
   def create_good_taxi_state do
-    create_state()
+    State.new()
     |> State.set_object("loc", "alice", "home_a")
     |> State.set_object("loc", "bob", "home_b")
     |> State.set_object("loc", "taxi1", "park")
@@ -434,7 +433,7 @@ defmodule AriaEngine.TestDomains do
   """
   @spec create_bad_taxi_state() :: AriaEngine.state()
   def create_bad_taxi_state do
-    create_state()
+    State.new()
     |> State.set_object("loc", "alice", "home_a")
     |> State.set_object("loc", "bob", "home_b")
     |> State.set_object("loc", "taxi1", "park")

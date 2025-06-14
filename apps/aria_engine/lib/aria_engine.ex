@@ -56,7 +56,7 @@ defmodule AriaEngine do
   ```
   """
 
-  alias AriaEngine.{Domain, State, Multigoal, Plan, Planner, DomainRegistry}
+  alias AriaEngine.{Domain, State, Multigoal, Plan, Planner, DomainProvider}
 
   # Core types
   @type domain :: Domain.t()
@@ -831,14 +831,19 @@ defmodule AriaEngine do
   @spec from_domain_types(String.t(), [String.t()], [todo_item()], State.t()) ::
     {:ok, t()} | {:error, String.t()}
   def from_domain_types(id, domain_types, goals, initial_state \\ nil) do
-    case DomainRegistry.compose_domains(domain_types) do
-      {:ok, composed_domain} ->
-        initial_state = initial_state || State.new()
-        definition = from_domain(composed_domain, goals, initial_state)
-        {:ok, %{definition | id: id}}
-
-      {:error, reason} ->
-        {:error, reason}
+    # For now, we'll get the first domain type and ignore composition
+    # TODO: Implement proper domain composition with the new provider system
+    case domain_types do
+      [] -> {:error, "No domain types provided"}
+      [domain_type | _] ->
+        case DomainProvider.get_domain(domain_type) do
+          {:ok, domain} ->
+            initial_state = initial_state || State.new()
+            definition = from_domain(domain, goals, initial_state)
+            {:ok, %{definition | id: id}}
+          {:error, reason} ->
+            {:error, reason}
+        end
     end
   end
 
@@ -847,7 +852,7 @@ defmodule AriaEngine do
   """
   @spec add_domain_type(t(), String.t()) :: {:ok, t()} | {:error, String.t()}
   def add_domain_type(%__MODULE__{} = engine, domain_type) do
-    case DomainRegistry.get_domain(domain_type) do
+    case DomainProvider.get_domain(domain_type) do
       {:ok, domain} ->
         updated_engine = %{engine |
           actions: Map.merge(engine.actions, domain.actions),
@@ -867,7 +872,7 @@ defmodule AriaEngine do
   """
   @spec list_domain_types() :: [String.t()]
   def list_domain_types do
-    DomainRegistry.list_domain_types()
+    DomainProvider.list_domain_types()
   end
 
   @doc """
@@ -875,7 +880,7 @@ defmodule AriaEngine do
   """
   @spec validate_domain_type(String.t()) :: :ok | {:error, String.t()}
   def validate_domain_type(domain_type) do
-    case DomainRegistry.get_domain(domain_type) do
+    case DomainProvider.get_domain(domain_type) do
       {:ok, _domain} -> :ok
       {:error, reason} -> {:error, reason}
     end
@@ -904,10 +909,19 @@ defmodule AriaEngine do
   @doc """
   Initialize the AriaEngine system.
 
-  This sets up the domain registry and prepares the engine for use.
+  This validates that domain providers are properly configured.
   """
   @spec init() :: :ok
   def init do
-    DomainRegistry.init()
+    # Validate that at least one domain provider is configured
+    case DomainProvider.get_configured_providers() do
+      [] ->
+        require Logger
+        Logger.warning("No domain providers configured for AriaEngine")
+      providers ->
+        require Logger
+        Logger.info("AriaEngine initialized with #{length(providers)} domain providers")
+    end
+    :ok
   end
 end

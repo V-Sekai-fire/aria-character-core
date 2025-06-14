@@ -36,5 +36,15 @@ config :telemetry_poller, :default,
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}
 
+# Configure AriaEngine domain providers
+config :aria_engine,
+  domain_providers: [
+    AriaEngine.BasicActionsDomainProvider
+    # Additional providers can be added when their apps are included
+    # AriaFileManagement.DomainProvider,
+    # AriaWorkflowSystem.DomainProvider,
+    # AriaTimestrike.DomainProvider
+  ]
+
 # Import environment specific config files
 import_config "#{config_env()}.exs"
