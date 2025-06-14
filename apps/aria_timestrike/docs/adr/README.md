@@ -2,9 +2,15 @@
 
 This directory contains Architecture Decision Records for the temporal planner component of aria_timestrike.
 
+## Current Architecture
+
+**All temporal planner architectural decisions are now consolidated in [ADR-034: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md).**
+
+ADRs 001-033 have been superseded and serve as historical records of the architectural evolution process. For current implementation guidance, reference ADR-034 exclusively.
+
 ## Overview
 
-These ADRs document all design decisions for the temporal, re-entrant goal-task-network (GTN) planner implementation. Each ADR follows a standard format and captures:
+These ADRs document the evolution of design decisions for the temporal, re-entrant goal-task-network (GTN) planner implementation. Each ADR follows a standard format and captures:
 
 - **Status**: Current state (Proposed, Accepted, Superseded)
 - **Context**: Background and problem statement
@@ -14,6 +20,14 @@ These ADRs document all design decisions for the temporal, re-entrant goal-task-
 - **Consequences**: Positive and negative impacts
 
 ## ADR Index
+
+### Current Architecture
+
+- **034**: **Definitive Temporal Planner Architecture** _(Supersedes ADR-001 through ADR-033)_
+
+### Historical Evolution (Superseded)
+
+The following ADRs document the historical evolution of the temporal planner architecture. They have been superseded by ADR-034 but remain for historical reference.
 
 ### Core Architecture (001-004)
 
@@ -66,22 +80,23 @@ These ADRs document all design decisions for the temporal, re-entrant goal-task-
 
 ## Design Consistency
 
-All ADRs have been verified for mutual consistency and compatibility. Key design strengths:
+**Current Architecture**: All architectural decisions are consolidated in ADR-034. This ensures complete consistency and eliminates conflicts between distributed decisions.
 
-- **Self-Correcting**: ADR-021 explicitly corrects ADR-014
-- **Incremental**: Builds on existing AriaEngine infrastructure
-- **Balanced**: Weekend timeline balances ambition with achievability
-- **Implementation-Ready**: All decisions supported by current codebase
+**Historical Evolution**: The superseded ADRs (001-033) were verified for mutual consistency during their active period and demonstrate the incremental evolution of the temporal planner design.
 
 ## Maintenance
 
-When adding new ADRs:
+**Current Process**: All temporal planner architectural changes should be made to ADR-034. The historical ADRs (001-033) should not be modified.
 
-1. Check consistency against all existing decisions
-2. Update cross-references in related ADRs
-3. Follow the established numbering scheme
-4. Include proper status, context, and consequences sections
+When making architectural changes:
+
+1. Update ADR-034 with the new decision and rationale
+2. Ensure changes are consistent with the overall architecture
+3. Update implementation status and consequences sections
+4. Consider impacts on related systems and document accordingly
 
 ## History
 
-These ADRs were migrated from the original `temporal_planner_design_resolutions.md` document on June 14, 2025, to provide better tracking and maintainability of individual architectural decisions.
+These ADRs were migrated from the original `temporal_planner_design_resolutions.md` document on June 13, 2025, to provide better tracking and maintainability of individual architectural decisions.
+
+On June 14, 2025, all temporal planner decisions were consolidated into ADR-034 to eliminate architectural fragmentation and provide a single source of truth for the temporal planner architecture.

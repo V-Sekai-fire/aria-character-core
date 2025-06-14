@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted (Supersedes ADR-029)
+**Superseded by ADR-034: Definitive Temporal Planner Architecture**
+
+*This ADR has been consolidated into ADR-034 along with all other temporal planner architectural decisions. See ADR-034 for current implementation guidance.*
 
 ## Date
 
