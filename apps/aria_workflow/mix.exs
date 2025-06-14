@@ -41,7 +41,6 @@ defmodule AriaWorkflow.MixProject do
       {:aria_engine, in_umbrella: true},
 
       # Domain apps
-      {:aria_file_management, in_umbrella: true},
       {:aria_workflow_system, in_umbrella: true},
       {:aria_timestrike, in_umbrella: true},
 

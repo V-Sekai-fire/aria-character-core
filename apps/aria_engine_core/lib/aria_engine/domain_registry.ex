@@ -13,7 +13,7 @@ defmodule AriaEngine.DomainRegistry do
   - Domain validation
   - Domain interface standardization
 
-  Domains are organized by type (e.g., "file_management", "workflow_system")
+  Domains are organized by type (e.g., "timestrike", "temporal_planning")
   and can be composed together to create complex planning capabilities.
   """
 

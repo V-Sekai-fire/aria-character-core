@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaTimestrike do
+defmodule AriaTimestrike.Core do
   @moduledoc """
   TimeStrike temporal planning game domain for AriaEngine.
 

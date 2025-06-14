@@ -40,10 +40,10 @@ config :hammer,
 config :aria_engine,
   domain_providers: [
     AriaEngine.BasicActionsDomainProvider,
-    # Additional providers can be added when their apps are included
-    AriaFileManagement.DomainProvider,
-    AriaWorkflowSystem.DomainProvider,
+    AriaTimestrike.Core.DomainProvider,
     AriaTimestrike.DomainProvider
+    # Additional providers can be added when their apps are included
+    # AriaWorkflowSystem.DomainProvider
   ]
 
 # Import environment specific config files

@@ -20,7 +20,6 @@ defmodule AriaEngine.Domain do
 
   ## Aliases
 
-  - `AriaFileManagement`: For file management actions and methods.
   - `AriaWorkflowSystem`: For workflow system actions and methods.
   """
 
@@ -295,8 +294,6 @@ defmodule AriaEngine.Domain do
   def create_complete_domain(name \\ "complete") do
     new(name)
     |> add_porcelain_actions()
-    |> add_file_management_methods()
-    |> add_workflow_system_methods()
   end
 
   @doc """
@@ -328,18 +325,4 @@ defmodule AriaEngine.Domain do
   end
 
   def validate(_), do: {:error, "Not a valid domain struct"}
-
-  defp add_file_management_methods(%__MODULE__{} = domain) do
-    # File management methods would be added by the respective apps
-    # that depend on aria_engine, not the other way around
-    Logger.debug("File management methods should be added by dependent apps")
-    domain
-  end
-
-  defp add_workflow_system_methods(%__MODULE__{} = domain) do
-    # Workflow system methods would be added by the respective apps
-    # that depend on aria_engine, not the other way around
-    Logger.debug("Workflow system methods should be added by dependent apps")
-    domain
-  end
 end

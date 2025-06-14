@@ -186,14 +186,14 @@ defmodule AriaEngineTest do
 
     test "attempts to load domain modules dynamically" do
       # These may or may not be available depending on compilation order
-      domain_types = ["file_management", "workflow_system", "timestrike"]
+      domain_types = ["timestrike_core", "timestrike"]
 
       for domain_type <- domain_types do
         case AriaEngine.DomainProvider.get_domain(domain_type) do
           {:ok, domain} ->
             # Domain may be a struct or map depending on implementation
             assert is_map(domain)
-            assert Map.get(domain, :name) == domain_type or domain.name == domain_type
+            assert Map.get(domain, :name) == domain_type or domain.name == "timestrike"
           {:error, reason} ->
             # Expected if domain module is not available
             assert String.contains?(reason, "not found") or

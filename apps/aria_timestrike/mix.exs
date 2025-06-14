@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaTimestrikeCore.MixProject do
+defmodule AriaTimestrike.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :aria_timestrike_core,
+      app: :aria_timestrike,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
@@ -21,7 +21,7 @@ defmodule AriaTimestrikeCore.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {AriaTimestrike.Core.Application, []},
+      mod: {AriaTimestrike.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -30,7 +30,8 @@ defmodule AriaTimestrikeCore.MixProject do
   defp deps do
     [
       # Internal dependencies
-      {:aria_engine_core, in_umbrella: true},
+      {:aria_engine, in_umbrella: true},
+      {:aria_timestrike_core, in_umbrella: true},
       {:aria_tui, in_umbrella: true},
 
       # Core dependencies

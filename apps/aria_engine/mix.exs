@@ -23,7 +23,7 @@ defmodule AriaEngine.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {AriaEngine.Application, []}
+      mod: {AriaEngine.Temporal.Application, []}
     ]
   end
 

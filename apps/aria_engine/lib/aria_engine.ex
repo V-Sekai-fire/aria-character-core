@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine do
+defmodule AriaEngine.Temporal do
   @moduledoc """
   AriaEngine - Temporal Game Engine for TimeStrike
   
@@ -17,15 +17,15 @@ defmodule AriaEngine do
   """
   
   # Re-export core functionality
-  defdelegate new_state(), to: AriaEngineCore.State, as: :new
-  defdelegate new_state(initial_data), to: AriaEngineCore.State, as: :new
+  defdelegate new_state(), to: AriaEngine.State, as: :new
+  defdelegate new_state(initial_data), to: AriaEngine.State, as: :new
   
   @doc """
   Creates a new temporal state with time-aware capabilities.
   """
   def new_temporal_state(timestamp \\ 0.0) do
     # TODO: Implement temporal state wrapper
-    AriaEngineCore.State.new()
+    AriaEngine.State.new()
     |> Map.put(:timestamp, timestamp)
     |> Map.put(:temporal_index, %{})
     |> Map.put(:history, [])
