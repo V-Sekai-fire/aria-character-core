@@ -46,5 +46,21 @@ config :aria_engine,
     AriaTimestrike.DomainProvider
   ]
 
+# Configure TimeStrike Phoenix application
+config :aria_timestrike, AriaTimestrikeWeb.Endpoint,
+  url: [host: "localhost"],
+  adapter: Bandit.PhoenixAdapter,
+  render_errors: [
+    formats: [html: AriaTimestrikeWeb.ErrorHTML, json: AriaTimestrikeWeb.ErrorJSON],
+    layout: false
+  ],
+  pubsub_server: AriaTimestrike.PubSub,
+  live_view: [signing_salt: "temporal_planner_salt"]
+
+# Configure Gettext for TimeStrike
+config :aria_timestrike, AriaTimestrikeWeb.Gettext,
+  default_locale: "en",
+  locales: ~w(en)
+
 # Import environment specific config files
 import_config "#{config_env()}.exs"
