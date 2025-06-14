@@ -29,7 +29,7 @@ defmodule AriaInterface.MixProject do
     [
       # Phoenix for web interface
       {:phoenix, "~> 1.7"},
-      {:phoenix_live_view, "~> 0.20"},
+      {:phoenix_live_view, "~> 1.0.0"},
 
       # HTTP server
       {:bandit, "~> 1.0"},

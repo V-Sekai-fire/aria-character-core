@@ -15,7 +15,6 @@ defmodule AriaTimestrike.WebInterface do
   use GenServer
 
   alias AriaEngine.TemporalState
-  alias AriaTimestrike.GameEngine
 
   defstruct [
     :game_state,

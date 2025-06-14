@@ -28,27 +28,27 @@ defmodule AriaMonitor.MixProject do
   defp deps do
     [
       # Monitoring and metrics
-      {:telemetry_metrics, "~> 0.6"},
+      {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-      
+
       # Prometheus integration
       {:telemetry_metrics_prometheus, "~> 1.1"},
       {:prometheus_ex, "~> 3.0"},
-      
+
       # System monitoring
       {:recon, "~> 2.5"},
-      
+
       # Phoenix Live Dashboard for UI
       {:phoenix_live_dashboard, "~> 0.8"},
       {:phoenix, "~> 1.7"},
-      {:phoenix_live_view, "~> 0.20"},
-      
+      {:phoenix_live_view, "~> 1.0.0"},
+
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
-      
+
       # JSON handling
       {:jason, "~> 1.4"},
-      
+
       # Shared dependencies
       {:telemetry, "~> 1.2"}
     ]

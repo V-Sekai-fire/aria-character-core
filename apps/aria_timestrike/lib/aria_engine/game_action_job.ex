@@ -142,7 +142,7 @@ defmodule AriaEngine.GameActionJob do
         completed_action = %{type: :move_to, to: destination}
 
         # This will trigger the next goal selection and queue the next intent job
-        case AriaTimestrike.GameEngine.handle_action_completion(game_state, agent_id, completed_action) do
+        case GameEngine.handle_action_completion(game_state, agent_id, completed_action) do
           {:ok, _updated_state, _next_actions} ->
             {:ok, Map.merge(result, %{continuous_movement_triggered: true})}
           error ->

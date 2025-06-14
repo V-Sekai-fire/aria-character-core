@@ -15,7 +15,6 @@ defmodule AriaTimestrike.GameEngine do
   use GenServer
 
   alias AriaEngine.TemporalState
-  alias AriaTimestrike.Planner
 
   @doc """
   Starts a new game session with initial state.
@@ -158,7 +157,7 @@ defmodule AriaTimestrike.GameEngine do
   """
   def replan_after_interruption(game_state, agent_id, target_position) do
     # Get current position (which may have changed due to interruption)
-    current_position = TemporalState.get_agent_position(game_state, agent_id)
+    _current_position = TemporalState.get_agent_position(game_state, agent_id)
 
     # Create new plan from current position to target
     plan_to_goal(game_state, agent_id, target_position)

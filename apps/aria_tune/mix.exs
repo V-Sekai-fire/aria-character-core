@@ -29,24 +29,24 @@ defmodule AriaTune.MixProject do
     [
       # Performance analysis and optimization
       {:benchee, "~> 1.1"},
-      {:telemetry_metrics, "~> 0.6"},
-      
+      {:telemetry_metrics, "~> 1.0"},
+
       # Machine learning for optimization
       {:nx, "~> 0.6"},
       {:scholar, "~> 0.2"},
-      
+
       # Character shaping for optimization suggestions
       {:aria_shape, in_umbrella: true},
-      
+
       # Monitor service for performance data
       {:aria_monitor, in_umbrella: true},
-      
+
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
-      
+
       # JSON handling
       {:jason, "~> 1.4"},
-      
+
       # Shared dependencies
       {:telemetry, "~> 1.2"}
     ]
