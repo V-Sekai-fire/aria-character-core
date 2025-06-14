@@ -63,7 +63,6 @@ temporal_constraints = [
   %{type: :dynamic_opportunities, blocking_entity: "archer1"}
 ]
 ```
-```
 
 ### Temporal Conflict & Multi-Layer Backtracking
 
