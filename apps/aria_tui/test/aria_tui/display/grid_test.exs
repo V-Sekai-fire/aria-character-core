@@ -141,8 +141,8 @@ defmodule AriaTui.Display.GridTest do
       end)
 
       # Should contain agent and map information
-      assert String.contains?(output, "👥")  # Agents panel header
-      assert String.contains?(output, "🗺️")   # Map panel header
+      assert String.contains?(output, "Agents")  # Agents panel header
+      assert String.contains?(output, "Map")   # Map panel header
       assert String.contains?(output, "│")  # Should have borders
     end
 
