@@ -4,11 +4,18 @@ This directory contains Architecture Decision Records for the temporal planner c
 
 ## Current Architecture
 
-**All temporal planner architectural decisions are now consolidated in [ADR-034: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md).**
+**The complete temporal planner architecture is defined through ADRs 034-044:**
 
-**The migration strategy from current AriaEngine to temporal AriaEngine is defined in [ADR-035: AriaEngine Temporal Migration Strategy with Control Theory Verification](035-aria-engine-temporal-migration-strategy.md).**
+- **ADR-034**: Definitive Temporal Planner Architecture (foundation)
+- **ADR-035**: Canonical Temporal Backtracking Problem (test case)
+- **ADR-037**: Timeline-Based vs Durative Actions (approach selection)
+- **ADR-040**: Temporal Constraint Solver Selection (algorithm choice)
+- **ADR-041**: Temporal Solver Tech Stack Requirements (implementation stack)
+- **ADR-042**: Temporal Planner Cold Boot Implementation Order (TDD roadmap)
+- **ADR-043**: Total Order to Partial Order Transformation (optimization)
+- **ADR-044**: Temporal Planner as Auto Battler AI (stakeholder communication)
 
-ADRs 001-033 have been superseded by ADR-034 and serve as historical records of the architectural evolution process. For current implementation guidance, reference ADR-034 and ADR-035 exclusively.
+ADRs 036, 038, and 039 are deprecated. ADRs 001-033 have been superseded by the current architecture and serve as historical records.
 
 ## Overview
 
@@ -23,11 +30,22 @@ These ADRs document the evolution of design decisions for the temporal, re-entra
 
 ## ADR Index
 
-### Current Architecture
+### Current Architecture (034-044)
 
-- **034**: **Definitive Temporal Planner Architecture** _(Supersedes ADR-001 through ADR-033)_
-- **035**: **AriaEngine Temporal Migration Strategy with Control Theory Verification** _(Migration path and verification framework)_
-- **035**: **AriaEngine to Temporal AriaEngine Migration Strategy**
+- **034**: **Definitive Temporal Planner Architecture** _(Architecture foundation)_
+- **035**: **Canonical Temporal Backtracking Problem** _(Definitive test case for temporal reasoning)_
+- **037**: **Timeline-Based vs Durative Actions** _(Timeline planning approach selection)_
+- **040**: **Temporal Constraint Solver Selection** _(PC-2 algorithm for STN solving)_
+- **041**: **Temporal Solver Tech Stack Requirements** _(Pure Elixir implementation stack)_
+- **042**: **Temporal Planner Cold Boot Implementation Order** _(TDD implementation roadmap)_
+- **043**: **Total Order to Partial Order Transformation** _(Optimization algorithm for constraint solving)_
+- **044**: **Temporal Planner as Auto Battler AI** _(Stakeholder communication framework)_
+
+### Deprecated Current Architecture
+
+- **036**: **Evolving AriaEngine Planner Blueprint** _(Deprecated by ADR-042)_
+- **038**: **Timeline-Based Temporal Planner Implementation** _(Deprecated by ADR-042)_
+- **039**: **Temporal Planner Reentrancy & Stability** _(Marked not necessary)_
 
 ### Historical Evolution (Superseded)
 
@@ -84,23 +102,44 @@ The following ADRs document the historical evolution of the temporal planner arc
 
 ## Design Consistency
 
-**Current Architecture**: All architectural decisions are consolidated in ADR-034. This ensures complete consistency and eliminates conflicts between distributed decisions.
+**Current Architecture**: The temporal planner architecture is distributed across ADRs 034-044, with each ADR focusing on a specific aspect:
 
-**Historical Evolution**: The superseded ADRs (001-033) were verified for mutual consistency during their active period and demonstrate the incremental evolution of the temporal planner design.
+- **ADR-034**: Overall architecture and requirements
+- **ADR-035**: Canonical test problem for validation
+- **ADR-037**: Timeline vs durative action planning approach
+- **ADR-040-041**: Constraint solver and tech stack selection
+- **ADR-042**: Implementation order and TDD methodology
+- **ADR-043**: Performance optimization through parallelization
+- **ADR-044**: Stakeholder communication through gaming analogies
+
+**Cross-Reference Consistency**: All active ADRs maintain proper cross-references to ensure architectural coherence.
+
+**Historical Evolution**: The superseded ADRs (001-033) were verified for mutual consistency during their active period and demonstrate the incremental evolution toward the final temporal planner design.
 
 ## Maintenance
 
-**Current Process**: All temporal planner architectural changes should be made to ADR-034. The historical ADRs (001-033) should not be modified.
+**Current Process**: Architectural changes should be made to the appropriate ADR in the 034-044 series based on the concern:
+
+- **ADR-034**: Core architecture modifications
+- **ADR-035**: Test case updates or new canonical problems
+- **ADR-037**: Timeline planning approach changes
+- **ADR-040-041**: Solver algorithm or tech stack changes
+- **ADR-042**: Implementation order or TDD methodology updates
+- **ADR-043**: Performance optimization changes
+- **ADR-044**: Stakeholder communication improvements
 
 When making architectural changes:
 
-1. Update ADR-034 with the new decision and rationale
-2. Ensure changes are consistent with the overall architecture
-3. Update implementation status and consequences sections
-4. Consider impacts on related systems and document accordingly
+1. Identify the appropriate ADR based on the type of change
+2. Update the relevant ADR with the new decision and rationale
+3. Ensure changes are consistent with cross-referenced ADRs
+4. Update cross-references in other ADRs if the change affects them
+5. Consider impacts on related systems and document accordingly
+
+**Historical ADRs**: The superseded ADRs (001-033) should not be modified.
 
 ## History
 
 These ADRs were migrated from the original `temporal_planner_design_resolutions.md` document on June 13, 2025, to provide better tracking and maintainability of individual architectural decisions.
 
-On June 14, 2025, all temporal planner decisions were consolidated into ADR-034 to eliminate architectural fragmentation and provide a single source of truth for the temporal planner architecture.
+On June 14, 2025, the temporal planner architecture was distributed across specialized ADRs (034-044) to provide focused, maintainable decision records for each architectural concern while maintaining cross-reference consistency.

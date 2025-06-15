@@ -306,8 +306,12 @@ end
 
 ## Related ADRs
 
-- [ADR-040: Temporal Constraint Solver Selection](040-temporal-constraint-solver-selection.md)
-- [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md)
-- [ADR-037: Timeline-Based vs Durative Actions](037-timeline-based-vs-durative-actions.md)
+- [ADR-034: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md) - Architecture foundation
+- [ADR-035: Canonical Temporal Backtracking Problem](035-canonical-temporal-backtracking-problem.md) - Performance requirements from test case
+- [ADR-037: Timeline-Based vs Durative Actions](037-timeline-based-vs-durative-actions.md) - Timeline approach requiring tech stack
+- [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md) - Deprecated implementation details
+- [ADR-040: Temporal Constraint Solver Selection](040-temporal-constraint-solver-selection.md) - PC-2 algorithm implementation requirements
+- [ADR-042: Cold Boot Implementation Order](042-temporal-planner-cold-boot-implementation-order.md) - TDD implementation using this tech stack
+- [ADR-043: Total Order to Partial Order Transformation](043-total-order-to-partial-order-transformation.md) - Performance optimization requirements
 
 This tech stack provides a robust, performant, and maintainable foundation for implementing the temporal constraint solver within the AriaEngine ecosystem.

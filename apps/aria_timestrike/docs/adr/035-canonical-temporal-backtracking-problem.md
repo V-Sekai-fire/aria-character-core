@@ -232,4 +232,14 @@ Any temporal planner implementation must demonstrate:
 10. **Optimality**: Solutions minimize execution time while ensuring goal achievement
 11. **Stability**: Plans remain robust under timing perturbations and information updates
 
+## Cross-References
+
+- **ADR-034**: Definitive temporal planner architecture (establishes requirements this problem validates)
+- **ADR-042**: Cold boot implementation order (uses this canonical problem as the definitive test case)
+- **ADR-044**: Auto battler analogy (Maya's scenario as "auto chess round" example)
+- **ADR-037**: Timeline-based planning approach (validated by this canonical problem)
+- **ADR-040**: STN solver selection (PC-2 algorithm must solve this problem efficiently)
+- **ADR-041**: Tech stack requirements (performance targets based on this problem)
+- **ADR-043**: Total order optimization (demonstrated through this problem's constraint solving)
+
 This enhanced canonical problem serves as the definitive architectural requirement for temporal planner implementation and testing. Success in solving this problem validates that the temporal planner implements comprehensive temporal reasoning capabilities including Goal-Task-Network planning, multi-phase backtracking, historical state reconstruction, imperfect information management, and dynamic opportunity exploitation.

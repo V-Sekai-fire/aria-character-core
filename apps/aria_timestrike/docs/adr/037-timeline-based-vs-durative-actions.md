@@ -275,9 +275,14 @@ If timeline-based planning is pursued in the future:
 
 ## Related ADRs
 
-- [ADR-034: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md)
-- [ADR-035: Canonical Temporal Backtracking Problem](035-canonical-temporal-backtracking-problem.md)
-- [ADR-036: Evolving AriaEngine Planner Blueprint](036-evolving-ariengine-planner-blueprint.md)
+- [ADR-034: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md) - Architecture foundation
+- [ADR-035: Canonical Temporal Backtracking Problem](035-canonical-temporal-backtracking-problem.md) - Test case validating timeline approach
+- [ADR-036: Evolving AriaEngine Planner Blueprint](036-evolving-ariengine-planner-blueprint.md) - Deprecated, replaced by later ADRs
+- [ADR-040: Temporal Constraint Solver Selection](040-temporal-constraint-solver-selection.md) - Implements timeline-based constraints
+- [ADR-041: Tech Stack Requirements](041-temporal-solver-tech-stack-requirements.md) - Supports timeline data structures
+- [ADR-042: Cold Boot Implementation Order](042-temporal-planner-cold-boot-implementation-order.md) - Implements timeline-based approach
+- [ADR-043: Total Order Optimization](043-total-order-to-partial-order-transformation.md) - Optimizes timeline constraint solving
+- [ADR-044: Auto Battler Analogy](044-temporal-planner-as-auto-battler-ai.md) - Communicates timeline planning benefits
 
 ## Consequences
 

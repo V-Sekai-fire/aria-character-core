@@ -255,8 +255,12 @@ end
 
 ## Related ADRs
 
-- [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md)
-- [ADR-037: Timeline-Based vs Durative Actions](037-timeline-based-vs-durative-actions.md)
-- [ADR-041: Temporal Solver Tech Stack Requirements](041-temporal-solver-tech-stack-requirements.md)
+- [ADR-034: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md) - Architecture foundation
+- [ADR-035: Canonical Temporal Backtracking Problem](035-canonical-temporal-backtracking-problem.md) - Test case requiring PC-2 algorithm
+- [ADR-037: Timeline-Based vs Durative Actions](037-timeline-based-vs-durative-actions.md) - Timeline approach requiring constraint solver
+- [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md) - Deprecated implementation details
+- [ADR-041: Temporal Solver Tech Stack Requirements](041-temporal-solver-tech-stack-requirements.md) - Implementation tech stack
+- [ADR-042: Cold Boot Implementation Order](042-temporal-planner-cold-boot-implementation-order.md) - STN solver implementation sequence
+- [ADR-043: Total Order to Partial Order Transformation](043-total-order-to-partial-order-transformation.md) - PC-2 parallelization algorithm
 
 This constraint solver selection provides the optimal balance of expressiveness, performance, and implementation feasibility for the timeline-based temporal planner architecture.

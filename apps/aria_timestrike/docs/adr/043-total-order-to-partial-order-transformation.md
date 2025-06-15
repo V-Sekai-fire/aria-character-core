@@ -219,7 +219,10 @@ end
 
 ## Cross-References
 
-- **ADR-035**: Canonical temporal backtracking problem (Maya's scenario)
+- **ADR-034**: Definitive temporal planner architecture (architecture foundation)
+- **ADR-035**: Canonical temporal backtracking problem (Maya's scenario requiring optimization)
+- **ADR-037**: Timeline-based planning approach (timeline constraints requiring parallelization)
 - **ADR-040**: Temporal constraint solver selection (PC-2 algorithm choice)
-- **ADR-042**: Cold boot implementation order (STN solver implementation)
-- **ADR-041**: Tech stack requirements (performance targets)
+- **ADR-041**: Tech stack requirements (performance targets and Elixir parallelization)
+- **ADR-042**: Cold boot implementation order (STN solver implementation sequence)
+- **ADR-044**: Auto battler analogy (optimizing "ability rotations" for performance)
