@@ -1,7 +1,7 @@
 # ADR-057: Test Cleanup and Code Maintenance Plan
 
 ## Status
-Proposed
+Active (Started: June 15, 2025)
 
 ## Context
 The aria-character-core codebase currently has several maintenance issues that need to be addressed:
@@ -13,58 +13,63 @@ The aria-character-core codebase currently has several maintenance issues that n
 5. **Documentation Gaps**: Some umbrella apps lack proper README files
 6. **Code Organization**: Some files may be too large and need splitting
 
+## Progress Tracking
+
 ## Decision
-We will implement a systematic maintenance approach with the following priorities:
+We will implement a systematic maintenance approach with the following prioritized phases:
 
 ### Phase 1: Critical Test Fixes (Immediate)
-- Fix failing tests one at a time to avoid overwhelming changes
-- Migrate behavior from backup file to proper tests in aria_flow
-- Update tests to work with direct method calls instead of GenServer patterns
-- Ensure tests are silent when passing (reduce log spam)
+- [ ] Fix failing tests in `aria_engine` (FlowBackflowTest)
+- [ ] Fix failing tests in `aria_timestrike` (BaselineTest)
+- [ ] Migrate behavior from backup file to proper tests in aria_flow
+- [ ] Update tests to work with direct method calls instead of GenServer patterns
+- [ ] Ensure tests are silent when passing (reduce log spam)
 
 ### Phase 2: Code Organization (Short-term)
-- Split overly large code files into smaller logical units
-- Create proper type annotations and documentation
-- Update imports and references when files are split
-- Backup original files before major restructuring
+- [x] Remove obsolete test files (membrane_workflow_test_old.exs, membrane_workflow_test_new.exs)
+- [ ] Split overly large code files into smaller logical units
+- [ ] Create proper type annotations and documentation
+- [ ] Update imports and references when files are split
+- [ ] Backup original files before major restructuring
 
 ### Phase 3: Documentation Updates (Ongoing)
-- Create/update README files for each umbrella app
-- Update design changelogs when notable changes occur
-- Document architecture decisions in ADR format
-- Maintain temporal planner design resolutions
+- [ ] Create/update README files for each umbrella app
+- [ ] Update design changelogs when notable changes occur
+- [x] Document architecture decisions in ADR format (this document)
+- [ ] Maintain temporal planner design resolutions
 
 ### Phase 4: Commit Strategy (Continuous)
-- Use descriptive commit messages in professional vtuber style
-- Group logically related changes into separate commits
-- Avoid conventional commit message style
-- Double-check spelling and grammar in all commit messages
-- Test and compile after each commit to ensure stability
+- [x] Use descriptive commit messages in professional vtuber style
+- [x] Group logically related changes into separate commits
+- [x] Avoid conventional commit message style
+- [x] Double-check spelling and grammar in all commit messages
+- [x] Test and compile after each commit to ensure stability
 
 ## Implementation Guidelines
 
 ### Test Fixing Protocol
-1. Identify one failing test or warning at a time
-2. Fix the issue with minimal necessary changes
-3. Commit the fix with descriptive message
-4. Repeat for next issue
-5. Bundle related fixes only when it reduces rate limiting
+- [ ] Identify one failing test or warning at a time
+- [ ] Fix the issue with minimal necessary changes
+- [ ] Commit the fix with descriptive message
+- [ ] Repeat for next issue
+- [ ] Bundle related fixes only when it reduces rate limiting
 
 ### File Splitting Protocol
-1. Backup the original file
-2. Split into smaller logical units with type annotations
-3. Create new files for each logical unit
-4. Update original file to reference new files
-5. Test changes thoroughly
-6. Remove original file if no longer needed
-7. Commit with descriptive message
-8. Document changes in relevant documentation
+- [ ] Identify files that are too large or have too much responsibility
+- [ ] Backup the original file
+- [ ] Split into smaller logical units with type annotations
+- [ ] Create new files for each logical unit
+- [ ] Update original file to reference new files
+- [ ] Test changes thoroughly
+- [ ] Remove original file if no longer needed
+- [ ] Commit with descriptive message
+- [ ] Document changes in relevant documentation
 
 ### Code Quality Standards
-- Passing tests must be silent (no log output)
-- Only failing tests or those with explicit verbose flags should produce output
-- All modules should have proper documentation
-- Type annotations should be included for public interfaces
+- [ ] Ensure passing tests are silent (no log output)
+- [ ] Verify only failing tests or those with explicit verbose flags produce output
+- [ ] Add proper documentation to all modules
+- [ ] Include type annotations for all public interfaces
 
 ## Consequences
 
