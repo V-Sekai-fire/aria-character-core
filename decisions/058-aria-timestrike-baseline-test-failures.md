@@ -2,8 +2,9 @@
 
 ## Status
 
-Active (Started: June 15, 2025)
-**Priority**: Critical - blocking test suite completion
+Paused (Started: June 15, 2025, Paused: June 15, 2025)  
+**Priority**: Critical - blocking test suite completion  
+**Paused Reason**: Extracting aria_engine functionality into dedicated ADR for focused implementation
 
 ## Context
 
