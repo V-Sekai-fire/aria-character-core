@@ -231,7 +231,7 @@ defmodule AriaQueue.FlowBackflow do
       backpressure_count: 0,
       backflow_enabled: Keyword.get(opts, :backflow_enabled, true),
       # Element state (for element-based processing)
-      element: %{name: name, type: Keyword.get(opts, :element_type, :processor)}
+      element: %{name: name, type: element_type}
     }
 
     {:ok, state}
