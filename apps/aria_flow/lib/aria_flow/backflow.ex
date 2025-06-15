@@ -270,6 +270,9 @@ defmodule AriaFlow.Backflow do
     filter_fn = Keyword.get(opts, :filter_fn, &default_filter/1)
     element_type = Keyword.get(opts, :element_type, :filter)
     
+    # Create the actual flow element using our helper function
+    flow_element = create_flow_element(name, element_type, opts)
+    
     # Create pad state maps
     input_pad_map = Map.new(input_pads, fn pad -> {pad.name, pad} end)
     output_pad_map = Map.new(output_pads, fn pad -> {pad.name, pad} end)
@@ -297,8 +300,8 @@ defmodule AriaFlow.Backflow do
       min_demand: Keyword.get(opts, :min_demand, 1),
       backpressure_count: 0,
       backflow_enabled: Keyword.get(opts, :backflow_enabled, true),
-      # Element state (for element-based processing)
-      element: %{name: name, type: element_type}
+      # Element state (for element-based processing) - use the flow element
+      element: flow_element
     }
 
     {:ok, state}
@@ -388,6 +391,13 @@ defmodule AriaFlow.Backflow do
   def handle_cast({:demand, pad_name, demand_size}, state) do
     # Handle demand signal through pad (Membrane-style demand)
     new_state = handle_pad_demand(state, pad_name, demand_size)
+    {:noreply, new_state}
+  end
+
+  @impl true
+  def handle_cast({:buffer, pad_name, buffer}, state) do
+    # Handle buffer arrival at input pad - support both pull and push modes
+    new_state = handle_pad_buffer(state, pad_name, buffer)
     {:noreply, new_state}
   end
 
@@ -779,6 +789,63 @@ defmodule AriaFlow.Backflow do
         updated_element = put_in(state.element.pads[pad_name], updated_pad)
         %{state | element: updated_element}
       _ ->
+        state
+    end
+  end
+
+  defp handle_pad_buffer(state, pad_name, buffer) do
+    # Handle buffer arrival at input pad - supports both pull and push flow control
+    case get_in(state.input_pads, [pad_name]) do
+      %ElementPad{type: :input, flow_control: flow_control} = pad ->
+        case flow_control do
+          :pull ->
+            # Pull mode: only process if there is demand
+            if pad.demand && pad.demand > 0 do
+              # Process buffer and update demand
+              updated_pad = %{pad | demand: pad.demand - 1}
+              updated_state = put_in(state.input_pads[pad_name], updated_pad)
+              
+              # Process buffer through element (if element exists)
+              if state.element do
+                case process_buffer_through_pad(state.element, pad_name, buffer) do
+                  {:ok, output_buffers} ->
+                    # Send output buffers to connected pads
+                    send_buffers_to_connected_pads(output_buffers, state)
+                    updated_state
+                  {:error, _reason} ->
+                    # Buffer processing failed, keep original state
+                    state
+                end
+              else
+                updated_state
+              end
+            else
+              # No demand, queue the buffer
+              buffer_queue = pad.buffer_queue || :queue.new()
+              queued_buffer_queue = :queue.in(buffer, buffer_queue)
+              updated_pad = %{pad | buffer_queue: queued_buffer_queue}
+              put_in(state.input_pads[pad_name], updated_pad)
+            end
+          
+          :push ->
+            # Push mode: process immediately regardless of demand
+            if state.element do
+              case process_buffer_through_pad(state.element, pad_name, buffer) do
+                {:ok, output_buffers} ->
+                  # Send output buffers to connected pads
+                  send_buffers_to_connected_pads(output_buffers, state)
+                  state
+                {:error, _reason} ->
+                  # Buffer processing failed, keep original state
+                  state
+              end
+            else
+              state
+            end
+        end
+      
+      nil ->
+        # Pad not found, ignore buffer
         state
     end
   end
