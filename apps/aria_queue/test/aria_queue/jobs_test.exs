@@ -9,18 +9,19 @@ defmodule AriaQueue.JobsTest do
   describe "job creation" do
     test "can create worker job structs without database" do
       # Test that we can create job structs for our Membrane-based system
-      job_data = %{
-        worker: "AriaQueue.Workers.AIGenerationWorker",
-        args: %{
-          type: "character_generation",
-          user_id: 123,
-          context: %{name: "test"}
-        },
-        queue: "ai_generation"
+      job_args = %{
+        type: "character_generation",
+        user_id: 123,
+        context: %{name: "test"}
       }
 
-      result = Oban.insert(job_data)
-      assert {:ok, _} = result
+      # Test creating a job struct using the worker module
+      job = AriaQueue.Workers.AIGenerationWorker.new(job_args, queue: :ai_generation)
+      
+      assert %Oban.Job{} = job
+      assert job.worker == "AriaQueue.Workers.AIGenerationWorker"
+      assert job.args == %{"type" => "character_generation", "user_id" => 123, "context" => %{"name" => "test"}}
+      assert job.queue == "ai_generation"
     end
 
     test "worker modules are available" do

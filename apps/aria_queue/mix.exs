@@ -30,6 +30,9 @@ defmodule AriaQueue.MixProject do
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
 
+      # Parallel processing pipelines for job batching
+      {:flow, "~> 1.2"},
+
       # JSON handling
       {:jason, "~> 1.4"},
 

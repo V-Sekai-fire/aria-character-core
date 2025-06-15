@@ -9,8 +9,14 @@ defmodule AriaQueue.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      # Registry for Flow backflow processors
+      {Registry, keys: :unique, name: AriaQueue.Registry},
+      
       # Membrane-based job processor to replace Oban
-      {AriaQueue.MembraneJobProcessor, []}
+      {AriaQueue.MembraneJobProcessor, []},
+      
+      # Flow-based parallel processor with GPU convergence principles
+      {AriaQueue.FlowProcessor, []}
     ]
 
     opts = [strategy: :one_for_one, name: AriaQueue.Supervisor]

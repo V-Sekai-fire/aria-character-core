@@ -39,14 +39,14 @@ defmodule AriaEngine.MixProject do
       # Planning and decision-making libraries
       {:libgraph, "~> 0.16"},
 
-      # Real-time multimedia processing framework
-      {:membrane_core, "~> 1.0"},
-
       # Parallel processing pipelines (ADR-041, ADR-052)
       {:flow, "~> 1.2"},
 
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
+
+      # Queue system with centralized Flow processing  
+      {:aria_queue, in_umbrella: true},
 
       # Character shaping integration
       {:aria_shape, in_umbrella: true},
