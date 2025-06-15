@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADRs)
 
-This directory contains Architecture Decision Records for the temporal planner component of aria_timestrike.
+This directory contains Architecture Decision Records for the temporal planner component of aria_timestrike_core.
 
 ## Current Architecture
 

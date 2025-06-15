@@ -153,7 +153,7 @@ Scheduled Actions:
 
 ### **5.2. Core CLI Functionality**
 
-The CLI task (mix aria_engine.play_timestrike) will demonstrate:
+The CLI task (mix aria_engine_core.play_timestrike) will demonstrate:
 
 1. **Temporal Planning**: Showing how the planner schedules actions over time.
 2. **Re-entrant Behavior**: Allowing the user to trigger the "Conviction Choice" mid-game and observing the planner generate a new plan.

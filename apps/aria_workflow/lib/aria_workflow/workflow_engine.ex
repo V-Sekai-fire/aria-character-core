@@ -22,7 +22,7 @@ defmodule AriaWorkflow.WorkflowEngine do
   ## Architecture Integration
 
   This service operates as part of the Orchestration Layer and depends on:
-  - aria_engine (planning and goal reasoning)
+  - aria_engine_core (planning and goal reasoning)
   - aria_security (secrets management)
   - aria_data (workflow persistence)
   - aria_queue (background execution)

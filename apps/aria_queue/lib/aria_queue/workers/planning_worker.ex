@@ -14,7 +14,7 @@ defmodule AriaQueue.Workers.PlanningWorker do
     require Logger
     Logger.info("Processing workflow planning for workflow #{workflow_id}")
 
-    # This would interface with aria_engine service
+    # This would interface with aria_engine_core service
     # Simulate processing time
     Process.sleep(500)
 

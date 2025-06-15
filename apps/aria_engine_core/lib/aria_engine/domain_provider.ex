@@ -34,7 +34,7 @@ defmodule AriaEngine.DomainProvider do
   """
   @spec get_configured_providers() :: [module()]
   def get_configured_providers do
-    Application.get_env(:aria_engine, :domain_providers, [])
+    Application.get_env(:aria_engine_core, :domain_providers, [])
   end
 
   @doc """

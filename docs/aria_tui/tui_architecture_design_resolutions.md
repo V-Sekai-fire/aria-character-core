@@ -20,8 +20,8 @@ This document captures the finalized design decisions for the modular Terminal U
 
 **Implementation**:
 
-- ✅ Removed all `aria_engine` dependencies from `mix.exs`
-- ✅ Extracted all TimeStrike-specific logic to `aria_timestrike` app
+- ✅ Removed all `aria_engine_core` dependencies from `mix.exs`
+- ✅ Extracted all TimeStrike-specific logic to `aria_timestrike_core` app
 - ✅ Created `AriaTui.ContentProvider` behavior for pluggable content
 - ✅ Verification: `aria_tui` compiles and runs in complete isolation
 
@@ -166,7 +166,7 @@ This document captures the finalized design decisions for the modular Terminal U
 
 ### 🔄 Integration Examples
 
-- `aria_timestrike` content provider implemented
+- `aria_timestrike_core` content provider implemented
 - Default test suite content provider active
 - Mix task updated for component testing
 

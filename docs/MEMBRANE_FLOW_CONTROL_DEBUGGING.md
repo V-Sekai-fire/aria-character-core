@@ -260,16 +260,16 @@ Key indicators:
 
 ```bash
 # Search for flow control specifications
-grep -r "flow_control:" apps/aria_engine/
+grep -r "flow_control:" apps/aria_engine_core/
 
 # Find pad definitions missing flow control
-grep -A 5 "def_input_pad\|def_output_pad" apps/aria_engine/ | grep -B 5 -A 5 -v "flow_control"
+grep -A 5 "def_input_pad\|def_output_pad" apps/aria_engine_core/ | grep -B 5 -A 5 -v "flow_control"
 
 # Check for invalid :auto usage on output pads
-grep -r "flow_control: :auto" apps/aria_engine/ | grep "def_output_pad" -B 2 -A 2
+grep -r "flow_control: :auto" apps/aria_engine_core/ | grep "def_output_pad" -B 2 -A 2
 
 # Run specific test to isolate issue
-mix test apps/aria_engine/test/membrane_workflow_test.exs --max-cases 1
+mix test apps/aria_engine_core/test/membrane_workflow_test.exs --max-cases 1
 ```
 
 ### 4. Common Error Patterns
