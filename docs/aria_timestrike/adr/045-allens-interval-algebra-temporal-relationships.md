@@ -176,17 +176,20 @@ This is interpreted to mean that if an interval exists for the primary action (e
 ### Examples
 
 #### Turn Action Constraints
+
 ```
 Turn(?target)            met-by   Pointing(?direction)
                          meets    Pointing(?target)
 ```
 
 This constraint means:
+
 - If a `Turn(?target)` action interval exists
 - Then there must be a `Pointing(?direction)` interval that ends exactly when `Turn` begins
 - And there must be a `Pointing(?target)` interval that begins exactly when `Turn` ends
 
 #### Calibrate Action Constraints
+
 ```
 Calibrate(?instrument)   met-by       Status(?instrument, On)
                          contained-by CalibrationTarget(?target)
@@ -195,6 +198,7 @@ Calibrate(?instrument)   met-by       Status(?instrument, On)
 ```
 
 This constraint means:
+
 - If a `Calibrate(?instrument)` action interval exists
 - Then `Status(?instrument, On)` must end exactly when `Calibrate` begins
 - And `CalibrationTarget(?target)` must contain the entire `Calibrate` interval
@@ -214,10 +218,10 @@ This constraint means:
 defmodule AriaTimestrike.Temporal.Constraints do
   @type constraint :: {atom(), atom(), any()}
   @type relation_constraint :: {relation(), constraint()}
-  
+
   @spec parse_shorthand(String.t()) :: [relation_constraint()]
   def parse_shorthand(constraint_text)
-  
+
   @spec compile_constraints([relation_constraint()]) :: constraint_network()
   def compile_constraints(shorthand_constraints)
 end
