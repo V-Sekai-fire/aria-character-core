@@ -3,26 +3,52 @@
 
 defmodule AriaEngine.GameActionJob do
   @moduledoc """
-  Job worker for executing game actions in the temporal planner using Membrane.
+  Job worker for executing game actions in the temporal planner using Flow-based processing.
 
   This module handles the execution of scheduled game actions using the
-  Membrane pipeline system for high-performance processing.
+  AriaQueue.MembraneFlowElement system for high-performance processing with 
+  Membrane-style pads and filters.
   """
-
-  use Membrane.Filter
 
   alias AriaEngine.TemporalState
   alias AriaTimestrike.GameEngine
+  alias AriaQueue.MembraneFlowElement
 
   defstruct action_type: :move_to, game_state_id: nil
 
-  def_input_pad :input,
-    accepted_format: %Membrane.RemoteStream{type: :bytestream},
-    flow_control: :auto
+  @doc """
+  Start a game action processing element with Membrane-style pads.
+  """
+  def start_element(action_type, game_state_id, opts \\ []) do
+    element_name = :"game_action_#{action_type}_#{game_state_id}_#{System.unique_integer()}"
+    
+    element_opts = [
+      input_pads: [
+        %MembraneFlowElement.Pad{
+          name: :input, 
+          type: :input, 
+          flow_control: :pull, 
+          demand_size: 100,
+          accepted_format: :game_action
+        }
+      ],
+      output_pads: [
+        %MembraneFlowElement.Pad{
+          name: :output, 
+          type: :output, 
+          flow_control: :push,
+          accepted_format: :game_result
+        }
+      ],
+      filter_fn: &process_game_action/1,
+      backflow_enabled: true
+    ] ++ opts
 
-  def_output_pad :output,
-    accepted_format: %Membrane.RemoteStream{type: :bytestream},
-    flow_control: :auto
+    case MembraneFlowElement.start_element(element_name, element_opts) do
+      {:ok, pid} -> {:ok, pid, element_name}
+      error -> error
+    end
+  end
 
   @impl true
   def handle_init(_ctx, %__MODULE__{action_type: action_type, game_state_id: game_state_id}) do
@@ -39,7 +65,7 @@ defmodule AriaEngine.GameActionJob do
 
     case process_game_action(action_data) do
       {:ok, result} ->
-        output_buffer = %Membrane.Buffer{
+        output_buffer = %AriaQueue.MembraneFlowElement.Buffer{
           payload: :erlang.term_to_binary(result)
         }
 
