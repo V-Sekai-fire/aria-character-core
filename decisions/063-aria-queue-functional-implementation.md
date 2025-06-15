@@ -2,8 +2,9 @@
 
 ## Status
 
-Active (Started: June 15, 2025)  
-**Priority**: High - prerequisite for aria_engine and aria_timestrike
+Paused (Started: June 15, 2025, Paused: June 15, 2025)  
+**Priority**: High - prerequisite for aria_engine and aria_timestrike  
+**Paused Reason**: Prerequisite aria_flow functionality needs to be implemented first (ADR-064)
 
 ## Context
 
