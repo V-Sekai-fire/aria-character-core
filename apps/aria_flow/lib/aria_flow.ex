@@ -50,49 +50,49 @@ defmodule AriaFlow do
       )
   """
 
-  alias AriaFlow.{Backflow, Element}
+  alias AriaFlow.{FlowProcessor, Element}
 
   # Main API functions that delegate to the backflow processor
   
   @doc """
   Create a Flow-based processing pipeline.
   """
-  defdelegate create_pipeline(name, opts \\ []), to: Backflow
+  defdelegate create_pipeline(name, opts \\ []), to: FlowProcessor
   
   @doc """
   Process data with backflow (demand-driven) control.
   """
-  defdelegate process_with_backflow(pipeline_name, data, opts \\ []), to: Backflow
+  defdelegate process_with_backflow(pipeline_name, data, opts \\ []), to: FlowProcessor
   
   @doc """
   Process data with GPU-style hierarchical convergence.
   """
-  defdelegate process_with_convergence(pipeline_name, data, opts \\ []), to: Backflow
+  defdelegate process_with_convergence(pipeline_name, data, opts \\ []), to: FlowProcessor
   
   @doc """
   Create a Membrane-style element with pads.
   """
-  defdelegate create_element(name, element_type, opts \\ []), to: Backflow
+  defdelegate create_element(name, element_type, opts \\ []), to: FlowProcessor
   
   @doc """
   Link two element pads together.
   """
-  defdelegate link_elements(source_element, source_pad, sink_element, sink_pad), to: Backflow
+  defdelegate link_elements(source_element, source_pad, sink_element, sink_pad), to: FlowProcessor
   
   @doc """
   Send buffer to element's input pad.
   """
-  defdelegate send_buffer(element_name, pad_name, buffer), to: Backflow
+  defdelegate send_buffer(element_name, pad_name, buffer), to: FlowProcessor
   
   @doc """
   Handle demand from downstream element.
   """
-  defdelegate handle_demand(element_name, pad_name, demand_size), to: Backflow
+  defdelegate handle_demand(element_name, pad_name, demand_size), to: FlowProcessor
   
   @doc """
   Signal backpressure or demand to the pipeline.
   """
-  defdelegate signal_backflow(pipeline_name, signal_type, metadata \\ %{}), to: Backflow
+  defdelegate signal_backflow(pipeline_name, signal_type, metadata \\ %{}), to: FlowProcessor
   
   # Element-related API that delegates to Element module
   

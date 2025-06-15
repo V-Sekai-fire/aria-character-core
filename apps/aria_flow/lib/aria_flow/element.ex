@@ -48,6 +48,39 @@ defmodule AriaFlow.Element do
     end
   end
 
+  # Pad definition similar to Membrane's def_input_pad/def_output_pad
+  defmodule ElementPad do
+    @moduledoc """
+    Represents a Membrane-style pad with demand-driven flow control.
+    """
+    defstruct [
+      :name,
+      :type,           # :input or :output
+      :flow_control,   # :push or :pull
+      :demand,         # current demand size
+      :connected_to,   # {element_name, pad_name}
+      :buffer_queue,   # queue of pending buffers
+      :accepted_format,
+      :demand_size
+    ]
+  end
+
+  # Buffer structure for data flowing through pads
+  defmodule ElementBuffer do
+    @moduledoc """
+    Represents a buffer of data flowing through element pads.
+    """
+    defstruct [
+      :payload,        # The actual data
+      :metadata,       # Additional metadata
+      :pts,           # Presentation timestamp
+      :dts,           # Decode timestamp
+      :size,          # Buffer size
+      :stream_format, # Format of the stream
+      :pad_name       # Which pad this buffer belongs to
+    ]
+  end
+
   @doc """
   Start a Membrane-style Flow element with pads and filters.
   

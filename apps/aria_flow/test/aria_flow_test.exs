@@ -16,7 +16,7 @@ defmodule AriaFlowTest do
   use ExUnit.Case, async: false
 
   alias AriaFlow
-  alias AriaFlow.Backflow.{ElementPad, ElementBuffer}
+  alias AriaFlow.FlowProcessor.{ElementPad, ElementBuffer}
 
   describe "Pipeline Management" do
     test "create and manage processing pipeline" do
