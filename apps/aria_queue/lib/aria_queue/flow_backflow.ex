@@ -151,18 +151,7 @@ defmodule AriaQueue.FlowBackflow do
     }
   end
 
-  defp calculate_chunk_size(current_demand, data_length) do
-    # For small datasets, process everything in one chunk
-    if data_length <= 10 do
-      data_length
-    else
-      # For larger datasets, calculate reasonable chunk size
-      base_chunk = max(1, div(data_length, current_demand))
-      min(base_chunk, 100)  # Keep chunks reasonable
-    end
-  end
-
-  defp should_apply_backpressure?(state) do
+  def should_apply_backpressure?(state) do
     state.backpressure_count > state.max_demand * 0.8
   end
 
@@ -177,43 +166,6 @@ defmodule AriaQueue.FlowBackflow do
       demand_ratio = processed_count / state.max_demand
       Logger.debug("Demand signal: #{demand_ratio} (processed: #{processed_count})")
     end
-  end
-
-  defp update_processing_metrics(metrics, item) do
-    processing_time = Map.get(item, :processing_time_us, 1000)
-    
-    %{
-      total_items: Map.get(metrics, :total_items, 0) + 1,
-      total_processing_time: Map.get(metrics, :total_processing_time, 0) + processing_time,
-      backpressure_events: Map.get(metrics, :backpressure_events, 0) + if(Map.get(item, :backpressure_detected, false), do: 1, else: 0)
-    }
-  end
-
-  defp aggregate_results([]), do: %{results: [], metrics: %{}}
-  defp aggregate_results(flow_results) do
-    # Handle different formats that might come from Flow.reduce
-    normalized_results = Enum.map(flow_results, fn
-      %{results: results, metrics: metrics} -> %{results: results, metrics: metrics}
-      {:metrics, metrics} -> %{results: [], metrics: metrics}
-      other -> %{results: [other], metrics: %{}}
-    end)
-    
-    all_results = Enum.flat_map(normalized_results, & &1.results)
-    
-    combined_metrics = Enum.reduce(normalized_results, %{}, fn flow_result, acc ->
-      metrics = flow_result.metrics
-      %{
-        total_items: Map.get(acc, :total_items, 0) + Map.get(metrics, :total_items, 0),
-        total_processing_time: Map.get(acc, :total_processing_time, 0) + Map.get(metrics, :total_processing_time, 0),
-        backpressure_events: Map.get(acc, :backpressure_events, 0) + Map.get(metrics, :backpressure_events, 0)
-      }
-    end)
-    
-    %{
-      results: Enum.reverse(all_results),
-      metrics: combined_metrics,
-      processed_count: length(all_results)
-    }
   end
 
   defp handle_backflow_signal(:backpressure, _metadata, state) do
