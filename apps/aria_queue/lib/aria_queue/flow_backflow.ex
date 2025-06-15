@@ -664,13 +664,36 @@ defmodule AriaQueue.FlowBackflow do
   defp process_buffer_through_pad(element, pad_name, buffer) do
     case Map.get(element.pads, pad_name) do
       %ElementPad{type: :input} = pad ->
-        # Process input buffer through element
-        case element.process_fn.(buffer, element.state) do
-          {:ok, output_buffer, new_state} ->
-            new_element = %{element | state: new_state}
-            {:ok, [{:output, output_buffer, new_element}]}
-          {:error, reason} ->
-            {:error, reason}
+        # Check flow control and demand before processing
+        demand = pad.demand || 0
+        case {pad.flow_control, demand} do
+          {:pull, demand} when demand > 0 ->
+            # Process input buffer through element
+            case element.process_fn.(buffer, element.state) do
+              {:ok, output_buffer, new_state} ->
+                new_element = %{element | state: new_state}
+                # Update pad demand
+                updated_pad = %{pad | demand: max(0, demand - 1)}
+                updated_element = put_in(new_element.pads[pad_name], updated_pad)
+                {:ok, [{:output, output_buffer, updated_element}]}
+              {:error, reason} ->
+                {:error, reason}
+            end
+          {:pull, _} ->
+            # No demand, buffer the input
+            buffer_queue = pad.buffer_queue || []
+            buffered_pad = %{pad | buffer_queue: [buffer | buffer_queue]}
+            updated_element = put_in(element.pads[pad_name], buffered_pad)
+            {:ok, [{:buffered, nil, updated_element}]}
+          {:push, _} ->
+            # Push mode, process immediately
+            case element.process_fn.(buffer, element.state) do
+              {:ok, output_buffer, new_state} ->
+                new_element = %{element | state: new_state}
+                {:ok, [{:output, output_buffer, new_element}]}
+              {:error, reason} ->
+                {:error, reason}
+            end
         end
       %ElementPad{type: :output} ->
         # Output pad doesn't process, just forwards
