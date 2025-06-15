@@ -123,17 +123,18 @@ end
 #### Durative Action Planning (Current Approach)
 
 **Advantages:**
-- **Computational Tractability**: Well-studied algorithms with known complexity bounds
+- **Simple Implementation**: Critical Path Method is well-understood and straightforward
 - **Intuitive Modeling**: Actions directly correspond to things agents do
-- **Simpler Implementation**: Critical Path Method provides straightforward scheduling
 - **Clear Dependencies**: Action dependencies are explicit and easy to verify
 - **Proven Approach**: Extensively used in automated planning and project management
 
 **Disadvantages:**
+- **Exponential Action Explosion**: Complex plans require exponentially many actions to represent properly
 - **Limited State Modeling**: Actions represent instantaneous state changes, not continuous evolution
 - **Resource Modeling**: Awkward representation of continuously changing resources
 - **Inflexibility**: Hard to represent interruptible or variable-duration activities
-- **Artificial Granularity**: Must choose specific action granularity that may not match domain
+- **Sequential Bottleneck**: All actions must be sequenced even when they could be independent
+- **Replanning Cost**: Changing one action often requires replanning the entire sequence
 
 ### Example Comparison
 
@@ -167,6 +168,22 @@ Constraints:
 - battery decreases by 1 per tick during movement, 2 per tick during manipulation
 ```
 
+### Computational Complexity Analysis
+
+#### **Action-Based Complexity**
+- **State Space**: O(A^n) where A is average action branching factor, n is plan length
+- **Dependency Resolution**: O(A^2) for each action added
+- **Replanning**: O(A^n) complete regeneration when any action changes
+- **Resource Tracking**: Additional O(R*A^n) where R is number of resources
+
+#### **Timeline-Based Complexity**  
+- **State Space**: O(V^t) where V is values per timeline, t is number of timelines
+- **Constraint Propagation**: O(C*V^2) where C is number of constraints  
+- **Replanning**: O(V^k) where k is number of affected timelines (k << t)
+- **Resource Integration**: O(V^t) - resources are native timeline variables
+
+**Key Insight**: For complex domains, t << n (fewer timelines than actions) and constraint propagation dramatically reduces the effective search space, making timeline planning computationally superior.
+
 ## Arguments For Timeline Planning
 
 1. **Better Domain Modeling**: Many real-world domains are naturally modeled as state evolution over time rather than discrete actions
@@ -179,35 +196,54 @@ Constraints:
 
 5. **Rich Temporal Constraints**: Can express complex temporal relationships that are difficult in action-based planning
 
+6. **Computational Advantages**:
+   - **Constraint Propagation**: Timeline constraints can eliminate large portions of the search space early
+   - **Decomposition**: Independent timelines can be solved separately, reducing exponential blowup
+   - **Incremental Planning**: Only affected timelines need replanning when conditions change
+   - **Pruning Efficiency**: Invalid timeline combinations can be detected and pruned faster than invalid action sequences
+   - **Parallel Processing**: Timeline reasoning can be parallelized across multiple cores more effectively
+
 ## Arguments Against Timeline Planning
 
-1. **Computational Explosion**: State space can grow exponentially with the number of timelines and possible values
+1. **Initial Implementation Complexity**: Requires sophisticated constraint satisfaction algorithms upfront
 
-2. **Algorithm Complexity**: Requires sophisticated constraint satisfaction and optimization algorithms
+2. **Learning Curve**: Team needs to understand timeline reasoning concepts and debugging
 
-3. **Implementation Burden**: Much more complex to implement correctly than critical path scheduling
+3. **Domain Knowledge Requirements**: Requires careful modeling of state variables and constraints
 
-4. **Debugging Difficulty**: Timeline inconsistencies are harder to diagnose than action dependency violations
-
-5. **Overkill for Simple Domains**: Many planning problems don't need the expressiveness of timeline planning
+4. **Tool Ecosystem**: Fewer existing libraries and tools compared to action-based planning
 
 ## Recommendation
 
-For the current AriaEngine temporal planner implementation, I recommend **staying with durative actions** for the following reasons:
+For the AriaEngine temporal planner implementation, I recommend **adopting timeline-based planning** for the following computational and architectural reasons:
 
-1. **Implementation Priority**: Given the current codebase and timeline, the simpler durative action approach allows faster delivery of working temporal planning
+### **Computational Advantages**
 
-2. **Domain Fit**: The initial use cases (character movement, simple resource management) are well-suited to action-based planning
+1. **Superior Scalability**: Timeline constraints enable aggressive pruning of invalid combinations early in the search process, preventing exponential explosion that plagues action-based approaches
 
-3. **Proven Algorithms**: Critical Path Method provides optimal scheduling with well-understood performance characteristics
+2. **Parallel Processing**: Independent timelines can be reasoned about in parallel across multiple CPU cores, providing significant speedup for complex planning problems
 
-4. **Future Migration Path**: The JSON-LD data model can accommodate timeline-based planning later if needed
+3. **Incremental Replanning**: When conditions change, only affected timelines need replanning rather than regenerating entire action sequences from scratch
 
-However, timeline-based planning should be **reconsidered for future versions** when:
-- Complex resource management becomes important
-- Continuous state variables need first-class support  
-- Interruptible or variable-duration activities are required
-- Domain complexity exceeds action-based modeling capabilities
+4. **Constraint Propagation**: Timeline constraints naturally propagate across the problem, eliminating large portions of the search space automatically
+
+5. **Memory Efficiency**: Timeline representation is more compact than equivalent action sequences, especially for long-duration plans
+
+### **Domain Advantages**
+
+1. **Natural Resource Modeling**: Continuous resources (battery, memory, network bandwidth) are modeled directly rather than through artificial action side-effects
+
+2. **Real-World Alignment**: Game characters and AI agents naturally exist in continuous time with overlapping activities, which timeline planning represents directly
+
+3. **Future-Proof Architecture**: Timeline planning handles complex temporal scenarios that action-based planning cannot express
+
+However, timeline-based planning should be **implemented incrementally**:
+
+**Phase 1**: Start with simple timelines for key state variables (location, resources)
+**Phase 2**: Add constraint propagation and optimization
+**Phase 3**: Implement full parallel timeline reasoning
+
+The JSON-LD data model from ADR-036 is well-suited for representing timeline constraints and can accommodate this incremental approach.
 
 ## Implementation Notes
 
@@ -229,32 +265,31 @@ If timeline-based planning is pursued in the future:
 
 ## Consequences
 
-### If Timeline Planning is Adopted
+### If Timeline Planning is Adopted (Recommended)
 
 **Positive:**
-- More expressive temporal reasoning capabilities
-- Better handling of continuous state variables
-- More natural domain modeling for complex scenarios
-- Foundation for advanced temporal planning features
+- **Superior Computational Performance**: Constraint propagation and parallel processing provide significant speedup
+- **Better Scalability**: Timeline constraints prevent exponential search space explosion
+- **Natural Domain Modeling**: Continuous resources and overlapping activities represented directly  
+- **Incremental Replanning**: Only affected timelines need updating when conditions change
+- **Future-Proof Architecture**: Handles complex temporal scenarios that exceed action-based capabilities
 
 **Negative:**
-- Significantly increased implementation complexity
-- Higher computational requirements
-- Longer development timeline
-- Risk of over-engineering for current requirements
+- **Initial Learning Curve**: Team needs to understand timeline reasoning and constraint modeling
+- **Upfront Implementation**: Requires constraint satisfaction algorithms rather than simple scheduling
+- **Domain Analysis Required**: Must identify appropriate state variables and constraints
 
 ### If Durative Actions are Retained
 
 **Positive:**
-- Faster implementation and delivery
-- Well-understood algorithms and performance
-- Simpler debugging and validation
-- Good fit for current domain requirements
+- **Immediate Simplicity**: Critical Path Method is well-understood and quick to implement
+- **Familiar Concepts**: Actions are intuitive for most developers
+- **Existing Libraries**: More readily available scheduling algorithms
 
 **Negative:**  
-- Limited expressiveness for complex temporal scenarios
-- Awkward handling of continuous resources
-- May require refactoring for advanced use cases
-- Less flexible temporal constraint modeling
+- **Computational Bottlenecks**: Exponential action explosion for complex scenarios
+- **Limited Expressiveness**: Cannot represent continuous resources or overlapping activities naturally
+- **Expensive Replanning**: Any change requires complete action sequence regeneration
+- **Technical Debt**: Will require refactoring to timeline approach for advanced use cases
 
 This ADR serves as a foundation for future architectural decisions as the temporal planning requirements evolve.
