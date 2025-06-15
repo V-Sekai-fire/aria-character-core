@@ -14,31 +14,31 @@ defmodule AriaEngine.Test.FlowTestHelpers do
     Flow-based backflow testing that replaces Membrane functionality.
     
     Implements the same backflow optimization concepts but using our
-    centralized Flow processor in AriaQueue.
+    centralized Flow processor in AriaFlow.
     """
 
     def create_backflow_pipeline(name, opts \\ []) do
-      AriaQueue.FlowBackflow.create_pipeline(name, opts)
+      AriaFlow.create_pipeline(name, opts)
     end
 
     def create_element(name, element_type, opts \\ []) do
-      AriaQueue.FlowBackflow.create_element(name, element_type, opts)
+      AriaFlow.create_element(name, element_type, opts)
     end
 
     def start_element(name, opts \\ []) do
-      AriaQueue.FlowBackflow.start_element(name, opts)
+      AriaFlow.start_element(name, opts)
     end
 
     def link_elements(source_element, source_pad, sink_element, sink_pad) do
-      AriaQueue.FlowBackflow.link_elements(source_element, source_pad, sink_element, sink_pad)
+      AriaFlow.link_elements(source_element, source_pad, sink_element, sink_pad)
     end
 
     def send_buffer(element_name, pad_name, buffer) do
-      AriaQueue.FlowBackflow.send_buffer(element_name, pad_name, buffer)
+      AriaFlow.send_buffer(element_name, pad_name, buffer)
     end
 
     def process_with_backflow_optimization(pipeline_name, actions, processing_opts \\ []) do
-      # This is a helper function that combines multiple AriaQueue.FlowBackflow calls
+      # This is a helper function that combines multiple AriaFlow calls
       with {:ok, pipeline} <- create_backflow_pipeline(pipeline_name, processing_opts),
            {:ok, _source} <- create_element("#{pipeline_name}_source", :source, [data: actions]),
            {:ok, _processor} <- create_element("#{pipeline_name}_processor", :filter, processing_opts),

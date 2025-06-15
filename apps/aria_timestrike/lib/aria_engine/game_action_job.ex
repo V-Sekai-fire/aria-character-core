@@ -6,13 +6,13 @@ defmodule AriaEngine.GameActionJob do
   Job worker for executing game actions in the temporal planner using Flow-based processing.
 
   This module handles the execution of scheduled game actions using the
-  AriaQueue.MembraneFlowElement system for high-performance processing with 
+  AriaFlow.Element system for high-performance processing with 
   Membrane-style pads and filters.
   """
 
   alias AriaEngine.TemporalState
   alias AriaTimestrike.GameEngine
-  alias AriaQueue.MembraneFlowElement
+  alias AriaFlow.Element
 
   defstruct action_type: :move_to, game_state_id: nil
 
@@ -65,7 +65,7 @@ defmodule AriaEngine.GameActionJob do
 
     case process_game_action(action_data) do
       {:ok, result} ->
-        output_buffer = %AriaQueue.MembraneFlowElement.Buffer{
+        output_buffer = %AriaFlow.Element.Buffer{
           payload: :erlang.term_to_binary(result)
         }
 

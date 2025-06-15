@@ -5,17 +5,17 @@ defmodule AriaEngine.FlowWorkflow do
   @moduledoc """
   Flow-based parallel processing adapter for AriaEngine.
   
-  This module provides a compatibility layer that delegates to AriaQueue.FlowProcessor
+  This module provides a compatibility layer that delegates to AriaFlow
   to prevent scheduling oversubscription and provide system-wide coordination.
   
-  All Flow operations are routed through the centralized processor in aria_queue
+  All Flow operations are routed through the centralized processor in aria_flow
   which implements GPU convergence principles.
   """
 
   @doc """
   Process actions in parallel using centralized Flow processor.
   
-  Delegates to AriaQueue.FlowProcessor to prevent scheduling oversubscription.
+  Delegates to AriaFlow to prevent scheduling oversubscription.
   """
   def parallel_action_processing(actions, core_count \\ System.schedulers_online()) do
     result = AriaQueue.FlowProcessor.process_actions(actions, max_cores: core_count)
@@ -83,7 +83,7 @@ defmodule AriaEngine.FlowWorkflow do
     pipeline_name = :"backflow_test_#{worker_count}_#{System.unique_integer()}"
     
     # Create backflow pipeline with GPU convergence characteristics
-    {:ok, _pid} = AriaQueue.FlowBackflow.create_pipeline(pipeline_name, [
+    {:ok, _pid} = AriaFlow.create_pipeline(pipeline_name, [
       stages: worker_count,
       backflow_enabled: true,
       max_demand: action_count * 2,  # Higher demand for convergence
@@ -95,7 +95,7 @@ defmodule AriaEngine.FlowWorkflow do
     start_time = System.monotonic_time(:microsecond)
     
     # Process with backflow and work stealing
-    result = AriaQueue.FlowBackflow.process_with_backflow(pipeline_name, actions, [
+    result = AriaFlow.process_with_backflow(pipeline_name, actions, [
       source_fn: &process_gpu_source/1,
       filter_fn: &process_gpu_filter/1,
       sink_fn: &process_gpu_sink/1
@@ -125,7 +125,7 @@ defmodule AriaEngine.FlowWorkflow do
     pipeline_name = :"backflow_#{System.unique_integer()}"
     
     # Create the backflow pipeline
-    {:ok, _pid} = AriaQueue.FlowBackflow.create_pipeline(pipeline_name, [
+    {:ok, _pid} = AriaFlow.create_pipeline(pipeline_name, [
       stages: core_count,
       backflow_enabled: true,
       max_demand: length(actions) * 2,
@@ -133,7 +133,7 @@ defmodule AriaEngine.FlowWorkflow do
     ])
     
     # Process with custom functions that match game logic
-    result = AriaQueue.FlowBackflow.process_with_backflow(pipeline_name, actions, [
+    result = AriaFlow.process_with_backflow(pipeline_name, actions, [
       source_fn: &process_source/1,
       filter_fn: &process_filter/1,
       sink_fn: &process_sink/1
@@ -153,7 +153,7 @@ defmodule AriaEngine.FlowWorkflow do
     # Create a convergence pipeline
     pipeline_name = :"convergence_#{System.unique_integer()}"
     
-    {:ok, _pid} = AriaQueue.FlowBackflow.create_pipeline(pipeline_name, [
+    {:ok, _pid} = AriaFlow.create_pipeline(pipeline_name, [
       stages: core_count,
       backflow_enabled: true,
       max_demand: length(actions) * 2,
@@ -161,7 +161,7 @@ defmodule AriaEngine.FlowWorkflow do
     ])
     
     # Process with convergence
-    result = AriaQueue.FlowBackflow.process_with_convergence(pipeline_name, actions, [
+    result = AriaFlow.process_with_convergence(pipeline_name, actions, [
       source_fn: &convergence_source/1,
       filter_fn: &convergence_filter/1,
       sink_fn: &convergence_sink/1,
