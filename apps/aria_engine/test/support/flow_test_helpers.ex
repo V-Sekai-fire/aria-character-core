@@ -21,24 +21,36 @@ defmodule AriaEngine.Test.FlowTestHelpers do
       AriaQueue.FlowBackflow.create_pipeline(name, opts)
     end
 
-    def add_source(pipeline, source_spec) do
-      AriaQueue.FlowBackflow.add_source(pipeline, source_spec)
+    def create_element(name, element_type, opts \\ []) do
+      AriaQueue.FlowBackflow.create_element(name, element_type, opts)
     end
 
-    def add_filter(pipeline, filter_spec) do
-      AriaQueue.FlowBackflow.add_filter(pipeline, filter_spec)
+    def start_element(name, opts \\ []) do
+      AriaQueue.FlowBackflow.start_element(name, opts)
     end
 
-    def add_sink(pipeline, sink_spec) do
-      AriaQueue.FlowBackflow.add_sink(pipeline, sink_spec)
+    def link_elements(source_element, source_pad, sink_element, sink_pad) do
+      AriaQueue.FlowBackflow.link_elements(source_element, source_pad, sink_element, sink_pad)
     end
 
-    def start_pipeline(pipeline) do
-      AriaQueue.FlowBackflow.start_pipeline(pipeline)
+    def send_buffer(element_name, pad_name, buffer) do
+      AriaQueue.FlowBackflow.send_buffer(element_name, pad_name, buffer)
     end
 
-    def get_results(pipeline, timeout \\ 5000) do
-      AriaQueue.FlowBackflow.collect_results(pipeline, timeout)
+    def process_with_backflow_optimization(pipeline_name, actions, processing_opts \\ []) do
+      # This is a helper function that combines multiple AriaQueue.FlowBackflow calls
+      with {:ok, pipeline} <- create_backflow_pipeline(pipeline_name, processing_opts),
+           {:ok, _source} <- create_element("#{pipeline_name}_source", :source, [data: actions]),
+           {:ok, _processor} <- create_element("#{pipeline_name}_processor", :filter, processing_opts),
+           {:ok, _sink} <- create_element("#{pipeline_name}_sink", :sink, []),
+           :ok <- link_elements("#{pipeline_name}_source", :output, "#{pipeline_name}_processor", :input),
+           :ok <- link_elements("#{pipeline_name}_processor", :output, "#{pipeline_name}_sink", :input) do
+        # Start processing
+        start_element("#{pipeline_name}_source")
+        {:ok, pipeline}
+      else
+        error -> error
+      end
     end
   end
 
