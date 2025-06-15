@@ -1,6 +1,6 @@
 # ADR-067: Timestrike Lottie Frame Rendering Phoenix Server
 
-**Status:** Proposed
+**Status:** Rejected
 
 **Date:** June 15, 2025
 
