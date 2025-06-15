@@ -49,6 +49,10 @@ defmodule AriaFlow do
         }]
       )
   """
+  
+  # Implement the behaviour defined in aria_flow
+  @behaviour AriaFlow.Behaviour
+  """
 
   alias AriaFlow.{FlowProcessor, Element}
 

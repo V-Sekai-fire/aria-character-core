@@ -14,27 +14,29 @@ defmodule AriaEngine.Test.FlowTestHelpers do
     Flow-based backflow testing that replaces Membrane functionality.
     
     Implements the same backflow optimization concepts but using our
-    centralized Flow processor in AriaFlow.
+    centralized Flow processor through the FlowBehaviour interface.
     """
 
+    defp flow_impl, do: AriaEngine.FlowConfig.flow_impl()
+
     def create_backflow_pipeline(name, opts \\ []) do
-      AriaFlow.create_pipeline(name, opts)
+      flow_impl().create_pipeline(name, opts)
     end
 
     def create_element(name, element_type, opts \\ []) do
-      AriaFlow.create_element(name, element_type, opts)
+      flow_impl().create_element(name, element_type, opts)
     end
 
     def start_element(name, opts \\ []) do
-      AriaFlow.start_element(name, opts)
+      flow_impl().start_element(name, opts)
     end
 
     def link_elements(source_element, source_pad, sink_element, sink_pad) do
-      AriaFlow.link_elements(source_element, source_pad, sink_element, sink_pad)
+      flow_impl().link_elements(source_element, source_pad, sink_element, sink_pad)
     end
 
     def send_buffer(element_name, pad_name, buffer) do
-      AriaFlow.send_buffer(element_name, pad_name, buffer)
+      flow_impl().send_buffer(element_name, pad_name, buffer)
     end
 
     def process_with_backflow_optimization(pipeline_name, actions, processing_opts \\ []) do

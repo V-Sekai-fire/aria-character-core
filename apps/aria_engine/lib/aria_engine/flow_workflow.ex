@@ -5,21 +5,12 @@ defmodule AriaEngine.FlowWorkflow do
   @moduledoc """
   Flow-based parallel processing adapter for AriaEngine.
   
-  This module provides a compatibility layer that delegates to AriaFlow
-  to prevent scheduling oversubscription and provide system-wide coordination.
-  
-  All Flow operations are routed through the centralized p  # Helper function to process individual actions
-  defp process_action_with_backflow(action) do
-    # Process action and simulate backflow behavior
-    processed_result = process_action(action)
-    
-    # Return processed action with backflow optimization flag
-    action
-    |> Map.put(:processed, processed_result)
-    |> Map.put(:backflow_optimized, true)
-  endor in aria_flow
-  which implements GPU convergence principles.
+  This module provides a compatibility layer that uses a configurable flow 
+  implementation to provide flow processing. It uses the behaviour-based interface
+  to allow switching between different implementations (real AriaFlow or MockFlow).
   """
+
+  alias AriaEngine.FlowConfig
 
   @doc """
   Process actions in parallel using Flow directly (common case).
@@ -87,7 +78,8 @@ defmodule AriaEngine.FlowWorkflow do
     pipeline_name = :"backflow_test_#{worker_count}_#{System.unique_integer()}"
     
     # Create backflow pipeline with GPU convergence characteristics
-    {:ok, _pid} = AriaFlow.create_pipeline(pipeline_name, [
+    flow_impl = FlowConfig.flow_impl()
+    {:ok, _pid} = flow_impl.create_pipeline(pipeline_name, [
       stages: worker_count,
       backflow_enabled: true,
       max_demand: action_count * 2,  # Higher demand for convergence
@@ -99,7 +91,7 @@ defmodule AriaEngine.FlowWorkflow do
     start_time = System.monotonic_time(:microsecond)
     
     # Process with backflow and work stealing
-    result = AriaFlow.process_with_backflow(pipeline_name, actions, [
+    result = flow_impl.process_with_backflow(pipeline_name, actions, [
       source_fn: &process_gpu_source/1,
       filter_fn: &process_gpu_filter/1,
       sink_fn: &process_gpu_sink/1
@@ -160,10 +152,13 @@ defmodule AriaEngine.FlowWorkflow do
   hierarchically, similar to GPU warp reduction patterns.
   """
   def process_actions_with_convergence(actions, core_count \\ System.schedulers_online()) do
+    # Get the configured flow implementation
+    flow_impl = AriaEngine.FlowConfig.flow_impl()
+    
     # Create a convergence pipeline
     pipeline_name = :"convergence_#{System.unique_integer()}"
     
-    {:ok, _pid} = AriaFlow.create_pipeline(pipeline_name, [
+    {:ok, _pid} = flow_impl.create_pipeline(pipeline_name, [
       stages: core_count,
       backflow_enabled: true,
       max_demand: length(actions) * 2,
@@ -171,7 +166,7 @@ defmodule AriaEngine.FlowWorkflow do
     ])
     
     # Process with convergence
-    result = AriaFlow.process_with_convergence(pipeline_name, actions, [
+    result = flow_impl.process_with_convergence(pipeline_name, actions, [
       source_fn: &convergence_source/1,
       filter_fn: &convergence_filter/1,
       sink_fn: &convergence_sink/1,
