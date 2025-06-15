@@ -20,12 +20,20 @@ ADR-034 established the temporal planner architecture requirements, and this ADR
 
 ## Canonical Temporal Backtracking Problem: Maya's Adaptive Scorch Coordination
 
+### Time System
+
+**All temporal values use integer time ticks** to ensure deterministic behavior and avoid floating-point precision issues in temporal reasoning. This canonical problem operates on a discrete time system where:
+- 1 tick = 1 unit of game time
+- Movement speeds are in units/tick
+- Durations are in ticks
+- All temporal constraints use integer values
+
 ### Problem Setup
 
 - **High-Level Goal**: `eliminate_soldier_patrol` (requires Goal-Task-Network decomposition)
 - **Primary Agent**: Maya {3,5,0} with Scorch ability, limited vision range (8 units)
-- **Supporting Agent**: Alex {4,4,0} with scouting capability and movement speed 4.0 units/second
-- **Target**: Soldier2 on patrol route {15,5,0} → {12,5,0} → {15,5,0} at 3.0 units/second
+- **Supporting Agent**: Alex {4,4,0} with scouting capability and movement speed 4 units/tick
+- **Target**: Soldier2 on patrol route {15,5,0} → {12,5,0} → {15,5,0} at 3 units/tick
 - **Constraint**: Must eliminate Soldier2 before he reaches safety bunker at {10,5,0}
 - **Imperfect Information**: Maya cannot see Soldier2's exact position without Alex's reconnaissance
 - **Dynamic Elements**: Archer1 at {18,3,0} occasionally blocks line of sight, creating opportunity windows
@@ -42,22 +50,22 @@ ADR-034 established the temporal planner architecture requirements, and this ADR
 ### Initial State Specification
 
 ```elixir
-initial_state = TemporalState.new(0.0)
-|> TemporalState.set_temporal_object("position", "maya", {3, 5, 0}, 0.0)
-|> TemporalState.set_temporal_object("vision_range", "maya", 8.0, 0.0)
-|> TemporalState.set_temporal_object("position", "alex", {4, 4, 0}, 0.0)
-|> TemporalState.set_temporal_object("speed", "alex", 4.0, 0.0)
-|> TemporalState.set_temporal_object("position", "soldier2", {15, 5, 0}, 0.0)
-|> TemporalState.set_temporal_object("patrol_route", "soldier2", [{15,5,0}, {12,5,0}], 0.0)
-|> TemporalState.set_temporal_object("patrol_speed", "soldier2", 3.0, 0.0)
-|> TemporalState.set_temporal_object("waypoint_pause_duration", "soldier2", 1.0, 0.0)
-|> TemporalState.set_temporal_object("safety_bunker", "mission", {10, 5, 0}, 0.0)
-|> TemporalState.set_temporal_object("position", "archer1", {18, 3, 0}, 0.0)
-|> TemporalState.set_temporal_object("hp", "soldier2", 70, 0.0)
+initial_state = TemporalState.new(0)
+|> TemporalState.set_temporal_object("position", "maya", {3, 5, 0}, 0)
+|> TemporalState.set_temporal_object("vision_range", "maya", 8, 0)
+|> TemporalState.set_temporal_object("position", "alex", {4, 4, 0}, 0)
+|> TemporalState.set_temporal_object("speed", "alex", 4, 0)
+|> TemporalState.set_temporal_object("position", "soldier2", {15, 5, 0}, 0)
+|> TemporalState.set_temporal_object("patrol_route", "soldier2", [{15,5,0}, {12,5,0}], 0)
+|> TemporalState.set_temporal_object("patrol_speed", "soldier2", 3, 0)
+|> TemporalState.set_temporal_object("waypoint_pause_duration", "soldier2", 10, 0)
+|> TemporalState.set_temporal_object("safety_bunker", "mission", {10, 5, 0}, 0)
+|> TemporalState.set_temporal_object("position", "archer1", {18, 3, 0}, 0)
+|> TemporalState.set_temporal_object("hp", "soldier2", 70, 0)
 
-goal = %{type: :eliminate_soldier_patrol, target: "soldier2", deadline: 20.0}
+goal = %{type: :eliminate_soldier_patrol, target: "soldier2", deadline: 200}
 temporal_constraints = [
-  %{type: :deadline, max_time: 20.0},
+  %{type: :deadline, max_time: 200},
   %{type: :vision_limit, agent: "maya", range: 8.0},
   %{type: :patrol_behavior, entity: "soldier2", waypoint_pause: 1.0},
   %{type: :dynamic_opportunities, blocking_entity: "archer1"}
@@ -79,15 +87,15 @@ temporal_constraints = [
 
 2. **Temporal Prediction Conflict**: 
    - Alex scouts and reveals Soldier2's patrol pattern with waypoint pauses
-   - Historical state queries show Soldier2 pauses at {12,5,0} for 1.0s every cycle
+   - Historical state queries show Soldier2 pauses at {12,5,0} for 10 ticks every cycle
    - Initial timing prediction fails to account for patrol complexity
 
 3. **Dynamic Opportunity Conflict**: 
-   - Archer1 moves and blocks line of sight at t=5.0s, creating opportunity window
+   - Archer1 moves and blocks line of sight at tick 50, creating opportunity window
    - Original plan timing conflicts with newly discovered tactical advantage
 
 4. **Cascading Timeline Conflict**: 
-   - Alex's scouting mission delays Maya's positioning by 3.0s
+   - Alex's scouting mission delays Maya's positioning by 30 ticks
    - Maya's delayed timing conflicts with Soldier2's safety bunker approach
    - Entire coordination sequence requires replanning
 
@@ -98,23 +106,23 @@ The temporal planner must demonstrate progressive backtracking through multiple 
 #### Phase 1: Information Gathering Backtracking
 **Initial Failure**: Maya cannot target unseen enemy
 **Backtrack Decision**: Deploy Alex for reconnaissance mission
-- Alex scouts to {14,5,0} to observe patrol pattern (2.5s travel time)
+- Alex scouts to {14,5,0} to observe patrol pattern (25 tick travel time)
 - Historical state reconstruction: Query Soldier2's last 3 positions
 - Pattern analysis: Discover waypoint pause behavior at {12,5,0}
-- **New timeline**: Reconnaissance complete at t=2.5s, pattern known at t=3.0s
+- **New timeline**: Reconnaissance complete at tick 25, pattern known at tick 30
 
 #### Phase 2: Temporal Coordination Backtracking  
 **Secondary Failure**: Simple coordination timing conflicts with patrol complexity
 **Backtrack Decision**: Exploit waypoint pause windows
 - Maya positions at {11,5,0} to catch Soldier2 during pause at {12,5,0}
 - Alex coordinates arrival to support attack during pause window
-- **Timing window**: Soldier2 pauses at t=4.0s for 1.0s duration
+- **Timing window**: Soldier2 pauses at tick 40 for 10 tick duration
 - **Verification**: `scorch_cast_time == pause_window_start && pause_duration >= cast_time`
 
 #### Phase 3: Opportunity Window Backtracking
 **Tertiary Failure**: Archer1 creates line-of-sight obstruction at critical moment
 **Backtrack Decision**: Exploit archer's movement for tactical advantage
-- Archer1 blocks view at t=5.0s, preventing enemy awareness of approach
+- Archer1 blocks view at tick 50, preventing enemy awareness of approach
 - Maya uses concealment window to reposition for optimal angle
 - Alex coordinates with concealment timing for surprise coordination
 - **Dynamic adaptation**: `archer_block_time == maya_reposition_start`
@@ -136,7 +144,7 @@ The temporal planner must demonstrate progressive backtracking through multiple 
 
 #### 2. Multi-Agent Coordination Verification  
 - Information sharing between agents: `alex_scout_data_shared_with_maya == true`
-- Synchronized timing across agent actions: `coordination_window_overlap >= 0.5s`
+- Synchronized timing across agent actions: `coordination_window_overlap >= 5`
 - No temporal conflicts in coordinated sequence: `agent_action_conflicts == 0`
 
 #### 3. Historical State Reconstruction Verification
@@ -170,7 +178,7 @@ The temporal planner must demonstrate progressive backtracking through multiple 
 # Goal-Task-Network Planning
 {:ok, task_network} = GameEngine.decompose_goal(
   initial_state,
-  %{type: :eliminate_soldier_patrol, target: "soldier2", deadline: 20.0}
+  %{type: :eliminate_soldier_patrol, target: "soldier2", deadline: 200}
 )
 
 # Multi-phase planning with backtracking
@@ -185,7 +193,7 @@ assert metadata.goal_decomposition_depth >= 2
 assert metadata.backtrack_phases >= 3
 assert metadata.historical_queries_count >= 2
 assert metadata.opportunity_windows_detected >= 1
-assert metadata.planning_time <= 10.0  # milliseconds
+assert metadata.planning_time <= 10.0  # milliseconds (real-world performance)
 assert plan.goal_achieved == true
 assert plan.temporal_conflicts_resolved == true
 ```
