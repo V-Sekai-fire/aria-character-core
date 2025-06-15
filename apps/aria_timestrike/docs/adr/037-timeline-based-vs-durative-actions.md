@@ -13,11 +13,13 @@ Proposed
 The current temporal planning architecture (ADR-035, ADR-036) uses durative actions with explicit start/end times and dependencies. This ADR explores an alternative approach using timeline-based planning, where instead of modeling individual actions with durations, we model multiple parallel timelines that represent different aspects of the system state over time.
 
 In traditional durative action planning, we have:
+
 - Actions with explicit duration (e.g., "move from A to B takes 5 ticks")
 - Dependencies between actions (e.g., "action B cannot start until action A finishes")
 - Resource constraints and scheduling
 
 In timeline-based planning, we have:
+
 - State variables that change over time on parallel timelines
 - Timeline constraints that define valid state transitions
 - Synchronization points between timelines
@@ -32,14 +34,17 @@ We propose to evaluate timeline-based temporal planning as an alternative to dur
 #### Core Concepts
 
 1. **Timeline**: A sequence of state values over time for a specific state variable
+
    - Example: `robot_location` timeline: [A(0-10), B(10-15), C(15-25)]
    - Example: `battery_level` timeline: [100(0-8), 75(8-16), 50(16-24)]
 
 2. **State Variable**: A domain-specific attribute that changes over time
+
    - Discrete: `robot_location`, `gripper_state`, `door_status`
    - Continuous: `battery_level`, `fuel_amount`, `temperature`
 
 3. **Timeline Constraint**: Rules governing valid state transitions
+
    - Duration constraints: "robot must stay at location for minimum 2 ticks"
    - Transition constraints: "battery can only decrease or stay same"
    - Synchronization: "gripper can only be 'open' when robot is at 'pickup_location'"
@@ -56,7 +61,7 @@ defmodule AriaEngine.TimelinePlanner do
   Timeline-based temporal planner using parallel state variable timelines
   instead of durative actions with dependencies.
   """
-  
+
   defstruct [
     :timelines,      # %{state_variable => [intervals]}
     :constraints,    # Timeline constraint rules
@@ -86,13 +91,16 @@ end
 #### Planning Process
 
 1. **Goal Decomposition**: Convert high-level goals into required timeline end states
+
    - Goal: "Robot at C with object" → timelines must end with `robot_location=C` and `carried_object=target`
 
 2. **Timeline Generation**: For each state variable, generate possible timeline sequences
+
    - Use domain knowledge to enumerate valid state transitions
    - Apply duration constraints to determine minimum/maximum interval lengths
 
 3. **Constraint Satisfaction**: Find timeline combinations that satisfy all constraints
+
    - Temporal constraints (durations, sequences)
    - Resource constraints (battery consumption, fuel usage)
    - Synchronization constraints (cross-timeline dependencies)
@@ -107,6 +115,7 @@ end
 #### Timeline-Based Planning
 
 **Advantages:**
+
 - **Natural State Modeling**: Directly represents how domain state evolves over time
 - **Parallel Reasoning**: Multiple timelines can be reasoned about independently then synchronized
 - **Continuous Variables**: Better handling of resources that change continuously (battery, fuel)
@@ -114,6 +123,7 @@ end
 - **Domain Expressiveness**: More natural for domains with complex state dependencies
 
 **Disadvantages:**
+
 - **Computational Complexity**: Potentially exponential state space for timeline combinations
 - **Constraint Satisfaction**: More complex constraint solving compared to simple action scheduling
 - **Implementation Complexity**: Requires sophisticated timeline reasoning algorithms
@@ -123,12 +133,14 @@ end
 #### Durative Action Planning (Current Approach)
 
 **Advantages:**
+
 - **Simple Implementation**: Critical Path Method is well-understood and straightforward
 - **Intuitive Modeling**: Actions directly correspond to things agents do
 - **Clear Dependencies**: Action dependencies are explicit and easy to verify
 - **Proven Approach**: Extensively used in automated planning and project management
 
 **Disadvantages:**
+
 - **Exponential Action Explosion**: Complex plans require exponentially many actions to represent properly
 - **Limited State Modeling**: Actions represent instantaneous state changes, not continuous evolution
 - **Resource Modeling**: Awkward representation of continuously changing resources
@@ -141,10 +153,11 @@ end
 #### Scenario: Robot picking up an object
 
 **Durative Action Approach:**
+
 ```
 Actions:
 - move_to_pickup(robot, A, B) [duration: 5 ticks]
-- open_gripper(robot) [duration: 1 tick]  
+- open_gripper(robot) [duration: 1 tick]
 - pick_up_object(robot, object) [duration: 2 ticks]
 - close_gripper(robot) [duration: 1 tick]
 
@@ -155,6 +168,7 @@ Dependencies:
 ```
 
 **Timeline Approach:**
+
 ```
 Timelines:
 - robot_location: [A(0-5), B(5-15)]
@@ -171,14 +185,16 @@ Constraints:
 ### Computational Complexity Analysis
 
 #### **Action-Based Complexity**
+
 - **State Space**: O(A^n) where A is average action branching factor, n is plan length
 - **Dependency Resolution**: O(A^2) for each action added
 - **Replanning**: O(A^n) complete regeneration when any action changes
-- **Resource Tracking**: Additional O(R*A^n) where R is number of resources
+- **Resource Tracking**: Additional O(R\*A^n) where R is number of resources
 
-#### **Timeline-Based Complexity**  
+#### **Timeline-Based Complexity**
+
 - **State Space**: O(V^t) where V is values per timeline, t is number of timelines
-- **Constraint Propagation**: O(C*V^2) where C is number of constraints  
+- **Constraint Propagation**: O(C\*V^2) where C is number of constraints
 - **Replanning**: O(V^k) where k is number of affected timelines (k << t)
 - **Resource Integration**: O(V^t) - resources are native timeline variables
 
@@ -260,7 +276,7 @@ If timeline-based planning is pursued in the future:
 ## Related ADRs
 
 - [ADR-034: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md)
-- [ADR-035: Canonical Temporal Backtracking Problem](035-canonical-temporal-backtracking-problem.md)  
+- [ADR-035: Canonical Temporal Backtracking Problem](035-canonical-temporal-backtracking-problem.md)
 - [ADR-036: Evolving AriaEngine Planner Blueprint](036-evolving-ariengine-planner-blueprint.md)
 
 ## Consequences
@@ -268,13 +284,15 @@ If timeline-based planning is pursued in the future:
 ### If Timeline Planning is Adopted (Recommended)
 
 **Positive:**
+
 - **Superior Computational Performance**: Constraint propagation and parallel processing provide significant speedup
 - **Better Scalability**: Timeline constraints prevent exponential search space explosion
-- **Natural Domain Modeling**: Continuous resources and overlapping activities represented directly  
+- **Natural Domain Modeling**: Continuous resources and overlapping activities represented directly
 - **Incremental Replanning**: Only affected timelines need updating when conditions change
 - **Future-Proof Architecture**: Handles complex temporal scenarios that exceed action-based capabilities
 
 **Negative:**
+
 - **Initial Learning Curve**: Team needs to understand timeline reasoning and constraint modeling
 - **Upfront Implementation**: Requires constraint satisfaction algorithms rather than simple scheduling
 - **Domain Analysis Required**: Must identify appropriate state variables and constraints
@@ -282,11 +300,13 @@ If timeline-based planning is pursued in the future:
 ### If Durative Actions are Retained
 
 **Positive:**
+
 - **Immediate Simplicity**: Critical Path Method is well-understood and quick to implement
 - **Familiar Concepts**: Actions are intuitive for most developers
 - **Existing Libraries**: More readily available scheduling algorithms
 
-**Negative:**  
+**Negative:**
+
 - **Computational Bottlenecks**: Exponential action explosion for complex scenarios
 - **Limited Expressiveness**: Cannot represent continuous resources or overlapping activities naturally
 - **Expensive Replanning**: Any change requires complete action sequence regeneration
