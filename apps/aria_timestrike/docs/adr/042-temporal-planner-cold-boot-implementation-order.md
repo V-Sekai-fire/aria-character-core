@@ -22,67 +22,91 @@ Implement the temporal planner using strict TDD methodology with the following e
 
 ## Cold Boot Implementation Order
 
-### Phase 1: Foundation Data Structures (TDD Red-Green-Refactor)
+### Phase 1: JSON-LD Temporal State Foundation (TDD Red-Green-Refactor)
 
-#### Step 1.1: Temporal State Core
-**Test First**: ADR-035 canonical problem state initialization
+#### Step 1.1: JSON-LD Temporal State Core (Unified Foundation)
+**Test First**: ADR-035 canonical problem using unified JSON-LD state representation
 ```elixir
-# test/aria_engine/temporal_state_test.exs
-defmodule AriaEngine.TemporalStateTest do
+# test/aria_engine/json_ld_temporal_state_test.exs
+defmodule AriaEngine.JsonLdTemporalStateTest do
   use ExUnit.Case, async: true
   
-  test "initializes Maya's Adaptive Scorch scenario state" do
-    initial_state = TemporalState.new(0)
-    |> TemporalState.set_temporal_object("position", "maya", {3, 5, 0}, 0)
-    |> TemporalState.set_temporal_object("vision_range", "maya", 8, 0)
-    |> TemporalState.set_temporal_object("position", "alex", {4, 4, 0}, 0)
-    |> TemporalState.set_temporal_object("position", "soldier2", {15, 5, 0}, 0)
+  test "initializes Maya's scenario as JSON-LD temporal state with chibifire.com namespace" do
+    # State IS JSON-LD - no separate serialization step
+    initial_state = JsonLdTemporalState.new(%{
+      "@context" => %{
+        "@vocab" => "https://chibifire.com/vocab/aria/temporal#",
+        "position" => "https://chibifire.com/vocab/aria/temporal#position",
+        "vision_range" => "https://chibifire.com/vocab/aria/temporal#vision_range"
+      },
+      "@type" => "TemporalState",
+      "time" => 0,
+      "agents" => %{
+        "maya" => %{
+          "position" => %{"@value" => [3, 5, 0], "time" => 0},
+          "vision_range" => %{"@value" => 8, "time" => 0}
+        },
+        "alex" => %{
+          "position" => %{"@value" => [4, 4, 0], "time" => 0}
+        },
+        "soldier2" => %{
+          "position" => %{"@value" => [15, 5, 0], "time" => 0}
+        }
+      }
+    })
     
-    assert TemporalState.get_temporal_object(initial_state, "position", "maya", 0) == {3, 5, 0}
-    assert TemporalState.get_temporal_object(initial_state, "vision_range", "maya", 0) == 8
+    assert JsonLdTemporalState.get_agent_property(initial_state, "maya", "position", 0) == [3, 5, 0]
+    assert JsonLdTemporalState.get_agent_property(initial_state, "maya", "vision_range", 0) == 8
   end
   
-  test "supports time-based queries for state history" do
-    state = TemporalState.new(0)
-    |> TemporalState.set_temporal_object("position", "soldier2", {15, 5, 0}, 0)
-    |> TemporalState.set_temporal_object("position", "soldier2", {14, 5, 0}, 10)
-    |> TemporalState.set_temporal_object("position", "soldier2", {13, 5, 0}, 20)
+  test "supports temporal queries and history directly on JSON-LD structure" do
+    state = JsonLdTemporalState.new()
+    |> JsonLdTemporalState.set_agent_property("soldier2", "position", [15, 5, 0], 0)
+    |> JsonLdTemporalState.set_agent_property("soldier2", "position", [14, 5, 0], 10)
+    |> JsonLdTemporalState.set_agent_property("soldier2", "position", [13, 5, 0], 20)
     
-    assert TemporalState.get_temporal_object(state, "position", "soldier2", 5) == {15, 5, 0}
-    assert TemporalState.get_temporal_object(state, "position", "soldier2", 15) == {14, 5, 0}
-    assert TemporalState.query_history(state, "position", "soldier2", 0, 25) == 
-           [{0, {15, 5, 0}}, {10, {14, 5, 0}}, {20, {13, 5, 0}}]
+    assert JsonLdTemporalState.get_agent_property(state, "soldier2", "position", 5) == [15, 5, 0]
+    assert JsonLdTemporalState.get_agent_property(state, "soldier2", "position", 15) == [14, 5, 0]
+    assert JsonLdTemporalState.query_property_history(state, "soldier2", "position", 0, 25) == 
+           [%{"time" => 0, "value" => [15, 5, 0]}, %{"time" => 10, "value" => [14, 5, 0]}, %{"time" => 20, "value" => [13, 5, 0]}]
   end
 end
 ```
 
-**Implementation**: Extend `apps/aria_timestrike_core/lib/aria_engine/temporal_state.ex`
-- Add time-indexed storage for all game objects
-- Implement temporal query functions
-- Support historical state reconstruction
-- Pass Maya scenario initialization tests
+**Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/json_ld_temporal_state.ex`
+- **Unified representation**: Temporal state IS JSON-LD with chibifire.com namespace
+- Time-indexed agent properties stored directly in JSON-LD structure
+- Native RDF/SPARQL query support for temporal reasoning
+- Historical state reconstruction through JSON-LD graph traversal
+- Pass Maya scenario initialization tests with semantic web standards
 
-#### Step 1.2: Timeline Data Structure  
-**Test First**: Basic timeline representation for state variables
+### Phase 2: Independent Core Components (Parallel Development Enabled)
+
+**Note**: All Phase 2 components can be developed in parallel since they all operate on the unified JSON-LD temporal state from Phase 1.
+
+#### Step 2.1: Timeline Data Structure  
+**Test First**: Timeline representation operates on JSON-LD temporal state
 ```elixir
 # test/aria_engine/timeline_test.exs
 defmodule AriaEngine.TimelineTest do
   use ExUnit.Case, async: true
   
-  test "creates timeline for soldier2 patrol behavior" do
-    timeline = Timeline.new(:position, "soldier2")
-    |> Timeline.add_interval(0, 33, {15, 5, 0})    # At start waypoint
-    |> Timeline.add_interval(33, 43, :moving)       # Moving to {12,5,0}
-    |> Timeline.add_interval(43, 53, {12, 5, 0})    # At second waypoint (10 tick pause)
-    |> Timeline.add_interval(53, 63, :moving)       # Moving back to {15,5,0}
+  test "creates timeline for soldier2 patrol behavior using JSON-LD state" do
+    json_ld_state = build_soldier2_patrol_state()  # JSON-LD temporal state
     
-    assert Timeline.get_value_at(timeline, 5) == {15, 5, 0}
-    assert Timeline.get_value_at(timeline, 45) == {12, 5, 0}
-    assert Timeline.find_intervals_with_value(timeline, {12, 5, 0}) == [{43, 53}]
+    timeline = Timeline.from_json_ld_state(json_ld_state, "soldier2", "position")
+    |> Timeline.add_interval(0, 33, [15, 5, 0])    # At start waypoint
+    |> Timeline.add_interval(33, 43, :moving)       # Moving to [12,5,0]
+    |> Timeline.add_interval(43, 53, [12, 5, 0])    # At second waypoint (10 tick pause)
+    |> Timeline.add_interval(53, 63, :moving)       # Moving back to [15,5,0]
+    
+    assert Timeline.get_value_at(timeline, 5) == [15, 5, 0]
+    assert Timeline.get_value_at(timeline, 45) == [12, 5, 0]
+    assert Timeline.find_intervals_with_value(timeline, [12, 5, 0]) == [{43, 53}]
   end
   
-  test "detects timeline conflicts and overlaps" do
-    timeline = Timeline.new(:battery_level, "maya")
+  test "detects timeline conflicts and overlaps in JSON-LD representation" do
+    timeline = Timeline.new("maya", "battery_level")
     |> Timeline.add_interval(0, 30, 100)
     |> Timeline.add_interval(25, 50, 75)  # Overlapping interval
     
@@ -92,6 +116,13 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike/lib/aria_engine/timeline.ex`
+- Operates directly on JSON-LD temporal state structure
+- Interval-based timeline representation for state variable changes
+- Conflict detection and validation for overlapping intervals  
+- Value interpolation for smooth transitions between discrete time points
+- Pass soldier2 patrol timeline tests
+
+#### Step 2.2: Simple Temporal Network (STN) Foundation
 ```elixir
 defmodule AriaEngine.Timeline do
   @moduledoc """
@@ -301,12 +332,52 @@ defmodule AriaEngine.Timeline do
   end
 end
 ```
-- Interval-based timeline representation for state variable changes
-- Conflict detection and validation for overlapping intervals  
-- Value interpolation for smooth transitions between discrete time points
-- Pass soldier2 patrol timeline tests
+**Test First**: STN constraint representation using JSON-LD temporal state
+```elixir
+# test/aria_engine/stn_solver_test.exs  
+defmodule AriaEngine.STNSolverTest do
+  use ExUnit.Case, async: true
+  
+  test "solves basic temporal constraints for Maya's movement using JSON-LD state" do
+    json_ld_state = build_maya_scenario_state()  # JSON-LD temporal state
+    
+    # Maya must reach position before soldier2 reaches bunker
+    constraints = [
+      # Maya movement time: 0 <= maya_arrive - start <= 25
+      STNConstraint.new(:start, :maya_arrive, 0, 25),  
+      # Soldier2 bunker time: 180 <= soldier2_bunker - start <= 200
+      STNConstraint.new(:start, :soldier2_bunker, 180, 200),
+      # Maya must act before soldier2 reaches safety
+      STNConstraint.new(:maya_arrive, :soldier2_bunker, 5, :infinity)
+    ]
+    
+    {:ok, solution} = STNSolver.solve(constraints, json_ld_state)
+    
+    # Verify solution provides valid time bounds
+    assert STNSolver.get_bounds(solution, :start, :maya_arrive) == {0, 25}
+    assert STNSolver.get_bounds(solution, :maya_arrive, :soldier2_bunker) >= {5, :infinity}
+    assert STNSolver.is_consistent?(solution) == true
+  end
+  
+  test "detects inconsistent temporal constraints" do
+    # Impossible constraints: Maya must arrive before she starts
+    constraints = [
+      STNConstraint.new(:maya_arrive, :start, 1, 10)  # Impossible
+    ]
+    
+    assert {:error, :inconsistent} = STNSolver.solve(constraints)
+  end
+end
+```
 
-#### Step 1.4: JSON-LD Solution Network Foundation
+**Implementation**: Create `apps/aria_timestrike/lib/aria_engine/stn_solver.ex`
+- Path Consistency (PC-2) algorithm for optimal STN solving performance
+- Operates on JSON-LD temporal state for timepoint definitions
+- Incremental constraint propagation for dynamic updates
+- Inconsistency detection with early termination
+- Pass Maya movement timing tests
+
+#### Step 2.3: Goal Decomposition Engine
 **Test First**: JSON-LD serialization with chibifire.com namespace as the solution network
 ```elixir
 # test/aria_engine/json_ld_solution_network_test.exs
@@ -677,9 +748,60 @@ end
 - Path Consistency (PC-2) algorithm for optimal STN solving performance
 - Incremental constraint propagation for dynamic updates
 - Inconsistency detection with early termination
-- Pass Maya movement timing tests
+**Test First**: Goal decomposition using JSON-LD temporal state
+```elixir
+# test/aria_engine/goal_decomposer_test.exs
+defmodule AriaEngine.GoalDecomposerTest do
+  use ExUnit.Case, async: true
+  
+  test "decomposes eliminate_soldier_patrol into executable tasks using JSON-LD state" do
+    json_ld_state = build_maya_scenario_state()  # JSON-LD temporal state
+    goal = %{
+      "@context" => "https://chibifire.com/vocab/aria/temporal#",
+      "@type" => "Goal",
+      "type" => "eliminate_soldier_patrol", 
+      "target" => "soldier2", 
+      "deadline" => 200
+    }
+    
+    {:ok, task_network} = GoalDecomposer.decompose_goal(goal, json_ld_state)
+    
+    # Verify task breakdown matches ADR-035 specification
+    assert length(task_network["tasks"]) >= 4
+    assert Enum.any?(task_network["tasks"], &(&1["@type"] == "ReconnaissanceTask"))
+    assert Enum.any?(task_network["tasks"], &(&1["@type"] == "HistoricalAnalysisTask"))
+    assert Enum.any?(task_network["tasks"], &(&1["@type"] == "CoordinationTask"))
+    assert Enum.any?(task_network["tasks"], &(&1["@type"] == "OpportunityExploitationTask"))
+    
+    # Verify task dependencies in JSON-LD structure
+    recon_task = Enum.find(task_network["tasks"], &(&1["@type"] == "ReconnaissanceTask"))
+    coord_task = Enum.find(task_network["tasks"], &(&1["@type"] == "CoordinationTask"))
+    assert coord_task["depends_on"] == [recon_task["@id"]]
+  end
+  
+  test "generates primitive actions from task breakdown in JSON-LD format" do
+    task_network = build_maya_task_network()  # JSON-LD task network
+    
+    {:ok, primitive_actions} = GoalDecomposer.generate_primitive_actions(task_network)
+    
+    assert length(primitive_actions) >= 4
+    assert Enum.any?(primitive_actions, &(&1["@type"] == "MoveToAction"))
+    assert Enum.any?(primitive_actions, &(&1["@type"] == "ScoutAreaAction"))
+    assert Enum.any?(primitive_actions, &(&1["@type"] == "CastScorchAction"))
+  end
+end
+```
 
-### Phase 2: Goal-Task-Network (GTN) Core (Building on Phase 1)
+**Implementation**: Create `apps/aria_timestrike/lib/aria_engine/goal_decomposer.ex`
+- Operates on JSON-LD temporal state and produces JSON-LD task networks
+- Hierarchical task network (HTN) decomposition for complex goals
+- Task dependency tracking and critical path analysis
+- Primitive action generation from high-level tasks
+- Pass Maya goal decomposition tests
+
+### Phase 3: Integration Layer (Building on Phase 2 Components)
+
+#### Step 3.1: STN + Timeline Integration
 
 #### Step 2.1: Goal Decomposition Engine
 **Test First**: Decompose ADR-035's high-level goal into tasks
@@ -1342,11 +1464,89 @@ end
 - Multi-agent action coordination with information sharing protocols
 - Temporal conflict detection and resolution algorithms
 - Synchronization point identification and management
-- Pass Maya-Alex coordination tests
+**Test First**: Combine STN solving with timeline constraints using unified JSON-LD state
+```elixir
+# test/aria_engine/temporal_planner_test.exs
+defmodule AriaEngine.TemporalPlannerTest do
+  use ExUnit.Case, async: true
+  
+  test "integrates STN constraints with timeline data using JSON-LD state" do
+    json_ld_state = build_maya_scenario_state()  # Unified JSON-LD temporal state
+    
+    # Timeline constraints from JSON-LD state
+    timelines = Timeline.extract_from_json_ld_state(json_ld_state)
+    
+    # STN constraints for Maya scenario
+    stn_constraints = [
+      STNConstraint.new(:maya_start, :maya_scout_end, 5, 15),
+      STNConstraint.new(:maya_scout_end, :maya_attack, 10, 30),
+      STNConstraint.new(:maya_attack, :mission_end, 1, 5)
+    ]
+    
+    {:ok, integrated_plan} = TemporalPlanner.solve_integrated(stn_constraints, timelines, json_ld_state)
+    
+    # Verify integration maintains both STN and timeline constraints
+    assert TemporalPlanner.satisfies_stn_constraints?(integrated_plan, stn_constraints)
+    assert TemporalPlanner.satisfies_timeline_constraints?(integrated_plan, timelines)
+    assert TemporalPlanner.validates_against_json_ld_state?(integrated_plan, json_ld_state)
+  end
+  
+  test "detects and reports constraint violations between STN and timelines" do
+    conflicting_constraints = build_conflicting_constraints()
+    timelines = build_soldier2_patrol_timeline()
+    
+    {:error, conflicts} = TemporalPlanner.solve_integrated(conflicting_constraints, timelines)
+    
+    assert length(conflicts) >= 1
+    assert Enum.any?(conflicts, &(&1.type == :stn_timeline_conflict))
+  end
+end
+```
 
-### Phase 3: Temporal Constraint Integration (Building on Phases 1-2)
+**Implementation**: Create `apps/aria_timestrike/lib/aria_engine/temporal_planner.ex`
+- Integration layer between STN solver and timeline constraints
+- Unified JSON-LD state ensures consistency across components
+- Constraint violation detection and reporting
+- Solution validation against all constraint types
+**Test First**: Integrate goal decomposition with timeline and STN coordination
+```elixir
+# test/aria_engine/coordination_integration_test.exs
+defmodule AriaEngine.CoordinationIntegrationTest do
+  use ExUnit.Case, async: true
+  
+  test "coordinates Maya and Alex using integrated timeline and STN constraints" do
+    json_ld_state = build_maya_scenario_state()
+    agents = ["maya", "alex"]
+    
+    # Goal decomposition produces JSON-LD task networks
+    {:ok, maya_tasks} = GoalDecomposer.decompose_goal(build_elimination_goal(), json_ld_state)
+    {:ok, alex_tasks} = GoalDecomposer.decompose_goal(build_support_goal(), json_ld_state)
+    
+    # Coordination integrates timelines, STN constraints, and task networks
+    {:ok, coordination_plan} = CoordinationManager.plan_integrated_coordination(
+      [maya_tasks, alex_tasks], json_ld_state)
+    
+    # Verify coordination respects all constraint types
+    assert CoordinationManager.satisfies_timeline_constraints?(coordination_plan)
+    assert CoordinationManager.satisfies_stn_constraints?(coordination_plan)
+    assert CoordinationManager.satisfies_task_dependencies?(coordination_plan)
+    
+    # Information sharing preserved in JSON-LD format
+    assert coordination_plan["information_flow"]["alex"]["to"] == ["maya"]
+    assert coordination_plan["information_flow"]["alex"]["type"] == "ScoutData"
+  end
+end
+```
 
-#### Step 3.1: JSON-LD Solution Network Integration
+**Implementation**: Integrate `CoordinationManager` with Phase 2 components
+- Coordinates goal decomposition outputs with STN and timeline constraints
+- Multi-agent action coordination using unified JSON-LD state
+- Information sharing protocols maintained in semantic format
+- Pass Maya-Alex coordination integration tests
+
+### Phase 4: Advanced Constraint Handling
+
+#### Step 4.1: Resource and Synchronization Constraints
 **Test First**: Integrate temporal planning with JSON-LD solution network serialization  
 ```elixir
 # test/aria_engine/solution_network_integration_test.exs
