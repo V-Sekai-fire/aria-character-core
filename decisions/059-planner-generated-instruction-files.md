@@ -2,8 +2,9 @@
 
 ## Status
 
-Proposed (Draft: June 15, 2025)
+Paused (June 15, 2025)
 **Priority**: Experimental - exploring AI-assisted instruction generation
+**Reason**: Paused to prioritize completion of ADR-058 (aria_engine core functionality fixes)
 
 ## Context
 
