@@ -8,9 +8,9 @@ config :aria_engine_core,
   domain_providers: [
     AriaEngine.BasicActionsDomainProvider,
     AriaTimestrike.Core.DomainProvider,
-    AriaFileManagement.DomainProvider
+    AriaFileManagement.DomainProvider,
+    AriaWorkflowSystem.DomainProvider
     # Add more providers as needed in development
-    # AriaWorkflowSystem.DomainProvider
   ]
 
 # Development environment configuration

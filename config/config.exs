@@ -41,9 +41,9 @@ config :aria_engine_core,
   domain_providers: [
     AriaEngine.BasicActionsDomainProvider,
     AriaTimestrike.Core.DomainProvider,
-    AriaFileManagement.DomainProvider
+    AriaFileManagement.DomainProvider,
+    AriaWorkflowSystem.DomainProvider
     # Additional providers can be added when their apps are included
-    # AriaWorkflowSystem.DomainProvider
   ]
 
 # Import environment specific config files
