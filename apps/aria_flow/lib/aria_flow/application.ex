@@ -15,9 +15,8 @@ defmodule AriaFlow.Application do
   def start(_type, _args) do
     children = [
       # Registry for Flow pipelines and elements
-      {Registry, keys: :unique, name: AriaFlow.Registry},
-      # Main backflow processor
-      AriaFlow.Backflow
+      {Registry, keys: :unique, name: AriaFlow.Registry}
+      # Note: AriaFlow.Backflow processes are started on-demand per pipeline/element
     ]
     
     opts = [strategy: :one_for_one, name: AriaFlow.Supervisor]
