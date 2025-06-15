@@ -17,6 +17,35 @@ The aria-character-core codebase currently has several maintenance issues that n
 
 ## Progress Tracking
 
+Started implementation on June 15, 2025. Current status: **Beginning Phase 1 - Critical Test Fixes**
+
+**Current Focus**: Making the common case common in FlowWorkflow API design
+
+- Common case: Simple data processing functions (`process_actions_with_backflow`, `process_actions_with_convergence`)  
+- Escape hatch: Advanced pipeline creation with GenServer processes for complex scenarios
+
+### Identified Issues from Test Run
+
+**aria_engine (FlowBackflowTest)**: 5 failures
+
+- `test Backflow Signal Handling demand increase signals boost processing capacity` - GenServer process not alive
+- `test Flow Backflow Processing demand-driven processing prevents oversubscription` - Logic error in expected results  
+- `test Flow Backflow Processing backflow optimization reduces computation cost` - Missing backflow optimization
+- `test Flow Backflow Processing GPU convergence patterns with hierarchical processing` - Convergence logic not working
+- `test Backflow Signal Handling backpressure signals reduce processing demand` - GenServer process not alive
+
+**aria_timestrike (BaselineTest)**: 4 failures
+
+- `test aria_timestrike basic actions are callable` - Invalid position format error
+- `test baseline performance benchmarks` - AriaEngine.State.add_fact/4 undefined
+- `test current AriaEngine basic planning works` - Planner not functional
+- `test aria_engine temporal module structure` - AriaEngine.Temporal module missing
+
+**Legacy Files Found**:
+
+- `debug_planner_structures.exs.disabled`
+- Disabled test files in aria_queue and aria_timestrike
+
 ## Decision
 
 We will implement a systematic maintenance approach with the following prioritized phases:
