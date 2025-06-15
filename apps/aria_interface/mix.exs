@@ -47,7 +47,7 @@ defmodule AriaInterface.MixProject do
       {:aria_interpret, in_umbrella: true},
 
       # Engine service for processing
-      {:aria_engine_core, in_umbrella: true},
+      {:aria_engine, in_umbrella: true},
 
       # Storage for large assets
       {:aria_storage, in_umbrella: true},

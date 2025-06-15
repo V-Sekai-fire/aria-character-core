@@ -29,7 +29,7 @@ defmodule AriaTui.MixProject do
   defp deps do
     [
       # Engine for state management and calculations
-      {:aria_engine_core, in_umbrella: true},
+      {:aria_engine, in_umbrella: true},
       # Workflow system for observability data
       {:aria_workflow_system, in_umbrella: true}
     ]

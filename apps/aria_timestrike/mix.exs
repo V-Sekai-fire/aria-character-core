@@ -1,18 +1,18 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaFileManagement.MixProject do
+defmodule AriaTimestrike.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :aria_file_management,
+      app: :aria_timestrike,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.18",
+      elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -21,7 +21,8 @@ defmodule AriaFileManagement.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      mod: {AriaTimestrike.Core.Application, []},
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -30,6 +31,11 @@ defmodule AriaFileManagement.MixProject do
     [
       # Internal dependencies
       {:aria_engine, in_umbrella: true},
+      {:aria_tui, in_umbrella: true},
+
+      # Core dependencies
+      {:jason, "~> 1.2"},
+
       # Development and testing
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]

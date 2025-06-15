@@ -37,10 +37,10 @@ config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}
 
 # Configure AriaEngine domain providers
-config :aria_engine_core,
+config :aria_engine,
   domain_providers: [
     AriaEngine.BasicActionsDomainProvider,
-    AriaTimestrike.Core.DomainProvider,
+    AriaTimestrike.DomainProvider,
     AriaFileManagement.DomainProvider,
     AriaWorkflowSystem.DomainProvider
     # Additional providers can be added when their apps are included

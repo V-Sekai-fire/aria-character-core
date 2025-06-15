@@ -62,8 +62,8 @@ defmodule AriaEngine.TemporalSolver do
   use GenServer
   
   # Dependencies on other umbrella apps
-  alias AriaEngine.Core.{State, Goal, Plan}              # From aria_engine_core
-  alias AriaTimestrike.Core.{Timeline, Interval}         # From aria_timestrike_core
+  alias AriaEngine.{State, Goal, Plan}              # From aria_engine
+  alias AriaTimestrike.{Timeline, Interval}         # From aria_timestrike
   alias AriaTimestrike.{TemporalPlanner, Constraint}     # From aria_timestrike
   
   # Integration with data storage
