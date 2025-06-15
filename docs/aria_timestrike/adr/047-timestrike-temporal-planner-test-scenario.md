@@ -51,8 +51,8 @@ The system consists of three main components operating in a coordinated loop:
   - Hostage: (20, 5, 0)
   - Escape Zone: Any tile where x >= 24
 - **Scenario Timers**:
-  - Hostage Execution: 30.0 seconds
-  - Enemy Reinforcements: 45.0 seconds
+  - Hostage Execution: 12.0 seconds
+  - Enemy Reinforcements: 25.0 seconds
 
 ### Agent Specifications
 
@@ -89,7 +89,7 @@ The test begins with a vague goal: **survive_the_encounter**. The game engine th
 _"Our allies are our strength. We leave no one behind!"_
 
 - **Goal**: Move a player agent to the hostage's tile before execution timer
-- **Success Condition**: alex.position == hostage.position AND world_time <= 30.0
+- **Success Condition**: alex.position == hostage.position AND world_time <= 12.0
 - **Expected Strategy**: Direct rush with Maya using Scorch to clear path, Alex using Delaying Strike on defenders, Jordan using Now! on Alex for maximum movement
 
 ### Choice 2: Utility (destroy_bridge)

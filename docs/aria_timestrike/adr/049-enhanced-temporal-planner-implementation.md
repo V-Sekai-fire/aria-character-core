@@ -39,15 +39,15 @@ defmodule AriaTimestrike.TemporalPlannerTest do
           defense: 15, 
           speed: 4.0,
           skills: [:delaying_strike])
-      |> set_goal(:alex, :reach_position, {20, 5}, within: 30.0)
-      |> add_temporal_constraint(:hostage_rescue_window, 0..30)
+      |> set_goal(:alex, :reach_position, {20, 5}, within: 12.0)
+      |> add_temporal_constraint(:hostage_rescue_window, 0..12)
       |> add_obstacle(:soldier_1, at: {15, 4}, blocks_path: true)
       |> expect_plan_success()
 
     plan = assert_temporal_planning(scenario)
     
     # Validate using TimeStrike scenario requirements from ADR-047
-    assert_agent_reaches_goal(plan, :alex, {20, 5}, within: 30.0)
+    assert_agent_reaches_goal(plan, :alex, {20, 5}, within: 12.0)
     assert_plan_respects_movement_speed(plan, :alex, 4.0)
     assert_no_collision_with_obstacles(plan, :alex)
   end
@@ -66,7 +66,7 @@ defmodule AriaTimestrike.TemporalPlannerTest do
           hp: 120, 
           speed: 4.0)
       |> add_enemy_agent(:soldier_2, at: {15, 5}, hp: 70)
-      |> set_goal(:alex, :reach_position, {20, 5}, within: 30.0)
+      |> set_goal(:alex, :reach_position, {20, 5}, within: 12.0)
       |> add_skill_constraint(:maya, :scorch, 
           cast_time: 2.0, 
           cooldown: 8.0, 
@@ -98,8 +98,8 @@ defmodule AriaTimestrike.ConvictionChoiceTest do
 
   test "Morality choice: rescue hostage with coordinated team tactics" do
     scenario = conviction_scenario(:morality)
-      |> set_team_goal(:rescue_hostage, target: {20, 5}, deadline: 30.0)
-      |> add_temporal_pressure(:hostage_execution, at: 30.0)
+      |> set_team_goal(:rescue_hostage, target: {20, 5}, deadline: 12.0)
+      |> add_temporal_pressure(:hostage_execution, at: 12.0)
       |> add_enemy_resistance(:standard_patrol, strength: :medium)
       |> expect_coordinated_team_plan()
 
