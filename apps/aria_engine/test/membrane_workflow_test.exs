@@ -955,89 +955,91 @@ defmodule AriaEngine.MembraneWorkflowTest do
       File.rm_rf!(storage_path)
     end
 
-    test "Membrane coordination overhead: 1 core vs all cores" do
-      # MEMBRANE OVERHEAD TEST: Compare 1 core vs all cores to measure coordination overhead
-      # Theory: Membrane's pipeline coordination should have minimal overhead
-      # Measure the difference between single pipeline vs multiple pipelines
+    test "Flow parallel processing efficiency: 1 core vs all cores" do
+      # FLOW EFFICIENCY TEST: Compare 1 core vs all cores to measure parallel efficiency
+      # Theory: Flow should have minimal coordination overhead and scale well across cores
+      # This replaces the failing Membrane test per ADR-052
 
-      action_count = 500  # Reduced from 10_000 for faster test execution
+      action_count = 500  # Consistent with previous test
       all_cores = System.schedulers_online()  # All available cores
 
-      # Test 1: Single core Membrane pipeline (baseline)
+      # Test 1: Single core Flow pipeline (baseline)
       {single_core_time_us, single_result} = :timer.tc(fn ->
-        test_backflow_gpu_convergence_with_work_stealing(action_count, 1)
+        AriaEngine.FlowWorkflow.test_flow_parallel_processing(action_count, 1)
       end)
 
       single_core_time_ms = single_core_time_us / 1000
       single_core_fps = action_count / (single_core_time_ms / 1000)
 
-      # Test 2: All cores Membrane pipelines (coordination test)
+      # Test 2: All cores Flow pipelines (efficiency test)
       {all_cores_time_us, all_cores_result} = :timer.tc(fn ->
-        test_backflow_gpu_convergence_with_work_stealing(action_count, all_cores)
+        AriaEngine.FlowWorkflow.test_flow_parallel_processing(action_count, all_cores)
       end)
 
       all_cores_time_ms = all_cores_time_us / 1000
       all_cores_fps = action_count / (all_cores_time_ms / 1000)
 
-      # Calculate coordination overhead
-      theoretical_speedup = all_cores  # Perfect scaling would be cores * single_core_fps
-      actual_speedup = all_cores_fps / single_core_fps
-      coordination_efficiency = actual_speedup / theoretical_speedup
-      coordination_overhead_pct = (1.0 - coordination_efficiency) * 100
+      # Calculate parallel efficiency
+      theoretical_speedup = all_cores  # Perfect scaling
+      actual_speedup = single_core_time_ms / all_cores_time_ms
+      parallel_efficiency = actual_speedup / theoretical_speedup
+      coordination_overhead_pct = (1.0 - parallel_efficiency) * 100
 
-      # Measure Membrane-specific metrics
+      # Flow should have minimal coordination overhead
       single_coordination_ms = single_result.coordination_time_ms || 0
       all_cores_coordination_ms = all_cores_result.coordination_time_ms || 0
-      coordination_scaling = if single_coordination_ms > 0, do: all_cores_coordination_ms / single_coordination_ms, else: 1.0
 
-      IO.puts("\n⚖️  MEMBRANE COORDINATION OVERHEAD TEST:")
+      IO.puts("\n🚀 FLOW PARALLEL PROCESSING EFFICIENCY TEST:")
       IO.puts("   Actions: #{action_count}")
       IO.puts("   Single core: #{Float.round(single_core_time_ms, 1)}ms (#{Float.round(single_core_fps, 0)} FPS)")
       IO.puts("   All cores (#{all_cores}): #{Float.round(all_cores_time_ms, 1)}ms (#{Float.round(all_cores_fps, 0)} FPS)")
       IO.puts("   Actual speedup: #{Float.round(actual_speedup, 1)}x")
       IO.puts("   Theoretical speedup: #{theoretical_speedup}x")
-      IO.puts("   Coordination efficiency: #{Float.round(coordination_efficiency * 100, 1)}%")
+      IO.puts("   Parallel efficiency: #{Float.round(parallel_efficiency * 100, 1)}%")
       IO.puts("   Coordination overhead: #{Float.round(coordination_overhead_pct, 1)}%")
-      IO.puts("   Single core coordination: #{Float.round(single_coordination_ms, 1)}ms")
-      IO.puts("   All cores coordination: #{Float.round(all_cores_coordination_ms, 1)}ms")
-      IO.puts("   Coordination scaling: #{Float.round(coordination_scaling, 1)}x")
 
-      # Success criteria: Membrane should have low coordination overhead
+      # Success criteria: Flow should have excellent parallel efficiency
       max_acceptable_overhead = 20.0  # 20% coordination overhead is acceptable
-      min_efficiency = 0.8  # 80% efficiency is good for pipeline coordination
+      min_efficiency = 0.6  # 60% efficiency is good for real-world parallel processing
+      excellent_efficiency = 0.8  # 80% efficiency is excellent
 
-      if coordination_overhead_pct <= max_acceptable_overhead and coordination_efficiency >= min_efficiency do
-        IO.puts("   ✅ MEMBRANE COORDINATION SUCCESS:")
+      if coordination_overhead_pct <= max_acceptable_overhead and parallel_efficiency >= min_efficiency do
+        IO.puts("   ✅ FLOW PARALLEL PROCESSING SUCCESS:")
         IO.puts("      - Overhead: #{Float.round(coordination_overhead_pct, 1)}% <= #{max_acceptable_overhead}%")
-        IO.puts("      - Efficiency: #{Float.round(coordination_efficiency * 100, 1)}% >= #{Float.round(min_efficiency * 100, 1)}%")
-        IO.puts("   🎯 Membrane's pipeline coordination is efficient!")
+        IO.puts("      - Efficiency: #{Float.round(parallel_efficiency * 100, 1)}% >= #{Float.round(min_efficiency * 100, 1)}%")
+        
+        if parallel_efficiency >= excellent_efficiency do
+          IO.puts("   🎯 Flow's parallel processing is excellent!")
+        else
+          IO.puts("   👍 Flow's parallel processing is good!")
+        end
       else
-        IO.puts("   ❌ MEMBRANE COORDINATION OVERHEAD HIGH:")
+        IO.puts("   ❌ FLOW PARALLEL PROCESSING NEEDS IMPROVEMENT:")
         IO.puts("      - Overhead: #{Float.round(coordination_overhead_pct, 1)}% > #{max_acceptable_overhead}%")
-        IO.puts("      - Efficiency: #{Float.round(coordination_efficiency * 100, 1)}% < #{Float.round(min_efficiency * 100, 1)}%")
-        IO.puts("   💡 Membrane pipeline coordination needs optimization")
+        IO.puts("      - Efficiency: #{Float.round(parallel_efficiency * 100, 1)}% < #{Float.round(min_efficiency * 100, 1)}%")
+        IO.puts("   💡 Flow pipeline configuration may need tuning")
       end
 
-      # Coordination efficiency insights
+      # Efficiency rating
       efficiency_rating = cond do
-        coordination_efficiency >= 0.9 -> "EXCELLENT"
-        coordination_efficiency >= 0.8 -> "GOOD"
-        coordination_efficiency >= 0.6 -> "ACCEPTABLE"
-        true -> "NEEDS_OPTIMIZATION"
+        parallel_efficiency >= 0.9 -> "EXCELLENT"
+        parallel_efficiency >= 0.8 -> "VERY_GOOD"
+        parallel_efficiency >= 0.6 -> "GOOD"
+        parallel_efficiency >= 0.4 -> "ACCEPTABLE"
+        true -> "NEEDS_IMPROVEMENT"
       end
 
-      IO.puts("   📊 Membrane coordination rating: #{efficiency_rating}")
+      IO.puts("   📊 Flow efficiency rating: #{efficiency_rating}")
 
-      # Assertions for coordination overhead test
+      # Assertions for Flow parallel processing
       assert single_core_fps > 0, "Single core should process actions"
       assert all_cores_fps > 0, "All cores should process actions"
-      assert actual_speedup > 0, "Multi-core should provide some speedup"
+      assert actual_speedup > 1.0, "Multi-core should provide speedup"
 
-      # Debug info for processed counts
-      IO.puts("   🐛 DEBUG: Expected #{action_count} actions")
-      IO.puts("   🐛 DEBUG: Single core processed #{single_result.processed_count}")
-      IO.puts("   🐛 DEBUG: All cores processed #{all_cores_result.processed_count}")
+      # Flow should be significantly better than Membrane's 8.1% efficiency
+      assert parallel_efficiency > 0.4, "Flow should achieve >40% efficiency (vs Membrane's 8.1%)"
 
+      # Verify processed counts
       assert single_result.processed_count == action_count,
         "Single core should process all actions. Expected: #{action_count}, Got: #{single_result.processed_count}"
       assert all_cores_result.processed_count == action_count,

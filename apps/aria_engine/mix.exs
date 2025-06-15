@@ -42,6 +42,9 @@ defmodule AriaEngine.MixProject do
       # Real-time multimedia processing framework
       {:membrane_core, "~> 1.0"},
 
+      # Parallel processing pipelines (ADR-041, ADR-052)
+      {:flow, "~> 1.2"},
+
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
 
