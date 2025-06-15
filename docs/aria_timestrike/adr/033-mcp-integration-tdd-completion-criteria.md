@@ -162,7 +162,7 @@ mix timestrike_mcp_server --stdio
 # Expected: Copilot uses timestrike_start_game tool
 # Expected Result: Shows Alex at {4,4,0}, Maya at {3,5,0}, Jordan at {4,6,0}, hostage at {20,5,0}
 
-# 4. Follow up: "@copilot Plan how to rescue the hostage before 30 seconds"
+# 4. Follow up: "@copilot Plan how to rescue the hostage before 12 seconds"
 # Expected: Copilot uses timestrike_plan_goal with rescue_hostage goal
 # Expected Result: Shows solution tree with move_to actions, timeline estimates
 
