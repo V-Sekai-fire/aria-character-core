@@ -31,7 +31,11 @@ defmodule AriaCharacterCore.MixProject do
       {:jason, "~> 1.4"},
       {:telemetry, "~> 1.2"},
       {:telemetry_metrics, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"}
+      {:telemetry_poller, "~> 1.0"},
+
+      # JSON-LD and RDF support for temporal planner
+      {:json_ld, "~> 1.0"},
+      {:rdf, "~> 2.1"}
     ]
   end
 

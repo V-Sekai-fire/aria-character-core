@@ -37,7 +37,7 @@ defmodule AriaEngine.Temporal do
   This is the main entry point for temporal planning that demonstrates
   the canonical temporal backtracking problem capabilities.
   """
-  def plan_temporal_sequence(initial_state, goals, constraints \\ []) do
+  def plan_temporal_sequence(initial_state, _goals, _constraints \\ []) do
     # TODO: Implement temporal planning algorithm
     # For now, return a placeholder that shows the expected structure
     {:ok, %{
