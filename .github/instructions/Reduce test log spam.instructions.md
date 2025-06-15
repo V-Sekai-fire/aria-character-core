@@ -1,5 +1,6 @@
 ---
 applyTo: "**"
+textId: "INST-006"
 ---
 
 The standard convention is that passing tests should be silent - they shouldn't
