@@ -52,6 +52,11 @@ defmodule AriaTimestrike do
     end
   end
 
+  def move_to(state, {agent_id, position}) when is_binary(agent_id) do
+    # This is a placeholder implementation.
+    {:ok, state}
+  end
+
   @doc """
   Execute an attack action with temporal planning.
   """

@@ -39,46 +39,25 @@ defmodule AriaTui.SystemDomain do
   def observe_system_metrics(state, [metric_type]) do
     case metric_type do
       :cpu_usage ->
-        if :rand.uniform() > 0.05 do  # 95% success rate
-          cpu_value = 10.0 + :rand.uniform() * 30.0  # Simulate realistic CPU usage
-          state
-          |> State.set_object("system_metric", "cpu_usage", cpu_value)
-          |> State.set_object("observation_status", "cpu_usage", "success")
-          |> State.set_object("observation_timestamp", "cpu_usage", :os.system_time(:second))
-        else
-          Logger.warning("Failed to observe CPU usage - sensor unavailable")
-          state
-          |> State.set_object("observation_status", "cpu_usage", "failed")
-          |> State.set_object("observation_error", "cpu_usage", "sensor_unavailable")
-        end
+        cpu_value = 10.0 + :rand.uniform() * 30.0  # Simulate realistic CPU usage
+        state
+        |> State.set_object("system_metric", "cpu_usage", cpu_value)
+        |> State.set_object("observation_status", "cpu_usage", "success")
+        |> State.set_object("observation_timestamp", "cpu_usage", :os.system_time(:second))
 
       :memory_usage ->
-        if :rand.uniform() > 0.03 do  # 97% success rate
-          memory_value = 30.0 + :rand.uniform() * 40.0  # Simulate realistic memory usage
-          state
-          |> State.set_object("system_metric", "memory_usage", memory_value)
-          |> State.set_object("observation_status", "memory_usage", "success")
-          |> State.set_object("observation_timestamp", "memory_usage", :os.system_time(:second))
-        else
-          Logger.warning("Failed to observe memory usage - permission denied")
-          state
-          |> State.set_object("observation_status", "memory_usage", "failed")
-          |> State.set_object("observation_error", "memory_usage", "permission_denied")
-        end
+        memory_value = System.get_memory_usage()
+        state
+        |> State.set_object("system_metric", "memory_usage", memory_value)
+        |> State.set_object("observation_status", "memory_usage", "success")
+        |> State.set_object("observation_timestamp", "memory_usage", :os.system_time(:second))
 
       :network_status ->
-        if :rand.uniform() > 0.10 do  # 90% success rate
-          network_status = if :rand.uniform() > 0.2, do: "connected", else: "limited"
-          state
-          |> State.set_object("system_metric", "network_status", network_status)
-          |> State.set_object("observation_status", "network_status", "success")
-          |> State.set_object("observation_timestamp", "network_status", :os.system_time(:second))
-        else
-          Logger.warning("Failed to observe network status - timeout")
-          state
-          |> State.set_object("observation_status", "network_status", "failed")
-          |> State.set_object("observation_error", "network_status", "timeout")
-        end
+        network_status = System.get_network_status()
+        state
+        |> State.set_object("system_metric", "network_status", network_status)
+        |> State.set_object("observation_status", "network_status", "success")
+        |> State.set_object("observation_timestamp", "network_status", :os.system_time(:second))
 
       _ ->
         Logger.warning("Unknown metric type: #{metric_type}")
@@ -94,18 +73,11 @@ defmodule AriaTui.SystemDomain do
     case tui_aspect do
       :terminal_size ->
         # Simulate terminal size observation
-        {width, height} = get_terminal_size()
-        state
-        |> State.set_object("tui_metric", "terminal_width", width)
-        |> State.set_object("tui_metric", "terminal_height", height)
-        |> State.set_object("observation_status", "terminal_size", "success")
+        observe_terminal_size(state)
 
       :display_mode ->
         # Simulate display mode observation
-        mode = if :rand.uniform() > 0.3, do: "enhanced", else: "compact"
-        state
-        |> State.set_object("tui_metric", "display_mode", mode)
-        |> State.set_object("observation_status", "display_mode", "success")
+        observe_display_mode(state)
 
       _ ->
         Logger.warning("Unknown TUI aspect: #{tui_aspect}")
@@ -230,5 +202,23 @@ defmodule AriaTui.SystemDomain do
       "display_mode" -> {:ok, :observe_tui_state, [:display_mode]}
       _ -> :error
     end
+  end
+
+  defp observe_terminal_size(state) do
+    case Tui.get_terminal_size() do
+      {:ok, {width, height}} ->
+        state
+        |> State.set_object("tui_metric", "terminal_width", width)
+        |> State.set_object("tui_metric", "terminal_height", height)
+        |> State.set_object("observation_status", "terminal_size", "success")
+      _ -> state
+    end
+  end
+
+  defp observe_display_mode(state) do
+    mode = Tui.get_display_mode()
+    state
+    |> State.set_object("tui_metric", "display_mode", mode)
+    |> State.set_object("observation_status", "display_mode", "success")
   end
 end
