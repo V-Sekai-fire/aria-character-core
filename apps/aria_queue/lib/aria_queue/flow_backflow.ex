@@ -97,29 +97,26 @@ defmodule AriaQueue.FlowBackflow do
   # Private implementation
 
   defp process_with_demand_control(data, state, source_fn, filter_fn, sink_fn) do
-    # Implement GPU convergence-style processing with backflow
-    chunk_size = calculate_chunk_size(state.current_demand, length(data))
-    
-    data
-    |> Enum.chunk_every(chunk_size)
+    # Implement idempotent Flow processing - each item processed exactly once
+    results = data
     |> Flow.from_enumerable(stages: state.stages)
-    |> Flow.map(fn chunk ->
+    |> Flow.map(fn item ->
       # Source stage with backflow awareness
-      source_result = Enum.map(chunk, source_fn)
+      source_result = source_fn.(item)
       
       # Check for backpressure signals
       if should_apply_backpressure?(state) do
-        signal_backflow_upstream(state, :backpressure, %{chunk_size: length(chunk)})
+        signal_backflow_upstream(state, :backpressure, %{item_id: Map.get(item, :id)})
       end
       
       source_result
     end)
-    |> Flow.flat_map(fn source_results ->
+    |> Flow.map(fn source_result ->
       # Filter stage with demand-driven processing
-      filtered = Enum.map(source_results, filter_fn)
+      filtered = filter_fn.(source_result)
       
       # Signal demand downstream based on processing capacity
-      signal_demand_downstream(state, length(filtered))
+      signal_demand_downstream(state, 1)
       
       filtered
     end)
@@ -134,20 +131,35 @@ defmodule AriaQueue.FlowBackflow do
       
       result
     end)
-    |> Flow.partition()
-    |> Flow.reduce(fn -> %{results: [], metrics: %{}} end, fn item, acc ->
-      %{
-        results: [item | acc.results],
-        metrics: update_processing_metrics(acc.metrics, item)
-      }
-    end)
     |> Enum.to_list()
-    |> aggregate_results()
+    
+    # Create metrics for all results
+    metrics = %{
+      total_items: length(results),
+      total_processing_time: Enum.reduce(results, 0, fn result, acc ->
+        acc + Map.get(result, :processing_time_us, 0)
+      end),
+      backpressure_events: Enum.count(results, fn result ->
+        Map.get(result, :processing_heavy, false)
+      end)
+    }
+    
+    %{
+      results: results,
+      metrics: metrics,
+      processed_count: length(results)
+    }
   end
 
   defp calculate_chunk_size(current_demand, data_length) do
-    base_chunk = div(data_length, current_demand)
-    max(1, min(base_chunk, 100))  # Keep chunks reasonable
+    # For small datasets, process everything in one chunk
+    if data_length <= 10 do
+      data_length
+    else
+      # For larger datasets, calculate reasonable chunk size
+      base_chunk = max(1, div(data_length, current_demand))
+      min(base_chunk, 100)  # Keep chunks reasonable
+    end
   end
 
   defp should_apply_backpressure?(state) do
