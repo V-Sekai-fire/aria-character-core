@@ -55,8 +55,9 @@ STN/STNP doesn't natively handle:
 ```elixir
 defmodule AriaEngine.STNSolver do
   @moduledoc """
-  Simple Temporal Network solver using Floyd-Warshall algorithm.
-  Handles temporal precedence and duration constraints.
+  Simple Temporal Network solver optimized for temporal planning workloads.
+  Uses Path Consistency (PC-2) algorithm for optimal STN solving performance.
+  Handles temporal precedence and duration constraints with incremental updates.
   """
 
   @type timepoint :: atom()
@@ -65,14 +66,24 @@ defmodule AriaEngine.STNSolver do
 
   @spec solve(constraints :: [constraint()]) :: {:ok, distance_graph()} | {:error, :inconsistent}
   def solve(constraints) do
-    # Build distance graph
-    # Apply Floyd-Warshall with interval arithmetic
-    # Check for negative cycles (inconsistency)
+    # Build constraint graph
+    # Apply Path Consistency (PC-2) algorithm - O(n³) with early termination
+    # PC-2 is specifically designed for STNs and outperforms Floyd-Warshall
+    # in practice due to constraint propagation optimizations
+    # Returns minimal network with tightest bounds
+  end
+
+  @spec solve_incremental(distance_graph(), [constraint()]) :: 
+    {:ok, distance_graph()} | {:error, :inconsistent}
+  def solve_incremental(existing_solution, new_constraints) do
+    # Incremental constraint propagation for dynamic updates
+    # Only propagates changes from new constraints, avoiding full recomputation
+    # Critical for real-time replanning scenarios
   end
 
   @spec is_consistent?(distance_graph()) :: boolean()
   def is_consistent?(graph) do
-    # Check diagonal elements for negative values
+    # Check diagonal elements for negative values (negative cycles)
   end
 
   @spec get_bounds(distance_graph(), timepoint(), timepoint()) :: {integer(), integer()}
