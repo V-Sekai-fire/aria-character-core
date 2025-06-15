@@ -219,7 +219,7 @@ The following MCP tools must be implemented and tested with real planner data st
 
 ### MCP Tool Schema Alignment
 
-The MCP tool implementations must use the exact data structures defined in `/apps/aria_timestrike/docs/temporal_planner_data_structures.md`:
+The MCP tool implementations must use the exact data structures defined in `/docs/aria_timestrike/temporal_planner_data_structures.md`:
 
 #### Tool Input/Output Types
 

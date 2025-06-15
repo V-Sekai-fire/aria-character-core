@@ -26,7 +26,7 @@ end
 
 ## Documentation
 
-See the main TimeStrike design document at `apps/aria_timestrike/docs/readme.md` for the complete scenario specification and requirements.
+See the main TimeStrike design document at `docs/aria_timestrike/readme.md` for the complete scenario specification and requirements.
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
