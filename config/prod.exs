@@ -17,10 +17,10 @@ config :aria_data, AriaData.AuthRepo,
   pool_size: String.to_integer(System.get_env("AUTH_POOL_SIZE") || "8"),
   ssl: true
 
-config :aria_data, AriaData.QueueRepo,
-  url: System.get_env("CRDB_URL_QUEUE") || "#{System.get_env("CRDB_BASE_URL")}/aria_queue",
-  pool_size: String.to_integer(System.get_env("QUEUE_POOL_SIZE") || "8"),
-  ssl: true
+# config :aria_data, AriaData.QueueRepo,
+#   url: System.get_env("CRDB_URL_QUEUE") || "#{System.get_env("CRDB_BASE_URL")}/aria_queue",
+#   pool_size: String.to_integer(System.get_env("QUEUE_POOL_SIZE") || "8"),
+#   ssl: true
 
 config :aria_data, AriaData.StorageRepo,
   url: System.get_env("CRDB_URL_STORAGE") || "#{System.get_env("CRDB_BASE_URL")}/aria_storage",
@@ -48,28 +48,28 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
   server: true
 
 # Production Oban configuration
-config :aria_queue, Oban,
-  repo: AriaData.QueueRepo,
-  notifier: Oban.Notifiers.PG,
-  plugins: [
-    Oban.Plugins.Pruner,
-    {Oban.Plugins.Cron,
-     crontab: [
-       {"0 2 * * *", AriaData.Workers.DatabaseCleanup},
-       {"*/15 * * * *", AriaStorage.Workers.CDNSync}
-     ]}
-  ],
-  queues: [
-    # Temporal planner queues (Resolution 2)
-    sequential_actions: 1,    # Single worker for strict temporal ordering
-    parallel_actions: String.to_integer(System.get_env("PARALLEL_ACTIONS_SIZE") || "5"),
-    instant_actions: String.to_integer(System.get_env("INSTANT_ACTIONS_SIZE") || "3"),
-    # Legacy application queues
-    ai_generation: String.to_integer(System.get_env("AI_QUEUE_SIZE") || "10"),
-    planning: String.to_integer(System.get_env("PLANNING_QUEUE_SIZE") || "20"),
-    storage_sync: String.to_integer(System.get_env("STORAGE_QUEUE_SIZE") || "5"),
-    monitoring: String.to_integer(System.get_env("MONITOR_QUEUE_SIZE") || "3")
-  ]
+# config :aria_queue, Oban,
+#   repo: AriaData.QueueRepo,
+#   notifier: Oban.Notifiers.PG,
+#   plugins: [
+#     Oban.Plugins.Pruner,
+#     {Oban.Plugins.Cron,
+#      crontab: [
+#        {"0 2 * * *", AriaData.Workers.DatabaseCleanup},
+#        {"*/15 * * * *", AriaStorage.Workers.CDNSync}
+#      ]}
+#   ],
+#   queues: [
+#     # Temporal planner queues (Resolution 2)
+#     sequential_actions: 1,    # Single worker for strict temporal ordering
+#     parallel_actions: String.to_integer(System.get_env("PARALLEL_ACTIONS_SIZE") || "5"),
+#     instant_actions: String.to_integer(System.get_env("INSTANT_ACTIONS_SIZE") || "3"),
+#     # Legacy application queues
+#     ai_generation: String.to_integer(System.get_env("AI_QUEUE_SIZE") || "10"),
+#     planning: String.to_integer(System.get_env("PLANNING_QUEUE_SIZE") || "20"),
+#     storage_sync: String.to_integer(System.get_env("STORAGE_QUEUE_SIZE") || "5"),
+#     monitoring: String.to_integer(System.get_env("MONITOR_QUEUE_SIZE") || "3")
+#   ]
 
 # Production OpenBao configuration
 config :aria_security,

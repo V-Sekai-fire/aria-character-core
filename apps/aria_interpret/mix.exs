@@ -34,9 +34,6 @@ defmodule AriaInterpret.MixProject do
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
       
-      # Background job processing (dependency on aria_queue) 
-      {:aria_queue, in_umbrella: true},
-      
       # JSON handling
       {:jason, "~> 1.4"},
       

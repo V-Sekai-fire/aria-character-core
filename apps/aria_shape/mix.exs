@@ -40,9 +40,6 @@ defmodule AriaShape.MixProject do
       # Storage for models and assets
       {:aria_storage, in_umbrella: true},
       
-      # Background processing
-      {:aria_queue, in_umbrella: true},
-      
       # JSON handling
       {:jason, "~> 1.4"},
       

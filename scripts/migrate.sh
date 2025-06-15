@@ -24,9 +24,6 @@ echo "Running AriaData.Repo migrations..."
 echo "Running AriaData.AuthRepo migrations..."
 /app/bin/aria_queue eval "AriaData.AuthRepo.migrate()"
 
-echo "Running AriaData.QueueRepo migrations..."
-/app/bin/aria_queue eval "AriaData.QueueRepo.migrate()"
-
 echo "Running AriaData.StorageRepo migrations..."
 /app/bin/aria_queue eval "AriaData.StorageRepo.migrate()"
 

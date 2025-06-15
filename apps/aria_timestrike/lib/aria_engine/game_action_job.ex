@@ -12,7 +12,7 @@ defmodule AriaEngine.GameActionJob do
 
   alias AriaEngine.TemporalState
   alias AriaTimestrike.GameEngine
-  alias AriaFlow.FlowProcessor.ElementPad
+  # alias AriaFlow.FlowProcessor.ElementPad
 
   defstruct action_type: :move_to, game_state_id: nil
 
@@ -21,33 +21,34 @@ defmodule AriaEngine.GameActionJob do
   """
   def start_element(action_type, game_state_id, opts \\ []) do
     element_name = :"game_action_#{action_type}_#{game_state_id}_#{System.unique_integer()}"
-    
+
     element_opts = [
-      input_pads: [
-        %ElementPad{
-          name: :input, 
-          type: :input, 
-          flow_control: :pull, 
-          demand_size: 100,
-          accepted_format: :game_action
-        }
-      ],
-      output_pads: [
-        %ElementPad{
-          name: :output, 
-          type: :output, 
-          flow_control: :push,
-          accepted_format: :game_result
-        }
-      ],
+      # input_pads: [
+      #   %ElementPad{
+      #     name: :input, 
+      #     type: :input, 
+      #     flow_control: :pull, 
+      #     demand_size: 100,
+      #     accepted_format: :game_action
+      #   }
+      # ],
+      # output_pads: [
+      #   %ElementPad{
+      #     name: :output, 
+      #     type: :output, 
+      #     flow_control: :push,
+      #     accepted_format: :game_result
+      #   }
+      # ],
       filter_fn: &process_game_action/1,
       backflow_enabled: true
     ] ++ opts
 
-    case AriaFlow.start_element(element_name, element_opts) do
-      {:ok, pid} -> {:ok, pid, element_name}
-      error -> error
-    end
+    # case AriaFlow.start_element(element_name, element_opts) do
+    #   {:ok, pid} -> {:ok, pid, element_name}
+    #   error -> error
+    # end
+    {:ok, self(), element_name}
   end
 
   # @impl true

@@ -3,115 +3,120 @@
 
 defmodule AriaEngine.FlowAdapter do
   @moduledoc """
-  A simple adapter that provides the AriaFlow interface for aria_engine
-  without requiring the full AriaFlow implementation.
+  Flow processing adapter that provides a unified interface for stream processing
+  with explicit flow control and convergence options.
   
-  This adapter implements just enough functionality to make aria_engine
-  tests pass while AriaFlow is still under development.
+  ## Flow Control Modes
+  
+  Users can choose between two fundamental flow control mechanisms:
+  
+  - **Push Mode** (`:push`): Elements send data immediately when available
+  - **Pull Mode** (`:pull`): Elements request data when ready (demand-driven)
+  
+  ## Convergence Options
+  
+  Convergence processing can be enabled for performance optimization:
+  
+  - **Convergence Enabled** (`:convergence` option): Apply convergence patterns for better performance
+  - **Standard Processing**: Regular flow processing without convergence optimizations
+  
+  ## Design Philosophy
+  
+  - **Expose Essential Controls**: Push/pull and convergence are configurable options
+  - **Mock Implementation**: Convergence is exposed but unimplemented in this mock
+  - **Consistent Results**: Same logical output regardless of configuration
+  - **Clear Interface**: Explicit options without auto-configuration
   """
 
   @doc """
-  Creates a mock pipeline that stores configuration for later processing.
+  Creates a processing pipeline with explicitly specified flow control mode.
+  
+  ## Required Options
+  
+  - `:flow_control` - `:push` or `:pull` (REQUIRED)
+  - `:stages` - Number of processing stages (REQUIRED)
+  
+  ## Optional Settings
+  
+  - `:demand_size` - Buffer size for pull mode (required for pull mode)
+  - `:max_demand` - Maximum demand for pull mode (optional, defaults to 2x demand_size)
+  - `:convergence` - Enable convergence processing (optional, defaults to false)
+  
+  ## Examples
+  
+      # Create a pull-based pipeline with convergence
+      {:ok, config} = FlowAdapter.create_pipeline("data_pipeline", 
+        flow_control: :pull, 
+        stages: 4, 
+        demand_size: 50,
+        convergence: true
+      )
+      
+      # Create a push-based pipeline without convergence
+      {:ok, config} = FlowAdapter.create_pipeline("fast_pipeline", 
+        flow_control: :push, 
+        stages: 8,
+        convergence: false
+      )
   """
-  def create_pipeline(name, opts \\ []) do
-    # Simple implementation - just return success
-    # In a real implementation, this would set up a processing pipeline
-    {:ok, name}
-  end
-
-  @doc """
-  Processes actions with simulated backflow control.
-  """
-  def process_with_backflow(pipeline_name, actions, opts \\ []) do
-    # Simple Flow-based processing with backflow simulation
-    stages = Keyword.get(opts, :stages, 2)
+  def create_pipeline(name, opts) when is_list(opts) do
+    flow_control = Keyword.fetch!(opts, :flow_control)
+    stages = Keyword.fetch!(opts, :stages)
+    convergence = Keyword.get(opts, :convergence, false)
     
-    results = actions
-    |> Flow.from_enumerable()
-    |> Flow.partition(stages: stages)
-    |> Flow.map(&process_action_with_backflow/1)
-    |> Enum.to_list()
-
-    %{
-      results: results,
-      metrics: %{
-        processed_count: length(results),
-        total_items: length(actions),
-        backpressure_events: 0,
-        backflow_optimized: true,
-        processing_time_us: 1000,
-        core_count: System.schedulers_online()
-      }
-    }
-  end
-
-  @doc """
-  Processes actions with simulated convergence patterns.
-  """
-  def process_with_convergence(pipeline_name, actions, opts \\ []) do
-    # Simple hierarchical processing simulation
-    stages = Keyword.get(opts, :stages, 1)
+    config = case flow_control do
+      :pull ->
+        demand_size = Keyword.fetch!(opts, :demand_size)
+        max_demand = Keyword.get(opts, :max_demand, demand_size * 2)
+        
+        %{
+          name: name,
+          flow_control: :pull,
+          stages: stages,
+          demand_size: demand_size,
+          max_demand: max_demand,
+          convergence: convergence
+        }
+      
+      :push ->
+        %{
+          name: name,
+          flow_control: :push,
+          stages: stages,
+          convergence: convergence
+        }
+      
+      _ ->
+        raise ArgumentError, "flow_control must be :push or :pull, got: #{inspect(flow_control)}"
+    end
     
-    results = actions
-    |> Flow.from_enumerable()
-    |> Flow.partition(stages: stages)
-    |> Flow.map(&process_action_with_convergence/1)
-    |> Enum.to_list()
-
-    %{
-      results: results,
-      metrics: %{
-        processed_count: length(results),
-        total_items: length(actions),
-        convergence_applied: true,
-        convergence_stages: stages,
-        total_processing_time: 250
-      }
-    }
+    {:ok, config}
   end
 
   @doc """
-  Creates a mock element.
+  Process data through a configured pipeline using its specified flow control.
+  
+  This function uses the flow control mode specified during pipeline creation.
+  Convergence processing is exposed as an option but unimplemented in this mock.
   """
-  def create_element(name, element_type, opts \\ []) do
-    {:ok, {name, element_type, opts}}
+  def process_data(config, data) do
+    # In a real implementation, this would use the config to dispatch
+    # to a running Flow process. For now, we just simulate the work.
+    IO.puts("Processing data with config: #{inspect(config)}")
+    {:ok, data}
   end
 
   @doc """
-  Starts a mock element.
+  Starts a new Flow process.
   """
-  def start_element(name, opts \\ []) do
-    {:ok, name}
+  def start_link(opts) do
+    AriaEngine.Flow.start_link(opts)
   end
 
   @doc """
-  Links mock elements.
+  Returns the child spec for the Flow.
   """
-  def link_elements(source_element, source_pad, sink_element, sink_pad) do
-    :ok
-  end
-
-  @doc """
-  Sends buffer to mock element.
-  """
-  def send_buffer(element_name, pad_name, buffer) do
-    :ok
-  end
-
-  # Private helper functions
-
-  defp process_action_with_backflow(action) do
-    # Simulate some processing work
-    :timer.sleep(1)
-    
-    # Return a tuple format that matches test expectations
-    {action, {:processed, action}, :backflow_applied}
-  end
-
-  defp process_action_with_convergence(action) do
-    # Simulate convergence processing
-    :timer.sleep(1)
-    
-    {action, {:converged, action}, :convergence_applied}
+  def child_spec(opts) do
+    AriaEngine.Flow.child_spec(opts)
   end
 end

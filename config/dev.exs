@@ -33,14 +33,6 @@ config :aria_data, AriaData.AuthRepo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 8
 
-# Queue repository for background jobs
-config :aria_data, AriaData.QueueRepo,
-  adapter: Ecto.Adapters.SQLite3,
-  database: "priv/aria_queue_dev.db",
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 8
-
 # Storage repository for file metadata
 config :aria_data, AriaData.StorageRepo,
   adapter: Ecto.Adapters.SQLite3,
@@ -75,18 +67,18 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
   watchers: []
 
 # Configure Membrane Job Processor for development (replaces Oban)
-config :aria_queue, AriaQueue.MembraneJobProcessor,
-  queues: %{
-    # Temporal planner queues (Resolution 2)
-    sequential_actions: 1,    # Single worker for strict temporal ordering
-    parallel_actions: 5,      # Multi-worker for concurrent execution
-    instant_actions: 3,       # High-priority immediate responses
-    # Legacy application queues
-    ai_generation: 5,
-    planning: 10,
-    storage_sync: 3,
-    monitoring: 2
-  }
+# config :aria_queue, AriaQueue.MembraneJobProcessor,
+#   queues: %{
+#     # Temporal planner queues (Resolution 2)
+#     sequential_actions: 1,    # Single worker for strict temporal ordering
+#     parallel_actions: 5,      # Multi-worker for concurrent execution
+#     instant_actions: 3,       # High-priority immediate responses
+#     # Legacy application queues
+#     ai_generation: 5,
+#     planning: 10,
+#     storage_sync: 3,
+#     monitoring: 2
+#   }
 
 # Security Service development configuration (using mock for simplicity)
 config :aria_security,

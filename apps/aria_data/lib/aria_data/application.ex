@@ -16,7 +16,6 @@ defmodule AriaData.Application do
       
       # Specialized repositories for different services
       {AriaData.AuthRepo, []},
-      {AriaData.QueueRepo, []},
       {AriaData.StorageRepo, []},
       {AriaData.MonitorRepo, []},
       {AriaData.EngineRepo, []}

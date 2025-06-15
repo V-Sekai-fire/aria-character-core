@@ -18,12 +18,12 @@ defmodule AriaEngine.DebugFlowTest do
 
       # Process with simple Flow
       results = actions
-      |> Flow.from_enumerable(stages: 1)
-      |> Flow.map(fn item -> 
+      # |> Flow.from_enumerable(stages: 1)
+      |> Enum.map(fn item -> 
         IO.puts("Processing item: #{inspect(item)}")
         %{id: item.id, processed: true}
       end)
-      |> Enum.to_list()
+      # |> Enum.to_list()
 
       IO.puts("Final results: #{inspect(results)}")
       IO.puts("Results count: #{length(results)}")
@@ -44,8 +44,8 @@ defmodule AriaEngine.DebugFlowTest do
 
       results = actions
       |> Enum.chunk_every(chunk_size)
-      |> Flow.from_enumerable(stages: 2)
-      |> Flow.map(fn chunk ->
+      # |> Flow.from_enumerable(stages: 2)
+      |> Enum.map(fn chunk ->
         IO.puts("Processing chunk: #{inspect(chunk)}")
         processed_chunk = Enum.map(chunk, fn item ->
           %{id: item.id, processed: true}
@@ -53,11 +53,12 @@ defmodule AriaEngine.DebugFlowTest do
         IO.puts("Processed chunk: #{inspect(processed_chunk)}")
         processed_chunk
       end)
-      |> Flow.flat_map(fn chunk_result ->
-        IO.puts("Flattening: #{inspect(chunk_result)}")
-        chunk_result
-      end)
-      |> Enum.to_list()
+      # |> Flow.flat_map(fn chunk_result ->
+      #   IO.puts("Flattening: #{inspect(chunk_result)}")
+      #   chunk_result
+      # end)
+      |> List.flatten()
+      # |> Enum.to_list()
 
       IO.puts("Final results: #{inspect(results)}")
       IO.puts("Results count: #{length(results)}")

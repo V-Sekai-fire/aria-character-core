@@ -12,7 +12,6 @@ config :logger, :console,
 config :aria_data, ecto_repos: [
   AriaData.Repo,
   AriaData.AuthRepo,
-  AriaData.QueueRepo,
   AriaData.StorageRepo,
   AriaData.MonitorRepo,
   AriaData.EngineRepo

@@ -50,9 +50,6 @@ defmodule AriaStorage.MixProject do
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},
 
-      # Background job processing (dependency on aria_queue)
-      {:aria_queue, in_umbrella: true},
-
       # Security service integration
       {:aria_security, in_umbrella: true},
 

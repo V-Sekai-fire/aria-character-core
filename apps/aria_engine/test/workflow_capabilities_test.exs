@@ -42,10 +42,8 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
       )
 
       # Verify results (simplified for Flow-based processing)
-      assert {:ok, _pipeline} = result
-      
-      # For now, just verify the pipeline processing was successful
-      # TODO: Implement full Flow-based workflow result collection and validation
+      assert is_map(result)
+      assert length(result.results) == 3
     end
 
     test "job persistence and durability with Flow" do
@@ -64,7 +62,8 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
         [storage_path: storage_path, persist_results: true]
       )
 
-      assert {:ok, _pipeline} = result
+      assert is_map(result)
+      assert length(result.results) == 2
 
       # Clean up
       File.rm_rf(storage_path)
@@ -77,7 +76,7 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
 
       # Test with 1 core
       start_time_1 = DateTime.utc_now()
-      {:ok, _pipeline_1} = FlowBackflowTester.process_with_backflow_optimization(
+      _results_1 = FlowBackflowTester.process_with_backflow_optimization(
         "single_core_test",
         actions,
         [max_demand: 1, stages: 1]
@@ -87,7 +86,7 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
       # Test with all cores
       core_count = System.schedulers_online()
       start_time_all = DateTime.utc_now()
-      {:ok, _pipeline_all} = FlowBackflowTester.process_with_backflow_optimization(
+      _results_all = FlowBackflowTester.process_with_backflow_optimization(
         "multi_core_test",
         actions,
         [max_demand: core_count, stages: core_count]
@@ -123,7 +122,8 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
         [routing: :game_subsystems, parallel: true]
       )
 
-      assert {:ok, _pipeline} = result
+      assert is_map(result)
+      assert length(result.results) == 3
     end
 
     test "simple random movement performance test" do
@@ -132,7 +132,7 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
 
       start_time = DateTime.utc_now()
       
-      {:ok, _pipeline} = FlowBackflowTester.process_with_backflow_optimization(
+      _results = FlowBackflowTester.process_with_backflow_optimization(
         "movement_perf_test",
         actions,
         [processor_function: &RandomMovementProcessor.process_movement/1]
@@ -157,7 +157,7 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
       start_time = DateTime.utc_now()
       
       # Process with optimized settings
-      {:ok, _pipeline} = FlowBackflowTester.process_with_backflow_optimization(
+      _results = FlowBackflowTester.process_with_backflow_optimization(
         "movement_fps_test",
         actions,
         [

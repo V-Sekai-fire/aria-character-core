@@ -15,7 +15,7 @@ defmodule AriaCharacterCore.MixProject do
         "test.all": :test,
         "test.watch": :test
       ],
-      elixirc_options: [warnings_as_errors: false],
+      elixirc_options: [warnings_as_errors: true],
     ]
   end
 
@@ -45,8 +45,27 @@ defmodule AriaCharacterCore.MixProject do
       "test.all": ["test"],
       "test.watch": ["test.watch"],
       setup: ["deps.get", "ecto.setup"],
-      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
-      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "ecto.setup": [
+        "ecto.create -r AriaData.Repo",
+        "ecto.migrate -r AriaData.Repo",
+        "ecto.create -r AriaData.AuthRepo",
+        "ecto.migrate -r AriaData.AuthRepo",
+        "ecto.create -r AriaData.StorageRepo",
+        "ecto.migrate -r AriaData.StorageRepo",
+        "ecto.create -r AriaData.MonitorRepo",
+        "ecto.migrate -r AriaData.MonitorRepo",
+        "ecto.create -r AriaData.EngineRepo",
+        "ecto.migrate -r AriaData.EngineRepo",
+        "run priv/repo/seeds.exs"
+      ],
+      "ecto.reset": [
+        "ecto.drop -r AriaData.Repo",
+        "ecto.drop -r AriaData.AuthRepo",
+        "ecto.drop -r AriaData.StorageRepo",
+        "ecto.drop -r AriaData.MonitorRepo",
+        "ecto.drop -r AriaData.EngineRepo",
+        "ecto.setup"
+      ],
       format: ["format", "cmd --app aria_* mix format"],
       quality: ["format", "credo --strict", "dialyzer"],
       app: ["app"],

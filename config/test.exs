@@ -19,12 +19,6 @@ config :aria_data, AriaData.AuthRepo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 8
 
-config :aria_data, AriaData.QueueRepo,
-  adapter: Ecto.Adapters.SQLite3,
-  database: "priv/aria_queue_test#{System.get_env("MIX_TEST_PARTITION")}.db",
-  pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 8
-
 config :aria_data, AriaData.StorageRepo,
   adapter: Ecto.Adapters.SQLite3,
   database: "priv/aria_storage_test#{System.get_env("MIX_TEST_PARTITION")}.db",
@@ -48,15 +42,6 @@ config :aria_coordinate, AriaCoordinateWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
   secret_key_base: "test_secret_key_base_for_testing_only",
   server: false
-
-# Test Membrane Job Processor configuration (replaces Oban for testing)
-config :aria_queue, AriaQueue.MembraneJobProcessor,
-  queues: %{
-    # Temporal planner queues (set to 1 for testing)
-    sequential_actions: 1,
-    parallel_actions: 1,
-    instant_actions: 1
-  }
 
 # Test security configuration (using mock)
 config :aria_security,
