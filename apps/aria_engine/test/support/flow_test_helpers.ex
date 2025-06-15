@@ -182,14 +182,14 @@ defmodule AriaEngine.Test.FlowTestHelpers do
     """
 
     def collect_fps_stats(start_time, end_time, processed_count) do
-      duration_ms = DateTime.diff(end_time, start_time, :millisecond)
+      duration_ms = max(DateTime.diff(end_time, start_time, :millisecond), 1)  # Ensure minimum 1ms
       
       %{
         start_time: start_time,
         end_time: end_time,
         duration_ms: duration_ms,
         processed_count: processed_count,
-        fps: if(duration_ms > 0, do: processed_count * 1000 / duration_ms, else: 0),
+        fps: if(duration_ms > 0, do: processed_count * 1000 / duration_ms, else: processed_count * 1000),
         avg_processing_time_ms: if(processed_count > 0, do: duration_ms / processed_count, else: 0)
       }
     end

@@ -188,9 +188,20 @@ defmodule AriaQueue.FlowBackflow do
   @impl true
   def init({name, opts}) do
     # Initialize element with Membrane-style pads
+    init_element(name, opts)
+  end
+
+  def init({name, element_type, opts}) do
+    # Initialize element with Membrane-style pads, including element_type
+    opts_with_type = Keyword.put(opts, :element_type, element_type)
+    init_element(name, opts_with_type)
+  end
+
+  defp init_element(name, opts) do
     input_pads = Keyword.get(opts, :input_pads, [])
     output_pads = Keyword.get(opts, :output_pads, [])
     filter_fn = Keyword.get(opts, :filter_fn, &default_filter/1)
+    element_type = Keyword.get(opts, :element_type, :filter)
     
     # Create pad state maps
     input_pad_map = Map.new(input_pads, fn pad -> {pad.name, pad} end)
