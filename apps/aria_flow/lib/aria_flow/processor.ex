@@ -12,7 +12,7 @@ defmodule AriaFlow.Processor do
   @doc """
   Process data through adaptive processing pipeline with demand signaling.
   """
-  def process_with_backflow(pipeline_name, data, opts \\ []) do
+  def process_with_backflow(_pipeline_name, data, opts \\ []) do
     # Direct processing without GenServer coordination overhead
     default_state = %{
       stages: Keyword.get(opts, :stages, 4),
@@ -27,7 +27,7 @@ defmodule AriaFlow.Processor do
   @doc """
   Process data with hierarchical reduction for optimal efficiency.
   """
-  def process_with_convergence(pipeline_name, data, opts \\ []) do
+  def process_with_convergence(_pipeline_name, data, opts \\ []) do
     # Direct processing without GenServer coordination overhead
     default_state = %{
       stages: Keyword.get(opts, :stages, 4),
@@ -63,7 +63,7 @@ defmodule AriaFlow.Processor do
     source_fn = Keyword.get(opts, :source_fn, &default_source/1)
     filter_fn = Keyword.get(opts, :filter_fn, &default_filter/1)
     sink_fn = Keyword.get(opts, :sink_fn, &default_sink/1)
-    convergence_fn = Keyword.get(opts, :convergence_fn, &default_convergence/2)
+    _convergence_fn = Keyword.get(opts, :convergence_fn, &default_convergence/2)
     
     # Process with hierarchical convergence
     results = data

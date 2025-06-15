@@ -12,7 +12,7 @@ defmodule AriaEngine.GameActionJob do
 
   alias AriaEngine.TemporalState
   alias AriaTimestrike.GameEngine
-  alias AriaFlow.Element
+  alias AriaFlow.FlowProcessor.ElementPad
 
   defstruct action_type: :move_to, game_state_id: nil
 
@@ -24,7 +24,7 @@ defmodule AriaEngine.GameActionJob do
     
     element_opts = [
       input_pads: [
-        %MembraneFlowElement.Pad{
+        %ElementPad{
           name: :input, 
           type: :input, 
           flow_control: :pull, 
@@ -33,7 +33,7 @@ defmodule AriaEngine.GameActionJob do
         }
       ],
       output_pads: [
-        %MembraneFlowElement.Pad{
+        %ElementPad{
           name: :output, 
           type: :output, 
           flow_control: :push,
@@ -44,7 +44,7 @@ defmodule AriaEngine.GameActionJob do
       backflow_enabled: true
     ] ++ opts
 
-    case MembraneFlowElement.start_element(element_name, element_opts) do
+    case AriaFlow.start_element(element_name, element_opts) do
       {:ok, pid} -> {:ok, pid, element_name}
       error -> error
     end

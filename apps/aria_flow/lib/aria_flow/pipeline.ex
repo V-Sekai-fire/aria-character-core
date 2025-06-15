@@ -33,7 +33,7 @@ defmodule AriaFlow.Pipeline do
   @doc """
   Signal backpressure or demand to the pipeline.
   """
-  def signal_backflow(pipeline_name, signal_type, metadata \\ %{}) do
+  def signal_backflow(_pipeline_name, _signal_type, _metadata \\ %{}) do
     # Direct signaling without GenServer coordination overhead
     :ok
   end

@@ -13,10 +13,9 @@ defmodule AriaQueue.Application do
       {Registry, keys: :unique, name: AriaQueue.Registry},
       
       # Membrane-based job processor to replace Oban
-      {AriaQueue.MembraneJobProcessor, []},
+      {AriaQueue.MembraneJobProcessor, []}
       
-      # Flow-based parallel processor with GPU convergence principles
-      {AriaQueue.FlowProcessor, []}
+      # Note: AriaQueue.FlowProcessor now delegates to AriaFlow and doesn't need supervision
     ]
 
     opts = [strategy: :one_for_one, name: AriaQueue.Supervisor]

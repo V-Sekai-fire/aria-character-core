@@ -33,57 +33,6 @@ defmodule AriaFlow.FlowProcessor do
   @type demand_size :: pos_integer()
   @type buffer_data :: any()
 
-  @doc """
-  Process data with backflow (TDD stub).
-  """
-  @spec process_with_backflow(pipeline_name(), [buffer_data()], processing_opts()) :: 
-    map()
-  def process_with_backflow(_pipeline_name, data, _opts \\ []) when is_list(data) do
-    # TDD: Start with minimal implementation - return map directly as expected by test
-    %{
-      results: data,
-      metrics: %{
-        total_items: length(data),
-        processed_count: length(data)
-      },
-      processed_count: length(data)
-    }
-  end
-
-defmodule AriaFlow.FlowProcessor do
-  @moduledoc """
-  Core parallel processing system with Membrane-style elements and backflow control.
-  
-  TDD-focused implementation that provides demand-driven processing with maximum 
-  parallelism and minimal coordination overhead. Extracted from the original 
-  backflow implementation without GenServer complexity.
-  """
-
-  require Logger
-
-  # Type definitions from the backup
-  @type pipeline_name :: atom() | String.t()
-  @type element_name :: atom() | String.t()
-  @type pad_name :: atom() | String.t()
-  @type element_type :: :source | :filter | :sink
-  @type processing_function :: (any() -> any())
-  @type convergence_function :: (any(), any() -> any())
-  @type pipeline_opts :: [
-    stages: pos_integer(),
-    backflow_enabled: boolean(),
-    max_demand: pos_integer(),
-    min_demand: pos_integer()
-  ]
-  @type element_opts :: [
-    input_pads: [ElementPad.t()],
-    output_pads: [ElementPad.t()],
-    filter_fn: processing_function(),
-    element_type: element_type()
-  ]
-  @type processing_opts :: keyword()
-  @type demand_size :: pos_integer()
-  @type buffer_data :: any()
-
   # Extracted structs from backup
   defmodule ElementPad do
     @moduledoc """
@@ -104,14 +53,15 @@ defmodule AriaFlow.FlowProcessor do
       name: atom() | String.t(),
       type: :input | :output,
       flow_control: :push | :pull,
-      demand: non_neg_integer(),
+      demand: non_neg_integer() | nil,
       connected_to: {atom() | String.t(), atom() | String.t()} | nil,
-      buffer_queue: :queue.queue() | list(),
+      buffer_queue: :queue.queue() | list() | nil,
       accepted_format: any(),
       demand_size: pos_integer() | nil
     }
   end
 
+  # Buffer structure for data flowing through pads
   defmodule ElementBuffer do
     @moduledoc """
     Represents a buffer of data flowing through element pads.
@@ -128,7 +78,7 @@ defmodule AriaFlow.FlowProcessor do
 
     @type t :: %__MODULE__{
       payload: any(),
-      metadata: map(),
+      metadata: map() | nil,
       pts: integer() | nil,
       dts: integer() | nil,
       size: non_neg_integer() | nil,
@@ -137,23 +87,23 @@ defmodule AriaFlow.FlowProcessor do
     }
   end
 
-  # TDD stubs for core API - start minimal and grow
-  
+  # TDD API Functions - minimal implementations to make tests pass
+
   @doc """
-  Process data with backflow control (TDD stub).
+  Process data with backflow (TDD stub).
   """
   @spec process_with_backflow(pipeline_name(), [buffer_data()], processing_opts()) :: 
-    {:ok, map()} | {:error, any()}
+    map()
   def process_with_backflow(_pipeline_name, data, _opts \\ []) when is_list(data) do
-    # TDD: Start with minimal implementation that satisfies tests
-    {:ok, %{
+    # TDD: Start with minimal implementation - return map directly as expected by test
+    %{
       results: data,
       metrics: %{
         total_items: length(data),
         processed_count: length(data)
       },
       processed_count: length(data)
-    }}
+    }
   end
 
   @doc """
@@ -193,6 +143,15 @@ defmodule AriaFlow.FlowProcessor do
   end
 
   @doc """
+  Start element (TDD stub) - alias for create_element to match test expectations.
+  """
+  @spec start_element(element_name(), element_opts()) :: {:ok, pid()}
+  def start_element(name, opts \\ []) do
+    # TDD: For now just call create_element
+    create_element(name, :filter, opts)
+  end
+
+  @doc """
   Link elements (TDD stub).
   """
   @spec link_elements(element_name(), pad_name(), element_name(), pad_name()) :: :ok
@@ -204,7 +163,7 @@ defmodule AriaFlow.FlowProcessor do
   @doc """
   Send buffer (TDD stub).
   """
-  @spec send_buffer(element_name(), pad_name(), buffer_data()) :: :ok
+  @spec send_buffer(element_name(), pad_name(), ElementBuffer.t()) :: :ok
   def send_buffer(_element_name, _pad_name, _buffer) do
     # TDD: Just return :ok for now
     :ok
@@ -226,15 +185,5 @@ defmodule AriaFlow.FlowProcessor do
   def signal_backflow(_pipeline_name, _signal_type, _metadata \\ %{}) do
     # TDD: Just return :ok for now
     :ok
-  end
-
-  @doc """
-  Process buffer (TDD stub).
-  """
-  @spec process_buffer(element_name(), pad_name(), ElementBuffer.t()) :: 
-    {:ok, [ElementBuffer.t()]} | {:error, any()}
-  def process_buffer(_element_name, _pad_name, buffer) do
-    # TDD: Just return the buffer for now
-    {:ok, [buffer]}
   end
 end

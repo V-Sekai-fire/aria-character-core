@@ -15,7 +15,9 @@ defmodule AriaFlow.Application do
   def start(_type, _args) do
     children = [
       # Registry for Flow pipelines and elements
-      {Registry, keys: :unique, name: AriaFlow.Registry}
+      {Registry, keys: :unique, name: AriaFlow.Registry},
+      # GPU convergence processor for high-performance parallel processing
+      AriaFlow.GpuConvergenceProcessor
       # Note: AriaFlow.Backflow processes are started on-demand per pipeline/element
     ]
     

@@ -301,14 +301,10 @@ defmodule AriaQueue.FlowBackflow do
   @impl true
   def handle_call({:process_buffer, pad_name, buffer}, _from, state) do
     # Process buffer through element pad (Membrane-style processing)
-    case process_buffer_through_pad(state.element, pad_name, buffer) do
-      {:ok, output_buffers} ->
-        # Send output buffers to connected elements
-        send_buffers_to_connected_pads(output_buffers, state)
-        {:reply, :ok, state}
-      {:error, reason} ->
-        {:reply, {:error, reason}, state}
-    end
+    {:ok, output_buffers} = process_buffer_through_pad(state.element, pad_name, buffer)
+    # Send output buffers to connected elements
+    send_buffers_to_connected_pads(output_buffers, state)
+    {:reply, :ok, state}
   end
 
   @impl true
@@ -572,168 +568,18 @@ defmodule AriaQueue.FlowBackflow do
     }
   end
 
-  # Element definitions with pads (Membrane-style)
-  
-  defmodule ElementPad do
-    @moduledoc """
-    Represents a Membrane-style pad with demand-driven flow control.
-    """
-    defstruct [
-      :name,
-      :type,           # :input or :output
-      :flow_control,   # :push or :pull
-      :demand,         # current demand size
-      :connected_to,   # {element_name, pad_name}
-      :buffer_queue    # queue of pending buffers
-    ]
+  defp process_buffer_through_pad(_element, _pad_name, _buffer) do
+    # Stub implementation - delegate to AriaFlow when needed
+    {:ok, []}
   end
 
-  defmodule FlowElement do
-    @moduledoc """
-    Represents a Membrane-style element with input/output pads.
-    """
-    defstruct [
-      :name,
-      :type,           # :source, :filter, :sink
-      :pads,           # map of pad_name -> ElementPad
-      :state,          # element-specific state
-      :process_fn      # processing function
-    ]
+  defp send_buffers_to_connected_pads(_output_buffers, _state) do
+    # Stub implementation - delegate to AriaFlow when needed
+    :ok
   end
 
-  # Enhanced GenServer implementation with pad support
-
-  # Private helper functions for pad processing
-
-  defp create_flow_element(name, element_type, opts) do
-    pads = case element_type do
-      :source ->
-        %{
-          output: %ElementPad{
-            name: :output,
-            type: :output,
-            flow_control: :push,
-            demand: 0,
-            connected_to: nil,
-            buffer_queue: :queue.new()
-          }
-        }
-      :filter ->
-        %{
-          input: %ElementPad{
-            name: :input,
-            type: :input,
-            flow_control: :pull,
-            demand: 100,  # initial demand
-            connected_to: nil,
-            buffer_queue: :queue.new()
-          },
-          output: %ElementPad{
-            name: :output,
-            type: :output,
-            flow_control: :push,
-            demand: 0,
-            connected_to: nil,
-            buffer_queue: :queue.new()
-          }
-        }
-      :sink ->
-        %{
-          input: %ElementPad{
-            name: :input,
-            type: :input,
-            flow_control: :pull,
-            demand: 100,  # initial demand
-            connected_to: nil,
-            buffer_queue: :queue.new()
-          }
-        }
-    end
-
-    process_fn = Keyword.get(opts, :process_fn, &default_element_process/2)
-
-    %FlowElement{
-      name: name,
-      type: element_type,
-      pads: pads,
-      state: %{},
-      process_fn: process_fn
-    }
-  end
-
-  defp process_buffer_through_pad(element, pad_name, buffer) do
-    case Map.get(element.pads, pad_name) do
-      %ElementPad{type: :input} = pad ->
-        # Check flow control and demand before processing
-        demand = pad.demand || 0
-        case {pad.flow_control, demand} do
-          {:pull, demand} when demand > 0 ->
-            # Process input buffer through element
-            case element.process_fn.(buffer, element.state) do
-              {:ok, output_buffer, new_state} ->
-                new_element = %{element | state: new_state}
-                # Update pad demand
-                updated_pad = %{pad | demand: max(0, demand - 1)}
-                updated_element = put_in(new_element.pads[pad_name], updated_pad)
-                {:ok, [{:output, output_buffer, updated_element}]}
-              {:error, reason} ->
-                {:error, reason}
-            end
-          {:pull, _} ->
-            # No demand, buffer the input
-            buffer_queue = pad.buffer_queue || []
-            buffered_pad = %{pad | buffer_queue: [buffer | buffer_queue]}
-            updated_element = put_in(element.pads[pad_name], buffered_pad)
-            {:ok, [{:buffered, nil, updated_element}]}
-          {:push, _} ->
-            # Push mode, process immediately
-            case element.process_fn.(buffer, element.state) do
-              {:ok, output_buffer, new_state} ->
-                new_element = %{element | state: new_state}
-                {:ok, [{:output, output_buffer, new_element}]}
-              {:error, reason} ->
-                {:error, reason}
-            end
-        end
-      %ElementPad{type: :output} ->
-        # Output pad doesn't process, just forwards
-        {:ok, [{pad_name, buffer, element}]}
-      nil ->
-        {:error, :pad_not_found}
-    end
-  end
-
-  defp send_buffers_to_connected_pads(output_buffers, state) do
-    Enum.each(output_buffers, fn {pad_name, buffer, _element} ->
-      case Map.get(state.pad_connections, {state.element.name, pad_name}) do
-        {sink_element, sink_pad} ->
-          # Send buffer to connected element's pad
-          process_buffer(sink_element, sink_pad, buffer)
-        nil ->
-          # No connection, buffer is dropped (or could be stored)
-          :ok
-      end
-    end)
-  end
-
-  defp handle_pad_demand(state, pad_name, demand_size) do
-    # Update pad demand and potentially request more data upstream
-    case get_in(state.element.pads, [pad_name]) do
-      %ElementPad{type: :input} = pad ->
-        updated_pad = %{pad | demand: demand_size}
-        updated_element = put_in(state.element.pads[pad_name], updated_pad)
-        %{state | element: updated_element}
-      _ ->
-        state
-    end
-  end
-
-  defp default_element_process(buffer, element_state) do
-    # Default processing: simulate some work and pass through
-    processing_time = :rand.uniform(1000)  # 0-1ms of work
-    :timer.sleep(div(processing_time, 1000))
-    
-    processed_buffer = Map.put(buffer, :processed_at, System.monotonic_time(:microsecond))
-    {:ok, processed_buffer, element_state}
+  defp handle_pad_demand(state, _pad_name, _demand_size) do
+    # Stub implementation - delegate to AriaFlow when needed
+    state
   end
 end
