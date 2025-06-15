@@ -17,12 +17,12 @@ defmodule AriaTimestrike.PerformanceTest do
       {time_us, results} = :timer.tc(fn ->
         Enum.map(actions, fn {action_type, args} ->
           case action_type do
-            :move_to -> AriaTimestrike.move_to(initial_state, args)
+            :move_to -> AriaTimestrike.Core.move_to(initial_state, args)
             :attack ->
               # attack/2 only takes [agent_id, target_id], so we take first 2 args
-              AriaTimestrike.attack(initial_state, Enum.take(args, 2))
-            :skill_cast -> AriaTimestrike.skill_cast(initial_state, args)
-            :interact -> AriaTimestrike.interact(initial_state, args)
+              AriaTimestrike.Core.attack(initial_state, Enum.take(args, 2))
+            :skill_cast -> AriaTimestrike.Core.skill_cast(initial_state, args)
+            :interact -> AriaTimestrike.Core.interact(initial_state, args)
           end
         end)
       end)
@@ -61,10 +61,10 @@ defmodule AriaTimestrike.PerformanceTest do
           Task.async(fn ->
             Enum.map(action_chunk, fn {action_type, args} ->
               case action_type do
-                :move_to -> AriaTimestrike.move_to(initial_state, args)
-                :attack -> AriaTimestrike.attack(initial_state, args)
-                :skill_cast -> AriaTimestrike.skill_cast(initial_state, args)
-                :interact -> AriaTimestrike.interact(initial_state, args)
+                :move_to -> AriaTimestrike.Core.move_to(initial_state, args)
+                :attack -> AriaTimestrike.Core.attack(initial_state, args)
+                :skill_cast -> AriaTimestrike.Core.skill_cast(initial_state, args)
+                :interact -> AriaTimestrike.Core.interact(initial_state, args)
               end
             end)
           end)
@@ -150,10 +150,10 @@ defmodule AriaTimestrike.PerformanceTest do
     # Process actions and send results to appropriate subsystems
     Enum.each(actions, fn {action_type, args} ->
       result = case action_type do
-        :move_to -> AriaTimestrike.move_to(initial_state, args)
-        :attack -> AriaTimestrike.attack(initial_state, args)
-        :skill_cast -> AriaTimestrike.skill_cast(initial_state, args)
-        :interact -> AriaTimestrike.interact(initial_state, args)
+        :move_to -> AriaTimestrike.Core.move_to(initial_state, args)
+        :attack -> AriaTimestrike.Core.attack(initial_state, args)
+        :skill_cast -> AriaTimestrike.Core.skill_cast(initial_state, args)
+        :interact -> AriaTimestrike.Core.interact(initial_state, args)
       end
 
       # Route results to appropriate subsystems
