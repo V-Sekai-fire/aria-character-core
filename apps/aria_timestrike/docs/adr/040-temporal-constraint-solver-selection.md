@@ -13,6 +13,7 @@ Accepted
 ADR-038's timeline-based temporal planner requires a constraint solver to handle various types of temporal constraints including duration constraints, resource constraints, synchronization constraints, and transition constraints. There are multiple temporal network formalisms available, each with different computational properties and expressiveness.
 
 The key constraint types identified in ADR-038 are:
+
 - **Temporal constraints**: min/max duration, precedence relationships
 - **Resource constraints**: consumption rates, capacity limits, thresholds
 - **Synchronization constraints**: conditional state dependencies
@@ -42,6 +43,7 @@ We will implement a **Simple Temporal Network with Preferences (STNP)** solver w
 #### Why Custom Extensions?
 
 STN/STNP doesn't natively handle:
+
 - **Resource constraints**: Need custom propagation for consumption/capacity
 - **Synchronization constraints**: Need conditional constraint activation
 - **State transitions**: Need discrete state space reasoning
@@ -56,23 +58,23 @@ defmodule AriaEngine.STNSolver do
   Simple Temporal Network solver using Floyd-Warshall algorithm.
   Handles temporal precedence and duration constraints.
   """
-  
+
   @type timepoint :: atom()
   @type constraint :: {timepoint(), timepoint(), integer(), integer()}
   @type distance_graph :: %{timepoint() => %{timepoint() => {integer(), integer()}}}
-  
+
   @spec solve(constraints :: [constraint()]) :: {:ok, distance_graph()} | {:error, :inconsistent}
   def solve(constraints) do
     # Build distance graph
-    # Apply Floyd-Warshall with interval arithmetic  
+    # Apply Floyd-Warshall with interval arithmetic
     # Check for negative cycles (inconsistency)
   end
-  
+
   @spec is_consistent?(distance_graph()) :: boolean()
   def is_consistent?(graph) do
     # Check diagonal elements for negative values
   end
-  
+
   @spec get_bounds(distance_graph(), timepoint(), timepoint()) :: {integer(), integer()}
   def get_bounds(graph, from, to) do
     # Extract temporal bounds between timepoints
@@ -88,7 +90,7 @@ defmodule AriaEngine.ResourceConstraintSolver do
   Resource constraint solver integrated with STN.
   Handles consumption rates, capacity limits, and thresholds.
   """
-  
+
   @type resource :: atom()
   @type resource_constraint :: %{
     resource: resource(),
@@ -97,8 +99,8 @@ defmodule AriaEngine.ResourceConstraintSolver do
     capacity_limit: number(),
     threshold: number()
   }
-  
-  @spec check_resource_feasibility([resource_constraint()], distance_graph()) :: 
+
+  @spec check_resource_feasibility([resource_constraint()], distance_graph()) ::
     {:ok, [resource_constraint()]} | {:error, :resource_conflict}
   def check_resource_feasibility(constraints, temporal_bounds) do
     # Check resource availability over time
@@ -116,15 +118,15 @@ defmodule AriaEngine.SynchronizationSolver do
   Synchronization constraint solver for conditional dependencies.
   Handles when-then rules and state-dependent activations.
   """
-  
+
   @type sync_constraint :: %{
     condition: {atom(), any()},
     consequence: {atom(), any()},
     timepoints: [timepoint()]
   }
-  
+
   @spec propagate_sync_constraints([sync_constraint()], distance_graph()) ::
-    {:ok, [constraint()]} | {:error, :sync_conflict}  
+    {:ok, [constraint()]} | {:error, :sync_conflict}
   def propagate_sync_constraints(sync_constraints, temporal_bounds) do
     # Evaluate conditional constraints
     # Generate additional STN constraints
@@ -140,15 +142,15 @@ defmodule AriaEngine.TemporalConstraintSolver do
   @moduledoc """
   Unified temporal constraint solver combining STN with custom extensions.
   """
-  
+
   alias AriaEngine.{STNSolver, ResourceConstraintSolver, SynchronizationSolver}
-  
+
   @type constraint_set :: %{
     temporal: [STNSolver.constraint()],
     resource: [ResourceConstraintSolver.resource_constraint()],
     synchronization: [SynchronizationSolver.sync_constraint()]
   }
-  
+
   @spec solve(constraint_set()) :: {:ok, solution()} | {:error, reason :: atom()}
   def solve(%{temporal: temporal, resource: resource, synchronization: sync}) do
     with {:ok, stn_solution} <- STNSolver.solve(temporal),
@@ -170,21 +172,25 @@ end
 ## Alternatives Considered
 
 ### Temporal Constraint Networks (TCN)
+
 - **Pros**: More expressive than STN, handles disjunctive constraints
 - **Cons**: NP-complete solving, too complex for real-time use
 - **Verdict**: Overkill for our constraint types
 
 ### Disjunctive Temporal Networks (DTN)
+
 - **Pros**: Handles alternative plans, resource scheduling
 - **Cons**: Exponential search space, implementation complexity
 - **Verdict**: Too complex for initial implementation
 
 ### Conditional Simple Temporal Networks (CSTN)
+
 - **Pros**: Native conditional constraint support
 - **Cons**: More complex than needed, execution semantics unclear
 - **Verdict**: Unnecessary complexity
 
 ### Simple Temporal Networks (STN) Only
+
 - **Pros**: Simplest, fastest, well-understood
 - **Cons**: Insufficient expressiveness for resource/sync constraints
 - **Verdict**: Too limited for our needs
@@ -192,21 +198,25 @@ end
 ## Implementation Phases
 
 ### Phase 1: Core STN Solver
+
 - Implement Floyd-Warshall with interval arithmetic
 - Basic inconsistency detection
 - Unit tests with simple temporal constraints
 
 ### Phase 2: Resource Extension
+
 - Resource consumption modeling
-- Capacity constraint checking  
+- Capacity constraint checking
 - Resource conflict detection
 
 ### Phase 3: Synchronization Extension
+
 - Conditional constraint evaluation
 - Dynamic constraint activation
 - Integration with STN core
 
 ### Phase 4: Performance Optimization
+
 - Incremental constraint propagation
 - Constraint preprocessing
 - Caching and memoization
@@ -214,17 +224,20 @@ end
 ## Consequences
 
 ### Positive
+
 - **Polynomial Time**: O(n³) solving enables real-time performance
 - **Extensible**: Modular design allows adding new constraint types
 - **Well-Founded**: STN theory provides mathematical guarantees
 - **Practical**: Handles all constraint types identified in ADR-038
 
 ### Negative
+
 - **Custom Implementation**: Need to implement extensions ourselves
 - **Limited Expressiveness**: Cannot handle arbitrary disjunctive constraints
 - **Complexity**: Multi-layer solving adds implementation complexity
 
 ### Risk Mitigation
+
 - **Incremental Development**: Build core STN first, add extensions gradually
 - **Extensive Testing**: Comprehensive test suite for each constraint type
 - **Performance Monitoring**: Benchmark against real-world planning scenarios

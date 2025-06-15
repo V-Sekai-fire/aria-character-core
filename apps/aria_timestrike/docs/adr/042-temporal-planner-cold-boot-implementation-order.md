@@ -14,6 +14,8 @@ Based on the comprehensive analysis of ADRs 034-041, we need a precise Test-Driv
 
 The implementation must pass ADR-035's "Maya's Adaptive Scorch Coordination" problem, which requires multi-phase backtracking through information gathering, temporal coordination, opportunity windows, and emergency fallback scenarios. The solution builds incrementally using TDD principles with each component validated before proceeding.
 
+**Key Architectural Insight**: The JSON-LD data structure with chibifire.com namespace IS the solution network itself. This semantic representation enables both human-readable temporal plans and machine-processable constraint networks, providing the foundation for all temporal reasoning operations.
+
 ## Decision
 
 Implement the temporal planner using strict TDD methodology with the following exact cold boot order, where each step builds verified functionality before advancing to the next level.
@@ -95,7 +97,68 @@ end
 - Value queries at specific times
 - Pass soldier2 patrol timeline tests
 
-#### Step 1.3: Simple Temporal Network (STN) Foundation
+#### Step 1.4: JSON-LD Solution Network Foundation
+**Test First**: JSON-LD serialization with chibifire.com namespace as the solution network
+```elixir
+# test/aria_engine/json_ld_solution_network_test.exs
+defmodule AriaEngine.JsonLdSolutionNetworkTest do
+  use ExUnit.Case, async: true
+  
+  test "serializes Maya scenario as JSON-LD solution network" do
+    temporal_state = build_maya_scenario_state()
+    timelines = build_maya_alex_timelines()
+    constraints = build_maya_temporal_constraints()
+    
+    {:ok, solution_network} = JsonLdSolutionNetwork.serialize(temporal_state, timelines, constraints)
+    
+    # Verify chibifire.com namespace
+    assert solution_network["@context"]["@vocab"] == "https://chibifire.com/vocab/aria/temporal#"
+    assert solution_network["@context"]["Timeline"] == "https://chibifire.com/vocab/aria/temporal#Timeline"
+    assert solution_network["@context"]["Constraint"] == "https://chibifire.com/vocab/aria/temporal#Constraint"
+    
+    # Verify solution network structure
+    assert solution_network["@type"] == "TemporalSolutionNetwork"
+    assert is_list(solution_network["timelines"])
+    assert is_list(solution_network["constraints"])
+    assert is_map(solution_network["agents"])
+  end
+  
+  test "round-trip serialization preserves Maya scenario semantics" do
+    original_state = build_maya_scenario_state()
+    
+    {:ok, json_ld} = JsonLdSolutionNetwork.serialize(original_state)
+    {:ok, reconstructed_state} = JsonLdSolutionNetwork.deserialize(json_ld)
+    
+    # Verify semantic equivalence
+    assert TemporalState.get_temporal_object(reconstructed_state, "position", "maya", 0) == {3, 5, 0}
+    assert TemporalState.get_temporal_object(reconstructed_state, "vision_range", "maya", 0) == 8
+    assert TemporalState.get_temporal_object(reconstructed_state, "position", "soldier2", 0) == {15, 5, 0}
+  end
+  
+  test "solution network supports RDF queries and reasoning" do
+    solution_network = build_maya_solution_network()
+    
+    # SPARQL-like queries on the solution network
+    maya_timelines = JsonLdSolutionNetwork.query(solution_network, """
+      SELECT ?timeline WHERE {
+        ?timeline rdf:type <https://chibifire.com/vocab/aria/temporal#Timeline> .
+        ?timeline <https://chibifire.com/vocab/aria/temporal#agent> "maya" .
+      }
+    """)
+    
+    assert length(maya_timelines) >= 2  # position timeline, vision timeline
+  end
+end
+```
+
+**Implementation**: Create `apps/aria_timestrike/lib/aria_engine/json_ld_solution_network.ex`
+- JSON-LD serialization with chibifire.com namespace
+- RDF semantic representation of temporal plans
+- Round-trip serialization/deserialization
+- SPARQL-compatible query interface
+- Pass Maya solution network serialization tests
+
+#### Step 1.5: Simple Temporal Network (STN) Foundation
 **Test First**: STN constraint representation and basic solving
 ```elixir
 # test/aria_engine/stn_solver_test.exs  
@@ -234,7 +297,51 @@ end
 
 ### Phase 3: Temporal Constraint Integration (Building on Phases 1-2)
 
-#### Step 3.1: STN + Timeline Integration  
+#### Step 3.1: JSON-LD Solution Network Integration
+**Test First**: Integrate temporal planning with JSON-LD solution network serialization  
+```elixir
+# test/aria_engine/solution_network_integration_test.exs
+defmodule AriaEngine.SolutionNetworkIntegrationTest do
+  use ExUnit.Case, async: true
+  
+  test "serializes complete Maya temporal plan as solution network" do
+    initial_state = build_maya_scenario_state()
+    goal = build_eliminate_soldier_patrol_goal()
+    
+    {:ok, temporal_plan} = TemporalPlanner.plan(goal, initial_state)
+    {:ok, solution_network} = JsonLdSolutionNetwork.from_temporal_plan(temporal_plan)
+    
+    # Verify complete solution network with chibifire.com namespace
+    assert solution_network["@context"]["@vocab"] == "https://chibifire.com/vocab/aria/temporal#"
+    assert solution_network["@type"] == "TemporalSolutionNetwork"
+    
+    # Solution network contains all planning artifacts
+    assert is_list(solution_network["timelines"])
+    assert is_list(solution_network["constraints"]) 
+    assert is_list(solution_network["backtrackingPhases"])
+    assert is_map(solution_network["coordinationPlan"])
+  end
+  
+  test "solution network enables plan replay and analysis" do
+    solution_network = build_maya_complete_solution_network()
+    
+    {:ok, replay_plan} = JsonLdSolutionNetwork.to_temporal_plan(solution_network)
+    
+    # Verify plan reconstruction preserves semantics
+    assert replay_plan.goal.type == :eliminate_soldier_patrol
+    assert length(replay_plan.backtrack_phases) >= 3
+    assert replay_plan.agents == ["maya", "alex"]
+  end
+end
+```
+
+**Implementation**: Extend JSON-LD solution network for complete temporal plans
+- Serialize backtracking phases and plan revisions
+- Integrate with temporal constraint solutions
+- Support plan replay from solution network
+- Pass complete solution network integration tests
+
+#### Step 3.2: STN + Timeline Integration  
 **Test First**: Combine STN solving with timeline constraints
 ```elixir
 # test/aria_engine/temporal_planner_test.exs
@@ -273,7 +380,7 @@ end
 - Solution validation
 - Pass Maya timeline integration tests
 
-#### Step 3.2: Resource and Synchronization Constraints
+#### Step 3.3: Resource and Synchronization Constraints
 **Test First**: Handle vision range and patrol behavior constraints
 ```elixir
 # test/aria_engine/resource_constraint_test.exs
@@ -422,7 +529,74 @@ end
 
 ### Phase 5: Performance and Integration (Building on Phases 1-4)
 
-#### Step 5.1: Real-Time Performance Requirements
+#### Step 5.1: High-Performance Computing Integration
+**Test First**: Verify Nx/Flow optimization for large-scale temporal problems
+```elixir
+# test/aria_engine/high_performance_test.exs
+defmodule AriaEngine.HighPerformanceTest do
+  use ExUnit.Case, async: true
+  
+  @tag :performance
+  test "Nx tensor operations for Floyd-Warshall optimization" do
+    # Large STN with 1000 timepoints  
+    large_constraints = build_large_stn_constraints(1000)
+    
+    {time, {:ok, solution}} = :timer.tc(fn ->
+      STNSolver.solve_with_nx(large_constraints)
+    end)
+    
+    # Nx should provide significant speedup
+    time_ms = time / 1000
+    assert time_ms <= 100.0  # Large STN solved within 100ms
+    assert STNSolver.is_consistent?(solution) == true
+  end
+  
+  @tag :performance
+  test "Flow parallel constraint propagation" do
+    # Multiple independent constraint sets
+    constraint_sets = build_parallel_constraint_sets(10)
+    
+    {time, solutions} = :timer.tc(fn ->
+      constraint_sets
+      |> Flow.from_enumerable()
+      |> Flow.partition()
+      |> Flow.map(&ConstraintPropagator.propagate/1)
+      |> Enum.to_list()
+    end)
+    
+    # Parallel processing improves throughput
+    time_ms = time / 1000
+    assert time_ms <= 50.0
+    assert length(solutions) == 10
+  end
+  
+  @tag :performance  
+  test "GenStage backpressure for real-time constraint updates" do
+    # Streaming constraint updates
+    {:ok, producer} = ConstraintProducer.start_link([])
+    {:ok, consumer} = ConstraintConsumer.start_link([])
+    
+    GenStage.sync_subscribe(consumer, to: producer)
+    
+    # High-frequency constraint updates handled with backpressure
+    for i <- 1..1000 do
+      ConstraintProducer.add_constraint(producer, build_constraint(i))
+    end
+    
+    # All constraints processed without overflow
+    :timer.sleep(100)
+    assert ConstraintConsumer.processed_count(consumer) == 1000
+  end
+end
+```
+
+**Implementation**: Performance optimization with ADR-041 tech stack
+- Nx tensor operations for Floyd-Warshall algorithm
+- Flow parallel processing for constraint propagation
+- GenStage backpressure for real-time updates
+- Pass high-performance computing integration tests
+
+#### Step 5.2: Real-Time Performance Requirements
 **Test First**: Verify ADR-035's performance requirements are met
 ```elixir
 # test/aria_engine/performance_test.exs
@@ -475,7 +649,7 @@ end
 - Caching for repeated computations
 - Pass all performance requirement tests
 
-#### Step 5.2: Integration with Existing AriaEngine Architecture
+#### Step 5.3: Integration with Existing AriaEngine Architecture
 **Test First**: Integration with existing game engine and TUI
 ```elixir
 # test/aria_timestrike/temporal_integration_test.exs
@@ -517,6 +691,7 @@ end
 - Adapter for existing game state structures  
 - Action execution through AriaEngine.GameActionJob
 - TUI display for temporal plans
+- OTP supervision tree integration per ADR-041
 - Pass integration tests with existing system
 
 ## Verification Criteria
@@ -527,6 +702,7 @@ Each phase must pass all tests before proceeding to the next phase:
 - ✅ Temporal state initialization for Maya scenario
 - ✅ Time-based queries and historical reconstruction
 - ✅ Basic timeline representation and conflict detection
+- ✅ JSON-LD solution network serialization with chibifire.com namespace
 - ✅ STN constraint solving with Floyd-Warshall algorithm
 
 ### Phase 2 Completion Criteria  
@@ -536,6 +712,7 @@ Each phase must pass all tests before proceeding to the next phase:
 - ✅ Primitive action generation from tasks
 
 ### Phase 3 Completion Criteria
+- ✅ JSON-LD solution network integration with temporal plans
 - ✅ STN + Timeline integration with constraint satisfaction
 - ✅ Vision range and line-of-sight modeling
 - ✅ Patrol behavior as synchronization constraints
@@ -548,6 +725,7 @@ Each phase must pass all tests before proceeding to the next phase:
 - ✅ Emergency fallback planning
 
 ### Phase 5 Completion Criteria
+- ✅ Nx/Flow high-performance computing integration
 - ✅ Planning time ≤ 10ms for Maya scenario
 - ✅ Replanning faster than initial planning
 - ✅ State queries ≤ 1ms response time
