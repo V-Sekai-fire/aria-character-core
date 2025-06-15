@@ -27,7 +27,7 @@ defmodule AriaWorkflow.Methods.CommandTracing do
       {:error, :missing_command}
     end
 
-    Logger.info("Executing with tracing: #{command}")
+    Logger.debug("Executing with tracing: #{command}")
 
     # Add timeout to state for use in execute_command_safely
     state_with_timeout = Map.put(state, :timeout_ms, timeout_ms)
@@ -59,7 +59,7 @@ defmodule AriaWorkflow.Methods.CommandTracing do
            exit_code: get_exit_code(execution_result)
          }) do
 
-      Logger.info("Command tracing completed: #{trace_id}")
+      Logger.debug("Command tracing completed: #{trace_id}")
 
       # Create a properly formatted execution result
       formatted_execution_result = %{
@@ -84,7 +84,7 @@ defmodule AriaWorkflow.Methods.CommandTracing do
   Generates an execution summary from traced commands.
   """
   def generate_execution_summary(state, _args \\ %{}) do
-    Logger.info("Generating execution summary")
+    Logger.debug("Generating execution summary")
 
     completed_traces = Map.get(state, :completed_traces, %{})
     active_traces = Map.get(state, :command_traces, %{})
@@ -155,7 +155,7 @@ defmodule AriaWorkflow.Methods.CommandTracing do
     # Log summary
     total = summary.statistics.total_executions
     success_rate = summary.statistics.success_rate
-    Logger.info("Execution summary: #{total} total, #{success_rate}% success rate")
+    Logger.debug("Execution summary: #{total} total, #{success_rate}% success rate")
 
     # Store summary in state
     summaries = Map.get(state, :execution_summaries, [])

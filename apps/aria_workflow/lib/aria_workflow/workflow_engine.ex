@@ -148,7 +148,7 @@ defmodule AriaWorkflow.WorkflowEngine do
         execution = WorkflowExecution.new(workflow, plan, initial_state)
         _finished_span = Span.finish(planning_span, status: :ok)
 
-        Logger.info("Successfully planned workflow: #{workflow.id}")
+        Logger.debug("Successfully planned workflow: #{workflow.id}")
         {:ok, execution}
       else
         error ->
@@ -180,7 +180,7 @@ defmodule AriaWorkflow.WorkflowEngine do
 
     if background? do
       # Queue for background execution
-      Logger.info("Queueing workflow #{execution.workflow_id} for background execution")
+      Logger.debug("Queueing workflow #{execution.workflow_id} for background execution")
       # TODO: Integrate with aria_queue when available
       {:error, :background_execution_not_implemented}
     else
@@ -252,7 +252,7 @@ defmodule AriaWorkflow.WorkflowEngine do
   end
 
   defp execute_workflow_sync(%WorkflowExecution{} = execution) do
-    Logger.info("Starting synchronous execution of workflow: #{execution.workflow_id}")
+    Logger.debug("Starting synchronous execution of workflow: #{execution.workflow_id}")
 
     started_execution = WorkflowExecution.start(execution)
 
@@ -264,7 +264,7 @@ defmodule AriaWorkflow.WorkflowEngine do
 
       completed_execution = WorkflowExecution.complete(final_execution)
 
-      Logger.info("Workflow execution completed successfully")
+      Logger.debug("Workflow execution completed successfully")
       Logger.debug("Execution trace:\n#{WorkflowExecution.get_trace_log(completed_execution)}")
 
       :ok

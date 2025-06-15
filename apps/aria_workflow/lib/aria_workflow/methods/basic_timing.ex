@@ -23,7 +23,7 @@ defmodule AriaWorkflow.Methods.BasicTiming do
     operation = Map.get(args, :operation, "unknown_operation")
     timer_id = Map.get(args, :timer_id, operation)
 
-    Logger.info("Starting timed execution: #{operation}")
+    Logger.debug("Starting timed execution: #{operation}")
 
     with {:ok, state1} <- BasicTiming.start_timer(state, %{timer_id: timer_id, command: operation}),
          {:ok, state2, result} <- execute_operation(state1, args),
@@ -82,7 +82,7 @@ defmodule AriaWorkflow.Methods.BasicTiming do
     operations = Map.get(args, :operations, [])
     session_id = Map.get(args, :session_id, "seq_#{:erlang.unique_integer()}")
 
-    Logger.info("Starting sequential timing session: #{session_id}")
+    Logger.debug("Starting sequential timing session: #{session_id}")
 
     # Start session timer
     {:ok, state1} = BasicTiming.start_timer(state, %{timer_id: session_id, command: "sequential_operations"})
@@ -126,7 +126,7 @@ defmodule AriaWorkflow.Methods.BasicTiming do
   Generates a timing report from collected timing data.
   """
   def generate_timing_report(state, _args \\ %{}) do
-    Logger.info("Generating timing report")
+    Logger.debug("Generating timing report")
 
     completed_timers = Map.get(state, :completed_timers, %{})
     execution_log = Map.get(state, :execution_log, [])
@@ -173,7 +173,7 @@ defmodule AriaWorkflow.Methods.BasicTiming do
     }
 
     # Log report summary
-    Logger.info("Timing report generated: #{summary_stats.count} operations, total: #{summary_stats[:total_duration] || 0}s")
+    Logger.debug("Timing report generated: #{summary_stats.count} operations, total: #{summary_stats[:total_duration] || 0}s")
 
     # Store report in state
     reports = Map.get(state, :timing_reports, [])

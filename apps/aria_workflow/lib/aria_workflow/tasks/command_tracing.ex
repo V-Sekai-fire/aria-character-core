@@ -28,7 +28,7 @@ defmodule AriaWorkflow.Tasks.CommandTracing do
       status: :started
     }
 
-    Logger.info("Command trace started: #{trace_id} - #{command}")
+    Logger.debug("Command trace started: #{trace_id} - #{command}")
 
     # Store trace in state
     traces = Map.get(state, :command_traces, %{})
@@ -66,7 +66,7 @@ defmodule AriaWorkflow.Tasks.CommandTracing do
             status: if(exit_code == 0, do: :success, else: :failed)
           })
 
-          Logger.info("Command trace ended: #{trace_id} - #{updated_trace.status} (#{updated_trace.duration_seconds}s)")
+          Logger.debug("Command trace ended: #{trace_id} - #{updated_trace.status} (#{updated_trace.duration_seconds}s)")
 
           # Move to completed traces
           completed_traces = Map.get(state, :completed_traces, %{})

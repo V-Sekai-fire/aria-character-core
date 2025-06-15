@@ -72,7 +72,7 @@ defmodule AriaWorkflow.Tasks.BasicTiming do
       command: Map.get(args, :command, "unknown")
     }
 
-    Logger.info("Timer started: #{timer_id} at #{DateTime.to_iso8601(timer_info.start_datetime)}")
+    Logger.debug("Timer started: #{timer_id} at #{DateTime.to_iso8601(timer_info.start_datetime)}")
 
     # Store timer in state
     active_timers = Map.get(state, :active_timers, %{})
@@ -109,7 +109,7 @@ defmodule AriaWorkflow.Tasks.BasicTiming do
           status: Map.get(args, :status, :completed)
         })
 
-        Logger.info("Timer stopped: #{timer_id}, duration: #{duration_seconds}s")
+        Logger.debug("Timer stopped: #{timer_id}, duration: #{duration_seconds}s")
 
         # Move timer to completed timers
         completed_timers = Map.get(state, :completed_timers, %{})

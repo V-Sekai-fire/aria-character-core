@@ -422,8 +422,8 @@ defmodule AriaWorkflow.WorkflowRegistry do
   @impl GenServer
   def init(state) do
     started_at = DateTime.utc_now()
-    Logger.info("Starting Workflow Registry: #{state.name}")
-    Logger.info("Loaded #{map_size(@hardcoded_workflows)} built-in workflows")
+    Logger.debug("Starting Workflow Registry: #{state.name}")
+    Logger.debug("Loaded #{map_size(@hardcoded_workflows)} built-in workflows")
 
     {:ok, %__MODULE__{name: state.name, started_at: started_at}}
   end
@@ -439,7 +439,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
     new_workflows = Map.put(state.workflows, workflow.id, entry)
     new_state = %{state | workflows: new_workflows}
 
-    Logger.info("Registered workflow: #{workflow.id} (version: #{version})")
+    Logger.debug("Registered workflow: #{workflow.id} (version: #{version})")
     {:reply, :ok, new_state}
   end
 
