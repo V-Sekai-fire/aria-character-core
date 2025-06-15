@@ -33,9 +33,19 @@ defmodule AriaQueue.MembraneFlowElement do
     defstruct [:name, :type, :flow_control, :demand_size, :accepted_format]
   end
 
-  # Buffer structure for data flowing through pads
+  # Emulate Membrane.Buffer structure
   defmodule Buffer do
-    defstruct [:payload, :metadata, :pts, :dts]
+    @moduledoc "Emulates Membrane.Buffer with payload and metadata"
+    defstruct [:payload, :metadata]
+    
+    @type t :: %__MODULE__{
+      payload: any(),
+      metadata: map()
+    }
+    
+    def new(payload, metadata \\ %{}) do
+      %__MODULE__{payload: payload, metadata: metadata}
+    end
   end
 
   @doc """

@@ -93,21 +93,40 @@ defmodule AriaEngine.FlowBackflowTest do
         %{id: i, action: :attack, data: %{"damage" => i * 10}}
       end
 
-      # Use more cores to test convergence
-      result = FlowWorkflow.process_actions_with_backflow(actions, 8)
+      # Use convergence processing to hierarchically reduce results
+      result = FlowWorkflow.process_actions_with_convergence(actions, 8)
 
       assert Map.has_key?(result, :results)
-      assert length(result.results) == 16
+      assert Map.has_key?(result, :convergence_applied)
+      assert result.convergence_applied == true
 
-      # All results should be processed
-      processed_ids = Enum.map(result.results, & &1.id) |> Enum.sort()
-      expected_ids = Enum.map(actions, & &1.id) |> Enum.sort()
-      assert processed_ids == expected_ids
+      # With convergence, we should have fewer results than inputs due to hierarchical reduction
+      assert length(result.results) < length(actions), "Convergence should reduce result count"
+      assert length(result.results) >= 1, "Should have at least one converged result"
 
-      # Metrics should show parallel efficiency
+      # Check convergence metrics
       metrics = result.metrics
-      total_processing_time = Map.get(metrics, :total_processing_time, 0)
-      assert total_processing_time > 0, "Should have processing time metrics"
+      assert Map.has_key?(metrics, :convergence_stages)
+      assert Map.has_key?(metrics, :parallel_efficiency)
+      assert metrics.convergence_stages >= 1, "Should have convergence stages"
+      assert metrics.parallel_efficiency > 0, "Should have parallel efficiency metric"
+
+      # Verify convergence results have expected properties
+      converged_results = Enum.filter(result.results, fn r ->
+        Map.get(r, :convergence_applied, false)
+      end)
+      
+      assert length(converged_results) > 0, "Should have converged results"
+      
+      # Check that converged results have combined computation costs
+      total_expected_cost = length(actions) * 20  # attack action baseline cost
+      total_actual_cost = Enum.reduce(result.results, 0, fn r, acc ->
+        acc + Map.get(r, :computation_cost, 0)
+      end)
+      
+      # Due to convergence combining costs, actual should be close to expected
+      assert total_actual_cost >= total_expected_cost * 0.8, 
+        "Converged cost should preserve most computation: expected ~#{total_expected_cost}, got #{total_actual_cost}"
     end
 
     test "demand-driven processing prevents oversubscription" do

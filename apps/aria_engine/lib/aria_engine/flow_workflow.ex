@@ -143,6 +143,34 @@ defmodule AriaEngine.FlowWorkflow do
     result
   end
 
+  @doc """
+  Process actions with GPU-style hierarchical convergence.
+  
+  This implements true convergence patterns where results are reduced
+  hierarchically, similar to GPU warp reduction patterns.
+  """
+  def process_actions_with_convergence(actions, core_count \\ System.schedulers_online()) do
+    # Create a convergence pipeline
+    pipeline_name = :"convergence_#{System.unique_integer()}"
+    
+    {:ok, _pid} = AriaQueue.FlowBackflow.create_pipeline(pipeline_name, [
+      stages: core_count,
+      backflow_enabled: true,
+      max_demand: length(actions) * 2,
+      min_demand: max(1, div(length(actions), 4))
+    ])
+    
+    # Process with convergence
+    result = AriaQueue.FlowBackflow.process_with_convergence(pipeline_name, actions, [
+      source_fn: &convergence_source/1,
+      filter_fn: &convergence_filter/1,
+      sink_fn: &convergence_sink/1,
+      convergence_fn: &convergence_combine/2
+    ])
+    
+    result
+  end
+
   # GPU convergence processing functions
 
   defp process_gpu_source(action) do
@@ -305,6 +333,78 @@ defmodule AriaEngine.FlowWorkflow do
       processing_time_us: Map.get(item, :processing_time_us, 0),
       backflow_optimized: Map.get(item, :backflow_optimized, false),
       backpressure_detected: Map.get(item, :processing_heavy, false),
+      completed_at: System.monotonic_time(:microsecond)
+    }
+  end
+
+  # Convergence processing functions
+  defp convergence_source(item) do
+    Map.put(item, :source_processed_at, System.monotonic_time(:microsecond))
+  end
+
+  defp convergence_filter(item) do
+    processing_start = System.monotonic_time(:microsecond)
+    
+    # Simulate GPU-style parallel computation
+    iterations = case Map.get(item, :action, :default) do
+      :move_to -> 
+        distance = get_in(item, [:data, "distance"]) || 5
+        # Backflow optimization: 25% reduction
+        min(distance * 6, 120)
+      :attack -> 
+        # Backflow optimization: reduced from 30 to 20
+        20
+      :skill_cast -> 
+        complexity = get_in(item, [:data, "complexity"]) || 80
+        # Backflow optimization: 67% reduction
+        div(complexity, 3)
+      :interact -> 
+        # Backflow optimization: reduced from 20 to 12
+        12
+      _ -> 10
+    end
+    
+    # Perform actual computation
+    _result = Enum.reduce(1..iterations, 0.0, fn i, acc ->
+      acc + :math.sin(i * 0.01) + :math.cos(i * 0.02)
+    end)
+    
+    processing_end = System.monotonic_time(:microsecond)
+    processing_time = processing_end - processing_start
+    
+    item
+    |> Map.put(:filter_processed_at, processing_end)
+    |> Map.put(:processing_time_us, processing_time)
+    |> Map.put(:computation_cost, iterations)
+    |> Map.put(:backflow_optimized, true)
+  end
+
+  defp convergence_sink(item) do
+    %{
+      id: Map.get(item, :id, :unknown),
+      action_type: Map.get(item, :action, :unknown),
+      computation_cost: Map.get(item, :computation_cost, 0),
+      processing_time_us: Map.get(item, :processing_time_us, 0),
+      backflow_optimized: Map.get(item, :backflow_optimized, false),
+      processing_heavy: Map.get(item, :processing_time_us, 0) > 5000,
+      result: :processed,
+      completed_at: System.monotonic_time(:microsecond)
+    }
+  end
+
+  defp convergence_combine(acc, item) do
+    # GPU-style convergence combining
+    combined_cost = Map.get(acc, :computation_cost, 0) + Map.get(item, :computation_cost, 0)
+    combined_time = Map.get(acc, :processing_time_us, 0) + Map.get(item, :processing_time_us, 0)
+    
+    %{
+      id: "conv_#{Map.get(acc, :id, "")}_#{Map.get(item, :id, "")}",
+      action_type: :converged,
+      computation_cost: combined_cost,
+      processing_time_us: combined_time,
+      convergence_applied: true,
+      converged_from: [Map.get(acc, :id), Map.get(item, :id)],
+      result: :converged,
       completed_at: System.monotonic_time(:microsecond)
     }
   end
