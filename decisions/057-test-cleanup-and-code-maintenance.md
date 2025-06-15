@@ -32,7 +32,7 @@ Started implementation on June 15, 2025. Current status: **Phase 1 - Foundation 
 
 **❌ Critical Work Remaining:**
 
-- **BaselineTest failures in aria_timestrike** (4 failures - highest priority)
+- ~~**BaselineTest failures in aria_timestrike** (4 failures - highest priority)~~ **→ Moved to ADR-058**
 - Legacy code migration from backup files
 - File splitting and code organization
 - README creation for umbrella apps
@@ -79,7 +79,7 @@ We will implement a systematic maintenance approach with the following prioritiz
 ### Phase 1: Critical Test Fixes (Immediate)
 
 - [x] Fix some failing tests in `aria_engine` (FlowBackflowTest) - **Partially Complete**
-- [ ] Fix failing tests in `aria_timestrike` (BaselineTest) - **4 failures remain**
+- ~~[ ] Fix failing tests in `aria_timestrike` (BaselineTest) - **4 failures remain**~~ **→ Moved to ADR-058**
 - [ ] Migrate behavior from backup file to proper tests in aria_flow
 - [x] Update some tests to work with direct method calls instead of GenServer patterns
 - [x] Ensure tests are silent when passing (reduce log spam) - **Instruction added**
@@ -180,11 +180,11 @@ To complete this ADR, the following critical tasks must be addressed:
 
 ### Immediate Priority (Phase 1 Completion)
 
-1. **Resolve BaselineTest failures** in aria_timestrike (4 critical failures)
-   - Fix invalid position format error
-   - Implement missing AriaEngine.State.add_fact/4 function
-   - Make planner functional for basic planning
-   - Add missing AriaEngine.Temporal module
+1. ~~**Resolve BaselineTest failures** in aria_timestrike (4 critical failures)~~ **→ Moved to ADR-058**
+   ~~- Fix invalid position format error~~
+   ~~- Implement missing AriaEngine.State.add_fact/4 function~~
+   ~~- Make planner functional for basic planning~~
+   ~~- Add missing AriaEngine.Temporal module~~
 
 2. **Migrate legacy code** from backup files to proper test structure
 
@@ -199,5 +199,9 @@ To complete this ADR, the following critical tasks must be addressed:
 
 4. **Documentation completion**
    - Create README files for all umbrella apps following INST-011
+
+## Related ADRs
+
+- **ADR-058**: Resolve aria_timestrike BaselineTest Failures (extracted from this ADR)
 
 **Completion Criteria**: This ADR will be marked as "Completed" when all tests pass consistently and the critical maintenance issues identified in the Context section have been resolved.
