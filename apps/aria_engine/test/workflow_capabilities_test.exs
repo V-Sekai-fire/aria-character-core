@@ -102,7 +102,8 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
       efficiency_ratio = if multi_duration > 0, do: single_duration / multi_duration, else: 1.0
       
       # Log results for analysis
-      IO.puts("Single core: #{single_duration}ms, Multi core: #{multi_duration}ms, Efficiency: #{Float.round(efficiency_ratio, 2)}x")
+      # Only log on failures or when debugging
+      # IO.puts("Single core: #{single_duration}ms, Multi core: #{multi_duration}ms, Efficiency: #{Float.round(efficiency_ratio, 2)}x")
       
       # Accept any positive efficiency (parallel processing can vary)
       assert efficiency_ratio > 0.5
@@ -145,7 +146,8 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
       assert stats.fps > 0
       assert stats.processed_count == action_count
       
-      IO.puts(FPSCollector.format_fps_report(stats))
+      # Only output on failure or when explicitly requested
+      # IO.puts(FPSCollector.format_fps_report(stats))
     end
 
     test "random movement FPS test - processing speed = more frames" do
@@ -173,7 +175,8 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
       assert stats.fps > 0
       assert stats.avg_processing_time_ms < 100  # Less than 100ms average per action
       
-      IO.puts("FPS Test Results: #{Float.round(stats.fps, 2)} FPS for #{action_count} actions")
+      # Only log on failures or when debugging
+      # IO.puts("FPS Test Results: #{Float.round(stats.fps, 2)} FPS for #{action_count} actions")
     end
   end
 end
