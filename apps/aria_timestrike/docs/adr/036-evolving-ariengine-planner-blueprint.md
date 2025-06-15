@@ -1,8 +1,30 @@
-# ADR-036: Evolving AriaEngine Planner
+# ADR-036: Evolving AriaEngine Planner Blueprint
 
 ## Status
 
-Accepted
+**Deprecated** - Superseded by ADR-038: Timeline-Based Temporal Planner Implementation Plan
+
+## Date
+
+2025-06-14
+
+## Deprecation Note
+
+This ADR is deprecated in favor of [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md) which provides a superior timeline-based implementation plan. 
+
+The durative action approach outlined in this ADR has been superseded by timeline-based temporal planning which offers:
+- Better computational performance (O(V^t) vs O(A^n))
+- More natural domain modeling for continuous resources
+- Superior scalability and parallel processing capabilities
+- Enhanced expressiveness for complex temporal scenarios
+
+**This ADR is retained for historical reference only. All future development should follow ADR-038.**
+
+---
+
+# Original ADR Content (Deprecated)
+
+## Title: Evolving AriaEngine Planner
 
 ## Date
 
