@@ -2,11 +2,25 @@
 
 ## Status
 
-Accepted
+**Deprecated** - Superseded by ADR-042: Temporal Planner Cold Boot Implementation Order
 
 ## Date
 
 2025-06-14
+
+## Deprecation Note
+
+This ADR is deprecated in favor of [ADR-042: Temporal Planner Cold Boot Implementation Order](042-temporal-planner-cold-boot-implementation-order.md) which provides a precise Test-Driven Development (TDD) implementation sequence that builds incrementally toward solving the canonical temporal backtracking problem defined in ADR-035.
+
+ADR-042 offers concrete implementation steps with exact test specifications, ensuring disciplined TDD methodology and validated functionality at each phase.
+
+**This ADR is retained for historical reference only. All future development should follow ADR-042.**
+
+---
+
+# Original ADR Content (Deprecated)
+
+## Title: Timeline-Based Temporal Planner Implementation Plan
 
 ## Context
 
