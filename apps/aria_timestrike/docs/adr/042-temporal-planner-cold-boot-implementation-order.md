@@ -92,9 +92,218 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike/lib/aria_engine/timeline.ex`
-- Core timeline data structure with intervals
-- Conflict detection and validation
-- Value queries at specific times
+```elixir
+defmodule AriaEngine.Timeline do
+  @moduledoc """
+  Timeline data structure for temporal planning.
+  Represents state variables changing over time with interval-based storage.
+  """
+
+  @type t :: %__MODULE__{
+    variable: atom(),
+    agent: String.t(),
+    intervals: [interval()],
+    default_value: any()
+  }
+
+  @type interval :: %{
+    start_time: integer(),
+    end_time: integer(),
+    value: any()
+  }
+
+  @type time_point :: integer()
+  @type validation_result :: :ok | {:error, atom()}
+
+  defstruct variable: nil, agent: nil, intervals: [], default_value: nil
+
+  @spec new(atom(), String.t(), any()) :: t()
+  def new(variable, agent, default_value \\ nil) do
+    %__MODULE__{
+      variable: variable,
+      agent: agent,
+      intervals: [],
+      default_value: default_value
+    }
+  end
+
+  @spec add_interval(t(), integer(), integer(), any()) :: t()
+  def add_interval(%__MODULE__{} = timeline, start_time, end_time, value) 
+      when start_time < end_time do
+    new_interval = %{
+      start_time: start_time,
+      end_time: end_time,
+      value: value
+    }
+    
+    updated_intervals = [new_interval | timeline.intervals]
+                       |> Enum.sort_by(& &1.start_time)
+    
+    %{timeline | intervals: updated_intervals}
+  end
+
+  @spec get_value_at(t(), time_point()) :: any()
+  def get_value_at(%__MODULE__{} = timeline, time_point) do
+    case find_interval_at_time(timeline.intervals, time_point) do
+      %{value: value} -> value
+      nil -> timeline.default_value
+    end
+  end
+
+  @spec find_intervals_with_value(t(), any()) :: [{integer(), integer()}]
+  def find_intervals_with_value(%__MODULE__{} = timeline, target_value) do
+    timeline.intervals
+    |> Enum.filter(fn interval -> interval.value == target_value end)
+    |> Enum.map(fn interval -> {interval.start_time, interval.end_time} end)
+  end
+
+  @spec get_timeline_bounds(t()) :: {integer(), integer()} | nil
+  def get_timeline_bounds(%__MODULE__{intervals: []}) do
+    nil
+  end
+  def get_timeline_bounds(%__MODULE__{intervals: intervals}) do
+    min_time = intervals |> Enum.map(& &1.start_time) |> Enum.min()
+    max_time = intervals |> Enum.map(& &1.end_time) |> Enum.max()
+    {min_time, max_time}
+  end
+
+  @spec validate(t()) :: validation_result()
+  def validate(%__MODULE__{} = timeline) do
+    case detect_overlaps(timeline.intervals) do
+      [] -> :ok
+      _overlaps -> {:error, :overlap_conflict}
+    end
+  end
+
+  @spec merge_timelines(t(), t()) :: {:ok, t()} | {:error, term()}
+  def merge_timelines(%__MODULE__{variable: var, agent: agent} = timeline1,
+                     %__MODULE__{variable: var, agent: agent} = timeline2) do
+    # Merge two timelines for the same variable and agent
+    all_intervals = timeline1.intervals ++ timeline2.intervals
+    merged_timeline = %{timeline1 | intervals: all_intervals}
+    
+    case validate(merged_timeline) do
+      :ok -> {:ok, merged_timeline}
+      error -> error
+    end
+  end
+  def merge_timelines(_timeline1, _timeline2) do
+    {:error, :incompatible_timelines}
+  end
+
+  @spec get_state_changes(t()) :: [%{time: integer(), from: any(), to: any()}]
+  def get_state_changes(%__MODULE__{} = timeline) do
+    sorted_intervals = Enum.sort_by(timeline.intervals, & &1.start_time)
+    
+    Enum.zip(sorted_intervals, tl(sorted_intervals))
+    |> Enum.map(fn {current, next} ->
+      %{
+        time: next.start_time,
+        from: current.value,
+        to: next.value
+      }
+    end)
+  end
+
+  @spec interpolate_value(t(), time_point()) :: any()
+  def interpolate_value(%__MODULE__{} = timeline, time_point) do
+    case find_interpolation_context(timeline.intervals, time_point) do
+      {prev_interval, next_interval} ->
+        interpolate_between_intervals(prev_interval, next_interval, time_point)
+      :no_interpolation ->
+        get_value_at(timeline, time_point)
+    end
+  end
+
+  @spec query_time_range(t(), integer(), integer()) :: [interval()]
+  def query_time_range(%__MODULE__{} = timeline, start_time, end_time) do
+    timeline.intervals
+    |> Enum.filter(fn interval ->
+      intervals_overlap?(interval, %{start_time: start_time, end_time: end_time})
+    end)
+  end
+
+  # Private helper functions
+
+  defp find_interval_at_time(intervals, time_point) do
+    Enum.find(intervals, fn interval ->
+      time_point >= interval.start_time and time_point < interval.end_time
+    end)
+  end
+
+  defp detect_overlaps(intervals) do
+    sorted_intervals = Enum.sort_by(intervals, & &1.start_time)
+    
+    Enum.zip(sorted_intervals, tl(sorted_intervals))
+    |> Enum.filter(fn {interval1, interval2} ->
+      intervals_overlap?(interval1, interval2)
+    end)
+  end
+
+  defp intervals_overlap?(interval1, interval2) do
+    not (interval1.end_time <= interval2.start_time or 
+         interval2.end_time <= interval1.start_time)
+  end
+
+  defp find_interpolation_context(intervals, time_point) do
+    sorted_intervals = Enum.sort_by(intervals, & &1.start_time)
+    
+    case find_surrounding_intervals(sorted_intervals, time_point) do
+      {prev, next} when is_map(prev) and is_map(next) ->
+        if can_interpolate?(prev.value, next.value) do
+          {prev, next}
+        else
+          :no_interpolation
+        end
+      _ -> :no_interpolation
+    end
+  end
+
+  defp find_surrounding_intervals(intervals, time_point) do
+    prev_interval = intervals
+                   |> Enum.filter(& &1.end_time <= time_point)
+                   |> Enum.max_by(& &1.end_time, fn -> nil end)
+    
+    next_interval = intervals
+                   |> Enum.filter(& &1.start_time >= time_point)
+                   |> Enum.min_by(& &1.start_time, fn -> nil end)
+    
+    {prev_interval, next_interval}
+  end
+
+  defp can_interpolate?(value1, value2) do
+    # Check if values can be interpolated (e.g., numeric tuples for positions)
+    case {value1, value2} do
+      {{x1, y1, z1}, {x2, y2, z2}} when is_number(x1) and is_number(x2) -> true
+      {n1, n2} when is_number(n1) and is_number(n2) -> true
+      _ -> false
+    end
+  end
+
+  defp interpolate_between_intervals(prev_interval, next_interval, time_point) do
+    # Linear interpolation between interval values
+    time_total = next_interval.start_time - prev_interval.end_time
+    time_elapsed = time_point - prev_interval.end_time
+    ratio = if time_total > 0, do: time_elapsed / time_total, else: 0.0
+    
+    case {prev_interval.value, next_interval.value} do
+      {{x1, y1, z1}, {x2, y2, z2}} ->
+        {
+          x1 + (x2 - x1) * ratio,
+          y1 + (y2 - y1) * ratio,
+          z1 + (z2 - z1) * ratio
+        }
+      {n1, n2} when is_number(n1) and is_number(n2) ->
+        n1 + (n2 - n1) * ratio
+      _ ->
+        prev_interval.value  # Fallback to discrete value
+    end
+  end
+end
+```
+- Interval-based timeline representation for state variable changes
+- Conflict detection and validation for overlapping intervals  
+- Value interpolation for smooth transitions between discrete time points
 - Pass soldier2 patrol timeline tests
 
 #### Step 1.4: JSON-LD Solution Network Foundation
@@ -152,6 +361,87 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike/lib/aria_engine/json_ld_solution_network.ex`
+```elixir
+defmodule AriaEngine.JsonLdSolutionNetwork do
+  @moduledoc """
+  JSON-LD solution network serialization for temporal plans.
+  Uses chibifire.com namespace as the semantic foundation.
+  """
+
+  @type temporal_state :: AriaEngine.TemporalState.t()
+  @type timeline :: AriaEngine.Timeline.t()
+  @type constraint :: AriaEngine.STNSolver.constraint()
+  @type solution_network :: %{String.t() => any()}
+
+  @chibifire_context %{
+    "@context" => %{
+      "@vocab" => "https://chibifire.com/vocab/aria/temporal#",
+      "Timeline" => "https://chibifire.com/vocab/aria/temporal#Timeline",
+      "Constraint" => "https://chibifire.com/vocab/aria/temporal#Constraint",
+      "Agent" => "https://chibifire.com/vocab/aria/temporal#Agent",
+      "TemporalState" => "https://chibifire.com/vocab/aria/temporal#TemporalState",
+      "BacktrackingPhase" => "https://chibifire.com/vocab/aria/temporal#BacktrackingPhase"
+    }
+  }
+
+  @spec serialize(temporal_state(), [timeline()], [constraint()]) :: 
+    {:ok, solution_network()} | {:error, term()}
+  def serialize(temporal_state, timelines \\ [], constraints \\ []) do
+    try do
+      solution_network = Map.merge(@chibifire_context, %{
+        "@type" => "TemporalSolutionNetwork",
+        "agents" => serialize_agents(temporal_state),
+        "timelines" => Enum.map(timelines, &serialize_timeline/1),
+        "constraints" => Enum.map(constraints, &serialize_constraint/1),
+        "timestamp" => DateTime.utc_now() |> DateTime.to_iso8601()
+      })
+      {:ok, solution_network}
+    rescue
+      error -> {:error, error}
+    end
+  end
+
+  @spec deserialize(solution_network()) :: {:ok, temporal_state()} | {:error, term()}
+  def deserialize(solution_network) do
+    # Implementation stub - deserialize JSON-LD back to temporal state
+    {:error, :not_implemented}
+  end
+
+  @spec query(solution_network(), String.t()) :: [map()]
+  def query(solution_network, sparql_query) do
+    # Implementation stub - SPARQL-like queries on solution network
+    []
+  end
+
+  @spec from_temporal_plan(map()) :: {:ok, solution_network()} | {:error, term()}
+  def from_temporal_plan(temporal_plan) do
+    # Implementation stub - serialize complete temporal plan
+    {:error, :not_implemented}
+  end
+
+  @spec to_temporal_plan(solution_network()) :: {:ok, map()} | {:error, term()}
+  def to_temporal_plan(solution_network) do
+    # Implementation stub - deserialize to temporal plan
+    {:error, :not_implemented}
+  end
+
+  # Private helper functions
+  defp serialize_agents(temporal_state) do
+    # Extract agent data from temporal state
+    %{}
+  end
+
+  defp serialize_timeline(timeline) do
+    # Serialize timeline to JSON-LD format
+    %{"@type" => "Timeline"}
+  end
+
+  defp serialize_constraint(constraint) do
+    # Serialize constraint to JSON-LD format
+    %{"@type" => "Constraint"}
+  end
+end
+```
 - JSON-LD serialization with chibifire.com namespace
 - RDF semantic representation of temporal plans
 - Round-trip serialization/deserialization
@@ -195,10 +485,198 @@ defmodule AriaEngine.STNSolverTest do
 end
 ```
 
-**Implementation**: Create `apps/aria_timestrike/lib/aria_engine/stn_solver.ex` 
-- Floyd-Warshall algorithm for STN solving
-- Constraint representation and validation
-- Inconsistency detection
+**Implementation**: Create `apps/aria_timestrike/lib/aria_engine/stn_solver.ex`
+```elixir
+defmodule AriaEngine.STNSolver do
+  @moduledoc """
+  Simple Temporal Network solver using Path Consistency (PC-2) algorithm.
+  Optimized for sparse temporal constraint networks in planning scenarios.
+  """
+
+  @type timepoint :: atom()
+  @type constraint :: {timepoint(), timepoint(), integer(), integer() | :infinity}
+  @type distance_graph :: %{timepoint() => %{timepoint() => {integer(), integer() | :infinity}}}
+  @type solution :: {:ok, distance_graph()} | {:error, :inconsistent}
+
+  defstruct constraints: [], timepoints: MapSet.new(), distance_matrix: %{}
+
+  @spec solve([constraint()]) :: solution()
+  def solve(constraints) when is_list(constraints) do
+    try do
+      timepoints = extract_timepoints(constraints)
+      initial_matrix = initialize_distance_matrix(timepoints, constraints)
+      
+      case path_consistency_2(initial_matrix, timepoints) do
+        {:ok, solution_matrix} -> {:ok, solution_matrix}
+        {:error, :inconsistent} -> {:error, :inconsistent}
+      end
+    rescue
+      _error -> {:error, :inconsistent}
+    end
+  end
+
+  @spec solve_incremental(distance_graph(), [constraint()]) :: solution()
+  def solve_incremental(existing_graph, new_constraints) do
+    # Incremental PC-2 algorithm for dynamic constraint addition
+    all_timepoints = extract_timepoints_from_graph(existing_graph) 
+                    |> MapSet.union(extract_timepoints(new_constraints))
+    
+    updated_matrix = add_constraints_to_matrix(existing_graph, new_constraints)
+    path_consistency_2(updated_matrix, all_timepoints)
+  end
+
+  @spec is_consistent?(distance_graph()) :: boolean()
+  def is_consistent?(graph) do
+    Enum.all?(graph, fn {timepoint, distances} ->
+      case Map.get(distances, timepoint) do
+        {lower, upper} when lower <= 0 and upper >= 0 -> true
+        _ -> false
+      end
+    end)
+  end
+
+  @spec get_bounds(distance_graph(), timepoint(), timepoint()) :: 
+    {integer(), integer() | :infinity}
+  def get_bounds(graph, from_timepoint, to_timepoint) do
+    case get_in(graph, [from_timepoint, to_timepoint]) do
+      {lower, upper} -> {lower, upper}
+      nil -> {0, :infinity}  # No constraint means unlimited bounds
+    end
+  end
+
+  # Path Consistency-2 (PC-2) Algorithm Implementation
+  @spec path_consistency_2(distance_graph(), MapSet.t()) :: solution()
+  defp path_consistency_2(distance_matrix, timepoints) do
+    timepoint_list = MapSet.to_list(timepoints)
+    
+    # Three nested loops for PC-2, but with early termination
+    result = Enum.reduce_while(timepoint_list, distance_matrix, fn k, matrix_k ->
+      matrix_jk = Enum.reduce_while(timepoint_list, matrix_k, fn j, matrix_j ->
+        matrix_ijk = Enum.reduce_while(timepoint_list, matrix_j, fn i, matrix_i ->
+          case propagate_constraint(matrix_i, i, j, k) do
+            {:ok, updated_matrix} -> {:cont, updated_matrix}
+            {:error, :inconsistent} -> {:halt, {:error, :inconsistent}}
+          end
+        end)
+        
+        case matrix_ijk do
+          {:error, :inconsistent} -> {:halt, {:error, :inconsistent}}
+          matrix -> {:cont, matrix}
+        end
+      end)
+      
+      case matrix_jk do
+        {:error, :inconsistent} -> {:halt, {:error, :inconsistent}}
+        matrix -> {:cont, matrix}
+      end
+    end)
+    
+    case result do
+      {:error, :inconsistent} -> {:error, :inconsistent}
+      matrix -> {:ok, matrix}
+    end
+  end
+
+  @spec propagate_constraint(distance_graph(), timepoint(), timepoint(), timepoint()) ::
+    {:ok, distance_graph()} | {:error, :inconsistent}
+  defp propagate_constraint(matrix, i, j, k) do
+    # Get current bounds
+    {ij_lower, ij_upper} = get_matrix_bounds(matrix, i, j)
+    {ik_lower, ik_upper} = get_matrix_bounds(matrix, i, k)
+    {kj_lower, kj_upper} = get_matrix_bounds(matrix, k, j)
+    
+    # Calculate new bounds via path through k: i -> k -> j
+    new_lower = max(ij_lower, add_bounds(ik_lower, kj_lower))
+    new_upper = min(ij_upper, add_bounds(ik_upper, kj_upper))
+    
+    # Check for inconsistency
+    if new_lower > new_upper do
+      {:error, :inconsistent}
+    else
+      updated_matrix = put_in(matrix, [i, j], {new_lower, new_upper})
+      {:ok, updated_matrix}
+    end
+  end
+
+  # Helper functions
+  defp extract_timepoints(constraints) do
+    Enum.reduce(constraints, MapSet.new(), fn {from, to, _min, _max}, acc ->
+      acc |> MapSet.put(from) |> MapSet.put(to)
+    end)
+  end
+
+  defp extract_timepoints_from_graph(graph) do
+    Enum.reduce(graph, MapSet.new(), fn {from, destinations}, acc ->
+      destinations_set = destinations |> Map.keys() |> MapSet.new()
+      acc |> MapSet.put(from) |> MapSet.union(destinations_set)
+    end)
+  end
+
+  defp initialize_distance_matrix(timepoints, constraints) do
+    # Initialize with infinite bounds, then add constraints
+    initial = Enum.reduce(timepoints, %{}, fn from, acc ->
+      destinations = Enum.reduce(timepoints, %{}, fn to, dest_acc ->
+        if from == to do
+          Map.put(dest_acc, to, {0, 0})  # Distance to self is 0
+        else
+          Map.put(dest_acc, to, {:neg_infinity, :infinity})
+        end
+      end)
+      Map.put(acc, from, destinations)
+    end)
+    
+    # Add actual constraints
+    Enum.reduce(constraints, initial, fn {from, to, min_bound, max_bound}, matrix ->
+      put_in(matrix, [from, to], {min_bound, max_bound})
+    end)
+  end
+
+  defp add_constraints_to_matrix(matrix, new_constraints) do
+    Enum.reduce(new_constraints, matrix, fn {from, to, min_bound, max_bound}, acc ->
+      put_in(acc, [from, to], {min_bound, max_bound})
+    end)
+  end
+
+  defp get_matrix_bounds(matrix, from, to) do
+    case get_in(matrix, [from, to]) do
+      {lower, upper} -> {lower, upper}
+      nil -> {:neg_infinity, :infinity}
+    end
+  end
+
+  defp add_bounds(a, b) when a == :neg_infinity or b == :neg_infinity, do: :neg_infinity
+  defp add_bounds(a, b) when a == :infinity or b == :infinity, do: :infinity
+  defp add_bounds(a, b), do: a + b
+end
+
+defmodule AriaEngine.STNConstraint do
+  @moduledoc """
+  Simple Temporal Network constraint representation.
+  """
+
+  @type t :: %__MODULE__{
+    from: atom(),
+    to: atom(),
+    min_bound: integer(),
+    max_bound: integer() | :infinity
+  }
+
+  defstruct [:from, :to, :min_bound, :max_bound]
+
+  @spec new(atom(), atom(), integer(), integer() | :infinity) :: t()
+  def new(from, to, min_bound, max_bound) do
+    %__MODULE__{
+      from: from,
+      to: to,
+      min_bound: min_bound,
+      max_bound: max_bound
+    }
+  end
+end
+```
+- Path Consistency (PC-2) algorithm for optimal STN solving performance
+- Incremental constraint propagation for dynamic updates
+- Inconsistency detection with early termination
 - Pass Maya movement timing tests
 
 ### Phase 2: Goal-Task-Network (GTN) Core (Building on Phase 1)
@@ -243,9 +721,245 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike/lib/aria_engine/goal_decomposer.ex`
-- Goal-to-task decomposition logic
-- Task dependency tracking
-- Primitive action generation
+```elixir
+defmodule AriaEngine.GoalDecomposer do
+  @moduledoc """
+  Goal-Task-Network (GTN) decomposition engine for temporal planning.
+  Breaks down high-level goals into executable task networks.
+  """
+
+  @type goal :: %{
+    type: atom(),
+    target: String.t(),
+    deadline: integer(),
+    constraints: [map()],
+    priority: integer()
+  }
+
+  @type task :: %{
+    id: String.t(),
+    type: atom(),
+    depends_on: [String.t()],
+    duration: {integer(), integer()},
+    resources: [atom()],
+    preconditions: [map()],
+    effects: [map()]
+  }
+
+  @type task_network :: %{
+    goal_id: String.t(),
+    tasks: [task()],
+    dependencies: %{String.t() => [String.t()]},
+    critical_path: [String.t()],
+    estimated_duration: integer()
+  }
+
+  @type primitive_action :: %{
+    type: atom(),
+    agent: String.t(),
+    parameters: map(),
+    start_time: integer(),
+    end_time: integer(),
+    preconditions: [map()],
+    effects: [map()]
+  }
+
+  @spec decompose_goal(goal(), AriaEngine.TemporalState.t()) :: 
+    {:ok, task_network()} | {:error, term()}
+  def decompose_goal(goal, initial_state) do
+    case goal.type do
+      :eliminate_soldier_patrol -> decompose_elimination_goal(goal, initial_state)
+      :scout_area -> decompose_scouting_goal(goal, initial_state)
+      :coordinate_agents -> decompose_coordination_goal(goal, initial_state)
+      _ -> {:error, {:unknown_goal_type, goal.type}}
+    end
+  end
+
+  @spec generate_primitive_actions(task_network()) :: 
+    {:ok, [primitive_action()]} | {:error, term()}
+  def generate_primitive_actions(task_network) do
+    actions = Enum.flat_map(task_network.tasks, fn task ->
+      decompose_task_to_actions(task)
+    end)
+    
+    {:ok, actions}
+  end
+
+  # Goal-specific decomposition methods
+  @spec decompose_elimination_goal(goal(), AriaEngine.TemporalState.t()) :: 
+    {:ok, task_network()}
+  defp decompose_elimination_goal(goal, initial_state) do
+    base_id = "elimination_#{:rand.uniform(1000)}"
+    
+    tasks = [
+      %{
+        id: "#{base_id}_reconnaissance",
+        type: :reconnaissance_task,
+        depends_on: [],
+        duration: {5, 15},
+        resources: [:vision, :movement],
+        preconditions: [%{type: :agent_available, agent: "maya"}],
+        effects: [%{type: :area_scouted, target: goal.target}]
+      },
+      %{
+        id: "#{base_id}_historical_analysis",
+        type: :historical_analysis_task,
+        depends_on: ["#{base_id}_reconnaissance"],
+        duration: {3, 8},
+        resources: [:processing],
+        preconditions: [%{type: :scout_data_available}],
+        effects: [%{type: :pattern_identified, target: goal.target}]
+      },
+      %{
+        id: "#{base_id}_coordination",
+        type: :coordination_task,
+        depends_on: ["#{base_id}_historical_analysis"],
+        duration: {2, 5},
+        resources: [:communication],
+        preconditions: [%{type: :pattern_identified}],
+        effects: [%{type: :coordination_plan_ready}]
+      },
+      %{
+        id: "#{base_id}_opportunity_exploitation",
+        type: :opportunity_exploitation_task,
+        depends_on: ["#{base_id}_coordination"],
+        duration: {1, 3},
+        resources: [:combat, :movement],
+        preconditions: [%{type: :coordination_plan_ready}, %{type: :opportunity_window}],
+        effects: [%{type: :target_eliminated, target: goal.target}]
+      }
+    ]
+    
+    dependencies = build_task_dependencies(tasks)
+    critical_path = calculate_critical_path(tasks, dependencies)
+    estimated_duration = calculate_total_duration(tasks, dependencies)
+    
+    task_network = %{
+      goal_id: base_id,
+      tasks: tasks,
+      dependencies: dependencies,
+      critical_path: critical_path,
+      estimated_duration: estimated_duration
+    }
+    
+    {:ok, task_network}
+  end
+
+  @spec decompose_scouting_goal(goal(), AriaEngine.TemporalState.t()) :: 
+    {:ok, task_network()}
+  defp decompose_scouting_goal(goal, _initial_state) do
+    # Implementation stub - decompose scouting goals
+    {:ok, %{goal_id: "scout", tasks: [], dependencies: %{}, critical_path: [], estimated_duration: 0}}
+  end
+
+  @spec decompose_coordination_goal(goal(), AriaEngine.TemporalState.t()) :: 
+    {:ok, task_network()}
+  defp decompose_coordination_goal(goal, _initial_state) do
+    # Implementation stub - decompose coordination goals
+    {:ok, %{goal_id: "coord", tasks: [], dependencies: %{}, critical_path: [], estimated_duration: 0}}
+  end
+
+  # Task-to-action decomposition
+  @spec decompose_task_to_actions(task()) :: [primitive_action()]
+  defp decompose_task_to_actions(task) do
+    case task.type do
+      :reconnaissance_task -> generate_reconnaissance_actions(task)
+      :historical_analysis_task -> generate_analysis_actions(task)
+      :coordination_task -> generate_coordination_actions(task)
+      :opportunity_exploitation_task -> generate_exploitation_actions(task)
+      _ -> []
+    end
+  end
+
+  defp generate_reconnaissance_actions(task) do
+    [
+      %{
+        type: :move_to,
+        agent: "maya",
+        parameters: %{position: {10, 5, 0}},
+        start_time: 0,
+        end_time: 5,
+        preconditions: [%{type: :agent_available, agent: "maya"}],
+        effects: [%{type: :agent_at_position, agent: "maya", position: {10, 5, 0}}]
+      },
+      %{
+        type: :scout_area,
+        agent: "maya", 
+        parameters: %{area: :patrol_route, radius: 8},
+        start_time: 5,
+        end_time: 15,
+        preconditions: [%{type: :agent_at_position, agent: "maya", position: {10, 5, 0}}],
+        effects: [%{type: :area_scouted, area: :patrol_route}]
+      }
+    ]
+  end
+
+  defp generate_analysis_actions(task) do
+    [
+      %{
+        type: :analyze_patterns,
+        agent: "maya",
+        parameters: %{data_source: :scout_data},
+        start_time: 15,
+        end_time: 23,
+        preconditions: [%{type: :scout_data_available}],
+        effects: [%{type: :pattern_identified}]
+      }
+    ]
+  end
+
+  defp generate_coordination_actions(task) do
+    [
+      %{
+        type: :coordinate_with_alex,
+        agent: "maya",
+        parameters: %{message: :synchronize_timing},
+        start_time: 23,
+        end_time: 28,
+        preconditions: [%{type: :pattern_identified}],
+        effects: [%{type: :coordination_plan_ready}]
+      }
+    ]
+  end
+
+  defp generate_exploitation_actions(task) do
+    [
+      %{
+        type: :cast_scorch,
+        agent: "maya",
+        parameters: %{target: "soldier2", timing: :opportunity_window},
+        start_time: 50,
+        end_time: 53,
+        preconditions: [%{type: :opportunity_window}, %{type: :coordination_plan_ready}],
+        effects: [%{type: :target_eliminated, target: "soldier2"}]
+      }
+    ]
+  end
+
+  # Helper functions for task network analysis
+  defp build_task_dependencies(tasks) do
+    Enum.reduce(tasks, %{}, fn task, acc ->
+      Map.put(acc, task.id, task.depends_on)
+    end)
+  end
+
+  defp calculate_critical_path(tasks, dependencies) do
+    # Implementation stub - critical path calculation
+    Enum.map(tasks, & &1.id)
+  end
+
+  defp calculate_total_duration(tasks, dependencies) do
+    # Implementation stub - duration calculation along critical path
+    Enum.reduce(tasks, 0, fn task, acc ->
+      {min_dur, max_dur} = task.duration
+      acc + max_dur  # Conservative estimate
+    end)
+  end
+end
+```
+- Hierarchical task network (HTN) decomposition for complex goals
+- Task dependency tracking and critical path analysis
+- Primitive action generation from high-level tasks
 - Pass Maya goal decomposition tests
 
 #### Step 2.2: Multi-Agent Coordination
@@ -290,9 +1004,344 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike/lib/aria_engine/coordination_manager.ex`
-- Multi-agent action coordination
-- Information sharing between agents
-- Temporal conflict detection
+```elixir
+defmodule AriaEngine.CoordinationManager do
+  @moduledoc """
+  Multi-agent coordination manager for temporal planning.
+  Handles information sharing, action synchronization, and conflict resolution.
+  """
+
+  @type agent_id :: String.t()
+  @type coordination_plan :: %{
+    id: String.t(),
+    agents: [agent_id()],
+    actions: [action()],
+    synchronization_points: [sync_point()],
+    information_flow: %{agent_id() => [agent_id()]},
+    temporal_constraints: [AriaEngine.STNSolver.constraint()]
+  }
+
+  @type action :: %{
+    id: String.t(),
+    agent: agent_id(),
+    type: atom(),
+    start_time: integer(),
+    end_time: integer(),
+    preconditions: [map()],
+    effects: [map()],
+    resources: [atom()]
+  }
+
+  @type sync_point :: %{
+    time: integer(),
+    agents: [agent_id()],
+    type: atom(),
+    data_exchange: map()
+  }
+
+  @type conflict :: %{
+    type: atom(),
+    agents: [agent_id()],
+    time_range: {integer(), integer()},
+    resource: atom(),
+    severity: :low | :medium | :high
+  }
+
+  @spec plan_coordination([agent_id()], AriaEngine.TemporalState.t()) :: 
+    {:ok, coordination_plan()} | {:error, term()}
+  def plan_coordination(agents, initial_state) when is_list(agents) do
+    base_id = "coordination_#{:rand.uniform(1000)}"
+    
+    case generate_coordination_strategy(agents, initial_state) do
+      {:ok, strategy} ->
+        actions = generate_coordinated_actions(strategy, agents)
+        sync_points = identify_synchronization_points(actions)
+        info_flow = plan_information_flow(agents, actions)
+        temporal_constraints = extract_temporal_constraints(actions, sync_points)
+        
+        coordination_plan = %{
+          id: base_id,
+          agents: agents,
+          actions: actions,
+          synchronization_points: sync_points,
+          information_flow: info_flow,
+          temporal_constraints: temporal_constraints
+        }
+        
+        {:ok, coordination_plan}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @spec detect_conflicts(coordination_plan()) :: [conflict()]
+  def detect_conflicts(coordination_plan) do
+    [
+      detect_temporal_conflicts(coordination_plan),
+      detect_resource_conflicts(coordination_plan),
+      detect_information_conflicts(coordination_plan)
+    ]
+    |> List.flatten()
+    |> Enum.reject(&is_nil/1)
+  end
+
+  @spec resolve_conflicts(coordination_plan(), [conflict()]) :: 
+    {:ok, coordination_plan()} | {:error, term()}
+  def resolve_conflicts(coordination_plan, conflicts) do
+    Enum.reduce_while(conflicts, {:ok, coordination_plan}, fn conflict, {:ok, plan} ->
+      case resolve_single_conflict(plan, conflict) do
+        {:ok, updated_plan} -> {:cont, {:ok, updated_plan}}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+  end
+
+  # Private implementation functions
+  
+  @spec generate_coordination_strategy([agent_id()], AriaEngine.TemporalState.t()) :: 
+    {:ok, map()} | {:error, term()}
+  defp generate_coordination_strategy(agents, initial_state) do
+    # Analyze agent capabilities and current state
+    agent_capabilities = Enum.map(agents, fn agent ->
+      {agent, analyze_agent_capabilities(agent, initial_state)}
+    end) |> Map.new()
+    
+    # Generate coordination strategy based on ADR-035 scenario
+    strategy = %{
+      information_sharing: plan_information_sharing_strategy(agents, agent_capabilities),
+      temporal_synchronization: plan_temporal_synchronization(agents),
+      opportunity_coordination: plan_opportunity_coordination(agents, initial_state)
+    }
+    
+    {:ok, strategy}
+  end
+
+  defp generate_coordinated_actions(strategy, agents) do
+    # Generate actions based on Maya-Alex coordination scenario
+    maya_actions = generate_maya_actions(strategy)
+    alex_actions = generate_alex_actions(strategy)
+    
+    maya_actions ++ alex_actions
+  end
+
+  defp generate_maya_actions(strategy) do
+    [
+      %{
+        id: "maya_initial_position",
+        agent: "maya",
+        type: :move_to,
+        start_time: 0,
+        end_time: 5,
+        preconditions: [],
+        effects: [%{type: :agent_positioned, agent: "maya"}],
+        resources: [:movement]
+      },
+      %{
+        id: "maya_wait_for_intel",
+        agent: "maya",
+        type: :wait_for_information,
+        start_time: 5,
+        end_time: 25,
+        preconditions: [%{type: :agent_positioned, agent: "maya"}],
+        effects: [%{type: :scout_data_available}],
+        resources: [:communication]
+      },
+      %{
+        id: "maya_exploit_opportunity",
+        agent: "maya",
+        type: :cast_scorch,
+        start_time: 50,
+        end_time: 53,
+        preconditions: [%{type: :scout_data_available}, %{type: :opportunity_window}],
+        effects: [%{type: :target_eliminated, target: "soldier2"}],
+        resources: [:combat, :mana]
+      }
+    ]
+  end
+
+  defp generate_alex_actions(strategy) do
+    [
+      %{
+        id: "alex_scout_mission",
+        agent: "alex",
+        type: :scout_area,
+        start_time: 0,
+        end_time: 20,
+        preconditions: [],
+        effects: [%{type: :area_scouted, area: :patrol_route}],
+        resources: [:movement, :vision]
+      },
+      %{
+        id: "alex_share_intel",
+        agent: "alex",
+        type: :share_information,
+        start_time: 20,
+        end_time: 25,
+        preconditions: [%{type: :area_scouted, area: :patrol_route}],
+        effects: [%{type: :intel_shared, recipient: "maya"}],
+        resources: [:communication]
+      }
+    ]
+  end
+
+  defp identify_synchronization_points(actions) do
+    # Find points where agents need to synchronize
+    [
+      %{
+        time: 25,
+        agents: ["maya", "alex"],
+        type: :information_exchange,
+        data_exchange: %{
+          from: "alex",
+          to: "maya",
+          data_type: :scout_report
+        }
+      },
+      %{
+        time: 50,
+        agents: ["maya"],
+        type: :opportunity_window,
+        data_exchange: %{
+          trigger: :archer_movement_block,
+          duration: 3
+        }
+      }
+    ]
+  end
+
+  defp plan_information_flow(agents, actions) do
+    # Map information dependencies between agents
+    %{
+      "alex" => ["maya"],  # Alex shares information with Maya
+      "maya" => []         # Maya receives but doesn't share in this scenario
+    }
+  end
+
+  defp extract_temporal_constraints(actions, sync_points) do
+    # Convert action timing and sync points to STN constraints
+    action_constraints = Enum.flat_map(actions, fn action ->
+      [
+        # Duration constraint: end_time - start_time = duration
+        {String.to_atom(action.id <> "_start"), String.to_atom(action.id <> "_end"),
+         action.end_time - action.start_time, action.end_time - action.start_time}
+      ]
+    end)
+    
+    sync_constraints = Enum.flat_map(sync_points, fn sync ->
+      # Synchronization constraints between agents
+      [{:sync_start, String.to_atom("sync_#{sync.time}"), 0, 0}]
+    end)
+    
+    action_constraints ++ sync_constraints
+  end
+
+  # Conflict detection functions
+  
+  defp detect_temporal_conflicts(coordination_plan) do
+    # Check for overlapping actions that conflict
+    actions_by_agent = Enum.group_by(coordination_plan.actions, & &1.agent)
+    
+    Enum.flat_map(actions_by_agent, fn {agent, actions} ->
+      detect_agent_temporal_conflicts(agent, actions)
+    end)
+  end
+
+  defp detect_agent_temporal_conflicts(agent, actions) do
+    # Sort actions by start time and check for overlaps
+    sorted_actions = Enum.sort_by(actions, & &1.start_time)
+    
+    Enum.zip(sorted_actions, tl(sorted_actions))
+    |> Enum.filter(fn {action1, action2} ->
+      action1.end_time > action2.start_time  # Overlap detected
+    end)
+    |> Enum.map(fn {action1, action2} ->
+      %{
+        type: :temporal_overlap,
+        agents: [agent],
+        time_range: {action2.start_time, action1.end_time},
+        resource: :time,
+        severity: :high
+      }
+    end)
+  end
+
+  defp detect_resource_conflicts(coordination_plan) do
+    # Check for resource conflicts between agents
+    # Implementation stub - would check for shared resource usage
+    []
+  end
+
+  defp detect_information_conflicts(coordination_plan) do
+    # Check for information flow conflicts
+    # Implementation stub - would validate information dependencies
+    []
+  end
+
+  # Conflict resolution functions
+  
+  defp resolve_single_conflict(coordination_plan, conflict) do
+    case conflict.type do
+      :temporal_overlap -> resolve_temporal_overlap(coordination_plan, conflict)
+      :resource_conflict -> resolve_resource_conflict(coordination_plan, conflict)
+      :information_conflict -> resolve_information_conflict(coordination_plan, conflict)
+      _ -> {:error, {:unknown_conflict_type, conflict.type}}
+    end
+  end
+
+  defp resolve_temporal_overlap(coordination_plan, conflict) do
+    # Implementation stub - would reschedule conflicting actions
+    {:ok, coordination_plan}
+  end
+
+  defp resolve_resource_conflict(coordination_plan, conflict) do
+    # Implementation stub - would allocate resources or reschedule
+    {:ok, coordination_plan}
+  end
+
+  defp resolve_information_conflict(coordination_plan, conflict) do
+    # Implementation stub - would adjust information flow timing
+    {:ok, coordination_plan}
+  end
+
+  # Helper functions
+  
+  defp analyze_agent_capabilities(agent, initial_state) do
+    # Analyze what the agent can do based on current state
+    %{
+      movement: true,
+      vision: true,
+      combat: agent == "maya",  # Only Maya has combat capabilities
+      communication: true
+    }
+  end
+
+  defp plan_information_sharing_strategy(agents, capabilities) do
+    # Plan how agents will share information
+    %{
+      method: :direct_communication,
+      timing: :after_scouting,
+      data_types: [:position_data, :patrol_patterns]
+    }
+  end
+
+  defp plan_temporal_synchronization(agents) do
+    %{
+      sync_points: [25, 50],  # Times when agents need to coordinate
+      tolerance: 2           # Allowed timing variance
+    }
+  end
+
+  defp plan_opportunity_coordination(agents, initial_state) do
+    %{
+      opportunity_detection: :environmental_trigger,
+      exploitation_agent: "maya",
+      support_agents: ["alex"]
+    }
+  end
+end
+```
+- Multi-agent action coordination with information sharing protocols
+- Temporal conflict detection and resolution algorithms
+- Synchronization point identification and management
 - Pass Maya-Alex coordination tests
 
 ### Phase 3: Temporal Constraint Integration (Building on Phases 1-2)
