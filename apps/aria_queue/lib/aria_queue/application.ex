@@ -9,7 +9,7 @@ defmodule AriaQueue.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Registry for Flow backflow processors
+      # Registry for job processors
       {Registry, keys: :unique, name: AriaQueue.Registry},
       
       # Membrane-based job processor to replace Oban
