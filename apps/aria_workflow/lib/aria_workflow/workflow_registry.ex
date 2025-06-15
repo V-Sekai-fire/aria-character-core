@@ -112,6 +112,23 @@ defmodule AriaWorkflow.WorkflowRegistry do
     end
   end
 
+  # Helper function to get workflow system task methods from domain provider
+  defp get_workflow_system_task_methods do
+    case DomainProvider.get_domain("workflow_system") do
+      {:ok, domain} ->
+        domain.task_methods
+        |> Enum.flat_map(fn {task_name, methods} ->
+          Enum.with_index(methods) 
+          |> Enum.map(fn {method_fn, index} ->
+            method_name = if index == 0, do: task_name, else: "#{task_name}_#{index}"
+            {method_name, method_fn}
+          end)
+        end)
+      {:error, _} ->
+        [{"workflow_system_unavailable", fn _, _ -> {:error, "Workflow system domain not available"} end}]
+    end
+  end
+
   # Core workflows for basic operations with AriaEngine integration
   @hardcoded_workflows %{
     "basic_timing" => %{
@@ -386,11 +403,14 @@ defmodule AriaWorkflow.WorkflowRegistry do
 
       builtin_def ->
         # Create WorkflowDefinition from built-in data
-        # Populate dynamic tasks for file_management workflow
-        enhanced_def = if workflow_id == "file_management" do
-          Map.put(builtin_def, :tasks, get_file_management_task_methods())
-        else
-          builtin_def
+        # Populate dynamic tasks from domain providers
+        enhanced_def = cond do
+          workflow_id == "file_management" ->
+            Map.put(builtin_def, :tasks, get_file_management_task_methods())
+          workflow_id == "system_deployment" ->
+            Map.put(builtin_def, :tasks, get_workflow_system_task_methods())
+          true ->
+            builtin_def
         end
         
         workflow = WorkflowDefinition.new(workflow_id, enhanced_def)
