@@ -35,18 +35,23 @@ defmodule AriaEngine.MembraneWorkflowTest do
     {:calculate_work_distribution_variance, 1}
   ]}
 
-  alias Membrane.Testing
+  # Flow-based backflow testing module - no more Membrane dependencies
+  # This implements the backflow optimization concepts using AriaQueue.FlowBackflow
+  defmodule FlowBackflowTester do
+    @moduledoc """
+    Flow-based backflow testing that replaces Membrane functionality.
+    
+    Implements the same backflow optimization concepts but using our
+    centralized Flow processor in AriaQueue.
+    """
 
-  # Custom source with auto flow control to replace Testing.Source
-  # This fixes the flow control mismatch error between :manual and :auto modes
-  defmodule AutoFlowSource do
-    use Membrane.Source
+    def create_backflow_pipeline(name, opts \\ []) do
+      AriaQueue.FlowBackflow.create_pipeline(name, opts)
+    end
 
-    defstruct output: []
-
-    def_output_pad :output,
-      accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :push
+    def process_with_backflow_optimization(pipeline_name, actions, processing_opts \\ []) do
+      AriaQueue.FlowBackflow.process_with_backflow(pipeline_name, actions, processing_opts)
+    end
 
     @impl true
     def handle_init(_ctx, %__MODULE__{output: output}) do
@@ -458,84 +463,80 @@ defmodule AriaEngine.MembraneWorkflowTest do
     end
   end
 
-  # Backflow-aware processor with proper Membrane flow control
-  defmodule BackflowProcessor do
-    use Membrane.Filter
+  # Flow-based backflow processor that implements the same optimizations
+  # as the original Membrane BackflowProcessor but using AriaQueue.FlowBackflow
+  defmodule FlowBackflowProcessor do
+    @moduledoc """
+    Flow-based processor that implements backflow optimization concepts.
+    
+    This replaces the Membrane BackflowProcessor with equivalent functionality
+    using our centralized Flow system in AriaQueue.
+    """
 
-    defstruct worker_id: nil, workflow_type: :concurrent_processing
-
-    def_input_pad :input,
-      accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :auto
-
-    def_output_pad :output,
-      accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :auto
-
-    @impl true
-    def handle_init(_ctx, %__MODULE__{worker_id: worker_id, workflow_type: workflow_type}) do
-      {[], %{
-        worker_id: worker_id,
-        workflow_type: workflow_type,
-        processed_count: 0,
-        backpressure_events: 0
-      }}
+    def process_actions_with_backflow(actions, workflow_type, pipeline_name) do
+      # Set up processing functions for different workflow types
+      processing_opts = [
+        source_fn: &flow_source_stage/1,
+        filter_fn: &(flow_filter_stage(&1, workflow_type)),
+        sink_fn: &flow_sink_stage/1
+      ]
+      
+      AriaQueue.FlowBackflow.process_with_backflow(pipeline_name, actions, processing_opts)
     end
 
-    @impl true
-    def handle_buffer(:input, buffer, _ctx, state) do
-      action = buffer.payload |> :erlang.binary_to_term()
-
-      # Process with backpressure awareness
-      case process_with_backflow(action, state.workflow_type) do
-        {:ok, result} ->
-          output_buffer = %Membrane.Buffer{
-            payload: :erlang.term_to_binary(result)
-          }
-
-          new_state = %{state | processed_count: state.processed_count + 1}
-          {[buffer: {:output, output_buffer}], new_state}
-
-        {:backpressure, result} ->
-          # Simulate backpressure event
-          output_buffer = %Membrane.Buffer{
-            payload: :erlang.term_to_binary(result)
-          }
-
-          new_state = %{
-            state |
-            processed_count: state.processed_count + 1,
-            backpressure_events: state.backpressure_events + 1
-          }
-
-          {[buffer: {:output, output_buffer}], new_state}
-      end
+    defp flow_source_stage(action) do
+      # Source stage - prepare action for backflow processing
+      action
+      |> Map.put(:source_processed_at, System.monotonic_time(:microsecond))
+      |> Map.put(:backflow_ready, true)
     end
 
-    defp process_with_backflow(action, workflow_type) do
-      # Simulate backpressure-aware processing
+    defp flow_filter_stage(action, workflow_type) do
+      # Filter stage with backflow optimization
+      processing_start = System.monotonic_time(:microsecond)
+      
       result = case workflow_type do
         :concurrent_processing ->
           case action.action do
             :move_to ->
-              simulate_pathfinding_with_backflow(action.data)
+              simulate_pathfinding_with_backflow(Map.get(action, :data, %{}))
             :attack ->
-              simulate_combat_with_backflow(action.data)
+              simulate_combat_with_backflow(Map.get(action, :data, %{}))
             :skill_cast ->
-              simulate_skill_with_backflow(action.data)
+              simulate_skill_with_backflow(Map.get(action, :data, %{}))
             :interact ->
-              simulate_interaction_with_backflow(action.data)
+              simulate_interaction_with_backflow(Map.get(action, :data, %{}))
             _ ->
-              %{processed: true, computation_cost: 10}
+              %{processed: true, computation_cost: 10, backflow_optimized: true}
           end
       end
-
+      
+      processing_end = System.monotonic_time(:microsecond)
+      processing_time = processing_end - processing_start
+      
       # Randomly simulate backpressure events (5% chance)
-      if :rand.uniform(100) <= 5 do
-        {:backpressure, Map.put(result, :backpressure_detected, true)}
-      else
-        {:ok, result}
-      end
+      backpressure_detected = :rand.uniform(100) <= 5
+      
+      action
+      |> Map.merge(result)
+      |> Map.put(:processing_time_us, processing_time)
+      |> Map.put(:backpressure_detected, backpressure_detected)
+      |> Map.put(:processing_heavy, processing_time > 5000)
+      |> Map.put(:filter_processed_at, processing_end)
+    end
+
+    defp flow_sink_stage(action) do
+      # Sink stage - finalize backflow processing
+      %{
+        id: Map.get(action, :id, :unknown),
+        result: :processed,
+        computation_cost: Map.get(action, :computation_cost, 10),
+        processing_time_us: Map.get(action, :processing_time_us, 0),
+        backpressure_detected: Map.get(action, :backpressure_detected, false),
+        backflow_optimized: Map.get(action, :backflow_optimized, false),
+        action_type: Map.get(action, :action_type, :unknown),
+        completed_at: System.monotonic_time(:microsecond)
+      }
     end
 
     defp simulate_pathfinding_with_backflow(data) do
@@ -577,26 +578,43 @@ defmodule AriaEngine.MembraneWorkflowTest do
     end
   end
 
-  # Simplified backflow result collector with auto flow control
-  defmodule BackflowResultCollector do
-    use Membrane.Sink
+  # Flow-based result collector that implements the same functionality
+  # as the original Membrane BackflowResultCollector but using Flow
+  defmodule FlowBackflowResultCollector do
+    @moduledoc """
+    Collects and analyzes results from Flow-based backflow processing.
+    
+    This replaces the Membrane BackflowResultCollector with equivalent functionality
+    using our Flow-based system.
+    """
 
-    defstruct parent_pid: nil, worker_id: nil
-
-    def_input_pad :input,
-      accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :auto
-
-    @impl true
-    def handle_init(_ctx, %__MODULE__{parent_pid: parent_pid, worker_id: worker_id}) do
-      {[], %{
-        parent_pid: parent_pid,
-        worker_id: worker_id,
-        results: [],
-        total_computation_cost: 0,
-        backpressure_events: 0
-      }}
+    def collect_and_analyze_results(flow_result) do
+      results = Map.get(flow_result, :results, [])
+      metrics = Map.get(flow_result, :metrics, %{})
+      
+      # Analyze the results for backflow optimization metrics
+      total_computation_cost = Enum.reduce(results, 0, fn result, acc ->
+        acc + Map.get(result, :computation_cost, 0)
+      end)
+      
+      backpressure_events = Enum.count(results, fn result ->
+        Map.get(result, :backpressure_detected, false)
+      end)
+      
+      backflow_optimized_count = Enum.count(results, fn result ->
+        Map.get(result, :backflow_optimized, false)
+      end)
+      
+      %{
+        results: results,
+        total_computation_cost: total_computation_cost,
+        backpressure_events: backpressure_events,
+        backflow_optimized_count: backflow_optimized_count,
+        processed_count: length(results),
+        flow_metrics: metrics
+      }
     end
+  end
 
     @impl true
     def handle_buffer(:input, buffer, _ctx, state) do
@@ -729,57 +747,104 @@ defmodule AriaEngine.MembraneWorkflowTest do
     end
   end
 
-  # Optimized processor for work-stealing with convergence
-  defmodule OptimizedBackflowProcessor do
-    use Membrane.Filter
+  # Flow-based optimized processor for work-stealing with convergence
+  defmodule OptimizedFlowBackflowProcessor do
+    @moduledoc """
+    Optimized Flow-based processor that implements work-stealing convergence.
+    
+    This replaces the Membrane OptimizedBackflowProcessor with equivalent functionality
+    using our Flow-based system for better performance.
+    """
 
-    defstruct core_id: nil, workflow_type: :work_stealing_convergence
-
-    def_input_pad :input,
-      accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :push
-
-    def_output_pad :output,
-      accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :push
-
-    @impl true
-    def handle_init(_ctx, %__MODULE__{core_id: core_id, workflow_type: workflow_type}) do
-      {[], %{
-        core_id: core_id,
-        workflow_type: workflow_type,
-        processed_count: 0,
-        computation_cost: 0,
-        backpressure_events: 0,
-        processing_start_time: System.monotonic_time(:microsecond)
-      }}
+    def create_optimized_pipeline(core_count) do
+      pipeline_name = :"optimized_backflow_#{System.unique_integer()}"
+      
+      {:ok, _pid} = AriaQueue.FlowBackflow.create_pipeline(pipeline_name, [
+        stages: core_count,
+        backflow_enabled: true,
+        max_demand: 1000,
+        min_demand: 100
+      ])
+      
+      pipeline_name
     end
 
-    @impl true
-    def handle_buffer(:input, buffer, _ctx, state) do
-      action = buffer.payload |> :erlang.binary_to_term()
-
-      # Optimized processing with minimal overhead
-      result = process_action_optimized(action, state.workflow_type, state.core_id)
-
-      output_buffer = %Membrane.Buffer{
-        payload: :erlang.term_to_binary(result)
+    def process_actions_optimized(pipeline_name, actions, core_count) do
+      processing_opts = [
+        source_fn: &optimized_source_stage/1,
+        filter_fn: &optimized_filter_stage/1,
+        sink_fn: &optimized_sink_stage/1
+      ]
+      
+      start_time = System.monotonic_time(:microsecond)
+      
+      result = AriaQueue.FlowBackflow.process_with_backflow(pipeline_name, actions, processing_opts)
+      
+      end_time = System.monotonic_time(:microsecond)
+      processing_time = end_time - start_time
+      
+      # Calculate metrics similar to the original Membrane processor
+      results = Map.get(result, :results, [])
+      total_computation_cost = Enum.reduce(results, 0, fn res, acc ->
+        acc + Map.get(res, :computation_cost, 0)
+      end)
+      
+      backpressure_events = Enum.count(results, fn res ->
+        Map.get(res, :backpressure_detected, false)
+      end)
+      
+      %{
+        processed_count: length(results),
+        computation_cost: total_computation_cost,
+        backpressure_events: backpressure_events,
+        processing_time_us: processing_time,
+        workflow_type: :work_stealing_convergence,
+        results: results
       }
+    end
 
-      new_state = %{
-        state |
-        processed_count: state.processed_count + 1,
-        computation_cost: state.computation_cost + result.computation_cost,
-        backpressure_events: state.backpressure_events + if(Map.get(result, :backpressure_detected, false), do: 1, else: 0)
+    defp optimized_source_stage(action) do
+      action
+      |> Map.put(:source_processed_at, System.monotonic_time(:microsecond))
+      |> Map.put(:optimized_ready, true)
+    end
+
+    defp optimized_filter_stage(action) do
+      # CPU-optimized processing with cache-friendly operations
+      # This simulates real game processing (pathfinding, physics, AI)
+      core_id = rem(Map.get(action, :id, 0), System.schedulers_online())
+      
+      result = process_action_optimized(action, :work_stealing_convergence, core_id)
+      
+      action
+      |> Map.merge(result)
+      |> Map.put(:filter_processed_at, System.monotonic_time(:microsecond))
+    end
+
+    defp optimized_sink_stage(action) do
+      %{
+        id: Map.get(action, :id, :unknown),
+        result: :optimized_processed,
+        computation_cost: Map.get(action, :computation_cost, 10),
+        processing_time_us: Map.get(action, :processing_time_us, 0),
+        backpressure_detected: Map.get(action, :backpressure_detected, false),
+        core_id: Map.get(action, :core_id, 0),
+        action_type: Map.get(action, :action_type, :unknown),
+        completed_at: System.monotonic_time(:microsecond)
       }
-
-      {[buffer: {:output, output_buffer}], new_state}
     end
 
     # CPU-optimized processing with cache-friendly operations
     defp process_action_optimized(action, _workflow_type, core_id) do
       # Heavy computation to simulate real game processing (pathfinding, physics, AI)
-      # This will make the test run for about 1 minute with 50,000 actions
+
+      base_iterations = case action.action do
+        :move_to -> 15000 + rem(core_id, 1500)      # Very heavy pathfinding computation
+        :attack -> 22500 + rem(core_id, 2250)       # Very complex damage calculation, collision detection
+        :skill_cast -> 36000 + rem(core_id, 3600)   # Extremely complex skill effects, particle systems
+        :interact -> 12000 + rem(core_id, 1200)     # Heavy UI state updates, inventory management
+        _ -> 15000
+      end
 
       base_iterations = case action.action do
         :move_to -> 15000 + rem(core_id, 1500)      # Very heavy pathfinding computation
@@ -793,7 +858,7 @@ defmodule AriaEngine.MembraneWorkflowTest do
       computation_result = Enum.reduce(1..base_iterations, 0.0, fn i, acc ->
         # Simulate complex mathematical operations like those in game engines
         x = :math.sin(i * 0.001 + core_id)
-        y = :math.cos(i * 0.002 + action.worker_target)
+        y = :math.cos(i * 0.002 + Map.get(action, :worker_target, 0))
         z = :math.sqrt(x * x + y * y + i * 0.0001)
         acc + z
       end)
@@ -813,58 +878,65 @@ defmodule AriaEngine.MembraneWorkflowTest do
     end
   end
 
-  # Convergence collector that aggregates results hierarchically
-  defmodule ConvergenceResultCollector do
-    use Membrane.Sink
+  # Flow-based convergence collector that aggregates results hierarchically
+  defmodule FlowConvergenceResultCollector do
+    @moduledoc """
+    Flow-based convergence collector that aggregates results hierarchically.
+    
+    This replaces the Membrane ConvergenceResultCollector with equivalent functionality
+    using our Flow-based system.
+    """
 
-    defstruct parent_pid: nil, core_id: nil
-
-    def_input_pad :input,
-      accepted_format: %Membrane.RemoteStream{type: :bytestream},
-      flow_control: :push
-
-    @impl true
-    def handle_init(_ctx, %__MODULE__{parent_pid: parent_pid, core_id: core_id}) do
-      {[], %{
-        parent_pid: parent_pid,
-        core_id: core_id,
-        results: [],
-        processed_count: 0,
-        total_computation_cost: 0,
-        backpressure_events: 0
-      }}
-    end
-
-    @impl true
-    def handle_buffer(:input, buffer, _ctx, state) do
-      result = buffer.payload |> :erlang.binary_to_term()
-      computation_cost = result.computation_cost || 0
-      backpressure_events = if Map.get(result, :backpressure_detected, false), do: 1, else: 0
-
-      new_state = %{
-        state |
-        results: [result | state.results],
-        processed_count: state.processed_count + 1,
-        total_computation_cost: state.total_computation_cost + computation_cost,
-        backpressure_events: state.backpressure_events + backpressure_events
+    def collect_convergence_results(flow_result, core_count) do
+      results = Map.get(flow_result, :results, [])
+      metrics = Map.get(flow_result, :metrics, %{})
+      
+      # Group results by core for convergence analysis
+      core_results = Enum.group_by(results, fn result ->
+        Map.get(result, :core_id, 0)
+      end)
+      
+      # Calculate per-core metrics
+      core_metrics = Enum.map(0..(core_count - 1), fn core_id ->
+        core_results_list = Map.get(core_results, core_id, [])
+        
+        total_computation_cost = Enum.reduce(core_results_list, 0, fn result, acc ->
+          acc + Map.get(result, :computation_cost, 0)
+        end)
+        
+        backpressure_events = Enum.count(core_results_list, fn result ->
+          Map.get(result, :backpressure_detected, false)
+        end)
+        
+        %{
+          core_id: core_id,
+          processed_count: length(core_results_list),
+          total_computation_cost: total_computation_cost,
+          backpressure_events: backpressure_events,
+          core_workload: length(core_results_list)  # For work distribution variance calculation
+        }
+      end)
+      
+      # Calculate overall convergence metrics
+      total_processed = length(results)
+      total_computation_cost = Enum.reduce(results, 0, fn result, acc ->
+        acc + Map.get(result, :computation_cost, 0)
+      end)
+      
+      total_backpressure_events = Enum.count(results, fn result ->
+        Map.get(result, :backpressure_detected, false)
+      end)
+      
+      %{
+        core_results: core_metrics,
+        convergence_summary: %{
+          total_processed: total_processed,
+          total_computation_cost: total_computation_cost,
+          total_backpressure_events: total_backpressure_events,
+          core_count: core_count
+        },
+        flow_metrics: metrics
       }
-
-      {[], new_state}
-    end
-
-    @impl true
-    def handle_end_of_stream(:input, _ctx, state) do
-      # Send convergence result when stream ends
-      core_result = %{
-        core_id: state.core_id,
-        processed_count: state.processed_count,
-        total_computation_cost: state.total_computation_cost,
-        backpressure_events: state.backpressure_events,
-        core_workload: state.processed_count  # For work distribution variance calculation
-      }
-
-      send(state.parent_pid, {:convergence_result, core_result})
-      {[], state}
     end
   end
 
@@ -1260,93 +1332,43 @@ defmodule AriaEngine.MembraneWorkflowTest do
   # BREAKTHROUGH: Simplified backflow-based GPU convergence
   # Uses Membrane's demand-driven processing for efficient scaling
 
-  # Simplified Membrane pipeline test - processes all actions directly
+  # Flow-based backflow processing replaces Membrane implementation
   defp test_backflow_gpu_convergence_with_work_stealing(action_count, worker_count) do
-    coordination_start_time = System.monotonic_time(:microsecond)
-
-    # Create all actions
-    actions = create_workflow_actions_for_gpu_trial(action_count, worker_count)
-
-    if worker_count == 1 do
-      # Single pipeline processes all actions
-      result = create_single_membrane_pipeline(actions)
-      coordination_end_time = System.monotonic_time(:microsecond)
-      coordination_time_ms = (coordination_end_time - coordination_start_time) / 1000
-
-      Map.put(result, :coordination_time_ms, coordination_time_ms)
-    else
-      # Multiple pipelines process action chunks
-      actions_per_worker = div(length(actions), worker_count)
-      action_chunks = Enum.chunk_every(actions, actions_per_worker)
-
-      # Process each chunk in a separate Membrane pipeline
-      pipeline_results = action_chunks
-      |> Enum.with_index()
-      |> Enum.map(fn {chunk, core_id} ->
-        create_single_membrane_pipeline(chunk, core_id)
-      end)
-
-      coordination_end_time = System.monotonic_time(:microsecond)
-      coordination_time_ms = (coordination_end_time - coordination_start_time) / 1000
-
-      # Aggregate results
-      total_processed = Enum.sum(Enum.map(pipeline_results, & &1.processed_count))
-      total_cost = Enum.sum(Enum.map(pipeline_results, & &1.total_computation_cost))
-
-      %{
-        processed_count: total_processed,
-        total_computation_cost: total_cost,
-        backpressure_events: 0,
-        coordination_time_ms: coordination_time_ms,
-        processing_type: :membrane_multi_pipeline,
-        work_stealing_efficiency: 1.0
-      }
-    end
+    # Use the new Flow backflow system instead of Membrane
+    AriaEngine.FlowWorkflow.test_backflow_gpu_convergence_with_work_stealing(action_count, worker_count)
   end
 
-  # Create a single Membrane pipeline to process actions
-  defp create_single_membrane_pipeline(actions, core_id \\ 0) do
-    import Membrane.ChildrenSpec
-
-    # Convert actions to buffers
-    buffers = Enum.map(actions, fn action ->
-      %Membrane.Buffer{payload: :erlang.term_to_binary(action)}
-    end)
-
-    # Create pipeline
-    spec = [
-      child(:source, %__MODULE__.AutoFlowSource{output: buffers})
-      |> child(:processor, %__MODULE__.OptimizedBackflowProcessor{
-        core_id: core_id,
-        workflow_type: :direct_processing
-      })
-      |> child(:sink, %__MODULE__.ConvergenceResultCollector{
-        core_id: core_id,
-        parent_pid: self()
-      })
-    ]
-
-    pipeline = Testing.Pipeline.start_supervised!(spec: spec)
-
-    # Wait for processing to complete
-    result = receive do
-      {:convergence_result, result} ->
-        Testing.Pipeline.terminate(pipeline)
-        result
-    after
-      30_000 ->  # 30 second timeout
-        Testing.Pipeline.terminate(pipeline)
-        # Return fallback if timeout
-        %{
-          core_id: core_id,
-          processed_count: length(actions),
-          total_computation_cost: length(actions) * 1000,
-          backpressure_events: 0,
-          core_workload: length(actions)
-        }
-    end
-
-    result
+  # Create a single Flow pipeline to process actions
+  defp create_single_flow_pipeline(actions, core_id \\ 0) do
+    # Create a Flow backflow pipeline for single-core processing
+    pipeline_name = :"single_flow_#{core_id}_#{System.unique_integer()}"
+    
+    {:ok, _pid} = AriaQueue.FlowBackflow.create_pipeline(pipeline_name, [
+      stages: 1,  # Single core processing
+      backflow_enabled: true,
+      max_demand: length(actions) * 2,
+      min_demand: max(1, div(length(actions), 4))
+    ])
+    
+    # Process actions using the optimized Flow processor
+    result = OptimizedFlowBackflowProcessor.process_actions_optimized(pipeline_name, actions, 1)
+    
+    # Convert to convergence result format
+    convergence_result = FlowConvergenceResultCollector.collect_convergence_results(
+      %{results: result.results, metrics: %{}}, 
+      1
+    )
+    
+    # Return the core result for compatibility
+    core_result = List.first(convergence_result.core_results) || %{
+      core_id: core_id,
+      processed_count: length(actions),
+      total_computation_cost: length(actions) * 1000,
+      backpressure_events: 0,
+      core_workload: length(actions)
+    }
+    
+    core_result
   end
 
 
@@ -1611,6 +1633,5 @@ defmodule AriaEngine.MembraneWorkflowTest do
         Testing.Pipeline.terminate(pipeline)
         %{error: :timeout}
     end
-  end
   end  # Close describe block
 end

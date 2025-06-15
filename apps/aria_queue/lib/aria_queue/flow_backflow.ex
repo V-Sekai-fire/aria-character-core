@@ -179,9 +179,16 @@ defmodule AriaQueue.FlowBackflow do
 
   defp aggregate_results([]), do: %{results: [], metrics: %{}}
   defp aggregate_results(flow_results) do
-    all_results = Enum.flat_map(flow_results, & &1.results)
+    # Handle different formats that might come from Flow.reduce
+    normalized_results = Enum.map(flow_results, fn
+      %{results: results, metrics: metrics} -> %{results: results, metrics: metrics}
+      {:metrics, metrics} -> %{results: [], metrics: metrics}
+      other -> %{results: [other], metrics: %{}}
+    end)
     
-    combined_metrics = Enum.reduce(flow_results, %{}, fn flow_result, acc ->
+    all_results = Enum.flat_map(normalized_results, & &1.results)
+    
+    combined_metrics = Enum.reduce(normalized_results, %{}, fn flow_result, acc ->
       metrics = flow_result.metrics
       %{
         total_items: Map.get(acc, :total_items, 0) + Map.get(metrics, :total_items, 0),
