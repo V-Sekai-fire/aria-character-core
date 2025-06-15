@@ -26,7 +26,7 @@ defmodule AriaEngine.TimelinePlanner do
   Timeline-based temporal planner with constraint propagation and parallel reasoning.
   Provides O(V^t) complexity vs O(A^n) for action-based approaches.
   """
-  
+
   defstruct [
     :state_variables,    # Map of domain state variables
     :timelines,         # Active timeline constraints
@@ -34,7 +34,7 @@ defmodule AriaEngine.TimelinePlanner do
     :constraints,       # Cross-timeline constraint rules
     :optimization_goals # Objectives (minimize time, resources, etc.)
   ]
-  
+
   @doc "Main planning entry point"
   def plan(initial_state, goals, horizon_ticks, opts \\ []) do
     # Timeline generation -> Constraint satisfaction -> Optimization
@@ -45,7 +45,7 @@ defmodule AriaEngine.Timeline do
   @moduledoc """
   Represents a state variable's evolution over time as discrete intervals.
   """
-  
+
   defstruct [
     :variable_name,     # State variable identifier
     :value_domain,      # Possible values for this variable
@@ -58,7 +58,7 @@ defmodule AriaEngine.TimelineInterval do
   @moduledoc """
   A time period during which a state variable has a specific value.
   """
-  
+
   defstruct [
     :value,            # State variable value during this interval
     :start_tick,       # Interval start time (inclusive)
@@ -71,7 +71,7 @@ defmodule AriaEngine.TimelineConstraint do
   @moduledoc """
   Rules governing valid timeline configurations and transitions.
   """
-  
+
   defstruct [
     :id,               # Unique constraint identifier
     :type,             # :temporal, :resource, :synchronization, :transition
@@ -85,17 +85,18 @@ end
 
 ### Phased Implementation Plan
 
-#### Phase 1: Core Timeline Infrastructure (Week 1-2)
+#### Phase 1: Core Timeline Infrastructure
 
 **Objective**: Establish basic timeline representation and manipulation
 
 1. **Timeline Data Structures**
+
    ```elixir
    # Implement core timeline types
    - AriaEngine.Timeline
-   - AriaEngine.TimelineInterval  
+   - AriaEngine.TimelineInterval
    - AriaEngine.TimelineConstraint
-   
+
    # Basic timeline operations
    - create_timeline/2
    - add_interval/3
@@ -104,12 +105,13 @@ end
    ```
 
 2. **JSON-LD Integration**
+
    ```elixir
    # Timeline serialization vocabulary using Chibifire namespace
    @context %{
      "@vocab" => "https://chibifire.com/vocab/aria/temporal#",
      "Timeline" => "https://chibifire.com/vocab/aria/temporal#Timeline",
-     "StateVariable" => "https://chibifire.com/vocab/aria/temporal#StateVariable", 
+     "StateVariable" => "https://chibifire.com/vocab/aria/temporal#StateVariable",
      "Constraint" => "https://chibifire.com/vocab/aria/temporal#Constraint",
      "Interval" => "https://chibifire.com/vocab/aria/temporal#Interval",
      "startTick" => "https://chibifire.com/vocab/aria/temporal#startTick",
@@ -136,22 +138,24 @@ end
 **Objective**: Implement constraint definition and basic propagation
 
 1. **Constraint Definition DSL**
+
    ```elixir
    # Temporal constraints
    temporal_constraint(:robot_location, min_duration: 2, max_duration: 10)
-   
-   # Resource constraints  
+
+   # Resource constraints
    resource_constraint(:battery_level, consumption_rate: 1, threshold: 10)
-   
+
    # Synchronization constraints
-   sync_constraint([:robot_location, :gripper_state], 
+   sync_constraint([:robot_location, :gripper_state],
      when: {robot_at: :pickup_zone}, then: {gripper: :open})
-   
+
    # Transition constraints
    transition_constraint(:battery_level, only: :decrease_or_same)
    ```
 
 2. **Constraint Propagation Engine**
+
    ```elixir
    defmodule AriaEngine.ConstraintPropagator do
      def propagate_constraints(timelines, constraints) do
@@ -171,11 +175,12 @@ end
 
 **Deliverable**: Constraint definition and basic propagation working
 
-#### Phase 3: Timeline Generation (Week 5-6)
+#### Phase 3: Timeline Generation
 
 **Objective**: Generate valid timeline combinations from initial state and goals
 
 1. **Goal Decomposition**
+
    ```elixir
    defmodule AriaEngine.GoalDecomposer do
      def decompose_goal(goal, state_variables) do
@@ -187,6 +192,7 @@ end
    ```
 
 2. **Timeline Search Strategy**
+
    ```elixir
    # Breadth-first timeline generation
    # Constraint-guided search pruning
@@ -207,6 +213,7 @@ end
 **Objective**: Find optimal timeline configurations
 
 1. **Multi-Objective Optimization**
+
    ```elixir
    defmodule AriaEngine.TimelineOptimizer do
      def optimize(timeline_candidates, objectives) do
@@ -218,6 +225,7 @@ end
    ```
 
 2. **Timeline Scheduling**
+
    ```elixir
    # Convert flexible timelines to concrete schedules
    # Resource allocation and leveling
@@ -238,6 +246,7 @@ end
 **Objective**: Complete integration with AriaEngine and advanced features
 
 1. **AriaEngine Integration**
+
    ```elixir
    # Replace existing planner interface
    # Maintain backward compatibility where possible
@@ -245,6 +254,7 @@ end
    ```
 
 2. **Incremental Replanning**
+
    ```elixir
    defmodule AriaEngine.IncrementalReplanner do
      def replan(current_timeline, changed_conditions) do
@@ -273,11 +283,11 @@ defmodule AriaEngine.ConstraintPropagator do
   def propagate(timelines, constraints) do
     # 1. Initialize constraint queue with all constraints
     queue = initialize_constraint_queue(constraints)
-    
+
     # 2. Process constraints until fixed point
     propagate_loop(timelines, queue, MapSet.new())
   end
-  
+
   defp propagate_loop(timelines, queue, processed) do
     case :queue.out(queue) do
       {{:value, constraint}, new_queue} ->
@@ -287,20 +297,20 @@ defmodule AriaEngine.ConstraintPropagator do
           case apply_constraint(timelines, constraint) do
             {:ok, new_timelines} ->
               # Constraint satisfied, continue
-              propagate_loop(new_timelines, new_queue, 
+              propagate_loop(new_timelines, new_queue,
                 MapSet.put(processed, constraint.id))
-            
+
             {:modified, new_timelines, affected_vars} ->
               # Timeline modified, re-queue related constraints
               related_constraints = find_related_constraints(constraints, affected_vars)
               updated_queue = enqueue_constraints(new_queue, related_constraints)
               propagate_loop(new_timelines, updated_queue, processed)
-            
+
             {:violation, reason} ->
               {:error, {:constraint_violation, constraint, reason}}
           end
         end
-      
+
       {:empty, _} ->
         {:ok, timelines}
     end
@@ -315,21 +325,21 @@ defmodule AriaEngine.ParallelTimelineProcessor do
   def process_timelines_parallel(state_variables, constraints) do
     # Group independent variables for parallel processing
     variable_groups = partition_independent_variables(state_variables, constraints)
-    
+
     # Process each group in parallel
     timeline_tasks = Enum.map(variable_groups, fn group ->
       Task.async(fn -> generate_timeline_group(group, constraints) end)
     end)
-    
+
     # Collect results and merge timelines
     partial_timelines = Task.await_many(timeline_tasks, :infinity)
     merge_timeline_groups(partial_timelines, constraints)
   end
-  
+
   defp partition_independent_variables(variables, constraints) do
     # Build dependency graph from constraints
     dependency_graph = build_dependency_graph(variables, constraints)
-    
+
     # Find strongly connected components
     Graph.strongly_connected_components(dependency_graph)
   end
@@ -343,20 +353,20 @@ defmodule AriaEngine.TimelineOptimizer do
   def optimize(timeline_candidates, objectives) do
     # 1. Filter feasible timelines
     feasible = Enum.filter(timeline_candidates, &timeline_feasible?/1)
-    
+
     # 2. Calculate objective scores
     scored = Enum.map(feasible, fn timeline ->
       score = calculate_objectives(timeline, objectives)
       {timeline, score}
     end)
-    
+
     # 3. Pareto frontier selection
     pareto_optimal = select_pareto_optimal(scored)
-    
+
     # 4. Final selection based on preferences
     select_best_timeline(pareto_optimal, objectives.preferences)
   end
-  
+
   defp calculate_objectives(timeline, objectives) do
     %{
       completion_time: calculate_makespan(timeline),
@@ -371,32 +381,37 @@ end
 ### Testing Strategy
 
 #### Unit Tests
+
 - Timeline data structure operations
-- Constraint propagation algorithms  
+- Constraint propagation algorithms
 - JSON-LD serialization/deserialization
 - Individual optimization components
 
-#### Integration Tests  
+#### Integration Tests
+
 - End-to-end timeline planning scenarios
 - Performance benchmarks vs action-based planning
 - Constraint satisfaction completeness
 - Parallel processing correctness
 
 #### Performance Tests
+
 - Timeline generation scalability (O(V^t) verification)
-- Constraint propagation efficiency 
+- Constraint propagation efficiency
 - Memory usage optimization
 - Parallel processing speedup measurement
 
 ### Migration Strategy
 
 #### From Existing Planner
+
 1. **Wrapper Compatibility Layer**: Create adapters that convert action-based plans to timeline representation
 2. **Gradual Feature Migration**: Move complex planning scenarios to timeline planner first
 3. **A/B Testing**: Compare timeline vs action performance on same problems
 4. **Deprecation Timeline**: Phase out action-based planner over 6 months
 
 #### Risk Mitigation
+
 - **Fallback Strategy**: Keep simplified action-based planner for critical scenarios
 - **Performance Monitoring**: Continuous benchmarking to ensure timeline benefits
 - **Team Training**: Comprehensive documentation and training on timeline concepts
@@ -435,24 +450,28 @@ end
 ## Double-Check Verification
 
 ### Implementation Plan Completeness ✅
+
 - **Phase-by-Phase Breakdown**: Clear 10-week implementation schedule
 - **Concrete Code Examples**: Actual Elixir module structures provided
 - **Dependencies Identified**: JSON-LD integration, constraint libraries
 - **Testing Strategy**: Unit, integration, and performance test plans
 
 ### Technical Feasibility ✅
+
 - **Algorithm Specifications**: Constraint propagation and optimization algorithms detailed
 - **Complexity Analysis**: O(V^t) vs O(A^n) mathematically justified
 - **Parallel Processing**: Task-based parallel timeline generation strategy
 - **Integration Path**: Clear migration from existing planner
 
-### Risk Assessment ✅  
+### Risk Assessment ✅
+
 - **Implementation Risks**: Complexity and learning curve acknowledged
 - **Mitigation Strategies**: Incremental approach, fallback options, comprehensive testing
 - **Performance Validation**: Benchmarking requirements specified
 - **Team Enablement**: Documentation and training plans included
 
 ### Architectural Consistency ✅
+
 - **Data Model**: JSON-LD vocabulary aligns with ADR-036 principles
 - **Module Structure**: Clean separation of concerns across timeline components
 - **Interface Design**: Backward compatibility and migration strategy
