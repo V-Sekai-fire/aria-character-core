@@ -1,21 +1,28 @@
 # ADR-030: Console TUI Implementation
 
-## Status
-
-Accepted
+**Status**: Superseded
 
 **Date**: June 14, 2025
-**Supersedes**: ADR-027 (Web Interface Implementation), ADR-028 (Three.js 3D Visualization Architecture)
+
+**Superseded by**: [ADR-068: Remove aria_tui application](068-remove-aria-tui-application.md)
 
 ## Context
 
-During weekend implementation, Three.js 3D visualization and Phoenix LiveView web interface proved too complex for the available timeline. The temporal planner needs a working demonstration interface that can be implemented reliably within weekend constraints while still showcasing core temporal planning capabilities.
+This ADR proposed a console-based TUI as a faster alternative to a web interface for demonstrating the temporal planner. The decision was based on the perceived complexity of web development and existing experience with TUIs.
 
-## Decision
+This approach has been abandoned. The `aria_tui` application has been removed, and development focus has shifted towards a web-based interface, as the initial complexity concerns have been re-evaluated.
+
+## Original Content
+
+The original content of this ADR is preserved below for historical context.
+
+---
+
+During weekend implementation, Three.js 3D visualization and Phoenix LiveView web interface proved too complex for the available timeline. The temporal planner needs a working demonstration interface that can be implemented reliably within weekend constraints while still showcasing core temporal planning capabilities.
 
 Implement a console-based Terminal User Interface (TUI) for the temporal planner demonstration, abandoning the web interface approach.
 
-## Rationale
+### Rationale
 
 - **Implementation Speed**: Console TUI can be implemented much faster than web interface
 - **Weekend Viability**: Proven terminal interface patterns reduce implementation risk
@@ -23,23 +30,23 @@ Implement a console-based Terminal User Interface (TUI) for the temporal planner
 - **Demonstration Capability**: Terminal interface still provides clear visualization of temporal planning
 - **Existing Expertise**: Project already has TUI experience from aria_tui application
 
-## Implementation
+### Implementation
 
-### Console Interface Design
+#### Console Interface Design
 
 - **Real-time Display**: Terminal-based real-time updates showing agent positions and actions
 - **ASCII Grid**: Simple ASCII representation of the battlefield grid
 - **Status Information**: Current agent positions, action progress, and timing information
 - **Input Handling**: Keyboard input for interruption and tactical commands
 
-### Technical Stack
+#### Technical Stack
 
 - **Elixir Console**: Native Elixir terminal I/O for cross-platform compatibility
 - **ASCII Rendering**: Simple character-based grid display
 - **Real-time Updates**: Terminal screen refresh for animation effects
 - **Keyboard Input**: Asynchronous input handling for real-time interaction
 
-### Display Format
+#### Display Format
 
 ```
 TimeStrike - Temporal Planner Demo
@@ -61,7 +68,7 @@ Actions:
 Press SPACEBAR to interrupt Alex | Press Q to quit
 ```
 
-### Weekend Implementation Scope
+#### Weekend Implementation Scope
 
 - **Basic Grid**: ASCII battlefield representation
 - **Agent Movement**: Real-time position updates
@@ -69,7 +76,7 @@ Press SPACEBAR to interrupt Alex | Press Q to quit
 - **Interruption**: SPACEBAR interrupt functionality
 - **Status Updates**: ETA and progress indicators
 
-## Benefits Over Web Interface
+### Benefits Over Web Interface
 
 - **Rapid Implementation**: No frontend JavaScript development required
 - **Cross-Platform**: Works on any terminal without browser dependencies
@@ -77,14 +84,14 @@ Press SPACEBAR to interrupt Alex | Press Q to quit
 - **Debugging Ease**: Direct terminal output easier to debug
 - **Resource Efficiency**: No web server or browser overhead
 
-## Limitations Accepted
+### Limitations Accepted
 
 - **Visual Appeal**: Less polished than 3D web interface
 - **Streaming Quality**: Terminal interface less engaging for stream viewers
 - **Mobile Access**: Not accessible on mobile devices
 - **Future Expansion**: Limited scalability compared to web platform
 
-## Implementation Plan
+### Implementation Plan
 
 1. **Terminal Setup**: Basic terminal screen management and input handling
 2. **Grid Display**: ASCII battlefield rendering with agent positions
@@ -92,23 +99,23 @@ Press SPACEBAR to interrupt Alex | Press Q to quit
 4. **Input Processing**: Asynchronous keyboard input for interruptions
 5. **Status Display**: Action progress and timing information
 
-## Consequences
+### Consequences
 
-### Positive
+#### Positive
 
 - **Achievable Timeline**: Can be implemented within weekend constraints
 - **Focus on Core Logic**: Removes frontend distractions from temporal planning
 - **Reliable Demonstration**: Terminal interface has fewer failure modes
 - **Development Speed**: Faster iteration cycle for temporal planner logic
 
-### Negative
+#### Negative
 
 - **Reduced Visual Impact**: Less impressive than 3D web interface
 - **Limited Streaming Appeal**: Terminal interface less engaging for viewers
 - **Platform Limitations**: Terminal capabilities vary across systems
 - **Future Migration Cost**: Eventually need to rebuild interface for production
 
-## Related Decisions
+### Related Decisions
 
 - **Supersedes**: ADR-027 (Web Interface Implementation)
 - **Supersedes**: ADR-028 (Three.js 3D Visualization Architecture)

@@ -1,20 +1,34 @@
-# TUI Architecture Design Resolutions
+# ADR-054: TUI Architecture Design Resolutions
+
+- **Status:** Superseded
+- **Date:** 2025-06-15
+- **Superseded by:** [ADR-068: Remove aria_tui application](068-remove-aria-tui-application.md)
+
+This ADR originally defined the architecture for the `aria_tui` application. The TUI was intended to provide a terminal-based interface for interacting with the Aria system.
+
+The decision was made to remove the `aria_tui` application entirely. The complexity of maintaining a TUI was not justified by its utility, and development focus has shifted to the web interface and core engine.
+
+## Original Content
+
+The original content of this ADR is preserved below for historical context.
+
+---
 
 This document captures the finalized design decisions for the modular Terminal User Interface (TUI) system refactoring.
 
-## Summary
+### Summary
 
 **Major Architectural Refactoring Completed (June 14, 2025)**: Complete separation of TUI system from game-specific logic
 
-### Key Design Resolution: Content Provider Pattern
+#### Key Design Resolution: Content Provider Pattern
 
 **Resolution**: The TUI system shall be completely decoupled from any specific application logic through a behavior-based content provider interface.
 
 **Rationale**: This enables reusability across different applications while maintaining a rich, interactive terminal interface.
 
-## Design Resolutions
+### Design Resolutions
 
-### Resolution 1: Pure TUI System
+#### Resolution 1: Pure TUI System
 
 **Decision**: The `aria_tui` app contains only generic TUI functionality with zero dependencies on game-specific modules.
 
@@ -27,7 +41,7 @@ This document captures the finalized design decisions for the modular Terminal U
 
 **Impact**: Any application can now use the TUI system by implementing the content provider behavior.
 
-### Resolution 2: Modular Code Architecture
+#### Resolution 2: Modular Code Architecture
 
 **Decision**: Split monolithic TUI code into focused, single-responsibility modules.
 
@@ -41,7 +55,7 @@ This document captures the finalized design decisions for the modular Terminal U
 
 **Impact**: Improved maintainability, testability, and extensibility of TUI components.
 
-### Resolution 3: Content Provider Behavior Pattern
+#### Resolution 3: Content Provider Behavior Pattern
 
 **Decision**: Define a formal behavior contract for content providers to ensure consistent interfaces.
 
@@ -59,34 +73,34 @@ This document captures the finalized design decisions for the modular Terminal U
 - Type safety and documentation through behaviors
 - Consistent interfaces across all implementations
 
-### Resolution 4: Terminal Lifecycle Management
+#### Resolution 4: Terminal Lifecycle Management
 
 **Decision**: Implement robust terminal setup, cleanup, and signal handling for professional terminal applications.
 
 **Implementation**:
 
-- ✅ Alternative screen buffer management (`\e[?1049h/l`)
-- ✅ Cursor visibility control (`\e[?25l/h`)
+- ✅ Alternative screen buffer management (`e[?1049h/l`)
+- ✅ Cursor visibility control (`e[?25l/h`)
 - ✅ Signal handling for interrupts and resize
 - ✅ Graceful cleanup on all exit scenarios
 - ✅ Error recovery and terminal restoration
 
 **Impact**: Professional terminal behavior with proper cleanup preventing terminal corruption.
 
-### Resolution 5: Flickering Bug Resolution
+#### Resolution 5: Flickering Bug Resolution
 
 **Decision**: Minimize screen redraws to eliminate visual flickering through strategic cursor positioning.
 
 **Implementation**:
 
 - ✅ Single screen clear only at startup
-- ✅ Cursor repositioning for updates (`\e[H`)
+- ✅ Cursor repositioning for updates (`e[H`)
 - ✅ Reduced terminal write operations
 - ✅ Efficient redraw strategy
 
 **Impact**: Smooth, professional visual experience without flicker.
 
-### Resolution 6: Test-Driven Development Suite
+#### Resolution 6: Test-Driven Development Suite
 
 **Decision**: The default content provider serves as both demonstration and comprehensive test suite for TUI capabilities.
 
@@ -100,7 +114,7 @@ This document captures the finalized design decisions for the modular Terminal U
 
 **Impact**: Self-validating TUI system with built-in testing capabilities.
 
-### Resolution 7: Responsive Design System
+#### Resolution 7: Responsive Design System
 
 **Decision**: Implement a comprehensive responsive grid system similar to modern web frameworks.
 
@@ -113,7 +127,7 @@ This document captures the finalized design decisions for the modular Terminal U
 
 **Impact**: Professional responsive design that works across all terminal sizes.
 
-### Resolution 8: Backward Compatibility Bridge
+#### Resolution 8: Backward Compatibility Bridge
 
 **Decision**: Maintain compatibility with existing TUI usage while providing modern APIs.
 
@@ -126,35 +140,35 @@ This document captures the finalized design decisions for the modular Terminal U
 
 **Impact**: Smooth transition for existing code without breaking changes.
 
-## Architecture Benefits
+### Architecture Benefits
 
-### 1. **Reusability**
+#### 1. **Reusability**
 
 - Any Elixir application can integrate the TUI system
 - Content providers enable application-specific customization
 - Zero coupling to specific business logic
 
-### 2. **Maintainability**
+#### 2. **Maintainability**
 
 - Clear separation of concerns
 - Focused, testable modules
 - Comprehensive test coverage
 
-### 3. **Professional UX**
+#### 3. **Professional UX**
 
 - Robust terminal handling
 - Smooth visual experience
 - Responsive design across terminal sizes
 
-### 4. **Extensibility**
+#### 4. **Extensibility**
 
 - Behavior-based extension points
 - Modular component system
 - Plugin-friendly architecture
 
-## Implementation Status
+### Implementation Status
 
-### ✅ Completed
+#### ✅ Completed
 
 - Pure TUI system extraction
 - Content provider behavior implementation
@@ -164,22 +178,22 @@ This document captures the finalized design decisions for the modular Terminal U
 - Comprehensive test suite
 - Full compilation and test verification
 
-### 🔄 Integration Examples
+#### 🔄 Integration Examples
 
 - `aria_timestrike_core` content provider implemented
 - Default test suite content provider active
 - Mix task updated for component testing
 
-## Future Considerations
+### Future Considerations
 
-### Potential Enhancements
+#### Potential Enhancements
 
 - WebRTC-based remote terminal support
 - Theme system for customizable color schemes
 - Plugin system for custom components
 - Performance profiling and optimization tools
 
-### Migration Path
+#### Migration Path
 
 - Existing applications using old TUI APIs continue to work
 - New applications should use content provider pattern

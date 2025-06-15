@@ -31,7 +31,6 @@ defmodule AriaTimestrike.MixProject do
     [
       # Internal dependencies
       {:aria_engine, in_umbrella: true},
-      {:aria_tui, in_umbrella: true},
 
       # Core dependencies
       {:jason, "~> 1.2"},
