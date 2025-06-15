@@ -4,13 +4,12 @@
 import Config
 
 # Configure AriaEngine domain providers for development
-config :aria_engine,
+config :aria_engine_core,
   domain_providers: [
     AriaEngine.BasicActionsDomainProvider,
     AriaTimestrike.Core.DomainProvider,
-    AriaTimestrike.DomainProvider
+    AriaFileManagement.DomainProvider
     # Add more providers as needed in development
-    # AriaFileManagement.DomainProvider
     # AriaWorkflowSystem.DomainProvider
   ]
 

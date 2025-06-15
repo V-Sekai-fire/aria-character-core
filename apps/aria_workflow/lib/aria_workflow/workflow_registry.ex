@@ -19,6 +19,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
   require Logger
 
   alias AriaWorkflow.WorkflowDefinition
+  alias AriaEngine.DomainProvider
 
   # Helper methods for unigoal processing - defined first for use in module attributes
 
@@ -91,6 +92,23 @@ defmodule AriaWorkflow.WorkflowRegistry do
       ]
     else
       false
+    end
+  end
+
+  # Helper function to get file management task methods from domain provider
+  defp get_file_management_task_methods do
+    case DomainProvider.get_domain("file_management") do
+      {:ok, domain} ->
+        domain.task_methods
+        |> Enum.flat_map(fn {task_name, methods} ->
+          Enum.with_index(methods) 
+          |> Enum.map(fn {method_fn, index} ->
+            method_name = if index == 0, do: task_name, else: "#{task_name}_#{index}"
+            {method_name, method_fn}
+          end)
+        end)
+      {:error, _} ->
+        [{"file_management_unavailable", fn _, _ -> {:error, "File management domain not available"} end}]
     end
   end
 
@@ -191,17 +209,7 @@ defmodule AriaWorkflow.WorkflowRegistry do
         {"directory_structure", "filesystem", "organized"},
         {"backup_system", "files", "protected"}
       ],
-      tasks: [
-        {"backup_file", &AriaFileManagement.backup_file/2},
-        {"replace_file_safely", &AriaFileManagement.replace_file_safely/2},
-        {"create_directory_structure", &AriaFileManagement.create_directory_structure/2},
-        {"download_and_verify", &AriaFileManagement.download_and_verify/2},
-        {"setup_workspace", &AriaFileManagement.setup_workspace/2},
-        {"cleanup_temp_files", &AriaFileManagement.cleanup_temp_files/2},
-        {"compress_directory", &AriaFileManagement.compress_directory/2},
-        {"extract_archive", &AriaFileManagement.extract_archive/2},
-        {"sync_directories", &AriaFileManagement.sync_directories/2}
-      ],
+      tasks: [],  # Will be populated dynamically
       methods: [
         {"execute_file_operations", &AriaWorkflow.Methods.CommandTracing.execute_with_tracing/2}
       ],
@@ -378,7 +386,14 @@ defmodule AriaWorkflow.WorkflowRegistry do
 
       builtin_def ->
         # Create WorkflowDefinition from built-in data
-        workflow = WorkflowDefinition.new(workflow_id, builtin_def)
+        # Populate dynamic tasks for file_management workflow
+        enhanced_def = if workflow_id == "file_management" do
+          Map.put(builtin_def, :tasks, get_file_management_task_methods())
+        else
+          builtin_def
+        end
+        
+        workflow = WorkflowDefinition.new(workflow_id, enhanced_def)
         {:ok, workflow}
     end
   end

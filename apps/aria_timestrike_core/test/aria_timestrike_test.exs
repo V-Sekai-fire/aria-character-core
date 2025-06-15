@@ -3,13 +3,13 @@
 
 defmodule AriaTimestrikeTest do
   use ExUnit.Case, async: true
-  doctest AriaTimestrike
+  doctest AriaTimestrike.Core
 
   alias AriaEngine.{Domain, State}
 
   describe "AriaTimestrike domain creation" do
     test "creates a valid domain with timestrike actions" do
-      domain = AriaTimestrike.create_domain()
+      domain = AriaTimestrike.Core.create_domain()
 
       assert %Domain{} = domain
       assert domain.name == "timestrike"
@@ -25,7 +25,7 @@ defmodule AriaTimestrikeTest do
     end
 
     test "domain has expected task methods" do
-      domain = AriaTimestrike.create_domain()
+      domain = AriaTimestrike.Core.create_domain()
 
       # The current implementation has no task methods defined
       # This is a basic domain with only primitive actions
@@ -34,7 +34,7 @@ defmodule AriaTimestrikeTest do
     end
 
     test "domain has expected unigoal methods" do
-      domain = AriaTimestrike.create_domain()
+      domain = AriaTimestrike.Core.create_domain()
 
       # The current implementation has no unigoal methods defined
       # This is a basic domain with only primitive actions
@@ -50,23 +50,23 @@ defmodule AriaTimestrikeTest do
     end
 
     test "move_to action", %{state: state} do
-      result = AriaTimestrike.move_to(state, ["agent_001", {10, 20, 5}])
+      result = AriaTimestrike.Core.move_to(state, ["agent_001", {10, 20, 5}])
       # Currently returns modified state (placeholder implementation)
       assert match?(%State{}, result) or result == false
     end
 
     test "attack action", %{state: state} do
-      result = AriaTimestrike.attack(state, ["agent_001", "target_002"])
+      result = AriaTimestrike.Core.attack(state, ["agent_001", "target_002"])
       assert match?(%State{}, result) or result == false
     end
 
     test "skill_cast action", %{state: state} do
-      result = AriaTimestrike.skill_cast(state, ["agent_001", "fireball", "target_area"])
+      result = AriaTimestrike.Core.skill_cast(state, ["agent_001", "fireball", "target_area"])
       assert match?(%State{}, result) or result == false
     end
 
     test "interact action", %{state: state} do
-      result = AriaTimestrike.interact(state, ["agent_001", "npc_merchant", "trade"])
+      result = AriaTimestrike.Core.interact(state, ["agent_001", "npc_merchant", "trade"])
       assert match?(%State{}, result) or result == false
     end
   end
