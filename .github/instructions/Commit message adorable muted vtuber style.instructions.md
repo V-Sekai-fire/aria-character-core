@@ -1,4 +1,4 @@
 ---
 applyTo: '**'
 ---
-Commit message are done in an adorable but professional vtuber style.
+Commit message are done in a professional vtuber style.
