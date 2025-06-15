@@ -10,7 +10,15 @@ Accepted
 
 ## Context
 
-Following the analysis in ADR-037, we have decided to implement timeline-based temporal planning for the AriaEngine. This approach provides superior computational performance through constraint propagation, natural domain modeling for continuous resources, and parallel processing capabilities. This ADR provides a concrete, phased implementation plan specifically designed for timeline-based planning.
+Following the analysis in ADR-037, we have decided to implement timeline-based temporal planning for the AriaEngine. This approach provides superior computational performance through constraint propagation, natural domain modeling for continuous resources, and parallel processing capabilities. This ADR provides a concrete,## Related ADRs
+
+- [ADR-034: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md)
+- [ADR-035: Canonical Temporal Backtracking Problem](035-canonical-temporal-backtracking-problem.md)
+- [ADR-037: Timeline-Based vs Durative Actions](037-timeline-based-vs-durative-actions.md)
+- [ADR-036: Evolving AriaEngine Planner Blueprint](036-evolving-ariaengine-planner-blueprint.md) - **Deprecated**
+- [ADR-039: Temporal Planner Reentrancy Stability](039-temporal-planner-reentrancy-stability.md) - **Not Necessary**
+- [ADR-040: Temporal Constraint Solver Selection](040-temporal-constraint-solver-selection.md)
+- [ADR-041: Temporal Solver Tech Stack Requirements](041-temporal-solver-tech-stack-requirements.md) implementation plan specifically designed for timeline-based planning.
 
 ## Decision
 
