@@ -4,7 +4,7 @@
 defmodule AriaEngine.PortcelainIntegrationTest do
   use ExUnit.Case, async: false
 
-  alias AriaEngine.{State, Actions, DomainProvider, Plan}
+  alias AriaEngine.{State, Actions}
 
   describe "AriaEngine Porcelain Actions" do
     test "execute_command action works with simple commands" do
