@@ -4,7 +4,7 @@
 
 Paused (Started: June 15, 2025, Paused: June 15, 2025)  
 **Priority**: Critical - foundational system implementation  
-**Paused Reason**: Prerequisite aria_queue functionality needs to be implemented first
+**Paused Reason**: Prerequisite aria_flow functionality needs to be implemented first
 
 ## Context
 
