@@ -2,11 +2,15 @@
 
 ## Status
 
-Accepted
+Superseded by ADR-049
 
 ## Date
 
 2025-06-14
+
+## Superseded
+
+2025-06-15 - Superseded by ADR-049: Enhanced Temporal Planner Implementation with Unified APIs
 
 ## Context
 

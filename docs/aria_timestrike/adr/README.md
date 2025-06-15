@@ -4,20 +4,20 @@ This directory contains Architecture Decision Records for the temporal planner c
 
 ## Current Architecture
 
-**The complete temporal planner architecture is defined through ADRs 034-048:**
+**The complete temporal planner architecture is defined through ADRs 034-041, 043-044, and 045-049:**
 
 - **ADR-034**: Definitive Temporal Planner Architecture (foundation)
 - **ADR-035**: Canonical Temporal Backtracking Problem (test case)
 - **ADR-037**: Timeline-Based vs Durative Actions (approach selection)
 - **ADR-040**: Temporal Constraint Solver Selection (algorithm choice)
 - **ADR-041**: Temporal Solver Tech Stack Requirements (implementation stack)
-- **ADR-042**: Temporal Planner Cold Boot Implementation Order (TDD roadmap)
 - **ADR-043**: Total Order to Partial Order Transformation (optimization)
 - **ADR-044**: Temporal Planner as Auto Battler AI (stakeholder communication)
 - **ADR-045**: Allen's Interval Algebra for Temporal Relationships (constraint specification)
 - **ADR-046**: User-Friendly Temporal Constraint Specification (developer productivity)
 - **ADR-047**: TimeStrike Temporal Planner Test Scenario (comprehensive validation)
 - **ADR-048**: Developer-Friendly APIs for Temporal Planner Implementation (enhanced developer experience)
+- **ADR-049**: Enhanced Temporal Planner Implementation with Unified APIs (supersedes ADR-042)
 
 ADRs 036, 038, and 039 are deprecated. ADRs 001-033 have been superseded by the current architecture and serve as historical records.
 
@@ -34,29 +34,32 @@ These ADRs document the evolution of design decisions for the temporal, re-entra
 
 ## ADR Index
 
-### Current Architecture (034-044)
+### Current Architecture (034-041, 043-044)
 
 - **034**: **Definitive Temporal Planner Architecture** _(Architecture foundation)_
 - **035**: **Canonical Temporal Backtracking Problem** _(Definitive test case for temporal reasoning)_
 - **037**: **Timeline-Based vs Durative Actions** _(Timeline planning approach selection)_
 - **040**: **Temporal Constraint Solver Selection** _(PC-2 algorithm for STN solving)_
 - **041**: **Temporal Solver Tech Stack Requirements** _(Pure Elixir implementation stack)_
-- **042**: **Temporal Planner Cold Boot Implementation Order** _(TDD implementation roadmap)_
 - **043**: **Total Order to Partial Order Transformation** _(Optimization algorithm for constraint solving)_
 - **044**: **Temporal Planner as Auto Battler AI** _(Stakeholder communication framework)_
 
-### Enhanced User Experience & Testing (045-048)
+### Enhanced User Experience & Implementation (045-049)
 
 - **045**: **Allen's Interval Algebra for Temporal Relationships** _(Interval constraint specification)_
 - **046**: **User-Friendly Temporal Constraint Specification** _(Developer productivity enhancements)_
 - **047**: **TimeStrike Temporal Planner Test Scenario** _(Comprehensive planner validation scenario)_
-- **048**: **Developer-Friendly APIs for Temporal Planner Implementation** _(Enhanced developer experience for ADR-042)_
-- **047**: **TimeStrike Temporal Planner Test Scenario** _(Comprehensive planner validation scenario)_
+- **048**: **Developer-Friendly APIs for Temporal Planner Implementation** _(Enhanced developer experience)_
+- **049**: **Enhanced Temporal Planner Implementation with Unified APIs** _(Unified implementation approach)_
+
+### Superseded Current Architecture
+
+- **042**: **Temporal Planner Cold Boot Implementation Order** _(Superseded by ADR-049)_
 
 ### Deprecated Current Architecture
 
-- **036**: **Evolving AriaEngine Planner Blueprint** _(Deprecated by ADR-042)_
-- **038**: **Timeline-Based Temporal Planner Implementation** _(Deprecated by ADR-042)_
+- **036**: **Evolving AriaEngine Planner Blueprint** _(Deprecated by ADR-042, now superseded by ADR-049)_
+- **038**: **Timeline-Based Temporal Planner Implementation** _(Deprecated by ADR-042, now superseded by ADR-049)_
 - **039**: **Temporal Planner Reentrancy & Stability** _(Marked not necessary)_
 
 ### Historical Evolution (Superseded)
@@ -130,19 +133,19 @@ The following ADRs document the historical evolution of the temporal planner arc
 
 ## Maintenance
 
-**Current Process**: Architectural changes should be made to the appropriate ADR in the 034-048 series based on the concern:
+**Current Process**: Architectural changes should be made to the appropriate ADR in the current architecture series based on the concern:
 
 - **ADR-034**: Core architecture modifications
 - **ADR-035**: Test case updates or new canonical problems
 - **ADR-037**: Timeline planning approach changes
 - **ADR-040-041**: Solver algorithm or tech stack changes
-- **ADR-042**: Implementation order or TDD methodology updates
 - **ADR-043**: Performance optimization changes
 - **ADR-044**: Stakeholder communication improvements
 - **ADR-045**: Temporal constraint specification changes
 - **ADR-046**: Developer productivity and usability improvements
 - **ADR-047**: Test scenario and validation framework updates
 - **ADR-048**: Developer API and tooling enhancements
+- **ADR-049**: Implementation approach and unified API development
 
 When making architectural changes:
 
