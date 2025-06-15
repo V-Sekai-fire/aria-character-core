@@ -2113,6 +2113,7 @@ end
 - [ADR-040: Temporal Constraint Solver Selection](040-temporal-constraint-solver-selection.md) - **STN solver specification**
 - [ADR-041: Temporal Solver Tech Stack Requirements](041-temporal-solver-tech-stack-requirements.md) - **Implementation tech stack**
 - [ADR-043: Total Order to Partial Order Transformation](043-total-order-to-partial-order-transformation.md) - **PC-2 parallelization algorithm**
+- [ADR-044: Temporal Planner as Auto Battler AI](044-temporal-planner-as-auto-battler-ai.md) - **Accessible explanation for stakeholders**
 - [ADR-037: Timeline-Based vs Durative Actions](037-timeline-based-vs-durative-actions.md) - **Timeline approach rationale**
 - [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md) - **Deprecated**
 
