@@ -21,7 +21,7 @@ config :aria_data, ecto_repos: [
 # This eliminates warnings about missing repos in:
 # aria_queue, aria_interpret, aria_security, aria_auth, aria_storage,
 # aria_shape, aria_engine, aria_workflow, aria_interface, aria_coordinate,
-# aria_monitor, aria_tune, aria_debugger
+# aria_monitor, aria_debugger
 
 # Configure telemetry for observability
 config :telemetry_poller, :default,

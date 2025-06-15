@@ -146,7 +146,6 @@ echo "✅ Layer 5 - Gateway & Ops (running in main app):"
 echo "   - aria_coordinate - API Gateway & Routing"
 echo "   - aria_monitor - System Observability"
 echo "   - aria_debugger - System Inspection"
-echo "   - aria_tune - Performance Optimization"
 
 print_success "Aria Character Core cluster initialization complete!"
 
