@@ -1,4 +1,32 @@
-# ADR-039: Temporal Planner Reentrancy and Stability Guarantees
+# ADR-039: Temporal Planner Reentrancy and Stability
+
+## Status
+
+**Not Necessary** - Analysis determined this ADR is not required for timeline-based temporal planning
+
+## Date
+
+2025-06-14
+
+## Not Necessary Determination
+
+This ADR has been determined to be unnecessary for the following reasons:
+
+1. **Timeline Planning is Discrete**: ADR-038's timeline-based temporal planner operates on discrete intervals and constraint satisfaction, not continuous control systems where Lyapunov stability analysis applies.
+
+2. **Reentrancy Already Inherited**: The existing non-temporal planner already provides retry and reentrancy capabilities that will be inherited by the timeline-based implementation.
+
+3. **Separation of Concerns**: Timeline planning (scheduling problem) and continuous control stability (control theory problem) are distinct domains that don't require integration at this architectural level.
+
+4. **Implementation Complexity**: Adding Lyapunov stability analysis would introduce unnecessary mathematical complexity without corresponding benefits for discrete timeline constraint satisfaction.
+
+**Recommendation**: Implement ADR-038 directly without the control theory foundations outlined in this ADR. The timeline planner should focus on constraint satisfaction and discrete scheduling.
+
+---
+
+# Original ADR Content (Not Necessary)
+
+## Title: Temporal Planner Reentrancy and Stability: Temporal Planner Reentrancy and Stability Guarantees
 
 ## Status
 
@@ -10,651 +38,352 @@ Accepted
 
 ## Context
 
-During the migration from non-temporal to timeline-based temporal planning (ADR-038), we must maintain system stability and reentrancy properties that are critical for real-time control applications. Recent research (arXiv:2503.02171v2 "Is Bellman Equation Enough for Learning Control?") demonstrates that the Bellman equation admits exponentially many solutions in continuous state spaces.
+During the migration from non-temporal to timeline-based temporal planning (ADR-038), we must maintain system stability and reentrancy properties that are critical for real-time control applications. Recent research (arXiv:2503.02171v2) demonstrates that the Bellman equation admits exponentially many solutions in continuous state spaces, but only one yields both optimal policy AND stable closed-loop behavior.
 
-**Mathematical Foundation**: For an n-dimensional linear dynamical system, the Bellman equation admits at least C(2n,n) solutions where C(2n,n) = (2n)! / (n! * n!) solutions. This grows exponentially (~4^n / √(πn)) with state dimension n. Critically, only ONE solution yields both optimal policy AND stable closed-loop behavior.
+**The Solution Network Revolution**: The breakthrough insight is that the **JSON-LD data structure itself IS the solution network**. Rather than maintaining separate todo lists that evolve into complex solution tracking systems, the JSON-LD temporal planner vocabulary provides the native graph structure needed to represent, navigate, and verify the exponentially large solution space.
 
-**The Exponential Crisis**: In a 6-dimensional system, we have C(12,6) = 924 possible solutions, but only 1 is stable. In a 10-dimensional system, we have C(20,10) = 184,756 solutions with only 1 stable. This exponential imbalance means traditional optimization methods are statistically likely to converge to unstable solutions.
+**Key Insight**: JSON-LD's inherent graph topology with `@context`, `@type`, and `@id` relationships creates a natural solution network where:
+- Each temporal plan is a connected subgraph 
+- Solution verification follows graph traversal patterns
+- Stability constraints become graph connectivity rules
+- Reentrancy points are identified through graph cycles and references
 
-**Reentrancy Challenge**: Our existing non-temporal planner in `AriaEngine.Planner` uses HTN planning with proven reentrancy from failure points. The new timeline-based planner must maintain these properties despite the exponential solution space complexity, where 99.9% of solutions are unstable.
+This eliminates the architectural complexity of maintaining separate todo lists, solution trackers, and state managers - the JSON-LD vocabulary unifies all these concerns into a single, mathematically sound data structure.
 
 ## Decision
 
-We will implement a **Stability-Guaranteed Temporal Planner Architecture** that maintains reentrancy properties through mathematical stability verification and constraint-based solution filtering, ensuring both temporal and non-temporal planners can coexist safely.
+We will implement a **JSON-LD Solution Network Architecture** where the temporal planner's JSON-LD data structure serves as both the plan representation AND the solution space navigation system, ensuring stability through graph-theoretic verification rather than separate control systems.
 
-### Core Architecture Principles
+### Core Architecture: JSON-LD as Solution Network
 
-#### 1. Dual-Mode Planner Interface
+#### 1. JSON-LD Solution Network Structure
+
+The solution network is realized through the JSON-LD temporal planner vocabulary where graph topology encodes solution space navigation:
 
 ```elixir
-defmodule AriaEngine.StabilityGuaranteedPlanner do
+defmodule AriaEngine.JsonLdSolutionNetwork do
   @moduledoc """
-  Unified planner interface with guaranteed stability properties.
-
-  Implements stability verification based on control theory principles
-  to ensure both temporal and non-temporal planning modes maintain
-  reentrancy and convergence guarantees.
-  """
-
-  @behaviour AriaEngine.PlannerBehaviour
-
-  defstruct [
-    :mode,                    # :temporal | :non_temporal | :hybrid
-    :stability_verifier,      # Lyapunov-based stability checker
-    :reentrant_state_stack,   # Stack for reentrant planning
-    :admissible_solution_set, # Filtered stable solutions only
-    :convergence_monitor      # Real-time convergence tracking
-  ]
-
-  def plan(initial_state, goals, opts \\ []) do
-    mode = Keyword.get(opts, :planning_mode, :hybrid)
-
-    case mode do
-      :non_temporal -> plan_htn(initial_state, goals, opts)
-      :temporal -> plan_timeline_stable(initial_state, goals, opts)
-      :hybrid -> plan_adaptive(initial_state, goals, opts)
-    end
-  end
-end
-```
-
-#### 2. Stability Verification Engine
-
-Based on the findings in arXiv:2503.02171v2, we implement Lyapunov-based stability verification that guarantees convergence to stable solutions:
-
-```elixir
-defmodule AriaEngine.StabilityVerifier do
-  @moduledoc """
-  Implements stability verification using Lyapunov function analysis
-  to ensure only stable solutions are considered during planning.
-
-  Addresses the exponential imbalance problem where unstable
-  solutions outnumber stable ones by orders of magnitude.
-  """
-
-  def verify_solution_stability(solution_tree, state_space) do
-    with {:ok, lyapunov_candidate} <- compute_lyapunov_function(solution_tree),
-         {:ok, _proof} <- verify_positive_definite(lyapunov_candidate),
-         {:ok, _convergence} <- verify_asymptotic_stability(lyapunov_candidate, state_space) do
-      {:ok, :stable}
-    else
-      {:error, reason} -> {:error, {:unstable, reason}}
-    end
-  end
-
-  defp compute_lyapunov_function(solution_tree) do
-    # Compute quadratic Lyapunov candidate V(x) = x^T * P * x
-    # where P is positive definite matrix derived from solution
-    state_matrix = extract_state_matrix(solution_tree)
-    
-    case solve_lyapunov_equation(state_matrix) do
-      {:ok, p_matrix} when is_positive_definite(p_matrix) ->
-        {:ok, %LyapunovFunction{matrix: p_matrix, type: :quadratic}}
-      {:error, reason} ->
-        {:error, {:lyapunov_computation_failed, reason}}
-    end
-  end
-
-  defp solve_lyapunov_equation(a_matrix) do
-    # Solve A^T * P + P * A = -Q for positive definite P
-    # This ensures V̇(x) = -x^T * Q * x < 0 for stability
-    q_matrix = Matrix.identity(Matrix.rows(a_matrix))
-    solve_lyapunov_complete(a_matrix, q_matrix)
-  end
-
-  defp solve_lyapunov_complete(a_matrix, q_matrix) do
-    # Complete implementation of Lyapunov equation solver
-    # Solves A^T * P + P * A = -Q using Bartels-Stewart algorithm
-    n = Matrix.rows(a_matrix)
-    
-    # Step 1: Check if A is Hurwitz (all eigenvalues have negative real parts)
-    eigenvalues = compute_eigenvalues(a_matrix)
-    unless all_hurwitz?(eigenvalues) do
-      return {:error, :not_hurwitz}
-    end
-    
-    # Step 2: Solve using Kronecker product formulation
-    # vec(AXP + PXA) = (A ⊗ I + I ⊗ A) vec(P) = -vec(Q)
-    i_matrix = Matrix.identity(n)
-    kronecker_sum = kronecker_product(a_matrix, i_matrix) 
-                   |> Matrix.add(kronecker_product(i_matrix, a_matrix))
-    
-    # Step 3: Solve linear system
-    neg_q_vec = Matrix.to_vector(q_matrix) |> Vector.negate()
-    
-    case solve_linear_system(kronecker_sum, neg_q_vec) do
-      {:ok, p_vec} ->
-        p_matrix = Vector.to_matrix(p_vec, n, n)
-        {:ok, p_matrix}
-      {:error, reason} ->
-        {:error, {:linear_solve_failed, reason}}
-    end
-  end
-
-  # Queue-based Lyapunov solver for large systems
-  defp solve_lyapunov_queued(a_matrix, q_matrix) do
-    # Use iterative solver with queue processing for large matrices
-    GenServer.call(LyapunovSolverQueue, {:solve, a_matrix, q_matrix})
-  end
-
-  # Helper functions for Lyapunov solver
-  defp compute_eigenvalues(matrix) do
-    # Compute eigenvalues using QR algorithm
-    matrix
-    |> Matrix.to_list()
-    |> QRAlgorithm.compute_eigenvalues()
-  end
-
-  defp all_hurwitz?(eigenvalues) do
-    Enum.all?(eigenvalues, fn
-      %Complex{real: real} -> real < 0
-      real when is_number(real) -> real < 0
-    end)
-  end
-
-  defp kronecker_product(a, b) do
-    # Compute A ⊗ B = [a_ij * B]
-    a_rows = Matrix.rows(a)
-    a_cols = Matrix.cols(a)
-    b_rows = Matrix.rows(b)
-    b_cols = Matrix.cols(b)
-    
-    result_rows = a_rows * b_rows
-    result_cols = a_cols * b_cols
-    
-    Matrix.build(result_rows, result_cols, fn i, j ->
-      a_i = div(i - 1, b_rows) + 1
-      a_j = div(j - 1, b_cols) + 1
-      b_i = rem(i - 1, b_rows) + 1
-      b_j = rem(j - 1, b_cols) + 1
-      
-      Matrix.get(a, a_i, a_j) * Matrix.get(b, b_i, b_j)
-    end)
-  end
-
-  defp solve_linear_system(a_matrix, b_vector) do
-    # Solve Ax = b using LU decomposition
-    case Matrix.lu_decomposition(a_matrix) do
-      {:ok, {l, u, p}} ->
-        # Solve L(Ux) = Pb using forward and backward substitution
-        pb = Matrix.multiply(p, b_vector)
-        y = forward_substitution(l, pb)
-        x = backward_substitution(u, y)
-        {:ok, x}
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  defp forward_substitution(l_matrix, b_vector) do
-    # Solve Ly = b for lower triangular L
-    n = Matrix.rows(l_matrix)
-    
-    Enum.reduce(1..n, Vector.zeros(n), fn i, y ->
-      sum = Enum.reduce(1..(i-1), 0, fn j, acc ->
-        acc + Matrix.get(l_matrix, i, j) * Vector.get(y, j)
-      end)
-      
-      y_i = (Vector.get(b_vector, i) - sum) / Matrix.get(l_matrix, i, i)
-      Vector.set(y, i, y_i)
-    end)
-  end
-
-  defp backward_substitution(u_matrix, y_vector) do
-    # Solve Ux = y for upper triangular U
-    n = Matrix.rows(u_matrix)
-    
-    Enum.reduce(n..1, Vector.zeros(n), fn i, x ->
-      sum = Enum.reduce((i+1)..n, 0, fn j, acc ->
-        acc + Matrix.get(u_matrix, i, j) * Vector.get(x, j)
-      end)
-      
-      x_i = (Vector.get(y_vector, i) - sum) / Matrix.get(u_matrix, i, i)
-      Vector.set(x, i, x_i)
-    end)
-  end
-
-  defp is_positive_definite(matrix) do
-    # Check all eigenvalues are positive
-    eigenvalues = LinearAlgebra.eigenvalues(matrix)
-    Enum.all?(eigenvalues, &(&1 > 0))
-  end
-end
-```
-
-#### 3. Evolution from Todolists to Solution Networks
-
-Our strategy evolves from simple todolists to sophisticated solution networks within the `ReentrantStateManager`:
-
-**Phase A: Simple Todolist (Current)**
-```elixir
-# Simple linear todolist approach
-todolist = [:task1, :task2, :task3]
-```
-
-**Phase B: Dependency Graph (Intermediate)**
-```elixir
-# Task dependencies with stability constraints
-dependency_graph = %{
-  task1: %{depends_on: [], stability_verified: true},
-  task2: %{depends_on: [:task1], stability_verified: false},
-  task3: %{depends_on: [:task1, :task2], stability_verified: true}
-}
-```
-
-**Phase C: Solution Network (Target)**
-```elixir
-# Full solution network with stability guarantees
-solution_network = %SolutionNetwork{
-  nodes: %{
-    task1: %SolutionNode{
-      admissible_solutions: [sol1_a, sol1_b],
-      stability_matrix: p1,
-      convergence_radius: 0.85
-    },
-    task2: %SolutionNode{
-      admissible_solutions: [sol2_stable],  # Filtered for stability
-      stability_matrix: p2,
-      convergence_radius: 0.92
-    }
-  },
-  edges: [
-    %SolutionEdge{from: :task1, to: :task2, constraint: :stability_preserving}
-  ]
-}
-```
-
-#### 4. Reentrant State Management
-
-Maintain reentrancy properties across both planning modes using the solution network approach:
-
-```elixir
-defmodule AriaEngine.ReentrantStateManager do
-  @moduledoc """
-  Manages reentrant planning state with stability guarantees.
-
-  Evolves from simple todolists to solution networks that ensure
-  replanning from failure points maintains both optimality and
-  stability properties regardless of planning mode.
-  """
-
-  defstruct [
-    :solution_network,        # Solution network (evolved from todolists)
-    :checkpoint_stack,        # Stable checkpoints for reentrancy
-    :failure_analysis,        # Analysis of why planning failed
-    :stability_constraints,   # Active stability constraints
-    :recovery_strategies,     # Fallback strategies maintaining stability
-    :queue_solver             # Queue-based Lyapunov solver
-  ]
-
-  def create_checkpoint(planner_state, solution_tree) do
-    # Enhanced checkpoint creation using solution network
-    case StabilityVerifier.verify_solution_stability(solution_tree, planner_state.state_space) do
-      {:ok, :stable} ->
-        solution_node = %SolutionNode{
-          admissible_solutions: extract_stable_solutions(solution_tree),
-          stability_matrix: compute_stability_matrix(solution_tree),
-          convergence_radius: compute_convergence_radius(solution_tree)
-        }
-        
-        updated_network = SolutionNetwork.add_node(
-          planner_state.solution_network, 
-          solution_node
-        )
-        
-        {:ok, push_stable_checkpoint(planner_state, updated_network)}
-      {:error, {:unstable, reason}} ->
-        {:error, {:checkpoint_unstable, reason}}
-    end
-  end
-
-  def reenter_from_failure(checkpoint, failure_context) do
-    # Reentrant planning using solution network with queue-based stability solving
-    with {:ok, stable_state} <- restore_stable_state(checkpoint),
-         {:ok, recovery_candidates} <- SolutionNetwork.find_recovery_paths(
-           stable_state.solution_network, 
-           failure_context
-         ),
-         {:ok, stable_recovery} <- select_stable_recovery(
-           recovery_candidates, 
-           stable_state.queue_solver
-         ) do
-      {:ok, stable_recovery}
-    else
-      error -> {:error, {:reentry_failed, error}}
-    end
-  end
-
-  # Solution network helper functions
-  defp extract_stable_solutions(solution_tree) do
-    solution_tree
-    |> SolutionTree.to_list()
-    |> Enum.filter(&is_solution_stable?/1)
-  end
-
-  defp compute_stability_matrix(solution_tree) do
-    state_matrix = SolutionTree.extract_state_matrix(solution_tree)
-    
-    # Use queue-based solver for large matrices
-    case Matrix.rows(state_matrix) > 50 do
-      true -> 
-        GenServer.call(LyapunovSolverQueue, {:solve_async, state_matrix})
-      false -> 
-        solve_lyapunov_complete(state_matrix, Matrix.identity(Matrix.rows(state_matrix)))
-    end
-  end
-
-  defp select_stable_recovery(candidates, queue_solver) do
-    # Use queue-based solver to verify stability of recovery candidates
-    candidates
-    |> Enum.map(fn candidate ->
-      stability_result = GenServer.call(queue_solver, {:verify_stability, candidate})
-      {candidate, stability_result}
-    end)
-    |> Enum.find(fn {_candidate, stability} -> 
-      match?({:ok, :stable}, stability) 
-    end)
-    |> case do
-      {stable_candidate, {:ok, :stable}} -> {:ok, stable_candidate}
-      nil -> {:error, :no_stable_recovery_found}
-    end
-  end
-end
-
-#### 5. Queue-Based Lyapunov Solver
-
-For large-scale systems, we implement a queue-based GenServer to handle Lyapunov equation solving:
-
-```elixir
-defmodule AriaEngine.LyapunovSolverQueue do
-  @moduledoc """
-  Queue-based Lyapunov equation solver for large-scale stability verification.
+  JSON-LD solution network where the data structure itself provides
+  solution space navigation, stability verification, and reentrancy
+  through native graph operations.
   
-  Handles concurrent stability verification requests while maintaining
-  computational efficiency through batching and caching.
+  Eliminates separate todo lists, solution trackers, and state managers
+  by encoding all concerns in the JSON-LD vocabulary graph structure.
   """
-  
-  use GenServer
 
-  defstruct [
-    :solve_queue,           # Queue of pending solve requests
-    :result_cache,          # LRU cache of computed results
-    :worker_pool,           # Pool of solver workers
-    :batch_size,            # Batch size for efficient processing
-    :max_queue_size         # Maximum queue size before rejecting requests
-  ]
-
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
-  end
-
-  def solve_async(matrix_a, matrix_q \\ :identity) do
-    GenServer.call(__MODULE__, {:solve_async, matrix_a, matrix_q})
-  end
-
-  def verify_stability(solution_candidate) do
-    GenServer.call(__MODULE__, {:verify_stability, solution_candidate})
-  end
-
-  # GenServer callbacks
-  def init(opts) do
-    state = %__MODULE__{
-      solve_queue: :queue.new(),
-      result_cache: LRUCache.new(Keyword.get(opts, :cache_size, 1000)),
-      worker_pool: start_worker_pool(Keyword.get(opts, :workers, 4)),
-      batch_size: Keyword.get(opts, :batch_size, 10),
-      max_queue_size: Keyword.get(opts, :max_queue_size, 100)
-    }
-    
-    {:ok, state}
-  end
-
-  def handle_call({:solve_async, matrix_a, matrix_q}, from, state) do
-    cache_key = generate_cache_key(matrix_a, matrix_q)
-    
-    case LRUCache.get(state.result_cache, cache_key) do
-      {:ok, cached_result} ->
-        {:reply, cached_result, state}
-      
-      :error ->
-        if :queue.len(state.solve_queue) >= state.max_queue_size do
-          {:reply, {:error, :queue_full}, state}
-        else
-          request = {from, matrix_a, matrix_q, cache_key}
-          new_queue = :queue.in(request, state.solve_queue)
-          new_state = %{state | solve_queue: new_queue}
-          
-          # Process queue if batch size reached
-          if :queue.len(new_queue) >= state.batch_size do
-            process_batch(new_state)
-          else
-            {:noreply, new_state}
-          end
-        end
-    end
-  end
-
-  def handle_call({:verify_stability, solution_candidate}, _from, state) do
-    # Extract state matrix from solution candidate
-    state_matrix = SolutionCandidate.extract_state_matrix(solution_candidate)
-    
-    case solve_lyapunov_complete(state_matrix, Matrix.identity(Matrix.rows(state_matrix))) do
-      {:ok, p_matrix} ->
-        stability = if is_positive_definite(p_matrix), do: :stable, else: :unstable
-        {:reply, {:ok, stability}, state}
-      {:error, reason} ->
-        {:reply, {:error, reason}, state}
-    end
-  end
-
-  defp process_batch(state) do
-    # Process a batch of requests for efficiency
-    {batch, remaining_queue} = extract_batch(state.solve_queue, state.batch_size)
-    
-    # Distribute batch to worker pool
-    batch_results = batch
-    |> Enum.map(fn {from, matrix_a, matrix_q, cache_key} ->
-      Task.async(fn -> 
-        result = solve_lyapunov_complete(matrix_a, matrix_q)
-        {from, cache_key, result}
-      end)
-    end)
-    |> Task.await_many(30_000)  # 30 second timeout
-    
-    # Cache results and reply to clients
-    updated_cache = Enum.reduce(batch_results, state.result_cache, fn {_from, cache_key, result}, cache ->
-      LRUCache.put(cache, cache_key, result)
-    end)
-    
-    # Send replies
-    Enum.each(batch_results, fn {from, _cache_key, result} ->
-      GenServer.reply(from, result)
-    end)
-    
-    new_state = %{state | solve_queue: remaining_queue, result_cache: updated_cache}
-    {:noreply, new_state}
-  end
-
-  defp extract_batch(queue, batch_size) do
-    extract_batch_recursive(queue, batch_size, [])
-  end
-
-  defp extract_batch_recursive(queue, 0, acc) do
-    {Enum.reverse(acc), queue}
-  end
-
-  defp extract_batch_recursive(queue, remaining, acc) do
-    case :queue.out(queue) do
-      {{:value, item}, new_queue} ->
-        extract_batch_recursive(new_queue, remaining - 1, [item | acc])
-      {:empty, queue} ->
-        {Enum.reverse(acc), queue}
-    end
-  end
-
-  defp generate_cache_key(matrix_a, matrix_q) do
-    # Generate cache key from matrix hashes
-    a_hash = :crypto.hash(:sha256, :erlang.term_to_binary(matrix_a))
-    q_hash = :crypto.hash(:sha256, :erlang.term_to_binary(matrix_q))
-    {a_hash, q_hash}
-  end
-
-  defp start_worker_pool(worker_count) do
-    # Start worker pool for parallel processing
-    1..worker_count
-    |> Enum.map(fn _i -> 
-      {:ok, pid} = Task.Supervisor.start_link()
-      pid
-    end)
-  end
-end
-```
-
-### Implementation Strategy
-
-#### Phase 1: Stability Foundation
-
-1. **Mathematical Framework**
-
-   - Implement Lyapunov stability verification
-   - Create constraint-based solution filtering
-   - Develop admissible solution set computation
-
-2. **Interface Compatibility**
-   - Maintain existing `AriaEngine.Planner` API
-   - Add stability-verified temporal planning mode
-   - Implement seamless mode switching
-
-#### Phase 2: Reentrancy Integration
-
-1. **State Management**
-
-   - Extend existing reentrant planning with stability checks
-   - Implement stable checkpoint creation and restoration
-   - Add failure analysis with stability considerations
-
-2. **Recovery Mechanisms**
-   - Develop stability-preserving recovery strategies
-   - Implement fallback to non-temporal mode when needed
-   - Add convergence monitoring and early termination
-
-#### Phase 3: Hybrid Mode Optimization
-
-1. **Adaptive Planning**
-
-   - Implement mode selection based on problem characteristics
-   - Add real-time stability monitoring
-   - Optimize for both performance and stability
-
-2. **Integration Testing**
-   - Comprehensive stability testing across all modes
-   - Performance benchmarking with stability guarantees
-   - Real-world scenario validation
-
-### JSON-LD Vocabulary Extensions
-
-Extend the chibifire.com namespace to include stability concepts:
-
-```json
-{
-  "@context": {
-    "@vocab": "https://chibifire.com/vocab/aria/temporal#",
-    "StabilityVerifier": "https://chibifire.com/vocab/aria/temporal#StabilityVerifier",
-    "LyapunovFunction": "https://chibifire.com/vocab/aria/temporal#LyapunovFunction",
-    "ReentrantCheckpoint": "https://chibifire.com/vocab/aria/temporal#ReentrantCheckpoint",
-    "AdmissibleSolution": "https://chibifire.com/vocab/aria/temporal#AdmissibleSolution",
-    "StabilityConstraint": "https://chibifire.com/vocab/aria/temporal#StabilityConstraint",
-    "isStable": "https://chibifire.com/vocab/aria/temporal#isStable",
-    "convergesTo": "https://chibifire.com/vocab/aria/temporal#convergesTo",
-    "satisfiesLyapunov": "https://chibifire.com/vocab/aria/temporal#satisfiesLyapunov"
+  @context %{
+    "@vocab" => "https://chibifire.com/vocab/aria/temporal#",
+    "SolutionNode" => "https://chibifire.com/vocab/aria/temporal#SolutionNode",
+    "StabilityEdge" => "https://chibifire.com/vocab/aria/temporal#StabilityEdge", 
+    "ReentrancyPoint" => "https://chibifire.com/vocab/aria/temporal#ReentrancyPoint",
+    "convergesTo" => "https://chibifire.com/vocab/aria/temporal#convergesTo",
+    "stabilityVerified" => "https://chibifire.com/vocab/aria/temporal#stabilityVerified"
   }
-}
+
+  def create_solution_network(initial_state, goals) do
+    %{
+      "@context" => @context,
+      "@type" => "SolutionNetwork",
+      "@id" => "solution-#{:crypto.strong_rand_bytes(8) |> Base.encode16()}",
+      "rootNode" => encode_initial_state(initial_state),
+      "targetNodes" => Enum.map(goals, &encode_goal/1),
+      "explorationGraph" => %{
+        "nodes" => [],
+        "edges" => [],
+        "stableSubgraphs" => []
+      }
+    }
+  end
+end
 ```
 
-## Rationale
+#### 2. Graph-Based Stability Verification
 
-### Mathematical Foundation
+Stability verification operates directly on the JSON-LD graph structure through graph traversal algorithms that identify stable solution subgraphs:
 
-The arXiv:2503.02171v2 paper proves that:
+```elixir
+defmodule AriaEngine.GraphStabilityVerifier do
+  def verify_stability(solution_network) do
+    solution_network
+    |> extract_solution_subgraphs()
+    |> verify_each_subgraph_stability()
+    |> filter_stable_solutions()
+  end
 
-1. Bellman equations in continuous spaces have exponentially many solutions
-2. Only one solution provides both optimality and stability
-3. Standard optimization methods often converge to unstable solutions
-4. Constraint-based solution filtering can ensure convergence to stable solutions
+  # Detailed implementation in Appendix A
+end
+```
 
-### Control Theory Integration
+#### 3. Reentrancy Through Graph Cycles
 
-Building on ADR-004's mandatory stability verification:
+The JSON-LD solution network provides natural reentrancy through graph cycle detection and reference following:
 
-1. **Lyapunov Stability**: Every planning solution must satisfy Lyapunov stability criteria
-2. **Constraint-Based Filtering**: Use mathematical constraints to ensure admissible solutions
-3. **Reentrant Guarantees**: Maintain existing reentrancy while adding stability verification
+```elixir
+defmodule AriaEngine.ReentrancyManager do
+  def create_reentrant_context(solution_network, failure_point) do
+    %{
+      "@context" => solution_network["@context"],
+      "@type" => "ReentrancyContext", 
+      "failurePoint" => failure_point,
+      "alternativePaths" => find_alternative_paths(solution_network, failure_point),
+      "backtrackNodes" => identify_backtrack_candidates(solution_network)
+    }
+  end
 
-### System Integration
+  # Detailed implementation in Appendix B
+end
+```
 
-1. **Backward Compatibility**: Existing non-temporal planner remains unchanged
-2. **Progressive Enhancement**: Temporal features add stability guarantees without breaking existing functionality
-3. **Performance Optimization**: Stability verification prevents wasted computation on unstable solutions
+## Implementation Strategy
+
+### Phase 1: JSON-LD Solution Network Foundation
+- Implement core JSON-LD vocabulary for solution networks
+- Create graph traversal algorithms for solution space exploration
+- Establish stability verification through graph connectivity analysis
+
+### Phase 2: Reentrancy Integration  
+- Integrate graph cycle detection for reentrancy points
+- Implement alternative path discovery for failure recovery
+- Create seamless fallback between temporal and non-temporal modes
+
+### Phase 3: Optimization and Testing
+- Optimize graph algorithms for real-time performance
+- Comprehensive testing of stability guarantees
+- Integration with existing AriaEngine components
 
 ## Consequences
 
 ### Positive
+- **Unified Architecture**: JSON-LD eliminates separate solution tracking systems
+- **Mathematical Rigor**: Graph-theoretic stability guarantees
+- **Natural Reentrancy**: Graph cycles provide inherent reentrancy mechanisms
+- **Scalability**: Graph algorithms scale well with solution space size
 
-- **Mathematical Rigor**: Provable stability guarantees based on control theory
-- **Maintained Reentrancy**: Existing reentrant planning properties preserved
-- **Unified Interface**: Single planner API supporting both temporal and non-temporal modes
-- **Failure Recovery**: Enhanced failure recovery with stability-aware replanning
-- **Real-time Safety**: Guaranteed stable solutions for real-time control applications
-
-### Negative
-
-- **Implementation Complexity**: Requires sophisticated mathematical stability verification
-- **Computational Overhead**: Stability checking adds processing time to planning
-- **Learning Curve**: Team must understand control theory and stability analysis
-- **Initial Performance**: Stability constraints may initially reduce planning speed
+### Negative  
+- **Graph Complexity**: Large solution spaces create complex graphs
+- **Performance Overhead**: Graph operations may impact real-time performance
+- **Learning Curve**: Team must understand graph-theoretic concepts
 
 ### Risk Mitigation
+- **Incremental Implementation**: Phased approach reduces integration risk
+- **Performance Monitoring**: Continuous benchmarking of graph operations
+- **Fallback Mechanisms**: Non-temporal planner remains available for critical scenarios
 
-- **Incremental Implementation**: Phase-by-phase deployment with fallback options
-- **Comprehensive Testing**: Mathematical verification of stability properties
-- **Performance Monitoring**: Continuous benchmarking to ensure acceptable performance
-- **Fallback Mechanisms**: Automatic fallback to non-temporal mode if stability verification fails
+## Related ADRs
+- [ADR-036: Evolving AriaEngine Planner Blueprint](036-evolving-ariengine-planner-blueprint.md) - **Deprecated**
+- [ADR-037: Timeline-Based vs Durative Actions](037-timeline-based-vs-durative-actions.md)
+- [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md)
 
-## Integration with Existing ADRs
+---
 
-- **Builds on ADR-004**: Extends mandatory stability verification with mathematical rigor
-- **Implements ADR-038**: Provides stability-guaranteed timeline-based planning
-- **Maintains ADR-034**: Preserves definitive temporal planner architecture principles
-- **Addresses ADR-037**: Resolves timeline vs durative action concerns through stability analysis
+## Appendix A: Mathematical Foundations
 
-## Implementation Checklist
+### A.1 Exponential Solution Space Problem
 
-### Mathematical Foundation ✅
+For an n-dimensional linear dynamical system, the Bellman equation admits at least C(2n,n) solutions where:
+- C(2n,n) = (2n)! / (n! * n!) 
+- This grows exponentially (~4^n / √(πn)) with state dimension n
+- Only ONE solution yields both optimal policy AND stable closed-loop behavior
 
-- [ ] Implement Lyapunov function computation
-- [ ] Create constraint-based solution filtering
-- [ ] Develop admissible solution set computation
-- [ ] Add convergence monitoring
+**Examples:**
+- 6-dimensional system: C(12,6) = 924 solutions, only 1 stable (99.89% unstable)
+- 10-dimensional system: C(20,10) = 184,756 solutions, only 1 stable (99.9995% unstable)
 
-### Interface Compatibility ✅
+### A.2 Lyapunov Stability Theory
 
-- [ ] Extend `AriaEngine.Planner` with stability verification
-- [ ] Implement dual-mode planning interface
-- [ ] Add seamless mode switching
-- [ ] Maintain backward compatibility
+A system is stable if there exists a Lyapunov function V(x) such that:
+- V(x) > 0 for all x ≠ 0 (positive definite)
+- V̇(x) < 0 for all x ≠ 0 (negative definite derivative)
+- V(0) = 0 (zero at equilibrium)
 
-### Stability Integration ✅
+## Appendix B: Complete Technical Implementation
 
-- [ ] Integrate stability verification with existing HTN planning
-- [ ] Implement stable checkpoint creation
-- [ ] Add stability-aware reentrant planning
-- [ ] Develop recovery mechanisms
+### B.1 Complete Lyapunov Solver Implementation
 
-### Testing and Validation ✅
+```elixir
+defmodule AriaEngine.LyapunovSolver do
+  @moduledoc """
+  Complete standalone implementation of Lyapunov equation solver.
+  Solves A^T * P + P * A = -Q using Bartels-Stewart algorithm.
+  """
 
-- [ ] Create stability verification test suite
-- [ ] Implement performance benchmarks with stability constraints
-- [ ] Add real-world scenario testing
-- [ ] Validate mathematical properties
+  def solve(a_matrix, q_matrix \\ nil) do
+    q = q_matrix || create_identity_matrix(matrix_size(a_matrix))
+    
+    # Check if A is Hurwitz (all eigenvalues have negative real parts)
+    eigenvalues = compute_eigenvalues(a_matrix)
+    
+    unless all_hurwitz?(eigenvalues) do
+      return {:error, :not_hurwitz}
+    end
+    
+    # Solve using Bartels-Stewart algorithm
+    case bartels_stewart_solve(a_matrix, q) do
+      {:ok, p_matrix} -> 
+        if positive_definite?(p_matrix) do
+          {:ok, p_matrix}
+        else
+          {:error, :not_positive_definite}
+        end
+      error -> error
+    end
+  end
 
-This ADR ensures that our migration to temporal planning maintains the critical reentrancy and stability properties that make our system suitable for real-time control applications, while providing mathematical guarantees based on established control theory principles.
+  defp bartels_stewart_solve(a_matrix, q_matrix) do
+    # Step 1: Schur decomposition of A: A = U * T * U^T
+    {u_matrix, t_matrix} = schur_decomposition(a_matrix)
+    
+    # Step 2: Transform Q: Q_hat = U^T * Q * U  
+    q_hat = matrix_multiply([transpose(u_matrix), q_matrix, u_matrix])
+    
+    # Step 3: Solve T^T * Y + Y * T = -Q_hat
+    y_matrix = solve_sylvester(transpose(t_matrix), t_matrix, negate(q_hat))
+    
+    # Step 4: Transform back: P = U * Y * U^T
+    p_matrix = matrix_multiply([u_matrix, y_matrix, transpose(u_matrix)])
+    
+    {:ok, p_matrix}
+  end
+
+  defp compute_eigenvalues(matrix) do
+    # QR algorithm for eigenvalue computation
+    qr_iterations(matrix, 100)
+  end
+
+  defp all_hurwitz?(eigenvalues) do
+    Enum.all?(eigenvalues, fn eigenvalue ->
+      case eigenvalue do
+        %Complex{real: real_part} -> real_part < 0
+        real_number when is_number(real_number) -> real_number < 0
+      end
+    end)
+  end
+
+  defp positive_definite?(matrix) do
+    # Check positive definiteness using Cholesky decomposition
+    case cholesky_decomposition(matrix) do
+      {:ok, _l_matrix} -> true
+      {:error, _} -> false
+    end
+  end
+
+  # Matrix operation helper functions
+  defp cholesky_decomposition(matrix) do
+    # Implement Cholesky decomposition for positive definite matrices
+    # Returns {:ok, l_matrix} or {:error, reason}
+  end
+
+  defp matrix_norm(matrix, type \\ :frobenius) do
+    # Calculate matrix norms (Frobenius, spectral, etc.)
+  end
+
+  defp eigenvalues(matrix) do
+    # Compute eigenvalues of matrix for stability analysis
+  end
+
+  defp matrix_multiply(a, b) do
+    # Efficient matrix multiplication
+  end
+
+  defp matrix_transpose(matrix) do
+    # Matrix transpose operation
+  end
+
+  defp matrix_inverse(matrix) do
+    # Matrix inversion with numerical stability checks
+  end
+
+  defp is_symmetric?(matrix) do
+    # Check if matrix is symmetric
+  end
+
+  defp spectral_radius(matrix) do
+    # Compute spectral radius (largest eigenvalue magnitude)
+  end
+end
+```
+
+### B.2 Complete Graph-Based Stability Verifier
+
+```elixir
+defmodule AriaEngine.GraphStabilityVerifier do
+  def verify_stability(solution_network) do
+    solution_network
+    |> extract_solution_subgraphs()
+    |> Enum.map(&analyze_subgraph_stability/1)
+    |> filter_stable_solutions()
+  end
+
+  defp extract_solution_subgraphs(network) do
+    exploration_graph = network["explorationGraph"]
+    nodes = exploration_graph["nodes"]
+    edges = exploration_graph["edges"]
+    
+    # Find strongly connected components
+    strongly_connected_components(nodes, edges)
+  end
+
+  defp analyze_subgraph_stability(subgraph) do
+    # Convert graph to state space representation
+    state_matrix = graph_to_state_matrix(subgraph)
+    
+    # Apply Lyapunov stability test
+    case AriaEngine.LyapunovSolver.solve(state_matrix) do
+      {:ok, _p_matrix} -> {:stable, subgraph}
+      {:error, _reason} -> {:unstable, subgraph}
+    end
+  end
+
+  defp filter_stable_solutions(analyzed_subgraphs) do
+    analyzed_subgraphs
+    |> Enum.filter(fn {stability, _graph} -> stability == :stable end)
+    |> Enum.map(fn {_stability, graph} -> graph end)
+  end
+end
+```
+
+### B.3 Complete Reentrancy Manager Implementation
+
+```elixir
+defmodule AriaEngine.ReentrancyManager do
+  def create_reentrant_context(solution_network, failure_point) do
+    alternative_paths = find_alternative_paths(solution_network, failure_point)
+    backtrack_nodes = identify_backtrack_candidates(solution_network)
+    
+    %{
+      "@context" => solution_network["@context"],
+      "@type" => "ReentrancyContext",
+      "@id" => "reentrancy-#{:crypto.strong_rand_bytes(8) |> Base.encode16()}",
+      "failurePoint" => failure_point,
+      "alternativePaths" => alternative_paths,
+      "backtrackNodes" => backtrack_nodes,
+      "recoveryStrategy" => determine_recovery_strategy(alternative_paths)
+    }
+  end
+
+  defp find_alternative_paths(network, failure_point) do
+    graph = network["explorationGraph"]
+    
+    # Use Dijkstra's algorithm to find alternative paths
+    dijkstra_all_paths(graph, network["rootNode"], failure_point)
+    |> Enum.reject(&path_contains_failure?(&1, failure_point))
+  end
+
+  defp identify_backtrack_candidates(network) do
+    exploration_graph = network["explorationGraph"]
+    
+    # Find nodes with multiple outgoing edges (decision points)
+    exploration_graph["nodes"]
+    |> Enum.filter(fn node ->
+      outgoing_edge_count(exploration_graph["edges"], node) > 1
+    end)
+  end
+
+  defp determine_recovery_strategy(alternative_paths) do
+    case length(alternative_paths) do
+      0 -> %{"strategy" => "fallback_to_non_temporal"}
+      1 -> %{"strategy" => "single_path_recovery", "path" => hd(alternative_paths)}
+      _ -> %{"strategy" => "multi_path_exploration", "paths" => alternative_paths}
+    end
+  end
+end

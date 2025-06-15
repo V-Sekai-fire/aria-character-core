@@ -446,6 +446,7 @@ end
 - [ADR-035: Canonical Temporal Backtracking Problem](035-canonical-temporal-backtracking-problem.md)
 - [ADR-037: Timeline-Based vs Durative Actions](037-timeline-based-vs-durative-actions.md)
 - [ADR-036: Evolving AriaEngine Planner Blueprint](036-evolving-ariengine-planner-blueprint.md) - **Deprecated**
+- [ADR-039: Temporal Planner Reentrancy Stability](039-temporal-planner-reentrancy-stability.md) - **Not Necessary**
 
 ## Double-Check Verification
 
