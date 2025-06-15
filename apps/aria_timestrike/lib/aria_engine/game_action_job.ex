@@ -50,33 +50,33 @@ defmodule AriaEngine.GameActionJob do
     end
   end
 
-  @impl true
-  def handle_init(_ctx, %__MODULE__{action_type: action_type, game_state_id: game_state_id}) do
-    {[], %{
-      action_type: action_type,
-      game_state_id: game_state_id,
-      processed_count: 0
-    }}
-  end
+  # @impl true
+  # def handle_init(_ctx, %__MODULE__{action_type: action_type, game_state_id: game_state_id}) do
+  #   {[], %{
+  #     action_type: action_type,
+  #     game_state_id: game_state_id,
+  #     processed_count: 0
+  #   }}
+  # end
 
-  @impl true
-  def handle_buffer(:input, buffer, _ctx, state) do
-    action_data = buffer.payload |> :erlang.binary_to_term()
+  # @impl true
+  # def handle_buffer(:input, buffer, _ctx, state) do
+  #   action_data = buffer.payload |> :erlang.binary_to_term()
 
-    case process_game_action(action_data) do
-      {:ok, result} ->
-        output_buffer = %AriaFlow.Element.Buffer{
-          payload: :erlang.term_to_binary(result)
-        }
+  #   case process_game_action(action_data) do
+  #     {:ok, result} ->
+  #       output_buffer = %AriaFlow.Element.Buffer{
+  #         payload: :erlang.term_to_binary(result)
+  #       }
 
-        new_state = %{state | processed_count: state.processed_count + 1}
-        {[buffer: {:output, output_buffer}], new_state}
+  #       new_state = %{state | processed_count: state.processed_count + 1}
+  #       {[buffer: {:output, output_buffer}], new_state}
 
-      {:error, _error} ->
-        # Skip failed actions
-        {[], state}
-    end
-  end
+  #     {:error, _error} ->
+  #       # Skip failed actions
+  #       {[], state}
+  #   end
+  # end
 
   @doc """
   Creates a new job with the given parameters.

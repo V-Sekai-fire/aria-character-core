@@ -46,11 +46,6 @@ defmodule AriaQueue.ObanAdapter do
     end
   end
 
-  @doc """
-  Create a worker-like interface for Flow processing.
-  
-  Maintains familiar worker API but executes through Flow pipelines.
-  """
   defmodule Worker do
     @callback perform(args :: map()) :: :ok | {:ok, any()} | {:error, any()}
     
