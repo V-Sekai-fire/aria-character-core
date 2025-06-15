@@ -46,7 +46,7 @@ defmodule AriaWorkflow.MixProject do
       {:aria_file_management, in_umbrella: true},
 
       # Character shaping for SOP assistance
-      {:aria_shape, in_umbrella: true},
+
 
       # Interpret service for analysis
       {:aria_interpret, in_umbrella: true},

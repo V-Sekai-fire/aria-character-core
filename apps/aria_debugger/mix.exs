@@ -35,7 +35,7 @@ defmodule AriaDebugger.MixProject do
       {:observer_cli, "~> 1.7"},
       
       # Character shaping for diagnostics
-      {:aria_shape, in_umbrella: true},
+
       
       # Data persistence (dependency on aria_data)
       {:aria_data, in_umbrella: true},

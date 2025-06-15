@@ -134,7 +134,7 @@ echo "   - aria_storage - Bulk Asset Storage"
 echo "   - aria_queue - Background Job Processing"
 echo ""
 echo "✅ Layer 3 - Intelligence (running in main app):"
-echo "   - aria_shape - Character Generation & Shaping"
+
 echo "   - aria_engine - Classical AI Planning" 
 echo "   - aria_interpret - Data Interpretation & Analysis"
 echo ""

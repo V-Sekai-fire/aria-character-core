@@ -41,7 +41,7 @@ defmodule AriaInterface.MixProject do
       {:phoenix_pubsub, "~> 2.1"},
 
       # Character shaping for data characterization
-      {:aria_shape, in_umbrella: true},
+
 
       # Interpret service for analysis
       {:aria_interpret, in_umbrella: true},

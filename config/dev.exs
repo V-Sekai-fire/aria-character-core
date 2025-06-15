@@ -92,12 +92,7 @@ config :aria_interpret,
   gpu_enabled: System.get_env("ARIA_GPU_ENABLED") == "true",
   batch_size: 1
 
-# Shape Service development configuration
-config :aria_shape,
-  qwen_model_path: "/models/qwen3.onnx",
-  gpu_enabled: System.get_env("ARIA_GPU_ENABLED") == "true",
-  batch_size: 1,
-  grpo_enabled: true
+
 
 # Storage Service development configuration
 config :aria_storage,

@@ -16,7 +16,7 @@ AriaInterface
 AriaInterpret
 AriaMonitor
 AriaSecurity
-AriaShape
+
 AriaStorage
 AriaTimestrike
 AriaTui

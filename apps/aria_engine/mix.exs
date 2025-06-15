@@ -43,7 +43,7 @@ defmodule AriaEngine.MixProject do
       {:aria_data, in_umbrella: true},
 
       # Character shaping integration
-      {:aria_shape, in_umbrella: true},
+
 
       # JSON handling
       {:jason, "~> 1.4"},
