@@ -21,13 +21,7 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
   use ExUnit.Case, async: false
 
-  alias AriaEngine.Test.FlowTestHelpers.{
-    FlowBackflowTester,
-    FlowConvergenceResultCollector,
-    FlowBackflowResultCollector,
-    RandomMovementProcessor,
-    FPSCollector
-  }
+  # No aliases needed since this file only contains helper module definitions
 
   # Suppress warnings for helper functions kept for future reference
   @compile {:no_warn_unused_function, [
