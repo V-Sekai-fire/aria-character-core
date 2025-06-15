@@ -9,6 +9,7 @@ Accepted
 The AriaTimestrike temporal planner system requires comprehensive testing to validate its ability to handle complex temporal constraints, dynamic replanning, and multi-agent coordination. A self-contained, real-time tactical scenario is needed that can serve as both a unit test and demonstration of the planner's capabilities.
 
 The test scenario must validate the planner's core abilities:
+
 - Decomposing high-level goals into concrete task sequences
 - Managing temporal constraints (cast times, cooldowns, timed objectives)
 - Re-planning dynamically when goals change abruptly

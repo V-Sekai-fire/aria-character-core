@@ -10,9 +10,10 @@
 
 ## Deprecation Note
 
-This ADR is deprecated in favor of [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md) which provides a superior timeline-based implementation plan. 
+This ADR is deprecated in favor of [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md) which provides a superior timeline-based implementation plan.
 
 The durative action approach outlined in this ADR has been superseded by timeline-based temporal planning which offers:
+
 - Better computational performance (O(V^t) vs O(A^n))
 - More natural domain modeling for continuous resources
 - Superior scalability and parallel processing capabilities
@@ -22,15 +23,15 @@ The durative action approach outlined in this ADR has been superseded by timelin
 
 ---
 
-# Original ADR Content (Deprecated)
+## Original ADR Content (Deprecated)
 
-## Title: Evolving AriaEngine Planner
+### Title: Evolving AriaEngine Planner
 
-## Date
+#### Original Date
 
 2025-06-14
 
-## Context
+### Context
 
 The AriaEngine requires evolution from its current non-temporal Goal-Task-Network (GTN) planner into a sophisticated, real-time temporal planner. This ADR documents the final, recommended architecture and phased implementation plan for this conversion, incorporating all design decisions made regarding data models, component architecture, and core algorithms.
 

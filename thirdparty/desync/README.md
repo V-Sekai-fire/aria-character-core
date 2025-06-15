@@ -393,6 +393,7 @@ desync cache -s ssh://192.168.1.2/store -c sftp://192.168.1.3/path/to/store /pat
 ```
 
 Cache chunks from remote locally with non-standard port. Ignore existing files that are available locally from seed(s). This will only download chunks from the remote if they do not exist in the seed. Works with multiple seeds.
+
 ```
 desync cache -s http://cdn:9876 -c /tmp/chunkstore --ignore /tmp/indices/existing-image.raw.caibx /tmp/images/existing-image.raw
 

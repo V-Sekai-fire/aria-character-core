@@ -24,39 +24,40 @@ This ADR has been determined to be unnecessary for the following reasons:
 
 ---
 
-# Original ADR Content (Not Necessary)
+## Original ADR Content (Not Necessary)
 
-## Title: Temporal Planner Reentrancy and Stability: Temporal Planner Reentrancy and Stability Guarantees
+### Title: Temporal Planner Reentrancy and Stability: Temporal Planner Reentrancy and Stability Guarantees
 
-## Status
+#### Original Status
 
 Accepted
 
-## Date
+#### Original Date
 
 2025-06-14
 
-## Context
+### Context
 
 During the migration from non-temporal to timeline-based temporal planning (ADR-038), we must maintain system stability and reentrancy properties that are critical for real-time control applications. Recent research (arXiv:2503.02171v2) demonstrates that the Bellman equation admits exponentially many solutions in continuous state spaces, but only one yields both optimal policy AND stable closed-loop behavior.
 
 **The Solution Network Revolution**: The breakthrough insight is that the **JSON-LD data structure itself IS the solution network**. Rather than maintaining separate todo lists that evolve into complex solution tracking systems, the JSON-LD temporal planner vocabulary provides the native graph structure needed to represent, navigate, and verify the exponentially large solution space.
 
 **Key Insight**: JSON-LD's inherent graph topology with `@context`, `@type`, and `@id` relationships creates a natural solution network where:
-- Each temporal plan is a connected subgraph 
+
+- Each temporal plan is a connected subgraph
 - Solution verification follows graph traversal patterns
 - Stability constraints become graph connectivity rules
 - Reentrancy points are identified through graph cycles and references
 
 This eliminates the architectural complexity of maintaining separate todo lists, solution trackers, and state managers - the JSON-LD vocabulary unifies all these concerns into a single, mathematically sound data structure.
 
-## Decision
+### Decision
 
 We will implement a **JSON-LD Solution Network Architecture** where the temporal planner's JSON-LD data structure serves as both the plan representation AND the solution space navigation system, ensuring stability through graph-theoretic verification rather than separate control systems.
 
-### Core Architecture: JSON-LD as Solution Network
+#### Core Architecture: JSON-LD as Solution Network
 
-#### 1. JSON-LD Solution Network Structure
+##### 1. JSON-LD Solution Network Structure
 
 The solution network is realized through the JSON-LD temporal planner vocabulary where graph topology encodes solution space navigation:
 
@@ -97,7 +98,7 @@ defmodule AriaEngine.JsonLdSolutionNetwork do
 end
 ```
 
-#### 2. Graph-Based Stability Verification
+##### 2. Graph-Based Stability Verification
 
 Stability verification operates directly on the JSON-LD graph structure through graph traversal algorithms that identify stable solution subgraphs:
 
@@ -114,7 +115,7 @@ defmodule AriaEngine.GraphStabilityVerifier do
 end
 ```
 
-#### 3. Reentrancy Through Graph Cycles
+##### 3. Reentrancy Through Graph Cycles
 
 The JSON-LD solution network provides natural reentrancy through graph cycle detection and reference following:
 
@@ -137,16 +138,19 @@ end
 ## Implementation Strategy
 
 ### Phase 1: JSON-LD Solution Network Foundation
+
 - Implement core JSON-LD vocabulary for solution networks
 - Create graph traversal algorithms for solution space exploration
 - Establish stability verification through graph connectivity analysis
 
 ### Phase 2: Reentrancy Integration  
+
 - Integrate graph cycle detection for reentrancy points
 - Implement alternative path discovery for failure recovery
 - Create seamless fallback between temporal and non-temporal modes
 
 ### Phase 3: Optimization and Testing
+
 - Optimize graph algorithms for real-time performance
 - Comprehensive testing of stability guarantees
 - Integration with existing AriaEngine components
@@ -154,22 +158,26 @@ end
 ## Consequences
 
 ### Positive
+
 - **Unified Architecture**: JSON-LD eliminates separate solution tracking systems
 - **Mathematical Rigor**: Graph-theoretic stability guarantees
 - **Natural Reentrancy**: Graph cycles provide inherent reentrancy mechanisms
 - **Scalability**: Graph algorithms scale well with solution space size
 
 ### Negative  
+
 - **Graph Complexity**: Large solution spaces create complex graphs
 - **Performance Overhead**: Graph operations may impact real-time performance
 - **Learning Curve**: Team must understand graph-theoretic concepts
 
 ### Risk Mitigation
+
 - **Incremental Implementation**: Phased approach reduces integration risk
 - **Performance Monitoring**: Continuous benchmarking of graph operations
 - **Fallback Mechanisms**: Non-temporal planner remains available for critical scenarios
 
 ## Related ADRs
+
 - [ADR-036: Evolving AriaEngine Planner Blueprint](036-evolving-ariengine-planner-blueprint.md) - **Deprecated**
 - [ADR-037: Timeline-Based vs Durative Actions](037-timeline-based-vs-durative-actions.md)
 - [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md)
@@ -181,17 +189,20 @@ end
 ### A.1 Exponential Solution Space Problem
 
 For an n-dimensional linear dynamical system, the Bellman equation admits at least C(2n,n) solutions where:
-- C(2n,n) = (2n)! / (n! * n!) 
+
+- C(2n,n) = (2n)! / (n! * n!)
 - This grows exponentially (~4^n / √(πn)) with state dimension n
 - Only ONE solution yields both optimal policy AND stable closed-loop behavior
 
 **Examples:**
+
 - 6-dimensional system: C(12,6) = 924 solutions, only 1 stable (99.89% unstable)
 - 10-dimensional system: C(20,10) = 184,756 solutions, only 1 stable (99.9995% unstable)
 
 ### A.2 Lyapunov Stability Theory
 
 A system is stable if there exists a Lyapunov function V(x) such that:
+
 - V(x) > 0 for all x ≠ 0 (positive definite)
 - V̇(x) < 0 for all x ≠ 0 (negative definite derivative)
 - V(0) = 0 (zero at equilibrium)
@@ -387,3 +398,4 @@ defmodule AriaEngine.ReentrancyManager do
     end
   end
 end
+```

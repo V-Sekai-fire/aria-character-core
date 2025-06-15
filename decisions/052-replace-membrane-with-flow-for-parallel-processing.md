@@ -101,6 +101,7 @@ end
 - **Memory Usage**: Lower due to reduced coordination
 
 **Flow Advantages for Computational Work**:
+
 1. **Staged Processing**: Each stage operates independently
 2. **Automatic Load Balancing**: Work distributed evenly across cores
 3. **Backpressure Management**: Built-in flow control
@@ -122,6 +123,7 @@ end
 ### When to Use Each Technology
 
 **Use Flow For**:
+
 - ✅ CPU-intensive computational tasks
 - ✅ Parallel constraint solving
 - ✅ Batch action processing
@@ -129,6 +131,7 @@ end
 - ✅ Data transformation pipelines
 
 **Use Membrane For**:
+
 - ✅ Streaming audio/video processing
 - ✅ Real-time data streams
 - ✅ Media format conversion
@@ -220,6 +223,7 @@ end
 ## Consequences
 
 ### Positive
+
 - **Dramatic Performance Improvement**: From 8% to >90% CPU utilization efficiency
 - **True Multi-Core Scaling**: Linear scaling across available cores
 - **Reduced Coordination Overhead**: From 91.9% to <5%
@@ -228,11 +232,13 @@ end
 - **Better Resource Utilization**: Effective use of available hardware
 
 ### Negative
+
 - **Migration Effort**: Need to rewrite existing Membrane computational workflows
 - **Technology Mix**: Two parallel processing technologies in codebase (Flow + Membrane)
 - **Learning Curve**: Team needs to understand Flow vs Membrane use cases
 
 ### Neutral
+
 - **Dependency Addition**: Flow library addition (already specified in ADR-041)
 - **Test Updates**: Need to update performance tests to reflect new technology
 

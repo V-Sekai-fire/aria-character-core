@@ -4,23 +4,14 @@
 # Markdownlint configuration for aria-character-core
 # See: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
 
-# MD013: Line length - allow longer lines for ADRs and technical docs
-MD013:
-  line_length: 200
-  code_blocks: false
-  tables: false
-  headings: false
-  strict: false
+# MD013: Line length - disabled to allow unlimited line length
+MD013: false
 
 # MD033: Inline HTML - allow HTML in markdown for better formatting
 MD033: false
 
 # MD041: First line in file should be a top level header - allow for license headers
 MD041: false
-
-# MD024: Multiple headers with the same content - allow in ADRs for structure
-MD024:
-  siblings_only: true
 
 # MD007: Unordered list indentation - use 2 spaces
 MD007:

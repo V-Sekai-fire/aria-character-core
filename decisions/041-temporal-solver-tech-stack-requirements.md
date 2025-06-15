@@ -21,6 +21,7 @@ We will implement the temporal solver using a pure Elixir tech stack with minima
 ### Core Tech Stack
 
 #### Programming Language & Runtime
+
 - **Elixir 1.15+**: Primary implementation language
 - **OTP 26+**: Concurrent, fault-tolerant runtime
 - **Rationale**: Consistency with existing codebase, excellent concurrency support
@@ -77,12 +78,14 @@ end
 ### Performance Requirements
 
 #### Computational Performance
+
 - **Constraint Solving**: O(n³) STN solving for up to 1000 timepoints
 - **Memory Usage**: <100MB heap for typical planning scenarios
 - **Latency**: <100ms for constraint satisfaction queries
 - **Throughput**: >10 plans/second for replanning scenarios
 
 #### Concurrency Requirements
+
 - **Parallel Solving**: Multi-core STN solving using Flow pipelines
 - **Concurrent Planners**: Multiple independent planning processes
 - **Backpressure Handling**: GenStage-based constraint propagation
@@ -236,6 +239,7 @@ end
 ### Development Requirements
 
 #### Testing Infrastructure
+
 - **Unit Tests**: ExUnit for individual solver components
 - **Property Tests**: StreamData for constraint solving properties
 - **Integration Tests**: Full planning scenarios with real temporal data
@@ -243,6 +247,7 @@ end
 - **Load Tests**: Concurrent solving under high load
 
 #### Development Tooling
+
 - **Static Analysis**: Dialyzer for type checking
 - **Code Quality**: Credo for style and complexity analysis
 - **Documentation**: ExDoc for API documentation
@@ -272,12 +277,14 @@ end
 ### Deployment Requirements
 
 #### Runtime Configuration
+
 - **Environment Variables**: Solver parameters and performance tuning
 - **OTP Applications**: Proper startup dependencies and supervision
 - **Memory Management**: Garbage collection tuning for large constraint sets
 - **Monitoring**: Telemetry integration for performance metrics
 
 #### Scalability Considerations
+
 - **Horizontal Scaling**: Multiple solver instances for different planning domains
 - **Vertical Scaling**: Multi-core utilization with Flow and GenStage
 - **Memory Scaling**: Efficient constraint representation and cleanup
@@ -286,6 +293,7 @@ end
 ## Consequences
 
 ### Positive
+
 - **Pure Elixir**: Consistent with existing codebase, excellent OTP integration
 - **High Performance**: Nx/Flow enable efficient numerical computation
 - **Fault Tolerant**: OTP supervision provides robustness
@@ -293,12 +301,14 @@ end
 - **JSON-LD Native**: Seamless integration with chibifire.com namespace
 
 ### Negative
+
 - **Implementation Complexity**: Need to implement STN algorithms from scratch
 - **Learning Curve**: Team needs to understand temporal constraint solving
 - **Performance Tuning**: May require optimization for large-scale scenarios
 - **Memory Usage**: Constraint graphs can consume significant memory
 
 ### Risk Mitigation
+
 - **Incremental Implementation**: Start with simple STN, add complexity gradually
 - **Performance Monitoring**: Continuous benchmarking and optimization
 - **Fallback Strategies**: Pure Elixir implementations with optional Rust NIFs

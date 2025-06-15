@@ -18,9 +18,9 @@ ADR-042 offers concrete implementation steps with exact test specifications, ens
 
 ---
 
-# Original ADR Content (Deprecated)
+## Original ADR Content (Deprecated)
 
-## Title: Timeline-Based Temporal Planner Implementation Plan
+### Title: Timeline-Based Temporal Planner Implementation Plan
 
 ## Context
 
@@ -145,6 +145,7 @@ end
    ```
 
 3. **State Variable Registry**
+
    ```elixir
    defmodule AriaEngine.StateVariableRegistry do
      # Register domain-specific state variables
@@ -189,6 +190,7 @@ end
    ```
 
 3. **Constraint Violation Handling**
+
    ```elixir
    # Soft constraint violations with costs
    # Hard constraint enforcement
@@ -222,6 +224,7 @@ end
    ```
 
 3. **Parallel Timeline Reasoning**
+
    ```elixir
    # Independent variable timeline generation
    # Cross-timeline dependency resolution
@@ -255,6 +258,7 @@ end
    ```
 
 3. **Performance Optimization**
+
    ```elixir
    # Timeline caching and memoization
    # Incremental constraint propagation
@@ -288,6 +292,7 @@ end
    ```
 
 3. **Advanced Timeline Features**
+
    ```elixir
    # Timeline branching for contingencies
    # Probabilistic timeline reasoning
@@ -455,7 +460,7 @@ end
 - **Debugging Challenges**: Timeline inconsistencies require specialized tools
 - **Initial Performance**: Setup overhead before constraint propagation benefits appear
 
-### Risk Mitigation
+#### Implementation Risk Mitigation
 
 - **Incremental Implementation**: Phased approach reduces big-bang risk
 - **Comprehensive Testing**: Performance benchmarks ensure timeline benefits

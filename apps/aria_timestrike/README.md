@@ -31,6 +31,7 @@ end
 ## Documentation
 
 See the complete TimeStrike documentation at `docs/aria_timestrike/` including:
+
 - Scenario specifications and requirements
 - Architecture Decision Records (ADRs) for temporal planning
 - Design documentation and implementation guides

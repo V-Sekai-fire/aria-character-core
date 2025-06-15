@@ -9,6 +9,7 @@ Accepted
 The existing `aria_engine` and `aria_timestrike` applications provide basic planning infrastructure, but lack the comprehensive temporal planning capabilities described in ADRs 034-049. We need a practical implementation roadmap that builds upon the current codebase rather than assuming previous ADR implementations.
 
 Current state analysis:
+
 - `aria_engine` provides basic HTN planning with `AriaEngine.Planner`
 - `aria_timestrike` has domain provider structure but minimal temporal capabilities
 - No implementation of temporal constraint networks or Allen's interval algebra
@@ -551,26 +552,31 @@ end
 ## Migration Strategy
 
 ### Phase 1: Foundation (Immediate)
+
 - Implement Stage 0-1: Assess current state and add basic temporal state
 - Ensure existing tests continue to pass
 - Add basic temporal state tests
 
 ### Phase 2: Temporal Actions (Week 1)
+
 - Implement Stage 2: Add temporal action duration
 - Enhance existing actions with timing information
 - Test movement and action timing
 
 ### Phase 3: Coordination (Week 2)
+
 - Implement Stage 3: Simple temporal constraint networks
 - Test basic agent coordination scenarios
 - Validate constraint satisfaction
 
 ### Phase 4: Domain Integration (Week 3)
+
 - Implement Stage 4: Enhanced temporal domain provider
 - Integrate with existing AriaTimestrike domain
 - Ensure backward compatibility
 
 ### Phase 5: API Enhancement (Week 4+)
+
 - Implement Stage 5: Progressive API improvements
 - Build toward ADR-046 fluent APIs organically
 - Add TimeStrike scenario testing
@@ -578,31 +584,37 @@ end
 ## Success Criteria
 
 ### Stage 0 Success
+
 - [ ] All existing tests pass
 - [ ] Current AriaEngine.Planner functionality verified
 - [ ] AriaTimestrike.DomainProvider functional
 
 ### Stage 1 Success  
+
 - [ ] TemporalState wraps existing State without breaking functionality
 - [ ] Temporal facts can be added and retrieved
 - [ ] Time advancement works
 
 ### Stage 2 Success
+
 - [ ] TemporalAction extends existing actions with duration
 - [ ] Actions can be scheduled in time
 - [ ] Duration calculations work for movement
 
 ### Stage 3 Success
+
 - [ ] SimpleTemporalNetwork handles basic constraints
 - [ ] Before/meets relationships validate correctly
 - [ ] Multi-action coordination possible
 
 ### Stage 4 Success
+
 - [ ] TemporalDomainProvider creates enhanced domain
 - [ ] Enhanced domain works with existing planner
 - [ ] TimeStrike actions have temporal properties
 
 ### Stage 5 Success
+
 - [ ] SimpleScenario builder creates planning problems
 - [ ] Scenarios convert to existing planner format
 - [ ] Foundation exists for ADR-046 enhancement

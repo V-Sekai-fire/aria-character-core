@@ -383,18 +383,21 @@ end
 ## Benefits
 
 ### Developer Experience
+
 1. **Fluent Interface**: Chainable methods for intuitive constraint building
 2. **Type Safety**: Compile-time validation of Allen's relationships
 3. **Reduced Boilerplate**: 80% less code compared to manual JSON-LD construction  
 4. **Clear Intent**: Method names directly express temporal relationships
 
 ### Maintainability
+
 1. **Modular Construction**: Build constraint networks incrementally
 2. **Reusable Patterns**: Helper methods for common temporal patterns
 3. **Easy Debugging**: Clear method calls make issues traceable
 4. **Flexible Approaches**: Both pipeline and direct state manipulation supported
 
 ### Technical Advantages
+
 1. **Full Allen's Algebra**: All 13 temporal relationships as first-class methods
 2. **Automatic Validation**: Constraint consistency checking built into pipeline
 3. **JSON-LD Compilation**: Seamless integration with ADR-042's temporal state system

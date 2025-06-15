@@ -13,6 +13,7 @@ Accepted (Supersedes ADR-001 through ADR-033 for temporal planner concerns)
 The temporal planner architecture for AriaEngine's TimeStrike implementation has evolved through 33 individual Architecture Decision Records (ADR-001 through ADR-033). While this distributed approach provided detailed decision tracking during development, it has created fragmentation and complexity for understanding the overall temporal planner design.
 
 The current architecture spans multiple concerns across dozens of ADRs:
+
 - State architecture and data structures (ADR-001, ADR-019)
 - Queue management evolution (ADR-002 → ADR-032)
 - Real-time execution systems (ADR-006, ADR-009, ADR-012, ADR-013)
@@ -42,6 +43,7 @@ The AriaEngine temporal planner implements a **re-entrant Goal-Task-Network (GTN
 ### State Architecture
 
 **Temporal State System** (Supersedes ADR-001, ADR-019):
+
 - All game entities (agents, actions, effects) use temporal state structures
 - 3D coordinates follow Godot conventions (Y-up, right-handed coordinate system)
 - Time-based queries support historical state reconstruction and future state prediction
@@ -60,12 +62,14 @@ The AriaEngine temporal planner implements a **re-entrant Goal-Task-Network (GTN
 ### Workflow Processing Architecture
 
 **Membrane-Based Job Processing** (Supersedes ADR-002, ADR-032):
+
 - In-memory job queues using Erlang `:queue` data structures
 - Membrane Core for pipeline-based job processing
 - GenServer-based coordination for job dispatch and worker management
 - Oban compatibility layer (`AriaQueue.Oban`) maintains existing API contracts
 
 **Queue Architecture**:
+
 - **Sequential Actions**: Strict temporal ordering for time-dependent operations
 - **Parallel Actions**: Concurrent execution for order-independent operations
 - **Immediate Responses**: High-priority queue for player feedback
@@ -73,12 +77,14 @@ The AriaEngine temporal planner implements a **re-entrant Goal-Task-Network (GTN
 ### Real-Time Execution System
 
 **Game Engine Integration** (Supersedes ADR-006, ADR-009, ADR-012, ADR-013):
+
 - Sub-millisecond job dispatch for real-time game actions
 - Action duration calculations based on movement physics
 - Opportunity window mechanics for dynamic gameplay
 - Real-time input system with conviction choice mechanics
 
 **Core Execution Loop**:
+
 1. Player input processed through conviction choice system
 2. Actions validated against temporal constraints
 3. Effects calculated and applied to temporal state
@@ -88,12 +94,14 @@ The AriaEngine temporal planner implements a **re-entrant Goal-Task-Network (GTN
 ### Game Mechanics Integration
 
 **Domain Model** (Supersedes ADR-005, ADR-007, ADR-010, ADR-015, ADR-021):
+
 - **TimeStrike**: Tactical combat domain optimizing for weekend implementation
 - **Map & Terrain System**: 3D spatial reasoning with line-of-sight calculations
 - **Imperfect Information**: Dynamic opportunity discovery based on agent knowledge
 - **Realistic Tension**: Balanced pacing avoiding both tedium and overwhelming complexity
 
 **Combat Mechanics**:
+
 - Movement calculations based on realistic physics
 - Terrain affects movement speed and action availability
 - Agent perception systems create fog-of-war effects
@@ -102,12 +110,14 @@ The AriaEngine temporal planner implements a **re-entrant Goal-Task-Network (GTN
 ### User Interface Architecture
 
 **Console TUI Implementation** (Supersedes ADR-008, ADR-027, ADR-028, ADR-030):
+
 - Terminal-based interface using existing Elixir TUI libraries
 - Optimized for weekend development timeline
 - Real-time updates without requiring web framework complexity
 - ASCII-based visualization suitable for spatial reasoning
 
 **Interface Features**:
+
 - Real-time game state visualization
 - Command input with auto-completion
 - Multi-panel layout showing different game aspects
@@ -116,12 +126,14 @@ The AriaEngine temporal planner implements a **re-entrant Goal-Task-Network (GTN
 ### Development and Testing Strategy
 
 **Implementation Approach** (Supersedes ADR-016, ADR-017, ADR-018, ADR-022, ADR-023, ADR-024, ADR-025, ADR-026):
+
 - **Test-Driven Development**: All components implemented with comprehensive test coverage
 - **Weekend Implementation Scope**: Achievable MVP within Friday-Sunday timeline
 - **Incremental Development**: Builds on existing AriaEngine infrastructure
 - **Risk Mitigation**: Concrete success criteria prevent scope creep
 
 **Minimum Success Criteria**:
+
 1. Basic agent movement and positioning
 2. Simple combat action execution
 3. Real-time state updates through TUI
@@ -131,6 +143,7 @@ The AriaEngine temporal planner implements a **re-entrant Goal-Task-Network (GTN
 ### External Integration Strategy
 
 **Development Tooling** (Supersedes ADR-029, ADR-031, ADR-033):
+
 - **Strategic Focus**: TimeStrike implementation prioritized over tool integration
 - **MCP Integration**: GitHub Copilot access through Model Context Protocol server
 - **Quality Assurance**: Comprehensive TDD completion criteria for all integrations
@@ -174,18 +187,21 @@ apps/aria_timestrike/
 ### Development Phases
 
 **Phase 1: Core Infrastructure** (Weekend MVP)
+
 - Temporal state system implementation
 - Basic Membrane workflow processing
 - Simple TUI with agent movement
 - Fundamental test coverage
 
 **Phase 2: Game Mechanics** (Post-MVP)
+
 - Combat system implementation
 - Advanced spatial reasoning
 - Multi-agent coordination
 - Enhanced TUI features
 
 **Phase 3: Advanced Features** (Future)
+
 - Complex opportunity mechanics
 - Advanced AI behaviors
 - Performance optimizations
@@ -230,7 +246,8 @@ All superseded ADRs remain in the repository as historical records of the archit
 ## Implementation Status
 
 **Current Status**: Architecture defined, implementation in progress
-**Next Steps**: 
+**Next Steps**:
+
 1. Validate existing code against consolidated architecture
 2. Implement missing components identified in gap analysis
 3. Complete weekend MVP as defined in success criteria

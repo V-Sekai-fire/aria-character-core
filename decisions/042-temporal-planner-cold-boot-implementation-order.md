@@ -29,7 +29,9 @@ Implement the temporal planner using strict TDD methodology with the following e
 ### Phase 1: JSON-LD Temporal State Foundation (TDD Red-Green-Refactor)
 
 #### Step 1.1: JSON-LD Temporal State Core (Unified Foundation)
+
 **Test First**: ADR-035 canonical problem using unified JSON-LD state representation
+
 ```elixir
 # test/aria_engine/json_ld_temporal_state_test.exs
 defmodule AriaEngine.JsonLdTemporalStateTest do
@@ -78,6 +80,7 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/json_ld_temporal_state.ex`
+
 - **Unified representation**: Temporal state IS JSON-LD with chibifire.com namespace
 - Time-indexed agent properties stored directly in JSON-LD structure
 - Native RDF/SPARQL query support for temporal reasoning
@@ -89,7 +92,9 @@ end
 **Note**: All Phase 2 components can be developed in parallel since they all operate on the unified JSON-LD temporal state from Phase 1.
 
 #### Step 2.1: Timeline Data Structure  
+
 **Test First**: Timeline representation operates on JSON-LD temporal state
+
 ```elixir
 # test/aria_engine/timeline_test.exs
 defmodule AriaEngine.TimelineTest do
@@ -120,6 +125,7 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/timeline.ex`
+
 - Operates directly on JSON-LD temporal state structure
 - Interval-based timeline representation for state variable changes
 - Conflict detection and validation for overlapping intervals  
@@ -127,6 +133,7 @@ end
 - Pass soldier2 patrol timeline tests
 
 #### Step 2.2: Simple Temporal Network (STN) Foundation
+
 ```elixir
 defmodule AriaEngine.Timeline do
   @moduledoc """
@@ -336,7 +343,9 @@ defmodule AriaEngine.Timeline do
   end
 end
 ```
+
 **Test First**: STN constraint representation using JSON-LD temporal state
+
 ```elixir
 # test/aria_engine/stn_solver_test.exs  
 defmodule AriaEngine.STNSolverTest do
@@ -375,6 +384,7 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/stn_solver.ex`
+
 - Path Consistency (PC-2) algorithm for optimal STN solving performance
 - Operates on JSON-LD temporal state for timepoint definitions
 - Incremental constraint propagation for dynamic updates
@@ -382,7 +392,9 @@ end
 - Pass Maya movement timing tests
 
 #### Step 2.3: Goal Decomposition Engine
+
 **Test First**: JSON-LD serialization with chibifire.com namespace as the solution network
+
 ```elixir
 # test/aria_engine/json_ld_solution_network_test.exs
 defmodule AriaEngine.JsonLdSolutionNetworkTest do
@@ -436,6 +448,7 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/json_ld_solution_network.ex`
+
 ```elixir
 defmodule AriaEngine.JsonLdSolutionNetwork do
   @moduledoc """
@@ -517,6 +530,7 @@ defmodule AriaEngine.JsonLdSolutionNetwork do
   end
 end
 ```
+
 - JSON-LD serialization with chibifire.com namespace
 - RDF semantic representation of temporal plans
 - Round-trip serialization/deserialization
@@ -524,7 +538,9 @@ end
 - Pass Maya solution network serialization tests
 
 #### Step 1.5: Simple Temporal Network (STN) Foundation
+
 **Test First**: STN constraint representation and basic solving
+
 ```elixir
 # test/aria_engine/stn_solver_test.exs  
 defmodule AriaEngine.STNSolverTest do
@@ -561,6 +577,7 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/stn_solver.ex`
+
 ```elixir
 defmodule AriaEngine.STNSolver do
   @moduledoc """
@@ -749,10 +766,12 @@ defmodule AriaEngine.STNConstraint do
   end
 end
 ```
+
 - Path Consistency (PC-2) algorithm for optimal STN solving performance
 - Incremental constraint propagation for dynamic updates
 - Inconsistency detection with early termination
 **Test First**: Goal decomposition using JSON-LD temporal state
+
 ```elixir
 # test/aria_engine/goal_decomposer_test.exs
 defmodule AriaEngine.GoalDecomposerTest do
@@ -797,6 +816,7 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/goal_decomposer.ex`
+
 - Operates on JSON-LD temporal state and produces JSON-LD task networks
 - Hierarchical task network (HTN) decomposition for complex goals
 - Task dependency tracking and critical path analysis
@@ -808,7 +828,9 @@ end
 #### Step 3.1: STN + Timeline Integration
 
 #### Step 2.1: Goal Decomposition Engine
+
 **Test First**: Decompose ADR-035's high-level goal into tasks
+
 ```elixir
 # test/aria_engine/goal_decomposer_test.exs
 defmodule AriaEngine.GoalDecomposerTest do
@@ -847,6 +869,7 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/goal_decomposer.ex`
+
 ```elixir
 defmodule AriaEngine.GoalDecomposer do
   @moduledoc """
@@ -1083,13 +1106,16 @@ defmodule AriaEngine.GoalDecomposer do
   end
 end
 ```
+
 - Hierarchical task network (HTN) decomposition for complex goals
 - Task dependency tracking and critical path analysis
 - Primitive action generation from high-level tasks
 - Pass Maya goal decomposition tests
 
 #### Step 2.2: Multi-Agent Coordination
+
 **Test First**: Maya and Alex coordination for the canonical problem
+
 ```elixir
 # test/aria_engine/coordination_manager_test.exs
 defmodule AriaEngine.CoordinationManagerTest do
@@ -1130,6 +1156,7 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/coordination_manager.ex`
+
 ```elixir
 defmodule AriaEngine.CoordinationManager do
   @moduledoc """
@@ -1465,10 +1492,12 @@ defmodule AriaEngine.CoordinationManager do
   end
 end
 ```
+
 - Multi-agent action coordination with information sharing protocols
 - Temporal conflict detection and resolution algorithms
 - Synchronization point identification and management
 **Test First**: Combine STN solving with timeline constraints using unified JSON-LD state
+
 ```elixir
 # test/aria_engine/temporal_planner_test.exs
 defmodule AriaEngine.TemporalPlannerTest do
@@ -1508,11 +1537,13 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/temporal_planner.ex`
+
 - Integration layer between STN solver and timeline constraints
 - Unified JSON-LD state ensures consistency across components
 - Constraint violation detection and reporting
 - Solution validation against all constraint types
 **Test First**: Integrate goal decomposition with timeline and STN coordination
+
 ```elixir
 # test/aria_engine/coordination_integration_test.exs
 defmodule AriaEngine.CoordinationIntegrationTest do
@@ -1543,6 +1574,7 @@ end
 ```
 
 **Implementation**: Integrate `CoordinationManager` with Phase 2 components
+
 - Coordinates goal decomposition outputs with STN and timeline constraints
 - Multi-agent action coordination using unified JSON-LD state
 - Information sharing protocols maintained in semantic format
@@ -1551,7 +1583,9 @@ end
 ### Phase 4: Advanced Constraint Handling
 
 #### Step 4.1: Resource and Synchronization Constraints
+
 **Test First**: Integrate temporal planning with JSON-LD solution network serialization  
+
 ```elixir
 # test/aria_engine/solution_network_integration_test.exs
 defmodule AriaEngine.SolutionNetworkIntegrationTest do
@@ -1589,13 +1623,16 @@ end
 ```
 
 **Implementation**: Extend JSON-LD solution network for complete temporal plans
+
 - Serialize backtracking phases and plan revisions
 - Integrate with temporal constraint solutions
 - Support plan replay from solution network
 - Pass complete solution network integration tests
 
 #### Step 3.2: STN + Timeline Integration  
+
 **Test First**: Combine STN solving with timeline constraints
+
 ```elixir
 # test/aria_engine/temporal_planner_test.exs
 defmodule AriaEngine.TemporalPlannerTest do
@@ -1631,6 +1668,7 @@ end
 
 **Step 3.2a: Temporal Planner Core**
 Create `apps/aria_timestrike_core/lib/aria_engine/temporal_planner.ex`
+
 - High-level planning interface combining STN solver with timelines
 - Multi-agent plan generation and coordination orchestration
 - Constraint satisfaction verification across all constraint types
@@ -1638,6 +1676,7 @@ Create `apps/aria_timestrike_core/lib/aria_engine/temporal_planner.ex`
 
 **Step 3.2b: Constraint Violation Detector**
 Create `apps/aria_timestrike_core/lib/aria_engine/constraint_violation_detector.ex`
+
 - Real-time constraint violation monitoring during plan execution
 - Violation severity classification and impact analysis
 - Trigger conditions for plan revision and backtracking
@@ -1645,6 +1684,7 @@ Create `apps/aria_timestrike_core/lib/aria_engine/constraint_violation_detector.
 
 **Step 3.2c: Solution Validator**
 Create `apps/aria_timestrike_core/lib/aria_engine/solution_validator.ex`
+
 - Comprehensive solution validation across temporal, resource, and sync constraints
 - Plan feasibility checking before execution commitment
 - Performance estimation and execution time prediction
@@ -1653,7 +1693,9 @@ Create `apps/aria_timestrike_core/lib/aria_engine/solution_validator.ex`
 - Pass Maya timeline integration and constraint satisfaction tests
 
 #### Step 3.3: Resource and Synchronization Constraints
+
 **Test First**: Handle vision range and patrol behavior constraints
+
 ```elixir
 # test/aria_engine/resource_constraint_test.exs
 defmodule AriaEngine.ResourceConstraintTest do
@@ -1692,6 +1734,7 @@ end
 
 **Step 3.3a: Vision and Line-of-Sight Module**
 Create `apps/aria_timestrike_core/lib/aria_engine/vision_constraint.ex`
+
 - Line-of-sight calculation algorithm (Bresenham's line or ray casting)
 - Vision range enforcement and validation
 - Obstacle detection and shadowing
@@ -1699,6 +1742,7 @@ Create `apps/aria_timestrike_core/lib/aria_engine/vision_constraint.ex`
 
 **Step 3.3b: Patrol Prediction Module**
 Create `apps/aria_timestrike_core/lib/aria_engine/patrol_predictor.ex`
+
 - Deterministic patrol route prediction algorithm
 - Waypoint timing calculation with pause behaviors
 - Future position queries at arbitrary times
@@ -1706,6 +1750,7 @@ Create `apps/aria_timestrike_core/lib/aria_engine/patrol_predictor.ex`
 
 **Step 3.3c: Opportunity Window Detection Module**
 Create `apps/aria_timestrike_core/lib/aria_engine/opportunity_detector.ex`
+
 - Archer1 line-of-sight blocking detection algorithm
 - Temporal opportunity window identification
 - Multi-agent interference pattern analysis
@@ -1713,6 +1758,7 @@ Create `apps/aria_timestrike_core/lib/aria_engine/opportunity_detector.ex`
 
 **Step 3.3d: Synchronization Constraint Engine**
 Create `apps/aria_timestrike_core/lib/aria_engine/sync_constraint_engine.ex`
+
 - Dynamic constraint activation based on state conditions
 - When-then rule evaluation for temporal dependencies
 - Conditional constraint propagation integration with STN
@@ -1721,7 +1767,9 @@ Create `apps/aria_timestrike_core/lib/aria_engine/sync_constraint_engine.ex`
 ### Phase 4: Backtracking Engine (Building on Phases 1-3)
 
 #### Step 4.1: Conflict Detection and Backtracking Triggers
+
 **Test First**: Detect failures that require backtracking in ADR-035 scenario
+
 ```elixir
 # test/aria_engine/backtracking_engine_test.exs
 defmodule AriaEngine.BacktrackingEngineTest do
@@ -1763,13 +1811,16 @@ end
 ```
 
 **Implementation**: Create `apps/aria_timestrike_core/lib/aria_engine/backtracking_engine.ex`
+
 - Conflict detection for different failure types
 - Backtracking trigger analysis
 - Multi-phase backtracking planning
 - Pass Maya conflict detection tests
 
 #### Step 4.2: Plan Revision and Alternative Generation
+
 **Test First**: Generate alternative plans through backtracking
+
 ```elixir
 # test/aria_engine/plan_revision_test.exs
 defmodule AriaEngine.PlanRevisionTest do
@@ -1821,14 +1872,16 @@ end
 
 **Step 4.2a: Plan Revision Engine (Constraint Analysis & Modification)**
 Create `apps/aria_timestrike_core/lib/aria_engine/plan_revision.ex`
+
 - **Constraint failure analysis**: Identify which specific constraints are violated (no new algorithms)
 - **Constraint relaxation**: Systematically loosen constraints that are causing failures
 - **Backtracking strategy**: Choose which constraint sets to try (prioritization, not new solving algorithms)
 - **Plan quality validation**: Verify revised constraint sets still meet quality requirements
 - **Implementation approach**: Analyze failed constraints → Generate relaxed constraint variations → Reuse existing STN solver
 
-**Step 4.2b: Alternative Plan Generator (Constraint Set Exploration)** 
+**Step 4.2b: Alternative Plan Generator (Constraint Set Exploration)**
 Create `apps/aria_timestrike_core/lib/aria_engine/alternative_generator.ex`
+
 - **No new algorithms**: Systematic exploration of different constraint sets using existing STN solver
 - **Constraint timing adjustment**: Shift temporal bounds (e.g., `maya_attack_time <= 70` instead of `<= 50`)
 - **Resource constraint reallocation**: Change resource allocation values (e.g., `alex_scout_duration = 5` instead of `10`)
@@ -1838,6 +1891,7 @@ Create `apps/aria_timestrike_core/lib/aria_engine/alternative_generator.ex`
 
 **Step 4.2c: Emergency Fallback Planner (Simplified Constraint Sets)**
 Create `apps/aria_timestrike_core/lib/aria_engine/emergency_fallback.ex`
+
 - **Minimal constraint sets**: Use simplified constraint sets with relaxed coordination requirements
 - **Direct action constraints**: Remove complex coordination constraints, allow independent agent actions
 - **Risk tolerance adjustment**: Modify safety and quality constraints to allow higher-risk solutions
@@ -1849,7 +1903,9 @@ Create `apps/aria_timestrike_core/lib/aria_engine/emergency_fallback.ex`
 ### Phase 5: Performance and Integration (Building on Phases 1-4)
 
 #### Step 5.1: High-Performance Computing Integration
+
 **Test First**: Verify Nx/Flow optimization for large-scale temporal problems
+
 ```elixir
 # test/aria_engine/high_performance_test.exs
 defmodule AriaEngine.HighPerformanceTest do
@@ -1910,13 +1966,16 @@ end
 ```
 
 **Implementation**: Performance optimization with ADR-041 tech stack
+
 - Nx tensor operations for Floyd-Warshall algorithm
 - Flow parallel processing for constraint propagation
 - GenStage backpressure for real-time updates
 - Pass high-performance computing integration tests
 
 #### Step 5.2: Real-Time Performance Requirements
+
 **Test First**: Verify ADR-035's performance requirements are met
+
 ```elixir
 # test/aria_engine/performance_test.exs
 defmodule AriaEngine.PerformanceTest do
@@ -1963,13 +2022,16 @@ end
 ```
 
 **Implementation**: Performance optimization across all modules
+
 - STN solver optimization with sparse matrices
 - Timeline indexing for fast queries
 - Caching for repeated computations
 - Pass all performance requirement tests
 
 #### Step 5.3: Integration with Existing AriaEngine Architecture
+
 **Test First**: Integration with existing game engine and TUI
+
 ```elixir
 # test/aria_timestrike/temporal_integration_test.exs
 defmodule AriaTimestrike.TemporalIntegrationTest do
@@ -2010,13 +2072,15 @@ end
 
 **Step 5.3a: Game State Integration Adapter**
 Create `apps/aria_timestrike_core/lib/aria_timestrike/game_state_adapter.ex`
+
 - Bidirectional conversion between AriaEngine game state and TemporalState
 - Incremental state synchronization during plan execution
 - Game object lifecycle management integration
 - State consistency validation across engine boundaries
 
-**Step 5.3b: Action Execution Bridge** 
+**Step 5.3b: Action Execution Bridge**
 Create `apps/aria_timestrike_core/lib/aria_timestrike/action_executor.ex`
+
 - Temporal action translation to AriaEngine.GameActionJob format
 - Action scheduling and timing coordination with game loop
 - Failure handling and temporal plan adjustment integration
@@ -2024,6 +2088,7 @@ Create `apps/aria_timestrike_core/lib/aria_timestrike/action_executor.ex`
 
 **Step 5.3c: TUI Temporal Plan Display**
 Create `apps/aria_timestrike_core/lib/aria_timestrike/tui_content_provider.ex`
+
 - Temporal plan visualization for TUI interface
 - Timeline rendering with agent coordination display
 - Backtracking phase indication and alternative plan comparison
@@ -2031,6 +2096,7 @@ Create `apps/aria_timestrike_core/lib/aria_timestrike/tui_content_provider.ex`
 
 **Step 5.3d: OTP Supervision Tree Integration**
 Create `apps/aria_timestrike_core/lib/aria_timestrike/supervisor.ex`
+
 - Temporal planner process supervision strategy per ADR-041
 - GenServer integration for temporal state management
 - GenStage pipeline for constraint propagation with backpressure
@@ -2043,6 +2109,7 @@ Create `apps/aria_timestrike_core/lib/aria_timestrike/supervisor.ex`
 Each phase must pass all tests before proceeding to the next phase:
 
 ### Phase 1 Completion Criteria
+
 - ✅ Temporal state initialization for Maya scenario
 - ✅ Time-based queries and historical reconstruction
 - ✅ Basic timeline representation and conflict detection
@@ -2050,12 +2117,14 @@ Each phase must pass all tests before proceeding to the next phase:
 - ✅ STN constraint solving with Floyd-Warshall algorithm
 
 ### Phase 2 Completion Criteria  
+
 - ✅ Goal decomposition into ADR-035's required tasks
 - ✅ Multi-agent coordination for Maya and Alex
 - ✅ Information sharing and timing synchronization
 - ✅ Primitive action generation from tasks
 
 ### Phase 3 Completion Criteria
+
 - ✅ JSON-LD solution network integration with temporal plans
 - ✅ STN + Timeline integration with constraint satisfaction
 - ✅ Vision range and line-of-sight modeling
@@ -2063,12 +2132,14 @@ Each phase must pass all tests before proceeding to the next phase:
 - ✅ Resource constraint validation
 
 ### Phase 4 Completion Criteria
+
 - ✅ Conflict detection for all ADR-035 failure scenarios
 - ✅ Multi-phase backtracking plan revision  
 - ✅ Alternative plan generation through backtracking
 - ✅ Emergency fallback planning
 
 ### Phase 5 Completion Criteria
+
 - ✅ Nx/Flow high-performance computing integration
 - ✅ Planning time ≤ 10ms for Maya scenario
 - ✅ Replanning faster than initial planning
@@ -2102,6 +2173,7 @@ end
 ## Implementation Schedule
 
 **Strict TDD Order**: Each step must pass all tests before proceeding
+
 - **Phase 1**: Foundation (Red-Green-Refactor for data structures)
 - **Phase 2**: GTN Core (Red-Green-Refactor for planning logic)  
 - **Phase 3**: Constraints (Red-Green-Refactor for temporal reasoning)

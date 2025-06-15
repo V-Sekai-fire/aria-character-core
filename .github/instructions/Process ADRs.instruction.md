@@ -3,7 +3,7 @@ applyTo: "**"
 ---
 When addressing maintenance, research, development and other tasks, follow these steps:
 
-1. Start by creating a new Architecture Decision Record (ADR) in the `decisions/` directory
+1. Start by creating a new Architecture Decision Record (ADR) in the `decisions` directory
 2. Use GitHub tasklist syntax (`- [ ] task` for incomplete tasks, `- [x] task` for completed tasks)
 3. Mark initial tasks as incomplete and update the ADR as tasks are completed
 4. Follow this structure for the ADRs:

@@ -52,7 +52,7 @@ ARCANA uses specific constants from desync source code for binary compatibility:
 
 Content Archive Index for Blobs files contain metadata and chunk references for blob content using the desync FormatIndex + FormatTable structure.
 
-### Structure
+### CAIBX Structure
 
 ```
 CAIBX File:
@@ -115,7 +115,7 @@ Content Archive Index files reference CATAR archive chunks. Uses identical struc
 
 Individual chunk files containing compressed or raw chunk data.
 
-### Structure
+### CACNK Structure
 
 ```
 CACNK File:
@@ -158,7 +158,7 @@ CATAR files can be detected in two ways:
 1. **Magic-based detection**: Files starting with `0xCA 0x1A 0x52` magic bytes
 2. **Structure-based detection**: Files starting with a 64-byte CA_FORMAT_ENTRY element
 
-### Structure
+### CATAR Structure
 
 ```
 CATAR File:

@@ -13,6 +13,7 @@
 The TimeStrike temporal planner needs a self-resetting, looping scenario that can play continuously for demonstration and testing purposes without requiring manual restarts. Current scenarios (like the hostage rescue in ADR-047) are one-time events that end in success or failure states, making them unsuitable for continuous simulation.
 
 A looping scenario is essential for:
+
 - **Continuous Demonstration**: Running the temporal planner indefinitely at conferences, demos, or showcases
 - **Long-term Testing**: Stress testing the temporal planner over extended periods
 - **Performance Monitoring**: Observing system behavior and performance characteristics over time
@@ -27,6 +28,7 @@ Implement a **"Training Ground"** scenario that automatically resets itself upon
 **Setting**: A military training facility with rotating exercise configurations.
 
 **Core Loop Pattern**:
+
 1. **Setup Phase** (0-2s): Initialize training exercise with random configuration
 2. **Engagement Phase** (2-20s): Execute tactical scenario with temporal constraints  
 3. **Evaluation Phase** (20-22s): Assess performance and log results
@@ -38,18 +40,21 @@ Implement a **"Training Ground"** scenario that automatically resets itself upon
 The training ground randomly selects from multiple sub-scenarios:
 
 **Scenario A: Perimeter Defense**
+
 - 3 defenders protect a central facility
 - 2-4 attackers attempt infiltration from random entry points
 - Success: Facility secured for 12 seconds
 - Failure: Facility breached
 
 **Scenario B: Asset Extraction**
+
 - 2 operatives must extract valuable intel from contested zone
 - 2-3 opponents guard the area with patrol patterns
 - Success: Intel extracted within 15 seconds
 - Failure: Operatives eliminated or time exceeded
 
 **Scenario C: Convoy Ambush**
+
 - 1 convoy vehicle follows predetermined route
 - 2-3 ambushers position for optimal attack timing
 - Success: Convoy eliminated or stopped
@@ -103,6 +108,7 @@ The looping scenario maintains running statistics:
 ### Visual and Logging Considerations
 
 **Console Output Pattern**:
+
 ```
 [Cycle 1] Training Ground - Perimeter Defense
   → Setup complete (2.1s)
@@ -160,17 +166,20 @@ The looping scenario maintains running statistics:
 ## Consequences
 
 ### Positive
+
 - Enables continuous demonstration and testing capabilities
 - Provides comprehensive temporal planner validation
 - Creates engaging, dynamic demonstration content
 - Supports long-term system performance monitoring
 
 ### Negative  
+
 - Additional complexity in scenario management
 - Requires careful resource management to prevent memory leaks
 - May mask temporal planner issues due to scenario variety
 
 ### Neutral
+
 - Adds another scenario type to maintain alongside hostage rescue
 - Requires configuration options for demonstration vs development use
 
