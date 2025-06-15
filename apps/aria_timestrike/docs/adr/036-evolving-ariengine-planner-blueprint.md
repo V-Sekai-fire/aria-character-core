@@ -1,4 +1,6 @@
-# ADR-036: Evolving AriaEngine Planne- **- **Outpu- **#### **Phase 1: Refactor the Existing Planner to the New Data Model\*\*
+# ADR-036: Evolving AriaEngine Planner
+
+#### **Phase 1: Refactor the Existing Planner to the New Data Model\*\*
 
 Upgrade your current non-temporal planner to speak the language of JSON-LD documents _before_ adding any temporal logic.
 
