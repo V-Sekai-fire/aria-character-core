@@ -1,12 +1,4 @@
-# ADR-036: Evolving AriaEngine Planne- **- **Outpu- **#### **Phase 1: Refactor the Existing Planner to the New Data Model\*\*
-
-Upgrade your current non-temporal planner to speak the language of JSON-LD documents _before_ adding any temporal logic.
-
-1. **Define a Vocabulary:** Create a centralized module for your JSON-LD `@context`, defining terms like `vocab:MoveAction`, `vocab:dependsOn`, `vocab:isPerformedBy`, etc.
-
-2. **Add JSON-LD Library:** Add `{:json_ld, "~> 1.0"}` to your `mix.exs` dependencies.
-
-3. **Modify GTN Planner Output:** Change the core logic of your existing planner to construct and return a JSON-LD document representing the logical plan with `dependsOn` relationships. The same JSON-LD document, but now **enriched** with new properties for each action: `startTick`, `endTick`, and `slack`.:** A **partially-ordered JSON-LD document**. Each action is represented with properties like `agent` and `duration_ticks`. Dependencies are represented as `dependsOn` relationships connecting the actions.utput:** The final, enriched JSON-LD document representing the plan, which includes all scheduling information and can be serialized to a JSON-LD string. Blueprint
+# ADR-036: Evolving AriaEngine Planner
 
 ## Status
 
