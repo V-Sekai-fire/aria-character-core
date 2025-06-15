@@ -44,13 +44,15 @@ These ADRs document the evolution of design decisions for the temporal, re-entra
 - **043**: **Total Order to Partial Order Transformation** _(Optimization algorithm for constraint solving)_
 - **044**: **Temporal Planner as Auto Battler AI** _(Stakeholder communication framework)_
 
-### Enhanced User Experience & Implementation (045-049)
+### Enhanced User Experience & Implementation (045-051)
 
 - **045**: **Allen's Interval Algebra for Temporal Relationships** _(Interval constraint specification)_
 - **046**: **User-Friendly Temporal Constraint Specification** _(Developer productivity enhancements)_
 - **047**: **TimeStrike Temporal Planner Test Scenario** _(Comprehensive planner validation scenario)_
 - **048**: **Developer-Friendly APIs for Temporal Planner Implementation** _(Enhanced developer experience)_
 - **049**: **Enhanced Temporal Planner Implementation with Unified APIs** _(Unified implementation approach)_
+- **050**: **Temporal Planner Cold Boot from Current Codebase** _(Staged implementation strategy)_
+- **051**: **Continuous Simulation Looping Scenario** _(Self-resetting demonstration scenario)_
 
 ### Superseded Current Architecture
 
