@@ -4,7 +4,7 @@ This directory contains Architecture Decision Records for the temporal planner c
 
 ## Current Architecture
 
-**The complete temporal planner architecture is defined through ADRs 034-047:**
+**The complete temporal planner architecture is defined through ADRs 034-048:**
 
 - **ADR-034**: Definitive Temporal Planner Architecture (foundation)
 - **ADR-035**: Canonical Temporal Backtracking Problem (test case)
@@ -17,6 +17,7 @@ This directory contains Architecture Decision Records for the temporal planner c
 - **ADR-045**: Allen's Interval Algebra for Temporal Relationships (constraint specification)
 - **ADR-046**: User-Friendly Temporal Constraint Specification (developer productivity)
 - **ADR-047**: TimeStrike Temporal Planner Test Scenario (comprehensive validation)
+- **ADR-048**: Developer-Friendly APIs for Temporal Planner Implementation (enhanced developer experience)
 
 ADRs 036, 038, and 039 are deprecated. ADRs 001-033 have been superseded by the current architecture and serve as historical records.
 
@@ -44,10 +45,12 @@ These ADRs document the evolution of design decisions for the temporal, re-entra
 - **043**: **Total Order to Partial Order Transformation** _(Optimization algorithm for constraint solving)_
 - **044**: **Temporal Planner as Auto Battler AI** _(Stakeholder communication framework)_
 
-### Enhanced User Experience & Testing (045-047)
+### Enhanced User Experience & Testing (045-048)
 
 - **045**: **Allen's Interval Algebra for Temporal Relationships** _(Interval constraint specification)_
 - **046**: **User-Friendly Temporal Constraint Specification** _(Developer productivity enhancements)_
+- **047**: **TimeStrike Temporal Planner Test Scenario** _(Comprehensive planner validation scenario)_
+- **048**: **Developer-Friendly APIs for Temporal Planner Implementation** _(Enhanced developer experience for ADR-042)_
 - **047**: **TimeStrike Temporal Planner Test Scenario** _(Comprehensive planner validation scenario)_
 
 ### Deprecated Current Architecture
@@ -127,7 +130,7 @@ The following ADRs document the historical evolution of the temporal planner arc
 
 ## Maintenance
 
-**Current Process**: Architectural changes should be made to the appropriate ADR in the 034-047 series based on the concern:
+**Current Process**: Architectural changes should be made to the appropriate ADR in the 034-048 series based on the concern:
 
 - **ADR-034**: Core architecture modifications
 - **ADR-035**: Test case updates or new canonical problems
@@ -139,6 +142,7 @@ The following ADRs document the historical evolution of the temporal planner arc
 - **ADR-045**: Temporal constraint specification changes
 - **ADR-046**: Developer productivity and usability improvements
 - **ADR-047**: Test scenario and validation framework updates
+- **ADR-048**: Developer API and tooling enhancements
 
 When making architectural changes:
 
