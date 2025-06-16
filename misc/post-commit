@@ -1,0 +1,86 @@
+#!/bin/bash
+# Aria Commentary System - Post-Commit Hook
+# This hook provides a regular "clock tick" for Aria's commentary randomness system
+# by updating the commentary state on each commit.
+
+STATE_FILE=".git/info/aria_commentary_state"
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Function to update commentary state
+update_commentary_state() {
+    # If state file doesn't exist, create it with initial values
+    if [[ ! -f "$STATE_FILE" ]]; then
+        cat > "$STATE_FILE" << EOF
+# Aria Commentary Randomness Accumulation State
+# This file tracks the probability accumulation for Aria's commentary system
+# as defined in .github/instructions/Aria commentary randomness system.instructions.md
+# Updated: Lowered threshold to 75 points for more frequent but less overwhelming commentary
+
+session_start_time=$TIMESTAMP
+accumulated_probability=5
+last_interaction_type=commit_hook
+last_update_time=$TIMESTAMP
+commentary_count_this_session=0
+git_commits_this_session=1
+EOF
+        return
+    fi
+
+    # Read current state
+    local current_prob=$(grep "^accumulated_probability=" "$STATE_FILE" | cut -d'=' -f2)
+    local commit_count=$(grep "^git_commits_this_session=" "$STATE_FILE" | cut -d'=' -f2 2>/dev/null || echo "0")
+    
+    # Default to 0 if parsing fails
+    current_prob=${current_prob:-0}
+    commit_count=${commit_count:-0}
+    
+    # Add commit-based probability increment (smaller than interaction-based)
+    # Commits represent development progress but shouldn't overwhelm the system
+    local increment=3  # Small but consistent increment per commit
+    local new_prob=$((current_prob + increment))
+    local new_commit_count=$((commit_count + 1))
+    
+    # Update the state file
+    # Use temporary file for atomic update
+    local temp_file=$(mktemp)
+    
+    # Copy existing content and update relevant lines
+    while IFS='=' read -r key value; do
+        case "$key" in
+            "accumulated_probability")
+                echo "accumulated_probability=$new_prob"
+                ;;
+            "last_interaction_type")
+                echo "last_interaction_type=commit_hook"
+                ;;
+            "last_update_time")
+                echo "last_update_time=$TIMESTAMP"
+                ;;
+            "git_commits_this_session")
+                echo "git_commits_this_session=$new_commit_count"
+                ;;
+            *)
+                # Preserve other lines (including comments)
+                if [[ "$key" =~ ^#.* ]] || [[ -z "$key" ]]; then
+                    echo "$key$value"
+                else
+                    echo "$key=$value"
+                fi
+                ;;
+        esac
+    done < "$STATE_FILE" > "$temp_file"
+    
+    # Add git_commits_this_session if it didn't exist
+    if ! grep -q "^git_commits_this_session=" "$temp_file"; then
+        echo "git_commits_this_session=$new_commit_count" >> "$temp_file"
+    fi
+    
+    # Atomically replace the state file
+    mv "$temp_file" "$STATE_FILE"
+}
+
+# Main execution
+update_commentary_state
+
+# Optional: Log the commit tick (uncomment for debugging)
+# echo "$(date): Aria commentary state updated (commit tick)" >> .git/logs/aria_commentary.log
