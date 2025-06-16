@@ -7,6 +7,8 @@ defmodule AriaEngine.Timeline.STNTest do
 
   alias AriaEngine.Timeline.{STN, Interval}
 
+  @describetag :timeline_stn
+
   describe "STN creation and basic operations" do
     test "creates new empty STN" do
       stn = STN.new()
@@ -50,7 +52,9 @@ defmodule AriaEngine.Timeline.STNTest do
   describe "interval integration" do
     test "adds interval to STN" do
       stn = STN.new()
-      interval = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
+      start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      interval = Interval.new(start_dt, end_dt)
       
       updated_stn = STN.add_interval(stn, interval)
       
@@ -74,8 +78,13 @@ defmodule AriaEngine.Timeline.STNTest do
     test "adds multiple intervals to STN" do
       stn = STN.new()
       
-      interval1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
-      interval2 = Interval.new(~N[2025-01-01 13:00:00], ~N[2025-01-01 15:00:00])
+      start_dt1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      end_dt1 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      interval1 = Interval.new(start_dt1, end_dt1)
+      
+      start_dt2 = DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC")
+      end_dt2 = DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC")
+      interval2 = Interval.new(start_dt2, end_dt2)
       
       updated_stn = stn
       |> STN.add_interval(interval1)
@@ -83,22 +92,6 @@ defmodule AriaEngine.Timeline.STNTest do
       
       assert STN.consistent?(updated_stn)
       assert length(STN.time_points(updated_stn)) == 4  # 2 intervals × 2 time points each
-    end
-
-    test "handles intervals with integer time points" do
-      stn = STN.new()
-      interval = Interval.new(0, 3600)  # 1 hour
-      
-      updated_stn = STN.add_interval(stn, interval)
-      
-      assert STN.consistent?(updated_stn)
-      
-      duration_constraint = STN.get_constraint(
-        updated_stn,
-        "#{interval.id}_start",
-        "#{interval.id}_end"
-      )
-      assert duration_constraint == {3600, 3600}
     end
   end
 

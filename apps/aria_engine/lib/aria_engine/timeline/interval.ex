@@ -193,6 +193,138 @@ defmodule AriaEngine.Timeline.Interval do
   @spec duration(t()) :: integer()
   def duration(interval), do: duration_ms(interval)
 
+  @doc """
+  Gets the duration of the interval in a specific time unit.
+
+  ## Examples
+
+      iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
+      iex> end_dt = DateTime.from_naive!(~N[2023-01-01 01:00:00], "Etc/UTC")
+      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
+      iex> AriaEngine.Timeline.Interval.duration_in_unit(interval, :minute)
+      60
+
+  """
+  @spec duration_in_unit(t(), :microsecond | :millisecond | :second | :minute | :hour | :day) :: integer()
+  def duration_in_unit(%__MODULE__{start_time: start_time, end_time: end_time}, unit) do
+    case unit do
+      :microsecond -> DateTime.diff(end_time, start_time, :microsecond)
+      :millisecond -> DateTime.diff(end_time, start_time, :millisecond)
+      :second -> DateTime.diff(end_time, start_time, :second)
+      :minute -> div(DateTime.diff(end_time, start_time, :second), 60)
+      :hour -> div(DateTime.diff(end_time, start_time, :second), 3600)
+      :day -> div(DateTime.diff(end_time, start_time, :second), 86400)
+    end
+  end
+
+  @doc """
+  Creates an interval from duration in a specific time unit.
+
+  ## Examples
+
+      iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
+      iex> interval = AriaEngine.Timeline.Interval.from_duration(start_dt, 30, :minute)
+      iex> AriaEngine.Timeline.Interval.duration_in_unit(interval, :minute)
+      30
+
+  """
+  @spec from_duration(DateTime.t(), integer(), :microsecond | :millisecond | :second | :minute | :hour | :day) :: t()
+  def from_duration(%DateTime{} = start_time, duration, unit) do
+    microseconds = duration * unit_to_microseconds(unit)
+    end_time = DateTime.add(start_time, microseconds, :microsecond)
+    new(start_time, end_time)
+  end
+
+  @doc """
+  Converts the interval to STN time points with explicit unit and LOD information.
+  
+  This provides metadata that STN can use for automatic rescaling.
+
+  ## Examples
+
+      iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
+      iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:00], "Etc/UTC")
+      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
+      iex> {start_point, end_point, duration} = AriaEngine.Timeline.Interval.to_stn_points(interval, :second)
+      iex> duration
+      300
+
+  """
+  @spec to_stn_points(t(), :microsecond | :millisecond | :second | :minute | :hour | :day) :: {String.t(), String.t(), integer()}
+  def to_stn_points(%__MODULE__{id: id} = interval, unit) do
+    start_point = "#{id}_start"
+    end_point = "#{id}_end"
+    duration = duration_in_unit(interval, unit)
+    {start_point, end_point, duration}
+  end
+
+  @doc """
+  Checks if two intervals overlap in time.
+
+  ## Examples
+
+      iex> start1 = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
+      iex> end1 = DateTime.from_naive!(~N[2023-01-01 01:00:00], "Etc/UTC")
+      iex> interval1 = AriaEngine.Timeline.Interval.new(start1, end1)
+      iex> start2 = DateTime.from_naive!(~N[2023-01-01 00:30:00], "Etc/UTC")
+      iex> end2 = DateTime.from_naive!(~N[2023-01-01 01:30:00], "Etc/UTC")
+      iex> interval2 = AriaEngine.Timeline.Interval.new(start2, end2)
+      iex> AriaEngine.Timeline.Interval.overlaps?(interval1, interval2)
+      true
+
+  """
+  @spec overlaps?(t(), t()) :: boolean()
+  def overlaps?(%__MODULE__{start_time: start1, end_time: end1}, %__MODULE__{start_time: start2, end_time: end2}) do
+    DateTime.compare(start1, end2) == :lt and DateTime.compare(start2, end1) == :lt
+  end
+
+  @doc """
+  Calculates the temporal relationship between two intervals using Allen's interval algebra.
+  
+  Returns one of: :before, :meets, :overlaps, :finished_by, :contains, :starts, :equals,
+  :started_by, :during, :finishes, :overlapped_by, :met_by, :after
+
+  ## Examples
+
+      iex> start1 = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
+      iex> end1 = DateTime.from_naive!(~N[2023-01-01 01:00:00], "Etc/UTC")
+      iex> interval1 = AriaEngine.Timeline.Interval.new(start1, end1)
+      iex> start2 = DateTime.from_naive!(~N[2023-01-01 01:00:00], "Etc/UTC")
+      iex> end2 = DateTime.from_naive!(~N[2023-01-01 02:00:00], "Etc/UTC")
+      iex> interval2 = AriaEngine.Timeline.Interval.new(start2, end2)
+      iex> AriaEngine.Timeline.Interval.allen_relation(interval1, interval2)
+      :meets
+
+  """
+  @spec allen_relation(t(), t()) :: atom()
+  def allen_relation(%__MODULE__{start_time: s1, end_time: e1}, %__MODULE__{start_time: s2, end_time: e2}) do
+    cond do
+      DateTime.compare(e1, s2) == :lt -> :before
+      DateTime.compare(e1, s2) == :eq -> :meets
+      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :eq -> :equals
+      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :lt -> :starts
+      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :gt -> :started_by
+      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :eq -> :finishes
+      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :eq -> :finished_by
+      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :lt -> :during
+      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :gt -> :contains
+      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :lt and DateTime.compare(e1, s2) == :gt -> :overlaps
+      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :gt and DateTime.compare(s1, e2) == :lt -> :overlapped_by
+      DateTime.compare(s1, e2) == :eq -> :met_by
+      DateTime.compare(s1, e2) == :gt -> :after
+      true -> :unknown
+    end
+  end
+
+  # Private helper functions
+  
+  defp unit_to_microseconds(:microsecond), do: 1
+  defp unit_to_microseconds(:millisecond), do: 1_000
+  defp unit_to_microseconds(:second), do: 1_000_000
+  defp unit_to_microseconds(:minute), do: 60_000_000
+  defp unit_to_microseconds(:hour), do: 3_600_000_000
+  defp unit_to_microseconds(:day), do: 86_400_000_000
+
   # Private helper functions
   
   defp validate_time_ordering!(start_time, end_time) do

@@ -7,6 +7,8 @@ defmodule AriaEngine.Timeline.IntervalTest do
 
   alias AriaEngine.Timeline.{AgentEntity, Interval, TimeConverter}
 
+  @tag :timeline_stn
+
   describe "interval creation" do
     test "creates interval with DateTime" do
       start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
