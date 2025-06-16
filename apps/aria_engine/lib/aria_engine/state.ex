@@ -228,8 +228,8 @@ defmodule AriaEngine.State do
     data
     |> Enum.map(fn {{predicate, subject}, object} ->
       %{
-        "predicate" => predicate,
         "subject" => subject,
+        "predicate" => predicate,
         "object" => serialize_object_to_json_ld(object)
       }
     end)
@@ -254,7 +254,7 @@ defmodule AriaEngine.State do
   # Private functions for JSON-LD deserialization
   defp deserialize_triples_from_json_ld(triples_data) do
     triples_data
-    |> Enum.map(fn %{"predicate" => predicate, "subject" => subject, "object" => object} ->
+    |> Enum.map(fn %{"subject" => subject, "predicate" => predicate, "object" => object} ->
       {{predicate, subject}, deserialize_object_from_json_ld(object)}
     end)
     |> Map.new()
@@ -450,8 +450,8 @@ defmodule AriaEngine.State do
     end)
     |> Enum.map(fn {{predicate, subject}, object} ->
       %{
-        "predicate" => predicate,
         "subject" => subject,
+        "predicate" => predicate,
         "object" => serialize_object_to_json_ld(object)
       }
     end)
