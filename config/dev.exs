@@ -106,14 +106,6 @@ config :aria_auth,
   session_ttl: 3600,
   webrtc_enabled: false
 
-# Interface Service development configuration
-config :aria_interface, AriaInterfaceWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4001],
-  check_origin: false,
-  code_reloader: true,
-  debug_errors: true,
-  secret_key_base: "development_interface_secret_key_base"
-
 # Monitor Service development configuration
 config :aria_monitor,
   prometheus_enabled: false,

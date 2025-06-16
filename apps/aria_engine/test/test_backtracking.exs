@@ -5,7 +5,7 @@ defmodule AriaEngine.BacktrackingTest do
   use ExUnit.Case
 
   import AriaEngine
-  alias AriaEngine.{State, TestDomains}
+  alias AriaEngine.{TestDomains}
 
   @moduletag timeout: 120_000
 

@@ -75,6 +75,23 @@ end
 [Feature]Debug.run_all_tests()
 ```
 
+### API verification patterns
+
+**Always verify function signatures before calling:**
+
+```elixir
+# Check available functions in a module
+IO.inspect(Module.__info__(:functions))
+
+# Verify function exists with correct arity
+if function_exported?(Module, :function_name, 4) do
+  result = Module.function_name(arg1, arg2, arg3, arg4)
+else
+  IO.puts("Function Module.function_name/4 not available")
+  # Use alternative approach or investigate
+end
+```
+
 ### Benefits of debug scripts
 
 - **Repeatable analysis:** Run the same test scenarios multiple times

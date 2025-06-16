@@ -472,7 +472,7 @@ defmodule AriaEngine.Plan do
 
     # Update root node
     updated_root = %{solution_tree.nodes[root_id] |
-      children_ids: Enum.reverse(child_ids),
+      children_ids: child_ids,
       expanded: true
     }
 
@@ -560,7 +560,7 @@ defmodule AriaEngine.Plan do
 
           # Update parent node
           updated_node = %{node |
-            children_ids: Enum.reverse(child_ids),
+            children_ids: child_ids,
             expanded: true,
             method_tried: method_id
           }
@@ -643,7 +643,7 @@ defmodule AriaEngine.Plan do
 
               # Update parent node
               updated_node = %{node |
-                children_ids: Enum.reverse(child_ids),
+                children_ids: child_ids,
                 expanded: true,
                 method_tried: method_id
               }
@@ -710,7 +710,7 @@ defmodule AriaEngine.Plan do
 
       # Update parent node
       updated_node = %{node |
-        children_ids: Enum.reverse(child_ids),
+        children_ids: child_ids,
         expanded: true
       }
 
