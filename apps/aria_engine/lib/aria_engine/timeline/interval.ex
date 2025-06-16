@@ -18,6 +18,19 @@ defmodule AriaEngine.Timeline.Interval do
   - NaiveDateTime is not supported to prevent ambiguity
   - Integer timestamps are not supported to enforce explicit timezone handling
   - All time comparisons account for timezone differences automatically
+  
+  ## Duration API Design
+  
+  The module provides multiple ways to access interval durations:
+  
+  - `duration_ms/1` and `duration/1` - Default millisecond precision (integer)
+  - `duration_seconds/1` - Floating-point seconds for human-readable values
+  - `duration_in_unit/2` - Flexible unit conversion for any supported time unit
+  - `to_stn_points/2` - STN integration with explicit unit specification
+  
+  Milliseconds are used as the default unit for temporal systems requiring high
+  precision and integer arithmetic, while the flexible API supports conversion
+  to any time unit as needed.
   """
 
   alias AriaEngine.Timeline.AgentEntity
