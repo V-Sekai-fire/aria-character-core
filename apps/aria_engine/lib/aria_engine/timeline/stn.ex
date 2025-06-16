@@ -10,36 +10,17 @@ defmodule AriaEngine.Timeline.STN do
   using composable STN operations that can be parallelized, avoiding O(n³) 
   complexity blowup through strategic segmentation and boolean-like operations.
 
-  ## Composable STN Operations
+  ## Creating STNs
 
-  Like boolean algebra, STNs support compositional operations:
-  - **Union**: Combine constraints allowing either STN to be satisfied (looser constraints)
-  - **Intersection**: Find common constraints that must satisfy both STNs (tighter constraints)
-  - **Difference**: Remove constraints from one STN based on another STN
-  - **Composition**: Chain STNs sequentially
-  - **Parallel Join**: Merge independent STN segments
+  For basic usage:
+  ```elixir
+  stn = STN.new()  # Standard STN
+  ```
 
-  ## Parallelization Strategy
-
-  - **Segment Independence**: Divide timeline into independent segments
-  - **Parallel Solving**: Each segment solved independently  
-  - **Boundary Merging**: Combine results at segment boundaries
-  - **Complexity Reduction**: O(n³) becomes O(k * (n/k)³) where k = segments
-
-  ## Algorithm: Path Consistency (PC-2)
-
-  The PC-2 algorithm maintains path consistency in the constraint graph by
-  ensuring that for every triple of variables (i, j, k), the direct constraint
-  between i and k is consistent with the path i -> j -> k.
-
-  Time complexity: O(n³) per segment, parallelizable across segments
-  Space complexity: O(n²) for the constraint matrix
-
-  ## References
-
-  - ADR-040: Temporal Constraint Solver Selection
-  - "Temporal Constraint Networks" by Dechter, Meiri, and Pearl (1991)
-  - "Parallelizing Constraint Satisfaction" for segmentation approaches
+  For production systems requiring predictable performance:
+  ```elixir
+  stn = STN.new_constant_work()  # AWS constant work pattern enabled
+  ```
 
   ## Composable STN Operations
 
@@ -57,6 +38,15 @@ defmodule AriaEngine.Timeline.STN do
   - **Boundary Merging**: Combine results at segment boundaries
   - **Complexity Reduction**: O(n³) becomes O(k * (n/k)³) where k = segments
 
+  ## AWS Constant Work Pattern
+
+  The constant work pattern ensures predictable performance by always processing
+  maximum-sized constraint networks, regardless of actual complexity. This eliminates
+  performance variance in real-time temporal reasoning systems.
+
+  Use `new_constant_work/1` for production systems requiring consistent response times.
+  See ADR-081 for detailed implementation rationale.
+
   ## Algorithm: Path Consistency (PC-2)
 
   The PC-2 algorithm maintains path consistency in the constraint graph by
@@ -68,9 +58,11 @@ defmodule AriaEngine.Timeline.STN do
 
   ## References
 
-  - ADR-040: Temporal Constraint Solver Selection
+  - ADR-040: Temporal Constraint Solver Selection  
+  - ADR-081: AWS Constant Work Pattern for STN Solving
   - "Temporal Constraint Networks" by Dechter, Meiri, and Pearl (1991)
   - "Parallelizing Constraint Satisfaction" for segmentation approaches
+  - [AWS Builders Library - Reliability and Constant Work](https://aws.amazon.com/builders-library/reliability-and-constant-work/)
   """
 
   alias AriaEngine.Timeline.Interval
@@ -123,7 +115,7 @@ defmodule AriaEngine.Timeline.STN do
             # Auto-rescaling defaults
             auto_rescale: true,
             datetime_conversion_unit: :millisecond,
-            # Constant work pattern defaults
+            # Constant work pattern defaults (AWS constant work pattern - opt-in)
             max_timepoints: 64,
             constant_work_enabled: false,
             dummy_constraints: %{}
@@ -191,6 +183,36 @@ defmodule AriaEngine.Timeline.STN do
     else
       stn
     end
+  end
+
+  @doc """
+  Creates a new Simple Temporal Network with constant work pattern enabled by default.
+  
+  This is a convenience function for production use cases where predictable performance
+  is required. Equivalent to calling `new(constant_work_enabled: true, ...)`.
+
+  ## Options
+
+  - `:time_unit` - Base time unit for the STN (default: `:millisecond`)
+  - `:lod_level` - Level of detail for temporal resolution (default: `:medium`)
+  - `:max_timepoints` - Maximum timepoints for constant work pattern (default: `64`)
+  - `:auto_rescale` - Enable automatic rescaling for DateTime conversion (default: `true`)
+
+  ## Examples
+
+      iex> stn = AriaEngine.Timeline.STN.new_constant_work()
+      iex> stn.constant_work_enabled
+      true
+
+      iex> stn = AriaEngine.Timeline.STN.new_constant_work(max_timepoints: 128)
+      iex> stn.max_timepoints
+      128
+
+  """
+  @spec new_constant_work(keyword()) :: t()
+  def new_constant_work(opts \\ []) do
+    opts_with_constant_work = Keyword.put(opts, :constant_work_enabled, true)
+    new(opts_with_constant_work)
   end
 
   @doc """

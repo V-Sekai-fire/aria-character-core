@@ -7,9 +7,8 @@ defmodule AriaEngine.Timeline.STNTest do
 
   alias AriaEngine.Timeline.{STN, Interval}
 
-  @describetag :timeline_stn
-
   describe "STN creation and basic operations" do
+    @describetag :timeline_stn
     test "creates new empty STN" do
       stn = STN.new()
       

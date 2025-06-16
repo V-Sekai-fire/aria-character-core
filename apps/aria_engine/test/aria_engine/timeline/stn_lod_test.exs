@@ -90,7 +90,7 @@ defmodule AriaEngine.Timeline.STNLODTest do
         |> STN.add_time_point("t2")
         |> STN.add_constraint("t2", "t2", {0, 0})
       
-      result = STN.and(stn1, stn2)
+      result = STN.union(stn1, stn2)
       
       assert STN.consistent?(result)
       time_points = STN.time_points(result)
@@ -109,7 +109,7 @@ defmodule AriaEngine.Timeline.STNLODTest do
         |> STN.add_time_point("t2")
         |> STN.add_constraint("t1", "t2", {5, 30})
       
-      result = STN.or(stn1, stn2)
+      result = STN.intersection(stn1, stn2)
       
       assert STN.consistent?(result)
       # OR should create more permissive bounds
@@ -259,9 +259,9 @@ defmodule AriaEngine.Timeline.STNLODTest do
       # Then split for parallel processing
       segments = STN.split(result, 2)
       
-      # And merge back together with OR
+      # And merge back together with union
       final_result = case segments do
-        [seg1, seg2] -> STN.or(seg1, seg2)
+        [seg1, seg2] -> STN.union(seg1, seg2)
         [single] -> single
         [] -> STN.new()
       end
