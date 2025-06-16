@@ -2,15 +2,38 @@
 
 ## Status
 
-**Superseded by ADR-034: Definitive Temporal Planner Architecture**
+**Cancelled** - MCP integration is not being implemented
 
-*This ADR has been consolidated into ADR-034 along with all other temporal planner architectural decisions. See ADR-034 for current implementation guidance.*
+*This ADR has been cancelled along with ADR-029 as the project has decided not to implement MCP (Model Context Protocol) integration. The focus is on core TimeStrike game functionality through a web interface.*
 
 ## Date
 
 2025-06-14
 
-## Context
+## Cancellation Rationale
+
+This ADR is cancelled because:
+
+1. **Parent ADR Cancelled**: ADR-029 (MCP Integration) has been cancelled, making TDD criteria unnecessary
+2. **Strategic Refocus**: Project is focusing on core game functionality rather than development tooling
+3. **Reduced Scope**: Eliminating MCP integration simplifies the project and reduces technical debt
+4. **Interface Strategy**: Web interface (Phoenix LiveView) provides sufficient user interaction
+
+## Impact
+
+- No TDD criteria needed for MCP integration
+- Testing efforts can focus on core temporal planner and game engine functionality
+- Simplified testing surface without MCP server components
+
+## Original Context (Cancelled)
+
+The MCP (Model Context Protocol) integration for GitHub Copilot access (ADR-029) requires concrete, testable completion criteria to ensure the implementation meets its objectives. Without clear success metrics, the integration could be considered "complete" without actually providing the intended natural language interaction capabilities.
+
+## Original Decision (Cancelled)
+
+Define comprehensive Test-Driven Development (TDD) objectives and completion criteria for the MCP integration that must be satisfied before the feature is considered production-ready.
+
+## Original Context
 
 The MCP (Model Context Protocol) integration for GitHub Copilot access (ADR-029) requires concrete, testable completion criteria to ensure the implementation meets its objectives. Without clear success metrics, the integration could be considered "complete" without actually providing the intended natural language interaction capabilities.
 

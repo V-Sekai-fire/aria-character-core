@@ -11,13 +11,13 @@ Accepted
 ## Context
 
 With the symbolic planner now functional, a critical strategic decision emerged: should development focus on (A) expanding tool integration capabilities
-by exposing the planner to Blender/Godot through MCP for workflow automation,
+by creating comprehensive workflow automation,
 or (B) completing the TimeStrike game implementation as a concrete demonstration of temporal planning capabilities?
 
 The choice represents two fundamentally different value propositions:
 
 - **Option A (Tool Integration)**: Aria becomes a sophisticated automation tool for content creation workflows,
-  leveraging MCP integration to provide AI-assisted task execution across creative software
+  providing AI-assisted task execution through web interface integration
 - **Option B (TimeStrike Focus)**: Aria demonstrates its core temporal planning capabilities through a complete, shippable game that validates the entire architectural vision
 
 ## Decision
@@ -100,9 +100,9 @@ Tool integration would require significant new architectural work outside the we
 
 Tool integration capabilities remain valuable for future development:
 
-- MCP server framework already specified (ADR-029)
-- Blender/Godot integration can build on proven temporal planning core
-- Avatar creation workflows become viable once core system is validated
+- Web interface framework established (ADR-068, ADR-069)
+- Tool integration can build on proven temporal planning core
+- Workflow automation becomes viable once core system is validated
 
 ## Consequences
 
@@ -137,7 +137,7 @@ This decision establishes Aria as a **temporal planning engine with game develop
 - **Implements**: ADR-018 (MVP Definition) - delivers concrete demonstration of temporal planning capabilities
 - **Builds on**: ADR-024 (Minimum Success Criteria) - leverages existing progress toward achievable weekend goal
 - **Supersedes**: ADR-030 (Console TUI) with ADR-068/069 (Web Interface) - modernizes interface approach for better demonstration capability
-- **Defers**: ADR-029 (MCP Integration) - postpones broader tool integration until core system validation complete
+- **Defers**: Tool integration development - postpones broader workflow automation until core system validation complete
 - **Leverages**: ADR-001-004 (Core Architecture) - maximizes return on established architectural investments
 - **Exercises**: ADR-006-013 (Real-time Systems) - validates all temporal planning components under realistic load
 - **Demonstrates**: ADR-020 (Design Consistency) - proves architectural coherence through complete implementation

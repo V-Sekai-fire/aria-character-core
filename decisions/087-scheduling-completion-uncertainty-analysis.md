@@ -201,12 +201,12 @@ Apply the Rumsfeld matrix (Known Knowns, Known Unknowns, Unknown Unknowns) to ca
 - Historical Pattern: Architecture consolidations occurred due to complexity
 - Unknown Factor: Depth of interdependencies not fully mapped
 
-**Tool Integration Complexity Underestimation (Impact: Medium, Probability: 60%)**
+**Interface Implementation Complexity (Impact: Medium, Probability: 65%)**
 
-- Risk: MCP integration (ADR-029, ADR-033) may require more effort than estimated
-- Evidence Gap: No concrete integration attempts with external tools
-- Strategic Risk: Tool integration vs. core development priority conflicts (ADR-031)
-- Scope Creep: Tool polish may distract from core temporal planner completion
+- Risk: Web interface integration (ADR-068, ADR-069) may require more refinement than expected
+- Evidence Gap: LiveView integration with temporal planner not fully tested
+- Strategic Impact: Interface polish may compete with core functionality development
+- Scope Consideration: Web interface features may expand beyond MVP requirements
 
 **Resource Availability and Context Switching (Impact: Variable, Probability: 50%)**
 

@@ -2,78 +2,50 @@
 
 ## Status
 
-Superseded by ADR-033
+**Cancelled** - MCP integration is not being implemented
 
-**Note**: This ADR has been superseded by ADR-033, which provides complete TDD completion criteria and focuses on AriaEngine.Domain planning capabilities rather than generic character management.
+**Note**: This ADR has been cancelled as the project has decided not to implement MCP (Model Context Protocol) integration. The focus is on the core TimeStrike game and temporal planner implementation through a web interface (Phoenix LiveView) as defined in ADR-068 and ADR-069.
 
 ## Date
 
 2025-06-14
 
-## Context
+## Cancellation Rationale
+
+This ADR is cancelled because:
+
+1. **Strategic Focus**: The project is prioritizing core game functionality (TimeStrike) over developer tooling integration
+2. **Interface Decision**: The web interface approach (ADR-068, ADR-069) provides sufficient user interaction without need for IDE integration
+3. **Complexity Reduction**: Avoiding MCP integration reduces project scope and technical complexity
+4. **Resource Allocation**: Development resources are better allocated to core temporal planner and game engine implementation
+
+## Original Context (Cancelled)
 
 Aria character core needs to be accessible from GitHub Copilot within VS Code to enable developers to interact with the character system directly from their development environment.
 This requires exposing Aria through the Model Context Protocol (MCP) which allows language models to access external tools and services.
 
-## Decision
+## Original Decision (Cancelled)
 
 Implement an MCP server that exposes key Aria functionality as tools that can be invoked by GitHub Copilot using the Hermes MCP library for stdio transport.
 
-## Rationale
-
-- Enables natural language interaction with Aria from within VS Code
-- Leverages existing Hermes MCP library with proven stdio support for Elixir
-- Provides contextual character assistance during development
-- Creates reusable integration pattern for other development environments
-- Uses stdio transport for seamless GitHub Copilot integration
-
-## Consequences
+## Consequences of Cancellation
 
 ### Positive
 
-- Natural language interaction with Aria from VS Code
-- Contextual development assistance
-- Leverages existing Aria capabilities without reimplementation
-- Proven library foundation reduces implementation risk
-- Seamless stdio integration with GitHub Copilot
+- Reduced project complexity and scope
+- Focus on core game functionality
+- Simplified architecture without MCP server components
+- Faster development timeline for MVP features
 
 ### Negative
 
-- Additional dependency on Hermes MCP library
-- Security considerations for MCP tool access
-- Performance optimization needed for real-time assistance
+- No GitHub Copilot/VS Code integration for development assistance
+- Loss of potential development workflow automation
+- No natural language interface within IDE
 
-## Implementation Details
+## Impact on Related ADRs
 
-### Technical Architecture
-
-1. **MCP Server Module**: Create `aria_mcp_server` application within umbrella project
-2. **Hermes MCP Integration**: Use [Hermes MCP](https://github.com/cloudwalk/hermes-mcp) library for stdio transport
-3. **Protocol Compliance**: Leverage Hermes MCP's MCP specification implementation
-4. **Core Functionality Exposure**:
-   - Character creation and management
-   - Workflow planning and execution
-   - File system operations with character context
-   - Temporal planning capabilities
-5. **VS Code Integration**: Configure as stdio-based MCP server for GitHub Copilot discovery
-
-### Implementation Phases
-
-1. **Phase 1**: Basic MCP server with core character operations using Hermes MCP stdio
-2. **Phase 2**: Advanced workflow and planning tool exposure
-3. **Phase 3**: Context-aware development assistance tools
-
-### Considerations
-
-- **Library Integration**: Use Hermes MCP's proven stdio implementation
-- **Transport Layer**: Stdio transport for GitHub Copilot compatibility
-- **Security**: Proper authentication and authorization for MCP tools
-- **Completion Criteria**: See ADR-033 for comprehensive TDD objectives and acceptance criteria
-
-## Related Decisions
-
-- Links to ADR-025 (Research Strategy) for development support and tooling
-- Supports ADR-026 (Implementation Risk Mitigation) by providing development assistance
-- Enables enhanced workflow support for ADR-002 (Oban Queue Design) and ADR-003 (Game Engine Separation)
-- **Performance**: Minimize latency for real-time assistance
-- **Compatibility**: Maintain backward compatibility with existing Aria interfaces
+- **ADR-033**: Also cancelled (MCP TDD criteria no longer needed)
+- **ADR-034**: Updated to remove MCP integration references
+- **ADR-076**: Cancelled (MCP server for commentary automation not needed)
+- **ADR-087**: Updated to remove MCP integration from uncertainty analysis

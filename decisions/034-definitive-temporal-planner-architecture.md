@@ -145,8 +145,8 @@ The AriaEngine temporal planner implements a **re-entrant Goal-Task-Network (GTN
 **Development Tooling** (Supersedes ADR-029, ADR-031, ADR-033):
 
 - **Strategic Focus**: TimeStrike implementation prioritized over tool integration
-- **MCP Integration**: GitHub Copilot access through Model Context Protocol server
-- **Quality Assurance**: Comprehensive TDD completion criteria for all integrations
+- **Interface Strategy**: Web-based interaction through Phoenix LiveView eliminates need for IDE integration
+- **Quality Assurance**: Comprehensive testing focused on core game functionality
 
 ## Rationale
 
@@ -239,11 +239,17 @@ This ADR consolidates and supersedes the following temporal planner architectura
 
 **Interface Design**: ADR-008 (Web Interface), ADR-027 (Web Implementation), ADR-028 (Three.js Visualization), ADR-030 (Console TUI), ADR-068 (Remove TUI), ADR-069 (Discord Shareable Frontend)
 
-**Strategic Focus**: ADR-011 (Idempotency), ADR-014 (Twitch Optimization), ADR-029 (MCP Integration), ADR-031 (Strategic Focus), ADR-033 (MCP TDD Criteria)
+**Strategic Focus**: ADR-011 (Idempotency), ADR-014 (Twitch Optimization), ADR-031 (Strategic Focus), ADR-068 (Web Interface), ADR-069 (LiveView Implementation)
 
 All superseded ADRs remain in the repository as historical records of the architectural evolution process but should not be referenced for current implementation guidance.
 
 ## Change Log
+
+### June 16, 2025
+
+- Removed MCP (Model Context Protocol) integration references following ADR-029 and ADR-033 cancellation
+- Updated Development Tooling section to reflect focus on web interface rather than IDE integration
+- Updated Related ADRs section to reference ADR-068, ADR-069 instead of cancelled MCP ADRs
 
 ### January 27, 2025
 

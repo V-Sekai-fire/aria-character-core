@@ -130,4 +130,4 @@ Success or failure of the temporal planner determines the viability of the entir
 - Implements ADR-017 (LLM Development Uncertainty) adaptive approaches
 - Builds on ADR-016 (Weekend Implementation Scope) for timeline management
 - Enables ADR-022 (Test-Driven Development) for integration validation
-- Supports ADR-029 (MCP Integration) for development assistance tools
+- Supports web interface development (ADR-068, ADR-069) for user interaction

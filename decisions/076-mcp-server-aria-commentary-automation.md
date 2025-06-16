@@ -1,8 +1,27 @@
 # ADR-076: MCP Server for Aria Commentary System Automation
 
-**Status:** Proposed
+**Status:** Cancelled - MCP integration is not being implemented
 
 **Date:** June 15, 2025
+
+## Cancellation Rationale
+
+This ADR is cancelled because:
+
+1. **Strategic Decision**: The project has decided not to implement MCP (Model Context Protocol) integration (see ADR-029 cancellation)
+2. **Simplified Architecture**: Commentary system automation can be achieved through simpler means within the existing web interface
+3. **Reduced Complexity**: Avoiding MCP server infrastructure reduces project scope and maintenance burden
+4. **Focus Shift**: Resources are better allocated to core game functionality rather than development tooling automation
+
+## Alternative Approach
+
+Commentary system automation will be handled through:
+
+- Direct integration within the Phoenix LiveView web interface
+- Server-side state management without MCP protocol overhead
+- Built-in automation within the existing application architecture
+
+## Original Context (Cancelled)
 
 ## Context
 
