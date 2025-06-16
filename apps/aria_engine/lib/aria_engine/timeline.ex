@@ -64,7 +64,7 @@ defmodule AriaEngine.Timeline do
   def add_interval(%__MODULE__{} = timeline, interval) do
     stn =
       timeline.stn
-      |> STN.add_interval(interval.id)
+      |> STN.add_interval(interval)
 
     timeline
     |> Map.put(:intervals, Map.put(timeline.intervals, interval.id, interval))
