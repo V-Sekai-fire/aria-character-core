@@ -26,6 +26,29 @@ The actual AriaEngine implementation uses:
 4. **Method selection** handled through standard HTN mechanisms
 5. **Temporal constraint validation** using STNPlanner for consistency checking
 
+## Evaluation: Sufficiency for Temporal Planning
+
+**This ADR is NOT sufficient for temporal planning in the current codebase** for the following reasons:
+
+1. **Architectural Mismatch**: The "STN bridge" approach described here was never implemented. The actual system uses direct HTN planning with STN validation, not bridge structures.
+
+2. **Wrong Abstraction Level**: This ADR focused on timeline segmentation and bridge composition, while the real implementation operates at the level of solution trees and constraint validation.
+
+3. **Incomplete Coverage**: The actual temporal planning involves complex interactions between:
+   - HTN method selection and decomposition
+   - Temporal constraint propagation during planning
+   - Backtracking through blacklisting mechanisms
+   - Real-time constraint validation
+   - None of these are addressed by the STN bridge approach.
+
+4. **Misleading Guidance**: Following this ADR would lead to implementing the wrong architecture entirely.
+
+**For actual temporal planning guidance, refer to:**
+
+- **ADR-099**: Canonical STN Bridge Reentrant Planner Architecture
+- **ADR-034**: Definitive Temporal Planner Architecture
+- The actual implementation in `AriaEngine.Planner` and `AriaEngine.TemporalPlanner.STNPlanner`
+
 ## Related ADRs
 
 - **ADR-099**: STN Bridge Reentrant Planner Architecture (canonical, accurate description)
