@@ -264,5 +264,6 @@ Any temporal planner implementation must demonstrate:
 - **ADR-040**: STN solver selection (PC-2 algorithm must solve this problem efficiently)
 - **ADR-041**: Tech stack requirements (performance targets based on this problem)
 - **ADR-043**: Total order optimization (demonstrated through this problem's constraint solving)
+- **ADR-075**: Complete Temporal Planning Solver Implementation (Tasks 075-079 specifically implement this canonical problem)
 
 This enhanced canonical problem serves as the definitive architectural requirement for temporal planner implementation and testing. Success in solving this problem validates that the temporal planner implements comprehensive temporal reasoning capabilities including Goal-Task-Network planning, multi-phase backtracking, historical state reconstruction, imperfect information management, and dynamic opportunity exploitation.

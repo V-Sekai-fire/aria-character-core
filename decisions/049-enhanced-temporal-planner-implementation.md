@@ -451,6 +451,7 @@ end
 - **ADR-047**: TimeStrike Temporal Planner Test Scenario (comprehensive test framework)
 - **ADR-048**: Developer-Friendly APIs for Temporal Planner Implementation (developer experience)
 - **ADR-045**: Allen's Interval Algebra for Temporal Relationships (constraint specification)
+- **ADR-075**: Complete Temporal Planning Solver Implementation (comprehensive 84-task implementation roadmap)
 
 ---
 

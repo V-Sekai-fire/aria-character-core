@@ -253,6 +253,8 @@ All superseded ADRs remain in the repository as historical records of the archit
 3. Complete weekend MVP as defined in success criteria
 4. Update documentation to reference this definitive ADR
 
+**Implementation Roadmap**: See ADR-075 (Complete Temporal Planning Solver Implementation) for the comprehensive 84-task implementation checklist derived from this architectural foundation.
+
 ---
 
 *This ADR represents the definitive architectural decision for the AriaEngine temporal planner. All implementation and architectural questions should reference this document rather than the superseded historical ADRs.*
