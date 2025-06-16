@@ -203,7 +203,7 @@ defmodule AriaEngine.Planner do
     end
 
     # Use the existing Plan module for replanning with STN bridge support
-    case Plan.replan(domain, current_state, solution_tree, fail_node_id, temporal_opts) do
+    case AriaEngine.Plan.replan(domain, current_state, solution_tree, fail_node_id, temporal_opts) do
       {:ok, new_solution_tree} ->
         # Validate temporal consistency of new plan
         case validate_solution_with_stn_bridges(new_solution_tree, domain, current_time || 0) do
@@ -225,7 +225,7 @@ defmodule AriaEngine.Planner do
     domain = interface_to_domain(domain_interface)
     
     # First validate using original Plan module
-    case Plan.validate_plan(domain, initial_state, solution_tree) do
+    case AriaEngine.Plan.validate_plan(domain, initial_state, solution_tree) do
       {:ok, final_state} ->
         # Additional STN temporal consistency validation
         case validate_solution_with_stn_bridges(solution_tree, domain, 0) do
@@ -243,7 +243,7 @@ defmodule AriaEngine.Planner do
   """
   @spec extract_actions(Plan.solution_tree()) :: [Plan.plan_step()]
   def extract_actions(solution_tree) do
-    Plan.get_primitive_actions_dfs(solution_tree)
+    AriaEngine.Plan.get_primitive_actions_dfs(solution_tree)
   end
 
   @doc """
@@ -251,7 +251,7 @@ defmodule AriaEngine.Planner do
   """
   @spec tree_stats(Plan.solution_tree()) :: map()
   def tree_stats(solution_tree) do
-    Plan.tree_stats(solution_tree)
+    AriaEngine.Plan.tree_stats(solution_tree)
   end
 
   @doc """
@@ -259,7 +259,7 @@ defmodule AriaEngine.Planner do
   """
   @spec plan_cost(Plan.solution_tree()) :: non_neg_integer()
   def plan_cost(solution_tree) do
-    Plan.plan_cost(solution_tree)
+    AriaEngine.Plan.plan_cost(solution_tree)
   end
 
   @doc """
@@ -304,7 +304,7 @@ defmodule AriaEngine.Planner do
   @spec solution_tree_to_stn_methods_with_bridges(Plan.solution_tree(), Domain.t(), integer()) :: [STNMethod.t()]
   defp solution_tree_to_stn_methods_with_bridges(solution_tree, domain, current_time) do
     # Extract primitive actions from solution tree
-    primitive_actions = Plan.get_primitive_actions_dfs(solution_tree)
+    primitive_actions = AriaEngine.Plan.get_primitive_actions_dfs(solution_tree)
     
     # Group actions into temporal segments separated by bridge actions
     action_segments = group_actions_into_temporal_segments(primitive_actions)
