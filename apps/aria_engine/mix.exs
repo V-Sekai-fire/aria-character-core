@@ -55,7 +55,8 @@ defmodule AriaEngine.MixProject do
       {:elixir_uuid, "~> 1.2"},
 
       # Shared dependencies
-      {:telemetry, "~> 1.2"}
+      {:telemetry, "~> 1.2"},
+      {:tzdata, "~> 1.1"}
     ]
   end
 end

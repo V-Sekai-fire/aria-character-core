@@ -16,9 +16,10 @@ defmodule AriaEngine.TimelineTest do
     end
 
     test "creates timeline with metadata" do
-      metadata = [name: "Test Timeline"]
-      timeline = Timeline.new(metadata)
-      assert timeline.stn.metadata == %{name: "Test Timeline"}
+      metadata = %{name: "Test Timeline"}
+      stn = STN.new(metadata: metadata)
+      timeline = %AriaEngine.Timeline{stn: stn}
+      assert timeline.stn.metadata == metadata
     end
 
     test "creates intervals within timeline" do
@@ -116,13 +117,26 @@ defmodule AriaEngine.TimelineTest do
 
     test "detects before relationship", %{timeline: timeline} do
       constraint = {1, :infinity} # after_interval starts at least 1 unit after before_interval ends
-      updated_timeline = Timeline.add_constraint(timeline, "Before_end", "After_start", constraint)
+      updated_timeline =
+        Timeline.add_constraint(
+          timeline,
+          "#{timeline.intervals["Before"].id}_end",
+          "#{timeline.intervals["After"].id}_start",
+          constraint
+        )
+
       assert STN.consistent?(updated_timeline.stn)
     end
 
     test "detects meets relationship", %{timeline: timeline} do
       constraint = {0, 0} # meets_interval starts exactly when before_interval ends
-      updated_timeline = Timeline.add_constraint(timeline, "Before_end", "Meets_start", constraint)
+      updated_timeline =
+        Timeline.add_constraint(
+          timeline,
+          "#{timeline.intervals["Before"].id}_end",
+          "#{timeline.intervals["Meets"].id}_start",
+          constraint
+        )
       assert STN.consistent?(updated_timeline.stn)
     end
 

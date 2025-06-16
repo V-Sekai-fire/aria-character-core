@@ -233,15 +233,15 @@ defmodule AriaEngine.Timeline.IntervalEnhancedTest do
 
     test "large duration calculations" do
       start_dt = DateTime.from_naive!(~N[2025-01-01 00:00:00], "Etc/UTC")
-      end_dt = DateTime.from_naive!(~N[2025-12-31 23:59:59], "Etc/UTC")  # Almost full year
+      end_dt = DateTime.from_naive!(~N[2025-12-31 23:59:59], "Etc/UTC") # Almost full year
       interval = Interval.new(start_dt, end_dt)
-      
+
       # Should handle large durations correctly
       days = Interval.duration_in_unit(interval, :day)
-      assert days == 364  # 2025 is not a leap year
-      
+      assert days == 364 # 2025 is not a leap year
+
       hours = Interval.duration_in_unit(interval, :hour)
-      assert hours == 8735  # 364 * 24 + 23 hours
+      assert hours == 8759 # 365 * 24 - 1 hour
     end
   end
 end

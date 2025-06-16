@@ -103,14 +103,14 @@ defmodule AriaEngine.Timeline.STNLODTest do
         |> STN.add_time_point("t1")
         |> STN.add_time_point("t2")
         |> STN.add_constraint("t1", "t2", {10, 20})
-      
+
       stn2 = STN.new(time_unit: :second)
         |> STN.add_time_point("t1")
         |> STN.add_time_point("t2")
         |> STN.add_constraint("t1", "t2", {5, 30})
-      
-      result = STN.intersection(stn1, stn2)
-      
+
+      result = STN.union(stn1, stn2)
+
       assert STN.consistent?(result)
       # OR should create more permissive bounds
       constraint = STN.get_constraint(result, "t1", "t2")
@@ -237,7 +237,7 @@ defmodule AriaEngine.Timeline.STNLODTest do
       
       # Solve in parallel
       solved_stn = STN.parallel_solve(stn_with_intervals, 4)
-      
+
       assert STN.consistent?(solved_stn)
       assert solved_stn.time_unit == :second
       assert solved_stn.lod_level == :high
