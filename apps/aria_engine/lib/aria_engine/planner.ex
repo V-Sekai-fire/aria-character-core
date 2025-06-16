@@ -668,8 +668,8 @@ defmodule AriaEngine.Planner do
         
       node ->
         # Get available methods for this task
-        available_methods = Domain.get_methods(domain, task_name)
-        
+        available_methods = Domain.get_task_methods(domain, task_name)
+
         # Filter out blacklisted methods
         usable_methods = Enum.reject(available_methods, fn method_name ->
           Enum.member?(node.blacklisted_methods, method_name)
