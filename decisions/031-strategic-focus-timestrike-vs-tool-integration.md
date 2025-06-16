@@ -54,7 +54,7 @@ Tool integration creates capabilities without immediate market validation or rev
 
 TimeStrike leverages existing, validated architectural decisions:
 
-- Uses established console TUI approach (ADR-030)
+- Uses web interface approach (ADR-068, ADR-069) superseding previous TUI approach (ADR-030)
 - Builds on proven AriaEngine state management (ADR-001)
 - Exercises real-time execution patterns (ADR-006)
 - Validates Oban queue performance under load (ADR-002)
@@ -136,7 +136,7 @@ This decision establishes Aria as a **temporal planning engine with game develop
 - **Aligns with**: ADR-016 (Weekend Implementation Scope) - maintains realistic timeline constraints
 - **Implements**: ADR-018 (MVP Definition) - delivers concrete demonstration of temporal planning capabilities
 - **Builds on**: ADR-024 (Minimum Success Criteria) - leverages existing progress toward achievable weekend goal
-- **Supports**: ADR-030 (Console TUI Implementation) - utilizes established interface approach for immediate productivity
+- **Supersedes**: ADR-030 (Console TUI) with ADR-068/069 (Web Interface) - modernizes interface approach for better demonstration capability
 - **Defers**: ADR-029 (MCP Integration) - postpones broader tool integration until core system validation complete
 - **Leverages**: ADR-001-004 (Core Architecture) - maximizes return on established architectural investments
 - **Exercises**: ADR-006-013 (Real-time Systems) - validates all temporal planning components under realistic load

@@ -109,19 +109,19 @@ The AriaEngine temporal planner implements a **re-entrant Goal-Task-Network (GTN
 
 ### User Interface Architecture
 
-**Console TUI Implementation** (Supersedes ADR-008, ADR-027, ADR-028, ADR-030):
+**Web Interface Implementation** (Supersedes ADR-008, ADR-027, ADR-028, ADR-030; Updated per ADR-068, ADR-069):
 
-- Terminal-based interface using existing Elixir TUI libraries
-- Optimized for weekend development timeline
-- Real-time updates without requiring web framework complexity
-- ASCII-based visualization suitable for spatial reasoning
+- Phoenix LiveView-based web interface for Discord shareability
+- Optimized for modern web deployment and easy demonstration sharing
+- Real-time updates through WebSocket connections
+- Modern web visualization suitable for tactical game display
 
 **Interface Features**:
 
-- Real-time game state visualization
-- Command input with auto-completion
-- Multi-panel layout showing different game aspects
-- Streaming output for continuous game updates
+- Real-time game state visualization through Phoenix LiveView
+- Web-based user interaction with click and keyboard input
+- Responsive web layout for different screen sizes
+- URL-based sharing for Discord demonstrations (per ADR-069)
 
 ### Development and Testing Strategy
 
@@ -237,11 +237,19 @@ This ADR consolidates and supersedes the following temporal planner architectura
 
 **Implementation Strategy**: ADR-016 (Weekend Scope), ADR-017 (LLM Development), ADR-018 (MVP Definition), ADR-022 (TDD), ADR-023 (MVP Timing), ADR-024 (Success Criteria), ADR-025 (Research Strategy), ADR-026 (Risk Mitigation)
 
-**Interface Design**: ADR-008 (Web Interface), ADR-027 (Web Implementation), ADR-028 (Three.js Visualization), ADR-030 (Console TUI)
+**Interface Design**: ADR-008 (Web Interface), ADR-027 (Web Implementation), ADR-028 (Three.js Visualization), ADR-030 (Console TUI), ADR-068 (Remove TUI), ADR-069 (Discord Shareable Frontend)
 
 **Strategic Focus**: ADR-011 (Idempotency), ADR-014 (Twitch Optimization), ADR-029 (MCP Integration), ADR-031 (Strategic Focus), ADR-033 (MCP TDD Criteria)
 
 All superseded ADRs remain in the repository as historical records of the architectural evolution process but should not be referenced for current implementation guidance.
+
+## Change Log
+
+### January 27, 2025
+
+- Updated User Interface Architecture section to reflect ADR-068 (aria_tui removal) and ADR-069 (web interface choice)
+- Changed from Console TUI to Phoenix LiveView web interface approach
+- Updated interface features to reflect web-based rather than terminal-based implementation
 
 ## Implementation Status
 

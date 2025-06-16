@@ -56,7 +56,7 @@ Use Phoenix LiveView with WebSocket updates and Three.js 3D visualization for fu
 ## Related Decisions
 
 - Implements ADR-019 (3D Coordinates with Godot Conventions) for coordinate system
-- Links to ADR-027 (Web Interface Implementation) as final interface choice (superseded by ADR-030)
+- Links to ADR-027 (Web Interface Implementation) → ADR-030 (Console TUI, superseded) → ADR-069 (Web Interface, current)
 - Supports ADR-028 (Three.js 3D Visualization Architecture) for 3D rendering
 - Enables ADR-014 (Twitch Streaming Optimization) with visual appeal
 - Builds on ADR-006 (Game Engine Real-time Execution) for synchronized updates

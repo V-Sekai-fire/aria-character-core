@@ -102,7 +102,7 @@ end
 ## Related Decisions
 
 - Links to ADR-016 (Weekend Implementation Scope) for realistic feature set
-- Superseded by ADR-030 (Console TUI Implementation) for interface approach
+- Interface approach evolved from ADR-030 (Console TUI, superseded) to ADR-069 (Web Interface)
 - Implements ADR-019 (3D Coordinates) through coordinate display
 - Supports ADR-024 (Minimum Success Criteria) with concrete validation
 - Enables ADR-025 (Research Strategy) with practical demonstration
