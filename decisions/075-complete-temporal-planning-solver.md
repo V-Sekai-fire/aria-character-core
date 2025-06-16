@@ -21,160 +21,422 @@ This ADR defines the complete implementation tasks required for a full temporal 
 
 Extend the existing AriaEngine architecture with temporal planning capabilities using strict TDD methodology. Build upon existing JSON-LD state support and HTN planner rather than reimplementing foundational components.
 
-## Phase 1: Temporal Foundation (Extending Existing Architecture)
+## Implementation Plan: Cold Boot Order
 
-### 1.1 Temporal State Extension
+*Tasks sequenced for minimal viable dependencies, incremental progress, and continuous testability*
+
+### Phase 1: Temporal Foundation (Minimal Viable Timeline)
+
+**Dependency Level 0: Core Temporal Infrastructure**
 
 - [x] **Task 001**: Basic JSON-LD state infrastructure with chibifire.com namespace (existing in `AriaEngine.State`)
 - [x] **Task 002**: RDF-triple state management system (existing in `AriaEngine.State`)
-- [ ] **Task 003**: Extend `AriaEngine.Temporal` with time-indexed state operations
-- [ ] **Task 004**: Add temporal property queries to existing state system
-- [ ] **Task 005**: Implement temporal history reconstruction from existing JSON-LD state
-
-### 1.2 HTN-Temporal Integration
-
 - [x] **Task 006**: Core HTN planner infrastructure (existing in `AriaEngine.Planner`)
 - [x] **Task 007**: Solution tree management (existing in `AriaEngine.Plan`)
-- [ ] **Task 008**: Extend HTN planner with temporal reasoning capabilities
-- [ ] **Task 009**: Add temporal constraints to existing domain actions
+- [x] **Task 085**: Basic temporal planning test framework (existing test file)
 
-## Phase 2: Temporal Planning Components
+**Dependency Level 1: Basic Temporal Operations**
 
-### 2.1 Timeline Data Structure
-
+- [ ] **Task 003**: Extend `AriaEngine.Temporal` with time-indexed state operations
+  - *Foundation for all temporal reasoning*
+  - *Implementation: Use temporal state structure from [ADR-042](042-temporal-planner-cold-boot-implementation-order.md#temporal-state-infrastructure)*
+  - *Testable: Time-based state queries*
+  
 - [ ] **Task 010**: Implement `AriaEngine.Timeline` module with interval-based storage
-- [ ] **Task 011**: Add timeline conflict detection and validation
-- [ ] **Task 012**: Support value interpolation for smooth temporal transitions
-- [ ] **Task 013**: Implement timeline operations (merge, split, transform)
-- [ ] **Task 014**: Integrate timeline with existing JSON-LD state serialization
+  - *Depends on: Task 003 (temporal state operations)*
+  - *Implementation: Use timeline structure from [ADR-042](042-temporal-planner-cold-boot-implementation-order.md#timeline-infrastructure)*
+  - *Testable: Timeline creation, interval storage*
 
-### 2.2 Simple Temporal Network (STN) Solver
+- [ ] **Task 086**: Expand test suite to cover temporal infrastructure
+  - *Depends on: Tasks 003, 010*
+  - *Testable: Comprehensive test coverage verification*
+
+**Dependency Level 2: Timeline Operations**
+
+- [ ] **Task 004**: Add temporal property queries to existing state system
+  - *Depends on: Task 003 (temporal state operations)*
+  - *Testable: State property queries at specific times*
+
+- [ ] **Task 011**: Add timeline conflict detection and validation
+  - *Depends on: Task 010 (timeline module)*
+  - *Testable: Conflict detection algorithms*
+
+- [ ] **Task 014**: Integrate timeline with existing JSON-LD state serialization
+  - *Depends on: Tasks 010, 004*
+  - *Testable: Timeline serialization/deserialization*
+
+### Phase 2: Simple Temporal Constraints (Minimal Viable Planning)
+
+**Dependency Level 3: Basic Constraint Infrastructure**
 
 - [ ] **Task 015**: Implement `AriaEngine.STN` module with Floyd-Warshall algorithm
-- [ ] **Task 016**: Add temporal constraint representation and parsing
-- [ ] **Task 017**: Implement consistency checking and conflict detection
-- [ ] **Task 018**: Add constraint propagation and tightening
-- [ ] **Task 019**: Support incremental constraint updates
+  - *Depends on: Task 011 (timeline validation)*
+  - *Implementation: Use PC-2 algorithm pseudo code from [ADR-043](043-total-order-to-partial-order-transformation.md#implementation-in-stn-solver)*
+  - *Testable: Basic STN solving with simple constraints*
 
-### 2.3 Temporal Constraint Integration
+- [ ] **Task 016**: Add temporal constraint representation and parsing
+  - *Depends on: Task 015 (STN module)*
+  - *Implementation: Use constraint types from [ADR-040](040-temporal-constraint-solver-selection.md#technical-approach)*
+  - *Testable: Constraint parsing and representation*
+
+- [ ] **Task 017**: Implement consistency checking and conflict detection
+  - *Depends on: Task 016 (constraint representation)*
+  - *Implementation: Use integrated solver approach from [ADR-040](040-temporal-constraint-solver-selection.md#integration-architecture)*
+  - *Testable: Consistency checking algorithms*
+
+**Dependency Level 4: Constraint Integration**
 
 - [ ] **Task 020**: Extend existing `AriaEngine.Domain` with temporal constraints
+  - *Depends on: Task 017 (consistency checking)*
+  - *Testable: Domain actions with temporal constraints*
+
 - [ ] **Task 021**: Add temporal constraint validation to existing actions
-- [ ] **Task 022**: Implement constraint propagation in HTN planning
-- [ ] **Task 023**: Add temporal constraint visualization support
-- [ ] **Task 024**: Integrate constraints with existing domain registry
+  - *Depends on: Task 020 (domain temporal constraints)*
+  - *Testable: Action validation with temporal constraints*
 
-### 2.4 Opportunity Window Detection
+- [ ] **Task 008**: Extend HTN planner with temporal reasoning capabilities
+  - *Depends on: Tasks 020, 021*
+  - *Testable: HTN planning with basic temporal constraints*
 
-- [ ] **Task 025**: Implement `AriaEngine.OpportunityDetector` for temporal windows
-- [ ] **Task 026**: Add environmental trigger detection (waypoint pauses)
-- [ ] **Task 027**: Support dynamic opportunity window updates
-- [ ] **Task 028**: Implement opportunity exploitation planning
-- [ ] **Task 029**: Add opportunity quality assessment
+### Phase 3: Temporal Planning Integration (Minimal Viable Solver)
 
-## Phase 3: Goal Decomposition and Task Planning
+**Dependency Level 5: Planning Integration**
 
-### 3.1 Temporal Goal Decomposition
+- [ ] **Task 074**: Extend existing planner with temporal domain actions
+  - *Depends on: Task 008 (HTN temporal reasoning)*
+  - *Testable: Planning with temporal actions*
 
-- [x] **Task 030**: Core goal decomposition infrastructure (existing in `AriaEngine.Planner`)
-- [x] **Task 031**: Task dependency analysis and critical path (existing HTN methods)
 - [ ] **Task 032**: Extend existing HTN decomposition with temporal constraints
-- [ ] **Task 033**: Add temporal-aware primitive action generation
-- [ ] **Task 034**: Implement temporal resource requirements analysis
+  - *Depends on: Task 074 (temporal domain actions)*
+  - *Testable: HTN decomposition with temporal constraints*
 
-### 3.2 Multi-Agent Coordination
+- [ ] **Task 005**: Implement temporal history reconstruction from existing JSON-LD state
+  - *Depends on: Task 032 (temporal HTN decomposition)*
+  - *Implementation: Use solution network structure from [ADR-042](042-temporal-planner-cold-boot-implementation-order.md#json-ld-solution-network)*
+  - *Testable: History reconstruction accuracy*
 
-- [ ] **Task 035**: Implement `AriaEngine.MultiAgentCoordinator` for agent synchronization
-- [ ] **Task 036**: Add information sharing protocol planning
-- [ ] **Task 037**: Support temporal coordination conflict resolution
-- [ ] **Task 038**: Implement agent capability analysis
-- [ ] **Task 039**: Add coordination quality metrics
+**Dependency Level 6: Basic Temporal Validation**
 
-## Phase 4: Backtracking and Plan Revision
+- [ ] **Task 076**: Implement temporal state validation
+  - *Depends on: Task 005 (history reconstruction)*
+  - *Testable: State validation across time*
 
-### 4.1 Temporal Backtracking Engine
+- [ ] **Task 080**: Implement complete Maya's Adaptive Scorch Coordination scenario
+  - *Depends on: Task 076 (state validation)*
+  - *Testable: End-to-end scenario execution*
+
+- [ ] **Task 089**: Add integration tests with existing AriaEngine components
+  - *Depends on: Task 080 (Maya scenario)*
+  - *Testable: Full integration test suite*
+
+### Phase 4: Temporal Backtracking (Minimal Viable Revision)
+
+**Dependency Level 7: Backtracking Extension**
 
 - [x] **Task 040**: Basic backtracking infrastructure (existing in HTN planner)
-- [ ] **Task 041**: Extend existing backtracking with temporal failure analysis
-- [ ] **Task 042**: Add multi-phase temporal backtracking strategy
-- [ ] **Task 043**: Support cascading temporal failure detection
-- [ ] **Task 044**: Implement temporal backtracking trigger analysis
 
-### 4.2 Plan Revision System
+- [ ] **Task 041**: Extend existing backtracking with temporal failure analysis
+  - *Depends on: Task 080 (Maya scenario)*
+  - *Testable: Temporal failure detection*
 
 - [ ] **Task 045**: Implement `AriaEngine.PlanRevision` for temporal constraint analysis
+  - *Depends on: Task 041 (temporal failure analysis)*
+  - *Testable: Plan revision algorithms*
+
+- [ ] **Task 042**: Add multi-phase temporal backtracking strategy
+  - *Depends on: Task 045 (plan revision)*
+  - *Testable: Multi-phase backtracking scenarios*
+
+**Dependency Level 8: Advanced Backtracking**
+
+- [ ] **Task 081**: Validate multi-phase backtracking with information gathering
+  - *Depends on: Task 042 (multi-phase backtracking)*
+  - *Testable: Information gathering scenarios*
+
 - [ ] **Task 046**: Add temporal constraint relaxation strategies
+  - *Depends on: Task 081 (backtracking validation)*
+  - *Testable: Constraint relaxation algorithms*
+
+### Phase 5: Performance Optimization (Minimal Viable Performance)
+
+**Dependency Level 9: Basic Performance**
+
+- [ ] **Task 018**: Add constraint propagation and tightening
+  - *Depends on: Task 046 (constraint relaxation)*
+  - *Implementation: Use propagation algorithms from [ADR-041](041-temporal-solver-tech-stack-requirements.md#constraint-propagation)*
+  - *Testable: Propagation algorithm efficiency*
+
+- [ ] **Task 019**: Support incremental constraint updates
+  - *Depends on: Task 018 (constraint propagation)*
+  - *Testable: Incremental update performance*
+
+- [ ] **Task 087**: Add performance benchmarking tests
+  - *Depends on: Task 019 (incremental updates)*
+  - *Testable: Performance metrics and benchmarks*
+
+**Dependency Level 10: Performance Targets**
+
+- [ ] **Task 057**: Ensure <10ms planning time for Maya scenario
+  - *Depends on: Task 087 (performance benchmarking)*
+  - *Testable: Performance target validation*
+
+- [ ] **Task 084**: Validate performance requirements (<10ms planning)
+  - *Depends on: Task 057 (10ms planning time)*
+  - *Testable: Performance requirement compliance*
+
+### Phase 6: Advanced Temporal Features (Viable Extensions)
+
+**Dependency Level 11: Timeline Operations**
+
+- [ ] **Task 012**: Support value interpolation for smooth temporal transitions
+  - *Depends on: Task 084 (performance validation)*
+  - *Testable: Interpolation accuracy*
+
+- [ ] **Task 013**: Implement timeline operations (merge, split, transform)
+  - *Depends on: Task 012 (value interpolation)*
+  - *Implementation: Use timeline structure from [ADR-037](037-timeline-based-vs-durative-actions.md#implementation-structure)*
+  - *Testable: Timeline transformation operations*
+
+- [ ] **Task 009**: Add temporal constraints to existing domain actions
+  - *Depends on: Task 021 (constraint validation)*
+  - *Testable: Domain action temporal constraints*
+
+- [ ] **Task 022**: Implement constraint propagation in HTN planning
+  - *Depends on: Task 009 (domain temporal constraints)*
+  - *Testable: HTN constraint propagation*
+
+**Dependency Level 12: Opportunity Detection**
+
+- *Depends on: Task 022 (HTN constraint propagation)*
+- *Testable: Opportunity window detection*
+
+- [ ] **Task 026**: Add environmental trigger detection (waypoint pauses)
+  - *Depends on: Task 025 (opportunity detector)*
+  - *Testable: Environmental trigger algorithms*
+
+- [ ] **Task 082**: Test temporal coordination with opportunity windows
+  - *Depends on: Task 026 (environmental triggers)*
+  - *Testable: Opportunity window coordination*
+
+### Phase 7: Advanced Planning Features (Full Capability)
+
+**Dependency Level 13: Advanced Temporal Operations**
+
+- [ ] **Task 033**: Add temporal-aware primitive action generation
+  - *Depends on: Task 082 (opportunity coordination)*
+  - *Testable: Temporal action generation*
+
+- [ ] **Task 043**: Support cascading temporal failure detection
+  - *Depends on: Task 033 (temporal action generation)*
+  - *Testable: Cascading failure scenarios*
+
 - [ ] **Task 047**: Support alternative temporal plan generation
+  - *Depends on: Task 043 (cascading failure detection)*
+  - *Testable: Alternative plan quality*
+
+**Dependency Level 14: Advanced Features**
+
+- [ ] **Task 027**: Support dynamic opportunity window updates
+  - *Depends on: Task 047 (alternative plans)*
+  - *Testable: Dynamic window adaptation*
+
+- [ ] **Task 044**: Implement temporal backtracking trigger analysis
+  - *Depends on: Task 027 (dynamic opportunities)*
+  - *Testable: Backtracking trigger accuracy*
+
 - [ ] **Task 048**: Implement temporal plan quality preservation
-- [ ] **Task 049**: Add emergency temporal fallback planning
+  - *Depends on: Task 044 (backtracking triggers)*
+  - *Testable: Plan quality metrics*
 
-## Phase 5: Performance and Integration
+### Phase 8: Multi-Agent and Resource Management (Full Coordination)
 
-### 5.1 High-Performance Computing
+**Dependency Level 15: Multi-Agent Infrastructure**
+
+- [ ] **Task 035**: Implement `AriaEngine.MultiAgentCoordinator` for agent synchronization
+  - *Depends on: Task 048 (plan quality preservation)*
+  - *Implementation: Use multi-agent patterns from [ADR-037](037-timeline-based-vs-durative-actions.md#multi-agent-coordination)*
+  - *Testable: Agent synchronization protocols*
+
+- [ ] **Task 034**: Implement temporal resource requirements analysis
+  - *Depends on: Task 035 (multi-agent coordinator)*
+  - *Implementation: Use resource patterns from [ADR-040](040-temporal-constraint-solver-selection.md#resource-extension)*
+  - *Testable: Resource analysis algorithms*
+
+- [ ] **Task 036**: Add information sharing protocol planning
+  - *Depends on: Task 034 (resource analysis)*
+  - *Testable: Information sharing protocols*
+
+**Dependency Level 16: Advanced Coordination**
+
+- [ ] **Task 037**: Support temporal coordination conflict resolution
+  - *Depends on: Task 036 (information sharing)*
+  - *Testable: Conflict resolution algorithms*
+
+- [ ] **Task 038**: Implement agent capability analysis
+  - *Depends on: Task 037 (conflict resolution)*
+  - *Testable: Capability analysis accuracy*
+
+- [ ] **Task 075**: Support hybrid temporal/hierarchical planning
+  - *Depends on: Task 038 (capability analysis)*
+  - *Testable: Hybrid planning scenarios*
+
+### Phase 9: Performance and Monitoring (Production Ready)
+
+**Dependency Level 17: Production Performance**
 
 - [x] **Task 050**: Basic Flow infrastructure (existing `AriaEngine.Flow.Worker`)
+
 - [ ] **Task 051**: Integrate Nx tensor operations for STN solving
-- [ ] **Task 052**: Add Flow parallel constraint propagation
-- [ ] **Task 053**: Implement GenStage backpressure for real-time updates
-- [ ] **Task 054**: Add performance monitoring and metrics
-- [ ] **Task 055**: Optimize memory usage for large constraint networks
+  - *Depends on: Task 075 (hybrid planning)*
+  - *Implementation: Use matrix operations from [ADR-041](041-temporal-solver-tech-stack-requirements.md#matrix-operations)*
+  - *Testable: Tensor operation performance*
 
-### 5.2 Real-Time Performance
-
-- [x] **Task 056**: Basic temporal state tracking (existing test framework)
-- [ ] **Task 057**: Ensure <10ms planning time for Maya scenario
 - [ ] **Task 058**: Implement faster replanning than initial planning
+  - *Depends on: Task 051 (Nx integration)*
+  - *Testable: Replanning performance ratios*
+
 - [ ] **Task 059**: Add incremental plan updates
-- [ ] **Task 060**: Support streaming constraint modifications
+  - *Depends on: Task 058 (faster replanning)*
+  - *Testable: Incremental update accuracy*
+
+**Dependency Level 18: Monitoring and Execution**
+
+- [ ] **Task 077**: Add temporal execution monitoring
+  - *Depends on: Task 059 (incremental updates)*
+  - *Testable: Execution monitoring accuracy*
+
 - [ ] **Task 061**: Implement plan execution monitoring
+  - *Depends on: Task 077 (temporal monitoring)*
+  - *Testable: Plan execution tracking*
 
-## Phase 6: Advanced Temporal Reasoning
+- [ ] **Task 054**: Add performance monitoring and metrics
+  - *Depends on: Task 061 (execution monitoring)*
+  - *Testable: Performance metric accuracy*
 
-### 6.1 Temporal Heuristics
+### Phase 10: Advanced Performance and Reliability (Enterprise)
+
+**Dependency Level 19: Advanced Performance**
+
+- [ ] **Task 052**: Add Flow parallel constraint propagation
+  - *Depends on: Task 054 (performance monitoring)*
+  - *Implementation: Use parallel patterns from [ADR-041](041-temporal-solver-tech-stack-requirements.md#constraint-propagation)*
+  - *Testable: Parallel propagation efficiency*
+
+- [ ] **Task 053**: Implement GenStage backpressure for real-time updates
+  - *Depends on: Task 052 (parallel propagation)*
+  - *Testable: Backpressure handling*
+
+- [ ] **Task 060**: Support streaming constraint modifications
+  - *Depends on: Task 053 (GenStage backpressure)*
+  - *Testable: Streaming constraint performance*
+
+**Dependency Level 20: Memory and Visualization**
+
+- [ ] **Task 055**: Optimize memory usage for large constraint networks
+  - *Depends on: Task 060 (streaming constraints)*
+  - *Testable: Memory usage benchmarks*
+
+- [ ] **Task 023**: Add temporal constraint visualization support
+  - *Depends on: Task 055 (memory optimization)*
+  - *Testable: Visualization accuracy*
+
+- [ ] **Task 024**: Integrate constraints with existing domain registry
+  - *Depends on: Task 023 (visualization)*
+  - *Testable: Domain registry integration*
+
+### Phase 11: Advanced Temporal Reasoning (Research Features)
+
+**Dependency Level 21: Heuristics and Optimization**
 
 - [ ] **Task 062**: Implement temporal planning heuristics
-- [ ] **Task 063**: Add deadline-aware planning strategies
-- [ ] **Task 064**: Support temporal resource allocation
-- [ ] **Task 065**: Implement temporal plan optimization
-- [ ] **Task 066**: Add temporal plan quality metrics
+  - *Depends on: Task 024 (domain registry)*
+  - *Testable: Heuristic effectiveness*
 
-### 6.2 Uncertainty Handling
+- [ ] **Task 063**: Add deadline-aware planning strategies
+  - *Depends on: Task 062 (planning heuristics)*
+  - *Testable: Deadline compliance rates*
+
+- [ ] **Task 064**: Support temporal resource allocation
+  - *Depends on: Task 063 (deadline strategies)*
+  - *Testable: Resource allocation efficiency*
+
+**Dependency Level 22: Quality and Metrics**
+
+- [ ] **Task 065**: Implement temporal plan optimization
+  - *Depends on: Task 064 (resource allocation)*
+  - *Testable: Plan optimization effectiveness*
+
+- [ ] **Task 066**: Add temporal plan quality metrics
+  - *Depends on: Task 065 (plan optimization)*
+  - *Testable: Quality metric accuracy*
+
+- [ ] **Task 039**: Add coordination quality metrics
+  - *Depends on: Task 066 (plan quality metrics)*
+  - *Testable: Coordination quality assessment*
+
+### Phase 12: Uncertainty and Robustness (Advanced Research)
+
+**Dependency Level 23: Uncertainty Handling**
 
 - [ ] **Task 067**: Implement uncertain temporal constraints
+  - *Depends on: Task 039 (coordination metrics)*
+  - *Testable: Uncertainty representation accuracy*
+
 - [ ] **Task 068**: Add probabilistic temporal reasoning
+  - *Depends on: Task 067 (uncertain constraints)*
+  - *Testable: Probabilistic reasoning correctness*
+
 - [ ] **Task 069**: Support robust plan generation
+  - *Depends on: Task 068 (probabilistic reasoning)*
+  - *Testable: Plan robustness metrics*
+
+**Dependency Level 24: Advanced Contingency**
+
 - [ ] **Task 070**: Implement temporal contingency planning
+  - *Depends on: Task 069 (robust plans)*
+  - *Testable: Contingency plan quality*
+
 - [ ] **Task 071**: Add temporal sensitivity analysis
+  - *Depends on: Task 070 (contingency planning)*
+  - *Testable: Sensitivity analysis accuracy*
 
-## Phase 7: Integration and Validation
+- [ ] **Task 049**: Add emergency temporal fallback planning
+  - *Depends on: Task 071 (sensitivity analysis)*
+  - *Testable: Emergency fallback effectiveness*
 
-### 7.1 AriaEngine Integration
+### Phase 13: Final Validation and Quality Assurance (Production Release)
 
-- [x] **Task 072**: Core HTN planner integration (existing `AriaEngine.Planner`)
-- [x] **Task 073**: Domain action system (existing `AriaEngine.Domain`)
-- [ ] **Task 074**: Extend existing planner with temporal domain actions
-- [ ] **Task 075**: Support hybrid temporal/hierarchical planning
-- [ ] **Task 076**: Implement temporal state validation
-- [ ] **Task 077**: Add temporal execution monitoring
+**Dependency Level 25: Advanced Testing**
 
-### 7.2 Canonical Problem Validation
+- [ ] **Task 028**: Implement opportunity exploitation planning
+  - *Depends on: Task 049 (emergency fallback)*
+  - *Testable: Opportunity exploitation success rates*
+
+- [ ] **Task 029**: Add opportunity quality assessment
+  - *Depends on: Task 028 (opportunity exploitation)*
+  - *Testable: Opportunity quality accuracy*
+
+- [ ] **Task 088**: Implement property-based testing for temporal constraints
+  - *Depends on: Task 029 (opportunity quality)*
+  - *Testable: Property-based test coverage*
+
+**Dependency Level 26: Final Validation**
+
+- [ ] **Task 083**: Verify emergency fallback scenarios
+  - *Depends on: Task 088 (property-based testing)*
+  - *Testable: Emergency scenario success rates*
+
+- [ ] **Task 090**: Create test scenarios for all failure modes
+  - *Depends on: Task 083 (emergency scenarios)*
+  - *Testable: Failure mode coverage*
 
 - [x] **Task 078**: Basic 1D temporal movement tests (existing in test file)
 - [x] **Task 079**: Maya coordination problem setup (existing in test file)
-- [ ] **Task 080**: Implement complete Maya's Adaptive Scorch Coordination scenario
-- [ ] **Task 081**: Validate multi-phase backtracking with information gathering
-- [ ] **Task 082**: Test temporal coordination with opportunity windows
-- [ ] **Task 083**: Verify emergency fallback scenarios
-- [ ] **Task 084**: Validate performance requirements (<10ms planning)
-
-### 7.3 Test Infrastructure
-
-- [x] **Task 085**: Basic temporal planning test framework (existing test file)
-- [ ] **Task 086**: Expand test suite to cover all temporal planning components
-- [ ] **Task 087**: Add performance benchmarking tests
-- [ ] **Task 088**: Implement property-based testing for temporal constraints
-- [ ] **Task 089**: Add integration tests with existing AriaEngine components
-- [ ] **Task 090**: Create test scenarios for all failure modes
+- [x] **Task 056**: Basic temporal state tracking (existing test framework)
+- [x] **Task 072**: Core HTN planner integration (existing `AriaEngine.Planner`)
+- [x] **Task 073**: Domain action system (existing `AriaEngine.Domain`)
+- [x] **Task 030**: Core goal decomposition infrastructure (existing in `AriaEngine.Planner`)
+- [x] **Task 031**: Task dependency analysis and critical path (existing HTN methods)
 
 ## Success Criteria
 
@@ -238,6 +500,9 @@ This revised ADR provides a realistic 90-task implementation roadmap that builds
 - **Focused scope**: Temporal extensions to proven HTN planner rather than greenfield development
 - **Realistic task count**: Reduced from 84 to 90 tasks with accurate completion tracking
 - **Architecture alignment**: Plan now reflects actual AriaEngine.Planner, AriaEngine.State, and test infrastructure
+- **Cold boot resequencing**: Reorganized all 90 tasks into 26 dependency levels for incremental, testable progress
+- **Minimal viable dependencies**: Each task can only be started when its dependencies are complete
+- **Continuous testability**: Every dependency level includes testable deliverables
 
 ---
 
