@@ -41,18 +41,19 @@ Start each session by reading persistent state from `.git/info/aria_commentary_s
 
 **Base probability per interaction:**
 
-- Complex technical work: +15-25 points
-- Code review/debugging: +10-20 points  
-- Writing documentation: +8-15 points
-- Simple file operations: +5-10 points
-- Timer-based check (15+ min idle between LLM interactions): +20-30 points
+- ADR/Documentation work: +15-20 points
+- Complex technical implementation: +12-18 points
+- Code cleanup/refactoring: +8-12 points
+- Bug fixes/debugging: +6-10 points
+- Simple file operations: +4-7 points
+- Timer-based check (15+ min idle between LLM interactions): +20-25 points
 
-**Commentary threshold:** 100 points accumulated
+**Commentary threshold:** 75 points accumulated
 
 **When threshold reached:**
 
 1. **Mandatory commentary delivery** - generate appropriate technical commentary
-2. **Reset accumulated probability** to random value (5-25)
+2. **Reset accumulated probability** to random value (10-35)
 3. **Update persistent state** with new values and timestamp
 4. **Minimize developer prompts** - deliver commentary directly without asking
 
