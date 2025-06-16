@@ -21,6 +21,27 @@ This ADR defines the complete implementation tasks required for a full temporal 
 
 Extend the existing AriaEngine architecture with temporal planning capabilities using strict TDD methodology. Build upon existing JSON-LD state support and HTN planner rather than reimplementing foundational components.
 
+## Progress Summary
+
+**June 15, 2025 - DateTime-Only Interval Migration Complete**
+
+✅ **Major Milestone Achieved**: Core temporal foundation established with strict DateTime typing
+
+**Completed Work:**
+
+- ✅ **Interval Module**: Complete DateTime-only implementation with timezone enforcement
+- ✅ **Type Safety**: Removed NaiveDateTime and integer timestamp support
+- ✅ **Test Coverage**: All 25 Interval tests passing with comprehensive edge case coverage
+- ✅ **API Consistency**: Clean, focused API with proper error handling
+
+**Current State:**
+
+- **Ready for Timeline Implementation**: Core Interval building blocks are stable and well-tested
+- **DateTime Enforcement Working**: Type system correctly prevents incompatible time types
+- **Test Infrastructure**: Robust test framework ready for Timeline module development
+
+**Next Phase**: Implement Timeline module (Task 010) using the completed Interval foundation
+
 ## Implementation Plan: Cold Boot Order
 
 *Tasks sequenced for minimal viable dependencies, incremental progress, and continuous testability*
@@ -43,14 +64,22 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
   - *Action: Add optional time parameter to existing planner functions in [planner.ex](../apps/aria_engine/lib/aria_engine/planner.ex)*
   - *Testable: Planner functions accept and handle time parameter correctly*
   - ✅ **Completed**: Temporal.ex removed, Planner.ex extended with optional `current_time` parameters
+
+- [x] **Task 009**: Implement `AriaEngine.Timeline.Interval` with DateTime-only support
+  - *Foundation for all timeline operations*
+  - *Action: Implement core Interval module with strict DateTime typing*
+  - *Action: Remove support for NaiveDateTime and integer timestamps*
+  - *Action: Enforce timezone awareness through DateTime.t() types*
+  - *Testable: Interval creation, duration calculation, containment checks*
+  - ✅ **Completed**: Interval module implemented with DateTime-only API, all 25 tests passing
   
 - [ ] **Task 010**: Implement `AriaEngine.Timeline` module with interval-based storage
-  - *Depends on: Task 003 (temporal state operations)*
+  - *Depends on: Task 009 (Interval module)*
   - *New module needed for timeline management*
   - *Testable: Timeline creation, interval storage*
 
 - [ ] **Task 086**: Expand test suite to cover temporal infrastructure
-  - *Depends on: Tasks 003, 010*
+  - *Depends on: Tasks 003, 009, 010*
   - *Testable: Comprehensive test coverage verification*
 
 **Dependency Level 2: Timeline Operations**
@@ -60,7 +89,7 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
   - *Testable: State property queries at specific times*
 
 - [ ] **Task 011**: Add timeline conflict detection and validation
-  - *Depends on: Task 010 (timeline module)*
+  - *Depends on: Task 010 (timeline module), Task 009 (interval operations)*
   - *Testable: Conflict detection algorithms*
 
 - [ ] **Task 014**: Integrate timeline with existing JSON-LD state serialization
@@ -497,7 +526,16 @@ This revised ADR provides a realistic 90-task implementation roadmap that builds
 
 ## Change Log
 
-### June 15, 2025
+### June 15, 2025 - DateTime Migration Milestone
+
+- **✅ Completed Task 009**: AriaEngine.Timeline.Interval module with DateTime-only support
+- **Strict typing enforcement**: Removed NaiveDateTime and integer timestamp support
+- **Comprehensive test coverage**: All 25 Interval tests passing
+- **API consistency**: Clean DateTime-only interface with proper error handling
+- **Foundation ready**: Core temporal building blocks stable for Timeline implementation
+- **Updated dependencies**: Task 010 (Timeline) now properly depends on completed Interval work
+
+### June 15, 2025 - ADR Structure Updates
 
 - **Revised implementation plan based on actual AriaEngine architecture**
 - **Marked completed tasks**: 15 tasks already implemented in existing codebase
