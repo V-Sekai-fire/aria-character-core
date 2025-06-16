@@ -23,24 +23,37 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 ## Progress Summary
 
-**June 15, 2025 - DateTime-Only Interval Migration Complete**
+**June 16, 2025 - Temporal Planner Progress Assessment**
 
-✅ **Major Milestone Achieved**: Core temporal foundation established with strict DateTime typing
+📊 **Overall Progress: ~17% Complete (15/90 tasks)**
 
-**Completed Work:**
+**✅ Foundation Established (Strong):**
 
-- ✅ **Interval Module**: Complete DateTime-only implementation with timezone enforcement
-- ✅ **Type Safety**: Removed NaiveDateTime and integer timestamp support
-- ✅ **Test Coverage**: All 25 Interval tests passing with comprehensive edge case coverage
-- ✅ **API Consistency**: Clean, focused API with proper error handling
+- ✅ **Interval Module**: DateTime-only implementation complete (25 tests passing)
+- ✅ **HTN Planner**: Solid AriaEngine.Planner with IPyHOP-style planning
+- ✅ **JSON-LD State**: Working AriaEngine.State with RDF-triple support  
+- ✅ **Domain System**: AriaEngine.Domain for actions and methods
+- ✅ **Solution Trees**: AriaEngine.Plan handles plan management
+- ✅ **Test Infrastructure**: Comprehensive test framework established
 
-**Current State:**
+**⚠️ Critical Integration Issues (Blocking Progress):**
 
-- **Ready for Timeline Implementation**: Core Interval building blocks are stable and well-tested
-- **DateTime Enforcement Working**: Type system correctly prevents incompatible time types
-- **Test Infrastructure**: Robust test framework ready for Timeline module development
+- ❌ **STN-Interval Type Mismatch**: STN expects NaiveDateTime/integers, Interval requires DateTime
+- ❌ **Timeline Integration Broken**: Timeline.add_interval/2 fails due to STN compatibility issues
+- ❌ **Test Failures**: 4/30 STN tests failing, 17/20 Timeline tests failing
+- ❌ **Allen Relations Blocked**: Timeline Allen's algebra non-functional due to STN issues
 
-**Next Phase**: Implement Timeline module (Task 010) using the completed Interval foundation
+**🎯 Immediate Priorities for MVP:**
+
+1. **Fix STN DateTime Compatibility** (Task 015) - 2-4 hours
+2. **Repair Timeline-STN Integration** (Task 010) - 3-5 hours  
+3. **Extend HTN with Temporal Reasoning** (Task 008) - 4-6 hours
+4. **Basic Temporal Domain Support** (Task 020) - 3-4 hours
+5. **Maya's 1D Coordination Scenario** (Task 080) - 6-8 hours
+
+**Estimated Time to Working Demo**: 18-27 hours of focused integration work
+
+**Current Phase**: **Critical Integration Repair** - Must fix existing components before building new features
 
 ## Implementation Plan: Cold Boot Order
 
@@ -75,6 +88,9 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
   
 - [ ] **Task 010**: Implement `AriaEngine.Timeline` module with interval-based storage
   - *Depends on: Task 009 (Interval module)*
+  - *Status: **BLOCKED** - STN integration broken, 17/20 tests failing*
+  - *Critical Issue: Timeline.add_interval/2 fails due to STN expecting wrong data types*
+  - *Priority: **URGENT** - Must fix before proceeding with temporal planning*
   - *New module needed for timeline management*
   - *Testable: Timeline creation, interval storage*
 
@@ -102,6 +118,9 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 - [ ] **Task 015**: Implement `AriaEngine.STN` module with Floyd-Warshall algorithm
   - *Depends on: Task 011 (timeline validation)*
+  - *Status: **BLOCKED** - Type compatibility issues with DateTime-only Intervals*
+  - *Critical Issue: STN expects NaiveDateTime/integers, incompatible with Interval DateTime requirements*
+  - *Priority: **URGENT** - 4/30 STN tests failing due to type mismatch*
   - *New module for Simple Temporal Networks*
   - *Testable: Basic STN solving with simple constraints*
 
@@ -525,6 +544,15 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 This revised ADR provides a realistic 90-task implementation roadmap that builds upon the existing AriaEngine architecture. It accounts for completed foundational work (HTN planner, JSON-LD state, basic test framework) and focuses implementation effort on temporal extensions rather than rebuilding working systems.
 
 ## Change Log
+
+### June 16, 2025 - Integration Crisis Identified
+
+- **🚨 Critical Integration Issues Discovered**: STN-Interval type compatibility blocking all temporal planning progress
+- **Timeline Module Status**: Exists but 17/20 tests failing due to STN integration problems
+- **STN Module Status**: Exists but 4/30 tests failing due to DateTime vs NaiveDateTime type mismatch  
+- **Priority Adjustment**: Must fix integration issues before proceeding with new features
+- **Progress Assessment**: 17% complete (15/90 tasks), with critical blockers identified
+- **Estimated Fix Time**: 18-27 hours to repair integration and achieve working temporal planning MVP
 
 ### June 15, 2025 - DateTime Migration Milestone
 
