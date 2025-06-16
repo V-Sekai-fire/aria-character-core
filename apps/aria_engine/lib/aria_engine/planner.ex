@@ -682,25 +682,29 @@ defmodule AriaEngine.Planner do
             end
             :failure
             
-          [method_name | _] ->
+          [method | _] ->
             # Try first available method
-            case Domain.get_method(domain, method_name) do
+            case method do
               nil ->
-                {:error, "Method not found: #{method_name}"}
+                {:error, "Method not found: #{inspect(method)}"}
                 
               method_fn ->
                 # Apply method to get subtasks
                 case apply_method_to_task(method_fn, args, verbose) do
                   {:ok, subtasks} ->
-                    create_subtask_nodes(solution_tree, node_id, subtasks, method_name)
+                    # Decomposed into subtasks
+                    new_tree =
+                      create_subtask_nodes(updated_tree, node_id, subtasks, method)
+
+                    {:continue, new_tree, path}
                     
                   {:error, reason} ->
                     # Blacklist this method and try next
-                    blacklisted_node = %{node | blacklisted_methods: [method_name | node.blacklisted_methods]}
+                    blacklisted_node = %{node | blacklisted_methods: [method | node.blacklisted_methods]}
                     updated_tree = %{solution_tree | nodes: Map.put(solution_tree.nodes, node_id, blacklisted_node)}
                     
                     if verbose > 2 do
-                      IO.puts("Method #{method_name} failed: #{reason}")
+                      IO.puts("Method #{method} failed: #{reason}")
                     end
                     
                     expand_task_node(domain, state, updated_tree, node_id, task_name, args, verbose)
@@ -746,7 +750,7 @@ defmodule AriaEngine.Planner do
                   # Apply method to get subtasks
                   case apply_method_to_goal(method_fn, predicate, subject, object, verbose) do
                     {:ok, subtasks} ->
-                      create_subtask_nodes(solution_tree, node_id, subtasks, method_name)
+                      create_subtask_nodes(solution_tree, node_id, subtasks, method)
                       
                     {:error, reason} ->
                       # Blacklist this method and try next
@@ -818,11 +822,7 @@ defmodule AriaEngine.Planner do
         Map.put(acc, child_node.id, child_node)
       end)
       |> Map.update!(parent_id, fn parent_node ->
-        %{parent_node | 
-          children_ids: child_ids, 
-          expanded: true,
-          method_tried: method_name
-        }
+        %{parent_node | children_ids: child_ids, expanded: true, method_tried: method_name}
       end)
     
     {:ok, %{solution_tree | nodes: updated_nodes}}
