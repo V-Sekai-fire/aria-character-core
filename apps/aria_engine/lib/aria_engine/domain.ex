@@ -91,10 +91,14 @@ defmodule AriaEngine.Domain do
 
   @doc """
   Adds multiple actions to the domain.
+  
+  Each action will be properly registered with its corresponding task method.
   """
   @spec add_actions(t(), %{action_name() => action_fn()}) :: t()
-  def add_actions(%__MODULE__{actions: current_actions} = domain, new_actions) do
-    %{domain | actions: Map.merge(current_actions, new_actions)}
+  def add_actions(%__MODULE__{} = domain, new_actions) do
+    Enum.reduce(new_actions, domain, fn {name, action_fn}, acc_domain ->
+      add_action(acc_domain, name, action_fn)
+    end)
   end
 
   @doc """
