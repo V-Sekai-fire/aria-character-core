@@ -112,13 +112,53 @@ defmodule AriaEngine.Timeline.STN do
     end_point = "#{interval.id}_end"
     
     # Duration constraint: end - start = duration
-    duration = Interval.duration(interval)
+    duration = Interval.duration_ms(interval)
     duration_constraint = {duration, duration}  # Exact duration
     
     stn
     |> add_time_point(start_point)
     |> add_time_point(end_point)
     |> add_constraint(start_point, end_point, duration_constraint)
+    |> apply_pc2()
+  end
+
+  @doc """
+  Updates an interval in the STN by removing the old one and adding the new one.
+  """
+  @spec update_interval(t(), Interval.t()) :: t()
+  def update_interval(stn, interval) do
+    stn
+    |> remove_interval(interval.id)
+    |> add_interval(interval)
+  end
+
+  @doc """
+  Removes an interval from the STN.
+  """
+  @spec remove_interval(t(), String.t()) :: t()
+  def remove_interval(stn, interval_id) do
+    start_point = "#{interval_id}_start"
+    end_point = "#{interval_id}_end"
+    
+    # Remove constraints involving these time points
+    updated_constraints = 
+      stn.constraints
+      |> Enum.reject(fn {{from, to}, _} -> 
+           from == start_point or to == start_point or
+           from == end_point or to == end_point
+         end)
+      |> Map.new()
+    
+    # Remove time points
+    updated_time_points = 
+      stn.time_points
+      |> MapSet.delete(start_point)
+      |> MapSet.delete(end_point)
+    
+    %{stn | 
+      time_points: updated_time_points,
+      constraints: updated_constraints
+    }
     |> apply_pc2()
   end
 
@@ -154,7 +194,9 @@ defmodule AriaEngine.Timeline.STN do
     reverse_constraint = {-max_dist, -min_dist}
     updated_constraints = Map.put(updated_constraints, {to_point, from_point}, reverse_constraint)
     
+    # Apply PC-2 to propagate the new constraint
     %{stn | constraints: updated_constraints}
+    |> apply_pc2()
   end
 
   @doc """
@@ -293,6 +335,9 @@ defmodule AriaEngine.Timeline.STN do
 
   ## Examples
 
+      iex> stn1 = AriaEngine.Timeline.STN.new()
+      iex> stn2 = AriaEngine.Timeline.STN.new()
+      iex> stn3 = AriaEngine.Timeline.STN.new()
       iex> segments = [stn1, stn2, stn3]
       iex> joined = AriaEngine.Timeline.STN.parallel_join(segments)
       iex> joined.consistent
@@ -342,6 +387,22 @@ defmodule AriaEngine.Timeline.STN do
     end
   end
 
+  defp create_segment(stn, chunk_points, _index) do
+    time_points_set = MapSet.new(chunk_points)
+    
+    # Filter constraints relevant to this segment
+    segment_constraints = 
+      Enum.filter(stn.constraints, fn {{p1, p2}, _} ->
+        MapSet.member?(time_points_set, p1) and MapSet.member?(time_points_set, p2)
+      end) |> Map.new()
+      
+    %__MODULE__{
+      time_points: time_points_set,
+      constraints: segment_constraints,
+      consistent: stn.consistent
+    }
+  end
+
   @doc """
   Solves STN segments in parallel and merges results.
   
@@ -365,6 +426,14 @@ defmodule AriaEngine.Timeline.STN do
     |> parallel_join()
   end
 
+  @doc """
+  Solves the STN for consistency and computes shortest paths.
+  """
+  @spec solve(t()) :: t()
+  def solve(stn) do
+    apply_pc2(stn)
+  end
+
   # Level of Detail (LOD) system for temporal resolution optimization
   
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low
@@ -384,25 +453,25 @@ defmodule AriaEngine.Timeline.STN do
           auto_lod: boolean()
         }
 
-  # LOD configuration
-  @lod_config %{
-    ultra_high: %{resolution: 1, range_seconds: 5},      # ±5 seconds at 1ms
-    high: %{resolution: 10, range_seconds: 60},          # ±1 minute at 10ms  
-    medium: %{resolution: 100, range_seconds: 600},      # ±10 minutes at 100ms
-    low: %{resolution: 1000, range_seconds: 3600},       # ±1 hour at 1s
-    very_low: %{resolution: 10000, range_seconds: nil}   # Beyond ±1 hour at 10s
-  }
-
-  # Private helper functions
-
-  defp add_time_point(stn, time_point) do
+  @doc """
+  Adds a time point to the STN.
+  """
+  @spec add_time_point(t(), time_point()) :: t()
+  def add_time_point(stn, time_point) do
     updated_time_points = MapSet.put(stn.time_points, time_point)
-    %{stn | time_points: updated_time_points}
+    
+    # Add self-constraint for the new time point
+    updated_constraints = Map.put(stn.constraints, {time_point, time_point}, {0, 0})
+    
+    %{stn | 
+      time_points: updated_time_points,
+      constraints: updated_constraints
+    }
   end
 
   # Core PC-2 algorithm implementation
   defp apply_pc2_iterations(time_points, constraints) do
-    n = length(time_points)
+    _n = length(time_points)
     
     # Initialize with existing constraints and zero self-constraints
     initial_constraints = initialize_constraints(time_points, constraints)
@@ -447,49 +516,61 @@ defmodule AriaEngine.Timeline.STN do
   end
 
   defp update_constraint_via_path(constraints, i, j, k) do
-    # Get existing direct constraint i -> j
-    direct_constraint = Map.get(constraints, {i, j}, {:infinity, :neg_infinity})
-    
+    # Get existing direct constraint i -> j (default to no constraint if not exists)
+    direct_constraint = Map.get(constraints, {i, j})
+
     # Get path constraint i -> k -> j
-    ik_constraint = Map.get(constraints, {i, k}, {:infinity, :neg_infinity})
-    kj_constraint = Map.get(constraints, {k, j}, {:infinity, :neg_infinity})
-    
-    path_constraint = compose_constraints(ik_constraint, kj_constraint)
-    
-    # Intersect direct and path constraints
-    new_constraint = intersect_constraints(direct_constraint, path_constraint)
-    
-    case new_constraint do
-      :inconsistent ->
-        {constraints, false}
-      
-      constraint ->
-        updated_constraints = 
-          if constraint != direct_constraint do
-            Map.put(constraints, {i, j}, constraint)
-          else
-            constraints
-          end
-        
-        {updated_constraints, true}
+    ik_constraint = Map.get(constraints, {i, k})
+    kj_constraint = Map.get(constraints, {k, j})
+
+    # Skip if either path constraint is missing
+    if is_nil(ik_constraint) or is_nil(kj_constraint) do
+      {constraints, true}
+    else
+      path_constraint = compose_constraints(ik_constraint, kj_constraint)
+
+      # Intersect direct and path constraints
+      new_constraint =
+        if is_nil(direct_constraint) do
+          path_constraint
+        else
+          intersect_constraints(direct_constraint, path_constraint)
+        end
+
+      case new_constraint do
+        :inconsistent ->
+          {constraints, false}
+
+        constraint ->
+          # Only update if the new constraint is tighter than the direct constraint
+          updated_constraints =
+            if constraint != direct_constraint do
+              Map.put(constraints, {i, j}, constraint)
+            else
+              constraints
+            end
+
+          {updated_constraints, true}
+      end
     end
   end
 
   defp compose_constraints({min1, max1}, {min2, max2}) do
-    # Compose two constraints by combining their bounds
-    new_min = case {min1, min2} do
-      {:infinity, _} -> min2
-      {_, :infinity} -> min1
-      _ -> min1 + min2
+    # Compose two constraints by adding their bounds
+    {min1 + min2, max1 + max2}
+  end
+
+  defp intersect_constraints({min1, max1}, {min2, max2}) do
+    # Intersect two constraints by taking the tighter bounds
+    new_min = max(min1, min2)
+    new_max = min(max1, max2)
+
+    # Check for inconsistency
+    if new_min > new_max do
+      :inconsistent
+    else
+      {new_min, new_max}
     end
-    
-    new_max = case {max1, max2} do
-      {:neg_infinity, _} -> max2
-      {_, :neg_infinity} -> max1
-      _ -> max1 + max2
-    end
-    
-    {new_min, new_max}
   end
 
   # Private helper functions for composable operations
@@ -498,64 +579,14 @@ defmodule AriaEngine.Timeline.STN do
     # Merge constraint maps, taking intersection of bounds (tighter constraints)
     Map.merge(constraints1, constraints2, fn _key, {min1, max1}, {min2, max2} ->
       # Intersection: tighter bounds win
-      new_min = case {min1, min2} do
-        {:infinity, _} -> min2
-        {_, :infinity} -> min1
-        _ -> max(min1, min2)
-      end
-      
-      new_max = case {max1, max2} do
-        {:neg_infinity, _} -> max2
-        {_, :neg_infinity} -> max1
-        _ -> min(max1, max2)
-      end
-      
+      new_min = max(min1, min2)
+      new_max = min(max1, max2)
       {new_min, new_max}
     end)
   end
 
-  defp create_bridge_constraints(stn1, stn2) do
-    # Create constraints that bridge between STNs
-    # This is a simplified version - real implementation would identify boundary points
+  defp create_bridge_constraints(_stn1, _stn2) do
+    # Placeholder for inter-STN constraints
     %{}
-  end
-
-  defp create_segment(stn, chunk_points, index) do
-    chunk_point_set = MapSet.new(chunk_points)
-    
-    # Extract constraints relevant to this segment
-    segment_constraints = 
-      stn.constraints
-      |> Enum.filter(fn {{from, to}, _constraint} ->
-        MapSet.member?(chunk_point_set, from) and MapSet.member?(chunk_point_set, to)
-      end)
-      |> Enum.into(%{})
-    
-    # Identify boundary points (points that connect to other segments)
-    boundary_points = identify_boundary_points(stn, chunk_points)
-    
-    %{
-      id: "segment_#{index}",
-      time_points: chunk_point_set,
-      constraints: segment_constraints,
-      boundary_points: boundary_points,
-      consistent: true
-    }
-  end
-
-  defp identify_boundary_points(stn, chunk_points) do
-    chunk_set = MapSet.new(chunk_points)
-    
-    # Find points in this chunk that have constraints to points outside the chunk
-    stn.constraints
-    |> Enum.filter(fn {{from, to}, _} ->
-      (MapSet.member?(chunk_set, from) and not MapSet.member?(chunk_set, to)) or
-      (MapSet.member?(chunk_set, to) and not MapSet.member?(chunk_set, from))
-    end)
-    |> Enum.flat_map(fn {{from, to}, _} ->
-      [from, to]
-    end)
-    |> Enum.filter(&MapSet.member?(chunk_set, &1))
-    |> Enum.uniq()
   end
 end

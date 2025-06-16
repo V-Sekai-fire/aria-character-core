@@ -3,70 +3,97 @@
 
 defmodule AriaEngine.Timeline.Interval do
   @moduledoc """
-  Represents a temporal interval with start and end points using DateTime with float precision.
+  Represents a temporal interval with start and end points using DateTime with timezone information.
 
   Intervals are the fundamental building blocks of the Timeline system,
   representing periods of time during which events, actions, or states occur.
   
-  Time is stored as DateTime structures with float precision for subsecond accuracy.
+  Only DateTime structs with explicit timezone information are supported
+  to ensure temporal consistency and proper timezone handling across the system.
+  This enforces clarity about when events occur in global context.
+  
+  ## Timezone Enforcement
+  
+  - All temporal data uses DateTime.t() with timezone information
+  - NaiveDateTime is not supported to prevent ambiguity
+  - Integer timestamps are not supported to enforce explicit timezone handling
+  - All time comparisons account for timezone differences automatically
   """
 
-  alias AriaEngine.Timeline.{AgentEntity, TimeConverter}
+  alias AriaEngine.Timeline.AgentEntity
 
+  @type id :: String.t()
   @type t :: %__MODULE__{
-          name: atom(),
+          id: id(),
           start_time: DateTime.t(),
           end_time: DateTime.t(),
-          label: String.t() | nil,
           agent: AgentEntity.agent() | nil,
           entity: AgentEntity.entity() | nil,
           metadata: map()
         }
 
-  defstruct [:name, :start_time, :end_time, :label, :agent, :entity, metadata: %{}]
+  defstruct id: nil,
+            start_time: nil,
+            end_time: nil,
+            agent: nil,
+            entity: nil,
+            metadata: %{}
 
   @doc """
-  Creates a new interval with millisecond precision.
-
-  ## Parameters
-
-  - `name`: Unique atom identifier for the interval
-  - `start_ms`: Start time in milliseconds (integer)
-  - `end_ms`: End time in milliseconds (integer)
-  - `opts`: Optional parameters including:
-    - `:label` - Human-readable label for the interval
-    - `:agent` - Associated agent (if any)
-    - `:entity` - Associated entity (if any)
-    - `:metadata` - Additional metadata
+  Creates a new interval with DateTime values.
+  
+  Both start_time and end_time must be DateTime structs with timezone information.
+  This ensures all temporal data has explicit timezone context.
 
   ## Examples
 
-      iex> interval = AriaEngine.Timeline.Interval.new(
-      ...>   :action1,
-      ...>   0,
-      ...>   5500,
-      ...>   label: "Morning Meeting"
-      ...> )
-      iex> interval.name
-      :action1
-      iex> interval.start_ms
-      0
-      iex> interval.end_ms
-      5500
+      iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
+      iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], "Etc/UTC")
+      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
+      iex> interval.start_time
+      ~U[2023-01-01 00:00:00Z]
 
   """
-  @spec new(atom(), integer(), integer(), keyword()) :: t()
-  def new(name, start_ms, end_ms, opts \\ []) when is_atom(name) and is_integer(start_ms) and is_integer(end_ms) do
-    # Validate that start_ms is before end_ms
-    if start_ms >= end_ms do
-      raise ArgumentError, "start_ms (#{start_ms}) must be before end_ms (#{end_ms})"
-    end
-
+  @spec new(DateTime.t(), DateTime.t()) :: t()
+  def new(%DateTime{} = start_time, %DateTime{} = end_time) do
+    validate_time_ordering!(start_time, end_time)
+    
     %__MODULE__{
-      name: name,
-      start_ms: start_ms,
-      end_ms: end_ms,
-      label: Keyword.get(opts, :label),
+      id: generate_id(),
+      start_time: start_time,
+      end_time: end_time,
+      metadata: %{}
+    }
+  end
+
+  @doc """
+  Creates a new interval with DateTime values and options.
+  
+  Both start_time and end_time must be DateTime structs with timezone information.
+
+  ## Options
+
+  - `:agent` - The agent associated with this interval
+  - `:entity` - The entity associated with this interval  
+  - `:metadata` - Additional metadata for the interval
+
+  ## Examples
+
+      iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
+      iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], "Etc/UTC")
+      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt, metadata: %{type: :action})
+      iex> interval.metadata
+      %{type: :action}
+
+  """
+  @spec new(DateTime.t(), DateTime.t(), keyword()) :: t()
+  def new(%DateTime{} = start_time, %DateTime{} = end_time, opts) when is_list(opts) do
+    validate_time_ordering!(start_time, end_time)
+    
+    %__MODULE__{
+      id: generate_id(),
+      start_time: start_time,
+      end_time: end_time,
       agent: Keyword.get(opts, :agent),
       entity: Keyword.get(opts, :entity),
       metadata: Keyword.get(opts, :metadata, %{})
@@ -78,14 +105,16 @@ defmodule AriaEngine.Timeline.Interval do
 
   ## Examples
 
-      iex> interval = AriaEngine.Timeline.Interval.new(:action1, 1000, 6500)
+      iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
+      iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], "Etc/UTC")
+      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
       iex> AriaEngine.Timeline.Interval.duration_ms(interval)
-      5500
+      330000
 
   """
   @spec duration_ms(t()) :: integer()
-  def duration_ms(%__MODULE__{start_ms: start_ms, end_ms: end_ms}) do
-    end_ms - start_ms
+  def duration_ms(%__MODULE__{start_time: start_time, end_time: end_time}) do
+    DateTime.diff(end_time, start_time, :millisecond)
   end
 
   @doc """
@@ -93,62 +122,37 @@ defmodule AriaEngine.Timeline.Interval do
 
   ## Examples
 
-      iex> interval = AriaEngine.Timeline.Interval.new(:action1, 1000, 6500)
+      iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
+      iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], "Etc/UTC")
+      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
       iex> AriaEngine.Timeline.Interval.duration_seconds(interval)
-      5.5
+      330.0
 
   """
   @spec duration_seconds(t()) :: float()
-  def duration_seconds(interval) do
-    TimeConverter.ms_to_seconds(duration_ms(interval))
+  def duration_seconds(%__MODULE__{start_time: start_time, end_time: end_time}) do
+    DateTime.diff(end_time, start_time, :microsecond) / 1_000_000.0
   end
 
   @doc """
-  Gets the start time in seconds.
+  Checks if a DateTime point is contained within the interval.
+
+  Only DateTime values are supported for time points to maintain timezone consistency.
 
   ## Examples
 
-      iex> interval = AriaEngine.Timeline.Interval.new(:action1, 1500, 6500)
-      iex> AriaEngine.Timeline.Interval.start_seconds(interval)
-      1.5
-
-  """
-  @spec start_seconds(t()) :: float()
-  def start_seconds(%__MODULE__{start_ms: start_ms}) do
-    TimeConverter.ms_to_seconds(start_ms)
-  end
-
-  @doc """
-  Gets the end time in seconds.
-
-  ## Examples
-
-      iex> interval = AriaEngine.Timeline.Interval.new(:action1, 1500, 6500)
-      iex> AriaEngine.Timeline.Interval.end_seconds(interval)
-      6.5
-
-  """
-  @spec end_seconds(t()) :: float()
-  def end_seconds(%__MODULE__{end_ms: end_ms}) do
-    TimeConverter.ms_to_seconds(end_ms)
-  end
-
-  @doc """
-  Checks if a time point is contained within the interval.
-
-  ## Examples
-
-      iex> interval = AriaEngine.Timeline.Interval.new(
-      ...>   ~N[2025-01-01 10:00:00],
-      ...>   ~N[2025-01-01 12:00:00]
-      ...> )
-      iex> AriaEngine.Timeline.Interval.contains?(interval, ~N[2025-01-01 11:00:00])
+      iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
+      iex> check_time = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      iex> AriaEngine.Timeline.Interval.contains?(interval, check_time)
       true
 
   """
-  @spec contains?(t(), DateTime.t() | NaiveDateTime.t() | integer()) :: boolean()
-  def contains?(%__MODULE__{start_time: start_time, end_time: end_time}, time_point) do
-    compare_time(start_time, time_point) <= 0 and compare_time(time_point, end_time) < 0
+  @spec contains?(t(), DateTime.t()) :: boolean()
+  def contains?(%__MODULE__{start_time: start_time, end_time: end_time}, %DateTime{} = time_point) do
+    DateTime.compare(start_time, time_point) in [:lt, :eq] and 
+    DateTime.compare(time_point, end_time) == :lt
   end
 
   @doc """
@@ -157,11 +161,9 @@ defmodule AriaEngine.Timeline.Interval do
   ## Examples
 
       iex> agent = %{type: :agent, id: "agent1", name: "Alice"}
-      iex> interval = AriaEngine.Timeline.Interval.new(
-      ...>   ~N[2025-01-01 10:00:00],
-      ...>   ~N[2025-01-01 12:00:00],
-      ...>   agent: agent
-      ...> )
+      iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt, agent: agent)
       iex> AriaEngine.Timeline.Interval.agent?(interval)
       true
 
@@ -175,11 +177,9 @@ defmodule AriaEngine.Timeline.Interval do
   ## Examples
 
       iex> entity = %{type: :entity, id: "entity1", name: "Conference Room"}
-      iex> interval = AriaEngine.Timeline.Interval.new(
-      ...>   ~N[2025-01-01 10:00:00],
-      ...>   ~N[2025-01-01 12:00:00],
-      ...>   entity: entity
-      ...> )
+      iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt, entity: entity)
       iex> AriaEngine.Timeline.Interval.entity?(interval)
       true
 
@@ -187,54 +187,23 @@ defmodule AriaEngine.Timeline.Interval do
   @spec entity?(t()) :: boolean()
   def entity?(%__MODULE__{entity: entity}), do: not is_nil(entity)
 
+  @doc """
+  Alias for duration_ms/1 for backward compatibility.
+  """
+  @spec duration(t()) :: integer()
+  def duration(interval), do: duration_ms(interval)
+
   # Private helper functions
+  
+  defp validate_time_ordering!(start_time, end_time) do
+    case DateTime.compare(start_time, end_time) do
+      :gt -> raise ArgumentError, "start_time must be before end_time"
+      :eq -> raise ArgumentError, "start_time must be before end_time"
+      :lt -> :ok
+    end
+  end
 
   defp generate_id do
-    # Generate a unique identifier for the interval
-    :crypto.strong_rand_bytes(16) |> Base.encode64(padding: false)
+    :crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)
   end
-
-  defp valid_time_order?(start_time, end_time) do
-    compare_time(start_time, end_time) < 0
-  end
-
-  defp calculate_duration(start_time, end_time) do
-    case {start_time, end_time} do
-      {%DateTime{} = start_dt, %DateTime{} = end_dt} ->
-        DateTime.diff(end_dt, start_dt, :second)
-
-      {%NaiveDateTime{} = start_ndt, %NaiveDateTime{} = end_ndt} ->
-        NaiveDateTime.diff(end_ndt, start_ndt, :second)
-
-      {start_int, end_int} when is_integer(start_int) and is_integer(end_int) ->
-        end_int - start_int
-
-      _ ->
-        raise ArgumentError, "Incompatible time types for duration calculation"
-    end
-  end
-
-  defp compare_time(time1, time2) do
-    case {time1, time2} do
-      {%DateTime{} = dt1, %DateTime{} = dt2} ->
-        DateTime.compare(dt1, dt2) |> comparison_to_integer()
-
-      {%NaiveDateTime{} = ndt1, %NaiveDateTime{} = ndt2} ->
-        NaiveDateTime.compare(ndt1, ndt2) |> comparison_to_integer()
-
-      {int1, int2} when is_integer(int1) and is_integer(int2) ->
-        cond do
-          int1 < int2 -> -1
-          int1 > int2 -> 1
-          true -> 0
-        end
-
-      _ ->
-        raise ArgumentError, "Incompatible time types for comparison"
-    end
-  end
-
-  defp comparison_to_integer(:lt), do: -1
-  defp comparison_to_integer(:eq), do: 0
-  defp comparison_to_integer(:gt), do: 1
 end

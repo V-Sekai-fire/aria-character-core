@@ -106,17 +106,4 @@ defmodule AriaEngine.FlowAdapter do
     {:ok, data}
   end
 
-  @doc """
-  Starts a new Flow process.
-  """
-  def start_link(opts) do
-    AriaEngine.Flow.start_link(opts)
-  end
-
-  @doc """
-  Returns the child spec for the Flow.
-  """
-  def child_spec(opts) do
-    AriaEngine.Flow.child_spec(opts)
-  end
 end

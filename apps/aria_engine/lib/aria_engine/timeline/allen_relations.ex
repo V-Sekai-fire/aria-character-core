@@ -3,49 +3,46 @@
 
 defmodule AriaEngine.Timeline.IntervalRelations do
   @moduledoc """
-  Implementation of Allen's Interval Algebra with improved usability.
+  Implementation of Allen's Interval Algebra for temporal reasoning.
 
-  This module provides all 13 Allen interval relations with enhanced usability
-  features as specified in ADR-046:
-  - Fluent API for chaining operations
-  - Internationalization (i18n) support for relation descriptions
-  - Semantic sugar for common operations
-  - Clear, readable function names
+  This module provides all 13 Allen interval relations for comparing temporal intervals.
+  Allen's Interval Algebra is a calculus for temporal reasoning that enables qualitative
+  reasoning about time intervals and their relationships.
 
   ## Allen's 13 Interval Relations
 
   Using symbolic notation that's language-agnostic:
 
-  1. **lt** (X < Y): X ends before Y starts (before)
-  2. **gt** (X > Y): X starts after Y ends (after)
-  3. **m** (X m Y): X ends exactly when Y starts (meets)
-  4. **mi** (X mi Y): X starts exactly when Y ends (met-by)
-  5. **o** (X o Y): X starts before Y, ends during Y (overlaps)
-  6. **oi** (X oi Y): X starts during Y, ends after Y (overlapped-by)
-  7. **s** (X s Y): X and Y start together, X ends before Y (starts)
-  8. **si** (X si Y): X and Y start together, X ends after Y (started-by)
-  9. **d** (X d Y): X starts after Y starts, X ends before Y ends (during)
-  10. **di** (X di Y): X starts before Y starts, X ends after Y ends (contains)
-  11. **f** (X f Y): X starts after Y, X and Y end together (finishes)
-  12. **fi** (X fi Y): X starts before Y, X and Y end together (finished-by)
-  13. **eq** (X = Y): X and Y have the same start and end times (equals)
+  1. **before** (X < Y): X ends before Y starts
+  2. **after** (X > Y): X starts after Y ends
+  3. **meets** (X m Y): X ends exactly when Y starts
+  4. **met_by** (X mi Y): X starts exactly when Y ends
+  5. **overlaps** (X o Y): X starts before Y, ends during Y
+  6. **overlapped_by** (X oi Y): X starts during Y, ends after Y
+  7. **starts** (X s Y): X and Y start together, X ends before Y
+  8. **started_by** (X si Y): X and Y start together, X ends after Y
+  9. **during** (X d Y): X starts after Y starts, X ends before Y ends
+  10. **contains** (X di Y): X starts before Y starts, X ends after Y ends
+  11. **finishes** (X f Y): X starts after Y, X and Y end together
+  12. **finished_by** (X fi Y): X starts before Y, X and Y end together
+  13. **equals** (X = Y): X and Y have the same start and end times
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 13:00:00], ~N[2025-01-01 15:00:00])
-      iex> AllenRelations.before?(i1, i2)
+      iex> IntervalRelations.before?(i1, i2)
       true
-      iex> AllenRelations.describe_relation(i1, i2, :en)
+      iex> IntervalRelations.describe_relation(i1, i2, :en)
       "before"
 
-  ## Fluent API Example
+  Using the pipe operator for functional composition:
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 11:00:00], ~N[2025-01-01 13:00:00])
-      iex> AllenRelations.fluent(i1) |> AllenRelations.overlaps?(i2)
+      iex> IntervalRelations.relation(i1, i2) |> IntervalRelations.valid_relation?()
       true
 
   ## References
@@ -59,25 +56,8 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   @type locale :: atom()  # :en, :es, :fr, :de, etc.
   @type relation :: 
-    :lt | :gt | :m | :mi | :o | :oi | :s | :si | :d | :di | :f | :fi | :eq
-
-  # Fluent API wrapper
-  defstruct [:interval]
-
-  @doc """
-  Creates a fluent API wrapper for an interval.
-
-  ## Examples
-
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
-      iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
-      iex> fluent = AllenRelations.fluent(i1)
-      iex> fluent.interval == i1
-      true
-
-  """
-  @spec fluent(Interval.t()) :: %__MODULE__{}
-  def fluent(interval), do: %__MODULE__{interval: interval}
+    :before | :after | :meets | :met_by | :overlaps | :overlapped_by |
+    :starts | :started_by | :during | :contains | :finishes | :finished_by | :equals
 
   # Allen's 13 Interval Relations Implementation
 
@@ -89,10 +69,10 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 13:00:00], ~N[2025-01-01 15:00:00])
-      iex> AllenRelations.before?(i1, i2)
+      iex> IntervalRelations.before?(i1, i2)
       true
 
   """
@@ -118,10 +98,10 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 12:00:00], ~N[2025-01-01 14:00:00])
-      iex> AllenRelations.meets?(i1, i2)
+      iex> IntervalRelations.meets?(i1, i2)
       true
 
   """
@@ -147,10 +127,10 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 13:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 12:00:00], ~N[2025-01-01 15:00:00])
-      iex> AllenRelations.overlaps?(i1, i2)
+      iex> IntervalRelations.overlaps?(i1, i2)
       true
 
   """
@@ -181,10 +161,10 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 14:00:00])
-      iex> AllenRelations.starts?(i1, i2)
+      iex> IntervalRelations.starts?(i1, i2)
       true
 
   """
@@ -213,10 +193,10 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 11:00:00], ~N[2025-01-01 13:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 14:00:00])
-      iex> AllenRelations.during?(i1, i2)
+      iex> IntervalRelations.during?(i1, i2)
       true
 
   """
@@ -245,10 +225,10 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 12:00:00], ~N[2025-01-01 14:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 14:00:00])
-      iex> AllenRelations.finishes?(i1, i2)
+      iex> IntervalRelations.finishes?(i1, i2)
       true
 
   """
@@ -277,10 +257,10 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
-      iex> AllenRelations.equals?(i1, i2)
+      iex> IntervalRelations.equals?(i1, i2)
       true
 
   """
@@ -299,10 +279,10 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 13:00:00], ~N[2025-01-01 15:00:00])
-      iex> AllenRelations.relation(i1, i2)
+      iex> IntervalRelations.relation(i1, i2)
       :before
 
   """
@@ -333,12 +313,12 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, AllenRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 13:00:00], ~N[2025-01-01 15:00:00])
-      iex> AllenRelations.describe_relation(i1, i2, :en)
+      iex> IntervalRelations.describe_relation(i1, i2, :en)
       "before"
-      iex> AllenRelations.describe_relation(i1, i2, :es)
+      iex> IntervalRelations.describe_relation(i1, i2, :es)
       "antes de"
 
   """
@@ -366,22 +346,6 @@ defmodule AriaEngine.Timeline.IntervalRelations do
       :starts, :started_by, :during, :contains, :finishes, :finished_by, :equals
     ]
   end
-
-  # Fluent API methods - allow chaining
-  
-  def before?(%__MODULE__{interval: interval1}, interval2), do: before?(interval1, interval2)
-  def after?(%__MODULE__{interval: interval1}, interval2), do: after?(interval1, interval2)
-  def meets?(%__MODULE__{interval: interval1}, interval2), do: meets?(interval1, interval2)
-  def met_by?(%__MODULE__{interval: interval1}, interval2), do: met_by?(interval1, interval2)
-  def overlaps?(%__MODULE__{interval: interval1}, interval2), do: overlaps?(interval1, interval2)
-  def overlapped_by?(%__MODULE__{interval: interval1}, interval2), do: overlapped_by?(interval1, interval2)
-  def starts?(%__MODULE__{interval: interval1}, interval2), do: starts?(interval1, interval2)
-  def started_by?(%__MODULE__{interval: interval1}, interval2), do: started_by?(interval1, interval2)
-  def during?(%__MODULE__{interval: interval1}, interval2), do: during?(interval1, interval2)
-  def contains?(%__MODULE__{interval: interval1}, interval2), do: contains?(interval1, interval2)
-  def finishes?(%__MODULE__{interval: interval1}, interval2), do: finishes?(interval1, interval2)
-  def finished_by?(%__MODULE__{interval: interval1}, interval2), do: finished_by?(interval1, interval2)
-  def equals?(%__MODULE__{interval: interval1}, interval2), do: equals?(interval1, interval2)
 
   # Private helper functions
 

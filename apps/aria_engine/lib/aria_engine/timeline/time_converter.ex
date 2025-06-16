@@ -221,4 +221,36 @@ defmodule AriaEngine.Timeline.TimeConverter do
   rescue
     ArgumentError -> {:error, "Expected numbers, got: start=#{inspect(start_input)}, end=#{inspect(end_input)}"}
   end
+
+  @doc """
+  Converts milliseconds to seconds.
+
+  ## Examples
+
+      iex> AriaEngine.Timeline.TimeConverter.ms_to_seconds(1000)
+      1.0
+      iex> AriaEngine.Timeline.TimeConverter.ms_to_seconds(1500)
+      1.5
+
+  """
+  @spec ms_to_seconds(number()) :: float()
+  def ms_to_seconds(milliseconds) when is_number(milliseconds) do
+    milliseconds / 1000.0
+  end
+
+  @doc """
+  Converts seconds to milliseconds.
+
+  ## Examples
+
+      iex> AriaEngine.Timeline.TimeConverter.seconds_to_ms(1.0)
+      1000
+      iex> AriaEngine.Timeline.TimeConverter.seconds_to_ms(1.5)
+      1500
+
+  """
+  @spec seconds_to_ms(number()) :: integer()
+  def seconds_to_ms(seconds) when is_number(seconds) do
+    round(seconds * 1000)
+  end
 end
