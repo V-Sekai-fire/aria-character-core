@@ -50,7 +50,7 @@ defmodule AriaEngine.BacktrackingTest do
       state = TestDomains.create_backtracking_state()
       goals = [{"put_it", []}, {"need0", []}]
 
-      case AriaEngine.plan(domain, state, goals) do
+      case AriaEngine.plan(domain, state, goals, verbose: 3) do
         {:ok, plan} ->
           # Should use m0 method: putv(0), getv(0), then getv(0) for need0
           expected = [{"putv", [0]}, {"getv", [0]}, {"getv", [0]}]
@@ -66,7 +66,7 @@ defmodule AriaEngine.BacktrackingTest do
       state = TestDomains.create_backtracking_state()
       goals = [{"put_it", []}, {"need1", []}]
 
-      case AriaEngine.plan(domain, state, goals) do
+      case AriaEngine.plan(domain, state, goals, verbose: 3) do
         {:ok, plan} ->
           # Should use m1 method: putv(1), getv(1), then getv(1) for need1
           expected = [{"putv", [1]}, {"getv", [1]}, {"getv", [1]}]
@@ -100,7 +100,7 @@ defmodule AriaEngine.BacktrackingTest do
       state = TestDomains.create_backtracking_state()
       goals = [{"put_it", []}, {"need10", []}]
 
-      case AriaEngine.plan(domain, state, goals) do
+      case AriaEngine.plan(domain, state, goals, verbose: 3) do
         {:ok, plan} ->
           # Should try need1 first, backtrack when it fails, then try need0
           expected = [{"putv", [0]}, {"getv", [0]}, {"getv", [0]}]

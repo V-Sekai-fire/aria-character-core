@@ -62,11 +62,31 @@ defmodule AriaEngine.Domain do
   Actions are functions that take a state and arguments, returning either:
   - A new state (success)
   - false (failure)
+
+  When an action is added, it also creates a corresponding task method
+  so the action can be used directly in task decompositions.
   """
   @spec add_action(t(), action_name(), action_fn()) :: t()
-  def add_action(%__MODULE__{actions: actions} = domain, name, action_fn)
+  def add_action(%__MODULE__{actions: actions, task_methods: methods} = domain, name, action_fn)
       when is_atom(name) and is_function(action_fn, 2) do
-    %{domain | actions: Map.put(actions, name, action_fn)}
+    
+    # Add the action to the actions map
+    updated_actions = Map.put(actions, name, action_fn)
+    
+    # Create a task method that just returns the action as a primitive task
+    # This allows the action to be used directly in HTN task decompositions
+    task_name = Atom.to_string(name)
+    primitive_method = fn _state, args -> [{name, args}] end
+    
+    # Add the primitive method to task methods
+    current_methods = Map.get(methods, task_name, [])
+    updated_methods = [primitive_method | current_methods]  # Put primitive method first
+    updated_task_methods = Map.put(methods, task_name, updated_methods)
+    
+    %{domain | 
+      actions: updated_actions, 
+      task_methods: updated_task_methods
+    }
   end
 
   @doc """
