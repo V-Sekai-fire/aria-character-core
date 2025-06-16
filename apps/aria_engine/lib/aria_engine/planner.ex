@@ -694,7 +694,7 @@ defmodule AriaEngine.Planner do
                   {:ok, subtasks} ->
                     # Decomposed into subtasks
                     new_tree =
-                      create_subtask_nodes(updated_tree, node_id, subtasks, method)
+                      create_subtask_nodes(solution_tree, node_id, subtasks, method)
 
                     {:continue, new_tree, path}
                     
@@ -750,8 +750,12 @@ defmodule AriaEngine.Planner do
                   # Apply method to get subtasks
                   case apply_method_to_goal(method_fn, predicate, subject, object, verbose) do
                     {:ok, subtasks} ->
-                      create_subtask_nodes(solution_tree, node_id, subtasks, method)
-                      
+                      # Decomposed into subtasks
+                      new_tree =
+                        create_subtask_nodes(solution_tree, node_id, subtasks, method_name)
+
+                      {:continue, new_tree, path}
+
                     {:error, reason} ->
                       # Blacklist this method and try next
                       blacklisted_node = %{node | blacklisted_methods: [method_name | node.blacklisted_methods]}
