@@ -10,12 +10,12 @@ This ADR defines the complete implementation tasks required for a full temporal 
 
 **Existing AriaEngine Foundation:**
 
-- `AriaEngine.Planner`: IPyHOP-style HTN planner with solution trees
-- `AriaEngine.State`: RDF-triple based state with JSON-LD support (chibifire.com namespace)
-- `AriaEngine.Domain`: Planning domain with actions, task methods, goal methods
-- `AriaEngine.Plan`: Solution tree management
-- `AriaEngine.Temporal`: Basic temporal state (placeholder implementation)
-- `AriaEngine.Flow.Worker`: Flow integration infrastructure (placeholder)
+- `AriaEngine.Planner`: IPyHOP-style HTN planner with solution trees ([planner.ex](../apps/aria_engine/lib/aria_engine/planner.ex))
+- `AriaEngine.State`: RDF-triple based state with JSON-LD support, chibifire.com namespace ([state.ex](../apps/aria_engine/lib/aria_engine/state.ex))
+- `AriaEngine.Domain`: Planning domain with actions, task methods, goal methods ([domain.ex](../apps/aria_engine/lib/aria_engine/domain.ex))
+- `AriaEngine.Plan`: Solution tree management with Run-Lazy-Refineahead ([plan.ex](../apps/aria_engine/lib/aria_engine/plan.ex))
+- `AriaEngine.Temporal`: Basic temporal state (placeholder implementation) ([temporal.ex](../apps/aria_engine/lib/aria_engine/temporal.ex))
+- `AriaEngine.Flow.Worker`: Flow integration infrastructure (placeholder) ([flow/worker.ex](../apps/aria_engine/lib/aria_engine/flow/worker.ex))
 
 ## Decision
 
@@ -29,22 +29,22 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 **Dependency Level 0: Core Temporal Infrastructure**
 
-- [x] **Task 001**: Basic JSON-LD state infrastructure with chibifire.com namespace (existing in `AriaEngine.State`)
-- [x] **Task 002**: RDF-triple state management system (existing in `AriaEngine.State`)
-- [x] **Task 006**: Core HTN planner infrastructure (existing in `AriaEngine.Planner`)
-- [x] **Task 007**: Solution tree management (existing in `AriaEngine.Plan`)
-- [x] **Task 085**: Basic temporal planning test framework (existing test file)
+- [x] **Task 001**: Basic JSON-LD state infrastructure with chibifire.com namespace (existing in [AriaEngine.State](../apps/aria_engine/lib/aria_engine/state.ex))
+- [x] **Task 002**: RDF-triple state management system (existing in [AriaEngine.State](../apps/aria_engine/lib/aria_engine/state.ex))
+- [x] **Task 006**: Core HTN planner infrastructure (existing in [AriaEngine.Planner](../apps/aria_engine/lib/aria_engine/planner.ex))
+- [x] **Task 007**: Solution tree management (existing in [AriaEngine.Plan](../apps/aria_engine/lib/aria_engine/plan.ex))
+- [x] **Task 085**: Basic temporal planning test framework (existing in [temporal_planning_test.exs](../apps/aria_engine/test/temporal_planning_test.exs))
 
 **Dependency Level 1: Basic Temporal Operations**
 
 - [ ] **Task 003**: Extend `AriaEngine.Temporal` with time-indexed state operations
   - *Foundation for all temporal reasoning*
-  - *Implementation: Use temporal state structure from [ADR-042](042-temporal-planner-cold-boot-implementation-order.md#temporal-state-infrastructure)*
+  - *Current: placeholder implementation in [temporal.ex](../apps/aria_engine/lib/aria_engine/temporal.ex)*
   - *Testable: Time-based state queries*
   
 - [ ] **Task 010**: Implement `AriaEngine.Timeline` module with interval-based storage
   - *Depends on: Task 003 (temporal state operations)*
-  - *Implementation: Use timeline structure from [ADR-042](042-temporal-planner-cold-boot-implementation-order.md#timeline-infrastructure)*
+  - *New module needed for timeline management*
   - *Testable: Timeline creation, interval storage*
 
 - [ ] **Task 086**: Expand test suite to cover temporal infrastructure
@@ -71,23 +71,24 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 - [ ] **Task 015**: Implement `AriaEngine.STN` module with Floyd-Warshall algorithm
   - *Depends on: Task 011 (timeline validation)*
-  - *Implementation: Use PC-2 algorithm pseudo code from [ADR-043](043-total-order-to-partial-order-transformation.md#implementation-in-stn-solver)*
+  - *New module for Simple Temporal Networks*
   - *Testable: Basic STN solving with simple constraints*
 
 - [ ] **Task 016**: Add temporal constraint representation and parsing
   - *Depends on: Task 015 (STN module)*
-  - *Implementation: Use constraint types from [ADR-040](040-temporal-constraint-solver-selection.md#technical-approach)*
+  - *Extension to constraint system*
   - *Testable: Constraint parsing and representation*
 
 - [ ] **Task 017**: Implement consistency checking and conflict detection
   - *Depends on: Task 016 (constraint representation)*
-  - *Implementation: Use integrated solver approach from [ADR-040](040-temporal-constraint-solver-selection.md#integration-architecture)*
+  - *Core constraint solving functionality*
   - *Testable: Consistency checking algorithms*
 
 **Dependency Level 4: Constraint Integration**
 
 - [ ] **Task 020**: Extend existing `AriaEngine.Domain` with temporal constraints
   - *Depends on: Task 017 (consistency checking)*
+  - *Extends [domain.ex](../apps/aria_engine/lib/aria_engine/domain.ex)*
   - *Testable: Domain actions with temporal constraints*
 
 - [ ] **Task 021**: Add temporal constraint validation to existing actions
@@ -96,6 +97,7 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 - [ ] **Task 008**: Extend HTN planner with temporal reasoning capabilities
   - *Depends on: Tasks 020, 021*
+  - *Extends [planner.ex](../apps/aria_engine/lib/aria_engine/planner.ex)*
   - *Testable: HTN planning with basic temporal constraints*
 
 ### Phase 3: Temporal Planning Integration (Minimal Viable Solver)
@@ -112,7 +114,7 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 - [ ] **Task 005**: Implement temporal history reconstruction from existing JSON-LD state
   - *Depends on: Task 032 (temporal HTN decomposition)*
-  - *Implementation: Use solution network structure from [ADR-042](042-temporal-planner-cold-boot-implementation-order.md#json-ld-solution-network)*
+  - *Extends [state.ex](../apps/aria_engine/lib/aria_engine/state.ex) JSON-LD capabilities*
   - *Testable: History reconstruction accuracy*
 
 **Dependency Level 6: Basic Temporal Validation**
@@ -133,7 +135,7 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 **Dependency Level 7: Backtracking Extension**
 
-- [x] **Task 040**: Basic backtracking infrastructure (existing in HTN planner)
+- [x] **Task 040**: Basic backtracking infrastructure (existing in [AriaEngine.Plan](../apps/aria_engine/lib/aria_engine/plan.ex))
 
 - [ ] **Task 041**: Extend existing backtracking with temporal failure analysis
   - *Depends on: Task 080 (Maya scenario)*
@@ -163,7 +165,7 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 - [ ] **Task 018**: Add constraint propagation and tightening
   - *Depends on: Task 046 (constraint relaxation)*
-  - *Implementation: Use propagation algorithms from [ADR-041](041-temporal-solver-tech-stack-requirements.md#constraint-propagation)*
+  - *Performance optimization for constraint solving*
   - *Testable: Propagation algorithm efficiency*
 
 - [ ] **Task 019**: Support incremental constraint updates
@@ -194,7 +196,7 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 - [ ] **Task 013**: Implement timeline operations (merge, split, transform)
   - *Depends on: Task 012 (value interpolation)*
-  - *Implementation: Use timeline structure from [ADR-037](037-timeline-based-vs-durative-actions.md#implementation-structure)*
+  - *Advanced timeline manipulation*
   - *Testable: Timeline transformation operations*
 
 - [ ] **Task 009**: Add temporal constraints to existing domain actions
