@@ -175,7 +175,7 @@ defmodule AriaEngine.Planner do
     case validate_solution_with_stn_bridges(solution_tree, domain, current_time || 0) do
       :ok ->
         # Use the existing Plan module for execution
-        Plan.run_lazy_refineahead(domain, initial_state, solution_tree, temporal_opts)
+        AriaEngine.Plan.run_lazy_refineahead(domain, initial_state, solution_tree, temporal_opts)
       
       {:error, reason} ->
         {:error, "Cannot execute temporally inconsistent plan: #{reason}"}
