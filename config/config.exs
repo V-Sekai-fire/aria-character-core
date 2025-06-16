@@ -39,7 +39,6 @@ config :hammer,
 config :aria_engine,
   domain_providers: [
     AriaEngine.BasicActionsDomainProvider,
-    AriaTimestrike.DomainProvider,
     AriaFileManagement.DomainProvider,
     AriaWorkflowSystem.DomainProvider
     # Additional providers can be added when their apps are included

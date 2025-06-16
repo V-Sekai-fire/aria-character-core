@@ -7,7 +7,6 @@ import Config
 config :aria_engine,
   domain_providers: [
     AriaEngine.BasicActionsDomainProvider,
-    AriaTimestrike.DomainProvider,
     AriaFileManagement.DomainProvider,
     AriaWorkflowSystem.DomainProvider
     # Add more providers as needed in development

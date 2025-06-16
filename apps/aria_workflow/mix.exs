@@ -42,7 +42,6 @@ defmodule AriaWorkflow.MixProject do
 
       # Domain apps
       {:aria_workflow_system, in_umbrella: true},
-      {:aria_timestrike, in_umbrella: true},
       {:aria_file_management, in_umbrella: true},
 
       # Character shaping for SOP assistance
