@@ -45,19 +45,27 @@ defmodule AriaEngine.Planner do
   - `initial_state`: Starting state for planning
   - `goals`: List of goals to achieve
   - `opts`: Planning options (max_depth, verbose, etc.)
+  - `current_time`: Optional current time for temporal planning (defaults to nil)
 
   ## Returns
   - `{:ok, solution_tree}`: Complete solution tree
   - `{:error, reason}`: Planning failure
   """
-  @spec plan(domain_interface(), State.t(), [Plan.todo_item()], planner_opts()) :: planner_result()
-  def plan(domain_interface, %State{} = initial_state, goals, opts \\ []) do
+  @spec plan(domain_interface(), State.t(), [Plan.todo_item()], planner_opts(), integer() | nil) :: planner_result()
+  def plan(domain_interface, %State{} = initial_state, goals, opts \\ [], current_time \\ nil) do
     set_logger_level_from_opts(opts)
     # Convert domain interface to Domain struct for compatibility with Plan module
     domain = interface_to_domain(domain_interface)
 
+    # Add temporal information to planning options if provided
+    temporal_opts = if current_time do
+      Keyword.put(opts, :current_time, current_time)
+    else
+      opts
+    end
+
     # Use the existing Plan module for actual planning
-    Plan.plan(domain, initial_state, goals, opts)
+    Plan.plan(domain, initial_state, goals, temporal_opts)
   end
 
   @doc """
@@ -70,19 +78,27 @@ defmodule AriaEngine.Planner do
   - `initial_state`: Starting execution state
   - `solution_tree`: Solution tree from planning
   - `opts`: Execution options
+  - `current_time`: Optional current time for temporal execution (defaults to nil)
 
   ## Returns
   - `{:ok, final_state}`: Successful execution
   - `{:error, reason}`: Execution failure
   """
-  @spec execute(domain_interface(), State.t(), Plan.solution_tree(), planner_opts()) :: execution_result()
-  def execute(domain_interface, %State{} = initial_state, solution_tree, opts \\ []) do
+  @spec execute(domain_interface(), State.t(), Plan.solution_tree(), planner_opts(), integer() | nil) :: execution_result()
+  def execute(domain_interface, %State{} = initial_state, solution_tree, opts \\ [], current_time \\ nil) do
     set_logger_level_from_opts(opts)
     # Convert domain interface to Domain struct
     domain = interface_to_domain(domain_interface)
 
+    # Add temporal information to execution options if provided
+    temporal_opts = if current_time do
+      Keyword.put(opts, :current_time, current_time)
+    else
+      opts
+    end
+
     # Use the existing Plan module for execution
-    Plan.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
+    Plan.run_lazy_refineahead(domain, initial_state, solution_tree, temporal_opts)
   end
 
   @doc """
@@ -94,20 +110,28 @@ defmodule AriaEngine.Planner do
   - `solution_tree`: Existing solution tree with failure
   - `fail_node_id`: ID of the failed node
   - `opts`: Replanning options
+  - `current_time`: Optional current time for temporal replanning (defaults to nil)
 
   ## Returns
   - `{:ok, new_solution_tree}`: Successfully replanned
   - `{:error, reason}`: Replanning failure
   - `:failure`: No alternatives available
   """
-  @spec replan(domain_interface(), State.t(), Plan.solution_tree(), String.t(), planner_opts()) :: replan_result()
-  def replan(domain_interface, %State{} = current_state, solution_tree, fail_node_id, opts \\ []) do
+  @spec replan(domain_interface(), State.t(), Plan.solution_tree(), String.t(), planner_opts(), integer() | nil) :: replan_result()
+  def replan(domain_interface, %State{} = current_state, solution_tree, fail_node_id, opts \\ [], current_time \\ nil) do
     set_logger_level_from_opts(opts)
     # Convert domain interface to Domain struct
     domain = interface_to_domain(domain_interface)
 
+    # Add temporal information to replanning options if provided
+    temporal_opts = if current_time do
+      Keyword.put(opts, :current_time, current_time)
+    else
+      opts
+    end
+
     # Use the existing Plan module for replanning
-    Plan.replan(domain, current_state, solution_tree, fail_node_id, opts)
+    Plan.replan(domain, current_state, solution_tree, fail_node_id, temporal_opts)
   end
 
   @doc """
