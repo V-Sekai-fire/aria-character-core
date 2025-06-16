@@ -10,9 +10,14 @@ Active (Restarted with Comprehensive Evidence Base)
 
 ## Context
 
-After systematically reviewing all 87 ADRs from oldest to newest, this analysis provides a comprehensive, evidence-based assessment of scheduling completion uncertainty for the temporal planner and TimeStrike game implementation using the Rumsfeld knowledge matrix.
+After systematically reviewing all 87 ADRs from oldest to newest, this analysis provides a
+comprehensive, evidence-based assessment of scheduling completion uncertainty for the temporal
+planner and TimeStrike game implementation using the Rumsfeld knowledge matrix.
 
-The project began June 7, 2025, and has evolved through 2,044 commits over 10 days with exceptionally high development velocity (204.4 commits/day). Multiple architectural consolidations, implementation attempts, and strategic pivots provide rich historical data for uncertainty analysis.
+The project began June 7, 2025, and has evolved through 2,044 commits over 10 days with
+exceptionally high development velocity (204.4 commits/day). Multiple architectural
+consolidations, implementation attempts, and strategic pivots provide rich historical data for
+uncertainty analysis.
 
 **Key Historical Context:**
 
@@ -27,7 +32,9 @@ The project began June 7, 2025, and has evolved through 2,044 commits over 10 da
 
 ## Decision
 
-Apply the Rumsfeld matrix (Known Knowns, Known Unknowns, Unknown Unknowns) to categorize scheduling completion uncertainties based on systematic analysis of all 87 ADRs, empirical git commit data, and current codebase status.
+Apply the Rumsfeld matrix (Known Knowns, Known Unknowns, Unknown Unknowns) to categorize
+scheduling completion uncertainties based on systematic analysis of all 87 ADRs, empirical git
+commit data, and current codebase status.
 
 ## Systematic Evidence Base
 
@@ -59,13 +66,18 @@ Apply the Rumsfeld matrix (Known Knowns, Known Unknowns, Unknown Unknowns) to ca
 - ✅ Umbrella app structure with 11 working applications
 - ✅ Domain modeling capabilities through AriaEngine.Domain
 
-**Technical Implementation Status (Evidence from ADR-075, ADR-079)**
+**Technical Implementation Status (Evidence from ADR-075, ADR-079, ADR-082, Latest Progress)**
 
 - ✅ Timeline.Interval module: 100% complete, 25/25 tests passing
 - ✅ Basic temporal planning infrastructure: Foundation exists
-- ✅ Core STN algorithm: PC-2 implementation exists but has integration issues
-- ❌ Timeline-STN integration: 17/20 tests failing (critical blocker)
-- ❌ STN DateTime compatibility: 4/30 tests failing (architectural mismatch)
+- ✅ Core STN algorithm: PC-2 implementation debugged and validated (genuine cycle detection working)
+- ✅ STN Planner refactored: FlowAdapter-based processing replaces Task.async for better stability
+- ✅ STN Planner tests: All 22 tests passing (100% success rate)
+- ✅ PC-2 inconsistency detection: Algorithm confirmed working for 3+ point cycles (2-point limitation understood)
+- ✅ Temporal planner core functionality: Constraint updates, execution management, and parallel solving working
+- ❌ Timeline-STN integration: Critical integration issues identified (17/20 timeline tests failing)
+- ❌ Interval-STN data structure mismatch: interval.id returning string instead of struct with :id field
+- ❌ DateTime integration compatibility: Timezone and precision issues in enhanced interval tests (2/23 enhanced tests failing)
 
 **Development Velocity Patterns (Data-Driven from ADR-084)**
 
@@ -74,12 +86,37 @@ Apply the Rumsfeld matrix (Known Knowns, Known Unknowns, Unknown Unknowns) to ca
 - ✅ Integration fix efficiency: 30-40% of original implementation time
 - ✅ Systematic approach: Coherent feature implementation patterns
 
+**Development Artifacts and Documentation (Updated Status)**
+
+- ✅ ADR-082: Hierarchical STN temporal planner architecture documented
+- ✅ ADR-082 (Unified): STN unified temporal planner architecture finalized
+- ✅ PC-2 inconsistency debugging: Algorithm behavior validated and documented
+- ✅ FlowAdapter integration: Temporal planner modules refactored for demand-driven processing
+- ✅ Interval duration API: Design patterns documented in Timeline.Interval module
+- ✅ Technical debt cleanup: Unused imports removed, debug files cleaned up
+- ✅ Comprehensive commit history: All changes tracked with detailed commit messages
+- ✅ Markdown linting: All ADRs pass markdown lint requirements
+
 **Strategic Clarity from Historical Pivots**
 
 - ✅ Architecture consolidated from 33 fragmented ADRs to single unified design (ADR-034)
 - ✅ Interface evolution from Console TUI (ADR-030, superseded) → Web interface (ADR-068, ADR-069)
 - ✅ TimeStrike focus prioritized over tool integration (ADR-031)
 - ✅ Membrane workflow migration completed successfully (ADR-032)
+
+**Current Technical Achievements (Latest Session Progress)**
+
+- ✅ STN constraint API: Two-point cycle constraint replacement behavior understood and documented
+- ✅ Temporal planner debugging: PC-2 algorithm validated against canonical 3-point inconsistent cycles
+- ✅ Code quality improvements: Import cleanup, consistent error handling, professional commit practices
+- ✅ Test reliability: Flaky async tests replaced with synchronous FlowAdapter-based implementation
+- ✅ Documentation standards: All code changes properly documented with rationale and examples
+- ✅ STN Planner stability: Complete test suite (22/22) passing with FlowAdapter integration
+- ❌ **CRITICAL BLOCKER**: Timeline-STN data structure integration failure
+  - Issue: interval.id returns string, STN expects struct with :id field
+  - Impact: 17/20 timeline tests failing with KeyError on interval.id access
+  - Root cause: Mismatched data structure expectations between Timeline and STN modules
+- ❌ DateTime precision issues: Enhanced interval tests failing on timezone and large duration calculations
 
 - **Information Sharing Protocols**: Architecture defined but implementation complexity varies with agent count
 - **Synchronization Constraints**: Basic patterns understood, but performance scaling unknown
@@ -143,6 +180,14 @@ Apply the Rumsfeld matrix (Known Knowns, Known Unknowns, Unknown Unknowns) to ca
 
 ### Known Unknowns (Manageable Uncertainty)
 
+**Timeline-STN Integration Resolution (Timeline: 1-3 weeks, Confidence: 75%)**
+
+- Evidence: Current critical blocker with interval.id data structure mismatch
+- Risk: Fundamental API incompatibility between Timeline and STN modules
+- Impact: 17/20 timeline tests failing, blocking all temporal planning integration
+- Success Pattern: STN planner tests (22/22 passing) show core algorithm works when properly integrated
+- Mitigation Strategy: Data structure harmonization or adapter layer implementation
+
 **Multi-Agent Coordination Complexity (Timeline: 4-8 weeks, Confidence: 60%)**
 
 - Evidence: ADR-035 defines Maya's scenario but untested at scale
@@ -180,26 +225,26 @@ Apply the Rumsfeld matrix (Known Knowns, Known Unknowns, Unknown Unknowns) to ca
 
 ### Unknown Unknowns (High Uncertainty)
 
-**Temporal Planning Algorithm Limitations (Impact: Critical, Probability: 30%)**
+**Integration Cascade Dependencies (Impact: Critical, Probability: 40%)**
+
+- Risk: Timeline-STN integration fix may reveal deeper architectural mismatches
+- Evidence: Current data structure mismatch suggests broader API design issues
+- Historical Pattern: Previous integration fixes revealed additional compatibility problems
+- Blind Spot: Full dependency chain between Timeline, STN, and Temporal Planner not fully mapped
+
+**Temporal Planning Algorithm Limitations (Impact: Critical, Probability: 25%)**
 
 - Risk: Mathematical complexity may exceed current approach capabilities
 - Evidence Gap: No large-scale temporal planning validation performed
 - Historical Hint: Multiple architecture consolidations suggest complexity discoveries
-- Mitigation: TDD approach should reveal limitations early
+- Mitigation: TDD approach should reveal limitations early, STN core algorithm proven stable
 
-**STN Performance Scaling Issues (Impact: High, Probability: 40%)**
+**STN Performance Scaling Issues (Impact: High, Probability: 35%)**
 
 - Risk: O(n³) PC-2 algorithm may not scale to game complexity
 - Evidence Gap: No performance benchmarking completed (ADR-080 planned)
 - Historical Context: Database scaling led to Membrane migration
-- Blind Spot: Real-world STN constraint network sizes unknown
-
-**Integration Cascade Failures (Impact: High, Probability: 25%)**
-
-- Risk: Fixing one integration issue may cascade to other system failures
-- Evidence: Current 17/20 timeline test failures suggest interconnected issues
-- Historical Pattern: Architecture consolidations occurred due to complexity
-- Unknown Factor: Depth of interdependencies not fully mapped
+- Reduced Risk: Core algorithm validation completed, data structure issues more likely than algorithmic ones
 
 **Interface Implementation Complexity (Impact: Medium, Probability: 65%)**
 
@@ -219,35 +264,42 @@ Apply the Rumsfeld matrix (Known Knowns, Known Unknowns, Unknown Unknowns) to ca
 
 ### Conservative Estimate (90% Confidence)
 
-- **Minimal Viable Temporal Planner**: 16-20 weeks
-- **Complete TimeStrike Game**: 24-30 weeks  
-- **Production-Ready System**: 32-40 weeks
+- **Critical Integration Fix**: 2-4 weeks (Timeline-STN data structure harmonization)
+- **Minimal Viable Temporal Planner**: 18-24 weeks (including integration resolution)
+- **Complete TimeStrike Game**: 26-32 weeks  
+- **Production-Ready System**: 34-42 weeks
 
 ### Optimistic Estimate (50% Confidence)
 
-- **Minimal Viable Temporal Planner**: 8-12 weeks
-- **Complete TimeStrike Game**: 14-18 weeks
-- **Production-Ready System**: 20-24 weeks
+- **Critical Integration Fix**: 1-2 weeks (simple adapter layer solution)
+- **Minimal Viable Temporal Planner**: 10-14 weeks
+- **Complete TimeStrike Game**: 16-20 weeks
+- **Production-Ready System**: 22-26 weeks
 
 ### Risk-Adjusted Estimate (70% Confidence)
 
-- **Minimal Viable Temporal Planner**: 12-16 weeks
-- **Complete TimeStrike Game**: 18-24 weeks
-- **Production-Ready System**: 26-32 weeks
+- **Critical Integration Fix**: 1-3 weeks (data structure alignment)
+- **Minimal Viable Temporal Planner**: 14-18 weeks
+- **Complete TimeStrike Game**: 20-26 weeks
+- **Production-Ready System**: 28-34 weeks
 
 ## Risk Mitigation Strategies
 
-### High-Priority Risk Reduction
+### Critical Priority Risk Reduction
 
-1. **Implement Maya's Canonical Scenario** (ADR-035) within 4 weeks to validate backtracking approach
-2. **Performance Benchmark Suite** to identify scaling bottlenecks early
-3. **Weekly Architecture Review** to catch Unknown Unknowns before they compound
+1. **Resolve Timeline-STN Integration** (IMMEDIATE - within 1-2 weeks) to unblock temporal
+   planning development
+   - Harmonize interval.id data structure expectations between Timeline and STN modules
+   - Consider adapter layer if fundamental API differences require preservation
+   - Validate fix with comprehensive integration test suite
+2. **Implement Maya's Canonical Scenario** (ADR-035) within 6 weeks to validate backtracking approach
+3. **Performance Benchmark Suite** to identify scaling bottlenecks early (after integration fix)
 
 ### Uncertainty Monitoring
 
-1. **Progress Tracking**: Update estimates weekly based on actual completion velocity
-2. **Blocker Identification**: Daily standups to surface new Unknown Unknowns
-3. **Scope Management**: Regular evaluation of feature requirements vs timeline pressure
+1. **Daily Integration Status**: Monitor timeline test failures as primary health indicator
+2. **Weekly Architecture Review**: Catch Unknown Unknowns before they compound
+3. **Progress Tracking**: Update estimates weekly based on actual completion velocity
 
 ### Contingency Planning
 
@@ -257,8 +309,10 @@ Apply the Rumsfeld matrix (Known Knowns, Known Unknowns, Unknown Unknowns) to ca
 
 ## Success Criteria
 
+- [ ] **CRITICAL**: Timeline-STN integration resolved with 0/20 timeline test failures
 - [ ] Maya's Canonical Temporal Backtracking Problem solved within predicted timeline variance
 - [ ] Performance requirements met within 20% of target specifications
+- [ ] Integration test suite passing with >95% success rate across all temporal planning modules
 - [ ] Unknown Unknowns identified and addressed before they cause >2 week schedule impact
 - [ ] Weekly estimates remain within 15% variance of actual completion times
 
@@ -292,4 +346,6 @@ Apply the Rumsfeld matrix (Known Knowns, Known Unknowns, Unknown Unknowns) to ca
 
 ---
 
-*This analysis provides structured uncertainty assessment for temporal planner completion, enabling evidence-based project planning while acknowledging the inherent unpredictability of complex software development.*
+*This analysis provides structured uncertainty assessment for temporal planner completion,
+enabling evidence-based project planning while acknowledging the inherent unpredictability of
+complex software development.*
