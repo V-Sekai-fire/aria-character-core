@@ -257,6 +257,7 @@ defmodule AriaStorage.RollingHashTest do
   end
   
   describe "performance characteristics" do
+    @tag :performance
     test "chunking performance is reasonable" do
       # Generate test data
       data = String.duplicate("performance test data ", 10000)  # ~200KB

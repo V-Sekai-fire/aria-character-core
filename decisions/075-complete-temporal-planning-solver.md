@@ -37,10 +37,12 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 **Dependency Level 1: Basic Temporal Operations**
 
-- [ ] **Task 003**: Extend `AriaEngine.Temporal` with time-indexed state operations
+- [x] **Task 003**: Remove placeholder `AriaEngine.Temporal` and extend `AriaEngine.Planner` with time parameter
   - *Foundation for all temporal reasoning*
-  - *Current: placeholder implementation in [temporal.ex](../apps/aria_engine/lib/aria_engine/temporal.ex)*
-  - *Testable: Time-based state queries*
+  - *Action: Delete placeholder [temporal.ex](../apps/aria_engine/lib/aria_engine/temporal.ex)*
+  - *Action: Add optional time parameter to existing planner functions in [planner.ex](../apps/aria_engine/lib/aria_engine/planner.ex)*
+  - *Testable: Planner functions accept and handle time parameter correctly*
+  - ✅ **Completed**: Temporal.ex removed, Planner.ex extended with optional `current_time` parameters
   
 - [ ] **Task 010**: Implement `AriaEngine.Timeline` module with interval-based storage
   - *Depends on: Task 003 (temporal state operations)*

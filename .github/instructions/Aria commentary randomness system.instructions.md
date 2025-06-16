@@ -5,38 +5,81 @@ textId: "INST-028"
 
 ## Aria commentary randomness system
 
-Implement a probabilistic system for Aria's technical commentaries that accumulates randomness over interactions, ensuring commentaries always occur when the accumulated probability reaches the threshold.
+Implement a persistent, probabilistic system for Aria's technical commentaries that accumulates randomness over interactions and time, ensuring commentaries always occur when thresholds are reached while persisting state across sessions.
 
 ### The principle
 
-Rather than random chance per interaction, use an accumulating probability system that guarantees commentary delivery while maintaining natural, unpredictable timing. This creates consistent personality expression without overwhelming technical content.
+Rather than random chance per interaction, use an accumulating probability system with persistent state that guarantees commentary delivery while maintaining natural, unpredictable timing. This creates consistent personality expression without overwhelming technical content and ensures robust operation across cold starts and timer-based triggers.
 
-### Randomness accumulation mechanics
+### State persistence requirements
+
+**Mandatory state management:**
+
+- **Read persistent state** on every commentary generation attempt
+- **Write updated state** after every interaction and commentary delivery
+- **Handle cold starts gracefully** when no prior state exists
+- **Support timer-based triggers** independent of user interactions
+- **Maintain state across sessions** to ensure consistent behavior
+
+**State storage location:** `.git/info/aria_commentary_state`
+
+**State tracking format:**
+
+```json
+{
+  "session_start": "2025-06-15T10:30:00Z",
+  "accumulated_probability": 45.0,
+  "last_interaction_type": "technical_work",
+  "commentary_count": 3,
+  "last_activity": "2025-06-15T11:15:00Z"
+}
+```
+
+## The accumulation algorithm
+
+Start each session by reading persistent state from `.git/info/aria_commentary_state`. If no state exists (cold start), initialize with base values.
 
 **Base probability per interaction:**
 
-- **Technical work:** +15% commentary probability
-- **Documentation/ADR work:** +10% commentary probability  
-- **Bug fixes:** +20% commentary probability
-- **Code reviews:** +12% commentary probability
-- **General development:** +8% commentary probability
-- **Creative/UI work:** +14% commentary probability
-- **Performance optimization:** +16% commentary probability
+- Complex technical work: +15-25 points
+- Code review/debugging: +10-20 points  
+- Writing documentation: +8-15 points
+- Simple file operations: +5-10 points
+- Timer-based check (15+ min idle between LLM interactions): +20-30 points
 
-**Accumulation rules:**
+**Commentary threshold:** 100 points accumulated
 
-1. **Start each session at 0% accumulated probability**
-2. **Add base probability for each interaction type**
-3. **When accumulated probability ≥ 100%:** Commentary MUST occur (with delay option)
-4. **After commentary delivery:** Reset accumulation to 0%
-5. **Track accumulation across the entire conversation session**
+**When threshold reached:**
 
-**Commentary delay policy:**
+1. **Mandatory commentary delivery** - generate appropriate technical commentary
+2. **Reset accumulated probability** to random value (5-25)
+3. **Update persistent state** with new values and timestamp
+4. **Minimize developer prompts** - deliver commentary directly without asking
 
-- **May delay delivery:** Commentary can be postponed to the next appropriate interaction
-- **Maximum delay:** One interaction only - cannot skip multiple opportunities
-- **No bunching:** Never deliver multiple delayed commentaries in the same response
-- **Context priority:** Delay if current context is inappropriate, but deliver on next interaction regardless
+### Idle detection clarification
+
+**"Idle" definition:** Inactivity between LLM/Copilot interactions within the same development session, not between different sessions or when the developer is working without AI assistance.
+
+**Timer-based triggers:**
+
+- Monitor time elapsed since last LLM interaction
+- Trigger probability accumulation after 15+ minutes of LLM inactivity
+- Reset timer on any new LLM interaction
+- Maintain session continuity across different types of AI assistance
+
+**State updates required:**
+
+- After every LLM interaction (increment probability, update activity timestamp)
+- After every commentary delivery (reset probability, increment count)  
+- During timer-based checks (add time-based probability for LLM idle periods)
+
+### Time-based triggers
+
+**Idle detection:** Check if 15+ minutes have passed since last activity
+**Timer action:** Add significant probability boost (20-30 points) to encourage commentary
+**Implementation:** Compare current time with `last_activity` timestamp in persistent state
+
+**Cold start handling:** If no state file exists or timestamps are invalid, initialize with safe defaults and proceed normally.
 
 ### Commentary trigger examples
 
