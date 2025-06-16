@@ -101,7 +101,6 @@ defmodule AriaEngine.Planner do
   }
 
   @type plan_result :: {:ok, solution_tree()} | {:error, String.t()}
-  @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure
 
   @default_max_depth 100
   @default_verbose 0
