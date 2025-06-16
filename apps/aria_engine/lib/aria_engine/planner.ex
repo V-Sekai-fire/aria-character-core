@@ -661,7 +661,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Expand task node with methods
-  defp expand_task_node(domain, _state, solution_tree, node_id, task_name, args, verbose) do
+  defp expand_task_node(domain, state, solution_tree, node_id, task_name, args, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
         {:error, "Node not found: #{node_id}"}
@@ -703,7 +703,7 @@ defmodule AriaEngine.Planner do
                       IO.puts("Method #{method_name} failed: #{reason}")
                     end
                     
-                    expand_task_node(domain, _state, updated_tree, node_id, task_name, args, verbose)
+                    expand_task_node(domain, state, updated_tree, node_id, task_name, args, verbose)
                 end
             end
         end
