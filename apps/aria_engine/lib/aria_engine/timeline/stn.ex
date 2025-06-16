@@ -476,8 +476,20 @@ defmodule AriaEngine.Timeline.STN do
   end
 
   defp compose_constraints({min1, max1}, {min2, max2}) do
-      _ -> {new_min, new_max}
+    # Compose two constraints by combining their bounds
+    new_min = case {min1, min2} do
+      {:infinity, _} -> min2
+      {_, :infinity} -> min1
+      _ -> min1 + min2
     end
+    
+    new_max = case {max1, max2} do
+      {:neg_infinity, _} -> max2
+      {_, :neg_infinity} -> max1
+      _ -> max1 + max2
+    end
+    
+    {new_min, new_max}
   end
 
   # Private helper functions for composable operations
