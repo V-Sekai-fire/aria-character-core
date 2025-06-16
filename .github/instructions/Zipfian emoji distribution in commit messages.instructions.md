@@ -1,11 +1,19 @@
 ---
 applyTo: "**"
-textId: "INST-007"
----
+textId: "INST-0**Rank 2:** 💫 (Achievements, completions, breakthroughs)
 
-## Zipfian emoji distribution in commit messages
+- **Target frequency:** ~15% of commits with emojis  
+- **Use for:** Major completions, successful implementations, milestones
+- **Aria's touch:** Celebrates progress with genuine excitement
 
-Apply Zipf's law distribution patterns to emoji usage in commit messages, creating natural frequency patterns that maintain professional appearance while adding personality.
+**Rank 3:** 🎯 (Fixes, optimizations, precise improvements)
+
+**Rank 4+:** Other expressive emojis (🚀📝💎⚡🔧🔮)
+
+- **Target frequency:** ≤7% each of commits with emojis
+- **Use sparingly:** 🚀 launches, 📝 documentation, 💎 quality, ⚡ performance, 🔧 fixes, 🔮 experimentalipfian emoji distribution in commit messages
+
+Apply Zipf's law distribution patterns to emoji usage in commit messages, creating natural frequency patterns that maintain professional standards while expressing Aria's vibrant VTuber personality.
 
 ### The principle
 
@@ -22,25 +30,28 @@ Emoji usage should follow a power law distribution where the most common emoji a
 
 ### Zipfian frequency guidelines
 
-**Rank 1 (Most frequent):** 🔧 (Technical work, fixes, implementations)
+**Rank 1 (Most frequent):** 🎨 (Technical implementations, core features, creative solutions)
 
 - **Target frequency:** ~30% of commits with emojis
-- **Use for:** Core functionality, major implementations, technical improvements
+- **Use for:** Core functionality, major implementations, feature additions
+- **Aria's touch:** Reflects the artistry of crafting elegant code
 
-**Rank 2:** 📋 (Documentation, planning, organization)
+**Rank 2:** � (Achievements, completions, breakthroughs)
 
 - **Target frequency:** ~15% of commits with emojis  
-- **Use for:** Documentation updates, ADR work, project organization
+- **Use for:** Major completions, successful implementations, milestones
+- **Aria's touch:** Celebrates progress with genuine excitement
 
-**Rank 3:** 🌟 (Achievements, completions, milestones)
+**Rank 3:** � (Fixes, optimizations, precise improvements)
 
 - **Target frequency:** ~10% of commits with emojis
-- **Use for:** Major completions, successful implementations, milestones
+- **Use for:** Bug fixes, performance improvements, targeted solutions
+- **Aria's touch:** Shows analytical precision with flair
 
-**Rank 4+:** Other contextual emojis (🐛🚀📝⚡️🎯🔍)
+**Rank 4+:** Other expressive emojis (🚀📝💎⚡��)
 
 - **Target frequency:** ≤7% each of commits with emojis
-- **Use sparingly:** Bug fixes, performance, testing, research, etc.
+- **Use sparingly:** 🚀 launches, 📝 documentation, 💎 quality, ⚡ performance, 🎨 design, 🔮 experimental
 
 ### Distribution rules
 
@@ -53,9 +64,9 @@ Emoji usage should follow a power law distribution where the most common emoji a
 
 ### Benefits
 
-- **Natural communication patterns:** Mirrors how humans naturally use language
-- **Professional balance:** Maintains appropriate emoji-to-text ratio
-- **Consistent personality:** Creates recognizable but not overwhelming patterns
+- **Authentic VTuber energy:** Reflects Aria's genuine enthusiasm while maintaining professionalism
+- **Natural communication patterns:** Mirrors how humans naturally use expressive language
+- **Technical precision with flair:** Combines analytical accuracy with engaging personality
 - **Improved readability:** High-frequency emojis become familiar navigation aids
 
-This approach ensures emoji usage feels organic and professional while supporting clear project communication.
+This approach ensures emoji usage feels authentically Aria while supporting clear, professional project communication.
