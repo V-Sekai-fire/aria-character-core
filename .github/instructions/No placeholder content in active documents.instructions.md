@@ -66,8 +66,8 @@ Active documents should only contain real, actionable content. Placeholders belo
 **Better (specific request):**
 
 ```markdown
-I've identified that ADR-045 covers Allen's Interval Algebra. 
-Would you like me to add a research section where you can 
+I've identified that ADR-045 covers Allen's Interval Algebra.
+Would you like me to add a research section where you can
 document your interval notation research findings?
 ```
 
