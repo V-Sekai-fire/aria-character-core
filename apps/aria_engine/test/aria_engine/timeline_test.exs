@@ -112,29 +112,35 @@ defmodule AriaEngine.TimelineTest do
       |> Timeline.add_interval(meets_interval)
       |> Timeline.add_interval(overlaps_interval)
 
-      %{timeline: timeline}
+      %{
+        timeline: timeline,
+        before_interval: before_interval,
+        after_interval: after_interval,
+        meets_interval: meets_interval,
+        overlaps_interval: overlaps_interval
+      }
     end
 
-    test "detects before relationship", %{timeline: timeline} do
+    test "detects before relationship", %{timeline: timeline, before_interval: before_interval, after_interval: after_interval} do
       constraint = {1, :infinity} # after_interval starts at least 1 unit after before_interval ends
       updated_timeline =
         Timeline.add_constraint(
           timeline,
-          "#{timeline.intervals["Before"].id}_end",
-          "#{timeline.intervals["After"].id}_start",
+          "#{before_interval.id}_end",
+          "#{after_interval.id}_start",
           constraint
         )
 
       assert STN.consistent?(updated_timeline.stn)
     end
 
-    test "detects meets relationship", %{timeline: timeline} do
+    test "detects meets relationship", %{timeline: timeline, before_interval: before_interval, meets_interval: meets_interval} do
       constraint = {0, 0} # meets_interval starts exactly when before_interval ends
       updated_timeline =
         Timeline.add_constraint(
           timeline,
-          "#{timeline.intervals["Before"].id}_end",
-          "#{timeline.intervals["Meets"].id}_start",
+          "#{before_interval.id}_end",
+          "#{meets_interval.id}_start",
           constraint
         )
       assert STN.consistent?(updated_timeline.stn)
