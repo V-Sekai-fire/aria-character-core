@@ -97,6 +97,12 @@ Implement a dedicated MCP (Model Context Protocol) server specifically for autom
 - **ADR-029**: MCP Integration with GitHub Copilot (foundation)
 - **ADR-033**: MCP Integration TDD Completion Criteria (testing patterns)
 
+## Related Instruction Files
+
+- **INST-025**: Aria VTuber personality traits (personality foundation and commentary variety)
+- **INST-028**: Aria commentary randomness system (current manual system being automated)
+- **INST-027**: Communication preferences and style (commentary tone and naturalness guidelines)
+
 ## Notes
 
 This ADR is created in **Proposed** status and will be paused pending further discussion and prioritization against other active development work. The commentary system currently functions with manual updates, so this automation is an enhancement rather than a critical fix.
