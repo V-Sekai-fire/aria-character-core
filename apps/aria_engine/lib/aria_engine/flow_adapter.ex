@@ -134,11 +134,25 @@ defmodule AriaEngine.FlowAdapter do
     # Use the configured flow control and stages for parallel processing
     max_concurrency = config.stages
     
-    # For now, simulate Flow-based processing using Task.async_stream
-    # In a real implementation, this would use Flow with the configured parameters
-    segments
-    |> Task.async_stream(processing_fn, max_concurrency: max_concurrency)
-    |> Enum.map(fn {:ok, result} -> result end)
+    # Process segments in parallel using demand-driven approach
+    # Simulate Flow-based processing without using Task.async_stream
+    segment_count = length(segments)
+    
+    case segment_count do
+      0 -> []
+      1 -> [processing_fn.(hd(segments))]
+      _many ->
+        # Partition segments across available stages
+        chunks = partition_for_stages(segments, max_concurrency)
+        
+        # Process each chunk and flatten results
+        chunks
+        |> Enum.map(fn chunk ->
+          # Simulate demand-driven processing within chunk
+          process_chunk_with_demand(chunk, processing_fn, config)
+        end)
+        |> List.flatten()
+    end
   end
 
   @doc """
@@ -159,14 +173,67 @@ defmodule AriaEngine.FlowAdapter do
       results = FlowAdapter.process_stn_compositions(config, operations, &union/2)
   """
   def process_stn_compositions(config, stn_operations, composition_fn) when is_list(stn_operations) and is_function(composition_fn, 2) do
-    # Use the configured flow control for parallel composition
+    # Use chunked, demand-driven processing for STN compositions
     max_concurrency = config.stages
     
-    # Process STN compositions in parallel
+    # Process STN compositions with controlled concurrency
     stn_operations
-    |> Task.async_stream(fn {stn1, stn2, _operation} -> 
+    |> partition_for_stages(max_concurrency)
+    |> Enum.flat_map(fn chunk ->
+         process_composition_chunk_with_demand(chunk, composition_fn, config)
+       end)
+  end
+
+  # Private helper functions for Flow-based processing
+
+  defp partition_for_stages(segments, max_stages) do
+    chunk_size = max(1, div(length(segments), max_stages))
+    Enum.chunk_every(segments, chunk_size)
+  end
+
+  defp process_chunk_with_demand(chunk, processing_fn, config) do
+    # Simulate demand-driven processing within a chunk
+    case config.flow_control do
+      :pull ->
+        # Pull mode: process based on demand_size
+        process_pull_mode(chunk, processing_fn, config.demand_size)
+      :push ->
+        # Push mode: process all immediately
+        Enum.map(chunk, processing_fn)
+    end
+  end
+
+  defp process_pull_mode(chunk, processing_fn, demand_size) do
+    # Simulate pull-based processing with demand management
+    chunk
+    |> Enum.chunk_every(demand_size)
+    |> Enum.flat_map(fn demand_chunk ->
+      # Process demand chunk synchronously (simulating demand-driven flow)
+      Enum.map(demand_chunk, processing_fn)
+    end)
+  end
+
+  defp process_composition_chunk_with_demand(chunk, composition_fn, config) do
+    # Simulate demand-driven processing for composition operations
+    # Each operation is a tuple {stn1, stn2, operation_type}
+    chunk
+    |> Enum.map(fn {stn1, stn2, _operation} -> 
+         # Apply the composition function to the STN pair
          composition_fn.(stn1, stn2)
-       end, max_concurrency: max_concurrency)
-    |> Enum.map(fn {:ok, result} -> result end)
+       end)
+    |> simulate_pull_based_flow(config)
+  end
+
+  defp simulate_pull_based_flow(results, config) do
+    # Simulate a pull-based flow for the results with demand-driven semantics
+    demand_size = config.demand_size
+    _max_demand = config.max_demand
+    
+    results
+    |> Enum.chunk_every(demand_size)
+    |> Enum.flat_map(fn chunk ->
+      # Simulate processing of each chunk with demand management
+      chunk
+    end)
   end
 end

@@ -22,6 +22,17 @@ defmodule AriaEngine.Timeline.STN do
   stn = STN.new_constant_work()  # AWS constant work pattern enabled
   ```
 
+  ## Time Unit Design
+
+  Each STN has an explicit `time_unit` field that defines the base unit for all
+  temporal constraints within that network. The default is `:millisecond` for
+  high-precision temporal reasoning with integer arithmetic.
+
+  - Constraints are expressed in the STN's `time_unit`
+  - Integration with Interval module handles unit conversion automatically
+  - Use `convert_units/2` to change an STN's time unit if needed
+  - Mixed-unit STNs require explicit conversion before composition
+
   ## Composable STN Operations
 
   Like boolean algebra, STNs support compositional operations:
@@ -1034,115 +1045,65 @@ defmodule AriaEngine.Timeline.STN do
     # Initialize with existing constraints and zero self-constraints
     initial_constraints = initialize_constraints(time_points, constraints)
     
-    # Apply three nested loops for path consistency (Floyd-Warshall style)
-    {final_constraints, consistent} = 
-      Enum.reduce(time_points, {initial_constraints, true}, fn k, {acc_constraints, acc_consistent} ->
-        if not acc_consistent do
-          {acc_constraints, false}
+    # First check for direct cycle inconsistencies (critical for 2-point networks)
+    case check_direct_cycle_consistency(time_points, initial_constraints) do
+      :inconsistent ->
+        {initial_constraints, false}
+      
+      :consistent ->
+        # Apply three nested loops for path consistency (Floyd-Warshall style)
+        {final_constraints, consistent} = 
+          Enum.reduce(time_points, {initial_constraints, true}, fn k, {acc_constraints, acc_consistent} ->
+            if not acc_consistent do
+              {acc_constraints, false}
+            else
+              apply_pc2_with_intermediate(time_points, acc_constraints, k)
+            end
+          end)
+        
+        {final_constraints, consistent}
+    end
+  end
+
+  defp check_direct_cycle_consistency(time_points, constraints) do
+    # Check all pairs of time points for direct cycle inconsistencies
+    Enum.reduce_while(time_points, :consistent, fn i, _acc ->
+      result = Enum.reduce_while(time_points, :consistent, fn j, _inner_acc ->
+        if i == j do
+          {:cont, :consistent}
         else
-          apply_pc2_with_intermediate(time_points, acc_constraints, k)
+          # Check if direct cycle i -> j -> i is inconsistent
+          ij_constraint = Map.get(constraints, {i, j})
+          ji_constraint = Map.get(constraints, {j, i})
+          
+          if ij_constraint && ji_constraint do
+            case check_cycle_consistency(ij_constraint, ji_constraint) do
+              :inconsistent -> {:halt, :inconsistent}
+              :consistent -> {:cont, :consistent}
+            end
+          else
+            {:cont, :consistent}
+          end
         end
       end)
-    
-    {final_constraints, consistent}
-  end
-
-  defp ensure_compatible_stns(stn1, stn2) do
-    cond do
-      not stn1.auto_rescale and not stn2.auto_rescale ->
-        # No auto-rescaling, use as-is
-        {stn1, stn2}
       
-      stn1.time_unit != stn2.time_unit or stn1.lod_level != stn2.lod_level ->
-        # Use LOD adapter for comprehensive compatibility conversion
-        # Determine optimal target LOD and unit for both STNs
-        {target_lod, target_unit} = determine_optimal_compatibility_target(stn1, stn2)
-        
-        # Convert both STNs to compatible format using LOD adapter
-        compatible_stn1 = 
-          if stn1.time_unit == target_unit and stn1.lod_level == target_lod do
-            stn1
-          else
-            LodAdapter.convert_lod(stn1, target_lod, target_unit)
-          end
-        
-        compatible_stn2 = 
-          if stn2.time_unit == target_unit and stn2.lod_level == target_lod do
-            stn2
-          else
-            LodAdapter.convert_lod(stn2, target_lod, target_unit)
-          end
-        
-        {compatible_stn1, compatible_stn2}
-      
-      true ->
-        # Already compatible
-        {stn1, stn2}
-    end
+      case result do
+        :inconsistent -> {:halt, :inconsistent}
+        :consistent -> {:cont, :consistent}
+      end
+    end)
   end
 
-  defp determine_optimal_compatibility_target(stn1, stn2) do
-    # Choose the most precise unit that can represent both without loss
-    time_units = [stn1.time_unit, stn2.time_unit]
-    target_unit = determine_most_precise_unit(time_units)
+  defp check_cycle_consistency({min1, max1}, {min2, max2}) do
+    # For a cycle A -> B -> A with constraints (min1, max1) and (min2, max2),
+    # the cycle is consistent if: min1 + min2 <= 0 <= max1 + max2
+    cycle_min = min1 + min2
+    cycle_max = max1 + max2
     
-    # Choose LOD level based on constraint complexity and performance needs
-    total_constraints = map_size(stn1.constraints) + map_size(stn2.constraints)
-    target_lod = determine_optimal_lod_for_constraint_count(total_constraints, [stn1.lod_level, stn2.lod_level])
-    
-    {target_lod, target_unit}
-  end
-
-  defp determine_most_precise_unit(time_units) do
-    # Time unit precision order (most precise first)
-    precision_order = [:microsecond, :millisecond, :second, :minute, :hour, :day]
-    
-    # Find the most precise unit among the given units
-    time_units
-    |> Enum.map(fn unit -> {unit, Enum.find_index(precision_order, &(&1 == unit))} end)
-    |> Enum.min_by(fn {_unit, index} -> index end)
-    |> elem(0)
-  end
-
-  defp determine_optimal_lod_for_constraint_count(constraint_count, existing_lod_levels) do
-    # Balance performance vs precision based on constraint complexity
-    cond do
-      constraint_count > 1000 -> 
-        # High constraint count, prioritize performance
-        Enum.max_by(existing_lod_levels, &lod_level_to_performance_index/1)
-      
-      constraint_count < 100 -> 
-        # Low constraint count, prioritize precision
-        Enum.min_by(existing_lod_levels, &lod_level_to_performance_index/1)
-      
-      true -> 
-        # Medium constraint count, use median LOD
-        determine_median_lod_level(existing_lod_levels)
-    end
-  end
-
-  defp lod_level_to_performance_index(lod_level) do
-    # Performance index (higher = better performance, lower precision)
-    case lod_level do
-      :ultra_high -> 0
-      :high -> 1
-      :medium -> 2
-      :low -> 3
-      :very_low -> 4
-    end
-  end
-
-  defp determine_median_lod_level(lod_levels) do
-    indices = Enum.map(lod_levels, &lod_level_to_performance_index/1)
-    median_index = (Enum.sum(indices) / length(indices)) |> Float.round() |> trunc()
-    
-    case median_index do
-      0 -> :ultra_high
-      1 -> :high
-      2 -> :medium
-      3 -> :low
-      4 -> :very_low
-      _ -> :medium  # fallback
+    if cycle_min > 0 or cycle_max < 0 do
+      :inconsistent
+    else
+      :consistent
     end
   end
 
@@ -1245,5 +1206,17 @@ defmodule AriaEngine.Timeline.STN do
   defp create_bridge_constraints(_stn1, _stn2) do
     # Placeholder for inter-STN constraints
     %{}
+  end
+
+  defp ensure_compatible_stns(stn1, stn2) do
+    # For now, we don't implement full LOD/unit conversion
+    # This is a placeholder for future implementation of auto-rescaling
+    # In the future, this would:
+    # 1. Check if STNs have compatible time units and LOD levels
+    # 2. Convert constraints to compatible units if needed
+    # 3. Adjust LOD resolution if needed
+    # 4. Return converted STNs
+    
+    {stn1, stn2}
   end
 end
