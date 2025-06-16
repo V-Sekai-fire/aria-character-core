@@ -1,6 +1,8 @@
 # ADR-083: STN Timeline Segmentation Strategy
 
-**Status:** Active (June 16, 2025)
+**Status:** Superseded (June 16, 2025)
+
+**Superseded by:** [ADR-099: STN Bridge Reentrant Planner Architecture](099-stn-bridge-reentrant-planner-architecture.md)
 
 > **DISCLAIMER: FICTIONAL GAME SCENARIO**
 >
@@ -8,105 +10,261 @@
 
 ## Context
 
-Large STN constraint networks exhibit O(n³) complexity that becomes computationally prohibitive for real-time temporal reasoning. Segmentation strategies can reduce complexity from O(n³) to O(k×(n/k)³), providing significant performance improvements for complex fictional game scenarios.
+The core challenge in temporal planning is that not all actions are inherently temporal. Some actions have measurable duration (temporal actions), while others are instantaneous logical decisions (non-temporal actions). STN bridges solve this fundamental mismatch by creating a hierarchical architecture that converts non-temporal actions into temporal timeline elements.
+
+## What Are STN Bridges?
+
+**STN Bridges** are compositional units that connect temporal segments (actions with duration) and non-temporal actions (instantaneous decisions) into a unified temporal timeline. They work by treating non-temporal actions as zero-duration "decision points" that create natural boundaries between temporal segments.
+
+### Hierarchical Bridge Architecture
+
+STN bridges create a hierarchical decomposition:
+
+```
+Planning Level    │ Bridge Type           │ Duration
+─────────────────┼──────────────────────┼─────────────
+Goals            │ Goal Achievement      │ Spans multiple methods
+Methods          │ Method Selection      │ Instantaneous decision
+Actions          │ Action Execution      │ Measured duration (temporal)
+Conditions       │ State Validation      │ Instantaneous check
+```
 
 ## Decision
 
-Implement comprehensive STN timeline segmentation strategies that decompose large constraint networks into smaller, manageable segments while maintaining temporal consistency across segment boundaries.
+Implement STN bridges as the primary mechanism for integrating temporal and non-temporal planning through hierarchical decomposition that converts logical decisions into temporal timeline elements.
+
+## How STN Bridges Work
+
+### Converting Non-Temporal to Temporal
+
+STN bridges convert non-temporal actions into temporal elements through **hierarchical decomposition**:
+
+1. **Non-temporal actions** (method selection, condition checking) become **instantaneous timepoints**
+2. **Temporal actions** (movement, equipment use) become **duration segments**
+3. **Bridge connections** link timepoints and segments into a continuous timeline
+
+### Real-World Example: Mission Planning
+
+Consider a fictional game scenario where a character must complete a mission:
+
+#### Non-Temporal Actions (Logical Decisions)
+
+```
+IF equipment_ready THEN proceed_to_waypoint
+IF path_blocked THEN find_alternate_route
+IF detected THEN switch_to_stealth_mode
+```
+
+#### Temporal Actions (Measurable Duration)
+
+```
+[5 min] Equipment check
+[20 min] Movement to waypoint
+[10 min] Stealth approach
+```
+
+#### STN Bridge Integration
+
+```
+Timeline: [T+0] → [T+5] → [T+5] → [T+25] → [T+25] → [T+35]
+          │       │       │       │        │       │
+          Start   Check   Decision Movement Decision Approach
+                  (5min)  (0min)  (20min)  (0min)  (10min)
+```
+
+### Hierarchical Bridge Types
+
+#### 1. Method Selection Bridges
+
+- **Purpose**: Choose which method to execute for a given task
+- **Duration**: Instantaneous (0 duration)
+- **Function**: Connect task goals to method execution segments
+
+```elixir
+%STNBridge{
+  type: :method_selection,
+  duration: 0,
+  preconditions: [goal_active],
+  effects: [method_selected],
+  connects: {:task_goal, :method_execution}
+}
+```
+
+#### 2. Condition Validation Bridges
+
+- **Purpose**: Check preconditions and state requirements
+- **Duration**: Instantaneous (0 duration)
+- **Function**: Validate that conditions are met before proceeding
+
+```elixir
+%STNBridge{
+  type: :condition_check,
+  duration: 0,
+  preconditions: [state_conditions],
+  effects: [validation_result],
+  connects: {:previous_action, :next_action}
+}
+```
+
+#### 3. Action Execution Bridges
+
+- **Purpose**: Execute actual temporal actions with measurable duration
+- **Duration**: Variable (based on action)
+- **Function**: Perform the actual work that takes time
+
+```elixir
+%STNBridge{
+  type: :action_execution,
+  duration: {5, 30},  # 5-30 minute range
+  preconditions: [action_ready],
+  effects: [action_completed],
+  connects: {:start_timepoint, :end_timepoint}
+}
+```
+
+### Hierarchical Composition Process
+
+1. **Goal Decomposition**: Break high-level goals into sub-goals
+2. **Method Selection**: Choose methods to achieve each sub-goal (Bridge)
+3. **Action Planning**: Determine specific actions for each method
+4. **Temporal Sequencing**: Order actions with timing constraints
+5. **Bridge Insertion**: Add instantaneous decision points between temporal segments
 
 ## Implementation Plan
 
-### Phase 1: Core Segmentation Framework
+### Phase 1: Core STN Bridge Framework
 
-- [ ] Create `AriaEngine.Timeline.STNSegmentation` module
-- [ ] Implement temporal window-based segmentation with overlap
-- [ ] Add agent-based decomposition for multi-character scenarios
-- [ ] Create segment boundary constraint management
+- [ ] Create `AriaEngine.STNBridge` module for bridge composition
+- [ ] Implement bridge types: method_selection, condition_check, action_execution
+- [ ] Add hierarchical bridge composition with parent-child relationships
+- [ ] Create bridge-to-timeline conversion functions
 
-### Phase 2: Segmentation Strategies
+### Phase 2: Non-Temporal to Temporal Conversion
 
-- [ ] **Temporal Segmentation** - Divide timeline into chronological windows
-- [ ] **Agent-Based Decomposition** - Separate constraint networks by character/agent
-- [ ] **Action Phase Segmentation** - Segment by mission/scenario phases
-- [ ] **Hybrid Decomposition** - Combine temporal and agent-based strategies
+- [ ] **Method Selection Bridges** - Convert method choices to timeline points
+- [ ] **Condition Validation Bridges** - Convert logical checks to timeline validation
+- [ ] **Goal Achievement Bridges** - Convert goal completion to timeline milestones
+- [ ] **State Transition Bridges** - Convert state changes to timeline events
 
-### Phase 3: Consistency Validation
+### Phase 3: Hierarchical Bridge Composition
 
-- [ ] Implement cross-segment constraint validation
-- [ ] Add segment boundary consistency checking
-- [ ] Create constraint conflict resolution for overlapping segments
-- [ ] Add global consistency verification after segment solving
+- [ ] Implement parent-child bridge relationships
+- [ ] Add bridge inheritance and constraint propagation
+- [ ] Create bridge network validation and consistency checking
+- [ ] Add bridge optimization for temporal efficiency
 
-### Phase 4: Performance Optimization
+### Phase 4: Integration with Planning System
 
-- [ ] Implement overlapping segment processing for boundary constraints
-- [ ] Add dynamic segment sizing based on constraint density
-- [ ] Create segment-specific optimization strategies
-- [ ] Add parallel segment processing integration
+- [ ] Integrate bridges with solution tree planning
+- [ ] Add bridge-aware replanning and failure recovery
+- [ ] Create bridge visualization for debugging and analysis
+- [ ] Add performance monitoring for bridge composition overhead
 
 ## Implementation Details
 
-### Segmentation Complexity Analysis
+### Bridge Composition Algorithm
 
 ```elixir
-# Performance improvement calculation
-# Original: O(n³) for n timepoints
-# Segmented: O(k × (n/k)³) for k segments
-
-defp calculate_segmentation_benefit(n_timepoints, k_segments) do
-  original_complexity = :math.pow(n_timepoints, 3)
-  segmented_complexity = k_segments * :math.pow(n_timepoints / k_segments, 3)
-  
-  improvement_factor = original_complexity / segmented_complexity
-  # Theoretical improvement: k² (quadratic improvement with segment count)
+# Convert mixed temporal/non-temporal plan to pure temporal timeline
+def compose_stn_bridges(plan_steps) do
+  plan_steps
+  |> Enum.map(&classify_action_type/1)
+  |> Enum.chunk_by(&(&1.type))
+  |> Enum.flat_map(&create_bridge_segment/1)
+  |> validate_temporal_consistency()
 end
 
-# Example: 128 timepoints → 4 segments of 32 timepoints each
-# Original: 128³ = 2,097,152 operations
-# Segmented: 4 × 32³ = 4 × 32,768 = 131,072 operations  
-# Improvement: 16× speedup
+defp classify_action_type(action) do
+  case action do
+    {method, _args} when is_atom(method) -> 
+      %{type: :temporal, action: action, duration: get_duration(method)}
+    
+    {:condition, condition} -> 
+      %{type: :non_temporal, action: action, duration: 0}
+    
+    {:goal, goal} ->
+      %{type: :bridge, action: action, duration: 0}
+  end
+end
+
+defp create_bridge_segment(action_group) do
+  case action_group do
+    [%{type: :temporal} | _] = temporal_actions ->
+      # Create temporal segment with duration constraints
+      create_temporal_segment(temporal_actions)
+      
+    [%{type: :non_temporal} | _] = logical_actions ->
+      # Create instantaneous bridge points
+      create_decision_bridges(logical_actions)
+      
+    [%{type: :bridge} | _] = bridge_actions ->
+      # Create hierarchical bridge composition
+      create_hierarchical_bridges(bridge_actions)
+  end
+end
 ```
 
-### Temporal Window Segmentation
+### Hierarchical Bridge Network
 
-- **Fixed-size windows** with configurable overlap ratio (default: 20%)
-- **Adaptive sizing** based on constraint density within time ranges
-- **Phase-aligned boundaries** that respect natural scenario breakpoints
-- **Constraint bridging** to maintain temporal relationships across segments
+```
+High-Level Goal: "Complete Mission"
+├── Method Selection Bridge (0 duration)
+│   ├── Temporal Segment: Equipment Check (5 min)
+│   ├── Condition Bridge: Equipment Status (0 duration)
+│   └── Temporal Segment: Movement (20 min)
+├── Condition Bridge: Path Status (0 duration)
+│   ├── Temporal Segment: Normal Route (15 min)
+│   └── Temporal Segment: Alternate Route (25 min)
+└── Goal Achievement Bridge (0 duration)
+```
 
-### Agent-Based Decomposition
+### Bridge Timeline Conversion
 
-- **Independent agent networks** for characters with minimal interaction
-- **Coordination constraint networks** for multi-agent synchronization points
-- **Hierarchical solving** with agent-level then coordination-level consistency
-- **Incremental integration** of agent solutions into global timeline
+Non-temporal actions become **decision points** that connect temporal segments:
+
+```
+Original Mixed Plan:
+[Equipment Check] → IF ready → [Move to Waypoint] → IF detected → [Stealth Mode]
+
+STN Bridge Timeline:
+[T+0-5: Equipment] → [T+5: Decision] → [T+5-25: Movement] → [T+25: Decision] → [T+25-35: Stealth]
+```
+
+### Temporal Consistency Validation
+
+STN bridges maintain temporal consistency through:
+
+1. **Bridge Timepoint Validation**: Ensure decision points don't violate temporal ordering
+2. **Segment Duration Constraints**: Validate that temporal segments have realistic durations
+3. **Cross-Bridge Dependencies**: Ensure that bridge decisions don't create temporal conflicts
+4. **Global Timeline Coherence**: Verify that the complete timeline is temporally consistent
 
 ## Success Criteria
 
-- Segmentation provides measurable performance improvement for large networks
-- Temporal consistency maintained across all segment boundaries
-- Multiple segmentation strategies optimize different scenario types
-- Framework integrates with parallel processing and constant work patterns
+- STN bridges successfully convert all non-temporal actions to temporal timeline elements
+- Hierarchical bridge composition maintains logical relationships while adding temporal structure
+- Bridge networks validate temporal consistency across decision points and action segments
+- Integration with solution tree planning preserves reentrant planning capabilities
 
 ## Consequences
 
 **Positive:**
 
-- Dramatic performance improvement for large constraint networks (up to k² speedup)
-- Enables real-time processing of complex fictional game scenarios
-- Provides multiple optimization strategies for different use cases
-- Maintains temporal consistency while improving performance
+- **Unified temporal representation**: All planning elements (temporal and non-temporal) exist in the same timeline
+- **Hierarchical clarity**: Clear separation between logical decisions and temporal execution
+- **Debugging visibility**: Bridge structure makes planning decisions explicit and traceable
+- **Temporal consistency**: Automatic validation prevents temporally impossible plans
 
 **Risks:**
 
-- Complexity in managing cross-segment constraints
-- Potential for segmentation to miss global constraint interactions
-- Need for careful tuning of segment sizes and overlap ratios
-- Additional validation required to ensure global consistency
+- **Complexity overhead**: Bridge composition adds computational complexity to planning
+- **Learning curve**: Developers need to understand bridge concepts and hierarchical structure
+- **Debugging complexity**: Bridge networks can become complex for large planning scenarios
+- **Performance impact**: Bridge validation and composition may slow planning performance
 
 ## Related ADRs
 
-- **ADR-080**: STN Performance Benchmarking Framework
-- **ADR-081**: AWS Constant Work Pattern for STN Solving
-- **ADR-082**: Elixir Flow Parallel STN Processing
-- **ADR-085**: Fictional Game Scenario Performance Modeling
+- **ADR-089**: STN Bridge Reentrant Planner Architecture (bridge implementation details)
+- **ADR-099**: STN Bridge Reentrant Planner Architecture (canonical bridge architecture)
+- **ADR-082**: Elixir Flow Parallel STN Processing (bridge performance optimization)
+- **ADR-034**: Definitive Temporal Planner Architecture (planning context)
