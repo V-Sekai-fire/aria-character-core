@@ -544,6 +544,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Create initial solution tree
+  @spec create_initial_solution_tree([todo_item()], State.t()) :: solution_tree()
   defp create_initial_solution_tree(todos, initial_state) do
     root_id = generate_node_id()
     
@@ -569,10 +570,12 @@ defmodule AriaEngine.Planner do
   end
 
   # Find next unexpanded node using depth-first search
+  @spec find_next_node(solution_tree()) :: node_id() | nil
   defp find_next_node(solution_tree) do
     find_next_node_dfs(solution_tree, solution_tree.root_id)
   end
 
+  @spec find_next_node_dfs(solution_tree(), node_id()) :: node_id() | nil
   defp find_next_node_dfs(solution_tree, node_id) do
     case solution_tree.nodes[node_id] do
       nil -> nil
@@ -597,6 +600,8 @@ defmodule AriaEngine.Planner do
   end
 
   # Try to expand a specific node
+  @spec try_expand_node(Domain.t(), State.t(), solution_tree(), node_id(), integer()) :: 
+    {:ok, solution_tree()} | {:error, String.t()} | :failure
   defp try_expand_node(domain, state, solution_tree, node_id, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
@@ -623,6 +628,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Expand root node with todos
+  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], State.t()) :: {:ok, solution_tree()}
   defp expand_root_node(solution_tree, root_id, todos, state) do
     # Create child nodes for each todo
     {child_nodes, child_ids} = 
@@ -661,6 +667,8 @@ defmodule AriaEngine.Planner do
   end
 
   # Expand task node with methods
+  @spec expand_task_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), list(), integer()) :: 
+    {:ok, solution_tree()} | {:error, String.t()} | :failure
   defp expand_task_node(domain, state, solution_tree, node_id, task_name, args, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
@@ -696,7 +704,7 @@ defmodule AriaEngine.Planner do
                     new_tree =
                       create_subtask_nodes(solution_tree, node_id, subtasks, method)
 
-                    {:continue, new_tree, path}
+                    {:ok, new_tree}
                     
                   {:error, reason} ->
                     # Blacklist this method and try next
@@ -715,6 +723,8 @@ defmodule AriaEngine.Planner do
   end
 
   # Expand goal node
+  @spec expand_goal_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), String.t(), any(), integer()) :: 
+    {:ok, solution_tree()} | {:error, String.t()} | :failure
   defp expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, object, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
@@ -754,7 +764,7 @@ defmodule AriaEngine.Planner do
                       new_tree =
                         create_subtask_nodes(solution_tree, node_id, subtasks, method_name)
 
-                      {:continue, new_tree, path}
+                      {:ok, new_tree}
 
                     {:error, reason} ->
                       # Blacklist this method and try next
@@ -774,6 +784,8 @@ defmodule AriaEngine.Planner do
   end
 
   # Expand multigoal node
+  @spec expand_multigoal_node(Domain.t(), State.t(), solution_tree(), node_id(), Multigoal.t(), integer()) :: 
+    {:ok, solution_tree()}
   defp expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
@@ -793,6 +805,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Create subtask nodes for a parent
+  @spec create_subtask_nodes(solution_tree(), node_id(), [todo_item()], String.t()) :: {:ok, solution_tree()}
   defp create_subtask_nodes(solution_tree, parent_id, subtasks, method_name) do
     parent_node = solution_tree.nodes[parent_id]
     
@@ -833,6 +846,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Mark node as primitive (leaf action)
+  @spec mark_as_primitive(solution_tree(), node_id()) :: {:ok, solution_tree()}
   defp mark_as_primitive(solution_tree, node_id) do
     updated_nodes = Map.update!(solution_tree.nodes, node_id, fn node ->
       %{node | is_primitive: true, expanded: true}
@@ -842,6 +856,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Check if solution is complete
+  @spec solution_complete?(solution_tree()) :: boolean()
   defp solution_complete?(solution_tree) do
     # All leaf nodes must be primitive (actions)
     solution_tree.nodes
@@ -851,6 +866,8 @@ defmodule AriaEngine.Planner do
   end
 
   # Backtrack and try alternatives
+  @spec backtrack_and_retry(Domain.t(), State.t(), solution_tree(), node_id(), integer(), integer(), integer()) :: 
+    {:ok, solution_tree()} | {:error, String.t()}
   defp backtrack_and_retry(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
     if verbose > 2 do
       IO.puts("Backtracking from failed node: #{failed_node_id}")
@@ -877,6 +894,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Find a good backtrack point
+  @spec find_backtrack_point(solution_tree(), node_id(), integer()) :: node_id() | nil
   defp find_backtrack_point(solution_tree, failed_node_id, verbose) do
     case solution_tree.nodes[failed_node_id] do
       nil -> nil
@@ -889,6 +907,8 @@ defmodule AriaEngine.Planner do
   end
 
   # Try alternative method at backtrack point
+  @spec backtrack_to_alternative_method(solution_tree(), node_id(), node_id(), integer()) :: 
+    {:ok, solution_tree()} | {:error, String.t()}
   defp backtrack_to_alternative_method(solution_tree, parent_id, _failed_child_id, verbose) do
     case solution_tree.nodes[parent_id] do
       nil ->
@@ -923,6 +943,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Remove entire subtree rooted at node_id
+  @spec remove_subtree(map(), node_id()) :: map()
   defp remove_subtree(nodes, node_id) do
     case nodes[node_id] do
       nil -> nodes
@@ -939,6 +960,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Helper functions for method application
+  @spec apply_method_to_task(function(), list(), integer()) :: {:ok, [todo_item()]} | {:error, String.t()}
   defp apply_method_to_task(method_fn, args, verbose) do
     try do
       case method_fn.(args) do
@@ -955,6 +977,8 @@ defmodule AriaEngine.Planner do
     end
   end
 
+  @spec apply_method_to_goal(function(), String.t(), String.t(), any(), integer()) :: 
+    {:ok, [todo_item()]} | {:error, String.t()}
   defp apply_method_to_goal(method_fn, predicate, subject, object, verbose) do
     try do
       case method_fn.(predicate, subject, object) do
@@ -972,6 +996,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Find the task node responsible for producing a failed action
+  @spec find_responsible_task_node(solution_tree(), node_id(), integer()) :: node_id() | nil
   defp find_responsible_task_node(solution_tree, fail_node_id, verbose) do
     case solution_tree.nodes[fail_node_id] do
       nil ->
@@ -984,8 +1009,10 @@ defmodule AriaEngine.Planner do
   end
 
   # Recursively find the first parent that is a task node (not primitive)
+  @spec find_parent_task_node(solution_tree(), nil, integer()) :: nil
   defp find_parent_task_node(_solution_tree, nil, _verbose), do: nil
 
+  @spec find_parent_task_node(solution_tree(), node_id(), integer()) :: node_id() | nil
   defp find_parent_task_node(solution_tree, node_id, verbose) do
     case solution_tree.nodes[node_id] do
       nil -> nil
@@ -1011,6 +1038,8 @@ defmodule AriaEngine.Planner do
   end
 
   # Try alternative method for a specific task node
+  @spec try_alternative_method_for_task(solution_tree(), node_id(), integer()) :: 
+    {:ok, solution_tree()} | {:error, String.t()}
   defp try_alternative_method_for_task(solution_tree, task_node_id, verbose) do
     case solution_tree.nodes[task_node_id] do
       nil ->
@@ -1051,6 +1080,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Update cached states in solution tree
+  @spec update_cached_states(solution_tree(), State.t()) :: solution_tree()
   defp update_cached_states(solution_tree, current_state) do
     # For now, just update the root state
     # In a more sophisticated implementation, we'd update states throughout the tree
@@ -1062,6 +1092,8 @@ defmodule AriaEngine.Planner do
   end
 
   # Main execution loop for Run-Lazy-Refineahead
+  @spec run_execution_loop(Domain.t(), State.t(), solution_tree(), keyword()) :: 
+    {:ok, State.t()} | {:error, String.t()}
   defp run_execution_loop(domain, current_state, current_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
     
@@ -1100,10 +1132,12 @@ defmodule AriaEngine.Planner do
   end
 
   # Get next primitive action to execute
+  @spec get_next_primitive_action(solution_tree()) :: {node_id(), atom(), list()} | nil
   defp get_next_primitive_action(solution_tree) do
     get_next_primitive_action_dfs(solution_tree, solution_tree.root_id)
   end
 
+  @spec get_next_primitive_action_dfs(solution_tree(), node_id()) :: {node_id(), atom(), list()} | nil
   defp get_next_primitive_action_dfs(solution_tree, node_id) do
     case solution_tree.nodes[node_id] do
       nil -> nil
@@ -1131,6 +1165,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Mark action as completed in the solution tree
+  @spec mark_action_completed(solution_tree(), node_id()) :: solution_tree()
   defp mark_action_completed(solution_tree, action_node_id) do
     updated_nodes = Map.update!(solution_tree.nodes, action_node_id, fn node ->
       %{node | visited: true}
@@ -1140,6 +1175,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Generate unique node ID
+  @spec generate_node_id() :: String.t()
   defp generate_node_id do
     :crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)
   end
@@ -1159,6 +1195,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Set Logger level from opts (internal planner verbosity)
+  @spec set_logger_level_from_opts(keyword()) :: :ok
   defp set_logger_level_from_opts(opts) do
     cond do
       Keyword.has_key?(opts, :log_level) ->
