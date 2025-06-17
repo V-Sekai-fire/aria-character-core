@@ -10,7 +10,7 @@ All `mix test` commands must include a `--timeout` flag to prevent tests from ru
 ### Process
 
 1.  When executing `mix test`, always include the `--timeout` flag.
-2.  The default timeout should be 60 seconds.
+2.  The default timeout should be 10 seconds.
 3.  If a specific test requires a longer or shorter timeout, it can be explicitly overridden.
 
 ### Rationale
