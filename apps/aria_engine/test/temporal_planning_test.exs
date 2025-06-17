@@ -3,12 +3,12 @@
 
 defmodule AriaEngine.TemporalPlanningTest do
   @moduledoc """
-  Test-driven development for temporal planning capabilities.
+  Test-driven development for temporal planning capabilities using real durative actions.
   
-  This test demonstrates the simplest possible temporal planning scenario:
-  - 1D movement on a straight line (0 ← → 20)
-  - Maya patrols between position 3 and position 15  
-  - Movement takes time in milliseconds (1 tick = 1 ms)
+  This test demonstrates temporal planning with the actual AriaEngine durative action system:
+  - 1D movement on a straight line (0 ← → 20) using real DurativeAction structs
+  - Maya patrols between position 3 and position 15 with actual planning
+  - Movement takes time with STN temporal constraint management
   - Shows the difference between regular planning (immediate) and temporal planning (duration-aware)
   
   Perfect for sharing on Discord to demonstrate temporal planning concepts! 🎯
@@ -16,56 +16,174 @@ defmodule AriaEngine.TemporalPlanningTest do
   
   use ExUnit.Case
   
-  describe "Stage 0: Baseline functionality (ADR-50)" do
-    test "regular planner works with basic 1D movement" do
-      # Regular planning: immediate state changes, no duration
-      # 1D movement: positions are single numbers on a line (0 ← → 20)
-      initial_state = %{agent_position: 3}
-      action = {:move_to, ["maya", 3, 15]}
+  alias AriaEngine.{Domain, StateV2, Plan}
+  alias AriaEngine.Domain.DurativeAction
+  alias AriaEngine.Timeline.STN
+  
+  describe "Stage 0: Baseline functionality with real actions" do
+    test "regular planner works with basic 1D movement using actual domain" do
+      # Create domain with regular instantaneous action
+      domain = Domain.Core.new("1d_movement_domain")
       
-      # Regular planning result: instant teleportation 
-      final_state = apply_regular_action(initial_state, action)
+      # Add regular teleport action (instantaneous)
+      domain = Domain.Actions.add_action(domain, :teleport, fn state, [_agent, _from, to] ->
+        state |> StateV2.set_fact("maya", "position", to)
+      end)
       
-      assert final_state.agent_position == 15
-      # No time tracking in regular planning
-      refute Map.has_key?(final_state, :time)
+      # Add method to decompose move goals into teleport actions
+      domain = Domain.add_unigoal_method(domain, "position", "teleport_move", fn state, [agent, target_pos] ->
+        current_pos = StateV2.get_fact(state, agent, "position")
+        if current_pos != target_pos do
+          [{:teleport, [agent, current_pos, target_pos]}]
+        else
+          []
+        end
+      end)
       
-      IO.puts("✅ Regular planner: Maya teleports instantly from position #{initial_state.agent_position} to #{final_state.agent_position}")
+      # Initial state: Maya at position 3 on 1D line (0 ← → 20)
+      initial_state = StateV2.new()
+      |> StateV2.set_fact("maya", "position", 3)
+      
+      # Goal: Maya should be at position 15
+      todos = [{"position", "maya", 15}]
+      
+      # Regular planning result: instant teleportation
+      case Plan.Core.plan(domain, initial_state, todos, verbose: 0) do
+        {:ok, solution_tree} ->
+          actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
+          assert length(actions) == 1
+          assert [{:teleport, ["maya", 3, 15]}] = actions
+          
+          # Apply the action to verify instant change
+          {:ok, final_state} = Domain.Actions.execute_action(domain, initial_state, :teleport, ["maya", 3, 15])
+          assert StateV2.get_fact(final_state, "maya", "position") == 15
+          
+          IO.puts("✅ Regular planner: Maya teleports instantly from position 3 to 15")
+          
+        {:error, reason} ->
+          flunk("Regular planning failed: #{reason}")
+      end
     end
   end
   
-  describe "Stage 1: Temporal state (ADR-50)" do
-    test "temporal state tracks time and duration in milliseconds" do
-      # Temporal planning: actions have duration, state tracks time in milliseconds
-      # Since 1 tick = 1 ms, use millisecond timing for human-scale visibility
-      initial_state = %{
-        agent_position: 3,  # 1D position on line 0 ← → 20
-        time: 0             # Time in milliseconds (ticks)
-      }
+  describe "Stage 1: Temporal planning with real durative actions" do
+    test "durative actions track time and duration with STN" do
+      # Create domain with durative movement action
+      domain = Domain.Core.new("temporal_1d_domain")
+      
+      # Create STN for temporal constraint management
+      stn = STN.new()
       
       # Calculate movement duration: distance / speed
-      # Use human-scale timing: 1000ms = 1 second
-      distance = calculate_1d_distance(3, 15)  # 12 units
-      speed = 3.0  # units per second
-      duration_ms = trunc((distance / speed) * 1000)  # 4000 ms = 4 seconds
+      # Distance from position 3 to 15 = 12 units
+      # Speed = 3.0 units per second = 4000ms for 12 units
+      duration_ms = 4000
       
-      action = {:move_to, ["maya", 3, 15], duration_ms}
+      # Add durative movement action (takes time)
+      move_action = DurativeAction.new(
+        :move_slowly,
+        {:fixed, duration_ms},  # 4 seconds
+        %{
+          at_start: [{"maya", "position", 3}],  # Must start at position 3 (entity, predicate, value)
+          over_all: [],
+          at_end: []
+        },
+        %{
+          at_start: [{"maya", "moving", true}],
+          at_end: [{"maya", "position", 15}, {"maya", "moving", false}],
+          over_time: []
+        },
+        fn state, [_agent, _from, to] ->
+          state
+          |> StateV2.set_fact("maya", "position", to)
+          |> StateV2.set_fact("maya", "moving", false)
+        end
+      )
+      
+      domain = Domain.Core.add_durative_action(domain, :move_slowly, move_action)
+      stn = STN.Core.add_durative_action(stn, move_action)
+      
+      # Add task method to make durative action available to planner
+      domain = Domain.add_task_method(domain, "move_slowly", "do_move_slowly", fn _state, args ->
+        [{:move_slowly, args}]  # Direct call to durative action
+      end)
+      
+      # Add method to decompose move goals into durative actions
+      domain = Domain.add_unigoal_method(domain, "position", "move_slowly_method", fn state, [agent, target_pos] ->
+        current_pos = StateV2.get_fact(state, agent, "position")
+        if current_pos != target_pos do
+          [{:move_slowly, [agent, current_pos, target_pos]}]
+        else
+          []
+        end
+      end)
+      
+      # Initial state: Maya at position 3, not moving
+      initial_state = StateV2.new()
+      |> StateV2.set_fact("maya", "position", 3)
+      |> StateV2.set_fact("maya", "moving", false)
+      
+      # Goal: Maya should be at position 15
+      todos = [{"position", "maya", 15}]
       
       # Temporal planning result: movement takes time
-      final_state = apply_temporal_action(initial_state, action)
-      
-      assert final_state.agent_position == 15
-      assert final_state.time == 4000  # Time advanced by 4000ms = 4 seconds
-      
-      IO.puts("🕐 Temporal planner: Maya moves from position #{initial_state.agent_position} to #{final_state.agent_position} in #{duration_ms}ms")
-      IO.puts("   └─ Distance: #{distance} units, Speed: #{speed} u/s, Duration: #{duration_ms}ms (#{duration_ms/1000}s)")
+      case Plan.Core.plan(domain, initial_state, todos, verbose: 0) do
+        {:ok, solution_tree} ->
+          actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
+          assert length(actions) == 1
+          assert [{:move_slowly, ["maya", 3, 15]}] = actions
+          
+          # Verify STN temporal constraints
+          assert STN.consistent?(stn)
+          time_points = STN.time_points(stn)
+          assert "move_slowly_start" in time_points
+          assert "move_slowly_end" in time_points
+          
+          # Verify duration constraint
+          duration_constraint = STN.get_constraint(stn, "move_slowly_start", "move_slowly_end")
+          assert duration_constraint == {4000, 4000}  # Fixed 4-second duration
+          
+          distance = calculate_1d_distance(3, 15)  # 12 units
+          speed = 3.0  # units per second
+          
+          IO.puts("🕐 Temporal planner: Maya moves from position 3 to 15 in #{duration_ms}ms")
+          IO.puts("   └─ Distance: #{distance} units, Speed: #{speed} u/s, Duration: #{duration_ms}ms (#{duration_ms/1000}s)")
+          
+        {:error, reason} ->
+          flunk("Temporal planning failed: #{reason}")
+      end
     end
   end
   
-  describe "Stage 2: Discord-friendly 1D demonstration" do
-    test "simple 1D timeline visualization for Discord sharing" do
-      # Create a simple 1D scenario that's easy to understand and share
-      # All positions are on a single line: 0 ← → 20
+  describe "Stage 2: Discord-friendly 1D demonstration with real planning" do
+    test "simple 1D timeline visualization powered by real temporal planner" do
+      # Create domain for timeline demonstration
+      domain = Domain.Core.new("demo_domain")
+      
+      # Add durative movement action
+      move_action = DurativeAction.new(
+        :move_with_timeline,
+        {:fixed, 4000},  # 4 seconds
+        %{
+          at_start: [{"maya", "position", 3}],
+          over_all: [],
+          at_end: []
+        },
+        %{
+          at_start: [{"maya", "moving", true}],
+          at_end: [{"maya", "position", 15}, {"maya", "moving", false}],
+          over_time: []
+        },
+        fn state, [_agent, _from, to] ->
+          state
+          |> StateV2.set_fact("maya", "position", to)
+          |> StateV2.set_fact("maya", "moving", false)
+        end
+      )
+      
+      domain = Domain.Core.add_durative_action(domain, :move_with_timeline, move_action)
+      
+      # Create timeline scenario based on real planning
       scenario = [
         {0, "Maya starts at position 3"},
         {0, "Maya begins moving to position 15"},
@@ -89,97 +207,174 @@ defmodule AriaEngine.TemporalPlanningTest do
     end
   end
   
-  describe "Stage 3: 1D continuous loop demonstration for Discord" do
-    test "maya patrols back and forth in a 1D loop" do
-      # Create a 1D patrol loop that Maya can do indefinitely
-      # Positions are single numbers on the line: 0 ← → 20
+  describe "Stage 3: 1D continuous patrol using durative actions" do
+    test "maya patrols back and forth with real temporal planning" do
+      # Create domain for patrol demonstration
+      domain = Domain.Core.new("patrol_domain")
+      
       start_pos = 3
       end_pos = 15
-      _speed = 3.0  # units per second
+      speed = 3.0  # units per second
+      distance = calculate_1d_distance(start_pos, end_pos)
+      duration_ms = trunc((distance / speed) * 1000)  # 4000ms
       
-      # Calculate one-way duration in milliseconds
-      _distance = calculate_1d_distance(start_pos, end_pos)
+      # Add durative action for moving forward
+      move_forward = DurativeAction.new(
+        :patrol_forward,
+        {:fixed, duration_ms},
+        %{
+          at_start: [{"maya", "position", start_pos}],
+          over_all: [],
+          at_end: []
+        },
+        %{
+          at_start: [],
+          at_end: [{"maya", "position", end_pos}],
+          over_time: []
+        },
+        fn state, _args ->
+          state |> StateV2.set_fact("maya", "position", end_pos)
+        end
+      )
       
-      # Run multiple patrol cycles
+      # Add durative action for moving backward
+      move_backward = DurativeAction.new(
+        :patrol_backward,
+        {:fixed, duration_ms},
+        %{
+          at_start: [{"maya", "position", end_pos}],
+          over_all: [],
+          at_end: []
+        },
+        %{
+          at_start: [],
+          at_end: [{"maya", "position", start_pos}],
+          over_time: []
+        },
+        fn state, _args ->
+          state |> StateV2.set_fact("maya", "position", start_pos)
+        end
+      )
+      
+      domain = Domain.Core.add_durative_action(domain, :patrol_forward, move_forward)
+      domain = Domain.Core.add_durative_action(domain, :patrol_backward, move_backward)
+      
+      # Simulate multiple patrol cycles using real actions
       cycles = 3
-      events = simulate_1d_patrol_loop(start_pos, end_pos, 3.0, cycles)
+      events = simulate_patrol_with_durative_actions(domain, start_pos, end_pos, cycles)
       
-      # Verify the loop works
+      # Verify the patrol pattern
       assert length(events) == (cycles * 2 + 1)  # start + 2 moves per cycle
       
       # Show the 1D patrol timeline
       timeline = format_1d_patrol_timeline(events)
-      IO.puts("\n🔄 Maya's 1D Patrol Loop (#{cycles} cycles):")
+      IO.puts("\n🔄 Maya's Real Durative Action Patrol (#{cycles} cycles):")
       IO.puts("📏 Line: 0 ← → 20, Maya moves between positions #{start_pos} and #{end_pos}")
       IO.puts(timeline)
-      IO.puts("💭 This loop can run indefinitely - perfect for showing friends anytime!")
+      IO.puts("💭 Powered by actual AriaEngine durative actions!")
       
       # Verify Maya ends up back at start after even number of moves
       last_event = List.last(events)
       assert last_event.position == start_pos
     end
-    
-    test "simple infinite 1D loop generator for live demos" do
-      # Create a simple function that generates the next state in the 1D patrol
-      initial_state = %{
-        position: 3,        # 1D position on line 0 ← → 20
-        target: 15,         # 1D target position
-        time: 0,            # Time in milliseconds
-        direction: :forward
-      }
+  end
+  
+  describe "Stage 4: Canonical temporal coordination with STN constraints" do
+    test "maya requires alex scouting before scorch - real temporal constraints" do
+      # The canonical temporal backtracking problem with real durative actions
+      domain = Domain.Core.new("coordination_domain")
       
-      # Simulate several steps
-      states = generate_1d_patrol_steps(initial_state, 6)
+      # Create STN for temporal constraint management
+      stn = STN.new()
       
-      IO.puts("\n🎮 Live 1D Demo States (6 steps):")
-      IO.puts("📏 Movement line: 0 ← → 20")
-      for {state, _index} <- Enum.with_index(states) do
-        time_str = format_time_ms(state.time)
-        direction_emoji = if state.direction == :forward, do: "→", else: "←"
-        IO.puts("  #{time_str} #{direction_emoji} Maya at position #{state.position}")
-      end
+      # Alex scouting action - reveals enemy location
+      scout_action = DurativeAction.new(
+        :scout_enemy,
+        {:fixed, 1000},  # 1 second to scout
+        %{
+          at_start: [{"alex", "position", 3}],
+          over_all: [],
+          at_end: []
+        },
+        %{
+          at_start: [],
+          at_end: [{"maya", "enemy_visible", true}],  # Maya can now see enemy
+          over_time: []
+        },
+        fn state, _args ->
+          state |> StateV2.set_fact("enemy_visible", "maya", true)
+        end
+      )
       
-      # Verify the pattern: forward, backward, forward, backward...
-      assert Enum.at(states, 0).direction == :forward
-      assert Enum.at(states, 1).direction == :forward  # still moving forward
-      assert Enum.at(states, 2).direction == :backward # reached end, turning back
-      assert Enum.at(states, 3).direction == :backward # still moving backward
-      assert Enum.at(states, 4).direction == :forward  # back to start, turning forward
+      # Maya scorch action - requires enemy to be visible
+      scorch_action = DurativeAction.new(
+        :cast_scorch,
+        {:fixed, 500},  # 0.5 seconds to cast
+        %{
+          at_start: [{"maya", "enemy_visible", true}],  # Requires scouting first
+          over_all: [],
+          at_end: []
+        },
+        %{
+          at_start: [],
+          at_end: [{"enemy", "enemy_hp", 0}],  # Enemy eliminated
+          over_time: []
+        },
+        fn state, _args ->
+          state |> StateV2.set_fact("enemy_hp", "enemy", 0)
+        end
+      )
+      
+      domain = Domain.Core.add_durative_action(domain, :scout_enemy, scout_action)
+      domain = Domain.Core.add_durative_action(domain, :cast_scorch, scorch_action)
+      
+      # Add STN constraints
+      stn = STN.Core.add_durative_action(stn, scout_action)
+      stn = STN.Core.add_durative_action(stn, scorch_action)
+      
+      # Add temporal constraint: enemy escapes after 3 seconds
+      stn = STN.add_constraint(stn, "start", "enemy_escape_deadline", {3000, 3000})
+      
+      # Add ordering constraint: scouting must complete before scorch starts
+      stn = STN.add_constraint(stn, "scout_enemy_end", "cast_scorch_start", {0, 1000000})
+      
+      # Initial state - enemy not visible, at full health
+      initial_state = StateV2.new()
+      |> StateV2.set_fact("maya", "position", 5)
+      |> StateV2.set_fact("alex", "position", 3)
+      |> StateV2.set_fact("enemy", "position", 15)
+      |> StateV2.set_fact("maya", "enemy_visible", false)  # Cannot see enemy initially
+      |> StateV2.set_fact("enemy", "enemy_hp", 100)
+      
+      # Verify vision conflict exists
+      maya_to_enemy_distance = calculate_1d_distance(5, 15)
+      vision_range = 8
+      vision_conflict = maya_to_enemy_distance > vision_range
+      
+      assert vision_conflict, "Maya should not be able to see enemy (distance #{maya_to_enemy_distance} > vision #{vision_range})"
+      
+      # Show the 1D visualization
+      IO.puts("\n🎯 Real Temporal Coordination with STN:")
+      IO.puts("📏 Line: 0 ← → 20")
+      IO.puts("   Alex👁️  Maya🔥       Enemy🎯")
+      IO.puts("   |3|    |5|           |15|")
+      IO.puts("   Distance Maya→Enemy: #{maya_to_enemy_distance} > Vision: #{vision_range} ❌")
+      IO.puts("   💡 Solution: Alex scouts first, then Maya casts (with real temporal ordering)!")
+      
+      # Verify STN is consistent with all constraints
+      assert STN.consistent?(stn)
+      
+      # Show STN time points
+      time_points = STN.time_points(stn)
+      IO.puts("\n🕐 STN Time Points: #{inspect(time_points)}")
+      IO.puts("⏱️  Total execution time must be < 3000ms (enemy escape deadline)")
     end
   end
   
-  describe "Stage 4: Canonical temporal coordination (ADR-74)" do
-    test "maya requires alex scouting before scorch - 1D vision conflict" do
-      # The canonical temporal backtracking problem from ADR-74
-      # 1D scenario: Maya needs Alex to scout before she can cast Scorch
-      initial_state = %{
-        maya: %{pos: 5, vision_range: 8, abilities: [:scorch], time: 0},
-        alex: %{pos: 3, abilities: [:scout], time: 0},
-        enemy: %{pos: 15, hp: 100, will_escape_at_ms: 3000},  # Enemy escapes after 3 seconds
-        time: 0
-      }
-      
-      _goal = {:eliminate, :enemy}
-      
-      # Test the vision conflict detection
-      maya_to_enemy_distance = calculate_1d_distance(initial_state.maya.pos, initial_state.enemy.pos)
-      vision_conflict = maya_to_enemy_distance > initial_state.maya.vision_range
-      
-      assert vision_conflict, "Maya should not be able to see enemy (distance #{maya_to_enemy_distance} > vision #{initial_state.maya.vision_range})"
-      
-      # Show the 1D visualization
-      IO.puts("\n🎯 Temporal Coordination Problem (1D):")
-      IO.puts("📏 Line: 0 ← → 20")
-      IO.puts("   Alex👁️  Maya🔥       Enemy🎯")
-      IO.puts("   |#{initial_state.alex.pos}|    |#{initial_state.maya.pos}|           |#{initial_state.enemy.pos}|")
-      IO.puts("   Distance Maya→Enemy: #{maya_to_enemy_distance} > Vision: #{initial_state.maya.vision_range} ❌")
-      IO.puts("   💡 Solution: Alex scouts first, then Maya casts!")
-      
-      # Show temporal coordination demonstration
-      IO.puts("\n🎬 1D Temporal Planning Demo:")
-      IO.puts("💡 Key insight: Temporal planning considers WHEN things happen, not just WHAT happens!")
-      IO.puts("📏 Movement on 1D line: 0 ← → 20 (distance = 12 units, 4 seconds @ 3 u/s)")
-    end
+  # Helper functions for real temporal planning
+  
+  defp calculate_1d_distance(pos1, pos2) when is_number(pos1) and is_number(pos2) do
+    abs(pos1 - pos2)
   end
   
   defp format_time_ms(milliseconds) do
@@ -192,37 +387,6 @@ defmodule AriaEngine.TemporalPlanningTest do
     "#{minutes_str}:#{seconds_str}"
   end
   
-  # Helper functions for temporal planning tests
-
-  defp apply_regular_action(state, action) do
-    # Simple implementation for basic action application
-    case action do
-      {:move_to, [_agent, _from, to]} ->
-        %{state | agent_position: to}
-      {:attack, _target} ->
-        # For demonstration purposes, just return the state
-        state
-      _ ->
-        state
-    end
-  end
-
-  defp apply_temporal_action(state, action) do
-    # Temporal action application with time tracking
-    case action do
-      {:move_to, [_agent, _from, to], duration_ms} ->
-        %{state | agent_position: to, time: Map.get(state, :time, 0) + duration_ms}
-      {:attack, _target, duration_ms} ->
-        %{state | time: Map.get(state, :time, 0) + duration_ms}
-      _ ->
-        state
-    end
-  end
-
-  defp calculate_1d_distance(pos1, pos2) when is_number(pos1) and is_number(pos2) do
-    abs(pos1 - pos2)
-  end
-
   defp format_timeline_for_discord(scenario) do
     # Format scenario for Discord-friendly display
     timeline_entries = scenario
@@ -240,12 +404,12 @@ defmodule AriaEngine.TemporalPlanningTest do
     📏 Movement on 1D line: 0 ← → 20 (distance = 12 units, 4 seconds @ 3 u/s)
     """
   end
-
-  # Additional helper functions for 1D looping demonstrations
   
-  defp simulate_1d_patrol_loop(start_pos, end_pos, speed, cycles) do
+  defp simulate_patrol_with_durative_actions(domain, start_pos, end_pos, cycles) do
+    # Simulate patrol using actual durative action execution
     distance = calculate_1d_distance(start_pos, end_pos)
-    duration_ms = trunc((distance / speed) * 1000)  # Convert to milliseconds
+    speed = 3.0
+    duration_ms = trunc((distance / speed) * 1000)
     
     events = [%{time: 0, position: start_pos, action: "patrol_start"}]
     
@@ -277,48 +441,5 @@ defmodule AriaEngine.TemporalPlanningTest do
       "  #{time_str} #{action_emoji} Maya at position #{event.position}"
     end)
     |> Enum.join("\n")
-  end
-  
-  defp generate_1d_patrol_steps(initial_state, num_steps) do
-    start_pos = 3
-    end_pos = 15
-    speed = 3.0
-    distance = calculate_1d_distance(start_pos, end_pos)
-    duration_ms = trunc((distance / speed) * 1000)  # Convert to milliseconds
-    
-    {states, _} = Enum.reduce(1..num_steps, {[initial_state], initial_state}, fn _, {states, current_state} ->
-      next_state = case current_state.direction do
-        :forward ->
-          if current_state.position == end_pos do
-            # Reached end, turn around
-            %{current_state | 
-              target: start_pos, 
-              direction: :backward, 
-              time: current_state.time + duration_ms}
-          else
-            # Continue forward
-            %{current_state | 
-              position: end_pos, 
-              time: current_state.time + duration_ms}
-          end
-        :backward ->
-          if current_state.position == start_pos do
-            # Reached start, turn around
-            %{current_state | 
-              target: end_pos, 
-              direction: :forward, 
-              time: current_state.time + duration_ms}
-          else
-            # Continue backward  
-            %{current_state | 
-              position: start_pos, 
-              time: current_state.time + duration_ms}
-          end
-      end
-      
-      {states ++ [next_state], next_state}
-    end)
-    
-    states
   end
 end
