@@ -36,19 +36,23 @@ Migrate the entire AriaEngine planner system to use StateV2's entity-first subje
 - [x] Update `Plan.Utils` to use StateV2
 - [x] Update `Plan` facade to use StateV2
 - [x] Update `Planning.CoreInterface` to use StateV2
+- [x] Update `Planner.ex` facade to use StateV2 **NEW** ✅
+- [x] Update `Multigoal.ex` to use StateV2 **NEW** ✅
+- [x] Verify compilation with warnings-as-errors **NEW** ✅
 
-### Phase 2: Domain Integration Migration
-- [ ] Update domain actions in `actions.ex` to work with StateV2 format
+### Phase 2: Domain Integration Migration (PARTIALLY COMPLETED)
+- [x] Update domain actions in `actions.ex` to work with StateV2 format **COMPLETED** ✅
 - [ ] Update method precondition checking to use subject-predicate-fact
-- [ ] Update effect application to use StateV2 API
+- [ ] Update effect application to use StateV2 API  
 - [ ] Update convenience functions to use StateV2
 - [ ] Update domain utilities to use entity-first patterns
 
-### Phase 3: Interface Migration
-- [ ] Update `Planner.ex` facade to use StateV2
+### Phase 3: Test Migration (IN PROGRESS)
+- [ ] Update all tests to use StateV2 format instead of legacy State
+- [ ] Fix durative action tests to use StateV2 
+- [ ] Fix planning tests to use StateV2
+- [ ] Fix goal management tests to use StateV2
 - [ ] Add conversion helpers for backward compatibility if needed
-- [ ] Update all planning interfaces to accept StateV2
-- [ ] Update tests to use StateV2 format
 
 ### Phase 4: Validation and Cleanup
 - [ ] Run full test suite to ensure no regressions

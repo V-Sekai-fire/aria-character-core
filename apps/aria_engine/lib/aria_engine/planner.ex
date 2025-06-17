@@ -55,7 +55,7 @@ defmodule AriaEngine.Planner do
   ```
   """
 
-  alias AriaEngine.{Domain, State, Multigoal}
+  alias AriaEngine.{Domain, StateV2, Multigoal}
   alias AriaEngine.TemporalPlanner.{STNPlanner, STNMethod, STNAction}
   alias AriaEngine.Plan # Alias for the Plan facade
   alias AriaEngine.Plan.Utils # Alias for Plan.Utils
@@ -64,7 +64,7 @@ defmodule AriaEngine.Planner do
   # Core planner types (maintained for compatibility)
   @type planner_opts :: keyword()
   @type planner_result :: {:ok, Plan.solution_tree()} | {:error, String.t()}
-  @type execution_result :: {:ok, State.t()} | {:error, String.t()}
+  @type execution_result :: {:ok, StateV2.t()} | {:error, String.t()}
   @type replan_result :: {:ok, Plan.solution_tree()} | {:error, String.t()} | :failure
 
   # Domain interface types (maintained for compatibility)
@@ -77,7 +77,7 @@ defmodule AriaEngine.Planner do
 
   # Solution tree types (core HTN planning) - these are now defined in Plan.Core
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), State.fact_value()}
+  @type goal :: {String.t(), String.t(), StateV2.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -91,8 +91,8 @@ defmodule AriaEngine.Planner do
   @doc """
   Plan goals using STN-based temporal planning with HTN bridge compatibility.
   """
-  @spec plan(domain_interface(), State.t(), [Plan.todo_item()], planner_opts(), integer() | nil) :: planner_result()
-  def plan(domain_interface, %State{} = initial_state, goals, opts \\ [], current_time \\ nil) when is_list(goals) do
+  @spec plan(domain_interface(), StateV2.t(), [Plan.todo_item()], planner_opts(), integer() | nil) :: planner_result()
+  def plan(domain_interface, %StateV2{} = initial_state, goals, opts \\ [], current_time \\ nil) when is_list(goals) do
     set_logger_level_from_opts(opts)
     Logger.configure(level: :debug) # Force debug for tracing
     
@@ -123,8 +123,8 @@ defmodule AriaEngine.Planner do
   @doc """
   Execute a solution tree with Run-Lazy-Refineahead using STN temporal coordination.
   """
-  @spec execute(domain_interface(), State.t(), Plan.solution_tree(), planner_opts(), integer() | nil) :: execution_result()
-  def execute(domain_interface, %State{} = initial_state, solution_tree, opts \\ [], current_time \\ nil) do
+  @spec execute(domain_interface(), StateV2.t(), Plan.solution_tree(), planner_opts(), integer() | nil) :: execution_result()
+  def execute(domain_interface, %StateV2{} = initial_state, solution_tree, opts \\ [], current_time \\ nil) do
     set_logger_level_from_opts(opts)
     
     # Convert domain interface to Domain struct
@@ -151,8 +151,8 @@ defmodule AriaEngine.Planner do
   @doc """
   Replan from a failure point using STN bridge-based replanning.
   """
-  @spec replan(domain_interface(), State.t(), Plan.solution_tree(), String.t(), planner_opts(), integer() | nil) :: replan_result()
-  def replan(domain_interface, %State{} = current_state, solution_tree, fail_node_id, opts \\ [], current_time \\ nil) do
+  @spec replan(domain_interface(), StateV2.t(), Plan.solution_tree(), String.t(), planner_opts(), integer() | nil) :: replan_result()
+  def replan(domain_interface, %StateV2{} = current_state, solution_tree, fail_node_id, opts \\ [], current_time \\ nil) do
     set_logger_level_from_opts(opts)
     
     # Convert domain interface to Domain struct
@@ -182,8 +182,8 @@ defmodule AriaEngine.Planner do
   @doc """
   Validate a plan against the domain and initial state using STN consistency checking.
   """
-  @spec validate_plan(domain_interface(), State.t(), Plan.solution_tree()) ::
-    {:ok, State.t()} | {:error, String.t()}
+  @spec validate_plan(domain_interface(), StateV2.t(), Plan.solution_tree()) ::
+    {:ok, StateV2.t()} | {:error, String.t()}
   def validate_plan(domain_interface, initial_state, solution_tree) do
     domain = interface_to_domain(domain_interface)
     
