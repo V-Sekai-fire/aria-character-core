@@ -1,38 +1,30 @@
-import Config
-
-# We don't want to configure the logger in tests, but we do want to suppress
-# the ipyhop_loop messages.
-config :logger,
-  backends: [:console],
-  level: :info, # Set default level to info to hide debug messages
-  # compile_time_purge_matching: [
-  #   [module: AriaEngine.IpyhopLoop, level: :info] # Suppress ipyhop_loop messages
-  # ],
-  # metadata: [:file, :line, :function, :module, :pid, :level, :node], # This line is correct, the error was elsewhere.
-  format: "$time $metadata[$level] $message\n",
-  utc_log: true,
-  sync_threshold: 1000,
-  discard_threshold: 5000,
-  truncate: 8000,
-  handle_otp_reports: true,
-  handle_sasl_reports: true
-
-
-# Configure AriaAuth.Repo for testing
-config :aria_auth, AriaAuth.Repo,
-  adapter: Ecto.Adapters.SQLite3,
-  database: ":memory:", # In-memory database for testing
-  pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 1
+use Mix.Config
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-# config :aria_character_core, AriaCharacterCoreWeb.Endpoint,
-#   http: [port: 4002],
-#   server: false
+config :aria_engine, AriaEngineWeb.Endpoint,
+  http: [port: 4002],
+  server: false
 
 # Print only warnings and errors during test
-config :logger, level: :warning
+config :logger, level: :debug
 
-# Initialize plugs at runtime for faster test compilation
-config :phoenix, :plug_init_mode, :runtime
+# Initialize and configure
+config :aria_engine, :ecto_repos, []
+
+# Set a higher stacktrace limit for more detailed errors
+config :phoenix, :stacktrace_depth, 20
+
+# Configure parameters for
+# the `mix test --cover` command.
+config :excoveralls,
+  tool: ExCoveralls.LCOV,
+  inputs: ["lib", "apps/aria_engine/lib", "apps/aria_auth/lib", "apps/aria_workflow/lib", "apps/aria_file_management/lib", "apps/aria_storage/lib"],
+  excluded: [
+    ~r"test",
+    ~r"mix.exs",
+    ~r"lib/aria_engine/application.ex",
+    ~r"lib/aria_engine/release.ex",
+    ~r"lib/aria_engine_web/",
+    ~r"lib/aria_engine/domains/"
+  ]

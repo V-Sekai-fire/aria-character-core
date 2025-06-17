@@ -79,6 +79,7 @@ defmodule AriaEngine.Timeline.STN do
   alias AriaEngine.Timeline.Interval
   alias AriaEngine.Timeline.LodAdapter
   alias AriaEngine.FlowAdapter
+  require Logger
 
   @type constraint :: {number(), number()}  # {min_distance, max_distance}
   @type time_point :: String.t()
@@ -355,6 +356,27 @@ defmodule AriaEngine.Timeline.STN do
   end
 
   @doc """
+  Adds a durative action to the STN, creating time points for its start and end,
+  and adding a duration constraint.
+  """
+  @spec add_durative_action(t(), AriaEngine.Domain.DurativeAction.t()) :: t()
+  def add_durative_action(stn, durative_action) do
+    start_point = "#{durative_action.name}_start"
+    end_point = "#{durative_action.name}_end"
+
+    duration_constraint = case durative_action.duration do
+      {:fixed, duration} -> {duration, duration}
+      {:range, min_duration, max_duration} -> {min_duration, max_duration}
+    end
+    
+    stn
+    |> add_time_point(start_point)
+    |> add_time_point(end_point)
+    |> add_constraint(start_point, end_point, duration_constraint)
+    |> apply_pc2()
+  end
+
+  @doc """
   Adds a temporal constraint between two time points.
 
   The constraint represents the allowable distance between the time points
@@ -379,16 +401,47 @@ defmodule AriaEngine.Timeline.STN do
           |> add_time_point(from_point)
           |> add_time_point(to_point)
     
-    # Add the constraint
-    updated_constraints = Map.put(stn.constraints, {from_point, to_point}, constraint)
+    # Add the constraint, intersecting with existing if present
+    {updated_constraints, is_inconsistent} = 
+      case Map.get(stn.constraints, {from_point, to_point}) do
+        nil ->
+          {Map.put(stn.constraints, {from_point, to_point}, constraint), false}
+        existing_constraint ->
+          case intersect_constraints(existing_constraint, constraint) do
+            :inconsistent ->
+              {stn.constraints, true} # Mark as inconsistent, keep original constraints
+            new_c ->
+              {Map.put(stn.constraints, {from_point, to_point}, new_c), false}
+          end
+      end
     
-    # Add the reverse constraint (negative distances)
-    reverse_constraint = {-max_dist, -min_dist}
-    updated_constraints = Map.put(updated_constraints, {to_point, from_point}, reverse_constraint)
-    
-    # Apply PC-2 to propagate the new constraint
-    %{stn | constraints: updated_constraints}
-    |> apply_pc2()
+    # If already inconsistent, return early
+    if is_inconsistent do
+      %{stn | consistent: false}
+    else
+      # Add the reverse constraint, intersecting with existing if present
+      reverse_constraint = {-max_dist, -min_dist}
+      {updated_constraints_with_reverse, is_inconsistent_with_reverse} = 
+        case Map.get(updated_constraints, {to_point, from_point}) do
+          nil ->
+            {Map.put(updated_constraints, {to_point, from_point}, reverse_constraint), false}
+          existing_reverse_constraint ->
+            case intersect_constraints(existing_reverse_constraint, reverse_constraint) do
+              :inconsistent ->
+                {updated_constraints, true} # Mark as inconsistent, keep original constraints
+              new_c ->
+                {Map.put(updated_constraints, {to_point, from_point}, new_c), false}
+            end
+        end
+      
+      if is_inconsistent_with_reverse do
+        %{stn | consistent: false}
+      else
+        # Apply PC-2 to propagate the new constraint
+        %{stn | constraints: updated_constraints_with_reverse}
+        |> apply_pc2()
+      end
+    end
   end
 
   @doc """
@@ -652,16 +705,11 @@ defmodule AriaEngine.Timeline.STN do
 
   ## Examples
 
-      # Bridge high-resolution real-time STN with low-resolution planning STN
-      real_time_stn = STN.new(lod_level: :ultra_high, time_unit: :microsecond)
-      planning_stn = STN.new(lod_level: :low, time_unit: :second)
-      
-      # Automatic bridging with intersection
-      result = STN.bridge_compose(real_time_stn, planning_stn, :intersection)
-      
-      # Explicit target LOD
-      result = STN.bridge_compose(real_time_stn, planning_stn, :union,
-        target_lod: :medium, target_unit: :millisecond)
+      iex> real_time_stn = AriaEngine.Timeline.STN.new(lod_level: :ultra_high, time_unit: :microsecond)
+      iex> planning_stn = AriaEngine.Timeline.STN.new(lod_level: :low, time_unit: :second)
+      iex> result = AriaEngine.Timeline.STN.bridge_compose(real_time_stn, planning_stn, :intersection)
+      iex> result = AriaEngine.Timeline.STN.bridge_compose(real_time_stn, planning_stn, :union,
+      ...>   target_lod: :medium, target_unit: :millisecond)
 
   """
   @spec bridge_compose(t(), t(), :intersection | :union | :difference, keyword()) :: t()
@@ -697,12 +745,10 @@ defmodule AriaEngine.Timeline.STN do
 
   ## Examples
 
-      strategic_stn = STN.new(lod_level: :very_low, time_unit: :hour)
-      tactical_stn = STN.new(lod_level: :low, time_unit: :minute)  
-      execution_stn = STN.new(lod_level: :high, time_unit: :millisecond)
-      
-      # Create hierarchical chain
-      chain = STN.lod_chain([strategic_stn, tactical_stn, execution_stn])
+      iex> strategic_stn = AriaEngine.Timeline.STN.new(lod_level: :very_low, time_unit: :hour)
+      iex> tactical_stn = AriaEngine.Timeline.STN.new(lod_level: :low, time_unit: :minute)  
+      iex> execution_stn = AriaEngine.Timeline.STN.new(lod_level: :high, time_unit: :millisecond)
+      iex> chain = AriaEngine.Timeline.STN.lod_chain([strategic_stn, tactical_stn, execution_stn])
 
   """
   @spec lod_chain([t()], keyword()) :: t()
@@ -918,13 +964,12 @@ defmodule AriaEngine.Timeline.STN do
         # Use Flow adapter for larger sets
         {:ok, flow_config} = FlowAdapter.create_pipeline("stn_parallel_join", 
           flow_control: :pull, 
-          stages: min(count, System.schedulers_online()),
+          stages: System.schedulers_online(),
           demand_size: 2,
           convergence: true
         )
         
-        # Process unions in parallel
-        FlowAdapter.process_stn_compositions(flow_config, 
+        _solved_segments = FlowAdapter.process_stn_compositions(flow_config,
           Enum.chunk_every(stns, 2, 2, [new()]) |> Enum.map(&List.to_tuple/1),
           &union/2)
         |> Enum.reduce(&union/2)
@@ -952,7 +997,7 @@ defmodule AriaEngine.Timeline.STN do
       true
 
   """
-  @spec segment(t(), integer()) :: [t()]
+  @spec segment(t(), pos_integer()) :: [t()]
   def segment(stn, max_segments) when max_segments > 0 do
     time_points = MapSet.to_list(stn.time_points)
     point_count = length(time_points)
@@ -1051,34 +1096,48 @@ defmodule AriaEngine.Timeline.STN do
     }
   end
 
-  # Core PC-2 algorithm implementation
+    # Core PC-2 algorithm implementation
   defp apply_pc2_iterations(time_points, constraints) do
     _n = length(time_points)
+    Logger.debug("PC2: Starting apply_pc2_iterations. Time points: #{inspect(time_points)}, Initial constraints: #{inspect(constraints)}")
     
     # Initialize with existing constraints and zero self-constraints
     initial_constraints = initialize_constraints(time_points, constraints)
+    Logger.debug("PC2: Initialized constraints: #{inspect(initial_constraints)}")
     
     # First check for direct cycle inconsistencies (critical for 2-point networks)
     case check_direct_cycle_consistency(time_points, initial_constraints) do
       :inconsistent ->
+        Logger.debug("PC2: Inconsistent after direct cycle check.")
         {initial_constraints, false}
       
       :consistent ->
+        Logger.debug("PC2: Consistent after direct cycle check. Proceeding with main loops.")
         # Apply three nested loops for path consistency (Floyd-Warshall style)
         {final_constraints, consistent} = 
-          Enum.reduce(time_points, {initial_constraints, true}, fn k, {acc_constraints, acc_consistent} ->
+          Enum.reduce_while(time_points, {initial_constraints, true}, fn k, {acc_constraints, acc_consistent} ->
+            Logger.debug("PC2: Outer loop (k): #{k}. Current consistent: #{acc_consistent}")
             if not acc_consistent do
-              {acc_constraints, false}
+              {:halt, {acc_constraints, false}}
             else
-              apply_pc2_with_intermediate(time_points, acc_constraints, k)
+              case apply_pc2_with_intermediate(time_points, acc_constraints, k) do
+                {new_constraints, new_consistent} ->
+                  Logger.debug("PC2: Intermediate loop result for k=#{k}: Consistent: #{new_consistent}")
+                  {:cont, {new_constraints, new_consistent}}
+              end
             end
           end)
         
-        {final_constraints, consistent}
+        # Final check for consistency after all iterations
+        final_consistent = Enum.all?(Map.values(final_constraints), fn {min, max} -> min <= max end)
+        Logger.debug("PC2: Final consistency check. Constraints: #{inspect(final_constraints)}. All bounds valid: #{final_consistent}")
+        
+        {final_constraints, consistent and final_consistent}
     end
   end
 
   defp check_direct_cycle_consistency(time_points, constraints) do
+    Logger.debug("PC2: Checking direct cycle consistency.")
     # Check all pairs of time points for direct cycle inconsistencies
     Enum.reduce_while(time_points, :consistent, fn i, _acc ->
       result = Enum.reduce_while(time_points, :consistent, fn j, _inner_acc ->
@@ -1090,6 +1149,7 @@ defmodule AriaEngine.Timeline.STN do
           ji_constraint = Map.get(constraints, {j, i})
           
           if ij_constraint && ji_constraint do
+            Logger.debug("PC2: Checking direct cycle #{i} -> #{j} -> #{i}. Constraints: #{inspect(ij_constraint)}, #{inspect(ji_constraint)}")
             case check_cycle_consistency(ij_constraint, ji_constraint) do
               :inconsistent -> {:halt, :inconsistent}
               :consistent -> {:cont, :consistent}
@@ -1108,14 +1168,15 @@ defmodule AriaEngine.Timeline.STN do
   end
 
   defp check_cycle_consistency({min1, max1}, {min2, max2}) do
-    # For a cycle A -> B -> A with constraints (min1, max1) and (min2, max2),
-    # the cycle is consistent if: min1 + min2 <= 0 <= max1 + max2
     cycle_min = min1 + min2
     cycle_max = max1 + max2
+    Logger.debug("PC2: check_cycle_consistency for (#{min1},#{max1}), (#{min2},#{max2}). Cycle: (#{cycle_min},#{cycle_max})")
     
     if cycle_min > 0 or cycle_max < 0 do
+      Logger.debug("PC2: Cycle inconsistent.")
       :inconsistent
     else
+      Logger.debug("PC2: Cycle consistent.")
       :consistent
     end
   end
@@ -1131,34 +1192,51 @@ defmodule AriaEngine.Timeline.STN do
   end
 
   defp apply_pc2_with_intermediate(time_points, constraints, k) do
-    Enum.reduce(time_points, {constraints, true}, fn i, {acc_constraints, acc_consistent} ->
-      if not acc_consistent do
-        {acc_constraints, false}
+    Logger.debug("PC2: Entering apply_pc2_with_intermediate for k=#{k}. Constraints: #{inspect(constraints)}")
+    Enum.reduce_while(time_points, {constraints, true}, fn i, {acc_constraints_i, acc_consistent_i} ->
+      Logger.debug("PC2: Inner loop (i): #{i}. Current consistent: #{acc_consistent_i}")
+      if not acc_consistent_i do
+        {:halt, {acc_constraints_i, false}}
       else
-        Enum.reduce(time_points, {acc_constraints, acc_consistent}, fn j, {inner_constraints, inner_consistent} ->
-          if not inner_consistent do
-            {inner_constraints, false}
-          else
-            update_constraint_via_path(inner_constraints, i, j, k)
-          end
-        end)
+        {final_constraints_j, final_consistent_j} =
+          Enum.reduce_while(time_points, {acc_constraints_i, acc_consistent_i}, fn j, {acc_constraints_j, acc_consistent_j} ->
+            Logger.debug("PC2: Innermost loop (j): #{j}. Current consistent: #{acc_consistent_j}")
+            if not acc_consistent_j do
+              {:halt, {acc_constraints_j, false}}
+            else
+              case update_constraint_via_path(acc_constraints_j, i, j, k) do
+                {:inconsistent} ->
+                  Logger.debug("PC2: Inconsistency detected in update_constraint_via_path for #{i}-#{j}-#{k}.")
+                  {:halt, {acc_constraints_j, false}}
+                {:ok, new_constraints} ->
+                  Logger.debug("PC2: Constraint updated for #{i}-#{j}-#{k}. New constraints: #{inspect(new_constraints)}")
+                  {:cont, {new_constraints, true}}
+              end
+            end
+          end)
+        {:cont, {final_constraints_j, final_consistent_j}}
       end
     end)
   end
 
   defp update_constraint_via_path(constraints, i, j, k) do
+    Logger.debug("PC2: update_constraint_via_path for i=#{i}, j=#{j}, k=#{k}. Constraints: #{inspect(constraints)}")
     # Get existing direct constraint i -> j (default to no constraint if not exists)
     direct_constraint = Map.get(constraints, {i, j})
+    Logger.debug("PC2: Direct constraint #{i}-#{j}: #{inspect(direct_constraint)}")
 
     # Get path constraint i -> k -> j
     ik_constraint = Map.get(constraints, {i, k})
     kj_constraint = Map.get(constraints, {k, j})
+    Logger.debug("PC2: Path constraints #{i}-#{k}: #{inspect(ik_constraint)}, #{k}-#{j}: #{inspect(kj_constraint)}")
 
     # Skip if either path constraint is missing
     if is_nil(ik_constraint) or is_nil(kj_constraint) do
-      {constraints, true}
+      Logger.debug("PC2: Skipping update_constraint_via_path due to missing path constraints.")
+      {:ok, constraints}
     else
       path_constraint = compose_constraints(ik_constraint, kj_constraint)
+      Logger.debug("PC2: Composed path constraint: #{inspect(path_constraint)}")
 
       # Intersect direct and path constraints
       new_constraint =
@@ -1167,10 +1245,12 @@ defmodule AriaEngine.Timeline.STN do
         else
           intersect_constraints(direct_constraint, path_constraint)
         end
+      Logger.debug("PC2: Intersected new constraint: #{inspect(new_constraint)}")
 
       case new_constraint do
         :inconsistent ->
-          {constraints, false}
+          Logger.debug("PC2: Inconsistency detected in intersect_constraints.")
+          {:inconsistent}
 
         constraint ->
           # Only update if the new constraint is tighter than the direct constraint
@@ -1180,24 +1260,26 @@ defmodule AriaEngine.Timeline.STN do
             else
               constraints
             end
-
-          {updated_constraints, true}
+          Logger.debug("PC2: Updated constraints: #{inspect(updated_constraints)}")
+          {:ok, updated_constraints}
       end
     end
   end
 
   defp compose_constraints({min1, max1}, {min2, max2}) do
-    # Compose two constraints by adding their bounds
-    {min1 + min2, max1 + max2}
+    composed = {min1 + min2, max1 + max2}
+    Logger.debug("PC2: Composing (#{min1},#{max1}) and (#{min2},#{max2}) -> #{inspect(composed)}")
+    composed
   end
 
   defp intersect_constraints({min1, max1}, {min2, max2}) do
-    # Intersect two constraints by taking the tighter bounds
     new_min = max(min1, min2)
     new_max = min(max1, max2)
+    Logger.debug("PC2: Intersecting (#{min1},#{max1}) and (#{min2},#{max2}) -> (#{new_min},#{new_max})")
 
     # Check for inconsistency
     if new_min > new_max do
+      Logger.debug("PC2: Inconsistency detected in intersect_constraints: #{new_min} > #{new_max}")
       :inconsistent
     else
       {new_min, new_max}

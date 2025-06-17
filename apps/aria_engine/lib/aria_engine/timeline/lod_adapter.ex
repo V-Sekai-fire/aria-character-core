@@ -377,7 +377,7 @@ defmodule AriaEngine.Timeline.LodAdapter do
   
   defp determine_median_lod(lod_levels) do
     indices = Enum.map(lod_levels, &lod_level_to_index/1)
-    median_index = Enum.sum(indices) / length(indices) |> Float.round()
+    median_index = Enum.sum(indices) / length(indices) |> Float.round() |> trunc()
     Enum.at(@lod_hierarchy, median_index)
   end
   

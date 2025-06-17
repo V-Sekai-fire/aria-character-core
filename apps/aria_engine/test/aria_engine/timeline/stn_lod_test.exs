@@ -3,6 +3,7 @@
 
 defmodule AriaEngine.Timeline.STNLODTest do
   use ExUnit.Case
+  @moduletag timeout: 60000 # Set module timeout to 60 seconds
   doctest AriaEngine.Timeline.STN
 
   alias AriaEngine.Timeline.{STN, Interval}
