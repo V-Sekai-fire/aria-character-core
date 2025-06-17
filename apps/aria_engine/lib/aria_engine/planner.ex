@@ -882,7 +882,7 @@ defmodule AriaEngine.Planner do
           {:ok, new_tree} ->
             ipyhop_loop(domain, state, new_tree, depth, max_depth, verbose)
             
-          :no_alternatives ->
+          {:error, _reason} ->
             # Continue backtracking up the tree
             case solution_tree.nodes[parent_id] do
               nil -> {:error, "Parent node not found"}
@@ -1114,9 +1114,9 @@ defmodule AriaEngine.Planner do
             updated_tree = mark_action_completed(current_tree, action_node_id)
             run_execution_loop(domain, new_state, updated_tree, opts)
             
-          {:error, reason} ->
+          false ->
             if verbose > 2 do
-              IO.puts("Action failed: #{reason}")
+              IO.puts("Action failed: #{action_name}")
             end
             
             # Action failed - try to replan
