@@ -1,4 +1,4 @@
-defmodule AriaTownDemo.ContextSchema do
+defmodule AriaTown.ContextSchema do
   @moduledoc """
   Chibifire.com JSON-LD context schema definitions for semantic web compatibility.
   Provides RDF properties and classes with full URL identifiers.

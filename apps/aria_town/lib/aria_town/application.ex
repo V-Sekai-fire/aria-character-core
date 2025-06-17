@@ -1,4 +1,4 @@
-defmodule AriaTownDemo.Application do
+defmodule AriaTown.Application do
   @moduledoc false
 
   use Application
@@ -7,18 +7,18 @@ defmodule AriaTownDemo.Application do
   def start(_type, _args) do
     children = [
       # Knowledge Base and Persistence
-      AriaTownDemo.KnowledgeBase,
-      AriaTownDemo.PersistenceManager,
+      AriaTown.KnowledgeBase,
+      AriaTown.PersistenceManager,
       
       # Time and NPC Management
-      AriaTownDemo.TimeManager,
-      AriaTownDemo.NPCManager,
+      AriaTown.TimeManager,
+      AriaTown.NPCManager,
       
       # Phoenix Endpoint
-      AriaTownDemoWeb.Endpoint
+      AriaTownWeb.Endpoint
     ]
 
-    opts = [strategy: :one_for_one, name: AriaTownDemo.Supervisor]
+    opts = [strategy: :one_for_one, name: AriaTown.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
@@ -26,7 +26,7 @@ defmodule AriaTownDemo.Application do
   # whenever the application is updated.
   @impl true
   def config_change(changed, _new, removed) do
-    AriaTownDemoWeb.Endpoint.config_change(changed, removed)
+    AriaTownWeb.Endpoint.config_change(changed, removed)
     :ok
   end
 end

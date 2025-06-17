@@ -1,4 +1,4 @@
-defmodule AriaTownDemo.IRIHelpers do
+defmodule AriaTown.IRIHelpers do
   @moduledoc """
   Helper functions for generating chibifire.com IRIs (Internationalized Resource Identifiers).
   Provides consistent URL generation for all entities in the knowledge base.

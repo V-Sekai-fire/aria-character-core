@@ -1,4 +1,4 @@
-defmodule AriaTownDemo.PersistenceManager do
+defmodule AriaTown.PersistenceManager do
   @moduledoc """
   Manages periodic JSON-LD persistence with capped memory strategy.
   Saves NPC knowledge to chibifire.com-formatted files every 2 minutes.
@@ -60,7 +60,7 @@ defmodule AriaTownDemo.PersistenceManager do
         try do
           json_data = Jason.decode!(content)
           graph = RDF.JSON.LD.Decoder.decode!(json_data)
-          AriaTownDemo.KnowledgeBase.set_graph(graph)
+          AriaTown.KnowledgeBase.set_graph(graph)
           Logger.info("Restored NPC knowledge from #{@knowledge_file}")
         rescue
           error ->
@@ -77,7 +77,7 @@ defmodule AriaTownDemo.PersistenceManager do
   end
   
   defp save_knowledge_to_jsonld() do
-    graph = AriaTownDemo.KnowledgeBase.get_graph()
+    graph = AriaTown.KnowledgeBase.get_graph()
     
     # Apply memory caps before saving
     capped_graph = apply_memory_caps(graph)
@@ -88,10 +88,10 @@ defmodule AriaTownDemo.PersistenceManager do
     end
     
     # Update knowledge base with capped version
-    AriaTownDemo.KnowledgeBase.set_graph(capped_graph)
+    AriaTown.KnowledgeBase.set_graph(capped_graph)
     
     # Convert to JSON-LD with chibifire.com context
-    context = AriaTownDemo.ContextSchema.get_context()
+    context = AriaTown.ContextSchema.get_context()
     
     try do
       json_ld = RDF.JSON.LD.Encoder.encode!(capped_graph, context)
@@ -137,7 +137,7 @@ defmodule AriaTownDemo.PersistenceManager do
   defp get_all_npcs(graph) do
     RDF.Graph.triples(graph)
     |> Enum.filter(fn {_s, p, o} -> 
-      p == RDF.type() && o == AriaTownDemo.ContextSchema.person()
+      p == RDF.type() && o == AriaTown.ContextSchema.person()
     end)
     |> Enum.map(fn {s, _p, _o} -> s end)
   end
@@ -177,7 +177,7 @@ defmodule AriaTownDemo.PersistenceManager do
       
       # Remove old knowledge from graph
       Enum.reduce(old_items, graph, fn {topic, _timestamp}, acc ->
-        RDF.Graph.delete(acc, {npc, AriaTownDemo.ContextSchema.heard_about(), topic})
+        RDF.Graph.delete(acc, {npc, AriaTown.ContextSchema.heard_about(), topic})
       end)
     else
       graph
@@ -190,7 +190,7 @@ defmodule AriaTownDemo.PersistenceManager do
     # Remove triples with timestamps older than cutoff
     RDF.Graph.triples(graph)
     |> Enum.filter(fn {_s, p, o} ->
-      p == AriaTownDemo.ContextSchema.timestamp() && 
+      p == AriaTown.ContextSchema.timestamp() && 
       is_datetime_older?(o, cutoff_date)
     end)
     |> Enum.reduce(graph, fn {s, _p, _o}, acc ->
@@ -207,9 +207,9 @@ defmodule AriaTownDemo.PersistenceManager do
   defp remove_low_importance_knowledge(graph) do
     # Remove knowledge about weather, routine activities
     low_importance_topics = [
-      AriaTownDemo.IRIHelpers.topic_iri("weather"),
-      AriaTownDemo.IRIHelpers.topic_iri("routine"),
-      AriaTownDemo.IRIHelpers.activity_iri("sleeping")
+      AriaTown.IRIHelpers.topic_iri("weather"),
+      AriaTown.IRIHelpers.topic_iri("routine"),
+      AriaTown.IRIHelpers.activity_iri("sleeping")
     ]
     
     Enum.reduce(low_importance_topics, graph, fn topic, acc ->
@@ -223,7 +223,7 @@ defmodule AriaTownDemo.PersistenceManager do
   
   defp estimated_size_mb(graph) do
     try do
-      context = AriaTownDemo.ContextSchema.get_context()
+      context = AriaTown.ContextSchema.get_context()
       json_size = graph 
         |> RDF.JSON.LD.Encoder.encode!(context)
         |> Jason.encode!()
@@ -239,7 +239,7 @@ defmodule AriaTownDemo.PersistenceManager do
   defp get_npc_conversations(graph, npc) do
     RDF.Graph.triples(graph)
     |> Enum.filter(fn {s, p, o} ->
-      p == AriaTownDemo.ContextSchema.participants() && o == npc
+      p == AriaTown.ContextSchema.participants() && o == npc
     end)
     |> Enum.map(fn {s, _p, _o} -> s end)
     |> Enum.uniq()
@@ -248,7 +248,7 @@ defmodule AriaTownDemo.PersistenceManager do
   defp get_conversation_timestamp(graph, conversation) do
     case RDF.Graph.triples(graph)
          |> Enum.find(fn {s, p, _o} ->
-           s == conversation && p == AriaTownDemo.ContextSchema.timestamp()
+           s == conversation && p == AriaTown.ContextSchema.timestamp()
          end) do
       {_s, _p, timestamp} -> timestamp
       nil -> DateTime.from_unix!(0)  # Default to epoch if no timestamp
@@ -258,7 +258,7 @@ defmodule AriaTownDemo.PersistenceManager do
   defp get_npc_knowledge_triples(graph, npc) do
     RDF.Graph.triples(graph)
     |> Enum.filter(fn {s, p, _o} ->
-      s == npc && p == AriaTownDemo.ContextSchema.heard_about()
+      s == npc && p == AriaTown.ContextSchema.heard_about()
     end)
     |> Enum.map(fn {_s, _p, topic} ->
       timestamp = get_topic_timestamp(graph, topic)
@@ -269,7 +269,7 @@ defmodule AriaTownDemo.PersistenceManager do
   defp get_topic_timestamp(graph, topic) do
     case RDF.Graph.triples(graph)
          |> Enum.find(fn {s, p, _o} ->
-           s == topic && p == AriaTownDemo.ContextSchema.timestamp()
+           s == topic && p == AriaTown.ContextSchema.timestamp()
          end) do
       {_s, _p, timestamp} -> timestamp
       nil -> DateTime.from_unix!(0)

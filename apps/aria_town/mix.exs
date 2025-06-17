@@ -1,9 +1,9 @@
-defmodule AriaTownDemo.MixProject do
+defmodule AriaTown.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :aria_town_demo,
+      app: :aria_town,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
@@ -18,7 +18,7 @@ defmodule AriaTownDemo.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {AriaTownDemo.Application, []}
+      mod: {AriaTown.Application, []}
     ]
   end
 

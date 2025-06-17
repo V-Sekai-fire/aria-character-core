@@ -1,6 +1,6 @@
-defmodule AriaTownDemo do
+defmodule AriaTown do
   @moduledoc """
-  Documentation for `AriaTownDemo`.
+  Documentation for `AriaTown`.
   """
 
   @doc """
@@ -8,7 +8,7 @@ defmodule AriaTownDemo do
 
   ## Examples
 
-      iex> AriaTownDemo.hello()
+      iex> AriaTown.hello()
       :world
 
   """
