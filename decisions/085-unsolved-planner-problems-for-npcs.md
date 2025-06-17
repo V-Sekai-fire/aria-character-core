@@ -36,31 +36,35 @@ This roadmap focuses on systematic enhancement of AriaEngine's NPC planning capa
     - ✅ Enabled complex NPC reasoning patterns like "find any available chair" or "ensure all doors are locked"
     - ✅ Comprehensive test suites validate both standalone quantifiers and durative action integration
 
-*   [ ] **Enhanced Scheduling**: **Effort: L, Significance: High**
+*   [ ] **Enhanced Scheduling**: **Effort: L, Significance: High** → **See ADR-087: Entity-Agent Timeline Graph Architecture**
     - Build robust scheduling system on existing STN temporal foundation
     - Implement NPC daily/weekly routine management with priority handling
     - Add activity coordination with deadlines and resource scheduling
     - Support schedule conflict resolution and dynamic rescheduling
     - Enable realistic NPC behavior patterns like work shifts, meal times, sleep cycles
+    - **Note**: ADR-087 proposes Entity-Agent Timeline Graph architecture that naturally solves scheduling through auto-growing entity timelines with dynamic LOD management
 
 ### Phase 2: Environmental Dynamics (FUTURE IMPLEMENTATION)
 
-*   [ ] **Enhanced Timed Effects/Goals**: **Effort: M, Significance: High** 
+*   [ ] **Enhanced Timed Effects/Goals**: **Effort: M, Significance: High** → **See ADR-087: Entity-Agent Timeline Graph Architecture**
     - Extend current temporal support for absolute time scheduling
     - Implement deadline-based goal achievement with failure handling
     - Add time-triggered effects independent of action execution
+    - **Note**: ADR-087's living timelines naturally handle time-based effects through automatic timeline growth
 
-*   [ ] **Processes & Events**: **Effort: L, Significance: High** 
+*   [ ] **Processes & Events**: **Effort: L, Significance: High** → **See ADR-087: Entity-Agent Timeline Graph Architecture**
     - Integrate continuous environmental processes (weather, resource depletion)
     - Implement discrete event system for environmental changes
     - Add event-driven NPC behavior triggers and responses
+    - **Note**: ADR-087's environmental timeline integration automatically propagates events through entity networks
 
 ### Phase 3: Advanced Coordination (RESEARCH PROJECTS)
 
-*   [ ] **Multi-Agent Planning**: **Effort: XL, Significance: High** 
+*   [ ] **Multi-Agent Planning**: **Effort: XL, Significance: High** → **See ADR-087: Entity-Agent Timeline Graph Architecture**
     - Design distributed planning architecture for multiple independent NPCs
     - Implement inter-agent communication, negotiation, and conflict resolution
     - Add coordination mechanisms for group activities and shared resources
+    - **Note**: ADR-087's timeline bridging architecture enables automatic multi-agent coordination through connected timelines rather than requiring explicit central planning
 
 *   [ ] **Trajectory Constraints & State Invariants**: **Effort: XL, Significance: High** 
     - Enhance pathfinding with complex spatial and logical constraints
@@ -103,6 +107,7 @@ This roadmap focuses on systematic enhancement of AriaEngine's NPC planning capa
 
 ## Related ADRs
 
+- **ADR-087**: Entity-Agent Timeline Graph Architecture (proposed solution for Enhanced Scheduling, Multi-Agent Planning, Processes & Events, and Enhanced Timed Effects/Goals)
 - **ADR-086**: Implement Durative Actions (completed foundation work)
 - **ADR-084**: Domain Method Naming Refactor (prerequisite for Phase 1 implementation)
 - **ADR-075**: Complete Temporal Planning Solver
