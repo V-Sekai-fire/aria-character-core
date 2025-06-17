@@ -67,9 +67,9 @@ defmodule AriaEngine.Planner do
   # Domain interface types (maintained for compatibility)
   @type domain_interface :: %{
     actions: %{atom() => function()},
-    task_methods: %{String.t() => [function()]},
-    unigoal_methods: %{String.t() => [function()]},
-    multigoal_methods: [function()]
+    task_methods: %{String.t() => [{String.t(), function()}]},
+    unigoal_methods: %{String.t() => [{String.t(), function()}]},
+    multigoal_methods: [{String.t(), function()}]
   }
 
   # Solution tree types (core HTN planning)
@@ -675,12 +675,26 @@ defmodule AriaEngine.Planner do
         {:error, "Node not found: #{node_id}"}
         
       node ->
-        # Get available methods for this task
+        # Get available methods for this task (returns {name, function} tuples)
         available_methods = Domain.get_task_methods(domain, task_name)
+        
+        # Debug: Check what we actually got
+        if verbose > 0 do
+          IO.puts("DEBUG: task_methods for #{task_name}: #{inspect(available_methods)}")
+        end
 
         # Filter out blacklisted methods
-        usable_methods = Enum.reject(available_methods, fn method_name ->
-          Enum.member?(node.blacklisted_methods, method_name)
+        usable_methods = Enum.reject(available_methods, fn method ->
+          case method do
+            {method_name, _method_fn} ->
+              Enum.member?(node.blacklisted_methods, method_name)
+            _ ->
+              # Handle unexpected format
+              if verbose > 0 do
+                IO.puts("DEBUG: Unexpected task method format: #{inspect(method)}")
+              end
+              false
+          end
         end)
         
         case usable_methods do
@@ -690,29 +704,29 @@ defmodule AriaEngine.Planner do
             end
             :failure
             
-          [method | _] ->
+          [{method_name, method_fn} | _] ->
             # Try first available method
-            case method do
+            case method_fn do
               nil ->
-                {:error, "Method not found: #{inspect(method)}"}
+                {:error, "Method function not found: #{inspect(method_name)}"}
                 
-              method_fn ->
+              method_fn when is_function(method_fn) ->
                 # Apply method to get subtasks
                 case apply_method_to_task(method_fn, args, verbose) do
                   {:ok, subtasks} ->
                     # Decomposed into subtasks
                     new_tree =
-                      create_subtask_nodes(solution_tree, node_id, subtasks, method)
+                      create_subtask_nodes(solution_tree, node_id, subtasks, method_name)
 
                     {:ok, new_tree}
                     
                   {:error, reason} ->
                     # Blacklist this method and try next
-                    blacklisted_node = %{node | blacklisted_methods: [method | node.blacklisted_methods]}
+                    blacklisted_node = %{node | blacklisted_methods: [method_name | node.blacklisted_methods]}
                     updated_tree = %{solution_tree | nodes: Map.put(solution_tree.nodes, node_id, blacklisted_node)}
                     
                     if verbose > 2 do
-                      IO.puts("Method #{method} failed: #{reason}")
+                      IO.puts("Method #{method_name} failed: #{reason}")
                     end
                     
                     expand_task_node(domain, state, updated_tree, node_id, task_name, args, verbose)
@@ -736,12 +750,26 @@ defmodule AriaEngine.Planner do
           # Goal already satisfied - mark as primitive (no action needed)
           mark_as_primitive(solution_tree, node_id)
         else
-          # Find methods that can achieve this goal
+          # Find methods that can achieve this goal (returns {name, function} tuples)
           goal_methods = Domain.get_goal_methods(domain, predicate)
           
+          # Debug: Check what we actually got
+          if verbose > 0 do
+            IO.puts("DEBUG: goal_methods for #{predicate}: #{inspect(goal_methods)}")
+          end
+          
           # Filter out blacklisted methods
-          usable_methods = Enum.reject(goal_methods, fn method_name ->
-            Enum.member?(node.blacklisted_methods, method_name)
+          usable_methods = Enum.reject(goal_methods, fn method ->
+            case method do
+              {method_name, _method_fn} ->
+                Enum.member?(node.blacklisted_methods, method_name)
+              _ ->
+                # Handle unexpected format
+                if verbose > 0 do
+                  IO.puts("DEBUG: Unexpected method format: #{inspect(method)}")
+                end
+                false
+            end
           end)
           
           case usable_methods do
@@ -751,12 +779,12 @@ defmodule AriaEngine.Planner do
               end
               :failure
               
-            [method_name | _] ->
-              case Domain.get_method(domain, method_name) do
+            [{method_name, method_fn} | _] ->
+              case method_fn do
                 nil ->
-                  {:error, "Method not found: #{method_name}"}
+                  {:error, "Method function not found: #{method_name}"}
                   
-                method_fn ->
+                method_fn when is_function(method_fn) ->
                   # Apply method to get subtasks
                   case apply_method_to_goal(method_fn, predicate, subject, object, verbose) do
                     {:ok, subtasks} ->

@@ -3,24 +3,28 @@
 
 defmodule AriaEngine.Domain do
   @moduledoc """
-  Represents a planning domain in the GTPyhop planner.
+  Represents a planning domain in the GTPhop planner (Elixir port of GTPyhop).
 
   A domain contains:
-  - Actions: Functions that modify the world state
-  - Task methods: Functions that decompose tasks into subtasks
-  - Unigoal methods: Functions that achieve single goals
-  - Multigoal methods: Functions that achieve multiple goals simultaneously
+  - Actions: Named functions that modify the world state
+  - Task methods: Named functions that decompose tasks into subtasks
+  - Unigoal methods: Named functions that achieve single goals
+  - Multigoal methods: Named functions that achieve multiple goals simultaneously
+
+  This implementation aligns with GTPyhop's approach where:
+  - Actions are stored as name -> function mappings
+  - Methods are stored as task_name -> list of {name, function} tuples
+  - Method names are preserved for logging, blacklisting, and error reporting
 
   Example:
   ```elixir
   domain = AriaEngine.Domain.new("logistics")
   |> AriaEngine.Domain.add_action(:move, &move_action/2)
-  |> AriaEngine.Domain.add_task_method("transport", [&transport_by_truck/2, &transport_by_plane/2])
+  |> AriaEngine.Domain.add_task_methods("transport", [
+       {"transport_by_truck", &transport_by_truck/2},
+       {"transport_by_plane", &transport_by_plane/2}
+     ])
   ```
-
-  ## Aliases
-
-  - `AriaWorkflowSystem`: For workflow system actions and methods.
   """
 
   require Logger
@@ -33,13 +37,14 @@ defmodule AriaEngine.Domain do
   @type action_fn :: (State.t(), list() -> State.t() | false)
   @type task_method_fn :: (State.t(), list() -> list() | false)
   @type goal_method_fn :: (State.t(), list() -> list() | false)
+  @type named_method :: {method_name(), task_method_fn() | goal_method_fn()}
 
   @type t :: %__MODULE__{
     name: String.t(),
     actions: %{action_name() => action_fn()},
-    task_methods: %{task_name() => [task_method_fn()]},
-    unigoal_methods: %{String.t() => [goal_method_fn()]},
-    multigoal_methods: [goal_method_fn()]
+    task_methods: %{task_name() => [named_method()]},
+    unigoal_methods: %{String.t() => [named_method()]},
+    multigoal_methods: [named_method()]
   }
 
   defstruct name: "",
@@ -76,7 +81,11 @@ defmodule AriaEngine.Domain do
     # Create a task method that just returns the action as a primitive task
     # This allows the action to be used directly in HTN task decompositions
     task_name = Atom.to_string(name)
-    primitive_method = fn _state, args -> [{name, args}] end
+    primitive_method_fn = fn _state, args -> [{name, args}] end
+    method_name = "primitive_#{task_name}"
+    
+    # Create a {name, function} tuple for the primitive method
+    primitive_method = {method_name, primitive_method_fn}
     
     # Add the primitive method to task methods
     current_methods = Map.get(methods, task_name, [])
@@ -105,23 +114,41 @@ defmodule AriaEngine.Domain do
   Adds a task method to the domain.
 
   Task methods decompose tasks into subtasks/actions/goals.
+  Method name is required for blacklisting, logging, and error reporting.
   """
-  @spec add_task_method(t(), task_name(), task_method_fn()) :: t()
-  def add_task_method(%__MODULE__{task_methods: methods} = domain, task_name, method_fn)
-      when is_binary(task_name) and is_function(method_fn, 2) do
+  @spec add_task_method(t(), task_name(), String.t(), task_method_fn()) :: t()
+  def add_task_method(%__MODULE__{task_methods: methods} = domain, task_name, method_name, method_fn)
+      when is_binary(task_name) and is_binary(method_name) and is_function(method_fn, 2) do
+    named_method = {method_name, method_fn}
     current_methods = Map.get(methods, task_name, [])
-    updated_methods = current_methods ++ [method_fn]
+    updated_methods = current_methods ++ [named_method]
     %{domain | task_methods: Map.put(methods, task_name, updated_methods)}
   end
 
   @doc """
-  Adds multiple task methods for a task.
+  Adds a task method to the domain with automatic method name inference.
   """
-  @spec add_task_methods(t(), task_name(), [task_method_fn()]) :: t()
-  def add_task_methods(%__MODULE__{} = domain, task_name, method_fns)
-      when is_binary(task_name) and is_list(method_fns) do
-    Enum.reduce(method_fns, domain, fn method_fn, acc_domain ->
-      add_task_method(acc_domain, task_name, method_fn)
+  @spec add_task_method(t(), task_name(), task_method_fn()) :: t()
+  def add_task_method(%__MODULE__{} = domain, task_name, method_fn) 
+      when is_binary(task_name) and is_function(method_fn, 2) do
+    method_name = infer_method_name(method_fn)
+    add_task_method(domain, task_name, method_name, method_fn)
+  end
+
+  @doc """
+  Adds multiple task methods for a task.
+  
+  Accepts a list of {method_name, method_function} tuples or plain functions.
+  For plain functions, method names are automatically inferred.
+  """
+  @spec add_task_methods(t(), task_name(), [{String.t(), task_method_fn()}] | [task_method_fn()]) :: t()
+  def add_task_methods(%__MODULE__{} = domain, task_name, method_tuples_or_functions)
+      when is_binary(task_name) and is_list(method_tuples_or_functions) do
+    Enum.reduce(method_tuples_or_functions, domain, fn
+      {method_name, method_fn}, acc_domain when is_binary(method_name) ->
+        add_task_method(acc_domain, task_name, method_name, method_fn)
+      method_fn, acc_domain when is_function(method_fn, 2) ->
+        add_task_method(acc_domain, task_name, method_fn)
     end)
   end
 
@@ -129,23 +156,27 @@ defmodule AriaEngine.Domain do
   Adds a unigoal method to the domain.
 
   Unigoal methods achieve single predicate-based goals.
+  Method name is required for blacklisting, logging, and error reporting.
   """
-  @spec add_unigoal_method(t(), String.t(), goal_method_fn()) :: t()
-  def add_unigoal_method(%__MODULE__{unigoal_methods: methods} = domain, goal_type, method_fn)
-      when is_binary(goal_type) and is_function(method_fn, 2) do
+  @spec add_unigoal_method(t(), String.t(), String.t(), goal_method_fn()) :: t()
+  def add_unigoal_method(%__MODULE__{unigoal_methods: methods} = domain, goal_type, method_name, method_fn)
+      when is_binary(goal_type) and is_binary(method_name) and is_function(method_fn, 2) do
+    named_method = {method_name, method_fn}
     current_methods = Map.get(methods, goal_type, [])
-    updated_methods = current_methods ++ [method_fn]
+    updated_methods = current_methods ++ [named_method]
     %{domain | unigoal_methods: Map.put(methods, goal_type, updated_methods)}
   end
 
   @doc """
   Adds multiple unigoal methods for a goal type.
+  
+  Accepts a list of {method_name, method_function} tuples.
   """
-  @spec add_unigoal_methods(t(), String.t(), [goal_method_fn()]) :: t()
-  def add_unigoal_methods(%__MODULE__{} = domain, goal_type, method_fns)
-      when is_binary(goal_type) and is_list(method_fns) do
-    Enum.reduce(method_fns, domain, fn method_fn, acc_domain ->
-      add_unigoal_method(acc_domain, goal_type, method_fn)
+  @spec add_unigoal_methods(t(), String.t(), [{String.t(), goal_method_fn()}]) :: t()
+  def add_unigoal_methods(%__MODULE__{} = domain, goal_type, method_tuples)
+      when is_binary(goal_type) and is_list(method_tuples) do
+    Enum.reduce(method_tuples, domain, fn {method_name, method_fn}, acc_domain ->
+      add_unigoal_method(acc_domain, goal_type, method_name, method_fn)
     end)
   end
 
@@ -153,21 +184,21 @@ defmodule AriaEngine.Domain do
   Adds a multigoal method to the domain.
 
   Multigoal methods work on achieving multiple goals simultaneously.
+  Method name is required for blacklisting, logging, and error reporting.
   """
-  @spec add_multigoal_method(t(), goal_method_fn()) :: t()
-  def add_multigoal_method(%__MODULE__{multigoal_methods: methods} = domain, method_fn)
-      when is_function(method_fn, 2) do
-    %{domain | multigoal_methods: [method_fn | methods]}
+  @spec add_multigoal_method(t(), String.t(), goal_method_fn()) :: t()
+  def add_multigoal_method(%__MODULE__{multigoal_methods: methods} = domain, method_name, method_fn)
+      when is_binary(method_name) and is_function(method_fn, 2) do
+    %{domain | multigoal_methods: [{method_name, method_fn} | methods]}
   end
 
   @doc """
-  Adds multiple multigoal methods.
+  Adds a multigoal method to the domain with automatic name inference.
   """
-  @spec add_multigoal_methods(t(), [goal_method_fn()]) :: t()
-  def add_multigoal_methods(%__MODULE__{} = domain, method_fns) when is_list(method_fns) do
-    Enum.reduce(method_fns, domain, fn method_fn, acc_domain ->
-      add_multigoal_method(acc_domain, method_fn)
-    end)
+  @spec add_multigoal_method(t(), goal_method_fn()) :: t()
+  def add_multigoal_method(%__MODULE__{} = domain, method_fn) when is_function(method_fn, 2) do
+    method_name = infer_method_name(method_fn)
+    add_multigoal_method(domain, method_name, method_fn)
   end
 
   @doc """
@@ -180,16 +211,20 @@ defmodule AriaEngine.Domain do
 
   @doc """
   Gets task methods for a task name.
+  
+  Returns a list of {method_name, method_function} tuples.
   """
-  @spec get_task_methods(t(), task_name()) :: [task_method_fn()]
+  @spec get_task_methods(t(), task_name()) :: [named_method()]
   def get_task_methods(%__MODULE__{task_methods: methods}, task_name) do
     Map.get(methods, task_name, [])
   end
 
   @doc """
   Gets unigoal methods for a goal type.
+  
+  Returns a list of {method_name, method_function} tuples.
   """
-  @spec get_unigoal_methods(t(), String.t()) :: [goal_method_fn()]
+  @spec get_unigoal_methods(t(), String.t()) :: [named_method()]
   def get_unigoal_methods(%__MODULE__{unigoal_methods: methods}, goal_type) do
     Map.get(methods, goal_type, [])
   end
@@ -197,7 +232,7 @@ defmodule AriaEngine.Domain do
   @doc """
   Gets all multigoal methods.
   """
-  @spec get_multigoal_methods(t()) :: [goal_method_fn()]
+  @spec get_multigoal_methods(t()) :: [named_method()]
   def get_multigoal_methods(%__MODULE__{multigoal_methods: methods}) do
     methods
   end
@@ -206,10 +241,9 @@ defmodule AriaEngine.Domain do
   Gets goal methods for a predicate. 
   
   This is an alias for get_unigoal_methods to maintain compatibility.
-  Returns method functions directly since the current implementation 
-  doesn't use named methods.
+  Returns a list of {method_name, method_function} tuples.
   """
-  @spec get_goal_methods(t(), String.t()) :: [goal_method_fn()]
+  @spec get_goal_methods(t(), String.t()) :: [named_method()]
   def get_goal_methods(%__MODULE__{} = domain, predicate) do
     get_unigoal_methods(domain, predicate)
   end
@@ -217,16 +251,15 @@ defmodule AriaEngine.Domain do
   @doc """
   Gets a specific method by name.
   
-  Since the current implementation stores methods as functions directly,
-  this function returns the first method in the list for the given predicate.
-  This is a temporary implementation to fix the Dialyzer warning.
+  This function returns the first method function for the given predicate.
+  With the tuple-based implementation, it extracts the function part.
   """
   @spec get_method(t(), String.t()) :: goal_method_fn() | nil
   def get_method(%__MODULE__{unigoal_methods: methods}, method_name) do
-    # For now, treat method_name as a predicate name and return the first method
+    # Treat method_name as a predicate name and return the first method function
     case Map.get(methods, method_name, []) do
       [] -> nil
-      [method_fn | _] -> method_fn
+      [{_name, method_fn} | _] -> method_fn
     end
   end
 
@@ -377,4 +410,54 @@ defmodule AriaEngine.Domain do
   end
 
   def validate(_), do: {:error, "Not a valid domain struct"}
+
+  @doc """
+  Adds a unigoal method to the domain with automatic method name inference.
+
+  The method name is automatically derived from the function reference string representation.
+  For example, `&ensure_workflow_completed/2` becomes "ensure_workflow_completed".
+  """
+  @spec add_unigoal_method(t(), String.t(), goal_method_fn()) :: t()
+  def add_unigoal_method(%__MODULE__{} = domain, goal_type, method_fn) 
+      when is_binary(goal_type) and is_function(method_fn, 2) do
+    method_name = infer_method_name(method_fn)
+    add_unigoal_method(domain, goal_type, method_name, method_fn)
+  end
+
+  # Private helper to infer method name from function reference
+  @doc """
+  Infers a method name from a function reference for tuple-based method storage.
+  """
+  @spec infer_method_name(function()) :: String.t()
+  def infer_method_name(fun) when is_function(fun, 2) do
+    # Convert function to string and extract name
+    fun_string = inspect(fun)
+    case Regex.run(~r/&([^\/]+)\/\d+/, fun_string) do
+      [_, name] -> 
+        # Remove module prefix if present (e.g., "Module.function" -> "function")
+        case String.split(name, ".") do
+          [single_name] -> single_name
+          parts -> List.last(parts)
+        end
+      _ -> 
+        # Fallback for anonymous functions or complex cases
+        "method_#{:erlang.phash2(fun)}"
+    end
+  end
+  
+  def infer_method_name(fun) when is_function(fun) do
+    # Convert function to string and extract name
+    fun_string = inspect(fun)
+    case Regex.run(~r/&([^\/]+)\/\d+/, fun_string) do
+      [_, name] -> 
+        # Remove module prefix if present (e.g., "Module.function" -> "function")
+        case String.split(name, ".") do
+          [single_name] -> single_name
+          parts -> List.last(parts)
+        end
+      _ -> 
+        # Fallback for anonymous functions or complex cases
+        "method_#{:erlang.phash2(fun)}"
+    end
+  end
 end

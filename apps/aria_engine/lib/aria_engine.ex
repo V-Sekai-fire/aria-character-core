@@ -200,13 +200,44 @@ defmodule AriaEngine do
   """
   @spec to_domain(t()) :: Domain.t()
   def to_domain(%__MODULE__{} = engine) do
-    %Domain{
-      name: engine.name,
-      actions: engine.actions,
-      task_methods: engine.task_methods,
-      unigoal_methods: engine.unigoal_methods,
-      multigoal_methods: engine.multigoal_methods
-    }
+    # Create domain with proper tuple-based methods
+    domain = Domain.new(engine.name)
+    
+    # Add actions directly (they don't need tuple conversion)
+    domain_with_actions = %{domain | actions: engine.actions}
+    
+    # Convert and add task methods
+    domain_with_task_methods = 
+      Enum.reduce(engine.task_methods, domain_with_actions, fn {task_name, methods}, acc ->
+        # Convert each method to tuple format if needed
+        tuple_methods = 
+          Enum.map(methods, fn 
+            {name, func} -> {name, func}  # Already a tuple
+            func when is_function(func) -> {Domain.infer_method_name(func), func}  # Convert to tuple
+          end)
+        %{acc | task_methods: Map.put(acc.task_methods, task_name, tuple_methods)}
+      end)
+    
+    # Convert and add unigoal methods
+    domain_with_unigoal_methods = 
+      Enum.reduce(engine.unigoal_methods, domain_with_task_methods, fn {goal_type, methods}, acc ->
+        # Convert each method to tuple format if needed
+        tuple_methods = 
+          Enum.map(methods, fn 
+            {name, func} -> {name, func}  # Already a tuple
+            func when is_function(func) -> {Domain.infer_method_name(func), func}  # Convert to tuple
+          end)
+        %{acc | unigoal_methods: Map.put(acc.unigoal_methods, goal_type, tuple_methods)}
+      end)
+    
+    # Convert and add multigoal methods
+    tuple_multigoal_methods = 
+      Enum.map(engine.multigoal_methods, fn
+        {name, func} -> {name, func}  # Already a tuple
+        func when is_function(func) -> {Domain.infer_method_name(func), func}  # Convert to tuple
+      end)
+      
+    %{domain_with_unigoal_methods | multigoal_methods: tuple_multigoal_methods}
   end
 
   ## Domain Building API
