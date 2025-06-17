@@ -36,13 +36,15 @@ This roadmap focuses on systematic enhancement of AriaEngine's NPC planning capa
     - ✅ Enabled complex NPC reasoning patterns like "find any available chair" or "ensure all doors are locked"
     - ✅ Comprehensive test suites validate both standalone quantifiers and durative action integration
 
-*   [ ] **Enhanced Scheduling**: **Effort: L, Significance: High** → **See ADR-087: Entity-Agent Timeline Graph Architecture**
-    - Build robust scheduling system on existing STN temporal foundation
-    - Implement NPC daily/weekly routine management with priority handling
-    - Add activity coordination with deadlines and resource scheduling
-    - Support schedule conflict resolution and dynamic rescheduling
-    - Enable realistic NPC behavior patterns like work shifts, meal times, sleep cycles
-    - **Note**: ADR-087 proposes Entity-Agent Timeline Graph architecture that naturally solves scheduling through auto-growing entity timelines with dynamic LOD management
+*   [x] ~~**Enhanced Scheduling**: **Effort: L, Significance: High**~~ → **Completed (June 17, 2025)**
+    - ✅ Built robust scheduling system on existing STN temporal foundation via TimelineGraph module
+    - ✅ Implemented NPC routine management with priority handling (`schedule_routine/4`)
+    - ✅ Added activity coordination with deadlines and resource scheduling
+    - ✅ Support schedule conflict resolution and dynamic rescheduling (`resolve_schedule_conflicts/4`)
+    - ✅ Enable realistic NPC behavior patterns like work shifts, meal times, sleep cycles
+    - ✅ Implemented through ADR-087's Entity-Agent Timeline Graph architecture that naturally solves scheduling through auto-growing entity timelines with dynamic LOD management
+    - ✅ Priority-based conflict resolution with deadline handling and rescheduling attempts
+    - ✅ Environmental process support for Phase 2 preparation (`add_environmental_process/3`)
 
 ### Phase 2: Environmental Dynamics (FUTURE IMPLEMENTATION)
 

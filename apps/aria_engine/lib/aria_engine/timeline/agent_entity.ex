@@ -581,6 +581,7 @@ defmodule AriaEngine.Timeline.AgentEntity do
       :action_execution,
       :movement,
       :autonomous_driving,
+      :autonomous_operation,
       :navigation,
       :interaction,
       :planning,
