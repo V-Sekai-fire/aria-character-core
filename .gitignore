@@ -85,3 +85,6 @@ priv/*.db*
 *.db-wal
 **/priv/*.db*
 node_modules/.cache/prettier/.prettier-caches
+
+# Dialyzer PLT files (should be generated locally)
+/priv/plts/

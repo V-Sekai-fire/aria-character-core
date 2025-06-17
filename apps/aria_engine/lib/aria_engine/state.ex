@@ -150,4 +150,18 @@ defmodule AriaEngine.State do
   def copy(%__MODULE__{data: data}) do
     %__MODULE__{data: Map.new(data)}
   end
+
+  @doc """
+  Checks if the state matches a specific predicate, subject, and object pattern.
+  
+  This function is used by the planner to check if a goal condition is satisfied
+  in the current state. It returns true if the state contains the specified triple.
+  """
+  @spec matches?(t(), predicate(), subject(), object()) :: boolean()
+  def matches?(%__MODULE__{data: data}, predicate, subject, object) do
+    case Map.get(data, {predicate, subject}) do
+      ^object -> true
+      _ -> false
+    end
+  end
 end

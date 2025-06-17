@@ -16,6 +16,10 @@ defmodule AriaCharacterCore.MixProject do
         "test.watch": :test
       ],
       elixirc_options: [warnings_as_errors: true],
+      dialyzer: [
+        plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
+        ignore_warnings: ".dialyzer_ignore.exs"
+      ],
     ]
   end
 
