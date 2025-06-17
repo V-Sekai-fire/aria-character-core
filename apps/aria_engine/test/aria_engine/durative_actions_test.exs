@@ -4,7 +4,7 @@
 defmodule AriaEngine.DurativeActionsTest do
   use ExUnit.Case, async: true
   
-  alias AriaEngine.{Domain, State}
+  alias AriaEngine.{Domain, StateV2}
   alias AriaEngine.Domain.DurativeAction
   alias AriaEngine.Timeline.STN
 
@@ -167,7 +167,7 @@ defmodule AriaEngine.DurativeActionsTest do
       # Add a regular instantaneous action
       domain = Domain.Actions.add_action(domain, :teleport, fn state, [_from, to] ->
         state
-        |> State.set_fact("location", "robot", to)
+        |> StateV2.set_fact("robot", "location", to)
       end)
       
       # Add a durative action with no preconditions to start simple
@@ -186,8 +186,8 @@ defmodule AriaEngine.DurativeActionsTest do
         },
         fn state, [_from, to] ->
           state
-          |> State.set_fact("location", "robot", to)
-          |> State.set_fact("moving", "robot", false)
+          |> StateV2.set_fact("robot", "location", to)
+          |> StateV2.set_fact("robot", "moving", false)
         end
       )
       
@@ -199,10 +199,10 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       # Create initial state
-      state = State.new()
-      |> State.set_fact("location", "robot", "start")
-      |> State.set_fact("energy", "robot", "sufficient")
-      |> State.set_fact("moving", "robot", false)
+      state = StateV2.new()
+      |> StateV2.set_fact("robot", "location", "start")
+      |> StateV2.set_fact("robot", "energy", "sufficient")
+      |> StateV2.set_fact("robot", "moving", false)
       
       {:ok, domain: domain, state: state}
     end
@@ -252,27 +252,27 @@ defmodule AriaEngine.DurativeActionsTest do
         },
         fn state, _args ->
           state
-          |> State.set_fact("battery_level", "robot", "full")
-          |> State.set_fact("charging", "robot", false)
+          |> StateV2.set_fact("battery_level", "robot", "full")
+          |> StateV2.set_fact("charging", "robot", false)
         end
       )
       
       # Create initial state
-      initial_state = State.new()
-      |> State.set_fact("battery_level", "robot", "low")
-      |> State.set_fact("connected_to_charger", "robot", true)
-      |> State.set_fact("charging", "robot", false)
+      initial_state = StateV2.new()
+      |> StateV2.set_fact("battery_level", "robot", "low")
+      |> StateV2.set_fact("connected_to_charger", "robot", true)
+      |> StateV2.set_fact("charging", "robot", false)
       
       # Verify preconditions at start
-      assert State.get_fact(initial_state, "battery_level", "robot") == "low"
-      assert State.get_fact(initial_state, "connected_to_charger", "robot") == true
+      assert StateV2.get_fact(initial_state, "battery_level", "robot") == "low"
+      assert StateV2.get_fact(initial_state, "connected_to_charger", "robot") == true
       
       # Simulate action execution (in real implementation, this would happen over time)
       final_state = action.action_fn.(initial_state, [])
       
       # Verify effects at end
-      assert State.get_fact(final_state, "battery_level", "robot") == "full"
-      assert State.get_fact(final_state, "charging", "robot") == false
+      assert StateV2.get_fact(final_state, "battery_level", "robot") == "full"
+      assert StateV2.get_fact(final_state, "charging", "robot") == false
     end
   end
 
@@ -298,7 +298,7 @@ defmodule AriaEngine.DurativeActionsTest do
           over_time: []
         },
         fn state, _args ->
-          state |> State.set_fact("health_status", "robot", :healthy)
+          state |> StateV2.set_fact("health_status", "robot", :healthy)
         end
       )
       domain = Domain.Core.add_durative_action(domain, :magic_heal, fast_heal)
@@ -318,14 +318,14 @@ defmodule AriaEngine.DurativeActionsTest do
           over_time: []
         },
         fn state, _args ->
-          state |> State.set_fact("health_status", "robot", :healthy)
+          state |> StateV2.set_fact("health_status", "robot", :healthy)
         end
       )
       domain = Domain.Core.add_durative_action(domain, :rest_heal, slow_heal)
       
       # Add goal methods for healing
       domain = Domain.add_unigoal_method(domain, "health_status", "try_magic_heal", fn state, [subject, target_status] ->
-        current_status = State.get_fact(state, "health_status", subject)
+        current_status = StateV2.get_fact(state, "health_status", subject)
         if current_status != target_status do
           [{:magic_heal, []}]
         else
@@ -334,7 +334,7 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       domain = Domain.add_unigoal_method(domain, "health_status", "try_rest_heal", fn state, [subject, target_status] ->
-        current_status = State.get_fact(state, "health_status", subject)
+        current_status = StateV2.get_fact(state, "health_status", subject)
         if current_status != target_status do
           [{:rest_heal, []}]
         else
@@ -343,10 +343,10 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       # Initial state - robot is wounded, magic unavailable, rest available
-      initial_state = State.new()
-      |> State.set_fact("health_status", "robot", :wounded)  # CATEGORICAL: :wounded is a symbol
-      |> State.set_fact("magic_potion", "available", false)
-      |> State.set_fact("rest_area", "available", true)
+      initial_state = StateV2.new()
+      |> StateV2.set_fact("health_status", "robot", :wounded)  # CATEGORICAL: :wounded is a symbol
+      |> StateV2.set_fact("magic_potion", "available", false)
+      |> StateV2.set_fact("rest_area", "available", true)
       
       # Goal: heal robot to healthy status
       todos = [{"health_status", "robot", :healthy}]  # CATEGORICAL: :healthy is a symbol
@@ -385,7 +385,7 @@ defmodule AriaEngine.DurativeActionsTest do
           over_time: []
         },
         fn state, _args ->
-          state |> State.set_fact("battery_percent", "phone", 50)
+          state |> StateV2.set_fact("battery_percent", "phone", 50)
         end
       )
       domain = Domain.Core.add_durative_action(domain, :fast_charge_numeric, fast_charge)
@@ -405,14 +405,14 @@ defmodule AriaEngine.DurativeActionsTest do
           over_time: []
         },
         fn state, _args ->
-          state |> State.set_fact("battery_percent", "phone", 50)
+          state |> StateV2.set_fact("battery_percent", "phone", 50)
         end
       )
       domain = Domain.Core.add_durative_action(domain, :slow_charge_numeric, slow_charge)
       
       # Add goal methods for charging
       domain = Domain.add_unigoal_method(domain, "battery_percent", "try_fast_numeric", fn state, [device, target_percent] ->
-        current_percent = State.get_fact(state, "battery_percent", device)
+        current_percent = StateV2.get_fact(state, "battery_percent", device)
         if current_percent != target_percent do
           [{:fast_charge_numeric, []}]
         else
@@ -421,7 +421,7 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       domain = Domain.add_unigoal_method(domain, "battery_percent", "try_slow_numeric", fn state, [device, target_percent] ->
-        current_percent = State.get_fact(state, "battery_percent", device)
+        current_percent = StateV2.get_fact(state, "battery_percent", device)
         if current_percent != target_percent do
           [{:slow_charge_numeric, []}]
         else
@@ -430,10 +430,10 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       # Initial state - battery at 10%, fast charger unavailable, outlet available
-      initial_state = State.new()
-      |> State.set_fact("battery_percent", "phone", 10)  # NUMERIC: 10 is an actual number
-      |> State.set_fact("fast_charger", "available", false)
-      |> State.set_fact("power_outlet", "available", true)
+      initial_state = StateV2.new()
+      |> StateV2.set_fact("battery_percent", "phone", 10)  # NUMERIC: 10 is an actual number
+      |> StateV2.set_fact("fast_charger", "available", false)
+      |> StateV2.set_fact("power_outlet", "available", true)
       
       # Goal: charge phone to 50%
       todos = [{"battery_percent", "phone", 50}]  # NUMERIC: 50 is an actual number
@@ -472,7 +472,7 @@ defmodule AriaEngine.DurativeActionsTest do
           over_time: []
         },
         fn state, _args ->
-          state |> State.set_fact("door_open", "main_door", true)
+          state |> StateV2.set_fact("door_open", "main_door", true)
         end
       )
       domain = Domain.Core.add_durative_action(domain, :manual_open_door, manual_open)
@@ -492,14 +492,14 @@ defmodule AriaEngine.DurativeActionsTest do
           over_time: []
         },
         fn state, _args ->
-          state |> State.set_fact("door_open", "main_door", true)
+          state |> StateV2.set_fact("door_open", "main_door", true)
         end
       )
       domain = Domain.Core.add_durative_action(domain, :electronic_open_door, electronic_open)
       
       # Add goal methods for door opening
       domain = Domain.add_unigoal_method(domain, "door_open", "try_manual_open", fn state, [door, target_state] ->
-        current_state = State.get_fact(state, "door_open", door)
+        current_state = StateV2.get_fact(state, "door_open", door)
         if current_state != target_state do
           [{:manual_open_door, []}]
         else
@@ -508,7 +508,7 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       domain = Domain.add_unigoal_method(domain, "door_open", "try_electronic_open", fn state, [door, target_state] ->
-        current_state = State.get_fact(state, "door_open", door)
+        current_state = StateV2.get_fact(state, "door_open", door)
         if current_state != target_state do
           [{:electronic_open_door, []}]
         else
@@ -517,10 +517,10 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       # Initial state - door closed, no key, has keycard
-      initial_state = State.new()
-      |> State.set_fact("door_open", "main_door", false)  # BOOLEAN: false is a categorical symbol
-      |> State.set_fact("has_key", "person", false)       # BOOLEAN: false (no physical key)
-      |> State.set_fact("has_keycard", "person", true)    # BOOLEAN: true (has electronic keycard)
+      initial_state = StateV2.new()
+      |> StateV2.set_fact("door_open", "main_door", false)  # BOOLEAN: false is a categorical symbol
+      |> StateV2.set_fact("has_key", "person", false)       # BOOLEAN: false (no physical key)
+      |> StateV2.set_fact("has_keycard", "person", true)    # BOOLEAN: true (has electronic keycard)
       
       # Goal: open the door
       todos = [{"door_open", "main_door", true}]  # BOOLEAN: true is a categorical symbol
@@ -567,16 +567,16 @@ defmodule AriaEngine.DurativeActionsTest do
         },
         fn state, _args ->
           state
-          |> State.set_fact("project_status", "task1", :completed)
-          |> State.set_fact("focus_minutes", "worker", 20)
-          |> State.set_fact("task_complete", "task1", true)
+          |> StateV2.set_fact("project_status", "task1", :completed)
+          |> StateV2.set_fact("focus_minutes", "worker", 20)
+          |> StateV2.set_fact("task_complete", "task1", true)
         end
       )
       domain = Domain.Core.add_durative_action(domain, :work_on_project, work_action)
       
       # Add a method to handle work tasks
       domain = Domain.add_unigoal_method(domain, "task_complete", "do_work", fn state, [task, target] ->
-        current = State.get_fact(state, "task_complete", task)
+        current = StateV2.get_fact(state, "task_complete", task)
         if current != target do
           [{:work_on_project, []}]
         else
@@ -585,12 +585,12 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       # Initial state with mixed fluent types
-      initial_state = State.new()
-      |> State.set_fact("energy_level", "worker", :high)        # CATEGORICAL
-      |> State.set_fact("focus_minutes", "worker", 60)          # NUMERIC
-      |> State.set_fact("computer_on", "workstation", true)     # BOOLEAN
-      |> State.set_fact("project_status", "task1", :pending)    # CATEGORICAL
-      |> State.set_fact("task_complete", "task1", false)        # BOOLEAN
+      initial_state = StateV2.new()
+      |> StateV2.set_fact("energy_level", "worker", :high)        # CATEGORICAL
+      |> StateV2.set_fact("focus_minutes", "worker", 60)          # NUMERIC
+      |> StateV2.set_fact("computer_on", "workstation", true)     # BOOLEAN
+      |> StateV2.set_fact("project_status", "task1", :pending)    # CATEGORICAL
+      |> StateV2.set_fact("task_complete", "task1", false)        # BOOLEAN
       
       # Goal: complete the task
       todos = [{"task_complete", "task1", true}]  # BOOLEAN goal
@@ -632,7 +632,7 @@ defmodule AriaEngine.DurativeActionsTest do
           over_time: []
         },
         fn state, _args ->
-          state |> State.set_fact("battery_status", "phone", :medium)
+          state |> StateV2.set_fact("battery_status", "phone", :medium)
         end
       )
       domain = Domain.Core.add_durative_action(domain, :fast_charge, fast_charge)
@@ -653,7 +653,7 @@ defmodule AriaEngine.DurativeActionsTest do
           over_time: []
         },
         fn state, _args ->
-          state |> State.set_fact("battery_status", "phone", :medium)
+          state |> StateV2.set_fact("battery_status", "phone", :medium)
         end
       )
       domain = Domain.Core.add_durative_action(domain, :slow_charge, slow_charge)
@@ -664,7 +664,7 @@ defmodule AriaEngine.DurativeActionsTest do
       
       # Add goal method for fast charging (will be tried first)
       domain = Domain.add_unigoal_method(domain, "battery_status", "try_fast_charge", fn state, [device, target_level] ->
-        current_level = State.get_fact(state, "battery_status", device)
+        current_level = StateV2.get_fact(state, "battery_status", device)
         if current_level != target_level do
           [{:fast_charge, []}]
         else
@@ -674,7 +674,7 @@ defmodule AriaEngine.DurativeActionsTest do
       
       # Add goal method for slow charging (will be tried second)
       domain = Domain.add_unigoal_method(domain, "battery_status", "try_slow_charge", fn state, [device, target_level] ->
-        current_level = State.get_fact(state, "battery_status", device)
+        current_level = StateV2.get_fact(state, "battery_status", device)
         if current_level != target_level do
           [{:slow_charge, []}]
         else
@@ -683,10 +683,10 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       # Initial state - no fast charger available, but power outlet available
-      initial_state = State.new()
-      |> State.set_fact("battery_status", "phone", :low)    # CATEGORICAL: :low is a symbol
-      |> State.set_fact("fast_charger", "available", false) # Fast charger unavailable
-      |> State.set_fact("power_outlet", "available", true)  # Power outlet available
+      initial_state = StateV2.new()
+      |> StateV2.set_fact("battery_status", "phone", :low)    # CATEGORICAL: :low is a symbol
+      |> StateV2.set_fact("fast_charger", "available", false) # Fast charger unavailable
+      |> StateV2.set_fact("power_outlet", "available", true)  # Power outlet available
       
       # Goal: charge phone to medium battery status
       todos = [{"battery_status", "phone", :medium}]  # CATEGORICAL: :medium is a symbol

@@ -48,8 +48,8 @@ Migrate the entire AriaEngine planner system to use StateV2's entity-first subje
 - [ ] Update domain utilities to use entity-first patterns
 
 ### Phase 3: Test Migration (IN PROGRESS)
-- [ ] Update all tests to use StateV2 format instead of legacy State
-- [ ] Fix durative action tests to use StateV2 
+- [x] Update all tests to use StateV2 format instead of legacy State
+- [x] Fix durative action tests to use StateV2 ✅ **COMPLETED** 
 - [ ] Fix planning tests to use StateV2
 - [ ] Fix goal management tests to use StateV2
 - [ ] Add conversion helpers for backward compatibility if needed
