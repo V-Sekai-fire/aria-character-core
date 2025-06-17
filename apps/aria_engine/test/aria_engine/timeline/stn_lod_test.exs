@@ -225,6 +225,7 @@ defmodule AriaEngine.Timeline.STNLODTest do
     test "parallel solving with LOD system" do
       # Create a larger STN for parallel processing
       stn = STN.new(time_unit: :millisecond, lod_level: :medium)
+      assert STN.consistent?(stn)
       
       # Add multiple intervals
       intervals = for i <- 1..10 do

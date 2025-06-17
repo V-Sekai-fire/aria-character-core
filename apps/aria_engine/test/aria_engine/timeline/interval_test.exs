@@ -5,11 +5,10 @@ defmodule AriaEngine.Timeline.IntervalTest do
   use ExUnit.Case, async: true
   doctest AriaEngine.Timeline.Interval
 
-  alias AriaEngine.Timeline.{AgentEntity, Interval, TimeConverter}
-
-  @tag :timeline_stn
+  alias AriaEngine.Timeline.{AgentEntity, Interval}
 
   describe "interval creation" do
+    @describetag :timeline_stn
     test "creates interval with DateTime" do
       start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
       end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
@@ -127,6 +126,7 @@ defmodule AriaEngine.Timeline.IntervalTest do
       assert Interval.duration_seconds(interval) == 400.0
     end
 
+    @dialyzer {:nowarn_function, new: 2}
     test "raises error for non-DateTime types" do
       assert_raise FunctionClauseError, fn ->
         Interval.new(~N[2025-01-01 10:00:00], 3600)
@@ -169,6 +169,7 @@ defmodule AriaEngine.Timeline.IntervalTest do
       refute Interval.contains?(interval, after_time)
     end
 
+    @dialyzer {:nowarn_function, contains?: 2}
     test "raises error for non-DateTime time types in containment check" do
       interval =
         Interval.new(

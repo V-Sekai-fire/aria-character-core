@@ -258,7 +258,7 @@ defmodule AriaEngine.Timeline.Interval do
       iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:00], "Etc/UTC")
       iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
-      iex> {start_point, end_point, duration} = AriaEngine.Timeline.Interval.to_stn_points(interval, :second)
+      iex> {_start_point, _end_point, duration} = AriaEngine.Timeline.Interval.to_stn_points(interval, :second)
       iex> duration
       300
 

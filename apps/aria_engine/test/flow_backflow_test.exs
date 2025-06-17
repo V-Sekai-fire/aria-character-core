@@ -158,7 +158,6 @@ defmodule AriaEngine.FlowBackflowTest do
       result = FlowWorkflow.process_actions_with_backflow(actions, 2)
 
       # Should still process data but with controlled demand
-      assert result != nil
       assert length(result.results) == 20
       assert Map.get(result.metrics, :backpressure_events, 0) >= 0
     end
@@ -172,14 +171,8 @@ defmodule AriaEngine.FlowBackflowTest do
       result = FlowWorkflow.process_actions_with_backflow(actions, 4)
 
       # Should process efficiently with increased demand
-      assert result != nil
       assert length(result.results) == 10
       assert Map.get(result.metrics, :backpressure_events, 0) == 0
     end
-
-    # Helper functions for default processing
-    defp default_source(item), do: item
-    defp default_filter(item), do: item
-    defp default_sink(item), do: item
   end
 end
