@@ -794,6 +794,16 @@ defmodule AriaEngine.Timeline.STN do
     |> Map.new()
   end
 
+  defp merge_constraints_union(constraints1, constraints2) do
+    # Merge constraint maps, taking union of bounds (looser constraints)
+    Map.merge(constraints1, constraints2, fn _key, {min1, max1}, {min2, max2} ->
+      # Union: looser bounds win
+      new_min = min(min1, min2)
+      new_max = max(max1, max2)
+      {new_min, new_max}
+    end)
+  end
+
   # Composable STN Operations - Boolean-like algebra for STNs
 
   @doc """
@@ -823,7 +833,7 @@ defmodule AriaEngine.Timeline.STN do
     merged_points = MapSet.union(compatible_stn1.time_points, compatible_stn2.time_points)
     
     # Merge constraints (intersection of bounds)
-    merged_constraints = merge_constraints(compatible_stn1.constraints, compatible_stn2.constraints)
+    merged_constraints = merge_constraints_union(compatible_stn1.constraints, compatible_stn2.constraints)
     
     # Combine metadata
     merged_metadata = Map.merge(compatible_stn1.metadata, compatible_stn2.metadata)
@@ -973,7 +983,10 @@ defmodule AriaEngine.Timeline.STN do
     %__MODULE__{
       time_points: time_points_set,
       constraints: segment_constraints,
-      consistent: stn.consistent
+      consistent: stn.consistent,
+      time_unit: stn.time_unit,
+      lod_level: stn.lod_level,
+      lod_resolution: stn.lod_resolution
     }
   end
 
@@ -1193,15 +1206,6 @@ defmodule AriaEngine.Timeline.STN do
 
   # Private helper functions for composable operations
 
-  defp merge_constraints(constraints1, constraints2) do
-    # Merge constraint maps, taking intersection of bounds (tighter constraints)
-    Map.merge(constraints1, constraints2, fn _key, {min1, max1}, {min2, max2} ->
-      # Intersection: tighter bounds win
-      new_min = max(min1, min2)
-      new_max = min(max1, max2)
-      {new_min, new_max}
-    end)
-  end
 
   defp create_bridge_constraints(_stn1, _stn2) do
     # Placeholder for inter-STN constraints
