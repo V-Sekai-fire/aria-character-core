@@ -5,10 +5,10 @@ defmodule AriaEngine.Plan.Utils do
   @moduledoc """
   General utility and helper functions for the planning module.
   """
-  alias AriaEngine.{Domain, State, Multigoal}
+  alias AriaEngine.{Domain, StateV2, Multigoal}
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), State.fact_value()}
+  @type goal :: {String.t(), String.t(), StateV2.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -18,7 +18,7 @@ defmodule AriaEngine.Plan.Utils do
     task: todo_item(),
     parent_id: node_id() | nil,
     children_ids: [node_id()],
-    state: State.t() | nil,
+    state: StateV2.t() | nil,
     visited: boolean(),
     expanded: boolean(),
     method_tried: String.t() | nil,
@@ -35,7 +35,7 @@ defmodule AriaEngine.Plan.Utils do
   }
 
   # Create initial solution tree with goal-task network
-  @spec create_initial_solution_tree([todo_item()], State.t()) :: solution_tree()
+  @spec create_initial_solution_tree([todo_item()], StateV2.t()) :: solution_tree()
   def create_initial_solution_tree(todos, initial_state) do
     root_id = generate_node_id()
 
@@ -80,7 +80,7 @@ defmodule AriaEngine.Plan.Utils do
   end
 
   # Update cached states in the solution tree
-  @spec update_cached_states(solution_tree(), State.t()) :: solution_tree()
+  @spec update_cached_states(solution_tree(), StateV2.t()) :: solution_tree()
   def update_cached_states(solution_tree, new_state) do
     # Update all node states to the current state
     # This is a simplified implementation - a full implementation would
@@ -138,14 +138,14 @@ defmodule AriaEngine.Plan.Utils do
   Validates a plan by executing it step by step.
   For compatibility with existing AriaEngine usage.
   """
-  @spec validate_plan(AriaEngine.Domain.Core.t(), State.t(), [plan_step()] | solution_tree()) :: {:ok, State.t()} | {:error, String.t()}
-  def validate_plan(%AriaEngine.Domain.Core{} = domain, %State{} = initial_state, %{root_id: _} = solution_tree) do
+  @spec validate_plan(AriaEngine.Domain.Core.t(), StateV2.t(), [plan_step()] | solution_tree()) :: {:ok, StateV2.t()} | {:error, String.t()}
+  def validate_plan(%AriaEngine.Domain.Core{} = domain, %StateV2{} = initial_state, %{root_id: _} = solution_tree) do
     # Extract primitive actions from solution tree
     actions = get_primitive_actions_dfs(solution_tree)
     validate_plan(domain, initial_state, actions)
   end
 
-  def validate_plan(%AriaEngine.Domain.Core{} = domain, %State{} = initial_state, plan) when is_list(plan) do
+  def validate_plan(%AriaEngine.Domain.Core{} = domain, %StateV2{} = initial_state, plan) when is_list(plan) do
     Enum.reduce_while(plan, {:ok, initial_state}, fn {action_name, args}, {:ok, state} ->
       action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 
@@ -153,7 +153,7 @@ defmodule AriaEngine.Plan.Utils do
         false ->
           {:halt, {:error, "Action #{action_name} failed during validation"}}
 
-        {:ok, %State{} = new_state} ->
+        {:ok, %StateV2{} = new_state} ->
           {:cont, {:ok, new_state}}
       end
     end)

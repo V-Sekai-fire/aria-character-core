@@ -5,11 +5,11 @@ defmodule AriaEngine.Plan.NodeExpansion do
   @moduledoc """
   Functions for expanding different types of nodes in the solution tree.
   """
-  alias AriaEngine.{Domain, State, Multigoal}
+  alias AriaEngine.{Domain, StateV2, Multigoal}
   alias AriaEngine.Plan.Utils # Assuming Utils will have generate_node_id and is_primitive_task?
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), State.fact_value()}
+  @type goal :: {String.t(), String.t(), StateV2.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -19,7 +19,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
     task: todo_item(),
     parent_id: node_id() | nil,
     children_ids: [node_id()],
-    state: State.t() | nil,
+    state: StateV2.t() | nil,
     visited: boolean(),
     expanded: boolean(),
     method_tried: String.t() | nil,
@@ -36,7 +36,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   }
 
   # Expand root node with initial todos
-  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], State.t()) :: {:ok, solution_tree()}
+  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], StateV2.t()) :: {:ok, solution_tree()}
   def expand_root_node(solution_tree, root_id, todos, state) do
     # Create child nodes for each todo
     {new_tree, child_ids} = Enum.reduce(todos, {solution_tree, []}, fn todo, {tree, ids} -> # Removed current_state from accumulator
@@ -73,7 +73,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   end
 
   # Expand task node using methods
-  @spec expand_task_node(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), node_id(), String.t(), list(), integer()) ::
+  @spec expand_task_node(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), String.t(), list(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_task_node(domain, _state, solution_tree, node_id, task_name, args, verbose) do
     node = solution_tree.nodes[node_id]
@@ -175,13 +175,13 @@ defmodule AriaEngine.Plan.NodeExpansion do
   end
 
   # Expand goal node
-  @spec expand_goal_node(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), node_id(), String.t(), String.t(), State.fact_value(), integer()) ::
+  @spec expand_goal_node(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), String.t(), String.t(), StateV2.fact_value(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose) do
     node = solution_tree.nodes[node_id]
 
-    # Check if goal is already satisfied
-    case State.get_fact(node.state, predicate, subject) do
+    # Check if goal is already satisfied  
+    case StateV2.get_fact(node.state, subject, predicate) do
       ^fact_value ->
         # Goal already satisfied - mark as expanded with no children
         updated_node = %{node | expanded: true, is_primitive: true}
@@ -314,7 +314,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   end
 
   # Expand multigoal node
-  @spec expand_multigoal_node(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), node_id(), Multigoal.t(), integer()) ::
+  @spec expand_multigoal_node(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), Multigoal.t(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | :failure
   def expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
     node = solution_tree.nodes[node_id]

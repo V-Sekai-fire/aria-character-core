@@ -6,7 +6,7 @@ defmodule AriaEngine.Planning.CoreInterface do
   alias AriaEngine.Planning.Internal
   alias AriaEngine.Core
   alias AriaEngine.Planner
-  alias AriaEngine.State
+  alias AriaEngine.StateV2
   alias AriaEngine.Pddl.Domain, as: PddlDomain
   alias AriaEngine.Plan
 
@@ -20,7 +20,7 @@ defmodule AriaEngine.Planning.CoreInterface do
   """
   @spec plan(AriaEngine.DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
     {:ok, solution_tree()} | {:error, String.t()}
-  def plan(domain, %State{} = state, todos, opts \\[]) do
+  def plan(domain, %StateV2{} = state, todos, opts \\[]) do
     # Adapt PDDL domain if necessary
     adapted_domain = case domain do
       %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
@@ -41,7 +41,7 @@ defmodule AriaEngine.Planning.CoreInterface do
   """
   @spec plan_with_tree(AriaEngine.DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
     {:ok, solution_tree()} | {:error, String.t()}
-  def plan_with_tree(domain, %State{} = state, todos, opts \\[]) do
+  def plan_with_tree(domain, %StateV2{} = state, todos, opts \\[]) do
     # Adapt PDDL domain if necessary
     adapted_domain = case domain do
       %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
@@ -54,7 +54,7 @@ defmodule AriaEngine.Planning.CoreInterface do
   Executes a plan step by step, returning the final state.
   """
   @spec execute_plan(AriaEngine.DomainBehaviour.t(), Core.state(), [plan_step()]) :: {:ok, Core.state()} | {:error, String.t()}
-  def execute_plan(domain, %State{} = initial_state, plan) do
+  def execute_plan(domain, %StateV2{} = initial_state, plan) do
     # Adapt PDDL domain if necessary
     adapted_domain = case domain do
       %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
@@ -97,7 +97,7 @@ defmodule AriaEngine.Planning.CoreInterface do
   @doc """
   Validate the current plan.
   """
-  @spec validate_plan(Core.t()) :: {:ok, State.t()} | {:error, String.t()}
+  @spec validate_plan(Core.t()) :: {:ok, StateV2.t()} | {:error, String.t()}
   def validate_plan(%Core{solution_tree: solution_tree} = engine)
       when not is_nil(solution_tree) do
 
