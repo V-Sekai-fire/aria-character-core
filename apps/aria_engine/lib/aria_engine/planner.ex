@@ -57,13 +57,15 @@ defmodule AriaEngine.Planner do
 
   alias AriaEngine.{Domain, State, Multigoal}
   alias AriaEngine.TemporalPlanner.{STNPlanner, STNMethod, STNAction}
+  alias AriaEngine.Plan # Alias for the Plan facade
+  alias AriaEngine.Plan.Utils # Alias for Plan.Utils
   require Logger
 
   # Core planner types (maintained for compatibility)
   @type planner_opts :: keyword()
-  @type planner_result :: {:ok, solution_tree()} | {:error, String.t()}
+  @type planner_result :: {:ok, Plan.solution_tree()} | {:error, String.t()}
   @type execution_result :: {:ok, State.t()} | {:error, String.t()}
-  @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure
+  @type replan_result :: {:ok, Plan.solution_tree()} | {:error, String.t()} | :failure
 
   # Domain interface types (maintained for compatibility)
   @type domain_interface :: %{
@@ -73,56 +75,21 @@ defmodule AriaEngine.Planner do
     multigoal_methods: [{String.t(), function()}]
   }
 
-  # Solution tree types (core HTN planning)
+  # Solution tree types (core HTN planning) - these are now defined in Plan.Core
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), State.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
-  # Solution tree node structure (IPyHOP-style)
   @type node_id :: String.t()
-  @type solution_node :: %{
-    id: node_id(),
-    task: todo_item(),
-    parent_id: node_id() | nil,
-    children_ids: [node_id()],
-    state: State.t() | nil,
-    visited: boolean(),
-    expanded: boolean(),
-    method_tried: String.t() | nil,
-    blacklisted_methods: [String.t()],
-    is_primitive: boolean()
-  }
+  @type solution_node :: Plan.solution_node() # Use type from Plan.Core
+  @type solution_tree :: Plan.solution_tree() # Use type from Plan.Core
 
-  @type solution_tree :: %{
-    root_id: node_id(),
-    nodes: %{node_id() => solution_node()},
-    blacklisted_commands: MapSet.t(),
-    goal_network: %{node_id() => [node_id()]}  # Goal-task network dependencies
-  }
-
-  @type plan_result :: {:ok, solution_tree()} | {:error, String.t()}
-
-  @default_max_depth 100
-  @default_verbose 0
+  # @default_max_depth 100 # Removed
+  # @default_verbose 0 # Removed
 
   @doc """
   Plan goals using STN-based temporal planning with HTN bridge compatibility.
-
-  This function maintains the original API while using STN bridges for non-temporal
-  HTN operations and falls back to the original Plan module for actual planning
-  while adding temporal validation through STN consistency checking.
-
-  ## Parameters
-  - `domain_interface`: Map containing actions and methods
-  - `initial_state`: Starting state for planning
-  - `goals`: List of goals to achieve
-  - `opts`: Planning options (max_depth, verbose, etc.)
-  - `current_time`: Optional current time for temporal planning (defaults to nil)
-
-  ## Returns
-  - `{:ok, solution_tree}`: Complete solution tree compatible with original API
-  - `{:error, reason}`: Planning failure
   """
   @spec plan(domain_interface(), State.t(), [Plan.todo_item()], planner_opts(), integer() | nil) :: planner_result()
   def plan(domain_interface, %State{} = initial_state, goals, opts \\ [], current_time \\ nil) when is_list(goals) do
@@ -140,7 +107,7 @@ defmodule AriaEngine.Planner do
     end
 
     # Use native solution tree implementation with STN bridge validation
-    case plan_with_solution_tree(domain, initial_state, goals, temporal_opts) do
+    case Plan.plan(domain, initial_state, goals, temporal_opts) do # Use Plan.plan
       {:ok, solution_tree} ->
         # Validate temporal consistency using STN bridges
         case validate_solution_with_stn_bridges(solution_tree, domain, current_time || 0) do
@@ -155,9 +122,6 @@ defmodule AriaEngine.Planner do
 
   @doc """
   Execute a solution tree with Run-Lazy-Refineahead using STN temporal coordination.
-
-  This maintains the original execution API while using STN for temporal validation
-  and coordination during execution.
   """
   @spec execute(domain_interface(), State.t(), Plan.solution_tree(), planner_opts(), integer() | nil) :: execution_result()
   def execute(domain_interface, %State{} = initial_state, solution_tree, opts \\ [], current_time \\ nil) do
@@ -177,7 +141,7 @@ defmodule AriaEngine.Planner do
     case validate_solution_with_stn_bridges(solution_tree, domain, current_time || 0) do
       :ok ->
         # Use the existing Plan module for execution
-        AriaEngine.Plan.run_lazy_refineahead(domain, initial_state, solution_tree, temporal_opts)
+        Plan.run_lazy_refineahead(domain, initial_state, solution_tree, temporal_opts) # Use Plan.run_lazy_refineahead
       
       {:error, reason} ->
         {:error, "Cannot execute temporally inconsistent plan: #{reason}"}
@@ -186,9 +150,6 @@ defmodule AriaEngine.Planner do
 
   @doc """
   Replan from a failure point using STN bridge-based replanning.
-
-  Maintains the original replanning API while using STN bridges for method
-  blacklisting and alternative selection.
   """
   @spec replan(domain_interface(), State.t(), Plan.solution_tree(), String.t(), planner_opts(), integer() | nil) :: replan_result()
   def replan(domain_interface, %State{} = current_state, solution_tree, fail_node_id, opts \\ [], current_time \\ nil) do
@@ -205,7 +166,7 @@ defmodule AriaEngine.Planner do
     end
 
     # Use the existing Plan module for replanning with STN bridge support
-    case AriaEngine.Plan.replan(domain, current_state, solution_tree, fail_node_id, temporal_opts) do
+    case Plan.replan(domain, current_state, solution_tree, fail_node_id, temporal_opts) do # Use Plan.replan
       {:ok, new_solution_tree} ->
         # Validate temporal consistency of new plan
         case validate_solution_with_stn_bridges(new_solution_tree, domain, current_time || 0) do
@@ -227,7 +188,7 @@ defmodule AriaEngine.Planner do
     domain = interface_to_domain(domain_interface)
     
     # First validate using original Plan module
-    case AriaEngine.Plan.validate_plan(domain, initial_state, solution_tree) do
+    case Plan.validate_plan(domain, initial_state, solution_tree) do # Use Plan.validate_plan
       {:ok, final_state} ->
         # Additional STN temporal consistency validation
         case validate_solution_with_stn_bridges(solution_tree, domain, 0) do
@@ -245,7 +206,7 @@ defmodule AriaEngine.Planner do
   """
   @spec extract_actions(Plan.solution_tree()) :: [Plan.plan_step()]
   def extract_actions(solution_tree) do
-    AriaEngine.Plan.get_primitive_actions_dfs(solution_tree)
+    Utils.get_primitive_actions_dfs(solution_tree) # Updated call
   end
 
   @doc """
@@ -253,7 +214,7 @@ defmodule AriaEngine.Planner do
   """
   @spec tree_stats(Plan.solution_tree()) :: map()
   def tree_stats(solution_tree) do
-    AriaEngine.Plan.tree_stats(solution_tree)
+    Utils.tree_stats(solution_tree) # Updated call
   end
 
   @doc """
@@ -261,7 +222,7 @@ defmodule AriaEngine.Planner do
   """
   @spec plan_cost(Plan.solution_tree()) :: non_neg_integer()
   def plan_cost(solution_tree) do
-    AriaEngine.Plan.plan_cost(solution_tree)
+    Utils.plan_cost(solution_tree) # Updated call
   end
 
   @doc """
@@ -306,7 +267,7 @@ defmodule AriaEngine.Planner do
   @spec solution_tree_to_stn_methods_with_bridges(Plan.solution_tree(), Domain.t(), integer()) :: [STNMethod.t()]
   defp solution_tree_to_stn_methods_with_bridges(solution_tree, domain, current_time) do
     # Extract primitive actions from solution tree
-    primitive_actions = AriaEngine.Plan.get_primitive_actions_dfs(solution_tree)
+    primitive_actions = Utils.get_primitive_actions_dfs(solution_tree) # Updated call
     
     # Group actions into temporal segments separated by bridge actions
     action_segments = group_actions_into_temporal_segments(primitive_actions)
@@ -330,7 +291,7 @@ defmodule AriaEngine.Planner do
   # Create STN method with bridge actions for a segment of primitive actions
   @spec create_stn_method_with_bridges([Plan.plan_step()], integer(), Domain.t(), integer()) :: STNMethod.t()
   defp create_stn_method_with_bridges(action_segment, segment_index, domain, current_time) do
-    method_id = "segment_#{segment_index}"
+    method_id = "segment_#{segment_index}" # Fixed method_id generation
     
     # Create bridge actions for HTN operations
     bridge_actions = [
@@ -414,848 +375,7 @@ defmodule AriaEngine.Planner do
     end
   end
 
-  ## Core solution tree planning functions migrated from AriaEngine.Plan
-
-  @doc """
-  Create a solution tree from todos and execute it with replanning on failure.
-
-  This implements the Run-Lazy-Refineahead algorithm from the IPyHOP paper.
-  """
-  @spec plan_with_solution_tree(Domain.t(), State.t(), [todo_item()], keyword()) ::
-    {:ok, solution_tree()} | {:error, String.t()}
-  def plan_with_solution_tree(%Domain{} = domain, %State{} = state, todos, opts \\ []) do
-    # Create initial solution tree with goal-task network
-    solution_tree = create_initial_solution_tree(todos, state)
-    Logger.debug("Initial solution tree for plan_with_solution_tree: #{inspect(solution_tree)}")
-    
-    # Run IPyHOP algorithm
-    ipyhop(domain, state, solution_tree, opts)
-  end
-
-  @doc """
-  Replan from a specific failure node in the solution tree.
-  """
-  @spec replan_solution_tree(Domain.t(), State.t(), solution_tree(), node_id(), keyword()) :: 
-    {:ok, solution_tree()} | {:error, String.t()} | :failure
-  def replan_solution_tree(%Domain{} = domain, %State{} = state, solution_tree, fail_node_id, opts \\ []) do
-    verbose = Keyword.get(opts, :verbose, @default_verbose)
-
-    if verbose > 2 do
-      IO.puts("Replanning from failure node: #{fail_node_id}")
-    end
-
-    # Find the task node that produced this action (walk up the tree)
-    case find_responsible_task_node(solution_tree, fail_node_id, verbose) do
-      nil ->
-        {:error, "Could not find responsible task node for failed action"}
-
-      task_node_id ->
-        if verbose > 2 do
-          IO.puts("Found responsible task node: #{task_node_id}")
-        end
-
-        # Update cached states to current execution state
-        updated_tree = update_cached_states(solution_tree, state)
-
-        # Try alternative method for the responsible task
-        case try_alternative_method_for_task(updated_tree, task_node_id, verbose) do
-          {:ok, new_tree} ->
-            # Resume planning from the updated tree
-            ipyhop(domain, state, new_tree, opts)
-
-          {:error, reason} ->
-            {:error, reason}
-        end
-    end
-  end
-
-  @doc """
-  Blacklist a command to prevent it from being tried again.
-  """
-  @spec blacklist_command(solution_tree(), todo_item()) :: solution_tree()
-  def blacklist_command(solution_tree, command) do
-    %{solution_tree |
-      blacklisted_commands: MapSet.put(solution_tree.blacklisted_commands, command)
-    }
-  end
-
-  @doc """
-  Run-Lazy-Refineahead: Execute plan with replanning on failure.
-  """
-  @spec run_lazy_refineahead(Domain.t(), State.t(), solution_tree(), keyword()) ::
-    {:ok, State.t()} | {:error, String.t()}
-  def run_lazy_refineahead(%Domain{} = domain, %State{} = initial_state, solution_tree, opts \\ []) do
-    verbose = Keyword.get(opts, :verbose, @default_verbose)
-
-    if verbose > 2 do
-      IO.puts("Starting Run-Lazy-Refineahead execution")
-    end
-
-    # Initialize execution state
-    current_state = initial_state
-    current_tree = solution_tree
-
-    # Main execution loop
-    run_execution_loop(domain, current_state, current_tree, opts)
-  end
-
-  # Core IPyHOP Algorithm implementation
-  @spec ipyhop(Domain.t(), State.t(), solution_tree(), keyword()) :: 
-    {:ok, solution_tree()} | {:error, String.t()}
-  defp ipyhop(%Domain{} = domain, %State{} = current_state, solution_tree, opts) do
-    verbose = Keyword.get(opts, :verbose, @default_verbose)
-    max_depth = Keyword.get(opts, :max_depth, @default_max_depth)
-
-    # IPyHOP main loop
-    ipyhop_loop(domain, current_state, solution_tree, 0, max_depth, verbose)
-  end
-
-  # IPyHOP main loop implementation
-  @spec ipyhop_loop(Domain.t(), State.t(), solution_tree(), integer(), integer(), integer()) :: 
-    {:ok, solution_tree()} | {:error, String.t()}
-  defp ipyhop_loop(%Domain{} = domain, current_state, solution_tree, depth, max_depth, verbose) do
-    Logger.debug("ipyhop_loop: current solution_tree: #{inspect(solution_tree)}")
-    if depth >= max_depth do
-      {:error, "Maximum planning depth exceeded"}
-    else
-      # Find next unexpanded node
-      case find_next_node(solution_tree) do
-        nil ->
-          # All nodes expanded - check if solution is complete
-          if solution_complete?(solution_tree) do
-            {:ok, solution_tree}
-          else
-            {:error, "No complete solution found"}
-          end
-
-        node_id ->
-          # Try to expand this node
-          case try_expand_node(domain, current_state, solution_tree, node_id, verbose) do
-            {:ok, new_tree} ->
-              ipyhop_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
-
-            {:error, reason} ->
-              {:error, reason}
-
-            :failure ->
-              # Backtrack and try alternatives
-              case backtrack_and_retry(domain, current_state, solution_tree, node_id, depth, max_depth, verbose) do
-                {:ok, new_tree} ->
-                  ipyhop_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
-
-                {:error, reason} ->
-                  {:error, reason}
-              end
-          end
-      end
-    end
-  end
-
-  # Create initial solution tree
-  @spec create_initial_solution_tree([todo_item()], State.t()) :: solution_tree()
-  defp create_initial_solution_tree(todos, initial_state) do
-    root_id = generate_node_id()
-    
-    root_node = %{
-      id: root_id,
-      task: {:root, todos},
-      parent_id: nil,
-      children_ids: [],
-      state: initial_state,
-      visited: false,
-      expanded: false,
-      method_tried: nil,
-      blacklisted_methods: [],
-      is_primitive: false
-    }
-
-    %{
-      root_id: root_id,
-      nodes: %{root_id => root_node},
-      blacklisted_commands: MapSet.new(),
-      goal_network: %{}
-    }
-  end
-
-  # Find next unexpanded node using depth-first search
-  @spec find_next_node(solution_tree()) :: node_id() | nil
-  defp find_next_node(solution_tree) do
-    find_next_node_dfs(solution_tree, solution_tree.root_id)
-  end
-
-  @spec find_next_node_dfs(solution_tree(), node_id()) :: node_id() | nil
-  defp find_next_node_dfs(solution_tree, node_id) do
-    case solution_tree.nodes[node_id] do
-      nil -> nil
-      
-      node ->
-        cond do
-          not node.expanded and not node.is_primitive ->
-            # This node needs expansion
-            node_id
-            
-          node.children_ids == [] ->
-            # Leaf node - no children to explore
-            nil
-            
-          true ->
-            # Search children
-            Enum.find_value(node.children_ids, fn child_id ->
-              find_next_node_dfs(solution_tree, child_id)
-            end)
-        end
-    end
-  end
-
-  # Try to expand a specific node
-  @spec try_expand_node(Domain.t(), State.t(), solution_tree(), node_id(), integer()) :: 
-    {:ok, solution_tree()} | {:error, String.t()} | :failure
-  defp try_expand_node(domain, state, solution_tree, node_id, verbose) do
-    case solution_tree.nodes[node_id] do
-      nil ->
-        {:error, "Node not found: #{node_id}"}
-        
-      node ->
-        case node.task do
-          {:root, todos} ->
-            expand_root_node(solution_tree, node_id, todos, state)
-            
-          {task_name, args} when is_binary(task_name) ->
-            expand_task_node(domain, state, solution_tree, node_id, task_name, args, verbose)
-            
-          {predicate, subject, fact_value} ->
-            expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose)
-            
-          %Multigoal{} = multigoal ->
-            expand_multigoal_node(domain, state, solution_tree, node_id, multigoal, verbose)
-            
-          _ ->
-            {:error, "Unknown task type: #{inspect(node.task)}"}
-        end
-    end
-  end
-
-  # Expand root node with todos
-  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], State.t()) :: {:ok, solution_tree()}
-  defp expand_root_node(solution_tree, root_id, todos, state) do
-    # Create child nodes for each todo
-    {child_nodes, child_ids} = 
-      Enum.map_reduce(todos, [], fn todo, acc_ids ->
-        child_id = generate_node_id()
-        
-        child_node = %{
-          id: child_id,
-          task: todo,
-          parent_id: root_id,
-          children_ids: [],
-          state: state,
-          visited: false,
-          expanded: false,
-          method_tried: nil,
-          blacklisted_methods: [],
-          is_primitive: false
-        }
-        
-        {child_node, [child_id | acc_ids]}
-      end)
-    
-    child_ids = Enum.reverse(child_ids)
-    
-    # Determine if root node should be marked as primitive
-    is_root_primitive = Enum.empty?(todos)
-
-    # Update solution tree
-    updated_nodes = 
-      child_nodes
-      |> Enum.reduce(solution_tree.nodes, fn child_node, acc ->
-        Map.put(acc, child_node.id, child_node)
-      end)
-      |> Map.update!(root_id, fn root_node ->
-        %{root_node | children_ids: child_ids, expanded: true, is_primitive: is_root_primitive}
-      end)
-    
-    {:ok, %{solution_tree | nodes: updated_nodes}}
-  end
-
-  # Expand task node with methods
-  @spec expand_task_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), list(), integer()) :: 
-    {:ok, solution_tree()} | {:error, String.t()} | :failure
-  defp expand_task_node(domain, state, solution_tree, node_id, task_name, args, verbose) do
-    case solution_tree.nodes[node_id] do
-      nil ->
-        {:error, "Node not found: #{node_id}"}
-        
-      node ->
-        # Get available methods for this task (returns {name, function} tuples)
-        available_methods = Domain.get_task_methods(domain, task_name)
-        
-        # Debug: Check what we actually got
-        if verbose > 0 do
-          IO.puts("DEBUG: task_methods for #{task_name}: #{inspect(available_methods)}")
-        end
-
-        # Filter out blacklisted methods
-        usable_methods = Enum.reject(available_methods, fn method ->
-          case method do
-            {method_name, _method_fn} ->
-              Enum.member?(node.blacklisted_methods, method_name)
-            _ ->
-              # Handle unexpected format
-              if verbose > 0 do
-                IO.puts("DEBUG: Unexpected task method format: #{inspect(method)}")
-              end
-              false
-          end
-        end)
-        
-        case usable_methods do
-          [] ->
-            if verbose > 2 do
-              IO.puts("No usable methods for task: #{task_name}")
-            end
-            :failure
-            
-          [{method_name, method_fn} | _] ->
-            # Try first available method
-            case method_fn do
-              nil ->
-                {:error, "Method function not found: #{inspect(method_name)}"}
-                
-              method_fn when is_function(method_fn) ->
-                # Apply method to get subtasks
-                case apply_method_to_task(method_fn, args, verbose) do
-                  {:ok, subtasks} ->
-                    # Decomposed into subtasks
-                    new_tree =
-                      create_subtask_nodes(solution_tree, node_id, subtasks, method_name)
-
-                    {:ok, new_tree}
-                    
-                  {:error, reason} ->
-                    # Blacklist this method and try next
-                    blacklisted_node = %{node | blacklisted_methods: [method_name | node.blacklisted_methods]}
-                    updated_tree = %{solution_tree | nodes: Map.put(solution_tree.nodes, node_id, blacklisted_node)}
-                    
-                    if verbose > 2 do
-                      IO.puts("Method #{method_name} failed: #{reason}")
-                    end
-                    
-                    expand_task_node(domain, state, updated_tree, node_id, task_name, args, verbose)
-                end
-            end
-        end
-    end
-  end
-
-  # Apply a goal method and handle the result
-  @spec apply_goal_method(Domain.t(), State.t(), solution_tree(), node_id(), 
-    String.t(), String.t(), State.fact_value(), String.t(), function(), integer()) :: 
-    {:ok, solution_tree()} | {:error, String.t()} | :failure
-  defp apply_goal_method(domain, state, solution_tree, node_id, 
-    predicate, subject, fact_value, method_name, method_fn, verbose) do
-    
-    # Apply method to get subtasks
-    case apply_method_to_goal(method_fn, predicate, subject, fact_value, verbose) do
-      {:ok, subtasks} ->
-        # Decomposed into subtasks
-        new_tree = create_subtask_nodes(solution_tree, node_id, subtasks, method_name)
-        {:ok, new_tree}
-
-      {:error, reason} ->
-        # Blacklist this method and try next
-        node = solution_tree.nodes[node_id]
-        blacklisted_node = %{node | blacklisted_methods: [method_name | node.blacklisted_methods]}
-        updated_tree = %{solution_tree | nodes: Map.put(solution_tree.nodes, node_id, blacklisted_node)}
-        
-        if verbose > 2 do
-          IO.puts("Method #{method_name} failed for goal: #{reason}")
-        end
-        
-        expand_goal_node(domain, state, updated_tree, node_id, predicate, subject, fact_value, verbose)
-    end
-  end
-
-  # Expand goal node
-  @spec expand_goal_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), String.t(), State.fact_value(), integer()) :: 
-    {:ok, solution_tree()} | {:error, String.t()} | :failure
-  defp expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose) do
-    case solution_tree.nodes[node_id] do
-      nil ->
-        {:error, "Node not found: #{node_id}"}
-        
-      node ->
-        # Check if goal is already satisfied
-        if State.matches?(state, predicate, subject, fact_value) do
-          # Goal already satisfied - mark as primitive (no action needed)
-          mark_as_primitive(solution_tree, node_id)
-        else
-          # Find methods that can achieve this goal
-          goal_methods = Domain.get_goal_methods(domain, predicate)
-          
-          # Debug: Check what we actually got
-          if verbose > 0 do
-            IO.puts("DEBUG: goal_methods for #{predicate}: #{inspect(goal_methods)}")
-          end
-          
-          # Filter out blacklisted methods - this depends on the method format
-          usable_methods = Enum.reject(goal_methods, fn method ->
-            case method do
-              {method_name, _method_fn} when is_binary(method_name) ->
-                # Already a named tuple, filter by name
-                Enum.member?(node.blacklisted_methods, method_name)
-              _function when is_function(method, 2) ->
-                # It's a raw function - for debug script just allow it
-                false
-              _ ->
-                # Handle unexpected format
-                if verbose > 0 do
-                  IO.puts("DEBUG: Unexpected method format: #{inspect(method)}")
-                end
-                false
-            end
-          end)
-          
-          case usable_methods do
-            [] ->
-              if verbose > 2 do
-                IO.puts("No usable methods for goal: #{predicate} #{subject} #{fact_value}")
-              end
-              :failure
-              
-            [first_method | _] ->
-              # Handle different method formats
-              case first_method do
-                {method_name, method_fn} when is_binary(method_name) and is_function(method_fn, 2) ->
-                  # Standard named tuple format
-                  apply_goal_method(domain, state, solution_tree, node_id, 
-                    predicate, subject, fact_value, method_name, method_fn, verbose)
-                
-                method_fn when is_function(method_fn, 2) ->
-                  # Raw function format - generate a name for blacklisting
-                  method_name = "method_#{:erlang.phash2(method_fn)}"
-                  apply_goal_method(domain, state, solution_tree, node_id, 
-                    predicate, subject, fact_value, method_name, method_fn, verbose)
-                
-                other ->
-                  # Unexpected format - try to handle gracefully
-                  if verbose > 0 do
-                    IO.puts("DEBUG: Cannot process method format: #{inspect(other)}")
-                  end
-                  {:error, "Invalid method format: #{inspect(other)}"}
-              end
-          end
-        end
-    end
-  end
-
-  # Expand multigoal node
-  @spec expand_multigoal_node(Domain.t(), State.t(), solution_tree(), node_id(), Multigoal.t(), integer()) :: 
-    {:ok, solution_tree()}
-  defp expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
-    case solution_tree.nodes[node_id] do
-      nil ->
-        {:error, "Node not found: #{node_id}"}
-        
-      _node ->
-        # Extract individual goals from multigoal
-        individual_goals = Multigoal.to_goals(multigoal)
-        
-        if verbose > 2 do
-          IO.puts("Expanding multigoal with #{length(individual_goals)} individual goals")
-        end
-        
-        # Create child nodes for each individual goal
-        create_subtask_nodes(solution_tree, node_id, individual_goals, "multigoal_expansion")
-    end
-  end
-
-  # Create subtask nodes for a parent
-  @spec create_subtask_nodes(solution_tree(), node_id(), [todo_item()], String.t()) :: {:ok, solution_tree()}
-  defp create_subtask_nodes(solution_tree, parent_id, subtasks, method_name) do
-    parent_node = solution_tree.nodes[parent_id]
-    
-    # Create child nodes for subtasks
-    {child_nodes, child_ids} = 
-      Enum.map_reduce(subtasks, [], fn subtask, acc_ids ->
-        child_id = generate_node_id()
-        
-        child_node = %{
-          id: child_id,
-          task: subtask,
-          parent_id: parent_id,
-          children_ids: [],
-          state: parent_node.state,
-          visited: false,
-          expanded: false,
-          method_tried: nil,
-          blacklisted_methods: [],
-          is_primitive: false
-        }
-        
-        {child_node, [child_id | acc_ids]}
-      end)
-    
-    child_ids = Enum.reverse(child_ids)
-    
-    # Update solution tree
-    updated_nodes = 
-      child_nodes
-      |> Enum.reduce(solution_tree.nodes, fn child_node, acc ->
-        Map.put(acc, child_node.id, child_node)
-      end)
-      |> Map.update!(parent_id, fn parent_node ->
-        %{parent_node | children_ids: child_ids, expanded: true, method_tried: method_name}
-      end)
-    
-    {:ok, %{solution_tree | nodes: updated_nodes}}
-  end
-
-  # Mark node as primitive (leaf action)
-  @spec mark_as_primitive(solution_tree(), node_id()) :: {:ok, solution_tree()}
-  defp mark_as_primitive(solution_tree, node_id) do
-    updated_nodes = Map.update!(solution_tree.nodes, node_id, fn node ->
-      %{node | is_primitive: true, expanded: true}
-    end)
-    
-    {:ok, %{solution_tree | nodes: updated_nodes}}
-  end
-
-  # Check if solution is complete
-  @spec solution_complete?(solution_tree()) :: boolean()
-  defp solution_complete?(solution_tree) do
-    # All leaf nodes must be primitive (actions)
-    solution_tree.nodes
-    |> Map.values()
-    |> Enum.filter(fn node -> node.children_ids == [] end)  # Leaf nodes
-    |> Enum.all?(fn node -> node.is_primitive end)
-  end
-
-  # Backtrack and try alternatives
-  @spec backtrack_and_retry(Domain.t(), State.t(), solution_tree(), node_id(), integer(), integer(), integer()) :: 
-    {:ok, solution_tree()} | {:error, String.t()}
-  defp backtrack_and_retry(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
-    if verbose > 2 do
-      IO.puts("Backtracking from failed node: #{failed_node_id}")
-    end
-    
-    case find_backtrack_point(solution_tree, failed_node_id, verbose) do
-      nil ->
-        {:error, "No backtrack point available"}
-        
-      parent_id ->
-        case backtrack_to_alternative_method(solution_tree, parent_id, failed_node_id, verbose) do
-          {:ok, new_tree} ->
-            ipyhop_loop(domain, state, new_tree, depth, max_depth, verbose)
-            
-          {:error, _reason} ->
-            # Continue backtracking up the tree
-            case solution_tree.nodes[parent_id] do
-              nil -> {:error, "Parent node not found"}
-              parent_node -> 
-                backtrack_and_retry(domain, state, solution_tree, parent_node.parent_id, depth, max_depth, verbose)
-            end
-        end
-    end
-  end
-
-  # Find a good backtrack point
-  @spec find_backtrack_point(solution_tree(), node_id(), integer()) :: node_id() | nil
-  defp find_backtrack_point(solution_tree, failed_node_id, verbose) do
-    case solution_tree.nodes[failed_node_id] do
-      nil -> nil
-      node -> 
-        if verbose > 2 do
-          IO.puts("Looking for backtrack point from: #{failed_node_id}")
-        end
-        node.parent_id
-    end
-  end
-
-  # Try alternative method at backtrack point
-  @spec backtrack_to_alternative_method(solution_tree(), node_id(), node_id(), integer()) :: 
-    {:ok, solution_tree()} | {:error, String.t()}
-  defp backtrack_to_alternative_method(solution_tree, parent_id, _failed_child_id, verbose) do
-    case solution_tree.nodes[parent_id] do
-      nil ->
-        {:error, "Parent node not found: #{parent_id}"}
-        
-      parent_node ->
-        # Remove children and mark as unexpanded to try different method
-        cleared_parent = %{parent_node | 
-          children_ids: [], 
-          expanded: false,
-          blacklisted_methods: case parent_node.method_tried do
-            nil -> parent_node.blacklisted_methods
-            method -> [method | parent_node.blacklisted_methods]
-          end,
-          method_tried: nil
-        }
-        
-        # Remove child nodes from tree
-        updated_nodes = 
-          parent_node.children_ids
-          |> Enum.reduce(solution_tree.nodes, fn child_id, acc ->
-            remove_subtree(acc, child_id)
-          end)
-          |> Map.put(parent_id, cleared_parent)
-        
-        if verbose > 2 do
-          IO.puts("Cleared children of node #{parent_id} for alternative method")
-        end
-        
-        {:ok, %{solution_tree | nodes: updated_nodes}}
-    end
-  end
-
-  # Remove entire subtree rooted at node_id
-  @spec remove_subtree(map(), node_id()) :: map()
-  defp remove_subtree(nodes, node_id) do
-    case nodes[node_id] do
-      nil -> nodes
-      node ->
-        # Recursively remove children
-        updated_nodes = 
-          Enum.reduce(node.children_ids, nodes, fn child_id, acc ->
-            remove_subtree(acc, child_id)
-          end)
-        
-        # Remove this node
-        Map.delete(updated_nodes, node_id)
-    end
-  end
-
-  # Helper functions for method application
-  @spec apply_method_to_task(function(), list(), integer()) :: {:ok, [todo_item()]} | {:error, String.t()}
-  defp apply_method_to_task(method_fn, args, verbose) do
-    try do
-      case method_fn.(args) do
-        {:ok, subtasks} -> {:ok, subtasks}
-        subtasks when is_list(subtasks) -> {:ok, subtasks}
-        error -> {:error, "Method returned: #{inspect(error)}"}
-      end
-    rescue
-      error -> 
-        if verbose > 2 do
-          IO.puts("Method application failed: #{inspect(error)}")
-        end
-        {:error, "Method exception: #{inspect(error)}"}
-    end
-  end
-
-  @spec apply_method_to_goal(function(), String.t(), String.t(), State.fact_value(), integer()) :: 
-    {:ok, [todo_item()]} | {:error, String.t()}
-  defp apply_method_to_goal(method_fn, predicate, subject, fact_value, verbose) do
-    try do
-      case method_fn.(predicate, subject, fact_value) do
-        {:ok, subtasks} -> {:ok, subtasks}
-        subtasks when is_list(subtasks) -> {:ok, subtasks}
-        error -> {:error, "Method returned: #{inspect(error)}"}
-      end
-    rescue
-      error -> 
-        if verbose > 2 do
-          IO.puts("Goal method application failed: #{inspect(error)}")
-        end
-        {:error, "Method exception: #{inspect(error)}"}
-    end
-  end
-
-  # Find the task node responsible for producing a failed action
-  @spec find_responsible_task_node(solution_tree(), node_id(), integer()) :: node_id() | nil
-  defp find_responsible_task_node(solution_tree, fail_node_id, verbose) do
-    case solution_tree.nodes[fail_node_id] do
-      nil ->
-        nil
-
-      node ->
-        # Walk up the tree to find a task node (not a primitive action)
-        find_parent_task_node(solution_tree, node.parent_id, verbose)
-    end
-  end
-
-  # Recursively find the first parent that is a task node (not primitive)
-  @spec find_parent_task_node(solution_tree(), nil, integer()) :: nil
-  defp find_parent_task_node(_solution_tree, nil, _verbose), do: nil
-
-  @spec find_parent_task_node(solution_tree(), node_id(), integer()) :: node_id() | nil
-  defp find_parent_task_node(solution_tree, node_id, verbose) do
-    case solution_tree.nodes[node_id] do
-      nil -> nil
-
-      node ->
-        case node.task do
-          {task_name, _args} when is_binary(task_name) ->
-            # This is a task node - this is what we're looking for
-            if verbose > 2 do
-              IO.puts("Found task node: #{node_id} with task: #{task_name}")
-            end
-            node_id
-
-          {:root, _} ->
-            # Skip root node, continue searching
-            find_parent_task_node(solution_tree, node.parent_id, verbose)
-
-          _ ->
-            # Goal or other node type, continue searching
-            find_parent_task_node(solution_tree, node.parent_id, verbose)
-        end
-    end
-  end
-
-  # Try alternative method for a specific task node
-  @spec try_alternative_method_for_task(solution_tree(), node_id(), integer()) :: 
-    {:ok, solution_tree()} | {:error, String.t()}
-  defp try_alternative_method_for_task(solution_tree, task_node_id, verbose) do
-    case solution_tree.nodes[task_node_id] do
-      nil ->
-        {:error, "Task node not found: #{task_node_id}"}
-
-      node ->
-        case node.task do
-          {task_name, _args} when is_binary(task_name) ->
-            # Clear the node's children and blacklist the current method
-            cleared_node = %{node |
-              children_ids: [],
-              expanded: false,
-              blacklisted_methods: case node.method_tried do
-                nil -> node.blacklisted_methods
-                method -> [method | node.blacklisted_methods]
-              end,
-              method_tried: nil
-            }
-
-            # Remove child nodes from tree
-            updated_nodes = 
-              node.children_ids
-              |> Enum.reduce(solution_tree.nodes, fn child_id, acc ->
-                remove_subtree(acc, child_id)
-              end)
-              |> Map.put(task_node_id, cleared_node)
-
-            if verbose > 2 do
-              IO.puts("Prepared task node #{task_node_id} for alternative method")
-            end
-
-            {:ok, %{solution_tree | nodes: updated_nodes}}
-
-          _ ->
-            {:error, "Node is not a task: #{inspect(node.task)}"}
-        end
-    end
-  end
-
-  # Update cached states in solution tree
-  @spec update_cached_states(solution_tree(), State.t()) :: solution_tree()
-  defp update_cached_states(solution_tree, current_state) do
-    # For now, just update the root state
-    # In a more sophisticated implementation, we'd update states throughout the tree
-    updated_nodes = Map.update!(solution_tree.nodes, solution_tree.root_id, fn root_node ->
-      %{root_node | state: current_state}
-    end)
-    
-    %{solution_tree | nodes: updated_nodes}
-  end
-
-  # Main execution loop for Run-Lazy-Refineahead
-  @spec run_execution_loop(Domain.t(), State.t(), solution_tree(), keyword()) :: 
-    {:ok, State.t()} | {:error, String.t()}
-  defp run_execution_loop(domain, current_state, current_tree, opts) do
-    verbose = Keyword.get(opts, :verbose, @default_verbose)
-    Logger.debug("run_execution_loop: current_tree: #{inspect(current_tree)}")
-    
-    case get_next_primitive_action(current_tree) do
-      nil ->
-        # No more actions to execute
-        {:ok, current_state}
-        
-      {action_node_id, action_name, action_args} ->
-        if verbose > 2 do
-          IO.puts("Executing action: #{action_name} with args: #{inspect(action_args)}")
-        end
-        
-        # Try to execute the action
-        case Domain.execute_action(domain, current_state, action_name, action_args) do
-          {:ok, new_state} ->
-            # Action succeeded - continue with next action
-            updated_tree = mark_action_completed(current_tree, action_node_id)
-            run_execution_loop(domain, new_state, updated_tree, opts)
-            
-          false ->
-            if verbose > 2 do
-              IO.puts("Action failed: #{action_name}")
-            end
-            
-            # Action failed - try to replan
-            case replan_solution_tree(domain, current_state, current_tree, action_node_id, opts) do
-              {:ok, new_tree} ->
-                run_execution_loop(domain, current_state, new_tree, opts)
-                
-              {:error, replan_reason} ->
-                {:error, "Execution failed: #{action_name}, replanning failed: #{replan_reason}"}
-            end
-        end
-    end
-  end
-
-  # Get next primitive action to execute
-  @spec get_next_primitive_action(solution_tree()) :: {node_id(), atom(), list()} | nil
-  defp get_next_primitive_action(solution_tree) do
-    get_next_primitive_action_dfs(solution_tree, solution_tree.root_id)
-  end
-
-  @spec get_next_primitive_action_dfs(solution_tree(), node_id()) :: {node_id(), atom(), list()} | nil
-  defp get_next_primitive_action_dfs(solution_tree, node_id) do
-    case solution_tree.nodes[node_id] do
-      nil -> 
-        Logger.debug("get_next_primitive_action_dfs: Node #{node_id} not found, returning nil")
-        nil
-      
-      node ->
-        Logger.debug("get_next_primitive_action_dfs: node_id: #{node_id}, node: #{inspect(node)}")
-        cond do
-          node.is_primitive and node.task != {:root, []} ->
-            # This is a primitive action
-            case node.task do
-              {action_name, args} -> 
-                Logger.debug("get_next_primitive_action_dfs: Found primitive action: #{action_name}, returning {#{node_id}, #{action_name}, #{inspect(args)}}")
-                {node_id, action_name, args}
-              _ -> 
-                Logger.debug("get_next_primitive_action_dfs: Primitive node with unexpected task format, returning nil")
-                nil
-            end
-            
-          node.children_ids == [] ->
-            # Leaf node but not primitive - shouldn't happen in a complete plan
-            Logger.debug("get_next_primitive_action_dfs: Leaf node but not primitive, returning nil")
-            nil
-            
-          true ->
-            # Search children in order
-            Logger.debug("get_next_primitive_action_dfs: Searching children for node #{node_id}")
-            Enum.find_value(node.children_ids, fn child_id ->
-              get_next_primitive_action_dfs(solution_tree, child_id)
-            end)
-        end
-    end
-  end
-
-  # Mark action as completed in the solution tree
-  @spec mark_action_completed(solution_tree(), node_id()) :: solution_tree()
-  defp mark_action_completed(solution_tree, action_node_id) do
-    updated_nodes = Map.update!(solution_tree.nodes, action_node_id, fn node ->
-      %{node | visited: true}
-    end)
-    
-    %{solution_tree | nodes: updated_nodes}
-  end
-
-  # Generate unique node ID
-  @spec generate_node_id() :: String.t()
-  defp generate_node_id do
-    :crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)
-  end
-
-  ## Helper Functions (maintained for compatibility)
+  ## Private Helper Functions
 
   # Convert domain interface to Domain struct
   @spec interface_to_domain(domain_interface()) :: Domain.t()

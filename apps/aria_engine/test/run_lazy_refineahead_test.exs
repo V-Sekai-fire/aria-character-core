@@ -12,6 +12,7 @@ defmodule RunLazyRefineaheadTest do
   use ExUnit.Case
   @tag timeout: 30000 # Set timeout to 30 seconds
   alias AriaEngine.{Domain, State, Plan}
+  alias AriaEngine.Plan.Utils # Added alias for Utils
   
   test "Run-Lazy-Refineahead with action failure and replanning" do
     # Create a domain with actions that can fail conditionally
@@ -30,7 +31,7 @@ defmodule RunLazyRefineaheadTest do
         IO.inspect(Plan.tree_stats(solution_tree))
         
         # Extract actions for inspection
-        initial_actions = Plan.get_primitive_actions_dfs(solution_tree)
+        initial_actions = Utils.get_primitive_actions_dfs(solution_tree)
         IO.puts("Initial plan: #{inspect(initial_actions)}")
         
         # Execute with Run-Lazy-Refineahead (this should trigger replanning)

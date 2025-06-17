@@ -7,6 +7,7 @@ defmodule AriaEnginePortelainIntegrationTest do
   alias AriaEngine.{Domain, State, Plan, DomainProvider}
   alias AriaEngine.Actions
   alias AriaWorkflow.{WorkflowDefinition, WorkflowRegistry}
+  alias AriaEngine.Plan.Utils # Added alias for Utils
 
   require Logger
 
@@ -100,7 +101,7 @@ defmodule AriaEnginePortelainIntegrationTest do
       case Plan.plan(domain, state, todos, verbose: 0) do
         {:ok, solution_tree} ->
           # Extract primitive actions from the solution tree
-          plan = Plan.get_primitive_actions_dfs(solution_tree)
+          plan = Utils.get_primitive_actions_dfs(solution_tree)
           assert is_list(plan)
           assert length(plan) > 0
           Logger.info("File management plan: #{inspect(plan)}")
@@ -140,7 +141,7 @@ defmodule AriaEnginePortelainIntegrationTest do
       case Plan.plan(domain, state, todos, max_depth: 20, verbose: 0) do
         {:ok, solution_tree} ->
           # Extract primitive actions from the solution tree
-          plan = Plan.get_primitive_actions_dfs(solution_tree)
+          plan = Utils.get_primitive_actions_dfs(solution_tree)
           assert is_list(plan)
           Logger.info("Mixed todo plan: #{inspect(plan)}")
 
@@ -267,7 +268,7 @@ defmodule AriaEnginePortelainIntegrationTest do
       case Plan.plan(domain, state, todos, max_depth: 10, verbose: 0) do
         {:ok, solution_tree} ->
           # Extract primitive actions from the solution tree
-          plan = Plan.get_primitive_actions_dfs(solution_tree)
+          plan = Utils.get_primitive_actions_dfs(solution_tree)
           Logger.info("Backup plan: #{inspect(plan)}")
 
           # Validate the plan

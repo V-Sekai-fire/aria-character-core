@@ -5,6 +5,7 @@ defmodule AriaEngine.Info do
   alias AriaEngine.Core
   alias AriaEngine.State
   alias AriaEngine.Plan
+  alias AriaEngine.Plan.Utils # Added alias for Utils
 
   @type t :: Core.t()
   @type status :: Core.status()
@@ -97,7 +98,7 @@ defmodule AriaEngine.Info do
   end
 
   def get_planned_actions(%Core{solution_tree: solution_tree}) do
-    Plan.get_primitive_actions_dfs(solution_tree)
+    Utils.get_primitive_actions_dfs(solution_tree)
   end
 
   @doc """
@@ -141,7 +142,7 @@ defmodule AriaEngine.Info do
   end
 
   def get_trace_log(%Core{solution_tree: solution_tree}) do
-    actions = Plan.get_primitive_actions_dfs(solution_tree)
+    actions = Utils.get_primitive_actions_dfs(solution_tree)
 
     actions
     |> Enum.with_index()
