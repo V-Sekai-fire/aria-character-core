@@ -23,7 +23,8 @@ defmodule AriaEngine.Plan.Utils do
     expanded: boolean(),
     method_tried: String.t() | nil,
     blacklisted_methods: [String.t()],
-    is_primitive: boolean()
+    is_primitive: boolean(),
+    is_durative: boolean()
   }
 
   @type solution_tree :: %{
@@ -49,7 +50,8 @@ defmodule AriaEngine.Plan.Utils do
       expanded: false,
       method_tried: nil,
       blacklisted_methods: [],
-      is_primitive: is_primitive_task?(todos) # This should be is_primitive_task?(todo)
+      is_primitive: false,  # Root node is never primitive
+      is_durative: false    # Root node is never durative
     }
 
     %{

@@ -51,7 +51,8 @@ defmodule AriaEngine.Plan.NodeExpansion do
         expanded: false,
         method_tried: nil,
         blacklisted_methods: [],
-        is_primitive: Utils.is_primitive_task?(todo)
+        is_primitive: Utils.is_primitive_task?(todo),
+        is_durative: false  # Will be set appropriately when marked as primitive
       }
 
       new_tree = put_in(tree.nodes[child_id], child_node)
@@ -148,7 +149,8 @@ defmodule AriaEngine.Plan.NodeExpansion do
               expanded: is_primitive,  # Primitive actions are considered expanded
               method_tried: nil,
               blacklisted_methods: [],
-              is_primitive: is_primitive
+              is_primitive: is_primitive,
+              is_durative: false  # Will be set appropriately when marked as primitive
             })
             {new_tree, [child_id | ids], child_state}
           end)
@@ -223,25 +225,57 @@ defmodule AriaEngine.Plan.NodeExpansion do
                 IO.puts("Goal method succeeded, created #{length(subtasks)} subtasks")
               end
 
-              # Create child nodes for subtasks
-              {new_tree, child_ids} = Enum.reduce(subtasks, {solution_tree, []}, fn subtask, {tree, ids} ->
+              # Create child nodes for subtasks and execute primitive actions immediately
+              {new_tree, child_ids, _final_state, any_action_failed} = Enum.reduce(subtasks, {solution_tree, [], node.state, false}, fn subtask, {tree, ids, current_state, failed_so_far} ->
                 child_id = Utils.generate_node_id()
                 is_primitive = Utils.is_primitive_task?(subtask)
+                
+                # Check if this is a durative action
+                is_durative = if is_primitive do
+                  {action_name, _args} = subtask
+                  action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
+                  AriaEngine.Domain.Core.get_durative_action(domain, action_atom) != nil
+                else
+                  false
+                end
+                
+                # If this is a primitive action, execute it immediately to check preconditions
+                {child_state, action_succeeded} = if is_primitive do
+                  {action_name, args} = subtask
+                  action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
+
+                  case Domain.execute_action(domain, current_state, action_atom, args) do
+                    {:ok, new_state} ->
+                      if verbose > 2 do
+                        IO.puts("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
+                      end
+                      {new_state, true}
+                    false ->
+                      if verbose > 2 do
+                        IO.puts("Primitive action #{action_name}(#{inspect(args)}) failed")
+                      end
+                      {current_state, false}  # Keep current state if action failed
+                  end
+                else
+                  {current_state, true}  # Non-primitive tasks inherit current state
+                end
+                
                 child_node = %{
                   id: child_id,
                   task: subtask,
                   parent_id: node_id,
                   children_ids: [],
-                  state: node.state,
+                  state: child_state,
                   visited: false,
-                  expanded: is_primitive,  # Primitive actions are considered expanded
+                  expanded: is_primitive and action_succeeded,  # Only expanded if action succeeded
                   method_tried: nil,
                   blacklisted_methods: [],
-                  is_primitive: is_primitive
+                  is_primitive: is_primitive,
+                  is_durative: is_durative
                 }
 
                 new_tree = put_in(tree.nodes[child_id], child_node)
-                {new_tree, [child_id | ids]}
+                {new_tree, [child_id | ids], child_state, failed_so_far or (is_primitive and not action_succeeded)}
               end)
 
               # Reverse child_ids to maintain original order
@@ -255,7 +289,13 @@ defmodule AriaEngine.Plan.NodeExpansion do
               }
 
               final_tree = put_in(new_tree.nodes[node_id], updated_node)
-              {:ok, final_tree}
+              
+              # If any primitive action failed, return failure to trigger backtracking
+              if any_action_failed do
+                {:failure, final_tree}
+              else
+                {:ok, final_tree}
+              end
 
             {:multigoal, goals} ->
               if verbose > 2 do
@@ -307,7 +347,8 @@ defmodule AriaEngine.Plan.NodeExpansion do
           expanded: is_primitive,  # Primitive actions are considered expanded
           method_tried: nil,
           blacklisted_methods: [],
-          is_primitive: is_primitive
+          is_primitive: is_primitive,
+          is_durative: false  # Will be set appropriately when marked as primitive
         }
 
         new_tree = put_in(tree.nodes[child_id], child_node)

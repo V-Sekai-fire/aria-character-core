@@ -106,9 +106,28 @@ defmodule AriaEngine.Domain.Actions do
   """
   @spec execute_action(t(), State.t(), action_name(), list()) :: {:ok, State.t()} | false
   def execute_action(%{} = domain, %State{} = state, action_name, args) do
+    # First check if it's a regular action
     case get_action(domain, action_name) do
       nil ->
-        false
+        # Check if it's a durative action
+        case AriaEngine.Domain.Core.get_durative_action(domain, action_name) do
+          nil ->
+            false
+          
+          durative_action ->
+            # Validate durative action preconditions
+            if validate_durative_preconditions(durative_action, state) do
+              # Execute the durative action
+              case durative_action.action_fn.(state, args) do
+                false ->
+                  false
+                %State{} = new_state ->
+                  {:ok, new_state}
+              end
+            else
+              false  # Preconditions failed
+            end
+        end
 
       action_fn ->
         case action_fn.(state, args) do
@@ -118,5 +137,26 @@ defmodule AriaEngine.Domain.Actions do
             {:ok, new_state}
         end
     end
+  end
+
+  # Validate durative action preconditions
+  @spec validate_durative_preconditions(AriaEngine.Domain.DurativeAction.t(), State.t()) :: boolean()
+  defp validate_durative_preconditions(durative_action, state) do
+    # Check at_start conditions
+    at_start_valid = Enum.all?(durative_action.conditions.at_start, fn {predicate, subject, required_value} ->
+      State.get_fact(state, predicate, subject) == required_value
+    end)
+    
+    # Check over_all conditions (for now, treat same as at_start)
+    over_all_valid = Enum.all?(durative_action.conditions.over_all, fn {predicate, subject, required_value} ->
+      State.get_fact(state, predicate, subject) == required_value
+    end)
+    
+    # Check at_end conditions (for now, treat same as at_start)
+    at_end_valid = Enum.all?(durative_action.conditions.at_end, fn {predicate, subject, required_value} ->
+      State.get_fact(state, predicate, subject) == required_value
+    end)
+    
+    at_start_valid and over_all_valid and at_end_valid
   end
 end
