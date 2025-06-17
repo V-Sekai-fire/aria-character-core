@@ -10,7 +10,7 @@ defmodule Mix.Tasks.AriaEngine.Benchmark.Satellite.DomainBuilder do
   @type parsed_domain_map :: AriaEngine.PddlParser.parsed_domain_map()
   @type initial_state :: AriaEngine.State.t()
 
-  @spec build_aria_domain(parsed_domain_map(), initial_state()) :: Domain.t()
+  @spec build_aria_domain(parsed_domain_map(), initial_state()) :: AriaEngine.Domain.Core.t()
   def build_aria_domain(parsed_domain, initial_state) do
     domain = Domain.new(parsed_domain.name)
 

@@ -25,7 +25,7 @@ defmodule AriaEngine.Convenience do
   @doc """
   Creates a new planning domain with the given name.
   """
-  @spec create_domain(String.t()) :: domain()
+  @spec create_domain(String.t()) :: AriaEngine.Domain.Core.t()
   def create_domain(name \\ "default") do
     Domain.new(name)
   end
@@ -65,8 +65,8 @@ defmodule AriaEngine.Convenience do
   @doc """
   Gets a summary of domain capabilities.
   """
-  @spec domain_summary(domain()) :: map()
-  def domain_summary(%Domain{} = domain) do
+  @spec domain_summary(AriaEngine.Domain.Core.t()) :: map()
+  def domain_summary(%AriaEngine.Domain.Core{} = domain) do
     Domain.summary(domain)
   end
 

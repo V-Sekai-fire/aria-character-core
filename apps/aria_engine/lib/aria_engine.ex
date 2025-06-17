@@ -56,8 +56,13 @@ defmodule AriaEngine do
 
   @doc """
   Converts an AriaEngine definition to a Domain (capabilities only).
+  @spec from_domain(AriaEngine.Domain.Core.t(), [todo_item()], State.t() | nil) :: t()
+  def from_domain(domain, goals, initial_state \\ nil), do: DomainAPI.from_domain(domain, goals, initial_state)
+
+  @doc """
+  Converts an AriaEngine definition to a Domain (capabilities only).
   """
-  @spec to_domain(t()) :: Domain.t()
+  @spec to_domain(t()) :: AriaEngine.Domain.Core.t()
   def to_domain(engine), do: DomainAPI.to_domain(engine)
 
   @doc """

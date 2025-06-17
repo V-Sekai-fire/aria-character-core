@@ -71,7 +71,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   end
 
   # Expand task node using methods
-  @spec expand_task_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), list(), integer()) ::
+  @spec expand_task_node(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), node_id(), String.t(), list(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_task_node(domain, _state, solution_tree, node_id, task_name, args, verbose) do
     node = solution_tree.nodes[node_id]
@@ -172,7 +172,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   end
 
   # Expand goal node
-  @spec expand_goal_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), String.t(), State.fact_value(), integer()) ::
+  @spec expand_goal_node(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), node_id(), String.t(), String.t(), State.fact_value(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose) do
     node = solution_tree.nodes[node_id]
@@ -273,7 +273,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   end
 
   # Expand multigoal node
-  @spec expand_multigoal_node(Domain.t(), State.t(), solution_tree(), node_id(), Multigoal.t(), integer()) ::
+  @spec expand_multigoal_node(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), node_id(), Multigoal.t(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | :failure
   def expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
     node = solution_tree.nodes[node_id]

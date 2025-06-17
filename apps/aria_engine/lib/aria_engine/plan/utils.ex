@@ -136,14 +136,14 @@ defmodule AriaEngine.Plan.Utils do
   Validates a plan by executing it step by step.
   For compatibility with existing AriaEngine usage.
   """
-  @spec validate_plan(Domain.t(), State.t(), [plan_step()] | solution_tree()) :: {:ok, State.t()} | {:error, String.t()}
-  def validate_plan(%Domain{} = domain, %State{} = initial_state, %{root_id: _} = solution_tree) do
+  @spec validate_plan(AriaEngine.Domain.Core.t(), State.t(), [plan_step()] | solution_tree()) :: {:ok, State.t()} | {:error, String.t()}
+  def validate_plan(%AriaEngine.Domain.Core{} = domain, %State{} = initial_state, %{root_id: _} = solution_tree) do
     # Extract primitive actions from solution tree
     actions = get_primitive_actions_dfs(solution_tree)
     validate_plan(domain, initial_state, actions)
   end
 
-  def validate_plan(%Domain{} = domain, %State{} = initial_state, plan) when is_list(plan) do
+  def validate_plan(%AriaEngine.Domain.Core{} = domain, %State{} = initial_state, plan) when is_list(plan) do
     Enum.reduce_while(plan, {:ok, initial_state}, fn {action_name, args}, {:ok, state} ->
       action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 

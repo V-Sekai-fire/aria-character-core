@@ -7,6 +7,7 @@ defmodule AriaEngine.Plan.Core do
   """
   alias AriaEngine.{Domain, State, Multigoal}
   alias AriaEngine.Plan.{NodeExpansion, Backtracking, Utils}
+  # alias AriaEngine.DomainBehaviour # Removed unused alias
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), State.fact_value()}
@@ -43,8 +44,8 @@ defmodule AriaEngine.Plan.Core do
   @doc """
   Main IPyHOP planning function that creates a solution tree to achieve the given todos.
   """
-  @spec plan(Domain.t(), State.t(), [todo_item()], keyword()) :: plan_result()
-  def plan(%Domain{} = domain, %State{} = state, todos, opts \\ []) do
+  @spec plan(AriaEngine.Domain.Core.t(), State.t(), [todo_item()], keyword()) :: plan_result()
+  def plan(domain, %State{} = state, todos, opts \\ []) do
     # Add replan_depth to opts with a default value
     opts = Keyword.put_new(opts, :replan_depth, @default_replan_depth)
     # IO.puts("Starting IPyHOP planning for ", length(todos), " todos")
@@ -58,8 +59,8 @@ defmodule AriaEngine.Plan.Core do
   end
 
   # Core IPyHOP Algorithm (Algorithm 2 from the paper)
-  @spec ipyhop(Domain.t(), State.t(), solution_tree(), keyword()) :: plan_result()
-  def ipyhop(%Domain{} = domain, %State{} = current_state, solution_tree, opts) do # Made public
+  @spec ipyhop(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), keyword()) :: plan_result()
+  def ipyhop(domain, %State{} = current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
     max_depth = Keyword.get(opts, :max_depth, @default_max_depth)
 
@@ -67,8 +68,8 @@ defmodule AriaEngine.Plan.Core do
     plan_decomposition_loop(domain, current_state, solution_tree, 0, max_depth, verbose)
   end
 
-  @spec plan_decomposition_loop(Domain.t(), State.t(), solution_tree(), integer(), integer(), integer()) :: plan_result()
-  defp plan_decomposition_loop(%Domain{} = domain, current_state, solution_tree, depth, max_depth, verbose) do
+  @spec plan_decomposition_loop(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), integer(), integer(), integer()) :: plan_result()
+  defp plan_decomposition_loop(domain, current_state, solution_tree, depth, max_depth, verbose) do
     if verbose > 3 do
       IO.puts("PLAN_DECOMPOSITION_LOOP: Depth #{depth}, Nodes: #{Kernel.map_size(solution_tree.nodes)}")
     end
@@ -170,7 +171,7 @@ defmodule AriaEngine.Plan.Core do
   end
 
   # Try to expand a node
-  @spec try_expand_node(Domain.t(), State.t(), solution_tree(), node_id(), integer()) ::
+  @spec try_expand_node(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), node_id(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   defp try_expand_node(domain, state, solution_tree, node_id, verbose) do
     case solution_tree.nodes[node_id] do
@@ -188,7 +189,7 @@ defmodule AriaEngine.Plan.Core do
 
           {task_name, args} when is_binary(task_name) ->
             action_atom = String.to_atom(task_name) # Define action_atom here
-            if Domain.has_action?(domain, action_atom) do
+            if Domain.has_action?(domain, action_atom) do # Use Domain.has_action?
               NodeExpansion.mark_as_primitive(solution_tree, node_id)
             else
               NodeExpansion.expand_task_node(domain, state, solution_tree, node_id, task_name, args, verbose)
@@ -196,7 +197,7 @@ defmodule AriaEngine.Plan.Core do
 
           {action_name, _args} when is_atom(action_name) ->
             # action_atom is already action_name here
-            if Domain.has_action?(domain, action_name) do # Use action_name directly
+            if Domain.has_action?(domain, action_name) do # Use Domain.has_action?
               NodeExpansion.mark_as_primitive(solution_tree, node_id)
             else
               {:error, "Unknown action: #{action_name}"}

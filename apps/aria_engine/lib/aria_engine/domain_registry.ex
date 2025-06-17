@@ -24,7 +24,7 @@ defmodule AriaEngine.DomainRegistry do
 
   # Registry types
   @type domain_type :: String.t()
-  @type domain_registry :: %{domain_type() => Domain.t()}
+  @type domain_registry :: %{domain_type() => AriaEngine.Domain.Core.t()}
   @type composition_spec :: %{
     base_domains: [domain_type()],
     additional_actions: %{atom() => function()},
@@ -42,7 +42,7 @@ defmodule AriaEngine.DomainRegistry do
   - `{:ok, domain}`: Domain found
   - `{:error, reason}`: Domain not found or invalid
   """
-  @spec get_domain(domain_type()) :: {:ok, Domain.t()} | {:error, String.t()}
+  @spec get_domain(domain_type()) :: {:ok, AriaEngine.Domain.Core.t()} | {:error, String.t()}
   def get_domain(domain_type) do
     case :ets.lookup(@domains_table, domain_type) do
       [{^domain_type, domain}] -> {:ok, domain}
@@ -71,7 +71,7 @@ defmodule AriaEngine.DomainRegistry do
   - `:ok`: Successfully registered
   - `{:error, reason}`: Registration failed
   """
-  @spec register_domain(domain_type(), Domain.t()) :: :ok | {:error, String.t()}
+  @spec register_domain(domain_type(), AriaEngine.Domain.Core.t()) :: :ok | {:error, String.t()}
   def register_domain(domain_type, domain) do
     case Domain.validate(domain) do
       {:ok, _} ->
@@ -152,7 +152,7 @@ defmodule AriaEngine.DomainRegistry do
   - `{:ok, composed_domain}`: Successfully composed domain
   - `{:error, reason}`: Composition failed
   """
-  @spec compose_domains(composition_spec()) :: {:ok, Domain.t()} | {:error, String.t()}
+  @spec compose_domains(composition_spec()) :: {:ok, AriaEngine.Domain.Core.t()} | {:error, String.t()}
   def compose_domains(spec) do
     base_domains = Map.get(spec, :base_domains, [])
     additional_actions = Map.get(spec, :additional_actions, %{})
@@ -190,8 +190,8 @@ defmodule AriaEngine.DomainRegistry do
   ## Returns
   Domain interface map
   """
-  @spec create_planner_interface(Domain.t()) :: Planner.domain_interface()
-  def create_planner_interface(%Domain{} = domain) do
+  @spec create_planner_interface(AriaEngine.Domain.Core.t()) :: Planner.domain_interface()
+  def create_planner_interface(%AriaEngine.Domain.Core{} = domain) do
     Planner.domain_to_interface(domain)
   end
 
@@ -207,8 +207,8 @@ defmodule AriaEngine.DomainRegistry do
   - `:ok`: Domain is valid
   - `{:error, missing_capabilities}`: Domain is missing required capabilities
   """
-  @spec validate_domain(Domain.t(), [atom()], [String.t()]) :: :ok | {:error, [String.t()]}
-  def validate_domain(%Domain{} = domain, required_actions \\ [], required_methods \\ []) do
+  @spec validate_domain(AriaEngine.Domain.Core.t(), [atom()], [String.t()]) :: :ok | {:error, [String.t()]}
+  def validate_domain(%AriaEngine.Domain.Core{} = domain, required_actions \\ [], required_methods \\ []) do
     missing_actions = Enum.reject(required_actions, &Domain.has_action?(domain, &1))
     missing_methods = Enum.reject(required_methods, &Domain.has_task_methods?(domain, &1))
 
@@ -227,7 +227,7 @@ defmodule AriaEngine.DomainRegistry do
   # Private helper functions
 
   # Get base domains from the registry
-  @spec get_base_domains([domain_type()]) :: {:ok, [Domain.t()]} | {:error, String.t()}
+  @spec get_base_domains([domain_type()]) :: {:ok, [AriaEngine.Domain.Core.t()]} | {:error, String.t()}
   defp get_base_domains(domain_types) do
     domains =
       domain_types
@@ -244,14 +244,14 @@ defmodule AriaEngine.DomainRegistry do
   end
 
   # Merge multiple domains into one
-  @spec merge_domains([Domain.t()]) :: Domain.t()
+  @spec merge_domains([AriaEngine.Domain.Core.t()]) :: AriaEngine.Domain.Core.t()
   defp merge_domains([single_domain]) do
     single_domain
   end
 
   defp merge_domains([first | rest]) do
     Enum.reduce(rest, first, fn domain, acc ->
-      %Domain{
+      %AriaEngine.Domain.Core{
         name: "#{acc.name}_#{domain.name}",
         actions: Map.merge(acc.actions, domain.actions),
         task_methods: merge_task_methods(acc.task_methods, domain.task_methods),
@@ -274,8 +274,8 @@ defmodule AriaEngine.DomainRegistry do
   end
 
   # Add additional actions and methods to a domain
-  @spec enhance_domain(Domain.t(), %{atom() => function()}, %{String.t() => [function()]}) :: Domain.t()
-  defp enhance_domain(%Domain{} = domain, additional_actions, additional_methods) do
+  @spec enhance_domain(AriaEngine.Domain.Core.t(), %{atom() => function()}, %{String.t() => [function()]}) :: AriaEngine.Domain.Core.t()
+  defp enhance_domain(%AriaEngine.Domain.Core{} = domain, additional_actions, additional_methods) do
     enhanced = Domain.add_actions(domain, additional_actions)
 
     Enum.reduce(additional_methods, enhanced, fn {method_name, method_fns}, acc ->
@@ -284,8 +284,8 @@ defmodule AriaEngine.DomainRegistry do
   end
 
   # Apply overrides to a domain
-  @spec apply_overrides(Domain.t(), %{String.t() => any()}) :: Domain.t()
-  defp apply_overrides(%Domain{} = domain, overrides) do
+  @spec apply_overrides(AriaEngine.Domain.Core.t(), %{String.t() => any()}) :: AriaEngine.Domain.Core.t()
+  defp apply_overrides(%AriaEngine.Domain.Core{} = domain, overrides) do
     Enum.reduce(overrides, domain, fn {key, value}, acc ->
       case key do
         "name" -> %{acc | name: value}
@@ -295,7 +295,7 @@ defmodule AriaEngine.DomainRegistry do
   end
 
   # Create a basic actions domain with core actions
-  @spec create_basic_actions_domain() :: Domain.t()
+  @spec create_basic_actions_domain() :: AriaEngine.Domain.Core.t()
   defp create_basic_actions_domain do
     alias AriaEngine.Actions
 
@@ -309,7 +309,7 @@ defmodule AriaEngine.DomainRegistry do
   end
 
   # Private helper to try loading built-in domain (no external dependencies)
-  @spec try_load_builtin_domain(String.t()) :: {:ok, Domain.t()} | {:error, String.t()}
+  @spec try_load_builtin_domain(String.t()) :: {:ok, AriaEngine.Domain.Core.t()} | {:error, String.t()}
   defp try_load_builtin_domain(domain_type) do
     case domain_type do
       "basic_actions" ->

@@ -40,7 +40,7 @@ defmodule AriaEngine.DomainProvider do
   @doc """
   Get a domain by type from configured providers.
   """
-  @spec get_domain(String.t()) :: {:ok, Domain.t()} | {:error, String.t()}
+  @spec get_domain(String.t()) :: {:ok, AriaEngine.Domain.Core.t()} | {:error, String.t()}
   def get_domain(domain_type) do
     providers = get_configured_providers()
 

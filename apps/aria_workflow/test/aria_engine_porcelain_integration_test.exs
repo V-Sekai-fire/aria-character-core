@@ -115,7 +115,7 @@ defmodule AriaEnginePortelainIntegrationTest do
 
   describe "AriaEngine Mixed Todo Structure" do
     test "mixed todos are processed correctly" do
-      domain = Domain.new("test_mixed")
+      domain = AriaEngine.Domain.Core.new("test_mixed")
       |> Domain.add_action(:echo, &Actions.echo/2)
       |> Domain.add_action(:execute_command, &Actions.execute_command/2)
       |> Domain.add_task_method("test_task", fn _state, _args ->

@@ -36,9 +36,9 @@ defmodule AriaEngine.Plan.Execution do
   @doc """
   Run-Lazy-Refineahead: Execute plan with replanning on failure.
   """
-  @spec run_lazy_refineahead(Domain.t(), State.t(), solution_tree(), keyword()) ::
+  @spec run_lazy_refineahead(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), keyword()) ::
     {:ok, State.t()} | {:error, String.t()}
-  def run_lazy_refineahead(%Domain{} = domain, %State{} = initial_state, solution_tree, opts \\ []) do
+  def run_lazy_refineahead(%AriaEngine.Domain.Core{} = domain, %State{} = initial_state, solution_tree, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, Core.get_default_verbose()) # Get from Core
 
     if verbose > 2 do
@@ -54,7 +54,7 @@ defmodule AriaEngine.Plan.Execution do
   end
 
   # Run execution loop for Run-Lazy-Refineahead
-  @spec run_execution_loop(Domain.t(), State.t(), solution_tree(), keyword()) ::
+  @spec run_execution_loop(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), keyword()) ::
     {:ok, State.t()} | {:error, String.t()}
   defp run_execution_loop(domain, current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, Core.get_default_verbose()) # Get from Core
@@ -71,7 +71,7 @@ defmodule AriaEngine.Plan.Execution do
   end
 
   # Execute actions with lazy failure checking and replanning
-  @spec execute_actions_lazily(Domain.t(), State.t(), [plan_step()], solution_tree(), keyword()) ::
+  @spec execute_actions_lazily(AriaEngine.Domain.Core.t(), State.t(), [plan_step()], solution_tree(), keyword()) ::
     {:ok, State.t()} | {:error, String.t()}
   defp execute_actions_lazily(_domain, state, [], _solution_tree, _opts) do
     {:ok, state}

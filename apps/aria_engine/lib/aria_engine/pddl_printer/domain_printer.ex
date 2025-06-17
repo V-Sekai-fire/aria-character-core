@@ -2,15 +2,15 @@ defmodule AriaEngine.PddlPrinter.DomainPrinter do
   @moduledoc """
   Provides functions for pretty printing parsed PDDL domain structures.
   """
-  alias AriaEngine.Pddl.Domain
+  alias AriaEngine.Pddl.Domain, as: Domain # Alias Pddl.Domain as Domain
   alias AriaEngine.Pddl.Domain.{Action, Type, Task, Method}
   alias AriaEngine.PddlPrinter.Core
 
   @doc """
   Formats a PDDL domain struct into a human-readable string.
   """
-  @spec format_domain(Domain.t()) :: String.t()
-  def format_domain(%Domain{
+  @spec format_domain(Domain.t()) :: String.t() # Use Domain.t()
+  def format_domain(%Domain{ # Use %Domain{}
         name: name,
         requirements: _requirements,
         types: types,

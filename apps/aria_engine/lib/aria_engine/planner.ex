@@ -228,8 +228,8 @@ defmodule AriaEngine.Planner do
   @doc """
   Create a domain interface from an AriaEngine.Domain struct (maintained for compatibility).
   """
-  @spec domain_to_interface(Domain.t()) :: domain_interface()
-  def domain_to_interface(%Domain{} = domain) do
+  @spec domain_to_interface(AriaEngine.Domain.Core.t()) :: domain_interface()
+  def domain_to_interface(%AriaEngine.Domain.Core{} = domain) do
     %{
       actions: domain.actions,
       task_methods: domain.task_methods,
@@ -241,7 +241,7 @@ defmodule AriaEngine.Planner do
   ## Private STN Bridge Implementation
 
   # Validate solution tree using STN bridge-based temporal consistency checking
-  @spec validate_solution_with_stn_bridges(Plan.solution_tree(), Domain.t(), integer()) :: 
+  @spec validate_solution_with_stn_bridges(Plan.solution_tree(), AriaEngine.Domain.Core.t(), integer()) :: 
     :ok | {:error, String.t()}
   defp validate_solution_with_stn_bridges(solution_tree, domain, current_time) do
     try do
@@ -264,7 +264,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Convert solution tree to STN methods with bridge actions for validation
-  @spec solution_tree_to_stn_methods_with_bridges(Plan.solution_tree(), Domain.t(), integer()) :: [STNMethod.t()]
+  @spec solution_tree_to_stn_methods_with_bridges(Plan.solution_tree(), AriaEngine.Domain.Core.t(), integer()) :: [STNMethod.t()]
   defp solution_tree_to_stn_methods_with_bridges(solution_tree, domain, current_time) do
     # Extract primitive actions from solution tree
     primitive_actions = Utils.get_primitive_actions_dfs(solution_tree) # Updated call
@@ -289,7 +289,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Create STN method with bridge actions for a segment of primitive actions
-  @spec create_stn_method_with_bridges([Plan.plan_step()], integer(), Domain.t(), integer()) :: STNMethod.t()
+  @spec create_stn_method_with_bridges([Plan.plan_step()], integer(), AriaEngine.Domain.Core.t(), integer()) :: STNMethod.t()
   defp create_stn_method_with_bridges(action_segment, segment_index, domain, current_time) do
     method_id = "segment_#{segment_index}" # Fixed method_id generation
     
@@ -338,7 +338,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Create temporal STN action from primitive action
-  @spec create_temporal_stn_action_from_primitive(atom(), list(), integer(), integer(), Domain.t()) :: STNAction.t()
+  @spec create_temporal_stn_action_from_primitive(atom(), list(), integer(), integer(), AriaEngine.Domain.Core.t()) :: STNAction.t()
   defp create_temporal_stn_action_from_primitive(action_name, args, segment_index, action_index, domain) do
     action_id = "#{action_name}_#{segment_index}_#{action_index}"
     
@@ -359,7 +359,7 @@ defmodule AriaEngine.Planner do
   end
 
   # Get action duration from domain or use default
-  @spec get_action_duration(atom(), Domain.t()) :: {integer(), integer()}
+  @spec get_action_duration(atom(), AriaEngine.Domain.Core.t()) :: {integer(), integer()}
   defp get_action_duration(action_name, domain) do
     case Domain.get_action_metadata(domain, action_name) do
       %{duration: %AriaEngine.Timeline.Interval{} = interval} ->
@@ -378,9 +378,9 @@ defmodule AriaEngine.Planner do
   ## Private Helper Functions
 
   # Convert domain interface to Domain struct
-  @spec interface_to_domain(domain_interface()) :: Domain.t()
+  @spec interface_to_domain(domain_interface()) :: AriaEngine.Domain.Core.t()
   defp interface_to_domain(interface) do
-    %Domain{
+    %AriaEngine.Domain.Core{
       name: "stn_bridge_domain",
       actions: Map.get(interface, :actions, %{}),
       task_methods: Map.get(interface, :task_methods, %{}),

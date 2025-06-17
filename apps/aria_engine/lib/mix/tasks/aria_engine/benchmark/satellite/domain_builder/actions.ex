@@ -9,7 +9,7 @@ defmodule Mix.Tasks.AriaEngine.Benchmark.Satellite.DomainBuilder.Actions do
   @type parsed_domain_map :: AriaEngine.PddlParser.parsed_domain_map()
   @type initial_state :: AriaEngine.State.t()
 
-  @spec add_durative_actions(Domain.t(), parsed_domain_map(), initial_state()) :: Domain.t()
+  @spec add_durative_actions(AriaEngine.Domain.Core.t(), parsed_domain_map(), initial_state()) :: AriaEngine.Domain.Core.t()
   def add_durative_actions(domain, parsed_domain, initial_state) do
     Enum.reduce(parsed_domain.durative_actions, domain, fn action, acc_domain ->
       action_fn = case action.name do

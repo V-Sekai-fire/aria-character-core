@@ -6,6 +6,9 @@ defmodule AriaEngine.Planning do
   alias AriaEngine.State
   alias AriaEngine.Plan
   alias AriaEngine.Planner
+  # alias AriaEngine.DomainBehaviour # Removed unused alias
+  # alias AriaEngine.Pddl.DomainAdapter # Removed unused alias
+  alias AriaEngine.Pddl.Domain, as: PddlDomain
 
   @type t :: Core.t()
   @type solution_tree :: Core.solution_tree()
@@ -97,11 +100,16 @@ defmodule AriaEngine.Planning do
   @doc """
   Simple planning interface - finds a plan to achieve the given todos.
   """
-  @spec plan(AriaEngine.Domain.t(), Core.state(), [todo_item()], keyword()) :: # Change Core.domain() to Domain.t()
+  @spec plan(AriaEngine.DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) :: # Changed spec to DomainBehaviour.t()
     {:ok, solution_tree()} | {:error, String.t()}
-  def plan(%AriaEngine.Domain{} = domain, %State{} = state, todos, opts \\ []) do # Change %Core.Domain{} to %Domain{}
-    # The underlying Plan module expects AriaEngine.Domain, so no adapter needed here.
-    case Plan.plan(domain, state, todos, opts) do
+  def plan(domain, %State{} = state, todos, opts \\ []) do # Removed %AriaEngine.Domain{} match
+    # Adapt PDDL domain if necessary
+    adapted_domain = case domain do
+      %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
+      _ -> domain
+    end
+    
+    case Plan.plan(adapted_domain, state, todos, opts) do # Pass adapted_domain
       {:ok, solution_tree} ->
         {:ok, solution_tree}
 
@@ -113,20 +121,28 @@ defmodule AriaEngine.Planning do
   @doc """
   Advanced planning interface - returns the full solution tree.
   """
-  @spec plan_with_tree(AriaEngine.Domain.t(), Core.state(), [todo_item()], keyword()) :: # Change Core.domain() to Domain.t()
+  @spec plan_with_tree(AriaEngine.DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) :: # Changed spec to DomainBehaviour.t()
     {:ok, solution_tree()} | {:error, String.t()}
-  def plan_with_tree(%AriaEngine.Domain{} = domain, %State{} = state, todos, opts \\ []) do # Change %Core.Domain{} to %Domain{}
-    # The underlying Plan module expects AriaEngine.Domain, so no adapter needed here.
-    Plan.plan(domain, state, todos, opts)
+  def plan_with_tree(domain, %State{} = state, todos, opts \\ []) do # Removed %AriaEngine.Domain{} match
+    # Adapt PDDL domain if necessary
+    adapted_domain = case domain do
+      %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
+      _ -> domain
+    end
+    Plan.plan(adapted_domain, state, todos, opts) # Pass adapted_domain
   end
 
   @doc """
   Executes a plan step by step, returning the final state.
   """
-  @spec execute_plan(AriaEngine.Domain.t(), Core.state(), [plan_step()]) :: {:ok, Core.state()} | {:error, String.t()} # Change Core.domain() to Domain.t()
-  def execute_plan(%AriaEngine.Domain{} = domain, %State{} = initial_state, plan) do # Change %Core.Domain{} to %Domain{}
-    # The underlying Plan module expects AriaEngine.Domain, so no adapter needed here.
-    Plan.validate_plan(domain, initial_state, plan)
+  @spec execute_plan(AriaEngine.DomainBehaviour.t(), Core.state(), [plan_step()]) :: {:ok, Core.state()} | {:error, String.t()} # Changed spec to DomainBehaviour.t()
+  def execute_plan(domain, %State{} = initial_state, plan) do # Removed %AriaEngine.Domain{} match
+    # Adapt PDDL domain if necessary
+    adapted_domain = case domain do
+      %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
+      _ -> domain
+    end
+    Plan.validate_plan(adapted_domain, initial_state, plan) # Pass adapted_domain
   end
 
   @doc """

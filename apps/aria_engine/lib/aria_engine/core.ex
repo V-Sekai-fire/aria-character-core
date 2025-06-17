@@ -6,7 +6,7 @@ defmodule AriaEngine.Core do
   alias AriaEngine.State # Add this alias
 
   # Core types
-  @type domain :: AriaEngine.Pddl.Domain.t()
+  @type domain :: AriaEngine.Domain.Core.t()
   @type state :: AriaEngine.State.t()
   @type multigoal :: AriaEngine.Multigoal.t()
   @type solution_tree :: AriaEngine.Plan.solution_tree()

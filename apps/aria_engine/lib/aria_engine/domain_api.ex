@@ -15,8 +15,8 @@ defmodule AriaEngine.DomainAPI do
   @doc """
   Creates an AriaEngine definition from an existing Domain.
   """
-  @spec from_domain(Domain.t(), [todo_item()], State.t() | nil) :: t()
-  def from_domain(%Domain{} = domain, goals, initial_state \\ nil) do
+  @spec from_domain(AriaEngine.Domain.Core.t(), [todo_item()], State.t() | nil) :: t()
+  def from_domain(%AriaEngine.Domain.Core{} = domain, goals, initial_state \\ nil) do
     initial_state = initial_state || State.new()
 
     # Preserve the method formats exactly as they are in the domain
@@ -35,7 +35,7 @@ defmodule AriaEngine.DomainAPI do
   @doc """
   Converts an AriaEngine definition to a Domain (capabilities only).
   """
-  @spec to_domain(t()) :: Domain.t()
+  @spec to_domain(t()) :: AriaEngine.Domain.Core.t()
   def to_domain(%Core{} = engine) do
     # Create domain with the same name
     domain = Domain.new(engine.name)
@@ -171,7 +171,7 @@ defmodule AriaEngine.DomainAPI do
   @spec add_domain_type(t(), String.t()) :: {:ok, t()} | {:error, String.t()}
   def add_domain_type(%Core{} = engine, domain_type) do
     case AriaEngine.DomainProvider.get_domain(domain_type) do
-      {:ok, domain} ->
+      {:ok, %AriaEngine.Domain.Core{} = domain} ->
         updated_engine = %{engine |
           actions: Map.merge(engine.actions, domain.actions),
           task_methods: AriaEngine.merge_method_maps(engine.task_methods, domain.task_methods),

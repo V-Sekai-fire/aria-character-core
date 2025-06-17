@@ -10,13 +10,13 @@ defmodule AriaEngine.PddlParser do
   alias AriaEngine.PddlParser.DomainParser
   alias AriaEngine.PddlParser.ProblemParser
 
-  @type parsed_domain_map :: Domain.t()
+  @type parsed_domain_map :: AriaEngine.Domain.Core.t()
   @type parsed_problem_map :: Problem.t()
 
   @doc """
   Parses a PDDL string based on its type (:domain or :problem).
   """
-  @spec parse(:domain, String.t()) :: {:ok, Domain.t()} | {:error, String.t()}
+  @spec parse(:domain, String.t()) :: {:ok, AriaEngine.Domain.Core.t()} | {:error, String.t()}
   @spec parse(:problem, String.t()) :: {:ok, Problem.t()} | {:error, String.t()}
   def parse(:domain, pddl_string), do: parse_domain(pddl_string)
   def parse(:problem, pddl_string), do: parse_problem(pddl_string)
@@ -25,7 +25,7 @@ defmodule AriaEngine.PddlParser do
   @doc """
   Parses a PDDL domain string into an Elixir map.
   """
-  @spec parse_domain(String.t()) :: {:ok, Domain.t()} | {:error, String.t()}
+  @spec parse_domain(String.t()) :: {:ok, AriaEngine.Domain.Core.t()} | {:error, String.t()}
   def parse_domain(pddl_string) do
     domain_name =
       case Core.parse_pddl_block(pddl_string, "define") do

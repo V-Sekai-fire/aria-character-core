@@ -19,7 +19,7 @@ defmodule AriaEngine.PddlPrinter do
   @doc """
   Formats a PDDL domain struct into a human-readable string.
   """
-  @spec format_domain(Domain.t()) :: String.t()
+  @spec format_domain(AriaEngine.Domain.Core.t()) :: String.t()
   def format_domain(parsed_domain) do
     DomainPrinter.format_domain(parsed_domain)
   end

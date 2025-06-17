@@ -33,6 +33,9 @@ To implement support for durative actions within the Aria Engine Solver. This wi
 *   [ ] **Develop Tests**:
     *   Create comprehensive unit and integration tests for durative action definition, planning, and execution.
     *   Include tests for various types of durative action conditions and effects, as well as temporal consistency checks.
+*   [ ] **Intermediate/External Conditions & Effects**:
+    *   Extend the planner to handle conditions that must hold or effects that occur during an action's duration.
+    *   Implement mechanisms for effects triggered by external events.
 
 ## Consequences/Risks
 

@@ -7,7 +7,7 @@ defmodule Mix.Tasks.AriaEngine.Benchmark.Satellite.DomainBuilder.Methods do
 
   @type parsed_domain_map :: AriaEngine.PddlParser.parsed_domain_map()
 
-  @spec add_methods(Domain.t(), parsed_domain_map()) :: Domain.t()
+  @spec add_methods(AriaEngine.Domain.Core.t(), parsed_domain_map()) :: AriaEngine.Domain.Core.t()
   def add_methods(domain, parsed_domain) do
     Enum.reduce(parsed_domain.methods, domain, fn method, acc_domain ->
       method_fn = case method.name do
