@@ -16,6 +16,8 @@ Before performing a `git commit` or `git push` operation, you must ask for user 
     *   Cancel the commit/push.
     *   (Optionally) Request to review changes before committing/pushing.
 
+Each option's description should be clear, concise, and provide sufficient detail for the user to make an informed decision. Avoid generic terms like "Confirm" or "Cancel" alone; instead, elaborate on what is being confirmed or cancelled.
+
 ### Rationale
 
 This ensures explicit user approval for all repository modifications, preventing unintended commits or pushes and maintaining a collaborative workflow.
