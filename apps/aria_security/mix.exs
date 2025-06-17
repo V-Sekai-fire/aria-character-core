@@ -27,6 +27,7 @@ defmodule AriaSecurity.MixProject do
 
   defp deps do
     [
+
       # OpenBao/Vault client (compatible with OpenBao)
       {:vaultex, "~> 1.0"},
 

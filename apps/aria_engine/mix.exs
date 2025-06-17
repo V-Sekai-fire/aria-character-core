@@ -39,8 +39,6 @@ defmodule AriaEngine.MixProject do
       # Planning and decision-making libraries
       {:libgraph, "~> 0.16"},
 
-      # Data persistence (dependency on aria_data)
-      {:aria_data, in_umbrella: true},
 
       # Character shaping integration
 

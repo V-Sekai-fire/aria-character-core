@@ -112,23 +112,6 @@ defmodule AriaWorkflow.WorkflowRegistry do
     end
   end
 
-  # Helper function to get workflow system task methods from domain provider
-  defp get_workflow_system_task_methods do
-    case DomainProvider.get_domain("workflow_system") do
-      {:ok, domain} ->
-        domain.task_methods
-        |> Enum.flat_map(fn {task_name, methods} ->
-          Enum.with_index(methods) 
-          |> Enum.map(fn {method_fn, index} ->
-            method_name = if index == 0, do: task_name, else: "#{task_name}_#{index}"
-            {method_name, method_fn}
-          end)
-        end)
-      {:error, _} ->
-        [{"workflow_system_unavailable", fn _, _ -> {:error, "Workflow system domain not available"} end}]
-    end
-  end
-
   # Core workflows for basic operations with AriaEngine integration
   @hardcoded_workflows %{
     "basic_timing" => %{
@@ -255,53 +238,6 @@ defmodule AriaWorkflow.WorkflowRegistry do
       }
     },
 
-    "system_deployment" => %{
-      goals: [
-        {"services", "deployment_targets", "deployed"},
-        {"databases", "migration_state", "migrated"},
-        {"monitoring", "health_checks", "active"}
-      ],
-      tasks: [
-        {"execute_traced_command", &AriaWorkflowSystem.execute_traced_command/2},
-        {"deploy_service", &AriaWorkflowSystem.deploy_service/2},
-        {"run_migrations", &AriaWorkflowSystem.run_migrations/2},
-        {"setup_dev_environment", &AriaWorkflowSystem.setup_dev_environment/2},
-        {"run_tests_with_coverage", &AriaWorkflowSystem.run_tests_with_coverage/2},
-        {"build_and_package", &AriaWorkflowSystem.build_and_package/2},
-        {"monitor_system_health", &AriaWorkflowSystem.monitor_system_health/2},
-        {"backup_system_data", &AriaWorkflowSystem.backup_system_data/2},
-        {"restore_system_data", &AriaWorkflowSystem.restore_system_data/2}
-      ],
-      methods: [
-        {"execute_deployment_pipeline", &AriaWorkflow.Methods.CommandTracing.execute_with_tracing/2},
-        {"generate_deployment_summary", &AriaWorkflow.Methods.CommandTracing.generate_execution_summary/2}
-      ],
-      documentation: %{
-        overview: ~s"""
-        System Deployment Workflow
-
-        Provides comprehensive system deployment and management operations using
-        AriaEngine with Porcelain for external process execution.
-        """,
-        procedures: ~s"""
-        System Deployment Procedures
-
-        1. Service Deployment and Configuration
-        2. Database Migration Management
-        3. Development Environment Setup
-        4. Testing and Coverage Analysis
-        5. Build and Package Operations
-        6. System Health Monitoring
-        7. Backup and Restoration
-        """
-      },
-      metadata: %{
-        version: "1.0",
-        last_updated: ~D[2025-06-11],
-        approved_by: "Aria AI Assistant",
-        description: "System deployment and management using AriaEngine with Porcelain"
-      }
-    },
 
     "porcelain_commands" => %{
       # Demonstrates AriaEngine flexible todo ordering with Porcelain actions
@@ -407,8 +343,6 @@ defmodule AriaWorkflow.WorkflowRegistry do
         enhanced_def = cond do
           workflow_id == "file_management" ->
             Map.put(builtin_def, :tasks, get_file_management_task_methods())
-          workflow_id == "system_deployment" ->
-            Map.put(builtin_def, :tasks, get_workflow_system_task_methods())
           true ->
             builtin_def
         end

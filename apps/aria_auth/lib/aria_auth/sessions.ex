@@ -7,7 +7,7 @@ defmodule AriaAuth.Sessions do
   """
 
   import Ecto.Query, warn: false
-  alias AriaData.AuthRepo
+  alias AriaAuth.Repo
   alias AriaAuth.Sessions.Session
   alias AriaAuth.Accounts.User
 
@@ -17,7 +17,7 @@ defmodule AriaAuth.Sessions do
   def create_session(%User{} = user, attrs \\ %{}) do
     %Session{}
     |> Session.create_changeset(user, attrs)
-    |> AuthRepo.insert()
+    |> Repo.insert()
   end
 
   @doc """
@@ -27,7 +27,7 @@ defmodule AriaAuth.Sessions do
     Session
     |> where([s], s.token == ^token)
     |> preload(:user)
-    |> AuthRepo.one()
+    |> Repo.one()
   end
 
   @doc """
@@ -55,7 +55,7 @@ defmodule AriaAuth.Sessions do
   def update_last_activity(%Session{} = session) do
     session
     |> Session.changeset(%{last_activity_at: DateTime.utc_now()})
-    |> AuthRepo.update()
+    |> Repo.update()
   end
 
   @doc """
@@ -75,7 +75,7 @@ defmodule AriaAuth.Sessions do
   Deletes a session.
   """
   def delete_session(%Session{} = session) do
-    AuthRepo.delete(session)
+    Repo.delete(session)
   end
 
   @doc """
@@ -85,7 +85,7 @@ defmodule AriaAuth.Sessions do
     Session
     |> where([s], s.user_id == ^user_id)
     |> order_by([s], desc: s.inserted_at)
-    |> AuthRepo.all()
+    |> Repo.all()
   end
 
   @doc """
@@ -94,7 +94,7 @@ defmodule AriaAuth.Sessions do
   def invalidate_all_user_sessions(%User{id: user_id}) do
     Session
     |> where([s], s.user_id == ^user_id)
-    |> AuthRepo.delete_all()
+    |> Repo.delete_all()
   end
 
   @doc """
@@ -105,7 +105,7 @@ defmodule AriaAuth.Sessions do
     
     Session
     |> where([s], s.expires_at < ^now)
-    |> AuthRepo.delete_all()
+    |> Repo.delete_all()
   end
 
   @doc """
@@ -115,7 +115,7 @@ defmodule AriaAuth.Sessions do
     Session
     |> where([s], s.refresh_token == ^refresh_token)
     |> preload(:user)
-    |> AuthRepo.one()
+    |> Repo.one()
     |> case do
       %Session{} = session ->
         if Session.active?(session) do

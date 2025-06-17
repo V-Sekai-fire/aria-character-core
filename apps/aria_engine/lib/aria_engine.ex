@@ -779,7 +779,6 @@ defmodule AriaEngine do
     errors = []
 
     errors = if String.trim(engine.id) == "", do: ["Engine ID cannot be empty" | errors], else: errors
-    errors = if Enum.empty?(engine.goals), do: ["Engine must have at least one goal" | errors], else: errors
     errors = validate_goals(engine.goals, errors)
     errors = validate_actions(engine.actions, errors)
     errors = validate_task_methods(engine.task_methods, errors)

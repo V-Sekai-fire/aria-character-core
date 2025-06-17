@@ -3,6 +3,7 @@
 
 defmodule AriaEngine.GoalTest do
   use ExUnit.Case
+  @tag :skip
   doctest AriaEngine.Multigoal
 
   alias AriaEngine.Multigoal

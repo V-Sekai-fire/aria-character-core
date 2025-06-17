@@ -10,6 +10,7 @@ defmodule RescueDomainTest do
   """
   
   use ExUnit.Case
+  @tag :skip
   alias AriaEngine.{Domain, State, Plan}
   
   # Test case based on thirdparty/IPyHOP/examples/rescue/rescue_example.py

@@ -27,8 +27,12 @@ defmodule AriaAuth.MixProject do
 
   defp deps do
     [
-      # Macaroon-based authentication (replacing JWT)
-      {:macfly, "~> 0.2.20"},
+      # Macaroon-based authentication
+      {:macfly, "~> 0.2.20"}, # Keeping macfly as per previous instruction
+
+      # Ecto and SQLite3 for local database
+      {:ecto_sql, "~> 3.10"},
+      {:ecto_sqlite3, "~> 0.12"},
       
       # Simple password hashing
       {:bcrypt_elixir, "~> 3.0"},
@@ -39,8 +43,6 @@ defmodule AriaAuth.MixProject do
       # HTTP client for external providers
       {:req, "~> 0.4"},
       
-      # Data persistence (dependency on aria_data)
-      {:aria_data, in_umbrella: true},
       
       # Security service integration
       {:aria_security, in_umbrella: true},

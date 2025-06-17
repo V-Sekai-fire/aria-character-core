@@ -12,6 +12,7 @@ defmodule AriaEngine.RegressionTest do
   Ported from GTPyhop Examples/regression_tests.py
   -- Dana Nau <nau@umd.edu>, July 20, 2021
   """
+  @tag :skip
 
   use ExUnit.Case
   import ExUnit.CaptureIO

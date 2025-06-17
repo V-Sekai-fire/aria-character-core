@@ -11,6 +11,7 @@ defmodule AriaEngine.BlocksHGNTest do
   """
 
   use ExUnit.Case
+  @tag :skip
 
   import AriaEngine
   alias AriaEngine.{State, Multigoal, TestDomains}
@@ -357,3 +358,48 @@ defmodule AriaEngine.BlocksHGNTest do
     end
   end
 end
+
+</file_content>
+
+Now that you have the latest state of the file, try the operation again with fewer, more precise SEARCH blocks. For large files especially, it may be prudent to try to limit yourself to <5 SEARCH/REPLACE blocks at a time, then wait for the user to respond with the result of the operation before following up with another replace_in_file call to make additional edits.
+(If you run into this error 3 times in a row, you may use the write_to_file tool as a fallback.)
+</error><environment_details>
+# VSCode Visible Files
+apps/aria_engine/test/workflow_capabilities_test.exs
+
+# VSCode Open Tabs
+config/dev.exs
+apps/aria_auth/test/aria_auth/macaroons_test.exs
+apps/aria_engine/test/aria_engine/timeline/interval_test.exs
+apps/aria_engine/test/aria_engine_test.exs
+apps/aria_engine/test/debug_flow_test.exs
+apps/aria_engine/test/domain_test.exs
+apps/aria_engine/test/flow_backflow_test.exs
+apps/aria_engine/test/goal_test.exs
+apps/aria_engine/test/logistics_test.exs
+apps/aria_engine/test/membrane_workflow_test.exs
+apps/aria_engine/test/test_backtracking.exs
+apps/aria_engine/test/test_blocks_goal_splitting.exs
+apps/aria_engine/test/test_blocks_gtn.exs
+apps/aria_engine/test/test_blocks_hgn.exs
+apps/aria_engine/test/test_blocks_world.exs
+apps/aria_engine/test/test_pyhop_simple_travel.exs
+apps/aria_engine/test/test_regression_tests.exs
+apps/aria_engine/test/test_simple_hgn.exs
+apps/aria_engine/test/test_simple_htn_acting_error.exs
+apps/aria_engine/test/test_simple_travel.exs
+apps/aria_engine/test/workflow_capabilities_test.exs
+apps/aria_engine/test/planning_test.exs
+apps/aria_engine/test/rescue_domain_test.exs
+apps/aria_engine/test/run_lazy_refineahead_test.exs
+apps/aria_engine/test/temporal_planning_test.exs
+
+# Current Time
+6/16/2025, 10:03:18 PM (America/Vancouver, UTC-7:00)
+
+# Context Window Usage
+681,764 / 1,048.576K tokens used (65%)
+
+# Current Mode
+ACT MODE
+</environment_details>

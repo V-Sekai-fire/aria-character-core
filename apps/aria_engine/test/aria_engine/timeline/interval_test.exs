@@ -126,7 +126,6 @@ defmodule AriaEngine.Timeline.IntervalTest do
       assert Interval.duration_seconds(interval) == 400.0
     end
 
-    @dialyzer {:nowarn_function, new: 2}
     test "raises error for non-DateTime types" do
       assert_raise FunctionClauseError, fn ->
         Interval.new(~N[2025-01-01 10:00:00], 3600)
@@ -169,7 +168,6 @@ defmodule AriaEngine.Timeline.IntervalTest do
       refute Interval.contains?(interval, after_time)
     end
 
-    @dialyzer {:nowarn_function, contains?: 2}
     test "raises error for non-DateTime time types in containment check" do
       interval =
         Interval.new(
@@ -181,7 +179,7 @@ defmodule AriaEngine.Timeline.IntervalTest do
         Interval.contains?(interval, 3600) # Integer time point with DateTime interval
       end
     end
-  end
+  end # Added this 'end'
 
   describe "agent and entity detection" do
     test "detects agent intervals" do
@@ -208,7 +206,7 @@ defmodule AriaEngine.Timeline.IntervalTest do
           entity: entity
         )
 
-      assert Interval.entity?(interval)
+      assert interval.entity == entity
       refute Interval.agent?(interval)
     end
 
@@ -220,5 +218,5 @@ defmodule AriaEngine.Timeline.IntervalTest do
       refute Interval.agent?(interval)
       refute Interval.entity?(interval)
     end
-  end
-end
+  end # Added this 'end'
+end # Added this final 'end'

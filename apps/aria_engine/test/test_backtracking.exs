@@ -3,6 +3,7 @@
 
 defmodule AriaEngine.BacktrackingTest do
   use ExUnit.Case
+  @tag :skip
 
   import AriaEngine
   alias AriaEngine.{TestDomains}

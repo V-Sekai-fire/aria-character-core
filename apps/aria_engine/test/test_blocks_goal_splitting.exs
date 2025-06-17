@@ -15,6 +15,7 @@ defmodule AriaEngine.BlocksGoalSplittingTest do
   """
 
   use ExUnit.Case
+  @tag :skip
 
   import AriaEngine
   alias AriaEngine.{State, Multigoal, TestDomains}

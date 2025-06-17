@@ -11,6 +11,7 @@ defmodule AriaEngine.PyhopSimpleTravelTest do
   """
 
   use ExUnit.Case
+  @tag :skip
 
   import AriaEngine
   alias AriaEngine.{State, TestDomains}

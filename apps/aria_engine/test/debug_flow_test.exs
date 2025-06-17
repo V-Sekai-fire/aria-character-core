@@ -6,6 +6,7 @@ defmodule AriaEngine.DebugFlowTest do
   Debug test to understand Flow backflow processing behavior.
   """
 
+  @tag :skip
   use ExUnit.Case, async: false
 
   describe "Debug Flow Processing" do

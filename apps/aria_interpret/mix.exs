@@ -31,8 +31,6 @@ defmodule AriaInterpret.MixProject do
       {:nx, "~> 0.6"},
       {:ortex, "~> 0.1"},
       
-      # Data persistence (dependency on aria_data)
-      {:aria_data, in_umbrella: true},
       
       # JSON handling
       {:jason, "~> 1.4"},

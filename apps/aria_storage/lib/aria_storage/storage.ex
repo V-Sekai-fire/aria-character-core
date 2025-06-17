@@ -14,7 +14,6 @@ defmodule AriaStorage.Storage do
   """
 
   alias AriaStorage.{Chunks, Index, ChunkStore, WaffleAdapter, WaffleChunkStore}
-  alias AriaData.StorageRepo
   import Ecto.Query
 
   @doc """
@@ -119,7 +118,7 @@ defmodule AriaStorage.Storage do
             limit: ^limit,
             offset: ^offset
 
-    case StorageRepo.all(query) do
+    case AriaStorage.SqliteRepo.all(query) do
       files when is_list(files) ->
         {:ok, files}
 
@@ -478,13 +477,13 @@ defmodule AriaStorage.Storage do
   defp create_file_record(metadata) do
     # TODO: Implement database integration
     # changeset = AriaStorage.File.changeset(%AriaStorage.File{}, metadata)
-    # StorageRepo.insert(changeset)
+    # AriaStorage.SqliteRepo.insert(changeset)
     {:ok, %{id: "stub_file_id", metadata: metadata}}
   end
 
   defp get_file_record_by_ref(_index_ref) do
     # TODO: Implement database integration
-    # case StorageRepo.get_by(AriaStorage.File, index_ref: index_ref) do
+    # case AriaStorage.SqliteRepo.get_by(AriaStorage.File, index_ref: index_ref) do
     #   nil -> {:error, :file_not_found}
     #   file -> {:ok, file}
     # end
@@ -535,12 +534,12 @@ defmodule AriaStorage.Storage do
   end
 
   defp count_files do
-    count = StorageRepo.aggregate(AriaStorage.File, :count, :id)
+    count = AriaStorage.SqliteRepo.aggregate(AriaStorage.File, :count, :id)
     {:ok, count}
   end
 
   defp calculate_total_size do
-    total = StorageRepo.aggregate(AriaStorage.File, :sum, :total_size) || 0
+    total = AriaStorage.SqliteRepo.aggregate(AriaStorage.File, :sum, :total_size) || 0
     {:ok, total}
   end
 
@@ -638,7 +637,7 @@ defmodule AriaStorage.Storage do
       backend -> from f in query, where: fragment("metadata->>'backend' = ?", ^to_string(backend))
     end
 
-    case StorageRepo.all(query) do
+    case AriaStorage.SqliteRepo.all(query) do
       files when is_list(files) ->
         waffle_files = Enum.map(files, &format_waffle_file_info/1)
         {:ok, waffle_files}

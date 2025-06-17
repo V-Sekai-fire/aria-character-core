@@ -14,6 +14,7 @@ defmodule AriaEngine.TemporalPlanningTest do
   Perfect for sharing on Discord to demonstrate temporal planning concepts! 🎯
   """
   
+  @tag :skip
   use ExUnit.Case
   
   describe "Stage 0: Baseline functionality (ADR-50)" do

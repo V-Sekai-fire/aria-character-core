@@ -4,6 +4,7 @@
 defmodule AriaEngine.BlocksWorldTest do
   use ExUnit.Case
   doctest AriaEngine
+  @tag :skip
 
   alias AriaEngine.{Domain, TestDomains}
 

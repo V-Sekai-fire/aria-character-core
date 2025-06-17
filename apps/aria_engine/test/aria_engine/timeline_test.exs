@@ -17,9 +17,9 @@ defmodule AriaEngine.TimelineTest do
 
     test "creates timeline with metadata" do
       metadata = %{name: "Test Timeline"}
-      stn = STN.new(metadata: metadata)
-      timeline = %AriaEngine.Timeline{stn: stn}
-      assert timeline.stn.metadata == metadata
+      # The Timeline struct itself has a metadata field
+      timeline = Timeline.new(metadata: metadata)
+      assert timeline.metadata == metadata
     end
 
     test "creates intervals within timeline" do
@@ -122,7 +122,8 @@ defmodule AriaEngine.TimelineTest do
     end
 
     test "detects before relationship", %{timeline: timeline, before_interval: before_interval, after_interval: after_interval} do
-      constraint = {1, :infinity} # after_interval starts at least 1 unit after before_interval ends
+      max_timepoint = 1_000_000_000 # A large integer to represent infinity
+      constraint = {1, max_timepoint} # after_interval starts at least 1 unit after before_interval ends
       updated_timeline =
         Timeline.add_constraint(
           timeline,

@@ -8,53 +8,11 @@ config :aria_engine,
   domain_providers: [
     AriaEngine.BasicActionsDomainProvider,
     AriaFileManagement.DomainProvider,
-    AriaWorkflowSystem.DomainProvider
     # Add more providers as needed in development
   ]
 
 # Development environment configuration
 config :logger, level: :info
-
-# Configure development databases (SQLite for weekend simplification)
-# Main repository for general data
-config :aria_data, AriaData.Repo,
-  adapter: Ecto.Adapters.SQLite3,
-  database: "priv/aria_data_dev.db",
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 10
-
-# Authentication repository for user data
-config :aria_data, AriaData.AuthRepo,
-  adapter: Ecto.Adapters.SQLite3,
-  database: "priv/aria_auth_dev.db",
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 8
-
-# Storage repository for file metadata
-config :aria_data, AriaData.StorageRepo,
-  adapter: Ecto.Adapters.SQLite3,
-  database: "priv/aria_storage_dev.db",
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 8
-
-# Monitor repository for telemetry data
-config :aria_data, AriaData.MonitorRepo,
-  adapter: Ecto.Adapters.SQLite3,
-  database: "priv/aria_monitor_dev.db",
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 6
-
-# Engine repository for planning data
-config :aria_data, AriaData.EngineRepo,
-  adapter: Ecto.Adapters.SQLite3,
-  database: "priv/aria_engine_dev.db",
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 6
 
 # Development Phoenix configuration for coordinate service
 config :aria_coordinate, AriaCoordinateWeb.Endpoint,

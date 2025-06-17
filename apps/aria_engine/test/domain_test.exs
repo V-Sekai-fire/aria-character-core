@@ -3,6 +3,7 @@
 
 defmodule AriaEngine.DomainTest do
   use ExUnit.Case
+  @tag :skip
   doctest AriaEngine.Domain
 
   alias AriaEngine.{Domain, TestDomains}

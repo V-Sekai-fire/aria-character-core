@@ -83,9 +83,6 @@ defmodule AriaEngine.FlowWorkflow do
   @doc """
   Process actions using Flow backflow processor with demand-driven control.
   
-  @doc """
-  Process actions with backflow demand control (common case).
-  
   This function provides the main entry point for backflow processing.
   Uses Flow's built-in demand control for the common case - no GenServer required.
   """

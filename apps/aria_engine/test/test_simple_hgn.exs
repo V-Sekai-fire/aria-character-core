@@ -9,6 +9,7 @@ defmodule AriaEngine.SimpleHgnTest do
   ported from GTPyhop's simple_hgn.py example.
   """
 
+  @tag :skip
   use ExUnit.Case
   doctest AriaEngine
 

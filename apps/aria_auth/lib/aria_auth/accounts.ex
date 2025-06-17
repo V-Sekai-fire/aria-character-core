@@ -7,38 +7,38 @@ defmodule AriaAuth.Accounts do
   """
 
   import Ecto.Query, warn: false
-  alias AriaData.AuthRepo
+  alias AriaAuth.Repo
   alias AriaAuth.Accounts.User
 
   @doc """
   Returns the list of users.
   """
   def list_users do
-    AuthRepo.all(User)
+    Repo.all(User)
   end
 
   @doc """
   Gets a single user.
   """
-  def get_user!(id), do: AuthRepo.get!(User, id)
+  def get_user!(id), do: Repo.get!(User, id)
 
   @doc """
   Gets a single user.
   """
-  def get_user(id), do: AuthRepo.get(User, id)
+  def get_user(id), do: Repo.get(User, id)
 
   @doc """
   Gets a user by email.
   """
   def get_user_by_email(email) when is_binary(email) do
-    AuthRepo.get_by(User, email: email)
+    Repo.get_by(User, email: email)
   end
 
   @doc """
   Gets a user by provider and provider uid.
   """
   def get_user_by_provider(provider, provider_uid) do
-    AuthRepo.get_by(User, provider: provider, provider_uid: provider_uid)
+    Repo.get_by(User, provider: provider, provider_uid: provider_uid)
   end
 
   @doc """
@@ -47,7 +47,7 @@ defmodule AriaAuth.Accounts do
   def create_user(attrs \\ %{}) do
     %User{}
     |> User.registration_changeset(attrs)
-    |> AuthRepo.insert()
+    |> Repo.insert()
   end
 
   @doc """
@@ -56,7 +56,7 @@ defmodule AriaAuth.Accounts do
   def update_user(%User{} = user, attrs) do
     user
     |> User.changeset(attrs)
-    |> AuthRepo.update()
+    |> Repo.update()
   end
 
   @doc """
@@ -65,14 +65,14 @@ defmodule AriaAuth.Accounts do
   def update_user_password(%User{} = user, password) do
     user
     |> User.password_changeset(%{password: password})
-    |> AuthRepo.update()
+    |> Repo.update()
   end
 
   @doc """
   Deletes a user.
   """
   def delete_user(%User{} = user) do
-    AuthRepo.delete(user)
+    Repo.delete(user)
   end
 
   @doc """
@@ -110,7 +110,7 @@ defmodule AriaAuth.Accounts do
   def confirm_user_email(%User{} = user) do
     user
     |> User.changeset(%{email_verified_at: DateTime.utc_now(), confirmation_token: nil})
-    |> AuthRepo.update()
+    |> Repo.update()
   end
 
   @doc """
@@ -119,7 +119,7 @@ defmodule AriaAuth.Accounts do
   def lock_user(%User{} = user) do
     user
     |> User.changeset(%{locked_at: DateTime.utc_now()})
-    |> AuthRepo.update()
+    |> Repo.update()
   end
 
   @doc """
@@ -128,7 +128,7 @@ defmodule AriaAuth.Accounts do
   def unlock_user(%User{} = user) do
     user
     |> User.changeset(%{locked_at: nil, failed_attempts: 0, unlock_token: nil})
-    |> AuthRepo.update()
+    |> Repo.update()
   end
 
   defp update_sign_in_tracking(%User{} = user) do
@@ -141,7 +141,7 @@ defmodule AriaAuth.Accounts do
       sign_in_count: (user.sign_in_count || 0) + 1,
       failed_attempts: 0
     })
-    |> AuthRepo.update()
+    |> Repo.update()
   end
 
   defp update_failed_attempts(%User{} = user) do
@@ -157,6 +157,6 @@ defmodule AriaAuth.Accounts do
 
     user
     |> User.changeset(changes)
-    |> AuthRepo.update()
+    |> Repo.update()
   end
 end

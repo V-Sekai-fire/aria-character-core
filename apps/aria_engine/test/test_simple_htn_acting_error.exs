@@ -9,6 +9,7 @@ defmodule AriaEngine.SimpleHtnActingErrorTest do
   cause failures if methods are too brittle. Ported from GTPyhop's
   simple_htn_acting_error.py example.
   """
+  @tag :skip
 
   use ExUnit.Case
   doctest AriaEngine

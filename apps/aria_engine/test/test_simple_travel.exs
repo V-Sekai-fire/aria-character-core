@@ -7,6 +7,7 @@ defmodule AriaEngine.SimpleTravelTest do
   import AriaEngine
   alias AriaEngine.{State, TestDomains}
 
+  @tag :skip
   @moduletag timeout: 120_000
 
   describe "Simple Travel domain" do

@@ -43,14 +43,13 @@ defmodule AriaMonitor.MixProject do
       {:phoenix, "~> 1.7"},
       {:phoenix_live_view, "~> 1.0.0"},
 
-      # Data persistence (dependency on aria_data)
-      {:aria_data, in_umbrella: true},
 
       # JSON handling
       {:jason, "~> 1.4"},
 
       # Shared dependencies
-      {:telemetry, "~> 1.2"}
+      {:telemetry, "~> 1.2"},
+
     ]
   end
 end

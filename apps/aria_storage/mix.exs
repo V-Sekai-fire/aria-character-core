@@ -47,8 +47,9 @@ defmodule AriaStorage.MixProject do
       # CDN integration
       {:finch, "~> 0.16"},
 
-      # Data persistence (dependency on aria_data)
-      {:aria_data, in_umbrella: true},
+      # Ecto and SQLite3 for database operations
+      {:ecto_sql, "~> 3.0"},
+      {:ecto_sqlite3, "~> 0.8"},
 
       # Security service integration
       {:aria_security, in_umbrella: true},

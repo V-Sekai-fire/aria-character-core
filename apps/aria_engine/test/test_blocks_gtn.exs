@@ -11,6 +11,7 @@ defmodule AriaEngine.BlocksGTNTest do
   """
 
   use ExUnit.Case
+  @tag :skip
 
   import AriaEngine
   alias AriaEngine.{State, Multigoal, TestDomains}

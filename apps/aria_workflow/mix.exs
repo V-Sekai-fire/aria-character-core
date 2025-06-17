@@ -34,14 +34,11 @@ defmodule AriaWorkflow.MixProject do
       # State machines and workflow management
       {:gen_state_machine, "~> 3.0"},
 
-      # Data persistence (dependency on aria_data)
-      {:aria_data, in_umbrella: true},
 
       # Planning engine for workflow execution
       {:aria_engine, in_umbrella: true},
 
       # Domain apps
-      {:aria_workflow_system, in_umbrella: true},
       {:aria_file_management, in_umbrella: true},
 
       # Character shaping for SOP assistance
