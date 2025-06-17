@@ -8,7 +8,7 @@ defmodule AriaEngine.Plan do
   """
 
   alias AriaEngine.{Domain, State, Multigoal}
-  alias AriaEngine.Plan.{Core, NodeExpansion, Backtracking, Execution, Utils, Blacklisting}
+  alias AriaEngine.Plan.{Core, Backtracking, Execution, Utils, Blacklisting} # Removed NodeExpansion
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), State.fact_value()}
@@ -16,25 +16,8 @@ defmodule AriaEngine.Plan do
   @type plan_step :: {atom(), list()}
 
   @type node_id :: String.t()
-  @type solution_node :: %{
-    id: node_id(),
-    task: todo_item(),
-    parent_id: node_id() | nil,
-    children_ids: [node_id()],
-    state: State.t() | nil,
-    visited: boolean(),
-    expanded: boolean(),
-    method_tried: String.t() | nil,
-    blacklisted_methods: [String.t()],
-    is_primitive: boolean()
-  }
-
-  @type solution_tree :: %{
-    root_id: node_id(),
-    nodes: %{node_id() => solution_node()},
-    blacklisted_commands: MapSet.t(),
-    goal_network: %{node_id() => [node_id()]}  # Goal-task network dependencies
-  }
+  @type solution_node :: Core.solution_node() # Reference from Core
+  @type solution_tree :: Core.solution_tree() # Reference from Core
 
   @type plan_result :: {:ok, solution_tree()} | {:error, String.t()}
   @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure

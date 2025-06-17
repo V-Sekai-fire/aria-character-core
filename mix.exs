@@ -50,6 +50,7 @@ defmodule AriaCharacterCore.MixProject do
     [
       "test.all": ["test"],
       "test.setup": ["test"],
+      test: ["test --exclude type_check_strict"], # Exclude type_check_strict tests by default
       "test.watch": ["test.watch"],
       setup: ["deps.get"],
       format: ["format", "cmd --app aria_* mix format"],

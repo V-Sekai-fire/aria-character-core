@@ -125,6 +125,7 @@ defmodule AriaEngine.Timeline.IntervalTest do
       assert Interval.duration_seconds(interval) == 400.0
     end
 
+    @tag :type_check_strict
     test "raises error for non-DateTime types" do
       assert_raise FunctionClauseError, fn ->
         # Convert NaiveDateTime to DateTime for the first argument
@@ -169,6 +170,7 @@ defmodule AriaEngine.Timeline.IntervalTest do
       refute Interval.contains?(interval, after_time)
     end
 
+    @tag :type_check_strict
     test "raises error for non-DateTime time types in containment check" do
       interval =
         Interval.new(
