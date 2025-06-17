@@ -61,13 +61,14 @@ defmodule AriaEngine.PlanningTest do
       tasks = [{"get_item", ["sword"]}]
 
       case AriaEngine.plan(domain, initial_state, tasks, verbose: 0) do
-        {:ok, plan} ->
-          assert length(plan) == 2
-          assert {:move, ["room2"]} in plan
-          assert {:pickup, ["sword"]} in plan
+        {:ok, solution_tree} ->
+          plan_actions = AriaEngine.Planner.extract_actions(solution_tree)
+          assert length(plan_actions) == 2
+          assert {:move, ["room2"]} in plan_actions
+          assert {:pickup, ["sword"]} in plan_actions
 
           # Verify plan works
-          {:ok, final_state} = AriaEngine.execute_plan(domain, initial_state, plan)
+          {:ok, final_state} = AriaEngine.execute_plan(domain, initial_state, plan_actions)
           assert AriaEngine.get_fact(final_state, "has", "player") == "sword"
           assert AriaEngine.get_fact(final_state, "location", "player") == "room2"
 

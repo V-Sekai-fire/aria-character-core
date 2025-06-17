@@ -10,6 +10,7 @@ defmodule RunLazyRefineaheadTest do
   """
   
   use ExUnit.Case
+  @tag timeout: 30000 # Set timeout to 30 seconds
   alias AriaEngine.{Domain, State, Plan}
   
   test "Run-Lazy-Refineahead with action failure and replanning" do

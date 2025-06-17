@@ -297,7 +297,7 @@ defmodule AriaEngine.TimelineTest do
 
   describe "error handling" do
     test "raises error for invalid time order" do
-      assert_raise ArgumentError, ~r/start_time must be before end_time/, fn ->
+      assert_raise ArgumentError, ~r/start_time must be before or equal to end_time/, fn ->
         Interval.new(
           DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")

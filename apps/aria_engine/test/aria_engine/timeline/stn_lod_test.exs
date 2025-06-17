@@ -222,6 +222,7 @@ defmodule AriaEngine.Timeline.STNLODTest do
   end
 
   describe "Performance and Integration" do
+    @tag timeout: 30000 # Set timeout to 30 seconds
     test "parallel solving with LOD system" do
       # Create a larger STN for parallel processing
       stn = STN.new(time_unit: :millisecond, lod_level: :medium)

@@ -85,16 +85,7 @@ defmodule AriaEngine.Timeline.IntervalTest do
       start_time = DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC")
       end_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
 
-      assert_raise ArgumentError, ~r/start_time must be before end_time/, fn ->
-        Interval.new(start_time, end_time)
-      end
-    end
-
-    test "raises error when start_time equals end_time" do
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-
-      assert_raise ArgumentError, ~r/start_time must be before end_time/, fn ->
+      assert_raise ArgumentError, ~r/start_time must be before or equal to end_time/, fn ->
         Interval.new(start_time, end_time)
       end
     end
@@ -105,6 +96,14 @@ defmodule AriaEngine.Timeline.IntervalTest do
       end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
       interval = Interval.new(start_time, end_time)
       assert DateTime.compare(interval.start_time, interval.end_time) == :lt
+    end
+
+    test "allows instantaneous intervals (start_time equals end_time)" do
+      # Should not raise
+      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      end_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      interval = Interval.new(start_time, end_time)
+      assert DateTime.compare(interval.start_time, interval.end_time) == :eq
     end
   end
 
