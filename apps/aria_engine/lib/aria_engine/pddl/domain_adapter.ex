@@ -89,44 +89,15 @@ defmodule AriaEngine.Pddl.DomainAdapter do
 
   # Placeholder for durative actions - PDDL does not have a direct equivalent in the PddlDomain struct
   @impl true # This is a behaviour callback
-  def durative_actions(%__MODULE__{pddl_domain: _pddl_domain}) do # Fixed unused pddl_domain
-    Logger.warning("PDDL DomainAdapter: durative_actions called, but PDDL Domain does not explicitly define durative actions.", []) # Fixed Logger.warn
-    %{} # Return empty map
-  end
-
-  def get_durative_actions(%__MODULE__{pddl_domain: _pddl_domain}) do # Removed @impl true
-    Logger.warning("PDDL DomainAdapter: get_durative_actions called, but PDDL Domain does not explicitly define durative actions.", []) # Fixed Logger.warn
-    []
-  end
-
-  @impl true # This is a behaviour callback
-  def durative_task_methods(%__MODULE__{pddl_domain: _pddl_domain}) do
-    Logger.warning("PDDL DomainAdapter: durative_task_methods called, but PDDL Domain does not explicitly define durative task methods.", [])
+  def durative_actions(%__MODULE__{pddl_domain: _pddl_domain}) do
+    Logger.warning("PDDL DomainAdapter: durative_actions called, but PDDL Domain does not explicitly define durative actions.", [])
     %{}
   end
 
-  @impl true # This is a behaviour callback
-  def durative_unigoal_methods(%__MODULE__{pddl_domain: _pddl_domain}) do
-    Logger.warning("PDDL DomainAdapter: durative_unigoal_methods called, but PDDL Domain does not explicitly define durative unigoal methods.", [])
-    %{}
-  end
-
-  @impl true # This is a behaviour callback
-  def durative_multigoal_methods(%__MODULE__{pddl_domain: _pddl_domain}) do
-    Logger.warning("PDDL DomainAdapter: durative_multigoal_methods called, but PDDL Domain does not explicitly define durative multigoal methods.", [])
-    []
-  end
-
-  def has_durative_action?(%__MODULE__{pddl_domain: _pddl_domain}, _action_name) do # Removed @impl true
-    Logger.warning("PDDL DomainAdapter: has_durative_action? called, but PDDL Domain does not explicitly define durative actions.", []) # Fixed Logger.warn
-    false
-  end
-
-  def execute_durative_action(%__MODULE__{pddl_domain: _pddl_domain}, state, action_name, args, start_time, end_time) do # Removed @impl true
-    IO.puts("PDDL DomainAdapter: execute_durative_action called for #{action_name}(#{inspect(args)}) from #{inspect(start_time)} to #{inspect(end_time)}")
-    Logger.warning("PDDL DomainAdapter: execute_durative_action called, but PDDL Domain does not explicitly define durative actions.", []) # Fixed Logger.warn
-    # Placeholder: always succeed for now
-    {:ok, state}
+  @impl true
+  def get_durative_action(%__MODULE__{pddl_domain: _pddl_domain}, name) do
+    Logger.warning("PDDL DomainAdapter: get_durative_action called for #{name}, but PDDL Domain does not explicitly define durative actions.", [])
+    nil
   end
 
   # Helper to convert AriaEngine.Domain to PddlDomain (if needed for export)

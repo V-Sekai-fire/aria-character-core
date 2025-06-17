@@ -14,9 +14,7 @@ defmodule AriaEngine.DomainBehaviour do
   @callback unigoal_methods(domain :: term()) :: map()
   @callback multigoal_methods(domain :: term()) :: list()
 
-  # Placeholder callbacks for durative versions
+  # Callbacks for durative actions
   @callback durative_actions(domain :: term()) :: map()
-  @callback durative_task_methods(domain :: term()) :: map()
-  @callback durative_unigoal_methods(domain :: term()) :: map()
-  @callback durative_multigoal_methods(domain :: term()) :: list()
+  @callback get_durative_action(domain :: term(), name :: atom()) :: AriaEngine.Domain.DurativeAction.t() | nil
 end

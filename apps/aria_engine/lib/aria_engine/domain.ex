@@ -75,9 +75,9 @@ defmodule AriaEngine.Domain do
   defdelegate unigoal_methods(domain), to: BehaviourImpl
   defdelegate multigoal_methods(domain), to: BehaviourImpl
   defdelegate durative_actions(domain), to: BehaviourImpl
-  defdelegate durative_task_methods(domain), to: BehaviourImpl
-  defdelegate durative_unigoal_methods(domain), to: BehaviourImpl
-  defdelegate durative_multigoal_methods(domain), to: BehaviourImpl
+
+  defdelegate add_durative_action(domain, name, durative_action), to: Core
+  defdelegate get_durative_action(domain, name), to: Core
 
 
 

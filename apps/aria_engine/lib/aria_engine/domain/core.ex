@@ -38,13 +38,19 @@ defmodule AriaEngine.Domain.Core do
   @type goal_method_fn :: (State.t(), list() -> list() | false)
   @type named_method :: {method_name(), task_method_fn() | goal_method_fn()}
 
+  alias AriaEngine.Domain.DurativeAction, as: DurativeAction
+
+  @type durative_action_name :: DurativeAction.durative_action_name()
+  @type durative_action :: DurativeAction.t()
+
   @type t :: %__MODULE__{
     name: String.t(),
     actions: %{action_name() => action_fn()},
     action_metadata: %{action_name() => map()}, # New field for action metadata
     task_methods: %{task_name() => [named_method()]},
     unigoal_methods: %{String.t() => [named_method()]},
-    multigoal_methods: [named_method()]
+    multigoal_methods: [named_method()],
+    durative_actions: %{durative_action_name() => durative_action()} # New field for durative actions
   }
 
   defstruct name: "",
@@ -52,7 +58,8 @@ defmodule AriaEngine.Domain.Core do
             action_metadata: %{}, # Initialize new field
             task_methods: %{},
             unigoal_methods: %{},
-            multigoal_methods: []
+            multigoal_methods: [],
+            durative_actions: %{} # Initialize new field
 
   @doc """
   Creates a new planning domain.
@@ -87,10 +94,28 @@ defmodule AriaEngine.Domain.Core do
         {:error, "Unigoal methods must be a map"}
       not is_list(domain.multigoal_methods) ->
         {:error, "Multigoal methods must be a list"}
+      not is_map(domain.durative_actions) ->
+        {:error, "Durative actions must be a map"}
       true ->
         {:ok, domain}
     end
   end
 
   def validate(_), do: {:error, "Not a valid domain struct"}
+
+  @doc """
+  Adds a durative action to the domain.
+  """
+  @spec add_durative_action(t(), durative_action_name(), durative_action()) :: t()
+  def add_durative_action(%__MODULE__{} = domain, name, durative_action) do
+    %{domain | durative_actions: Map.put(domain.durative_actions, name, durative_action)}
+  end
+
+  @doc """
+  Retrieves a durative action from the domain by name.
+  """
+  @spec get_durative_action(t(), durative_action_name()) :: durative_action() | nil
+  def get_durative_action(%__MODULE__{durative_actions: durative_actions}, name) do
+    Map.get(durative_actions, name)
+  end
 end

@@ -30,14 +30,6 @@ defmodule AriaEngine.Domain.BehaviourImpl do
   def durative_actions(_domain), do: %{}
 
   @impl true
-  @spec durative_task_methods(Core.t()) :: map()
-  def durative_task_methods(_domain), do: %{}
-
-  @impl true
-  @spec durative_unigoal_methods(Core.t()) :: map()
-  def durative_unigoal_methods(_domain), do: %{}
-
-  @impl true
-  @spec durative_multigoal_methods(Core.t()) :: list()
-  def durative_multigoal_methods(_domain), do: []
+  @spec get_durative_action(Core.t(), Core.durative_action_name()) :: AriaEngine.Domain.DurativeAction.t() | nil
+  def get_durative_action(%Core{durative_actions: durative_actions}, name), do: Map.get(durative_actions, name)
 end
