@@ -151,6 +151,14 @@ defmodule AriaEngine.Multigoal do
   end
 
   @doc """
+  Gets all goals as a list (alias for to_list for compatibility).
+  """
+  @spec to_goals(t()) :: [goal()]
+  def to_goals(%__MODULE__{goals: goals}) do
+    goals
+  end
+
+  @doc """
   Merges two multigoals, combining their goals.
   """
   @spec merge(t(), t()) :: t()

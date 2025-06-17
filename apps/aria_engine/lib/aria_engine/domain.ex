@@ -203,6 +203,34 @@ defmodule AriaEngine.Domain do
   end
 
   @doc """
+  Gets goal methods for a predicate. 
+  
+  This is an alias for get_unigoal_methods to maintain compatibility.
+  Returns method functions directly since the current implementation 
+  doesn't use named methods.
+  """
+  @spec get_goal_methods(t(), String.t()) :: [goal_method_fn()]
+  def get_goal_methods(%__MODULE__{} = domain, predicate) do
+    get_unigoal_methods(domain, predicate)
+  end
+
+  @doc """
+  Gets a specific method by name.
+  
+  Since the current implementation stores methods as functions directly,
+  this function returns the first method in the list for the given predicate.
+  This is a temporary implementation to fix the Dialyzer warning.
+  """
+  @spec get_method(t(), String.t()) :: goal_method_fn() | nil
+  def get_method(%__MODULE__{unigoal_methods: methods}, method_name) do
+    # For now, treat method_name as a predicate name and return the first method
+    case Map.get(methods, method_name, []) do
+      [] -> nil
+      [method_fn | _] -> method_fn
+    end
+  end
+
+  @doc """
   Checks if an action exists in the domain.
   """
   @spec has_action?(t(), action_name()) :: boolean()
