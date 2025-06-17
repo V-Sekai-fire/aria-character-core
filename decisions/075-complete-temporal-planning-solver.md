@@ -84,7 +84,7 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
   - *Action: Remove support for NaiveDateTime and integer timestamps*
   - *Action: Enforce timezone awareness through DateTime.t() types*
   - *Testable: Interval creation, duration calculation, containment checks*
-  - ✅ **Completed**: Interval module implemented with DateTime-only API, all 25 tests passing
+  - ✅ **Completed**: Interval module implemented with DateTime-only API, all 25 tests passing. **Refinement**: Allowed `start_time == end_time` for instantaneous intervals.
   
 - [ ] **Task 010**: Implement `AriaEngine.Timeline` module with interval-based storage
   - *Depends on: Task 009 (Interval module)*
@@ -220,7 +220,7 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 - [ ] **Task 019**: Support incremental constraint updates
   - *Depends on: Task 018 (constraint propagation)*
-  - *Testable: Incremental update performance*
+  - *Testable: Incremental update accuracy*
 
 - [ ] **Task 087**: Add performance benchmarking tests
   - *Depends on: Task 019 (incremental updates)*
@@ -371,7 +371,7 @@ Extend the existing AriaEngine architecture with temporal planning capabilities 
 
 - [ ] **Task 052**: Add Flow parallel constraint propagation
   - *Depends on: Task 054 (performance monitoring)*
-  - *Implementation: Use parallel patterns from [ADR-041](041-temporal-solver-tech-stack-requirements.md#constraint-propagation)*
+  - *Implementation: Use parallel patterns from [ADR-041](041-temporal-solver-tech_stack-requirements.md#constraint-propagation)*
   - *Testable: Parallel propagation efficiency*
 
 - [ ] **Task 053**: Implement GenStage backpressure for real-time updates
@@ -549,14 +549,14 @@ This revised ADR provides a realistic 90-task implementation roadmap that builds
 
 - **🚨 Critical Integration Issues Discovered**: STN-Interval type compatibility blocking all temporal planning progress
 - **Timeline Module Status**: Exists but 17/20 tests failing due to STN integration problems
-- **STN Module Status**: Exists but 4/30 tests failing due to DateTime vs NaiveDateTime type mismatch  
+- **STN Module Status**: Exists but 4/30 STN tests failing due to DateTime vs NaiveDateTime type mismatch  
 - **Priority Adjustment**: Must fix integration issues before proceeding with new features
 - **Progress Assessment**: 17% complete (15/90 tasks), with critical blockers identified
 - **Estimated Fix Time**: 18-27 hours to repair integration and achieve working temporal planning MVP
 
 ### June 15, 2025 - DateTime Migration Milestone
 
-- **✅ Completed Task 009**: AriaEngine.Timeline.Interval module with DateTime-only support
+- **✅ Completed Task 009**: AriaEngine.Timeline.Interval module with DateTime-only API, all 25 tests passing
 - **Strict typing enforcement**: Removed NaiveDateTime and integer timestamp support
 - **Comprehensive test coverage**: All 25 Interval tests passing
 - **API consistency**: Clean DateTime-only interface with proper error handling
