@@ -91,13 +91,13 @@ StateV2.set_fact(state, "player", "location", "room1")
 
 ## Success Criteria
 
-- [ ] All planner modules use StateV2 exclusively
-- [ ] No remaining usage of legacy State format in core planning
-- [ ] Full test suite passes with StateV2 format
-- [ ] Performance is maintained or improved
-- [ ] Entity-first API patterns are consistent throughout
-- [ ] Documentation reflects StateV2 usage patterns
-- [ ] TimelineGraph integration works seamlessly with unified state format
+- [x] All planner modules use StateV2 exclusively ✅ **ACHIEVED**
+- [x] No remaining usage of legacy State format in core planning ✅ **ACHIEVED**
+- [ ] Full test suite passes with StateV2 format (In Progress: DurativeActionsTest converted)
+- [ ] Performance is maintained or improved (Testing needed)
+- [x] Entity-first API patterns are consistent throughout ✅ **ACHIEVED**
+- [ ] Documentation reflects StateV2 usage patterns (Updates needed)
+- [x] TimelineGraph integration works seamlessly with unified state format ✅ **ACHIEVED**
 
 ## Consequences
 
