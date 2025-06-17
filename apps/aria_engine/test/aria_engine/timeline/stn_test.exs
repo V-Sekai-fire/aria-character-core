@@ -313,7 +313,7 @@ defmodule AriaEngine.Timeline.STNTest do
     end
 
     test "allows consistent two-point cycle with zero constraint" do
-      # This demonstrates the API's constraint replacement behavior
+      # This demonstrates the API's constraint intersection behavior
       stn = STN.new()
       |> STN.add_constraint("A", "B", {0, 5})   # B is 0-5 units after A
       |> STN.add_constraint("B", "A", {0, 5})   # A is 0-5 units after B
@@ -321,12 +321,13 @@ defmodule AriaEngine.Timeline.STNTest do
       
       assert STN.consistent?(stn)
       
-      # The API replaces constraints, so we get the result of the second call:
-      # B→A = {0,5} creates A→B = {-5,0}, which replaces the original {0,5}
+      # The API intersects constraints for mathematical soundness:
+      # Original A→B = {0,5}, New A→B from B→A {0,5} = {-5,0}
+      # Intersection: max(0,-5)=0, min(5,0)=0 => {0,0} (simultaneous events)
       constraint_ab = STN.get_constraint(stn, "A", "B")
       constraint_ba = STN.get_constraint(stn, "B", "A")
-      assert constraint_ab == {-5, 0}  # A is -5 to 0 units after B (B is 0-5 after A)
-      assert constraint_ba == {0, 5}   # B is 0-5 units after A
+      assert constraint_ab == {0, 0}   # A and B must occur simultaneously
+      assert constraint_ba == {0, 0}   # A and B must occur simultaneously
     end
 
     test "allows consistent two-point cycle with overlapping ranges" do
