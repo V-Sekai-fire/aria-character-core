@@ -500,10 +500,10 @@ defmodule AriaEngine.Plan do
       {:error, "No methods found for task: #{task_name}"}
     else
       # Try the first available method
-      [method | _] = available_methods
-      method_id = "method_#{:erlang.phash2(method)}"
+      [{_method_name, method_fn} | _] = available_methods
+      method_id = "method_#{:erlang.phash2(method_fn)}"
 
-      case method.(node.state, args) do
+      case method_fn.(node.state, args) do
         false ->
           if verbose > 2 do
             IO.puts("Method failed preconditions for task: #{task_name}")
@@ -605,10 +605,10 @@ defmodule AriaEngine.Plan do
           {:error, "No methods found for goal: #{predicate}"}
         else
           # Try the first method
-          [method | _] = available_methods
-          method_id = "goal_method_#{:erlang.phash2(method)}"
+          [{_method_name, method_fn} | _] = available_methods
+          method_id = "goal_method_#{:erlang.phash2(method_fn)}"
 
-          case method.(node.state, [subject, object]) do
+          case method_fn.(node.state, [subject, object]) do
             false ->
               if verbose > 2 do
                 IO.puts("Method failed preconditions for goal: #{predicate}")
