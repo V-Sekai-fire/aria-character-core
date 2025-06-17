@@ -18,10 +18,10 @@ defmodule AriaEnginePortelainIntegrationTest do
       result = Actions.execute_command(state, ["echo", "Hello from Porcelain"])
 
       assert result != false
-      assert State.get_object(result, "last_command", "command") == "echo"
-      assert State.get_object(result, "last_command", "exit_code") == 0
-      assert State.get_object(result, "last_command", "success") == true
-      assert String.contains?(State.get_object(result, "last_command", "stdout"), "Hello from Porcelain")
+      assert State.get_fact(result, "last_command", "command") == "echo"
+      assert State.get_fact(result, "last_command", "exit_code") == 0
+      assert State.get_fact(result, "last_command", "success") == true
+      assert String.contains?(State.get_fact(result, "last_command", "stdout"), "Hello from Porcelain")
     end
 
     test "file operations work with Porcelain" do
@@ -33,12 +33,12 @@ defmodule AriaEnginePortelainIntegrationTest do
       # Test file creation
       result1 = Actions.execute_command(state, ["touch", temp_file])
       assert result1 != false
-      assert State.get_object(result1, "last_command", "success") == true
+      assert State.get_fact(result1, "last_command", "success") == true
 
       # Test file existence check
       result2 = Actions.file_exists(result1, [temp_file])
       assert result2 != false
-      assert State.get_object(result2, "file_exists", temp_file) == true
+      assert State.get_fact(result2, "file_exists", temp_file) == true
 
       # Clean up
       Actions.delete_file(result2, [temp_file])
@@ -53,12 +53,12 @@ defmodule AriaEnginePortelainIntegrationTest do
       # Test directory creation
       result1 = Actions.create_directory(state, [temp_dir])
       assert result1 != false
-      assert State.get_object(result1, "last_command", "success") == true
+      assert State.get_fact(result1, "last_command", "success") == true
 
       # Test directory listing
       result2 = Actions.list_directory(result1, [temp_dir])
       assert result2 != false
-      assert State.get_object(result2, "last_command", "success") == true
+      assert State.get_fact(result2, "last_command", "success") == true
 
       # Clean up
       Actions.execute_command(result2, ["rmdir", temp_dir])
@@ -72,8 +72,8 @@ defmodule AriaEnginePortelainIntegrationTest do
 
       # Should either succeed (if in git repo) or fail gracefully
       if result != false do
-        assert State.get_object(result, "last_command", "command") == "git"
-        assert is_integer(State.get_object(result, "last_command", "exit_code"))
+        assert State.get_fact(result, "last_command", "command") == "git"
+        assert is_integer(State.get_fact(result, "last_command", "exit_code"))
       end
     end
   end

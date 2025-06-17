@@ -39,7 +39,7 @@ defmodule AriaEngine.Planner do
 
   # Create initial state
   initial_state = AriaEngine.State.new()
-  |> AriaEngine.State.set_object("location", "robot", "room1")
+  |> AriaEngine.State.set_fact("location", "robot", "room1")
 
   # Create goals
   goals = [{"location", "robot", "room2"}]
@@ -75,7 +75,7 @@ defmodule AriaEngine.Planner do
 
   # Solution tree types (core HTN planning)
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), any()}
+  @type goal :: {String.t(), String.t(), State.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -400,12 +400,16 @@ defmodule AriaEngine.Planner do
   # Get action duration from domain or use default
   @spec get_action_duration(atom(), Domain.t()) :: {integer(), integer()}
   defp get_action_duration(action_name, domain) do
-    # Check if domain has temporal metadata for this action
-    case Map.get(domain.actions, action_name) do
-      nil -> {1, 5}  # Default duration range
-      _action_fn ->
-        # For now, use default duration
-        # TODO: Extract actual duration constraints from action metadata
+    case Domain.get_action_metadata(domain, action_name) do
+      %{duration: %AriaEngine.Timeline.Interval{} = interval} ->
+        # If duration is an Interval struct, use its duration_ms as fixed min/max
+        fixed_duration = AriaEngine.Timeline.Interval.duration_ms(interval)
+        {fixed_duration, fixed_duration}
+      %{duration: {min, max}} when is_integer(min) and is_integer(max) and min <= max ->
+        # If duration is a {min, max} tuple, use it directly
+        {min, max}
+      _ ->
+        # Default duration if not specified or invalid
         {1, 5}
     end
   end
@@ -619,8 +623,8 @@ defmodule AriaEngine.Planner do
           {task_name, args} when is_binary(task_name) ->
             expand_task_node(domain, state, solution_tree, node_id, task_name, args, verbose)
             
-          {predicate, subject, object} ->
-            expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, object, verbose)
+          {predicate, subject, fact_value} ->
+            expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose)
             
           %Multigoal{} = multigoal ->
             expand_multigoal_node(domain, state, solution_tree, node_id, multigoal, verbose)
@@ -745,13 +749,13 @@ defmodule AriaEngine.Planner do
 
   # Apply a goal method and handle the result
   @spec apply_goal_method(Domain.t(), State.t(), solution_tree(), node_id(), 
-    String.t(), String.t(), any(), String.t(), function(), integer()) :: 
+    String.t(), String.t(), State.fact_value(), String.t(), function(), integer()) :: 
     {:ok, solution_tree()} | {:error, String.t()} | :failure
   defp apply_goal_method(domain, state, solution_tree, node_id, 
-    predicate, subject, object, method_name, method_fn, verbose) do
+    predicate, subject, fact_value, method_name, method_fn, verbose) do
     
     # Apply method to get subtasks
-    case apply_method_to_goal(method_fn, predicate, subject, object, verbose) do
+    case apply_method_to_goal(method_fn, predicate, subject, fact_value, verbose) do
       {:ok, subtasks} ->
         # Decomposed into subtasks
         new_tree = create_subtask_nodes(solution_tree, node_id, subtasks, method_name)
@@ -767,21 +771,21 @@ defmodule AriaEngine.Planner do
           IO.puts("Method #{method_name} failed for goal: #{reason}")
         end
         
-        expand_goal_node(domain, state, updated_tree, node_id, predicate, subject, object, verbose)
+        expand_goal_node(domain, state, updated_tree, node_id, predicate, subject, fact_value, verbose)
     end
   end
 
   # Expand goal node
-  @spec expand_goal_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), String.t(), any(), integer()) :: 
+  @spec expand_goal_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), String.t(), State.fact_value(), integer()) :: 
     {:ok, solution_tree()} | {:error, String.t()} | :failure
-  defp expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, object, verbose) do
+  defp expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
         {:error, "Node not found: #{node_id}"}
         
       node ->
         # Check if goal is already satisfied
-        if State.matches?(state, predicate, subject, object) do
+        if State.matches?(state, predicate, subject, fact_value) do
           # Goal already satisfied - mark as primitive (no action needed)
           mark_as_primitive(solution_tree, node_id)
         else
@@ -814,7 +818,7 @@ defmodule AriaEngine.Planner do
           case usable_methods do
             [] ->
               if verbose > 2 do
-                IO.puts("No usable methods for goal: #{predicate} #{subject} #{object}")
+                IO.puts("No usable methods for goal: #{predicate} #{subject} #{fact_value}")
               end
               :failure
               
@@ -824,13 +828,13 @@ defmodule AriaEngine.Planner do
                 {method_name, method_fn} when is_binary(method_name) and is_function(method_fn, 2) ->
                   # Standard named tuple format
                   apply_goal_method(domain, state, solution_tree, node_id, 
-                    predicate, subject, object, method_name, method_fn, verbose)
+                    predicate, subject, fact_value, method_name, method_fn, verbose)
                 
                 method_fn when is_function(method_fn, 2) ->
                   # Raw function format - generate a name for blacklisting
                   method_name = "method_#{:erlang.phash2(method_fn)}"
                   apply_goal_method(domain, state, solution_tree, node_id, 
-                    predicate, subject, object, method_name, method_fn, verbose)
+                    predicate, subject, fact_value, method_name, method_fn, verbose)
                 
                 other ->
                   # Unexpected format - try to handle gracefully
@@ -1038,11 +1042,11 @@ defmodule AriaEngine.Planner do
     end
   end
 
-  @spec apply_method_to_goal(function(), String.t(), String.t(), any(), integer()) :: 
+  @spec apply_method_to_goal(function(), String.t(), String.t(), State.fact_value(), integer()) :: 
     {:ok, [todo_item()]} | {:error, String.t()}
-  defp apply_method_to_goal(method_fn, predicate, subject, object, verbose) do
+  defp apply_method_to_goal(method_fn, predicate, subject, fact_value, verbose) do
     try do
-      case method_fn.(predicate, subject, object) do
+      case method_fn.(predicate, subject, fact_value) do
         {:ok, subtasks} -> {:ok, subtasks}
         subtasks when is_list(subtasks) -> {:ok, subtasks}
         error -> {:error, "Method returned: #{inspect(error)}"}

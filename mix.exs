@@ -40,7 +40,8 @@ defmodule AriaCharacterCore.MixProject do
 
       # JSON-LD and RDF support for temporal planner
       {:json_ld, "~> 1.0"},
-      {:rdf, "~> 2.1"}
+      {:rdf, "~> 2.1"},
+      {:porcelain, "~> 2.0"}
     ]
   end
 

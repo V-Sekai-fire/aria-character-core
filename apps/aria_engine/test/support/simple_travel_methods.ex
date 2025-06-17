@@ -17,7 +17,7 @@ defmodule AriaEngine.SimpleTravelMethods do
   Do nothing if already at destination.
   """
   def do_nothing(state, {"travel", [p, y]}) do
-    x = State.get_object(state, "loc", p)
+    x = State.get_fact(state, "loc", p)
 
     cond do
       not is_person(p) -> false
@@ -31,7 +31,7 @@ defmodule AriaEngine.SimpleTravelMethods do
   Travel by foot if destination is close enough.
   """
   def travel_by_foot(state, {"travel", [p, y]}) do
-    x = State.get_object(state, "loc", p)
+    x = State.get_fact(state, "loc", p)
 
     cond do
       not is_person(p) -> false
@@ -46,8 +46,8 @@ defmodule AriaEngine.SimpleTravelMethods do
   Travel by taxi if person has enough money.
   """
   def travel_by_taxi(state, {"travel", [p, y]}) do
-    x = State.get_object(state, "loc", p)
-    cash = State.get_object(state, "cash", p)
+    x = State.get_fact(state, "loc", p)
+    cash = State.get_fact(state, "cash", p)
     fare = taxi_rate(distance(x, y))
 
     cond do
@@ -69,7 +69,7 @@ defmodule AriaEngine.SimpleTravelMethods do
   Method to achieve the goal that person p is at location y.
   """
   def loc_unigoal(state, {"loc", p, y}) do
-    current_loc = State.get_object(state, "loc", p)
+    current_loc = State.get_fact(state, "loc", p)
 
     cond do
       current_loc == y -> []  # Already there
@@ -112,7 +112,7 @@ defmodule AriaEngine.SimpleTravelMethods do
   Simple travel by foot method for Pyhop compatibility.
   """
   def travel_by_foot_simple(state, {"travel", [p, y]}) do
-    x = State.get_object(state, "loc", p)
+    x = State.get_fact(state, "loc", p)
 
     cond do
       not is_person(p) -> false
@@ -127,8 +127,8 @@ defmodule AriaEngine.SimpleTravelMethods do
   Simple travel by taxi method for Pyhop compatibility.
   """
   def travel_by_taxi_simple(state, {"travel", [p, y]}) do
-    x = State.get_object(state, "loc", p)
-    cash = State.get_object(state, "cash", p)
+    x = State.get_fact(state, "loc", p)
+    cash = State.get_fact(state, "cash", p)
     fare = taxi_rate(distance(x, y))
 
     cond do
@@ -154,7 +154,7 @@ defmodule AriaEngine.SimpleTravelMethods do
   defp find_available_taxi(state, location) do
     taxis = ["taxi1", "taxi2"]
     Enum.find(taxis, fn taxi ->
-      State.get_object(state, "loc", taxi) == location
+      State.get_fact(state, "loc", taxi) == location
     end) || Enum.at(taxis, 0)  # Default to first taxi if none at location
   end
 end

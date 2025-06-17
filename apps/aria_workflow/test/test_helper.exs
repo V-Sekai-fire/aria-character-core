@@ -45,7 +45,7 @@ defmodule AriaWorkflow.TestHelpers do
     state = State.new()
 
     Enum.reduce(facts, state, fn {pred, subj, obj}, acc ->
-      State.set_object(acc, pred, subj, obj)
+      State.set_fact(acc, pred, subj, obj)
     end)
   end
 

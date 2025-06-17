@@ -92,7 +92,7 @@ defmodule AriaFileManagement.Domain do
   @spec execute_command(State.t(), list()) :: State.t() | false
   def execute_command(state, [_command | _args]) do
     # Simulate successful command execution
-    AriaEngine.State.set_object(state, "last_command", "success", true)
+    AriaEngine.State.set_fact(state, "last_command", "success", true)
   end
 
   # Task methods that decompose complex file operations

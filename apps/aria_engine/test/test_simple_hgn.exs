@@ -9,7 +9,6 @@ defmodule AriaEngine.SimpleHgnTest do
   ported from GTPyhop's simple_hgn.py example.
   """
 
-  @tag :skip
   use ExUnit.Case
   doctest AriaEngine
 
@@ -48,9 +47,9 @@ defmodule AriaEngine.SimpleHgnTest do
   # Actions
   defp walk_action(state, [person, from, to]) do
     if is_a(person, "person") and is_a(from, "location") and is_a(to, "location") and from != to do
-      current_loc = State.get_object(state, "loc", person)
+      current_loc = State.get_fact(state, "loc", person)
       if current_loc == from do
-        State.set_object(state, "loc", person, to)
+        State.set_fact(state, "loc", person, to)
       else
         false
       end
@@ -62,8 +61,8 @@ defmodule AriaEngine.SimpleHgnTest do
   defp call_taxi_action(state, [person, location]) do
     if is_a(person, "person") and is_a(location, "location") do
       state
-      |> State.set_object("loc", "taxi1", location)
-      |> State.set_object("loc", person, "taxi1")
+      |> State.set_fact("loc", "taxi1", location)
+      |> State.set_fact("loc", person, "taxi1")
     else
       false
     end
@@ -71,19 +70,19 @@ defmodule AriaEngine.SimpleHgnTest do
 
   defp ride_taxi_action(state, [person, destination]) do
     if is_a(person, "person") and is_a(destination, "location") do
-      person_loc = State.get_object(state, "loc", person)
+      person_loc = State.get_fact(state, "loc", person)
 
       if is_a(person_loc, "taxi") do
         taxi = person_loc
-        current_loc = State.get_object(state, "loc", taxi)
+        current_loc = State.get_fact(state, "loc", taxi)
 
         if is_a(current_loc, "location") and current_loc != destination do
           dist = distance(current_loc, destination)
           fare = taxi_rate(dist)
 
           state
-          |> State.set_object("loc", taxi, destination)
-          |> State.set_object("owe", person, fare)
+          |> State.set_fact("loc", taxi, destination)
+          |> State.set_fact("owe", person, fare)
         else
           false
         end
@@ -97,14 +96,14 @@ defmodule AriaEngine.SimpleHgnTest do
 
   defp pay_driver_action(state, [person, location]) do
     if is_a(person, "person") do
-      cash = State.get_object(state, "cash", person) || 0
-      owe = State.get_object(state, "owe", person) || 0
+      cash = State.get_fact(state, "cash", person) || 0
+      owe = State.get_fact(state, "owe", person) || 0
 
       if cash >= owe do
         state
-        |> State.set_object("cash", person, cash - owe)
-        |> State.set_object("owe", person, 0)
-        |> State.set_object("loc", person, location)
+        |> State.set_fact("cash", person, cash - owe)
+        |> State.set_fact("owe", person, 0)
+        |> State.set_fact("loc", person, location)
       else
         false
       end
@@ -116,7 +115,7 @@ defmodule AriaEngine.SimpleHgnTest do
   # Unigoal methods for 'loc' goal
   defp travel_by_foot(state, [person, destination]) do
     if is_a(person, "person") and is_a(destination, "location") do
-      current_loc = State.get_object(state, "loc", person)
+      current_loc = State.get_fact(state, "loc", person)
 
       if current_loc != destination and distance(current_loc, destination) <= 2 do
         [{:walk, [person, current_loc, destination]}]
@@ -130,8 +129,8 @@ defmodule AriaEngine.SimpleHgnTest do
 
   defp travel_by_taxi(state, [person, destination]) do
     if is_a(person, "person") and is_a(destination, "location") do
-      current_loc = State.get_object(state, "loc", person)
-      cash = State.get_object(state, "cash", person) || 0
+      current_loc = State.get_fact(state, "loc", person)
+      cash = State.get_fact(state, "cash", person) || 0
 
       if current_loc != destination do
         dist = distance(current_loc, destination)
@@ -175,7 +174,7 @@ defmodule AriaEngine.SimpleHgnTest do
       # Test walk action
       result = Domain.execute_action(domain, state, :walk, ["alice", "home_a", "home_b"])
       assert result != false
-      assert State.get_object(result, "loc", "alice") == "home_b"
+      assert State.get_fact(result, "loc", "alice") == "home_b"
 
       # Walking to same location should fail
       result = Domain.execute_action(domain, state, :walk, ["alice", "home_a", "home_a"])
@@ -184,23 +183,23 @@ defmodule AriaEngine.SimpleHgnTest do
       # Test call_taxi action
       result = Domain.execute_action(domain, state, :call_taxi, ["alice", "home_a"])
       assert result != false
-      assert State.get_object(result, "loc", "taxi1") == "home_a"
-      assert State.get_object(result, "loc", "alice") == "taxi1"
+      assert State.get_fact(result, "loc", "taxi1") == "home_a"
+      assert State.get_fact(result, "loc", "alice") == "taxi1"
 
       # Test ride_taxi action (after calling taxi)
       taxi_state = Domain.execute_action(domain, state, :call_taxi, ["alice", "home_a"])
       result = Domain.execute_action(domain, taxi_state, :ride_taxi, ["alice", "park"])
       assert result != false
-      assert State.get_object(result, "loc", "taxi1") == "park"
-      assert State.get_object(result, "owe", "alice") == taxi_rate(distance("home_a", "park"))
+      assert State.get_fact(result, "loc", "taxi1") == "park"
+      assert State.get_fact(result, "owe", "alice") == taxi_rate(distance("home_a", "park"))
 
       # Test pay_driver action
       result = Domain.execute_action(domain, result, :pay_driver, ["alice", "park"])
       assert result != false
-      assert State.get_object(result, "loc", "alice") == "park"
-      assert State.get_object(result, "owe", "alice") == 0
+      assert State.get_fact(result, "loc", "alice") == "park"
+      assert State.get_fact(result, "owe", "alice") == 0
       expected_cash = 20 - taxi_rate(distance("home_a", "park"))
-      assert State.get_object(result, "cash", "alice") == expected_cash
+      assert State.get_fact(result, "cash", "alice") == expected_cash
     end
 
     test "goal planning: alice to park (by taxi)", %{domain: domain, state: state} do
@@ -216,8 +215,8 @@ defmodule AriaEngine.SimpleHgnTest do
 
           # Verify plan execution
           {:ok, final_state} = AriaEngine.execute_plan(domain, state, plan)
-          assert State.get_object(final_state, "loc", "alice") == "park"
-          assert State.get_object(final_state, "owe", "alice") == 0
+          assert State.get_fact(final_state, "loc", "alice") == "park"
+          assert State.get_fact(final_state, "owe", "alice") == 0
 
         {:error, reason} ->
           flunk("Planning failed: #{reason}")
@@ -235,7 +234,7 @@ defmodule AriaEngine.SimpleHgnTest do
 
           # Verify plan execution
           {:ok, final_state} = AriaEngine.execute_plan(domain, state, plan)
-          assert State.get_object(final_state, "loc", "bob") == "park"
+          assert State.get_fact(final_state, "loc", "bob") == "park"
 
         {:error, reason} ->
           flunk("Planning failed: #{reason}")
@@ -252,8 +251,8 @@ defmodule AriaEngine.SimpleHgnTest do
 
           # Verify plan execution
           {:ok, final_state} = AriaEngine.execute_plan(domain, state, plan)
-          assert State.get_object(final_state, "loc", "alice") == "park"
-          assert State.get_object(final_state, "loc", "bob") == "park"
+          assert State.get_fact(final_state, "loc", "alice") == "park"
+          assert State.get_fact(final_state, "loc", "bob") == "park"
 
         {:error, reason} ->
           flunk("Planning failed: #{reason}")
@@ -276,7 +275,7 @@ defmodule AriaEngine.SimpleHgnTest do
 
     test "planning fails when insufficient cash", %{domain: domain, state: state} do
       # Give alice very little cash
-      poor_state = State.set_object(state, "cash", "alice", 1)
+      poor_state = State.set_fact(state, "cash", "alice", 1)
 
       # Try to get alice to park (needs taxi due to distance, but can't afford it)
       goals = [{"loc", "alice", "park"}]

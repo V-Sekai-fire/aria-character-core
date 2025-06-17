@@ -42,6 +42,7 @@ defmodule AriaEngine.Domain do
   @type t :: %__MODULE__{
     name: String.t(),
     actions: %{action_name() => action_fn()},
+    action_metadata: %{action_name() => map()}, # New field for action metadata
     task_methods: %{task_name() => [named_method()]},
     unigoal_methods: %{String.t() => [named_method()]},
     multigoal_methods: [named_method()]
@@ -49,6 +50,7 @@ defmodule AriaEngine.Domain do
 
   defstruct name: "",
             actions: %{},
+            action_metadata: %{}, # Initialize new field
             task_methods: %{},
             unigoal_methods: %{},
             multigoal_methods: []
@@ -70,13 +72,18 @@ defmodule AriaEngine.Domain do
 
   When an action is added, it also creates a corresponding task method
   so the action can be used directly in task decompositions.
+  
+  Optional `metadata` can be provided for the action, e.g., `duration: {min, max}`.
   """
-  @spec add_action(t(), action_name(), action_fn()) :: t()
-  def add_action(%__MODULE__{actions: actions, task_methods: methods} = domain, name, action_fn)
-      when is_atom(name) and is_function(action_fn, 2) do
+  @spec add_action(t(), action_name(), action_fn(), map()) :: t()
+  def add_action(%__MODULE__{actions: actions, action_metadata: action_metadata, task_methods: methods} = domain, name, action_fn, metadata \\ %{})
+      when is_atom(name) and is_function(action_fn, 2) and is_map(metadata) do
     
     # Add the action to the actions map
     updated_actions = Map.put(actions, name, action_fn)
+    
+    # Store action metadata
+    updated_action_metadata = Map.put(action_metadata, name, metadata)
     
     # Create a task method that just returns the action as a primitive task
     # This allows the action to be used directly in HTN task decompositions
@@ -94,6 +101,7 @@ defmodule AriaEngine.Domain do
     
     %{domain | 
       actions: updated_actions, 
+      action_metadata: updated_action_metadata, # Update action metadata
       task_methods: updated_task_methods
     }
   end
@@ -102,11 +110,20 @@ defmodule AriaEngine.Domain do
   Adds multiple actions to the domain.
   
   Each action will be properly registered with its corresponding task method.
+  `new_actions` can be a map of `%{action_name => action_fn}` or `%{action_name => {action_fn, metadata}}`.
   """
-  @spec add_actions(t(), %{action_name() => action_fn()}) :: t()
+  @spec add_actions(t(), %{action_name() => action_fn() | {action_fn(), map()}}) :: t()
   def add_actions(%__MODULE__{} = domain, new_actions) do
-    Enum.reduce(new_actions, domain, fn {name, action_fn}, acc_domain ->
-      add_action(acc_domain, name, action_fn)
+    Enum.reduce(new_actions, domain, fn {name, action_def}, acc_domain ->
+      case action_def do
+        {action_fn, metadata} when is_function(action_fn, 2) and is_map(metadata) ->
+          add_action(acc_domain, name, action_fn, metadata)
+        action_fn when is_function(action_fn, 2) ->
+          add_action(acc_domain, name, action_fn)
+        _ ->
+          Logger.warning("Invalid action definition for #{name}: #{inspect(action_def)}", [])
+          acc_domain
+      end
     end)
   end
 
@@ -207,6 +224,14 @@ defmodule AriaEngine.Domain do
   @spec get_action(t(), action_name()) :: action_fn() | nil
   def get_action(%__MODULE__{actions: actions}, name) do
     Map.get(actions, name)
+  end
+
+  @doc """
+  Gets metadata for a given action.
+  """
+  @spec get_action_metadata(t(), action_name()) :: map() | nil
+  def get_action_metadata(%__MODULE__{action_metadata: action_metadata}, name) do
+    Map.get(action_metadata, name)
   end
 
   @doc """
@@ -319,11 +344,11 @@ defmodule AriaEngine.Domain do
 
   This is used for goal verification during planning.
   """
-  @spec verify_goal(State.t(), String.t(), String.t(), list(), any(), integer(), integer()) :: any()
+  @spec verify_goal(State.t(), String.t(), String.t(), list(), State.fact_value(), integer(), integer()) :: State.fact_value() | false
   def verify_goal(%State{} = state, _method_name, state_var, args, desired_values, _depth, _verbose) do
     # This is a placeholder for goal verification logic
     # In the original C++ code, this would check if a goal is satisfied
-    case State.get_object(state, state_var, List.first(args) || "") do
+    case State.get_fact(state, state_var, List.first(args) || "") do
       ^desired_values -> desired_values
       _ -> false
     end
@@ -398,6 +423,8 @@ defmodule AriaEngine.Domain do
         {:error, "Domain name cannot be empty"}
       not is_map(domain.actions) ->
         {:error, "Actions must be a map"}
+      not is_map(domain.action_metadata) -> # Validate new field
+        {:error, "Action metadata must be a map"}
       not is_map(domain.task_methods) ->
         {:error, "Task methods must be a map"}
       not is_map(domain.unigoal_methods) ->

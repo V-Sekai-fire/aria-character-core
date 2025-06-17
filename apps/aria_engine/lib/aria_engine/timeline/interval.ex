@@ -342,9 +342,8 @@ defmodule AriaEngine.Timeline.Interval do
   
   defp validate_time_ordering!(start_time, end_time) do
     case DateTime.compare(start_time, end_time) do
-      :gt -> raise ArgumentError, "start_time must be before end_time"
-      :eq -> raise ArgumentError, "start_time must be before end_time"
-      :lt -> :ok
+      :gt -> raise ArgumentError, "start_time must be before or equal to end_time"
+      _ -> :ok # Allow :eq and :lt
     end
   end
 

@@ -71,13 +71,13 @@ defmodule AriaEngine.Actions do
 
       # Update state with execution results using direct state operations
       new_state = state
-      |> State.set_object("last_command", "command", command)
-      |> State.set_object("last_command", "args", args)
-      |> State.set_object("last_command", "exit_code", result.status)
-      |> State.set_object("last_command", "stdout", result.out || "")
-      |> State.set_object("last_command", "stderr", result.err || "")
-      |> State.set_object("last_command", "duration_ms", duration_ms)
-      |> State.set_object("last_command", "success", result.status == 0)
+      |> State.set_fact("last_command", "command", command)
+      |> State.set_fact("last_command", "args", args)
+      |> State.set_fact("last_command", "exit_code", result.status)
+      |> State.set_fact("last_command", "stdout", result.out || "")
+      |> State.set_fact("last_command", "stderr", result.err || "")
+      |> State.set_fact("last_command", "duration_ms", duration_ms)
+      |> State.set_fact("last_command", "success", result.status == 0)
 
       if result.status == 0 do
         Logger.debug("Command succeeded (#{duration_ms}ms)")
@@ -89,8 +89,8 @@ defmodule AriaEngine.Actions do
         else
           # Continue on error - update state with failure info but don't fail
           new_state
-          |> State.set_object("command_result", "last_exit_code", result.status)
-          |> State.set_object("command_result", "last_success", false)
+          |> State.set_fact("command_result", "last_exit_code", result.status)
+          |> State.set_fact("command_result", "last_success", false)
         end
       end
 
@@ -100,9 +100,9 @@ defmodule AriaEngine.Actions do
 
         # Update state with error information
         error_state = state
-        |> State.set_object("last_command", "command", command)
-        |> State.set_object("last_command", "error", inspect(error))
-        |> State.set_object("last_command", "success", false)
+        |> State.set_fact("last_command", "command", command)
+        |> State.set_fact("last_command", "error", inspect(error))
+        |> State.set_fact("last_command", "success", false)
 
         if fail_on_error do
           false # Ensure this returns false
@@ -122,10 +122,10 @@ defmodule AriaEngine.Actions do
       new_state ->
         # Update state to record successful copy
         new_state
-        |> State.set_object("file_exists", destination, true)
-        |> State.set_object("file_copied_from", destination, source)
-        |> State.set_object("last_copy", "source", source)
-        |> State.set_object("last_copy", "destination", destination)
+        |> State.set_fact("file_exists", destination, true)
+        |> State.set_fact("file_copied_from", destination, source)
+        |> State.set_fact("last_copy", "source", source)
+        |> State.set_fact("last_copy", "destination", destination)
     end
   end
 
@@ -161,8 +161,8 @@ defmodule AriaEngine.Actions do
       new_state ->
         # Update state to record successful directory creation
         new_state
-        |> State.set_object("directory_exists", dir_path, true)
-        |> State.set_object("last_mkdir", "path", dir_path)
+        |> State.set_fact("directory_exists", dir_path, true)
+        |> State.set_fact("last_mkdir", "path", dir_path)
     end
   end
 
@@ -190,11 +190,11 @@ defmodule AriaEngine.Actions do
       false ->
         # Command failed, file doesn't exist - still return state with the result
         state
-        |> State.set_object("file_exists", file_path, false)
+        |> State.set_fact("file_exists", file_path, false)
       new_state ->
         # Update state to record file existence
         new_state
-        |> State.set_object("file_exists", file_path, true)
+        |> State.set_fact("file_exists", file_path, true)
     end
   end
 
@@ -208,10 +208,10 @@ defmodule AriaEngine.Actions do
       new_state ->
         # Update state to record successful download
         new_state
-        |> State.set_object("file_exists", destination, true)
-        |> State.set_object("file_downloaded_from", destination, url)
-        |> State.set_object("last_download", "url", url)
-        |> State.set_object("last_download", "destination", destination)
+        |> State.set_fact("file_exists", destination, true)
+        |> State.set_fact("file_downloaded_from", destination, url)
+        |> State.set_fact("last_download", "url", url)
+        |> State.set_fact("last_download", "destination", destination)
     end
   end
 
@@ -222,10 +222,10 @@ defmodule AriaEngine.Actions do
       new_state ->
         # Update state to record successful download
         new_state
-        |> State.set_object("file_exists", destination, true)
-        |> State.set_object("file_downloaded_from", destination, url)
-        |> State.set_object("last_download", "url", url)
-        |> State.set_object("last_download", "destination", destination)
+        |> State.set_fact("file_exists", destination, true)
+        |> State.set_fact("file_downloaded_from", destination, url)
+        |> State.set_fact("last_download", "url", url)
+        |> State.set_fact("last_download", "destination", destination)
     end
   end
 
@@ -303,7 +303,7 @@ defmodule AriaEngine.Actions do
   @spec set_env_var(state(), [String.t()]) :: state()
   def set_env_var(state, [var_name, var_value]) do
     state
-    |> State.set_object("env", var_name, var_value)
+    |> State.set_fact("env", var_name, var_value)
   end
 
   @doc """
@@ -317,7 +317,7 @@ defmodule AriaEngine.Actions do
         false
       value ->
         state
-        |> State.set_object("env", var_name, value)
+        |> State.set_fact("env", var_name, value)
     end
   end
 

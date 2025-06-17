@@ -25,7 +25,7 @@ defmodule AriaEngine.Plan do
 
   # Create initial state
   initial_state = AriaEngine.State.new()
-  |> AriaEngine.State.set_object("location", "robot", "room1")
+  |> AriaEngine.State.set_fact("location", "robot", "room1")
 
   # Create goals
   goals = [{"location", "robot", "room2"}]
@@ -44,7 +44,7 @@ defmodule AriaEngine.Plan do
   alias AriaEngine.{Domain, State, Multigoal}
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), any()}
+  @type goal :: {String.t(), String.t(), State.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -433,9 +433,9 @@ defmodule AriaEngine.Plan do
               {:error, "Unknown action: #{action_name}"}
             end
 
-          {predicate, subject, object} ->
+          {predicate, subject, fact_value} ->
             # Expand goal
-            expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, object, verbose)
+            expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose)
 
           %Multigoal{} = multigoal ->
             # Expand multigoal
@@ -575,14 +575,14 @@ defmodule AriaEngine.Plan do
   end
 
   # Expand goal node
-  @spec expand_goal_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), String.t(), any(), integer()) ::
+  @spec expand_goal_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), String.t(), State.fact_value(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | :failure
-  defp expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, object, verbose) do
+  defp expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose) do
     node = solution_tree.nodes[node_id]
 
     # Check if goal is already satisfied
-    case State.get_object(node.state, predicate, subject) do
-      ^object ->
+    case State.get_fact(node.state, predicate, subject) do
+      ^fact_value ->
         # Goal already satisfied - mark as expanded with no children
         updated_node = %{node | expanded: true, is_primitive: true}
         final_tree = put_in(solution_tree.nodes[node_id], updated_node)
@@ -608,7 +608,7 @@ defmodule AriaEngine.Plan do
           [{_method_name, method_fn} | _] = available_methods
           method_id = "goal_method_#{:erlang.phash2(method_fn)}"
 
-          case method_fn.(node.state, [subject, object]) do
+          case method_fn.(node.state, [subject, fact_value]) do
             false ->
               if verbose > 2 do
                 IO.puts("Method failed preconditions for goal: #{predicate}")
@@ -808,9 +808,9 @@ defmodule AriaEngine.Plan do
             # This is a task node - try next available method
             try_next_task_method(solution_tree, parent_id, task_name, args, verbose)
 
-          {predicate, subject, object} ->
+          {predicate, subject, fact_value} ->
             # This is a goal node - try next available method
-            try_next_goal_method(solution_tree, parent_id, predicate, subject, object, verbose)
+            try_next_goal_method(solution_tree, parent_id, predicate, subject, fact_value, verbose)
 
           _ ->
             # Other node types don't have alternative methods
@@ -819,10 +819,10 @@ defmodule AriaEngine.Plan do
     end
   end
 
-  # Try the next available method for a task node
-  @spec try_next_task_method(solution_tree(), node_id(), String.t(), list(), integer()) ::
+  # Try the next available method for a goal node
+  @spec try_next_goal_method(solution_tree(), node_id(), String.t(), String.t(), State.fact_value(), integer()) ::
     {:ok, solution_tree()} | :no_alternatives | {:error, String.t()}
-  defp try_next_task_method(solution_tree, node_id, _task_name, _args, verbose) do
+  defp try_next_goal_method(solution_tree, node_id, _predicate, _subject, _fact_value, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
         {:error, "Node not found: #{node_id}"}
@@ -861,10 +861,10 @@ defmodule AriaEngine.Plan do
     end
   end
 
-  # Try the next available method for a goal node
-  @spec try_next_goal_method(solution_tree(), node_id(), String.t(), String.t(), any(), integer()) ::
+  # Try the next available method for a task node
+  @spec try_next_task_method(solution_tree(), node_id(), String.t(), list(), integer()) ::
     {:ok, solution_tree()} | :no_alternatives | {:error, String.t()}
-  defp try_next_goal_method(solution_tree, node_id, _predicate, _subject, _object, verbose) do
+  defp try_next_task_method(solution_tree, node_id, _task_name, _args, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
         {:error, "Node not found: #{node_id}"}
@@ -896,7 +896,7 @@ defmodule AriaEngine.Plan do
         }
 
         if verbose > 2 do
-          IO.puts("Reset goal node #{node_id} for alternative method, blacklisted: #{inspect(blacklisted_methods)}")
+          IO.puts("Reset task node #{node_id} for alternative method, blacklisted: #{inspect(blacklisted_methods)}")
         end
 
         {:ok, updated_tree}

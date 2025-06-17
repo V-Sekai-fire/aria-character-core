@@ -12,7 +12,7 @@ defmodule AriaEngine do
 
   ## Core Components
 
-  - `AriaEngine.State`: Manages world state using predicate-subject-object triples
+  - `AriaEngine.State`: Manages world state using predicate-subject-fact triples
   - `AriaEngine.Domain`: Contains actions, tasks, and planning methods
   - `AriaEngine.Plan`: IPyHOP-style HTN planning with solution trees
   - `AriaEngine.Multigoal`: Represents collections of goals to achieve
@@ -66,7 +66,7 @@ defmodule AriaEngine do
   @type plan_step :: Plan.plan_step()
 
   # Goal and task types
-  @type goal :: {String.t(), String.t(), any()}
+  @type goal :: {String.t(), String.t(), State.fact_value()}
   @type task :: {String.t(), list()}
   @type todo_item :: Plan.todo_item()
 
@@ -180,7 +180,7 @@ defmodule AriaEngine do
   @doc """
   Creates an AriaEngine definition from an existing Domain.
   """
-  @spec from_domain(Domain.t(), [todo_item()], State.t()) :: t()
+  @spec from_domain(Domain.t(), [todo_item()], State.t() | nil) :: t()
   def from_domain(%Domain{} = domain, goals, initial_state \\ nil) do
     initial_state = initial_state || State.new()
 
@@ -430,17 +430,13 @@ defmodule AriaEngine do
 
   @doc """
   Simple planning interface - finds a plan to achieve the given todos.
-
-  This is a convenience function that creates a temporary AriaEngine definition
-  and extracts just the plan steps for backward compatibility.
   """
   @spec plan(domain(), state(), [todo_item()], keyword()) ::
-    {:ok, [plan_step()]} | {:error, String.t()}
+    {:ok, solution_tree()} | {:error, String.t()}
   def plan(%Domain{} = domain, %State{} = state, todos, opts \\ []) do
     case Plan.plan(domain, state, todos, opts) do
       {:ok, solution_tree} ->
-        actions = Plan.get_primitive_actions_dfs(solution_tree)
-        {:ok, actions}
+        {:ok, solution_tree}
 
       {:error, reason} ->
         {:error, reason}
@@ -688,27 +684,27 @@ defmodule AriaEngine do
   end
 
   @doc """
-  Sets a fact (predicate-subject-object triple) in the state.
+  Sets a fact (predicate-subject-fact triple) in the state.
   """
-  @spec set_fact(state(), String.t(), String.t(), any()) :: state()
-  def set_fact(%State{} = state, predicate, subject, object) do
-    State.set_object(state, predicate, subject, object)
+  @spec set_fact(state(), String.t(), String.t(), State.fact_value()) :: state()
+  def set_fact(%State{} = state, predicate, subject, fact_value) do
+    State.set_fact(state, predicate, subject, fact_value)
   end
 
   @doc """
   Gets a fact from the state.
   """
-  @spec get_fact(state(), String.t(), String.t()) :: any() | nil
+  @spec get_fact(state(), String.t(), String.t()) :: State.fact_value() | nil
   def get_fact(%State{} = state, predicate, subject) do
-    State.get_object(state, predicate, subject)
+    State.get_fact(state, predicate, subject)
   end
 
   @doc """
-  Creates a goal from predicate, subject, and object.
+  Creates a goal from predicate, subject, and fact_value.
   """
-  @spec create_goal(String.t(), String.t(), any()) :: goal()
-  def create_goal(predicate, subject, object) do
-    {predicate, subject, object}
+  @spec create_goal(String.t(), String.t(), State.fact_value()) :: goal()
+  def create_goal(predicate, subject, fact_value) do
+    {predicate, subject, fact_value}
   end
 
   @doc """
@@ -724,8 +720,8 @@ defmodule AriaEngine do
   """
   @spec goals_satisfied?(state(), [goal()]) :: boolean()
   def goals_satisfied?(%State{} = state, goals) do
-    Enum.all?(goals, fn {predicate, subject, object} ->
-      State.get_object(state, predicate, subject) == object
+    Enum.all?(goals, fn {predicate, subject, fact_value} ->
+      State.get_fact(state, predicate, subject) == fact_value
     end)
   end
 
@@ -756,7 +752,7 @@ defmodule AriaEngine do
   @doc """
   Converts a state to a list of triples for inspection.
   """
-  @spec state_to_triples(state()) :: [{String.t(), String.t(), any()}]
+  @spec state_to_triples(state()) :: [{String.t(), String.t(), State.fact_value()}]
   def state_to_triples(%State{} = state) do
     State.to_triples(state)
   end
@@ -764,7 +760,7 @@ defmodule AriaEngine do
   @doc """
   Creates a state from a list of triples.
   """
-  @spec state_from_triples([{String.t(), String.t(), any()}]) :: state()
+  @spec state_from_triples([{String.t(), String.t(), State.fact_value()}]) :: state()
   def state_from_triples(triples) do
     State.from_triples(triples)
   end
@@ -795,7 +791,7 @@ defmodule AriaEngine do
   defp validate_goals(goals, errors) do
     Enum.reduce(goals, errors, fn goal, acc ->
       case goal do
-        {pred, subj, obj} when is_binary(pred) and is_binary(subj) and is_binary(obj) ->
+        {pred, subj, _fact_value} when is_binary(pred) and is_binary(subj) ->
           acc  # Valid goal
         {task_name, args} when is_binary(task_name) and is_list(args) ->
           acc  # Valid task
@@ -844,7 +840,7 @@ defmodule AriaEngine do
   @doc """
   Creates an AriaEngine definition by composing multiple domains from the registry.
   """
-  @spec from_domain_types(String.t(), [String.t()], [todo_item()], State.t()) ::
+  @spec from_domain_types(String.t(), [String.t()], [todo_item()], State.t() | nil) ::
     {:ok, t()} | {:error, String.t()}
   def from_domain_types(id, domain_types, goals, initial_state \\ nil) do
     # For now, we'll get the first domain type and ignore composition

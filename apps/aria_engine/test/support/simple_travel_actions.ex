@@ -29,9 +29,9 @@ defmodule AriaEngine.SimpleTravelActions do
       not is_location(x) -> false
       not is_location(y) -> false
       x == y -> false
-      State.get_object(state, "loc", p) != x -> false
+      State.get_fact(state, "loc", p) != x -> false
       true ->
-        State.set_object(state, "loc", p, y)
+        State.set_fact(state, "loc", p, y)
     end
   end
 
@@ -52,8 +52,8 @@ defmodule AriaEngine.SimpleTravelActions do
       not is_location(x) -> false
       true ->
         state
-        |> State.set_object("loc", "taxi1", x)
-        |> State.set_object("loc", p, "taxi1")
+        |> State.set_fact("loc", "taxi1", x)
+        |> State.set_fact("loc", p, "taxi1")
     end
   end
 
@@ -71,7 +71,7 @@ defmodule AriaEngine.SimpleTravelActions do
   - person p owes the taxi fare
   """
   def ride_taxi(state, [p, y]) do
-    person_loc = State.get_object(state, "loc", p)
+    person_loc = State.get_fact(state, "loc", p)
 
     cond do
       not is_person(p) -> false
@@ -79,7 +79,7 @@ defmodule AriaEngine.SimpleTravelActions do
       not is_location(y) -> false
       true ->
         taxi = person_loc
-        x = State.get_object(state, "loc", taxi)
+        x = State.get_fact(state, "loc", taxi)
 
         cond do
           not is_location(x) -> false
@@ -87,8 +87,8 @@ defmodule AriaEngine.SimpleTravelActions do
           true ->
             fare = taxi_rate(distance(x, y))
             state
-            |> State.set_object("loc", taxi, y)
-            |> State.set_object("owe", p, fare)
+            |> State.set_fact("loc", taxi, y)
+            |> State.set_fact("owe", p, fare)
         end
     end
   end
@@ -106,17 +106,17 @@ defmodule AriaEngine.SimpleTravelActions do
   - person exits taxi to location y
   """
   def pay_driver(state, [p, y]) do
-    cash = State.get_object(state, "cash", p)
-    owe = State.get_object(state, "owe", p)
+    cash = State.get_fact(state, "cash", p)
+    owe = State.get_fact(state, "owe", p)
 
     cond do
       not is_person(p) -> false
       cash < owe -> false
       true ->
         state
-        |> State.set_object("cash", p, cash - owe)
-        |> State.set_object("owe", p, 0)
-        |> State.set_object("loc", p, y)
+        |> State.set_fact("cash", p, cash - owe)
+        |> State.set_fact("owe", p, 0)
+        |> State.set_fact("loc", p, y)
     end
   end
 
@@ -163,11 +163,11 @@ defmodule AriaEngine.SimpleTravelActions do
       not is_person(p) -> false
       not is_taxi(taxi) -> false
       not is_location(y) -> false
-      State.get_object(state, "loc", p) != State.get_object(state, "loc", taxi) -> false
+      State.get_fact(state, "loc", p) != State.get_fact(state, "loc", taxi) -> false
       true ->
         state
-        |> State.set_object("loc", p, y)
-        |> State.set_object("loc", taxi, y)
+        |> State.set_fact("loc", p, y)
+        |> State.set_fact("loc", taxi, y)
     end
   end
 
@@ -180,10 +180,10 @@ defmodule AriaEngine.SimpleTravelActions do
       not is_taxi(taxi) -> false
       true ->
         # For simple version, just deduct a fixed amount
-        cash = State.get_object(state, "cash", p)
+        cash = State.get_fact(state, "cash", p)
         fare = 5  # Fixed fare for simplicity
         if cash >= fare do
-          State.set_object(state, "cash", p, cash - fare)
+          State.set_fact(state, "cash", p, cash - fare)
         else
           false
         end

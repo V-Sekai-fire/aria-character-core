@@ -284,15 +284,15 @@ defmodule AriaEngine.TestDomains do
   def build_simple_rpg_domain do
     # Define simple actions
     move_action = fn state, [to] ->
-      State.set_object(state, "location", "player", to)
+      State.set_fact(state, "location", "player", to)
     end
 
     pickup_action = fn state, [item] ->
-      player_location = State.get_object(state, "location", "player")
-      item_location = State.get_object(state, "location", item)
+      player_location = State.get_fact(state, "location", "player")
+      item_location = State.get_fact(state, "location", item)
 
       if player_location == item_location do
-        State.set_object(state, "has", "player", item)
+        State.set_fact(state, "has", "player", item)
       else
         false  # Can't pickup item not in same location
       end
@@ -313,15 +313,15 @@ defmodule AriaEngine.TestDomains do
   def build_rpg_domain do
     # Actions
     move_action = fn state, [to] ->
-      State.set_object(state, "location", "player", to)
+      State.set_fact(state, "location", "player", to)
     end
 
     pickup_action = fn state, [item] ->
-      player_location = State.get_object(state, "location", "player")
-      item_location = State.get_object(state, "location", item)
+      player_location = State.get_fact(state, "location", "player")
+      item_location = State.get_fact(state, "location", item)
 
       if player_location == item_location do
-        State.set_object(state, "has", "player", item)
+        State.set_fact(state, "has", "player", item)
       else
         false
       end
@@ -329,8 +329,8 @@ defmodule AriaEngine.TestDomains do
 
     # Task method: get item from another room
     get_item_method = fn state, [item] ->
-      player_location = State.get_object(state, "location", "player")
-      item_location = State.get_object(state, "location", item)
+      player_location = State.get_fact(state, "location", "player")
+      item_location = State.get_fact(state, "location", item)
 
       if player_location == item_location do
         # Already in same room, just pickup
@@ -355,11 +355,11 @@ defmodule AriaEngine.TestDomains do
   @spec build_test_domain() :: AriaEngine.domain()
   def build_test_domain do
     move_action = fn state, [_from, to] ->
-      State.set_object(state, "location", "player", to)
+      State.set_fact(state, "location", "player", to)
     end
 
     pickup_action = fn state, [item] ->
-      State.set_object(state, "has", "player", item)
+      State.set_fact(state, "has", "player", item)
     end
 
     Domain.new("test")
@@ -375,14 +375,14 @@ defmodule AriaEngine.TestDomains do
   @spec create_simple_travel_state() :: AriaEngine.state()
   def create_simple_travel_state do
     State.new()
-    |> State.set_object("loc", "alice", "home_a")
-    |> State.set_object("loc", "bob", "home_b")
-    |> State.set_object("loc", "taxi1", "park")
-    |> State.set_object("loc", "taxi2", "station")
-    |> State.set_object("cash", "alice", 20)
-    |> State.set_object("cash", "bob", 15)
-    |> State.set_object("owe", "alice", 0)
-    |> State.set_object("owe", "bob", 0)
+    |> State.set_fact("loc", "alice", "home_a")
+    |> State.set_fact("loc", "bob", "home_b")
+    |> State.set_fact("loc", "taxi1", "park")
+    |> State.set_fact("loc", "taxi2", "station")
+    |> State.set_fact("cash", "alice", 20)
+    |> State.set_fact("cash", "bob", 15)
+    |> State.set_fact("owe", "alice", 0)
+    |> State.set_fact("owe", "bob", 0)
   end
 
   @doc """
@@ -391,7 +391,7 @@ defmodule AriaEngine.TestDomains do
   @spec create_backtracking_state() :: AriaEngine.state()
   def create_backtracking_state do
     State.new()
-    |> State.set_object("flag", "system", -1)
+    |> State.set_fact("flag", "system", -1)
   end
 
   @doc """
@@ -400,14 +400,14 @@ defmodule AriaEngine.TestDomains do
   @spec create_simple_hgn_state() :: AriaEngine.state()
   def create_simple_hgn_state do
     State.new()
-    |> State.set_object("loc", "alice", "home_a")
-    |> State.set_object("loc", "bob", "home_b")
-    |> State.set_object("loc", "taxi1", "park")
-    |> State.set_object("loc", "taxi2", "station")
-    |> State.set_object("cash", "alice", 20)
-    |> State.set_object("cash", "bob", 15)
-    |> State.set_object("owe", "alice", 0)
-    |> State.set_object("owe", "bob", 0)
+    |> State.set_fact("loc", "alice", "home_a")
+    |> State.set_fact("loc", "bob", "home_b")
+    |> State.set_fact("loc", "taxi1", "park")
+    |> State.set_fact("loc", "taxi2", "station")
+    |> State.set_fact("cash", "alice", 20)
+    |> State.set_fact("cash", "bob", 15)
+    |> State.set_fact("owe", "alice", 0)
+    |> State.set_fact("owe", "bob", 0)
   end
 
   @doc """
@@ -416,16 +416,16 @@ defmodule AriaEngine.TestDomains do
   @spec create_good_taxi_state() :: AriaEngine.state()
   def create_good_taxi_state do
     State.new()
-    |> State.set_object("loc", "alice", "home_a")
-    |> State.set_object("loc", "bob", "home_b")
-    |> State.set_object("loc", "taxi1", "park")
-    |> State.set_object("loc", "taxi2", "station")
-    |> State.set_object("cash", "alice", 20)
-    |> State.set_object("cash", "bob", 15)
-    |> State.set_object("owe", "alice", 0)
-    |> State.set_object("owe", "bob", 0)
-    |> State.set_object("taxi_condition", "taxi1", "good")
-    |> State.set_object("taxi_condition", "taxi2", "good")
+    |> State.set_fact("loc", "alice", "home_a")
+    |> State.set_fact("loc", "bob", "home_b")
+    |> State.set_fact("loc", "taxi1", "park")
+    |> State.set_fact("loc", "taxi2", "station")
+    |> State.set_fact("cash", "alice", 20)
+    |> State.set_fact("cash", "bob", 15)
+    |> State.set_fact("owe", "alice", 0)
+    |> State.set_fact("owe", "bob", 0)
+    |> State.set_fact("taxi_condition", "taxi1", "good")
+    |> State.set_fact("taxi_condition", "taxi2", "good")
   end
 
   @doc """
@@ -434,26 +434,26 @@ defmodule AriaEngine.TestDomains do
   @spec create_bad_taxi_state() :: AriaEngine.state()
   def create_bad_taxi_state do
     State.new()
-    |> State.set_object("loc", "alice", "home_a")
-    |> State.set_object("loc", "bob", "home_b")
-    |> State.set_object("loc", "taxi1", "park")
-    |> State.set_object("loc", "taxi2", "station")
-    |> State.set_object("cash", "alice", 20)
-    |> State.set_object("cash", "bob", 15)
-    |> State.set_object("owe", "alice", 0)
-    |> State.set_object("owe", "bob", 0)
-    |> State.set_object("taxi_condition", "taxi1", "bad")
-    |> State.set_object("taxi_condition", "taxi2", "bad")
+    |> State.set_fact("loc", "alice", "home_a")
+    |> State.set_fact("loc", "bob", "home_b")
+    |> State.set_fact("loc", "taxi1", "park")
+    |> State.set_fact("loc", "taxi2", "station")
+    |> State.set_fact("cash", "alice", 20)
+    |> State.set_fact("cash", "bob", 15)
+    |> State.set_fact("owe", "alice", 0)
+    |> State.set_fact("owe", "bob", 0)
+    |> State.set_fact("taxi_condition", "taxi1", "bad")
+    |> State.set_fact("taxi_condition", "taxi2", "bad")
   end
 
   # Private helper functions for backtracking domain
 
   defp putv_action(state, [flag_val]) do
-    State.set_object(state, "flag", "system", flag_val)
+    State.set_fact(state, "flag", "system", flag_val)
   end
 
   defp getv_action(state, [flag_val]) do
-    current_flag = State.get_object(state, "flag", "system")
+    current_flag = State.get_fact(state, "flag", "system")
     if current_flag == flag_val do
       state
     else
@@ -484,43 +484,43 @@ defmodule AriaEngine.TestDomains do
   # Private helper functions for simple HGN domain
 
   defp walk_action(state, [person, from, to]) do
-    current_loc = State.get_object(state, "loc", person)
+    current_loc = State.get_fact(state, "loc", person)
     if current_loc == from do
-      State.set_object(state, "loc", person, to)
+      State.set_fact(state, "loc", person, to)
     else
       false
     end
   end
 
   defp call_taxi_action(state, [person, taxi]) do
-    person_loc = State.get_object(state, "loc", person)
-    State.set_object(state, "loc", taxi, person_loc)
+    person_loc = State.get_fact(state, "loc", person)
+    State.set_fact(state, "loc", taxi, person_loc)
   end
 
   defp ride_taxi_action(state, [person, taxi, to]) do
-    person_loc = State.get_object(state, "loc", person)
-    taxi_loc = State.get_object(state, "loc", taxi)
+    person_loc = State.get_fact(state, "loc", person)
+    taxi_loc = State.get_fact(state, "loc", taxi)
     if person_loc == taxi_loc do
       state
-      |> State.set_object("loc", person, to)
-      |> State.set_object("loc", taxi, to)
+      |> State.set_fact("loc", person, to)
+      |> State.set_fact("loc", taxi, to)
     else
       false
     end
   end
 
   defp pay_driver_action(state, [person, taxi]) do
-    fare = taxi_fare(State.get_object(state, "loc", person), State.get_object(state, "loc", taxi))
-    cash = State.get_object(state, "cash", person)
+    fare = taxi_fare(State.get_fact(state, "loc", person), State.get_fact(state, "loc", taxi))
+    cash = State.get_fact(state, "cash", person)
     if cash >= fare do
-      State.set_object(state, "cash", person, cash - fare)
+      State.set_fact(state, "cash", person, cash - fare)
     else
       false
     end
   end
 
   defp travel_by_foot(state, [["loc", person, destination]]) do
-    current_loc = State.get_object(state, "loc", person)
+    current_loc = State.get_fact(state, "loc", person)
     distance = distance_between(current_loc, destination)
     if distance <= 2 do
       [{"walk", person, current_loc, destination}]
@@ -530,11 +530,11 @@ defmodule AriaEngine.TestDomains do
   end
 
   defp travel_by_taxi(state, [["loc", person, destination]]) do
-    current_loc = State.get_object(state, "loc", person)
+    current_loc = State.get_fact(state, "loc", person)
     taxis = ["taxi1", "taxi2"]
 
     case Enum.find(taxis, fn _taxi ->
-      cash = State.get_object(state, "cash", person)
+      cash = State.get_fact(state, "cash", person)
       fare = taxi_fare(current_loc, destination)
       cash >= fare
     end) do
@@ -551,79 +551,79 @@ defmodule AriaEngine.TestDomains do
   # Private helper functions for HTN acting error domain
 
   defp walk_action_htn(state, [person, from, to]) do
-    current_loc = State.get_object(state, "loc", person)
+    current_loc = State.get_fact(state, "loc", person)
     if current_loc == from do
-      State.set_object(state, "loc", person, to)
+      State.set_fact(state, "loc", person, to)
     else
       false
     end
   end
 
   defp call_taxi_action_htn(state, [person, taxi]) do
-    person_loc = State.get_object(state, "loc", person)
-    State.set_object(state, "loc", taxi, person_loc)
+    person_loc = State.get_fact(state, "loc", person)
+    State.set_fact(state, "loc", taxi, person_loc)
   end
 
   defp ride_taxi_action_htn(state, [person, taxi, to]) do
-    person_loc = State.get_object(state, "loc", person)
-    taxi_loc = State.get_object(state, "loc", taxi)
+    person_loc = State.get_fact(state, "loc", person)
+    taxi_loc = State.get_fact(state, "loc", taxi)
     if person_loc == taxi_loc do
       state
-      |> State.set_object("loc", person, to)
-      |> State.set_object("loc", taxi, to)
+      |> State.set_fact("loc", person, to)
+      |> State.set_fact("loc", taxi, to)
     else
       false
     end
   end
 
   defp pay_driver_action_htn(state, [person, taxi]) do
-    fare = taxi_fare(State.get_object(state, "loc", person), State.get_object(state, "loc", taxi))
-    cash = State.get_object(state, "cash", person)
+    fare = taxi_fare(State.get_fact(state, "loc", person), State.get_fact(state, "loc", taxi))
+    cash = State.get_fact(state, "cash", person)
     if cash >= fare do
-      State.set_object(state, "cash", person, cash - fare)
+      State.set_fact(state, "cash", person, cash - fare)
     else
       false
     end
   end
 
   defp walk_command_htn(state, [person, from, to]) do
-    current_loc = State.get_object(state, "loc", person)
+    current_loc = State.get_fact(state, "loc", person)
     if current_loc == from do
-      State.set_object(state, "loc", person, to)
+      State.set_fact(state, "loc", person, to)
     else
       false
     end
   end
 
   defp call_taxi_command_htn(state, [person, taxi]) do
-    taxi_condition = State.get_object(state, "taxi_condition", taxi)
+    taxi_condition = State.get_fact(state, "taxi_condition", taxi)
     if taxi_condition == "good" do
-      person_loc = State.get_object(state, "loc", person)
-      State.set_object(state, "loc", taxi, person_loc)
+      person_loc = State.get_fact(state, "loc", person)
+      State.set_fact(state, "loc", taxi, person_loc)
     else
       false
     end
   end
 
   defp ride_taxi_command_htn(state, [person, taxi, to]) do
-    person_loc = State.get_object(state, "loc", person)
-    taxi_loc = State.get_object(state, "loc", taxi)
-    taxi_condition = State.get_object(state, "taxi_condition", taxi)
+    person_loc = State.get_fact(state, "loc", person)
+    taxi_loc = State.get_fact(state, "loc", taxi)
+    taxi_condition = State.get_fact(state, "taxi_condition", taxi)
 
     if person_loc == taxi_loc and taxi_condition == "good" do
       state
-      |> State.set_object("loc", person, to)
-      |> State.set_object("loc", taxi, to)
+      |> State.set_fact("loc", person, to)
+      |> State.set_fact("loc", taxi, to)
     else
       false
     end
   end
 
   defp pay_driver_command_htn(state, [person, taxi]) do
-    fare = taxi_fare(State.get_object(state, "loc", person), State.get_object(state, "loc", taxi))
-    cash = State.get_object(state, "cash", person)
+    fare = taxi_fare(State.get_fact(state, "loc", person), State.get_fact(state, "loc", taxi))
+    cash = State.get_fact(state, "cash", person)
     if cash >= fare do
-      State.set_object(state, "cash", person, cash - fare)
+      State.set_fact(state, "cash", person, cash - fare)
     else
       false
     end
@@ -632,7 +632,7 @@ defmodule AriaEngine.TestDomains do
   defp do_nothing_htn(_state, ["travel", _person, _destination]), do: []
 
   defp travel_by_foot_htn(state, ["travel", person, destination]) do
-    current_loc = State.get_object(state, "loc", person)
+    current_loc = State.get_fact(state, "loc", person)
     distance = distance_between(current_loc, destination)
     if distance <= 2 do
       [{"walk", person, current_loc, destination}]
@@ -642,11 +642,11 @@ defmodule AriaEngine.TestDomains do
   end
 
   defp travel_by_taxi_htn(state, ["travel", person, destination]) do
-    current_loc = State.get_object(state, "loc", person)
+    current_loc = State.get_fact(state, "loc", person)
     taxis = ["taxi1", "taxi2"]
 
     case Enum.find(taxis, fn _taxi ->
-      cash = State.get_object(state, "cash", person)
+      cash = State.get_fact(state, "cash", person)
       fare = taxi_fare(current_loc, destination)
       cash >= fare
     end) do

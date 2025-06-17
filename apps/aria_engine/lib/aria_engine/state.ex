@@ -3,28 +3,28 @@
 
 defmodule AriaEngine.State do
   @moduledoc """
-  Represents the state of a planning problem using predicate-subject-object triples.
+  Represents the state of a planning problem using predicate-subject-fact triples.
   
   This module provides functionality to manage world state using RDF-like triples,
-  where each fact is represented as {predicate, subject} -> object.
+  where each fact is represented as {predicate, subject} -> fact_value.
   
   Example:
   ```elixir
   state = AriaEngine.State.new()
-  |> AriaEngine.State.set_object("location", "player", "room1")
-  |> AriaEngine.State.set_object("has", "player", "sword")
+  |> AriaEngine.State.set_fact("location", "player", "room1")
+  |> AriaEngine.State.set_fact("has", "player", "sword")
   
-  AriaEngine.State.get_object(state, "location", "player")
+  AriaEngine.State.get_fact(state, "location", "player")
   # => "room1"
   ```
   """
 
   @type predicate :: String.t()
   @type subject :: String.t()
-  @type object :: any()
+  @type fact_value :: any()
   @type triple_key :: {predicate(), subject()}
   @type t :: %__MODULE__{
-    data: %{triple_key() => object()}
+    data: %{triple_key() => fact_value()}
   }
 
   defstruct data: %{}
@@ -46,27 +46,27 @@ defmodule AriaEngine.State do
   end
 
   @doc """
-  Gets the object for a given predicate and subject.
+  Gets the fact_value for a given predicate and subject.
   Returns nil if the triple doesn't exist.
   """
-  @spec get_object(t(), predicate(), subject()) :: object() | nil
-  def get_object(%__MODULE__{data: data}, predicate, subject) do
+  @spec get_fact(t(), predicate(), subject()) :: fact_value() | nil
+  def get_fact(%__MODULE__{data: data}, predicate, subject) do
     Map.get(data, {predicate, subject})
   end
 
   @doc """
-  Sets the object for a given predicate and subject.
+  Sets the fact_value for a given predicate and subject.
   """
-  @spec set_object(t(), predicate(), subject(), object()) :: t()
-  def set_object(%__MODULE__{data: data} = state, predicate, subject, object) do
-    %{state | data: Map.put(data, {predicate, subject}, object)}
+  @spec set_fact(t(), predicate(), subject(), fact_value()) :: t()
+  def set_fact(%__MODULE__{data: data} = state, predicate, subject, fact_value) do
+    %{state | data: Map.put(data, {predicate, subject}, fact_value)}
   end
 
   @doc """
   Removes a triple from the state.
   """
-  @spec remove_object(t(), predicate(), subject()) :: t()
-  def remove_object(%__MODULE__{data: data} = state, predicate, subject) do
+  @spec remove_fact(t(), predicate(), subject()) :: t()
+  def remove_fact(%__MODULE__{data: data} = state, predicate, subject) do
     %{state | data: Map.delete(data, {predicate, subject})}
   end
 
@@ -111,24 +111,24 @@ defmodule AriaEngine.State do
   end
 
   @doc """
-  Gets all triples as a list of {predicate, subject, object} tuples.
+  Gets all triples as a list of {predicate, subject, fact_value} tuples.
   """
-  @spec to_triples(t()) :: [{predicate(), subject(), object()}]
+  @spec to_triples(t()) :: [{predicate(), subject(), fact_value()}]
   def to_triples(%__MODULE__{data: data}) do
-    Enum.map(data, fn {{predicate, subject}, object} ->
-      {predicate, subject, object}
+    Enum.map(data, fn {{predicate, subject}, fact_value} ->
+      {predicate, subject, fact_value}
     end)
   end
 
   @doc """
   Creates a state from a list of triples.
   """
-  @spec from_triples([{predicate(), subject(), object()}]) :: t()
+  @spec from_triples([{predicate(), subject(), fact_value()}]) :: t()
   def from_triples(triples) do
     data = 
       triples
-      |> Enum.map(fn {predicate, subject, object} -> 
-        {{predicate, subject}, object} 
+      |> Enum.map(fn {predicate, subject, fact_value} -> 
+        {{predicate, subject}, fact_value} 
       end)
       |> Map.new()
     
@@ -152,15 +152,15 @@ defmodule AriaEngine.State do
   end
 
   @doc """
-  Checks if the state matches a specific predicate, subject, and object pattern.
+  Checks if the state matches a specific predicate, subject, and fact_value pattern.
   
   This function is used by the planner to check if a goal condition is satisfied
   in the current state. It returns true if the state contains the specified triple.
   """
-  @spec matches?(t(), predicate(), subject(), object()) :: boolean()
-  def matches?(%__MODULE__{data: data}, predicate, subject, object) do
+  @spec matches?(t(), predicate(), subject(), fact_value()) :: boolean()
+  def matches?(%__MODULE__{data: data}, predicate, subject, fact_value) do
     case Map.get(data, {predicate, subject}) do
-      ^object -> true
+      ^fact_value -> true
       _ -> false
     end
   end

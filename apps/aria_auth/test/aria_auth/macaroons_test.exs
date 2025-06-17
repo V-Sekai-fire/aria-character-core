@@ -3,7 +3,6 @@
 
 defmodule AriaAuth.MacaroonsTest do
   use ExUnit.Case, async: true
-  @tag :skip
   
   alias AriaAuth.Macaroons
   alias AriaAuth.Accounts.User

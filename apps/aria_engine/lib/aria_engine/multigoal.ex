@@ -6,7 +6,7 @@ defmodule AriaEngine.Multigoal do
   Represents a collection of goals in the GTPyhop planner.
 
   A multigoal is essentially a desired state represented as a collection of
-  predicate-subject-object triples that should be true in the world state.
+  predicate-subject-fact triples that should be true in the world state.
 
   Example:
   ```elixir
@@ -21,7 +21,7 @@ defmodule AriaEngine.Multigoal do
 
   alias AriaEngine.State
 
-  @type goal :: {State.predicate(), State.subject(), State.object()}
+  @type goal :: {State.predicate(), State.subject(), State.fact_value()}
   @type t :: %__MODULE__{
     goals: [goal()]
   }
@@ -56,9 +56,9 @@ defmodule AriaEngine.Multigoal do
   @doc """
   Adds a single goal to the multigoal.
   """
-  @spec add_goal(t(), State.predicate(), State.subject(), State.object()) :: t()
-  def add_goal(%__MODULE__{goals: goals} = multigoal, predicate, subject, object) do
-    new_goal = {predicate, subject, object}
+  @spec add_goal(t(), State.predicate(), State.subject(), State.fact_value()) :: t()
+  def add_goal(%__MODULE__{goals: goals} = multigoal, predicate, subject, fact_value) do
+    new_goal = {predicate, subject, fact_value}
     %{multigoal | goals: [new_goal | goals]}
   end
 
@@ -73,9 +73,9 @@ defmodule AriaEngine.Multigoal do
   @doc """
   Removes a goal from the multigoal.
   """
-  @spec remove_goal(t(), State.predicate(), State.subject(), State.object()) :: t()
-  def remove_goal(%__MODULE__{goals: goals} = multigoal, predicate, subject, object) do
-    target_goal = {predicate, subject, object}
+  @spec remove_goal(t(), State.predicate(), State.subject(), State.fact_value()) :: t()
+  def remove_goal(%__MODULE__{goals: goals} = multigoal, predicate, subject, fact_value) do
+    target_goal = {predicate, subject, fact_value}
     filtered_goals = Enum.reject(goals, fn goal -> goal == target_goal end)
     %{multigoal | goals: filtered_goals}
   end
@@ -85,8 +85,8 @@ defmodule AriaEngine.Multigoal do
   """
   @spec satisfied?(t(), State.t()) :: boolean()
   def satisfied?(%__MODULE__{goals: goals}, %State{} = state) do
-    Enum.all?(goals, fn {predicate, subject, object} ->
-      State.get_object(state, predicate, subject) == object
+    Enum.all?(goals, fn {predicate, subject, fact_value} ->
+      State.get_fact(state, predicate, subject) == fact_value
     end)
   end
 
@@ -95,8 +95,8 @@ defmodule AriaEngine.Multigoal do
   """
   @spec unsatisfied_goals(t(), State.t()) :: [goal()]
   def unsatisfied_goals(%__MODULE__{goals: goals}, %State{} = state) do
-    Enum.reject(goals, fn {predicate, subject, object} ->
-      State.get_object(state, predicate, subject) == object
+    Enum.reject(goals, fn {predicate, subject, fact_value} ->
+      State.get_fact(state, predicate, subject) == fact_value
     end)
   end
 
@@ -105,8 +105,8 @@ defmodule AriaEngine.Multigoal do
   """
   @spec satisfied_goals(t(), State.t()) :: [goal()]
   def satisfied_goals(%__MODULE__{goals: goals}, %State{} = state) do
-    Enum.filter(goals, fn {predicate, subject, object} ->
-      State.get_object(state, predicate, subject) == object
+    Enum.filter(goals, fn {predicate, subject, fact_value} ->
+      State.get_fact(state, predicate, subject) == fact_value
     end)
   end
 

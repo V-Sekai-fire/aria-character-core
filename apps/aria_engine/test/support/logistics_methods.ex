@@ -10,13 +10,13 @@ defmodule AriaEngine.LogisticsMethods do
   alias AriaEngine.State
 
   def truck_at(%State{} = state, [truck, location]) do
-    trucks = State.get_object(state, "trucks", "list") || []
-    locations = State.get_object(state, "locations", "list") || []
+    trucks = State.get_fact(state, "trucks", "list") || []
+    locations = State.get_fact(state, "locations", "list") || []
     
     if truck in trucks and location in locations do
-      truck_current = State.get_object(state, "truck_at", truck)
-      truck_city = State.get_object(state, "in_city", truck_current)
-      location_city = State.get_object(state, "in_city", location)
+      truck_current = State.get_fact(state, "truck_at", truck)
+      truck_city = State.get_fact(state, "in_city", truck_current)
+      location_city = State.get_fact(state, "in_city", location)
       
       if truck_city == location_city do
         [{:drive_truck, [truck, location]}]
@@ -29,8 +29,8 @@ defmodule AriaEngine.LogisticsMethods do
   end
 
   def plane_at(%State{} = state, [plane, airport]) do
-    airplanes = State.get_object(state, "airplanes", "list") || []
-    airports = State.get_object(state, "airports", "list") || []
+    airplanes = State.get_fact(state, "airplanes", "list") || []
+    airports = State.get_fact(state, "airports", "list") || []
     
     if plane in airplanes and airport in airports do
       [{:fly_plane, [plane, airport]}]
@@ -40,7 +40,7 @@ defmodule AriaEngine.LogisticsMethods do
   end
 
   def at_unigoal(%State{} = state, [object, location]) do
-    packages = State.get_object(state, "packages", "list") || []
+    packages = State.get_fact(state, "packages", "list") || []
     
     if object in packages do
       # Try various methods to get object to location
@@ -57,11 +57,11 @@ defmodule AriaEngine.LogisticsMethods do
   end
 
   defp try_load_truck(%State{} = state, object, truck) do
-    trucks = State.get_object(state, "trucks", "list") || []
+    trucks = State.get_fact(state, "trucks", "list") || []
     
     if truck in trucks do
-      object_at = State.get_object(state, "at", object)
-      truck_at = State.get_object(state, "truck_at", truck)
+      object_at = State.get_fact(state, "at", object)
+      truck_at = State.get_fact(state, "truck_at", truck)
       
       if object_at == truck_at do
         [{:load_truck, [object, truck]}]
@@ -74,11 +74,11 @@ defmodule AriaEngine.LogisticsMethods do
   end
 
   defp try_unload_truck(%State{} = state, object, location) do
-    trucks = State.get_object(state, "trucks", "list") || []
-    locations = State.get_object(state, "locations", "list") || []
+    trucks = State.get_fact(state, "trucks", "list") || []
+    locations = State.get_fact(state, "locations", "list") || []
     
     if location in locations do
-      object_at = State.get_object(state, "at", object)
+      object_at = State.get_fact(state, "at", object)
       
       if object_at in trucks do
         [{:unload_truck, [object, location]}]
@@ -91,11 +91,11 @@ defmodule AriaEngine.LogisticsMethods do
   end
 
   defp try_load_plane(%State{} = state, object, plane) do
-    airplanes = State.get_object(state, "airplanes", "list") || []
+    airplanes = State.get_fact(state, "airplanes", "list") || []
     
     if plane in airplanes do
-      object_at = State.get_object(state, "at", object)
-      plane_at = State.get_object(state, "plane_at", plane)
+      object_at = State.get_fact(state, "at", object)
+      plane_at = State.get_fact(state, "plane_at", plane)
       
       if object_at == plane_at do
         [{:load_plane, [object, plane]}]
@@ -108,11 +108,11 @@ defmodule AriaEngine.LogisticsMethods do
   end
 
   defp try_unload_plane(%State{} = state, object, airport) do
-    airplanes = State.get_object(state, "airplanes", "list") || []
-    airports = State.get_object(state, "airports", "list") || []
+    airplanes = State.get_fact(state, "airplanes", "list") || []
+    airports = State.get_fact(state, "airports", "list") || []
     
     if airport in airports do
-      object_at = State.get_object(state, "at", object)
+      object_at = State.get_fact(state, "at", object)
       
       if object_at in airplanes do
         [{:unload_plane, [object, airport]}]
@@ -125,13 +125,13 @@ defmodule AriaEngine.LogisticsMethods do
   end
 
   defp try_move_within_city(%State{} = state, object, location) do
-    packages = State.get_object(state, "packages", "list") || []
-    locations = State.get_object(state, "locations", "list") || []
+    packages = State.get_fact(state, "packages", "list") || []
+    locations = State.get_fact(state, "locations", "list") || []
     
     if object in packages and location in locations do
-      object_at = State.get_object(state, "at", object)
+      object_at = State.get_fact(state, "at", object)
       
-      if State.get_object(state, "in_city", object_at) == State.get_object(state, "in_city", location) do
+      if State.get_fact(state, "in_city", object_at) == State.get_fact(state, "in_city", location) do
         truck = AriaEngine.LogisticsActions.find_truck(state, object)
         
         if truck do
@@ -154,14 +154,14 @@ defmodule AriaEngine.LogisticsMethods do
   end
 
   defp try_move_between_airports(%State{} = state, object, airport) do
-    packages = State.get_object(state, "packages", "list") || []
-    airports = State.get_object(state, "airports", "list") || []
+    packages = State.get_fact(state, "packages", "list") || []
+    airports = State.get_fact(state, "airports", "list") || []
     
     if object in packages and airport in airports do
-      object_at = State.get_object(state, "at", object)
+      object_at = State.get_fact(state, "at", object)
       
       if object_at in airports and 
-         State.get_object(state, "in_city", object_at) != State.get_object(state, "in_city", airport) do
+         State.get_fact(state, "in_city", object_at) != State.get_fact(state, "in_city", airport) do
         plane = AriaEngine.LogisticsActions.find_plane(state, object)
         
         if plane do
@@ -184,13 +184,13 @@ defmodule AriaEngine.LogisticsMethods do
   end
 
   defp try_move_between_cities(%State{} = state, object, location) do
-    packages = State.get_object(state, "packages", "list") || []
-    locations = State.get_object(state, "locations", "list") || []
+    packages = State.get_fact(state, "packages", "list") || []
+    locations = State.get_fact(state, "locations", "list") || []
     
     if object in packages and location in locations do
-      object_at = State.get_object(state, "at", object)
+      object_at = State.get_fact(state, "at", object)
       
-      if State.get_object(state, "in_city", object_at) != State.get_object(state, "in_city", location) do
+      if State.get_fact(state, "in_city", object_at) != State.get_fact(state, "in_city", location) do
         airport1 = AriaEngine.LogisticsActions.find_airport(state, object_at)
         airport2 = AriaEngine.LogisticsActions.find_airport(state, location)
         

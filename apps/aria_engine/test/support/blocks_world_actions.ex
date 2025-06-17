@@ -30,21 +30,21 @@ defmodule AriaEngine.BlocksWorldActions do
   def pickup(%State{} = state, [block]) do
     # Check preconditions
     cond do
-      not State.get_object(state, "clear", block) ->
+      not State.get_fact(state, "clear", block) ->
         false  # Block is not clear
       
-      not State.get_object(state, "on_table", block) ->
+      not State.get_fact(state, "on_table", block) ->
         false  # Block is not on table
       
-      State.get_object(state, "holding", "hand") != nil ->
+      State.get_fact(state, "holding", "hand") != nil ->
         false  # Hand is not empty
       
       true ->
         # Apply effects
         state
-        |> State.set_object("on_table", block, false)
-        |> State.set_object("clear", block, false)
-        |> State.set_object("holding", "hand", block)
+        |> State.set_fact("on_table", block, false)
+        |> State.set_fact("clear", block, false)
+        |> State.set_fact("holding", "hand", block)
     end
   end
 
@@ -61,12 +61,12 @@ defmodule AriaEngine.BlocksWorldActions do
   """
   def putdown(%State{} = state, [block]) do
     # Check preconditions
-    if State.get_object(state, "holding", "hand") == block do
+    if State.get_fact(state, "holding", "hand") == block do
       # Apply effects
       state
-      |> State.set_object("on_table", block, true)
-      |> State.set_object("clear", block, true)
-      |> State.set_object("holding", "hand", nil)
+      |> State.set_fact("on_table", block, true)
+      |> State.set_fact("clear", block, true)
+      |> State.set_fact("holding", "hand", nil)
     else
       false  # Not holding the specified block
     end
@@ -88,10 +88,10 @@ defmodule AriaEngine.BlocksWorldActions do
   def stack(%State{} = state, [block, target]) do
     # Check preconditions
     cond do
-      State.get_object(state, "holding", "hand") != block ->
+      State.get_fact(state, "holding", "hand") != block ->
         false  # Not holding the block
       
-      not State.get_object(state, "clear", target) ->
+      not State.get_fact(state, "clear", target) ->
         false  # Target is not clear
       
       block == target ->
@@ -100,10 +100,10 @@ defmodule AriaEngine.BlocksWorldActions do
       true ->
         # Apply effects
         state
-        |> State.set_object("on", block, target)
-        |> State.set_object("clear", block, true)
-        |> State.set_object("clear", target, false)
-        |> State.set_object("holding", "hand", nil)
+        |> State.set_fact("on", block, target)
+        |> State.set_fact("clear", block, true)
+        |> State.set_fact("clear", target, false)
+        |> State.set_fact("holding", "hand", nil)
     end
   end
 
@@ -124,22 +124,22 @@ defmodule AriaEngine.BlocksWorldActions do
   def unstack(%State{} = state, [block, target]) do
     # Check preconditions
     cond do
-      State.get_object(state, "on", block) != target ->
+      State.get_fact(state, "on", block) != target ->
         false  # Block is not on target
       
-      not State.get_object(state, "clear", block) ->
+      not State.get_fact(state, "clear", block) ->
         false  # Block is not clear
       
-      State.get_object(state, "holding", "hand") != nil ->
+      State.get_fact(state, "holding", "hand") != nil ->
         false  # Hand is not empty
       
       true ->
         # Apply effects
         state
-        |> State.set_object("on", block, nil)
-        |> State.set_object("clear", block, false)
-        |> State.set_object("clear", target, true)
-        |> State.set_object("holding", "hand", block)
+        |> State.set_fact("on", block, nil)
+        |> State.set_fact("clear", block, false)
+        |> State.set_fact("clear", target, true)
+        |> State.set_fact("holding", "hand", block)
     end
   end
 end

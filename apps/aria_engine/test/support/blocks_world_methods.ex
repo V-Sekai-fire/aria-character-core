@@ -22,7 +22,7 @@ defmodule AriaEngine.BlocksWorldMethods do
     cond do
       target == "table" ->
         # Move block to table
-        if State.get_object(state, "holding", "hand") == block do
+        if State.get_fact(state, "holding", "hand") == block do
           # Already holding the block, just put it down
           [{:putdown, [block]}]
         else
@@ -32,7 +32,7 @@ defmodule AriaEngine.BlocksWorldMethods do
 
       true ->
         # Move block on top of another block
-        if State.get_object(state, "holding", "hand") == block do
+        if State.get_fact(state, "holding", "hand") == block do
           # Already holding the block, just stack it
           [{:stack, [block, target]}]
         else
@@ -50,13 +50,13 @@ defmodule AriaEngine.BlocksWorldMethods do
   """
   def get_block(%State{} = state, [block]) do
     cond do
-      State.get_object(state, "on_table", block) ->
+      State.get_fact(state, "on_table", block) ->
         # Block is on table, just pick it up
         [{:pickup, [block]}]
 
       true ->
         # Block is on another block, need to unstack it
-        target = State.get_object(state, "on", block)
+        target = State.get_fact(state, "on", block)
         if target do
           [{:unstack, [block, target]}]
         else
@@ -89,7 +89,7 @@ defmodule AriaEngine.BlocksWorldMethods do
   Unigoal method for achieving 'on(block, target)' goals.
   """
   def on_unigoal(%State{} = state, [block, target]) do
-    current_location = State.get_object(state, "on", block)
+    current_location = State.get_fact(state, "on", block)
 
     cond do
       current_location == target ->
@@ -106,7 +106,7 @@ defmodule AriaEngine.BlocksWorldMethods do
   Unigoal method for achieving 'on_table(block)' goals.
   """
   def on_table_unigoal(%State{} = state, [block, true]) do
-    if State.get_object(state, "on_table", block) do
+    if State.get_fact(state, "on_table", block) do
       # Goal already satisfied
       []
     else
@@ -119,7 +119,7 @@ defmodule AriaEngine.BlocksWorldMethods do
   Unigoal method for achieving 'clear(block)' goals.
   """
   def clear_unigoal(%State{} = state, [block, true]) do
-    if State.get_object(state, "clear", block) do
+    if State.get_fact(state, "clear", block) do
       # Goal already satisfied
       []
     else
@@ -156,7 +156,7 @@ defmodule AriaEngine.BlocksWorldMethods do
     all_blocks = get_all_blocks(state)
 
     Enum.filter(all_blocks, fn block ->
-      State.get_object(state, "on", block) == target_block
+      State.get_fact(state, "on", block) == target_block
     end)
   end
 
@@ -164,7 +164,7 @@ defmodule AriaEngine.BlocksWorldMethods do
   defp get_all_blocks(%State{} = state) do
     # This would need to be implemented based on how blocks are tracked in state
     # For now, assume blocks are tracked in a "blocks" list
-    State.get_object(state, "blocks", "list") || []
+    State.get_fact(state, "blocks", "list") || []
   end
 
   # Helper function to build tower goals recursively
@@ -189,11 +189,11 @@ defmodule AriaEngine.BlocksWorldMethods do
   """
   def pos_on_table(%State{} = state, [["pos", block, "table"]]) do
     cond do
-      State.get_object(state, "on_table", block) ->
+      State.get_fact(state, "on_table", block) ->
         # Already on table
         []
 
-      State.get_object(state, "holding", "hand") == block ->
+      State.get_fact(state, "holding", "hand") == block ->
         # Holding the block, just put it down
         [{"putdown", [block]}]
 
@@ -210,13 +210,13 @@ defmodule AriaEngine.BlocksWorldMethods do
   """
   def pos_on_block(%State{} = state, [["pos", block, target]]) when target != "table" do
     cond do
-      State.get_object(state, "on", block) == target ->
+      State.get_fact(state, "on", block) == target ->
         # Already on target
         []
 
-      State.get_object(state, "holding", "hand") == block ->
+      State.get_fact(state, "holding", "hand") == block ->
         # Holding the block, ensure target is clear and stack
-        if State.get_object(state, "clear", target) do
+        if State.get_fact(state, "clear", target) do
           [{"stack", [block, target]}]
         else
           # Need to clear the target first
@@ -225,7 +225,7 @@ defmodule AriaEngine.BlocksWorldMethods do
 
       true ->
         # Need to get the block first, ensure target is clear, then stack
-        clear_target_goals = if State.get_object(state, "clear", target) do
+        clear_target_goals = if State.get_fact(state, "clear", target) do
           []
         else
           [["pos", find_block_on_top(state, target), "table"]]
@@ -242,13 +242,13 @@ defmodule AriaEngine.BlocksWorldMethods do
   """
   def pos_in_hand(%State{} = state, [["pos", block, "hand"]]) do
     cond do
-      State.get_object(state, "holding", "hand") == block ->
+      State.get_fact(state, "holding", "hand") == block ->
         # Already holding the block
         []
 
-      State.get_object(state, "holding", "hand") != nil ->
+      State.get_fact(state, "holding", "hand") != nil ->
         # Holding something else, put it down first
-        held_block = State.get_object(state, "holding", "hand")
+        held_block = State.get_fact(state, "holding", "hand")
         [{"putdown", [held_block]}, {"take", [block]}]
 
       true ->
@@ -286,7 +286,7 @@ defmodule AriaEngine.BlocksWorldMethods do
   This method achieves the goal of holding a specific block or having an empty hand.
   """
   def holding_state(%State{} = state, [["holding", "hand", value]]) do
-    current_held = State.get_object(state, "holding", "hand")
+    current_held = State.get_fact(state, "holding", "hand")
 
     cond do
       current_held == value ->
@@ -316,7 +316,7 @@ defmodule AriaEngine.BlocksWorldMethods do
     all_blocks = get_all_blocks(state)
 
     Enum.find(all_blocks, fn other_block ->
-      State.get_object(state, "on", block) == other_block
+      State.get_fact(state, "on", block) == other_block
     end)
   end
 
@@ -324,24 +324,24 @@ defmodule AriaEngine.BlocksWorldMethods do
     all_blocks = get_all_blocks(state)
 
     Enum.find(all_blocks, fn block ->
-      State.get_object(state, "on", block) == target_block
+      State.get_fact(state, "on", block) == target_block
     end)
   end
 
   defp goal_satisfied?(%State{} = state, ["pos", block, "table"]) do
-    State.get_object(state, "on_table", block)
+    State.get_fact(state, "on_table", block)
   end
 
   defp goal_satisfied?(%State{} = state, ["pos", block, target]) when target != "table" do
-    State.get_object(state, "on", block) == target
+    State.get_fact(state, "on", block) == target
   end
 
   defp goal_satisfied?(%State{} = state, ["holding", "hand", value]) do
-    State.get_object(state, "holding", "hand") == value
+    State.get_fact(state, "holding", "hand") == value
   end
 
   defp goal_satisfied?(%State{} = state, ["clear", block, true]) do
-    State.get_object(state, "clear", block)
+    State.get_fact(state, "clear", block)
   end
 
   defp goal_satisfied?(_, _), do: false
@@ -353,7 +353,7 @@ defmodule AriaEngine.BlocksWorldMethods do
   """
   def take_from_table(%State{} = state, ["take", block]) do
     cond do
-      State.get_object(state, "on_table", block) and State.get_object(state, "clear", block) ->
+      State.get_fact(state, "on_table", block) and State.get_fact(state, "clear", block) ->
         [{:pickup, [block]}]
       true ->
         false
@@ -366,7 +366,7 @@ defmodule AriaEngine.BlocksWorldMethods do
   def take_from_block(%State{} = state, ["take", block]) do
     under_block = find_block_under(state, block)
     cond do
-      under_block and State.get_object(state, "clear", block) ->
+      under_block and State.get_fact(state, "clear", block) ->
         [{:unstack, [block, under_block]}]
       true ->
         false
@@ -378,7 +378,7 @@ defmodule AriaEngine.BlocksWorldMethods do
   """
   def put_on_table(%State{} = state, ["put", block, "table"]) do
     cond do
-      State.get_object(state, "holding", "hand") == block ->
+      State.get_fact(state, "holding", "hand") == block ->
         [{:putdown, [block]}]
       true ->
         false
@@ -390,8 +390,8 @@ defmodule AriaEngine.BlocksWorldMethods do
   """
   def put_on_block(%State{} = state, ["put", block, target]) when target != "table" do
     cond do
-      State.get_object(state, "holding", "hand") == block and
-      State.get_object(state, "clear", target) ->
+      State.get_fact(state, "holding", "hand") == block and
+      State.get_fact(state, "clear", target) ->
         [{:stack, [block, target]}]
       true ->
         false
