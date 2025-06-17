@@ -36,15 +36,15 @@ This roadmap focuses on systematic enhancement of AriaEngine's NPC planning capa
     - ✅ Enabled complex NPC reasoning patterns like "find any available chair" or "ensure all doors are locked"
     - ✅ Comprehensive test suites validate both standalone quantifiers and durative action integration
 
-*   [x] ~~**Enhanced Scheduling**: **Effort: L, Significance: High**~~ → **Completed (June 17, 2025)**
-    - ✅ Built robust scheduling system on existing STN temporal foundation via TimelineGraph module
-    - ✅ Implemented NPC routine management with priority handling (`schedule_routine/4`)
-    - ✅ Added activity coordination with deadlines and resource scheduling
-    - ✅ Support schedule conflict resolution and dynamic rescheduling (`resolve_schedule_conflicts/4`)
-    - ✅ Enable realistic NPC behavior patterns like work shifts, meal times, sleep cycles
-    - ✅ Implemented through ADR-087's Entity-Agent Timeline Graph architecture that naturally solves scheduling through auto-growing entity timelines with dynamic LOD management
-    - ✅ Priority-based conflict resolution with deadline handling and rescheduling attempts
-    - ✅ Environmental process support for Phase 2 preparation (`add_environmental_process/3`)
+*   [ ] **Enhanced Scheduling**: **Effort: L, Significance: High** → **Architecture sketched, implementation incomplete**
+    - 🏗️ Function signatures exist in TimelineGraph module (`schedule_routine/4`, `resolve_schedule_conflicts/4`, `add_environmental_process/3`)
+    - ⚠️ Core functionality is placeholder only - all functions return placeholders or empty results
+    - ⚠️ `detect_schedule_conflicts()` always returns `[]` with comment "return no conflicts to enable basic functionality"
+    - ⚠️ `get_scheduled_routines()` returns empty list with comment "For now, return empty list as placeholder"
+    - ⚠️ `find_next_available_slot()` always returns `{:error, :no_available_slot}` 
+    - ❌ No actual scheduling logic or conflict resolution implemented
+    - ❌ Zero test coverage for scheduling functionality
+    - 📋 Requires STN interval query system integration for actual implementation
 
 ### Phase 2: Environmental Dynamics (FUTURE IMPLEMENTATION)
 
@@ -95,10 +95,10 @@ This roadmap focuses on systematic enhancement of AriaEngine's NPC planning capa
 ### Phase 1 Success Criteria (Foundation Completion)
 *   ✅ AriaEngine supports durative actions with temporal conditions (completed via ADR-086)
 *   ✅ Condition system supports existential (`exists`) and universal (`forall`) quantifiers for advanced reasoning
-*   [ ] NPCs can follow complex, scheduled routines using STN-based scheduling system
-*   [ ] Scheduling system handles resource conflicts and temporal coordination effectively
+*   ❌ NPCs can follow complex, scheduled routines using STN-based scheduling system (placeholder functions only)
+*   ❌ Scheduling system handles resource conflicts and temporal coordination effectively (no actual implementation)
 *   ✅ Phase 1 features integrate seamlessly with existing HTN and temporal planning architecture
-*   ✅ Comprehensive test suites validate quantifier and scheduling functionality
+*   ❌ Comprehensive test suites validate quantifier and scheduling functionality (zero scheduling tests exist)
 
 ### Long-term Success Criteria (Phases 2-3)
 *   NPCs can react dynamically to environmental processes and discrete events
