@@ -237,31 +237,6 @@ defmodule AriaAuth.MacaroonsTest do
     # Note: These tests focus on the token verification part
     # Full integration tests would require database setup
     
-    @tag :skip
-    test "token verification succeeds but user lookup depends on database" do
-      # Use a proper binary UUID instead of a string to match User schema
-      user_id = Ecto.UUID.generate()
-      mock_user = %User{
-        id: user_id,
-        email: "mock@example.com",
-        roles: ["user", "tester"]
-      }
-      
-      {:ok, token} = Macaroons.generate_token(mock_user)
-      
-      # First verify that the token can be decoded and contains correct user_id
-      assert {:ok, %{user_id: ^user_id, permissions: ["user", "tester"]}} = 
-        Macaroons.verify_token(token)
-      
-      # The verify_token_and_get_user function will fail because it tries to query
-      # the database, but that's expected in unit tests without database setup
-      # In a full integration test, this would work with proper test database
-      result = Macaroons.verify_token_and_get_user(token)
-      
-      # We expect this to fail with a database-related error since we don't have
-      # the user in the test database, but the token verification part should work
-      assert match?({:error, _}, result)
-    end
     
     test "returns error for invalid token" do
       result = Macaroons.verify_token_and_get_user("invalid-token")

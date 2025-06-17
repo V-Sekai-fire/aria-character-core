@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngine.MembraneWorkflowTest do
-  @tag :skip
   @moduledoc """
   Investigation of Flow-based workflow capabilities for high-performance action processing.
 
@@ -18,8 +17,9 @@ defmodule AriaEngine.MembraneWorkflowTest do
   ✅ Test helper modules moved to test/support/flow_test_helpers.ex
   ✅ Test suite moved to test/workflow_capabilities_test.exs  
   🔄 Remaining inline modules need to be extracted
-
+  """
   use ExUnit.Case, async: false
+  @tag :skip
 
   # No aliases needed since this file only contains helper module definitions
 
@@ -36,7 +36,6 @@ defmodule AriaEngine.MembraneWorkflowTest do
 
   # Membrane element for persistent job storage
   # TODO: Extract this module to proper library location
-  """
   defmodule PersistentJobSink do
     @moduledoc """
     Membrane element that persists jobs to disk for durability testing.

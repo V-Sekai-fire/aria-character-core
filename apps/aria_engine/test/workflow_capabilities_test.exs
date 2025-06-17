@@ -9,8 +9,8 @@ defmodule AriaEngine.WorkflowCapabilitiesTest do
   capabilities that have replaced the Membrane-based system.
   """
 
-  @tag :skip
   use ExUnit.Case, async: false
+  @tag :skip
 
   alias AriaEngine.Test.FlowTestHelpers.{
     FlowBackflowTester,

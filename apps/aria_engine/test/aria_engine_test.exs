@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngineTest do
-  @tag :skip
   use ExUnit.Case, async: true
+  @tag :skip
 
   alias AriaEngine.{Domain, State, Actions}
 

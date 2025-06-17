@@ -52,11 +52,15 @@ defmodule AriaEngine.Timeline do
         }
 
   defstruct intervals: %{},
-            stn: AriaEngine.Timeline.STN.new()
+            stn: AriaEngine.Timeline.STN.new(),
+            metadata: %{}
 
-  @spec new(list(Interval.t())) :: t()
-  def new(intervals \\ []) when is_list(intervals) do
-    %__MODULE__{}
+  @spec new(keyword()) :: t()
+  def new(opts \\ []) do
+    intervals = Keyword.get(opts, :intervals, [])
+    metadata = Keyword.get(opts, :metadata, %{})
+
+    %__MODULE__{metadata: metadata}
     |> add_intervals(intervals)
   end
 

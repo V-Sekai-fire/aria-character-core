@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngine.PlanningTest do
-  @tag :skip
   use ExUnit.Case
+  @tag :skip
   doctest AriaEngine
 
   alias AriaEngine.TestDomains

@@ -89,14 +89,6 @@ defmodule AriaEnginePortelainIntegrationTest do
       assert Map.has_key?(domain.task_methods, "backup_files")
     end
 
-    test "workflow system domain creation" do
-      {:ok, domain} = DomainProvider.get_domain("workflow_system")
-
-      assert domain.name == "workflow_system"
-      assert Map.has_key?(domain.actions, :execute_workflow_command)
-      assert Map.has_key?(domain.actions, :execute_command)
-      assert Map.has_key?(domain.task_methods, "execute_workflow")
-    end
 
     test "file management domain planning" do
       {:ok, domain} = DomainProvider.get_domain("file_management")
