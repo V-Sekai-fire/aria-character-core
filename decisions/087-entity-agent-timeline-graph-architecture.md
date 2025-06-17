@@ -13,35 +13,41 @@ ADR-085 identified several unsolved NPC planning problems requiring enhanced sch
 3. **Manual LOD Management**: Level of detail changes require explicit calls, not automatic adaptation based on relevance
 4. **Disconnected Coordination**: Multi-agent planning requires manual coordination rather than natural timeline bridging
 
-**Key Insight:** Agents are entities with action capabilities, and every entity should own a timeline that automatically grows as they live, act, and interact in the world.
+**Key Insight:** Everything in the world is an entity with capabilities. Timelines are owned by entities and grow automatically based on their capabilities and interactions.
 
 ## Decision
 
-Implement an Entity-Agent Timeline Graph Architecture where:
+Implement a pure Entity Timeline Graph Architecture where:
 
-1. **Every Entity owns an auto-growing timeline**
-2. **Agents are Entities with action capabilities** 
-3. **Timelines automatically bridge during interactions**
-4. **LOD scales dynamically based on relevance**
-5. **No manual timeline management required**
+1. **Everything is an Entity** (following game networking ECS patterns)
+2. **Capabilities determine behavior** (action capabilities = agent behavior)
+3. **Every Entity owns an auto-growing timeline**
+4. **Timelines automatically bridge during interactions**
+5. **LOD scales dynamically based on relevance**
+6. **No manual timeline management required**
 
 ### Core Architecture
 
 ```elixir
-# Base abstraction - everything in the world
-entity = Entity.new("chair_1")
-|> Entity.set_property("type", "furniture")
-|> Entity.set_property("material", "wood")
-# Timeline grows when: moved, used, damaged, scheduled events affect it
+# Everything is an Entity - capabilities determine behavior
+chair = AgentEntity.create_entity("chair_1", "Wooden Chair", %{type: "furniture", material: "wood"})
+# Timeline grows when: moved, used, damaged, properties change
 
-# Agents are entities with action capabilities
-npc = Entity.new("guard_npc")
-|> Entity.set_property("type", "humanoid") 
-|> Agent.make_agent()  # Gains action capabilities
-|> Agent.add_capability(:patrol)
-|> Agent.add_capability(:investigate)
-# Timeline grows when: planning actions, executing actions, reacting to events, 
-# being affected by others, plus all Entity timeline growth triggers
+# NPCs are entities with action capabilities  
+npc = AgentEntity.create_entity("guard_npc", "Tower Guard", %{type: "humanoid"})
+|> AgentEntity.add_capabilities([:patrol, :investigate, :decision_making])
+# is_currently_agent?(npc) -> true (has action capabilities)
+# Timeline grows when: planning, executing actions, reacting, plus all entity triggers
+
+# Players are entities with comprehensive action capabilities
+player = AgentEntity.create_entity("player", "Hero", %{type: "player"}) 
+|> AgentEntity.add_capabilities([:movement, :combat, :magic, :decision_making, :communication])
+# Ultra-high LOD timeline with millisecond precision
+
+# Environmental objects are entities that can gain capabilities dynamically
+door = AgentEntity.create_entity("castle_door", "Main Gate", %{type: "portal", state: "closed"})
+# Initially passive entity - timeline grows from environmental events
+# Later: door |> AgentEntity.add_capabilities([:autonomous_operation]) -> automated door
 ```
 
 ### Timeline Graph Management
@@ -64,19 +70,30 @@ end
 
 ## Implementation Plan
 
-### Phase 1: Core Entity-Agent System
+### Phase 0: State System Modernization (FOUNDATION)
 
-- [ ] **AriaEngine.Entity** - Base entity abstraction with timeline ownership
-  - [ ] Entity creation with automatic timeline attachment
-  - [ ] Property management integrated with State system
-  - [ ] Timeline growth triggers for passive events
-  - [ ] Integration with existing AriaEngine.State predicate-subject-fact system
+- [ ] **AriaEngine.State Refactoring** - Subject-Predicate-Fact migration for entity-centric architecture
+  - [ ] Change internal storage from `{predicate, subject}` to `{subject, predicate}` key format
+  - [ ] Update all API functions to natural entity-first order: `get_fact(state, subject, predicate)`
+  - [ ] Refactor quantifiers: `exists?(state, subject_filter, predicate, fact_value)`
+  - [ ] Update condition evaluation to `{subject, predicate, fact_value}` format
+  - [ ] Migrate all existing domains, methods, and action definitions
+  - [ ] Update comprehensive test suites for new API
+  - [ ] Maintain backward compatibility during transition period
 
-- [ ] **AriaEngine.Agent** - Entity extension with action capabilities
-  - [ ] Agent behavior addition to existing entities
-  - [ ] Action planning integration with timeline growth
-  - [ ] Capability management and goal pursuit
-  - [ ] Integration with existing AriaEngine planner
+### Phase 1: Core Entity-Agent System (builds on existing AriaEngine.Timeline.AgentEntity)
+
+- [ ] **Timeline Integration** - Connect existing AgentEntity with auto-growing timelines
+  - [ ] Automatic timeline attachment when entities are created via `AgentEntity.create_entity/4`
+  - [ ] Timeline growth triggers for capability transitions via `AgentEntity.add_capabilities/2`
+  - [ ] Agent timeline growth when `AgentEntity.is_currently_agent?/1` returns true
+  - [ ] Integration with modernized AriaEngine.State subject-predicate-fact system
+
+- [ ] **Enhanced AgentEntity Integration** - Extend existing capability-based system
+  - [ ] Timeline ownership: Every entity gets timeline on creation
+  - [ ] Agent behavior: Timeline grows when capabilities indicate agency
+  - [ ] Natural transitions: `transition_to_agent/2` and `transition_to_entity/1` trigger timeline LOD changes
+  - [ ] Property-timeline bridge: `get_property/2` and `set_property/3` operations affect timeline growth
 
 - [ ] **AriaEngine.TimelineGraph** - Inter-timeline connection management
   - [ ] Bridge creation and lifecycle management
@@ -153,7 +170,11 @@ This architecture solves multiple ADR-085 unsolved problems:
 
 ### Enhanced Scheduling
 **Solution:** Auto-growing timelines with dynamic LOD provide natural scheduling system
-- Agent timelines automatically extend as they plan daily/weekly routines  
+- Agent timelines automatically extend with arbitrary temporal patterns (micro-patterns to annual cycles)
+- Multi-scale scheduling: minutes (guard checks) → hourly (rounds) → daily (meals) → weekly (market days) → seasonal (harvests) → annual (festivals)
+- Dynamic pattern recognition: entities learn and adapt their own scheduling behaviors
+- Conditional scheduling: weather-dependent, resource-driven, social-context activities
+- Cross-entity pattern influence: schedule interconnections and emergent coordination
 - LOD scaling ensures computational efficiency for background NPCs
 - Timeline bridging enables automatic coordination between scheduling entities
 
