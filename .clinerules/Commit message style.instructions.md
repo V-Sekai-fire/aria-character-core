@@ -4,6 +4,10 @@
 
 Use descriptive, complete commit messages that communicate the full scope of changes with natural language. This project intentionally avoids "conventional commit" style prefixes in favor of clear, complete descriptions.
 
+### Critical Rule
+
+**Absolutely no conventional commit prefixes (e.g., `feat:`, `fix:`, `docs:`, `refactor:`, etc.) are allowed.** Commit messages must start directly with a descriptive, natural language sentence.
+
 ### Style Guidelines
 
 **Preferred approach:**
