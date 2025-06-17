@@ -325,7 +325,7 @@ defmodule AriaEngine.DurativeActionsTest do
       
       # Add goal methods for healing
       domain = Domain.add_unigoal_method(domain, "health_status", "try_magic_heal", fn state, [subject, target_status] ->
-        current_status = StateV2.get_fact(state, "health_status", subject)
+        current_status = StateV2.get_fact(state, subject, "health_status")
         if current_status != target_status do
           [{:magic_heal, []}]
         else
@@ -334,7 +334,7 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       domain = Domain.add_unigoal_method(domain, "health_status", "try_rest_heal", fn state, [subject, target_status] ->
-        current_status = StateV2.get_fact(state, "health_status", subject)
+        current_status = StateV2.get_fact(state, subject, "health_status")
         if current_status != target_status do
           [{:rest_heal, []}]
         else
@@ -412,7 +412,7 @@ defmodule AriaEngine.DurativeActionsTest do
       
       # Add goal methods for charging
       domain = Domain.add_unigoal_method(domain, "battery_percent", "try_fast_numeric", fn state, [device, target_percent] ->
-        current_percent = StateV2.get_fact(state, "battery_percent", device)
+        current_percent = StateV2.get_fact(state, device, "battery_percent")
         if current_percent != target_percent do
           [{:fast_charge_numeric, []}]
         else
@@ -421,7 +421,7 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       domain = Domain.add_unigoal_method(domain, "battery_percent", "try_slow_numeric", fn state, [device, target_percent] ->
-        current_percent = StateV2.get_fact(state, "battery_percent", device)
+        current_percent = StateV2.get_fact(state, device, "battery_percent")
         if current_percent != target_percent do
           [{:slow_charge_numeric, []}]
         else
@@ -499,7 +499,7 @@ defmodule AriaEngine.DurativeActionsTest do
       
       # Add goal methods for door opening
       domain = Domain.add_unigoal_method(domain, "door_open", "try_manual_open", fn state, [door, target_state] ->
-        current_state = StateV2.get_fact(state, "door_open", door)
+        current_state = StateV2.get_fact(state, door, "door_open")
         if current_state != target_state do
           [{:manual_open_door, []}]
         else
@@ -508,7 +508,7 @@ defmodule AriaEngine.DurativeActionsTest do
       end)
       
       domain = Domain.add_unigoal_method(domain, "door_open", "try_electronic_open", fn state, [door, target_state] ->
-        current_state = StateV2.get_fact(state, "door_open", door)
+        current_state = StateV2.get_fact(state, door, "door_open")
         if current_state != target_state do
           [{:electronic_open_door, []}]
         else
@@ -576,7 +576,7 @@ defmodule AriaEngine.DurativeActionsTest do
       
       # Add a method to handle work tasks
       domain = Domain.add_unigoal_method(domain, "task_complete", "do_work", fn state, [task, target] ->
-        current = StateV2.get_fact(state, "task_complete", task)
+        current = StateV2.get_fact(state, task, "task_complete")
         if current != target do
           [{:work_on_project, []}]
         else
@@ -664,7 +664,7 @@ defmodule AriaEngine.DurativeActionsTest do
       
       # Add goal method for fast charging (will be tried first)
       domain = Domain.add_unigoal_method(domain, "battery_status", "try_fast_charge", fn state, [device, target_level] ->
-        current_level = StateV2.get_fact(state, "battery_status", device)
+        current_level = StateV2.get_fact(state, device, "battery_status")
         if current_level != target_level do
           [{:fast_charge, []}]
         else
@@ -674,7 +674,7 @@ defmodule AriaEngine.DurativeActionsTest do
       
       # Add goal method for slow charging (will be tried second)
       domain = Domain.add_unigoal_method(domain, "battery_status", "try_slow_charge", fn state, [device, target_level] ->
-        current_level = StateV2.get_fact(state, "battery_status", device)
+        current_level = StateV2.get_fact(state, device, "battery_status")
         if current_level != target_level do
           [{:slow_charge, []}]
         else

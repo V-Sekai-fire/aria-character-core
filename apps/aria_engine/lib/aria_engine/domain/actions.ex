@@ -172,8 +172,8 @@ defmodule AriaEngine.Domain.Actions do
         StateV2.evaluate_condition(state, condition)
       
       # Regular conditions (entity-first format)
-      {predicate, subject, required_value} ->
-        StateV2.get_fact(state, subject, predicate) == required_value
+      {entity, predicate, required_value} ->
+        StateV2.get_fact(state, entity, predicate) == required_value
       
       # Use the general condition evaluator for other formats
       _ ->
