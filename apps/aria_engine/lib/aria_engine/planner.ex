@@ -1125,7 +1125,7 @@ defmodule AriaEngine.Planner do
                 run_execution_loop(domain, current_state, new_tree, opts)
                 
               {:error, replan_reason} ->
-                {:error, "Execution failed: #{reason}, replanning failed: #{replan_reason}"}
+                {:error, "Execution failed: #{action_name}, replanning failed: #{replan_reason}"}
             end
         end
     end
