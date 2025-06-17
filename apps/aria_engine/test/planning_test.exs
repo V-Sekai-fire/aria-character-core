@@ -15,7 +15,7 @@ defmodule AriaEngine.PlanningTest do
       # Set up initial state
       initial_state = AriaEngine.create_state()
       |> AriaEngine.set_fact("location", "player", "room1")
-      |> AriaEngine.set_fact("location", "sword", "room2")
+      |> AriaEngine.set_fact("location", "sword", "room1") # Change sword location to room1
 
       # Simple goal: have the sword
       goals = [{"has", "player", "sword"}]
@@ -23,8 +23,7 @@ defmodule AriaEngine.PlanningTest do
       # This will fail without proper task methods, but let's test the structure
       case AriaEngine.plan(domain, initial_state, goals, verbose: 0) do
         {:ok, _plan} ->
-          # Planning succeeded
-          :ok
+          flunk("Planning unexpectedly succeeded when no methods were expected.")
         {:error, reason} ->
           # Expected to fail without proper methods
           assert String.contains?(reason, "No methods found")

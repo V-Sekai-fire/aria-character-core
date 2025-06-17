@@ -34,7 +34,7 @@ defmodule RunLazyRefineaheadTest do
         IO.puts("Initial plan: #{inspect(initial_actions)}")
         
         # Execute with Run-Lazy-Refineahead (this should trigger replanning)
-        case Plan.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 0) do
+        case Plan.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 3) do # Increased verbose level
           {:ok, final_state} ->
             # Verify we reached the goal despite initial failures
             robot_location = State.get_fact(final_state, "location", "robot")
@@ -77,10 +77,14 @@ defmodule RunLazyRefineaheadTest do
     robot_location = State.get_fact(state, "location", "robot")
     prepared = State.get_fact(state, "prepared", "robot")
     
+    IO.puts("move_unreliable_action: robot_location=#{inspect(robot_location)}, from=#{inspect(from)}, prepared=#{inspect(prepared)}")
+    
     if robot_location == from and prepared == true do
+      IO.puts("move_unreliable_action: SUCCESS")
       # Success - update location
       State.set_fact(state, "location", "robot", to)
     else
+      IO.puts("move_unreliable_action: FAILURE")
       # Failure - robot not prepared or not at start location
       false
     end
@@ -90,12 +94,16 @@ defmodule RunLazyRefineaheadTest do
   defp move_reliable_action(state, [from, to]) do
     robot_location = State.get_fact(state, "location", "robot")
     
+    IO.puts("move_reliable_action: robot_location=#{inspect(robot_location)}, from=#{inspect(from)}")
+    
     if robot_location == from do
+      IO.puts("move_reliable_action: SUCCESS")
       # Always succeeds - prepare and move
       state
       |> State.set_fact("prepared", "robot", true)
       |> State.set_fact("location", "robot", to)
     else
+      IO.puts("move_reliable_action: FAILURE")
       false
     end
   end

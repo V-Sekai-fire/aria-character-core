@@ -88,3 +88,4 @@ node_modules/.cache/prettier/.prettier-caches
 
 # Dialyzer PLT files (should be generated locally)
 /priv/plts/
+apps/.DS_Store

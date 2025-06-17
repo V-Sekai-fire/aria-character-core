@@ -197,20 +197,17 @@ defmodule AriaEngine.Plan do
     run_execution_loop(domain, current_state, current_tree, opts)
   end
 
-  # Core IPyHOP Algorithm (Algorithm 2 from the paper)
-  @spec ipyhop(Domain.t(), State.t(), solution_tree(), keyword()) :: plan_result()
-  defp ipyhop(%Domain{} = domain, %State{} = current_state, solution_tree, opts) do
-    verbose = Keyword.get(opts, :verbose, @default_verbose)
-    max_depth = Keyword.get(opts, :max_depth, @default_max_depth)
+  # Core planning decomposition loop
+  @spec plan_decomposition_loop(Domain.t(), State.t(), solution_tree(), integer(), integer(), integer()) :: plan_result()
+  defp plan_decomposition_loop(%Domain{} = domain, current_state, solution_tree, depth, max_depth, verbose) do
+    if verbose > 3 do
+      IO.puts("PLAN_DECOMPOSITION_LOOP: Depth #{depth}, Nodes: #{Kernel.map_size(solution_tree.nodes)}")
+    end
 
-    # IPyHOP main loop
-    ipyhop_loop(domain, current_state, solution_tree, 0, max_depth, verbose)
-  end
-
-  # IPyHOP main loop implementation
-  @spec ipyhop_loop(Domain.t(), State.t(), solution_tree(), integer(), integer(), integer()) :: plan_result()
-  defp ipyhop_loop(%Domain{} = domain, current_state, solution_tree, depth, max_depth, verbose) do
     if depth >= max_depth do
+      if verbose > 0 do
+        IO.puts("PLAN_DECOMPOSITION_LOOP: Maximum planning depth exceeded at depth #{depth}")
+      end
       {:error, "Maximum planning depth exceeded"}
     else
       # Find next unexpanded node
@@ -218,32 +215,66 @@ defmodule AriaEngine.Plan do
         nil ->
           # All nodes expanded - check if solution is complete
           if solution_complete?(solution_tree) do
+            if verbose > 0 do
+              IO.puts("PLAN_DECOMPOSITION_LOOP: Solution complete.")
+            end
             {:ok, solution_tree}
           else
+            if verbose > 0 do
+              IO.puts("PLAN_DECOMPOSITION_LOOP: No complete solution found after all nodes expanded.")
+            end
             {:error, "No complete solution found"}
           end
 
         node_id ->
+          if verbose > 3 do
+            IO.puts("PLAN_DECOMPOSITION_LOOP: Expanding node #{node_id} (Task: #{inspect(solution_tree.nodes[node_id].task)})")
+          end
           # Try to expand this node
           case try_expand_node(domain, current_state, solution_tree, node_id, verbose) do
             {:ok, new_tree} ->
-              ipyhop_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
+              if verbose > 3 do
+                IO.puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expanded successfully.")
+              end
+              plan_decomposition_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
 
             {:error, reason} ->
+              if verbose > 0 do
+                IO.puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion failed: #{reason}")
+              end
               {:error, reason}
 
             :failure ->
+              if verbose > 0 do
+                IO.puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion returned :failure, attempting backtrack.")
+              end
               # Backtrack and try alternatives
               case backtrack_and_retry(domain, current_state, solution_tree, node_id, depth, max_depth, verbose) do
                 {:ok, new_tree} ->
-                  ipyhop_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
+                  if verbose > 0 do
+                    IO.puts("PLAN_DECOMPOSITION_LOOP: Backtrack succeeded, continuing planning.")
+                  end
+                  plan_decomposition_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
 
                 {:error, reason} ->
+                  if verbose > 0 do
+                    IO.puts("PLAN_DECOMPOSITION_LOOP: Backtrack failed: #{reason}")
+                  end
                   {:error, reason}
               end
           end
       end
     end
+  end
+
+  # Core IPyHOP Algorithm (Algorithm 2 from the paper)
+  @spec ipyhop(Domain.t(), State.t(), solution_tree(), keyword()) :: plan_result()
+  defp ipyhop(%Domain{} = domain, %State{} = current_state, solution_tree, opts) do
+    verbose = Keyword.get(opts, :verbose, @default_verbose)
+    max_depth = Keyword.get(opts, :max_depth, @default_max_depth)
+
+    # IPyHOP main loop
+    plan_decomposition_loop(domain, current_state, solution_tree, 0, max_depth, verbose)
   end
 
   # Find the task node responsible for producing a failed action
@@ -500,8 +531,8 @@ defmodule AriaEngine.Plan do
       {:error, "No methods found for task: #{task_name}"}
     else
       # Try the first available method
-      [{_method_name, method_fn} | _] = available_methods
-      method_id = "method_#{:erlang.phash2(method_fn)}"
+      [{method_name, method_fn} | _] = available_methods
+      method_id = method_name
 
       case method_fn.(node.state, args) do
         false ->
@@ -605,8 +636,8 @@ defmodule AriaEngine.Plan do
           {:error, "No methods found for goal: #{predicate}"}
         else
           # Try the first method
-          [{_method_name, method_fn} | _] = available_methods
-          method_id = "goal_method_#{:erlang.phash2(method_fn)}"
+          [{method_name, method_fn} | _] = available_methods
+          method_id = method_name
 
           case method_fn.(node.state, [subject, fact_value]) do
             false ->
