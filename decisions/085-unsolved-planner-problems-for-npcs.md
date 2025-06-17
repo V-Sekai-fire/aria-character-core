@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Active (June 17, 2025)
 
 ## Context
 
@@ -20,16 +20,56 @@ To formally document these unsolved problems and their relevance to NPC behavior
 
 ## Implementation Plan
 
-The following features are identified as crucial for improving NPC behavior in virtual environments and are proposed for future implementation. The "Effort" is estimated using T-shirt sizing (XS, S, M, L, XL), where XL indicates a very high level of effort, potentially requiring significant research and development, and representing a long-term, high-investment goal. "Significance" indicates the impact on NPC behavior and realism (High, Medium).
+This roadmap focuses on systematic enhancement of AriaEngine's NPC planning capabilities, organized into implementation phases based on current system readiness and impact potential.
 
-*   [ ] **Intermediate/External Conditions & Effects**: **Effort: M, Significance: High** Extend the planner to handle conditions that must hold or effects that occur during an action's duration, and effects triggered by external events.
-*   [ ] **Timed Effects/Goals**: **Effort: M, Significance: High** Implement support for effects scheduled at absolute times and goals that must be achieved by specific deadlines.
-*   [ ] **Quantifiers (Existential/Universal)**: **Effort: M, Significance: Medium** Implement support for existential (`exists`) and universal (`forall`) quantifiers in conditions and effects for more advanced reasoning.
-*   [ ] **Scheduling**: **Effort: L, Significance: High** Develop robust scheduling capabilities to manage NPC routines, activities with deadlines, and temporal coordination of tasks.
-*   [ ] **Processes & Events**: **Effort: L, Significance: High** Integrate the ability to model continuous environmental processes and discrete events that influence NPC behavior.
-*   [ ] **Multi-Agent Planning (Independent Planners)**: **Effort: XL, Significance: High** Implement mechanisms for **multiple independent planners** to coordinate their actions, including inter-agent communication, negotiation, and distributed conflict resolution. This is a highly complex area involving decentralized decision-making.
-*   [ ] **Trajectory Constraints & State Invariants**: **Effort: XL, Significance: High** Enhance pathfinding and action execution to enforce complex spatial and logical constraints (e.g., "stay on path," "don't walk through walls").
-*   [ ] **Contingent Planning**: **Effort: XL, Significance: Medium** Introduce support for non-deterministic initial states and sensing actions, allowing NPCs to gather information and react to uncertainty.
+### Phase 1: Foundation Completion (IMMEDIATE PRIORITY)
+
+*   [x] ~~**Intermediate/External Conditions & Effects**: **Effort: M, Significance: High**~~ → **Completed via ADR-086**
+    - ✅ Durative actions with at_start, over_all, and at_end conditions implemented
+    - ✅ Temporal condition validation during action execution  
+    - ✅ Integration with STN for temporal constraint management
+
+*   [ ] **Quantifiers Support (Existential/Universal)**: **Effort: M, Significance: Medium**
+    - Implement `exists` and `forall` quantifiers in condition evaluation system
+    - Extend state reasoning to support "any object matching" vs "all objects matching" logic
+    - Add quantifier support to goal and precondition validation
+    - Enable complex NPC reasoning patterns like "find any available chair" or "ensure all doors are locked"
+
+*   [ ] **Enhanced Scheduling**: **Effort: L, Significance: High**
+    - Build robust scheduling system on existing STN temporal foundation
+    - Implement NPC daily/weekly routine management with priority handling
+    - Add activity coordination with deadlines and resource scheduling
+    - Support schedule conflict resolution and dynamic rescheduling
+    - Enable realistic NPC behavior patterns like work shifts, meal times, sleep cycles
+
+### Phase 2: Environmental Dynamics (FUTURE IMPLEMENTATION)
+
+*   [ ] **Enhanced Timed Effects/Goals**: **Effort: M, Significance: High** 
+    - Extend current temporal support for absolute time scheduling
+    - Implement deadline-based goal achievement with failure handling
+    - Add time-triggered effects independent of action execution
+
+*   [ ] **Processes & Events**: **Effort: L, Significance: High** 
+    - Integrate continuous environmental processes (weather, resource depletion)
+    - Implement discrete event system for environmental changes
+    - Add event-driven NPC behavior triggers and responses
+
+### Phase 3: Advanced Coordination (RESEARCH PROJECTS)
+
+*   [ ] **Multi-Agent Planning**: **Effort: XL, Significance: High** 
+    - Design distributed planning architecture for multiple independent NPCs
+    - Implement inter-agent communication, negotiation, and conflict resolution
+    - Add coordination mechanisms for group activities and shared resources
+
+*   [ ] **Trajectory Constraints & State Invariants**: **Effort: XL, Significance: High** 
+    - Enhance pathfinding with complex spatial and logical constraints
+    - Implement navigation mesh integration and collision avoidance
+    - Add dynamic obstacle handling and path replanning
+
+*   [ ] **Contingent Planning**: **Effort: XL, Significance: Medium** 
+    - Introduce non-deterministic initial states and uncertainty modeling
+    - Implement sensing actions and belief state management
+    - Add adaptive planning for unknown or changing environments
 
 ## Consequences/Risks
 
@@ -45,9 +85,24 @@ The following features are identified as crucial for improving NPC behavior in v
 
 ## Success Criteria
 
-*   AriaEngine can successfully plan and execute scenarios involving multiple coordinating NPCs.
-*   NPCs can adhere to complex schedules and react to time-sensitive events.
-*   The planner can handle actions with conditions and effects that span durations or are triggered by external factors.
-*   The planner can reason about and react to uncertain information in the environment.
-*   The implemented features are robust, scalable, and do not introduce unacceptable performance overhead in typical virtual environment simulations.
-*   New test suites are developed to validate the functionality of each implemented feature.
+### Phase 1 Success Criteria (Foundation Completion)
+*   ✅ AriaEngine supports durative actions with temporal conditions (completed via ADR-086)
+*   [ ] Condition system supports existential (`exists`) and universal (`forall`) quantifiers for advanced reasoning
+*   [ ] NPCs can follow complex, scheduled routines using STN-based scheduling system
+*   [ ] Scheduling system handles resource conflicts and temporal coordination effectively
+*   [ ] Phase 1 features integrate seamlessly with existing HTN and temporal planning architecture
+*   [ ] Comprehensive test suites validate quantifier and scheduling functionality
+
+### Long-term Success Criteria (Phases 2-3)
+*   NPCs can react dynamically to environmental processes and discrete events
+*   Multiple NPCs can coordinate effectively in shared virtual environments  
+*   Advanced spatial constraints and pathfinding integrate with planning system
+*   Uncertainty handling enables adaptive NPC behavior in unknown situations
+*   All implemented features maintain acceptable performance in real-time virtual environments
+
+## Related ADRs
+
+- **ADR-086**: Implement Durative Actions (completed foundation work)
+- **ADR-084**: Domain Method Naming Refactor (prerequisite for Phase 1 implementation)
+- **ADR-075**: Complete Temporal Planning Solver
+- **ADR-078**: Timeline Module PC-2 STN Implementation
