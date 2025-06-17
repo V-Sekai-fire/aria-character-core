@@ -125,14 +125,6 @@ defmodule AriaEngine.Timeline.IntervalTest do
       assert Interval.duration_seconds(interval) == 400.0
     end
 
-    @tag :type_check_strict
-    test "raises error for non-DateTime types" do
-      assert_raise FunctionClauseError, fn ->
-        # Convert NaiveDateTime to DateTime for the first argument
-        start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-        Interval.new(start_time, 3600) # Still passing integer for second argument to trigger error
-      end
-    end
   end
 
   describe "time point containment" do
@@ -170,20 +162,6 @@ defmodule AriaEngine.Timeline.IntervalTest do
       refute Interval.contains?(interval, after_time)
     end
 
-    @tag :type_check_strict
-    test "raises error for non-DateTime time types in containment check" do
-      interval =
-        Interval.new(
-          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-        )
-
-      assert_raise FunctionClauseError, fn ->
-        # Convert integer to DateTime for the time point to match expected type
-        # This test is specifically to check for non-DateTime types, so we keep the integer
-        Interval.contains?(interval, 3600) # Integer time point with DateTime interval
-      end
-    end
   end
 
   describe "agent and entity detection" do

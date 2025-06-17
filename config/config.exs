@@ -30,6 +30,9 @@ config :aria_engine,
     # Additional providers can be added when their apps are included
   ]
 
+# Suppress Porcelain goon executable warning
+config :porcelain, goon_warn_if_missing: false
+
 # Configure AriaStorage.SqliteRepo for SQLite database
 config :aria_storage, AriaStorage.SqliteRepo,
   database: Path.expand("../priv/aria_storage.sqlite3", __DIR__),
