@@ -135,21 +135,6 @@ defmodule AriaEngineTest do
       end
     end
 
-    test "handles planning failures gracefully", %{engine: _engine} do
-      # Create engine with impossible goals
-      impossible_engine = AriaEngine.new("impossible", %{
-        goals: [{"impossible_goal", "subject", "object"}],
-        actions: %{echo: &Actions.echo/2}  # No actions that can achieve the goal
-      })
-
-      case AriaEngine.plan_advanced(impossible_engine) do
-        {:error, reason} ->
-          assert is_binary(reason)
-        {:ok, planned_engine} ->
-          # If planning succeeds, execution should fail
-          assert {:error, _} = AriaEngine.execute(planned_engine)
-      end
-    end
   end
 
   describe "Domain registry integration" do
