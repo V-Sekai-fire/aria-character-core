@@ -164,4 +164,151 @@ defmodule AriaEngine.State do
       _ -> false
     end
   end
+
+  @doc """
+  Evaluates existential quantifier: checks if there exists at least one subject 
+  that matches the given predicate and fact_value pattern.
+  
+  Example:
+  ```elixir
+  # Check if there exists any chair that is available
+  State.exists?(state, "status", "available", &String.contains?(&1, "chair"))
+  ```
+  """
+  @spec exists?(t(), predicate(), fact_value(), (subject() -> boolean()) | nil) :: boolean()
+  def exists?(%__MODULE__{data: data}, predicate, fact_value, subject_filter \\ nil) do
+    data
+    |> Enum.any?(fn
+      {{^predicate, subject}, ^fact_value} ->
+        case subject_filter do
+          nil -> true
+          filter_fn when is_function(filter_fn, 1) -> filter_fn.(subject)
+          _ -> false
+        end
+      _ -> false
+    end)
+  end
+
+  @doc """
+  Evaluates universal quantifier: checks if all subjects matching the pattern
+  have the specified predicate and fact_value.
+  
+  Example:
+  ```elixir
+  # Check if all doors are locked
+  State.forall?(state, "status", "locked", &String.contains?(&1, "door"))
+  ```
+  """
+  @spec forall?(t(), predicate(), fact_value(), (subject() -> boolean())) :: boolean()
+  def forall?(%__MODULE__{data: data}, predicate, fact_value, subject_filter) 
+      when is_function(subject_filter, 1) do
+    # Find all subjects that match the filter
+    matching_subjects = 
+      data
+      |> Map.keys()
+      |> Enum.map(fn {_pred, subj} -> subj end)
+      |> Enum.uniq()
+      |> Enum.filter(subject_filter)
+    
+    # If no subjects match the filter, vacuous truth applies (return true)
+    if Enum.empty?(matching_subjects) do
+      true
+    else
+      # Check that ALL matching subjects have the required predicate-value
+      Enum.all?(matching_subjects, fn subject ->
+        matches?(%__MODULE__{data: data}, predicate, subject, fact_value)
+      end)
+    end
+  end
+
+  @doc """
+  Gets all subjects that have a specific predicate with a specific fact_value.
+  
+  Example:
+  ```elixir
+  # Get all subjects with status "available"
+  State.get_subjects_with_fact(state, "status", "available")
+  # => ["chair1", "chair3", "table2"]
+  ```
+  """
+  @spec get_subjects_with_fact(t(), predicate(), fact_value()) :: [subject()]
+  def get_subjects_with_fact(%__MODULE__{data: data}, predicate, fact_value) do
+    data
+    |> Enum.filter(fn {{pred, _subj}, val} -> 
+      pred == predicate and val == fact_value 
+    end)
+    |> Enum.map(fn {{_pred, subj}, _val} -> subj end)
+  end
+
+  @doc """
+  Gets all subjects that match a predicate pattern, regardless of fact_value.
+  
+  Example:
+  ```elixir
+  # Get all subjects that have a "location" predicate
+  State.get_subjects_with_predicate(state, "location")
+  # => ["player", "npc1", "chest"]
+  ```
+  """
+  @spec get_subjects_with_predicate(t(), predicate()) :: [subject()]
+  def get_subjects_with_predicate(%__MODULE__{data: data}, predicate) do
+    data
+    |> Map.keys()
+    |> Enum.filter(fn {pred, _subj} -> pred == predicate end)
+    |> Enum.map(fn {_pred, subj} -> subj end)
+    |> Enum.uniq()
+  end
+
+  @doc """
+  Evaluates a quantified condition structure.
+  
+  Supports both existential and universal quantifiers with flexible condition patterns.
+  
+  ## Condition Format
+  ```elixir
+  # Existential quantifier
+  {:exists, predicate, fact_value, subject_filter}
+  
+  # Universal quantifier  
+  {:forall, predicate, fact_value, subject_filter}
+  
+  # Regular condition (backward compatibility)
+  {predicate, subject, fact_value}
+  ```
+  
+  ## Examples
+  ```elixir
+  # Check if any chair is available
+  condition = {:exists, "status", "available", &String.contains?(&1, "chair")}
+  State.evaluate_condition(state, condition)
+  
+  # Check if all doors are locked
+  condition = {:forall, "status", "locked", &String.contains?(&1, "door")}
+  State.evaluate_condition(state, condition)
+  
+  # Regular condition check
+  condition = {"location", "player", "room1"}
+  State.evaluate_condition(state, condition)
+  ```
+  """
+  @spec evaluate_condition(t(), tuple()) :: boolean()
+  def evaluate_condition(state, condition)
+
+  def evaluate_condition(state, {:exists, predicate, fact_value, subject_filter}) do
+    exists?(state, predicate, fact_value, subject_filter)
+  end
+
+  def evaluate_condition(state, {:forall, predicate, fact_value, subject_filter}) do
+    forall?(state, predicate, fact_value, subject_filter)
+  end
+
+  def evaluate_condition(state, {predicate, subject, fact_value}) do
+    matches?(state, predicate, subject, fact_value)
+  end
+
+  def evaluate_condition(_state, condition) do
+    require Logger
+    Logger.warning("Unknown condition format: #{inspect(condition)}")
+    false
+  end
 end

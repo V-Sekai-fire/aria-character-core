@@ -139,24 +139,45 @@ defmodule AriaEngine.Domain.Actions do
     end
   end
 
-  # Validate durative action preconditions
+  # Validate durative action preconditions with quantifier support
   @spec validate_durative_preconditions(AriaEngine.Domain.DurativeAction.t(), State.t()) :: boolean()
   defp validate_durative_preconditions(durative_action, state) do
     # Check at_start conditions
-    at_start_valid = Enum.all?(durative_action.conditions.at_start, fn {predicate, subject, required_value} ->
-      State.get_fact(state, predicate, subject) == required_value
+    at_start_valid = Enum.all?(durative_action.conditions.at_start, fn condition ->
+      validate_temporal_condition(condition, state)
     end)
     
-    # Check over_all conditions (for now, treat same as at_start)
-    over_all_valid = Enum.all?(durative_action.conditions.over_all, fn {predicate, subject, required_value} ->
-      State.get_fact(state, predicate, subject) == required_value
+    # Check over_all conditions
+    over_all_valid = Enum.all?(durative_action.conditions.over_all, fn condition ->
+      validate_temporal_condition(condition, state)
     end)
     
-    # Check at_end conditions (for now, treat same as at_start)
-    at_end_valid = Enum.all?(durative_action.conditions.at_end, fn {predicate, subject, required_value} ->
-      State.get_fact(state, predicate, subject) == required_value
+    # Check at_end conditions
+    at_end_valid = Enum.all?(durative_action.conditions.at_end, fn condition ->
+      validate_temporal_condition(condition, state)
     end)
     
     at_start_valid and over_all_valid and at_end_valid
+  end
+
+  # Validate a single temporal condition, supporting both regular and quantified conditions
+  @spec validate_temporal_condition(tuple(), State.t()) :: boolean()
+  defp validate_temporal_condition(condition, state) do
+    case condition do
+      # Quantified conditions (delegate to State.evaluate_condition)
+      {:exists, _predicate, _fact_value, _subject_filter} ->
+        State.evaluate_condition(state, condition)
+      
+      {:forall, _predicate, _fact_value, _subject_filter} ->
+        State.evaluate_condition(state, condition)
+      
+      # Regular conditions (backward compatibility)
+      {predicate, subject, required_value} ->
+        State.get_fact(state, predicate, subject) == required_value
+      
+      # Use the general condition evaluator for other formats
+      _ ->
+        State.evaluate_condition(state, condition)
+    end
   end
 end
