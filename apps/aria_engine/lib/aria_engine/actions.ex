@@ -129,6 +129,7 @@ defmodule AriaEngine.Actions do
     end
   end
 
+  @spec copy_file(state(), [file_path() | any()]) :: state() | false
   def copy_file(state, [source, destination, _opts]) do
     # For now, ignore options and use the basic copy
     copy_file(state, [source, destination])
@@ -165,6 +166,7 @@ defmodule AriaEngine.Actions do
     end
   end
 
+  @spec create_directory(state(), [file_path() | any()]) :: state() | false
   def create_directory(state, [dir_path, _opts]) do
     # For now, ignore options and use the basic mkdir with -p flag
     create_directory(state, [dir_path])
@@ -173,6 +175,7 @@ defmodule AriaEngine.Actions do
   @doc """
   List directory contents using external ls command.
   """
+  @spec list_directory(state(), [file_path()]) :: state() | false
   def list_directory(state, [dir_path]) do
     execute_command(state, ["ls", "-la", dir_path])
   end
@@ -180,6 +183,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Check if a file exists using external ls command.
   """
+  @spec file_exists(state(), [file_path()]) :: state()
   def file_exists(state, [file_path]) do
     # Use ls instead of test -f as it's more reliable with Porcelain
     case execute_command(state, ["ls", file_path]) do
@@ -211,6 +215,7 @@ defmodule AriaEngine.Actions do
     end
   end
 
+  @spec download_file(state(), [url() | file_path() | any()]) :: state() | false
   def download_file(state, [url, destination, _options]) do
     case execute_command(state, ["curl", "-o", destination, url]) do
       false -> false  # Command failed, ensure false is returned
@@ -227,6 +232,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Archive files using tar.
   """
+  @spec create_archive(state(), [String.t()]) :: state() | false
   def create_archive(state, [archive_name, source_path]) do
     execute_command(state, ["tar", "-czf", archive_name, source_path])
   end
@@ -234,6 +240,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Extract an archive using tar.
   """
+  @spec extract_archive(state(), [String.t()]) :: state() | false
   def extract_archive(state, [archive_path, destination]) do
     execute_command(state, ["tar", "-xzf", archive_path, "-C", destination])
   end
@@ -241,6 +248,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Run a git command in a repository.
   """
+  @spec git_command(state(), [String.t()]) :: state() | false
   def git_command(state, [repo_path | git_args]) do
     execute_command(state, ["git", "-C", repo_path] ++ git_args)
   end
@@ -248,6 +256,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Send an HTTP request using curl.
   """
+  @spec http_request(state(), [String.t()]) :: state() | false
   def http_request(state, [method, url | curl_args]) do
     case String.upcase(method) do
       "GET" -> execute_command(state, ["curl", "-X", "GET", url] ++ curl_args)
@@ -263,6 +272,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Execute a custom script or program.
   """
+  @spec run_script(state(), [String.t()]) :: state() | false
   def run_script(state, [script_path | script_args]) do
     execute_command(state, [script_path] ++ script_args)
   end
@@ -270,9 +280,11 @@ defmodule AriaEngine.Actions do
   @doc """
   Wait for a specified number of seconds.
   """
+  @spec wait(state(), [integer() | String.t()]) :: state() | false
   def wait(state, [seconds]) when is_integer(seconds) do
     execute_command(state, ["sleep", Integer.to_string(seconds)])
   end
+  @spec wait(state(), [String.t()]) :: state() | false
   def wait(state, [seconds]) when is_binary(seconds) do
     execute_command(state, ["sleep", seconds])
   end
@@ -288,6 +300,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Set an environment variable in the state (simulated).
   """
+  @spec set_env_var(state(), [String.t()]) :: state()
   def set_env_var(state, [var_name, var_value]) do
     state
     |> State.set_object("env", var_name, var_value)
@@ -296,6 +309,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Get an environment variable from the system.
   """
+  @spec get_env_var(state(), [String.t()]) :: state() | false
   def get_env_var(state, [var_name]) do
     case System.get_env(var_name) do
       nil ->
@@ -310,6 +324,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Remove a file or directory path using external rm command.
   """
+  @spec remove_path(state(), [String.t()]) :: state() | false
   def remove_path(state, [path]) do
     execute_command(state, ["rm", "-rf", path])
   end
@@ -317,6 +332,7 @@ defmodule AriaEngine.Actions do
   @doc """
   Change permissions of a file or directory using external chmod command.
   """
+  @spec change_permissions(state(), [String.t()]) :: state() | false
   def change_permissions(state, [mode, path]) do
     execute_command(state, ["chmod", mode, path])
   end
