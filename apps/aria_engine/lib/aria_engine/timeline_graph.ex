@@ -633,10 +633,44 @@ defmodule AriaEngine.TimelineGraph do
 
   # Enhanced Scheduling helper functions
 
-  defp detect_schedule_conflicts(_timeline, _new_interval) do
-    # Placeholder implementation - would need STN interval query support
-    # For now, return no conflicts to enable basic functionality
-    []
+  defp detect_schedule_conflicts(timeline, new_interval) do
+    start_time = get_in(new_interval.metadata, [:start_time])
+    end_time = get_in(new_interval.metadata, [:end_time])
+    
+    # Convert DateTime to STN time units if necessary
+    {stn_start, stn_end} = case {start_time, end_time} do
+      {%DateTime{} = start_dt, %DateTime{} = end_dt} ->
+        # Convert DateTime to milliseconds since epoch, then to STN units
+        start_ms = DateTime.to_unix(start_dt, :millisecond)
+        end_ms = DateTime.to_unix(end_dt, :millisecond)
+        {convert_to_stn_time(start_ms, timeline.time_unit),
+         convert_to_stn_time(end_ms, timeline.time_unit)}
+      {start_num, end_num} when is_number(start_num) and is_number(end_num) ->
+        {start_num, end_num}
+      _ ->
+        # Fallback: use start_time and end_time from Interval if available
+        if new_interval.start_time && new_interval.end_time do
+          start_ms = DateTime.to_unix(new_interval.start_time, :millisecond)
+          end_ms = DateTime.to_unix(new_interval.end_time, :millisecond)
+          {convert_to_stn_time(start_ms, timeline.time_unit),
+           convert_to_stn_time(end_ms, timeline.time_unit)}
+        else
+          {0, 1}  # Fallback for malformed intervals
+        end
+    end
+    
+    # Use STN Core to find conflicts
+    conflicts = STN.Core.check_interval_conflicts(timeline, stn_start, stn_end)
+    
+    # Convert back to Interval format for compatibility
+    Enum.map(conflicts, fn conflict ->
+      Interval.new(
+        # Convert back from STN time units to DateTime
+        convert_from_stn_time(conflict.start_time, timeline.time_unit),
+        convert_from_stn_time(conflict.end_time, timeline.time_unit),
+        metadata: conflict.metadata
+      )
+    end)
   end
 
   defp priority_higher?(priority1, priority2) do
@@ -650,9 +684,72 @@ defmodule AriaEngine.TimelineGraph do
     Map.get(priority_values, priority1, 0) > Map.get(priority_values, priority2, 0)
   end
 
-  defp find_next_available_slot(_timeline, _activity) do
-    # Placeholder implementation - would attempt to find next free time slot
-    # For now, return error to indicate rescheduling failed
-    {:error, :no_available_slot}
+  defp find_next_available_slot(timeline, activity) do
+    # Extract duration and start time from activity
+    duration = case get_in(activity.metadata, [:duration_hours]) do
+      hours when is_number(hours) -> 
+        # Convert hours to STN time units
+        convert_duration_to_stn_time(hours * 3600 * 1000, timeline.time_unit)  # hours to milliseconds to STN units
+      _ -> 
+        # Default 1 hour duration
+        convert_duration_to_stn_time(3600 * 1000, timeline.time_unit)
+    end
+    
+    earliest_start = case get_in(activity.metadata, [:start_time]) do
+      %DateTime{} = dt ->
+        convert_to_stn_time(DateTime.to_unix(dt, :millisecond), timeline.time_unit)
+      num when is_number(num) ->
+        num
+      _ ->
+        # Default to current time in STN units
+        now_ms = DateTime.to_unix(DateTime.utc_now(), :millisecond)
+        convert_to_stn_time(now_ms, timeline.time_unit)
+    end
+    
+    # Use STN Core to find next available slot
+    case STN.Core.find_next_available_slot(timeline, duration, earliest_start) do
+      {:ok, slot_start, slot_end} ->
+        # Convert back to DateTime format
+        start_dt = convert_from_stn_time(slot_start, timeline.time_unit)
+        end_dt = convert_from_stn_time(slot_end, timeline.time_unit)
+        
+        # Return rescheduled activity
+        {:ok, Interval.new(start_dt, end_dt, metadata: activity.metadata)}
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  # Helper functions for time conversion
+
+  defp convert_to_stn_time(time_value_ms, target_unit) do
+    case target_unit do
+      :microsecond -> time_value_ms * 1000
+      :millisecond -> time_value_ms
+      :second -> div(time_value_ms, 1000)
+      :minute -> div(time_value_ms, 60_000)
+      :hour -> div(time_value_ms, 3_600_000)
+      :day -> div(time_value_ms, 86_400_000)
+      _ -> time_value_ms  # Default to milliseconds
+    end
+  end
+
+  defp convert_from_stn_time(stn_time_value, source_unit) do
+    # Convert STN time units back to milliseconds, then to DateTime
+    ms_value = case source_unit do
+      :microsecond -> div(stn_time_value, 1000)
+      :millisecond -> stn_time_value
+      :second -> stn_time_value * 1000
+      :minute -> stn_time_value * 60_000
+      :hour -> stn_time_value * 3_600_000
+      :day -> stn_time_value * 86_400_000
+      _ -> stn_time_value  # Default treat as milliseconds
+    end
+    
+    DateTime.from_unix!(ms_value, :millisecond)
+  end
+
+  defp convert_duration_to_stn_time(duration_ms, target_unit) do
+    convert_to_stn_time(duration_ms, target_unit)
   end
 end

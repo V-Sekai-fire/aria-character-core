@@ -193,6 +193,13 @@ defmodule AriaEngine.Timeline.STN do
   defdelegate time_points(stn), to: Core
   defdelegate get_constraint(stn, from_point, to_point), to: Core
   defdelegate add_time_point(stn, time_point), to: Core
+  
+  # Interval query functions for scheduling
+  defdelegate get_intervals(stn), to: Core
+  defdelegate get_overlapping_intervals(stn, query_start, query_end), to: Core
+  defdelegate find_free_slots(stn, duration, window_start, window_end), to: Core
+  defdelegate check_interval_conflicts(stn, new_start, new_end), to: Core
+  defdelegate find_next_available_slot(stn, duration, earliest_start), to: Core
 
   # PC2 functions
   defdelegate apply_pc2(stn), to: PC2
