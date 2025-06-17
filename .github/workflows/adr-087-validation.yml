@@ -1,0 +1,112 @@
+name: ADR-087 Entity-Agent Timeline Graph Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/aria_engine/**'
+      - 'decisions/087-entity-agent-timeline-graph-architecture.md'
+      - '.github/workflows/adr-087-validation.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/aria_engine/**'
+      - 'decisions/087-entity-agent-timeline-graph-architecture.md'
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: 'Enable verbose test output'
+        required: false
+        default: 'true'
+        type: boolean
+
+env:
+  MIX_ENV: test
+  ELIXIR_VERSION: '1.16.0'
+  OTP_VERSION: '26.2'
+
+jobs:
+  adr-087-timeline-graph-test:
+    name: ADR-087 Timeline Graph Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Elixir & OTP
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: ${{ env.ELIXIR_VERSION }}
+        otp-version: ${{ env.OTP_VERSION }}
+        version-type: strict
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          deps
+          _build
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-mix-
+
+    - name: Install dependencies
+      run: |
+        mix deps.get
+        mix deps.compile
+
+    - name: Compile project
+      run: |
+        mix compile --warnings-as-errors
+        
+    - name: Run ADR-087 Timeline Graph Validation Test
+      id: validation-test
+      run: |
+        echo "Running ADR-087 Entity-Agent Timeline Graph Validation"
+        echo "Testing: Entity creation, Agent transitions, LOD management, Property updates"
+        echo "Characters: Maya (Mage), Alex (Scout), Enemy (Target)"
+        echo ""
+        
+        # Run only the ADR-087 Stage 5 test
+        cd apps/aria_engine
+        mix test test/temporal_planning_test.exs --timeout 15000 \
+          --only describe:"Stage 5: ADR-087 Entity-Agent Timeline Graph Dynamic Validation" \
+          --trace
+          
+    - name: Test Results Summary
+      if: always()
+      run: |
+        echo ""
+        echo "ADR-087 Timeline Graph Validation Results"
+        echo "========================================"
+        if [ "${{ steps.validation-test.outcome }}" == "success" ]; then
+          echo "STATUS: PASSED"
+          echo "Entity-Agent Timeline Graph Architecture validation completed successfully."
+          echo ""
+          echo "Validated Components:"
+          echo "- Entity Creation (Maya, Alex, Enemy)"
+          echo "- Agent Capability Transitions"
+          echo "- LOD Management System"
+          echo "- Property Management with subject-predicate-fact format"
+          echo "- TimelineGraph and StateV2 integration"
+        else
+          echo "STATUS: FAILED"
+          echo "ADR-087 validation test failed. Check logs above for details."
+          echo ""
+          echo "Common failure reasons:"
+          echo "- Entity creation not working properly"
+          echo "- Agent transitions failing"
+          echo "- LOD system not promoting agents"
+          echo "- Property updates not persisting"
+          echo "- TimelineGraph API changes"
+        fi
+
+    - name: Upload test artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: adr-087-validation-results
+        path: |
+          apps/aria_engine/_build/test/logs/
+        retention-days: 30
