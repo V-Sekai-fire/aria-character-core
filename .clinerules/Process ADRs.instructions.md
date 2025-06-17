@@ -15,6 +15,7 @@ When addressing maintenance, research, development and other tasks, follow these
    - Consequences/Risks
    - Success Criteria
 5. Process the tasks defined in the ADR
+   - Before making any code modifications, you must ask for user confirmation using the `ask_followup_question` tool, providing options for approval or cancellation.
 6. When all tasks are complete, update the ADR status to "Completed"
 7. Add a completion date to clearly mark that the ADR is no longer active
 

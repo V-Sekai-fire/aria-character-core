@@ -57,6 +57,7 @@ defmodule AriaEngine.Planner do
 
   alias AriaEngine.{Domain, State, Multigoal}
   alias AriaEngine.TemporalPlanner.{STNPlanner, STNMethod, STNAction}
+  require Logger
 
   # Core planner types (maintained for compatibility)
   @type planner_opts :: keyword()
