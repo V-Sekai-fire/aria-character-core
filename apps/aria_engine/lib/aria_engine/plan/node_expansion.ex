@@ -24,7 +24,8 @@ defmodule AriaEngine.Plan.NodeExpansion do
     expanded: boolean(),
     method_tried: String.t() | nil,
     blacklisted_methods: [String.t()],
-    is_primitive: boolean()
+    is_primitive: boolean(),
+    is_durative: boolean()
   }
 
   @type solution_tree :: %{
@@ -328,14 +329,15 @@ defmodule AriaEngine.Plan.NodeExpansion do
   end
 
   # Mark a node as primitive (action)
-  @spec mark_as_primitive(solution_tree(), node_id()) :: {:ok, solution_tree()}
-  def mark_as_primitive(solution_tree, node_id) do
+  @spec mark_as_primitive(solution_tree(), node_id(), keyword()) :: {:ok, solution_tree()} | {:error, String.t()}
+  def mark_as_primitive(solution_tree, node_id, opts \\ []) do
     case solution_tree.nodes[node_id] do
       nil ->
         {:error, "Node not found: #{node_id}"}
 
       node ->
-        updated_node = %{node | is_primitive: true, expanded: true}
+        is_durative = Keyword.get(opts, :is_durative, false)
+        updated_node = %{node | is_primitive: true, expanded: true, is_durative: is_durative}
         final_tree = put_in(solution_tree.nodes[node_id], updated_node)
         {:ok, final_tree}
     end

@@ -25,7 +25,8 @@ defmodule AriaEngine.Plan.Core do
     expanded: boolean(),
     method_tried: String.t() | nil,
     blacklisted_methods: [String.t()],
-    is_primitive: boolean()
+    is_primitive: boolean(),
+    is_durative: boolean() # New field to indicate if the action is durative
   }
 
   @type solution_tree :: %{
@@ -190,17 +191,23 @@ defmodule AriaEngine.Plan.Core do
           {task_name, args} when is_binary(task_name) ->
             action_atom = String.to_atom(task_name) # Define action_atom here
             if Domain.has_action?(domain, action_atom) do # Use Domain.has_action?
-              NodeExpansion.mark_as_primitive(solution_tree, node_id)
+              NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
+            else if Domain.get_durative_action(domain, action_atom) do # Check for durative action
+              NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
             else
               NodeExpansion.expand_task_node(domain, state, solution_tree, node_id, task_name, args, verbose)
+            end
             end
 
           {action_name, _args} when is_atom(action_name) ->
             # action_atom is already action_name here
             if Domain.has_action?(domain, action_name) do # Use Domain.has_action?
-              NodeExpansion.mark_as_primitive(solution_tree, node_id)
+              NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
+            else if Domain.get_durative_action(domain, action_name) do # Check for durative action
+              NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
             else
               {:error, "Unknown action: #{action_name}"}
+            end
             end
 
           {predicate, subject, fact_value} ->
