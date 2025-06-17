@@ -3,7 +3,7 @@ defmodule AriaEngine.Domain.DurativeAction do
   Represents a durative action in the Aria Engine planning domain.
   """
 
-  alias AriaEngine.State
+  alias AriaEngine.StateV2
 
   @type durative_action_name :: atom()
 
@@ -26,7 +26,7 @@ defmodule AriaEngine.Domain.DurativeAction do
     duration: durative_action_duration(),
     conditions: durative_action_conditions(),
     effects: durative_action_effects(),
-    action_fn: (State.t(), list() -> State.t() | false) # The actual function that performs the action
+    action_fn: (StateV2.t(), list() -> StateV2.t() | false) # The actual function that performs the action
   }
 
   defstruct name: nil,
@@ -38,7 +38,7 @@ defmodule AriaEngine.Domain.DurativeAction do
   @doc """
   Creates a new durative action.
   """
-  @spec new(durative_action_name(), durative_action_duration(), durative_action_conditions(), durative_action_effects(), (State.t(), list() -> State.t() | false)) :: t()
+  @spec new(durative_action_name(), durative_action_duration(), durative_action_conditions(), durative_action_effects(), (StateV2.t(), list() -> StateV2.t() | false)) :: t()
   def new(name, duration, conditions, effects, action_fn) do
     %__MODULE__{
       name: name,

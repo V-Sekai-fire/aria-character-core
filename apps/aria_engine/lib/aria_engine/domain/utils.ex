@@ -6,25 +6,25 @@ defmodule AriaEngine.Domain.Utils do
   Provides utility functions for the planning domain.
   """
 
-  alias AriaEngine.State
+  alias AriaEngine.StateV2
   alias AriaEngine.Actions
 
   @type t :: AriaEngine.Domain.Core.t()
   @type action_name :: atom()
   @type task_name :: String.t()
   @type method_name :: String.t()
-  @type goal_method_fn :: (State.t(), list() -> list() | false)
+  @type goal_method_fn :: (StateV2.t(), list() -> list() | false)
 
   @doc """
   Validates that a goal is satisfied in the given state.
 
   This is used for goal verification during planning.
   """
-  @spec verify_goal(State.t(), String.t(), String.t(), list(), State.fact_value(), integer(), integer()) :: State.fact_value() | false
-  def verify_goal(%State{} = state, _method_name, state_var, args, desired_values, _depth, _verbose) do
+  @spec verify_goal(StateV2.t(), String.t(), String.t(), list(), StateV2.fact_value(), integer(), integer()) :: StateV2.fact_value() | false
+  def verify_goal(%StateV2{} = state, _method_name, state_var, args, desired_values, _depth, _verbose) do
     # This is a placeholder for goal verification logic
     # In the original C++ code, this would check if a goal is satisfied
-    case State.get_fact(state, state_var, List.first(args) || "") do
+    case StateV2.get_fact(state, List.first(args) || "", state_var) do
       ^desired_values -> desired_values
       _ -> false
     end

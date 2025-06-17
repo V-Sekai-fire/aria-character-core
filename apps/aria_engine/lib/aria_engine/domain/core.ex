@@ -28,14 +28,14 @@ defmodule AriaEngine.Domain.Core do
   """
 
   require Logger
-  alias AriaEngine.State
+  alias AriaEngine.StateV2
 
   @type action_name :: atom()
   @type task_name :: String.t()
   @type method_name :: String.t()
-  @type action_fn :: (State.t(), list() -> State.t() | false)
-  @type task_method_fn :: (State.t(), list() -> list() | false)
-  @type goal_method_fn :: (State.t(), list() -> list() | false)
+  @type action_fn :: (StateV2.t(), list() -> StateV2.t() | false)
+  @type task_method_fn :: (StateV2.t(), list() -> list() | false)
+  @type goal_method_fn :: (StateV2.t(), list() -> list() | false)
   @type named_method :: {method_name(), task_method_fn() | goal_method_fn()}
 
   alias AriaEngine.Domain.DurativeAction, as: DurativeAction

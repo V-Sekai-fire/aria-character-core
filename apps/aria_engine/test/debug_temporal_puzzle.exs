@@ -27,10 +27,10 @@ defmodule AriaEngine.TemporalPuzzleDebug do
     domain = build_coffee_bagel_domain()
 
     # 2. Define initial state
-    initial_state = State.new()
-    |> State.set_fact("coffee", "status", "raw")
-    |> State.set_fact("bagel", "status", "raw")
-    |> State.set_fact("time", "current", 0) # Current time in milliseconds
+    initial_state = StateV2.new()
+    |> StateV2.set_fact("coffee", "status", "raw")
+    |> StateV2.set_fact("bagel", "status", "raw")
+    |> StateV2.set_fact("time", "current", 0) # Current time in milliseconds
 
     # 3. Define goals
     goals = [
@@ -83,8 +83,8 @@ defmodule AriaEngine.TemporalPuzzleDebug do
 
   # Instantaneous action: brew_coffee_start
   defp brew_coffee_start_action(state, []) do
-    if State.get_fact(state, "coffee", "status") == "raw" do
-      State.set_fact(state, "coffee", "status", "brewing")
+    if StateV2.get_fact(state, "status", "coffee") == "raw" do
+      StateV2.set_fact(state, "coffee", "status", "brewing")
     else
       false
     end
@@ -92,10 +92,10 @@ defmodule AriaEngine.TemporalPuzzleDebug do
 
   # Temporal action: wait_for_brew (takes 5 minutes = 300,000 ms)
   defp wait_for_brew_action(state, []) do
-    if State.get_fact(state, "coffee", "status") == "brewing" do
-      new_time = State.get_fact(state, "time", "current") + 300_000
-      State.set_fact(state, "coffee", "status", "brewed")
-      |> State.set_fact("time", "current", new_time)
+    if StateV2.get_fact(state, "status", "coffee") == "brewing" do
+      new_time = StateV2.get_fact(state, "current", "time") + 300_000
+      StateV2.set_fact(state, "coffee", "status", "brewed")
+      |> StateV2.set_fact("time", "current", new_time)
     else
       false
     end
@@ -103,8 +103,8 @@ defmodule AriaEngine.TemporalPuzzleDebug do
 
   # Instantaneous action: toast_bagel_start
   defp toast_bagel_start_action(state, []) do
-    if State.get_fact(state, "bagel", "status") == "raw" do
-      State.set_fact(state, "bagel", "status", "toasting")
+    if StateV2.get_fact(state, "status", "bagel") == "raw" do
+      StateV2.set_fact(state, "bagel", "status", "toasting")
     else
       false
     end
@@ -112,10 +112,10 @@ defmodule AriaEngine.TemporalPuzzleDebug do
 
   # Temporal action: wait_for_toast (takes 3 minutes = 180,000 ms)
   defp wait_for_toast_action(state, []) do
-    if State.get_fact(state, "bagel", "status") == "toasting" do
-      new_time = State.get_fact(state, "time", "current") + 180_000
-      State.set_fact(state, "bagel", "status", "toasted")
-      |> State.set_fact("time", "current", new_time)
+    if StateV2.get_fact(state, "status", "bagel") == "toasting" do
+      new_time = StateV2.get_fact(state, "current", "time") + 180_000
+      StateV2.set_fact(state, "bagel", "status", "toasted")
+      |> StateV2.set_fact("time", "current", new_time)
     else
       false
     end
@@ -123,8 +123,8 @@ defmodule AriaEngine.TemporalPuzzleDebug do
 
   # Non-temporal action: eat_bagel (instantaneous, requires bagel toasted)
   defp eat_bagel_action(state, []) do
-    if State.get_fact(state, "bagel", "status") == "toasted" do
-      State.set_fact(state, "bagel", "status", "consumed")
+    if StateV2.get_fact(state, "status", "bagel") == "toasted" do
+      StateV2.set_fact(state, "bagel", "status", "consumed")
     else
       false
     end
@@ -132,8 +132,8 @@ defmodule AriaEngine.TemporalPuzzleDebug do
 
   # Non-temporal action: drink_coffee (instantaneous, requires coffee brewed)
   defp drink_coffee_action(state, []) do
-    if State.get_fact(state, "coffee", "status") == "brewed" do
-      State.set_fact(state, "coffee", "status", "consumed")
+    if StateV2.get_fact(state, "status", "coffee") == "brewed" do
+      StateV2.set_fact(state, "coffee", "status", "consumed")
     else
       false
     end
@@ -141,7 +141,7 @@ defmodule AriaEngine.TemporalPuzzleDebug do
 
   # Unigoal method for "coffee" goal (temporal method)
   defp achieve_coffee_unigoal(state, ["status", "consumed"]) do
-    case State.get_fact(state, "coffee", "status") do
+    case StateV2.get_fact(state, "status", "coffee") do
       "consumed" -> []
       "brewed" -> [{:drink_coffee, []}]
       "brewing" -> [{:wait_for_brew, []}, {:drink_coffee, []}]
@@ -152,7 +152,7 @@ defmodule AriaEngine.TemporalPuzzleDebug do
 
   # Unigoal method for "bagel" goal (temporal method)
   defp achieve_bagel_unigoal(state, ["status", "consumed"]) do
-    case State.get_fact(state, "bagel", "status") do
+    case StateV2.get_fact(state, "status", "bagel") do
       "consumed" -> []
       "toasted" -> [{:eat_bagel, []}]
       "toasting" -> [{:wait_for_toast, []}, {:eat_bagel, []}]

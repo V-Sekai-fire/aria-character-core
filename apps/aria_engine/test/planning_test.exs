@@ -13,9 +13,9 @@ defmodule AriaEngine.PlanningTest do
       domain = TestDomains.build_simple_rpg_domain()
 
       # Set up initial state
-      initial_state = AriaEngine.create_state()
-      |> AriaEngine.set_fact("location", "player", "room1")
-      |> AriaEngine.set_fact("location", "sword", "room1") # Change sword location to room1
+      initial_state = AriaEngine.StateV2.new()
+      |> AriaEngine.StateV2.set_fact("player", "location", "room1")
+      |> AriaEngine.StateV2.set_fact("sword", "location", "room1") # Change sword location to room1
 
       # Simple goal: have the sword
       goals = [{"has", "player", "sword"}]
@@ -33,15 +33,15 @@ defmodule AriaEngine.PlanningTest do
     test "validates plan execution" do
       domain = TestDomains.build_test_domain()
 
-      initial_state = AriaEngine.create_state()
-      |> AriaEngine.set_fact("location", "player", "room1")
+      initial_state = AriaEngine.StateV2.new()
+      |> AriaEngine.StateV2.set_fact("player", "location", "room1")
 
       # Manual plan
       plan = [{:move, ["room1", "room2"]}, {:move, ["room2", "room3"]}]
 
       case AriaEngine.execute_plan(domain, initial_state, plan) do
         {:ok, final_state} ->
-          assert AriaEngine.get_fact(final_state, "location", "player") == "room3"
+          assert AriaEngine.StateV2.get_fact(final_state, "player", "location") == "room3"
         {:error, reason} ->
           flunk("Plan execution failed: #{reason}")
       end
@@ -52,9 +52,9 @@ defmodule AriaEngine.PlanningTest do
     test "decomposes tasks into actions" do
       domain = TestDomains.build_rpg_domain()
 
-      initial_state = AriaEngine.create_state()
-      |> AriaEngine.set_fact("location", "player", "room1")
-      |> AriaEngine.set_fact("location", "sword", "room2")
+      initial_state = AriaEngine.StateV2.new()
+      |> AriaEngine.StateV2.set_fact("player", "location", "room1")
+      |> AriaEngine.StateV2.set_fact("sword", "location", "room2")
 
       # Task: get the sword
       tasks = [{"get_item", ["sword"]}]
@@ -68,8 +68,8 @@ defmodule AriaEngine.PlanningTest do
 
           # Verify plan works
           {:ok, final_state} = AriaEngine.execute_plan(domain, initial_state, plan_actions)
-          assert AriaEngine.get_fact(final_state, "has", "player") == "sword"
-          assert AriaEngine.get_fact(final_state, "location", "player") == "room2"
+          assert AriaEngine.StateV2.get_fact(final_state, "player", "has") == "sword"
+          assert AriaEngine.StateV2.get_fact(final_state, "player", "location") == "room2"
 
         {:error, reason} ->
           flunk("Planning failed: #{reason}")

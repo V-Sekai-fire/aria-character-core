@@ -24,9 +24,9 @@ defmodule AriaEngine.GoalTest do
 
     test "checks goal satisfaction" do
       # Create a state where player is in treasure_room and has treasure
-      state = AriaEngine.create_state()
-      |> AriaEngine.set_fact("location", "player", "treasure_room")
-      |> AriaEngine.set_fact("has", "player", "treasure")
+      state = AriaEngine.StateV2.new()
+      |> AriaEngine.StateV2.set_fact("player", "location", "treasure_room")
+      |> AriaEngine.StateV2.set_fact("player", "has", "treasure")
 
       multigoal = AriaEngine.create_multigoal()
       |> Multigoal.add_goal("location", "player", "treasure_room")

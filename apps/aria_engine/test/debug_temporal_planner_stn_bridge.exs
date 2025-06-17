@@ -24,10 +24,10 @@ defmodule AriaEngine.TemporalPlannerSTNBridgeDebug do
     domain = build_temporal_hybrid_domain()
 
     # 2. Define initial state with time
-    initial_state = State.new()
-    |> State.set_fact("location", "player", "start_location")
-    |> State.set_fact("has", "player", "nothing")
-    |> State.set_fact("time", "current", 0) # Current time in milliseconds
+    initial_state = StateV2.new()
+    |> StateV2.set_fact("location", "player", "start_location")
+    |> StateV2.set_fact("has", "player", "nothing")
+    |> StateV2.set_fact("time", "current", 0) # Current time in milliseconds
 
     # 3. Define goals
     # Goal: Player has the item and is at the end location
@@ -83,11 +83,11 @@ defmodule AriaEngine.TemporalPlannerSTNBridgeDebug do
 
   # Non-temporal action: pickup
   defp pickup_action(state, [item]) do
-    player_location = State.get_fact(state, "location", "player")
-    item_location = State.get_fact(state, "location", item)
+    player_location = StateV2.get_fact(state, "player", "location")
+    item_location = StateV2.get_fact(state, "location", item)
 
     if player_location == item_location do
-      State.set_fact(state, "has", "player", item)
+      StateV2.set_fact(state, "has", "player", "item")
     else
       false # Cannot pickup if not in same location
     end
@@ -96,11 +96,11 @@ defmodule AriaEngine.TemporalPlannerSTNBridgeDebug do
   # Temporal action: travel
   # This action will return a new state and the duration it took
   defp travel_action(state, [from_loc, to_loc, duration_ms]) do
-    current_loc = State.get_fact(state, "location", "player")
+    current_loc = StateV2.get_fact(state, "player", "location")
     if current_loc == from_loc do
-      new_time = State.get_fact(state, "time", "current") + duration_ms
-      State.set_fact(state, "location", "player", to_loc)
-      |> State.set_fact("time", "current", new_time)
+      new_time = StateV2.get_fact(state, "current", "time") + duration_ms
+      StateV2.set_fact(state, "location", "player", "to_loc")
+      |> StateV2.set_fact("time", "current", new_time)
     else
       false # Cannot travel from wrong location
     end
@@ -108,10 +108,10 @@ defmodule AriaEngine.TemporalPlannerSTNBridgeDebug do
 
   # Unigoal method for "has" goal
   defp achieve_has_item_unigoal(state, ["has", "player", item]) do
-    if State.get_fact(state, "has", "player") == item do
+    if StateV2.get_fact(state, "player", "has") == item do
       [] # Already has the item, no actions needed
     else
-      player_location = State.get_fact(state, "location", "player")
+      player_location = StateV2.get_fact(state, "player", "location")
       item_location = "middle_location" # Assume item is here
       
       # Plan to travel to item location and pick it up
@@ -124,10 +124,10 @@ defmodule AriaEngine.TemporalPlannerSTNBridgeDebug do
 
   # Unigoal method for "location" goal
   defp achieve_location_unigoal(state, ["location", "player", target_location]) do
-    if State.get_fact(state, "location", "player") == target_location do
+    if StateV2.get_fact(state, "player", "location") == target_location do
       [] # Already at target location, no actions needed
     else
-      current_player_loc = State.get_fact(state, "location", "player")
+      current_player_loc = StateV2.get_fact(state, "player", "location")
       # Plan to travel to the target location
       [
         {:travel, [current_player_loc, target_location, 3000]} # Travel to target (3 seconds)
@@ -139,7 +139,7 @@ defmodule AriaEngine.TemporalPlannerSTNBridgeDebug do
 
   defp build_stn_from_plan(plan, initial_state) do
     stn = STN.new(time_unit: :millisecond)
-    current_time = State.get_fact(initial_state, "time", "current")
+    current_time = StateV2.get_fact(initial_state, "current", "time")
     
     # Add a time point for the start of the plan
     stn = STN.add_time_point(stn, "t_start_plan_#{current_time}")
