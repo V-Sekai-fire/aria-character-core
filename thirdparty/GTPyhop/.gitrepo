@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/dananau/GTPyhop.git
+	branch = main
+	commit = 1ca7773963443476d0e83d03f10efab325327565
+	parent = 493bf39b0737a1ed5ed3239f5b4c6fef329bc881
+	method = merge
+	cmdver = 0.4.9
