@@ -38,6 +38,12 @@ defmodule AriaTownDemo.MixProject do
       # AriaEngine Integration
       {:aria_engine, in_umbrella: true},
       
+      # Utilities
+      {:uuid, "~> 1.1"},
+      
+      # Utilities
+      {:elixir_uuid, "~> 1.2"},
+      
       # Development and Testing
       {:phoenix_live_reload, "~> 1.2", only: :dev}
     ]
