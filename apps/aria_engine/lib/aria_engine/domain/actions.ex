@@ -165,10 +165,11 @@ defmodule AriaEngine.Domain.Actions do
   defp validate_temporal_condition(condition, state) do
     case condition do
       # Quantified conditions (delegate to StateV2.evaluate_condition)
-      {:exists, _predicate, _fact_value, _subject_filter} ->
+      # New StateV2 format: {:exists, subject_filter, predicate, fact_value}
+      {:exists, _subject_filter, _predicate, _fact_value} ->
         StateV2.evaluate_condition(state, condition)
       
-      {:forall, _predicate, _fact_value, _subject_filter} ->
+      {:forall, _subject_filter, _predicate, _fact_value} ->
         StateV2.evaluate_condition(state, condition)
       
       # Regular conditions (entity-first format)
