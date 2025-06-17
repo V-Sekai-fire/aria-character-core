@@ -184,6 +184,8 @@ defmodule AriaEngine do
   def from_domain(%Domain{} = domain, goals, initial_state \\ nil) do
     initial_state = initial_state || State.new()
 
+    # Preserve the method formats exactly as they are in the domain
+    # This ensures that method tuples remain as tuples in the engine
     new(domain.name, %{
       name: domain.name,
       actions: domain.actions,
@@ -200,44 +202,28 @@ defmodule AriaEngine do
   """
   @spec to_domain(t()) :: Domain.t()
   def to_domain(%__MODULE__{} = engine) do
-    # Create domain with proper tuple-based methods
+    # Create domain with the same name
     domain = Domain.new(engine.name)
     
-    # Add actions directly (they don't need tuple conversion)
+    # Add actions directly (they don't need conversion)
     domain_with_actions = %{domain | actions: engine.actions}
     
-    # Convert and add task methods
+    # Add task methods - preserve original format exactly
     domain_with_task_methods = 
       Enum.reduce(engine.task_methods, domain_with_actions, fn {task_name, methods}, acc ->
-        # Convert each method to tuple format if needed
-        tuple_methods = 
-          Enum.map(methods, fn 
-            {name, func} -> {name, func}  # Already a tuple
-            func when is_function(func) -> {Domain.infer_method_name(func), func}  # Convert to tuple
-          end)
-        %{acc | task_methods: Map.put(acc.task_methods, task_name, tuple_methods)}
+        # Preserve the methods exactly as they are in the engine
+        %{acc | task_methods: Map.put(acc.task_methods, task_name, methods)}
       end)
     
-    # Convert and add unigoal methods
+    # Add unigoal methods - preserve original format exactly
     domain_with_unigoal_methods = 
       Enum.reduce(engine.unigoal_methods, domain_with_task_methods, fn {goal_type, methods}, acc ->
-        # Convert each method to tuple format if needed
-        tuple_methods = 
-          Enum.map(methods, fn 
-            {name, func} -> {name, func}  # Already a tuple
-            func when is_function(func) -> {Domain.infer_method_name(func), func}  # Convert to tuple
-          end)
-        %{acc | unigoal_methods: Map.put(acc.unigoal_methods, goal_type, tuple_methods)}
+        # Preserve the methods exactly as they are in the engine
+        %{acc | unigoal_methods: Map.put(acc.unigoal_methods, goal_type, methods)}
       end)
     
-    # Convert and add multigoal methods
-    tuple_multigoal_methods = 
-      Enum.map(engine.multigoal_methods, fn
-        {name, func} -> {name, func}  # Already a tuple
-        func when is_function(func) -> {Domain.infer_method_name(func), func}  # Convert to tuple
-      end)
-      
-    %{domain_with_unigoal_methods | multigoal_methods: tuple_multigoal_methods}
+    # Add multigoal methods - preserve original format exactly
+    %{domain_with_unigoal_methods | multigoal_methods: engine.multigoal_methods}
   end
 
   ## Domain Building API

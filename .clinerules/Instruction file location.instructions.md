@@ -1,11 +1,11 @@
 ---
-applyTo: ".github/instructions/**"
+applyTo: ".clinerules/**"
 textId: "INST-012"
 ---
 
 ## Instruction File Location
 
-To maintain a centralized and organized set of project guidelines, all instruction files must be placed in the `.github/instructions/` directory.
+To maintain a centralized and organized set of project guidelines, all instruction files must be placed in the `.clinerules/` directory.
 
 ### Rationale
 

@@ -126,6 +126,7 @@ defmodule AriaEngine.Planner do
   @spec plan(domain_interface(), State.t(), [Plan.todo_item()], planner_opts(), integer() | nil) :: planner_result()
   def plan(domain_interface, %State{} = initial_state, goals, opts \\ [], current_time \\ nil) when is_list(goals) do
     set_logger_level_from_opts(opts)
+    Logger.configure(level: :debug) # Force debug for tracing
     
     # Convert domain interface to Domain struct for compatibility
     domain = interface_to_domain(domain_interface)
@@ -420,6 +421,7 @@ defmodule AriaEngine.Planner do
   def plan_with_solution_tree(%Domain{} = domain, %State{} = state, todos, opts \\ []) do
     # Create initial solution tree with goal-task network
     solution_tree = create_initial_solution_tree(todos, state)
+    Logger.debug("Initial solution tree for plan_with_solution_tree: #{inspect(solution_tree)}")
     
     # Run IPyHOP algorithm
     ipyhop(domain, state, solution_tree, opts)
@@ -507,6 +509,7 @@ defmodule AriaEngine.Planner do
   @spec ipyhop_loop(Domain.t(), State.t(), solution_tree(), integer(), integer(), integer()) :: 
     {:ok, solution_tree()} | {:error, String.t()}
   defp ipyhop_loop(%Domain{} = domain, current_state, solution_tree, depth, max_depth, verbose) do
+    Logger.debug("ipyhop_loop: current solution_tree: #{inspect(solution_tree)}")
     if depth >= max_depth do
       {:error, "Maximum planning depth exceeded"}
     else
@@ -653,6 +656,9 @@ defmodule AriaEngine.Planner do
     
     child_ids = Enum.reverse(child_ids)
     
+    # Determine if root node should be marked as primitive
+    is_root_primitive = Enum.empty?(todos)
+
     # Update solution tree
     updated_nodes = 
       child_nodes
@@ -660,7 +666,7 @@ defmodule AriaEngine.Planner do
         Map.put(acc, child_node.id, child_node)
       end)
       |> Map.update!(root_id, fn root_node ->
-        %{root_node | children_ids: child_ids, expanded: true}
+        %{root_node | children_ids: child_ids, expanded: true, is_primitive: is_root_primitive}
       end)
     
     {:ok, %{solution_tree | nodes: updated_nodes}}
@@ -736,6 +742,34 @@ defmodule AriaEngine.Planner do
     end
   end
 
+  # Apply a goal method and handle the result
+  @spec apply_goal_method(Domain.t(), State.t(), solution_tree(), node_id(), 
+    String.t(), String.t(), any(), String.t(), function(), integer()) :: 
+    {:ok, solution_tree()} | {:error, String.t()} | :failure
+  defp apply_goal_method(domain, state, solution_tree, node_id, 
+    predicate, subject, object, method_name, method_fn, verbose) do
+    
+    # Apply method to get subtasks
+    case apply_method_to_goal(method_fn, predicate, subject, object, verbose) do
+      {:ok, subtasks} ->
+        # Decomposed into subtasks
+        new_tree = create_subtask_nodes(solution_tree, node_id, subtasks, method_name)
+        {:ok, new_tree}
+
+      {:error, reason} ->
+        # Blacklist this method and try next
+        node = solution_tree.nodes[node_id]
+        blacklisted_node = %{node | blacklisted_methods: [method_name | node.blacklisted_methods]}
+        updated_tree = %{solution_tree | nodes: Map.put(solution_tree.nodes, node_id, blacklisted_node)}
+        
+        if verbose > 2 do
+          IO.puts("Method #{method_name} failed for goal: #{reason}")
+        end
+        
+        expand_goal_node(domain, state, updated_tree, node_id, predicate, subject, object, verbose)
+    end
+  end
+
   # Expand goal node
   @spec expand_goal_node(Domain.t(), State.t(), solution_tree(), node_id(), String.t(), String.t(), any(), integer()) :: 
     {:ok, solution_tree()} | {:error, String.t()} | :failure
@@ -750,7 +784,7 @@ defmodule AriaEngine.Planner do
           # Goal already satisfied - mark as primitive (no action needed)
           mark_as_primitive(solution_tree, node_id)
         else
-          # Find methods that can achieve this goal (returns {name, function} tuples)
+          # Find methods that can achieve this goal
           goal_methods = Domain.get_goal_methods(domain, predicate)
           
           # Debug: Check what we actually got
@@ -758,11 +792,15 @@ defmodule AriaEngine.Planner do
             IO.puts("DEBUG: goal_methods for #{predicate}: #{inspect(goal_methods)}")
           end
           
-          # Filter out blacklisted methods
+          # Filter out blacklisted methods - this depends on the method format
           usable_methods = Enum.reject(goal_methods, fn method ->
             case method do
-              {method_name, _method_fn} ->
+              {method_name, _method_fn} when is_binary(method_name) ->
+                # Already a named tuple, filter by name
                 Enum.member?(node.blacklisted_methods, method_name)
+              _function when is_function(method, 2) ->
+                # It's a raw function - for debug script just allow it
+                false
               _ ->
                 # Handle unexpected format
                 if verbose > 0 do
@@ -779,32 +817,26 @@ defmodule AriaEngine.Planner do
               end
               :failure
               
-            [{method_name, method_fn} | _] ->
-              case method_fn do
-                nil ->
-                  {:error, "Method function not found: #{method_name}"}
-                  
-                method_fn when is_function(method_fn) ->
-                  # Apply method to get subtasks
-                  case apply_method_to_goal(method_fn, predicate, subject, object, verbose) do
-                    {:ok, subtasks} ->
-                      # Decomposed into subtasks
-                      new_tree =
-                        create_subtask_nodes(solution_tree, node_id, subtasks, method_name)
-
-                      {:ok, new_tree}
-
-                    {:error, reason} ->
-                      # Blacklist this method and try next
-                      blacklisted_node = %{node | blacklisted_methods: [method_name | node.blacklisted_methods]}
-                      updated_tree = %{solution_tree | nodes: Map.put(solution_tree.nodes, node_id, blacklisted_node)}
-                      
-                      if verbose > 2 do
-                        IO.puts("Method #{method_name} failed for goal: #{reason}")
-                      end
-                      
-                      expand_goal_node(domain, state, updated_tree, node_id, predicate, subject, object, verbose)
+            [first_method | _] ->
+              # Handle different method formats
+              case first_method do
+                {method_name, method_fn} when is_binary(method_name) and is_function(method_fn, 2) ->
+                  # Standard named tuple format
+                  apply_goal_method(domain, state, solution_tree, node_id, 
+                    predicate, subject, object, method_name, method_fn, verbose)
+                
+                method_fn when is_function(method_fn, 2) ->
+                  # Raw function format - generate a name for blacklisting
+                  method_name = "method_#{:erlang.phash2(method_fn)}"
+                  apply_goal_method(domain, state, solution_tree, node_id, 
+                    predicate, subject, object, method_name, method_fn, verbose)
+                
+                other ->
+                  # Unexpected format - try to handle gracefully
+                  if verbose > 0 do
+                    IO.puts("DEBUG: Cannot process method format: #{inspect(other)}")
                   end
+                  {:error, "Invalid method format: #{inspect(other)}"}
               end
           end
         end
@@ -1124,6 +1156,7 @@ defmodule AriaEngine.Planner do
     {:ok, State.t()} | {:error, String.t()}
   defp run_execution_loop(domain, current_state, current_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
+    Logger.debug("run_execution_loop: current_tree: #{inspect(current_tree)}")
     
     case get_next_primitive_action(current_tree) do
       nil ->
@@ -1168,23 +1201,32 @@ defmodule AriaEngine.Planner do
   @spec get_next_primitive_action_dfs(solution_tree(), node_id()) :: {node_id(), atom(), list()} | nil
   defp get_next_primitive_action_dfs(solution_tree, node_id) do
     case solution_tree.nodes[node_id] do
-      nil -> nil
+      nil -> 
+        Logger.debug("get_next_primitive_action_dfs: Node #{node_id} not found, returning nil")
+        nil
       
       node ->
+        Logger.debug("get_next_primitive_action_dfs: node_id: #{node_id}, node: #{inspect(node)}")
         cond do
           node.is_primitive and node.task != {:root, []} ->
             # This is a primitive action
             case node.task do
-              {action_name, args} -> {node_id, action_name, args}
-              _ -> nil
+              {action_name, args} -> 
+                Logger.debug("get_next_primitive_action_dfs: Found primitive action: #{action_name}, returning {#{node_id}, #{action_name}, #{inspect(args)}}")
+                {node_id, action_name, args}
+              _ -> 
+                Logger.debug("get_next_primitive_action_dfs: Primitive node with unexpected task format, returning nil")
+                nil
             end
             
           node.children_ids == [] ->
             # Leaf node but not primitive - shouldn't happen in a complete plan
+            Logger.debug("get_next_primitive_action_dfs: Leaf node but not primitive, returning nil")
             nil
             
           true ->
             # Search children in order
+            Logger.debug("get_next_primitive_action_dfs: Searching children for node #{node_id}")
             Enum.find_value(node.children_ids, fn child_id ->
               get_next_primitive_action_dfs(solution_tree, child_id)
             end)
