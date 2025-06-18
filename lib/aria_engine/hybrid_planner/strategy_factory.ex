@@ -376,59 +376,6 @@ defmodule AriaEngine.HybridPlanner.StrategyFactory do
     |> register_configuration(:quiet, quiet_config)
   end
 
-  # Validate that a strategy module implements the required behavior
-  defp validate_strategy_module(strategy_type, strategy_module) do
-    required_functions = case strategy_type do
-      :planning_strategy -> [
-        {:plan, 4},        # domain, state, goals, opts
-        {:replan, 5},      # domain, state, solution_tree, fail_node_id, opts
-        {:validate_plan, 3}, # domain, state, solution_tree
-        {:strategy_info, 0}
-      ]
-      :temporal_strategy -> [
-        {:add_temporal_constraints, 3}, # constraints, actions, opts
-        {:validate_temporal_consistency, 2}, # constraints, opts
-        {:update_constraints, 3}, # constraints, modifications, opts
-        {:get_temporal_schedule, 2} # constraints, opts
-      ]
-      :state_strategy -> [
-        {:apply_action, 4}, # state, action, domain, opts
-        {:query_state, 3}, # state, query, opts
-        {:create_checkpoint, 3}, # state, checkpoint_id, opts
-        {:rollback_to_checkpoint, 3} # state, checkpoint_id, opts
-      ]
-      :domain_strategy -> [
-        {:get_action_metadata, 3}, # domain, action_name, opts
-        {:get_task_methods, 3}, # domain, task_name, opts
-        {:get_goal_methods, 3}, # domain, goal_spec, opts
-        {:validate_domain, 2} # domain, opts
-      ]
-      :logging_strategy -> [
-        {:log, 4}, # level, message, metadata, opts
-        {:log_progress, 3}, # phase, progress, opts
-        {:log_error, 3}, # error, context, opts
-        {:configure, 2} # config, opts
-      ]
-      :execution_strategy -> [
-        {:execute_plan, 4}, # solution_tree, initial_state, strategies, opts
-        {:execute_step, 4}, # step, current_state, strategies, opts
-        {:handle_execution_failure, 4} # failure, current_state, strategies, opts
-      ]
-    end
-
-    # Check for functions with flexible arity (allowing default parameters)
-    missing_functions = Enum.filter(required_functions, fn {func, arity} ->
-      # Check if function exists with exact arity or with fewer args (due to defaults)
-      not (function_exported?(strategy_module, func, arity) or 
-           function_exported?(strategy_module, func, arity - 1))
-    end)
-
-    if length(missing_functions) > 0 do
-      {:error, "Module #{strategy_module} missing required functions: #{inspect(missing_functions)}"}
-    else
-      :ok
-    end
-  end
 
   # Resolve strategy configuration to actual strategy modules
   defp resolve_strategy_modules(factory, strategy_config) do

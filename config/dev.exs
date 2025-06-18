@@ -3,12 +3,6 @@
 
 import Config
 
-# Configure AriaEngine domain providers for development
-config :aria_engine,
-  domain_providers: [
-    AriaEngine.BasicActionsDomainProvider,
-    # Add more providers as needed in development
-  ]
 
 # Development environment configuration
 config :logger, level: :info
@@ -28,29 +22,6 @@ config :logger, level: :info
 #     monitoring: 2
 #   }
 
-# Security Service development configuration (using mock for simplicity)
-config :aria_security,
-  secrets_module: AriaSecurity.SecretsMock,
-  openbao_url: "http://localhost:8200",
-  openbao_token: System.get_env("OPENBAO_DEV_TOKEN") || "dev-token"
-
-# Storage Service development configuration
-config :aria_storage,
-  backend: :local,
-  local_path: "tmp/storage",
-  chunk_size: 64 * 1024,
-  cdn_enabled: false
-
-# Authentication Service development configuration
-config :aria_auth,
-  macaroon_secret: "development_macaroon_secret_key",
-  session_ttl: 3600,
-  webrtc_enabled: false
-
-# Monitor Service development configuration
-config :aria_monitor,
-  prometheus_enabled: false,
-  live_dashboard_enabled: true
 
 # Development Hammer rate limiting configuration
 config :hammer,

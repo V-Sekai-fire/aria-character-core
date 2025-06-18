@@ -3,7 +3,6 @@
 
 defmodule AriaAuthTest do
   use ExUnit.Case
-  doctest AriaAuth
 
   alias AriaAuth.Accounts.User
 
@@ -33,4 +32,3 @@ defmodule AriaAuthTest do
       AriaAuth.verify_token(token)
   end
 end
-

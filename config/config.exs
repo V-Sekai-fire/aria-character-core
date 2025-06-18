@@ -22,21 +22,10 @@ config :telemetry_poller, :default,
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2, cleanup_interval_ms: 60_000 * 10]}
 
-# Configure AriaEngine domain providers
-config :aria_engine,
-  domain_providers: [
-    AriaEngine.BasicActionsDomainProvider,
-    AriaFileManagement.DomainProvider,
-    # Additional providers can be added when their apps are included
-  ]
 
 # Suppress Porcelain goon executable warning
 config :porcelain, goon_warn_if_missing: false
 
-# Configure AriaStorage.SqliteRepo for SQLite database
-config :aria_storage, AriaStorage.SqliteRepo,
-  database: Path.expand("../priv/aria_storage.sqlite3", __DIR__),
-  pool_size: 10
 
 # Import environment specific config files
 import_config "#{config_env()}.exs"

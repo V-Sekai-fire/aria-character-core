@@ -72,6 +72,27 @@ defmodule AriaEngine.StateV2 do
   end
 
   @doc """
+  Alias for set_fact/4 for backward compatibility.
+  
+  Entity-first API: update_fact(state, subject, predicate, fact_value)
+  """
+  @spec update_fact(t(), subject(), predicate(), fact_value()) :: t()
+  def update_fact(%__MODULE__{} = state, subject, predicate, fact_value) do
+    set_fact(state, subject, predicate, fact_value)
+  end
+
+  @doc """
+  Alias for set_fact/4 for backward compatibility.
+  
+  Entity-first API: add_fact(state, predicate, subject, fact_value)
+  Note: Parameters are in different order for legacy compatibility.
+  """
+  @spec add_fact(t(), predicate(), subject(), fact_value()) :: t()
+  def add_fact(%__MODULE__{} = state, predicate, subject, fact_value) do
+    set_fact(state, subject, predicate, fact_value)
+  end
+
+  @doc """
   Removes a triple from the state.
   
   Entity-first API: remove_fact(state, subject, predicate)
