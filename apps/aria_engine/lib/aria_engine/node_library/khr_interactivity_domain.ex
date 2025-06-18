@@ -29,6 +29,8 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivityDomain do
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathTrigonometry
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathVector
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathMatrix
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathQuaternion
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathSwizzle
   
   @doc "Register all KHR_interactivity actions with a domain"
   @spec register_all_actions(Core.t()) :: Core.t()
@@ -58,9 +60,9 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivityDomain do
   # =============================================================================
   
   defp register_math_vectors(domain), do: MathVector.register_actions(domain)
-  defp register_math_matrices(domain), do: domain
-  defp register_math_quaternions(domain), do: domain
-  defp register_math_swizzle(domain), do: domain
+  defp register_math_matrices(domain), do: MathMatrix.register_actions(domain)
+  defp register_math_quaternions(domain), do: MathQuaternion.register_actions(domain)
+  defp register_math_swizzle(domain), do: MathSwizzle.register_actions(domain)
   defp register_type_conversion(domain), do: domain
   defp register_control_flow(domain), do: domain
   defp register_temporal_flow(domain), do: domain
