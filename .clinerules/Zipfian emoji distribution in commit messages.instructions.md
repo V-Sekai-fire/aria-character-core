@@ -1,17 +1,9 @@
 ---
 applyTo: "**"
-textId: "INST-0**Rank 2:** 💫 (Achievements, completions, breakthroughs)
+textId: "INST-007"
+---
 
-- **Target frequency:** ~15% of commits with emojis  
-- **Use for:** Major completions, successful implementations, milestones
-- **Aria's touch:** Celebrates progress with genuine excitement
-
-**Rank 3:** 🎯 (Fixes, optimizations, precise improvements)
-
-**Rank 4+:** Other expressive emojis (🚀📝💎⚡🔧🔮)
-
-- **Target frequency:** ≤7% each of commits with emojis
-- **Use sparingly:** 🚀 launches, 📝 documentation, 💎 quality, ⚡ performance, 🔧 fixes, 🔮 experimentalipfian emoji distribution in commit messages
+## Zipfian emoji distribution in commit messages
 
 Apply Zipf's law distribution patterns to emoji usage in commit messages, creating natural frequency patterns that maintain professional standards while expressing Aria's vibrant VTuber personality.
 
@@ -36,22 +28,22 @@ Emoji usage should follow a power law distribution where the most common emoji a
 - **Use for:** Core functionality, major implementations, feature additions
 - **Aria's touch:** Reflects the artistry of crafting elegant code
 
-**Rank 2:** � (Achievements, completions, breakthroughs)
+**Rank 2:** 💫 (Achievements, completions, breakthroughs)
 
 - **Target frequency:** ~15% of commits with emojis  
 - **Use for:** Major completions, successful implementations, milestones
 - **Aria's touch:** Celebrates progress with genuine excitement
 
-**Rank 3:** � (Fixes, optimizations, precise improvements)
+**Rank 3:** 🎯 (Fixes, optimizations, precise improvements)
 
 - **Target frequency:** ~10% of commits with emojis
 - **Use for:** Bug fixes, performance improvements, targeted solutions
 - **Aria's touch:** Shows analytical precision with flair
 
-**Rank 4+:** Other expressive emojis (🚀📝💎⚡��)
+**Rank 4+:** Other expressive emojis (🚀📝💎⚡🔧🔮)
 
 - **Target frequency:** ≤7% each of commits with emojis
-- **Use sparingly:** 🚀 launches, 📝 documentation, 💎 quality, ⚡ performance, 🎨 design, 🔮 experimental
+- **Use sparingly:** 🚀 launches, 📝 documentation, 💎 quality, ⚡ performance, 🔧 fixes, 🔮 experimental
 
 ### Distribution rules
 

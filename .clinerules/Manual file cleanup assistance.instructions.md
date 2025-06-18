@@ -1,3 +1,8 @@
+---
+applyTo: "**"
+textId: "INST-037"
+---
+
 ## Manual File Cleanup Assistance
 
 ### The Problem

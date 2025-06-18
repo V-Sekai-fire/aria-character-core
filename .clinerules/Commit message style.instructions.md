@@ -1,4 +1,7 @@
-# Aria Character Core - Instructions
+---
+applyTo: "**"
+textId: "INST-014"
+---
 
 ## Commit message style
 

@@ -1,3 +1,8 @@
+---
+applyTo: "**"
+textId: "INST-036"
+---
+
 ## Elixir Module Splitting Guidelines
 
 ### The Principle
