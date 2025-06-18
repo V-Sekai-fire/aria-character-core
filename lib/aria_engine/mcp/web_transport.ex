@@ -51,9 +51,11 @@ defmodule AriaEngine.MCP.WebTransport do
   
   ## Routes
   
-  # SSE endpoint for MCP protocol communication (must be early to avoid catch-all)
+  # SSE endpoint for MCP protocol communication (MUST be first to avoid conflicts)
   get "/mcp/sse" do
     server_pid = conn.assigns.server_pid
+    
+    Logger.info("SSE GET connection request received")
     
     conn
     |> put_resp_content_type("text/event-stream")
@@ -62,6 +64,18 @@ defmodule AriaEngine.MCP.WebTransport do
     |> put_resp_header("access-control-allow-origin", "*")
     |> send_chunked(200)
     |> handle_sse_connection(server_pid)
+  end
+  
+  # HEAD support for SSE endpoint (for curl -I testing)
+  head "/mcp/sse" do
+    Logger.info("SSE HEAD request received")
+    
+    conn
+    |> put_resp_content_type("text/event-stream")
+    |> put_resp_header("cache-control", "no-cache")
+    |> put_resp_header("connection", "keep-alive")
+    |> put_resp_header("access-control-allow-origin", "*")
+    |> send_resp(200, "")
   end
   
   get "/" do
