@@ -51,6 +51,19 @@ defmodule AriaEngine.MCP.WebTransport do
   
   ## Routes
   
+  # SSE endpoint for MCP protocol communication (must be early to avoid catch-all)
+  get "/mcp/sse" do
+    server_pid = conn.assigns.server_pid
+    
+    conn
+    |> put_resp_content_type("text/event-stream")
+    |> put_resp_header("cache-control", "no-cache")
+    |> put_resp_header("connection", "keep-alive")
+    |> put_resp_header("access-control-allow-origin", "*")
+    |> send_chunked(200)
+    |> handle_sse_connection(server_pid)
+  end
+  
   get "/" do
     response = %{
       name: "Aria Engine MCP Server",
@@ -155,5 +168,57 @@ defmodule AriaEngine.MCP.WebTransport do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status, Jason.encode!(data))
+  end
+  
+  defp handle_sse_connection(conn, server_pid) do
+    # Send initial capabilities as SSE event
+    capabilities = GenServer.call(server_pid, :get_capabilities)
+    
+    init_message = %{
+      jsonrpc: "2.0",
+      method: "initialize",
+      params: %{
+        protocolVersion: "2024-11-05",
+        capabilities: capabilities,
+        serverInfo: %{
+          name: "Aria Engine Temporal Scheduler",
+          version: "1.0.0"
+        }
+      }
+    }
+    
+    # Send initialization message
+    send_sse_event(conn, "message", init_message)
+    
+    # Keep connection alive and handle incoming messages
+    keep_alive_loop(conn, server_pid)
+  end
+  
+  defp send_sse_event(conn, event_type, data) do
+    event_data = Jason.encode!(data)
+    sse_message = "event: #{event_type}\ndata: #{event_data}\n\n"
+    
+    case chunk(conn, sse_message) do
+      {:ok, conn} -> conn
+      {:error, _reason} -> conn
+    end
+  end
+  
+  defp keep_alive_loop(conn, server_pid) do
+    # Send periodic heartbeat to keep connection alive
+    receive do
+      :stop -> conn
+    after
+      30_000 ->
+        # Send heartbeat every 30 seconds
+        heartbeat = %{
+          jsonrpc: "2.0",
+          method: "ping",
+          params: %{timestamp: DateTime.utc_now()}
+        }
+        
+        conn = send_sse_event(conn, "ping", heartbeat)
+        keep_alive_loop(conn, server_pid)
+    end
   end
 end
