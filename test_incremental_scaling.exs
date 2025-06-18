@@ -6,7 +6,7 @@
 defmodule IncrementalScalingTest do
   @moduledoc """
   Systematic scaling test that increases complexity gradually across:
-  - Activity count (1 → 2 → 3 → 4 → 5 → 8 → 10 → 32)
+  - Activity count (1 → 2 → 3 → 4 → 5 → 8 → 10 → 32 → 64)
   - Dependency complexity (none → linear → tree → DAG → complex)
   - Resource constraints (none → single → multiple → conflicts)
   - Temporal complexity (uniform → variable → mixed)
@@ -28,7 +28,8 @@ defmodule IncrementalScalingTest do
       {"5 Activities", &test_5_activities/0},
       {"8 Activities", &test_8_activities/0},
       {"10 Activities", &test_10_activities/0},
-      {"32 Activities", &test_32_activities/0}
+      {"32 Activities", &test_32_activities/0},
+      {"64 Activities", &test_64_activities/0}
     ]
     
     phase1_results = run_test_phase(activity_scaling_tests)
@@ -308,6 +309,84 @@ defmodule IncrementalScalingTest do
         # Phase 5: Completion (2 final activities)
         %{"id" => "E1", "duration" => 1, "dependencies" => ["D5", "D6"]},
         %{"id" => "E2", "duration" => 1, "dependencies" => ["E1"]}
+      ]
+    }
+  end
+
+  # 64 Activities - Enterprise-scale project structure
+  defp test_64_activities do
+    %{
+      "schedule_name" => "Scale_64_Activities",
+      "activities" => [
+        # Phase 1: Infrastructure Setup (8 parallel activities)
+        %{"id" => "A1", "duration" => 1}, %{"id" => "A2", "duration" => 1},
+        %{"id" => "A3", "duration" => 1}, %{"id" => "A4", "duration" => 1},
+        %{"id" => "A5", "duration" => 1}, %{"id" => "A6", "duration" => 1},
+        %{"id" => "A7", "duration" => 1}, %{"id" => "A8", "duration" => 1},
+        
+        # Phase 2: Foundation Services (16 activities depending on Phase 1)
+        %{"id" => "B1", "duration" => 1, "dependencies" => ["A1"]},
+        %{"id" => "B2", "duration" => 1, "dependencies" => ["A1"]},
+        %{"id" => "B3", "duration" => 1, "dependencies" => ["A2"]},
+        %{"id" => "B4", "duration" => 1, "dependencies" => ["A2"]},
+        %{"id" => "B5", "duration" => 1, "dependencies" => ["A3"]},
+        %{"id" => "B6", "duration" => 1, "dependencies" => ["A3"]},
+        %{"id" => "B7", "duration" => 1, "dependencies" => ["A4"]},
+        %{"id" => "B8", "duration" => 1, "dependencies" => ["A4"]},
+        %{"id" => "B9", "duration" => 1, "dependencies" => ["A5"]},
+        %{"id" => "B10", "duration" => 1, "dependencies" => ["A5"]},
+        %{"id" => "B11", "duration" => 1, "dependencies" => ["A6"]},
+        %{"id" => "B12", "duration" => 1, "dependencies" => ["A6"]},
+        %{"id" => "B13", "duration" => 1, "dependencies" => ["A7"]},
+        %{"id" => "B14", "duration" => 1, "dependencies" => ["A7"]},
+        %{"id" => "B15", "duration" => 1, "dependencies" => ["A8"]},
+        %{"id" => "B16", "duration" => 1, "dependencies" => ["A8"]},
+        
+        # Phase 3: Core Development (24 activities with complex cross-dependencies)
+        %{"id" => "C1", "duration" => 1, "dependencies" => ["B1", "B2"]},
+        %{"id" => "C2", "duration" => 1, "dependencies" => ["B1", "B3"]},
+        %{"id" => "C3", "duration" => 1, "dependencies" => ["B2", "B4"]},
+        %{"id" => "C4", "duration" => 1, "dependencies" => ["B3", "B4"]},
+        %{"id" => "C5", "duration" => 1, "dependencies" => ["B5", "B6"]},
+        %{"id" => "C6", "duration" => 1, "dependencies" => ["B5", "B7"]},
+        %{"id" => "C7", "duration" => 1, "dependencies" => ["B6", "B8"]},
+        %{"id" => "C8", "duration" => 1, "dependencies" => ["B7", "B8"]},
+        %{"id" => "C9", "duration" => 1, "dependencies" => ["B9", "B10"]},
+        %{"id" => "C10", "duration" => 1, "dependencies" => ["B9", "B11"]},
+        %{"id" => "C11", "duration" => 1, "dependencies" => ["B10", "B12"]},
+        %{"id" => "C12", "duration" => 1, "dependencies" => ["B11", "B12"]},
+        %{"id" => "C13", "duration" => 1, "dependencies" => ["B13", "B14"]},
+        %{"id" => "C14", "duration" => 1, "dependencies" => ["B13", "B15"]},
+        %{"id" => "C15", "duration" => 1, "dependencies" => ["B14", "B16"]},
+        %{"id" => "C16", "duration" => 1, "dependencies" => ["B15", "B16"]},
+        %{"id" => "C17", "duration" => 1, "dependencies" => ["C1", "C2"]},
+        %{"id" => "C18", "duration" => 1, "dependencies" => ["C3", "C4"]},
+        %{"id" => "C19", "duration" => 1, "dependencies" => ["C5", "C6"]},
+        %{"id" => "C20", "duration" => 1, "dependencies" => ["C7", "C8"]},
+        %{"id" => "C21", "duration" => 1, "dependencies" => ["C9", "C10"]},
+        %{"id" => "C22", "duration" => 1, "dependencies" => ["C11", "C12"]},
+        %{"id" => "C23", "duration" => 1, "dependencies" => ["C13", "C14"]},
+        %{"id" => "C24", "duration" => 1, "dependencies" => ["C15", "C16"]},
+        
+        # Phase 4: System Integration (12 activities)
+        %{"id" => "D1", "duration" => 1, "dependencies" => ["C17", "C18"]},
+        %{"id" => "D2", "duration" => 1, "dependencies" => ["C18", "C19"]},
+        %{"id" => "D3", "duration" => 1, "dependencies" => ["C19", "C20"]},
+        %{"id" => "D4", "duration" => 1, "dependencies" => ["C20", "C21"]},
+        %{"id" => "D5", "duration" => 1, "dependencies" => ["C21", "C22"]},
+        %{"id" => "D6", "duration" => 1, "dependencies" => ["C22", "C23"]},
+        %{"id" => "D7", "duration" => 1, "dependencies" => ["C23", "C24"]},
+        %{"id" => "D8", "duration" => 1, "dependencies" => ["C17", "C24"]},
+        %{"id" => "D9", "duration" => 1, "dependencies" => ["D1", "D2"]},
+        %{"id" => "D10", "duration" => 1, "dependencies" => ["D3", "D4"]},
+        %{"id" => "D11", "duration" => 1, "dependencies" => ["D5", "D6"]},
+        %{"id" => "D12", "duration" => 1, "dependencies" => ["D7", "D8"]},
+        
+        # Phase 5: Final Delivery (4 activities)
+        %{"id" => "E1", "duration" => 1, "dependencies" => ["D9", "D10"]},
+        %{"id" => "E2", "duration" => 1, "dependencies" => ["D11", "D12"]},
+        %{"id" => "E3", "duration" => 1, "dependencies" => ["E1", "E2"]},
+        %{"id" => "E4", "duration" => 1, "dependencies" => ["E3"]}
       ]
     }
   end
