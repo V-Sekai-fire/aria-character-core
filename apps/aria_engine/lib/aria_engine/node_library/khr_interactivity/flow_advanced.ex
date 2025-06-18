@@ -271,7 +271,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
 
   def throttle(state, [node_id, _duration]) do
     # Invalid duration
-    StateV2.set_fact(state, Integer.to_string(node_id), "last_remaining_time", Float.nan())
+    StateV2.set_fact(state, Integer.to_string(node_id), "last_remaining_time", :nan)
   end
 
   # =============================================================================
@@ -324,7 +324,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
   ## Returns
   Updated state with delay cancelled
   """
-  def cancel_delay(state, [node_id, delay_index]) when is_integer(delay_index) do
+  def cancel_delay(state, [_node_id, delay_index]) when is_integer(delay_index) do
     delays = StateV2.get_fact(state, "system", "active_delays") || []
     updated_delays = Enum.reject(delays, &(&1.delay_index == delay_index))
     
@@ -357,16 +357,16 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
   # Task Methods for HTN Planning
   # =============================================================================
 
-  def switch_task_method(state, [node_id, selection, cases, default_action]) do
+  def switch_task_method(_state, [node_id, selection, cases, default_action]) do
     [[:khr_flow_switch, node_id, selection, cases, default_action]]
   end
 
-  def math_switch_task_method(state, [node_id, selection, cases, default_value]) do
+  def math_switch_task_method(_state, [node_id, selection, cases, default_value]) do
     [[:khr_math_switch, node_id, selection, cases, default_value]]
   end
 
   @doc "COMPOSITE: While loop decomposes into condition check + body iterations"
-  def while_loop_task_method(state, [node_id, condition_node, body_action]) do
+  def while_loop_task_method(_state, [node_id, condition_node, body_action]) do
     # COMPOSITE PATTERN: Sequential with conditional loop
     [
       # 1. Initialize loop state
@@ -382,9 +382,9 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
   end
 
   @doc "COMPOSITE: For loop decomposes into initialization + iteration sequence + completion"
-  def for_loop_task_method(state, [node_id, start_index, end_index, body_action]) do
+  def for_loop_task_method(_state, [node_id, start_index, end_index, body_action]) do
     # COMPOSITE PATTERN: Sequential iteration pattern
-    iteration_count = max(0, end_index - start_index)
+    _iteration_count = max(0, end_index - start_index)
     
     initialization = [
       [:khr_variable_set, "#{node_id}_current_index", start_index],
@@ -402,7 +402,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
   end
 
   @doc "COMPOSITE: Do N decomposes into N iterations of the body action"
-  def do_n_task_method(state, [node_id, n, body_action]) when is_integer(n) and n > 0 do
+  def do_n_task_method(_state, [node_id, n, body_action]) when is_integer(n) and n > 0 do
     # COMPOSITE PATTERN: Sequential repetition
     initialization = [[:khr_variable_set, "#{node_id}_count", n]]
     
@@ -416,13 +416,13 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
     initialization ++ iteration_tasks ++ completion
   end
 
-  def do_n_task_method(state, [node_id, _n, _body_action]) do
+  def do_n_task_method(_state, [node_id, _n, _body_action]) do
     # Invalid N, just complete immediately
     [[:khr_flow_do_n_complete, node_id]]
   end
 
   @doc "COMPOSITE: Multi-gate decomposes into alternative output selection"
-  def multi_gate_task_method(state, [node_id, outputs, is_random, is_loop]) when is_list(outputs) do
+  def multi_gate_task_method(_state, [node_id, outputs, is_random, is_loop]) when is_list(outputs) do
     # COMPOSITE PATTERN: Alternative selection
     setup = [
       [:khr_variable_set, "#{node_id}_is_random", is_random],
@@ -440,12 +440,12 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
     setup ++ [List.first(output_alternatives) || [:khr_flow_multi_gate_empty, node_id]]
   end
 
-  def multi_gate_task_method(state, [node_id, _outputs, _is_random, _is_loop]) do
+  def multi_gate_task_method(_state, [node_id, _outputs, _is_random, _is_loop]) do
     [[:khr_flow_multi_gate_empty, node_id]]
   end
 
   @doc "COMPOSITE: Wait all decomposes into parallel input monitoring"
-  def wait_all_task_method(state, [node_id, input_count]) when is_integer(input_count) and input_count > 0 do
+  def wait_all_task_method(_state, [node_id, input_count]) when is_integer(input_count) and input_count > 0 do
     # COMPOSITE PATTERN: Parallel waiting for multiple inputs
     initialization = [
       [:khr_variable_set, "#{node_id}_input_count", input_count],
@@ -464,19 +464,19 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
     initialization ++ input_monitors ++ completion
   end
 
-  def wait_all_task_method(state, [node_id, _input_count]) do
+  def wait_all_task_method(_state, [node_id, _input_count]) do
     [[:khr_flow_wait_all_complete, node_id]]
   end
 
-  def throttle_task_method(state, [node_id, duration]) do
+  def throttle_task_method(_state, [node_id, duration]) do
     [[:khr_flow_throttle, node_id, duration]]
   end
 
-  def set_delay_task_method(state, [node_id, duration, action]) do
+  def set_delay_task_method(_state, [node_id, duration, action]) do
     [{:durative_action, :khr_flow_set_delay, [node_id, duration, action], duration}]
   end
 
-  def cancel_delay_task_method(state, [node_id, delay_index]) do
+  def cancel_delay_task_method(_state, [node_id, delay_index]) do
     [[:khr_flow_cancel_delay, node_id, delay_index]]
   end
 end

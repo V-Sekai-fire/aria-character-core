@@ -225,9 +225,9 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathQuaternion do
           end
           
           # Cross product with perpendicular vector
-          cross_x = ay * perp |> Enum.at(2) - az * perp |> Enum.at(1)
-          cross_y = az * perp |> Enum.at(0) - ax * perp |> Enum.at(2)
-          cross_z = ax * perp |> Enum.at(1) - ay * perp |> Enum.at(0)
+          cross_x = ay * Enum.at(perp, 2) - az * Enum.at(perp, 1)
+          cross_y = az * Enum.at(perp, 0) - ax * Enum.at(perp, 2)
+          cross_z = ax * Enum.at(perp, 1) - ay * Enum.at(perp, 0)
           
           # Normalize
           length = :math.sqrt(cross_x * cross_x + cross_y * cross_y + cross_z * cross_z)

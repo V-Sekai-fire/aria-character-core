@@ -288,51 +288,51 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathSwizzle do
   # Task Methods for HTN Planning
   # =============================================================================
 
-  def combine2_task_method(state, [node_id, x, y]) do
+  def combine2_task_method(_state, [node_id, x, y]) do
     [[:khr_math_combine2, node_id, x, y]]
   end
 
-  def combine3_task_method(state, [node_id, x, y, z]) do
+  def combine3_task_method(_state, [node_id, x, y, z]) do
     [[:khr_math_combine3, node_id, x, y, z]]
   end
 
-  def combine4_task_method(state, [node_id, x, y, z, w]) do
+  def combine4_task_method(_state, [node_id, x, y, z, w]) do
     [[:khr_math_combine4, node_id, x, y, z, w]]
   end
 
-  def extract2_task_method(state, [node_id, vector, start_index]) do
+  def extract2_task_method(_state, [node_id, vector, start_index]) do
     [[:khr_math_extract2, node_id, vector, start_index]]
   end
 
-  def extract3_task_method(state, [node_id, vector, start_index]) do
+  def extract3_task_method(_state, [node_id, vector, start_index]) do
     [[:khr_math_extract3, node_id, vector, start_index]]
   end
 
-  def extract4_task_method(state, [node_id, vector, start_index]) do
+  def extract4_task_method(_state, [node_id, vector, start_index]) do
     [[:khr_math_extract4, node_id, vector, start_index]]
   end
 
-  def combine2x2_task_method(state, [node_id, row0, row1]) do
+  def combine2x2_task_method(_state, [node_id, row0, row1]) do
     [[:khr_math_combine2x2, node_id, row0, row1]]
   end
 
-  def combine3x3_task_method(state, [node_id, row0, row1, row2]) do
+  def combine3x3_task_method(_state, [node_id, row0, row1, row2]) do
     [[:khr_math_combine3x3, node_id, row0, row1, row2]]
   end
 
-  def combine4x4_task_method(state, [node_id, row0, row1, row2, row3]) do
+  def combine4x4_task_method(_state, [node_id, row0, row1, row2, row3]) do
     [[:khr_math_combine4x4, node_id, row0, row1, row2, row3]]
   end
 
-  def extract2x2_task_method(state, [node_id, matrix, row_start, col_start]) do
+  def extract2x2_task_method(_state, [node_id, matrix, row_start, col_start]) do
     [[:khr_math_extract2x2, node_id, matrix, row_start, col_start]]
   end
 
-  def extract3x3_task_method(state, [node_id, matrix, row_start, col_start]) do
+  def extract3x3_task_method(_state, [node_id, matrix, row_start, col_start]) do
     [[:khr_math_extract3x3, node_id, matrix, row_start, col_start]]
   end
 
-  def extract4x4_task_method(state, [node_id, matrix, row_start, col_start]) do
+  def extract4x4_task_method(_state, [node_id, matrix, row_start, col_start]) do
     [[:khr_math_extract4x4, node_id, matrix, row_start, col_start]]
   end
 end

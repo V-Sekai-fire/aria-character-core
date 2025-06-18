@@ -60,7 +60,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.EventSystem do
   end
 
   @doc "Listen for events from the environment"
-  def event_receive(state, [node_index, event_type, timeout \\ 0]) when is_binary(event_type) do
+  def event_receive(state, [node_index, event_type]) when is_binary(event_type) do
+    event_receive(state, [node_index, event_type, 0])
+  end
+
+  def event_receive(state, [node_index, event_type, timeout]) when is_binary(event_type) do
     # Check for pending events of the specified type
     event_queue = StateV2.get_fact(state, "event_system", "queue") || []
     
@@ -93,7 +97,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.EventSystem do
   end
 
   @doc "Emit events to other nodes or systems"
-  def event_send(state, [node_index, event_type, event_data, target \\ "global"]) when is_binary(event_type) do
+  def event_send(state, [node_index, event_type, event_data]) when is_binary(event_type) do
+    event_send(state, [node_index, event_type, event_data, "global"])
+  end
+
+  def event_send(state, [node_index, event_type, event_data, target]) when is_binary(event_type) do
     event = create_event(event_type, event_data, target)
     
     # Add event to the global event queue
@@ -145,7 +153,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.EventSystem do
   end
 
   @doc "Queue events for delayed processing"
-  def event_queue(state, [node_index, events, delay_ms \\ 0]) when is_list(events) do
+  def event_queue(state, [node_index, events]) when is_list(events) do
+    event_queue(state, [node_index, events, 0])
+  end
+
+  def event_queue(state, [node_index, events, delay_ms]) when is_list(events) do
     timestamp = System.system_time(:millisecond)
     
     queued_events = Enum.map(events, fn event ->

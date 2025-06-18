@@ -44,7 +44,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.AnimationSystem do
     StateV2.set_fact(updated_state, Integer.to_string(node_id), "animation_started", animation_id)
   end
 
-  def start(state, [node_id, animation_id, _invalid_time]) do
+  def start(state, [node_id, _animation_id, _invalid_time]) do
     StateV2.set_fact(state, Integer.to_string(node_id), "animation_started", nil)
   end
 
@@ -234,35 +234,35 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.AnimationSystem do
   # Task Methods for HTN Planning
   # =============================================================================
 
-  def start_task_method(state, [node_id, animation_id]) do
+  def start_task_method(_state, [node_id, animation_id]) do
     [[:khr_animation_start, node_id, animation_id]]
   end
 
-  def start_task_method(state, [node_id, animation_id, start_time]) do
+  def start_task_method(_state, [node_id, animation_id, start_time]) do
     [[:khr_animation_start, node_id, animation_id, start_time]]
   end
 
-  def stop_task_method(state, [node_id, animation_id]) do
+  def stop_task_method(_state, [node_id, animation_id]) do
     [[:khr_animation_stop, node_id, animation_id]]
   end
 
-  def stop_at_task_method(state, [node_id, animation_id, stop_time]) do
+  def stop_at_task_method(_state, [node_id, animation_id, stop_time]) do
     [[:khr_animation_stop_at, node_id, animation_id, stop_time]]
   end
 
-  def get_time_task_method(state, [node_id, animation_id]) do
+  def get_time_task_method(_state, [node_id, animation_id]) do
     [[:khr_animation_get_time, node_id, animation_id]]
   end
 
-  def is_playing_task_method(state, [node_id, animation_id]) do
+  def is_playing_task_method(_state, [node_id, animation_id]) do
     [[:khr_animation_is_playing, node_id, animation_id]]
   end
 
-  def pause_task_method(state, [node_id, animation_id]) do
+  def pause_task_method(_state, [node_id, animation_id]) do
     [[:khr_animation_pause, node_id, animation_id]]
   end
 
-  def resume_task_method(state, [node_id, animation_id]) do
+  def resume_task_method(_state, [node_id, animation_id]) do
     [[:khr_animation_resume, node_id, animation_id]]
   end
 end

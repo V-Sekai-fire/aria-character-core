@@ -436,59 +436,59 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathAdvanced do
   # Task Methods for HTN Planning
   # =============================================================================
 
-  def saturate_task_method(state, [node_id, value]) do
+  def saturate_task_method(_state, [node_id, value]) do
     [[:khr_math_saturate, node_id, value]]
   end
 
-  def mix_task_method(state, [node_id, a, b, t]) do
+  def mix_task_method(_state, [node_id, a, b, t]) do
     [[:khr_math_mix, node_id, a, b, t]]
   end
 
-  def length_task_method(state, [node_id, vector]) do
+  def length_task_method(_state, [node_id, vector]) do
     [[:khr_math_length, node_id, vector]]
   end
 
-  def normalize_task_method(state, [node_id, vector]) do
+  def normalize_task_method(_state, [node_id, vector]) do
     [[:khr_math_normalize, node_id, vector]]
   end
 
-  def rotate_2d_task_method(state, [node_id, vector, angle]) do
+  def rotate_2d_task_method(_state, [node_id, vector, angle]) do
     [[:khr_math_rotate_2d, node_id, vector, angle]]
   end
 
-  def rotate_3d_task_method(state, [node_id, vector, quaternion]) do
+  def rotate_3d_task_method(_state, [node_id, vector, quaternion]) do
     [[:khr_math_rotate_3d, node_id, vector, quaternion]]
   end
 
-  def transpose_task_method(state, [node_id, matrix]) do
+  def transpose_task_method(_state, [node_id, matrix]) do
     [[:khr_math_transpose, node_id, matrix]]
   end
 
-  def determinant_task_method(state, [node_id, matrix]) do
+  def determinant_task_method(_state, [node_id, matrix]) do
     [[:khr_math_determinant, node_id, matrix]]
   end
 
-  def inverse_task_method(state, [node_id, matrix]) do
+  def inverse_task_method(_state, [node_id, matrix]) do
     [[:khr_math_inverse, node_id, matrix]]
   end
 
-  def quat_conjugate_task_method(state, [node_id, quaternion]) do
+  def quat_conjugate_task_method(_state, [node_id, quaternion]) do
     [[:khr_math_quat_conjugate, node_id, quaternion]]
   end
 
-  def quat_angle_between_task_method(state, [node_id, quat_a, quat_b]) do
+  def quat_angle_between_task_method(_state, [node_id, quat_a, quat_b]) do
     [[:khr_math_quat_angle_between, node_id, quat_a, quat_b]]
   end
 
-  def quat_from_axis_angle_task_method(state, [node_id, axis, angle]) do
+  def quat_from_axis_angle_task_method(_state, [node_id, axis, angle]) do
     [[:khr_math_quat_from_axis_angle, node_id, axis, angle]]
   end
 
-  def quat_to_axis_angle_task_method(state, [node_id, quaternion]) do
+  def quat_to_axis_angle_task_method(_state, [node_id, quaternion]) do
     [[:khr_math_quat_to_axis_angle, node_id, quaternion]]
   end
 
-  def quat_from_directions_task_method(state, [node_id, from_dir, to_dir]) do
+  def quat_from_directions_task_method(_state, [node_id, from_dir, to_dir]) do
     [[:khr_math_quat_from_directions, node_id, from_dir, to_dir]]
   end
 end
