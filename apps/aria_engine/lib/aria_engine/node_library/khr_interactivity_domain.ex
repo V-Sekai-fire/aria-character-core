@@ -24,6 +24,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivityDomain do
   alias AriaEngine.Domain.Core
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathConstants
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathArithmetic
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathComparison
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathSpecial
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathTrigonometry
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathVector
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathMatrix
   
   @doc "Register all KHR_interactivity actions with a domain"
   @spec register_all_actions(Core.t()) :: Core.t()
@@ -31,11 +36,12 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivityDomain do
     domain
     |> MathConstants.register_actions()
     |> MathArithmetic.register_actions()
-    |> register_math_trigonometry()
+    |> MathComparison.register_actions()
+    |> MathSpecial.register_actions()
+    |> MathTrigonometry.register_actions()
     |> register_math_vectors()
     |> register_math_matrices()
     |> register_math_quaternions()
-    |> register_math_comparison()
     |> register_math_swizzle()
     |> register_type_conversion()
     |> register_control_flow()
@@ -51,11 +57,9 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivityDomain do
   # STUB REGISTRATION FUNCTIONS (to be implemented)
   # =============================================================================
   
-  defp register_math_trigonometry(domain), do: domain
-  defp register_math_vectors(domain), do: domain  
+  defp register_math_vectors(domain), do: MathVector.register_actions(domain)
   defp register_math_matrices(domain), do: domain
   defp register_math_quaternions(domain), do: domain
-  defp register_math_comparison(domain), do: domain
   defp register_math_swizzle(domain), do: domain
   defp register_type_conversion(domain), do: domain
   defp register_control_flow(domain), do: domain
