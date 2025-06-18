@@ -253,10 +253,10 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
   Updated state with throttle status
   """
   def throttle(state, [node_id, duration]) when is_number(duration) and duration > 0 do
-    current_time = :os.system_time(:millisecond)
+    current_time = :os.system_time(:second)
     last_activation = StateV2.get_fact(state, Integer.to_string(node_id), "last_activation") || 0
     
-    time_since_last = (current_time - last_activation) / 1000.0
+    time_since_last = current_time - last_activation
     
     if time_since_last >= duration do
       # Allow execution
@@ -290,8 +290,8 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
   """
   def set_delay(state, [node_id, duration, action]) when is_number(duration) and duration >= 0 do
     delay_index = generate_delay_index()
-    current_time = :os.system_time(:millisecond)
-    execution_time = current_time + trunc(duration * 1000)
+    current_time = :os.system_time(:second)
+    execution_time = current_time + trunc(duration)
     
     # Store delay information
     delay_info = %{
@@ -365,24 +365,107 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
     [[:khr_math_switch, node_id, selection, cases, default_value]]
   end
 
+  @doc "COMPOSITE: While loop decomposes into condition check + body iterations"
   def while_loop_task_method(state, [node_id, condition_node, body_action]) do
-    [[:khr_flow_while, node_id, condition_node, body_action]]
+    # COMPOSITE PATTERN: Sequential with conditional loop
+    [
+      # 1. Initialize loop state
+      [:khr_variable_set, "#{node_id}_loop_active", true],
+      [:khr_variable_set, "#{node_id}_iterations", 0],
+      
+      # 2. Loop body (this will be repeated by the planner based on condition)
+      ["flow/while_iteration", node_id, condition_node, body_action],
+      
+      # 3. Finalize loop
+      [:khr_flow_while_complete, node_id]
+    ]
   end
 
+  @doc "COMPOSITE: For loop decomposes into initialization + iteration sequence + completion"
   def for_loop_task_method(state, [node_id, start_index, end_index, body_action]) do
-    [[:khr_flow_for, node_id, start_index, end_index, body_action]]
+    # COMPOSITE PATTERN: Sequential iteration pattern
+    iteration_count = max(0, end_index - start_index)
+    
+    initialization = [
+      [:khr_variable_set, "#{node_id}_current_index", start_index],
+      [:khr_variable_set, "#{node_id}_end_index", end_index]
+    ]
+    
+    # Generate iteration tasks
+    iteration_tasks = for i <- start_index..(end_index - 1) do
+      ["flow/for_iteration", node_id, i, body_action]
+    end
+    
+    completion = [[:khr_flow_for_complete, node_id]]
+    
+    initialization ++ iteration_tasks ++ completion
   end
 
-  def do_n_task_method(state, [node_id, n, body_action]) do
-    [[:khr_flow_do_n, node_id, n, body_action]]
+  @doc "COMPOSITE: Do N decomposes into N iterations of the body action"
+  def do_n_task_method(state, [node_id, n, body_action]) when is_integer(n) and n > 0 do
+    # COMPOSITE PATTERN: Sequential repetition
+    initialization = [[:khr_variable_set, "#{node_id}_count", n]]
+    
+    # Generate N iteration tasks
+    iteration_tasks = for i <- 1..n do
+      ["flow/do_n_iteration", node_id, i, body_action]
+    end
+    
+    completion = [[:khr_flow_do_n_complete, node_id]]
+    
+    initialization ++ iteration_tasks ++ completion
   end
 
-  def multi_gate_task_method(state, [node_id, outputs, is_random, is_loop]) do
-    [[:khr_flow_multi_gate, node_id, outputs, is_random, is_loop]]
+  def do_n_task_method(state, [node_id, _n, _body_action]) do
+    # Invalid N, just complete immediately
+    [[:khr_flow_do_n_complete, node_id]]
   end
 
-  def wait_all_task_method(state, [node_id, input_count]) do
-    [[:khr_flow_wait_all, node_id, input_count]]
+  @doc "COMPOSITE: Multi-gate decomposes into alternative output selection"
+  def multi_gate_task_method(state, [node_id, outputs, is_random, is_loop]) when is_list(outputs) do
+    # COMPOSITE PATTERN: Alternative selection
+    setup = [
+      [:khr_variable_set, "#{node_id}_is_random", is_random],
+      [:khr_variable_set, "#{node_id}_is_loop", is_loop],
+      [:khr_variable_set, "#{node_id}_used_outputs", []]
+    ]
+    
+    # Create alternative paths for each output
+    output_alternatives = Enum.with_index(outputs, fn output, index ->
+      ["flow/multi_gate_output", node_id, index, output]
+    end)
+    
+    # In a full implementation, the planner would choose one alternative
+    # For now, we represent this as the first available output
+    setup ++ [List.first(output_alternatives) || [:khr_flow_multi_gate_empty, node_id]]
+  end
+
+  def multi_gate_task_method(state, [node_id, _outputs, _is_random, _is_loop]) do
+    [[:khr_flow_multi_gate_empty, node_id]]
+  end
+
+  @doc "COMPOSITE: Wait all decomposes into parallel input monitoring"
+  def wait_all_task_method(state, [node_id, input_count]) when is_integer(input_count) and input_count > 0 do
+    # COMPOSITE PATTERN: Parallel waiting for multiple inputs
+    initialization = [
+      [:khr_variable_set, "#{node_id}_input_count", input_count],
+      [:khr_variable_set, "#{node_id}_activated_inputs", []]
+    ]
+    
+    # Create parallel monitoring tasks for each input
+    input_monitors = for i <- 0..(input_count - 1) do
+      ["flow/wait_input", node_id, i]
+    end
+    
+    # Completion check
+    completion = [["flow/wait_all_complete", node_id]]
+    
+    # Sequential setup, then parallel monitoring, then completion
+    initialization ++ input_monitors ++ completion
+  end
+
+  def wait_all_task_method(state, [node_id, _input_count]) do
+    [[:khr_flow_wait_all_complete, node_id]]
   end
 
   def throttle_task_method(state, [node_id, duration]) do

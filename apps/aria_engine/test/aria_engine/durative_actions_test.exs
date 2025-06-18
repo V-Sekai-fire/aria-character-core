@@ -12,14 +12,14 @@ defmodule AriaEngine.DurativeActionsTest do
     test "creates durative action with fixed duration" do
       action = DurativeAction.new(
         :move_slowly,
-        {:fixed, 5000},  # 5 seconds
+        {:fixed, 5},  # 5 seconds
         %{at_start: [{"location", "robot", "start"}], over_all: [], at_end: []},
         %{at_start: [], at_end: [{"location", "robot", "goal"}], over_time: []},
         fn state, _args -> state end
       )
       
       assert action.name == :move_slowly
-      assert action.duration == {:fixed, 5000}
+      assert action.duration == {:fixed, 5}
       assert action.conditions.at_start == [{"location", "robot", "start"}]
       assert action.effects.at_end == [{"location", "robot", "goal"}]
     end
@@ -27,13 +27,13 @@ defmodule AriaEngine.DurativeActionsTest do
     test "creates durative action with duration range" do
       action = DurativeAction.new(
         :investigate,
-        {:range, 3000, 8000},  # 3-8 seconds
+        {:range, 3, 8},  # 3-8 seconds
         %{at_start: [], over_all: [{"energy", "robot", "high"}], at_end: []},
         %{at_start: [], at_end: [{"investigated", "area", true}], over_time: []},
         fn state, _args -> state end
       )
       
-      assert action.duration == {:range, 3000, 8000}
+      assert action.duration == {:range, 3, 8}
       assert action.conditions.over_all == [{"energy", "robot", "high"}]
     end
   end
@@ -44,7 +44,7 @@ defmodule AriaEngine.DurativeActionsTest do
       
       action = DurativeAction.new(
         :construct_building,
-        {:fixed, 10000},
+        {:fixed, 10},
         %{at_start: [{"resources", "player", "sufficient"}], over_all: [], at_end: []},
         %{at_start: [], at_end: [{"building", "location1", "complete"}], over_time: []},
         fn state, _args -> state end
@@ -55,7 +55,7 @@ defmodule AriaEngine.DurativeActionsTest do
       assert Map.has_key?(updated_domain.durative_actions, :construct_building)
       retrieved_action = Domain.Core.get_durative_action(updated_domain, :construct_building)
       assert retrieved_action.name == :construct_building
-      assert retrieved_action.duration == {:fixed, 10000}
+      assert retrieved_action.duration == {:fixed, 10}
     end
 
     test "retrieves durative action from domain" do
@@ -63,7 +63,7 @@ defmodule AriaEngine.DurativeActionsTest do
       
       action = DurativeAction.new(
         :harvest_crops,
-        {:range, 2000, 4000},
+        {:range, 2, 4},
         %{at_start: [], over_all: [{"weather", "field", "good"}], at_end: []},
         %{at_start: [], at_end: [{"crops", "field", "harvested"}], over_time: []},
         fn state, _args -> state end
@@ -73,7 +73,7 @@ defmodule AriaEngine.DurativeActionsTest do
       retrieved_action = Domain.Core.get_durative_action(updated_domain, :harvest_crops)
       
       assert retrieved_action.name == :harvest_crops
-      assert retrieved_action.duration == {:range, 2000, 4000}
+      assert retrieved_action.duration == {:range, 2, 4}
       assert retrieved_action.conditions.over_all == [{"weather", "field", "good"}]
     end
 

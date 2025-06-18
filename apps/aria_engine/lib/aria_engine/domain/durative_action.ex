@@ -22,7 +22,7 @@ defmodule AriaEngine.Domain.DurativeAction do
     over_time: list()
   }
 
-  @type durative_action_duration :: {:fixed, non_neg_integer()} | {:range, non_neg_integer(), non_neg_integer()}
+  @type durative_action_duration :: {:fixed, number()} | {:range, number(), number()}
 
   @type t :: %__MODULE__{
     name: durative_action_name(),

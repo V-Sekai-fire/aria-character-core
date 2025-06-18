@@ -25,8 +25,8 @@ defmodule AriaEngine.Timeline.STN do
   ## Time Unit Design
 
   Each STN has an explicit `time_unit` field that defines the base unit for all
-  temporal constraints within that network. The default is `:millisecond` for
-  high-precision temporal reasoning with integer arithmetic.
+  temporal constraints within that network. The default is `:second` for
+  human-readable temporal reasoning with decimal arithmetic.
 
   - Constraints are expressed in the STN's `time_unit`
   - Integration with Interval module handles unit conversion automatically
@@ -121,12 +121,12 @@ defmodule AriaEngine.Timeline.STN do
             segments: [],
             metadata: %{},
             # LOD and unit system defaults
-            time_unit: :millisecond,
+            time_unit: :second,
             lod_level: :medium,
             lod_resolution: 100,
             # Auto-rescaling defaults
             auto_rescale: true,
-            datetime_conversion_unit: :millisecond,
+            datetime_conversion_unit: :second,
             # Constant work pattern defaults (AWS constant work pattern - opt-in)
             max_timepoints: 64,
             constant_work_enabled: false,
@@ -134,13 +134,16 @@ defmodule AriaEngine.Timeline.STN do
 
   @doc """
   Creates a new empty Simple Temporal Network.
+  
+  Uses seconds as the default time unit for human-readable temporal constraints.
   """
   @spec new() :: t()
   def new do
     %__MODULE__{
       time_points: MapSet.new(),
       constraints: %{},
-      consistent: true
+      consistent: true,
+      time_unit: :second  # Default to seconds instead of milliseconds
     }
   end
 
@@ -149,7 +152,7 @@ defmodule AriaEngine.Timeline.STN do
   """
   @spec new(keyword()) :: t()
   def new(opts) when is_list(opts) do
-    time_unit = Keyword.get(opts, :time_unit, :millisecond)
+    time_unit = Keyword.get(opts, :time_unit, :second)
     lod_level = Keyword.get(opts, :lod_level, :medium)
     max_timepoints = Keyword.get(opts, :max_timepoints, 64)
     constant_work_enabled = Keyword.get(opts, :constant_work_enabled, false)
@@ -162,7 +165,7 @@ defmodule AriaEngine.Timeline.STN do
       lod_level: lod_level,
       lod_resolution: Units.lod_resolution_for_level(lod_level),
       auto_rescale: Keyword.get(opts, :auto_rescale, true),
-      datetime_conversion_unit: Keyword.get(opts, :datetime_conversion_unit, :millisecond),
+      datetime_conversion_unit: Keyword.get(opts, :datetime_conversion_unit, :second),
       max_timepoints: max_timepoints,
       constant_work_enabled: constant_work_enabled,
       dummy_constraints: %{}

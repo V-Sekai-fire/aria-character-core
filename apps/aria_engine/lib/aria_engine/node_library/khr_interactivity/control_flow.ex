@@ -87,7 +87,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.ControlFlow do
     # Loop durative action - has temporal constraints
     loop_durative = DurativeAction.new(
       :khr_flow_loop,
-      {:range, 100, 30000}, # 0.1s to 30s duration range
+      {:range, 0.1, 30}, # 0.1s to 30s duration range
       %{
         at_start: [{"loop_count", "count", :exists}],
         over_all: [{"loop_state", "active", true}],
@@ -104,7 +104,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.ControlFlow do
     # While loop durative action - has timeout constraints  
     while_durative = DurativeAction.new(
       :khr_flow_while,
-      {:range, 100, 60000}, # 0.1s to 60s duration range
+      {:range, 0.1, 60}, # 0.1s to 60s duration range
       %{
         at_start: [{"while_condition", "evaluable", true}],
         over_all: [{"while_state", "active", true}],
@@ -222,7 +222,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.ControlFlow do
   end
 
   @doc "While loop with condition"
-  def flow_while(state, [node_index, condition_check, operation, max_iterations \\ 100]) do
+  def flow_while(state, [node_index, condition_check, operation]) do
+    flow_while(state, [node_index, condition_check, operation, 100])
+  end
+
+  def flow_while(state, [node_index, condition_check, operation, max_iterations]) do
     {final_state, results, iterations} = execute_while_loop(state, condition_check, operation, max_iterations, [])
     
     final_state
@@ -252,23 +256,32 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.ControlFlow do
     [[:khr_flow_branch, node_id, condition, true_branch]]
   end
 
-  @doc "Task method for flow/sequence - decomposes to sequential subtasks"
+  @doc "Task method for flow/sequence - decomposes to sequential subtasks (COMPOSITE)"
   def sequence_task_method(_state, [node_id, operations]) when is_list(operations) do
-    # Decompose sequence into individual operation tasks
-    operation_tasks = Enum.map(operations, fn operation ->
+    # COMPOSITE PATTERN: Sequential decomposition
+    # Each operation becomes a subtask in sequence
+    sequential_tasks = Enum.map(operations, fn operation ->
       case operation do
-        ["flow/switch" | args] -> ["flow/switch" | args]
-        ["flow/select" | args] -> ["flow/select" | args]
-        ["flow/branch" | args] -> ["flow/branch" | args]
+        ["flow/switch", switch_node, condition, cases] -> 
+          ["flow/switch", switch_node, condition, cases]
+        ["flow/select", select_node, index, options] -> 
+          ["flow/select", select_node, index, options]
+        ["flow/branch", branch_node, condition, true_branch] -> 
+          ["flow/branch", branch_node, condition, true_branch]
+        ["flow/branch", branch_node, condition, true_branch, false_branch] -> 
+          ["flow/branch", branch_node, condition, true_branch, false_branch]
+        ["math" | _] = math_op -> math_op
+        ["variable" | _] = var_op -> var_op
         other -> other
       end
     end)
     
     # Add final sequence completion action
-    operation_tasks ++ [[:khr_flow_sequence, node_id, operations]]
+    sequential_tasks ++ [[:khr_flow_sequence, node_id, operations]]
   end
 
   def sequence_task_method(_state, [node_id, _operations]) do
+    # Empty sequence still needs completion action
     [[:khr_flow_sequence, node_id, []]]
   end
 
@@ -319,5 +332,43 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.ControlFlow do
     else
       {state, results, length(results)}
     end
+  end
+
+  # Durative action functions for loops
+
+  @doc "Durative action function for loop execution"
+  def loop_durative_action(state, [count, operation]) when is_integer(count) and count > 0 do
+    # Execute the loop operation for the specified count
+    {final_state, _results} = Enum.reduce(1..count, {state, []}, fn iteration, {current_state, acc_results} ->
+      result = execute_operation_with_context(current_state, operation, %{iteration: iteration})
+      {current_state, [result | acc_results]}
+    end)
+    
+    final_state
+    |> StateV2.set_fact("loop_state", "active", false)
+    |> StateV2.set_fact("loop_state", "completed", true)
+  end
+
+  def loop_durative_action(state, _args) do
+    state
+    |> StateV2.set_fact("loop_state", "active", false)
+    |> StateV2.set_fact("loop_state", "completed", false)
+  end
+
+  @doc "Durative action function for while loop execution"
+  def while_durative_action(state, [condition_check, operation]) do
+    # Execute the while loop with a reasonable max iteration limit
+    {final_state, _results, iterations} = execute_while_loop(state, condition_check, operation, 100, [])
+    
+    final_state
+    |> StateV2.set_fact("while_state", "active", false)
+    |> StateV2.set_fact("while_state", "completed", true)
+    |> StateV2.set_fact("while_state", "iterations", iterations)
+  end
+
+  def while_durative_action(state, _args) do
+    state
+    |> StateV2.set_fact("while_state", "active", false)
+    |> StateV2.set_fact("while_state", "completed", false)
   end
 end
