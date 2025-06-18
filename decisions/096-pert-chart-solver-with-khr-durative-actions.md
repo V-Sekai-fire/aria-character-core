@@ -1,4 +1,4 @@
-# ADR-096: PERT Chart Solver with KHR Durative Actions
+# ADR-096: PERT Chart Execution with Hybrid Planner and KHR Durative Actions
 
 **Status:** Proposed  
 **Date:** 2025-06-18  
@@ -6,47 +6,134 @@
 
 ## Context
 
-Following the successful resolution of KHR goal processing in ADR-095, we now have a working foundation for KHR durative actions. This creates an opportunity to implement practical project management tools using temporal planning.
+Following the successful resolution of KHR goal processing in ADR-095 and the hybrid planner dependency encapsulation in ADR-091, we now have a complete planning infrastructure. This creates an opportunity to implement practical project management tools using the existing hybrid planner API with KHR durative actions.
 
 ### Problem Statement
 
 Current project management tools lack integration with AI planning systems. Teams need:
 
-- **Critical path analysis** with automatic dependency resolution
+- **Project execution simulation** with real-time progress tracking
+- **Critical path execution** with automatic dependency resolution
 - **Resource scheduling** with conflict detection and optimization
-- **Temporal planning** that can adapt to changing requirements
-- **MCP integration** for AI assistant access to project planning capabilities
+- **Temporal execution logs** showing project timeline progression
+- **MCP integration** for AI assistant access to project execution capabilities
 
 ### Opportunity
 
-KHR_interactivity specification provides three durative actions perfect for PERT chart execution:
+The existing hybrid planner infrastructure provides everything needed for PERT chart execution:
 
-1. **`variable/interpolate`** - Task progress tracking (0% → 100% over duration)
-2. **`pointer/interpolate`** - Resource allocation adjustment over time
-3. **`flow/setDelay`** - Dependency scheduling and milestone triggers
+1. **HybridCoordinatorV2**: Strategy-based planning with temporal constraints
+2. **Plan.run_lazy_refineahead**: Execution with step-by-step logging
+3. **KHR Durative Actions**: Perfect for construction project simulation
+4. **MCP Framework**: Ready for tool integration
 
 ### Technical Foundation
 
-- ✅ **HTN Planning**: Proven durative action support in hybrid planner
+- ✅ **Hybrid Planner**: Complete strategy-based planning system (ADR-091)
 - ✅ **KHR Integration**: Goal processing pipeline working (ADR-095)
+- ✅ **Execution Engine**: Plan.run_lazy_refineahead for step-by-step execution
+- ✅ **Temporal Constraints**: STN temporal strategy for scheduling
 - ✅ **MCP Framework**: Ready for tool integration
-- ✅ **Temporal Constraints**: Timeline module supports duration and scheduling
 
 ## Decision
 
-Implement a PERT chart solver using KHR durative actions to provide AI-accessible project management capabilities through MCP tools.
+Implement a PERT chart execution simulator using the existing hybrid planner API with KHR durative actions to provide AI-accessible project execution capabilities through MCP tools.
 
 ### Core Approach
 
-**PERT Chart as HTN Domain**: Model project tasks as HTN methods with durative actions for execution, dependency management, and resource scheduling.
+**Use Existing Hybrid Planner**: Leverage HybridCoordinatorV2 instead of creating custom planning logic.
 
-**KHR Durative Mapping**:
+**Construction Domain as HTN Domain**: Model project tasks as HTN methods that decompose into KHR durative actions.
 
-- **Task Execution**: `variable/interpolate` for progress tracking
-- **Resource Management**: `pointer/interpolate` for allocation adjustments
-- **Dependency Scheduling**: `flow/setDelay` for milestone triggers
+**Execution-Focused**: Use Plan.run_lazy_refineahead to execute projects and return execution logs instead of static plans.
 
-**MCP Tool Integration**: Expose project planning capabilities as MCP tools for AI assistant access.
+**MCP Tool Integration**: Expose project execution simulation as MCP tools for AI assistant access.
+
+## KHR Interactivity Construction Domain
+
+Based on the KHR_interactivity specification, the following nodes are available for constructing durative actions and task methods:
+
+### Math Operations (Task Methods)
+**Constants**: `math/e`, `math/pi`, `math/inf`, `math/nan`
+**Arithmetic**: `math/abs`, `math/sign`, `math/add`, `math/sub`, `math/mul`, `math/div`, `math/min`, `math/max`, `math/clamp`
+**Comparison**: `math/eq`, `math/lt`, `math/le`, `math/gt`, `math/ge`
+**Trigonometry**: `math/sin`, `math/cos`, `math/tan`, `math/asin`, `math/acos`, `math/atan`, `math/atan2`
+**Vector Operations**: `math/length`, `math/normalize`, `math/dot`, `math/cross`, `math/transform`
+**Matrix Operations**: `math/transpose`, `math/determinant`, `math/inverse`, `math/matmul`, `math/matCompose`
+**Type Conversion**: `type/boolToInt`, `type/intToFloat`, `type/floatToInt`, `type/floatToBool`
+
+### Flow Control (Task Methods)
+**Sequence**: `flow/sequence` - Execute actions in order
+**Branching**: `flow/branch`, `flow/switch` - Conditional execution
+**Loops**: `flow/while`, `flow/for`, `flow/doN` - Iterative execution
+**Synchronization**: `flow/waitAll`, `flow/multiGate` - Coordination
+**Timing**: `flow/throttle` - Rate limiting
+
+### Durative Actions (Core PERT Implementation)
+**Variable Interpolation**: `variable/interpolate` - Progress tracking over time
+- Maps to: Task execution with progress from 0% to 100%
+- Duration: Task duration in seconds
+- Use: Critical path task execution
+
+**Pointer Interpolation**: `pointer/interpolate` - Resource allocation over time  
+- Maps to: Dynamic resource adjustment during task execution
+- Duration: Resource allocation period
+- Use: Resource leveling and optimization
+
+**Delay Scheduling**: `flow/setDelay` - Milestone and dependency triggers
+- Maps to: Task start scheduling based on dependencies
+- Duration: Delay until task can begin
+- Use: Dependency management and milestone triggers
+
+### State Management (Task Methods)
+**Variables**: `variable/get`, `variable/set`, `variable/setMultiple` - State tracking
+**Object Model**: `pointer/get`, `pointer/set` - External system integration
+**Animation**: `animation/start`, `animation/stop`, `animation/stopAt` - Timeline control
+
+### Event System (Task Methods)
+**Lifecycle**: `event/onStart`, `event/onTick` - System events
+**Custom Events**: `event/receive`, `event/send` - Inter-task communication
+
+### Construction Domain Mapping
+
+```elixir
+# PERT Task → KHR Durative Action Mapping
+%ConstructionDomain{
+  # Task execution with progress tracking
+  task_methods: %{
+    "execute_task" => %{
+      durative_action: "variable/interpolate",
+      parameters: [:task_id, :progress_var, :target_progress, :duration],
+      preconditions: [:dependencies_complete],
+      effects: [:task_complete, :progress_updated]
+    },
+    
+    # Resource allocation during task
+    "allocate_resources" => %{
+      durative_action: "pointer/interpolate", 
+      parameters: [:resource_pointer, :allocation_level, :duration],
+      preconditions: [:resources_available],
+      effects: [:resources_allocated, :allocation_optimized]
+    },
+    
+    # Dependency scheduling
+    "schedule_dependency" => %{
+      durative_action: "flow/setDelay",
+      parameters: [:successor_task, :delay_duration],
+      preconditions: [:predecessor_complete],
+      effects: [:successor_scheduled, :dependency_satisfied]
+    }
+  },
+  
+  # Non-durative task methods for calculations
+  calculation_methods: %{
+    "calculate_critical_path" => ["math/max", "math/add", "flow/sequence"],
+    "compute_slack" => ["math/sub", "math/min", "math/max"],
+    "optimize_schedule" => ["math/min", "flow/branch", "variable/set"],
+    "validate_dependencies" => ["math/eq", "flow/branch", "variable/get"]
+  }
+}
+```
 
 ## Implementation Plan
 
@@ -232,24 +319,41 @@ Implement a PERT chart solver using KHR durative actions to provide AI-accessibl
 }}
 ```
 
-### MCP Tool Interface
+### Hybrid Planner Execution Flow
 
 ```elixir
-# MCP Tool: plan_project_pert
-def plan_project_pert(project_spec) do
-  # Input: Project specification with tasks and dependencies
-  # Output: Executable HTN plan with KHR durative actions
-
-  project_spec
-  |> parse_project_tasks()
-  |> calculate_critical_path()
-  |> generate_khr_plan()
-  |> validate_temporal_constraints()
+# MCP Tool: execute_construction_project
+def execute_construction_project(project_spec) do
+  # Step 1: Create construction domain from project specification
+  domain = ConstructionDomain.from_project_spec(project_spec)
+  
+  # Step 2: Convert project to HTN goals and initial state
+  {goals, initial_state} = ConstructionDomain.to_htn_problem(project_spec)
+  
+  # Step 3: Create hybrid coordinator with default strategies
+  coordinator = HybridCoordinatorV2.new_default()
+  
+  # Step 4: Generate plan using hybrid planner
+  case HybridCoordinatorV2.plan(coordinator, domain, initial_state, goals) do
+    {:ok, plan} ->
+      # Step 5: Execute plan using run_lazy_refineahead
+      case Plan.run_lazy_refineahead(domain, initial_state, plan.solution_tree, verbose: 3) do
+        {:ok, final_state} ->
+          # Step 6: Format execution results for MCP response
+          format_execution_results(plan, final_state, project_spec)
+        
+        {:error, reason} ->
+          {:error, "Execution failed: #{reason}"}
+      end
+    
+    {:error, reason} ->
+      {:error, "Planning failed: #{reason}"}
+  end
 end
 
-# Example usage from MCP client (minimal input data):
+# Example MCP usage:
 {
-  "tool": "plan_project_pert",
+  "tool": "execute_construction_project",
   "arguments": {
     "project": {
       "name": "house_construction",
@@ -283,19 +387,30 @@ end
   }
 }
 
-# Expected algorithm output:
+# Expected execution log output:
 {
-  "critical_path": ["a", "b", "c", "d", "i", "j", "k", "l", "o", "s", "x"],
-  "total_duration": 37,
-  "slack_analysis": {
-    "basement_drains": 3,
-    "roofing_work": 11, 
-    "storm_drains": 23
+  "execution_log": [
+    {"time": 0.0, "action": "start_project", "task": "a", "status": "completed"},
+    {"time": 0.0, "action": "khr_variable_interpolate", "task": "b", "progress": 0.0, "duration": 4.0},
+    {"time": 1.0, "action": "progress_update", "task": "b", "progress": 0.25},
+    {"time": 2.0, "action": "progress_update", "task": "b", "progress": 0.50},
+    {"time": 3.0, "action": "progress_update", "task": "b", "progress": 0.75},
+    {"time": 4.0, "action": "task_complete", "task": "b", "progress": 1.0},
+    {"time": 4.0, "action": "khr_variable_interpolate", "task": "c", "progress": 0.0, "duration": 2.0},
+    {"time": 6.0, "action": "task_complete", "task": "c", "progress": 1.0},
+    {"time": 6.0, "action": "khr_flow_setDelay", "task": "f", "delay": 0.0},
+    {"time": 6.0, "action": "khr_variable_interpolate", "task": "d", "progress": 0.0, "duration": 4.0}
+  ],
+  "critical_path_executed": ["a", "b", "c", "d", "i", "j", "k", "l", "o", "s", "x"],
+  "total_execution_time": 37.0,
+  "resource_utilization": {
+    "crew_allocation": 0.90,
+    "equipment_usage": 0.85,
+    "material_efficiency": 0.92
   },
-  "khr_plan": {
-    "foundation_phase": {"start": 0, "duration": 6},
-    "framing_phase": {"start": 6, "duration": 20},
-    "finishing_phase": {"start": 26, "duration": 11}
+  "final_state": {
+    "construction": {"house_complete": true},
+    "milestones": {"all_phases_complete": true}
   }
 }
 ```
@@ -359,23 +474,23 @@ end
 
 ### Development Approach
 
-1. **Start Simple**: Begin with standard construction project (37 tasks, complex dependencies)
-2. **Add Complexity Gradually**: Introduce parallel tasks, resource constraints, optimization
-3. **Validate Each Phase**: Ensure PERT calculations match industry tools before proceeding
-4. **MCP Integration Last**: Focus on core algorithms before tool interface design
+1. **Use Existing Infrastructure**: Leverage HybridCoordinatorV2 and Plan.run_lazy_refineahead instead of custom implementations
+2. **Domain-First**: Create proper Domain.Core structure for construction projects
+3. **Execution-Focused**: Prioritize execution logging over static plan generation
+4. **Incremental Testing**: Start with simple 3-task projects, expand to full construction example
 
 ### Testing Strategy
 
-- **Unit Tests**: PERT algorithm correctness with known project examples
-- **Integration Tests**: HTN plan generation and execution with durative actions
-- **Performance Tests**: Large project handling and optimization timing
-- **MCP Tool Tests**: End-to-end client interaction scenarios
+- **Domain Tests**: Validate construction domain HTN methods and KHR action mapping
+- **Hybrid Planner Tests**: Ensure HybridCoordinatorV2 generates valid plans for construction projects
+- **Execution Tests**: Verify Plan.run_lazy_refineahead produces expected execution logs
+- **MCP Integration Tests**: End-to-end testing of MCP tool with real project specifications
 
 ### Documentation Requirements
 
-- **Algorithm Documentation**: PERT calculation methods and critical path analysis
-- **KHR Mapping Guide**: How project tasks map to durative actions
-- **MCP Tool Reference**: Complete API documentation with examples
-- **Project Management Examples**: Common scenarios and best practices
+- **Construction Domain Guide**: How PERT tasks map to HTN methods and KHR durative actions
+- **Hybrid Planner Integration**: Using HybridCoordinatorV2 for construction project planning
+- **Execution Log Format**: Structure and content of execution results
+- **MCP Tool Reference**: Complete API documentation with construction project examples
 
-This ADR establishes the foundation for AI-accessible project management through temporal planning with KHR durative actions.
+This ADR establishes AI-accessible project execution simulation using the existing hybrid planner infrastructure with KHR durative actions.
