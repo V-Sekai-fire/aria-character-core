@@ -1,7 +1,7 @@
 # Debug script to understand what error message is returned from plan execution
 # Usage: mix run scripts/debug_planning_test.exs
 
-alias AriaEngine.{StateV2, BasicActionsDomainProvider}
+alias {StateV2, BasicActionsDomainProvider}
 
 # Create test domain and state
 domain = BasicActionsDomainProvider.create_domain()
@@ -23,7 +23,7 @@ IO.puts("Domain: #{inspect(domain)}")
 IO.puts("State: #{inspect(state)}")
 IO.puts("Invalid plan: #{inspect(invalid_plan)}")
 
-case AriaEngine.execute_plan(domain, state, invalid_plan) do
+case execute_plan(domain, state, invalid_plan) do
   {:ok, final_state} ->
     IO.puts("Unexpected success: #{inspect(final_state)}")
   {:error, reason} ->

@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule GeneratePddlDomain do
-  alias AriaEngine.Domain
-  alias AriaEngine.Pddl.DomainAdapter
+  alias Domain
+  alias Pddl.DomainAdapter
 
   def run do
     IO.puts("=== Generating PDDL Domain ===")

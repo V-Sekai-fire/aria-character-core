@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: MIT
 
 # This script demonstrates how to create a simple PDDL domain
-# using the new AriaEngine.Pddl structs and print it using AriaEngine.PddlPrinter.
+# using the new Pddl structs and print it using PddlPrinter.
 
 # Ensure the application is started to load all modules
 :ok = Application.ensure_all_started(:aria_engine)
 
-alias AriaEngine.Pddl.Domain
-alias AriaEngine.Pddl.Domain.{Action, Type, Task, Method, Parameter}
-alias AriaEngine.PddlPrinter
+alias Pddl.Domain
+alias Pddl.Domain.{Action, Type, Task, Method, Parameter}
+alias PddlPrinter
 
 # 1. Create a simple PDDL Domain instance
 # Define types
@@ -74,8 +74,8 @@ example_domain = Domain.new(
   methods: [direct_move_method]
 )
 
-# 2. Use AriaEngine.PddlPrinter.format/2 to convert this instance to a PDDL string.
-pddl_string = AriaEngine.PddlPrinter.format(:domain, example_domain)
+# 2. Use PddlPrinter.format/2 to convert this instance to a PDDL string.
+pddl_string = PddlPrinter.format(:domain, example_domain)
 
 # 3. Display the generated PDDL string.
 IO.puts("Generated PDDL Domain:")

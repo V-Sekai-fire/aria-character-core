@@ -17,7 +17,7 @@ defmodule AriaTown.NPCManager do
   
   The NPCManager should eventually coordinate with:
   - TimeManager for scheduled behaviors and time-based actions
-  - AriaEngine.Planner for NPC goal-directed behavior
+  - Planner for NPC goal-directed behavior
   - KnowledgeBase for NPC knowledge and memory
   - PersistenceManager for NPC state storage
   

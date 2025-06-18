@@ -5,7 +5,6 @@
 # Usage: mix run scripts/fix_unigoal_methods_statev2.exs
 
 defmodule FixUnigoalMethods do
-  alias AriaEngine.{Domain, StateV2}
   
   def run do
     IO.puts("=== Fixing Unigoal Methods for StateV2 Format ===")
