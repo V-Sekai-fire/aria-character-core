@@ -306,6 +306,7 @@ defmodule NodeLibrary.KHRInteractivity.ControlFlow do
 
   defp evaluate_condition(condition) when is_boolean(condition), do: condition
   defp evaluate_condition(condition) when is_number(condition), do: condition != 0
+  defp evaluate_condition(condition) when is_function(condition, 0), do: evaluate_condition(condition.())
   defp evaluate_condition(nil), do: false
   defp evaluate_condition(_), do: true
 

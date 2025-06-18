@@ -14,6 +14,7 @@ defmodule NodeLibrary.KHRInteractivity.Verification.ObjectModelVerificationTest 
 
   use ExUnit.Case
   alias StateV2
+  alias NodeLibrary.KHRInteractivity.ObjectModel
   alias NodeLibrary.KHRInteractivity.StateAdvanced
   alias NodeLibrary.KHRInteractivity.Support.GLTFSceneMock
 
@@ -228,8 +229,9 @@ defmodule NodeLibrary.KHRInteractivity.Verification.ObjectModelVerificationTest 
       # t values outside [0, 1] should still work (extrapolation)
       result_state_extrapolate = StateAdvanced.pointer_interpolate(state, [8602, "node_2", "translation", [2, 4, 6], 1.5])
       extrapolated = StateV2.get_fact(result_state_extrapolate, "8602", "interpolated_value")
-      # Should extrapolate beyond target: current + 1.5 * (target - current)
-      assert extrapolated == [3.0, 6.2, 9.0]
+      # Should extrapolate beyond target: current * (1-t) + target * t
+      # [0.0, 1.8, 0.0] * (-0.5) + [2, 4, 6] * 1.5 = [0.0, -0.9, 0.0] + [3.0, 6.0, 9.0] = [3.0, 5.1, 9.0]
+      assert extrapolated == [3.0, 5.1, 9.0]
     end
 
     test "mismatched vector sizes" do

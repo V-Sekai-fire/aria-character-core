@@ -227,7 +227,7 @@ defmodule NodeLibrary.KHRInteractivity.Support.GLTFSceneMock do
   Get node property value using JSON pointer-style path.
   """
   def get_node_property(state, node_name_or_index, property_path) do
-    node_id = resolve_node_id(node_name_or_index)
+    node_id = resolve_node_to_data_id(state, node_name_or_index)
     
     case String.split(property_path, ".") do
       [property] ->
@@ -247,7 +247,7 @@ defmodule NodeLibrary.KHRInteractivity.Support.GLTFSceneMock do
   Set node property value using JSON pointer-style path.
   """
   def set_node_property(state, node_name_or_index, property_path, value) do
-    node_id = resolve_node_id(node_name_or_index)
+    node_id = resolve_node_to_data_id(state, node_name_or_index)
     
     case String.split(property_path, ".") do
       [property] ->
@@ -269,7 +269,7 @@ defmodule NodeLibrary.KHRInteractivity.Support.GLTFSceneMock do
   Get animation timeline information.
   """
   def get_animation_info(state, animation_name_or_index) do
-    animation_id = resolve_animation_id(animation_name_or_index)
+    animation_id = resolve_animation_to_data_id(state, animation_name_or_index)
     
     %{
       name: StateV2.get_fact(state, animation_id, "name"),
@@ -333,6 +333,30 @@ defmodule NodeLibrary.KHRInteractivity.Support.GLTFSceneMock do
         _ -> max_duration
       end
     end)
+  end
+
+  defp resolve_node_to_data_id(state, node_name) when is_binary(node_name) do
+    # Get the index from the name lookup, then convert to data ID
+    case StateV2.get_fact(state, "node_by_name_#{node_name}", "index") do
+      nil -> nil
+      index -> "node_#{index}"
+    end
+  end
+
+  defp resolve_node_to_data_id(_state, node_index) when is_integer(node_index) do
+    "node_#{node_index}"
+  end
+
+  defp resolve_animation_to_data_id(state, animation_name) when is_binary(animation_name) do
+    # Get the index from the name lookup, then convert to data ID
+    case StateV2.get_fact(state, "animation_by_name_#{animation_name}", "index") do
+      nil -> nil
+      index -> "animation_#{index}"
+    end
+  end
+
+  defp resolve_animation_to_data_id(_state, animation_index) when is_integer(animation_index) do
+    "animation_#{animation_index}"
   end
 
   defp current_time do

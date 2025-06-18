@@ -71,18 +71,24 @@ defmodule NodeLibrary.KHRInteractivity.StateAdvanced do
   ## Returns
   Updated state with property modified
   """
-  def pointer_set(state, [node_id, object_id, property_path, value]) when is_binary(property_path) do
+  def pointer_set(state, [node_id, object_id, property_path, value]) when is_binary(property_path) and property_path != "" do
     # Parse property path
     path_parts = String.split(property_path, ".")
     
-    # Set the nested property
-    updated_state = set_nested_property(state, object_id, path_parts, value)
-    
-    StateV2.set_fact(updated_state, Integer.to_string(node_id), "property_set", property_path)
+    # Check if object exists (has any facts)
+    if object_exists?(state, object_id) do
+      # Set the nested property
+      updated_state = set_nested_property(state, object_id, path_parts, value)
+      StateV2.set_fact(updated_state, Integer.to_string(node_id), "property_set", property_path)
+    else
+      # Object doesn't exist, don't set property_set
+      state
+    end
   end
 
   def pointer_set(state, [node_id, _object_id, _invalid_path, _value]) do
-    StateV2.set_fact(state, Integer.to_string(node_id), "property_set", nil)
+    # Don't set the fact at all for invalid operations  
+    state
   end
 
   @doc """
@@ -122,10 +128,18 @@ defmodule NodeLibrary.KHRInteractivity.StateAdvanced do
     current_value = StateV2.get_fact(state, object_id, property)
     
     case rest_path do
-      [] -> current_value
+      [] -> 
+        current_value
+      [component] when is_list(current_value) ->
+        # Handle component access for vectors (e.g., translation.y)
+        component_index = component_to_index(component)
+        if component_index && component_index < length(current_value) do
+          Enum.at(current_value, component_index)
+        else
+          nil
+        end
       _ -> 
-        # For nested properties, we'd need more complex object model support
-        # For now, just return the current level
+        # For deeper nesting, we'd need more complex object model support
         current_value
     end
   end
@@ -134,12 +148,43 @@ defmodule NodeLibrary.KHRInteractivity.StateAdvanced do
     nil
   end
 
+  defp component_to_index("x"), do: 0
+  defp component_to_index("y"), do: 1
+  defp component_to_index("z"), do: 2
+  defp component_to_index("w"), do: 3
+  defp component_to_index(index_str) when is_binary(index_str) do
+    case Integer.parse(index_str) do
+      {index, ""} -> index
+      _ -> nil
+    end
+  end
+  defp component_to_index(index) when is_integer(index), do: index
+  defp component_to_index(_), do: nil
+
   defp set_nested_property(state, object_id, [property], value) do
     StateV2.set_fact(state, object_id, property, value)
   end
 
+  defp set_nested_property(state, object_id, [property, component], value) do
+    # Handle component-level setting (e.g., translation.y = 5.0)
+    current_value = StateV2.get_fact(state, object_id, property)
+    
+    if is_list(current_value) do
+      component_index = component_to_index(component)
+      if component_index && component_index < length(current_value) do
+        updated_vector = List.replace_at(current_value, component_index, value)
+        StateV2.set_fact(state, object_id, property, updated_vector)
+      else
+        state
+      end
+    else
+      # If not a vector, just set the property itself
+      StateV2.set_fact(state, object_id, property, value)
+    end
+  end
+
   defp set_nested_property(state, object_id, [property | _rest_path], value) do
-    # For nested properties, we'd need more complex object model support
+    # For deeper nesting, we'd need more complex object model support
     # For now, just set at the current level
     StateV2.set_fact(state, object_id, property, value)
   end
@@ -163,6 +208,15 @@ defmodule NodeLibrary.KHRInteractivity.StateAdvanced do
   defp interpolate_values(current, _target, _t) do
     # For non-numeric types, just return current
     current
+  end
+
+  defp object_exists?(state, object_id) do
+    # Check if the object has any facts stored
+    # This is a simple check - in a real implementation we'd check the glTF scene
+    case StateV2.get_fact(state, object_id, "name") do
+      nil -> false
+      _ -> true
+    end
   end
 
   # =============================================================================
