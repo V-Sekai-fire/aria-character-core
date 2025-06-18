@@ -1,253 +1,338 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathSwizzle do
   @moduledoc """
-  KHR_interactivity Math Swizzle Nodes
-
-  Implements vector/matrix combine and extract operations from the glTF KHR_interactivity specification:
-  - khr_math_combine2/3/4: Combine floats into vectors
-  - khr_math_combine2x2/3x3/4x4: Combine floats into matrices
-  - khr_math_extract2/3/4: Extract floats from vectors
-  - khr_math_extract2x2/3x3/4x4: Extract floats from matrices
-
-  All operations handle NaN and infinity according to the KHR_interactivity spec.
+  Swizzle operations for KHR_interactivity specification.
+  Implements vector and matrix combine/extract operations.
   """
 
   alias AriaEngine.StateV2
-  alias AriaEngine.Domain.Actions
 
-  @doc "Register all math swizzle actions with a domain"
-  @spec register_actions(AriaEngine.Domain.Core.t()) :: AriaEngine.Domain.Core.t()
-  def register_actions(domain) do
-    domain
-    |> Actions.add_action(:khr_math_combine2, &math_combine2/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle",
-      khr_node_type: "math/combine2",
-      description: "Combine two floats into a two-component vector"
-    })
-    |> Actions.add_action(:khr_math_combine3, &math_combine3/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle", 
-      khr_node_type: "math/combine3",
-      description: "Combine three floats into a three-component vector"
-    })
-    |> Actions.add_action(:khr_math_combine4, &math_combine4/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle",
-      khr_node_type: "math/combine4", 
-      description: "Combine four floats into a four-component vector"
-    })
-    |> Actions.add_action(:khr_math_combine2x2, &math_combine2x2/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle",
-      khr_node_type: "math/combine2x2",
-      description: "Combine 4 floats into a 2x2 matrix"
-    })
-    |> Actions.add_action(:khr_math_combine3x3, &math_combine3x3/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle",
-      khr_node_type: "math/combine3x3", 
-      description: "Combine 9 floats into a 3x3 matrix"
-    })
-    |> Actions.add_action(:khr_math_combine4x4, &math_combine4x4/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle",
-      khr_node_type: "math/combine4x4",
-      description: "Combine 16 floats into a 4x4 matrix"
-    })
-    |> Actions.add_action(:khr_math_extract2, &math_extract2/2, %{
-      domain: "khr_interactivity", 
-      category: "math_swizzle",
-      khr_node_type: "math/extract2",
-      description: "Extract two floats from a two-component vector"
-    })
-    |> Actions.add_action(:khr_math_extract3, &math_extract3/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle",
-      khr_node_type: "math/extract3",
-      description: "Extract three floats from a three-component vector"
-    })
-    |> Actions.add_action(:khr_math_extract4, &math_extract4/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle", 
-      khr_node_type: "math/extract4",
-      description: "Extract four floats from a four-component vector"
-    })
-    |> Actions.add_action(:khr_math_extract2x2, &math_extract2x2/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle",
-      khr_node_type: "math/extract2x2",
-      description: "Extract 4 floats from a 2x2 matrix"
-    })
-    |> Actions.add_action(:khr_math_extract3x3, &math_extract3x3/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle",
-      khr_node_type: "math/extract3x3",
-      description: "Extract 9 floats from a 3x3 matrix"
-    })
-    |> Actions.add_action(:khr_math_extract4x4, &math_extract4x4/2, %{
-      domain: "khr_interactivity",
-      category: "math_swizzle",
-      khr_node_type: "math/extract4x4", 
-      description: "Extract 16 floats from a 4x4 matrix"
-    })
+  # =============================================================================
+  # Vector Combine Operations
+  # =============================================================================
+
+  @doc """
+  Combine values into 2D vector.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, x, y]: Node ID and component values
+  
+  ## Returns
+  Updated state with 2D vector
+  """
+  def combine2(state, [node_id, x, y]) do
+    result = [x, y]
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
   end
 
-  @doc "Combine two floats into a two-component vector"
-  def math_combine2(state, [node_index, a, b]) when is_number(a) and is_number(b) do
-    result = [a, b]
+  @doc """
+  Combine values into 3D vector.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, x, y, z]: Node ID and component values
+  
+  ## Returns
+  Updated state with 3D vector
+  """
+  def combine3(state, [node_id, x, y, z]) do
+    result = [x, y, z]
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
+  end
+
+  @doc """
+  Combine values into 4D vector.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, x, y, z, w]: Node ID and component values
+  
+  ## Returns
+  Updated state with 4D vector
+  """
+  def combine4(state, [node_id, x, y, z, w]) do
+    result = [x, y, z, w]
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
+  end
+
+  # =============================================================================
+  # Vector Extract Operations
+  # =============================================================================
+
+  @doc """
+  Extract 2D vector from larger vector.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, vector, start_index]: Node ID, source vector, and start index
+  
+  ## Returns
+  Updated state with extracted 2D vector
+  """
+  def extract2(state, [node_id, vector, start_index]) when is_list(vector) and is_integer(start_index) do
+    result = 
+      if start_index >= 0 and start_index + 1 < length(vector) do
+        [Enum.at(vector, start_index), Enum.at(vector, start_index + 1)]
+      else
+        [0.0, 0.0]
+      end
     
-    state
-    |> StateV2.set_fact(Integer.to_string(node_index), "value", result)
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
   end
 
-  @doc "Combine three floats into a three-component vector"
-  def math_combine3(state, [node_index, a, b, c]) when is_number(a) and is_number(b) and is_number(c) do
-    result = [a, b, c]
+  @doc """
+  Extract 3D vector from larger vector.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, vector, start_index]: Node ID, source vector, and start index
+  
+  ## Returns
+  Updated state with extracted 3D vector
+  """
+  def extract3(state, [node_id, vector, start_index]) when is_list(vector) and is_integer(start_index) do
+    result = 
+      if start_index >= 0 and start_index + 2 < length(vector) do
+        [
+          Enum.at(vector, start_index),
+          Enum.at(vector, start_index + 1),
+          Enum.at(vector, start_index + 2)
+        ]
+      else
+        [0.0, 0.0, 0.0]
+      end
     
-    state
-    |> StateV2.set_fact(Integer.to_string(node_index), "value", result)
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
   end
 
-  @doc "Combine four floats into a four-component vector"
-  def math_combine4(state, [node_index, a, b, c, d]) when is_number(a) and is_number(b) and is_number(c) and is_number(d) do
-    result = [a, b, c, d]
+  @doc """
+  Extract 4D vector from larger vector.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, vector, start_index]: Node ID, source vector, and start index
+  
+  ## Returns
+  Updated state with extracted 4D vector
+  """
+  def extract4(state, [node_id, vector, start_index]) when is_list(vector) and is_integer(start_index) do
+    result = 
+      if start_index >= 0 and start_index + 3 < length(vector) do
+        [
+          Enum.at(vector, start_index),
+          Enum.at(vector, start_index + 1),
+          Enum.at(vector, start_index + 2),
+          Enum.at(vector, start_index + 3)
+        ]
+      else
+        [0.0, 0.0, 0.0, 0.0]
+      end
     
-    state
-    |> StateV2.set_fact(Integer.to_string(node_index), "value", result)
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
   end
 
-  @doc "Combine 4 floats into a 2x2 matrix (column-major order)"
-  def math_combine2x2(state, [node_index, a, b, c, d]) when is_number(a) and is_number(b) and is_number(c) and is_number(d) do
-    # Column-major order: [c0r0, c0r1, c1r0, c1r1]
-    result = [a, b, c, d]
+  # =============================================================================
+  # Matrix Combine Operations
+  # =============================================================================
+
+  @doc """
+  Combine vectors into 2x2 matrix.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, row0, row1]: Node ID and row vectors
+  
+  ## Returns
+  Updated state with 2x2 matrix
+  """
+  def combine2x2(state, [node_id, [r0c0, r0c1], [r1c0, r1c1]]) do
+    result = [r0c0, r0c1, r1c0, r1c1]
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
+  end
+
+  @doc """
+  Combine vectors into 3x3 matrix.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, row0, row1, row2]: Node ID and row vectors
+  
+  ## Returns
+  Updated state with 3x3 matrix
+  """
+  def combine3x3(state, [node_id, [r0c0, r0c1, r0c2], [r1c0, r1c1, r1c2], [r2c0, r2c1, r2c2]]) do
+    result = [r0c0, r0c1, r0c2, r1c0, r1c1, r1c2, r2c0, r2c1, r2c2]
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
+  end
+
+  @doc """
+  Combine vectors into 4x4 matrix.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, row0, row1, row2, row3]: Node ID and row vectors
+  
+  ## Returns
+  Updated state with 4x4 matrix
+  """
+  def combine4x4(state, [node_id, row0, row1, row2, row3]) do
+    result = row0 ++ row1 ++ row2 ++ row3
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
+  end
+
+  # =============================================================================
+  # Matrix Extract Operations
+  # =============================================================================
+
+  @doc """
+  Extract 2x2 matrix from larger matrix.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, matrix, row_start, col_start]: Node ID, source matrix, start row, start column
+  
+  ## Returns
+  Updated state with extracted 2x2 matrix
+  """
+  def extract2x2(state, [node_id, matrix, row_start, col_start]) when is_list(matrix) do
+    matrix_size = determine_matrix_size(length(matrix))
     
-    state
-    |> StateV2.set_fact(Integer.to_string(node_index), "value", result)
+    result = 
+      if matrix_size >= 2 and row_start >= 0 and col_start >= 0 and 
+         row_start + 1 < matrix_size and col_start + 1 < matrix_size do
+        [
+          Enum.at(matrix, row_start * matrix_size + col_start),
+          Enum.at(matrix, row_start * matrix_size + col_start + 1),
+          Enum.at(matrix, (row_start + 1) * matrix_size + col_start),
+          Enum.at(matrix, (row_start + 1) * matrix_size + col_start + 1)
+        ]
+      else
+        [1.0, 0.0, 0.0, 1.0]  # Identity 2x2
+      end
+    
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
   end
 
-  @doc "Combine 9 floats into a 3x3 matrix (column-major order)"
-  def math_combine3x3(state, [node_index, a, b, c, d, e, f, g, h, i]) do
-    if Enum.all?([a, b, c, d, e, f, g, h, i], &is_number/1) do
-      # Column-major order
-      result = [a, b, c, d, e, f, g, h, i]
-      
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "value", result)
-    else
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "value", List.duplicate(:nan, 9))
+  @doc """
+  Extract 3x3 matrix from larger matrix.
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, matrix, row_start, col_start]: Node ID, source matrix, start row, start column
+  
+  ## Returns
+  Updated state with extracted 3x3 matrix
+  """
+  def extract3x3(state, [node_id, matrix, row_start, col_start]) when is_list(matrix) do
+    matrix_size = determine_matrix_size(length(matrix))
+    
+    result = 
+      if matrix_size >= 3 and row_start >= 0 and col_start >= 0 and 
+         row_start + 2 < matrix_size and col_start + 2 < matrix_size do
+        for row <- 0..2, col <- 0..2 do
+          Enum.at(matrix, (row_start + row) * matrix_size + (col_start + col))
+        end
+      else
+        [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]  # Identity 3x3
+      end
+    
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
+  end
+
+  @doc """
+  Extract 4x4 matrix from larger matrix (or return as-is if already 4x4).
+  
+  ## Parameters
+  - state: Current state
+  - [node_id, matrix, row_start, col_start]: Node ID, source matrix, start row, start column
+  
+  ## Returns
+  Updated state with extracted 4x4 matrix
+  """
+  def extract4x4(state, [node_id, matrix, row_start, col_start]) when is_list(matrix) do
+    matrix_size = determine_matrix_size(length(matrix))
+    
+    result = 
+      if matrix_size == 4 and row_start == 0 and col_start == 0 do
+        matrix
+      else
+        # For now, return identity 4x4 for invalid extractions
+        [
+          1.0, 0.0, 0.0, 0.0,
+          0.0, 1.0, 0.0, 0.0,
+          0.0, 0.0, 1.0, 0.0,
+          0.0, 0.0, 0.0, 1.0
+        ]
+      end
+    
+    StateV2.set_fact(state, Integer.to_string(node_id), "value", result)
+  end
+
+  # =============================================================================
+  # Helper Functions
+  # =============================================================================
+
+  defp determine_matrix_size(element_count) do
+    case element_count do
+      4 -> 2   # 2x2
+      9 -> 3   # 3x3
+      16 -> 4  # 4x4
+      _ -> 0   # Invalid
     end
   end
 
-  @doc "Combine 16 floats into a 4x4 matrix (column-major order)"
-  def math_combine4x4(state, [node_index | components]) when length(components) == 16 do
-    if Enum.all?(components, &is_number/1) do
-      # Column-major order
-      result = components
-      
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "value", result)
-    else
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "value", List.duplicate(:nan, 16))
-    end
+  # =============================================================================
+  # Task Methods for HTN Planning
+  # =============================================================================
+
+  def combine2_task_method(state, [node_id, x, y]) do
+    [[:khr_math_combine2, node_id, x, y]]
   end
 
-  @doc "Extract two floats from a two-component vector"
-  def math_extract2(state, [node_index, vector]) when is_list(vector) do
-    if length(vector) == 2 do
-      [a, b] = vector
-      
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "0", a)
-      |> StateV2.set_fact(Integer.to_string(node_index), "1", b)
-    else
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "0", :nan)
-      |> StateV2.set_fact(Integer.to_string(node_index), "1", :nan)
-    end
+  def combine3_task_method(state, [node_id, x, y, z]) do
+    [[:khr_math_combine3, node_id, x, y, z]]
   end
 
-  @doc "Extract three floats from a three-component vector"
-  def math_extract3(state, [node_index, vector]) when is_list(vector) do
-    if length(vector) == 3 do
-      [a, b, c] = vector
-      
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "0", a)
-      |> StateV2.set_fact(Integer.to_string(node_index), "1", b)
-      |> StateV2.set_fact(Integer.to_string(node_index), "2", c)
-    else
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "0", :nan)
-      |> StateV2.set_fact(Integer.to_string(node_index), "1", :nan)
-      |> StateV2.set_fact(Integer.to_string(node_index), "2", :nan)
-    end
+  def combine4_task_method(state, [node_id, x, y, z, w]) do
+    [[:khr_math_combine4, node_id, x, y, z, w]]
   end
 
-  @doc "Extract four floats from a four-component vector"
-  def math_extract4(state, [node_index, vector]) when is_list(vector) do
-    if length(vector) == 4 do
-      [a, b, c, d] = vector
-      
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "0", a)
-      |> StateV2.set_fact(Integer.to_string(node_index), "1", b)
-      |> StateV2.set_fact(Integer.to_string(node_index), "2", c)
-      |> StateV2.set_fact(Integer.to_string(node_index), "3", d)
-    else
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "0", :nan)
-      |> StateV2.set_fact(Integer.to_string(node_index), "1", :nan)
-      |> StateV2.set_fact(Integer.to_string(node_index), "2", :nan)
-      |> StateV2.set_fact(Integer.to_string(node_index), "3", :nan)
-    end
+  def extract2_task_method(state, [node_id, vector, start_index]) do
+    [[:khr_math_extract2, node_id, vector, start_index]]
   end
 
-  @doc "Extract 4 floats from a 2x2 matrix (column-major order)"
-  def math_extract2x2(state, [node_index, matrix]) when is_list(matrix) do
-    if length(matrix) == 4 do
-      [a, b, c, d] = matrix
-      
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "0", a)
-      |> StateV2.set_fact(Integer.to_string(node_index), "1", b)
-      |> StateV2.set_fact(Integer.to_string(node_index), "2", c)
-      |> StateV2.set_fact(Integer.to_string(node_index), "3", d)
-    else
-      state
-      |> StateV2.set_fact(Integer.to_string(node_index), "0", :nan)
-      |> StateV2.set_fact(Integer.to_string(node_index), "1", :nan)
-      |> StateV2.set_fact(Integer.to_string(node_index), "2", :nan)
-      |> StateV2.set_fact(Integer.to_string(node_index), "3", :nan)
-    end
+  def extract3_task_method(state, [node_id, vector, start_index]) do
+    [[:khr_math_extract3, node_id, vector, start_index]]
   end
 
-  @doc "Extract 9 floats from a 3x3 matrix (column-major order)"
-  def math_extract3x3(state, [node_index, matrix]) when is_list(matrix) do
-    if length(matrix) == 9 do
-      Enum.with_index(matrix)
-      |> Enum.reduce(state, fn {value, index}, acc_state ->
-        StateV2.set_fact(acc_state, Integer.to_string(node_index), Integer.to_string(index), value)
-      end)
-    else
-      Enum.reduce(0..8, state, fn index, acc_state ->
-        StateV2.set_fact(acc_state, Integer.to_string(node_index), Integer.to_string(index), :nan)
-      end)
-    end
+  def extract4_task_method(state, [node_id, vector, start_index]) do
+    [[:khr_math_extract4, node_id, vector, start_index]]
   end
 
-  @doc "Extract 16 floats from a 4x4 matrix (column-major order)"
-  def math_extract4x4(state, [node_index, matrix]) when is_list(matrix) do
-    if length(matrix) == 16 do
-      Enum.with_index(matrix)
-      |> Enum.reduce(state, fn {value, index}, acc_state ->
-        StateV2.set_fact(acc_state, Integer.to_string(node_index), Integer.to_string(index), value)
-      end)
-    else
-      Enum.reduce(0..15, state, fn index, acc_state ->
-        StateV2.set_fact(acc_state, Integer.to_string(node_index), Integer.to_string(index), :nan)
-      end)
-    end
+  def combine2x2_task_method(state, [node_id, row0, row1]) do
+    [[:khr_math_combine2x2, node_id, row0, row1]]
+  end
+
+  def combine3x3_task_method(state, [node_id, row0, row1, row2]) do
+    [[:khr_math_combine3x3, node_id, row0, row1, row2]]
+  end
+
+  def combine4x4_task_method(state, [node_id, row0, row1, row2, row3]) do
+    [[:khr_math_combine4x4, node_id, row0, row1, row2, row3]]
+  end
+
+  def extract2x2_task_method(state, [node_id, matrix, row_start, col_start]) do
+    [[:khr_math_extract2x2, node_id, matrix, row_start, col_start]]
+  end
+
+  def extract3x3_task_method(state, [node_id, matrix, row_start, col_start]) do
+    [[:khr_math_extract3x3, node_id, matrix, row_start, col_start]]
+  end
+
+  def extract4x4_task_method(state, [node_id, matrix, row_start, col_start]) do
+    [[:khr_math_extract4x4, node_id, matrix, row_start, col_start]]
   end
 end

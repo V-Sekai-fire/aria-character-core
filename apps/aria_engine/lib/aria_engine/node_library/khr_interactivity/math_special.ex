@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathSpecial do
   @moduledoc """
   KHR_interactivity Math Special Nodes

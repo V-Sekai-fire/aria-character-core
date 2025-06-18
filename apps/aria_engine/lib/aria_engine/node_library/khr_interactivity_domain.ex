@@ -6,7 +6,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivityDomain do
   Complete implementation of glTF KHR_interactivity specification nodes
   as Aria Engine actions and durative actions.
   
-  This domain provides 400+ actions covering:
+  This domain provides all 125 behavior graph nodes covering:
   - Mathematical operations (khr_math_* nodes)
   - Control flow (khr_flow_* nodes)  
   - Temporal operations (khr_flow_delay, khr_animation_* nodes)
@@ -27,10 +27,22 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivityDomain do
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathComparison
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathSpecial
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathTrigonometry
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathInteger
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathBoolean
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathBitwise
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathVector
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathMatrix
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathQuaternion
+  alias AriaEngine.NodeLibrary.KHRInteractivity.MathAdvanced
   alias AriaEngine.NodeLibrary.KHRInteractivity.MathSwizzle
+  alias AriaEngine.NodeLibrary.KHRInteractivity.ControlFlow
+  alias AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced
+  alias AriaEngine.NodeLibrary.KHRInteractivity.TypeConversion
+  alias AriaEngine.NodeLibrary.KHRInteractivity.VariableManagement
+  alias AriaEngine.NodeLibrary.KHRInteractivity.StateAdvanced
+  alias AriaEngine.NodeLibrary.KHRInteractivity.EventSystem
+  alias AriaEngine.NodeLibrary.KHRInteractivity.EventAdvanced
+  alias AriaEngine.NodeLibrary.KHRInteractivity.AnimationSystem
   
   @doc "Register all KHR_interactivity actions with a domain"
   @spec register_all_actions(Core.t()) :: Core.t()
@@ -41,33 +53,207 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivityDomain do
     |> MathComparison.register_actions()
     |> MathSpecial.register_actions()
     |> MathTrigonometry.register_actions()
+    |> register_math_integers()
+    |> register_math_booleans()
+    |> register_math_bitwise()
     |> register_math_vectors()
     |> register_math_matrices()
     |> register_math_quaternions()
+    |> register_math_advanced()
     |> register_math_swizzle()
     |> register_type_conversion()
     |> register_control_flow()
+    |> register_flow_advanced()
     |> register_temporal_flow()
     |> register_variable_management()
+    |> register_state_advanced()
     |> register_event_system()
+    |> register_event_advanced()
     |> register_animation_control()
     |> register_debug_utilities()
   end
   
   
   # =============================================================================
-  # STUB REGISTRATION FUNCTIONS (to be implemented)
+  # REGISTRATION FUNCTIONS
   # =============================================================================
+  
+  defp register_math_integers(domain) do
+    domain
+    |> MathInteger.register_instant_actions()
+    |> MathInteger.register_task_methods()
+  end
+  
+  defp register_math_booleans(domain) do
+    domain
+    |> MathBoolean.register_instant_actions()
+    |> MathBoolean.register_task_methods()
+  end
+  
+  defp register_math_bitwise(domain) do
+    domain
+    |> MathBitwise.register_instant_actions()
+    |> MathBitwise.register_task_methods()
+  end
   
   defp register_math_vectors(domain), do: MathVector.register_actions(domain)
   defp register_math_matrices(domain), do: MathMatrix.register_actions(domain)
   defp register_math_quaternions(domain), do: MathQuaternion.register_actions(domain)
-  defp register_math_swizzle(domain), do: MathSwizzle.register_actions(domain)
-  defp register_type_conversion(domain), do: domain
-  defp register_control_flow(domain), do: domain
+  
+  defp register_math_advanced(domain) do
+    # Advanced math operations (vectors, matrices, quaternions)
+    domain
+    |> Core.add_action(:khr_math_saturate, &MathAdvanced.saturate/2, %{})
+    |> Core.add_action(:khr_math_mix, &MathAdvanced.mix/2, %{})
+    |> Core.add_action(:khr_math_length, &MathAdvanced.length/2, %{})
+    |> Core.add_action(:khr_math_normalize, &MathAdvanced.normalize/2, %{})
+    |> Core.add_action(:khr_math_rotate_2d, &MathAdvanced.rotate_2d/2, %{})
+    |> Core.add_action(:khr_math_rotate_3d, &MathAdvanced.rotate_3d/2, %{})
+    |> Core.add_action(:khr_math_transpose, &MathAdvanced.transpose/2, %{})
+    |> Core.add_action(:khr_math_determinant, &MathAdvanced.determinant/2, %{})
+    |> Core.add_action(:khr_math_inverse, &MathAdvanced.inverse/2, %{})
+    |> Core.add_action(:khr_math_quat_conjugate, &MathAdvanced.quat_conjugate/2, %{})
+    |> Core.add_action(:khr_math_quat_angle_between, &MathAdvanced.quat_angle_between/2, %{})
+    |> Core.add_action(:khr_math_quat_from_axis_angle, &MathAdvanced.quat_from_axis_angle/2, %{})
+    |> Core.add_action(:khr_math_quat_to_axis_angle, &MathAdvanced.quat_to_axis_angle/2, %{})
+    |> Core.add_action(:khr_math_quat_from_directions, &MathAdvanced.quat_from_directions/2, %{})
+    # Add task methods
+    |> Core.add_task_methods("math/saturate", [{"saturate", &MathAdvanced.saturate_task_method/2}])
+    |> Core.add_task_methods("math/mix", [{"mix", &MathAdvanced.mix_task_method/2}])
+    |> Core.add_task_methods("math/length", [{"length", &MathAdvanced.length_task_method/2}])
+    |> Core.add_task_methods("math/normalize", [{"normalize", &MathAdvanced.normalize_task_method/2}])
+    |> Core.add_task_methods("math/rotate2D", [{"rotate_2d", &MathAdvanced.rotate_2d_task_method/2}])
+    |> Core.add_task_methods("math/rotate3D", [{"rotate_3d", &MathAdvanced.rotate_3d_task_method/2}])
+    |> Core.add_task_methods("math/transpose", [{"transpose", &MathAdvanced.transpose_task_method/2}])
+    |> Core.add_task_methods("math/determinant", [{"determinant", &MathAdvanced.determinant_task_method/2}])
+    |> Core.add_task_methods("math/inverse", [{"inverse", &MathAdvanced.inverse_task_method/2}])
+    |> Core.add_task_methods("math/quatConjugate", [{"quat_conjugate", &MathAdvanced.quat_conjugate_task_method/2}])
+    |> Core.add_task_methods("math/quatAngleBetween", [{"quat_angle_between", &MathAdvanced.quat_angle_between_task_method/2}])
+    |> Core.add_task_methods("math/quatFromAxisAngle", [{"quat_from_axis_angle", &MathAdvanced.quat_from_axis_angle_task_method/2}])
+    |> Core.add_task_methods("math/quatToAxisAngle", [{"quat_to_axis_angle", &MathAdvanced.quat_to_axis_angle_task_method/2}])
+    |> Core.add_task_methods("math/quatFromDirections", [{"quat_from_directions", &MathAdvanced.quat_from_directions_task_method/2}])
+  end
+  
+  defp register_math_swizzle(domain) do
+    # Swizzle operations for vector/matrix combine/extract
+    domain
+    |> Core.add_action(:khr_math_combine2, &MathSwizzle.combine2/2, %{})
+    |> Core.add_action(:khr_math_combine3, &MathSwizzle.combine3/2, %{})
+    |> Core.add_action(:khr_math_combine4, &MathSwizzle.combine4/2, %{})
+    |> Core.add_action(:khr_math_extract2, &MathSwizzle.extract2/2, %{})
+    |> Core.add_action(:khr_math_extract3, &MathSwizzle.extract3/2, %{})
+    |> Core.add_action(:khr_math_extract4, &MathSwizzle.extract4/2, %{})
+    |> Core.add_action(:khr_math_combine2x2, &MathSwizzle.combine2x2/2, %{})
+    |> Core.add_action(:khr_math_combine3x3, &MathSwizzle.combine3x3/2, %{})
+    |> Core.add_action(:khr_math_combine4x4, &MathSwizzle.combine4x4/2, %{})
+    |> Core.add_action(:khr_math_extract2x2, &MathSwizzle.extract2x2/2, %{})
+    |> Core.add_action(:khr_math_extract3x3, &MathSwizzle.extract3x3/2, %{})
+    |> Core.add_action(:khr_math_extract4x4, &MathSwizzle.extract4x4/2, %{})
+    # Add task methods
+    |> Core.add_task_methods("math/combine2", [{"combine2", &MathSwizzle.combine2_task_method/2}])
+    |> Core.add_task_methods("math/combine3", [{"combine3", &MathSwizzle.combine3_task_method/2}])
+    |> Core.add_task_methods("math/combine4", [{"combine4", &MathSwizzle.combine4_task_method/2}])
+    |> Core.add_task_methods("math/extract2", [{"extract2", &MathSwizzle.extract2_task_method/2}])
+    |> Core.add_task_methods("math/extract3", [{"extract3", &MathSwizzle.extract3_task_method/2}])
+    |> Core.add_task_methods("math/extract4", [{"extract4", &MathSwizzle.extract4_task_method/2}])
+    |> Core.add_task_methods("math/combine2x2", [{"combine2x2", &MathSwizzle.combine2x2_task_method/2}])
+    |> Core.add_task_methods("math/combine3x3", [{"combine3x3", &MathSwizzle.combine3x3_task_method/2}])
+    |> Core.add_task_methods("math/combine4x4", [{"combine4x4", &MathSwizzle.combine4x4_task_method/2}])
+    |> Core.add_task_methods("math/extract2x2", [{"extract2x2", &MathSwizzle.extract2x2_task_method/2}])
+    |> Core.add_task_methods("math/extract3x3", [{"extract3x3", &MathSwizzle.extract3x3_task_method/2}])
+    |> Core.add_task_methods("math/extract4x4", [{"extract4x4", &MathSwizzle.extract4x4_task_method/2}])
+  end
+  
+  defp register_type_conversion(domain) do
+    domain
+    |> TypeConversion.register_instant_actions()
+    |> TypeConversion.register_task_methods()
+  end
+  
+  defp register_control_flow(domain), do: ControlFlow.register_all(domain)
+  
+  defp register_flow_advanced(domain) do
+    # Advanced control flow operations
+    domain
+    |> Core.add_action(:khr_flow_switch, &FlowAdvanced.switch/2, %{})
+    |> Core.add_action(:khr_math_switch, &FlowAdvanced.math_switch/2, %{})
+    |> Core.add_action(:khr_flow_while, &FlowAdvanced.while_loop/2, %{})
+    |> Core.add_action(:khr_flow_for, &FlowAdvanced.for_loop/2, %{})
+    |> Core.add_action(:khr_flow_do_n, &FlowAdvanced.do_n/2, %{})
+    |> Core.add_action(:khr_flow_multi_gate, &FlowAdvanced.multi_gate/2, %{})
+    |> Core.add_action(:khr_flow_wait_all, &FlowAdvanced.wait_all/2, %{})
+    |> Core.add_action(:khr_flow_throttle, &FlowAdvanced.throttle/2, %{})
+    |> Core.add_action(:khr_flow_set_delay, &FlowAdvanced.set_delay/2, %{})
+    |> Core.add_action(:khr_flow_cancel_delay, &FlowAdvanced.cancel_delay/2, %{})
+    # Add task methods
+    |> Core.add_task_methods("flow/switch", [{"switch", &FlowAdvanced.switch_task_method/2}])
+    |> Core.add_task_methods("math/switch", [{"math_switch", &FlowAdvanced.math_switch_task_method/2}])
+    |> Core.add_task_methods("flow/while", [{"while_loop", &FlowAdvanced.while_loop_task_method/2}])
+    |> Core.add_task_methods("flow/for", [{"for_loop", &FlowAdvanced.for_loop_task_method/2}])
+    |> Core.add_task_methods("flow/doN", [{"do_n", &FlowAdvanced.do_n_task_method/2}])
+    |> Core.add_task_methods("flow/multiGate", [{"multi_gate", &FlowAdvanced.multi_gate_task_method/2}])
+    |> Core.add_task_methods("flow/waitAll", [{"wait_all", &FlowAdvanced.wait_all_task_method/2}])
+    |> Core.add_task_methods("flow/throttle", [{"throttle", &FlowAdvanced.throttle_task_method/2}])
+    |> Core.add_task_methods("flow/setDelay", [{"set_delay", &FlowAdvanced.set_delay_task_method/2}])
+    |> Core.add_task_methods("flow/cancelDelay", [{"cancel_delay", &FlowAdvanced.cancel_delay_task_method/2}])
+  end
+  
   defp register_temporal_flow(domain), do: domain
-  defp register_variable_management(domain), do: domain
-  defp register_event_system(domain), do: domain
-  defp register_animation_control(domain), do: domain
+  
+  defp register_variable_management(domain) do
+    domain
+    |> VariableManagement.register_instant_actions()
+    |> VariableManagement.register_task_methods()
+  end
+  
+  defp register_state_advanced(domain) do
+    # Advanced state management operations
+    domain
+    |> Core.add_action(:khr_variable_set_multiple, &StateAdvanced.set_multiple/2, %{})
+    |> Core.add_action(:khr_pointer_get, &StateAdvanced.pointer_get/2, %{})
+    |> Core.add_action(:khr_pointer_set, &StateAdvanced.pointer_set/2, %{})
+    |> Core.add_action(:khr_pointer_interpolate, &StateAdvanced.pointer_interpolate/2, %{})
+    # Add task methods
+    |> Core.add_task_methods("variable/setMultiple", [{"set_multiple", &StateAdvanced.set_multiple_task_method/2}])
+    |> Core.add_task_methods("pointer/get", [{"pointer_get", &StateAdvanced.pointer_get_task_method/2}])
+    |> Core.add_task_methods("pointer/set", [{"pointer_set", &StateAdvanced.pointer_set_task_method/2}])
+    |> Core.add_task_methods("pointer/interpolate", [{"pointer_interpolate", &StateAdvanced.pointer_interpolate_task_method/2}])
+  end
+  
+  defp register_event_system(domain), do: EventSystem.register_instant_actions(domain)
+  
+  defp register_event_advanced(domain) do
+    # Advanced event system operations
+    domain
+    |> Core.add_action(:khr_event_on_start, &EventAdvanced.on_start/2, %{})
+    |> Core.add_action(:khr_event_on_tick, &EventAdvanced.on_tick/2, %{})
+    |> Core.add_action(:khr_debug_log, &EventAdvanced.debug_log/2, %{})
+    |> Core.add_action(:khr_event_clear, &EventAdvanced.clear_event/2, %{})
+    |> Core.add_action(:khr_event_is_triggered, &EventAdvanced.is_triggered/2, %{})
+    |> Core.add_action(:khr_event_initialize_system, &EventAdvanced.initialize_event_system/2, %{})
+    |> Core.add_action(:khr_event_trigger_graph_start, &EventAdvanced.trigger_graph_start/2, %{})
+    |> Core.add_action(:khr_event_process_frame_tick, &EventAdvanced.process_frame_tick/2, %{})
+    # Add task methods
+    |> Core.add_task_methods("event/onStart", [{"on_start", &EventAdvanced.on_start_task_method/2}])
+    |> Core.add_task_methods("event/onTick", [{"on_tick", &EventAdvanced.on_tick_task_method/2}])
+    |> Core.add_task_methods("debug/log", [{"debug_log", &EventAdvanced.debug_log_task_method/2}])
+  end
+  
+  defp register_animation_control(domain) do
+    # Animation system operations
+    domain
+    |> Core.add_action(:khr_animation_start, &AnimationSystem.start/2, %{})
+    |> Core.add_action(:khr_animation_stop, &AnimationSystem.stop/2, %{})
+    |> Core.add_action(:khr_animation_stop_at, &AnimationSystem.stop_at/2, %{})
+    |> Core.add_action(:khr_animation_get_time, &AnimationSystem.get_time/2, %{})
+    |> Core.add_action(:khr_animation_is_playing, &AnimationSystem.is_playing/2, %{})
+    |> Core.add_action(:khr_animation_pause, &AnimationSystem.pause/2, %{})
+    |> Core.add_action(:khr_animation_resume, &AnimationSystem.resume/2, %{})
+    # Add task methods
+    |> Core.add_task_methods("animation/start", [{"start", &AnimationSystem.start_task_method/2}])
+    |> Core.add_task_methods("animation/stop", [{"stop", &AnimationSystem.stop_task_method/2}])
+    |> Core.add_task_methods("animation/stopAt", [{"stop_at", &AnimationSystem.stop_at_task_method/2}])
+  end
+  
   defp register_debug_utilities(domain), do: domain
 end

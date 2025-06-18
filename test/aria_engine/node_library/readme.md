@@ -7,12 +7,14 @@
 ### Two-Layer Design
 
 **Layer 1: KHR Primitives (Explicit Node Addressing)**
+
 - Direct glTF node control with explicit node indexing
 - Pattern: `action(state, [node_index, ...inputs])`
 - Perfect glTF spec compliance for reference runtime
 - Used by: Direct node graph execution, debugging, testing
 
 **Layer 2: Task Abstraction (Flow Control)**
+
 - Hide node ID management behind task interface
 - Pattern: `task: calculate_sequence([{:add, [5, 3]}, {:multiply, [:result, 2]}])`
 - HTN planning interface: compose KHR primitives automatically
@@ -30,6 +32,7 @@ end
 ```
 
 **Benefits:**
+
 - Exact glTF node addressing: `"node_index" -> "value" -> result`
 - Consistent state management across all operations
 - Perfect compatibility with glTF node graph execution
@@ -40,10 +43,12 @@ end
 ### ✅ Completed Categories
 
 **Math Constants** (4 actions)
+
 - `khr_math_e`, `khr_math_pi`, `khr_math_inf`, `khr_math_nan`
 - Pattern: `math_e(state, [node_index])`
 
 **Math Arithmetic** (17 actions)  
+
 - Unary: `abs`, `sign`, `neg`, `floor`, `ceil`, `round`, `trunc`, `fract`, `saturate`
 - Binary: `add`, `sub`, `mul`, `div`, `rem`, `min`, `max`, `mix`
 - Ternary: `clamp`
@@ -52,22 +57,27 @@ end
 ### 🚧 Remaining Categories
 
 **Math Advanced**
+
 - Trigonometry: `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`
 - Vector operations: `length`, `normalize`, `dot`, `cross`, `distance`
 - Matrix operations: `multiply`, `transpose`, `inverse`, `determinant`
 - Quaternion operations: `multiply`, `normalize`, `slerp`, `fromAxisAngle`
 
 **Control Flow & Events**
+
 - `flow_branch`, `flow_switch`, `flow_sequence`, `flow_loop`
 - `event_trigger`, `event_listener`, `event_handler`
 
 **Temporal Operations**
+
 - `flow_delay`, `animation_start`, `animation_stop`, `timer_create`
 
 **State Management**
+
 - `variable_set`, `variable_get`, `pointer_get`, `pointer_set`
 
 **Type Conversion & Debug**
+
 - `convert_to_string`, `convert_to_number`, `debug_log`, `debug_assert`
 
 ## Testing Strategy
@@ -75,6 +85,7 @@ end
 ### Current Test Architecture
 
 **Unit Tests** (Direct Function Calls)
+
 ```elixir
 # Bypass planner - test primitives directly
 result_state = KHRInteractivityDomain.math_abs(state, [4, 5.5])
@@ -82,6 +93,7 @@ assert StateV2.get_fact(result_state, "4", "value") == 5.5
 ```
 
 **Integration Tests** (Simulated Planner Context)
+
 ```elixir
 # Simulate planner but manually execute
 case Planner.plan(domain, state, goals) do
@@ -91,6 +103,7 @@ case Planner.plan(domain, state, goals) do
 ```
 
 ### Future: True Integration Tests
+
 ```elixir
 # Planner handles everything automatically
 {:ok, final_state} = HTNPlanner.execute_plan(domain, state, goals)
