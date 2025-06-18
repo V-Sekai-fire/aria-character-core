@@ -7,14 +7,26 @@ Expand OperationRegistry from ~50 basic operations to full KHR_interactivity nod
 **Current State**: Only 2 of 21 KHR modules registered, ~22 operations mapped
 **Target State**: All 21 KHR modules registered and mapped to Elixir AST patterns
 
-**CRITICAL DISCOVERY**: 
-- **21 implementation files** in `lib/aria_engine/node_library/khr_interactivity/`
-- **Only 2 modules registered** in `khr_interactivity_domain.ex` 
-- **19 unregistered modules** containing potentially 100+ operations
-- **Real scope is much larger** than initially assessed
+**ACTUAL SCOPE ANALYSIS**: 
+- **12 modules with operations** (~101 total operations)
+- **9 empty/stub modules** (0 operations each)
+- **Only 2 modules registered** (MathConstants: 4 + MathArithmetic: 18 = 22 operations)
+- **10 unregistered modules** with ~79 operations
 
-**Step 0: Register Missing Modules (BLOCKING)**
-Before expanding OperationRegistry, must first register all 21 modules in `khr_interactivity_domain.ex`
+**REAL TARGET**: Register 10 missing modules with ~79 operations + map all to AST patterns
+
+**Step 0: Register Missing Modules (PRIORITY: HIGH)**
+Must register these 10 modules in `khr_interactivity_domain.ex`:
+- [ ] control_flow.ex (12 operations)
+- [ ] event_system.ex (15 operations) 
+- [ ] variable_management.ex (12 operations)
+- [ ] math_trigonometry.ex (9 operations)
+- [ ] math_vector.ex (7 operations)
+- [ ] math_matrix.ex (6 operations)
+- [ ] math_quaternion.ex (6 operations)
+- [ ] math_special.ex (5 operations)
+- [ ] math_comparison.ex (5 operations)
+- [ ] flow_advanced.ex (2 operations)
 </replace_in_file>
 
 ## Phase 1: Complete Math Operations Coverage
