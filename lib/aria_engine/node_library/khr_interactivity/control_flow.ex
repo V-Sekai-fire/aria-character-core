@@ -1,4 +1,4 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.ControlFlow do
+defmodule NodeLibrary.KHRInteractivity.ControlFlow do
   @moduledoc """
   KHR_interactivity Control Flow Nodes
 
@@ -20,9 +20,9 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.ControlFlow do
   This separation enables proper hierarchical planning and temporal reasoning.
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.{Actions, Methods, Core}
-  alias AriaEngine.Domain.DurativeAction
+  alias StateV2
+  alias Domain.{Actions, Methods, Core}
+  alias Domain.DurativeAction
 
   @doc "Register all control flow operations with a domain (actions, methods, and durative actions)"
   @spec register_all(Core.t()) :: Core.t()

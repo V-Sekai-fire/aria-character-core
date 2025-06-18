@@ -1,18 +1,18 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathConstants do
+defmodule NodeLibrary.KHRInteractivity.MathConstants do
   @moduledoc """
   Math constant nodes for glTF KHR_interactivity specification.
   
   Provides mathematical constants: e, pi, infinity, and NaN.
   """
   
-  alias AriaEngine.Domain.Actions
-  alias AriaEngine.StateV2
+  alias Domain.Actions
+  alias StateV2
   
   @doc "Register math constant actions with a domain"
-  @spec register_actions(AriaEngine.Domain.Core.t()) :: AriaEngine.Domain.Core.t()
+  @spec register_actions(Domain.Core.t()) :: Domain.Core.t()
   def register_actions(domain) do
     domain
     |> Actions.add_action(:khr_math_e, &math_e/2, %{

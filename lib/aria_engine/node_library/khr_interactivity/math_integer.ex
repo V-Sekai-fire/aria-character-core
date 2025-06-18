@@ -1,4 +1,4 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathInteger do
+defmodule NodeLibrary.KHRInteractivity.MathInteger do
   @moduledoc """
   KHR_interactivity Math Integer Operations
 
@@ -17,8 +17,8 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathInteger do
   All operations use 32-bit signed integer arithmetic with proper overflow/underflow handling.
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.{Actions, Methods, Core}
+  alias StateV2
+  alias Domain.{Actions, Methods, Core}
 
   @doc "Register instant action operations"
   @spec register_instant_actions(Core.t()) :: Core.t()

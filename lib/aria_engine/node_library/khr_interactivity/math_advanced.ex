@@ -1,10 +1,10 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathAdvanced do
+defmodule NodeLibrary.KHRInteractivity.MathAdvanced do
   @moduledoc """
   Advanced math operations for KHR_interactivity specification.
   Implements vector, matrix, and quaternion operations.
   """
 
-  alias AriaEngine.StateV2
+  alias StateV2
 
   # =============================================================================
   # Vector Operations

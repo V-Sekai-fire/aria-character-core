@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathArithmetic do
+defmodule NodeLibrary.KHRInteractivity.MathArithmetic do
   @moduledoc """
   Math arithmetic nodes for glTF KHR_interactivity specification.
   
@@ -9,11 +9,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathArithmetic do
   min, max, clamp, floor, ceil, round, trunc, fract, saturate, mix.
   """
   
-  alias AriaEngine.Domain.Actions
-  alias AriaEngine.StateV2
+  alias Domain.Actions
+  alias StateV2
   
   @doc "Register math arithmetic actions with a domain"
-  @spec register_actions(AriaEngine.Domain.Core.t()) :: AriaEngine.Domain.Core.t()
+  @spec register_actions(Domain.Core.t()) :: Domain.Core.t()
   def register_actions(domain) do
     domain
     |> Actions.add_action(:khr_math_abs, &math_abs/2, %{

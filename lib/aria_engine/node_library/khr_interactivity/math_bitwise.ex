@@ -1,4 +1,4 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathBitwise do
+defmodule NodeLibrary.KHRInteractivity.MathBitwise do
   @moduledoc """
   KHR_interactivity Math Bitwise Operations
 
@@ -17,8 +17,8 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathBitwise do
   All operations work on 32-bit signed integers and follow standard bitwise logic.
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.{Actions, Methods, Core}
+  alias StateV2
+  alias Domain.{Actions, Methods, Core}
 
   @doc "Register instant action operations"
   @spec register_instant_actions(Core.t()) :: Core.t()

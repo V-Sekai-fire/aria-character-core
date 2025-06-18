@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.NodeLibrary.KHRInteractivityDomain do
+defmodule NodeLibrary.KHRInteractivityDomain do
   @moduledoc """
   Complete implementation of glTF KHR_interactivity specification nodes
   as Aria Engine actions and durative actions.
@@ -21,28 +21,28 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivityDomain do
   Based on glTF KHR_interactivity Extension Specification
   """
   
-  alias AriaEngine.Domain
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathConstants
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathArithmetic
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathComparison
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathSpecial
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathTrigonometry
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathInteger
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathBoolean
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathBitwise
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathVector
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathMatrix
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathQuaternion
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathAdvanced
-  alias AriaEngine.NodeLibrary.KHRInteractivity.MathSwizzle
-  alias AriaEngine.NodeLibrary.KHRInteractivity.ControlFlow
-  alias AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced
-  alias AriaEngine.NodeLibrary.KHRInteractivity.TypeConversion
-  alias AriaEngine.NodeLibrary.KHRInteractivity.VariableManagement
-  alias AriaEngine.NodeLibrary.KHRInteractivity.StateAdvanced
-  alias AriaEngine.NodeLibrary.KHRInteractivity.EventSystem
-  alias AriaEngine.NodeLibrary.KHRInteractivity.EventAdvanced
-  alias AriaEngine.NodeLibrary.KHRInteractivity.AnimationSystem
+  alias Domain
+  alias NodeLibrary.KHRInteractivity.MathConstants
+  alias NodeLibrary.KHRInteractivity.MathArithmetic
+  alias NodeLibrary.KHRInteractivity.MathComparison
+  alias NodeLibrary.KHRInteractivity.MathSpecial
+  alias NodeLibrary.KHRInteractivity.MathTrigonometry
+  alias NodeLibrary.KHRInteractivity.MathInteger
+  alias NodeLibrary.KHRInteractivity.MathBoolean
+  alias NodeLibrary.KHRInteractivity.MathBitwise
+  alias NodeLibrary.KHRInteractivity.MathVector
+  alias NodeLibrary.KHRInteractivity.MathMatrix
+  alias NodeLibrary.KHRInteractivity.MathQuaternion
+  alias NodeLibrary.KHRInteractivity.MathAdvanced
+  alias NodeLibrary.KHRInteractivity.MathSwizzle
+  alias NodeLibrary.KHRInteractivity.ControlFlow
+  alias NodeLibrary.KHRInteractivity.FlowAdvanced
+  alias NodeLibrary.KHRInteractivity.TypeConversion
+  alias NodeLibrary.KHRInteractivity.VariableManagement
+  alias NodeLibrary.KHRInteractivity.StateAdvanced
+  alias NodeLibrary.KHRInteractivity.EventSystem
+  alias NodeLibrary.KHRInteractivity.EventAdvanced
+  alias NodeLibrary.KHRInteractivity.AnimationSystem
   
   @doc "Register all KHR_interactivity actions with a domain"
   @spec register_all_actions(Domain.t()) :: Domain.t()

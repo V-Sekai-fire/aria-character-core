@@ -1,10 +1,10 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.EventAdvanced do
+defmodule NodeLibrary.KHRInteractivity.EventAdvanced do
   @moduledoc """
   Advanced event operations for KHR_interactivity specification.
   Implements lifecycle events and debug operations.
   """
 
-  alias AriaEngine.StateV2
+  alias StateV2
 
   # =============================================================================
   # Lifecycle Events

@@ -1,13 +1,13 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathSwizzle do
+defmodule NodeLibrary.KHRInteractivity.MathSwizzle do
   @moduledoc """
   Swizzle operations for KHR_interactivity specification.
   Implements vector and matrix combine/extract operations.
   """
 
-  alias AriaEngine.StateV2
+  alias StateV2
 
   # =============================================================================
   # Vector Combine Operations

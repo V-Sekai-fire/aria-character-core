@@ -1,10 +1,10 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.StateAdvanced do
+defmodule NodeLibrary.KHRInteractivity.StateAdvanced do
   @moduledoc """
   Advanced state management operations for KHR_interactivity specification.
   Implements variable sets, pointer operations, and state manipulation.
   """
 
-  alias AriaEngine.StateV2
+  alias StateV2
 
   # =============================================================================
   # Variable Operations

@@ -1,4 +1,4 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.EventSystem do
+defmodule NodeLibrary.KHRInteractivity.EventSystem do
   @moduledoc """
   KHR_interactivity Event System Nodes
 
@@ -14,11 +14,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.EventSystem do
   Events are stored in state and can trigger cascading behaviors.
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.Actions
+  alias StateV2
+  alias Domain.Actions
 
   @doc "Register all event system actions with a domain"
-  @spec register_actions(AriaEngine.Domain.Core.t()) :: AriaEngine.Domain.Core.t()
+  @spec register_actions(Domain.Core.t()) :: Domain.Core.t()
   def register_actions(domain) do
     domain
     |> Actions.add_action(:khr_event_receive, &event_receive/2, %{

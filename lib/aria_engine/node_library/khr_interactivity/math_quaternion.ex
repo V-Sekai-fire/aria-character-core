@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathQuaternion do
+defmodule NodeLibrary.KHRInteractivity.MathQuaternion do
   @moduledoc """
   KHR_interactivity Math Quaternion Nodes
 
@@ -16,11 +16,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathQuaternion do
   All operations handle NaN and infinity according to the KHR_interactivity spec.
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.Actions
+  alias StateV2
+  alias Domain.Actions
 
   @doc "Register all math quaternion actions with a domain"
-  @spec register_actions(AriaEngine.Domain.Core.t()) :: AriaEngine.Domain.Core.t()
+  @spec register_actions(Domain.Core.t()) :: Domain.Core.t()
   def register_actions(domain) do
     domain
     |> Actions.add_action(:khr_math_quatConjugate, &math_quat_conjugate/2, %{

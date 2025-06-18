@@ -1,4 +1,4 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.VariableManagement do
+defmodule NodeLibrary.KHRInteractivity.VariableManagement do
   @moduledoc """
   KHR_interactivity Variable Management Nodes
 
@@ -14,8 +14,8 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.VariableManagement do
   Pointers reference other variables by name and support indirection.
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.{Actions, Methods, Core}
+  alias StateV2
+  alias Domain.{Actions, Methods, Core}
 
   @doc "Register instant action operations"
   @spec register_instant_actions(Core.t()) :: Core.t()
@@ -46,7 +46,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.VariableManagement do
   end
 
   @doc "Register all variable management actions with a domain"
-  @spec register_actions(AriaEngine.Domain.Core.t()) :: AriaEngine.Domain.Core.t()
+  @spec register_actions(Domain.Core.t()) :: Domain.Core.t()
   def register_actions(domain) do
     domain
     |> Actions.add_action(:khr_variable_get, &variable_get/2, %{

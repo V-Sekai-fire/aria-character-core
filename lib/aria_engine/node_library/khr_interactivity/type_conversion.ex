@@ -1,4 +1,4 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.TypeConversion do
+defmodule NodeLibrary.KHRInteractivity.TypeConversion do
   @moduledoc """
   KHR_interactivity Type Conversion Nodes
 
@@ -16,8 +16,8 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.TypeConversion do
   - Float to int uses truncation
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.{Actions, Methods, Core}
+  alias StateV2
+  alias Domain.{Actions, Methods, Core}
 
   @doc "Register instant action operations"
   @spec register_instant_actions(Core.t()) :: Core.t()
@@ -48,7 +48,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.TypeConversion do
   end
 
   @doc "Register all type conversion actions with a domain"
-  @spec register_actions(AriaEngine.Domain.Core.t()) :: AriaEngine.Domain.Core.t()
+  @spec register_actions(Domain.Core.t()) :: Domain.Core.t()
   def register_actions(domain) do
     domain
     |> Actions.add_action(:khr_type_bool_to_int, &bool_to_int/2, %{

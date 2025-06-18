@@ -1,10 +1,10 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.FlowAdvanced do
+defmodule NodeLibrary.KHRInteractivity.FlowAdvanced do
   @moduledoc """
   Advanced control flow operations for KHR_interactivity specification.
   Implements loops, conditionals, delays, and flow control.
   """
 
-  alias AriaEngine.StateV2
+  alias StateV2
 
   # =============================================================================
   # Switch Operations

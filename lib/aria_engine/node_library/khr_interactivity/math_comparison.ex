@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathComparison do
+defmodule NodeLibrary.KHRInteractivity.MathComparison do
   @moduledoc """
   KHR_interactivity Math Comparison Nodes
 
@@ -16,11 +16,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathComparison do
   For float comparisons, negative zero equals positive zero.
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.Actions
+  alias StateV2
+  alias Domain.Actions
 
   @doc "Register all math comparison actions with a domain"
-  @spec register_actions(AriaEngine.Domain.Core.t()) :: AriaEngine.Domain.Core.t()
+  @spec register_actions(Domain.Core.t()) :: Domain.Core.t()
   def register_actions(domain) do
     domain
     |> Actions.add_action(:khr_math_eq, &math_eq/2, %{

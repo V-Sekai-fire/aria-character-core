@@ -1,10 +1,10 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.AnimationSystem do
+defmodule NodeLibrary.KHRInteractivity.AnimationSystem do
   @moduledoc """
   Animation system operations for KHR_interactivity specification.
   Implements animation playback control and timing.
   """
 
-  alias AriaEngine.StateV2
+  alias StateV2
 
   # =============================================================================
   # Animation Control Operations

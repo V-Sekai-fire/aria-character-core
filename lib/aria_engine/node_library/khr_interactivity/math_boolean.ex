@@ -1,4 +1,4 @@
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathBoolean do
+defmodule NodeLibrary.KHRInteractivity.MathBoolean do
   @moduledoc """
   KHR_interactivity Math Boolean Operations
 
@@ -16,8 +16,8 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathBoolean do
   for non-boolean inputs according to programming language conventions.
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.{Actions, Methods, Core}
+  alias StateV2
+  alias Domain.{Actions, Methods, Core}
 
   @doc "Register instant action operations"
   @spec register_instant_actions(Core.t()) :: Core.t()

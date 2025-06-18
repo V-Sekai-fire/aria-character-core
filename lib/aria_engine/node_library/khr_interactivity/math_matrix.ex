@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathMatrix do
+defmodule NodeLibrary.KHRInteractivity.MathMatrix do
   @moduledoc """
   KHR_interactivity Math Matrix Nodes
 
@@ -16,11 +16,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathMatrix do
   All operations handle NaN and infinity according to the KHR_interactivity spec.
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.Actions
+  alias StateV2
+  alias Domain.Actions
 
   @doc "Register all math matrix actions with a domain"
-  @spec register_actions(AriaEngine.Domain.Core.t()) :: AriaEngine.Domain.Core.t()
+  @spec register_actions(Domain.Core.t()) :: Domain.Core.t()
   def register_actions(domain) do
     domain
     |> Actions.add_action(:khr_math_transpose, &math_transpose/2, %{
