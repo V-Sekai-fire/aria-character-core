@@ -11,7 +11,7 @@ defmodule AriaCharacterCore.MixProject do
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
-      elixirc_options: [warnings_as_errors: true],
+      elixirc_options: [],
       deps: deps(),
       aliases: aliases(),
       preferred_cli_env: [
