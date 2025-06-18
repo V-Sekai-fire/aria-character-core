@@ -1,9 +1,13 @@
 # ADR-095: Fix KHR Interactivity Planner Goal Processing Pipeline
 
-**Status:** Completed  
+**Status:** Obsolete - KHR System Deleted  
 **Date:** 2025-06-18  
-**Completion Date:** 2025-06-18  
-**Priority:** HIGH
+**Deletion Date:** 2025-06-18  
+**Priority:** ~~HIGH~~ N/A
+
+## Obsolescence Reason
+
+This ADR is now obsolete as the entire KHR_interactivity system has been deleted from the project. The KHR node library, domain implementation, tests, and all related infrastructure have been removed. This ADR is preserved for historical reference only.
 
 ## Context
 

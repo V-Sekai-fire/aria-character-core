@@ -34,9 +34,6 @@ This document tracks test files that have been disabled (renamed with `.disabled
   - **Reason:** Planning strategy errors and logging issues
   - **Issues:** Replanning failures, goal conversion problems
 
-- `test/aria_engine/node_library/khr_interactivity/integration/planner_math_nodes_test.exs.disabled`
-  - **Reason:** Planning integration failures
-  - **Issues:** "No methods found for goal: ok" errors, state management problems
 
 - `test/aria_engine/test/temporal_planning_test.exs.disabled`
   - **Reason:** Missing modules and undefined functions
@@ -53,11 +50,7 @@ After disabling problematic tests:
 
 ## Working Test Examples
 
-### KHR Math Nodes (All Passing)
-- `test/aria_engine/node_library/khr_interactivity/unit/math_nodes_test.exs`
-  - 45 tests, all passing
-  - Comprehensive coverage of math constants and arithmetic operations
-  - Good example of well-structured test patterns
+*No specific examples currently documented.*
 
 ## Re-enabling Strategy
 
@@ -70,7 +63,7 @@ When re-enabling tests, prioritize by:
 
 ## Adding New Tests
 
-When adding new tests, follow the patterns from successful tests like the KHR math nodes:
+When adding new tests, follow these patterns:
 - Clear test organization with describe blocks
 - Comprehensive edge case coverage
 - Proper setup and teardown

@@ -1,9 +1,13 @@
 # ADR-093: KHR Interactivity Systematic Verification Plan
 
-**Status:** Completed  
+**Status:** Obsolete - KHR System Deleted  
 **Date:** June 18, 2025  
-**Completion Date:** June 18, 2025  
-**Priority:** HIGH
+**Deletion Date:** June 18, 2025  
+**Priority:** ~~HIGH~~ N/A
+
+## Obsolescence Reason
+
+This ADR is now obsolete as the entire KHR_interactivity system has been deleted from the project. The KHR node library, domain implementation, tests, and all related infrastructure have been removed. This ADR is preserved for historical reference only.
 
 ## Context
 

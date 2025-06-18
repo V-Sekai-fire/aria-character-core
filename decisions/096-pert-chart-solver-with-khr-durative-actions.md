@@ -1,8 +1,13 @@
 # ADR-096: PERT Chart Execution with Hybrid Planner and KHR Durative Actions
 
-**Status:** Proposed  
+**Status:** Obsolete - KHR System Deleted  
 **Date:** 2025-06-18  
-**Priority:** MEDIUM
+**Deletion Date:** 2025-06-18  
+**Priority:** ~~MEDIUM~~ N/A
+
+## Obsolescence Reason
+
+This ADR is now obsolete as the entire KHR_interactivity system has been deleted from the project. The KHR node library, domain implementation, tests, and all related infrastructure have been removed. This ADR is preserved for historical reference only.
 
 ## Context
 

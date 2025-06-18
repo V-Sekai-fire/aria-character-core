@@ -1,13 +1,13 @@
 # ADR-092: AST-to-glTF KHR_interactivity Node Translation System
 
-**Status:** Cancelled  
+**Status:** Obsolete - KHR System Deleted  
 **Date:** 2025-06-18  
-**Cancelled Date:** 2025-06-18  
+**Deletion Date:** 2025-06-18  
 **Priority:** ~~High~~ N/A
 
-## Cancellation Reason
+## Obsolescence Reason
 
-This ADR has been cancelled as the AST-to-KHR translation approach was determined to be overly complex for the current project needs. The existing direct KHR node composition approach provides sufficient functionality for the aria_character_core project without the additional complexity of AST translation. Focus has shifted to improving the direct node library implementation and planner integration instead.
+This ADR is now obsolete as the entire KHR_interactivity system has been deleted from the project. The KHR node library, domain implementation, tests, and all related infrastructure have been removed. This ADR is preserved for historical reference only.
 
 ## Context
 
