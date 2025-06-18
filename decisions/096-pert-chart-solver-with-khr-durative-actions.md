@@ -53,15 +53,6 @@ Implement a PERT chart execution simulator using the existing hybrid planner API
 
 Based on the KHR_interactivity specification, the following nodes are available for constructing durative actions and task methods:
 
-### Math Operations (Task Methods)
-**Constants**: `math/e`, `math/pi`, `math/inf`, `math/nan`
-**Arithmetic**: `math/abs`, `math/sign`, `math/add`, `math/sub`, `math/mul`, `math/div`, `math/min`, `math/max`, `math/clamp`
-**Comparison**: `math/eq`, `math/lt`, `math/le`, `math/gt`, `math/ge`
-**Trigonometry**: `math/sin`, `math/cos`, `math/tan`, `math/asin`, `math/acos`, `math/atan`, `math/atan2`
-**Vector Operations**: `math/length`, `math/normalize`, `math/dot`, `math/cross`, `math/transform`
-**Matrix Operations**: `math/transpose`, `math/determinant`, `math/inverse`, `math/matmul`, `math/matCompose`
-**Type Conversion**: `type/boolToInt`, `type/intToFloat`, `type/floatToInt`, `type/floatToBool`
-
 ### Flow Control (Task Methods)
 **Sequence**: `flow/sequence` - Execute actions in order
 **Branching**: `flow/branch`, `flow/switch` - Conditional execution
@@ -96,44 +87,7 @@ Based on the KHR_interactivity specification, the following nodes are available 
 
 ### Construction Domain Mapping
 
-```elixir
-# PERT Task → KHR Durative Action Mapping
-%ConstructionDomain{
-  # Task execution with progress tracking
-  task_methods: %{
-    "execute_task" => %{
-      durative_action: "variable/interpolate",
-      parameters: [:task_id, :progress_var, :target_progress, :duration],
-      preconditions: [:dependencies_complete],
-      effects: [:task_complete, :progress_updated]
-    },
-    
-    # Resource allocation during task
-    "allocate_resources" => %{
-      durative_action: "pointer/interpolate", 
-      parameters: [:resource_pointer, :allocation_level, :duration],
-      preconditions: [:resources_available],
-      effects: [:resources_allocated, :allocation_optimized]
-    },
-    
-    # Dependency scheduling
-    "schedule_dependency" => %{
-      durative_action: "flow/setDelay",
-      parameters: [:successor_task, :delay_duration],
-      preconditions: [:predecessor_complete],
-      effects: [:successor_scheduled, :dependency_satisfied]
-    }
-  },
-  
-  # Non-durative task methods for calculations
-  calculation_methods: %{
-    "calculate_critical_path" => ["math/max", "math/add", "flow/sequence"],
-    "compute_slack" => ["math/sub", "math/min", "math/max"],
-    "optimize_schedule" => ["math/min", "flow/branch", "variable/set"],
-    "validate_dependencies" => ["math/eq", "flow/branch", "variable/get"]
-  }
-}
-```
+To be programmed.
 
 ## Implementation Plan
 
