@@ -8,25 +8,34 @@ defmodule StateV2 do
   This module provides functionality to manage world state using entity-first RDF-like triples,
   where each fact is represented as {subject, predicate} -> fact_value.
   
-  This design supports the Entity Timeline Graph Architecture (ADR-087) by making entities
-  the primary organizational unit, with natural API patterns like:
+  Supports any reasonable Elixir type for subjects and predicates:
   
   ```elixir
   state = StateV2.new()
+  # String-based entities (traditional approach)
   |> StateV2.set_fact("player", "location", "room1")
   |> StateV2.set_fact("player", "has", "sword")
   
-  StateV2.get_fact(state, "player", "location")
-  # => "room1"
+  # Integer node IDs (for computational graphs)
+  |> StateV2.set_fact(42, :value, 3.14159)
+  |> StateV2.set_fact(43, :operation, :add)
+  
+  # Atom predicates for performance
+  |> StateV2.set_fact("npc1", :status, :active)
+  |> StateV2.set_fact("npc1", :ai_state, {:planning, "attack_player"})
+  
+  # Mixed types work naturally
+  StateV2.get_fact(state, 42, :value)  # => 3.14159
+  StateV2.get_fact(state, "player", "location")  # => "room1"
   ```
   
   This entity-first approach aligns with game networking ECS patterns and supports
   the timeline-per-entity architecture defined in ADR-087.
   """
 
-  @type subject :: String.t()
-  @type predicate :: String.t()
-  @type fact_value :: any()
+  @type subject :: term()
+  @type predicate :: term()
+  @type fact_value :: term()
   @type triple_key :: {subject(), predicate()}
   @type t :: %__MODULE__{
     data: %{triple_key() => fact_value()}
