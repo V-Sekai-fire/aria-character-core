@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.Strategies do
+defmodule HybridPlanner.Strategies do
   @moduledoc """
   Strategy behavior definitions for hybrid planner dependency encapsulation.
   
@@ -23,7 +23,7 @@ defmodule AriaEngine.HybridPlanner.Strategies do
   ```elixir
   # Define a custom planning strategy
   defmodule MyHTNStrategy do
-    @behaviour AriaEngine.HybridPlanner.Strategies.PlanningStrategy
+    @behaviour HybridPlanner.Strategies.PlanningStrategy
     
     @impl true
     def plan(domain, state, goals, opts) do
@@ -39,8 +39,6 @@ defmodule AriaEngine.HybridPlanner.Strategies do
   })
   ```
   """
-
-  alias AriaEngine.{StateV2, Domain, Plan}
 
   # ==================== STRATEGY VALIDATION ====================
 
@@ -519,12 +517,12 @@ defmodule AriaEngine.HybridPlanner.Strategies do
     @spec default_strategy_map() :: map()
     def default_strategy_map do
       %{
-        planning_strategy: AriaEngine.HybridPlanner.Strategies.Default.HTNPlanningStrategy,
-        temporal_strategy: AriaEngine.HybridPlanner.Strategies.Default.STNTemporalStrategy,
-        state_strategy: AriaEngine.HybridPlanner.Strategies.Default.StateV2Strategy,
-        domain_strategy: AriaEngine.HybridPlanner.Strategies.Default.DomainStrategy,
-        logging_strategy: AriaEngine.HybridPlanner.Strategies.Default.LoggerStrategy,
-        execution_strategy: AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy
+        planning_strategy: HybridPlanner.Strategies.Default.HTNPlanningStrategy,
+        temporal_strategy: HybridPlanner.Strategies.Default.STNTemporalStrategy,
+        state_strategy: HybridPlanner.Strategies.Default.StateV2Strategy,
+        domain_strategy: HybridPlanner.Strategies.Default.DomainStrategy,
+        logging_strategy: HybridPlanner.Strategies.Default.LoggerStrategy,
+        execution_strategy: HybridPlanner.Strategies.Default.LazyExecutionStrategy
       }
     end
 

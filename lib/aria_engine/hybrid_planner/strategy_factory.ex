@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.StrategyFactory do
+defmodule HybridPlanner.StrategyFactory do
   @moduledoc """
   Factory and registry for creating and managing hybrid planner strategies.
   
@@ -16,9 +16,9 @@ defmodule AriaEngine.HybridPlanner.StrategyFactory do
       # Register strategies
       factory = StrategyFactory.new()
       |> StrategyFactory.register_strategy(:planning, :default, 
-           AriaEngine.HybridPlanner.Strategies.Default.HTNPlanningStrategy)
+           HybridPlanner.Strategies.Default.HTNPlanningStrategy)
       |> StrategyFactory.register_strategy(:planning, :optimized,
-           AriaEngine.HybridPlanner.Strategies.Optimized.HTNPlanningStrategy)
+           HybridPlanner.Strategies.Optimized.HTNPlanningStrategy)
       
       # Create coordinator from configuration
       config = %{
@@ -36,7 +36,7 @@ defmodule AriaEngine.HybridPlanner.StrategyFactory do
       new_coordinator = StrategyFactory.swap_strategy(coordinator, :planning, :optimized)
   """
 
-  alias AriaEngine.HybridPlanner.{HybridCoordinatorV2, Strategies}
+  alias HybridPlanner.{HybridCoordinatorV2, Strategies}
 
   defstruct [
     :strategies,

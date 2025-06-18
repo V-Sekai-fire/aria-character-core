@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.StrategyCoordinator do
+defmodule HybridPlanner.StrategyCoordinator do
   @moduledoc """
   Coordinates planning using pluggable function strategies.
   
@@ -37,8 +37,7 @@ defmodule AriaEngine.HybridPlanner.StrategyCoordinator do
       end
   """
 
-  alias AriaEngine.{Domain, StateV2}
-  alias AriaEngine.HybridPlanner.StrategyRegistry
+  alias HybridPlanner.StrategyRegistry
 
   @type strategy_function :: function()
   @type coordination_result :: {:ok, StateV2.t()} | {:error, String.t()}

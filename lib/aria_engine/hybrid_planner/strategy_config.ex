@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.StrategyConfig do
+defmodule HybridPlanner.StrategyConfig do
   @moduledoc """
   Configuration-based strategy selection and management for the hybrid planner.
   
@@ -49,7 +49,7 @@ defmodule AriaEngine.HybridPlanner.StrategyConfig do
       config = StrategyConfig.merge_configs(base_config, override_config)
   """
 
-  alias AriaEngine.HybridPlanner.{StrategyFactory, HybridCoordinatorV2}
+  alias HybridPlanner.{StrategyFactory, HybridCoordinatorV2}
   require Logger
 
   @type strategy_config :: %{atom() => atom()}

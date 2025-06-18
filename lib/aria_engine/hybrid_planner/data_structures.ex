@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.DataStructures do
+defmodule HybridPlanner.DataStructures do
   @moduledoc """
   Encapsulated data structures with clean public interfaces.
   Internal structure is completely hidden from external access.
@@ -12,11 +12,11 @@ defmodule AriaEngine.HybridPlanner.DataStructures do
     Opaque plan structure that hides internal solution tree complexity.
     
     This provides a clean public interface while completely encapsulating
-    the internal AriaEngine.Plan.solution_tree() structure.
+    the internal Plan.solution_tree() structure.
     """
 
     @opaque t :: %__MODULE__{
-      internal_plan: AriaEngine.Plan.solution_tree(),
+      internal_plan: Plan.solution_tree(),
       metadata: map(),
       creation_time: DateTime.t(),
       temporal_validated: boolean()
@@ -24,12 +24,12 @@ defmodule AriaEngine.HybridPlanner.DataStructures do
 
     defstruct [:internal_plan, :metadata, :creation_time, :temporal_validated]
 
-    alias AriaEngine.Plan.Utils
+    alias Plan.Utils
 
     @doc """
     Create a new encapsulated plan from an internal solution tree.
     """
-    @spec new(AriaEngine.Plan.solution_tree(), map()) :: t()
+    @spec new(Plan.solution_tree(), map()) :: t()
     def new(internal_plan, metadata \\ %{}) do
       %__MODULE__{
         internal_plan: internal_plan,
@@ -42,7 +42,7 @@ defmodule AriaEngine.HybridPlanner.DataStructures do
     @doc """
     Create a temporally validated encapsulated plan.
     """
-    @spec new_validated(AriaEngine.Plan.solution_tree(), map()) :: t()
+    @spec new_validated(Plan.solution_tree(), map()) :: t()
     def new_validated(internal_plan, metadata \\ %{}) do
       %__MODULE__{
         internal_plan: internal_plan,
@@ -71,7 +71,7 @@ defmodule AriaEngine.HybridPlanner.DataStructures do
     @doc """
     Get the primitive actions from the plan.
     """
-    @spec get_actions(t()) :: [AriaEngine.Plan.plan_step()]
+    @spec get_actions(t()) :: [Plan.plan_step()]
     def get_actions(%__MODULE__{internal_plan: plan}) do
       Utils.get_primitive_actions_dfs(plan)
     end
@@ -109,13 +109,13 @@ defmodule AriaEngine.HybridPlanner.DataStructures do
     end
 
     @doc false
-    @spec get_internal_plan(t()) :: AriaEngine.Plan.solution_tree()
+    @spec get_internal_plan(t()) :: Plan.solution_tree()
     def get_internal_plan(%__MODULE__{internal_plan: plan}) do
       plan
     end
 
     @doc false
-    @spec update_internal_plan(t(), AriaEngine.Plan.solution_tree()) :: t()
+    @spec update_internal_plan(t(), Plan.solution_tree()) :: t()
     def update_internal_plan(%__MODULE__{} = encapsulated_plan, new_internal_plan) do
       %{encapsulated_plan | internal_plan: new_internal_plan}
     end

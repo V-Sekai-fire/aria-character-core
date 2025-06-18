@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.HybridCoordinator do
+defmodule HybridPlanner.HybridCoordinator do
   @moduledoc """
   Public API for hybrid goal task reentrant temporal planning.
   
@@ -18,21 +18,20 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
   
   ## Usage
   
-      domain = AriaEngine.Domain.new("example")
-      initial_state = AriaEngine.StateV2.new()
+      domain = Domain.new("example")
+      initial_state = StateV2.new()
       goals = [{"location", "robot", "room2"}]
       
-      case AriaEngine.HybridPlanner.HybridCoordinator.plan(domain, initial_state, goals) do
+      case HybridPlanner.HybridCoordinator.plan(domain, initial_state, goals) do
         {:ok, encapsulated_plan} ->
-          AriaEngine.HybridPlanner.HybridCoordinator.execute(domain, initial_state, encapsulated_plan)
+          HybridPlanner.HybridCoordinator.execute(domain, initial_state, encapsulated_plan)
         {:error, error_reason} ->
           IO.puts("Planning failed: \#{error_reason}")
       end
   """
 
-  alias AriaEngine.{StateV2, Domain}
-  alias AriaEngine.HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
-  alias AriaEngine.HybridPlanner.StrategyCoordinator
+  alias HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
+  alias HybridPlanner.StrategyCoordinator
 
   require Logger
 
@@ -134,7 +133,7 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
     internal_plan = EncapsulatedPlan.get_internal_plan(plan)
     
     # Use Plan.replan for actual replanning, then validate with strategy coordinator
-    case AriaEngine.PlannerAdapter.replan(domain, state, internal_plan, fail_node_id, opts) do
+    case PlannerAdapter.replan(domain, state, internal_plan, fail_node_id, opts) do
       {:ok, new_htn_plan} ->
         # Validate using strategy coordinator's temporal function
         case coordinator.temporal_fn.(new_htn_plan, domain, opts) do
@@ -164,7 +163,7 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
     # Use both planning and temporal validation
     internal_plan = EncapsulatedPlan.get_internal_plan(encapsulated_plan)
     
-    case AriaEngine.PlannerAdapter.validate_plan(domain, initial_state, internal_plan) do
+    case PlannerAdapter.validate_plan(domain, initial_state, internal_plan) do
       {:ok, final_state} ->
         # Additional temporal consistency validation using strategy coordinator
         coordinator = get_strategy_coordinator([])
@@ -288,8 +287,7 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
   defmodule PlanningEngine do
     @moduledoc false  # Hide from documentation
     
-    alias AriaEngine.{Plan, Domain, StateV2}
-    alias AriaEngine.HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
+    alias HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
     
     require Logger
 
@@ -457,9 +455,8 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
   defmodule TemporalEngine do
     @moduledoc false  # Hide from documentation
     
-    alias AriaEngine.{Domain, Plan}
-    alias AriaEngine.TemporalPlanner.{STNPlanner, STNMethod, STNAction}
-    alias AriaEngine.HybridPlanner.DataStructures.PlanningContext
+    alias TemporalPlanner.{STNPlanner, STNMethod, STNAction}
+    alias HybridPlanner.DataStructures.PlanningContext
     
     require Logger
 
@@ -595,9 +592,9 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
 
     defp get_action_duration(action_name, domain) do
       case Domain.get_action_metadata(domain, action_name) do
-        %{duration: %AriaEngine.Timeline.Interval{} = interval} ->
+        %{duration: %Timeline.Interval{} = interval} ->
           # If duration is an Interval struct, use its duration_ms as fixed min/max
-          fixed_duration = AriaEngine.Timeline.Interval.duration_ms(interval)
+          fixed_duration = Timeline.Interval.duration_ms(interval)
           {fixed_duration, fixed_duration}
         %{duration: {min, max}} when is_integer(min) and is_integer(max) and min <= max ->
           # If duration is a {min, max} tuple, use it directly
@@ -613,8 +610,7 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
   defmodule ExecutionEngine do
     @moduledoc false  # Hide from documentation
     
-    alias AriaEngine.{Plan, StateV2}
-    alias AriaEngine.HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
+    alias HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
     
     require Logger
 
@@ -676,7 +672,7 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
         case failure_info do
           %{type: :action_failure, node_id: node_id, reason: reason} ->
             # Attempt replanning from failure point
-            case AriaEngine.HybridPlanner.HybridCoordinator.replan(domain, state, encapsulated_plan, node_id, []) do
+            case HybridPlanner.HybridCoordinator.replan(domain, state, encapsulated_plan, node_id, []) do
               {:ok, new_plan} -> 
                 {:replan, new_plan}
               {:error, replan_reason} -> 
@@ -720,8 +716,7 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
   defmodule BacktrackingEngine do
     @moduledoc false  # Hide from documentation
     
-    alias AriaEngine.{Plan, StateV2}
-    alias AriaEngine.HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
+    alias HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
     
     require Logger
 
@@ -810,8 +805,7 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
   defmodule ValidationEngine do
     @moduledoc false  # Hide from documentation
     
-    alias AriaEngine.{Plan, StateV2}
-    alias AriaEngine.HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
+    alias HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
     
     require Logger
 
@@ -934,8 +928,7 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
   defmodule BlacklistingEngine do
     @moduledoc false  # Hide from documentation
     
-    alias AriaEngine.{Plan}
-    alias AriaEngine.HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
+    alias HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
     
     require Logger
 

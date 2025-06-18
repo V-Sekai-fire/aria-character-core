@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.HybridCoordinatorV2 do
+defmodule HybridPlanner.HybridCoordinatorV2 do
   @moduledoc """
   Strategy-based hybrid goal task reentrant temporal planner using dependency injection.
   
@@ -23,28 +23,27 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinatorV2 do
   
       # Create strategies
       strategies = %{
-        planning_strategy: AriaEngine.HybridPlanner.Strategies.Default.HTNPlanningStrategy,
-        temporal_strategy: AriaEngine.HybridPlanner.Strategies.Default.STNTemporalStrategy,
-        state_strategy: AriaEngine.HybridPlanner.Strategies.Default.StateV2Strategy,
-        domain_strategy: AriaEngine.HybridPlanner.Strategies.Default.DomainStrategy,
-        logging_strategy: AriaEngine.HybridPlanner.Strategies.Default.LoggerStrategy,
-        execution_strategy: AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy
+        planning_strategy: HybridPlanner.Strategies.Default.HTNPlanningStrategy,
+        temporal_strategy: HybridPlanner.Strategies.Default.STNTemporalStrategy,
+        state_strategy: HybridPlanner.Strategies.Default.StateV2Strategy,
+        domain_strategy: HybridPlanner.Strategies.Default.DomainStrategy,
+        logging_strategy: HybridPlanner.Strategies.Default.LoggerStrategy,
+        execution_strategy: HybridPlanner.Strategies.Default.LazyExecutionStrategy
       }
       
       # Create coordinator with injected strategies
-      coordinator = AriaEngine.HybridPlanner.HybridCoordinatorV2.new(strategies)
+      coordinator = HybridPlanner.HybridCoordinatorV2.new(strategies)
       
       # Use coordinator for planning
-      case AriaEngine.HybridPlanner.HybridCoordinatorV2.plan(coordinator, domain, state, goals) do
+      case HybridPlanner.HybridCoordinatorV2.plan(coordinator, domain, state, goals) do
         {:ok, plan} ->
-          AriaEngine.HybridPlanner.HybridCoordinatorV2.execute(coordinator, domain, state, plan)
+          HybridPlanner.HybridCoordinatorV2.execute(coordinator, domain, state, plan)
         {:error, error_reason} ->
           IO.puts("Planning failed: \#{error_reason}")
       end
   """
 
-  alias AriaEngine.{StateV2, Domain}
-  alias AriaEngine.HybridPlanner.Strategies
+  alias HybridPlanner.Strategies
 
   # Strategy-based coordinator structure
   defstruct [

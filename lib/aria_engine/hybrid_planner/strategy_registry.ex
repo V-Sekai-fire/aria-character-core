@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.StrategyRegistry do
+defmodule HybridPlanner.StrategyRegistry do
   @moduledoc """
   Registry of planning strategy functions that can be composed at runtime.
   
@@ -28,8 +28,7 @@ defmodule AriaEngine.HybridPlanner.StrategyRegistry do
       coordinator = StrategyCoordinator.new(planning_fn, temporal_fn, execution_fn)
   """
 
-  alias AriaEngine.{Domain, StateV2, Plan}
-  alias AriaEngine.TemporalPlanner.{STNPlanner, STNMethod, STNAction}
+  alias TemporalPlanner.{STNPlanner, STNMethod, STNAction}
 
   # Strategy function type definitions
   @type planning_strategy :: (Domain.Core.t(), StateV2.t(), [term()], keyword() -> {:ok, term()} | {:error, String.t()})
@@ -274,9 +273,9 @@ defmodule AriaEngine.HybridPlanner.StrategyRegistry do
 
   defp get_action_duration(action_name, domain) do
     case Domain.get_action_metadata(domain, action_name) do
-      %{duration: %AriaEngine.Timeline.Interval{} = interval} ->
+      %{duration: %Timeline.Interval{} = interval} ->
         # If duration is an Interval struct, use its duration_ms as fixed min/max
-        fixed_duration = AriaEngine.Timeline.Interval.duration_ms(interval)
+        fixed_duration = Timeline.Interval.duration_ms(interval)
         {fixed_duration, fixed_duration}
       %{duration: {min, max}} when is_integer(min) and is_integer(max) and min <= max ->
         # If duration is a {min, max} tuple, use it directly
