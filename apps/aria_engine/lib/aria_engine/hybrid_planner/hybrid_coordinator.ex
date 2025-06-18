@@ -31,7 +31,6 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
   """
 
   alias AriaEngine.{StateV2, Domain}
-  alias AriaEngine.HybridPlanner.DataStructures
   alias AriaEngine.HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
   alias AriaEngine.HybridPlanner.StrategyCoordinator
 
@@ -350,20 +349,109 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
     end
 
     # All other HTN operations stay private here
-    defp decompose_task(_domain, _task, _state) do
-      # Future: Private task decomposition logic
-      {:error, "Not implemented"}
+    
+    @doc false
+    def decompose_task(domain, {task_name, args}, state) do
+      case Domain.get_task_methods(domain, task_name) do
+        [] -> {:error, "No methods found for task #{task_name}"}
+        methods ->
+          # Try each method until one succeeds
+          try_methods(methods, args, state, domain)
+      end
     end
 
-    defp select_method(_domain, _task_name, _args, _state) do
-      # Future: Private method selection logic
-      {:error, "Not implemented"}
+    @doc false
+    def select_method(domain, task_name, args, state) do
+      case Domain.get_task_methods(domain, task_name) do
+        [] -> {:error, "No methods available for task #{task_name}"}
+        methods ->
+          # Select first applicable method (can be enhanced with cost-based selection)
+          case find_applicable_method(methods, args, state, domain) do
+            {:ok, method} -> {:ok, method}
+            :no_applicable -> {:error, "No applicable methods for task #{task_name} with args #{inspect(args)}"}
+          end
+      end
     end
 
-    defp build_solution_tree(_decomposed_tasks) do
-      # Future: Private solution tree building
-      {:error, "Not implemented"}
+    @doc false
+    def build_solution_tree(decomposed_tasks) when is_list(decomposed_tasks) do
+      try do
+        # Build hierarchical solution tree from decomposed tasks
+        root_node = %{
+          node_id: "root_#{:erlang.system_time(:millisecond)}",
+          task: {:root, []},
+          status: :composite,
+          children: [],
+          parent: nil,
+          depth: 0
+        }
+        
+        case build_tree_recursive(decomposed_tasks, root_node, 1) do
+          {:ok, completed_tree} -> {:ok, completed_tree}
+          {:error, reason} -> {:error, "Failed to build solution tree: #{reason}"}
+        end
+      rescue
+        e -> {:error, "Solution tree construction error: #{Exception.message(e)}"}
+      end
     end
+    
+    # Private helper functions for HTN operations
+    
+    defp try_methods([], _args, _state, _domain), do: {:error, "All methods failed"}
+    defp try_methods([{method_name, method_fn} | rest], args, state, domain) do
+      case apply_method_safely(method_fn, args, state) do
+        {:ok, decomposition} -> {:ok, {method_name, decomposition}}
+        {:error, _reason} -> try_methods(rest, args, state, domain)
+      end
+    end
+    
+    defp find_applicable_method([], _args, _state, _domain), do: :no_applicable
+    defp find_applicable_method([{method_name, method_fn} | rest], args, state, domain) do
+      case check_method_preconditions(method_fn, args, state) do
+        true -> {:ok, {method_name, method_fn}}
+        false -> find_applicable_method(rest, args, state, domain)
+      end
+    end
+    
+    defp apply_method_safely(method_fn, args, state) do
+      try do
+        case method_fn.(args, state) do
+          result when is_list(result) -> {:ok, result}
+          {:ok, result} -> {:ok, result}
+          {:error, reason} -> {:error, reason}
+          _ -> {:error, "Invalid method return format"}
+        end
+      rescue
+        e -> {:error, "Method execution failed: #{Exception.message(e)}"}
+      end
+    end
+    
+    defp check_method_preconditions(method_fn, args, state) do
+      # Simple precondition check - method should not immediately fail
+      case apply_method_safely(method_fn, args, state) do
+        {:ok, _} -> true
+        {:error, _} -> false
+      end
+    end
+    
+    defp build_tree_recursive([], parent_node, _depth), do: {:ok, parent_node}
+    defp build_tree_recursive([task | rest], parent_node, depth) do
+      child_node = %{
+        node_id: "node_#{:erlang.system_time(:millisecond)}_#{depth}",
+        task: task,
+        status: determine_task_status(task),
+        children: [],
+        parent: parent_node.node_id,
+        depth: depth
+      }
+      
+      updated_parent = %{parent_node | children: parent_node.children ++ [child_node]}
+      build_tree_recursive(rest, updated_parent, depth)
+    end
+    
+    defp determine_task_status({_task_name, _args}), do: :composite
+    defp determine_task_status([_action_name | _args]), do: :primitive
+    defp determine_task_status(_), do: :unknown
   end
 
   defmodule TemporalEngine do
@@ -520,15 +608,6 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
       end
     end
 
-    defp build_constraint_network(_plan, _domain) do
-      # Future: Private constraint network building
-      {:error, "Not implemented"}
-    end
-
-    defp check_stn_consistency(_constraints) do
-      # Future: Private STN consistency checking
-      {:error, "Not implemented"}
-    end
   end
 
   defmodule ExecutionEngine do
@@ -566,14 +645,353 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
     end
 
     # All execution operations stay private here
-    defp execute_action(_domain, _state, _action) do
-      # Future: Private action execution logic
-      {:error, "Not implemented"}
+    
+    @doc false
+    def execute_action(domain, state, action) do
+      try do
+        case action do
+          {action_name, args} when is_atom(action_name) ->
+            # Get action function from domain
+            case Map.get(domain.actions, action_name) do
+              nil -> {:error, "Action #{action_name} not found in domain"}
+              action_fn when is_function(action_fn) ->
+                # Execute action with state and arguments
+                case apply_action_safely(action_fn, args, state) do
+                  %StateV2{} = new_state -> {:ok, new_state}
+                  {:ok, new_state} -> {:ok, new_state}
+                  {:error, reason} -> {:error, "Action execution failed: #{reason}"}
+                  _ -> {:error, "Action returned invalid state format"}
+                end
+            end
+          _ -> {:error, "Invalid action format: #{inspect(action)}"}
+        end
+      rescue
+        e -> {:error, "Action execution error: #{Exception.message(e)}"}
+      end
     end
 
-    defp handle_execution_failure(_domain, _state, _plan, _failure) do
-      # Future: Private execution failure handling
-      {:error, "Not implemented"}
+    @doc false
+    def handle_execution_failure(domain, state, encapsulated_plan, failure_info) do
+      try do
+        case failure_info do
+          %{type: :action_failure, node_id: node_id, reason: reason} ->
+            # Attempt replanning from failure point
+            case AriaEngine.HybridPlanner.HybridCoordinator.replan(domain, state, encapsulated_plan, node_id, []) do
+              {:ok, new_plan} -> 
+                {:replan, new_plan}
+              {:error, replan_reason} -> 
+                {:error, "Replanning failed: #{replan_reason}. Original failure: #{reason}"}
+              :failure -> 
+                {:failure, "Could not recover from action failure: #{reason}"}
+            end
+          
+          %{type: :temporal_violation, constraints: constraints} ->
+            # Handle temporal constraint violations
+            {:error, "Temporal constraint violation: #{inspect(constraints)}"}
+          
+          %{type: :state_inconsistency, expected: expected, actual: actual} ->
+            # Handle state inconsistencies
+            {:error, "State inconsistency - expected: #{inspect(expected)}, actual: #{inspect(actual)}"}
+          
+          _ ->
+            {:error, "Unknown failure type: #{inspect(failure_info)}"}
+        end
+      rescue
+        e -> {:error, "Failure handling error: #{Exception.message(e)}"}
+      end
+    end
+    
+    # Private helper functions for execution
+    
+    defp apply_action_safely(action_fn, args, state) do
+      try do
+        case action_fn.(args, state) do
+          %StateV2{} = new_state -> new_state
+          {:ok, new_state} -> new_state
+          {:error, reason} -> {:error, reason}
+          result -> {:error, "Action returned unexpected format: #{inspect(result)}"}
+        end
+      rescue
+        e -> {:error, "Action function failed: #{Exception.message(e)}"}
+      end
+    end
+  end
+
+  defmodule BacktrackingEngine do
+    @moduledoc false  # Hide from documentation
+    
+    alias AriaEngine.{Plan, StateV2}
+    alias AriaEngine.HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
+    
+    require Logger
+
+    @doc false
+    def replan_with_backtracking(domain, state, encapsulated_plan, fail_node_id, context) do
+      verbose = PlanningContext.get_verbose_level(context)
+      opts = PlanningContext.get_options(context)
+      
+      if verbose > 1 do
+        Logger.debug("BacktrackingEngine: Starting backtracking replanning from node #{fail_node_id}")
+      end
+
+      # Extract internal plan for backtracking
+      internal_plan = EncapsulatedPlan.get_internal_plan(encapsulated_plan)
+      
+      # Use sophisticated backtracking with blacklisting
+      case backtrack_with_alternatives(domain, state, internal_plan, fail_node_id, opts) do
+        {:ok, new_solution_tree} ->
+          if verbose > 1 do
+            Logger.debug("BacktrackingEngine: Backtracking replanning completed successfully")
+          end
+          {:ok, new_solution_tree}
+        {:error, reason} ->
+          if verbose > 0 do
+            Logger.warning("BacktrackingEngine: Backtracking replanning failed - #{reason}")
+          end
+          {:error, reason}
+        :failure ->
+          if verbose > 0 do
+            Logger.warning("BacktrackingEngine: All backtracking alternatives exhausted")
+          end
+          :failure
+      end
+    end
+
+    @doc false
+    def find_failure_ancestors(solution_tree, fail_node_id) do
+      # Find all ancestor nodes that could be replanned
+      case find_node_in_tree(solution_tree, fail_node_id) do
+        nil -> []
+        node -> collect_ancestors(solution_tree, node, [])
+      end
+    end
+
+    # Private backtracking functions
+    
+    defp backtrack_with_alternatives(domain, state, solution_tree, fail_node_id, opts) do
+      # Get potential backtrack points (ancestors of failed node)
+      backtrack_candidates = find_failure_ancestors(solution_tree, fail_node_id)
+      
+      # Try replanning from each ancestor, starting from closest
+      try_backtrack_candidates(domain, state, solution_tree, backtrack_candidates, opts)
+    end
+    
+    defp try_backtrack_candidates(_domain, _state, _tree, [], _opts), do: :failure
+    defp try_backtrack_candidates(domain, state, solution_tree, [candidate | rest], opts) do
+      case Plan.replan(domain, state, solution_tree, candidate.node_id, opts) do
+        {:ok, new_tree} -> {:ok, new_tree}
+        {:error, _reason} -> try_backtrack_candidates(domain, state, solution_tree, rest, opts)
+        :failure -> try_backtrack_candidates(domain, state, solution_tree, rest, opts)
+      end
+    end
+    
+    defp find_node_in_tree(node, target_id) when is_map(node) do
+      case node do
+        %{node_id: ^target_id} -> node
+        %{children: children} when is_list(children) ->
+          Enum.find_value(children, fn child -> find_node_in_tree(child, target_id) end)
+        _ -> nil
+      end
+    end
+    defp find_node_in_tree(_tree, _target_id), do: nil
+    
+    defp collect_ancestors(tree, target_node, acc) do
+      case Map.get(target_node, :parent) do
+        nil -> acc
+        parent_id ->
+          case find_node_in_tree(tree, parent_id) do
+            nil -> acc
+            parent_node -> collect_ancestors(tree, parent_node, [parent_node | acc])
+          end
+      end
+    end
+  end
+
+  defmodule ValidationEngine do
+    @moduledoc false  # Hide from documentation
+    
+    alias AriaEngine.{Plan, StateV2}
+    alias AriaEngine.HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
+    
+    require Logger
+
+    @doc false
+    def validate_encapsulated_plan(domain, initial_state, encapsulated_plan, context) do
+      verbose = PlanningContext.get_verbose_level(context)
+      
+      if verbose > 1 do
+        Logger.debug("ValidationEngine: Starting comprehensive plan validation")
+      end
+
+      # Extract internal plan for validation
+      internal_plan = EncapsulatedPlan.get_internal_plan(encapsulated_plan)
+      
+      # Multi-stage validation
+      with {:ok, _} <- validate_plan_structure(internal_plan),
+           {:ok, _} <- validate_plan_actions(domain, internal_plan),
+           {:ok, final_state} <- validate_plan_execution(domain, initial_state, internal_plan) do
+        if verbose > 1 do
+          Logger.debug("ValidationEngine: Plan validation completed successfully")
+        end
+        {:ok, final_state}
+      else
+        {:error, reason} ->
+          if verbose > 0 do
+            Logger.warning("ValidationEngine: Plan validation failed - #{reason}")
+          end
+          {:error, reason}
+      end
+    end
+
+    @doc false
+    def calculate_plan_metrics(encapsulated_plan) do
+      internal_plan = EncapsulatedPlan.get_internal_plan(encapsulated_plan)
+      
+      %{
+        total_actions: count_primitive_actions(internal_plan),
+        tree_depth: calculate_tree_depth(internal_plan, 0),
+        branching_factor: calculate_branching_factor(internal_plan),
+        estimated_cost: estimate_execution_cost(internal_plan),
+        complexity_score: calculate_complexity_score(internal_plan)
+      }
+    end
+
+    # Private validation functions
+    
+    defp validate_plan_structure(solution_tree) do
+      case solution_tree do
+        %{node_id: _id, task: _task} -> {:ok, :valid_structure}
+        _ -> {:error, "Invalid solution tree structure"}
+      end
+    end
+    
+    defp validate_plan_actions(domain, solution_tree) do
+      primitive_actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
+      
+      case validate_all_actions_exist(domain, primitive_actions) do
+        [] -> {:ok, :all_actions_valid}
+        missing_actions -> {:error, "Missing actions in domain: #{inspect(missing_actions)}"}
+      end
+    end
+    
+    defp validate_plan_execution(domain, initial_state, solution_tree) do
+      # Use existing Plan validation but with error handling
+      case Plan.validate_plan(domain, initial_state, solution_tree) do
+        {:ok, final_state} -> {:ok, final_state}
+        {:error, reason} -> {:error, "Execution validation failed: #{reason}"}
+      end
+    end
+    
+    defp validate_all_actions_exist(domain, primitive_actions) do
+      primitive_actions
+      |> Enum.map(fn {action_name, _args} -> action_name end)
+      |> Enum.uniq()
+      |> Enum.filter(fn action_name -> not Map.has_key?(domain.actions, action_name) end)
+    end
+    
+    defp count_primitive_actions(solution_tree) do
+      Plan.Utils.get_primitive_actions_dfs(solution_tree) |> length()
+    end
+    
+    defp calculate_tree_depth(node, current_depth) when is_map(node) do
+      case Map.get(node, :children, []) do
+        [] -> current_depth
+        children ->
+          children
+          |> Enum.map(fn child -> calculate_tree_depth(child, current_depth + 1) end)
+          |> Enum.max()
+      end
+    end
+    defp calculate_tree_depth(_node, current_depth), do: current_depth
+    
+    defp calculate_branching_factor(node) when is_map(node) do
+      children = Map.get(node, :children, [])
+      child_counts = Enum.map(children, &calculate_branching_factor/1)
+      
+      case child_counts do
+        [] -> 0
+        counts -> (length(children) + Enum.sum(counts)) / (length(counts) + 1)
+      end
+    end
+    defp calculate_branching_factor(_node), do: 0
+    
+    defp estimate_execution_cost(solution_tree) do
+      # Simple cost estimation based on action count
+      # Can be enhanced with domain-specific cost functions
+      Plan.Utils.plan_cost(solution_tree)
+    end
+    
+    defp calculate_complexity_score(solution_tree) do
+      depth = calculate_tree_depth(solution_tree, 0)
+      actions = count_primitive_actions(solution_tree)
+      branching = calculate_branching_factor(solution_tree)
+      
+      # Weighted complexity score
+      depth * 2 + actions + branching * 3
+    end
+  end
+
+  defmodule BlacklistingEngine do
+    @moduledoc false  # Hide from documentation
+    
+    alias AriaEngine.{Plan}
+    alias AriaEngine.HybridPlanner.DataStructures.{EncapsulatedPlan, PlanningContext}
+    
+    require Logger
+
+    @doc false
+    def blacklist_failed_command(encapsulated_plan, failed_command, context) do
+      verbose = PlanningContext.get_verbose_level(context)
+      
+      if verbose > 1 do
+        Logger.debug("BlacklistingEngine: Blacklisting failed command #{inspect(failed_command)}")
+      end
+
+      # Extract internal plan and apply blacklisting
+      internal_plan = EncapsulatedPlan.get_internal_plan(encapsulated_plan)
+      
+      # Use existing Plan blacklisting functionality
+      blacklisted_plan = Plan.blacklist_command(internal_plan, failed_command)
+      
+      # Create new encapsulated plan with blacklisting metadata
+      original_metadata = EncapsulatedPlan.get_metadata(encapsulated_plan)
+      
+      updated_metadata = Map.update(original_metadata, :blacklisted_commands, [failed_command], fn existing ->
+        [failed_command | existing] |> Enum.uniq()
+      end)
+      |> Map.put(:blacklisted_at, DateTime.utc_now())
+      
+      new_encapsulated_plan = EncapsulatedPlan.new(blacklisted_plan, updated_metadata)
+      
+      if verbose > 1 do
+        Logger.debug("BlacklistingEngine: Command blacklisting completed")
+      end
+      
+      {:ok, new_encapsulated_plan}
+    end
+
+    @doc false
+    def get_blacklisted_commands(encapsulated_plan) do
+      metadata = EncapsulatedPlan.get_metadata(encapsulated_plan)
+      Map.get(metadata, :blacklisted_commands, [])
+    end
+
+    @doc false
+    def clear_blacklist(encapsulated_plan) do
+      metadata = EncapsulatedPlan.get_metadata(encapsulated_plan)
+      
+      cleared_metadata = Map.delete(metadata, :blacklisted_commands)
+      |> Map.delete(:blacklisted_at)
+      |> Map.put(:blacklist_cleared_at, DateTime.utc_now())
+      
+      internal_plan = EncapsulatedPlan.get_internal_plan(encapsulated_plan)
+      EncapsulatedPlan.new(internal_plan, cleared_metadata)
+    end
+
+    @doc false
+    def is_command_blacklisted?(encapsulated_plan, command) do
+      blacklisted_commands = get_blacklisted_commands(encapsulated_plan)
+      Enum.member?(blacklisted_commands, command)
     end
   end
 end
