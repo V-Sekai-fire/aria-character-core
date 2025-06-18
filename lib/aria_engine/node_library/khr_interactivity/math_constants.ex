@@ -38,7 +38,6 @@ defmodule NodeLibrary.KHRInteractivity.MathConstants do
       khr_node_type: "math/nan",
       description: "Not a Number"
     })
-    |> register_task_methods()
   end
 
   @doc "Register task methods for math constants"

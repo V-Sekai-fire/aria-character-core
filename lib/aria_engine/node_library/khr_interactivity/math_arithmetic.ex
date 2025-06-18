@@ -123,7 +123,6 @@ defmodule NodeLibrary.KHRInteractivity.MathArithmetic do
       khr_node_type: "math/mix",
       description: "Linear interpolation operation"
     })
-    |> register_task_methods()
   end
 
   @doc "Register task methods for math arithmetic operations"
