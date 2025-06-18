@@ -28,16 +28,15 @@ Before reading this document, you might want to read [[Nau21](#Nau21)] to get so
 
 Here is a summary of GTPyhop's planning algorithm. For pseudocode, see [[Nau21](#Nau21)].
 
-GTPyhop starts with an initial [state](#States) *s*, and a *to-do* list *T* consisting of [actions](#States), [tasks](#Tasks), and [goals](#Goals). The objective is to construct a *solution plan* π, i.e., a sequence of actions that begins in *s* and accomplishes all of the items in *T* in left-to-right order. 
-GTPyhop does this in a *planning domain* that includes definitions of actions, methods for accomplishing tasks, and methods for achieving goals. 
-
+GTPyhop starts with an initial [state](#States) *s*, and a *to-do* list *T* consisting of [actions](#States), [tasks](#Tasks), and [goals](#Goals). The objective is to construct a *solution plan* π, i.e., a sequence of actions that begins in *s* and accomplishes all of the items in *T* in left-to-right order.
+GTPyhop does this in a *planning domain* that includes definitions of actions, methods for accomplishing tasks, and methods for achieving goals.
 
 GTPyhop does a backtracking search, starting with an empty list π. It goes left-to-right through the items in *T*, and considers the following possibilities for each item:
 
-  - If the item is an applicable action *a*, GTPyhop executes *a* to update *s*, and appends *a* to π.
-  - If the item is a task *t*, GTPyhop looks for a task method that is both relevant for *t* and applicable in *s*, and uses it to get a to-do list for accomplishing *t*. GTPyhop inserts the items in this list into *T* to do next.
-  - If the item is a goal *g*, GTPyhop looks for a goal method that is both relevant for *g* and applicable in *s*, and uses it to get a to-do list for achieving *g*. GTPyhop inserts the items in this list into *T* to do next, along with a way to check whether they actually achieve *g*.
-  - Whenever one of the above steps fails (e.g., an action is inapplicable, a goal or task has no applicable methods, or a goal method doesn't achieve its goal), GTPyhop backtracks to the last point where it chose a method for a task or goal, to try a different method if one is available.
+- If the item is an applicable action *a*, GTPyhop executes *a* to update *s*, and appends *a* to π.
+- If the item is a task *t*, GTPyhop looks for a task method that is both relevant for *t* and applicable in *s*, and uses it to get a to-do list for accomplishing *t*. GTPyhop inserts the items in this list into *T* to do next.
+- If the item is a goal *g*, GTPyhop looks for a goal method that is both relevant for *g* and applicable in *s*, and uses it to get a to-do list for achieving *g*. GTPyhop inserts the items in this list into *T* to do next, along with a way to check whether they actually achieve *g*.
+- Whenever one of the above steps fails (e.g., an action is inapplicable, a goal or task has no applicable methods, or a goal method doesn't achieve its goal), GTPyhop backtracks to the last point where it chose a method for a task or goal, to try a different method if one is available.
 
 If GTPyhop reaches the end of *T*, it returns π as the solution plan. If GTPyhop is unable to reach the end of *T*, it returns failure.
 
@@ -52,8 +51,8 @@ bindings. For example, consider the following state object:
     state0.loc = {'alice':'home', 'taxi1':'park'}
     state0.cash = {'alice':20}
     state0.distance = {('home','park'):8, ('station','home'):1, ('station','park'):9}
-    
-This specifies that 
+
+This specifies that
 
     state0.loc['alice'] = 'home_a',
     state0.loc['taxi1'] = 'park',
@@ -65,7 +64,6 @@ This specifies that
 Note that each state variable has exactly one argument, e.g., `'alice'` or `'taxi1'`. However, the argument may be any hashable Python object, e.g., `'alice'` or the tuple  `('station','home')`, but not the list `['station','home']`.
 
 Although a `State` is object is used mainly to represent a state of the world, it can also be used for other collections of variables. For example, in [Examples/simple_htn.py](Examples/simple_htn.py) and [Examples/simple_hgn.py](Examples/simple_hgn.py), the `State` object named `rigid` contains some "rigid" properties that are true in every state of the world.
-    
 
 ### Actions
 
@@ -83,8 +81,7 @@ In Pyhop there would be two minor differences:
 
 - If an action is inapplicable (i.e., if the `if` test fails in the above example), Pyhop would require it to return `False`. In GTPyhop, it may either return `False` or (as above) not return a value.
 
- - The last line would begin with `pyhop` rather than `gtpyhop`.
- 
+- The last line would begin with `pyhop` rather than `gtpyhop`.
 
 ## <span id="Tasks">3. Tasks and task methods</span>
 
@@ -110,8 +107,7 @@ In Pyhop there would be two minor differences:
 
 - If a method is inapplicable (i.e., if the `if` test fails in the above example), Pyhop requires it to return `False`. In GTPyhop, it may either return `False` or (as above) not return a value.
 
- - The last line would begin with `pyhop` rather than `gtpyhop`.
- 
+- The last line would begin with `pyhop` rather than `gtpyhop`.
 
 ## <span id="Goals">4. Goals and goal methods</span>
 
@@ -148,7 +144,6 @@ The above declaration tells GTPyhop that `m_unload_at_loc` is relevant not only 
     gtpyhop.declare_unigoal_methods('loc', m_unload_at_loc)
 
 For an example of a situation where such restrictions are important, see the definitions of `m_move1`, `m_get`, and `m_put` in the [Examples/blocks_hgn/methods.py](Examples/blocks_hgn/methods.py) file.
-    
 
 ### Multigoals
 
@@ -168,7 +163,7 @@ A multigoal method always takes two arguments: the current state and the multigo
 
     gtpyhop.declare_multigoal_methods(m_unload_at_loc)
 
-This method returns a list of unigoals, one for each container that needs to be moved to `loc2`. The containers are sorted in order of their distance from `loc2`, so that the closest ones will be moved first. 
+This method returns a list of unigoals, one for each container that needs to be moved to `loc2`. The containers are sorted in order of their distance from `loc2`, so that the closest ones will be moved first.
 
 **Restricting a multigoal method's relevance:**
 
@@ -190,7 +185,6 @@ For the above method to work, we would need to define a unigoal method, e.g., `m
 
     gtpyhop.declare_unigoal_methods('loc', move_c_to_loc)
 
-
 ## <span id="Other">5. Other properties of goals and tasks</span>
 
 ### Goal Task Network (GTN) Planning
@@ -199,7 +193,7 @@ It is easy to have both goal methods and task methods in the same planning domai
 
     return [('move_container', c, mg.loc[c]) for c in containers_to_move]
 
-where `move_container` is a task for which we have declared one or more task methods. 
+where `move_container` is a task for which we have declared one or more task methods.
 
 ### Checking whether a method has achieved a goal
 
@@ -213,26 +207,23 @@ An obvious question is whether such checks are useful. They may be useful while 
 
 Depending on feedback from users, I'll consider whether to make `verify_goals = False` the default.
 
-
 ## <span id="Pyhop">6. Backward Compatibility with Pyhop</span>
-
 
 GTPyhop is mostly backward-compatible with Pyhop, but not completely so. Below is a list of the differences. To illustrate them, the [`pyhop_simple_travel_example`](Examples/pyhop_simple_travel_example) example domain is a near-verbatim adaptation of Pyhop's [simple travel example](https://bitbucket.org/dananau/pyhop/src/master/simple_travel_example.py).
 
 - Pyhop worked in both Python 2 and 3. GTPyhop requires Python 3.
 - GTPyhop requires a domain declaration before any actions and methods can be defined.
-- In Pyhop, `verbose` was a keyword argument having the default value 0. In GTPyhop, it is a global variable and its initial value is 1. 
+- In Pyhop, `verbose` was a keyword argument having the default value 0. In GTPyhop, it is a global variable and its initial value is 1.
 - GTPyhop uses different names for the following functions. For backward compatibility, you can still use the old Pyhop function names, but a message will ask you to use the new names in the future.
 
     |     Pyhop |     GTPyhop |
-     --- | --- 
+     --- | ---
     `pyhop.declare_methods` | `gtpyhop.declare_task_methods`*
     `pyhop.declare_operators` | `gtpyhop.declare_actions`
     `pyhop.print_operators` | `gtpyhop.print_actions`
     `pyhop.pyhop` | `gtpyhop.find_plan`
-     
-    \* There is a minor difference between these two functions. In Pyhop, if `'task1'` is a task name and you call `pyhop.declare_methods('task1', …)` more than once, the only methods for `task1` will be the ones in the last call. In GTPyhop, you can call `gtpyhop.declare_task_methods('task1', …)` more than once to add additional methods for `task1`.  
 
+    \* There is a minor difference between these two functions. In Pyhop, if `'task1'` is a task name and you call `pyhop.declare_methods('task1', …)` more than once, the only methods for `task1` will be the ones in the last call. In GTPyhop, you can call `gtpyhop.declare_task_methods('task1', …)` more than once to add additional methods for `task1`.  
 
 ## <span id="Comparisons">7. Comparisons with other planners</span>
 
@@ -248,8 +239,8 @@ To see why, let us rewrite the `unload` action in classical precondition-and-eff
 
 GDP and GoDel would consider such an action to be relevant for both of the following goals:
 
- - goal 1: reach a state `s` in which `loc[container] = location`;
- - goal 2: reach a state `s` in which `cargo[robot] = 'nil'`.
+- goal 1: reach a state `s` in which `loc[container] = location`;
+- goal 2: reach a state `s` in which `cargo[robot] = 'nil'`.
 
 That isn't feasible in GTPyhop, because the preconditions and effects of a GTPyhop action are not fixed in advance, but instead are computed using arbitrary Python code. The only way to tell what effects an action will have is to execute the code and see what state it produces. To find an action that is applicable in a state *s* and whose effects satisfy a goal *g*, we would need to do a backtracking search through many combinations of actions and parameter values, trying each one to see if executing it in *s* will produce a state that satisfies *g*. This would be unacceptably expensive. Thus when trying to accomplish a goal, GTPyhop doesn't look at actions, it only looks at goal methods.
 
@@ -276,7 +267,7 @@ Then we can write the following two methods:
         gtpyhop.declare_unigoal_methods('loc', m_unload_at_loc)
 
     The `declare_unigoal_methods` declaration makes `m_unload_at_loc` relevant for `('loc', container, location)`, which is goal 1 in GTPyhop notation.
-    
+
 - A goal-method `m_unload_cargo` that we declare relevant for goal 2. If the desired cargo is `'nil'` (i.e., empty) and the robot's current cargo isn't `'nil'`, then this method will return the desired `unload` action:
 
         def m_unload_cargo(state, robot, desired_cargo):
@@ -287,10 +278,8 @@ Then we can write the following two methods:
         gtpyhop.declare_unigoal_methods('cargo', m_unload_cargo)
 
     The `declare_unigoal_methods` declaration makes `m_unload_cargo` relevant for `('cargo', robot, desired_cargo)`, which is goal 2 in GTPyhop notation.
-    
+
 If a domain definition includes such methods for all of the actions, then GTPyhop will behave similarly to GDP -- though not identically, since GTPyhop won't have access to the heuristic function that GDP uses to guide its search.
-
-
 
 ### <span id="HGNpyhop">7.2. HGNPyhop</span>
 
@@ -298,7 +287,7 @@ There is a fork of Pyhop called [HGNpyhop](https://github.com/ospur/hgn-pyhop) i
 
 In HGNPyhop, to declare an action relevant for a goal of the form `(variable, arg, value)`, the action must be callable as `action_name(arg,value)`. Consider what this means for goals 1 and 2 in the previous section:
 
- - To make `unload` relevant for goal 1, `('loc', container, location)`, we would need to rewrite it to be callable as `unload(state,container,location)`, and declare it relevant for `loc`. The rewrite would look like this:
+- To make `unload` relevant for goal 1, `('loc', container, location)`, we would need to rewrite it to be callable as `unload(state,container,location)`, and declare it relevant for `loc`. The rewrite would look like this:
 
         def unload(state, container, location):
             r = state.loc[container]
@@ -310,7 +299,7 @@ In HGNPyhop, to declare an action relevant for a goal of the form `(variable, ar
 
         hgn_pyhop.declare_operators('loc', unload)
 
- - To make `unload` relevant for goal 2, `('cargo', robot, desired_cargo)`, we would need to rewrite it to be callable as `unload(robot, desired_cargo)`, and declare it relevant for `cargo`. The rewrite would look like this:
+- To make `unload` relevant for goal 2, `('cargo', robot, desired_cargo)`, we would need to rewrite it to be callable as `unload(robot, desired_cargo)`, and declare it relevant for `cargo`. The rewrite would look like this:
 
         def unload(state, robot, desired_cargo):
             c = state.cargo[robot]
@@ -320,7 +309,7 @@ In HGNPyhop, to declare an action relevant for a goal of the form `(variable, ar
                 return state
 
         hgn_pyhop.declare_operators('cargo', unload)
- 
+
 Both rewrites make the `unload` action harder to understand -- and neither of them makes it relevant for *both* goals. To accomplish that in HGNpyhop, I think something like the following *might* work, though I haven't tested it to make sure:
 
     def unload(state, arg1, arg2):
@@ -341,14 +330,13 @@ Both rewrites make the `unload` action harder to understand -- and neither of th
     hgn_pyhop.declare_operators('loc', unload)
     hgn_pyhop.declare_operators('cargo', unload)
 
-This definition is much harder to understand than the original one. Furthermore, one can construct examples of other actions and goals for which an `is_a` test on the arguments would not be sufficient to tell which piece of code to execute. 
+This definition is much harder to understand than the original one. Furthermore, one can construct examples of other actions and goals for which an `is_a` test on the arguments would not be sufficient to tell which piece of code to execute.
 
 To summarize: it can be difficult to tell HGNpyhop that an action *a* is relevant for achieving a particular one of its effects, and even more difficult to tell HGNpyhop that *a* also is relevant for achieving its other effects. Without a way to do this, if those effects are goals that we want to achieve, HGNpyhop won't be able to use *a* to achieve them.
 
 In GTPyhop, we can overcome this problem by defining, for each effect *e* of *a*, a unigoal_method for *e* that returns the list [*a*]. This is possible because GTPyhop allows actions to appear in the list of items returned by a method -- which is not allowed in HGNpyhop, nor in HGN planners such as GDP and GoDel.
 
 As an example of how to do this, see [Examples/logistics_hgn.py](Examples/logistics_hgn.py)
-
 
 ## <span id="References">8. References</span>
 
@@ -360,7 +348,7 @@ In *IJCAI*, 2016, pp. 3022–3028.
 
 <span id="Gha16">[Gha16]</span> M. Ghallab, D. S. Nau, and P. Traverso. [*Automated Planning and Acting*](http://www.laas.fr/planning). Cambridge University Press, Sept. 2016.
 
-<span id="Nau21">[Nau21]</span> D. Nau, S. Patra, M. Roberts, Y. Bansod and R. Li. [GTPyhop: A Hierarchical Goal+Task Planner Implemented in Python](http://www.cs.umd.edu/users/nau/papers/Nau21gtpyhop.pdf). ICAPS HPlan Workshop, 2021. 
+<span id="Nau21">[Nau21]</span> D. Nau, S. Patra, M. Roberts, Y. Bansod and R. Li. [GTPyhop: A Hierarchical Goal+Task Planner Implemented in Python](http://www.cs.umd.edu/users/nau/papers/Nau21gtpyhop.pdf). ICAPS HPlan Workshop, 2021.
 
 <span id="Shi12">[Shi12]</span> V. Shivashankar, U. Kuter, D. S. Nau, and R. Alford. [A hierarchical goal-based formalism and algorithm for single-agent planning](https://www.cs.umd.edu/~nau/papers/shivashankar2012hierarchical.pdf). In *Proc. International Conference on Autonomous Agents and Multiagent Systems (AAMAS)*, 2012.
 

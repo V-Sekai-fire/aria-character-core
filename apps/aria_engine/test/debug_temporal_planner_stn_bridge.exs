@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script for unifying temporal planner via STN bridge
 # Usage: mix run apps/aria_engine/test/debug_temporal_planner_stn_bridge.exs
 

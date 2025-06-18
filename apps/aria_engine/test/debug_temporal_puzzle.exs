@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script for a temporal puzzle (Coffee and Bagel)
 # Usage: mix run apps/aria_engine/test/debug_temporal_puzzle.exs
 
