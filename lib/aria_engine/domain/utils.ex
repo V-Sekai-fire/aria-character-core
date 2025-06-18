@@ -1,15 +1,15 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Domain.Utils do
+defmodule Domain.Utils do
   @moduledoc """
   Provides utility functions for the planning domain.
   """
 
-  alias AriaEngine.StateV2
-  alias AriaEngine.Actions
+  alias StateV2
+  alias Actions
 
-  @type t :: AriaEngine.Domain.Core.t()
+  @type t :: Domain.Core.t()
   @type action_name :: atom()
   @type task_name :: String.t()
   @type method_name :: String.t()
@@ -53,7 +53,7 @@ defmodule AriaEngine.Domain.Utils do
   @doc  """
   Adds Porcelain-based actions to the domain.
 
-  This convenience method adds all the external process actions from AriaEngine.Actions.
+  This convenience method adds all the external process actions from Actions.
   """
   @spec add_porcelain_actions(t()) :: t()
   def add_porcelain_actions(%{} = domain) do
@@ -67,7 +67,7 @@ defmodule AriaEngine.Domain.Utils do
       change_permissions: &Actions.change_permissions/2
     }
 
-    AriaEngine.Domain.Actions.add_actions(domain, porcelain_actions)
+    Domain.Actions.add_actions(domain, porcelain_actions)
   end
 
   @doc """
@@ -78,7 +78,7 @@ defmodule AriaEngine.Domain.Utils do
   """
   @spec create_complete_domain(String.t()) :: t()
   def create_complete_domain(name \\ "complete") do
-    AriaEngine.Domain.Core.new(name)
+    Domain.Core.new(name)
     |> add_porcelain_actions()
   end
 

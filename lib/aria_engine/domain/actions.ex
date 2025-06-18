@@ -1,15 +1,15 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Domain.Actions do
+defmodule Domain.Actions do
   @moduledoc """
   Handles action-related operations for the planning domain.
   """
 
   require Logger
-  alias AriaEngine.StateV2
+  alias StateV2
 
-  @type t :: AriaEngine.Domain.Core.t()
+  @type t :: Domain.Core.t()
   @type action_name :: atom()
   @type action_fn :: (StateV2.t(), list() -> StateV2.t() | false)
 
@@ -110,7 +110,7 @@ defmodule AriaEngine.Domain.Actions do
     case get_action(domain, action_name) do
       nil ->
         # Check if it's a durative action
-        case AriaEngine.Domain.Core.get_durative_action(domain, action_name) do
+        case Domain.Core.get_durative_action(domain, action_name) do
           nil ->
             false
           
@@ -140,7 +140,7 @@ defmodule AriaEngine.Domain.Actions do
   end
 
   # Validate durative action preconditions with quantifier support
-  @spec validate_durative_preconditions(AriaEngine.Domain.DurativeAction.t(), StateV2.t()) :: boolean()
+  @spec validate_durative_preconditions(Domain.DurativeAction.t(), StateV2.t()) :: boolean()
   defp validate_durative_preconditions(durative_action, state) do
     # Check at_start conditions
     at_start_valid = Enum.all?(durative_action.conditions.at_start, fn condition ->

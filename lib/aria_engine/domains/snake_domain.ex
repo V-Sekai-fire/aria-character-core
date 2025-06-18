@@ -1,9 +1,9 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Domains.SnakeDomain do
-  alias AriaEngine.Domain
-  alias AriaEngine.State
+defmodule Domains.SnakeDomain do
+  alias Domain
+  alias State
 
   @doc """
   Defines the Snake planning domain.

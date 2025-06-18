@@ -1,13 +1,13 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Domain.BehaviourImpl do
+defmodule Domain.BehaviourImpl do
   @moduledoc """
-  Contains the implementation of `AriaEngine.DomainBehaviour` callbacks.
+  Contains the implementation of `DomainBehaviour` callbacks.
   """
 
-  @behaviour AriaEngine.DomainBehaviour
-  alias AriaEngine.Domain.Core
+  @behaviour DomainBehaviour
+  alias Domain.Core
 
   @impl true
   @spec actions(Core.t()) :: map()
@@ -30,6 +30,6 @@ defmodule AriaEngine.Domain.BehaviourImpl do
   def durative_actions(_domain), do: %{}
 
   @impl true
-  @spec get_durative_action(Core.t(), Core.durative_action_name()) :: AriaEngine.Domain.DurativeAction.t() | nil
+  @spec get_durative_action(Core.t(), Core.durative_action_name()) :: Domain.DurativeAction.t() | nil
   def get_durative_action(%Core{durative_actions: durative_actions}, name), do: Map.get(durative_actions, name)
 end
