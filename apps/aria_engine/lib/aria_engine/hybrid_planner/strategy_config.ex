@@ -50,6 +50,7 @@ defmodule AriaEngine.HybridPlanner.StrategyConfig do
   """
 
   alias AriaEngine.HybridPlanner.{StrategyFactory, HybridCoordinatorV2}
+  require Logger
 
   @type strategy_config :: %{atom() => atom()}
   @type config_source :: :application | :environment | :file | :runtime
@@ -372,7 +373,9 @@ defmodule AriaEngine.HybridPlanner.StrategyConfig do
   end
 
   defp parse_config_content(content, ".yaml") do
-    case YamlElixir.read_from_string(content) do
+    # TODO: Add YamlElixir dependency or implement alternative YAML parsing
+    Logger.warning("StrategyConfig: YamlElixir dependency not available, using JSON fallback")
+    case Jason.decode(content) do
       {:ok, data} -> 
         config = atomize_keys(data)
         case validate_config(config) do

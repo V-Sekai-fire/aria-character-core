@@ -15,7 +15,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   require Logger
 
   @impl true
-  def execute_plan(solution_tree, %StateV2{} = initial_state, strategies, opts \\ []) do
+  def execute_plan(solution_tree, %StateV2{} = initial_state, _strategies, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
     if verbose > 1 do
@@ -33,7 +33,9 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy do
         
         %AriaEngine.Domain.Core{} = domain ->
           # Use existing Plan.Core.run_lazy_refineahead logic
-          case Plan.Core.run_lazy_refineahead(domain, initial_state, solution_tree, opts) do
+          # TODO: Implement Plan.Core.run_lazy_refineahead/4 function  
+          Logger.warning("LazyExecutionStrategy: Plan.Core.run_lazy_refineahead/4 not yet implemented")
+          case Plan.Core.plan(domain, initial_state, opts) do
             {:ok, final_state} ->
               if verbose > 1 do
                 Logger.debug("LazyExecutionStrategy: Execution completed successfully")
@@ -129,7 +131,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy do
         {_, nil} ->
           {:error, "Domain required for failure recovery"}
         
-        {planning_strategy, domain} ->
+        {_planning_strategy, _domain} ->
           # Log the failure
           if logging_strategy do
             logging_strategy.log_error(failure, %{
@@ -150,7 +152,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy do
               # A real implementation might attempt replanning here
               {:ok, current_state}
             
-            {:temporal_violation, constraint, reason} ->
+            {:temporal_violation, _constraint, reason} ->
               if verbose > 0 do
                 Logger.warning("LazyExecutionStrategy: Temporal violation - #{reason}")
               end

@@ -11,7 +11,6 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.DomainStrategy do
 
   @behaviour AriaEngine.HybridPlanner.Strategies.DomainStrategy
 
-  alias AriaEngine.Domain
   require Logger
 
   @impl true

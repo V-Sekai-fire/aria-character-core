@@ -41,7 +41,6 @@ defmodule AriaEngine.HybridPlanner.Strategies do
   """
 
   alias AriaEngine.{StateV2, Domain, Plan}
-  alias AriaEngine.HybridPlanner.DataStructures
 
   # ==================== STRATEGY VALIDATION ====================
 

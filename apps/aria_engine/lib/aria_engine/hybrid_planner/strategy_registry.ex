@@ -29,7 +29,6 @@ defmodule AriaEngine.HybridPlanner.StrategyRegistry do
   """
 
   alias AriaEngine.{Domain, StateV2, Plan}
-  alias AriaEngine.HybridPlanner.DataStructures.PlanningContext
   alias AriaEngine.TemporalPlanner.{STNPlanner, STNMethod, STNAction}
 
   # Strategy function type definitions
