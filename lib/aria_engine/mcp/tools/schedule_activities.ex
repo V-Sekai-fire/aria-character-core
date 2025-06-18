@@ -31,16 +31,15 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   
   alias HybridPlanner.HybridCoordinatorV2
   alias StateV2
+  alias Hermes.Server.Response
   
   require Logger
   
   schema do
-    %{
-      schedule_name: {:required, :string},
-      activities: {:required, {:list, :map}},
-      resources: :map,
-      constraints: :map
-    }
+    field :schedule_name, {:required, :string}, description: "Name for this scheduling request"
+    field :activities, {:required, {:list, :map}}, description: "List of activities to schedule with id, duration, dependencies, and resources"
+    field :resources, :map, description: "Available resources and their constraints"
+    field :constraints, :map, description: "Scheduling constraints and limits"
   end
   
   @impl true
@@ -60,22 +59,25 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
         case HybridCoordinatorV2.plan(coordinator, domain, state, goals) do
           {:ok, plan} ->
             # Convert back to MCP format
-            response = create_success_response(request, analysis, plan)
-            {:ok, response, frame}
+            response_content = create_success_response(request, analysis, plan)
+            response_text = Jason.encode!(response_content, pretty: true)
+            {:reply, Response.text(Response.tool(), response_text), frame}
           
           {:error, reason} ->
             Logger.warning("Hybrid planner failed: #{reason}")
             # Fall back to empty plan response
-            response = create_empty_plan_response(request, analysis)
-            {:ok, response, frame}
+            response_content = create_empty_plan_response(request, analysis)
+            response_text = Jason.encode!(response_content, pretty: true)
+            {:reply, Response.text(Response.tool(), response_text), frame}
         end
       
       {:error, reason} ->
         Logger.warning("Failed to convert to planner format: #{reason}")
         # Fall back to empty plan response
         analysis = Map.put(analysis, :conversion_error, reason)
-        response = create_empty_plan_response(request, analysis)
-        {:ok, response, frame}
+        response_content = create_empty_plan_response(request, analysis)
+        response_text = Jason.encode!(response_content, pretty: true)
+        {:reply, Response.text(Response.tool(), response_text), frame}
     end
   end
   

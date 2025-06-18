@@ -62,6 +62,17 @@ defmodule AriaEngine.MCP.Server do
             {:reply, {:ok, result}, state}
           {:error, reason} -> 
             {:reply, {:error, reason}, state}
+          {:reply, %Hermes.Server.Response{content: content}, _frame} ->
+            # Handle Hermes response format - extract JSON from text content
+            case content do
+              [%{"text" => json_text, "type" => "text"}] ->
+                case Jason.decode(json_text) do
+                  {:ok, parsed_result} -> {:reply, {:ok, parsed_result}, state}
+                  {:error, _} -> {:reply, {:error, "Invalid JSON response"}, state}
+                end
+              _ ->
+                {:reply, {:error, "Unexpected response format"}, state}
+            end
           result when is_map(result) ->
             # Handle direct result return
             {:reply, {:ok, result}, state}
