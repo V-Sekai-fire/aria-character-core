@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.FlowAdapter do
+defmodule FlowAdapter do
   @moduledoc """
   Flow processing adapter that provides a unified interface for stream processing
   with explicit flow control and convergence options.

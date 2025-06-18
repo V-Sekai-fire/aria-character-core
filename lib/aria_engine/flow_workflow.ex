@@ -1,9 +1,9 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.FlowWorkflow do
+defmodule FlowWorkflow do
   @moduledoc """
-  Flow-based parallel processing adapter for AriaEngine.
+  Flow-based parallel processing adapter for 
   
   This module provides a compatibility layer that uses a configurable flow 
   implementation to provide flow processing. It uses the behaviour-based interface

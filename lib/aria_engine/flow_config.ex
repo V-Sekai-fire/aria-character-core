@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.FlowConfig do
+defmodule FlowConfig do
   @moduledoc """
   Configuration module for determining which flow implementation to use.
   
@@ -16,7 +16,7 @@ defmodule AriaEngine.FlowConfig do
   Defaults to MockFlow for development/testing, can be configured to use AriaFlow.
   """
   def flow_impl do
-    Application.get_env(:aria_engine, :flow_impl, AriaEngine.MockFlow)
+    Application.get_env(:aria_engine, :flow_impl, MockFlow)
   end
 
   @doc """
@@ -30,6 +30,6 @@ defmodule AriaEngine.FlowConfig do
   Use MockFlow as the flow implementation (testing mode).
   """
   def use_mock_flow do
-    Application.put_env(:aria_engine, :flow_impl, AriaEngine.MockFlow)
+    Application.put_env(:aria_engine, :flow_impl, MockFlow)
   end
 end

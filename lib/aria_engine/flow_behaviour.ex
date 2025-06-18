@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.FlowBehaviour do
+defmodule FlowBehaviour do
   @moduledoc """
   Behaviour defining the interface for stream processing functionality.
   
