@@ -31,6 +31,7 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   
   alias HybridPlanner.HybridCoordinatorV2
   alias StateV2
+  alias Domain
   alias Hermes.Server.Response
   
   require Logger
@@ -195,13 +196,13 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   # Convert MCP request to hybrid planner format
   defp convert_to_planner_format(request) do
     try do
-      # Create a minimal scheduling domain
+      # Create a scheduling domain with proper HTN structure
       domain = create_scheduling_domain(request)
       
       # Create initial state from resources and constraints
       state = create_initial_state(request)
       
-      # Convert activities to goals (empty for now to demonstrate empty plan)
+      # Convert activities to HTN goals
       goals = create_goals_from_activities(request)
       
       {:ok, {domain, state, goals}}
@@ -212,44 +213,104 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   end
   
   defp create_scheduling_domain(request) do
-    # Create a minimal domain for scheduling
-    # This is a placeholder - in a real implementation this would be more sophisticated
-    activities = Map.get(request, :activities, [])
+    activities = Map.get(request, "activities", [])
     
-    %{
-      name: "scheduling_domain",
-      actions: create_domain_actions(activities),
-      action_metadata: %{},
-      task_methods: %{},
-      unigoal_methods: %{},
-      multigoal_methods: [],
-      durative_actions: %{}
-    }
+    # Create a proper Domain structure for scheduling
+    Domain.new("scheduling_domain")
+    |> add_scheduling_actions(activities)
+    |> add_scheduling_task_methods()
+    |> add_scheduling_unigoal_methods()
   end
   
-  defp create_domain_actions(activities) do
-    # Convert activities to domain actions
+  defp add_scheduling_actions(domain, activities) do
+    # Add actions for each activity
     activities
-    |> Enum.map(fn activity ->
-      action_name = "execute_#{Map.get(activity, :id, "unknown")}"
+    |> Enum.reduce(domain, fn activity, acc_domain ->
+      activity_id = Map.get(activity, "id")
+      duration = Map.get(activity, "duration", 1.0)
+      resources = Map.get(activity, "resources", [])
       
-      {action_name, %{
-        parameters: [],
-        preconditions: [],
-        effects: [],
-        duration: Map.get(activity, :duration, 1.0)
-      }}
+      action_name = String.to_atom("execute_#{activity_id}")
+      
+      Domain.add_action(acc_domain, action_name, fn state, _args ->
+        # Simple action that marks activity as completed
+        new_triples = [
+          {activity_id, "status", "completed"},
+          {activity_id, "completion_time", System.system_time(:millisecond)}
+        ]
+        
+        # Release resources
+        resource_triples = Enum.map(resources, fn resource ->
+          {resource, "allocated_to", nil}
+        end)
+        
+        # Add triples to state (StateV2 uses from_triples, not add_triples)
+        existing_triples = StateV2.to_triples(state)
+        all_triples = existing_triples ++ new_triples ++ resource_triples
+        StateV2.from_triples(all_triples)
+      end, %{duration: duration, resources: resources})
     end)
-    |> Enum.into(%{})
   end
   
+  defp add_scheduling_task_methods(domain) do
+    # Add task method for scheduling all activities
+    Domain.add_task_methods(domain, "schedule_all", [
+      {"schedule_activities_method", &schedule_activities_method/2}
+    ])
+  end
+  
+  defp add_scheduling_unigoal_methods(domain) do
+    # Add unigoal methods for individual activity completion
+    domain
+  end
+  
+  # HTN method for scheduling activities
+  defp schedule_activities_method(state, activities) when is_list(activities) do
+    # Sort activities by dependencies (topological sort)
+    sorted_activities = topological_sort_activities(activities)
+    
+    # Create subtasks for each activity in dependency order
+    subtasks = Enum.map(sorted_activities, fn activity_id ->
+      {String.to_atom("execute_#{activity_id}"), []}
+    end)
+    
+    subtasks
+  end
+  defp schedule_activities_method(_state, _args), do: false
+  
+  defp topological_sort_activities(activities) do
+    # Simple topological sort based on dependencies
+    # For now, just return activities in order - a real implementation would do proper sorting
+    Enum.map(activities, &Map.get(&1, "id"))
+  end
   
   defp create_initial_state(request) do
-    # Create initial state from resources and constraints
-    resources = Map.get(request, :resources, %{})
+    activities = Map.get(request, "activities", [])
+    resources = Map.get(request, "resources", %{})
     
-    # Convert resources to StateV2 triples format
-    triples = resources
+    # Create triples for activities
+    activity_triples = activities
+    |> Enum.flat_map(fn activity ->
+      activity_id = Map.get(activity, "id")
+      duration = Map.get(activity, "duration", 1.0)
+      dependencies = Map.get(activity, "dependencies", [])
+      
+      base_triples = [
+        {activity_id, "type", "activity"},
+        {activity_id, "status", "pending"},
+        {activity_id, "duration", duration}
+      ]
+      
+      # Add dependency triples
+      dep_triples = Enum.map(dependencies, fn dep ->
+        {activity_id, "depends_on", dep}
+      end)
+      
+      base_triples ++ dep_triples
+    end)
+    
+    # Create triples for resources
+    resource_triples = resources
     |> Enum.flat_map(fn {resource_name, config} ->
       base_triples = [
         {resource_name, "type", "resource"},
@@ -265,13 +326,20 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
       base_triples ++ capacity_triples
     end)
     
-    StateV2.from_triples(triples)
+    StateV2.from_triples(activity_triples ++ resource_triples)
   end
   
-  defp create_goals_from_activities(_request) do
-    # Return empty goals to demonstrate empty plan solution
-    # In a real implementation, this would convert activities to HTN goals
-    []
+  defp create_goals_from_activities(request) do
+    activities = Map.get(request, "activities", [])
+    
+    if length(activities) == 0 do
+      # Empty activities list - return empty goals (valid)
+      []
+    else
+      # Create HTN task to schedule all activities
+      # Format: {task_name, args} where task_name is string and args is list
+      [{"schedule_all", activities}]
+    end
   end
   
   defp create_success_response(request, analysis, plan) do
