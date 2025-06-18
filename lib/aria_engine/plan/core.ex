@@ -6,6 +6,7 @@ defmodule Plan.Core do
   Core IPyHOP planning algorithm and decomposition loop.
   """
   alias Plan.{NodeExpansion, Backtracking, Utils}
+  alias StateV2
   # alias DomainBehaviour # Removed unused alias
 
   @type task :: {String.t(), list()}

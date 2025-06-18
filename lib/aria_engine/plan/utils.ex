@@ -3,8 +3,9 @@
 
 defmodule Plan.Utils do
   @moduledoc """
-  General utility and helper functions for the planning module.
+  Utility functions for IPyHOP planning.
   """
+  alias StateV2
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), StateV2.fact_value()}

@@ -8,6 +8,9 @@ defmodule AriaEngine do
   This module contains utility functions that are used across the AriaEngine system.
   """
 
+  # Simple aliases for core modules
+  alias StateV2
+  alias TimelineGraph
 
   @doc """
   Basic planning function that delegates to the Planner module.

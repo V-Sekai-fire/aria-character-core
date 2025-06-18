@@ -6,6 +6,7 @@ defmodule Plan.Backtracking do
   Functions for handling backtracking and replanning in the solution tree.
   """
   alias Plan.{Core, Utils} # Assuming Core will have ipyhop, Utils will have update_cached_states, generate_node_id, get_all_descendants
+  alias StateV2
 
   @type node_id :: String.t()
   @type solution_node :: %{

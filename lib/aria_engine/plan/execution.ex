@@ -6,6 +6,7 @@ defmodule Plan.Execution do
   Functions for executing the planned solution using Run-Lazy-Refineahead.
   """
   alias Plan.{Backtracking, Utils, Blacklisting, Core} # Added Core alias
+  alias StateV2
 
   @type node_id :: String.t()
   @type solution_node :: %{
