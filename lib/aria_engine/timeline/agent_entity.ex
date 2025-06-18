@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.AgentEntity do
+defmodule Timeline.AgentEntity do
   @moduledoc """
   Defines the semantic distinction between agents and entities in the timeline system.
 
@@ -33,7 +33,7 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Usage
 
-      iex> alias AriaEngine.Timeline.AgentEntity
+      iex> alias Timeline.AgentEntity
       iex> agent = AgentEntity.create_agent("aria", "Aria VTuber", %{personality: "helpful"})
       iex> AgentEntity.agent?(agent)
       true
@@ -91,7 +91,7 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> agent = AriaEngine.Timeline.AgentEntity.create_agent(
+      iex> agent = Timeline.AgentEntity.create_agent(
       ...>   "aria",
       ...>   "Aria VTuber",
       ...>   %{personality: "helpful", skill_level: "expert"},
@@ -129,7 +129,7 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> entity = AriaEngine.Timeline.AgentEntity.create_entity(
+      iex> entity = Timeline.AgentEntity.create_entity(
       ...>   "conference_room",
       ...>   "Conference Room A",
       ...>   %{capacity: 10, location: "Building 1, Floor 2"},
@@ -159,8 +159,8 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> agent = AriaEngine.Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> AriaEngine.Timeline.AgentEntity.agent?(agent)
+      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
+      iex> Timeline.AgentEntity.agent?(agent)
       true
 
   """
@@ -173,8 +173,8 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> entity = AriaEngine.Timeline.AgentEntity.create_entity("room", "Conference Room")
-      iex> AriaEngine.Timeline.AgentEntity.entity?(entity)
+      iex> entity = Timeline.AgentEntity.create_entity("room", "Conference Room")
+      iex> Timeline.AgentEntity.entity?(entity)
       true
 
   """
@@ -187,15 +187,15 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> agent = AriaEngine.Timeline.AgentEntity.create_agent(
+      iex> agent = Timeline.AgentEntity.create_agent(
       ...>   "aria", 
       ...>   "Aria VTuber",
       ...>   %{},
       ...>   capabilities: [:decision_making, :communication]
       ...> )
-      iex> AriaEngine.Timeline.AgentEntity.has_capability?(agent, :decision_making)
+      iex> Timeline.AgentEntity.has_capability?(agent, :decision_making)
       true
-      iex> AriaEngine.Timeline.AgentEntity.has_capability?(agent, :flight)
+      iex> Timeline.AgentEntity.has_capability?(agent, :flight)
       false
 
   """
@@ -211,9 +211,9 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> agent = AriaEngine.Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> updated_agent = AriaEngine.Timeline.AgentEntity.add_capability(agent, :new_skill)
-      iex> AriaEngine.Timeline.AgentEntity.has_capability?(updated_agent, :new_skill)
+      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
+      iex> updated_agent = Timeline.AgentEntity.add_capability(agent, :new_skill)
+      iex> Timeline.AgentEntity.has_capability?(updated_agent, :new_skill)
       true
 
   """
@@ -231,14 +231,14 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> agent = AriaEngine.Timeline.AgentEntity.create_agent(
+      iex> agent = Timeline.AgentEntity.create_agent(
       ...>   "aria", 
       ...>   "Aria VTuber",
       ...>   %{},
       ...>   capabilities: [:decision_making, :communication]
       ...> )
-      iex> updated_agent = AriaEngine.Timeline.AgentEntity.remove_capabilities(agent, [:decision_making])
-      iex> AriaEngine.Timeline.AgentEntity.has_capability?(updated_agent, :decision_making)
+      iex> updated_agent = Timeline.AgentEntity.remove_capabilities(agent, [:decision_making])
+      iex> Timeline.AgentEntity.has_capability?(updated_agent, :decision_making)
       false
 
   """
@@ -255,13 +255,13 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> entity = AriaEngine.Timeline.AgentEntity.create_entity("car", "Tesla Model 3")
-      iex> agent = AriaEngine.Timeline.AgentEntity.transition_to_agent(entity, [:autonomous_driving, :decision_making])
-      iex> AriaEngine.Timeline.AgentEntity.is_currently_agent?(agent)
+      iex> entity = Timeline.AgentEntity.create_entity("car", "Tesla Model 3")
+      iex> agent = Timeline.AgentEntity.transition_to_agent(entity, [:autonomous_driving, :decision_making])
+      iex> Timeline.AgentEntity.is_currently_agent?(agent)
       true
       
-      iex> back_to_entity = AriaEngine.Timeline.AgentEntity.transition_to_entity(agent)
-      iex> AriaEngine.Timeline.AgentEntity.is_currently_agent?(back_to_entity)
+      iex> back_to_entity = Timeline.AgentEntity.transition_to_entity(agent)
+      iex> Timeline.AgentEntity.is_currently_agent?(back_to_entity)
       false
 
   """
@@ -284,8 +284,8 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> agent = AriaEngine.Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> updated_agent = AriaEngine.Timeline.AgentEntity.update_properties(
+      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
+      iex> updated_agent = Timeline.AgentEntity.update_properties(
       ...>   agent, 
       ...>   %{mood: "happy", energy: 100}
       ...> )
@@ -304,14 +304,14 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> agent = AriaEngine.Timeline.AgentEntity.create_agent(
+      iex> agent = Timeline.AgentEntity.create_agent(
       ...>   "aria", 
       ...>   "Aria VTuber",
       ...>   %{personality: "helpful"}
       ...> )
-      iex> AriaEngine.Timeline.AgentEntity.get_property(agent, :personality)
+      iex> Timeline.AgentEntity.get_property(agent, :personality)
       "helpful"
-      iex> AriaEngine.Timeline.AgentEntity.get_property(agent, :unknown)
+      iex> Timeline.AgentEntity.get_property(agent, :unknown)
       nil
 
   """
@@ -325,9 +325,9 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> agent = AriaEngine.Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> updated_agent = AriaEngine.Timeline.AgentEntity.set_property(agent, :mood, "excited")
-      iex> AriaEngine.Timeline.AgentEntity.get_property(updated_agent, :mood)
+      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
+      iex> updated_agent = Timeline.AgentEntity.set_property(agent, :mood, "excited")
+      iex> Timeline.AgentEntity.get_property(updated_agent, :mood)
       "excited"
 
   """
@@ -342,15 +342,15 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> entity = AriaEngine.Timeline.AgentEntity.create_entity(
+      iex> entity = Timeline.AgentEntity.create_entity(
       ...>   "room",
       ...>   "Conference Room",
       ...>   %{},
       ...>   owner_agent_id: "facility_manager"
       ...> )
-      iex> AriaEngine.Timeline.AgentEntity.owned_by?(entity, "facility_manager")
+      iex> Timeline.AgentEntity.owned_by?(entity, "facility_manager")
       true
-      iex> AriaEngine.Timeline.AgentEntity.owned_by?(entity, "other_agent")
+      iex> Timeline.AgentEntity.owned_by?(entity, "other_agent")
       false
 
   """
@@ -366,16 +366,16 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> owned_entity = AriaEngine.Timeline.AgentEntity.create_entity(
+      iex> owned_entity = Timeline.AgentEntity.create_entity(
       ...>   "room",
       ...>   "Conference Room",
       ...>   %{},
       ...>   owner_agent_id: "facility_manager"
       ...> )
-      iex> AriaEngine.Timeline.AgentEntity.has_owner?(owned_entity)
+      iex> Timeline.AgentEntity.has_owner?(owned_entity)
       true
-      iex> unowned_entity = AriaEngine.Timeline.AgentEntity.create_entity("item", "Free Item")
-      iex> AriaEngine.Timeline.AgentEntity.has_owner?(unowned_entity)
+      iex> unowned_entity = Timeline.AgentEntity.create_entity("item", "Free Item")
+      iex> Timeline.AgentEntity.has_owner?(unowned_entity)
       false
 
   """
@@ -391,13 +391,13 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> entity = AriaEngine.Timeline.AgentEntity.create_entity(
+      iex> entity = Timeline.AgentEntity.create_entity(
       ...>   "room",
       ...>   "Conference Room",
       ...>   %{},
       ...>   owner_agent_id: "old_manager"
       ...> )
-      iex> updated_entity = AriaEngine.Timeline.AgentEntity.transfer_ownership(entity, "new_manager")
+      iex> updated_entity = Timeline.AgentEntity.transfer_ownership(entity, "new_manager")
       iex> updated_entity.owner_agent_id
       "new_manager"
 
@@ -412,13 +412,13 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> entity = AriaEngine.Timeline.AgentEntity.create_entity(
+      iex> entity = Timeline.AgentEntity.create_entity(
       ...>   "room",
       ...>   "Conference Room",
       ...>   %{},
       ...>   owner_agent_id: "manager"
       ...> )
-      iex> unowned_entity = AriaEngine.Timeline.AgentEntity.remove_ownership(entity)
+      iex> unowned_entity = Timeline.AgentEntity.remove_ownership(entity)
       iex> unowned_entity.owner_agent_id
       nil
 
@@ -436,16 +436,16 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> agent = AriaEngine.Timeline.AgentEntity.create_agent(
+      iex> agent = Timeline.AgentEntity.create_agent(
       ...>   "aria", 
       ...>   "Aria VTuber",
       ...>   %{},
       ...>   capabilities: [:decision_making]
       ...> )
-      iex> AriaEngine.Timeline.AgentEntity.can_perform_action?(agent, :make_decision)
+      iex> Timeline.AgentEntity.can_perform_action?(agent, :make_decision)
       true
-      iex> entity = AriaEngine.Timeline.AgentEntity.create_entity("room", "Conference Room")
-      iex> AriaEngine.Timeline.AgentEntity.can_perform_action?(entity, :make_decision)
+      iex> entity = Timeline.AgentEntity.create_entity("room", "Conference Room")
+      iex> Timeline.AgentEntity.can_perform_action?(entity, :make_decision)
       false
 
   """
@@ -473,16 +473,16 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> car = AriaEngine.Timeline.AgentEntity.create_entity(
+      iex> car = Timeline.AgentEntity.create_entity(
       ...>   "car1", 
       ...>   "Tesla Model 3",
       ...>   %{autonomous_mode: false}
       ...> )
-      iex> AriaEngine.Timeline.AgentEntity.is_currently_agent?(car)
+      iex> Timeline.AgentEntity.is_currently_agent?(car)
       false
       
-      iex> autonomous_car = AriaEngine.Timeline.AgentEntity.add_capabilities(car, [:autonomous_driving, :decision_making])
-      iex> AriaEngine.Timeline.AgentEntity.is_currently_agent?(autonomous_car)
+      iex> autonomous_car = Timeline.AgentEntity.add_capabilities(car, [:autonomous_driving, :decision_making])
+      iex> Timeline.AgentEntity.is_currently_agent?(autonomous_car)
       true
 
   """
@@ -502,12 +502,12 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> entity = AriaEngine.Timeline.AgentEntity.create_entity("car", "Tesla")
-      iex> AriaEngine.Timeline.AgentEntity.is_currently_agent?(entity)
+      iex> entity = Timeline.AgentEntity.create_entity("car", "Tesla")
+      iex> Timeline.AgentEntity.is_currently_agent?(entity)
       false
       
-      iex> agent = AriaEngine.Timeline.AgentEntity.add_capabilities(entity, [:autonomous_driving])
-      iex> AriaEngine.Timeline.AgentEntity.is_currently_agent?(agent)
+      iex> agent = Timeline.AgentEntity.add_capabilities(entity, [:autonomous_driving])
+      iex> Timeline.AgentEntity.is_currently_agent?(agent)
       true
 
   """
@@ -524,8 +524,8 @@ defmodule AriaEngine.Timeline.AgentEntity do
 
   ## Examples
 
-      iex> agent = AriaEngine.Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> AriaEngine.Timeline.AgentEntity.valid?(agent)
+      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
+      iex> Timeline.AgentEntity.valid?(agent)
       true
 
   """

@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.STN.Operations do
+defmodule Timeline.STN.Operations do
   @moduledoc false # This module is part of the internal STN implementation
 
-  alias AriaEngine.Timeline.STN
-  alias AriaEngine.Timeline.LodAdapter
-  alias AriaEngine.FlowAdapter
+  alias Timeline.STN
+  alias Timeline.LodAdapter
+  alias FlowAdapter
 
   @doc """
   Performs intersection operation on two STNs.

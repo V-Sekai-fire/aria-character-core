@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.STN do
+defmodule Timeline.STN do
   @moduledoc """
   Simple Temporal Network (STN) implementation with composable, parallelizable operations
   and Path Consistency (PC-2) algorithm.
@@ -76,10 +76,10 @@ defmodule AriaEngine.Timeline.STN do
   - [AWS Builders Library - Reliability and Constant Work](https://aws.amazon.com/builders-library/reliability-and-constant-work/)
   """
 
-  alias AriaEngine.Timeline.STN.Core
-  alias AriaEngine.Timeline.STN.PC2
-  alias AriaEngine.Timeline.STN.Units
-  alias AriaEngine.Timeline.STN.Operations
+  alias Timeline.STN.Core
+  alias Timeline.STN.PC2
+  alias Timeline.STN.Units
+  alias Timeline.STN.Operations
 
   @type constraint :: {number(), number()}  # {min_distance, max_distance}
   @type time_point :: String.t()

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.IntervalRelations do
+defmodule Timeline.IntervalRelations do
   @moduledoc """
   Implementation of Allen's Interval Algebra for temporal reasoning.
 
@@ -29,7 +29,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 13:00:00], ~N[2025-01-01 15:00:00])
       iex> IntervalRelations.before?(i1, i2)
@@ -39,7 +39,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   Using the pipe operator for functional composition:
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 11:00:00], ~N[2025-01-01 13:00:00])
       iex> IntervalRelations.relation(i1, i2) |> IntervalRelations.valid_relation?()
@@ -52,7 +52,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
   - ADR-046: Interval Notation Usability
   """
 
-  alias AriaEngine.Timeline.Interval
+  alias Timeline.Interval
 
   @type locale :: atom()  # :en, :es, :fr, :de, etc.
   @type relation :: 
@@ -69,7 +69,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 13:00:00], ~N[2025-01-01 15:00:00])
       iex> IntervalRelations.before?(i1, i2)
@@ -98,7 +98,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 12:00:00], ~N[2025-01-01 14:00:00])
       iex> IntervalRelations.meets?(i1, i2)
@@ -127,7 +127,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 13:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 12:00:00], ~N[2025-01-01 15:00:00])
       iex> IntervalRelations.overlaps?(i1, i2)
@@ -161,7 +161,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 14:00:00])
       iex> IntervalRelations.starts?(i1, i2)
@@ -193,7 +193,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 11:00:00], ~N[2025-01-01 13:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 14:00:00])
       iex> IntervalRelations.during?(i1, i2)
@@ -225,7 +225,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 12:00:00], ~N[2025-01-01 14:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 14:00:00])
       iex> IntervalRelations.finishes?(i1, i2)
@@ -257,7 +257,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> IntervalRelations.equals?(i1, i2)
@@ -279,7 +279,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 13:00:00], ~N[2025-01-01 15:00:00])
       iex> IntervalRelations.relation(i1, i2)
@@ -313,7 +313,7 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
+      iex> alias Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 13:00:00], ~N[2025-01-01 15:00:00])
       iex> IntervalRelations.describe_relation(i1, i2, :en)
@@ -333,9 +333,9 @@ defmodule AriaEngine.Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> AriaEngine.Timeline.IntervalRelations.valid_relation?(:before)
+      iex> Timeline.IntervalRelations.valid_relation?(:before)
       true
-      iex> AriaEngine.Timeline.IntervalRelations.valid_relation?(:invalid)
+      iex> Timeline.IntervalRelations.valid_relation?(:invalid)
       false
 
   """

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.LodAdapter do
+defmodule Timeline.LodAdapter do
   @moduledoc """
   Level of Detail (LOD) adapter for Simple Temporal Networks (STNs).
   
@@ -33,7 +33,7 @@ defmodule AriaEngine.Timeline.LodAdapter do
   
   ## Integration with Flow Adapter
   
-  All parallel operations use AriaEngine.FlowAdapter for consistent
+  All parallel operations use FlowAdapter for consistent
   performance characteristics and avoid direct Task.async_stream usage.
   
   ## References
@@ -42,8 +42,8 @@ defmodule AriaEngine.Timeline.LodAdapter do
   - ADR-034: Definitive Temporal Planner Architecture
   """
   
-  alias AriaEngine.Timeline.STN
-  alias AriaEngine.FlowAdapter
+  alias Timeline.STN
+  alias FlowAdapter
   
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low
   @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day

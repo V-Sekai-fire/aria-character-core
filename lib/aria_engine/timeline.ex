@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline do
+defmodule Timeline do
   @moduledoc """
   Timeline module with interval-based storage using Path Consistency (PC-2) algorithm
   for Simple Temporal Network (STN) solving.
@@ -24,12 +24,12 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = AriaEngine.Timeline.new()
-      iex> alias AriaEngine.Timeline.Interval
+      iex> timeline = Timeline.new()
+      iex> alias Timeline.Interval
       iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
       iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
       iex> interval = Interval.new(start_time, end_time)
-      iex> timeline = AriaEngine.Timeline.add_interval(timeline, interval)
+      iex> timeline = Timeline.add_interval(timeline, interval)
       iex> length(Map.keys(timeline.intervals))
       1
 
@@ -43,16 +43,16 @@ defmodule AriaEngine.Timeline do
   - ADR-006: Game Engine Real-time Execution (1ms tick requirement)
   """
 
-  alias AriaEngine.Timeline.Interval
-  alias AriaEngine.Timeline.STN
+  alias Timeline.Interval
+  alias Timeline.STN
 
   @type t :: %__MODULE__{
           intervals: %{Interval.id() => Interval.t()},
-          stn: AriaEngine.Timeline.STN.t()
+          stn: Timeline.STN.t()
         }
 
   defstruct intervals: %{},
-            stn: AriaEngine.Timeline.STN.new(),
+            stn: Timeline.STN.new(),
             metadata: %{}
 
   @spec new(keyword()) :: t()

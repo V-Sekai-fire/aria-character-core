@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.STN.Core do
+defmodule Timeline.STN.Core do
   @moduledoc false # This module is part of the internal STN implementation
 
-  alias AriaEngine.Timeline.Interval
-  alias AriaEngine.Timeline.STN
+  alias Timeline.Interval
+  alias Timeline.STN
 
   @type constraint :: {number(), number()}  # {min_distance, max_distance}
   @type time_point :: String.t()
@@ -87,7 +87,7 @@ defmodule AriaEngine.Timeline.STN.Core do
   Adds a durative action to the STN, creating time points for its start and end,
   and adding a duration constraint.
   """
-  @spec add_durative_action(STN.t(), AriaEngine.Domain.DurativeAction.t()) :: STN.t()
+  @spec add_durative_action(STN.t(), Domain.DurativeAction.t()) :: STN.t()
   def add_durative_action(stn, durative_action) do
     start_point = "#{durative_action.name}_start"
     end_point = "#{durative_action.name}_end"

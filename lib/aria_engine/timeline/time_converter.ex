@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.TimeConverter do
+defmodule Timeline.TimeConverter do
   @moduledoc """
   Time conversion utilities for the Timeline system.
 
@@ -17,11 +17,11 @@ defmodule AriaEngine.Timeline.TimeConverter do
 
   ## Examples
 
-      iex> AriaEngine.Timeline.TimeConverter.seconds_to_datetime(5.5)
+      iex> Timeline.TimeConverter.seconds_to_datetime(5.5)
       ~U[1970-01-01 00:00:05.500000Z]
-      iex> AriaEngine.Timeline.TimeConverter.datetime_to_seconds(~U[1970-01-01 00:00:05.500000Z])
+      iex> Timeline.TimeConverter.datetime_to_seconds(~U[1970-01-01 00:00:05.500000Z])
       5.5
-      iex> AriaEngine.Timeline.TimeConverter.add_seconds(~U[2025-01-01 10:00:00.000000Z], 1.5)
+      iex> Timeline.TimeConverter.add_seconds(~U[2025-01-01 10:00:00.000000Z], 1.5)
       ~U[2025-01-01 10:00:01.500000Z]
 
   ## References
@@ -41,16 +41,16 @@ defmodule AriaEngine.Timeline.TimeConverter do
 
   ## Examples
 
-      iex> AriaEngine.Timeline.TimeConverter.seconds_to_datetime(5.5)
+      iex> Timeline.TimeConverter.seconds_to_datetime(5.5)
       ~U[1970-01-01 00:00:05.500000Z]
-      iex> AriaEngine.Timeline.TimeConverter.seconds_to_datetime(0)
+      iex> Timeline.TimeConverter.seconds_to_datetime(0)
       ~U[1970-01-01 00:00:00.000000Z]
-      iex> AriaEngine.Timeline.TimeConverter.seconds_to_datetime(1.123456)
+      iex> Timeline.TimeConverter.seconds_to_datetime(1.123456)
       ~U[1970-01-01 00:00:01.123456Z]
 
   ## Edge Cases
 
-      iex> AriaEngine.Timeline.TimeConverter.seconds_to_datetime(-1.5)
+      iex> Timeline.TimeConverter.seconds_to_datetime(-1.5)
       ~U[1969-12-31 23:59:58.500000Z]
 
   """
@@ -72,11 +72,11 @@ defmodule AriaEngine.Timeline.TimeConverter do
 
   ## Examples
 
-      iex> AriaEngine.Timeline.TimeConverter.datetime_to_seconds(~U[1970-01-01 00:00:05.500000Z])
+      iex> Timeline.TimeConverter.datetime_to_seconds(~U[1970-01-01 00:00:05.500000Z])
       5.5
-      iex> AriaEngine.Timeline.TimeConverter.datetime_to_seconds(~U[1970-01-01 00:00:00.000000Z])
+      iex> Timeline.TimeConverter.datetime_to_seconds(~U[1970-01-01 00:00:00.000000Z])
       0.0
-      iex> AriaEngine.Timeline.TimeConverter.datetime_to_seconds(~U[1970-01-01 00:00:01.123456Z])
+      iex> Timeline.TimeConverter.datetime_to_seconds(~U[1970-01-01 00:00:01.123456Z])
       1.123456
 
   """
@@ -97,9 +97,9 @@ defmodule AriaEngine.Timeline.TimeConverter do
   ## Examples
 
       iex> base = ~U[2025-01-01 10:00:00.000000Z]
-      iex> AriaEngine.Timeline.TimeConverter.add_seconds(base, 1.5)
+      iex> Timeline.TimeConverter.add_seconds(base, 1.5)
       ~U[2025-01-01 10:00:01.500000Z]
-      iex> AriaEngine.Timeline.TimeConverter.add_seconds(base, -0.5)
+      iex> Timeline.TimeConverter.add_seconds(base, -0.5)
       ~U[2025-01-01 09:59:59.500000Z]
 
   """
@@ -118,9 +118,9 @@ defmodule AriaEngine.Timeline.TimeConverter do
 
   ## Examples
 
-      iex> AriaEngine.Timeline.TimeConverter.validate_time_value(5.5)
+      iex> Timeline.TimeConverter.validate_time_value(5.5)
       :ok
-      iex> AriaEngine.Timeline.TimeConverter.validate_time_value(0.0)
+      iex> Timeline.TimeConverter.validate_time_value(0.0)
       :ok
 
   """
@@ -135,11 +135,11 @@ defmodule AriaEngine.Timeline.TimeConverter do
 
   ## Examples
 
-      iex> AriaEngine.Timeline.TimeConverter.validate_time_order(0.0, 5.0)
+      iex> Timeline.TimeConverter.validate_time_order(0.0, 5.0)
       :ok
-      iex> AriaEngine.Timeline.TimeConverter.validate_time_order(5.0, 3.0)
+      iex> Timeline.TimeConverter.validate_time_order(5.0, 3.0)
       {:error, "Start time (5.0) must be before end time (3.0)"}
-      iex> AriaEngine.Timeline.TimeConverter.validate_time_order(5.0, 5.0)
+      iex> Timeline.TimeConverter.validate_time_order(5.0, 5.0)
       {:error, "Start time (5.0) must be before end time (5.0)"}
 
   """
@@ -164,7 +164,7 @@ defmodule AriaEngine.Timeline.TimeConverter do
 
       iex> start_dt = ~U[2025-01-01 10:00:00.000000Z]
       iex> end_dt = ~U[2025-01-01 10:00:02.500000Z]
-      iex> AriaEngine.Timeline.TimeConverter.duration_seconds(start_dt, end_dt)
+      iex> Timeline.TimeConverter.duration_seconds(start_dt, end_dt)
       2.5
 
   """
@@ -183,9 +183,9 @@ defmodule AriaEngine.Timeline.TimeConverter do
 
   ## Examples
 
-      iex> AriaEngine.Timeline.TimeConverter.safe_seconds_to_datetime(5.5)
+      iex> Timeline.TimeConverter.safe_seconds_to_datetime(5.5)
       {:ok, ~U[1970-01-01 00:00:05.500000Z]}
-      iex> AriaEngine.Timeline.TimeConverter.safe_seconds_to_datetime("invalid")
+      iex> Timeline.TimeConverter.safe_seconds_to_datetime("invalid")
       {:error, "Expected number, got: \"invalid\""}
 
   """
@@ -203,9 +203,9 @@ defmodule AriaEngine.Timeline.TimeConverter do
 
   ## Examples
 
-      iex> AriaEngine.Timeline.TimeConverter.safe_interval_to_datetime(0.0, 5.0)
+      iex> Timeline.TimeConverter.safe_interval_to_datetime(0.0, 5.0)
       {:ok, {~U[1970-01-01 00:00:00.000000Z], ~U[1970-01-01 00:00:05.000000Z]}}
-      iex> AriaEngine.Timeline.TimeConverter.safe_interval_to_datetime(5.0, 3.0)
+      iex> Timeline.TimeConverter.safe_interval_to_datetime(5.0, 3.0)
       {:error, "Start time (5.0) must be before end time (3.0)"}
 
   """
@@ -227,9 +227,9 @@ defmodule AriaEngine.Timeline.TimeConverter do
 
   ## Examples
 
-      iex> AriaEngine.Timeline.TimeConverter.ms_to_seconds(1000)
+      iex> Timeline.TimeConverter.ms_to_seconds(1000)
       1.0
-      iex> AriaEngine.Timeline.TimeConverter.ms_to_seconds(1500)
+      iex> Timeline.TimeConverter.ms_to_seconds(1500)
       1.5
 
   """
@@ -243,9 +243,9 @@ defmodule AriaEngine.Timeline.TimeConverter do
 
   ## Examples
 
-      iex> AriaEngine.Timeline.TimeConverter.seconds_to_ms(1.0)
+      iex> Timeline.TimeConverter.seconds_to_ms(1.0)
       1000
-      iex> AriaEngine.Timeline.TimeConverter.seconds_to_ms(1.5)
+      iex> Timeline.TimeConverter.seconds_to_ms(1.5)
       1500
 
   """

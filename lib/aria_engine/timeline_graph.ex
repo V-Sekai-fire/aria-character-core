@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.TimelineGraph do
+defmodule TimelineGraph do
   @moduledoc """
   Manages timeline integration with the Entity Timeline Graph Architecture (ADR-087).
   
-  This module connects the existing AriaEngine.Timeline.AgentEntity system with 
+  This module connects the existing Timeline.AgentEntity system with 
   auto-growing timelines, implementing the core concept that every entity owns
   a timeline that grows automatically based on their capabilities and interactions.
   
@@ -30,10 +30,10 @@ defmodule AriaEngine.TimelineGraph do
   ```
   """
 
-  alias AriaEngine.Timeline.AgentEntity
-  alias AriaEngine.Timeline.STN
-  alias AriaEngine.Timeline.Interval
-  alias AriaEngine.StateV2
+  alias Timeline.AgentEntity
+  alias Timeline.STN
+  alias Timeline.Interval
+  alias StateV2
 
   @type entity_id :: String.t()
   @type timeline_id :: String.t()

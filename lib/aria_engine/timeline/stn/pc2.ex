@@ -1,10 +1,10 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.STN.PC2 do
+defmodule Timeline.STN.PC2 do
   @moduledoc false # This module is part of the internal STN implementation
 
-  alias AriaEngine.Timeline.STN
+  alias Timeline.STN
 
   @type time_point :: String.t()
   @type constraint :: {number(), number()}

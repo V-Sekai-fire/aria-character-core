@@ -1,10 +1,10 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.STN.Units do
+defmodule Timeline.STN.Units do
   @moduledoc false # This module is part of the internal STN implementation
 
-  alias AriaEngine.Timeline.STN
+  alias Timeline.STN
 
   @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low
@@ -66,7 +66,7 @@ defmodule AriaEngine.Timeline.STN.Units do
   @doc """
   Creates an STN from DateTime intervals with automatic unit conversion.
   """
-  @spec from_datetime_intervals([AriaEngine.Timeline.Interval.t()], keyword()) :: STN.t()
+  @spec from_datetime_intervals([Timeline.Interval.t()], keyword()) :: STN.t()
   def from_datetime_intervals(intervals, opts \\ []) do
     stn = STN.new(opts)
     

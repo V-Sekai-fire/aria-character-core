@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.Interval do
+defmodule Timeline.Interval do
   @moduledoc """
   Represents a temporal interval with start and end points using DateTime with timezone information.
 
@@ -33,7 +33,7 @@ defmodule AriaEngine.Timeline.Interval do
   to any time unit as needed.
   """
 
-  alias AriaEngine.Timeline.AgentEntity
+  alias Timeline.AgentEntity
 
   @type id :: String.t()
   @type t :: %__MODULE__{
@@ -62,7 +62,7 @@ defmodule AriaEngine.Timeline.Interval do
 
       iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], "Etc/UTC")
-      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
+      iex> interval = Timeline.Interval.new(start_dt, end_dt)
       iex> interval.start_time
       ~U[2023-01-01 00:00:00Z]
 
@@ -94,7 +94,7 @@ defmodule AriaEngine.Timeline.Interval do
 
       iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], "Etc/UTC")
-      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt, metadata: %{type: :action})
+      iex> interval = Timeline.Interval.new(start_dt, end_dt, metadata: %{type: :action})
       iex> interval.metadata
       %{type: :action}
 
@@ -120,8 +120,8 @@ defmodule AriaEngine.Timeline.Interval do
 
       iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], "Etc/UTC")
-      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
-      iex> AriaEngine.Timeline.Interval.duration_ms(interval)
+      iex> interval = Timeline.Interval.new(start_dt, end_dt)
+      iex> Timeline.Interval.duration_ms(interval)
       330000
 
   """
@@ -137,8 +137,8 @@ defmodule AriaEngine.Timeline.Interval do
 
       iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], "Etc/UTC")
-      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
-      iex> AriaEngine.Timeline.Interval.duration_seconds(interval)
+      iex> interval = Timeline.Interval.new(start_dt, end_dt)
+      iex> Timeline.Interval.duration_seconds(interval)
       330.0
 
   """
@@ -156,9 +156,9 @@ defmodule AriaEngine.Timeline.Interval do
 
       iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
+      iex> interval = Timeline.Interval.new(start_dt, end_dt)
       iex> check_time = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
-      iex> AriaEngine.Timeline.Interval.contains?(interval, check_time)
+      iex> Timeline.Interval.contains?(interval, check_time)
       true
 
   """
@@ -176,8 +176,8 @@ defmodule AriaEngine.Timeline.Interval do
       iex> agent = %{type: :agent, id: "agent1", name: "Alice"}
       iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt, agent: agent)
-      iex> AriaEngine.Timeline.Interval.agent?(interval)
+      iex> interval = Timeline.Interval.new(start_dt, end_dt, agent: agent)
+      iex> Timeline.Interval.agent?(interval)
       true
 
   """
@@ -192,8 +192,8 @@ defmodule AriaEngine.Timeline.Interval do
       iex> entity = %{type: :entity, id: "entity1", name: "Conference Room"}
       iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt, entity: entity)
-      iex> AriaEngine.Timeline.Interval.entity?(interval)
+      iex> interval = Timeline.Interval.new(start_dt, end_dt, entity: entity)
+      iex> Timeline.Interval.entity?(interval)
       true
 
   """
@@ -213,8 +213,8 @@ defmodule AriaEngine.Timeline.Interval do
 
       iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2023-01-01 01:00:00], "Etc/UTC")
-      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
-      iex> AriaEngine.Timeline.Interval.duration_in_unit(interval, :minute)
+      iex> interval = Timeline.Interval.new(start_dt, end_dt)
+      iex> Timeline.Interval.duration_in_unit(interval, :minute)
       60
 
   """
@@ -236,8 +236,8 @@ defmodule AriaEngine.Timeline.Interval do
   ## Examples
 
       iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
-      iex> interval = AriaEngine.Timeline.Interval.from_duration(start_dt, 30, :minute)
-      iex> AriaEngine.Timeline.Interval.duration_in_unit(interval, :minute)
+      iex> interval = Timeline.Interval.from_duration(start_dt, 30, :minute)
+      iex> Timeline.Interval.duration_in_unit(interval, :minute)
       30
 
   """
@@ -257,8 +257,8 @@ defmodule AriaEngine.Timeline.Interval do
 
       iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:00], "Etc/UTC")
-      iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)
-      iex> {_start_point, _end_point, duration} = AriaEngine.Timeline.Interval.to_stn_points(interval, :second)
+      iex> interval = Timeline.Interval.new(start_dt, end_dt)
+      iex> {_start_point, _end_point, duration} = Timeline.Interval.to_stn_points(interval, :second)
       iex> duration
       300
 
@@ -278,11 +278,11 @@ defmodule AriaEngine.Timeline.Interval do
 
       iex> start1 = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
       iex> end1 = DateTime.from_naive!(~N[2023-01-01 01:00:00], "Etc/UTC")
-      iex> interval1 = AriaEngine.Timeline.Interval.new(start1, end1)
+      iex> interval1 = Timeline.Interval.new(start1, end1)
       iex> start2 = DateTime.from_naive!(~N[2023-01-01 00:30:00], "Etc/UTC")
       iex> end2 = DateTime.from_naive!(~N[2023-01-01 01:30:00], "Etc/UTC")
-      iex> interval2 = AriaEngine.Timeline.Interval.new(start2, end2)
-      iex> AriaEngine.Timeline.Interval.overlaps?(interval1, interval2)
+      iex> interval2 = Timeline.Interval.new(start2, end2)
+      iex> Timeline.Interval.overlaps?(interval1, interval2)
       true
 
   """
@@ -301,11 +301,11 @@ defmodule AriaEngine.Timeline.Interval do
 
       iex> start1 = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
       iex> end1 = DateTime.from_naive!(~N[2023-01-01 01:00:00], "Etc/UTC")
-      iex> interval1 = AriaEngine.Timeline.Interval.new(start1, end1)
+      iex> interval1 = Timeline.Interval.new(start1, end1)
       iex> start2 = DateTime.from_naive!(~N[2023-01-01 01:00:00], "Etc/UTC")
       iex> end2 = DateTime.from_naive!(~N[2023-01-01 02:00:00], "Etc/UTC")
-      iex> interval2 = AriaEngine.Timeline.Interval.new(start2, end2)
-      iex> AriaEngine.Timeline.Interval.allen_relation(interval1, interval2)
+      iex> interval2 = Timeline.Interval.new(start2, end2)
+      iex> Timeline.Interval.allen_relation(interval1, interval2)
       :meets
 
   """
