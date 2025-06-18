@@ -38,8 +38,15 @@ defmodule AriaEngine.MCP.WebTransport do
     
     Logger.info("Starting Aria Engine MCP Web Transport on port #{port}")
     
-    # Start Cowboy
-    Plug.Cowboy.http(__MODULE__, [], port: port)
+    # Start Cowboy and return the result
+    case Plug.Cowboy.http(__MODULE__, [], port: port) do
+      {:ok, cowboy_pid} ->
+        Logger.info("Cowboy HTTP server started on port #{port}")
+        {:ok, cowboy_pid}
+      {:error, reason} ->
+        Logger.error("Failed to start Cowboy HTTP server: #{inspect(reason)}")
+        {:error, reason}
+    end
   end
   
   ## Routes
