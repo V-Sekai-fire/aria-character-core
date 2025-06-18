@@ -1,135 +1,103 @@
 # Aria Character Core
 
-A high-performance NPC town simulation game featuring intelligent characters powered by hybrid planning, glTF visual scripting, and GPU-inspired parallel processing.
+**⚠️ ALPHA/EXPERIMENTAL STATUS ⚠️**
 
-## Overview
+An experimental AI planning research project exploring intelligent NPC behavior through hybrid planning systems. This is active development code - not a released game or production software.
 
-Aria Character Core is a sophisticated town simulation where NPCs (Non-Player Characters) exhibit intelligent behavior through:
+## Project Status
 
-- **Hybrid Planning**: HTN (Hierarchical Task Network) + STN (Simple Temporal Network) planning for complex NPC decision-making
-- **glTF Visual Scripting**: KHR_interactivity extension provides a visual node-based programming language for NPC behaviors
-- **High-Performance Processing**: FlowAdapter enables GPU-style convergence patterns for efficient multi-NPC coordination
-- **RDF Knowledge Base**: Semantic knowledge representation for rich NPC understanding and relationships
-- **Content Distribution**: Casync-based efficient distribution of game assets, behaviors, and updates
-- **Secure Authentication**: Macaroon-based tokens with delegation and attenuation for multiplayer access control
+**Current Version:** 0.1.0 (Alpha)
 
-## Core Technology Stack
+**Development Status:**
+- 🔬 **Research Phase:** Core AI planning algorithms under development
+- 🧪 **Experimental Codebase:** Many systems incomplete or non-functional
+- ⚠️ **Testing Issues:** 115+ tests currently disabled due to implementation gaps
+- 📚 **Academic Focus:** Exploring hybrid HTN+STN planning for game AI
 
-### AriaEngine - Intelligent Planning System
-- **Hybrid Planner**: Combines HTN planning for high-level goals with STN temporal constraints
-- **Multi-Strategy Architecture**: Pluggable planning strategies (HTN, STN, lazy execution, domain-specific)
-- **Real-Time Decision Making**: NPCs can adapt plans dynamically based on changing conditions
-- **Temporal Reasoning**: Handle time-sensitive actions, schedules, and resource conflicts
+**This is NOT:**
+- A playable game
+- Production-ready software  
+- A stable API or framework
+- Ready for end-user installation
 
-### FlowAdapter - High-Performance Parallel Processing
-- **GPU-Style Convergence**: Applies convergence patterns for efficient CPU-based parallel processing
-- **Scalable Beyond 2 CPUs**: Push/pull flow control that efficiently utilizes multi-core systems
-- **STN Parallel Operations**: Process temporal constraints across multiple NPCs simultaneously
-- **Demand-Driven Processing**: Adaptive workload distribution based on system capacity
+## Research Goals
 
-### glTF KHR_interactivity - Visual Scripting Language
-- **Node-Based Programming**: Visual scripting system built on the glTF KHR_interactivity standard
-- **Comprehensive Node Library**: Math, animation, state management, events, and flow control nodes
-- **Real-Time Interpretation**: Execute visual scripts as NPCs make decisions and react to events
-- **Designer-Friendly**: Non-programmers can create complex NPC behaviors through visual scripting
+This project investigates advanced AI planning techniques for game NPCs, specifically:
 
-### AriaTown - Knowledge & NPC Management
-- **RDF Knowledge Base**: Semantic representation of town state, relationships, and facts
-- **SPARQL Queries**: Powerful knowledge retrieval for informed NPC decision-making
-- **Time Management**: Coordinated temporal progression across all town systems
-- **NPC Lifecycle**: Birth, aging, relationships, careers, and emergent social dynamics
+### Hybrid Planning Architecture
+- **HTN (Hierarchical Task Network)** planning for high-level goal decomposition
+- **STN (Simple Temporal Network)** constraints for temporal reasoning
+- **Multi-strategy coordination** between different planning approaches
+- **Real-time adaptation** of plans based on changing conditions
 
-### AriaStorage - Efficient Content Distribution
-- **Casync Integration**: Content-addressable storage with chunk-based deduplication
-- **Asset Streaming**: Efficiently distribute 3D models, textures, animations, and behavior scripts
-- **Version Control**: Delta updates for game content and NPC behavior modifications
-- **Distributed Architecture**: Support for CDN-based content delivery
+### Visual Scripting Research
+- **glTF KHR_interactivity** standard implementation for node-based NPC behavior
+- **Mathematical computation nodes** for AI decision-making
+- **Event-driven programming** models for reactive NPC systems
 
-### AriaAuth - Secure Access Control
-- **Macaroon Tokens**: Advanced authentication with built-in attenuation and delegation
-- **Permission Management**: Fine-grained control over player and NPC capabilities
-- **Multiplayer Security**: Secure token sharing for collaborative town experiences
-- **API Access Control**: Restrict external tools and modding interfaces appropriately
+### High-Performance Processing
+- **Flow-based parallel processing** for multi-NPC coordination
+- **GPU-inspired convergence patterns** adapted for CPU architectures
+- **Scalable temporal constraint solving** across populations
 
-## Architecture
+## Technical Architecture
+
+### Core Modules (Implementation Status)
 
 ```
-Aria Character Core
-├── AriaEngine (Planning & Decision Making)
-│   ├── Hybrid Planner (HTN + STN)
-│   ├── FlowAdapter (Parallel Processing)
-│   ├── Domain Registry (Planning Domains)
-│   └── KHR_interactivity (Visual Scripting)
-├── AriaTown (Knowledge & NPCs)
-│   ├── RDF Knowledge Base
-│   ├── NPC Manager
-│   ├── Time Manager
-│   └── Persistence Manager
-├── AriaStorage (Content & Assets)
-│   ├── Casync Decoder
-│   ├── Chunk Store
-│   └── File Management
-├── AriaAuth (Security & Access)
-│   ├── Macaroon Authentication
-│   ├── Session Management
-│   └── Permission Control
-├── AriaSecurity (Encryption & Secrets)
-└── AriaMonitor (Telemetry & Performance)
+lib/aria_engine/           # AI Planning Core
+├── hybrid_planner/        # 🔶 Partial - Strategy coordination framework
+├── plan/                  # 🔶 Partial - Core planning algorithms  
+├── timeline/              # 🔶 Partial - Temporal constraint handling
+├── node_library/          # ✅ Working - KHR math nodes (45 tests passing)
+└── domains/               # 🔶 Partial - Planning domain definitions
+
+lib/aria_town/             # Knowledge & NPC Management
+├── knowledge_base.ex      # 🔶 Partial - RDF knowledge representation
+├── npc_manager.ex         # 🔶 Partial - NPC lifecycle management
+└── time_manager.ex        # 🔶 Partial - Temporal coordination
+
+lib/aria_storage/          # Content Distribution Research
+├── casync_decoder.ex      # 🔶 Partial - Content-addressable storage
+├── chunks.ex              # ❌ Disabled - Chunking system has test failures
+└── storage.ex             # 🔶 Partial - Storage abstraction
+
+lib/aria_auth/             # Authentication Framework
+├── macaroons.ex           # 🔶 Partial - Token-based auth research
+└── sessions.ex            # 🔶 Partial - Session management
+
+lib/aria_security/         # Security Integration
+├── openbao.ex             # 🔶 Partial - Vault integration
+└── secrets.ex             # 🔶 Partial - Secrets management
 ```
 
-## Key Features
+**Legend:**
+- ✅ Working: Functional with passing tests
+- 🔶 Partial: Basic structure exists, many features incomplete
+- ❌ Disabled: Non-functional, tests disabled due to failures
 
-### Intelligent NPC Behavior
-- **Goal-Oriented Planning**: NPCs pursue complex, multi-step objectives (career advancement, relationship building, resource acquisition)
-- **Temporal Coordination**: NPCs schedule activities, meet deadlines, and coordinate with other characters
-- **Adaptive Responses**: React intelligently to player actions, environmental changes, and social dynamics
-- **Visual Script Execution**: Behaviors defined through intuitive node-based programming
+## Current Capabilities
 
-### Scalable Town Simulation
-- **Multi-Core Performance**: FlowAdapter enables efficient simulation of large populations
-- **Real-Time Processing**: Hundreds of NPCs can plan and act simultaneously without performance degradation
-- **Convergence Optimization**: GPU-inspired algorithms optimize decision-making across character populations
-- **Demand-Driven Architecture**: System resources scale automatically with simulation complexity
+### What Actually Works
+- **KHR Math Nodes:** Complete implementation with 45 passing tests
+- **Basic Project Structure:** Modular Elixir architecture established
+- **Development Tooling:** Code quality, testing, and build systems configured
+- **Core Dependencies:** AI/ML libraries (Nx, LibGraph) integrated
 
-### Rich Knowledge Representation
-- **Semantic Understanding**: NPCs have deep knowledge about their world, relationships, and capabilities
-- **Dynamic Learning**: Characters can acquire new knowledge and update their understanding over time
-- **Social Networks**: Complex relationship modeling with emotional states, reputation, and influence
-- **Economic Simulation**: Supply/demand dynamics, currency, trade, and resource management
+### Major Limitations
+- **Planning System:** Core HTN/STN algorithms incomplete
+- **Temporal Reasoning:** STN constraint solver has timing issues
+- **Storage System:** Chunk-based content distribution failing tests
+- **Integration:** Most cross-system integration non-functional
+- **Performance:** Many components have timeout and scaling issues
 
-### Content Creation & Distribution
-- **Visual Scripting Tools**: Create NPC behaviors without programming knowledge
-- **Efficient Asset Pipeline**: Stream 3D models, animations, and scripts using content-addressable storage
-- **Modding Support**: Community-created content integrates seamlessly with core game systems
-- **Live Updates**: Push new behaviors and content without interrupting active simulations
+## Development Environment
 
-## Game Examples
-
-### NPC Daily Life Simulation
+### Prerequisites
+```bash
+# Elixir 1.16+ required
+# Erlang/OTP 26+ required
 ```
-• Blacksmith NPC wakes up → checks orders → plans crafting schedule
-• Uses temporal planning to balance work, meals, and social time
-• Adapts to player requests, resource availability, and town events
-• Behavior defined through visual scripts: decision trees, state machines, event handlers
-```
-
-### Multi-NPC Coordination
-```
-• Town festival requires coordination between 20+ NPCs
-• FlowAdapter processes all planning decisions in parallel
-• Temporal constraints ensure proper event sequencing
-• Social dynamics influence participation and role assignments
-```
-
-### Player-NPC Interactions
-```
-• Player requests custom item from craftsman NPC
-• NPC plans multi-day production schedule considering resources
-• Updates delivery timeline based on material availability
-• Macaroon tokens control access to different NPC services
-```
-
-## Development
 
 ### Setup
 ```bash
@@ -137,53 +105,53 @@ mix deps.get
 mix compile
 ```
 
-### Running the Town Simulation
-```bash
-iex -S mix
-AriaCharacterCore.start_town_simulation()
-```
-
 ### Testing
 ```bash
+# Run working tests only (368 tests, ~115 disabled)
 mix test
+
+# Many integration tests are currently disabled
+# See test/DISABLED_TESTS.md for details
 ```
 
-### Performance Testing
-```bash
-# Test multi-NPC parallel planning
-mix test --only integration:flow_adapter
+### Current Test Status
+- **Total Tests:** 368 (115+ disabled due to failures)
+- **Passing:** 368/368 currently enabled tests
+- **Major Systems:** Many core planning tests disabled
+- **Working Example:** KHR math nodes demonstrate target patterns
 
-# Test temporal constraint solving
-mix test --only integration:stn_performance
-```
+## Research Dependencies
 
-## Configuration
+This project explores integration of several research areas:
 
-Town simulation parameters can be configured in `config/`:
-
-```elixir
-# config/dev.exs
-config :aria_town,
-  population_size: 50,
-  time_acceleration: 1.0,
-  knowledge_base_size: :medium
-
-config :aria_engine,
-  max_planning_depth: 8,
-  temporal_horizon: 24,  # hours
-  parallel_stages: 4
-```
+- **AI Planning:** HTN/STN hybrid approaches
+- **Temporal Reasoning:** Constraint satisfaction for time-based planning  
+- **Parallel Processing:** Flow-based coordination patterns
+- **Knowledge Representation:** RDF/SPARQL for NPC knowledge
+- **Visual Programming:** glTF-based node scripting
+- **Content Distribution:** Casync-inspired asset streaming
 
 ## Contributing
 
-This project focuses on creating believable, intelligent NPCs through advanced AI planning and high-performance simulation:
+This is experimental research code. Contributions should focus on:
 
-- Use descriptive commit messages focused on NPC behavior improvements
-- Test new planning strategies with multiple NPCs to ensure scalability
-- Visual scripts should be tested for both correctness and performance
-- Follow Elixir/OTP patterns for concurrent, fault-tolerant systems
+- **Core Algorithm Implementation:** Help complete HTN/STN planning systems
+- **Test Recovery:** Fix disabled tests to restore system functionality  
+- **Performance Research:** Address timeout and scaling issues
+- **Integration Work:** Connect partial systems into working pipelines
+- **Documentation:** Document research findings and implementation decisions
+
+### Development Priorities
+1. **Restore Core Planning Tests:** Many temporal planning tests are disabled
+2. **Complete HTN/STN Integration:** Hybrid planner needs algorithm implementation
+3. **Fix Storage System:** Chunk-based system has fundamental issues
+4. **Performance Optimization:** Address widespread timeout problems
 
 ## License
 
 Copyright (c) 2025-present K. S. Ernest (iFire) Lee  
 SPDX-License-Identifier: MIT
+
+---
+
+**Disclaimer:** This is active research and development code. Expect significant changes, incomplete features, and non-functional systems. Not suitable for production use or as a stable dependency.
