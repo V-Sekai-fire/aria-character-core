@@ -374,16 +374,45 @@ defmodule AriaEngine.HybridPlanner.StrategyFactory do
   # Validate that a strategy module implements the required behavior
   defp validate_strategy_module(strategy_type, strategy_module) do
     required_functions = case strategy_type do
-      :planning_strategy -> [:plan, :replan, :validate_plan, :strategy_info]
-      :temporal_strategy -> [:add_temporal_constraints, :validate_temporal_consistency, :strategy_info]
-      :state_strategy -> [:apply_action, :check_condition, :strategy_info]
-      :domain_strategy -> [:get_action_metadata, :get_task_methods, :strategy_info]
-      :logging_strategy -> [:log_progress, :log_error, :strategy_info]
-      :execution_strategy -> [:execute_plan, :strategy_info]
+      :planning_strategy -> [
+        {:plan, 3},        # min arity (opts has default)
+        {:replan, 4},      # min arity (opts has default)  
+        {:validate_plan, 3}, 
+        {:strategy_info, 0}
+      ]
+      :temporal_strategy -> [
+        {:add_temporal_constraints, 3}, 
+        {:validate_temporal_consistency, 2}, 
+        {:update_constraints, 3},
+        {:get_temporal_schedule, 2}
+      ]
+      :state_strategy -> [
+        {:apply_action, 4}, 
+        {:query_state, 3}, 
+        {:create_checkpoint, 3},
+        {:rollback_to_checkpoint, 3}
+      ]
+      :domain_strategy -> [
+        {:get_action_metadata, 3}, 
+        {:get_task_methods, 3}, 
+        {:get_goal_methods, 3},
+        {:validate_domain, 2}
+      ]
+      :logging_strategy -> [
+        {:log, 4}, 
+        {:log_progress, 3}, 
+        {:log_error, 3},
+        {:configure, 2}
+      ]
+      :execution_strategy -> [
+        {:execute_plan, 4}, 
+        {:execute_step, 4},
+        {:handle_execution_failure, 4}
+      ]
     end
 
-    missing_functions = Enum.filter(required_functions, fn func ->
-      not function_exported?(strategy_module, func, 2)
+    missing_functions = Enum.filter(required_functions, fn {func, arity} ->
+      not function_exported?(strategy_module, func, arity)
     end)
 
     if length(missing_functions) > 0 do
