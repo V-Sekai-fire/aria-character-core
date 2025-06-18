@@ -216,39 +216,39 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.EventAdvanced do
   # Task Methods for HTN Planning
   # =============================================================================
 
-  def on_start_task_method(state, [node_id]) do
+  def on_start_task_method(_state, [node_id]) do
     [[:khr_event_on_start, node_id]]
   end
 
-  def on_tick_task_method(state, [node_id, delta_time]) do
+  def on_tick_task_method(_state, [node_id, delta_time]) do
     [[:khr_event_on_tick, node_id, delta_time]]
   end
 
-  def debug_log_task_method(state, [node_id, message]) do
+  def debug_log_task_method(_state, [node_id, message]) do
     [[:khr_debug_log, node_id, message]]
   end
 
-  def debug_log_task_method(state, [node_id, message, level]) do
+  def debug_log_task_method(_state, [node_id, message, level]) do
     [[:khr_debug_log, node_id, message, level]]
   end
 
-  def clear_event_task_method(state, [node_id]) do
+  def clear_event_task_method(_state, [node_id]) do
     [[:khr_event_clear, node_id]]
   end
 
-  def is_triggered_task_method(state, [node_id, target_node_id]) do
+  def is_triggered_task_method(_state, [node_id, target_node_id]) do
     [[:khr_event_is_triggered, node_id, target_node_id]]
   end
 
-  def initialize_event_system_task_method(state, [graph_id]) do
+  def initialize_event_system_task_method(_state, [graph_id]) do
     [[:khr_event_initialize_system, graph_id]]
   end
 
-  def trigger_graph_start_task_method(state, [graph_id, node_ids]) do
+  def trigger_graph_start_task_method(_state, [graph_id, node_ids]) do
     [[:khr_event_trigger_graph_start, graph_id, node_ids]]
   end
 
-  def process_frame_tick_task_method(state, [graph_id, active_nodes, delta_time]) do
+  def process_frame_tick_task_method(_state, [graph_id, active_nodes, delta_time]) do
     [[:khr_event_process_frame_tick, graph_id, active_nodes, delta_time]]
   end
 end

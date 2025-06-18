@@ -138,7 +138,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.StateAdvanced do
     StateV2.set_fact(state, object_id, property, value)
   end
 
-  defp set_nested_property(state, object_id, [property | rest_path], value) do
+  defp set_nested_property(state, object_id, [property | _rest_path], value) do
     # For nested properties, we'd need more complex object model support
     # For now, just set at the current level
     StateV2.set_fact(state, object_id, property, value)
@@ -169,19 +169,19 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.StateAdvanced do
   # Task Methods for HTN Planning
   # =============================================================================
 
-  def set_multiple_task_method(state, [node_id, variable_map]) do
+  def set_multiple_task_method(_state, [node_id, variable_map]) do
     [[:khr_variable_set_multiple, node_id, variable_map]]
   end
 
-  def pointer_get_task_method(state, [node_id, object_id, property_path]) do
+  def pointer_get_task_method(_state, [node_id, object_id, property_path]) do
     [[:khr_pointer_get, node_id, object_id, property_path]]
   end
 
-  def pointer_set_task_method(state, [node_id, object_id, property_path, value]) do
+  def pointer_set_task_method(_state, [node_id, object_id, property_path, value]) do
     [[:khr_pointer_set, node_id, object_id, property_path, value]]
   end
 
-  def pointer_interpolate_task_method(state, [node_id, object_id, property_path, target_value, t]) do
+  def pointer_interpolate_task_method(_state, [node_id, object_id, property_path, target_value, t]) do
     [[:khr_pointer_interpolate, node_id, object_id, property_path, target_value, t]]
   end
 end
