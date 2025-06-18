@@ -27,13 +27,13 @@ defmodule AriaTown.MixProject do
 
   defp deps do
     [
-      # RDF Knowledge Base
-      {:rdf, "~> 1.1"},
+      # RDF Knowledge Base - aligned with root mix.exs
+      {:rdf, "~> 2.1"},
       {:sparql, "~> 0.3"},
       
-      # Phoenix LiveView for Real-time UI
+      # Phoenix LiveView for Real-time UI - using stable 1.0 branch
       {:phoenix, "~> 1.7.14"},
-      {:phoenix_live_view, "~> 0.20.2"},
+      {:phoenix_live_view, "~> 1.0"},
       {:phoenix_html, "~> 4.0"},
       {:jason, "~> 1.4"},
       {:plug_cowboy, "~> 2.5"},
