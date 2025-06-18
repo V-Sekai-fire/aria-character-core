@@ -275,7 +275,7 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   end
   
   # HTN method for scheduling activities
-  defp schedule_activities_method(state, activities) when is_list(activities) do
+  defp schedule_activities_method(_state, activities) when is_list(activities) do
     # Sort activities by dependencies (topological sort)
     sorted_activities = topological_sort_activities(activities)
     
@@ -388,15 +388,138 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   
   defp extract_schedule_from_plan(plan) do
     # Extract schedule from hybrid planner result
-    # For now, return empty schedule since we're passing empty goals
     case plan do
       %{solution_tree: solution_tree} when not is_nil(solution_tree) ->
-        # In a real implementation, this would traverse the solution tree
-        # and extract scheduled activities with timing information
+        # Extract activities from the solution tree
+        extract_activities_from_solution_tree(solution_tree)
+      
+      %{actions: actions} when is_list(actions) ->
+        # Extract from action sequence
+        extract_activities_from_actions(actions)
+      
+      _ ->
+        # If no recognizable plan structure, return empty schedule
         []
+    end
+  end
+  
+  defp extract_activities_from_solution_tree(solution_tree) do
+    # Traverse the solution tree and extract scheduled activities
+    case solution_tree do
+      %{nodes: nodes, root_id: _root_id} when is_map(nodes) ->
+        # Extract primitive tasks (actions) from the solution tree nodes
+        nodes
+        |> Map.values()
+        |> Enum.filter(fn node -> Map.get(node, :is_primitive, false) end)
+        |> Enum.with_index()
+        |> Enum.map(fn {node, index} ->
+          extract_activity_from_node(node, index)
+        end)
+        |> Enum.reject(&is_nil/1)
+      
+      {_task_name, subtasks} when is_list(subtasks) ->
+        # Fallback: old format with simple tuple structure
+        subtasks
+        |> List.flatten()
+        |> Enum.with_index()
+        |> Enum.map(fn {task, index} ->
+          extract_activity_from_task(task, index)
+        end)
+        |> Enum.reject(&is_nil/1)
       
       _ ->
         []
+    end
+  end
+  
+  defp extract_activity_from_node(node, index) do
+    case Map.get(node, :task) do
+      {action_name, _args} when is_atom(action_name) ->
+        # Extract activity ID from action name (e.g., :execute_A -> "A")
+        action_str = Atom.to_string(action_name)
+        if String.starts_with?(action_str, "execute_") do
+          activity_id = String.replace_prefix(action_str, "execute_", "")
+          %{
+            "id" => activity_id,
+            "start_time" => index,
+            "end_time" => index + 1,
+            "duration" => 1
+          }
+        else
+          nil
+        end
+      
+      _ ->
+        nil
+    end
+  end
+  
+  defp extract_activities_from_actions(actions) do
+    # Extract activities from action sequence
+    actions
+    |> Enum.with_index()
+    |> Enum.map(fn {action, index} ->
+      extract_activity_from_action(action, index)
+    end)
+    |> Enum.reject(&is_nil/1)
+  end
+  
+  defp extract_activity_from_task(task, index) do
+    case task do
+      {action_name, _args} when is_atom(action_name) ->
+        # Extract activity ID from action name (e.g., :execute_A -> "A")
+        action_str = Atom.to_string(action_name)
+        if String.starts_with?(action_str, "execute_") do
+          activity_id = String.replace_prefix(action_str, "execute_", "")
+          %{
+            "id" => activity_id,
+            "start_time" => index,
+            "end_time" => index + 1,
+            "duration" => 1
+          }
+        else
+          nil
+        end
+      
+      _ ->
+        nil
+    end
+  end
+  
+  defp extract_activity_from_action(action, index) do
+    case action do
+      {action_name, _args} when is_atom(action_name) ->
+        # Extract activity ID from action name
+        action_str = Atom.to_string(action_name)
+        if String.starts_with?(action_str, "execute_") do
+          activity_id = String.replace_prefix(action_str, "execute_", "")
+          %{
+            "id" => activity_id,
+            "start_time" => index,
+            "end_time" => index + 1,
+            "duration" => 1
+          }
+        else
+          nil
+        end
+      
+      action_name when is_atom(action_name) ->
+        # Simple action name
+        action_str = Atom.to_string(action_name)
+        if String.starts_with?(action_str, "execute_") do
+          activity_id = String.replace_prefix(action_str, "execute_", "")
+          %{
+            "id" => activity_id,
+            "start_time" => index,
+            "end_time" => index + 1,
+            "duration" => 1
+          }
+        else
+          nil
+        end
+      
+      _ ->
+        nil
     end
   end
   
