@@ -1,12 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Plan.Backtracking do
+defmodule Plan.Backtracking do
   @moduledoc """
   Functions for handling backtracking and replanning in the solution tree.
   """
-  alias AriaEngine.{Domain, StateV2}
-  alias AriaEngine.Plan.{Core, Utils} # Assuming Core will have ipyhop, Utils will have update_cached_states, generate_node_id, get_all_descendants
+  alias Plan.{Core, Utils} # Assuming Core will have ipyhop, Utils will have update_cached_states, generate_node_id, get_all_descendants
 
   @type node_id :: String.t()
   @type solution_node :: %{
@@ -36,8 +35,8 @@ defmodule AriaEngine.Plan.Backtracking do
   @doc """
   Replan from a specific failure node in the solution tree.
   """
-  @spec replan(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), keyword()) :: replan_result()
-  def replan(%AriaEngine.Domain.Core{} = domain, %StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
+  @spec replan(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), keyword()) :: replan_result()
+  def replan(%Domain.Core{} = domain, %StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
     # Decrement replan_depth for recursive calls
     replan_depth = Keyword.get(opts, :replan_depth, Core.get_default_replan_depth()) # Get from Core
     if replan_depth <= 0 do
@@ -121,7 +120,7 @@ defmodule AriaEngine.Plan.Backtracking do
   end
 
   # Try alternative method for a specific task node
-  @spec try_alternative_method_for_task(AriaEngine.Domain.Core.t(), solution_tree(), node_id(), integer()) ::
+  @spec try_alternative_method_for_task(Domain.Core.t(), solution_tree(), node_id(), integer()) ::
     {:ok, solution_tree()} | :no_alternatives | {:error, String.t()}
   def try_alternative_method_for_task(domain, solution_tree, task_node_id, verbose) do
     case solution_tree.nodes[task_node_id] do
@@ -232,7 +231,7 @@ defmodule AriaEngine.Plan.Backtracking do
   end
 
   # Backtrack and retry from a failed node
-  @spec backtrack_and_retry(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), integer(), integer(), integer()) ::
+  @spec backtrack_and_retry(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), integer(), integer(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()}
   def backtrack_and_retry(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
     if verbose > 2 do
@@ -284,7 +283,7 @@ defmodule AriaEngine.Plan.Backtracking do
   end
 
   # Helper to backtrack up the tree
-  @spec backtrack_up_tree(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), integer(), integer(), integer()) ::
+  @spec backtrack_up_tree(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), integer(), integer(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()}
   def backtrack_up_tree(domain, state, solution_tree, current_node_id, depth, max_depth, verbose) do
     case solution_tree.nodes[current_node_id].parent_id do

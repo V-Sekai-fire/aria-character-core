@@ -1,18 +1,18 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Planning.CoreInterface do
+defmodule Planning.CoreInterface do
   @moduledoc """
   Provides core planning interfaces for the Aria Engine.
   """
 
-  alias AriaEngine.Planning.Internal
-  alias AriaEngine.Core
-  alias AriaEngine.StateV2
-  alias AriaEngine.Pddl.Domain, as: PddlDomain
-  alias AriaEngine.PlannerAdapter
+  alias Planning.Internal
+  alias Core
+  alias StateV2
+  alias Pddl.Domain, as: PddlDomain
+  alias PlannerAdapter
 
-  @type t :: AriaEngine.Planning.HighLevel.t()
+  @type t :: Planning.HighLevel.t()
   @type solution_tree :: Core.solution_tree()
   @type plan_step :: Core.plan_step()
   @type todo_item :: Core.todo_item()
@@ -20,12 +20,12 @@ defmodule AriaEngine.Planning.CoreInterface do
   @doc """
   Simple planning interface - finds a plan to achieve the given todos.
   """
-  @spec plan(AriaEngine.DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
+  @spec plan(DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
     {:ok, solution_tree()} | {:error, String.t()}
   def plan(domain, %StateV2{} = state, todos, opts \\[]) do
     # Adapt PDDL domain if necessary
     adapted_domain = case domain do
-      %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
+      %PddlDomain{} -> Pddl.DomainAdapter.new(domain)
       _ -> domain
     end
 
@@ -41,12 +41,12 @@ defmodule AriaEngine.Planning.CoreInterface do
   @doc """
   Advanced planning interface - returns the full solution tree.
   """
-  @spec plan_with_tree(AriaEngine.DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
+  @spec plan_with_tree(DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
     {:ok, solution_tree()} | {:error, String.t()}
   def plan_with_tree(domain, %StateV2{} = state, todos, opts \\[]) do
     # Adapt PDDL domain if necessary
     adapted_domain = case domain do
-      %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
+      %PddlDomain{} -> Pddl.DomainAdapter.new(domain)
       _ -> domain
     end
     PlannerAdapter.plan(adapted_domain, state, todos, opts)
@@ -55,18 +55,18 @@ defmodule AriaEngine.Planning.CoreInterface do
   @doc """
   Executes a plan step by step, returning the final state.
   """
-  @spec execute_plan(AriaEngine.DomainBehaviour.t(), Core.state(), [plan_step()]) :: {:ok, Core.state()} | {:error, String.t()}
+  @spec execute_plan(DomainBehaviour.t(), Core.state(), [plan_step()]) :: {:ok, Core.state()} | {:error, String.t()}
   def execute_plan(domain, %StateV2{} = initial_state, plan) do
     # Adapt PDDL domain if necessary
     adapted_domain = case domain do
-      %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
+      %PddlDomain{} -> Pddl.DomainAdapter.new(domain)
       _ -> domain
     end
     PlannerAdapter.validate_plan(adapted_domain, initial_state, plan)
   end
 
   @doc """
-  Replan from a failure point using AriaEngine.HybridPlanner.HybridCoordinator.
+  Replan from a failure point using HybridPlanner.HybridCoordinator.
   """
   @spec replan(Core.t(), String.t(), keyword()) :: {:ok, Core.t()} | {:error, String.t()}
   def replan(engine, fail_node_id, opts \\[])

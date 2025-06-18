@@ -1,13 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Plan.Core do
+defmodule Plan.Core do
   @moduledoc """
   Core IPyHOP planning algorithm and decomposition loop.
   """
-  alias AriaEngine.{Domain, StateV2, Multigoal}
-  alias AriaEngine.Plan.{NodeExpansion, Backtracking, Utils}
-  # alias AriaEngine.DomainBehaviour # Removed unused alias
+  alias Plan.{NodeExpansion, Backtracking, Utils}
+  # alias DomainBehaviour # Removed unused alias
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), StateV2.fact_value()}
@@ -45,7 +44,7 @@ defmodule AriaEngine.Plan.Core do
   @doc """
   Main IPyHOP planning function that creates a solution tree to achieve the given todos.
   """
-  @spec plan(AriaEngine.Domain.Core.t(), StateV2.t(), [todo_item()], keyword()) :: plan_result()
+  @spec plan(Domain.Core.t(), StateV2.t(), [todo_item()], keyword()) :: plan_result()
   def plan(domain, %StateV2{} = state, todos, opts \\ []) do
     # Add replan_depth to opts with a default value
     opts = Keyword.put_new(opts, :replan_depth, @default_replan_depth)
@@ -60,7 +59,7 @@ defmodule AriaEngine.Plan.Core do
   end
 
   # Core IPyHOP Algorithm (Algorithm 2 from the paper)
-  @spec ipyhop(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), keyword()) :: plan_result()
+  @spec ipyhop(Domain.Core.t(), StateV2.t(), solution_tree(), keyword()) :: plan_result()
   def ipyhop(domain, %StateV2{} = current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
     max_depth = Keyword.get(opts, :max_depth, @default_max_depth)
@@ -69,7 +68,7 @@ defmodule AriaEngine.Plan.Core do
     plan_decomposition_loop(domain, current_state, solution_tree, 0, max_depth, verbose)
   end
 
-  @spec plan_decomposition_loop(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), integer(), integer(), integer()) :: plan_result()
+  @spec plan_decomposition_loop(Domain.Core.t(), StateV2.t(), solution_tree(), integer(), integer(), integer()) :: plan_result()
   defp plan_decomposition_loop(domain, current_state, solution_tree, depth, max_depth, verbose) do
     if verbose > 3 do
       IO.puts("PLAN_DECOMPOSITION_LOOP: Depth #{depth}, Nodes: #{Kernel.map_size(solution_tree.nodes)}")
@@ -172,7 +171,7 @@ defmodule AriaEngine.Plan.Core do
   end
 
   # Try to expand a node
-  @spec try_expand_node(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), integer()) ::
+  @spec try_expand_node(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   defp try_expand_node(domain, state, solution_tree, node_id, verbose) do
     case solution_tree.nodes[node_id] do

@@ -1,14 +1,14 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Planning.Internal do
+defmodule Planning.Internal do
   @moduledoc """
   Provides internal helper functions for the Aria Engine planning modules.
   """
 
-  alias AriaEngine.Core
-  alias AriaEngine.DomainBehaviour
-  alias AriaEngine.Domain.Core, as: DomainCore
+  alias Core
+  alias DomainBehaviour
+  alias Domain.Core, as: DomainCore
 
   @doc """
   Converts an engine struct into a planner interface compatible domain.

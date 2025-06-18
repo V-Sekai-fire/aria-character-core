@@ -1,16 +1,16 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Planning.HighLevel do
+defmodule Planning.HighLevel do
   @moduledoc """
   Provides high-level planning and execution functionalities for the Aria Engine.
   """
 
-  alias AriaEngine.Planning.Internal
-  alias AriaEngine.Core
-  alias AriaEngine.Planner
+  alias Planning.Internal
+  alias Core
+  alias Planner
 
-  @type t :: AriaEngine.Planning.HighLevel.t()
+  @type t :: Planning.HighLevel.t()
   @type solution_tree :: Core.solution_tree()
   @type plan_step :: Core.plan_step()
   @type todo_item :: Core.todo_item()

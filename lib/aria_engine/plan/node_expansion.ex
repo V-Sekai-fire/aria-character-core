@@ -1,12 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Plan.NodeExpansion do
+defmodule Plan.NodeExpansion do
   @moduledoc """
   Functions for expanding different types of nodes in the solution tree.
   """
-  alias AriaEngine.{Domain, StateV2, Multigoal}
-  alias AriaEngine.Plan.Utils # Assuming Utils will have generate_node_id and is_primitive_task?
+  alias Plan.Utils # Assuming Utils will have generate_node_id and is_primitive_task?
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), StateV2.fact_value()}
@@ -73,7 +72,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   end
 
   # Expand task node using methods
-  @spec expand_task_node(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), String.t(), list(), integer()) ::
+  @spec expand_task_node(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), String.t(), list(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_task_node(domain, _state, solution_tree, node_id, task_name, args, verbose) do
     node = solution_tree.nodes[node_id]
@@ -175,7 +174,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   end
 
   # Expand goal node
-  @spec expand_goal_node(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), String.t(), String.t(), StateV2.fact_value(), integer()) ::
+  @spec expand_goal_node(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), String.t(), String.t(), StateV2.fact_value(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose) do
     node = solution_tree.nodes[node_id]
@@ -234,7 +233,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
                 is_durative = if is_primitive do
                   {action_name, _args} = subtask
                   action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
-                  AriaEngine.Domain.Core.get_durative_action(domain, action_atom) != nil
+                  Domain.Core.get_durative_action(domain, action_atom) != nil
                 else
                   false
                 end
@@ -314,7 +313,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   end
 
   # Expand multigoal node
-  @spec expand_multigoal_node(AriaEngine.Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), Multigoal.t(), integer()) ::
+  @spec expand_multigoal_node(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), Multigoal.t(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | :failure
   def expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
     node = solution_tree.nodes[node_id]

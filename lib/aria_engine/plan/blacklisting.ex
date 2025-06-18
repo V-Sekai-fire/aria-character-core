@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Plan.Blacklisting do
+defmodule Plan.Blacklisting do
   @moduledoc """
   Functions for handling blacklisting of commands and methods.
   """
-  # alias AriaEngine.{Domain, State} # Domain and State are not directly used here, but included for type definitions
-  # alias AriaEngine.Plan.Core # For solution_tree type
+  # alias {Domain, State} # Domain and State are not directly used here, but included for type definitions
+  # alias Plan.Core # For solution_tree type
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), State.fact_value()}

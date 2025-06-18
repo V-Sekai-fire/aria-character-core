@@ -1,11 +1,10 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Plan.Utils do
+defmodule Plan.Utils do
   @moduledoc """
   General utility and helper functions for the planning module.
   """
-  alias AriaEngine.{Domain, StateV2, Multigoal}
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), StateV2.fact_value()}
@@ -138,14 +137,14 @@ defmodule AriaEngine.Plan.Utils do
   Validates a plan by executing it step by step.
   For compatibility with existing AriaEngine usage.
   """
-  @spec validate_plan(AriaEngine.Domain.Core.t(), StateV2.t(), [plan_step()] | solution_tree()) :: {:ok, StateV2.t()} | {:error, String.t()}
-  def validate_plan(%AriaEngine.Domain.Core{} = domain, %StateV2{} = initial_state, %{root_id: _} = solution_tree) do
+  @spec validate_plan(Domain.Core.t(), StateV2.t(), [plan_step()] | solution_tree()) :: {:ok, StateV2.t()} | {:error, String.t()}
+  def validate_plan(%Domain.Core{} = domain, %StateV2{} = initial_state, %{root_id: _} = solution_tree) do
     # Extract primitive actions from solution tree
     actions = get_primitive_actions_dfs(solution_tree)
     validate_plan(domain, initial_state, actions)
   end
 
-  def validate_plan(%AriaEngine.Domain.Core{} = domain, %StateV2{} = initial_state, plan) when is_list(plan) do
+  def validate_plan(%Domain.Core{} = domain, %StateV2{} = initial_state, plan) when is_list(plan) do
     Enum.reduce_while(plan, {:ok, initial_state}, fn {action_name, args}, {:ok, state} ->
       action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Planner do
+defmodule Planner do
   @moduledoc """
   Main planner interface that delegates to PlannerAdapter.
   
@@ -9,7 +9,7 @@ defmodule AriaEngine.Planner do
   which in turn uses the HybridCoordinator for actual planning functionality.
   """
 
-  alias AriaEngine.PlannerAdapter
+  alias PlannerAdapter
 
   @doc """
   Plan using the hybrid planner system.
