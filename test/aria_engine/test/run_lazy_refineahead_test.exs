@@ -11,8 +11,7 @@ defmodule RunLazyRefineaheadTest do
   
   use ExUnit.Case
   @tag timeout: 30000 # Set timeout to 30 seconds
-  alias AriaEngine.{Domain, StateV2, Plan}
-  alias AriaEngine.Plan.Utils # Added alias for Utils
+  alias Plan.Utils # Added alias for Utils
   
   test "Run-Lazy-Refineahead with action failure and replanning" do
     # Create a domain with actions that can fail conditionally
@@ -27,12 +26,12 @@ defmodule RunLazyRefineaheadTest do
     # Plan using IPyHOP
     case Plan.plan(domain, initial_state, todos, verbose: 1) do
       {:ok, solution_tree} ->
-        IO.puts("Initial planning succeeded!")
-        IO.inspect(Plan.tree_stats(solution_tree))
+        TestOutput.trace_puts("Initial planning succeeded!")
+        TestOutput.trace_inspect(Plan.tree_stats(solution_tree))
         
         # Extract actions for inspection
         initial_actions = Utils.get_primitive_actions_dfs(solution_tree)
-        IO.puts("Initial plan: #{inspect(initial_actions)}")
+        TestOutput.trace_puts("Initial plan: #{inspect(initial_actions)}")
         
         # Execute with Run-Lazy-Refineahead (this should trigger replanning)
         case Plan.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 3) do # Increased verbose level
@@ -41,12 +40,12 @@ defmodule RunLazyRefineaheadTest do
             robot_location = StateV2.get_fact(final_state, "robot", "location")
             assert robot_location == "goal"
             
-            IO.puts("Run-Lazy-Refineahead succeeded with replanning!")
+            TestOutput.trace_puts("Run-Lazy-Refineahead succeeded with replanning!")
           
           {:error, reason} ->
             # Check if this is the expected "no more alternatives" error
             if String.contains?(reason, "Replanning failed") do
-              IO.puts("Expected failure: #{reason}")
+              TestOutput.trace_puts("Expected failure: #{reason}")
               assert true
             else
               flunk("Unexpected execution failure: #{reason}")
@@ -78,14 +77,14 @@ defmodule RunLazyRefineaheadTest do
     robot_location = StateV2.get_fact(state, "robot", "location")
     prepared = StateV2.get_fact(state, "robot", "prepared")
     
-    IO.puts("move_unreliable_action: robot_location=#{inspect(robot_location)}, from=#{inspect(from)}, prepared=#{inspect(prepared)}")
+    TestOutput.trace_puts("move_unreliable_action: robot_location=#{inspect(robot_location)}, from=#{inspect(from)}, prepared=#{inspect(prepared)}")
     
     if robot_location == from and prepared == true do
-      IO.puts("move_unreliable_action: SUCCESS")
+      TestOutput.trace_puts("move_unreliable_action: SUCCESS")
       # Success - update location
       StateV2.set_fact(state, "robot", "location", to)
     else
-      IO.puts("move_unreliable_action: FAILURE")
+      TestOutput.trace_puts("move_unreliable_action: FAILURE")
       # Failure - robot not prepared or not at start location
       false
     end
@@ -95,16 +94,16 @@ defmodule RunLazyRefineaheadTest do
   defp move_reliable_action(state, [from, to]) do
     robot_location = StateV2.get_fact(state, "robot", "location")
     
-    IO.puts("move_reliable_action: robot_location=#{inspect(robot_location)}, from=#{inspect(from)}")
+    TestOutput.trace_puts("move_reliable_action: robot_location=#{inspect(robot_location)}, from=#{inspect(from)}")
     
     if robot_location == from do
-      IO.puts("move_reliable_action: SUCCESS")
+      TestOutput.trace_puts("move_reliable_action: SUCCESS")
       # Always succeeds - prepare and move
       state
       |> StateV2.set_fact("robot", "prepared", true)
       |> StateV2.set_fact("robot", "location", to)
     else
-      IO.puts("move_reliable_action: FAILURE")
+      TestOutput.trace_puts("move_reliable_action: FAILURE")
       false
     end
   end
