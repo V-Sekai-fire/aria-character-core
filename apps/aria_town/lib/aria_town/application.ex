@@ -15,10 +15,10 @@ defmodule AriaTown.Application do
       
       # Time and NPC Management
       AriaTown.TimeManager,
-      AriaTown.NPCManager,
+      AriaTown.NPCManager
       
-      # Phoenix Endpoint
-      AriaTownWeb.Endpoint
+      # Phoenix Endpoint (not implemented yet)
+      # AriaTownWeb.Endpoint
     ]
 
     opts = [strategy: :one_for_one, name: AriaTown.Supervisor]
@@ -27,9 +27,9 @@ defmodule AriaTown.Application do
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
-  @impl true
-  def config_change(changed, _new, removed) do
-    AriaTownWeb.Endpoint.config_change(changed, removed)
-    :ok
-  end
+  # @impl true
+  # def config_change(changed, _new, removed) do
+  #   AriaTownWeb.Endpoint.config_change(changed, removed)
+  #   :ok
+  # end
 end
