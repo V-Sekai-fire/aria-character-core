@@ -6,20 +6,9 @@ defmodule AriaCharacterCore.Application do
 
   use Application
 
-  alias DomainProvider
 
   @impl true
   def start(_type, _args) do
-    # Validate that at least one domain provider is configured
-    case DomainProvider.get_configured_providers() do
-      [] ->
-        require Logger
-        Logger.warning("No domain providers configured for AriaEngine")
-      providers ->
-        require Logger
-        Logger.info("AriaEngine initialized with #{length(providers)} domain providers")
-    end
-
     children = [
       # AriaEngine components (planning and AI core)
       # Worker can be added here when needed

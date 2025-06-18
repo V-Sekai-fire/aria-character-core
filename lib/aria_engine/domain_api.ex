@@ -144,29 +144,6 @@ defmodule DomainAPI do
     end)
   end
 
-  ## Domain Composition and Registry Integration
-
-  @doc """
-  Creates an AriaEngine definition by composing multiple domains from the registry.
-  """
-  @spec from_domain_types(String.t(), [String.t()], [Core.todo_item()], State.t() | nil) ::
-    {:ok, t()} | {:error, String.t()}
-  def from_domain_types(id, domain_types, goals, initial_state \\ nil) do
-    # For now, we'll get the first domain type and ignore composition
-    # TODO: Implement proper domain composition with the new provider system
-    case domain_types do
-      [] -> {:error, "No domain types provided"}
-      [domain_type | _] ->
-        case DomainProvider.get_domain(domain_type) do
-          {:ok, domain} ->
-            initial_state = initial_state || State.new()
-            definition = from_domain(domain, goals, initial_state)
-            {:ok, %{definition | id: id}}
-          {:error, reason} ->
-            {:error, reason}
-        end
-    end
-  end
 
   @doc """
   Merges two method maps, combining method lists for the same keys.
@@ -187,42 +164,4 @@ defmodule DomainAPI do
     end)
   end
 
-  @doc """
-  Adds a domain type to an existing AriaEngine definition.
-  """
-  @spec add_domain_type(t(), String.t()) :: {:ok, t()} | {:error, String.t()}
-  def add_domain_type(%Core{} = engine, domain_type) do
-    case DomainProvider.get_domain(domain_type) do
-      {:ok, %Domain.Core{} = domain} ->
-        updated_engine = %{engine |
-          actions: Map.merge(engine.actions, domain.actions),
-          task_methods: merge_method_maps(engine.task_methods, domain.task_methods),
-          unigoal_methods: merge_method_maps(engine.unigoal_methods, domain.unigoal_methods),
-          multigoal_methods: engine.multigoal_methods ++ domain.multigoal_methods
-        }
-        {:ok, updated_engine}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  @doc """
-  Lists available domain types in the registry.
-  """
-  @spec list_domain_types() :: [String.t()]
-  def list_domain_types do
-    DomainProvider.list_domain_types()
-  end
-
-  @doc """
-  Validates a domain type exists in the registry.
-  """
-  @spec validate_domain_type(String.t()) :: :ok | {:error, String.t()}
-  def validate_domain_type(domain_type) do
-    case DomainProvider.get_domain(domain_type) do
-      {:ok, _domain} -> :ok
-      {:error, reason} -> {:error, reason}
-    end
-  end
 end
