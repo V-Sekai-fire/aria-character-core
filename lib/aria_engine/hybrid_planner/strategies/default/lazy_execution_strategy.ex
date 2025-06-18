@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy do
+defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   @moduledoc """
   Default lazy execution strategy implementation wrapping existing execution logic.
   
@@ -9,9 +9,8 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   while providing the clean strategy interface defined in ADR-091.
   """
 
-  @behaviour AriaEngine.HybridPlanner.Strategies.ExecutionStrategy
+  @behaviour HybridPlanner.Strategies.ExecutionStrategy
 
-  alias AriaEngine.{StateV2, Plan}
   require Logger
 
   @impl true
@@ -31,7 +30,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy do
         nil ->
           {:error, "Domain required for execution but not provided in options"}
         
-        %AriaEngine.Domain.Core{} = domain ->
+        %Domain.Core{} = domain ->
           # Use existing Plan.Core.run_lazy_refineahead logic
           # TODO: Implement Plan.Core.run_lazy_refineahead/4 function  
           Logger.warning("LazyExecutionStrategy: Plan.Core.run_lazy_refineahead/4 not yet implemented")
@@ -196,7 +195,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy do
         :simple_recovery_model,
         :no_rollback_support
       ],
-      underlying_implementation: "AriaEngine.Plan.Core.run_lazy_refineahead"
+      underlying_implementation: "Plan.Core.run_lazy_refineahead"
     }
   end
 

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.Strategies.Default.DomainStrategy do
+defmodule HybridPlanner.Strategies.Default.DomainStrategy do
   @moduledoc """
   Default domain strategy implementation wrapping existing domain operations.
   
@@ -9,7 +9,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.DomainStrategy do
   providing the clean strategy interface defined in ADR-091.
   """
 
-  @behaviour AriaEngine.HybridPlanner.Strategies.DomainStrategy
+  @behaviour HybridPlanner.Strategies.DomainStrategy
 
   require Logger
 
@@ -128,7 +128,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.DomainStrategy do
       version: "1.0.0",
       description: "Default domain query and metadata strategy",
       capabilities: [:action_metadata, :method_queries, :domain_validation],
-      underlying_implementation: "AriaEngine.Domain.Core"
+      underlying_implementation: "Domain.Core"
     }
   end
 end

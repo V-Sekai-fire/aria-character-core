@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.Strategies.Default.LoggerStrategy do
+defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
   @moduledoc """
   Default logging strategy implementation using Elixir's Logger.
   
@@ -9,7 +9,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.LoggerStrategy do
   strategy interface defined in ADR-091.
   """
 
-  @behaviour AriaEngine.HybridPlanner.Strategies.LoggingStrategy
+  @behaviour HybridPlanner.Strategies.LoggingStrategy
 
   require Logger
 

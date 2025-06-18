@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.Strategies.Default.STNTemporalStrategy do
+defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
   @moduledoc """
   Default STN temporal strategy implementation wrapping existing temporal validation logic.
   
@@ -10,9 +10,9 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.STNTemporalStrategy do
   the default implementation for temporal constraint management.
   """
 
-  @behaviour AriaEngine.HybridPlanner.Strategies.TemporalStrategy
+  @behaviour HybridPlanner.Strategies.TemporalStrategy
 
-  alias AriaEngine.TemporalPlanner.STNPlanner
+  alias TemporalPlanner.STNPlanner
   require Logger
 
   @impl true
@@ -246,7 +246,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.STNTemporalStrategy do
         :no_resource_conflicts,
         :simple_duration_model
       ],
-      underlying_implementation: "AriaEngine.TemporalPlanner.STNPlanner"
+      underlying_implementation: "TemporalPlanner.STNPlanner"
     }
   end
 

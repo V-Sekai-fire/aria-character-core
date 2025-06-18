@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.Strategies.Mock.MockPlanningStrategy do
+defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   @moduledoc """
   Mock planning strategy for testing purposes.
   
@@ -33,9 +33,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   ```
   """
 
-  @behaviour AriaEngine.HybridPlanner.Strategies.PlanningStrategy
-
-  alias AriaEngine.{StateV2, Plan}
+  @behaviour HybridPlanner.Strategies.PlanningStrategy
 
   # Default static configuration
   @default_plan_result {:ok, [%{action: :mock_action, args: ["mock_result"], node_id: "mock_node_1"}]}
@@ -44,7 +42,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Mock.MockPlanningStrategy do
 
   # ==================== BEHAVIOR IMPLEMENTATION ====================
 
-  @impl AriaEngine.HybridPlanner.Strategies.PlanningStrategy
+  @impl HybridPlanner.Strategies.PlanningStrategy
   def plan(_domain, _state, _goals, opts \\ []) do
     # Check for artificial delay configuration
     apply_delay(opts)
@@ -53,7 +51,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Mock.MockPlanningStrategy do
     Application.get_env(:aria_engine, :mock_plan_result, @default_plan_result)
   end
 
-  @impl AriaEngine.HybridPlanner.Strategies.PlanningStrategy
+  @impl HybridPlanner.Strategies.PlanningStrategy
   def replan(_domain, _state, _solution_tree, _fail_node_id, opts \\ []) do
     # Check for artificial delay configuration
     apply_delay(opts)
@@ -62,13 +60,13 @@ defmodule AriaEngine.HybridPlanner.Strategies.Mock.MockPlanningStrategy do
     Application.get_env(:aria_engine, :mock_replan_result, @default_replan_result)
   end
 
-  @impl AriaEngine.HybridPlanner.Strategies.PlanningStrategy
+  @impl HybridPlanner.Strategies.PlanningStrategy
   def validate_plan(_domain, _state, _solution_tree) do
     # Return configured result or default
     Application.get_env(:aria_engine, :mock_validate_result, @default_validate_result)
   end
 
-  @impl AriaEngine.HybridPlanner.Strategies.PlanningStrategy
+  @impl HybridPlanner.Strategies.PlanningStrategy
   def strategy_info do
     %{
       name: "Mock Planning Strategy",

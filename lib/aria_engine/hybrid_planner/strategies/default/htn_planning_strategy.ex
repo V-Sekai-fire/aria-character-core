@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.Strategies.Default.HTNPlanningStrategy do
+defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   @moduledoc """
   Default HTN planning strategy implementation wrapping existing Plan.Core logic.
   
@@ -10,9 +10,8 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   It serves as the default implementation during the migration period.
   """
 
-  @behaviour AriaEngine.HybridPlanner.Strategies.PlanningStrategy
+  @behaviour HybridPlanner.Strategies.PlanningStrategy
 
-  alias AriaEngine.{StateV2, Plan}
   require Logger
 
   @impl true
@@ -127,7 +126,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.HTNPlanningStrategy do
     {predicate, subject, value}
   end
 
-  defp convert_goal_to_todo(%AriaEngine.Multigoal{} = multigoal) do
+  defp convert_goal_to_todo(%Multigoal{} = multigoal) do
     # Multigoal: pass through, Plan.Core handles this
     multigoal
   end
@@ -161,7 +160,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.HTNPlanningStrategy do
         :no_resource_constraints,
         :no_continuous_planning
       ],
-      underlying_implementation: "AriaEngine.Plan.Core"
+      underlying_implementation: "Plan.Core"
     }
   end
 

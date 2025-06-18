@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.Strategies.Default.StateV2Strategy do
+defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
   @moduledoc """
   Default StateV2 strategy implementation wrapping existing state management logic.
   
@@ -9,9 +9,9 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.StateV2Strategy do
   strategy interface defined in ADR-091.
   """
 
-  @behaviour AriaEngine.HybridPlanner.Strategies.StateStrategy
+  @behaviour HybridPlanner.Strategies.StateStrategy
 
-  alias AriaEngine.StateV2
+  alias StateV2
   require Logger
 
   @impl true
@@ -114,7 +114,7 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.StateV2Strategy do
       version: "1.0.0",
       description: "Default StateV2 state management strategy",
       capabilities: [:fact_storage, :action_application, :state_querying, :checkpointing],
-      underlying_implementation: "AriaEngine.StateV2"
+      underlying_implementation: "StateV2"
     }
   end
 end
