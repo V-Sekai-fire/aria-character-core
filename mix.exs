@@ -6,16 +6,18 @@ defmodule AriaCharacterCore.MixProject do
 
   def project do
     [
-      apps_path: "apps",
+      app: :aria_character_core,
       version: "0.1.0",
+      elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
+      elixirc_options: [warnings_as_errors: true],
       deps: deps(),
       aliases: aliases(),
       preferred_cli_env: [
         "test.all": :test,
         "test.watch": :test
       ],
-      elixirc_options: [warnings_as_errors: true],
       dialyzer: [
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
         ignore_warnings: ".dialyzer_ignore.exs"
@@ -23,7 +25,17 @@ defmodule AriaCharacterCore.MixProject do
     ]
   end
 
-  # Dependencies listed here are available to all child apps
+  # Specifies which paths to compile per environment
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
+  def application do
+    [
+      extra_applications: [:logger],
+      mod: {AriaCharacterCore.Application, []}
+    ]
+  end
+
   defp deps do
     [
       # Development and testing tools
@@ -31,17 +43,82 @@ defmodule AriaCharacterCore.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
 
-      # Shared utilities that all apps might need
+      # Core dependencies
       {:jason, "~> 1.4"},
       {:telemetry, "~> 1.2"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:tzdata, "~> 1.1"},
 
-      # JSON-LD and RDF support for temporal planner
-      {:json_ld, "~> 1.0"},
+      # Planning and AI/ML
+      {:nx, "~> 0.6"},
+      {:libgraph, "~> 0.16"},
+      {:ortex, "~> 0.1"},
+
+      # Phoenix web framework
+      {:phoenix, "~> 1.7"},
+      {:phoenix_html, "~> 4.0"},
+      {:phoenix_live_reload, "~> 1.4", only: :dev},
+      {:phoenix_live_view, "~> 1.0"},
+      {:phoenix_live_dashboard, "~> 0.8"},
+      {:bandit, "~> 1.0"},
+      {:plug_cowboy, "~> 2.6"},
+      {:cors_plug, "~> 3.0"},
+
+      # Database
+      {:ecto_sql, "~> 3.10"},
+      {:ecto_sqlite3, "~> 0.12"},
+
+      # RDF Knowledge Base
       {:rdf, "~> 2.1"},
-      {:porcelain, "~> 2.0"}
+      {:sparql, "~> 0.3"},
+      {:json_ld, "~> 1.0"},
+
+      # Authentication and Security
+      {:macfly, "~> 0.2.20"},
+      {:bcrypt_elixir, "~> 3.0"},
+      {:vaultex, "~> 1.0"},
+      {:httpoison, "~> 1.8"},
+      {:poison, "~> 4.0"},
+
+      # Storage and File Management
+      {:ex_aws, "~> 2.4"},
+      {:ex_aws_s3, "~> 2.4"},
+      {:hackney, "~> 1.18"},
+      {:sweet_xml, "~> 0.7"},
+      {:waffle, "~> 1.1"},
+      {:waffle_ecto, "~> 0.0.11"},
+      {:sftp_ex, "~> 0.2"},
+      {:finch, "~> 0.16"},
+
+      # Workflow and State Management
+      {:gen_state_machine, "~> 3.0"},
+
+      # Monitoring and Metrics
+      {:telemetry_metrics_prometheus, "~> 1.1"},
+      {:prometheus_ex, "~> 3.0"},
+      {:recon, "~> 2.5"},
+      {:hammer, "~> 6.1"},
+
+      # External Communication
+      {:ex_webrtc, "~> 0.3"},
+      {:req, "~> 0.4"},
+
+      # Cryptography and Compression
+      {:ex_crypto, "~> 0.10"},
+      {:ezstd, "~> 1.0"},
+      {:rustler, "~> 0.36", optional: true},
+
+      # External Process Execution
+      {:porcelain, "~> 2.0"},
+
+      # UUID Generation
+      {:elixir_uuid, "~> 1.2"},
+      {:uuid, "~> 1.1"},
+
+      # Test dependencies
+      {:stream_data, "~> 1.2", only: :test},
+      {:ex_unit_notifier, "~> 1.3", only: :test}
     ]
   end
 
@@ -53,9 +130,8 @@ defmodule AriaCharacterCore.MixProject do
       test: ["test --exclude type_check_strict"], # Exclude type_check_strict tests by default
       "test.watch": ["test.watch"],
       setup: ["deps.get"],
-      format: ["format", "cmd --app aria_* mix format"],
+      format: ["format"],
       quality: ["credo --strict", "dialyzer"],
-      app: ["app"],
       "cycle.analyze": ["run scripts/analyze_commit_cycles.exs"],
       "cycle.format": ["cmd", "sh", "-c", "elixir scripts/analyze_commit_cycles.exs --format-commit"]
     ]

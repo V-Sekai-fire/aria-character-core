@@ -232,7 +232,7 @@ defmodule AriaEngine.Domains.SnakeDomain do
   Parameters: (?snake - snake ?snakepos ?goalpos - location)
   Task: (move ?snake ?snakepos ?goalpos)
   """
-  def move_base(state, [snake, snakepos, goalpos]) do
+  def move_base(_state, [_snake, snakepos, goalpos]) do
     # Precondition: (= ?snakepos ?goalpos)
     cond do
       snakepos != goalpos ->
