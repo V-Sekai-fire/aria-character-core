@@ -88,8 +88,8 @@ defmodule AriaEngine.HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   # ==================== STRATEGY BEHAVIOR IMPLEMENTATION ====================
 
   @impl AriaEngine.HybridPlanner.Strategies.PlanningStrategy
-  def plan(%__MODULE__{} = strategy, planning_request) do
-    strategy = record_call(strategy, :plan, %{request: planning_request})
+  def plan(%__MODULE__{} = strategy, domain, state, goals) do
+    strategy = record_call(strategy, :plan, %{domain: domain, state: state, goals: goals})
     
     with :ok <- check_call_limit(strategy, :plan),
          :ok <- check_should_fail(strategy, :plan),
@@ -101,8 +101,8 @@ defmodule AriaEngine.HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   end
 
   @impl AriaEngine.HybridPlanner.Strategies.PlanningStrategy
-  def replan(%__MODULE__{} = strategy, replan_request) do
-    strategy = record_call(strategy, :replan, %{request: replan_request})
+  def replan(%__MODULE__{} = strategy, domain, state, current_plan, failure_info) do
+    strategy = record_call(strategy, :replan, %{domain: domain, state: state, current_plan: current_plan, failure_info: failure_info})
     
     with :ok <- check_call_limit(strategy, :replan),
          :ok <- check_should_fail(strategy, :replan),
@@ -114,8 +114,8 @@ defmodule AriaEngine.HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   end
 
   @impl AriaEngine.HybridPlanner.Strategies.PlanningStrategy
-  def validate_plan(%__MODULE__{} = strategy, validation_request) do
-    strategy = record_call(strategy, :validate_plan, %{request: validation_request})
+  def validate_plan(%__MODULE__{} = strategy, plan, context) do
+    strategy = record_call(strategy, :validate_plan, %{plan: plan, context: context})
     
     with :ok <- check_call_limit(strategy, :validate_plan),
          :ok <- check_should_fail(strategy, :validate_plan),
@@ -126,7 +126,6 @@ defmodule AriaEngine.HybridPlanner.Strategies.Mock.MockPlanningStrategy do
     end
   end
 
-  @impl AriaEngine.HybridPlanner.Strategies.PlanningStrategy
   def strategy_info(%__MODULE__{} = strategy) do
     %{
       name: :mock_planning_strategy,

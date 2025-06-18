@@ -139,13 +139,13 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathMatrix do
   Returns the inverse matrix and an isValid flag.
   """
   def math_inverse(state, [node_index, matrix]) when is_list(matrix) do
-    {determinant, inverse_matrix, is_valid} = case length(matrix) do
+    {_determinant, inverse_matrix, is_valid} = case length(matrix) do
       4 ->
         # 2x2 inverse
         [m00, m10, m01, m11] = matrix
         det = m00 * m11 - m01 * m10
         
-        if det != 0.0 and det != :nan and det != :positive_infinity and det != :negative_infinity do
+        if det != 0.0 and is_number(det) and is_finite(det) do
           inv_det = 1.0 / det
           {det, [m11 * inv_det, -m10 * inv_det, -m01 * inv_det, m00 * inv_det], true}
         else
@@ -158,7 +158,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathMatrix do
         
         det = m00 * (m11 * m22 - m12 * m21) - m01 * (m10 * m22 - m12 * m20) + m02 * (m10 * m21 - m11 * m20)
         
-        if det != 0.0 and det != :nan and det != :positive_infinity and det != :negative_infinity do
+        if det != 0.0 and is_number(det) and is_finite(det) do
           inv_det = 1.0 / det
           
           # Calculate cofactor matrix and transpose
@@ -183,7 +183,7 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathMatrix do
         # 4x4 inverse (simplified approach)
         det = compute_4x4_determinant(matrix)
         
-        if det != 0.0 and det != :nan and det != :positive_infinity and det != :negative_infinity do
+        if det != 0.0 and is_number(det) and is_finite(det) do
           inverse = compute_4x4_inverse(matrix, det)
           {det, inverse, true}
         else
@@ -333,6 +333,11 @@ defmodule AriaEngine.NodeLibrary.KHRInteractivity.MathMatrix do
   end
 
   # Helper functions
+
+  defp is_finite(num) when is_number(num) do
+    num != :nan and num != :positive_infinity and num != :negative_infinity
+  end
+  defp is_finite(_), do: false
 
   defp compute_4x4_determinant(matrix) do
     [m00, m10, m20, m30, m01, m11, m21, m31, m02, m12, m22, m32, m03, m13, m23, m33] = matrix
