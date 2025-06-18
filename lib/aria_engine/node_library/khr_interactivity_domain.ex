@@ -256,4 +256,100 @@ defmodule NodeLibrary.KHRInteractivityDomain do
   end
   
   defp register_debug_utilities(domain), do: domain
+  
+  # =============================================================================
+  # DIRECT FUNCTION IMPLEMENTATIONS (for test compatibility)
+  # =============================================================================
+  
+  # Math Constants
+  def math_e(state, [output_id]) do
+    MathConstants.e(state, [output_id])
+  end
+  
+  def math_pi(state, [output_id]) do
+    MathConstants.pi(state, [output_id])
+  end
+  
+  def math_inf(state, [output_id]) do
+    MathConstants.inf(state, [output_id])
+  end
+  
+  def math_nan(state, [output_id]) do
+    MathConstants.nan(state, [output_id])
+  end
+  
+  # Math Arithmetic - Unary
+  def math_abs(state, [output_id, input]) do
+    MathArithmetic.abs(state, [output_id, input])
+  end
+  
+  def math_sign(state, [output_id, input]) do
+    MathArithmetic.sign(state, [output_id, input])
+  end
+  
+  def math_neg(state, [output_id, input]) do
+    MathArithmetic.neg(state, [output_id, input])
+  end
+  
+  def math_floor(state, [output_id, input]) do
+    MathArithmetic.floor(state, [output_id, input])
+  end
+  
+  def math_ceil(state, [output_id, input]) do
+    MathArithmetic.ceil(state, [output_id, input])
+  end
+  
+  def math_round(state, [output_id, input]) do
+    MathArithmetic.round(state, [output_id, input])
+  end
+  
+  def math_trunc(state, [output_id, input]) do
+    MathArithmetic.trunc(state, [output_id, input])
+  end
+  
+  def math_fract(state, [output_id, input]) do
+    MathArithmetic.fract(state, [output_id, input])
+  end
+  
+  def math_saturate(state, [output_id, input]) do
+    MathArithmetic.saturate(state, [output_id, input])
+  end
+  
+  # Math Arithmetic - Binary
+  def math_add(state, [output_id, a, b]) do
+    MathArithmetic.add(state, [output_id, a, b])
+  end
+  
+  def math_sub(state, [output_id, a, b]) do
+    MathArithmetic.sub(state, [output_id, a, b])
+  end
+  
+  def math_mul(state, [output_id, a, b]) do
+    MathArithmetic.mul(state, [output_id, a, b])
+  end
+  
+  def math_div(state, [output_id, a, b]) do
+    MathArithmetic.div(state, [output_id, a, b])
+  end
+  
+  def math_rem(state, [output_id, a, b]) do
+    MathArithmetic.rem(state, [output_id, a, b])
+  end
+  
+  def math_min(state, [output_id, a, b]) do
+    MathArithmetic.min(state, [output_id, a, b])
+  end
+  
+  def math_max(state, [output_id, a, b]) do
+    MathArithmetic.max(state, [output_id, a, b])
+  end
+  
+  def math_mix(state, [output_id, a, b, t]) do
+    MathArithmetic.mix(state, [output_id, a, b, t])
+  end
+  
+  # Math Arithmetic - Ternary
+  def math_clamp(state, [output_id, value, min_val, max_val]) do
+    MathArithmetic.clamp(state, [output_id, value, min_val, max_val])
+  end
 end
