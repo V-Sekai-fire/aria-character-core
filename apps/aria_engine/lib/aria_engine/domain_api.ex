@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.DomainAPI do
   @moduledoc """
   Provides functions for building and managing the domain capabilities of the Aria Engine.

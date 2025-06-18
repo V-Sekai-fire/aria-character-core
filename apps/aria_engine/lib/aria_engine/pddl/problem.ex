@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Pddl.Problem do
   @moduledoc """
   Represents a PDDL/HDDL problem structure.

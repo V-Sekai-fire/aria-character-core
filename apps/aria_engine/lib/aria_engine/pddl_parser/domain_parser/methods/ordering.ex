@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PddlParser.DomainParser.Methods.Ordering do
   @moduledoc """
   Parses the ordering of a method.

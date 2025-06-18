@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PddlParser.DomainParser.Methods.Constraints do
   @moduledoc """
   Parses the constraints of a method.

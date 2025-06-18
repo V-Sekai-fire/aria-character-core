@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PddlParser.DomainParser.Methods.Task do
   @moduledoc """
   Parses the task of a method.

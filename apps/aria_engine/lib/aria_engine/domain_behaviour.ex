@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.DomainBehaviour do
   @moduledoc """
   Behaviour for modules that define a planning domain for AriaEngine.Plan.

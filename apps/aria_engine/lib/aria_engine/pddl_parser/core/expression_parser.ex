@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PddlParser.Core.ExpressionParser do
   @moduledoc """
   Functions for parsing PDDL expressions.

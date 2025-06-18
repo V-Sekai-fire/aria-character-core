@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PddlParser.DomainParser.Methods.Subtasks do
   @moduledoc """
   Parses the subtasks of a method.

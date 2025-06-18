@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PddlPrinter do
   @moduledoc """
   Provides functions for pretty printing PDDL/HDDL structures.

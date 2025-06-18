@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PddlParser.ProblemParser.Objects do
   @moduledoc """
   Parses the objects section of a PDDL problem string.

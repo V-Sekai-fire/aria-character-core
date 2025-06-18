@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Pddl.DomainAdapter do
   @moduledoc """
   Adapts an AriaEngine.Pddl.Domain to conform to the AriaEngine.DomainBehaviour.

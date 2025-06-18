@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.GoalAPI do
   @moduledoc """
   Provides functions for managing goals within the Aria Engine.

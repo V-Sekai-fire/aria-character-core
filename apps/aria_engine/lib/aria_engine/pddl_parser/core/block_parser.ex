@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PddlParser.Core.BlockParser do
   @moduledoc """
   Functions for parsing top-level PDDL blocks.
