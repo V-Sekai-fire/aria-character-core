@@ -72,19 +72,19 @@ defmodule NodeLibrary.KHRInteractivity.MathConstants do
   end
 
   # Task method implementations - using integer node IDs directly
-  def task_method_e(state, [node_index]) when is_integer(node_index) do
-    [{:ok, state |> StateV2.set_fact(node_index, "value", :math.exp(1)), []}]
+  def task_method_e(_state, [node_index]) when is_integer(node_index) do
+    [{"khr_math_e", [node_index]}]
   end
 
-  def task_method_pi(state, [node_index]) when is_integer(node_index) do
-    [{:ok, state |> StateV2.set_fact(node_index, "value", :math.pi()), []}]
+  def task_method_pi(_state, [node_index]) when is_integer(node_index) do
+    [{"khr_math_pi", [node_index]}]
   end
 
-  def task_method_inf(state, [node_index]) when is_integer(node_index) do
-    [{:ok, state |> StateV2.set_fact(node_index, "value", :positive_infinity), []}]
+  def task_method_inf(_state, [node_index]) when is_integer(node_index) do
+    [{"khr_math_inf", [node_index]}]
   end
 
-  def task_method_nan(state, [node_index]) when is_integer(node_index) do
-    [{:ok, state |> StateV2.set_fact(node_index, "value", :nan), []}]
+  def task_method_nan(_state, [node_index]) when is_integer(node_index) do
+    [{"khr_math_nan", [node_index]}]
   end
 end
