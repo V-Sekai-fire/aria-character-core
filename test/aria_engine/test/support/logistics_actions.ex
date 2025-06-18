@@ -1,13 +1,13 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.LogisticsActions do
+defmodule LogisticsActions do
   @moduledoc """
   Logistics domain actions - implements the basic logistics operations
   from the C++ GTPyhop test suite.
   """
 
-  alias AriaEngine.State
+  alias State
 
   def drive_truck(%State{} = state, [truck, _from_location, to_location]) do
     State.set_fact(state, "at", truck, to_location)

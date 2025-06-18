@@ -1,13 +1,13 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.TimelineGraphTest do
+defmodule TimelineGraphTest do
   use ExUnit.Case, async: true
-  doctest AriaEngine.TimelineGraph
+  doctest TimelineGraph
 
-  alias AriaEngine.TimelineGraph
-  alias AriaEngine.Timeline.AgentEntity
-  alias AriaEngine.StateV2
+  alias TimelineGraph
+  alias Timeline.AgentEntity
+  alias StateV2
 
   describe "new/0" do
     test "creates empty timeline graph with StateV2" do

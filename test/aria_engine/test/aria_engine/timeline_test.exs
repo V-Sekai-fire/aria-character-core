@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.TimelineTest do
+defmodule TimelineTest do
   use ExUnit.Case, async: true
-  doctest AriaEngine.Timeline
+  doctest Timeline
 
-  alias AriaEngine.Timeline
-  alias AriaEngine.Timeline.{Interval, STN}
+  alias Timeline
+  alias Timeline.{Interval, STN}
 
   describe "timeline creation and basic operations" do
     test "creates a new empty timeline" do

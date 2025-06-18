@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.IntervalEnhancedTest do
+defmodule Timeline.IntervalEnhancedTest do
   use ExUnit.Case
-  doctest AriaEngine.Timeline.Interval
+  doctest Timeline.Interval
 
-  alias AriaEngine.Timeline.Interval
+  alias Timeline.Interval
 
   describe "Enhanced Duration Functions" do
     test "duration_in_unit works for all supported units" do

@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.TemporalPlanner.STNMethodTest do
+defmodule TemporalPlanner.STNMethodTest do
   use ExUnit.Case, async: true
   
-  alias AriaEngine.TemporalPlanner.STNMethod
-  alias AriaEngine.TemporalPlanner.STNAction
-  alias AriaEngine.Timeline.STN
+  alias TemporalPlanner.STNMethod
+  alias TemporalPlanner.STNAction
+  alias Timeline.STN
 
   describe "method creation" do
     test "creates method with sequential decomposition" do

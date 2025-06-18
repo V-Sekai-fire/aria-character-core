@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.SimpleTravelActions do
+defmodule SimpleTravelActions do
   @moduledoc """
   Actions for the Simple Travel domain.
 
@@ -9,7 +9,7 @@ defmodule AriaEngine.SimpleTravelActions do
   This implements actions for walking, calling taxis, riding taxis, and paying drivers.
   """
 
-  alias AriaEngine.State
+  alias State
 
   @doc """
   Walk from one location to another.

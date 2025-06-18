@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.BlocksWorldActions do
+defmodule BlocksWorldActions do
   @moduledoc """
   Actions for the classic blocks world planning domain.
   
@@ -12,7 +12,7 @@ defmodule AriaEngine.BlocksWorldActions do
   - unstack: unstack a block from on top of another block
   """
 
-  alias AriaEngine.State
+  alias State
 
   @doc """
   Pick up a block from the table.

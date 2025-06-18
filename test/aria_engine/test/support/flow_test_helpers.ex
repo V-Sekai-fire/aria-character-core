@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Test.FlowTestHelpers do
+defmodule Test.FlowTestHelpers do
   @moduledoc """
   Test support modules for Flow-based processing tests.
   
@@ -17,14 +17,14 @@ defmodule AriaEngine.Test.FlowTestHelpers do
     centralized Flow processor through the FlowBehaviour interface.
     """
 
-    defp flow_impl, do: AriaEngine.FlowAdapter
+    defp flow_impl, do: FlowAdapter
 
     def create_backflow_pipeline(name, opts \\ []) do
       flow_impl().create_pipeline(name, opts)
     end
 
     def process_with_backflow_optimization(_pipeline_name, actions, processing_opts \\ []) do
-      AriaEngine.FlowWorkflow.process_actions_with_backflow(actions, Keyword.get(processing_opts, :stages, System.schedulers_online()))
+      FlowWorkflow.process_actions_with_backflow(actions, Keyword.get(processing_opts, :stages, System.schedulers_online()))
     end
 
   end

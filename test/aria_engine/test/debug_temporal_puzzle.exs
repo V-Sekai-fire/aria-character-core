@@ -4,9 +4,9 @@
 # Debug script for a temporal puzzle (Coffee and Bagel)
 # Usage: mix run apps/aria_engine/test/debug_temporal_puzzle.exs
 
-defmodule AriaEngine.TemporalPuzzleDebug do
-  alias AriaEngine.{Domain, State, Planner} # Keep Planner for extract_actions
-  alias AriaEngine.Timeline.Interval # STN is no longer directly used
+defmodule TemporalPuzzleDebug do
+  alias {Domain, State, Planner} # Keep Planner for extract_actions
+  alias Timeline.Interval # STN is no longer directly used
   alias DateTime
 
   @moduledoc """
@@ -46,9 +46,9 @@ defmodule AriaEngine.TemporalPuzzleDebug do
     IO.puts("Goals: #{inspect(goals)}")
 
     # 4. Attempt to generate a plan
-    # The AriaEngine.plan function now handles STN construction and validation internally
-    case AriaEngine.plan(domain, initial_state, goals, verbose: 0) do
-      {:ok, solution_tree} -> # AriaEngine.plan now returns the full solution_tree
+    # The plan function now handles STN construction and validation internally
+    case plan(domain, initial_state, goals, verbose: 0) do
+      {:ok, solution_tree} -> # plan now returns the full solution_tree
         IO.puts("\nGenerated Solution Tree:")
         # Extract primitive actions for display
         plan_actions = Planner.extract_actions(solution_tree)
@@ -57,7 +57,7 @@ defmodule AriaEngine.TemporalPuzzleDebug do
         IO.puts("\n✅ Planning successful and temporal constraints validated by Planner.")
         IO.puts("You can now execute this solution tree.")
         # Optionally, you can run the execution here
-        # case AriaEngine.Planner.run_lazy_refineahead(Planner.domain_to_interface(domain), initial_state, solution_tree) do
+        # case Planner.run_lazy_refineahead(Planner.domain_to_interface(domain), initial_state, solution_tree) do
         #   {:ok, final_state} ->
         #     IO.puts("\nExecution successful. Final state: #{inspect(final_state.data)}")
         #   {:error, reason} ->
@@ -165,8 +165,8 @@ defmodule AriaEngine.TemporalPuzzleDebug do
   end
 
   # The build_stn_from_plan function is no longer needed as STN construction
-  # and validation are handled internally by AriaEngine.Planner.plan
+  # and validation are handled internally by Planner.plan
 end
 
 # Run the debug script
-AriaEngine.TemporalPuzzleDebug.run()
+TemporalPuzzleDebug.run()

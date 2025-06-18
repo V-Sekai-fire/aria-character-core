@@ -1,10 +1,10 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.STNInconsistencyTest do
+defmodule Timeline.STNInconsistencyTest do
   use ExUnit.Case, async: true
 
-  alias AriaEngine.Timeline.STN
+  alias Timeline.STN
 
   setup do
     :ok

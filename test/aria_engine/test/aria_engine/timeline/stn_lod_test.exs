@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.STNLODTest do
+defmodule Timeline.STNLODTest do
   use ExUnit.Case
   @moduletag timeout: 60000 # Set module timeout to 60 seconds
-  doctest AriaEngine.Timeline.STN
+  doctest Timeline.STN
 
-  alias AriaEngine.Timeline.{STN, Interval}
+  alias Timeline.{STN, Interval}
 
   describe "LOD and Unit System" do
     test "creates STN with specified time unit and LOD level" do

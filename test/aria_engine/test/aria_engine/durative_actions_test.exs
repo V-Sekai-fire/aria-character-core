@@ -1,12 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.DurativeActionsTest do
+defmodule DurativeActionsTest do
   use ExUnit.Case, async: true
   
-  alias AriaEngine.{Domain, StateV2}
-  alias AriaEngine.Domain.DurativeAction
-  alias AriaEngine.Timeline.STN
+  alias Domain.DurativeAction
+  alias Timeline.STN
 
   describe "DurativeAction struct" do
     test "creates durative action with fixed duration" do
@@ -352,9 +351,9 @@ defmodule AriaEngine.DurativeActionsTest do
       todos = [{"health_status", "robot", :healthy}]  # CATEGORICAL: :healthy is a symbol
       
       # Planning should backtrack from failed magic heal to successful rest heal
-      case AriaEngine.Plan.Core.plan(domain, initial_state, todos, verbose: 0) do
+      case Plan.Core.plan(domain, initial_state, todos, verbose: 0) do
         {:ok, solution_tree} ->
-          actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
+          actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
           assert length(actions) == 1
           assert [{action_name, _args}] = actions
           assert action_name == :rest_heal
@@ -439,9 +438,9 @@ defmodule AriaEngine.DurativeActionsTest do
       todos = [{"battery_percent", "phone", 50}]  # NUMERIC: 50 is an actual number
       
       # Planning should backtrack from failed fast charge to successful slow charge
-      case AriaEngine.Plan.Core.plan(domain, initial_state, todos, verbose: 0) do
+      case Plan.Core.plan(domain, initial_state, todos, verbose: 0) do
         {:ok, solution_tree} ->
-          actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
+          actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
           assert length(actions) == 1
           assert [{action_name, _args}] = actions
           assert action_name == :slow_charge_numeric
@@ -526,9 +525,9 @@ defmodule AriaEngine.DurativeActionsTest do
       todos = [{"door_open", "main_door", true}]  # BOOLEAN: true is a categorical symbol
       
       # Planning should backtrack from failed manual open to successful electronic open
-      case AriaEngine.Plan.Core.plan(domain, initial_state, todos, verbose: 0) do
+      case Plan.Core.plan(domain, initial_state, todos, verbose: 0) do
         {:ok, solution_tree} ->
-          actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
+          actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
           assert length(actions) == 1
           assert [{action_name, _args}] = actions
           assert action_name == :electronic_open_door
@@ -595,9 +594,9 @@ defmodule AriaEngine.DurativeActionsTest do
       # Goal: complete the task
       todos = [{"task_complete", "task1", true}]  # BOOLEAN goal
       
-      case AriaEngine.Plan.Core.plan(domain, initial_state, todos, verbose: 0) do
+      case Plan.Core.plan(domain, initial_state, todos, verbose: 0) do
         {:ok, solution_tree} ->
-          actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
+          actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
           assert length(actions) == 1
           assert [{action_name, _args}] = actions
           assert action_name == :work_on_project
@@ -695,10 +694,10 @@ defmodule AriaEngine.DurativeActionsTest do
       assert STN.consistent?(stn)
       
       # Planning should backtrack from failed fast charge to successful slow charge
-      case AriaEngine.Plan.Core.plan(domain, initial_state, todos, verbose: 1) do
+      case Plan.Core.plan(domain, initial_state, todos, verbose: 1) do
         {:ok, solution_tree} ->
           # Verify the solution used slow charge (not fast charge)
-          actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
+          actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
           
           # Should have exactly one action: slow_charge
           assert length(actions) == 1

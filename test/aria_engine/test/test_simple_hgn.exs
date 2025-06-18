@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.SimpleHgnTest do
+defmodule SimpleHgnTest do
   @moduledoc """
   Test implementation of Simple HGN (goal-oriented travel) domain.
 
@@ -12,7 +12,7 @@ defmodule AriaEngine.SimpleHgnTest do
   use ExUnit.Case
   doctest AriaEngine
 
-  alias AriaEngine.{Domain, State, TestDomains}
+  alias {Domain, State, TestDomains}
 
   # Rigid relations (constants in the domain)
   @types %{
@@ -161,7 +161,7 @@ defmodule AriaEngine.SimpleHgnTest do
     end
 
     test "domain creates correctly", %{domain: domain} do
-      summary = AriaEngine.domain_summary(domain)
+      summary = domain_summary(domain)
       assert summary.name == "simple_hgn"
       assert :walk in summary.actions
       assert :call_taxi in summary.actions
@@ -205,7 +205,7 @@ defmodule AriaEngine.SimpleHgnTest do
     test "goal planning: alice to park (by taxi)", %{domain: domain, state: state} do
       goals = [{"loc", "alice", "park"}]
 
-      case AriaEngine.plan(domain, state, goals) do
+      case plan(domain, state, goals) do
         {:ok, plan} ->
           # Should use taxi since distance is 8 (> 2)
           assert length(plan) == 3
@@ -214,7 +214,7 @@ defmodule AriaEngine.SimpleHgnTest do
           assert {:pay_driver, ["alice", "park"]} in plan
 
           # Verify plan execution
-          {:ok, final_state} = AriaEngine.execute_plan(domain, state, plan)
+          {:ok, final_state} = execute_plan(domain, state, plan)
           assert StateV2.get_fact(final_state, "alice", "loc") == "park"
           assert StateV2.get_fact(final_state, "alice", "owe") == 0
 
@@ -226,14 +226,14 @@ defmodule AriaEngine.SimpleHgnTest do
     test "goal planning: bob to park (by foot)", %{domain: domain, state: state} do
       goals = [{"loc", "bob", "park"}]
 
-      case AriaEngine.plan(domain, state, goals) do
+      case plan(domain, state, goals) do
         {:ok, plan} ->
           # Should walk since distance is 2 (== walking limit)
           assert length(plan) == 1
           assert {:walk, ["bob", "home_b", "park"]} in plan
 
           # Verify plan execution
-          {:ok, final_state} = AriaEngine.execute_plan(domain, state, plan)
+          {:ok, final_state} = execute_plan(domain, state, plan)
           assert StateV2.get_fact(final_state, "bob", "loc") == "park"
 
         {:error, reason} ->
@@ -244,13 +244,13 @@ defmodule AriaEngine.SimpleHgnTest do
     test "goal planning: multiple goals", %{domain: domain, state: state} do
       goals = [{"loc", "alice", "park"}, {"loc", "bob", "park"}]
 
-      case AriaEngine.plan(domain, state, goals) do
+      case plan(domain, state, goals) do
         {:ok, plan} ->
           # Should contain actions for both alice and bob
           assert length(plan) >= 4  # At least 3 for alice + 1 for bob
 
           # Verify plan execution
-          {:ok, final_state} = AriaEngine.execute_plan(domain, state, plan)
+          {:ok, final_state} = execute_plan(domain, state, plan)
           assert StateV2.get_fact(final_state, "alice", "loc") == "park"
           assert StateV2.get_fact(final_state, "bob", "loc") == "park"
 
@@ -263,7 +263,7 @@ defmodule AriaEngine.SimpleHgnTest do
       # Alice is already at home_a
       goals = [{"loc", "alice", "home_a"}]
 
-      case AriaEngine.plan(domain, state, goals) do
+      case plan(domain, state, goals) do
         {:ok, plan} ->
           # Should be empty plan since goal is already satisfied
           assert plan == []
@@ -280,7 +280,7 @@ defmodule AriaEngine.SimpleHgnTest do
       # Try to get alice to park (needs taxi due to distance, but can't afford it)
       goals = [{"loc", "alice", "park"}]
 
-      case AriaEngine.plan(domain, poor_state, goals) do
+      case plan(domain, poor_state, goals) do
         {:ok, _plan} ->
           flunk("Planning should have failed due to insufficient cash")
 

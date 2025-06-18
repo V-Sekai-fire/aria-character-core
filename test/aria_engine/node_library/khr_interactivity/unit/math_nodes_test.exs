@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.Unit.MathNodesTest do
+defmodule NodeLibrary.KHRInteractivity.Unit.MathNodesTest do
   use ExUnit.Case, async: true
   
-  alias AriaEngine.NodeLibrary.KHRInteractivityDomain
-  alias AriaEngine.StateV2
+  alias NodeLibrary.KHRInteractivityDomain
+  alias StateV2
   
   describe "math constants" do
     test "khr_math_e returns Euler's number" do

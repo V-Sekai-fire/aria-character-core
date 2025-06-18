@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.IntervalTest do
+defmodule Timeline.IntervalTest do
   use ExUnit.Case, async: true
-  doctest AriaEngine.Timeline.Interval
+  doctest Timeline.Interval
 
-  alias AriaEngine.Timeline.{AgentEntity, Interval}
+  alias Timeline.{AgentEntity, Interval}
 
   describe "interval creation" do
     @describetag :timeline_stn

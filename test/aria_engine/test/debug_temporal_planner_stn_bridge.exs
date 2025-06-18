@@ -4,9 +4,9 @@
 # Debug script for unifying temporal planner via STN bridge
 # Usage: mix run apps/aria_engine/test/debug_temporal_planner_stn_bridge.exs
 
-defmodule AriaEngine.TemporalPlannerSTNBridgeDebug do
-  alias AriaEngine.{Domain, State}
-  alias AriaEngine.Timeline.STN
+defmodule TemporalPlannerSTNBridgeDebug do
+  alias {Domain, State}
+  alias Timeline.STN
 
   @moduledoc """
   This debug script demonstrates how a plan involving both temporal and non-temporal
@@ -44,9 +44,9 @@ defmodule AriaEngine.TemporalPlannerSTNBridgeDebug do
     IO.puts("Goals: #{inspect(goals)}")
 
     # 4. Attempt to generate a plan
-    # Note: AriaEngine.plan might not directly handle temporal actions with durations
+    # Note: plan might not directly handle temporal actions with durations
     # in a way that automatically builds an STN. We will simulate this.
-    case AriaEngine.plan(domain, initial_state, goals, verbose: 0) do
+    case plan(domain, initial_state, goals, verbose: 0) do
       {:ok, plan} ->
         IO.puts("\nGenerated Plan:")
         Enum.each(plan, fn action -> IO.puts("  #{inspect(action)}") end)
@@ -178,4 +178,4 @@ defmodule AriaEngine.TemporalPlannerSTNBridgeDebug do
 end
 
 # Run the debug script
-AriaEngine.TemporalPlannerSTNBridgeDebug.run()
+TemporalPlannerSTNBridgeDebug.run()

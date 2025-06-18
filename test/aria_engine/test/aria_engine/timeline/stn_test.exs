@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Timeline.STNTest do
+defmodule Timeline.STNTest do
   use ExUnit.Case, async: true
-  doctest AriaEngine.Timeline.STN
+  doctest Timeline.STN
 
-  alias AriaEngine.Timeline.{STN, Interval}
+  alias Timeline.{STN, Interval}
 
   describe "STN creation and basic operations" do
     @describetag :timeline_stn

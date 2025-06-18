@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.DurativeActionsQuantifiersTest do
+defmodule DurativeActionsQuantifiersTest do
   @moduledoc """
   Integration tests for durative actions with quantifier support.
   
@@ -10,8 +10,8 @@ defmodule AriaEngine.DurativeActionsQuantifiersTest do
   """
   
   use ExUnit.Case, async: true
-  alias AriaEngine.StateV2
-  alias AriaEngine.Domain.{Core, DurativeAction, Actions}
+  alias StateV2
+  alias Domain.{Core, DurativeAction, Actions}
 
   describe "durative actions with existential quantifiers" do
     test "NPC can find any available seating" do

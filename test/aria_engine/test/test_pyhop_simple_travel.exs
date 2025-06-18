@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.PyhopSimpleTravelTest do
+defmodule PyhopSimpleTravelTest do
   @moduledoc """
   Test suite for Pyhop Simple Travel Example.
 
@@ -14,14 +14,14 @@ defmodule AriaEngine.PyhopSimpleTravelTest do
   @tag :skip
 
   import AriaEngine
-  alias AriaEngine.{State, TestDomains}
+  alias {State, TestDomains}
 
   @moduletag timeout: 120_000
 
   describe "Pyhop Simple Travel domain" do
     test "domain creation and basic functionality" do
       domain = TestDomains.build_pyhop_simple_travel_domain()
-      summary = AriaEngine.domain_summary(domain)
+      summary = domain_summary(domain)
 
       assert summary.name == "pyhop_simple_travel"
       assert :walk in summary.actions

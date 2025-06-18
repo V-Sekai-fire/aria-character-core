@@ -1,15 +1,15 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.StateQuantifiersTest do
+defmodule StateQuantifiersTest do
   @moduledoc """
-  Tests for quantifier support (existential and universal) in AriaEngine.State.
+  Tests for quantifier support (existential and universal) in State.
   
   These tests verify the implementation of Phase 1 from ADR-085: Quantifiers Support.
   """
   
   use ExUnit.Case, async: true
-  alias AriaEngine.StateV2
+  alias StateV2
 
   describe "existential quantifier (exists?)" do
     test "finds existing subjects matching predicate and value" do

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.TestDomains do
+defmodule TestDomains do
   @moduledoc """
   Test domain builders for AriaEngine testing.
 
@@ -10,37 +10,37 @@ defmodule AriaEngine.TestDomains do
   and acting error domains used in testing scenarios.
   """
 
-  alias AriaEngine.{Domain, StateV2, SimpleTravelActions, SimpleTravelMethods}
+  alias {Domain, StateV2, SimpleTravelActions, SimpleTravelMethods}
 
   @doc """
   Builds a logistics domain for testing.
 
   This creates a sample domain with basic logistics actions and methods.
   """
-  @spec build_logistics_domain() :: AriaEngine.domain()
+  @spec build_logistics_domain() :: domain()
   def build_logistics_domain do
     domain = Domain.new("logistics")
 
     # Add basic movement actions (with both naming conventions for compatibility)
     domain
-    |> Domain.add_action(:drive, &AriaEngine.LogisticsActions.drive_truck/2)
-    |> Domain.add_action(:drive_truck, &AriaEngine.LogisticsActions.drive_truck/2)
-    |> Domain.add_action(:fly, &AriaEngine.LogisticsActions.fly_plane/2)
-    |> Domain.add_action(:fly_plane, &AriaEngine.LogisticsActions.fly_plane/2)
-    |> Domain.add_action(:load, &AriaEngine.LogisticsActions.load_truck/2)
-    |> Domain.add_action(:load_truck, &AriaEngine.LogisticsActions.load_truck/2)
-    |> Domain.add_action(:unload, &AriaEngine.LogisticsActions.unload_truck/2)
-    |> Domain.add_action(:unload_truck, &AriaEngine.LogisticsActions.unload_truck/2)
-    |> Domain.add_action(:load_plane, &AriaEngine.LogisticsActions.load_plane/2)
-    |> Domain.add_action(:unload_plane, &AriaEngine.LogisticsActions.unload_plane/2)
+    |> Domain.add_action(:drive, &LogisticsActions.drive_truck/2)
+    |> Domain.add_action(:drive_truck, &LogisticsActions.drive_truck/2)
+    |> Domain.add_action(:fly, &LogisticsActions.fly_plane/2)
+    |> Domain.add_action(:fly_plane, &LogisticsActions.fly_plane/2)
+    |> Domain.add_action(:load, &LogisticsActions.load_truck/2)
+    |> Domain.add_action(:load_truck, &LogisticsActions.load_truck/2)
+    |> Domain.add_action(:unload, &LogisticsActions.unload_truck/2)
+    |> Domain.add_action(:unload_truck, &LogisticsActions.unload_truck/2)
+    |> Domain.add_action(:load_plane, &LogisticsActions.load_plane/2)
+    |> Domain.add_action(:unload_plane, &LogisticsActions.unload_plane/2)
 
     # Add task methods
-    |> Domain.add_task_method("transport", &AriaEngine.LogisticsMethods.transport/2)
+    |> Domain.add_task_method("transport", &LogisticsMethods.transport/2)
 
     # Add unigoal methods
-    |> Domain.add_unigoal_method("truck_at", &AriaEngine.LogisticsMethods.truck_at/2)
-    |> Domain.add_unigoal_method("plane_at", &AriaEngine.LogisticsMethods.plane_at/2)
-    |> Domain.add_unigoal_method("at", &AriaEngine.LogisticsMethods.at_unigoal/2)
+    |> Domain.add_unigoal_method("truck_at", &LogisticsMethods.truck_at/2)
+    |> Domain.add_unigoal_method("plane_at", &LogisticsMethods.plane_at/2)
+    |> Domain.add_unigoal_method("at", &LogisticsMethods.at_unigoal/2)
   end
 
   @doc """
@@ -49,27 +49,27 @@ defmodule AriaEngine.TestDomains do
   This creates a domain with the four basic blocks world actions and
   associated task and goal methods for complex block manipulation.
   """
-  @spec build_blocks_world_domain() :: AriaEngine.domain()
+  @spec build_blocks_world_domain() :: domain()
   def build_blocks_world_domain do
     domain = Domain.new("blocks_world")
 
     # Add basic blocks world actions
     domain
-    |> Domain.add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
-    |> Domain.add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
-    |> Domain.add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
-    |> Domain.add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+    |> Domain.add_action(:pickup, &BlocksWorldActions.pickup/2)
+    |> Domain.add_action(:putdown, &BlocksWorldActions.putdown/2)
+    |> Domain.add_action(:stack, &BlocksWorldActions.stack/2)
+    |> Domain.add_action(:unstack, &BlocksWorldActions.unstack/2)
 
     # Add task methods
-    |> Domain.add_task_method("move_block", &AriaEngine.BlocksWorldMethods.move_block/2)
-    |> Domain.add_task_method("get_block", &AriaEngine.BlocksWorldMethods.get_block/2)
-    |> Domain.add_task_method("clear_block", &AriaEngine.BlocksWorldMethods.clear_block/2)
-    |> Domain.add_task_method("build_tower", &AriaEngine.BlocksWorldMethods.build_tower/2)
+    |> Domain.add_task_method("move_block", &BlocksWorldMethods.move_block/2)
+    |> Domain.add_task_method("get_block", &BlocksWorldMethods.get_block/2)
+    |> Domain.add_task_method("clear_block", &BlocksWorldMethods.clear_block/2)
+    |> Domain.add_task_method("build_tower", &BlocksWorldMethods.build_tower/2)
 
     # Add unigoal methods
-    |> Domain.add_unigoal_method("on", &AriaEngine.BlocksWorldMethods.on_unigoal/2)
-    |> Domain.add_unigoal_method("on_table", &AriaEngine.BlocksWorldMethods.on_table_unigoal/2)
-    |> Domain.add_unigoal_method("clear", &AriaEngine.BlocksWorldMethods.clear_unigoal/2)
+    |> Domain.add_unigoal_method("on", &BlocksWorldMethods.on_unigoal/2)
+    |> Domain.add_unigoal_method("on_table", &BlocksWorldMethods.on_table_unigoal/2)
+    |> Domain.add_unigoal_method("clear", &BlocksWorldMethods.clear_unigoal/2)
   end
 
   @doc """
@@ -78,30 +78,30 @@ defmodule AriaEngine.TestDomains do
   This creates a blocks world domain that uses both goals and tasks,
   implementing the near-optimal algorithm from Gupta & Nau (1992).
   """
-  @spec build_blocks_gtn_domain() :: AriaEngine.domain()
+  @spec build_blocks_gtn_domain() :: domain()
   def build_blocks_gtn_domain do
     domain = Domain.new("blocks_gtn")
 
     # Add basic blocks world actions
     domain
-    |> Domain.add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
-    |> Domain.add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
-    |> Domain.add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
-    |> Domain.add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+    |> Domain.add_action(:pickup, &BlocksWorldActions.pickup/2)
+    |> Domain.add_action(:putdown, &BlocksWorldActions.putdown/2)
+    |> Domain.add_action(:stack, &BlocksWorldActions.stack/2)
+    |> Domain.add_action(:unstack, &BlocksWorldActions.unstack/2)
 
     # Add task methods for take and put
-    |> Domain.add_task_method("take", &AriaEngine.BlocksWorldMethods.take_from_table/2)
-    |> Domain.add_task_method("take", &AriaEngine.BlocksWorldMethods.take_from_block/2)
-    |> Domain.add_task_method("put", &AriaEngine.BlocksWorldMethods.put_on_table/2)
-    |> Domain.add_task_method("put", &AriaEngine.BlocksWorldMethods.put_on_block/2)
+    |> Domain.add_task_method("take", &BlocksWorldMethods.take_from_table/2)
+    |> Domain.add_task_method("take", &BlocksWorldMethods.take_from_block/2)
+    |> Domain.add_task_method("put", &BlocksWorldMethods.put_on_table/2)
+    |> Domain.add_task_method("put", &BlocksWorldMethods.put_on_block/2)
 
     # Add unigoal methods for blocks positioning
-    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
-    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
-    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
+    |> Domain.add_unigoal_method("pos", &BlocksWorldMethods.pos_on_table/2)
+    |> Domain.add_unigoal_method("pos", &BlocksWorldMethods.pos_on_block/2)
+    |> Domain.add_unigoal_method("pos", &BlocksWorldMethods.pos_in_hand/2)
 
     # Add multigoal methods
-    |> Domain.add_multigoal_method(&AriaEngine.BlocksWorldMethods.achieve_blocks_multigoal/2)
+    |> Domain.add_multigoal_method(&BlocksWorldMethods.achieve_blocks_multigoal/2)
   end
 
   @doc """
@@ -110,24 +110,24 @@ defmodule AriaEngine.TestDomains do
   This creates a blocks world domain that uses only goals (no tasks),
   implementing the near-optimal algorithm from Gupta & Nau (1992).
   """
-  @spec build_blocks_hgn_domain() :: AriaEngine.domain()
+  @spec build_blocks_hgn_domain() :: domain()
   def build_blocks_hgn_domain do
     domain = Domain.new("blocks_hgn")
 
     # Add basic blocks world actions
     domain
-    |> Domain.add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
-    |> Domain.add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
-    |> Domain.add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
-    |> Domain.add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+    |> Domain.add_action(:pickup, &BlocksWorldActions.pickup/2)
+    |> Domain.add_action(:putdown, &BlocksWorldActions.putdown/2)
+    |> Domain.add_action(:stack, &BlocksWorldActions.stack/2)
+    |> Domain.add_action(:unstack, &BlocksWorldActions.unstack/2)
 
     # Add unigoal methods only (no task methods)
-    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
-    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
-    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
+    |> Domain.add_unigoal_method("pos", &BlocksWorldMethods.pos_on_table/2)
+    |> Domain.add_unigoal_method("pos", &BlocksWorldMethods.pos_on_block/2)
+    |> Domain.add_unigoal_method("pos", &BlocksWorldMethods.pos_in_hand/2)
 
     # Add multigoal methods for complex goals
-    |> Domain.add_multigoal_method(&AriaEngine.BlocksWorldMethods.achieve_blocks_multigoal/2)
+    |> Domain.add_multigoal_method(&BlocksWorldMethods.achieve_blocks_multigoal/2)
   end
 
   @doc """
@@ -137,26 +137,26 @@ defmodule AriaEngine.TestDomains do
   using GTPyhop's built-in method to split multigoals into unigoals
   and achieve them sequentially.
   """
-  @spec build_blocks_goal_splitting_domain() :: AriaEngine.domain()
+  @spec build_blocks_goal_splitting_domain() :: domain()
   def build_blocks_goal_splitting_domain do
     domain = Domain.new("blocks_goal_splitting")
 
     # Add basic blocks world actions
     domain
-    |> Domain.add_action(:pickup, &AriaEngine.BlocksWorldActions.pickup/2)
-    |> Domain.add_action(:putdown, &AriaEngine.BlocksWorldActions.putdown/2)
-    |> Domain.add_action(:stack, &AriaEngine.BlocksWorldActions.stack/2)
-    |> Domain.add_action(:unstack, &AriaEngine.BlocksWorldActions.unstack/2)
+    |> Domain.add_action(:pickup, &BlocksWorldActions.pickup/2)
+    |> Domain.add_action(:putdown, &BlocksWorldActions.putdown/2)
+    |> Domain.add_action(:stack, &BlocksWorldActions.stack/2)
+    |> Domain.add_action(:unstack, &BlocksWorldActions.unstack/2)
 
     # Add only basic unigoal methods (relies on built-in goal splitting)
-    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_table/2)
-    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_on_block/2)
-    |> Domain.add_unigoal_method("pos", &AriaEngine.BlocksWorldMethods.pos_in_hand/2)
-    |> Domain.add_unigoal_method("clear", &AriaEngine.BlocksWorldMethods.clear_block/2)
-    |> Domain.add_unigoal_method("holding", &AriaEngine.BlocksWorldMethods.holding_state/2)
+    |> Domain.add_unigoal_method("pos", &BlocksWorldMethods.pos_on_table/2)
+    |> Domain.add_unigoal_method("pos", &BlocksWorldMethods.pos_on_block/2)
+    |> Domain.add_unigoal_method("pos", &BlocksWorldMethods.pos_in_hand/2)
+    |> Domain.add_unigoal_method("clear", &BlocksWorldMethods.clear_block/2)
+    |> Domain.add_unigoal_method("holding", &BlocksWorldMethods.holding_state/2)
 
     # Use built-in goal splitting method
-    |> Domain.add_multigoal_method(&AriaEngine.Multigoal.split_multigoal/2)
+    |> Domain.add_multigoal_method(&Multigoal.split_multigoal/2)
   end
 
   @doc """
@@ -165,7 +165,7 @@ defmodule AriaEngine.TestDomains do
   This creates a domain with basic travel actions (walk, call_taxi, ride_taxi, pay_driver)
   and associated task methods for travel planning.
   """
-  @spec build_simple_travel_domain() :: AriaEngine.domain()
+  @spec build_simple_travel_domain() :: domain()
   def build_simple_travel_domain do
     Domain.new("simple_travel")
     |> Domain.add_action(:walk, &SimpleTravelActions.walk/2)
@@ -184,20 +184,20 @@ defmodule AriaEngine.TestDomains do
   This creates a simpler version of the travel domain that maintains
   compatibility with the original Pyhop planner interface.
   """
-  @spec build_pyhop_simple_travel_domain() :: AriaEngine.domain()
+  @spec build_pyhop_simple_travel_domain() :: domain()
   def build_pyhop_simple_travel_domain do
     domain = Domain.new("pyhop_simple_travel")
 
     # Add basic travel actions
     domain
-    |> Domain.add_action(:walk, &AriaEngine.SimpleTravelActions.walk/2)
-    |> Domain.add_action(:call_taxi, &AriaEngine.SimpleTravelActions.call_taxi/2)
-    |> Domain.add_action(:ride_taxi, &AriaEngine.SimpleTravelActions.ride_taxi_simple/2)
-    |> Domain.add_action(:pay_driver, &AriaEngine.SimpleTravelActions.pay_driver_simple/2)
+    |> Domain.add_action(:walk, &SimpleTravelActions.walk/2)
+    |> Domain.add_action(:call_taxi, &SimpleTravelActions.call_taxi/2)
+    |> Domain.add_action(:ride_taxi, &SimpleTravelActions.ride_taxi_simple/2)
+    |> Domain.add_action(:pay_driver, &SimpleTravelActions.pay_driver_simple/2)
 
     # Add task methods for travel
-    |> Domain.add_task_method("travel", &AriaEngine.SimpleTravelMethods.travel_by_foot_simple/2)
-    |> Domain.add_task_method("travel", &AriaEngine.SimpleTravelMethods.travel_by_taxi_simple/2)
+    |> Domain.add_task_method("travel", &SimpleTravelMethods.travel_by_foot_simple/2)
+    |> Domain.add_task_method("travel", &SimpleTravelMethods.travel_by_taxi_simple/2)
   end
 
   @doc """
@@ -206,7 +206,7 @@ defmodule AriaEngine.TestDomains do
   This creates a domain with flag manipulation actions and multiple
   task methods that demonstrate backtracking behavior.
   """
-  @spec build_backtracking_domain() :: AriaEngine.domain()
+  @spec build_backtracking_domain() :: domain()
   def build_backtracking_domain do
     Domain.new("backtracking")
     |> Domain.add_action(:putv, &putv_action/2)
@@ -228,7 +228,7 @@ defmodule AriaEngine.TestDomains do
   This creates a domain with travel actions and unigoal methods
   for goal-oriented planning.
   """
-  @spec build_simple_hgn_domain() :: AriaEngine.domain()
+  @spec build_simple_hgn_domain() :: domain()
   def build_simple_hgn_domain do
     Domain.new("simple_hgn")
     |> Domain.add_action(:walk, &walk_action/2)
@@ -245,7 +245,7 @@ defmodule AriaEngine.TestDomains do
   This creates a domain with travel actions for planning that assumes
   taxis are always in good condition.
   """
-  @spec build_simple_htn_acting_error_actions_domain() :: AriaEngine.domain()
+  @spec build_simple_htn_acting_error_actions_domain() :: domain()
   def build_simple_htn_acting_error_actions_domain do
     Domain.new("simple_htn_acting_error_actions")
     |> Domain.add_action(:walk, &walk_action_htn/2)
@@ -263,7 +263,7 @@ defmodule AriaEngine.TestDomains do
   This creates a domain with travel commands for execution that checks
   taxi conditions and can fail if taxis are in bad condition.
   """
-  @spec build_simple_htn_acting_error_commands_domain() :: AriaEngine.domain()
+  @spec build_simple_htn_acting_error_commands_domain() :: domain()
   def build_simple_htn_acting_error_commands_domain do
     Domain.new("simple_htn_acting_error_commands")
     |> Domain.add_action(:walk, &walk_command_htn/2)
@@ -280,7 +280,7 @@ defmodule AriaEngine.TestDomains do
 
   This creates a domain with move and pickup actions for simple planning scenarios.
   """
-  @spec build_simple_rpg_domain() :: AriaEngine.domain()
+  @spec build_simple_rpg_domain() :: domain()
   def build_simple_rpg_domain do
     # Define simple actions
     move_action = fn state, [to] ->
@@ -309,7 +309,7 @@ defmodule AriaEngine.TestDomains do
 
   This creates a domain with move, pickup actions and a get_item task method.
   """
-  @spec build_rpg_domain() :: AriaEngine.domain()
+  @spec build_rpg_domain() :: domain()
   def build_rpg_domain do
     # Actions
     move_action = fn state, [to] ->
@@ -352,7 +352,7 @@ defmodule AriaEngine.TestDomains do
 
   This creates a basic domain with move and pickup actions for testing domain functionality.
   """
-  @spec build_test_domain() :: AriaEngine.domain()
+  @spec build_test_domain() :: domain()
   def build_test_domain do
     move_action = fn state, [_from, to] ->
       StateV2.set_fact(state, "player", "location", to)
@@ -372,7 +372,7 @@ defmodule AriaEngine.TestDomains do
   @doc """
   Creates an initial state for simple travel domain testing.
   """
-  @spec create_simple_travel_state() :: AriaEngine.state()
+  @spec create_simple_travel_state() :: state()
   def create_simple_travel_state do
     StateV2.new()
     |> StateV2.set_fact("alice", "loc", "home_a")
@@ -388,7 +388,7 @@ defmodule AriaEngine.TestDomains do
   @doc """
   Creates an initial state for backtracking domain testing.
   """
-  @spec create_backtracking_state() :: AriaEngine.state()
+  @spec create_backtracking_state() :: state()
   def create_backtracking_state do
     StateV2.new()
     |> StateV2.set_fact("system", "flag", -1)
@@ -397,7 +397,7 @@ defmodule AriaEngine.TestDomains do
   @doc """
   Creates an initial state for simple HGN domain testing.
   """
-  @spec create_simple_hgn_state() :: AriaEngine.state()
+  @spec create_simple_hgn_state() :: state()
   def create_simple_hgn_state do
     StateV2.new()
     |> StateV2.set_fact("alice", "loc", "home_a")
@@ -413,7 +413,7 @@ defmodule AriaEngine.TestDomains do
   @doc """
   Creates an initial state with good taxis for HTN acting error testing.
   """
-  @spec create_good_taxi_state() :: AriaEngine.state()
+  @spec create_good_taxi_state() :: state()
   def create_good_taxi_state do
     StateV2.new()
     |> StateV2.set_fact("alice", "loc", "home_a")
@@ -431,7 +431,7 @@ defmodule AriaEngine.TestDomains do
   @doc """
   Creates an initial state with bad taxis for HTN acting error testing.
   """
-  @spec create_bad_taxi_state() :: AriaEngine.state()
+  @spec create_bad_taxi_state() :: state()
   def create_bad_taxi_state do
     StateV2.new()
     |> StateV2.set_fact("alice", "loc", "home_a")

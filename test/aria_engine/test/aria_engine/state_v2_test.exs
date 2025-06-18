@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.StateV2Test do
+defmodule StateV2Test do
   use ExUnit.Case, async: true
-  doctest AriaEngine.StateV2
+  doctest StateV2
 
-  alias AriaEngine.StateV2
+  alias StateV2
 
   describe "new/0 and new/1" do
     test "creates empty state" do
@@ -253,7 +253,7 @@ defmodule AriaEngine.StateV2Test do
         {"has", "player"} => "sword",
         {"status", "chair1"} => "available"
       }
-      legacy_state = %AriaEngine.State{data: legacy_data}
+      legacy_state = %State{data: legacy_data}
 
       # Convert to StateV2
       state_v2 = StateV2.from_legacy_state(legacy_state)
@@ -274,8 +274,8 @@ defmodule AriaEngine.StateV2Test do
       legacy_state = StateV2.to_legacy_state(state_v2)
 
       # Verify legacy access works
-      assert AriaEngine.State.get_fact(legacy_state, "location", "player") == "room1"
-      assert AriaEngine.State.get_fact(legacy_state, "has", "player") == "sword"
+      assert State.get_fact(legacy_state, "location", "player") == "room1"
+      assert State.get_fact(legacy_state, "has", "player") == "sword"
     end
 
     test "round-trip conversion preserves data" do

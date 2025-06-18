@@ -1,11 +1,10 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.Strategies.Default.HTNPlanningStrategyTest do
+defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategyTest do
   use ExUnit.Case, async: true
 
-  alias AriaEngine.HybridPlanner.Strategies.Default.HTNPlanningStrategy
-  alias AriaEngine.{StateV2, Domain}
+  alias HybridPlanner.Strategies.Default.HTNPlanningStrategy
 
   describe "basic planning functionality" do
     setup do

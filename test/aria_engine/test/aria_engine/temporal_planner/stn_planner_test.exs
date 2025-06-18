@@ -1,13 +1,13 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.TemporalPlanner.STNPlannerTest do
+defmodule TemporalPlanner.STNPlannerTest do
   use ExUnit.Case, async: true
   
-  alias AriaEngine.TemporalPlanner.STNPlanner
-  alias AriaEngine.TemporalPlanner.STNMethod
-  alias AriaEngine.TemporalPlanner.STNAction
-  alias AriaEngine.Timeline.STN
+  alias TemporalPlanner.STNPlanner
+  alias TemporalPlanner.STNMethod
+  alias TemporalPlanner.STNAction
+  alias Timeline.STN
 
   describe "planner creation" do
     test "creates planner with hierarchical strategy" do

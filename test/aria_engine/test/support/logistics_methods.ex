@@ -1,13 +1,13 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.LogisticsMethods do
+defmodule LogisticsMethods do
   @moduledoc """
   Logistics domain methods - implements the task and goal methods
   from the C++ GTPyhop test suite.
   """
 
-  alias AriaEngine.State
+  alias State
 
   def truck_at(%State{} = state, [truck, location]) do
     trucks = State.get_fact(state, "trucks", "list") || []
@@ -132,7 +132,7 @@ defmodule AriaEngine.LogisticsMethods do
       object_at = State.get_fact(state, "at", object)
       
       if State.get_fact(state, "in_city", object_at) == State.get_fact(state, "in_city", location) do
-        truck = AriaEngine.LogisticsActions.find_truck(state, object)
+        truck = LogisticsActions.find_truck(state, object)
         
         if truck do
           # Return as multigoal - multiple goals that need to be achieved
@@ -162,7 +162,7 @@ defmodule AriaEngine.LogisticsMethods do
       
       if object_at in airports and 
          State.get_fact(state, "in_city", object_at) != State.get_fact(state, "in_city", airport) do
-        plane = AriaEngine.LogisticsActions.find_plane(state, object)
+        plane = LogisticsActions.find_plane(state, object)
         
         if plane do
           # Return as multigoal - multiple goals that need to be achieved in sequence
@@ -191,8 +191,8 @@ defmodule AriaEngine.LogisticsMethods do
       object_at = State.get_fact(state, "at", object)
       
       if State.get_fact(state, "in_city", object_at) != State.get_fact(state, "in_city", location) do
-        airport1 = AriaEngine.LogisticsActions.find_airport(state, object_at)
-        airport2 = AriaEngine.LogisticsActions.find_airport(state, location)
+        airport1 = LogisticsActions.find_airport(state, object_at)
+        airport2 = LogisticsActions.find_airport(state, location)
         
         if airport1 && airport2 do
           # Return as multigoal - multiple goals that need to be achieved in sequence

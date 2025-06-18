@@ -1,16 +1,15 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.HybridPlanner.HybridCoordinatorV2Test do
+defmodule HybridPlanner.HybridCoordinatorV2Test do
   use ExUnit.Case, async: true
 
-  alias AriaEngine.HybridPlanner.{
+  alias HybridPlanner.{
     HybridCoordinatorV2,
     StrategyFactory,
     Strategies.Mock.MockPlanningStrategy
   }
 
-  alias AriaEngine.{StateV2, Domain}
 
   describe "basic coordinator functionality" do
     test "can create coordinator with default strategies" do

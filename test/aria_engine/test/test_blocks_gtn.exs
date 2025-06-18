@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.BlocksGTNTest do
+defmodule BlocksGTNTest do
   @moduledoc """
   Test suite for Blocks World Goal-Task-Network (GTN) planning.
 
@@ -14,14 +14,14 @@ defmodule AriaEngine.BlocksGTNTest do
   @tag :skip
 
   import AriaEngine
-  alias AriaEngine.{State, Multigoal, TestDomains}
+  alias {State, Multigoal, TestDomains}
 
   @moduletag timeout: 120_000
 
   describe "Blocks GTN domain" do
     test "domain creation and basic functionality" do
       domain = TestDomains.build_blocks_gtn_domain()
-      summary = AriaEngine.domain_summary(domain)
+      summary = domain_summary(domain)
 
       assert summary.name == "blocks_gtn"
       assert :pickup in summary.actions

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.BlocksWorldMethods do
+defmodule BlocksWorldMethods do
   @moduledoc """
   Methods for blocks world planning domain.
 
@@ -9,7 +9,7 @@ defmodule AriaEngine.BlocksWorldMethods do
   including strategies for moving blocks and achieving complex block configurations.
   """
 
-  alias AriaEngine.State
+  alias State
 
   @doc """
   Task method for moving a block to a target location.

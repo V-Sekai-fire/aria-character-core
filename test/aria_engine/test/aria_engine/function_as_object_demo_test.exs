@@ -1,11 +1,10 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.FunctionAsObjectDemoTest do
+defmodule FunctionAsObjectDemoTest do
   use ExUnit.Case, async: true
   
-  alias AriaEngine.{Domain, StateV2}
-  alias AriaEngine.HybridPlanner.{StrategyCoordinator, StrategyRegistry}
+  alias HybridPlanner.{StrategyCoordinator, StrategyRegistry}
 
   describe "Function as Object Pattern Demo" do
     test "demonstrates composable strategy functions" do

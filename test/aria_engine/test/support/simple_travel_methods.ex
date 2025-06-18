@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.SimpleTravelMethods do
+defmodule SimpleTravelMethods do
   @moduledoc """
   Methods for the Simple Travel domain.
 
@@ -9,7 +9,7 @@ defmodule AriaEngine.SimpleTravelMethods do
   This implements task methods and unigoal methods for travel planning.
   """
 
-  alias AriaEngine.State
+  alias State
 
   # Task Methods
 

@@ -1,14 +1,14 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.NodeLibrary.KHRInteractivity.Integration.PlannerMathNodesTest do
+defmodule NodeLibrary.KHRInteractivity.Integration.PlannerMathNodesTest do
   use ExUnit.Case, async: true
   
-  alias AriaEngine.NodeLibrary.KHRInteractivityDomain
-  alias AriaEngine.Domain.Core
-  alias AriaEngine.Domain.Actions
-  alias AriaEngine.StateV2
-  alias AriaEngine.Planner
+  alias NodeLibrary.KHRInteractivityDomain
+  alias Domain.Core
+  alias Domain.Actions
+  alias StateV2
+  alias Planner
   
   describe "KHR math nodes integration with temporal planner" do
     setup do
