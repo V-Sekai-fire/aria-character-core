@@ -9,6 +9,7 @@ defmodule AriaStorage.WaffleExample do
   storage system for various use cases.
   """
 
+  require Logger
   alias AriaStorage.Storage
 
   @doc """
@@ -24,14 +25,14 @@ defmodule AriaStorage.WaffleExample do
 
     case Storage.store_file_with_waffle(file_path, storage_opts) do
       {:ok, result} ->
-        IO.puts("✅ File stored locally")
-        IO.puts("   Index: #{result.index_ref}")
-        IO.puts("   Chunks: #{result.chunks_stored}")
-        IO.puts("   Size: #{result.total_size} bytes")
+        Logger.info("File stored locally")
+        Logger.info("  Index: #{result.index_ref}")
+        Logger.info("  Chunks: #{result.chunks_stored}")
+        Logger.info("  Size: #{result.total_size} bytes")
         {:ok, result}
 
       {:error, reason} ->
-        IO.puts("❌ Failed to store file: #{inspect(reason)}")
+        Logger.error("Failed to store file: #{inspect(reason)}")
         {:error, reason}
     end
   end
@@ -75,9 +76,9 @@ defmodule AriaStorage.WaffleExample do
       {:ok, result} ->
         case File.write(output_path, result.data) do
           :ok ->
-            IO.puts("✅ File retrieved and saved to #{output_path}")
-            IO.puts("   Size: #{result.size} bytes")
-            IO.puts("   Chunks: #{result.chunks_count}")
+            Logger.info(" File retrieved and saved to #{output_path}")
+            Logger.debug("   Size: #{result.size} bytes")
+            Logger.debug("   Chunks: #{result.chunks_count}")
             {:ok, output_path}
 
           {:error, reason} ->
@@ -85,7 +86,7 @@ defmodule AriaStorage.WaffleExample do
         end
 
       {:error, reason} ->
-        IO.puts("❌ Failed to retrieve file: #{inspect(reason)}")
+        Logger.error(" Failed to retrieve file: #{inspect(reason)}")
         {:error, reason}
     end
   end
@@ -111,9 +112,9 @@ defmodule AriaStorage.WaffleExample do
 
     {successful, failed} = Enum.split_with(results, &match?({:ok, _}, &1))
 
-    IO.puts("📊 Batch upload completed:")
-    IO.puts("   Successful: #{length(successful)}")
-    IO.puts("   Failed: #{length(failed)}")
+    Logger.info(" Batch upload completed:")
+    Logger.debug("   Successful: #{length(successful)}")
+    Logger.error("   Failed: #{length(failed)}")
 
     {:ok, %{
       successful: Enum.map(successful, fn {:ok, data} -> data end),
@@ -130,19 +131,19 @@ defmodule AriaStorage.WaffleExample do
       bucket: "aria-chunks-migrated"
     ], opts)
 
-    IO.puts("🔄 Starting migration to #{target_backend}...")
+    Logger.info(" Starting migration to #{target_backend}...")
 
     case Storage.migrate_to_waffle(target_backend, migration_opts) do
       {:ok, result} ->
-        IO.puts("✅ Migration completed successfully")
-        IO.puts("   Total chunks: #{result.total_chunks}")
-        IO.puts("   Migrated: #{result.migrated}")
-        IO.puts("   Failed: #{result.failed}")
-        IO.puts("   Target backend: #{result.target_backend}")
+        Logger.info(" Migration completed successfully")
+        Logger.debug("   Total chunks: #{result.total_chunks}")
+        Logger.debug("   Migrated: #{result.migrated}")
+        Logger.error("   Failed: #{result.failed}")
+        Logger.debug("   Target backend: #{result.target_backend}")
         {:ok, result}
 
       {:error, reason} ->
-        IO.puts("❌ Migration failed: #{inspect(reason)}")
+        Logger.error(" Migration failed: #{inspect(reason)}")
         {:error, reason}
     end
   end
@@ -151,37 +152,37 @@ defmodule AriaStorage.WaffleExample do
   Example: Storage health check and diagnostics.
   """
   def health_check(backend \\ :local, opts \\ []) do
-    IO.puts("🏥 Running storage health check for #{backend}...")
+    Logger.info(" Running storage health check for #{backend}...")
 
     # Test connectivity
     case Storage.test_waffle_storage(backend, opts) do
       {:ok, result} ->
-        IO.puts("✅ Connectivity: #{result.status}")
+        Logger.info(" Connectivity: #{result.status}")
 
         # Get configuration
         config = Storage.get_waffle_config()
-        IO.puts("📋 Configuration:")
-        IO.puts("   Storage: #{config.storage}")
-        IO.puts("   Bucket: #{config.bucket}")
-        IO.puts("   Directory: #{config.storage_dir_prefix}")
+        Logger.info(" Configuration:")
+        Logger.debug("   Storage: #{config.storage}")
+        Logger.debug("   Bucket: #{config.bucket}")
+        Logger.debug("   Directory: #{config.storage_dir_prefix}")
 
         # List recent files
         case Storage.list_waffle_files(backend: backend, limit: 5) do
           {:ok, files} ->
-            IO.puts("📁 Recent files (#{length(files)}):")
+            Logger.info(" Recent files (#{length(files)}):")
             Enum.each(files, fn file ->
-              IO.puts("   - #{file.index_ref} (#{format_bytes(file.size)})")
+              Logger.debug("   - #{file.index_ref} (#{format_bytes(file.size)})")
             end)
 
           {:error, reason} ->
-            IO.puts("⚠️  Could not list files: #{inspect(reason)}")
+            Logger.warning("  Could not list files: #{inspect(reason)}")
         end
 
         {:ok, %{status: :healthy, config: config}}
 
       {:error, result} ->
-        IO.puts("❌ Connectivity: #{result.status}")
-        IO.puts("   Error: #{inspect(result.error)}")
+        Logger.error(" Connectivity: #{result.status}")
+        Logger.error("   Error: #{inspect(result.error)}")
         {:error, %{status: :unhealthy, error: result.error}}
     end
   end
@@ -199,14 +200,14 @@ defmodule AriaStorage.WaffleExample do
         Enum.each(test_files, fn file ->
           file_path = Path.join(temp_dir, file)
           File.rm(file_path)
-          IO.puts("🗑️  Removed: #{file}")
+          Logger.info("  Removed: #{file}")
         end)
 
-        IO.puts("✅ Cleanup completed: #{length(test_files)} files removed")
+        Logger.info(" Cleanup completed: #{length(test_files)} files removed")
         {:ok, length(test_files)}
 
       {:error, reason} ->
-        IO.puts("❌ Cleanup failed: #{inspect(reason)}")
+        Logger.error(" Cleanup failed: #{inspect(reason)}")
         {:error, reason}
     end
   end

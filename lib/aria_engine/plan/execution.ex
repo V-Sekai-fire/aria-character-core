@@ -5,6 +5,8 @@ defmodule Plan.Execution do
   @moduledoc """
   Functions for executing the planned solution using Run-Lazy-Refineahead.
   """
+  
+  require Logger
   alias Plan.{Backtracking, Utils, Blacklisting, Core} # Added Core alias
   alias StateV2
 
@@ -35,7 +37,7 @@ defmodule Plan.Execution do
   defp debug_puts(message) do
     # Only output during tests if ExUnit trace mode is enabled
     if Application.get_env(:ex_unit, :trace, false) or not test_mode?() do
-      IO.puts(message)
+      Logger.debug(message)
     end
   end
 

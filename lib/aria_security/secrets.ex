@@ -83,9 +83,9 @@ defmodule AriaSecurity.Secrets do
     # Check vault health before proceeding
     case check_vault_health(vault_addr) do
       {:ok, :healthy} ->
-        IO.puts("DEBUG: Vault is healthy")
+        Logger.debug("Vault is healthy")
       {:error, reason} ->
-        IO.puts("DEBUG: Vault health check failed: #{inspect(reason)}")
+        Logger.debug("Vault health check failed: #{inspect(reason)}")
         Logger.error("Vault health check failed: #{inspect(reason)}")
         {:error, {:vault_unhealthy, reason}}
     end
@@ -96,16 +96,16 @@ defmodule AriaSecurity.Secrets do
       _ -> System.get_env("VAULT_TOKEN", "")
     end
     
-    IO.puts("DEBUG: Vault address: #{vault_addr}")
-    IO.puts("DEBUG: Vault token length: #{String.length(vault_token)}")
-    IO.puts("DEBUG: Vault token: #{vault_token}")
+    Logger.debug("Vault address: #{vault_addr}")
+    Logger.debug("Vault token length: #{String.length(vault_token)}")
+    Logger.debug("Vault token: #{vault_token}")
     
     # First check if OpenBao is reachable
     case check_vault_health(vault_addr) do
       {:ok, :healthy} ->
-        IO.puts("DEBUG: OpenBao health check passed")
+        Logger.debug("OpenBao health check passed")
       {:error, reason} ->
-        IO.puts("DEBUG: OpenBao health check failed: #{inspect(reason)}")
+        Logger.debug("OpenBao health check failed: #{inspect(reason)}")
         {:error, {:health_check_failed, reason}}
     end
     
@@ -115,19 +115,19 @@ defmodule AriaSecurity.Secrets do
     # Start the Vaultex application if not already started
     case Application.ensure_all_started(:vaultex) do
       {:ok, apps} ->
-        IO.puts("DEBUG: Started Vaultex apps: #{inspect(apps)}")
+        Logger.debug("Started Vaultex apps: #{inspect(apps)}")
         # Authenticate with the token if provided
         if vault_token != "" do
-          IO.puts("DEBUG: Attempting authentication with token...")
+          Logger.debug("Attempting authentication with token...")
           case Vaultex.Client.auth(:token, {vault_token}) do
             {:ok, response} ->
-              IO.puts("DEBUG: Authentication successful: #{inspect(response)}")
+              Logger.debug("Authentication successful: #{inspect(response)}")
               Logger.info("Successfully authenticated with OpenBao")
               # Store token for later use
               Process.put(:vault_token, vault_token)
               {:ok, %{vault_connected: true}}
             {:error, reason} ->
-              IO.puts("DEBUG: Authentication failed: #{inspect(reason)}")
+              Logger.debug("Authentication failed: #{inspect(reason)}")
               Logger.error("Failed to authenticate with OpenBao: #{inspect(reason)}")
               {:error, {:auth_failed, reason}}
           end
@@ -244,10 +244,10 @@ defmodule AriaSecurity.Secrets do
         # These are all valid OpenBao health status codes
         {:ok, :healthy}
       {:ok, response} ->
-        IO.puts("DEBUG: Unexpected health check response: #{inspect(response)}")
+        Logger.debug("Unexpected health check response: #{inspect(response)}")
         {:error, {:unexpected_response, response}}
       {:error, reason} ->
-        IO.puts("DEBUG: Health check failed: #{inspect(reason)}")
+        Logger.debug("Health check failed: #{inspect(reason)}")
         {:error, reason}
     end
   end

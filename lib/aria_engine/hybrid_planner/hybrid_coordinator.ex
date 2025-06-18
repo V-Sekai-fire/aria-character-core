@@ -26,7 +26,7 @@ defmodule HybridPlanner.HybridCoordinator do
         {:ok, encapsulated_plan} ->
           HybridPlanner.HybridCoordinator.execute(domain, initial_state, encapsulated_plan)
         {:error, error_reason} ->
-          IO.puts("Planning failed: \#{error_reason}")
+          Logger.error("Planning failed: \#{error_reason}")
       end
   """
 

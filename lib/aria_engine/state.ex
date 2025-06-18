@@ -307,8 +307,11 @@ defmodule State do
   end
 
   def evaluate_condition(_state, condition) do
-    require Logger
-    Logger.warning("Unknown condition format: #{inspect(condition)}")
+    # Only log in development or when ExUnit trace mode is enabled
+    if Mix.env() == :dev or (Mix.env() == :test and ExUnit.configuration()[:trace]) do
+      require Logger
+      Logger.warning("Unknown condition format: #{inspect(condition)}")
+    end
     false
   end
 end

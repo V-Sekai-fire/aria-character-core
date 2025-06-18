@@ -37,6 +37,7 @@ defmodule HybridPlanner.StrategyCoordinator do
       end
   """
 
+  require Logger
   alias HybridPlanner.StrategyRegistry
 
   @type strategy_function :: function()
@@ -231,9 +232,9 @@ defmodule HybridPlanner.StrategyCoordinator do
       
       case result do
         {:ok, _} -> 
-          IO.puts("#{label} succeeded in #{duration}ms")
+          Logger.debug("#{label} succeeded in #{duration}ms")
         {:error, reason} -> 
-          IO.puts("#{label} failed in #{duration}ms: #{reason}")
+          Logger.error("#{label} failed in #{duration}ms: #{reason}")
       end
       
       result

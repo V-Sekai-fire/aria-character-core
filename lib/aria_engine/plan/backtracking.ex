@@ -5,6 +5,8 @@ defmodule Plan.Backtracking do
   @moduledoc """
   Functions for handling backtracking and replanning in the solution tree.
   """
+
+  require Logger
   alias Plan.{Core, Utils} # Assuming Core will have ipyhop, Utils will have update_cached_states, generate_node_id, get_all_descendants
   alias StateV2
 
@@ -41,14 +43,14 @@ defmodule Plan.Backtracking do
     # Decrement replan_depth for recursive calls
     replan_depth = Keyword.get(opts, :replan_depth, Core.get_default_replan_depth()) # Get from Core
     if replan_depth <= 0 do
-      IO.puts("REPLAN: Maximum replanning depth exceeded.")
+      Logger.debug("REPLAN: Maximum replanning depth exceeded.")
       {:error, "Maximum replanning depth exceeded"}
     else
       opts = Keyword.put(opts, :replan_depth, replan_depth - 1)
       verbose = Keyword.get(opts, :verbose, Core.get_default_verbose()) # Assuming Core has default_verbose
 
       if verbose > 2 do
-        IO.puts("Replanning from failure node: #{fail_node_id}")
+        Logger.debug("Replanning from failure node: #{fail_node_id}")
       end
 
       # Find the task node that produced this action (walk up the tree)
@@ -58,7 +60,7 @@ defmodule Plan.Backtracking do
 
         task_node_id ->
           if verbose > 2 do
-            IO.puts("Found responsible task node: #{task_node_id}")
+            Logger.debug("Found responsible task node: #{task_node_id}")
           end
 
           # Update cached states to current execution state
@@ -105,7 +107,7 @@ defmodule Plan.Backtracking do
           {task_name, _args} when is_binary(task_name) ->
             # This is a task node - this is what we're looking for
             if verbose > 2 do
-              IO.puts("Found task node: #{node_id} with task: #{task_name}")
+              Logger.debug("Found task node: #{node_id} with task: #{task_name}")
             end
             node_id
 
@@ -130,7 +132,7 @@ defmodule Plan.Backtracking do
 
       node ->
         if verbose > 2 do
-          IO.puts("DEBUG: try_alternative_method_for_task - node.method_tried: #{inspect(node.method_tried)}")
+          Logger.debug("DEBUG: try_alternative_method_for_task - node.method_tried: #{inspect(node.method_tried)}")
         end
         case node.task do
           {task_name, _args} when is_binary(task_name) ->
@@ -150,13 +152,13 @@ defmodule Plan.Backtracking do
 
             if Enum.empty?(remaining_methods) do
               if verbose > 2 do
-                IO.puts("No alternative methods left for task: #{task_name}")
+                Logger.debug("No alternative methods left for task: #{task_name}")
               end
               :no_alternatives # Return no_alternatives if no methods left
             else
               if verbose > 2 do
-                IO.puts("Blacklisting method for task #{task_name}: #{inspect(current_method)}")
-                IO.puts("Total blacklisted methods: #{inspect(blacklisted_methods)}")
+                Logger.debug("Blacklisting method for task #{task_name}: #{inspect(current_method)}")
+                Logger.debug("Total blacklisted methods: #{inspect(blacklisted_methods)}")
               end
 
               # Reset the node for retrying with alternative methods
@@ -196,13 +198,13 @@ defmodule Plan.Backtracking do
 
             if Enum.empty?(remaining_methods) do
               if verbose > 2 do
-                IO.puts("No alternative methods left for goal: #{predicate}")
+                Logger.debug("No alternative methods left for goal: #{predicate}")
               end
               :no_alternatives # Return no_alternatives if no methods left
             else
               if verbose > 2 do
-                IO.puts("Blacklisting method for goal #{predicate}: #{inspect(current_method)}")
-                IO.puts("Total blacklisted methods: #{inspect(blacklisted_methods)}")
+                Logger.debug("Blacklisting method for goal #{predicate}: #{inspect(current_method)}")
+                Logger.debug("Total blacklisted methods: #{inspect(blacklisted_methods)}")
               end
 
               # Reset the node for retrying with alternative methods
@@ -236,7 +238,7 @@ defmodule Plan.Backtracking do
     {:ok, solution_tree()} | {:error, String.t()}
   def backtrack_and_retry(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
     if verbose > 2 do
-      IO.puts("Backtracking from failed node: #{failed_node_id}")
+      Logger.debug("Backtracking from failed node: #{failed_node_id}")
     end
 
     case solution_tree.nodes[failed_node_id] do

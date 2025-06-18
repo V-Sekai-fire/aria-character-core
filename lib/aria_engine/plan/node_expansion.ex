@@ -5,6 +5,8 @@ defmodule Plan.NodeExpansion do
   @moduledoc """
   Functions for expanding different types of nodes in the solution tree.
   """
+
+  require Logger
   alias Plan.Utils # Assuming Utils will have generate_node_id and is_primitive_task?
 
   @type task :: {String.t(), list()}
@@ -85,7 +87,7 @@ defmodule Plan.NodeExpansion do
 
     if Enum.empty?(available_methods) do
       if verbose > 2 do
-        IO.puts("No methods available for task: #{task_name}")
+        Logger.debug("No methods available for task: #{task_name}")
       end
       {:error, "No methods found for task: #{task_name}"}
     else
@@ -96,8 +98,8 @@ defmodule Plan.NodeExpansion do
       case method_fn.(node.state, args) do
           false ->
             if verbose > 2 do
-              IO.puts("Method failed preconditions for task: #{task_name}")
-              IO.puts("DEBUG: expand_task_node - method_id: #{inspect(method_id)}")
+        Logger.debug("Method failed preconditions for task: #{task_name}")
+              Logger.debug("expand_task_node - method_id: #{inspect(method_id)}")
             end
             # Update the node with the method_tried and mark as not expanded (failed)
             updated_node = %{node |
@@ -109,7 +111,7 @@ defmodule Plan.NodeExpansion do
 
         subtasks when is_list(subtasks) ->
           if verbose > 2 do
-            IO.puts("Method succeeded, created #{length(subtasks)} subtasks")
+        Logger.debug("Method succeeded, created #{length(subtasks)} subtasks")
           end
 
           # Create child nodes for subtasks and execute primitive actions immediately
@@ -125,12 +127,12 @@ defmodule Plan.NodeExpansion do
               case Domain.execute_action(domain, current_state, action_atom, args) do
                 {:ok, new_state} ->
                   if verbose > 2 do
-                    IO.puts("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
+        Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
                   end
                   new_state
                 false ->
                   if verbose > 2 do
-                    IO.puts("Primitive action #{action_name}(#{inspect(args)}) failed")
+        Logger.debug("Primitive action #{action_name}(#{inspect(args)}) failed")
                   end
                   current_state  # Keep current state if action failed
               end
@@ -198,7 +200,7 @@ defmodule Plan.NodeExpansion do
 
         if Enum.empty?(available_methods) do
           if verbose > 2 do
-            IO.puts("No methods available for goal: #{predicate}")
+        Logger.debug("No methods available for goal: #{predicate}")
           end
           {:error, "No methods found for goal: #{predicate}"}
         else
@@ -209,7 +211,7 @@ defmodule Plan.NodeExpansion do
           case method_fn.(node.state, [subject, fact_value]) do
             false ->
               if verbose > 2 do
-                IO.puts("Method failed preconditions for goal: #{predicate}")
+        Logger.debug("Method failed preconditions for goal: #{predicate}")
               end
               # Update the node with the method_tried and mark as not expanded (failed)
               updated_node = %{node |
@@ -221,7 +223,7 @@ defmodule Plan.NodeExpansion do
 
             subtasks when is_list(subtasks) ->
               if verbose > 2 do
-                IO.puts("Goal method succeeded, created #{length(subtasks)} subtasks")
+        Logger.debug("Goal method succeeded, created #{length(subtasks)} subtasks")
               end
 
               # Create child nodes for subtasks and execute primitive actions immediately
@@ -246,12 +248,12 @@ defmodule Plan.NodeExpansion do
                   case Domain.execute_action(domain, current_state, action_atom, args) do
                     {:ok, new_state} ->
                       if verbose > 2 do
-                        IO.puts("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
+        Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
                       end
                       {new_state, true}
                     false ->
                       if verbose > 2 do
-                        IO.puts("Primitive action #{action_name}(#{inspect(args)}) failed")
+        Logger.debug("Primitive action #{action_name}(#{inspect(args)}) failed")
                       end
                       {current_state, false}  # Keep current state if action failed
                   end
@@ -298,7 +300,7 @@ defmodule Plan.NodeExpansion do
 
             {:multigoal, goals} ->
               if verbose > 2 do
-                IO.puts("Goal method returned multigoal with #{length(goals)} goals")
+        Logger.debug("Goal method returned multigoal with #{length(goals)} goals")
               end
 
               # Create a multigoal struct and use multigoal expansion
@@ -329,7 +331,7 @@ defmodule Plan.NodeExpansion do
       unsatisfied = Multigoal.unsatisfied_goals(multigoal, node.state)
 
       if verbose > 2 do
-        IO.puts("Multigoal has #{length(unsatisfied)} unsatisfied goals")
+        Logger.debug("Multigoal has #{length(unsatisfied)} unsatisfied goals")
       end
 
       # Create child nodes for unsatisfied goals

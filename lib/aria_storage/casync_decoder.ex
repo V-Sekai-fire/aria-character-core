@@ -30,6 +30,7 @@ defmodule AriaStorage.CasyncDecoder do
 
   """
 
+  require Logger
   import Bitwise
   alias AriaStorage.Parsers.CasyncFormat
 
@@ -373,19 +374,19 @@ defmodule AriaStorage.CasyncDecoder do
                     assemble_chunks_to_file(file, remaining_chunks, store_context,
                       success_count + 1, total_bytes + byte_size(decompressed_data), progress_callback, feature_flags)
                   {:error, reason} ->
-                    IO.puts("❌ DEBUG: Failed to write chunk #{String.slice(chunk_id_hex, 0, 8)}: #{inspect(reason)}")
+                    Logger.debug("Failed to write chunk #{String.slice(chunk_id_hex, 0, 8)}: #{inspect(reason)}")
                     assemble_chunks_to_file(file, remaining_chunks, store_context,
                       success_count, total_bytes, progress_callback, feature_flags)
                 end
 
               {:error, reason} ->
-                IO.puts("❌ DEBUG: Chunk #{String.slice(chunk_id_hex, 0, 8)} verification failed: #{inspect(reason)}")
+                Logger.debug("Chunk #{String.slice(chunk_id_hex, 0, 8)} verification failed: #{inspect(reason)}")
                 assemble_chunks_to_file(file, remaining_chunks, store_context,
                   success_count, total_bytes, progress_callback, feature_flags)
             end
 
           {:error, reason} ->
-            IO.puts("❌ DEBUG: Chunk #{String.slice(chunk_id_hex, 0, 8)} not found: #{inspect(reason)}")
+            Logger.debug("Chunk #{String.slice(chunk_id_hex, 0, 8)} not found: #{inspect(reason)}")
             assemble_chunks_to_file(file, remaining_chunks, store_context,
               success_count, total_bytes, progress_callback, feature_flags)
         end

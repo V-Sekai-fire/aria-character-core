@@ -28,6 +28,8 @@ defmodule FlowAdapter do
   - **Clear Interface**: Explicit options without auto-configuration
   """
 
+  require Logger
+
   @doc """
   Creates a processing pipeline with explicitly specified flow control mode.
   
@@ -102,7 +104,7 @@ defmodule FlowAdapter do
   def process_data(config, data) do
     # In a real implementation, this would use the config to dispatch
     # to a running Flow process. For now, we just simulate the work.
-    IO.puts("Processing data with config: #{inspect(config)}")
+    Logger.debug("Processing data with config: #{inspect(config)}")
     {:ok, data}
   end
 

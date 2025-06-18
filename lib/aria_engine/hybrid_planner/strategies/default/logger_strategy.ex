@@ -44,7 +44,7 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
     rescue
       _ ->
         # Fallback to basic IO if Logger fails
-        IO.puts("LoggerStrategy: #{level} - #{message}")
+        Logger.debug("LoggerStrategy: #{level} - #{message}")
         :ok
     end
   end

@@ -13,6 +13,7 @@ defmodule AriaStorage.Storage do
   - Storage optimization and deduplication
   """
 
+  require Logger
   alias AriaStorage.{Chunks, Index, ChunkStore, WaffleAdapter, WaffleChunkStore}
   import Ecto.Query
 
@@ -300,7 +301,7 @@ defmodule AriaStorage.Storage do
     with {:ok, stored_result} <- WaffleChunkStore.store({temp_file, scope}) do
       # Debug what the URL returns
       url_result = WaffleChunkStore.url({stored_result, scope})
-      IO.puts("DEBUG URL result: #{inspect(url_result)}")
+      Logger.debug("URL result: #{inspect(url_result)}")
 
       # Try to get the URL and download if it's available
       case url_result do
@@ -308,7 +309,7 @@ defmodule AriaStorage.Storage do
           cond do
             String.starts_with?(url, "http") ->
               # Full URL - can download via HTTP
-              IO.puts("DEBUG: Attempting to download from HTTP URL: #{url}")
+              Logger.debug("Attempting to download from HTTP URL: #{url}")
               case download_from_waffle_url(url) do
                 {:ok, retrieved_data} ->
                   if retrieved_data == expected_data do
@@ -321,12 +322,12 @@ defmodule AriaStorage.Storage do
               end
             String.starts_with?(url, "/") ->
               # Local file path - read directly from filesystem
-              IO.puts("DEBUG: Local file path, reading directly: #{url}")
+              Logger.debug("Local file path, reading directly: #{url}")
               # For local storage, we need to construct the full path
               # Waffle.Local uses System.tmp_dir by default or configured path
               base_path = System.get_env("WAFFLE_UPLOADS_DIR") || System.tmp_dir()
               full_path = Path.join(base_path, String.trim_leading(url, "/"))
-              IO.puts("DEBUG: Checking file at: #{full_path}")
+              Logger.debug("Checking file at: #{full_path}")
 
               case File.read(full_path) do
                 {:ok, retrieved_data} ->
@@ -336,17 +337,17 @@ defmodule AriaStorage.Storage do
                     {:error, :data_mismatch}
                   end
                 {:error, reason} ->
-                  IO.puts("DEBUG: File read failed: #{inspect(reason)}")
+                  Logger.debug("File read failed: #{inspect(reason)}")
                   # For local storage, just consider storage successful without verification
                   {:ok, %{stored: stored_result, verified: :file_not_accessible}}
               end
             true ->
-              IO.puts("DEBUG: Unknown URL format: #{url}")
+              Logger.debug("Unknown URL format: #{url}")
               {:ok, %{stored: stored_result, verified: :unknown_url_format}}
           end
         _ ->
           # URL not available or empty, treat as success since store worked
-          IO.puts("DEBUG: No valid URL returned, but storage succeeded")
+          Logger.debug("No valid URL returned, but storage succeeded")
           {:ok, %{stored: stored_result, verified: :no_url_available}}
       end
     else

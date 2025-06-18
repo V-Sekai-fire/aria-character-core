@@ -48,7 +48,7 @@ defmodule Pddl.DomainAdapter do
     # This would involve converting State to PDDL state,
     # executing the action in PDDL, and converting back.
     # For now, this is a placeholder.
-    IO.puts("PDDL DomainAdapter: execute_action called for #{action_name}(#{inspect(args)})")
+    Logger.debug("PDDL DomainAdapter: execute_action called for #{action_name}(#{inspect(args)})")
     # Placeholder: always succeed for now
     {:ok, state}
   end

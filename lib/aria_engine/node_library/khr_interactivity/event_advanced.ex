@@ -4,6 +4,7 @@ defmodule NodeLibrary.KHRInteractivity.EventAdvanced do
   Implements lifecycle events and debug operations.
   """
 
+  require Logger
   alias StateV2
 
   # =============================================================================
@@ -85,9 +86,7 @@ defmodule NodeLibrary.KHRInteractivity.EventAdvanced do
     updated_logs = [log_entry | debug_logs]
     
     # Also output to console in development
-    if Application.get_env(:aria_engine, :debug_output, false) do
-      IO.puts("[#{level || "info"}] Node #{node_id}: #{message}")
-    end
+    Logger.debug("[#{level || "info"}] Node #{node_id}: #{message}")
     
     StateV2.set_fact(state, "system", "debug_logs", updated_logs)
     |> StateV2.set_fact(Integer.to_string(node_id), "last_log_message", message)

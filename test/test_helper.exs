@@ -11,22 +11,25 @@ defmodule TestOutput do
   Only --trace mode should provide normal logging output.
   """
 
+  require Logger
+
   @doc """
-  Print output only when running in trace mode (mix test --trace).
+  Log debug message only when running in trace mode (mix test --trace).
   Silent during normal test execution.
   """
   def trace_puts(message) do
     if trace_mode?() do
-      IO.puts(message)
+      Logger.debug(message)
     end
   end
 
   @doc """
-  Inspect and print data only in trace mode.
+  Inspect and log data only in trace mode.
   """
   def trace_inspect(data, opts \\ []) do
     if trace_mode?() do
-      IO.inspect(data, opts)
+      Logger.debug(inspect(data, opts))
+      data
     else
       data
     end

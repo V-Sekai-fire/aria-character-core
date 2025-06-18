@@ -5,6 +5,8 @@ defmodule Plan.Core do
   @moduledoc """
   Core IPyHOP planning algorithm and decomposition loop.
   """
+
+  require Logger
   alias Plan.{NodeExpansion, Backtracking, Utils}
   alias StateV2
   # alias DomainBehaviour # Removed unused alias
@@ -47,7 +49,7 @@ defmodule Plan.Core do
     # Only output during tests if ExUnit trace mode is enabled
     if Application.get_env(:ex_unit, :trace, false) or not test_mode?() do
       if verbose_level <= get_verbose_level() do
-        IO.puts(message)
+        Logger.debug(message)
       end
     end
   end
@@ -69,7 +71,7 @@ defmodule Plan.Core do
   def plan(domain, %StateV2{} = state, todos, opts \\ []) do
     # Add replan_depth to opts with a default value
     opts = Keyword.put_new(opts, :replan_depth, @default_replan_depth)
-    # IO.puts("Starting IPyHOP planning for ", length(todos), " todos")
+    # Logger.debug("Starting IPyHOP planning for ", length(todos), " todos")
     # Commented out to reduce test output noise
 
     # Create initial solution tree with goal-task network

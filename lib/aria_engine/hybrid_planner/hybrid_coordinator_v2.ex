@@ -3,6 +3,7 @@
 
 defmodule HybridPlanner.HybridCoordinatorV2 do
   @moduledoc """
+  require Logger
   Strategy-based hybrid goal task reentrant temporal planner using dependency injection.
   
   This version implements the Function as Object pattern with injected strategy
@@ -39,7 +40,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
         {:ok, plan} ->
           HybridPlanner.HybridCoordinatorV2.execute(coordinator, domain, state, plan)
         {:error, error_reason} ->
-          IO.puts("Planning failed: \#{error_reason}")
+          Logger.error("Planning failed: \#{error_reason}")
       end
   """
 
