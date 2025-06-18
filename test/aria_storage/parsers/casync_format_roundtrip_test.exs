@@ -3,15 +3,8 @@
 
 defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
   use ExUnit.Case
+  require Logger
   alias AriaStorage.Parsers.CasyncFormat
-
-  defmodule TestOutput do
-    def trace_puts(message) do
-      if Application.get_env(:ex_unit, :trace, false) do
-        IO.puts(message)
-      end
-    end
-  end
 
   @moduledoc """
   Roundtrip tests for casync format import and export functionality.
@@ -163,7 +156,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
 
         {:error, :enoent} ->
           # Skip test if file doesn't exist
-          IO.puts("Skipping flat.catar test - file not found")
+          Logger.info("Skipping flat.catar test - file not found")
           :ok
       end
     end
@@ -190,7 +183,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
 
         {:error, :enoent} ->
           # Skip test if file doesn't exist
-          IO.puts("Skipping nested.catar test - file not found")
+          Logger.info("Skipping nested.catar test - file not found")
           :ok
       end
     end
@@ -216,7 +209,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
 
         {:error, :enoent} ->
           # Skip test if file doesn't exist
-          IO.puts("Skipping complex.catar test - file not found")
+          Logger.info("Skipping complex.catar test - file not found")
           :ok
       end
     end
@@ -243,7 +236,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
 
         {:error, :enoent} ->
           # Skip test if file doesn't exist
-          IO.puts("Skipping flatdir.catar test - file not found")
+          Logger.info("Skipping flatdir.catar test - file not found")
           :ok
       end
     end
@@ -257,7 +250,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
       |> Enum.uniq()
 
       if Enum.empty?(catar_files) do
-        IO.puts("No catar files found for parsing testing")
+        Logger.info("No catar files found for parsing testing")
         :ok
       else
         Enum.each(catar_files, fn file_path ->
@@ -313,7 +306,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
       |> Enum.uniq()
 
       if Enum.empty?(catar_files) do
-        IO.puts("No catar files found for roundtrip testing")
+        Logger.info("No catar files found for roundtrip testing")
         :ok
       else
         Enum.each(catar_files, fn file_path ->
@@ -327,10 +320,10 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
                     {:ok, re_encoded_data} ->
                       if original_data != re_encoded_data do
                         # Use comprehensive hex diff comparison for CATAR files
-                        IO.puts("Testing roundtrip for #{filename}")
+                        Logger.info("Testing roundtrip for #{filename}")
                         CasyncFormat.test_file_roundtrip_encoding(file_path, parsed)
                       else
-                        IO.puts("Perfect roundtrip for #{filename}")
+                        Logger.info("Perfect roundtrip for #{filename}")
                       end
 
                     {:error, reason} ->
@@ -497,7 +490,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
       |> Enum.take(10)  # Limit to first 10 for test performance
 
       if Enum.empty?(cacnk_files) do
-        IO.puts("No cacnk files found for roundtrip testing")
+        Logger.info("No cacnk files found for roundtrip testing")
         :ok
       else
         Enum.each(cacnk_files, fn file_path ->
@@ -511,14 +504,14 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
                     {:ok, re_encoded_data} ->
                       if original_data != re_encoded_data do
                         # Debug information for failed roundtrip
-                        IO.puts("Roundtrip failed for #{filename}")
-                        IO.puts("Original size: #{byte_size(original_data)}")
-                        IO.puts("Re-encoded size: #{byte_size(re_encoded_data)}")
+                        Logger.info("Roundtrip failed for #{filename}")
+                        Logger.info("Original size: #{byte_size(original_data)}")
+                        Logger.info("Re-encoded size: #{byte_size(re_encoded_data)}")
 
                         # Find first differing byte
                         diff_pos = find_first_difference(original_data, re_encoded_data)
                         if diff_pos do
-                          IO.puts("First difference at byte #{diff_pos}")
+                          Logger.info("First difference at byte #{diff_pos}")
                         end
 
                         flunk("Roundtrip failed for #{filename}")
@@ -563,10 +556,10 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
       case CasyncFormat.encode_archive(parsed) do
         {:ok, re_encoded_data} ->
           if original_data == re_encoded_data do
-            IO.puts("Perfect synthetic CATAR roundtrip")
+            Logger.info("Perfect synthetic CATAR roundtrip")
           else
             # Use hex diff for detailed comparison
-            IO.puts("Synthetic CATAR roundtrip differences detected:")
+            Logger.info("Synthetic CATAR roundtrip differences detected:")
             CasyncFormat.hex_compare(original_data, re_encoded_data)
           end
 
