@@ -5,7 +5,7 @@ textId: "INST-039"
 
 ## Telegraph style commit messages
 
-Write commit messages using telegraph-style economy of words while maintaining proper sentence case and technical clarity.
+Write commit messages using telegraph-style economy of words while maintaining proper sentence case and technical clarity. Ensure a secondary summary line.
 
 ### The principle
 

@@ -3,11 +3,11 @@
 
 defmodule Domain.Actions do
   @moduledoc """
-  Handles action-related operations for the planning domain.
+  Core action execution functions for domains.
   """
+  alias StateV2
 
   require Logger
-  alias StateV2
 
   @type t :: Domain.Core.t()
   @type action_name :: atom()

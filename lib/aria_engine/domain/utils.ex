@@ -1,11 +1,11 @@
+
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
 defmodule Domain.Utils do
   @moduledoc """
-  Provides utility functions for the planning domain.
+  Domain utilities and helper functions.
   """
-
   alias StateV2
   alias Actions
 
