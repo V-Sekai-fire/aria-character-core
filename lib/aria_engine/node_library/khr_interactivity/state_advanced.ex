@@ -86,7 +86,7 @@ defmodule NodeLibrary.KHRInteractivity.StateAdvanced do
     end
   end
 
-  def pointer_set(state, [node_id, _object_id, _invalid_path, _value]) do
+  def pointer_set(state, [_node_id, _object_id, _invalid_path, _value]) do
     # Don't set the fact at all for invalid operations  
     state
   end

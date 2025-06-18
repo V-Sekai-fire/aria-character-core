@@ -230,7 +230,7 @@ defmodule NodeLibrary.KHRInteractivity.Variable do
   """
   def list_variables(state) do
     # Get all facts for the "variables" subject
-    case StateV2.get_all_facts_for_subject(state, "variables") do
+    case StateV2.get_properties(state, "variables") do
       facts when is_map(facts) -> facts
       _ -> %{}
     end

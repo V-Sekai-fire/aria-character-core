@@ -1,8 +1,13 @@
 # ADR-092: AST-to-glTF KHR_interactivity Node Translation System
 
-**Status:** Active  
+**Status:** Cancelled  
 **Date:** 2025-06-18  
-**Priority:** High
+**Cancelled Date:** 2025-06-18  
+**Priority:** ~~High~~ N/A
+
+## Cancellation Reason
+
+This ADR has been cancelled as the AST-to-KHR translation approach was determined to be overly complex for the current project needs. The existing direct KHR node composition approach provides sufficient functionality for the aria_character_core project without the additional complexity of AST translation. Focus has shifted to improving the direct node library implementation and planner integration instead.
 
 ## Context
 
