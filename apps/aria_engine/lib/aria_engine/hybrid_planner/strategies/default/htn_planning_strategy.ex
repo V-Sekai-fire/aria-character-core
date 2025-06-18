@@ -51,18 +51,16 @@ defmodule AriaEngine.HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   end
 
   @impl true
-  def replan(domain, %StateV2{} = state, _solution_tree, _fail_node_id, opts \\ []) do
+  def replan(domain, %StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
     if verbose > 1 do
-      Logger.debug("HTNPlanningStrategy: Starting replanning from failed node")
+      Logger.debug("HTNPlanningStrategy: Starting replanning from failed node #{fail_node_id}")
     end
 
     try do
-      # Use existing Plan.Core.replan/5 logic
-      # TODO: Implement Plan.Core.replan/5 function
-      Logger.warning("HTNPlanningStrategy: Plan.Core.replan/5 not yet implemented")
-      case Plan.Core.plan(domain, state, opts) do
+      # Use existing Plan.replan/5 logic which handles sophisticated backtracking
+      case Plan.replan(domain, state, solution_tree, fail_node_id, opts) do
         {:ok, new_solution_tree} ->
           if verbose > 1 do
             action_count = Plan.Utils.plan_cost(new_solution_tree)
