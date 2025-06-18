@@ -15,20 +15,20 @@ Each commit should tell a single, cohesive story about what was accomplished. Al
 
 **Group together when changes:**
 
-- **Implement the same feature:** All code, tests, and documentation for a single feature
-- **Fix the same bug:** All modifications needed to resolve one specific issue
-- **Refactor the same concern:** All files affected by a single architectural improvement
-- **Update the same system:** All changes to maintain or enhance one logical component
-- **Address the same requirement:** All modifications needed to fulfill one specific need
+- Implement the same feature: All code, tests, and documentation for a single feature
+- Fix the same bug: All modifications needed to resolve one specific issue
+- Refactor the same concern: All files affected by a single architectural improvement
+- Update the same system: All changes to maintain or enhance one logical component
+- Address the same requirement: All modifications needed to fulfill one specific need
 
 ### Implementation guidelines
 
 **Before staging changes:**
 
-1. **Review what you're committing:** Use `git diff --cached` to see all staged changes
-2. **Verify logical connection:** Ensure all modified files serve the same purpose
-3. **Check for mixed concerns:** Split unrelated changes into separate commits
-4. **Confirm completeness:** Include all files needed to complete the logical unit
+1. Review what you're committing: Use `git diff --cached` to see all staged changes
+2. Verify logical connection: Ensure all modified files serve the same purpose
+3. Check for mixed concerns: Split unrelated changes into separate commits
+4. Confirm completeness: Include all files needed to complete the logical unit
 
 ### Examples of good logical grouping
 
@@ -67,10 +67,10 @@ Extract planning utilities into separate module
 
 **Don't group together:**
 
-- **Mixed concerns:** Bug fix + new feature + documentation update
-- **Unrelated areas:** Frontend changes + database migration + configuration update
-- **Different timelines:** Urgent fix + long-term refactoring
-- **Independent changes:** Multiple unrelated bug fixes in one commit
+- Mixed concerns: Bug fix + new feature + documentation update
+- Unrelated areas: Frontend changes + database migration + configuration update
+- Different timelines: Urgent fix + long-term refactoring
+- Independent changes: Multiple unrelated bug fixes in one commit
 
 **Red flags for poor grouping:**
 
@@ -91,11 +91,11 @@ Extract planning utilities into separate module
 
 ### Benefits
 
-- **Clear history:** Each commit represents a complete, understandable change
-- **Easier debugging:** Problems can be traced to specific logical units
-- **Better reviews:** Reviewers can understand the complete scope of changes
-- **Simplified reverting:** Entire logical units can be undone cleanly
-- **Improved bisecting:** Git bisect can identify the specific logical change that introduced issues
+- Clear history: Each commit represents a complete, understandable change
+- Easier debugging: Problems can be traced to specific logical units
+- Better reviews: Reviewers can understand the complete scope of changes
+- Simplified reverting: Entire logical units can be undone cleanly
+- Improved bisecting: Git bisect can identify the specific logical change that introduced issues
 
 ### Enforcement
 

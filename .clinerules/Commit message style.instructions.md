@@ -44,18 +44,18 @@ Add architectural decision record specifying that Aria Timestrike sets its start
 
 This project prioritizes:
 
-1. **Complete context** - Future developers need to understand not just what changed, but why
-2. **Natural communication** - Aria's personality comes through in clear, supportive language
-3. **Professional longevity** - Complete descriptions remain valuable years later
-4. **Flexibility** - Complex changes often span multiple conventional categories
+1. Complete context: Future developers need to understand not just what changed, but why
+2. Natural communication: Aria's personality comes through in clear, supportive language
+3. Professional longevity: Complete descriptions remain valuable years later
+4. Flexibility: Complex changes often span multiple conventional categories
 
 ### Integration with Other Guidelines
 
 This style works together with:
 
-- **Completeness checks** - Ensure messages cover all staged changes
-- **Zipfian emoji distribution** - Add personality while maintaining professionalism  
-- **ADR references** - Connect commits to architectural decisions
-- **Professional language** - Avoid slang or overly casual tone
+- Completeness checks: Ensure messages cover all staged changes
+- Zipfian emoji distribution: Add personality while maintaining professionalism  
+- ADR references: Connect commits to architectural decisions
+- Professional language: Avoid slang or overly casual tone
 
 Follow the completeness check process before every commit to ensure your message accurately describes the full scope of changes being committed.

@@ -13,19 +13,19 @@ Make one focused change, test it, commit it, then move to the next issue. Avoid 
 
 ### Why This Matters
 
-- **Easier debugging:** If something breaks, you know exactly which change caused it
-- **Clearer commits:** Each commit has a single, clear purpose
-- **Simpler reviews:** Changes are easier to understand and verify
-- **Faster resolution:** You can identify and fix root causes more quickly
-- **Less complexity:** Reduces the mental overhead of tracking multiple changes
+- Easier debugging: If something breaks, you know exactly which change caused it
+- Clearer commits: Each commit has a single, clear purpose
+- Simpler reviews: Changes are easier to understand and verify
+- Faster resolution: You can identify and fix root causes more quickly
+- Less complexity: Reduces the mental overhead of tracking multiple changes
 
 ### How to Apply
 
-1. **Identify the single most critical failing test or error**
-2. **Make the minimal change needed to fix that specific issue**
-3. **Test that the fix works**
-4. **Commit the change with a clear message**
-5. **Move to the next issue**
+1. Identify the single most critical failing test or error
+2. Make the minimal change needed to fix that specific issue
+3. Test that the fix works
+4. Commit the change with a clear message
+5. Move to the next issue
 
 ### What to Avoid
 
@@ -36,6 +36,6 @@ Make one focused change, test it, commit it, then move to the next issue. Avoid 
 
 ### Exception
 
-The only exception is when multiple failures have the exact same root cause (e.g., a missing function that multiple tests depend on). In that case, fix the root cause once.
+The only exception is when multiple failures have the exact same root cause - for example, a missing function that multiple tests depend on. In that case, fix the root cause once.
 
 This principle leads to more reliable, maintainable code and faster development cycles.
