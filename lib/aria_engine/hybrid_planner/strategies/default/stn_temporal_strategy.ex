@@ -28,7 +28,7 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
       # Start with existing constraints or create new STN
       stn = case existing_constraints do
         %{stn: stn} when not is_nil(stn) -> stn
-        _ -> STNPlanner.new([], [])
+        _ -> STNPlanner.new("temporal_constraints", :hierarchical)
       end
 
       # Add constraints for each action
@@ -113,7 +113,7 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
     try do
       stn = case constraints do
         %{stn: stn} when not is_nil(stn) -> stn
-        _ -> STNPlanner.new([], [])
+        _ -> STNPlanner.new("constraint_updates", :hierarchical)
       end
 
       # Apply each modification to the STN

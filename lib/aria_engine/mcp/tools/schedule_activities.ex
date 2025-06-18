@@ -50,35 +50,45 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
     # Analyze the request structure
     analysis = analyze_schedule_structure(request)
     
-    # Convert to hybrid planner format and execute
-    case convert_to_planner_format(request) do
-      {:ok, {domain, state, goals}} ->
-        # Create hybrid coordinator with default strategies
-        coordinator = HybridCoordinatorV2.new_default()
-        
-        # Plan using hybrid planner (currently returns empty plan for empty goals)
-        case HybridCoordinatorV2.plan(coordinator, domain, state, goals) do
-          {:ok, plan} ->
-            # Convert back to MCP format
-            response_content = create_success_response(request, analysis, plan)
-            response_text = Jason.encode!(response_content, pretty: true)
-            {:reply, Response.text(Response.tool(), response_text), frame}
+    # Check if this is an empty activities request first
+    activities = Map.get(request, "activities", [])
+    
+    if length(activities) == 0 do
+      # Empty activities - return empty plan response directly
+      response_content = create_empty_plan_response(request, analysis)
+      response_text = Jason.encode!(response_content, pretty: true)
+      {:reply, Response.text(Response.tool(), response_text), frame}
+    else
+      # Convert to hybrid planner format and execute
+      case convert_to_planner_format(request) do
+        {:ok, {domain, state, goals}} ->
+          # Create hybrid coordinator with default strategies
+          coordinator = HybridCoordinatorV2.new_default()
           
-          {:error, reason} ->
-            Logger.warning("Hybrid planner failed: #{reason}")
-            # Fall back to empty plan response
-            response_content = create_empty_plan_response(request, analysis)
-            response_text = Jason.encode!(response_content, pretty: true)
-            {:reply, Response.text(Response.tool(), response_text), frame}
-        end
-      
-      {:error, reason} ->
-        Logger.warning("Failed to convert to planner format: #{reason}")
-        # Fall back to empty plan response
-        analysis = Map.put(analysis, :conversion_error, reason)
-        response_content = create_empty_plan_response(request, analysis)
-        response_text = Jason.encode!(response_content, pretty: true)
-        {:reply, Response.text(Response.tool(), response_text), frame}
+          # Plan using hybrid planner
+          case HybridCoordinatorV2.plan(coordinator, domain, state, goals) do
+            {:ok, plan} ->
+              # Convert back to MCP format
+              response_content = create_success_response(request, analysis, plan)
+              response_text = Jason.encode!(response_content, pretty: true)
+              {:reply, Response.text(Response.tool(), response_text), frame}
+            
+            {:error, reason} ->
+              Logger.warning("Hybrid planner failed: #{reason}")
+              # Fall back to empty plan response
+              response_content = create_empty_plan_response(request, analysis)
+              response_text = Jason.encode!(response_content, pretty: true)
+              {:reply, Response.text(Response.tool(), response_text), frame}
+          end
+        
+        {:error, reason} ->
+          Logger.warning("Failed to convert to planner format: #{reason}")
+          # Fall back to empty plan response
+          analysis = Map.put(analysis, :conversion_error, reason)
+          response_content = create_empty_plan_response(request, analysis)
+          response_text = Jason.encode!(response_content, pretty: true)
+          {:reply, Response.text(Response.tool(), response_text), frame}
+      end
     end
   end
   
@@ -337,8 +347,8 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
       []
     else
       # Create HTN task to schedule all activities
-      # Format: {task_name, args} where task_name is string and args is list
-      [{"schedule_all", activities}]
+      # Format: %{task: task_name, args: args} for JSON compatibility
+      [%{"task" => "schedule_all", "args" => activities}]
     end
   end
   
