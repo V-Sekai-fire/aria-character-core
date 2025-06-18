@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaTown.PersistenceManager do
   @moduledoc """
   Manages periodic JSON-LD persistence with capped memory strategy.
