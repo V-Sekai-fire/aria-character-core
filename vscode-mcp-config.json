@@ -1,0 +1,14 @@
+{
+  "mcp": {
+    "servers": {
+      "aria-scheduler": {
+        "command": "mix",
+        "args": ["mcp.stdio"],
+        "cwd": "/Users/setup/Developer/aria-character-core",
+        "env": {
+          "MIX_ENV": "dev"
+        }
+      }
+    }
+  }
+}

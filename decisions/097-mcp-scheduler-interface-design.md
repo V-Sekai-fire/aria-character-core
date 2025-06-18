@@ -1,7 +1,8 @@
 # ADR-097: MCP Scheduler Interface Design
 
-**Status:** Active  
-**Date:** June 18, 2025  
+**Status:** Completed
+**Date:** June 18, 2025
+**Completion Date:** June 18, 2025
 **Priority:** HIGH
 
 ## Context

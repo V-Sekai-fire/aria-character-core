@@ -89,24 +89,24 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   end
   
   defp analyze_schedule_structure(request) do
-    activities = Map.get(request, :activities, [])
-    resources = Map.get(request, :resources, %{})
+    activities = Map.get(request, "activities", [])
+    resources = Map.get(request, "resources", %{})
     
     %{
-      method: "Critical Path Method (CPM)",
-      activities_analyzed: length(activities),
-      dependencies_found: count_dependencies(activities),
-      resource_conflicts: detect_resource_conflicts(activities, resources),
-      circular_dependencies: detect_circular_dependencies(activities),
-      critical_path_length: 0,
-      issues: generate_analysis_issues(request),
-      suggestions: generate_suggestions(request)
+      "method" => "Critical Path Method (CPM)",
+      "activities_analyzed" => length(activities),
+      "dependencies_found" => count_dependencies(activities),
+      "resource_conflicts" => detect_resource_conflicts(activities, resources),
+      "circular_dependencies" => detect_circular_dependencies(activities),
+      "critical_path_length" => 0,
+      "issues" => generate_analysis_issues(request),
+      "suggestions" => generate_suggestions(request)
     }
   end
   
   defp count_dependencies(activities) do
     activities
-    |> Enum.map(&Map.get(&1, :dependencies, []))
+    |> Enum.map(&Map.get(&1, "dependencies", []))
     |> List.flatten()
     |> length()
   end
@@ -115,7 +115,7 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
     # Simple resource conflict detection
     resource_usage = 
       activities
-      |> Enum.flat_map(&Map.get(&1, :resources, []))
+      |> Enum.flat_map(&Map.get(&1, "resources", []))
       |> Enum.frequencies()
     
     available_resources = Map.keys(resources)
@@ -130,11 +130,11 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   
   defp detect_circular_dependencies(activities) do
     # Simple circular dependency detection
-    activity_ids = MapSet.new(activities, &Map.get(&1, :id))
+    activity_ids = MapSet.new(activities, &Map.get(&1, "id"))
     
     invalid_deps = 
       activities
-      |> Enum.flat_map(&Map.get(&1, :dependencies, []))
+      |> Enum.flat_map(&Map.get(&1, "dependencies", []))
       |> Enum.reject(&(&1 in activity_ids))
       |> length()
     
@@ -143,8 +143,8 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   
   defp generate_analysis_issues(request) do
     issues = ["Critical Path Method solver not yet implemented"]
-    activities = Map.get(request, :activities, [])
-    resources = Map.get(request, :resources, %{})
+    activities = Map.get(request, "activities", [])
+    resources = Map.get(request, "resources", %{})
     
     issues = if detect_resource_conflicts(activities, resources) > 0 do
       ["Resource allocation conflicts detected" | issues]
@@ -163,8 +163,8 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   
   defp generate_suggestions(request) do
     suggestions = []
-    activities = Map.get(request, :activities, [])
-    resources = Map.get(request, :resources, %{})
+    activities = Map.get(request, "activities", [])
+    resources = Map.get(request, "resources", %{})
     
     suggestions = if detect_resource_conflicts(activities, resources) > 0 do
       ["Review resource capacity and allocation" | suggestions]
@@ -278,29 +278,29 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
     schedule = extract_schedule_from_plan(plan)
     
     enhanced_analysis = analysis
-    |> Map.put(:schedule_name, Map.get(request, :schedule_name))
-    |> Map.put(:hybrid_planner_used, true)
-    |> Map.put(:plan_metadata, Map.get(plan, :metadata, %{}))
+    |> Map.put("schedule_name", Map.get(request, "schedule_name"))
+    |> Map.put("hybrid_planner_used", true)
+    |> Map.put("plan_metadata", Map.get(plan, :metadata, %{}))
     
     %{
-      status: "success",
-      reason: "Schedule successfully generated using hybrid temporal planner",
-      schedule: schedule,
-      analysis: enhanced_analysis
+      "status" => "success",
+      "reason" => "Schedule successfully generated using hybrid temporal planner",
+      "schedule" => schedule,
+      "analysis" => enhanced_analysis
     }
   end
   
   defp create_empty_plan_response(request, analysis) do
     enhanced_analysis = analysis
-    |> Map.put(:schedule_name, Map.get(request, :schedule_name))
-    |> Map.put(:hybrid_planner_used, true)
-    |> Map.put(:empty_plan_reason, "Empty todo list results in empty plan (valid solution)")
+    |> Map.put("schedule_name", Map.get(request, "schedule_name"))
+    |> Map.put("hybrid_planner_used", true)
+    |> Map.put("empty_plan_reason", "Empty todo list results in empty plan (valid solution)")
     
     %{
-      status: "success", 
-      reason: "Empty plan successfully generated - valid solution for empty todo list",
-      schedule: [],
-      analysis: enhanced_analysis
+      "status" => "success", 
+      "reason" => "Empty plan successfully generated - valid solution for empty todo list",
+      "schedule" => [],
+      "analysis" => enhanced_analysis
     }
   end
   
