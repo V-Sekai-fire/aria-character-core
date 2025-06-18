@@ -3,6 +3,9 @@
 
 ExUnit.start()
 
+# Load test support modules
+Code.require_file("test/support/state_v2_mock.ex")
+
 defmodule TestOutput do
   @moduledoc """
   Conditional test output helpers that respect trace mode.
