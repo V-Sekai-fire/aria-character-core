@@ -1,16 +1,21 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.GoalTest do
+defmodule GoalTest do
   use ExUnit.Case
   @tag :skip
-  doctest AriaEngine.Multigoal
+  doctest Multigoal
 
-  alias AriaEngine.Multigoal
+  alias Multigoal
+  alias StateV2
+
+  # Helper functions
+  defp create_multigoal(), do: Multigoal.new()
+  defp create_state(), do: StateV2.new()
 
   describe "Goal management" do
     test "creates and manages multigoals" do
-      multigoal = AriaEngine.create_multigoal()
+      multigoal = create_multigoal()
       |> Multigoal.add_goal("location", "player", "treasure_room")
       |> Multigoal.add_goal("has", "player", "treasure")
 
@@ -24,11 +29,11 @@ defmodule AriaEngine.GoalTest do
 
     test "checks goal satisfaction" do
       # Create a state where player is in treasure_room and has treasure
-      state = AriaEngine.StateV2.new()
-      |> AriaEngine.StateV2.set_fact("player", "location", "treasure_room")
-      |> AriaEngine.StateV2.set_fact("player", "has", "treasure")
+      state = StateV2.new()
+      |> StateV2.set_fact("player", "location", "treasure_room")
+      |> StateV2.set_fact("player", "has", "treasure")
 
-      multigoal = AriaEngine.create_multigoal()
+      multigoal = create_multigoal()
       |> Multigoal.add_goal("location", "player", "treasure_room")
       |> Multigoal.add_goal("has", "player", "treasure")
 
