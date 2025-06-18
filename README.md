@@ -1,157 +1,100 @@
 # Aria Character Core
 
-**⚠️ ALPHA/EXPERIMENTAL STATUS ⚠️**
+**⚠️ ALPHA • v0.1.0 • Research Code • Not Production Ready ⚠️**
 
-An experimental AI planning research project exploring intelligent NPC behavior through hybrid planning systems. This is active development code - not a released game or production software.
+AI planning research project exploring intelligent NPC behavior through hybrid HTN+STN planning systems.
 
-## Project Status
+## Status Overview
 
-**Current Version:** 0.1.0 (Alpha)
+| Component | Status | Tests | Notes |
+|-----------|--------|-------|-------|
+| **KHR Math Nodes** | ✅ Working | 45/45 | Complete implementation |
+| **Core Planning** | ❌ Broken | 0/115+ | HTN/STN algorithms incomplete |
+| **Storage System** | ❌ Broken | 0/20+ | Chunk distribution failing |
+| **Temporal Solver** | 🔶 Partial | Mixed | STN constraints have timing issues |
+| **NPC Management** | 🔶 Partial | Mixed | Basic structure exists |
 
-**Development Status:**
-- 🔬 **Research Phase:** Core AI planning algorithms under development
-- 🧪 **Experimental Codebase:** Many systems incomplete or non-functional
-- ⚠️ **Testing Issues:** 115+ tests currently disabled due to implementation gaps
-- 📚 **Academic Focus:** Exploring hybrid HTN+STN planning for game AI
+**Current Reality:** 368 enabled tests passing, 115+ tests disabled due to core system failures.
 
-**This is NOT:**
-- A playable game
-- Production-ready software  
-- A stable API or framework
-- Ready for end-user installation
+## Quick Start
 
-## Research Goals
+```bash
+# Prerequisites: Elixir 1.16+, Erlang/OTP 26+
+mix deps.get && mix compile
+mix test  # Runs only working tests
+```
 
-This project investigates advanced AI planning techniques for game NPCs, specifically:
+**Key Limitation:** Most planning and storage systems non-functional.
 
-### Hybrid Planning Architecture
-- **HTN (Hierarchical Task Network)** planning for high-level goal decomposition
-- **STN (Simple Temporal Network)** constraints for temporal reasoning
-- **Multi-strategy coordination** between different planning approaches
-- **Real-time adaptation** of plans based on changing conditions
+## What This Is/Isn't
 
-### Visual Scripting Research
-- **glTF KHR_interactivity** node definitions adapted for AI planning (not full standard implementation)
-- **Mathematical computation nodes** reusing KHR node concepts for AI decision-making
-- **Event-driven programming** models for reactive NPC systems
+| ✅ This IS | ❌ This is NOT |
+|------------|----------------|
+| Research codebase exploring AI planning | Playable game |
+| Academic investigation of HTN+STN hybrid planning | Production software |
+| Experimental NPC behavior systems | Stable API/framework |
+| Development environment for planning algorithms | Ready for end users |
 
-### High-Performance Processing
-- **Flow-based parallel processing** for multi-NPC coordination
-- **GPU-inspired convergence patterns** adapted for CPU architectures
-- **Scalable temporal constraint solving** across populations
+## Research Focus
+
+**Core Investigation Areas:**
+- **Hybrid Planning:** HTN goal decomposition + STN temporal constraints
+- **Visual Scripting:** glTF KHR_interactivity nodes adapted for AI planning
+- **Parallel Processing:** Flow-based coordination for multi-NPC systems
+- **Knowledge Representation:** RDF/SPARQL for NPC decision-making
 
 ## Technical Architecture
 
-### Core Modules (Implementation Status)
-
 ```
-lib/aria_engine/           # AI Planning Core
-├── hybrid_planner/        # 🔶 Partial - Strategy coordination framework
-├── plan/                  # 🔶 Partial - Core planning algorithms  
-├── timeline/              # 🔶 Partial - Temporal constraint handling
-├── node_library/          # ✅ Working - KHR math nodes (45 tests passing)
-└── domains/               # 🔶 Partial - Planning domain definitions
+lib/aria_engine/           # AI Planning Core (mostly incomplete)
+├── hybrid_planner/        # Strategy coordination framework
+├── plan/                  # Core planning algorithms  
+├── timeline/              # Temporal constraint handling
+├── node_library/          # ✅ KHR math nodes (working)
+└── domains/               # Planning domain definitions
 
-lib/aria_town/             # Knowledge & NPC Management
-├── knowledge_base.ex      # 🔶 Partial - RDF knowledge representation
-├── npc_manager.ex         # 🔶 Partial - NPC lifecycle management
-└── time_manager.ex        # 🔶 Partial - Temporal coordination
-
-lib/aria_storage/          # Content Distribution Research
-├── casync_decoder.ex      # 🔶 Partial - Content-addressable storage
-├── chunks.ex              # ❌ Disabled - Chunking system has test failures
-└── storage.ex             # 🔶 Partial - Storage abstraction
-
-lib/aria_auth/             # Authentication Framework
-├── macaroons.ex           # 🔶 Partial - Token-based auth research
-└── sessions.ex            # 🔶 Partial - Session management
-
-lib/aria_security/         # Security Integration
-├── openbao.ex             # 🔶 Partial - Vault integration
-└── secrets.ex             # 🔶 Partial - Secrets management
+lib/aria_town/             # Knowledge & NPC Management (partial)
+lib/aria_storage/          # Content Distribution (broken)
+lib/aria_auth/             # Authentication Framework (partial)
+lib/aria_security/         # Security Integration (partial)
 ```
-
-**Legend:**
-- ✅ Working: Functional with passing tests
-- 🔶 Partial: Basic structure exists, many features incomplete
-- ❌ Disabled: Non-functional, tests disabled due to failures
 
 ## Current Capabilities
 
-### What Actually Works
-- **KHR Math Nodes:** Complete implementation with 45 passing tests
-- **Basic Project Structure:** Modular Elixir architecture established
-- **Development Tooling:** Code quality, testing, and build systems configured
-- **Core Dependencies:** AI/ML libraries (Nx, LibGraph) integrated
+**Actually Working:**
+- KHR Math Nodes: Complete glTF-inspired computation nodes
+- Project Structure: Modular Elixir architecture
+- Development Tooling: Quality/testing/build systems
+- Dependencies: AI/ML libraries (Nx, LibGraph) integrated
 
-### Major Limitations
-- **Planning System:** Core HTN/STN algorithms incomplete
-- **Temporal Reasoning:** STN constraint solver has timing issues
-- **Storage System:** Chunk-based content distribution failing tests
-- **Integration:** Most cross-system integration non-functional
-- **Performance:** Many components have timeout and scaling issues
+**Major Gaps:**
+- Planning algorithms incomplete (HTN/STN core missing)
+- Temporal reasoning has performance issues
+- Storage system fundamentally broken
+- Cross-system integration non-functional
 
-## Development Environment
+## Development Priorities
 
-### Prerequisites
-```bash
-# Elixir 1.16+ required
-# Erlang/OTP 26+ required
-```
-
-### Setup
-```bash
-mix deps.get
-mix compile
-```
-
-### Testing
-```bash
-# Run working tests only (368 tests, ~115 disabled)
-mix test
-
-# Many integration tests are currently disabled
-# See test/DISABLED_TESTS.md for details
-```
-
-### Current Test Status
-- **Total Tests:** 368 (115+ disabled due to failures)
-- **Passing:** 368/368 currently enabled tests
-- **Major Systems:** Many core planning tests disabled
-- **Working Example:** KHR math nodes demonstrate target patterns
-
-## Research Dependencies
-
-This project explores integration of several research areas:
-
-- **AI Planning:** HTN/STN hybrid approaches
-- **Temporal Reasoning:** Constraint satisfaction for time-based planning  
-- **Parallel Processing:** Flow-based coordination patterns
-- **Knowledge Representation:** RDF/SPARQL for NPC knowledge
-- **Visual Programming:** glTF-based node scripting
-- **Content Distribution:** Casync-inspired asset streaming
+1. **Restore Planning Tests:** Fix 115+ disabled core planning tests
+2. **Complete HTN/STN Integration:** Implement hybrid planning algorithms
+3. **Fix Storage System:** Resolve chunk-based distribution failures
+4. **Performance Issues:** Address widespread timeout problems
 
 ## Contributing
 
-This is experimental research code. Contributions should focus on:
+Focus areas for experimental research contributions:
+- **Algorithm Implementation:** Complete HTN/STN planning systems
+- **Test Recovery:** Fix disabled tests to restore functionality
+- **Performance Research:** Solve timeout and scaling issues
+- **Integration:** Connect partial systems into working pipelines
 
-- **Core Algorithm Implementation:** Help complete HTN/STN planning systems
-- **Test Recovery:** Fix disabled tests to restore system functionality  
-- **Performance Research:** Address timeout and scaling issues
-- **Integration Work:** Connect partial systems into working pipelines
-- **Documentation:** Document research findings and implementation decisions
+See `test/DISABLED_TESTS.md` for specific failing systems.
 
-### Development Priorities
-1. **Restore Core Planning Tests:** Many temporal planning tests are disabled
-2. **Complete HTN/STN Integration:** Hybrid planner needs algorithm implementation
-3. **Fix Storage System:** Chunk-based system has fundamental issues
-4. **Performance Optimization:** Address widespread timeout problems
+## Dependencies
 
-## License
-
-Copyright (c) 2025-present K. S. Ernest (iFire) Lee  
-SPDX-License-Identifier: MIT
+Exploring integration of: AI Planning (HTN/STN) • Temporal Reasoning • Parallel Processing (Flow) • Knowledge Representation (RDF/SPARQL) • Visual Programming (glTF nodes) • Content Distribution (Casync-inspired)
 
 ---
 
-**Disclaimer:** This is active research and development code. Expect significant changes, incomplete features, and non-functional systems. Not suitable for production use or as a stable dependency.
+**License:** MIT • **Copyright:** 2025-present K. S. Ernest (iFire) Lee  
+**Disclaimer:** Active research code. Expect incomplete features and non-functional systems.
