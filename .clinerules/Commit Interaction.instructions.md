@@ -9,12 +9,12 @@ Before performing a `git commit` or `git push` operation, you must ask for user 
 
 ### Process
 
-1.  When a `git commit` or `git push` operation is required, formulate a clear question to the user.
-2.  Provide at least two options using the phonetic alphabet (Alpha, Bravo, Charlie, Delta, etc.) as identifiers.
-3.  The options should allow the user to:
-    *   Confirm the commit/push.
-    *   Cancel the commit/push.
-    *   (Optionally) Request to review changes before committing/pushing.
+1. When a `git commit` or `git push` operation is required, formulate a clear question to the user.
+2. Provide at least two options using the phonetic alphabet (Alpha, Bravo, Charlie, Delta, etc.) as identifiers.
+3. The options should allow the user to:
+    * Confirm the commit/push.
+    * Cancel the commit/push.
+    * (Optionally) Request to review changes before committing/pushing.
 
 Each option's description should be clear, concise, and provide sufficient detail for the user to make an informed decision. Avoid generic terms like "Confirm" or "Cancel" alone; instead, elaborate on what is being confirmed or cancelled.
 

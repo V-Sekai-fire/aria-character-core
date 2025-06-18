@@ -13,9 +13,10 @@ Options should be provided as a JSON array of strings within the `options` param
 
 Each option's description should be clear, concise, and provide sufficient detail for the user to make an informed decision. Avoid generic terms like "Confirm" or "Cancel" alone; instead, elaborate on what is being confirmed or cancelled.
 
-*   **Always include a "Commit" option:** For any decision point where changes have been made or are about to be made, include an option to `git commit` the changes. This option should be clearly labeled, for example: `"Echo: Commit current changes."`
+* **Always include a "Commit" option:** For any decision point where changes have been made or are about to be made, include an option to `git commit` the changes. This option should be clearly labeled, for example: `"Echo: Commit current changes."`
 
 Example:
+
 ```json
 ["Alpha: Proceed with adding temporary debugging statements.", "Bravo: Cancel the proposed code modification.", "Echo: Commit current changes."]
 ```
