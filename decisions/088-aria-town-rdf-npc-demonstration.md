@@ -9,6 +9,7 @@
 Following completion of the Enhanced Scheduling System (ADR-085), we need a compelling visual demonstration that showcases autonomous NPC behavior in real-time. The Stanford Generative Agents paper provides an excellent reference implementation of believable AI agents living in a simulated town environment.
 
 This demonstration will serve multiple purposes:
+
 - Visual validation of our Enhanced Scheduling system capabilities
 - Compelling demo for showcasing AriaEngine's NPC coordination
 - Test bed for social AI behaviors and information diffusion
@@ -30,6 +31,7 @@ Implement **Aria Town Live** - a Phoenix LiveView-based NPC town simulation that
 ## Temporal Architecture
 
 ### Day Cycle Structure (20 minutes = 1 simulation day)
+
 - **Dawn (0-2 mins)**: NPCs wake up, morning routines, plan day
 - **Morning (2-7 mins)**: Work activities, errands, initial social interactions  
 - **Midday (7-10 mins)**: Peak activity, lunch, scheduled meetings
@@ -38,6 +40,7 @@ Implement **Aria Town Live** - a Phoenix LiveView-based NPC town simulation that
 - **Night (18-20 mins)**: NPCs return home, sleep preparations, cycle reset
 
 ### Technical Time Management
+
 ```elixir
 defmodule AriaTown.TimeManager do
   @simulation_day_ms 20 * 60 * 1000     # 20 minutes
@@ -67,6 +70,7 @@ end
 ## Implementation Plan
 
 ### Phase 1: Core Infrastructure (1.5 hours)
+
 - [x] Create aria_town_demo umbrella app
 - [ ] Set up Phoenix LiveView with RDF.ex dependencies
 - [ ] Define NPC ontology and knowledge representation
@@ -75,6 +79,7 @@ end
 - [ ] Integration with AriaEngine Enhanced Scheduling
 
 ### Phase 2: NPC Behavior System (2 hours)
+
 - [ ] RDF-based memory stream implementation
 - [ ] Time-based NPC personality and schedule definitions
 - [ ] Movement and pathfinding on 2D grid
@@ -82,6 +87,7 @@ end
 - [ ] Schedule conflicts via Enhanced Scheduling (peak during midday)
 
 ### Phase 3: Social Interaction Layer (2 hours)
+
 - [ ] Proximity-based conversation triggering
 - [ ] SPARQL-powered dialogue generation using shared knowledge
 - [ ] Speech bubble UI matching paper's visual style
@@ -89,6 +95,7 @@ end
 - [ ] Conversation memory persistence in RDF with timestamps
 
 ### Phase 4: Advanced Behaviors (1.5 hours)
+
 - [ ] Emergency event system (town meetings override schedules)
 - [ ] Social coordination scenarios (evening party planning)
 - [ ] Day/night visual cycle with lighting changes
@@ -98,6 +105,7 @@ end
 ## Technical Specifications
 
 ### Dependencies
+
 ```elixir
 {:rdf, "~> 1.1"},
 {:sparql, "~> 0.3"},  
@@ -106,6 +114,7 @@ end
 ```
 
 ### JSON-LD Context Schema (Chibifire.com)
+
 ```elixir
 @chibifire_context %{
   "@context" => %{
@@ -139,6 +148,7 @@ end
 ```
 
 ### Capped Persistence Strategy
+
 - **Save Frequency**: Every 2 minutes with JSON-LD format
 - **Conversation Cap**: 50 conversations per NPC maximum
 - **Knowledge Cap**: 100 knowledge facts per NPC maximum  
@@ -148,6 +158,7 @@ end
 - **Chibifire.com Namespace**: Full URL identifiers for all entities (e.g., `https://chibifire.com/npc/alice`)
 
 ### Sample NPC Schedule (Time-Compressed)
+
 ```elixir
 %Schedule{
   dawn: [:wake_up, :coffee, :check_weather],
@@ -160,6 +171,7 @@ end
 ```
 
 ### Demo Scenarios (Fit Within 20-Minute Cycles)
+
 1. **Election Gossip**: Information spreads from morning through evening
 2. **Schedule Conflicts**: Peak conflicts during midday activities
 3. **Emergency Meetings**: Evening announcements interrupt normal schedules
@@ -180,6 +192,7 @@ end
 ## Consequences
 
 ### Benefits
+
 - **Perfect Demo Timing**: Complete behavioral cycles every 20 minutes for presentations
 - **Engaging Monitoring**: Suitable for side-screen watching with clear progression
 - **Compelling Visual Demonstration**: Shows AriaEngine capabilities through emergent behaviors
@@ -187,12 +200,14 @@ end
 - **Reusable Foundation**: Time-accelerated framework for future NPC systems
 
 ### Risks
+
 - **Performance Under Continuous Operation**: 20-minute cycles require stable real-time processing
 - **RDF Query Performance**: Complex SPARQL queries at 30-second intervals
 - **Visual Complexity**: Rich interactions may overwhelm core scheduling demonstrations
 - **Memory Management**: Continuous RDF growth without cleanup
 
 ### Mitigation Strategies
+
 - **Optimize Update Frequency**: Critical path analysis for 30-second cycles
 - **RDF Query Caching**: Pre-computed common patterns and relationships
 - **Progressive Complexity**: Start with minimal NPCs, add features incrementally
@@ -200,6 +215,7 @@ end
 - **Performance Monitoring**: Real-time metrics for cycle completion times
 
 ## Related ADRs
+
 - **ADR-085**: Enhanced Scheduling System (foundation for conflict resolution)
 - **ADR-087**: Entity-Agent Timeline Graph Architecture (NPC state management)
 

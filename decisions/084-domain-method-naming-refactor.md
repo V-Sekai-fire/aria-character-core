@@ -18,6 +18,7 @@ The AriaEngine planner and domain modules have critical issues with method namin
 ### GTPyhop Alignment Requirements
 
 Based on GTPyhop Python implementation research:
+
 - Actions: stored as `{name -> function}` mappings
 - Methods: stored as `{task_name -> [function_list]}` but method names are available via `__name__` attribute
 - Method names: not required to be unique globally; multiple methods can exist for the same task
@@ -26,6 +27,7 @@ Based on GTPyhop Python implementation research:
 ### STN Bridge Integration
 
 The planner comments reference STN bridges for:
+
 - Non-temporal HTN operations (method selection, goal decomposition, blacklisting)
 - Instantaneous decision points separating temporal execution segments
 - Reentrant planning from failure points
@@ -36,18 +38,21 @@ The planner comments reference STN bridges for:
 Refactor the Domain and planner modules to align with GTPyhop conventions and implement STN bridge architecture:
 
 ### Phase 1: Method Naming Foundation
+
 - Update Domain module to store methods as `{method_name, function}` pairs
 - Modify all method addition functions to require both name and function  
 - Update planner logic to use method names for blacklisting and logging
 - Fix String.Chars protocol errors by using method names instead of function interpolation
 
 ### Phase 2: STN Bridge Architecture  
+
 - Design and implement STN bridge pattern for non-temporal operations
 - Integrate temporal constraint propagation with bridge actions
 - Support reentrant planning and solution tree updates with temporal validation
 - Document the bridge architecture and its relationship to existing STN validation
 
 ### Phase 3: Temporal Integration
+
 - Extend domain structure to support temporal actions, methods, and facts
 - Implement temporal constraint updates during method execution
 - Ensure STN consistency checking works with bridge-based planning
@@ -115,18 +120,21 @@ Refactor the Domain and planner modules to align with GTPyhop conventions and im
 ## Success Criteria
 
 ### Phase 1 Completion
+
 - All tests pass without String.Chars protocol errors
 - Method blacklisting works correctly with method names
 - Logging shows readable method names instead of function references
 - Dialyzer warnings related to method handling are resolved
 
 ### Phase 2 Completion  
+
 - STN bridge architecture is documented and functional
 - Non-temporal operations use bridge actions correctly
 - Temporal constraint propagation works through bridges
 - Reentrant planning supports bridge-based updates
 
 ### Phase 3 Completion
+
 - Full temporal planning with actions, methods, and facts
 - Real-time constraint updates during execution
 - Complete STN-HTN integration with bridge architecture
@@ -134,6 +142,7 @@ Refactor the Domain and planner modules to align with GTPyhop conventions and im
 ## Consequences
 
 ### Benefits
+
 - **Aligned with GTPyhop**: Proper method name handling matching Python implementation
 - **Better Debugging**: Method names available for logging and error reporting
 - **Correct Blacklisting**: Method names can be properly blacklisted and tracked
@@ -141,12 +150,14 @@ Refactor the Domain and planner modules to align with GTPyhop conventions and im
 - **Protocol Compliance**: No more String.Chars errors from function interpolation
 
 ### Risks
+
 - **Breaking Changes**: All existing method definitions need updating
 - **Migration Effort**: Extensive refactoring across planner and domain modules
 - **Temporal Complexity**: STN bridge architecture adds significant complexity
 - **Performance Impact**: Additional method name tracking may affect performance
 
 ### Mitigation
+
 - **Incremental Implementation**: Phase-based approach reduces risk
 - **Comprehensive Testing**: Update all tests to verify correct behavior
 - **Documentation**: Clear documentation of new method patterns

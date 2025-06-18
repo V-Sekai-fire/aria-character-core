@@ -146,18 +146,21 @@ end
 ### Automatic Growth Triggers
 
 **All Entities:**
+
 - Being affected by other entities (interactions received)
 - Environmental events (weather changes, scheduled events)
 - State changes (properties modified)
 - Spatial events (being moved, collisions)
 
 **Agents (additional triggers):**
+
 - Planning actions (future timepoints added automatically)
 - Executing actions (current timepoints updated automatically)
 - Goal pursuit (timeline extends to include goal achievement)
 - Reacting to sensory input (reactive timepoints added)
 
 **No Manual Configuration:**
+
 ```elixir
 # The system figures it out automatically based on entity nature
 Entity.new("chair")        # Timeline grows when moved, used, damaged
@@ -169,7 +172,9 @@ Agent.make_agent(entity)   # Timeline now also grows from autonomous planning
 This architecture solves multiple ADR-085 unsolved problems:
 
 ### Enhanced Scheduling
+
 **Solution:** Auto-growing timelines with dynamic LOD provide natural scheduling system
+
 - Agent timelines automatically extend with arbitrary temporal patterns (micro-patterns to annual cycles)
 - Multi-scale scheduling: minutes (guard checks) → hourly (rounds) → daily (meals) → weekly (market days) → seasonal (harvests) → annual (festivals)
 - Dynamic pattern recognition: entities learn and adapt their own scheduling behaviors
@@ -179,19 +184,25 @@ This architecture solves multiple ADR-085 unsolved problems:
 - Timeline bridging enables automatic coordination between scheduling entities
 
 ### Multi-Agent Planning  
+
 **Solution:** Timeline bridging enables automatic coordination between agents
+
 - Agents planning coordinated actions automatically bridge their timelines
 - Shared temporal constraints emerge naturally from interaction
 - No central coordination required - emerges from individual timeline connections
 
 ### Processes & Events
+
 **Solution:** Environmental events automatically grow entity timelines
+
 - Weather changes, day/night cycles automatically added to affected entity timelines
 - Resource depletion, environmental state changes propagate through entity network
 - Continuous processes modeled as timeline growth rather than separate systems
 
 ### Enhanced Timed Effects/Goals
+
 **Solution:** Living timelines naturally handle time-based effects
+
 - Absolute time constraints integrated into timeline growth
 - Deadline-based goals become natural timeline endpoints
 - Failure handling through timeline branch management
@@ -201,26 +212,31 @@ This architecture solves multiple ADR-085 unsolved problems:
 ### Automatic LOD Scaling
 
 **Ultra High LOD**: Player entities
+
 - Millisecond precision planning and execution
 - Full temporal constraint solving
 - All bridge types active
 
 **High LOD**: Entities directly interacting with ultra-high LOD entities  
+
 - Second precision planning
 - Active bridge management
 - Promoted automatically during interactions
 
 **Medium LOD**: Active NPCs in local area
+
 - Minute precision planning
 - Selective bridge activation
 - Background autonomous behavior
 
 **Low LOD**: Background entities and distant NPCs
+
 - Hour precision planning
 - Minimal bridge maintenance
 - State-only updates until relevance increases
 
 **Very Low LOD**: Completely background entities
+
 - Daily precision planning  
 - Bridge storage only
 - Minimal computational overhead
@@ -238,6 +254,7 @@ quest_completes -> demote_based_on_distance()
 ## Bridge Lifecycle Management
 
 ### Bridge Creation
+
 - **Proximity**: Automatic when entities within interaction range
 - **Memory**: Created after significant interactions, persist with decay
 - **Communication**: Created when messages sent/received
@@ -245,11 +262,13 @@ quest_completes -> demote_based_on_distance()
 - **Coordination**: Created when agents plan coordinated activities
 
 ### Bridge Maintenance
+
 - **Strength Decay**: Bridge influence weakens over time/distance
 - **Relevance Updates**: Bridge importance changes based on ongoing interactions
 - **Computational Budgets**: Bridge complexity managed based on available resources
 
 ### Bridge Cleanup
+
 - **Automatic Pruning**: Remove bridges below relevance threshold
 - **Memory Consolidation**: Convert active bridges to memory traces
 - **Performance Optimization**: Maintain bridge indices for fast lookup
@@ -283,6 +302,7 @@ AriaEngine.TimelineGraph.ExternalBridge      # VRChat, Discord, web interface co
 ### Integration Points
 
 **With Existing Systems:**
+
 - **AriaEngine.State**: Entity properties integrate with predicate-subject-fact system
 - **AriaEngine.Planner**: Agent planning triggers automatic timeline growth
 - **AriaEngine.Timeline.STN**: Timeline constraints solved using existing STN system
@@ -291,24 +311,28 @@ AriaEngine.TimelineGraph.ExternalBridge      # VRChat, Discord, web interface co
 ## Success Criteria
 
 ### Phase 1 Success
+
 - [ ] Create entities with auto-growing timelines
 - [ ] Convert entities to agents with action capabilities
 - [ ] Basic proximity bridging between entity timelines
 - [ ] Automatic LOD promotion/demotion
 
 ### Phase 2 Success  
+
 - [ ] All bridge types implemented and functional
 - [ ] Memory bridges persist and influence future decisions
 - [ ] Communication bridges handle message delays
 - [ ] Causal bridges maintain action-at-distance relationships
 
 ### Phase 3 Success
+
 - [ ] Multi-agent coordination emerges from timeline bridging
 - [ ] Environmental events automatically propagate through entity network
 - [ ] Performance remains stable with 100+ entities at mixed LOD levels
 - [ ] Player interactions feel natural and responsive
 
 ### Integration Success
+
 - [ ] ADR-085 Enhanced Scheduling solved through auto-growing timelines
 - [ ] ADR-085 Multi-Agent Planning solved through timeline bridging  
 - [ ] ADR-085 Processes & Events solved through environmental timeline integration
@@ -317,6 +341,7 @@ AriaEngine.TimelineGraph.ExternalBridge      # VRChat, Discord, web interface co
 ## Consequences
 
 ### Benefits
+
 - **Natural NPC Behavior**: NPCs coordinate and behave organically through timeline interactions
 - **Scalable Performance**: LOD system ensures computational efficiency across entity scales
 - **Emergent Coordination**: Complex multi-entity behaviors emerge from simple bridging rules
@@ -324,12 +349,14 @@ AriaEngine.TimelineGraph.ExternalBridge      # VRChat, Discord, web interface co
 - **Solves Multiple Problems**: Addresses several ADR-085 unsolved problems simultaneously
 
 ### Risks
+
 - **Implementation Complexity**: Significant architectural change requiring careful integration
 - **Performance Tuning**: LOD and bridge management requires optimization for large entity counts
 - **Debugging Difficulty**: Timeline interactions may create complex emergent behaviors hard to debug
 - **Memory Management**: Bridge persistence and timeline growth may require active memory management
 
 ### Monitoring
+
 - **Performance Metrics**: Timeline growth rates, bridge creation/destruction rates, LOD distribution
 - **Behavior Quality**: NPC coordination quality, player interaction responsiveness
 - **Resource Usage**: Memory consumption, computational load distribution across LOD levels
