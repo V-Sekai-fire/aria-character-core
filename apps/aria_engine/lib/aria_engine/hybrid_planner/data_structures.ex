@@ -108,19 +108,12 @@ defmodule AriaEngine.HybridPlanner.DataStructures do
       %{plan | temporal_validated: true}
     end
 
-    @doc """
-    Internal accessor for the solution tree - only for use within HybridCoordinator.
-    This function should not be called from external modules.
-    """
     @doc false
     @spec get_internal_plan(t()) :: AriaEngine.Plan.solution_tree()
     def get_internal_plan(%__MODULE__{internal_plan: plan}) do
       plan
     end
 
-    @doc """
-    Internal function to update the internal plan - only for use within HybridCoordinator.
-    """
     @doc false
     @spec update_internal_plan(t(), AriaEngine.Plan.solution_tree()) :: t()
     def update_internal_plan(%__MODULE__{} = encapsulated_plan, new_internal_plan) do

@@ -14,7 +14,7 @@ defmodule AriaEngine do
 
   - `AriaEngine.State`: Manages world state using predicate-subject-fact triples
   - `AriaEngine.Domain`: Contains actions, tasks, and planning methods
-  - `AriaEngine.Plan`: IPyHOP-style HTN planning with solution trees
+  - `AriaEngine.PlannerAdapter`: Migration adapter for Plan API using HybridCoordinator
   - `AriaEngine.Multigoal`: Represents collections of goals to achieve
 
   ## Planning Integration
@@ -182,7 +182,7 @@ defmodule AriaEngine do
 
   # Replanning and Advanced Features
   @doc """
-  Replan from a failure point using AriaEngine.Planner.
+  Replan from a failure point using AriaEngine.HybridPlanner.HybridCoordinator.
   """
   @spec replan(t(), String.t(), keyword()) :: {:ok, t()} | {:error, String.t()}
   def replan(engine, fail_node_id, opts \\ []), do: Planning.replan(engine, fail_node_id, opts)

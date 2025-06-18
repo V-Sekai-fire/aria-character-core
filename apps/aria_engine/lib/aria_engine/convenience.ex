@@ -9,7 +9,7 @@ defmodule AriaEngine.Convenience do
   alias AriaEngine.State
   alias AriaEngine.Domain
   alias AriaEngine.Multigoal
-  alias AriaEngine.Plan
+  alias AriaEngine.PlannerAdapter
 
   @type state :: Core.state()
   @type domain :: Core.domain()
@@ -62,7 +62,7 @@ defmodule AriaEngine.Convenience do
   """
   @spec plan_cost([plan_step()]) :: non_neg_integer()
   def plan_cost(plan) do
-    Plan.plan_cost(plan)
+    PlannerAdapter.plan_cost(plan)
   end
 
   @doc """

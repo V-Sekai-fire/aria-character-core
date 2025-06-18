@@ -17,7 +17,7 @@ defmodule AriaEngine.DomainRegistry do
   and can be composed together to create complex planning capabilities.
   """
 
-  alias AriaEngine.{Domain, Planner}
+  alias AriaEngine.Domain
   alias AriaEngine.Actions
 
   @domains_table :aria_domains_registry
@@ -182,7 +182,7 @@ defmodule AriaEngine.DomainRegistry do
   Create a domain interface suitable for the planner.
 
   This converts a Domain struct to the interface format expected
-  by AriaEngine.Planner.
+  by AriaEngine.HybridPlanner.HybridCoordinator.
 
   ## Parameters
   - `domain`: Domain to convert
@@ -190,9 +190,16 @@ defmodule AriaEngine.DomainRegistry do
   ## Returns
   Domain interface map
   """
-  @spec create_planner_interface(AriaEngine.Domain.Core.t()) :: Planner.domain_interface()
+  @spec create_planner_interface(AriaEngine.Domain.Core.t()) :: map()
   def create_planner_interface(%AriaEngine.Domain.Core{} = domain) do
-    Planner.domain_to_interface(domain)
+    # Convert domain to the interface format expected by HybridCoordinator
+    %{
+      name: domain.name,
+      actions: domain.actions,
+      task_methods: domain.task_methods,
+      unigoal_methods: domain.unigoal_methods,
+      multigoal_methods: domain.multigoal_methods
+    }
   end
 
   @doc """

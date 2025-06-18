@@ -134,7 +134,7 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
     internal_plan = EncapsulatedPlan.get_internal_plan(plan)
     
     # Use Plan.replan for actual replanning, then validate with strategy coordinator
-    case AriaEngine.Plan.replan(domain, state, internal_plan, fail_node_id, opts) do
+    case AriaEngine.PlannerAdapter.replan(domain, state, internal_plan, fail_node_id, opts) do
       {:ok, new_htn_plan} ->
         # Validate using strategy coordinator's temporal function
         case coordinator.temporal_fn.(new_htn_plan, domain, opts) do
@@ -164,7 +164,7 @@ defmodule AriaEngine.HybridPlanner.HybridCoordinator do
     # Use both planning and temporal validation
     internal_plan = EncapsulatedPlan.get_internal_plan(encapsulated_plan)
     
-    case AriaEngine.Plan.validate_plan(domain, initial_state, internal_plan) do
+    case AriaEngine.PlannerAdapter.validate_plan(domain, initial_state, internal_plan) do
       {:ok, final_state} ->
         # Additional temporal consistency validation using strategy coordinator
         coordinator = get_strategy_coordinator([])

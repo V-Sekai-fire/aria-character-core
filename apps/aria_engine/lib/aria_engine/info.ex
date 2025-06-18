@@ -7,7 +7,7 @@ defmodule AriaEngine.Info do
   """
   alias AriaEngine.Core
   alias AriaEngine.State
-  alias AriaEngine.Plan
+  alias AriaEngine.PlannerAdapter
   alias AriaEngine.Plan.Utils # Added alias for Utils
 
   @type t :: Core.t()
@@ -85,7 +85,7 @@ defmodule AriaEngine.Info do
   """
   @spec get_plan_stats(t()) :: map()
   def get_plan_stats(%Core{solution_tree: solution_tree}) when not is_nil(solution_tree) do
-    Plan.tree_stats(solution_tree)
+    PlannerAdapter.tree_stats(solution_tree)
   end
 
   def get_plan_stats(%Core{solution_tree: nil}) do
@@ -117,7 +117,7 @@ defmodule AriaEngine.Info do
 
     tree_stats = case engine.solution_tree do
       nil -> %{}
-      solution_tree -> Plan.tree_stats(solution_tree)
+      solution_tree -> PlannerAdapter.tree_stats(solution_tree)
     end
 
     %{

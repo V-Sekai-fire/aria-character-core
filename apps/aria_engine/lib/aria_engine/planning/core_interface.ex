@@ -8,10 +8,9 @@ defmodule AriaEngine.Planning.CoreInterface do
 
   alias AriaEngine.Planning.Internal
   alias AriaEngine.Core
-  alias AriaEngine.Planner
   alias AriaEngine.StateV2
   alias AriaEngine.Pddl.Domain, as: PddlDomain
-  alias AriaEngine.Plan
+  alias AriaEngine.PlannerAdapter
 
   @type t :: AriaEngine.Planning.HighLevel.t()
   @type solution_tree :: Core.solution_tree()
@@ -30,7 +29,7 @@ defmodule AriaEngine.Planning.CoreInterface do
       _ -> domain
     end
 
-    case Plan.plan(adapted_domain, state, todos, opts) do
+    case PlannerAdapter.plan(adapted_domain, state, todos, opts) do
       {:ok, solution_tree} ->
         {:ok, solution_tree}
 
@@ -50,7 +49,7 @@ defmodule AriaEngine.Planning.CoreInterface do
       %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
       _ -> domain
     end
-    Plan.plan(adapted_domain, state, todos, opts)
+    PlannerAdapter.plan(adapted_domain, state, todos, opts)
   end
 
   @doc """
@@ -63,11 +62,11 @@ defmodule AriaEngine.Planning.CoreInterface do
       %PddlDomain{} -> AriaEngine.Pddl.DomainAdapter.new(domain)
       _ -> domain
     end
-    Plan.validate_plan(adapted_domain, initial_state, plan)
+    PlannerAdapter.validate_plan(adapted_domain, initial_state, plan)
   end
 
   @doc """
-  Replan from a failure point using AriaEngine.Planner.
+  Replan from a failure point using AriaEngine.HybridPlanner.HybridCoordinator.
   """
   @spec replan(Core.t(), String.t(), keyword()) :: {:ok, Core.t()} | {:error, String.t()}
   def replan(engine, fail_node_id, opts \\[])
@@ -77,12 +76,12 @@ defmodule AriaEngine.Planning.CoreInterface do
 
     domain_interface = Internal.to_planner_interface(engine)
 
-    case Planner.replan(domain_interface, engine.current_state, solution_tree, fail_node_id, opts) do
+    case PlannerAdapter.replan(domain_interface, engine.current_state, solution_tree, fail_node_id, opts) do
       {:ok, new_solution_tree} ->
         updated_engine = %{engine |
           solution_tree: new_solution_tree,
           progress: %{engine.progress |
-            total_steps: Planner.plan_cost(new_solution_tree)
+            total_steps: PlannerAdapter.plan_cost(new_solution_tree)
           }
         }
 
@@ -105,7 +104,7 @@ defmodule AriaEngine.Planning.CoreInterface do
       when not is_nil(solution_tree) do
 
     domain_interface = Internal.to_planner_interface(engine)
-    Planner.validate_plan(domain_interface, engine.initial_state, solution_tree)
+    PlannerAdapter.validate_plan(domain_interface, engine.initial_state, solution_tree)
   end
 
   def validate_plan(%Core{solution_tree: nil}) do
