@@ -104,7 +104,11 @@ defmodule NodeLibrary.KHRInteractivity.Event do
   Triggered on each frame or update cycle.
   Provides delta time and frame number.
   """
-  def event_on_tick(state, [node_index, delta_time \\ 0.016]) do
+  def event_on_tick(state, [node_index]) do
+    event_on_tick(state, [node_index, 0.016])
+  end
+
+  def event_on_tick(state, [node_index, delta_time]) do
     timestamp = System.system_time(:millisecond)
     
     # Get current frame number or initialize to 0
@@ -125,7 +129,19 @@ defmodule NodeLibrary.KHRInteractivity.Event do
   Triggered when user clicks on interactive elements.
   Provides click position, button, and target information.
   """
-  def event_on_click(state, [node_index, x \\ 0, y \\ 0, button \\ "left"]) do
+  def event_on_click(state, [node_index]) do
+    event_on_click(state, [node_index, 0, 0, "left"])
+  end
+
+  def event_on_click(state, [node_index, x]) do
+    event_on_click(state, [node_index, x, 0, "left"])
+  end
+
+  def event_on_click(state, [node_index, x, y]) do
+    event_on_click(state, [node_index, x, y, "left"])
+  end
+
+  def event_on_click(state, [node_index, x, y, button]) do
     timestamp = System.system_time(:millisecond)
     
     state
@@ -143,7 +159,15 @@ defmodule NodeLibrary.KHRInteractivity.Event do
   Triggered when user presses or releases keys.
   Provides key code, action type, and modifier states.
   """
-  def event_on_key(state, [node_index, key_code \\ "", action \\ "press"]) do
+  def event_on_key(state, [node_index]) do
+    event_on_key(state, [node_index, "", "press"])
+  end
+
+  def event_on_key(state, [node_index, key_code]) do
+    event_on_key(state, [node_index, key_code, "press"])
+  end
+
+  def event_on_key(state, [node_index, key_code, action]) do
     timestamp = System.system_time(:millisecond)
     
     state
@@ -160,7 +184,19 @@ defmodule NodeLibrary.KHRInteractivity.Event do
   Triggered when user hovers over interactive elements.
   Provides hover state and position information.
   """
-  def event_on_hover(state, [node_index, x \\ 0, y \\ 0, is_entering \\ true]) do
+  def event_on_hover(state, [node_index]) do
+    event_on_hover(state, [node_index, 0, 0, true])
+  end
+
+  def event_on_hover(state, [node_index, x]) do
+    event_on_hover(state, [node_index, x, 0, true])
+  end
+
+  def event_on_hover(state, [node_index, x, y]) do
+    event_on_hover(state, [node_index, x, y, true])
+  end
+
+  def event_on_hover(state, [node_index, x, y, is_entering]) do
     timestamp = System.system_time(:millisecond)
     hover_state = if is_entering, do: "enter", else: "exit"
     
@@ -179,7 +215,15 @@ defmodule NodeLibrary.KHRInteractivity.Event do
   Triggered by application-specific events.
   Provides flexible event data and custom payload.
   """
-  def event_on_custom(state, [node_index, event_name \\ "", event_data \\ %{}]) do
+  def event_on_custom(state, [node_index]) do
+    event_on_custom(state, [node_index, "", %{}])
+  end
+
+  def event_on_custom(state, [node_index, event_name]) do
+    event_on_custom(state, [node_index, event_name, %{}])
+  end
+
+  def event_on_custom(state, [node_index, event_name, event_data]) do
     timestamp = System.system_time(:millisecond)
     
     state

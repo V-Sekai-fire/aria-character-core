@@ -81,7 +81,11 @@ defmodule NodeLibrary.KHRInteractivity.Variable do
   Retrieves the current value of a named variable.
   Returns the value or a default if the variable doesn't exist.
   """
-  def variable_get(state, [node_index, variable_name, default_value \\ nil]) do
+  def variable_get(state, [node_index, variable_name]) do
+    variable_get(state, [node_index, variable_name, nil])
+  end
+
+  def variable_get(state, [node_index, variable_name, default_value]) do
     # Variables are stored in a special "variables" subject
     value = StateV2.get_fact(state, "variables", variable_name) || default_value
     
