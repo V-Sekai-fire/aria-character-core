@@ -31,7 +31,6 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   
   alias HybridPlanner.HybridCoordinatorV2
   alias StateV2
-  alias Domain.Core
   
   require Logger
   
@@ -215,7 +214,7 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
     # This is a placeholder - in a real implementation this would be more sophisticated
     activities = Map.get(request, :activities, [])
     
-    %Domain.Core{
+    %{
       name: "scheduling_domain",
       actions: create_domain_actions(activities),
       action_metadata: %{},
