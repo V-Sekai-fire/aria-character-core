@@ -49,46 +49,6 @@ Implement a PERT chart execution simulator using the existing hybrid planner API
 
 **MCP Tool Integration**: Expose project execution simulation as MCP tools for AI assistant access.
 
-## KHR Interactivity Construction Domain
-
-Based on the KHR_interactivity specification, the following nodes are available for constructing durative actions and task methods:
-
-### Flow Control (Task Methods)
-**Sequence**: `flow/sequence` - Execute actions in order
-**Branching**: `flow/branch`, `flow/switch` - Conditional execution
-**Loops**: `flow/while`, `flow/for`, `flow/doN` - Iterative execution
-**Synchronization**: `flow/waitAll`, `flow/multiGate` - Coordination
-**Timing**: `flow/throttle` - Rate limiting
-
-### Durative Actions (Core PERT Implementation)
-**Variable Interpolation**: `variable/interpolate` - Progress tracking over time
-- Maps to: Task execution with progress from 0% to 100%
-- Duration: Task duration in seconds
-- Use: Critical path task execution
-
-**Pointer Interpolation**: `pointer/interpolate` - Resource allocation over time  
-- Maps to: Dynamic resource adjustment during task execution
-- Duration: Resource allocation period
-- Use: Resource leveling and optimization
-
-**Delay Scheduling**: `flow/setDelay` - Milestone and dependency triggers
-- Maps to: Task start scheduling based on dependencies
-- Duration: Delay until task can begin
-- Use: Dependency management and milestone triggers
-
-### State Management (Task Methods)
-**Variables**: `variable/get`, `variable/set`, `variable/setMultiple` - State tracking
-**Object Model**: `pointer/get`, `pointer/set` - External system integration
-**Animation**: `animation/start`, `animation/stop`, `animation/stopAt` - Timeline control
-
-### Event System (Task Methods)
-**Lifecycle**: `event/onStart`, `event/onTick` - System events
-**Custom Events**: `event/receive`, `event/send` - Inter-task communication
-
-### Construction Domain Mapping
-
-To be programmed.
-
 ## Technical Specifications
 
 ### PERT Chart Input Data
