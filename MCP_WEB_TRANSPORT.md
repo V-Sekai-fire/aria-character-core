@@ -2,6 +2,8 @@
 
 This document describes how to use the Aria Engine Model Context Protocol (MCP) server via HTTP web transport instead of stdio.
 
+**Current Status:** The web transport provides HTTP access to the same MCP scheduling capabilities. Note that there are currently some response handling issues in the underlying MCP server that affect both stdio and web transports.
+
 ## Starting the Web Server
 
 Start the MCP server in web mode:
@@ -145,6 +147,14 @@ The Cline MCP settings have been updated to use the web transport:
 - **Better debugging**: HTTP logs are easier to trace than stdio
 - **Standard protocol**: Uses familiar REST API patterns
 - **Development friendly**: Easy to test and integrate with other tools
+
+## Known Issues
+
+The web transport shares the same underlying MCP server implementation, so it currently has the same response handling issues as the stdio transport:
+
+- Response formatting case clause errors in the server wrapper
+- The scheduling tool generates correct JSON but the server response handling needs fixes
+- See [MCP_INTEGRATION.md](MCP_INTEGRATION.md) for detailed troubleshooting information
 
 ## Architecture
 

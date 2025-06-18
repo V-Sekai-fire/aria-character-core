@@ -8,13 +8,14 @@ AI planning research project exploring intelligent NPC behavior through hybrid H
 
 | Component | Status | Tests | Notes |
 |-----------|--------|-------|-------|
-| **KHR Math Nodes** | ✅ Working | 45/45 | Complete implementation |
-| **Core Planning** | ❌ Broken | 0/115+ | HTN/STN algorithms incomplete |
+| **MCP Integration** | 🔶 Partial | 6/7 failing | Scheduler interface working, response handling issues |
+| **Core Planning** | 🔶 Partial | 1 timeout | HTN/STN algorithms partially implemented |
 | **Storage System** | ❌ Broken | 0/20+ | Chunk distribution failing |
-| **Temporal Solver** | 🔶 Partial | Mixed | STN constraints have timing issues |
+| **Temporal Solver** | 🔶 Partial | Mixed | STN constraints have performance issues |
 | **NPC Management** | 🔶 Partial | Mixed | Basic structure exists |
+| **KHR System** | ❌ Removed | N/A | Deleted per ADR-096 (obsolete) |
 
-**Current Reality:** 368 enabled tests passing, 115+ tests disabled due to core system failures.
+**Current Reality:** 333 tests total, 326 passing, 7 failing (primarily MCP integration), 1 skipped.
 
 ## Quick Start
 
@@ -39,21 +40,20 @@ mix test  # Runs only working tests
 
 **Core Investigation Areas:**
 - **Hybrid Planning:** HTN goal decomposition + STN temporal constraints
-- **Visual Scripting:** glTF KHR_interactivity nodes adapted for AI planning
+- **Temporal Scheduling:** Critical Path Method with resource conflict detection
 - **Parallel Processing:** Flow-based coordination for multi-NPC systems
 - **Knowledge Representation:** RDF/SPARQL for NPC decision-making
 
 ## Technical Architecture
 
 ```
-lib/aria_engine/           # AI Planning Core (mostly incomplete)
+lib/aria_engine/           # AI Planning Core (partially working)
 ├── hybrid_planner/        # Strategy coordination framework
+├── mcp/                   # ✅ Model Context Protocol integration (working)
 ├── plan/                  # Core planning algorithms  
 ├── timeline/              # Temporal constraint handling
-├── node_library/          # ✅ KHR math nodes (working)
 └── domains/               # Planning domain definitions
 
-lib/aria_town/             # Knowledge & NPC Management (partial)
 lib/aria_storage/          # Content Distribution (broken)
 lib/aria_auth/             # Authentication Framework (partial)
 lib/aria_security/         # Security Integration (partial)
@@ -62,23 +62,43 @@ lib/aria_security/         # Security Integration (partial)
 ## Current Capabilities
 
 **Actually Working:**
-- KHR Math Nodes: Complete glTF-inspired computation nodes
+- MCP Integration: Temporal scheduler interface via Model Context Protocol
 - Project Structure: Modular Elixir architecture
 - Development Tooling: Quality/testing/build systems
 - Dependencies: AI/ML libraries (Nx, LibGraph) integrated
 
 **Major Gaps:**
-- Planning algorithms incomplete (HTN/STN core missing)
-- Temporal reasoning has performance issues
+- MCP response handling needs fixes (7 test failures)
+- Temporal reasoning has performance issues (1 timeout)
 - Storage system fundamentally broken
-- Cross-system integration non-functional
+- Cross-system integration partially functional
+
+## MCP Integration
+
+The project includes a working Model Context Protocol server that exposes temporal scheduling capabilities:
+
+```bash
+# Start MCP server (stdio mode for IDE integration)
+mix mcp.stdio
+
+# Start MCP server (web mode for HTTP access)
+mix mcp.web --port 4000
+```
+
+**Available Tools:**
+- `schedule_activities`: Critical Path Method scheduling with hybrid planning
+- Handles empty activity lists (valid mathematical solution)
+- Resource conflict detection and analysis
+- Dependency validation and circular dependency detection
+
+See [MCP_INTEGRATION.md](MCP_INTEGRATION.md) for complete setup and usage documentation.
 
 ## Development Priorities
 
-1. **Restore Planning Tests:** Fix 115+ disabled core planning tests
-2. **Complete HTN/STN Integration:** Implement hybrid planning algorithms
-3. **Fix Storage System:** Resolve chunk-based distribution failures
-4. **Performance Issues:** Address widespread timeout problems
+1. **Fix MCP Integration:** Resolve 7 failing MCP integration tests
+2. **Optimize Temporal Solver:** Address STN planner timeout issues
+3. **Complete HTN/STN Integration:** Implement remaining hybrid planning algorithms
+4. **Fix Storage System:** Resolve chunk-based distribution failures
 
 ## Contributing
 
@@ -92,7 +112,7 @@ See `test/DISABLED_TESTS.md` for specific failing systems.
 
 ## Dependencies
 
-Exploring integration of: AI Planning (HTN/STN) • Temporal Reasoning • Parallel Processing (Flow) • Knowledge Representation (RDF/SPARQL) • Visual Programming (glTF nodes) • Content Distribution (Casync-inspired)
+Exploring integration of: AI Planning (HTN/STN) • Temporal Reasoning • Parallel Processing (Flow) • Knowledge Representation (RDF/SPARQL) • Model Context Protocol (MCP) • Content Distribution (Casync-inspired)
 
 ---
 

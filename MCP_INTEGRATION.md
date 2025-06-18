@@ -6,6 +6,8 @@ This document describes how to set up and use the Aria Engine Model Context Prot
 
 The Aria Engine MCP server provides temporal scheduling and planning capabilities through the Model Context Protocol, allowing external clients like VSCode to access AriaEngine's sophisticated hybrid temporal planner.
 
+**Current Status:** The MCP server is functional with working tool registration and basic scheduling capabilities. However, there are currently 7 failing integration tests related to response handling that need to be resolved.
+
 ## Features
 
 - **Temporal Scheduling**: Critical Path Method (CPM) with hybrid planning
@@ -221,6 +223,18 @@ mix test test/aria_engine/mcp/mcp_integration_test.exs
 ### Empty Responses
 
 This is expected behavior for empty activity lists and represents a mathematically correct solution (empty plan for empty input).
+
+### Known Issues
+
+**MCP Integration Test Failures (7 tests):**
+- Response handling has case clause matching errors in the MCP server
+- The scheduling tool works correctly but response formatting needs fixes
+- Tests show the tool generates proper JSON responses but the server wrapper has issues
+- See test output for specific `CaseClauseError` details in `AriaEngine.MCP.Server.handle_call/3`
+
+**STN Planner Performance:**
+- One test timeout in complex hierarchical planning scenarios
+- PC-2 algorithm performance needs optimization for large constraint networks
 
 ## Development
 
