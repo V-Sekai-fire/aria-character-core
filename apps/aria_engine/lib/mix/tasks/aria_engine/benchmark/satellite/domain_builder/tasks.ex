@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Mix.Tasks.AriaEngine.Benchmark.Satellite.DomainBuilder.Tasks do
   @moduledoc "Handles adding tasks to the AriaEngine Domain."
 

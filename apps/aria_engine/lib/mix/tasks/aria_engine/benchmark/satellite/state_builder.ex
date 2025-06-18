@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Mix.Tasks.AriaEngine.Benchmark.Satellite.StateBuilder do
   @moduledoc "Builds the AriaEngine State for the Satellite benchmark."
 

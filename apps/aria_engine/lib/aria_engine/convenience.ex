@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Convenience do
   @moduledoc """
   Provides convenience API for State and Domain operations for the Aria Engine.

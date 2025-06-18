@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Planning.Internal do
   @moduledoc """
   Provides internal helper functions for the Aria Engine planning modules.

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.SatelliteActions do
   @moduledoc """
   Simulated action functions for the Satellite domain.

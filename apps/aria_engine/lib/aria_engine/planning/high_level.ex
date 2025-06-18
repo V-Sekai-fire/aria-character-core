@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Planning.HighLevel do
   @moduledoc """
   Provides high-level planning and execution functionalities for the Aria Engine.

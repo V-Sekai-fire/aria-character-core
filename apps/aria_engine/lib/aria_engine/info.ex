@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Info do
   @moduledoc """
   Provides functions for retrieving information and status from the Aria Engine.

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Timeline.STN do
   @moduledoc """
   Simple Temporal Network (STN) implementation with composable, parallelizable operations

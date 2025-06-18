@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Problems.SatelliteProblem do
   @moduledoc """
   PDDL problem definition for the Satellite problem.

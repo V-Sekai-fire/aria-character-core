@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Timeline.STN.Core do
   @moduledoc false # This module is part of the internal STN implementation
 
