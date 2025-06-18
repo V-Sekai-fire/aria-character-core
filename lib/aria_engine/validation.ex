@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Validation do
+defmodule Validation do
   @moduledoc """
   Provides validation functions for the Aria Engine definition.
   """
-  alias AriaEngine.Core
+  alias Core
 
   @type t :: Core.t()
   @type todo_item :: Core.todo_item()

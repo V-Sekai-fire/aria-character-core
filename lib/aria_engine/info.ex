@@ -1,14 +1,14 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Info do
+defmodule Info do
   @moduledoc """
   Provides functions for retrieving information and status from the Aria Engine.
   """
-  alias AriaEngine.Core
-  alias AriaEngine.State
-  alias AriaEngine.PlannerAdapter
-  alias AriaEngine.Plan.Utils # Added alias for Utils
+  alias Core
+  alias State
+  alias PlannerAdapter
+  alias Plan.Utils # Added alias for Utils
 
   @type t :: Core.t()
   @type status :: Core.status()

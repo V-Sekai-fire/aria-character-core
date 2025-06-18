@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.StateV2 do
+defmodule StateV2 do
   @moduledoc """
   Modernized state management using subject-predicate-fact triples for entity-centric architecture.
   
@@ -12,11 +12,11 @@ defmodule AriaEngine.StateV2 do
   the primary organizational unit, with natural API patterns like:
   
   ```elixir
-  state = AriaEngine.StateV2.new()
-  |> AriaEngine.StateV2.set_fact("player", "location", "room1")
-  |> AriaEngine.StateV2.set_fact("player", "has", "sword")
+  state = StateV2.new()
+  |> StateV2.set_fact("player", "location", "room1")
+  |> StateV2.set_fact("player", "has", "sword")
   
-  AriaEngine.StateV2.get_fact(state, "player", "location")
+  StateV2.get_fact(state, "player", "location")
   # => "room1"
   ```
   
@@ -370,8 +370,8 @@ defmodule AriaEngine.StateV2 do
   This function helps with migration from the old {predicate, subject} format
   to the new entity-first {subject, predicate} format.
   """
-  @spec from_legacy_state(AriaEngine.State.t()) :: t()
-  def from_legacy_state(%AriaEngine.State{data: legacy_data}) do
+  @spec from_legacy_state(State.t()) :: t()
+  def from_legacy_state(%State{data: legacy_data}) do
     converted_data = 
       legacy_data
       |> Enum.map(fn {{predicate, subject}, fact_value} ->
@@ -388,7 +388,7 @@ defmodule AriaEngine.StateV2 do
   This function helps with migration by allowing StateV2 to be used
   with existing code that expects the old format.
   """
-  @spec to_legacy_state(t()) :: AriaEngine.State.t()
+  @spec to_legacy_state(t()) :: State.t()
   def to_legacy_state(%__MODULE__{data: data}) do
     converted_data = 
       data
@@ -397,6 +397,6 @@ defmodule AriaEngine.StateV2 do
       end)
       |> Map.new()
     
-    %AriaEngine.State{data: converted_data}
+    %State{data: converted_data}
   end
 end

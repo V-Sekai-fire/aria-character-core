@@ -1,14 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.BasicActionsDomainProvider do
+defmodule BasicActionsDomainProvider do
   @moduledoc """
-  Built-in domain provider for basic actions in AriaEngine.
+  Built-in domain provider for basic actions in 
   """
 
-  @behaviour AriaEngine.DomainProvider
-
-  alias AriaEngine.{Domain, Actions}
+  @behaviour DomainProvider
 
   @impl true
   def domain_type, do: "basic_actions"

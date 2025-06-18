@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Actions do
+defmodule Actions do
   @moduledoc """
   A library of actions that can execute external processes via Porcelain.
 
@@ -9,7 +9,7 @@ defmodule AriaEngine.Actions do
   and can interact with external systems through command execution.
   """
 
-  alias AriaEngine.State
+  alias State
   require Logger
 
   # Type definitions

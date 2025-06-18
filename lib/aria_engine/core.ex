@@ -1,24 +1,24 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Core do
+defmodule Core do
   @moduledoc """
   Core components and types for the Aria Engine.
   """
 
-  alias AriaEngine.State # Add this alias
+  alias State # Add this alias
 
   # Core types
-  @type domain :: AriaEngine.Domain.Core.t()
-  @type state :: AriaEngine.State.t()
-  @type multigoal :: AriaEngine.Multigoal.t()
-  @type solution_tree :: AriaEngine.Plan.solution_tree()
-  @type plan_step :: AriaEngine.Plan.plan_step()
+  @type domain :: Domain.Core.t()
+  @type state :: State.t()
+  @type multigoal :: Multigoal.t()
+  @type solution_tree :: Plan.solution_tree()
+  @type plan_step :: Plan.plan_step()
 
   # Goal and task types
   @type goal :: {String.t(), String.t(), State.fact_value()}
   @type task :: {String.t(), list()}
-  @type todo_item :: AriaEngine.Plan.todo_item() # Use fully qualified name
+  @type todo_item :: Plan.todo_item() # Use fully qualified name
 
   # Function types
   @type action_fn :: (State.t(), list() -> State.t() | false)
@@ -107,7 +107,7 @@ defmodule AriaEngine.Core do
   @spec new(String.t(), map()) :: t()
   def new(id, definition \\ %{}) do
     now = DateTime.utc_now()
-    initial_state = Map.get(definition, :initial_state, AriaEngine.State.new()) # Use fully qualified name
+    initial_state = Map.get(definition, :initial_state, State.new()) # Use fully qualified name
 
     %__MODULE__{
       id: id,

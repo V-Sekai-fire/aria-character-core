@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.State do
+defmodule State do
   @moduledoc """
   Represents the state of a planning problem using predicate-subject-fact triples.
   
@@ -10,11 +10,11 @@ defmodule AriaEngine.State do
   
   Example:
   ```elixir
-  state = AriaEngine.State.new()
-  |> AriaEngine.State.set_fact("location", "player", "room1")
-  |> AriaEngine.State.set_fact("has", "player", "sword")
+  state = State.new()
+  |> State.set_fact("location", "player", "room1")
+  |> State.set_fact("has", "player", "sword")
   
-  AriaEngine.State.get_fact(state, "location", "player")
+  State.get_fact(state, "location", "player")
   # => "room1"
   ```
   """
