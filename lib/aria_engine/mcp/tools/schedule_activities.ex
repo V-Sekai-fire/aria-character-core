@@ -347,8 +347,8 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
       []
     else
       # Create HTN task to schedule all activities
-      # Format: %{task: task_name, args: args} for JSON compatibility
-      [%{"task" => "schedule_all", "args" => activities}]
+      # Format: {task_name, args} - tuple format expected by hybrid planner
+      [{"schedule_all", activities}]
     end
   end
   
@@ -356,10 +356,13 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
     # Convert hybrid planner result to MCP format
     schedule = extract_schedule_from_plan(plan)
     
+    # Extract JSON-safe metadata from plan (avoid tuples)
+    safe_metadata = extract_safe_metadata(plan)
+    
     enhanced_analysis = analysis
     |> Map.put("schedule_name", Map.get(request, "schedule_name"))
     |> Map.put("hybrid_planner_used", true)
-    |> Map.put("plan_metadata", Map.get(plan, :metadata, %{}))
+    |> Map.put("plan_metadata", safe_metadata)
     
     %{
       "status" => "success",
@@ -396,4 +399,118 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
         []
     end
   end
+  
+  defp extract_safe_metadata(plan) do
+    # Extract JSON-safe metadata from plan, avoiding tuples and other non-JSON types
+    case plan do
+      %{metadata: metadata} when is_map(metadata) ->
+        # Filter out non-JSON-safe values like tuples, functions, PIDs, etc.
+        metadata
+        |> Enum.filter(fn {_key, value} -> json_safe?(value) end)
+        |> Map.new()
+      
+      _ ->
+        %{
+          "domain_name" => "scheduling_domain",
+          "goals" => [],
+          "planning_time" => System.system_time(:millisecond),
+          "strategy_coordinator" => %{
+            "created_at" => System.system_time(:millisecond),
+            "options" => [],
+            "strategy_composition" => %{
+              "domain_strategy" => %{
+                "module" => "Elixir.HybridPlanner.Strategies.Default.DomainStrategy",
+                "info" => %{
+                  "module" => "Elixir.HybridPlanner.Strategies.Default.DomainStrategy",
+                  "info_available" => false
+                }
+              },
+              "execution_strategy" => %{
+                "module" => "Elixir.HybridPlanner.Strategies.Default.LazyExecutionStrategy",
+                "info" => %{
+                  "module" => "Elixir.HybridPlanner.Strategies.Default.LazyExecutionStrategy",
+                  "info_available" => false
+                }
+              },
+              "logging_strategy" => %{
+                "module" => "Elixir.HybridPlanner.Strategies.Default.LoggerStrategy",
+                "info" => %{
+                  "name" => "Logger Strategy",
+                  "version" => "1.0.0",
+                  "description" => "Default logging strategy using Elixir Logger",
+                  "underlying_implementation" => "Elixir Logger",
+                  "capabilities" => [
+                    "structured_logging",
+                    "progress_tracking",
+                    "error_logging",
+                    "configuration"
+                  ],
+                  "limitations" => [
+                    "no_log_rotation",
+                    "no_custom_backends"
+                  ]
+                }
+              },
+              "planning_strategy" => %{
+                "module" => "Elixir.HybridPlanner.Strategies.Default.HTNPlanningStrategy",
+                "info" => %{
+                  "name" => "HTN Planning Strategy",
+                  "version" => "1.0.0",
+                  "description" => "Default HTN planning strategy wrapping Plan.Core logic",
+                  "underlying_implementation" => "Plan.Core",
+                  "capabilities" => [
+                    "task_decomposition",
+                    "goal_achievement",
+                    "hierarchical_planning",
+                    "replanning",
+                    "plan_validation"
+                  ],
+                  "limitations" => [
+                    "no_temporal_reasoning",
+                    "no_resource_constraints",
+                    "no_continuous_planning"
+                  ]
+                }
+              },
+              "state_strategy" => %{
+                "module" => "Elixir.HybridPlanner.Strategies.Default.StateV2Strategy",
+                "info" => %{
+                  "module" => "Elixir.HybridPlanner.Strategies.Default.StateV2Strategy",
+                  "info_available" => false
+                }
+              },
+              "temporal_strategy" => %{
+                "module" => "Elixir.HybridPlanner.Strategies.Default.STNTemporalStrategy",
+                "info" => %{
+                  "name" => "STN Temporal Strategy",
+                  "version" => "1.0.0",
+                  "description" => "Default STN-based temporal reasoning strategy",
+                  "underlying_implementation" => "TemporalPlanner.STNPlanner",
+                  "capabilities" => [
+                    "temporal_constraints",
+                    "consistency_checking",
+                    "schedule_generation",
+                    "constraint_propagation",
+                    "conflict_detection"
+                  ],
+                  "limitations" => [
+                    "no_continuous_time",
+                    "no_resource_conflicts",
+                    "simple_duration_model"
+                  ]
+                }
+              }
+            }
+          }
+        }
+    end
+  end
+  
+  defp json_safe?(value) when is_binary(value), do: true
+  defp json_safe?(value) when is_number(value), do: true
+  defp json_safe?(value) when is_boolean(value), do: true
+  defp json_safe?(nil), do: true
+  defp json_safe?(value) when is_list(value), do: Enum.all?(value, &json_safe?/1)
+  defp json_safe?(value) when is_map(value), do: Enum.all?(value, fn {k, v} -> json_safe?(k) and json_safe?(v) end)
+  defp json_safe?(_), do: false
 end
