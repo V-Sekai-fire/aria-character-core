@@ -42,6 +42,26 @@ defmodule Plan.Core do
   @default_replan_depth 10 # New default replanning depth
   @default_verbose 0
 
+  # Helper to conditionally output debug information
+  defp debug_puts(message, verbose_level \\ 0) do
+    # Only output during tests if ExUnit trace mode is enabled
+    if Application.get_env(:ex_unit, :trace, false) or not test_mode?() do
+      if verbose_level <= get_verbose_level() do
+        IO.puts(message)
+      end
+    end
+  end
+
+  defp test_mode?() do
+    # Check if we're running in test environment
+    Mix.env() == :test
+  end
+
+  defp get_verbose_level() do
+    # Get verbose level from process dictionary if set by calling function
+    Process.get(:verbose_level, 0)
+  end
+
   @doc """
   Main IPyHOP planning function that creates a solution tree to achieve the given todos.
   """
@@ -71,13 +91,15 @@ defmodule Plan.Core do
 
   @spec plan_decomposition_loop(Domain.Core.t(), StateV2.t(), solution_tree(), integer(), integer(), integer()) :: plan_result()
   defp plan_decomposition_loop(domain, current_state, solution_tree, depth, max_depth, verbose) do
+    Process.put(:verbose_level, verbose)
+    
     if verbose > 3 do
-      IO.puts("PLAN_DECOMPOSITION_LOOP: Depth #{depth}, Nodes: #{Kernel.map_size(solution_tree.nodes)}")
+      debug_puts("PLAN_DECOMPOSITION_LOOP: Depth #{depth}, Nodes: #{Kernel.map_size(solution_tree.nodes)}")
     end
 
     if depth >= max_depth do
       if verbose > 0 do
-        IO.puts("PLAN_DECOMPOSITION_LOOP: Maximum planning depth exceeded at depth #{depth}")
+        debug_puts("PLAN_DECOMPOSITION_LOOP: Maximum planning depth exceeded at depth #{depth}")
       end
       {:error, "Maximum planning depth exceeded"}
     else
@@ -87,49 +109,49 @@ defmodule Plan.Core do
           # All nodes expanded - check if solution is complete
           if solution_complete?(solution_tree) do
             if verbose > 0 do
-              IO.puts("PLAN_DECOMPOSITION_LOOP: Solution complete.")
+              debug_puts("PLAN_DECOMPOSITION_LOOP: Solution complete.")
             end
             {:ok, solution_tree}
           else
             if verbose > 0 do
-              IO.puts("PLAN_DECOMPOSITION_LOOP: No complete solution found after all nodes expanded.")
+              debug_puts("PLAN_DECOMPOSITION_LOOP: No complete solution found after all nodes expanded.")
             end
             {:error, "No complete solution found"}
           end
 
         node_id ->
           if verbose > 3 do
-            IO.puts("PLAN_DECOMPOSITION_LOOP: Expanding node #{node_id} (Task: #{inspect(solution_tree.nodes[node_id].task)})")
+            debug_puts("PLAN_DECOMPOSITION_LOOP: Expanding node #{node_id} (Task: #{inspect(solution_tree.nodes[node_id].task)})")
           end
           # Try to expand this node
           case try_expand_node(domain, current_state, solution_tree, node_id, verbose) do
             {:ok, new_tree} ->
               if verbose > 3 do
-                IO.puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expanded successfully.")
+                debug_puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expanded successfully.")
               end
               plan_decomposition_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
 
             {:error, reason} ->
               if verbose > 0 do
-                IO.puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion failed: #{reason}")
+                debug_puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion failed: #{reason}")
               end
               {:error, reason}
 
             {:failure, failed_tree} -> # Capture the tree with the failed method info
               if verbose > 0 do
-                IO.puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion returned :failure, attempting backtrack.")
+                debug_puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion returned :failure, attempting backtrack.")
               end
               # Backtrack and try alternatives
               case Backtracking.backtrack_and_retry(domain, current_state, failed_tree, node_id, depth, max_depth, verbose) do # Pass failed_tree
                 {:ok, new_tree} ->
                   if verbose > 0 do
-                    IO.puts("PLAN_DECOMPOSITION_LOOP: Backtrack succeeded, continuing planning.")
+                    debug_puts("PLAN_DECOMPOSITION_LOOP: Backtrack succeeded, continuing planning.")
                   end
                   plan_decomposition_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
 
                 {:error, reason} ->
                   if verbose > 0 do
-                    IO.puts("PLAN_DECOMPOSITION_LOOP: Backtrack failed: #{reason}")
+                    debug_puts("PLAN_DECOMPOSITION_LOOP: Backtrack failed: #{reason}")
                   end
                   {:error, reason}
               end
@@ -181,7 +203,7 @@ defmodule Plan.Core do
 
       node ->
         if verbose > 2 do
-          IO.puts("Expanding node #{node_id}: #{inspect(node.task)}")
+          debug_puts("Expanding node #{node_id}: #{inspect(node.task)}")
         end
 
         case node.task do

@@ -45,10 +45,10 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
                 {:ok, parsed} ->
                   throughput = file_size / (time_micro / 1_000_000)  # bytes per second
 
-                  IO.puts("\n#{filename}:")
-                  IO.puts("  File size: #{file_size} bytes")
-                  IO.puts("  Parse time: #{time_micro} μs (#{time_micro / 1000} ms)")
-                  IO.puts("  Throughput: #{Float.round(throughput / 1024 / 1024, 2)} MB/s")
+                  TestOutput.trace_puts("\n#{filename}:")
+                  TestOutput.trace_puts("  File size: #{file_size} bytes")
+                  TestOutput.trace_puts("  Parse time: #{time_micro} μs (#{time_micro / 1000} ms)")
+                  TestOutput.trace_puts("  Throughput: #{Float.round(throughput / 1024 / 1024, 2)} MB/s")
 
                   # Basic performance assertions
                   assert time_micro < 100_000  # Should parse in less than 100ms
@@ -57,12 +57,12 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
                   {filename, file_size, time_micro, throughput, parsed}
 
                 {:error, reason} ->
-                  IO.puts("#{filename}: Failed to parse - #{inspect(reason)}")
+                  TestOutput.trace_puts("#{filename}: Failed to parse - #{inspect(reason)}")
                   {filename, file_size, :error, 0, nil}
               end
 
             {:error, _} ->
-              IO.puts("#{filename}: File not found, skipping")
+              TestOutput.trace_puts("#{filename}: File not found, skipping")
               {filename, 0, :not_found, 0, nil}
           end
         end)
@@ -75,21 +75,21 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
           total_size = Enum.sum(Enum.map(successful_results, fn {_, size, _, _, _} -> size end))
           avg_throughput = total_size / (total_time / 1_000_000)
 
-          IO.puts("\nSummary:")
-          IO.puts("  Files processed: #{length(successful_results)}")
-          IO.puts("  Total size: #{total_size} bytes")
-          IO.puts("  Total time: #{total_time} μs")
-          IO.puts("  Average throughput: #{Float.round(avg_throughput / 1024 / 1024, 2)} MB/s")
+          TestOutput.trace_puts("\nSummary:")
+          TestOutput.trace_puts("  Files processed: #{length(successful_results)}")
+          TestOutput.trace_puts("  Total size: #{total_size} bytes")
+          TestOutput.trace_puts("  Total time: #{total_time} μs")
+          TestOutput.trace_puts("  Average throughput: #{Float.round(avg_throughput / 1024 / 1024, 2)} MB/s")
         end
       else
-        IO.puts("Testdata directory not found, skipping benchmark")
+        TestOutput.trace_puts("Testdata directory not found, skipping benchmark")
       end
     end
 
     test "benchmark synthetic data scaling" do
       chunk_counts = [1, 10, 50, 100, 500, 1000]
 
-      IO.puts("\nSynthetic Data Scaling Benchmark:")
+      TestOutput.trace_puts("\nSynthetic Data Scaling Benchmark:")
 
       results = Enum.map(chunk_counts, fn chunk_count ->
         data = CasyncFixtures.create_multi_chunk_caibx(chunk_count)
@@ -110,9 +110,9 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
 
         throughput = file_size / (avg_time / 1_000_000)
 
-        IO.puts("  #{chunk_count} chunks (#{file_size} bytes):")
-        IO.puts("    Avg: #{Float.round(avg_time)} μs, Min: #{min_time} μs, Max: #{max_time} μs")
-        IO.puts("    Throughput: #{Float.round(throughput / 1024 / 1024, 2)} MB/s")
+        TestOutput.trace_puts("  #{chunk_count} chunks (#{file_size} bytes):")
+        TestOutput.trace_puts("    Avg: #{Float.round(avg_time)} μs, Min: #{min_time} μs, Max: #{max_time} μs")
+        TestOutput.trace_puts("    Throughput: #{Float.round(throughput / 1024 / 1024, 2)} MB/s")
 
         {chunk_count, file_size, avg_time, throughput}
       end)
@@ -132,7 +132,7 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
         # Only run memory benchmarks when explicitly requested
         chunk_counts = [100, 500, 1000]
 
-        IO.puts("\nMemory Usage Benchmark:")
+        TestOutput.trace_puts("\nMemory Usage Benchmark:")
 
         Enum.each(chunk_counts, fn chunk_count ->
           data = CasyncFixtures.create_multi_chunk_caibx(chunk_count)
@@ -152,18 +152,18 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
           file_size = byte_size(data)
           result_size = :erts_debug.size(result) * :erlang.system_info(:wordsize)
 
-          IO.puts("  #{chunk_count} chunks:")
-          IO.puts("    Input size: #{file_size} bytes")
-          IO.puts("    Result size: #{result_size} bytes")
-          IO.puts("    Memory used: #{memory_used} bytes")
-          IO.puts("    Memory ratio: #{Float.round(memory_used / file_size, 2)}x")
+          TestOutput.trace_puts("  #{chunk_count} chunks:")
+          TestOutput.trace_puts("    Input size: #{file_size} bytes")
+          TestOutput.trace_puts("    Result size: #{result_size} bytes")
+          TestOutput.trace_puts("    Memory used: #{memory_used} bytes")
+          TestOutput.trace_puts("    Memory ratio: #{Float.round(memory_used / file_size, 2)}x")
 
           # Memory usage should be reasonable (not more than 10x input size)
           assert memory_used < file_size * 10,
                  "Memory usage #{memory_used} exceeds 10x input size #{file_size}"
         end)
       else
-        IO.puts("Skipping memory benchmark (set BENCHMARK_MEMORY=true to enable)")
+        TestOutput.trace_puts("Skipping memory benchmark (set BENCHMARK_MEMORY=true to enable)")
       end
     end
 
@@ -176,7 +176,7 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
         # Could add alternative implementations for comparison
       ]
 
-      IO.puts("\nParser Comparison:")
+      TestOutput.trace_puts("\nParser Comparison:")
 
       Enum.each(parsers, fn {name, parser_func} ->
         # Warm up
@@ -191,10 +191,10 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
         avg_time = Enum.sum(times) / length(times)
         std_dev = :math.sqrt(Enum.sum(Enum.map(times, fn t -> (t - avg_time) * (t - avg_time) end)) / length(times))
 
-        IO.puts("  #{name}:")
-        IO.puts("    Average: #{Float.round(avg_time)} μs")
-        IO.puts("    Std dev: #{Float.round(std_dev)} μs")
-        IO.puts("    Range: #{Enum.min(times)}-#{Enum.max(times)} μs")
+        TestOutput.trace_puts("  #{name}:")
+        TestOutput.trace_puts("    Average: #{Float.round(avg_time)} μs")
+        TestOutput.trace_puts("    Std dev: #{Float.round(std_dev)} μs")
+        TestOutput.trace_puts("    Range: #{Enum.min(times)}-#{Enum.max(times)} μs")
       end)
     end
 
@@ -202,7 +202,7 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
       data = CasyncFixtures.create_multi_chunk_caibx(50)
       concurrency_levels = [1, 2, 4, 8, 16]
 
-      IO.puts("\nConcurrent Parsing Benchmark:")
+      TestOutput.trace_puts("\nConcurrent Parsing Benchmark:")
 
       Enum.each(concurrency_levels, fn concurrency ->
         # Create tasks
@@ -220,10 +220,10 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
 
         avg_parse_time = Enum.sum(results) / length(results)
 
-        IO.puts("  #{concurrency} concurrent parses:")
-        IO.puts("    Total time: #{total_time} μs")
-        IO.puts("    Avg parse time: #{Float.round(avg_parse_time)} μs")
-        IO.puts("    Efficiency: #{Float.round(100 * avg_parse_time / total_time)}%")
+        TestOutput.trace_puts("  #{concurrency} concurrent parses:")
+        TestOutput.trace_puts("    Total time: #{total_time} μs")
+        TestOutput.trace_puts("    Avg parse time: #{Float.round(avg_parse_time)} μs")
+        TestOutput.trace_puts("    Efficiency: #{Float.round(100 * avg_parse_time / total_time)}%")
 
         # Should handle concurrency reasonably well
         # Relaxed assertion - concurrent parsing may have overhead
@@ -249,11 +249,11 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
         _ -> false
       end)
 
-      IO.puts("\nStress Test - Many Small Files:")
-      IO.puts("  Files: #{length(small_files)}")
-      IO.puts("  Successful: #{successful_parses}")
-      IO.puts("  Total time: #{total_time} μs")
-      IO.puts("  Avg per file: #{Float.round(total_time / length(small_files))} μs")
+      TestOutput.trace_puts("\nStress Test - Many Small Files:")
+      TestOutput.trace_puts("  Files: #{length(small_files)}")
+      TestOutput.trace_puts("  Successful: #{successful_parses}")
+      TestOutput.trace_puts("  Total time: #{total_time} μs")
+      TestOutput.trace_puts("  Avg per file: #{Float.round(total_time / length(small_files))} μs")
 
       assert successful_parses == length(small_files)
       assert total_time < 1_000_000  # Should complete in under 1 second
@@ -267,11 +267,11 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
 
       case result do
         {:ok, parsed} ->
-          IO.puts("\nStress Test - Large File:")
-          IO.puts("  Input size: #{byte_size(large_data)} bytes")
-          IO.puts("  Chunks: #{length(parsed.chunks)}")
-          IO.puts("  Parse time: #{time_micro} μs")
-          IO.puts("  Time per chunk: #{Float.round(time_micro / length(parsed.chunks), 2)} μs")
+          TestOutput.trace_puts("\nStress Test - Large File:")
+          TestOutput.trace_puts("  Input size: #{byte_size(large_data)} bytes")
+          TestOutput.trace_puts("  Chunks: #{length(parsed.chunks)}")
+          TestOutput.trace_puts("  Parse time: #{time_micro} μs")
+          TestOutput.trace_puts("  Time per chunk: #{Float.round(time_micro / length(parsed.chunks), 2)} μs")
 
           # Should handle large files reasonably
           assert time_micro < 1_000_000  # Less than 1 second

@@ -5,6 +5,14 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
   use ExUnit.Case
   alias AriaStorage.Parsers.CasyncFormat
 
+  defmodule TestOutput do
+    def trace_puts(message) do
+      if Application.get_env(:ex_unit, :trace, false) do
+        IO.puts(message)
+      end
+    end
+  end
+
   @moduledoc """
   Roundtrip tests for casync format import and export functionality.
 
@@ -36,7 +44,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
 
         {:error, :enoent} ->
           # Skip test if file doesn't exist
-          IO.puts("Skipping blob1.caibx test - file not found")
+          TestOutput.trace_puts("Skipping blob1.caibx test - file not found")
           :ok
       end
     end
@@ -58,7 +66,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
 
         {:error, :enoent} ->
           # Skip test if file doesn't exist
-          IO.puts("Skipping blob2.caibx test - file not found")
+          TestOutput.trace_puts("Skipping blob2.caibx test - file not found")
           :ok
       end
     end
@@ -80,7 +88,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
 
         {:error, :enoent} ->
           # Skip test if file doesn't exist
-          IO.puts("Skipping index.caibx test - file not found")
+          TestOutput.trace_puts("Skipping index.caibx test - file not found")
           :ok
       end
     end
@@ -94,7 +102,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
       |> Enum.uniq()
 
       if Enum.empty?(caibx_files) do
-        IO.puts("No caibx files found for roundtrip testing")
+        TestOutput.trace_puts("No caibx files found for roundtrip testing")
         :ok
       else
         Enum.each(caibx_files, fn file_path ->
@@ -110,14 +118,14 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
                       {:ok, re_encoded_data} ->
                         if original_data != re_encoded_data do
                           # Debug information for failed roundtrip
-                          IO.puts("Roundtrip failed for #{filename}")
-                          IO.puts("Original size: #{byte_size(original_data)}")
-                          IO.puts("Re-encoded size: #{byte_size(re_encoded_data)}")
+                          TestOutput.trace_puts("Roundtrip failed for #{filename}")
+                          TestOutput.trace_puts("Original size: #{byte_size(original_data)}")
+                          TestOutput.trace_puts("Re-encoded size: #{byte_size(re_encoded_data)}")
 
                           # Find first differing byte
                           diff_pos = find_first_difference(original_data, re_encoded_data)
                           if diff_pos do
-                            IO.puts("First difference at byte #{diff_pos}")
+                            TestOutput.trace_puts("First difference at byte #{diff_pos}")
                           end
 
                           flunk("Roundtrip failed for #{filename}")

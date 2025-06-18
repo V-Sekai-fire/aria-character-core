@@ -77,11 +77,11 @@ defmodule AriaStorage.ChunksVerificationTest do
 
       # Log success details
       first_chunk_id_hex = Base.encode16(our_first_chunk.id, case: :lower)
-      IO.puts("\n✅ CHUNKING VERIFICATION SUCCESS:")
-      IO.puts("  - Created #{length(our_chunks)} chunks matching desync exactly")
-      IO.puts("  - First chunk: size=#{our_first_chunk.size}, id=#{String.slice(first_chunk_id_hex, 0, 16)}...")
-      IO.puts("  - Total size: #{total_size} bytes")
-      IO.puts("  - Parameters: min=#{min_size}, avg=#{avg_size}, max=#{max_size}, discriminator=#{discriminator}")
+      TestOutput.trace_puts("\n✅ CHUNKING VERIFICATION SUCCESS:")
+      TestOutput.trace_puts("  - Created #{length(our_chunks)} chunks matching desync exactly")
+      TestOutput.trace_puts("  - First chunk: size=#{our_first_chunk.size}, id=#{String.slice(first_chunk_id_hex, 0, 16)}...")
+      TestOutput.trace_puts("  - Total size: #{total_size} bytes")
+      TestOutput.trace_puts("  - Parameters: min=#{min_size}, avg=#{avg_size}, max=#{max_size}, discriminator=#{discriminator}")
     end
 
     test "chunk IDs use SHA512/256 hash correctly" do

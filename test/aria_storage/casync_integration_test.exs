@@ -239,12 +239,12 @@ defmodule AriaStorage.CasyncIntegrationTest do
 
       total_time = parse_time + process_time
 
-      IO.puts("\nIntegration Performance:")
-      IO.puts("  Parse time: #{parse_time} μs")
-      IO.puts("  Process time: #{process_time} μs")
-      IO.puts("  Total time: #{total_time} μs")
-      IO.puts("  Chunks processed: #{length(processed_chunks)}")
-      IO.puts("  Time per chunk: #{Float.round(total_time / length(processed_chunks), 2)} μs")
+      TestOutput.trace_puts("\nIntegration Performance:")
+      TestOutput.trace_puts("  Parse time: #{parse_time} μs")
+      TestOutput.trace_puts("  Process time: #{process_time} μs")
+      TestOutput.trace_puts("  Total time: #{total_time} μs")
+      TestOutput.trace_puts("  Chunks processed: #{length(processed_chunks)}")
+      TestOutput.trace_puts("  Time per chunk: #{Float.round(total_time / length(processed_chunks), 2)} μs")
 
       # Should be reasonably fast
       assert total_time < 100_000  # Less than 100ms total

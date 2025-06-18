@@ -31,7 +31,18 @@ defmodule Plan.Execution do
 
   @type plan_step :: {atom(), list()}
 
-  # @default_verbose 0 # Removed this module attribute
+  # Helper to conditionally output debug information
+  defp debug_puts(message) do
+    # Only output during tests if ExUnit trace mode is enabled
+    if Application.get_env(:ex_unit, :trace, false) or not test_mode?() do
+      IO.puts(message)
+    end
+  end
+
+  defp test_mode?() do
+    # Check if we're running in test environment
+    Mix.env() == :test
+  end
 
   @doc """
   Run-Lazy-Refineahead: Execute plan with replanning on failure.
@@ -42,7 +53,7 @@ defmodule Plan.Execution do
     verbose = Keyword.get(opts, :verbose, Core.get_default_verbose()) # Get from Core
 
     if verbose > 2 do
-      IO.puts("Starting Run-Lazy-Refineahead execution")
+      debug_puts("Starting Run-Lazy-Refineahead execution")
     end
 
     # Initialize execution state
@@ -63,7 +74,7 @@ defmodule Plan.Execution do
     actions = Utils.get_primitive_actions_dfs(solution_tree)
 
     if verbose > 1 do
-      IO.puts("Executing #{length(actions)} primitive actions")
+      debug_puts("Executing #{length(actions)} primitive actions")
     end
 
     # Execute actions one by one with lazy checking
@@ -84,7 +95,7 @@ defmodule Plan.Execution do
     action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 
     if verbose > 2 do
-      IO.puts("Executing action: #{action_name}(#{inspect(args)})")
+      debug_puts("Executing action: #{action_name}(#{inspect(args)})")
     end
 
     case Domain.execute_action(domain, state, action_atom, args) do
@@ -95,7 +106,7 @@ defmodule Plan.Execution do
       false ->
         # Action failed - trigger replanning (Run-Lazy-Refineahead core feature)
         if verbose > 2 do
-          IO.puts("Action failed: #{action_name}, attempting replanning...")
+          debug_puts("Action failed: #{action_name}, attempting replanning...")
         end
 
         # Find the failing node in the solution tree
@@ -114,7 +125,7 @@ defmodule Plan.Execution do
                 new_actions = Utils.get_primitive_actions_dfs(new_solution_tree)
 
                 if verbose > 1 do
-                  IO.puts("Replanning succeeded, executing #{length(new_actions)} new actions")
+                  debug_puts("Replanning succeeded, executing #{length(new_actions)} new actions")
                 end
 
                 # Execute the new plan
