@@ -82,6 +82,28 @@ defmodule IncrementalScalingTest do
       case result.status do
         :success ->
           IO.puts("  ✅ SUCCESS: Generated schedule with #{result.schedule_length} activities")
+          
+          # Show validation results for small schedules or 64-activity test
+          if Map.has_key?(result, :validation) and result.validation do
+            validation = result.validation
+            
+            # Show dependency validation
+            IO.puts("    #{validation.dependency_validation}")
+            
+            # Show critical path and efficiency
+            IO.puts("    #{validation.critical_path}")
+            IO.puts("    Parallel efficiency: #{validation.parallel_efficiency}")
+            
+            # Show ASCII diagram for small schedules or 64-activity test
+            if Map.has_key?(validation, :ascii_diagram) do
+              IO.puts("\n    📊 Schedule Timeline:")
+              validation.ascii_diagram
+              |> String.split("\n")
+              |> Enum.each(fn line -> IO.puts("    #{line}") end)
+              IO.puts("")
+            end
+          end
+          
         :failure ->
           IO.puts("  ❌ FAILURE: #{result.failure_reason}")
         :expected_error ->
@@ -141,11 +163,15 @@ defmodule IncrementalScalingTest do
             failure_reason: "Expected real schedule with activities, got empty schedule"
           }
         else
+          # Validate and visualize the schedule
+          validation_result = validate_schedule(schedule, test_name)
+          
           %{
             status: :success,
             response: resp,
             schedule_length: length(schedule),
-            analysis: analysis
+            analysis: analysis,
+            validation: validation_result
           }
         end
       
@@ -162,6 +188,186 @@ defmodule IncrementalScalingTest do
           error: "Invalid response format",
           response: response
         }
+    end
+  end
+
+  # ==================== SCHEDULE VALIDATION AND VISUALIZATION ====================
+
+  defp validate_schedule(schedule, test_name) do
+    if length(schedule) <= 10 or String.contains?(test_name, "64 Activities") do
+      # Generate ASCII diagram for small schedules or specifically for 64-activity test
+      ascii_diagram = generate_ascii_timeline(schedule)
+      dependency_validation = validate_dependencies(schedule)
+      critical_path = find_critical_path(schedule)
+      
+      %{
+        ascii_diagram: ascii_diagram,
+        dependency_validation: dependency_validation,
+        critical_path: critical_path,
+        total_duration: calculate_total_duration(schedule),
+        parallel_efficiency: calculate_parallel_efficiency(schedule)
+      }
+    else
+      # For larger schedules, just do basic validation
+      %{
+        dependency_validation: validate_dependencies(schedule),
+        critical_path: find_critical_path(schedule),
+        total_duration: calculate_total_duration(schedule),
+        parallel_efficiency: calculate_parallel_efficiency(schedule)
+      }
+    end
+  end
+
+  defp generate_ascii_timeline(schedule) do
+    if length(schedule) == 0, do: "No activities scheduled"
+    
+    # Sort activities by start time, then by ID
+    sorted_schedule = Enum.sort_by(schedule, fn activity ->
+      {Map.get(activity, "start_time", 0), Map.get(activity, "id", "")}
+    end)
+    
+    max_time = Enum.max_by(sorted_schedule, fn activity ->
+      start = Map.get(activity, "start_time", 0)
+      duration = Map.get(activity, "duration", 1)
+      start + duration
+    end)
+    |> then(fn activity ->
+      start = Map.get(activity, "start_time", 0)
+      duration = Map.get(activity, "duration", 1)
+      start + duration
+    end)
+    
+    # Create timeline header
+    time_header = "Time: " <> 
+      (0..(max_time-1) |> Enum.map(&Integer.to_string/1) |> Enum.join("    "))
+    
+    # Create activity rows
+    activity_rows = Enum.map(sorted_schedule, fn activity ->
+      id = Map.get(activity, "id", "?")
+      start_time = Map.get(activity, "start_time", 0)
+      duration = Map.get(activity, "duration", 1)
+      
+      # Create the timeline bar
+      timeline = String.duplicate("     ", start_time) <>
+                String.duplicate("████ ", duration) <>
+                String.duplicate("     ", max(0, max_time - start_time - duration))
+      
+      "#{String.pad_trailing(id, 4)}: #{timeline}"
+    end)
+    
+    [time_header | activity_rows] |> Enum.join("\n")
+  end
+
+  defp validate_dependencies(schedule) do
+    # Check if all dependencies are respected
+    violations = Enum.flat_map(schedule, fn activity ->
+      id = Map.get(activity, "id")
+      start_time = Map.get(activity, "start_time", 0)
+      dependencies = Map.get(activity, "dependencies", [])
+      
+      Enum.flat_map(dependencies, fn dep_id ->
+        case Enum.find(schedule, fn a -> Map.get(a, "id") == dep_id end) do
+          nil ->
+            ["Missing dependency: #{dep_id} for activity #{id}"]
+          
+          dep_activity ->
+            dep_start = Map.get(dep_activity, "start_time", 0)
+            dep_duration = Map.get(dep_activity, "duration", 1)
+            dep_end = dep_start + dep_duration
+            
+            if start_time < dep_end do
+              ["Dependency violation: #{id} starts at #{start_time} but #{dep_id} ends at #{dep_end}"]
+            else
+              []
+            end
+        end
+      end)
+    end)
+    
+    if length(violations) == 0 do
+      "✅ All dependencies respected"
+    else
+      "❌ Dependency violations:\n" <> Enum.join(violations, "\n")
+    end
+  end
+
+  defp find_critical_path(schedule) do
+    if length(schedule) == 0, do: "No activities"
+    
+    # Find the activity that finishes last
+    last_activity = Enum.max_by(schedule, fn activity ->
+      start = Map.get(activity, "start_time", 0)
+      duration = Map.get(activity, "duration", 1)
+      start + duration
+    end)
+    
+    last_finish = Map.get(last_activity, "start_time", 0) + Map.get(last_activity, "duration", 1)
+    last_id = Map.get(last_activity, "id")
+    
+    # Trace back through dependencies to find critical path
+    critical_path = trace_critical_path(schedule, last_id, [])
+    
+    "Critical path (#{last_finish} time units): #{Enum.join(Enum.reverse(critical_path), " → ")}"
+  end
+
+  defp trace_critical_path(schedule, activity_id, path) do
+    case Enum.find(schedule, fn a -> Map.get(a, "id") == activity_id end) do
+      nil -> path
+      
+      activity ->
+        new_path = [activity_id | path]
+        dependencies = Map.get(activity, "dependencies", [])
+        
+        if length(dependencies) == 0 do
+          new_path
+        else
+          # Find the dependency that finishes latest (critical predecessor)
+          critical_dep = Enum.max_by(dependencies, fn dep_id ->
+            case Enum.find(schedule, fn a -> Map.get(a, "id") == dep_id end) do
+              nil -> 0
+              dep_activity ->
+                start = Map.get(dep_activity, "start_time", 0)
+                duration = Map.get(dep_activity, "duration", 1)
+                start + duration
+            end
+          end)
+          
+          trace_critical_path(schedule, critical_dep, new_path)
+        end
+    end
+  end
+
+  defp calculate_total_duration(schedule) do
+    if length(schedule) == 0 do
+      0
+    else
+      Enum.max_by(schedule, fn activity ->
+        start = Map.get(activity, "start_time", 0)
+        duration = Map.get(activity, "duration", 1)
+        start + duration
+      end)
+      |> then(fn activity ->
+        start = Map.get(activity, "start_time", 0)
+        duration = Map.get(activity, "duration", 1)
+        start + duration
+      end)
+    end
+  end
+
+  defp calculate_parallel_efficiency(schedule) do
+    if length(schedule) == 0, do: "N/A"
+    
+    total_work = Enum.sum(Enum.map(schedule, fn activity ->
+      Map.get(activity, "duration", 1)
+    end))
+    
+    total_duration = calculate_total_duration(schedule)
+    
+    if total_duration == 0 do
+      "N/A"
+    else
+      efficiency = Float.round(total_work / total_duration, 2)
+      "#{efficiency}x (#{total_work} work units in #{total_duration} time units)"
     end
   end
 
