@@ -3,8 +3,8 @@
 
 import Config
 
-# Print only warnings and errors during test
-config :logger, level: :debug
+# Silent tests by default, use --trace for verbose output
+config :logger, level: :warn
 
 # Set a higher stacktrace limit for more detailed errors
 config :phoenix, :stacktrace_depth, 20

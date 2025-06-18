@@ -6,7 +6,7 @@ defmodule AriaCharacterCore.Application do
 
   use Application
 
-  alias AriaEngine.DomainProvider
+  alias DomainProvider
 
   @impl true
   def start(_type, _args) do
@@ -22,7 +22,7 @@ defmodule AriaCharacterCore.Application do
 
     children = [
       # AriaEngine components (planning and AI core)
-      # AriaEngine.Worker can be added here when needed
+      # Worker can be added here when needed
       
       # AriaTown components (knowledge base and NPC management)
       AriaTown.KnowledgeBase,
