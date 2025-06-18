@@ -23,6 +23,7 @@ defmodule NodeLibrary.KHRInteractivityDomain do
   
   alias NodeLibrary.KHRInteractivity.MathConstants
   alias NodeLibrary.KHRInteractivity.MathArithmetic
+  alias NodeLibrary.KHRInteractivity.VariableInterpolation
   
   @doc "Register all KHR_interactivity actions with a domain"
   @spec register_all_actions(Domain.t()) :: Domain.t()
@@ -30,6 +31,7 @@ defmodule NodeLibrary.KHRInteractivityDomain do
     domain
     |> MathConstants.register_actions()
     |> MathArithmetic.register_actions()
+    |> VariableInterpolation.register_all()
   end
 
   @doc "Register all KHR_interactivity task methods with a domain"
@@ -38,6 +40,7 @@ defmodule NodeLibrary.KHRInteractivityDomain do
     domain
     |> MathConstants.register_task_methods()
     |> MathArithmetic.register_task_methods()
+    |> VariableInterpolation.register_all()
   end
 
   @doc "Register both actions and task methods for complete KHR domain support"
