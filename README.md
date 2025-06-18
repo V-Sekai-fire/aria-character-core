@@ -174,14 +174,6 @@ config :aria_engine,
   parallel_stages: 4
 ```
 
-## Performance Characteristics
-
-- **NPC Population**: Efficiently handles 100+ concurrent NPCs
-- **Planning Depth**: Support for 8+ step hierarchical plans
-- **Temporal Reasoning**: 24+ hour planning horizons with minute-level precision
-- **Multi-Core Scaling**: Linear performance improvement up to 8+ CPU cores
-- **Memory Efficiency**: Content deduplication reduces asset memory usage by 60-80%
-
 ## Contributing
 
 This project focuses on creating believable, intelligent NPCs through advanced AI planning and high-performance simulation:
