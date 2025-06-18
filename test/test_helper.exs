@@ -4,7 +4,8 @@
 ExUnit.start()
 
 # Load test support modules
-Code.require_file("test/support/state_v2_mock.ex")
+Code.require_file("test/aria_engine/test/support/state_v2_mock.ex")
+Code.require_file("test/aria_engine/test/support/gltf_scene_mock.ex")
 
 defmodule TestOutput do
   @moduledoc """
