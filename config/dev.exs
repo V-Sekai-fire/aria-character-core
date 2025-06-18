@@ -7,21 +7,12 @@ import Config
 config :aria_engine,
   domain_providers: [
     AriaEngine.BasicActionsDomainProvider,
-    AriaFileManagement.DomainProvider,
     # Add more providers as needed in development
   ]
 
 # Development environment configuration
 config :logger, level: :info
 
-# Development Phoenix configuration for coordinate service
-config :aria_coordinate, AriaCoordinateWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4000],
-  check_origin: false,
-  code_reloader: true,
-  debug_errors: true,
-  secret_key_base: "development_secret_key_base_replace_in_production",
-  watchers: []
 
 # Configure Membrane Job Processor for development (replaces Oban)
 # config :aria_queue, AriaQueue.MembraneJobProcessor,
@@ -42,14 +33,6 @@ config :aria_security,
   secrets_module: AriaSecurity.SecretsMock,
   openbao_url: "http://localhost:8200",
   openbao_token: System.get_env("OPENBAO_DEV_TOKEN") || "dev-token"
-
-# AI Service development configuration
-config :aria_interpret,
-  qwen_model_path: "/models/qwen3.onnx",
-  gpu_enabled: System.get_env("ARIA_GPU_ENABLED") == "true",
-  batch_size: 1
-
-
 
 # Storage Service development configuration
 config :aria_storage,

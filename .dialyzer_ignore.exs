@@ -10,8 +10,6 @@
   ~r"lib/aria_storage/.+",
   ~r"lib/aria_security/.+",
   ~r"lib/aria_monitor/.+",
-  ~r"lib/aria_workflow/.+",
-  ~r"lib/aria_workflow_system/.+",
   ~r"lib/mix/tasks/.+",
   
   # Ignore callback info missing warnings

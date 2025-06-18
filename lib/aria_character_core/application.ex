@@ -30,9 +30,6 @@ defmodule AriaCharacterCore.Application do
       AriaTown.TimeManager,
       AriaTown.NPCManager,
       
-      # AriaWorkflow components
-      # Workflow supervisors can be added here as needed
-      
       # AriaAuth components
       # Authentication supervisors can be added here as needed
       
@@ -44,12 +41,6 @@ defmodule AriaCharacterCore.Application do
       
       # AriaMonitor components
       # Monitoring supervisors can be added here as needed
-      
-      # AriaCoordinate components (Phoenix endpoint)
-      # AriaCoordinateWeb.Endpoint can be added here when implemented
-      
-      # AriaInterpret components
-      # AI/ML interpretation supervisors can be added here as needed
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
