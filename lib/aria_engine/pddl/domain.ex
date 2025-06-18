@@ -1,13 +1,13 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Pddl.Domain do
+defmodule Pddl.Domain do
   @moduledoc """
   Represents a PDDL/HDDL domain structure.
   """
 
   # Alias for nested structs used within Domain
-  alias AriaEngine.Pddl.Domain.{Action, Type, Task, Method}
+  alias Pddl.Domain.{Action, Type, Task, Method}
 
   @type t :: %__MODULE__{
           name: atom(),

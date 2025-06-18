@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Pddl.Problem do
+defmodule Pddl.Problem do
   @moduledoc """
   Represents a PDDL/HDDL problem structure.
   """
 
-  alias AriaEngine.Pddl.Problem.{Object, InitFact, Goal}
+  alias Pddl.Problem.{Object, InitFact, Goal}
 
   @type t :: %__MODULE__{
           name: atom(),

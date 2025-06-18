@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Pddl.Domain.Parameter do
+defmodule Pddl.Domain.Parameter do
   @moduledoc """
   Represents a parameter in a PDDL action, task, or method.
   """

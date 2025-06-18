@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Pddl.Domain.Task do
+defmodule Pddl.Domain.Task do
   @moduledoc """
   Represents a PDDL task.
   """
 
-  alias AriaEngine.Pddl.Domain.Parameter
+  alias Pddl.Domain.Parameter
 
   @type t :: %__MODULE__{
           name: atom(),

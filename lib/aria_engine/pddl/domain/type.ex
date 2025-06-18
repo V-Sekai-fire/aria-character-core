@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Pddl.Domain.Type do
+defmodule Pddl.Domain.Type do
   @moduledoc """
   Represents a PDDL type.
   """

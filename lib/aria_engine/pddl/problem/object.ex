@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Pddl.Problem.Object do
+defmodule Pddl.Problem.Object do
   @moduledoc """
   Represents an object in a PDDL problem.
   """

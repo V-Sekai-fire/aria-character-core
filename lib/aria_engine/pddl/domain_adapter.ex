@@ -1,16 +1,16 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Pddl.DomainAdapter do
+defmodule Pddl.DomainAdapter do
   @moduledoc """
-  Adapts an AriaEngine.Pddl.Domain to conform to the AriaEngine.DomainBehaviour.
+  Adapts an Pddl.Domain to conform to the DomainBehaviour.
   """
 
-  @behaviour AriaEngine.DomainBehaviour
+  @behaviour DomainBehaviour
 
-  alias AriaEngine.Pddl.Domain, as: PddlDomain
-  alias AriaEngine.Domain, as: AriaDomain
-  # alias AriaEngine.State # Removed unused alias
+  alias Pddl.Domain, as: PddlDomain
+  alias Domain, as: AriaDomain
+  # alias State # Removed unused alias
   require Logger
 
   @type t :: %__MODULE__{
@@ -45,7 +45,7 @@ defmodule AriaEngine.Pddl.DomainAdapter do
   end
 
   def execute_action(%__MODULE__{pddl_domain: _pddl_domain}, state, action_name, args) do # Removed @impl true
-    # This would involve converting AriaEngine.State to PDDL state,
+    # This would involve converting State to PDDL state,
     # executing the action in PDDL, and converting back.
     # For now, this is a placeholder.
     IO.puts("PDDL DomainAdapter: execute_action called for #{action_name}(#{inspect(args)})")
@@ -103,8 +103,8 @@ defmodule AriaEngine.Pddl.DomainAdapter do
     nil
   end
 
-  # Helper to convert AriaEngine.Domain to PddlDomain (if needed for export)
-  @spec to_pddl_domain(AriaEngine.Domain.Core.t()) :: PddlDomain.t()
+  # Helper to convert Domain to PddlDomain (if needed for export)
+  @spec to_pddl_domain(Domain.Core.t()) :: PddlDomain.t()
   def to_pddl_domain(%AriaDomain.Core{} = aria_domain) do
     # This is a complex conversion that would involve mapping AriaEngine actions/methods
     # to PDDL syntax. For now, return a placeholder PddlDomain.

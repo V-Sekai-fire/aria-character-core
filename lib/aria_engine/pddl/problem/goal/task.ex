@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Pddl.Problem.Goal.Task do
+defmodule Pddl.Problem.Goal.Task do
   @moduledoc """
   Represents a task goal in a PDDL problem.
   """

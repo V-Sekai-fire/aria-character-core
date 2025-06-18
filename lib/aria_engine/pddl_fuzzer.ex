@@ -1,15 +1,15 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.PddlFuzzer do
+defmodule PddlFuzzer do
   @moduledoc """
   Generates random PDDL/HDDL domain and problem structures for fuzzing.
   """
 
-  alias AriaEngine.Pddl.Domain
-  alias AriaEngine.Pddl.Domain.{Action, Type, Task, Method, Parameter}
-  alias AriaEngine.Pddl.Problem
-  alias AriaEngine.Pddl.Problem.{Object, InitFact, Goal}
+  alias Pddl.Domain
+  alias Pddl.Domain.{Action, Type, Task, Method, Parameter}
+  alias Pddl.Problem
+  alias Pddl.Problem.{Object, InitFact, Goal}
 
   @max_elements 5
   @max_params 3

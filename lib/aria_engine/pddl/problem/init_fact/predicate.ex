@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Pddl.Problem.InitFact.Predicate do
+defmodule Pddl.Problem.InitFact.Predicate do
   @moduledoc """
   Represents a predicate initial fact in a PDDL problem.
   """

@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Pddl.Domain.Action do
+defmodule Pddl.Domain.Action do
   @moduledoc """
   Represents a PDDL action.
   """
 
-  alias AriaEngine.Pddl.Domain.Parameter
+  alias Pddl.Domain.Parameter
 
   @type t :: %__MODULE__{
           name: atom(),
