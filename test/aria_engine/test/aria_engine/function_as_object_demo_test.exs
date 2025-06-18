@@ -5,13 +5,13 @@ defmodule AriaEngine.FunctionAsObjectDemoTest do
   use ExUnit.Case, async: true
   
   alias AriaEngine.{Domain, StateV2}
-  alias AriaEngine.HybridPlanner.{HybridCoordinator, StrategyCoordinator, StrategyRegistry}
+  alias AriaEngine.HybridPlanner.{StrategyCoordinator, StrategyRegistry}
 
   describe "Function as Object Pattern Demo" do
     test "demonstrates composable strategy functions" do
       # Create a simple test domain
       domain = Domain.new("function_as_object_demo")
-      |> Domain.add_action(:move, fn state, [from, to] ->
+      |> Domain.add_action(:move, fn state, [_from, to] ->
         new_state = StateV2.set_fact(state, "location", "robot", to)
         {:ok, new_state}
       end)

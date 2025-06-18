@@ -181,7 +181,7 @@ defmodule AriaEngine.TemporalPlanningTest do
         end
       )
       
-      domain = Domain.Core.add_durative_action(domain, :move_with_timeline, move_action)
+      _domain = Domain.Core.add_durative_action(domain, :move_with_timeline, move_action)
       
       # Create timeline scenario based on real planning
       scenario = [
@@ -326,7 +326,7 @@ defmodule AriaEngine.TemporalPlanningTest do
       )
       
       domain = Domain.Core.add_durative_action(domain, :scout_enemy, scout_action)
-      domain = Domain.Core.add_durative_action(domain, :cast_scorch, scorch_action)
+      _domain = Domain.Core.add_durative_action(domain, :cast_scorch, scorch_action)
       
       # Add STN constraints
       stn = STN.Core.add_durative_action(stn, scout_action)
@@ -339,7 +339,7 @@ defmodule AriaEngine.TemporalPlanningTest do
       stn = STN.add_constraint(stn, "scout_enemy_end", "cast_scorch_start", {0, 1000000})
       
       # Initial state - enemy not visible, at full health
-      initial_state = StateV2.new()
+      _initial_state = StateV2.new()
       |> StateV2.set_fact("maya", "position", 5)
       |> StateV2.set_fact("alex", "position", 3)
       |> StateV2.set_fact("enemy", "position", 15)
