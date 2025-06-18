@@ -31,8 +31,8 @@ This project investigates advanced AI planning techniques for game NPCs, specifi
 - **Real-time adaptation** of plans based on changing conditions
 
 ### Visual Scripting Research
-- **glTF KHR_interactivity** standard implementation for node-based NPC behavior
-- **Mathematical computation nodes** for AI decision-making
+- **glTF KHR_interactivity** node definitions adapted for AI planning (not full standard implementation)
+- **Mathematical computation nodes** reusing KHR node concepts for AI decision-making
 - **Event-driven programming** models for reactive NPC systems
 
 ### High-Performance Processing
