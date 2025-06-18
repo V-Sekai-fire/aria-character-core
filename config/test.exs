@@ -4,7 +4,7 @@
 import Config
 
 # Silent tests by default, use --trace for verbose output
-config :logger, level: :warn
+config :logger, level: :warning
 
 # Set a higher stacktrace limit for more detailed errors
 config :phoenix, :stacktrace_depth, 20
