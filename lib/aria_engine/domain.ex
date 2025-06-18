@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Domain do
+defmodule Domain do
   @moduledoc """
   Represents a planning domain in the GTPhop planner (Elixir port of GTPyhop).
 
@@ -18,9 +18,9 @@ defmodule AriaEngine.Domain do
 
   Example:
   ```elixir
-  domain = AriaEngine.Domain.new("logistics")
-  |> AriaEngine.Domain.add_action(:move, &move_action/2)
-  |> AriaEngine.Domain.add_task_methods("transport", [
+  domain = Domain.new("logistics")
+  |> Domain.add_action(:move, &move_action/2)
+  |> Domain.add_task_methods("transport", [
        {"transport", &transport_by_truck/2},
        {"transport", &transport_by_plane/2}
      ])
@@ -29,11 +29,11 @@ defmodule AriaEngine.Domain do
 
   require Logger
 
-  alias AriaEngine.Domain.Core
-  alias AriaEngine.Domain.Actions
-  alias AriaEngine.Domain.Methods
-  alias AriaEngine.Domain.Utils
-  alias AriaEngine.Domain.BehaviourImpl
+  alias Domain.Core
+  alias Domain.Actions
+  alias Domain.Methods
+  alias Domain.Utils
+  alias Domain.BehaviourImpl
 
   @type t :: Core.t()
 

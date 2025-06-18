@@ -1,13 +1,13 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.DomainAPI do
+defmodule DomainAPI do
   @moduledoc """
   Provides functions for building and managing the domain capabilities of the Aria Engine.
   """
-  alias AriaEngine.Core
-  alias AriaEngine.Domain
-  alias AriaEngine.State
+  alias Core
+  alias Domain
+  alias State
 
   @type t :: Core.t()
   @type action_fn :: Core.action_fn()
@@ -18,8 +18,8 @@ defmodule AriaEngine.DomainAPI do
   @doc """
   Creates an AriaEngine definition from an existing Domain.
   """
-  @spec from_domain(AriaEngine.Domain.Core.t(), [todo_item()], State.t() | nil) :: t()
-  def from_domain(%AriaEngine.Domain.Core{} = domain, goals, initial_state \\ nil) do
+  @spec from_domain(Domain.Core.t(), [todo_item()], State.t() | nil) :: t()
+  def from_domain(%Domain.Core{} = domain, goals, initial_state \\ nil) do
     initial_state = initial_state || State.new()
 
     # Preserve the method formats exactly as they are in the domain
@@ -38,7 +38,7 @@ defmodule AriaEngine.DomainAPI do
   @doc """
   Converts an AriaEngine definition to a Domain (capabilities only).
   """
-  @spec to_domain(t()) :: AriaEngine.Domain.Core.t()
+  @spec to_domain(t()) :: Domain.Core.t()
   def to_domain(%Core{} = engine) do
     # Create domain with the same name
     domain = Domain.new(engine.name)
@@ -157,7 +157,7 @@ defmodule AriaEngine.DomainAPI do
     case domain_types do
       [] -> {:error, "No domain types provided"}
       [domain_type | _] ->
-        case AriaEngine.DomainProvider.get_domain(domain_type) do
+        case DomainProvider.get_domain(domain_type) do
           {:ok, domain} ->
             initial_state = initial_state || State.new()
             definition = from_domain(domain, goals, initial_state)
@@ -169,16 +169,35 @@ defmodule AriaEngine.DomainAPI do
   end
 
   @doc """
+  Merges two method maps, combining method lists for the same keys.
+  
+  When both maps have the same key, the method lists are concatenated.
+  """
+  @spec merge_method_maps(map(), map()) :: map()
+  def merge_method_maps(map1, map2) when is_map(map1) and is_map(map2) do
+    Map.merge(map1, map2, fn _key, methods1, methods2 ->
+      # Both should be lists of methods - concatenate them
+      case {methods1, methods2} do
+        {list1, list2} when is_list(list1) and is_list(list2) ->
+          list1 ++ list2
+        {^methods1, methods2} ->
+          # Fallback: if not both lists, prefer the second one
+          methods2
+      end
+    end)
+  end
+
+  @doc """
   Adds a domain type to an existing AriaEngine definition.
   """
   @spec add_domain_type(t(), String.t()) :: {:ok, t()} | {:error, String.t()}
   def add_domain_type(%Core{} = engine, domain_type) do
-    case AriaEngine.DomainProvider.get_domain(domain_type) do
-      {:ok, %AriaEngine.Domain.Core{} = domain} ->
+    case DomainProvider.get_domain(domain_type) do
+      {:ok, %Domain.Core{} = domain} ->
         updated_engine = %{engine |
           actions: Map.merge(engine.actions, domain.actions),
-          task_methods: AriaEngine.merge_method_maps(engine.task_methods, domain.task_methods),
-          unigoal_methods: AriaEngine.merge_method_maps(engine.unigoal_methods, domain.unigoal_methods),
+          task_methods: merge_method_maps(engine.task_methods, domain.task_methods),
+          unigoal_methods: merge_method_maps(engine.unigoal_methods, domain.unigoal_methods),
           multigoal_methods: engine.multigoal_methods ++ domain.multigoal_methods
         }
         {:ok, updated_engine}
@@ -193,7 +212,7 @@ defmodule AriaEngine.DomainAPI do
   """
   @spec list_domain_types() :: [String.t()]
   def list_domain_types do
-    AriaEngine.DomainProvider.list_domain_types()
+    DomainProvider.list_domain_types()
   end
 
   @doc """
@@ -201,7 +220,7 @@ defmodule AriaEngine.DomainAPI do
   """
   @spec validate_domain_type(String.t()) :: :ok | {:error, String.t()}
   def validate_domain_type(domain_type) do
-    case AriaEngine.DomainProvider.get_domain(domain_type) do
+    case DomainProvider.get_domain(domain_type) do
       {:ok, _domain} -> :ok
       {:error, reason} -> {:error, reason}
     end

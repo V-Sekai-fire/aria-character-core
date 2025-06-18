@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Multigoal do
+defmodule Multigoal do
   @moduledoc """
   Represents a collection of goals in the GTPyhop planner.
 
@@ -10,16 +10,16 @@ defmodule AriaEngine.Multigoal do
 
   Example:
   ```elixir
-  multigoal = AriaEngine.Multigoal.new()
-  |> AriaEngine.Multigoal.add_goal("location", "player", "treasure_room")
-  |> AriaEngine.Multigoal.add_goal("has", "player", "treasure")
+  multigoal = Multigoal.new()
+  |> Multigoal.add_goal("location", "player", "treasure_room")
+  |> Multigoal.add_goal("has", "player", "treasure")
 
   # Check if goals are satisfied in current state
-  satisfied? = AriaEngine.Multigoal.satisfied?(multigoal, current_state)
+  satisfied? = Multigoal.satisfied?(multigoal, current_state)
   ```
   """
 
-  alias AriaEngine.StateV2
+  alias StateV2
 
   @type goal :: {StateV2.predicate(), StateV2.subject(), StateV2.fact_value()}
   @type t :: %__MODULE__{
@@ -211,9 +211,9 @@ defmodule AriaEngine.Multigoal do
 
   ## Examples
 
-      iex> state = AriaEngine.create_state()
+      iex> state = create_state()
       iex> goals = [["on", "a", "b"], ["on", "b", "table"]]
-      iex> AriaEngine.Multigoal.split_multigoal(state, goals)
+      iex> Multigoal.split_multigoal(state, goals)
       [["on", "a", "b"], ["on", "b", "table"]]
   """
   def split_multigoal(%StateV2{} = _state, goals) when is_list(goals) do

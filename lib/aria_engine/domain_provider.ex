@@ -1,15 +1,15 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.DomainProvider do
+defmodule DomainProvider do
   @moduledoc """
-  Behavior for domain providers in AriaEngine.
+  Behavior for domain providers in 
 
   This provides a more idiomatic Elixir approach to domain management
   by using behaviors and explicit configuration rather than runtime registration.
   """
 
-  alias AriaEngine.Domain
+  alias Domain
 
   @doc """
   Returns the domain type identifier for this provider.
@@ -40,7 +40,7 @@ defmodule AriaEngine.DomainProvider do
   @doc """
   Get a domain by type from configured providers.
   """
-  @spec get_domain(String.t()) :: {:ok, AriaEngine.Domain.Core.t()} | {:error, String.t()}
+  @spec get_domain(String.t()) :: {:ok, Domain.Core.t()} | {:error, String.t()}
   def get_domain(domain_type) do
     providers = get_configured_providers()
 

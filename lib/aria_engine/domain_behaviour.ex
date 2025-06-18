@@ -1,9 +1,9 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.DomainBehaviour do
+defmodule DomainBehaviour do
   @moduledoc """
-  Behaviour for modules that define a planning domain for AriaEngine.Plan.
+  Behaviour for modules that define a planning domain for Plan.
   """
 
   defmacro __using__(_opts) do
@@ -19,5 +19,5 @@ defmodule AriaEngine.DomainBehaviour do
 
   # Callbacks for durative actions
   @callback durative_actions(domain :: term()) :: map()
-  @callback get_durative_action(domain :: term(), name :: atom()) :: AriaEngine.Domain.DurativeAction.t() | nil
+  @callback get_durative_action(domain :: term(), name :: atom()) :: Domain.DurativeAction.t() | nil
 end
