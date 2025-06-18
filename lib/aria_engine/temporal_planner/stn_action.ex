@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.TemporalPlanner.STNAction do
+defmodule TemporalPlanner.STNAction do
   @moduledoc """
   STN-based action representation for unified temporal planning.
 
@@ -27,7 +27,7 @@ defmodule AriaEngine.TemporalPlanner.STNAction do
   - **Resource conflicts** → `intersection/2` for constraint tightening
   """
 
-  alias AriaEngine.Timeline.STN
+  alias Timeline.STN
 
   @type action_id :: String.t()
   @type resource_id :: String.t()

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.TemporalPlanner.STNPlanner do
+defmodule TemporalPlanner.STNPlanner do
   @moduledoc """
   STN-based hierarchical temporal planner for goal-level coordination.
 
@@ -38,10 +38,10 @@ defmodule AriaEngine.TemporalPlanner.STNPlanner do
   - Temporal consistency maintenance across plan updates
   """
 
-  alias AriaEngine.TemporalPlanner.STNMethod
-  alias AriaEngine.TemporalPlanner.STNAction
-  alias AriaEngine.Timeline.STN
-  alias AriaEngine.FlowAdapter
+  alias TemporalPlanner.STNMethod
+  alias TemporalPlanner.STNAction
+  alias Timeline.STN
+  alias FlowAdapter
 
   @type goal_id :: String.t()
   @type planning_strategy :: :sequential | :parallel | :hierarchical | :adaptive

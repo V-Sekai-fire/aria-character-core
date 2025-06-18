@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.TemporalPlanner.STNMethod do
+defmodule TemporalPlanner.STNMethod do
   @moduledoc """
   STN-based method representation for hierarchical temporal planning.
 
@@ -32,9 +32,9 @@ defmodule AriaEngine.TemporalPlanner.STNMethod do
   - Composing method results using STN boolean operations
   """
 
-  alias AriaEngine.TemporalPlanner.STNAction
-  alias AriaEngine.Timeline.STN
-  alias AriaEngine.FlowAdapter
+  alias TemporalPlanner.STNAction
+  alias Timeline.STN
+  alias FlowAdapter
 
   @type method_id :: String.t()
   @type decomposition_pattern :: :sequential | :parallel | :alternative | :conditional
