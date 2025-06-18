@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Comprehensive conversion of quantifiers test to StateV2 format
 
 defmodule ComprehensiveStateV2Converter do

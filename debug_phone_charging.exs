@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script for phone charging backtracking test
 # Usage: mix run debug_phone_charging.exs
 

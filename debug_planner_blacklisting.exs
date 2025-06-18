@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script for AriaEngine.Plan blacklisting
 # Usage: mix run debug_planner_blacklisting.exs
 

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script for Enhanced Scheduling functionality
 # Usage: mix run scripts/debug_enhanced_scheduling.exs
 

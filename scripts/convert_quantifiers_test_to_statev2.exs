@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Quick script to convert the durative actions quantifiers test to StateV2 format
 
 defmodule StateV2Converter do

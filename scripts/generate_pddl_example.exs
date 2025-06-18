@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # This script demonstrates how to create a simple PDDL domain
 # using the new AriaEngine.Pddl structs and print it using AriaEngine.PddlPrinter.
 

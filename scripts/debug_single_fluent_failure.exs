@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug a single fluent failure to understand the exact issue
 # Usage: mix run scripts/debug_single_fluent_failure.exs
 

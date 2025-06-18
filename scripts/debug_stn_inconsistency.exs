@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script for STN inconsistency
 # Usage: mix run scripts/debug_stn_inconsistency.exs
 

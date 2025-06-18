@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script for tracing durative action planning failures
 # Usage: mix run scripts/debug_durative_planning_failures.exs
 

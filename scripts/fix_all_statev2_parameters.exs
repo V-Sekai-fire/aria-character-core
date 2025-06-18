@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Fix ALL StateV2.set_fact parameter order issues in the test file
 
 defmodule StateV2ParameterFixer do

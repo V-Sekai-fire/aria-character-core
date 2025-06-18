@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Fix StateV2.set_fact parameter order in action functions and test setup
 
 defmodule ActionFunctionParameterFixer do

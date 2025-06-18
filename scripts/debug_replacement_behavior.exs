@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script for constraint replacement behavior
 # Usage: mix run scripts/debug_replacement_behavior.exs
 

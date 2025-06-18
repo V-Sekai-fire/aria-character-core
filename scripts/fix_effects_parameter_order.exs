@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Fix effects parameter order to match StateV2's subject-predicate-object format
 
 defmodule EffectsParameterOrderFixer do

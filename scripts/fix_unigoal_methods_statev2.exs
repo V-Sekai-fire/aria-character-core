@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Fix unigoal methods to use StateV2 entity-first format
 # Usage: mix run scripts/fix_unigoal_methods_statev2.exs
 

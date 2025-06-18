@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script for converting State to StateV2 in test files
 # Usage: mix run scripts/debug_state_migration.exs
 

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule PC2Debug do
   alias AriaEngine.Timeline.STN
   alias AriaEngine.Timeline.STN.PC2
