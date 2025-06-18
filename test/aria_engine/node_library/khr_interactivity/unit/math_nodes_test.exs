@@ -5,36 +5,84 @@ defmodule NodeLibrary.KHRInteractivity.Unit.MathNodesTest do
   use ExUnit.Case
   alias StateV2
   alias NodeLibrary.KHRInteractivityDomain
+  alias Domain.Core
+  alias Planner
+
+  setup do
+    # Create domain with complete KHR registration (actions + task methods)
+    domain = Core.new()
+    |> KHRInteractivityDomain.register_complete_domain()
+    
+    # Initial state
+    initial_state = StateV2.new()
+    |> StateV2.add_fact("test", "ready", true)
+    
+    {:ok, domain: domain, state: initial_state}
+  end
+
+  # Helper function to execute a plan and return final state
+  defp execute_plan(plan, initial_state) do
+    Enum.reduce(plan, initial_state, fn {action, args}, current_state ->
+      case Domain.execute_action(current_state, action, args) do
+        {:ok, new_state} -> new_state
+        {:error, _reason} -> current_state
+      end
+    end)
+  end
 
   describe "math constants" do
-    test "khr_math_e returns Euler's number" do
-      state = StateV2.new()
-      result_state = KHRInteractivityDomain.math_e(state, [0])
+    test "khr_math_e returns Euler's number", %{domain: domain, state: state} do
+      goals = [{"math/e", [0]}]
       
-      assert StateV2.get_fact(result_state, 0, "value") == :math.exp(1)
-      assert_in_delta StateV2.get_fact(result_state, 0, "value"), 2.718281828459045, 1.0e-15
+      case Planner.plan(domain, state, goals) do
+        {:ok, plan} ->
+          final_state = execute_plan(plan, state)
+          
+          assert StateV2.get_fact(final_state, 0, "value") == :math.exp(1)
+          assert_in_delta StateV2.get_fact(final_state, 0, "value"), 2.718281828459045, 1.0e-15
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
     
-    test "khr_math_pi returns pi constant" do
-      state = StateV2.new()
-      result_state = KHRInteractivityDomain.math_pi(state, [1])
+    test "khr_math_pi returns pi constant", %{domain: domain, state: state} do
+      goals = [{"math/pi", [1]}]
       
-      assert StateV2.get_fact(result_state, 1, "value") == :math.pi()
-      assert_in_delta StateV2.get_fact(result_state, 1, "value"), 3.141592653589793, 1.0e-15
+      case Planner.plan(domain, state, goals) do
+        {:ok, plan} ->
+          final_state = execute_plan(plan, state)
+          
+          assert StateV2.get_fact(final_state, 1, "value") == :math.pi()
+          assert_in_delta StateV2.get_fact(final_state, 1, "value"), 3.141592653589793, 1.0e-15
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
     
-    test "khr_math_inf returns positive infinity" do
-      state = StateV2.new()
-      result_state = KHRInteractivityDomain.math_inf(state, [2])
+    test "khr_math_inf returns positive infinity", %{domain: domain, state: state} do
+      goals = [{"math/inf", [2]}]
       
-      assert StateV2.get_fact(result_state, 2, "value") == :positive_infinity
+      case Planner.plan(domain, state, goals) do
+        {:ok, plan} ->
+          final_state = execute_plan(plan, state)
+          
+          assert StateV2.get_fact(final_state, 2, "value") == :positive_infinity
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
     
-    test "khr_math_nan returns NaN" do
-      state = StateV2.new()
-      result_state = KHRInteractivityDomain.math_nan(state, [3])
+    test "khr_math_nan returns NaN", %{domain: domain, state: state} do
+      goals = [{"math/nan", [3]}]
       
-      assert StateV2.get_fact(result_state, 3, "value") == :nan
+      case Planner.plan(domain, state, goals) do
+        {:ok, plan} ->
+          final_state = execute_plan(plan, state)
+          
+          assert StateV2.get_fact(final_state, 3, "value") == :nan
+        {:error, reason} ->
+          flunk("Planning failed: #{inspect(reason)}")
+      end
     end
   end
 

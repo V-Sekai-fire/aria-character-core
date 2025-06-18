@@ -31,6 +31,22 @@ defmodule NodeLibrary.KHRInteractivityDomain do
     |> MathConstants.register_actions()
     |> MathArithmetic.register_actions()
   end
+
+  @doc "Register all KHR_interactivity task methods with a domain"
+  @spec register_all_task_methods(Domain.t()) :: Domain.t()
+  def register_all_task_methods(domain) do
+    domain
+    |> MathConstants.register_task_methods()
+    |> MathArithmetic.register_task_methods()
+  end
+
+  @doc "Register both actions and task methods for complete KHR domain support"
+  @spec register_complete_domain(Domain.t()) :: Domain.t()
+  def register_complete_domain(domain) do
+    domain
+    |> register_all_actions()
+    |> register_all_task_methods()
+  end
   
   # =============================================================================
   # DIRECT FUNCTION IMPLEMENTATIONS (for test compatibility)
