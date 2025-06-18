@@ -6,7 +6,7 @@
 defmodule IncrementalScalingTest do
   @moduledoc """
   Systematic scaling test that increases complexity gradually across:
-  - Activity count (1 → 2 → 3 → 4 → 5 → 8 → 10)
+  - Activity count (1 → 2 → 3 → 4 → 5 → 8 → 10 → 32)
   - Dependency complexity (none → linear → tree → DAG → complex)
   - Resource constraints (none → single → multiple → conflicts)
   - Temporal complexity (uniform → variable → mixed)
@@ -27,7 +27,8 @@ defmodule IncrementalScalingTest do
       {"4 Activities", &test_4_activities/0},
       {"5 Activities", &test_5_activities/0},
       {"8 Activities", &test_8_activities/0},
-      {"10 Activities", &test_10_activities/0}
+      {"10 Activities", &test_10_activities/0},
+      {"32 Activities", &test_32_activities/0}
     ]
     
     phase1_results = run_test_phase(activity_scaling_tests)
@@ -257,6 +258,56 @@ defmodule IncrementalScalingTest do
         %{"id" => "H", "duration" => 1, "dependencies" => ["F"]},
         %{"id" => "I", "duration" => 1, "dependencies" => ["G"]},
         %{"id" => "J", "duration" => 1, "dependencies" => ["H", "I"]}
+      ]
+    }
+  end
+
+  # 32 Activities - Multi-phase project structure
+  defp test_32_activities do
+    %{
+      "schedule_name" => "Scale_32_Activities",
+      "activities" => [
+        # Phase 1: Initialization (4 parallel activities)
+        %{"id" => "A1", "duration" => 1},
+        %{"id" => "A2", "duration" => 1},
+        %{"id" => "A3", "duration" => 1},
+        %{"id" => "A4", "duration" => 1},
+        
+        # Phase 2: Setup (8 activities depending on Phase 1)
+        %{"id" => "B1", "duration" => 1, "dependencies" => ["A1"]},
+        %{"id" => "B2", "duration" => 1, "dependencies" => ["A1"]},
+        %{"id" => "B3", "duration" => 1, "dependencies" => ["A2"]},
+        %{"id" => "B4", "duration" => 1, "dependencies" => ["A2"]},
+        %{"id" => "B5", "duration" => 1, "dependencies" => ["A3"]},
+        %{"id" => "B6", "duration" => 1, "dependencies" => ["A3"]},
+        %{"id" => "B7", "duration" => 1, "dependencies" => ["A4"]},
+        %{"id" => "B8", "duration" => 1, "dependencies" => ["A4"]},
+        
+        # Phase 3: Core work (12 activities with mixed dependencies)
+        %{"id" => "C1", "duration" => 1, "dependencies" => ["B1", "B2"]},
+        %{"id" => "C2", "duration" => 1, "dependencies" => ["B1", "B3"]},
+        %{"id" => "C3", "duration" => 1, "dependencies" => ["B2", "B4"]},
+        %{"id" => "C4", "duration" => 1, "dependencies" => ["B3", "B4"]},
+        %{"id" => "C5", "duration" => 1, "dependencies" => ["B5", "B6"]},
+        %{"id" => "C6", "duration" => 1, "dependencies" => ["B5", "B7"]},
+        %{"id" => "C7", "duration" => 1, "dependencies" => ["B6", "B8"]},
+        %{"id" => "C8", "duration" => 1, "dependencies" => ["B7", "B8"]},
+        %{"id" => "C9", "duration" => 1, "dependencies" => ["C1", "C2"]},
+        %{"id" => "C10", "duration" => 1, "dependencies" => ["C3", "C4"]},
+        %{"id" => "C11", "duration" => 1, "dependencies" => ["C5", "C6"]},
+        %{"id" => "C12", "duration" => 1, "dependencies" => ["C7", "C8"]},
+        
+        # Phase 4: Integration (6 activities)
+        %{"id" => "D1", "duration" => 1, "dependencies" => ["C9", "C10"]},
+        %{"id" => "D2", "duration" => 1, "dependencies" => ["C10", "C11"]},
+        %{"id" => "D3", "duration" => 1, "dependencies" => ["C11", "C12"]},
+        %{"id" => "D4", "duration" => 1, "dependencies" => ["C9", "C12"]},
+        %{"id" => "D5", "duration" => 1, "dependencies" => ["D1", "D2"]},
+        %{"id" => "D6", "duration" => 1, "dependencies" => ["D3", "D4"]},
+        
+        # Phase 5: Completion (2 final activities)
+        %{"id" => "E1", "duration" => 1, "dependencies" => ["D5", "D6"]},
+        %{"id" => "E2", "duration" => 1, "dependencies" => ["E1"]}
       ]
     }
   end
