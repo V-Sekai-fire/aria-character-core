@@ -243,9 +243,11 @@ defmodule AriaEngine.ConvergenceBenchmark.NxApproaches do
     infinity = 1.0e6
     distance_matrix = Nx.broadcast(infinity, {n, n})
     
-    # Set diagonal to zero
-    diagonal_indices = Enum.map(0..(n-1), fn i -> [i, i] end)
-    distance_matrix = Nx.indexed_put(distance_matrix, Nx.tensor(diagonal_indices), 0.0)
+    # Set diagonal to zero using put_slice approach
+    distance_matrix = Enum.reduce(0..(n-1), distance_matrix, fn i, acc_matrix ->
+      zero_tensor = Nx.tensor([[0.0]], type: :f32)
+      Nx.put_slice(acc_matrix, [i, i], zero_tensor)
+    end)
     
     # Fill in constraint values
     constraint_updates = Enum.flat_map(constraints, fn {{p1, p2}, {min_val, max_val}} ->
@@ -259,11 +261,12 @@ defmodule AriaEngine.ConvergenceBenchmark.NxApproaches do
     end)
     
     distance_matrix = if length(constraint_updates) > 0 do
-      {indices, values} = Enum.unzip(constraint_updates)
-      # Ensure indices are properly shaped as a 2D tensor and values as 1D
-      indices_tensor = Nx.tensor(indices, type: :s64)
-      values_tensor = Nx.tensor(values, type: :f32)
-      Nx.indexed_put(distance_matrix, indices_tensor, values_tensor)
+      # Use a different approach: iterate through updates and use put_slice
+      Enum.reduce(constraint_updates, distance_matrix, fn {[i, j], value}, acc_matrix ->
+        # Create a 1x1 tensor for the value and put it at position [i, j]
+        value_tensor = Nx.tensor([[value]], type: :f32)
+        Nx.put_slice(acc_matrix, [i, j], value_tensor)
+      end)
     else
       distance_matrix
     end
@@ -316,9 +319,14 @@ defmodule AriaEngine.ConvergenceBenchmark.NxApproaches do
       end)
     end)
     
-    if length(updates) > 0 do
-      {indices, values} = Enum.unzip(updates)
-      resource_matrix = Nx.indexed_put(resource_matrix, Nx.tensor(indices), Nx.tensor(values))
+    resource_matrix = if length(updates) > 0 do
+      # Use put_slice approach for resource matrix updates
+      Enum.reduce(updates, resource_matrix, fn {[i, j], value}, acc_matrix ->
+        value_tensor = Nx.tensor([[value]], type: :f32)
+        Nx.put_slice(acc_matrix, [i, j], value_tensor)
+      end)
+    else
+      resource_matrix
     end
     
     {resource_matrix, activity_map, resource_map}
@@ -350,9 +358,14 @@ defmodule AriaEngine.ConvergenceBenchmark.NxApproaches do
       end)
     end)
     
-    if length(dependency_updates) > 0 do
-      {indices, values} = Enum.unzip(dependency_updates)
-      dependency_matrix = Nx.indexed_put(dependency_matrix, Nx.tensor(indices), Nx.tensor(values))
+    dependency_matrix = if length(dependency_updates) > 0 do
+      # Use put_slice approach for dependency matrix updates
+      Enum.reduce(dependency_updates, dependency_matrix, fn {[i, j], value}, acc_matrix ->
+        value_tensor = Nx.tensor([[value]], type: :f32)
+        Nx.put_slice(acc_matrix, [i, j], value_tensor)
+      end)
+    else
+      dependency_matrix
     end
     
     maps = %{activity: activity_map, resource: resource_map}
@@ -488,12 +501,9 @@ defmodule AriaEngine.ConvergenceBenchmark.NxApproaches do
     schedule_to_activities(final_schedule, maps)
   end
 
-  defp calculate_resource_conflicts(resource_matrix, schedule_state) do
+  defp calculate_resource_conflicts(resource_matrix, _schedule_state) do
     # Calculate resource-based scheduling conflicts
-    {n_activities, n_resources} = Nx.shape(resource_matrix)
-    
-    # For each activity, calculate when resources become available
-    resource_availability = Nx.broadcast(0.0, {n_resources})
+    {_n_activities, _n_resources} = Nx.shape(resource_matrix)
     
     # Simple conflict resolution: add small delays for resource conflicts
     conflict_penalties = Nx.sum(resource_matrix, axes: [1])
@@ -514,7 +524,7 @@ defmodule AriaEngine.ConvergenceBenchmark.NxApproaches do
       p1 = Enum.at(timepoint_list, i)
       p2 = Enum.at(timepoint_list, j)
       
-      distance = distance_matrix |> Nx.slice([i, j], [1, 1]) |> Nx.to_number()
+      distance = distance_matrix |> Nx.slice([i, j], [1, 1]) |> Nx.squeeze() |> Nx.to_number()
       
       if distance < 1.0e5 do
         {{p1, p2}, {-distance, distance}}
@@ -533,7 +543,7 @@ defmodule AriaEngine.ConvergenceBenchmark.NxApproaches do
     matrix_to_constraints(distance_matrix, timepoint_map)
   end
 
-  defp matrix_to_activity_schedule(resource_matrix, activity_map, resource_map) do
+  defp matrix_to_activity_schedule(resource_matrix, activity_map, _resource_map) do
     # Convert resource allocation matrix to activity schedule
     {n_activities, _} = Nx.shape(resource_matrix)
     
