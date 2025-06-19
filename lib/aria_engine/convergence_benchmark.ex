@@ -41,9 +41,13 @@ defmodule AriaEngine.ConvergenceBenchmark do
       small_stn: generate_stn_constraints(50, 20),
       medium_stn: generate_stn_constraints(500, 100),
       large_stn: generate_stn_constraints(2000, 500),
+      xl_stn: generate_stn_constraints(10000, 1000),
+      xxl_stn: generate_stn_constraints(50000, 2000),
       small_activities: generate_activities(100),
       medium_activities: generate_activities(1000),
-      large_activities: generate_activities(5000)
+      large_activities: generate_activities(5000),
+      xl_activities: generate_activities(25000),
+      xxl_activities: generate_activities(100000)
     }
   end
 
@@ -56,12 +60,12 @@ defmodule AriaEngine.ConvergenceBenchmark do
         case data do
           %{constraints: _} = stn_data ->
             AriaEngine.ConvergenceFlow.solve_stn_with_convergence(stn_data, 
-              stages: System.schedulers_online(),
+              stages: System.schedulers_online() * 2,
               max_iterations: 20
             )
           activities when is_list(activities) ->
             AriaEngine.ConvergenceFlow.solve_activities_with_convergence(activities,
-              stages: System.schedulers_online(),
+              stages: System.schedulers_online() * 2,
               max_iterations: 20
             )
         end
@@ -123,7 +127,8 @@ defmodule AriaEngine.ConvergenceBenchmark do
 
   # Pure Task.async implementation
   defp solve_with_pure_tasks(data, opts) do
-    max_concurrency = Keyword.get(opts, :max_concurrency, System.schedulers_online())
+    # Max out all cores - use 4x schedulers for maximum parallelism
+    max_concurrency = Keyword.get(opts, :max_concurrency, System.schedulers_online() * 4)
     max_iterations = Keyword.get(opts, :max_iterations, 20)
     
     case data do
