@@ -90,6 +90,13 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 - [ ] Update README with MCP tool capabilities
 - [x] Mark this ADR as completed
 
+### Phase 5: Simple MCP Server Implementation (June 19, 2025)
+- [x] Created `Mix.Tasks.Mcp.Stdio.Simple` as working MCP server
+- [x] Bypassed Hermes framework compatibility issues
+- [x] Implemented proper MCP protocol handling (initialize, tools/list, tools/call)
+- [x] Updated Cline configuration to use simple MCP server
+- [x] Verified JSON-RPC protocol compliance and tool functionality
+
 ## Success Criteria
 
 ### Functional Requirements

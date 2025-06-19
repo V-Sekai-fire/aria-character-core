@@ -116,8 +116,6 @@ defmodule AriaCharacterCore.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:uuid, "~> 1.1"},
 
-      # MCP Server Framework
-      {:hermes_mcp, git: "https://github.com/cloudwalk/hermes-mcp.git", branch: "main"},
 
       # Test dependencies
       {:stream_data, "~> 1.2", only: :test},
