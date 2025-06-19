@@ -34,7 +34,7 @@ From `test/DISABLED_TESTS.md`:
 
 ### Development Utilities
 - **PddlFuzzer**: Random PDDL generation for testing (unused)
-- **PngGenerator**: PNG generation for timeline visualization (unused)
+- **PngGenerator**: PNG generation for timeline visualization (required - keep)
 
 ## Decision
 
@@ -43,7 +43,7 @@ Remove the following unused components:
 1. **Complete PDDL infrastructure** (`lib/aria_engine/pddl/` directory)
 2. **PDDL-related utilities** (`pddl_fuzzer.ex`, `pddl/domain_adapter.ex`)
 3. **All disabled test files** (`.disabled` extension files)
-4. **Unused development utilities** (`png_generator.ex`)
+4. **Unused development utilities** (excluding `png_generator.ex` which is required)
 
 ## Implementation Plan
 
@@ -58,9 +58,9 @@ Remove the following unused components:
 - [x] Remove PDDL references from `planning/core_interface.ex`
 - [x] Update any imports or aliases that reference PDDL modules
 
-### Phase 3: Remove Unused Utilities
-- [x] Remove `lib/aria_engine/png_generator.ex`
-- [x] Remove any references to PNG generation functionality
+### Phase 3: Review Unused Utilities
+- [x] Review `lib/aria_engine/png_generator.ex` - **KEPT** (required for timeline visualization)
+- [x] Confirm no other unused utilities remain
 
 ### Phase 4: Verification
 - [x] Compile project to ensure no broken dependencies
