@@ -281,7 +281,7 @@ defmodule Timeline.Internal.STN.Operations do
         # Single segment, no need for parallel processing
         STN.PC2.apply_pc2(hd(segments))
       
-      segment_count ->
+      _segment_count ->
         # Use convergence-based solving for parallel segment solving
         # Apply PC2 to each segment individually, then merge
         solved_segments = segments
