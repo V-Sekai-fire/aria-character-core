@@ -16,8 +16,7 @@ defmodule AriaEngine.MCP.HermesServer do
   
   require Logger
   
-  # Register the schedule activities tool component
-  component AriaEngine.MCP.Tools.ScheduleActivities
+  # No components registered - ScheduleActivities tool removed
   
   @doc """
   Start the Hermes MCP server.
