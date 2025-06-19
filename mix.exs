@@ -114,8 +114,9 @@ defmodule AriaCharacterCore.MixProject do
 
       # UUID Generation
       {:elixir_uuid, "~> 1.2"},
-      {:uuid, "~> 1.1"},
+      {:uuid, "~> 1.1", app: false},
 
+      {:iso8601, "~> 1.3"},
 
       # Test dependencies
       {:stream_data, "~> 1.2", only: :test},
