@@ -31,7 +31,7 @@ defmodule TimelineGraph do
   """
 
   alias Timeline.AgentEntity
-  alias Timeline.STN
+  alias Timeline
   alias Timeline.Interval
   alias StateV2
 
@@ -42,7 +42,7 @@ defmodule TimelineGraph do
 
   @type entity_timeline :: %{
     entity: AgentEntity.participant(),
-    timeline: STN.t(),
+    timeline: Timeline.t(),
     lod: lod_level(),
     last_growth: DateTime.t(),
     bridges: %{entity_id() => bridge_type()}
@@ -106,8 +106,8 @@ defmodule TimelineGraph do
     # Create entity using existing AgentEntity system
     entity = AgentEntity.create_entity(entity_id, name, properties, opts)
     
-    # Create timeline for this entity (STN.new/0 for basic usage)
-    timeline = STN.new()
+    # Create timeline for this entity (Timeline.new/0 for basic usage)
+    timeline = Timeline.new()
     
     # Determine initial LOD based on entity type
     initial_lod = determine_initial_lod(entity)
@@ -390,7 +390,7 @@ defmodule TimelineGraph do
         case detect_schedule_conflicts(entity_timeline.timeline, routine_interval) do
           [] ->
             # No conflicts, add routine
-            updated_timeline = STN.add_interval(entity_timeline.timeline, routine_interval)
+            updated_timeline = Timeline.add_interval(entity_timeline.timeline, routine_interval)
             
             updated_entity_timeline = %{entity_timeline |
               timeline: updated_timeline,
@@ -437,11 +437,11 @@ defmodule TimelineGraph do
     
     # Remove overridden activities
     updated_timeline = Enum.reduce(can_override, entity_timeline.timeline, fn conflict, timeline ->
-      STN.remove_interval(timeline, conflict.id)
+      Timeline.remove_interval(timeline, conflict.id)
     end)
     
     # Add new routine
-    updated_timeline = STN.add_interval(updated_timeline, new_routine)
+    updated_timeline = Timeline.add_interval(updated_timeline, new_routine)
     
     # Attempt to reschedule reschedulable activities
     final_timeline = Enum.reduce(reschedulable, updated_timeline, fn activity, timeline ->
@@ -546,7 +546,7 @@ defmodule TimelineGraph do
           )
           
           # Add to entity timeline
-          updated_timeline = STN.add_interval(entity_timeline.timeline, process_interval)
+          updated_timeline = Timeline.add_interval(entity_timeline.timeline, process_interval)
           
           updated_entity_timeline = %{entity_timeline |
             timeline: updated_timeline,
@@ -583,7 +583,7 @@ defmodule TimelineGraph do
       metadata: %{type: :creation, event: "entity_created"}
     )
     
-    STN.add_interval(timeline, creation_interval)
+    Timeline.add_interval(timeline, creation_interval)
   end
 
   defp grow_timeline_for_capabilities(timeline, new_capabilities, opts) do
@@ -601,7 +601,7 @@ defmodule TimelineGraph do
       }
     )
     
-    STN.add_interval(timeline, capability_interval)
+    Timeline.add_interval(timeline, capability_interval)
   end
 
   defp grow_timeline_for_property_change(timeline, predicate, value) do
@@ -618,7 +618,7 @@ defmodule TimelineGraph do
       }
     )
     
-    STN.add_interval(timeline, property_interval)
+    Timeline.add_interval(timeline, property_interval)
   end
 
   defp promote_lod(current_lod) do

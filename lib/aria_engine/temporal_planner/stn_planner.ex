@@ -40,7 +40,7 @@ defmodule TemporalPlanner.STNPlanner do
 
   alias TemporalPlanner.STNMethod
   alias TemporalPlanner.STNAction
-  alias Timeline.STN
+  alias Timeline
   alias FlowAdapter
 
   @type goal_id :: String.t()
@@ -48,7 +48,7 @@ defmodule TemporalPlanner.STNPlanner do
   @type execution_status :: :planning | :executing | :completed | :failed | :replanning
   @type constraint_update :: %{
           timepoint: String.t(),
-          constraint: STN.constraint(),
+          constraint: Timeline.constraint(),
           timestamp: DateTime.t()
         }
 
@@ -56,12 +56,12 @@ defmodule TemporalPlanner.STNPlanner do
           goal_id: goal_id(),
           planning_strategy: planning_strategy(),
           methods: [STNMethod.t()],
-          goal_stn: STN.t(),
-          method_segments: [STN.t()],
+          goal_stn: Timeline.t(),
+          method_segments: [Timeline.t()],
           execution_status: execution_status(),
           constraint_updates: [constraint_update()],
-          world_constraints: STN.t(),
-          parallel_segments: [{STN.t(), pid()}],
+          world_constraints: Timeline.t(),
+          parallel_segments: [{Timeline.t(), pid()}],
           reentrant_enabled: boolean(),
           metadata: map()
         }
@@ -91,7 +91,7 @@ defmodule TemporalPlanner.STNPlanner do
   @spec new(goal_id(), planning_strategy(), keyword()) :: t()
   def new(goal_id, strategy, opts \\ []) when strategy in [:sequential, :parallel, :hierarchical, :adaptive] do
     methods = Keyword.get(opts, :methods, [])
-    world_constraints = Keyword.get(opts, :world_constraints, STN.new())
+    world_constraints = Keyword.get(opts, :world_constraints, Timeline.new())
     reentrant_enabled = Keyword.get(opts, :reentrant_enabled, true)
     metadata = Keyword.get(opts, :metadata, %{})
 
@@ -165,7 +165,7 @@ defmodule TemporalPlanner.STNPlanner do
       0 -> planner
       1 -> 
         # Single segment, solve directly
-        solved_segment = hd(planner.method_segments) |> STN.apply_pc2()
+        solved_segment = hd(planner.method_segments) |> Timeline.apply_pc2()
         %{planner | goal_stn: solved_segment}
       
       _segment_count ->
@@ -173,14 +173,14 @@ defmodule TemporalPlanner.STNPlanner do
         solved_segments = start_parallel_segment_solving(planner.method_segments)
         
         # Apply cross-segment constraint propagation
-        final_stn = apply_cross_segment_constraints(
+        final_timeline = apply_cross_segment_constraints(
           solved_segments, 
           planner.planning_strategy,
           planner.world_constraints
         )
         
         %{planner | 
-          goal_stn: final_stn,
+          goal_stn: final_timeline,
           parallel_segments: []  # Flow adapter doesn't return tasks
         }
     end
@@ -198,7 +198,7 @@ defmodule TemporalPlanner.STNPlanner do
       true
 
   """
-  @spec update_constraint(t(), {String.t(), String.t(), STN.constraint()}) :: t()
+  @spec update_constraint(t(), {String.t(), String.t(), Timeline.constraint()}) :: t()
   def update_constraint(%__MODULE__{} = planner, {from_point, to_point, constraint}) do
     # Add constraint update to history
     constraint_update = %{
@@ -211,7 +211,7 @@ defmodule TemporalPlanner.STNPlanner do
     
     # Update world constraints
     updated_world_constraints = planner.world_constraints
-    |> STN.add_constraint(from_point, to_point, constraint)
+    |> Timeline.add_constraint(from_point, to_point, constraint)
     
     # Trigger replanning if reentrant execution is enabled
     updated_planner = %{planner | 
@@ -255,8 +255,8 @@ defmodule TemporalPlanner.STNPlanner do
   @spec consistent?(t()) :: boolean()
   def consistent?(%__MODULE__{goal_stn: goal_stn, world_constraints: world_constraints}) do
     # Check consistency of the intersection of goal and world constraints
-    combined_stn = STN.intersection(goal_stn, world_constraints)
-    STN.consistent?(combined_stn)
+    combined_timeline = Timeline.intersection(goal_stn, world_constraints)
+    Timeline.consistent?(combined_timeline)
   end
 
   @doc """
@@ -270,9 +270,9 @@ defmodule TemporalPlanner.STNPlanner do
       true
 
   """
-  @spec get_timeline(t()) :: STN.t()
-  def get_timeline(%__MODULE__{goal_stn: goal_stn, world_constraints: world_stn}) do
-    STN.intersection(goal_stn, world_stn)
+  @spec get_timeline(t()) :: Timeline.t()
+  def get_timeline(%__MODULE__{goal_stn: goal_stn, world_constraints: world_timeline}) do
+    Timeline.intersection(goal_stn, world_timeline)
   end
 
   @doc """
@@ -320,19 +320,19 @@ defmodule TemporalPlanner.STNPlanner do
   # Private helper functions
 
   defp compute_goal_stn(strategy, methods) do
-    method_stns = Enum.map(methods, &STNMethod.to_stn/1)
+    method_timelines = Enum.map(methods, &STNMethod.to_timeline/1)
     
     case strategy do
       :sequential -> 
-        STN.chain(method_stns)
+        Timeline.chain(method_timelines)
       :parallel -> 
-        STN.parallel_join(method_stns)
+        Timeline.parallel_join(method_timelines)
       :hierarchical ->
         # Hierarchical strategy uses both sequential and parallel composition
-        compose_hierarchical(method_stns)
+        compose_hierarchical(method_timelines)
       :adaptive ->
         # Adaptive strategy selects best composition based on constraints
-        compose_adaptive(method_stns)
+        compose_adaptive(method_timelines)
     end
   end
 
@@ -340,7 +340,7 @@ defmodule TemporalPlanner.STNPlanner do
     case strategy do
       :sequential ->
         # Each method is a separate segment for sequential execution
-        Enum.map(methods, &STNMethod.to_stn/1)
+        Enum.map(methods, &STNMethod.to_timeline/1)
       :parallel ->
         # All methods in single segment for parallel execution
         case methods do
@@ -369,21 +369,21 @@ defmodule TemporalPlanner.STNPlanner do
     FlowAdapter.process_stn_segments(
       flow_config, 
       segments, 
-      &STN.apply_pc2/1
+      &Timeline.apply_pc2/1
     )
   end
 
   defp apply_cross_segment_constraints(solved_segments, strategy, world_constraints) do
     # Compose solved segments based on strategy
-    composed_stn = case strategy do
-      :sequential -> STN.chain(solved_segments)
-      :parallel -> STN.parallel_join(solved_segments)
+    composed_timeline = case strategy do
+      :sequential -> Timeline.chain(solved_segments)
+      :parallel -> Timeline.parallel_join(solved_segments)
       :hierarchical -> compose_hierarchical(solved_segments)
       :adaptive -> compose_adaptive(solved_segments)
     end
     
     # Apply world constraints
-    STN.intersection(composed_stn, world_constraints)
+    Timeline.intersection(composed_timeline, world_constraints)
   end
 
   defp trigger_replanning(%__MODULE__{} = planner) do
@@ -396,10 +396,10 @@ defmodule TemporalPlanner.STNPlanner do
     }
   end
 
-  defp compose_hierarchical(method_stns) do
+  defp compose_hierarchical(method_timelines) do
     # Hierarchical composition: alternate between sequential and parallel
-    case method_stns do
-      [] -> STN.new()
+    case method_timelines do
+      [] -> Timeline.new()
       [single] -> single
       multiple ->
         # Group methods and apply mixed composition
@@ -407,16 +407,16 @@ defmodule TemporalPlanner.STNPlanner do
         |> Enum.chunk_every(2)
         |> Enum.map(fn
           [single] -> single
-          chunk -> STN.parallel_join(chunk)
+          chunk -> Timeline.parallel_join(chunk)
         end)
-        |> STN.chain()
+        |> Timeline.chain()
     end
   end
 
-  defp compose_adaptive(method_stns) do
+  defp compose_adaptive(method_timelines) do
     # Adaptive composition: choose best strategy based on constraint density
-    case method_stns do
-      [] -> STN.new()
+    case method_timelines do
+      [] -> Timeline.new()
       [single] -> single
       multiple ->
         # For now, use hierarchical as default adaptive strategy

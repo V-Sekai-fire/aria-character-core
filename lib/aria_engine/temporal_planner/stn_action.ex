@@ -27,12 +27,12 @@ defmodule TemporalPlanner.STNAction do
   - **Resource conflicts** → `intersection/2` for constraint tightening
   """
 
-  alias Timeline.STN
+  alias Timeline
 
   @type action_id :: String.t()
   @type resource_id :: String.t()
   @type timepoint :: String.t()
-  @type temporal_constraint :: STN.constraint()
+  @type temporal_constraint :: {number(), number()}
   @type duration_constraint :: {min_duration :: number(), max_duration :: number()}
 
   @type precondition :: %{
@@ -55,8 +55,8 @@ defmodule TemporalPlanner.STNAction do
 
   @type t :: %__MODULE__{
           action_id: action_id(),
-          stn_segment: STN.segment(),
-          base_stn: STN.t(),
+          stn_segment: map(),
+          base_stn: Timeline.t(),
           preconditions: [precondition()],
           effects: [effect()],
           resource_requirements: [resource_requirement()],
@@ -103,50 +103,50 @@ defmodule TemporalPlanner.STNAction do
     start_timepoint = "#{action_id}_start"
     end_timepoint = "#{action_id}_end"
 
-    # Create base STN with action duration constraint
-    base_stn = STN.new()
-    |> STN.add_constraint(start_timepoint, end_timepoint, duration)
+    # Create base Timeline with action duration constraint
+    base_timeline = Timeline.new()
+    |> Timeline.add_constraint(start_timepoint, end_timepoint, duration)
 
     # Add precondition constraints
-    stn_with_preconditions = 
-      Enum.reduce(preconditions, base_stn, fn precond, stn ->
+    timeline_with_preconditions = 
+      Enum.reduce(preconditions, base_timeline, fn precond, timeline ->
         precond_timepoint = "#{action_id}_precond_#{precond.resource}"
-        stn
-        |> STN.add_constraint(precond_timepoint, start_timepoint, precond.constraint)
+        timeline
+        |> Timeline.add_constraint(precond_timepoint, start_timepoint, precond.constraint)
       end)
 
     # Add effect constraints  
-    stn_with_effects =
-      Enum.reduce(effects, stn_with_preconditions, fn effect, stn ->
+    timeline_with_effects =
+      Enum.reduce(effects, timeline_with_preconditions, fn effect, timeline ->
         effect_timepoint = "#{action_id}_effect_#{effect.resource}"
-        stn
-        |> STN.add_constraint(end_timepoint, effect_timepoint, effect.constraint)
+        timeline
+        |> Timeline.add_constraint(end_timepoint, effect_timepoint, effect.constraint)
       end)
 
     # Add resource requirement constraints
-    final_stn =
-      Enum.reduce(resource_requirements, stn_with_effects, fn req, stn ->
+    final_timeline =
+      Enum.reduce(resource_requirements, timeline_with_effects, fn req, timeline ->
         resource_start = "#{action_id}_resource_#{req.resource}_start"
         resource_end = "#{action_id}_resource_#{req.resource}_end"
-        stn
-        |> STN.add_constraint(resource_start, resource_end, req.duration)
-        |> STN.add_constraint(start_timepoint, resource_start, {0, 0})
-        |> STN.add_constraint(resource_end, end_timepoint, {0, 0})
+        timeline
+        |> Timeline.add_constraint(resource_start, resource_end, req.duration)
+        |> Timeline.add_constraint(start_timepoint, resource_start, {0, 0})
+        |> Timeline.add_constraint(resource_end, end_timepoint, {0, 0})
       end)
 
     # Create STN segment representation
     segment = %{
       id: action_id,
-      time_points: STN.time_points(final_stn) |> MapSet.new(),
-      constraints: final_stn.constraints,
+      time_points: Timeline.time_points(final_timeline) |> MapSet.new(),
+      constraints: Timeline.get_stn(final_timeline).constraints,
       boundary_points: [start_timepoint, end_timepoint],
-      consistent: STN.consistent?(final_stn)
+      consistent: Timeline.consistent?(final_timeline)
     }
 
     %__MODULE__{
       action_id: action_id,
       stn_segment: segment,
-      base_stn: final_stn,
+      base_stn: final_timeline,
       preconditions: normalize_preconditions(preconditions, action_id),
       effects: normalize_effects(effects, action_id),
       resource_requirements: resource_requirements,
@@ -168,75 +168,75 @@ defmodule TemporalPlanner.STNAction do
       true
 
   """
-  @spec to_stn(t()) :: STN.t()
-  def to_stn(%__MODULE__{base_stn: stn}), do: stn
+  @spec to_timeline(t()) :: Timeline.t()
+  def to_timeline(%__MODULE__{base_stn: timeline}), do: timeline
 
   @doc """
-  Creates a sequential chain of STN actions using STN chain operation.
+  Creates a sequential chain of STN actions using Timeline chain operation.
 
   ## Examples
 
       iex> action1 = STNAction.new("first")  
       iex> action2 = STNAction.new("second")
-      iex> chained_stn = STNAction.chain([action1, action2])
-      iex> STN.consistent?(chained_stn)
+      iex> chained_timeline = STNAction.chain([action1, action2])
+      iex> Timeline.consistent?(chained_timeline)
       true
 
   """
-  @spec chain([t()]) :: STN.t()
+  @spec chain([t()]) :: Timeline.t()
   def chain(actions) when is_list(actions) do
     actions
-    |> Enum.map(&to_stn/1)
-    |> STN.chain()
+    |> Enum.map(&to_timeline/1)
+    |> Timeline.chain()
   end
 
   @doc """
-  Creates parallel execution of STN actions using STN parallel_join operation.
+  Creates parallel execution of STN actions using Timeline parallel_join operation.
 
   ## Examples
 
       iex> action1 = STNAction.new("parallel_1")
       iex> action2 = STNAction.new("parallel_2") 
-      iex> parallel_stn = STNAction.parallel([action1, action2])
-      iex> STN.consistent?(parallel_stn)
+      iex> parallel_timeline = STNAction.parallel([action1, action2])
+      iex> Timeline.consistent?(parallel_timeline)
       true
 
   """
-  @spec parallel([t()]) :: STN.t()
+  @spec parallel([t()]) :: Timeline.t()
   def parallel(actions) when is_list(actions) do
     actions
-    |> Enum.map(&to_stn/1)
-    |> STN.parallel_join()
+    |> Enum.map(&to_timeline/1)
+    |> Timeline.parallel_join()
   end
 
   @doc """
-  Creates alternative action choices using STN union operation.
+  Creates alternative action choices using Timeline union operation.
 
   ## Examples
 
       iex> action1 = STNAction.new("option_1")
       iex> action2 = STNAction.new("option_2")
-      iex> alternative_stn = STNAction.alternative([action1, action2])
-      iex> STN.consistent?(alternative_stn)
+      iex> alternative_timeline = STNAction.alternative([action1, action2])
+      iex> Timeline.consistent?(alternative_timeline)
       true
 
   """
-  @spec alternative([t()]) :: STN.t()
+  @spec alternative([t()]) :: Timeline.t()
   def alternative(actions) when is_list(actions) do
     actions
-    |> Enum.map(&to_stn/1)
-    |> Enum.reduce(&STN.union/2)
+    |> Enum.map(&to_timeline/1)
+    |> Enum.reduce(&Timeline.union/2)
   end
 
   @doc """
   Checks if an action can execute given current temporal constraints.
 
   """
-  @spec can_execute?(t(), STN.t()) :: boolean()
-  def can_execute?(%__MODULE__{base_stn: action_stn}, world_stn) do
-    # Check if action STN is consistent with world constraints
-    merged_stn = STN.intersection(action_stn, world_stn)
-    STN.consistent?(merged_stn)
+  @spec can_execute?(t(), Timeline.t()) :: boolean()
+  def can_execute?(%__MODULE__{base_stn: action_timeline}, world_timeline) do
+    # Check if action Timeline is consistent with world constraints
+    merged_timeline = Timeline.intersection(action_timeline, world_timeline)
+    Timeline.consistent?(merged_timeline)
   end
 
   @doc """

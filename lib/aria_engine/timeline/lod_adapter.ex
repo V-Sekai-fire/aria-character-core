@@ -42,7 +42,7 @@ defmodule Timeline.LodAdapter do
   - ADR-034: Definitive Temporal Planner Architecture
   """
   
-  alias Timeline.STN
+  alias Timeline
   alias FlowAdapter
   
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low
@@ -97,24 +97,24 @@ defmodule Timeline.LodAdapter do
       detailed_stn = LodAdapter.convert_lod(plan_stn, :high, :millisecond, 
         rounding_strategy: :floor)
   """
-  def convert_lod(%STN{} = stn, target_lod, target_unit \\ nil, opts \\ []) do
-    target_unit = target_unit || stn.time_unit
-    conversion_direction = determine_conversion_direction(stn.lod_level, target_lod)
+  def convert_lod(%Timeline{} = timeline, target_lod, target_unit \\ nil, opts \\ []) do
+    target_unit = target_unit || timeline.time_unit
+    conversion_direction = determine_conversion_direction(timeline.lod_level, target_lod)
     
     # Calculate scaling factors
-    lod_scale_factor = calculate_lod_scale_factor(stn.lod_level, target_lod)
-    unit_scale_factor = calculate_unit_scale_factor(stn.time_unit, target_unit)
+    lod_scale_factor = calculate_lod_scale_factor(timeline.lod_level, target_lod)
+    unit_scale_factor = calculate_unit_scale_factor(timeline.time_unit, target_unit)
     total_scale_factor = lod_scale_factor * unit_scale_factor
     
     # Apply conversion based on direction and complexity
-    case {conversion_direction, map_size(stn.constraints)} do
+    case {conversion_direction, map_size(timeline.constraints)} do
       {_direction, constraint_count} when constraint_count > 100 ->
         # Use Flow adapter for large constraint networks
-        convert_lod_parallel(stn, target_lod, target_unit, total_scale_factor, opts)
+        convert_lod_parallel(timeline, target_lod, target_unit, total_scale_factor, opts)
         
       {_direction, _small_count} ->
         # Direct conversion for small networks
-        convert_lod_direct(stn, target_lod, target_unit, total_scale_factor, opts)
+        convert_lod_direct(timeline, target_lod, target_unit, total_scale_factor, opts)
     end
   end
   
@@ -147,7 +147,7 @@ defmodule Timeline.LodAdapter do
       result = LodAdapter.bridge_and_compose(stn1, stn2, :union, 
         target_lod: :medium, target_unit: :millisecond)
   """
-  def bridge_and_compose(%STN{} = stn1, %STN{} = stn2, operation, opts \\ [])
+  def bridge_and_compose(%Timeline{} = timeline1, %Timeline{} = timeline2, operation, opts \\ [])
       when operation in [:intersection, :union, :difference] do
     
     # Determine optimal target LOD and unit

@@ -63,9 +63,24 @@ Fully encapsulate STN within Timeline by:
   - ✅ Updated type annotations and return types
   - ✅ Maintained all existing functionality through Timeline's encapsulation layer
   - ✅ **Encapsulation proven successful** - external module works correctly with Timeline API
-- [ ] Update `temporal_planner/stn_method.ex` to use Timeline API  
-- [ ] Update `temporal_planner/stn_planner.ex` to use Timeline API
-- [ ] Update `timeline_graph.ex` to use Timeline API
+- [x] Update `temporal_planner/stn_method.ex` to use Timeline API
+  - ✅ Converted aliases from `Timeline.STN` to `Timeline`
+  - ✅ Updated all type definitions to use `Timeline.t()`
+  - ✅ Added `to_timeline/1` function with backward compatibility
+  - ✅ Updated all STN function calls to Timeline equivalents
+  - ✅ Maintained all existing functionality through Timeline's encapsulation layer
+- [x] Update `temporal_planner/stn_planner.ex` to use Timeline API
+  - ✅ Converted aliases from `Timeline.STN` to `Timeline`
+  - ✅ Updated all type definitions to use `Timeline.t()` and `Timeline.constraint()`
+  - ✅ Updated all STN function calls to Timeline equivalents throughout
+  - ✅ Updated helper functions to use Timeline operations
+  - ✅ Maintained all existing functionality through Timeline's encapsulation layer
+- [x] Update `timeline_graph.ex` to use Timeline API
+  - ✅ Converted aliases from `Timeline.STN` to `Timeline`
+  - ✅ Updated all type definitions to use `Timeline.t()`
+  - ✅ Updated all STN function calls to Timeline equivalents throughout
+  - ✅ Updated helper functions to use Timeline operations
+  - ✅ Maintained all existing functionality through Timeline's encapsulation layer
 - [ ] Update `timeline/lod_adapter.ex` to use Timeline API
 
 ### Phase 4: Test Migration
