@@ -9,7 +9,6 @@ defmodule Planning.CoreInterface do
   alias Planning.Internal
   alias Core
   alias StateV2
-  alias Pddl.Domain, as: PddlDomain
   alias PlannerAdapter
 
   @type t :: Planning.HighLevel.t()
@@ -23,13 +22,7 @@ defmodule Planning.CoreInterface do
   @spec plan(DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
     {:ok, solution_tree()} | {:error, String.t()}
   def plan(domain, %StateV2{} = state, todos, opts \\[]) do
-    # Adapt PDDL domain if necessary
-    adapted_domain = case domain do
-      %PddlDomain{} -> Pddl.DomainAdapter.new(domain)
-      _ -> domain
-    end
-
-    case PlannerAdapter.plan(adapted_domain, state, todos, opts) do
+    case PlannerAdapter.plan(domain, state, todos, opts) do
       {:ok, solution_tree} ->
         {:ok, solution_tree}
 
@@ -44,12 +37,7 @@ defmodule Planning.CoreInterface do
   @spec plan_with_tree(DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
     {:ok, solution_tree()} | {:error, String.t()}
   def plan_with_tree(domain, %StateV2{} = state, todos, opts \\[]) do
-    # Adapt PDDL domain if necessary
-    adapted_domain = case domain do
-      %PddlDomain{} -> Pddl.DomainAdapter.new(domain)
-      _ -> domain
-    end
-    PlannerAdapter.plan(adapted_domain, state, todos, opts)
+    PlannerAdapter.plan(domain, state, todos, opts)
   end
 
   @doc """
@@ -57,12 +45,7 @@ defmodule Planning.CoreInterface do
   """
   @spec execute_plan(DomainBehaviour.t(), Core.state(), [plan_step()]) :: {:ok, Core.state()} | {:error, String.t()}
   def execute_plan(domain, %StateV2{} = initial_state, plan) do
-    # Adapt PDDL domain if necessary
-    adapted_domain = case domain do
-      %PddlDomain{} -> Pddl.DomainAdapter.new(domain)
-      _ -> domain
-    end
-    PlannerAdapter.validate_plan(adapted_domain, initial_state, plan)
+    PlannerAdapter.validate_plan(domain, initial_state, plan)
   end
 
   @doc """

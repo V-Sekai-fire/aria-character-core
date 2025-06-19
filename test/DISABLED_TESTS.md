@@ -1,43 +1,30 @@
 # Disabled Tests Documentation
 
-This document tracks test files that have been disabled (renamed with `.disabled` extension) to create a clean testing foundation.
+This document tracks test files that have been disabled or removed to create a clean testing foundation.
 
-## Disabled Test Files
+## Removed Test Files (ADR-099)
 
-### AriaStorage Tests
-- `test/aria_storage/aria_storage/rolling_hash_test.exs.disabled`
-  - **Reason:** Timeout issues and performance problems
-  - **Issues:** Tests timing out after 120ms, chunking performance taking 105678μs
-  
-- `test/aria_storage/aria_storage/chunks_test.exs.disabled`
-  - **Reason:** File not found errors
-  - **Issues:** `{:error, :enoent}` when trying to read test input files
+As of June 18, 2025, the following disabled test files have been permanently removed from the codebase:
 
-### AriaEngine Tests
-- `test/aria_engine/test/aria_engine/durative_actions_test.exs.disabled`
-  - **Reason:** Timeout issues in planning
-  - **Issues:** Test timing out after 120ms during plan decomposition
+### AriaStorage Tests (Removed)
+- `test/aria_storage/aria_storage/rolling_hash_test.exs.disabled` - Timeout and performance issues
+- `test/aria_storage/aria_storage/chunks_test.exs.disabled` - File not found errors
 
-- `test/aria_engine/test/aria_engine/function_as_object_demo_test.exs.disabled`
-  - **Reason:** Planning errors and goal method failures
-  - **Issues:** Invalid goal method results, coordination failures
+### AriaEngine Tests (Removed)
+- `test/aria_engine/test/aria_engine/durative_actions_test.exs.disabled` - Planning timeout issues
+- `test/aria_engine/test/aria_engine/function_as_object_demo_test.exs.disabled` - Planning errors and goal method failures
+- `test/aria_engine/test/aria_engine/timeline/stn_test.exs.disabled` - Value assertion mismatches
+- `test/aria_engine/test/aria_engine/hybrid_planner/hybrid_coordinator_v2_test.exs.disabled` - API mismatches
+- `test/aria_engine/test/aria_engine/hybrid_planner/strategies/default/htn_planning_strategy_test.exs.disabled` - Planning strategy errors
+- `test/aria_engine/test/temporal_planning_test.exs.disabled` - Missing modules and undefined functions
 
-- `test/aria_engine/test/aria_engine/timeline/stn_test.exs.disabled`
-  - **Reason:** Value assertion mismatches
-  - **Issues:** Expected 72000 but got 72 (unit conversion issues)
+### AriaEngine Support Files (Removed)
+- `test/aria_engine/test/support/gltf_scene_mock.ex.disabled` - Unused mock file
 
-- `test/aria_engine/test/aria_engine/hybrid_planner/hybrid_coordinator_v2_test.exs.disabled`
-  - **Reason:** Multiple assertion failures and API mismatches
-  - **Issues:** Strategy composition problems, missing fields, type mismatches
+### AriaSecurity Tests (Removed)
+- `test/aria_security/aria_security_test.exs.disabled` - Disabled security tests
 
-- `test/aria_engine/test/aria_engine/hybrid_planner/strategies/default/htn_planning_strategy_test.exs.disabled`
-  - **Reason:** Planning strategy errors and logging issues
-  - **Issues:** Replanning failures, goal conversion problems
-
-
-- `test/aria_engine/test/temporal_planning_test.exs.disabled`
-  - **Reason:** Missing modules and undefined functions
-  - **Issues:** `AriaEngine.Domain.Core.new/1` undefined, multiple module availability issues
+**Rationale:** These files were causing test suite failures and represented incomplete or problematic implementations. Rather than maintaining broken tests, they have been removed to keep the test suite clean and focused on working functionality.
 
 ## Current Test Status
 
