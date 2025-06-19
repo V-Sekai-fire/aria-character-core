@@ -55,7 +55,7 @@ defmodule FlowOptimizationBenchmark do
       benchmark_stn_approaches(stn_data, size)
       
       IO.puts("")
-      IO.puts("=" * 60)
+      IO.puts(String.duplicate("=", 60))
       IO.puts("")
     end
   end
@@ -79,7 +79,7 @@ defmodule FlowOptimizationBenchmark do
           AriaEngine.ConvergenceFlowOptimized.solve_activities_hybrid(activities, stages: 4)
         end,
         "Nx Baseline" => fn -> 
-          AriaEngine.ConvergenceNx.solve_activities_with_convergence(activities, backend: :cpu)
+          AriaEngine.ConvergenceNx.solve_activities(activities, backend: :cpu)
         end
       },
       time: 3,
@@ -108,7 +108,7 @@ defmodule FlowOptimizationBenchmark do
           AriaEngine.ConvergenceFlowOptimized.solve_stn_streaming(stn_data, stages: 4)
         end,
         "Nx Baseline" => fn -> 
-          AriaEngine.ConvergenceNx.solve_stn_with_convergence(stn_data, backend: :cpu)
+          AriaEngine.ConvergenceNx.solve_stn(stn_data.constraints, backend: :cpu)
         end
       },
       time: 3,
@@ -351,7 +351,7 @@ defmodule FlowOptimizationBenchmark do
 
   defp generate_test_stn(count) do
     constraints = for i <- 1..count do
-      {"timepoint_#{i}", "timepoint_#{rem(i + 1, count) + 1}", :rand.uniform(10)}
+      {{"timepoint_#{i}", "timepoint_#{rem(i + 1, count) + 1}"}, :rand.uniform(10)}
     end
     
     %{constraints: Enum.into(constraints, %{})}
