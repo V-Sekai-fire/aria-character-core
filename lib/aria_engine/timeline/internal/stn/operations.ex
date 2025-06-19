@@ -93,54 +93,6 @@ defmodule Timeline.Internal.STN.Operations do
   end
 
   @doc """
-  Bridge and compose STNs with different LOD levels using the LOD adapter.
-  """
-  @spec bridge_compose(STN.t(), STN.t(), :intersection | :union | :difference, keyword()) :: STN.t()
-  def bridge_compose(%STN{} = stn1, %STN{} = stn2, operation, opts \\ [])
-      when operation in [:intersection, :union, :difference] do
-    
-    # Check if we need Flow adapter for large operations
-    total_constraints = map_size(stn1.constraints) + map_size(stn2.constraints)
-    
-    opts = 
-      if total_constraints > 200 and not Keyword.has_key?(opts, :flow_config) do
-        # Use convergence-based solving for large operations
-        convergence_opts = [
-          stages: System.schedulers_online(),
-          max_iterations: 50,
-          convergence_threshold: 0.001
-        ]
-        Keyword.put(opts, :convergence_opts, convergence_opts)
-      else
-        opts
-      end
-    
-    # Convert STNs to Timeline structs for LodAdapter compatibility
-    timeline1 = Timeline.from_stn(stn1)
-    timeline2 = Timeline.from_stn(stn2)
-    
-    # Use LOD adapter for bridging and composition
-    result_timeline = LodAdapter.bridge_and_compose(timeline1, timeline2, operation, opts)
-    
-    # Extract the STN from the result Timeline
-    Timeline.get_stn(result_timeline)
-  end
-
-  @doc """
-  Create a hierarchical chain of STNs across multiple LOD levels.
-  """
-  @spec lod_chain([STN.t()], keyword()) :: STN.t()
-  def lod_chain(stns, opts \\ []) when is_list(stns) do
-    case length(stns) do
-      0 -> STN.new()
-      1 -> hd(stns)
-      _ -> 
-        # Use LOD adapter for chaining
-        LodAdapter.create_lod_chain(stns, :sequential, opts)
-    end
-  end
-
-  @doc """
   Combines two STNs using union operation.
   """
   @spec union(STN.t(), STN.t()) :: STN.t()
