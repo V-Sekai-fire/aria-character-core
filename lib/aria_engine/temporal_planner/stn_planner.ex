@@ -146,47 +146,6 @@ defmodule TemporalPlanner.STNPlanner do
   end
 
   @doc """
-  Solves the entire plan using parallel segment solving.
-
-  This is the main entry point for hierarchical STN temporal planning,
-  achieving O(k * (n/k)³) complexity reduction through parallel solving.
-
-  ## Examples
-
-      iex> planner = STNPlanner.new("mission", :hierarchical)
-      iex> solved_planner = STNPlanner.solve_parallel(planner)
-      iex> solved_planner.execution_status
-      :planning
-
-  """
-  @spec solve_parallel(t()) :: t()
-  def solve_parallel(%__MODULE__{} = planner) do
-    case length(planner.method_segments) do
-      0 -> planner
-      1 -> 
-        # Single segment, solve directly
-        solved_segment = hd(planner.method_segments) |> Timeline.apply_pc2()
-        %{planner | goal_stn: solved_segment}
-      
-      _segment_count ->
-        # Parallel solving with cross-segment constraint propagation
-        solved_segments = start_parallel_segment_solving(planner.method_segments)
-        
-        # Apply cross-segment constraint propagation
-        final_timeline = apply_cross_segment_constraints(
-          solved_segments, 
-          planner.planning_strategy,
-          planner.world_constraints
-        )
-        
-        %{planner | 
-          goal_stn: final_timeline,
-          parallel_segments: []  # Flow adapter doesn't return tasks
-        }
-    end
-  end
-
-  @doc """
   Updates world constraints and triggers replanning if reentrant execution is enabled.
 
   ## Examples
@@ -354,15 +313,6 @@ defmodule TemporalPlanner.STNPlanner do
         # Dynamic segmentation based on current constraints
         create_adaptive_segments(methods)
     end
-  end
-
-  defp start_parallel_segment_solving(segments) do
-    # Use convergence-based solving for parallel STN processing
-    ConvergenceFlow.solve_with_convergence(segments,
-      stages: min(length(segments), 4),  # Limit to 4 concurrent stages
-      max_iterations: 30,
-      convergence_threshold: 0.01
-    )
   end
 
   defp apply_cross_segment_constraints(solved_segments, strategy, world_constraints) do
