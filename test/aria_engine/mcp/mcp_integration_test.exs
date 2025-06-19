@@ -4,7 +4,7 @@
 defmodule AriaEngine.MCP.IntegrationTest do
   use ExUnit.Case, async: false
   
-  alias AriaEngine.MCP.{Server, StdioTransport}
+  alias AriaEngine.MCP.Server
   
   require Logger
   
@@ -123,87 +123,16 @@ defmodule AriaEngine.MCP.IntegrationTest do
     end
   end
   
-  describe "Stdio Transport" do
+  describe "Hermes MCP Integration" do
     @tag timeout: 5000
-    test "handles MCP initialize request" do
-      # This test simulates the MCP protocol initialization
-      {:ok, transport_pid} = StdioTransport.start_link([])
+    test "Hermes server starts successfully" do
+      # Start the Hermes application and registry first
+      {:ok, _} = Application.ensure_all_started(:hermes_mcp)
+      {:ok, _registry_pid} = Registry.start_link(keys: :unique, name: Hermes.Server.Registry)
       
-      # Simulate an initialize request
-      initialize_request = %{
-        "jsonrpc" => "2.0",
-        "id" => 1,
-        "method" => "initialize",
-        "params" => %{
-          "protocolVersion" => "2024-11-05",
-          "capabilities" => %{},
-          "clientInfo" => %{
-            "name" => "test-client",
-            "version" => "1.0.0"
-          }
-        }
-      }
-      
-      # Send the request to the transport
-      send(transport_pid, {:stdio_input, Jason.encode!(initialize_request)})
-      
-      # Give it a moment to process
-      Process.sleep(100)
-      
-      GenServer.stop(transport_pid)
-    end
-    
-    @tag timeout: 5000
-    test "handles tools/list request" do
-      {:ok, transport_pid} = StdioTransport.start_link([])
-      
-      tools_request = %{
-        "jsonrpc" => "2.0",
-        "id" => 2,
-        "method" => "tools/list"
-      }
-      
-      send(transport_pid, {:stdio_input, Jason.encode!(tools_request)})
-      
-      Process.sleep(100)
-      
-      GenServer.stop(transport_pid)
-    end
-    
-    @tag timeout: 5000
-    test "handles tools/call request with empty activities" do
-      {:ok, transport_pid} = StdioTransport.start_link([])
-      
-      tool_call_request = %{
-        "jsonrpc" => "2.0",
-        "id" => 3,
-        "method" => "tools/call",
-        "params" => %{
-          "name" => "schedule_activities",
-          "arguments" => %{
-            "schedule_name" => "Empty Test",
-            "activities" => []
-          }
-        }
-      }
-      
-      send(transport_pid, {:stdio_input, Jason.encode!(tool_call_request)})
-      
-      Process.sleep(100)
-      
-      GenServer.stop(transport_pid)
-    end
-    
-    @tag timeout: 5000
-    test "handles malformed JSON gracefully" do
-      {:ok, transport_pid} = StdioTransport.start_link([])
-      
-      # Send malformed JSON
-      send(transport_pid, {:stdio_input, "{ invalid json"})
-      
-      Process.sleep(100)
-      
-      GenServer.stop(transport_pid)
+      # Test that the Hermes server can start (this validates the Hermes integration)
+      # We don't test the full protocol here since that's handled by Hermes framework
+      assert {:ok, _pid} = AriaEngine.MCP.HermesServer.start_link([transport: :stdio])
     end
   end
   
