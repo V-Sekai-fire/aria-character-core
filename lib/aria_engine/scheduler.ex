@@ -139,11 +139,16 @@ defmodule AriaEngine.Scheduler do
   defmodule ActivityLogEntry do
     @moduledoc """
     Represents a logged activity event.
+    
+    Supports both absolute timestamps (when mission start time is known)
+    and duration-based formatting (when only relative timing is available).
     """
     
     @derive Jason.Encoder
     defstruct [
       :timestamp,
+      :mission_duration,
+      :relative_minutes,
       :activity_id,
       :entity_id,
       :event_type,
@@ -153,7 +158,9 @@ defmodule AriaEngine.Scheduler do
     ]
     
     @type t :: %__MODULE__{
-      timestamp: DateTime.t(),
+      timestamp: DateTime.t() | nil,
+      mission_duration: String.t() | nil,
+      relative_minutes: non_neg_integer() | nil,
       activity_id: String.t(),
       entity_id: String.t() | nil,
       event_type: :started | :completed | :failed | :paused | :resumed,

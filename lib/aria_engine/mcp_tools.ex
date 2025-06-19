@@ -706,8 +706,17 @@ defp convert_activities(activities) when is_list(activities) do
     Enum.map(activity_log, fn entry ->
       case entry do
         %AriaEngine.Scheduler.ActivityLogEntry{} = log_entry ->
-          %{
-            timestamp: safe_datetime_to_iso8601(log_entry.timestamp),
+          # Handle both timestamp and mission_duration formats
+          time_info = case {log_entry.timestamp, log_entry.mission_duration} do
+            {%DateTime{} = timestamp, _} ->
+              %{timestamp: safe_datetime_to_iso8601(timestamp)}
+            {nil, mission_duration} when is_binary(mission_duration) ->
+              %{mission_duration: mission_duration}
+            _ ->
+              %{relative_minutes: log_entry.relative_minutes}
+          end
+          
+          base_entry = %{
             activity_id: log_entry.activity_id,
             entity_id: log_entry.entity_id,
             event_type: log_entry.event_type,
@@ -715,6 +724,8 @@ defp convert_activities(activities) when is_list(activities) do
             state_changes: log_entry.state_changes || [],
             metadata: log_entry.metadata || %{}
           }
+          
+          Map.merge(base_entry, time_info)
         _ ->
           entry
       end
