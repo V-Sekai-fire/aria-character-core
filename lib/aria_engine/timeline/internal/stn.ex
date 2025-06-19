@@ -222,7 +222,6 @@ defmodule Timeline.Internal.STN do
   defdelegate difference(stn1, stn2), to: Operations
   defdelegate split(stn, num_segments), to: Operations
   defdelegate chain(stns), to: Operations
-  defdelegate bridge_compose(stn1, stn2, operation, opts), to: Operations
   defdelegate lod_chain(stns, opts), to: Operations
   defdelegate union(stn1, stn2), to: Operations
   defdelegate compose(stn1, stn2), to: Operations
