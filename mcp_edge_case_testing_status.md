@@ -37,10 +37,10 @@
 **Current Focus**: Test 1.1 - schedule_name validation
 
 ## Testing Progress Overview
-- 🟢 **Passed**: 0 tests
-- 🔴 **Failed**: 0 tests  
-- 🟡 **Needs Investigation**: 0 tests
-- ⚪ **Not Started**: 20+ tests
+- 🟢 **Passed**: 36 tests
+- 🔴 **Failed**: 5 tests  
+- 🟡 **Needs Investigation**: 5 tests
+- ⚪ **Not Started**: 0 tests
 
 ---
 

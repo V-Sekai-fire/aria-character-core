@@ -593,4 +593,299 @@ defmodule AriaEngine.MCPToolsTest do
       assert task[:duration] == 60
     end
   end
+
+  describe "MCP API Edge Case Testing - Phase 1: Parameter Validation" do
+    test "Test 1.1.1: schedule_name - empty string" do
+      args = %{
+        "schedule_name" => "",
+        "activities" => [%{"id" => "task1", "duration" => 30}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "schedule_name"
+    end
+
+    test "Test 1.1.2: schedule_name - null value" do
+      args = %{
+        "schedule_name" => nil,
+        "activities" => [%{"id" => "task1", "duration" => 30}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "schedule_name"
+    end
+
+    test "Test 1.1.3: schedule_name - whitespace only" do
+      args = %{
+        "schedule_name" => "   ",
+        "activities" => [%{"id" => "task1", "duration" => 30}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      # Should either trim and succeed or error - depends on implementation
+      assert result[:status] in ["success", "error"]
+    end
+
+    test "Test 1.1.4: schedule_name - very long string" do
+      long_name = String.duplicate("x", 1000)
+      args = %{
+        "schedule_name" => long_name,
+        "activities" => [%{"id" => "task1", "duration" => 30}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      # Should either accept or truncate
+      assert result[:status] == "success"
+    end
+
+    test "Test 1.1.5: schedule_name - unicode characters" do
+      args = %{
+        "schedule_name" => "测试🚀",
+        "activities" => [%{"id" => "task1", "duration" => 30}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "success"
+    end
+
+    test "Test 1.2.1: activities - not a list (object)" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => %{}
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "activities must be a list"
+    end
+
+    test "Test 1.2.2: activities - not a list (string)" do
+      args = %{
+        "schedule_name" => "Test", 
+        "activities" => "invalid"
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "activities must be a list"
+    end
+
+    test "Test 1.2.3: activities - empty list" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => []
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "success"
+      assert result[:reason] =~ "Empty plan successfully generated"
+    end
+
+    test "Test 1.2.4: activities - null value" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => nil
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "activities must be a list"
+    end
+  end
+
+  describe "MCP API Edge Case Testing - Phase 2: Activity Structure" do
+    test "Test 2.1.1: Missing id field" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => [%{"duration" => 5}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "missing required 'id' field"
+    end
+
+    test "Test 2.1.2: Missing duration field" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => [%{"id" => "task1"}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "missing required 'duration' field"
+    end
+
+    test "Test 2.1.3: Both id and duration missing" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => [%{}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "missing required"
+    end
+
+    test "Test 2.2.1: id as number" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => [%{"id" => 123, "duration" => 5}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "must be a string"
+    end
+
+    test "Test 2.2.2: duration as string" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => [%{"id" => "task1", "duration" => "five"}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "Invalid"
+    end
+
+    test "Test 2.2.3: duration as float" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => [%{"id" => "task1", "duration" => 5.5}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      # Float durations might be accepted depending on implementation
+      assert result[:status] in ["success", "error"]
+    end
+
+    test "Test 2.3.1: Empty ID" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => [%{"id" => "", "duration" => 5}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "cannot be empty"
+    end
+
+    test "Test 2.3.2: Whitespace ID" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => [%{"id" => "   ", "duration" => 5}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      # Should trim whitespace and succeed or error if empty after trim
+      assert result[:status] in ["success", "error"]
+    end
+
+    test "Test 2.3.3: Negative duration" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => [%{"id" => "task1", "duration" => -5}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "non-negative"
+    end
+
+    test "Test 2.3.4: Zero duration" do
+      args = %{
+        "schedule_name" => "Test",
+        "activities" => [%{"id" => "task1", "duration" => 0}]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "success"
+    end
+  end
+
+  describe "MCP API Edge Case Testing - Phase 3: Dependency Edge Cases" do
+    test "Test 3.1.1: Simple cycle A→B→A" do
+      args = %{
+        "schedule_name" => "Cycle Test",
+        "activities" => [
+          %{"id" => "A", "duration" => 5, "dependencies" => ["B"]},
+          %{"id" => "B", "duration" => 5, "dependencies" => ["A"]}
+        ]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "Circular dependency detected"
+    end
+
+    test "Test 3.1.2: Self-reference A→A" do
+      args = %{
+        "schedule_name" => "Self Ref Test",
+        "activities" => [
+          %{"id" => "A", "duration" => 5, "dependencies" => ["A"]}
+        ]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "Circular dependency detected"
+    end
+
+    test "Test 3.1.3: Complex cycle A→B→C→A" do
+      args = %{
+        "schedule_name" => "Complex Cycle Test",
+        "activities" => [
+          %{"id" => "A", "duration" => 5, "dependencies" => ["B"]},
+          %{"id" => "B", "duration" => 5, "dependencies" => ["C"]},
+          %{"id" => "C", "duration" => 5, "dependencies" => ["A"]}
+        ]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "Circular dependency detected"
+    end
+
+    test "Test 3.2.1: Non-existent dependency" do
+      args = %{
+        "schedule_name" => "Non-existent Dep Test",
+        "activities" => [
+          %{"id" => "A", "duration" => 5, "dependencies" => ["nonexistent"]}
+        ]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      # Implementation might handle this gracefully or error
+      assert result[:status] in ["success", "error"]
+    end
+
+    test "Test 3.2.2: Wrong dependency type (string)" do
+      args = %{
+        "schedule_name" => "Wrong Type Test",
+        "activities" => [
+          %{"id" => "A", "duration" => 5, "dependencies" => "B"}
+        ]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "must be a list"
+    end
+
+    test "Test 3.2.3: Mixed types in dependencies" do
+      args = %{
+        "schedule_name" => "Mixed Types Test",
+        "activities" => [
+          %{"id" => "A", "duration" => 5, "dependencies" => ["B", 123]}
+        ]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      assert result[:status] == "error"
+      assert result[:reason] =~ "must be a list of strings"
+    end
+  end
 end

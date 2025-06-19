@@ -262,6 +262,9 @@ defmodule AriaEngine.MCPTools do
       not is_binary(params["schedule_name"]) ->
         {:error, "schedule_name is required and must be a string"}
         
+      String.trim(params["schedule_name"]) == "" ->
+        {:error, "schedule_name cannot be empty"}
+        
       not Map.has_key?(params, "activities") ->
         {:error, "activities is required"}
         
