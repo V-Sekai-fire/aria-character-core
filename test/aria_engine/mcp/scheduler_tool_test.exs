@@ -130,7 +130,7 @@ defmodule AriaEngine.MCP.SchedulerToolTest do
       assert result.status == "success"
       assert is_list(result.schedule)
       assert is_map(result.analysis)
-      assert Map.has_key?(result.analysis, "schedule_name")
+      assert Map.has_key?(result.analysis, :schedule_name)
     end
   end
 end
