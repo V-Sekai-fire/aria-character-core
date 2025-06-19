@@ -22,6 +22,9 @@ defmodule AriaEngine.ConvergenceBenchmark do
     # Generate test data sets
     test_data = generate_test_data()
     
+    # Warm up the system first
+    warmup_system(test_data, opts)
+    
     # Run benchmarks for each approach
     results = %{
       pure_flow: benchmark_pure_flow(test_data, opts),
@@ -413,5 +416,63 @@ defmodule AriaEngine.ConvergenceBenchmark do
       %{results: results} -> length(results)
       _ -> 1
     end
+  end
+
+  # System warmup to ensure accurate benchmarking
+  defp warmup_system(test_data, opts) do
+    Logger.info("Warming up system for accurate benchmarking...")
+    
+    # Get a subset of test data for warmup
+    warmup_data = %{
+      warmup_stn: test_data.medium_stn,
+      warmup_activities: test_data.medium_activities
+    }
+    
+    # Run each approach multiple times to warm up JIT, caches, etc.
+    warmup_rounds = Keyword.get(opts, :warmup_rounds, 5)
+    
+    Logger.info("Running #{warmup_rounds} warmup rounds...")
+    
+    for round <- 1..warmup_rounds do
+      Logger.info("Warmup round #{round}/#{warmup_rounds}")
+      
+      # Warmup Pure Flow
+      Enum.each(warmup_data, fn {_test_name, data} ->
+        case data do
+          %{constraints: _} = stn_data ->
+            AriaEngine.ConvergenceFlow.solve_stn_with_convergence(stn_data, 
+              stages: System.schedulers_online() * 2,
+              max_iterations: 5
+            )
+          activities when is_list(activities) ->
+            AriaEngine.ConvergenceFlow.solve_activities_with_convergence(activities,
+              stages: System.schedulers_online() * 2,
+              max_iterations: 5
+            )
+        end
+      end)
+      
+      # Warmup Pure Task
+      Enum.each(warmup_data, fn {_test_name, data} ->
+        solve_with_pure_tasks(data, Keyword.put(opts, :max_iterations, 5))
+      end)
+      
+      # Warmup Hybrid
+      Enum.each(warmup_data, fn {_test_name, data} ->
+        solve_with_hybrid_warp_flow(data, Keyword.put(opts, :max_iterations, 5))
+      end)
+      
+      # Force garbage collection between rounds
+      :erlang.garbage_collect()
+      
+      # Small delay to let system stabilize
+      Process.sleep(100)
+    end
+    
+    # Final garbage collection before benchmarks
+    :erlang.garbage_collect()
+    Process.sleep(500)
+    
+    Logger.info("System warmup complete. Starting benchmarks...")
   end
 end
