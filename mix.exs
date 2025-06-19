@@ -52,6 +52,7 @@ defmodule AriaCharacterCore.MixProject do
 
       # Planning and AI/ML
       {:nx, "~> 0.6"},
+      {:torchx, "~> 0.6"},
       {:libgraph, "~> 0.16"},
       {:ortex, "~> 0.1"},
 
