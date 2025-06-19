@@ -108,11 +108,17 @@ defmodule Timeline.Internal.STN.Core do
   Adds a temporal constraint between two time points.
 
   The constraint represents the allowable distance between the time points
-  as {min_distance, max_distance}.
+  as {min_distance, max_distance}. Supports :infinity for unbounded constraints.
   """
   @spec add_constraint(STN.t(), time_point(), time_point(), constraint()) :: STN.t()
   def add_constraint(stn, from_point, to_point, {min_dist, max_dist} = constraint)
-      when is_number(min_dist) and is_number(max_dist) and min_dist <= max_dist do
+      when (is_number(min_dist) or min_dist == :neg_infinity) and 
+           (is_number(max_dist) or max_dist == :infinity) do
+    
+    # Validate constraint bounds
+    unless valid_constraint_bounds?(min_dist, max_dist) do
+      raise ArgumentError, "Invalid constraint bounds: #{inspect(constraint)}"
+    end
     
     # Ensure both time points exist
     stn = stn
@@ -127,8 +133,8 @@ defmodule Timeline.Internal.STN.Core do
     {updated_constraints_1, consistent_1} = 
       update_single_constraint(current_constraints, {from_point, to_point}, constraint)
 
-    # Update reverse constraint
-    reverse_constraint = {-max_dist, -min_dist}
+    # Update reverse constraint (handle infinity values)
+    reverse_constraint = {negate_constraint_value(max_dist), negate_constraint_value(min_dist)}
     {updated_constraints_2, consistent_2} = 
       update_single_constraint(updated_constraints_1, {to_point, from_point}, reverse_constraint)
 
@@ -287,17 +293,53 @@ defmodule Timeline.Internal.STN.Core do
   end
 
   # Private helper functions
+  
+  # Validates constraint bounds, handling infinity values
+  defp valid_constraint_bounds?(min_dist, max_dist) do
+    case {min_dist, max_dist} do
+      {:neg_infinity, :infinity} -> true
+      {:neg_infinity, max_dist} when is_number(max_dist) -> true
+      {min_dist, :infinity} when is_number(min_dist) -> true
+      {min_dist, max_dist} when is_number(min_dist) and is_number(max_dist) -> min_dist <= max_dist
+      _ -> false
+    end
+  end
+
   defp intersect_constraints({min1, max1}, {min2, max2}) do
-    new_min = max(min1, min2)
-    new_max = min(max1, max2)
+    new_min = constraint_max(min1, min2)
+    new_max = constraint_min(max1, max2)
 
     # Check for inconsistency
-    if new_min > new_max do
+    if constraint_greater_than?(new_min, new_max) do
       :inconsistent
     else
       {new_min, new_max}
     end
   end
+
+  # Helper functions for constraint arithmetic with infinity
+  defp constraint_max(:neg_infinity, other), do: other
+  defp constraint_max(other, :neg_infinity), do: other
+  defp constraint_max(:infinity, _), do: :infinity
+  defp constraint_max(_, :infinity), do: :infinity
+  defp constraint_max(a, b) when is_number(a) and is_number(b), do: max(a, b)
+
+  defp constraint_min(:infinity, other), do: other
+  defp constraint_min(other, :infinity), do: other
+  defp constraint_min(:neg_infinity, _), do: :neg_infinity
+  defp constraint_min(_, :neg_infinity), do: :neg_infinity
+  defp constraint_min(a, b) when is_number(a) and is_number(b), do: min(a, b)
+
+  defp constraint_greater_than?(:infinity, _), do: false
+  defp constraint_greater_than?(_, :neg_infinity), do: false
+  defp constraint_greater_than?(:neg_infinity, _), do: true
+  defp constraint_greater_than?(_, :infinity), do: true
+  defp constraint_greater_than?(a, b) when is_number(a) and is_number(b), do: a > b
+
+  # Helper function to negate constraint values, handling infinity
+  defp negate_constraint_value(:infinity), do: :neg_infinity
+  defp negate_constraint_value(:neg_infinity), do: :infinity
+  defp negate_constraint_value(value) when is_number(value), do: -value
 
   # Helper function to update a single constraint
   defp update_single_constraint(constraints, key, new_constraint) do

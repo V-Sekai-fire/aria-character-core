@@ -104,7 +104,14 @@ defmodule Timeline.AgentEntity do
 
   """
   @spec create_agent(String.t(), String.t(), map(), keyword()) :: agent()
-  def create_agent(id, name, properties \\ %{}, opts \\ []) do
+  def create_agent(id, name, properties \\ %{}, opts \\ [])
+
+  def create_agent(id, name, opts, []) when is_list(opts) do
+    # Handle case where properties is omitted and opts is passed as third argument
+    create_agent(id, name, %{}, opts)
+  end
+
+  def create_agent(id, name, properties, opts) do
     %{
       type: :agent,
       id: id,
@@ -199,9 +206,21 @@ defmodule Timeline.AgentEntity do
       false
 
   """
-  @spec has_capability?(agent(), atom()) :: boolean()
-  def has_capability?(%{type: :agent, capabilities: capabilities}, capability) do
+  @spec has_capability?(participant(), atom()) :: boolean()
+  def has_capability?(%{capabilities: capabilities}, capability) when is_list(capabilities) do
     capability in capabilities
+  end
+
+  def has_capability?(%{properties: %{capabilities: capabilities}}, capability) when is_list(capabilities) do
+    capability in capabilities
+  end
+
+  def has_capability?(%{properties: properties}, capability) when is_list(properties) do
+    # Handle case where properties is a keyword list with capabilities
+    case Keyword.get(properties, :capabilities) do
+      capabilities when is_list(capabilities) -> capability in capabilities
+      _ -> false
+    end
   end
 
   def has_capability?(_, _), do: false
@@ -587,7 +606,12 @@ defmodule Timeline.AgentEntity do
       :planning,
       :goal_setting,
       :environmental_response,
-      :general_capability
+      :general_capability,
+      :communication,
+      :manual_operation,
+      :data_transmission,
+      :diagnostic_analysis,
+      :repair_operations
     ]
   end
 end
