@@ -73,6 +73,9 @@ defmodule Mix.Tasks.Mcp.Sse do
     # Start Hermes MCP application
     {:ok, _} = Application.ensure_all_started(:hermes_mcp)
 
+    # Start the Hermes registry
+    {:ok, _registry_pid} = Registry.start_link(keys: :unique, name: Hermes.Server.Registry)
+
     Logger.info("Starting Aria Engine MCP server in SSE mode...")
     Logger.info("Server will be available at http://localhost:#{port}")
     Logger.info("Available endpoints:")

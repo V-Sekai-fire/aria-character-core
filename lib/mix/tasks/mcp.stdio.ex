@@ -48,6 +48,9 @@ defmodule Mix.Tasks.Mcp.Stdio do
     # Start Hermes MCP application
     {:ok, _} = Application.ensure_all_started(:hermes_mcp)
 
+    # Start the Hermes registry
+    {:ok, _registry_pid} = Registry.start_link(keys: :unique, name: Hermes.Server.Registry)
+
     Logger.info("Starting Aria Engine MCP server in stdio mode...")
     Logger.info("Server ready for VSCode MCP client connection (no tools registered)")
 
