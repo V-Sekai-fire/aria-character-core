@@ -51,7 +51,8 @@ defmodule AriaEngine.MCP.TemporalScheduler do
   Start the TemporalScheduler MCP server.
   """
   def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+    name = Keyword.get(opts, :name, __MODULE__)
+    GenServer.start_link(__MODULE__, opts, name: name)
   end
 
   @doc """
@@ -62,10 +63,24 @@ defmodule AriaEngine.MCP.TemporalScheduler do
   end
 
   @doc """
+  Handle MCP tool call for schedule_activities with specific server.
+  """
+  def handle_tool_call(server, "schedule_activities", params) do
+    GenServer.call(server, {:schedule_activities, params})
+  end
+
+  @doc """
   Get MCP server capabilities and tool definitions.
   """
   def get_capabilities do
     GenServer.call(__MODULE__, :get_capabilities)
+  end
+
+  @doc """
+  Get MCP server capabilities and tool definitions from specific server.
+  """
+  def get_capabilities(server) do
+    GenServer.call(server, :get_capabilities)
   end
 
   ## GenServer Callbacks
