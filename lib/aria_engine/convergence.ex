@@ -10,7 +10,7 @@ defmodule AriaEngine.Convergence do
   for multiple problems via the new BatchProcessor.
   """
 
-  alias AriaEngine.ConvergenceFlow
+  # alias AriaEngine.ConvergenceFlow
   alias AriaEngine.BatchProcessor
 
   require Logger
@@ -32,7 +32,7 @@ defmodule AriaEngine.Convergence do
       Convergence.solve_stn(constraints, max_iterations: 200, stages: 8)
   """
   def solve_stn(constraints, opts \\ []) do
-    ConvergenceFlow.solve_stn_with_convergence(constraints, opts)
+    raise "ConvergenceFlow.solve_stn_with_convergence/2 is not implemented"
   end
 
   @doc """
@@ -52,7 +52,7 @@ defmodule AriaEngine.Convergence do
       Convergence.solve_activities(activities, max_iterations: 100, stages: 4)
   """
   def solve_activities(activities, opts \\ []) do
-    ConvergenceFlow.solve_activities_with_convergence(activities, opts)
+    raise "ConvergenceFlow.solve_activities_with_convergence/2 is not implemented"
   end
 
   @doc """
@@ -241,11 +241,11 @@ defmodule AriaEngine.Convergence do
       Enum.map(problems, fn problem ->
         case problem do
           activities when is_list(activities) ->
-            ConvergenceFlow.solve_activities_with_convergence(activities, opts)
+            raise "ConvergenceFlow.solve_activities_with_convergence/2 is not implemented"
           %{activities: activities} ->
             ConvergenceFlow.solve_activities_with_convergence(activities, opts)
           _ ->
-            ConvergenceFlow.solve_activities_with_convergence([problem], opts)
+            raise "ConvergenceFlow.solve_activities_with_convergence/2 is not implemented"
         end
       end)
     end)

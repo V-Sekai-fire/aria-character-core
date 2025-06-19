@@ -41,7 +41,7 @@ defmodule TemporalPlanner.STNPlanner do
   alias TemporalPlanner.STNMethod
   alias TemporalPlanner.STNAction
   alias Timeline
-  alias AriaEngine.ConvergenceFlow
+  # alias AriaEngine.ConvergenceFlow
 
   @type goal_id :: String.t()
   @type planning_strategy :: :sequential | :parallel | :hierarchical | :adaptive

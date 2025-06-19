@@ -43,7 +43,7 @@ defmodule Timeline.LodAdapter do
   """
   
   alias Timeline
-  alias AriaEngine.ConvergenceFlow
+  # alias AriaEngine.ConvergenceFlow
   
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low | :galactic | :cosmic
   @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day | :week | :month | :year | :decade | :century | :millennium | :megayear

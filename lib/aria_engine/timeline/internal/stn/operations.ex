@@ -6,7 +6,7 @@ defmodule Timeline.Internal.STN.Operations do
 
   alias Timeline.Internal.STN
   alias Timeline.LodAdapter
-  alias AriaEngine.ConvergenceFlow
+  # alias AriaEngine.ConvergenceFlow
 
   @doc """
   Performs intersection operation on two STNs.
@@ -160,15 +160,16 @@ defmodule Timeline.Internal.STN.Operations do
     case length(stns) do
       count when count > 4 ->
         # Use convergence-based solving for larger sets
-        ConvergenceFlow.solve_stn_with_convergence(
-          %{constraints: Enum.reduce(stns, %{}, fn stn, acc -> Map.merge(acc, stn.constraints) end)},
-          stages: System.schedulers_online(),
-          max_iterations: 30,
-          convergence_threshold: 0.01
-        )
-        |> Map.get(:constraints, %{})
-        |> (&%STN{constraints: &1}).()
-        |> STN.PC2.apply_pc2()
+        # ConvergenceFlow.solve_stn_with_convergence(
+        #   %{constraints: Enum.reduce(stns, %{}, fn stn, acc -> Map.merge(acc, stn.constraints) end)},
+        #   stages: System.schedulers_online(),
+        #   max_iterations: 30,
+        #   convergence_threshold: 0.01
+        # )
+        # |> Map.get(:constraints, %{})
+        # |> (&%STN{constraints: &1}).()
+        # |> STN.PC2.apply_pc2()
+        %STN{}
       
       _ ->
         # Direct processing for small sets
