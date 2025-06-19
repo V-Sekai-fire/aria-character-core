@@ -97,6 +97,16 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 - [x] Updated Cline configuration to use simple MCP server
 - [x] Verified JSON-RPC protocol compliance and tool functionality
 
+### Phase 6: Hermes MCP Framework Removal (June 19, 2025)
+- [x] Removed hermes_mcp dependency from mix.exs
+- [x] Deleted lib/aria_engine/mcp/hermes_server.ex
+- [x] Deleted lib/mix/tasks/mcp.stdio.ex (Hermes-based)
+- [x] Deleted lib/mix/tasks/mcp.sse.ex (Hermes-based)
+- [x] Deleted test/aria_engine/mcp/hermes_server_test.exs
+- [x] Cleaned mix.lock dependencies
+- [x] Verified simple MCP server still works without Hermes
+- [x] All tests passing (6 tests, 0 failures)
+
 ## Success Criteria
 
 ### Functional Requirements
