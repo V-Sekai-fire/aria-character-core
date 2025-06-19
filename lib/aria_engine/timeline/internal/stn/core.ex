@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.STN.Core do
+defmodule Timeline.Internal.STN.Core do
   @moduledoc false # This module is part of the internal STN implementation
 
   alias Timeline.Interval
-  alias Timeline.STN
+  alias Timeline.Internal.STN
 
   @type constraint :: {number(), number()}  # {min_distance, max_distance}
   @type time_point :: String.t()

@@ -1,10 +1,10 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.STN.Units do
+defmodule Timeline.Internal.STN.Units do
   @moduledoc false # This module is part of the internal STN implementation
 
-  alias Timeline.STN
+  alias Timeline.Internal.STN
 
   @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low

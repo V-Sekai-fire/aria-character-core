@@ -1,10 +1,10 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.STN.Operations do
+defmodule Timeline.Internal.STN.Operations do
   @moduledoc false # This module is part of the internal STN implementation
 
-  alias Timeline.STN
+  alias Timeline.Internal.STN
   alias Timeline.LodAdapter
   alias FlowAdapter
 

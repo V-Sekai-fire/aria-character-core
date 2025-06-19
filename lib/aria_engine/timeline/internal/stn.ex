@@ -1,14 +1,17 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.STN do
-  @moduledoc """
-  Simple Temporal Network (STN) implementation with composable, parallelizable operations
-  and Path Consistency (PC-2) algorithm.
+defmodule Timeline.Internal.STN do
+  @moduledoc false
+  # This module is part of the internal Timeline implementation.
+  # External modules should use the Timeline API instead of accessing STN directly.
+  
+  # Simple Temporal Network (STN) implementation with composable, parallelizable operations
+  # and Path Consistency (PC-2) algorithm.
 
-  This module provides optimal constraint solving for temporal relationships
-  using composable STN operations that can be parallelized, avoiding O(n³) 
-  complexity blowup through strategic segmentation and boolean-like operations.
+  # This module provides optimal constraint solving for temporal relationships
+  # using composable STN operations that can be parallelized, avoiding O(n³) 
+  # complexity blowup through strategic segmentation and boolean-like operations.
 
   ## Creating STNs
 
@@ -76,10 +79,10 @@ defmodule Timeline.STN do
   - [AWS Builders Library - Reliability and Constant Work](https://aws.amazon.com/builders-library/reliability-and-constant-work/)
   """
 
-  alias Timeline.STN.Core
-  alias Timeline.STN.PC2
-  alias Timeline.STN.Units
-  alias Timeline.STN.Operations
+  alias Timeline.Internal.STN.Core
+  alias Timeline.Internal.STN.PC2
+  alias Timeline.Internal.STN.Units
+  alias Timeline.Internal.STN.Operations
 
   @type constraint :: {number(), number()}  # {min_distance, max_distance}
   @type time_point :: String.t()
