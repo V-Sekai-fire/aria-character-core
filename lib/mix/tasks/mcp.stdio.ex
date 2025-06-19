@@ -42,10 +42,23 @@ defmodule Mix.Tasks.Mcp.Stdio do
     # Ensure the application is started
     Mix.Task.run("app.start")
     
+    # Start Hermes MCP application
+    {:ok, _} = Application.ensure_all_started(:hermes_mcp)
+    
+    # Start the Hermes registry
+    {:ok, _registry_pid} = Registry.start_link(keys: :unique, name: Hermes.Server.Registry)
+    
     Logger.info("Starting Aria Engine MCP server in stdio mode...")
     Logger.info("Server ready for VSCode MCP client connection")
     
-    # Start the stdio transport which handles the MCP protocol
-    AriaEngine.MCP.StdioTransport.start_stdio_loop()
+    # Start the Hermes MCP server with stdio transport
+    {:ok, _pid} = Hermes.Server.start_link(
+      AriaEngine.MCP.HermesServer,
+      :ok,
+      transport: :stdio
+    )
+    
+    # Keep the process alive
+    Process.sleep(:infinity)
   end
 end
