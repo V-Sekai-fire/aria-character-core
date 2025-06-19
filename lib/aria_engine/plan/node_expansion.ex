@@ -7,7 +7,6 @@ defmodule Plan.NodeExpansion do
   """
 
   require Logger
-  alias Plan.Utils # Assuming Utils will have generate_node_id and is_primitive_task?
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}

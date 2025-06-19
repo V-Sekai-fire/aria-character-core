@@ -3,9 +3,9 @@
 
 defmodule StateV2Test do
   use ExUnit.Case, async: true
-  doctest StateV2
+  doctest AriaEngine.StateV2
 
-  alias StateV2
+  alias AriaEngine.StateV2
 
   describe "new/0 and new/1" do
     test "creates empty state" do

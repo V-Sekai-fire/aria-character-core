@@ -9,7 +9,6 @@ defmodule Plan.Core do
   require Logger
   alias Plan.{NodeExpansion, Backtracking}
   alias AriaEngine.Plan.Utils
-  alias AriaEngine.StateV2
   # alias DomainBehaviour # Removed unused alias
 
   @type task :: {String.t(), list()}

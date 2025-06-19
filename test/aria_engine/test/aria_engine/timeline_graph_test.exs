@@ -7,7 +7,7 @@ defmodule TimelineGraphTest do
 
   alias TimelineGraph
   alias Timeline.AgentEntity
-  alias StateV2
+  alias AriaEngine.StateV2
 
   describe "new/0" do
     test "creates empty timeline graph with StateV2" do

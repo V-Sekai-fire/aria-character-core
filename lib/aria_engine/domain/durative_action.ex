@@ -6,7 +6,6 @@ defmodule Domain.DurativeAction do
   Represents a durative action in the Aria Engine planning domain.
   """
 
-  alias AriaEngine.StateV2
 
   @type durative_action_name :: atom()
 

@@ -8,7 +8,6 @@ defmodule Planning.CoreInterface do
 
   alias Planning.Internal
   alias Core
-  alias AriaEngine.StateV2
   alias PlannerAdapter
 
   @type t :: Planning.HighLevel.t()

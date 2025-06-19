@@ -28,7 +28,6 @@ defmodule Domain.Core do
   """
 
   require Logger
-  alias AriaEngine.StateV2
 
   @type action_name :: atom()
   @type task_name :: String.t()

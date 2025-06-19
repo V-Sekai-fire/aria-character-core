@@ -24,7 +24,6 @@ defmodule HybridPlanner.DataStructures do
 
     defstruct [:internal_plan, :metadata, :creation_time, :temporal_validated]
 
-    alias Plan.Utils
 
     @doc """
     Create a new encapsulated plan from an internal solution tree.

@@ -110,7 +110,7 @@ defmodule AriaEngine.Scheduler.Core do
   @doc """
   Enhanced scheduling with entity/resource management.
   """
-  def attempt_enhanced_scheduling(schedule_name, activities, entities, resources, constraints, simulation_mode, activity_log, verbose) do
+  def attempt_enhanced_scheduling(_schedule_name, activities, entities, resources, constraints, simulation_mode, activity_log, verbose) do
     if verbose > 1 do
       Logger.debug("AriaEngine.Scheduler: Attempting enhanced scheduling with #{length(entities)} entities and #{length(resources)} resources")
     end
@@ -273,17 +273,11 @@ defmodule AriaEngine.Scheduler.Core do
     ResourceManager.allocate_resources_for_activity(state, activity_id, required_capabilities, required_resources, entities, resources)
   end
   
-  defp find_available_entity_with_capabilities(state, required_capabilities, entities) do
-    ResourceManager.find_available_entity_with_capabilities(state, required_capabilities, entities)
-  end
   
   defp check_resource_availability(state, required_capabilities, required_resources, entities, resources) do
     ResourceManager.check_resource_availability(state, required_capabilities, required_resources, entities, resources)
   end
   
-  defp check_single_resource_availability(state, resource_id, resources) do
-    ResourceManager.check_single_resource_availability(state, resource_id, resources)
-  end
   
   @doc """
   Create resource management actions.
@@ -324,7 +318,7 @@ defmodule AriaEngine.Scheduler.Core do
   @doc """
   Create enhanced scheduling methods.
   """
-  def create_enhanced_scheduling_methods(activities, entities, resources) do
+  def create_enhanced_scheduling_methods(activities, _entities, _resources) do
     %{
       "schedule_all" => [{
         "resource_aware_sequential", fn _args, _state ->
@@ -341,7 +335,7 @@ defmodule AriaEngine.Scheduler.Core do
   @doc """
   Create action metadata for durative actions.
   """
-  def create_action_metadata(activities, entities, resources) do
+  def create_action_metadata(activities, _entities, _resources) do
     activities
     |> Enum.map(fn activity ->
       action_name = String.to_atom(activity.id)
@@ -424,97 +418,6 @@ defmodule AriaEngine.Scheduler.Core do
     ResourceAnalyzer.calculate_resource_utilization(schedule, resources)
   end
   
-  defp calculate_peak_usage(schedule, resource_id) do
-    # Calculate peak concurrent usage of a resource
-    schedule
-    |> Enum.filter(fn activity ->
-      required_resources = get_in(activity, [:resource_requirements, :resources]) || []
-      Enum.member?(required_resources, resource_id)
-    end)
-    |> length()
-  end
-  
-  defp calculate_average_usage(schedule, resource_id) do
-    # Calculate average usage over time
-    total_activities = length(schedule)
-    activities_using_resource = schedule
-    |> Enum.filter(fn activity ->
-      required_resources = get_in(activity, [:resource_requirements, :resources]) || []
-      Enum.member?(required_resources, resource_id)
-    end)
-    |> length()
-    
-    if total_activities > 0 do
-      activities_using_resource / total_activities
-    else
-      0
-    end
-  end
-  
-  defp calculate_efficiency_score(peak_usage, average_usage, total_capacity) do
-    if total_capacity > 0 do
-      # Efficiency score based on how well capacity is utilized
-      utilization_ratio = average_usage / total_capacity
-      peak_ratio = peak_usage / total_capacity
-      
-      # Balance between high utilization and avoiding overload
-      cond do
-        peak_ratio > 1.0 -> 0.5  # Overloaded
-        utilization_ratio > 0.8 -> 0.9  # High efficiency
-        utilization_ratio > 0.6 -> 0.8  # Good efficiency
-        utilization_ratio > 0.4 -> 0.6  # Moderate efficiency
-        true -> 0.3  # Low efficiency
-      end
-    else
-      0
-    end
-  end
-  
-  defp calculate_overall_efficiency(resource_usage) do
-    if map_size(resource_usage) > 0 do
-      total_efficiency = resource_usage
-      |> Enum.map(fn {_id, metrics} -> metrics.efficiency_score end)
-      |> Enum.sum()
-      
-      total_efficiency / map_size(resource_usage)
-    else
-      0
-    end
-  end
-  
-  defp identify_bottlenecks(resource_usage) do
-    resource_usage
-    |> Enum.filter(fn {_id, metrics} ->
-      metrics.utilization_percentage > 90
-    end)
-    |> Enum.map(fn {id, _metrics} -> id end)
-  end
-  
-  defp generate_optimization_recommendations(resource_usage) do
-    recommendations = []
-    
-    # Check for overutilized resources
-    overutilized = resource_usage
-    |> Enum.filter(fn {_id, metrics} -> metrics.utilization_percentage > 90 end)
-    
-    recommendations = if not Enum.empty?(overutilized) do
-      ["Consider increasing capacity for overutilized resources: #{Enum.map(overutilized, fn {id, _} -> id end) |> Enum.join(", ")}" | recommendations]
-    else
-      recommendations
-    end
-    
-    # Check for underutilized resources
-    underutilized = resource_usage
-    |> Enum.filter(fn {_id, metrics} -> metrics.utilization_percentage < 30 end)
-    
-    recommendations = if not Enum.empty?(underutilized) do
-      ["Consider reducing capacity or reassigning underutilized resources: #{Enum.map(underutilized, fn {id, _} -> id end) |> Enum.join(", ")}" | recommendations]
-    else
-      recommendations
-    end
-    
-    recommendations
-  end
   
   # Activity logging functions
   
@@ -539,11 +442,4 @@ defmodule AriaEngine.Scheduler.Core do
     ActivityLogger.generate_timeline(schedule, entities, resources)
   end
   
-  # Analysis helper functions (stubs for missing functions)
-  
-  defp detect_circular_dependencies(_activities, _verbose), do: 0
-  defp detect_enhanced_resource_conflicts(_activities, _entities, _resources, _verbose), do: 0
-  defp calculate_resource_aware_critical_path(_activities, _entities, _resources, _verbose), do: 0
-  defp analyze_entity_utilization(_activities, _entities), do: %{}
-  defp analyze_resource_availability(_resources), do: %{}
 end

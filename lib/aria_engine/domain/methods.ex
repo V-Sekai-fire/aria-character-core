@@ -6,7 +6,6 @@ defmodule Domain.Methods do
   Handles method-related operations for the planning domain.
   """
 
-  alias AriaEngine.StateV2
 
   @type t :: Domain.Core.t()
   @type task_name :: String.t()

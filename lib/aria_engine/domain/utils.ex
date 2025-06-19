@@ -6,7 +6,6 @@ defmodule Domain.Utils do
   @moduledoc """
   Domain utilities and helper functions.
   """
-  alias AriaEngine.StateV2
   alias Actions
 
   @type t :: Domain.Core.t()

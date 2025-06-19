@@ -7,7 +7,6 @@ defmodule Info do
   """
   alias Core
     alias PlannerAdapter
-  alias Plan.Utils # Added alias for Utils
 
   @type t :: Core.t()
   @type status :: Core.status()

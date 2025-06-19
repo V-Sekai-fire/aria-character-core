@@ -173,7 +173,7 @@ defmodule AriaEngine.Scheduler.Analyzer do
           has_cycle?(graph, dep, visited, rec_stack)
         end)
         
-        rec_stack = MapSet.delete(rec_stack, node)
+        _rec_stack = MapSet.delete(rec_stack, node)
         cycle_found
       end
     end

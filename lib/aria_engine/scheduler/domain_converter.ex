@@ -67,7 +67,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   """
   @spec create_activity_action(activity(), [Entity.t()], [Resource.t()]) :: function()
   def create_activity_action(activity, _entities, _resources) do
-    fn state, args ->
+    fn state, _args ->
       activity_id = activity.id
       duration = Map.get(activity, :duration, 1)
       
@@ -87,7 +87,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   def create_htn_scheduling_methods(activities, entities, resources) do
     %{
       "schedule_activities" => [{
-        "htn_decomposition_method", fn args, state ->
+        "htn_decomposition_method", fn _args, _state ->
           # Return proper todo list with tasks for individual activities
           activities
           |> Enum.map(fn activity ->
@@ -116,8 +116,8 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   Create activity method that returns proper todo list for hybrid planner.
   """
   @spec create_khr_activity_method(activity(), [Entity.t()], [Resource.t()]) :: function()
-  def create_khr_activity_method(activity, entities, resources) do
-    fn args, state ->
+  def create_khr_activity_method(activity, _entities, _resources) do
+    fn _args, state ->
       activity_id = activity.id
       dependencies = Map.get(activity, :dependencies, [])
       required_resources = Map.get(activity, :required_resources, [])
@@ -164,7 +164,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   Create sequence of KHR primitive actions to complete an activity.
   """
   @spec create_khr_primitive_sequence(activity(), [Entity.t()], [Resource.t()]) :: [khr_primitive()]
-  def create_khr_primitive_sequence(activity, entities, resources) do
+  def create_khr_primitive_sequence(activity, _entities, _resources) do
     activity_id = activity.id
     required_resources = Map.get(activity, :required_resources, [])
     duration = Map.get(activity, :duration, 1)
@@ -232,7 +232,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     |> Enum.reduce(%{}, fn resource, acc ->
       goal_type = "resource_available_#{resource.id}"
       method_name = "check_resource_capacity"
-      method_fn = fn args, state ->
+      method_fn = fn _args, state ->
         current_usage = AriaEngine.StateV2.get_fact(state, resource.id, "current_usage") || 0
         capacity = resource.capacity
         
@@ -259,7 +259,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
       if not Enum.empty?(dependencies) do
         goal_type = "dependencies_satisfied_#{activity.id}"
         method_name = "ensure_dependencies"
-        method_fn = fn args, state ->
+        method_fn = fn _args, state ->
           incomplete_deps = Enum.filter(dependencies, fn dep_id ->
             not AriaEngine.StateV2.matches_exactly?(state, dep_id, "completed", true)
           end)
@@ -284,10 +284,10 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   @doc """
   Create optimization goal methods.
   """
-  def create_optimization_goals(activities, entities, resources) do
+  def create_optimization_goals(activities, _entities, resources) do
     %{
       "minimize_makespan" => [{
-        "optimize_execution_time", fn args, state ->
+        "optimize_execution_time", fn _args, state ->
           # Check if all activities are completed
           all_completed = Enum.all?(activities, fn activity ->
             AriaEngine.StateV2.matches_exactly?(state, activity.id, "completed", true)
@@ -302,7 +302,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
         end
       }],
       "maximize_resource_efficiency" => [{
-        "balance_resource_usage", fn args, state ->
+        "balance_resource_usage", fn _args, state ->
           # Check resource utilization balance
           utilizations = resources
           |> Enum.map(fn resource ->
