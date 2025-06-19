@@ -6,7 +6,7 @@ defmodule TemporalPlanner.STNMethodTest do
   
   alias TemporalPlanner.STNMethod
   alias TemporalPlanner.STNAction
-  alias Timeline.STN
+  alias Timeline
 
   describe "method creation" do
     test "creates method with sequential decomposition" do
@@ -20,7 +20,7 @@ defmodule TemporalPlanner.STNMethodTest do
       assert method.method_id == "patrol"
       assert method.decomposition_pattern == :sequential
       assert length(method.stn_actions) == 2
-      assert STN.consistent?(method.method_stn)
+      assert Timeline.consistent?(method.method_stn)
     end
 
     test "creates method with parallel decomposition" do
@@ -32,7 +32,7 @@ defmodule TemporalPlanner.STNMethodTest do
       method = STNMethod.new("surveillance", :parallel, actions)
       
       assert method.decomposition_pattern == :parallel
-      assert STN.consistent?(method.method_stn)
+      assert Timeline.consistent?(method.method_stn)
       
       # Parallel execution should have duration equal to longest action
       {min_duration, max_duration} = method.estimated_duration
@@ -49,7 +49,7 @@ defmodule TemporalPlanner.STNMethodTest do
       method = STNMethod.new("approach", :alternative, actions)
       
       assert method.decomposition_pattern == :alternative
-      assert STN.consistent?(method.method_stn)
+      assert Timeline.consistent?(method.method_stn)
       
       # Alternative execution should have average duration
       {min_duration, max_duration} = method.estimated_duration
@@ -66,7 +66,7 @@ defmodule TemporalPlanner.STNMethodTest do
       method = STNMethod.new("conditional_advance", :conditional, actions)
       
       assert method.decomposition_pattern == :conditional
-      assert STN.consistent?(method.method_stn)
+      assert Timeline.consistent?(method.method_stn)
     end
   end
 
@@ -86,7 +86,7 @@ defmodule TemporalPlanner.STNMethodTest do
       
       assert length(updated_method.bridge_actions) == 1
       assert hd(updated_method.bridge_actions).action_id == "decide_route"
-      assert STN.consistent?(updated_method.method_stn)
+      assert Timeline.consistent?(updated_method.method_stn)
     end
 
     test "bridge actions create temporal segments" do
@@ -121,10 +121,10 @@ defmodule TemporalPlanner.STNMethodTest do
       
       chained_stn = STNMethod.chain([method1, method2])
       
-      assert STN.consistent?(chained_stn)
+      assert Timeline.consistent?(chained_stn)
       
       # Should have timepoints from both methods
-      time_points = STN.time_points(chained_stn)
+      time_points = Timeline.time_points(chained_stn)
       assert length(time_points) >= 4  # At least start/end for each action
     end
 
@@ -138,7 +138,7 @@ defmodule TemporalPlanner.STNMethodTest do
       
       parallel_stn = STNMethod.parallel([method1, method2])
       
-      assert STN.consistent?(parallel_stn)
+      assert Timeline.consistent?(parallel_stn)
     end
 
     test "creates alternative method choices" do
@@ -151,7 +151,7 @@ defmodule TemporalPlanner.STNMethodTest do
       
       alternative_stn = STNMethod.alternative([method1, method2])
       
-      assert STN.consistent?(alternative_stn)
+      assert Timeline.consistent?(alternative_stn)
     end
   end
 
@@ -167,7 +167,7 @@ defmodule TemporalPlanner.STNMethodTest do
       
       solved_stn = STNMethod.solve_parallel(method)
       
-      assert STN.consistent?(solved_stn)
+      assert Timeline.consistent?(solved_stn)
     end
 
     test "handles empty method gracefully" do
@@ -175,7 +175,7 @@ defmodule TemporalPlanner.STNMethodTest do
       
       solved_stn = STNMethod.solve_parallel(method)
       
-      assert STN.consistent?(solved_stn)
+      assert Timeline.consistent?(solved_stn)
     end
   end
 
@@ -184,9 +184,9 @@ defmodule TemporalPlanner.STNMethodTest do
       actions = [STNAction.new("test_action", duration: {1000, 2000})]
       method = STNMethod.new("test_method", :sequential, actions)
       
-      world_stn = STN.new()
-      |> STN.add_time_point("world_start")
-      |> STN.add_constraint("world_start", "world_start", {0, 0})
+      world_stn = Timeline.new()
+      |> Timeline.add_time_point("world_start")
+      |> Timeline.add_constraint("world_start", "world_start", {0, 0})
       
       assert STNMethod.can_execute?(method, world_stn)
     end
@@ -213,8 +213,8 @@ defmodule TemporalPlanner.STNMethodTest do
       
       stn = STNMethod.to_stn(method)
       
-      assert %STN{} = stn
-      assert STN.consistent?(stn)
+      assert %Timeline{} = stn
+      assert Timeline.consistent?(stn)
     end
   end
 end

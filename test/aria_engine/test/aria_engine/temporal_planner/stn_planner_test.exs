@@ -7,7 +7,7 @@ defmodule TemporalPlanner.STNPlannerTest do
   alias TemporalPlanner.STNPlanner
   alias TemporalPlanner.STNMethod
   alias TemporalPlanner.STNAction
-  alias Timeline.STN
+  alias Timeline
 
   describe "planner creation" do
     test "creates planner with hierarchical strategy" do
@@ -17,28 +17,28 @@ defmodule TemporalPlanner.STNPlannerTest do
       assert planner.planning_strategy == :hierarchical
       assert planner.execution_status == :planning
       assert planner.reentrant_enabled == true
-      assert STN.consistent?(planner.goal_stn)
+      assert Timeline.consistent?(planner.goal_stn)
     end
 
     test "creates planner with sequential strategy" do
       planner = STNPlanner.new("sequential_mission", :sequential)
       
       assert planner.planning_strategy == :sequential
-      assert STN.consistent?(planner.goal_stn)
+      assert Timeline.consistent?(planner.goal_stn)
     end
 
     test "creates planner with parallel strategy" do
       planner = STNPlanner.new("parallel_mission", :parallel)
       
       assert planner.planning_strategy == :parallel
-      assert STN.consistent?(planner.goal_stn)
+      assert Timeline.consistent?(planner.goal_stn)
     end
 
     test "creates planner with adaptive strategy" do
       planner = STNPlanner.new("adaptive_mission", :adaptive)
       
       assert planner.planning_strategy == :adaptive
-      assert STN.consistent?(planner.goal_stn)
+      assert Timeline.consistent?(planner.goal_stn)
     end
   end
 
@@ -53,7 +53,7 @@ defmodule TemporalPlanner.STNPlannerTest do
       
       assert length(updated_planner.methods) == 1
       assert hd(updated_planner.methods).method_id == "reconnaissance"
-      assert STN.consistent?(updated_planner.goal_stn)
+      assert Timeline.consistent?(updated_planner.goal_stn)
     end
 
     test "adds multiple methods and maintains consistency" do
@@ -76,7 +76,7 @@ defmodule TemporalPlanner.STNPlannerTest do
       |> STNPlanner.add_method(method3)
       
       assert length(updated_planner.methods) == 3
-      assert STN.consistent?(updated_planner.goal_stn)
+      assert Timeline.consistent?(updated_planner.goal_stn)
     end
   end
 
@@ -90,7 +90,7 @@ defmodule TemporalPlanner.STNPlannerTest do
       
       solved_planner = STNPlanner.solve_parallel(planner)
       
-      assert STN.consistent?(solved_planner.goal_stn)
+      assert Timeline.consistent?(solved_planner.goal_stn)
     end
 
     test "solves multiple methods in parallel" do
@@ -108,7 +108,7 @@ defmodule TemporalPlanner.STNPlannerTest do
       
       solved_planner = STNPlanner.solve_parallel(planner)
       
-      assert STN.consistent?(solved_planner.goal_stn)
+      assert Timeline.consistent?(solved_planner.goal_stn)
       assert length(solved_planner.parallel_segments) >= 0
     end
 
@@ -117,7 +117,7 @@ defmodule TemporalPlanner.STNPlannerTest do
       
       solved_planner = STNPlanner.solve_parallel(planner)
       
-      assert STN.consistent?(solved_planner.goal_stn)
+      assert Timeline.consistent?(solved_planner.goal_stn)
     end
   end
 
@@ -188,13 +188,13 @@ defmodule TemporalPlanner.STNPlannerTest do
     test "detects inconsistent plans" do
       # Create genuinely inconsistent constraints using a three-point cycle
       # that PC-2 will detect (based on debug script Test 4 pattern)
-      world_constraints = STN.new()
-      |> STN.add_time_point("A")
-      |> STN.add_time_point("B") 
-      |> STN.add_time_point("C")
-      |> STN.add_constraint("A", "B", {1, 2})  # A to B: 1-2 units
-      |> STN.add_constraint("B", "C", {1, 2})  # B to C: 1-2 units  
-      |> STN.add_constraint("C", "A", {-1, -1})  # C to A: exactly -1 units (creates inconsistent cycle)
+      world_constraints = Timeline.new()
+      |> Timeline.add_time_point("A")
+      |> Timeline.add_time_point("B") 
+      |> Timeline.add_time_point("C")
+      |> Timeline.add_constraint("A", "B", {1, 2})  # A to B: 1-2 units
+      |> Timeline.add_constraint("B", "C", {1, 2})  # B to C: 1-2 units  
+      |> Timeline.add_constraint("C", "A", {-1, -1})  # C to A: exactly -1 units (creates inconsistent cycle)
       
       planner = STNPlanner.new("inconsistent_test", :hierarchical, 
         world_constraints: world_constraints)
@@ -215,8 +215,8 @@ defmodule TemporalPlanner.STNPlannerTest do
       
       timeline = STNPlanner.get_timeline(planner)
       
-      assert %STN{} = timeline
-      assert STN.consistent?(timeline)
+      assert %Timeline{} = timeline
+      assert Timeline.consistent?(timeline)
     end
 
     test "estimates sequential execution duration" do
@@ -318,7 +318,7 @@ defmodule TemporalPlanner.STNPlannerTest do
       
       solved_planner = STNPlanner.solve_parallel(planner)
       
-      assert STN.consistent?(solved_planner.goal_stn)
+      assert Timeline.consistent?(solved_planner.goal_stn)
       assert length(solved_planner.methods) == 5
     end
 

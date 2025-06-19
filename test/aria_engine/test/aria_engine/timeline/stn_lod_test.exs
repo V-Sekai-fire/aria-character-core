@@ -4,9 +4,10 @@
 defmodule Timeline.STNLODTest do
   use ExUnit.Case
   @moduletag timeout: 60000 # Set module timeout to 60 seconds
-  doctest Timeline.STN
+  doctest Timeline
 
-  alias Timeline.{STN, Interval}
+  alias Timeline.{Interval}
+  alias Timeline.Internal.STN
 
   describe "LOD and Unit System" do
     test "creates STN with specified time unit and LOD level" do

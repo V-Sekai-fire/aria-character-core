@@ -116,8 +116,15 @@ defmodule Timeline.Internal.STN.Operations do
         opts
       end
     
+    # Convert STNs to Timeline structs for LodAdapter compatibility
+    timeline1 = Timeline.from_stn(stn1)
+    timeline2 = Timeline.from_stn(stn2)
+    
     # Use LOD adapter for bridging and composition
-    LodAdapter.bridge_and_compose(stn1, stn2, operation, opts)
+    result_timeline = LodAdapter.bridge_and_compose(timeline1, timeline2, operation, opts)
+    
+    # Extract the STN from the result Timeline
+    Timeline.get_stn(result_timeline)
   end
 
   @doc """

@@ -98,16 +98,16 @@ defmodule Timeline.LodAdapter do
         rounding_strategy: :floor)
   """
   def convert_lod(%Timeline{} = timeline, target_lod, target_unit \\ nil, opts \\ []) do
-    target_unit = target_unit || timeline.time_unit
-    conversion_direction = determine_conversion_direction(timeline.lod_level, target_lod)
+    target_unit = target_unit || timeline.stn.time_unit
+    conversion_direction = determine_conversion_direction(timeline.stn.lod_level, target_lod)
     
     # Calculate scaling factors
-    lod_scale_factor = calculate_lod_scale_factor(timeline.lod_level, target_lod)
-    unit_scale_factor = calculate_unit_scale_factor(timeline.time_unit, target_unit)
+    lod_scale_factor = calculate_lod_scale_factor(timeline.stn.lod_level, target_lod)
+    unit_scale_factor = calculate_unit_scale_factor(timeline.stn.time_unit, target_unit)
     total_scale_factor = lod_scale_factor * unit_scale_factor
     
     # Apply conversion based on direction and complexity
-    case {conversion_direction, map_size(timeline.constraints)} do
+    case {conversion_direction, map_size(timeline.stn.constraints)} do
       {_direction, constraint_count} when constraint_count > 100 ->
         # Use Flow adapter for large constraint networks
         convert_lod_parallel(timeline, target_lod, target_unit, total_scale_factor, opts)
@@ -223,7 +223,10 @@ defmodule Timeline.LodAdapter do
     optimal_lod = determine_optimal_lod(constraint_density, performance_target)
     
     if optimal_lod != stn.lod_level do
-      convert_lod(stn, optimal_lod, nil, opts)
+      # Create a Timeline wrapper for the STN to use convert_lod
+      timeline = %Timeline{stn: stn, intervals: [], metadata: %{}}
+      converted_timeline = convert_lod(timeline, optimal_lod, nil, opts)
+      converted_timeline.stn
     else
       stn
     end
@@ -254,8 +257,9 @@ defmodule Timeline.LodAdapter do
     source_factor / target_factor
   end
   
-  defp convert_lod_direct(%Timeline.Internal.STN{} = stn, target_lod, target_unit, scale_factor, opts) do
+  defp convert_lod_direct(%Timeline{} = timeline, target_lod, target_unit, scale_factor, opts) do
     rounding_strategy = Keyword.get(opts, :rounding_strategy, :round)
+    stn = timeline.stn
     
     # Scale all constraints by the calculated factor
     scaled_constraints = 
@@ -278,7 +282,7 @@ defmodule Timeline.LodAdapter do
       end
     
     # Update STN with new LOD parameters
-    %Timeline.Internal.STN{stn | 
+    updated_stn = %Timeline.Internal.STN{stn | 
       lod_level: target_lod,
       time_unit: target_unit,
       lod_resolution: @lod_resolutions[target_lod],
@@ -286,10 +290,14 @@ defmodule Timeline.LodAdapter do
       dummy_constraints: scaled_dummy_constraints,
       consistent: false  # Will need re-solving after scaling
     }
+    
+    # Return updated Timeline
+    %Timeline{timeline | stn: updated_stn}
   end
   
-  defp convert_lod_parallel(%Timeline.Internal.STN{} = stn, target_lod, target_unit, scale_factor, opts) do
+  defp convert_lod_parallel(%Timeline{} = timeline, target_lod, target_unit, scale_factor, opts) do
     flow_config = Keyword.get(opts, :flow_config)
+    stn = timeline.stn
     
     # Use Flow adapter for parallel constraint scaling
     if flow_config do
@@ -307,16 +315,19 @@ defmodule Timeline.LodAdapter do
       
       scaled_constraints = Enum.reduce(scaled_constraint_chunks, %{}, &Map.merge/2)
       
-      %Timeline.Internal.STN{stn | 
+      updated_stn = %Timeline.Internal.STN{stn | 
         lod_level: target_lod,
         time_unit: target_unit,
         lod_resolution: @lod_resolutions[target_lod],
         constraints: scaled_constraints,
         consistent: false
       }
+      
+      # Return updated Timeline
+      %Timeline{timeline | stn: updated_stn}
     else
       # Fallback to direct conversion
-      convert_lod_direct(stn, target_lod, target_unit, scale_factor, opts)
+      convert_lod_direct(timeline, target_lod, target_unit, scale_factor, opts)
     end
   end
   
