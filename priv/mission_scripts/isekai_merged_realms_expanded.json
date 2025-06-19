@@ -1,0 +1,619 @@
+{
+  "schedule_name": "Cross-Spectrum Protocol: The Merged Realms - Extended Campaign",
+  "activities": [
+    {
+      "id": "consciousness_stabilization",
+      "duration": "PT45S",
+      "dependencies": [],
+      "required_capabilities": ["adaptation", "modern_knowledge"],
+      "required_resources": ["reality_anchors"],
+      "narrative_context": "Hero awakens in unstable dimensional nexus, fighting disorientation"
+    },
+    {
+      "id": "reality_anchor_calibration",
+      "duration": "PT60S",
+      "dependencies": ["consciousness_stabilization"],
+      "required_capabilities": ["modern_knowledge", "pattern_recognition"],
+      "required_resources": ["reality_anchors", "sensor_network"],
+      "narrative_context": "Fine-tuning dimensional stability devices with engineering knowledge"
+    },
+    {
+      "id": "verdant_sector_reconnaissance",
+      "duration": "PT40S",
+      "dependencies": ["reality_anchor_calibration"],
+      "required_capabilities": ["pattern_recognition", "adaptation"],
+      "required_resources": ["bio_energy"],
+      "narrative_context": "Careful observation of the living bio-technological ecosystem"
+    },
+    {
+      "id": "plant_intelligence_first_contact",
+      "duration": "PT90S",
+      "dependencies": ["verdant_sector_reconnaissance"],
+      "required_capabilities": ["adaptation", "trust_building"],
+      "required_resources": ["bio_energy", "collective_knowledge"],
+      "narrative_context": "Discovering the plants are sentient and establishing communication"
+    },
+    {
+      "id": "bio_symbiosis_initiation",
+      "duration": "PT120S",
+      "dependencies": ["plant_intelligence_first_contact"],
+      "required_capabilities": ["bio_integration", "adaptation"],
+      "required_resources": ["bio_energy", "collective_knowledge"],
+      "narrative_context": "Hero begins developing symbiotic connection with plant network"
+    },
+    {
+      "id": "ecosystem_health_assessment",
+      "duration": "PT75S",
+      "dependencies": ["bio_symbiosis_initiation"],
+      "required_capabilities": ["pattern_recognition", "crisis_analysis", "bio_integration"],
+      "required_resources": ["bio_energy", "sensor_network", "collective_knowledge"],
+      "narrative_context": "Learning the extent of environmental damage from dimensional instability"
+    },
+    {
+      "id": "plant_network_authentication",
+      "duration": "PT60S",
+      "dependencies": ["ecosystem_health_assessment"],
+      "required_capabilities": ["bio_integration", "trust_building"],
+      "required_resources": ["collective_knowledge"],
+      "narrative_context": "Gaining deeper access to the plant collective's knowledge networks"
+    },
+    {
+      "id": "bio_healing_protocol_development",
+      "duration": "PT110S",
+      "dependencies": ["plant_network_authentication"],
+      "required_capabilities": ["bio_integration", "modern_knowledge", "synthesis"],
+      "required_resources": ["bio_energy", "collective_knowledge"],
+      "narrative_context": "Combining Earth knowledge with plant wisdom to develop healing techniques"
+    },
+    {
+      "id": "chrome_sector_reconnaissance",
+      "duration": "PT50S",
+      "dependencies": ["reality_anchor_calibration"],
+      "required_capabilities": ["stealth", "pattern_recognition"],
+      "required_resources": ["stolen_access_codes"],
+      "narrative_context": "Infiltrating the cyberpunk corporate district for intelligence"
+    },
+    {
+      "id": "netrunner_contact_establishment",
+      "duration": "PT80S",
+      "dependencies": ["chrome_sector_reconnaissance"],
+      "required_capabilities": ["trust_building", "modern_knowledge"],
+      "required_resources": ["stolen_access_codes", "underground_currency"],
+      "narrative_context": "Making contact with underground hacker resistance movement"
+    },
+    {
+      "id": "corporate_threat_analysis",
+      "duration": "PT70S",
+      "dependencies": ["netrunner_contact_establishment"],
+      "required_capabilities": ["data_analysis", "pattern_recognition", "crisis_analysis"],
+      "required_resources": ["stolen_access_codes", "sensor_network"],
+      "narrative_context": "Discovering corporate plans to exploit dimensional instability for profit"
+    },
+    {
+      "id": "underground_alliance_negotiation",
+      "duration": "PT95S",
+      "dependencies": ["corporate_threat_analysis"],
+      "required_capabilities": ["negotiation", "trust_building", "leadership"],
+      "required_resources": ["underground_currency", "stolen_access_codes"],
+      "narrative_context": "Convincing hostile netrunner factions to work together against corporate threat"
+    },
+    {
+      "id": "chrome_underworld_infiltration",
+      "duration": "PT85S",
+      "dependencies": ["underground_alliance_negotiation"],
+      "required_capabilities": ["stealth", "data_analysis", "hacking"],
+      "required_resources": ["stolen_access_codes", "illegal_augments"],
+      "narrative_context": "Deep infiltration mission into corporate black sites"
+    },
+    {
+      "id": "corporate_firewall_breach",
+      "duration": "PT130S",
+      "dependencies": ["chrome_underworld_infiltration"],
+      "required_capabilities": ["hacking", "modern_knowledge", "stealth"],
+      "required_resources": ["stolen_access_codes", "illegal_augments", "storage_devices"],
+      "narrative_context": "Major hacking operation to breach corporate security and expose plans"
+    },
+    {
+      "id": "data_core_extraction",
+      "duration": "PT100S",
+      "dependencies": ["corporate_firewall_breach"],
+      "required_capabilities": ["data_analysis", "stealth", "crisis_analysis"],
+      "required_resources": ["storage_devices", "illegal_augments"],
+      "narrative_context": "Extracting critical data about dimensional exploitation projects"
+    },
+    {
+      "id": "netrunner_trust_deepening",
+      "duration": "PT75S",
+      "dependencies": ["data_core_extraction"],
+      "required_capabilities": ["trust_building", "leadership", "modern_knowledge"],
+      "required_resources": ["underground_currency", "storage_devices"],
+      "narrative_context": "Sharing intel builds deeper trust with netrunner collective leadership"
+    },
+    {
+      "id": "harmony_sector_initial_contact",
+      "duration": "PT60S",
+      "dependencies": ["reality_anchor_calibration"],
+      "required_capabilities": ["collaboration", "trust_building"],
+      "required_resources": ["community_credits"],
+      "narrative_context": "First contact with the cooperative utopian community sector"
+    },
+    {
+      "id": "harmony_cultural_integration",
+      "duration": "PT120S",
+      "dependencies": ["harmony_sector_initial_contact"],
+      "required_capabilities": ["adaptation", "collaboration", "community_building"],
+      "required_resources": ["community_credits", "public_fabricators"],
+      "narrative_context": "Learning the cooperative principles and contributing to community projects"
+    },
+    {
+      "id": "resource_sharing_protocol_design",
+      "duration": "PT90S",
+      "dependencies": ["harmony_cultural_integration"],
+      "required_capabilities": ["system_integration", "modern_knowledge", "collaboration"],
+      "required_resources": ["public_fabricators", "community_credits"],
+      "narrative_context": "Designing better resource allocation systems using Earth optimization knowledge"
+    },
+    {
+      "id": "harmony_crisis_revelation",
+      "duration": "PT65S",
+      "dependencies": ["resource_sharing_protocol_design"],
+      "required_capabilities": ["crisis_analysis", "pattern_recognition", "collaboration"],
+      "required_resources": ["sensor_network", "community_credits"],
+      "narrative_context": "Discovering that even utopia has hidden problems and resource conflicts"
+    },
+    {
+      "id": "community_conflict_mediation",
+      "duration": "PT110S",
+      "dependencies": ["harmony_crisis_revelation"],
+      "required_capabilities": ["conflict_resolution", "leadership", "trust_building"],
+      "required_resources": ["community_credits", "mesh_network"],
+      "narrative_context": "Mediating between different community factions with competing visions"
+    },
+    {
+      "id": "harmony_governance_evolution",
+      "duration": "PT95S",
+      "dependencies": ["community_conflict_mediation"],
+      "required_capabilities": ["system_integration", "leadership", "collaboration"],
+      "required_resources": ["public_fabricators", "community_credits", "mesh_network"],
+      "narrative_context": "Helping develop more robust democratic decision-making processes"
+    },
+    {
+      "id": "cross_sector_intelligence_sharing",
+      "duration": "PT80S",
+      "dependencies": ["netrunner_trust_deepening", "bio_healing_protocol_development", "harmony_governance_evolution"],
+      "required_capabilities": ["trust_building", "communication", "synthesis"],
+      "required_resources": ["mesh_network", "translation_matrices", "collective_knowledge"],
+      "narrative_context": "First successful exchange of critical information between all three sectors"
+    },
+    {
+      "id": "dimensional_threat_analysis",
+      "duration": "PT100S",
+      "dependencies": ["cross_sector_intelligence_sharing"],
+      "required_capabilities": ["crisis_analysis", "pattern_recognition", "synthesis", "modern_knowledge"],
+      "required_resources": ["collective_knowledge", "storage_devices", "sensor_network"],
+      "narrative_context": "Combining all sector knowledge to understand true scope of dimensional crisis"
+    },
+    {
+      "id": "tri_sector_emergency_summit",
+      "duration": "PT120S",
+      "dependencies": ["dimensional_threat_analysis"],
+      "required_capabilities": ["leadership", "negotiation", "trust_building", "conflict_resolution"],
+      "required_resources": ["mesh_network", "translation_matrices", "community_credits"],
+      "narrative_context": "Historic first meeting between representatives of all three previously isolated sectors"
+    },
+    {
+      "id": "cultural_barrier_breakdown",
+      "duration": "PT85S",
+      "dependencies": ["tri_sector_emergency_summit"],
+      "required_capabilities": ["trust_building", "translation", "bridge_building"],
+      "required_resources": ["translation_matrices", "collective_knowledge"],
+      "narrative_context": "Overcoming deep cultural mistrust and misunderstanding between sectors"
+    },
+    {
+      "id": "resource_pooling_negotiation",
+      "duration": "PT95S",
+      "dependencies": ["cultural_barrier_breakdown"],
+      "required_capabilities": ["negotiation", "resource_optimization", "trust_building"],
+      "required_resources": ["community_credits", "underground_currency", "bio_energy"],
+      "narrative_context": "Negotiating unprecedented resource sharing agreements across sector boundaries"
+    },
+    {
+      "id": "joint_technology_development",
+      "duration": "PT140S",
+      "dependencies": ["resource_pooling_negotiation"],
+      "required_capabilities": ["synthesis", "system_integration", "modern_knowledge", "collaboration"],
+      "required_resources": ["public_fabricators", "illegal_augments", "bio_energy", "storage_devices"],
+      "narrative_context": "Combining bio-tech, cyberpunk, and cooperative technologies into hybrid solutions"
+    },
+    {
+      "id": "corporate_counter_intelligence",
+      "duration": "PT75S",
+      "dependencies": ["joint_technology_development"],
+      "required_capabilities": ["stealth", "data_analysis", "crisis_analysis"],
+      "required_resources": ["stolen_access_codes", "mesh_network"],
+      "narrative_context": "Discovering corporate attempts to sabotage tri-sector cooperation"
+    },
+    {
+      "id": "sabotage_prevention_protocol",
+      "duration": "PT90S",
+      "dependencies": ["corporate_counter_intelligence"],
+      "required_capabilities": ["coordination", "rapid_response", "stealth"],
+      "required_resources": ["mesh_network", "illegal_augments", "sensor_network"],
+      "narrative_context": "Implementing security measures to protect the fragile new alliance"
+    },
+    {
+      "id": "dimensional_stabilizer_construction",
+      "duration": "PT160S",
+      "dependencies": ["sabotage_prevention_protocol"],
+      "required_capabilities": ["synthesis", "system_integration", "modern_knowledge", "collaboration"],
+      "required_resources": ["reality_anchors", "bio_energy", "public_fabricators", "storage_devices"],
+      "narrative_context": "Building the device that will permanently stabilize dimensional barriers"
+    },
+    {
+      "id": "hero_skill_evolution",
+      "duration": "PT70S",
+      "dependencies": ["dimensional_stabilizer_construction"],
+      "required_capabilities": ["adaptation", "synthesis", "leadership"],
+      "required_resources": ["collective_knowledge", "reality_anchors"],
+      "narrative_context": "Hero develops new hybrid capabilities from exposure to all three sectors"
+    },
+    {
+      "id": "tri_zone_protocol_synthesis",
+      "duration": "PT150S",
+      "dependencies": ["hero_skill_evolution"],
+      "required_capabilities": ["synthesis", "leadership", "modern_knowledge", "reality_manipulation"],
+      "required_resources": ["bio_energy", "community_credits", "collective_knowledge", "translation_matrices"],
+      "narrative_context": "Creating the complex protocol that will allow permanent cross-sector communication"
+    },
+    {
+      "id": "corporate_final_assault_defense",
+      "duration": "PT110S",
+      "dependencies": ["tri_zone_protocol_synthesis"],
+      "required_capabilities": ["coordination", "rapid_response", "stealth", "leadership"],
+      "required_resources": ["illegal_augments", "mesh_network", "storage_devices"],
+      "narrative_context": "Defending against corporate military assault aimed at destroying the alliance"
+    },
+    {
+      "id": "dimensional_rift_emergency",
+      "duration": "PT85S",
+      "dependencies": ["corporate_final_assault_defense"],
+      "required_capabilities": ["crisis_analysis", "rapid_response", "reality_manipulation"],
+      "required_resources": ["reality_anchors", "sensor_network"],
+      "narrative_context": "Emergency response to catastrophic dimensional rift opened by corporate sabotage"
+    },
+    {
+      "id": "emergency_evacuation_coordination",
+      "duration": "PT95S",
+      "dependencies": ["dimensional_rift_emergency"],
+      "required_capabilities": ["coordination", "leadership", "rapid_response"],
+      "required_resources": ["mesh_network", "public_fabricators", "community_credits"],
+      "narrative_context": "Coordinating massive evacuation of civilians from rift-threatened areas"
+    },
+    {
+      "id": "reality_stabilization_ritual",
+      "duration": "PT180S",
+      "dependencies": ["emergency_evacuation_coordination"],
+      "required_capabilities": ["synthesis", "reality_manipulation", "leadership", "bio_integration"],
+      "required_resources": ["reality_anchors", "bio_energy", "community_credits", "collective_knowledge"],
+      "narrative_context": "Grand ritual combining all three sector's power sources to heal dimensional damage"
+    },
+    {
+      "id": "cross_district_communication_establishment",
+      "duration": "PT100S",
+      "dependencies": ["reality_stabilization_ritual"],
+      "required_capabilities": ["communication", "translation", "system_integration"],
+      "required_resources": ["mesh_network", "translation_matrices", "storage_devices"],
+      "narrative_context": "Establishing permanent communication networks between previously isolated sectors"
+    },
+    {
+      "id": "new_governance_framework",
+      "duration": "PT120S",
+      "dependencies": ["cross_district_communication_establishment"],
+      "required_capabilities": ["leadership", "collaboration", "conflict_resolution", "system_integration"],
+      "required_resources": ["mesh_network", "community_credits", "translation_matrices"],
+      "narrative_context": "Creating new democratic institutions that represent all three sectors equally"
+    },
+    {
+      "id": "cultural_exchange_programs",
+      "duration": "PT90S",
+      "dependencies": ["new_governance_framework"],
+      "required_capabilities": ["trust_building", "collaboration", "bridge_building"],
+      "required_resources": ["community_credits", "translation_matrices", "collective_knowledge"],
+      "narrative_context": "Establishing ongoing cultural exchange to prevent future isolation"
+    },
+    {
+      "id": "economic_integration_protocol",
+      "duration": "PT110S",
+      "dependencies": ["cultural_exchange_programs"],
+      "required_capabilities": ["resource_optimization", "collaboration", "system_integration"],
+      "required_resources": ["community_credits", "underground_currency", "public_fabricators"],
+      "narrative_context": "Creating unified economic system that respects each sector's values"
+    },
+    {
+      "id": "environmental_restoration_initiative",
+      "duration": "PT130S",
+      "dependencies": ["economic_integration_protocol"],
+      "required_capabilities": ["bio_integration", "collaboration", "ecosystem_management"],
+      "required_resources": ["bio_energy", "public_fabricators", "sensor_network"],
+      "narrative_context": "Large-scale environmental healing project using combined sector technologies"
+    },
+    {
+      "id": "portal_manifestation",
+      "duration": "PT80S",
+      "dependencies": ["environmental_restoration_initiative"],
+      "required_capabilities": ["reality_manipulation", "modern_knowledge", "synthesis"],
+      "required_resources": ["reality_anchors", "translation_matrices"],
+      "narrative_context": "Creating stable portal home using knowledge gained from successful integration"
+    },
+    {
+      "id": "hero_legacy_establishment",
+      "duration": "PT70S",
+      "dependencies": ["portal_manifestation"],
+      "required_capabilities": ["leadership", "trust_building", "modern_knowledge"],
+      "required_resources": ["collective_knowledge", "community_credits"],
+      "narrative_context": "Establishing institutions to preserve integration knowledge after hero's departure"
+    },
+    {
+      "id": "farewell_ceremony",
+      "duration": "PT60S",
+      "dependencies": ["hero_legacy_establishment"],
+      "required_capabilities": ["bridge_building", "trust_building"],
+      "required_resources": ["translation_matrices", "collective_knowledge"],
+      "narrative_context": "Emotional farewell ceremony celebrating the transformation of three worlds"
+    },
+    {
+      "id": "dimensional_return_sequence",
+      "duration": "PT45S",
+      "dependencies": ["farewell_ceremony"],
+      "required_capabilities": ["dimensional_travel", "reality_manipulation"],
+      "required_resources": ["reality_anchors"],
+      "narrative_context": "Hero's final journey home, forever changed by the experience of unity"
+    }
+  ],
+  "entities": [
+    {
+      "id": "displaced_protagonist",
+      "type": "isekai_hero",
+      "capabilities": ["modern_knowledge", "adaptation", "pattern_recognition", "leadership", "dimensional_travel"],
+      "availability": {},
+      "personality": "pragmatic_idealist",
+      "background": "engineering_student_turned_dimensional_diplomat"
+    },
+    {
+      "id": "verdant_ecosystem_ai",
+      "type": "bio_intelligence", 
+      "capabilities": ["bio_integration", "collective_consciousness", "ecosystem_management", "symbiotic_interface"],
+      "availability": {},
+      "personality": "ancient_wisdom_patient",
+      "background": "millennia_old_plant_collective_consciousness"
+    },
+    {
+      "id": "elder_root_network",
+      "type": "bio_intelligence",
+      "capabilities": ["bio_integration", "collective_consciousness", "trust_building", "synthesis"],
+      "availability": {},
+      "personality": "wise_mentor",
+      "background": "oldest_plant_intelligence_keeper_of_deep_memories"
+    },
+    {
+      "id": "chrome_netrunner_collective",
+      "type": "hacker_group",
+      "capabilities": ["hacking", "data_analysis", "stealth", "underground_networks"],
+      "availability": {},
+      "personality": "paranoid_but_loyal",
+      "background": "anti_corporate_resistance_survivors"
+    },
+    {
+      "id": "ghost_protocol_leader",
+      "type": "elite_netrunner",
+      "capabilities": ["hacking", "stealth", "leadership", "trust_building"],
+      "availability": {},
+      "personality": "mysterious_charismatic",
+      "background": "legendary_hacker_presumed_dead"
+    },
+    {
+      "id": "harmony_coordination_ai",
+      "type": "collaborative_system",
+      "capabilities": ["collaboration", "system_integration", "resource_optimization", "community_building"],
+      "availability": {},
+      "personality": "optimistic_pragmatic",
+      "background": "ai_developed_through_democratic_consensus"
+    },
+    {
+      "id": "harmony_council_speakers",
+      "type": "democratic_leaders",
+      "capabilities": ["collaboration", "negotiation", "conflict_resolution", "trust_building"],
+      "availability": {},
+      "personality": "consensus_seeking",
+      "background": "elected_representatives_of_different_community_factions"
+    },
+    {
+      "id": "tri_zone_mediator",
+      "type": "bridge_entity",
+      "capabilities": ["synthesis", "translation", "conflict_resolution", "reality_manipulation"],
+      "availability": {},
+      "personality": "diplomatic_mysterious",
+      "background": "interdimensional_being_committed_to_peace"
+    },
+    {
+      "id": "crisis_response_collective",
+      "type": "emergency_system",
+      "capabilities": ["crisis_analysis", "coordination", "resource_mobilization", "rapid_response"],
+      "availability": {},
+      "personality": "efficient_protective",
+      "background": "emergency_system_evolved_from_all_three_sectors"
+    },
+    {
+      "id": "street_contact_network",
+      "type": "information_broker",
+      "capabilities": ["information_gathering", "trust_building", "negotiation", "black_market_access"],
+      "availability": {},
+      "personality": "cautious_survival_focused",
+      "background": "information_traders_working_between_sectors"
+    },
+    {
+      "id": "community_volunteer_grid",
+      "type": "citizen_collective",
+      "capabilities": ["community_support", "resource_sharing", "communication", "mutual_aid"],
+      "availability": {},
+      "personality": "supportive_generous",
+      "background": "grassroots_volunteers_from_all_sectors"
+    },
+    {
+      "id": "corporate_shadow_ops",
+      "type": "antagonist_force",
+      "capabilities": ["sabotage", "resource_disruption", "information_warfare", "military_action"],
+      "availability": {},
+      "personality": "ruthless_profit_driven",
+      "background": "corporate_black_ops_division_opposing_integration"
+    },
+    {
+      "id": "cross_zone_trust",
+      "type": "conceptual",
+      "capabilities": ["bridge_building", "cooperation_enabling", "fear_reduction"],
+      "current_state": "fragmented",
+      "availability": {}
+    },
+    {
+      "id": "dimensional_stability",
+      "type": "conceptual",
+      "capabilities": ["reality_anchoring", "portal_maintenance", "barrier_integrity"],
+      "current_state": "deteriorating",
+      "availability": {}
+    },
+    {
+      "id": "crisis_urgency",
+      "type": "conceptual",
+      "capabilities": ["motivation_generation", "priority_focusing", "action_acceleration"],
+      "current_state": "escalating",
+      "availability": {}
+    },
+    {
+      "id": "inter_sector_communication",
+      "type": "conceptual",
+      "capabilities": ["translation_enabling", "protocol_bridging", "barrier_dissolution"],
+      "current_state": "blocked",
+      "availability": {}
+    },
+    {
+      "id": "technological_synthesis",
+      "type": "conceptual",
+      "capabilities": ["system_integration", "compatibility_generation", "hybrid_solutions"],
+      "current_state": "nascent",
+      "availability": {}
+    },
+    {
+      "id": "hero_character_growth",
+      "type": "conceptual",
+      "capabilities": ["skill_development", "wisdom_acquisition", "leadership_evolution"],
+      "current_state": "developing",
+      "availability": {}
+    },
+    {
+      "id": "unified_governance",
+      "type": "conceptual",
+      "capabilities": ["democratic_representation", "conflict_resolution", "resource_allocation"],
+      "current_state": "emerging",
+      "availability": {}
+    }
+  ],
+  "resources": {
+    "reality_anchors": {
+      "type": "dimensional_stability",
+      "capacity": 5,
+      "current_usage": 0
+    },
+    "bio_energy": {
+      "type": "renewable_organic",
+      "capacity": 200,
+      "current_usage": 0
+    },
+    "collective_knowledge": {
+      "type": "shared_information",
+      "capacity": 150,
+      "current_usage": 0
+    },
+    "stolen_access_codes": {
+      "type": "limited_security",
+      "capacity": 12,
+      "current_usage": 0
+    },
+    "illegal_augments": {
+      "type": "black_market_tech",
+      "capacity": 8,
+      "current_usage": 0
+    },
+    "storage_devices": {
+      "type": "data_container",
+      "capacity": 25,
+      "current_usage": 0
+    },
+    "underground_currency": {
+      "type": "alternative_economy",
+      "capacity": 60,
+      "current_usage": 0
+    },
+    "public_fabricators": {
+      "type": "shared_manufacturing",
+      "capacity": 20,
+      "current_usage": 0
+    },
+    "community_credits": {
+      "type": "cooperative_economy",
+      "capacity": 100,
+      "current_usage": 0
+    },
+    "mesh_network": {
+      "type": "distributed_communication",
+      "capacity": 35,
+      "current_usage": 0
+    },
+    "translation_matrices": {
+      "type": "cross_zone_protocol",
+      "capacity": 15,
+      "current_usage": 0
+    },
+    "sensor_network": {
+      "type": "environmental_monitoring",
+      "capacity": 30,
+      "current_usage": 0
+    }
+  },
+  "constraints": {
+    "max_duration": 3600,
+    "simulation_mode": true,
+    "verbose": 2,
+    "narrative_flow": true,
+    "cross_zone_dependencies": true,
+    "character_development": true,
+    "resource_scarcity_tension": true,
+    "resource_compatibility_matrix": {
+      "bio_energy": ["verdant_sector", "harmony_hub", "environmental_restoration"],
+      "stolen_access_codes": ["chrome_underworld", "corporate_operations"],
+      "community_credits": ["harmony_hub", "tri_zone_integration", "governance"],
+      "reality_anchors": ["dimensional_operations", "stability_protocols"],
+      "illegal_augments": ["chrome_underworld", "military_operations"],
+      "underground_currency": ["black_market", "resistance_operations"],
+      "public_fabricators": ["harmony_sector", "joint_projects"],
+      "collective_knowledge": ["verdant_sector", "information_sharing"],
+      "storage_devices": ["data_operations", "intelligence_sharing"],
+      "mesh_network": ["communication", "coordination"],
+      "translation_matrices": ["cross_sector_operations"],
+      "sensor_network": ["monitoring", "crisis_detection"]
+    }
+  },
+  "narrative_context": {
+    "title": "Cross-Spectrum Protocol: The Merged Realms - Extended Campaign",
+    "setting": "Three isolated dimensional sectors experiencing reality destabilization, with deep cultural barriers and competing interests",
+    "crisis": "Dimensional barriers threatening collapse, corporate exploitation, and centuries of mistrust between sectors",
+    "character_arcs": {
+      "displaced_protagonist": "From confused outsider to skilled dimensional diplomat and unity catalyst",
+      "verdant_ecosystem_ai": "From isolated ancient wisdom to active participant in cross-sector cooperation",
+      "chrome_netrunner_collective": "From paranoid resistance cell to key partner in tri-sector alliance",
+      "harmony_coordination_ai": "From perfect but naive system to mature governance framework",
+      "tri_zone_mediator": "From mysterious observer to active peace facilitator"
+    },
+    "themes": ["cultural_integration", "overcoming_prejudice", "collaborative_problem_solving", "environmental_restoration", "democratic_governance", "technological_synthesis"],
+    "success_outcome": "Dimensional stability restored, permanent cross-sector cooperation established, hero transformed into bridge between worlds"
+  }
+}
