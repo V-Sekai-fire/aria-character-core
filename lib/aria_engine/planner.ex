@@ -9,7 +9,7 @@ defmodule Planner do
   which in turn uses the HybridCoordinator for actual planning functionality.
   """
 
-  # alias AriaEngine.PlannerAdapter
+  alias PlannerAdapter
   alias AriaEngine.StateV2
 
   @type domain :: map()
@@ -24,20 +24,20 @@ defmodule Planner do
   Plan using the hybrid planner system.
   """
   @spec plan(domain(), state(), todos(), opts()) :: {:ok, plan()} | {:error, String.t()}
-  defdelegate plan(domain, state, todos, opts \\ []), to: AriaEngine.PlannerAdapter
+  defdelegate plan(domain, state, todos, opts \\ []), to: PlannerAdapter
 
   @doc """
   Calculate the cost of a plan.
   """
   @spec plan_cost(plan()) :: number()
-  defdelegate plan_cost(plan), to: AriaEngine.PlannerAdapter
+  defdelegate plan_cost(plan), to: PlannerAdapter
 
   @doc """
   Execute a plan - delegates to run_lazy_refineahead.
   """
   @spec execute(domain(), state(), solution_tree(), opts()) :: {:ok, state()} | {:error, String.t()}
   def execute(domain, state, solution_tree, opts \\ []) do
-    AriaEngine.PlannerAdapter.run_lazy_refineahead(domain, state, solution_tree, opts)
+    PlannerAdapter.run_lazy_refineahead(domain, state, solution_tree, opts)
   end
 
   @doc """
