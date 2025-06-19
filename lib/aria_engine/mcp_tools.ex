@@ -33,10 +33,6 @@ defmodule AriaEngine.MCPTools do
   # Tool registry with versioning - add new tools here
   @tools [
     {:schedule_activities, "1.0.0"}
-    # Add new tools here with version, e.g.:
-    # {:analyze_timeline, "1.1.0"},
-    # {:optimize_resources, "1.2.0"},
-    # {:generate_report, "2.0.0"}
   ]
   
   @doc """
