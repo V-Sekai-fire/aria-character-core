@@ -210,17 +210,33 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   """
   @spec create_htn_scheduling_methods([activity()], [Entity.t()], [Resource.t()]) :: task_methods()
   def create_htn_scheduling_methods(activities, entities, resources) do
-    %{
-      "schedule_activities" => [{
-        "htn_decomposition_method", fn _args, _state ->
-          # Return proper todo list with tasks for individual activities
-          activities
-          |> Enum.map(fn activity ->
-            {activity.id, []}
-          end)
-        end
-      }]
-    } |> Map.merge(create_activity_task_methods(activities, entities, resources))
+    # First check for circular dependencies and reject them
+    case detect_circular_dependencies(activities) do
+      :ok ->
+        %{
+          "schedule_activities" => [{
+            "htn_decomposition_method", fn _args, _state ->
+              # Return proper todo list with tasks for individual activities
+              activities
+              |> Enum.map(fn activity ->
+                {activity.id, []}
+              end)
+            end
+          }]
+        } |> Map.merge(create_activity_task_methods(activities, entities, resources))
+      
+      {:error, cycle} ->
+        Logger.error("DomainConverter: Circular dependency detected in activities: #{Enum.join(cycle, " → ")} → #{hd(cycle)}")
+        # Return empty methods to prevent infinite loops
+        %{
+          "schedule_activities" => [{
+            "safe_method", fn _args, _state ->
+              Logger.warning("DomainConverter: Refusing to create methods due to circular dependencies")
+              []
+            end
+          }]
+        }
+    end
   end
   
   @doc """
@@ -635,4 +651,59 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   defp ensure_statev2(%AriaEngine.StateV2{} = state), do: state
   defp ensure_statev2(state) when is_map(state), do: AriaEngine.StateV2.new(state)
   defp ensure_statev2(_), do: AriaEngine.StateV2.new()
+
+  # Detects circular dependencies in activities using depth-first search.
+  defp detect_circular_dependencies(activities) do
+    # Build dependency graph
+    dependency_graph = build_dependency_graph(activities)
+    activity_ids = Enum.map(activities, & &1.id)
+    
+    # Check each activity for cycles using DFS
+    case find_cycle_in_graph(dependency_graph, activity_ids) do
+      nil -> :ok
+      cycle -> {:error, cycle}
+    end
+  end
+  
+  # Builds a dependency graph from activities.
+  defp build_dependency_graph(activities) do
+    Enum.reduce(activities, %{}, fn activity, graph ->
+      activity_id = activity.id
+      dependencies = Map.get(activity, :dependencies, [])
+      Map.put(graph, activity_id, dependencies)
+    end)
+  end
+  
+  # Finds cycles in the dependency graph using DFS.
+  defp find_cycle_in_graph(graph, activity_ids) do
+    Enum.find_value(activity_ids, fn start_node ->
+      visited = MapSet.new()
+      path = []
+      dfs_detect_cycle(graph, start_node, visited, path)
+    end)
+  end
+  
+  # Depth-first search to detect cycles.
+  defp dfs_detect_cycle(graph, node, visited, path) do
+    cond do
+      node in path ->
+        # Found a cycle - return the cycle path
+        cycle_start_index = Enum.find_index(path, &(&1 == node))
+        Enum.drop(path, cycle_start_index)
+        
+      MapSet.member?(visited, node) ->
+        # Already visited this node in a different path, no cycle here
+        nil
+        
+      true ->
+        # Continue DFS
+        updated_visited = MapSet.put(visited, node)
+        updated_path = [node | path]
+        dependencies = Map.get(graph, node, [])
+        
+        Enum.find_value(dependencies, fn dep ->
+          dfs_detect_cycle(graph, dep, updated_visited, updated_path)
+        end)
+    end
+  end
 end

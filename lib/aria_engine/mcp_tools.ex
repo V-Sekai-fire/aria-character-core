@@ -147,28 +147,46 @@ defmodule AriaEngine.MCPTools do
       # Validate required parameters
       case validate_params(params) do
         {:ok, validated_params} ->
-          # Extract parameters
+          # Extract and validate parameters
           schedule_name = validated_params["schedule_name"]
-          activities = convert_activities(validated_params["activities"] || [])
-          entities = convert_entities(validated_params["entities"] || [])
-          resources = validated_params["resources"] || %{}
-          constraints = validated_params["constraints"] || %{}
+          raw_activities = validated_params["activities"] || []
           
-          # Prepare scheduler options
-          opts = [
-            entities: entities,
-            resources: resources,
-            constraints: constraints,
-            simulation_mode: Map.get(constraints, "simulation_mode", true),
-            verbose: Map.get(constraints, "verbose", 0),
-            log_activities: true
-          ]
-          
-          # Call the scheduler
-          case AriaEngine.Scheduler.schedule_activities(schedule_name, activities, opts) do
-            {:ok, simulation_result} ->
-              # Return the complete SimulationResult
-              convert_simulation_result_to_map(simulation_result)
+          # Validate activities for type safety and circular dependencies
+          case validate_activities(raw_activities) do
+            {:ok, validated_activities} ->
+              activities = convert_activities(validated_activities)
+              entities = convert_entities(validated_params["entities"] || [])
+              resources = validated_params["resources"] || %{}
+              constraints = validated_params["constraints"] || %{}
+              
+              # Prepare scheduler options
+              opts = [
+                entities: entities,
+                resources: resources,
+                constraints: constraints,
+                simulation_mode: Map.get(constraints, "simulation_mode", true),
+                verbose: Map.get(constraints, "verbose", 0),
+                log_activities: true
+              ]
+              
+              # Call the scheduler
+              case AriaEngine.Scheduler.schedule_activities(schedule_name, activities, opts) do
+                {:ok, simulation_result} ->
+                  # Return the complete SimulationResult
+                  convert_simulation_result_to_map(simulation_result)
+                  
+                {:error, reason} ->
+                  %{
+                    status: "error",
+                    reason: reason,
+                    schedule: [],
+                    analysis: %{},
+                    activity_log: [],
+                    resource_utilization: %{},
+                    timeline: [],
+                    simulation_metadata: %{}
+                  }
+              end
               
             {:error, reason} ->
               %{
@@ -233,6 +251,137 @@ defmodule AriaEngine.MCPTools do
   end
   
   defp validate_params(_), do: {:error, "Invalid parameters format"}
+  
+  # Validates activities for type safety and circular dependencies.
+  defp validate_activities(activities) when is_list(activities) do
+    try do
+      # First validate each activity's structure and types
+      case validate_activity_structures(activities) do
+        {:ok, validated_activities} ->
+          # Then check for circular dependencies
+          case detect_circular_dependencies(validated_activities) do
+            :ok -> {:ok, validated_activities}
+            {:error, cycle} -> {:error, "Circular dependency detected: #{Enum.join(cycle, " → ")} → #{hd(cycle)}"}
+          end
+        {:error, reason} -> {:error, reason}
+      end
+    rescue
+      e -> {:error, "Activity validation failed: #{Exception.message(e)}"}
+    end
+  end
+  
+  defp validate_activities(_), do: {:error, "Activities must be a list"}
+  
+  # Validates the structure and types of individual activities.
+  defp validate_activity_structures(activities) do
+    validated = Enum.map(activities, &validate_single_activity/1)
+    
+    case Enum.find(validated, &match?({:error, _}, &1)) do
+      {:error, reason} -> {:error, reason}
+      nil -> {:ok, Enum.map(validated, fn {:ok, activity} -> activity end)}
+    end
+  end
+  
+  # Validates a single activity's structure and types.
+  defp validate_single_activity(activity) when is_map(activity) do
+    cond do
+      not Map.has_key?(activity, "id") ->
+        {:error, "Activity missing required 'id' field"}
+        
+      not is_binary(activity["id"]) ->
+        {:error, "Activity 'id' must be a string"}
+        
+      String.trim(activity["id"]) == "" ->
+        {:error, "Activity 'id' cannot be empty"}
+        
+      not Map.has_key?(activity, "duration") ->
+        {:error, "Activity missing required 'duration' field"}
+        
+      not is_integer(activity["duration"]) ->
+        {:error, "Activity 'duration' must be an integer, got: #{inspect(activity["duration"])}"}
+        
+      activity["duration"] < 0 ->
+        {:error, "Activity 'duration' must be non-negative, got: #{activity["duration"]}"}
+        
+      not validate_dependencies_format(activity["dependencies"]) ->
+        {:error, "Activity 'dependencies' must be a list of strings"}
+        
+      true ->
+        # Sanitize and return validated activity
+        validated_activity = %{
+          "id" => String.trim(activity["id"]),
+          "duration" => activity["duration"],
+          "dependencies" => activity["dependencies"] || [],
+          "required_capabilities" => activity["required_capabilities"] || [],
+          "required_resources" => activity["required_resources"] || []
+        }
+        {:ok, validated_activity}
+    end
+  end
+  
+  defp validate_single_activity(_), do: {:error, "Activity must be a map/object"}
+  
+  # Validates dependencies format.
+  defp validate_dependencies_format(nil), do: true
+  defp validate_dependencies_format(deps) when is_list(deps) do
+    Enum.all?(deps, &is_binary/1)
+  end
+  defp validate_dependencies_format(_), do: false
+  
+  # Detects circular dependencies using depth-first search.
+  defp detect_circular_dependencies(activities) do
+    # Build dependency graph
+    dependency_graph = build_dependency_graph(activities)
+    activity_ids = Enum.map(activities, & &1["id"])
+    
+    # Check each activity for cycles using DFS
+    case find_cycle_in_graph(dependency_graph, activity_ids) do
+      nil -> :ok
+      cycle -> {:error, cycle}
+    end
+  end
+  
+  # Builds a dependency graph from activities.
+  defp build_dependency_graph(activities) do
+    Enum.reduce(activities, %{}, fn activity, graph ->
+      activity_id = activity["id"]
+      dependencies = activity["dependencies"] || []
+      Map.put(graph, activity_id, dependencies)
+    end)
+  end
+  
+  # Finds cycles in the dependency graph using DFS.
+  defp find_cycle_in_graph(graph, activity_ids) do
+    Enum.find_value(activity_ids, fn start_node ->
+      visited = MapSet.new()
+      path = []
+      dfs_detect_cycle(graph, start_node, visited, path)
+    end)
+  end
+  
+  # Depth-first search to detect cycles.
+  defp dfs_detect_cycle(graph, node, visited, path) do
+    cond do
+      node in path ->
+        # Found a cycle - return the cycle path
+        cycle_start_index = Enum.find_index(path, &(&1 == node))
+        Enum.drop(path, cycle_start_index)
+        
+      MapSet.member?(visited, node) ->
+        # Already visited this node in a different path, no cycle here
+        nil
+        
+      true ->
+        # Continue DFS
+        updated_visited = MapSet.put(visited, node)
+        updated_path = [node | path]
+        dependencies = Map.get(graph, node, [])
+        
+        Enum.find_value(dependencies, fn dep ->
+          dfs_detect_cycle(graph, dep, updated_visited, updated_path)
+        end)
+    end
+  end
   
   defp convert_activities(activities) when is_list(activities) do
     Enum.map(activities, fn activity ->
