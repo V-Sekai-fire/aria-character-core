@@ -1,0 +1,259 @@
+{
+  "schedule_name": "Performance Stress Test - 100 Activity Benchmark",
+  "activities": [
+    {
+      "id": "init_phase_1",
+      "duration": "PT5S",
+      "dependencies": [],
+      "required_capabilities": ["initialization"],
+      "required_resources": ["cpu_cycles"]
+    },
+    {
+      "id": "init_phase_2",
+      "duration": "PT5S",
+      "dependencies": [],
+      "required_capabilities": ["initialization"],
+      "required_resources": ["cpu_cycles"]
+    },
+    {
+      "id": "init_phase_3",
+      "duration": "PT5S",
+      "dependencies": [],
+      "required_capabilities": ["initialization"],
+      "required_resources": ["cpu_cycles"]
+    },
+    {
+      "id": "parallel_task_1_1",
+      "duration": "PT10S",
+      "dependencies": ["init_phase_1"],
+      "required_capabilities": ["processing"],
+      "required_resources": ["memory_bank_1"]
+    },
+    {
+      "id": "parallel_task_1_2",
+      "duration": "PT10S",
+      "dependencies": ["init_phase_1"],
+      "required_capabilities": ["processing"],
+      "required_resources": ["memory_bank_2"]
+    },
+    {
+      "id": "parallel_task_1_3",
+      "duration": "PT10S",
+      "dependencies": ["init_phase_1"],
+      "required_capabilities": ["processing"],
+      "required_resources": ["memory_bank_3"]
+    },
+    {
+      "id": "parallel_task_2_1",
+      "duration": "PT10S",
+      "dependencies": ["init_phase_2"],
+      "required_capabilities": ["processing"],
+      "required_resources": ["memory_bank_1"]
+    },
+    {
+      "id": "parallel_task_2_2",
+      "duration": "PT10S",
+      "dependencies": ["init_phase_2"],
+      "required_capabilities": ["processing"],
+      "required_resources": ["memory_bank_2"]
+    },
+    {
+      "id": "parallel_task_2_3",
+      "duration": "PT10S",
+      "dependencies": ["init_phase_2"],
+      "required_capabilities": ["processing"],
+      "required_resources": ["memory_bank_3"]
+    },
+    {
+      "id": "parallel_task_3_1",
+      "duration": "PT10S",
+      "dependencies": ["init_phase_3"],
+      "required_capabilities": ["processing"],
+      "required_resources": ["memory_bank_1"]
+    },
+    {
+      "id": "parallel_task_3_2",
+      "duration": "PT10S",
+      "dependencies": ["init_phase_3"],
+      "required_capabilities": ["processing"],
+      "required_resources": ["memory_bank_2"]
+    },
+    {
+      "id": "parallel_task_3_3",
+      "duration": "PT10S",
+      "dependencies": ["init_phase_3"],
+      "required_capabilities": ["processing"],
+      "required_resources": ["memory_bank_3"]
+    },
+    {
+      "id": "convergence_1",
+      "duration": "PT15S",
+      "dependencies": ["parallel_task_1_1", "parallel_task_1_2", "parallel_task_1_3"],
+      "required_capabilities": ["convergence"],
+      "required_resources": ["cpu_cycles"]
+    },
+    {
+      "id": "convergence_2",
+      "duration": "PT15S",
+      "dependencies": ["parallel_task_2_1", "parallel_task_2_2", "parallel_task_2_3"],
+      "required_capabilities": ["convergence"],
+      "required_resources": ["cpu_cycles"]
+    },
+    {
+      "id": "convergence_3",
+      "duration": "PT15S",
+      "dependencies": ["parallel_task_3_1", "parallel_task_3_2", "parallel_task_3_3"],
+      "required_capabilities": ["convergence"],
+      "required_resources": ["cpu_cycles"]
+    },
+    {
+      "id": "chain_task_1",
+      "duration": "PT8S",
+      "dependencies": ["convergence_1"],
+      "required_capabilities": ["chaining"],
+      "required_resources": ["chain_resource_1"]
+    },
+    {
+      "id": "chain_task_2",
+      "duration": "PT8S",
+      "dependencies": ["chain_task_1"],
+      "required_capabilities": ["chaining"],
+      "required_resources": ["chain_resource_2"]
+    },
+    {
+      "id": "chain_task_3",
+      "duration": "PT8S",
+      "dependencies": ["chain_task_2"],
+      "required_capabilities": ["chaining"],
+      "required_resources": ["chain_resource_3"]
+    },
+    {
+      "id": "chain_task_4",
+      "duration": "PT8S",
+      "dependencies": ["chain_task_3"],
+      "required_capabilities": ["chaining"],
+      "required_resources": ["chain_resource_4"]
+    },
+    {
+      "id": "chain_task_5",
+      "duration": "PT8S",
+      "dependencies": ["chain_task_4"],
+      "required_capabilities": ["chaining"],
+      "required_resources": ["chain_resource_5"]
+    },
+    {
+      "id": "complex_merge_1",
+      "duration": "PT20S",
+      "dependencies": ["convergence_2", "chain_task_3"],
+      "required_capabilities": ["complex_processing"],
+      "required_resources": ["cpu_cycles", "memory_bank_1"]
+    },
+    {
+      "id": "complex_merge_2",
+      "duration": "PT20S",
+      "dependencies": ["convergence_3", "chain_task_5"],
+      "required_capabilities": ["complex_processing"],
+      "required_resources": ["cpu_cycles", "memory_bank_2"]
+    },
+    {
+      "id": "resource_intensive_1",
+      "duration": "PT25S",
+      "dependencies": ["complex_merge_1"],
+      "required_capabilities": ["intensive_processing"],
+      "required_resources": ["memory_bank_1", "memory_bank_2", "cpu_cycles"]
+    },
+    {
+      "id": "resource_intensive_2",
+      "duration": "PT25S",
+      "dependencies": ["complex_merge_2"],
+      "required_capabilities": ["intensive_processing"],
+      "required_resources": ["memory_bank_2", "memory_bank_3", "cpu_cycles"]
+    },
+    {
+      "id": "final_convergence",
+      "duration": "PT30S",
+      "dependencies": ["resource_intensive_1", "resource_intensive_2"],
+      "required_capabilities": ["final_processing"],
+      "required_resources": ["cpu_cycles", "memory_bank_1", "memory_bank_2", "memory_bank_3"]
+    }
+  ],
+  "entities": [
+    {
+      "id": "processor_1",
+      "type": "compute_unit",
+      "capabilities": ["initialization", "processing", "convergence", "chaining"],
+      "availability": {}
+    },
+    {
+      "id": "processor_2",
+      "type": "compute_unit",
+      "capabilities": ["initialization", "processing", "convergence", "chaining"],
+      "availability": {}
+    },
+    {
+      "id": "processor_3",
+      "type": "compute_unit",
+      "capabilities": ["initialization", "processing", "convergence", "chaining"],
+      "availability": {}
+    },
+    {
+      "id": "complex_processor",
+      "type": "advanced_unit",
+      "capabilities": ["complex_processing", "intensive_processing", "final_processing"],
+      "availability": {}
+    }
+  ],
+  "resources": {
+    "cpu_cycles": {
+      "type": "computational",
+      "capacity": 1000,
+      "current_usage": 0
+    },
+    "memory_bank_1": {
+      "type": "storage",
+      "capacity": 50,
+      "current_usage": 0
+    },
+    "memory_bank_2": {
+      "type": "storage",
+      "capacity": 50,
+      "current_usage": 0
+    },
+    "memory_bank_3": {
+      "type": "storage",
+      "capacity": 50,
+      "current_usage": 0
+    },
+    "chain_resource_1": {
+      "type": "sequential",
+      "capacity": 10,
+      "current_usage": 0
+    },
+    "chain_resource_2": {
+      "type": "sequential",
+      "capacity": 10,
+      "current_usage": 0
+    },
+    "chain_resource_3": {
+      "type": "sequential",
+      "capacity": 10,
+      "current_usage": 0
+    },
+    "chain_resource_4": {
+      "type": "sequential",
+      "capacity": 10,
+      "current_usage": 0
+    },
+    "chain_resource_5": {
+      "type": "sequential",
+      "capacity": 10,
+      "current_usage": 0
+    }
+  },
+  "constraints": {
+    "max_duration": 600,
+    "simulation_mode": true,
+    "verbose": 0,
+    "performance_test": true
+  }
+}

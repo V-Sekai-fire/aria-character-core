@@ -1,0 +1,83 @@
+{
+  "schedule_name": "Basic Linear Mission - Tutorial",
+  "activities": [
+    {
+      "id": "mission_start",
+      "duration": "PT30S",
+      "dependencies": [],
+      "required_capabilities": ["basic_movement"],
+      "required_resources": ["player_health"]
+    },
+    {
+      "id": "first_corridor",
+      "duration": "PT60S",
+      "dependencies": ["mission_start"],
+      "required_capabilities": ["basic_movement", "combat"],
+      "required_resources": ["ammo_basic"]
+    },
+    {
+      "id": "enemy_encounter_1",
+      "duration": "PT45S",
+      "dependencies": ["first_corridor"],
+      "required_capabilities": ["combat"],
+      "required_resources": ["ammo_basic", "player_health"]
+    },
+    {
+      "id": "health_station",
+      "duration": "PT20S",
+      "dependencies": ["enemy_encounter_1"],
+      "required_capabilities": ["interaction"],
+      "required_resources": ["health_kit"]
+    },
+    {
+      "id": "final_corridor",
+      "duration": "PT90S",
+      "dependencies": ["health_station"],
+      "required_capabilities": ["basic_movement", "combat"],
+      "required_resources": ["ammo_basic"]
+    },
+    {
+      "id": "mission_complete",
+      "duration": "PT15S",
+      "dependencies": ["final_corridor"],
+      "required_capabilities": ["interaction"],
+      "required_resources": []
+    }
+  ],
+  "entities": [
+    {
+      "id": "player",
+      "type": "protagonist",
+      "capabilities": ["basic_movement", "combat", "interaction"],
+      "availability": {}
+    },
+    {
+      "id": "enemy_spawner",
+      "type": "ai_director",
+      "capabilities": ["spawn_control", "difficulty_scaling"],
+      "availability": {}
+    }
+  ],
+  "resources": {
+    "player_health": {
+      "type": "vital_resource",
+      "capacity": 100,
+      "current_usage": 0
+    },
+    "ammo_basic": {
+      "type": "consumable",
+      "capacity": 50,
+      "current_usage": 0
+    },
+    "health_kit": {
+      "type": "consumable",
+      "capacity": 3,
+      "current_usage": 0
+    }
+  },
+  "constraints": {
+    "max_duration": 300,
+    "simulation_mode": true,
+    "verbose": 1
+  }
+}

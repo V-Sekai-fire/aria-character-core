@@ -1,0 +1,235 @@
+{
+  "schedule_name": "Cross-Spectrum Protocol: The Merged Realms",
+  "activities": [
+    {
+      "id": "consciousness_stabilization",
+      "duration": "PT45S",
+      "dependencies": [],
+      "required_capabilities": ["adaptation", "modern_knowledge"],
+      "required_resources": ["reality_anchors"]
+    },
+    {
+      "id": "verdant_sector_entry",
+      "duration": "PT30S", 
+      "dependencies": ["consciousness_stabilization"],
+      "required_capabilities": ["pattern_recognition"],
+      "required_resources": ["bio_energy"]
+    },
+    {
+      "id": "symbiotic_interface_discovery",
+      "duration": "PT90S",
+      "dependencies": ["verdant_sector_entry"],
+      "required_capabilities": ["adaptation", "bio_integration"],
+      "required_resources": ["bio_energy", "collective_knowledge"]
+    },
+    {
+      "id": "plant_network_authentication",
+      "duration": "PT60S",
+      "dependencies": ["symbiotic_interface_discovery"],
+      "required_capabilities": ["bio_integration", "trust_building"],
+      "required_resources": ["collective_knowledge"]
+    },
+    {
+      "id": "ecosystem_crisis_detection",
+      "duration": "PT45S",
+      "dependencies": ["plant_network_authentication"],
+      "required_capabilities": ["pattern_recognition", "crisis_analysis"],
+      "required_resources": ["bio_energy", "sensor_network"]
+    },
+    {
+      "id": "chrome_underworld_infiltration",
+      "duration": "PT75S",
+      "dependencies": ["ecosystem_crisis_detection"],
+      "required_capabilities": ["stealth", "data_analysis"],
+      "required_resources": ["stolen_access_codes"]
+    },
+    {
+      "id": "corporate_firewall_breach",
+      "duration": "PT120S",
+      "dependencies": ["chrome_underworld_infiltration"],
+      "required_capabilities": ["hacking", "modern_knowledge"],
+      "required_resources": ["stolen_access_codes", "illegal_augments"]
+    },
+    {
+      "id": "data_core_extraction",
+      "duration": "PT90S",
+      "dependencies": ["corporate_firewall_breach"],
+      "required_capabilities": ["data_analysis", "stealth"],
+      "required_resources": ["storage_devices", "illegal_augments"]
+    },
+    {
+      "id": "netrunner_alliance_formation",
+      "duration": "PT60S",
+      "dependencies": ["data_core_extraction"],
+      "required_capabilities": ["trust_building", "negotiation"],
+      "required_resources": ["underground_currency"]
+    },
+    {
+      "id": "harmony_hub_coordination",
+      "duration": "PT90S",
+      "dependencies": ["netrunner_alliance_formation"],
+      "required_capabilities": ["collaboration", "system_integration"],
+      "required_resources": ["public_fabricators", "community_credits"]
+    },
+    {
+      "id": "tri_zone_protocol_synthesis",
+      "duration": "PT150S",
+      "dependencies": ["harmony_hub_coordination", "plant_network_authentication"],
+      "required_capabilities": ["synthesis", "leadership", "modern_knowledge"],
+      "required_resources": ["bio_energy", "community_credits", "collective_knowledge"]
+    },
+    {
+      "id": "cross_district_communication",
+      "duration": "PT75S",
+      "dependencies": ["tri_zone_protocol_synthesis"],
+      "required_capabilities": ["communication", "translation"],
+      "required_resources": ["mesh_network", "translation_matrices"]
+    },
+    {
+      "id": "reality_stabilization_ritual",
+      "duration": "PT120S",
+      "dependencies": ["cross_district_communication"],
+      "required_capabilities": ["synthesis", "reality_manipulation", "leadership"],
+      "required_resources": ["reality_anchors", "bio_energy", "community_credits"]
+    },
+    {
+      "id": "portal_manifestation",
+      "duration": "PT60S",
+      "dependencies": ["reality_stabilization_ritual"],
+      "required_capabilities": ["reality_manipulation", "modern_knowledge"],
+      "required_resources": ["reality_anchors", "translation_matrices"]
+    },
+    {
+      "id": "dimensional_return_sequence",
+      "duration": "PT30S",
+      "dependencies": ["portal_manifestation"],
+      "required_capabilities": ["dimensional_travel"],
+      "required_resources": ["reality_anchors"]
+    }
+  ],
+  "entities": [
+    {
+      "id": "displaced_protagonist",
+      "type": "isekai_hero",
+      "capabilities": ["modern_knowledge", "adaptation", "pattern_recognition", "leadership", "dimensional_travel"],
+      "availability": {}
+    },
+    {
+      "id": "verdant_ecosystem_ai",
+      "type": "bio_intelligence", 
+      "capabilities": ["bio_integration", "collective_consciousness", "ecosystem_management", "symbiotic_interface"],
+      "availability": {}
+    },
+    {
+      "id": "chrome_netrunner_collective",
+      "type": "hacker_group",
+      "capabilities": ["hacking", "data_analysis", "stealth", "underground_networks"],
+      "availability": {}
+    },
+    {
+      "id": "harmony_coordination_ai",
+      "type": "collaborative_system",
+      "capabilities": ["collaboration", "system_integration", "resource_optimization", "community_building"],
+      "availability": {}
+    },
+    {
+      "id": "tri_zone_mediator",
+      "type": "bridge_entity",
+      "capabilities": ["synthesis", "translation", "conflict_resolution", "reality_manipulation"],
+      "availability": {}
+    },
+    {
+      "id": "crisis_response_collective",
+      "type": "emergency_system",
+      "capabilities": ["crisis_analysis", "coordination", "resource_mobilization", "rapid_response"],
+      "availability": {}
+    },
+    {
+      "id": "street_contact_network",
+      "type": "information_broker",
+      "capabilities": ["information_gathering", "trust_building", "negotiation", "black_market_access"],
+      "availability": {}
+    },
+    {
+      "id": "community_volunteer_grid",
+      "type": "citizen_collective",
+      "capabilities": ["community_support", "resource_sharing", "communication", "mutual_aid"],
+      "availability": {}
+    }
+  ],
+  "resources": {
+    "reality_anchors": {
+      "type": "dimensional_stability",
+      "capacity": 3,
+      "current_usage": 0
+    },
+    "bio_energy": {
+      "type": "renewable_organic",
+      "capacity": 100,
+      "current_usage": 0
+    },
+    "collective_knowledge": {
+      "type": "shared_information",
+      "capacity": 50,
+      "current_usage": 0
+    },
+    "stolen_access_codes": {
+      "type": "limited_security",
+      "capacity": 5,
+      "current_usage": 0
+    },
+    "illegal_augments": {
+      "type": "black_market_tech",
+      "capacity": 3,
+      "current_usage": 0
+    },
+    "storage_devices": {
+      "type": "data_container",
+      "capacity": 10,
+      "current_usage": 0
+    },
+    "underground_currency": {
+      "type": "alternative_economy",
+      "capacity": 25,
+      "current_usage": 0
+    },
+    "public_fabricators": {
+      "type": "shared_manufacturing",
+      "capacity": 8,
+      "current_usage": 0
+    },
+    "community_credits": {
+      "type": "cooperative_economy",
+      "capacity": 40,
+      "current_usage": 0
+    },
+    "mesh_network": {
+      "type": "distributed_communication",
+      "capacity": 15,
+      "current_usage": 0
+    },
+    "translation_matrices": {
+      "type": "cross_zone_protocol",
+      "capacity": 6,
+      "current_usage": 0
+    },
+    "sensor_network": {
+      "type": "environmental_monitoring",
+      "capacity": 12,
+      "current_usage": 0
+    }
+  },
+  "constraints": {
+    "max_duration": 1200,
+    "simulation_mode": true,
+    "verbose": 2,
+    "narrative_flow": true,
+    "cross_zone_dependencies": true,
+    "resource_compatibility_matrix": {
+      "bio_energy": ["verdant_sector", "harmony_hub"],
+      "stolen_access_codes": ["chrome_underworld"],
+      "community_credits": ["harmony_hub", "tri_zone_integration"],
+      "reality_anchors": ["dimensional_operations"]
+    }
+  }
+}

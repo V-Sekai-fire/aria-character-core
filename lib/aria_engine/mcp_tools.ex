@@ -1,42 +1,142 @@
 defmodule AriaEngine.MCPTools do
+  # API Version Management
+  @current_api_version "1.0.0"
+  @supported_api_versions ["1.0.0"]
+
   @moduledoc """
   Shared MCP tool definitions and handlers for AriaEngine.
   
   This module provides a registry-based system for MCP tools that can be
   used by different MCP server implementations (stdio, HTTP, etc.).
   
+  ## Versioning
+  
+  The MCP API uses semantic versioning (major.minor.patch):
+  - Major: Breaking changes to existing tools
+  - Minor: New tools or backward-compatible enhancements  
+  - Patch: Bug fixes and internal improvements
+  
+  Current API version: #{@current_api_version}
+  Supported versions: #{inspect(@supported_api_versions)}
+  
+  ## Adding Tools
+  
   To add a new tool:
-  1. Add the tool definition to the @tools list
-  2. Add a handler function following the pattern handle_<tool_name>_tool_call/1
+  1. Add the tool definition to the @tools list with version
+  2. Add a handler function following the pattern handle_<tool_name>_tool_call/2
   3. The tool will automatically be available in all MCP servers
+  4. Update API version appropriately (minor for new tools, major for breaking changes)
   """
 
   require Logger
-  alias Timeline.LodAdapter
-
-  # Tool registry - add new tools here
+  
+  # Tool registry with versioning - add new tools here
   @tools [
-    :schedule_activities
-    # Add new tools here, e.g.:
-    # :analyze_timeline,
-    # :optimize_resources,
-    # :generate_report
+    {:schedule_activities, "1.0.0"}
+    # Add new tools here with version, e.g.:
+    # {:analyze_timeline, "1.1.0"},
+    # {:optimize_resources, "1.2.0"},
+    # {:generate_report, "2.0.0"}
   ]
-
+  
   @doc """
-  Returns all available tool definitions.
+  Returns the current API version.
   """
-  def get_all_tools do
-    Enum.map(@tools, &get_tool_definition/1)
+  def current_api_version, do: @current_api_version
+  
+  @doc """
+  Returns all supported API versions.
+  """
+  def supported_api_versions, do: @supported_api_versions
+  
+  @doc """
+  Checks if a given API version is supported.
+  """
+  def version_supported?(version) when is_binary(version) do
+    version in @supported_api_versions
+  end
+  
+  @doc """
+  Validates API version compatibility for a request.
+  Returns {:ok, version} or {:error, reason}.
+  """
+  def validate_api_version(nil), do: {:ok, @current_api_version}
+  def validate_api_version(version) when is_binary(version) do
+    if version_supported?(version) do
+      {:ok, version}
+    else
+      {:error, "Unsupported API version: #{version}. Supported versions: #{inspect(@supported_api_versions)}"}
+    end
+  end
+  def validate_api_version(_), do: {:error, "API version must be a string"}
+  
+  @doc """
+  Checks if a tool version is compatible with a requested API version.
+  Uses semantic versioning compatibility rules.
+  """
+  def version_compatible?(tool_version, api_version) when is_binary(tool_version) and is_binary(api_version) do
+    # For now, use simple exact matching. 
+    # In the future, this could implement semantic versioning rules:
+    # - Same major version required for compatibility
+    # - Minor/patch versions are backward compatible
+    tool_version == api_version
   end
 
   @doc """
-  Returns a specific tool definition by name.
+  Returns all available tool definitions for the current API version.
   """
-  def get_tool_definition(:schedule_activities) do
+  def get_all_tools do
+    get_all_tools(@current_api_version)
+  end
+  
+  @doc """
+  Returns all available tool definitions for a specific API version.
+  """
+  def get_all_tools(api_version) when is_binary(api_version) do
+    case validate_api_version(api_version) do
+      {:ok, validated_version} ->
+        @tools
+        |> Enum.filter(fn {_tool_name, tool_version} -> 
+          version_compatible?(tool_version, validated_version)
+        end)
+        |> Enum.map(fn {tool_name, _version} -> 
+          get_tool_definition(tool_name, validated_version)
+        end)
+      {:error, _reason} ->
+        []
+    end
+  end
+
+  @doc """
+  Returns a specific tool definition by name for the current API version.
+  """
+  def get_tool_definition(tool_name) do
+    get_tool_definition(tool_name, @current_api_version)
+  end
+  
+  @doc """
+  Returns a specific tool definition by name for a specific API version.
+  """
+  def get_tool_definition(:schedule_activities, api_version) when is_binary(api_version) do
+    case validate_api_version(api_version) do
+      {:ok, _validated_version} ->
+        get_schedule_activities_definition(api_version)
+      {:error, reason} ->
+        %{error: reason}
+    end
+  end
+  
+  def get_tool_definition(tool_name, _api_version) do
+    Logger.warning("MCPTools: Unknown tool definition requested: #{inspect(tool_name)}")
+    %{error: "Unknown tool: #{tool_name}"}
+  end
+  
+  defp get_schedule_activities_definition(api_version) do
     %{
       name: "schedule_activities",
       description: "Schedule activities using AriaEngine's temporal planner with entity and resource management. Returns complete SimulationResult with solution tree.",
+      version: "1.0.0",
+      apiVersion: api_version,
       inputSchema: %{
         type: "object",
         properties: %{
@@ -143,6 +243,12 @@ defmodule AriaEngine.MCPTools do
   def handle_tool_call(tool_name, params) when is_binary(tool_name) do
     tool_atom = String.to_atom(tool_name)
     handle_tool_call(tool_atom, params)
+  end
+  
+  def handle_tool_call(tool_name, params) when is_list(tool_name) do
+    # Handle charlist input (convert to string first)
+    string_name = List.to_string(tool_name)
+    handle_tool_call(string_name, params)
   end
 
   def handle_tool_call(:schedule_activities, params) do
