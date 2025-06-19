@@ -33,7 +33,7 @@ defmodule AriaEngine.MCPTools do
   # Tool registry with versioning - add new tools here
   @tools [
     {:schedule_activities, "1.0.0"},
-    {:director, "1.0.0"}
+    {:director, "1.1.0"}
     # Add new tools here with version, e.g.:
     # {:analyze_timeline, "1.1.0"},
     # {:optimize_resources, "1.2.0"},
@@ -668,7 +668,7 @@ defp convert_activities(activities) when is_list(activities) do
       case entry do
         %AriaEngine.Scheduler.ActivityLogEntry{} = log_entry ->
           %{
-            timestamp: DateTime.to_iso8601(log_entry.timestamp),
+            timestamp: safe_datetime_to_iso8601(log_entry.timestamp),
             activity_id: log_entry.activity_id,
             entity_id: log_entry.entity_id,
             event_type: log_entry.event_type,
@@ -683,6 +683,33 @@ defp convert_activities(activities) when is_list(activities) do
   end
   
   defp convert_activity_log(_), do: []
+
+  # Safe DateTime to ISO8601 conversion with proper Erlang syntax
+  defp safe_datetime_to_iso8601(timestamp) do
+    case timestamp do
+      %DateTime{} = dt ->
+        DateTime.to_iso8601(dt)
+      
+      {{year, month, day}, {hour, minute, second}} ->
+        # Erlang datetime tuple format - convert to ISO8601 using the iso8601 library
+        :iso8601.format({{year, month, day}, {hour, minute, second}})
+      
+      timestamp_str when is_binary(timestamp_str) ->
+        timestamp_str
+      
+      timestamp_int when is_integer(timestamp_int) ->
+        # Unix timestamp - convert to DateTime first
+        case DateTime.from_unix(timestamp_int) do
+          {:ok, dt} -> DateTime.to_iso8601(dt)
+          {:error, _} -> "Invalid timestamp"
+        end
+      
+      _ ->
+        "Unknown timestamp format"
+    end
+  rescue
+    _ -> "Error formatting timestamp"
+  end
 
   defp process_duration(duration) do
     case duration do
@@ -958,105 +985,105 @@ defp convert_activities(activities) when is_list(activities) do
     [
       %{
         "id" => "consciousness_stabilization",
-        "duration" => "PT45S",
+        "duration" => "PT2H",
         "dependencies" => [],
         "required_capabilities" => ["adaptation", "modern_knowledge"],
         "required_resources" => ["reality_anchors"]
       },
       %{
         "id" => "verdant_sector_entry",
-        "duration" => "PT30S",
+        "duration" => "PT45M",
         "dependencies" => ["consciousness_stabilization"],
         "required_capabilities" => ["pattern_recognition"],
         "required_resources" => ["bio_energy"]
       },
       %{
         "id" => "symbiotic_interface_discovery",
-        "duration" => "PT90S",
+        "duration" => "PT3H",
         "dependencies" => ["verdant_sector_entry"],
         "required_capabilities" => ["adaptation", "bio_integration"],
         "required_resources" => ["bio_energy", "collective_knowledge"]
       },
       %{
         "id" => "plant_network_authentication",
-        "duration" => "PT60S",
+        "duration" => "PT90M",
         "dependencies" => ["symbiotic_interface_discovery"],
         "required_capabilities" => ["bio_integration", "trust_building"],
         "required_resources" => ["collective_knowledge"]
       },
       %{
         "id" => "ecosystem_crisis_detection",
-        "duration" => "PT45S",
+        "duration" => "PT2H",
         "dependencies" => ["plant_network_authentication"],
         "required_capabilities" => ["pattern_recognition", "crisis_analysis"],
         "required_resources" => ["bio_energy", "sensor_network"]
       },
       %{
         "id" => "chrome_underworld_infiltration",
-        "duration" => "PT75S",
+        "duration" => "PT4H",
         "dependencies" => ["ecosystem_crisis_detection"],
         "required_capabilities" => ["stealth", "data_analysis"],
         "required_resources" => ["stolen_access_codes"]
       },
       %{
         "id" => "corporate_firewall_breach",
-        "duration" => "PT120S",
+        "duration" => "PT6H",
         "dependencies" => ["chrome_underworld_infiltration"],
         "required_capabilities" => ["hacking", "modern_knowledge"],
         "required_resources" => ["stolen_access_codes", "illegal_augments"]
       },
       %{
         "id" => "data_core_extraction",
-        "duration" => "PT90S",
+        "duration" => "PT3H",
         "dependencies" => ["corporate_firewall_breach"],
         "required_capabilities" => ["data_analysis", "stealth"],
         "required_resources" => ["storage_devices", "illegal_augments"]
       },
       %{
         "id" => "netrunner_alliance_formation",
-        "duration" => "PT60S",
+        "duration" => "PT5H",
         "dependencies" => ["data_core_extraction"],
         "required_capabilities" => ["trust_building", "negotiation"],
         "required_resources" => ["underground_currency"]
       },
       %{
         "id" => "harmony_hub_coordination",
-        "duration" => "PT90S",
+        "duration" => "PT4H",
         "dependencies" => ["netrunner_alliance_formation"],
         "required_capabilities" => ["collaboration", "system_integration"],
         "required_resources" => ["public_fabricators", "community_credits"]
       },
       %{
         "id" => "tri_zone_protocol_synthesis",
-        "duration" => "PT150S",
+        "duration" => "PT8H",
         "dependencies" => ["harmony_hub_coordination", "plant_network_authentication"],
         "required_capabilities" => ["synthesis", "leadership", "modern_knowledge"],
         "required_resources" => ["bio_energy", "community_credits", "collective_knowledge"]
       },
       %{
         "id" => "cross_district_communication",
-        "duration" => "PT75S",
+        "duration" => "PT2H",
         "dependencies" => ["tri_zone_protocol_synthesis"],
         "required_capabilities" => ["communication", "translation"],
         "required_resources" => ["mesh_network", "translation_matrices"]
       },
       %{
         "id" => "reality_stabilization_ritual",
-        "duration" => "PT120S",
+        "duration" => "PT12H",
         "dependencies" => ["cross_district_communication"],
         "required_capabilities" => ["synthesis", "reality_manipulation", "leadership"],
         "required_resources" => ["reality_anchors", "bio_energy", "community_credits"]
       },
       %{
         "id" => "portal_manifestation",
-        "duration" => "PT60S",
+        "duration" => "PT30M",
         "dependencies" => ["reality_stabilization_ritual"],
         "required_capabilities" => ["reality_manipulation", "modern_knowledge"],
         "required_resources" => ["reality_anchors", "translation_matrices"]
       },
       %{
         "id" => "dimensional_return_sequence",
-        "duration" => "PT30S",
+        "duration" => "PT15M",
         "dependencies" => ["portal_manifestation"],
         "required_capabilities" => ["dimensional_travel"],
         "required_resources" => ["reality_anchors"]
