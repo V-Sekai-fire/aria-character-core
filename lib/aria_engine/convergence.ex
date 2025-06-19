@@ -3,107 +3,75 @@
 
 defmodule AriaEngine.Convergence do
   @moduledoc """
-  Unified convergence solving API with Flow and Nx-PyTorch backends.
+  Unified convergence solving API with Flow-based parallel processing.
   
   This module provides a clean interface for solving convergence problems
-  using either Flow-based parallel processing or Nx tensor operations
-  with optional PyTorch hardware acceleration.
+  using Flow-based parallel processing with automatic batch optimization
+  for multiple problems via the new BatchProcessor.
   """
 
   alias AriaEngine.ConvergenceFlow
-  alias AriaEngine.ConvergenceNx
+  alias AriaEngine.BatchProcessor
 
   require Logger
 
   @doc """
-  Solve STN constraints using the specified approach.
+  Solve STN constraints using Flow-based parallel processing.
   
   ## Options
   
-  - `:approach` - `:flow` or `:nx` (default: `:flow`)
-  - `:use_pytorch` - Enable PyTorch acceleration for Nx approach (default: `false`)
   - `:max_iterations` - Maximum iterations for convergence (default: 100)
+  - `:stages` - Number of Flow stages for parallel processing (default: System.schedulers_online())
   
   ## Examples
   
-      # Use Flow approach (default)
+      # Single problem
       Convergence.solve_stn(constraints)
       
-      # Use Nx with CPU backend
-      Convergence.solve_stn(constraints, approach: :nx)
-      
-      # Use Nx with PyTorch acceleration
-      Convergence.solve_stn(constraints, approach: :nx, use_pytorch: true)
+      # With custom options
+      Convergence.solve_stn(constraints, max_iterations: 200, stages: 8)
   """
   def solve_stn(constraints, opts \\ []) do
-    approach = Keyword.get(opts, :approach, :flow)
-    
-    case approach do
-      :flow ->
-        ConvergenceFlow.solve_stn_with_convergence(constraints, opts)
-      
-      :nx ->
-        ConvergenceNx.solve_stn(constraints, opts)
-      
-      _ ->
-        Logger.warning("Unknown approach #{inspect(approach)}, falling back to Flow")
-        ConvergenceFlow.solve_stn_with_convergence(constraints, opts)
-    end
+    ConvergenceFlow.solve_stn_with_convergence(constraints, opts)
   end
 
   @doc """
-  Solve activity scheduling using the specified approach.
+  Solve activity scheduling using Flow-based parallel processing.
   
   ## Options
   
-  - `:approach` - `:flow` or `:nx` (default: `:flow`)
-  - `:use_pytorch` - Enable PyTorch acceleration for Nx approach (default: `false`)
   - `:max_iterations` - Maximum iterations for convergence (default: 50)
+  - `:stages` - Number of Flow stages for parallel processing (default: System.schedulers_online())
   
   ## Examples
   
-      # Use Flow approach (default)
+      # Single problem
       Convergence.solve_activities(activities)
       
-      # Use Nx with CPU backend
-      Convergence.solve_activities(activities, approach: :nx)
-      
-      # Use Nx with PyTorch acceleration
-      Convergence.solve_activities(activities, approach: :nx, use_pytorch: true)
+      # With custom options
+      Convergence.solve_activities(activities, max_iterations: 100, stages: 4)
   """
   def solve_activities(activities, opts \\ []) do
-    approach = Keyword.get(opts, :approach, :flow)
-    
-    case approach do
-      :flow ->
-        ConvergenceFlow.solve_activities_with_convergence(activities, opts)
-      
-      :nx ->
-        ConvergenceNx.solve_activities(activities, opts)
-      
-      _ ->
-        Logger.warning("Unknown approach #{inspect(approach)}, falling back to Flow")
-        ConvergenceFlow.solve_activities_with_convergence(activities, opts)
-    end
+    ConvergenceFlow.solve_activities_with_convergence(activities, opts)
   end
 
   @doc """
-  Solve multiple STN constraint sets in batch for improved performance.
+  Solve multiple STN constraint sets in batch using the new BatchProcessor.
   
-  This function processes multiple timelines simultaneously using vectorized
-  operations, which is particularly efficient with the Nx approach and PyTorch
-  acceleration.
+  This function automatically uses the optimized BatchProcessor for improved
+  performance when processing multiple problems simultaneously.
   
   ## Options
   
-  - `:approach` - `:flow` or `:nx` (default: `:nx`)
-  - `:use_pytorch` - Enable PyTorch acceleration for Nx approach (default: `true`)
+  - `:max_concurrency` - Maximum number of problems to process simultaneously (default: number of problems)
+  - `:timeout` - Timeout per problem in milliseconds (default: 60_000)
+  - `:ordered` - Whether to preserve problem order in results (default: false)
+  - `:cores_per_problem` - Explicit core allocation per problem (overrides automatic calculation)
   - `:max_iterations` - Maximum iterations for convergence (default: 100)
-  - `:batch_size` - Maximum number of timelines to process simultaneously (default: 8)
   
   ## Examples
   
-      # Batch solve multiple timelines
+      # Batch solve multiple timelines (uses all cores distributed)
       timelines = [
         %{id: "npc1", constraints: constraints1},
         %{id: "npc2", constraints: constraints2},
@@ -112,63 +80,125 @@ defmodule AriaEngine.Convergence do
       
       Convergence.solve_stn_batch(timelines)
       
-      # Use specific batch size and PyTorch
-      Convergence.solve_stn_batch(timelines, batch_size: 16, use_pytorch: true)
+      # Force single core per problem for maximum cross-problem parallelism
+      Convergence.solve_stn_batch(timelines, cores_per_problem: 1)
+      
+      # With custom options
+      Convergence.solve_stn_batch(timelines, max_concurrency: 4, timeout: 30_000)
   """
   def solve_stn_batch(timelines, opts \\ []) do
-    approach = Keyword.get(opts, :approach, :nx)
-    batch_size = Keyword.get(opts, :batch_size, 8)
-    
-    case approach do
-      :nx ->
-        ConvergenceNx.solve_stn_batch(timelines, opts)
+    if length(timelines) == 0 do
+      %{
+        batch_solved: true,
+        timelines: [],
+        total_count: 0,
+        successful_count: 0
+      }
+    else
+      # Convert timelines to problems format for BatchProcessor
+      problems = Enum.map(timelines, fn timeline ->
+        Map.get(timeline, :constraints, %{})
+      end)
       
-      :flow ->
-        # For Flow approach, process in parallel chunks
-        solve_stn_batch_flow(timelines, batch_size, opts)
+      # Use the new BatchProcessor for optimal performance
+      results = BatchProcessor.solve_multiple_stn_problems(problems, opts)
       
-      _ ->
-        Logger.warning("Unknown approach #{inspect(approach)}, falling back to Nx")
-        ConvergenceNx.solve_stn_batch(timelines, opts)
+      # Convert results back to timeline format
+      timeline_results = Enum.zip(timelines, results)
+      |> Enum.map(fn {timeline, result} ->
+        Map.put(timeline, :result, result)
+      end)
+      
+      %{
+        batch_solved: true,
+        timelines: timeline_results,
+        total_count: length(timelines),
+        successful_count: Enum.count(timeline_results, fn t -> 
+          get_in(t, [:result, :converged]) || get_in(t, [:result, :solved])
+        end)
+      }
     end
   end
 
   @doc """
-  Solve multiple activity scheduling problems in batch for improved performance.
+  Solve multiple activity scheduling problems in batch using the new BatchProcessor.
+  
+  This function automatically uses the optimized BatchProcessor for improved
+  performance when processing multiple activity sets simultaneously.
   
   ## Options
   
-  - `:approach` - `:flow` or `:nx` (default: `:nx`)
-  - `:use_pytorch` - Enable PyTorch acceleration for Nx approach (default: `true`)
+  - `:max_concurrency` - Maximum number of activity sets to process simultaneously (default: number of sets)
+  - `:timeout` - Timeout per activity set in milliseconds (default: 60_000)
+  - `:ordered` - Whether to preserve activity set order in results (default: false)
+  - `:cores_per_problem` - Explicit core allocation per problem (overrides automatic calculation)
   - `:max_iterations` - Maximum iterations for convergence (default: 50)
-  - `:batch_size` - Maximum number of activity sets to process simultaneously (default: 8)
   
   ## Examples
   
-      # Batch solve multiple activity sets
+      # Batch solve multiple activity sets (uses all cores distributed)
       activity_sets = [
         %{id: "project1", activities: activities1},
         %{id: "project2", activities: activities2}
       ]
       
       Convergence.solve_activities_batch(activity_sets)
+      
+      # Force single core per problem for maximum cross-problem parallelism
+      Convergence.solve_activities_batch(activity_sets, cores_per_problem: 1)
   """
   def solve_activities_batch(activity_sets, opts \\ []) do
-    approach = Keyword.get(opts, :approach, :nx)
-    batch_size = Keyword.get(opts, :batch_size, 8)
-    
-    case approach do
-      :nx ->
-        ConvergenceNx.solve_activities_batch(activity_sets, opts)
+    if length(activity_sets) == 0 do
+      %{
+        batch_solved: true,
+        activity_sets: [],
+        total_count: 0,
+        successful_count: 0
+      }
+    else
+      # Convert activity sets to problems format for BatchProcessor
+      problems = Enum.map(activity_sets, fn activity_set ->
+        Map.get(activity_set, :activities, [])
+      end)
       
-      :flow ->
-        # For Flow approach, process in parallel chunks
-        solve_activities_batch_flow(activity_sets, batch_size, opts)
+      # Use the new BatchProcessor for optimal performance
+      results = BatchProcessor.solve_multiple_activities_batches(problems, opts)
       
-      _ ->
-        Logger.warning("Unknown approach #{inspect(approach)}, falling back to Nx")
-        ConvergenceNx.solve_activities_batch(activity_sets, opts)
+      # Convert results back to activity set format
+      activity_set_results = Enum.zip(activity_sets, results)
+      |> Enum.map(fn {activity_set, result} ->
+        Map.put(activity_set, :result, result)
+      end)
+      
+      %{
+        batch_solved: true,
+        activity_sets: activity_set_results,
+        total_count: length(activity_sets),
+        successful_count: Enum.count(activity_set_results, fn s -> 
+          get_in(s, [:result, :converged]) || get_in(s, [:result, :solved])
+        end)
+      }
     end
+  end
+
+  @doc """
+  Solve multiple problems using all available cores (distributed approach).
+  
+  Convenience function that uses the BatchProcessor's all-cores strategy.
+  Best for complex problems that benefit from internal parallelization.
+  """
+  def solve_batch_all_cores(problems, opts \\ []) do
+    BatchProcessor.solve_multiple_problems_all_cores(problems, opts)
+  end
+
+  @doc """
+  Solve multiple problems using single core per problem (wide parallelism).
+  
+  Convenience function that uses the BatchProcessor's single-core strategy.
+  Best for many simple problems or when testing cross-problem parallelism.
+  """
+  def solve_batch_single_core(problems, opts \\ []) do
+    BatchProcessor.solve_multiple_problems_single_core(problems, opts)
   end
 
   @doc """
@@ -179,137 +209,89 @@ defmodule AriaEngine.Convergence do
       approaches: %{
         flow: %{
           description: "Pure Elixir parallel processing with Flow library",
-          strengths: ["Activity scheduling", "Consistent performance", "Large datasets"],
+          strengths: ["Activity scheduling", "STN constraints", "Consistent performance", "Large datasets"],
           backend: "CPU (Elixir processes)"
         },
-        nx: %{
-          description: "Tensor-based operations with optional PyTorch acceleration",
-          strengths: ["STN constraints", "Mathematical precision", "Hardware acceleration"],
-          backend: if(ConvergenceNx.pytorch_available?(), do: "PyTorch", else: "CPU (Nx tensors)")
+        batch_processor: %{
+          description: "Optimized batch processing for multiple problems with core distribution",
+          strengths: ["Multiple problems", "Core utilization", "Parallel scaling", "Performance optimization"],
+          backend: "CPU (Task.async_stream + Flow)"
         }
       },
       system: %{
-        pytorch_available: ConvergenceNx.pytorch_available?(),
+        total_cores: System.schedulers_online(),
         architecture: get_system_architecture(),
-        recommended_approach: get_recommended_approach()
+        recommended_approach: :batch_processor_for_multiple_problems
+      },
+      core_strategies: %{
+        all_cores: "Distribute all cores across problems (default)",
+        single_core: "Use 1 core per problem, maximize cross-problem parallelism"
       }
     }
   end
 
   @doc """
-  Benchmark both approaches on the given problem and return performance comparison.
+  Benchmark Flow vs BatchProcessor approaches on the given problems.
   """
-  def benchmark(problem_type, data, opts \\ []) do
-    Logger.info("Benchmarking Flow vs Nx approaches for #{problem_type}")
+  def benchmark(problems, opts \\ []) when is_list(problems) do
+    Logger.info("Benchmarking Flow vs BatchProcessor approaches for #{length(problems)} problems")
     
-    # Benchmark Flow approach
-    {flow_time_us, flow_result} = :timer.tc(fn ->
-      case problem_type do
-        :stn -> ConvergenceFlow.solve_stn_with_convergence(data, opts)
-        :activities -> ConvergenceFlow.solve_activities_with_convergence(data, opts)
-      end
-    end)
-    
-    # Benchmark Nx approach
-    {nx_time_us, nx_result} = :timer.tc(fn ->
-      case problem_type do
-        :stn -> ConvergenceNx.solve_stn(data, opts)
-        :activities -> ConvergenceNx.solve_activities(data, opts)
-      end
-    end)
-    
-    # Benchmark Nx with PyTorch if available
-    {nx_pytorch_time_us, nx_pytorch_result} = if ConvergenceNx.pytorch_available?() do
-      pytorch_opts = Keyword.put(opts, :use_pytorch, true)
-      :timer.tc(fn ->
-        case problem_type do
-          :stn -> ConvergenceNx.solve_stn(data, pytorch_opts)
-          :activities -> ConvergenceNx.solve_activities(data, pytorch_opts)
+    # Benchmark single Flow approach (sequential)
+    {flow_time_us, flow_results} = :timer.tc(fn ->
+      Enum.map(problems, fn problem ->
+        case problem do
+          activities when is_list(activities) ->
+            ConvergenceFlow.solve_activities_with_convergence(activities, opts)
+          %{activities: activities} ->
+            ConvergenceFlow.solve_activities_with_convergence(activities, opts)
+          _ ->
+            ConvergenceFlow.solve_activities_with_convergence([problem], opts)
         end
       end)
-    else
-      {nil, nil}
-    end
+    end)
+    
+    # Benchmark BatchProcessor all cores
+    {batch_all_time_us, batch_all_results} = :timer.tc(fn ->
+      BatchProcessor.solve_multiple_problems_all_cores(problems, opts)
+    end)
+    
+    # Benchmark BatchProcessor single core
+    {batch_single_time_us, batch_single_results} = :timer.tc(fn ->
+      BatchProcessor.solve_multiple_problems_single_core(problems, opts)
+    end)
     
     %{
-      problem_type: problem_type,
+      problem_count: length(problems),
       results: %{
-        flow: %{
+        flow_sequential: %{
           time_ms: flow_time_us / 1000,
           time_us: flow_time_us,
-          result_size: estimate_result_size(flow_result),
-          status: if(flow_result[:solved], do: :success, else: :failed)
+          result_count: length(flow_results),
+          status: :success
         },
-        nx: %{
-          time_ms: nx_time_us / 1000,
-          time_us: nx_time_us,
-          result_size: estimate_result_size(nx_result),
-          status: if(nx_result[:solved], do: :success, else: :failed)
+        batch_all_cores: %{
+          time_ms: batch_all_time_us / 1000,
+          time_us: batch_all_time_us,
+          result_count: length(batch_all_results),
+          status: :success
         },
-        nx_pytorch: if nx_pytorch_time_us do
-          %{
-            time_ms: nx_pytorch_time_us / 1000,
-            time_us: nx_pytorch_time_us,
-            result_size: estimate_result_size(nx_pytorch_result),
-            status: if(nx_pytorch_result[:solved], do: :success, else: :failed)
-          }
-        else
-          %{status: :unavailable, reason: "PyTorch not available"}
-        end
+        batch_single_core: %{
+          time_ms: batch_single_time_us / 1000,
+          time_us: batch_single_time_us,
+          result_count: length(batch_single_results),
+          status: :success
+        }
       },
-      winner: determine_winner(flow_time_us, nx_time_us, nx_pytorch_time_us)
+      speedup: %{
+        batch_all_vs_flow: flow_time_us / max(batch_all_time_us, 1),
+        batch_single_vs_flow: flow_time_us / max(batch_single_time_us, 1),
+        batch_all_vs_single: batch_single_time_us / max(batch_all_time_us, 1)
+      },
+      winner: determine_winner(flow_time_us, batch_all_time_us, batch_single_time_us)
     }
   end
 
   # Private helper functions
-
-  defp solve_stn_batch_flow(timelines, batch_size, opts) do
-    # Process timelines in parallel chunks using Flow
-    timelines
-    |> Enum.chunk_every(batch_size)
-    |> Flow.from_enumerable()
-    |> Flow.flat_map(fn chunk ->
-      chunk
-      |> Enum.map(fn timeline ->
-        constraints = Map.get(timeline, :constraints, %{})
-        result = ConvergenceFlow.solve_stn_with_convergence(constraints, opts)
-        Map.put(timeline, :result, result)
-      end)
-    end)
-    |> Enum.to_list()
-    |> then(fn results ->
-      %{
-        batch_solved: true,
-        timelines: results,
-        total_count: length(timelines),
-        successful_count: Enum.count(results, fn t -> get_in(t, [:result, :converged]) end)
-      }
-    end)
-  end
-
-  defp solve_activities_batch_flow(activity_sets, batch_size, opts) do
-    # Process activity sets in parallel chunks using Flow
-    activity_sets
-    |> Enum.chunk_every(batch_size)
-    |> Flow.from_enumerable()
-    |> Flow.flat_map(fn chunk ->
-      chunk
-      |> Enum.map(fn activity_set ->
-        activities = Map.get(activity_set, :activities, [])
-        result = ConvergenceFlow.solve_activities_with_convergence(activities, opts)
-        Map.put(activity_set, :result, result)
-      end)
-    end)
-    |> Enum.to_list()
-    |> then(fn results ->
-      %{
-        batch_solved: true,
-        activity_sets: results,
-        total_count: length(activity_sets),
-        successful_count: Enum.count(results, fn s -> get_in(s, [:result, :converged]) end)
-      }
-    end)
-  end
 
   defp get_system_architecture do
     case :erlang.system_info(:system_architecture) do
@@ -318,33 +300,12 @@ defmodule AriaEngine.Convergence do
     end
   end
 
-  defp get_recommended_approach do
-    cond do
-      ConvergenceNx.pytorch_available?() -> :nx_with_pytorch
-      true -> :flow
-    end
-  end
-
-  defp estimate_result_size(result) do
-    case result do
-      %{constraints: constraints} -> map_size(constraints)
-      %{activities: activities} -> length(activities)
-      list when is_list(list) -> length(list)
-      _ -> 1
-    end
-  end
-
-  defp determine_winner(flow_time, nx_time, nx_pytorch_time) do
+  defp determine_winner(flow_time, batch_all_time, batch_single_time) do
     times = [
-      {:flow, flow_time},
-      {:nx, nx_time}
+      {:flow_sequential, flow_time},
+      {:batch_all_cores, batch_all_time},
+      {:batch_single_core, batch_single_time}
     ]
-    
-    times = if nx_pytorch_time do
-      [{:nx_pytorch, nx_pytorch_time} | times]
-    else
-      times
-    end
     
     {winner, _time} = Enum.min_by(times, &elem(&1, 1))
     winner

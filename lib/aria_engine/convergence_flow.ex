@@ -3,7 +3,7 @@
 
 defmodule AriaEngine.ConvergenceFlow do
   @moduledoc """
-  Convergence-based partition solving using Flow.
+  Convergence-based partition solving using high-performance batch processing.
   
   The only parallel processing pattern - partitions solve locally
   then converge through iterative boundary condition exchange.
@@ -11,6 +11,9 @@ defmodule AriaEngine.ConvergenceFlow do
   This implements the ultimate form of parallel processing where
   partitions don't just work in parallel, but actively converge
   their solutions until reaching a globally stable state.
+  
+  **Updated Implementation**: Now uses Task.async_stream for parallel processing
+  instead of Flow, providing better performance and eliminating Flow dependency.
   """
 
   require Logger
@@ -83,9 +86,7 @@ defmodule AriaEngine.ConvergenceFlow do
     
     stn_constraints
     |> partition_stn_constraints(stages)
-    |> Flow.from_enumerable()
-    |> Flow.partition(stages: stages)
-    |> Flow.map(&solve_stn_partition/1)
+    |> solve_partitions_parallel(&solve_stn_partition/1, stages)
     |> converge_stn_partitions(opts)
     |> merge_stn_solutions()
   end
@@ -100,11 +101,11 @@ defmodule AriaEngine.ConvergenceFlow do
   def solve_activities_with_convergence(activities, opts \\ []) do
     stages = Keyword.get(opts, :stages, System.schedulers_online())
     
+    Logger.debug("Batch processing #{length(activities)} activities with #{stages} partitions")
+    
     activities
     |> partition_activities(stages)
-    |> Flow.from_enumerable()
-    |> Flow.partition(stages: stages)
-    |> Flow.map(&solve_activity_partition/1)
+    |> solve_partitions_parallel(&solve_activity_partition/1, stages)
     |> converge_activity_partitions(opts)
     |> merge_activity_solutions()
   end
@@ -124,41 +125,43 @@ defmodule AriaEngine.ConvergenceFlow do
   defp solve_partitions_with_convergence(partitions, max_iterations, threshold) do
     # Core convergence loop - iterate until stable
     partitions
-    |> Flow.from_enumerable()
-    |> Flow.partition(stages: length(partitions))
-    |> Flow.map(&solve_partition_locally/1)
+    |> solve_partitions_parallel(&solve_partition_locally/1, length(partitions))
     |> iterate_convergence(max_iterations, threshold, 0)
   end
 
-  defp iterate_convergence(partitioned_flow, max_iterations, threshold, iteration) when iteration < max_iterations do
+  defp solve_partitions_parallel(partitions, solve_fn, concurrency) when is_list(partitions) do
+    # Use Task.async_stream for parallel processing instead of Flow
+    partitions
+    |> Task.async_stream(solve_fn, 
+         max_concurrency: concurrency,
+         timeout: :infinity,
+         ordered: true)
+    |> Enum.map(fn {:ok, result} -> result end)
+  end
+
+  defp iterate_convergence(current_solutions, max_iterations, threshold, iteration) when iteration < max_iterations do
     Logger.debug("Convergence iteration #{iteration}")
     
-    # Solve current partition states
-    current_solutions = partitioned_flow
-    |> Flow.map(&update_partition_solution/1)
-    |> Enum.to_list()
+    # Update partition solutions
+    updated_solutions = current_solutions
+    |> Enum.map(&update_partition_solution/1)
     
     # Check for convergence
-    if converged?(current_solutions, threshold) do
+    if converged?(updated_solutions, threshold) do
       Logger.info("Converged after #{iteration} iterations")
-      current_solutions
+      updated_solutions
     else
       # Exchange boundary conditions and continue
-      updated_partitions = exchange_boundary_conditions(current_solutions)
-      
-      updated_partitions
-      |> Flow.from_enumerable()
-      |> Flow.partition(stages: length(updated_partitions))
-      |> iterate_convergence(max_iterations, threshold, iteration + 1)
+      boundary_updated = exchange_boundary_conditions(updated_solutions)
+      iterate_convergence(boundary_updated, max_iterations, threshold, iteration + 1)
     end
   end
 
-  defp iterate_convergence(partitioned_flow, _max_iterations, _threshold, iteration) do
-    Logger.warn("Convergence did not complete within #{iteration} iterations")
+  defp iterate_convergence(solutions, _max_iterations, _threshold, iteration) do
+    Logger.warning("Convergence did not complete within #{iteration} iterations")
     
-    partitioned_flow
-    |> Flow.map(&finalize_partition_solution/1)
-    |> Enum.to_list()
+    solutions
+    |> Enum.map(&finalize_partition_solution/1)
   end
 
   defp converged?(solutions, threshold) do
@@ -214,35 +217,28 @@ defmodule AriaEngine.ConvergenceFlow do
     %{partition | solution: local_solution}
   end
 
-  defp converge_stn_partitions(partitioned_flow, opts) do
+  defp converge_stn_partitions(partitioned_solutions, opts) do
     max_iterations = Keyword.get(opts, :max_iterations, 50)
     threshold = Keyword.get(opts, :convergence_threshold, 0.001)
     
-    partitioned_flow
-    |> iterate_stn_convergence(max_iterations, threshold, 0)
+    iterate_stn_convergence(partitioned_solutions, max_iterations, threshold, 0)
   end
 
-  defp iterate_stn_convergence(partitioned_flow, max_iterations, threshold, iteration) when iteration < max_iterations do
-    current_solutions = partitioned_flow
-    |> Flow.map(&update_stn_partition_solution/1)
-    |> Enum.to_list()
+  defp iterate_stn_convergence(current_solutions, max_iterations, threshold, iteration) when iteration < max_iterations do
+    updated_solutions = current_solutions
+    |> Enum.map(&update_stn_partition_solution/1)
     
-    if stn_converged?(current_solutions, threshold) do
-      current_solutions
+    if stn_converged?(updated_solutions, threshold) do
+      updated_solutions
     else
-      updated_partitions = exchange_stn_boundary_conditions(current_solutions)
-      
-      updated_partitions
-      |> Flow.from_enumerable()
-      |> Flow.partition(stages: length(updated_partitions))
-      |> iterate_stn_convergence(max_iterations, threshold, iteration + 1)
+      boundary_updated = exchange_stn_boundary_conditions(updated_solutions)
+      iterate_stn_convergence(boundary_updated, max_iterations, threshold, iteration + 1)
     end
   end
 
-  defp iterate_stn_convergence(partitioned_flow, _max_iterations, _threshold, _iteration) do
-    partitioned_flow
-    |> Flow.map(&finalize_stn_partition/1)
-    |> Enum.to_list()
+  defp iterate_stn_convergence(solutions, _max_iterations, _threshold, _iteration) do
+    solutions
+    |> Enum.map(&finalize_stn_partition/1)
   end
 
   # Activity-specific convergence functions
@@ -273,12 +269,28 @@ defmodule AriaEngine.ConvergenceFlow do
     %{partition | solution: local_schedule}
   end
 
-  defp converge_activity_partitions(partitioned_flow, opts) do
+  defp converge_activity_partitions(partitioned_solutions, opts) do
     max_iterations = Keyword.get(opts, :max_iterations, 30)
     threshold = Keyword.get(opts, :convergence_threshold, 0.01)
     
-    partitioned_flow
-    |> iterate_activity_convergence(max_iterations, threshold, 0)
+    iterate_activity_convergence(partitioned_solutions, max_iterations, threshold, 0)
+  end
+
+  defp iterate_activity_convergence(current_solutions, max_iterations, threshold, iteration) when iteration < max_iterations do
+    updated_solutions = current_solutions
+    |> Enum.map(&update_activity_partition_solution/1)
+    
+    if activity_converged?(updated_solutions, threshold) do
+      updated_solutions
+    else
+      boundary_updated = exchange_activity_boundary_conditions(updated_solutions)
+      iterate_activity_convergence(boundary_updated, max_iterations, threshold, iteration + 1)
+    end
+  end
+
+  defp iterate_activity_convergence(solutions, _max_iterations, _threshold, _iteration) do
+    solutions
+    |> Enum.map(&finalize_activity_partition/1)
   end
 
   # Generic helper functions
@@ -411,11 +423,19 @@ defmodule AriaEngine.ConvergenceFlow do
     partition
   end
 
-  defp iterate_activity_convergence(partitioned_flow, _max_iterations, _threshold, _iteration) do
-    # Placeholder: Activity convergence iteration
-    partitioned_flow
-    |> Flow.map(&finalize_activity_partition/1)
-    |> Enum.to_list()
+  defp activity_converged?(_solutions, _threshold) do
+    # Placeholder: Check activity convergence
+    true
+  end
+
+  defp exchange_activity_boundary_conditions(solutions) do
+    # Placeholder: Exchange activity boundary conditions
+    solutions
+  end
+
+  defp update_activity_partition_solution(partition) do
+    # Placeholder: Update activity partition solution
+    partition
   end
 
   defp finalize_activity_partition(partition) do
@@ -424,11 +444,13 @@ defmodule AriaEngine.ConvergenceFlow do
   end
 
   defp merge_activity_solutions(solutions) do
-    # Placeholder: Merge activity solutions
+    # Merge activity solutions
     merged_activities = solutions
     |> Enum.flat_map(fn solution ->
       case solution do
         %{activities: activities} -> activities
+        %{solution: %{schedule: schedule}} -> schedule
+        %{solution: %{activities: activities}} -> activities
         %{schedule: schedule} -> schedule
         activities when is_list(activities) -> activities
         _ -> []
@@ -439,9 +461,15 @@ defmodule AriaEngine.ConvergenceFlow do
   end
 
   defp merge_stn_solutions(solutions) do
-    # Placeholder: Merge STN solutions
+    # Merge STN solutions
     merged_constraints = solutions
-    |> Enum.map(& &1.constraints || %{})
+    |> Enum.map(fn solution ->
+      case solution do
+        %{constraints: constraints} -> constraints
+        %{solution: %{constraints: constraints}} -> constraints
+        _ -> %{}
+      end
+    end)
     |> Enum.reduce(%{}, &Map.merge/2)
     
     %{constraints: merged_constraints, converged: true}
