@@ -32,7 +32,8 @@ defmodule AriaEngine.MCPTools do
   
   # Tool registry with versioning - add new tools here
   @tools [
-    {:schedule_activities, "1.0.0"}
+    {:schedule_activities, "1.0.0"},
+    {:director, "1.0.0"}
     # Add new tools here with version, e.g.:
     # {:analyze_timeline, "1.1.0"},
     # {:optimize_resources, "1.2.0"},
@@ -121,6 +122,15 @@ defmodule AriaEngine.MCPTools do
     case validate_api_version(api_version) do
       {:ok, _validated_version} ->
         get_schedule_activities_definition(api_version)
+      {:error, reason} ->
+        %{error: reason}
+    end
+  end
+  
+  def get_tool_definition(:director, api_version) when is_binary(api_version) do
+    case validate_api_version(api_version) do
+      {:ok, _validated_version} ->
+        get_director_definition(api_version)
       {:error, reason} ->
         %{error: reason}
     end
@@ -236,6 +246,38 @@ defmodule AriaEngine.MCPTools do
       }
     }
   end
+  
+  defp get_director_definition(api_version) do
+    %{
+      name: "director",
+      description: "Direct complex scenarios with entities, resources, and narrative flow coordination",
+      version: "1.0.0",
+      apiVersion: api_version,
+      inputSchema: %{
+        type: "object",
+        properties: %{
+          template: %{
+            type: "string",
+            enum: ["tri_zone_integration"],
+            description: "Built-in mission template",
+            examples: [
+              %{
+                value: "tri_zone_integration",
+                summary: "Cross-Spectrum Protocol: Multi-zone integration mission",
+                description: "Complex scenario across Verdant (bio-tech), Chrome (corporate), and Harmony (synthesis) districts. Features resource conflicts, entity cooperation, and temporal coordination challenges. Duration: ~20 minutes with 15 overlapping activities."
+              }
+            ]
+          },
+          narrative_mode: %{
+            type: "boolean",
+            default: true,
+            description: "Include DateTime-stamped narrative markdown"
+          }
+        },
+        required: ["template"]
+      }
+    }
+  end
 
   @doc """
   Handles any tool call by routing to the appropriate handler function.
@@ -253,6 +295,10 @@ defmodule AriaEngine.MCPTools do
 
   def handle_tool_call(:schedule_activities, params) do
     handle_schedule_activities_tool_call(params)
+  end
+
+  def handle_tool_call(:director, params) do
+    handle_director_tool_call(params)
   end
 
   def handle_tool_call(tool_name, _params) do
@@ -680,5 +726,475 @@ defp convert_activities(activities) when is_list(activities) do
     
     # Convert to minutes for test compatibility (keep existing behavior)
     hours * 60 + minutes + div(seconds, 60)
+  end
+
+  @doc """
+  Handles the director tool call with template-based mission execution.
+  """
+  def handle_director_tool_call(params) do
+    try do
+      # Validate parameters
+      case validate_director_params(params) do
+        {:ok, validated_params} ->
+          template = validated_params["template"]
+          narrative_mode = Map.get(validated_params, "narrative_mode", true)
+          
+          # Load mission data based on template
+          case load_template_data(template) do
+            {:ok, mission_data} ->
+              # Execute the mission using existing scheduler
+              execute_mission(mission_data, narrative_mode)
+              
+            {:error, reason} ->
+              %{
+                status: "error",
+                reason: reason,
+                schedule: [],
+                analysis: %{},
+                activity_log: [],
+                resource_utilization: %{},
+                timeline: [],
+                simulation_metadata: %{}
+              }
+          end
+          
+        {:error, reason} ->
+          %{
+            status: "error",
+            reason: reason,
+            schedule: [],
+            analysis: %{},
+            activity_log: [],
+            resource_utilization: %{},
+            timeline: [],
+            simulation_metadata: %{}
+          }
+      end
+    rescue
+      e ->
+        Logger.error("Director tool error: #{Exception.message(e)}")
+        %{
+          status: "error",
+          reason: "Internal error: #{Exception.message(e)}",
+          schedule: [],
+          analysis: %{},
+          activity_log: [],
+          resource_utilization: %{},
+          timeline: [],
+          simulation_metadata: %{}
+        }
+    end
+  end
+
+  defp validate_director_params(params) when is_map(params) do
+    cond do
+      not Map.has_key?(params, "template") ->
+        {:error, "template is required"}
+        
+      not is_binary(params["template"]) ->
+        {:error, "template must be a string"}
+        
+      params["template"] not in ["tri_zone_integration"] ->
+        {:error, "unsupported template: #{params["template"]}. Available templates: tri_zone_integration"}
+        
+      true ->
+        {:ok, params}
+    end
+  end
+  
+  defp validate_director_params(_), do: {:error, "Invalid parameters format"}
+
+  defp load_template_data("tri_zone_integration") do
+    # Hardcoded mission data from isekai_merged_realms.json
+    mission_data = %{
+      "schedule_name" => "Cross-Spectrum Protocol: The Merged Realms",
+      "activities" => get_tri_zone_activities(),
+      "entities" => get_tri_zone_entities(),
+      "resources" => get_tri_zone_resources(),
+      "constraints" => get_tri_zone_constraints()
+    }
+    {:ok, mission_data}
+  end
+  
+  defp load_template_data(template) do
+    {:error, "Unknown template: #{template}"}
+  end
+
+  defp execute_mission(mission_data, narrative_mode) do
+    # Convert mission data to scheduler format
+    schedule_name = mission_data["schedule_name"]
+    activities = convert_activities(mission_data["activities"])
+    entities = convert_entities(mission_data["entities"])
+    resources = mission_data["resources"]
+    constraints = mission_data["constraints"]
+    
+    # Prepare scheduler options
+    opts = [
+      entities: entities,
+      resources: resources,
+      constraints: constraints,
+      simulation_mode: Map.get(constraints, "simulation_mode", true),
+      verbose: Map.get(constraints, "verbose", 2),
+      log_activities: true,
+      narrative_mode: narrative_mode
+    ]
+    
+    # Call the scheduler
+    case AriaEngine.Scheduler.schedule_activities(schedule_name, activities, opts) do
+      {:ok, simulation_result} ->
+        # Enhanced output with narrative if requested
+        result = convert_simulation_result_to_map(simulation_result)
+        
+        if narrative_mode do
+          Map.put(result, :narrative, generate_narrative(simulation_result))
+        else
+          result
+        end
+        
+      {:error, reason} ->
+        %{
+          status: "error",
+          reason: reason,
+          schedule: [],
+          analysis: %{},
+          activity_log: [],
+          resource_utilization: %{},
+          timeline: [],
+          simulation_metadata: %{}
+        }
+    end
+  end
+
+  defp generate_narrative(simulation_result) do
+    timestamp = DateTime.utc_now() |> DateTime.to_iso8601()
+    
+    """
+    # Cross-Spectrum Protocol: The Merged Realms
+    
+    **Mission Execution Report**  
+    *Generated: #{timestamp}*
+    
+    ## Mission Overview
+    
+    The displaced protagonist has successfully navigated the complex tri-zone integration protocol across the Verdant bio-tech district, Chrome corporate underworld, and Harmony synthesis hub. This represents a significant breakthrough in cross-dimensional stability and inter-district cooperation.
+    
+    ## Key Achievements
+    
+    - **Consciousness Stabilization**: Successfully anchored dimensional awareness
+    - **Tri-Zone Authentication**: Gained trust across all three distinct sectors
+    - **Resource Synthesis**: Coordinated bio-energy, underground currency, and community credits
+    - **Reality Stabilization**: Achieved dimensional portal manifestation
+    
+    ## Technical Results
+    
+    **Total Activities Scheduled**: #{length(simulation_result.schedule || [])}  
+    **Mission Duration**: #{get_total_duration(simulation_result)}  
+    **Resource Efficiency**: #{calculate_resource_efficiency(simulation_result)}  
+    **Success Status**: #{simulation_result.status}
+    
+    ## Narrative Timeline
+    
+    #{generate_activity_timeline(simulation_result)}
+    
+    ## Mission Completion
+    
+    The Cross-Spectrum Protocol has achieved its primary objectives: establishing sustainable communication channels between the three districts, synthesizing resource management protocols, and creating a stable portal for dimensional return. The protagonist's modern knowledge and adaptive capabilities proved essential in bridging the technological, biological, and social systems of this merged reality.
+    
+    *End of Mission Report*
+    """
+  end
+
+  defp get_total_duration(simulation_result) do
+    case simulation_result.analysis do
+      %{total_duration: duration} -> "#{duration} minutes"
+      _ -> "Unknown"
+    end
+  end
+
+  defp calculate_resource_efficiency(simulation_result) do
+    case simulation_result.resource_utilization do
+      resources when map_size(resources) > 0 ->
+        total_used = Enum.reduce(resources, 0, fn {_key, usage}, acc -> 
+          case usage do
+            %{current_usage: used} -> acc + used
+            _ -> acc
+          end
+        end)
+        "#{total_used}% utilized"
+      _ -> "Not calculated"
+    end
+  end
+
+  defp generate_activity_timeline(simulation_result) do
+    case simulation_result.activity_log do
+      activities when is_list(activities) and length(activities) > 0 ->
+        activities
+        |> Enum.take(10)  # Show first 10 activities
+        |> Enum.map_join("\n", fn activity ->
+          timestamp = Map.get(activity, :timestamp, Map.get(activity, "timestamp", "Unknown"))
+          activity_id = Map.get(activity, :activity_id, Map.get(activity, "activity_id", "unknown"))
+          entity_id = Map.get(activity, :entity_id, Map.get(activity, "entity_id", "unknown"))
+          
+          "- **#{format_timestamp(timestamp)}**: #{humanize_activity_id(activity_id)} (#{entity_id})"
+        end)
+      _ -> "No detailed timeline available"
+    end
+  end
+
+  defp format_timestamp(timestamp) when is_binary(timestamp), do: timestamp
+  defp format_timestamp(%DateTime{} = dt), do: DateTime.to_time(dt) |> Time.to_string()
+  defp format_timestamp(_), do: "Unknown"
+
+  defp humanize_activity_id(activity_id) do
+    activity_id
+    |> String.replace("_", " ")
+    |> String.split(" ")
+    |> Enum.map(&String.capitalize/1)
+    |> Enum.join(" ")
+  end
+
+  # Template data definitions
+  defp get_tri_zone_activities() do
+    [
+      %{
+        "id" => "consciousness_stabilization",
+        "duration" => "PT45S",
+        "dependencies" => [],
+        "required_capabilities" => ["adaptation", "modern_knowledge"],
+        "required_resources" => ["reality_anchors"]
+      },
+      %{
+        "id" => "verdant_sector_entry",
+        "duration" => "PT30S",
+        "dependencies" => ["consciousness_stabilization"],
+        "required_capabilities" => ["pattern_recognition"],
+        "required_resources" => ["bio_energy"]
+      },
+      %{
+        "id" => "symbiotic_interface_discovery",
+        "duration" => "PT90S",
+        "dependencies" => ["verdant_sector_entry"],
+        "required_capabilities" => ["adaptation", "bio_integration"],
+        "required_resources" => ["bio_energy", "collective_knowledge"]
+      },
+      %{
+        "id" => "plant_network_authentication",
+        "duration" => "PT60S",
+        "dependencies" => ["symbiotic_interface_discovery"],
+        "required_capabilities" => ["bio_integration", "trust_building"],
+        "required_resources" => ["collective_knowledge"]
+      },
+      %{
+        "id" => "ecosystem_crisis_detection",
+        "duration" => "PT45S",
+        "dependencies" => ["plant_network_authentication"],
+        "required_capabilities" => ["pattern_recognition", "crisis_analysis"],
+        "required_resources" => ["bio_energy", "sensor_network"]
+      },
+      %{
+        "id" => "chrome_underworld_infiltration",
+        "duration" => "PT75S",
+        "dependencies" => ["ecosystem_crisis_detection"],
+        "required_capabilities" => ["stealth", "data_analysis"],
+        "required_resources" => ["stolen_access_codes"]
+      },
+      %{
+        "id" => "corporate_firewall_breach",
+        "duration" => "PT120S",
+        "dependencies" => ["chrome_underworld_infiltration"],
+        "required_capabilities" => ["hacking", "modern_knowledge"],
+        "required_resources" => ["stolen_access_codes", "illegal_augments"]
+      },
+      %{
+        "id" => "data_core_extraction",
+        "duration" => "PT90S",
+        "dependencies" => ["corporate_firewall_breach"],
+        "required_capabilities" => ["data_analysis", "stealth"],
+        "required_resources" => ["storage_devices", "illegal_augments"]
+      },
+      %{
+        "id" => "netrunner_alliance_formation",
+        "duration" => "PT60S",
+        "dependencies" => ["data_core_extraction"],
+        "required_capabilities" => ["trust_building", "negotiation"],
+        "required_resources" => ["underground_currency"]
+      },
+      %{
+        "id" => "harmony_hub_coordination",
+        "duration" => "PT90S",
+        "dependencies" => ["netrunner_alliance_formation"],
+        "required_capabilities" => ["collaboration", "system_integration"],
+        "required_resources" => ["public_fabricators", "community_credits"]
+      },
+      %{
+        "id" => "tri_zone_protocol_synthesis",
+        "duration" => "PT150S",
+        "dependencies" => ["harmony_hub_coordination", "plant_network_authentication"],
+        "required_capabilities" => ["synthesis", "leadership", "modern_knowledge"],
+        "required_resources" => ["bio_energy", "community_credits", "collective_knowledge"]
+      },
+      %{
+        "id" => "cross_district_communication",
+        "duration" => "PT75S",
+        "dependencies" => ["tri_zone_protocol_synthesis"],
+        "required_capabilities" => ["communication", "translation"],
+        "required_resources" => ["mesh_network", "translation_matrices"]
+      },
+      %{
+        "id" => "reality_stabilization_ritual",
+        "duration" => "PT120S",
+        "dependencies" => ["cross_district_communication"],
+        "required_capabilities" => ["synthesis", "reality_manipulation", "leadership"],
+        "required_resources" => ["reality_anchors", "bio_energy", "community_credits"]
+      },
+      %{
+        "id" => "portal_manifestation",
+        "duration" => "PT60S",
+        "dependencies" => ["reality_stabilization_ritual"],
+        "required_capabilities" => ["reality_manipulation", "modern_knowledge"],
+        "required_resources" => ["reality_anchors", "translation_matrices"]
+      },
+      %{
+        "id" => "dimensional_return_sequence",
+        "duration" => "PT30S",
+        "dependencies" => ["portal_manifestation"],
+        "required_capabilities" => ["dimensional_travel"],
+        "required_resources" => ["reality_anchors"]
+      }
+    ]
+  end
+
+  defp get_tri_zone_entities() do
+    [
+      %{
+        "id" => "displaced_protagonist",
+        "type" => "isekai_hero",
+        "capabilities" => ["modern_knowledge", "adaptation", "pattern_recognition", "leadership", "dimensional_travel"],
+        "availability" => %{}
+      },
+      %{
+        "id" => "verdant_ecosystem_ai",
+        "type" => "bio_intelligence",
+        "capabilities" => ["bio_integration", "collective_consciousness", "ecosystem_management", "symbiotic_interface"],
+        "availability" => %{}
+      },
+      %{
+        "id" => "chrome_netrunner_collective",
+        "type" => "hacker_group",
+        "capabilities" => ["hacking", "data_analysis", "stealth", "underground_networks"],
+        "availability" => %{}
+      },
+      %{
+        "id" => "harmony_coordination_ai",
+        "type" => "collaborative_system",
+        "capabilities" => ["collaboration", "system_integration", "resource_optimization", "community_building"],
+        "availability" => %{}
+      },
+      %{
+        "id" => "tri_zone_mediator",
+        "type" => "bridge_entity",
+        "capabilities" => ["synthesis", "translation", "conflict_resolution", "reality_manipulation"],
+        "availability" => %{}
+      },
+      %{
+        "id" => "crisis_response_collective",
+        "type" => "emergency_system",
+        "capabilities" => ["crisis_analysis", "coordination", "resource_mobilization", "rapid_response"],
+        "availability" => %{}
+      },
+      %{
+        "id" => "street_contact_network",
+        "type" => "information_broker",
+        "capabilities" => ["information_gathering", "trust_building", "negotiation", "black_market_access"],
+        "availability" => %{}
+      },
+      %{
+        "id" => "community_volunteer_grid",
+        "type" => "citizen_collective",
+        "capabilities" => ["community_support", "resource_sharing", "communication", "mutual_aid"],
+        "availability" => %{}
+      }
+    ]
+  end
+
+  defp get_tri_zone_resources() do
+    %{
+      "reality_anchors" => %{
+        "type" => "dimensional_stability",
+        "capacity" => 3,
+        "current_usage" => 0
+      },
+      "bio_energy" => %{
+        "type" => "renewable_organic",
+        "capacity" => 100,
+        "current_usage" => 0
+      },
+      "collective_knowledge" => %{
+        "type" => "shared_information",
+        "capacity" => 50,
+        "current_usage" => 0
+      },
+      "stolen_access_codes" => %{
+        "type" => "limited_security",
+        "capacity" => 5,
+        "current_usage" => 0
+      },
+      "illegal_augments" => %{
+        "type" => "black_market_tech",
+        "capacity" => 3,
+        "current_usage" => 0
+      },
+      "storage_devices" => %{
+        "type" => "data_container",
+        "capacity" => 10,
+        "current_usage" => 0
+      },
+      "underground_currency" => %{
+        "type" => "alternative_economy",
+        "capacity" => 25,
+        "current_usage" => 0
+      },
+      "public_fabricators" => %{
+        "type" => "shared_manufacturing",
+        "capacity" => 8,
+        "current_usage" => 0
+      },
+      "community_credits" => %{
+        "type" => "cooperative_economy",
+        "capacity" => 40,
+        "current_usage" => 0
+      },
+      "mesh_network" => %{
+        "type" => "distributed_communication",
+        "capacity" => 15,
+        "current_usage" => 0
+      },
+      "translation_matrices" => %{
+        "type" => "cross_zone_protocol",
+        "capacity" => 6,
+        "current_usage" => 0
+      },
+      "sensor_network" => %{
+        "type" => "environmental_monitoring",
+        "capacity" => 12,
+        "current_usage" => 0
+      }
+    }
+  end
+
+  defp get_tri_zone_constraints() do
+    %{
+      "max_duration" => 1200,
+      "simulation_mode" => true,
+      "verbose" => 2,
+      "narrative_flow" => true,
+      "cross_zone_dependencies" => true,
+      "resource_compatibility_matrix" => %{
+        "bio_energy" => ["verdant_sector", "harmony_hub"],
+        "stolen_access_codes" => ["chrome_underworld"],
+        "community_credits" => ["harmony_hub", "tri_zone_integration"],
+        "reality_anchors" => ["dimensional_operations"]
+      }
+    }
   end
 end
