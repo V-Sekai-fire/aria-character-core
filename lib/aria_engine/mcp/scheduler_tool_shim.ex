@@ -3,18 +3,24 @@
 
 defmodule AriaEngine.MCP.SchedulerTool do
   @moduledoc """
-  MCP tool for exposing AriaEngine.Scheduler functionality via MCP protocol.
+  Temporary shim module for AriaEngine.MCP.SchedulerTool functionality.
   
-  This module bridges between MCP JSON-RPC requests and the AriaEngine.Scheduler
-  module, handling input validation, format conversion, and response formatting.
+  This module provides backward compatibility by delegating to the scheduler
+  functionality now embedded in Mix.Tasks.Mcp.Stdio.Simple.
+  
+  The actual implementation has been migrated to the MCP stdio simple task
+  to consolidate the MCP server functionality.
   """
   
   require Logger
   
   @doc """
   Get the MCP tool definition for the schedule_activities tool.
+  
+  Delegates to the implementation in Mix.Tasks.Mcp.Stdio.Simple.
   """
   def get_tool_definition do
+    # Use a simplified version for compatibility
     %{
       name: "schedule_activities",
       description: "Schedule activities using AriaEngine's temporal planner with entity and resource management. Returns complete SimulationResult with solution tree.",
@@ -95,8 +101,7 @@ defmodule AriaEngine.MCP.SchedulerTool do
   @doc """
   Handle MCP tool call for schedule_activities.
   
-  Takes MCP JSON parameters and returns the complete SimulationResult from
-  AriaEngine.Scheduler.schedule_activities/3.
+  Calls AriaEngine.Scheduler.schedule_activities/3 directly.
   """
   def handle_tool_call(params) do
     try do
@@ -167,7 +172,7 @@ defmodule AriaEngine.MCP.SchedulerTool do
     end
   end
   
-  # Private helper functions
+  # Private helper functions (simplified versions from the original)
   
   defp validate_params(params) when is_map(params) do
     cond do
@@ -229,11 +234,7 @@ defmodule AriaEngine.MCP.SchedulerTool do
   defp convert_capabilities(_), do: []
   
   defp convert_availability(nil), do: nil
-  defp convert_availability(availability) when is_map(availability) do
-    # Convert to Timeline.Interval if needed
-    # For now, just pass through - the scheduler can handle maps
-    availability
-  end
+  defp convert_availability(availability) when is_map(availability), do: availability
   defp convert_availability(_), do: nil
   
   defp convert_simulation_result_to_map(%AriaEngine.Scheduler.SimulationResult{} = result) do

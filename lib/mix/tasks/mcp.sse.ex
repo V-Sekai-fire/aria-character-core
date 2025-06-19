@@ -179,7 +179,37 @@ defmodule AriaEngine.MCP.SSEServer do
     Logger.info("Received schedule_activities tool call via HTTP")
     
     try do
-      result = AriaEngine.MCP.SchedulerTool.handle_tool_call(args)
+      # Call AriaEngine.Scheduler directly
+      schedule_name = args["schedule_name"] || "MCP Request"  
+      activities = convert_mcp_activities(args["activities"] || [])
+      entities = convert_mcp_entities(args["entities"] || [])
+      resources = args["resources"] || %{}
+      constraints = args["constraints"] || %{}
+      
+      opts = [
+        entities: entities,
+        resources: resources,
+        constraints: constraints,
+        simulation_mode: Map.get(constraints, "simulation_mode", true),
+        verbose: Map.get(constraints, "verbose", 0),
+        log_activities: true
+      ]
+      
+      result = case AriaEngine.Scheduler.schedule_activities(schedule_name, activities, opts) do
+        {:ok, simulation_result} ->
+          convert_scheduler_result_to_mcp_format(simulation_result)
+        {:error, reason} ->
+          %{
+            status: "error",
+            reason: reason,
+            schedule: [],
+            analysis: %{},
+            activity_log: [],
+            resource_utilization: %{},
+            timeline: [],
+            simulation_metadata: %{}
+          }
+      end
       
       response = %{
         jsonrpc: "2.0",
@@ -259,4 +289,79 @@ defmodule AriaEngine.MCP.SSEServer do
     
     send_json_response(conn, status, error_response)
   end
+
+  # MCP Scheduler helper functions
+  
+  defp convert_mcp_activities(activities) when is_list(activities) do
+    Enum.map(activities, fn activity ->
+      %{
+        id: Map.get(activity, "id"),
+        duration: Map.get(activity, "duration"),
+        dependencies: Map.get(activity, "dependencies", []),
+        required_capabilities: convert_mcp_capabilities(Map.get(activity, "required_capabilities", [])),
+        required_resources: Map.get(activity, "required_resources", [])
+      }
+    end)
+  end
+  
+  defp convert_mcp_activities(_), do: []
+  
+  defp convert_mcp_entities(entities) when is_list(entities) do
+    Enum.map(entities, fn entity ->
+      %AriaEngine.Scheduler.Entity{
+        id: Map.get(entity, "id", "unknown"),
+        type: String.to_atom(Map.get(entity, "type", "agent")),
+        capabilities: convert_mcp_capabilities(Map.get(entity, "capabilities", [])),
+        current_activity: Map.get(entity, "current_activity"),
+        availability: Map.get(entity, "availability"),
+        resources_held: Map.get(entity, "resources_held", []),
+        metadata: Map.get(entity, "metadata", %{})
+      }
+    end)
+  end
+  
+  defp convert_mcp_entities(_), do: []
+  
+  defp convert_mcp_capabilities(capabilities) when is_list(capabilities) do
+    Enum.map(capabilities, fn cap ->
+      if is_binary(cap), do: String.to_atom(cap), else: cap
+    end)
+  end
+  
+  defp convert_mcp_capabilities(_), do: []
+  
+  defp convert_scheduler_result_to_mcp_format(%AriaEngine.Scheduler.SimulationResult{} = result) do
+    %{
+      status: result.status,
+      reason: result.reason,
+      schedule: result.schedule || [],
+      analysis: result.analysis || %{},
+      activity_log: convert_mcp_activity_log(result.activity_log || []),
+      resource_utilization: result.resource_utilization || %{},
+      timeline: result.timeline || [],
+      simulation_metadata: result.simulation_metadata || %{}
+    }
+  end
+  
+  defp convert_mcp_activity_log(activity_log) when is_list(activity_log) do
+    Enum.map(activity_log, fn entry ->
+      case entry do
+        %AriaEngine.Scheduler.ActivityLogEntry{} = log_entry ->
+          %{
+            timestamp: DateTime.to_iso8601(log_entry.timestamp),
+            activity_id: log_entry.activity_id,
+            entity_id: log_entry.entity_id,
+            event_type: log_entry.event_type,
+            resource_snapshot: log_entry.resource_snapshot || %{},
+            state_changes: log_entry.state_changes || [],
+            metadata: log_entry.metadata || %{}
+          }
+        _ ->
+          entry
+      end
+    end)
+  end
+  
+  defp convert_mcp_activity_log(_), do: []
+  
 end
