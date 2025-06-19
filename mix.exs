@@ -52,7 +52,6 @@ defmodule AriaCharacterCore.MixProject do
 
       # Planning and AI/ML
       {:libgraph, "~> 0.16"},
-      {:ortex, "~> 0.1"},
 
       # Phoenix web framework
       {:phoenix, "~> 1.7"},
