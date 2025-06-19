@@ -5,6 +5,9 @@ defmodule AriaTown.Application do
   @moduledoc false
 
   use Application
+  
+  # Ensure JSON encoders are loaded
+  require AriaTown.JSONEncoders
 
   @impl true
   def start(_type, _args) do

@@ -87,6 +87,7 @@ defmodule AriaEngine.Scheduler do
     Represents an entity (agent, NPC, object) with capabilities and availability.
     """
     
+    @derive Jason.Encoder
     defstruct [
       :id,
       :type,
@@ -113,6 +114,7 @@ defmodule AriaEngine.Scheduler do
     Represents a resource with capacity and constraints.
     """
     
+    @derive Jason.Encoder
     defstruct [
       :id,
       :type,
@@ -139,6 +141,7 @@ defmodule AriaEngine.Scheduler do
     Represents a logged activity event.
     """
     
+    @derive Jason.Encoder
     defstruct [
       :timestamp,
       :activity_id,
@@ -165,6 +168,7 @@ defmodule AriaEngine.Scheduler do
     Results from a scheduling simulation.
     """
     
+    @derive Jason.Encoder
     defstruct [
       :status,
       :reason,
