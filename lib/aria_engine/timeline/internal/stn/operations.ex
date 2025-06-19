@@ -228,19 +228,21 @@ defmodule Timeline.Internal.STN.Operations do
 
   @doc """
   Segments an STN into independent chunks for parallel processing.
+  Each segment is limited to 5 time points for optimal Apple Vision Pro performance.
   """
   @spec segment(STN.t(), pos_integer()) :: [STN.t()]
-  def segment(stn, max_segments) when max_segments > 0 do
+  def segment(stn, _max_segments) do
     time_points = MapSet.to_list(stn.time_points)
     point_count = length(time_points)
     
-    if point_count <= max_segments do
+    # Limit each segment to 5 time points for Apple Vision Pro optimization
+    max_points_per_segment = 5
+    
+    if point_count <= max_points_per_segment do
       [stn]  # No need to segment
     else
-      chunk_size = div(point_count, max_segments)
-      
       time_points
-      |> Enum.chunk_every(chunk_size)
+      |> Enum.chunk_every(max_points_per_segment)
       |> Enum.with_index()
       |> Enum.map(fn {chunk_points, index} ->
         create_segment(stn, chunk_points, index)
