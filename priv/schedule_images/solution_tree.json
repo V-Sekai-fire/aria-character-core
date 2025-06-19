@@ -1,0 +1,2863 @@
+{
+  "status": "success",
+  "timestamp": "2025-06-19T07:06:44.034467Z",
+  "resources": [
+    {
+      "id": "secure_meeting_room",
+      "type": "facility",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "mission_briefing_coordination",
+          "agent": "sage",
+          "start_time": 0,
+          "end_time": 3
+        }
+      ]
+    },
+    {
+      "id": "financial_database",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "nexus_financial_analysis",
+          "agent": "oracle",
+          "start_time": 3,
+          "end_time": 7
+        }
+      ]
+    },
+    {
+      "id": "social_engineering_kit",
+      "type": "psychological",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "corporate_insider_recruitment",
+          "agent": "mirage",
+          "start_time": 8,
+          "end_time": 14
+        }
+      ]
+    },
+    {
+      "id": "executive_credentials",
+      "type": "access",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "executive_access_establishment",
+          "agent": "nexus",
+          "start_time": 18,
+          "end_time": 22
+        }
+      ]
+    },
+    {
+      "id": "quantum_research_lab",
+      "type": "facility",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "quantum_encryption_research",
+          "agent": "cipher",
+          "start_time": 8,
+          "end_time": 16
+        }
+      ]
+    },
+    {
+      "id": "supercomputer_access",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "mathematical_security_modeling",
+          "agent": "cipher",
+          "start_time": 40,
+          "end_time": 46
+        }
+      ]
+    },
+    {
+      "id": "security_scanner",
+      "type": "electronic",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "titan_security_assessment",
+          "agent": "spark",
+          "start_time": 16,
+          "end_time": 21
+        }
+      ]
+    },
+    {
+      "id": "architectural_plans",
+      "type": "intelligence",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "building_structural_analysis",
+          "agent": "wraith",
+          "start_time": 0,
+          "end_time": 5
+        }
+      ]
+    },
+    {
+      "id": "surveillance_drone",
+      "type": "aerial",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "aerial_reconnaissance",
+          "agent": "vector",
+          "start_time": 40,
+          "end_time": 44
+        }
+      ]
+    },
+    {
+      "id": "behavioral_analysis_suite",
+      "type": "psychological",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "employee_psychological_profiling",
+          "agent": "mirage",
+          "start_time": 18,
+          "end_time": 23
+        }
+      ]
+    },
+    {
+      "id": "signal_analysis_equipment",
+      "type": "electronic",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "signal_intelligence_setup",
+          "agent": "echo",
+          "start_time": 35,
+          "end_time": 39
+        }
+      ]
+    },
+    {
+      "id": "intercept_array",
+      "type": "communication",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "communication_intercept_network",
+          "agent": "echo",
+          "start_time": 44,
+          "end_time": 50
+        }
+      ]
+    },
+    {
+      "id": "detection_countermeasures",
+      "type": "defensive",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "counter_surveillance_preparation",
+          "agent": "echo",
+          "start_time": 72,
+          "end_time": 76
+        }
+      ]
+    },
+    {
+      "id": "network_mapper",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "nexus_network_topology_mapping",
+          "agent": "ghost",
+          "start_time": 36,
+          "end_time": 42
+        }
+      ]
+    },
+    {
+      "id": "biometric_analyzer",
+      "type": "electronic",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "biometric_system_analysis",
+          "agent": "spark",
+          "start_time": 35,
+          "end_time": 39
+        }
+      ]
+    },
+    {
+      "id": "traffic_analysis_system",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "extraction_route_planning",
+          "agent": "vector",
+          "start_time": 36,
+          "end_time": 41
+        }
+      ]
+    },
+    {
+      "id": "vehicle_database",
+      "type": "intelligence",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "vehicle_acquisition_planning",
+          "agent": "vector",
+          "start_time": 80,
+          "end_time": 83
+        }
+      ]
+    },
+    {
+      "id": "scenario_simulator",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "contingency_planning",
+          "agent": "sage",
+          "start_time": 52,
+          "end_time": 58
+        }
+      ]
+    },
+    {
+      "id": "communication_protocols",
+      "type": "communication",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "team_coordination_protocols",
+          "agent": "sage",
+          "start_time": 108,
+          "end_time": 112
+        }
+      ]
+    },
+    {
+      "id": "demolition_kit",
+      "type": "explosive",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "explosive_device_preparation",
+          "agent": "wraith",
+          "start_time": 40,
+          "end_time": 45
+        }
+      ]
+    },
+    {
+      "id": "identity_forge",
+      "type": "fabrication",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "identity_fabrication",
+          "agent": "mirage",
+          "start_time": 50,
+          "end_time": 56
+        }
+      ]
+    },
+    {
+      "id": "corporate_intelligence",
+      "type": "intelligence",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "insider_knowledge_briefing",
+          "agent": "nexus",
+          "start_time": 16,
+          "end_time": 20
+        }
+      ]
+    },
+    {
+      "id": "access_verification_system",
+      "type": "security",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "executive_privilege_verification",
+          "agent": "nexus",
+          "start_time": 88,
+          "end_time": 91
+        }
+      ]
+    },
+    {
+      "id": "surveillance_kit",
+      "type": "surveillance",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "surveillance_equipment_deployment",
+          "agent": "oracle",
+          "start_time": 76,
+          "end_time": 80
+        }
+      ]
+    },
+    {
+      "id": "equipment_cache",
+      "type": "storage",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "final_equipment_staging",
+          "agent": "spark",
+          "start_time": 126,
+          "end_time": 129
+        }
+      ]
+    },
+    {
+      "id": "perimeter_monitors",
+      "type": "surveillance",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "perimeter_surveillance_establishment",
+          "agent": "oracle",
+          "start_time": 96,
+          "end_time": 99
+        }
+      ]
+    },
+    {
+      "id": "jamming_equipment",
+      "type": "electronic",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "communication_jamming_activation",
+          "agent": "echo",
+          "start_time": 52,
+          "end_time": 54
+        }
+      ]
+    },
+    {
+      "id": "executive_disguise",
+      "type": "disguise",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "executive_impersonation_entry",
+          "agent": "mirage",
+          "start_time": 126,
+          "end_time": 130
+        }
+      ]
+    },
+    {
+      "id": "distraction_scenario",
+      "type": "psychological",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "social_engineering_distraction",
+          "agent": "mirage",
+          "start_time": 112,
+          "end_time": 115
+        }
+      ]
+    },
+    {
+      "id": "master_keycard",
+      "type": "access",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "lobby_security_bypass",
+          "agent": "phantom",
+          "start_time": 87,
+          "end_time": 90
+        }
+      ]
+    },
+    {
+      "id": "elevator_control_interface",
+      "type": "electronic",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "elevator_system_override",
+          "agent": "spark",
+          "start_time": 90,
+          "end_time": 92
+        }
+      ]
+    },
+    {
+      "id": "network_infiltration_kit",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "camera_network_infiltration",
+          "agent": "ghost",
+          "start_time": 84,
+          "end_time": 88
+        }
+      ]
+    },
+    {
+      "id": "guard_radio_tap",
+      "type": "communication",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "guard_communication_intercept",
+          "agent": "echo",
+          "start_time": 54,
+          "end_time": 57
+        }
+      ]
+    },
+    {
+      "id": "false_alarm_system",
+      "type": "deception",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "security_patrol_misdirection",
+          "agent": "mirage",
+          "start_time": 99,
+          "end_time": 103
+        }
+      ]
+    },
+    {
+      "id": "stealth_suit",
+      "type": "equipment",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "helix_biotech_infiltration",
+          "agent": "ghost",
+          "start_time": 128,
+          "end_time": 134
+        }
+      ]
+    },
+    {
+      "id": "network_takeover_kit",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "cipher_communications_takeover",
+          "agent": "ghost",
+          "start_time": 136,
+          "end_time": 144
+        }
+      ]
+    },
+    {
+      "id": "climbing_gear",
+      "type": "physical",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "quantum_vault_approach",
+          "agent": "phantom",
+          "start_time": 210,
+          "end_time": 218
+        }
+      ]
+    },
+    {
+      "id": "precision_charges",
+      "type": "explosive",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "structural_breach_preparation",
+          "agent": "wraith",
+          "start_time": 100,
+          "end_time": 106
+        }
+      ]
+    },
+    {
+      "id": "quantum_decryption_array",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "quantum_encryption_breaking",
+          "agent": "cipher",
+          "start_time": 296,
+          "end_time": 308
+        }
+      ]
+    },
+    {
+      "id": "code_verification_system",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "code_analysis_verification",
+          "agent": "cipher",
+          "start_time": 468,
+          "end_time": 472
+        }
+      ]
+    },
+    {
+      "id": "shaped_charges",
+      "type": "explosive",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "vault_physical_breach",
+          "agent": "wraith",
+          "start_time": 228,
+          "end_time": 231
+        }
+      ]
+    },
+    {
+      "id": "biometric_spoofer",
+      "type": "electronic",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "biometric_security_defeat",
+          "agent": "spark",
+          "start_time": 123,
+          "end_time": 128
+        }
+      ]
+    },
+    {
+      "id": "advanced_lock_tools",
+      "type": "physical",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "vault_lock_mechanisms_defeat",
+          "agent": "phantom",
+          "start_time": 123,
+          "end_time": 129
+        }
+      ]
+    },
+    {
+      "id": "data_extraction_array",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "data_extraction_primary",
+          "agent": "ghost",
+          "start_time": 258,
+          "end_time": 268
+        }
+      ]
+    },
+    {
+      "id": "alert_detection_system",
+      "type": "surveillance",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "security_alert_detection",
+          "agent": "echo",
+          "start_time": 78,
+          "end_time": 86
+        }
+      ]
+    },
+    {
+      "id": "tactical_command_center",
+      "type": "facility",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "tactical_response_coordination",
+          "agent": "sage",
+          "start_time": 360,
+          "end_time": 363
+        }
+      ]
+    },
+    {
+      "id": "emergency_protocols",
+      "type": "communication",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "team_coordination_adjustment",
+          "agent": "sage",
+          "start_time": 138,
+          "end_time": 140
+        }
+      ]
+    },
+    {
+      "id": "backup_plans",
+      "type": "intelligence",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "contingency_activation",
+          "agent": "sage",
+          "start_time": 94,
+          "end_time": 98
+        }
+      ]
+    },
+    {
+      "id": "data_wipe_tools",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "evidence_elimination_digital",
+          "agent": "ghost",
+          "start_time": 440,
+          "end_time": 445
+        }
+      ]
+    },
+    {
+      "id": "forensic_cleanup_kit",
+      "type": "physical",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "physical_trace_cleanup",
+          "agent": "spark",
+          "start_time": 192,
+          "end_time": 198
+        }
+      ]
+    },
+    {
+      "id": "evacuation_gear",
+      "type": "physical",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "building_evacuation_initiation",
+          "agent": "phantom",
+          "start_time": 300,
+          "end_time": 304
+        }
+      ]
+    },
+    {
+      "id": "getaway_vehicles",
+      "type": "vehicle",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "vehicle_acquisition_execution",
+          "agent": "vector",
+          "start_time": 51,
+          "end_time": 54
+        }
+      ]
+    },
+    {
+      "id": "route_control_system",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "extraction_route_activation",
+          "agent": "vector",
+          "start_time": 204,
+          "end_time": 206
+        }
+      ]
+    },
+    {
+      "id": "pursuit_countermeasures",
+      "type": "defensive",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "pursuit_countermeasures",
+          "agent": "echo",
+          "start_time": 156,
+          "end_time": 162
+        }
+      ]
+    },
+    {
+      "id": "extraction_aircraft",
+      "type": "aerial",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "aerial_extraction_team",
+          "agent": "vector",
+          "start_time": 106,
+          "end_time": 114
+        }
+      ]
+    },
+    {
+      "id": "evasion_vehicles",
+      "type": "vehicle",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "ground_pursuit_evasion",
+          "agent": "vector",
+          "start_time": 324,
+          "end_time": 334
+        }
+      ]
+    },
+    {
+      "id": "area_jammers",
+      "type": "electronic",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "communication_blackout",
+          "agent": "echo",
+          "start_time": 245,
+          "end_time": 249
+        }
+      ]
+    },
+    {
+      "id": "misdirection_tools",
+      "type": "deception",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "false_trail_creation",
+          "agent": "mirage",
+          "start_time": 228,
+          "end_time": 233
+        }
+      ]
+    },
+    {
+      "id": "data_verification_suite",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "data_verification_secure",
+          "agent": "oracle",
+          "start_time": 440,
+          "end_time": 443
+        }
+      ]
+    },
+    {
+      "id": "encryption_tools",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "encryption_application",
+          "agent": "cipher",
+          "start_time": 177,
+          "end_time": 181
+        }
+      ]
+    },
+    {
+      "id": "secure_transmission_array",
+      "type": "communication",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "secure_transmission_setup",
+          "agent": "oracle",
+          "start_time": 240,
+          "end_time": 243
+        }
+      ]
+    },
+    {
+      "id": "transmission_equipment",
+      "type": "communication",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "data_transmission_execution",
+          "agent": "echo",
+          "start_time": 440,
+          "end_time": 442
+        }
+      ]
+    },
+    {
+      "id": "dispersal_protocols",
+      "type": "intelligence",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "team_dispersal_coordination",
+          "agent": "sage",
+          "start_time": 560,
+          "end_time": 563
+        }
+      ]
+    },
+    {
+      "id": "identity_destruction_kit",
+      "type": "fabrication",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "identity_dissolution",
+          "agent": "mirage",
+          "start_time": 189,
+          "end_time": 193
+        }
+      ]
+    },
+    {
+      "id": "safe_house_network",
+      "type": "facility",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "safe_house_activation",
+          "agent": "ghost",
+          "start_time": 256,
+          "end_time": 261
+        }
+      ]
+    },
+    {
+      "id": "insider_protection_protocol",
+      "type": "security",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "corporate_insider_extraction",
+          "agent": "nexus",
+          "start_time": 325,
+          "end_time": 331
+        }
+      ]
+    },
+    {
+      "id": "mission_verification_system",
+      "type": "computational",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "mission_completion_verification",
+          "agent": "sage",
+          "start_time": 396,
+          "end_time": 398
+        }
+      ]
+    },
+    {
+      "id": "evidence_destruction_charges",
+      "type": "explosive",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "final_evidence_destruction",
+          "agent": "wraith",
+          "start_time": 134,
+          "end_time": 137
+        }
+      ]
+    },
+    {
+      "id": "exfiltration_confirmation",
+      "type": "communication",
+      "capacity": 1,
+      "utilization_percent": 33,
+      "usage_timeline": [
+        {
+          "task": "team_exfiltration_complete",
+          "agent": "sage",
+          "start_time": 204,
+          "end_time": 205
+        }
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "mission_briefing_coordination",
+      "status": "scheduled",
+      "dependencies": [],
+      "duration": 3,
+      "required_capabilities": [
+        "tactical_planning"
+      ],
+      "required_resources": [
+        "secure_meeting_room"
+      ],
+      "start_time": 0,
+      "assigned_agent": "sage",
+      "end_time": 3
+    },
+    {
+      "id": "nexus_financial_analysis",
+      "status": "scheduled",
+      "dependencies": [
+        "mission_briefing_coordination"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "data_analysis"
+      ],
+      "required_resources": [
+        "financial_database"
+      ],
+      "start_time": 3,
+      "assigned_agent": "oracle",
+      "end_time": 7
+    },
+    {
+      "id": "corporate_insider_recruitment",
+      "status": "scheduled",
+      "dependencies": [
+        "nexus_financial_analysis"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "persuasion"
+      ],
+      "required_resources": [
+        "social_engineering_kit"
+      ],
+      "start_time": 8,
+      "assigned_agent": "mirage",
+      "end_time": 14
+    },
+    {
+      "id": "executive_access_establishment",
+      "status": "scheduled",
+      "dependencies": [
+        "corporate_insider_recruitment"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "corporate_access"
+      ],
+      "required_resources": [
+        "executive_credentials"
+      ],
+      "start_time": 18,
+      "assigned_agent": "nexus",
+      "end_time": 22
+    },
+    {
+      "id": "quantum_encryption_research",
+      "status": "scheduled",
+      "dependencies": [
+        "nexus_financial_analysis"
+      ],
+      "duration": 8,
+      "required_capabilities": [
+        "encryption_breaking"
+      ],
+      "required_resources": [
+        "quantum_research_lab"
+      ],
+      "start_time": 8,
+      "assigned_agent": "cipher",
+      "end_time": 16
+    },
+    {
+      "id": "mathematical_security_modeling",
+      "status": "scheduled",
+      "dependencies": [
+        "quantum_encryption_research"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "mathematical_modeling"
+      ],
+      "required_resources": [
+        "supercomputer_access"
+      ],
+      "start_time": 40,
+      "assigned_agent": "cipher",
+      "end_time": 46
+    },
+    {
+      "id": "titan_security_assessment",
+      "status": "scheduled",
+      "dependencies": [
+        "executive_access_establishment"
+      ],
+      "duration": 5,
+      "required_capabilities": [
+        "security_bypass"
+      ],
+      "required_resources": [
+        "security_scanner"
+      ],
+      "start_time": 16,
+      "assigned_agent": "spark",
+      "end_time": 21
+    },
+    {
+      "id": "building_structural_analysis",
+      "status": "scheduled",
+      "dependencies": [],
+      "duration": 5,
+      "required_capabilities": [
+        "structural_analysis"
+      ],
+      "required_resources": [
+        "architectural_plans"
+      ],
+      "start_time": 0,
+      "assigned_agent": "wraith",
+      "end_time": 5
+    },
+    {
+      "id": "aerial_reconnaissance",
+      "status": "scheduled",
+      "dependencies": [
+        "building_structural_analysis"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "piloting"
+      ],
+      "required_resources": [
+        "surveillance_drone"
+      ],
+      "start_time": 40,
+      "assigned_agent": "vector",
+      "end_time": 44
+    },
+    {
+      "id": "employee_psychological_profiling",
+      "status": "scheduled",
+      "dependencies": [
+        "corporate_insider_recruitment"
+      ],
+      "duration": 5,
+      "required_capabilities": [
+        "psychological_manipulation"
+      ],
+      "required_resources": [
+        "behavioral_analysis_suite"
+      ],
+      "start_time": 18,
+      "assigned_agent": "mirage",
+      "end_time": 23
+    },
+    {
+      "id": "signal_intelligence_setup",
+      "status": "scheduled",
+      "dependencies": [
+        "titan_security_assessment"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "signal_jamming"
+      ],
+      "required_resources": [
+        "signal_analysis_equipment"
+      ],
+      "start_time": 35,
+      "assigned_agent": "echo",
+      "end_time": 39
+    },
+    {
+      "id": "communication_intercept_network",
+      "status": "scheduled",
+      "dependencies": [
+        "signal_intelligence_setup"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "radio_intercept"
+      ],
+      "required_resources": [
+        "intercept_array"
+      ],
+      "start_time": 44,
+      "assigned_agent": "echo",
+      "end_time": 50
+    },
+    {
+      "id": "counter_surveillance_preparation",
+      "status": "scheduled",
+      "dependencies": [
+        "communication_intercept_network"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "counter_surveillance"
+      ],
+      "required_resources": [
+        "detection_countermeasures"
+      ],
+      "start_time": 72,
+      "assigned_agent": "echo",
+      "end_time": 76
+    },
+    {
+      "id": "nexus_network_topology_mapping",
+      "status": "scheduled",
+      "dependencies": [
+        "mathematical_security_modeling"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "hacking"
+      ],
+      "required_resources": [
+        "network_mapper"
+      ],
+      "start_time": 36,
+      "assigned_agent": "ghost",
+      "end_time": 42
+    },
+    {
+      "id": "biometric_system_analysis",
+      "status": "scheduled",
+      "dependencies": [
+        "titan_security_assessment"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "electronics"
+      ],
+      "required_resources": [
+        "biometric_analyzer"
+      ],
+      "start_time": 35,
+      "assigned_agent": "spark",
+      "end_time": 39
+    },
+    {
+      "id": "extraction_route_planning",
+      "status": "scheduled",
+      "dependencies": [
+        "aerial_reconnaissance"
+      ],
+      "duration": 5,
+      "required_capabilities": [
+        "route_planning"
+      ],
+      "required_resources": [
+        "traffic_analysis_system"
+      ],
+      "start_time": 36,
+      "assigned_agent": "vector",
+      "end_time": 41
+    },
+    {
+      "id": "vehicle_acquisition_planning",
+      "status": "scheduled",
+      "dependencies": [
+        "extraction_route_planning"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "driving"
+      ],
+      "required_resources": [
+        "vehicle_database"
+      ],
+      "start_time": 80,
+      "assigned_agent": "vector",
+      "end_time": 83
+    },
+    {
+      "id": "contingency_planning",
+      "status": "scheduled",
+      "dependencies": [
+        "counter_surveillance_preparation"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "contingency_management"
+      ],
+      "required_resources": [
+        "scenario_simulator"
+      ],
+      "start_time": 52,
+      "assigned_agent": "sage",
+      "end_time": 58
+    },
+    {
+      "id": "team_coordination_protocols",
+      "status": "scheduled",
+      "dependencies": [
+        "contingency_planning"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "team_coordination"
+      ],
+      "required_resources": [
+        "communication_protocols"
+      ],
+      "start_time": 108,
+      "assigned_agent": "sage",
+      "end_time": 112
+    },
+    {
+      "id": "explosive_device_preparation",
+      "status": "scheduled",
+      "dependencies": [
+        "building_structural_analysis"
+      ],
+      "duration": 5,
+      "required_capabilities": [
+        "explosives"
+      ],
+      "required_resources": [
+        "demolition_kit"
+      ],
+      "start_time": 40,
+      "assigned_agent": "wraith",
+      "end_time": 45
+    },
+    {
+      "id": "identity_fabrication",
+      "status": "scheduled",
+      "dependencies": [
+        "employee_psychological_profiling"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "impersonation"
+      ],
+      "required_resources": [
+        "identity_forge"
+      ],
+      "start_time": 50,
+      "assigned_agent": "mirage",
+      "end_time": 56
+    },
+    {
+      "id": "insider_knowledge_briefing",
+      "status": "scheduled",
+      "dependencies": [
+        "executive_access_establishment"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "insider_knowledge"
+      ],
+      "required_resources": [
+        "corporate_intelligence"
+      ],
+      "start_time": 16,
+      "assigned_agent": "nexus",
+      "end_time": 20
+    },
+    {
+      "id": "executive_privilege_verification",
+      "status": "scheduled",
+      "dependencies": [
+        "insider_knowledge_briefing"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "executive_privileges"
+      ],
+      "required_resources": [
+        "access_verification_system"
+      ],
+      "start_time": 88,
+      "assigned_agent": "nexus",
+      "end_time": 91
+    },
+    {
+      "id": "surveillance_equipment_deployment",
+      "status": "scheduled",
+      "dependencies": [
+        "team_coordination_protocols"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "surveillance"
+      ],
+      "required_resources": [
+        "surveillance_kit"
+      ],
+      "start_time": 76,
+      "assigned_agent": "oracle",
+      "end_time": 80
+    },
+    {
+      "id": "final_equipment_staging",
+      "status": "scheduled",
+      "dependencies": [
+        "explosive_device_preparation",
+        "identity_fabrication"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "technical_repair"
+      ],
+      "required_resources": [
+        "equipment_cache"
+      ],
+      "start_time": 126,
+      "assigned_agent": "spark",
+      "end_time": 129
+    },
+    {
+      "id": "perimeter_surveillance_establishment",
+      "status": "scheduled",
+      "dependencies": [
+        "surveillance_equipment_deployment"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "surveillance"
+      ],
+      "required_resources": [
+        "perimeter_monitors"
+      ],
+      "start_time": 96,
+      "assigned_agent": "oracle",
+      "end_time": 99
+    },
+    {
+      "id": "communication_jamming_activation",
+      "status": "scheduled",
+      "dependencies": [
+        "counter_surveillance_preparation"
+      ],
+      "duration": 2,
+      "required_capabilities": [
+        "signal_jamming"
+      ],
+      "required_resources": [
+        "jamming_equipment"
+      ],
+      "start_time": 52,
+      "assigned_agent": "echo",
+      "end_time": 54
+    },
+    {
+      "id": "executive_impersonation_entry",
+      "status": "scheduled",
+      "dependencies": [
+        "executive_privilege_verification",
+        "identity_fabrication"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "impersonation"
+      ],
+      "required_resources": [
+        "executive_disguise"
+      ],
+      "start_time": 126,
+      "assigned_agent": "mirage",
+      "end_time": 130
+    },
+    {
+      "id": "social_engineering_distraction",
+      "status": "scheduled",
+      "dependencies": [
+        "executive_impersonation_entry"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "persuasion"
+      ],
+      "required_resources": [
+        "distraction_scenario"
+      ],
+      "start_time": 112,
+      "assigned_agent": "mirage",
+      "end_time": 115
+    },
+    {
+      "id": "lobby_security_bypass",
+      "status": "scheduled",
+      "dependencies": [
+        "social_engineering_distraction"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "lockpicking"
+      ],
+      "required_resources": [
+        "master_keycard"
+      ],
+      "start_time": 87,
+      "assigned_agent": "phantom",
+      "end_time": 90
+    },
+    {
+      "id": "elevator_system_override",
+      "status": "scheduled",
+      "dependencies": [
+        "lobby_security_bypass"
+      ],
+      "duration": 2,
+      "required_capabilities": [
+        "electronics"
+      ],
+      "required_resources": [
+        "elevator_control_interface"
+      ],
+      "start_time": 90,
+      "assigned_agent": "spark",
+      "end_time": 92
+    },
+    {
+      "id": "camera_network_infiltration",
+      "status": "scheduled",
+      "dependencies": [
+        "nexus_network_topology_mapping"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "hacking"
+      ],
+      "required_resources": [
+        "network_infiltration_kit"
+      ],
+      "start_time": 84,
+      "assigned_agent": "ghost",
+      "end_time": 88
+    },
+    {
+      "id": "guard_communication_intercept",
+      "status": "scheduled",
+      "dependencies": [
+        "communication_jamming_activation"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "radio_intercept"
+      ],
+      "required_resources": [
+        "guard_radio_tap"
+      ],
+      "start_time": 54,
+      "assigned_agent": "echo",
+      "end_time": 57
+    },
+    {
+      "id": "security_patrol_misdirection",
+      "status": "scheduled",
+      "dependencies": [
+        "guard_communication_intercept"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "psychological_manipulation"
+      ],
+      "required_resources": [
+        "false_alarm_system"
+      ],
+      "start_time": 99,
+      "assigned_agent": "mirage",
+      "end_time": 103
+    },
+    {
+      "id": "helix_biotech_infiltration",
+      "status": "scheduled",
+      "dependencies": [
+        "elevator_system_override",
+        "camera_network_infiltration"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "stealth"
+      ],
+      "required_resources": [
+        "stealth_suit"
+      ],
+      "start_time": 128,
+      "assigned_agent": "ghost",
+      "end_time": 134
+    },
+    {
+      "id": "cipher_communications_takeover",
+      "status": "scheduled",
+      "dependencies": [
+        "security_patrol_misdirection"
+      ],
+      "duration": 8,
+      "required_capabilities": [
+        "network_access"
+      ],
+      "required_resources": [
+        "network_takeover_kit"
+      ],
+      "start_time": 136,
+      "assigned_agent": "ghost",
+      "end_time": 144
+    },
+    {
+      "id": "quantum_vault_approach",
+      "status": "scheduled",
+      "dependencies": [
+        "helix_biotech_infiltration"
+      ],
+      "duration": 8,
+      "required_capabilities": [
+        "acrobatics"
+      ],
+      "required_resources": [
+        "climbing_gear"
+      ],
+      "start_time": 210,
+      "assigned_agent": "phantom",
+      "end_time": 218
+    },
+    {
+      "id": "structural_breach_preparation",
+      "status": "scheduled",
+      "dependencies": [
+        "explosive_device_preparation"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "tactical_breach"
+      ],
+      "required_resources": [
+        "precision_charges"
+      ],
+      "start_time": 100,
+      "assigned_agent": "wraith",
+      "end_time": 106
+    },
+    {
+      "id": "quantum_encryption_breaking",
+      "status": "scheduled",
+      "dependencies": [
+        "mathematical_security_modeling",
+        "quantum_vault_approach"
+      ],
+      "duration": 12,
+      "required_capabilities": [
+        "encryption_breaking"
+      ],
+      "required_resources": [
+        "quantum_decryption_array"
+      ],
+      "start_time": 296,
+      "assigned_agent": "cipher",
+      "end_time": 308
+    },
+    {
+      "id": "code_analysis_verification",
+      "status": "scheduled",
+      "dependencies": [
+        "quantum_encryption_breaking"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "code_analysis"
+      ],
+      "required_resources": [
+        "code_verification_system"
+      ],
+      "start_time": 468,
+      "assigned_agent": "cipher",
+      "end_time": 472
+    },
+    {
+      "id": "vault_physical_breach",
+      "status": "scheduled",
+      "dependencies": [
+        "structural_breach_preparation"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "explosives"
+      ],
+      "required_resources": [
+        "shaped_charges"
+      ],
+      "start_time": 228,
+      "assigned_agent": "wraith",
+      "end_time": 231
+    },
+    {
+      "id": "biometric_security_defeat",
+      "status": "scheduled",
+      "dependencies": [
+        "biometric_system_analysis",
+        "vault_physical_breach"
+      ],
+      "duration": 5,
+      "required_capabilities": [
+        "security_bypass"
+      ],
+      "required_resources": [
+        "biometric_spoofer"
+      ],
+      "start_time": 123,
+      "assigned_agent": "spark",
+      "end_time": 128
+    },
+    {
+      "id": "vault_lock_mechanisms_defeat",
+      "status": "scheduled",
+      "dependencies": [
+        "vault_physical_breach"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "lockpicking"
+      ],
+      "required_resources": [
+        "advanced_lock_tools"
+      ],
+      "start_time": 123,
+      "assigned_agent": "phantom",
+      "end_time": 129
+    },
+    {
+      "id": "data_extraction_primary",
+      "status": "scheduled",
+      "dependencies": [
+        "code_analysis_verification",
+        "biometric_security_defeat",
+        "vault_lock_mechanisms_defeat"
+      ],
+      "duration": 10,
+      "required_capabilities": [
+        "network_access"
+      ],
+      "required_resources": [
+        "data_extraction_array"
+      ],
+      "start_time": 258,
+      "assigned_agent": "ghost",
+      "end_time": 268
+    },
+    {
+      "id": "security_alert_detection",
+      "status": "scheduled",
+      "dependencies": [
+        "perimeter_surveillance_establishment"
+      ],
+      "duration": 8,
+      "required_capabilities": [
+        "counter_surveillance"
+      ],
+      "required_resources": [
+        "alert_detection_system"
+      ],
+      "start_time": 78,
+      "assigned_agent": "echo",
+      "end_time": 86
+    },
+    {
+      "id": "tactical_response_coordination",
+      "status": "scheduled",
+      "dependencies": [
+        "security_alert_detection"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "tactical_planning"
+      ],
+      "required_resources": [
+        "tactical_command_center"
+      ],
+      "start_time": 360,
+      "assigned_agent": "sage",
+      "end_time": 363
+    },
+    {
+      "id": "team_coordination_adjustment",
+      "status": "scheduled",
+      "dependencies": [
+        "tactical_response_coordination"
+      ],
+      "duration": 2,
+      "required_capabilities": [
+        "team_coordination"
+      ],
+      "required_resources": [
+        "emergency_protocols"
+      ],
+      "start_time": 138,
+      "assigned_agent": "sage",
+      "end_time": 140
+    },
+    {
+      "id": "contingency_activation",
+      "status": "scheduled",
+      "dependencies": [
+        "team_coordination_adjustment"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "contingency_management"
+      ],
+      "required_resources": [
+        "backup_plans"
+      ],
+      "start_time": 94,
+      "assigned_agent": "sage",
+      "end_time": 98
+    },
+    {
+      "id": "evidence_elimination_digital",
+      "status": "scheduled",
+      "dependencies": [
+        "data_extraction_primary"
+      ],
+      "duration": 5,
+      "required_capabilities": [
+        "hacking"
+      ],
+      "required_resources": [
+        "data_wipe_tools"
+      ],
+      "start_time": 440,
+      "assigned_agent": "ghost",
+      "end_time": 445
+    },
+    {
+      "id": "physical_trace_cleanup",
+      "status": "scheduled",
+      "dependencies": [
+        "contingency_activation"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "technical_repair"
+      ],
+      "required_resources": [
+        "forensic_cleanup_kit"
+      ],
+      "start_time": 192,
+      "assigned_agent": "spark",
+      "end_time": 198
+    },
+    {
+      "id": "building_evacuation_initiation",
+      "status": "scheduled",
+      "dependencies": [
+        "physical_trace_cleanup"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "acrobatics"
+      ],
+      "required_resources": [
+        "evacuation_gear"
+      ],
+      "start_time": 300,
+      "assigned_agent": "phantom",
+      "end_time": 304
+    },
+    {
+      "id": "vehicle_acquisition_execution",
+      "status": "scheduled",
+      "dependencies": [
+        "vehicle_acquisition_planning"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "driving"
+      ],
+      "required_resources": [
+        "getaway_vehicles"
+      ],
+      "start_time": 51,
+      "assigned_agent": "vector",
+      "end_time": 54
+    },
+    {
+      "id": "extraction_route_activation",
+      "status": "scheduled",
+      "dependencies": [
+        "extraction_route_planning",
+        "building_evacuation_initiation"
+      ],
+      "duration": 2,
+      "required_capabilities": [
+        "route_planning"
+      ],
+      "required_resources": [
+        "route_control_system"
+      ],
+      "start_time": 204,
+      "assigned_agent": "vector",
+      "end_time": 206
+    },
+    {
+      "id": "pursuit_countermeasures",
+      "status": "scheduled",
+      "dependencies": [
+        "vehicle_acquisition_execution"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "counter_surveillance"
+      ],
+      "required_resources": [
+        "pursuit_countermeasures"
+      ],
+      "start_time": 156,
+      "assigned_agent": "echo",
+      "end_time": 162
+    },
+    {
+      "id": "aerial_extraction_team",
+      "status": "scheduled",
+      "dependencies": [
+        "extraction_route_activation"
+      ],
+      "duration": 8,
+      "required_capabilities": [
+        "piloting"
+      ],
+      "required_resources": [
+        "extraction_aircraft"
+      ],
+      "start_time": 106,
+      "assigned_agent": "vector",
+      "end_time": 114
+    },
+    {
+      "id": "ground_pursuit_evasion",
+      "status": "scheduled",
+      "dependencies": [
+        "pursuit_countermeasures"
+      ],
+      "duration": 10,
+      "required_capabilities": [
+        "driving"
+      ],
+      "required_resources": [
+        "evasion_vehicles"
+      ],
+      "start_time": 324,
+      "assigned_agent": "vector",
+      "end_time": 334
+    },
+    {
+      "id": "communication_blackout",
+      "status": "scheduled",
+      "dependencies": [
+        "evidence_elimination_digital"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "signal_jamming"
+      ],
+      "required_resources": [
+        "area_jammers"
+      ],
+      "start_time": 245,
+      "assigned_agent": "echo",
+      "end_time": 249
+    },
+    {
+      "id": "false_trail_creation",
+      "status": "scheduled",
+      "dependencies": [
+        "communication_blackout"
+      ],
+      "duration": 5,
+      "required_capabilities": [
+        "psychological_manipulation"
+      ],
+      "required_resources": [
+        "misdirection_tools"
+      ],
+      "start_time": 228,
+      "assigned_agent": "mirage",
+      "end_time": 233
+    },
+    {
+      "id": "data_verification_secure",
+      "status": "scheduled",
+      "dependencies": [
+        "data_extraction_primary"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "data_analysis"
+      ],
+      "required_resources": [
+        "data_verification_suite"
+      ],
+      "start_time": 440,
+      "assigned_agent": "oracle",
+      "end_time": 443
+    },
+    {
+      "id": "encryption_application",
+      "status": "scheduled",
+      "dependencies": [
+        "data_verification_secure"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "encryption_breaking"
+      ],
+      "required_resources": [
+        "encryption_tools"
+      ],
+      "start_time": 177,
+      "assigned_agent": "cipher",
+      "end_time": 181
+    },
+    {
+      "id": "secure_transmission_setup",
+      "status": "scheduled",
+      "dependencies": [
+        "encryption_application"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "communication"
+      ],
+      "required_resources": [
+        "secure_transmission_array"
+      ],
+      "start_time": 240,
+      "assigned_agent": "oracle",
+      "end_time": 243
+    },
+    {
+      "id": "data_transmission_execution",
+      "status": "scheduled",
+      "dependencies": [
+        "secure_transmission_setup",
+        "aerial_extraction_team"
+      ],
+      "duration": 2,
+      "required_capabilities": [
+        "radio_intercept"
+      ],
+      "required_resources": [
+        "transmission_equipment"
+      ],
+      "start_time": 440,
+      "assigned_agent": "echo",
+      "end_time": 442
+    },
+    {
+      "id": "team_dispersal_coordination",
+      "status": "scheduled",
+      "dependencies": [
+        "ground_pursuit_evasion",
+        "false_trail_creation"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "team_coordination"
+      ],
+      "required_resources": [
+        "dispersal_protocols"
+      ],
+      "start_time": 560,
+      "assigned_agent": "sage",
+      "end_time": 563
+    },
+    {
+      "id": "identity_dissolution",
+      "status": "scheduled",
+      "dependencies": [
+        "team_dispersal_coordination"
+      ],
+      "duration": 4,
+      "required_capabilities": [
+        "impersonation"
+      ],
+      "required_resources": [
+        "identity_destruction_kit"
+      ],
+      "start_time": 189,
+      "assigned_agent": "mirage",
+      "end_time": 193
+    },
+    {
+      "id": "safe_house_activation",
+      "status": "scheduled",
+      "dependencies": [
+        "identity_dissolution"
+      ],
+      "duration": 5,
+      "required_capabilities": [
+        "stealth"
+      ],
+      "required_resources": [
+        "safe_house_network"
+      ],
+      "start_time": 256,
+      "assigned_agent": "ghost",
+      "end_time": 261
+    },
+    {
+      "id": "corporate_insider_extraction",
+      "status": "scheduled",
+      "dependencies": [
+        "safe_house_activation"
+      ],
+      "duration": 6,
+      "required_capabilities": [
+        "corporate_access"
+      ],
+      "required_resources": [
+        "insider_protection_protocol"
+      ],
+      "start_time": 325,
+      "assigned_agent": "nexus",
+      "end_time": 331
+    },
+    {
+      "id": "mission_completion_verification",
+      "status": "scheduled",
+      "dependencies": [
+        "data_transmission_execution",
+        "corporate_insider_extraction"
+      ],
+      "duration": 2,
+      "required_capabilities": [
+        "tactical_planning"
+      ],
+      "required_resources": [
+        "mission_verification_system"
+      ],
+      "start_time": 396,
+      "assigned_agent": "sage",
+      "end_time": 398
+    },
+    {
+      "id": "final_evidence_destruction",
+      "status": "scheduled",
+      "dependencies": [
+        "mission_completion_verification"
+      ],
+      "duration": 3,
+      "required_capabilities": [
+        "explosives"
+      ],
+      "required_resources": [
+        "evidence_destruction_charges"
+      ],
+      "start_time": 134,
+      "assigned_agent": "wraith",
+      "end_time": 137
+    },
+    {
+      "id": "team_exfiltration_complete",
+      "status": "scheduled",
+      "dependencies": [
+        "final_evidence_destruction"
+      ],
+      "duration": 1,
+      "required_capabilities": [
+        "contingency_management"
+      ],
+      "required_resources": [
+        "exfiltration_confirmation"
+      ],
+      "start_time": 204,
+      "assigned_agent": "sage",
+      "end_time": 205
+    }
+  ],
+  "execution_time_ms": 131487,
+  "scenario": {
+    "name": "Operation: Digital Dynasty - Nexus Dynamics Heist",
+    "description": "Ocean's 11-style corporate espionage: 11 specialists, 75 coordinated tasks, 60+ high-tech tools - Multi-act cinematic heist with parallel operations, complex dependencies, and full capability utilization",
+    "complexity": "maximum",
+    "expected_outcome": "sophisticated multi-team coordination with advanced resource allocation, parallel execution paths, and realistic agent workload distribution across 3-act structure"
+  },
+  "solution_id": "simple_work_assignment",
+  "agents": [
+    {
+      "id": "ghost",
+      "type": "agent",
+      "metadata": {
+        "role": "Network Infiltration Specialist",
+        "codename": "Ghost",
+        "specialty": "Digital Systems"
+      },
+      "capabilities": [
+        "hacking",
+        "network_access",
+        "stealth"
+      ],
+      "assigned_tasks": [
+        "nexus_network_topology_mapping",
+        "camera_network_infiltration",
+        "helix_biotech_infiltration",
+        "cipher_communications_takeover",
+        "data_extraction_primary",
+        "evidence_elimination_digital",
+        "safe_house_activation"
+      ],
+      "resource_usage": [
+        {
+          "resource": "network_mapper",
+          "task": "nexus_network_topology_mapping",
+          "start_time": 36,
+          "end_time": 42
+        },
+        {
+          "resource": "network_infiltration_kit",
+          "task": "camera_network_infiltration",
+          "start_time": 84,
+          "end_time": 88
+        },
+        {
+          "resource": "stealth_suit",
+          "task": "helix_biotech_infiltration",
+          "start_time": 128,
+          "end_time": 134
+        },
+        {
+          "resource": "network_takeover_kit",
+          "task": "cipher_communications_takeover",
+          "start_time": 136,
+          "end_time": 144
+        },
+        {
+          "resource": "data_extraction_array",
+          "task": "data_extraction_primary",
+          "start_time": 258,
+          "end_time": 268
+        },
+        {
+          "resource": "data_wipe_tools",
+          "task": "evidence_elimination_digital",
+          "start_time": 440,
+          "end_time": 445
+        },
+        {
+          "resource": "safe_house_network",
+          "task": "safe_house_activation",
+          "start_time": 256,
+          "end_time": 261
+        }
+      ],
+      "utilization_percent": 100
+    },
+    {
+      "id": "spark",
+      "type": "agent",
+      "metadata": {
+        "role": "Electronics Expert",
+        "codename": "Spark",
+        "specialty": "Hardware Systems"
+      },
+      "capabilities": [
+        "electronics",
+        "security_bypass",
+        "technical_repair"
+      ],
+      "assigned_tasks": [
+        "titan_security_assessment",
+        "biometric_system_analysis",
+        "final_equipment_staging",
+        "elevator_system_override",
+        "biometric_security_defeat",
+        "physical_trace_cleanup"
+      ],
+      "resource_usage": [
+        {
+          "resource": "security_scanner",
+          "task": "titan_security_assessment",
+          "start_time": 16,
+          "end_time": 21
+        },
+        {
+          "resource": "biometric_analyzer",
+          "task": "biometric_system_analysis",
+          "start_time": 35,
+          "end_time": 39
+        },
+        {
+          "resource": "equipment_cache",
+          "task": "final_equipment_staging",
+          "start_time": 126,
+          "end_time": 129
+        },
+        {
+          "resource": "elevator_control_interface",
+          "task": "elevator_system_override",
+          "start_time": 90,
+          "end_time": 92
+        },
+        {
+          "resource": "biometric_spoofer",
+          "task": "biometric_security_defeat",
+          "start_time": 123,
+          "end_time": 128
+        },
+        {
+          "resource": "forensic_cleanup_kit",
+          "task": "physical_trace_cleanup",
+          "start_time": 192,
+          "end_time": 198
+        }
+      ],
+      "utilization_percent": 100
+    },
+    {
+      "id": "phantom",
+      "type": "agent",
+      "metadata": {
+        "role": "Physical Infiltration Specialist",
+        "codename": "Phantom",
+        "specialty": "Physical Security"
+      },
+      "capabilities": [
+        "lockpicking",
+        "stealth",
+        "acrobatics"
+      ],
+      "assigned_tasks": [
+        "lobby_security_bypass",
+        "quantum_vault_approach",
+        "vault_lock_mechanisms_defeat",
+        "building_evacuation_initiation"
+      ],
+      "resource_usage": [
+        {
+          "resource": "master_keycard",
+          "task": "lobby_security_bypass",
+          "start_time": 87,
+          "end_time": 90
+        },
+        {
+          "resource": "climbing_gear",
+          "task": "quantum_vault_approach",
+          "start_time": 210,
+          "end_time": 218
+        },
+        {
+          "resource": "advanced_lock_tools",
+          "task": "vault_lock_mechanisms_defeat",
+          "start_time": 123,
+          "end_time": 129
+        },
+        {
+          "resource": "evacuation_gear",
+          "task": "building_evacuation_initiation",
+          "start_time": 300,
+          "end_time": 304
+        }
+      ],
+      "utilization_percent": 100
+    },
+    {
+      "id": "oracle",
+      "type": "agent",
+      "metadata": {
+        "role": "Intelligence Coordinator",
+        "codename": "Oracle",
+        "specialty": "Information Warfare"
+      },
+      "capabilities": [
+        "surveillance",
+        "communication",
+        "data_analysis"
+      ],
+      "assigned_tasks": [
+        "nexus_financial_analysis",
+        "surveillance_equipment_deployment",
+        "perimeter_surveillance_establishment",
+        "data_verification_secure",
+        "secure_transmission_setup"
+      ],
+      "resource_usage": [
+        {
+          "resource": "financial_database",
+          "task": "nexus_financial_analysis",
+          "start_time": 3,
+          "end_time": 7
+        },
+        {
+          "resource": "surveillance_kit",
+          "task": "surveillance_equipment_deployment",
+          "start_time": 76,
+          "end_time": 80
+        },
+        {
+          "resource": "perimeter_monitors",
+          "task": "perimeter_surveillance_establishment",
+          "start_time": 96,
+          "end_time": 99
+        },
+        {
+          "resource": "data_verification_suite",
+          "task": "data_verification_secure",
+          "start_time": 440,
+          "end_time": 443
+        },
+        {
+          "resource": "secure_transmission_array",
+          "task": "secure_transmission_setup",
+          "start_time": 240,
+          "end_time": 243
+        }
+      ],
+      "utilization_percent": 100
+    },
+    {
+      "id": "cipher",
+      "type": "agent",
+      "metadata": {
+        "role": "Cryptography Expert",
+        "codename": "Cipher",
+        "specialty": "Quantum Encryption"
+      },
+      "capabilities": [
+        "encryption_breaking",
+        "code_analysis",
+        "mathematical_modeling"
+      ],
+      "assigned_tasks": [
+        "quantum_encryption_research",
+        "mathematical_security_modeling",
+        "quantum_encryption_breaking",
+        "code_analysis_verification",
+        "encryption_application"
+      ],
+      "resource_usage": [
+        {
+          "resource": "quantum_research_lab",
+          "task": "quantum_encryption_research",
+          "start_time": 8,
+          "end_time": 16
+        },
+        {
+          "resource": "supercomputer_access",
+          "task": "mathematical_security_modeling",
+          "start_time": 40,
+          "end_time": 46
+        },
+        {
+          "resource": "quantum_decryption_array",
+          "task": "quantum_encryption_breaking",
+          "start_time": 296,
+          "end_time": 308
+        },
+        {
+          "resource": "code_verification_system",
+          "task": "code_analysis_verification",
+          "start_time": 468,
+          "end_time": 472
+        },
+        {
+          "resource": "encryption_tools",
+          "task": "encryption_application",
+          "start_time": 177,
+          "end_time": 181
+        }
+      ],
+      "utilization_percent": 100
+    },
+    {
+      "id": "mirage",
+      "type": "agent",
+      "metadata": {
+        "role": "Social Engineer",
+        "codename": "Mirage",
+        "specialty": "Human Psychology"
+      },
+      "capabilities": [
+        "persuasion",
+        "impersonation",
+        "psychological_manipulation"
+      ],
+      "assigned_tasks": [
+        "corporate_insider_recruitment",
+        "employee_psychological_profiling",
+        "identity_fabrication",
+        "executive_impersonation_entry",
+        "social_engineering_distraction",
+        "security_patrol_misdirection",
+        "false_trail_creation",
+        "identity_dissolution"
+      ],
+      "resource_usage": [
+        {
+          "resource": "social_engineering_kit",
+          "task": "corporate_insider_recruitment",
+          "start_time": 8,
+          "end_time": 14
+        },
+        {
+          "resource": "behavioral_analysis_suite",
+          "task": "employee_psychological_profiling",
+          "start_time": 18,
+          "end_time": 23
+        },
+        {
+          "resource": "identity_forge",
+          "task": "identity_fabrication",
+          "start_time": 50,
+          "end_time": 56
+        },
+        {
+          "resource": "executive_disguise",
+          "task": "executive_impersonation_entry",
+          "start_time": 126,
+          "end_time": 130
+        },
+        {
+          "resource": "distraction_scenario",
+          "task": "social_engineering_distraction",
+          "start_time": 112,
+          "end_time": 115
+        },
+        {
+          "resource": "false_alarm_system",
+          "task": "security_patrol_misdirection",
+          "start_time": 99,
+          "end_time": 103
+        },
+        {
+          "resource": "misdirection_tools",
+          "task": "false_trail_creation",
+          "start_time": 228,
+          "end_time": 233
+        },
+        {
+          "resource": "identity_destruction_kit",
+          "task": "identity_dissolution",
+          "start_time": 189,
+          "end_time": 193
+        }
+      ],
+      "utilization_percent": 100
+    },
+    {
+      "id": "vector",
+      "type": "agent",
+      "metadata": {
+        "role": "Vehicle & Logistics Specialist",
+        "codename": "Vector",
+        "specialty": "Transportation"
+      },
+      "capabilities": [
+        "driving",
+        "piloting",
+        "route_planning"
+      ],
+      "assigned_tasks": [
+        "aerial_reconnaissance",
+        "extraction_route_planning",
+        "vehicle_acquisition_planning",
+        "vehicle_acquisition_execution",
+        "extraction_route_activation",
+        "aerial_extraction_team",
+        "ground_pursuit_evasion"
+      ],
+      "resource_usage": [
+        {
+          "resource": "surveillance_drone",
+          "task": "aerial_reconnaissance",
+          "start_time": 40,
+          "end_time": 44
+        },
+        {
+          "resource": "traffic_analysis_system",
+          "task": "extraction_route_planning",
+          "start_time": 36,
+          "end_time": 41
+        },
+        {
+          "resource": "vehicle_database",
+          "task": "vehicle_acquisition_planning",
+          "start_time": 80,
+          "end_time": 83
+        },
+        {
+          "resource": "getaway_vehicles",
+          "task": "vehicle_acquisition_execution",
+          "start_time": 51,
+          "end_time": 54
+        },
+        {
+          "resource": "route_control_system",
+          "task": "extraction_route_activation",
+          "start_time": 204,
+          "end_time": 206
+        },
+        {
+          "resource": "extraction_aircraft",
+          "task": "aerial_extraction_team",
+          "start_time": 106,
+          "end_time": 114
+        },
+        {
+          "resource": "evasion_vehicles",
+          "task": "ground_pursuit_evasion",
+          "start_time": 324,
+          "end_time": 334
+        }
+      ],
+      "utilization_percent": 100
+    },
+    {
+      "id": "nexus",
+      "type": "agent",
+      "metadata": {
+        "role": "Inside Contact",
+        "codename": "Nexus",
+        "specialty": "Corporate Intelligence"
+      },
+      "capabilities": [
+        "corporate_access",
+        "executive_privileges",
+        "insider_knowledge"
+      ],
+      "assigned_tasks": [
+        "executive_access_establishment",
+        "insider_knowledge_briefing",
+        "executive_privilege_verification",
+        "corporate_insider_extraction"
+      ],
+      "resource_usage": [
+        {
+          "resource": "executive_credentials",
+          "task": "executive_access_establishment",
+          "start_time": 18,
+          "end_time": 22
+        },
+        {
+          "resource": "corporate_intelligence",
+          "task": "insider_knowledge_briefing",
+          "start_time": 16,
+          "end_time": 20
+        },
+        {
+          "resource": "access_verification_system",
+          "task": "executive_privilege_verification",
+          "start_time": 88,
+          "end_time": 91
+        },
+        {
+          "resource": "insider_protection_protocol",
+          "task": "corporate_insider_extraction",
+          "start_time": 325,
+          "end_time": 331
+        }
+      ],
+      "utilization_percent": 100
+    },
+    {
+      "id": "wraith",
+      "type": "agent",
+      "metadata": {
+        "role": "Demolitions & Breach Expert",
+        "codename": "Wraith",
+        "specialty": "Tactical Operations"
+      },
+      "capabilities": [
+        "explosives",
+        "structural_analysis",
+        "tactical_breach"
+      ],
+      "assigned_tasks": [
+        "building_structural_analysis",
+        "explosive_device_preparation",
+        "structural_breach_preparation",
+        "vault_physical_breach",
+        "final_evidence_destruction"
+      ],
+      "resource_usage": [
+        {
+          "resource": "architectural_plans",
+          "task": "building_structural_analysis",
+          "start_time": 0,
+          "end_time": 5
+        },
+        {
+          "resource": "demolition_kit",
+          "task": "explosive_device_preparation",
+          "start_time": 40,
+          "end_time": 45
+        },
+        {
+          "resource": "precision_charges",
+          "task": "structural_breach_preparation",
+          "start_time": 100,
+          "end_time": 106
+        },
+        {
+          "resource": "shaped_charges",
+          "task": "vault_physical_breach",
+          "start_time": 228,
+          "end_time": 231
+        },
+        {
+          "resource": "evidence_destruction_charges",
+          "task": "final_evidence_destruction",
+          "start_time": 134,
+          "end_time": 137
+        }
+      ],
+      "utilization_percent": 100
+    },
+    {
+      "id": "echo",
+      "type": "agent",
+      "metadata": {
+        "role": "Communications & Jamming Specialist",
+        "codename": "Echo",
+        "specialty": "Signal Intelligence"
+      },
+      "capabilities": [
+        "signal_jamming",
+        "radio_intercept",
+        "counter_surveillance"
+      ],
+      "assigned_tasks": [
+        "signal_intelligence_setup",
+        "communication_intercept_network",
+        "counter_surveillance_preparation",
+        "communication_jamming_activation",
+        "guard_communication_intercept",
+        "security_alert_detection",
+        "pursuit_countermeasures",
+        "communication_blackout",
+        "data_transmission_execution"
+      ],
+      "resource_usage": [
+        {
+          "resource": "signal_analysis_equipment",
+          "task": "signal_intelligence_setup",
+          "start_time": 35,
+          "end_time": 39
+        },
+        {
+          "resource": "intercept_array",
+          "task": "communication_intercept_network",
+          "start_time": 44,
+          "end_time": 50
+        },
+        {
+          "resource": "detection_countermeasures",
+          "task": "counter_surveillance_preparation",
+          "start_time": 72,
+          "end_time": 76
+        },
+        {
+          "resource": "jamming_equipment",
+          "task": "communication_jamming_activation",
+          "start_time": 52,
+          "end_time": 54
+        },
+        {
+          "resource": "guard_radio_tap",
+          "task": "guard_communication_intercept",
+          "start_time": 54,
+          "end_time": 57
+        },
+        {
+          "resource": "alert_detection_system",
+          "task": "security_alert_detection",
+          "start_time": 78,
+          "end_time": 86
+        },
+        {
+          "resource": "pursuit_countermeasures",
+          "task": "pursuit_countermeasures",
+          "start_time": 156,
+          "end_time": 162
+        },
+        {
+          "resource": "area_jammers",
+          "task": "communication_blackout",
+          "start_time": 245,
+          "end_time": 249
+        },
+        {
+          "resource": "transmission_equipment",
+          "task": "data_transmission_execution",
+          "start_time": 440,
+          "end_time": 442
+        }
+      ],
+      "utilization_percent": 100
+    },
+    {
+      "id": "sage",
+      "type": "agent",
+      "metadata": {
+        "role": "Mission Coordinator",
+        "codename": "Sage",
+        "specialty": "Strategic Operations"
+      },
+      "capabilities": [
+        "tactical_planning",
+        "team_coordination",
+        "contingency_management"
+      ],
+      "assigned_tasks": [
+        "mission_briefing_coordination",
+        "contingency_planning",
+        "team_coordination_protocols",
+        "tactical_response_coordination",
+        "team_coordination_adjustment",
+        "contingency_activation",
+        "team_dispersal_coordination",
+        "mission_completion_verification",
+        "team_exfiltration_complete"
+      ],
+      "resource_usage": [
+        {
+          "resource": "secure_meeting_room",
+          "task": "mission_briefing_coordination",
+          "start_time": 0,
+          "end_time": 3
+        },
+        {
+          "resource": "scenario_simulator",
+          "task": "contingency_planning",
+          "start_time": 52,
+          "end_time": 58
+        },
+        {
+          "resource": "communication_protocols",
+          "task": "team_coordination_protocols",
+          "start_time": 108,
+          "end_time": 112
+        },
+        {
+          "resource": "tactical_command_center",
+          "task": "tactical_response_coordination",
+          "start_time": 360,
+          "end_time": 363
+        },
+        {
+          "resource": "emergency_protocols",
+          "task": "team_coordination_adjustment",
+          "start_time": 138,
+          "end_time": 140
+        },
+        {
+          "resource": "backup_plans",
+          "task": "contingency_activation",
+          "start_time": 94,
+          "end_time": 98
+        },
+        {
+          "resource": "dispersal_protocols",
+          "task": "team_dispersal_coordination",
+          "start_time": 560,
+          "end_time": 563
+        },
+        {
+          "resource": "mission_verification_system",
+          "task": "mission_completion_verification",
+          "start_time": 396,
+          "end_time": 398
+        },
+        {
+          "resource": "exfiltration_confirmation",
+          "task": "team_exfiltration_complete",
+          "start_time": 204,
+          "end_time": 205
+        }
+      ],
+      "utilization_percent": 100
+    }
+  ],
+  "schedule_summary": {
+    "total_tasks": 69,
+    "scheduled_tasks": 69,
+    "unscheduled_tasks": 0,
+    "total_duration": 319,
+    "makespan": 563
+  }
+}

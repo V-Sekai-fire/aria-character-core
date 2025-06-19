@@ -15,64 +15,73 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   Convert plan to enhanced schedule format.
   """
   def convert_plan_to_enhanced_schedule(encapsulated_plan, activities, entities, resources) do
-    try do
-      # Extract primitive actions from the plan
-      internal_plan = HybridPlanner.DataStructures.EncapsulatedPlan.get_internal_plan(encapsulated_plan)
-      primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(internal_plan)
+    # Extract primitive actions from the plan
+    internal_plan = HybridPlanner.DataStructures.EncapsulatedPlan.get_internal_plan(encapsulated_plan)
+    primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(internal_plan)
+    
+    # Convert actions to scheduled activities with proper timing and assignments
+    scheduled_activities = primitive_actions
+    |> Enum.with_index()
+    |> Enum.map(fn {action_step, index} ->
+      # Handle different action step formats
+      activity_id = case action_step do
+        {action_name, _args} when is_atom(action_name) -> 
+          Atom.to_string(action_name)
+        {action_name, _args} when is_binary(action_name) -> 
+          action_name
+        action_name when is_atom(action_name) -> 
+          Atom.to_string(action_name)
+        action_name when is_binary(action_name) -> 
+          action_name
+        other -> 
+          Logger.warning("Unexpected action step format: #{inspect(other)}")
+          "unknown_action_#{index}"
+      end
       
-      # Convert actions to scheduled activities with entity/resource assignments
-      scheduled_activities = primitive_actions
-      |> Enum.with_index()
-      |> Enum.map(fn {{action_name, _args}, index} ->
-        activity_id = Atom.to_string(action_name)
+      # Find original activity
+      original_activity = Enum.find(activities, fn act -> act.id == activity_id end)
+      
+      if original_activity do
+        duration = Map.get(original_activity, :duration, 1)
+        required_capabilities = Map.get(original_activity, :required_capabilities, [])
+        required_resources = Map.get(original_activity, :required_resources, [])
         
-        # Find original activity
-        original_activity = Enum.find(activities, fn act -> act.id == activity_id end)
+        # Assign entities and resources with improved logic
+        assigned_entity = assign_entity_for_activity(original_activity, entities)
+        assigned_resources = assign_resources_for_activity(original_activity, resources)
         
-        if original_activity do
-          duration = Map.get(original_activity, :duration, 1)
-          required_capabilities = Map.get(original_activity, :required_capabilities, [])
-          required_resources = Map.get(original_activity, :required_resources, [])
-          
-          # Assign entities and resources
-          assigned_entity = assign_entity_for_activity(original_activity, entities)
-          assigned_resources = assign_resources_for_activity(original_activity, resources)
-          
-          Map.merge(original_activity, %{
-            start_time: index * duration,
-            end_time: (index + 1) * duration,
-            scheduled: true,
-            execution_order: index,
-            assigned_entity: assigned_entity,
-            assigned_resources: assigned_resources,
-            resource_requirements: %{
-              capabilities: required_capabilities,
-              resources: required_resources
-            }
-          })
-        else
-          # Fallback if activity not found
-          %{
-            id: activity_id,
-            duration: 1,
-            start_time: index,
-            end_time: index + 1,
-            scheduled: true,
-            execution_order: index,
-            assigned_entity: nil,
-            assigned_resources: [],
-            resource_requirements: %{capabilities: [], resources: []}
-          }
+        # Get the first required resource for compatibility with JSON generator
+        primary_resource = case required_resources do
+          [first_resource | _] -> first_resource
+          [] -> nil
         end
-      end)
-      
-      scheduled_activities
-    rescue
-      e ->
-        Logger.warning("Failed to convert plan to enhanced schedule: #{Exception.message(e)}")
-        # Fallback to simple sequential schedule
-        create_fallback_schedule(activities, entities, resources)
-    end
+        
+        # Store activity with temporary timing (will be fixed in Phase 2)
+        Map.merge(original_activity, %{
+          start_time: index * duration,
+          end_time: (index + 1) * duration,
+          scheduled: true,
+          execution_order: index,
+          assigned_entity: assigned_entity,
+          assigned_resources: assigned_resources,
+          # Add fields expected by JSON generator
+          agent_id: if(assigned_entity, do: assigned_entity.id, else: nil),
+          resource_id: primary_resource,
+          resource_requirements: %{
+            capabilities: required_capabilities,
+            resources: required_resources
+          }
+        })
+      else
+        # Return error if activity not found in original list
+        raise "Activity #{activity_id} from plan not found in original activities list"
+      end
+    end)
+    
+    # Phase 2: Fix timing to respect dependencies
+    scheduled_activities_with_proper_timing = fix_timing_constraints(scheduled_activities, activities)
+    
+    scheduled_activities_with_proper_timing
   end
   
   @doc """
@@ -127,28 +136,47 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   end
   
   @doc """
-  Create fallback schedule when plan conversion fails.
+  Fix timing constraints to respect dependencies.
   """
-  def create_fallback_schedule(activities, entities, resources) do
-    activities
-    |> Enum.with_index()
-    |> Enum.map(fn {activity, index} ->
-      duration = Map.get(activity, :duration, 1)
-      assigned_entity = assign_entity_for_activity(activity, entities)
-      assigned_resources = assign_resources_for_activity(activity, resources)
+  def fix_timing_constraints(scheduled_activities, original_activities) do
+    # Create a map for quick lookup of dependencies
+    dependency_map = original_activities
+    |> Enum.map(fn activity -> 
+      {activity.id, Map.get(activity, :dependencies, [])} 
+    end)
+    |> Enum.into(%{})
+    
+    # Create a map for quick lookup of scheduled activities
+    activity_map = scheduled_activities
+    |> Enum.map(fn activity -> {activity.id, activity} end)
+    |> Enum.into(%{})
+    
+    # Calculate proper start times based on dependencies
+    scheduled_activities
+    |> Enum.map(fn activity ->
+      dependencies = Map.get(dependency_map, activity.id, [])
       
-      Map.merge(activity, %{
-        start_time: index * duration,
-        end_time: (index + 1) * duration,
-        scheduled: true,
-        execution_order: index,
-        assigned_entity: assigned_entity,
-        assigned_resources: assigned_resources,
-        resource_requirements: %{
-          capabilities: Map.get(activity, :required_capabilities, []),
-          resources: Map.get(activity, :required_resources, [])
-        }
-      })
+      # Calculate earliest start time based on dependencies
+      earliest_start = if Enum.empty?(dependencies) do
+        0
+      else
+        dependencies
+        |> Enum.map(fn dep_id ->
+          case Map.get(activity_map, dep_id) do
+            nil -> 0
+            dep_activity -> dep_activity.end_time
+          end
+        end)
+        |> Enum.max()
+      end
+      
+      # Update timing
+      duration = Map.get(activity, :duration, 1)
+      %{activity | 
+        start_time: earliest_start,
+        end_time: earliest_start + duration
+      }
     end)
   end
+  
 end

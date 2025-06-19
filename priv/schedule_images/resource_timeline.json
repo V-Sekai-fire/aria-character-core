@@ -1,0 +1,1322 @@
+{
+  "timestamp": "2025-06-19T07:06:44.043369Z",
+  "resources": [
+    {
+      "capacity": 1,
+      "resource_id": "secure_meeting_room",
+      "usage_events": [
+        {
+          "task": "mission_briefing_coordination",
+          "agent": "sage",
+          "start_time": 0,
+          "end_time": 3
+        }
+      ],
+      "resource_type": "facility",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "financial_database",
+      "usage_events": [
+        {
+          "task": "nexus_financial_analysis",
+          "agent": "oracle",
+          "start_time": 3,
+          "end_time": 7
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "social_engineering_kit",
+      "usage_events": [
+        {
+          "task": "corporate_insider_recruitment",
+          "agent": "mirage",
+          "start_time": 8,
+          "end_time": 14
+        }
+      ],
+      "resource_type": "psychological",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "executive_credentials",
+      "usage_events": [
+        {
+          "task": "executive_access_establishment",
+          "agent": "nexus",
+          "start_time": 18,
+          "end_time": 22
+        }
+      ],
+      "resource_type": "access",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "quantum_research_lab",
+      "usage_events": [
+        {
+          "task": "quantum_encryption_research",
+          "agent": "cipher",
+          "start_time": 8,
+          "end_time": 16
+        }
+      ],
+      "resource_type": "facility",
+      "utilization_stats": {
+        "total_usage_time": 8,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "supercomputer_access",
+      "usage_events": [
+        {
+          "task": "mathematical_security_modeling",
+          "agent": "cipher",
+          "start_time": 40,
+          "end_time": 46
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "security_scanner",
+      "usage_events": [
+        {
+          "task": "titan_security_assessment",
+          "agent": "spark",
+          "start_time": 16,
+          "end_time": 21
+        }
+      ],
+      "resource_type": "electronic",
+      "utilization_stats": {
+        "total_usage_time": 5,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "architectural_plans",
+      "usage_events": [
+        {
+          "task": "building_structural_analysis",
+          "agent": "wraith",
+          "start_time": 0,
+          "end_time": 5
+        }
+      ],
+      "resource_type": "intelligence",
+      "utilization_stats": {
+        "total_usage_time": 5,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "surveillance_drone",
+      "usage_events": [
+        {
+          "task": "aerial_reconnaissance",
+          "agent": "vector",
+          "start_time": 40,
+          "end_time": 44
+        }
+      ],
+      "resource_type": "aerial",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "behavioral_analysis_suite",
+      "usage_events": [
+        {
+          "task": "employee_psychological_profiling",
+          "agent": "mirage",
+          "start_time": 18,
+          "end_time": 23
+        }
+      ],
+      "resource_type": "psychological",
+      "utilization_stats": {
+        "total_usage_time": 5,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "signal_analysis_equipment",
+      "usage_events": [
+        {
+          "task": "signal_intelligence_setup",
+          "agent": "echo",
+          "start_time": 35,
+          "end_time": 39
+        }
+      ],
+      "resource_type": "electronic",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "intercept_array",
+      "usage_events": [
+        {
+          "task": "communication_intercept_network",
+          "agent": "echo",
+          "start_time": 44,
+          "end_time": 50
+        }
+      ],
+      "resource_type": "communication",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "detection_countermeasures",
+      "usage_events": [
+        {
+          "task": "counter_surveillance_preparation",
+          "agent": "echo",
+          "start_time": 72,
+          "end_time": 76
+        }
+      ],
+      "resource_type": "defensive",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "network_mapper",
+      "usage_events": [
+        {
+          "task": "nexus_network_topology_mapping",
+          "agent": "ghost",
+          "start_time": 36,
+          "end_time": 42
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "biometric_analyzer",
+      "usage_events": [
+        {
+          "task": "biometric_system_analysis",
+          "agent": "spark",
+          "start_time": 35,
+          "end_time": 39
+        }
+      ],
+      "resource_type": "electronic",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "traffic_analysis_system",
+      "usage_events": [
+        {
+          "task": "extraction_route_planning",
+          "agent": "vector",
+          "start_time": 36,
+          "end_time": 41
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 5,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "vehicle_database",
+      "usage_events": [
+        {
+          "task": "vehicle_acquisition_planning",
+          "agent": "vector",
+          "start_time": 80,
+          "end_time": 83
+        }
+      ],
+      "resource_type": "intelligence",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "scenario_simulator",
+      "usage_events": [
+        {
+          "task": "contingency_planning",
+          "agent": "sage",
+          "start_time": 52,
+          "end_time": 58
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "communication_protocols",
+      "usage_events": [
+        {
+          "task": "team_coordination_protocols",
+          "agent": "sage",
+          "start_time": 108,
+          "end_time": 112
+        }
+      ],
+      "resource_type": "communication",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "demolition_kit",
+      "usage_events": [
+        {
+          "task": "explosive_device_preparation",
+          "agent": "wraith",
+          "start_time": 40,
+          "end_time": 45
+        }
+      ],
+      "resource_type": "explosive",
+      "utilization_stats": {
+        "total_usage_time": 5,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "identity_forge",
+      "usage_events": [
+        {
+          "task": "identity_fabrication",
+          "agent": "mirage",
+          "start_time": 50,
+          "end_time": 56
+        }
+      ],
+      "resource_type": "fabrication",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "corporate_intelligence",
+      "usage_events": [
+        {
+          "task": "insider_knowledge_briefing",
+          "agent": "nexus",
+          "start_time": 16,
+          "end_time": 20
+        }
+      ],
+      "resource_type": "intelligence",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "access_verification_system",
+      "usage_events": [
+        {
+          "task": "executive_privilege_verification",
+          "agent": "nexus",
+          "start_time": 88,
+          "end_time": 91
+        }
+      ],
+      "resource_type": "security",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "surveillance_kit",
+      "usage_events": [
+        {
+          "task": "surveillance_equipment_deployment",
+          "agent": "oracle",
+          "start_time": 76,
+          "end_time": 80
+        }
+      ],
+      "resource_type": "surveillance",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "equipment_cache",
+      "usage_events": [
+        {
+          "task": "final_equipment_staging",
+          "agent": "spark",
+          "start_time": 126,
+          "end_time": 129
+        }
+      ],
+      "resource_type": "storage",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "perimeter_monitors",
+      "usage_events": [
+        {
+          "task": "perimeter_surveillance_establishment",
+          "agent": "oracle",
+          "start_time": 96,
+          "end_time": 99
+        }
+      ],
+      "resource_type": "surveillance",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "jamming_equipment",
+      "usage_events": [
+        {
+          "task": "communication_jamming_activation",
+          "agent": "echo",
+          "start_time": 52,
+          "end_time": 54
+        }
+      ],
+      "resource_type": "electronic",
+      "utilization_stats": {
+        "total_usage_time": 2,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "executive_disguise",
+      "usage_events": [
+        {
+          "task": "executive_impersonation_entry",
+          "agent": "mirage",
+          "start_time": 126,
+          "end_time": 130
+        }
+      ],
+      "resource_type": "disguise",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "distraction_scenario",
+      "usage_events": [
+        {
+          "task": "social_engineering_distraction",
+          "agent": "mirage",
+          "start_time": 112,
+          "end_time": 115
+        }
+      ],
+      "resource_type": "psychological",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "master_keycard",
+      "usage_events": [
+        {
+          "task": "lobby_security_bypass",
+          "agent": "phantom",
+          "start_time": 87,
+          "end_time": 90
+        }
+      ],
+      "resource_type": "access",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "elevator_control_interface",
+      "usage_events": [
+        {
+          "task": "elevator_system_override",
+          "agent": "spark",
+          "start_time": 90,
+          "end_time": 92
+        }
+      ],
+      "resource_type": "electronic",
+      "utilization_stats": {
+        "total_usage_time": 2,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "network_infiltration_kit",
+      "usage_events": [
+        {
+          "task": "camera_network_infiltration",
+          "agent": "ghost",
+          "start_time": 84,
+          "end_time": 88
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "guard_radio_tap",
+      "usage_events": [
+        {
+          "task": "guard_communication_intercept",
+          "agent": "echo",
+          "start_time": 54,
+          "end_time": 57
+        }
+      ],
+      "resource_type": "communication",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "false_alarm_system",
+      "usage_events": [
+        {
+          "task": "security_patrol_misdirection",
+          "agent": "mirage",
+          "start_time": 99,
+          "end_time": 103
+        }
+      ],
+      "resource_type": "deception",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "stealth_suit",
+      "usage_events": [
+        {
+          "task": "helix_biotech_infiltration",
+          "agent": "ghost",
+          "start_time": 128,
+          "end_time": 134
+        }
+      ],
+      "resource_type": "equipment",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "network_takeover_kit",
+      "usage_events": [
+        {
+          "task": "cipher_communications_takeover",
+          "agent": "ghost",
+          "start_time": 136,
+          "end_time": 144
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 8,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "climbing_gear",
+      "usage_events": [
+        {
+          "task": "quantum_vault_approach",
+          "agent": "phantom",
+          "start_time": 210,
+          "end_time": 218
+        }
+      ],
+      "resource_type": "physical",
+      "utilization_stats": {
+        "total_usage_time": 8,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "precision_charges",
+      "usage_events": [
+        {
+          "task": "structural_breach_preparation",
+          "agent": "wraith",
+          "start_time": 100,
+          "end_time": 106
+        }
+      ],
+      "resource_type": "explosive",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "quantum_decryption_array",
+      "usage_events": [
+        {
+          "task": "quantum_encryption_breaking",
+          "agent": "cipher",
+          "start_time": 296,
+          "end_time": 308
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 12,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "code_verification_system",
+      "usage_events": [
+        {
+          "task": "code_analysis_verification",
+          "agent": "cipher",
+          "start_time": 468,
+          "end_time": 472
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "shaped_charges",
+      "usage_events": [
+        {
+          "task": "vault_physical_breach",
+          "agent": "wraith",
+          "start_time": 228,
+          "end_time": 231
+        }
+      ],
+      "resource_type": "explosive",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "biometric_spoofer",
+      "usage_events": [
+        {
+          "task": "biometric_security_defeat",
+          "agent": "spark",
+          "start_time": 123,
+          "end_time": 128
+        }
+      ],
+      "resource_type": "electronic",
+      "utilization_stats": {
+        "total_usage_time": 5,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "advanced_lock_tools",
+      "usage_events": [
+        {
+          "task": "vault_lock_mechanisms_defeat",
+          "agent": "phantom",
+          "start_time": 123,
+          "end_time": 129
+        }
+      ],
+      "resource_type": "physical",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "data_extraction_array",
+      "usage_events": [
+        {
+          "task": "data_extraction_primary",
+          "agent": "ghost",
+          "start_time": 258,
+          "end_time": 268
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 10,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "alert_detection_system",
+      "usage_events": [
+        {
+          "task": "security_alert_detection",
+          "agent": "echo",
+          "start_time": 78,
+          "end_time": 86
+        }
+      ],
+      "resource_type": "surveillance",
+      "utilization_stats": {
+        "total_usage_time": 8,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "tactical_command_center",
+      "usage_events": [
+        {
+          "task": "tactical_response_coordination",
+          "agent": "sage",
+          "start_time": 360,
+          "end_time": 363
+        }
+      ],
+      "resource_type": "facility",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "emergency_protocols",
+      "usage_events": [
+        {
+          "task": "team_coordination_adjustment",
+          "agent": "sage",
+          "start_time": 138,
+          "end_time": 140
+        }
+      ],
+      "resource_type": "communication",
+      "utilization_stats": {
+        "total_usage_time": 2,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "backup_plans",
+      "usage_events": [
+        {
+          "task": "contingency_activation",
+          "agent": "sage",
+          "start_time": 94,
+          "end_time": 98
+        }
+      ],
+      "resource_type": "intelligence",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "data_wipe_tools",
+      "usage_events": [
+        {
+          "task": "evidence_elimination_digital",
+          "agent": "ghost",
+          "start_time": 440,
+          "end_time": 445
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 5,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "forensic_cleanup_kit",
+      "usage_events": [
+        {
+          "task": "physical_trace_cleanup",
+          "agent": "spark",
+          "start_time": 192,
+          "end_time": 198
+        }
+      ],
+      "resource_type": "physical",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "evacuation_gear",
+      "usage_events": [
+        {
+          "task": "building_evacuation_initiation",
+          "agent": "phantom",
+          "start_time": 300,
+          "end_time": 304
+        }
+      ],
+      "resource_type": "physical",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "getaway_vehicles",
+      "usage_events": [
+        {
+          "task": "vehicle_acquisition_execution",
+          "agent": "vector",
+          "start_time": 51,
+          "end_time": 54
+        }
+      ],
+      "resource_type": "vehicle",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "route_control_system",
+      "usage_events": [
+        {
+          "task": "extraction_route_activation",
+          "agent": "vector",
+          "start_time": 204,
+          "end_time": 206
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 2,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "pursuit_countermeasures",
+      "usage_events": [
+        {
+          "task": "pursuit_countermeasures",
+          "agent": "echo",
+          "start_time": 156,
+          "end_time": 162
+        }
+      ],
+      "resource_type": "defensive",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "extraction_aircraft",
+      "usage_events": [
+        {
+          "task": "aerial_extraction_team",
+          "agent": "vector",
+          "start_time": 106,
+          "end_time": 114
+        }
+      ],
+      "resource_type": "aerial",
+      "utilization_stats": {
+        "total_usage_time": 8,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "evasion_vehicles",
+      "usage_events": [
+        {
+          "task": "ground_pursuit_evasion",
+          "agent": "vector",
+          "start_time": 324,
+          "end_time": 334
+        }
+      ],
+      "resource_type": "vehicle",
+      "utilization_stats": {
+        "total_usage_time": 10,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "area_jammers",
+      "usage_events": [
+        {
+          "task": "communication_blackout",
+          "agent": "echo",
+          "start_time": 245,
+          "end_time": 249
+        }
+      ],
+      "resource_type": "electronic",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "misdirection_tools",
+      "usage_events": [
+        {
+          "task": "false_trail_creation",
+          "agent": "mirage",
+          "start_time": 228,
+          "end_time": 233
+        }
+      ],
+      "resource_type": "deception",
+      "utilization_stats": {
+        "total_usage_time": 5,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "data_verification_suite",
+      "usage_events": [
+        {
+          "task": "data_verification_secure",
+          "agent": "oracle",
+          "start_time": 440,
+          "end_time": 443
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "encryption_tools",
+      "usage_events": [
+        {
+          "task": "encryption_application",
+          "agent": "cipher",
+          "start_time": 177,
+          "end_time": 181
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "secure_transmission_array",
+      "usage_events": [
+        {
+          "task": "secure_transmission_setup",
+          "agent": "oracle",
+          "start_time": 240,
+          "end_time": 243
+        }
+      ],
+      "resource_type": "communication",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "transmission_equipment",
+      "usage_events": [
+        {
+          "task": "data_transmission_execution",
+          "agent": "echo",
+          "start_time": 440,
+          "end_time": 442
+        }
+      ],
+      "resource_type": "communication",
+      "utilization_stats": {
+        "total_usage_time": 2,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "dispersal_protocols",
+      "usage_events": [
+        {
+          "task": "team_dispersal_coordination",
+          "agent": "sage",
+          "start_time": 560,
+          "end_time": 563
+        }
+      ],
+      "resource_type": "intelligence",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "identity_destruction_kit",
+      "usage_events": [
+        {
+          "task": "identity_dissolution",
+          "agent": "mirage",
+          "start_time": 189,
+          "end_time": 193
+        }
+      ],
+      "resource_type": "fabrication",
+      "utilization_stats": {
+        "total_usage_time": 4,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "safe_house_network",
+      "usage_events": [
+        {
+          "task": "safe_house_activation",
+          "agent": "ghost",
+          "start_time": 256,
+          "end_time": 261
+        }
+      ],
+      "resource_type": "facility",
+      "utilization_stats": {
+        "total_usage_time": 5,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "insider_protection_protocol",
+      "usage_events": [
+        {
+          "task": "corporate_insider_extraction",
+          "agent": "nexus",
+          "start_time": 325,
+          "end_time": 331
+        }
+      ],
+      "resource_type": "security",
+      "utilization_stats": {
+        "total_usage_time": 6,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "mission_verification_system",
+      "usage_events": [
+        {
+          "task": "mission_completion_verification",
+          "agent": "sage",
+          "start_time": 396,
+          "end_time": 398
+        }
+      ],
+      "resource_type": "computational",
+      "utilization_stats": {
+        "total_usage_time": 2,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "evidence_destruction_charges",
+      "usage_events": [
+        {
+          "task": "final_evidence_destruction",
+          "agent": "wraith",
+          "start_time": 134,
+          "end_time": 137
+        }
+      ],
+      "resource_type": "explosive",
+      "utilization_stats": {
+        "total_usage_time": 3,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    },
+    {
+      "capacity": 1,
+      "resource_id": "exfiltration_confirmation",
+      "usage_events": [
+        {
+          "task": "team_exfiltration_complete",
+          "agent": "sage",
+          "start_time": 204,
+          "end_time": 205
+        }
+      ],
+      "resource_type": "communication",
+      "utilization_stats": {
+        "total_usage_time": 1,
+        "peak_utilization": 100,
+        "average_utilization": 50,
+        "idle_periods": []
+      }
+    }
+  ],
+  "timeline_type": "resource_usage_over_time",
+  "timeline_summary": {
+    "total_makespan": 563,
+    "resource_conflicts": 0,
+    "overall_efficiency": 85.5
+  }
+}

@@ -83,23 +83,12 @@ defmodule JsonSolutionTest do
   defp print_test_header do
     IO.puts """
     
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║                📊 JSON SOLUTION TREE TEST 📊                 ║
-    ║                AGENT-ENTITY-CAPABILITY PLANNING               ║
-    ╠═══════════════════════════════════════════════════════════════╣
-    ║                                                               ║
-    ║  ┌─────────────────────────────────────────────────────────┐  ║
-    ║  │ [W1] Worker 1  [W2] Worker 2  [W3] Worker 3            │  ║
-    ║  │ [T1] Tool 1    [T2] Tool 2    [T3] Tool 3              │  ║
-    ║  │                                                         │  ║
-    ║  │           🎯 SIMPLE TASK ASSIGNMENT 🎯                 │  ║
-    ║  │                                                         │  ║
-    ║  │ Output: JSON solution trees + Markdown logs            │  ║
-    ║  │ Focus: Agent-capability matching and resource allocation │  ║
-    ║  │ Goal: Pure data analysis with comprehensive logging     │  ║
-    ║  └─────────────────────────────────────────────────────────┘  ║
-    ║                                                               ║
-    ╚═══════════════════════════════════════════════════════════════╝
+    JSON SOLUTION TREE TEST
+    Agent-Entity-Capability Planning
+    
+    Test: Simple task assignment with 3 workers, 3 tasks, 3 tools
+    Output: JSON solution trees and markdown logs
+    Focus: Agent-capability matching and resource allocation
     
     """
   end

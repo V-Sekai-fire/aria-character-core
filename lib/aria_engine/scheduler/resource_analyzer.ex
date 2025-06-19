@@ -19,14 +19,17 @@ defmodule AriaEngine.Scheduler.ResourceAnalyzer do
     |> Enum.map(fn resource ->
       # Calculate utilization metrics for each resource
       total_capacity = resource.capacity
+      usage_timeline = calculate_usage_timeline(schedule, resource.id)
       peak_usage = calculate_peak_usage(schedule, resource.id)
       average_usage = calculate_average_usage(schedule, resource.id)
+      utilization_percentage = calculate_utilization_percentage(schedule, resource.id, total_capacity)
       
       {resource.id, %{
         total_capacity: total_capacity,
         peak_usage: peak_usage,
         average_usage: average_usage,
-        utilization_percentage: if(total_capacity > 0, do: (peak_usage / total_capacity) * 100, else: 0),
+        utilization_percentage: utilization_percentage,
+        usage_timeline: usage_timeline,
         efficiency_score: calculate_efficiency_score(peak_usage, average_usage, total_capacity)
       }}
     end)
@@ -148,5 +151,62 @@ defmodule AriaEngine.Scheduler.ResourceAnalyzer do
     end
     
     recommendations
+  end
+  
+  @doc """
+  Calculate usage timeline for a resource.
+  """
+  def calculate_usage_timeline(schedule, resource_id) do
+    # Find all activities that use this resource
+    activities_using_resource = schedule
+    |> Enum.filter(fn activity ->
+      required_resources = get_in(activity, [:resource_requirements, :resources]) || []
+      Enum.member?(required_resources, resource_id)
+    end)
+    
+    # Create timeline entries
+    activities_using_resource
+    |> Enum.map(fn activity ->
+      %{
+        task_id: activity.id,
+        start_time: activity.start_time,
+        end_time: activity.end_time,
+        duration: activity.end_time - activity.start_time
+      }
+    end)
+    |> Enum.sort_by(& &1.start_time)
+  end
+  
+  @doc """
+  Calculate utilization percentage for a resource.
+  """
+  def calculate_utilization_percentage(schedule, resource_id, total_capacity) do
+    if total_capacity == 0 do
+      0
+    else
+      # Calculate total time the resource is used
+      usage_timeline = calculate_usage_timeline(schedule, resource_id)
+      
+      if Enum.empty?(usage_timeline) do
+        0
+      else
+        # Calculate total usage time
+        total_usage_time = usage_timeline
+        |> Enum.map(& &1.duration)
+        |> Enum.sum()
+        
+        # Calculate total schedule time span
+        max_end_time = schedule
+        |> Enum.map(& &1.end_time)
+        |> Enum.max(fn -> 0 end)
+        
+        if max_end_time > 0 do
+          # Utilization as percentage of total time
+          (total_usage_time / max_end_time) * 100
+        else
+          0
+        end
+      end
+    end
   end
 end

@@ -132,7 +132,13 @@ defmodule AriaEngine.Scheduler.Core do
         # Use AriaEngine.PlannerAdapter for HTN task decomposition with temporal validation
         planner_opts = [verbose: verbose]
         case AriaEngine.PlannerAdapter.plan_tasks(domain, initial_state, tasks, planner_opts) do
-          {:ok, encapsulated_plan} ->
+          {:ok, solution_tree} ->
+            # Wrap raw solution tree in EncapsulatedPlan for PlanConverter compatibility
+            encapsulated_plan = HybridPlanner.DataStructures.EncapsulatedPlan.new(solution_tree, %{
+              source: "AriaEngine.PlannerAdapter.plan_tasks",
+              scheduler_wrapped: true
+            })
+            
             if simulation_mode do
               # Run simulation using run_lazy_refineahead
               simulate_plan_execution(domain, initial_state, encapsulated_plan, activities, entities, resources, activity_log, verbose)
@@ -383,31 +389,6 @@ defmodule AriaEngine.Scheduler.Core do
     |> Enum.filter(& &1)
   end
   
-  @doc """
-  Create fallback schedule.
-  """
-  def create_fallback_schedule(activities, entities, resources) do
-    activities
-    |> Enum.with_index()
-    |> Enum.map(fn {activity, index} ->
-      duration = Map.get(activity, :duration, 1)
-      assigned_entity = assign_entity_for_activity(activity, entities)
-      assigned_resources = assign_resources_for_activity(activity, resources)
-      
-      Map.merge(activity, %{
-        start_time: index * duration,
-        end_time: (index + 1) * duration,
-        scheduled: true,
-        execution_order: index,
-        assigned_entity: assigned_entity,
-        assigned_resources: assigned_resources,
-        resource_requirements: %{
-          capabilities: Map.get(activity, :required_capabilities, []),
-          resources: Map.get(activity, :required_resources, [])
-        }
-      })
-    end)
-  end
   
   # Resource utilization calculation functions
   
