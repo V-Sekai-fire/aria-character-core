@@ -30,6 +30,9 @@ defmodule AriaEngine.Scheduler.DomainConverter do
       # Create basic actions for activity execution
       basic_actions = create_basic_activity_actions(activities, entities, resources)
       
+      # Create durative actions for temporal scheduling
+      durative_actions = create_durative_actions(activities, entities, resources)
+      
       # Phase 1: HTN task methods for feasible decomposition
       task_methods = create_htn_scheduling_methods(activities, entities, resources)
       
@@ -39,6 +42,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
       # Create domain using basic actions, task methods, and goal methods
       domain = Domain.new("scheduler_domain")
       |> Domain.add_actions(basic_actions)
+      |> add_durative_actions_to_domain(durative_actions)
       |> add_task_methods_to_domain(task_methods)
       |> add_goal_methods_to_domain(goal_methods)
       
@@ -53,13 +57,25 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   """
   @spec create_basic_activity_actions([activity()], [Entity.t()], [Resource.t()]) :: %{atom() => function()}
   def create_basic_activity_actions(activities, entities, resources) do
-    activities
+    # Create regular actions
+    regular_actions = activities
     |> Enum.map(fn activity ->
       action_name = String.to_atom(activity.id)
       action_fn = create_activity_action(activity, entities, resources)
       {action_name, action_fn}
     end)
     |> Enum.into(%{})
+    
+    # Create durative actions
+    durative_actions = activities
+    |> Enum.map(fn activity ->
+      durative_action_name = String.to_atom("durative_#{activity.id}")
+      durative_action_fn = create_durative_activity_action(activity, entities, resources)
+      {durative_action_name, durative_action_fn}
+    end)
+    |> Enum.into(%{})
+    
+    Map.merge(regular_actions, durative_actions)
   end
   
   @doc """
@@ -81,6 +97,109 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   end
   
   @doc """
+  Create durative action function for a specific activity.
+  """
+  @spec create_durative_activity_action(activity(), [Entity.t()], [Resource.t()]) :: function()
+  def create_durative_activity_action(activity, _entities, _resources) do
+    fn state, _args ->
+      activity_id = activity.id
+      duration = Map.get(activity, :duration, 1)
+      required_resources = Map.get(activity, :required_resources, [])
+      
+      # Durative action: handle resource allocation and activity execution over time
+      updated_state = state
+      |> AriaEngine.StateV2.set_fact(activity_id, "status", "in_progress")
+      |> AriaEngine.StateV2.set_fact(activity_id, "start_time", DateTime.utc_now())
+      |> AriaEngine.StateV2.set_fact(activity_id, "duration", duration)
+      
+      # Allocate resources
+      final_state = Enum.reduce(required_resources, updated_state, fn resource_id, acc_state ->
+        current_usage = AriaEngine.StateV2.get_fact(acc_state, resource_id, "current_usage") || 0
+        acc_state
+        |> AriaEngine.StateV2.set_fact(resource_id, "current_usage", current_usage + 1)
+        |> AriaEngine.StateV2.set_fact(resource_id, "allocated_to", activity_id)
+      end)
+      
+      # Mark as completed (for now - in a real temporal system this would be handled by the temporal planner)
+      final_state
+      |> AriaEngine.StateV2.set_fact(activity_id, "completed", true)
+      |> AriaEngine.StateV2.set_fact(activity_id, "status", "completed")
+      |> AriaEngine.StateV2.set_fact(activity_id, "end_time", DateTime.utc_now())
+    end
+  end
+  
+  @doc """
+  Create durative actions for activities.
+  """
+  @spec create_durative_actions([activity()], [Entity.t()], [Resource.t()]) :: %{atom() => Domain.DurativeAction.t()}
+  def create_durative_actions(activities, entities, resources) do
+    activities
+    |> Enum.map(fn activity ->
+      durative_action_name = String.to_atom("durative_#{activity.id}")
+      durative_action = create_durative_action_struct(activity, entities, resources)
+      {durative_action_name, durative_action}
+    end)
+    |> Enum.into(%{})
+  end
+  
+  @doc """
+  Create durative action struct for a specific activity.
+  """
+  @spec create_durative_action_struct(activity(), [Entity.t()], [Resource.t()]) :: Domain.DurativeAction.t()
+  def create_durative_action_struct(activity, entities, resources) do
+    activity_id = activity.id
+    duration = Map.get(activity, :duration, 1)
+    required_resources = Map.get(activity, :required_resources, [])
+    dependencies = Map.get(activity, :dependencies, [])
+    
+    # Create conditions for the durative action
+    conditions = %{
+      at_start: [
+        # Dependencies must be completed at start
+        Enum.map(dependencies, fn dep_id -> {dep_id, "completed", true} end),
+        # Resources must be available at start
+        Enum.map(required_resources, fn resource_id -> {resource_id, "available", true} end)
+      ] |> List.flatten(),
+      over_all: [
+        # Resources must remain allocated over the duration
+        Enum.map(required_resources, fn resource_id -> {resource_id, "allocated_to", activity_id} end)
+      ] |> List.flatten(),
+      at_end: []
+    }
+    
+    # Create effects for the durative action
+    effects = %{
+      at_start: [
+        # Mark activity as in progress and allocate resources
+        {activity_id, "status", "in_progress"},
+        {activity_id, "start_time", DateTime.utc_now()}
+      ] ++ Enum.map(required_resources, fn resource_id ->
+        {resource_id, "allocated_to", activity_id}
+      end),
+      at_end: [
+        # Mark activity as completed and release resources
+        {activity_id, "completed", true},
+        {activity_id, "status", "completed"},
+        {activity_id, "end_time", DateTime.utc_now()}
+      ] ++ Enum.map(required_resources, fn resource_id ->
+        {resource_id, "allocated_to", nil}
+      end),
+      over_time: []
+    }
+    
+    # Create the action function
+    action_fn = create_durative_activity_action(activity, entities, resources)
+    
+    Domain.DurativeAction.new(
+      String.to_atom("durative_#{activity_id}"),
+      {:fixed, duration},
+      conditions,
+      effects,
+      action_fn
+    )
+  end
+  
+  @doc """
   Create HTN scheduling methods for Phase 1 (feasibility).
   """
   @spec create_htn_scheduling_methods([activity()], [Entity.t()], [Resource.t()]) :: task_methods()
@@ -91,7 +210,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
           # Return proper todo list with tasks for individual activities
           activities
           |> Enum.map(fn activity ->
-            {"execute_#{activity.id}", []}
+            {activity.id, []}
           end)
         end
       }]
@@ -105,18 +224,18 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   def create_activity_task_methods(activities, entities, resources) do
     activities
     |> Enum.reduce(%{}, fn activity, acc ->
-      task_name = "execute_#{activity.id}"
-      method_name = "khr_activity_method"
-      method_fn = create_khr_activity_method(activity, entities, resources)
+      task_name = activity.id  # Use activity ID directly as task name
+      method_name = "schedule_activity_method"
+      method_fn = create_activity_scheduling_method(activity, entities, resources)
       Map.put(acc, task_name, [{method_name, method_fn}])
     end)
   end
   
   @doc """
-  Create activity method that returns proper todo list for hybrid planner.
+  Create activity scheduling method that returns proper todo list for hybrid planner.
   """
-  @spec create_khr_activity_method(activity(), [Entity.t()], [Resource.t()]) :: function()
-  def create_khr_activity_method(activity, _entities, _resources) do
+  @spec create_activity_scheduling_method(activity(), [Entity.t()], [Resource.t()]) :: function()
+  def create_activity_scheduling_method(activity, _entities, _resources) do
     fn _args, state ->
       activity_id = activity.id
       dependencies = Map.get(activity, :dependencies, [])
@@ -137,10 +256,10 @@ defmodule AriaEngine.Scheduler.DomainConverter do
         if not Enum.empty?(incomplete_deps) do
           # Return dependency tasks first (proper task format)
           Enum.map(incomplete_deps, fn dep_id ->
-            {"execute_#{dep_id}", []}
+            {dep_id, []}
           end)
         else
-          # Dependencies satisfied - check resources and execute activity
+          # Dependencies satisfied - check resources and execute activity with durative action
           todo_list = []
           
           # Add resource availability goals (StateV2 format: {subject, predicate, object})
@@ -148,8 +267,9 @@ defmodule AriaEngine.Scheduler.DomainConverter do
             {resource_id, "available", true}
           end)
           
-          # Add action to execute the activity
-          todo_list = todo_list ++ [{String.to_atom(activity_id), []}]
+          # Add durative action to execute the activity (not regular action)
+          durative_action_name = String.to_atom("durative_#{activity_id}")
+          todo_list = todo_list ++ [{durative_action_name, []}]
           
           # Add goal to mark activity as completed
           todo_list = todo_list ++ [{activity_id, "completed", true}]
@@ -338,6 +458,12 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   defp add_goal_methods_to_domain(domain, goal_methods) do
     Enum.reduce(goal_methods, domain, fn {goal_type, methods}, acc_domain ->
       Domain.add_unigoal_methods(acc_domain, goal_type, methods)
+    end)
+  end
+  
+  defp add_durative_actions_to_domain(domain, durative_actions) do
+    Enum.reduce(durative_actions, domain, fn {name, durative_action}, acc_domain ->
+      Domain.add_durative_action(acc_domain, name, durative_action)
     end)
   end
   
