@@ -118,6 +118,9 @@ defmodule AriaCharacterCore.MixProject do
 
       {:iso8601, "~> 1.3"},
 
+      # MCP Protocol Support
+      {:hermes_mcp, git: "https://github.com/cloudwalk/hermes-mcp.git", branch: "main"},
+
       # Test dependencies
       {:stream_data, "~> 1.2", only: :test},
       {:ex_unit_notifier, "~> 1.3", only: :test}

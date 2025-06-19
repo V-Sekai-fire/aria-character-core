@@ -433,7 +433,7 @@ defmodule Timeline.LodAdapter do
     map_size(stn.constraints) > 100 || stn.constant_work_enabled
   end
   
-  defp bridge_stns_parallel(stn1, stn2, target_lod, target_unit, flow_config, opts) do
+  defp bridge_stns_parallel(stn1, stn2, target_lod, target_unit, _flow_config, opts) do
     # Use Flow adapter to convert both STNs in parallel
     conversion_tasks = [
       {stn1, target_lod, target_unit, opts},
@@ -476,7 +476,7 @@ defmodule Timeline.LodAdapter do
     end)
   end
   
-  defp chain_stns_parallel(stns, flow_config, opts) do
+  defp chain_stns_parallel(stns, _flow_config, opts) do
     # Use Flow adapter for parallel chaining operations
     chain_operations = 
       stns
