@@ -1,26 +1,41 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.MCP.SchedulerTool do
+defmodule AriaEngine.MCPTools do
   @moduledoc """
-  Temporary shim module for AriaEngine.MCP.SchedulerTool functionality.
+  Shared MCP tool definitions and handlers for AriaEngine.
   
-  This module provides backward compatibility by delegating to the scheduler
-  functionality now embedded in Mix.Tasks.Mcp.Stdio.Simple.
+  This module provides a registry-based system for MCP tools that can be
+  used by different MCP server implementations (stdio, HTTP, etc.).
   
-  The actual implementation has been migrated to the MCP stdio simple task
-  to consolidate the MCP server functionality.
+  To add a new tool:
+  1. Add the tool definition to the @tools list
+  2. Add a handler function following the pattern handle_<tool_name>_tool_call/1
+  3. The tool will automatically be available in all MCP servers
   """
-  
+
   require Logger
-  
+
+  # Tool registry - add new tools here
+  @tools [
+    :schedule_activities
+    # Add new tools here, e.g.:
+    # :analyze_timeline,
+    # :optimize_resources,
+    # :generate_report
+  ]
+
   @doc """
-  Get the MCP tool definition for the schedule_activities tool.
-  
-  Delegates to the implementation in Mix.Tasks.Mcp.Stdio.Simple.
+  Returns all available tool definitions.
   """
-  def get_tool_definition do
-    # Use a simplified version for compatibility
+  def get_all_tools do
+    Enum.map(@tools, &get_tool_definition/1)
+  end
+
+  @doc """
+  Returns a specific tool definition by name.
+  """
+  def get_tool_definition(:schedule_activities) do
     %{
       name: "schedule_activities",
       description: "Schedule activities using AriaEngine's temporal planner with entity and resource management. Returns complete SimulationResult with solution tree.",
@@ -97,13 +112,37 @@ defmodule AriaEngine.MCP.SchedulerTool do
       }
     }
   end
-  
+
   @doc """
-  Handle MCP tool call for schedule_activities.
-  
-  Calls AriaEngine.Scheduler.schedule_activities/3 directly.
+  Handles any tool call by routing to the appropriate handler function.
   """
-  def handle_tool_call(params) do
+  def handle_tool_call(tool_name, params) when is_binary(tool_name) do
+    tool_atom = String.to_atom(tool_name)
+    handle_tool_call(tool_atom, params)
+  end
+
+  def handle_tool_call(:schedule_activities, params) do
+    handle_schedule_activities_tool_call(params)
+  end
+
+  def handle_tool_call(tool_name, _params) do
+    Logger.warning("MCPTools: Unknown tool requested: #{inspect(tool_name)}")
+    %{
+      status: "error",
+      reason: "Unknown tool: #{tool_name}",
+      schedule: [],
+      analysis: %{},
+      activity_log: [],
+      resource_utilization: %{},
+      timeline: [],
+      simulation_metadata: %{}
+    }
+  end
+
+  @doc """
+  Handles the schedule_activities tool call with the given parameters.
+  """
+  def handle_schedule_activities_tool_call(params) do
     try do
       # Validate required parameters
       case validate_params(params) do
@@ -158,7 +197,7 @@ defmodule AriaEngine.MCP.SchedulerTool do
       end
     rescue
       e ->
-        Logger.error("SchedulerTool error: #{Exception.message(e)}")
+        Logger.error("MCPTools error: #{Exception.message(e)}")
         %{
           status: "error",
           reason: "Internal error: #{Exception.message(e)}",
@@ -171,9 +210,9 @@ defmodule AriaEngine.MCP.SchedulerTool do
         }
     end
   end
-  
-  # Private helper functions (simplified versions from the original)
-  
+
+  # Private helper functions
+
   defp validate_params(params) when is_map(params) do
     cond do
       not Map.has_key?(params, "schedule_name") ->
