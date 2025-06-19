@@ -133,13 +133,19 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   """
   @spec create_durative_actions([activity()], [Entity.t()], [Resource.t()]) :: %{atom() => Domain.DurativeAction.t()}
   def create_durative_actions(activities, entities, resources) do
-    activities
+    # Create durative actions for individual activities
+    activity_actions = activities
     |> Enum.map(fn activity ->
       durative_action_name = String.to_atom("durative_#{activity.id}")
       durative_action = create_durative_action_struct(activity, entities, resources)
       {durative_action_name, durative_action}
     end)
     |> Enum.into(%{})
+    
+    # Add timing constraint fixing durative action
+    timing_constraint_action = create_timing_constraint_durative_action(activities)
+    
+    Map.put(activity_actions, :fix_timing_constraints, timing_constraint_action)
   end
   
   @doc """
@@ -467,6 +473,164 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     end)
   end
   
+  @doc """
+  Create timing constraint fixing durative action.
+  """
+  @spec create_timing_constraint_durative_action([activity()]) :: Domain.DurativeAction.t()
+  def create_timing_constraint_durative_action(activities) do
+    # Create conditions for the timing constraint durative action
+    conditions = %{
+      at_start: [
+        # Schedule must exist and have timing conflicts
+        {"schedule", "exists", true},
+        {"schedule", "has_timing_conflicts", true}
+      ],
+      over_all: [
+        # Schedule must remain modifiable during constraint solving
+        {"schedule", "modifiable", true}
+      ],
+      at_end: []
+    }
+    
+    # Create effects for the timing constraint durative action
+    effects = %{
+      at_start: [
+        # Mark constraint solving as active
+        {"schedule", "constraint_solving_active", true}
+      ],
+      at_end: [
+        # Mark timing constraints as satisfied and remove conflicts
+        {"schedule", "timing_constraints_satisfied", true},
+        {"schedule", "valid", true},
+        {"schedule", "has_timing_conflicts", false},
+        {"schedule", "constraint_solving_active", false}
+      ],
+      over_time: []
+    }
+    
+    # Create the action function that performs iterative constraint propagation
+    action_fn = create_timing_constraint_action_function(activities)
+    
+    Domain.DurativeAction.new(
+      :fix_timing_constraints,
+      {:range, 1, 10},  # Duration between 1-10 time units depending on convergence
+      conditions,
+      effects,
+      action_fn
+    )
+  end
+  
+  @doc """
+  Create action function for timing constraint fixing.
+  """
+  @spec create_timing_constraint_action_function([activity()]) :: function()
+  def create_timing_constraint_action_function(activities) do
+    fn state, _args ->
+      # Extract scheduled activities from state
+      scheduled_activities = extract_scheduled_activities_from_state(state, activities)
+      
+      # Create dependency map for constraint propagation
+      dependency_map = activities
+      |> Enum.map(fn activity -> 
+        {activity.id, Map.get(activity, :dependencies, [])} 
+      end)
+      |> Enum.into(%{})
+      
+      # Perform iterative constraint propagation
+      fixed_activities = fix_timing_iteratively_in_planner(scheduled_activities, dependency_map, 0)
+      
+      # Update state with fixed timing
+      update_state_with_fixed_timing(state, fixed_activities)
+    end
+  end
+  
+  # Extract scheduled activities from planner state.
+  defp extract_scheduled_activities_from_state(state, activities) do
+    activities
+    |> Enum.map(fn activity ->
+      activity_id = activity.id
+      start_time = AriaEngine.StateV2.get_fact(state, activity_id, "start_time") || 0
+      end_time = AriaEngine.StateV2.get_fact(state, activity_id, "end_time") || Map.get(activity, :duration, 1)
+      duration = Map.get(activity, :duration, 1)
+      
+      Map.merge(activity, %{
+        start_time: start_time,
+        end_time: end_time,
+        duration: duration
+      })
+    end)
+  end
+  
+  # Iterative constraint propagation within the planner context.
+  defp fix_timing_iteratively_in_planner(activities, dependency_map, iteration) do
+    # Prevent infinite loops
+    if iteration > 10 do
+      Logger.warning("Timing constraint fixing reached maximum iterations in planner")
+      activities
+    else
+      # Create activity lookup map with current timing
+      activity_map = activities
+      |> Enum.map(fn activity -> {activity.id, activity} end)
+      |> Enum.into(%{})
+      
+      # Calculate new timing for each activity
+      updated_activities = activities
+      |> Enum.map(fn activity ->
+        dependencies = Map.get(dependency_map, activity.id, [])
+        
+        # Calculate earliest start time based on current dependency timing
+        earliest_start = if Enum.empty?(dependencies) do
+          0
+        else
+          dependencies
+          |> Enum.map(fn dep_id ->
+            case Map.get(activity_map, dep_id) do
+              nil -> 
+                Logger.warning("Dependency #{dep_id} not found for activity #{activity.id}")
+                0
+              dep_activity -> dep_activity.end_time
+            end
+          end)
+          |> Enum.max()
+        end
+        
+        # Update timing
+        duration = Map.get(activity, :duration, 1)
+        %{activity | 
+          start_time: earliest_start,
+          end_time: earliest_start + duration
+        }
+      end)
+      
+      # Check if timing has converged (no changes from previous iteration)
+      if timing_converged_in_planner?(activities, updated_activities) do
+        updated_activities
+      else
+        # Continue iterating with updated timing
+        fix_timing_iteratively_in_planner(updated_activities, dependency_map, iteration + 1)
+      end
+    end
+  end
+  
+  # Check if timing has converged between iterations in planner context.
+  defp timing_converged_in_planner?(old_activities, new_activities) do
+    old_timing = old_activities |> Enum.map(fn a -> {a.id, a.start_time, a.end_time} end) |> Enum.sort()
+    new_timing = new_activities |> Enum.map(fn a -> {a.id, a.start_time, a.end_time} end) |> Enum.sort()
+    
+    old_timing == new_timing
+  end
+  
+  # Update planner state with fixed timing information.
+  defp update_state_with_fixed_timing(state, fixed_activities) do
+    Enum.reduce(fixed_activities, state, fn activity, acc_state ->
+      activity_id = activity.id
+      acc_state
+      |> AriaEngine.StateV2.set_fact(activity_id, "start_time", activity.start_time)
+      |> AriaEngine.StateV2.set_fact(activity_id, "end_time", activity.end_time)
+      |> AriaEngine.StateV2.set_fact(activity_id, "timing_fixed", true)
+    end)
+  end
+
   # Helper function to ensure we have a StateV2 struct
   defp ensure_statev2(%AriaEngine.StateV2{} = state), do: state
   defp ensure_statev2(state) when is_map(state), do: AriaEngine.StateV2.new(state)
