@@ -207,7 +207,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 3: Entity Test - tasks with capabilities (FIXED)" do
       # Create entities with proper struct format
       entities = [
-        %Entity{
+        %AriaEngine.Scheduler.Entity{
           id: "agent1",
           type: :agent,
           capabilities: [:coding, :testing],
@@ -216,7 +216,7 @@ defmodule AriaEngine.MCPToolsTest do
           resources_held: [],
           metadata: %{}
         },
-        %Entity{
+        %AriaEngine.Scheduler.Entity{
           id: "agent2", 
           type: :agent,
           capabilities: [:design, :testing],
@@ -531,6 +531,66 @@ defmodule AriaEngine.MCPToolsTest do
       }
       
       assert {:ok, _json} = Jason.encode(sim_result)
+    end
+  end
+
+  describe "schedule_activities tool - duration and DateTime support" do
+    test "Test 7: ISO 8601 duration string" do
+      args = %{
+        "schedule_name" => "ISO Duration Test",
+        "activities" => [
+          %{
+            "id" => "iso_task",
+            "duration" => "PT1H30M"
+          }
+        ]
+      }
+
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+
+      assert is_map(result)
+      parsed = result
+      assert parsed[:status] == "success"
+
+      schedule = parsed[:schedule]
+      assert length(schedule) == 1
+
+      task = hd(schedule)
+      assert task[:id] == "iso_task"
+      assert task[:duration] == 90
+      assert task[:start_time] == 0
+      assert task[:end_time] == 90
+    end
+
+    test "Test 8: DateTime interval" do
+      start_time = DateTime.utc_now()
+      end_time = DateTime.add(start_time, 1, :hour)
+
+      args = %{
+        "schedule_name" => "DateTime Interval Test",
+        "activities" => [
+          %{
+            "id" => "datetime_task",
+            "duration" => %{
+              "start" => DateTime.to_iso8601(start_time),
+              "end" => DateTime.to_iso8601(end_time)
+            }
+          }
+        ]
+      }
+
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+
+      assert is_map(result)
+      parsed = result
+      assert parsed[:status] == "success"
+
+      schedule = parsed[:schedule]
+      assert length(schedule) == 1
+
+      task = hd(schedule)
+      assert task[:id] == "datetime_task"
+      assert task[:duration] == 60
     end
   end
 end

@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.MCPTools do
   @moduledoc """
   Shared MCP tool definitions and handlers for AriaEngine.
@@ -53,7 +50,33 @@ defmodule AriaEngine.MCPTools do
               type: "object",
               properties: %{
                 id: %{type: "string", description: "Activity identifier"},
-                duration: %{type: "integer", description: "Duration in minutes"},
+                duration: %{
+                  oneOf: [
+                    %{
+                      type: "string",
+                      format: "duration",
+                      description: "The activity's duration in ISO 8601 format (e.g., 'PT2H30M')."
+                    },
+                    %{
+                      type: "object",
+                      properties: %{
+                        start: %{
+                          type: "string",
+                          format: "date-time",
+                          description: "Start time in ISO 8601 format."
+                        },
+                        end: %{
+                          type: "string",
+                          format: "date-time",
+                          description: "End time in ISO 8601 format."
+                        }
+                      },
+                      required: ["start", "end"],
+                      description: "A fixed time window for the activity."
+                    }
+                  ],
+                  description: "The duration of the activity, specified as a time span or a fixed start/end window."
+                },
                 dependencies: %{
                   type: "array",
                   items: %{type: "string"},
@@ -284,49 +307,90 @@ defmodule AriaEngine.MCPTools do
   
   # Validates a single activity's structure and types.
   defp validate_single_activity(activity) when is_map(activity) do
-    cond do
-      not Map.has_key?(activity, "id") ->
-        {:error, "Activity missing required 'id' field"}
-        
-      not is_binary(activity["id"]) ->
-        {:error, "Activity 'id' must be a string"}
-        
-      String.trim(activity["id"]) == "" ->
-        {:error, "Activity 'id' cannot be empty"}
-        
-      not Map.has_key?(activity, "duration") ->
-        {:error, "Activity missing required 'duration' field"}
-        
-      not is_integer(activity["duration"]) ->
-        {:error, "Activity 'duration' must be an integer, got: #{inspect(activity["duration"])}"}
-        
-      activity["duration"] < 0 ->
-        {:error, "Activity 'duration' must be non-negative, got: #{activity["duration"]}"}
-        
-      not validate_dependencies_format(activity["dependencies"]) ->
-        {:error, "Activity 'dependencies' must be a list of strings"}
-        
-      true ->
-        # Sanitize and return validated activity
-        validated_activity = %{
-          "id" => String.trim(activity["id"]),
-          "duration" => activity["duration"],
-          "dependencies" => activity["dependencies"] || [],
-          "required_capabilities" => activity["required_capabilities"] || [],
-          "required_resources" => activity["required_resources"] || []
-        }
-        {:ok, validated_activity}
+    with {:ok, id} <- validate_id(activity),
+         {:ok, duration} <- validate_duration(activity),
+         :ok <- validate_dependencies_format(activity["dependencies"]) do
+      
+      validated_activity = %{
+        "id" => id,
+        "duration" => duration,
+        "dependencies" => activity["dependencies"] || [],
+        "required_capabilities" => activity["required_capabilities"] || [],
+        "required_resources" => activity["required_resources"] || []
+      }
+      {:ok, validated_activity}
+    else
+      {:error, reason} -> {:error, reason}
+      _ -> {:error, "Invalid activity structure"}
     end
   end
   
   defp validate_single_activity(_), do: {:error, "Activity must be a map/object"}
+
+  defp validate_id(activity) do
+    cond do
+      not Map.has_key?(activity, "id") ->
+        {:error, "Activity missing required 'id' field"}
+      not is_binary(activity["id"]) ->
+        {:error, "Activity 'id' must be a string"}
+      String.trim(activity["id"]) == "" ->
+        {:error, "Activity 'id' cannot be empty"}
+      true ->
+        {:ok, String.trim(activity["id"])}
+    end
+  end
+
+  defp validate_duration(activity) do
+    case Map.get(activity, "duration") do
+      nil ->
+        {:error, "Activity missing required 'duration' field"}
+      
+      duration_str when is_binary(duration_str) ->
+        case :iso8601.parse_duration(duration_str) do
+          duration_proplist when is_list(duration_proplist) -> {:ok, duration_str}
+          _ -> {:error, "Invalid ISO 8601 duration string: #{duration_str}"}
+        end
+
+      duration_map when is_map(duration_map) ->
+        with {:ok, start_time} <- parse_datetime(duration_map, "start"),
+             {:ok, end_time} <- parse_datetime(duration_map, "end") do
+          if DateTime.compare(end_time, start_time) == :gt do
+            {:ok, duration_map}
+          else
+            {:error, "End time must be after start time"}
+          end
+        end
+      
+      duration_int when is_integer(duration_int) ->
+        # Backwards compatibility for integer durations (minutes)
+        if duration_int >= 0 do
+          {:ok, duration_int}
+        else
+          {:error, "Activity 'duration' must be non-negative, got: #{duration_int}"}
+        end
+      
+      _ ->
+        {:error, "Invalid 'duration' format. Must be an ISO 8601 duration string, a start/end object, or an integer (minutes)."}
+    end
+  end
+
+  defp parse_datetime(map, key) do
+    case Map.get(map, key) do
+      nil -> {:error, "Missing '#{key}' in duration object"}
+      datetime_str -> DateTime.from_iso8601(datetime_str)
+    end
+  end
   
   # Validates dependencies format.
-  defp validate_dependencies_format(nil), do: true
+  defp validate_dependencies_format(nil), do: :ok
   defp validate_dependencies_format(deps) when is_list(deps) do
-    Enum.all?(deps, &is_binary/1)
+    if Enum.all?(deps, &is_binary/1) do
+      :ok
+    else
+      {:error, "Activity 'dependencies' must be a list of strings"}
+    end
   end
-  defp validate_dependencies_format(_), do: false
+  defp validate_dependencies_format(_), do: {:error, "Activity 'dependencies' must be a list of strings"}
   
   # Detects circular dependencies using depth-first search.
   defp detect_circular_dependencies(activities) do
@@ -383,14 +447,14 @@ defmodule AriaEngine.MCPTools do
     end
   end
   
-  defp convert_activities(activities) when is_list(activities) do
+defp convert_activities(activities) when is_list(activities) do
     Enum.map(activities, fn activity ->
       %{
         id: Map.get(activity, "id"),
-        duration: Map.get(activity, "duration"),
+        duration: process_duration(Map.get(activity, "duration")),
         dependencies: Map.get(activity, "dependencies", []),
         required_capabilities: convert_capabilities(Map.get(activity, "required_capabilities", [])),
-        required_resources: Map.get(activity, "required_resources", [])
+        required_resources: convert_capabilities(Map.get(activity, "required_resources", []))
       }
     end)
   end
@@ -458,4 +522,34 @@ defmodule AriaEngine.MCPTools do
   end
   
   defp convert_activity_log(_), do: []
+
+  defp process_duration(duration) do
+    case duration do
+      duration_str when is_binary(duration_str) ->
+        case :iso8601.parse_duration(duration_str) do
+          duration_proplist when is_list(duration_proplist) ->
+            convert_duration_to_seconds(duration_proplist)
+          _ -> nil
+        end
+      duration_map when is_map(duration_map) ->
+        with {:ok, start_time} <- Map.fetch(duration_map, "start") |> then(&DateTime.from_iso8601(&1)),
+             {:ok, end_time} <- Map.fetch(duration_map, "end") do
+          DateTime.diff(end_time, start_time, :seconds)
+        else
+          _ -> nil
+        end
+      duration_int when is_integer(duration_int) ->
+        duration_int * 60
+      _ ->
+        nil
+    end
+  end
+
+  defp convert_duration_to_seconds(duration_proplist) when is_list(duration_proplist) do
+    hours = Enum.find_value(duration_proplist, 0, fn {key, value} -> if key == :hours, do: value, else: 0 end)
+    minutes = Enum.find_value(duration_proplist, 0, fn {key, value} -> if key == :minutes, do: value, else: 0 end)
+    seconds = Enum.find_value(duration_proplist, 0, fn {key, value} -> if key == :seconds, do: value, else: 0 end)
+    
+    hours * 3600 + minutes * 60 + seconds
+  end
 end
