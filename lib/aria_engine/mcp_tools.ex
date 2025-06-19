@@ -952,23 +952,21 @@ defp convert_activities(activities) when is_list(activities) do
 
   defp generate_narrative(simulation_result) do
     timestamp = DateTime.utc_now() |> DateTime.to_iso8601()
+    entity_lookup = create_entity_lookup()
     
     """
-    # Cross-Spectrum Protocol: The Merged Realms
+    # Cross-District Integration Mission
     
     **Mission Execution Report**  
     *Generated: #{timestamp}*
     
     ## Mission Overview
     
-    The displaced protagonist has successfully navigated the complex tri-zone integration protocol across the Verdant bio-tech district, Chrome corporate underworld, and Harmony synthesis hub. This represents a significant breakthrough in cross-dimensional stability and inter-district cooperation.
+    A multi-disciplinary team successfully executed a complex cross-district integration protocol, combining expertise from logistics, biotechnology, cybersecurity, community organizing, emergency medicine, creative technology, data analysis, and urban planning to establish sustainable connections between three distinct urban districts.
     
-    ## Key Achievements
+    ## Team Achievements
     
-    - **Consciousness Stabilization**: Successfully anchored dimensional awareness
-    - **Tri-Zone Authentication**: Gained trust across all three distinct sectors
-    - **Resource Synthesis**: Coordinated bio-energy, underground currency, and community credits
-    - **Reality Stabilization**: Achieved dimensional portal manifestation
+    #{generate_team_achievements(simulation_result, entity_lookup)}
     
     ## Technical Results
     
@@ -977,13 +975,13 @@ defp convert_activities(activities) when is_list(activities) do
     **Resource Efficiency**: #{calculate_resource_efficiency(simulation_result)}  
     **Success Status**: #{simulation_result.status}
     
-    ## Narrative Timeline
+    ## Detailed Action Timeline
     
-    #{generate_activity_timeline(simulation_result)}
+    #{generate_detailed_activity_timeline(simulation_result, entity_lookup)}
     
     ## Mission Completion
     
-    The Cross-Spectrum Protocol has achieved its primary objectives: establishing sustainable communication channels between the three districts, synthesizing resource management protocols, and creating a stable portal for dimensional return. The protagonist's modern knowledge and adaptive capabilities proved essential in bridging the technological, biological, and social systems of this merged reality.
+    #{generate_mission_summary(simulation_result, entity_lookup)}
     
     *End of Mission Report*
     """
@@ -1038,113 +1036,326 @@ defp convert_activities(activities) when is_list(activities) do
     |> Enum.join(" ")
   end
 
+  # Helper functions for personalized narrative generation
+  defp create_entity_lookup do
+    entities = get_tri_zone_entities()
+    Enum.reduce(entities, %{}, fn entity, acc ->
+      Map.put(acc, entity["id"], entity)
+    end)
+  end
+
+  defp generate_team_achievements(simulation_result, entity_lookup) do
+    case simulation_result.activity_log do
+      activities when is_list(activities) and length(activities) > 0 ->
+        # Group activities by entity to show individual contributions
+        entity_contributions = Enum.group_by(activities, fn activity ->
+          Map.get(activity, :entity_id, Map.get(activity, "entity_id", "unknown"))
+        end)
+        
+        entity_contributions
+        |> Enum.map(fn {entity_id, entity_activities} ->
+          entity_info = Map.get(entity_lookup, entity_id, %{"name" => entity_id, "background" => "Unknown specialist"})
+          activity_count = length(entity_activities)
+          
+          key_activities = entity_activities
+          |> Enum.take(2)
+          |> Enum.map(fn activity ->
+            activity_id = Map.get(activity, :activity_id, Map.get(activity, "activity_id", "unknown"))
+            humanize_activity_id(activity_id)
+          end)
+          |> Enum.join(" and ")
+          
+          "- **#{entity_info["name"]}**: Led #{key_activities} among #{activity_count} total activities, leveraging #{String.split(entity_info["background"], ",") |> hd()}"
+        end)
+        |> Enum.join("\n")
+      _ -> "Team member contributions not available in detailed logs."
+    end
+  end
+
+  defp generate_detailed_activity_timeline(simulation_result, entity_lookup) do
+    case simulation_result.activity_log do
+      activities when is_list(activities) and length(activities) > 0 ->
+        activities
+        |> Enum.take(8)  # Show first 8 activities for detail
+        |> Enum.map(fn activity ->
+          # Extract timestamp - try multiple possible fields
+          timestamp = Map.get(activity, :mission_duration, 
+                              Map.get(activity, "mission_duration",
+                              Map.get(activity, :timestamp, 
+                              Map.get(activity, "timestamp", "Unknown"))))
+          
+          activity_id = Map.get(activity, :activity_id, Map.get(activity, "activity_id", "unknown"))
+          entity_id = Map.get(activity, :entity_id, Map.get(activity, "entity_id", "unknown"))
+          
+          # Handle empty or missing entity_id
+          actual_entity_id = if entity_id == "unknown" or entity_id == "" or is_nil(entity_id) do
+            # Try to find an entity that can handle this activity's capabilities
+            find_capable_entity_for_activity(activity_id, entity_lookup)
+          else
+            entity_id
+          end
+          
+          entity_info = Map.get(entity_lookup, actual_entity_id, %{"name" => "Unassigned Specialist", "capabilities" => [], "background" => "Cross-functional expertise"})
+          
+          # Generate specific action description based on entity and activity
+          action_description = generate_specific_action_description(activity_id, entity_info, entity_lookup)
+          
+          "- **#{format_timestamp(timestamp)}**: #{action_description}"
+        end)
+        |> Enum.join("\n")
+      _ -> "Detailed timeline not available - no activity log entries found."
+    end
+  end
+
+  defp generate_specific_action_description(activity_id, entity_info, _entity_lookup) do
+    entity_name = entity_info["name"] || "Unknown"
+    entity_background = entity_info["background"] || ""
+    capabilities = entity_info["capabilities"] || []
+    
+    # Generate contextual descriptions based on activity and entity background
+    case activity_id do
+      "initial_situation_assessment" ->
+        "#{entity_name} applied #{get_relevant_capability(capabilities, ["rapid_assessment", "crisis_coordination"])} expertise to conduct comprehensive situation analysis, drawing on #{extract_experience(entity_background)}"
+      
+      "bio_district_infrastructure_survey" ->
+        "#{entity_name} utilized #{get_relevant_capability(capabilities, ["ecosystem_analysis", "environmental_monitoring"])} skills to map bio-district infrastructure, leveraging background in #{extract_field(entity_background)}"
+      
+      "plant_computer_interface_setup" ->
+        "#{entity_name} established plant-computer interfaces using #{get_relevant_capability(capabilities, ["plant_computer_interfaces", "bio_integration"])} expertise, building on #{extract_experience(entity_background)}"
+      
+      "underground_network_reconnaissance" ->
+        "#{entity_name} conducted stealth reconnaissance of underground networks, applying #{get_relevant_capability(capabilities, ["stealth_operations", "network_penetration"])} skills from #{extract_field(entity_background)}"
+      
+      "community_stakeholder_coordination" ->
+        "#{entity_name} coordinated with community stakeholders using #{get_relevant_capability(capabilities, ["stakeholder_coordination", "community_building"])} experience, drawing on #{extract_experience(entity_background)}"
+      
+      "ar_interface_development" ->
+        "#{entity_name} developed AR interfaces leveraging #{get_relevant_capability(capabilities, ["ar_development", "user_interface_design"])} skills, utilizing background in #{extract_field(entity_background)}"
+      
+      _ ->
+        "#{entity_name} executed #{humanize_activity_id(activity_id)} using #{get_first_capability(capabilities)} expertise, applying #{extract_experience(entity_background)}"
+    end
+  end
+
+  defp get_relevant_capability(capabilities, preferred_caps) do
+    relevant = Enum.find(capabilities, fn cap ->
+      cap_str = to_string(cap)
+      Enum.any?(preferred_caps, fn pref -> cap_str == pref end)
+    end)
+    
+    case relevant do
+      nil -> get_first_capability(capabilities)
+      cap -> cap |> to_string() |> String.replace("_", " ")
+    end
+  end
+
+  defp get_first_capability([]), do: "general problem-solving"
+  defp get_first_capability([cap | _]), do: cap |> to_string() |> String.replace("_", " ")
+
+  defp extract_experience(background) when is_binary(background) do
+    cond do
+      String.contains?(background, "years") -> 
+        background |> String.split(",") |> Enum.find(&String.contains?(&1, "years")) || "extensive experience"
+      String.contains?(background, "former") or String.contains?(background, "Former") ->
+        background |> String.split(",") |> hd() |> String.trim()
+      true -> 
+        background |> String.split(",") |> hd() |> String.trim()
+    end
+  end
+  defp extract_experience(_), do: "relevant professional experience"
+
+  defp extract_field(background) when is_binary(background) do
+    cond do
+      String.contains?(background, "University") -> "academic research"
+      String.contains?(background, "freelance") -> "independent consulting"  
+      String.contains?(background, "neighborhood") -> "community organizing"
+      String.contains?(background, "emergency") or String.contains?(background, "medicine") -> "emergency medicine"
+      String.contains?(background, "game") or String.contains?(background, "indie") -> "creative technology"
+      String.contains?(background, "Systems") -> "data systems analysis"
+      String.contains?(background, "planning") -> "urban planning"
+      String.contains?(background, "Flow") -> "logistics coordination"
+      true -> "professional specialization"
+    end
+  end
+  defp extract_field(_), do: "professional background"
+
+  # Helper function to find an entity capable of handling a specific activity
+  defp find_capable_entity_for_activity(activity_id, entity_lookup) do
+    # Get activity requirements
+    activity_requirements = get_activity_requirements(activity_id)
+    
+    # Find the best matching entity based on capabilities
+    best_entity = entity_lookup
+    |> Enum.find(fn {_entity_id, entity_info} ->
+      entity_capabilities = entity_info["capabilities"] || []
+      
+      # Check if this entity has any of the required capabilities
+      Enum.any?(activity_requirements, fn req_cap ->
+        Enum.any?(entity_capabilities, fn entity_cap ->
+          to_string(entity_cap) == req_cap
+        end)
+      end)
+    end)
+    
+    case best_entity do
+      {entity_id, _entity_info} -> entity_id
+      nil -> 
+        # Fallback: assign to Dr. Kai Chen for crisis management
+        "dr_kai_chen"
+    end
+  end
+
+  # Get required capabilities for a specific activity
+  defp get_activity_requirements(activity_id) do
+    case activity_id do
+      "initial_situation_assessment" -> ["rapid_assessment", "crisis_coordination"]
+      "bio_district_infrastructure_survey" -> ["ecosystem_analysis", "environmental_monitoring"]
+      "plant_computer_interface_setup" -> ["plant_computer_interfaces", "bio_integration"]
+      "bio_sensor_network_integration" -> ["bio_integration", "system_integration"]
+      "environmental_monitoring_deployment" -> ["environmental_monitoring", "data_analysis"]
+      "underground_network_reconnaissance" -> ["stealth_operations", "network_penetration"]
+      "corporate_security_audit" -> ["security_audits", "incident_response"]
+      "data_recovery_operations" -> ["data_recovery", "data_analysis"]
+      "community_stakeholder_coordination" -> ["stakeholder_coordination", "community_building"]
+      "resource_sharing_network_setup" -> ["resource_sharing", "volunteer_coordination"]
+      "cross_district_protocol_design" -> ["systems_thinking", "process_design"]
+      "mesh_network_communication_setup" -> ["system_integration", "real_time_monitoring"]
+      "integrated_systems_coordination" -> ["multi_team_coordination", "infrastructure_planning"]
+      "ar_interface_development" -> ["ar_development", "user_interface_design"]
+      "final_system_validation" -> ["predictive_modeling", "rapid_assessment"]
+      _ -> ["crisis_coordination"]  # Default fallback
+    end
+  end
+
+  defp generate_mission_summary(simulation_result, entity_lookup) do
+    total_entities = map_size(entity_lookup)
+    
+    case simulation_result.activity_log do
+      activities when is_list(activities) and length(activities) > 0 ->
+        active_entities = activities
+        |> Enum.map(fn activity -> Map.get(activity, :entity_id, Map.get(activity, "entity_id")) end)
+        |> Enum.uniq()
+        |> length()
+        
+        """
+        The cross-district integration mission successfully coordinated #{active_entities} specialized team members from diverse professional backgrounds, including logistics, biotechnology, cybersecurity, community organizing, emergency medicine, creative technology, data analysis, and urban planning. The mission established sustainable communication channels between districts, implemented resource-sharing protocols, and created integrated monitoring systems.
+        
+        Key innovations included plant-computer interface protocols developed by botanical researchers, mesh network communication systems designed by data specialists, and community engagement frameworks created by neighborhood organizers. The team's diverse expertise enabled comprehensive solutions spanning technical, social, and infrastructural challenges.
+        """
+      _ ->
+        """
+        The mission planning phase was completed with #{total_entities} team members identified across multiple specializations. Full execution logs are not available, but the comprehensive planning phase established frameworks for cross-district integration including technical protocols, community engagement strategies, and resource coordination systems.
+        """
+    end
+  end
+
   # Template data definitions
   defp get_tri_zone_activities() do
     [
       %{
-        "id" => "consciousness_stabilization",
+        "id" => "initial_situation_assessment",
         "duration" => "PT2H",
         "dependencies" => [],
-        "required_capabilities" => ["adaptation", "modern_knowledge"],
-        "required_resources" => ["reality_anchors"]
+        "required_capabilities" => ["rapid_assessment", "crisis_coordination"],
+        "required_resources" => ["sensor_network"]
       },
       %{
-        "id" => "verdant_sector_entry",
+        "id" => "bio_district_infrastructure_survey",
         "duration" => "PT45M",
-        "dependencies" => ["consciousness_stabilization"],
-        "required_capabilities" => ["pattern_recognition"],
+        "dependencies" => ["initial_situation_assessment"],
+        "required_capabilities" => ["ecosystem_analysis", "environmental_monitoring"],
         "required_resources" => ["bio_energy"]
       },
       %{
-        "id" => "symbiotic_interface_discovery",
+        "id" => "plant_computer_interface_setup",
         "duration" => "PT3H",
-        "dependencies" => ["verdant_sector_entry"],
-        "required_capabilities" => ["adaptation", "bio_integration"],
+        "dependencies" => ["bio_district_infrastructure_survey"],
+        "required_capabilities" => ["plant_computer_interfaces", "bio_integration"],
         "required_resources" => ["bio_energy", "collective_knowledge"]
       },
       %{
-        "id" => "plant_network_authentication",
+        "id" => "bio_sensor_network_integration",
         "duration" => "PT90M",
-        "dependencies" => ["symbiotic_interface_discovery"],
-        "required_capabilities" => ["bio_integration", "trust_building"],
-        "required_resources" => ["collective_knowledge"]
+        "dependencies" => ["plant_computer_interface_setup"],
+        "required_capabilities" => ["bio_integration", "system_integration"],
+        "required_resources" => ["collective_knowledge", "sensor_network"]
       },
       %{
-        "id" => "ecosystem_crisis_detection",
+        "id" => "environmental_monitoring_deployment",
         "duration" => "PT2H",
-        "dependencies" => ["plant_network_authentication"],
-        "required_capabilities" => ["pattern_recognition", "crisis_analysis"],
+        "dependencies" => ["bio_sensor_network_integration"],
+        "required_capabilities" => ["environmental_monitoring", "data_analysis"],
         "required_resources" => ["bio_energy", "sensor_network"]
       },
       %{
-        "id" => "chrome_underworld_infiltration",
+        "id" => "underground_network_reconnaissance",
         "duration" => "PT4H",
-        "dependencies" => ["ecosystem_crisis_detection"],
-        "required_capabilities" => ["stealth", "data_analysis"],
+        "dependencies" => ["environmental_monitoring_deployment"],
+        "required_capabilities" => ["stealth_operations", "network_penetration"],
         "required_resources" => ["stolen_access_codes"]
       },
       %{
-        "id" => "corporate_firewall_breach",
+        "id" => "corporate_security_audit",
         "duration" => "PT6H",
-        "dependencies" => ["chrome_underworld_infiltration"],
-        "required_capabilities" => ["hacking", "modern_knowledge"],
-        "required_resources" => ["stolen_access_codes", "illegal_augments"]
+        "dependencies" => ["underground_network_reconnaissance"],
+        "required_capabilities" => ["security_audits", "incident_response"],
+        "required_resources" => ["stolen_access_codes", "storage_devices"]
       },
       %{
-        "id" => "data_core_extraction",
+        "id" => "data_recovery_operations",
         "duration" => "PT3H",
-        "dependencies" => ["corporate_firewall_breach"],
-        "required_capabilities" => ["data_analysis", "stealth"],
-        "required_resources" => ["storage_devices", "illegal_augments"]
+        "dependencies" => ["corporate_security_audit"],
+        "required_capabilities" => ["data_recovery", "data_analysis"],
+        "required_resources" => ["storage_devices"]
       },
       %{
-        "id" => "netrunner_alliance_formation",
+        "id" => "community_stakeholder_coordination",
         "duration" => "PT5H",
-        "dependencies" => ["data_core_extraction"],
-        "required_capabilities" => ["trust_building", "negotiation"],
-        "required_resources" => ["underground_currency"]
+        "dependencies" => ["data_recovery_operations"],
+        "required_capabilities" => ["stakeholder_coordination", "community_building"],
+        "required_resources" => ["community_credits"]
       },
       %{
-        "id" => "harmony_hub_coordination",
+        "id" => "resource_sharing_network_setup",
         "duration" => "PT4H",
-        "dependencies" => ["netrunner_alliance_formation"],
-        "required_capabilities" => ["collaboration", "system_integration"],
+        "dependencies" => ["community_stakeholder_coordination"],
+        "required_capabilities" => ["resource_sharing", "volunteer_coordination"],
         "required_resources" => ["public_fabricators", "community_credits"]
       },
       %{
-        "id" => "tri_zone_protocol_synthesis",
+        "id" => "cross_district_protocol_design",
         "duration" => "PT8H",
-        "dependencies" => ["harmony_hub_coordination", "plant_network_authentication"],
-        "required_capabilities" => ["synthesis", "leadership", "modern_knowledge"],
+        "dependencies" => ["resource_sharing_network_setup", "bio_sensor_network_integration"],
+        "required_capabilities" => ["systems_thinking", "process_design"],
         "required_resources" => ["bio_energy", "community_credits", "collective_knowledge"]
       },
       %{
-        "id" => "cross_district_communication",
+        "id" => "mesh_network_communication_setup",
         "duration" => "PT2H",
-        "dependencies" => ["tri_zone_protocol_synthesis"],
-        "required_capabilities" => ["communication", "translation"],
+        "dependencies" => ["cross_district_protocol_design"],
+        "required_capabilities" => ["system_integration", "real_time_monitoring"],
         "required_resources" => ["mesh_network", "translation_matrices"]
       },
       %{
-        "id" => "reality_stabilization_ritual",
+        "id" => "integrated_systems_coordination",
         "duration" => "PT12H",
-        "dependencies" => ["cross_district_communication"],
-        "required_capabilities" => ["synthesis", "reality_manipulation", "leadership"],
-        "required_resources" => ["reality_anchors", "bio_energy", "community_credits"]
+        "dependencies" => ["mesh_network_communication_setup"],
+        "required_capabilities" => ["multi_team_coordination", "infrastructure_planning"],
+        "required_resources" => ["bio_energy", "community_credits", "mesh_network"]
       },
       %{
-        "id" => "portal_manifestation",
+        "id" => "ar_interface_development",
         "duration" => "PT30M",
-        "dependencies" => ["reality_stabilization_ritual"],
-        "required_capabilities" => ["reality_manipulation", "modern_knowledge"],
-        "required_resources" => ["reality_anchors", "translation_matrices"]
+        "dependencies" => ["integrated_systems_coordination"],
+        "required_capabilities" => ["ar_development", "user_interface_design"],
+        "required_resources" => ["translation_matrices"]
       },
       %{
-        "id" => "dimensional_return_sequence",
+        "id" => "final_system_validation",
         "duration" => "PT15M",
-        "dependencies" => ["portal_manifestation"],
-        "required_capabilities" => ["dimensional_travel"],
-        "required_resources" => ["reality_anchors"]
+        "dependencies" => ["ar_interface_development"],
+        "required_capabilities" => ["predictive_modeling", "rapid_assessment"],
+        "required_resources" => ["sensor_network"]
       }
     ]
   end
@@ -1152,51 +1363,67 @@ defp convert_activities(activities) when is_list(activities) do
   defp get_tri_zone_entities() do
     [
       %{
-        "id" => "displaced_protagonist",
-        "type" => "isekai_hero",
-        "capabilities" => ["modern_knowledge", "adaptation", "pattern_recognition", "leadership", "dimensional_travel"],
+        "id" => "alex_rivera",
+        "name" => "Alex Rivera, SynergyFlow logistics coordinator",
+        "type" => "logistics_specialist",
+        "capabilities" => ["supply_chain_optimization", "crisis_coordination", "cross_team_communication", "resource_allocation", "route_planning"],
+        "background" => "Former SynergyFlow distribution specialist with 8 years coordinating multi-site operations",
         "availability" => %{}
       },
       %{
-        "id" => "verdant_ecosystem_ai",
-        "type" => "bio_intelligence",
-        "capabilities" => ["bio_integration", "collective_consciousness", "ecosystem_management", "symbiotic_interface"],
+        "id" => "dr_elena_vasquez",
+        "name" => "Dr. Elena Vasquez, Greenfield University botanical researcher",
+        "type" => "bio_researcher",
+        "capabilities" => ["bio_integration", "ecosystem_analysis", "plant_computer_interfaces", "environmental_monitoring", "biological_protocols"],
+        "background" => "Published researcher on plant-computer interfaces, community garden coordinator",
         "availability" => %{}
       },
       %{
-        "id" => "chrome_netrunner_collective",
-        "type" => "hacker_group",
-        "capabilities" => ["hacking", "data_analysis", "stealth", "underground_networks"],
+        "id" => "jake_morrison",
+        "name" => "Jake Morrison, freelance security researcher",
+        "type" => "security_expert",
+        "capabilities" => ["network_penetration", "data_recovery", "security_audits", "incident_response", "stealth_operations"],
+        "background" => "Former military IT specialist, now freelance penetration tester for small businesses",
         "availability" => %{}
       },
       %{
-        "id" => "harmony_coordination_ai",
-        "type" => "collaborative_system",
-        "capabilities" => ["collaboration", "system_integration", "resource_optimization", "community_building"],
+        "id" => "maria_santos",
+        "name" => "Maria Santos, neighborhood organizer",
+        "type" => "community_coordinator",
+        "capabilities" => ["community_building", "resource_sharing", "conflict_mediation", "volunteer_coordination", "grassroots_organizing"],
+        "background" => "Runs neighborhood tool library, coordinates mutual aid and disaster response",
         "availability" => %{}
       },
       %{
-        "id" => "tri_zone_mediator",
-        "type" => "bridge_entity",
-        "capabilities" => ["synthesis", "translation", "conflict_resolution", "reality_manipulation"],
+        "id" => "dr_kai_chen",
+        "name" => "Dr. Kai Chen, emergency medicine physician",
+        "type" => "crisis_specialist",
+        "capabilities" => ["rapid_assessment", "multi_team_coordination", "stress_management", "emergency_protocols", "triage_decision_making"],
+        "background" => "Emergency room physician at Metro General, specializes in disaster response coordination",
         "availability" => %{}
       },
       %{
-        "id" => "crisis_response_collective",
-        "type" => "emergency_system",
-        "capabilities" => ["crisis_analysis", "coordination", "resource_mobilization", "rapid_response"],
+        "id" => "river_thompson",
+        "name" => "River Thompson, indie game developer",
+        "type" => "creative_technologist",
+        "capabilities" => ["user_interface_design", "creative_problem_solving", "storytelling", "ar_development", "community_engagement"],
+        "background" => "Indie game developer creating AR experiences for community events and social causes",
         "availability" => %{}
       },
       %{
-        "id" => "street_contact_network",
-        "type" => "information_broker",
-        "capabilities" => ["information_gathering", "trust_building", "negotiation", "black_market_access"],
+        "id" => "sam_okafor",
+        "name" => "Sam Okafor, DataFlow Systems analyst",
+        "type" => "data_specialist",
+        "capabilities" => ["data_analysis", "pattern_recognition", "system_integration", "real_time_monitoring", "predictive_modeling"],
+        "background" => "Senior data analyst at DataFlow Systems, expertise in cross-platform integration",
         "availability" => %{}
       },
       %{
-        "id" => "community_volunteer_grid",
-        "type" => "citizen_collective",
-        "capabilities" => ["community_support", "resource_sharing", "communication", "mutual_aid"],
+        "id" => "casey_nguyen",
+        "name" => "Casey Nguyen, urban planning consultant",
+        "type" => "systems_coordinator",
+        "capabilities" => ["systems_thinking", "stakeholder_coordination", "resource_optimization", "infrastructure_planning", "process_design"],
+        "background" => "Urban planning consultant specializing in sustainable community development",
         "availability" => %{}
       }
     ]

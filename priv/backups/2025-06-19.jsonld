@@ -1,0 +1,29 @@
+{
+  "@context": {
+    "@context": {
+      "Activity": "https://chibifire.com/schema/Activity",
+      "Conversation": "https://chibifire.com/schema/Conversation",
+      "Location": "https://chibifire.com/schema/Location",
+      "Person": "https://chibifire.com/schema/Person",
+      "about": "https://chibifire.com/schema/about",
+      "conflictsWith": "https://chibifire.com/schema/conflictsWith",
+      "content": "https://chibifire.com/schema/content",
+      "engagedIn": "https://chibifire.com/schema/engagedIn",
+      "heardAbout": "https://chibifire.com/schema/heardAbout",
+      "knows": "https://chibifire.com/schema/knows",
+      "locatedAt": "https://chibifire.com/schema/locatedAt",
+      "mood": "https://chibifire.com/schema/mood",
+      "participants": "https://chibifire.com/schema/participants",
+      "personality": "https://chibifire.com/schema/personality",
+      "plansTo": "https://chibifire.com/schema/plansTo",
+      "priority": "https://chibifire.com/schema/priority",
+      "remembers": "https://chibifire.com/schema/remembers",
+      "scheduledAt": "https://chibifire.com/schema/scheduledAt",
+      "source": "https://chibifire.com/schema/source",
+      "spokeWith": "https://chibifire.com/schema/spokeWith",
+      "timeOfDay": "https://chibifire.com/schema/timeOfDay",
+      "timestamp": "https://chibifire.com/schema/timestamp"
+    }
+  },
+  "@graph": []
+}
