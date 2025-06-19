@@ -28,9 +28,12 @@ defmodule AriaStorage.File do
     timestamps()
   end
 
+  @type t :: %__MODULE__{}
+
   @doc """
   Changeset for creating and updating file records.
   """
+  @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(file, attrs) do
     file
     |> cast(attrs, [:filename, :content_type, :size, :checksum, :index_ref, :metadata, :status, :uploaded_at])
@@ -44,6 +47,7 @@ defmodule AriaStorage.File do
   @doc """
   Changeset for marking a file as successfully stored.
   """
+  @spec store_changeset(t(), String.t()) :: Ecto.Changeset.t()
   def store_changeset(file, index_ref) do
     file
     |> cast(%{index_ref: index_ref, status: "stored"}, [:index_ref, :status])
@@ -53,6 +57,7 @@ defmodule AriaStorage.File do
   @doc """
   Changeset for marking a file as failed.
   """
+  @spec fail_changeset(t(), String.t()) :: Ecto.Changeset.t()
   def fail_changeset(file, reason) do
     metadata = Map.put(file.metadata || %{}, "failure_reason", reason)
 
