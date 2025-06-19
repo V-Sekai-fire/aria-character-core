@@ -87,8 +87,7 @@ defmodule Mix.Tasks.Mcp.Sse do
     case Hermes.Server.start_link(
       AriaEngine.MCP.HermesServer,
       :ok,
-      transport: :sse,
-      port: port
+      transport: {:sse, port: port, start: true}
     ) do
       {:ok, _pid} ->
         Logger.info("MCP SSE Server started successfully")
