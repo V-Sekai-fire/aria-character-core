@@ -136,7 +136,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   end
   
   @doc """
-  Fix timing constraints to respect dependencies.
+  Fix timing constraints to respect dependencies using iterative constraint propagation.
   """
   def fix_timing_constraints(scheduled_activities, original_activities) do
     # Create a map for quick lookup of dependencies
@@ -146,37 +146,68 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     end)
     |> Enum.into(%{})
     
-    # Create a map for quick lookup of scheduled activities
-    activity_map = scheduled_activities
-    |> Enum.map(fn activity -> {activity.id, activity} end)
-    |> Enum.into(%{})
-    
-    # Calculate proper start times based on dependencies
-    scheduled_activities
-    |> Enum.map(fn activity ->
-      dependencies = Map.get(dependency_map, activity.id, [])
+    # Use iterative constraint propagation to fix timing
+    # This ensures dependencies are properly resolved without external sorting
+    fix_timing_iteratively(scheduled_activities, dependency_map, 0)
+  end
+  
+  # Iteratively fix timing constraints until all dependencies are satisfied.
+  defp fix_timing_iteratively(activities, dependency_map, iteration) do
+    # Prevent infinite loops
+    if iteration > 10 do
+      Logger.warning("Timing constraint fixing reached maximum iterations")
+      activities
+    else
+      # Create activity lookup map with current timing
+      activity_map = activities
+      |> Enum.map(fn activity -> {activity.id, activity} end)
+      |> Enum.into(%{})
       
-      # Calculate earliest start time based on dependencies
-      earliest_start = if Enum.empty?(dependencies) do
-        0
+      # Calculate new timing for each activity
+      updated_activities = activities
+      |> Enum.map(fn activity ->
+        dependencies = Map.get(dependency_map, activity.id, [])
+        
+        # Calculate earliest start time based on current dependency timing
+        earliest_start = if Enum.empty?(dependencies) do
+          0
+        else
+          dependencies
+          |> Enum.map(fn dep_id ->
+            case Map.get(activity_map, dep_id) do
+              nil -> 
+                Logger.warning("Dependency #{dep_id} not found for activity #{activity.id}")
+                0
+              dep_activity -> dep_activity.end_time
+            end
+          end)
+          |> Enum.max()
+        end
+        
+        # Update timing
+        duration = Map.get(activity, :duration, 1)
+        %{activity | 
+          start_time: earliest_start,
+          end_time: earliest_start + duration
+        }
+      end)
+      
+      # Check if timing has converged (no changes from previous iteration)
+      if timing_converged?(activities, updated_activities) do
+        updated_activities
       else
-        dependencies
-        |> Enum.map(fn dep_id ->
-          case Map.get(activity_map, dep_id) do
-            nil -> 0
-            dep_activity -> dep_activity.end_time
-          end
-        end)
-        |> Enum.max()
+        # Continue iterating with updated timing
+        fix_timing_iteratively(updated_activities, dependency_map, iteration + 1)
       end
-      
-      # Update timing
-      duration = Map.get(activity, :duration, 1)
-      %{activity | 
-        start_time: earliest_start,
-        end_time: earliest_start + duration
-      }
-    end)
+    end
+  end
+  
+  # Check if timing has converged between iterations.
+  defp timing_converged?(old_activities, new_activities) do
+    old_timing = old_activities |> Enum.map(fn a -> {a.id, a.start_time, a.end_time} end) |> Enum.sort()
+    new_timing = new_activities |> Enum.map(fn a -> {a.id, a.start_time, a.end_time} end) |> Enum.sort()
+    
+    old_timing == new_timing
   end
   
 end
