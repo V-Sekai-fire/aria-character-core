@@ -89,6 +89,12 @@ Fully encapsulate STN within Timeline by:
 
 ### Phase 4: Test Migration
 - [ ] Migrate STN-specific tests to test through Timeline interface
+  - [ ] `test/aria_engine/test/aria_engine/timeline/stn_inconsistency_test.exs`
+  - [ ] `test/aria_engine/test/aria_engine/timeline_test.exs` 
+  - [ ] `test/aria_engine/test/aria_engine/timeline/stn_lod_test.exs`
+  - [ ] `test/aria_engine/test/aria_engine/temporal_planner/stn_planner_test.exs`
+  - [ ] `test/aria_engine/test/aria_engine/temporal_planner/stn_method_test.exs`
+  - [ ] `test/debug_temporal_planner_stn_bridge.exs`
 - [ ] Update test imports and aliases
 - [ ] Ensure all STN functionality remains tested
 

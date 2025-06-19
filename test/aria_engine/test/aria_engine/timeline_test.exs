@@ -6,13 +6,13 @@ defmodule TimelineTest do
   doctest Timeline
 
   alias Timeline
-  alias Timeline.{Interval, STN}
+  alias Timeline.Interval
 
   describe "timeline creation and basic operations" do
     test "creates a new empty timeline" do
       timeline = Timeline.new()
       assert timeline.intervals == %{}
-      assert timeline.stn.consistent
+      assert Timeline.consistent?(timeline)
     end
 
     test "creates timeline with metadata" do
@@ -37,7 +37,7 @@ defmodule TimelineTest do
       updated_timeline = Timeline.add_interval(timeline, interval)
 
       assert length(Map.keys(updated_timeline.intervals)) == 1
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
 
     test "maintains temporal consistency when adding intervals" do
@@ -56,7 +56,7 @@ defmodule TimelineTest do
       |> Timeline.add_interval(interval2)
 
       assert length(Map.keys(updated_timeline.intervals)) == 2
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
 
     test "handles overlapping intervals" do
@@ -74,7 +74,7 @@ defmodule TimelineTest do
       |> Timeline.add_interval(interval1)
       |> Timeline.add_interval(interval2)
 
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
   end
 
@@ -132,7 +132,7 @@ defmodule TimelineTest do
           constraint
         )
 
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
 
     test "detects meets relationship", %{timeline: timeline, before_interval: before_interval, meets_interval: meets_interval} do
@@ -144,12 +144,12 @@ defmodule TimelineTest do
           "#{meets_interval.id}_start",
           constraint
         )
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
 
     test "detects overlaps relationship", %{timeline: timeline} do
       # No explicit constraint needed, overlapping is determined by start/end times
-      assert STN.consistent?(timeline.stn)
+      assert Timeline.consistent?(timeline)
     end
 
     test "detects equals relationship", %{timeline: timeline} do
@@ -166,7 +166,7 @@ defmodule TimelineTest do
       |> Timeline.add_interval(equal_interval1)
       |> Timeline.add_interval(equal_interval2)
 
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
 
     test "detects during relationship", %{timeline: timeline} do
@@ -175,7 +175,7 @@ defmodule TimelineTest do
         DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC")
       )
       updated_timeline = Timeline.add_interval(timeline, during_interval)
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
 
     test "detects starts relationship", %{timeline: timeline} do
@@ -184,7 +184,7 @@ defmodule TimelineTest do
         DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
       )
       updated_timeline = Timeline.add_interval(timeline, starts_interval)
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
 
     test "detects finishes relationship", %{timeline: timeline} do
@@ -193,7 +193,7 @@ defmodule TimelineTest do
         DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
       )
       updated_timeline = Timeline.add_interval(timeline, finishes_interval)
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
   end
 
@@ -208,7 +208,7 @@ defmodule TimelineTest do
       )
       updated_timeline = Timeline.add_interval(timeline, interval)
 
-      assert updated_timeline.stn.consistent
+      assert Timeline.consistent?(updated_timeline)
     end
 
     test "creates timeline with entities" do
@@ -221,7 +221,7 @@ defmodule TimelineTest do
       )
       updated_timeline = Timeline.add_interval(timeline, interval)
 
-      assert updated_timeline.stn.consistent
+      assert Timeline.consistent?(updated_timeline)
     end
 
     test "tracks agents and entities in timeline" do
@@ -274,7 +274,7 @@ defmodule TimelineTest do
       |> Timeline.add_interval(interval3)
 
       assert length(Map.keys(updated_timeline.intervals)) == 3
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
 
     test "handles DateTime time points" do
@@ -291,7 +291,7 @@ defmodule TimelineTest do
       |> Timeline.add_interval(interval1)
       |> Timeline.add_interval(interval2)
 
-      assert STN.consistent?(updated_timeline.stn)
+      assert Timeline.consistent?(updated_timeline)
     end
   end
 
@@ -307,7 +307,7 @@ defmodule TimelineTest do
 
     test "handles empty timeline consistently" do
       timeline = Timeline.new()
-      assert STN.consistent?(timeline.stn)
+      assert Timeline.consistent?(timeline)
       assert Map.keys(timeline.intervals) == []
     end
   end

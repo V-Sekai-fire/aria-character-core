@@ -660,7 +660,7 @@ defmodule TimelineGraph do
     end
     
     # Use STN Core to find conflicts
-    conflicts = STN.Core.check_interval_conflicts(timeline, stn_start, stn_end)
+    conflicts = Timeline.Internal.STN.Core.check_interval_conflicts(timeline, stn_start, stn_end)
     
     # Convert back to Interval format for compatibility
     Enum.map(conflicts, fn conflict ->
@@ -707,7 +707,7 @@ defmodule TimelineGraph do
     end
     
     # Use STN Core to find next available slot
-    case STN.Core.find_next_available_slot(timeline, duration, earliest_start) do
+    case Timeline.Internal.STN.Core.find_next_available_slot(timeline, duration, earliest_start) do
       {:ok, slot_start, slot_end} ->
         # Convert back to DateTime format
         start_dt = convert_from_stn_time(slot_start, timeline.time_unit)

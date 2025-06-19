@@ -151,20 +151,20 @@ defmodule Timeline.LodAdapter do
       when operation in [:intersection, :union, :difference] do
     
     # Determine optimal target LOD and unit
-    {target_lod, target_unit} = determine_bridge_target(stn1, stn2, opts)
+    {target_lod, target_unit} = determine_bridge_target(timeline1.stn, timeline2.stn, opts)
     
     # Convert both STNs to compatible format
     flow_config = Keyword.get(opts, :flow_config)
     
     {converted_stn1, converted_stn2} = 
-      if flow_config && (requires_parallel_conversion?(stn1) || requires_parallel_conversion?(stn2)) do
+      if flow_config && (requires_parallel_conversion?(timeline1.stn) || requires_parallel_conversion?(timeline2.stn)) do
         # Use Flow adapter for parallel conversion
-        bridge_stns_parallel(stn1, stn2, target_lod, target_unit, flow_config, opts)
+        bridge_stns_parallel(timeline1.stn, timeline2.stn, target_lod, target_unit, flow_config, opts)
       else
         # Direct conversion
         {
-          convert_lod(stn1, target_lod, target_unit, opts),
-          convert_lod(stn2, target_lod, target_unit, opts)
+          convert_lod(timeline1, target_lod, target_unit, opts),
+          convert_lod(timeline2, target_lod, target_unit, opts)
         }
       end
     
@@ -218,7 +218,7 @@ defmodule Timeline.LodAdapter do
   This implements the constant work pattern from ADR-081 by potentially
   adjusting LOD levels to maintain predictable performance.
   """
-  def auto_rescale(%STN{} = stn, performance_target \\ :balanced, opts \\ []) do
+  def auto_rescale(%Timeline.Internal.STN{} = stn, performance_target \\ :balanced, opts \\ []) do
     constraint_density = calculate_constraint_density(stn)
     optimal_lod = determine_optimal_lod(constraint_density, performance_target)
     
@@ -254,7 +254,7 @@ defmodule Timeline.LodAdapter do
     source_factor / target_factor
   end
   
-  defp convert_lod_direct(%STN{} = stn, target_lod, target_unit, scale_factor, opts) do
+  defp convert_lod_direct(%Timeline.Internal.STN{} = stn, target_lod, target_unit, scale_factor, opts) do
     rounding_strategy = Keyword.get(opts, :rounding_strategy, :round)
     
     # Scale all constraints by the calculated factor
@@ -278,7 +278,7 @@ defmodule Timeline.LodAdapter do
       end
     
     # Update STN with new LOD parameters
-    %STN{stn | 
+    %Timeline.Internal.STN{stn | 
       lod_level: target_lod,
       time_unit: target_unit,
       lod_resolution: @lod_resolutions[target_lod],
@@ -288,7 +288,7 @@ defmodule Timeline.LodAdapter do
     }
   end
   
-  defp convert_lod_parallel(%STN{} = stn, target_lod, target_unit, scale_factor, opts) do
+  defp convert_lod_parallel(%Timeline.Internal.STN{} = stn, target_lod, target_unit, scale_factor, opts) do
     flow_config = Keyword.get(opts, :flow_config)
     
     # Use Flow adapter for parallel constraint scaling
@@ -307,7 +307,7 @@ defmodule Timeline.LodAdapter do
       
       scaled_constraints = Enum.reduce(scaled_constraint_chunks, %{}, &Map.merge/2)
       
-      %STN{stn | 
+      %Timeline.Internal.STN{stn | 
         lod_level: target_lod,
         time_unit: target_unit,
         lod_resolution: @lod_resolutions[target_lod],
@@ -330,7 +330,7 @@ defmodule Timeline.LodAdapter do
   defp apply_rounding(value, :ceil), do: Float.ceil(value)  
   defp apply_rounding(value, :round), do: Float.round(value)
   
-  defp determine_bridge_target(%STN{} = stn1, %STN{} = stn2, opts) do
+  defp determine_bridge_target(%Timeline.Internal.STN{} = stn1, %Timeline.Internal.STN{} = stn2, opts) do
     case {Keyword.get(opts, :target_lod), Keyword.get(opts, :target_unit)} do
       {nil, nil} ->
         # Auto-determine optimal target
@@ -353,7 +353,7 @@ defmodule Timeline.LodAdapter do
     end
   end
   
-  defp auto_determine_bridge_target(%STN{} = stn1, %STN{} = stn2, strategy) do
+  defp auto_determine_bridge_target(%Timeline.Internal.STN{} = stn1, %Timeline.Internal.STN{} = stn2, strategy) do
     lod_levels = [stn1.lod_level, stn2.lod_level]
     time_units = [stn1.time_unit, stn2.time_unit]
     
@@ -402,7 +402,7 @@ defmodule Timeline.LodAdapter do
     determine_optimal_lod(avg_density, :balanced)
   end
   
-  defp requires_parallel_conversion?(%STN{} = stn) do
+  defp requires_parallel_conversion?(%Timeline.Internal.STN{} = stn) do
     map_size(stn.constraints) > 100 || stn.constant_work_enabled
   end
   
@@ -421,16 +421,16 @@ defmodule Timeline.LodAdapter do
     List.to_tuple(results)
   end
   
-  defp apply_boolean_operation(%STN{} = stn1, %STN{} = stn2, :intersection) do
-    STN.intersection(stn1, stn2)
+  defp apply_boolean_operation(%Timeline.Internal.STN{} = stn1, %Timeline.Internal.STN{} = stn2, :intersection) do
+    Timeline.Internal.STN.intersection(stn1, stn2)
   end
   
-  defp apply_boolean_operation(%STN{} = stn1, %STN{} = stn2, :union) do
-    STN.union(stn1, stn2)
+  defp apply_boolean_operation(%Timeline.Internal.STN{} = stn1, %Timeline.Internal.STN{} = stn2, :union) do
+    Timeline.Internal.STN.union(stn1, stn2)
   end
   
-  defp apply_boolean_operation(%STN{} = stn1, %STN{} = stn2, :difference) do
-    STN.difference(stn1, stn2)  
+  defp apply_boolean_operation(%Timeline.Internal.STN{} = stn1, %Timeline.Internal.STN{} = stn2, :difference) do
+    Timeline.Internal.STN.difference(stn1, stn2)  
   end
   
   defp sort_stns_by_lod(stns) do
@@ -480,10 +480,10 @@ defmodule Timeline.LodAdapter do
   
   defp combine_stns_at_level([stn]), do: stn
   defp combine_stns_at_level(stns) when is_list(stns) do
-    Enum.reduce(stns, fn stn, acc -> STN.intersection(acc, stn) end)
+    Enum.reduce(stns, fn stn, acc -> Timeline.Internal.STN.intersection(acc, stn) end)
   end
   
-  defp calculate_constraint_density(%STN{} = stn) do
+  defp calculate_constraint_density(%Timeline.Internal.STN{} = stn) do
     timepoint_count = MapSet.size(stn.time_points)
     constraint_count = map_size(stn.constraints)
     

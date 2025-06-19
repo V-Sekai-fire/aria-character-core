@@ -3,6 +3,7 @@
 
 defmodule Timeline.Internal.STN do
   @moduledoc false
+  
   # This module is part of the internal Timeline implementation.
   # External modules should use the Timeline API instead of accessing STN directly.
   
@@ -15,69 +16,66 @@ defmodule Timeline.Internal.STN do
 
   ## Creating STNs
 
-  For basic usage:
-  ```elixir
-  stn = STN.new()  # Standard STN
-  ```
+  # For basic usage:
 
-  For production systems requiring predictable performance:
-  ```elixir
-  stn = STN.new_constant_work()  # AWS constant work pattern enabled
-  ```
+  #     stn = STN.new()  # Standard STN
 
-  ## Time Unit Design
+  # For production systems requiring predictable performance:
 
-  Each STN has an explicit `time_unit` field that defines the base unit for all
-  temporal constraints within that network. The default is `:second` for
-  human-readable temporal reasoning with decimal arithmetic.
+  #     stn = STN.new_constant_work()  # AWS constant work pattern enabled
 
-  - Constraints are expressed in the STN's `time_unit`
-  - Integration with Interval module handles unit conversion automatically
-  - Use `convert_units/2` to change an STN's time unit if needed
-  - Mixed-unit STNs require explicit conversion before composition
+  # ## Time Unit Design
+
+  # Each STN has an explicit time_unit field that defines the base unit for all
+  # temporal constraints within that network. The default is :second for
+  # human-readable temporal reasoning with decimal arithmetic.
+
+  # - Constraints are expressed in the STN's time_unit
+  # - Integration with Interval module handles unit conversion automatically
+  # - Use convert_units/2 to change an STN's time unit if needed
+  # - Mixed-unit STNs require explicit conversion before composition
 
   ## Composable STN Operations
 
-  Like boolean algebra, STNs support compositional operations:
-  - **Union**: Combine constraints allowing either STN to be satisfied (looser constraints)
-  - **Intersection**: Find common constraints that must satisfy both STNs (tighter constraints)
-  - **Difference**: Remove constraints from one STN based on another STN
-  - **Composition**: Chain STNs sequentially
-  - **Parallel Join**: Merge independent STN segments
+  # Like boolean algebra, STNs support compositional operations:
+  # - **Union**: Combine constraints allowing either STN to be satisfied (looser constraints)
+  # - **Intersection**: Find common constraints that must satisfy both STNs (tighter constraints)
+  # - **Difference**: Remove constraints from one STN based on another STN
+  # - **Composition**: Chain STNs sequentially
+  # - **Parallel Join**: Merge independent STN segments
 
   ## Parallelization Strategy
 
-  - **Segment Independence**: Divide timeline into independent segments
-  - **Parallel Solving**: Each segment solved independently  
-  - **Boundary Merging**: Combine results at segment boundaries
-  - **Complexity Reduction**: O(n³) becomes O(k * (n/k)³) where k = segments
+  # - **Segment Independence**: Divide timeline into independent segments
+  # - **Parallel Solving**: Each segment solved independently  
+  # - **Boundary Merging**: Combine results at segment boundaries
+  # - **Complexity Reduction**: O(n³) becomes O(k * (n/k)³) where k = segments
 
   ## AWS Constant Work Pattern
 
-  The constant work pattern ensures predictable performance by always processing
-  maximum-sized constraint networks, regardless of actual complexity. This eliminates
-  performance variance in real-time temporal reasoning systems.
+  # The constant work pattern ensures predictable performance by always processing
+  # maximum-sized constraint networks, regardless of actual complexity. This eliminates
+  # performance variance in real-time temporal reasoning systems.
 
-  Use `new_constant_work/1` for production systems requiring consistent response times.
-  See ADR-081 for detailed implementation rationale.
+  # Use new_constant_work/1 for production systems requiring consistent response times.
+  # See ADR-081 for detailed implementation rationale.
 
-  ## Algorithm: Path Consistency (PC-2)
+  # ## Algorithm: Path Consistency (PC-2)
 
-  The PC-2 algorithm maintains path consistency in the constraint graph by
-  ensuring that for every triple of variables (i, j, k), the direct constraint
-  between i and k is consistent with the path i -> j -> k.
+  # The PC-2 algorithm maintains path consistency in the constraint graph by
+  # ensuring that for every triple of variables (i, j, k), the direct constraint
+  # between i and k is consistent with the path i -> j -> k.
 
-  Time complexity: O(n³) per segment, parallelizable across segments
-  Space complexity: O(n²) for the constraint matrix
+  # Time complexity: O(n³) per segment, parallelizable across segments
+  # Space complexity: O(n²) for the constraint matrix
 
   ## References
 
-  - ADR-040: Temporal Constraint Solver Selection  
-  - ADR-081: AWS Constant Work Pattern for STN Solving
-  - "Temporal Constraint Networks" by Dechter, Meiri, and Pearl (1991)
-  - "Parallelizing Constraint Satisfaction" for segmentation approaches
-  - [AWS Builders Library - Reliability and Constant Work](https://aws.amazon.com/builders-library/reliability-and-constant-work/)
-  """
+  # - ADR-040: Temporal Constraint Solver Selection  
+  # - ADR-081: AWS Constant Work Pattern for STN Solving
+  # - "Temporal Constraint Networks" by Dechter, Meiri, and Pearl (1991)
+  # - "Parallelizing Constraint Satisfaction" for segmentation approaches
+  # - [AWS Builders Library - Reliability and Constant Work](https://aws.amazon.com/builders-library/reliability-and-constant-work/)
 
   alias Timeline.Internal.STN.Core
   alias Timeline.Internal.STN.PC2
