@@ -770,11 +770,36 @@ defmodule AriaEngine.MCP.Tools.ScheduleActivities do
   end
   
   # Get solved interval times from timeline STN
-  defp get_solved_interval_times(_timeline, interval) do
+  defp get_solved_interval_times(timeline, interval) do
     try do
-      # Try to get the solved times from the STN
-      # This is a simplified approach - the actual Timeline.STN may have different APIs
-      {interval.start_time, interval.end_time}
+      # Extract time point names for this interval
+      start_point = "#{interval.id}_start"
+      end_point = "#{interval.id}_end"
+      
+      # Get the solved duration constraint from the Timeline
+      case Timeline.get_constraint(timeline, start_point, end_point) do
+        {duration, duration} when is_number(duration) ->
+          # Fixed duration - use original start time and calculate end time
+          # Convert duration from STN time units (seconds) to DateTime
+          start_time = interval.start_time
+          end_time = DateTime.add(start_time, trunc(duration), :second)
+          {start_time, end_time}
+        
+        {min_duration, max_duration} when is_number(min_duration) and is_number(max_duration) ->
+          # Variable duration - use average for scheduling
+          avg_duration = (min_duration + max_duration) / 2
+          start_time = interval.start_time
+          end_time = DateTime.add(start_time, trunc(avg_duration), :second)
+          {start_time, end_time}
+        
+        nil ->
+          # No constraint found - fall back to original times
+          {interval.start_time, interval.end_time}
+        
+        _ ->
+          # Invalid constraint format - fall back to original times
+          {interval.start_time, interval.end_time}
+      end
     rescue
       _ -> :error
     end
