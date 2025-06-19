@@ -19,18 +19,6 @@ defmodule AriaEngine do
   @type opts :: keyword()
 
   @doc """
-  Basic planning function that delegates to the Planner module.
-  """
-  @spec plan(domain(), state(), todos(), opts()) :: {:ok, plan()} | {:error, String.t()}
-  defdelegate plan(domain, state, todos, opts \\ []), to: Planner
-
-  @doc """
-  Basic plan execution function that delegates to the Planner module.
-  """
-  @spec execute_plan(domain(), state(), plan()) :: {:ok, state()} | {:error, String.t()}
-  defdelegate execute_plan(domain, state, plan), to: Planner, as: :execute
-
-  @doc """
   Creates a new empty multigoal structure.
   """
   @spec create_multigoal() :: Multigoal.t()
