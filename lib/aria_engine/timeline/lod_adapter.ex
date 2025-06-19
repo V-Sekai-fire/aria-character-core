@@ -45,9 +45,9 @@ defmodule Timeline.LodAdapter do
   alias Timeline
   alias AriaEngine.ConvergenceFlow
   
-  @type lod_level :: :ultra_high | :high | :medium | :low | :very_low
-  @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day
-  @type lod_resolution :: 1 | 10 | 100 | 1000 | 10000
+  @type lod_level :: :ultra_high | :high | :medium | :low | :very_low | :galactic | :cosmic
+  @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day | :week | :month | :year | :decade | :century | :millennium | :megayear
+  @type lod_resolution :: 1 | 10 | 100 | 1000 | 10000 | 100000 | 1000000
   @type conversion_direction :: :upscale | :downscale | :same_level
   
   # LOD level to resolution mapping
@@ -56,7 +56,9 @@ defmodule Timeline.LodAdapter do
     high: 10, 
     medium: 100,
     low: 1000,
-    very_low: 10000
+    very_low: 10000,
+    galactic: 100000,
+    cosmic: 1000000
   }
   
   # Time unit conversion factors (to microseconds)
@@ -66,11 +68,18 @@ defmodule Timeline.LodAdapter do
     second: 1_000_000,
     minute: 60_000_000,
     hour: 3_600_000_000,
-    day: 86_400_000_000
+    day: 86_400_000_000,
+    week: 604_800_000_000,
+    month: 2_629_800_000_000,
+    year: 31_557_600_000_000,
+    decade: 315_576_000_000_000,
+    century: 3_155_760_000_000_000,
+    millennium: 31_557_600_000_000_000,
+    megayear: 31_557_600_000_000_000_000
   }
   
   # LOD level hierarchy (ordered from finest to coarsest)
-  @lod_hierarchy [:ultra_high, :high, :medium, :low, :very_low]
+  @lod_hierarchy [:ultra_high, :high, :medium, :low, :very_low, :galactic, :cosmic]
   
   @doc """
   Convert an STN from one LOD level to another with optional unit conversion.

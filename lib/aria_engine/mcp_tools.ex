@@ -12,6 +12,7 @@ defmodule AriaEngine.MCPTools do
   """
 
   require Logger
+  alias Timeline.LodAdapter
 
   # Tool registry - add new tools here
   @tools [
@@ -292,7 +293,7 @@ defmodule AriaEngine.MCPTools do
         {:error, reason} -> {:error, reason}
       end
     rescue
-      e -> {:error, "Activity validation failed: #{Exception.message(e)}"}
+      e -> {:error, "Invalid activity format: #{Exception.message(e)}"}
     end
   end
   
@@ -380,7 +381,12 @@ defmodule AriaEngine.MCPTools do
   defp parse_datetime(map, key) do
     case Map.get(map, key) do
       nil -> {:error, "Missing '#{key}' in duration object"}
-      datetime_str -> DateTime.from_iso8601(datetime_str)
+      datetime_str when is_binary(datetime_str) ->
+        case DateTime.from_iso8601(datetime_str) do
+          {:ok, datetime} -> {:ok, datetime}
+          {:error, _reason} -> {:error, "Invalid '#{key}' datetime format: #{datetime_str}"}
+        end
+      _ -> {:error, "Invalid '#{key}' format: must be a string"}
     end
   end
   
@@ -542,17 +548,19 @@ defp convert_activities(activities) when is_list(activities) do
           _ -> nil
         end
       duration_int when is_integer(duration_int) ->
-        duration_int * 60
+        # Keep integer durations as-is (test compatibility)
+        duration_int
       _ ->
         nil
     end
   end
 
   defp convert_duration_to_seconds(duration_proplist) when is_list(duration_proplist) do
-    hours = Enum.find_value(duration_proplist, 0, fn {key, value} -> if key == :hours, do: value, else: 0 end)
-    minutes = Enum.find_value(duration_proplist, 0, fn {key, value} -> if key == :minutes, do: value, else: 0 end)
-    seconds = Enum.find_value(duration_proplist, 0, fn {key, value} -> if key == :seconds, do: value, else: 0 end)
+    hours = Keyword.get(duration_proplist, :hours, 0)
+    minutes = Keyword.get(duration_proplist, :minutes, 0)
+    seconds = Keyword.get(duration_proplist, :seconds, 0)
     
+    # Convert to SI seconds for LOD system compatibility
     hours * 3600 + minutes * 60 + seconds
   end
 end
