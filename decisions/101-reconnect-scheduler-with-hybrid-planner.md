@@ -40,24 +40,24 @@ Rewrite the scheduler domain converter to create a proper hybrid planner domain 
 
 ## Implementation Plan
 
-### Phase 1: Fix Domain Converter Core Structure
-- [ ] Update goal format to use correct StateV2 tuple order: `{subject, predicate, object}`
-- [ ] Create proper actions that take `(state, args)` and return new state or `false`
-- [ ] Create methods that return heterogeneous todo lists with proper structures
-- [ ] Implement backtracking support with `false` returns for constraint violations
+### Phase 1: Fix Domain Converter Core Structure ✅ COMPLETED
+- [x] Update goal format to use correct StateV2 tuple order: `{subject, predicate, object}`
+- [x] Create proper actions that take `(state, args)` and return new state or `false`
+- [x] Create methods that return heterogeneous todo lists with proper structures
+- [x] Implement backtracking support with `false` returns for constraint violations
 
-### Phase 2: Scheduler-Specific Domain Creation
-- [ ] **Resource management actions**: Allocate/deallocate resources
-- [ ] **Activity execution actions**: Start/complete activities  
-- [ ] **Durative actions**: Time-based activity execution with proper temporal constraints
-- [ ] **Constraint checking methods**: Resource availability, dependencies
-- [ ] **Scheduling methods**: Complex decomposition of scheduling problems
+### Phase 2: Scheduler-Specific Domain Creation ✅ COMPLETED
+- [x] **Resource management actions**: Allocate/deallocate resources
+- [x] **Activity execution actions**: Start/complete activities  
+- [x] **Durative actions**: Time-based activity execution with proper temporal constraints
+- [x] **Constraint checking methods**: Resource availability, dependencies
+- [x] **Scheduling methods**: Complex decomposition of scheduling problems
 
-### Phase 3: Integration Testing
-- [ ] Test basic scheduling: Simple activity with resource constraints
-- [ ] Test complex scenarios: Multiple activities, dependencies, resource conflicts
-- [ ] Test backtracking: Impossible constraints trigger proper backtracking
-- [ ] Verify scheduler works end-to-end with hybrid planner
+### Phase 3: Integration Testing ✅ COMPLETED
+- [x] Test basic scheduling: Simple activity with resource constraints
+- [x] Test complex scenarios: Multiple activities, dependencies, resource conflicts
+- [x] Test backtracking: Impossible constraints trigger proper backtracking
+- [x] Verify scheduler works end-to-end with hybrid planner
 
 ## Success Criteria
 
@@ -94,26 +94,45 @@ Rewrite the scheduler domain converter to create a proper hybrid planner domain 
 
 1. **Core Integration Completed**: Successfully updated `lib/aria_engine/scheduler.ex` to use `HybridPlanner.HybridCoordinator` instead of direct `Plan` calls
 2. **Namespace Fixes Applied**: Fixed all `PlannerAdapter` references to use proper `AriaEngine.PlannerAdapter` namespace across the codebase
-3. **Compilation Success**: All files now compile successfully with the scheduler properly integrated with the hybrid planner
-4. **Integration Verified**: Tests confirm the scheduler is now connecting to the hybrid planner (though domain methods need updating for full functionality)
+3. **Domain Converter Fixed**: Completely rewrote domain converter to use task methods with durative actions
+4. **Task Method Implementation**: Created proper task methods for each activity ID that return correct todo lists
+5. **Durative Actions Added**: Implemented full durative action support with temporal constraints and resource management
+6. **Test Success**: All scheduler tests now pass (9/9) with proper hybrid planner integration
 
 ### Key Changes Made
 
 - **scheduler.ex**: Updated `schedule_activities/3` to use `HybridPlanner.HybridCoordinator.plan/4`
 - **Multiple files**: Fixed namespace references from `PlannerAdapter` to `AriaEngine.PlannerAdapter`
 - **hybrid_coordinator.ex**: Updated Plan module references for proper integration
-- **Compilation**: Resolved all compilation errors, system now builds successfully
+- **domain_converter.ex**: Complete rewrite to create task methods for activity IDs instead of goal methods
+- **Durative Actions**: Added proper durative action structs with conditions, effects, and temporal constraints
+- **Method Returns**: Fixed all methods to return proper todo lists with correct StateV2 goal tuples
 
 ### Current State
 
-The scheduler is now successfully reconnected with the hybrid planner. The integration is working at the API level, but the domain converter still needs updates to create proper methods that the hybrid planner expects. This is a separate concern that can be addressed in future ADRs.
+The scheduler is now fully functional with the hybrid planner. All integration is working correctly:
+- Task methods properly decompose activities into executable plans
+- Durative actions handle temporal scheduling with resource allocation
+- Dependencies and constraints are properly managed
+- All scheduler tests pass consistently
 
-### Next Steps
+### Test Results
 
-While this ADR is complete, future work should focus on:
-- Updating domain converter to create proper StateV2 goal tuples
-- Implementing proper method returns for hybrid planner compatibility
-- Adding comprehensive integration tests
+```
+Running ExUnit with seed: 846494, max_cases: 24
+Excluding tags: [:type_check_strict]
+
+.........
+Finished in 0.1 seconds (0.1s async, 0.00s sync)
+9 tests, 0 failures
+```
+
+The scheduler can now successfully:
+- Schedule simple activities with dependencies
+- Handle resource constraints and allocation
+- Process activities with timing information
+- Manage verbose logging and analysis
+- Handle edge cases like missing durations and empty dependencies
 
 ## Notes
 
