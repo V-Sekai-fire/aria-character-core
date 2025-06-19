@@ -75,4 +75,66 @@ defmodule AriaEngine.PC2Benchmark do
       }
     end
   end
+
+  def run_scaling_benchmark(opts \\ []) do
+    sizes = Keyword.get(opts, :sizes, [5, 10, 25, 50, 100])
+    iterations = Keyword.get(opts, :iterations, 10)
+
+    Logger.info("Running scaling benchmark with sizes: #{inspect(sizes)} and iterations: #{iterations}")
+
+    results =
+      Enum.map(sizes, fn size ->
+        benchmark_size(size, iterations, opts)
+      end)
+
+    analyze_scaling_results(results)
+  end
+
+  def benchmark_size(size, iterations, _opts) do
+    Logger.info("Benchmarking size: #{size} with #{iterations} iterations")
+
+    Enum.map(1..iterations, fn _i ->
+      stn = generate_test_stn(size)
+      result = run_pc2_solve(stn)
+      {stn, result}
+    end)
+  end
+
+  def analyze_scaling_results(results) do
+    Logger.info("Analyzing scaling results")
+
+    Enum.map(results, fn size_results ->
+      stn = List.first(size_results) |> elem(0)
+      size = MapSet.size(stn.time_points)
+      timing_data = size_results |> Enum.map(fn {_, result} -> result end) |> collect_timing_data()
+
+      %{
+        size: size,
+        timing: timing_data,
+        stn: stn
+      }
+    end)
+  end
+
+  def format_benchmark_report(analysis) do
+    Logger.info("Formatting benchmark report")
+
+    report =
+      "PC2 Scaling Benchmark Results\n" <>
+      "============================\n" <>
+      "Size |  Avg Time  |  Min Time  |  Max Time  |  P95 Time\n" <>
+      "-----|-----------|------------|------------|------------\n" <>
+      Enum.map_join(analysis, "\n", fn result ->
+        size = result.size
+        avg = result.timing.avg
+        min = result.timing.min
+        max = result.timing.max
+        p95 = result.timing.p95
+
+        "#{size} | #{avg} | #{min} | #{max} | #{p95}"
+      end)
+
+    IO.puts(report)
+    report
+  end
 end

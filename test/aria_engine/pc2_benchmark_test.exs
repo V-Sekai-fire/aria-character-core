@@ -32,4 +32,24 @@ defmodule AriaEngine.PC2BenchmarkTest do
     assert stats.max == 50
     assert stats.p95 == 50
   end
+
+  test "run_scaling_benchmark/1 runs benchmarks for multiple sizes" do
+    results = AriaEngine.PC2Benchmark.run_scaling_benchmark(sizes: [5, 10], iterations: 2)
+    assert length(results) == 2
+    assert Map.has_key?(List.first(results), :size)
+    assert Map.has_key?(List.first(results), :timing)
+    assert Map.has_key?(List.first(results), :stn)
+  end
+
+  test "format_benchmark_report/1 formats the benchmark report" do
+    analysis = [
+      %{size: 5, timing: %{avg: 0.02, min: 0.01, max: 0.03, p95: 0.03}},
+      %{size: 10, timing: %{avg: 0.15, min: 0.14, max: 0.16, p95: 0.16}}
+    ]
+
+    report = AriaEngine.PC2Benchmark.format_benchmark_report(analysis)
+
+    assert String.contains?(report, "PC2 Scaling Benchmark Results")
+    assert String.contains?(report, "Size |  Avg Time  |  Min Time  |  Max Time  |  P95 Time")
+  end
 end
