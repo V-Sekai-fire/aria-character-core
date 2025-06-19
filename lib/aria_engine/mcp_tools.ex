@@ -502,9 +502,9 @@ defmodule AriaEngine.MCPTools do
         {:error, "Activity missing required 'duration' field"}
       
       duration_str when is_binary(duration_str) ->
-        case :iso8601.parse_duration(duration_str) do
-          duration_proplist when is_list(duration_proplist) -> {:ok, duration_str}
-          _ -> {:error, "Invalid ISO 8601 duration string: #{duration_str}"}
+        case parse_iso8601_duration(duration_str) do
+          {:ok, _parsed} -> {:ok, duration_str}
+          {:error, reason} -> {:error, reason}
         end
 
       duration_map when is_map(duration_map) ->
@@ -539,6 +539,45 @@ defmodule AriaEngine.MCPTools do
           {:error, reason} -> {:error, "Invalid '#{key}' datetime format: #{reason}"}
         end
       _ -> {:error, "Invalid '#{key}' format: must be a string"}
+    end
+  end
+
+  # Parse ISO8601 duration strings like "PT2H30M" without external dependencies
+  defp parse_iso8601_duration(duration_str) when is_binary(duration_str) do
+    # Simple regex-based parser for common ISO8601 duration formats
+    # Supports: PT[n]H[n]M[n]S format
+    regex = ~r/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/
+    
+    case Regex.run(regex, String.upcase(duration_str)) do
+      [_, hours_str, minutes_str, seconds_str] ->
+        hours = parse_time_component(hours_str)
+        minutes = parse_time_component(minutes_str)
+        seconds = parse_time_component(seconds_str)
+        
+        {:ok, %{hours: hours, minutes: minutes, seconds: seconds}}
+      
+      [_, hours_str, minutes_str] ->
+        hours = parse_time_component(hours_str)
+        minutes = parse_time_component(minutes_str)
+        
+        {:ok, %{hours: hours, minutes: minutes, seconds: 0}}
+      
+      [_, hours_str] ->
+        hours = parse_time_component(hours_str)
+        
+        {:ok, %{hours: hours, minutes: 0, seconds: 0}}
+      
+      _ ->
+        {:error, "Invalid ISO 8601 duration format: #{duration_str}. Expected format like PT2H30M or PT90M"}
+    end
+  end
+
+  defp parse_time_component(nil), do: 0
+  defp parse_time_component(""), do: 0
+  defp parse_time_component(str) when is_binary(str) do
+    case Float.parse(str) do
+      {value, ""} -> trunc(value)
+      _ -> 0
     end
   end
   
@@ -691,8 +730,11 @@ defp convert_activities(activities) when is_list(activities) do
         DateTime.to_iso8601(dt)
       
       {{year, month, day}, {hour, minute, second}} ->
-        # Erlang datetime tuple format - convert to ISO8601 using the iso8601 library
-        :iso8601.format({{year, month, day}, {hour, minute, second}})
+        # Erlang datetime tuple format - convert to ISO8601 using NaiveDateTime
+        case NaiveDateTime.from_erl({{year, month, day}, {hour, minute, second}}) do
+          {:ok, naive_dt} -> NaiveDateTime.to_iso8601(naive_dt)
+          {:error, _} -> "Invalid datetime tuple"
+        end
       
       timestamp_str when is_binary(timestamp_str) ->
         timestamp_str
@@ -714,10 +756,10 @@ defp convert_activities(activities) when is_list(activities) do
   defp process_duration(duration) do
     case duration do
       duration_str when is_binary(duration_str) ->
-        case :iso8601.parse_duration(duration_str) do
-          duration_proplist when is_list(duration_proplist) ->
-            convert_duration_to_minutes(duration_proplist)
-          _ -> nil
+        case parse_iso8601_duration(duration_str) do
+          {:ok, parsed_duration} ->
+            convert_parsed_duration_to_minutes(parsed_duration)
+          {:error, _} -> nil
         end
       duration_map when is_map(duration_map) ->
         with {:ok, start_time} <- parse_duration_datetime(duration_map, "start"),
@@ -744,6 +786,11 @@ defp convert_activities(activities) when is_list(activities) do
         end
       _ -> {:error, "Invalid '#{key}' format: must be a string"}
     end
+  end
+
+  defp convert_parsed_duration_to_minutes(%{hours: hours, minutes: minutes, seconds: seconds}) do
+    # Convert to minutes for scheduler compatibility
+    hours * 60 + minutes + div(seconds, 60)
   end
 
   defp convert_duration_to_minutes(duration_proplist) when is_list(duration_proplist) do
