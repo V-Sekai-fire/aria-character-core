@@ -1,6 +1,6 @@
 # ADR-102: Fix Multigoal Tuple Ordering Consistency
 
-**Status:** Active (June 18, 2025)
+**Status:** Completed (June 18, 2025)
 
 ## Context
 
