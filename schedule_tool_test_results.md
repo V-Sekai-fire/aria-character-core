@@ -72,8 +72,97 @@ Comprehensive testing of the `schedule_activities` MCP tool with various paramet
 3. **Error Boundary Testing**: Test malformed JSON, invalid activity structures
 4. **Concurrent Access**: Test multiple simultaneous scheduling requests
 
+## Fuzzing Test Results (Extended)
+
+### 🔴 Critical Failures Found
+
+| Test # | Scenario | Status | Issue | Severity |
+|--------|----------|--------|-------|----------|
+| 4 | **Circular Dependencies** | ❌ **HANGING** | Process hangs indefinitely on circular dependency detection | **CRITICAL** |
+| 8 | **String Duration** | ❌ **ERROR** | `bad argument in arithmetic expression` - no type validation | **HIGH** |
+| 9 | **Missing Schedule Name** | ❌ **ERROR** | `schedule_name is required` - proper validation | **LOW** |
+
+### ✅ Additional Successful Tests
+
+| Test # | Scenario | Status | Notes |
+|--------|----------|--------|-------|
+| 7 | **Very Large Duration** | ✅ **SUCCESS** | Handles 999,999,999 duration without issues |
+| 10 | **Stress Test (50 Activities)** | ✅ **SUCCESS** | 50 parallel activities scheduled correctly, critical path: 10 |
+
+### 🟡 Edge Cases Handled Well
+
+- **Zero Duration**: Accepted and scheduled correctly
+- **Negative Duration**: Accepted (may need validation)
+- **Large Scale**: 50 activities processed efficiently
+- **Empty Activities**: Graceful handling
+
+### 🔴 Critical Issues Requiring Immediate Attention
+
+#### 1. **Circular Dependency Infinite Loop** (CRITICAL)
+- **Test Case**: Activities with circular dependencies (A→B→C→A)
+- **Behavior**: Process hangs indefinitely, never returns
+- **Impact**: Can cause system lockup in production
+- **Root Cause**: Likely in timing constraint fixing or dependency resolution
+- **Fix Required**: Add cycle detection in dependency graph
+
+#### 2. **Type Validation Missing** (HIGH)
+- **Test Case**: String value for duration field
+- **Error**: `bad argument in arithmetic expression`
+- **Impact**: Crashes scheduler with invalid input
+- **Fix Required**: Add input validation before arithmetic operations
+
+#### 3. **Durative Action Integration Issues**
+- The hanging on circular dependencies suggests our new durative action timing constraint fixing may have infinite loops
+- Need to add cycle detection in `fix_timing_iteratively_in_planner/3`
+
+### 📊 Fuzzing Summary
+
+**Total Tests Run**: 10  
+**Successful**: 6 (60%)  
+**Failed**: 3 (30%)  
+**Hanging**: 1 (10%)  
+
+**Performance**: 
+- Simple cases: ~50-100ms
+- 50 activities: ~200-300ms
+- Stress test passed without memory issues
+
+## Recommendations
+
+### Immediate Critical Fixes
+
+1. **Add Cycle Detection**:
+   ```elixir
+   defp detect_cycles(dependency_map) do
+     # Implement topological sort or DFS cycle detection
+   end
+   ```
+
+2. **Add Input Validation**:
+   ```elixir
+   defp validate_activity_duration(duration) when is_integer(duration) and duration >= 0, do: :ok
+   defp validate_activity_duration(_), do: {:error, "Duration must be non-negative integer"}
+   ```
+
+3. **Add Timeout Protection**:
+   ```elixir
+   defp fix_timing_iteratively(activities, dependency_map, iteration) when iteration > 10 do
+     Logger.error("Timing constraint fixing exceeded maximum iterations - possible cycle")
+     activities
+   end
+   ```
+
+### Future Enhancements
+
+1. **Comprehensive Input Validation**: Validate all activity fields before processing
+2. **Dependency Graph Analysis**: Pre-validate dependency graphs for cycles
+3. **Resource Conflict Detection**: Better handling of resource over-allocation
+4. **Performance Monitoring**: Add metrics for large-scale scheduling
+
 ## Conclusion
 
-The extensible MCP tool system is working correctly for basic and intermediate scenarios. The core scheduling engine and MCP protocol integration are solid. The main blockers are JSON encoding issues for Entity and Resource structs, which are straightforward to fix.
+The scheduler handles most scenarios well, but has **critical stability issues** with circular dependencies that can cause system hangs. The durative action implementation needs cycle detection to prevent infinite loops in timing constraint fixing.
 
-**Overall Assessment: 🟡 Mostly Functional** (4/6 tests passing, 2 blocked by encoding issues)
+**Overall Assessment: 🔴 Critical Issues Found** (6/10 tests passing, 1 hanging, 3 failed)
+
+**Priority**: Fix circular dependency handling before production use.

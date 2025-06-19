@@ -41,7 +41,7 @@ defmodule TemporalPlanner.STNPlanner do
   alias TemporalPlanner.STNMethod
   alias TemporalPlanner.STNAction
   alias Timeline
-  alias FlowAdapter
+  alias AriaEngine.ConvergenceFlow
 
   @type goal_id :: String.t()
   @type planning_strategy :: :sequential | :parallel | :hierarchical | :adaptive
@@ -357,19 +357,11 @@ defmodule TemporalPlanner.STNPlanner do
   end
 
   defp start_parallel_segment_solving(segments) do
-    # Create Flow configuration for parallel STN processing
-    {:ok, flow_config} = FlowAdapter.create_pipeline("stn_segment_solver",
-      flow_control: :pull,
+    # Use convergence-based solving for parallel STN processing
+    ConvergenceFlow.solve_with_convergence(segments,
       stages: min(length(segments), 4),  # Limit to 4 concurrent stages
-      demand_size: 2,
-      convergence: true
-    )
-    
-    # Process segments in parallel using Flow adapter
-    FlowAdapter.process_stn_segments(
-      flow_config, 
-      segments, 
-      &Timeline.apply_pc2/1
+      max_iterations: 30,
+      convergence_threshold: 0.01
     )
   end
 

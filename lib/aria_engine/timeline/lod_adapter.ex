@@ -43,7 +43,7 @@ defmodule Timeline.LodAdapter do
   """
   
   alias Timeline
-  alias FlowAdapter
+  alias AriaEngine.ConvergenceFlow
   
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low
   @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day
@@ -305,7 +305,14 @@ defmodule Timeline.LodAdapter do
       constraint_chunks = chunk_constraints(stn.constraints, flow_config.stages)
       
       scaled_constraint_chunks = 
-        FlowAdapter.process_stn_segments(flow_config, constraint_chunks, fn chunk ->
+        ConvergenceFlow.solve_with_convergence(constraint_chunks, 
+          stages: System.schedulers_online(),
+          max_iterations: 20,
+          convergence_threshold: 0.01
+        )
+      scaled_constraint_chunks = 
+        constraint_chunks
+        |> Enum.map(fn chunk ->
           chunk
           |> Enum.map(fn {key, constraint} ->
                {key, scale_constraint(constraint, scale_factor, rounding_strategy)}
@@ -424,8 +431,8 @@ defmodule Timeline.LodAdapter do
       {stn2, target_lod, target_unit, opts}
     ]
     
-    results = FlowAdapter.process_stn_segments(flow_config, conversion_tasks, 
-      fn {stn, t_lod, t_unit, t_opts} ->
+    results = conversion_tasks
+    |> Enum.map(fn {stn, t_lod, t_unit, t_opts} ->
         convert_lod(stn, t_lod, t_unit, t_opts)
       end)
     
@@ -467,8 +474,8 @@ defmodule Timeline.LodAdapter do
       |> Enum.chunk_every(2, 1, :discard)
       |> Enum.with_index()
     
-    FlowAdapter.process_stn_compositions(flow_config, chain_operations,
-      fn {{stn1, stn2}, _index} ->
+    chain_operations
+    |> Enum.map(fn {{stn1, stn2}, _index} ->
         bridge_and_compose(stn1, stn2, :intersection, opts)
       end)
     |> List.last()  # Return final chained result

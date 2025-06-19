@@ -34,7 +34,7 @@ defmodule TemporalPlanner.STNMethod do
 
   alias TemporalPlanner.STNAction
   alias Timeline
-  alias FlowAdapter
+  alias AriaEngine.ConvergenceFlow
 
   @type method_id :: String.t()
   @type decomposition_pattern :: :sequential | :parallel | :alternative | :conditional
@@ -252,8 +252,12 @@ defmodule TemporalPlanner.STNMethod do
       0 -> Timeline.new()
       1 -> hd(segments) |> Timeline.apply_pc2()
       _segment_count ->
-        # Solve segments in parallel using FlowAdapter
-        solved_segments = FlowAdapter.process_stn_segments(segments, &Timeline.apply_pc2/1, %{})
+        # Solve segments in parallel using ConvergenceFlow
+        solved_segments = ConvergenceFlow.solve_with_convergence(segments,
+          stages: min(length(segments), 4),
+          max_iterations: 20,
+          convergence_threshold: 0.01
+        )
         
         # Compose solved segments based on decomposition pattern
         compose_solved_segments(solved_segments, pattern)

@@ -93,6 +93,7 @@ defmodule AriaCharacterCore.MixProject do
 
       # Workflow and State Management
       {:gen_state_machine, "~> 3.0"},
+      {:flow, "~> 1.2"},
 
       # Monitoring and Metrics
       {:telemetry_metrics_prometheus, "~> 1.1"},

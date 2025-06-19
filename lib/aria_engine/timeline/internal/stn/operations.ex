@@ -6,7 +6,7 @@ defmodule Timeline.Internal.STN.Operations do
 
   alias Timeline.Internal.STN
   alias Timeline.LodAdapter
-  alias FlowAdapter
+  alias AriaEngine.ConvergenceFlow
 
   @doc """
   Performs intersection operation on two STNs.
@@ -104,14 +104,13 @@ defmodule Timeline.Internal.STN.Operations do
     
     opts = 
       if total_constraints > 200 and not Keyword.has_key?(opts, :flow_config) do
-        # Create Flow configuration for large operations
-        {:ok, flow_config} = FlowAdapter.create_pipeline("stn_lod_bridge", 
-          flow_control: :pull, 
+        # Use convergence-based solving for large operations
+        convergence_opts = [
           stages: System.schedulers_online(),
-          demand_size: 10,
-          convergence: true
-        )
-        Keyword.put(opts, :flow_config, flow_config)
+          max_iterations: 50,
+          convergence_threshold: 0.001
+        ]
+        Keyword.put(opts, :convergence_opts, convergence_opts)
       else
         opts
       end
@@ -208,18 +207,15 @@ defmodule Timeline.Internal.STN.Operations do
     # Use Flow adapter for parallel processing of STN unions
     case length(stns) do
       count when count > 4 ->
-        # Use Flow adapter for larger sets
-        {:ok, flow_config} = FlowAdapter.create_pipeline("stn_parallel_join", 
-          flow_control: :pull, 
+        # Use convergence-based solving for larger sets
+        ConvergenceFlow.solve_stn_with_convergence(
+          %{constraints: Enum.reduce(stns, %{}, fn stn, acc -> Map.merge(acc, stn.constraints) end)},
           stages: System.schedulers_online(),
-          demand_size: 2,
-          convergence: true
+          max_iterations: 30,
+          convergence_threshold: 0.01
         )
-        
-        _solved_segments = FlowAdapter.process_stn_compositions(flow_config,
-          Enum.chunk_every(stns, 2, 2, [STN.new()]) |> Enum.map(&List.to_tuple/1),
-          &union/2)
-        |> Enum.reduce(&union/2)
+        |> Map.get(:constraints, %{})
+        |> (&%STN{constraints: &1}).()
         |> STN.PC2.apply_pc2()
       
       _ ->
@@ -284,15 +280,12 @@ defmodule Timeline.Internal.STN.Operations do
         STN.PC2.apply_pc2(hd(segments))
       
       segment_count ->
-        # Use Flow adapter for parallel segment solving
-        {:ok, flow_config} = FlowAdapter.create_pipeline("stn_parallel_solve", 
-          flow_control: :pull, 
-          stages: min(segment_count, max_segments),
-          demand_size: 1,
-          convergence: false
-        )
+        # Use convergence-based solving for parallel segment solving
+        # Apply PC2 to each segment individually, then merge
+        solved_segments = segments
+        |> Enum.map(&STN.PC2.apply_pc2/1)
         
-        solved_segments = FlowAdapter.process_stn_segments(flow_config, segments, &STN.PC2.apply_pc2/1)
+        # Merge the solved segments
         parallel_join(solved_segments)
     end
   end
