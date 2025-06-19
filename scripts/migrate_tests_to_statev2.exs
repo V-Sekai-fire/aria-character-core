@@ -33,22 +33,22 @@ defmodule TestMigrator do
       |> String.replace("alias State", "alias StateV2")
       |> String.replace("alias {State,", "alias {StateV2,")
       
-      # Replace State.new() with StateV2.new()
-      |> String.replace("State.new()", "StateV2.new()")
+      # Replace AriaEngine.StateV2.new() with StateV2.new()
+      |> String.replace("AriaEngine.StateV2.new()", "StateV2.new()")
       
       # Replace State.set_fact calls - need to handle parameter order
-      # State.set_fact(state, predicate, subject, value) -> StateV2.set_fact(state, subject, predicate, value)
+      # AriaEngine.StateV2.set_fact(state, predicate, subject, value) -> StateV2.set_fact(state, subject, predicate, value)
       |> fix_state_set_fact_calls()
       
       # Replace State.get_fact calls - need to handle parameter order  
-      # State.get_fact(state, predicate, subject) -> StateV2.get_fact(state, subject, predicate)
+      # AriaEngine.StateV2.get_fact(state, predicate, subject) -> StateV2.get_fact(state, subject, predicate)
       |> fix_state_get_fact_calls()
       
       # Replace other State method calls
       |> String.replace(~r/State\.([a-zA-Z_]+)/, "StateV2.\\1")
       
       # Fix pattern matching on State structs
-      |> String.replace("%State{", "%StateV2{")
+      |> String.replace("%AriaEngine.StateV2{", "%StateV2{")
       
       File.write!(file_path, fixed_content)
       IO.puts("  ✅ Migrated #{file_path}")
@@ -58,7 +58,7 @@ defmodule TestMigrator do
   end
   
   defp fix_state_set_fact_calls(content) do
-    # Handle State.set_fact(state, predicate, subject, value) -> StateV2.set_fact(state, subject, predicate, value)
+    # Handle AriaEngine.StateV2.set_fact(state, predicate, subject, value) -> StateV2.set_fact(state, subject, predicate, value)
     content
     |> String.replace(
       ~r/State\.set_fact\(([^,]+),\s*"([^"]+)",\s*"([^"]+)",\s*"?([^")]+)"?\)/,
@@ -71,7 +71,7 @@ defmodule TestMigrator do
   end
   
   defp fix_state_get_fact_calls(content) do
-    # Handle State.get_fact(state, predicate, subject) -> StateV2.get_fact(state, subject, predicate) 
+    # Handle AriaEngine.StateV2.get_fact(state, predicate, subject) -> StateV2.get_fact(state, subject, predicate) 
     content
     |> String.replace(
       ~r/State\.get_fact\(([^,]+),\s*"([^"]+)",\s*"([^"]+)"\)/,

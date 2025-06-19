@@ -126,7 +126,7 @@ defmodule HybridPlanner.Strategies do
     - `{:error, reason}`: Validation failure
     """
     @callback validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), Plan.solution_tree()) :: 
-      {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+      {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
 
     @doc """
     Get strategy metadata and capabilities.
@@ -216,7 +216,7 @@ defmodule HybridPlanner.Strategies do
     operations while remaining independent of planning logic.
     """
 
-    @type state_result :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+    @type state_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
     @type query_result :: {:ok, term()} | {:error, String.t()}
 
     @doc """
@@ -422,8 +422,8 @@ defmodule HybridPlanner.Strategies do
     execution, step-by-step) while coordinating with other strategies.
     """
 
-    @type execution_result :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
-    @type step_result :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:retry, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+    @type execution_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+    @type step_result :: {:ok, AriaEngine.StateV2.t()} | {:retry, AriaEngine.StateV2.t()} | {:error, String.t()}
 
     @doc """
     Execute a complete solution tree.

@@ -29,7 +29,7 @@ defmodule Domain.DurativeAction do
     duration: durative_action_duration(),
     conditions: durative_action_conditions(),
     effects: durative_action_effects(),
-    action_fn: (AriaEngine.StateV2.t(), list() -> AriaEngine.AriaEngine.StateV2.t() | false) # The actual function that performs the action
+    action_fn: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false) # The actual function that performs the action
   }
 
   defstruct name: nil,
@@ -41,7 +41,7 @@ defmodule Domain.DurativeAction do
   @doc """
   Creates a new durative action.
   """
-  @spec new(durative_action_name(), durative_action_duration(), durative_action_conditions(), durative_action_effects(), (AriaEngine.StateV2.t(), list() -> AriaEngine.AriaEngine.StateV2.t() | false)) :: t()
+  @spec new(durative_action_name(), durative_action_duration(), durative_action_conditions(), durative_action_effects(), (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)) :: t()
   def new(name, duration, conditions, effects, action_fn) do
     %__MODULE__{
       name: name,

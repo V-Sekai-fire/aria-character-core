@@ -6,8 +6,7 @@ defmodule Info do
   Provides functions for retrieving information and status from the Aria Engine.
   """
   alias Core
-  alias State
-  alias PlannerAdapter
+    alias PlannerAdapter
   alias Plan.Utils # Added alias for Utils
 
   @type t :: Core.t()
@@ -27,7 +26,7 @@ defmodule Info do
   @doc """
   Gets the current state.
   """
-  @spec get_current_state(t()) :: State.t()
+  @spec get_current_state(t()) :: AriaEngine.StateV2.t()
   def get_current_state(%Core{current_state: state}) do
     state
   end
@@ -35,7 +34,7 @@ defmodule Info do
   @doc """
   Gets the final state (if completed).
   """
-  @spec get_final_state(t()) :: State.t() | nil
+  @spec get_final_state(t()) :: AriaEngine.StateV2.t() | nil
   def get_final_state(%Core{status: :completed, current_state: state}) do
     state
   end
@@ -85,7 +84,7 @@ defmodule Info do
   """
   @spec get_plan_stats(t()) :: map()
   def get_plan_stats(%Core{solution_tree: solution_tree}) when not is_nil(solution_tree) do
-    PlannerAdapter.tree_stats(solution_tree)
+    AriaEngine.PlannerAdapter.tree_stats(solution_tree)
   end
 
   def get_plan_stats(%Core{solution_tree: nil}) do
@@ -117,7 +116,7 @@ defmodule Info do
 
     tree_stats = case engine.solution_tree do
       nil -> %{}
-      solution_tree -> PlannerAdapter.tree_stats(solution_tree)
+      solution_tree -> AriaEngine.PlannerAdapter.tree_stats(solution_tree)
     end
 
     %{
@@ -158,7 +157,7 @@ defmodule Info do
   @doc """
   Updates the current state.
   """
-  @spec update_state(t(), State.t()) :: t()
+  @spec update_state(t(), AriaEngine.StateV2.t()) :: t()
   def update_state(%Core{} = engine, new_state) do
     %{engine | current_state: new_state}
   end

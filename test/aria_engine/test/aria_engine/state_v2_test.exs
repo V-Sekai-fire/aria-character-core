@@ -253,7 +253,7 @@ defmodule StateV2Test do
         {"has", "player"} => "sword",
         {"status", "chair1"} => "available"
       }
-      legacy_state = %State{data: legacy_data}
+      legacy_state = %AriaEngine.StateV2{data: legacy_data}
 
       # Convert to StateV2
       state_v2 = StateV2.from_legacy_state(legacy_state)
@@ -274,8 +274,8 @@ defmodule StateV2Test do
       legacy_state = StateV2.to_legacy_state(state_v2)
 
       # Verify legacy access works
-      assert State.get_fact(legacy_state, "location", "player") == "room1"
-      assert State.get_fact(legacy_state, "has", "player") == "sword"
+      assert AriaEngine.StateV2.get_fact(legacy_state, "location", "player") == "room1"
+      assert AriaEngine.StateV2.get_fact(legacy_state, "has", "player") == "sword"
     end
 
     test "round-trip conversion preserves data" do

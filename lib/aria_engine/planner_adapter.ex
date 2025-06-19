@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule PlannerAdapter do
+defmodule AriaEngine.PlannerAdapter do
   @moduledoc """
   Migration adapter that provides the Plan API while delegating to HybridCoordinator.
   
@@ -140,7 +140,7 @@ defmodule PlannerAdapter do
   Execute plan using HybridCoordinator while maintaining run_lazy_refineahead API compatibility.
   """
   @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
-    {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def run_lazy_refineahead(domain, %AriaEngine.StateV2{} = initial_state, solution_tree, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
@@ -165,7 +165,7 @@ defmodule PlannerAdapter do
   Validate plan using HybridCoordinator while maintaining Plan.validate_plan/3 API compatibility.
   """
   @spec validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) :: 
-    {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def validate_plan(domain, %AriaEngine.StateV2{} = initial_state, plan) do
     case plan do
       plan when is_list(plan) ->

@@ -11,7 +11,7 @@ defmodule Domain.Actions do
 
   @type t :: Domain.Core.t()
   @type action_name :: atom()
-  @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.AriaEngine.StateV2.t() | false)
+  @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
 
   @doc """
   Adds an action to the domain.
@@ -104,7 +104,7 @@ defmodule Domain.Actions do
   @doc """
   Executes an action with the given state and arguments.
   """
-  @spec execute_action(t(), AriaEngine.StateV2.t(), action_name(), list()) :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | false
+  @spec execute_action(t(), AriaEngine.StateV2.t(), action_name(), list()) :: {:ok, AriaEngine.StateV2.t()} | false
   def execute_action(%{} = domain, %AriaEngine.StateV2{} = state, action_name, args) do
     # First check if it's a regular action
     case get_action(domain, action_name) do

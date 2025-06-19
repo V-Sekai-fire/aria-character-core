@@ -9,7 +9,7 @@ defmodule Plan.Blacklisting do
   # alias Plan.Core # For solution_tree type
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), State.fact_value()}
+  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -19,7 +19,7 @@ defmodule Plan.Blacklisting do
     task: todo_item(),
     parent_id: node_id() | nil,
     children_ids: [node_id()],
-    state: State.t() | nil,
+    state: AriaEngine.StateV2.t() | nil,
     visited: boolean(),
     expanded: boolean(),
     method_tried: String.t() | nil,

@@ -33,7 +33,7 @@ defmodule Domain.Core do
   @type action_name :: atom()
   @type task_name :: String.t()
   @type method_name :: String.t()
-  @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.AriaEngine.StateV2.t() | false)
+  @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
   @type task_method_fn :: (AriaEngine.StateV2.t(), list() -> list() | false)
   @type goal_method_fn :: (AriaEngine.StateV2.t(), list() -> list() | false)
   @type named_method :: {method_name(), task_method_fn() | goal_method_fn()}

@@ -122,13 +122,16 @@ defmodule AriaEngine.Scheduler.DomainConverter do
       dependencies = Map.get(activity, :dependencies, [])
       required_resources = Map.get(activity, :required_resources, [])
       
+      # Ensure we have a StateV2 struct
+      statev2 = ensure_statev2(state)
+      
       # Check if already completed
-      if AriaEngine.StateV2.matches?(state, activity_id, "completed", true) do
+      if AriaEngine.StateV2.matches_exactly?(statev2, activity_id, "completed", true) do
         [] # Already completed, no actions needed
       else
         # Check dependencies
         incomplete_deps = Enum.filter(dependencies, fn dep_id ->
-          not AriaEngine.StateV2.matches?(state, dep_id, "completed", true)
+          not AriaEngine.StateV2.matches_exactly?(statev2, dep_id, "completed", true)
         end)
         
         if not Enum.empty?(incomplete_deps) do
@@ -258,7 +261,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
         method_name = "ensure_dependencies"
         method_fn = fn args, state ->
           incomplete_deps = Enum.filter(dependencies, fn dep_id ->
-            not AriaEngine.StateV2.matches?(state, dep_id, "completed", true)
+            not AriaEngine.StateV2.matches_exactly?(state, dep_id, "completed", true)
           end)
           
           if Enum.empty?(incomplete_deps) do
@@ -287,7 +290,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
         "optimize_execution_time", fn args, state ->
           # Check if all activities are completed
           all_completed = Enum.all?(activities, fn activity ->
-            AriaEngine.StateV2.matches?(state, activity.id, "completed", true)
+            AriaEngine.StateV2.matches_exactly?(state, activity.id, "completed", true)
           end)
           
           if all_completed do
@@ -337,4 +340,9 @@ defmodule AriaEngine.Scheduler.DomainConverter do
       Domain.add_unigoal_methods(acc_domain, goal_type, methods)
     end)
   end
+  
+  # Helper function to ensure we have a StateV2 struct
+  defp ensure_statev2(%AriaEngine.StateV2{} = state), do: state
+  defp ensure_statev2(state) when is_map(state), do: AriaEngine.StateV2.new(state)
+  defp ensure_statev2(_), do: AriaEngine.StateV2.new()
 end

@@ -212,10 +212,10 @@ defmodule AriaEngine.StateV2 do
   @doc """
   Checks if the state matches a specific subject, predicate, and fact_value pattern.
   
-  Entity-first API: matches?(state, subject, predicate, fact_value)
+  Entity-first API: matches_exactly?(state, subject, predicate, fact_value)
   """
-  @spec matches?(t(), subject(), predicate(), fact_value()) :: boolean()
-  def matches?(%__MODULE__{data: data}, subject, predicate, fact_value) do
+  @spec matches_exactly?(t(), subject(), predicate(), fact_value()) :: boolean()
+  def matches_exactly?(%__MODULE__{data: data}, subject, predicate, fact_value) do
     case Map.get(data, {subject, predicate}) do
       ^fact_value -> true
       _ -> false
@@ -277,7 +277,7 @@ defmodule AriaEngine.StateV2 do
     else
       # Check that ALL matching subjects have the required predicate-value
       Enum.all?(matching_subjects, fn subject ->
-        matches?(%__MODULE__{data: data}, subject, predicate, fact_value)
+        matches_exactly?(%__MODULE__{data: data}, subject, predicate, fact_value)
       end)
     end
   end
@@ -364,7 +364,7 @@ defmodule AriaEngine.StateV2 do
   end
 
   def evaluate_condition(state, {subject, predicate, fact_value}) do
-    matches?(state, subject, predicate, fact_value)
+    matches_exactly?(state, subject, predicate, fact_value)
   end
 
   def evaluate_condition(_state, condition) do
@@ -382,8 +382,8 @@ defmodule AriaEngine.StateV2 do
   This function helps with migration from the old {predicate, subject} format
   to the new entity-first {subject, predicate} format.
   """
-  @spec from_legacy_state(State.t()) :: t()
-  def from_legacy_state(%State{data: legacy_data}) do
+  @spec from_legacy_state(AriaEngine.StateV2.t()) :: t()
+  def from_legacy_state(%AriaEngine.StateV2{data: legacy_data}) do
     converted_data = 
       legacy_data
       |> Enum.map(fn {{predicate, subject}, fact_value} ->
@@ -400,7 +400,7 @@ defmodule AriaEngine.StateV2 do
   This function helps with migration by allowing StateV2 to be used
   with existing code that expects the old format.
   """
-  @spec to_legacy_state(t()) :: State.t()
+  @spec to_legacy_state(t()) :: AriaEngine.StateV2.t()
   def to_legacy_state(%__MODULE__{data: data}) do
     converted_data = 
       data
@@ -409,6 +409,6 @@ defmodule AriaEngine.StateV2 do
       end)
       |> Map.new()
     
-    %State{data: converted_data}
+    %AriaEngine.StateV2{data: converted_data}
   end
 end

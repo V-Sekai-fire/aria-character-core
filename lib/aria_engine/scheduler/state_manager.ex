@@ -115,12 +115,12 @@ defmodule AriaEngine.Scheduler.StateManager do
   # Private helper functions
   
   defp find_available_entity_with_capabilities(state, required_capabilities, entities) do
-    # Return nil if no entities available
-    if Enum.empty?(entities) do
+    # Return nil if no entities available or no capabilities required
+    if Enum.empty?(entities) or Enum.empty?(required_capabilities) do
       nil
     else
       Enum.find(entities, fn entity ->
-        is_available = AriaEngine.StateV2.matches?(state, entity.id, "available", true)
+        is_available = AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
         has_capabilities = Enum.all?(required_capabilities, fn cap ->
           Enum.member?(entity.capabilities || [], cap)
         end)

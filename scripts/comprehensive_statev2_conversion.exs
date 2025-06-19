@@ -14,7 +14,7 @@ defmodule ComprehensiveStateV2Converter do
     |> String.replace("alias State", "alias StateV2")
     
     # Step 2: Convert all State function calls to StateV2
-    |> String.replace("State.new()", "StateV2.new()")
+    |> String.replace("AriaEngine.StateV2.new()", "StateV2.new()")
     |> String.replace("State.set_fact", "StateV2.set_fact")
     |> String.replace("State.get_fact", "StateV2.get_fact")
     |> String.replace("State.get_subjects_with_fact", "StateV2.get_subjects_with_fact")

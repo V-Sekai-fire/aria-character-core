@@ -20,7 +20,7 @@ defmodule Plan.NodeExpansion do
     task: todo_item(),
     parent_id: node_id() | nil,
     children_ids: [node_id()],
-    state: AriaEngine.AriaEngine.StateV2.t() | nil,
+    state: AriaEngine.StateV2.t() | nil,
     visited: boolean(),
     expanded: boolean(),
     method_tried: String.t() | nil,

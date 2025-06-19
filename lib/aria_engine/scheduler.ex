@@ -65,6 +65,22 @@ defmodule AriaEngine.Scheduler do
   
   require Logger
   
+  # Type definitions for the scheduler system
+  @type activity :: %{
+    id: String.t(),
+    duration: non_neg_integer(),
+    dependencies: [String.t()],
+    required_capabilities: [atom()],
+    required_resources: [String.t()]
+  }
+  
+  @type state :: AriaEngine.StateV2.t()
+  @type entity_list :: [Entity.t()]
+  @type resource_list :: [Resource.t()]
+  @type activity_list :: [activity()]
+  @type schedule_options :: keyword()
+  @type schedule_result :: {:ok, SimulationResult.t()} | {:error, String.t()}
+  
   # Data structures for enhanced scheduling
   defmodule Entity do
     @moduledoc """

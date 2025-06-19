@@ -15,7 +15,7 @@ defmodule Plan.Backtracking do
     task: term(), # Using term() as task type is defined in Core
     parent_id: node_id() | nil,
     children_ids: [node_id()],
-    state: AriaEngine.AriaEngine.StateV2.t() | nil,
+    state: AriaEngine.StateV2.t() | nil,
     visited: boolean(),
     expanded: boolean(),
     method_tried: String.t() | nil,

@@ -54,7 +54,8 @@ defmodule AriaEngine.Scheduler.ResourceManager do
       nil
     else
       Enum.find(entities, fn entity ->
-        AriaEngine.StateV2.matches?(state, entity.id, "current_activity", activity_id)
+        current_activity = AriaEngine.StateV2.get_fact(state, entity.id, "current_activity")
+        current_activity == activity_id
       end)
     end
     
@@ -108,7 +109,7 @@ defmodule AriaEngine.Scheduler.ResourceManager do
       nil
     else
       Enum.find(entities, fn entity ->
-        is_available = AriaEngine.StateV2.matches?(state, entity.id, "available", true)
+        is_available = AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
         has_capabilities = Enum.all?(required_capabilities, fn cap ->
           Enum.member?(entity.capabilities || [], cap)
         end)

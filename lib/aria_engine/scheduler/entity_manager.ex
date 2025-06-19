@@ -10,11 +10,40 @@ defmodule AriaEngine.Scheduler.EntityManager do
   """
   
   require Logger
-  alias AriaEngine.StateV2
+  
+  # Type definitions
+  @type entity :: AriaEngine.Scheduler.Entity.t()
+  @type activity :: AriaEngine.Scheduler.activity()
+  @type state :: AriaEngine.Scheduler.state()
+  @type entity_list :: AriaEngine.Scheduler.entity_list()
+  @type capability :: atom()
+  @type entity_id :: String.t()
+  @type activity_id :: String.t()
+  @type utilization_metrics :: %{
+    status: :available | :busy | :unknown,
+    current_activity: String.t() | nil,
+    capabilities: [capability()],
+    availability_score: number()
+  }
+  @type workload_metrics :: %{
+    assigned_activities: non_neg_integer(),
+    activity_ids: [String.t()],
+    capabilities: [capability()],
+    workload_score: number()
+  }
+  @type workload_distribution :: %{
+    entity_workloads: %{entity_id() => workload_metrics()},
+    total_activities: non_neg_integer(),
+    average_workload: float(),
+    max_workload: non_neg_integer(),
+    min_workload: non_neg_integer(),
+    workload_variance: float()
+  }
   
   @doc """
   Assign an entity to an activity based on capability requirements.
   """
+  @spec assign_entity_for_activity(activity(), entity_list()) :: entity() | nil
   def assign_entity_for_activity(activity, entities) do
     required_capabilities = Map.get(activity, :required_capabilities, [])
     
@@ -34,33 +63,40 @@ defmodule AriaEngine.Scheduler.EntityManager do
   
   Considers both capability matching and current availability.
   """
+  @spec find_best_available_entity(state(), activity(), entity_list()) :: entity() | nil
   def find_best_available_entity(state, activity, entities) do
-    required_capabilities = Map.get(activity, :required_capabilities, [])
-    
-    if Enum.empty?(required_capabilities) do
-      # If no specific capabilities required, find any available entity
-      find_any_available_entity(state, entities)
+    # Return nil if no entities available
+    if Enum.empty?(entities) do
+      nil
     else
-      # Find entity with required capabilities that is available
-      entities
-      |> Enum.filter(fn entity ->
-        is_available = AriaEngine.StateV2.matches?(state, entity.id, "available", true)
-        has_capabilities = Enum.all?(required_capabilities, fn cap ->
-          Enum.member?(entity.capabilities || [], cap)
+      required_capabilities = Map.get(activity, :required_capabilities, [])
+      
+      if Enum.empty?(required_capabilities) do
+        # If no specific capabilities required, find any available entity
+        find_any_available_entity(state, entities)
+      else
+        # Find entity with required capabilities that is available
+        entities
+        |> Enum.filter(fn entity ->
+          is_available = AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
+          has_capabilities = Enum.all?(required_capabilities, fn cap ->
+            Enum.member?(entity.capabilities || [], cap)
+          end)
+          is_available and has_capabilities
         end)
-        is_available and has_capabilities
-      end)
-      |> select_optimal_entity(required_capabilities)
+        |> select_optimal_entity(required_capabilities)
+      end
     end
   end
   
   @doc """
   Get entity utilization metrics.
   """
+  @spec get_entity_utilization(state(), entity_list()) :: %{entity_id() => utilization_metrics()}
   def get_entity_utilization(state, entities) do
     entities
     |> Enum.map(fn entity ->
-      is_available = AriaEngine.StateV2.matches?(state, entity.id, "available", true)
+      is_available = AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
       current_activity = AriaEngine.StateV2.get_fact(state, entity.id, "current_activity")
       
       utilization_status = cond do
@@ -242,7 +278,7 @@ defmodule AriaEngine.Scheduler.EntityManager do
   
   defp find_any_available_entity(state, entities) do
     Enum.find(entities, fn entity ->
-      AriaEngine.StateV2.matches?(state, entity.id, "available", true)
+      AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
     end)
   end
   
@@ -257,7 +293,7 @@ defmodule AriaEngine.Scheduler.EntityManager do
   end
   
   defp calculate_availability_score(entity, state) do
-    is_available = AriaEngine.StateV2.matches?(state, entity.id, "available", true)
+    is_available = AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
     capability_count = length(entity.capabilities || [])
     
     base_score = if is_available, do: 100, else: 0

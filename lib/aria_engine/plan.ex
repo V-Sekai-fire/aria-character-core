@@ -35,7 +35,7 @@ defmodule Plan do
 
   # Delegate to Execution
   @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
-    {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def run_lazy_refineahead(domain, initial_state, solution_tree, opts \\ []), do: Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
 
   # Delegate to Utils
@@ -43,7 +43,7 @@ defmodule Plan do
   Validates a plan by executing it step by step.
   For compatibility with existing AriaEngine usage.
   """
-  @spec validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+  @spec validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def validate_plan(domain, initial_state, plan), do: AriaEngine.Plan.Utils.validate_plan(domain, initial_state, plan)
 
   @doc """

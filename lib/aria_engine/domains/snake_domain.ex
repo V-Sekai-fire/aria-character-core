@@ -3,8 +3,7 @@
 
 defmodule Domains.SnakeDomain do
   alias Domain
-  alias State
-
+  
   @doc """
   Defines the Snake planning domain.
   """
@@ -55,11 +54,11 @@ defmodule Domains.SnakeDomain do
     # (not (= ?headpos ?foodpos))
 
     cond do
-      State.get_fact(state, "head", Atom.to_string(snake)) != Atom.to_string(headpos) ->
+      AriaEngine.StateV2.get_fact(state, "head", Atom.to_string(snake)) != Atom.to_string(headpos) ->
         false
-      State.get_fact(state, "mouse-at", Atom.to_string(foodpos)) != true ->
+      AriaEngine.StateV2.get_fact(state, "mouse-at", Atom.to_string(foodpos)) != true ->
         false
-      State.get_fact(state, "adjacent", "#{Atom.to_string(foodpos)}-#{Atom.to_string(headpos)}") != true ->
+      AriaEngine.StateV2.get_fact(state, "adjacent", "#{Atom.to_string(foodpos)}-#{Atom.to_string(headpos)}") != true ->
         false
       headpos == foodpos ->
         false
@@ -71,10 +70,10 @@ defmodule Domains.SnakeDomain do
         # (head ?snake ?foodpos)
 
         state
-        |> State.remove_fact("mouse-at", Atom.to_string(foodpos))
-        |> State.remove_fact("head", Atom.to_string(snake))
-        |> State.set_fact("connected", "#{Atom.to_string(foodpos)}-#{Atom.to_string(headpos)}", true)
-        |> State.set_fact("head", Atom.to_string(snake), Atom.to_string(foodpos))
+        |> AriaEngine.StateV2.remove_fact("mouse-at", Atom.to_string(foodpos))
+        |> AriaEngine.StateV2.remove_fact("head", Atom.to_string(snake))
+        |> AriaEngine.StateV2.set_fact("connected", "#{Atom.to_string(foodpos)}-#{Atom.to_string(headpos)}", true)
+        |> AriaEngine.StateV2.set_fact("head", Atom.to_string(snake), Atom.to_string(foodpos))
     end
   end
 
@@ -90,13 +89,13 @@ defmodule Domains.SnakeDomain do
     # (not (occupied ?nextpos))
 
     cond do
-      State.get_fact(state, "head", Atom.to_string(snake)) != Atom.to_string(snakepos) ->
+      AriaEngine.StateV2.get_fact(state, "head", Atom.to_string(snake)) != Atom.to_string(snakepos) ->
         false
-      State.get_fact(state, "tail", Atom.to_string(snake)) != Atom.to_string(snakepos) ->
+      AriaEngine.StateV2.get_fact(state, "tail", Atom.to_string(snake)) != Atom.to_string(snakepos) ->
         false
-      State.get_fact(state, "adjacent", "#{Atom.to_string(nextpos)}-#{Atom.to_string(snakepos)}") != true ->
+      AriaEngine.StateV2.get_fact(state, "adjacent", "#{Atom.to_string(nextpos)}-#{Atom.to_string(snakepos)}") != true ->
         false
-      State.get_fact(state, "occupied", Atom.to_string(nextpos)) == true ->
+      AriaEngine.StateV2.get_fact(state, "occupied", Atom.to_string(nextpos)) == true ->
         false
       true ->
         # Effects:
@@ -108,12 +107,12 @@ defmodule Domains.SnakeDomain do
         # (not (occupied ?snakepos))
 
         state
-        |> State.remove_fact("head", Atom.to_string(snake))
-        |> State.remove_fact("tail", Atom.to_string(snake))
-        |> State.set_fact("occupied", Atom.to_string(nextpos), true)
-        |> State.set_fact("head", Atom.to_string(snake), Atom.to_string(nextpos))
-        |> State.set_fact("tail", Atom.to_string(snake), Atom.to_string(nextpos))
-        |> State.remove_fact("occupied", Atom.to_string(snakepos))
+        |> AriaEngine.StateV2.remove_fact("head", Atom.to_string(snake))
+        |> AriaEngine.StateV2.remove_fact("tail", Atom.to_string(snake))
+        |> AriaEngine.StateV2.set_fact("occupied", Atom.to_string(nextpos), true)
+        |> AriaEngine.StateV2.set_fact("head", Atom.to_string(snake), Atom.to_string(nextpos))
+        |> AriaEngine.StateV2.set_fact("tail", Atom.to_string(snake), Atom.to_string(nextpos))
+        |> AriaEngine.StateV2.remove_fact("occupied", Atom.to_string(snakepos))
     end
   end
 
@@ -134,17 +133,17 @@ defmodule Domains.SnakeDomain do
     # (not (= ?headpos ?tailpos))
 
     cond do
-      State.get_fact(state, "head", Atom.to_string(snake)) != Atom.to_string(headpos) ->
+      AriaEngine.StateV2.get_fact(state, "head", Atom.to_string(snake)) != Atom.to_string(headpos) ->
         false
-      State.get_fact(state, "connected", "#{Atom.to_string(bodypos)}-#{Atom.to_string(tailpos)}") != true ->
+      AriaEngine.StateV2.get_fact(state, "connected", "#{Atom.to_string(bodypos)}-#{Atom.to_string(tailpos)}") != true ->
         false
-      State.get_fact(state, "tail", Atom.to_string(snake)) != Atom.to_string(tailpos) ->
+      AriaEngine.StateV2.get_fact(state, "tail", Atom.to_string(snake)) != Atom.to_string(tailpos) ->
         false
-      State.get_fact(state, "adjacent", "#{Atom.to_string(nextpos)}-#{Atom.to_string(headpos)}") != true ->
+      AriaEngine.StateV2.get_fact(state, "adjacent", "#{Atom.to_string(nextpos)}-#{Atom.to_string(headpos)}") != true ->
         false
-      State.get_fact(state, "adjacent", "#{Atom.to_string(bodypos)}-#{Atom.to_string(tailpos)}") != true ->
+      AriaEngine.StateV2.get_fact(state, "adjacent", "#{Atom.to_string(bodypos)}-#{Atom.to_string(tailpos)}") != true ->
         false
-      State.get_fact(state, "occupied", Atom.to_string(nextpos)) == true ->
+      AriaEngine.StateV2.get_fact(state, "occupied", Atom.to_string(nextpos)) == true ->
         false
       bodypos == nextpos ->
         false
@@ -164,14 +163,14 @@ defmodule Domains.SnakeDomain do
         # (not (occupied ?tailpos))
 
         state
-        |> State.remove_fact("head", Atom.to_string(snake))
-        |> State.set_fact("head", Atom.to_string(snake), Atom.to_string(nextpos))
-        |> State.remove_fact("tail", Atom.to_string(snake))
-        |> State.set_fact("tail", Atom.to_string(snake), Atom.to_string(bodypos))
-        |> State.remove_fact("connected", "#{Atom.to_string(bodypos)}-#{Atom.to_string(tailpos)}")
-        |> State.set_fact("connected", "#{Atom.to_string(nextpos)}-#{Atom.to_string(headpos)}", true)
-        |> State.set_fact("occupied", Atom.to_string(nextpos), true)
-        |> State.remove_fact("occupied", Atom.to_string(tailpos))
+        |> AriaEngine.StateV2.remove_fact("head", Atom.to_string(snake))
+        |> AriaEngine.StateV2.set_fact("head", Atom.to_string(snake), Atom.to_string(nextpos))
+        |> AriaEngine.StateV2.remove_fact("tail", Atom.to_string(snake))
+        |> AriaEngine.StateV2.set_fact("tail", Atom.to_string(snake), Atom.to_string(bodypos))
+        |> AriaEngine.StateV2.remove_fact("connected", "#{Atom.to_string(bodypos)}-#{Atom.to_string(tailpos)}")
+        |> AriaEngine.StateV2.set_fact("connected", "#{Atom.to_string(nextpos)}-#{Atom.to_string(headpos)}", true)
+        |> AriaEngine.StateV2.set_fact("occupied", Atom.to_string(nextpos), true)
+        |> AriaEngine.StateV2.remove_fact("occupied", Atom.to_string(tailpos))
     end
   end
 
@@ -189,11 +188,11 @@ defmodule Domains.SnakeDomain do
     # (adjacent ?foodpos ?pos1)
 
     cond do
-      State.get_fact(state, "mouse-at", Atom.to_string(foodpos)) != true ->
+      AriaEngine.StateV2.get_fact(state, "mouse-at", Atom.to_string(foodpos)) != true ->
         false
-      State.get_fact(state, "head", Atom.to_string(snake)) != Atom.to_string(snakepos) ->
+      AriaEngine.StateV2.get_fact(state, "head", Atom.to_string(snake)) != Atom.to_string(snakepos) ->
         false
-      State.get_fact(state, "adjacent", "#{Atom.to_string(foodpos)}-#{Atom.to_string(pos1)}") != true ->
+      AriaEngine.StateV2.get_fact(state, "adjacent", "#{Atom.to_string(foodpos)}-#{Atom.to_string(pos1)}") != true ->
         false
       true ->
         # Ordered Subtasks:
@@ -220,7 +219,7 @@ defmodule Domains.SnakeDomain do
     # A more robust check would iterate all possible locations.
     
     # Check if there are any "mouse-at" facts in the state
-    if Enum.any?(State.to_triples(state), fn {pred, _sub, _val} -> pred == "mouse-at" end) do
+    if Enum.any?(AriaEngine.StateV2.to_triples(state), fn {pred, _sub, _val} -> pred == "mouse-at" end) do
       false # There's still a mouse
     else
       [] # No subtasks, meaning hunt is done
@@ -255,13 +254,13 @@ defmodule Domains.SnakeDomain do
     # (tail ?snake ?tailpos)
 
     cond do
-      State.get_fact(state, "adjacent", "#{Atom.to_string(pos2)}-#{Atom.to_string(snakepos)}") != true ->
+      AriaEngine.StateV2.get_fact(state, "adjacent", "#{Atom.to_string(pos2)}-#{Atom.to_string(snakepos)}") != true ->
         false
-      State.get_fact(state, "occupied", Atom.to_string(pos2)) == true ->
+      AriaEngine.StateV2.get_fact(state, "occupied", Atom.to_string(pos2)) == true ->
         false
-      State.get_fact(state, "connected", "#{Atom.to_string(bodypos)}-#{Atom.to_string(tailpos)}") != true ->
+      AriaEngine.StateV2.get_fact(state, "connected", "#{Atom.to_string(bodypos)}-#{Atom.to_string(tailpos)}") != true ->
         false
-      State.get_fact(state, "tail", Atom.to_string(snake)) != Atom.to_string(tailpos) ->
+      AriaEngine.StateV2.get_fact(state, "tail", Atom.to_string(snake)) != Atom.to_string(tailpos) ->
         false
       true ->
         # Ordered Subtasks:
@@ -286,11 +285,11 @@ defmodule Domains.SnakeDomain do
     # (tail ?snake ?snakepos)
 
     cond do
-      State.get_fact(state, "adjacent", "#{Atom.to_string(pos2)}-#{Atom.to_string(snakepos)}") != true ->
+      AriaEngine.StateV2.get_fact(state, "adjacent", "#{Atom.to_string(pos2)}-#{Atom.to_string(snakepos)}") != true ->
         false
-      State.get_fact(state, "occupied", Atom.to_string(pos2)) == true ->
+      AriaEngine.StateV2.get_fact(state, "occupied", Atom.to_string(pos2)) == true ->
         false
-      State.get_fact(state, "tail", Atom.to_string(snake)) != Atom.to_string(snakepos) ->
+      AriaEngine.StateV2.get_fact(state, "tail", Atom.to_string(snake)) != Atom.to_string(snakepos) ->
         false
       true ->
         # Ordered Subtasks:

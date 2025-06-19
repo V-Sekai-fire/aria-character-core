@@ -6,24 +6,23 @@ defmodule Core do
   Core components and types for the Aria Engine.
   """
 
-  alias State # Add this alias
-
+  
   # Core types
   @type domain :: Domain.Core.t()
-  @type state :: State.t()
+  @type state :: AriaEngine.StateV2.t()
   @type multigoal :: Multigoal.t()
   @type solution_tree :: Plan.solution_tree()
   @type plan_step :: Plan.plan_step()
 
   # Goal and task types
-  @type goal :: {String.t(), String.t(), State.fact_value()}
+  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
   @type task :: {String.t(), list()}
   @type todo_item :: Plan.todo_item() # Use fully qualified name
 
   # Function types
-  @type action_fn :: (State.t(), list() -> State.t() | false)
-  @type task_method_fn :: (State.t(), list() -> list() | false)
-  @type goal_method_fn :: (State.t(), list() -> list() | false)
+  @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
+  @type task_method_fn :: (AriaEngine.StateV2.t(), list() -> list() | false)
+  @type goal_method_fn :: (AriaEngine.StateV2.t(), list() -> list() | false)
 
   # Status and execution types
   @type status :: :pending | :planning | :executing | :completed | :failed | :cancelled
@@ -47,8 +46,8 @@ defmodule Core do
     goals: [todo_item()],
 
     # Execution State
-    current_state: State.t(),
-    initial_state: State.t(),
+    current_state: AriaEngine.StateV2.t(),
+    initial_state: AriaEngine.StateV2.t(),
     status: status(),
     solution_tree: solution_tree() | nil,
 
@@ -107,7 +106,7 @@ defmodule Core do
   @spec new(String.t(), map()) :: t()
   def new(id, definition \\ %{}) do
     now = DateTime.utc_now()
-    initial_state = Map.get(definition, :initial_state, State.new()) # Use fully qualified name
+    initial_state = Map.get(definition, :initial_state, AriaEngine.StateV2.new()) # Use fully qualified name
 
     %__MODULE__{
       id: id,

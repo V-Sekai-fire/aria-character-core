@@ -68,7 +68,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   }
 
   @type plan_result :: {:ok, map()} | {:error, String.t()}
-  @type execution_result :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+  @type execution_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   @type replan_result :: {:ok, map()} | {:error, String.t()} | :failure
 
   # ==================== CONSTRUCTOR ====================
@@ -337,7 +337,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   @doc """
   Validate a plan using injected planning strategy.
   """
-  @spec validate_plan(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map()) :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+  @spec validate_plan(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map()) :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def validate_plan(%__MODULE__{} = coordinator, domain, %AriaEngine.StateV2{} = initial_state, plan) do
     try do
       solution_tree = Map.get(plan, :solution_tree)

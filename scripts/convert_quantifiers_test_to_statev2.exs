@@ -16,8 +16,8 @@ defmodule StateV2Converter do
     # Convert State references to StateV2
     |> String.replace("alias State", "alias StateV2")
     
-    # Convert State.new() to StateV2.new()
-    |> String.replace("State.new()", "StateV2.new()")
+    # Convert AriaEngine.StateV2.new() to StateV2.new()
+    |> String.replace("AriaEngine.StateV2.new()", "StateV2.new()")
     
     # Convert State.set_fact calls from predicate-subject-fact to subject-predicate-fact
     |> String.replace(~r/State\.set_fact\(([^,]+),\s*"([^"]+)",\s*"([^"]+)",\s*"([^"]+)"\)/, 

@@ -13,8 +13,6 @@ defmodule AriaEngine.Scheduler.Core do
   
   require Logger
   
-  alias AriaEngine.{StateV2}
-  alias AriaEngine.Scheduler.{SimulationResult}
   alias AriaEngine.Scheduler.{DomainConverter, StateManager, PlanConverter, ResourceAnalyzer, ActivityLogger, Analyzer, ResourceManager, EntityManager}
   
   @doc """
@@ -35,7 +33,7 @@ defmodule AriaEngine.Scheduler.Core do
       # Attempt enhanced scheduling
       case attempt_enhanced_scheduling(schedule_name, activities, entities, resources, constraints, simulation_mode, activity_log, verbose) do
         {:ok, schedule, enhanced_activity_log, resource_utilization, timeline} ->
-          result = %SimulationResult{
+          result = %AriaEngine.Scheduler.SimulationResult{
             status: "success",
             reason: if(simulation_mode, do: "Simulation completed successfully", else: "Schedule successfully generated"),
             schedule: schedule,
@@ -83,7 +81,7 @@ defmodule AriaEngine.Scheduler.Core do
         empty_plan_reason: "Empty todo list results in empty plan (valid solution)"
       }
     
-    result = %SimulationResult{
+    result = %AriaEngine.Scheduler.SimulationResult{
       status: "success",
       reason: "Empty plan successfully generated - valid solution for empty todo list",
       schedule: [],
@@ -131,9 +129,9 @@ defmodule AriaEngine.Scheduler.Core do
           Logger.debug("AriaEngine.Scheduler: Generated #{length(tasks)} tasks and #{length(goals)} goals")
         end
         
-        # Use PlannerAdapter for HTN task decomposition with temporal validation
+        # Use AriaEngine.PlannerAdapter for HTN task decomposition with temporal validation
         planner_opts = [verbose: verbose]
-        case PlannerAdapter.plan_tasks(domain, initial_state, tasks, planner_opts) do
+        case AriaEngine.PlannerAdapter.plan_tasks(domain, initial_state, tasks, planner_opts) do
           {:ok, encapsulated_plan} ->
             if simulation_mode do
               # Run simulation using run_lazy_refineahead
@@ -240,7 +238,7 @@ defmodule AriaEngine.Scheduler.Core do
       
       # Check if dependencies are satisfied
       deps_satisfied = Enum.all?(dependencies, fn dep_id ->
-        AriaEngine.StateV2.matches?(state, dep_id, "completed", true)
+        AriaEngine.StateV2.matches_exactly?(state, dep_id, "completed", true)
       end)
       
       # Check if required capabilities and resources are available
@@ -252,7 +250,7 @@ defmodule AriaEngine.Scheduler.Core do
       else
         # Dependencies not satisfied or resources unavailable
         incomplete_deps = Enum.filter(dependencies, fn dep_id ->
-          not AriaEngine.StateV2.matches?(state, dep_id, "completed", true)
+          not AriaEngine.StateV2.matches_exactly?(state, dep_id, "completed", true)
         end)
         
         if not Enum.empty?(incomplete_deps) do

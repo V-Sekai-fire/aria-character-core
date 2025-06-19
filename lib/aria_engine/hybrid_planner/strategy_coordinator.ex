@@ -41,7 +41,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   alias HybridPlanner.StrategyRegistry
 
   @type strategy_function :: function()
-  @type coordination_result :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+  @type coordination_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
 
   defstruct [
     :planning_fn,
@@ -197,7 +197,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   @doc """
   Execute a pre-planned solution using the coordinator's execution strategy.
   """
-  @spec execute_only(t(), Domain.Core.t(), AriaEngine.StateV2.t(), term(), keyword()) :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+  @spec execute_only(t(), Domain.Core.t(), AriaEngine.StateV2.t(), term(), keyword()) :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def execute_only(%__MODULE__{} = coordinator, domain, state, plan, opts \\ []) do
     call_with_middleware(coordinator.execution_fn, [domain, state, plan, opts], coordinator.middleware)
   end
