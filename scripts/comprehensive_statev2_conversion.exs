@@ -11,7 +11,7 @@ defmodule ComprehensiveStateV2Converter do
     
     # Step 1: Convert alias
     converted = content
-    |> String.replace("alias State", "alias StateV2")
+    |> String.replace("alias State", "alias AriaEngine.StateV2")
     
     # Step 2: Convert all State function calls to StateV2
     |> String.replace("AriaEngine.StateV2.new()", "StateV2.new()")

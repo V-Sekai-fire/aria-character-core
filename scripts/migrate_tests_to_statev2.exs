@@ -30,7 +30,7 @@ defmodule TestMigrator do
       # Basic migrations
       fixed_content = content
       # Replace imports and aliases
-      |> String.replace("alias State", "alias StateV2")
+      |> String.replace("alias State", "alias AriaEngine.StateV2")
       |> String.replace("alias {State,", "alias {StateV2,")
       
       # Replace AriaEngine.StateV2.new() with StateV2.new()

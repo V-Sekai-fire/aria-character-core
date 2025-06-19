@@ -10,7 +10,7 @@ defmodule DurativeActionsQuantifiersTest do
   """
   
   use ExUnit.Case, async: true
-  alias StateV2
+  alias AriaEngine.StateV2
   alias Domain.{Core, DurativeAction, Actions}
 
   describe "durative actions with existential quantifiers" do

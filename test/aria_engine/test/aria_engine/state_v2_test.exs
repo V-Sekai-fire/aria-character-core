@@ -173,9 +173,9 @@ defmodule StateV2Test do
     end
 
     test "matches?/4 checks exact entity-predicate-value match", %{state: state} do
-      assert StateV2.matches?(state, "player", "location", "room1") == true
-      assert StateV2.matches?(state, "player", "location", "room2") == false
-      assert StateV2.matches?(state, "unknown", "location", "room1") == false
+      assert StateV2.matches_exactly?(state, "player", "location", "room1") == true
+      assert StateV2.matches_exactly?(state, "player", "location", "room2") == false
+      assert StateV2.matches_exactly?(state, "unknown", "location", "room1") == false
     end
 
     test "get_subjects_with_fact/3 finds entities by predicate-value", %{state: state} do

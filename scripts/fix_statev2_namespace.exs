@@ -32,7 +32,7 @@ defmodule StateV2NamespaceFixer do
         |> String.replace("StateV2.t() |", "AriaEngine.StateV2.t() |")
         |> String.replace("StateV2.t()} |", "AriaEngine.StateV2.t()} |")
         |> String.replace("StateV2.fact_value()", "AriaEngine.StateV2.fact_value()")
-        |> String.replace("alias StateV2", "alias AriaEngine.StateV2")
+        |> String.replace("alias AriaEngine.StateV2", "alias AriaEngine.StateV2")
         
         # Write back to file
         File.write!(file_path, updated_content)

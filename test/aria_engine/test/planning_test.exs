@@ -6,7 +6,7 @@ defmodule PlanningTest do
 
   alias Planning
   alias Domain
-  alias StateV2
+  alias AriaEngine.StateV2
 
   # Helper function to build a simple test domain
   defp build_simple_test_domain do

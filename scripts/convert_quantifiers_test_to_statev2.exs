@@ -14,7 +14,7 @@ defmodule StateV2Converter do
     # Convert all State function calls to StateV2 with proper parameter order
     converted = content
     # Convert State references to StateV2
-    |> String.replace("alias State", "alias StateV2")
+    |> String.replace("alias State", "alias AriaEngine.StateV2")
     
     # Convert AriaEngine.StateV2.new() to StateV2.new()
     |> String.replace("AriaEngine.StateV2.new()", "StateV2.new()")

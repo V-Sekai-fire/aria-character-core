@@ -7,7 +7,7 @@ defmodule GoalTest do
   doctest Multigoal
 
   alias Multigoal
-  alias StateV2
+  alias AriaEngine.StateV2
 
   # Helper functions
   defp create_multigoal(), do: Multigoal.new()

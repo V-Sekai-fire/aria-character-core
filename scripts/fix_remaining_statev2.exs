@@ -28,7 +28,7 @@ defmodule RemainingStateV2Fixer do
       |> String.replace("StateV2.add_fact", "AriaEngine.StateV2.add_fact")
       |> String.replace("StateV2.get_fact", "AriaEngine.StateV2.get_fact")
       |> String.replace("StateV2.set_fact", "AriaEngine.StateV2.set_fact")
-      |> String.replace("StateV2.matches?", "AriaEngine.StateV2.matches?")
+      |> String.replace("StateV2.matches_exactly?", "AriaEngine.StateV2.matches_exactly?")
       |> String.replace("StateV2.new", "AriaEngine.StateV2.new")
       
       # Write back to file
