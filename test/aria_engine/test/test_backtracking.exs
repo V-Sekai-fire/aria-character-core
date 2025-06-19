@@ -3,6 +3,7 @@
 
 defmodule BacktrackingTest do
   use ExUnit.Case
+  require Logger
   @tag :skip
 
   import AriaEngine
@@ -87,8 +88,8 @@ defmodule BacktrackingTest do
         {:ok, plan} ->
           # Should backtrack to find compatible solution
           expected = [{"putv", [0]}, {"getv", [0]}, {"getv", [0]}]
-          IO.puts("Got plan: #{inspect(plan)}")
-          IO.puts("Expected: #{inspect(expected)}")
+          Logger.info("Got plan: #{inspect(plan)}")
+          Logger.info("Expected: #{inspect(expected)}")
           assert plan == expected
 
         {:error, reason} ->

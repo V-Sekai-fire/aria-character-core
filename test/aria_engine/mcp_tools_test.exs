@@ -585,8 +585,9 @@ defmodule AriaEngine.MCPToolsTest do
       parsed = result
       
       # Debug output to see what error we're getting
+      require Logger
       if parsed[:status] == "error" do
-        IO.puts("DateTime test error: #{parsed[:reason]}")
+        Logger.info("DateTime test error: #{parsed[:reason]}")
       end
       
       assert parsed[:status] == "success"

@@ -20,8 +20,9 @@ defmodule TemporalPlannerSTNBridgeDebug do
   temporal aspects of the plan to verify its consistency.
   """
 
+  require Logger
   def run do
-    IO.puts("=== Debugging Temporal Planner STN Bridge ===")
+    Logger.info("=== Debugging Temporal Planner STN Bridge ===")
 
     # 1. Define the domain with temporal and non-temporal actions
     domain = build_temporal_hybrid_domain()
@@ -39,38 +40,38 @@ defmodule TemporalPlannerSTNBridgeDebug do
       {"location", "player", "end_location"}
     ]
 
-    IO.puts("\n--- Planning ---")
-    IO.puts("Initial State: #{inspect(initial_state.data)}")
-    IO.puts("Goals: #{inspect(goals)}")
+    Logger.info("\n--- Planning ---")
+    Logger.info("Initial State: #{inspect(initial_state.data)}")
+    Logger.info("Goals: #{inspect(goals)}")
 
     # 4. Attempt to generate a plan
     # Note: plan might not directly handle temporal actions with durations
     # in a way that automatically builds an STN. We will simulate this.
     case plan(domain, initial_state, goals, verbose: 0) do
       {:ok, plan} ->
-        IO.puts("\nGenerated Plan:")
-        Enum.each(plan, fn action -> IO.puts("  #{inspect(action)}") end)
+        Logger.info("\nGenerated Plan:")
+        Enum.each(plan, fn action -> Logger.info("  #{inspect(action)}") end)
 
         # 5. Construct an STN from the plan's temporal aspects
         stn = build_stn_from_plan(plan, initial_state)
 
-        IO.puts("\n--- STN Validation ---")
-        IO.puts("STN Time Points: #{inspect(STN.time_points(stn))}")
-        IO.puts("STN Constraints: #{inspect(stn.constraints)}")
+        Logger.info("\n--- STN Validation ---")
+        Logger.info("STN Time Points: #{inspect(STN.time_points(stn))}")
+        Logger.info("STN Constraints: #{inspect(stn.constraints)}")
 
         # 6. Check STN consistency
         if STN.consistent?(stn) do
-          IO.puts("\n✅ STN is consistent. Temporal and non-temporal elements unified successfully.")
+          Logger.info("\n✅ STN is consistent. Temporal and non-temporal elements unified successfully.")
           # Optionally, solve the STN to get minimal network
           solved_stn = STN.solve(stn)
-          IO.puts("Solved STN Constraints: #{inspect(solved_stn.constraints)}")
+          Logger.info("Solved STN Constraints: #{inspect(solved_stn.constraints)}")
         else
-          IO.puts("\n❌ STN is inconsistent. Temporal constraints conflict.")
+          Logger.info("\n❌ STN is inconsistent. Temporal constraints conflict.")
         end
 
       {:error, reason} ->
-        IO.puts("\nPlanning failed: #{reason}")
-        IO.puts("This might indicate that the planner needs to be extended to handle temporal actions directly, or that the domain definition needs refinement.")
+        Logger.info("\nPlanning failed: #{reason}")
+        Logger.info("This might indicate that the planner needs to be extended to handle temporal actions directly, or that the domain definition needs refinement.")
     end
   end
 

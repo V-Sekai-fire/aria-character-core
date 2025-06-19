@@ -23,8 +23,9 @@ defmodule TemporalPuzzleDebug do
   The goal is to have both coffee and bagel ready and consumed.
   """
 
+  require Logger
   def run do
-    IO.puts("=== Debugging Temporal Puzzle: Coffee and Bagel ===")
+    Logger.info("=== Debugging Temporal Puzzle: Coffee and Bagel ===")
 
     # 1. Define the domain with temporal actions
     domain = build_coffee_bagel_domain()
@@ -41,32 +42,32 @@ defmodule TemporalPuzzleDebug do
       {"bagel", "status", "consumed"}
     ]
 
-    IO.puts("\n--- Planning ---")
-    IO.puts("Initial State: #{inspect(initial_state.data)}")
-    IO.puts("Goals: #{inspect(goals)}")
+    Logger.info("\n--- Planning ---")
+    Logger.info("Initial State: #{inspect(initial_state.data)}")
+    Logger.info("Goals: #{inspect(goals)}")
 
     # 4. Attempt to generate a plan
     # The plan function now handles STN construction and validation internally
     case plan(domain, initial_state, goals, verbose: 0) do
       {:ok, solution_tree} -> # plan now returns the full solution_tree
-        IO.puts("\nGenerated Solution Tree:")
+        Logger.info("\nGenerated Solution Tree:")
         # Extract primitive actions for display
         plan_actions = Planner.extract_actions(solution_tree)
-        Enum.each(plan_actions, fn action -> IO.puts("  #{inspect(action)}") end)
+        Enum.each(plan_actions, fn action -> Logger.info("  #{inspect(action)}") end)
 
-        IO.puts("\n✅ Planning successful and temporal constraints validated by Planner.")
-        IO.puts("You can now execute this solution tree.")
+        Logger.info("\n✅ Planning successful and temporal constraints validated by Planner.")
+        Logger.info("You can now execute this solution tree.")
         # Optionally, you can run the execution here
         # case Planner.run_lazy_refineahead(Planner.domain_to_interface(domain), initial_state, solution_tree) do
         #   {:ok, final_state} ->
-        #     IO.puts("\nExecution successful. Final state: #{inspect(final_state.data)}")
+        #     Logger.info("\nExecution successful. Final state: #{inspect(final_state.data)}")
         #   {:error, reason} ->
-        #     IO.puts("\nExecution failed: #{reason}")
+        #     Logger.info("\nExecution failed: #{reason}")
         # end
 
       {:error, reason} ->
-        IO.puts("\nPlanning failed: #{reason}")
-        IO.puts("This might indicate that the domain definition needs refinement or that the goals are unachievable.")
+        Logger.info("\nPlanning failed: #{reason}")
+        Logger.info("This might indicate that the domain definition needs refinement or that the goals are unachievable.")
     end
   end
 
