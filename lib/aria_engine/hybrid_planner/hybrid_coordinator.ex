@@ -37,7 +37,7 @@ defmodule HybridPlanner.HybridCoordinator do
 
   # Public API types
   @type plan_result :: {:ok, EncapsulatedPlan.t()} | {:error, String.t()}
-  @type execution_result :: {:ok, StateV2.t()} | {:error, String.t()}
+  @type execution_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   @type replan_result :: {:ok, EncapsulatedPlan.t()} | {:error, String.t()} | :failure
 
   # ==================== PUBLIC API ====================
@@ -48,8 +48,8 @@ defmodule HybridPlanner.HybridCoordinator do
   Returns an encapsulated plan that hides all internal complexity.
   Uses Function as Object pattern for maximum flexibility.
   """
-  @spec plan(Domain.Core.t(), StateV2.t(), [term()], keyword()) :: plan_result()
-  def plan(domain, %StateV2{} = state, goals, opts \\ []) do
+  @spec plan(Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) :: plan_result()
+  def plan(domain, %AriaEngine.StateV2{} = state, goals, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
     if verbose > 0 do
@@ -83,8 +83,8 @@ defmodule HybridPlanner.HybridCoordinator do
   Execute an encapsulated plan with coordinated replanning on failure.
   Uses Function as Object pattern for strategy-based execution.
   """
-  @spec execute(Domain.Core.t(), StateV2.t(), EncapsulatedPlan.t(), keyword()) :: execution_result()
-  def execute(domain, %StateV2{} = state, %EncapsulatedPlan{} = encapsulated_plan, opts \\ []) do
+  @spec execute(Domain.Core.t(), AriaEngine.StateV2.t(), EncapsulatedPlan.t(), keyword()) :: execution_result()
+  def execute(domain, %AriaEngine.StateV2{} = state, %EncapsulatedPlan{} = encapsulated_plan, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
     if verbose > 0 do
@@ -118,8 +118,8 @@ defmodule HybridPlanner.HybridCoordinator do
   Replan from a failure point using coordinated HTN replanning with temporal validation.
   Uses Function as Object pattern for strategy-based replanning.
   """
-  @spec replan(Domain.Core.t(), StateV2.t(), EncapsulatedPlan.t(), String.t(), keyword()) :: replan_result()
-  def replan(domain, %StateV2{} = state, %EncapsulatedPlan{} = plan, fail_node_id, opts \\ []) do
+  @spec replan(Domain.Core.t(), AriaEngine.StateV2.t(), EncapsulatedPlan.t(), String.t(), keyword()) :: replan_result()
+  def replan(domain, %AriaEngine.StateV2{} = state, %EncapsulatedPlan{} = plan, fail_node_id, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
     if verbose > 0 do
@@ -157,9 +157,9 @@ defmodule HybridPlanner.HybridCoordinator do
   Validate a plan against the domain and initial state using coordinated validation.
   Uses Function as Object pattern for strategy-based validation.
   """
-  @spec validate_plan(Domain.Core.t(), StateV2.t(), EncapsulatedPlan.t()) :: 
-    {:ok, StateV2.t()} | {:error, String.t()}
-  def validate_plan(domain, %StateV2{} = initial_state, %EncapsulatedPlan{} = encapsulated_plan) do
+  @spec validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), EncapsulatedPlan.t()) :: 
+    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  def validate_plan(domain, %AriaEngine.StateV2{} = initial_state, %EncapsulatedPlan{} = encapsulated_plan) do
     # Use both planning and temporal validation
     internal_plan = EncapsulatedPlan.get_internal_plan(encapsulated_plan)
     
@@ -507,7 +507,7 @@ defmodule HybridPlanner.HybridCoordinator do
 
     defp solution_tree_to_stn_methods_with_bridges(solution_tree, domain, current_time) do
       # Extract primitive actions from solution tree
-      primitive_actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
+      primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
       
       # Group actions into temporal segments separated by bridge actions
       action_segments = group_actions_into_temporal_segments(primitive_actions)
@@ -653,7 +653,7 @@ defmodule HybridPlanner.HybridCoordinator do
               action_fn when is_function(action_fn) ->
                 # Execute action with state and arguments
                 case apply_action_safely(action_fn, args, state) do
-                  %StateV2{} = new_state -> {:ok, new_state}
+                  %AriaEngine.StateV2{} = new_state -> {:ok, new_state}
                   {:ok, new_state} -> {:ok, new_state}
                   {:error, reason} -> {:error, "Action execution failed: #{reason}"}
                   _ -> {:error, "Action returned invalid state format"}
@@ -702,7 +702,7 @@ defmodule HybridPlanner.HybridCoordinator do
     defp apply_action_safely(action_fn, args, state) do
       try do
         case action_fn.(args, state) do
-          %StateV2{} = new_state -> new_state
+          %AriaEngine.StateV2{} = new_state -> new_state
           {:ok, new_state} -> new_state
           {:error, reason} -> {:error, reason}
           result -> {:error, "Action returned unexpected format: #{inspect(result)}"}
@@ -860,7 +860,7 @@ defmodule HybridPlanner.HybridCoordinator do
     end
     
     defp validate_plan_actions(domain, solution_tree) do
-      primitive_actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
+      primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
       
       case validate_all_actions_exist(domain, primitive_actions) do
         [] -> {:ok, :all_actions_valid}
@@ -884,7 +884,7 @@ defmodule HybridPlanner.HybridCoordinator do
     end
     
     defp count_primitive_actions(solution_tree) do
-      Plan.Utils.get_primitive_actions_dfs(solution_tree) |> length()
+      AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree) |> length()
     end
     
     defp calculate_tree_depth(node, current_depth) when is_map(node) do
@@ -912,7 +912,7 @@ defmodule HybridPlanner.HybridCoordinator do
     defp estimate_execution_cost(solution_tree) do
       # Simple cost estimation based on action count
       # Can be enhanced with domain-specific cost functions
-      Plan.Utils.plan_cost(solution_tree)
+      AriaEngine.Plan.Utils.plan_cost(solution_tree)
     end
     
     defp calculate_complexity_score(solution_tree) do

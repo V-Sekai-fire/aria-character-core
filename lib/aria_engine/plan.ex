@@ -7,10 +7,10 @@ defmodule Plan do
   This module acts as a facade for the new, modularized planning components.
   """
 
-  alias Plan.{Core, Backtracking, Execution, Utils, Blacklisting} # Removed NodeExpansion
+  alias Plan.{Core, Backtracking, Execution, Blacklisting} # Removed NodeExpansion
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), StateV2.fact_value()}
+  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -22,11 +22,11 @@ defmodule Plan do
   @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure
 
   # Delegate to Core
-  @spec plan(Domain.Core.t(), StateV2.t(), [todo_item()], keyword()) :: plan_result()
+  @spec plan(Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
   def plan(domain, state, todos, opts \\ []), do: Core.plan(domain, state, todos, opts)
 
   # Delegate to Backtracking
-  @spec replan(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), keyword()) :: replan_result()
+  @spec replan(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) :: replan_result()
   def replan(domain, state, solution_tree, fail_node_id, opts \\ []), do: Backtracking.replan(domain, state, solution_tree, fail_node_id, opts)
 
   # Delegate to Blacklisting
@@ -34,8 +34,8 @@ defmodule Plan do
   def blacklist_command(solution_tree, command), do: Blacklisting.blacklist_command(solution_tree, command)
 
   # Delegate to Execution
-  @spec run_lazy_refineahead(Domain.Core.t(), StateV2.t(), solution_tree(), keyword()) ::
-    {:ok, StateV2.t()} | {:error, String.t()}
+  @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+    {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
   def run_lazy_refineahead(domain, initial_state, solution_tree, opts \\ []), do: Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
 
   # Delegate to Utils
@@ -43,15 +43,15 @@ defmodule Plan do
   Validates a plan by executing it step by step.
   For compatibility with existing AriaEngine usage.
   """
-  @spec validate_plan(Domain.Core.t(), StateV2.t(), [plan_step()] | solution_tree()) :: {:ok, StateV2.t()} | {:error, String.t()}
-  def validate_plan(domain, initial_state, plan), do: Utils.validate_plan(domain, initial_state, plan)
+  @spec validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+  def validate_plan(domain, initial_state, plan), do: AriaEngine.Plan.Utils.validate_plan(domain, initial_state, plan)
 
   @doc """
   Estimates the cost of a plan (simple step count for now).
   For compatibility with existing AriaEngine usage.
   """
   @spec plan_cost([plan_step()] | solution_tree()) :: non_neg_integer()
-  def plan_cost(plan), do: Utils.plan_cost(plan)
+  def plan_cost(plan), do: AriaEngine.Plan.Utils.plan_cost(plan)
 
   @doc """
   Get statistics about the solution tree.
@@ -62,5 +62,5 @@ defmodule Plan do
     primitive_actions: integer(),
     max_depth: integer()
   }
-  def tree_stats(solution_tree), do: Utils.tree_stats(solution_tree)
+  def tree_stats(solution_tree), do: AriaEngine.Plan.Utils.tree_stats(solution_tree)
 end

@@ -13,9 +13,9 @@ defmodule HybridPlanner.StrategyRegistry do
   
   All strategy functions follow consistent signatures for composability:
   
-  - Planning strategies: `(Domain.t(), StateV2.t(), [term()], keyword()) -> {:ok, term()} | {:error, String.t()}`
+  - Planning strategies: `(Domain.t(), AriaEngine.StateV2.t(), [term()], keyword()) -> {:ok, term()} | {:error, String.t()}`
   - Temporal strategies: `(term(), Domain.t(), keyword()) -> {:ok, term()} | {:error, String.t()}`
-  - Execution strategies: `(Domain.t(), StateV2.t(), term(), keyword()) -> {:ok, StateV2.t()} | {:error, String.t()}`
+  - Execution strategies: `(Domain.t(), AriaEngine.StateV2.t(), term(), keyword()) -> {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}`
   
   ## Usage
   
@@ -31,9 +31,9 @@ defmodule HybridPlanner.StrategyRegistry do
   alias TemporalPlanner.{STNPlanner, STNMethod, STNAction}
 
   # Strategy function type definitions
-  @type planning_strategy :: (Domain.Core.t(), StateV2.t(), [term()], keyword() -> {:ok, term()} | {:error, String.t()})
+  @type planning_strategy :: (Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword() -> {:ok, term()} | {:error, String.t()})
   @type temporal_strategy :: (term(), Domain.Core.t(), keyword() -> {:ok, term()} | {:error, String.t()})
-  @type execution_strategy :: (Domain.Core.t(), StateV2.t(), term(), keyword() -> {:ok, StateV2.t()} | {:error, String.t()})
+  @type execution_strategy :: (Domain.Core.t(), AriaEngine.StateV2.t(), term(), keyword() -> {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()})
 
   @type strategy_map :: %{
     planning: %{atom() => planning_strategy()},
@@ -188,7 +188,7 @@ defmodule HybridPlanner.StrategyRegistry do
   # Convert solution tree to STN methods with bridge actions for validation
   defp solution_tree_to_stn_methods_with_bridges(solution_tree, domain, current_time) do
     # Extract primitive actions from solution tree
-    primitive_actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
+    primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
     
     # Group actions into temporal segments separated by bridge actions
     action_segments = group_actions_into_temporal_segments(primitive_actions)

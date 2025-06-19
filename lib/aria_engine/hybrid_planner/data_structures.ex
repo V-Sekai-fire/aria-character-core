@@ -57,7 +57,7 @@ defmodule HybridPlanner.DataStructures do
     """
     @spec get_statistics(t()) :: map()
     def get_statistics(%__MODULE__{internal_plan: plan}) do
-      Utils.tree_stats(plan)
+      AriaEngine.Plan.Utils.tree_stats(plan)
     end
 
     @doc """
@@ -65,7 +65,7 @@ defmodule HybridPlanner.DataStructures do
     """
     @spec get_cost(t()) :: non_neg_integer()
     def get_cost(%__MODULE__{internal_plan: plan}) do
-      Utils.plan_cost(plan)
+      AriaEngine.Plan.Utils.plan_cost(plan)
     end
 
     @doc """
@@ -73,7 +73,7 @@ defmodule HybridPlanner.DataStructures do
     """
     @spec get_actions(t()) :: [Plan.plan_step()]
     def get_actions(%__MODULE__{internal_plan: plan}) do
-      Utils.get_primitive_actions_dfs(plan)
+      AriaEngine.Plan.Utils.get_primitive_actions_dfs(plan)
     end
 
     @doc """

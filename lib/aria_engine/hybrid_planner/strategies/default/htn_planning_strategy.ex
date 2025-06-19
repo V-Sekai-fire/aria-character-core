@@ -15,7 +15,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   require Logger
 
   @impl true
-  def plan(domain, %StateV2{} = state, goals, opts \\ []) do
+  def plan(domain, %AriaEngine.StateV2{} = state, goals, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
     if verbose > 1 do
@@ -30,7 +30,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
       case Plan.Core.plan(domain, state, todos, opts) do
         {:ok, solution_tree} ->
           if verbose > 1 do
-            action_count = Plan.Utils.plan_cost(solution_tree)
+            action_count = AriaEngine.Plan.Utils.plan_cost(solution_tree)
             Logger.debug("HTNPlanningStrategy: Planning successful with #{action_count} actions")
           end
           {:ok, solution_tree}
@@ -50,7 +50,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   end
 
   @impl true
-  def replan(domain, %StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
+  def replan(domain, %AriaEngine.StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
     if verbose > 1 do
@@ -62,7 +62,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
       case Plan.replan(domain, state, solution_tree, fail_node_id, opts) do
         {:ok, new_solution_tree} ->
           if verbose > 1 do
-            action_count = Plan.Utils.plan_cost(new_solution_tree)
+            action_count = AriaEngine.Plan.Utils.plan_cost(new_solution_tree)
             Logger.debug("HTNPlanningStrategy: Replanning successful with #{action_count} actions")
           end
           {:ok, new_solution_tree}
@@ -88,13 +88,13 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   end
 
   @impl true
-  def validate_plan(domain, %StateV2{} = initial_state, solution_tree) do
+  def validate_plan(domain, %AriaEngine.StateV2{} = initial_state, solution_tree) do
     try do
       # Extract primitive actions from solution tree
-      primitive_actions = Plan.Utils.get_primitive_actions_dfs(solution_tree)
+      primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
       
-      # Use existing Plan.Utils.validate_plan/3 logic
-      case Plan.Utils.validate_plan(domain, initial_state, primitive_actions) do
+      # Use existing AriaEngine.Plan.Utils.validate_plan/3 logic
+      case AriaEngine.Plan.Utils.validate_plan(domain, initial_state, primitive_actions) do
         {:ok, final_state} ->
           {:ok, final_state}
         

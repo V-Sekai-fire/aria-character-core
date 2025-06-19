@@ -5,13 +5,13 @@ defmodule Domain.Actions do
   @moduledoc """
   Core action execution functions for domains.
   """
-  alias StateV2
+  alias AriaEngine.StateV2
 
   require Logger
 
   @type t :: Domain.Core.t()
   @type action_name :: atom()
-  @type action_fn :: (StateV2.t(), list() -> StateV2.t() | false)
+  @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.AriaEngine.StateV2.t() | false)
 
   @doc """
   Adds an action to the domain.
@@ -104,8 +104,8 @@ defmodule Domain.Actions do
   @doc """
   Executes an action with the given state and arguments.
   """
-  @spec execute_action(t(), StateV2.t(), action_name(), list()) :: {:ok, StateV2.t()} | false
-  def execute_action(%{} = domain, %StateV2{} = state, action_name, args) do
+  @spec execute_action(t(), AriaEngine.StateV2.t(), action_name(), list()) :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | false
+  def execute_action(%{} = domain, %AriaEngine.StateV2{} = state, action_name, args) do
     # First check if it's a regular action
     case get_action(domain, action_name) do
       nil ->
@@ -121,7 +121,7 @@ defmodule Domain.Actions do
               case durative_action.action_fn.(state, args) do
                 false ->
                   false
-                %StateV2{} = new_state ->
+                %AriaEngine.StateV2{} = new_state ->
                   {:ok, new_state}
               end
             else
@@ -133,14 +133,14 @@ defmodule Domain.Actions do
         case action_fn.(state, args) do
           false ->
             false
-          %StateV2{} = new_state ->
+          %AriaEngine.StateV2{} = new_state ->
             {:ok, new_state}
         end
     end
   end
 
   # Validate durative action preconditions with quantifier support
-  @spec validate_durative_preconditions(Domain.DurativeAction.t(), StateV2.t()) :: boolean()
+  @spec validate_durative_preconditions(Domain.DurativeAction.t(), AriaEngine.StateV2.t()) :: boolean()
   defp validate_durative_preconditions(durative_action, state) do
     # Check at_start conditions
     at_start_valid = Enum.all?(durative_action.conditions.at_start, fn condition ->
@@ -161,7 +161,7 @@ defmodule Domain.Actions do
   end
 
   # Validate a single temporal condition, supporting both regular and quantified conditions
-  @spec validate_temporal_condition(tuple(), StateV2.t()) :: boolean()
+  @spec validate_temporal_condition(tuple(), AriaEngine.StateV2.t()) :: boolean()
   defp validate_temporal_condition(condition, state) do
     case condition do
       # Quantified conditions (delegate to StateV2.evaluate_condition)
@@ -174,7 +174,7 @@ defmodule Domain.Actions do
       
       # Regular conditions (entity-first format)
       {entity, predicate, required_value} ->
-        StateV2.get_fact(state, entity, predicate) == required_value
+        AriaEngine.StateV2.get_fact(state, entity, predicate) == required_value
       
       # Use the general condition evaluator for other formats
       _ ->

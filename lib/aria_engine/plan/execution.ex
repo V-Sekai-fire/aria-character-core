@@ -7,8 +7,8 @@ defmodule Plan.Execution do
   """
   
   require Logger
-  alias Plan.{Backtracking, Utils, Blacklisting, Core} # Added Core alias
-  alias StateV2
+  alias Plan.{Backtracking, Blacklisting, Core} # Added Core alias
+  alias AriaEngine.Plan.Utils
 
   @type node_id :: String.t()
   @type solution_node :: %{
@@ -16,7 +16,7 @@ defmodule Plan.Execution do
     task: term(), # Using term() as task type is defined in Core
     parent_id: node_id() | nil,
     children_ids: [node_id()],
-    state: StateV2.t() | nil,
+    state: AriaEngine.StateV2.t() | nil,
     visited: boolean(),
     expanded: boolean(),
     method_tried: String.t() | nil,
@@ -49,9 +49,9 @@ defmodule Plan.Execution do
   @doc """
   Run-Lazy-Refineahead: Execute plan with replanning on failure.
   """
-  @spec run_lazy_refineahead(Domain.Core.t(), StateV2.t(), solution_tree(), keyword()) ::
-    {:ok, StateV2.t()} | {:error, String.t()}
-  def run_lazy_refineahead(%Domain.Core{} = domain, %StateV2{} = initial_state, solution_tree, opts \\ []) do
+  @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  def run_lazy_refineahead(%Domain.Core{} = domain, %AriaEngine.StateV2{} = initial_state, solution_tree, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, Core.get_default_verbose()) # Get from Core
 
     if verbose > 2 do
@@ -67,8 +67,8 @@ defmodule Plan.Execution do
   end
 
   # Run execution loop for Run-Lazy-Refineahead
-  @spec run_execution_loop(Domain.Core.t(), StateV2.t(), solution_tree(), keyword()) ::
-    {:ok, StateV2.t()} | {:error, String.t()}
+  @spec run_execution_loop(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp run_execution_loop(domain, current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, Core.get_default_verbose()) # Get from Core
 
@@ -84,8 +84,8 @@ defmodule Plan.Execution do
   end
 
   # Execute actions with lazy failure checking and replanning
-  @spec execute_actions_lazily(Domain.Core.t(), StateV2.t(), [plan_step()], solution_tree(), keyword()) ::
-    {:ok, StateV2.t()} | {:error, String.t()}
+  @spec execute_actions_lazily(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()], solution_tree(), keyword()) ::
+    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp execute_actions_lazily(_domain, state, [], _solution_tree, _opts) do
     {:ok, state}
   end

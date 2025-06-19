@@ -7,8 +7,7 @@ defmodule Plan.Backtracking do
   """
 
   require Logger
-  alias Plan.{Core, Utils} # Assuming Core will have ipyhop, Utils will have update_cached_states, generate_node_id, get_all_descendants
-  alias StateV2
+  alias Plan.Core # Assuming Core will have ipyhop
 
   @type node_id :: String.t()
   @type solution_node :: %{
@@ -16,7 +15,7 @@ defmodule Plan.Backtracking do
     task: term(), # Using term() as task type is defined in Core
     parent_id: node_id() | nil,
     children_ids: [node_id()],
-    state: StateV2.t() | nil,
+    state: AriaEngine.AriaEngine.StateV2.t() | nil,
     visited: boolean(),
     expanded: boolean(),
     method_tried: String.t() | nil,
@@ -38,8 +37,8 @@ defmodule Plan.Backtracking do
   @doc """
   Replan from a specific failure node in the solution tree.
   """
-  @spec replan(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), keyword()) :: replan_result()
-  def replan(%Domain.Core{} = domain, %StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
+  @spec replan(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) :: replan_result()
+  def replan(%Domain.Core{} = domain, %AriaEngine.StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
     # Decrement replan_depth for recursive calls
     replan_depth = Keyword.get(opts, :replan_depth, Core.get_default_replan_depth()) # Get from Core
     if replan_depth <= 0 do
@@ -64,7 +63,7 @@ defmodule Plan.Backtracking do
           end
 
           # Update cached states to current execution state
-          updated_tree = Utils.update_cached_states(solution_tree, state)
+          updated_tree = AriaEngine.Plan.Utils.update_cached_states(solution_tree, state)
 
           # Try alternative method for the responsible task
           case try_alternative_method_for_task(domain, updated_tree, task_node_id, verbose) do # Pass domain
@@ -170,7 +169,7 @@ defmodule Plan.Backtracking do
               }
 
               # Remove all descendant nodes
-              descendant_ids = Utils.get_all_descendants(solution_tree, task_node_id)
+              descendant_ids = AriaEngine.Plan.Utils.get_all_descendants(solution_tree, task_node_id)
               remaining_nodes = Map.drop(solution_tree.nodes, descendant_ids)
 
               # Update the tree
@@ -216,7 +215,7 @@ defmodule Plan.Backtracking do
               }
 
               # Remove all descendant nodes
-              descendant_ids = Utils.get_all_descendants(solution_tree, task_node_id)
+              descendant_ids = AriaEngine.Plan.Utils.get_all_descendants(solution_tree, task_node_id)
               remaining_nodes = Map.drop(solution_tree.nodes, descendant_ids)
 
               # Update the tree
@@ -234,7 +233,7 @@ defmodule Plan.Backtracking do
   end
 
   # Backtrack and retry from a failed node
-  @spec backtrack_and_retry(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), integer(), integer(), integer()) ::
+  @spec backtrack_and_retry(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), integer(), integer(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()}
   def backtrack_and_retry(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
     if verbose > 2 do
@@ -286,7 +285,7 @@ defmodule Plan.Backtracking do
   end
 
   # Helper to backtrack up the tree
-  @spec backtrack_up_tree(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), integer(), integer(), integer()) ::
+  @spec backtrack_up_tree(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), integer(), integer(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()}
   def backtrack_up_tree(domain, state, solution_tree, current_node_id, depth, max_depth, verbose) do
     case solution_tree.nodes[current_node_id].parent_id do

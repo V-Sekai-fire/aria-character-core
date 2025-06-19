@@ -33,7 +33,7 @@ defmodule TimelineGraph do
   alias Timeline.AgentEntity
   alias Timeline
   alias Timeline.Interval
-  alias StateV2
+  alias AriaEngine.StateV2
 
   @type entity_id :: String.t()
   @type timeline_id :: String.t()

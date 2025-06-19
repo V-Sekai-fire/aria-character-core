@@ -41,7 +41,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   alias HybridPlanner.StrategyRegistry
 
   @type strategy_function :: function()
-  @type coordination_result :: {:ok, StateV2.t()} | {:error, String.t()}
+  @type coordination_result :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
 
   defstruct [
     :planning_fn,
@@ -171,7 +171,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   
   This is where Function as Object shines - just call the functions in sequence.
   """
-  @spec coordinate(t(), Domain.Core.t(), StateV2.t(), [term()], keyword()) :: coordination_result()
+  @spec coordinate(t(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) :: coordination_result()
   def coordinate(%__MODULE__{} = coordinator, domain, state, goals, opts \\ []) do
     # Apply middleware if present
     result = with {:ok, plan} <- call_with_middleware(coordinator.planning_fn, [domain, state, goals, opts], coordinator.middleware),
@@ -186,7 +186,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   @doc """
   Plan only (without execution) using the coordinator's strategies.
   """
-  @spec plan_only(t(), Domain.Core.t(), StateV2.t(), [term()], keyword()) :: {:ok, term()} | {:error, String.t()}
+  @spec plan_only(t(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) :: {:ok, term()} | {:error, String.t()}
   def plan_only(%__MODULE__{} = coordinator, domain, state, goals, opts \\ []) do
     with {:ok, plan} <- call_with_middleware(coordinator.planning_fn, [domain, state, goals, opts], coordinator.middleware),
          {:ok, validated_plan} <- call_with_middleware(coordinator.temporal_fn, [plan, domain, opts], coordinator.middleware) do
@@ -197,7 +197,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   @doc """
   Execute a pre-planned solution using the coordinator's execution strategy.
   """
-  @spec execute_only(t(), Domain.Core.t(), StateV2.t(), term(), keyword()) :: {:ok, StateV2.t()} | {:error, String.t()}
+  @spec execute_only(t(), Domain.Core.t(), AriaEngine.StateV2.t(), term(), keyword()) :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
   def execute_only(%__MODULE__{} = coordinator, domain, state, plan, opts \\ []) do
     call_with_middleware(coordinator.execution_fn, [domain, state, plan, opts], coordinator.middleware)
   end

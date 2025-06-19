@@ -68,7 +68,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   }
 
   @type plan_result :: {:ok, map()} | {:error, String.t()}
-  @type execution_result :: {:ok, StateV2.t()} | {:error, String.t()}
+  @type execution_result :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
   @type replan_result :: {:ok, map()} | {:error, String.t()} | :failure
 
   # ==================== CONSTRUCTOR ====================
@@ -143,8 +143,8 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   
   Pure Function as Object implementation - all dependencies are injected strategies.
   """
-  @spec plan(t(), Domain.Core.t(), StateV2.t(), [term()], keyword()) :: plan_result()
-  def plan(%__MODULE__{} = coordinator, domain, %StateV2{} = state, goals, opts \\ []) do
+  @spec plan(t(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) :: plan_result()
+  def plan(%__MODULE__{} = coordinator, domain, %AriaEngine.StateV2{} = state, goals, opts \\ []) do
     _verbose = Keyword.get(opts, :verbose, 0)
     
     # Log start using injected logging strategy
@@ -215,8 +215,8 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   @doc """
   Execute a plan using injected execution strategy.
   """
-  @spec execute(t(), Domain.Core.t(), StateV2.t(), map(), keyword()) :: execution_result()
-  def execute(%__MODULE__{} = coordinator, domain, %StateV2{} = initial_state, plan, opts \\ []) do
+  @spec execute(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map(), keyword()) :: execution_result()
+  def execute(%__MODULE__{} = coordinator, domain, %AriaEngine.StateV2{} = initial_state, plan, opts \\ []) do
     coordinator.logging_strategy.log_progress("execution", %{
       status: "started"
     }, opts)
@@ -256,8 +256,8 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   @doc """
   Replan from a failure point using injected planning and temporal strategies.
   """
-  @spec replan(t(), Domain.Core.t(), StateV2.t(), map(), String.t(), keyword()) :: replan_result()
-  def replan(%__MODULE__{} = coordinator, domain, %StateV2{} = state, plan, fail_node_id, opts \\ []) do
+  @spec replan(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map(), String.t(), keyword()) :: replan_result()
+  def replan(%__MODULE__{} = coordinator, domain, %AriaEngine.StateV2{} = state, plan, fail_node_id, opts \\ []) do
     coordinator.logging_strategy.log_progress("replanning", %{
       status: "started",
       fail_node_id: fail_node_id
@@ -337,8 +337,8 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   @doc """
   Validate a plan using injected planning strategy.
   """
-  @spec validate_plan(t(), Domain.Core.t(), StateV2.t(), map()) :: {:ok, StateV2.t()} | {:error, String.t()}
-  def validate_plan(%__MODULE__{} = coordinator, domain, %StateV2{} = initial_state, plan) do
+  @spec validate_plan(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map()) :: {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+  def validate_plan(%__MODULE__{} = coordinator, domain, %AriaEngine.StateV2{} = initial_state, plan) do
     try do
       solution_tree = Map.get(plan, :solution_tree)
 

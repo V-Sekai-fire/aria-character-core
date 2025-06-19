@@ -101,7 +101,7 @@ defmodule Info do
   end
 
   def get_planned_actions(%Core{solution_tree: solution_tree}) do
-    Utils.get_primitive_actions_dfs(solution_tree)
+    AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
   end
 
   @doc """
@@ -145,7 +145,7 @@ defmodule Info do
   end
 
   def get_trace_log(%Core{solution_tree: solution_tree}) do
-    actions = Utils.get_primitive_actions_dfs(solution_tree)
+    actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
 
     actions
     |> Enum.with_index()

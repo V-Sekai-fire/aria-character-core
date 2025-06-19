@@ -17,7 +17,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   # Set custom results for testing
   Application.put_env(:aria_engine, :mock_plan_result, {:ok, [%{action: :test_action, args: ["result"]}]})
   Application.put_env(:aria_engine, :mock_replan_result, {:error, "replan failed"})
-  Application.put_env(:aria_engine, :mock_validate_result, {:ok, %StateV2{}})
+  Application.put_env(:aria_engine, :mock_validate_result, {:ok, %AriaEngine.StateV2{}})
   ```
   
   ## Usage
@@ -38,7 +38,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   # Default static configuration
   @default_plan_result {:ok, [%{action: :mock_action, args: ["mock_result"], node_id: "mock_node_1"}]}
   @default_replan_result {:ok, [%{action: :mock_replan_action, args: ["mock_replan_result"], node_id: "mock_node_2"}]}
-  @default_validate_result {:ok, %StateV2{}}
+  @default_validate_result {:ok, %AriaEngine.StateV2{}}
 
   # ==================== BEHAVIOR IMPLEMENTATION ====================
 
@@ -270,17 +270,17 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   ## Returns
   - StateV2 instance suitable for testing
   """
-  @spec create_mock_state() :: StateV2.t()
+  @spec create_mock_state() :: AriaEngine.StateV2.t()
   def create_mock_state do
     # Create a basic StateV2 with some test facts
-    state = %StateV2{}
+    state = %AriaEngine.StateV2{}
     
     # Add facts using the correct StateV2 API if available, or return basic state
-    case function_exported?(StateV2, :add_fact, 4) do
+    case function_exported?(AriaEngine.StateV2, :add_fact, 4) do
       true ->
         state
-        |> StateV2.add_fact("mock_predicate", "mock_subject", "mock_value")
-        |> StateV2.add_fact("test_ready", "system", true)
+        |> AriaEngine.StateV2.add_fact("mock_predicate", "mock_subject", "mock_value")
+        |> AriaEngine.StateV2.add_fact("test_ready", "system", true)
       false ->
         # Return basic state if add_fact/4 is not available
         state

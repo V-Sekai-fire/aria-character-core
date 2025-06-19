@@ -10,7 +10,7 @@ defmodule Plan.NodeExpansion do
   alias Plan.Utils # Assuming Utils will have generate_node_id and is_primitive_task?
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), StateV2.fact_value()}
+  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -20,7 +20,7 @@ defmodule Plan.NodeExpansion do
     task: todo_item(),
     parent_id: node_id() | nil,
     children_ids: [node_id()],
-    state: StateV2.t() | nil,
+    state: AriaEngine.AriaEngine.StateV2.t() | nil,
     visited: boolean(),
     expanded: boolean(),
     method_tried: String.t() | nil,
@@ -37,11 +37,11 @@ defmodule Plan.NodeExpansion do
   }
 
   # Expand root node with initial todos
-  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], StateV2.t()) :: {:ok, solution_tree()}
+  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], AriaEngine.StateV2.t()) :: {:ok, solution_tree()}
   def expand_root_node(solution_tree, root_id, todos, state) do
     # Create child nodes for each todo
     {new_tree, child_ids} = Enum.reduce(todos, {solution_tree, []}, fn todo, {tree, ids} -> # Removed current_state from accumulator
-      child_id = Utils.generate_node_id()
+      child_id = AriaEngine.Plan.Utils.generate_node_id()
       child_node = %{
         id: child_id,
         task: todo,
@@ -52,7 +52,7 @@ defmodule Plan.NodeExpansion do
         expanded: false,
         method_tried: nil,
         blacklisted_methods: [],
-        is_primitive: Utils.is_primitive_task?(todo),
+        is_primitive: AriaEngine.Plan.Utils.is_primitive_task?(todo),
         is_durative: false  # Will be set appropriately when marked as primitive
       }
 
@@ -74,7 +74,7 @@ defmodule Plan.NodeExpansion do
   end
 
   # Expand task node using methods
-  @spec expand_task_node(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), String.t(), list(), integer()) ::
+  @spec expand_task_node(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), String.t(), list(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_task_node(domain, _state, solution_tree, node_id, task_name, args, verbose) do
     node = solution_tree.nodes[node_id]
@@ -116,8 +116,8 @@ defmodule Plan.NodeExpansion do
 
           # Create child nodes for subtasks and execute primitive actions immediately
           {new_tree, child_ids, _final_state} = Enum.reduce(subtasks, {solution_tree, [], node.state}, fn subtask, {tree, ids, current_state} ->
-            child_id = Utils.generate_node_id()
-            is_primitive = Utils.is_primitive_task?(subtask)
+            child_id = AriaEngine.Plan.Utils.generate_node_id()
+            is_primitive = AriaEngine.Plan.Utils.is_primitive_task?(subtask)
 
             # If this is a primitive action, execute it immediately to get the new state
             child_state = if is_primitive do
@@ -176,13 +176,13 @@ defmodule Plan.NodeExpansion do
   end
 
   # Expand goal node
-  @spec expand_goal_node(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), String.t(), String.t(), StateV2.fact_value(), integer()) ::
+  @spec expand_goal_node(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), String.t(), String.t(), AriaEngine.StateV2.fact_value(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose) do
     node = solution_tree.nodes[node_id]
 
     # Check if goal is already satisfied  
-    case StateV2.get_fact(node.state, subject, predicate) do
+    case AriaEngine.StateV2.get_fact(node.state, subject, predicate) do
       ^fact_value ->
         # Goal already satisfied - mark as expanded with no children
         updated_node = %{node | expanded: true, is_primitive: true}
@@ -228,8 +228,8 @@ defmodule Plan.NodeExpansion do
 
               # Create child nodes for subtasks and execute primitive actions immediately
               {new_tree, child_ids, _final_state, any_action_failed} = Enum.reduce(subtasks, {solution_tree, [], node.state, false}, fn subtask, {tree, ids, current_state, failed_so_far} ->
-                child_id = Utils.generate_node_id()
-                is_primitive = Utils.is_primitive_task?(subtask)
+                child_id = AriaEngine.Plan.Utils.generate_node_id()
+                is_primitive = AriaEngine.Plan.Utils.is_primitive_task?(subtask)
                 
                 # Check if this is a durative action
                 is_durative = if is_primitive do
@@ -315,7 +315,7 @@ defmodule Plan.NodeExpansion do
   end
 
   # Expand multigoal node
-  @spec expand_multigoal_node(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), Multigoal.t(), integer()) ::
+  @spec expand_multigoal_node(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), Multigoal.t(), integer()) ::
     {:ok, solution_tree()} | {:error, String.t()} | :failure
   def expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
     node = solution_tree.nodes[node_id]
@@ -336,8 +336,8 @@ defmodule Plan.NodeExpansion do
 
       # Create child nodes for unsatisfied goals
       {new_tree, child_ids} = Enum.reduce(unsatisfied, {solution_tree, []}, fn goal, {tree, ids} ->
-        child_id = Utils.generate_node_id()
-        is_primitive = Utils.is_primitive_task?(goal)
+        child_id = AriaEngine.Plan.Utils.generate_node_id()
+        is_primitive = AriaEngine.Plan.Utils.is_primitive_task?(goal)
         child_node = %{
           id: child_id,
           task: goal,

@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Plan.Utils do
+defmodule AriaEngine.Plan.Utils do
   @moduledoc """
   Utility functions for IPyHOP planning.
   """
-  alias StateV2
+  alias AriaEngine.StateV2
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), StateV2.fact_value()}

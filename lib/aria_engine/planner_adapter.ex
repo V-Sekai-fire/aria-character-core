@@ -18,13 +18,14 @@ defmodule PlannerAdapter do
   """
 
   alias HybridPlanner.{HybridCoordinator, DataStructures}
-  alias Plan.{Utils, Blacklisting}
+  alias AriaEngine.Plan.Utils
+  alias Plan.Blacklisting
 
   require Logger
 
   # Type compatibility with Plan module
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), StateV2.fact_value()}
+  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
@@ -35,12 +36,53 @@ defmodule PlannerAdapter do
   # ==================== CORE PLANNING FUNCTIONS ====================
 
   @doc """
+  Plan using HTN task decomposition directly with temporal validation.
+  
+  This function bypasses the goal-based HybridCoordinator.plan/4 and uses
+  direct HTN task decomposition while preserving temporal planning capabilities.
+  """
+  @spec plan_tasks(Domain.Core.t(), AriaEngine.StateV2.t(), [task()], keyword()) :: plan_result()
+  def plan_tasks(domain, %AriaEngine.StateV2{} = state, tasks, opts \\ []) do
+    verbose = Keyword.get(opts, :verbose, 0)
+    
+    if verbose > 1 do
+      Logger.debug("PlannerAdapter: Starting HTN task decomposition for #{length(tasks)} tasks")
+    end
+
+    # Use Plan.plan directly for HTN task decomposition
+    case Plan.plan(domain, state, tasks, opts) do
+      {:ok, solution_tree} ->
+        if verbose > 1 do
+          Logger.debug("PlannerAdapter: HTN task decomposition completed, applying temporal validation")
+        end
+        
+        # Apply temporal validation using HybridCoordinator's temporal engine
+        case apply_temporal_validation(solution_tree, domain, opts) do
+          {:ok, validated_tree} ->
+            if verbose > 1 do
+              Logger.debug("PlannerAdapter: Temporal validation completed successfully")
+            end
+            {:ok, validated_tree}
+          {:error, reason} ->
+            Logger.warning("PlannerAdapter: Temporal validation failed - #{reason}")
+            {:error, "Temporal validation failed: #{reason}"}
+        end
+      
+      {:error, reason} -> 
+        if verbose > 0 do
+          Logger.warning("PlannerAdapter: HTN task decomposition failed - #{reason}")
+        end
+        {:error, reason}
+    end
+  end
+
+  @doc """
   Plan using HybridCoordinator while maintaining Plan.plan/4 API compatibility.
   
   Converts between Plan module API and HybridCoordinator API seamlessly.
   """
-  @spec plan(Domain.Core.t(), StateV2.t(), [todo_item()], keyword()) :: plan_result()
-  def plan(domain, %StateV2{} = state, todos, opts \\ []) do
+  @spec plan(Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
+  def plan(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
     if verbose > 1 do
@@ -69,8 +111,8 @@ defmodule PlannerAdapter do
   @doc """
   Replan using HybridCoordinator while maintaining Plan.replan/5 API compatibility.
   """
-  @spec replan(Domain.Core.t(), StateV2.t(), solution_tree(), node_id(), keyword()) :: replan_result()
-  def replan(domain, %StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
+  @spec replan(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) :: replan_result()
+  def replan(domain, %AriaEngine.StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
     if verbose > 1 do
@@ -97,9 +139,9 @@ defmodule PlannerAdapter do
   @doc """
   Execute plan using HybridCoordinator while maintaining run_lazy_refineahead API compatibility.
   """
-  @spec run_lazy_refineahead(Domain.Core.t(), StateV2.t(), solution_tree(), keyword()) ::
-    {:ok, StateV2.t()} | {:error, String.t()}
-  def run_lazy_refineahead(domain, %StateV2{} = initial_state, solution_tree, opts \\ []) do
+  @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+    {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+  def run_lazy_refineahead(domain, %AriaEngine.StateV2{} = initial_state, solution_tree, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
     if verbose > 1 do
@@ -122,9 +164,9 @@ defmodule PlannerAdapter do
   @doc """
   Validate plan using HybridCoordinator while maintaining Plan.validate_plan/3 API compatibility.
   """
-  @spec validate_plan(Domain.Core.t(), StateV2.t(), [plan_step()] | solution_tree()) :: 
-    {:ok, StateV2.t()} | {:error, String.t()}
-  def validate_plan(domain, %StateV2{} = initial_state, plan) do
+  @spec validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) :: 
+    {:ok, AriaEngine.AriaEngine.StateV2.t()} | {:error, String.t()}
+  def validate_plan(domain, %AriaEngine.StateV2{} = initial_state, plan) do
     case plan do
       plan when is_list(plan) ->
         # For list of plan steps, use existing Utils validation
@@ -198,6 +240,22 @@ defmodule PlannerAdapter do
 
   # ==================== PRIVATE HELPER FUNCTIONS ====================
 
+  # Apply temporal validation to a solution tree using HybridCoordinator's temporal engine
+  defp apply_temporal_validation(solution_tree, domain, opts) do
+    try do
+      # Create a planning context for temporal validation
+      context = HybridPlanner.DataStructures.PlanningContext.new(opts)
+      
+      # Use HybridCoordinator's private TemporalEngine for validation
+      case HybridCoordinator.TemporalEngine.validate(solution_tree, domain, context) do
+        {:ok, validated_plan} -> {:ok, validated_plan}
+        {:error, reason} -> {:error, reason}
+      end
+    rescue
+      e -> {:error, "Temporal validation error: #{Exception.message(e)}"}
+    end
+  end
+
   # Convert Plan module todos to HybridCoordinator goals format
   defp convert_todos_to_goals(todos) when is_list(todos) do
     Enum.map(todos, &convert_todo_to_goal/1)
@@ -249,7 +307,7 @@ defmodule PlannerAdapter do
   @doc """
   Test compatibility between Plan and HybridCoordinator results.
   """
-  @spec test_compatibility(Domain.Core.t(), StateV2.t(), [todo_item()], keyword()) :: 
+  @spec test_compatibility(Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: 
     {:compatible | :incompatible, map()}
   def test_compatibility(domain, state, todos, opts \\ []) do
     # This function can be used during migration to validate behavior parity

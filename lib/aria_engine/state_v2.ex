@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule StateV2 do
+defmodule AriaEngine.StateV2 do
   @moduledoc """
   Modernized state management using subject-predicate-fact triples for entity-centric architecture.
   
