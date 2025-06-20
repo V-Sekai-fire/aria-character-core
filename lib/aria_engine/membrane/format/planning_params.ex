@@ -29,7 +29,7 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
   }
 
   @doc """
-  Validates a planning parameters format structure.
+  Validates a planning params format structure.
   
   ## Examples
   
@@ -55,7 +55,7 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
   def valid?(_), do: false
 
   @doc """
-  Creates planning parameters from converted domain, state, and goals.
+  Creates planning params from converted domain, state, and goals.
   
   ## Examples
   
@@ -86,7 +86,7 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
   end
 
   @doc """
-  Creates error planning parameters when conversion fails.
+  Creates error planning params when conversion fails.
   
   ## Examples
   
@@ -113,7 +113,7 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
   end
 
   @doc """
-  Checks if the planning parameters represent an error state.
+  Checks if the planning params represents an error state.
   
   ## Examples
   
@@ -129,7 +129,7 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
   end
 
   @doc """
-  Gets the error reason from error planning parameters.
+  Gets the error reason from error planning params.
   
   ## Examples
   
@@ -145,7 +145,7 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
   end
 
   @doc """
-  Converts planning parameters to a map for serialization.
+  Converts planning params to a map for serialization.
   """
   @spec to_map(t()) :: map()
   def to_map(%__MODULE__{} = params) do
