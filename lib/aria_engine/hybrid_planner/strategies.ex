@@ -2,44 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule HybridPlanner.Strategies do
-  @moduledoc """
-  Strategy behavior definitions for hybrid planner dependency encapsulation.
-  
-  This module defines the behavior contracts for all pluggable strategies used
-  by the hybrid planner, implementing the Function as Object pattern with
-  dependency injection as outlined in ADR-091.
-  
-  ## Strategy Types
-  
-  - **PlanningStrategy**: HTN planning algorithms and decomposition logic
-  - **TemporalStrategy**: Temporal constraint management and STN validation
-  - **StateStrategy**: State management and manipulation operations
-  - **DomainStrategy**: Domain query and metadata operations
-  - **LoggingStrategy**: Logging and debugging output management
-  - **ExecutionStrategy**: Plan execution and action application
-  
-  ## Usage
-  
-  ```elixir
-  # Define a custom planning strategy
-  defmodule MyHTNStrategy do
-    @behaviour HybridPlanner.Strategies.PlanningStrategy
-    
-    @impl true
-    def plan(domain, state, goals, opts) do
-      # Custom HTN planning implementation
-    end
-  end
-  
-  # Use with HybridCoordinatorV2
-coordinator = HybridCoordinatorV2.new(%{
-  planning_strategy: MyHTNStrategy,
-    temporal_strategy: STNTemporalStrategy,
-    # ... other strategies
-  })
-  ```
-  """
-
   # ==================== STRATEGY VALIDATION ====================
 
   @doc """

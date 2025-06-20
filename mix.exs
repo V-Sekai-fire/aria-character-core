@@ -68,6 +68,8 @@ defmodule AriaCharacterCore.MixProject do
       {:ecto_sqlite3, "~> 0.12"},
 
       # RDF Knowledge Base
+      {:rdf, "~> 2.1"},
+      {:rdf_xml, "~> 1.2"},
       {:json_ld, "~> 1.0"},
 
       # Authentication and Security
