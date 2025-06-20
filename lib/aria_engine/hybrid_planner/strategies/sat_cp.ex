@@ -1,32 +1,38 @@
 defmodule AriaEngine.HybridPlanner.Strategies.SatCp do
   @moduledoc """
-  SAT-CP Strategy - Simple CP-SAT Solver in Pure Elixir
+  SAT-CP Strategy - OptimizerStrategy Adapter for HTN Planning
 
-  A small but functional constraint programming solver that actually solves problems.
-  Implements basic SAT solving with constraint propagation for simple CP problems.
+  Reuses the existing HTNPlanningStrategy backtracking capabilities
+  to provide the OptimizerStrategy interface for constraint programming problems.
+  
+  This leverages the sophisticated backtracking already implemented in Plan.replan/5.
   """
 
   @behaviour AriaEngine.HybridPlanner.OptimizerStrategy
 
+  alias HybridPlanner.Strategies.Default.HTNPlanningStrategy
+
   @impl true
-  def solve(problem, _options \\ []) do
-    case extract_variables_and_constraints(problem) do
-      {:ok, {variables, constraints}} ->
-        case solve_sat(variables, constraints) do
-          {:ok, assignment} ->
+  def solve(problem, options \\ []) do
+    case convert_problem_to_planning_format(problem) do
+      {:ok, {domain, state, goals}} ->
+        case HTNPlanningStrategy.plan(domain, state, goals, options) do
+          {:ok, solution_tree} ->
+            variables = extract_variables_from_solution(solution_tree)
             {:ok, %{
               status: "OPTIMAL",
-              solver: "CP-SAT (Pure Elixir)",
-              variables: assignment,
+              solver: "CP-SAT (HTN Adapter)",
+              variables: variables,
               solve_time_ms: 0
             }}
           
-          :unsat ->
+          {:error, reason} ->
             {:ok, %{
-              status: "INFEASIBLE",
-              solver: "CP-SAT (Pure Elixir)",
+              status: "INFEASIBLE", 
+              solver: "CP-SAT (HTN Adapter)",
               variables: %{},
-              solve_time_ms: 0
+              solve_time_ms: 0,
+              reason: reason
             }}
         end
       
@@ -44,167 +50,78 @@ defmodule AriaEngine.HybridPlanner.Strategies.SatCp do
     end
   end
 
-  # Simple SAT solver with constraint propagation
-  defp solve_sat(variables, constraints) do
-    # Start with all variables unassigned
-    assignment = Map.new(variables, fn var -> {var, :unassigned} end)
-    
-    case backtrack_search(assignment, constraints, variables) do
-      {:ok, final_assignment} -> {:ok, final_assignment}
-      :fail -> :unsat
-    end
-  end
-
-  defp backtrack_search(assignment, constraints, variables) do
-    # Check if assignment is complete
-    if all_assigned?(assignment) do
-      if satisfies_all_constraints?(assignment, constraints) do
-        {:ok, assignment}
-      else
-        :fail
-      end
-    else
-      # Pick next unassigned variable
-      var = find_unassigned_variable(assignment)
-      
-      # Try values for this variable
-      try_values(var, [true, false], assignment, constraints, variables)
-    end
-  end
-
-  defp try_values(_var, [], _assignment, _constraints, _variables), do: :fail
-
-  defp try_values(var, [value | rest], assignment, constraints, variables) do
-    new_assignment = Map.put(assignment, var, value)
-    
-    # Check if this assignment is consistent with constraints
-    if consistent_with_constraints?(new_assignment, constraints) do
-      case backtrack_search(new_assignment, constraints, variables) do
-        {:ok, result} -> {:ok, result}
-        :fail -> try_values(var, rest, assignment, constraints, variables)
-      end
-    else
-      try_values(var, rest, assignment, constraints, variables)
-    end
-  end
-
-  defp all_assigned?(assignment) do
-    Enum.all?(assignment, fn {_var, value} -> value != :unassigned end)
-  end
-
-  defp find_unassigned_variable(assignment) do
-    {var, :unassigned} = Enum.find(assignment, fn {_var, value} -> value == :unassigned end)
-    var
-  end
-
-  defp consistent_with_constraints?(assignment, constraints) do
-    Enum.all?(constraints, fn constraint ->
-      evaluate_constraint(constraint, assignment)
-    end)
-  end
-
-  defp satisfies_all_constraints?(assignment, constraints) do
-    Enum.all?(constraints, fn constraint ->
-      evaluate_constraint_complete(constraint, assignment)
-    end)
-  end
-
-  # Evaluate constraint with possibly unassigned variables (for consistency check)
-  defp evaluate_constraint(constraint, assignment) do
-    case constraint do
-      {:and, left, right} ->
-        evaluate_constraint(left, assignment) and evaluate_constraint(right, assignment)
-      
-      {:or, left, right} ->
-        evaluate_constraint(left, assignment) or evaluate_constraint(right, assignment)
-      
-      {:not, expr} ->
-        not evaluate_constraint(expr, assignment)
-      
-      {:eq, var1, var2} ->
-        val1 = Map.get(assignment, var1)
-        val2 = Map.get(assignment, var2)
-        if val1 == :unassigned or val2 == :unassigned do
-          true  # Can't violate yet
-        else
-          val1 == val2
-        end
-      
-      {:neq, var1, var2} ->
-        val1 = Map.get(assignment, var1)
-        val2 = Map.get(assignment, var2)
-        if val1 == :unassigned or val2 == :unassigned do
-          true  # Can't violate yet
-        else
-          val1 != val2
-        end
-      
-      var when is_binary(var) ->
-        case Map.get(assignment, var) do
-          :unassigned -> true
-          value -> value
-        end
-    end
-  end
-
-  # Evaluate constraint with complete assignment
-  defp evaluate_constraint_complete(constraint, assignment) do
-    case constraint do
-      {:and, left, right} ->
-        evaluate_constraint_complete(left, assignment) and evaluate_constraint_complete(right, assignment)
-      
-      {:or, left, right} ->
-        evaluate_constraint_complete(left, assignment) or evaluate_constraint_complete(right, assignment)
-      
-      {:not, expr} ->
-        not evaluate_constraint_complete(expr, assignment)
-      
-      {:eq, var1, var2} ->
-        Map.get(assignment, var1) == Map.get(assignment, var2)
-      
-      {:neq, var1, var2} ->
-        Map.get(assignment, var1) != Map.get(assignment, var2)
-      
-      var when is_binary(var) ->
-        Map.get(assignment, var)
-    end
-  end
-
-  defp extract_variables_and_constraints(problem) do
+  # Convert constraint programming problem to HTN planning format
+  defp convert_problem_to_planning_format(problem) do
     variables = Map.get(problem, "variables", [])
     constraints = Map.get(problem, "constraints", [])
     
     if length(variables) > 0 do
-      parsed_constraints = Enum.map(constraints, &parse_constraint/1)
-      {:ok, {variables, parsed_constraints}}
+      # Create simple domain and state for constraint satisfaction
+      domain = create_constraint_domain(variables, constraints)
+      state = create_initial_state(variables)
+      goals = create_constraint_goals(constraints)
+      
+      {:ok, {domain, state, goals}}
     else
       {:error, "No variables specified"}
     end
   end
 
-  defp parse_constraint(constraint) when is_map(constraint) do
-    case constraint do
-      %{"type" => "and", "left" => left, "right" => right} ->
-        {:and, parse_constraint(left), parse_constraint(right)}
-      
-      %{"type" => "or", "left" => left, "right" => right} ->
-        {:or, parse_constraint(left), parse_constraint(right)}
-      
-      %{"type" => "not", "expr" => expr} ->
-        {:not, parse_constraint(expr)}
-      
-      %{"type" => "eq", "var1" => var1, "var2" => var2} ->
-        {:eq, var1, var2}
-      
-      %{"type" => "neq", "var1" => var1, "var2" => var2} ->
-        {:neq, var1, var2}
-      
-      %{"type" => "var", "name" => name} ->
-        name
-    end
+  defp create_constraint_domain(variables, constraints) do
+    # Create a simple domain that can assign boolean values to variables
+    methods = create_assignment_methods(variables)
+    actions = create_assignment_actions(variables)
+    
+    %{
+      methods: methods,
+      actions: actions
+    }
   end
 
-  defp parse_constraint(constraint) when is_binary(constraint) do
-    constraint
+  defp create_assignment_methods(variables) do
+    # Create methods for assigning values to each variable
+    Enum.reduce(variables, %{}, fn var, acc ->
+      Map.put(acc, "assign_#{var}", [
+        {["assign_#{var}"], [], [{"assign_action", [var, true]}]},
+        {["assign_#{var}"], [], [{"assign_action", [var, false]}]}
+      ])
+    end)
+  end
+
+  defp create_assignment_actions(variables) do
+    # Create actions for setting variable values
+    %{
+      "assign_action" => %{
+        preconditions: [],
+        effects: fn [var, value] -> [{"assigned", var, value}] end
+      }
+    }
+  end
+
+  defp create_initial_state(variables) do
+    # Start with all variables unassigned
+    facts = Enum.map(variables, fn var -> {"unassigned", var, true} end)
+    AriaEngine.StateV2.new(facts)
+  end
+
+  defp create_constraint_goals(constraints) do
+    # Convert constraints to goals that need to be satisfied
+    Enum.map(constraints, fn constraint ->
+      {"satisfy_constraint", [constraint]}
+    end)
+  end
+
+  defp extract_variables_from_solution(solution_tree) do
+    # Extract variable assignments from the HTN solution
+    actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
+    
+    Enum.reduce(actions, %{}, fn action, acc ->
+      case action do
+        {"assign_action", [var, value]} ->
+          Map.put(acc, var, value)
+        _ ->
+          acc
+      end
+    end)
   end
 end
