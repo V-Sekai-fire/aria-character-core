@@ -47,7 +47,7 @@ Integrate Exhort OR-Tools library into aria_engine's hybrid planning architectur
 3. **Durative Actions Translation Layer**: Build translation from OR-Tools solutions to durative actions
 4. **Unified Output Format**: Ensure all strategies produce durative action sequences (instant and durative)
 
-**Key Architectural Principle**: ExhortStrategy becomes the 7th strategy in HybridCoordinatorV2 (alongside planning, temporal, state, domain, logging, execution), with all strategies producing the same unified output format - sequences of durative actions.
+**Key Architectural Principle**: ExhortStrategy becomes the 7th strategy in HybridCoordinatorV2 (alongside planning, temporal, state, domain, logging, execution), enabling the scheduler and other consumers to automatically benefit from CP-SAT optimization capabilities.
 
 ## Implementation Plan
 
