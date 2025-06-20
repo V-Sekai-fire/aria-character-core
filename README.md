@@ -42,7 +42,7 @@ mix test  # Runs only working tests
 **Core Investigation Areas:**
 
 - **Hybrid Planning:** HTN goal decomposition + STN temporal constraints
-- **Temporal Scheduling:** Critical Path Method with resource conflict detection
+- **Temporal Scheduling:** Scheduling with resource conflict detection
 - **Parallel Processing:** Flow-based coordination for multi-NPC systems
 - **Knowledge Representation:** RDF/SPARQL for NPC decision-making
 
