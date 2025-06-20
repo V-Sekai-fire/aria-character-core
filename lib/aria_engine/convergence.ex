@@ -31,7 +31,7 @@ defmodule AriaEngine.Convergence do
       # With custom options
       Convergence.solve_stn(constraints, max_iterations: 200, stages: 8)
   """
-  def solve_stn(constraints, opts \\ []) do
+  def solve_stn(_constraints, _opts \\ []) do
     raise "ConvergenceFlow.solve_stn_with_convergence/2 is not implemented"
   end
 
@@ -51,7 +51,7 @@ defmodule AriaEngine.Convergence do
       # With custom options
       Convergence.solve_activities(activities, max_iterations: 100, stages: 4)
   """
-  def solve_activities(activities, opts \\ []) do
+  def solve_activities(_activities, _opts \\ []) do
     raise "ConvergenceFlow.solve_activities_with_convergence/2 is not implemented"
   end
 
@@ -230,67 +230,6 @@ defmodule AriaEngine.Convergence do
     }
   end
 
-  @doc """
-  Benchmark Flow vs BatchProcessor approaches on the given problems.
-  """
-  def benchmark(problems, opts \\ []) when is_list(problems) do
-    Logger.info("Benchmarking Flow vs BatchProcessor approaches for #{length(problems)} problems")
-    
-    # Benchmark single Flow approach (sequential)
-    {flow_time_us, flow_results} = :timer.tc(fn ->
-      Enum.map(problems, fn problem ->
-        case problem do
-          activities when is_list(activities) ->
-            raise "ConvergenceFlow.solve_activities_with_convergence/2 is not implemented"
-          %{activities: activities} ->
-            ConvergenceFlow.solve_activities_with_convergence(activities, opts)
-          _ ->
-            raise "ConvergenceFlow.solve_activities_with_convergence/2 is not implemented"
-        end
-      end)
-    end)
-    
-    # Benchmark BatchProcessor all cores
-    {batch_all_time_us, batch_all_results} = :timer.tc(fn ->
-      BatchProcessor.solve_multiple_problems_all_cores(problems, opts)
-    end)
-    
-    # Benchmark BatchProcessor single core
-    {batch_single_time_us, batch_single_results} = :timer.tc(fn ->
-      BatchProcessor.solve_multiple_problems_single_core(problems, opts)
-    end)
-    
-    %{
-      problem_count: length(problems),
-      results: %{
-        flow_sequential: %{
-          time_ms: flow_time_us / 1000,
-          time_us: flow_time_us,
-          result_count: length(flow_results),
-          status: :success
-        },
-        batch_all_cores: %{
-          time_ms: batch_all_time_us / 1000,
-          time_us: batch_all_time_us,
-          result_count: length(batch_all_results),
-          status: :success
-        },
-        batch_single_core: %{
-          time_ms: batch_single_time_us / 1000,
-          time_us: batch_single_time_us,
-          result_count: length(batch_single_results),
-          status: :success
-        }
-      },
-      speedup: %{
-        batch_all_vs_flow: flow_time_us / max(batch_all_time_us, 1),
-        batch_single_vs_flow: flow_time_us / max(batch_single_time_us, 1),
-        batch_all_vs_single: batch_single_time_us / max(batch_all_time_us, 1)
-      },
-      winner: determine_winner(flow_time_us, batch_all_time_us, batch_single_time_us)
-    }
-  end
-
   # Private helper functions
 
   defp get_system_architecture do
@@ -298,16 +237,5 @@ defmodule AriaEngine.Convergence do
       arch when is_list(arch) -> List.to_string(arch)
       _ -> "unknown"
     end
-  end
-
-  defp determine_winner(flow_time, batch_all_time, batch_single_time) do
-    times = [
-      {:flow_sequential, flow_time},
-      {:batch_all_cores, batch_all_time},
-      {:batch_single_core, batch_single_time}
-    ]
-    
-    {winner, _time} = Enum.min_by(times, &elem(&1, 1))
-    winner
   end
 end

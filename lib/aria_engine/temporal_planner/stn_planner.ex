@@ -315,19 +315,6 @@ defmodule TemporalPlanner.STNPlanner do
     end
   end
 
-  defp apply_cross_segment_constraints(solved_segments, strategy, world_constraints) do
-    # Compose solved segments based on strategy
-    composed_timeline = case strategy do
-      :sequential -> Timeline.chain(solved_segments)
-      :parallel -> Timeline.parallel_join(solved_segments)
-      :hierarchical -> compose_hierarchical(solved_segments)
-      :adaptive -> compose_adaptive(solved_segments)
-    end
-    
-    # Apply world constraints
-    Timeline.intersection(composed_timeline, world_constraints)
-  end
-
   defp trigger_replanning(%__MODULE__{} = planner) do
     # Set status to replanning and recompute goal STN
     updated_goal_stn = compute_goal_stn(planner.planning_strategy, planner.methods)

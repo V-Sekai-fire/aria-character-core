@@ -34,7 +34,6 @@ defmodule TemporalPlanner.STNMethod do
 
   alias TemporalPlanner.STNAction
   alias Timeline
-  alias AriaEngine.ConvergenceFlow
 
   @type method_id :: String.t()
   @type decomposition_pattern :: :sequential | :parallel | :alternative | :conditional
@@ -247,20 +246,21 @@ defmodule TemporalPlanner.STNMethod do
 
   """
   @spec solve_parallel(t()) :: Timeline.t()
-  def solve_parallel(%__MODULE__{temporal_segments: segments, decomposition_pattern: pattern}) do
+  def solve_parallel(%__MODULE__{temporal_segments: segments, decomposition_pattern: _pattern}) do
     case length(segments) do
       0 -> Timeline.new()
       1 -> hd(segments) |> Timeline.apply_pc2()
       _segment_count ->
+        :not_implemented
         # Solve segments in parallel using ConvergenceFlow
-        solved_segments = ConvergenceFlow.solve_with_convergence(segments,
-          stages: min(length(segments), 4),
-          max_iterations: 20,
-          convergence_threshold: 0.01
-        )
+        # solved_segments = ConvergenceFlow.solve_with_convergence(segments,
+        #   stages: min(length(segments), 4),
+        #   max_iterations: 20,
+        #   convergence_threshold: 0.01
+        # )
         
         # Compose solved segments based on decomposition pattern
-        compose_solved_segments(solved_segments, pattern)
+        # compose_solved_segments(solved_segments, pattern)
     end
   end
 
@@ -441,15 +441,6 @@ defmodule TemporalPlanner.STNMethod do
                      else: (if acc_max == :infinity, do: max, else: min(max, acc_max))
             {new_min, new_max}
         end)
-    end
-  end
-
-  defp compose_solved_segments(segments, pattern) do
-    case pattern do
-      :sequential -> Timeline.chain(segments)
-      :parallel -> Timeline.parallel_join(segments)
-      :alternative -> Enum.reduce(segments, &Timeline.union/2)
-      :conditional -> Enum.reduce(segments, &Timeline.intersection/2)
     end
   end
 end

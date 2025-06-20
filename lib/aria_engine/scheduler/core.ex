@@ -13,7 +13,7 @@ defmodule AriaEngine.Scheduler.Core do
   
   require Logger
   
-  alias AriaEngine.Scheduler.{DomainConverter, StateManager, PlanConverter, ResourceAnalyzer, ActivityLogger, Analyzer, ResourceManager, EntityManager}
+  alias AriaEngine.Scheduler.{DomainConverter, StateManager, PlanConverter, ResourceAnalyzer, ActivityLogger, Analyzer, ResourceManager}
   
   @doc """
   Main scheduling function with enhanced features.
@@ -374,21 +374,6 @@ defmodule AriaEngine.Scheduler.Core do
   end
   
   # Entity and resource assignment helpers (delegated to specialized modules)
-  
-  defp assign_entity_for_activity(activity, entities) do
-    EntityManager.assign_entity_for_activity(activity, entities)
-  end
-  
-  defp assign_resources_for_activity(activity, resources) do
-    required_resources = Map.get(activity, :required_resources, [])
-    
-    required_resources
-    |> Enum.map(fn resource_id ->
-      Enum.find(resources, fn resource -> resource.id == resource_id end)
-    end)
-    |> Enum.filter(& &1)
-  end
-  
   
   # Resource utilization calculation functions
   

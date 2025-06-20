@@ -5,7 +5,7 @@ defmodule Timeline.Internal.STN.Operations do
   @moduledoc false # This module is part of the internal STN implementation
 
   alias Timeline.Internal.STN
-  alias Timeline.LodAdapter
+  
   # alias AriaEngine.ConvergenceFlow
 
   @doc """
