@@ -604,7 +604,7 @@ end
 - [x] Implement configurable mock scenarios (success/error/timeout)
 - [x] Add telemetry for both transformation types
 - [ ] Test EchoFilter in both pipeline configurations
-- [ ] Add MCPSink implementation for complete end-to-end testing
+- [x] Add MCPSink implementation for complete end-to-end testing
 
 **Pipeline Testing Configurations**:
 
