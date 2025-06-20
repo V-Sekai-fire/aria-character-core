@@ -67,14 +67,10 @@ lib/aria_security/         # Security Integration (partial)
 - MCP Integration: Temporal scheduler interface via Model Context Protocol
 - Project Structure: Modular Elixir architecture
 - Development Tooling: Quality/testing/build systems
-- Dependencies: AI/ML libraries (Nx, LibGraph) integrated
 
 **Major Gaps:**
 
-- MCP response handling needs fixes (7 test failures)
-- Temporal reasoning has performance issues (1 timeout)
 - Storage system fundamentally broken
-- Cross-system integration partially functional
 
 ## MCP Integration
 
@@ -92,13 +88,9 @@ mix mcp.stdio
 - Resource conflict detection and analysis
 - Dependency validation and circular dependency detection
 
-
 ## Development Priorities
 
-1. **Fix MCP Integration:** Resolve 7 failing MCP integration tests
-2. **Optimize Temporal Solver:** Address STN planner timeout issues
-3. **Complete HTN/STN Integration:** Implement remaining hybrid planning algorithms
-4. **Fix Storage System:** Resolve chunk-based distribution failures
+1. **Fix Storage System:** Resolve chunk-based distribution failures
 
 ## Contributing
 
