@@ -2,7 +2,9 @@
 
 ## Status
 
-**Proposed** (June 17, 2025)
+**Paused** (June 20, 2025)  
+**Reason:** Superseded by current MCP implementation (ADR-097, ADR-105, ADR-111)  
+**Originally Proposed:** June 17, 2025
 
 ## Context
 
@@ -102,3 +104,35 @@ The server includes a bidirectional translation layer:
 - [ ] Add client integration examples showing basic usage
 - [ ] Document the 4 exposed tools with examples
 - [ ] Verify integration with common AI assistants
+
+## Paused Notice
+
+**This ADR has been paused** because the MCP functionality has been successfully implemented through a different approach:
+
+**Current MCP Implementation:**
+- **ADR-097**: Designed MCP scheduler interface with proper tool schema
+- **ADR-105**: Implemented MCP server with `schedule_activities` tool
+- **ADR-111**: Enhanced architecture with plan converter for clean separation
+
+**Key Differences from This ADR:**
+- **Simpler Implementation**: Uses custom MCP server instead of Hermes framework
+- **Direct Scheduling**: Focuses on scheduling tool rather than KHR_interactivity behavior graphs
+- **Proven Approach**: Working implementation with VSCode integration
+- **Cleaner Architecture**: Separates data transformation from planning execution
+
+**Status of Original Goals:**
+- ✅ **MCP Integration**: Successfully achieved through ADR-105
+- ✅ **External Tool Access**: Working with VSCode and other MCP clients
+- ❌ **KHR_interactivity Output**: Not implemented (different output format chosen)
+- ✅ **Temporal Planning Exposure**: Available through `schedule_activities` tool
+
+**Future Consideration:**
+This ADR could be revisited if KHR_interactivity behavior graph output becomes a requirement, but the current MCP implementation satisfies the core need for external access to Aria's planning capabilities.
+
+## Related ADRs
+
+- **ADR-097**: MCP Scheduler Interface Design (implemented approach)
+- **ADR-105**: Reconnect Scheduler to MCP (working implementation)
+- **ADR-111**: Schedule Activities Data Transformer Conversion (architectural enhancement)
+- **ADR-091**: Hybrid Planner Dependency Encapsulation (planning engine)
+- **ADR-034**: Definitive Temporal Planner Architecture (core planning)

@@ -1,8 +1,10 @@
 # ADR-097: MCP Scheduler Interface Design
 
-**Status:** Completed
+**Status:** Superseded
 **Date:** June 18, 2025
 **Completion Date:** June 18, 2025
+**Superseded Date:** June 20, 2025
+**Superseded By:** ADR-111 (Schedule Activities Data Transformer Conversion)
 **Priority:** HIGH
 
 ## Context
@@ -187,11 +189,28 @@ end
 - **Response Generation:** Monitor output formatting and delivery
 - **Error Tracking:** Detailed logging for debugging and improvement
 
+## Superseded Notice
+
+**This ADR has been superseded by ADR-111** due to architectural improvements that separate data transformation from planning execution.
+
+**Key Changes in ADR-111:**
+- Convert `schedule_activities` from full execution pipeline to pure data transformer
+- Return HybridCoordinatorV2 input format instead of execution results
+- Enable clean separation between MCP layer (data conversion) and domain layer (planning execution)
+- Preserve all validation and conversion logic designed in this ADR
+
+**Migration Impact:**
+- The interface design and validation logic from this ADR remains valuable
+- ADR-111 changes the output format but preserves the input schema and validation approach
+- The "empty plan for empty inputs" principle is maintained in the new architecture
+
 ## Related ADRs
 
 - **ADR-090**: Expose Aria via MCP Hermes (parent architecture)
 - **ADR-091**: Hybrid Planner Dependency Encapsulation (planning engine)
 - **ADR-034**: Definitive Temporal Planner Architecture (core planning)
+- **ADR-105**: Reconnect Scheduler to MCP (implemented this design)
+- **ADR-111**: Schedule Activities Data Transformer Conversion (supersedes this ADR)
 
 ## Examples
 

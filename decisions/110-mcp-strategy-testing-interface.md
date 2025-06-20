@@ -1073,6 +1073,9 @@ Each boot level has specific success criteria that must be met before proceeding
 
 ## Related ADRs
 
+- **ADR-111**: Schedule Activities Data Transformer Conversion (aligned architecture)
+- **ADR-105**: Reconnect Scheduler to MCP (superseded by plan converter approach)
+- **ADR-097**: MCP Scheduler Interface Design (superseded by plan converter approach)
 - **ADR-109**: Integrate CP-SAT Solver Strategy via Exhort OR-Tools
 - **ADR-091**: Hybrid Planner Dependency Encapsulation  
 - **ADR-101**: Reconnect Scheduler with Hybrid Planner

@@ -1,8 +1,10 @@
 # ADR-105: Reconnect Scheduler to MCP
 
-**Status:** Completed
+**Status:** Superseded
 **Date:** June 19, 2025
 **Completion Date:** June 19, 2025
+**Superseded Date:** June 20, 2025
+**Superseded By:** ADR-111 (Schedule Activities Data Transformer Conversion)
 **Priority:** HIGH
 
 ## Context
@@ -192,10 +194,26 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 - **Scheduler Integration:** Track calls to underlying scheduler module
 - **Error Tracking:** Detailed logging for debugging and improvement
 
+## Superseded Notice
+
+**This ADR has been superseded by ADR-111** due to architectural improvements that separate data transformation from planning execution.
+
+**Key Changes in ADR-111:**
+- Convert `schedule_activities` from full execution pipeline to pure data transformer
+- Separate MCP layer (data conversion) from domain layer (planning execution)
+- Enable individual strategy testing through clean architectural boundaries
+- Maintain all validation and conversion logic in dedicated plan converter module
+
+**Migration Path:**
+- The MCP tool functionality implemented in this ADR remains functional
+- ADR-111 provides a cleaner architectural approach for the same capabilities
+- Existing MCP clients will need updates for the new response format
+
 ## Related ADRs
 
 - **ADR-097**: MCP Scheduler Interface Design (original implementation)
 - **ADR-100**: Extract Scheduler and Remove MCP Infrastructure (separation)
 - **ADR-090**: Expose Aria via MCP Hermes (parent MCP architecture)
+- **ADR-111**: Schedule Activities Data Transformer Conversion (supersedes this ADR)
 
-This ADR restores the MCP scheduling functionality while preserving the clean standalone scheduler architecture, providing both direct Elixir access and external MCP protocol access to the comprehensive scheduling system.
+This ADR successfully restored MCP scheduling functionality, but ADR-111 provides a superior architectural approach that separates concerns more cleanly.
