@@ -53,7 +53,7 @@ defmodule DurativeActionsQuantifiersTest do
         end
       }
       
-      domain = Core.add_durative_action(domain, :find_seating, find_seating_action)
+      domain = Domain.add_action(domain, :find_seating, find_seating_action)
 
       # Test scenario 1: Chairs available
       state_with_chairs = StateV2.new()
@@ -107,7 +107,7 @@ defmodule DurativeActionsQuantifiersTest do
         end
       }
       
-      domain = Core.add_durative_action(domain, :craft_simple, craft_simple_action)
+      domain = Domain.add_action(domain, :craft_simple, craft_simple_action)
       
       state_simple = StateV2.new()
       |> StateV2.set_fact("wood1", "status", "available")
@@ -149,7 +149,7 @@ defmodule DurativeActionsQuantifiersTest do
         end
       }
       
-      domain = Core.add_durative_action(domain, :security_patrol, security_patrol_action)
+      domain = Domain.add_action(domain, :security_patrol, security_patrol_action)
 
       # Test scenario 1: All doors locked (should succeed)
       secure_state = StateV2.new()
@@ -215,7 +215,7 @@ defmodule DurativeActionsQuantifiersTest do
         end
       }
       
-      domain = Core.add_durative_action(domain, :maintenance_check, maintenance_check_action)
+      domain = Domain.add_action(domain, :maintenance_check, maintenance_check_action)
 
       # All equipment operational
       operational_state = StateV2.new()
@@ -282,7 +282,7 @@ defmodule DurativeActionsQuantifiersTest do
         end
       }
       
-      domain = Core.add_durative_action(domain, :serve_meal, serve_meal_action)
+      domain = Domain.add_action(domain, :serve_meal, serve_meal_action)
 
       # Test: Table available and all ingredients ready (should succeed)
       ready_state = StateV2.new()

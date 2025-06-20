@@ -194,7 +194,6 @@ defmodule Timeline.Internal.STN do
   defdelegate add_interval(stn, interval), to: Core
   defdelegate update_interval(stn, interval), to: Core
   defdelegate remove_interval(stn, interval_id), to: Core
-  defdelegate add_durative_action(stn, durative_action), to: Core
   defdelegate add_constraint(stn, from_point, to_point, constraint), to: Core
   defdelegate consistent?(stn), to: Core
   defdelegate time_points(stn), to: Core

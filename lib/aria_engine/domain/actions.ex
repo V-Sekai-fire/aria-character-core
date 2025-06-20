@@ -130,11 +130,28 @@ defmodule Domain.Actions do
         end
 
       action_fn ->
-        case action_fn.(state, args) do
-          false ->
+        cond do
+          is_function(action_fn, 2) ->
+            case action_fn.(state, args) do
+              false ->
+                false
+              %AriaEngine.StateV2{} = new_state ->
+                {:ok, new_state}
+            end
+          match?(%Domain.DurativeAction{}, action_fn) ->
+            # If the action is a DurativeAction struct, validate preconditions first
+            if validate_durative_preconditions(action_fn, state) do
+              case action_fn.action_fn.(state, args) do
+                false ->
+                  false
+                %AriaEngine.StateV2{} = new_state ->
+                  {:ok, new_state}
+              end
+            else
+              false
+            end
+          true ->
             false
-          %AriaEngine.StateV2{} = new_state ->
-            {:ok, new_state}
         end
     end
   end

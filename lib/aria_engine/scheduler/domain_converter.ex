@@ -485,7 +485,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   
   defp add_durative_actions_to_domain(domain, durative_actions) do
     Enum.reduce(durative_actions, domain, fn {name, durative_action}, acc_domain ->
-      Domain.add_durative_action(acc_domain, name, durative_action)
+      Domain.add_action(acc_domain, name, durative_action)
     end)
   end
   

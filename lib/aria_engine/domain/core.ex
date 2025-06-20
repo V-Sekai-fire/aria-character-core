@@ -103,11 +103,11 @@ defmodule Domain.Core do
   def validate(_), do: {:error, "Not a valid domain struct"}
 
   @doc """
-  Adds a durative action to the domain.
+  Adds an action (function or struct) to the domain.
   """
-  @spec add_durative_action(t(), durative_action_name(), durative_action()) :: t()
-  def add_durative_action(%__MODULE__{} = domain, name, durative_action) do
-    %{domain | durative_actions: Map.put(domain.durative_actions, name, durative_action)}
+  @spec add_action(t(), action_name(), any()) :: t()
+  def add_action(%__MODULE__{actions: actions} = domain, name, action) do
+    %{domain | actions: Map.put(actions, name, action)}
   end
 
   @doc """

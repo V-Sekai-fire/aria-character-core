@@ -84,27 +84,6 @@ defmodule Timeline.Internal.STN.Core do
   end
 
   @doc """
-  Adds a durative action to the STN, creating time points for its start and end,
-  and adding a duration constraint.
-  """
-  @spec add_durative_action(STN.t(), Domain.DurativeAction.t()) :: STN.t()
-  def add_durative_action(stn, durative_action) do
-    start_point = "#{durative_action.name}_start"
-    end_point = "#{durative_action.name}_end"
-
-    duration_constraint = case durative_action.duration do
-      {:fixed, duration} -> {duration, duration}
-      {:range, min_duration, max_duration} -> {min_duration, max_duration}
-    end
-    
-    stn
-    |> add_time_point(start_point)
-    |> add_time_point(end_point)
-    |> add_constraint(start_point, end_point, duration_constraint)
-    |> STN.PC2.apply_pc2()
-  end
-
-  @doc """
   Adds a temporal constraint between two time points.
 
   The constraint represents the allowable distance between the time points

@@ -40,6 +40,7 @@ defmodule Domain do
   defdelegate new(name), to: Core
   defdelegate validate(domain), to: Core
 
+  defdelegate add_action(domain, name, action), to: Core
   defdelegate add_action(domain, name, action_fn, metadata \\ %{}), to: Actions
   defdelegate add_actions(domain, new_actions), to: Actions
   defdelegate get_action(domain, name), to: Actions
@@ -76,7 +77,6 @@ defmodule Domain do
   defdelegate multigoal_methods(domain), to: BehaviourImpl
   defdelegate durative_actions(domain), to: BehaviourImpl
 
-  defdelegate add_durative_action(domain, name, durative_action), to: Core
   defdelegate get_durative_action(domain, name), to: Core
 
 
