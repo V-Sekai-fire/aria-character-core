@@ -99,10 +99,11 @@ activities = [
 
 ```elixir
 # Create timeline with temporal constraints
-timeline = AriaEngine.Timeline.new()
-|> AriaEngine.Timeline.add_event("start", 0)
-|> AriaEngine.Timeline.add_event("end", 100)
-|> AriaEngine.Timeline.add_constraint("start", "end", {50, 100})
+# NOTE: The Timeline API uses `Timeline`, not `AriaEngine.Timeline`, and does not have `add_event`.
+timeline = Timeline.new()
+|> Timeline.add_time_point("start")
+|> Timeline.add_time_point("end")
+|> Timeline.add_constraint("start", "end", {50, 100})
 ```
 
 ## Architecture
