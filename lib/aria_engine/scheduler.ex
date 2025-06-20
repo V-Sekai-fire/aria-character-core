@@ -7,7 +7,6 @@ defmodule AriaEngine.Scheduler do
   
   Provides comprehensive scheduling capabilities including:
   - Entity and resource modeling with capabilities
-  - Activity logging and execution tracking
   - run_lazy simulation for predictive scheduling
   - Resource conflict detection and resolution
   - Critical path analysis with resource constraints
@@ -16,9 +15,7 @@ defmodule AriaEngine.Scheduler do
   
   - Entity management with capabilities and availability
   - Resource modeling with capacity and constraints
-  - Comprehensive activity logging
   - Simulation modes for schedule validation
-  - Resource utilization analytics
   - Timeline optimization
   
   ## Usage
@@ -212,11 +209,10 @@ defmodule AriaEngine.Scheduler do
     - `:constraints` - Scheduling constraints and limits
     - `:simulation_mode` - Run in simulation mode (default: false)
     - `:verbose` - Logging verbosity level (0-3, default: 0)
-    - `:log_activities` - Enable activity logging (default: true)
   
   ## Returns
   
-  - `{:ok, SimulationResult.t()}` - Successful scheduling with comprehensive results
+  - `{:ok, SimulationResult.t()}` - Successful scheduling with results
   - `{:error, reason}` - Scheduling failed with error details
   """
   @spec schedule_activities(String.t(), list(), keyword()) :: 
@@ -273,17 +269,11 @@ defmodule AriaEngine.Scheduler do
   end
   
   @doc """
-  Analyze resource utilization for a given schedule.
-  
-  Provides detailed metrics including:
-  - Resource usage patterns
-  - Efficiency scores
-  - Bottleneck identification
-  - Optimization recommendations
+  Analyze resource utilization is no longer supported (analytics removed).
   """
-  @spec analyze_resource_utilization([map()], [Resource.t()]) :: map()
-  def analyze_resource_utilization(schedule, resources) do
-    AriaEngine.Scheduler.Core.calculate_resource_utilization(schedule, resources)
+  @spec analyze_resource_utilization([map()], [Resource.t()]) :: no_return()
+  def analyze_resource_utilization(_schedule, _resources) do
+    raise "Resource utilization analytics have been removed from AriaEngine."
   end
   
   # Private helper functions

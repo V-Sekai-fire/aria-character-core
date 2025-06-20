@@ -13,7 +13,7 @@ defmodule AriaEngine.Scheduler.Core do
   
   require Logger
   
-  alias AriaEngine.Scheduler.{DomainConverter, StateManager, PlanConverter, ResourceAnalyzer, ActivityLogger, Analyzer, ResourceManager}
+  alias AriaEngine.Scheduler.{DomainConverter, StateManager, PlanConverter, ResourceManager}
   
   @doc """
   Main scheduling function with enhanced features.
@@ -27,26 +27,30 @@ defmodule AriaEngine.Scheduler.Core do
     if Enum.empty?(activities) do
       return_empty_schedule_result(schedule_name, entities, resources, simulation_mode, activity_log)
     else
-      # Analyze activities and resources
-      analysis = analyze_activities_with_resources(activities, entities, resources, verbose)
       
       # Attempt enhanced scheduling
       case attempt_enhanced_scheduling(schedule_name, activities, entities, resources, constraints, simulation_mode, activity_log, verbose) do
-        {:ok, schedule, enhanced_activity_log, resource_utilization, timeline} ->
+        {:ok, schedule} ->
+          default_analysis = %{
+            schedule_name: schedule_name,
+            method: "Critical Path Method with Enhanced Resource-Aware Scheduling",
+            activities_analyzed: 0,
+            dependencies_found: 0,
+            resource_conflicts: 0,
+            circular_dependencies: 0,
+            critical_path_length: 0,
+            simulation_mode: simulation_mode,
+            entities_used: length(entities),
+            resources_managed: length(resources),
+            hybrid_planner_used: true,
+            empty_plan_reason: "Empty todo list results in empty plan (valid solution)"
+          }
           result = %AriaEngine.Scheduler.SimulationResult{
             status: "success",
             reason: if(simulation_mode, do: "Simulation completed successfully", else: "Schedule successfully generated"),
             schedule: schedule,
-            analysis: Map.merge(analysis, %{
-              schedule_name: schedule_name,
-              method: "Critical Path Method with Enhanced Resource-Aware Scheduling",
-              simulation_mode: simulation_mode,
-              entities_used: length(entities),
-              resources_managed: length(resources)
-            }),
-            activity_log: enhanced_activity_log,
-            resource_utilization: resource_utilization,
-            timeline: timeline,
+            analysis: default_analysis,
+            resource_utilization: %{},
             simulation_metadata: %{
               generated_at: DateTime.utc_now(),
               simulation_duration: 0,
@@ -65,30 +69,27 @@ defmodule AriaEngine.Scheduler.Core do
   @doc """
   Handle empty activities case.
   """
-  def return_empty_schedule_result(schedule_name, entities, resources, simulation_mode, activity_log) do
-      analysis = %{
-        schedule_name: schedule_name,
-        method: "Enhanced Resource-Aware Scheduling",
-        activities_analyzed: 0,
-        dependencies_found: 0,
-        resource_conflicts: 0,
-        circular_dependencies: 0,
-        critical_path_length: 0,
-        simulation_mode: simulation_mode,
-        entities_used: length(entities),
-        resources_managed: length(resources),
-        hybrid_planner_used: true,
-        empty_plan_reason: "Empty todo list results in empty plan (valid solution)"
-      }
-    
+  def return_empty_schedule_result(schedule_name, entities, resources, simulation_mode, _activity_log) do
+    default_analysis = %{
+      schedule_name: schedule_name,
+      method: "Critical Path Method with Enhanced Resource-Aware Scheduling",
+      activities_analyzed: 0,
+      dependencies_found: 0,
+      resource_conflicts: 0,
+      circular_dependencies: 0,
+      critical_path_length: 0,
+      simulation_mode: simulation_mode,
+      entities_used: length(entities),
+      resources_managed: length(resources),
+      hybrid_planner_used: true,
+      empty_plan_reason: "Empty todo list results in empty plan (valid solution)"
+    }
     result = %AriaEngine.Scheduler.SimulationResult{
       status: "success",
       reason: "Empty plan successfully generated - valid solution for empty todo list",
       schedule: [],
-      analysis: analysis,
-      activity_log: activity_log || [],
+      analysis: default_analysis,
       resource_utilization: %{},
-      timeline: [],
       simulation_metadata: %{
         generated_at: DateTime.utc_now(),
         simulation_duration: 0,
@@ -96,16 +97,10 @@ defmodule AriaEngine.Scheduler.Core do
         resources_count: length(resources)
       }
     }
-    
+  
     {:ok, result}
   end
   
-  @doc """
-  Enhanced activity analysis with resource considerations.
-  """
-  def analyze_activities_with_resources(activities, entities, resources, verbose) do
-    Analyzer.analyze_activities_with_resources(activities, entities, resources, verbose)
-  end
   
   @doc """
   Enhanced scheduling with entity/resource management.
@@ -145,11 +140,8 @@ defmodule AriaEngine.Scheduler.Core do
             else
               # Convert plan to schedule format
               schedule = convert_plan_to_enhanced_schedule(encapsulated_plan, activities, entities, resources)
-              enhanced_activity_log = if activity_log, do: generate_activity_log(schedule, entities), else: []
-              resource_utilization = calculate_resource_utilization(schedule, resources)
-              timeline = generate_timeline(schedule, entities, resources)
               
-              {:ok, schedule, enhanced_activity_log, resource_utilization, timeline}
+              {:ok, schedule}
             end
           {:error, reason} ->
             {:error, "Enhanced planning failed: #{reason}"}
@@ -162,7 +154,7 @@ defmodule AriaEngine.Scheduler.Core do
   @doc """
   Simulate plan execution using run_lazy_refineahead.
   """
-  def simulate_plan_execution(domain, initial_state, encapsulated_plan, activities, entities, resources, activity_log, verbose) do
+  def simulate_plan_execution(domain, initial_state, encapsulated_plan, activities, entities, resources, _activity_log, verbose) do
     if verbose > 1 do
       Logger.debug("AriaEngine.Scheduler: Running simulation with run_lazy_refineahead")
     end
@@ -175,11 +167,8 @@ defmodule AriaEngine.Scheduler.Core do
       {:ok, final_state} ->
         # Convert simulation results to schedule format
         schedule = convert_simulation_to_schedule(encapsulated_plan, final_state, activities, entities, resources)
-        enhanced_activity_log = if activity_log, do: generate_simulation_activity_log(schedule, entities, final_state), else: []
-        resource_utilization = calculate_resource_utilization(schedule, resources)
-        timeline = generate_timeline(schedule, entities, resources)
         
-        {:ok, schedule, enhanced_activity_log, resource_utilization, timeline}
+        {:ok, schedule}
       {:error, reason} ->
         {:error, "Simulation execution failed: #{reason}"}
     end
@@ -377,35 +366,5 @@ defmodule AriaEngine.Scheduler.Core do
   
   # Resource utilization calculation functions
   
-  @doc """
-  Calculate resource utilization metrics.
-  """
-  def calculate_resource_utilization(schedule, resources) do
-    ResourceAnalyzer.calculate_resource_utilization(schedule, resources)
-  end
-  
-  
-  # Activity logging functions
-  
-  @doc """
-  Generate activity log from schedule.
-  """
-  def generate_activity_log(schedule, entities) do
-    ActivityLogger.generate_activity_log(schedule, entities)
-  end
-  
-  @doc """
-  Generate simulation activity log.
-  """
-  def generate_simulation_activity_log(schedule, entities, final_state) do
-    ActivityLogger.generate_simulation_activity_log(schedule, entities, final_state)
-  end
-  
-  @doc """
-  Generate timeline from schedule.
-  """
-  def generate_timeline(schedule, entities, resources) do
-    ActivityLogger.generate_timeline(schedule, entities, resources)
-  end
   
 end

@@ -301,8 +301,7 @@ defmodule AriaEngine.MCPTools do
                 resources: resources,
                 constraints: constraints,
                 simulation_mode: Map.get(constraints, "simulation_mode", true),
-                verbose: Map.get(constraints, "verbose", 0),
-                log_activities: true
+                verbose: Map.get(constraints, "verbose", 0)
               ]
               
               # Call the scheduler
@@ -317,7 +316,6 @@ defmodule AriaEngine.MCPTools do
                     reason: reason,
                     schedule: [],
                     analysis: %{},
-                    activity_log: [],
                     resource_utilization: %{},
                     timeline: [],
                     simulation_metadata: %{}
@@ -330,7 +328,6 @@ defmodule AriaEngine.MCPTools do
                 reason: reason,
                 schedule: [],
                 analysis: %{},
-                activity_log: [],
                 resource_utilization: %{},
                 timeline: [],
                 simulation_metadata: %{}
@@ -343,7 +340,6 @@ defmodule AriaEngine.MCPTools do
             reason: reason,
             schedule: [],
             analysis: %{},
-            activity_log: [],
             resource_utilization: %{},
             timeline: [],
             simulation_metadata: %{}
@@ -357,7 +353,6 @@ defmodule AriaEngine.MCPTools do
           reason: "Internal error: #{Exception.message(e)}",
           schedule: [],
           analysis: %{},
-          activity_log: [],
           resource_utilization: %{},
           timeline: [],
           simulation_metadata: %{}
@@ -655,7 +650,6 @@ defp convert_activities(activities) when is_list(activities) do
         reason: result.reason,
         schedule: result.schedule || [],
         analysis: result.analysis || %{},
-        activity_log: safe_convert_activity_log(result.activity_log || []),
         resource_utilization: result.resource_utilization || %{},
         timeline: result.timeline || [],
         simulation_metadata: result.simulation_metadata || %{}
@@ -676,79 +670,6 @@ defp convert_activities(activities) when is_list(activities) do
     end
   end
   
-  defp safe_convert_activity_log(activity_log) when is_list(activity_log) do
-    try do
-      convert_activity_log(activity_log)
-    rescue
-      e ->
-        Logger.warning("Error converting activity log: #{Exception.message(e)}")
-        []
-    end
-  end
-  
-  defp safe_convert_activity_log(_), do: []
-
-  defp convert_activity_log(activity_log) when is_list(activity_log) do
-    Enum.map(activity_log, fn entry ->
-      case entry do
-        %AriaEngine.Scheduler.ActivityLogEntry{} = log_entry ->
-          # Handle both timestamp and mission_duration formats
-          time_info = case {log_entry.timestamp, log_entry.mission_duration} do
-            {%DateTime{} = timestamp, _} ->
-              %{timestamp: safe_datetime_to_iso8601(timestamp)}
-            {nil, mission_duration} when is_binary(mission_duration) ->
-              %{mission_duration: mission_duration}
-            _ ->
-              %{relative_minutes: log_entry.relative_minutes}
-          end
-          
-          base_entry = %{
-            activity_id: log_entry.activity_id,
-            entity_id: log_entry.entity_id,
-            event_type: log_entry.event_type,
-            resource_snapshot: log_entry.resource_snapshot || %{},
-            state_changes: log_entry.state_changes || [],
-            metadata: log_entry.metadata || %{}
-          }
-          
-          Map.merge(base_entry, time_info)
-        _ ->
-          entry
-      end
-    end)
-  end
-  
-  defp convert_activity_log(_), do: []
-
-  # Safe DateTime to ISO8601 conversion with proper Erlang syntax
-  defp safe_datetime_to_iso8601(timestamp) do
-    case timestamp do
-      %DateTime{} = dt ->
-        DateTime.to_iso8601(dt)
-      
-      {{year, month, day}, {hour, minute, second}} ->
-        # Erlang datetime tuple format - convert to ISO8601 using NaiveDateTime
-        case NaiveDateTime.from_erl({{year, month, day}, {hour, minute, second}}) do
-          {:ok, naive_dt} -> NaiveDateTime.to_iso8601(naive_dt)
-          {:error, _} -> "Invalid datetime tuple"
-        end
-      
-      timestamp_str when is_binary(timestamp_str) ->
-        timestamp_str
-      
-      timestamp_int when is_integer(timestamp_int) ->
-        # Unix timestamp - convert to DateTime first
-        case DateTime.from_unix(timestamp_int) do
-          {:ok, dt} -> DateTime.to_iso8601(dt)
-          {:error, _} -> "Invalid timestamp"
-        end
-      
-      _ ->
-        "Unknown timestamp format"
-    end
-  rescue
-    _ -> "Error formatting timestamp"
-  end
 
   defp process_duration(duration) do
     case duration do
