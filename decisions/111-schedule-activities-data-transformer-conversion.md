@@ -1,4 +1,4 @@
-# ADR-111: Convert schedule_activities to Pure Data Transformer
+# ADR-111: Convert schedule_activities to Plan Transformer
 
 **Status:** Proposed  
 **Date:** June 20, 2025  
@@ -20,25 +20,25 @@ Current: MCP Tool → validate → convert → AriaEngine.Scheduler → HybridCo
 - **Reusability Issues**: Formatted data cannot be used in different execution contexts
 - **Architectural Violation**: MCP layer should handle format conversion, not execution
 
-### Plan Converter Architecture Benefits
+### Plan Transformer Architecture Benefits
 
 Converting to a pure data transformer creates clean separation:
 
 ```
-Proposed: MCP Tool (plan converter) → HybridCoordinatorV2 input format
+Proposed: MCP Tool (plan transformer) → HybridCoordinatorV2 input format
           Domain Layer → HybridCoordinatorV2 → [Individual Strategies] → Result
 ```
 
-**Benefits of Plan Converter:**
+**Benefits of Plan Transformer:**
 1. **Pure Data Transformation**: MCP tools become pure functions that only format data
 2. **Cleaner Testing**: Can test data conversion separately from planning execution
 3. **Better Separation**: MCP layer handles format conversion, domain layer handles planning
 4. **Reusability**: Formatted data can be used by different execution contexts
-5. **Individual Strategy Testing**: Enables direct testing of strategies in isolation
+5. **Future Interface Discovery**: Focus on one tool until we understand what interface we need
 
 ### Related ADR Context
 
-- **ADR-110**: MCP Strategy Testing Interface - already incorporates plan converter architecture
+- **ADR-110**: MCP Strategy Testing Interface - already incorporates plan transformer architecture
 - **ADR-105**: Reconnect Scheduler to MCP - implemented current mixed-concern approach
 - **ADR-097**: MCP Scheduler Interface Design - designed current implementation
 
@@ -48,14 +48,14 @@ Convert `schedule_activities` from a full execution pipeline to a pure data tran
 
 ### Implementation Strategy
 
-**Phase 1: Create Plan Converter Module**
+**Phase 1: Create Plan Transformer Module**
 - Extract data conversion logic from `AriaEngine.MCPTools`
-- Create `AriaEngine.HybridPlanner.PlanConverter` module
+- Create `AriaEngine.HybridPlanner.PlanTransformer` module
 - Implement pure data transformation functions
 - Preserve all existing validation and conversion logic
 
 **Phase 2: Update MCP Tools**
-- Modify `schedule_activities` to use plan converter
+- Modify `schedule_activities` to use plan transformer
 - Return formatted coordinator input instead of execution results
 - Add conversion metadata for debugging and traceability
 - Maintain backward compatibility during transition
@@ -65,9 +65,9 @@ Convert `schedule_activities` from a full execution pipeline to a pure data tran
 - Verify strategy execution works with converted data
 - Add integration points for direct domain layer execution
 
-### Plan Converter Interface
+### Plan Transformer Interface
 
-**Module**: `AriaEngine.HybridPlanner.PlanConverter`
+**Module**: `AriaEngine.HybridPlanner.PlanTransformer`
 
 ```elixir
 @type mcp_input :: map()
@@ -118,18 +118,18 @@ end
 
 ## Implementation Plan
 
-### Phase 1: Plan Converter Module Creation
+### Phase 1: Plan Transformer Module Creation
 
-- [ ] Create `lib/aria_engine/hybrid_planner/plan_converter.ex`
+- [ ] Create `lib/aria_engine/hybrid_planner/plan_transformer.ex`
 - [ ] Extract validation logic from `AriaEngine.MCPTools.handle_schedule_activities_tool_call/1`
 - [ ] Extract conversion functions: `convert_activities/1`, `convert_entities/1`, etc.
 - [ ] Add comprehensive type specifications and documentation
-- [ ] Create unit tests for plan converter module
+- [ ] Create unit tests for plan transformer module
 
 ### Phase 2: MCP Tools Update
 
 - [ ] Update `AriaEngine.MCPTools.handle_schedule_activities_tool_call/1`
-- [ ] Replace scheduler execution with plan converter call
+- [ ] Replace scheduler execution with plan transformer call
 - [ ] Update tool definition schema to reflect new output format
 - [ ] Add conversion metadata to responses
 - [ ] Update error handling for conversion failures
@@ -137,7 +137,7 @@ end
 ### Phase 3: Integration and Testing
 
 - [ ] Verify HybridCoordinatorV2 accepts converted input format
-- [ ] Add integration tests for plan converter → coordinator flow
+- [ ] Add integration tests for plan transformer → coordinator flow
 - [ ] Update existing tests to expect new response format
 - [ ] Add performance benchmarks for conversion operations
 
@@ -154,13 +154,13 @@ end
 
 - [ ] `schedule_activities` returns coordinator input format instead of execution results
 - [ ] All existing validation and conversion logic is preserved
-- [ ] Plan converter handles all current input scenarios (empty lists, complex schedules)
+- [ ] Plan transformer handles all current input scenarios (empty lists, complex schedules)
 - [ ] Converted data is compatible with HybridCoordinatorV2
 - [ ] Error handling maintains same quality as current implementation
 
 ### Quality Requirements
 
-- [ ] Plan converter is a pure function with no side effects
+- [ ] Plan transformer is a pure function with no side effects
 - [ ] Conversion performance is equivalent to current implementation
 - [ ] All edge cases (empty activities, invalid inputs) are handled correctly
 - [ ] Comprehensive test coverage for conversion logic
@@ -230,7 +230,7 @@ end
 - **Conversion Performance**: < 10ms for typical inputs
 - **Error Rate**: < 0.1% for valid inputs
 - **Client Adoption**: > 80% migration to new format within 30 days
-- **Test Coverage**: > 95% for plan converter module
+- **Test Coverage**: > 95% for plan transformer module
 
 ### Logging Strategy
 
@@ -243,9 +243,9 @@ end
 
 ### ADRs to Update
 
-- **ADR-105**: Reconnect Scheduler to MCP → Update to reflect plan converter approach
+- **ADR-105**: Reconnect Scheduler to MCP → Update to reflect plan transformer approach
 - **ADR-097**: MCP Scheduler Interface Design → Update tool interface specification
-- **ADR-110**: MCP Strategy Testing Interface → Align with plan converter architecture
+- **ADR-110**: MCP Strategy Testing Interface → Align with plan transformer architecture
 
 ### ADRs to Deprecate/Pause
 
