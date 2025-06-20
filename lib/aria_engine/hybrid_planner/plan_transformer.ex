@@ -437,13 +437,11 @@ defmodule AriaEngine.HybridPlanner.PlanTransformer do
     %Domain.Core{
       name: schedule_name,
       actions: %{},
-      methods: %{},
-      predicates: %{},
-      types: %{},
-      metadata: %{
-        created_from: "mcp_schedule_activities",
-        created_at: System.system_time(:millisecond)
-      }
+      action_metadata: %{},
+      task_methods: %{},
+      unigoal_methods: %{},
+      multigoal_methods: [],
+      durative_actions: %{}
     }
   end
 
@@ -452,11 +450,7 @@ defmodule AriaEngine.HybridPlanner.PlanTransformer do
     # For now, create a minimal state
     # In a full implementation, this would properly initialize state from entities/resources
     %AriaEngine.StateV2{
-      facts: %{},
-      metadata: %{
-        created_from: "mcp_schedule_activities",
-        created_at: System.system_time(:millisecond)
-      }
+      data: %{}
     }
   end
 

@@ -120,6 +120,14 @@ defmodule AriaEngine.Membrane.EchoFilter do
     {[buffer: {:output, output_buffer}], new_state}
   end
 
+  # Catch-all clause for unsupported payload types
+  @impl true
+  def handle_buffer(:input, %Buffer{payload: _payload} = buffer, _ctx, state) do
+    # Pass through unsupported payloads unchanged
+    new_state = %{state | processed_count: state.processed_count + 1}
+    {[buffer: {:output, buffer}], new_state}
+  end
+
   # Private functions for mock response creation
 
   defp create_mock_mcp_response(%MCPRequest{} = request, scenario) do

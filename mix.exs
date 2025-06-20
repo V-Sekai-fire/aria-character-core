@@ -93,6 +93,10 @@ defmodule AriaCharacterCore.MixProject do
       {:gen_state_machine, "~> 3.0"},
       {:flow, "~> 1.2"},
 
+      # Membrane Framework for Pipeline Processing
+      {:membrane_core, "~> 1.0"},
+      {:membrane_file_plugin, "~> 0.17.0"},
+
       # Monitoring and Metrics
       {:telemetry_metrics_prometheus, "~> 1.1"},
       {:prometheus_ex, "~> 3.0"},
