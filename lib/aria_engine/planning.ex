@@ -6,7 +6,6 @@ defmodule Planning do
   Provides core planning and execution functionalities for the Aria Engine.
   """
 
-  alias Planning.HighLevel
   alias Planning.CoreInterface
   alias Core
 
@@ -14,11 +13,6 @@ defmodule Planning do
   @type solution_tree :: Core.solution_tree()
   @type plan_step :: Core.plan_step()
   @type todo_item :: Core.todo_item()
-
-  # HighLevel functions
-  defdelegate plan_advanced(engine, opts), to: HighLevel
-  defdelegate execute(engine, opts), to: HighLevel
-  defdelegate run(engine, opts), to: HighLevel
 
   # CoreInterface functions
   defdelegate plan(domain, state, todos, opts), to: CoreInterface
