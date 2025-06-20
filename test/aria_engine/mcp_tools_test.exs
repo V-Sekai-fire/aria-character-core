@@ -76,7 +76,7 @@ defmodule AriaEngine.MCPToolsTest do
       assert task[:id] == "simple_task"
       assert task[:duration] == 30
       assert task[:start_time] == 0
-      assert task[:end_time] == 30
+      assert AriaEngine.Utils.duration_to_seconds(task[:end_time]) == 30
     end
     
     test "Test 2: Sequential Test - dependent tasks" do
@@ -120,8 +120,8 @@ defmodule AriaEngine.MCPToolsTest do
       # Verify sequential ordering - be more flexible about exact timing
       # The key requirement is that dependencies are respected
       assert task1[:start_time] == 0
-      assert task1[:end_time] == 20
-      assert task2[:start_time] >= task1[:end_time]
+      assert AriaEngine.Utils.duration_to_seconds(task1[:end_time]) == 20
+      assert AriaEngine.Utils.duration_to_seconds(task2[:start_time]) >= AriaEngine.Utils.duration_to_seconds(task1[:end_time])
       
       # For task3, check if it either respects the dependency OR if there's a scheduling issue
       # that we need to account for. The important thing is that all tasks are scheduled.
@@ -546,7 +546,7 @@ defmodule AriaEngine.MCPToolsTest do
       assert task[:id] == "iso_task"
       assert task[:duration] == 5400
       assert task[:start_time] == 0
-      assert task[:end_time] == 5400
+      assert AriaEngine.Utils.duration_to_seconds(task[:end_time]) == 5400
     end
 
     test "Test 8: DateTime interval" do

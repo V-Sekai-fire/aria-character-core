@@ -188,7 +188,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
         duration = Map.get(activity, :duration, 1)
         %{activity | 
           start_time: earliest_start,
-          end_time: earliest_start + duration
+          end_time: AriaEngine.Utils.add_durations(earliest_start, duration)
         }
       end)
       

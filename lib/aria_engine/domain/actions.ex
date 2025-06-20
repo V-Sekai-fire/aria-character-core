@@ -28,29 +28,38 @@ defmodule Domain.Actions do
   @spec add_action(t(), action_name(), action_fn(), map()) :: t()
   def add_action(%{actions: actions, action_metadata: action_metadata, task_methods: methods} = domain, name, action_fn, metadata \\ %{})
       when is_atom(name) and is_function(action_fn, 2) and is_map(metadata) do
-    
+
+    # Normalize duration in metadata if present
+    normalized_metadata =
+      if Map.has_key?(metadata, :duration) do
+        duration = metadata[:duration]
+        Map.put(metadata, :duration, AriaEngine.Utils.normalize_duration(duration))
+      else
+        metadata
+      end
+
     # Add the action to the actions map
     updated_actions = Map.put(actions, name, action_fn)
-    
+
     # Store action metadata
-    updated_action_metadata = Map.put(action_metadata, name, metadata)
-    
+    updated_action_metadata = Map.put(action_metadata, name, normalized_metadata)
+
     # Create a task method that just returns the action as a primitive task
     # This allows the action to be used directly in HTN task decompositions
     task_name = Atom.to_string(name)
     primitive_method_fn = fn _state, args -> [{name, args}] end
     method_name = "primitive_#{task_name}"
-    
+
     # Create a {name, function} tuple for the primitive method
     primitive_method = {method_name, primitive_method_fn}
-    
+
     # Add the primitive method to task methods
     current_methods = Map.get(methods, task_name, [])
     updated_methods = [primitive_method | current_methods]  # Put primitive method first
     updated_task_methods = Map.put(methods, task_name, updated_methods)
-    
-    %{domain | 
-      actions: updated_actions, 
+
+    %{domain |
+      actions: updated_actions,
       action_metadata: updated_action_metadata, # Update action metadata
       task_methods: updated_task_methods
     }

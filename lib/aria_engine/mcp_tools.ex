@@ -605,7 +605,7 @@ defp convert_activities(activities) when is_list(activities) do
     Enum.map(activities, fn activity ->
       %{
         id: Map.get(activity, "id"),
-        duration: process_duration(Map.get(activity, "duration")),
+        duration: AriaEngine.Utils.duration_to_seconds(process_duration(Map.get(activity, "duration"))),
         dependencies: Map.get(activity, "dependencies", []),
         required_capabilities: convert_capabilities(Map.get(activity, "required_capabilities", [])),
         required_resources: convert_capabilities(Map.get(activity, "required_resources", []))
@@ -672,24 +672,28 @@ defp convert_activities(activities) when is_list(activities) do
   
 
   defp process_duration(duration) do
-    case duration do
-      duration_str when is_binary(duration_str) ->
-        case parse_iso8601_duration(duration_str) do
-          {:ok, parsed_duration} ->
-            convert_parsed_duration_to_seconds(parsed_duration)
-          {:error, _} -> nil
-        end
-      duration_map when is_map(duration_map) ->
-        with {:ok, start_time} <- parse_duration_datetime(duration_map, "start"),
-             {:ok, end_time} <- parse_duration_datetime(duration_map, "end") do
-          DateTime.diff(end_time, start_time, :second)
+    cond do
+      is_binary(duration) ->
+        duration
+      is_map(duration) ->
+        with {:ok, start_time} <- parse_duration_datetime(duration, "start"),
+             {:ok, end_time} <- parse_duration_datetime(duration, "end") do
+          seconds = DateTime.diff(end_time, start_time, :second)
+          hours = div(seconds, 3600)
+          minutes = div(rem(seconds, 3600), 60)
+          secs = rem(seconds, 60)
+          "PT" <>
+            (if hours > 0, do: "#{hours}H", else: "") <>
+            (if minutes > 0, do: "#{minutes}M", else: "") <>
+            (if secs > 0, do: "#{secs}S", else: "")
         else
           _ -> nil
         end
-      duration_int when is_integer(duration_int) ->
-        # Treat integer durations as seconds
-        duration_int
-      _ ->
+      is_float(duration) ->
+        duration
+      is_integer(duration) ->
+        duration * 1.0
+      true ->
         nil
     end
   end

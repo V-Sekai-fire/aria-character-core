@@ -106,8 +106,26 @@ defmodule Domain.Core do
   Adds an action (function or struct) to the domain.
   """
   @spec add_action(t(), action_name(), any()) :: t()
-  def add_action(%__MODULE__{actions: actions} = domain, name, action) do
-    %{domain | actions: Map.put(actions, name, action)}
+  def add_action(%__MODULE__{actions: actions, action_metadata: action_metadata} = domain, name, action) do
+    cond do
+      is_function(action, 2) ->
+        # Just store the function, no metadata
+        %{domain | actions: Map.put(actions, name, action)}
+      is_map(action) and Map.has_key?(action, :metadata) ->
+        metadata = Map.get(action, :metadata, %{})
+        normalized_metadata =
+          if Map.has_key?(metadata, :duration) do
+            duration = metadata[:duration]
+            Map.put(metadata, :duration, AriaEngine.Utils.normalize_duration(duration))
+          else
+            metadata
+          end
+        updated_action_metadata = Map.put(action_metadata, name, normalized_metadata)
+        %{domain | actions: Map.put(actions, name, action), action_metadata: updated_action_metadata}
+      true ->
+        # Unknown type, just store as is
+        %{domain | actions: Map.put(actions, name, action)}
+    end
   end
 
   @doc """

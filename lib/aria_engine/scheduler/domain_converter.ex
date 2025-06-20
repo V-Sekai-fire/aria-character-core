@@ -85,7 +85,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   def create_activity_action(activity, _entities, _resources) do
     fn state, _args ->
       activity_id = activity.id
-      duration = Map.get(activity, :duration, 1)
+      duration = AriaEngine.Utils.normalize_duration(Map.get(activity, :duration, 1))
       
       # Simple action: mark activity as completed
       # Note: Fixed parameter order to match hybrid planner expectations
@@ -103,7 +103,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   def create_durative_activity_action(activity, _entities, _resources) do
     fn state, _args ->
       activity_id = activity.id
-      duration = Map.get(activity, :duration, 1)
+      duration = AriaEngine.Utils.normalize_duration(Map.get(activity, :duration, 1))
       required_resources = Map.get(activity, :required_resources, [])
       
       # Durative action: handle resource allocation and activity execution over time
@@ -154,7 +154,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   @spec create_durative_action_struct(activity(), [Entity.t()], [Resource.t()]) :: Domain.DurativeAction.t()
   def create_durative_action_struct(activity, entities, resources) do
     activity_id = activity.id
-    duration = Map.get(activity, :duration, 1)
+    duration = AriaEngine.Utils.normalize_duration(Map.get(activity, :duration, 1))
     required_resources = Map.get(activity, :required_resources, [])
     dependencies = Map.get(activity, :dependencies, [])
     
@@ -309,7 +309,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   def create_khr_primitive_sequence(activity, _entities, _resources) do
     activity_id = activity.id
     required_resources = Map.get(activity, :required_resources, [])
-    duration = Map.get(activity, :duration, 1)
+    duration = AriaEngine.Utils.normalize_duration(Map.get(activity, :duration, 1))
     
     # Generate node indices for this activity's operations
     base_node = String.to_integer(String.replace(activity_id, ~r/[^\d]/, ""), 10) * 1000
@@ -565,9 +565,9 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     activities
     |> Enum.map(fn activity ->
       activity_id = activity.id
-      start_time = AriaEngine.StateV2.get_fact(state, activity_id, "start_time") || 0
-      end_time = AriaEngine.StateV2.get_fact(state, activity_id, "end_time") || Map.get(activity, :duration, 1)
-      duration = Map.get(activity, :duration, 1)
+      start_time = AriaEngine.StateV2.get_fact(state, activity_id, "start_time") || "PT0S"
+      duration = AriaEngine.Utils.normalize_duration(Map.get(activity, :duration, 1))
+      end_time = AriaEngine.Utils.add_durations(start_time, duration)
       
       Map.merge(activity, %{
         start_time: start_time,
@@ -596,25 +596,32 @@ defmodule AriaEngine.Scheduler.DomainConverter do
         
         # Calculate earliest start time based on current dependency timing
         earliest_start = if Enum.empty?(dependencies) do
-          0
+          "PT0S"
         else
           dependencies
           |> Enum.map(fn dep_id ->
             case Map.get(activity_map, dep_id) do
               nil -> 
                 Logger.warning("Dependency #{dep_id} not found for activity #{activity.id}")
-                0
+                "PT0S"
               dep_activity -> dep_activity.end_time
             end
           end)
           |> Enum.max()
         end
-        
+
         # Update timing
-        duration = Map.get(activity, :duration, 1)
-        %{activity | 
+        duration = AriaEngine.Utils.normalize_duration(Map.get(activity, :duration, 1))
+        new_end_time = AriaEngine.Utils.add_durations(earliest_start, duration)
+        %{activity |
           start_time: earliest_start,
-          end_time: earliest_start + duration
+          end_time: new_end_time
+        }
+        duration = AriaEngine.Utils.normalize_duration(Map.get(activity, :duration, 1))
+        new_end_time = AriaEngine.Utils.add_durations(earliest_start, duration)
+        %{activity |
+          start_time: earliest_start,
+          end_time: new_end_time
         }
       end)
       
