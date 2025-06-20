@@ -4,7 +4,6 @@
 defmodule BacktrackingTest do
   use ExUnit.Case
   require Logger
-  @tag :skip
 
   import AriaEngine
   alias {TestDomains}

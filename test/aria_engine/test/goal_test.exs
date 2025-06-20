@@ -3,7 +3,6 @@
 
 defmodule GoalTest do
   use ExUnit.Case
-  @tag :skip
   doctest Multigoal
 
   alias Multigoal
