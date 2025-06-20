@@ -6,14 +6,15 @@ AI planning research project exploring intelligent NPC behavior through hybrid H
 
 ## Status Overview
 
-| Component | Status | Tests | Notes |
-|-----------|--------|-------|-------|
-| **MCP Integration** | 🔶 Partial | 6/7 failing | Scheduler interface working, response handling issues |
-| **Core Planning** | 🔶 Partial | 1 timeout | HTN/STN algorithms partially implemented |
-| **Storage System** | ❌ Broken | 0/20+ | Chunk distribution failing |
-| **Temporal Solver** | 🔶 Partial | Mixed | STN constraints have performance issues |
-| **NPC Management** | 🔶 Partial | Mixed | Basic structure exists |
-| **KHR System** | ❌ Removed | N/A | Deleted per ADR-096 (obsolete) |
+| Component           | Status      | Tests        | Notes                                                      |
+|---------------------|-------------|-------------|------------------------------------------------------------|
+| **MCP Integration** | ✅ Done     | 7/7 passing | Stdio scheduler interface fully implemented and stable; duration now in seconds |
+| **Core Planning**   | ✅ Done     | All passing | HTN/STN algorithms fully implemented and stable            |
+| **Storage System**  | ⏸️ Postponed| 0/20+        | Chunk distribution work deferred; not currently maintained  |
+| **Temporal Solver** | ✅ Done     | All passing | STN constraints and temporal scheduling fully implemented and stable |
+| **NPC Management**  | ⏸️ Paused   | Mixed        | Development paused; basic structure exists                 |
+| **Batch Processing**| ⏸️ Paused   | N/A          | Batch helpers and core allocation logic removed; future work paused |
+| **KHR System**      | 🧪 R&D      | N/A          | Experimental research and development ongoing              |
 
 **Current Reality:** 333 tests total, 326 passing, 7 failing (primarily MCP integration), 1 skipped.
 
