@@ -1,8 +1,9 @@
 # ADR-110: MCP Strategy Testing Interface for Hybrid Planner
 
-**Status:** Proposed  
+**Status:** Completed  
 **Date:** June 20, 2025  
-**Priority:** HIGH  
+**Completion Date:** June 20, 2025  
+**Priority:** HIGH
 
 ## Context
 

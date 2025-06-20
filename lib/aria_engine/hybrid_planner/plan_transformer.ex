@@ -1,322 +1,55 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.MCPTools do
-  # API Version Management
-  @current_api_version "1.0.0"
-  @supported_api_versions ["1.0.0"]
-
+defmodule AriaEngine.HybridPlanner.PlanTransformer do
   @moduledoc """
-  Shared MCP tool definitions and handlers for AriaEngine.
+  Converts MCP schedule_activities input to HybridCoordinatorV2 planning parameters.
   
-  This module provides a registry-based system for MCP tools that can be
-  used by different MCP server implementations (stdio, HTTP, etc.).
+  Extracts and validates MCP tool input, then converts to the format expected
+  by HybridCoordinatorV2: {domain, state, goals}.
   
-  ## Versioning
-  
-  The MCP API uses semantic versioning (major.minor.patch):
-  - Major: Breaking changes to existing tools
-  - Minor: New tools or backward-compatible enhancements  
-  - Patch: Bug fixes and internal improvements
-  
-  Current API version: #{@current_api_version}
-  Supported versions: #{inspect(@supported_api_versions)}
-  
-  ## Adding Tools
-  
-  To add a new tool:
-  1. Add the tool definition to the @tools list with version
-  2. Add a handler function following the pattern handle_<tool_name>_tool_call/2
-  3. The tool will automatically be available in all MCP servers
-  4. Update API version appropriately (minor for new tools, major for breaking changes)
+  This module contains all validation logic previously embedded in MCPTools,
+  providing clean separation between MCP input handling and planning execution.
   """
 
   require Logger
-  
-  # Tool registry with versioning - add new tools here
-  @tools [
-    {:schedule_activities, "1.0.0"}
-  ]
-  
-  @doc """
-  Returns the current API version.
-  """
-  def current_api_version, do: @current_api_version
-  
-  @doc """
-  Returns all supported API versions.
-  """
-  def supported_api_versions, do: @supported_api_versions
-  
-  @doc """
-  Checks if a given API version is supported.
-  """
-  def version_supported?(version) when is_binary(version) do
-    version in @supported_api_versions
-  end
-  
-  @doc """
-  Validates API version compatibility for a request.
-  Returns {:ok, version} or {:error, reason}.
-  """
-  def validate_api_version(nil), do: {:ok, @current_api_version}
-  def validate_api_version(version) when is_binary(version) do
-    if version_supported?(version) do
-      {:ok, version}
-    else
-      {:error, "Unsupported API version: #{version}. Supported versions: #{inspect(@supported_api_versions)}"}
-    end
-  end
-  def validate_api_version(_), do: {:error, "API version must be a string"}
-  
-  @doc """
-  Checks if a tool version is compatible with a requested API version.
-  Uses semantic versioning compatibility rules.
-  """
-  def version_compatible?(tool_version, api_version) when is_binary(tool_version) and is_binary(api_version) do
-    # For now, use simple exact matching. 
-    # In the future, this could implement semantic versioning rules:
-    # - Same major version required for compatibility
-    # - Minor/patch versions are backward compatible
-    tool_version == api_version
-  end
 
   @doc """
-  Returns all available tool definitions for the current API version.
+  Convert MCP schedule_activities parameters to planning format.
+  
+  Takes raw MCP input and returns validated planning parameters for HybridCoordinatorV2.
+  
+  ## Returns
+  
+  - `{:ok, {domain, state, goals}}` - Ready for HybridCoordinatorV2.plan/4
+  - `{:error, reason}` - Validation or conversion error
   """
-  def get_all_tools do
-    get_all_tools(@current_api_version)
-  end
-  
-  @doc """
-  Returns all available tool definitions for a specific API version.
-  """
-  def get_all_tools(api_version) when is_binary(api_version) do
-    case validate_api_version(api_version) do
-      {:ok, validated_version} ->
-        @tools
-        |> Enum.filter(fn {_tool_name, tool_version} -> 
-          version_compatible?(tool_version, validated_version)
-        end)
-        |> Enum.map(fn {tool_name, _version} -> 
-          get_tool_definition(tool_name, validated_version)
-        end)
-      {:error, _reason} ->
-        []
-    end
-  end
-
-  @doc """
-  Returns a specific tool definition by name for the current API version.
-  """
-  def get_tool_definition(tool_name) do
-    get_tool_definition(tool_name, @current_api_version)
-  end
-  
-  @doc """
-  Returns a specific tool definition by name for a specific API version.
-  """
-  def get_tool_definition(:schedule_activities, api_version) when is_binary(api_version) do
-    case validate_api_version(api_version) do
-      {:ok, _validated_version} ->
-        get_schedule_activities_definition(api_version)
-      {:error, reason} ->
-        %{error: reason}
-    end
-  end
-  
-  
-  def get_tool_definition(tool_name, _api_version) do
-    Logger.warning("MCPTools: Unknown tool definition requested: #{inspect(tool_name)}")
-    %{error: "Unknown tool: #{tool_name}"}
-  end
-  
-  defp get_schedule_activities_definition(api_version) do
-    %{
-      name: "schedule_activities",
-      description: "Schedule activities using AriaEngine's temporal planner with entity and resource management. Returns complete SimulationResult with solution tree.",
-      version: "1.0.0",
-      apiVersion: api_version,
-      inputSchema: %{
-        type: "object",
-        properties: %{
-          schedule_name: %{
-            type: "string",
-            description: "Name for this scheduling request"
-          },
-          activities: %{
-            type: "array",
-            description: "List of activities to schedule",
-            items: %{
-              type: "object",
-              properties: %{
-                id: %{type: "string", description: "Activity identifier"},
-                duration: %{
-                  anyOf: [
-                    %{
-                      type: "string",
-                      format: "duration",
-                      description: "The activity's duration in ISO 8601 format (e.g., 'PT2H30M', 'PT90S')."
-                    },
-                    %{
-                      type: "object",
-                      properties: %{
-                        start: %{
-                          type: "string",
-                          format: "date-time",
-                          pattern: "Z|[+-][0-9]{2}:[0-9]{2}$",
-                          description: "Start time in ISO 8601 format with timezone."
-                        },
-                        end: %{
-                          type: "string",
-                          format: "date-time",
-                          pattern: "Z|[+-][0-9]{2}:[0-9]{2}$",
-                          description: "End time in ISO 8601 format with timezone."
-                        }
-                      },
-                      minProperties: 1,
-                      description: "A time window for the activity. At least one of start or end must be present. Both are ISO 8601 datetime strings with mandatory timezone."
-                    }
-                  ],
-                  description: "The duration of the activity, specified as an ISO 8601 duration string or a fixed/open interval (ISO 8601 datetimes with timezone)."
-                },
-                dependencies: %{
-                  type: "array",
-                  items: %{type: "string"},
-                  description: "List of activity IDs this depends on"
-                },
-                required_capabilities: %{
-                  type: "array",
-                  items: %{type: "string"},
-                  description: "Required entity capabilities"
-                },
-                required_resources: %{
-                  type: "array",
-                  items: %{type: "string"},
-                  description: "Required resource IDs"
-                }
-              },
-              required: ["id", "duration"]
-            }
-          },
-          entities: %{
-            type: "array",
-            description: "Available entities with capabilities",
-            items: %{
-              type: "object",
-              properties: %{
-                id: %{type: "string"},
-                type: %{type: "string"},
-                capabilities: %{type: "array", items: %{type: "string"}},
-                availability: %{type: "object"}
-              }
-            }
-          },
-          resources: %{
-            type: "object",
-            description: "Available resources with capacity",
-            additionalProperties: %{
-              type: "object",
-              properties: %{
-                type: %{type: "string"},
-                capacity: %{type: "integer"},
-                current_usage: %{type: "integer"}
-              }
-            }
-          },
-          constraints: %{
-            type: "object",
-            description: "Scheduling constraints and options",
-            properties: %{
-              max_duration: %{type: "integer"},
-              simulation_mode: %{type: "boolean"},
-              verbose: %{type: "integer"}
-            }
-          }
-        },
-        required: ["schedule_name", "activities"]
-      }
-    }
-  end
-  
-
-  @doc """
-  Handles any tool call by routing to the appropriate handler function.
-  """
-  def handle_tool_call(tool_name, params) when is_binary(tool_name) do
-    tool_atom = String.to_atom(tool_name)
-    handle_tool_call(tool_atom, params)
-  end
-  
-  def handle_tool_call(tool_name, params) when is_list(tool_name) do
-    # Handle charlist input (convert to string first)
-    string_name = List.to_string(tool_name)
-    handle_tool_call(string_name, params)
-  end
-
-  def handle_tool_call(:schedule_activities, params) do
-    handle_schedule_activities_tool_call(params)
-  end
-
-
-  def handle_tool_call(tool_name, _params) do
-    Logger.warning("MCPTools: Unknown tool requested: #{inspect(tool_name)}")
-    %{
-      status: "error",
-      reason: "Unknown tool: #{tool_name}",
-      schedule: [],
-      analysis: %{},
-      activity_log: [],
-      resource_utilization: %{},
-      timeline: [],
-      simulation_metadata: %{}
-    }
-  end
-
-  @doc """
-  Handles the schedule_activities tool call with the given parameters.
-  
-  This function now acts as a pure plan converter that transforms MCP input
-  to HybridCoordinatorV2 format without executing the planning.
-  """
-  def handle_schedule_activities_tool_call(params) do
+  @spec convert_to_planning_params(map()) :: 
+    {:ok, {Domain.Core.t(), AriaEngine.StateV2.t(), [term()]}} | {:error, String.t()}
+  def convert_to_planning_params(params) when is_map(params) do
     try do
-      # Use plan transformer to convert MCP input to planning parameters
-      case AriaEngine.HybridPlanner.PlanTransformer.convert_to_planning_params(params) do
-        {:ok, {domain, state, goals}} ->
-          # Return the converted planning parameters in MCP format
-          %{
-            status: "success",
-            reason: "MCP input successfully converted to planning format",
-            coordinator_input: %{
-              domain: domain,
-              state: state,
-              goals: goals
-            },
-            conversion_metadata: %{
-              original_activities: length(Map.get(params, "activities", [])),
-              converted_at: DateTime.utc_now() |> DateTime.to_iso8601(),
-              input_format: "mcp_schedule_activities",
-              output_format: "hybrid_coordinator_v2"
-            },
-            schedule: [],
-            analysis: %{},
-            resource_utilization: %{},
-            timeline: [],
-            simulation_metadata: %{}
-          }
-          
-        {:error, reason} ->
-          format_mcp_error(reason)
+      # Step 1: Validate basic parameter structure
+      case validate_params(params) do
+        {:ok, validated_params} ->
+          # Step 2: Validate activities for type safety and circular dependencies
+          case validate_activities(validated_params["activities"] || []) do
+            {:ok, validated_activities} ->
+              # Step 3: Convert to planning format
+              convert_validated_params_to_planning_format(validated_params, validated_activities)
+            {:error, reason} -> {:error, reason}
+          end
+        {:error, reason} -> {:error, reason}
       end
     rescue
       e ->
-        Logger.error("MCPTools error: #{Exception.message(e)}")
-        format_mcp_error("Internal error: #{Exception.message(e)}")
+        Logger.error("PlanTransformer conversion error: #{Exception.message(e)}")
+        {:error, "Conversion error: #{Exception.message(e)}"}
     end
   end
 
-  # Private helper functions
+  def convert_to_planning_params(_), do: {:error, "Invalid parameters format"}
+
+  # ==================== VALIDATION FUNCTIONS ====================
 
   defp validate_params(params) when is_map(params) do
     cond do
@@ -341,7 +74,7 @@ defmodule AriaEngine.MCPTools do
   end
   
   defp validate_params(_), do: {:error, "Invalid parameters format"}
-  
+
   # Validates activities for type safety and circular dependencies.
   defp validate_activities(activities) when is_list(activities) do
     try do
@@ -361,7 +94,7 @@ defmodule AriaEngine.MCPTools do
   end
   
   defp validate_activities(_), do: {:error, "Activities must be a list"}
-  
+
   # Validates the structure and types of individual activities.
   defp validate_activity_structures(activities) do
     validated = Enum.map(activities, &validate_single_activity/1)
@@ -539,7 +272,9 @@ defmodule AriaEngine.MCPTools do
     end
   end
   defp validate_dependencies_format(_), do: {:error, "Activity 'dependencies' must be a list of strings"}
-  
+
+  # ==================== CIRCULAR DEPENDENCY DETECTION ====================
+
   # Detects circular dependencies using depth-first search.
   defp detect_circular_dependencies(activities) do
     # Build dependency graph
@@ -594,8 +329,36 @@ defmodule AriaEngine.MCPTools do
         end)
     end
   end
-  
-defp convert_activities(activities) when is_list(activities) do
+
+  # ==================== CONVERSION FUNCTIONS ====================
+
+  defp convert_validated_params_to_planning_format(validated_params, validated_activities) do
+    try do
+      # Convert activities to internal format
+      activities = convert_activities(validated_activities)
+      entities = convert_entities(validated_params["entities"] || [])
+      resources = validated_params["resources"] || %{}
+      constraints = validated_params["constraints"] || %{}
+      schedule_name = validated_params["schedule_name"]
+
+      # Create domain (simplified for now - in reality this would be more complex)
+      domain = create_domain_from_activities(schedule_name, activities, entities, resources)
+      
+      # Create initial state
+      state = create_initial_state(entities, resources, activities)
+      
+      # Create goals from activities
+      goals = create_goals_from_activities(activities)
+
+      {:ok, {domain, state, goals}}
+    rescue
+      e ->
+        Logger.error("PlanTransformer format conversion error: #{Exception.message(e)}")
+        {:error, "Format conversion error: #{Exception.message(e)}"}
+    end
+  end
+
+  defp convert_activities(activities) when is_list(activities) do
     Enum.map(activities, fn activity ->
       duration_raw = Map.get(activity, "duration")
       duration =
@@ -636,7 +399,7 @@ defp convert_activities(activities) when is_list(activities) do
   end
   
   defp convert_activities(_), do: []
-  
+
   defp convert_entities(entities) when is_list(entities) do
     Enum.map(entities, fn entity ->
       %AriaEngine.Scheduler.Entity{
@@ -664,41 +427,45 @@ defp convert_activities(activities) when is_list(activities) do
   defp convert_availability(nil), do: nil
   defp convert_availability(availability) when is_map(availability), do: availability
   defp convert_availability(_), do: nil
-  
-  defp convert_simulation_result_to_map(%AriaEngine.Scheduler.SimulationResult{} = result) do
-    try do
-      %{
-        status: result.status,
-        reason: result.reason,
-        schedule: result.schedule || [],
-        analysis: result.analysis || %{},
-        resource_utilization: result.resource_utilization || %{},
-        timeline: result.timeline || [],
-        simulation_metadata: result.simulation_metadata || %{}
+
+  # ==================== DOMAIN/STATE/GOALS CREATION ====================
+
+  # Create a basic domain from activities (simplified implementation)
+  defp create_domain_from_activities(schedule_name, _activities, _entities, _resources) do
+    # For now, create a minimal domain structure
+    # In a full implementation, this would analyze activities and create proper domain
+    %Domain.Core{
+      name: schedule_name,
+      actions: %{},
+      methods: %{},
+      predicates: %{},
+      types: %{},
+      metadata: %{
+        created_from: "mcp_schedule_activities",
+        created_at: System.system_time(:millisecond)
       }
-    rescue
-      e ->
-        Logger.error("Error converting SimulationResult to map: #{Exception.message(e)}")
-        %{
-          status: "error",
-          reason: "Conversion error: #{Exception.message(e)}",
-          schedule: [],
-          analysis: %{},
-          activity_log: [],
-          resource_utilization: %{},
-          timeline: [],
-          simulation_metadata: %{}
-        }
-    end
-  end
-  
-  # Convert plan result to MCP format using the format converter
-  defp convert_plan_to_mcp_format(plan) do
-    AriaEngine.MCP.FormatConverter.convert_plan_to_mcp_format(plan)
+    }
   end
 
-  # Format error response in MCP format using the format converter
-  defp format_mcp_error(reason) do
-    AriaEngine.MCP.FormatConverter.format_mcp_error(reason)
+  # Create initial state from entities and resources
+  defp create_initial_state(_entities, _resources, _activities) do
+    # For now, create a minimal state
+    # In a full implementation, this would properly initialize state from entities/resources
+    %AriaEngine.StateV2{
+      facts: %{},
+      metadata: %{
+        created_from: "mcp_schedule_activities",
+        created_at: System.system_time(:millisecond)
+      }
+    }
+  end
+
+  # Create goals from activities
+  defp create_goals_from_activities(activities) do
+    # For now, create simple goals based on activity completion
+    # In a full implementation, this would create proper goal structures
+    Enum.map(activities, fn activity ->
+      {:complete_activity, activity.id}
+    end)
   end
 end
