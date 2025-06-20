@@ -196,11 +196,11 @@ end
 ```
 
 **Implementation Tasks**:
-- [ ] Add Membrane Framework dependencies to mix.exs
-- [ ] Run `mix deps.get` to install Membrane
-- [ ] Define 4 custom format modules with proper `@derive Membrane.Format`
-- [ ] Add format validation functions
-- [ ] Test format serialization/deserialization
+- [x] Add Membrane Framework dependencies to mix.exs
+- [x] Run `mix deps.get` to install Membrane
+- [x] Define 4 custom format modules with proper `@derive Membrane.Format`
+- [x] Add format validation functions
+- [x] Test format serialization/deserialization
 
 ### Boot Level 2: Membrane Source Element (MCP Tool + Pipeline Control)
 
