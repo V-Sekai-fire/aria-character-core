@@ -1,6 +1,6 @@
 # ADR-110: MCP Strategy Testing Interface using Membrane Framework Pipeline
 
-**Status:** Completed (June 20, 2025)
+**Status:** Active
 **Date:** June 20, 2025  
 **Priority:** HIGH
 
