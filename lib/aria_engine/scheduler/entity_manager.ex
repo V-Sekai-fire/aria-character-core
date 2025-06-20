@@ -305,7 +305,27 @@ defmodule AriaEngine.Scheduler.EntityManager do
   defp calculate_workload_score(activities) do
     # Simple workload score based on activity count and estimated duration
     total_duration = activities
-    |> Enum.map(fn activity -> Map.get(activity, :duration, 1) end)
+    |> Enum.map(fn activity ->
+      duration_val = Map.get(activity, :duration)
+      cond do
+        is_map(duration_val) and Map.has_key?(duration_val, :start) and Map.has_key?(duration_val, :end) ->
+          # Fixed interval: use difference in seconds
+          {:ok, start_dt, _} = DateTime.from_iso8601(duration_val[:start])
+          {:ok, end_dt, _} = DateTime.from_iso8601(duration_val[:end])
+          DateTime.diff(end_dt, start_dt)
+        is_map(duration_val) ->
+          AriaEngine.Utils.duration_struct_to_seconds(duration_val)
+        is_binary(duration_val) ->
+          case :iso8601.parse_duration(String.to_charlist(duration_val)) do
+            parsed when is_list(parsed) ->
+              map = Enum.into(parsed, %{})
+              AriaEngine.Utils.duration_struct_to_seconds(map)
+            _ -> 0
+          end
+        true ->
+          0
+      end
+    end)
     |> Enum.sum()
     
     activity_count = length(activities)

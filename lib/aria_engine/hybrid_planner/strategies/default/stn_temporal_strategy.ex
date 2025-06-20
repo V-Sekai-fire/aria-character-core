@@ -233,20 +233,51 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
     %{
       name: "STN Temporal Strategy",
       version: "1.0.0",
-      description: "Default STN-based temporal reasoning strategy",
+      description: "Default STN-based temporal reasoning strategy using Simple Temporal Networks",
       capabilities: [
         :temporal_constraints,
         :consistency_checking,
         :schedule_generation,
         :constraint_propagation,
-        :conflict_detection
+        :conflict_detection,
+        :hierarchical_planning,
+        :discrete_time_reasoning
       ],
       limitations: [
         :no_continuous_time,
         :no_resource_conflicts,
-        :simple_duration_model
+        :simple_duration_model,
+        :no_conditional_constraints,
+        :no_metric_optimization
       ],
-      underlying_implementation: "TemporalPlanner.STNPlanner"
+      temporal_model: %{
+        time_representation: :discrete_intervals,
+        constraint_types: [:before, :after, :during, :meets, :overlaps],
+        precision: :millisecond,
+        supports_uncertainty: false
+      },
+      configuration_options: [
+        :verbose,
+        :current_time,
+        :constraint_propagation_level,
+        :consistency_check_frequency
+      ],
+      dependencies: [
+        "TemporalPlanner.STNPlanner",
+        "Logger"
+      ],
+      action_compatibility: [
+        :durative_actions,
+        :instantaneous_actions,
+        :hierarchical_actions
+      ],
+      underlying_implementation: "TemporalPlanner.STNPlanner",
+      performance_characteristics: %{
+        best_case_actions: 1000,
+        worst_case_complexity: "O(n³)",
+        memory_scaling: "O(n²)",
+        recommended_max_actions: 500
+      }
     }
   end
 

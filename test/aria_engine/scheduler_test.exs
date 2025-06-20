@@ -125,6 +125,33 @@ defmodule AriaEngine.SchedulerTest do
       assert length(result.schedule) == 2
       assert is_nil(result.analysis) or result.analysis.dependencies_found == 0
     end
+
+    test "timing constraints are respected with multiple dependencies (STN logic)" do
+      activities = [
+        %{id: "a", duration: 2, dependencies: []},
+        %{id: "b", duration: 3, dependencies: ["a"]},
+        %{id: "c", duration: 1, dependencies: ["a"]},
+        %{id: "d", duration: 4, dependencies: ["b", "c"]}
+      ]
+
+      {:ok, result} = Scheduler.schedule_activities("STN Timing Test", activities)
+      schedule = Enum.sort_by(result.schedule, & &1.id)
+
+      a = Enum.find(schedule, &(&1.id == "a"))
+      b = Enum.find(schedule, &(&1.id == "b"))
+      c = Enum.find(schedule, &(&1.id == "c"))
+      d = Enum.find(schedule, &(&1.id == "d"))
+
+      assert a.start_time == 0
+      assert a.end_time == 2
+      assert b.start_time == 2
+      assert b.end_time == 5
+      assert c.start_time == 2
+      assert c.end_time == 3
+      # d should start after both b and c finish
+      assert d.start_time == 5
+      assert d.end_time == 9
+    end
   end
   
   describe "error handling" do

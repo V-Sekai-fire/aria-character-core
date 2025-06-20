@@ -21,7 +21,7 @@ defmodule Domain.DurativeAction do
     over_time: list()
   }
 
-  @type durative_action_duration :: {:fixed, number()} | {:range, number(), number()}
+  @type durative_action_duration :: {:fixed, number()} | {:range, number(), number()} | {:open_ended, map()}
 
   @type t :: %__MODULE__{
     name: durative_action_name(),

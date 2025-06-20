@@ -3,6 +3,20 @@
 
 defmodule AriaEngine.MCPToolsTest do
   use ExUnit.Case, async: true
+
+  test "MCP tools schedule activities returns ISO8601 PT0S for missing durations" do
+    activities = [
+      %{id: "task1", dependencies: []},
+      %{id: "task2", dependencies: ["task1"]}
+    ]
+
+    opts = []
+    {:ok, result} = AriaEngine.Scheduler.schedule_activities("MCP PT0S Test", activities, opts)
+    assert is_list(result.schedule)
+    assert Enum.any?(result.schedule, fn act ->
+      act.start_time == "PT0S" and act.end_time == "PT0S"
+    end)
+  end
   
   alias AriaEngine.MCPTools
   alias AriaEngine.Scheduler.{Entity, Resource}
@@ -53,7 +67,7 @@ defmodule AriaEngine.MCPToolsTest do
         "activities" => [
           %{
             "id" => "simple_task",
-            "duration" => 30
+            "duration" => "PT30S"
           }
         ]
       }
@@ -74,7 +88,7 @@ defmodule AriaEngine.MCPToolsTest do
       
       task = hd(schedule)
       assert task[:id] == "simple_task"
-      assert task[:duration] == 30
+      assert task[:duration] == "PT30.0S"
       assert task[:start_time] == 0
       assert AriaEngine.Utils.duration_to_seconds(task[:end_time]) == 30
     end
@@ -85,17 +99,17 @@ defmodule AriaEngine.MCPToolsTest do
         "activities" => [
           %{
             "id" => "task1",
-            "duration" => 20,
+            "duration" => "PT20S",
             "dependencies" => []
           },
           %{
             "id" => "task2", 
-            "duration" => 15,
+            "duration" => "PT15S",
             "dependencies" => ["task1"]
           },
           %{
             "id" => "task3",
-            "duration" => 10,
+            "duration" => "PT10S",
             "dependencies" => ["task2"]
           }
         ]
@@ -127,9 +141,9 @@ defmodule AriaEngine.MCPToolsTest do
       # that we need to account for. The important thing is that all tasks are scheduled.
       if task3[:start_time] < task2[:end_time] do
         # If there's a scheduling overlap, at least verify the tasks are all present and have correct durations
-        assert task3[:duration] == 10
-        assert task2[:duration] == 15
-        assert task1[:duration] == 20
+        assert task3[:duration] == "PT10S"
+        assert task2[:duration] == "PT15S"
+        assert task1[:duration] == "PT20S"
       else
         # Normal case: task3 starts after task2 ends
         assert task3[:start_time] >= task2[:end_time]
@@ -167,11 +181,11 @@ defmodule AriaEngine.MCPToolsTest do
         "activities" => [
           %{
             "id" => "task1",
-            "duration" => 45
+            "duration" => "PT45S"
           },
           %{
             "id" => "task2",
-            "duration" => 30
+            "duration" => "PT30S"
           }
         ],
         "constraints" => %{
@@ -223,12 +237,12 @@ defmodule AriaEngine.MCPToolsTest do
         "activities" => [
           %{
             "id" => "coding_task",
-            "duration" => 60,
+            "duration" => "PT1M",
             "required_capabilities" => ["coding"]
           },
           %{
             "id" => "design_task",
-            "duration" => 45,
+            "duration" => "PT45S",
             "required_capabilities" => ["design"]
           }
         ],
@@ -286,12 +300,12 @@ defmodule AriaEngine.MCPToolsTest do
         "activities" => [
           %{
             "id" => "meeting",
-            "duration" => 60,
+            "duration" => "PT1M",
             "required_resources" => ["room1"]
           },
           %{
             "id" => "workshop",
-            "duration" => 120,
+            "duration" => "PT2M",
             "required_resources" => ["room2"]
           }
         ],
@@ -351,13 +365,13 @@ defmodule AriaEngine.MCPToolsTest do
         "activities" => [
           %{
             "id" => "implement_feature",
-            "duration" => 120,
+            "duration" => "PT2M",
             "required_capabilities" => ["coding"],
             "required_resources" => ["dev_server"]
           },
           %{
             "id" => "test_feature",
-            "duration" => 60,
+            "duration" => "PT1M",
             "dependencies" => ["implement_feature"],
             "required_capabilities" => ["testing"],
             "required_resources" => ["dev_server"]
@@ -437,7 +451,7 @@ defmodule AriaEngine.MCPToolsTest do
         
         %{
           "id" => "task#{i}",
-          "duration" => Enum.random(10..60),
+          "duration" => "PT#{Enum.random(10..60)}S",
           "dependencies" => deps
         }
       end
@@ -544,7 +558,7 @@ defmodule AriaEngine.MCPToolsTest do
 
       task = hd(schedule)
       assert task[:id] == "iso_task"
-      assert task[:duration] == 5400
+      assert task[:duration] == "PT1H30M"
       assert task[:start_time] == 0
       assert AriaEngine.Utils.duration_to_seconds(task[:end_time]) == 5400
     end
@@ -576,7 +590,6 @@ defmodule AriaEngine.MCPToolsTest do
       if parsed[:status] == "error" do
         Logger.info("DateTime test error: #{parsed[:reason]}")
       end
-      
       assert parsed[:status] == "success"
 
       schedule = parsed[:schedule]
@@ -584,7 +597,87 @@ defmodule AriaEngine.MCPToolsTest do
 
       task = hd(schedule)
       assert task[:id] == "datetime_task"
-      assert task[:duration] == 3600
+      # Accept both map and string-keyed map for duration
+      expected_duration = %{"start" => DateTime.to_iso8601(start_time), "end" => DateTime.to_iso8601(end_time)}
+      assert Map.equal?(task[:duration], expected_duration) or Map.equal?(task[:duration], %{start: DateTime.to_iso8601(start_time), end: DateTime.to_iso8601(end_time)})
+    end
+    
+    test "Test 9: Open-ended interval - only start time" do
+      start_time = DateTime.utc_now()
+      
+      args = %{
+        "schedule_name" => "Open-Ended Start Test",
+        "activities" => [
+          %{
+            "id" => "start_only_task",
+            "duration" => %{
+              "start" => DateTime.to_iso8601(start_time)
+            }
+          }
+        ]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      
+      assert is_map(result)
+      parsed = result
+      
+      # Debug output to see what error we're getting
+      require Logger
+      if parsed[:status] == "error" do
+        Logger.info("Open-ended start test error: #{parsed[:reason]}")
+      end
+      assert parsed[:status] == "success"
+      
+      schedule = parsed[:schedule]
+      assert length(schedule) == 1
+      
+      task = hd(schedule)
+      assert task[:id] == "start_only_task"
+      
+      # Verify that only start time is present in the duration
+      assert is_map(task[:duration])
+      assert Map.has_key?(task[:duration], "start") or Map.has_key?(task[:duration], :start)
+      refute Map.has_key?(task[:duration], "end") and Map.has_key?(task[:duration], :end)
+    end
+    
+    test "Test 10: Open-ended interval - only end time" do
+      end_time = DateTime.utc_now()
+      
+      args = %{
+        "schedule_name" => "Open-Ended End Test",
+        "activities" => [
+          %{
+            "id" => "end_only_task",
+            "duration" => %{
+              "end" => DateTime.to_iso8601(end_time)
+            }
+          }
+        ]
+      }
+      
+      result = MCPTools.handle_tool_call("schedule_activities", args)
+      
+      assert is_map(result)
+      parsed = result
+      
+      # Debug output to see what error we're getting
+      require Logger
+      if parsed[:status] == "error" do
+        Logger.info("Open-ended end test error: #{parsed[:reason]}")
+      end
+      assert parsed[:status] == "success"
+      
+      schedule = parsed[:schedule]
+      assert length(schedule) == 1
+      
+      task = hd(schedule)
+      assert task[:id] == "end_only_task"
+      
+      # Verify that only end time is present in the duration
+      assert is_map(task[:duration])
+      assert Map.has_key?(task[:duration], "end") or Map.has_key?(task[:duration], :end)
+      refute Map.has_key?(task[:duration], "start") and Map.has_key?(task[:duration], :start)
     end
   end
 
@@ -592,7 +685,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 1.1.1: schedule_name - empty string" do
       args = %{
         "schedule_name" => "",
-        "activities" => [%{"id" => "task1", "duration" => 30}]
+        "activities" => [%{"id" => "task1", "duration" => "PT30S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -603,7 +696,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 1.1.2: schedule_name - null value" do
       args = %{
         "schedule_name" => nil,
-        "activities" => [%{"id" => "task1", "duration" => 30}]
+        "activities" => [%{"id" => "task1", "duration" => "PT30S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -614,7 +707,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 1.1.3: schedule_name - whitespace only" do
       args = %{
         "schedule_name" => "   ",
-        "activities" => [%{"id" => "task1", "duration" => 30}]
+        "activities" => [%{"id" => "task1", "duration" => "PT30S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -626,7 +719,7 @@ defmodule AriaEngine.MCPToolsTest do
       long_name = String.duplicate("x", 1000)
       args = %{
         "schedule_name" => long_name,
-        "activities" => [%{"id" => "task1", "duration" => 30}]
+        "activities" => [%{"id" => "task1", "duration" => "PT30S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -637,7 +730,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 1.1.5: schedule_name - unicode characters" do
       args = %{
         "schedule_name" => "测试🚀",
-        "activities" => [%{"id" => "task1", "duration" => 30}]
+        "activities" => [%{"id" => "task1", "duration" => "PT30S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -693,7 +786,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 2.1.1: Missing id field" do
       args = %{
         "schedule_name" => "Test",
-        "activities" => [%{"duration" => 5}]
+        "activities" => [%{"duration" => "PT5S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -726,7 +819,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 2.2.1: id as number" do
       args = %{
         "schedule_name" => "Test",
-        "activities" => [%{"id" => 123, "duration" => 5}]
+        "activities" => [%{"id" => 123, "duration" => "PT5S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -748,7 +841,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 2.2.3: duration as float" do
       args = %{
         "schedule_name" => "Test",
-        "activities" => [%{"id" => "task1", "duration" => 5.5}]
+        "activities" => [%{"id" => "task1", "duration" => "PT5.5S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -759,7 +852,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 2.3.1: Empty ID" do
       args = %{
         "schedule_name" => "Test",
-        "activities" => [%{"id" => "", "duration" => 5}]
+        "activities" => [%{"id" => "", "duration" => "PT5S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -770,7 +863,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 2.3.2: Whitespace ID" do
       args = %{
         "schedule_name" => "Test",
-        "activities" => [%{"id" => "   ", "duration" => 5}]
+        "activities" => [%{"id" => "   ", "duration" => "PT5S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -781,7 +874,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 2.3.3: Negative duration" do
       args = %{
         "schedule_name" => "Test",
-        "activities" => [%{"id" => "task1", "duration" => -5}]
+        "activities" => [%{"id" => "task1", "duration" => "PT-5S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -792,7 +885,7 @@ defmodule AriaEngine.MCPToolsTest do
     test "Test 2.3.4: Zero duration" do
       args = %{
         "schedule_name" => "Test",
-        "activities" => [%{"id" => "task1", "duration" => 0}]
+        "activities" => [%{"id" => "task1", "duration" => "PT0S"}]
       }
       
       result = MCPTools.handle_tool_call("schedule_activities", args)
@@ -805,8 +898,8 @@ defmodule AriaEngine.MCPToolsTest do
       args = %{
         "schedule_name" => "Cycle Test",
         "activities" => [
-          %{"id" => "A", "duration" => 5, "dependencies" => ["B"]},
-          %{"id" => "B", "duration" => 5, "dependencies" => ["A"]}
+          %{"id" => "A", "duration" => "PT5S", "dependencies" => ["B"]},
+          %{"id" => "B", "duration" => "PT5S", "dependencies" => ["A"]}
         ]
       }
       
@@ -819,7 +912,7 @@ defmodule AriaEngine.MCPToolsTest do
       args = %{
         "schedule_name" => "Self Ref Test",
         "activities" => [
-          %{"id" => "A", "duration" => 5, "dependencies" => ["A"]}
+          %{"id" => "A", "duration" => "PT5S", "dependencies" => ["A"]}
         ]
       }
       
@@ -832,9 +925,9 @@ defmodule AriaEngine.MCPToolsTest do
       args = %{
         "schedule_name" => "Complex Cycle Test",
         "activities" => [
-          %{"id" => "A", "duration" => 5, "dependencies" => ["B"]},
-          %{"id" => "B", "duration" => 5, "dependencies" => ["C"]},
-          %{"id" => "C", "duration" => 5, "dependencies" => ["A"]}
+          %{"id" => "A", "duration" => "PT5S", "dependencies" => ["B"]},
+          %{"id" => "B", "duration" => "PT5S", "dependencies" => ["C"]},
+          %{"id" => "C", "duration" => "PT5S", "dependencies" => ["A"]}
         ]
       }
       
@@ -847,7 +940,7 @@ defmodule AriaEngine.MCPToolsTest do
       args = %{
         "schedule_name" => "Non-existent Dep Test",
         "activities" => [
-          %{"id" => "A", "duration" => 5, "dependencies" => ["nonexistent"]}
+          %{"id" => "A", "duration" => "PT5S", "dependencies" => ["nonexistent"]}
         ]
       }
       
@@ -860,7 +953,7 @@ defmodule AriaEngine.MCPToolsTest do
       args = %{
         "schedule_name" => "Wrong Type Test",
         "activities" => [
-          %{"id" => "A", "duration" => 5, "dependencies" => "B"}
+          %{"id" => "A", "duration" => "PT5S", "dependencies" => "B"}
         ]
       }
       
@@ -873,7 +966,7 @@ defmodule AriaEngine.MCPToolsTest do
       args = %{
         "schedule_name" => "Mixed Types Test",
         "activities" => [
-          %{"id" => "A", "duration" => 5, "dependencies" => ["B", 123]}
+          %{"id" => "A", "duration" => "PT5S", "dependencies" => ["B", 123]}
         ]
       }
       

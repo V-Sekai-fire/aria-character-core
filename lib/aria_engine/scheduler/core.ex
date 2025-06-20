@@ -105,7 +105,7 @@ defmodule AriaEngine.Scheduler.Core do
   @doc """
   Enhanced scheduling with entity/resource management.
   """
-  def attempt_enhanced_scheduling(_schedule_name, activities, entities, resources, constraints, simulation_mode, activity_log, verbose) do
+  def attempt_enhanced_scheduling(_schedule_name, activities, entities, resources, constraints, simulation_mode, activity_log, verbose, opts \\ []) do
     if verbose > 1 do
       Logger.debug("AriaEngine.Scheduler: Attempting enhanced scheduling with #{length(entities)} entities and #{length(resources)} resources")
     end
@@ -139,7 +139,10 @@ defmodule AriaEngine.Scheduler.Core do
               simulate_plan_execution(domain, initial_state, encapsulated_plan, activities, entities, resources, activity_log, verbose)
             else
               # Convert plan to schedule format
-              schedule = convert_plan_to_enhanced_schedule(encapsulated_plan, activities, entities, resources)
+              base_datetime =
+                Keyword.get(opts, :base_datetime) ||
+                  DateTime.utc_now()
+              schedule = convert_plan_to_enhanced_schedule(encapsulated_plan, activities, entities, resources, base_datetime)
               
               {:ok, schedule}
             end
@@ -201,7 +204,23 @@ defmodule AriaEngine.Scheduler.Core do
   def create_enhanced_activity_action(activity, entities, resources) do
     fn _args, state ->
       activity_id = activity.id
-      duration = Map.get(activity, :duration, 1)
+      duration_val = Map.get(activity, :duration)
+      {duration, fixed_start, fixed_end} =
+        cond do
+          is_map(duration_val) and Map.has_key?(duration_val, :start) and Map.has_key?(duration_val, :end) ->
+            {duration_val, duration_val[:start], duration_val[:end]}
+          is_map(duration_val) ->
+            {duration_val, nil, nil}
+          is_binary(duration_val) ->
+            case :iso8601.parse_duration(String.to_charlist(duration_val)) do
+              parsed when is_list(parsed) ->
+                map = Enum.into(parsed, %{})
+                {map, nil, nil}
+              _ -> {nil, nil, nil}
+            end
+          true ->
+            {nil, nil, nil}
+        end
       required_capabilities = Map.get(activity, :required_capabilities, [])
       required_resources = Map.get(activity, :required_resources, [])
       
@@ -334,7 +353,23 @@ defmodule AriaEngine.Scheduler.Core do
     activities
     |> Enum.map(fn activity ->
       action_name = String.to_atom(activity.id)
-      duration = Map.get(activity, :duration, 1)
+      duration_val = Map.get(activity, :duration)
+      {duration, fixed_start, fixed_end} =
+        cond do
+          is_map(duration_val) and Map.has_key?(duration_val, :start) and Map.has_key?(duration_val, :end) ->
+            {duration_val, duration_val[:start], duration_val[:end]}
+          is_map(duration_val) ->
+            {duration_val, nil, nil}
+          is_binary(duration_val) ->
+            case :iso8601.parse_duration(String.to_charlist(duration_val)) do
+              parsed when is_list(parsed) ->
+                map = Enum.into(parsed, %{})
+                {map, nil, nil}
+              _ -> {nil, nil, nil}
+            end
+          true ->
+            {nil, nil, nil}
+        end
       
       metadata = %{
         duration: {duration, duration},
@@ -351,15 +386,16 @@ defmodule AriaEngine.Scheduler.Core do
   @doc """
   Convert plan to enhanced schedule format.
   """
-  def convert_plan_to_enhanced_schedule(encapsulated_plan, activities, entities, resources) do
-    PlanConverter.convert_plan_to_enhanced_schedule(encapsulated_plan, activities, entities, resources)
+  def convert_plan_to_enhanced_schedule(encapsulated_plan, activities, entities, resources, base_datetime) do
+    PlanConverter.convert_plan_to_enhanced_schedule(encapsulated_plan, activities, entities, resources, base_datetime)
   end
   
   @doc """
   Convert simulation results to schedule format.
   """
   def convert_simulation_to_schedule(encapsulated_plan, final_state, activities, entities, resources) do
-    PlanConverter.convert_simulation_to_schedule(encapsulated_plan, final_state, activities, entities, resources)
+    base_datetime = DateTime.utc_now()
+    PlanConverter.convert_simulation_to_schedule(encapsulated_plan, final_state, activities, entities, resources, base_datetime)
   end
   
   # Entity and resource assignment helpers (delegated to specialized modules)
