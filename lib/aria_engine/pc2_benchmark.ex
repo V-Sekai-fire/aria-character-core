@@ -166,7 +166,7 @@ defmodule AriaEngine.PC2Benchmark do
         "#{size} | #{avg} | #{min} | #{max} | #{p95}"
       end)
 
-    IO.puts(report)
+    Logger.debug(report)
     report
   end
 
@@ -210,7 +210,7 @@ defmodule AriaEngine.PC2Benchmark do
 
     report = header <> table_header <> table_rows <> "\n\n" <> recommendations
 
-    IO.puts(report)
+    Logger.debug(report)
     report
   end
 
@@ -254,9 +254,9 @@ defmodule AriaEngine.PC2Benchmark do
     analysis = run_scaling_benchmark(vision_pro_opts)
     
     # Generate both reports
-    IO.puts("\n" <> String.duplicate("=", 60))
+    Logger.debug("\n" <> String.duplicate("=", 60))
     format_benchmark_report(analysis)
-    IO.puts("\n" <> String.duplicate("=", 60))
+    Logger.debug("\n" <> String.duplicate("=", 60))
     format_vision_pro_report(analysis)
     
     analysis
@@ -370,7 +370,7 @@ defmodule AriaEngine.PC2Benchmark do
     
     report = header <> table_header <> table_rows <> "\n\n" <> summary
     
-    IO.puts(report)
+    Logger.debug(report)
     report
   end
   
