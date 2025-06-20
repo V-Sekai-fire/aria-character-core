@@ -90,3 +90,5 @@ node_modules/.cache/prettier/.prettier-caches
 /priv/plts/
 apps/.DS_Store
 /priv/
+
+tmp
