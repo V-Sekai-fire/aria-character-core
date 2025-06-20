@@ -14,6 +14,14 @@ The existing MCP tools provide a high-level `schedule_activities` interface that
 MCP Tool → Scheduler → HybridCoordinatorV2 → [All 6 Strategies] → Schedule
 ```
 
+### Architectural Issue: Mixed Concerns
+
+The current implementation mixes data transformation (MCP layer) with planning execution (domain layer), making it difficult to:
+- Test data conversion separately from planning logic
+- Execute individual strategies in isolation
+- Reuse formatted data in different execution contexts
+- Debug issues at the proper architectural layer
+
 ### Need for Individual Strategy Testing
 
 To effectively develop and test existing strategies and prepare for future strategy additions, we need:
@@ -26,7 +34,36 @@ To effectively develop and test existing strategies and prepare for future strat
 
 ## Decision
 
-Rebuild the hybrid planner MCP interface to provide individual strategy testing capabilities while maintaining the existing high-level interface for production use.
+Rebuild the hybrid planner MCP interface using a **plan converter architecture** that provides individual strategy testing capabilities while maintaining clean separation of concerns.
+
+### Plan Converter Architecture
+
+Transform `schedule_activities` from a full execution pipeline into a pure data converter:
+
+**Current Architecture (Mixed Concerns)**:
+```
+MCP Tool → validate → convert → AriaEngine.Scheduler → HybridCoordinatorV2 → [Strategies] → Result
+```
+
+**New Architecture (Clean Separation)**:
+```
+MCP Tool (plan converter) → HybridCoordinatorV2 input format
+Domain Layer → HybridCoordinatorV2 → [Individual Strategies] → Result
+```
+
+### Benefits of Plan Converter Approach
+
+1. **Pure Data Transformation**: MCP tools become pure functions that only format data
+2. **Cleaner Testing**: Can test data conversion separately from planning execution
+3. **Better Separation**: MCP layer handles format conversion, domain layer handles planning
+4. **Reusability**: Formatted data can be used by different execution contexts
+5. **Individual Strategy Testing**: Enables direct testing of strategies in isolation
+
+### Dual Interface Design
+
+- **High-level interface**: `schedule_activities` as plan converter for production use
+- **Low-level interface**: Individual strategy testing tools for development and debugging
+- **Unified data format**: Both interfaces use the same HybridCoordinatorV2 input format
 
 ## Cold Boot Implementation Order
 
@@ -262,17 +299,76 @@ end
 
 **Note**: Additional strategy wrappers (such as StateV2, Domain, and Execution strategies) will be added as Boot Level 3 expands. ExhortStrategy wrapper will be implemented after the foundational system is complete.
 
-### Boot Level 4: MCP Tool Registration and Handlers
+### Boot Level 4: Plan Converter and MCP Tool Handlers
 
-**File**: `lib/aria_engine/mcp_tools.ex` (additions)
+**File**: `lib/aria_engine/hybrid_planner/plan_converter.ex`
+
+```elixir
+defmodule AriaEngine.HybridPlanner.PlanConverter do
+  @moduledoc """
+  Pure data converter that transforms MCP input format to HybridCoordinatorV2 input format.
+  """
+
+  @type mcp_input :: map()
+  @type coordinator_input :: map()
+  @type conversion_result :: {:ok, coordinator_input()} | {:error, String.t()}
+
+  @spec convert_to_coordinator_input(mcp_input()) :: conversion_result()
+  def convert_to_coordinator_input(params) do
+    try do
+      case validate_mcp_params(params) do
+        {:ok, validated_params} ->
+          coordinator_input = %{
+            schedule_name: validated_params["schedule_name"],
+            activities: convert_activities(validated_params["activities"]),
+            entities: convert_entities(validated_params["entities"] || []),
+            resources: validated_params["resources"] || %{},
+            constraints: validated_params["constraints"] || %{},
+            options: extract_options(validated_params)
+          }
+          {:ok, coordinator_input}
+        {:error, reason} ->
+          {:error, reason}
+      end
+    rescue
+      e -> {:error, "Conversion error: #{Exception.message(e)}"}
+    end
+  end
+
+  @spec validate_mcp_params(map()) :: {:ok, map()} | {:error, String.t()}
+  defp validate_mcp_params(params) do
+    # Reuse existing validation logic from MCPTools
+    cond do
+      not Map.has_key?(params, "schedule_name") ->
+        {:error, "schedule_name is required"}
+      not is_binary(params["schedule_name"]) ->
+        {:error, "schedule_name must be a string"}
+      not Map.has_key?(params, "activities") ->
+        {:error, "activities is required"}
+      not is_list(params["activities"]) ->
+        {:error, "activities must be a list"}
+      true ->
+        {:ok, params}
+    end
+  end
+
+  # Reuse existing conversion functions from MCPTools
+  defp convert_activities(activities), do: activities  # Implementation details
+  defp convert_entities(entities), do: entities        # Implementation details
+  defp extract_options(params), do: []                 # Implementation details
+end
+```
+
+**File**: `lib/aria_engine/mcp_tools.ex` (updated)
 
 ```elixir
 defmodule AriaEngine.MCPTools do
   # ... existing code ...
 
-  alias AriaEngine.HybridPlanner.StrategyWrappers.{
-    PlanningStrategyWrapper,
-    TemporalStrategyWrapper
+  alias AriaEngine.HybridPlanner.{
+    PlanConverter,
+    StrategyWrappers.PlanningStrategyWrapper,
+    StrategyWrappers.TemporalStrategyWrapper
   }
 
   @tools [
@@ -280,6 +376,29 @@ defmodule AriaEngine.MCPTools do
     {:test_planning_strategy, "1.0.0"},
     {:test_temporal_strategy, "1.0.0"}
   ]
+
+  # Updated schedule_activities as pure plan converter
+  def handle_tool_call(:schedule_activities, params) do
+    case PlanConverter.convert_to_coordinator_input(params) do
+      {:ok, coordinator_input} ->
+        %{
+          "status" => "success",
+          "coordinator_input" => coordinator_input,
+          "conversion_metadata" => %{
+            "original_activities" => length(params["activities"] || []),
+            "converted_at" => DateTime.utc_now() |> DateTime.to_iso8601(),
+            "input_format" => "mcp_schedule_activities",
+            "output_format" => "hybrid_coordinator_v2"
+          }
+        }
+      {:error, reason} ->
+        %{
+          "status" => "error",
+          "reason" => reason,
+          "coordinator_input" => nil
+        }
+    end
+  end
 
   @spec handle_tool_call(atom(), map()) :: map()
   def handle_tool_call(:test_planning_strategy, params) do
