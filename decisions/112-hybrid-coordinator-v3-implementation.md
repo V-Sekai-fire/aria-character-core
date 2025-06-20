@@ -74,7 +74,7 @@ Create HybridCoordinatorV3 that adapts to HybridCoordinatorV2, maintaining full 
   - [ ] CPM strategy adapter
   - [ ] PERT strategy adapter
   - [ ] Resource leveling adapter
-  - [ ] SAT-CP mock strategy adapter
+  - [ ] Other existing strategy adapters
 - [ ] Add integration tests for adapter pattern
 - [ ] Verify all V2 strategies work through adapters
 
@@ -138,63 +138,6 @@ defmodule AriaEngine.HybridPlanner.StrategyAdapter do
 end
 ```
 
-### SAT-CP Mock Strategy
-
-Create a simple SAT-CP strategy implementation to provide the OptimizerStrategy interface:
-
-```elixir
-defmodule AriaEngine.HybridPlanner.Strategies.SatCp do
-  @behaviour AriaEngine.HybridPlanner.OptimizerStrategy
-  
-  @impl true
-  def solve(activities, constraints, _options \\ []) do
-    # Simple mock implementation
-    # Just return activities in order with basic scheduling
-    scheduled_activities = 
-      activities
-      |> Enum.with_index()
-      |> Enum.map(fn {activity, index} ->
-        start_time = index * 60  # 1 hour apart
-        duration = parse_duration(activity.duration) || 3600  # 1 hour default
-        
-        %{
-          id: activity.id,
-          start_time: start_time,
-          end_time: start_time + duration,
-          duration: duration
-        }
-      end)
-    
-    {:ok, %{
-      status: "success",
-      method: "SAT-CP (Mock)",
-      activities: scheduled_activities,
-      total_duration: calculate_total_duration(scheduled_activities)
-    }}
-  end
-  
-  defp parse_duration("PT" <> duration_str) do
-    # Simple ISO 8601 duration parsing
-    cond do
-      String.ends_with?(duration_str, "H") ->
-        duration_str |> String.trim_trailing("H") |> String.to_integer() |> Kernel.*(3600)
-      String.ends_with?(duration_str, "M") ->
-        duration_str |> String.trim_trailing("M") |> String.to_integer() |> Kernel.*(60)
-      true -> nil
-    end
-  end
-  
-  defp calculate_total_duration(activities) do
-    case activities do
-      [] -> 0
-      _ -> 
-        max_end = activities |> Enum.map(& &1.end_time) |> Enum.max()
-        min_start = activities |> Enum.map(& &1.start_time) |> Enum.min()
-        max_end - min_start
-    end
-  end
-end
-```
 
 ## Success Criteria
 

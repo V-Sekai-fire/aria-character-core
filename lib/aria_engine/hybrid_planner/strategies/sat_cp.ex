@@ -1,44 +1,38 @@
 defmodule AriaEngine.HybridPlanner.Strategies.SatCp do
   @moduledoc """
-  SAT-CP Mock Strategy - Extremely Simple Implementation
+  SAT-CP Mock Strategy - Simple CP-SAT Interface Mock
 
-  This mock strategy schedules activities one after another with 1-hour gaps.
-  It's designed for clarity and testing, not performance.
+  This provides a mock interface for the OptimizerStrategy behavior
+  that will eventually integrate with Exhort OR-Tools for solving
+  MiniZinc 2024 competition problems using CP-SAT solver.
+
+  This is NOT for schedule activities - it's for constraint programming problems.
   """
 
   @behaviour AriaEngine.HybridPlanner.OptimizerStrategy
 
   @impl true
-  def solve(activities, _constraints \\ %{}, _options \\ []) do
-    scheduled = 
-      activities
-      |> Enum.with_index()
-      |> Enum.map(fn {activity, index} ->
-        start_time = index * 3600  # Each activity starts 1 hour after previous
-        duration = 3600            # All activities take 1 hour
-        
-        %{
-          id: activity["id"] || "task_#{index}",
-          start_time: start_time,
-          end_time: start_time + duration,
-          duration: duration
-        }
-      end)
-    
+  def solve(problem, _options \\ []) do
+    # Mock CP-SAT solver response for MiniZinc-style problems
     {:ok, %{
-      status: "success",
-      method: "SAT-CP (Mock)",
-      activities: scheduled,
-      total_duration: length(activities) * 3600
+      status: "OPTIMAL",
+      solver: "CP-SAT (Mock)",
+      objective_value: 42,
+      variables: %{
+        "x1" => 1,
+        "x2" => 2,
+        "x3" => 3
+      },
+      solve_time_ms: 100
     }}
   end
 
   @impl true
-  def validate_input(activities, _constraints \\ %{}) do
-    if is_list(activities) and length(activities) > 0 do
+  def validate_problem(problem) do
+    if is_map(problem) do
       :ok
     else
-      {:error, "Need a non-empty list of activities"}
+      {:error, "Problem must be a map"}
     end
   end
 end
