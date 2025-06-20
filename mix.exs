@@ -116,6 +116,7 @@ defmodule AriaCharacterCore.MixProject do
       {:uuid, "~> 1.1", app: false},
 
       {:iso8601, "~> 1.3"},
+      {:timex, "~> 3.7"},
 
       # MCP Protocol Support
       {:hermes_mcp, git: "https://github.com/cloudwalk/hermes-mcp.git", branch: "main"},
