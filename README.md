@@ -1,6 +1,6 @@
 # Aria Character Core
 
-**⚠️ ALPHA • v0.1.0 • Research Code • Not Production Ready ⚠️**
+**⚠️ ALPHA • v0.2.0 • Research Code • Not Production Ready ⚠️**
 
 AI planning research project exploring intelligent NPC behavior through hybrid HTN+STN planning systems.
 

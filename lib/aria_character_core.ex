@@ -21,5 +21,5 @@ defmodule AriaCharacterCore do
   @doc """
   Returns the version of AriaCharacterCore.
   """
-  def version, do: "0.1.0"
+  def version, do: "0.2.0"
 end
