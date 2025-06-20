@@ -1,1082 +1,1097 @@
-# ADR-110: MCP Strategy Testing Interface for Hybrid Planner
+# ADR-110: MCP Strategy Testing Interface using Membrane Framework Pipeline
 
-**Status:** Completed  
+**Status:** Active  
 **Date:** June 20, 2025  
-**Completion Date:** June 20, 2025  
 **Priority:** HIGH
 
 ## Context
 
-### Current MCP Tools Interface
+### Current Architecture Limitations
 
-The existing MCP tools provide a high-level `schedule_activities` interface that goes through the entire scheduler pipeline:
+The existing MCP tools provide a monolithic `schedule_activities` interface that tightly couples data transformation with planning execution:
 
 ```
 MCP Tool → Scheduler → HybridCoordinatorV2 → [All 6 Strategies] → Schedule
 ```
 
-### Architectural Issue: Mixed Concerns
+This creates several architectural issues:
+- Mixed concerns between data transformation and planning logic
+- Difficult to test individual strategies in isolation
+- No backpressure handling for concurrent requests
+- Limited fault tolerance and error recovery
+- Poor scalability for multiple simultaneous planning requests
 
-The current implementation mixes data transformation (MCP layer) with planning execution (domain layer), making it difficult to:
-- Test data conversion separately from planning logic
-- Execute individual strategies in isolation
-- Reuse formatted data in different execution contexts
-- Debug issues at the proper architectural layer
+### Need for Pipeline Architecture
 
-### Need for Individual Strategy Testing
+To effectively develop, test, and scale the hybrid planner system, we need:
 
-To effectively develop and test existing strategies and prepare for future strategy additions, we need:
-
-1. **Individual Strategy Testing**: Test each strategy in isolation
-2. **Strategy Comparison**: Compare outputs between different strategies
-3. **Development Workflow**: Rapid iteration on strategy implementations
-4. **Debugging Capability**: Isolate issues to specific strategies
-5. **Performance Benchmarking**: Measure individual strategy performance
+1. **Process Isolation**: Each processing stage runs independently
+2. **Fault Tolerance**: Individual component failures don't crash the entire system
+3. **Backpressure Management**: Handle varying load and processing speeds
+4. **Individual Strategy Testing**: Test each strategy in complete isolation
+5. **Concurrent Processing**: Handle multiple planning requests simultaneously
+6. **Monitoring and Telemetry**: Real-time pipeline performance metrics
 
 ## Decision
 
-Rebuild the hybrid planner MCP interface using a **plan converter architecture** that provides individual strategy testing capabilities while maintaining clean separation of concerns.
+Implement a **Membrane Framework pipeline architecture** that provides clean separation of concerns, process isolation, and robust fault tolerance for the MCP strategy testing interface.
 
-### Plan Converter Architecture
+### Membrane Framework Pipeline Design
 
-Transform `schedule_activities` from a full execution pipeline into a pure data converter:
+Transform the monolithic architecture into a proper multimedia-style processing pipeline:
 
-**Current Architecture (Mixed Concerns)**:
+**Current Architecture (Monolithic)**:
 ```
 MCP Tool → validate → convert → AriaEngine.Scheduler → HybridCoordinatorV2 → [Strategies] → Result
 ```
 
-**New Architecture (Clean Separation)**:
+**New Architecture (Membrane Pipeline)**:
 ```
-MCP Tool (plan converter) → HybridCoordinatorV2 input format
-Domain Layer → HybridCoordinatorV2 → [Individual Strategies] → Result
+MCPSource → PlanFilter → PlannerSink → MCPSink
+    ↓             ↓              ↓         ↓
+  Process A    Process B     Process C  Process D
 ```
 
-### Benefits of Plan Converter Approach
+### Benefits of Membrane Framework
 
-1. **Pure Data Transformation**: MCP tools become pure functions that only format data
-2. **Cleaner Testing**: Can test data conversion separately from planning execution
-3. **Better Separation**: MCP layer handles format conversion, domain layer handles planning
-4. **Reusability**: Formatted data can be used by different execution contexts
-5. **Individual Strategy Testing**: Enables direct testing of strategies in isolation
-
-### Dual Interface Design
-
-- **High-level interface**: `schedule_activities` as plan converter for production use
-- **Low-level interface**: Individual strategy testing tools for development and debugging
-- **Unified data format**: Both interfaces use the same HybridCoordinatorV2 input format
+1. **Process Isolation**: Each element runs in its own GenServer process
+2. **Built-in Backpressure**: Automatic flow control and demand management
+3. **Fault Tolerance**: Supervisor trees handle element failures gracefully
+4. **Telemetry Integration**: Built-in metrics and monitoring capabilities
+5. **Hot Swapping**: Dynamic pipeline reconfiguration without downtime
+6. **Testing Framework**: Membrane's testing utilities for pipeline verification
 
 ## Cold Boot Implementation Order
 
-### Boot Level 1: Foundation Types and Contracts
+### Boot Level 1: Membrane Dependencies and Format Definitions
 
-**File**: `lib/aria_engine/hybrid_planner/strategy_types.ex`
+**File**: `mix.exs` (dependency addition)
 
 ```elixir
-defmodule AriaEngine.HybridPlanner.StrategyTypes do
+defp deps do
+  [
+    {:membrane_core, "~> 1.0"},
+    {:membrane_file_plugin, "~> 0.17.0"},
+    # ... existing dependencies
+  ]
+end
+```
+
+**File**: `lib/aria_engine/membrane/format/mcp_request.ex`
+
+```elixir
+defmodule AriaEngine.Membrane.Format.MCPRequest do
   @moduledoc """
-  Core type definitions for strategy testing interface.
+  Membrane format for MCP schedule_activities requests.
   """
 
-  @type problem_type :: :planning | :temporal | :optimization | :constraint_satisfaction
+  @derive Membrane.Format
 
-  @type strategy_input :: %{
-    problem_type: problem_type(),
+  defstruct [
+    :schedule_name,
+    :activities,
+    :entities,
+    :resources,
+    :constraints,
+    :request_id,
+    :timestamp
+  ]
+
+  @type t :: %__MODULE__{
+    schedule_name: String.t(),
+    activities: [map()],
+    entities: [map()],
+    resources: map(),
+    constraints: map(),
+    request_id: String.t(),
+    timestamp: DateTime.t()
+  }
+end
+```
+
+**File**: `lib/aria_engine/membrane/format/planning_params.ex`
+
+```elixir
+defmodule AriaEngine.Membrane.Format.PlanningParams do
+  @moduledoc """
+  Membrane format for converted planning parameters.
+  """
+
+  @derive Membrane.Format
+
+  defstruct [
+    :domain,
+    :state,
+    :goals,
+    :options,
+    :request_id,
+    :conversion_metadata
+  ]
+
+  @type t :: %__MODULE__{
     domain: AriaEngine.Domain.Core.t(),
     state: AriaEngine.StateV2.t(),
     goals: [term()],
-    constraints: map(),
-    options: keyword()
+    options: keyword(),
+    request_id: String.t(),
+    conversion_metadata: map()
   }
-
-  @type performance_metrics :: %{
-    execution_time_ms: non_neg_integer(),
-    memory_usage_bytes: non_neg_integer(),
-    iterations: non_neg_integer(),
-    cpu_time_ms: non_neg_integer()
-  }
-
-  @type strategy_metadata :: %{
-    strategy_name: String.t(),
-    strategy_version: String.t(),
-    problem_characteristics: map(),
-    capabilities: [atom()]
-  }
-
-  @type strategy_result :: %{
-    status: :success | :failure | :error,
-    result: term(),
-    performance: performance_metrics(),
-    metadata: strategy_metadata(),
-    error_details: String.t() | nil
-  }
-
-  @type strategy_module :: module()
-  @type strategy_name :: atom()
 end
 ```
 
-**File**: `lib/aria_engine/hybrid_planner/strategy_behaviour.ex`
+**File**: `lib/aria_engine/membrane/format/planning_result.ex`
 
 ```elixir
-defmodule AriaEngine.HybridPlanner.StrategyBehaviour do
+defmodule AriaEngine.Membrane.Format.PlanningResult do
   @moduledoc """
-  Behaviour that all testable strategies must implement.
+  Membrane format for planning execution results.
   """
 
-  alias AriaEngine.HybridPlanner.StrategyTypes
+  @derive Membrane.Format
 
-  @callback execute(StrategyTypes.strategy_input()) :: StrategyTypes.strategy_result()
-  @callback strategy_info() :: StrategyTypes.strategy_metadata()
-  @callback validate_input(StrategyTypes.strategy_input()) :: {:ok, StrategyTypes.strategy_input()} | {:error, String.t()}
-end
-```
-
-### Boot Level 2: Strategy Isolation Infrastructure
-
-**File**: `lib/aria_engine/hybrid_planner/strategy_isolation.ex`
-
-```elixir
-defmodule AriaEngine.HybridPlanner.StrategyIsolation do
-  @moduledoc """
-  Infrastructure for executing strategies in isolation with resource limits.
-  """
-
-  alias AriaEngine.HybridPlanner.StrategyTypes
-
-  @type isolation_options :: [
-    timeout_ms: non_neg_integer(),
-    memory_limit_mb: non_neg_integer(),
-    capture_logs: boolean()
+  defstruct [
+    :status,
+    :result,
+    :execution_metadata,
+    :request_id,
+    :performance_metrics
   ]
 
-  @spec execute_isolated(StrategyTypes.strategy_module(), StrategyTypes.strategy_input(), isolation_options()) :: 
-    StrategyTypes.strategy_result()
-  def execute_isolated(strategy_module, input, opts \\ []) do
-    # Implementation details
-  end
-
-  @spec setup_isolation_environment(StrategyTypes.strategy_module(), isolation_options()) :: 
-    {:ok, pid()} | {:error, String.t()}
-  def setup_isolation_environment(strategy_module, opts) do
-    # Implementation details
-  end
-
-  @spec cleanup_isolation_environment(pid()) :: :ok
-  def cleanup_isolation_environment(isolation_pid) do
-    # Implementation details
-  end
-
-  @spec measure_performance(fun()) :: {term(), StrategyTypes.performance_metrics()}
-  def measure_performance(execution_fun) do
-    # Implementation details
-  end
+  @type t :: %__MODULE__{
+    status: :success | :failure | :error,
+    result: term(),
+    execution_metadata: map(),
+    request_id: String.t(),
+    performance_metrics: map()
+  }
 end
 ```
 
-### Boot Level 3: Individual Strategy Wrappers
-
-**File**: `lib/aria_engine/hybrid_planner/strategy_wrappers/planning_strategy_wrapper.ex`
+**File**: `lib/aria_engine/membrane/format/mcp_response.ex`
 
 ```elixir
-defmodule AriaEngine.HybridPlanner.StrategyWrappers.PlanningStrategyWrapper do
+defmodule AriaEngine.Membrane.Format.MCPResponse do
   @moduledoc """
-  Wrapper for testing HTN planning strategy in isolation.
+  Membrane format for MCP-formatted responses.
   """
 
-  alias AriaEngine.HybridPlanner.{StrategyTypes, StrategyIsolation}
+  @derive Membrane.Format
 
-  @behaviour AriaEngine.HybridPlanner.StrategyBehaviour
+  defstruct [
+    :status,
+    :schedule,
+    :error_details,
+    :request_id,
+    :response_metadata
+  ]
 
-  @spec test_strategy(
-    AriaEngine.Domain.Core.t(),
-    AriaEngine.StateV2.t(),
-    [term()],
-    keyword()
-  ) :: StrategyTypes.strategy_result()
-  def test_strategy(domain, state, goals, opts \\ []) do
-    input = %{
-      problem_type: :planning,
-      domain: domain,
-      state: state,
-      goals: goals,
-      constraints: %{},
-      options: opts
+  @type t :: %__MODULE__{
+    status: String.t(),
+    schedule: map() | nil,
+    error_details: String.t() | nil,
+    request_id: String.t(),
+    response_metadata: map()
+  }
+end
+```
+
+**Implementation Tasks**:
+- [ ] Add Membrane Framework dependencies to mix.exs
+- [ ] Run `mix deps.get` to install Membrane
+- [ ] Define 4 custom format modules with proper `@derive Membrane.Format`
+- [ ] Add format validation functions
+- [ ] Test format serialization/deserialization
+
+### Boot Level 2: Membrane Source Element (MCP Tool + Pipeline Control)
+
+**File**: `lib/aria_engine/membrane/mcp_source.ex`
+
+```elixir
+defmodule AriaEngine.Membrane.MCPSource do
+  @moduledoc """
+  Membrane Source element that receives MCP requests and controls pipeline topology.
+  
+  This element acts as both the entry point for planning requests and the
+  controller for dynamic pipeline configuration and element connections.
+  """
+
+  use Membrane.Source
+
+  alias AriaEngine.Membrane.Format.MCPRequest
+  alias Membrane.Buffer
+
+  def_output_pad :output,
+    accepted_format: MCPRequest,
+    flow_control: :push
+
+  def_options request_queue: [
+    spec: :queue.queue(),
+    default: :queue.new()
+  ],
+  pipeline_config: [
+    spec: map(),
+    default: %{}
+  ]
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    state = %{
+      request_queue: opts.request_queue,
+      pipeline_config: opts.pipeline_config,
+      request_counter: 0,
+      active_pipelines: %{}
     }
     
-    StrategyIsolation.execute_isolated(__MODULE__, input, opts)
+    {[], state}
   end
 
   @impl true
-  @spec execute(StrategyTypes.strategy_input()) :: StrategyTypes.strategy_result()
-  def execute(input) do
-    # Implementation details
-  end
-
-  @impl true
-  @spec strategy_info() :: StrategyTypes.strategy_metadata()
-  def strategy_info() do
-    %{
-      strategy_name: "HTNPlanningStrategy",
-      strategy_version: "1.0.0",
-      problem_characteristics: %{
-        supports_hierarchical: true,
-        supports_temporal: false,
-        supports_optimization: false
-      },
-      capabilities: [:planning, :hierarchical_decomposition]
+  def handle_info({:mcp_request, mcp_params}, _ctx, state) do
+    request = %MCPRequest{
+      schedule_name: mcp_params["schedule_name"],
+      activities: mcp_params["activities"] || [],
+      entities: mcp_params["entities"] || [],
+      resources: mcp_params["resources"] || %{},
+      constraints: mcp_params["constraints"] || %{},
+      request_id: generate_request_id(state.request_counter),
+      timestamp: DateTime.utc_now()
     }
+
+    buffer = %Buffer{payload: request}
+    new_state = %{state | request_counter: state.request_counter + 1}
+
+    {[buffer: {:output, buffer}], new_state}
   end
 
   @impl true
-  @spec validate_input(StrategyTypes.strategy_input()) :: 
-    {:ok, StrategyTypes.strategy_input()} | {:error, String.t()}
-  def validate_input(input) do
-    # Implementation details
+  def handle_info({:configure_pipeline, config}, _ctx, state) do
+    # Handle dynamic pipeline reconfiguration
+    new_state = %{state | pipeline_config: config}
+    {[], new_state}
+  end
+
+  # Public API for MCP tools
+  @spec send_mcp_request(pid(), map()) :: :ok
+  def send_mcp_request(source_pid, mcp_params) do
+    send(source_pid, {:mcp_request, mcp_params})
+    :ok
+  end
+
+  @spec configure_pipeline(pid(), map()) :: :ok
+  def configure_pipeline(source_pid, config) do
+    send(source_pid, {:configure_pipeline, config})
+    :ok
+  end
+
+  defp generate_request_id(counter) do
+    "mcp_req_#{System.system_time(:millisecond)}_#{counter}"
   end
 end
 ```
 
-**File**: `lib/aria_engine/hybrid_planner/strategy_wrappers/temporal_strategy_wrapper.ex`
+**Implementation Tasks**:
+- [ ] Implement MCPSource with proper Membrane.Source behavior
+- [ ] Add output pad with MCPRequest format and proper bin specification
+- [ ] Implement request queuing and processing
+- [ ] Add pipeline topology configuration capabilities
+- [ ] Add public API for MCP tools to send requests and configure pipelines
+- [ ] Test source element in isolation
+
+### Boot Level 3: Membrane Filter Element (Plan Transformer)
+
+**File**: `lib/aria_engine/membrane/plan_filter.ex`
 
 ```elixir
-defmodule AriaEngine.HybridPlanner.StrategyWrappers.TemporalStrategyWrapper do
+defmodule AriaEngine.Membrane.PlanFilter do
   @moduledoc """
-  Wrapper for testing STN temporal strategy in isolation.
+  Membrane Filter element that converts MCP requests to planning parameters.
+  
+  This element validates MCP input and transforms it into the format expected
+  by the HybridCoordinator planning system.
   """
 
-  alias AriaEngine.HybridPlanner.{StrategyTypes, StrategyIsolation}
+  use Membrane.Filter
 
-  @behaviour AriaEngine.HybridPlanner.StrategyBehaviour
+  alias AriaEngine.Membrane.Format.{MCPRequest, PlanningParams}
+  alias AriaEngine.HybridPlanner.PlanTransformer, as: CoreTransformer
+  alias Membrane.Buffer
 
-  @spec test_strategy(
-    AriaEngine.Timeline.t(),
-    AriaEngine.StateV2.t(),
-    [term()],
-    keyword()
-  ) :: StrategyTypes.strategy_result()
-  def test_strategy(timeline, state, constraints, opts \\ []) do
-    input = %{
-      problem_type: :temporal,
-      domain: nil,
-      state: state,
-      goals: constraints,
-      constraints: %{timeline: timeline},
-      options: opts
+  def_input_pad :input,
+    accepted_format: MCPRequest,
+    flow_control: :auto
+
+  def_output_pad :output,
+    accepted_format: PlanningParams,
+    flow_control: :auto
+
+  def_options telemetry_prefix: [
+    spec: [atom()],
+    default: [:aria_engine, :membrane, :plan_filter]
+  ]
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    state = %{
+      telemetry_prefix: opts.telemetry_prefix,
+      processed_count: 0,
+      error_count: 0
     }
     
-    StrategyIsolation.execute_isolated(__MODULE__, input, opts)
+    {[], state}
   end
 
   @impl true
-  @spec execute(StrategyTypes.strategy_input()) :: StrategyTypes.strategy_result()
-  def execute(input) do
-    # Implementation details
+  def handle_buffer(:input, buffer, _ctx, state) do
+    %Buffer{payload: mcp_request} = buffer
+    start_time = System.monotonic_time(:microsecond)
+
+    case transform_mcp_request(mcp_request) do
+      {:ok, planning_params} ->
+        emit_telemetry(state.telemetry_prefix, :transformation_success, %{
+          request_id: mcp_request.request_id,
+          processing_time: System.monotonic_time(:microsecond) - start_time
+        })
+
+        output_buffer = %Buffer{payload: planning_params}
+        new_state = %{state | processed_count: state.processed_count + 1}
+
+        {[buffer: {:output, output_buffer}], new_state}
+
+      {:error, reason} ->
+        emit_telemetry(state.telemetry_prefix, :transformation_error, %{
+          request_id: mcp_request.request_id,
+          error_reason: reason
+        })
+
+        error_params = create_error_planning_params(mcp_request, reason)
+        output_buffer = %Buffer{payload: error_params}
+        new_state = %{state | error_count: state.error_count + 1}
+
+        {[buffer: {:output, output_buffer}], new_state}
+    end
   end
 
-  @impl true
-  @spec strategy_info() :: StrategyTypes.strategy_metadata()
-  def strategy_info() do
-    %{
-      strategy_name: "STNTemporalStrategy",
-      strategy_version: "1.0.0",
-      problem_characteristics: %{
-        supports_hierarchical: false,
-        supports_temporal: true,
-        supports_optimization: false
-      },
-      capabilities: [:temporal_reasoning, :constraint_propagation]
+  defp transform_mcp_request(%MCPRequest{} = request) do
+    mcp_params = %{
+      "schedule_name" => request.schedule_name,
+      "activities" => request.activities,
+      "entities" => request.entities,
+      "resources" => request.resources,
+      "constraints" => request.constraints
     }
-  end
 
-  @impl true
-  @spec validate_input(StrategyTypes.strategy_input()) :: 
-    {:ok, StrategyTypes.strategy_input()} | {:error, String.t()}
-  def validate_input(input) do
-    # Implementation details
-  end
-end
-```
-
-**Note**: Additional strategy wrappers (such as StateV2, Domain, and Execution strategies) will be added as Boot Level 3 expands. ExhortStrategy wrapper will be implemented after the foundational system is complete.
-
-### Boot Level 4: Plan Converter and MCP Tool Handlers
-
-**File**: `lib/aria_engine/hybrid_planner/plan_converter.ex`
-
-```elixir
-defmodule AriaEngine.HybridPlanner.PlanConverter do
-  @moduledoc """
-  Pure data converter that transforms MCP input format to HybridCoordinatorV2 input format.
-  """
-
-  @type mcp_input :: map()
-  @type coordinator_input :: map()
-  @type conversion_result :: {:ok, coordinator_input()} | {:error, String.t()}
-
-  @spec convert_to_coordinator_input(mcp_input()) :: conversion_result()
-  def convert_to_coordinator_input(params) do
-    try do
-      case validate_mcp_params(params) do
-        {:ok, validated_params} ->
-          coordinator_input = %{
-            schedule_name: validated_params["schedule_name"],
-            activities: convert_activities(validated_params["activities"]),
-            entities: convert_entities(validated_params["entities"] || []),
-            resources: validated_params["resources"] || %{},
-            constraints: validated_params["constraints"] || %{},
-            options: extract_options(validated_params)
+    case CoreTransformer.convert_to_planning_params(mcp_params) do
+      {:ok, {domain, state, goals}} ->
+        planning_params = %PlanningParams{
+          domain: domain,
+          state: state,
+          goals: goals,
+          options: [],
+          request_id: request.request_id,
+          conversion_metadata: %{
+            original_activities: length(request.activities),
+            converted_at: DateTime.utc_now()
           }
-          {:ok, coordinator_input}
-        {:error, reason} ->
-          {:error, reason}
-      end
-    rescue
-      e -> {:error, "Conversion error: #{Exception.message(e)}"}
+        }
+        {:ok, planning_params}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
-  @spec validate_mcp_params(map()) :: {:ok, map()} | {:error, String.t()}
-  defp validate_mcp_params(params) do
-    # Reuse existing validation logic from MCPTools
-    cond do
-      not Map.has_key?(params, "schedule_name") ->
-        {:error, "schedule_name is required"}
-      not is_binary(params["schedule_name"]) ->
-        {:error, "schedule_name must be a string"}
-      not Map.has_key?(params, "activities") ->
-        {:error, "activities is required"}
-      not is_list(params["activities"]) ->
-        {:error, "activities must be a list"}
-      true ->
-        {:ok, params}
-    end
+  defp create_error_planning_params(%MCPRequest{} = request, reason) do
+    %PlanningParams{
+      domain: nil,
+      state: nil,
+      goals: [],
+      options: [error: true],
+      request_id: request.request_id,
+      conversion_metadata: %{
+        error: true,
+        error_reason: reason,
+        converted_at: DateTime.utc_now()
+      }
+    }
   end
 
-  # Reuse existing conversion functions from MCPTools
-  defp convert_activities(activities), do: activities  # Implementation details
-  defp convert_entities(entities), do: entities        # Implementation details
-  defp extract_options(params), do: []                 # Implementation details
+  defp emit_telemetry(prefix, event, metadata) do
+    :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
+  end
 end
 ```
 
-**File**: `lib/aria_engine/mcp_tools.ex` (updated)
+**Implementation Tasks**:
+- [ ] Implement PlanFilter with Membrane.Filter behavior
+- [ ] Add input/output pads with proper format specifications and bins
+- [ ] Integrate with existing CoreTransformer logic
+- [ ] Add telemetry events for monitoring
+- [ ] Handle transformation errors gracefully
+- [ ] Test filter element with various input scenarios
+
+### Boot Level 4: Membrane Sink Element (Planner Sink)
+
+**File**: `lib/aria_engine/membrane/planner_sink.ex`
+
+```elixir
+defmodule AriaEngine.Membrane.PlannerSink do
+  @moduledoc """
+  Membrane Sink element that executes planning using HybridCoordinatorV2.
+  
+  This element receives planning parameters and executes pure planning
+  without any MCP knowledge, making it reusable for other pipelines.
+  """
+
+  use Membrane.Sink
+
+  alias AriaEngine.Membrane.Format.{PlanningParams, PlanningResult}
+  alias HybridPlanner.HybridCoordinatorV2
+  alias Membrane.Buffer
+
+  def_input_pad :input,
+    accepted_format: PlanningParams,
+    flow_control: :auto
+
+  def_output_pad :output,
+    accepted_format: PlanningResult,
+    flow_control: :push
+
+  def_options coordinator: [
+    spec: HybridCoordinatorV2.t(),
+    description: "HybridCoordinatorV2 instance for planning execution"
+  ],
+  telemetry_prefix: [
+    spec: [atom()],
+    default: [:aria_engine, :membrane, :planner_sink]
+  ]
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    state = %{
+      coordinator: opts.coordinator,
+      telemetry_prefix: opts.telemetry_prefix,
+      executed_count: 0,
+      success_count: 0,
+      error_count: 0
+    }
+    
+    {[], state}
+  end
+
+  @impl true
+  def handle_buffer(:input, buffer, _ctx, state) do
+    %Buffer{payload: planning_params} = buffer
+    start_time = System.monotonic_time(:microsecond)
+
+    case execute_planning(state.coordinator, planning_params) do
+      {:ok, result} ->
+        planning_result = %PlanningResult{
+          status: :success,
+          result: result,
+          execution_metadata: %{
+            executed_at: DateTime.utc_now(),
+            coordinator_version: "v2"
+          },
+          request_id: planning_params.request_id,
+          performance_metrics: %{
+            execution_time_ms: div(System.monotonic_time(:microsecond) - start_time, 1000)
+          }
+        }
+
+        emit_telemetry(state.telemetry_prefix, :planning_success, %{
+          request_id: planning_params.request_id,
+          processing_time: planning_result.performance_metrics.execution_time_ms
+        })
+
+        output_buffer = %Buffer{payload: planning_result}
+        new_state = %{state | 
+          executed_count: state.executed_count + 1,
+          success_count: state.success_count + 1
+        }
+
+        {[buffer: {:output, output_buffer}], new_state}
+
+      {:error, reason} ->
+        planning_result = %PlanningResult{
+          status: :error,
+          result: nil,
+          execution_metadata: %{
+            error_reason: reason,
+            executed_at: DateTime.utc_now()
+          },
+          request_id: planning_params.request_id,
+          performance_metrics: %{
+            execution_time_ms: div(System.monotonic_time(:microsecond) - start_time, 1000)
+          }
+        }
+
+        emit_telemetry(state.telemetry_prefix, :planning_error, %{
+          request_id: planning_params.request_id,
+          error_reason: reason
+        })
+
+        output_buffer = %Buffer{payload: planning_result}
+        new_state = %{state | 
+          executed_count: state.executed_count + 1,
+          error_count: state.error_count + 1
+        }
+
+        {[buffer: {:output, output_buffer}], new_state}
+    end
+  end
+
+  defp execute_planning(_coordinator, %PlanningParams{options: [error: true]} = params) do
+    error_reason = get_in(params.conversion_metadata, [:error_reason]) || "Unknown conversion error"
+    {:error, "Planning skipped due to conversion error: #{error_reason}"}
+  end
+
+  defp execute_planning(coordinator, %PlanningParams{} = params) do
+    case HybridCoordinatorV2.plan(coordinator, params.domain, params.state, params.goals, params.options) do
+      {:ok, plan} -> {:ok, plan}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp emit_telemetry(prefix, event, metadata) do
+    :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
+  end
+end
+```
+
+**Implementation Tasks**:
+- [ ] Implement PlannerSink with Membrane.Sink behavior
+- [ ] Add input pad with PlanningParams format and output pad with PlanningResult format
+- [ ] Integrate with HybridCoordinatorV2 for pure planning execution
+- [ ] Add telemetry events for performance monitoring
+- [ ] Handle planning errors and conversion errors gracefully
+- [ ] Test sink element with various planning scenarios
+
+### Boot Level 5: Membrane Sink Element (MCP Response Formatter)
+
+**File**: `lib/aria_engine/membrane/mcp_sink.ex`
+
+```elixir
+defmodule AriaEngine.Membrane.MCPSink do
+  @moduledoc """
+  Membrane Sink element that formats planning results into MCP responses.
+  
+  This element receives planning results and formats them into MCP-compatible
+  response format without any planning knowledge.
+  """
+
+  use Membrane.Sink
+
+  alias AriaEngine.Membrane.Format.{PlanningResult, MCPResponse}
+  alias Membrane.Buffer
+
+  def_input_pad :input,
+    accepted_format: PlanningResult,
+    flow_control: :auto
+
+  def_options result_handler: [
+    spec: (String.t(), MCPResponse.t() -> :ok),
+    description: "Function to handle formatted MCP responses"
+  ],
+  telemetry_prefix: [
+    spec: [atom()],
+    default: [:aria_engine, :membrane, :mcp_sink]
+  ]
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    state = %{
+      result_handler: opts.result_handler,
+      telemetry_prefix: opts.telemetry_prefix,
+      formatted_count: 0
+    }
+    
+    {[], state}
+  end
+
+  @impl true
+  def handle_buffer(:input, buffer, _ctx, state) do
+    %Buffer{payload: planning_result} = buffer
+    start_time = System.monotonic_time(:microsecond)
+
+    mcp_response = format_planning_result(planning_result)
+    
+    # Send formatted response to handler
+    state.result_handler.(planning_result.request_id, mcp_response)
+
+    emit_telemetry(state.telemetry_prefix, :response_formatted, %{
+      request_id: planning_result.request_id,
+      status: mcp_response.status,
+      formatting_time: System.monotonic_time(:microsecond) - start_time
+    })
+
+    new_state = %{state | formatted_count: state.formatted_count + 1}
+    {[], new_state}
+  end
+
+  defp format_planning_result(%PlanningResult{status: :success} = result) do
+    %MCPResponse{
+      status: "success",
+      schedule: format_schedule(result.result),
+      error_details: nil,
+      request_id: result.request_id,
+      response_metadata: %{
+        formatted_at: DateTime.utc_now(),
+        execution_time_ms: result.performance_metrics.execution_time_ms,
+        coordinator_metadata: result.execution_metadata
+      }
+    }
+  end
+
+  defp format_planning_result(%PlanningResult{status: :error} = result) do
+    %MCPResponse{
+      status: "error",
+      schedule: nil,
+      error_details: get_in(result.execution_metadata, [:error_reason]) || "Unknown planning error",
+      request_id: result.request_id,
+      response_metadata: %{
+        formatted_at: DateTime.utc_now(),
+        execution_time_ms: result.performance_metrics.execution_time_ms
+      }
+    }
+  end
+
+  defp format_schedule(plan_result) do
+    # Convert planning result to MCP schedule format
+    # This would use existing formatting logic from MCPTools
+    %{
+      "activities" => extract_activities(plan_result),
+      "timeline" => extract_timeline(plan_result),
+      "resources" => extract_resource_usage(plan_result)
+    }
+  end
+
+  # Placeholder implementations - would use existing MCPTools logic
+  defp extract_activities(_plan), do: []
+  defp extract_timeline(_plan), do: %{}
+  defp extract_resource_usage(_plan), do: %{}
+
+  defp emit_telemetry(prefix, event, metadata) do
+    :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
+  end
+end
+```
+
+**Implementation Tasks**:
+- [ ] Implement MCPSink with Membrane.Sink behavior
+- [ ] Add input pad with PlanningResult format
+- [ ] Implement MCP response formatting logic
+- [ ] Add result handler for sending responses back to MCP tools
+- [ ] Add telemetry for response formatting metrics
+- [ ] Test sink element with various planning results
+
+### Boot Level 6: Pipeline Management and Topology Control
+
+**File**: `lib/aria_engine/membrane/pipeline_manager.ex`
+
+```elixir
+defmodule AriaEngine.Membrane.PipelineManager do
+  @moduledoc """
+  Manager for Membrane pipeline lifecycle and dynamic topology configuration.
+  
+  Handles pipeline creation, element linking, supervision, and runtime
+  reconfiguration of the planning pipeline.
+  """
+
+  use GenServer
+
+  alias AriaEngine.Membrane.{MCPSource, PlanFilter, PlannerSink, MCPSink}
+  alias Membrane.Pipeline
+
+  @type pipeline_config :: %{
+    topology: :linear | :parallel | :multi_strategy | :custom,
+    elements: [map()],
+    connections: [map()],
+    supervision_strategy: atom()
+  }
+
+  @type pipeline_state :: %{
+    active_pipelines: map(),
+    default_config: pipeline_config(),
+    telemetry_prefix: [atom()]
+  }
+
+  # Public API
+
+  @spec start_link(keyword()) :: GenServer.on_start()
+  def start_link(opts \\ []) do
+    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+  end
+
+  @spec create_pipeline(pipeline_config()) :: {:ok, pid()} | {:error, term()}
+  def create_pipeline(config) do
+    GenServer.call(__MODULE__, {:create_pipeline, config})
+  end
+
+  @spec configure_pipeline_topology(pid(), pipeline_config()) :: :ok | {:error, term()}
+  def configure_pipeline_topology(pipeline_pid, config) do
+    GenServer.call(__MODULE__, {:configure_topology, pipeline_pid, config})
+  end
+
+  @spec get_pipeline_status(pid()) :: map()
+  def get_pipeline_status(pipeline_pid) do
+    GenServer.call(__MODULE__, {:get_status, pipeline_pid})
+  end
+
+  @spec stop_pipeline(pid()) :: :ok
+  def stop_pipeline(pipeline_pid) do
+    GenServer.call(__MODULE__, {:stop_pipeline, pipeline_pid})
+  end
+
+  # GenServer callbacks
+
+  @impl true
+  def init(opts) do
+    default_config = %{
+      topology: :linear,
+      elements: [
+        %{type: MCPSource, id: :source, config: %{}},
+        %{type: PlanFilter, id: :filter, config: %{}},
+        %{type: PlannerSink, id: :planner, config: %{}},
+        %{type: MCPSink, id: :mcp_sink, config: %{}}
+      ],
+      connections: [
+        %{from: {:source, :output}, to: {:filter, :input}},
+        %{from: {:filter, :output}, to: {:planner, :input}},
+        %{from: {:planner, :output}, to: {:mcp_sink, :input}}
+      ],
+      supervision_strategy: :one_for_one
+    }
+
+    state = %{
+      active_pipelines: %{},
+      default_config: default_config,
+      telemetry_prefix: Keyword.get(opts, :telemetry_prefix, [:aria_engine, :membrane, :pipeline])
+    }
+
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_call({:create_pipeline, config}, _from, state) do
+    case build_pipeline(config) do
+      {:ok, pipeline_pid} ->
+        new_pipelines = Map.put(state.active_pipelines, pipeline_pid, config)
+        new_state = %{state | active_pipelines: new_pipelines}
+        {:reply, {:ok, pipeline_pid}, new_state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:configure_topology, pipeline_pid, config}, _from, state) do
+    case reconfigure_pipeline(pipeline_pid, config) do
+      :ok ->
+        new_pipelines = Map.put(state.active_pipelines, pipeline_pid, config)
+        new_state = %{state | active_pipelines: new_pipelines}
+        {:reply, :ok, new_state}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:get_status, pipeline_pid}, _from, state) do
+    status = get_pipeline_status_info(pipeline_pid, state.active_pipelines)
+    {:reply, status, state}
+  end
+
+  @impl true
+  def handle_call({:stop_pipeline, pipeline_pid}, _from, state) do
+    :ok = Pipeline.stop(pipeline_pid)
+    new_pipelines = Map.delete(state.active_pipelines, pipeline_pid)
+    new_state = %{state | active_pipelines: new_pipelines}
+    {:reply, :ok, new_state}
+  end
+
+  # Private functions
+
+  defp build_pipeline(config) do
+    # Implementation would create Membrane pipeline with specified topology
+    # This is a simplified version
+    {:ok, spawn(fn -> :timer.sleep(:infinity) end)}
+  end
+
+  defp reconfigure_pipeline(_pipeline_pid, _config) do
+    # Implementation would reconfigure existing pipeline
+    :ok
+  end
+
+  defp get_pipeline_status_info(pipeline_pid, active_pipelines) do
+    config = Map.get(active_pipelines, pipeline_pid, %{})
+    %{
+      pipeline_pid: pipeline_pid,
+      status: :running,
+      config: config,
+      uptime: :timer.seconds(60), # Placeholder
+      processed_requests: 0 # Placeholder
+    }
+  end
+end
+```
+
+**Implementation Tasks**:
+- [ ] Implement PipelineManager GenServer for lifecycle management
+- [ ] Add pipeline creation with configurable topology
+- [ ] Implement dynamic pipeline reconfiguration
+- [ ] Add pipeline supervision and error recovery
+- [ ] Add pipeline status monitoring and metrics
+- [ ] Test pipeline management with various configurations
+
+### Boot Level 7: MCP Tools Integration
+
+**File**: `lib/aria_engine/mcp_tools.ex` (updated with Membrane integration)
 
 ```elixir
 defmodule AriaEngine.MCPTools do
-  # ... existing code ...
+  @moduledoc """
+  MCP tools interface with Membrane Framework pipeline integration.
+  
+  Provides MCP tools for pipeline management and individual strategy testing.
+  """
 
-  alias AriaEngine.HybridPlanner.{
-    PlanConverter,
-    StrategyWrappers.PlanningStrategyWrapper,
-    StrategyWrappers.TemporalStrategyWrapper
-  }
+  alias AriaEngine.Membrane.{PipelineManager, MCPSource}
 
   @tools [
-    {:schedule_activities, "1.0.0"},
-    {:test_planning_strategy, "1.0.0"},
-    {:test_temporal_strategy, "1.0.0"}
+    {:configure_pipeline_layout, "1.0.0"},
+    {:setup_element_config, "1.0.0"},
+    {:start_planning_pipeline, "1.0.0"},
+    {:stop_planning_pipeline, "1.0.0"},
+    {:get_pipeline_status, "1.0.0"},
+    {:get_pipeline_metrics, "1.0.0"},
+    {:schedule_activities, "2.0.0"}  # Updated to use pipeline
   ]
 
-  # Updated schedule_activities as pure plan converter
-  def handle_tool_call(:schedule_activities, params) do
-    case PlanConverter.convert_to_coordinator_input(params) do
-      {:ok, coordinator_input} ->
+  @spec handle_tool_call(atom(), map()) :: map()
+  def handle_tool_call(:configure_pipeline_layout, params) do
+    topology = String.to_atom(params["topology"] || "linear")
+    elements = params["elements"] || []
+    connections = params["connections"] || []
+
+    config = %{
+      topology: topology,
+      elements: parse_elements(elements),
+      connections: parse_connections(connections),
+      supervision_strategy: String.to_atom(params["supervision_strategy"] || "one_for_one")
+    }
+
+    case PipelineManager.create_pipeline(config) do
+      {:ok, pipeline_pid} ->
         %{
           "status" => "success",
-          "coordinator_input" => coordinator_input,
-          "conversion_metadata" => %{
-            "original_activities" => length(params["activities"] || []),
-            "converted_at" => DateTime.utc_now() |> DateTime.to_iso8601(),
-            "input_format" => "mcp_schedule_activities",
-            "output_format" => "hybrid_coordinator_v2"
+          "pipeline_id" => inspect(pipeline_pid),
+          "config" => %{
+            "topology" => Atom.to_string(topology),
+            "element_count" => length(elements),
+            "connection_count" => length(connections)
           }
         }
+
       {:error, reason} ->
         %{
           "status" => "error",
-          "reason" => reason,
-          "coordinator_input" => nil
+          "error" => "Failed to create pipeline: #{inspect(reason)}"
         }
     end
   end
 
-  @spec handle_tool_call(atom(), map()) :: map()
-  def handle_tool_call(:test_planning_strategy, params) do
-    domain = parse_domain(params["domain"])
-    state = parse_state(params["state"])
-    goals = params["goals"] || []
-    options = params["options"] || []
+  def handle_tool_call(:setup_element_config, params) do
+    element_type = params["element_type"]
+    element_config = params["config"] || %{}
 
-    case PlanningStrategyWrapper.test_strategy(domain, state, goals, options) do
-      %{status: :success} = result -> format_success_response(result)
-      %{status: :failure} = result -> format_failure_response(result)
-      %{status: :error} = result -> format_error_response(result)
+    # Validate element configuration
+    case validate_element_config(element_type, element_config) do
+      :ok ->
+        %{
+          "status" => "success",
+          "element_type" => element_type,
+          "config" => element_config,
+          "validation" => "passed"
+        }
+
+      {:error, reason} ->
+        %{
+          "status" => "error",
+          "error" => "Invalid element configuration: #{reason}"
+        }
     end
   end
 
-  def handle_tool_call(:test_temporal_strategy, params) do
-    timeline = parse_timeline(params["timeline"])
-    state = parse_state(params["state"])
-    constraints = params["constraints"] || []
-    options = params["options"] || []
+  def handle_tool_call(:start_planning_pipeline, params) do
+    pipeline_config = params["pipeline_config"] || %{}
+    
+    case PipelineManager.create_pipeline(parse_pipeline_config(pipeline_config)) do
+      {:ok, pipeline_pid} ->
+        %{
+          "status" => "success",
+          "pipeline_id" => inspect(pipeline_pid),
+          "message" => "Planning pipeline started successfully"
+        }
 
-    case TemporalStrategyWrapper.test_strategy(timeline, state, constraints, options) do
-      %{status: :success} = result -> format_success_response(result)
-      %{status: :failure} = result -> format_failure_response(result)
-      %{status: :error} = result -> format_error_response(result)
+      {:error, reason} ->
+        %{
+          "status" => "error",
+          "error" => "Failed to start pipeline: #{inspect(reason)}"
+        }
     end
   end
 
-
-  @spec format_success_response(StrategyTypes.strategy_result()) :: map()
-  defp format_success_response(result) do
-    %{
-      "status" => "success",
-      "result" => result.result,
-      "performance" => %{
-        "execution_time_ms" => result.performance.execution_time_ms,
-        "memory_usage_bytes" => result.performance.memory_usage_bytes,
-        "iterations" => result.performance.iterations
-      },
-      "metadata" => %{
-        "strategy_name" => result.metadata.strategy_name,
-        "strategy_version" => result.metadata.strategy_version,
-        "capabilities" => result.metadata.capabilities
-      }
-    }
-  end
-
-  @spec format_failure_response(StrategyTypes.strategy_result()) :: map()
-  defp format_failure_response(result) do
-    %{
-      "status" => "failure",
-      "error" => result.error_details,
-      "performance" => %{
-        "execution_time_ms" => result.performance.execution_time_ms
-      },
-      "metadata" => %{
-        "strategy_name" => result.metadata.strategy_name
-      }
-    }
-  end
-
-  @spec format_error_response(StrategyTypes.strategy_result()) :: map()
-  defp format_error_response(result) do
-    %{
-      "status" => "error",
-      "error" => result.error_details,
-      "metadata" => %{
-        "strategy_name" => result.metadata.strategy_name
-      }
-    }
-  end
-end
-```
-
-### Boot Level 5: Multi-Strategy Execution Framework
-
-**File**: `lib/aria_engine/hybrid_planner/multi_strategy_executor.ex`
-
-```elixir
-defmodule AriaEngine.HybridPlanner.MultiStrategyExecutor do
-  @moduledoc """
-  Framework for executing multiple strategies in parallel and aggregating results.
-  """
-
-  alias AriaEngine.HybridPlanner.StrategyTypes
-
-  @type execution_options :: [
-    parallel: boolean(),
-    timeout_ms: non_neg_integer(),
-    max_concurrent: pos_integer()
-  ]
-
-  @type aggregated_results :: %{
-    strategy_results: [StrategyTypes.strategy_result()],
-    execution_summary: map(),
-    timing_info: map()
-  }
-
-  @spec execute_strategies(
-    StrategyTypes.strategy_input(),
-    [StrategyTypes.strategy_module()],
-    execution_options()
-  ) :: aggregated_results()
-  def execute_strategies(problem, strategy_list, opts \\ []) do
-    parallel = Keyword.get(opts, :parallel, true)
-    
-    if parallel do
-      execute_parallel(problem, strategy_list, opts)
-    else
-      execute_sequential(problem, strategy_list, opts)
-    end
-  end
-
-  @spec execute_parallel(
-    StrategyTypes.strategy_input(),
-    [StrategyTypes.strategy_module()],
-    execution_options()
-  ) :: aggregated_results()
-  defp execute_parallel(problem, strategy_list, opts) do
-    max_concurrent = Keyword.get(opts, :max_concurrent, System.schedulers_online())
-    timeout_ms = Keyword.get(opts, :timeout_ms, 30_000)
-
-    tasks = strategy_list
-    |> Enum.map(fn strategy_module ->
-      Task.async(fn ->
-        strategy_module.execute(problem)
-      end)
-    end)
-
-    results = Task.await_many(tasks, timeout_ms)
-    
-    %{
-      strategy_results: results,
-      execution_summary: summarize_execution(results),
-      timing_info: %{
-        total_execution_time_ms: calculate_total_time(results),
-        parallel_execution: true
-      }
-    }
-  end
-
-  @spec execute_sequential(
-    StrategyTypes.strategy_input(),
-    [StrategyTypes.strategy_module()],
-    execution_options()
-  ) :: aggregated_results()
-  defp execute_sequential(problem, strategy_list, _opts) do
-    start_time = System.monotonic_time(:millisecond)
-    
-    results = Enum.map(strategy_list, fn strategy_module ->
-      strategy_module.execute(problem)
-    end)
-    
-    end_time = System.monotonic_time(:millisecond)
-    
-    %{
-      strategy_results: results,
-      execution_summary: summarize_execution(results),
-      timing_info: %{
-        total_execution_time_ms: end_time - start_time,
-        parallel_execution: false
-      }
-    }
-  end
-
-  @spec summarize_execution([StrategyTypes.strategy_result()]) :: map()
-  defp summarize_execution(results) do
-    success_count = Enum.count(results, &(&1.status == :success))
-    failure_count = Enum.count(results, &(&1.status == :failure))
-    error_count = Enum.count(results, &(&1.status == :error))
-    
-    %{
-      total_strategies: length(results),
-      success_count: success_count,
-      failure_count: failure_count,
-      error_count: error_count,
-      success_rate: success_count / length(results)
-    }
-  end
-
-  @spec calculate_total_time([StrategyTypes.strategy_result()]) :: non_neg_integer()
-  defp calculate_total_time(results) do
-    results
-    |> Enum.map(& &1.performance.execution_time_ms)
-    |> Enum.max(fn -> 0 end)
-  end
-end
-```
-
-### Boot Level 6: Strategy Comparison and Analysis
-
-**File**: `lib/aria_engine/hybrid_planner/strategy_comparison.ex`
-
-```elixir
-defmodule AriaEngine.HybridPlanner.StrategyComparison do
-  @moduledoc """
-  Framework for comparing strategy outputs and performance.
-  """
-
-  alias AriaEngine.HybridPlanner.{StrategyTypes, MultiStrategyExecutor}
-
-  @type comparison_metrics :: [
-    :execution_time | :memory_usage | :solution_quality | :success_rate
-  ]
-
-  @type comparison_result :: %{
-    problem_summary: map(),
-    strategy_results: [StrategyTypes.strategy_result()],
-    comparison: %{
-      performance_ranking: [map()],
-      solution_quality: map(),
-      statistical_analysis: map()
-    }
-  }
-
-  @spec compare_strategies(
-    StrategyTypes.strategy_input(),
-    [StrategyTypes.strategy_module()],
-    comparison_metrics()
-  ) :: comparison_result()
-  def compare_strategies(problem, strategy_list, metrics) do
-    aggregated = MultiStrategyExecutor.execute_strategies(problem, strategy_list)
-    
-    %{
-      problem_summary: summarize_problem(problem),
-      strategy_results: aggregated.strategy_results,
-      comparison: %{
-        performance_ranking: rank_by_performance(aggregated.strategy_results, metrics),
-        solution_quality: compare_solution_quality(aggregated.strategy_results),
-        statistical_analysis: analyze_statistics(aggregated.strategy_results)
-      }
-    }
-  end
-
-  @spec rank_by_performance([StrategyTypes.strategy_result()], comparison_metrics()) :: [map()]
-  def rank_by_performance(results, metrics) do
-    results
-    |> Enum.map(&extract_performance_data(&1, metrics))
-    |> Enum.sort_by(&calculate_composite_score(&1, metrics))
-    |> Enum.with_index(1)
-    |> Enum.map(fn {strategy_data, rank} ->
-      Map.put(strategy_data, :rank, rank)
-    end)
-  end
-
-  @spec compare_solution_quality([StrategyTypes.strategy_result()]) :: map()
-  def compare_solution_quality(results) do
-    successful_results = Enum.filter(results, &(&1.status == :success))
-    
-    %{
-      total_solutions: length(successful_results),
-      unique_solutions: count_unique_solutions(successful_results),
-      solution_diversity: calculate_solution_diversity(successful_results),
-      optimal_solutions: identify_optimal_solutions(successful_results)
-    }
-  end
-
-  @spec analyze_statistics([StrategyTypes.strategy_result()]) :: map()
-  def analyze_statistics(results) do
-    execution_times = Enum.map(results, & &1.performance.execution_time_ms)
-    memory_usage = Enum.map(results, & &1.performance.memory_usage_bytes)
-    
-    %{
-      execution_time_stats: calculate_stats(execution_times),
-      memory_usage_stats: calculate_stats(memory_usage),
-      success_rate: calculate_success_rate(results),
-      performance_variance: calculate_performance_variance(results)
-    }
-  end
-
-  @spec extract_performance_data(StrategyTypes.strategy_result(), comparison_metrics()) :: map()
-  defp extract_performance_data(result, metrics) do
-    base_data = %{
-      strategy_name: result.metadata.strategy_name,
-      status: result.status
-    }
-    
-    Enum.reduce(metrics, base_data, fn metric, acc ->
-      case metric do
-        :execution_time -> Map.put(acc, :execution_time_ms, result.performance.execution_time_ms)
-        :memory_usage -> Map.put(acc, :memory_usage_bytes, result.performance.memory_usage_bytes)
-        :solution_quality -> Map.put(acc, :solution_quality, assess_solution_quality(result))
-        :success_rate -> Map.put(acc, :success, result.status == :success)
-      end
-    end)
-  end
-
-  @spec calculate_composite_score(map(), comparison_metrics()) :: float()
-  defp calculate_composite_score(strategy_data, metrics) do
-    # Implementation details for composite scoring
-    0.0
-  end
-
-  @spec summarize_problem(StrategyTypes.strategy_input()) :: map()
-  defp summarize_problem(problem) do
-    %{
-      problem_type: problem.problem_type,
-      goal_count: length(problem.goals),
-      constraint_count: map_size(problem.constraints),
-      complexity_estimate: estimate_complexity(problem)
-    }
-  end
-
-  @spec calculate_stats([number()]) :: map()
-  defp calculate_stats(values) do
-    sorted = Enum.sort(values)
-    count = length(values)
-    
-    %{
-      min: Enum.min(values),
-      max: Enum.max(values),
-      mean: Enum.sum(values) / count,
-      median: Enum.at(sorted, div(count, 2)),
-      std_dev: calculate_standard_deviation(values)
-    }
-  end
-
-  # Additional helper functions...
-  defp count_unique_solutions(_results), do: 0
-  defp calculate_solution_diversity(_results), do: 0.0
-  defp identify_optimal_solutions(_results), do: []
-  defp calculate_success_rate(_results), do: 0.0
-  defp calculate_performance_variance(_results), do: 0.0
-  defp assess_solution_quality(_result), do: 0.0
-  defp estimate_complexity(_problem), do: :medium
-  defp calculate_standard_deviation(_values), do: 0.0
-end
-```
-
-### Boot Level 7: Advanced MCP Tools
-
-**File**: `lib/aria_engine/mcp_tools.ex` (additional tools)
-
-```elixir
-defmodule AriaEngine.MCPTools do
-  # ... existing code ...
-
-  alias AriaEngine.HybridPlanner.{StrategyComparison, MultiStrategyExecutor}
-
-  @tools [
-    # ... existing tools ...
-    {:compare_strategies, "1.0.0"},
-    {:benchmark_strategies, "1.0.0"},
-    {:analyze_strategy_performance, "1.0.0"}
-  ]
-
-  def handle_tool_call(:compare_strategies, params) do
-    problem = parse_strategy_input(params["problem"])
-    strategy_names = params["strategies"] || []
-    metrics = parse_comparison_metrics(params["comparison_metrics"])
-    
-    strategy_modules = resolve_strategy_modules(strategy_names)
-    
-    case StrategyComparison.compare_strategies(problem, strategy_modules, metrics) do
-      comparison_result -> format_comparison_response(comparison_result)
-    end
-  end
-
-  def handle_tool_call(:benchmark_strategies, params) do
-    problem_set = parse_problem_set(params["problem_set"])
-    strategy_names = params["strategies"] || []
-    benchmark_options = params["benchmark_options"] || []
-    
-    strategy_modules = resolve_strategy_modules(strategy_names)
-    
-    benchmark_results = run_benchmark_suite(problem_set, strategy_modules, benchmark_options)
-    format_benchmark_response(benchmark_results)
-  end
-
-  def handle_tool_call(:analyze_strategy_performance, params) do
-    strategy_name = params["strategy_name"]
-    performance_data = params["performance_data"]
-    analysis_options = params["analysis_options"] || []
-    
-    analysis_result = analyze_performance_data(strategy_name, performance_data, analysis_options)
-    format_analysis_response(analysis_result)
-  end
-
-  @spec resolve_strategy_modules([String.t()]) :: [StrategyTypes.strategy_module()]
-  defp resolve_strategy_modules(strategy_names) do
-    strategy_map = %{
-      "planning" => PlanningStrategyWrapper,
-      "temporal" => TemporalStrategyWrapper
-    }
-    
-    Enum.map(strategy_names, &Map.get(strategy_map, &1))
-    |> Enum.reject(&is_nil/1)
-  end
-
-  @spec parse_strategy_input(map()) :: StrategyTypes.strategy_input()
-  defp parse_strategy_input(params) do
-    %{
-      problem_type: String.to_atom(params["problem_type"]),
-      domain: parse_domain(params["domain"]),
-      state: parse_state(params["state"]),
-      goals: params["goals"] || [],
-      constraints: params["constraints"] || %{},
-      options: params["options"] || []
-    }
-  end
-
-  @spec parse_comparison_metrics([String.t()]) :: [atom()]
-  defp parse_comparison_metrics(metric_strings) do
-    Enum.map(metric_strings, &String.to_atom/1)
-  end
-
-  @spec format_comparison_response(StrategyComparison.comparison_result()) :: map()
-  defp format_comparison_response(comparison_result) do
-    %{
-      "status" => "success",
-      "problem_summary" => comparison_result.problem_summary,
-      "strategy_count" => length(comparison_result.strategy_results),
-      "performance_ranking" => comparison_result.comparison.performance_ranking,
-      "solution_quality" => comparison_result.comparison.solution_quality,
-      "statistical_analysis" => comparison_result.comparison.statistical_analysis
-    }
-  end
-
-  # Additional helper functions...
-  defp parse_problem_set(_params), do: []
-  defp run_benchmark_suite(_problem_set, _strategies, _options), do: %{}
-  defp format_benchmark_response(_results), do: %{}
-  defp analyze_performance_data(_strategy, _data, _options), do: %{}
-  defp format_analysis_response(_result), do: %{}
-end
-```
-
-### Boot Level 8: Integration Testing
-
-**File**: `test/aria_engine/hybrid_planner/strategy_testing_integration_test.exs`
-
-```elixir
-defmodule AriaEngine.HybridPlanner.StrategyTestingIntegrationTest do
-  use ExUnit.Case, async: true
-
-  alias AriaEngine.HybridPlanner.{
-    StrategyTypes,
-    StrategyWrappers.PlanningStrategyWrapper,
-    MultiStrategyExecutor,
-    StrategyComparison
-  }
-  alias AriaEngine.MCPTools
-
-  describe "Boot Level 1: Foundation Types" do
-    test "strategy input type validation" do
-      input = %{
-        problem_type: :planning,
-        domain: %AriaEngine.Domain.Core{},
-        state: %AriaEngine.StateV2{},
-        goals: [:goal1, :goal2],
-        constraints: %{},
-        options: []
-      }
-      
-      assert %StrategyTypes{} = struct(StrategyTypes, %{})
-      assert is_map(input)
-      assert input.problem_type in [:planning, :temporal, :optimization, :constraint_satisfaction]
-    end
-  end
-
-  describe "Boot Level 2: Strategy Isolation" do
-    test "strategy can execute in isolation" do
-      input = build_test_input(:planning)
-      
-      result = PlanningStrategyWrapper.test_strategy(
-        input.domain,
-        input.state,
-        input.goals,
-        input.options
-      )
-      
-      assert %{status: status} = result
-      assert status in [:success, :failure, :error]
-      assert is_map(result.performance)
-      assert is_map(result.metadata)
-    end
-  end
-
-  describe "Boot Level 3: Strategy Wrappers" do
-    test "all strategy wrappers implement behaviour" do
-      wrappers = [
-        PlanningStrategyWrapper,
-        # Add other wrappers as they're implemented
+  def handle_tool_call(:schedule_activities, params) do
+    # Updated to use Membrane pipeline instead of direct scheduler call
+    pipeline_config = %{
+      topology: :linear,
+      elements: [
+        %{type: MCPSource, id: :source},
+        %{type: PlanFilter, id: :filter},
+        %{type: PlannerSink, id: :planner},
+        %{type: MCPSink, id: :mcp_sink}
       ]
-      
-      Enum.each(wrappers, fn wrapper ->
-        assert function_exported?(wrapper, :execute, 1)
-        assert function_exported?(wrapper, :strategy_info, 0)
-        assert function_exported?(wrapper, :validate_input, 1)
-      end)
+    }
+
+    case PipelineManager.create_pipeline(pipeline_config) do
+      {:ok, pipeline_pid} ->
+        # Send MCP request through pipeline
+        MCPSource.send_mcp_request(pipeline_pid, params)
+        
+        %{
+          "status" => "processing",
+          "pipeline_id" => inspect(pipeline_pid),
+          "message" => "Request sent to Membrane pipeline for processing"
+        }
+
+      {:error, reason} ->
+        %{
+          "status" => "error",
+          "error" => "Failed to process request: #{inspect(reason)}"
+        }
     end
   end
 
-  describe "Boot Level 4: MCP Tool Integration" do
-    test "MCP tools can call strategy wrappers" do
-      params = %{
-        "domain" => build_test_domain(),
-        "state" => build_test_state(),
-        "goals" => ["goal1", "goal2"],
-        "options" => []
+  # Helper functions
+  defp parse_elements(elements) do
+    Enum.map(elements, fn element ->
+      %{
+        type: String.to_atom(element["type"]),
+        id: String.to_atom(element["id"]),
+        config: element["config"] || %{}
       }
-      
-      result = MCPTools.handle_tool_call(:test_planning_strategy, params)
-      
-      assert is_map(result)
-      assert Map.has_key?(result, "status")
-      assert result["status"] in ["success", "failure", "error"]
-    end
+    end)
   end
 
-  describe "Boot Level 5: Multi-Strategy Execution" do
-    test "multiple strategies can execute together" do
-      problem = build_test_input(:planning)
-      strategies = [PlanningStrategyWrapper]
-      
-      result = MultiStrategyExecutor.execute_strategies(problem, strategies)
-      
-      assert %{strategy_results: results} = result
-      assert is_list(results)
-      assert length(results) == length(strategies)
-    end
-  end
-
-  describe "Boot Level 6: Strategy Comparison" do
-    test "strategies can be compared" do
-      problem = build_test_input(:planning)
-      strategies = [PlanningStrategyWrapper]
-      metrics = [:execution_time, :memory_usage]
-      
-      result = StrategyComparison.compare_strategies(problem, strategies, metrics)
-      
-      assert %{comparison: comparison} = result
-      assert Map.has_key?(comparison, :performance_ranking)
-      assert Map.has_key?(comparison, :solution_quality)
-    end
-  end
-
-  describe "Boot Level 7: Advanced MCP Tools" do
-    test "strategy comparison via MCP tools" do
-      params = %{
-        "problem" => build_test_problem_params(),
-        "strategies" => ["planning"],
-        "comparison_metrics" => ["execution_time", "memory_usage"]
+  defp parse_connections(connections) do
+    Enum.map(connections, fn conn ->
+      %{
+        from: {String.to_atom(conn["from"]["element"]), String.to_atom(conn["from"]["pad"])},
+        to: {String.to_atom(conn["to"]["element"]), String.to_atom(conn["to"]["pad"])}
       }
-      
-      result = MCPTools.handle_tool_call(:compare_strategies, params)
-      
-      assert is_map(result)
-      assert result["status"] == "success"
-      assert Map.has_key?(result, "performance_ranking")
-    end
+    end)
   end
 
-  describe "Boot Level 8: Complete Integration" do
-    test "end-to-end strategy testing workflow" do
-      # Test complete workflow from MCP tool to strategy execution
-      params = %{
-        "domain" => build_test_domain(),
-        "state" => build_test_state(),
-        "goals" => ["goal1"],
-        "options" => []
-      }
-      
-      # Individual strategy test
-      individual_result = MCPTools.handle_tool_call(:test_planning_strategy, params)
-      assert individual_result["status"] in ["success", "failure", "error"]
-      
-      # Strategy comparison
-      comparison_params = %{
-        "problem" => build_test_problem_params(),
-        "strategies" => ["planning"],
-        "comparison_metrics" => ["execution_time"]
-      }
-      
-      comparison_result = MCPTools.handle_tool_call(:compare_strategies, comparison_params)
-      assert comparison_result["status"] == "success"
-    end
-  end
-
-  # Helper functions for tests
-  @spec build_test_input(StrategyTypes.problem_type()) :: StrategyTypes.strategy_input()
-  defp build_test_input(problem_type) do
+  defp parse_pipeline_config(config) do
     %{
-      problem_type: problem_type,
-      domain: build_test_domain(),
-      state: build_test_state(),
-      goals: [:test_goal],
-      constraints: %{},
-      options: []
+      topology: String.to_atom(config["topology"] || "linear"),
+      elements: parse_elements(config["elements"] || []),
+      connections: parse_connections(config["connections"] || []),
+      supervision_strategy: String.to_atom(config["supervision_strategy"] || "one_for_one")
     }
   end
 
-  @spec build_test_domain() :: map()
-  defp build_test_domain() do
-    %{
-      "name" => "test_domain",
-      "actions" => [],
-      "predicates" => []
-    }
+  defp validate_element_config(element_type, config) do
+    case element_type do
+      "MCPSource" -> validate_mcp_source_config(config)
+      "PlanFilter" -> validate_plan_filter_config(config)
+      "PlannerSink" -> validate_planner_sink_config(config)
+      "MCPSink" -> validate_mcp_sink_config(config)
+      _ -> {:error, "Unknown element type: #{element_type}"}
+    end
   end
 
-  @spec build_test_state() :: map()
-  defp build_test_state() do
-    %{
-      "facts" => [],
-      "timestamp" => DateTime.utc_now()
-    }
-  end
-
-  @spec build_test_problem_params() :: map()
-  defp build_test_problem_params() do
-    %{
-      "problem_type" => "planning",
-      "domain" => build_test_domain(),
-      "state" => build_test_state(),
-      "goals" => ["test_goal"],
-      "constraints" => %{},
-      "options" => []
-    }
-  end
+  defp validate_mcp_source_config(_config), do: :ok
+  defp validate_plan_filter_config(_config), do: :ok
+  defp validate_planner_sink_config(_config), do: :ok
+  defp validate_mcp_sink_config(_config), do: :ok
 end
 ```
 
-## Implementation Summary
-
-This ADR defines a complete cold boot implementation order for the MCP Strategy Testing Interface with concrete Elixir methods and typespecs:
-
-### Boot Level Dependencies
-
-1. **Boot Level 1**: Foundation types and behaviour contracts
-2. **Boot Level 2**: Strategy isolation infrastructure with resource limits
-3. **Boot Level 3**: Individual strategy wrappers implementing the behaviour
-4. **Boot Level 4**: MCP tool registration and handlers
-5. **Boot Level 5**: Multi-strategy execution framework
-6. **Boot Level 6**: Strategy comparison and analysis
-7. **Boot Level 7**: Advanced MCP tools for benchmarking
-8. **Boot Level 8**: Complete integration testing
-
-### Key Function Signatures
-
-**Strategy Testing Interface**:
-```elixir
-@spec test_strategy(domain, state, goals, opts) :: StrategyTypes.strategy_result()
-@spec execute(StrategyTypes.strategy_input()) :: StrategyTypes.strategy_result()
-@spec strategy_info() :: StrategyTypes.strategy_metadata()
-```
-
-**MCP Tool Handlers**:
-```elixir
-@spec handle_tool_call(atom(), map()) :: map()
-```
-
-**Multi-Strategy Execution**:
-```elixir
-@spec execute_strategies(problem, strategy_list, opts) :: aggregated_results()
-@spec compare_strategies(problem, strategy_list, metrics) :: comparison_result()
-```
-
-### Type Definitions
-
-All core types are defined in `StrategyTypes` module with proper typespecs for:
-- `strategy_input()` - Standardized input format
-- `strategy_result()` - Standardized output format  
-- `performance_metrics()` - Performance measurement data
-- `strategy_metadata()` - Strategy capability information
-
-This provides a clear, implementable roadmap with concrete function signatures and type contracts for building the MCP Strategy Testing Interface.
+**Implementation Tasks**:
+- [ ] Update MCPTools to use Membrane pipeline instead of direct scheduler calls
+- [ ] Add MCP tools for pipeline management and configuration
+- [ ] Implement element configuration validation
+- [ ] Add pipeline status and metrics tools
+- [ ] Test MCP tools integration with pipeline
 
 ## Success Criteria
 
-Each boot level has specific success criteria that must be met before proceeding to the next level, ensuring a solid foundation for the complete strategy testing system.
+### Functional Requirements
+
+- [ ] **Pipeline Creation**: Successfully create Membrane pipelines with 4 elements
+- [ ] **Element Communication**: Data flows correctly through all pipeline stages
+- [ ] **Format Validation**: All custom formats serialize/deserialize properly
+- [ ] **Process Isolation**: Each element runs in separate GenServer process
+- [ ] **Error Handling**: Pipeline handles element failures gracefully
+- [ ] **Dynamic Configuration**: Pipeline topology can be reconfigured at runtime
+
+### Performance Requirements
+
+- [ ] **Throughput**: Handle at least 10 concurrent planning requests
+- [ ] **Latency**: End-to-end processing under 5 seconds for typical requests
+- [ ] **Memory Usage**: Pipeline memory footprint under 100MB per instance
+- [ ] **Fault Recovery**: Pipeline recovers from element failures within 1 second
+
+### Integration Requirements
+
+- [ ] **MCP Compatibility**: All existing MCP tools work with pipeline architecture
+- [ ] **HybridCoordinator Integration**: PlannerSink successfully executes planning
+- [ ] **Telemetry**: All pipeline stages emit proper telemetry events
+- [ ] **Testing**: Comprehensive test suite for all elements and pipeline configurations
 
 ## Related ADRs
 
-- **ADR-111**: Schedule Activities Data Transformer Conversion (aligned architecture)
-- **ADR-105**: Reconnect Scheduler to MCP (superseded by plan converter approach)
-- **ADR-097**: MCP Scheduler Interface Design (superseded by plan converter approach)
-- **ADR-109**: Integrate CP-SAT Solver Strategy via Exhort OR-Tools
-- **ADR-091**: Hybrid Planner Dependency Encapsulation  
-- **ADR-101**: Reconnect Scheduler with Hybrid Planner
+- **ADR-101**: Reconnect Scheduler with Hybrid Planner (foundation for PlannerSink)
+- **ADR-089**: Migrate planner to StateV2 subject predicate fact
+- **ADR-086**: Implement durative actions
+- **ADR-105**: Reconnect scheduler to MCP (superseded by this pipeline approach)
+
+## Consequences
+
+### Positive
+
+- **Scalability**: Process isolation enables horizontal scaling
+- **Fault Tolerance**: Individual element failures don't crash entire system
+- **Testability**: Each element can be tested in complete isolation
+- **Monitoring**: Built-in telemetry provides detailed performance metrics
+- **Flexibility**: Dynamic pipeline reconfiguration supports different testing scenarios
+- **Reusability**: PlannerSink can be used in non-MCP pipelines
+
+### Risks
+
+- **Complexity**: Membrane Framework adds architectural complexity
+- **Learning Curve**: Team needs to understand Membrane concepts and patterns
+- **Debugging**: Distributed processing makes debugging more challenging
+- **Performance Overhead**: Process communication may add latency
+- **Dependency**: Additional external dependency on Membrane Framework
+
+### Mitigation Strategies
+
+- **Documentation**: Comprehensive documentation of pipeline architecture
+- **Training**: Team training on Membrane Framework concepts
+- **Monitoring**: Extensive telemetry and logging for debugging
+- **Testing**: Thorough testing of all pipeline configurations
+- **Gradual Migration**: Implement alongside existing monolithic approach initially
+
+## Implementation Timeline
+
+**Week 1**: Boot Levels 1-2 (Dependencies, formats, MCPSource)
+**Week 2**: Boot Levels 3-4 (PlanFilter, PlannerSink)  
+**Week 3**: Boot Levels 5-6 (MCPSink, PipelineManager)
+**Week 4**: Boot Level 7 (MCP Tools integration, testing)
+**Week 5**: Performance optimization and production readiness
+
+This Membrane Framework pipeline architecture provides a robust, scalable foundation for MCP strategy testing while maintaining clean separation of concerns and enabling individual component testing.

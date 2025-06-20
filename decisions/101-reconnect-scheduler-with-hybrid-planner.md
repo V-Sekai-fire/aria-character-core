@@ -90,6 +90,24 @@ Rewrite the scheduler domain converter to create a proper hybrid planner domain 
 - **ADR-100**: Extract scheduler remove MCP
 - **ADR-089**: Migrate planner to StateV2 subject predicate fact
 - **ADR-086**: Implement durative actions
+- **ADR-110**: MCP Strategy Testing Interface using Membrane Framework Pipeline (supersedes direct MCP integration)
+
+## Future Integration with Membrane Framework
+
+**Note**: This ADR establishes the core scheduler-planner integration. Future work in ADR-110 will migrate the MCP interface to use a Membrane Framework pipeline architecture:
+
+```
+MCPSource → PlanFilter → PlannerSink → MCPSink
+```
+
+This will provide:
+- Process isolation for scheduler execution
+- Better fault tolerance and error recovery
+- Individual strategy testing capabilities
+- Dynamic pipeline reconfiguration
+- Improved scalability for concurrent requests
+
+The scheduler integration completed in this ADR will serve as the foundation for the Membrane pipeline's PlannerSink element.
 
 ## Completion Summary
 
