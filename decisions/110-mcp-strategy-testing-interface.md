@@ -16,7 +16,7 @@ MCP Tool → Scheduler → HybridCoordinatorV2 → [All 6 Strategies] → Schedu
 
 ### Need for Individual Strategy Testing
 
-To effectively develop and test the new ExhortStrategy (ADR-109) and other strategies, we need:
+To effectively develop and test existing strategies and prepare for future strategy additions, we need:
 
 1. **Individual Strategy Testing**: Test each strategy in isolation
 2. **Strategy Comparison**: Compare outputs between different strategies
@@ -24,406 +24,936 @@ To effectively develop and test the new ExhortStrategy (ADR-109) and other strat
 4. **Debugging Capability**: Isolate issues to specific strategies
 5. **Performance Benchmarking**: Measure individual strategy performance
 
-### Current Limitations
-
-- **No Direct Strategy Access**: Cannot test strategies individually through MCP
-- **Complex Pipeline**: Full scheduler pipeline obscures strategy-specific issues
-- **Limited Debugging**: Hard to isolate problems to specific strategies
-- **No Strategy Comparison**: Cannot easily compare strategy outputs
-
 ## Decision
 
 Rebuild the hybrid planner MCP interface to provide individual strategy testing capabilities while maintaining the existing high-level interface for production use.
 
-## Implementation Plan
+## Cold Boot Implementation Order
 
-### Phase 1: Strategy-Level MCP Tools (HIGH PRIORITY)
+### Boot Level 1: Foundation Types and Contracts
 
-**File**: `lib/aria_engine/mcp_tools.ex`
-
-**New MCP Tools to Add**:
-- [ ] `test_planning_strategy` - Test HTN planning strategy directly
-- [ ] `test_temporal_strategy` - Test STN temporal strategy directly  
-- [ ] `test_state_strategy` - Test StateV2 strategy directly
-- [ ] `test_domain_strategy` - Test domain strategy directly
-- [ ] `test_execution_strategy` - Test execution strategy directly
-- [ ] `test_exhort_strategy` - Test new ExhortStrategy directly
-- [ ] `compare_strategies` - Compare outputs from multiple strategies
-- [ ] `benchmark_strategies` - Performance benchmark multiple strategies
-
-### Phase 2: Strategy Input/Output Standardization (HIGH PRIORITY)
-
-**File**: `lib/aria_engine/hybrid_planner/strategy_interface.ex`
-
-**Missing/Required**:
-- [ ] Reuse MCP tool schemas as standardized input format for all strategies
-- [ ] Reuse MCP tool schemas as standardized output format for all strategies  
-- [ ] Input validation and conversion utilities (leveraging existing MCP validation)
-- [ ] Output formatting and comparison utilities (using MCP response format)
-- [ ] Strategy metadata and capability reporting (following MCP tool definition pattern)
-
-**Implementation Patterns Needed**:
-- [ ] MCP schema validation for strategy inputs (reuse existing MCPTools validation)
-- [ ] MCP response format for strategy outputs (consistent with tool responses)
-- [ ] Error handling standardization (following MCP error response pattern)
-- [ ] Performance metrics collection (embedded in MCP response metadata)
-
-### Phase 3: Individual Strategy Wrappers (MEDIUM PRIORITY)
-
-**File**: `lib/aria_engine/hybrid_planner/strategy_wrappers/`
-
-**Missing/Required**:
-- [ ] `planning_strategy_wrapper.ex` - Wrap HTN planning for direct testing
-- [ ] `temporal_strategy_wrapper.ex` - Wrap STN temporal for direct testing
-- [ ] `state_strategy_wrapper.ex` - Wrap StateV2 for direct testing
-- [ ] `domain_strategy_wrapper.ex` - Wrap domain strategy for direct testing
-- [ ] `execution_strategy_wrapper.ex` - Wrap execution strategy for direct testing
-- [ ] `exhort_strategy_wrapper.ex` - Wrap ExhortStrategy for direct testing
-
-**Implementation Patterns Needed**:
-- [ ] Strategy isolation and setup
-- [ ] Mock dependency injection
-- [ ] Result capture and formatting
-- [ ] Error isolation and reporting
-
-### Phase 4: Strategy Comparison and Benchmarking (MEDIUM PRIORITY)
-
-**File**: `lib/aria_engine/hybrid_planner/strategy_comparison.ex`
-
-**Missing/Required**:
-- [ ] Multi-strategy execution framework
-- [ ] Result comparison algorithms
-- [ ] Performance benchmarking utilities
-- [ ] Visualization and reporting tools
-- [ ] Statistical analysis of strategy performance
-
-## Technical Architecture
-
-### Dual Interface Approach: MCP + Direct Elixir Calls
-
-**Key Design Principle**: Use MCP tool schemas as the standardized interface for both MCP tools and direct Elixir function calls.
+**File**: `lib/aria_engine/hybrid_planner/strategy_types.ex`
 
 ```elixir
-# MCP Tool Usage
-AriaEngine.MCPTools.handle_tool_call(:test_planning_strategy, params)
+defmodule AriaEngine.HybridPlanner.StrategyTypes do
+  @moduledoc """
+  Core type definitions for strategy testing interface.
+  """
 
-# Direct Elixir Usage (same interface)
-AriaEngine.HybridPlanner.StrategyInterface.test_planning_strategy(params)
+  @type problem_type :: :planning | :temporal | :optimization | :constraint_satisfaction
 
-# Both use identical input validation and output formatting
+  @type strategy_input :: %{
+    problem_type: problem_type(),
+    domain: AriaEngine.Domain.Core.t(),
+    state: AriaEngine.StateV2.t(),
+    goals: [term()],
+    constraints: map(),
+    options: keyword()
+  }
+
+  @type performance_metrics :: %{
+    execution_time_ms: non_neg_integer(),
+    memory_usage_bytes: non_neg_integer(),
+    iterations: non_neg_integer(),
+    cpu_time_ms: non_neg_integer()
+  }
+
+  @type strategy_metadata :: %{
+    strategy_name: String.t(),
+    strategy_version: String.t(),
+    problem_characteristics: map(),
+    capabilities: [atom()]
+  }
+
+  @type strategy_result :: %{
+    status: :success | :failure | :error,
+    result: term(),
+    performance: performance_metrics(),
+    metadata: strategy_metadata(),
+    error_details: String.t() | nil
+  }
+
+  @type strategy_module :: module()
+  @type strategy_name :: atom()
+end
 ```
 
-**Benefits of Unified Interface**:
-- **Consistency**: Same input/output format regardless of access method
-- **Reusability**: MCP validation logic reused for direct calls
-- **Flexibility**: Choose MCP or direct calls based on context
-- **Maintainability**: Single source of truth for interface definitions
-
-### MCP Tool Interface Design
+**File**: `lib/aria_engine/hybrid_planner/strategy_behaviour.ex`
 
 ```elixir
-# Individual Strategy Testing
-%{
-  name: "test_planning_strategy",
-  description: "Test HTN planning strategy with specific domain and goals",
-  inputSchema: %{
-    type: "object",
-    properties: %{
-      domain: %{type: "object", description: "Domain definition"},
-      state: %{type: "object", description: "Initial state"},
-      goals: %{type: "array", description: "Planning goals"},
-      strategy_options: %{type: "object", description: "Strategy-specific options"}
-    }
-  }
-}
+defmodule AriaEngine.HybridPlanner.StrategyBehaviour do
+  @moduledoc """
+  Behaviour that all testable strategies must implement.
+  """
 
-# Strategy Comparison
-%{
-  name: "compare_strategies",
-  description: "Compare outputs from multiple strategies on same problem",
-  inputSchema: %{
-    type: "object", 
-    properties: %{
-      problem: %{type: "object", description: "Problem definition"},
-      strategies: %{type: "array", description: "List of strategies to compare"},
-      comparison_metrics: %{type: "array", description: "Metrics to compare"}
-    }
-  }
-}
+  alias AriaEngine.HybridPlanner.StrategyTypes
+
+  @callback execute(StrategyTypes.strategy_input()) :: StrategyTypes.strategy_result()
+  @callback strategy_info() :: StrategyTypes.strategy_metadata()
+  @callback validate_input(StrategyTypes.strategy_input()) :: {:ok, StrategyTypes.strategy_input()} | {:error, String.t()}
+end
 ```
 
-### Strategy Wrapper Pattern
+### Boot Level 2: Strategy Isolation Infrastructure
+
+**File**: `lib/aria_engine/hybrid_planner/strategy_isolation.ex`
+
+```elixir
+defmodule AriaEngine.HybridPlanner.StrategyIsolation do
+  @moduledoc """
+  Infrastructure for executing strategies in isolation with resource limits.
+  """
+
+  alias AriaEngine.HybridPlanner.StrategyTypes
+
+  @type isolation_options :: [
+    timeout_ms: non_neg_integer(),
+    memory_limit_mb: non_neg_integer(),
+    capture_logs: boolean()
+  ]
+
+  @spec execute_isolated(StrategyTypes.strategy_module(), StrategyTypes.strategy_input(), isolation_options()) :: 
+    StrategyTypes.strategy_result()
+  def execute_isolated(strategy_module, input, opts \\ []) do
+    # Implementation details
+  end
+
+  @spec setup_isolation_environment(StrategyTypes.strategy_module(), isolation_options()) :: 
+    {:ok, pid()} | {:error, String.t()}
+  def setup_isolation_environment(strategy_module, opts) do
+    # Implementation details
+  end
+
+  @spec cleanup_isolation_environment(pid()) :: :ok
+  def cleanup_isolation_environment(isolation_pid) do
+    # Implementation details
+  end
+
+  @spec measure_performance(fun()) :: {term(), StrategyTypes.performance_metrics()}
+  def measure_performance(execution_fun) do
+    # Implementation details
+  end
+end
+```
+
+### Boot Level 3: Individual Strategy Wrappers
+
+**File**: `lib/aria_engine/hybrid_planner/strategy_wrappers/planning_strategy_wrapper.ex`
 
 ```elixir
 defmodule AriaEngine.HybridPlanner.StrategyWrappers.PlanningStrategyWrapper do
   @moduledoc """
   Wrapper for testing HTN planning strategy in isolation.
   """
-  
+
+  alias AriaEngine.HybridPlanner.{StrategyTypes, StrategyIsolation}
+
+  @behaviour AriaEngine.HybridPlanner.StrategyBehaviour
+
+  @spec test_strategy(
+    AriaEngine.Domain.Core.t(),
+    AriaEngine.StateV2.t(),
+    [term()],
+    keyword()
+  ) :: StrategyTypes.strategy_result()
   def test_strategy(domain, state, goals, opts \\ []) do
-    # Setup isolated environment
-    strategy = HybridPlanner.Strategies.Default.HTNPlanningStrategy
-    
-    # Execute strategy with timing
-    start_time = System.monotonic_time(:millisecond)
-    result = strategy.plan(domain, state, goals, opts)
-    end_time = System.monotonic_time(:millisecond)
-    
-    # Format result with metadata
-    %{
-      strategy: "HTNPlanningStrategy",
-      result: result,
-      performance: %{
-        execution_time_ms: end_time - start_time,
-        memory_usage: :erlang.memory(:total)
-      },
-      metadata: strategy.strategy_info()
+    input = %{
+      problem_type: :planning,
+      domain: domain,
+      state: state,
+      goals: goals,
+      constraints: %{},
+      options: opts
     }
+    
+    StrategyIsolation.execute_isolated(__MODULE__, input, opts)
+  end
+
+  @impl true
+  @spec execute(StrategyTypes.strategy_input()) :: StrategyTypes.strategy_result()
+  def execute(input) do
+    # Implementation details
+  end
+
+  @impl true
+  @spec strategy_info() :: StrategyTypes.strategy_metadata()
+  def strategy_info() do
+    %{
+      strategy_name: "HTNPlanningStrategy",
+      strategy_version: "1.0.0",
+      problem_characteristics: %{
+        supports_hierarchical: true,
+        supports_temporal: false,
+        supports_optimization: false
+      },
+      capabilities: [:planning, :hierarchical_decomposition]
+    }
+  end
+
+  @impl true
+  @spec validate_input(StrategyTypes.strategy_input()) :: 
+    {:ok, StrategyTypes.strategy_input()} | {:error, String.t()}
+  def validate_input(input) do
+    # Implementation details
   end
 end
 ```
 
-### Standardized Input/Output Format
+**File**: `lib/aria_engine/hybrid_planner/strategy_wrappers/temporal_strategy_wrapper.ex`
 
 ```elixir
-# Standardized Strategy Input
-%{
-  problem_type: :planning | :temporal | :optimization,
-  domain: %Domain.Core{},
-  state: %AriaEngine.StateV2{},
-  goals: [term()],
-  constraints: %{},
-  options: %{}
-}
+defmodule AriaEngine.HybridPlanner.StrategyWrappers.TemporalStrategyWrapper do
+  @moduledoc """
+  Wrapper for testing STN temporal strategy in isolation.
+  """
 
-# Standardized Strategy Output  
-%{
-  status: :success | :failure | :error,
-  result: term(),
-  performance: %{
-    execution_time_ms: integer(),
-    memory_usage: integer(),
-    iterations: integer()
-  },
-  metadata: %{
-    strategy_name: string(),
-    strategy_version: string(),
-    problem_characteristics: %{}
-  }
-}
+  alias AriaEngine.HybridPlanner.{StrategyTypes, StrategyIsolation}
+
+  @behaviour AriaEngine.HybridPlanner.StrategyBehaviour
+
+  @spec test_strategy(
+    AriaEngine.Timeline.t(),
+    AriaEngine.StateV2.t(),
+    [term()],
+    keyword()
+  ) :: StrategyTypes.strategy_result()
+  def test_strategy(timeline, state, constraints, opts \\ []) do
+    input = %{
+      problem_type: :temporal,
+      domain: nil,
+      state: state,
+      goals: constraints,
+      constraints: %{timeline: timeline},
+      options: opts
+    }
+    
+    StrategyIsolation.execute_isolated(__MODULE__, input, opts)
+  end
+
+  @impl true
+  @spec execute(StrategyTypes.strategy_input()) :: StrategyTypes.strategy_result()
+  def execute(input) do
+    # Implementation details
+  end
+
+  @impl true
+  @spec strategy_info() :: StrategyTypes.strategy_metadata()
+  def strategy_info() do
+    %{
+      strategy_name: "STNTemporalStrategy",
+      strategy_version: "1.0.0",
+      problem_characteristics: %{
+        supports_hierarchical: false,
+        supports_temporal: true,
+        supports_optimization: false
+      },
+      capabilities: [:temporal_reasoning, :constraint_propagation]
+    }
+  end
+
+  @impl true
+  @spec validate_input(StrategyTypes.strategy_input()) :: 
+    {:ok, StrategyTypes.strategy_input()} | {:error, String.t()}
+  def validate_input(input) do
+    # Implementation details
+  end
+end
 ```
 
-### Strategy Comparison Framework
+**Note**: Additional strategy wrappers (such as StateV2, Domain, and Execution strategies) will be added as Boot Level 3 expands. ExhortStrategy wrapper will be implemented after the foundational system is complete.
+
+### Boot Level 4: MCP Tool Registration and Handlers
+
+**File**: `lib/aria_engine/mcp_tools.ex` (additions)
 
 ```elixir
-defmodule AriaEngine.HybridPlanner.StrategyComparison do
-  def compare_strategies(problem, strategy_list, metrics) do
-    results = Enum.map(strategy_list, fn strategy ->
-      execute_strategy_with_metrics(strategy, problem, metrics)
-    end)
-    
+defmodule AriaEngine.MCPTools do
+  # ... existing code ...
+
+  alias AriaEngine.HybridPlanner.StrategyWrappers.{
+    PlanningStrategyWrapper,
+    TemporalStrategyWrapper
+  }
+
+  @tools [
+    {:schedule_activities, "1.0.0"},
+    {:test_planning_strategy, "1.0.0"},
+    {:test_temporal_strategy, "1.0.0"}
+  ]
+
+  @spec handle_tool_call(atom(), map()) :: map()
+  def handle_tool_call(:test_planning_strategy, params) do
+    domain = parse_domain(params["domain"])
+    state = parse_state(params["state"])
+    goals = params["goals"] || []
+    options = params["options"] || []
+
+    case PlanningStrategyWrapper.test_strategy(domain, state, goals, options) do
+      %{status: :success} = result -> format_success_response(result)
+      %{status: :failure} = result -> format_failure_response(result)
+      %{status: :error} = result -> format_error_response(result)
+    end
+  end
+
+  def handle_tool_call(:test_temporal_strategy, params) do
+    timeline = parse_timeline(params["timeline"])
+    state = parse_state(params["state"])
+    constraints = params["constraints"] || []
+    options = params["options"] || []
+
+    case TemporalStrategyWrapper.test_strategy(timeline, state, constraints, options) do
+      %{status: :success} = result -> format_success_response(result)
+      %{status: :failure} = result -> format_failure_response(result)
+      %{status: :error} = result -> format_error_response(result)
+    end
+  end
+
+
+  @spec format_success_response(StrategyTypes.strategy_result()) :: map()
+  defp format_success_response(result) do
     %{
-      problem_summary: summarize_problem(problem),
-      strategy_results: results,
-      comparison: %{
-        performance_ranking: rank_by_performance(results),
-        solution_quality: compare_solution_quality(results),
-        success_rates: calculate_success_rates(results)
+      "status" => "success",
+      "result" => result.result,
+      "performance" => %{
+        "execution_time_ms" => result.performance.execution_time_ms,
+        "memory_usage_bytes" => result.performance.memory_usage_bytes,
+        "iterations" => result.performance.iterations
+      },
+      "metadata" => %{
+        "strategy_name" => result.metadata.strategy_name,
+        "strategy_version" => result.metadata.strategy_version,
+        "capabilities" => result.metadata.capabilities
+      }
+    }
+  end
+
+  @spec format_failure_response(StrategyTypes.strategy_result()) :: map()
+  defp format_failure_response(result) do
+    %{
+      "status" => "failure",
+      "error" => result.error_details,
+      "performance" => %{
+        "execution_time_ms" => result.performance.execution_time_ms
+      },
+      "metadata" => %{
+        "strategy_name" => result.metadata.strategy_name
+      }
+    }
+  end
+
+  @spec format_error_response(StrategyTypes.strategy_result()) :: map()
+  defp format_error_response(result) do
+    %{
+      "status" => "error",
+      "error" => result.error_details,
+      "metadata" => %{
+        "strategy_name" => result.metadata.strategy_name
       }
     }
   end
 end
 ```
 
-## MCP Tool Definitions
+### Boot Level 5: Multi-Strategy Execution Framework
 
-### Individual Strategy Testing Tools
-
-```elixir
-# Add to @tools list in MCPTools
-@tools [
-  {:schedule_activities, "1.0.0"},
-  {:test_planning_strategy, "1.0.0"},
-  {:test_temporal_strategy, "1.0.0"}, 
-  {:test_state_strategy, "1.0.0"},
-  {:test_domain_strategy, "1.0.0"},
-  {:test_execution_strategy, "1.0.0"},
-  {:test_exhort_strategy, "1.0.0"},
-  {:compare_strategies, "1.0.0"},
-  {:benchmark_strategies, "1.0.0"}
-]
-```
-
-### Strategy Testing Workflow
+**File**: `lib/aria_engine/hybrid_planner/multi_strategy_executor.ex`
 
 ```elixir
-# Example: Test ExhortStrategy on constraint satisfaction problem
-{
-  "tool": "test_exhort_strategy",
-  "params": {
-    "problem_type": "constraint_satisfaction",
-    "variables": [
-      {"name": "x1", "domain": [1, 2, 3]},
-      {"name": "x2", "domain": [1, 2, 3]}
-    ],
-    "constraints": [
-      {"type": "alldifferent", "variables": ["x1", "x2"]}
-    ],
-    "objective": {"type": "minimize", "expression": "x1 + x2"}
-  }
-}
+defmodule AriaEngine.HybridPlanner.MultiStrategyExecutor do
+  @moduledoc """
+  Framework for executing multiple strategies in parallel and aggregating results.
+  """
 
-# Example: Compare HTN vs Exhort on same problem
-{
-  "tool": "compare_strategies", 
-  "params": {
-    "problem": {...},
-    "strategies": ["HTNPlanningStrategy", "ExhortStrategy"],
-    "metrics": ["execution_time", "solution_quality", "memory_usage"]
+  alias AriaEngine.HybridPlanner.StrategyTypes
+
+  @type execution_options :: [
+    parallel: boolean(),
+    timeout_ms: non_neg_integer(),
+    max_concurrent: pos_integer()
+  ]
+
+  @type aggregated_results :: %{
+    strategy_results: [StrategyTypes.strategy_result()],
+    execution_summary: map(),
+    timing_info: map()
   }
-}
+
+  @spec execute_strategies(
+    StrategyTypes.strategy_input(),
+    [StrategyTypes.strategy_module()],
+    execution_options()
+  ) :: aggregated_results()
+  def execute_strategies(problem, strategy_list, opts \\ []) do
+    parallel = Keyword.get(opts, :parallel, true)
+    
+    if parallel do
+      execute_parallel(problem, strategy_list, opts)
+    else
+      execute_sequential(problem, strategy_list, opts)
+    end
+  end
+
+  @spec execute_parallel(
+    StrategyTypes.strategy_input(),
+    [StrategyTypes.strategy_module()],
+    execution_options()
+  ) :: aggregated_results()
+  defp execute_parallel(problem, strategy_list, opts) do
+    max_concurrent = Keyword.get(opts, :max_concurrent, System.schedulers_online())
+    timeout_ms = Keyword.get(opts, :timeout_ms, 30_000)
+
+    tasks = strategy_list
+    |> Enum.map(fn strategy_module ->
+      Task.async(fn ->
+        strategy_module.execute(problem)
+      end)
+    end)
+
+    results = Task.await_many(tasks, timeout_ms)
+    
+    %{
+      strategy_results: results,
+      execution_summary: summarize_execution(results),
+      timing_info: %{
+        total_execution_time_ms: calculate_total_time(results),
+        parallel_execution: true
+      }
+    }
+  end
+
+  @spec execute_sequential(
+    StrategyTypes.strategy_input(),
+    [StrategyTypes.strategy_module()],
+    execution_options()
+  ) :: aggregated_results()
+  defp execute_sequential(problem, strategy_list, _opts) do
+    start_time = System.monotonic_time(:millisecond)
+    
+    results = Enum.map(strategy_list, fn strategy_module ->
+      strategy_module.execute(problem)
+    end)
+    
+    end_time = System.monotonic_time(:millisecond)
+    
+    %{
+      strategy_results: results,
+      execution_summary: summarize_execution(results),
+      timing_info: %{
+        total_execution_time_ms: end_time - start_time,
+        parallel_execution: false
+      }
+    }
+  end
+
+  @spec summarize_execution([StrategyTypes.strategy_result()]) :: map()
+  defp summarize_execution(results) do
+    success_count = Enum.count(results, &(&1.status == :success))
+    failure_count = Enum.count(results, &(&1.status == :failure))
+    error_count = Enum.count(results, &(&1.status == :error))
+    
+    %{
+      total_strategies: length(results),
+      success_count: success_count,
+      failure_count: failure_count,
+      error_count: error_count,
+      success_rate: success_count / length(results)
+    }
+  end
+
+  @spec calculate_total_time([StrategyTypes.strategy_result()]) :: non_neg_integer()
+  defp calculate_total_time(results) do
+    results
+    |> Enum.map(& &1.performance.execution_time_ms)
+    |> Enum.max(fn -> 0 end)
+  end
+end
 ```
 
-## Benefits
+### Boot Level 6: Strategy Comparison and Analysis
 
-### Development Workflow Improvements
+**File**: `lib/aria_engine/hybrid_planner/strategy_comparison.ex`
 
-- **Rapid Iteration**: Test strategy changes immediately through MCP
-- **Isolated Debugging**: Identify issues specific to individual strategies
-- **Performance Profiling**: Measure strategy performance in isolation
-- **Strategy Development**: Build new strategies with immediate testing capability
+```elixir
+defmodule AriaEngine.HybridPlanner.StrategyComparison do
+  @moduledoc """
+  Framework for comparing strategy outputs and performance.
+  """
 
-### Testing and Validation
+  alias AriaEngine.HybridPlanner.{StrategyTypes, MultiStrategyExecutor}
 
-- **Unit Testing**: Test strategies as isolated units
-- **Integration Testing**: Verify strategy integration with coordinator
-- **Regression Testing**: Ensure strategy changes don't break existing functionality
-- **Comparative Analysis**: Compare strategy performance across different problems
+  @type comparison_metrics :: [
+    :execution_time | :memory_usage | :solution_quality | :success_rate
+  ]
 
-### Research and Development
+  @type comparison_result :: %{
+    problem_summary: map(),
+    strategy_results: [StrategyTypes.strategy_result()],
+    comparison: %{
+      performance_ranking: [map()],
+      solution_quality: map(),
+      statistical_analysis: map()
+    }
+  }
 
-- **Algorithm Comparison**: Compare different algorithmic approaches
-- **Performance Analysis**: Identify performance bottlenecks in specific strategies
-- **Problem Classification**: Understand which strategies work best for which problems
-- **Strategy Selection**: Develop heuristics for automatic strategy selection
+  @spec compare_strategies(
+    StrategyTypes.strategy_input(),
+    [StrategyTypes.strategy_module()],
+    comparison_metrics()
+  ) :: comparison_result()
+  def compare_strategies(problem, strategy_list, metrics) do
+    aggregated = MultiStrategyExecutor.execute_strategies(problem, strategy_list)
+    
+    %{
+      problem_summary: summarize_problem(problem),
+      strategy_results: aggregated.strategy_results,
+      comparison: %{
+        performance_ranking: rank_by_performance(aggregated.strategy_results, metrics),
+        solution_quality: compare_solution_quality(aggregated.strategy_results),
+        statistical_analysis: analyze_statistics(aggregated.strategy_results)
+      }
+    }
+  end
 
-## Implementation Strategy
+  @spec rank_by_performance([StrategyTypes.strategy_result()], comparison_metrics()) :: [map()]
+  def rank_by_performance(results, metrics) do
+    results
+    |> Enum.map(&extract_performance_data(&1, metrics))
+    |> Enum.sort_by(&calculate_composite_score(&1, metrics))
+    |> Enum.with_index(1)
+    |> Enum.map(fn {strategy_data, rank} ->
+      Map.put(strategy_data, :rank, rank)
+    end)
+  end
 
-### Step 1: Strategy Interface Standardization
-1. Define common input/output formats for all strategies
-2. Create strategy wrapper base class with common functionality
-3. Implement input validation and output formatting utilities
+  @spec compare_solution_quality([StrategyTypes.strategy_result()]) :: map()
+  def compare_solution_quality(results) do
+    successful_results = Enum.filter(results, &(&1.status == :success))
+    
+    %{
+      total_solutions: length(successful_results),
+      unique_solutions: count_unique_solutions(successful_results),
+      solution_diversity: calculate_solution_diversity(successful_results),
+      optimal_solutions: identify_optimal_solutions(successful_results)
+    }
+  end
 
-### Step 2: Individual Strategy MCP Tools
-1. Add MCP tool definitions for each strategy type
-2. Implement strategy wrapper classes for isolation testing
-3. Create handler functions for each strategy testing tool
+  @spec analyze_statistics([StrategyTypes.strategy_result()]) :: map()
+  def analyze_statistics(results) do
+    execution_times = Enum.map(results, & &1.performance.execution_time_ms)
+    memory_usage = Enum.map(results, & &1.performance.memory_usage_bytes)
+    
+    %{
+      execution_time_stats: calculate_stats(execution_times),
+      memory_usage_stats: calculate_stats(memory_usage),
+      success_rate: calculate_success_rate(results),
+      performance_variance: calculate_performance_variance(results)
+    }
+  end
 
-### Step 3: Strategy Comparison Framework
-1. Implement multi-strategy execution framework
-2. Create result comparison and ranking algorithms
-3. Add performance benchmarking and statistical analysis
+  @spec extract_performance_data(StrategyTypes.strategy_result(), comparison_metrics()) :: map()
+  defp extract_performance_data(result, metrics) do
+    base_data = %{
+      strategy_name: result.metadata.strategy_name,
+      status: result.status
+    }
+    
+    Enum.reduce(metrics, base_data, fn metric, acc ->
+      case metric do
+        :execution_time -> Map.put(acc, :execution_time_ms, result.performance.execution_time_ms)
+        :memory_usage -> Map.put(acc, :memory_usage_bytes, result.performance.memory_usage_bytes)
+        :solution_quality -> Map.put(acc, :solution_quality, assess_solution_quality(result))
+        :success_rate -> Map.put(acc, :success, result.status == :success)
+      end
+    end)
+  end
 
-### Step 4: Integration and Testing
-1. Test individual strategy tools with existing strategies
-2. Validate strategy comparison framework with known problems
-3. Create comprehensive test suite for new MCP tools
+  @spec calculate_composite_score(map(), comparison_metrics()) :: float()
+  defp calculate_composite_score(strategy_data, metrics) do
+    # Implementation details for composite scoring
+    0.0
+  end
 
-### Current Focus: Phase 1 Strategy Interface
+  @spec summarize_problem(StrategyTypes.strategy_input()) :: map()
+  defp summarize_problem(problem) do
+    %{
+      problem_type: problem.problem_type,
+      goal_count: length(problem.goals),
+      constraint_count: map_size(problem.constraints),
+      complexity_estimate: estimate_complexity(problem)
+    }
+  end
 
-Starting with standardizing the strategy interface to enable consistent testing across all strategies, including the new ExhortStrategy from ADR-109.
+  @spec calculate_stats([number()]) :: map()
+  defp calculate_stats(values) do
+    sorted = Enum.sort(values)
+    count = length(values)
+    
+    %{
+      min: Enum.min(values),
+      max: Enum.max(values),
+      mean: Enum.sum(values) / count,
+      median: Enum.at(sorted, div(count, 2)),
+      std_dev: calculate_standard_deviation(values)
+    }
+  end
 
-**Priority Order**:
-1. **Phase 1**: Strategy-level MCP tools and interface standardization
-2. **Phase 2**: Individual strategy wrappers and isolation testing
-3. **Phase 3**: Strategy comparison and benchmarking framework
-4. **Phase 4**: Integration testing and validation
+  # Additional helper functions...
+  defp count_unique_solutions(_results), do: 0
+  defp calculate_solution_diversity(_results), do: 0.0
+  defp identify_optimal_solutions(_results), do: []
+  defp calculate_success_rate(_results), do: 0.0
+  defp calculate_performance_variance(_results), do: 0.0
+  defp assess_solution_quality(_result), do: 0.0
+  defp estimate_complexity(_problem), do: :medium
+  defp calculate_standard_deviation(_values), do: 0.0
+end
+```
+
+### Boot Level 7: Advanced MCP Tools
+
+**File**: `lib/aria_engine/mcp_tools.ex` (additional tools)
+
+```elixir
+defmodule AriaEngine.MCPTools do
+  # ... existing code ...
+
+  alias AriaEngine.HybridPlanner.{StrategyComparison, MultiStrategyExecutor}
+
+  @tools [
+    # ... existing tools ...
+    {:compare_strategies, "1.0.0"},
+    {:benchmark_strategies, "1.0.0"},
+    {:analyze_strategy_performance, "1.0.0"}
+  ]
+
+  def handle_tool_call(:compare_strategies, params) do
+    problem = parse_strategy_input(params["problem"])
+    strategy_names = params["strategies"] || []
+    metrics = parse_comparison_metrics(params["comparison_metrics"])
+    
+    strategy_modules = resolve_strategy_modules(strategy_names)
+    
+    case StrategyComparison.compare_strategies(problem, strategy_modules, metrics) do
+      comparison_result -> format_comparison_response(comparison_result)
+    end
+  end
+
+  def handle_tool_call(:benchmark_strategies, params) do
+    problem_set = parse_problem_set(params["problem_set"])
+    strategy_names = params["strategies"] || []
+    benchmark_options = params["benchmark_options"] || []
+    
+    strategy_modules = resolve_strategy_modules(strategy_names)
+    
+    benchmark_results = run_benchmark_suite(problem_set, strategy_modules, benchmark_options)
+    format_benchmark_response(benchmark_results)
+  end
+
+  def handle_tool_call(:analyze_strategy_performance, params) do
+    strategy_name = params["strategy_name"]
+    performance_data = params["performance_data"]
+    analysis_options = params["analysis_options"] || []
+    
+    analysis_result = analyze_performance_data(strategy_name, performance_data, analysis_options)
+    format_analysis_response(analysis_result)
+  end
+
+  @spec resolve_strategy_modules([String.t()]) :: [StrategyTypes.strategy_module()]
+  defp resolve_strategy_modules(strategy_names) do
+    strategy_map = %{
+      "planning" => PlanningStrategyWrapper,
+      "temporal" => TemporalStrategyWrapper
+    }
+    
+    Enum.map(strategy_names, &Map.get(strategy_map, &1))
+    |> Enum.reject(&is_nil/1)
+  end
+
+  @spec parse_strategy_input(map()) :: StrategyTypes.strategy_input()
+  defp parse_strategy_input(params) do
+    %{
+      problem_type: String.to_atom(params["problem_type"]),
+      domain: parse_domain(params["domain"]),
+      state: parse_state(params["state"]),
+      goals: params["goals"] || [],
+      constraints: params["constraints"] || %{},
+      options: params["options"] || []
+    }
+  end
+
+  @spec parse_comparison_metrics([String.t()]) :: [atom()]
+  defp parse_comparison_metrics(metric_strings) do
+    Enum.map(metric_strings, &String.to_atom/1)
+  end
+
+  @spec format_comparison_response(StrategyComparison.comparison_result()) :: map()
+  defp format_comparison_response(comparison_result) do
+    %{
+      "status" => "success",
+      "problem_summary" => comparison_result.problem_summary,
+      "strategy_count" => length(comparison_result.strategy_results),
+      "performance_ranking" => comparison_result.comparison.performance_ranking,
+      "solution_quality" => comparison_result.comparison.solution_quality,
+      "statistical_analysis" => comparison_result.comparison.statistical_analysis
+    }
+  end
+
+  # Additional helper functions...
+  defp parse_problem_set(_params), do: []
+  defp run_benchmark_suite(_problem_set, _strategies, _options), do: %{}
+  defp format_benchmark_response(_results), do: %{}
+  defp analyze_performance_data(_strategy, _data, _options), do: %{}
+  defp format_analysis_response(_result), do: %{}
+end
+```
+
+### Boot Level 8: Integration Testing
+
+**File**: `test/aria_engine/hybrid_planner/strategy_testing_integration_test.exs`
+
+```elixir
+defmodule AriaEngine.HybridPlanner.StrategyTestingIntegrationTest do
+  use ExUnit.Case, async: true
+
+  alias AriaEngine.HybridPlanner.{
+    StrategyTypes,
+    StrategyWrappers.PlanningStrategyWrapper,
+    MultiStrategyExecutor,
+    StrategyComparison
+  }
+  alias AriaEngine.MCPTools
+
+  describe "Boot Level 1: Foundation Types" do
+    test "strategy input type validation" do
+      input = %{
+        problem_type: :planning,
+        domain: %AriaEngine.Domain.Core{},
+        state: %AriaEngine.StateV2{},
+        goals: [:goal1, :goal2],
+        constraints: %{},
+        options: []
+      }
+      
+      assert %StrategyTypes{} = struct(StrategyTypes, %{})
+      assert is_map(input)
+      assert input.problem_type in [:planning, :temporal, :optimization, :constraint_satisfaction]
+    end
+  end
+
+  describe "Boot Level 2: Strategy Isolation" do
+    test "strategy can execute in isolation" do
+      input = build_test_input(:planning)
+      
+      result = PlanningStrategyWrapper.test_strategy(
+        input.domain,
+        input.state,
+        input.goals,
+        input.options
+      )
+      
+      assert %{status: status} = result
+      assert status in [:success, :failure, :error]
+      assert is_map(result.performance)
+      assert is_map(result.metadata)
+    end
+  end
+
+  describe "Boot Level 3: Strategy Wrappers" do
+    test "all strategy wrappers implement behaviour" do
+      wrappers = [
+        PlanningStrategyWrapper,
+        # Add other wrappers as they're implemented
+      ]
+      
+      Enum.each(wrappers, fn wrapper ->
+        assert function_exported?(wrapper, :execute, 1)
+        assert function_exported?(wrapper, :strategy_info, 0)
+        assert function_exported?(wrapper, :validate_input, 1)
+      end)
+    end
+  end
+
+  describe "Boot Level 4: MCP Tool Integration" do
+    test "MCP tools can call strategy wrappers" do
+      params = %{
+        "domain" => build_test_domain(),
+        "state" => build_test_state(),
+        "goals" => ["goal1", "goal2"],
+        "options" => []
+      }
+      
+      result = MCPTools.handle_tool_call(:test_planning_strategy, params)
+      
+      assert is_map(result)
+      assert Map.has_key?(result, "status")
+      assert result["status"] in ["success", "failure", "error"]
+    end
+  end
+
+  describe "Boot Level 5: Multi-Strategy Execution" do
+    test "multiple strategies can execute together" do
+      problem = build_test_input(:planning)
+      strategies = [PlanningStrategyWrapper]
+      
+      result = MultiStrategyExecutor.execute_strategies(problem, strategies)
+      
+      assert %{strategy_results: results} = result
+      assert is_list(results)
+      assert length(results) == length(strategies)
+    end
+  end
+
+  describe "Boot Level 6: Strategy Comparison" do
+    test "strategies can be compared" do
+      problem = build_test_input(:planning)
+      strategies = [PlanningStrategyWrapper]
+      metrics = [:execution_time, :memory_usage]
+      
+      result = StrategyComparison.compare_strategies(problem, strategies, metrics)
+      
+      assert %{comparison: comparison} = result
+      assert Map.has_key?(comparison, :performance_ranking)
+      assert Map.has_key?(comparison, :solution_quality)
+    end
+  end
+
+  describe "Boot Level 7: Advanced MCP Tools" do
+    test "strategy comparison via MCP tools" do
+      params = %{
+        "problem" => build_test_problem_params(),
+        "strategies" => ["planning"],
+        "comparison_metrics" => ["execution_time", "memory_usage"]
+      }
+      
+      result = MCPTools.handle_tool_call(:compare_strategies, params)
+      
+      assert is_map(result)
+      assert result["status"] == "success"
+      assert Map.has_key?(result, "performance_ranking")
+    end
+  end
+
+  describe "Boot Level 8: Complete Integration" do
+    test "end-to-end strategy testing workflow" do
+      # Test complete workflow from MCP tool to strategy execution
+      params = %{
+        "domain" => build_test_domain(),
+        "state" => build_test_state(),
+        "goals" => ["goal1"],
+        "options" => []
+      }
+      
+      # Individual strategy test
+      individual_result = MCPTools.handle_tool_call(:test_planning_strategy, params)
+      assert individual_result["status"] in ["success", "failure", "error"]
+      
+      # Strategy comparison
+      comparison_params = %{
+        "problem" => build_test_problem_params(),
+        "strategies" => ["planning"],
+        "comparison_metrics" => ["execution_time"]
+      }
+      
+      comparison_result = MCPTools.handle_tool_call(:compare_strategies, comparison_params)
+      assert comparison_result["status"] == "success"
+    end
+  end
+
+  # Helper functions for tests
+  @spec build_test_input(StrategyTypes.problem_type()) :: StrategyTypes.strategy_input()
+  defp build_test_input(problem_type) do
+    %{
+      problem_type: problem_type,
+      domain: build_test_domain(),
+      state: build_test_state(),
+      goals: [:test_goal],
+      constraints: %{},
+      options: []
+    }
+  end
+
+  @spec build_test_domain() :: map()
+  defp build_test_domain() do
+    %{
+      "name" => "test_domain",
+      "actions" => [],
+      "predicates" => []
+    }
+  end
+
+  @spec build_test_state() :: map()
+  defp build_test_state() do
+    %{
+      "facts" => [],
+      "timestamp" => DateTime.utc_now()
+    }
+  end
+
+  @spec build_test_problem_params() :: map()
+  defp build_test_problem_params() do
+    %{
+      "problem_type" => "planning",
+      "domain" => build_test_domain(),
+      "state" => build_test_state(),
+      "goals" => ["test_goal"],
+      "constraints" => %{},
+      "options" => []
+    }
+  end
+end
+```
+
+## Implementation Summary
+
+This ADR defines a complete cold boot implementation order for the MCP Strategy Testing Interface with concrete Elixir methods and typespecs:
+
+### Boot Level Dependencies
+
+1. **Boot Level 1**: Foundation types and behaviour contracts
+2. **Boot Level 2**: Strategy isolation infrastructure with resource limits
+3. **Boot Level 3**: Individual strategy wrappers implementing the behaviour
+4. **Boot Level 4**: MCP tool registration and handlers
+5. **Boot Level 5**: Multi-strategy execution framework
+6. **Boot Level 6**: Strategy comparison and analysis
+7. **Boot Level 7**: Advanced MCP tools for benchmarking
+8. **Boot Level 8**: Complete integration testing
+
+### Key Function Signatures
+
+**Strategy Testing Interface**:
+```elixir
+@spec test_strategy(domain, state, goals, opts) :: StrategyTypes.strategy_result()
+@spec execute(StrategyTypes.strategy_input()) :: StrategyTypes.strategy_result()
+@spec strategy_info() :: StrategyTypes.strategy_metadata()
+```
+
+**MCP Tool Handlers**:
+```elixir
+@spec handle_tool_call(atom(), map()) :: map()
+```
+
+**Multi-Strategy Execution**:
+```elixir
+@spec execute_strategies(problem, strategy_list, opts) :: aggregated_results()
+@spec compare_strategies(problem, strategy_list, metrics) :: comparison_result()
+```
+
+### Type Definitions
+
+All core types are defined in `StrategyTypes` module with proper typespecs for:
+- `strategy_input()` - Standardized input format
+- `strategy_result()` - Standardized output format  
+- `performance_metrics()` - Performance measurement data
+- `strategy_metadata()` - Strategy capability information
+
+This provides a clear, implementable roadmap with concrete function signatures and type contracts for building the MCP Strategy Testing Interface.
 
 ## Success Criteria
 
-### Individual Strategy Testing
-- **Direct Access**: Each strategy can be tested individually through MCP tools
-- **Isolation**: Strategy tests don't interfere with each other or the main system
-- **Performance Metrics**: Detailed performance data available for each strategy
-- **Error Isolation**: Strategy-specific errors are clearly identified and reported
-
-### Strategy Comparison
-- **Multi-Strategy Execution**: Can run multiple strategies on same problem
-- **Result Comparison**: Clear comparison of strategy outputs and performance
-- **Ranking and Analysis**: Automatic ranking and statistical analysis of results
-- **Visualization**: Clear presentation of comparison results
-
-### Development Workflow
-- **Rapid Testing**: Strategy changes can be tested immediately
-- **Debugging Support**: Issues can be isolated to specific strategies
-- **Performance Monitoring**: Strategy performance can be tracked over time
-- **Research Support**: Framework supports algorithm research and development
-
-## Consequences
-
-### Positive Consequences
-
-**Enhanced Development Workflow**:
-- Faster strategy development and testing cycles
-- Better debugging and issue isolation capabilities
-- Improved understanding of strategy performance characteristics
-
-**Better Testing Coverage**:
-- Individual strategy unit testing through MCP
-- Comprehensive strategy comparison and validation
-- Performance regression detection
-
-**Research Enablement**:
-- Algorithm comparison and analysis capabilities
-- Problem classification and strategy selection research
-- Performance optimization opportunities
-
-### Negative Consequences
-
-**Increased Complexity**:
-- Additional MCP tools to maintain and document
-- Strategy wrapper layer adds abstraction overhead
-- More complex testing and validation requirements
-
-**Development Overhead**:
-- Strategy interface standardization effort
-- Wrapper implementation for each strategy
-- Comparison framework development and maintenance
-
-## Risks and Mitigation
-
-### Risk: Strategy Interface Complexity
-**Impact**: MEDIUM  
-**Probability**: MEDIUM  
-**Mitigation**: 
-- Start with simple, common interface patterns
-- Evolve interface based on actual strategy needs
-- Maintain backward compatibility with existing strategies
-
-### Risk: Performance Overhead
-**Impact**: LOW  
-**Probability**: MEDIUM  
-**Mitigation**:
-- Minimize wrapper overhead through efficient implementation
-- Use lazy evaluation and caching where appropriate
-- Profile and optimize hot paths in testing framework
-
-### Risk: Maintenance Burden
-**Impact**: MEDIUM  
-**Probability**: HIGH  
-**Mitigation**:
-- Automate wrapper generation where possible
-- Use consistent patterns across all strategy wrappers
-- Comprehensive documentation and examples
+Each boot level has specific success criteria that must be met before proceeding to the next level, ensuring a solid foundation for the complete strategy testing system.
 
 ## Related ADRs
 
 - **ADR-109**: Integrate CP-SAT Solver Strategy via Exhort OR-Tools
-- **ADR-091**: Hybrid Planner Dependency Encapsulation
+- **ADR-091**: Hybrid Planner Dependency Encapsulation  
 - **ADR-101**: Reconnect Scheduler with Hybrid Planner
-
-## References
-
-- [MCP Protocol Specification](https://spec.modelcontextprotocol.io/)
-- [Strategy Pattern Documentation](https://refactoring.guru/design-patterns/strategy)
-- [Elixir Testing Best Practices](https://hexdocs.pm/ex_unit/ExUnit.html)
