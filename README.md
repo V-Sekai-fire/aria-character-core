@@ -57,7 +57,7 @@ mix mcp.stdio
 
 **Available Tools:**
 
-- `schedule_activities`: Critical Path Method scheduling with hybrid planning
+- `schedule_activities`: Scheduling with hybrid planning
 - Handles empty activity lists (valid mathematical solution)
 - Resource conflict detection and analysis
 - Dependency validation and circular dependency detection
