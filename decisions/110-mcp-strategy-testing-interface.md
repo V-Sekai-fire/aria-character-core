@@ -56,17 +56,17 @@ Rebuild the hybrid planner MCP interface to provide individual strategy testing 
 **File**: `lib/aria_engine/hybrid_planner/strategy_interface.ex`
 
 **Missing/Required**:
-- [ ] Standardized input format for all strategies
-- [ ] Standardized output format for all strategies  
-- [ ] Input validation and conversion utilities
-- [ ] Output formatting and comparison utilities
-- [ ] Strategy metadata and capability reporting
+- [ ] Reuse MCP tool schemas as standardized input format for all strategies
+- [ ] Reuse MCP tool schemas as standardized output format for all strategies  
+- [ ] Input validation and conversion utilities (leveraging existing MCP validation)
+- [ ] Output formatting and comparison utilities (using MCP response format)
+- [ ] Strategy metadata and capability reporting (following MCP tool definition pattern)
 
 **Implementation Patterns Needed**:
-- [ ] Common input schema validation
-- [ ] Strategy result normalization
-- [ ] Error handling standardization
-- [ ] Performance metrics collection
+- [ ] MCP schema validation for strategy inputs (reuse existing MCPTools validation)
+- [ ] MCP response format for strategy outputs (consistent with tool responses)
+- [ ] Error handling standardization (following MCP error response pattern)
+- [ ] Performance metrics collection (embedded in MCP response metadata)
 
 ### Phase 3: Individual Strategy Wrappers (MEDIUM PRIORITY)
 
@@ -98,6 +98,26 @@ Rebuild the hybrid planner MCP interface to provide individual strategy testing 
 - [ ] Statistical analysis of strategy performance
 
 ## Technical Architecture
+
+### Dual Interface Approach: MCP + Direct Elixir Calls
+
+**Key Design Principle**: Use MCP tool schemas as the standardized interface for both MCP tools and direct Elixir function calls.
+
+```elixir
+# MCP Tool Usage
+AriaEngine.MCPTools.handle_tool_call(:test_planning_strategy, params)
+
+# Direct Elixir Usage (same interface)
+AriaEngine.HybridPlanner.StrategyInterface.test_planning_strategy(params)
+
+# Both use identical input validation and output formatting
+```
+
+**Benefits of Unified Interface**:
+- **Consistency**: Same input/output format regardless of access method
+- **Reusability**: MCP validation logic reused for direct calls
+- **Flexibility**: Choose MCP or direct calls based on context
+- **Maintainability**: Single source of truth for interface definitions
 
 ### MCP Tool Interface Design
 
