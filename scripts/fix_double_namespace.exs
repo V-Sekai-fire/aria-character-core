@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Script to fix double namespace prefixes like AriaEngine.Plan.AriaEngine.Plan.Utils
 # This script fixes the double prefixing issue
 

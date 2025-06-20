@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Debug script to understand what error message is returned from plan execution
 # Usage: mix run scripts/debug_planning_test.exs
 

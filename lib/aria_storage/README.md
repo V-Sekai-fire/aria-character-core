@@ -15,16 +15,19 @@ AriaStorage implements a modern storage system with:
 ## Core Components
 
 ### File Management
+
 - `AriaStorage.Files` - High-level file operations and metadata management
 - `AriaStorage.File` - Individual file representation and operations
 - `AriaStorage.FileRecord` - Database persistence for file metadata
 
 ### Chunked Storage
+
 - `AriaStorage.Chunks` - Chunk creation, storage, and retrieval
 - `AriaStorage.ChunkStore` - Low-level chunk storage backend
 - `AriaStorage.ChunkUploader` - Efficient chunk upload and synchronization
 
 ### Archive System
+
 - `AriaStorage.Archives` - Archive creation and management
 - `AriaStorage.CasyncDecoder` - Casync-compatible archive decoding
 - Support for `.caibx` (casync index) and `.caidx` (casync data) formats

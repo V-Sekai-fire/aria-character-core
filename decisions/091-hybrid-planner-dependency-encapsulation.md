@@ -11,21 +11,25 @@ I can see the current hybrid goal task reentrant temporal planner has some encap
 ### Current Issues
 
 **1. Mixed Responsibilities**
+
 - `AriaEngine.Planner` handles both planning coordination and STN bridge validation
 - `Plan.Core` contains all decomposition logic in one monolithic module
 - Temporal constraints are tightly coupled with HTN planning logic
 
 **2. Leaky Abstractions**
+
 - Solution tree internals are exposed across multiple modules
 - Domain interface requires conversion logic scattered throughout
 - STN validation logic is mixed with planning logic
 
 **3. Tight Coupling**
+
 - HTN planning is directly coupled to STN temporal validation
 - State management is mixed with planning logic
 - No clear separation between planning and execution engines
 
 The current HybridCoordinator has hard-coded dependencies on:
+
 - `AriaEngine.Plan.{plan, replan, validate_plan, run_lazy_refineahead}`
 - `AriaEngine.StateV2` for state management
 - `AriaEngine.Domain.get_action_metadata` for domain queries
@@ -42,6 +46,7 @@ Implement comprehensive dependency encapsulation for the hybrid planner using th
 ### Proposed Better Encapsulation
 
 **A. Core Engine Separation**
+
 ```
 AriaEngine.HybridPlanner/
 ├── PlanningEngine/     # Pure HTN planning without temporal concerns
@@ -51,19 +56,22 @@ AriaEngine.HybridPlanner/
 ```
 
 **B. Encapsulated Data Structures**
+
 - **SolutionTree**: Clean public interface hiding internal structure
 - **PlanningContext**: Encapsulate planning state separate from world state
 - **TemporalConstraints**: Encapsulate STN management with clear APIs
 
 **C. Plugin Architecture**
+
 - **PlanningStrategy**: Pluggable algorithms (HTN, STRIPS, etc.)
-- **TemporalStrategy**: Pluggable temporal reasoning (STN, CSP, etc.) 
+- **TemporalStrategy**: Pluggable temporal reasoning (STN, CSP, etc.)
 - **ExecutionStrategy**: Pluggable execution models (lazy, eager, etc.)
 - **StateStrategy**: Pluggable state management approaches
 - **DomainStrategy**: Pluggable domain query interfaces
 - **LoggingStrategy**: Pluggable logging approaches
 
 **D. Clear Interfaces**
+
 - **DomainInterface**: Clean abstraction without conversion logic
 - **StateInterface**: Separate planning state from execution state
 - **ConstraintInterface**: Abstract temporal constraint management
@@ -71,6 +79,7 @@ AriaEngine.HybridPlanner/
 ## Implementation Plan
 
 ### Phase 1: Strategy Behavior Definitions
+
 - [x] Define strategy behaviors/protocols for each dependency type
 - [x] Create strategy behavior contracts for planning, temporal, state, domain, logging, execution
 - [x] Establish clear interfaces and error handling patterns
@@ -80,6 +89,7 @@ AriaEngine.HybridPlanner/
   - ✅ Added strategy composition utilities and validation functions
 
 ### Phase 2: Strategy Implementation Modules
+
 - [x] Implement default strategy modules for existing functionality
 - [x] Create HTNPlanningStrategy wrapping current Plan.Core logic
 - [x] Create STNTemporalStrategy wrapping current temporal validation
@@ -94,6 +104,7 @@ AriaEngine.HybridPlanner/
   - ✅ All strategies handle errors gracefully and provide verbose logging support
 
 ### Phase 3: HybridCoordinator Refactoring
+
 - [x] Refactor HybridCoordinator to use injected strategies instead of direct module calls
 - [x] Update constructor to accept strategy objects
 - [x] Modify all planning, temporal, state, domain, and execution operations to use strategies
@@ -105,6 +116,7 @@ AriaEngine.HybridPlanner/
   - ✅ Maintained functional equivalence while eliminating hard-coded dependencies
 
 ### Phase 4: Strategy Injection Infrastructure
+
 - [x] Create strategy factory/registry for dynamic strategy selection
 - [x] Implement strategy composition utilities
 - [x] Add configuration-based strategy selection
@@ -116,6 +128,7 @@ AriaEngine.HybridPlanner/
   - ✅ Supports loading from application config, environment variables, and configuration files
 
 ### Phase 5: Testing and Validation
+
 - [ ] Create mock strategies for comprehensive testing
 - [ ] Validate that existing functionality works with new architecture
 - [ ] Test strategy composition and substitution
@@ -133,6 +146,7 @@ AriaEngine.HybridPlanner/
 ## Consequences
 
 ### Positive
+
 - Clean separation of concerns with single responsibility per strategy
 - Enhanced testability through dependency injection
 - Greater flexibility for different planning scenarios
@@ -140,6 +154,7 @@ AriaEngine.HybridPlanner/
 - True Function as Object architecture throughout the planner
 
 ### Negative
+
 - Additional abstraction layer may introduce slight performance overhead
 - More complex initial setup and configuration
 - Requires careful interface design to avoid leaky abstractions

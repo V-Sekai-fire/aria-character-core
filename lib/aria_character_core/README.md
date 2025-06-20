@@ -1,6 +1,22 @@
 # AriaCharacterCore
 
+**⚠️ ALPHA • Research Code • Not Production Ready ⚠️**
+
+> **This module is part of the Aria Character Core research project. Most features are experimental, incomplete, or non-functional. See the root [README.md](../../README.md) for current project status and limitations.**
+
 AriaCharacterCore is the main application module that orchestrates and integrates all components of the Aria Character Core system. It provides the unified interface and coordination layer for the entire ecosystem.
+
+## Status
+
+| Feature                | Status      | Notes                                      |
+|------------------------|------------|--------------------------------------------|
+| Application Coordination | Partial  | Startup and supervision work, but incomplete |
+| Service Integration      | Experimental | APIs exist, but many are stubs or non-functional |
+| Configuration Management | Partial  | Central config present, but not robust      |
+| Health Monitoring        | Experimental | Health checks are basic or incomplete      |
+| API Gateway              | Experimental | REST/WebSocket/GraphQL APIs are incomplete |
+
+**Warning:** This module is not suitable for production use. Many features are incomplete or non-functional.
 
 ## Overview
 
@@ -15,18 +31,21 @@ AriaCharacterCore serves as the central hub that brings together:
 ## Core Responsibilities
 
 ### Application Management
+
 - `AriaCharacterCore.Application` - Main application supervisor
 - Component lifecycle management and supervision trees
 - Graceful startup and shutdown coordination
 - Inter-service communication and dependency management
 
 ### Service Coordination
+
 - Unified API layer across all Aria components
 - Service discovery and registration
 - Load balancing and failover management
 - Cross-component transaction coordination
 
 ### System Integration
+
 - External API endpoints and client interfaces
 - WebSocket connections for real-time communication
 - REST API for standard operations
@@ -47,6 +66,8 @@ AriaCharacterCore (Main Application)
 ```
 
 ## Usage
+
+> **Note:** The following examples assume features are implemented. Many APIs are incomplete or non-functional.
 
 ### Starting the Application
 
@@ -102,6 +123,8 @@ config :aria_character_core,
 ```
 
 ## API Endpoints
+
+> **Note:** API endpoints are experimental and may not be implemented or functional.
 
 ### REST API
 
@@ -186,6 +209,8 @@ mix assets.deploy
 
 ## Deployment
 
+> **Warning:** Production deployment is not supported. This codebase is for research and experimentation only.
+
 ### Production Configuration
 
 ```elixir
@@ -234,20 +259,20 @@ AriaCharacterCore.HealthCheck.status()
 
 ### Metrics and Logging
 
-- **Telemetry**: Comprehensive metrics collection
+- **Telemetry**: Metrics collection (experimental)
 - **Structured Logging**: JSON-formatted logs for analysis
-- **Performance Monitoring**: Request/response times and throughput
-- **Error Tracking**: Automatic error reporting and alerting
+- **Performance Monitoring**: Request/response times and throughput (incomplete)
+- **Error Tracking**: Automatic error reporting and alerting (incomplete)
 
 ## Security
 
 ### Security Features
 
-- **Authentication**: Multi-factor authentication support
-- **Authorization**: Role-based access control
-- **Encryption**: End-to-end encryption for sensitive data
-- **Audit Logging**: Comprehensive audit trails
-- **Rate Limiting**: Protection against abuse and DoS attacks
+- **Authentication**: Multi-factor authentication support (planned)
+- **Authorization**: Role-based access control (planned)
+- **Encryption**: End-to-end encryption for sensitive data (planned)
+- **Audit Logging**: Audit trails (planned)
+- **Rate Limiting**: Protection against abuse and DoS attacks (planned)
 
 ### Security Configuration
 
@@ -280,6 +305,6 @@ AriaCharacterCore integrates and coordinates:
 - **AriaSecurity**: Security infrastructure and secrets management
 - **AriaTown**: Game world simulation and NPC behavior
 
-## Status
+---
 
-AriaCharacterCore provides a stable, production-ready platform for intelligent character systems. The modular architecture enables easy scaling and extension while maintaining system coherence and reliability.
+**Disclaimer:** Active research code. Expect incomplete features and non-functional systems. See the root [README.md](../../README.md) for current project status.

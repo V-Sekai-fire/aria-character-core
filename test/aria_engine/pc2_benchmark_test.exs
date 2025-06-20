@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PC2BenchmarkTest do
   use ExUnit.Case
   doctest AriaEngine.PC2Benchmark

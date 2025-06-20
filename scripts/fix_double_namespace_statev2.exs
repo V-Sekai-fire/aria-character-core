@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Script to fix double namespace issues with AriaEngine.AriaEngine.StateV2
 # This fixes Dialyzer errors and runtime function clause mismatches
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # JSON Solution Tree Generator - Main Entry Point
 # Modular agent-entity-capability scenario that outputs JSON solution trees and markdown logs
 

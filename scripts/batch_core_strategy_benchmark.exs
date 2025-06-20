@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Benchmark script to compare BatchProcessor core allocation strategies
 # Tests both "all cores distributed" vs "single core per problem" approaches
 

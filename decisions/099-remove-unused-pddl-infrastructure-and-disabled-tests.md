@@ -19,13 +19,16 @@ These components increase maintenance overhead, compilation time, and cognitive 
 ## Analysis Results
 
 ### PDDL Infrastructure Usage
+
 - **Location**: `lib/aria_engine/pddl/` directory (15+ files)
 - **Test Coverage**: Zero tests found using PDDL modules
 - **External Usage**: Only referenced in `planning/core_interface.ex` which itself appears unused
 - **Status**: Complete infrastructure with no active usage
 
 ### Disabled Test Files
+
 From `test/DISABLED_TESTS.md`:
+
 - AriaStorage: `rolling_hash_test.exs.disabled`, `chunks_test.exs.disabled`
 - AriaEngine: `durative_actions_test.exs.disabled`, `function_as_object_demo_test.exs.disabled`
 - Timeline: `stn_test.exs.disabled`
@@ -33,6 +36,7 @@ From `test/DISABLED_TESTS.md`:
 - Temporal Planning: `temporal_planning_test.exs.disabled`
 
 ### Development Utilities
+
 - **PddlFuzzer**: Random PDDL generation for testing (unused)
 - **PngGenerator**: PNG generation for timeline visualization (required - keep)
 
@@ -48,21 +52,25 @@ Remove the following unused components:
 ## Implementation Plan
 
 ### Phase 1: Remove Disabled Tests
+
 - [x] Remove all `.disabled` test files
 - [x] Update `test/DISABLED_TESTS.md` to reflect removal
 - [x] Verify test suite still passes
 
 ### Phase 2: Remove PDDL Infrastructure
+
 - [x] Remove `lib/aria_engine/pddl/` directory and all contents
 - [x] Remove `lib/aria_engine/pddl_fuzzer.ex`
 - [x] Remove PDDL references from `planning/core_interface.ex`
 - [x] Update any imports or aliases that reference PDDL modules
 
 ### Phase 3: Review Unused Utilities
+
 - [x] Review `lib/aria_engine/png_generator.ex` - **KEPT** (required for timeline visualization)
 - [x] Confirm no other unused utilities remain
 
 ### Phase 4: Verification
+
 - [x] Compile project to ensure no broken dependencies
 - [x] Run full test suite to verify functionality
 - [x] Update documentation if necessary

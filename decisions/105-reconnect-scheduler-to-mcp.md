@@ -10,10 +10,12 @@
 The AriaEngine has a fully functional standalone scheduler (`AriaEngine.Scheduler`) and MCP infrastructure (`AriaEngine.MCP.HermesServer`), but they are not connected. The MCP server exists but has no tools registered, while the scheduler provides comprehensive scheduling capabilities that should be accessible via MCP protocol.
 
 Historical context:
+
 - ADR-097 designed and implemented a complete MCP scheduler interface
 - ADR-100 extracted the scheduler as standalone and "removed" MCP, but actually only removed the tools while leaving the server infrastructure
 
 Current state:
+
 - `AriaEngine.Scheduler` provides full scheduling with entities, resources, simulation, activity logging
 - `AriaEngine.MCP.HermesServer` provides MCP server foundation with no tools
 - Mix tasks `mcp.stdio` and `mcp.sse` work but serve no tools
@@ -26,16 +28,19 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 ### Implementation Approach
 
 **Phase 1: Add MCP Tool Registration**
+
 - Modify `AriaEngine.MCP.HermesServer` to register `schedule_activities` tool
 - Create `AriaEngine.MCP.SchedulerTool` module to handle MCP-to-Scheduler conversion
 - Implement input/output schema conversion between JSON and Elixir structs
 
 **Phase 2: Protocol Bridge**
+
 - Handle MCP JSON schema validation and conversion
 - Bridge between MCP tool calls and `AriaEngine.Scheduler.schedule_activities/3`
 - Preserve all existing scheduler functionality and analysis features
 
 **Phase 3: Testing and Documentation**
+
 - Add comprehensive tests for MCP tool functionality
 - Update documentation to reflect restored MCP capabilities
 - Verify end-to-end MCP protocol communication
@@ -45,6 +50,7 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 **Tool Name:** `schedule_activities`
 
 **Input Schema:**
+
 ```json
 {
   "schedule_name": {"type": "string", "required": true},
@@ -55,6 +61,7 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 ```
 
 **Output Schema:**
+
 ```json
 {
   "status": "success" | "error",
@@ -67,30 +74,35 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 ## Implementation Plan
 
 ### Phase 1: Core MCP Tool Integration
+
 - [x] Create `AriaEngine.MCP.SchedulerTool` module
 - [x] Implement MCP tool schema and handler functions
 - [x] Add tool registration to `AriaEngine.MCP.HermesServer`
 - [x] Handle input validation and conversion
 
 ### Phase 2: Scheduler Bridge Implementation
+
 - [x] Implement JSON-to-Elixir struct conversion for entities and resources
 - [x] Bridge MCP tool calls to `AriaEngine.Scheduler.schedule_activities/3`
 - [x] Handle error cases and edge conditions (empty activities, invalid inputs)
 - [x] Preserve all scheduler analysis and reporting features
 
 ### Phase 3: Testing and Verification
+
 - [x] Add unit tests for MCP tool functionality
 - [x] Test empty activity list handling (should return successful empty plans)
 - [x] Test complex scheduling scenarios with entities and resources
 - [x] Verify MCP protocol compliance and tool discovery
 
 ### Phase 4: Documentation and Cleanup
+
 - [ ] Update ADR-097 to reflect reconnection status
 - [ ] Document MCP usage instructions and examples
 - [ ] Update README with MCP tool capabilities
 - [x] Mark this ADR as completed
 
 ### Phase 5: Simple MCP Server Implementation (June 19, 2025)
+
 - [x] Created `Mix.Tasks.Mcp.Stdio.Simple` as working MCP server
 - [x] Bypassed Hermes framework compatibility issues
 - [x] Implemented proper MCP protocol handling (initialize, tools/list, tools/call)
@@ -98,6 +110,7 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 - [x] Verified JSON-RPC protocol compliance and tool functionality
 
 ### Phase 6: Hermes MCP Framework Removal (June 19, 2025)
+
 - [x] Removed hermes_mcp dependency from mix.exs
 - [x] Deleted lib/aria_engine/mcp/hermes_server.ex
 - [x] Deleted lib/mix/tasks/mcp.stdio.ex (Hermes-based)
@@ -108,6 +121,7 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 - [x] All tests passing (6 tests, 0 failures)
 
 ### Phase 7: Robust MCP Server Implementation (June 19, 2025)
+
 - [x] Created `Mix.Tasks.Mcp.Stdio` - robust stdio MCP server
 - [x] Created `Mix.Tasks.Mcp.Sse` - HTTP Server-Sent Events MCP server
 - [x] Both servers expose identical `schedule_activities` tool functionality
@@ -119,6 +133,7 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 ## Success Criteria
 
 ### Functional Requirements
+
 - [x] `schedule_activities` tool is discoverable via MCP `tools/list`
 - [x] Tool accepts valid JSON input and returns proper JSON output
 - [x] Empty activity lists return successful empty plans (not errors)
@@ -126,12 +141,14 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 - [x] All existing scheduler features accessible via MCP
 
 ### Quality Requirements
+
 - [x] Proper error handling for invalid inputs
 - [x] MCP protocol compliance (proper JSON-RPC responses)
 - [x] Performance suitable for interactive use
 - [x] Comprehensive logging for debugging
 
 ### Integration Requirements
+
 - [x] Works with existing `mix mcp.stdio` and `mix mcp.sse` tasks
 - [x] Compatible with VSCode MCP client integration
 - [x] No breaking changes to standalone scheduler API
@@ -140,6 +157,7 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 ## Consequences
 
 ### Positive
+
 - **Restored MCP Access:** External tools can use scheduling via MCP protocol
 - **Dual API Support:** Both direct Elixir and MCP protocol access available
 - **Complete Feature Set:** All scheduler capabilities accessible via MCP
@@ -147,11 +165,13 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 - **Minimal Risk:** Adding to existing working components, not changing them
 
 ### Negative
+
 - **Additional Complexity:** MCP protocol layer adds conversion overhead
 - **Maintenance Burden:** Must maintain both direct and MCP interfaces
 - **Testing Overhead:** Need to test both API paths
 
 ### Risks
+
 - **Protocol Mismatch:** JSON schema conversion might lose data fidelity
 - **Performance Impact:** MCP protocol overhead for complex scheduling
 - **Integration Issues:** External MCP clients might not handle responses correctly
@@ -159,12 +179,14 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 ## Monitoring
 
 ### Success Metrics
+
 - **Tool Discovery:** `tools/list` returns `schedule_activities` tool
 - **Response Time:** < 100ms for empty inputs, < 2s for complex schedules
 - **Error Rate:** < 1% for valid inputs
 - **Protocol Compliance:** All responses follow MCP JSON-RPC format
 
 ### Logging Strategy
+
 - **Tool Registration:** Log successful tool registration at startup
 - **Request Processing:** Log MCP tool calls and conversion results
 - **Scheduler Integration:** Track calls to underlying scheduler module

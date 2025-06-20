@@ -41,12 +41,14 @@ Rewrite the scheduler domain converter to create a proper hybrid planner domain 
 ## Implementation Plan
 
 ### Phase 1: Fix Domain Converter Core Structure ✅ COMPLETED
+
 - [x] Update goal format to use correct StateV2 tuple order: `{subject, predicate, object}`
 - [x] Create proper actions that take `(state, args)` and return new state or `false`
 - [x] Create methods that return heterogeneous todo lists with proper structures
 - [x] Implement backtracking support with `false` returns for constraint violations
 
 ### Phase 2: Scheduler-Specific Domain Creation ✅ COMPLETED
+
 - [x] **Resource management actions**: Allocate/deallocate resources
 - [x] **Activity execution actions**: Start/complete activities  
 - [x] **Durative actions**: Time-based activity execution with proper temporal constraints
@@ -54,6 +56,7 @@ Rewrite the scheduler domain converter to create a proper hybrid planner domain 
 - [x] **Scheduling methods**: Complex decomposition of scheduling problems
 
 ### Phase 3: Integration Testing ✅ COMPLETED
+
 - [x] Test basic scheduling: Simple activity with resource constraints
 - [x] Test complex scenarios: Multiple activities, dependencies, resource conflicts
 - [x] Test backtracking: Impossible constraints trigger proper backtracking
@@ -70,12 +73,14 @@ Rewrite the scheduler domain converter to create a proper hybrid planner domain 
 ## Consequences
 
 ### Positive
+
 - Scheduler becomes fully functional with hybrid planner
 - Enables sophisticated scheduling with resource constraints and temporal planning
 - Proper separation of concerns between scheduling logic and planning execution
 - Supports complex scenarios with backtracking and constraint satisfaction
 
 ### Risks
+
 - Requires careful attention to StateV2 goal tuple order
 - Must ensure all method returns match expected todo list format
 - Integration complexity between scheduler domain and hybrid planner
@@ -111,6 +116,7 @@ Rewrite the scheduler domain converter to create a proper hybrid planner domain 
 ### Current State
 
 The scheduler is now fully functional with the hybrid planner. All integration is working correctly:
+
 - Task methods properly decompose activities into executable plans
 - Durative actions handle temporal scheduling with resource allocation
 - Dependencies and constraints are properly managed
@@ -128,6 +134,7 @@ Finished in 0.1 seconds (0.1s async, 0.00s sync)
 ```
 
 The scheduler can now successfully:
+
 - Schedule simple activities with dependencies
 - Handle resource constraints and allocation
 - Process activities with timing information

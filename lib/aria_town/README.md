@@ -15,24 +15,28 @@ AriaTown implements a comprehensive game world simulation with:
 ## Core Components
 
 ### NPC Management
+
 - Intelligent character behavior using AriaEngine planning
 - Personality systems and character traits
 - Goal-oriented behavior and decision making
 - Social relationship modeling
 
 ### World Simulation
+
 - Persistent world state and environment
 - Dynamic events and environmental changes
 - Time progression and scheduling systems
 - Location and spatial relationship management
 
 ### Social Systems
+
 - Character-to-character interactions
 - Reputation and relationship tracking
 - Communication and dialogue systems
 - Group dynamics and faction management
 
 ### Economic Systems
+
 - Resource production and consumption
 - Trading and market mechanics
 - Inventory and item management

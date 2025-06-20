@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Script to migrate from legacy State to AriaEngine.StateV2
 # This script will update all references to use the new StateV2 format
 

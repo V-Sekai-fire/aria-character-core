@@ -1,10 +1,27 @@
 # AriaSecurity
 
-AriaSecurity provides comprehensive security infrastructure for the Aria Character Core system, including secrets management, cryptographic operations, and secure key storage.
+**⚠️ ALPHA • Research Code • Not Production Ready ⚠️**
+
+> **This module is part of the Aria Character Core research project. Most features are experimental, incomplete, or non-functional. See the root [README.md](../../README.md) for current project status and limitations.**
+
+AriaSecurity provides security infrastructure for the Aria Character Core system, including secrets management, cryptographic operations, and secure key storage.
+
+## Status
+
+| Feature                | Status      | Notes                                      |
+|------------------------|------------|--------------------------------------------|
+| Secrets Management     | Partial    | Basic API present, not robust              |
+| Hardware Security Modules | Experimental | SoftHSM integration is incomplete         |
+| OpenBao Integration    | Experimental | Vault-compatible backend, not production-ready |
+| Cryptographic Operations | Partial  | Some APIs present, not fully tested        |
+| Key Lifecycle Management | Experimental | Rotation/expiration not fully implemented |
+| Compliance             | Planned    | Not implemented                            |
+
+**Warning:** This module is not suitable for production use. Many features are incomplete or non-functional.
 
 ## Overview
 
-AriaSecurity implements enterprise-grade security with:
+AriaSecurity implements security features with:
 
 - **Secrets Management**: Secure storage and retrieval of sensitive data
 - **Hardware Security Modules**: Integration with SoftHSM for key protection
@@ -15,23 +32,28 @@ AriaSecurity implements enterprise-grade security with:
 ## Core Components
 
 ### Secrets Management
+
 - `AriaSecurity.Secrets` - High-level secrets management interface
 - `AriaSecurity.SecretsInterface` - Abstract interface for secrets backends
 - `AriaSecurity.SecretsMock` - Mock implementation for testing
 
 ### OpenBao Integration
+
 - `AriaSecurity.OpenBao` - HashiCorp Vault-compatible secrets backend
 - Dynamic secrets generation and management
 - Policy-based access control
 - Audit logging and compliance
 
 ### Hardware Security Module
+
 - `AriaSecurity.SoftHSM` - Software-based HSM implementation
 - Secure key generation and storage
 - Cryptographic operations in protected environment
 - PKCS#11 interface compatibility
 
 ## Usage
+
+> **Note:** The following examples assume features are implemented. Many APIs are incomplete or non-functional.
 
 ### Basic Secrets Management
 
@@ -98,11 +120,11 @@ AriaSecurity
 
 ## Security Features
 
-- **Zero-Knowledge Architecture**: Secrets encrypted at rest and in transit
-- **Role-Based Access Control**: Fine-grained permissions and policies
-- **Audit Logging**: Comprehensive logging of all security operations
-- **Key Rotation**: Automated key lifecycle management
-- **Compliance**: SOC 2, FIPS 140-2 Level 2 compatible operations
+- **Zero-Knowledge Architecture**: Secrets encrypted at rest and in transit (planned)
+- **Role-Based Access Control**: Fine-grained permissions and policies (planned)
+- **Audit Logging**: Logging of security operations (planned)
+- **Key Rotation**: Automated key lifecycle management (experimental)
+- **Compliance**: SOC 2, FIPS 140-2, etc. (not implemented)
 
 ## Configuration
 
@@ -120,7 +142,7 @@ config :aria_security,
 
 AriaSecurity supports multiple secrets backends:
 
-- **OpenBao**: Production-ready Vault-compatible backend
+- **OpenBao**: Vault-compatible backend (experimental)
 - **Mock**: In-memory backend for testing and development
 - **File**: Simple file-based backend for development
 
@@ -157,18 +179,18 @@ export VAULT_TOKEN="your-token"
 
 - **Principle of Least Privilege**: Grant minimal required permissions
 - **Defense in Depth**: Multiple layers of security controls
-- **Regular Rotation**: Automated key and secret rotation
-- **Monitoring**: Continuous monitoring of security events
-- **Incident Response**: Automated response to security incidents
+- **Regular Rotation**: Automated key and secret rotation (experimental)
+- **Monitoring**: Continuous monitoring of security events (planned)
+- **Incident Response**: Automated response to security incidents (planned)
 
 ## Compliance
 
-AriaSecurity supports compliance with:
+AriaSecurity aims to support compliance with:
 
-- **SOC 2 Type II**: Security, availability, and confidentiality
-- **GDPR**: Data protection and privacy requirements
-- **HIPAA**: Healthcare data protection standards
-- **PCI DSS**: Payment card industry security standards
+- **SOC 2 Type II**: Security, availability, and confidentiality (not implemented)
+- **GDPR**: Data protection and privacy requirements (not implemented)
+- **HIPAA**: Healthcare data protection standards (not implemented)
+- **PCI DSS**: Payment card industry security standards (not implemented)
 
 ## Related Components
 
@@ -176,6 +198,6 @@ AriaSecurity supports compliance with:
 - **AriaStorage**: Secure storage with encryption at rest
 - **AriaEngine**: Core planning and execution engine
 
-## Status
+---
 
-AriaSecurity provides production-ready security infrastructure with ongoing enhancements for compliance and threat protection. The modular architecture enables easy integration of additional security backends and services.
+**Disclaimer:** Active research code. Expect incomplete features and non-functional systems. See the root [README.md](../../README.md) for current project status.

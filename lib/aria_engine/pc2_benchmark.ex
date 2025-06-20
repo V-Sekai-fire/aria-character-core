@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PC2Benchmark do
   @moduledoc """
   Performance benchmarking for PC2 algorithm with Apple Vision Pro optimization.

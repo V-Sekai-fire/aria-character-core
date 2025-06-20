@@ -18,7 +18,7 @@ The KHR Interactivity node library planner tests had fundamental architectural i
 1. **Test Isolation Issues**: GLTF scene mock was shared across all tests in setup block, causing test interference and preventing parallel execution
 2. **API Layer Confusion**: Tests mixed direct StateV2 fact checking with GLTF scene execution, creating unclear boundaries
 3. **Broken Execution Flow**: Tests used manual `execute_plan()` helper instead of proper `run_lazy_refineahead()` execution
-4. **Missing 4-Layer Architecture**: 
+4. **Missing 4-Layer Architecture**:
    - Domain layer: KHR actions ✅
    - Plan layer: Planning logic ✅  
    - Planner layer: HTN planner ✅
@@ -40,30 +40,35 @@ Implemented proper 4-layer test architecture with per-test GLTF scene isolation:
 ## Implementation Completed
 
 ### Phase 1: Test Isolation ✅
+
 - [x] Remove shared GLTF scene setup from test setup block
 - [x] Create per-test scene initialization pattern
 - [x] Update all test cases to use isolated scenes
 - [x] Verify tests can run in parallel without interference
 
 ### Phase 2: Execution Flow Fix ✅
+
 - [x] Replace manual `execute_plan()` helper with `PlannerAdapter.run_lazy_refineahead()`
 - [x] Update test execution pattern to use proper planning → execution flow
 - [x] Add proper error handling for execution failures
 - [x] Verify plans are actually executed through the planner system
 
 ### Phase 3: State Validation Fix ✅
+
 - [x] Replace `StateV2.get_fact()` assertions with `GLTFSceneMock.get_node_property()`
 - [x] Update all test assertions to check GLTF scene state
 - [x] Ensure node IDs are properly mapped between planning and execution
 - [x] Add validation that scene state reflects expected node values
 
 ### Phase 4: KHR Action Integration ✅
+
 - [x] Update KHR math actions to work through GLTF scene mock
 - [x] Modify `math_e()`, `math_pi()`, etc. to use `GLTFSceneMock.set_node_property()`
 - [x] Ensure action execution updates scene graph correctly
 - [x] Add task method integration with scene mock
 
 ### Phase 5: Architecture Verification ✅
+
 - [x] Add comprehensive integration tests for 4-layer flow
 - [x] Verify planner → execution → scene → validation chain
 - [x] Add debug logging to trace execution through layers
@@ -92,12 +97,14 @@ Implemented proper 4-layer test architecture with per-test GLTF scene isolation:
 ## Consequences
 
 ### Positive
+
 - **Test Reliability**: Eliminates test interference and flaky behavior
 - **Architectural Clarity**: Clear separation between planning, execution, and scene state
 - **Future Scalability**: Proper pattern for testing additional KHR nodes
 - **Debugging Capability**: Clear execution flow makes issues easier to trace
 
 ### Risks
+
 - **Implementation Complexity**: Requires changes across multiple test files and KHR actions
 - **Regression Potential**: Changes to execution flow could break existing functionality
 - **Performance Impact**: Per-test scene creation may slow down test execution

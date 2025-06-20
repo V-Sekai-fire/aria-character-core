@@ -1,6 +1,7 @@
 # ADR-104: Enhanced Heist Scenario for JSON Solution Analysis
 
 ## Status
+
 Completed
 
 ## Context
@@ -20,6 +21,7 @@ The simple scenario (37ms execution time) shows single-core feasibility for basi
 Implement a 4-person heist team scenario with specialized roles, sequential dependencies, and resource constraints:
 
 **Team Composition:**
+
 - Ghost: Network infiltration specialist (hacking, network_access, stealth)
 - Spark: Electronics expert (electronics, security_bypass, technical_repair)
 - Phantom: Physical infiltration specialist (lockpicking, stealth, acrobatics)
@@ -27,6 +29,7 @@ Implement a 4-person heist team scenario with specialized roles, sequential depe
 
 **Mission Structure:**
 8 sequential tasks with dependencies:
+
 1. Reconnaissance → 2. Network Breach → 3. Security Disable → 4. Physical Entry → 5. Data Extraction → 6. Evidence Cleanup → 7. Escape Route → 8. Exfiltration
 
 **Equipment Requirements:**
@@ -53,12 +56,14 @@ Implement a 4-person heist team scenario with specialized roles, sequential depe
 ## Consequences
 
 **Positive:**
+
 - More realistic complexity analysis for agent-entity-capability planning
 - Better understanding of performance limits and scaling behavior
 - Comprehensive demonstration of scheduling coordination capabilities
 - Interesting logs that showcase real-world planning scenarios
 
 **Negative:**
+
 - Increased complexity may reveal performance bottlenecks
 - More complex scenario may be harder to debug if issues arise
 - Additional maintenance overhead for enhanced test data
@@ -99,6 +104,7 @@ Implement a 4-person heist team scenario with specialized roles, sequential depe
 ### Generated Outputs
 
 All success criteria met:
+
 - ✅ Clean JSON files: solution_tree.json, agent_assignments.json, resource_timeline.json, complexity_analysis.json
 - ✅ Readable markdown logs: scheduling_test_log.md, activity_log.md
 - ✅ Performance metrics demonstrating single-core feasibility

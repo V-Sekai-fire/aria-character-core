@@ -1,6 +1,21 @@
 # AriaAuth
 
+**⚠️ ALPHA • Research Code • Not Production Ready ⚠️**
+
+> **This module is part of the Aria Character Core research project. Most features are experimental, incomplete, or non-functional. See the root [README.md](../../README.md) for current project status and limitations.**
+
 AriaAuth provides authentication and session management for the Aria Character Core system. It handles user accounts, secure sessions, and authorization using modern cryptographic techniques.
+
+## Status
+
+| Feature                | Status      | Notes                                      |
+|------------------------|------------|--------------------------------------------|
+| Account Management     | Partial    | Basic registration and login implemented   |
+| Session Management     | Partial    | Sessions work, but may lack full security  |
+| Macaroon Authorization | Experimental | API exists, not fully integrated/tested    |
+| Database Integration   | Partial    | Persistence works, but not production-grade|
+
+**Warning:** This module is not suitable for production use. Security features are experimental and may be incomplete or broken.
 
 ## Overview
 
@@ -14,26 +29,32 @@ AriaAuth implements a secure authentication system with:
 ## Core Components
 
 ### Account Management
+
 - `AriaAuth.Accounts` - User account creation, authentication, and management
 - User registration with secure password hashing
 - Account verification and password reset functionality
 
 ### Session Management
+
 - `AriaAuth.Sessions` - Session creation, validation, and cleanup
 - Automatic session expiration and renewal
 - Secure session token generation
 
 ### Macaroon Authorization
+
 - `AriaAuth.Macaroons` - Cryptographic authorization tokens
 - Capability-based access control
 - Token delegation and attenuation
 
 ### Database Layer
+
 - `AriaAuth.Repo` - Database repository for persistent storage
 - User account persistence
 - Session storage and cleanup
 
 ## Usage
+
+> **Note:** The following examples assume features are implemented. Some APIs may be incomplete or non-functional.
 
 ### User Registration
 
@@ -152,6 +173,6 @@ mix ecto.migrate
 - **AriaSecurity**: Security infrastructure and secrets management
 - **AriaStorage**: Persistent storage and archiving
 
-## Status
+---
 
-AriaAuth provides stable authentication and session management. The macaroon-based authorization system enables flexible, secure access control for the Aria ecosystem.
+**Disclaimer:** Active research code. Expect incomplete features and non-functional systems. See the root [README.md](../../README.md) for current project status.

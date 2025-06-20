@@ -21,6 +21,7 @@ This inconsistency was noted in ADR-101 and creates several issues:
 ### Evidence
 
 **StateV2.ex (CORRECT format):**
+
 ```elixir
 # Functions expect: (state, subject, predicate, fact_value)
 StateV2.set_fact(state, "player", "location", "treasure_room")
@@ -34,6 +35,7 @@ end
 ```
 
 **Multigoal.ex (INCORRECT format):**
+
 ```elixir
 @type goal :: {StateV2.predicate(), StateV2.subject(), AriaEngine.StateV2.fact_value()}
 
@@ -42,6 +44,7 @@ Multigoal.add_goal(multigoal, "location", "player", "treasure_room")
 ```
 
 **Test Evidence:**
+
 ```elixir
 # Test creates state with StateV2 (subject-first):
 StateV2.set_fact("player", "location", "treasure_room")
@@ -57,17 +60,20 @@ Fix Multigoal.ex to use consistent StateV2 tuple ordering: `{subject, predicate,
 ## Implementation Plan
 
 ### Phase 1: Fix Core Structure ✅ COMPLETED
+
 - [x] Update type definitions to use subject-first format
 - [x] Fix all function signatures to match StateV2 conventions  
 - [x] Update internal tuple creation and matching logic
 - [x] Fix documentation examples to use correct format
 
 ### Phase 2: Update Tests ✅ COMPLETED
+
 - [x] Fix all test calls to use correct parameter order
 - [x] Verify goal satisfaction logic works correctly
 - [x] Ensure tests pass with new consistent format
 
 ### Phase 3: Verify Integration ✅ COMPLETED
+
 - [x] Check hybrid planner integration still works
 - [x] Ensure scheduler domain converter compatibility
 - [x] Run full test suite to verify no regressions
@@ -83,12 +89,14 @@ Fix Multigoal.ex to use consistent StateV2 tuple ordering: `{subject, predicate,
 ## Consequences
 
 ### Positive
+
 - **Consistent API**: Multigoal now matches StateV2 conventions exactly
 - **Reduced confusion**: Developers can use the same tuple order everywhere
 - **Better integration**: Seamless compatibility with hybrid planner and scheduler
 - **Future-proof**: New code using StateV2 format will work correctly with Multigoal
 
 ### Risks
+
 - **Breaking change**: Any external code using the incorrect predicate-first format will break
 - **Test updates required**: All existing tests need parameter order corrections
 
@@ -127,6 +135,7 @@ Fix Multigoal.ex to use consistent StateV2 tuple ordering: `{subject, predicate,
 ### Current State
 
 Multigoal.ex now provides complete consistency with StateV2:
+
 - Type definitions match exactly
 - Function signatures follow StateV2 conventions
 - All internal logic uses subject-first tuples

@@ -102,6 +102,7 @@ Implement a PERT chart execution simulator using the existing hybrid planner API
 - [x] Prepare data structures for MCP tool integration
 
 **Status**: Part 1 implementation completed with comprehensive integration test. One test passing (variable interpolation durative action functionality). Remaining issues identified:
+
 - STN temporal strategy errors with `TemporalPlanner.STNPlanner.new/3`
 - Some task method recognition issues in hybrid planner
 
@@ -118,6 +119,7 @@ Implement a PERT chart execution simulator using the existing hybrid planner API
 ## Success Criteria
 
 ### Part 1 (Planning) - ACHIEVED
+
 - ✅ Unit test created with comprehensive PERT chart scenarios
 - ✅ KHR durative actions implemented for variable interpolation
 - ✅ Construction domain with HTN methods for house building
@@ -125,6 +127,7 @@ Implement a PERT chart execution simulator using the existing hybrid planner API
 - ✅ One test passing: variable interpolation durative action functionality
 
 ### Part 2 (Execution) - PENDING
+
 - [ ] All integration tests passing
 - [ ] STN temporal strategy working correctly
 - [ ] Task methods properly recognized by hybrid planner

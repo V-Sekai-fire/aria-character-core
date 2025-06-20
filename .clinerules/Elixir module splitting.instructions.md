@@ -10,7 +10,7 @@ When a code file becomes too large, it should be split into smaller, more manage
 ### When to split
 
 - Modules exceeding 200-300 lines
-- Multiple distinct responsibilities 
+- Multiple distinct responsibilities
 - High cognitive load
 - Frequent changes in unrelated areas
 

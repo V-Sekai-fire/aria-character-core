@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PngGenerator do
   @moduledoc """
   Pure Elixir PNG generation for schedule timeline visualization.

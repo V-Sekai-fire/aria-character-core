@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Script to fix StateV2 namespace references throughout the codebase
 # This script replaces %StateV2{} with %AriaEngine.StateV2{} and StateV2.t() with AriaEngine.StateV2.t()
 

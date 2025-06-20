@@ -16,6 +16,7 @@ Only failing tests (or tests with explicit verbose flags) should produce output.
 **`mix test --trace` should provide normal logging output.** The `--trace` flag enables developers to see detailed test execution, including all IO.puts and IO.inspect statements. This allows for targeted debugging by running specific files or test lines with full visibility.
 
 **Usage examples:**
+
 - `mix test --trace` - Enable verbose output for all tests
 - `mix test --trace test/specific_file_test.exs` - Verbose output for specific file
 - `mix test --trace test/specific_file_test.exs:123` - Verbose output for specific test line

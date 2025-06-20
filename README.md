@@ -39,6 +39,7 @@ mix test  # Runs only working tests
 ## Research Focus
 
 **Core Investigation Areas:**
+
 - **Hybrid Planning:** HTN goal decomposition + STN temporal constraints
 - **Temporal Scheduling:** Critical Path Method with resource conflict detection
 - **Parallel Processing:** Flow-based coordination for multi-NPC systems
@@ -62,12 +63,14 @@ lib/aria_security/         # Security Integration (partial)
 ## Current Capabilities
 
 **Actually Working:**
+
 - MCP Integration: Temporal scheduler interface via Model Context Protocol
 - Project Structure: Modular Elixir architecture
 - Development Tooling: Quality/testing/build systems
 - Dependencies: AI/ML libraries (Nx, LibGraph) integrated
 
 **Major Gaps:**
+
 - MCP response handling needs fixes (7 test failures)
 - Temporal reasoning has performance issues (1 timeout)
 - Storage system fundamentally broken
@@ -86,6 +89,7 @@ mix mcp.web --port 4000
 ```
 
 **Available Tools:**
+
 - `schedule_activities`: Critical Path Method scheduling with hybrid planning
 - Handles empty activity lists (valid mathematical solution)
 - Resource conflict detection and analysis
@@ -103,6 +107,7 @@ See [MCP_INTEGRATION.md](MCP_INTEGRATION.md) for complete setup and usage docume
 ## Contributing
 
 Focus areas for experimental research contributions:
+
 - **Algorithm Implementation:** Complete HTN/STN planning systems
 - **Test Recovery:** Fix disabled tests to restore functionality
 - **Performance Research:** Solve timeout and scaling issues

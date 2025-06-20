@@ -75,12 +75,14 @@ Rationale for starting point selection
 ### Breakdown methodology
 
 **Phase structure:**
+
 - **Group by logical domain:** Math operations, control flow, events, etc.
 - **Sub-phases by complexity:** Basic → advanced within each domain
 - **Priority assignment:** HIGH/MEDIUM/LOW based on dependencies
 - **File path references:** Direct links to implementation files
 
 **Task granularity:**
+
 - **Actionable items:** Each checkbox represents completable unit
 - **Technical context:** Include function names, operation types, patterns
 - **Gap identification:** Current vs required state clearly marked
@@ -89,11 +91,13 @@ Rationale for starting point selection
 ### Essential information per phase
 
 **File context:**
+
 - **Source file path:** Where implementation exists
 - **Target registry:** Where mappings need addition
 - **Pattern requirements:** AST structures or API calls needed
 
 **Technical details:**
+
 - **Operation names:** Exact function/action identifiers
 - **Input/output types:** Parameter and return value specifications
 - **Implementation gaps:** Missing functionality or incomplete coverage
@@ -101,11 +105,13 @@ Rationale for starting point selection
 ### Implementation strategy separation
 
 **Keep separate:**
+
 - **Task list:** What needs completion (phases/checkboxes)
 - **Implementation strategy:** How to approach work (steps/sequence)
 - **Current focus:** Immediate next actions with rationale
 
 **Strategy components:**
+
 - **Ordered steps:** Sequential work phases
 - **Decision points:** Where choices affect approach
 - **Testing approach:** Validation and verification methods
@@ -113,11 +119,13 @@ Rationale for starting point selection
 ### Progress tracking format
 
 **Checkbox states:**
+
 - `[ ]` Incomplete task
 - `[*]` Completed task
 - `!!!` Uncertain scope or blocked
 
 **Progress indicators:**
+
 - **Phase completion:** Percentage or ratio tracking
 - **File coverage:** Operations mapped vs total available
 - **Priority completion:** High-priority items resolved first

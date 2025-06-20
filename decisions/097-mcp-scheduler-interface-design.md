@@ -18,6 +18,7 @@ The MCP interface serves as a bridge between external clients (like IDEs, projec
 **Tool Name:** `schedule_activities`
 
 **Input Schema:**
+
 ```json
 {
   "schedule_name": {"required": true, "type": "string"},
@@ -28,6 +29,7 @@ The MCP interface serves as a bridge between external clients (like IDEs, projec
 ```
 
 **Output Schema:**
+
 ```json
 {
   "status": "success" | "error",
@@ -42,12 +44,14 @@ The MCP interface serves as a bridge between external clients (like IDEs, projec
 **Core Principle:** Empty activity lists should return successful empty plans, not errors.
 
 **Rationale:**
+
 - **Mathematical Correctness:** An empty set of activities has a trivial solution (empty schedule)
 - **User Experience:** Users shouldn't get errors when starting with blank project templates
 - **API Consistency:** Success responses for valid inputs, regardless of complexity
 - **Integration Friendly:** External tools can handle empty responses predictably
 
 **Implementation:**
+
 ```elixir
 def handle_empty_activities(request) do
   %{
@@ -72,6 +76,7 @@ end
 ### Hybrid Planner Integration
 
 **Strategy Composition:**
+
 - **Planning Strategy:** HTN task decomposition and goal achievement
 - **Temporal Strategy:** STN constraint management and timeline validation  
 - **State Strategy:** Categorical and numerical fluent management
@@ -80,6 +85,7 @@ end
 - **Execution Strategy:** Plan execution and failure recovery
 
 **Conversion Process:**
+
 1. **Request Analysis:** Parse MCP input format and validate structure
 2. **Domain Creation:** Convert activities to hybrid planner domain format
 3. **State Initialization:** Create initial state from resources and constraints
@@ -90,6 +96,7 @@ end
 ### Error Handling Strategy
 
 **Graceful Degradation:**
+
 - Hybrid planner failures fall back to empty plan responses
 - Conversion errors are logged but don't break the API
 - Invalid inputs return structured error responses
@@ -98,18 +105,21 @@ end
 ## Implementation Plan
 
 ### Phase 1: Core Interface ✅
+
 - [x] Implement `schedule_activities` MCP tool
 - [x] Add input validation and schema enforcement
 - [x] Integrate with hybrid planner coordinator
 - [x] Handle empty activity lists correctly
 
 ### Phase 2: Enhanced Analysis
+
 - [ ] Add detailed resource conflict detection
 - [ ] Implement circular dependency analysis
 - [ ] Provide scheduling suggestions and recommendations
 - [ ] Add timeline estimation capabilities
 
 ### Phase 3: Advanced Features
+
 - [ ] Support for complex temporal constraints
 - [ ] Multi-project scheduling coordination
 - [ ] Real-time replanning capabilities
@@ -118,6 +128,7 @@ end
 ## Success Criteria
 
 ### Functional Requirements
+
 - [x] Empty activity lists return successful empty plans
 - [x] Valid activity lists generate appropriate schedules
 - [x] Resource conflicts are detected and reported
@@ -125,12 +136,14 @@ end
 - [x] All responses follow consistent schema
 
 ### Quality Requirements
+
 - [x] Graceful error handling for all input scenarios
 - [x] Comprehensive logging for debugging
 - [x] Performance suitable for interactive use
 - [x] Clear documentation and examples
 
 ### Integration Requirements
+
 - [x] Compatible with Hermes MCP server framework
 - [x] Proper tool registration and discovery
 - [x] Consistent with other AriaEngine MCP tools
@@ -139,6 +152,7 @@ end
 ## Consequences
 
 ### Positive
+
 - **Predictable API:** Consistent behavior across all input scenarios
 - **User-Friendly:** No errors for common edge cases like empty projects
 - **Mathematically Sound:** Correct handling of trivial scheduling problems
@@ -146,11 +160,13 @@ end
 - **Extensible:** Foundation for advanced scheduling features
 
 ### Negative
+
 - **Complexity:** Additional logic needed to handle edge cases properly
 - **Testing Overhead:** Must verify behavior across many input scenarios
 - **Documentation Burden:** Need to explain empty plan behavior clearly
 
 ### Risks
+
 - **Misunderstanding:** Users might expect errors for empty inputs
 - **Integration Issues:** External tools might not handle empty responses
 - **Performance:** Hybrid planner overhead even for trivial cases
@@ -158,12 +174,14 @@ end
 ## Monitoring
 
 ### Success Metrics
+
 - **API Response Time:** < 100ms for empty inputs, < 2s for complex schedules
 - **Error Rate:** < 1% for valid inputs
 - **User Adoption:** Increasing usage of MCP scheduling tool
 - **Integration Success:** External tools successfully using the interface
 
 ### Logging Strategy
+
 - **Request Analysis:** Log input structure and validation results
 - **Planner Integration:** Track hybrid planner performance and failures
 - **Response Generation:** Monitor output formatting and delivery
@@ -178,6 +196,7 @@ end
 ## Examples
 
 ### Empty Input Example
+
 ```json
 {
   "schedule_name": "New Project",
@@ -188,6 +207,7 @@ end
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -204,6 +224,7 @@ end
 ```
 
 ### Complex Input Example
+
 ```json
 {
   "schedule_name": "Website Launch",

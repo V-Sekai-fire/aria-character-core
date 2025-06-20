@@ -1,6 +1,24 @@
 # AriaEngine
 
+**⚠️ ALPHA • Research Code • Not Production Ready ⚠️**
+
+> **This module is part of the Aria Character Core research project. Most features are experimental, incomplete, or non-functional. See the root [README.md](../../README.md) for current project status and limitations.**
+
 AriaEngine is the core planning and execution engine for the Aria Character Core system. It provides hierarchical task network (HTN) planning, temporal planning, and workflow execution capabilities.
+
+## Status
+
+| Feature                | Status      | Notes                                      |
+|------------------------|------------|--------------------------------------------|
+| HTN Planning           | Partial    | Basic decomposition implemented, incomplete |
+| Temporal Planning      | Partial    | STN/Timeline code present, performance issues, timeouts |
+| Hybrid Planning        | Experimental | Multi-strategy coordination is incomplete  |
+| Workflow Execution     | Experimental | Flow/backflow APIs exist, not fully working|
+| State Management       | Partial    | Fact-based state present, not robust       |
+| MCP Integration        | Partial    | Scheduler interface works, response handling broken |
+| Test Coverage          | Partial    | Many tests failing or skipped              |
+
+**Warning:** This module is not suitable for production use. Many features are incomplete or non-functional.
 
 ## Overview
 
@@ -15,26 +33,32 @@ AriaEngine combines multiple planning paradigms to enable intelligent character 
 ## Core Components
 
 ### Planning System
+
 - `AriaEngine.Planner` - Main planning interface
 - `AriaEngine.HybridPlanner` - Multi-strategy planning coordinator
 - `AriaEngine.Domain` - Domain definition and method management
 - `AriaEngine.Plan` - Plan representation and execution
 
 ### Temporal Planning
+
 - `AriaEngine.Timeline` - Timeline-based temporal planning
 - `AriaEngine.TemporalPlanner` - STN-based constraint solving
 - `AriaEngine.TimelineGraph` - Timeline visualization and analysis
 
 ### Workflow System
+
 - `AriaEngine.FlowWorkflow` - Flow-based data processing
 - `AriaEngine.Scheduler` - Activity scheduling and resource management
 - `AriaEngine.FlowAdapter` - Integration with Flow library
 
 ### State Management
+
 - `AriaEngine.StateV2` - Fact-based state representation
 - `AriaEngine.Validation` - State validation and consistency checking
 
 ## Usage
+
+> **Note:** The following examples assume features are implemented. Many APIs are incomplete or non-functional.
 
 ### Basic Planning
 
@@ -116,6 +140,6 @@ mix test test/aria_engine/ --timeout 120
 - **AriaSecurity**: Security and secrets management
 - **AriaTown**: Game world simulation and NPC behavior
 
-## Status
+---
 
-AriaEngine is actively developed and maintained. The core planning functionality is stable, with ongoing work on temporal planning and workflow optimization.
+**Disclaimer:** Active research code. Expect incomplete features and non-functional systems. See the root [README.md](../../README.md) for current project status.

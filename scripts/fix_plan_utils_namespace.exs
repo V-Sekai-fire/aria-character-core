@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Script to fix Plan.Utils namespace references throughout the codebase
 # This script replaces Plan.Utils with AriaEngine.Plan.Utils
 
