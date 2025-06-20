@@ -38,6 +38,7 @@ Proposed: MCP Tool (plan transformer) → HybridCoordinatorV3 input format
 
 ### Related ADR Context
 
+- **ADR-112**: HybridCoordinatorV3 Implementation with V2 Adapter (provides target interface)
 - **ADR-110**: MCP Strategy Testing Interface - already incorporates plan transformer architecture
 - **ADR-105**: Reconnect Scheduler to MCP - implemented current mixed-concern approach
 - **ADR-097**: MCP Scheduler Interface Design - designed current implementation
@@ -45,6 +46,8 @@ Proposed: MCP Tool (plan transformer) → HybridCoordinatorV3 input format
 ## Decision
 
 Convert `schedule_activities` from a full execution pipeline to a pure data transformer that outputs HybridCoordinatorV3-compatible input format.
+
+**Note**: This ADR focuses on the plan transformer implementation. The HybridCoordinatorV3 interface and adapter implementation is covered in ADR-112.
 
 ### Implementation Strategy
 
@@ -54,21 +57,15 @@ Convert `schedule_activities` from a full execution pipeline to a pure data tran
 - Implement pure data transformation functions
 - Preserve all existing validation and conversion logic
 
-**Phase 2: Create HybridCoordinatorV3 and Strategy Adapters**
-- Create `AriaEngine.HybridPlanner.HybridCoordinatorV3` module
-- Test HybridCoordinatorV2 functionality (verify current implementation)
-- Write adapters for existing strategies to work with V3 interface
-- Ensure backward compatibility with V2 strategies through adapters
-
-**Phase 3: Update MCP Tools**
+**Phase 2: Update MCP Tools**
 - Modify `schedule_activities` to use plan transformer
 - Return formatted coordinator input instead of execution results
 - Add conversion metadata for debugging and traceability
 - Maintain backward compatibility during transition
 
-**Phase 4: Update Domain Layer**
-- Ensure HybridCoordinatorV3 can accept converted input format
-- Verify strategy execution works with converted data through adapters
+**Phase 3: Integration with HybridCoordinatorV3**
+- Integrate with HybridCoordinatorV3 interface (from ADR-112)
+- Verify plan transformer output works with V3 coordinator
 - Add integration points for direct domain layer execution
 
 ### Plan Transformer Interface
@@ -132,20 +129,7 @@ end
 - [ ] Add comprehensive type specifications and documentation
 - [ ] Create unit tests for plan transformer module
 
-### Phase 2: HybridCoordinatorV3 and Strategy Adapters
-
-- [ ] Test HybridCoordinatorV2 functionality (verify current implementation works)
-- [ ] Create `lib/aria_engine/hybrid_planner/hybrid_coordinator_v3.ex`
-- [ ] Design V3 interface based on plan transformer output format
-- [ ] Create strategy adapter interface: `AriaEngine.HybridPlanner.StrategyAdapter`
-- [ ] Write adapters for existing V2 strategies to work with V3:
-  - [ ] Critical Path Method (CPM) adapter
-  - [ ] PERT adapter  
-  - [ ] Resource leveling adapter
-  - [ ] Other existing strategy adapters
-- [ ] Add comprehensive tests for V3 coordinator and adapters
-
-### Phase 3: MCP Tools Update
+### Phase 2: MCP Tools Update
 
 - [ ] Update `AriaEngine.MCPTools.handle_schedule_activities_tool_call/1`
 - [ ] Replace scheduler execution with plan transformer call
@@ -153,21 +137,19 @@ end
 - [ ] Add conversion metadata to responses
 - [ ] Update error handling for conversion failures
 
-### Phase 4: Integration and Testing
+### Phase 3: Integration and Testing
 
-- [ ] Verify HybridCoordinatorV3 accepts converted input format
+- [ ] Verify plan transformer output is compatible with HybridCoordinatorV3 (ADR-112)
 - [ ] Add integration tests for plan transformer → coordinator V3 flow
-- [ ] Test strategy adapters with real planning scenarios
 - [ ] Update existing tests to expect new response format
 - [ ] Add performance benchmarks for conversion operations
 
-### Phase 5: Documentation and Migration
+### Phase 4: Documentation and Migration
 
 - [ ] Update MCP tool documentation with new response format
 - [ ] Create migration guide for existing MCP clients
 - [ ] Add examples showing how to use converted data
 - [ ] Document integration with domain layer execution
-- [ ] Document strategy adapter pattern for future strategies
 
 ## Success Criteria
 
@@ -176,8 +158,7 @@ end
 - [ ] `schedule_activities` returns coordinator input format instead of execution results
 - [ ] All existing validation and conversion logic is preserved
 - [ ] Plan transformer handles all current input scenarios (empty lists, complex schedules)
-- [ ] Converted data is compatible with HybridCoordinatorV3
-- [ ] Strategy adapters enable V2 strategies to work with V3 interface
+- [ ] Converted data is compatible with HybridCoordinatorV3 (ADR-112)
 - [ ] Error handling maintains same quality as current implementation
 
 ### Quality Requirements
@@ -191,7 +172,7 @@ end
 ### Integration Requirements
 
 - [ ] Existing MCP clients can adapt to new response format
-- [ ] Domain layer can execute plans using converted data
+- [ ] Domain layer can execute plans using converted data through HybridCoordinatorV3
 - [ ] Strategy testing interface (ADR-110) can use same conversion logic
 - [ ] No breaking changes to core scheduler functionality
 
@@ -263,6 +244,10 @@ end
 
 ## Related ADRs
 
+### Primary Dependencies
+
+- **ADR-112**: HybridCoordinatorV3 Implementation with V2 Adapter (provides target interface)
+
 ### ADRs to Update
 
 - **ADR-105**: Reconnect Scheduler to MCP → Update to reflect plan transformer approach
@@ -320,4 +305,4 @@ end
 }
 ```
 
-This ADR establishes the foundation for clean architectural separation between data transformation and planning execution, enabling both better testing and the strategy testing capabilities outlined in ADR-110.
+This ADR establishes the plan transformer component for clean architectural separation between data transformation and planning execution. The HybridCoordinatorV3 interface that consumes this output is defined in ADR-112.
