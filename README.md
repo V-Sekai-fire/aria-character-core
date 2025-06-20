@@ -83,9 +83,6 @@ The project includes a working Model Context Protocol server that exposes tempor
 ```bash
 # Start MCP server (stdio mode for IDE integration)
 mix mcp.stdio
-
-# Start MCP server (web mode for HTTP access)
-mix mcp.web --port 4000
 ```
 
 **Available Tools:**
@@ -95,7 +92,6 @@ mix mcp.web --port 4000
 - Resource conflict detection and analysis
 - Dependency validation and circular dependency detection
 
-See [MCP_INTEGRATION.md](MCP_INTEGRATION.md) for complete setup and usage documentation.
 
 ## Development Priorities
 
@@ -113,7 +109,6 @@ Focus areas for experimental research contributions:
 - **Performance Research:** Solve timeout and scaling issues
 - **Integration:** Connect partial systems into working pipelines
 
-See `test/DISABLED_TESTS.md` for specific failing systems.
 
 ## Dependencies
 
