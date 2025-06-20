@@ -156,7 +156,11 @@ defmodule AriaEngine.MCPTools do
                     %{
                       type: "string",
                       format: "duration",
-                      description: "The activity's duration in ISO 8601 format (e.g., 'PT2H30M')."
+                      description: "The activity's duration in ISO 8601 format (e.g., 'PT2H30M', 'PT90S')."
+                    },
+                    %{
+                      type: "integer",
+                      description: "The activity's duration in seconds (non-negative integer)."
                     },
                     %{
                       type: "object",
@@ -176,7 +180,7 @@ defmodule AriaEngine.MCPTools do
                       description: "A fixed time window for the activity."
                     }
                   ],
-                  description: "The duration of the activity, specified as a time span or a fixed start/end window."
+                  description: "The duration of the activity, specified as an ISO 8601 duration string (hours/minutes/seconds), a non-negative integer (seconds), or a fixed start/end window (ISO 8601 datetimes)."
                 },
                 dependencies: %{
                   type: "array",
@@ -456,7 +460,7 @@ defmodule AriaEngine.MCPTools do
     case Map.get(activity, "duration") do
       nil ->
         {:error, "Activity missing required 'duration' field"}
-      
+
       duration_str when is_binary(duration_str) ->
         case parse_iso8601_duration(duration_str) do
           {:ok, _parsed} -> {:ok, duration_str}
@@ -472,17 +476,16 @@ defmodule AriaEngine.MCPTools do
             {:error, "End time must be after start time"}
           end
         end
-      
+
       duration_int when is_integer(duration_int) ->
-        # Backwards compatibility for integer durations (minutes)
         if duration_int >= 0 do
           {:ok, duration_int}
         else
           {:error, "Activity 'duration' must be non-negative, got: #{duration_int}"}
         end
-      
+
       _ ->
-        {:error, "Invalid 'duration' format. Must be an ISO 8601 duration string, a start/end object, or an integer (minutes)."}
+        {:error, "Invalid 'duration' format. Must be an ISO 8601 duration string, a start/end object, or an integer (seconds)."}
     end
   end
 
@@ -752,22 +755,26 @@ defp convert_activities(activities) when is_list(activities) do
       duration_str when is_binary(duration_str) ->
         case parse_iso8601_duration(duration_str) do
           {:ok, parsed_duration} ->
-            convert_parsed_duration_to_minutes(parsed_duration)
+            convert_parsed_duration_to_seconds(parsed_duration)
           {:error, _} -> nil
         end
       duration_map when is_map(duration_map) ->
         with {:ok, start_time} <- parse_duration_datetime(duration_map, "start"),
              {:ok, end_time} <- parse_duration_datetime(duration_map, "end") do
-          DateTime.diff(end_time, start_time, :minute)
+          DateTime.diff(end_time, start_time, :second)
         else
           _ -> nil
         end
       duration_int when is_integer(duration_int) ->
-        # Keep integer durations as-is (test compatibility)
+        # Treat integer durations as seconds
         duration_int
       _ ->
         nil
     end
+  end
+
+  defp convert_parsed_duration_to_seconds(%{hours: hours, minutes: minutes, seconds: seconds}) do
+    hours * 3600 + minutes * 60 + trunc(seconds)
   end
 
   defp parse_duration_datetime(map, key) do
@@ -781,10 +788,4 @@ defp convert_activities(activities) when is_list(activities) do
       _ -> {:error, "Invalid '#{key}' format: must be a string"}
     end
   end
-
-  defp convert_parsed_duration_to_minutes(%{hours: hours, minutes: minutes, seconds: seconds}) do
-    # Convert to fractional minutes for better precision
-    hours * 60 + minutes + (seconds / 60)
-  end
-
 end

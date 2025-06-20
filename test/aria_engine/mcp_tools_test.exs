@@ -557,9 +557,9 @@ defmodule AriaEngine.MCPToolsTest do
 
       task = hd(schedule)
       assert task[:id] == "iso_task"
-      assert task[:duration] == 90
+      assert task[:duration] == 5400
       assert task[:start_time] == 0
-      assert task[:end_time] == 90
+      assert task[:end_time] == 5400
     end
 
     test "Test 8: DateTime interval" do
@@ -597,7 +597,7 @@ defmodule AriaEngine.MCPToolsTest do
 
       task = hd(schedule)
       assert task[:id] == "datetime_task"
-      assert task[:duration] == 60
+      assert task[:duration] == 3600
     end
   end
 
