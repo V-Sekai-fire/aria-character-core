@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Planning.CoreInterface do
-  @moduledoc """
-  Provides core planning interfaces for the Aria Engine.
-  """
+@moduledoc """
+Replan from a failure point using HybridPlanner.HybridCoordinatorV2.
+"""
 
   alias Planning.Internal
   alias Core

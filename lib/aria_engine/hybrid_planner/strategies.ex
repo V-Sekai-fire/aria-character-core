@@ -31,9 +31,9 @@ defmodule HybridPlanner.Strategies do
     end
   end
   
-  # Use with HybridCoordinator
-  coordinator = HybridCoordinator.new(%{
-    planning_strategy: MyHTNStrategy,
+  # Use with HybridCoordinatorV2
+coordinator = HybridCoordinatorV2.new(%{
+  planning_strategy: MyHTNStrategy,
     temporal_strategy: STNTemporalStrategy,
     # ... other strategies
   })
