@@ -25,8 +25,8 @@ Current: MCP Tool → validate → convert → AriaEngine.Scheduler → HybridCo
 Converting to a pure data transformer creates clean separation:
 
 ```
-Proposed: MCP Tool (plan transformer) → HybridCoordinatorV2 input format
-          Domain Layer → HybridCoordinatorV2 → [Individual Strategies] → Result
+Proposed: MCP Tool (plan transformer) → HybridCoordinatorV3 input format
+          Domain Layer → HybridCoordinatorV3 → [Individual Strategies] → Result
 ```
 
 **Benefits of Plan Transformer:**
@@ -44,7 +44,7 @@ Proposed: MCP Tool (plan transformer) → HybridCoordinatorV2 input format
 
 ## Decision
 
-Convert `schedule_activities` from a full execution pipeline to a pure data transformer that outputs HybridCoordinatorV2-compatible input format.
+Convert `schedule_activities` from a full execution pipeline to a pure data transformer that outputs HybridCoordinatorV3-compatible input format.
 
 ### Implementation Strategy
 
@@ -54,15 +54,21 @@ Convert `schedule_activities` from a full execution pipeline to a pure data tran
 - Implement pure data transformation functions
 - Preserve all existing validation and conversion logic
 
-**Phase 2: Update MCP Tools**
+**Phase 2: Create HybridCoordinatorV3 and Strategy Adapters**
+- Create `AriaEngine.HybridPlanner.HybridCoordinatorV3` module
+- Test HybridCoordinatorV2 functionality (verify current implementation)
+- Write adapters for existing strategies to work with V3 interface
+- Ensure backward compatibility with V2 strategies through adapters
+
+**Phase 3: Update MCP Tools**
 - Modify `schedule_activities` to use plan transformer
 - Return formatted coordinator input instead of execution results
 - Add conversion metadata for debugging and traceability
 - Maintain backward compatibility during transition
 
-**Phase 3: Update Domain Layer**
-- Ensure HybridCoordinatorV2 can accept converted input format
-- Verify strategy execution works with converted data
+**Phase 4: Update Domain Layer**
+- Ensure HybridCoordinatorV3 can accept converted input format
+- Verify strategy execution works with converted data through adapters
 - Add integration points for direct domain layer execution
 
 ### Plan Transformer Interface
@@ -111,7 +117,7 @@ end
     "original_activities": 5,
     "converted_at": "2025-06-20T14:46:00Z",
     "input_format": "mcp_schedule_activities",
-    "output_format": "hybrid_coordinator_v2"
+    "output_format": "hybrid_coordinator_v3"
   }
 }
 ```
@@ -126,7 +132,20 @@ end
 - [ ] Add comprehensive type specifications and documentation
 - [ ] Create unit tests for plan transformer module
 
-### Phase 2: MCP Tools Update
+### Phase 2: HybridCoordinatorV3 and Strategy Adapters
+
+- [ ] Test HybridCoordinatorV2 functionality (verify current implementation works)
+- [ ] Create `lib/aria_engine/hybrid_planner/hybrid_coordinator_v3.ex`
+- [ ] Design V3 interface based on plan transformer output format
+- [ ] Create strategy adapter interface: `AriaEngine.HybridPlanner.StrategyAdapter`
+- [ ] Write adapters for existing V2 strategies to work with V3:
+  - [ ] Critical Path Method (CPM) adapter
+  - [ ] PERT adapter  
+  - [ ] Resource leveling adapter
+  - [ ] Other existing strategy adapters
+- [ ] Add comprehensive tests for V3 coordinator and adapters
+
+### Phase 3: MCP Tools Update
 
 - [ ] Update `AriaEngine.MCPTools.handle_schedule_activities_tool_call/1`
 - [ ] Replace scheduler execution with plan transformer call
@@ -134,19 +153,21 @@ end
 - [ ] Add conversion metadata to responses
 - [ ] Update error handling for conversion failures
 
-### Phase 3: Integration and Testing
+### Phase 4: Integration and Testing
 
-- [ ] Verify HybridCoordinatorV2 accepts converted input format
-- [ ] Add integration tests for plan transformer → coordinator flow
+- [ ] Verify HybridCoordinatorV3 accepts converted input format
+- [ ] Add integration tests for plan transformer → coordinator V3 flow
+- [ ] Test strategy adapters with real planning scenarios
 - [ ] Update existing tests to expect new response format
 - [ ] Add performance benchmarks for conversion operations
 
-### Phase 4: Documentation and Migration
+### Phase 5: Documentation and Migration
 
 - [ ] Update MCP tool documentation with new response format
 - [ ] Create migration guide for existing MCP clients
 - [ ] Add examples showing how to use converted data
 - [ ] Document integration with domain layer execution
+- [ ] Document strategy adapter pattern for future strategies
 
 ## Success Criteria
 
@@ -155,7 +176,8 @@ end
 - [ ] `schedule_activities` returns coordinator input format instead of execution results
 - [ ] All existing validation and conversion logic is preserved
 - [ ] Plan transformer handles all current input scenarios (empty lists, complex schedules)
-- [ ] Converted data is compatible with HybridCoordinatorV2
+- [ ] Converted data is compatible with HybridCoordinatorV3
+- [ ] Strategy adapters enable V2 strategies to work with V3 interface
 - [ ] Error handling maintains same quality as current implementation
 
 ### Quality Requirements
@@ -293,7 +315,7 @@ end
     "original_activities": 1,
     "converted_at": "2025-06-20T14:46:00Z",
     "input_format": "mcp_schedule_activities",
-    "output_format": "hybrid_coordinator_v2"
+    "output_format": "hybrid_coordinator_v3"
   }
 }
 ```
