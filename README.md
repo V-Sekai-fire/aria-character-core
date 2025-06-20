@@ -46,33 +46,6 @@ mix test  # Runs only working tests
 - **Parallel Processing:** Flow-based coordination for multi-NPC systems
 - **Knowledge Representation:** RDF/SPARQL for NPC decision-making
 
-## Technical Architecture
-
-```
-lib/aria_engine/           # AI Planning Core (partially working)
-├── hybrid_planner/        # Strategy coordination framework
-├── mcp/                   # ✅ Model Context Protocol integration (working)
-├── plan/                  # Core planning algorithms  
-├── timeline/              # Temporal constraint handling
-└── domains/               # Planning domain definitions
-
-lib/aria_storage/          # Content Distribution (broken)
-lib/aria_auth/             # Authentication Framework (partial)
-lib/aria_security/         # Security Integration (partial)
-```
-
-## Current Capabilities
-
-**Actually Working:**
-
-- MCP Integration: Temporal scheduler interface via Model Context Protocol
-- Project Structure: Modular Elixir architecture
-- Development Tooling: Quality/testing/build systems
-
-**Major Gaps:**
-
-- Storage system fundamentally broken
-
 ## MCP Integration
 
 The project includes a working Model Context Protocol server that exposes temporal scheduling capabilities:
@@ -101,7 +74,6 @@ Focus areas for experimental research contributions:
 - **Test Recovery:** Fix disabled tests to restore functionality
 - **Performance Research:** Solve timeout and scaling issues
 - **Integration:** Connect partial systems into working pipelines
-
 
 ## Dependencies
 
