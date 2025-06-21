@@ -20,8 +20,8 @@ defmodule SimpleTravelMethods do
     x = State.get_fact(state, "loc", p)
 
     cond do
-      not is_person(p) -> false
-      not is_location(y) -> false
+      not person?(p) -> false
+      not location?(y) -> false
       x == y -> []
       true -> false
     end
@@ -34,8 +34,8 @@ defmodule SimpleTravelMethods do
     x = State.get_fact(state, "loc", p)
 
     cond do
-      not is_person(p) -> false
-      not is_location(y) -> false
+      not person?(p) -> false
+      not location?(y) -> false
       x == y -> false
       distance(x, y) <= 2 -> [{"walk", [p, x, y]}]
       true -> false
@@ -51,10 +51,10 @@ defmodule SimpleTravelMethods do
     fare = taxi_rate(distance(x, y))
 
     cond do
-      not is_person(p) ->
+      not person?(p) ->
         false
 
-      not is_location(y) ->
+      not location?(y) ->
         false
 
       x == y ->
@@ -90,11 +90,11 @@ defmodule SimpleTravelMethods do
 
   # Helper functions
 
-  defp is_person(p) do
+  defp person?(p) do
     p in ["alice", "bob"]
   end
 
-  defp is_location(loc) do
+  defp location?(loc) do
     loc in ["home_a", "home_b", "park", "station"]
   end
 
@@ -126,8 +126,8 @@ defmodule SimpleTravelMethods do
     x = State.get_fact(state, "loc", p)
 
     cond do
-      not is_person(p) -> false
-      not is_location(y) -> false
+      not person?(p) -> false
+      not location?(y) -> false
       x == y -> false
       distance(x, y) <= 2 -> [{"walk", [p, x, y]}]
       true -> false
@@ -143,10 +143,10 @@ defmodule SimpleTravelMethods do
     fare = taxi_rate(distance(x, y))
 
     cond do
-      not is_person(p) ->
+      not person?(p) ->
         false
 
-      not is_location(y) ->
+      not location?(y) ->
         false
 
       x == y ->

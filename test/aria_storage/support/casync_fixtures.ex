@@ -245,7 +245,7 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
       :small -> create_multi_chunk_caibx(10)
       :medium -> create_multi_chunk_caibx(100)
       :large -> create_multi_chunk_caibx(1000)
-      :xlarge -> create_multi_chunk_caibx(10000)
+      :xlarge -> create_multi_chunk_caibx(10_000)
       _ -> create_minimal_caibx()
     end
   end
