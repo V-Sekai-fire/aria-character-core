@@ -6,7 +6,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilterTest do
 
   alias AriaEngine.Membrane.FormatTransformerFilter
   alias AriaEngine.Membrane.Format.{MCPRequest, MCPResponse, PlanningParams, PlanningResult}
-  alias Membrane.{Buffer, Testing}
+  alias Membrane.{Buffer}
 
   describe "FormatTransformerFilter initialization" do
     test "initializes with default options" do
@@ -14,6 +14,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilterTest do
       assert {[], _state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :success,
         processing_delay_ms: 0,
+        output_format: :auto,
         telemetry_prefix: [:aria_engine, :membrane, :format_transformer_filter]
       })
     end
@@ -23,6 +24,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilterTest do
       assert {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :error,
         processing_delay_ms: 100,
+        output_format: :auto,
         telemetry_prefix: [:test, :format_transformer_filter]
       })
       
@@ -55,6 +57,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilterTest do
       {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :success,
         processing_delay_ms: 0,
+        output_format: :auto,
         telemetry_prefix: [:test, :format_transformer_filter]
       })
       
@@ -95,6 +98,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilterTest do
       {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :error,
         processing_delay_ms: 0,
+        output_format: :auto,
         telemetry_prefix: [:test, :format_transformer_filter]
       })
       
@@ -133,6 +137,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilterTest do
       {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :timeout,
         processing_delay_ms: 0,
+        output_format: :auto,
         telemetry_prefix: [:test, :format_transformer_filter]
       })
       
@@ -175,6 +180,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilterTest do
       {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :success,
         processing_delay_ms: 0,
+        output_format: :auto,
         telemetry_prefix: [:test, :format_transformer_filter]
       })
       
@@ -209,6 +215,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilterTest do
       {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :error,
         processing_delay_ms: 0,
+        output_format: :auto,
         telemetry_prefix: [:test, :format_transformer_filter]
       })
       
@@ -238,6 +245,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilterTest do
       {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :success,
         processing_delay_ms: 0,
+        output_format: :auto,
         telemetry_prefix: [:test, :format_transformer_filter]
       })
       
