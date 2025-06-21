@@ -8,15 +8,15 @@ NOTE: We use elixir 18.
 
 ## Status Overview
 
-| Component           | Status      | Tests        | Notes                                                      |
-|---------------------|-------------|-------------|------------------------------------------------------------|
-| **MCP Integration** | ✅ Done     | 7/7 passing | Stdio scheduler interface fully implemented and stable; duration now in seconds |
-| **Core Planning**   | ✅ Done     | All passing | HTN/STN algorithms fully implemented and stable            |
-| **Storage System**  | ⏸️ Postponed| 0/20+        | Chunk distribution work deferred; not currently maintained  |
-| **Temporal Solver** | ✅ Done     | All passing | STN constraints and temporal scheduling fully implemented and stable |
-| **NPC Management**  | ⏸️ Paused   | Mixed        | Development paused; basic structure exists                 |
-| **Batch Processing**| ⏸️ Paused   | N/A          | Batch helpers and core allocation logic removed; future work paused |
-| **KHR System**      | 🧪 R&D      | N/A          | Experimental research and development ongoing              |
+| Component            | Status       | Tests       | Notes                                                                           |
+| -------------------- | ------------ | ----------- | ------------------------------------------------------------------------------- |
+| **MCP Integration**  | ✅ Done      | 7/7 passing | Stdio scheduler interface fully implemented and stable; duration now in seconds |
+| **Core Planning**    | ✅ Done      | All passing | HTN/STN algorithms fully implemented and stable                                 |
+| **Storage System**   | ⏸️ Postponed | 0/20+       | Chunk distribution work deferred; not currently maintained                      |
+| **Temporal Solver**  | ✅ Done      | All passing | STN constraints and temporal scheduling fully implemented and stable            |
+| **NPC Management**   | ⏸️ Paused    | Mixed       | Development paused; basic structure exists                                      |
+| **Batch Processing** | ⏸️ Paused    | N/A         | Batch helpers and core allocation logic removed; future work paused             |
+| **KHR System**       | 🧪 R&D       | N/A         | Experimental research and development ongoing                                   |
 
 **Current Reality:** 333 tests total, 326 passing, 7 failing (primarily MCP integration), 1 skipped.
 
@@ -32,12 +32,12 @@ mix test  # Runs only working tests
 
 ## What This Is/Isn't
 
-| ✅ This IS | ❌ This is NOT |
-|------------|----------------|
-| Research codebase exploring AI planning | Playable game |
-| Academic investigation of HTN+STN hybrid planning | Production software |
-| Experimental NPC behavior systems | Stable API/framework |
-| Development environment for planning algorithms | Ready for end users |
+| ✅ This IS                                        | ❌ This is NOT       |
+| ------------------------------------------------- | -------------------- |
+| Research codebase exploring AI planning           | Playable game        |
+| Academic investigation of HTN+STN hybrid planning | Production software  |
+| Experimental NPC behavior systems                 | Stable API/framework |
+| Development environment for planning algorithms   | Ready for end users  |
 
 ## Research Focus
 
@@ -50,19 +50,22 @@ mix test  # Runs only working tests
 
 ## MCP Integration
 
-The project includes a working Model Context Protocol server that exposes temporal scheduling capabilities:
+The project includes a working Model Context Protocol (MCP) server that exposes temporal scheduling and pipeline management capabilities.
 
-```bash
-# Start MCP server (stdio mode for IDE integration)
-mix mcp.stdio
-```
+### Available Tools
 
-**Available Tools:**
-
-- `schedule_activities`: Scheduling with hybrid planning
-- Handles empty activity lists (valid mathematical solution)
-- Resource conflict detection and analysis
-- Dependency validation and circular dependency detection
+| Tool Name                     | Description                                                                              |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| schedule_activities           | Schedule activities using Membrane pipeline architecture with multiple strategy options  |
+| validate_scheduling_solutions | Validate scheduling solutions by comparing Hybrid solver with MiniZinc constraint solver |
+| configure_pipeline_layout     | Configure and create a new Membrane pipeline with specified topology and elements        |
+| setup_element_config          | Validate and setup configuration for pipeline elements                                   |
+| start_planning_pipeline       | Start a new planning pipeline with predefined topology                                   |
+| stop_planning_pipeline        | Stop an active planning pipeline                                                         |
+| get_pipeline_status           | Get detailed status information for a specific pipeline                                  |
+| get_pipeline_metrics          | Get overall metrics for the pipeline manager                                             |
+| list_active_pipelines         | List all currently active pipelines                                                      |
+| send_pipeline_request         | Send a request to a specific active pipeline                                             |
 
 ## Development Priorities
 
