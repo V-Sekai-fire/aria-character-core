@@ -91,7 +91,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
           is_binary(duration_val) ->
             case :iso8601.parse_duration(String.to_charlist(duration_val)) do
               parsed when is_list(parsed) ->
-                keys = [:years, :months, :days, :hours, :minutes, :seconds]
+                _keys = [:years, :months, :days, :hours, :minutes, :seconds]
                 map = Enum.into(parsed, %{})
                 %{
                   years: Map.get(map, :years, 0),
@@ -250,7 +250,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   decomposing to the corresponding durative action.
   """
   @spec create_activity_task_methods([activity()], [Entity.t()], [Resource.t()]) :: task_methods()
-  def create_activity_task_methods(activities, entities, resources) do
+  def create_activity_task_methods(activities, _entities, _resources) do
     activities
     |> Enum.reduce(%{}, fn activity, acc ->
       task_name = activity["id"]  # Use activity ID directly as task name
@@ -329,7 +329,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
         is_binary(duration_val) ->
           case :iso8601.parse_duration(String.to_charlist(duration_val)) do
             parsed when is_list(parsed) ->
-              keys = [:years, :months, :days, :hours, :minutes, :seconds]
+              _keys = [:years, :months, :days, :hours, :minutes, :seconds]
               map = Enum.into(parsed, %{})
               %{
                 years: Map.get(map, :years, 0),

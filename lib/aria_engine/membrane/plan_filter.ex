@@ -49,10 +49,7 @@ defmodule AriaEngine.Membrane.PlanFilter do
     case transform_mcp_request(mcp_request) do
       {:ok, planning_params} ->
         # Extract activities count for telemetry
-        activities_count = case MCPRequest.get_tool_params(mcp_request, "schedule_activities") do
-          {:ok, params} -> length(params["activities"] || [])
-          {:error, _} -> 0
-        end
+        activities_count = length(mcp_request.parameters["activities"] || [])
 
         emit_telemetry(state.telemetry_prefix, :transformation_success, %{
           request_id: mcp_request.request_id,
@@ -87,44 +84,36 @@ defmodule AriaEngine.Membrane.PlanFilter do
   end
 
   defp transform_mcp_request(%MCPRequest{} = request) do
-    # Extract parameters from the MCP request
-    case MCPRequest.get_tool_params(request, "schedule_activities") do
-      {:ok, mcp_params} ->
-        case PlanTransformer.convert_to_planning_params(mcp_params) do
-          {:ok, transformer_result} ->
-            planning_params = %PlanningParams{
-              domain: transformer_result.domain,
-              state: transformer_result.initial_state,
-              goals: transformer_result.goals,
-              options: [],
-              request_id: request.request_id,
-              conversion_metadata: %{
-                original_activities: length(mcp_params["activities"] || []),
-                converted_at: DateTime.utc_now(),
-                schedule_name: mcp_params["schedule_name"],
-                transformer_metadata: transformer_result.metadata
-              }
-            }
-            {:ok, planning_params}
-
-          {:error, reason} ->
-            {:error, reason}
-        end
+    # Extract parameters directly from the MCP request
+    mcp_params = request.parameters
+    
+    case PlanTransformer.convert_to_planning_params(mcp_params) do
+      {:ok, transformer_result} ->
+        planning_params = %PlanningParams{
+          domain: transformer_result.domain,
+          state: transformer_result.initial_state,
+          goals: transformer_result.goals,
+          options: [],
+          request_id: request.request_id,
+          conversion_metadata: %{
+            original_activities: length(mcp_params["activities"] || []),
+            converted_at: DateTime.utc_now(),
+            schedule_name: mcp_params["schedule_name"],
+            transformer_metadata: transformer_result.metadata
+          }
+        }
+        {:ok, planning_params}
 
       {:error, reason} ->
-        {:error, "Tool parameter extraction failed: #{reason}"}
+        {:error, reason}
     end
   end
 
   defp create_error_planning_params(%MCPRequest{} = request, reason) do
     # Try to extract activities count for error metadata, handle malformed data
-    activities_count = case MCPRequest.get_tool_params(request, "schedule_activities") do
-      {:ok, params} -> 
-        case params["activities"] do
-          activities when is_list(activities) -> length(activities)
-          _ -> 0
-        end
-      {:error, _} -> 0
+    activities_count = case request.parameters["activities"] do
+      activities when is_list(activities) -> length(activities)
+      _ -> 0
     end
 
     %PlanningParams{

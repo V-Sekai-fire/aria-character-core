@@ -182,7 +182,7 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
 
   defp process_mcp_request(%MCPRequest{} = request, state) do
     cond do
-      MCPRequest.is_tool?(request, "schedule_activities") ->
+      request.tool_name == "schedule_activities" ->
         process_schedule_request(request, state)
         
       state.allow_non_schedule_requests ->
@@ -194,13 +194,9 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
   end
 
   defp process_schedule_request(%MCPRequest{} = request, state) do
-    case MCPRequest.get_tool_params(request, "schedule_activities") do
-      {:ok, schedule_params} ->
-        convert_schedule_to_planning_params(request, schedule_params, state)
-        
-      {:error, reason} ->
-        {:error, "Failed to extract schedule parameters: #{reason}", :validation_error}
-    end
+    # Extract parameters directly from the request
+    schedule_params = request.parameters
+    convert_schedule_to_planning_params(request, schedule_params, state)
   end
 
   defp convert_schedule_to_planning_params(%MCPRequest{} = request, schedule_params, state) do

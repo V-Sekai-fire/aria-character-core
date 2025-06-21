@@ -12,7 +12,6 @@ defmodule AriaEngine.Membrane.PlannerFilter do
 
   alias AriaEngine.Membrane.Format.{PlanningParams, PlanningResult}
   alias AriaEngine.HybridPlanner.HybridCoordinatorV2
-  alias AriaEngine.Scheduler
   alias Membrane.Buffer
 
   def_input_pad :input,
@@ -177,21 +176,6 @@ defmodule AriaEngine.Membrane.PlannerFilter do
     end
   end
 
-  defp convert_goals_to_activities(goals) when is_list(goals) do
-    Enum.with_index(goals, fn goal, index ->
-      %{
-        id: "goal_activity_#{index}",
-        name: "Goal #{index + 1}",
-        duration: 3600,  # 1 hour in seconds
-        dependencies: [],
-        required_capabilities: [],
-        required_resources: [],
-        goal_data: goal
-      }
-    end)
-  end
-
-  defp convert_goals_to_activities(_), do: []
 
   defp extract_strategy_info(plan_result) when is_map(plan_result) do
     Map.get(plan_result, :strategy_used, "unknown")
