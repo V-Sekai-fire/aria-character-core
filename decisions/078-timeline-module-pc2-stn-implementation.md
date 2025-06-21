@@ -1,7 +1,8 @@
 # ADR-078: Timeline Module with PC-2 STN Implementation
 
-**Status:** Active  
+**Status:** Deferred  
 **Date:** June 15, 2025  
+**Closure Date:** June 21, 2025  
 **Extracted from:** ADR-075 Task 10
 
 ## Context
@@ -156,4 +157,7 @@ Implement `AriaEngine.Timeline` module with the following architecture:
 
 ## Progress Notes
 
-_Progress updates will be added here as work proceeds._
+**June 21, 2025 - Segment Closure:**
+This ADR is being deferred as part of the temporal planning segment closure. The core temporal planning infrastructure has been successfully implemented through HybridCoordinatorV2 with STN temporal strategies, providing the essential functionality needed for the current segment. This comprehensive timeline module with PC-2 implementation represents future enhancement work that can be pursued in subsequent development phases.
+
+**Current Status:** Deferred to future development phases. Core temporal planning needs are met by existing HybridCoordinatorV2 infrastructure.

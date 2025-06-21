@@ -1,7 +1,8 @@
 # ADR-088: Aria Town - RDF-Powered NPC Demonstration System
 
-**Status:** Active  
+**Status:** Future Work  
 **Date:** June 17, 2025  
+**Closure Date:** June 21, 2025  
 **Priority:** Medium - Demo Implementation
 
 ## Context
@@ -219,6 +220,12 @@ end
 - **ADR-085**: Enhanced Scheduling System (foundation for conflict resolution)
 - **ADR-087**: Entity-Agent Timeline Graph Architecture (NPC state management)
 
+## Segment Closure Note
+
+**June 21, 2025:** This ADR is being marked as "Future Work" as part of the temporal planning segment closure. While the Enhanced Scheduling System (ADR-085) provides the foundation for NPC coordination, this demonstration system represents application-layer work that extends beyond the core temporal planning infrastructure. The RDF-powered town simulation would be an excellent showcase for the temporal planning capabilities but is not essential for the core functionality.
+
+**Current Status:** Future work for demonstration and application development phases.
+
 ---
 
-**Ready for Implementation**: This ADR establishes a complete, time-bounded demonstration system that showcases Enhanced Scheduling through compelling 20-minute social simulation cycles.
+**Ready for Future Implementation**: This ADR establishes a complete, time-bounded demonstration system that showcases Enhanced Scheduling through compelling 20-minute social simulation cycles.

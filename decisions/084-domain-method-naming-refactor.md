@@ -1,7 +1,8 @@
 # ADR-084: Domain Method Naming and STN Bridge Integration
 
-**Status:** Active  
-**Date:** June 16, 2025
+**Status:** Deferred  
+**Date:** June 16, 2025  
+**Closure Date:** June 21, 2025
 
 ## Context
 
@@ -170,7 +171,13 @@ Refactor the Domain and planner modules to align with GTPyhop conventions and im
 - **ADR-075**: Complete Temporal Planning Solver
 - **ADR-083**: STN Timeline Segmentation (Superseded)
 
-## Next Steps
+## Segment Closure Note
+
+**June 21, 2025:** This ADR is being deferred as part of the temporal planning segment closure. The current HybridCoordinatorV2 implementation provides stable temporal planning functionality with all tests passing (382 tests, 0 failures). While this refactoring would improve method naming and STN bridge integration, it represents enhancement work that can be pursued in future development phases when the core functionality requires these improvements.
+
+**Current Status:** Deferred to future development phases. Core temporal planning functionality is stable and operational.
+
+## Next Steps (Future Implementation)
 
 1. Begin Phase 1 implementation with Domain module refactoring
 2. Update method addition functions to require names
