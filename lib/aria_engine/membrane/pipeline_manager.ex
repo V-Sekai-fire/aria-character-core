@@ -350,6 +350,26 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
+  defp get_predefined_config(:schedule_pipeline) do
+    %{
+      topology: :schedule_processing,
+      elements: [
+        %{type: MCPSource, id: :mcp_source, config: %{}},
+        %{type: ScheduleFilter, id: :schedule_filter, config: %{strict_validation: true}},
+        %{type: AriaEngine.Membrane.PlannerFilter, id: :planner_filter, config: %{timeout_ms: 30_000}},
+        %{type: ResponseFilter, id: :response_filter, config: %{}},
+        %{type: MCPSink, id: :mcp_sink, config: %{}}
+      ],
+      connections: [
+        %{from: {:mcp_source, :output}, to: {:schedule_filter, :input}},
+        %{from: {:schedule_filter, :output}, to: {:planner_filter, :input}},
+        %{from: {:planner_filter, :output}, to: {:response_filter, :input}},
+        %{from: {:response_filter, :output}, to: {:mcp_sink, :input}}
+      ],
+      supervision_strategy: :one_for_one
+    }
+  end
+
   defp get_predefined_config(topology) do
     Logger.warning("Unknown predefined topology: #{topology}, using default")
     get_predefined_config(:echo_pipeline)
