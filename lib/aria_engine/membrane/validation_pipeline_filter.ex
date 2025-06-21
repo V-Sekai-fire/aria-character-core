@@ -36,11 +36,9 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilter do
 
   @impl true
   def handle_init(_ctx, opts) do
-    Logger.info("🔧 Initializing Validation Pipeline Filter")
 
     # Check if MiniZinc is available
     minizinc_available = MiniZincSolver.check_availability()
-    Logger.info("🔧 MiniZinc available: #{minizinc_available}")
 
     state = %{
       timeout: opts.timeout,
@@ -53,30 +51,24 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilter do
 
   @impl true
   def handle_buffer(:input, buffer, _ctx, state) do
-    Logger.info("🔧 Validation Pipeline received buffer")
 
     try do
       # Parse the incoming MCP scheduling request
       mcp_request = Jason.decode!(buffer.payload)
-      Logger.info("🔧 Processing validation request")
 
       # Extract schedule_activities parameters
       params = mcp_request["params"]["arguments"]
 
       # Step 1: Solve with Hybrid solver (using existing MCP format)
       hybrid_result = HybridSolver.solve(params, state)
-      Logger.info("✅ Solved with Hybrid: #{hybrid_result.status}")
 
       # Step 2: Handle MiniZinc solving based on availability
       minizinc_result =
         if state.minizinc_available do
           MiniZincSolver.solve(params, state)
         else
-          Logger.info("⚠️ MiniZinc not available, skipping")
           %{status: :unavailable, reason: "MiniZinc not installed"}
         end
-
-      Logger.info("✅ MiniZinc result: #{minizinc_result.status}")
 
       # Step 3: Compare results and validate
       validation_result =
@@ -86,10 +78,6 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilter do
           params,
           state
         )
-
-      Logger.info("✅ Validation complete: #{validation_result.overall_status}")
-
-      # Create response buffer
       response =
         ResponseFormatter.create_validation_response(
           validation_result,
@@ -114,8 +102,6 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilter do
       {[buffer: {:output, response_buffer}], new_state}
     rescue
       error ->
-        Logger.error("❌ Validation Pipeline error: #{inspect(error)}")
-
         error_response = %{
           "id" => get_request_id(buffer.payload),
           "jsonrpc" => "2.0",

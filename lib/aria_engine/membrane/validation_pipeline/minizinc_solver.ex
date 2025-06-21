@@ -17,8 +17,6 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
   Solves a scheduling problem using MiniZinc.
   """
   def solve(params, state) do
-    Logger.info("🔧 Calling MiniZinc solver")
-
     # For widget assembly problems, use the existing model
     schedule_name = params["schedule_name"] || ""
 
@@ -33,21 +31,14 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
   # Private functions
 
   defp solve_stn_temporal(params, state) do
-    Logger.info("🔧 Solving STN temporal problem with MiniZinc")
-
     try do
       # Convert MCP schedule_activities format to MiniZinc template variables
       template_vars = convert_to_minizinc_format(params)
-      
-      Logger.info("🔧 Template variables: #{inspect(template_vars, pretty: true)}")
 
       # Use the EEx-based executor to solve with STN temporal template
       case Executor.exec("stn_temporal", template_vars: template_vars, timeout: state.timeout) do
         {:ok, result} ->
-          Logger.info("✅ MiniZinc STN temporal completed in #{result.solve_time_ms}ms")
-          
           converted_solution = convert_minizinc_solution(result.solution, params)
-          Logger.info("🎯 MiniZinc Solution: #{inspect(converted_solution, pretty: true)}")
           
           %{
             status: :success,
@@ -57,8 +48,6 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
           }
 
         {:error, error} ->
-          Logger.error("❌ MiniZinc STN temporal failed: #{inspect(error)}")
-          
           %{
             status: :error,
             error: "MiniZinc STN temporal solver failed: #{inspect(error)}",
@@ -67,8 +56,6 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
       end
     rescue
       error ->
-        Logger.error("❌ STN temporal conversion failed: #{inspect(error)}")
-        
         %{
           status: :error,
           error: "STN temporal conversion failed: #{Exception.message(error)}",
@@ -90,18 +77,14 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
       "widget_assembly.mzn"
     ]
 
-    Logger.info("🔧 Running: minizinc #{Enum.join(cmd_args, " ")}")
-
     case System.cmd("minizinc", cmd_args, stderr_to_stdout: true) do
       {output, 0} ->
         end_time = System.monotonic_time(:millisecond)
         solve_time = end_time - start_time
 
-        Logger.info("✅ MiniZinc completed in #{solve_time}ms")
 
         # Parse MiniZinc output
         solution = parse_output(output)
-        Logger.info("🎯 MiniZinc Widget Assembly Solution: #{inspect(solution, pretty: true)}")
 
         %{
           status: :success,
@@ -113,9 +96,6 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
       {output, exit_code} ->
         end_time = System.monotonic_time(:millisecond)
         solve_time = end_time - start_time
-
-        Logger.error("❌ MiniZinc failed with exit code #{exit_code}")
-
         %{
           status: :error,
           error: "MiniZinc solver failed with exit code #{exit_code}",

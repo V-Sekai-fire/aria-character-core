@@ -26,21 +26,17 @@ defmodule Timeline.Internal.STN.MiniZincSolver do
       {:ok, template_vars} ->
         case Executor.exec("stn_temporal", template_vars: template_vars) do
           {:ok, %{status: :success, solution: solution}} ->
-            Logger.debug("✅ MiniZinc STN solve successful")
             update_stn_with_solution(stn, solution)
             
           {:ok, %{status: :error}} ->
-            Logger.debug("❌ MiniZinc STN solve failed - inconsistent")
             %{stn | consistent: false}
             
           {:error, reason} ->
-            Logger.warning("⚠️ MiniZinc execution failed: #{inspect(reason)}")
             # Fall back to marking as inconsistent
             %{stn | consistent: false}
         end
         
       {:error, reason} ->
-        Logger.warning("⚠️ STN to MiniZinc conversion failed: #{reason}")
         %{stn | consistent: false}
     end
   end
@@ -74,9 +70,6 @@ defmodule Timeline.Internal.STN.MiniZincSolver do
         constraints: constraints,
         time_point_map: time_point_map
       }
-      
-      Logger.debug("🔍 STN converted to MiniZinc: #{length(time_points)} time points, #{length(constraints)} constraints")
-      
       {:ok, template_vars}
     end
   end
