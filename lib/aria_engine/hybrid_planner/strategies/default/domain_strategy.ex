@@ -4,7 +4,7 @@
 defmodule HybridPlanner.Strategies.Default.DomainStrategy do
   @moduledoc """
   Default domain strategy implementation wrapping existing domain operations.
-  
+
   This strategy encapsulates domain queries and metadata operations while
   providing the clean strategy interface defined in ADR-091.
   """
@@ -25,8 +25,9 @@ defmodule HybridPlanner.Strategies.Default.DomainStrategy do
             type: :primitive_action,
             available: true
           }
+
           {:ok, metadata}
-        
+
         nil ->
           {:error, "Action #{action_name} not found in domain"}
       end
@@ -42,7 +43,7 @@ defmodule HybridPlanner.Strategies.Default.DomainStrategy do
       case Map.get(domain.task_methods, task_name) do
         methods when is_list(methods) ->
           {:ok, methods}
-        
+
         nil ->
           {:ok, []}
       end
@@ -59,9 +60,11 @@ defmodule HybridPlanner.Strategies.Default.DomainStrategy do
         {predicate, subject, _value} ->
           # Look for unigoal methods for this predicate
           goal_key = "#{predicate}_#{subject}"
+
           case Map.get(domain.unigoal_methods, goal_key) do
             methods when is_list(methods) ->
               {:ok, methods}
+
             nil ->
               # Also check for generic predicate methods
               case Map.get(domain.unigoal_methods, predicate) do
@@ -69,7 +72,7 @@ defmodule HybridPlanner.Strategies.Default.DomainStrategy do
                 nil -> {:ok, []}
               end
           end
-        
+
         _ ->
           {:ok, []}
       end
@@ -83,35 +86,39 @@ defmodule HybridPlanner.Strategies.Default.DomainStrategy do
   def validate_domain(domain, _opts \\ []) do
     try do
       errors = []
-      
+
       # Check actions
-      errors = if is_map(domain.actions) do
-        errors
-      else
-        ["Actions must be a map" | errors]
-      end
-      
+      errors =
+        if is_map(domain.actions) do
+          errors
+        else
+          ["Actions must be a map" | errors]
+        end
+
       # Check task methods
-      errors = if is_map(domain.task_methods) do
-        errors
-      else
-        ["Task methods must be a map" | errors]
-      end
-      
+      errors =
+        if is_map(domain.task_methods) do
+          errors
+        else
+          ["Task methods must be a map" | errors]
+        end
+
       # Check unigoal methods
-      errors = if is_map(domain.unigoal_methods) do
-        errors
-      else
-        ["Unigoal methods must be a map" | errors]
-      end
-      
+      errors =
+        if is_map(domain.unigoal_methods) do
+          errors
+        else
+          ["Unigoal methods must be a map" | errors]
+        end
+
       # Check multigoal methods
-      errors = if is_list(domain.multigoal_methods) do
-        errors
-      else
-        ["Multigoal methods must be a list" | errors]
-      end
-      
+      errors =
+        if is_list(domain.multigoal_methods) do
+          errors
+        else
+          ["Multigoal methods must be a list" | errors]
+        end
+
       case errors do
         [] -> {:ok, true}
         error_list -> {:error, "Domain validation failed: #{Enum.join(error_list, ", ")}"}

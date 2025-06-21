@@ -4,7 +4,7 @@
 defmodule AriaEngine.Membrane.PlanFilter do
   @moduledoc """
   Membrane Filter element that converts MCP requests to planning parameters.
-  
+
   This element validates MCP input and transforms it into the format expected
   by the HybridCoordinator planning system using the existing PlanTransformer.
   """
@@ -15,19 +15,23 @@ defmodule AriaEngine.Membrane.PlanFilter do
   alias AriaEngine.HybridPlanner.PlanTransformer
   alias Membrane.Buffer
 
-  def_input_pad :input,
+  def_input_pad(:input,
     accepted_format: MCPRequest,
     flow_control: :auto
+  )
 
-  def_output_pad :output,
+  def_output_pad(:output,
     accepted_format: PlanningParams,
     flow_control: :auto
+  )
 
-  def_options telemetry_prefix: [
-    spec: [atom()],
-    default: [:aria_engine, :membrane, :plan_filter],
-    description: "Telemetry event prefix for monitoring"
-  ]
+  def_options(
+    telemetry_prefix: [
+      spec: [atom()],
+      default: [:aria_engine, :membrane, :plan_filter],
+      description: "Telemetry event prefix for monitoring"
+    ]
+  )
 
   @impl true
   def handle_init(_ctx, opts) do
@@ -37,7 +41,7 @@ defmodule AriaEngine.Membrane.PlanFilter do
       success_count: 0,
       error_count: 0
     }
-    
+
     {[], state}
   end
 
@@ -58,9 +62,11 @@ defmodule AriaEngine.Membrane.PlanFilter do
         })
 
         output_buffer = %Buffer{payload: planning_params}
-        new_state = %{state | 
-          processed_count: state.processed_count + 1,
-          success_count: state.success_count + 1
+
+        new_state = %{
+          state
+          | processed_count: state.processed_count + 1,
+            success_count: state.success_count + 1
         }
 
         {[buffer: {:output, output_buffer}], new_state}
@@ -74,9 +80,11 @@ defmodule AriaEngine.Membrane.PlanFilter do
 
         error_params = create_error_planning_params(mcp_request, reason)
         output_buffer = %Buffer{payload: error_params}
-        new_state = %{state | 
-          processed_count: state.processed_count + 1,
-          error_count: state.error_count + 1
+
+        new_state = %{
+          state
+          | processed_count: state.processed_count + 1,
+            error_count: state.error_count + 1
         }
 
         {[buffer: {:output, output_buffer}], new_state}
@@ -86,7 +94,7 @@ defmodule AriaEngine.Membrane.PlanFilter do
   defp transform_mcp_request(%MCPRequest{} = request) do
     # Extract parameters directly from the MCP request
     mcp_params = request.parameters
-    
+
     case PlanTransformer.convert_to_planning_params(mcp_params) do
       {:ok, transformer_result} ->
         planning_params = %PlanningParams{
@@ -102,6 +110,7 @@ defmodule AriaEngine.Membrane.PlanFilter do
             transformer_metadata: transformer_result.metadata
           }
         }
+
         {:ok, planning_params}
 
       {:error, reason} ->
@@ -111,10 +120,11 @@ defmodule AriaEngine.Membrane.PlanFilter do
 
   defp create_error_planning_params(%MCPRequest{} = request, reason) do
     # Try to extract activities count for error metadata, handle malformed data
-    activities_count = case request.parameters["activities"] do
-      activities when is_list(activities) -> length(activities)
-      _ -> 0
-    end
+    activities_count =
+      case request.parameters["activities"] do
+        activities when is_list(activities) -> length(activities)
+        _ -> 0
+      end
 
     %PlanningParams{
       domain: nil,
@@ -143,7 +153,7 @@ defmodule AriaEngine.Membrane.PlanFilter do
   @spec get_stats(pid()) :: map()
   def get_stats(filter_pid) do
     send(filter_pid, {:get_stats, self()})
-    
+
     receive do
       {:plan_filter_stats, stats} -> stats
     after
@@ -159,7 +169,7 @@ defmodule AriaEngine.Membrane.PlanFilter do
       error_count: state.error_count,
       success_rate: calculate_success_rate(state.success_count, state.processed_count)
     }
-    
+
     send(from, {:plan_filter_stats, stats})
     {[], state}
   end
@@ -172,6 +182,7 @@ defmodule AriaEngine.Membrane.PlanFilter do
   end
 
   def calculate_success_rate(0, 0), do: 0.0
+
   def calculate_success_rate(success_count, total_count) do
     Float.round(success_count / total_count * 100, 2)
   end

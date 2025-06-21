@@ -5,13 +5,13 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   @moduledoc """
   require Logger
   Strategy-based hybrid goal task reentrant temporal planner using dependency injection.
-  
+
   This version implements the Function as Object pattern with injected strategy
   dependencies as defined in ADR-091. All dependencies are provided through
   strategy objects, enabling maximum modularity, testability, and flexibility.
-  
+
   ## Strategy Architecture
-  
+
   The coordinator accepts six strategy objects:
   - PlanningStrategy: HTN planning logic
   - TemporalStrategy: Temporal constraint management
@@ -19,9 +19,9 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   - DomainStrategy: Domain queries and metadata
   - LoggingStrategy: Logging and progress tracking
   - ExecutionStrategy: Plan execution and failure recovery
-  
+
   ## Usage
-  
+
       # Create strategies
       strategies = %{
         planning_strategy: HybridPlanner.Strategies.Default.HTNPlanningStrategy,
@@ -58,14 +58,14 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   ]
 
   @type t :: %__MODULE__{
-    planning_strategy: module(),
-    temporal_strategy: module(),
-    state_strategy: module(),
-    domain_strategy: module(),
-    logging_strategy: module(),
-    execution_strategy: module(),
-    metadata: map()
-  }
+          planning_strategy: module(),
+          temporal_strategy: module(),
+          state_strategy: module(),
+          domain_strategy: module(),
+          logging_strategy: module(),
+          execution_strategy: module(),
+          metadata: map()
+        }
 
   @type plan_result :: {:ok, map()} | {:error, String.t()}
   @type execution_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
@@ -75,7 +75,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   @doc """
   Create a new hybrid coordinator with injected strategy dependencies.
-  
+
   This implements the Function as Object pattern - the coordinator becomes
   a composable object containing strategy functions as data.
   """
@@ -84,15 +84,16 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
     # Validate that all required strategies are provided
     required_strategies = [
       :planning_strategy,
-      :temporal_strategy, 
+      :temporal_strategy,
       :state_strategy,
       :domain_strategy,
       :logging_strategy,
       :execution_strategy
     ]
 
-    missing_strategies = required_strategies
-    |> Enum.filter(fn strategy -> not Map.has_key?(strategies, strategy) end)
+    missing_strategies =
+      required_strategies
+      |> Enum.filter(fn strategy -> not Map.has_key?(strategies, strategy) end)
 
     if length(missing_strategies) > 0 do
       raise ArgumentError, "Missing required strategies: #{inspect(missing_strategies)}"
@@ -140,63 +141,95 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   @doc """
   Plan goals using injected planning and temporal strategies.
-  
+
   Pure Function as Object implementation - all dependencies are injected strategies.
   """
   @spec plan(t(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) :: plan_result()
   def plan(%__MODULE__{} = coordinator, domain, %AriaEngine.StateV2{} = state, goals, opts \\ []) do
     _verbose = Keyword.get(opts, :verbose, 0)
-    
+
     # Log start using injected logging strategy
-    coordinator.logging_strategy.log_progress("planning", %{
-      status: "started",
-      goals: length(goals),
-      domain: domain.name
-    }, opts)
+    coordinator.logging_strategy.log_progress(
+      "planning",
+      %{
+        status: "started",
+        goals: length(goals),
+        domain: domain.name
+      },
+      opts
+    )
 
     try do
       # Phase 1: HTN Planning using injected planning strategy
       case coordinator.planning_strategy.plan(domain, state, goals, opts) do
         {:ok, solution_tree} ->
-          coordinator.logging_strategy.log_progress("planning", %{
-            status: "htn_completed",
-            solution_tree_size: count_solution_tree_nodes(solution_tree)
-          }, opts)
+          coordinator.logging_strategy.log_progress(
+            "planning",
+            %{
+              status: "htn_completed",
+              solution_tree_size: count_solution_tree_nodes(solution_tree)
+            },
+            opts
+          )
 
           # Phase 2: Temporal Validation using injected temporal strategy
           case add_temporal_constraints_to_plan(coordinator, solution_tree, domain, opts) do
             {:ok, temporal_constraints} ->
               # Phase 3: Validate temporal consistency
-              case coordinator.temporal_strategy.validate_temporal_consistency(temporal_constraints, opts) do
+              case coordinator.temporal_strategy.validate_temporal_consistency(
+                     temporal_constraints,
+                     opts
+                   ) do
                 {:ok, true} ->
-                  coordinator.logging_strategy.log_progress("planning", %{
-                    status: "completed_successfully"
-                  }, opts)
+                  coordinator.logging_strategy.log_progress(
+                    "planning",
+                    %{
+                      status: "completed_successfully"
+                    },
+                    opts
+                  )
 
                   # Return composite plan with both HTN and temporal information
-                  {:ok, %{
-                    solution_tree: solution_tree,
-                    temporal_constraints: temporal_constraints,
-                    metadata: %{
-                      goals: goals,
-                      domain_name: domain.name,
-                      planning_time: System.system_time(:millisecond),
-                      strategy_coordinator: coordinator.metadata
-                    }
-                  }}
+                  {:ok,
+                   %{
+                     solution_tree: solution_tree,
+                     temporal_constraints: temporal_constraints,
+                     metadata: %{
+                       goals: goals,
+                       domain_name: domain.name,
+                       planning_time: System.system_time(:millisecond),
+                       strategy_coordinator: coordinator.metadata
+                     }
+                   }}
 
                 {:ok, false} ->
                   error_msg = "Temporal constraints are inconsistent"
-                  coordinator.logging_strategy.log_error(error_msg, %{phase: "temporal_validation"}, opts)
+
+                  coordinator.logging_strategy.log_error(
+                    error_msg,
+                    %{phase: "temporal_validation"},
+                    opts
+                  )
+
                   {:error, error_msg}
 
                 {:error, reason} ->
-                  coordinator.logging_strategy.log_error(reason, %{phase: "temporal_validation"}, opts)
+                  coordinator.logging_strategy.log_error(
+                    reason,
+                    %{phase: "temporal_validation"},
+                    opts
+                  )
+
                   {:error, "Temporal validation failed: #{reason}"}
               end
 
             {:error, reason} ->
-              coordinator.logging_strategy.log_error(reason, %{phase: "temporal_constraint_creation"}, opts)
+              coordinator.logging_strategy.log_error(
+                reason,
+                %{phase: "temporal_constraint_creation"},
+                opts
+              )
+
               {:error, "Failed to create temporal constraints: #{reason}"}
           end
 
@@ -215,11 +248,22 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   @doc """
   Execute a plan using injected execution strategy.
   """
-  @spec execute(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map(), keyword()) :: execution_result()
-  def execute(%__MODULE__{} = coordinator, domain, %AriaEngine.StateV2{} = initial_state, plan, opts \\ []) do
-    coordinator.logging_strategy.log_progress("execution", %{
-      status: "started"
-    }, opts)
+  @spec execute(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map(), keyword()) ::
+          execution_result()
+  def execute(
+        %__MODULE__{} = coordinator,
+        domain,
+        %AriaEngine.StateV2{} = initial_state,
+        plan,
+        opts \\ []
+      ) do
+    coordinator.logging_strategy.log_progress(
+      "execution",
+      %{
+        status: "started"
+      },
+      opts
+    )
 
     try do
       # Extract solution tree from composite plan
@@ -233,11 +277,21 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
         strategies = extract_strategies_map(coordinator)
         enhanced_opts = Keyword.put(opts, :domain, domain)
 
-        case coordinator.execution_strategy.execute_plan(solution_tree, initial_state, strategies, enhanced_opts) do
+        case coordinator.execution_strategy.execute_plan(
+               solution_tree,
+               initial_state,
+               strategies,
+               enhanced_opts
+             ) do
           {:ok, final_state} ->
-            coordinator.logging_strategy.log_progress("execution", %{
-              status: "completed_successfully"
-            }, opts)
+            coordinator.logging_strategy.log_progress(
+              "execution",
+              %{
+                status: "completed_successfully"
+              },
+              opts
+            )
+
             {:ok, final_state}
 
           {:error, reason} ->
@@ -256,12 +310,24 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   @doc """
   Replan from a failure point using injected planning and temporal strategies.
   """
-  @spec replan(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map(), String.t(), keyword()) :: replan_result()
-  def replan(%__MODULE__{} = coordinator, domain, %AriaEngine.StateV2{} = state, plan, fail_node_id, opts \\ []) do
-    coordinator.logging_strategy.log_progress("replanning", %{
-      status: "started",
-      fail_node_id: fail_node_id
-    }, opts)
+  @spec replan(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map(), String.t(), keyword()) ::
+          replan_result()
+  def replan(
+        %__MODULE__{} = coordinator,
+        domain,
+        %AriaEngine.StateV2{} = state,
+        plan,
+        fail_node_id,
+        opts \\ []
+      ) do
+    coordinator.logging_strategy.log_progress(
+      "replanning",
+      %{
+        status: "started",
+        fail_node_id: fail_node_id
+      },
+      opts
+    )
 
     try do
       # Extract solution tree from composite plan
@@ -271,47 +337,83 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
         {:error, "Invalid plan format for replanning - missing solution tree"}
       else
         # Use injected planning strategy for replanning
-        case coordinator.planning_strategy.replan(domain, state, solution_tree, fail_node_id, opts) do
+        case coordinator.planning_strategy.replan(
+               domain,
+               state,
+               solution_tree,
+               fail_node_id,
+               opts
+             ) do
           {:ok, new_solution_tree} ->
-            coordinator.logging_strategy.log_progress("replanning", %{
-              status: "htn_replanning_completed"
-            }, opts)
+            coordinator.logging_strategy.log_progress(
+              "replanning",
+              %{
+                status: "htn_replanning_completed"
+              },
+              opts
+            )
 
             # Re-validate temporal constraints for new plan
             case add_temporal_constraints_to_plan(coordinator, new_solution_tree, domain, opts) do
               {:ok, new_temporal_constraints} ->
-                case coordinator.temporal_strategy.validate_temporal_consistency(new_temporal_constraints, opts) do
+                case coordinator.temporal_strategy.validate_temporal_consistency(
+                       new_temporal_constraints,
+                       opts
+                     ) do
                   {:ok, true} ->
-                    coordinator.logging_strategy.log_progress("replanning", %{
-                      status: "completed_successfully"
-                    }, opts)
+                    coordinator.logging_strategy.log_progress(
+                      "replanning",
+                      %{
+                        status: "completed_successfully"
+                      },
+                      opts
+                    )
 
                     # Return new composite plan
                     original_metadata = Map.get(plan, :metadata, %{})
-                    replan_metadata = Map.merge(original_metadata, %{
-                      replanned_at: System.system_time(:millisecond),
-                      original_fail_node: fail_node_id,
-                      strategy_coordinator: coordinator.metadata
-                    })
 
-                    {:ok, %{
-                      solution_tree: new_solution_tree,
-                      temporal_constraints: new_temporal_constraints,
-                      metadata: replan_metadata
-                    }}
+                    replan_metadata =
+                      Map.merge(original_metadata, %{
+                        replanned_at: System.system_time(:millisecond),
+                        original_fail_node: fail_node_id,
+                        strategy_coordinator: coordinator.metadata
+                      })
+
+                    {:ok,
+                     %{
+                       solution_tree: new_solution_tree,
+                       temporal_constraints: new_temporal_constraints,
+                       metadata: replan_metadata
+                     }}
 
                   {:ok, false} ->
                     error_msg = "Replanned temporal constraints are inconsistent"
-                    coordinator.logging_strategy.log_error(error_msg, %{phase: "replanning_temporal_validation"}, opts)
+
+                    coordinator.logging_strategy.log_error(
+                      error_msg,
+                      %{phase: "replanning_temporal_validation"},
+                      opts
+                    )
+
                     {:error, error_msg}
 
                   {:error, reason} ->
-                    coordinator.logging_strategy.log_error(reason, %{phase: "replanning_temporal_validation"}, opts)
+                    coordinator.logging_strategy.log_error(
+                      reason,
+                      %{phase: "replanning_temporal_validation"},
+                      opts
+                    )
+
                     {:error, "Replanning temporal validation failed: #{reason}"}
                 end
 
               {:error, reason} ->
-                coordinator.logging_strategy.log_error(reason, %{phase: "replanning_temporal_constraints"}, opts)
+                coordinator.logging_strategy.log_error(
+                  reason,
+                  %{phase: "replanning_temporal_constraints"},
+                  opts
+                )
+
                 {:error, "Failed to create temporal constraints during replanning: #{reason}"}
             end
 
@@ -320,16 +422,27 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
             {:error, reason}
 
           :failure ->
-            coordinator.logging_strategy.log_progress("replanning", %{
-              status: "no_alternatives_found"
-            }, opts)
+            coordinator.logging_strategy.log_progress(
+              "replanning",
+              %{
+                status: "no_alternatives_found"
+              },
+              opts
+            )
+
             :failure
         end
       end
     rescue
       e ->
         error_msg = "Replanning error: #{Exception.message(e)}"
-        coordinator.logging_strategy.log_error(error_msg, %{phase: "replanning_coordinator"}, opts)
+
+        coordinator.logging_strategy.log_error(
+          error_msg,
+          %{phase: "replanning_coordinator"},
+          opts
+        )
+
         {:error, error_msg}
     end
   end
@@ -337,8 +450,14 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   @doc """
   Validate a plan using injected planning strategy.
   """
-  @spec validate_plan(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map()) :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
-  def validate_plan(%__MODULE__{} = coordinator, domain, %AriaEngine.StateV2{} = initial_state, plan) do
+  @spec validate_plan(t(), Domain.Core.t(), AriaEngine.StateV2.t(), map()) ::
+          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  def validate_plan(
+        %__MODULE__{} = coordinator,
+        domain,
+        %AriaEngine.StateV2{} = initial_state,
+        plan
+      ) do
     try do
       solution_tree = Map.get(plan, :solution_tree)
 
@@ -358,7 +477,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   @doc """
   Replace a strategy in the coordinator.
-  
+
   This enables runtime strategy swapping for adaptive planning.
   """
   @spec replace_strategy(t(), atom(), module()) :: t()
@@ -419,7 +538,10 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   Simple replan interface for backward compatibility.
   """
   @spec replan(t(), map()) :: replan_result()
-  def replan(%__MODULE__{} = coordinator, %{domain: domain, state: state, plan: plan, fail_node_id: fail_node_id} = request) do
+  def replan(
+        %__MODULE__{} = coordinator,
+        %{domain: domain, state: state, plan: plan, fail_node_id: fail_node_id} = request
+      ) do
     opts = Map.get(request, :opts, [])
     replan(coordinator, domain, state, plan, fail_node_id, opts)
   end
@@ -454,8 +576,11 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
     current_time = Keyword.get(opts, :current_time, 0)
 
     # Use temporal strategy to add constraints
-    coordinator.temporal_strategy.add_temporal_constraints(%{}, primitive_actions, 
-      Keyword.merge(opts, [current_time: current_time]))
+    coordinator.temporal_strategy.add_temporal_constraints(
+      %{},
+      primitive_actions,
+      Keyword.merge(opts, current_time: current_time)
+    )
   end
 
   # Extract primitive actions from solution tree
@@ -465,13 +590,13 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
     case solution_tree do
       %{children: children} when is_list(children) ->
         Enum.flat_map(children, &extract_primitive_actions/1)
-      
+
       %{task: {action_name, args}, status: :primitive} ->
         [{action_name, args}]
-      
+
       %{task: task} when is_tuple(task) ->
         [task]
-      
+
       _ ->
         []
     end
@@ -482,7 +607,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
     case solution_tree do
       %{children: children} when is_list(children) ->
         1 + Enum.sum(Enum.map(children, &count_solution_tree_nodes/1))
-      
+
       _ ->
         1
     end
@@ -504,20 +629,22 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   defp get_strategy_composition_info(strategies) do
     strategies
     |> Enum.map(fn {strategy_type, strategy_module} ->
-      strategy_info = if function_exported?(strategy_module, :strategy_info, 0) do
-        try do
-          strategy_module.strategy_info()
-        rescue
-          _ -> %{module: strategy_module, info_available: false}
+      strategy_info =
+        if function_exported?(strategy_module, :strategy_info, 0) do
+          try do
+            strategy_module.strategy_info()
+          rescue
+            _ -> %{module: strategy_module, info_available: false}
+          end
+        else
+          %{module: strategy_module, info_available: false}
         end
-      else
-        %{module: strategy_module, info_available: false}
-      end
 
-      {strategy_type, %{
-        module: strategy_module,
-        info: strategy_info
-      }}
+      {strategy_type,
+       %{
+         module: strategy_module,
+         info: strategy_info
+       }}
     end)
     |> Enum.into(%{})
   end

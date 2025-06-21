@@ -6,7 +6,7 @@ defmodule Info do
   Provides functions for retrieving information and status from the Aria Engine.
   """
   alias Core
-    alias PlannerAdapter
+  alias PlannerAdapter
 
   @type t :: Core.t()
   @type status :: Core.status()
@@ -75,7 +75,7 @@ defmodule Info do
   end
 
   def progress(%Core{progress: %{total_steps: total, completed_steps: completed}}) do
-    min(100.0, (completed / total) * 100.0)
+    min(100.0, completed / total * 100.0)
   end
 
   @doc """
@@ -107,16 +107,20 @@ defmodule Info do
   """
   @spec get_summary(t()) :: map()
   def get_summary(%Core{} = engine) do
-    total_duration = case {engine.started_at, engine.completed_at} do
-      {%DateTime{} = start_time, %DateTime{} = end_time} ->
-        DateTime.diff(end_time, start_time, :millisecond)
-      _ -> nil
-    end
+    total_duration =
+      case {engine.started_at, engine.completed_at} do
+        {%DateTime{} = start_time, %DateTime{} = end_time} ->
+          DateTime.diff(end_time, start_time, :millisecond)
 
-    tree_stats = case engine.solution_tree do
-      nil -> %{}
-      solution_tree -> AriaEngine.PlannerAdapter.tree_stats(solution_tree)
-    end
+        _ ->
+          nil
+      end
+
+    tree_stats =
+      case engine.solution_tree do
+        nil -> %{}
+        solution_tree -> AriaEngine.PlannerAdapter.tree_stats(solution_tree)
+      end
 
     %{
       id: engine.id,

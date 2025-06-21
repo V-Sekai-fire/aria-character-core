@@ -44,6 +44,7 @@ defmodule AriaSecurity.SecretsMock do
     case config do
       %{host: _host, port: _port, scheme: _scheme, auth: %{credentials: %{token: _token}}} ->
         {:ok, %{vault_connected: true, mock: true}}
+
       _ ->
         {:error, :invalid_config}
     end
@@ -58,10 +59,12 @@ defmodule AriaSecurity.SecretsMock do
     case Process.whereis(__MODULE__) do
       nil ->
         {:error, :not_initialized}
+
       _pid ->
         Agent.update(__MODULE__, fn store ->
           Map.put(store, path, data)
         end)
+
         {:ok, %{path: path, stored: true}}
     end
   end
@@ -75,15 +78,19 @@ defmodule AriaSecurity.SecretsMock do
     case Process.whereis(__MODULE__) do
       nil ->
         {:error, :not_initialized}
+
       _pid ->
         case Agent.get(__MODULE__, fn store -> Map.get(store, path) end) do
           nil ->
             {:error, :not_found}
+
           data ->
             # Convert atom keys to string keys to match OpenBao behavior
-            string_data = for {key, value} <- data, into: %{} do
-              {to_string(key), value}
-            end
+            string_data =
+              for {key, value} <- data, into: %{} do
+                {to_string(key), value}
+              end
+
             {:ok, string_data}
         end
     end
@@ -98,8 +105,10 @@ defmodule AriaSecurity.SecretsMock do
     case Process.whereis(__MODULE__) do
       nil ->
         {:error, :not_initialized}
+
       _pid ->
         existed = Agent.get(__MODULE__, fn store -> Map.has_key?(store, path) end)
+
         Agent.update(__MODULE__, fn store ->
           Map.delete(store, path)
         end)
@@ -121,12 +130,15 @@ defmodule AriaSecurity.SecretsMock do
     case Process.whereis(__MODULE__) do
       nil ->
         {:error, :not_initialized}
+
       _pid ->
-        keys = Agent.get(__MODULE__, fn store ->
-          store
-          |> Map.keys()
-          |> Enum.filter(fn key -> String.starts_with?(key, path_prefix) end)
-        end)
+        keys =
+          Agent.get(__MODULE__, fn store ->
+            store
+            |> Map.keys()
+            |> Enum.filter(fn key -> String.starts_with?(key, path_prefix) end)
+          end)
+
         {:ok, %{keys: keys}}
     end
   end
@@ -136,7 +148,9 @@ defmodule AriaSecurity.SecretsMock do
   """
   def clear_all do
     case Process.whereis(__MODULE__) do
-      nil -> :ok
+      nil ->
+        :ok
+
       _pid ->
         Agent.update(__MODULE__, fn _store -> %{} end)
         :ok

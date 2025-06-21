@@ -4,22 +4,22 @@
 defmodule AriaEngine.Scheduler do
   @moduledoc """
   Advanced scheduler with entity/resource/capability management and simulation.
-  
+
   Provides comprehensive scheduling capabilities including:
   - Entity and resource modeling with capabilities
   - run_lazy simulation for predictive scheduling
   - Resource conflict detection and resolution
   - Critical path analysis with resource constraints
-  
+
   ## Features
-  
+
   - Entity management with capabilities and availability
   - Resource modeling with capacity and constraints
   - Simulation modes for schedule validation
   - Timeline optimization
-  
+
   ## Usage
-  
+
       # Define entities with capabilities
       entities = [
         %AriaEngine.Scheduler.Entity{
@@ -59,31 +59,31 @@ defmodule AriaEngine.Scheduler do
         simulation_mode: true
       )
   """
-  
+
   require Logger
-  
+
   # Type definitions for the scheduler system
   @type activity :: %{
-    id: String.t(),
-    duration: non_neg_integer(),
-    dependencies: [String.t()],
-    required_capabilities: [atom()],
-    required_resources: [String.t()]
-  }
-  
+          id: String.t(),
+          duration: non_neg_integer(),
+          dependencies: [String.t()],
+          required_capabilities: [atom()],
+          required_resources: [String.t()]
+        }
+
   @type state :: AriaEngine.StateV2.t()
   @type entity_list :: [Entity.t()]
   @type resource_list :: [Resource.t()]
   @type activity_list :: [activity()]
   @type schedule_options :: keyword()
   @type schedule_result :: {:ok, SimulationResult.t()} | {:error, String.t()}
-  
+
   # Data structures for enhanced scheduling
   defmodule Entity do
     @moduledoc """
     Represents an entity (agent, NPC, object) with capabilities and availability.
     """
-    
+
     @derive Jason.Encoder
     defstruct [
       :id,
@@ -94,23 +94,23 @@ defmodule AriaEngine.Scheduler do
       :resources_held,
       :metadata
     ]
-    
+
     @type t :: %__MODULE__{
-      id: String.t(),
-      type: :agent | :npc | :object | :resource,
-      capabilities: [atom()],
-      current_activity: String.t() | nil,
-      availability: Timeline.Interval.t() | nil,
-      resources_held: [String.t()],
-      metadata: map()
-    }
+            id: String.t(),
+            type: :agent | :npc | :object | :resource,
+            capabilities: [atom()],
+            current_activity: String.t() | nil,
+            availability: Timeline.Interval.t() | nil,
+            resources_held: [String.t()],
+            metadata: map()
+          }
   end
-  
+
   defmodule Resource do
     @moduledoc """
     Represents a resource with capacity and constraints.
     """
-    
+
     @derive Jason.Encoder
     defstruct [
       :id,
@@ -121,26 +121,26 @@ defmodule AriaEngine.Scheduler do
       :availability_schedule,
       :metadata
     ]
-    
+
     @type t :: %__MODULE__{
-      id: String.t(),
-      type: :computational | :physical | :human | :virtual,
-      capacity: non_neg_integer(),
-      current_usage: non_neg_integer(),
-      constraints: map(),
-      availability_schedule: [Timeline.Interval.t()],
-      metadata: map()
-    }
+            id: String.t(),
+            type: :computational | :physical | :human | :virtual,
+            capacity: non_neg_integer(),
+            current_usage: non_neg_integer(),
+            constraints: map(),
+            availability_schedule: [Timeline.Interval.t()],
+            metadata: map()
+          }
   end
-  
+
   defmodule ActivityLogEntry do
     @moduledoc """
     Represents a logged activity event.
-    
+
     Supports both absolute timestamps (when mission start time is known)
     and duration-based formatting (when only relative timing is available).
     """
-    
+
     @derive Jason.Encoder
     defstruct [
       :timestamp,
@@ -153,25 +153,25 @@ defmodule AriaEngine.Scheduler do
       :state_changes,
       :metadata
     ]
-    
+
     @type t :: %__MODULE__{
-      timestamp: DateTime.t() | nil,
-      mission_duration: String.t() | nil,
-      relative_minutes: non_neg_integer() | nil,
-      activity_id: String.t(),
-      entity_id: String.t() | nil,
-      event_type: :started | :completed | :failed | :paused | :resumed,
-      resource_snapshot: map(),
-      state_changes: [map()],
-      metadata: map()
-    }
+            timestamp: DateTime.t() | nil,
+            mission_duration: String.t() | nil,
+            relative_minutes: non_neg_integer() | nil,
+            activity_id: String.t(),
+            entity_id: String.t() | nil,
+            event_type: :started | :completed | :failed | :paused | :resumed,
+            resource_snapshot: map(),
+            state_changes: [map()],
+            metadata: map()
+          }
   end
-  
+
   defmodule SimulationResult do
     @moduledoc """
     Results from a scheduling simulation.
     """
-    
+
     @derive Jason.Encoder
     defstruct [
       :status,
@@ -183,24 +183,24 @@ defmodule AriaEngine.Scheduler do
       :timeline,
       :simulation_metadata
     ]
-    
+
     @type t :: %__MODULE__{
-      status: String.t(),
-      reason: String.t(),
-      schedule: [map()],
-      analysis: map(),
-      activity_log: [ActivityLogEntry.t()],
-      resource_utilization: map(),
-      timeline: [map()],
-      simulation_metadata: map()
-    }
+            status: String.t(),
+            reason: String.t(),
+            schedule: [map()],
+            analysis: map(),
+            activity_log: [ActivityLogEntry.t()],
+            resource_utilization: map(),
+            timeline: [map()],
+            simulation_metadata: map()
+          }
   end
-  
+
   @doc """
   Schedule activities with advanced entity/resource management and simulation.
-  
+
   ## Parameters
-  
+
   - `schedule_name` - Name for this scheduling request
   - `activities` - List of activities to schedule (can be empty)
   - `opts` - Optional parameters:
@@ -209,14 +209,14 @@ defmodule AriaEngine.Scheduler do
     - `:constraints` - Scheduling constraints and limits
     - `:simulation_mode` - Run in simulation mode (default: false)
     - `:verbose` - Logging verbosity level (0-3, default: 0)
-  
+
   ## Returns
-  
+
   - `{:ok, SimulationResult.t()}` - Successful scheduling with results
   - `{:error, reason}` - Scheduling failed with error details
   """
-  @spec schedule_activities(String.t(), list(), keyword()) :: 
-    {:ok, SimulationResult.t()} | {:error, String.t()}
+  @spec schedule_activities(String.t(), list(), keyword()) ::
+          {:ok, SimulationResult.t()} | {:error, String.t()}
   def schedule_activities(schedule_name, activities, opts \\ []) do
     entities = Keyword.get(opts, :entities, [])
     raw_resources = Keyword.get(opts, :resources, [])
@@ -224,26 +224,31 @@ defmodule AriaEngine.Scheduler do
     simulation_mode = Keyword.get(opts, :simulation_mode, false)
     verbose = Keyword.get(opts, :verbose, 0)
     log_activities = Keyword.get(opts, :log_activities, true)
-    
+
     # Convert resources from map format to struct format if needed
     resources = convert_resources_to_structs(raw_resources)
-    
+
     if verbose > 0 do
-      Logger.info("AriaEngine.Scheduler: Starting #{if simulation_mode, do: "simulation", else: "scheduling"} for '#{schedule_name}'")
-      Logger.info("AriaEngine.Scheduler: #{length(activities)} activities, #{length(entities)} entities, #{length(resources)} resources")
+      Logger.info(
+        "AriaEngine.Scheduler: Starting #{if simulation_mode, do: "simulation", else: "scheduling"} for '#{schedule_name}'"
+      )
+
+      Logger.info(
+        "AriaEngine.Scheduler: #{length(activities)} activities, #{length(entities)} entities, #{length(resources)} resources"
+      )
     end
-    
+
     try do
       # Initialize activity log
       activity_log = if log_activities, do: [], else: nil
-      
+
       # Delegate to core implementation
       AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
-        schedule_name, 
-        activities, 
-        entities, 
-        resources, 
-        constraints, 
+        schedule_name,
+        activities,
+        entities,
+        resources,
+        constraints,
         simulation_mode,
         activity_log,
         verbose
@@ -255,19 +260,19 @@ defmodule AriaEngine.Scheduler do
         {:error, error_msg}
     end
   end
-  
+
   @doc """
   Run a simulation to predict scheduling outcomes without execution.
-  
+
   This is a convenience function that sets simulation_mode to true.
   """
-  @spec simulate_schedule(String.t(), list(), keyword()) :: 
-    {:ok, SimulationResult.t()} | {:error, String.t()}
+  @spec simulate_schedule(String.t(), list(), keyword()) ::
+          {:ok, SimulationResult.t()} | {:error, String.t()}
   def simulate_schedule(schedule_name, activities, opts \\ []) do
     opts = Keyword.put(opts, :simulation_mode, true)
     schedule_activities(schedule_name, activities, opts)
   end
-  
+
   @doc """
   Analyze resource utilization is no longer supported (analytics removed).
   """
@@ -275,15 +280,15 @@ defmodule AriaEngine.Scheduler do
   def analyze_resource_utilization(_schedule, _resources) do
     raise "Resource utilization analytics have been removed from AriaEngine."
   end
-  
+
   # Private helper functions
-  
+
   @doc false
   defp convert_resources_to_structs(resources) when is_list(resources) do
     # Already a list, assume it's in the correct format
     resources
   end
-  
+
   defp convert_resources_to_structs(resources) when is_map(resources) do
     # Convert map format to list of Resource structs
     Enum.map(resources, fn {resource_id, resource_config} ->
@@ -298,6 +303,6 @@ defmodule AriaEngine.Scheduler do
       }
     end)
   end
-  
+
   defp convert_resources_to_structs(_), do: []
 end

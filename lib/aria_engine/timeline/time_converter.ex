@@ -126,6 +126,7 @@ defmodule Timeline.TimeConverter do
   """
   @spec validate_time_value(seconds_input()) :: :ok | {:error, String.t()}
   def validate_time_value(seconds) when is_number(seconds), do: :ok
+
   def validate_time_value(input) do
     {:error, "Expected number, got: #{inspect(input)}"}
   end
@@ -144,7 +145,7 @@ defmodule Timeline.TimeConverter do
 
   """
   @spec validate_time_order(seconds_input(), seconds_input()) :: :ok | {:error, String.t()}
-  def validate_time_order(start_seconds, end_seconds) 
+  def validate_time_order(start_seconds, end_seconds)
       when is_number(start_seconds) and is_number(end_seconds) do
     if start_seconds < end_seconds do
       :ok
@@ -154,7 +155,8 @@ defmodule Timeline.TimeConverter do
   end
 
   def validate_time_order(start_seconds, end_seconds) do
-    {:error, "Expected numbers, got: start=#{inspect(start_seconds)}, end=#{inspect(end_seconds)}"}
+    {:error,
+     "Expected numbers, got: start=#{inspect(start_seconds)}, end=#{inspect(end_seconds)}"}
   end
 
   @doc """
@@ -209,7 +211,8 @@ defmodule Timeline.TimeConverter do
       {:error, "Start time (5.0) must be before end time (3.0)"}
 
   """
-  @spec safe_interval_to_datetime(any(), any()) :: {:ok, {datetime_internal(), datetime_internal()}} | {:error, String.t()}
+  @spec safe_interval_to_datetime(any(), any()) ::
+          {:ok, {datetime_internal(), datetime_internal()}} | {:error, String.t()}
   def safe_interval_to_datetime(start_input, end_input) do
     with :ok <- validate_time_value(start_input),
          :ok <- validate_time_value(end_input),
@@ -219,7 +222,8 @@ defmodule Timeline.TimeConverter do
       {:ok, {start_dt, end_dt}}
     end
   rescue
-    ArgumentError -> {:error, "Expected numbers, got: start=#{inspect(start_input)}, end=#{inspect(end_input)}"}
+    ArgumentError ->
+      {:error, "Expected numbers, got: start=#{inspect(start_input)}, end=#{inspect(end_input)}"}
   end
 
   @doc """

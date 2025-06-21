@@ -29,28 +29,37 @@ defmodule AriaStorage.Chunks do
   import Bitwise
 
   # Default chunk sizes - these can be overridden when calling create_chunks/2
-  @default_min_chunk_size 16 * 1024      # 16KB
-  @default_avg_chunk_size 64 * 1024      # 64KB
-  @default_max_chunk_size 256 * 1024     # 256KB
+  # 16KB
+  @default_min_chunk_size 16 * 1024
+  # 64KB
+  @default_avg_chunk_size 64 * 1024
+  # 256KB
+  @default_max_chunk_size 256 * 1024
   @rolling_hash_window_size 48
 
   defstruct [
-    :id,           # SHA512/256 hash of chunk content
-    :data,         # Raw chunk data
-    :size,         # Size in bytes
-    :compressed,   # Compressed data (zstd)
-    :offset,       # Offset in original file
-    :checksum      # Additional checksum for verification
+    # SHA512/256 hash of chunk content
+    :id,
+    # Raw chunk data
+    :data,
+    # Size in bytes
+    :size,
+    # Compressed data (zstd)
+    :compressed,
+    # Offset in original file
+    :offset,
+    # Additional checksum for verification
+    :checksum
   ]
 
   @type t :: %__MODULE__{
-    id: binary(),
-    data: binary(),
-    size: non_neg_integer(),
-    compressed: binary(),
-    offset: non_neg_integer(),
-    checksum: binary()
-  }
+          id: binary(),
+          data: binary(),
+          size: non_neg_integer(),
+          compressed: binary(),
+          offset: non_neg_integer(),
+          checksum: binary()
+        }
 
   @doc """
   Creates content-defined chunks from a file using rolling hash algorithm.
@@ -135,7 +144,8 @@ defmodule AriaStorage.Chunks do
   """
   def calculate_chunk_id(data) when is_binary(data) do
     :crypto.hash(:sha512, data)
-    |> binary_part(0, 32)  # Use first 256 bits for SHA512/256
+    # Use first 256 bits for SHA512/256
+    |> binary_part(0, 32)
   end
 
   @doc """
@@ -214,70 +224,262 @@ defmodule AriaStorage.Chunks do
 
   # Buzhash hash table (from desync)
   @hash_table [
-    0x458be752, 0xc10748cc, 0xfbbcdbb8, 0x6ded5b68,
-    0xb10a82b5, 0x20d75648, 0xdfc5665f, 0xa8428801,
-    0x7ebf5191, 0x841135c7, 0x65cc53b3, 0x280a597c,
-    0x16f60255, 0xc78cbc3e, 0x294415f5, 0xb938d494,
-    0xec85c4e6, 0xb7d33edc, 0xe549b544, 0xfdeda5aa,
-    0x882bf287, 0x3116737c, 0x05569956, 0xe8cc1f68,
-    0x0806ac5e, 0x22a14443, 0x15297e10, 0x50d090e7,
-    0x4ba60f6f, 0xefd9f1a7, 0x5c5c885c, 0x82482f93,
-    0x9bfd7c64, 0x0b3e7276, 0xf2688e77, 0x8fad8abc,
-    0xb0509568, 0xf1ada29f, 0xa53efdfe, 0xcb2b1d00,
-    0xf2a9e986, 0x6463432b, 0x95094051, 0x5a223ad2,
-    0x9be8401b, 0x61e579cb, 0x1a556a14, 0x5840fdc2,
-    0x9261ddf6, 0xcde002bb, 0x52432bb0, 0xbf17373e,
-    0x7b7c222f, 0x2955ed16, 0x9f10ca59, 0xe840c4c9,
-    0xccabd806, 0x14543f34, 0x1462417a, 0x0d4a1f9c,
-    0x087ed925, 0xd7f8f24c, 0x7338c425, 0xcf86c8f5,
-    0xb19165cd, 0x9891c393, 0x325384ac, 0x0308459d,
-    0x86141d7e, 0xc922116a, 0xe2ffa6b6, 0x53f52aed,
-    0x2cd86197, 0xf5b9f498, 0xbf319c8f, 0xe0411fae,
-    0x977eb18c, 0xd8770976, 0x9833466a, 0xc674df7f,
-    0x8c297d45, 0x8ca48d26, 0xc49ed8e2, 0x7344f874,
-    0x556f79c7, 0x6b25eaed, 0xa03e2b42, 0xf68f66a4,
-    0x8e8b09a2, 0xf2e0e62a, 0x0d3a9806, 0x9729e493,
-    0x8c72b0fc, 0x160b94f6, 0x450e4d3d, 0x7a320e85,
-    0xbef8f0e1, 0x21d73653, 0x4e3d977a, 0x1e7b3929,
-    0x1cc6c719, 0xbe478d53, 0x8d752809, 0xe6d8c2c6,
-    0x275f0892, 0xc8acc273, 0x4cc21580, 0xecc4a617,
-    0xf5f7be70, 0xe795248a, 0x375a2fe9, 0x425570b6,
-    0x8898dcf8, 0xdc2d97c4, 0x0106114b, 0x364dc22f,
-    0x1e0cad1f, 0xbe63803c, 0x5f69fac2, 0x4d5afa6f,
-    0x1bc0dfb5, 0xfb273589, 0x0ea47f7b, 0x3c1c2b50,
-    0x21b2a932, 0x6b1223fd, 0x2fe706a8, 0xf9bd6ce2,
-    0xa268e64e, 0xe987f486, 0x3eacf563, 0x1ca2018c,
-    0x65e18228, 0x2207360a, 0x57cf1715, 0x34c37d2b,
-    0x1f8f3cde, 0x93b657cf, 0x31a019fd, 0xe69eb729,
-    0x8bca7b9b, 0x4c9d5bed, 0x277ebeaf, 0xe0d8f8ae,
-    0xd150821c, 0x31381871, 0xafc3f1b0, 0x927db328,
-    0xe95effac, 0x305a47bd, 0x426ba35b, 0x1233af3f,
-    0x686a5b83, 0x50e072e5, 0xd9d3bb2a, 0x8befc475,
-    0x487f0de6, 0xc88dff89, 0xbd664d5e, 0x971b5d18,
-    0x63b14847, 0xd7d3c1ce, 0x7f583cf3, 0x72cbcb09,
-    0xc0d0a81c, 0x7fa3429b, 0xe9158a1b, 0x225ea19a,
-    0xd8ca9ea3, 0xc763b282, 0xbb0c6341, 0x020b8293,
-    0xd4cd299d, 0x58cfa7f8, 0x91b4ee53, 0x37e4d140,
-    0x95ec764c, 0x30f76b06, 0x5ee68d24, 0x679c8661,
-    0xa41979c2, 0xf2b61284, 0x4fac1475, 0x0adb49f9,
-    0x19727a23, 0x15a7e374, 0xc43a18d5, 0x3fb1aa73,
-    0x342fc615, 0x924c0793, 0xbee2d7f0, 0x8a279de9,
-    0x4aa2d70c, 0xe24dd37f, 0xbe862c0b, 0x177c22c2,
-    0x5388e5ee, 0xcd8a7510, 0xf901b4fd, 0xdbc13dbc,
-    0x6c0bae5b, 0x64efe8c7, 0x48b02079, 0x80331a49,
-    0xca3d8ae6, 0xf3546190, 0xfed7108b, 0xc49b941b,
-    0x32baf4a9, 0xeb833a4a, 0x88a3f1a5, 0x3a91ce0a,
-    0x3cc27da1, 0x7112e684, 0x4a3096b1, 0x3794574c,
-    0xa3c8b6f3, 0x1d213941, 0x6e0a2e00, 0x233479f1,
-    0x0f4cd82f, 0x6093edd2, 0x5d7d209e, 0x464fe319,
-    0xd4dcac9e, 0x0db845cb, 0xfb5e4bc3, 0xe0256ce1,
-    0x09fb4ed1, 0x0914be1e, 0xa5bdb2c3, 0xc6eb57bb,
-    0x30320350, 0x3f397e91, 0xa67791bc, 0x86bc0e2c,
-    0xefa0a7e2, 0xe9ff7543, 0xe733612c, 0xd185897b,
-    0x329e5388, 0x91dd236b, 0x2ecb0d93, 0xf4d82a3d,
-    0x35b5c03f, 0xe4e606f0, 0x05b21843, 0x37b45964,
-    0x5eff22f4, 0x6027f4cc, 0x77178b3c, 0xae507131,
-    0x7bf7cabc, 0xf9c18d66, 0x593ade65, 0xd95ddf11
+    0x458BE752,
+    0xC10748CC,
+    0xFBBCDBB8,
+    0x6DED5B68,
+    0xB10A82B5,
+    0x20D75648,
+    0xDFC5665F,
+    0xA8428801,
+    0x7EBF5191,
+    0x841135C7,
+    0x65CC53B3,
+    0x280A597C,
+    0x16F60255,
+    0xC78CBC3E,
+    0x294415F5,
+    0xB938D494,
+    0xEC85C4E6,
+    0xB7D33EDC,
+    0xE549B544,
+    0xFDEDA5AA,
+    0x882BF287,
+    0x3116737C,
+    0x05569956,
+    0xE8CC1F68,
+    0x0806AC5E,
+    0x22A14443,
+    0x15297E10,
+    0x50D090E7,
+    0x4BA60F6F,
+    0xEFD9F1A7,
+    0x5C5C885C,
+    0x82482F93,
+    0x9BFD7C64,
+    0x0B3E7276,
+    0xF2688E77,
+    0x8FAD8ABC,
+    0xB0509568,
+    0xF1ADA29F,
+    0xA53EFDFE,
+    0xCB2B1D00,
+    0xF2A9E986,
+    0x6463432B,
+    0x95094051,
+    0x5A223AD2,
+    0x9BE8401B,
+    0x61E579CB,
+    0x1A556A14,
+    0x5840FDC2,
+    0x9261DDF6,
+    0xCDE002BB,
+    0x52432BB0,
+    0xBF17373E,
+    0x7B7C222F,
+    0x2955ED16,
+    0x9F10CA59,
+    0xE840C4C9,
+    0xCCABD806,
+    0x14543F34,
+    0x1462417A,
+    0x0D4A1F9C,
+    0x087ED925,
+    0xD7F8F24C,
+    0x7338C425,
+    0xCF86C8F5,
+    0xB19165CD,
+    0x9891C393,
+    0x325384AC,
+    0x0308459D,
+    0x86141D7E,
+    0xC922116A,
+    0xE2FFA6B6,
+    0x53F52AED,
+    0x2CD86197,
+    0xF5B9F498,
+    0xBF319C8F,
+    0xE0411FAE,
+    0x977EB18C,
+    0xD8770976,
+    0x9833466A,
+    0xC674DF7F,
+    0x8C297D45,
+    0x8CA48D26,
+    0xC49ED8E2,
+    0x7344F874,
+    0x556F79C7,
+    0x6B25EAED,
+    0xA03E2B42,
+    0xF68F66A4,
+    0x8E8B09A2,
+    0xF2E0E62A,
+    0x0D3A9806,
+    0x9729E493,
+    0x8C72B0FC,
+    0x160B94F6,
+    0x450E4D3D,
+    0x7A320E85,
+    0xBEF8F0E1,
+    0x21D73653,
+    0x4E3D977A,
+    0x1E7B3929,
+    0x1CC6C719,
+    0xBE478D53,
+    0x8D752809,
+    0xE6D8C2C6,
+    0x275F0892,
+    0xC8ACC273,
+    0x4CC21580,
+    0xECC4A617,
+    0xF5F7BE70,
+    0xE795248A,
+    0x375A2FE9,
+    0x425570B6,
+    0x8898DCF8,
+    0xDC2D97C4,
+    0x0106114B,
+    0x364DC22F,
+    0x1E0CAD1F,
+    0xBE63803C,
+    0x5F69FAC2,
+    0x4D5AFA6F,
+    0x1BC0DFB5,
+    0xFB273589,
+    0x0EA47F7B,
+    0x3C1C2B50,
+    0x21B2A932,
+    0x6B1223FD,
+    0x2FE706A8,
+    0xF9BD6CE2,
+    0xA268E64E,
+    0xE987F486,
+    0x3EACF563,
+    0x1CA2018C,
+    0x65E18228,
+    0x2207360A,
+    0x57CF1715,
+    0x34C37D2B,
+    0x1F8F3CDE,
+    0x93B657CF,
+    0x31A019FD,
+    0xE69EB729,
+    0x8BCA7B9B,
+    0x4C9D5BED,
+    0x277EBEAF,
+    0xE0D8F8AE,
+    0xD150821C,
+    0x31381871,
+    0xAFC3F1B0,
+    0x927DB328,
+    0xE95EFFAC,
+    0x305A47BD,
+    0x426BA35B,
+    0x1233AF3F,
+    0x686A5B83,
+    0x50E072E5,
+    0xD9D3BB2A,
+    0x8BEFC475,
+    0x487F0DE6,
+    0xC88DFF89,
+    0xBD664D5E,
+    0x971B5D18,
+    0x63B14847,
+    0xD7D3C1CE,
+    0x7F583CF3,
+    0x72CBCB09,
+    0xC0D0A81C,
+    0x7FA3429B,
+    0xE9158A1B,
+    0x225EA19A,
+    0xD8CA9EA3,
+    0xC763B282,
+    0xBB0C6341,
+    0x020B8293,
+    0xD4CD299D,
+    0x58CFA7F8,
+    0x91B4EE53,
+    0x37E4D140,
+    0x95EC764C,
+    0x30F76B06,
+    0x5EE68D24,
+    0x679C8661,
+    0xA41979C2,
+    0xF2B61284,
+    0x4FAC1475,
+    0x0ADB49F9,
+    0x19727A23,
+    0x15A7E374,
+    0xC43A18D5,
+    0x3FB1AA73,
+    0x342FC615,
+    0x924C0793,
+    0xBEE2D7F0,
+    0x8A279DE9,
+    0x4AA2D70C,
+    0xE24DD37F,
+    0xBE862C0B,
+    0x177C22C2,
+    0x5388E5EE,
+    0xCD8A7510,
+    0xF901B4FD,
+    0xDBC13DBC,
+    0x6C0BAE5B,
+    0x64EFE8C7,
+    0x48B02079,
+    0x80331A49,
+    0xCA3D8AE6,
+    0xF3546190,
+    0xFED7108B,
+    0xC49B941B,
+    0x32BAF4A9,
+    0xEB833A4A,
+    0x88A3F1A5,
+    0x3A91CE0A,
+    0x3CC27DA1,
+    0x7112E684,
+    0x4A3096B1,
+    0x3794574C,
+    0xA3C8B6F3,
+    0x1D213941,
+    0x6E0A2E00,
+    0x233479F1,
+    0x0F4CD82F,
+    0x6093EDD2,
+    0x5D7D209E,
+    0x464FE319,
+    0xD4DCAC9E,
+    0x0DB845CB,
+    0xFB5E4BC3,
+    0xE0256CE1,
+    0x09FB4ED1,
+    0x0914BE1E,
+    0xA5BDB2C3,
+    0xC6EB57BB,
+    0x30320350,
+    0x3F397E91,
+    0xA67791BC,
+    0x86BC0E2C,
+    0xEFA0A7E2,
+    0xE9FF7543,
+    0xE733612C,
+    0xD185897B,
+    0x329E5388,
+    0x91DD236B,
+    0x2ECB0D93,
+    0xF4D82A3D,
+    0x35B5C03F,
+    0xE4E606F0,
+    0x05B21843,
+    0x37B45964,
+    0x5EFF22F4,
+    0x6027F4CC,
+    0x77178B3C,
+    0xAE507131,
+    0x7BF7CABC,
+    0xF9C18D66,
+    0x593ADE65,
+    0xD95DDF11
   ]
 
   @doc """
@@ -300,7 +502,18 @@ defmodule AriaStorage.Chunks do
     case File.open(file_path, [:read, :binary]) do
       {:ok, file} ->
         try do
-          chunks = rolling_hash_chunk_file(file, min_size, avg_size, max_size, discriminator, compression, 0, [])
+          chunks =
+            rolling_hash_chunk_file(
+              file,
+              min_size,
+              avg_size,
+              max_size,
+              discriminator,
+              compression,
+              0,
+              []
+            )
+
           {:ok, Enum.reverse(chunks)}
         after
           File.close(file)
@@ -311,7 +524,16 @@ defmodule AriaStorage.Chunks do
     end
   end
 
-  defp rolling_hash_chunk_file(file, min_size, _avg_size, max_size, discriminator, compression, offset, acc) do
+  defp rolling_hash_chunk_file(
+         file,
+         min_size,
+         _avg_size,
+         max_size,
+         discriminator,
+         compression,
+         offset,
+         acc
+       ) do
     # Read entire file at once for now to simplify debugging
     case IO.binread(file, :eof) do
       :eof ->
@@ -350,18 +572,35 @@ defmodule AriaStorage.Chunks do
   end
 
   # Helper function to find chunks recursively with proper offsets
-  defp find_chunks_recursively(data, _min_size, _max_size, _discriminator, _compression, current_offset, chunks)
+  defp find_chunks_recursively(
+         data,
+         _min_size,
+         _max_size,
+         _discriminator,
+         _compression,
+         current_offset,
+         chunks
+       )
        when current_offset >= byte_size(data) do
     # We've processed all the data, return the chunks in original order
     Enum.reverse(chunks)
   end
 
-  defp find_chunks_recursively(data, min_size, max_size, discriminator, compression, current_offset, chunks) do
+  defp find_chunks_recursively(
+         data,
+         min_size,
+         max_size,
+         discriminator,
+         compression,
+         current_offset,
+         chunks
+       ) do
     remaining_size = byte_size(data) - current_offset
 
     if remaining_size <= min_size do
       # Create final chunk with remaining data
       chunk_data = binary_part(data, current_offset, remaining_size)
+
       case create_chunk_from_data(chunk_data, current_offset, compression) do
         {:ok, chunk} -> Enum.reverse([chunk | chunks])
         _ -> Enum.reverse(chunks)
@@ -374,9 +613,26 @@ defmodule AriaStorage.Chunks do
 
       case create_chunk_from_data(chunk_data, current_offset, compression) do
         {:ok, chunk} ->
-          find_chunks_recursively(data, min_size, max_size, discriminator, compression, chunk_end, [chunk | chunks])
+          find_chunks_recursively(
+            data,
+            min_size,
+            max_size,
+            discriminator,
+            compression,
+            chunk_end,
+            [chunk | chunks]
+          )
+
         _ ->
-          find_chunks_recursively(data, min_size, max_size, discriminator, compression, chunk_end, chunks)
+          find_chunks_recursively(
+            data,
+            min_size,
+            max_size,
+            discriminator,
+            compression,
+            chunk_end,
+            chunks
+          )
       end
     end
   end
@@ -422,7 +678,8 @@ defmodule AriaStorage.Chunks do
   end
 
   # Continue the rolling hash search with corrected positioning
-  defp rolling_search_v2(data, pos, max_end, _hash, _discriminator) when pos > max_end or pos >= byte_size(data) do
+  defp rolling_search_v2(data, pos, max_end, _hash, _discriminator)
+       when pos > max_end or pos >= byte_size(data) do
     max_end
   end
 
@@ -437,8 +694,10 @@ defmodule AriaStorage.Chunks do
       else
         # Get the bytes that are leaving and entering the window for next position
         # Current window ends at pos, next window will end at pos+1
-        out_byte = :binary.at(data, pos - @rolling_hash_window_size + 1)  # Byte leaving the window
-        in_byte = :binary.at(data, pos + 1)                              # Byte entering the window
+        # Byte leaving the window
+        out_byte = :binary.at(data, pos - @rolling_hash_window_size + 1)
+        # Byte entering the window
+        in_byte = :binary.at(data, pos + 1)
 
         # Update the hash to reflect the next window position
         new_hash = update_buzhash(hash, out_byte, in_byte)
@@ -447,7 +706,8 @@ defmodule AriaStorage.Chunks do
         # Check if the new position is a boundary (matching desync order)
         # In desync, the boundary position includes the byte that caused the boundary
         if rem(new_hash, discriminator) == discriminator - 1 do
-          new_pos + 1  # Return position after the boundary-causing byte (matching desync)
+          # Return position after the boundary-causing byte (matching desync)
+          new_pos + 1
         else
           # Continue rolling forward
           rolling_search_v2(data, new_pos, max_end, new_hash, discriminator)
@@ -455,10 +715,6 @@ defmodule AriaStorage.Chunks do
       end
     end
   end
-
-
-
-
 
   # Calculate buzhash same as desync
   defp calculate_buzhash(window) when byte_size(window) == @rolling_hash_window_size do
@@ -472,10 +728,6 @@ defmodule AriaStorage.Chunks do
       Bitwise.bxor(acc, rotated)
     end)
   end
-
-
-
-
 
   # Updates an existing buzhash value by removing one byte and adding another.
 
@@ -512,7 +764,7 @@ defmodule AriaStorage.Chunks do
   defp rol32(value, shift) do
     shift = rem(shift, 32)
     mask32 = 0xFFFFFFFF
-    ((value <<< shift) ||| (value >>> (32 - shift))) &&& mask32
+    (value <<< shift ||| value >>> (32 - shift)) &&& mask32
   end
 
   @doc """
@@ -549,6 +801,7 @@ defmodule AriaStorage.Chunks do
           offset: offset,
           checksum: :crypto.hash(:sha256, data)
         }
+
         {:ok, chunk}
 
       {:error, _} ->
@@ -561,6 +814,7 @@ defmodule AriaStorage.Chunks do
           offset: offset,
           checksum: :crypto.hash(:sha256, data)
         }
+
         {:ok, chunk}
     end
   end
@@ -604,6 +858,7 @@ defmodule AriaStorage.Chunks do
   defp validate_index(index, chunks, verify) do
     if verify do
       expected_checksum = Utils.calculate_index_checksum(chunks)
+
       if index.checksum == expected_checksum do
         :ok
       else

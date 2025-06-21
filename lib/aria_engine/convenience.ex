@@ -6,7 +6,7 @@ defmodule Convenience do
   Provides convenience API for State and Domain operations for the Aria Engine.
   """
   alias Core
-    alias Domain
+  alias Domain
   alias Multigoal
   alias PlannerAdapter
 

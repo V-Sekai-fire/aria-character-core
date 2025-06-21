@@ -4,7 +4,7 @@
 defmodule AriaEngine.Membrane.Format.PlanningResult do
   @moduledoc """
   Membrane format for planning execution results.
-  
+
   This format represents the results from planning execution by the
   HybridCoordinator. It includes the planning status, result data,
   execution metadata, and performance metrics.
@@ -19,20 +19,20 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
   ]
 
   @type status :: :success | :failure | :error
-  
+
   @type t :: %__MODULE__{
-    status: status(),
-    result: term(),
-    execution_metadata: map(),
-    request_id: String.t(),
-    performance_metrics: map()
-  }
+          status: status(),
+          result: term(),
+          execution_metadata: map(),
+          request_id: String.t(),
+          performance_metrics: map()
+        }
 
   @doc """
   Validates a planning result format structure.
-  
+
   ## Examples
-  
+
       iex> result = %AriaEngine.Membrane.Format.PlanningResult{
       ...>   status: :success,
       ...>   result: %{},
@@ -46,18 +46,18 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
   @spec valid?(t()) :: boolean()
   def valid?(%__MODULE__{} = result) do
     result.status in [:success, :failure, :error] and
-    is_map(result.execution_metadata) and
-    is_binary(result.request_id) and
-    is_map(result.performance_metrics)
+      is_map(result.execution_metadata) and
+      is_binary(result.request_id) and
+      is_map(result.performance_metrics)
   end
 
   def valid?(_), do: false
 
   @doc """
   Creates a successful planning result.
-  
+
   ## Examples
-  
+
       iex> plan = %{actions: []}
       iex> metadata = %{executed_at: DateTime.utc_now()}
       iex> metrics = %{execution_time_ms: 100}
@@ -72,10 +72,11 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
     %__MODULE__{
       status: :success,
       result: plan_result,
-      execution_metadata: Map.merge(execution_metadata, %{
-        executed_at: DateTime.utc_now(),
-        coordinator_version: "v2"
-      }),
+      execution_metadata:
+        Map.merge(execution_metadata, %{
+          executed_at: DateTime.utc_now(),
+          coordinator_version: "v2"
+        }),
       request_id: request_id,
       performance_metrics: performance_metrics
     }
@@ -83,9 +84,9 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
 
   @doc """
   Creates a failed planning result.
-  
+
   ## Examples
-  
+
       iex> metadata = %{failure_reason: "No solution found"}
       iex> metrics = %{execution_time_ms: 50}
       iex> result = AriaEngine.Membrane.Format.PlanningResult.failure(
@@ -99,10 +100,11 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
     %__MODULE__{
       status: :failure,
       result: nil,
-      execution_metadata: Map.merge(execution_metadata, %{
-        executed_at: DateTime.utc_now(),
-        coordinator_version: "v2"
-      }),
+      execution_metadata:
+        Map.merge(execution_metadata, %{
+          executed_at: DateTime.utc_now(),
+          coordinator_version: "v2"
+        }),
       request_id: request_id,
       performance_metrics: performance_metrics
     }
@@ -110,9 +112,9 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
 
   @doc """
   Creates an error planning result.
-  
+
   ## Examples
-  
+
       iex> metadata = %{error_reason: "Invalid domain"}
       iex> metrics = %{execution_time_ms: 10}
       iex> result = AriaEngine.Membrane.Format.PlanningResult.error(
@@ -126,10 +128,11 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
     %__MODULE__{
       status: :error,
       result: nil,
-      execution_metadata: Map.merge(execution_metadata, %{
-        executed_at: DateTime.utc_now(),
-        coordinator_version: "v2"
-      }),
+      execution_metadata:
+        Map.merge(execution_metadata, %{
+          executed_at: DateTime.utc_now(),
+          coordinator_version: "v2"
+        }),
       request_id: request_id,
       performance_metrics: performance_metrics
     }
@@ -137,9 +140,9 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
 
   @doc """
   Creates a planning result from HybridCoordinator execution.
-  
+
   ## Examples
-  
+
       iex> start_time = System.monotonic_time(:microsecond)
       iex> result = AriaEngine.Membrane.Format.PlanningResult.from_execution(
       ...>   {:ok, %{plan: []}}, "req_123", start_time
@@ -150,7 +153,7 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
   @spec from_execution({:ok, term()} | {:error, term()}, String.t(), integer()) :: t()
   def from_execution({:ok, plan_result}, request_id, start_time) do
     execution_time_ms = div(System.monotonic_time(:microsecond) - start_time, 1000)
-    
+
     success(
       plan_result,
       request_id,
@@ -161,7 +164,7 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
 
   def from_execution({:error, reason}, request_id, start_time) do
     execution_time_ms = div(System.monotonic_time(:microsecond) - start_time, 1000)
-    
+
     error(
       request_id,
       %{error_reason: reason},
@@ -171,9 +174,9 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
 
   @doc """
   Checks if the planning result represents a successful execution.
-  
+
   ## Examples
-  
+
       iex> result = AriaEngine.Membrane.Format.PlanningResult.success(
       ...>   %{}, "req_123", %{}, %{}
       ...> )
@@ -186,9 +189,9 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
 
   @doc """
   Gets the error reason from error planning results.
-  
+
   ## Examples
-  
+
       iex> result = AriaEngine.Membrane.Format.PlanningResult.error(
       ...>   "req_123", %{error_reason: "test error"}, %{}
       ...> )
@@ -202,9 +205,9 @@ defmodule AriaEngine.Membrane.Format.PlanningResult do
 
   @doc """
   Gets the execution time in milliseconds.
-  
+
   ## Examples
-  
+
       iex> result = AriaEngine.Membrane.Format.PlanningResult.success(
       ...>   %{}, "req_123", %{}, %{execution_time_ms: 150}
       ...> )

@@ -2,12 +2,14 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Timeline.Internal.STN.Core do
-  @moduledoc false # This module is part of the internal STN implementation
+  # This module is part of the internal STN implementation
+  @moduledoc false
 
   alias Timeline.Interval
   alias Timeline.Internal.STN
 
-  @type constraint :: {number(), number()}  # {min_distance, max_distance}
+  # {min_distance, max_distance}
+  @type constraint :: {number(), number()}
   @type time_point :: String.t()
   @type constraint_matrix :: %{optional({time_point(), time_point()}) => constraint()}
 
@@ -16,7 +18,7 @@ defmodule Timeline.Internal.STN.Core do
 
   This creates two time points (start and end) and adds the necessary
   temporal constraints. Then applies PC-2 to maintain consistency.
-  
+
   The interval's DateTime values are automatically converted to the STN's
   declared time units and rescaled according to the LOD level.
   """
@@ -24,18 +26,20 @@ defmodule Timeline.Internal.STN.Core do
   def add_interval(stn, interval) do
     start_point = "#{interval.id}_start"
     end_point = "#{interval.id}_end"
-    
+
     # Convert DateTime to STN units with LOD rescaling
-    duration = STN.Units.convert_datetime_duration_to_stn_units(
-      interval.start_time, 
-      interval.end_time, 
-      stn.time_unit,
-      stn.lod_level,
-      stn.lod_resolution
-    )
-    
-    duration_constraint = {duration, duration}  # Exact duration
-    
+    duration =
+      STN.Units.convert_datetime_duration_to_stn_units(
+        interval.start_time,
+        interval.end_time,
+        stn.time_unit,
+        stn.lod_level,
+        stn.lod_resolution
+      )
+
+    # Exact duration
+    duration_constraint = {duration, duration}
+
     stn
     |> add_time_point(start_point)
     |> add_time_point(end_point)
@@ -60,26 +64,23 @@ defmodule Timeline.Internal.STN.Core do
   def remove_interval(stn, interval_id) do
     start_point = "#{interval_id}_start"
     end_point = "#{interval_id}_end"
-    
+
     # Remove constraints involving these time points
-    updated_constraints = 
+    updated_constraints =
       stn.constraints
-      |> Enum.reject(fn {{from, to}, _} -> 
-           from == start_point or to == start_point or
-           from == end_point or to == end_point
-         end)
+      |> Enum.reject(fn {{from, to}, _} ->
+        from == start_point or to == start_point or
+          from == end_point or to == end_point
+      end)
       |> Map.new()
-    
+
     # Remove time points
-    updated_time_points = 
+    updated_time_points =
       stn.time_points
       |> MapSet.delete(start_point)
       |> MapSet.delete(end_point)
-    
-    %{stn | 
-      time_points: updated_time_points,
-      constraints: updated_constraints
-    }
+
+    %{stn | time_points: updated_time_points, constraints: updated_constraints}
     |> STN.PC2.apply_pc2()
   end
 
@@ -91,30 +92,31 @@ defmodule Timeline.Internal.STN.Core do
   """
   @spec add_constraint(STN.t(), time_point(), time_point(), constraint()) :: STN.t()
   def add_constraint(stn, from_point, to_point, {min_dist, max_dist} = constraint)
-      when (is_number(min_dist) or min_dist == :neg_infinity) and 
-           (is_number(max_dist) or max_dist == :infinity) do
-    
+      when (is_number(min_dist) or min_dist == :neg_infinity) and
+             (is_number(max_dist) or max_dist == :infinity) do
     # Validate constraint bounds
     unless valid_constraint_bounds?(min_dist, max_dist) do
       raise ArgumentError, "Invalid constraint bounds: #{inspect(constraint)}"
     end
-    
+
     # Ensure both time points exist
-    stn = stn
-          |> add_time_point(from_point)
-          |> add_time_point(to_point)
-    
+    stn =
+      stn
+      |> add_time_point(from_point)
+      |> add_time_point(to_point)
+
     # Start with the current constraints and assume consistency
     current_constraints = stn.constraints
     is_consistent = stn.consistent
 
     # Update forward constraint
-    {updated_constraints_1, consistent_1} = 
+    {updated_constraints_1, consistent_1} =
       update_single_constraint(current_constraints, {from_point, to_point}, constraint)
 
     # Update reverse constraint (handle infinity values)
     reverse_constraint = {negate_constraint_value(max_dist), negate_constraint_value(min_dist)}
-    {updated_constraints_2, consistent_2} = 
+
+    {updated_constraints_2, consistent_2} =
       update_single_constraint(updated_constraints_1, {to_point, from_point}, reverse_constraint)
 
     # Combine consistency flags - if ANY intersection fails, the whole STN is inconsistent
@@ -157,24 +159,23 @@ defmodule Timeline.Internal.STN.Core do
   @spec add_time_point(STN.t(), time_point()) :: STN.t()
   def add_time_point(stn, time_point) do
     updated_time_points = MapSet.put(stn.time_points, time_point)
-    
+
     # Add self-constraint for the new time point
     updated_constraints = Map.put(stn.constraints, {time_point, time_point}, {0, 0})
-    
-    %{stn | 
-      time_points: updated_time_points,
-      constraints: updated_constraints
-    }
+
+    %{stn | time_points: updated_time_points, constraints: updated_constraints}
   end
 
   @doc """
   Gets all intervals currently stored in the STN.
-  
+
   Returns a list of interval representations with their time bounds.
   Each interval is returned as %{id: interval_id, start_time: number, end_time: number, metadata: map}
   where times are in the STN's time units.
   """
-  @spec get_intervals(STN.t()) :: [%{id: String.t(), start_time: number(), end_time: number(), metadata: map()}]
+  @spec get_intervals(STN.t()) :: [
+          %{id: String.t(), start_time: number(), end_time: number(), metadata: map()}
+        ]
   def get_intervals(stn) do
     # Find interval pairs by looking for matching _start and _end time points
     stn.time_points
@@ -183,7 +184,7 @@ defmodule Timeline.Internal.STN.Core do
     |> Enum.map(fn start_point ->
       interval_id = String.replace_suffix(start_point, "_start", "")
       end_point = "#{interval_id}_end"
-      
+
       if MapSet.member?(stn.time_points, end_point) do
         # Extract time bounds from constraints
         case get_interval_bounds(stn, start_point, end_point) do
@@ -194,7 +195,9 @@ defmodule Timeline.Internal.STN.Core do
               end_time: end_time,
               metadata: Map.get(stn.metadata, interval_id, %{})
             }
-          {:error, _} -> nil
+
+          {:error, _} ->
+            nil
         end
       else
         nil
@@ -205,11 +208,13 @@ defmodule Timeline.Internal.STN.Core do
 
   @doc """
   Finds intervals that overlap with the given time range.
-  
+
   Returns intervals that have any overlap with [query_start, query_end].
   Times should be in the same units as the STN.
   """
-  @spec get_overlapping_intervals(STN.t(), number(), number()) :: [%{id: String.t(), start_time: number(), end_time: number(), metadata: map()}]
+  @spec get_overlapping_intervals(STN.t(), number(), number()) :: [
+          %{id: String.t(), start_time: number(), end_time: number(), metadata: map()}
+        ]
   def get_overlapping_intervals(stn, query_start, query_end) when query_start <= query_end do
     get_intervals(stn)
     |> Enum.filter(fn interval ->
@@ -220,67 +225,82 @@ defmodule Timeline.Internal.STN.Core do
 
   @doc """
   Finds free time slots of the specified duration within the given time window.
-  
+
   Returns a list of available slots as %{start_time: number, end_time: number}.
   Each slot has exactly the requested duration and fits within [window_start, window_end].
   """
-  @spec find_free_slots(STN.t(), number(), number(), number()) :: [%{start_time: number(), end_time: number()}]
-  def find_free_slots(stn, duration, window_start, window_end) 
-      when duration > 0 and window_start <= window_end and (window_end - window_start) >= duration do
-    
+  @spec find_free_slots(STN.t(), number(), number(), number()) :: [
+          %{start_time: number(), end_time: number()}
+        ]
+  def find_free_slots(stn, duration, window_start, window_end)
+      when duration > 0 and window_start <= window_end and window_end - window_start >= duration do
     # Get all intervals sorted by start time
-    occupied_intervals = 
+    occupied_intervals =
       get_intervals(stn)
       |> Enum.filter(fn interval ->
         # Only consider intervals that overlap with our search window
         interval.start_time <= window_end and window_start <= interval.end_time
       end)
       |> Enum.sort_by(& &1.start_time)
-    
+
     # Find gaps between occupied intervals
     find_gaps_in_timeline(occupied_intervals, window_start, window_end, duration)
   end
 
   @doc """
   Checks if a new interval conflicts with existing intervals in the STN.
-  
+
   Returns a list of conflicting intervals, or empty list if no conflicts.
   """
-  @spec check_interval_conflicts(STN.t(), number(), number()) :: [%{id: String.t(), start_time: number(), end_time: number(), metadata: map()}]
+  @spec check_interval_conflicts(STN.t(), number(), number()) :: [
+          %{id: String.t(), start_time: number(), end_time: number(), metadata: map()}
+        ]
   def check_interval_conflicts(stn, new_start, new_end) when new_start <= new_end do
     get_overlapping_intervals(stn, new_start, new_end)
   end
 
   @doc """
   Finds the next available time slot for the given duration after the specified start time.
-  
+
   Returns {:ok, start_time, end_time} for the first available slot,
   or {:error, reason} if no slot is available within a reasonable search window.
   """
-  @spec find_next_available_slot(STN.t(), number(), number()) :: {:ok, number(), number()} | {:error, atom()}
+  @spec find_next_available_slot(STN.t(), number(), number()) ::
+          {:ok, number(), number()} | {:error, atom()}
   def find_next_available_slot(stn, duration, earliest_start) when duration > 0 do
     # Search within a reasonable window (e.g., 30 days in STN time units)
-    search_window = convert_to_stn_time_units(30 * 24 * 3600 * 1000, stn.time_unit)  # 30 days in milliseconds
+    # 30 days in milliseconds
+    search_window = convert_to_stn_time_units(30 * 24 * 3600 * 1000, stn.time_unit)
     window_end = earliest_start + search_window
-    
+
     case find_free_slots(stn, duration, earliest_start, window_end) do
-      [] -> 
+      [] ->
         {:error, :no_available_slot}
+
       [first_slot | _] ->
         {:ok, first_slot.start_time, first_slot.end_time}
     end
   end
 
   # Private helper functions
-  
+
   # Validates constraint bounds, handling infinity values
   defp valid_constraint_bounds?(min_dist, max_dist) do
     case {min_dist, max_dist} do
-      {:neg_infinity, :infinity} -> true
-      {:neg_infinity, max_dist} when is_number(max_dist) -> true
-      {min_dist, :infinity} when is_number(min_dist) -> true
-      {min_dist, max_dist} when is_number(min_dist) and is_number(max_dist) -> min_dist <= max_dist
-      _ -> false
+      {:neg_infinity, :infinity} ->
+        true
+
+      {:neg_infinity, max_dist} when is_number(max_dist) ->
+        true
+
+      {min_dist, :infinity} when is_number(min_dist) ->
+        true
+
+      {min_dist, max_dist} when is_number(min_dist) and is_number(max_dist) ->
+        min_dist <= max_dist
+
+      _ ->
+        false
     end
   end
 
@@ -325,12 +345,14 @@ defmodule Timeline.Internal.STN.Core do
     case Map.get(constraints, key) do
       nil ->
         {Map.put(constraints, key, new_constraint), true}
+
       existing_constraint ->
         case intersect_constraints(existing_constraint, new_constraint) do
           :inconsistent ->
             # When local intersection fails, add the new constraint anyway
             # PC2 will detect the global inconsistency through path consistency
             {Map.put(constraints, key, new_constraint), false}
+
           intersected_constraint ->
             {Map.put(constraints, key, intersected_constraint), true}
         end
@@ -347,12 +369,15 @@ defmodule Timeline.Internal.STN.Core do
         # In a real implementation, we'd need to solve the constraint network
         # to get absolute times or work with relative constraints
         {:ok, 0, duration}
+
       {min_duration, max_duration} when is_number(min_duration) and is_number(max_duration) ->
         # Use the average for approximate scheduling
         avg_duration = (min_duration + max_duration) / 2
         {:ok, 0, avg_duration}
+
       nil ->
         {:error, :no_constraint}
+
       _ ->
         {:error, :invalid_constraint}
     end
@@ -362,66 +387,83 @@ defmodule Timeline.Internal.STN.Core do
   defp find_gaps_in_timeline(occupied_intervals, window_start, window_end, required_duration) do
     # Sort intervals by start time and merge overlapping ones
     merged_intervals = merge_overlapping_intervals(occupied_intervals)
-    
+
     # Find gaps between merged intervals
     gaps = []
-    
+
     # Check gap before first interval
-    gaps = case merged_intervals do
-      [] -> 
-        # Entire window is free
-        if window_end - window_start >= required_duration do
-          [%{start_time: window_start, end_time: window_start + required_duration}]
-        else
-          []
-        end
-      [first | _] ->
-        if first.start_time > window_start and (first.start_time - window_start) >= required_duration do
-          [%{start_time: window_start, end_time: window_start + required_duration} | gaps]
-        else
-          gaps
-        end
-    end
-    
-    # Check gaps between intervals
-    gaps = Enum.reduce(Enum.zip(merged_intervals, Enum.drop(merged_intervals, 1)), gaps, fn {current, next}, acc ->
-      gap_start = current.end_time
-      gap_end = next.start_time
-      gap_size = gap_end - gap_start
-      
-      if gap_size >= required_duration do
-        slot = %{start_time: gap_start, end_time: gap_start + required_duration}
-        [slot | acc]
-      else
-        acc
+    gaps =
+      case merged_intervals do
+        [] ->
+          # Entire window is free
+          if window_end - window_start >= required_duration do
+            [%{start_time: window_start, end_time: window_start + required_duration}]
+          else
+            []
+          end
+
+        [first | _] ->
+          if first.start_time > window_start and
+               first.start_time - window_start >= required_duration do
+            [%{start_time: window_start, end_time: window_start + required_duration} | gaps]
+          else
+            gaps
+          end
       end
-    end)
-    
-    # Check gap after last interval
-    gaps = case List.last(merged_intervals) do
-      nil -> gaps  # Already handled empty case above
-      last_interval ->
-        if last_interval.end_time < window_end and (window_end - last_interval.end_time) >= required_duration do
-          slot = %{start_time: last_interval.end_time, end_time: last_interval.end_time + required_duration}
-          [slot | gaps]
+
+    # Check gaps between intervals
+    gaps =
+      Enum.reduce(Enum.zip(merged_intervals, Enum.drop(merged_intervals, 1)), gaps, fn {current,
+                                                                                        next},
+                                                                                       acc ->
+        gap_start = current.end_time
+        gap_end = next.start_time
+        gap_size = gap_end - gap_start
+
+        if gap_size >= required_duration do
+          slot = %{start_time: gap_start, end_time: gap_start + required_duration}
+          [slot | acc]
         else
-          gaps
+          acc
         end
-    end
-    
+      end)
+
+    # Check gap after last interval
+    gaps =
+      case List.last(merged_intervals) do
+        # Already handled empty case above
+        nil ->
+          gaps
+
+        last_interval ->
+          if last_interval.end_time < window_end and
+               window_end - last_interval.end_time >= required_duration do
+            slot = %{
+              start_time: last_interval.end_time,
+              end_time: last_interval.end_time + required_duration
+            }
+
+            [slot | gaps]
+          else
+            gaps
+          end
+      end
+
     # Sort gaps by start time
     Enum.sort_by(gaps, & &1.start_time)
   end
 
   # Helper function to merge overlapping intervals
   defp merge_overlapping_intervals([]), do: []
+
   defp merge_overlapping_intervals(intervals) do
     sorted_intervals = Enum.sort_by(intervals, & &1.start_time)
-    
+
     Enum.reduce(sorted_intervals, [], fn current, acc ->
       case acc do
-        [] -> 
+        [] ->
           [current]
+
         [last | rest] ->
           if current.start_time <= last.end_time do
             # Overlapping - merge them
@@ -445,7 +487,8 @@ defmodule Timeline.Internal.STN.Core do
       :minute -> div(time_value_ms, 60_000)
       :hour -> div(time_value_ms, 3_600_000)
       :day -> div(time_value_ms, 86_400_000)
-      _ -> time_value_ms  # Default to milliseconds
+      # Default to milliseconds
+      _ -> time_value_ms
     end
   end
 end

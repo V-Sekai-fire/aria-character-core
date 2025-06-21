@@ -38,7 +38,8 @@ defmodule BacktrackingTest do
 
       # getv should succeed if flag matches
       {:ok, state2} = Domain.execute_action(domain, state1, :getv, [0])
-      assert state2 != false # Or check for {:ok, _} pattern if preferred
+      # Or check for {:ok, _} pattern if preferred
+      assert state2 != false
       assert get_fact(state2, "flag", "system") == 0
 
       # getv should fail if flag doesn't match

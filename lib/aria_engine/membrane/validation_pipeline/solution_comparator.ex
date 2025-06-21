@@ -20,7 +20,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
           minizinc_solved: false,
           solutions_match: false
         }
-      
+
       # MiniZinc unsupported for this problem type
       minizinc_result.status == :unsupported ->
         %{
@@ -30,7 +30,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
           minizinc_solved: false,
           solutions_match: false
         }
-      
+
       # Both solvers failed
       hybrid_result.status != :success and minizinc_result.status != :success ->
         %{
@@ -40,7 +40,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
           minizinc_solved: false,
           solutions_match: false
         }
-      
+
       # Only one solver succeeded
       hybrid_result.status == :success and minizinc_result.status != :success ->
         %{
@@ -50,7 +50,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
           minizinc_solved: false,
           solutions_match: false
         }
-      
+
       # Only MiniZinc succeeded
       hybrid_result.status != :success and minizinc_result.status == :success ->
         %{
@@ -60,11 +60,11 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
           minizinc_solved: true,
           solutions_match: false
         }
-      
+
       # Both succeeded - compare solutions
       hybrid_result.status == :success and minizinc_result.status == :success ->
         solutions_match = compare_solutions(hybrid_result.solution, minizinc_result.solution)
-        
+
         if solutions_match do
           %{
             overall_status: :success,
@@ -82,7 +82,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
             solutions_match: false
           }
         end
-      
+
       # Default case
       true ->
         %{
@@ -102,16 +102,17 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
     # Compare makespans (allowing small tolerance)
     hybrid_makespan = hybrid_solution.makespan || 0
     minizinc_makespan = minizinc_solution.makespan || 0
-    
-    makespan_tolerance = 5  # Allow 5 minute tolerance
+
+    # Allow 5 minute tolerance
+    makespan_tolerance = 5
     makespans_match = abs(hybrid_makespan - minizinc_makespan) <= makespan_tolerance
-    
+
     # Compare activity count
     hybrid_activities = length(hybrid_solution.activities || [])
     minizinc_activities = length(minizinc_solution.activities || [])
-    
+
     activities_count_match = hybrid_activities == minizinc_activities
-    
+
     # For now, consider solutions matching if makespans are close and activity counts match
     makespans_match and activities_count_match
   end

@@ -33,9 +33,7 @@ defmodule Timeline.IntervalTest do
       end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
 
       interval =
-        Interval.new(start_time, end_time,
-          agent: agent
-        )
+        Interval.new(start_time, end_time, agent: agent)
 
       assert interval.agent == agent
       assert Interval.agent?(interval)
@@ -48,9 +46,7 @@ defmodule Timeline.IntervalTest do
       end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
 
       interval =
-        Interval.new(start_time, end_time,
-          entity: entity
-        )
+        Interval.new(start_time, end_time, entity: entity)
 
       assert interval.entity == entity
       assert Interval.entity?(interval)
@@ -63,9 +59,7 @@ defmodule Timeline.IntervalTest do
       end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
 
       interval =
-        Interval.new(start_time, end_time,
-          metadata: metadata
-        )
+        Interval.new(start_time, end_time, metadata: metadata)
 
       assert interval.metadata == metadata
     end
@@ -124,7 +118,6 @@ defmodule Timeline.IntervalTest do
 
       assert Interval.duration_seconds(interval) == 400.0
     end
-
   end
 
   describe "time point containment" do
@@ -146,22 +139,21 @@ defmodule Timeline.IntervalTest do
       # Test point in middle
       test_time = DateTime.from_naive!(~N[1970-01-01 00:03:20], "Etc/UTC")
       assert Interval.contains?(interval, test_time)
-      
+
       # Start inclusive
       assert Interval.contains?(interval, start_time)
-      
+
       # End exclusive
       refute Interval.contains?(interval, end_time)
-      
+
       # Before start
       before_time = DateTime.from_naive!(~N[1970-01-01 00:00:50], "Etc/UTC")
       refute Interval.contains?(interval, before_time)
-      
+
       # After end
       after_time = DateTime.from_naive!(~N[1970-01-01 00:10:00], "Etc/UTC")
       refute Interval.contains?(interval, after_time)
     end
-
   end
 
   describe "agent and entity detection" do
@@ -171,9 +163,7 @@ defmodule Timeline.IntervalTest do
       end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
 
       interval =
-        Interval.new(start_time, end_time,
-          agent: agent
-        )
+        Interval.new(start_time, end_time, agent: agent)
 
       assert Interval.agent?(interval)
       refute Interval.entity?(interval)
@@ -185,9 +175,7 @@ defmodule Timeline.IntervalTest do
       end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
 
       interval =
-        Interval.new(start_time, end_time,
-          entity: entity
-        )
+        Interval.new(start_time, end_time, entity: entity)
 
       assert interval.entity == entity
       refute Interval.agent?(interval)
@@ -201,5 +189,9 @@ defmodule Timeline.IntervalTest do
       refute Interval.agent?(interval)
       refute Interval.entity?(interval)
     end
-  end # Added this 'end'
-end # Added this final 'end'
+  end
+
+  # Added this 'end'
+end
+
+# Added this final 'end'

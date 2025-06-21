@@ -22,11 +22,12 @@ defmodule TemporalPlannerSTNBridgeTest do
     domain = build_temporal_hybrid_domain()
 
     # 2. Define initial state with time
-    initial_state = StateV2.new()
-    |> StateV2.set_fact("player", "location", "start_location")
-    |> StateV2.set_fact("player", "has", "nothing")
-    |> StateV2.set_fact("item", "location", "middle_location")
-    |> StateV2.set_fact("time", "current", 0)
+    initial_state =
+      StateV2.new()
+      |> StateV2.set_fact("player", "location", "start_location")
+      |> StateV2.set_fact("player", "has", "nothing")
+      |> StateV2.set_fact("item", "location", "middle_location")
+      |> StateV2.set_fact("time", "current", 0)
 
     # 3. Define goals
     goals = [
@@ -37,6 +38,7 @@ defmodule TemporalPlannerSTNBridgeTest do
     # 4. Attempt to generate a plan
     Logger.debug("Initial state: #{inspect(initial_state)}")
     Logger.debug("Goals: #{inspect(goals)}")
+
     case AriaEngine.PlannerAdapter.plan(domain, initial_state, goals, verbose: 3) do
       {:ok, solution_tree} ->
         Logger.debug("Planner returned solution_tree: #{inspect(solution_tree, pretty: true)}")
@@ -45,8 +47,10 @@ defmodule TemporalPlannerSTNBridgeTest do
         Logger.debug("Constructed timeline: #{inspect(timeline)}")
 
         # 6. Check Timeline consistency (example: check for non-overlapping actions, valid durations, etc.)
-        assert timeline != nil, "Timeline should be constructed for unified temporal/non-temporal plan"
-        # Optionally, add more timeline-specific assertions here
+        assert timeline != nil,
+               "Timeline should be constructed for unified temporal/non-temporal plan"
+
+      # Optionally, add more timeline-specific assertions here
 
       {:error, reason} ->
         Logger.error("Planning failed: #{inspect(reason)}")
@@ -77,10 +81,15 @@ defmodule TemporalPlannerSTNBridgeTest do
   end
 
   defp travel_action(state, [from_loc, to_loc, duration_ms]) do
-    Logger.debug("travel_action called with state=#{inspect(state)}, args=#{inspect([from_loc, to_loc, duration_ms])}")
+    Logger.debug(
+      "travel_action called with state=#{inspect(state)}, args=#{inspect([from_loc, to_loc, duration_ms])}"
+    )
+
     current_loc = StateV2.get_fact(state, "player", "location")
+
     if current_loc == from_loc do
       new_time = StateV2.get_fact(state, "time", "current") + duration_ms
+
       StateV2.set_fact(state, "player", "location", to_loc)
       |> StateV2.set_fact("time", "current", new_time)
     else
@@ -89,12 +98,16 @@ defmodule TemporalPlannerSTNBridgeTest do
   end
 
   defp achieve_has_item_unigoal(state, ["has", item]) do
-    Logger.debug("achieve_has_item_unigoal (subject, [predicate, object]) called with state=#{inspect(state)}, item=#{inspect(item)}")
+    Logger.debug(
+      "achieve_has_item_unigoal (subject, [predicate, object]) called with state=#{inspect(state)}, item=#{inspect(item)}"
+    )
+
     if StateV2.get_fact(state, "player", "has") == item do
       []
     else
       player_location = StateV2.get_fact(state, "player", "location")
       item_location = StateV2.get_fact(state, item, "location") || "middle_location"
+
       [
         {:travel, [player_location, item_location, 2000]},
         {:pickup, [item]}
@@ -103,16 +116,23 @@ defmodule TemporalPlannerSTNBridgeTest do
   end
 
   defp achieve_has_item_unigoal(state, args) do
-    Logger.debug("achieve_has_item_unigoal catch-all called with state=#{inspect(state)}, args=#{inspect(args)}")
+    Logger.debug(
+      "achieve_has_item_unigoal catch-all called with state=#{inspect(state)}, args=#{inspect(args)}"
+    )
+
     false
   end
 
   defp achieve_location_unigoal(state, ["location", target_location]) do
-    Logger.debug("achieve_location_unigoal (subject, [predicate, object]) called with state=#{inspect(state)}, target_location=#{inspect(target_location)}")
+    Logger.debug(
+      "achieve_location_unigoal (subject, [predicate, object]) called with state=#{inspect(state)}, target_location=#{inspect(target_location)}"
+    )
+
     if StateV2.get_fact(state, "player", "location") == target_location do
       []
     else
       current_player_loc = StateV2.get_fact(state, "player", "location")
+
       [
         {:travel, [current_player_loc, target_location, 3000]}
       ]

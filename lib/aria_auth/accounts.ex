@@ -133,7 +133,7 @@ defmodule AriaAuth.Accounts do
 
   defp update_sign_in_tracking(%User{} = user) do
     current_time = DateTime.utc_now()
-    
+
     user
     |> User.changeset(%{
       last_sign_in_at: user.current_sign_in_at,
@@ -149,11 +149,13 @@ defmodule AriaAuth.Accounts do
     max_attempts = Application.get_env(:aria_auth, :max_failed_attempts, 5)
 
     changes = %{failed_attempts: failed_attempts}
-    changes = if failed_attempts >= max_attempts do
-      Map.put(changes, :locked_at, DateTime.utc_now())
-    else
-      changes
-    end
+
+    changes =
+      if failed_attempts >= max_attempts do
+        Map.put(changes, :locked_at, DateTime.utc_now())
+      else
+        changes
+      end
 
     user
     |> User.changeset(changes)

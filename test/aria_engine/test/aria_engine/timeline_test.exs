@@ -27,12 +27,13 @@ defmodule TimelineTest do
 
       start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
       end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      
-      interval = Interval.new(
-        start_time,
-        end_time,
-        [label: "Test Interval"]
-      )
+
+      interval =
+        Interval.new(
+          start_time,
+          end_time,
+          label: "Test Interval"
+        )
 
       updated_timeline = Timeline.add_interval(timeline, interval)
 
@@ -51,9 +52,10 @@ defmodule TimelineTest do
       interval1 = Interval.new(start1, end1)
       interval2 = Interval.new(start2, end2)
 
-      updated_timeline = timeline
-      |> Timeline.add_interval(interval1)
-      |> Timeline.add_interval(interval2)
+      updated_timeline =
+        timeline
+        |> Timeline.add_interval(interval1)
+        |> Timeline.add_interval(interval2)
 
       assert length(Map.keys(updated_timeline.intervals)) == 2
       assert Timeline.consistent?(updated_timeline)
@@ -70,9 +72,10 @@ defmodule TimelineTest do
       interval1 = Interval.new(start1, end1)
       interval2 = Interval.new(start2, end2)
 
-      updated_timeline = timeline
-      |> Timeline.add_interval(interval1)
-      |> Timeline.add_interval(interval2)
+      updated_timeline =
+        timeline
+        |> Timeline.add_interval(interval1)
+        |> Timeline.add_interval(interval2)
 
       assert Timeline.consistent?(updated_timeline)
     end
@@ -82,35 +85,40 @@ defmodule TimelineTest do
     setup do
       timeline = Timeline.new()
 
-      before_interval = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-        [label: "Before"]
-      )
+      before_interval =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+          label: "Before"
+        )
 
-      after_interval = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
-        [label: "After"]
-      )
+      after_interval =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+          label: "After"
+        )
 
-      meets_interval = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
-        [label: "Meets"]
-      )
+      meets_interval =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
+          label: "Meets"
+        )
 
-      overlaps_interval = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
-        [label: "Overlaps"]
-      )
+      overlaps_interval =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
+          label: "Overlaps"
+        )
 
-      timeline = timeline
-      |> Timeline.add_interval(before_interval)
-      |> Timeline.add_interval(after_interval)
-      |> Timeline.add_interval(meets_interval)
-      |> Timeline.add_interval(overlaps_interval)
+      timeline =
+        timeline
+        |> Timeline.add_interval(before_interval)
+        |> Timeline.add_interval(after_interval)
+        |> Timeline.add_interval(meets_interval)
+        |> Timeline.add_interval(overlaps_interval)
 
       %{
         timeline: timeline,
@@ -121,9 +129,16 @@ defmodule TimelineTest do
       }
     end
 
-    test "detects before relationship", %{timeline: timeline, before_interval: before_interval, after_interval: after_interval} do
-      max_timepoint = 1_000_000_000 # A large integer to represent infinity
-      constraint = {1, max_timepoint} # after_interval starts at least 1 unit after before_interval ends
+    test "detects before relationship", %{
+      timeline: timeline,
+      before_interval: before_interval,
+      after_interval: after_interval
+    } do
+      # A large integer to represent infinity
+      max_timepoint = 1_000_000_000
+      # after_interval starts at least 1 unit after before_interval ends
+      constraint = {1, max_timepoint}
+
       updated_timeline =
         Timeline.add_constraint(
           timeline,
@@ -135,8 +150,14 @@ defmodule TimelineTest do
       assert Timeline.consistent?(updated_timeline)
     end
 
-    test "detects meets relationship", %{timeline: timeline, before_interval: before_interval, meets_interval: meets_interval} do
-      constraint = {0, 0} # meets_interval starts exactly when before_interval ends
+    test "detects meets relationship", %{
+      timeline: timeline,
+      before_interval: before_interval,
+      meets_interval: meets_interval
+    } do
+      # meets_interval starts exactly when before_interval ends
+      constraint = {0, 0}
+
       updated_timeline =
         Timeline.add_constraint(
           timeline,
@@ -144,6 +165,7 @@ defmodule TimelineTest do
           "#{meets_interval.id}_start",
           constraint
         )
+
       assert Timeline.consistent?(updated_timeline)
     end
 
@@ -153,45 +175,55 @@ defmodule TimelineTest do
     end
 
     test "detects equals relationship", %{timeline: timeline} do
-      equal_interval1 = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      )
-      equal_interval2 = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      )
+      equal_interval1 =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+        )
 
-      updated_timeline = timeline
-      |> Timeline.add_interval(equal_interval1)
-      |> Timeline.add_interval(equal_interval2)
+      equal_interval2 =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+        )
+
+      updated_timeline =
+        timeline
+        |> Timeline.add_interval(equal_interval1)
+        |> Timeline.add_interval(equal_interval2)
 
       assert Timeline.consistent?(updated_timeline)
     end
 
     test "detects during relationship", %{timeline: timeline} do
-      during_interval = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC")
-      )
+      during_interval =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC")
+        )
+
       updated_timeline = Timeline.add_interval(timeline, during_interval)
       assert Timeline.consistent?(updated_timeline)
     end
 
     test "detects starts relationship", %{timeline: timeline} do
-      starts_interval = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
-      )
+      starts_interval =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+        )
+
       updated_timeline = Timeline.add_interval(timeline, starts_interval)
       assert Timeline.consistent?(updated_timeline)
     end
 
     test "detects finishes relationship", %{timeline: timeline} do
-      finishes_interval = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      )
+      finishes_interval =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+        )
+
       updated_timeline = Timeline.add_interval(timeline, finishes_interval)
       assert Timeline.consistent?(updated_timeline)
     end
@@ -200,12 +232,30 @@ defmodule TimelineTest do
   describe "agent and entity support" do
     test "creates timeline with agents" do
       timeline = Timeline.new()
-      agent = %{id: "aria", name: "Aria VTuber", type: :agent, metadata: %{}, capabilities: [:decision_making, :action_execution, :communication, :learning, :goal_setting], properties: %{personality: "helpful"}}
-      interval = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-        agent: agent, label: "Agent Interval"
-      )
+
+      agent = %{
+        id: "aria",
+        name: "Aria VTuber",
+        type: :agent,
+        metadata: %{},
+        capabilities: [
+          :decision_making,
+          :action_execution,
+          :communication,
+          :learning,
+          :goal_setting
+        ],
+        properties: %{personality: "helpful"}
+      }
+
+      interval =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+          agent: agent,
+          label: "Agent Interval"
+        )
+
       updated_timeline = Timeline.add_interval(timeline, interval)
 
       assert Timeline.consistent?(updated_timeline)
@@ -213,12 +263,24 @@ defmodule TimelineTest do
 
     test "creates timeline with entities" do
       timeline = Timeline.new()
-      entity = %{id: "room", name: "Conference Room", type: :entity, metadata: %{}, properties: %{capacity: 10}, owner_agent_id: nil}
-      interval = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-        entity: entity, label: "Entity Interval"
-      )
+
+      entity = %{
+        id: "room",
+        name: "Conference Room",
+        type: :entity,
+        metadata: %{},
+        properties: %{capacity: 10},
+        owner_agent_id: nil
+      }
+
+      interval =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+          entity: entity,
+          label: "Entity Interval"
+        )
+
       updated_timeline = Timeline.add_interval(timeline, interval)
 
       assert Timeline.consistent?(updated_timeline)
@@ -226,23 +288,49 @@ defmodule TimelineTest do
 
     test "tracks agents and entities in timeline" do
       timeline = Timeline.new()
-      agent = %{id: "aria", name: "Aria VTuber", type: :agent, metadata: %{}, capabilities: [:decision_making, :action_execution, :communication, :learning, :goal_setting], properties: %{}}
-      entity = %{id: "room", name: "Conference Room", type: :entity, metadata: %{}, properties: %{}, owner_agent_id: nil}
 
-      interval1 = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-        agent: agent
-      )
-      interval2 = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-        entity: entity
-      )
+      agent = %{
+        id: "aria",
+        name: "Aria VTuber",
+        type: :agent,
+        metadata: %{},
+        capabilities: [
+          :decision_making,
+          :action_execution,
+          :communication,
+          :learning,
+          :goal_setting
+        ],
+        properties: %{}
+      }
 
-      updated_timeline = timeline
-      |> Timeline.add_interval(interval1)
-      |> Timeline.add_interval(interval2)
+      entity = %{
+        id: "room",
+        name: "Conference Room",
+        type: :entity,
+        metadata: %{},
+        properties: %{},
+        owner_agent_id: nil
+      }
+
+      interval1 =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+          agent: agent
+        )
+
+      interval2 =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+          entity: entity
+        )
+
+      updated_timeline =
+        timeline
+        |> Timeline.add_interval(interval1)
+        |> Timeline.add_interval(interval2)
 
       assert length(Map.keys(updated_timeline.intervals)) == 2
     end
@@ -252,26 +340,32 @@ defmodule TimelineTest do
     test "maintains consistency with complex constraint networks" do
       timeline = Timeline.new()
 
-      interval1 = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-        label: "Task 1"
-      )
-      interval2 = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
-        label: "Task 2"
-      )
-      interval3 = Interval.new(
-        DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC"),
-        DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC"),
-        label: "Task 3"
-      )
+      interval1 =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+          label: "Task 1"
+        )
 
-      updated_timeline = timeline
-      |> Timeline.add_interval(interval1)
-      |> Timeline.add_interval(interval2)
-      |> Timeline.add_interval(interval3)
+      interval2 =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+          label: "Task 2"
+        )
+
+      interval3 =
+        Interval.new(
+          DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC"),
+          DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC"),
+          label: "Task 3"
+        )
+
+      updated_timeline =
+        timeline
+        |> Timeline.add_interval(interval1)
+        |> Timeline.add_interval(interval2)
+        |> Timeline.add_interval(interval3)
 
       assert length(Map.keys(updated_timeline.intervals)) == 3
       assert Timeline.consistent?(updated_timeline)
@@ -287,9 +381,10 @@ defmodule TimelineTest do
       interval1 = Interval.new(start1, end1)
       interval2 = Interval.new(start2, end2)
 
-      updated_timeline = timeline
-      |> Timeline.add_interval(interval1)
-      |> Timeline.add_interval(interval2)
+      updated_timeline =
+        timeline
+        |> Timeline.add_interval(interval1)
+        |> Timeline.add_interval(interval2)
 
       assert Timeline.consistent?(updated_timeline)
     end

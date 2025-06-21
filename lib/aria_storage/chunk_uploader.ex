@@ -17,7 +17,8 @@ defmodule AriaStorage.ChunkUploader do
   # Accept chunk data and compressed data
   @versions [:original, :compressed]
 
-  def __storage, do: Waffle.Storage.Local  # Default to local, can be overridden
+  # Default to local, can be overridden
+  def __storage, do: Waffle.Storage.Local
 
   # Generate chunk filename based on SHA512/256 hash
   def filename(_version, {%Chunks{id: chunk_id}, _scope}) do
@@ -50,7 +51,8 @@ defmodule AriaStorage.ChunkUploader do
     {:ok, create_temp_file(data)}
   end
 
-  def transform(:compressed, {%Chunks{compressed: compressed}, _scope}) when not is_nil(compressed) do
+  def transform(:compressed, {%Chunks{compressed: compressed}, _scope})
+      when not is_nil(compressed) do
     {:ok, create_temp_file(compressed)}
   end
 
@@ -59,7 +61,8 @@ defmodule AriaStorage.ChunkUploader do
     case Chunks.compress_chunk(data, :zstd) do
       {:ok, compressed} -> {:ok, create_temp_file(compressed)}
       compressed when is_binary(compressed) -> {:ok, create_temp_file(compressed)}
-      {:error, _} -> {:ok, create_temp_file(data)}  # Fallback to uncompressed
+      # Fallback to uncompressed
+      {:error, _} -> {:ok, create_temp_file(data)}
     end
   end
 
@@ -78,7 +81,8 @@ defmodule AriaStorage.ChunkUploader do
   def s3_object_headers(_version, {%Chunks{} = chunk, _scope}) do
     %{
       "content-type" => "application/octet-stream",
-      "cache-control" => "public, max-age=31536000",  # Cache for 1 year
+      # Cache for 1 year
+      "cache-control" => "public, max-age=31536000",
       "x-chunk-size" => to_string(chunk.size),
       "x-chunk-algorithm" => "sha512-256",
       "x-desync-version" => "1.0"
@@ -98,6 +102,7 @@ defmodule AriaStorage.ChunkUploader do
       len when len >= 4 ->
         <<a::binary-size(2), b::binary-size(2), _rest::binary>> = chunk_id_hex
         "chunks/#{a}/#{b}"
+
       _ ->
         "chunks/misc"
     end
@@ -107,6 +112,7 @@ defmodule AriaStorage.ChunkUploader do
     # Create a temporary file for Waffle to process
     temp_path = System.tmp_dir!() |> Path.join("chunk_#{System.unique_integer([:positive])}")
     :ok = File.write!(temp_path, data)
+
     %{
       path: temp_path,
       content_type: "application/octet-stream",
@@ -117,10 +123,12 @@ defmodule AriaStorage.ChunkUploader do
   defp validate_chunk_integrity(%Chunks{data: data, id: expected_id, checksum: checksum}) do
     # Validate SHA512/256 hash
     calculated_id = Chunks.calculate_chunk_id(data)
+
     if calculated_id == expected_id do
       # Validate additional checksum if present
       if checksum do
         calculated_checksum = :crypto.hash(:sha256, data)
+
         if calculated_checksum == checksum do
           :ok
         else

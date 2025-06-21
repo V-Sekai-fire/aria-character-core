@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Timeline.Internal.STN.Operations do
-  @moduledoc false # This module is part of the internal STN implementation
+  # This module is part of the internal STN implementation
+  @moduledoc false
 
   alias Timeline.Internal.STN
-  
+
   # alias AriaEngine.ConvergenceFlow
 
   @doc """
@@ -15,13 +16,14 @@ defmodule Timeline.Internal.STN.Operations do
   def intersection(stn1, stn2) do
     # Auto-rescale to compatible units and LOD if enabled
     {compatible_stn1, compatible_stn2} = ensure_compatible_stns(stn1, stn2)
-    
+
     # Merge time points
     merged_points = MapSet.union(compatible_stn1.time_points, compatible_stn2.time_points)
-    
+
     # Merge constraints (intersection of bounds - tighter constraints)
-    merged_constraints = merge_constraints_intersection(compatible_stn1.constraints, compatible_stn2.constraints)
-    
+    merged_constraints =
+      merge_constraints_intersection(compatible_stn1.constraints, compatible_stn2.constraints)
+
     %STN{
       time_points: merged_points,
       constraints: merged_constraints,
@@ -35,8 +37,10 @@ defmodule Timeline.Internal.STN.Operations do
       auto_rescale: compatible_stn1.auto_rescale,
       datetime_conversion_unit: compatible_stn1.datetime_conversion_unit,
       max_timepoints: max(compatible_stn1.max_timepoints, compatible_stn2.max_timepoints),
-      constant_work_enabled: compatible_stn1.constant_work_enabled or compatible_stn2.constant_work_enabled,
-      dummy_constraints: Map.merge(compatible_stn1.dummy_constraints, compatible_stn2.dummy_constraints)
+      constant_work_enabled:
+        compatible_stn1.constant_work_enabled or compatible_stn2.constant_work_enabled,
+      dummy_constraints:
+        Map.merge(compatible_stn1.dummy_constraints, compatible_stn2.dummy_constraints)
     }
     |> STN.PC2.apply_pc2()
   end
@@ -48,13 +52,14 @@ defmodule Timeline.Internal.STN.Operations do
   def difference(stn1, stn2) do
     # Auto-rescale to compatible units and LOD if enabled
     {compatible_stn1, compatible_stn2} = ensure_compatible_stns(stn1, stn2)
-    
+
     # Keep time points from first STN, remove those in second
     merged_points = MapSet.difference(compatible_stn1.time_points, compatible_stn2.time_points)
-    
+
     # For difference, we remove constraints that exist in stn2
-    merged_constraints = merge_constraints_difference(compatible_stn1.constraints, compatible_stn2.constraints)
-    
+    merged_constraints =
+      merge_constraints_difference(compatible_stn1.constraints, compatible_stn2.constraints)
+
     %STN{
       time_points: merged_points,
       constraints: merged_constraints,
@@ -86,6 +91,7 @@ defmodule Timeline.Internal.STN.Operations do
   @spec chain([STN.t()]) :: STN.t()
   def chain([]), do: STN.new()
   def chain([single_stn]), do: single_stn
+
   def chain([first_stn | rest_stns]) do
     Enum.reduce(rest_stns, first_stn, fn stn, acc ->
       compose(acc, stn)
@@ -99,16 +105,17 @@ defmodule Timeline.Internal.STN.Operations do
   def union(stn1, stn2) do
     # Auto-rescale to compatible units and LOD if enabled
     {compatible_stn1, compatible_stn2} = ensure_compatible_stns(stn1, stn2)
-    
+
     # Merge time points
     merged_points = MapSet.union(compatible_stn1.time_points, compatible_stn2.time_points)
-    
+
     # Merge constraints (intersection of bounds)
-    merged_constraints = merge_constraints_union(compatible_stn1.constraints, compatible_stn2.constraints)
-    
+    merged_constraints =
+      merge_constraints_union(compatible_stn1.constraints, compatible_stn2.constraints)
+
     # Combine metadata
     merged_metadata = Map.merge(compatible_stn1.metadata, compatible_stn2.metadata)
-    
+
     %STN{
       time_points: merged_points,
       constraints: merged_constraints,
@@ -122,8 +129,10 @@ defmodule Timeline.Internal.STN.Operations do
       auto_rescale: compatible_stn1.auto_rescale,
       datetime_conversion_unit: compatible_stn1.datetime_conversion_unit,
       max_timepoints: max(compatible_stn1.max_timepoints, compatible_stn2.max_timepoints),
-      constant_work_enabled: compatible_stn1.constant_work_enabled or compatible_stn2.constant_work_enabled,
-      dummy_constraints: Map.merge(compatible_stn1.dummy_constraints, compatible_stn2.dummy_constraints)
+      constant_work_enabled:
+        compatible_stn1.constant_work_enabled or compatible_stn2.constant_work_enabled,
+      dummy_constraints:
+        Map.merge(compatible_stn1.dummy_constraints, compatible_stn2.dummy_constraints)
     }
     |> STN.PC2.apply_pc2()
   end
@@ -135,7 +144,7 @@ defmodule Timeline.Internal.STN.Operations do
   def compose(stn1, stn2) do
     # Create bridge constraints between STNs
     bridged_constraints = create_bridge_constraints(stn1, stn2)
-    
+
     # Union the STNs with bridge constraints
     bridge_stn = %STN{
       time_points: MapSet.new(),
@@ -144,7 +153,7 @@ defmodule Timeline.Internal.STN.Operations do
       segments: [],
       metadata: %{}
     }
-    
+
     union(stn1, stn2)
     |> union(bridge_stn)
   end
@@ -155,6 +164,7 @@ defmodule Timeline.Internal.STN.Operations do
   @spec parallel_join([STN.t()]) :: STN.t()
   def parallel_join([]), do: STN.new()
   def parallel_join([single_stn]), do: single_stn
+
   def parallel_join(stns) do
     # Use Flow adapter for parallel processing of STN unions
     case length(stns) do
@@ -170,7 +180,7 @@ defmodule Timeline.Internal.STN.Operations do
         # |> (&%STN{constraints: &1}).()
         # |> STN.PC2.apply_pc2()
         %STN{}
-      
+
       _ ->
         # Direct processing for small sets
         stns
@@ -187,12 +197,13 @@ defmodule Timeline.Internal.STN.Operations do
   def segment(stn, _max_segments) do
     time_points = MapSet.to_list(stn.time_points)
     point_count = length(time_points)
-    
+
     # Limit each segment to 5 time points for Apple Vision Pro optimization
     max_points_per_segment = 5
-    
+
     if point_count <= max_points_per_segment do
-      [stn]  # No need to segment
+      # No need to segment
+      [stn]
     else
       time_points
       |> Enum.chunk_every(max_points_per_segment)
@@ -205,13 +216,14 @@ defmodule Timeline.Internal.STN.Operations do
 
   defp create_segment(stn, chunk_points, _index) do
     time_points_set = MapSet.new(chunk_points)
-    
+
     # Filter constraints relevant to this segment
-    segment_constraints = 
+    segment_constraints =
       Enum.filter(stn.constraints, fn {{p1, p2}, _} ->
         MapSet.member?(time_points_set, p1) and MapSet.member?(time_points_set, p2)
-      end) |> Map.new()
-      
+      end)
+      |> Map.new()
+
     %STN{
       time_points: time_points_set,
       constraints: segment_constraints,
@@ -228,18 +240,19 @@ defmodule Timeline.Internal.STN.Operations do
   @spec parallel_solve(STN.t(), integer()) :: STN.t()
   def parallel_solve(stn, max_segments \\ System.schedulers_online()) do
     segments = segment(stn, max_segments)
-    
+
     case length(segments) do
-      1 -> 
+      1 ->
         # Single segment, no need for parallel processing
         STN.PC2.apply_pc2(hd(segments))
-      
+
       _segment_count ->
         # Use convergence-based solving for parallel segment solving
         # Apply PC2 to each segment individually, then merge
-        solved_segments = segments
-        |> Enum.map(&STN.PC2.apply_pc2/1)
-        
+        solved_segments =
+          segments
+          |> Enum.map(&STN.PC2.apply_pc2/1)
+
         # Merge the solved segments
         parallel_join(solved_segments)
     end
@@ -271,8 +284,8 @@ defmodule Timeline.Internal.STN.Operations do
     # This filters out constraints that exist in the second STN
     constraints1
     |> Enum.reject(fn {key, _constraint} ->
-         Map.has_key?(constraints2, key)
-       end)
+      Map.has_key?(constraints2, key)
+    end)
     |> Map.new()
   end
 
@@ -299,7 +312,7 @@ defmodule Timeline.Internal.STN.Operations do
     # 2. Convert constraints to compatible units if needed
     # 3. Adjust LOD resolution if needed
     # 4. Return converted STNs
-    
+
     {stn1, stn2}
   end
 end

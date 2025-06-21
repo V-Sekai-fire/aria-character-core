@@ -69,7 +69,8 @@ defmodule AriaStorage.CasyncDecoderTest do
       test_data = "Test chunk data for hash verification"
       expected_hash = :crypto.hash(:sha512, test_data) |> binary_part(0, 32)
 
-      assert {:ok, ^test_data} = CasyncDecoder.verify_chunk(test_data, expected_hash, @ca_format_sha512_256)
+      assert {:ok, ^test_data} =
+               CasyncDecoder.verify_chunk(test_data, expected_hash, @ca_format_sha512_256)
     end
 
     test "returns error for hash mismatch" do
@@ -87,7 +88,8 @@ defmodule AriaStorage.CasyncDecoderTest do
       chunk_id = Chunks.calculate_chunk_id(test_data)
 
       # Verify using CasyncDecoder - should match
-      assert {:ok, ^test_data} = CasyncDecoder.verify_chunk(test_data, chunk_id, @ca_format_sha512_256)
+      assert {:ok, ^test_data} =
+               CasyncDecoder.verify_chunk(test_data, chunk_id, @ca_format_sha512_256)
     end
 
     test "confirms SHA512/256 vs SHA256 difference" do
@@ -140,19 +142,20 @@ defmodule AriaStorage.CasyncDecoderTest do
       assert {:ok, chunk_dirs} = File.ls(store_path)
       chunk_dirs_to_test = Enum.take(chunk_dirs, 3)
 
-      results = for chunk_dir <- chunk_dirs_to_test do
-        chunk_dir_path = Path.join(store_path, chunk_dir)
-        assert {:ok, chunk_files} = File.ls(chunk_dir_path)
-        chunk_file = List.first(chunk_files)
+      results =
+        for chunk_dir <- chunk_dirs_to_test do
+          chunk_dir_path = Path.join(store_path, chunk_dir)
+          assert {:ok, chunk_files} = File.ls(chunk_dir_path)
+          chunk_file = List.first(chunk_files)
 
-        chunk_path = Path.join(chunk_dir_path, chunk_file)
-        assert {:ok, chunk_data} = File.read(chunk_path)
+          chunk_path = Path.join(chunk_dir_path, chunk_file)
+          assert {:ok, chunk_data} = File.read(chunk_path)
 
-        chunk_id_hex = Path.basename(chunk_file, ".cacnk")
-        chunk_id = Base.decode16!(chunk_id_hex, case: :lower)
+          chunk_id_hex = Path.basename(chunk_file, ".cacnk")
+          chunk_id = Base.decode16!(chunk_id_hex, case: :lower)
 
-        process_real_chunk(chunk_data, chunk_id, chunk_id_hex)
-      end
+          process_real_chunk(chunk_data, chunk_id, chunk_id_hex)
+        end
 
       # All chunks should process successfully
       Enum.each(results, fn result ->
@@ -174,10 +177,11 @@ defmodule AriaStorage.CasyncDecoderTest do
       # Assemble the file
       _output_path = Path.join(@test_output_dir, "assembled_blob1.bin")
 
-      result = CasyncDecoder.assemble_file(parsed_data, [
-        store_path: store_path,
-        output_dir: @test_output_dir
-      ])
+      result =
+        CasyncDecoder.assemble_file(parsed_data,
+          store_path: store_path,
+          output_dir: @test_output_dir
+        )
 
       assert {:ok, assembly_result} = result
       assert assembly_result.success == true
@@ -193,11 +197,12 @@ defmodule AriaStorage.CasyncDecoderTest do
       assert {:ok, caibx_data} = File.read(caibx_path)
       assert {:ok, parsed_data} = CasyncFormat.parse_index(caibx_data)
 
-      result = CasyncDecoder.assemble_file(parsed_data, [
-        store_path: store_path,
-        output_dir: @test_output_dir,
-        verify_integrity: true
-      ])
+      result =
+        CasyncDecoder.assemble_file(parsed_data,
+          store_path: store_path,
+          output_dir: @test_output_dir,
+          verify_integrity: true
+        )
 
       assert {:ok, assembly_result} = result
       assert assembly_result.verification_passed == true
@@ -212,10 +217,11 @@ defmodule AriaStorage.CasyncDecoderTest do
         assert {:ok, caibx_data} = File.read(caibx_path)
         assert {:ok, parsed_data} = CasyncFormat.parse_index(caibx_data)
 
-        result = CasyncDecoder.assemble_file(parsed_data, [
-          store_path: store_path,
-          output_dir: @test_output_dir
-        ])
+        result =
+          CasyncDecoder.assemble_file(parsed_data,
+            store_path: store_path,
+            output_dir: @test_output_dir
+          )
 
         # Should handle corruption gracefully
         case result do
@@ -226,6 +232,7 @@ defmodule AriaStorage.CasyncDecoderTest do
             assert assembly_result.chunks_processed <= length(parsed_data.chunks)
             # Verification might still pass if corruption is in metadata, not chunk data
             assert is_boolean(assembly_result.verification_passed)
+
           {:error, _reason} ->
             # Or fail gracefully with error
             assert true
@@ -238,16 +245,18 @@ defmodule AriaStorage.CasyncDecoderTest do
           assert {:ok, caibx_data} = File.read(caibx_path)
           assert {:ok, parsed_data} = CasyncFormat.parse_index(caibx_data)
 
-          result = CasyncDecoder.assemble_file(parsed_data, [
-            store_path: store_path,
-            output_dir: @test_output_dir
-          ])
+          result =
+            CasyncDecoder.assemble_file(parsed_data,
+              store_path: store_path,
+              output_dir: @test_output_dir
+            )
 
           # Normal file should process successfully
           case result do
             {:ok, assembly_result} ->
               assert assembly_result.chunks_processed <= length(parsed_data.chunks)
               assert is_boolean(assembly_result.verification_passed)
+
             {:error, _reason} ->
               # Even normal files may fail if store is incomplete
               assert true
@@ -300,11 +309,12 @@ defmodule AriaStorage.CasyncDecoderTest do
       caibx_path = Path.join(@testdata_path, "blob1.caibx")
       store_path = Path.join(@testdata_path, "blob1.store")
 
-      result = CasyncDecoder.decode_file(caibx_path, [
-        store_path: store_path,
-        output_dir: @test_output_dir,
-        verify_integrity: true
-      ])
+      result =
+        CasyncDecoder.decode_file(caibx_path,
+          store_path: store_path,
+          output_dir: @test_output_dir,
+          verify_integrity: true
+        )
 
       assert {:ok, decode_result} = result
       assert decode_result.format == :caibx
@@ -319,11 +329,12 @@ defmodule AriaStorage.CasyncDecoderTest do
       store_path = Path.join(@testdata_path, "blob2.store")
 
       # This test verifies parsing works despite hash mismatches
-      result = CasyncDecoder.decode_file(caibx_path, [
-        store_path: store_path,
-        output_dir: @test_output_dir,
-        verify_integrity: true
-      ])
+      result =
+        CasyncDecoder.decode_file(caibx_path,
+          store_path: store_path,
+          output_dir: @test_output_dir,
+          verify_integrity: true
+        )
 
       assert {:ok, decode_result} = result
       assert decode_result.format == :caibx
@@ -352,8 +363,10 @@ defmodule AriaStorage.CasyncDecoderTest do
           result when is_binary(result) -> {:ok, result}
           error -> {:error, {:zstd_error, error}}
         end
+
       :none ->
         {:ok, data}
+
       _ ->
         {:error, {:unsupported_compression, compression}}
     end

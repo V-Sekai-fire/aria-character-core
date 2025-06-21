@@ -6,7 +6,7 @@ defmodule GoalAPI do
   Provides functions for managing goals within the Aria Engine.
   """
   alias Core
-  
+
   @type t :: Core.t()
   @type todo_item :: Core.todo_item()
   @type goal :: Core.goal()

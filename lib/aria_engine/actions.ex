@@ -9,24 +9,24 @@ defmodule Actions do
   and can interact with external systems through command execution.
   """
 
-    require Logger
+  require Logger
 
   # Type definitions
   @type state :: AriaEngine.StateV2.t()
   @type command :: String.t()
   @type args :: [String.t()]
   @type execution_opts :: %{
-    optional(:timeout) => non_neg_integer(),
-    optional(:working_dir) => String.t(),
-    optional(:env) => %{String.t() => String.t()},
-    optional(:capture_output) => boolean()
-  }
+          optional(:timeout) => non_neg_integer(),
+          optional(:working_dir) => String.t(),
+          optional(:env) => %{String.t() => String.t()},
+          optional(:capture_output) => boolean()
+        }
   @type execution_result :: %{
-    exit_code: non_neg_integer(),
-    stdout: String.t(),
-    stderr: String.t(),
-    duration_ms: non_neg_integer()
-  }
+          exit_code: non_neg_integer(),
+          stdout: String.t(),
+          stderr: String.t(),
+          duration_ms: non_neg_integer()
+        }
   @type file_path :: String.t()
   @type permissions :: String.t()
   @type url :: String.t()
@@ -56,35 +56,40 @@ defmodule Actions do
     start_time = System.monotonic_time(:millisecond)
 
     try do
-      result = case args do
-        [] ->
-          # Single command string
-          Porcelain.shell(command, out: :string, err: :string)
-        _ ->
-          # Command with args
-          Porcelain.exec(command, args, out: :string, err: :string)
-      end
+      result =
+        case args do
+          [] ->
+            # Single command string
+            Porcelain.shell(command, out: :string, err: :string)
+
+          _ ->
+            # Command with args
+            Porcelain.exec(command, args, out: :string, err: :string)
+        end
 
       end_time = System.monotonic_time(:millisecond)
       duration_ms = end_time - start_time
 
       # Update state with execution results using direct state operations
-      new_state = state
-      |> AriaEngine.StateV2.set_fact("last_command", "command", command)
-      |> AriaEngine.StateV2.set_fact("last_command", "args", args)
-      |> AriaEngine.StateV2.set_fact("last_command", "exit_code", result.status)
-      |> AriaEngine.StateV2.set_fact("last_command", "stdout", result.out || "")
-      |> AriaEngine.StateV2.set_fact("last_command", "stderr", result.err || "")
-      |> AriaEngine.StateV2.set_fact("last_command", "duration_ms", duration_ms)
-      |> AriaEngine.StateV2.set_fact("last_command", "success", result.status == 0)
+      new_state =
+        state
+        |> AriaEngine.StateV2.set_fact("last_command", "command", command)
+        |> AriaEngine.StateV2.set_fact("last_command", "args", args)
+        |> AriaEngine.StateV2.set_fact("last_command", "exit_code", result.status)
+        |> AriaEngine.StateV2.set_fact("last_command", "stdout", result.out || "")
+        |> AriaEngine.StateV2.set_fact("last_command", "stderr", result.err || "")
+        |> AriaEngine.StateV2.set_fact("last_command", "duration_ms", duration_ms)
+        |> AriaEngine.StateV2.set_fact("last_command", "success", result.status == 0)
 
       if result.status == 0 do
         Logger.debug("Command succeeded (#{duration_ms}ms)")
         new_state
       else
         Logger.debug("Command failed with exit code #{result.status}")
+
         if fail_on_error do
-          false # Ensure this returns false
+          # Ensure this returns false
+          false
         else
           # Continue on error - update state with failure info but don't fail
           new_state
@@ -92,19 +97,20 @@ defmodule Actions do
           |> AriaEngine.StateV2.set_fact("command_result", "last_success", false)
         end
       end
-
     rescue
       error ->
         Logger.debug("Command execution failed: #{inspect(error)}")
 
         # Update state with error information
-        error_state = state
-        |> AriaEngine.StateV2.set_fact("last_command", "command", command)
-        |> AriaEngine.StateV2.set_fact("last_command", "error", inspect(error))
-        |> AriaEngine.StateV2.set_fact("last_command", "success", false)
+        error_state =
+          state
+          |> AriaEngine.StateV2.set_fact("last_command", "command", command)
+          |> AriaEngine.StateV2.set_fact("last_command", "error", inspect(error))
+          |> AriaEngine.StateV2.set_fact("last_command", "success", false)
 
         if fail_on_error do
-          false # Ensure this returns false
+          # Ensure this returns false
+          false
         else
           error_state
         end
@@ -117,7 +123,10 @@ defmodule Actions do
   @spec copy_file(state(), {file_path(), file_path()}) :: state() | false
   def copy_file(state, [source, destination]) do
     case execute_command(state, ["cp", source, destination]) do
-      false -> false  # Command failed, ensure false is returned
+      # Command failed, ensure false is returned
+      false ->
+        false
+
       new_state ->
         # Update state to record successful copy
         new_state
@@ -156,7 +165,10 @@ defmodule Actions do
   @spec create_directory(state(), [file_path()]) :: state() | false
   def create_directory(state, [dir_path]) do
     case execute_command(state, ["mkdir", "-p", dir_path]) do
-      false -> false  # Command failed, ensure false is returned
+      # Command failed, ensure false is returned
+      false ->
+        false
+
       new_state ->
         # Update state to record successful directory creation
         new_state
@@ -190,6 +202,7 @@ defmodule Actions do
         # Command failed, file doesn't exist - still return state with the result
         state
         |> AriaEngine.StateV2.set_fact("file_exists", file_path, false)
+
       new_state ->
         # Update state to record file existence
         new_state
@@ -203,7 +216,10 @@ defmodule Actions do
   @spec download_file(state(), {url(), file_path()}) :: state() | false
   def download_file(state, [url, destination]) do
     case execute_command(state, ["curl", "-o", destination, url]) do
-      false -> false  # Command failed, ensure false is returned
+      # Command failed, ensure false is returned
+      false ->
+        false
+
       new_state ->
         # Update state to record successful download
         new_state
@@ -217,7 +233,10 @@ defmodule Actions do
   @spec download_file(state(), [url() | file_path() | any()]) :: state() | false
   def download_file(state, [url, destination, _options]) do
     case execute_command(state, ["curl", "-o", destination, url]) do
-      false -> false  # Command failed, ensure false is returned
+      # Command failed, ensure false is returned
+      false ->
+        false
+
       new_state ->
         # Update state to record successful download
         new_state
@@ -258,10 +277,18 @@ defmodule Actions do
   @spec http_request(state(), [String.t()]) :: state() | false
   def http_request(state, [method, url | curl_args]) do
     case String.upcase(method) do
-      "GET" -> execute_command(state, ["curl", "-X", "GET", url] ++ curl_args)
-      "POST" -> execute_command(state, ["curl", "-X", "POST", url] ++ curl_args)
-      "PUT" -> execute_command(state, ["curl", "-X", "PUT", url] ++ curl_args)
-      "DELETE" -> execute_command(state, ["curl", "-X", "DELETE", url] ++ curl_args)
+      "GET" ->
+        execute_command(state, ["curl", "-X", "GET", url] ++ curl_args)
+
+      "POST" ->
+        execute_command(state, ["curl", "-X", "POST", url] ++ curl_args)
+
+      "PUT" ->
+        execute_command(state, ["curl", "-X", "PUT", url] ++ curl_args)
+
+      "DELETE" ->
+        execute_command(state, ["curl", "-X", "DELETE", url] ++ curl_args)
+
       _ ->
         Logger.error("Unsupported HTTP method: #{method}")
         false
@@ -283,6 +310,7 @@ defmodule Actions do
   def wait(state, [seconds]) when is_integer(seconds) do
     execute_command(state, ["sleep", Integer.to_string(seconds)])
   end
+
   @spec wait(state(), [String.t()]) :: state() | false
   def wait(state, [seconds]) when is_binary(seconds) do
     execute_command(state, ["sleep", seconds])
@@ -314,6 +342,7 @@ defmodule Actions do
       nil ->
         Logger.warning("Environment variable #{var_name} not found")
         false
+
       value ->
         state
         |> AriaEngine.StateV2.set_fact("env", var_name, value)

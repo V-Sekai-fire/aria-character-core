@@ -43,7 +43,7 @@ defmodule AriaAuth.Sessions do
           delete_session(session)
           {:error, :expired}
         end
-      
+
       nil ->
         {:error, :not_found}
     end
@@ -65,7 +65,7 @@ defmodule AriaAuth.Sessions do
     case get_session(token) do
       %Session{} = session ->
         delete_session(session)
-      
+
       nil ->
         {:error, :not_found}
     end
@@ -102,7 +102,7 @@ defmodule AriaAuth.Sessions do
   """
   def cleanup_expired_sessions do
     now = DateTime.utc_now()
-    
+
     Session
     |> where([s], s.expires_at < ^now)
     |> Repo.delete_all()
@@ -125,7 +125,7 @@ defmodule AriaAuth.Sessions do
           delete_session(session)
           {:error, :expired}
         end
-      
+
       nil ->
         {:error, :not_found}
     end

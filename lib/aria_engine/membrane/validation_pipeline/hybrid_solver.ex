@@ -10,51 +10,53 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
   """
   def solve(params, state) do
     Logger.info("🔧 Calling Hybrid solver")
-    
+
     start_time = System.monotonic_time(:millisecond)
-    
+
     try do
       # Call the real AriaEngine scheduler
       case AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
-        params["schedule_name"] || "validation_test",
-        params["activities"] || [],
-        params["entities"] || [],
-        params["resources"] || %{},
-        params["constraints"] || %{},
-        true, # simulation_mode
-        true, # activity_log
-        1     # verbose
-      ) do
+             params["schedule_name"] || "validation_test",
+             params["activities"] || [],
+             params["entities"] || [],
+             params["resources"] || %{},
+             params["constraints"] || %{},
+             # simulation_mode
+             true,
+             # activity_log
+             true,
+             # verbose
+             1
+           ) do
         {:ok, result} ->
           end_time = System.monotonic_time(:millisecond)
           solve_time = end_time - start_time
-          
+
           Logger.info("✅ Hybrid solver completed in #{solve_time}ms")
-          
+
           %{
             status: :success,
             solution: extract_solution(result),
             solve_time_ms: solve_time,
             raw_result: result
           }
-          
+
         {:error, reason} ->
           end_time = System.monotonic_time(:millisecond)
           solve_time = end_time - start_time
-          
+
           Logger.error("❌ Hybrid solver failed: #{reason}")
-          
+
           %{
             status: :error,
             error: reason,
             solve_time_ms: solve_time
           }
       end
-      
     rescue
       error ->
         Logger.error("❌ Hybrid solver exception: #{inspect(error)}")
-        
+
         %{
           status: :error,
           error: "Hybrid solver exception: #{Exception.message(error)}"
@@ -73,14 +75,14 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
           makespan: calculate_makespan(schedule),
           resource_utilization: extract_resource_utilization(result)
         }
-        
+
       %{schedule: schedule} ->
         %{
           activities: extract_activities_from_schedule(schedule),
           makespan: calculate_makespan(schedule),
           resource_utilization: %{}
         }
-        
+
       _ ->
         %{
           activities: [],

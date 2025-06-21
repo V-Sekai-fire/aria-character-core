@@ -89,7 +89,8 @@ defmodule TemporalPlanner.STNPlanner do
 
   """
   @spec new(goal_id(), planning_strategy(), keyword()) :: t()
-  def new(goal_id, strategy, opts \\ []) when strategy in [:sequential, :parallel, :hierarchical, :adaptive] do
+  def new(goal_id, strategy, opts \\ [])
+      when strategy in [:sequential, :parallel, :hierarchical, :adaptive] do
     methods = Keyword.get(opts, :methods, [])
     world_constraints = Keyword.get(opts, :world_constraints, Timeline.new())
     reentrant_enabled = Keyword.get(opts, :reentrant_enabled, true)
@@ -97,7 +98,7 @@ defmodule TemporalPlanner.STNPlanner do
 
     # Compute initial goal STN from methods
     goal_stn = compute_goal_stn(strategy, methods)
-    
+
     # Create method segments for parallel solving
     method_segments = create_method_segments(methods, strategy)
 
@@ -131,17 +132,18 @@ defmodule TemporalPlanner.STNPlanner do
   @spec add_method(t(), STNMethod.t()) :: t()
   def add_method(%__MODULE__{} = planner, %STNMethod{} = method) do
     updated_methods = planner.methods ++ [method]
-    
+
     # Recompute goal STN with new method
     updated_goal_stn = compute_goal_stn(planner.planning_strategy, updated_methods)
-    
+
     # Recreate method segments
     updated_segments = create_method_segments(updated_methods, planner.planning_strategy)
 
-    %{planner | 
-      methods: updated_methods,
-      goal_stn: updated_goal_stn,
-      method_segments: updated_segments
+    %{
+      planner
+      | methods: updated_methods,
+        goal_stn: updated_goal_stn,
+        method_segments: updated_segments
     }
   end
 
@@ -165,19 +167,21 @@ defmodule TemporalPlanner.STNPlanner do
       constraint: constraint,
       timestamp: DateTime.utc_now()
     }
-    
+
     updated_constraint_updates = [constraint_update | planner.constraint_updates]
-    
+
     # Update world constraints
-    updated_world_constraints = planner.world_constraints
-    |> Timeline.add_constraint(from_point, to_point, constraint)
-    
+    updated_world_constraints =
+      planner.world_constraints
+      |> Timeline.add_constraint(from_point, to_point, constraint)
+
     # Trigger replanning if reentrant execution is enabled
-    updated_planner = %{planner | 
-      constraint_updates: updated_constraint_updates,
-      world_constraints: updated_world_constraints
+    updated_planner = %{
+      planner
+      | constraint_updates: updated_constraint_updates,
+        world_constraints: updated_world_constraints
     }
-    
+
     if planner.reentrant_enabled and planner.execution_status == :executing do
       trigger_replanning(updated_planner)
     else
@@ -248,28 +252,32 @@ defmodule TemporalPlanner.STNPlanner do
   @spec estimate_duration(t()) :: STNAction.duration_constraint()
   def estimate_duration(%__MODULE__{methods: methods, planning_strategy: strategy}) do
     method_durations = Enum.map(methods, & &1.estimated_duration)
-    
+
     case strategy do
       :sequential ->
         # Sum all method durations
         Enum.reduce(method_durations, {0, 0}, fn
           {min, max}, {acc_min, acc_max} ->
-            new_max = if max == :infinity or acc_max == :infinity, do: :infinity, else: max + acc_max
+            new_max =
+              if max == :infinity or acc_max == :infinity, do: :infinity, else: max + acc_max
+
             {min + acc_min, new_max}
         end)
-      
+
       :parallel ->
         # Take maximum method duration
         Enum.reduce(method_durations, {0, 0}, fn
           {min, max}, {acc_min, acc_max} ->
-            new_max = if max == :infinity or acc_max == :infinity, do: :infinity, else: max(max, acc_max)
+            new_max =
+              if max == :infinity or acc_max == :infinity, do: :infinity, else: max(max, acc_max)
+
             {max(min, acc_min), new_max}
         end)
-        
+
       :hierarchical ->
         # Mixed strategy based on method dependencies
         estimate_hierarchical_duration(method_durations)
-        
+
       :adaptive ->
         # Conservative estimate based on current world constraints
         estimate_adaptive_duration(method_durations)
@@ -280,15 +288,18 @@ defmodule TemporalPlanner.STNPlanner do
 
   defp compute_goal_stn(strategy, methods) do
     method_timelines = Enum.map(methods, &STNMethod.to_timeline/1)
-    
+
     case strategy do
-      :sequential -> 
+      :sequential ->
         Timeline.chain(method_timelines)
-      :parallel -> 
+
+      :parallel ->
         Timeline.parallel_join(method_timelines)
+
       :hierarchical ->
         # Hierarchical strategy uses both sequential and parallel composition
         compose_hierarchical(method_timelines)
+
       :adaptive ->
         # Adaptive strategy selects best composition based on constraints
         compose_adaptive(method_timelines)
@@ -300,15 +311,18 @@ defmodule TemporalPlanner.STNPlanner do
       :sequential ->
         # Each method is a separate segment for sequential execution
         Enum.map(methods, &STNMethod.to_timeline/1)
+
       :parallel ->
         # All methods in single segment for parallel execution
         case methods do
           [] -> []
           methods -> [STNMethod.parallel(methods)]
         end
+
       :hierarchical ->
         # Create segments based on method dependencies
         create_hierarchical_segments(methods)
+
       :adaptive ->
         # Dynamic segmentation based on current constraints
         create_adaptive_segments(methods)
@@ -318,18 +332,19 @@ defmodule TemporalPlanner.STNPlanner do
   defp trigger_replanning(%__MODULE__{} = planner) do
     # Set status to replanning and recompute goal STN
     updated_goal_stn = compute_goal_stn(planner.planning_strategy, planner.methods)
-    
-    %{planner | 
-      execution_status: :replanning,
-      goal_stn: updated_goal_stn
-    }
+
+    %{planner | execution_status: :replanning, goal_stn: updated_goal_stn}
   end
 
   defp compose_hierarchical(method_timelines) do
     # Hierarchical composition: alternate between sequential and parallel
     case method_timelines do
-      [] -> Timeline.new()
-      [single] -> single
+      [] ->
+        Timeline.new()
+
+      [single] ->
+        single
+
       multiple ->
         # Group methods and apply mixed composition
         multiple
@@ -345,8 +360,12 @@ defmodule TemporalPlanner.STNPlanner do
   defp compose_adaptive(method_timelines) do
     # Adaptive composition: choose best strategy based on constraint density
     case method_timelines do
-      [] -> Timeline.new()
-      [single] -> single
+      [] ->
+        Timeline.new()
+
+      [single] ->
+        single
+
       multiple ->
         # For now, use hierarchical as default adaptive strategy
         compose_hierarchical(multiple)
@@ -356,7 +375,8 @@ defmodule TemporalPlanner.STNPlanner do
   defp create_hierarchical_segments(methods) do
     # Group methods into hierarchical segments
     methods
-    |> Enum.chunk_every(3)  # Group into chunks of 3 for hierarchical processing
+    # Group into chunks of 3 for hierarchical processing
+    |> Enum.chunk_every(3)
     |> Enum.map(fn method_chunk ->
       STNMethod.parallel(method_chunk)
     end)
@@ -370,24 +390,34 @@ defmodule TemporalPlanner.STNPlanner do
   defp estimate_hierarchical_duration(method_durations) do
     # Hierarchical duration: mix of sequential and parallel
     case method_durations do
-      [] -> {0, 0}
+      [] ->
+        {0, 0}
+
       durations ->
         # Group durations and apply mixed estimation
         durations
         |> Enum.chunk_every(2)
         |> Enum.map(fn
-          [single] -> single
-          chunk -> 
+          [single] ->
+            single
+
+          chunk ->
             # Parallel execution within chunk
             Enum.reduce(chunk, {0, 0}, fn
               {min, max}, {acc_min, acc_max} ->
-                new_max = if max == :infinity or acc_max == :infinity, do: :infinity, else: max(max, acc_max)
+                new_max =
+                  if max == :infinity or acc_max == :infinity,
+                    do: :infinity,
+                    else: max(max, acc_max)
+
                 {max(min, acc_min), new_max}
             end)
         end)
         |> Enum.reduce({0, 0}, fn
           {min, max}, {acc_min, acc_max} ->
-            new_max = if max == :infinity or acc_max == :infinity, do: :infinity, else: max + acc_max
+            new_max =
+              if max == :infinity or acc_max == :infinity, do: :infinity, else: max + acc_max
+
             {min + acc_min, new_max}
         end)
     end

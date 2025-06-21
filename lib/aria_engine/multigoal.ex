@@ -23,8 +23,8 @@ defmodule Multigoal do
 
   @type goal :: {StateV2.subject(), StateV2.predicate(), AriaEngine.StateV2.fact_value()}
   @type t :: %__MODULE__{
-    goals: [goal()]
-  }
+          goals: [goal()]
+        }
 
   defstruct goals: []
 
@@ -56,7 +56,8 @@ defmodule Multigoal do
   @doc """
   Adds a single goal to the multigoal.
   """
-  @spec add_goal(t(), StateV2.subject(), StateV2.predicate(), AriaEngine.StateV2.fact_value()) :: t()
+  @spec add_goal(t(), StateV2.subject(), StateV2.predicate(), AriaEngine.StateV2.fact_value()) ::
+          t()
   def add_goal(%__MODULE__{goals: goals} = multigoal, subject, predicate, fact_value) do
     new_goal = {subject, predicate, fact_value}
     %{multigoal | goals: [new_goal | goals]}
@@ -73,7 +74,8 @@ defmodule Multigoal do
   @doc """
   Removes a goal from the multigoal.
   """
-  @spec remove_goal(t(), StateV2.subject(), StateV2.predicate(), AriaEngine.StateV2.fact_value()) :: t()
+  @spec remove_goal(t(), StateV2.subject(), StateV2.predicate(), AriaEngine.StateV2.fact_value()) ::
+          t()
   def remove_goal(%__MODULE__{goals: goals} = multigoal, subject, predicate, fact_value) do
     target_goal = {subject, predicate, fact_value}
     filtered_goals = Enum.reject(goals, fn goal -> goal == target_goal end)

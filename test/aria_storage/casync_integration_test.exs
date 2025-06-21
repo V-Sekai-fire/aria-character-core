@@ -34,7 +34,8 @@ defmodule AriaStorage.CasyncIntegrationTest do
 
             # Should generate valid filename
             assert String.ends_with?(filename, ".cacnk")
-            assert String.length(filename) == 64 + 6  # 64 hex chars + .cacnk
+            # 64 hex chars + .cacnk
+            assert String.length(filename) == 64 + 6
 
             # Test storage directory organization
             storage_dir = ChunkUploader.storage_dir(:original, {nil, %{chunk_id: chunk_id}})
@@ -58,35 +59,38 @@ defmodule AriaStorage.CasyncIntegrationTest do
         {"chunk3", "Final chunk data"}
       ]
 
-      processed_chunks = Enum.map(chunks_data, fn {name, data} ->
-        # Calculate chunk ID as parser would
-        chunk_id = :crypto.hash(:sha256, data) <> :crypto.strong_rand_bytes(0)  # Pad to 32 bytes
+      processed_chunks =
+        Enum.map(chunks_data, fn {name, data} ->
+          # Calculate chunk ID as parser would
+          # Pad to 32 bytes
+          chunk_id = :crypto.hash(:sha256, data) <> :crypto.strong_rand_bytes(0)
 
-        # Create chunk metadata as parser would produce
-        chunk_metadata = %{
-          chunk_id: chunk_id,
-          offset: 0,
-          size: byte_size(data),
-          flags: 0
-        }
+          # Create chunk metadata as parser would produce
+          chunk_metadata = %{
+            chunk_id: chunk_id,
+            offset: 0,
+            size: byte_size(data),
+            flags: 0
+          }
 
-        # Test uploader integration
-        filename = ChunkUploader.filename(:original, {nil, chunk_metadata})
-        storage_dir = ChunkUploader.storage_dir(:original, {nil, chunk_metadata})
+          # Test uploader integration
+          filename = ChunkUploader.filename(:original, {nil, chunk_metadata})
+          storage_dir = ChunkUploader.storage_dir(:original, {nil, chunk_metadata})
 
-        %{
-          name: name,
-          data: data,
-          metadata: chunk_metadata,
-          filename: filename,
-          storage_dir: storage_dir
-        }
-      end)
+          %{
+            name: name,
+            data: data,
+            metadata: chunk_metadata,
+            filename: filename,
+            storage_dir: storage_dir
+          }
+        end)
 
       # Verify all chunks have unique storage paths
-      storage_paths = Enum.map(processed_chunks, fn chunk ->
-        Path.join(chunk.storage_dir, chunk.filename)
-      end)
+      storage_paths =
+        Enum.map(processed_chunks, fn chunk ->
+          Path.join(chunk.storage_dir, chunk.filename)
+        end)
 
       assert length(Enum.uniq(storage_paths)) == length(storage_paths)
 
@@ -106,24 +110,26 @@ defmodule AriaStorage.CasyncIntegrationTest do
       case CasyncFormat.parse_index(synthetic_data) do
         {:ok, parsed} ->
           # Extract chunk information
-          chunk_infos = Enum.map(parsed.chunks, fn chunk ->
-            %{
-              id: chunk.chunk_id,
-              offset: chunk.offset,
-              size: chunk.size,
-              flags: chunk.flags
-            }
-          end)
+          chunk_infos =
+            Enum.map(parsed.chunks, fn chunk ->
+              %{
+                id: chunk.chunk_id,
+                offset: chunk.offset,
+                size: chunk.size,
+                flags: chunk.flags
+              }
+            end)
 
           # Recreate a simplified index (just structure validation)
-          recreated_chunks = Enum.map(chunk_infos, fn info ->
-            %{
-              chunk_id: info.id,
-              offset: info.offset,
-              size: info.size,
-              flags: info.flags
-            }
-          end)
+          recreated_chunks =
+            Enum.map(chunk_infos, fn info ->
+              %{
+                chunk_id: info.id,
+                offset: info.offset,
+                size: info.size,
+                flags: info.flags
+              }
+            end)
 
           recreated_result = %{
             format: parsed.format,
@@ -161,14 +167,15 @@ defmodule AriaStorage.CasyncIntegrationTest do
       json_compatible = %{
         format: result.format,
         header: result.header,
-        chunks: Enum.map(result.chunks, fn chunk ->
-          %{
-            chunk_id: Base.encode64(chunk.chunk_id),
-            offset: chunk.offset,
-            size: chunk.size,
-            flags: chunk.flags
-          }
-        end)
+        chunks:
+          Enum.map(result.chunks, fn chunk ->
+            %{
+              chunk_id: Base.encode64(chunk.chunk_id),
+              offset: chunk.offset,
+              size: chunk.size,
+              flags: chunk.flags
+            }
+          end)
       }
 
       # Should serialize to JSON without errors
@@ -206,7 +213,8 @@ defmodule AriaStorage.CasyncIntegrationTest do
         ChunkUploader.filename(:original, {mock_chunk, %{}})
         flunk("Should have raised an error for missing chunk_id")
       rescue
-        _ -> :ok  # Expected to fail
+        # Expected to fail
+        _ -> :ok
       end
 
       # Test with invalid chunk_id format
@@ -214,7 +222,8 @@ defmodule AriaStorage.CasyncIntegrationTest do
         ChunkUploader.filename(:original, {nil, %{chunk_id: "invalid"}})
         # This might work depending on implementation, so we don't assert failure
       catch
-        _, _ -> :ok  # It's okay if it fails
+        # It's okay if it fails
+        _, _ -> :ok
       end
     end
 
@@ -224,19 +233,20 @@ defmodule AriaStorage.CasyncIntegrationTest do
 
       {parse_time, {:ok, parsed}} = :timer.tc(CasyncFormat, :parse_index, [synthetic_data])
 
-      {process_time, processed_chunks} = :timer.tc(fn ->
-        Enum.map(parsed.chunks, fn chunk ->
-          filename = ChunkUploader.filename(:original, {nil, %{chunk_id: chunk.chunk_id}})
-          storage_dir = ChunkUploader.storage_dir(:original, {nil, %{chunk_id: chunk.chunk_id}})
+      {process_time, processed_chunks} =
+        :timer.tc(fn ->
+          Enum.map(parsed.chunks, fn chunk ->
+            filename = ChunkUploader.filename(:original, {nil, %{chunk_id: chunk.chunk_id}})
+            storage_dir = ChunkUploader.storage_dir(:original, {nil, %{chunk_id: chunk.chunk_id}})
 
-          %{
-            chunk_id: chunk.chunk_id,
-            filename: filename,
-            storage_dir: storage_dir,
-            full_path: Path.join(storage_dir, filename)
-          }
+            %{
+              chunk_id: chunk.chunk_id,
+              filename: filename,
+              storage_dir: storage_dir,
+              full_path: Path.join(storage_dir, filename)
+            }
+          end)
         end)
-      end)
 
       total_time = parse_time + process_time
 
@@ -245,10 +255,14 @@ defmodule AriaStorage.CasyncIntegrationTest do
       TestOutput.trace_puts("  Process time: #{process_time} μs")
       TestOutput.trace_puts("  Total time: #{total_time} μs")
       TestOutput.trace_puts("  Chunks processed: #{length(processed_chunks)}")
-      TestOutput.trace_puts("  Time per chunk: #{Float.round(total_time / length(processed_chunks), 2)} μs")
+
+      TestOutput.trace_puts(
+        "  Time per chunk: #{Float.round(total_time / length(processed_chunks), 2)} μs"
+      )
 
       # Should be reasonably fast
-      assert total_time < 100_000  # Less than 100ms total
+      # Less than 100ms total
+      assert total_time < 100_000
       assert length(processed_chunks) == 50
 
       # Verify all chunks have valid paths
@@ -269,14 +283,24 @@ defmodule AriaStorage.CasyncIntegrationTest do
         {:ok, result} ->
           # Verify entries have useful metadata for storage decisions
           Enum.each(result.elements, fn entry ->
-            assert entry.type in [:file, :directory, :symlink, :device, :fifo, :socket, :unknown, :entry]
+            assert entry.type in [
+                     :file,
+                     :directory,
+                     :symlink,
+                     :device,
+                     :fifo,
+                     :socket,
+                     :unknown,
+                     :entry
+                   ]
 
             # Check for standard Unix metadata
             if Map.has_key?(entry, :mode) do
               assert is_integer(entry.mode)
               # Mode should be reasonable (not negative, not huge)
               assert entry.mode >= 0
-              assert entry.mode < 0o777777  # Reasonable upper bound
+              # Reasonable upper bound
+              assert entry.mode < 0o777777
             end
 
             if Map.has_key?(entry, :uid) do
@@ -293,7 +317,8 @@ defmodule AriaStorage.CasyncIntegrationTest do
               assert is_integer(entry.mtime)
               # Should be a reasonable timestamp (after 1970, before far future)
               assert entry.mtime >= 0
-              assert entry.mtime < 4_000_000_000  # Year 2096
+              # Year 2096
+              assert entry.mtime < 4_000_000_000
             end
           end)
 

@@ -80,12 +80,13 @@ defmodule AriaStorage.WaffleChunkStore do
     try do
       case store({temp_file, scope}) do
         {:ok, file_path} ->
-          {:ok, %{
-            path: file_path,
-            url: url({file_path, scope}),
-            chunk_id: scope.chunk_id,
-            size: chunk.size
-          }}
+          {:ok,
+           %{
+             path: file_path,
+             url: url({file_path, scope}),
+             chunk_id: scope.chunk_id,
+             size: chunk.size
+           }}
 
         {:error, reason} ->
           {:error, {:waffle_store_failed, reason}}
@@ -109,13 +110,16 @@ defmodule AriaStorage.WaffleChunkStore do
         case Chunks.decompress_chunk(compressed_data, :zstd) do
           {:ok, data} ->
             chunk_id_binary = Base.decode16!(chunk_id, case: :lower)
-            {:ok, %Chunks{
-              id: chunk_id_binary,
-              data: data,
-              size: byte_size(data),
-              compressed: compressed_data,
-              checksum: :crypto.hash(:sha256, data)
-            }}
+
+            {:ok,
+             %Chunks{
+               id: chunk_id_binary,
+               data: data,
+               size: byte_size(data),
+               compressed: compressed_data,
+               checksum: :crypto.hash(:sha256, data)
+             }}
+
           {:error, _} = error ->
             error
         end
@@ -169,7 +173,9 @@ defmodule AriaStorage.WaffleChunkStore do
   defp create_temp_chunk_file(%Chunks{} = chunk) do
     # Create temporary file with chunk data (compressed if available)
     data = chunk.compressed || chunk.data
-    temp_path = System.tmp_dir!()
+
+    temp_path =
+      System.tmp_dir!()
       |> Path.join("chunk_#{System.unique_integer([:positive])}.tmp")
 
     File.write!(temp_path, data)
@@ -200,7 +206,8 @@ defmodule AriaStorage.WaffleChunkStore do
 
     case ExAws.S3.list_objects(bucket, prefix: prefix) |> ExAws.request() do
       {:ok, %{body: %{contents: objects}}} ->
-        chunk_ids = objects
+        chunk_ids =
+          objects
           |> Enum.map(& &1.key)
           |> Enum.filter(&String.ends_with?(&1, ".cacnk"))
           |> Enum.map(&extract_chunk_id_from_path/1)
@@ -247,7 +254,8 @@ defmodule AriaStorage.WaffleChunkStore do
 
     case File.ls(search_path) do
       {:ok, files} ->
-        chunk_ids = files
+        chunk_ids =
+          files
           |> Enum.filter(&String.ends_with?(&1, ".cacnk"))
           |> Enum.map(&extract_chunk_id_from_path/1)
           |> Enum.reject(&is_nil/1)
@@ -279,7 +287,8 @@ defmodule AriaStorage.WaffleChunkStore do
     file_path
     |> Path.basename(".cacnk")
     |> case do
-      ^file_path -> nil  # No .cacnk extension
+      # No .cacnk extension
+      ^file_path -> nil
       chunk_id -> chunk_id
     end
   end

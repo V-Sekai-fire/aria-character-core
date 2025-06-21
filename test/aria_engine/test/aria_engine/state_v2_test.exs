@@ -22,10 +22,11 @@ defmodule StateV2Test do
 
   describe "entity-first API" do
     test "set_fact/4 and get_fact/3 work with entity-first order" do
-      state = StateV2.new()
-      |> StateV2.set_fact("player", "location", "room1")
-      |> StateV2.set_fact("player", "has", "sword")
-      |> StateV2.set_fact("npc1", "location", "room2")
+      state =
+        StateV2.new()
+        |> StateV2.set_fact("player", "location", "room1")
+        |> StateV2.set_fact("player", "has", "sword")
+        |> StateV2.set_fact("npc1", "location", "room2")
 
       assert StateV2.get_fact(state, "player", "location") == "room1"
       assert StateV2.get_fact(state, "player", "has") == "sword"
@@ -34,18 +35,20 @@ defmodule StateV2Test do
     end
 
     test "remove_fact/3 works with entity-first order" do
-      state = StateV2.new()
-      |> StateV2.set_fact("player", "location", "room1")
-      |> StateV2.set_fact("player", "has", "sword")
-      |> StateV2.remove_fact("player", "location")
+      state =
+        StateV2.new()
+        |> StateV2.set_fact("player", "location", "room1")
+        |> StateV2.set_fact("player", "has", "sword")
+        |> StateV2.remove_fact("player", "location")
 
       assert StateV2.get_fact(state, "player", "location") == nil
       assert StateV2.get_fact(state, "player", "has") == "sword"
     end
 
     test "has_predicate?/3 checks entity-first" do
-      state = StateV2.new()
-      |> StateV2.set_fact("player", "location", "room1")
+      state =
+        StateV2.new()
+        |> StateV2.set_fact("player", "location", "room1")
 
       assert StateV2.has_predicate?(state, "player", "location") == true
       assert StateV2.has_predicate?(state, "player", "unknown") == false
@@ -55,13 +58,14 @@ defmodule StateV2Test do
 
   describe "entity-centric queries" do
     setup do
-      state = StateV2.new()
-      |> StateV2.set_fact("player", "location", "room1")
-      |> StateV2.set_fact("player", "has", "sword")
-      |> StateV2.set_fact("player", "health", 100)
-      |> StateV2.set_fact("npc1", "location", "room2")
-      |> StateV2.set_fact("chair1", "type", "furniture")
-      |> StateV2.set_fact("chair1", "status", "available")
+      state =
+        StateV2.new()
+        |> StateV2.set_fact("player", "location", "room1")
+        |> StateV2.set_fact("player", "has", "sword")
+        |> StateV2.set_fact("player", "health", 100)
+        |> StateV2.set_fact("npc1", "location", "room2")
+        |> StateV2.set_fact("chair1", "type", "furniture")
+        |> StateV2.set_fact("chair1", "status", "available")
 
       {:ok, state: state}
     end
@@ -95,17 +99,19 @@ defmodule StateV2Test do
 
     test "get_properties/2 returns entity properties as map", %{state: state} do
       player_props = StateV2.get_properties(state, "player")
+
       assert player_props == %{
-        "location" => "room1",
-        "has" => "sword", 
-        "health" => 100
-      }
+               "location" => "room1",
+               "has" => "sword",
+               "health" => 100
+             }
 
       chair_props = StateV2.get_properties(state, "chair1")
+
       assert chair_props == %{
-        "type" => "furniture",
-        "status" => "available"
-      }
+               "type" => "furniture",
+               "status" => "available"
+             }
 
       empty_props = StateV2.get_properties(state, "unknown")
       assert empty_props == %{}
@@ -130,26 +136,34 @@ defmodule StateV2Test do
 
   describe "state operations" do
     test "merge/2 combines states with second taking precedence" do
-      state1 = StateV2.from_triples([
-        {"player", "location", "room1"},
-        {"player", "health", 100}
-      ])
+      state1 =
+        StateV2.from_triples([
+          {"player", "location", "room1"},
+          {"player", "health", 100}
+        ])
 
-      state2 = StateV2.from_triples([
-        {"player", "location", "room2"},  # conflicts with state1
-        {"player", "has", "sword"}        # new fact
-      ])
+      state2 =
+        StateV2.from_triples([
+          # conflicts with state1
+          {"player", "location", "room2"},
+          # new fact
+          {"player", "has", "sword"}
+        ])
 
       merged = StateV2.merge(state1, state2)
 
-      assert StateV2.get_fact(merged, "player", "location") == "room2"  # state2 wins
-      assert StateV2.get_fact(merged, "player", "health") == 100        # from state1
-      assert StateV2.get_fact(merged, "player", "has") == "sword"       # from state2
+      # state2 wins
+      assert StateV2.get_fact(merged, "player", "location") == "room2"
+      # from state1
+      assert StateV2.get_fact(merged, "player", "health") == 100
+      # from state2
+      assert StateV2.get_fact(merged, "player", "has") == "sword"
     end
 
     test "copy/1 creates independent copy" do
-      original = StateV2.new()
-      |> StateV2.set_fact("player", "location", "room1")
+      original =
+        StateV2.new()
+        |> StateV2.set_fact("player", "location", "room1")
 
       copied = StateV2.copy(original)
       modified = StateV2.set_fact(copied, "player", "location", "room2")
@@ -161,13 +175,14 @@ defmodule StateV2Test do
 
   describe "pattern matching and conditions" do
     setup do
-      state = StateV2.new()
-      |> StateV2.set_fact("player", "location", "room1")
-      |> StateV2.set_fact("chair1", "status", "available")
-      |> StateV2.set_fact("chair2", "status", "available")
-      |> StateV2.set_fact("table1", "status", "occupied")
-      |> StateV2.set_fact("door1", "status", "locked")
-      |> StateV2.set_fact("door2", "status", "locked")
+      state =
+        StateV2.new()
+        |> StateV2.set_fact("player", "location", "room1")
+        |> StateV2.set_fact("chair1", "status", "available")
+        |> StateV2.set_fact("chair2", "status", "available")
+        |> StateV2.set_fact("table1", "status", "occupied")
+        |> StateV2.set_fact("door1", "status", "locked")
+        |> StateV2.set_fact("door2", "status", "locked")
 
       {:ok, state: state}
     end
@@ -194,7 +209,8 @@ defmodule StateV2Test do
       subjects_with_status = StateV2.get_subjects_with_predicate(state, "status")
       assert "chair1" in subjects_with_status
       assert "door1" in subjects_with_status
-      assert "player" not in subjects_with_status  # has location, not status
+      # has location, not status
+      assert "player" not in subjects_with_status
       assert length(subjects_with_status) == 5
     end
 
@@ -253,6 +269,7 @@ defmodule StateV2Test do
         {"has", "player"} => "sword",
         {"status", "chair1"} => "available"
       }
+
       legacy_state = %AriaEngine.StateV2{data: legacy_data}
 
       # Convert to StateV2
@@ -266,9 +283,10 @@ defmodule StateV2Test do
 
     test "to_legacy_state/1 converts new format to old" do
       # Create StateV2
-      state_v2 = StateV2.new()
-      |> StateV2.set_fact("player", "location", "room1")
-      |> StateV2.set_fact("player", "has", "sword")
+      state_v2 =
+        StateV2.new()
+        |> StateV2.set_fact("player", "location", "room1")
+        |> StateV2.set_fact("player", "has", "sword")
 
       # Convert to legacy
       legacy_state = StateV2.to_legacy_state(state_v2)
@@ -280,9 +298,10 @@ defmodule StateV2Test do
 
     test "round-trip conversion preserves data" do
       # Start with StateV2
-      original = StateV2.new()
-      |> StateV2.set_fact("player", "location", "room1")
-      |> StateV2.set_fact("chair1", "status", "available")
+      original =
+        StateV2.new()
+        |> StateV2.set_fact("player", "location", "room1")
+        |> StateV2.set_fact("chair1", "status", "available")
 
       # Convert to legacy and back
       legacy = StateV2.to_legacy_state(original)

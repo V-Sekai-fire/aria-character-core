@@ -4,7 +4,7 @@
 defmodule AriaEngine.Membrane.Format.PlanningParams do
   @moduledoc """
   Membrane format for converted planning parameters.
-  
+
   This format represents the converted planning parameters that are ready
   for execution by the HybridCoordinator. It contains the domain, state,
   goals, and options needed for planning execution.
@@ -20,19 +20,19 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
   ]
 
   @type t :: %__MODULE__{
-    domain: AriaEngine.Domain.Core.t() | nil,
-    state: AriaEngine.StateV2.t() | nil,
-    goals: [term()],
-    options: keyword(),
-    request_id: String.t(),
-    conversion_metadata: map()
-  }
+          domain: AriaEngine.Domain.Core.t() | nil,
+          state: AriaEngine.StateV2.t() | nil,
+          goals: [term()],
+          options: keyword(),
+          request_id: String.t(),
+          conversion_metadata: map()
+        }
 
   @doc """
   Validates a planning params format structure.
-  
+
   ## Examples
-  
+
       iex> params = %AriaEngine.Membrane.Format.PlanningParams{
       ...>   domain: nil,
       ...>   state: nil,
@@ -47,18 +47,18 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
   @spec valid?(t()) :: boolean()
   def valid?(%__MODULE__{} = params) do
     is_list(params.goals) and
-    is_list(params.options) and
-    is_binary(params.request_id) and
-    is_map(params.conversion_metadata)
+      is_list(params.options) and
+      is_binary(params.request_id) and
+      is_map(params.conversion_metadata)
   end
 
   def valid?(_), do: false
 
   @doc """
   Creates planning params from converted domain, state, and goals.
-  
+
   ## Examples
-  
+
       iex> metadata = %{converted_at: DateTime.utc_now()}
       iex> params = AriaEngine.Membrane.Format.PlanningParams.create(
       ...>   nil, nil, [], [], "req_123", metadata
@@ -67,13 +67,13 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
       "req_123"
   """
   @spec create(
-    AriaEngine.Domain.Core.t() | nil,
-    AriaEngine.StateV2.t() | nil,
-    [term()],
-    keyword(),
-    String.t(),
-    map()
-  ) :: t()
+          AriaEngine.Domain.Core.t() | nil,
+          AriaEngine.StateV2.t() | nil,
+          [term()],
+          keyword(),
+          String.t(),
+          map()
+        ) :: t()
   def create(domain, state, goals, options, request_id, conversion_metadata) do
     %__MODULE__{
       domain: domain,
@@ -87,9 +87,9 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
 
   @doc """
   Creates error planning params when conversion fails.
-  
+
   ## Examples
-  
+
       iex> params = AriaEngine.Membrane.Format.PlanningParams.create_error(
       ...>   "req_123", "Invalid input format"
       ...> )
@@ -114,9 +114,9 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
 
   @doc """
   Checks if the planning params represents an error state.
-  
+
   ## Examples
-  
+
       iex> params = AriaEngine.Membrane.Format.PlanningParams.create_error(
       ...>   "req_123", "test error"
       ...> )
@@ -130,9 +130,9 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
 
   @doc """
   Gets the error reason from error planning params.
-  
+
   ## Examples
-  
+
       iex> params = AriaEngine.Membrane.Format.PlanningParams.create_error(
       ...>   "req_123", "test error"
       ...> )

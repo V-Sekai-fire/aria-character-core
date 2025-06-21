@@ -6,21 +6,21 @@ defmodule AriaAuth.Accounts.User do
   import Ecto.Changeset
 
   schema "users" do
-    field :email, :string
-    field :password_hash, :string
-    field :email_verified_at, :utc_datetime
-    field :confirmation_token, :string
-    field :reset_password_token, :string
-    field :reset_password_sent_at, :utc_datetime
-    field :locked_at, :utc_datetime
-    field :failed_attempts, :integer, default: 0
-    field :unlock_token, :string
-    field :provider, :string
-    field :provider_uid, :string
-    field :sign_in_count, :integer, default: 0
-    field :current_sign_in_at, :utc_datetime
-    field :last_sign_in_at, :utc_datetime
-    field :roles, {:array, :string}, default: []
+    field(:email, :string)
+    field(:password_hash, :string)
+    field(:email_verified_at, :utc_datetime)
+    field(:confirmation_token, :string)
+    field(:reset_password_token, :string)
+    field(:reset_password_sent_at, :utc_datetime)
+    field(:locked_at, :utc_datetime)
+    field(:failed_attempts, :integer, default: 0)
+    field(:unlock_token, :string)
+    field(:provider, :string)
+    field(:provider_uid, :string)
+    field(:sign_in_count, :integer, default: 0)
+    field(:current_sign_in_at, :utc_datetime)
+    field(:last_sign_in_at, :utc_datetime)
+    field(:roles, {:array, :string}, default: [])
 
     timestamps()
   end
@@ -40,11 +40,22 @@ defmodule AriaAuth.Accounts.User do
   """
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:email, :email_verified_at, :confirmation_token,
-                    :reset_password_token, :reset_password_sent_at,
-                    :locked_at, :failed_attempts, :unlock_token,
-                    :provider, :provider_uid, :sign_in_count,
-                    :current_sign_in_at, :last_sign_in_at, :roles])
+    |> cast(attrs, [
+      :email,
+      :email_verified_at,
+      :confirmation_token,
+      :reset_password_token,
+      :reset_password_sent_at,
+      :locked_at,
+      :failed_attempts,
+      :unlock_token,
+      :provider,
+      :provider_uid,
+      :sign_in_count,
+      :current_sign_in_at,
+      :last_sign_in_at,
+      :roles
+    ])
     |> validate_required([:email])
     |> unique_constraint(:email)
   end

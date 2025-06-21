@@ -11,21 +11,23 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
   describe "ScheduleFilter initialization" do
     test "initializes with default options" do
       # Test basic initialization
-      assert {[], _state} = ScheduleFilter.handle_init(nil, %{
-        telemetry_prefix: [:aria_engine, :membrane, :schedule_filter],
-        strict_validation: true,
-        allow_non_schedule_requests: false
-      })
+      assert {[], _state} =
+               ScheduleFilter.handle_init(nil, %{
+                 telemetry_prefix: [:aria_engine, :membrane, :schedule_filter],
+                 strict_validation: true,
+                 allow_non_schedule_requests: false
+               })
     end
 
     test "initializes with custom options" do
       # Test initialization with custom options
-      assert {[], state} = ScheduleFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :schedule_filter],
-        strict_validation: false,
-        allow_non_schedule_requests: true
-      })
-      
+      assert {[], state} =
+               ScheduleFilter.handle_init(nil, %{
+                 telemetry_prefix: [:test, :schedule_filter],
+                 strict_validation: false,
+                 allow_non_schedule_requests: true
+               })
+
       assert state.strict_validation == false
       assert state.allow_non_schedule_requests == true
       assert state.telemetry_prefix == [:test, :schedule_filter]
@@ -35,52 +37,56 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
   describe "ScheduleFilter processes valid schedule_activities requests" do
     test "processes valid schedule_activities requests" do
       # Create a valid schedule_activities MCPRequest
-      {:ok, mcp_request} = MCPRequest.from_tool_call(
-        "schedule_activities",
-        %{
-          "schedule_name" => "test_schedule",
-          "activities" => [
-            %{
-              "id" => "activity_1",
-              "name" => "Test Activity",
-              "duration" => %{
-                "start" => "2025-06-20T09:00:00Z",
-                "end" => "2025-06-20T10:00:00Z"
+      {:ok, mcp_request} =
+        MCPRequest.from_tool_call(
+          "schedule_activities",
+          %{
+            "schedule_name" => "test_schedule",
+            "activities" => [
+              %{
+                "id" => "activity_1",
+                "name" => "Test Activity",
+                "duration" => %{
+                  "start" => "2025-06-20T09:00:00Z",
+                  "end" => "2025-06-20T10:00:00Z"
+                }
               }
+            ],
+            "entities" => [
+              %{"id" => "entity_1", "type" => "person"}
+            ],
+            "resources" => %{
+              "resource_1" => %{"type" => "room", "capacity" => 10}
+            },
+            "constraints" => %{
+              "max_concurrent_activities" => 5
             }
-          ],
-          "entities" => [
-            %{"id" => "entity_1", "type" => "person"}
-          ],
-          "resources" => %{
-            "resource_1" => %{"type" => "room", "capacity" => 10}
           },
-          "constraints" => %{
-            "max_concurrent_activities" => 5
-          }
-        },
-        "test_req_123",
-        %{}
-      )
+          "test_req_123",
+          %{}
+        )
 
       # Initialize filter state
-      {[], state} = ScheduleFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :schedule_filter],
-        strict_validation: true,
-        allow_non_schedule_requests: false
-      })
-      
+      {[], state} =
+        ScheduleFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :schedule_filter],
+          strict_validation: true,
+          allow_non_schedule_requests: false
+        })
+
       # Process buffer
       buffer = %Buffer{payload: mcp_request}
-      {[buffer: {:output, output_buffer}], new_state} = ScheduleFilter.handle_buffer(:input, buffer, nil, state)
-      
+
+      {[buffer: {:output, output_buffer}], new_state} =
+        ScheduleFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify output
       assert %Buffer{payload: %PlanningParams{} = planning_params} = output_buffer
       assert planning_params.request_id == "test_req_123"
       assert planning_params.conversion_metadata.original_tool == "schedule_activities"
       assert planning_params.conversion_metadata.activities_count == 1
       assert planning_params.conversion_metadata.entities_count == 1
-      
+
       # Verify state updates
       assert new_state.processed_count == 1
       assert new_state.schedule_count == 1
@@ -88,35 +94,39 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
 
     test "rejects non-schedule_activities requests" do
       # Create a non-schedule MCPRequest
-      {:ok, mcp_request} = MCPRequest.from_tool_call(
-        "configure_pipeline",
-        %{
-          "pipeline_config" => %{
-            "topology" => "linear"
-          }
-        },
-        "test_req_456",
-        %{}
-      )
+      {:ok, mcp_request} =
+        MCPRequest.from_tool_call(
+          "configure_pipeline",
+          %{
+            "pipeline_config" => %{
+              "topology" => "linear"
+            }
+          },
+          "test_req_456",
+          %{}
+        )
 
       # Initialize filter state
-      {[], state} = ScheduleFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :schedule_filter],
-        strict_validation: true,
-        allow_non_schedule_requests: false
-      })
-      
+      {[], state} =
+        ScheduleFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :schedule_filter],
+          strict_validation: true,
+          allow_non_schedule_requests: false
+        })
+
       # Process buffer
       buffer = %Buffer{payload: mcp_request}
-      {[buffer: {:output, output_buffer}], new_state} = ScheduleFilter.handle_buffer(:input, buffer, nil, state)
-      
+
+      {[buffer: {:output, output_buffer}], new_state} =
+        ScheduleFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify output is an error response
       assert %Buffer{payload: %PlanningParams{} = planning_params} = output_buffer
       assert planning_params.request_id == "test_req_456"
       assert planning_params.conversion_metadata.error == true
       assert planning_params.conversion_metadata.error_type == :rejected
       assert planning_params.options[:error] == true
-      
+
       # Verify state updates
       assert new_state.processed_count == 1
       assert new_state.rejected_count == 1
@@ -124,37 +134,42 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
 
     test "handles invalid schedule parameters with strict validation" do
       # Create an invalid schedule_activities MCPRequest
-      {:ok, mcp_request} = MCPRequest.from_tool_call(
-        "schedule_activities",
-        %{
-          "schedule_name" => "invalid_schedule",
-          "activities" => [],  # Empty activities should fail validation
-          "entities" => [],
-          "resources" => %{},
-          "constraints" => %{}
-        },
-        "test_req_789",
-        %{}
-      )
+      {:ok, mcp_request} =
+        MCPRequest.from_tool_call(
+          "schedule_activities",
+          %{
+            "schedule_name" => "invalid_schedule",
+            # Empty activities should fail validation
+            "activities" => [],
+            "entities" => [],
+            "resources" => %{},
+            "constraints" => %{}
+          },
+          "test_req_789",
+          %{}
+        )
 
       # Initialize filter state with strict validation enabled
-      {[], state} = ScheduleFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :schedule_filter],
-        strict_validation: true,
-        allow_non_schedule_requests: false
-      })
-      
+      {[], state} =
+        ScheduleFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :schedule_filter],
+          strict_validation: true,
+          allow_non_schedule_requests: false
+        })
+
       # Process buffer
       buffer = %Buffer{payload: mcp_request}
-      {[buffer: {:output, output_buffer}], new_state} = ScheduleFilter.handle_buffer(:input, buffer, nil, state)
-      
+
+      {[buffer: {:output, output_buffer}], new_state} =
+        ScheduleFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify output is an error response
       assert %Buffer{payload: %PlanningParams{} = planning_params} = output_buffer
       assert planning_params.request_id == "test_req_789"
       assert planning_params.conversion_metadata.error == true
       assert planning_params.conversion_metadata.error_type == :validation_error
       assert planning_params.options[:error] == true
-      
+
       # Verify state updates
       assert new_state.processed_count == 1
       assert new_state.error_count == 1
@@ -162,36 +177,41 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
 
     test "allows invalid parameters with strict validation disabled" do
       # Create an invalid schedule_activities MCPRequest
-      {:ok, mcp_request} = MCPRequest.from_tool_call(
-        "schedule_activities",
-        %{
-          "schedule_name" => "lenient_schedule",
-          "activities" => [],  # Empty activities
-          "entities" => [],
-          "resources" => %{},
-          "constraints" => %{}
-        },
-        "test_req_lenient",
-        %{}
-      )
+      {:ok, mcp_request} =
+        MCPRequest.from_tool_call(
+          "schedule_activities",
+          %{
+            "schedule_name" => "lenient_schedule",
+            # Empty activities
+            "activities" => [],
+            "entities" => [],
+            "resources" => %{},
+            "constraints" => %{}
+          },
+          "test_req_lenient",
+          %{}
+        )
 
       # Initialize filter state with strict validation disabled
-      {[], state} = ScheduleFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :schedule_filter],
-        strict_validation: false,
-        allow_non_schedule_requests: false
-      })
-      
+      {[], state} =
+        ScheduleFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :schedule_filter],
+          strict_validation: false,
+          allow_non_schedule_requests: false
+        })
+
       # Process buffer
       buffer = %Buffer{payload: mcp_request}
-      {[buffer: {:output, output_buffer}], new_state} = ScheduleFilter.handle_buffer(:input, buffer, nil, state)
-      
+
+      {[buffer: {:output, output_buffer}], new_state} =
+        ScheduleFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify output processed without validation error
       assert %Buffer{payload: %PlanningParams{} = planning_params} = output_buffer
       assert planning_params.request_id == "test_req_lenient"
       # Should not be an error since validation is disabled
       refute planning_params.conversion_metadata[:error]
-      
+
       # Verify state updates
       assert new_state.processed_count == 1
       assert new_state.schedule_count == 1
@@ -199,42 +219,46 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
 
     test "handles legacy format MCPRequest" do
       # Create a legacy format MCPRequest
-      {:ok, mcp_request} = MCPRequest.from_mcp_params(
-        %{
-          "schedule_name" => "legacy_schedule",
-          "activities" => [
-            %{
-              "id" => "legacy_activity",
-              "name" => "Legacy Activity",
-              "duration" => %{
-                "start" => "2025-06-20T09:00:00Z",
-                "end" => "2025-06-20T10:00:00Z"
+      {:ok, mcp_request} =
+        MCPRequest.from_mcp_params(
+          %{
+            "schedule_name" => "legacy_schedule",
+            "activities" => [
+              %{
+                "id" => "legacy_activity",
+                "name" => "Legacy Activity",
+                "duration" => %{
+                  "start" => "2025-06-20T09:00:00Z",
+                  "end" => "2025-06-20T10:00:00Z"
+                }
               }
-            }
-          ],
-          "entities" => [],
-          "resources" => %{},
-          "constraints" => %{}
-        },
-        "test_req_legacy"
-      )
+            ],
+            "entities" => [],
+            "resources" => %{},
+            "constraints" => %{}
+          },
+          "test_req_legacy"
+        )
 
       # Initialize filter state
-      {[], state} = ScheduleFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :schedule_filter],
-        strict_validation: true,
-        allow_non_schedule_requests: false
-      })
-      
+      {[], state} =
+        ScheduleFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :schedule_filter],
+          strict_validation: true,
+          allow_non_schedule_requests: false
+        })
+
       # Process buffer
       buffer = %Buffer{payload: mcp_request}
-      {[buffer: {:output, output_buffer}], new_state} = ScheduleFilter.handle_buffer(:input, buffer, nil, state)
-      
+
+      {[buffer: {:output, output_buffer}], new_state} =
+        ScheduleFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify the conversion
       assert %Buffer{payload: %PlanningParams{} = planning_params} = output_buffer
       assert planning_params.request_id == "test_req_legacy"
       assert planning_params.conversion_metadata.legacy_format == true
-      
+
       # Verify state updates
       assert new_state.processed_count == 1
       assert new_state.schedule_count == 1
@@ -258,7 +282,8 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
 
     test "rejects invalid schedule parameters" do
       invalid_params = %{
-        "schedule_name" => 123,  # Should be string
+        # Should be string
+        "schedule_name" => 123,
         "activities" => "not_a_list",
         "entities" => [],
         "resources" => %{},
@@ -271,7 +296,8 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
     test "rejects empty activities list" do
       empty_activities = %{
         "schedule_name" => "test",
-        "activities" => [],  # Empty activities
+        # Empty activities
+        "activities" => [],
         "entities" => [],
         "resources" => %{},
         "constraints" => %{}
@@ -285,7 +311,8 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
       invalid_activity = %{
         "schedule_name" => "test",
         "activities" => [
-          %{"name" => "Missing ID"}  # Missing id field
+          # Missing id field
+          %{"name" => "Missing ID"}
         ],
         "entities" => [],
         "resources" => %{},

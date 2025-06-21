@@ -51,15 +51,24 @@ defmodule SimpleTravelMethods do
     fare = taxi_rate(distance(x, y))
 
     cond do
-      not is_person(p) -> false
-      not is_location(y) -> false
-      x == y -> false
-      cash < fare -> false
-      true -> [
-        {"call_taxi", [p, x]},
-        {"ride_taxi", [p, y]},
-        {"pay_driver", [p, y]}
-      ]
+      not is_person(p) ->
+        false
+
+      not is_location(y) ->
+        false
+
+      x == y ->
+        false
+
+      cash < fare ->
+        false
+
+      true ->
+        [
+          {"call_taxi", [p, x]},
+          {"ride_taxi", [p, y]},
+          {"pay_driver", [p, y]}
+        ]
     end
   end
 
@@ -72,8 +81,10 @@ defmodule SimpleTravelMethods do
     current_loc = State.get_fact(state, "loc", p)
 
     cond do
-      current_loc == y -> []  # Already there
-      true -> [{"travel", [p, y]}]  # Need to travel
+      # Already there
+      current_loc == y -> []
+      # Need to travel
+      true -> [{"travel", [p, y]}]
     end
   end
 
@@ -132,13 +143,22 @@ defmodule SimpleTravelMethods do
     fare = taxi_rate(distance(x, y))
 
     cond do
-      not is_person(p) -> false
-      not is_location(y) -> false
-      x == y -> false
-      cash < fare -> false
+      not is_person(p) ->
+        false
+
+      not is_location(y) ->
+        false
+
+      x == y ->
+        false
+
+      cash < fare ->
+        false
+
       true ->
         # Find an available taxi
         taxi = find_available_taxi(state, x)
+
         if taxi do
           [
             {"call_taxi", [p, taxi]},
@@ -153,8 +173,9 @@ defmodule SimpleTravelMethods do
 
   defp find_available_taxi(state, location) do
     taxis = ["taxi1", "taxi2"]
+    # Default to first taxi if none at location
     Enum.find(taxis, fn taxi ->
       State.get_fact(state, "loc", taxi) == location
-    end) || Enum.at(taxis, 0)  # Default to first taxi if none at location
+    end) || Enum.at(taxis, 0)
   end
 end

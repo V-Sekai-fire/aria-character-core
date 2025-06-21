@@ -4,32 +4,32 @@
 defmodule AriaEngine.Membrane.MCPScheduleFilter do
   @moduledoc """
   Membrane Filter element that processes MCP requests and prepares them for schedule processing.
-  
+
   This filter sits at the beginning of the schedule processing pipeline and handles:
   1. Initial MCP request validation
   2. Request routing and filtering
   3. Format normalization for downstream processing
   4. Request metadata enrichment
-  
+
   ## Pipeline Position
-  
+
   ```
   MCPSource → MCPScheduleFilter → SchedulePlannerFilter → PlannerFilter → PlannerMCPFilter → MCPSink
   ```
-  
+
   The MCPScheduleFilter acts as the entry point for MCP requests into the scheduling pipeline,
   ensuring only valid schedule-related requests proceed to downstream processing.
-  
+
   ## Features
-  
+
   - Validates incoming MCP request format
   - Filters for schedule-related tool calls
   - Enriches requests with processing metadata
   - Provides request routing and rejection capabilities
   - Comprehensive telemetry for request processing
-  
+
   ## Usage
-  
+
       # In a pipeline spec
       children = [
         child(:mcp_source, MCPSource)
@@ -48,46 +48,50 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
   alias AriaEngine.Membrane.Format.MCPRequest
   alias Membrane.Buffer
 
-  def_input_pad :input,
+  def_input_pad(:input,
     accepted_format: MCPRequest,
     flow_control: :auto
+  )
 
-  def_output_pad :output,
+  def_output_pad(:output,
     accepted_format: MCPRequest,
     flow_control: :auto
+  )
 
-  def_options telemetry_prefix: [
-                spec: [atom()],
-                default: [:aria_engine, :membrane, :mcp_schedule_filter],
-                description: "Telemetry event prefix for monitoring"
-              ],
-              allowed_tools: [
-                spec: [String.t()],
-                default: ["schedule_activities"],
-                description: "List of allowed tool names to process"
-              ],
-              strict_filtering: [
-                spec: boolean(),
-                default: true,
-                description: "Whether to strictly filter non-allowed tools"
-              ],
-              enrich_metadata: [
-                spec: boolean(),
-                default: true,
-                description: "Whether to enrich requests with processing metadata"
-              ]
+  def_options(
+    telemetry_prefix: [
+      spec: [atom()],
+      default: [:aria_engine, :membrane, :mcp_schedule_filter],
+      description: "Telemetry event prefix for monitoring"
+    ],
+    allowed_tools: [
+      spec: [String.t()],
+      default: ["schedule_activities"],
+      description: "List of allowed tool names to process"
+    ],
+    strict_filtering: [
+      spec: boolean(),
+      default: true,
+      description: "Whether to strictly filter non-allowed tools"
+    ],
+    enrich_metadata: [
+      spec: boolean(),
+      default: true,
+      description: "Whether to enrich requests with processing metadata"
+    ]
+  )
 
   @typedoc "Internal state of the MCPScheduleFilter element"
   @type state :: %{
-    telemetry_prefix: [atom()],
-    allowed_tools: [String.t()],
-    strict_filtering: boolean(),
-    enrich_metadata: boolean(),
-    processed_count: non_neg_integer(),
-    accepted_count: non_neg_integer(),
-    rejected_count: non_neg_integer(),
-    error_count: non_neg_integer()
-  }
+          telemetry_prefix: [atom()],
+          allowed_tools: [String.t()],
+          strict_filtering: boolean(),
+          enrich_metadata: boolean(),
+          processed_count: non_neg_integer(),
+          accepted_count: non_neg_integer(),
+          rejected_count: non_neg_integer(),
+          error_count: non_neg_integer()
+        }
 
   # ==================== Membrane Callbacks ====================
 
@@ -103,21 +107,24 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
       rejected_count: 0,
       error_count: 0
     }
-    
-    Logger.info("MCPScheduleFilter initialized with allowed_tools: #{inspect(opts.allowed_tools)}")
+
+    Logger.info(
+      "MCPScheduleFilter initialized with allowed_tools: #{inspect(opts.allowed_tools)}"
+    )
+
     emit_telemetry(state.telemetry_prefix, :initialized, %{
       allowed_tools: opts.allowed_tools,
       strict_filtering: opts.strict_filtering,
       enrich_metadata: opts.enrich_metadata
     })
-    
+
     {[], state}
   end
 
   @impl true
   def handle_buffer(:input, %Buffer{payload: mcp_request}, _ctx, state) do
     start_time = System.monotonic_time(:microsecond)
-    
+
     case process_mcp_request(mcp_request, state) do
       {:ok, processed_request} ->
         emit_telemetry(state.telemetry_prefix, :request_accepted, %{
@@ -127,16 +134,18 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
         })
 
         output_buffer = %Buffer{payload: processed_request}
-        new_state = %{state | 
-          processed_count: state.processed_count + 1,
-          accepted_count: state.accepted_count + 1
+
+        new_state = %{
+          state
+          | processed_count: state.processed_count + 1,
+            accepted_count: state.accepted_count + 1
         }
 
         {[buffer: {:output, output_buffer}], new_state}
 
       {:reject, reason} ->
         Logger.info("MCPScheduleFilter rejected request: #{reason}")
-        
+
         emit_telemetry(state.telemetry_prefix, :request_rejected, %{
           request_id: mcp_request.request_id,
           tool_name: mcp_request.tool_name,
@@ -147,17 +156,18 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
         # Create rejection response and pass it through
         rejection_request = create_rejection_request(mcp_request, reason)
         output_buffer = %Buffer{payload: rejection_request}
-        
-        new_state = %{state | 
-          processed_count: state.processed_count + 1,
-          rejected_count: state.rejected_count + 1
+
+        new_state = %{
+          state
+          | processed_count: state.processed_count + 1,
+            rejected_count: state.rejected_count + 1
         }
 
         {[buffer: {:output, output_buffer}], new_state}
 
       {:error, reason} ->
         Logger.warning("MCPScheduleFilter processing error: #{reason}")
-        
+
         emit_telemetry(state.telemetry_prefix, :processing_error, %{
           request_id: mcp_request.request_id,
           tool_name: mcp_request.tool_name,
@@ -168,10 +178,11 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
         # Create error response and pass it through
         error_request = create_error_request(mcp_request, reason)
         output_buffer = %Buffer{payload: error_request}
-        
-        new_state = %{state | 
-          processed_count: state.processed_count + 1,
-          error_count: state.error_count + 1
+
+        new_state = %{
+          state
+          | processed_count: state.processed_count + 1,
+            error_count: state.error_count + 1
         }
 
         {[buffer: {:output, output_buffer}], new_state}
@@ -189,7 +200,7 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
       allowed_tools: state.allowed_tools,
       strict_filtering: state.strict_filtering
     }
-    
+
     send(from, {:mcp_schedule_filter_stats, stats})
     {[], state}
   end
@@ -204,7 +215,8 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
 
   defp process_mcp_request(%MCPRequest{} = request, state) do
     with :ok <- validate_request_format(request),
-         :ok <- check_tool_allowed(request.tool_name, state.allowed_tools, state.strict_filtering),
+         :ok <-
+           check_tool_allowed(request.tool_name, state.allowed_tools, state.strict_filtering),
          {:ok, enriched_request} <- maybe_enrich_metadata(request, state.enrich_metadata) do
       {:ok, enriched_request}
     else
@@ -217,13 +229,13 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
     cond do
       is_nil(request.request_id) or request.request_id == "" ->
         {:error, "Missing or empty request_id"}
-        
+
       is_nil(request.tool_name) or request.tool_name == "" ->
         {:error, "Missing or empty tool_name"}
-        
+
       not is_map(request.parameters) ->
         {:error, "Invalid parameters format - must be a map"}
-        
+
       true ->
         :ok
     end
@@ -236,20 +248,22 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
       if strict_filtering do
         {:reject, "Tool '#{tool_name}' not allowed in schedule processing pipeline"}
       else
-        :ok  # Allow through for downstream processing
+        # Allow through for downstream processing
+        :ok
       end
     end
   end
 
   defp maybe_enrich_metadata(%MCPRequest{} = request, true) do
-    enriched_metadata = Map.merge(request.metadata || %{}, %{
-      mcp_schedule_filter: %{
-        processed_at: DateTime.utc_now(),
-        filter_version: "1.0.0",
-        pipeline_stage: "mcp_schedule_entry"
-      }
-    })
-    
+    enriched_metadata =
+      Map.merge(request.metadata || %{}, %{
+        mcp_schedule_filter: %{
+          processed_at: DateTime.utc_now(),
+          filter_version: "1.0.0",
+          pipeline_stage: "mcp_schedule_entry"
+        }
+      })
+
     enriched_request = %{request | metadata: enriched_metadata}
     {:ok, enriched_request}
   end
@@ -264,13 +278,14 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
       tool_name: original_request.tool_name,
       parameters: original_request.parameters,
       timestamp: original_request.timestamp,
-      metadata: Map.merge(original_request.metadata || %{}, %{
-        mcp_schedule_filter: %{
-          status: :rejected,
-          rejection_reason: reason,
-          processed_at: DateTime.utc_now()
-        }
-      })
+      metadata:
+        Map.merge(original_request.metadata || %{}, %{
+          mcp_schedule_filter: %{
+            status: :rejected,
+            rejection_reason: reason,
+            processed_at: DateTime.utc_now()
+          }
+        })
     }
   end
 
@@ -280,13 +295,14 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
       tool_name: original_request.tool_name,
       parameters: original_request.parameters,
       timestamp: original_request.timestamp,
-      metadata: Map.merge(original_request.metadata || %{}, %{
-        mcp_schedule_filter: %{
-          status: :error,
-          error_reason: reason,
-          processed_at: DateTime.utc_now()
-        }
-      })
+      metadata:
+        Map.merge(original_request.metadata || %{}, %{
+          mcp_schedule_filter: %{
+            status: :error,
+            error_reason: reason,
+            processed_at: DateTime.utc_now()
+          }
+        })
     }
   end
 
@@ -301,20 +317,20 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
 
   @doc """
   Gets the current processing statistics of the MCPScheduleFilter element.
-  
+
   ## Parameters
-  
+
   - `filter_pid` - PID of the MCPScheduleFilter element
   - `timeout` - Timeout in milliseconds (default: 5000)
-  
+
   ## Returns
-  
+
   Map containing current statistics or error.
   """
   @spec get_stats(pid(), timeout()) :: map()
   def get_stats(filter_pid, timeout \\ 5000) do
     send(filter_pid, {:get_stats, self()})
-    
+
     receive do
       {:mcp_schedule_filter_stats, stats} -> stats
     after
@@ -324,11 +340,12 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
 
   @doc """
   Validates that a tool name is allowed for schedule processing.
-  
+
   This is useful for testing tool filtering logic independently.
   """
   @spec tool_allowed?(String.t(), [String.t()]) :: boolean()
-  def tool_allowed?(tool_name, allowed_tools) when is_binary(tool_name) and is_list(allowed_tools) do
+  def tool_allowed?(tool_name, allowed_tools)
+      when is_binary(tool_name) and is_list(allowed_tools) do
     tool_name in allowed_tools
   end
 

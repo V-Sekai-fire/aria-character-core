@@ -1,7 +1,7 @@
 defmodule AriaEngine.Membrane.PipelineManager do
   @moduledoc """
   Manager for Membrane pipeline lifecycle and dynamic topology configuration.
-  
+
   Handles pipeline creation, element linking, supervision, and runtime
   reconfiguration of the planning pipeline.
   """
@@ -12,18 +12,18 @@ defmodule AriaEngine.Membrane.PipelineManager do
   alias AriaEngine.Membrane.{MCPSource, FormatTransformerFilter, MCPSink}
 
   @type pipeline_config :: %{
-    topology: :linear | :parallel | :multi_strategy | :custom,
-    elements: [map()],
-    connections: [map()],
-    supervision_strategy: atom()
-  }
+          topology: :linear | :parallel | :multi_strategy | :custom,
+          elements: [map()],
+          connections: [map()],
+          supervision_strategy: atom()
+        }
 
   @type pipeline_state :: %{
-    active_pipelines: map(),
-    default_config: pipeline_config(),
-    telemetry_prefix: [atom()],
-    pipeline_counter: non_neg_integer()
-  }
+          active_pipelines: map(),
+          default_config: pipeline_config(),
+          telemetry_prefix: [atom()],
+          pipeline_counter: non_neg_integer()
+        }
 
   # Public API
 
@@ -89,7 +89,8 @@ defmodule AriaEngine.Membrane.PipelineManager do
     state = %{
       active_pipelines: %{},
       default_config: default_config,
-      telemetry_prefix: Keyword.get(opts, :telemetry_prefix, [:aria_engine, :membrane, :pipeline]),
+      telemetry_prefix:
+        Keyword.get(opts, :telemetry_prefix, [:aria_engine, :membrane, :pipeline]),
       pipeline_counter: 0
     }
 
@@ -99,28 +100,30 @@ defmodule AriaEngine.Membrane.PipelineManager do
   @impl true
   def handle_call({:create_pipeline, config}, _from, state) do
     pipeline_id = "pipeline_#{state.pipeline_counter}"
-    
+
     case build_pipeline(config, pipeline_id) do
       {:ok, pipeline_info} ->
-        new_pipelines = Map.put(state.active_pipelines, pipeline_info.pid, %{
-          config: config,
-          id: pipeline_id,
-          created_at: DateTime.utc_now(),
-          status: :running,
-          request_count: 0,
-          source_pid: pipeline_info.source_pid
-        })
-        
-        new_state = %{state | 
-          active_pipelines: new_pipelines,
-          pipeline_counter: state.pipeline_counter + 1
+        new_pipelines =
+          Map.put(state.active_pipelines, pipeline_info.pid, %{
+            config: config,
+            id: pipeline_id,
+            created_at: DateTime.utc_now(),
+            status: :running,
+            request_count: 0,
+            source_pid: pipeline_info.source_pid
+          })
+
+        new_state = %{
+          state
+          | active_pipelines: new_pipelines,
+            pipeline_counter: state.pipeline_counter + 1
         }
-        
+
         emit_telemetry(state.telemetry_prefix, :pipeline_created, %{
           pipeline_id: pipeline_id,
           topology: config.topology
         })
-        
+
         {:reply, {:ok, pipeline_info.pid}, new_state}
 
       {:error, reason} ->
@@ -134,18 +137,19 @@ defmodule AriaEngine.Membrane.PipelineManager do
     case Map.get(state.active_pipelines, pipeline_pid) do
       nil ->
         {:reply, {:error, :pipeline_not_found}, state}
-        
+
       pipeline_info ->
         case reconfigure_pipeline(pipeline_pid, config) do
           :ok ->
-            updated_info = Map.merge(pipeline_info, %{
-              config: config,
-              reconfigured_at: DateTime.utc_now()
-            })
-            
+            updated_info =
+              Map.merge(pipeline_info, %{
+                config: config,
+                reconfigured_at: DateTime.utc_now()
+              })
+
             new_pipelines = Map.put(state.active_pipelines, pipeline_pid, updated_info)
             new_state = %{state | active_pipelines: new_pipelines}
-            
+
             {:reply, :ok, new_state}
 
           {:error, reason} ->
@@ -162,17 +166,18 @@ defmodule AriaEngine.Membrane.PipelineManager do
 
   @impl true
   def handle_call(:list_pipelines, _from, state) do
-    pipelines = Enum.map(state.active_pipelines, fn {pid, info} ->
-      %{
-        pid: pid,
-        id: info.id,
-        topology: info.config.topology,
-        status: info.status,
-        created_at: info.created_at,
-        request_count: info.request_count
-      }
-    end)
-    
+    pipelines =
+      Enum.map(state.active_pipelines, fn {pid, info} ->
+        %{
+          pid: pid,
+          id: info.id,
+          topology: info.config.topology,
+          status: info.status,
+          created_at: info.created_at,
+          request_count: info.request_count
+        }
+      end)
+
     {:reply, pipelines, state}
   end
 
@@ -181,16 +186,16 @@ defmodule AriaEngine.Membrane.PipelineManager do
     case Map.get(state.active_pipelines, pipeline_pid) do
       nil ->
         {:reply, {:error, :pipeline_not_found}, state}
-        
+
       pipeline_info ->
         # Stop the pipeline process
         try do
           Process.exit(pipeline_pid, :normal)
-          
+
           emit_telemetry(state.telemetry_prefix, :pipeline_stopped, %{
             pipeline_id: pipeline_info.id
           })
-          
+
           new_pipelines = Map.delete(state.active_pipelines, pipeline_pid)
           new_state = %{state | active_pipelines: new_pipelines}
           {:reply, :ok, new_state}
@@ -207,22 +212,22 @@ defmodule AriaEngine.Membrane.PipelineManager do
     case Map.get(state.active_pipelines, pipeline_pid) do
       nil ->
         {:reply, {:error, :pipeline_not_found}, state}
-        
+
       pipeline_info ->
         case pipeline_info.source_pid do
           nil ->
             {:reply, {:error, :source_not_available}, state}
-            
+
           source_pid ->
             try do
               # Send message to source process (simplified for testing)
               send(source_pid, {:mcp_request, mcp_params})
-              
+
               # Update request count
               updated_info = Map.update(pipeline_info, :request_count, 1, &(&1 + 1))
               new_pipelines = Map.put(state.active_pipelines, pipeline_pid, updated_info)
               new_state = %{state | active_pipelines: new_pipelines}
-              
+
               {:reply, :ok, new_state}
             rescue
               error ->
@@ -238,19 +243,21 @@ defmodule AriaEngine.Membrane.PipelineManager do
   defp build_pipeline(config, pipeline_id) do
     # Create a simple pipeline structure for testing
     # In a full implementation, this would use Membrane.Pipeline
-    
+
     # For now, create a mock pipeline with element processes
-    source_pid = spawn(fn -> 
-      receive do
-        {:mcp_request, _params} -> :ok
-      end
-    end)
-    
-    pipeline_pid = spawn(fn ->
-      Process.monitor(source_pid)
-      pipeline_loop(pipeline_id, source_pid)
-    end)
-    
+    source_pid =
+      spawn(fn ->
+        receive do
+          {:mcp_request, _params} -> :ok
+        end
+      end)
+
+    pipeline_pid =
+      spawn(fn ->
+        Process.monitor(source_pid)
+        pipeline_loop(pipeline_id, source_pid)
+      end)
+
     {:ok, %{pid: pipeline_pid, source_pid: source_pid}}
   end
 
@@ -258,10 +265,10 @@ defmodule AriaEngine.Membrane.PipelineManager do
     receive do
       {:DOWN, _ref, :process, ^source_pid, _reason} ->
         Logger.info("Pipeline #{pipeline_id} source process terminated")
-        
+
       {:stop} ->
         Logger.info("Pipeline #{pipeline_id} stopping")
-        
+
       msg ->
         Logger.debug("Pipeline #{pipeline_id} received: #{inspect(msg)}")
         pipeline_loop(pipeline_id, source_pid)
@@ -278,7 +285,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
     case Map.get(active_pipelines, pipeline_pid) do
       nil ->
         %{error: "Pipeline not found"}
-        
+
       info ->
         %{
           pipeline_pid: pipeline_pid,
@@ -299,7 +306,11 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :direct_passthrough,
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
-        %{type: FormatTransformerFilter, id: :passthrough, config: %{mock_scenario: :mcp_request_to_response}},
+        %{
+          type: FormatTransformerFilter,
+          id: :passthrough,
+          config: %{mock_scenario: :mcp_request_to_response}
+        },
         %{type: MCPSink, id: :sink, config: %{}}
       ],
       connections: [
@@ -333,8 +344,16 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :mcp_filtering,
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
-        %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_filter, config: %{strict_filtering: false}},
-        %{type: FormatTransformerFilter, id: :format_converter, config: %{mock_scenario: :mcp_request_to_response}},
+        %{
+          type: AriaEngine.Membrane.MCPScheduleFilter,
+          id: :mcp_filter,
+          config: %{strict_filtering: false}
+        },
+        %{
+          type: FormatTransformerFilter,
+          id: :format_converter,
+          config: %{mock_scenario: :mcp_request_to_response}
+        },
         %{type: MCPSink, id: :sink, config: %{}}
       ],
       connections: [
@@ -353,8 +372,16 @@ defmodule AriaEngine.Membrane.PipelineManager do
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
         %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_filter, config: %{}},
-        %{type: AriaEngine.Membrane.SchedulePlannerFilter, id: :schedule_filter, config: %{strict_validation: false}},
-        %{type: FormatTransformerFilter, id: :format_converter, config: %{mock_scenario: :planning_params_to_response}},
+        %{
+          type: AriaEngine.Membrane.SchedulePlannerFilter,
+          id: :schedule_filter,
+          config: %{strict_validation: false}
+        },
+        %{
+          type: FormatTransformerFilter,
+          id: :format_converter,
+          config: %{mock_scenario: :planning_params_to_response}
+        },
         %{type: MCPSink, id: :sink, config: %{}}
       ],
       connections: [
@@ -374,8 +401,16 @@ defmodule AriaEngine.Membrane.PipelineManager do
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
         %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_filter, config: %{}},
-        %{type: AriaEngine.Membrane.SchedulePlannerFilter, id: :schedule_filter, config: %{strict_validation: false}},
-        %{type: FormatTransformerFilter, id: :mock_planner, config: %{mock_scenario: :planning_success}},
+        %{
+          type: AriaEngine.Membrane.SchedulePlannerFilter,
+          id: :schedule_filter,
+          config: %{strict_validation: false}
+        },
+        %{
+          type: FormatTransformerFilter,
+          id: :mock_planner,
+          config: %{mock_scenario: :planning_success}
+        },
         %{type: AriaEngine.Membrane.PlannerMCPFilter, id: :response_filter, config: %{}},
         %{type: MCPSink, id: :sink, config: %{}}
       ],
@@ -397,8 +432,16 @@ defmodule AriaEngine.Membrane.PipelineManager do
       elements: [
         %{type: MCPSource, id: :mcp_source, config: %{}},
         %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_schedule_filter, config: %{}},
-        %{type: AriaEngine.Membrane.SchedulePlannerFilter, id: :schedule_planner_filter, config: %{strict_validation: true}},
-        %{type: AriaEngine.Membrane.PlannerFilter, id: :planner_filter, config: %{timeout_ms: 30_000}},
+        %{
+          type: AriaEngine.Membrane.SchedulePlannerFilter,
+          id: :schedule_planner_filter,
+          config: %{strict_validation: true}
+        },
+        %{
+          type: AriaEngine.Membrane.PlannerFilter,
+          id: :planner_filter,
+          config: %{timeout_ms: 30_000}
+        },
         %{type: AriaEngine.Membrane.PlannerMCPFilter, id: :planner_mcp_filter, config: %{}},
         %{type: MCPSink, id: :mcp_sink, config: %{}}
       ],
@@ -420,7 +463,11 @@ defmodule AriaEngine.Membrane.PipelineManager do
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
         %{type: AriaEngine.Membrane.PlanFilter, id: :plan_filter, config: %{}},
-        %{type: FormatTransformerFilter, id: :format_transformer, config: %{mock_scenario: :planning_params_to_response}},
+        %{
+          type: FormatTransformerFilter,
+          id: :format_transformer,
+          config: %{mock_scenario: :planning_params_to_response}
+        },
         %{type: MCPSink, id: :sink, config: %{}}
       ],
       connections: [
@@ -438,8 +485,16 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :full_processing,
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
-        %{type: AriaEngine.Membrane.SchedulePlannerFilter, id: :schedule_filter, config: %{strict_validation: false}},
-        %{type: AriaEngine.Membrane.PlannerFilter, id: :planner_filter, config: %{timeout_ms: 30_000}},
+        %{
+          type: AriaEngine.Membrane.SchedulePlannerFilter,
+          id: :schedule_filter,
+          config: %{strict_validation: false}
+        },
+        %{
+          type: AriaEngine.Membrane.PlannerFilter,
+          id: :planner_filter,
+          config: %{timeout_ms: 30_000}
+        },
         %{type: MCPSink, id: :sink, config: %{}}
       ],
       connections: [
@@ -457,7 +512,11 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :validation_processing,
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
-        %{type: AriaEngine.Membrane.ValidationPipelineFilter, id: :validation_filter, config: %{timeout_ms: 60_000}},
+        %{
+          type: AriaEngine.Membrane.ValidationPipelineFilter,
+          id: :validation_filter,
+          config: %{timeout_ms: 60_000}
+        },
         %{type: MCPSink, id: :sink, config: %{}}
       ],
       connections: [
@@ -494,7 +553,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
       total_pipelines_created: state.pipeline_counter,
       pipeline_ids: Enum.map(state.active_pipelines, fn {_pid, info} -> info.id end)
     }
-    
+
     {:reply, stats, state}
   end
 end

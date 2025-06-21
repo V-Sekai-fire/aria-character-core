@@ -7,7 +7,7 @@ defmodule DomainAPI do
   """
   alias Core
   alias Domain
-  
+
   @type t :: Core.t()
   @type action_fn :: Core.action_fn()
   @type task_method_fn :: Core.task_method_fn()
@@ -41,24 +41,25 @@ defmodule DomainAPI do
   def to_domain(%Core{} = engine) do
     # Create domain with the same name
     domain = Domain.new(engine.name)
-    
+
     # Add actions directly (they don't need conversion)
     domain_with_actions = %{domain | actions: engine.actions}
-    
+
     # Add task methods - preserve original format exactly
-    domain_with_task_methods = 
+    domain_with_task_methods =
       Enum.reduce(engine.task_methods, domain_with_actions, fn {task_name, methods}, acc ->
         # Preserve the methods exactly as they are in the engine
         %{acc | task_methods: Map.put(acc.task_methods, task_name, methods)}
       end)
-    
+
     # Add unigoal methods - preserve original format exactly
-    domain_with_unigoal_methods = 
-      Enum.reduce(engine.unigoal_methods, domain_with_task_methods, fn {goal_type, methods}, acc ->
+    domain_with_unigoal_methods =
+      Enum.reduce(engine.unigoal_methods, domain_with_task_methods, fn {goal_type, methods},
+                                                                       acc ->
         # Preserve the methods exactly as they are in the engine
         %{acc | unigoal_methods: Map.put(acc.unigoal_methods, goal_type, methods)}
       end)
-    
+
     # Add multigoal methods - preserve original format exactly
     %{domain_with_unigoal_methods | multigoal_methods: engine.multigoal_methods}
   end
@@ -143,10 +144,9 @@ defmodule DomainAPI do
     end)
   end
 
-
   @doc """
   Merges two method maps, combining method lists for the same keys.
-  
+
   When both maps have the same key, the method lists are concatenated.
   """
   @spec merge_method_maps(map(), map()) :: map()
@@ -156,11 +156,11 @@ defmodule DomainAPI do
       case {methods1, methods2} do
         {list1, list2} when is_list(list1) and is_list(list2) ->
           list1 ++ list2
+
         {^methods1, methods2} ->
           # Fallback: if not both lists, prefer the second one
           methods2
       end
     end)
   end
-
 end

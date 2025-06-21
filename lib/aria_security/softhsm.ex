@@ -27,14 +27,14 @@ defmodule AriaSecurity.SoftHSM do
   ]
 
   @type t :: %__MODULE__{
-    library_path: String.t(),
-    config_path: String.t(),
-    token_dir: String.t(),
-    slot: non_neg_integer(),
-    pin: String.t(),
-    so_pin: String.t(),
-    label: String.t()
-  }
+          library_path: String.t(),
+          config_path: String.t(),
+          token_dir: String.t(),
+          slot: non_neg_integer(),
+          pin: String.t(),
+          so_pin: String.t(),
+          label: String.t()
+        }
 
   @doc """
   Creates a new SoftHSM configuration struct.
@@ -90,9 +90,12 @@ defmodule AriaSecurity.SoftHSM do
     cmd_args = [
       "--init-token",
       "--free",
-      "--label", hsm.label,
-      "--so-pin", hsm.so_pin,
-      "--pin", hsm.pin
+      "--label",
+      hsm.label,
+      "--so-pin",
+      hsm.so_pin,
+      "--pin",
+      hsm.pin
     ]
 
     case System.cmd("softhsm2-util", cmd_args, stderr_to_stdout: true) do
@@ -102,11 +105,12 @@ defmodule AriaSecurity.SoftHSM do
         # Extract the assigned slot from output
         assigned_slot = extract_slot_from_output(output)
 
-        {:ok, %{
-          slot: assigned_slot || hsm.slot,
-          label: hsm.label,
-          output: output
-        }}
+        {:ok,
+         %{
+           slot: assigned_slot || hsm.slot,
+           label: hsm.label,
+           output: output
+         }}
 
       {error, exit_code} ->
         Logger.error("Failed to initialize SoftHSM token: #{error}")
@@ -160,32 +164,39 @@ defmodule AriaSecurity.SoftHSM do
     Logger.info("Generating RSA-#{key_size} key pair: #{key_label} in slot #{hsm.slot}")
 
     cmd_args = [
-      "--module", hsm.library_path,
+      "--module",
+      hsm.library_path,
       "--login",
-      "--pin", hsm.pin,
-      "--slot", to_string(hsm.slot),
+      "--pin",
+      hsm.pin,
+      "--slot",
+      to_string(hsm.slot),
       "--keypairgen",
-      "--key-type", "rsa:#{key_size}",
-      "--label", key_label
+      "--key-type",
+      "rsa:#{key_size}",
+      "--label",
+      key_label
     ]
 
-    cmd_args = if extractable do
-      cmd_args ++ ["--extractable"]
-    else
-      cmd_args
-    end
+    cmd_args =
+      if extractable do
+        cmd_args ++ ["--extractable"]
+      else
+        cmd_args
+      end
 
     case System.cmd("pkcs11-tool", cmd_args, stderr_to_stdout: true) do
       {output, 0} ->
         Logger.info("RSA key pair generated successfully: #{output}")
 
-        {:ok, %{
-          key_label: key_label,
-          key_size: key_size,
-          slot: hsm.slot,
-          extractable: extractable,
-          output: output
-        }}
+        {:ok,
+         %{
+           key_label: key_label,
+           key_size: key_size,
+           slot: hsm.slot,
+           extractable: extractable,
+           output: output
+         }}
 
       {error, exit_code} ->
         Logger.error("Failed to generate RSA key pair: #{error}")
@@ -204,10 +215,13 @@ defmodule AriaSecurity.SoftHSM do
   """
   def list_objects(%__MODULE__{} = hsm) do
     cmd_args = [
-      "--module", hsm.library_path,
+      "--module",
+      hsm.library_path,
       "--login",
-      "--pin", hsm.pin,
-      "--slot", to_string(hsm.slot),
+      "--pin",
+      hsm.pin,
+      "--slot",
+      to_string(hsm.slot),
       "--list-objects"
     ]
 
@@ -306,6 +320,7 @@ defmodule AriaSecurity.SoftHSM do
             slot: String.to_integer(slot_str),
             description: String.trim(line)
           }
+
         nil ->
           %{description: String.trim(line)}
       end

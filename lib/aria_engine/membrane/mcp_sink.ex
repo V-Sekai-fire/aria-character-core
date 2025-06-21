@@ -4,7 +4,7 @@
 defmodule AriaEngine.Membrane.MCPSink do
   @moduledoc """
   Membrane Sink element for MCP responses.
-  
+
   This sink receives processed MCP responses and can store them,
   log them, or forward them to external systems.
   """
@@ -13,25 +13,28 @@ defmodule AriaEngine.Membrane.MCPSink do
 
   require Logger
 
-  def_input_pad :input,
+  def_input_pad(:input,
     accepted_format: _any,
     flow_control: :auto
+  )
 
-  def_options storage_mode: [
-                spec: :memory | :log | :callback,
-                default: :log,
-                description: "How to handle received responses"
-              ],
-              callback_pid: [
-                spec: pid() | nil,
-                default: nil,
-                description: "PID to send responses to when using callback mode"
-              ],
-              max_stored_responses: [
-                spec: pos_integer(),
-                default: 100,
-                description: "Maximum number of responses to store in memory"
-              ]
+  def_options(
+    storage_mode: [
+      spec: :memory | :log | :callback,
+      default: :log,
+      description: "How to handle received responses"
+    ],
+    callback_pid: [
+      spec: pid() | nil,
+      default: nil,
+      description: "PID to send responses to when using callback mode"
+    ],
+    max_stored_responses: [
+      spec: pos_integer(),
+      default: 100,
+      description: "Maximum number of responses to store in memory"
+    ]
+  )
 
   @impl true
   def handle_init(_ctx, opts) do
@@ -42,7 +45,7 @@ defmodule AriaEngine.Membrane.MCPSink do
       stored_responses: [],
       response_count: 0
     }
-    
+
     Logger.info("MCPSink initialized with storage_mode: #{opts.storage_mode}")
     {[], state}
   end
@@ -50,17 +53,17 @@ defmodule AriaEngine.Membrane.MCPSink do
   @impl true
   def handle_buffer(:input, buffer, _ctx, state) do
     response = buffer.payload
-    
+
     case state.storage_mode do
       :memory ->
         handle_memory_storage(response, state)
-        
+
       :log ->
         handle_log_storage(response, state)
-        
+
       :callback ->
         handle_callback_storage(response, state)
-        
+
       _ ->
         Logger.warning("Unknown storage mode: #{state.storage_mode}")
         {[], state}
@@ -68,21 +71,26 @@ defmodule AriaEngine.Membrane.MCPSink do
   end
 
   defp handle_memory_storage(response, state) do
-    new_responses = [response | state.stored_responses]
-    |> Enum.take(state.max_stored_responses)
-    
-    new_state = %{state |
-      stored_responses: new_responses,
-      response_count: state.response_count + 1
+    new_responses =
+      [response | state.stored_responses]
+      |> Enum.take(state.max_stored_responses)
+
+    new_state = %{
+      state
+      | stored_responses: new_responses,
+        response_count: state.response_count + 1
     }
-    
-    Logger.debug("Stored response in memory (#{length(new_responses)}/#{state.max_stored_responses})")
+
+    Logger.debug(
+      "Stored response in memory (#{length(new_responses)}/#{state.max_stored_responses})"
+    )
+
     {[], new_state}
   end
 
   defp handle_log_storage(response, state) do
     Logger.info("MCPSink received response: #{inspect(response, limit: :infinity)}")
-    
+
     new_state = %{state | response_count: state.response_count + 1}
     {[], new_state}
   end
@@ -94,7 +102,7 @@ defmodule AriaEngine.Membrane.MCPSink do
     else
       Logger.warning("Callback mode enabled but no callback_pid provided")
     end
-    
+
     new_state = %{state | response_count: state.response_count + 1}
     {[], new_state}
   end
@@ -105,7 +113,7 @@ defmodule AriaEngine.Membrane.MCPSink do
   @spec get_stored_responses(pid()) :: [map()]
   def get_stored_responses(sink_pid) do
     send(sink_pid, {:get_responses, self()})
-    
+
     receive do
       {:responses, responses} -> responses
     after
@@ -127,7 +135,7 @@ defmodule AriaEngine.Membrane.MCPSink do
       stored_count: length(state.stored_responses),
       max_stored: state.max_stored_responses
     }
-    
+
     send(from, {:sink_stats, stats})
     {[], state}
   end

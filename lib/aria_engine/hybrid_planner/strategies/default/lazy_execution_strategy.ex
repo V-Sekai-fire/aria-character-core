@@ -4,7 +4,7 @@
 defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   @moduledoc """
   Default lazy execution strategy implementation wrapping existing execution logic.
-  
+
   This strategy encapsulates the lazy refinement execution model from Plan.Core
   while providing the clean strategy interface defined in ADR-091.
   """
@@ -16,38 +16,46 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   @impl true
   def execute_plan(solution_tree, %AriaEngine.StateV2{} = initial_state, _strategies, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     if verbose > 1 do
       action_count = AriaEngine.Plan.Utils.plan_cost(solution_tree)
-      Logger.debug("LazyExecutionStrategy: Starting execution of plan with #{action_count} actions")
+
+      Logger.debug(
+        "LazyExecutionStrategy: Starting execution of plan with #{action_count} actions"
+      )
     end
 
     try do
       # Extract domain from strategies for compatibility
       domain = Map.get(opts, :domain)
-      
+
       case domain do
         nil ->
           {:error, "Domain required for execution but not provided in options"}
-        
+
         %Domain.Core{} = domain ->
           # Use existing Plan.Core.run_lazy_refineahead logic
           # TODO: Implement Plan.Core.run_lazy_refineahead/4 function  
-          Logger.warning("LazyExecutionStrategy: Plan.Core.run_lazy_refineahead/4 not yet implemented")
+          Logger.warning(
+            "LazyExecutionStrategy: Plan.Core.run_lazy_refineahead/4 not yet implemented"
+          )
+
           case Plan.Core.plan(domain, initial_state, opts) do
             {:ok, final_state} ->
               if verbose > 1 do
                 Logger.debug("LazyExecutionStrategy: Execution completed successfully")
               end
+
               {:ok, final_state}
-            
+
             {:error, reason} ->
               if verbose > 0 do
                 Logger.warning("LazyExecutionStrategy: Execution failed - #{reason}")
               end
+
               {:error, reason}
           end
-        
+
         _ ->
           {:error, "Invalid domain type provided for execution"}
       end
@@ -62,7 +70,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   @impl true
   def execute_step(step, %AriaEngine.StateV2{} = current_state, strategies, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     if verbose > 2 do
       Logger.debug("LazyExecutionStrategy: Executing step #{inspect(step)}")
     end
@@ -71,14 +79,14 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
       # Get required strategies
       state_strategy = Map.get(strategies, :state_strategy)
       domain = Map.get(opts, :domain)
-      
+
       case {state_strategy, domain} do
         {nil, _} ->
           {:error, "State strategy required for step execution"}
-        
+
         {_, nil} ->
           {:error, "Domain required for step execution"}
-        
+
         {state_strategy, domain} ->
           case step do
             {action_name, args} when is_atom(action_name) ->
@@ -88,15 +96,17 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
                   if verbose > 2 do
                     Logger.debug("LazyExecutionStrategy: Step executed successfully")
                   end
+
                   {:ok, new_state}
-                
+
                 {:error, reason} ->
                   if verbose > 1 do
                     Logger.warning("LazyExecutionStrategy: Step execution failed - #{reason}")
                   end
+
                   {:error, reason}
               end
-            
+
             _ ->
               {:error, "Unknown step format: #{inspect(step)}"}
           end
@@ -110,9 +120,14 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   end
 
   @impl true
-  def handle_execution_failure(failure, %AriaEngine.StateV2{} = current_state, strategies, opts \\ []) do
+  def handle_execution_failure(
+        failure,
+        %AriaEngine.StateV2{} = current_state,
+        strategies,
+        opts \\ []
+      ) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     if verbose > 1 do
       Logger.debug("LazyExecutionStrategy: Handling execution failure: #{inspect(failure)}")
     end
@@ -126,17 +141,21 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
       case {planning_strategy, domain} do
         {nil, _} ->
           {:error, "Planning strategy required for failure recovery"}
-        
+
         {_, nil} ->
           {:error, "Domain required for failure recovery"}
-        
+
         {_planning_strategy, _domain} ->
           # Log the failure
           if logging_strategy do
-            logging_strategy.log_error(failure, %{
-              phase: "execution",
-              state: "recovery_attempt"
-            }, opts)
+            logging_strategy.log_error(
+              failure,
+              %{
+                phase: "execution",
+                state: "recovery_attempt"
+              },
+              opts
+            )
           end
 
           # Simple recovery strategy: return current state
@@ -146,23 +165,25 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
               if verbose > 0 do
                 Logger.warning("LazyExecutionStrategy: Action #{action_name} failed - #{reason}")
               end
-              
+
               # For now, just return the current state as a recovery
               # A real implementation might attempt replanning here
               {:ok, current_state}
-            
+
             {:temporal_violation, _constraint, reason} ->
               if verbose > 0 do
                 Logger.warning("LazyExecutionStrategy: Temporal violation - #{reason}")
               end
-              
+
               {:ok, current_state}
-            
+
             _ ->
               if verbose > 0 do
-                Logger.warning("LazyExecutionStrategy: Unknown failure type - #{inspect(failure)}")
+                Logger.warning(
+                  "LazyExecutionStrategy: Unknown failure type - #{inspect(failure)}"
+                )
               end
-              
+
               {:error, "Cannot recover from failure: #{inspect(failure)}"}
           end
       end
@@ -222,7 +243,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
 
   @doc """
   Create execution context for tracking execution state.
-  
+
   This can be used to maintain execution-specific state across
   multiple step executions.
   """
@@ -242,11 +263,12 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   Update execution context after a step.
   """
   def update_execution_context(context, step, new_state) do
-    %{context |
-      current_state: new_state,
-      executed_steps: [step | context.executed_steps],
-      step_count: context.step_count + 1,
-      last_step_time: System.system_time(:millisecond)
+    %{
+      context
+      | current_state: new_state,
+        executed_steps: [step | context.executed_steps],
+        step_count: context.step_count + 1,
+        last_step_time: System.system_time(:millisecond)
     }
   end
 
@@ -256,11 +278,12 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   def get_execution_stats(context) do
     current_time = System.system_time(:millisecond)
     total_time = current_time - context.start_time
-    
+
     %{
       total_steps: context.step_count,
       total_time_ms: total_time,
-      average_step_time_ms: if(context.step_count > 0, do: total_time / context.step_count, else: 0),
+      average_step_time_ms:
+        if(context.step_count > 0, do: total_time / context.step_count, else: 0),
       last_step_time: context.last_step_time,
       execution_rate: if(total_time > 0, do: context.step_count / (total_time / 1000), else: 0)
     }

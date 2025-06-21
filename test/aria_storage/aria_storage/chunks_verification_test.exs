@@ -31,9 +31,12 @@ defmodule AriaStorage.ChunksVerificationTest do
       {:ok, data} = File.read(input_path)
 
       # Use the same parameters as desync/casync
-      min_size = 16 * 1024       # 16KB
-      avg_size = 64 * 1024       # 64KB
-      max_size = 256 * 1024      # 256KB
+      # 16KB
+      min_size = 16 * 1024
+      # 64KB
+      avg_size = 64 * 1024
+      # 256KB
+      max_size = 256 * 1024
       discriminator = Chunks.discriminator_from_avg(avg_size)
 
       # Create chunks using our algorithm
@@ -41,7 +44,7 @@ defmodule AriaStorage.ChunksVerificationTest do
 
       # Verify chunk count matches
       assert length(our_chunks) == length(expected_chunks),
-        "Chunk count mismatch: expected #{length(expected_chunks)}, got #{length(our_chunks)}"
+             "Chunk count mismatch: expected #{length(expected_chunks)}, got #{length(our_chunks)}"
 
       # Verify chunk boundaries are contiguous
       Enum.with_index(our_chunks)
@@ -50,38 +53,46 @@ defmodule AriaStorage.ChunksVerificationTest do
 
         # Check chunk is contiguous with previous
         assert chunk.offset == prev_offset,
-          "Chunk #{i + 1} offset #{chunk.offset} doesn't follow previous chunk end #{prev_offset}"
+               "Chunk #{i + 1} offset #{chunk.offset} doesn't follow previous chunk end #{prev_offset}"
 
         # Check offset matches expected
         assert chunk.offset == expected_chunk.offset,
-          "Chunk #{i + 1} offset #{chunk.offset} doesn't match expected #{expected_chunk.offset}"
+               "Chunk #{i + 1} offset #{chunk.offset} doesn't match expected #{expected_chunk.offset}"
 
         # Check size matches expected
         assert chunk.size == expected_chunk.size,
-          "Chunk #{i + 1} size #{chunk.size} doesn't match expected #{expected_chunk.size}"
+               "Chunk #{i + 1} size #{chunk.size} doesn't match expected #{expected_chunk.size}"
 
         prev_offset + chunk.size
       end)
 
       # Verify total size matches input
       total_size = Enum.sum(Enum.map(our_chunks, & &1.size))
+
       assert total_size == byte_size(data),
-        "Total chunk size #{total_size} doesn't match input size #{byte_size(data)}"
+             "Total chunk size #{total_size} doesn't match input size #{byte_size(data)}"
 
       # Verify first chunk has expected characteristics
       our_first_chunk = List.first(our_chunks)
       expected_first_chunk = List.first(expected_chunks)
 
       assert our_first_chunk.size == expected_first_chunk.size,
-        "First chunk size mismatch: expected #{expected_first_chunk.size}, got #{our_first_chunk.size}"
+             "First chunk size mismatch: expected #{expected_first_chunk.size}, got #{our_first_chunk.size}"
 
       # Log success details
       first_chunk_id_hex = Base.encode16(our_first_chunk.id, case: :lower)
       TestOutput.trace_puts("\n✅ CHUNKING VERIFICATION SUCCESS:")
       TestOutput.trace_puts("  - Created #{length(our_chunks)} chunks matching desync exactly")
-      TestOutput.trace_puts("  - First chunk: size=#{our_first_chunk.size}, id=#{String.slice(first_chunk_id_hex, 0, 16)}...")
+
+      TestOutput.trace_puts(
+        "  - First chunk: size=#{our_first_chunk.size}, id=#{String.slice(first_chunk_id_hex, 0, 16)}..."
+      )
+
       TestOutput.trace_puts("  - Total size: #{total_size} bytes")
-      TestOutput.trace_puts("  - Parameters: min=#{min_size}, avg=#{avg_size}, max=#{max_size}, discriminator=#{discriminator}")
+
+      TestOutput.trace_puts(
+        "  - Parameters: min=#{min_size}, avg=#{avg_size}, max=#{max_size}, discriminator=#{discriminator}"
+      )
     end
 
     test "chunk IDs use SHA512/256 hash correctly" do
@@ -102,7 +113,8 @@ defmodule AriaStorage.ChunksVerificationTest do
     end
 
     test "chunk compression works correctly" do
-      test_data = String.duplicate("Hello, World! ", 1000)  # Make it compressible
+      # Make it compressible
+      test_data = String.duplicate("Hello, World! ", 1000)
 
       # Test zstd compression
       {:ok, compressed} = Chunks.compress_chunk(test_data, :zstd)
@@ -115,7 +127,9 @@ defmodule AriaStorage.ChunksVerificationTest do
       assert uncompressed == test_data, "No compression should return original data"
 
       {:ok, decompressed_none} = Chunks.decompress_chunk(uncompressed, :none)
-      assert decompressed_none == test_data, "Decompressed uncompressed data should match original"
+
+      assert decompressed_none == test_data,
+             "Decompressed uncompressed data should match original"
     end
   end
 end

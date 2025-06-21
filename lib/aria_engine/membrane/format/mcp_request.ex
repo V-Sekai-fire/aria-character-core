@@ -4,7 +4,7 @@
 defmodule AriaEngine.Membrane.Format.MCPRequest do
   @moduledoc """
   Membrane format for MCP (Model Context Protocol) requests.
-  
+
   This format represents a standardized MCP request that can flow through
   the Membrane pipeline for processing by various filters and elements.
   """
@@ -20,13 +20,13 @@ defmodule AriaEngine.Membrane.Format.MCPRequest do
   ]
 
   @type t :: %__MODULE__{
-    request_id: String.t(),
-    tool_name: String.t(),
-    parameters: map(),
-    metadata: map(),
-    timestamp: DateTime.t(),
-    version: String.t()
-  }
+          request_id: String.t(),
+          tool_name: String.t(),
+          parameters: map(),
+          metadata: map(),
+          timestamp: DateTime.t(),
+          version: String.t()
+        }
 
   @doc """
   Creates an MCPRequest from a tool call.
@@ -42,6 +42,7 @@ defmodule AriaEngine.Membrane.Format.MCPRequest do
         timestamp: DateTime.utc_now(),
         version: "2.0.0"
       }
+
       {:ok, request}
     else
       {:error, "Invalid parameters for MCPRequest"}
@@ -55,7 +56,7 @@ defmodule AriaEngine.Membrane.Format.MCPRequest do
   def from_mcp_params(mcp_params, request_id) do
     # Try to detect tool name from parameters
     tool_name = detect_tool_name(mcp_params)
-    
+
     request = %__MODULE__{
       request_id: request_id,
       tool_name: tool_name,
@@ -64,6 +65,7 @@ defmodule AriaEngine.Membrane.Format.MCPRequest do
       timestamp: DateTime.utc_now(),
       version: "2.0.0"
     }
+
     {:ok, request}
   end
 

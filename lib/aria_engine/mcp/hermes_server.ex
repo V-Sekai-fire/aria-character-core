@@ -4,7 +4,7 @@
 defmodule AriaEngine.MCP.HermesServer do
   @moduledoc """
   Hermes MCP server implementation for AriaEngine.
-  
+
   This module provides a MCP server using the Hermes framework that exposes
   AriaEngine's scheduling and planning capabilities through MCP tools.
   """
@@ -30,23 +30,24 @@ defmodule AriaEngine.MCP.HermesServer do
   @impl true
   def handle_request(%{"method" => "tools/list"} = _request, state) do
     Logger.info("Listing available MCP tools")
-    
+
     tools = AriaEngine.MCPTools.get_all_tools()
-    
+
     response = %{"tools" => tools}
     {:reply, response, state}
   end
 
   @impl true
   def handle_request(
-    %{"method" => "tools/call", "params" => %{"name" => tool_name, "arguments" => arguments}} = _request,
-    state
-  ) do
+        %{"method" => "tools/call", "params" => %{"name" => tool_name, "arguments" => arguments}} =
+          _request,
+        state
+      ) do
     Logger.info("Calling tool: #{tool_name} with args: #{inspect(arguments)}")
-    
+
     try do
       result = AriaEngine.MCPTools.handle_tool_call(tool_name, arguments)
-      
+
       # Format the result as MCP content
       response = %{
         "content" => [
@@ -57,12 +58,12 @@ defmodule AriaEngine.MCP.HermesServer do
         ],
         "isError" => false
       }
-      
+
       {:reply, response, state}
     rescue
       e ->
         Logger.error("Tool call failed: #{Exception.message(e)}")
-        
+
         {:error, Error.execution("Tool execution failed: #{Exception.message(e)}"), state}
     end
   end

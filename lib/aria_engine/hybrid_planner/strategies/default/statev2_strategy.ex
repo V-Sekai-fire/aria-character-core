@@ -4,7 +4,7 @@
 defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
   @moduledoc """
   Default StateV2 strategy implementation wrapping existing state management logic.
-  
+
   This strategy encapsulates StateV2 operations while providing the clean
   strategy interface defined in ADR-091.
   """
@@ -17,7 +17,7 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
   @impl true
   def apply_action(%AriaEngine.StateV2{} = state, {action_name, args}, domain, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     if verbose > 1 do
       Logger.debug("StateV2Strategy: Applying action #{action_name} with args #{inspect(args)}")
     end
@@ -31,14 +31,15 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
               if verbose > 1 do
                 Logger.debug("StateV2Strategy: Action applied successfully")
               end
+
               {:ok, new_state}
-            
+
             other ->
               error_msg = "Action #{action_name} returned invalid state: #{inspect(other)}"
               Logger.error(error_msg)
               {:error, error_msg}
           end
-        
+
         nil ->
           error_msg = "Action #{action_name} not found in domain"
           {:error, error_msg}
@@ -58,14 +59,14 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
         {:fact, subject, predicate} ->
           result = AriaEngine.StateV2.get_fact(state, subject, predicate)
           {:ok, result}
-        
+
         {:facts, predicate} ->
           result = StateV2.get_subjects_with_predicate(state, predicate)
           {:ok, result}
-        
+
         {:all_facts} ->
           {:ok, state.data}
-        
+
         _ ->
           {:error, "Unknown query type: #{inspect(query)}"}
       end
@@ -80,9 +81,11 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
     try do
       # Simple checkpoint by storing state data with special checkpoint key
       checkpoint_key = {"__checkpoint__", checkpoint_id}
+
       checkpointed_state = %AriaEngine.StateV2{
         data: Map.put(state.data, checkpoint_key, state.data)
       }
+
       {:ok, checkpointed_state}
     rescue
       e ->
@@ -94,10 +97,11 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
   def rollback_to_checkpoint(%AriaEngine.StateV2{} = state, checkpoint_id, _opts \\ []) do
     try do
       checkpoint_key = {"__checkpoint__", checkpoint_id}
+
       case Map.get(state.data, checkpoint_key) do
         nil ->
           {:error, "Checkpoint #{checkpoint_id} not found"}
-        
+
         saved_data ->
           restored_state = %AriaEngine.StateV2{data: saved_data}
           {:ok, restored_state}

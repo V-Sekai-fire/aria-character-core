@@ -4,13 +4,13 @@
 defmodule AriaEngine.PlannerAdapter do
   @moduledoc """
   Migration adapter that provides the Plan API while delegating to HybridCoordinator.
-  
+
   This module allows seamless migration from the old Plan module to the new HybridCoordinator
   by maintaining the same public API and function signatures while using the hybrid planner
   internally.
-  
+
   ## Migration Strategy
-  
+
   1. Replace Plan usages with PlannerAdapter
   2. Test compatibility and behavior parity
   3. Gradually migrate to direct HybridCoordinator usage
@@ -29,7 +29,8 @@ defmodule AriaEngine.PlannerAdapter do
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
-  @type solution_tree :: map() # Plan.Core.solution_tree()
+  # Plan.Core.solution_tree()
+  @type solution_tree :: map()
   @type plan_result :: {:ok, solution_tree()} | {:error, String.t()}
   @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure
 
@@ -37,69 +38,83 @@ defmodule AriaEngine.PlannerAdapter do
 
   @doc """
   Plan using HTN task decomposition directly with temporal validation.
-  
+
   This function bypasses the goal-based HybridCoordinator.plan/4 and uses
   direct HTN task decomposition while preserving temporal planning capabilities.
   """
   @spec plan_tasks(Domain.Core.t(), AriaEngine.StateV2.t(), [task()], keyword()) :: plan_result()
   def plan_tasks(domain, %AriaEngine.StateV2{} = state, tasks, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     # ALWAYS log to prove this function is being called
-    Logger.info("🔧 PlannerAdapter.plan_tasks() called with #{length(tasks)} tasks, verbose=#{verbose}")
+    Logger.info(
+      "🔧 PlannerAdapter.plan_tasks() called with #{length(tasks)} tasks, verbose=#{verbose}"
+    )
+
     Logger.info("🔧 Tasks: #{inspect(tasks)}")
     Logger.info("🔧 Opts: #{inspect(opts)}")
-    
+
     if verbose > 1 do
-      Logger.debug("PlannerAdapter: Starting HTN task decomposition using HybridCoordinatorV2 for #{length(tasks)} tasks")
+      Logger.debug(
+        "PlannerAdapter: Starting HTN task decomposition using HybridCoordinatorV2 for #{length(tasks)} tasks"
+      )
     end
 
     # Use HybridCoordinatorV2 for sophisticated planning instead of old Plan.plan
     Logger.info("🔧 Creating HybridCoordinatorV2 with opts: #{inspect(opts)}")
     coordinator = HybridCoordinatorV2.new_default(opts)
     Logger.info("🔧 Calling HybridCoordinatorV2.plan() with coordinator: #{inspect(coordinator)}")
-    
+
     case HybridCoordinatorV2.plan(coordinator, domain, state, tasks, opts) do
       {:ok, %{solution_tree: solution_tree}} ->
         Logger.info("🔧 PlannerAdapter: HybridCoordinatorV2 planning completed successfully")
+
         if verbose > 1 do
           Logger.debug("PlannerAdapter: HybridCoordinatorV2 planning completed successfully")
         end
+
         {:ok, solution_tree}
-      
-      {:error, reason} -> 
+
+      {:error, reason} ->
         Logger.warning("🔧 PlannerAdapter: HybridCoordinatorV2 planning failed - #{reason}")
+
         if verbose > 0 do
           Logger.warning("PlannerAdapter: HybridCoordinatorV2 planning failed - #{reason}")
         end
+
         {:error, reason}
     end
   end
 
   @doc """
   Plan using HybridCoordinator while maintaining Plan.plan/4 API compatibility.
-  
+
   Converts between Plan module API and HybridCoordinator API seamlessly.
   """
   @spec plan(Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
   def plan(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     if verbose > 1 do
       Logger.debug("PlannerAdapter: Converting Plan.plan/4 call to HybridCoordinator.plan/4")
     end
 
     # Convert todos to goals format expected by HybridCoordinator
     converted_goals = convert_todos_to_goals(todos)
-    
+
     coordinator = HybridCoordinatorV2.new_default(opts)
+
     case HybridCoordinatorV2.plan(coordinator, domain, state, converted_goals, opts) do
       {:ok, %{solution_tree: solution_tree}} ->
         if verbose > 1 do
-          Logger.debug("PlannerAdapter: Successfully converted HybridCoordinatorV2 result to Plan format")
+          Logger.debug(
+            "PlannerAdapter: Successfully converted HybridCoordinatorV2 result to Plan format"
+          )
         end
+
         {:ok, solution_tree}
-      {:error, reason} -> 
+
+      {:error, reason} ->
         {:error, reason}
     end
   end
@@ -107,26 +122,40 @@ defmodule AriaEngine.PlannerAdapter do
   @doc """
   Replan using HybridCoordinator while maintaining Plan.replan/5 API compatibility.
   """
-  @spec replan(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) :: replan_result()
+  @spec replan(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) ::
+          replan_result()
   def replan(domain, %AriaEngine.StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     if verbose > 1 do
       Logger.debug("PlannerAdapter: Converting Plan.replan/5 call to HybridCoordinator.replan/5")
     end
 
     # Wrap solution tree in EncapsulatedPlan for HybridCoordinator
-    encapsulated_plan = DataStructures.EncapsulatedPlan.new(solution_tree, %{
-      adapter_wrapped: true,
-      original_api: "Plan.replan"
-    })
-    
+    encapsulated_plan =
+      DataStructures.EncapsulatedPlan.new(solution_tree, %{
+        adapter_wrapped: true,
+        original_api: "Plan.replan"
+      })
+
     coordinator = HybridCoordinatorV2.new_default(opts)
-    case HybridCoordinatorV2.replan(coordinator, domain, state, encapsulated_plan, fail_node_id, opts) do
+
+    case HybridCoordinatorV2.replan(
+           coordinator,
+           domain,
+           state,
+           encapsulated_plan,
+           fail_node_id,
+           opts
+         ) do
       {:ok, %{solution_tree: new_solution_tree}} ->
         {:ok, new_solution_tree}
-      {:error, reason} -> {:error, reason}
-      :failure -> :failure
+
+      {:error, reason} ->
+        {:error, reason}
+
+      :failure ->
+        :failure
     end
   end
 
@@ -134,22 +163,31 @@ defmodule AriaEngine.PlannerAdapter do
   Execute plan using HybridCoordinator while maintaining run_lazy_refineahead API compatibility.
   """
   @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
-    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
-  def run_lazy_refineahead(domain, %AriaEngine.StateV2{} = initial_state, solution_tree, opts \\ []) do
+          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  def run_lazy_refineahead(
+        domain,
+        %AriaEngine.StateV2{} = initial_state,
+        solution_tree,
+        opts \\ []
+      ) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     if verbose > 1 do
-      Logger.debug("PlannerAdapter: Converting run_lazy_refineahead call to HybridCoordinator.execute/4")
+      Logger.debug(
+        "PlannerAdapter: Converting run_lazy_refineahead call to HybridCoordinator.execute/4"
+      )
     end
 
     # Wrap solution tree in EncapsulatedPlan for HybridCoordinator
-    encapsulated_plan = DataStructures.EncapsulatedPlan.new(solution_tree, %{
-      adapter_wrapped: true,
-      original_api: "Plan.run_lazy_refineahead"
-    })
-    
+    encapsulated_plan =
+      DataStructures.EncapsulatedPlan.new(solution_tree, %{
+        adapter_wrapped: true,
+        original_api: "Plan.run_lazy_refineahead"
+      })
+
     # Use HybridCoordinator execution engine
     coordinator = HybridCoordinatorV2.new_default(opts)
+
     case HybridCoordinatorV2.execute(coordinator, domain, initial_state, encapsulated_plan, opts) do
       {:ok, final_state} -> {:ok, final_state}
       {:error, reason} -> {:error, reason}
@@ -159,23 +197,30 @@ defmodule AriaEngine.PlannerAdapter do
   @doc """
   Validate plan using HybridCoordinator while maintaining Plan.validate_plan/3 API compatibility.
   """
-  @spec validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) :: 
-    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @spec validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) ::
+          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def validate_plan(domain, %AriaEngine.StateV2{} = initial_state, plan) do
     case plan do
       plan when is_list(plan) ->
         # For list of plan steps, use existing Utils validation
         Utils.validate_plan(domain, initial_state, plan)
-      
+
       solution_tree when is_map(solution_tree) ->
         # For solution tree, use HybridCoordinator validation
-        encapsulated_plan = DataStructures.EncapsulatedPlan.new(solution_tree, %{
-          adapter_wrapped: true,
-          original_api: "Plan.validate_plan"
-        })
-        
+        encapsulated_plan =
+          DataStructures.EncapsulatedPlan.new(solution_tree, %{
+            adapter_wrapped: true,
+            original_api: "Plan.validate_plan"
+          })
+
         coordinator = HybridCoordinatorV2.new_default([])
-        case HybridCoordinatorV2.validate_plan(coordinator, domain, initial_state, encapsulated_plan) do
+
+        case HybridCoordinatorV2.validate_plan(
+               coordinator,
+               domain,
+               initial_state,
+               encapsulated_plan
+             ) do
           {:ok, final_state} -> {:ok, final_state}
           {:error, reason} -> {:error, reason}
         end
@@ -194,24 +239,25 @@ defmodule AriaEngine.PlannerAdapter do
   Get tree statistics - delegates to existing Utils for compatibility.
   """
   @spec tree_stats(solution_tree()) :: %{
-    total_nodes: integer(),
-    expanded_nodes: integer(),
-    primitive_actions: integer(),
-    max_depth: integer()
-  }
+          total_nodes: integer(),
+          expanded_nodes: integer(),
+          primitive_actions: integer(),
+          max_depth: integer()
+        }
   def tree_stats(solution_tree), do: Utils.tree_stats(solution_tree)
 
   @doc """
   Blacklist command - delegates to existing Blacklisting for compatibility.
   """
   @spec blacklist_command(solution_tree(), todo_item()) :: solution_tree()
-  def blacklist_command(solution_tree, command), do: Blacklisting.blacklist_command(solution_tree, command)
+  def blacklist_command(solution_tree, command),
+    do: Blacklisting.blacklist_command(solution_tree, command)
 
   # ==================== HYBRID PLANNER INTEGRATION ====================
 
   @doc """
   Get the underlying HybridCoordinator for direct access.
-  
+
   This function allows gradual migration to direct HybridCoordinator usage.
   """
   @spec get_hybrid_coordinator() :: module()
@@ -236,7 +282,6 @@ defmodule AriaEngine.PlannerAdapter do
 
   # ==================== PRIVATE HELPER FUNCTIONS ====================
 
-
   # Convert Plan module todos to HybridCoordinator goals format
   defp convert_todos_to_goals(todos) when is_list(todos) do
     Enum.map(todos, &convert_todo_to_goal/1)
@@ -247,7 +292,8 @@ defmodule AriaEngine.PlannerAdapter do
     {task_name, args}
   end
 
-  defp convert_todo_to_goal({predicate, subject, value}) when is_binary(predicate) and is_binary(subject) do
+  defp convert_todo_to_goal({predicate, subject, value})
+       when is_binary(predicate) and is_binary(subject) do
     # Goal format: already in correct format
     {predicate, subject, value}
   end
@@ -273,14 +319,14 @@ defmodule AriaEngine.PlannerAdapter do
   def suggest_migration(calling_module) do
     Logger.info("""
     Migration suggestion for #{calling_module}:
-    
+
     1. Replace Plan with PlannerAdapter for immediate compatibility
     2. Consider migrating to HybridPlanner.HybridCoordinator for enhanced features:
        - Temporal reasoning with STN validation
        - Enhanced error handling and recovery
        - Function as Object strategy patterns
        - Comprehensive backtracking and replanning
-    
+
     See ADR-091 for detailed migration guidance.
     """)
   end
@@ -288,21 +334,21 @@ defmodule AriaEngine.PlannerAdapter do
   @doc """
   Test compatibility between Plan and HybridCoordinator results.
   """
-  @spec test_compatibility(Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: 
-    {:compatible | :incompatible, map()}
+  @spec test_compatibility(Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) ::
+          {:compatible | :incompatible, map()}
   def test_compatibility(domain, state, todos, opts \\ []) do
     # This function can be used during migration to validate behavior parity
     try do
       # Test both implementations
       {:ok, adapter_result} = plan(domain, state, todos, opts)
-      
+
       # Compare results (this would need more sophisticated comparison in practice)
       compatibility_metrics = %{
         adapter_success: true,
         result_type: :solution_tree,
         action_count: Utils.plan_cost(adapter_result)
       }
-      
+
       {:compatible, compatibility_metrics}
     rescue
       e ->

@@ -4,7 +4,7 @@
 defmodule AriaEngine.Convergence do
   @moduledoc """
   Unified convergence solving API with Flow-based parallel processing.
-  
+
   This module provides a clean interface for solving convergence problems
   using Flow-based parallel processing with automatic batch optimization
   for multiple problems via the new BatchProcessor.
@@ -14,14 +14,14 @@ defmodule AriaEngine.Convergence do
 
   @doc """
   Solve STN constraints using Flow-based parallel processing.
-  
+
   ## Options
-  
+
   - `:max_iterations` - Maximum iterations for convergence (default: 100)
   - `:stages` - Number of Flow stages for parallel processing (default: System.schedulers_online())
-  
+
   ## Examples
-  
+
       # Single problem
       Convergence.solve_stn(constraints)
       
@@ -34,14 +34,14 @@ defmodule AriaEngine.Convergence do
 
   @doc """
   Solve activity scheduling using Flow-based parallel processing.
-  
+
   ## Options
-  
+
   - `:max_iterations` - Maximum iterations for convergence (default: 50)
   - `:stages` - Number of Flow stages for parallel processing (default: System.schedulers_online())
-  
+
   ## Examples
-  
+
       # Single problem
       Convergence.solve_activities(activities)
       
@@ -60,12 +60,22 @@ defmodule AriaEngine.Convergence do
       approaches: %{
         flow: %{
           description: "Pure Elixir parallel processing with Flow library",
-          strengths: ["Activity scheduling", "STN constraints", "Consistent performance", "Large datasets"],
+          strengths: [
+            "Activity scheduling",
+            "STN constraints",
+            "Consistent performance",
+            "Large datasets"
+          ],
           backend: "CPU (Elixir processes)"
         },
         batch_processor: %{
           description: "Optimized batch processing for multiple problems with core distribution",
-          strengths: ["Multiple problems", "Core utilization", "Parallel scaling", "Performance optimization"],
+          strengths: [
+            "Multiple problems",
+            "Core utilization",
+            "Parallel scaling",
+            "Performance optimization"
+          ],
           backend: "CPU (Task.async_stream + Flow)"
         }
       },

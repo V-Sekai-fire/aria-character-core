@@ -16,10 +16,11 @@ defmodule TemporalPuzzleTest do
     domain = build_coffee_bagel_domain()
 
     # 2. Define initial state
-    initial_state = StateV2.new()
-    |> StateV2.set_fact("coffee", "status", "raw")
-    |> StateV2.set_fact("bagel", "status", "raw")
-    |> StateV2.set_fact("time", "current", 0)
+    initial_state =
+      StateV2.new()
+      |> StateV2.set_fact("coffee", "status", "raw")
+      |> StateV2.set_fact("bagel", "status", "raw")
+      |> StateV2.set_fact("time", "current", 0)
 
     # 3. Define goals
     todo = [
@@ -68,17 +69,23 @@ defmodule TemporalPuzzleTest do
   defp brew_coffee_action(state, []) do
     require Logger
     Logger.debug("brew_coffee_action called with state: #{inspect(state)}")
+
     if StateV2.get_fact(state, "coffee", "status") == "raw" do
       Logger.debug("brew_coffee_action: coffee is raw, proceeding to brew")
       # Start brewing
       state = StateV2.set_fact(state, "coffee", "status", "brewing")
       # Simulate time passing and finish brewing
       new_time = StateV2.get_fact(state, "time", "current") + 300_000
+
       state
       |> StateV2.set_fact("coffee", "status", "brewed")
       |> StateV2.set_fact("time", "current", new_time)
     else
-      Logger.warning("brew_coffee_action: precondition failed, coffee status: #{inspect(StateV2.get_fact(state, "coffee", "status"))}", [])
+      Logger.warning(
+        "brew_coffee_action: precondition failed, coffee status: #{inspect(StateV2.get_fact(state, "coffee", "status"))}",
+        []
+      )
+
       false
     end
   end
@@ -87,17 +94,23 @@ defmodule TemporalPuzzleTest do
   defp toast_bagel_action(state, []) do
     require Logger
     Logger.debug("toast_bagel_action called with state: #{inspect(state)}")
+
     if StateV2.get_fact(state, "bagel", "status") == "raw" do
       Logger.debug("toast_bagel_action: bagel is raw, proceeding to toast")
       # Start toasting
       state = StateV2.set_fact(state, "bagel", "status", "toasting")
       # Simulate time passing and finish toasting
       new_time = StateV2.get_fact(state, "time", "current") + 180_000
+
       state
       |> StateV2.set_fact("bagel", "status", "toasted")
       |> StateV2.set_fact("time", "current", new_time)
     else
-      Logger.warning("toast_bagel_action: precondition failed, bagel status: #{inspect(StateV2.get_fact(state, "bagel", "status"))}", [])
+      Logger.warning(
+        "toast_bagel_action: precondition failed, bagel status: #{inspect(StateV2.get_fact(state, "bagel", "status"))}",
+        []
+      )
+
       false
     end
   end
@@ -105,11 +118,16 @@ defmodule TemporalPuzzleTest do
   defp eat_bagel_action(state, []) do
     require Logger
     Logger.debug("eat_bagel_action called with state: #{inspect(state)}")
+
     if StateV2.get_fact(state, "bagel", "status") == "toasted" do
       Logger.debug("eat_bagel_action: bagel is toasted, proceeding to consume")
       StateV2.set_fact(state, "bagel", "status", "consumed")
     else
-      Logger.warning("eat_bagel_action: precondition failed, bagel status: #{inspect(StateV2.get_fact(state, "bagel", "status"))}", [])
+      Logger.warning(
+        "eat_bagel_action: precondition failed, bagel status: #{inspect(StateV2.get_fact(state, "bagel", "status"))}",
+        []
+      )
+
       false
     end
   end
@@ -117,11 +135,16 @@ defmodule TemporalPuzzleTest do
   defp drink_coffee_action(state, []) do
     require Logger
     Logger.debug("drink_coffee_action called with state: #{inspect(state)}")
+
     if StateV2.get_fact(state, "coffee", "status") == "brewed" do
       Logger.debug("drink_coffee_action: coffee is brewed, proceeding to consume")
       StateV2.set_fact(state, "coffee", "status", "consumed")
     else
-      Logger.warning("drink_coffee_action: precondition failed, coffee status: #{inspect(StateV2.get_fact(state, "coffee", "status"))}", [])
+      Logger.warning(
+        "drink_coffee_action: precondition failed, coffee status: #{inspect(StateV2.get_fact(state, "coffee", "status"))}",
+        []
+      )
+
       false
     end
   end
@@ -129,29 +152,45 @@ defmodule TemporalPuzzleTest do
   defp achieve_coffee_unigoal(state, ["status", "consumed"]) do
     require Logger
     Logger.debug("achieve_coffee_unigoal called with state: #{inspect(state)}")
+
     case StateV2.get_fact(state, "coffee", "status") do
-      "consumed" -> []
-      "brewed" -> [{:drink_coffee, []}]
-      "raw" -> [{:brew_coffee, []}, {:drink_coffee, []}]
+      "consumed" ->
+        []
+
+      "brewed" ->
+        [{:drink_coffee, []}]
+
+      "raw" ->
+        [{:brew_coffee, []}, {:drink_coffee, []}]
+
       other ->
         Logger.warning("achieve_coffee_unigoal: unexpected coffee status: #{inspect(other)}", [])
         false
     end
   end
+
   defp achieve_coffee_unigoal(_state, _args), do: false
 
   defp achieve_bagel_unigoal(state, ["status", "consumed"]) do
     require Logger
     Logger.debug("achieve_bagel_unigoal called with state: #{inspect(state)}")
+
     case StateV2.get_fact(state, "bagel", "status") do
-      "consumed" -> []
-      "toasted" -> [{:eat_bagel, []}]
-      "raw" -> [{:toast_bagel, []}, {:eat_bagel, []}]
+      "consumed" ->
+        []
+
+      "toasted" ->
+        [{:eat_bagel, []}]
+
+      "raw" ->
+        [{:toast_bagel, []}, {:eat_bagel, []}]
+
       other ->
         Logger.warning("achieve_bagel_unigoal: unexpected bagel status: #{inspect(other)}", [])
         false
     end
   end
+
   defp achieve_bagel_unigoal(_state, _args), do: false
 
   defp achieve_time_unigoal(_state, _args), do: []

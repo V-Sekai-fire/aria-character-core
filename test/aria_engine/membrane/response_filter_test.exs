@@ -11,17 +11,19 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
   describe "ResponseFilter initialization" do
     test "initializes with default options" do
       # Test basic initialization
-      assert {[], _state} = ResponseFilter.handle_init(nil, %{
-        telemetry_prefix: [:aria_engine, :membrane, :response_filter]
-      })
+      assert {[], _state} =
+               ResponseFilter.handle_init(nil, %{
+                 telemetry_prefix: [:aria_engine, :membrane, :response_filter]
+               })
     end
 
     test "initializes with custom options" do
       # Test initialization with custom options
-      assert {[], state} = ResponseFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :response_filter]
-      })
-      
+      assert {[], state} =
+               ResponseFilter.handle_init(nil, %{
+                 telemetry_prefix: [:test, :response_filter]
+               })
+
       assert state.telemetry_prefix == [:test, :response_filter]
       assert state.processed_count == 0
       assert state.success_transforms == 0
@@ -52,32 +54,35 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
       }
 
       # Initialize filter state
-      {[], state} = ResponseFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :response_filter]
-      })
-      
+      {[], state} =
+        ResponseFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :response_filter]
+        })
+
       # Process buffer
       buffer = %Buffer{payload: planning_result}
-      {[buffer: {:output, output_buffer}], new_state} = ResponseFilter.handle_buffer(:input, buffer, nil, state)
-      
+
+      {[buffer: {:output, output_buffer}], new_state} =
+        ResponseFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify output
       assert %Buffer{payload: %MCPResponse{} = response} = output_buffer
       assert response.status == "success"
       assert response.request_id == "planning_req_123"
       assert response.error_details == nil
-      
+
       # Verify schedule formatting
       assert response.schedule["activities"] |> length() == 2
       assert response.schedule["timeline"]["start"] == 0
       assert response.schedule["timeline"]["end"] == 200
       assert response.schedule["resources"]["cpu"] == "50%"
       assert response.schedule["metadata"]["planning_method"] == "hybrid"
-      
+
       # Verify response metadata
       assert response.response_metadata.execution_time_ms == 150
       assert response.response_metadata.transformation_source == "response_filter"
       assert Map.has_key?(response.response_metadata, :planning_metadata)
-      
+
       # Verify state updates
       assert new_state.processed_count == 1
       assert new_state.success_transforms == 1
@@ -98,25 +103,28 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
       }
 
       # Initialize filter state
-      {[], state} = ResponseFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :response_filter]
-      })
-      
+      {[], state} =
+        ResponseFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :response_filter]
+        })
+
       # Process buffer
       buffer = %Buffer{payload: planning_result}
-      {[buffer: {:output, output_buffer}], new_state} = ResponseFilter.handle_buffer(:input, buffer, nil, state)
-      
+
+      {[buffer: {:output, output_buffer}], new_state} =
+        ResponseFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify output
       assert %Buffer{payload: %MCPResponse{} = response} = output_buffer
       assert response.status == "error"
       assert response.request_id == "planning_error_456"
       assert response.schedule == nil
       assert response.error_details == "Planning timeout exceeded"
-      
+
       # Verify response metadata
       assert response.response_metadata.execution_time_ms == 5000
       assert response.response_metadata.transformation_source == "response_filter"
-      
+
       # Verify state updates
       assert new_state.processed_count == 1
       assert new_state.success_transforms == 0
@@ -127,21 +135,25 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
       # Create PlanningResult with minimal plan structure
       planning_result = %PlanningResult{
         status: :success,
-        result: %{actions: []}, # Minimal plan
+        # Minimal plan
+        result: %{actions: []},
         execution_metadata: %{},
         request_id: "minimal_req_789",
         performance_metrics: %{execution_time_ms: 25}
       }
 
       # Initialize filter state
-      {[], state} = ResponseFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :response_filter]
-      })
-      
+      {[], state} =
+        ResponseFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :response_filter]
+        })
+
       # Process buffer
       buffer = %Buffer{payload: planning_result}
-      {[buffer: {:output, output_buffer}], new_state} = ResponseFilter.handle_buffer(:input, buffer, nil, state)
-      
+
+      {[buffer: {:output, output_buffer}], new_state} =
+        ResponseFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify output
       assert %Buffer{payload: %MCPResponse{} = response} = output_buffer
       assert response.status == "success"
@@ -149,7 +161,7 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
       assert response.schedule["activities"] == []
       assert response.schedule["timeline"] == %{}
       assert response.schedule["resources"] == %{}
-      
+
       # Verify state updates
       assert new_state.processed_count == 1
       assert new_state.success_transforms == 1
@@ -159,28 +171,32 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
       # Create PlanningResult with unexpected plan format
       planning_result = %PlanningResult{
         status: :success,
-        result: "unexpected_string_format", # Not a map
+        # Not a map
+        result: "unexpected_string_format",
         execution_metadata: %{},
         request_id: "unexpected_req_999",
         performance_metrics: %{execution_time_ms: 10}
       }
 
       # Initialize filter state
-      {[], state} = ResponseFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :response_filter]
-      })
-      
+      {[], state} =
+        ResponseFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :response_filter]
+        })
+
       # Process buffer
       buffer = %Buffer{payload: planning_result}
-      {[buffer: {:output, output_buffer}], new_state} = ResponseFilter.handle_buffer(:input, buffer, nil, state)
-      
+
+      {[buffer: {:output, output_buffer}], new_state} =
+        ResponseFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify output (should handle gracefully)
       assert %Buffer{payload: %MCPResponse{} = response} = output_buffer
       assert response.status == "success"
       assert response.request_id == "unexpected_req_999"
       assert response.schedule["activities"] == []
       assert response.schedule["metadata"]["error"] == "Unable to format plan result"
-      
+
       # Verify state updates
       assert new_state.processed_count == 1
       assert new_state.success_transforms == 1
@@ -197,21 +213,24 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
       }
 
       # Initialize filter state
-      {[], state} = ResponseFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :response_filter]
-      })
-      
+      {[], state} =
+        ResponseFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :response_filter]
+        })
+
       # Process buffer
       buffer = %Buffer{payload: planning_result}
-      {[buffer: {:output, output_buffer}], new_state} = ResponseFilter.handle_buffer(:input, buffer, nil, state)
-      
+
+      {[buffer: {:output, output_buffer}], new_state} =
+        ResponseFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify output (should default to error)
       assert %Buffer{payload: %MCPResponse{} = response} = output_buffer
       assert response.status == "error"
       assert response.request_id == "unknown_status_req"
       assert response.schedule == nil
       assert response.error_details == "Unexpected planning result status: unknown_status"
-      
+
       # Verify state updates
       assert new_state.processed_count == 1
       assert new_state.success_transforms == 0
@@ -224,19 +243,21 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
       unsupported_payload = %{some: "random", data: 123}
 
       # Initialize filter state
-      {[], state} = ResponseFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :response_filter]
-      })
-      
+      {[], state} =
+        ResponseFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :response_filter]
+        })
+
       # Process buffer with unsupported payload
       buffer = %Buffer{payload: unsupported_payload}
-      
+
       # Should handle gracefully and pass through unchanged
-      {[buffer: {:output, output_buffer}], new_state} = ResponseFilter.handle_buffer(:input, buffer, nil, state)
-      
+      {[buffer: {:output, output_buffer}], new_state} =
+        ResponseFilter.handle_buffer(:input, buffer, nil, state)
+
       # Verify output is unchanged
       assert %Buffer{payload: ^unsupported_payload} = output_buffer
-      
+
       # Verify state updates (processed but no transforms)
       assert new_state.processed_count == 1
       assert new_state.success_transforms == 0
@@ -247,10 +268,11 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
   describe "statistics and monitoring" do
     test "calculates success rate correctly" do
       # Initialize filter state
-      {[], state} = ResponseFilter.handle_init(nil, %{
-        telemetry_prefix: [:test, :response_filter]
-      })
-      
+      {[], state} =
+        ResponseFilter.handle_init(nil, %{
+          telemetry_prefix: [:test, :response_filter]
+        })
+
       # Process successful result
       success_result = %PlanningResult{
         status: :success,
@@ -259,10 +281,10 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
         request_id: "success_req",
         performance_metrics: %{execution_time_ms: 100}
       }
-      
+
       buffer1 = %Buffer{payload: success_result}
       {[buffer: {:output, _}], state2} = ResponseFilter.handle_buffer(:input, buffer1, nil, state)
-      
+
       # Process error result
       error_result = %PlanningResult{
         status: :error,
@@ -271,10 +293,12 @@ defmodule AriaEngine.Membrane.ResponseFilterTest do
         request_id: "error_req",
         performance_metrics: %{execution_time_ms: 50}
       }
-      
+
       buffer2 = %Buffer{payload: error_result}
-      {[buffer: {:output, _}], final_state} = ResponseFilter.handle_buffer(:input, buffer2, nil, state2)
-      
+
+      {[buffer: {:output, _}], final_state} =
+        ResponseFilter.handle_buffer(:input, buffer2, nil, state2)
+
       # Verify final state
       assert final_state.processed_count == 2
       assert final_state.success_transforms == 1

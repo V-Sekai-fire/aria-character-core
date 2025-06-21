@@ -1,7 +1,7 @@
 defmodule AriaEngine.MCPToolsV2 do
   @moduledoc """
   MCP tools interface with Membrane Framework pipeline integration.
-  
+
   Provides MCP tools for pipeline management and individual strategy testing.
   This is the updated version that uses the Membrane pipeline architecture
   instead of direct scheduler calls.
@@ -17,8 +17,10 @@ defmodule AriaEngine.MCPToolsV2 do
     {:stop_planning_pipeline, "2.0.0"},
     {:get_pipeline_status, "2.0.0"},
     {:get_pipeline_metrics, "2.0.0"},
-    {:schedule_activities, "2.0.0"},  # Updated to use pipeline
-    {:validate_scheduling_solutions, "2.0.0"},  # New validation pipeline
+    # Updated to use pipeline
+    {:schedule_activities, "2.0.0"},
+    # New validation pipeline
+    {:validate_scheduling_solutions, "2.0.0"},
     {:list_active_pipelines, "2.0.0"},
     {:send_pipeline_request, "2.0.0"}
   ]
@@ -38,7 +40,7 @@ defmodule AriaEngine.MCPToolsV2 do
   @spec handle_tool_call(atom(), map()) :: map()
   def handle_tool_call(tool_name, params) when is_atom(tool_name) do
     Logger.info("MCP tool call: #{tool_name} with params: #{inspect(params)}")
-    
+
     try do
       case tool_name do
         :configure_pipeline_layout -> handle_configure_pipeline_layout(params)
@@ -56,6 +58,7 @@ defmodule AriaEngine.MCPToolsV2 do
     rescue
       error ->
         Logger.error("Error in MCP tool #{tool_name}: #{inspect(error)}")
+
         %{
           "error" => "Tool execution failed: #{Exception.message(error)}",
           "details" => %{
@@ -137,7 +140,7 @@ defmodule AriaEngine.MCPToolsV2 do
 
   defp handle_start_planning_pipeline(params) do
     topology = String.to_atom(params["topology"] || "echo_pipeline")
-    
+
     case PipelineManager.create_testing_pipeline(topology) do
       {:ok, pipeline_pid} ->
         %{
@@ -157,7 +160,7 @@ defmodule AriaEngine.MCPToolsV2 do
 
   defp handle_stop_planning_pipeline(params) do
     pipeline_id = params["pipeline_id"]
-    
+
     case parse_pipeline_pid(pipeline_id) do
       {:ok, pipeline_pid} ->
         case PipelineManager.stop_pipeline(pipeline_pid) do
@@ -167,14 +170,14 @@ defmodule AriaEngine.MCPToolsV2 do
               "pipeline_id" => pipeline_id,
               "message" => "Pipeline stopped successfully"
             }
-            
+
           {:error, reason} ->
             %{
               "status" => "error",
               "error" => "Failed to stop pipeline: #{inspect(reason)}"
             }
         end
-        
+
       {:error, reason} ->
         %{
           "status" => "error",
@@ -185,18 +188,18 @@ defmodule AriaEngine.MCPToolsV2 do
 
   defp handle_get_pipeline_status(params) do
     pipeline_id = params["pipeline_id"]
-    
+
     case parse_pipeline_pid(pipeline_id) do
       {:ok, pipeline_pid} ->
         status = PipelineManager.get_pipeline_status(pipeline_pid)
-        
+
         case status do
           %{error: _} ->
             %{
               "status" => "error",
               "error" => status.error
             }
-            
+
           _ ->
             %{
               "status" => "success",
@@ -211,7 +214,7 @@ defmodule AriaEngine.MCPToolsV2 do
               }
             }
         end
-        
+
       {:error, reason} ->
         %{
           "status" => "error",
@@ -222,7 +225,7 @@ defmodule AriaEngine.MCPToolsV2 do
 
   defp handle_get_pipeline_metrics(_params) do
     stats = PipelineManager.get_manager_stats()
-    
+
     %{
       "status" => "success",
       "metrics" => %{
@@ -236,7 +239,7 @@ defmodule AriaEngine.MCPToolsV2 do
   defp handle_schedule_activities(params) do
     # Check if this is a trains05 scheduling request
     schedule_name = params["schedule_name"] || ""
-    
+
     if String.contains?(schedule_name, "trains05") or String.contains?(schedule_name, "train") do
       # Use real train scheduling with hybrid coordinator
       handle_train_scheduling_request(params)
@@ -248,10 +251,10 @@ defmodule AriaEngine.MCPToolsV2 do
 
   defp handle_train_scheduling_request(_params) do
     Logger.info("🚂 Processing trains05 scheduling request with real hybrid coordinator")
-    
+
     # Convert trains05.dzn to schedule_activities format
     train_data = AriaEngine.TrainSchedulingConverter.convert_trains05_to_schedule_activities()
-    
+
     # Call real scheduler with train data
     case call_real_scheduler(train_data) do
       {:ok, result} ->
@@ -271,9 +274,10 @@ defmodule AriaEngine.MCPToolsV2 do
             "resources_count" => map_size(train_data["resources"])
           }
         }
-        
+
       {:error, reason} ->
         Logger.error("🚂 Train scheduling failed: #{reason}")
+
         %{
           "status" => "error",
           "error" => "Train scheduling failed: #{reason}",
@@ -284,7 +288,7 @@ defmodule AriaEngine.MCPToolsV2 do
 
   defp handle_real_scheduling_request(params) do
     Logger.info("📋 Processing general scheduling request with real scheduler")
-    
+
     # Call real scheduler with provided params
     case call_real_scheduler(params) do
       {:ok, result} ->
@@ -303,9 +307,10 @@ defmodule AriaEngine.MCPToolsV2 do
             "resources_count" => map_size(params["resources"] || %{})
           }
         }
-        
+
       {:error, reason} ->
         Logger.error("📋 General scheduling failed: #{reason}")
+
         %{
           "status" => "error",
           "error" => "Scheduling failed: #{reason}",
@@ -322,20 +327,24 @@ defmodule AriaEngine.MCPToolsV2 do
     resources = params["resources"] || %{}
     constraints = params["constraints"] || %{}
     simulation_options = params["simulation_options"] || %{}
-    
+
     simulation_mode = simulation_options["simulation_mode"] || false
     verbose = simulation_options["verbose"] || 1
     activity_log = simulation_options["log_activities"] || false
-    
+
     Logger.info("🔧 Calling AriaEngine.Scheduler.Core.schedule_with_enhanced_features")
-    Logger.info("🔧 Schedule: #{schedule_name}, Activities: #{length(activities)}, Entities: #{length(entities)}")
+
+    Logger.info(
+      "🔧 Schedule: #{schedule_name}, Activities: #{length(activities)}, Entities: #{length(entities)}"
+    )
+
     Logger.info("🔧 Activities type: #{inspect(activities |> Enum.take(1))}")
     Logger.info("🔧 Entities type: #{inspect(entities |> Enum.take(1))}")
-    
+
     # Ensure activities is a list
     activities_list = if is_list(activities), do: activities, else: []
     entities_list = if is_list(entities), do: entities, else: []
-    
+
     # Call the real scheduler
     AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
       schedule_name,
@@ -375,27 +384,32 @@ defmodule AriaEngine.MCPToolsV2 do
 
   defp format_timeline_result(result) do
     case result do
-      %AriaEngine.Scheduler.SimulationResult{simulation_metadata: metadata} -> 
+      %AriaEngine.Scheduler.SimulationResult{simulation_metadata: metadata} ->
         Map.get(metadata, :timeline, [])
-      %{timeline: timeline} -> timeline
-      _ -> []
+
+      %{timeline: timeline} ->
+        timeline
+
+      _ ->
+        []
     end
   end
 
   defp handle_list_active_pipelines(_params) do
     pipelines = PipelineManager.list_active_pipelines()
-    
-    formatted_pipelines = Enum.map(pipelines, fn pipeline ->
-      %{
-        "id" => pipeline.id,
-        "pid" => inspect(pipeline.pid),
-        "topology" => Atom.to_string(pipeline.topology),
-        "status" => Atom.to_string(pipeline.status),
-        "created_at" => DateTime.to_iso8601(pipeline.created_at),
-        "request_count" => pipeline.request_count
-      }
-    end)
-    
+
+    formatted_pipelines =
+      Enum.map(pipelines, fn pipeline ->
+        %{
+          "id" => pipeline.id,
+          "pid" => inspect(pipeline.pid),
+          "topology" => Atom.to_string(pipeline.topology),
+          "status" => Atom.to_string(pipeline.status),
+          "created_at" => DateTime.to_iso8601(pipeline.created_at),
+          "request_count" => pipeline.request_count
+        }
+      end)
+
     %{
       "status" => "success",
       "pipelines" => formatted_pipelines,
@@ -405,23 +419,26 @@ defmodule AriaEngine.MCPToolsV2 do
 
   defp handle_validate_scheduling_solutions(params) do
     Logger.info("🔍 Processing validation request with dual solver comparison")
-    
+
     # Generate a new unique problem for this validation
     problem_name = params["problem_name"] || "generated_problem"
     generated_problem = generate_new_validation_problem(problem_name)
-    
-    Logger.info("🎲 Generated new problem: #{generated_problem.name} with #{length(generated_problem.activities)} activities")
-    
+
+    Logger.info(
+      "🎲 Generated new problem: #{generated_problem.name} with #{length(generated_problem.activities)} activities"
+    )
+
     # Merge generated problem with any provided parameters
-    enhanced_params = Map.merge(params, %{
-      "problem_name" => generated_problem.name,
-      "activities" => generated_problem.activities,
-      "entities" => generated_problem.entities,
-      "resources" => generated_problem.resources,
-      "constraints" => generated_problem.constraints,
-      "problem_metadata" => generated_problem.metadata
-    })
-    
+    enhanced_params =
+      Map.merge(params, %{
+        "problem_name" => generated_problem.name,
+        "activities" => generated_problem.activities,
+        "entities" => generated_problem.entities,
+        "resources" => generated_problem.resources,
+        "constraints" => generated_problem.constraints,
+        "problem_metadata" => generated_problem.metadata
+      })
+
     # Create validation pipeline and process request
     case PipelineManager.create_testing_pipeline(:validation_pipeline) do
       {:ok, pipeline_pid} ->
@@ -430,7 +447,7 @@ defmodule AriaEngine.MCPToolsV2 do
           :ok ->
             # Wait for response (in real implementation, this would be async)
             Process.sleep(1000)
-            
+
             %{
               "status" => "success",
               "message" => "Validation pipeline processing completed",
@@ -445,16 +462,17 @@ defmodule AriaEngine.MCPToolsV2 do
                 "problem_type" => generated_problem.metadata.problem_type
               }
             }
-            
+
           {:error, reason} ->
             %{
               "status" => "error",
               "error" => "Failed to send validation request: #{inspect(reason)}"
             }
         end
-        
+
       {:error, reason} ->
         Logger.error("🔍 Failed to create validation pipeline: #{reason}")
+
         %{
           "status" => "error",
           "error" => "Failed to create validation pipeline: #{inspect(reason)}"
@@ -465,7 +483,7 @@ defmodule AriaEngine.MCPToolsV2 do
   defp handle_send_pipeline_request(params) do
     pipeline_id = params["pipeline_id"]
     request_params = params["request"] || %{}
-    
+
     case parse_pipeline_pid(pipeline_id) do
       {:ok, pipeline_pid} ->
         case PipelineManager.send_request_to_pipeline(pipeline_pid, request_params) do
@@ -475,14 +493,14 @@ defmodule AriaEngine.MCPToolsV2 do
               "pipeline_id" => pipeline_id,
               "message" => "Request sent successfully"
             }
-            
+
           {:error, reason} ->
             %{
               "status" => "error",
               "error" => "Failed to send request: #{inspect(reason)}"
             }
         end
-        
+
       {:error, reason} ->
         %{
           "status" => "error",
@@ -520,7 +538,7 @@ defmodule AriaEngine.MCPToolsV2 do
           # This is a simplified approach - in production you'd want
           # a more robust PID tracking system
           {:ok, :erlang.list_to_pid(~c"<" ++ String.to_charlist(pid_string) ++ ~c">")}
-          
+
         nil ->
           {:error, "Invalid PID format"}
       end
@@ -972,89 +990,101 @@ defmodule AriaEngine.MCPToolsV2 do
   def generate_new_validation_problem(base_name) do
     # Generate deterministic problem ID based on timestamp
     timestamp = System.system_time(:microsecond)
-    problem_id = rem(timestamp, 100000)
-    
+    problem_id = rem(timestamp, 100_000)
+
     # Use cryptographic randomization to ensure all combinations are generated
     # Create a cryptographically secure hash from multiple entropy sources
-    entropy_data = "#{timestamp}_#{base_name}_#{:erlang.unique_integer([:positive])}_#{:erlang.system_time(:nanosecond)}"
+    entropy_data =
+      "#{timestamp}_#{base_name}_#{:erlang.unique_integer([:positive])}_#{:erlang.system_time(:nanosecond)}"
+
     crypto_hash = :crypto.hash(:sha256, entropy_data)
-    
+
     # Extract bytes and convert to integer for distribution
     <<hash_int::256>> = crypto_hash
-    
+
     # Use cryptographic hash to select activity count (1-6)
     # This ensures truly random distribution across all values
     activity_count = rem(hash_int, 6) + 1
-    
+
     generate_scaling_task_problem(base_name, problem_id, activity_count)
   end
 
   defp generate_scaling_task_problem(base_name, problem_id, activity_count) do
     # Generate activities that scale in complexity
-    activities = case activity_count do
-      1 -> 
-        # Identity case - single task that returns input
-        [%{
-          "id" => "identity_task",
-          "name" => "Identity Task",
-          "duration" => "PT30M",
-          "required_capabilities" => ["basic"],
-          "required_resources" => ["workstation_1"],
-          "dependencies" => []
-        }]
-      
-      count when count > 1 ->
-        # Scaling case - create chain of dependent tasks
-        for i <- 1..count do
-          duration = 30 + (i * 15)  # Increasing duration: 45, 60, 75, 90, 105 minutes
-          
-          %{
-            "id" => "task_#{i}",
-            "name" => "Task #{i}",
-            "duration" => "PT#{duration}M",
-            "required_capabilities" => ["basic", "processing"],
-            "required_resources" => ["workstation_#{rem(i-1, 2) + 1}"],
-            "dependencies" => (if i > 1, do: ["task_#{i-1}"], else: [])
-          }
-        end
-    end
-    
+    activities =
+      case activity_count do
+        1 ->
+          # Identity case - single task that returns input
+          [
+            %{
+              "id" => "identity_task",
+              "name" => "Identity Task",
+              "duration" => "PT30M",
+              "required_capabilities" => ["basic"],
+              "required_resources" => ["workstation_1"],
+              "dependencies" => []
+            }
+          ]
+
+        count when count > 1 ->
+          # Scaling case - create chain of dependent tasks
+          for i <- 1..count do
+            # Increasing duration: 45, 60, 75, 90, 105 minutes
+            duration = 30 + i * 15
+
+            %{
+              "id" => "task_#{i}",
+              "name" => "Task #{i}",
+              "duration" => "PT#{duration}M",
+              "required_capabilities" => ["basic", "processing"],
+              "required_resources" => ["workstation_#{rem(i - 1, 2) + 1}"],
+              "dependencies" => if(i > 1, do: ["task_#{i - 1}"], else: [])
+            }
+          end
+      end
+
     # Generate entities based on activity count
-    entity_count = min(activity_count, 3)  # Max 3 entities
-    entities = for i <- 1..entity_count do
-      %{
-        "id" => "worker_#{i}",
-        "type" => "worker",
-        "capabilities" => ["basic", "processing", "coordination"],
-        "availability" => "PT8H"
-      }
-    end
-    
+    # Max 3 entities
+    entity_count = min(activity_count, 3)
+
+    entities =
+      for i <- 1..entity_count do
+        %{
+          "id" => "worker_#{i}",
+          "type" => "worker",
+          "capabilities" => ["basic", "processing", "coordination"],
+          "availability" => "PT8H"
+        }
+      end
+
     # Generate resources based on activity count - fix resource structure for tests
-    resources = case activity_count do
-      1 ->
-        # Identity case - single workstation with numbered key for consistency
-        %{"workstation_1" => %{"type" => "equipment", "capacity" => 1}}
-      
-      count when count > 1 ->
-        # Scaling case - multiple numbered workstations plus shared resources
-        base_resources = for i <- 1..min(count, 3), into: %{} do
-          {"workstation_#{i}", %{"type" => "equipment", "capacity" => 1}}
-        end
-        
-        # Add shared storage for multi-activity problems
-        Map.put(base_resources, "shared_storage", %{"type" => "storage", "capacity" => count})
-    end
-    
+    resources =
+      case activity_count do
+        1 ->
+          # Identity case - single workstation with numbered key for consistency
+          %{"workstation_1" => %{"type" => "equipment", "capacity" => 1}}
+
+        count when count > 1 ->
+          # Scaling case - multiple numbered workstations plus shared resources
+          base_resources =
+            for i <- 1..min(count, 3), into: %{} do
+              {"workstation_#{i}", %{"type" => "equipment", "capacity" => 1}}
+            end
+
+          # Add shared storage for multi-activity problems
+          Map.put(base_resources, "shared_storage", %{"type" => "storage", "capacity" => count})
+      end
+
     # Determine complexity based on activity count
-    complexity = case activity_count do
-      1 -> "trivial"
-      2 -> "simple" 
-      3 -> "medium"
-      4 -> "medium"
-      _ -> "high"
-    end
-    
+    complexity =
+      case activity_count do
+        1 -> "trivial"
+        2 -> "simple"
+        3 -> "medium"
+        4 -> "medium"
+        _ -> "high"
+      end
+
     %{
       name: "#{base_name}_scaling_#{activity_count}_#{problem_id}",
       activities: activities,
@@ -1074,5 +1104,4 @@ defmodule AriaEngine.MCPToolsV2 do
       }
     }
   end
-
 end

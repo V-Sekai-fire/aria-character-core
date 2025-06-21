@@ -21,6 +21,7 @@ defmodule TemporalPlannerSTNBridgeDebug do
   """
 
   require Logger
+
   def run do
     Logger.info("=== Debugging Temporal Planner STN Bridge ===")
 
@@ -28,10 +29,12 @@ defmodule TemporalPlannerSTNBridgeDebug do
     domain = build_temporal_hybrid_domain()
 
     # 2. Define initial state with time
-    initial_state = StateV2.new()
-    |> StateV2.set_fact("location", "player", "start_location")
-    |> StateV2.set_fact("has", "player", "nothing")
-    |> StateV2.set_fact("time", "current", 0) # Current time in milliseconds
+    initial_state =
+      StateV2.new()
+      |> StateV2.set_fact("location", "player", "start_location")
+      |> StateV2.set_fact("has", "player", "nothing")
+      # Current time in milliseconds
+      |> StateV2.set_fact("time", "current", 0)
 
     # 3. Define goals
     # Goal: Player has the item and is at the end location
@@ -61,7 +64,10 @@ defmodule TemporalPlannerSTNBridgeDebug do
 
         # 6. Check STN consistency
         if STN.consistent?(stn) do
-          Logger.info("\n✅ STN is consistent. Temporal and non-temporal elements unified successfully.")
+          Logger.info(
+            "\n✅ STN is consistent. Temporal and non-temporal elements unified successfully."
+          )
+
           # Optionally, solve the STN to get minimal network
           solved_stn = STN.solve(stn)
           Logger.info("Solved STN Constraints: #{inspect(solved_stn.constraints)}")
@@ -71,7 +77,10 @@ defmodule TemporalPlannerSTNBridgeDebug do
 
       {:error, reason} ->
         Logger.info("\nPlanning failed: #{reason}")
-        Logger.info("This might indicate that the planner needs to be extended to handle temporal actions directly, or that the domain definition needs refinement.")
+
+        Logger.info(
+          "This might indicate that the planner needs to be extended to handle temporal actions directly, or that the domain definition needs refinement."
+        )
     end
   end
 
@@ -93,7 +102,8 @@ defmodule TemporalPlannerSTNBridgeDebug do
     if player_location == item_location do
       StateV2.set_fact(state, "has", "player", "item")
     else
-      false # Cannot pickup if not in same location
+      # Cannot pickup if not in same location
+      false
     end
   end
 
@@ -101,26 +111,32 @@ defmodule TemporalPlannerSTNBridgeDebug do
   # This action will return a new state and the duration it took
   defp travel_action(state, [from_loc, to_loc, duration_ms]) do
     current_loc = StateV2.get_fact(state, "player", "location")
+
     if current_loc == from_loc do
       new_time = StateV2.get_fact(state, "current", "time") + duration_ms
+
       StateV2.set_fact(state, "location", "player", "to_loc")
       |> StateV2.set_fact("time", "current", new_time)
     else
-      false # Cannot travel from wrong location
+      # Cannot travel from wrong location
+      false
     end
   end
 
   # Unigoal method for "has" goal
   defp achieve_has_item_unigoal(state, ["has", "player", item]) do
     if StateV2.get_fact(state, "player", "has") == item do
-      [] # Already has the item, no actions needed
+      # Already has the item, no actions needed
+      []
     else
       player_location = StateV2.get_fact(state, "player", "location")
-      item_location = "middle_location" # Assume item is here
-      
+      # Assume item is here
+      item_location = "middle_location"
+
       # Plan to travel to item location and pick it up
       [
-        {:travel, [player_location, item_location, 2000]}, # Travel to item (2 seconds)
+        # Travel to item (2 seconds)
+        {:travel, [player_location, item_location, 2000]},
         {:pickup, [item]}
       ]
     end
@@ -129,12 +145,14 @@ defmodule TemporalPlannerSTNBridgeDebug do
   # Unigoal method for "location" goal
   defp achieve_location_unigoal(state, ["location", "player", target_location]) do
     if StateV2.get_fact(state, "player", "location") == target_location do
-      [] # Already at target location, no actions needed
+      # Already at target location, no actions needed
+      []
     else
       current_player_loc = StateV2.get_fact(state, "player", "location")
       # Plan to travel to the target location
       [
-        {:travel, [current_player_loc, target_location, 3000]} # Travel to target (3 seconds)
+        # Travel to target (3 seconds)
+        {:travel, [current_player_loc, target_location, 3000]}
       ]
     end
   end
@@ -144,22 +162,24 @@ defmodule TemporalPlannerSTNBridgeDebug do
   defp build_stn_from_plan(plan, initial_state) do
     stn = STN.new(time_unit: :millisecond)
     current_time = StateV2.get_fact(initial_state, "current", "time")
-    
+
     # Add a time point for the start of the plan
     stn = STN.add_time_point(stn, "t_start_plan_#{current_time}")
     last_time_point = "t_start_plan_#{current_time}"
 
-    Enum.reduce(plan, {stn, current_time, last_time_point}, fn action, {acc_stn, acc_time, acc_last_tp} ->
+    Enum.reduce(plan, {stn, current_time, last_time_point}, fn action,
+                                                               {acc_stn, acc_time, acc_last_tp} ->
       case action do
         {:travel, [_from, _to, duration_ms]} ->
           # Temporal action: create new time point and add constraint
           new_time = acc_time + duration_ms
           new_time_point = "t_travel_end_#{new_time}"
-          
-          acc_stn = acc_stn
-          |> STN.add_time_point(new_time_point)
-          |> STN.add_constraint(acc_last_tp, new_time_point, {duration_ms, duration_ms})
-          
+
+          acc_stn =
+            acc_stn
+            |> STN.add_time_point(new_time_point)
+            |> STN.add_constraint(acc_last_tp, new_time_point, {duration_ms, duration_ms})
+
           {acc_stn, new_time, new_time_point}
 
         {:pickup, _item} ->
@@ -174,7 +194,8 @@ defmodule TemporalPlannerSTNBridgeDebug do
           {acc_stn, acc_time, acc_last_tp}
       end
     end)
-    |> elem(0) # Return only the STN
+    # Return only the STN
+    |> elem(0)
   end
 end
 

@@ -5,7 +5,7 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
   Provides OptimizerStrategy interface that can work with:
   1. Exhort SAT Builder API (when available)
   2. HTN Planning fallback (using existing backtracking)
-  
+
   This enables seamless integration with ADR-109 Exhort OR-Tools while
   maintaining functionality through HTN adapter when Exhort is unavailable.
   """
@@ -16,7 +16,7 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
     case detect_solver_availability() do
       :exhort_available ->
         solve_with_exhort(problem, options)
-      
+
       :htn_fallback ->
         solve_with_htn_fallback(problem, options)
     end
@@ -40,7 +40,7 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
           # This would use Exhort.SAT.Model.solve/1 when available
           response = solve_exhort_model(model)
           convert_exhort_response(response)
-        
+
         {:error, reason} ->
           {:error, reason}
       end
@@ -54,19 +54,19 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
   defp build_exhort_model(problem) do
     variables = Map.get(problem, "variables", [])
     constraints = Map.get(problem, "constraints", [])
-    
+
     # Build Exhort model using Builder pattern
     # This follows the pattern from the binpacking example
     try do
       # Create boolean variables for each problem variable
       bool_vars = create_exhort_bool_vars(variables)
-      
+
       # Convert constraints to Exhort constraint format
       exhort_constraints = convert_constraints_to_exhort(constraints)
-      
+
       # Build model using Exhort.SAT.Builder pattern
       model = build_exhort_sat_model(bool_vars, exhort_constraints)
-      
+
       {:ok, model}
     rescue
       e ->
@@ -87,17 +87,25 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
     Enum.map(constraints, fn constraint ->
       case constraint do
         %{"type" => "and", "left" => left, "right" => right} ->
-          %{type: :and, left: convert_constraints_to_exhort([left]), right: convert_constraints_to_exhort([right])}
-        
+          %{
+            type: :and,
+            left: convert_constraints_to_exhort([left]),
+            right: convert_constraints_to_exhort([right])
+          }
+
         %{"type" => "or", "left" => left, "right" => right} ->
-          %{type: :or, left: convert_constraints_to_exhort([left]), right: convert_constraints_to_exhort([right])}
-        
+          %{
+            type: :or,
+            left: convert_constraints_to_exhort([left]),
+            right: convert_constraints_to_exhort([right])
+          }
+
         %{"type" => "eq", "var1" => var1, "var2" => var2} ->
           %{type: :eq, var1: var1, var2: var2}
-        
+
         %{"type" => "neq", "var1" => var1, "var2" => var2} ->
           %{type: :neq, var1: var1, var2: var2}
-        
+
         _ ->
           constraint
       end
@@ -110,7 +118,7 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
     # |> Builder.add(bool_vars)
     # |> Builder.add(constraints)
     # |> Builder.build()
-    
+
     # For now, return a mock model structure
     %{
       variables: bool_vars,
@@ -137,17 +145,19 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
   end
 
   defp convert_exhort_response(response) do
-    {:ok, %{
-      status: case response.status do
-        :optimal -> "OPTIMAL"
-        :infeasible -> "INFEASIBLE"
-        _ -> "UNKNOWN"
-      end,
-      solver: "CP-SAT (Exhort)",
-      variables: response.variables,
-      objective_value: Map.get(response, :objective),
-      solve_time_ms: 0
-    }}
+    {:ok,
+     %{
+       status:
+         case response.status do
+           :optimal -> "OPTIMAL"
+           :infeasible -> "INFEASIBLE"
+           _ -> "UNKNOWN"
+         end,
+       solver: "CP-SAT (Exhort)",
+       variables: response.variables,
+       objective_value: Map.get(response, :objective),
+       solve_time_ms: 0
+     }}
   end
 
   # ==================== HTN FALLBACK SOLVER ====================
@@ -158,23 +168,26 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
         case HTNPlanningStrategy.plan(domain, state, goals, options) do
           {:ok, solution_tree} ->
             variables = extract_variables_from_solution(solution_tree)
-            {:ok, %{
-              status: "OPTIMAL",
-              solver: "CP-SAT (HTN Fallback)",
-              variables: variables,
-              solve_time_ms: 0
-            }}
-          
+
+            {:ok,
+             %{
+               status: "OPTIMAL",
+               solver: "CP-SAT (HTN Fallback)",
+               variables: variables,
+               solve_time_ms: 0
+             }}
+
           {:error, reason} ->
-            {:ok, %{
-              status: "INFEASIBLE", 
-              solver: "CP-SAT (HTN Fallback)",
-              variables: %{},
-              solve_time_ms: 0,
-              reason: reason
-            }}
+            {:ok,
+             %{
+               status: "INFEASIBLE",
+               solver: "CP-SAT (HTN Fallback)",
+               variables: %{},
+               solve_time_ms: 0,
+               reason: reason
+             }}
         end
-      
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -184,13 +197,13 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
   defp convert_problem_to_planning_format(problem) do
     variables = Map.get(problem, "variables", [])
     constraints = Map.get(problem, "constraints", [])
-    
+
     if length(variables) > 0 do
       # Create simple domain and state for constraint satisfaction
       domain = create_constraint_domain(variables, constraints)
       state = create_initial_state(variables)
       goals = create_constraint_goals(constraints)
-      
+
       {:ok, {domain, state, goals}}
     else
       {:error, "No variables specified"}
@@ -201,7 +214,7 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
     # Create a simple domain that can assign boolean values to variables
     methods = create_assignment_methods(variables)
     actions = create_assignment_actions(variables)
-    
+
     %{
       methods: methods,
       actions: actions
@@ -244,11 +257,12 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
   defp extract_variables_from_solution(solution_tree) do
     # Extract variable assignments from the HTN solution
     actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
-    
+
     Enum.reduce(actions, %{}, fn action, acc ->
       case action do
         {"assign_action", [var, value]} ->
           Map.put(acc, var, value)
+
         _ ->
           acc
       end

@@ -25,11 +25,21 @@ defmodule SimpleTravelActions do
   """
   def walk(state, [p, x, y]) do
     cond do
-      not is_person(p) -> false
-      not is_location(x) -> false
-      not is_location(y) -> false
-      x == y -> false
-      State.get_fact(state, "loc", p) != x -> false
+      not is_person(p) ->
+        false
+
+      not is_location(x) ->
+        false
+
+      not is_location(y) ->
+        false
+
+      x == y ->
+        false
+
+      State.get_fact(state, "loc", p) != x ->
+        false
+
       true ->
         State.set_fact(state, "loc", p, y)
     end
@@ -48,8 +58,12 @@ defmodule SimpleTravelActions do
   """
   def call_taxi(state, [p, x]) do
     cond do
-      not is_person(p) -> false
-      not is_location(x) -> false
+      not is_person(p) ->
+        false
+
+      not is_location(x) ->
+        false
+
       true ->
         state
         |> State.set_fact("loc", "taxi1", x)
@@ -74,18 +88,29 @@ defmodule SimpleTravelActions do
     person_loc = State.get_fact(state, "loc", p)
 
     cond do
-      not is_person(p) -> false
-      not is_taxi(person_loc) -> false
-      not is_location(y) -> false
+      not is_person(p) ->
+        false
+
+      not is_taxi(person_loc) ->
+        false
+
+      not is_location(y) ->
+        false
+
       true ->
         taxi = person_loc
         x = State.get_fact(state, "loc", taxi)
 
         cond do
-          not is_location(x) -> false
-          x == y -> false
+          not is_location(x) ->
+            false
+
+          x == y ->
+            false
+
           true ->
             fare = taxi_rate(distance(x, y))
+
             state
             |> State.set_fact("loc", taxi, y)
             |> State.set_fact("owe", p, fare)
@@ -110,8 +135,12 @@ defmodule SimpleTravelActions do
     owe = State.get_fact(state, "owe", p)
 
     cond do
-      not is_person(p) -> false
-      cash < owe -> false
+      not is_person(p) ->
+        false
+
+      cash < owe ->
+        false
+
       true ->
         state
         |> State.set_fact("cash", p, cash - owe)
@@ -160,10 +189,18 @@ defmodule SimpleTravelActions do
   """
   def ride_taxi_simple(state, [p, taxi, y]) do
     cond do
-      not is_person(p) -> false
-      not is_taxi(taxi) -> false
-      not is_location(y) -> false
-      State.get_fact(state, "loc", p) != State.get_fact(state, "loc", taxi) -> false
+      not is_person(p) ->
+        false
+
+      not is_taxi(taxi) ->
+        false
+
+      not is_location(y) ->
+        false
+
+      State.get_fact(state, "loc", p) != State.get_fact(state, "loc", taxi) ->
+        false
+
       true ->
         state
         |> State.set_fact("loc", p, y)
@@ -176,12 +213,18 @@ defmodule SimpleTravelActions do
   """
   def pay_driver_simple(state, [p, taxi]) do
     cond do
-      not is_person(p) -> false
-      not is_taxi(taxi) -> false
+      not is_person(p) ->
+        false
+
+      not is_taxi(taxi) ->
+        false
+
       true ->
         # For simple version, just deduct a fixed amount
         cash = State.get_fact(state, "cash", p)
-        fare = 5  # Fixed fare for simplicity
+        # Fixed fare for simplicity
+        fare = 5
+
         if cash >= fare do
           State.set_fact(state, "cash", p, cash - fare)
         else

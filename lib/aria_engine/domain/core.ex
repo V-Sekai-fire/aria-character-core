@@ -43,22 +43,26 @@ defmodule Domain.Core do
   @type durative_action :: DurativeAction.t()
 
   @type t :: %__MODULE__{
-    name: String.t(),
-    actions: %{action_name() => action_fn()},
-    action_metadata: %{action_name() => map()}, # New field for action metadata
-    task_methods: %{task_name() => [named_method()]},
-    unigoal_methods: %{String.t() => [named_method()]},
-    multigoal_methods: [named_method()],
-    durative_actions: %{durative_action_name() => durative_action()} # New field for durative actions
-  }
+          name: String.t(),
+          actions: %{action_name() => action_fn()},
+          # New field for action metadata
+          action_metadata: %{action_name() => map()},
+          task_methods: %{task_name() => [named_method()]},
+          unigoal_methods: %{String.t() => [named_method()]},
+          multigoal_methods: [named_method()],
+          # New field for durative actions
+          durative_actions: %{durative_action_name() => durative_action()}
+        }
 
   defstruct name: "",
             actions: %{},
-            action_metadata: %{}, # Initialize new field
+            # Initialize new field
+            action_metadata: %{},
             task_methods: %{},
             unigoal_methods: %{},
             multigoal_methods: [],
-            durative_actions: %{} # Initialize new field
+            # Initialize new field
+            durative_actions: %{}
 
   @doc """
   Creates a new planning domain.
@@ -83,18 +87,26 @@ defmodule Domain.Core do
     cond do
       domain.name == "" or domain.name == nil ->
         {:error, "Domain name cannot be empty"}
+
       not is_map(domain.actions) ->
         {:error, "Actions must be a map"}
-      not is_map(domain.action_metadata) -> # Validate new field
+
+      # Validate new field
+      not is_map(domain.action_metadata) ->
         {:error, "Action metadata must be a map"}
+
       not is_map(domain.task_methods) ->
         {:error, "Task methods must be a map"}
+
       not is_map(domain.unigoal_methods) ->
         {:error, "Unigoal methods must be a map"}
+
       not is_list(domain.multigoal_methods) ->
         {:error, "Multigoal methods must be a list"}
+
       not is_map(domain.durative_actions) ->
         {:error, "Durative actions must be a map"}
+
       true ->
         {:ok, domain}
     end
@@ -106,13 +118,19 @@ defmodule Domain.Core do
   Adds an action (function or struct) to the domain.
   """
   @spec add_action(t(), action_name(), any()) :: t()
-  def add_action(%__MODULE__{actions: actions, action_metadata: action_metadata} = domain, name, action) do
+  def add_action(
+        %__MODULE__{actions: actions, action_metadata: action_metadata} = domain,
+        name,
+        action
+      ) do
     cond do
       is_function(action, 2) ->
         # Just store the function, no metadata
         %{domain | actions: Map.put(actions, name, action)}
+
       is_map(action) and Map.has_key?(action, :metadata) ->
         metadata = Map.get(action, :metadata, %{})
+
         normalized_metadata =
           if Map.has_key?(metadata, :duration) do
             duration = metadata[:duration]
@@ -120,8 +138,15 @@ defmodule Domain.Core do
           else
             metadata
           end
+
         updated_action_metadata = Map.put(action_metadata, name, normalized_metadata)
-        %{domain | actions: Map.put(actions, name, action), action_metadata: updated_action_metadata}
+
+        %{
+          domain
+          | actions: Map.put(actions, name, action),
+            action_metadata: updated_action_metadata
+        }
+
       true ->
         # Unknown type, just store as is
         %{domain | actions: Map.put(actions, name, action)}

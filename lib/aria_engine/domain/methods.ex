@@ -6,7 +6,6 @@ defmodule Domain.Methods do
   Handles method-related operations for the planning domain.
   """
 
-
   @type t :: Domain.Core.t()
   @type task_name :: String.t()
   @type method_name :: String.t()
@@ -33,7 +32,7 @@ defmodule Domain.Methods do
   Adds a task method to the domain with automatic method name inference.
   """
   @spec add_task_method(t(), task_name(), task_method_fn()) :: t()
-  def add_task_method(%{} = domain, task_name, method_fn) 
+  def add_task_method(%{} = domain, task_name, method_fn)
       when is_binary(task_name) and is_function(method_fn, 2) do
     method_name = Domain.Utils.infer_method_name(method_fn)
     add_task_method(domain, task_name, method_name, method_fn)
@@ -41,16 +40,18 @@ defmodule Domain.Methods do
 
   @doc """
   Adds multiple task methods for a task.
-  
+
   Accepts a list of {method_name, method_function} tuples or plain functions.
   For plain functions, method names are automatically inferred.
   """
-  @spec add_task_methods(t(), task_name(), [{String.t(), task_method_fn()}] | [task_method_fn()]) :: t()
+  @spec add_task_methods(t(), task_name(), [{String.t(), task_method_fn()}] | [task_method_fn()]) ::
+          t()
   def add_task_methods(%{} = domain, task_name, method_tuples_or_functions)
       when is_binary(task_name) and is_list(method_tuples_or_functions) do
     Enum.reduce(method_tuples_or_functions, domain, fn
       {method_name, method_fn}, acc_domain when is_binary(method_name) ->
         add_task_method(acc_domain, task_name, method_name, method_fn)
+
       method_fn, acc_domain when is_function(method_fn, 2) ->
         inferred_method_name = Domain.Utils.infer_method_name(method_fn)
         add_task_method(acc_domain, task_name, inferred_method_name, method_fn)
@@ -87,7 +88,7 @@ defmodule Domain.Methods do
 
   @doc """
   Adds multiple unigoal methods for a goal type.
-  
+
   Accepts a list of {method_name, method_function} tuples.
   """
   @spec add_unigoal_methods(t(), String.t(), [{String.t(), goal_method_fn()}]) :: t()
@@ -121,7 +122,7 @@ defmodule Domain.Methods do
 
   @doc """
   Gets task methods for a task name.
-  
+
   Returns a list of {method_name, method_function} tuples.
   """
   @spec get_task_methods(t(), task_name()) :: [named_method()]
@@ -131,7 +132,7 @@ defmodule Domain.Methods do
 
   @doc """
   Gets unigoal methods for a goal type.
-  
+
   Returns a list of {method_name, method_function} tuples.
   """
   @spec get_unigoal_methods(t(), String.t()) :: [named_method()]
@@ -149,7 +150,7 @@ defmodule Domain.Methods do
 
   @doc """
   Gets goal methods for a predicate. 
-  
+
   This is an alias for get_unigoal_methods to maintain compatibility.
   Returns a list of {method_name, method_function} tuples.
   """
@@ -160,7 +161,7 @@ defmodule Domain.Methods do
 
   @doc """
   Gets a specific method by name.
-  
+
   This function returns the first method function for the given predicate.
   With the tuple-based implementation, it extracts the function part.
   """

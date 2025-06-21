@@ -4,7 +4,7 @@
 defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   @moduledoc """
   Default HTN planning strategy implementation wrapping existing Plan.Core logic.
-  
+
   This strategy encapsulates the current HTN planning functionality from
   Plan.Core while providing the clean strategy interface defined in ADR-091.
   It serves as the default implementation during the migration period.
@@ -17,7 +17,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   @impl true
   def plan(domain, %AriaEngine.StateV2{} = state, goals, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     if verbose > 1 do
       Logger.debug("HTNPlanningStrategy: Starting planning with #{length(goals)} goals")
     end
@@ -25,7 +25,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
     try do
       # Convert goals to todos format expected by Plan.Core
       todos = convert_goals_to_todos(goals)
-      
+
       # Use existing Plan.Core.plan/4 logic
       case Plan.Core.plan(domain, state, todos, opts) do
         {:ok, solution_tree} ->
@@ -33,12 +33,14 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
             action_count = AriaEngine.Plan.Utils.plan_cost(solution_tree)
             Logger.debug("HTNPlanningStrategy: Planning successful with #{action_count} actions")
           end
+
           {:ok, solution_tree}
-        
+
         {:error, reason} ->
           if verbose > 0 do
             Logger.warning("HTNPlanningStrategy: Planning failed - #{reason}")
           end
+
           {:error, reason}
       end
     rescue
@@ -52,7 +54,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   @impl true
   def replan(domain, %AriaEngine.StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     if verbose > 1 do
       Logger.debug("HTNPlanningStrategy: Starting replanning from failed node #{fail_node_id}")
     end
@@ -63,20 +65,28 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
         {:ok, new_solution_tree} ->
           if verbose > 1 do
             action_count = AriaEngine.Plan.Utils.plan_cost(new_solution_tree)
-            Logger.debug("HTNPlanningStrategy: Replanning successful with #{action_count} actions")
+
+            Logger.debug(
+              "HTNPlanningStrategy: Replanning successful with #{action_count} actions"
+            )
           end
+
           {:ok, new_solution_tree}
-        
+
         {:error, reason} ->
           if verbose > 0 do
             Logger.warning("HTNPlanningStrategy: Replanning failed - #{reason}")
           end
+
           {:error, reason}
-        
+
         :failure ->
           if verbose > 1 do
-            Logger.debug("HTNPlanningStrategy: Replanning returned failure - no viable alternatives")
+            Logger.debug(
+              "HTNPlanningStrategy: Replanning returned failure - no viable alternatives"
+            )
           end
+
           :failure
       end
     rescue
@@ -92,12 +102,12 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
     try do
       # Extract primitive actions from solution tree
       primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
-      
+
       # Use existing AriaEngine.Plan.Utils.validate_plan/3 logic
       case AriaEngine.Plan.Utils.validate_plan(domain, initial_state, primitive_actions) do
         {:ok, final_state} ->
           {:ok, final_state}
-        
+
         {:error, reason} ->
           {:error, reason}
       end
@@ -121,7 +131,8 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
     {task_name, args}
   end
 
-  defp convert_goal_to_todo({predicate, subject, value}) when is_binary(predicate) and is_binary(subject) do
+  defp convert_goal_to_todo({predicate, subject, value})
+       when is_binary(predicate) and is_binary(subject) do
     # Goal format: already in correct format for Plan.Core
     {predicate, subject, value}
   end

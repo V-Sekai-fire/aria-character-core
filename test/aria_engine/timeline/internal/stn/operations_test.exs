@@ -10,37 +10,37 @@ defmodule Timeline.Internal.STN.OperationsTest do
   describe "segment/2" do
     test "returns single STN when time points <= 5" do
       stn = create_stn_with_points(3)
-      
+
       segments = Operations.segment(stn, 10)
-      
+
       assert length(segments) == 1
       assert hd(segments) == stn
     end
 
     test "splits STN into 5-point segments when time points > 5" do
       stn = create_stn_with_points(12)
-      
+
       segments = Operations.segment(stn, 10)
-      
+
       # 12 points should create 3 segments: [5, 5, 2]
       assert length(segments) == 3
-      
+
       # Check first two segments have 5 points each
       assert MapSet.size(Enum.at(segments, 0).time_points) == 5
       assert MapSet.size(Enum.at(segments, 1).time_points) == 5
-      
+
       # Check last segment has remaining points
       assert MapSet.size(Enum.at(segments, 2).time_points) == 2
     end
 
     test "segments contain only relevant constraints" do
       stn = create_stn_with_connected_points(6)
-      
+
       segments = Operations.segment(stn, 10)
-      
+
       # Should create 2 segments: [5, 1]
       assert length(segments) == 2
-      
+
       # Each segment should only have constraints between its own time points
       for segment <- segments do
         for {{p1, p2}, _constraint} <- segment.constraints do
@@ -52,9 +52,9 @@ defmodule Timeline.Internal.STN.OperationsTest do
 
     test "preserves STN properties in segments" do
       stn = create_stn_with_properties()
-      
+
       segments = Operations.segment(stn, 10)
-      
+
       for segment <- segments do
         assert segment.consistent == stn.consistent
         assert segment.time_unit == stn.time_unit
@@ -65,12 +65,12 @@ defmodule Timeline.Internal.STN.OperationsTest do
 
     test "handles large STNs efficiently" do
       stn = create_stn_with_points(25)
-      
+
       segments = Operations.segment(stn, 10)
-      
+
       # 25 points should create 5 segments: [5, 5, 5, 5, 5]
       assert length(segments) == 5
-      
+
       # Each segment should have exactly 5 points
       for segment <- segments do
         assert MapSet.size(segment.time_points) == 5
@@ -81,9 +81,9 @@ defmodule Timeline.Internal.STN.OperationsTest do
   describe "parallel_solve/2" do
     test "handles single segment STN correctly" do
       stn = create_stn_with_points(3)
-      
+
       result = Operations.parallel_solve(stn, 4)
-      
+
       # Should return a solved STN
       assert %STN{} = result
       assert result.consistent
@@ -91,9 +91,9 @@ defmodule Timeline.Internal.STN.OperationsTest do
 
     test "solves multi-segment STN and merges results" do
       stn = create_stn_with_connected_points(8)
-      
+
       result = Operations.parallel_solve(stn, 4)
-      
+
       # Should return a solved STN with all original time points
       assert %STN{} = result
       assert MapSet.size(result.time_points) >= MapSet.size(stn.time_points)
@@ -101,9 +101,9 @@ defmodule Timeline.Internal.STN.OperationsTest do
 
     test "maintains consistency after parallel solving" do
       stn = create_consistent_stn(10)
-      
+
       result = Operations.parallel_solve(stn, 4)
-      
+
       assert result.consistent
     end
   end
@@ -111,12 +111,12 @@ defmodule Timeline.Internal.STN.OperationsTest do
   # Helper functions for creating test STNs
 
   defp create_stn_with_points(count) do
-    time_points = 
+    time_points =
       1..count
       |> Enum.map(&"point_#{&1}")
       |> MapSet.new()
 
-    constraints = 
+    constraints =
       time_points
       |> MapSet.to_list()
       |> Enum.map(fn point -> {{point, point}, {0, 0}} end)
@@ -130,20 +130,20 @@ defmodule Timeline.Internal.STN.OperationsTest do
   end
 
   defp create_stn_with_connected_points(count) do
-    time_points = 
+    time_points =
       1..count
       |> Enum.map(&"point_#{&1}")
       |> MapSet.new()
 
     # Create constraints between consecutive points
-    constraints = 
+    constraints =
       time_points
       |> MapSet.to_list()
       |> Enum.with_index()
       |> Enum.reduce(%{}, fn {point, index}, acc ->
         # Self-constraint
         acc = Map.put(acc, {point, point}, {0, 0})
-        
+
         # Constraint to next point if exists
         if index < count - 1 do
           next_point = "point_#{index + 2}"
@@ -176,13 +176,13 @@ defmodule Timeline.Internal.STN.OperationsTest do
   end
 
   defp create_consistent_stn(count) do
-    time_points = 
+    time_points =
       1..count
       |> Enum.map(&"point_#{&1}")
       |> MapSet.new()
 
     # Create a simple consistent constraint network
-    constraints = 
+    constraints =
       time_points
       |> MapSet.to_list()
       |> Enum.map(fn point -> {{point, point}, {0, 0}} end)

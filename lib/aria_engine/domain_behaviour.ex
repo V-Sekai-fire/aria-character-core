@@ -19,5 +19,6 @@ defmodule DomainBehaviour do
 
   # Callbacks for durative actions
   @callback durative_actions(domain :: term()) :: map()
-  @callback get_durative_action(domain :: term(), name :: atom()) :: Domain.DurativeAction.t() | nil
+  @callback get_durative_action(domain :: term(), name :: atom()) ::
+              Domain.DurativeAction.t() | nil
 end

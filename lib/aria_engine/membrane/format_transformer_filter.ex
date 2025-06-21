@@ -4,7 +4,7 @@
 defmodule AriaEngine.Membrane.FormatTransformerFilter do
   @moduledoc """
   Generic format transformer filter for Membrane pipelines.
-  
+
   This filter can transform between different formats and provides
   mock scenarios for testing purposes.
   """
@@ -13,27 +13,30 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
 
   require Logger
 
-
-  def_input_pad :input,
+  def_input_pad(:input,
     accepted_format: _any,
     flow_control: :auto
+  )
 
-  def_output_pad :output,
+  def_output_pad(:output,
     accepted_format: _any,
     flow_control: :auto
+  )
 
-  def_options mock_scenario: [
-                spec: atom(),
-                default: :passthrough,
-                description: "Mock scenario for testing"
-              ]
+  def_options(
+    mock_scenario: [
+      spec: atom(),
+      default: :passthrough,
+      description: "Mock scenario for testing"
+    ]
+  )
 
   @impl true
   def handle_init(_ctx, opts) do
     state = %{
       mock_scenario: opts.mock_scenario
     }
-    
+
     Logger.info("FormatTransformerFilter initialized with scenario: #{opts.mock_scenario}")
     {[], state}
   end
@@ -43,27 +46,27 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
     case state.mock_scenario do
       :passthrough ->
         {[buffer: {:output, buffer}], state}
-        
+
       :success ->
         mock_response = create_mock_success_response(buffer.payload)
         new_buffer = %{buffer | payload: mock_response}
         {[buffer: {:output, new_buffer}], state}
-        
+
       :mcp_request_to_response ->
         mock_response = create_mock_mcp_response(buffer.payload)
         new_buffer = %{buffer | payload: mock_response}
         {[buffer: {:output, new_buffer}], state}
-        
+
       :planning_params_to_response ->
         mock_response = create_mock_planning_response(buffer.payload)
         new_buffer = %{buffer | payload: mock_response}
         {[buffer: {:output, new_buffer}], state}
-        
+
       :planning_success ->
         mock_response = create_mock_planning_success(buffer.payload)
         new_buffer = %{buffer | payload: mock_response}
         {[buffer: {:output, new_buffer}], state}
-        
+
       _ ->
         Logger.warning("Unknown mock scenario: #{state.mock_scenario}")
         {[buffer: {:output, buffer}], state}
@@ -129,7 +132,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
 
   defp create_mock_schedule(payload) do
     activities = extract_activities(payload)
-    
+
     Enum.map(activities, fn activity ->
       %{
         "id" => activity["id"],
@@ -147,7 +150,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
 
   defp create_mock_timeline(payload) do
     activities = extract_activities(payload)
-    
+
     Enum.map(activities, fn activity ->
       %{
         "time" => get_activity_start_time(activity),
@@ -162,11 +165,11 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
     cond do
       is_map(payload) and Map.has_key?(payload, "activities") ->
         payload["activities"]
-        
-      is_map(payload) and Map.has_key?(payload, :parameters) and 
-      is_map(payload.parameters) and Map.has_key?(payload.parameters, "activities") ->
+
+      is_map(payload) and Map.has_key?(payload, :parameters) and
+        is_map(payload.parameters) and Map.has_key?(payload.parameters, "activities") ->
         payload.parameters["activities"]
-        
+
       true ->
         []
     end
@@ -185,12 +188,15 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
 
   defp get_activity_end_time(activity) do
     case activity["duration"] do
-      %{"end" => end_time} -> end_time
+      %{"end" => end_time} ->
+        end_time
+
       %{"start" => start_time} ->
         # Add 1 hour as default duration
         {:ok, start_dt, _} = DateTime.from_iso8601(start_time)
         DateTime.add(start_dt, 3600, :second) |> DateTime.to_iso8601()
-      _ -> 
+
+      _ ->
         DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_iso8601()
     end
   end

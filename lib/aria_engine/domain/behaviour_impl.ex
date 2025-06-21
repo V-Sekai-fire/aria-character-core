@@ -30,6 +30,8 @@ defmodule Domain.BehaviourImpl do
   def durative_actions(_domain), do: %{}
 
   @impl true
-  @spec get_durative_action(Core.t(), Core.durative_action_name()) :: Domain.DurativeAction.t() | nil
-  def get_durative_action(%Core{durative_actions: durative_actions}, name), do: Map.get(durative_actions, name)
+  @spec get_durative_action(Core.t(), Core.durative_action_name()) ::
+          Domain.DurativeAction.t() | nil
+  def get_durative_action(%Core{durative_actions: durative_actions}, name),
+    do: Map.get(durative_actions, name)
 end

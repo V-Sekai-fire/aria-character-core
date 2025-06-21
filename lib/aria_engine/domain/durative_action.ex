@@ -6,30 +6,31 @@ defmodule Domain.DurativeAction do
   Represents a durative action in the Aria Engine planning domain.
   """
 
-
   @type durative_action_name :: atom()
 
   @type durative_action_conditions :: %{
-    at_start: list(),
-    over_all: list(),
-    at_end: list()
-  }
+          at_start: list(),
+          over_all: list(),
+          at_end: list()
+        }
 
   @type durative_action_effects :: %{
-    at_start: list(),
-    at_end: list(),
-    over_time: list()
-  }
+          at_start: list(),
+          at_end: list(),
+          over_time: list()
+        }
 
-  @type durative_action_duration :: {:fixed, number()} | {:range, number(), number()} | {:open_ended, map()}
+  @type durative_action_duration ::
+          {:fixed, number()} | {:range, number(), number()} | {:open_ended, map()}
 
   @type t :: %__MODULE__{
-    name: durative_action_name(),
-    duration: durative_action_duration(),
-    conditions: durative_action_conditions(),
-    effects: durative_action_effects(),
-    action_fn: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false) # The actual function that performs the action
-  }
+          name: durative_action_name(),
+          duration: durative_action_duration(),
+          conditions: durative_action_conditions(),
+          effects: durative_action_effects(),
+          # The actual function that performs the action
+          action_fn: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
+        }
 
   defstruct name: nil,
             duration: {:fixed, 0},
@@ -40,7 +41,13 @@ defmodule Domain.DurativeAction do
   @doc """
   Creates a new durative action.
   """
-  @spec new(durative_action_name(), durative_action_duration(), durative_action_conditions(), durative_action_effects(), (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)) :: t()
+  @spec new(
+          durative_action_name(),
+          durative_action_duration(),
+          durative_action_conditions(),
+          durative_action_effects(),
+          (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
+        ) :: t()
   def new(name, duration, conditions, effects, action_fn) do
     %__MODULE__{
       name: name,

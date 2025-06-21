@@ -28,6 +28,7 @@ defmodule AriaEngine.PC2BenchmarkTest do
       %{time: 40},
       %{time: 50}
     ]
+
     stats = AriaEngine.PC2Benchmark.collect_timing_data(results)
     assert is_map(stats)
     assert stats.avg == 30
@@ -57,23 +58,27 @@ defmodule AriaEngine.PC2BenchmarkTest do
   end
 
   test "analyze_vision_pro_compliance/1 analyzes Vision Pro performance" do
-    times = [0.3, 0.8, 1.2, 2.5, 0.1]  # Mix of critical, warning, and failure times
+    # Mix of critical, warning, and failure times
+    times = [0.3, 0.8, 1.2, 2.5, 0.1]
     analysis = AriaEngine.PC2Benchmark.analyze_vision_pro_compliance(times)
 
-    assert analysis.critical_compliance == 40.0  # 2 out of 5 under 0.5ms
-    assert analysis.warning_compliance == 60.0   # 3 out of 5 under 1.0ms
-    assert analysis.failure_rate == 20.0         # 1 out of 5 over 2.0ms
+    # 2 out of 5 under 0.5ms
+    assert analysis.critical_compliance == 40.0
+    # 3 out of 5 under 1.0ms
+    assert analysis.warning_compliance == 60.0
+    # 1 out of 5 over 2.0ms
+    assert analysis.failure_rate == 20.0
     assert is_number(analysis.frame_budget_usage)
   end
 
   test "format_vision_pro_report/1 formats Vision Pro analysis" do
     analysis = [
       %{
-        size: 5, 
+        size: 5,
         timing: %{
-          avg: 0.4, 
-          min: 0.1, 
-          max: 0.8, 
+          avg: 0.4,
+          min: 0.1,
+          max: 0.8,
           p95: 0.7,
           vision_pro: %{
             critical_compliance: 95.0,
@@ -90,7 +95,8 @@ defmodule AriaEngine.PC2BenchmarkTest do
     assert String.contains?(report, "Apple Vision Pro PC2 Performance Analysis")
     assert String.contains?(report, "Target: 96fps")
     assert String.contains?(report, "Critical%")
-    assert String.contains?(report, "✅")  # Should show success for good performance
+    # Should show success for good performance
+    assert String.contains?(report, "✅")
   end
 
   test "run_vision_pro_benchmark/1 runs complete Vision Pro analysis" do

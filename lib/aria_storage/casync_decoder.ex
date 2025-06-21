@@ -38,30 +38,30 @@ defmodule AriaStorage.CasyncDecoder do
   @ca_format_sha512_256 0x2000000000000000
 
   @type decode_options :: [
-    store_path: String.t() | nil,
-    store_uri: String.t() | nil,
-    output_dir: String.t() | nil,
-    verify_integrity: boolean(),
-    progress_callback: (integer(), integer() -> :ok) | nil
-  ]
+          store_path: String.t() | nil,
+          store_uri: String.t() | nil,
+          output_dir: String.t() | nil,
+          verify_integrity: boolean(),
+          progress_callback: (integer(), integer() -> :ok) | nil
+        ]
 
   @type decode_result :: %{
-    format: atom(),
-    parsed_data: map(),
-    file_size: integer(),
-    chunk_count: integer(),
-    integrity_verified: boolean(),
-    assembly_result: map() | nil
-  }
+          format: atom(),
+          parsed_data: map(),
+          file_size: integer(),
+          chunk_count: integer(),
+          integrity_verified: boolean(),
+          assembly_result: map() | nil
+        }
 
   @type assembly_result :: %{
-    success: boolean(),
-    assembled_file: String.t(),
-    bytes_written: integer(),
-    chunks_processed: integer(),
-    verification_passed: boolean(),
-    size_verified: boolean()
-  }
+          success: boolean(),
+          assembled_file: String.t(),
+          bytes_written: integer(),
+          chunks_processed: integer(),
+          verification_passed: boolean(),
+          size_verified: boolean()
+        }
 
   @doc """
   Decode a casync file from a local file path.
@@ -70,7 +70,6 @@ defmodule AriaStorage.CasyncDecoder do
   def decode_file(file_path, opts \\ []) do
     with {:ok, binary_data} <- File.read(file_path),
          {:ok, parsed_data} <- parse_casync_data(binary_data, file_path) do
-
       result = %{
         format: parsed_data.format,
         parsed_data: parsed_data,
@@ -81,16 +80,22 @@ defmodule AriaStorage.CasyncDecoder do
       }
 
       # Perform assembly if store is available and requested
-      result = if should_assemble?(parsed_data, opts) do
-        case assemble_file(parsed_data, opts) do
-          {:ok, assembly_result} ->
-            %{result | assembly_result: assembly_result, integrity_verified: assembly_result.verification_passed}
-          {:error, _reason} ->
-            result
+      result =
+        if should_assemble?(parsed_data, opts) do
+          case assemble_file(parsed_data, opts) do
+            {:ok, assembly_result} ->
+              %{
+                result
+                | assembly_result: assembly_result,
+                  integrity_verified: assembly_result.verification_passed
+              }
+
+            {:error, _reason} ->
+              result
+          end
+        else
+          result
         end
-      else
-        result
-      end
 
       {:ok, result}
     end
@@ -103,7 +108,6 @@ defmodule AriaStorage.CasyncDecoder do
   def decode_uri(file_uri, opts \\ []) do
     with {:ok, binary_data} <- download_file(file_uri),
          {:ok, parsed_data} <- parse_casync_data(binary_data, file_uri) do
-
       result = %{
         format: parsed_data.format,
         parsed_data: parsed_data,
@@ -114,16 +118,22 @@ defmodule AriaStorage.CasyncDecoder do
       }
 
       # Perform assembly if store is available and requested
-      result = if should_assemble?(parsed_data, opts) do
-        case assemble_file(parsed_data, opts) do
-          {:ok, assembly_result} ->
-            %{result | assembly_result: assembly_result, integrity_verified: assembly_result.verification_passed}
-          {:error, _reason} ->
-            result
+      result =
+        if should_assemble?(parsed_data, opts) do
+          case assemble_file(parsed_data, opts) do
+            {:ok, assembly_result} ->
+              %{
+                result
+                | assembly_result: assembly_result,
+                  integrity_verified: assembly_result.verification_passed
+              }
+
+            {:error, _reason} ->
+              result
+          end
+        else
+          result
         end
-      else
-        result
-      end
 
       {:ok, result}
     end
@@ -140,8 +150,10 @@ defmodule AriaStorage.CasyncDecoder do
     case parsed_data.format do
       format when format in [:caidx, :caibx] ->
         assemble_from_chunks(parsed_data, opts, output_dir, progress_callback)
+
       :catar ->
         extract_catar_archive(parsed_data, output_dir)
+
       _ ->
         {:error, {:unsupported_format, parsed_data.format}}
     end
@@ -193,14 +205,18 @@ defmodule AriaStorage.CasyncDecoder do
     cond do
       bytes >= 1024 * 1024 * 1024 ->
         "#{Float.round(bytes / (1024 * 1024 * 1024), 2)} GB"
+
       bytes >= 1024 * 1024 ->
         "#{Float.round(bytes / (1024 * 1024), 2)} MB"
+
       bytes >= 1024 ->
         "#{Float.round(bytes / 1024, 2)} KB"
+
       true ->
         "#{bytes} bytes"
     end
   end
+
   def format_bytes(_), do: "unknown size"
 
   # Private functions
@@ -228,8 +244,10 @@ defmodule AriaStorage.CasyncDecoder do
     case parsed_data.format do
       format when format in [:caidx, :caibx] ->
         length(parsed_data.chunks)
+
       :catar ->
         length(parsed_data.files) + length(parsed_data.directories)
+
       _ ->
         0
     end
@@ -239,8 +257,10 @@ defmodule AriaStorage.CasyncDecoder do
     case parsed_data.format do
       format when format in [:caidx, :caibx] ->
         opts[:store_path] != nil or opts[:store_uri] != nil
+
       :catar ->
         true
+
       _ ->
         false
     end
@@ -261,7 +281,15 @@ defmodule AriaStorage.CasyncDecoder do
             store_context = get_store_context(opts)
 
             {success_count, total_bytes_written} =
-              assemble_chunks_to_file(file, sorted_chunks, store_context, 0, 0, progress_callback, parsed_data.feature_flags)
+              assemble_chunks_to_file(
+                file,
+                sorted_chunks,
+                store_context,
+                0,
+                0,
+                progress_callback,
+                parsed_data.feature_flags
+              )
 
             File.close(file)
 
@@ -271,15 +299,15 @@ defmodule AriaStorage.CasyncDecoder do
 
             verification_passed = actual_size == parsed_data.header.total_size
 
-            {:ok, %{
-              success: true,
-              assembled_file: assembled_file,
-              bytes_written: total_bytes_written,
-              chunks_processed: success_count,
-              verification_passed: verification_passed,
-              size_verified: verification_passed
-            }}
-
+            {:ok,
+             %{
+               success: true,
+               assembled_file: assembled_file,
+               bytes_written: total_bytes_written,
+               chunks_processed: success_count,
+               verification_passed: verification_passed,
+               size_verified: verification_passed
+             }}
           rescue
             error ->
               File.close(file)
@@ -304,42 +332,47 @@ defmodule AriaStorage.CasyncDecoder do
     end)
 
     # Extract files
-    files_extracted = Enum.reduce(parsed_data.files, 0, fn file, acc ->
-      path = Map.get(file, :path) || Map.get(file, :name, "unnamed")
-      file_path = Path.join(extract_dir, path)
+    files_extracted =
+      Enum.reduce(parsed_data.files, 0, fn file, acc ->
+        path = Map.get(file, :path) || Map.get(file, :name, "unnamed")
+        file_path = Path.join(extract_dir, path)
 
-      # Ensure parent directory exists
-      parent_dir = Path.dirname(file_path)
-      File.mkdir_p!(parent_dir)
+        # Ensure parent directory exists
+        parent_dir = Path.dirname(file_path)
+        File.mkdir_p!(parent_dir)
 
-      content = Map.get(file, :content)
+        content = Map.get(file, :content)
 
-      if content do
-        File.write!(file_path, content)
+        if content do
+          File.write!(file_path, content)
 
-        # Set file permissions if available
-        mode = Map.get(file, :mode)
-        if mode do
-          perm = mode &&& 0o777
-          if perm > 0 do
-            File.chmod!(file_path, perm)
+          # Set file permissions if available
+          mode = Map.get(file, :mode)
+
+          if mode do
+            perm = mode &&& 0o777
+
+            if perm > 0 do
+              File.chmod!(file_path, perm)
+            end
           end
+
+          acc + 1
+        else
+          acc
         end
+      end)
 
-        acc + 1
-      else
-        acc
-      end
-    end)
-
-    {:ok, %{
-      success: true,
-      assembled_file: extract_dir,
-      bytes_written: 0,  # Not applicable for CATAR
-      chunks_processed: files_extracted,
-      verification_passed: true,
-      size_verified: true
-    }}
+    {:ok,
+     %{
+       success: true,
+       assembled_file: extract_dir,
+       # Not applicable for CATAR
+       bytes_written: 0,
+       chunks_processed: files_extracted,
+       verification_passed: true,
+       size_verified: true
+     }}
   end
 
   defp get_store_context(opts) do
@@ -350,7 +383,15 @@ defmodule AriaStorage.CasyncDecoder do
     end
   end
 
-  defp assemble_chunks_to_file(file, chunks, store_context, success_count, total_bytes, progress_callback, feature_flags) do
+  defp assemble_chunks_to_file(
+         file,
+         chunks,
+         store_context,
+         success_count,
+         total_bytes,
+         progress_callback,
+         feature_flags
+       ) do
     total_chunks = length(chunks)
 
     case chunks do
@@ -371,24 +412,62 @@ defmodule AriaStorage.CasyncDecoder do
               {:ok, decompressed_data} ->
                 case :file.write(file, decompressed_data) do
                   :ok ->
-                    assemble_chunks_to_file(file, remaining_chunks, store_context,
-                      success_count + 1, total_bytes + byte_size(decompressed_data), progress_callback, feature_flags)
+                    assemble_chunks_to_file(
+                      file,
+                      remaining_chunks,
+                      store_context,
+                      success_count + 1,
+                      total_bytes + byte_size(decompressed_data),
+                      progress_callback,
+                      feature_flags
+                    )
+
                   {:error, reason} ->
-                    Logger.debug("Failed to write chunk #{String.slice(chunk_id_hex, 0, 8)}: #{inspect(reason)}")
-                    assemble_chunks_to_file(file, remaining_chunks, store_context,
-                      success_count, total_bytes, progress_callback, feature_flags)
+                    Logger.debug(
+                      "Failed to write chunk #{String.slice(chunk_id_hex, 0, 8)}: #{inspect(reason)}"
+                    )
+
+                    assemble_chunks_to_file(
+                      file,
+                      remaining_chunks,
+                      store_context,
+                      success_count,
+                      total_bytes,
+                      progress_callback,
+                      feature_flags
+                    )
                 end
 
               {:error, reason} ->
-                Logger.debug("Chunk #{String.slice(chunk_id_hex, 0, 8)} verification failed: #{inspect(reason)}")
-                assemble_chunks_to_file(file, remaining_chunks, store_context,
-                  success_count, total_bytes, progress_callback, feature_flags)
+                Logger.debug(
+                  "Chunk #{String.slice(chunk_id_hex, 0, 8)} verification failed: #{inspect(reason)}"
+                )
+
+                assemble_chunks_to_file(
+                  file,
+                  remaining_chunks,
+                  store_context,
+                  success_count,
+                  total_bytes,
+                  progress_callback,
+                  feature_flags
+                )
             end
 
           {:error, reason} ->
-            Logger.debug("Chunk #{String.slice(chunk_id_hex, 0, 8)} not found: #{inspect(reason)}")
-            assemble_chunks_to_file(file, remaining_chunks, store_context,
-              success_count, total_bytes, progress_callback, feature_flags)
+            Logger.debug(
+              "Chunk #{String.slice(chunk_id_hex, 0, 8)} not found: #{inspect(reason)}"
+            )
+
+            assemble_chunks_to_file(
+              file,
+              remaining_chunks,
+              store_context,
+              success_count,
+              total_bytes,
+              progress_callback,
+              feature_flags
+            )
         end
     end
   end
@@ -466,23 +545,29 @@ defmodule AriaStorage.CasyncDecoder do
   end
 
   defp decompress_chunk_data(data, :none), do: {:ok, data}
-  defp decompress_chunk_data(_data, compression), do: {:error, {:unsupported_compression, compression}}
+
+  defp decompress_chunk_data(_data, compression),
+    do: {:error, {:unsupported_compression, compression}}
 
   defp download_file(url) do
     # Start HTTPoison application
     Application.ensure_all_started(:hackney)
     Application.ensure_all_started(:ssl)
 
-    case HTTPoison.get(url, [], [
-      timeout: 300_000,      # 5 minutes
-      recv_timeout: 300_000, # 5 minutes
-      follow_redirect: true,
-      max_redirect: 5
-    ]) do
+    case HTTPoison.get(url, [],
+           # 5 minutes
+           timeout: 300_000,
+           # 5 minutes
+           recv_timeout: 300_000,
+           follow_redirect: true,
+           max_redirect: 5
+         ) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         {:ok, body}
+
       {:ok, %HTTPoison.Response{status_code: status_code}} ->
         {:error, "HTTP #{status_code}"}
+
       {:error, %HTTPoison.Error{reason: reason}} ->
         {:error, reason}
     end

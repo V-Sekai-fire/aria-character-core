@@ -36,14 +36,15 @@ defmodule BlocksGoalSplittingTest do
     test "multigoal splitting - tower c on b on a" do
       domain = TestDomains.build_blocks_goal_splitting_domain()
 
-      state1 = create_state()
-      |> set_fact("pos", "a", "b")
-      |> set_fact("pos", "b", "table")
-      |> set_fact("pos", "c", "table")
-      |> set_fact("clear", "c", true)
-      |> set_fact("clear", "b", false)
-      |> set_fact("clear", "a", true)
-      |> set_fact("holding", "hand", false)
+      state1 =
+        create_state()
+        |> set_fact("pos", "a", "b")
+        |> set_fact("pos", "b", "table")
+        |> set_fact("pos", "c", "table")
+        |> set_fact("clear", "c", true)
+        |> set_fact("clear", "b", false)
+        |> set_fact("clear", "a", true)
+        |> set_fact("holding", "hand", false)
 
       # Goal: c on b, b on a, a on table
       goal1a = %Multigoal{
@@ -55,9 +56,18 @@ defmodule BlocksGoalSplittingTest do
 
       # With goal splitting, this will likely produce a longer plan
       # due to deleted-condition interactions
-      expected = [{"unstack", "a", "b"}, {"putdown", "a"}, {"pickup", "c"}, {"stack", "c", "b"},
-                  {"unstack", "c", "b"}, {"putdown", "c"}, {"pickup", "b"}, {"stack", "b", "a"},
-                  {"pickup", "c"}, {"stack", "c", "b"}]
+      expected = [
+        {"unstack", "a", "b"},
+        {"putdown", "a"},
+        {"pickup", "c"},
+        {"stack", "c", "b"},
+        {"unstack", "c", "b"},
+        {"putdown", "c"},
+        {"pickup", "b"},
+        {"stack", "b", "a"},
+        {"pickup", "c"},
+        {"stack", "c", "b"}
+      ]
 
       {:ok, plan} = plan(domain, state1, [goal1a])
       assert plan == expected
@@ -78,16 +88,17 @@ defmodule BlocksGoalSplittingTest do
     test "complex goal splitting example" do
       domain = TestDomains.build_blocks_goal_splitting_domain()
 
-      state2 = create_state()
-      |> set_fact("pos", "a", "c")
-      |> set_fact("pos", "b", "d")
-      |> set_fact("pos", "c", "table")
-      |> set_fact("pos", "d", "table")
-      |> set_fact("clear", "a", true)
-      |> set_fact("clear", "c", false)
-      |> set_fact("clear", "b", true)
-      |> set_fact("clear", "d", false)
-      |> set_fact("holding", "hand", false)
+      state2 =
+        create_state()
+        |> set_fact("pos", "a", "c")
+        |> set_fact("pos", "b", "d")
+        |> set_fact("pos", "c", "table")
+        |> set_fact("pos", "d", "table")
+        |> set_fact("clear", "a", true)
+        |> set_fact("clear", "c", false)
+        |> set_fact("clear", "b", true)
+        |> set_fact("clear", "d", false)
+        |> set_fact("holding", "hand", false)
 
       goal2a = %Multigoal{
         name: "goal2a",
@@ -105,8 +116,14 @@ defmodule BlocksGoalSplittingTest do
         }
       }
 
-      expected = [{"unstack", "a", "c"}, {"putdown", "a"}, {"unstack", "b", "d"},
-                  {"stack", "b", "c"}, {"pickup", "a"}, {"stack", "a", "d"}]
+      expected = [
+        {"unstack", "a", "c"},
+        {"putdown", "a"},
+        {"unstack", "b", "d"},
+        {"stack", "b", "c"},
+        {"pickup", "a"},
+        {"stack", "a", "d"}
+      ]
 
       # Both should produce same plan
       {:ok, plan1} = plan(domain, state2, [goal2a])
@@ -124,22 +141,40 @@ defmodule BlocksGoalSplittingTest do
 
       # Set up initial positions
       initial_pos = %{
-        1 => 12, 12 => 13, 13 => "table",
-        11 => 10, 10 => 5, 5 => 4, 4 => 14, 14 => 15, 15 => "table",
-        9 => 8, 8 => 7, 7 => 6, 6 => "table",
-        19 => 18, 18 => 17, 17 => 16, 16 => 3, 3 => 2, 2 => "table"
+        1 => 12,
+        12 => 13,
+        13 => "table",
+        11 => 10,
+        10 => 5,
+        5 => 4,
+        4 => 14,
+        14 => 15,
+        15 => "table",
+        9 => 8,
+        8 => 7,
+        7 => 6,
+        6 => "table",
+        19 => 18,
+        18 => 17,
+        17 => 16,
+        16 => 3,
+        3 => 2,
+        2 => "table"
       }
 
-      state3 = Enum.reduce(initial_pos, state3, fn {block, pos}, acc ->
-        set_fact(acc, "pos", to_string(block), to_string(pos))
-      end)
+      state3 =
+        Enum.reduce(initial_pos, state3, fn {block, pos}, acc ->
+          set_fact(acc, "pos", to_string(block), to_string(pos))
+        end)
 
       # Set clear status (only top blocks are clear)
       clear_blocks = [1, 11, 9, 19]
-      state3 = Enum.reduce(1..19, state3, fn block, acc ->
-        is_clear = block in clear_blocks
-        set_fact(acc, "clear", to_string(block), is_clear)
-      end)
+
+      state3 =
+        Enum.reduce(1..19, state3, fn block, acc ->
+          is_clear = block in clear_blocks
+          set_fact(acc, "clear", to_string(block), is_clear)
+        end)
 
       state3 = set_fact(state3, "holding", "hand", false)
 
@@ -147,9 +182,18 @@ defmodule BlocksGoalSplittingTest do
         name: "goal3",
         goals: %{
           "pos" => %{
-            "15" => "13", "13" => "8", "8" => "9", "9" => "4",
-            "4" => "12", "12" => "2", "2" => "3", "3" => "16",
-            "16" => "11", "11" => "7", "7" => "6", "6" => "table"
+            "15" => "13",
+            "13" => "8",
+            "8" => "9",
+            "9" => "4",
+            "4" => "12",
+            "12" => "2",
+            "2" => "3",
+            "3" => "16",
+            "16" => "11",
+            "11" => "7",
+            "7" => "6",
+            "6" => "table"
           }
         }
       }

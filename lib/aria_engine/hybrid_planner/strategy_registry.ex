@@ -4,21 +4,21 @@
 defmodule HybridPlanner.StrategyRegistry do
   @moduledoc """
   Registry of planning strategy functions that can be composed at runtime.
-  
+
   Pure Function as Object implementation following Martin Fowler's pattern.
   All strategies are functions that can be stored, passed around, and composed
   without requiring complex object hierarchies.
-  
+
   ## Function Signatures
-  
+
   All strategy functions follow consistent signatures for composability:
-  
+
   - Planning strategies: `(Domain.t(), AriaEngine.StateV2.t(), [term()], keyword()) -> {:ok, term()} | {:error, String.t()}`
   - Temporal strategies: `(term(), Domain.t(), keyword()) -> {:ok, term()} | {:error, String.t()}`
   - Execution strategies: `(Domain.t(), AriaEngine.StateV2.t(), term(), keyword()) -> {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}`
-  
+
   ## Usage
-  
+
       strategies = StrategyRegistry.default_strategies()
       planning_fn = strategies.planning.htn
       temporal_fn = strategies.temporal.stn
@@ -31,19 +31,22 @@ defmodule HybridPlanner.StrategyRegistry do
   alias TemporalPlanner.{STNPlanner, STNMethod, STNAction}
 
   # Strategy function type definitions
-  @type planning_strategy :: (Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword() -> {:ok, term()} | {:error, String.t()})
-  @type temporal_strategy :: (term(), Domain.Core.t(), keyword() -> {:ok, term()} | {:error, String.t()})
-  @type execution_strategy :: (Domain.Core.t(), AriaEngine.StateV2.t(), term(), keyword() -> {:ok, AriaEngine.StateV2.t()} | {:error, String.t()})
+  @type planning_strategy :: (Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword() ->
+                                {:ok, term()} | {:error, String.t()})
+  @type temporal_strategy :: (term(), Domain.Core.t(), keyword() ->
+                                {:ok, term()} | {:error, String.t()})
+  @type execution_strategy :: (Domain.Core.t(), AriaEngine.StateV2.t(), term(), keyword() ->
+                                 {:ok, AriaEngine.StateV2.t()} | {:error, String.t()})
 
   @type strategy_map :: %{
-    planning: %{atom() => planning_strategy()},
-    temporal: %{atom() => temporal_strategy()},
-    execution: %{atom() => execution_strategy()}
-  }
+          planning: %{atom() => planning_strategy()},
+          temporal: %{atom() => temporal_strategy()},
+          execution: %{atom() => execution_strategy()}
+        }
 
   @doc """
   Get the default registry of strategy functions.
-  
+
   Returns a map of strategy categories, each containing named function strategies.
   """
   @spec default_strategies() :: strategy_map()
@@ -128,15 +131,15 @@ defmodule HybridPlanner.StrategyRegistry do
   @doc false
   def stn_temporal_strategy(plan, domain, opts) do
     current_time = Keyword.get(opts, :current_time, 0)
-    
+
     try do
       # Convert solution tree to STN methods with bridge actions
       stn_methods = solution_tree_to_stn_methods_with_bridges(plan, domain, current_time)
-      
+
       # Create STN planner for validation
       goal_id = "validation_#{:erlang.system_time(:millisecond)}"
       planner = STNPlanner.new(goal_id, :hierarchical, methods: stn_methods)
-      
+
       # Check temporal consistency
       if STNPlanner.consistent?(planner) do
         {:ok, plan}
@@ -189,10 +192,10 @@ defmodule HybridPlanner.StrategyRegistry do
   defp solution_tree_to_stn_methods_with_bridges(solution_tree, domain, current_time) do
     # Extract primitive actions from solution tree
     primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
-    
+
     # Group actions into temporal segments separated by bridge actions
     action_segments = group_actions_into_temporal_segments(primitive_actions)
-    
+
     # Convert each segment to STN method with bridges
     action_segments
     |> Enum.with_index()
@@ -209,7 +212,7 @@ defmodule HybridPlanner.StrategyRegistry do
 
   defp create_stn_method_with_bridges(action_segment, segment_index, domain, current_time) do
     method_id = "segment_#{segment_index}"
-    
+
     # Create bridge actions for HTN operations
     bridge_actions = [
       %{
@@ -233,14 +236,21 @@ defmodule HybridPlanner.StrategyRegistry do
         }
       }
     ]
-    
+
     # Create temporal STN actions for primitive actions
-    stn_actions = action_segment
-    |> Enum.with_index()
-    |> Enum.map(fn {{action_name, args}, action_index} ->
-      create_temporal_stn_action_from_primitive(action_name, args, segment_index, action_index, domain)
-    end)
-    
+    stn_actions =
+      action_segment
+      |> Enum.with_index()
+      |> Enum.map(fn {{action_name, args}, action_index} ->
+        create_temporal_stn_action_from_primitive(
+          action_name,
+          args,
+          segment_index,
+          action_index,
+          domain
+        )
+      end)
+
     # Create method with sequential decomposition (maintains original execution order)
     STNMethod.new(method_id, :sequential, stn_actions,
       bridge_actions: bridge_actions,
@@ -252,12 +262,18 @@ defmodule HybridPlanner.StrategyRegistry do
     )
   end
 
-  defp create_temporal_stn_action_from_primitive(action_name, args, segment_index, action_index, domain) do
+  defp create_temporal_stn_action_from_primitive(
+         action_name,
+         args,
+         segment_index,
+         action_index,
+         domain
+       ) do
     action_id = "#{action_name}_#{segment_index}_#{action_index}"
-    
+
     # Determine duration based on action metadata or use default
     duration = get_action_duration(action_name, domain)
-    
+
     STNAction.new(action_id,
       duration: duration,
       preconditions: [],
@@ -277,9 +293,11 @@ defmodule HybridPlanner.StrategyRegistry do
         # If duration is an Interval struct, use its duration_ms as fixed min/max
         fixed_duration = Timeline.Interval.duration_ms(interval)
         {fixed_duration, fixed_duration}
+
       %{duration: {min, max}} when is_integer(min) and is_integer(max) and min <= max ->
         # If duration is a {min, max} tuple, use it directly
         {min, max}
+
       _ ->
         # Default duration if not specified or invalid
         {1, 5}

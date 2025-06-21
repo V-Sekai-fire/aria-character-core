@@ -4,16 +4,16 @@
 defmodule State do
   @moduledoc """
   Represents the state of a planning problem using predicate-subject-fact triples.
-  
+
   This module provides functionality to manage world state using RDF-like triples,
   where each fact is represented as {predicate, subject} -> fact_value.
-  
+
   Example:
   ```elixir
   state = AriaEngine.StateV2.new()
   |> AriaEngine.StateV2.set_fact("location", "player", "room1")
   |> AriaEngine.StateV2.set_fact("has", "player", "sword")
-  
+
   AriaEngine.StateV2.get_fact(state, "location", "player")
   # => "room1"
   ```
@@ -24,8 +24,8 @@ defmodule State do
   @type fact_value :: any()
   @type triple_key :: {predicate(), subject()}
   @type t :: %__MODULE__{
-    data: %{triple_key() => fact_value()}
-  }
+          data: %{triple_key() => fact_value()}
+        }
 
   defstruct data: %{}
 
@@ -125,13 +125,13 @@ defmodule State do
   """
   @spec from_triples([{predicate(), subject(), fact_value()}]) :: t()
   def from_triples(triples) do
-    data = 
+    data =
       triples
-      |> Enum.map(fn {predicate, subject, fact_value} -> 
-        {{predicate, subject}, fact_value} 
+      |> Enum.map(fn {predicate, subject, fact_value} ->
+        {{predicate, subject}, fact_value}
       end)
       |> Map.new()
-    
+
     %__MODULE__{data: data}
   end
 
@@ -153,7 +153,7 @@ defmodule State do
 
   @doc """
   Checks if the state matches a specific predicate, subject, and fact_value pattern.
-  
+
   This function is used by the planner to check if a goal condition is satisfied
   in the current state. It returns true if the state contains the specified triple.
   """
@@ -168,7 +168,7 @@ defmodule State do
   @doc """
   Evaluates existential quantifier: checks if there exists at least one subject 
   that matches the given predicate and fact_value pattern.
-  
+
   Example:
   ```elixir
   # Check if there exists any chair that is available
@@ -185,14 +185,16 @@ defmodule State do
           filter_fn when is_function(filter_fn, 1) -> filter_fn.(subject)
           _ -> false
         end
-      _ -> false
+
+      _ ->
+        false
     end)
   end
 
   @doc """
   Evaluates universal quantifier: checks if all subjects matching the pattern
   have the specified predicate and fact_value.
-  
+
   Example:
   ```elixir
   # Check if all doors are locked
@@ -200,16 +202,16 @@ defmodule State do
   ```
   """
   @spec forall?(t(), predicate(), fact_value(), (subject() -> boolean())) :: boolean()
-  def forall?(%__MODULE__{data: data}, predicate, fact_value, subject_filter) 
+  def forall?(%__MODULE__{data: data}, predicate, fact_value, subject_filter)
       when is_function(subject_filter, 1) do
     # Find all subjects that match the filter
-    matching_subjects = 
+    matching_subjects =
       data
       |> Map.keys()
       |> Enum.map(fn {_pred, subj} -> subj end)
       |> Enum.uniq()
       |> Enum.filter(subject_filter)
-    
+
     # If no subjects match the filter, vacuous truth applies (return true)
     if Enum.empty?(matching_subjects) do
       true
@@ -223,7 +225,7 @@ defmodule State do
 
   @doc """
   Gets all subjects that have a specific predicate with a specific fact_value.
-  
+
   Example:
   ```elixir
   # Get all subjects with status "available"
@@ -234,15 +236,15 @@ defmodule State do
   @spec get_subjects_with_fact(t(), predicate(), fact_value()) :: [subject()]
   def get_subjects_with_fact(%__MODULE__{data: data}, predicate, fact_value) do
     data
-    |> Enum.filter(fn {{pred, _subj}, val} -> 
-      pred == predicate and val == fact_value 
+    |> Enum.filter(fn {{pred, _subj}, val} ->
+      pred == predicate and val == fact_value
     end)
     |> Enum.map(fn {{_pred, subj}, _val} -> subj end)
   end
 
   @doc """
   Gets all subjects that match a predicate pattern, regardless of fact_value.
-  
+
   Example:
   ```elixir
   # Get all subjects that have a "location" predicate
@@ -261,31 +263,31 @@ defmodule State do
 
   @doc """
   Evaluates a quantified condition structure.
-  
+
   Supports both existential and universal quantifiers with flexible condition patterns.
-  
+
   ## Condition Format
   ```elixir
   # Existential quantifier
   {:exists, predicate, fact_value, subject_filter}
-  
+
   # Universal quantifier  
   {:forall, predicate, fact_value, subject_filter}
-  
+
   # Regular condition (backward compatibility)
   {predicate, subject, fact_value}
   ```
-  
+
   ## Examples
   ```elixir
   # Check if any chair is available
   condition = {:exists, "status", "available", &String.contains?(&1, "chair")}
   AriaEngine.StateV2.evaluate_condition(state, condition)
-  
+
   # Check if all doors are locked
   condition = {:forall, "status", "locked", &String.contains?(&1, "door")}
   AriaEngine.StateV2.evaluate_condition(state, condition)
-  
+
   # Regular condition check
   condition = {"location", "player", "room1"}
   AriaEngine.StateV2.evaluate_condition(state, condition)
@@ -312,6 +314,7 @@ defmodule State do
       require Logger
       Logger.warning("Unknown condition format: #{inspect(condition)}")
     end
+
     false
   end
 end

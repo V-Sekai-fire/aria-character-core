@@ -8,7 +8,13 @@ defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
   @doc """
   Creates a comprehensive validation response in MCP format.
   """
-  def create_validation_response(validation_result, hybrid_result, minizinc_result, mcp_request, state) do
+  def create_validation_response(
+        validation_result,
+        hybrid_result,
+        minizinc_result,
+        mcp_request,
+        state
+      ) do
     %{
       "id" => mcp_request["id"],
       "jsonrpc" => "2.0",
@@ -59,7 +65,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
       :success ->
         solution = result.solution || %{}
         activities = solution.activities || []
-        
+
         %{
           "type" => "solution",
           "makespan" => solution.makespan || 0,
@@ -67,26 +73,26 @@ defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
           "resource_utilization" => solution.resource_utilization || %{},
           "solve_time_ms" => result.solve_time_ms || 0
         }
-        
+
       :error ->
         %{
           "type" => "error",
           "error" => result.error || "Unknown error",
           "solve_time_ms" => result.solve_time_ms || 0
         }
-        
+
       :unavailable ->
         %{
           "type" => "unavailable",
           "reason" => result.reason || "Solver not available"
         }
-        
+
       :unsupported ->
         %{
           "type" => "unsupported",
           "reason" => result.reason || "Problem type not supported"
         }
-        
+
       _ ->
         %{
           "type" => "unknown",

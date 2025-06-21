@@ -18,30 +18,32 @@ defmodule Plan.Core do
 
   @type node_id :: String.t()
   @type solution_node :: %{
-    id: node_id(),
-    task: todo_item(),
-    parent_id: node_id() | nil,
-    children_ids: [node_id()],
-    state: AriaEngine.StateV2.t() | nil,
-    visited: boolean(),
-    expanded: boolean(),
-    method_tried: String.t() | nil,
-    blacklisted_methods: [String.t()],
-    is_primitive: boolean(),
-    is_durative: boolean() # New field to indicate if the action is durative
-  }
+          id: node_id(),
+          task: todo_item(),
+          parent_id: node_id() | nil,
+          children_ids: [node_id()],
+          state: AriaEngine.StateV2.t() | nil,
+          visited: boolean(),
+          expanded: boolean(),
+          method_tried: String.t() | nil,
+          blacklisted_methods: [String.t()],
+          is_primitive: boolean(),
+          # New field to indicate if the action is durative
+          is_durative: boolean()
+        }
 
   @type solution_tree :: %{
-    root_id: node_id(),
-    nodes: %{node_id() => solution_node()},
-    blacklisted_commands: MapSet.t(),
-    goal_network: %{node_id() => [node_id()]}
-  }
+          root_id: node_id(),
+          nodes: %{node_id() => solution_node()},
+          blacklisted_commands: MapSet.t(),
+          goal_network: %{node_id() => [node_id()]}
+        }
 
   @type plan_result :: {:ok, solution_tree()} | {:error, String.t()}
 
   @default_max_depth 100
-  @default_replan_depth 10 # New default replanning depth
+  # New default replanning depth
+  @default_replan_depth 10
   @default_verbose 0
 
   # Helper to conditionally output debug information
@@ -82,7 +84,8 @@ defmodule Plan.Core do
   end
 
   # Core IPyHOP Algorithm (Algorithm 2 from the paper)
-  @spec ipyhop(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) :: plan_result()
+  @spec ipyhop(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+          plan_result()
   def ipyhop(domain, %AriaEngine.StateV2{} = current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
     max_depth = Keyword.get(opts, :max_depth, @default_max_depth)
@@ -91,18 +94,28 @@ defmodule Plan.Core do
     plan_decomposition_loop(domain, current_state, solution_tree, 0, max_depth, verbose)
   end
 
-  @spec plan_decomposition_loop(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), integer(), integer(), integer()) :: plan_result()
+  @spec plan_decomposition_loop(
+          Domain.Core.t(),
+          AriaEngine.StateV2.t(),
+          solution_tree(),
+          integer(),
+          integer(),
+          integer()
+        ) :: plan_result()
   defp plan_decomposition_loop(domain, current_state, solution_tree, depth, max_depth, verbose) do
     Process.put(:verbose_level, verbose)
-    
+
     if verbose > 3 do
-      debug_puts("PLAN_DECOMPOSITION_LOOP: Depth #{depth}, Nodes: #{Kernel.map_size(solution_tree.nodes)}")
+      debug_puts(
+        "PLAN_DECOMPOSITION_LOOP: Depth #{depth}, Nodes: #{Kernel.map_size(solution_tree.nodes)}"
+      )
     end
 
     if depth >= max_depth do
       if verbose > 0 do
         debug_puts("PLAN_DECOMPOSITION_LOOP: Maximum planning depth exceeded at depth #{depth}")
       end
+
       {:error, "Maximum planning depth exceeded"}
     else
       # Find next unexpanded node
@@ -113,48 +126,88 @@ defmodule Plan.Core do
             if verbose > 0 do
               debug_puts("PLAN_DECOMPOSITION_LOOP: Solution complete.")
             end
+
             {:ok, solution_tree}
           else
             if verbose > 0 do
-              debug_puts("PLAN_DECOMPOSITION_LOOP: No complete solution found after all nodes expanded.")
+              debug_puts(
+                "PLAN_DECOMPOSITION_LOOP: No complete solution found after all nodes expanded."
+              )
             end
+
             {:error, "No complete solution found"}
           end
 
         node_id ->
           if verbose > 3 do
-            debug_puts("PLAN_DECOMPOSITION_LOOP: Expanding node #{node_id} (Task: #{inspect(solution_tree.nodes[node_id].task)})")
+            debug_puts(
+              "PLAN_DECOMPOSITION_LOOP: Expanding node #{node_id} (Task: #{inspect(solution_tree.nodes[node_id].task)})"
+            )
           end
+
           # Try to expand this node
           case try_expand_node(domain, current_state, solution_tree, node_id, verbose) do
             {:ok, new_tree} ->
               if verbose > 3 do
                 debug_puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expanded successfully.")
               end
-              plan_decomposition_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
+
+              plan_decomposition_loop(
+                domain,
+                current_state,
+                new_tree,
+                depth + 1,
+                max_depth,
+                verbose
+              )
 
             {:error, reason} ->
               if verbose > 0 do
                 debug_puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion failed: #{reason}")
               end
+
               {:error, reason}
 
-            {:failure, failed_tree} -> # Capture the tree with the failed method info
+            # Capture the tree with the failed method info
+            {:failure, failed_tree} ->
               if verbose > 0 do
-                debug_puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion returned :failure, attempting backtrack.")
+                debug_puts(
+                  "PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion returned :failure, attempting backtrack."
+                )
               end
+
               # Backtrack and try alternatives
-              case Backtracking.backtrack_and_retry(domain, current_state, failed_tree, node_id, depth, max_depth, verbose) do # Pass failed_tree
+              # Pass failed_tree
+              case Backtracking.backtrack_and_retry(
+                     domain,
+                     current_state,
+                     failed_tree,
+                     node_id,
+                     depth,
+                     max_depth,
+                     verbose
+                   ) do
                 {:ok, new_tree} ->
                   if verbose > 0 do
-                    debug_puts("PLAN_DECOMPOSITION_LOOP: Backtrack succeeded, continuing planning.")
+                    debug_puts(
+                      "PLAN_DECOMPOSITION_LOOP: Backtrack succeeded, continuing planning."
+                    )
                   end
-                  plan_decomposition_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
+
+                  plan_decomposition_loop(
+                    domain,
+                    current_state,
+                    new_tree,
+                    depth + 1,
+                    max_depth,
+                    verbose
+                  )
 
                 {:error, reason} ->
                   if verbose > 0 do
                     debug_puts("PLAN_DECOMPOSITION_LOOP: Backtrack failed: #{reason}")
                   end
+
                   {:error, reason}
               end
           end
@@ -171,7 +224,9 @@ defmodule Plan.Core do
   @spec find_next_node_dfs(solution_tree(), node_id()) :: node_id() | nil
   defp find_next_node_dfs(solution_tree, node_id) do
     case solution_tree.nodes[node_id] do
-      nil -> nil
+      nil ->
+        nil
+
       node ->
         cond do
           not node.expanded and not node.is_primitive ->
@@ -181,9 +236,11 @@ defmodule Plan.Core do
           Enum.empty?(node.children_ids) ->
             # Leaf node, check if it's primitive or already expanded
             if node.is_primitive or node.expanded do
-              nil  # Primitive action or already expanded leaf, no expansion needed
+              # Primitive action or already expanded leaf, no expansion needed
+              nil
             else
-              node_id  # Non-primitive, non-expanded leaf needs expansion
+              # Non-primitive, non-expanded leaf needs expansion
+              node_id
             end
 
           true ->
@@ -196,8 +253,14 @@ defmodule Plan.Core do
   end
 
   # Try to expand a node
-  @spec try_expand_node(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), integer()) ::
-    {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
+  @spec try_expand_node(
+          Domain.Core.t(),
+          AriaEngine.StateV2.t(),
+          solution_tree(),
+          node_id(),
+          integer()
+        ) ::
+          {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   defp try_expand_node(domain, state, solution_tree, node_id, verbose) do
     case solution_tree.nodes[node_id] do
       nil ->
@@ -214,30 +277,59 @@ defmodule Plan.Core do
 
           {task_name, args} when is_binary(task_name) ->
             action_atom = String.to_atom(task_name)
+
             cond do
               Domain.has_action?(domain, action_atom) ->
                 NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
+
               Domain.Core.get_durative_action(domain, action_atom) ->
                 NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
+
               true ->
-                NodeExpansion.expand_task_node(domain, state, solution_tree, node_id, task_name, args, verbose)
+                NodeExpansion.expand_task_node(
+                  domain,
+                  state,
+                  solution_tree,
+                  node_id,
+                  task_name,
+                  args,
+                  verbose
+                )
             end
 
           {action_name, _args} when is_atom(action_name) ->
             cond do
               Domain.has_action?(domain, action_name) ->
                 NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
+
               Domain.Core.get_durative_action(domain, action_name) ->
                 NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
+
               true ->
                 {:error, "Unknown action: #{action_name}"}
             end
 
           {predicate, subject, fact_value} ->
-            NodeExpansion.expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose)
+            NodeExpansion.expand_goal_node(
+              domain,
+              state,
+              solution_tree,
+              node_id,
+              predicate,
+              subject,
+              fact_value,
+              verbose
+            )
 
           %Multigoal{} = multigoal ->
-            NodeExpansion.expand_multigoal_node(domain, state, solution_tree, node_id, multigoal, verbose)
+            NodeExpansion.expand_multigoal_node(
+              domain,
+              state,
+              solution_tree,
+              node_id,
+              multigoal,
+              verbose
+            )
 
           _ ->
             {:error, "Unknown task type: #{inspect(node.task)}"}
@@ -250,7 +342,7 @@ defmodule Plan.Core do
     # All nodes should be expanded and all leaves should be primitive actions
     # Root node is complete if expanded (even with no children for empty goals)
     Enum.all?(solution_tree.nodes, fn {id, node} ->
-      is_root = (id == solution_tree.root_id)
+      is_root = id == solution_tree.root_id
       node.expanded and (node.is_primitive or not Enum.empty?(node.children_ids) or is_root)
     end)
   end

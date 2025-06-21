@@ -10,20 +10,19 @@ defmodule HybridPlanner.DataStructures do
   defmodule EncapsulatedPlan do
     @moduledoc """
     Opaque plan structure that hides internal solution tree complexity.
-    
+
     This provides a clean public interface while completely encapsulating
     the internal Plan.solution_tree() structure.
     """
 
     @opaque t :: %__MODULE__{
-      internal_plan: Plan.solution_tree(),
-      metadata: map(),
-      creation_time: DateTime.t(),
-      temporal_validated: boolean()
-    }
+              internal_plan: Plan.solution_tree(),
+              metadata: map(),
+              creation_time: DateTime.t(),
+              temporal_validated: boolean()
+            }
 
     defstruct [:internal_plan, :metadata, :creation_time, :temporal_validated]
-
 
     @doc """
     Create a new encapsulated plan from an internal solution tree.
@@ -126,12 +125,12 @@ defmodule HybridPlanner.DataStructures do
     """
 
     @opaque t :: %__MODULE__{
-      current_depth: integer(),
-      max_depth: integer(),
-      blacklisted_methods: MapSet.t(),
-      planning_options: keyword(),
-      verbose_level: integer()
-    }
+              current_depth: integer(),
+              max_depth: integer(),
+              blacklisted_methods: MapSet.t(),
+              planning_options: keyword(),
+              verbose_level: integer()
+            }
 
     defstruct [
       :current_depth,

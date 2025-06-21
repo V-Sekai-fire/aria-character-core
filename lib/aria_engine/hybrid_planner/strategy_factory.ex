@@ -4,15 +4,15 @@
 defmodule HybridPlanner.StrategyFactory do
   @moduledoc """
   Factory and registry for creating and managing hybrid planner strategies.
-  
+
   This module provides centralized strategy management including:
   - Strategy registration and lookup
   - Dynamic strategy composition
   - Configuration-based strategy selection
   - Runtime strategy validation and swapping
-  
+
   ## Usage
-  
+
       # Register strategies
       factory = StrategyFactory.new()
       |> StrategyFactory.register_strategy(:planning, :default, 
@@ -44,18 +44,23 @@ defmodule HybridPlanner.StrategyFactory do
     :metadata
   ]
 
-  @type strategy_type :: :planning_strategy | :temporal_strategy | :state_strategy | 
-                        :domain_strategy | :logging_strategy | :execution_strategy
+  @type strategy_type ::
+          :planning_strategy
+          | :temporal_strategy
+          | :state_strategy
+          | :domain_strategy
+          | :logging_strategy
+          | :execution_strategy
 
   @type strategy_key :: atom()
   @type strategy_module :: module()
   @type strategy_config :: %{strategy_type() => strategy_key()}
 
   @type t :: %__MODULE__{
-    strategies: %{strategy_type() => %{strategy_key() => strategy_module()}},
-    configurations: %{atom() => strategy_config()},
-    metadata: map()
-  }
+          strategies: %{strategy_type() => %{strategy_key() => strategy_module()}},
+          configurations: %{atom() => strategy_config()},
+          metadata: map()
+        }
 
   # ==================== CONSTRUCTOR ====================
 
@@ -111,7 +116,7 @@ defmodule HybridPlanner.StrategyFactory do
     current_strategies = Map.get(factory.strategies, strategy_type, %{})
     updated_strategy_map = Map.put(current_strategies, strategy_key, strategy_module)
     updated_strategies = Map.put(factory.strategies, strategy_type, updated_strategy_map)
-    
+
     %{factory | strategies: updated_strategies}
   end
 
@@ -128,7 +133,8 @@ defmodule HybridPlanner.StrategyFactory do
   @doc """
   Get a registered strategy by type and key.
   """
-  @spec get_strategy(t(), strategy_type(), strategy_key()) :: {:ok, strategy_module()} | {:error, String.t()}
+  @spec get_strategy(t(), strategy_type(), strategy_key()) ::
+          {:ok, strategy_module()} | {:error, String.t()}
   def get_strategy(%__MODULE__{} = factory, strategy_type, strategy_key) do
     case get_in(factory.strategies, [strategy_type, strategy_key]) do
       nil -> {:error, "Strategy not found: #{strategy_type}:#{strategy_key}"}
@@ -187,8 +193,8 @@ defmodule HybridPlanner.StrategyFactory do
   @doc """
   Create a hybrid coordinator from a strategy configuration.
   """
-  @spec create_coordinator(t(), strategy_config() | atom(), keyword()) :: 
-    {:ok, HybridCoordinatorV2.t()} | {:error, String.t()}
+  @spec create_coordinator(t(), strategy_config() | atom(), keyword()) ::
+          {:ok, HybridCoordinatorV2.t()} | {:error, String.t()}
   def create_coordinator(factory, config, opts \\ [])
 
   def create_coordinator(%__MODULE__{} = factory, config_name, opts) when is_atom(config_name) do
@@ -198,7 +204,8 @@ defmodule HybridPlanner.StrategyFactory do
     end
   end
 
-  def create_coordinator(%__MODULE__{} = factory, strategy_config, opts) when is_map(strategy_config) do
+  def create_coordinator(%__MODULE__{} = factory, strategy_config, opts)
+      when is_map(strategy_config) do
     try do
       # Resolve strategy modules from configuration
       case resolve_strategy_modules(factory, strategy_config) do
@@ -231,12 +238,19 @@ defmodule HybridPlanner.StrategyFactory do
   @doc """
   Swap a strategy in an existing coordinator.
   """
-  @spec swap_strategy(HybridCoordinatorV2.t(), strategy_type(), strategy_key(), t()) :: 
-    {:ok, HybridCoordinatorV2.t()} | {:error, String.t()}
-  def swap_strategy(%HybridCoordinatorV2{} = coordinator, strategy_type, strategy_key, %__MODULE__{} = factory) do
+  @spec swap_strategy(HybridCoordinatorV2.t(), strategy_type(), strategy_key(), t()) ::
+          {:ok, HybridCoordinatorV2.t()} | {:error, String.t()}
+  def swap_strategy(
+        %HybridCoordinatorV2{} = coordinator,
+        strategy_type,
+        strategy_key,
+        %__MODULE__{} = factory
+      ) do
     case get_strategy(factory, strategy_type, strategy_key) do
       {:ok, new_strategy_module} ->
-        updated_coordinator = HybridCoordinatorV2.replace_strategy(coordinator, strategy_type, new_strategy_module)
+        updated_coordinator =
+          HybridCoordinatorV2.replace_strategy(coordinator, strategy_type, new_strategy_module)
+
         {:ok, updated_coordinator}
 
       {:error, reason} ->
@@ -247,8 +261,8 @@ defmodule HybridPlanner.StrategyFactory do
   @doc """
   Create a new coordinator by modifying an existing configuration.
   """
-  @spec modify_configuration(t(), atom(), strategy_config(), keyword()) :: 
-    {:ok, HybridCoordinatorV2.t()} | {:error, String.t()}
+  @spec modify_configuration(t(), atom(), strategy_config(), keyword()) ::
+          {:ok, HybridCoordinatorV2.t()} | {:error, String.t()}
   def modify_configuration(%__MODULE__{} = factory, base_config_name, modifications, opts \\ []) do
     case get_configuration(factory, base_config_name) do
       {:ok, base_config} ->
@@ -269,12 +283,13 @@ defmodule HybridPlanner.StrategyFactory do
   def compose_configurations(%__MODULE__{} = factory, config_names, new_config_name) do
     try do
       # Collect all configurations
-      configs = Enum.map(config_names, fn name ->
-        case get_configuration(factory, name) do
-          {:ok, config} -> config
-          {:error, reason} -> throw({:error, reason})
-        end
-      end)
+      configs =
+        Enum.map(config_names, fn name ->
+          case get_configuration(factory, name) do
+            {:ok, config} -> config
+            {:error, reason} -> throw({:error, reason})
+          end
+        end)
 
       # Merge configurations (later configs override earlier ones)
       composed_config = Enum.reduce(configs, %{}, &Map.merge/2)
@@ -300,21 +315,29 @@ defmodule HybridPlanner.StrategyFactory do
   """
   @spec validate_strategy_configuration(t(), strategy_config()) :: :ok | {:error, String.t()}
   def validate_strategy_configuration(%__MODULE__{} = factory, strategy_config) do
-    required_strategies = [:planning_strategy, :temporal_strategy, :state_strategy, 
-                          :domain_strategy, :logging_strategy, :execution_strategy]
+    required_strategies = [
+      :planning_strategy,
+      :temporal_strategy,
+      :state_strategy,
+      :domain_strategy,
+      :logging_strategy,
+      :execution_strategy
+    ]
 
     # Check all required strategies are present
-    missing_strategies = required_strategies
-    |> Enum.filter(fn strategy_type -> not Map.has_key?(strategy_config, strategy_type) end)
+    missing_strategies =
+      required_strategies
+      |> Enum.filter(fn strategy_type -> not Map.has_key?(strategy_config, strategy_type) end)
 
     if length(missing_strategies) > 0 do
       {:error, "Missing required strategies: #{inspect(missing_strategies)}"}
     else
       # Validate each strategy exists in registry
-      validation_results = Enum.map(required_strategies, fn strategy_type ->
-        strategy_key = Map.get(strategy_config, strategy_type)
-        get_strategy(factory, strategy_type, strategy_key)
-      end)
+      validation_results =
+        Enum.map(required_strategies, fn strategy_type ->
+          strategy_key = Map.get(strategy_config, strategy_type)
+          get_strategy(factory, strategy_type, strategy_key)
+        end)
 
       case Enum.find(validation_results, fn result -> match?({:error, _}, result) end) do
         nil -> :ok
@@ -376,16 +399,16 @@ defmodule HybridPlanner.StrategyFactory do
     |> register_configuration(:quiet, quiet_config)
   end
 
-
   # Resolve strategy configuration to actual strategy modules
   defp resolve_strategy_modules(factory, strategy_config) do
     try do
-      resolved_modules = Enum.map(strategy_config, fn {strategy_type, strategy_key} ->
-        case get_strategy(factory, strategy_type, strategy_key) do
-          {:ok, module} -> {strategy_type, module}
-          {:error, reason} -> throw({:error, reason})
-        end
-      end)
+      resolved_modules =
+        Enum.map(strategy_config, fn {strategy_type, strategy_key} ->
+          case get_strategy(factory, strategy_type, strategy_key) do
+            {:ok, module} -> {strategy_type, module}
+            {:error, reason} -> throw({:error, reason})
+          end
+        end)
 
       {:ok, Enum.into(resolved_modules, %{})}
     catch

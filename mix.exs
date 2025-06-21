@@ -21,7 +21,7 @@ defmodule AriaCharacterCore.MixProject do
       dialyzer: [
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
         ignore_warnings: ".dialyzer_ignore.exs"
-      ],
+      ]
     ]
   end
 
@@ -118,7 +118,6 @@ defmodule AriaCharacterCore.MixProject do
       # UUID Generation
       {:elixir_uuid, "~> 1.2"},
       {:uuid, "~> 1.1", app: false},
-
       {:iso8601, "~> 1.3"},
       {:timex, "~> 3.7"},
 
@@ -136,13 +135,19 @@ defmodule AriaCharacterCore.MixProject do
     [
       "test.all": ["test"],
       "test.setup": ["test"],
-      test: ["test --exclude type_check_strict"], # Exclude type_check_strict tests by default
+      # Exclude type_check_strict tests by default
+      test: ["test --exclude type_check_strict"],
       "test.watch": ["test.watch"],
       setup: ["deps.get"],
       format: ["format"],
       quality: ["credo --strict", "dialyzer"],
       "cycle.analyze": ["run scripts/analyze_commit_cycles.exs"],
-      "cycle.format": ["cmd", "sh", "-c", "elixir scripts/analyze_commit_cycles.exs --format-commit"]
+      "cycle.format": [
+        "cmd",
+        "sh",
+        "-c",
+        "elixir scripts/analyze_commit_cycles.exs --format-commit"
+      ]
     ]
   end
 end

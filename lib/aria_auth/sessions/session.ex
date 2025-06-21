@@ -8,12 +8,12 @@ defmodule AriaAuth.Sessions.Session do
   alias AriaAuth.Accounts.User
 
   schema "sessions" do
-    field :token, :string
-    field :refresh_token, :string
-    field :expires_at, :utc_datetime
-    field :last_activity_at, :utc_datetime
+    field(:token, :string)
+    field(:refresh_token, :string)
+    field(:expires_at, :utc_datetime)
+    field(:last_activity_at, :utc_datetime)
 
-    belongs_to :user, User
+    belongs_to(:user, User)
 
     timestamps()
   end

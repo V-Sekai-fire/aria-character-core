@@ -119,13 +119,14 @@ defmodule Timeline do
 
   @doc """
   Creates a new Timeline with STN configuration options.
-  
+
   This function provides access to STN configuration while maintaining
   Timeline as the primary interface.
   """
   @spec new_with_stn_opts(keyword()) :: t()
   def new_with_stn_opts(stn_opts) do
     stn = STN.new(stn_opts)
+
     %__MODULE__{
       intervals: %{},
       stn: stn,
@@ -139,6 +140,7 @@ defmodule Timeline do
   @spec new_constant_work(keyword()) :: t()
   def new_constant_work(opts \\ []) do
     stn = STN.new_constant_work(opts)
+
     %__MODULE__{
       intervals: %{},
       stn: stn,
@@ -192,19 +194,19 @@ defmodule Timeline do
 
   @doc """
   Computes the intersection of two Timelines.
-  
+
   Returns a Timeline with constraints that satisfy both input Timelines.
   """
   @spec intersection(t(), t()) :: t()
   def intersection(timeline1, timeline2) do
     intersected_stn = STN.intersection(timeline1.stn, timeline2.stn)
-    
+
     # Merge intervals from both timelines
     merged_intervals = Map.merge(timeline1.intervals, timeline2.intervals)
-    
+
     # Merge metadata
     merged_metadata = Map.merge(timeline1.metadata, timeline2.metadata)
-    
+
     %__MODULE__{
       intervals: merged_intervals,
       stn: intersected_stn,
@@ -214,19 +216,19 @@ defmodule Timeline do
 
   @doc """
   Computes the union of two Timelines.
-  
+
   Returns a Timeline with constraints that allow either input Timeline to be satisfied.
   """
   @spec union(t(), t()) :: t()
   def union(timeline1, timeline2) do
     union_stn = STN.union(timeline1.stn, timeline2.stn)
-    
+
     # Merge intervals from both timelines
     merged_intervals = Map.merge(timeline1.intervals, timeline2.intervals)
-    
+
     # Merge metadata
     merged_metadata = Map.merge(timeline1.metadata, timeline2.metadata)
-    
+
     %__MODULE__{
       intervals: merged_intervals,
       stn: union_stn,
@@ -236,27 +238,28 @@ defmodule Timeline do
 
   @doc """
   Chains multiple Timelines sequentially.
-  
+
   Returns a Timeline where the Timelines are executed in sequence.
   """
   @spec chain([t()]) :: t()
   def chain([]), do: new()
   def chain([single_timeline]), do: single_timeline
+
   def chain(timelines) when is_list(timelines) do
     stns = Enum.map(timelines, & &1.stn)
     chained_stn = STN.chain(stns)
-    
+
     # Merge all intervals and metadata
-    merged_intervals = 
+    merged_intervals =
       timelines
       |> Enum.map(& &1.intervals)
       |> Enum.reduce(%{}, &Map.merge/2)
-    
-    merged_metadata = 
+
+    merged_metadata =
       timelines
       |> Enum.map(& &1.metadata)
       |> Enum.reduce(%{}, &Map.merge/2)
-    
+
     %__MODULE__{
       intervals: merged_intervals,
       stn: chained_stn,
@@ -266,27 +269,28 @@ defmodule Timeline do
 
   @doc """
   Joins multiple Timelines in parallel.
-  
+
   Returns a Timeline where the Timelines can be executed concurrently.
   """
   @spec parallel_join([t()]) :: t()
   def parallel_join([]), do: new()
   def parallel_join([single_timeline]), do: single_timeline
+
   def parallel_join(timelines) when is_list(timelines) do
     stns = Enum.map(timelines, & &1.stn)
     parallel_stn = STN.parallel_join(stns)
-    
+
     # Merge all intervals and metadata
-    merged_intervals = 
+    merged_intervals =
       timelines
       |> Enum.map(& &1.intervals)
       |> Enum.reduce(%{}, &Map.merge/2)
-    
-    merged_metadata = 
+
+    merged_metadata =
       timelines
       |> Enum.map(& &1.metadata)
       |> Enum.reduce(%{}, &Map.merge/2)
-    
+
     %__MODULE__{
       intervals: merged_intervals,
       stn: parallel_stn,
@@ -296,19 +300,19 @@ defmodule Timeline do
 
   @doc """
   Composes two Timelines.
-  
+
   Returns a Timeline representing the composition of the two input Timelines.
   """
   @spec compose(t(), t()) :: t()
   def compose(timeline1, timeline2) do
     composed_stn = STN.compose(timeline1.stn, timeline2.stn)
-    
+
     # Merge intervals from both timelines
     merged_intervals = Map.merge(timeline1.intervals, timeline2.intervals)
-    
+
     # Merge metadata
     merged_metadata = Map.merge(timeline1.metadata, timeline2.metadata)
-    
+
     %__MODULE__{
       intervals: merged_intervals,
       stn: composed_stn,
@@ -340,7 +344,7 @@ defmodule Timeline do
 
   @doc """
   Gets the underlying STN for compatibility during migration.
-  
+
   This function should only be used during the migration period and will be
   removed once all external modules use the Timeline API.
   """
@@ -349,7 +353,7 @@ defmodule Timeline do
 
   @doc """
   Creates a Timeline from an existing STN.
-  
+
   This function should only be used during the migration period and will be
   removed once all external modules use the Timeline API.
   """

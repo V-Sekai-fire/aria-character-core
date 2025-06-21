@@ -63,7 +63,9 @@ defmodule Domain do
   defdelegate has_task_methods?(domain, task_name), to: Methods
   defdelegate has_unigoal_methods?(domain, goal_type), to: Methods
 
-  defdelegate verify_goal(state, method_name, state_var, args, desired_values, depth, verbose), to: Utils
+  defdelegate verify_goal(state, method_name, state_var, args, desired_values, depth, verbose),
+    to: Utils
+
   defdelegate summary(domain), to: Utils
   defdelegate add_porcelain_actions(domain), to: Utils
   defdelegate create_complete_domain(name \\ "complete"), to: Utils
@@ -77,10 +79,4 @@ defmodule Domain do
   defdelegate durative_actions(domain), to: BehaviourImpl
 
   defdelegate get_durative_action(domain, name), to: Core
-
-
-
-
-
-
 end

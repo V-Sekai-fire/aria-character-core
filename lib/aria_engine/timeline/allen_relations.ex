@@ -54,10 +54,22 @@ defmodule Timeline.IntervalRelations do
 
   alias Timeline.Interval
 
-  @type locale :: atom()  # :en, :es, :fr, :de, etc.
-  @type relation :: 
-    :before | :after | :meets | :met_by | :overlaps | :overlapped_by |
-    :starts | :started_by | :during | :contains | :finishes | :finished_by | :equals
+  # :en, :es, :fr, :de, etc.
+  @type locale :: atom()
+  @type relation ::
+          :before
+          | :after
+          | :meets
+          | :met_by
+          | :overlaps
+          | :overlapped_by
+          | :starts
+          | :started_by
+          | :during
+          | :contains
+          | :finishes
+          | :finished_by
+          | :equals
 
   # Allen's 13 Interval Relations Implementation
 
@@ -136,12 +148,12 @@ defmodule Timeline.IntervalRelations do
   """
   @spec overlaps?(Interval.t(), Interval.t()) :: boolean()
   def overlaps?(
-        %Interval{start_time: start1, end_time: end1}, 
+        %Interval{start_time: start1, end_time: end1},
         %Interval{start_time: start2, end_time: end2}
       ) do
-    compare_times(start1, start2) < 0 and 
-    compare_times(start2, end1) < 0 and 
-    compare_times(end1, end2) < 0
+    compare_times(start1, start2) < 0 and
+      compare_times(start2, end1) < 0 and
+      compare_times(end1, end2) < 0
   end
 
   @doc """
@@ -170,7 +182,7 @@ defmodule Timeline.IntervalRelations do
   """
   @spec starts?(Interval.t(), Interval.t()) :: boolean()
   def starts?(
-        %Interval{start_time: start1, end_time: end1}, 
+        %Interval{start_time: start1, end_time: end1},
         %Interval{start_time: start2, end_time: end2}
       ) do
     compare_times(start1, start2) == 0 and compare_times(end1, end2) < 0
@@ -202,7 +214,7 @@ defmodule Timeline.IntervalRelations do
   """
   @spec during?(Interval.t(), Interval.t()) :: boolean()
   def during?(
-        %Interval{start_time: start1, end_time: end1}, 
+        %Interval{start_time: start1, end_time: end1},
         %Interval{start_time: start2, end_time: end2}
       ) do
     compare_times(start2, start1) < 0 and compare_times(end1, end2) < 0
@@ -234,7 +246,7 @@ defmodule Timeline.IntervalRelations do
   """
   @spec finishes?(Interval.t(), Interval.t()) :: boolean()
   def finishes?(
-        %Interval{start_time: start1, end_time: end1}, 
+        %Interval{start_time: start1, end_time: end1},
         %Interval{start_time: start2, end_time: end2}
       ) do
     compare_times(start2, start1) < 0 and compare_times(end1, end2) == 0
@@ -266,7 +278,7 @@ defmodule Timeline.IntervalRelations do
   """
   @spec equals?(Interval.t(), Interval.t()) :: boolean()
   def equals?(
-        %Interval{start_time: start1, end_time: end1}, 
+        %Interval{start_time: start1, end_time: end1},
         %Interval{start_time: start2, end_time: end2}
       ) do
     compare_times(start1, start2) == 0 and compare_times(end1, end2) == 0
@@ -302,7 +314,8 @@ defmodule Timeline.IntervalRelations do
       finishes?(interval1, interval2) -> :finishes
       finished_by?(interval1, interval2) -> :finished_by
       equals?(interval1, interval2) -> :equals
-      true -> :unknown  # Should not happen with valid intervals
+      # Should not happen with valid intervals
+      true -> :unknown
     end
   end
 
@@ -342,8 +355,19 @@ defmodule Timeline.IntervalRelations do
   @spec valid_relation?(atom()) :: boolean()
   def valid_relation?(relation) do
     relation in [
-      :before, :after, :meets, :met_by, :overlaps, :overlapped_by,
-      :starts, :started_by, :during, :contains, :finishes, :finished_by, :equals
+      :before,
+      :after,
+      :meets,
+      :met_by,
+      :overlaps,
+      :overlapped_by,
+      :starts,
+      :started_by,
+      :during,
+      :contains,
+      :finishes,
+      :finished_by,
+      :equals
     ]
   end
 
@@ -382,7 +406,7 @@ defmodule Timeline.IntervalRelations do
     translations = %{
       en: %{
         before: "before",
-        after: "after", 
+        after: "after",
         meets: "meets",
         met_by: "met by",
         overlaps: "overlaps",

@@ -1,7 +1,7 @@
 defmodule AriaEngine.Membrane.PlannerFilterTest do
   @moduledoc """
   Isolated unit tests for the PlannerFilter Membrane element.
-  
+
   These tests focus specifically on the PlannerFilter's core functionality:
   - Planning execution with valid inputs
   - Error handling for invalid inputs
@@ -60,6 +60,7 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
         timeout_ms: 30_000,
         strategy_config: %{}
       }
+
       {[], state} = PlannerFilter.handle_init(nil, opts)
       %{state: state}
     end
@@ -90,7 +91,8 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
       assert [{:buffer, {:output, output_buffer}}] = actions
       assert %PlanningResult{} = result = output_buffer.payload
       assert result.request_id == "test_request_123"
-      assert result.status in [:success, :error]  # Either is valid for this test
+      # Either is valid for this test
+      assert result.status in [:success, :error]
       assert is_map(result.execution_metadata)
       assert is_map(result.performance_metrics)
       assert is_integer(result.performance_metrics.execution_time_ms)
@@ -134,7 +136,8 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
       }
 
       # Update state with very short timeout
-      short_timeout_state = %{state | timeout_ms: 1}  # 1ms timeout
+      # 1ms timeout
+      short_timeout_state = %{state | timeout_ms: 1}
       buffer = %Buffer{payload: planning_params}
 
       # Execute the planning
@@ -160,26 +163,28 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
         timeout_ms: 30_000,
         strategy_config: %{}
       }
+
       {[], state} = PlannerFilter.handle_init(nil, opts)
       %{state: state}
     end
 
     test "tracks execution statistics", %{state: initial_state} do
       # Execute multiple planning requests
-      state = Enum.reduce(1..3, initial_state, fn i, acc_state ->
-        planning_params = %PlanningParams{
-          domain: nil,
-          state: nil,
-          goals: [%{type: "goal", id: i}],
-          options: [],
-          request_id: "stats_test_#{i}",
-          conversion_metadata: %{converted_at: DateTime.utc_now()}
-        }
+      state =
+        Enum.reduce(1..3, initial_state, fn i, acc_state ->
+          planning_params = %PlanningParams{
+            domain: nil,
+            state: nil,
+            goals: [%{type: "goal", id: i}],
+            options: [],
+            request_id: "stats_test_#{i}",
+            conversion_metadata: %{converted_at: DateTime.utc_now()}
+          }
 
-        buffer = %Buffer{payload: planning_params}
-        {_actions, new_state} = PlannerFilter.handle_buffer(:input, buffer, nil, acc_state)
-        new_state
-      end)
+          buffer = %Buffer{payload: planning_params}
+          {_actions, new_state} = PlannerFilter.handle_buffer(:input, buffer, nil, acc_state)
+          new_state
+        end)
 
       # Verify statistics
       assert state.executed_count == 3
@@ -189,25 +194,28 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
 
     test "calculates statistics correctly", %{state: state} do
       # Manually test the statistics calculation logic
-      test_state = %{state | 
-        executed_count: 5,
-        success_count: 3,
-        error_count: 2,
-        total_planning_time_ms: 1000
+      test_state = %{
+        state
+        | executed_count: 5,
+          success_count: 3,
+          error_count: 2,
+          total_planning_time_ms: 1000
       }
 
       # Test the calculation logic that would be used in handle_info
-      avg_time = if test_state.executed_count > 0 do
-        div(test_state.total_planning_time_ms, test_state.executed_count)
-      else
-        0
-      end
+      avg_time =
+        if test_state.executed_count > 0 do
+          div(test_state.total_planning_time_ms, test_state.executed_count)
+        else
+          0
+        end
 
-      success_rate = if test_state.executed_count > 0 do
-        test_state.success_count / test_state.executed_count
-      else
-        0.0
-      end
+      success_rate =
+        if test_state.executed_count > 0 do
+          test_state.success_count / test_state.executed_count
+        else
+          0.0
+        end
 
       assert test_state.executed_count == 5
       assert test_state.success_count == 3
@@ -232,7 +240,7 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
     setup do
       # Set up telemetry capture
       test_pid = self()
-      
+
       :telemetry.attach_many(
         "planner_filter_test",
         [
@@ -254,6 +262,7 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
         timeout_ms: 30_000,
         strategy_config: %{}
       }
+
       {[], state} = PlannerFilter.handle_init(nil, opts)
       %{state: state}
     end
@@ -266,10 +275,9 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
       {_actions, _new_state} = PlannerFilter.handle_buffer(:input, buffer, nil, state)
 
       # Check for telemetry event
-      assert_receive {:telemetry, 
-        [:test, :planner_filter, :planning_error], 
-        %{count: 1}, 
-        metadata}, 1000
+      assert_receive {:telemetry, [:test, :planner_filter, :planning_error], %{count: 1},
+                      metadata},
+                     1000
 
       assert metadata.request_id == "telemetry_error_test"
       assert String.contains?(metadata.error_reason, "conversion error")
@@ -284,6 +292,7 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
         timeout_ms: 30_000,
         strategy_config: %{}
       }
+
       {[], state} = PlannerFilter.handle_init(nil, opts)
       %{state: state}
     end
@@ -307,7 +316,8 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
       edge_case_params = %PlanningParams{
         domain: nil,
         state: nil,
-        goals: nil,  # This might cause issues in goal processing
+        # This might cause issues in goal processing
+        goals: nil,
         options: [],
         request_id: "edge_case_test",
         conversion_metadata: %{}
@@ -317,7 +327,7 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
 
       # Should still handle gracefully and return an error result
       {actions, _new_state} = PlannerFilter.handle_buffer(:input, buffer, nil, state)
-      
+
       assert [{:buffer, {:output, output_buffer}}] = actions
       assert %PlanningResult{} = result = output_buffer.payload
       assert result.status == :error
@@ -331,6 +341,7 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
         timeout_ms: 30_000,
         strategy_config: %{}
       }
+
       {[], state} = PlannerFilter.handle_init(nil, opts)
       %{state: state}
     end
@@ -355,11 +366,11 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
 
       # Execute the planning
       {actions, _new_state} = PlannerFilter.handle_buffer(:input, buffer, nil, state)
-      
+
       assert [{:buffer, {:output, output_buffer}}] = actions
       assert %PlanningResult{} = result = output_buffer.payload
       assert result.request_id == "goal_conversion_test"
-      
+
       # Verify goals were processed (count should match)
       assert result.execution_metadata.goals_count == 3
     end
@@ -378,7 +389,7 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
 
       # Execute the planning
       {actions, _new_state} = PlannerFilter.handle_buffer(:input, buffer, nil, state)
-      
+
       assert [{:buffer, {:output, output_buffer}}] = actions
       assert %PlanningResult{} = result = output_buffer.payload
       assert result.execution_metadata.goals_count == 0
@@ -408,14 +419,15 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
         timeout_ms: 30_000,
         strategy_config: %{}
       }
+
       {[], state} = PlannerFilter.handle_init(nil, opts)
       buffer = %Buffer{payload: planning_params}
 
       {actions, _new_state} = PlannerFilter.handle_buffer(:input, buffer, nil, state)
-      
+
       assert [{:buffer, {:output, output_buffer}}] = actions
       assert %PlanningResult{} = result = output_buffer.payload
-      
+
       # The goals should have been converted and counted
       assert result.execution_metadata.goals_count == 2
     end
@@ -435,14 +447,15 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
         timeout_ms: 30_000,
         strategy_config: %{}
       }
+
       {[], state} = PlannerFilter.handle_init(nil, opts)
       buffer = %Buffer{payload: planning_params}
 
       {actions, _new_state} = PlannerFilter.handle_buffer(:input, buffer, nil, state)
-      
+
       assert [{:buffer, {:output, output_buffer}}] = actions
       assert %PlanningResult{} = result = output_buffer.payload
-      
+
       # Should handle nil goals gracefully
       assert result.status == :error
     end

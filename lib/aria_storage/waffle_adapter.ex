@@ -15,18 +15,22 @@ defmodule AriaStorage.WaffleAdapter do
   @behaviour AriaStorage.ChunkStore.Behaviour
 
   defstruct [
-    :backend,      # The Waffle storage backend (:local, :s3, etc.)
-    :config,       # Backend-specific configuration
-    :uploader,     # Waffle uploader module
-    :fallback      # Fallback chunk store for reads
+    # The Waffle storage backend (:local, :s3, etc.)
+    :backend,
+    # Backend-specific configuration
+    :config,
+    # Waffle uploader module
+    :uploader,
+    # Fallback chunk store for reads
+    :fallback
   ]
 
   @type t :: %__MODULE__{
-    backend: atom(),
-    config: map(),
-    uploader: module(),
-    fallback: ChunkStore.t() | nil
-  }
+          backend: atom(),
+          config: map(),
+          uploader: module(),
+          fallback: ChunkStore.t() | nil
+        }
 
   @doc """
   Creates a new Waffle adapter.
@@ -79,6 +83,7 @@ defmodule AriaStorage.WaffleAdapter do
           urls: urls,
           stored_at: DateTime.utc_now()
         }
+
         {:ok, metadata}
 
       {:error, reason} ->
@@ -101,9 +106,14 @@ defmodule AriaStorage.WaffleAdapter do
             case header.compression do
               :zstd ->
                 case Chunks.decompress_chunk(data, :zstd) do
-                  {:ok, decompressed} -> create_chunk_from_data(chunk_id, decompressed, data)
-                  decompressed when is_binary(decompressed) -> create_chunk_from_data(chunk_id, decompressed, data)
-                  {:error, _} -> create_chunk_from_data(chunk_id, data, data)
+                  {:ok, decompressed} ->
+                    create_chunk_from_data(chunk_id, decompressed, data)
+
+                  decompressed when is_binary(decompressed) ->
+                    create_chunk_from_data(chunk_id, decompressed, data)
+
+                  {:error, _} ->
+                    create_chunk_from_data(chunk_id, data, data)
                 end
 
               :none ->
@@ -130,6 +140,7 @@ defmodule AriaStorage.WaffleAdapter do
   @impl true
   def chunk_exists?(%__MODULE__{} = adapter, chunk_id) do
     chunk_url = build_chunk_url(adapter, chunk_id)
+
     case adapter.backend do
       :local ->
         File.exists?(chunk_url)
@@ -235,6 +246,7 @@ defmodule AriaStorage.WaffleAdapter do
       offset: 0,
       checksum: :crypto.hash(:sha256, data)
     }
+
     {:ok, chunk}
   end
 
@@ -277,9 +289,11 @@ defmodule AriaStorage.WaffleAdapter do
 
         # Configure ExAws
         Application.put_env(:ex_aws, :region, config.region)
+
         if config[:access_key_id] do
           Application.put_env(:ex_aws, :access_key_id, config.access_key_id)
         end
+
         if config[:secret_access_key] do
           Application.put_env(:ex_aws, :secret_access_key, config.secret_access_key)
         end
@@ -307,9 +321,10 @@ defmodule AriaStorage.WaffleAdapter do
   end
 
   defp validate_s3_config(config, required_keys) do
-    missing_keys = Enum.filter(required_keys, fn key ->
-      not Map.has_key?(config, key)
-    end)
+    missing_keys =
+      Enum.filter(required_keys, fn key ->
+        not Map.has_key?(config, key)
+      end)
 
     if Enum.empty?(missing_keys) do
       :ok
@@ -319,9 +334,10 @@ defmodule AriaStorage.WaffleAdapter do
   end
 
   defp validate_config(config, required_keys) do
-    missing_keys = Enum.filter(required_keys, fn key ->
-      not Map.has_key?(config, key)
-    end)
+    missing_keys =
+      Enum.filter(required_keys, fn key ->
+        not Map.has_key?(config, key)
+      end)
 
     if Enum.empty?(missing_keys) do
       :ok

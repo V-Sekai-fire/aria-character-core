@@ -21,12 +21,12 @@ defmodule AriaSecurity.OpenBao do
   ]
 
   @type t :: %__MODULE__{
-    address: String.t(),
-    token: String.t() | nil,
-    hsm_config: SoftHSM.t(),
-    seal_config: map(),
-    client_config: map()
-  }
+          address: String.t(),
+          token: String.t() | nil,
+          hsm_config: SoftHSM.t(),
+          seal_config: map(),
+          client_config: map()
+        }
 
   @default_address "http://localhost:8200"
   @default_seal_config %{
@@ -34,7 +34,8 @@ defmodule AriaSecurity.OpenBao do
     slot: "0",
     pin: "1234",
     key_label: "openbao-seal-key",
-    mechanism: "0x00000009"  # CKM_RSA_PKCS
+    # CKM_RSA_PKCS
+    mechanism: "0x00000009"
   }
 
   @doc """
@@ -85,15 +86,15 @@ defmodule AriaSecurity.OpenBao do
     with {:ok, hsm_result} <- SoftHSM.initialize_token(bao.hsm_config),
          {:ok, _keypair_result} <- SoftHSM.generate_rsa_keypair(bao.hsm_config),
          {:ok, init_result} <- initialize_openbao(bao) do
-
       Logger.info("OpenBao initialized successfully with HSM seal")
 
-      {:ok, %{
-        root_token: init_result.root_token,
-        unseal_keys: init_result.unseal_keys,
-        hsm_slot: hsm_result.slot,
-        recovery_keys: init_result.recovery_keys
-      }}
+      {:ok,
+       %{
+         root_token: init_result.root_token,
+         unseal_keys: init_result.unseal_keys,
+         hsm_slot: hsm_result.slot,
+         recovery_keys: init_result.recovery_keys
+       }}
     else
       {:error, reason} ->
         Logger.error("Failed to initialize OpenBao with HSM: #{inspect(reason)}")
@@ -116,6 +117,7 @@ defmodule AriaSecurity.OpenBao do
         case Jason.decode(body) do
           {:ok, %{"initialized" => initialized}} ->
             {:ok, initialized}
+
           {:error, reason} ->
             {:error, {:json_decode_error, reason}}
         end
@@ -143,6 +145,7 @@ defmodule AriaSecurity.OpenBao do
         case Jason.decode(body) do
           {:ok, %{"sealed" => sealed}} ->
             {:ok, sealed}
+
           {:error, reason} ->
             {:error, {:json_decode_error, reason}}
         end
@@ -166,10 +169,12 @@ defmodule AriaSecurity.OpenBao do
   """
   def health(%__MODULE__{} = bao) do
     case HTTPoison.get("#{bao.address}/v1/sys/health") do
-      {:ok, %HTTPoison.Response{status_code: status_code, body: body}} when status_code in [200, 429, 472, 473, 501] ->
+      {:ok, %HTTPoison.Response{status_code: status_code, body: body}}
+      when status_code in [200, 429, 472, 473, 501] ->
         case Jason.decode(body) do
           {:ok, health_data} ->
             {:ok, health_data}
+
           {:error, reason} ->
             {:error, {:json_decode_error, reason}}
         end
@@ -205,12 +210,15 @@ defmodule AriaSecurity.OpenBao do
     payload = %{"data" => data}
 
     case HTTPoison.post("#{bao.address}/v1/#{path}", Jason.encode!(payload), headers) do
-      {:ok, %HTTPoison.Response{status_code: status_code, body: body}} when status_code in [200, 204] ->
+      {:ok, %HTTPoison.Response{status_code: status_code, body: body}}
+      when status_code in [200, 204] ->
         case Jason.decode(body) do
           {:ok, response_data} ->
             {:ok, response_data}
+
           {:error, _} ->
-            {:ok, %{}}  # No response body for some writes
+            # No response body for some writes
+            {:ok, %{}}
         end
 
       {:ok, %HTTPoison.Response{status_code: status_code, body: body}} ->
@@ -243,6 +251,7 @@ defmodule AriaSecurity.OpenBao do
         case Jason.decode(body) do
           {:ok, response_data} ->
             {:ok, response_data}
+
           {:error, reason} ->
             {:error, {:json_decode_error, reason}}
         end
@@ -278,6 +287,7 @@ defmodule AriaSecurity.OpenBao do
     case File.read(token_file) do
       {:ok, token} ->
         clean_token = String.trim(token)
+
         if String.length(clean_token) > 0 do
           Logger.info("Retrieved OpenBao root token from native storage")
           {:ok, clean_token}
@@ -301,10 +311,7 @@ defmodule AriaSecurity.OpenBao do
       %AriaSecurity.OpenBao{token: "hvs.1234567890", ...}
   """
   def set_token(%__MODULE__{} = bao, token) do
-    %{bao |
-      token: token,
-      client_config: Map.put(bao.client_config, :vault_token, token)
-    }
+    %{bao | token: token, client_config: Map.put(bao.client_config, :vault_token, token)}
   end
 
   # Private helper functions
@@ -324,11 +331,13 @@ defmodule AriaSecurity.OpenBao do
           {:ok, %{"root_token" => root_token, "recovery_keys" => recovery_keys} = _response} ->
             Logger.info("OpenBao initialized with HSM seal successfully")
 
-            {:ok, %{
-              root_token: root_token,
-              recovery_keys: recovery_keys,
-              unseal_keys: []  # Not needed with HSM seal
-            }}
+            {:ok,
+             %{
+               root_token: root_token,
+               recovery_keys: recovery_keys,
+               # Not needed with HSM seal
+               unseal_keys: []
+             }}
 
           {:error, reason} ->
             {:error, {:json_decode_error, reason}}

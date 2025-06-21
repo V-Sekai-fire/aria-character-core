@@ -5,8 +5,10 @@
 # Usage: mix run apps/aria_engine/test/debug_temporal_puzzle.exs
 
 defmodule TemporalPuzzleDebug do
-  alias {Domain, State, Planner} # Keep Planner for extract_actions
-  alias Timeline.Interval # STN is no longer directly used
+  # Keep Planner for extract_actions
+  alias {Domain, State, Planner}
+  # STN is no longer directly used
+  alias Timeline.Interval
   alias DateTime
 
   @moduledoc """
@@ -24,6 +26,7 @@ defmodule TemporalPuzzleDebug do
   """
 
   require Logger
+
   def run do
     Logger.info("=== Debugging Temporal Puzzle: Coffee and Bagel ===")
 
@@ -31,10 +34,12 @@ defmodule TemporalPuzzleDebug do
     domain = build_coffee_bagel_domain()
 
     # 2. Define initial state
-    initial_state = StateV2.new()
-    |> StateV2.set_fact("coffee", "status", "raw")
-    |> StateV2.set_fact("bagel", "status", "raw")
-    |> StateV2.set_fact("time", "current", 0) # Current time in milliseconds
+    initial_state =
+      StateV2.new()
+      |> StateV2.set_fact("coffee", "status", "raw")
+      |> StateV2.set_fact("bagel", "status", "raw")
+      # Current time in milliseconds
+      |> StateV2.set_fact("time", "current", 0)
 
     # 3. Define goals
     goals = [
@@ -49,7 +54,8 @@ defmodule TemporalPuzzleDebug do
     # 4. Attempt to generate a plan
     # The plan function now handles STN construction and validation internally
     case plan(domain, initial_state, goals, verbose: 0) do
-      {:ok, solution_tree} -> # plan now returns the full solution_tree
+      # plan now returns the full solution_tree
+      {:ok, solution_tree} ->
         Logger.info("\nGenerated Solution Tree:")
         # Extract primitive actions for display
         plan_actions = Planner.extract_actions(solution_tree)
@@ -57,17 +63,21 @@ defmodule TemporalPuzzleDebug do
 
         Logger.info("\n✅ Planning successful and temporal constraints validated by Planner.")
         Logger.info("You can now execute this solution tree.")
-        # Optionally, you can run the execution here
-        # case Planner.run_lazy_refineahead(Planner.domain_to_interface(domain), initial_state, solution_tree) do
-        #   {:ok, final_state} ->
-        #     Logger.info("\nExecution successful. Final state: #{inspect(final_state.data)}")
-        #   {:error, reason} ->
-        #     Logger.info("\nExecution failed: #{reason}")
-        # end
+
+      # Optionally, you can run the execution here
+      # case Planner.run_lazy_refineahead(Planner.domain_to_interface(domain), initial_state, solution_tree) do
+      #   {:ok, final_state} ->
+      #     Logger.info("\nExecution successful. Final state: #{inspect(final_state.data)}")
+      #   {:error, reason} ->
+      #     Logger.info("\nExecution failed: #{reason}")
+      # end
 
       {:error, reason} ->
         Logger.info("\nPlanning failed: #{reason}")
-        Logger.info("This might indicate that the domain definition needs refinement or that the goals are unachievable.")
+
+        Logger.info(
+          "This might indicate that the domain definition needs refinement or that the goals are unachievable."
+        )
     end
   end
 
@@ -75,12 +85,30 @@ defmodule TemporalPuzzleDebug do
 
   defp build_coffee_bagel_domain do
     Domain.new("coffee_bagel")
-    |> Domain.add_action(:brew_coffee_start, &brew_coffee_start_action/2, %{duration: Interval.from_duration(DateTime.utc_now(), 0, :millisecond)}) # Instantaneous
-    |> Domain.add_action(:wait_for_brew, &wait_for_brew_action/2, %{duration: Interval.from_duration(DateTime.utc_now(), 300_000, :millisecond)}) # 5 minutes
-    |> Domain.add_action(:toast_bagel_start, &toast_bagel_start_action/2, %{duration: Interval.from_duration(DateTime.utc_now(), 0, :millisecond)}) # Instantaneous
-    |> Domain.add_action(:wait_for_toast, &wait_for_toast_action/2, %{duration: Interval.from_duration(DateTime.utc_now(), 180_000, :millisecond)}) # 3 minutes
-    |> Domain.add_action(:eat_bagel, &eat_bagel_action/2, %{duration: Interval.from_duration(DateTime.utc_now(), 0, :millisecond)}) # Instantaneous
-    |> Domain.add_action(:drink_coffee, &drink_coffee_action/2, %{duration: Interval.from_duration(DateTime.utc_now(), 0, :millisecond)}) # Instantaneous
+    # Instantaneous
+    |> Domain.add_action(:brew_coffee_start, &brew_coffee_start_action/2, %{
+      duration: Interval.from_duration(DateTime.utc_now(), 0, :millisecond)
+    })
+    # 5 minutes
+    |> Domain.add_action(:wait_for_brew, &wait_for_brew_action/2, %{
+      duration: Interval.from_duration(DateTime.utc_now(), 300_000, :millisecond)
+    })
+    # Instantaneous
+    |> Domain.add_action(:toast_bagel_start, &toast_bagel_start_action/2, %{
+      duration: Interval.from_duration(DateTime.utc_now(), 0, :millisecond)
+    })
+    # 3 minutes
+    |> Domain.add_action(:wait_for_toast, &wait_for_toast_action/2, %{
+      duration: Interval.from_duration(DateTime.utc_now(), 180_000, :millisecond)
+    })
+    # Instantaneous
+    |> Domain.add_action(:eat_bagel, &eat_bagel_action/2, %{
+      duration: Interval.from_duration(DateTime.utc_now(), 0, :millisecond)
+    })
+    # Instantaneous
+    |> Domain.add_action(:drink_coffee, &drink_coffee_action/2, %{
+      duration: Interval.from_duration(DateTime.utc_now(), 0, :millisecond)
+    })
     |> Domain.add_unigoal_method("coffee", &achieve_coffee_unigoal/2)
     |> Domain.add_unigoal_method("bagel", &achieve_bagel_unigoal/2)
   end
@@ -98,6 +126,7 @@ defmodule TemporalPuzzleDebug do
   defp wait_for_brew_action(state, []) do
     if StateV2.get_fact(state, "status", "coffee") == "brewing" do
       new_time = StateV2.get_fact(state, "current", "time") + 300_000
+
       StateV2.set_fact(state, "coffee", "status", "brewed")
       |> StateV2.set_fact("time", "current", new_time)
     else
@@ -118,6 +147,7 @@ defmodule TemporalPuzzleDebug do
   defp wait_for_toast_action(state, []) do
     if StateV2.get_fact(state, "status", "bagel") == "toasting" do
       new_time = StateV2.get_fact(state, "current", "time") + 180_000
+
       StateV2.set_fact(state, "bagel", "status", "toasted")
       |> StateV2.set_fact("time", "current", new_time)
     else

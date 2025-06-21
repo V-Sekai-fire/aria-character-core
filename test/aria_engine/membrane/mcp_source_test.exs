@@ -18,9 +18,9 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         child(:mcp_source, MCPSource)
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       assert status.processed_count == 0
       assert status.error_count == 0
@@ -37,9 +37,9 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         })
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       assert status.max_queue_size == 50
     end
@@ -51,7 +51,7 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         child(:mcp_source, MCPSource)
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
       %{pipeline: pipeline}
     end
@@ -71,10 +71,10 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
       }
 
       Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, mcp_params})
-      
+
       # Wait for buffer to be processed
       assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %MCPRequest{}})
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       assert status.processed_count == 1
       assert status.error_count == 0
@@ -86,10 +86,10 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
       }
 
       Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, invalid_params})
-      
+
       # Give some time for processing
       Process.sleep(10)
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       assert status.processed_count == 0
       assert status.error_count == 1
@@ -97,10 +97,10 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
 
     test "rejects non-map parameters", %{pipeline: pipeline} do
       Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, "invalid"})
-      
+
       # Give some time for processing
       Process.sleep(10)
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       assert status.processed_count == 0
       assert status.error_count == 1
@@ -113,7 +113,7 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         child(:mcp_source, MCPSource)
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
       %{pipeline: pipeline}
     end
@@ -132,10 +132,10 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
       for _ <- 1..3 do
         Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, mcp_params})
       end
-      
+
       # Give time for processing
       Process.sleep(10)
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       # Requests should be queued, not processed yet
       assert status.queue_size > 0
@@ -154,11 +154,11 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
       for _ <- 1..2 do
         Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, mcp_params})
       end
-      
+
       # Wait for buffers to be processed by sink (which creates demand)
       assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %MCPRequest{}})
       assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %MCPRequest{}})
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       assert status.processed_count == 2
       assert status.queue_size == 0
@@ -171,7 +171,7 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         child(:mcp_source, MCPSource)
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
       %{pipeline: pipeline}
     end
@@ -189,12 +189,12 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
       for _ <- 1..3 do
         Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, mcp_params})
       end
-      
+
       # Wait for all buffers
       assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %MCPRequest{}})
       assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %MCPRequest{}})
       assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %MCPRequest{}})
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       assert status.processed_count == 3
     end
@@ -206,7 +206,7 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         child(:mcp_source, MCPSource)
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
       %{pipeline: pipeline}
     end
@@ -224,10 +224,10 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
       }
 
       Pipeline.notify_child(pipeline, :mcp_source, {:configure_pipeline, config})
-      
+
       # Give time for processing
       Process.sleep(10)
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       assert status.pipeline_config == config
     end
@@ -239,9 +239,9 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         child(:mcp_source, %MCPSource{max_queue_size: 2})
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
-      
+
       mcp_params = %{
         "schedule_name" => "test_schedule",
         "activities" => [],
@@ -254,10 +254,10 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
       for _ <- 1..5 do
         Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, mcp_params})
       end
-      
+
       # Give time for processing
       Process.sleep(50)
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       # Should have limited queue size due to max_queue_size setting
       assert status.queue_size <= 2
@@ -270,14 +270,14 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         child(:mcp_source, MCPSource)
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
       %{pipeline: pipeline}
     end
 
     test "returns comprehensive status", %{pipeline: pipeline} do
       status = MCPSource.get_status(pipeline, :mcp_source)
-      
+
       assert Map.has_key?(status, :processed_count)
       assert Map.has_key?(status, :error_count)
       assert Map.has_key?(status, :queue_size)
@@ -292,12 +292,12 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         child(:mcp_source, MCPSource)
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
-      
+
       # Terminate the pipeline to test timeout
       Pipeline.terminate(pipeline)
-      
+
       status = MCPSource.get_status(pipeline, :mcp_source, 100)
       assert Map.has_key?(status, :error)
     end
@@ -309,7 +309,7 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         child(:mcp_source, MCPSource)
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
       %{pipeline: pipeline}
     end
@@ -341,12 +341,14 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
       }
 
       Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, mcp_params})
-      
+
       # Wait for buffer to be processed
-      assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %MCPRequest{
-        tool_name: "schedule_activities"
-      }})
-      
+      assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{
+        payload: %MCPRequest{
+          tool_name: "schedule_activities"
+        }
+      })
+
       status = MCPSource.get_status(pipeline, :mcp_source)
       assert status.processed_count == 1
       assert status.error_count == 0
@@ -357,7 +359,7 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
     setup do
       # Attach telemetry handler for testing
       test_pid = self()
-      
+
       :telemetry.attach_many(
         "mcp_source_test",
         [
@@ -371,20 +373,20 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
         end,
         nil
       )
-      
+
       on_exit(fn -> :telemetry.detach("mcp_source_test") end)
-      
+
       children = [
         child(:mcp_source, MCPSource)
         |> child(:sink, %Sink{})
       ]
-      
+
       pipeline = Pipeline.start_link_supervised!(spec: children)
       %{pipeline: pipeline}
     end
 
     test "emits initialization telemetry", %{pipeline: _pipeline} do
-      assert_receive {:telemetry, [:aria_engine, :membrane, :mcp_source, :initialized], 
+      assert_receive {:telemetry, [:aria_engine, :membrane, :mcp_source, :initialized],
                       %{count: 1}, %{max_queue_size: 100}}
     end
 
@@ -398,10 +400,10 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
       }
 
       Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, mcp_params})
-      
-      assert_receive {:telemetry, [:aria_engine, :membrane, :mcp_source, :request_processed], 
+
+      assert_receive {:telemetry, [:aria_engine, :membrane, :mcp_source, :request_processed],
                       %{count: 1}, metadata}
-      
+
       assert Map.has_key?(metadata, :request_id)
       assert Map.has_key?(metadata, :processing_time)
       assert Map.has_key?(metadata, :queue_size)
@@ -409,24 +411,24 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
 
     test "emits error telemetry for invalid requests", %{pipeline: pipeline} do
       invalid_params = %{"invalid" => "format"}
-      
+
       Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, invalid_params})
-      
-      assert_receive {:telemetry, [:aria_engine, :membrane, :mcp_source, :request_error], 
+
+      assert_receive {:telemetry, [:aria_engine, :membrane, :mcp_source, :request_error],
                       %{count: 1}, metadata}
-      
+
       assert Map.has_key?(metadata, :error_reason)
       assert Map.has_key?(metadata, :processing_time)
     end
 
     test "emits pipeline configuration telemetry", %{pipeline: pipeline} do
       config = %{topology: :linear, elements: []}
-      
+
       Pipeline.notify_child(pipeline, :mcp_source, {:configure_pipeline, config})
-      
-      assert_receive {:telemetry, [:aria_engine, :membrane, :mcp_source, :pipeline_configured], 
+
+      assert_receive {:telemetry, [:aria_engine, :membrane, :mcp_source, :pipeline_configured],
                       %{count: 1}, metadata}
-      
+
       assert metadata.topology == :linear
       assert metadata.element_count == 0
     end

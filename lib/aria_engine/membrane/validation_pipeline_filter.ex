@@ -23,77 +23,84 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilter do
     ResponseFormatter
   }
 
-  def_input_pad :input, accepted_format: %Membrane.RemoteStream{}
-  def_output_pad :output, accepted_format: %Membrane.RemoteStream{}
+  def_input_pad(:input, accepted_format: %Membrane.RemoteStream{})
+  def_output_pad(:output, accepted_format: %Membrane.RemoteStream{})
 
-  def_options timeout: [
-                spec: pos_integer(),
-                default: 30_000,
-                description: "Solver timeout in milliseconds"
-              ]
+  def_options(
+    timeout: [
+      spec: pos_integer(),
+      default: 30_000,
+      description: "Solver timeout in milliseconds"
+    ]
+  )
 
   @impl true
   def handle_init(_ctx, opts) do
     Logger.info("🔧 Initializing Validation Pipeline Filter")
-    
+
     # Check if MiniZinc is available
     minizinc_available = MiniZincSolver.check_availability()
     Logger.info("🔧 MiniZinc available: #{minizinc_available}")
-    
+
     state = %{
       timeout: opts.timeout,
       minizinc_available: minizinc_available,
       validation_count: 0
     }
-    
+
     {[], state}
   end
 
   @impl true
   def handle_buffer(:input, buffer, _ctx, state) do
     Logger.info("🔧 Validation Pipeline received buffer")
-    
+
     try do
       # Parse the incoming MCP scheduling request
       mcp_request = Jason.decode!(buffer.payload)
       Logger.info("🔧 Processing validation request")
-      
+
       # Extract schedule_activities parameters
       params = mcp_request["params"]["arguments"]
-      
+
       # Step 1: Solve with Hybrid solver (using existing MCP format)
       hybrid_result = HybridSolver.solve(params, state)
       Logger.info("✅ Solved with Hybrid: #{hybrid_result.status}")
-      
+
       # Step 2: Handle MiniZinc solving based on availability
-      minizinc_result = if state.minizinc_available do
-        MiniZincSolver.solve(params, state)
-      else
-        Logger.info("⚠️ MiniZinc not available, skipping")
-        %{status: :unavailable, reason: "MiniZinc not installed"}
-      end
-      
+      minizinc_result =
+        if state.minizinc_available do
+          MiniZincSolver.solve(params, state)
+        else
+          Logger.info("⚠️ MiniZinc not available, skipping")
+          %{status: :unavailable, reason: "MiniZinc not installed"}
+        end
+
       Logger.info("✅ MiniZinc result: #{minizinc_result.status}")
-      
+
       # Step 3: Compare results and validate
-      validation_result = SolutionComparator.validate_and_compare(
-        hybrid_result, 
-        minizinc_result, 
-        params, 
-        state
-      )
+      validation_result =
+        SolutionComparator.validate_and_compare(
+          hybrid_result,
+          minizinc_result,
+          params,
+          state
+        )
+
       Logger.info("✅ Validation complete: #{validation_result.overall_status}")
-      
+
       # Create response buffer
-      response = ResponseFormatter.create_validation_response(
-        validation_result, 
-        hybrid_result, 
-        minizinc_result, 
-        mcp_request, 
-        state
-      )
+      response =
+        ResponseFormatter.create_validation_response(
+          validation_result,
+          hybrid_result,
+          minizinc_result,
+          mcp_request,
+          state
+        )
+
       response_payload = Jason.encode!(response)
-      
+
       response_buffer = %Membrane.Buffer{
         payload: response_payload,
         metadata: %{
@@ -102,14 +109,13 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilter do
           overall_status: validation_result.overall_status
         }
       }
-      
+
       new_state = %{state | validation_count: state.validation_count + 1}
       {[buffer: {:output, response_buffer}], new_state}
-      
     rescue
       error ->
         Logger.error("❌ Validation Pipeline error: #{inspect(error)}")
-        
+
         error_response = %{
           "id" => get_request_id(buffer.payload),
           "jsonrpc" => "2.0",
@@ -119,12 +125,12 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilter do
             "validation_type" => "pipeline_error"
           }
         }
-        
+
         error_buffer = %Membrane.Buffer{
           payload: Jason.encode!(error_response),
           metadata: %{error: true, timestamp: DateTime.utc_now()}
         }
-        
+
         {[buffer: {:output, error_buffer}], state}
     end
   end

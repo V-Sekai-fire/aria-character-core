@@ -19,7 +19,7 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
 
   describe "property-based parsing tests" do
     property "parser never crashes on random binary input" do
-      check all binary_data <- binary(min_length: 0, max_length: 1000) do
+      check all(binary_data <- binary(min_length: 0, max_length: 1000)) do
         # Parser should never crash, but may return errors
         try do
           case CasyncFormat.detect_format(binary_data) do
@@ -48,9 +48,10 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
     end
 
     property "valid caibx files always parse successfully" do
-      check all chunk_count <- integer(1..50),
-                chunk_size <- integer(1..4096) do
-
+      check all(
+              chunk_count <- integer(1..50),
+              chunk_size <- integer(1..4096)
+            ) do
         # Generate a valid caibx structure
         binary_data = generate_valid_caibx(chunk_count, chunk_size)
 
@@ -61,8 +62,11 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
     end
 
     property "valid catar files always parse successfully" do
-      check all entry_count <- integer(1..20),
-                entry_types <- list_of(member_of([:file, :directory, :symlink]), length: entry_count) do
+      check all(
+              entry_count <- integer(1..20),
+              entry_types <-
+                list_of(member_of([:file, :directory, :symlink]), length: entry_count)
+            ) do
         # Generate a valid catar structure
         binary_data = generate_valid_catar(entry_types)
 
@@ -71,7 +75,7 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
     end
 
     property "chunk IDs are always 32 bytes" do
-      check all chunk_count <- integer(1..10) do
+      check all(chunk_count <- integer(1..10)) do
         binary_data = generate_valid_caibx(chunk_count, 1024)
 
         {:ok, result} = CasyncFormat.parse_index(binary_data)
@@ -83,7 +87,7 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
     end
 
     property "chunk offsets are monotonically increasing" do
-      check all chunk_count <- integer(2..20) do
+      check all(chunk_count <- integer(2..20)) do
         binary_data = generate_valid_caibx(chunk_count, 1024)
 
         {:ok, result} = CasyncFormat.parse_index(binary_data)
@@ -97,19 +101,21 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
     end
 
     property "parsing is deterministic" do
-      check all binary_data <- binary(min_length: 10, max_length: 100) do
+      check all(binary_data <- binary(min_length: 10, max_length: 100)) do
         # Parse the same data multiple times
-        results = for _i <- 1..3 do
-          [
-            CasyncFormat.detect_format(binary_data),
-            CasyncFormat.parse_index(binary_data),
-            CasyncFormat.parse_archive(binary_data),
-            CasyncFormat.parse_chunk(binary_data)
-          ]
-        end
+        results =
+          for _i <- 1..3 do
+            [
+              CasyncFormat.detect_format(binary_data),
+              CasyncFormat.parse_index(binary_data),
+              CasyncFormat.parse_archive(binary_data),
+              CasyncFormat.parse_chunk(binary_data)
+            ]
+          end
 
         # All results should be identical
         [first_result | other_results] = results
+
         Enum.each(other_results, fn result ->
           assert result == first_result
         end)
@@ -117,12 +123,13 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
     end
 
     property "invalid magic headers are rejected" do
-      check all wrong_magic <- binary(length: 3),
-                rest_data <- binary(min_length: 10, max_length: 100),
-                wrong_magic != <<0xCA, 0x1B, 0x5C>> and
+      check all(
+              wrong_magic <- binary(length: 3),
+              rest_data <- binary(min_length: 10, max_length: 100),
+              wrong_magic != <<0xCA, 0x1B, 0x5C>> and
                 wrong_magic != <<0xCA, 0x1D, 0x5C>> and
-                wrong_magic != <<0xCA, 0x1A, 0x52>> do
-
+                wrong_magic != <<0xCA, 0x1A, 0x52>>
+            ) do
         invalid_data = wrong_magic <> rest_data
 
         assert {:error, :unknown_format} = CasyncFormat.detect_format(invalid_data)
@@ -132,24 +139,26 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
     end
 
     property "truncated files are handled gracefully" do
-      check all _original_length <- integer(50..200),
-                truncate_at <- integer(1..49) do
-
+      check all(
+              _original_length <- integer(50..200),
+              truncate_at <- integer(1..49)
+            ) do
         # Create valid data then truncate it
         binary_data = generate_valid_caibx(5, 1024)
         truncated_data = binary_part(binary_data, 0, min(truncate_at, byte_size(binary_data)))
 
         # Should either parse successfully or return an error (not crash)
         case CasyncFormat.parse_index(truncated_data) do
-          {:ok, _result} -> :ok  # Somehow still valid
-          {:error, _reason} -> :ok  # Expected for truncated data
+          # Somehow still valid
+          {:ok, _result} -> :ok
+          # Expected for truncated data
+          {:error, _reason} -> :ok
         end
       end
     end
 
     property "header values are within reasonable ranges" do
-      check all chunk_count <- integer(1..1000) do
-
+      check all(chunk_count <- integer(1..1000)) do
         binary_data = generate_valid_caibx_with_values(chunk_count, 0)
 
         case CasyncFormat.parse_index(binary_data) do
@@ -159,6 +168,7 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
             expected_total_size = chunk_count * 1024
             assert result.header.total_size == expected_total_size
             assert result.header.version >= 0
+
           {:error, _} ->
             # May fail if generated data is invalid
             :ok
@@ -167,15 +177,18 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
     end
 
     property "entry types are correctly identified" do
-      check all entry_types <- list_of(member_of([1, 2, 3, 4, 5, 6]), min_length: 1, max_length: 10) do
-        _expected_types = Enum.map(entry_types, fn
-          1 -> :file
-          2 -> :directory
-          3 -> :symlink
-          4 -> :device
-          5 -> :fifo
-          6 -> :socket
-        end)
+      check all(
+              entry_types <- list_of(member_of([1, 2, 3, 4, 5, 6]), min_length: 1, max_length: 10)
+            ) do
+        _expected_types =
+          Enum.map(entry_types, fn
+            1 -> :file
+            2 -> :directory
+            3 -> :symlink
+            4 -> :device
+            5 -> :fifo
+            6 -> :socket
+          end)
 
         binary_data = generate_catar_with_types(entry_types)
 
@@ -186,14 +199,16 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
 
   describe "boundary condition testing" do
     property "empty chunk lists are handled correctly" do
-      check all _seed <- integer() do
+      check all(_seed <- integer()) do
         # Create caibx with 0 chunks using fixtures
-        binary_data = CasyncFixtures.create_multi_chunk_caibx(1) # Minimum 1 chunk for valid format
+        # Minimum 1 chunk for valid format
+        binary_data = CasyncFixtures.create_multi_chunk_caibx(1)
 
         case CasyncFormat.parse_index(binary_data) do
           {:ok, result} ->
             assert result.header.chunk_count >= 0
             assert is_list(result.chunks)
+
           {:error, _} ->
             # Parser may reject some generated files as invalid
             :ok
@@ -202,12 +217,13 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
     end
 
     property "maximum values don't cause overflow" do
-      check all _seed <- integer() do
+      check all(_seed <- integer()) do
         # Test with maximum uint32/uint64 values
         magic = <<0xCA, 0x1B, 0x5C>>
         version = <<0xFFFFFFFF::little-32>>
         total_size = <<0xFFFFFFFFFFFFFFFF::little-64>>
-        chunk_count = <<0::little-32>>  # 0 chunks to keep data size reasonable
+        # 0 chunks to keep data size reasonable
+        chunk_count = <<0::little-32>>
         reserved = <<0::little-32>>
 
         binary_data = magic <> version <> total_size <> chunk_count <> reserved
@@ -217,6 +233,7 @@ defmodule AriaStorage.Parsers.CasyncFormatPropertyTest do
             # Values should be parsed correctly without overflow
             assert result.header.version == 0xFFFFFFFF
             assert result.header.total_size == 0xFFFFFFFFFFFFFFFF
+
           {:error, _} ->
             # Parser may reject extreme values
             :ok

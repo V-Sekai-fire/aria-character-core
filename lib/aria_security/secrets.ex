@@ -4,21 +4,21 @@
 defmodule AriaSecurity.Secrets do
   @moduledoc """
   Security service for managing secrets using OpenBao (open-source Vault alternative).
-  
+
   This module provides a secure interface for storing and retrieving secrets
   using OpenBao as the backend. It uses the Vaultex library for communication
   with OpenBao.
-  
+
   ## Configuration
-  
+
   The module expects OpenBao to be configured with:
   - Host: The OpenBao server hostname
   - Port: The OpenBao server port
   - Scheme: The protocol scheme (http/https)
   - Auth: Authentication configuration with token method
-  
+
   ## Examples
-  
+
       # Initialize connection to OpenBao
       config = %{
         host: "localhost",
@@ -43,22 +43,22 @@ defmodule AriaSecurity.Secrets do
 
   @doc """
   Initialize connection to OpenBao.
-  
+
   ## Parameters
-  
+
   - `config` - A map containing OpenBao configuration:
     - `:host` - OpenBao server hostname
     - `:port` - OpenBao server port
     - `:scheme` - Protocol scheme ("http" or "https")
     - `:auth` - Authentication configuration with `:method` and `:credentials`
-  
+
   ## Returns
-  
+
   - `{:ok, status}` - Connection successful, returns OpenBao status
   - `{:error, reason}` - Connection failed
-  
+
   ## Examples
-  
+
       config = %{
         host: "localhost",
         port: 8200,
@@ -73,17 +73,20 @@ defmodule AriaSecurity.Secrets do
   """
   def init(config) do
     # Build vault address from config
-    vault_addr = case config do
-      %{host: host, port: port, scheme: scheme} ->
-        "#{scheme}://#{host}:#{port}"
-      _ ->
-        System.get_env("VAULT_ADDR", "http://localhost:8200")
-    end
-    
+    vault_addr =
+      case config do
+        %{host: host, port: port, scheme: scheme} ->
+          "#{scheme}://#{host}:#{port}"
+
+        _ ->
+          System.get_env("VAULT_ADDR", "http://localhost:8200")
+      end
+
     # Check vault health before proceeding
     case check_vault_health(vault_addr) do
       {:ok, :healthy} ->
         Logger.debug("Vault is healthy")
+
       {:error, reason} ->
         Logger.debug("Vault health check failed: #{inspect(reason)}")
         Logger.error("Vault health check failed: #{inspect(reason)}")
@@ -91,27 +94,29 @@ defmodule AriaSecurity.Secrets do
     end
 
     # Get token from config or environment variable
-    vault_token = case config do
-      %{auth: %{credentials: %{token: token}}} when is_binary(token) -> token
-      _ -> System.get_env("VAULT_TOKEN", "")
-    end
-    
+    vault_token =
+      case config do
+        %{auth: %{credentials: %{token: token}}} when is_binary(token) -> token
+        _ -> System.get_env("VAULT_TOKEN", "")
+      end
+
     Logger.debug("Vault address: #{vault_addr}")
     Logger.debug("Vault token length: #{String.length(vault_token)}")
     Logger.debug("Vault token: #{vault_token}")
-    
+
     # First check if OpenBao is reachable
     case check_vault_health(vault_addr) do
       {:ok, :healthy} ->
         Logger.debug("OpenBao health check passed")
+
       {:error, reason} ->
         Logger.debug("OpenBao health check failed: #{inspect(reason)}")
         {:error, {:health_check_failed, reason}}
     end
-    
+
     # Configure Vaultex through application environment
     Application.put_env(:vaultex, :vault_addr, vault_addr)
-    
+
     # Start the Vaultex application if not already started
     case Application.ensure_all_started(:vaultex) do
       {:ok, apps} ->
@@ -119,6 +124,7 @@ defmodule AriaSecurity.Secrets do
         # Authenticate with the token if provided
         if vault_token != "" do
           Logger.debug("Attempting authentication with token...")
+
           case Vaultex.Client.auth(:token, {vault_token}) do
             {:ok, response} ->
               Logger.debug("Authentication successful: #{inspect(response)}")
@@ -126,6 +132,7 @@ defmodule AriaSecurity.Secrets do
               # Store token for later use
               Process.put(:vault_token, vault_token)
               {:ok, %{vault_connected: true}}
+
             {:error, reason} ->
               Logger.debug("Authentication failed: #{inspect(reason)}")
               Logger.error("Failed to authenticate with OpenBao: #{inspect(reason)}")
@@ -135,6 +142,7 @@ defmodule AriaSecurity.Secrets do
           Logger.warning("No VAULT_TOKEN provided, connection may be limited")
           {:error, :no_token}
         end
+
       {:error, reason} ->
         Logger.error("Failed to start Vaultex application: #{inspect(reason)}")
         {:error, {:vaultex_start_failed, reason}}
@@ -143,19 +151,19 @@ defmodule AriaSecurity.Secrets do
 
   @doc """
   Store a secret in OpenBao.
-  
+
   ## Parameters
-  
+
   - `path` - The path where the secret will be stored
   - `data` - A map containing the secret data
-  
+
   ## Returns
-  
+
   - `{:ok, response}` - Secret stored successfully
   - `{:error, reason}` - Failed to store secret
-  
+
   ## Examples
-  
+
       {:ok, _} = AriaSecurity.Secrets.write("secret/myapp", %{
         password: "secret123",
         api_key: "key456"
@@ -163,23 +171,26 @@ defmodule AriaSecurity.Secrets do
   """
   def write(path, data) when is_binary(path) and is_map(data) do
     # Get stored token from process dictionary or environment
-    vault_token = case Process.get(:vault_token) do
-      nil -> System.get_env("VAULT_TOKEN", "")
-      token -> token
-    end
-    
+    vault_token =
+      case Process.get(:vault_token) do
+        nil -> System.get_env("VAULT_TOKEN", "")
+        token -> token
+      end
+
     if vault_token == "" do
       {:error, :no_token}
     else
       # Convert path for KV v2 engine (add /data/ and wrap data)
       kv_path = convert_to_kv2_write_path(path)
       kv_data = %{"data" => data}
-      
+
       case Vaultex.Client.write(kv_path, kv_data, :token, {vault_token}) do
         :ok ->
           {:ok, :ok}
+
         {:ok, response} ->
           {:ok, response}
+
         {:error, reason} ->
           {:error, {:write_failed, reason}}
       end
@@ -191,43 +202,46 @@ defmodule AriaSecurity.Secrets do
 
   @doc """
   Retrieve a secret from OpenBao.
-  
+
   ## Parameters
-  
+
   - `path` - The path of the secret to retrieve
-  
+
   ## Returns
-  
+
   - `{:ok, data}` - Secret retrieved successfully, returns the secret data
   - `{:error, reason}` - Failed to retrieve secret (e.g., not found)
-  
+
   ## Examples
-  
+
       {:ok, data} = AriaSecurity.Secrets.read("secret/myapp")
       password = data["password"]
   """
   def read(path) when is_binary(path) do
     # Get stored token from process dictionary or environment
-    vault_token = case Process.get(:vault_token) do
-      nil -> System.get_env("VAULT_TOKEN", "")
-      token -> token
-    end
-    
+    vault_token =
+      case Process.get(:vault_token) do
+        nil -> System.get_env("VAULT_TOKEN", "")
+        token -> token
+      end
+
     if vault_token == "" do
       {:error, :no_token}
     else
       # Convert path for KV v2 engine (add /data/)
       kv_path = convert_to_kv2_read_path(path)
-      
+
       case Vaultex.Client.read(kv_path, :token, {vault_token}) do
         {:ok, nil} ->
           {:error, :not_found}
+
         {:ok, response} ->
           # Extract data from KV v2 response (data.data)
           case response do
             %{"data" => data} when is_map(data) -> {:ok, data}
             _ -> {:ok, response}
           end
+
         {:error, reason} ->
           {:error, {:read_failed, reason}}
       end
@@ -243,9 +257,11 @@ defmodule AriaSecurity.Secrets do
       {:ok, %HTTPoison.Response{status_code: status}} when status in [200, 429, 472, 473, 503] ->
         # These are all valid OpenBao health status codes
         {:ok, :healthy}
+
       {:ok, response} ->
         Logger.debug("Unexpected health check response: #{inspect(response)}")
         {:error, {:unexpected_response, response}}
+
       {:error, reason} ->
         Logger.debug("Health check failed: #{inspect(reason)}")
         {:error, reason}

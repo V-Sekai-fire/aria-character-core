@@ -7,27 +7,27 @@ defmodule Timeline.Interval do
 
   Intervals are the fundamental building blocks of the Timeline system,
   representing periods of time during which events, actions, or states occur.
-  
+
   Only DateTime structs with explicit timezone information are supported
   to ensure temporal consistency and proper timezone handling across the system.
   This enforces clarity about when events occur in global context.
-  
+
   ## Timezone Enforcement
-  
+
   - All temporal data uses DateTime.t() with timezone information
   - NaiveDateTime is not supported to prevent ambiguity
   - Integer timestamps are not supported to enforce explicit timezone handling
   - All time comparisons account for timezone differences automatically
-  
+
   ## Duration API Design
-  
+
   The module provides multiple ways to access interval durations:
-  
+
   - `duration_ms/1` and `duration/1` - Default millisecond precision (integer)
   - `duration_seconds/1` - Floating-point seconds for human-readable values
   - `duration_in_unit/2` - Flexible unit conversion for any supported time unit
   - `to_stn_points/2` - STN integration with explicit unit specification
-  
+
   Milliseconds are used as the default unit for temporal systems requiring high
   precision and integer arithmetic, while the flexible API supports conversion
   to any time unit as needed.
@@ -54,7 +54,7 @@ defmodule Timeline.Interval do
 
   @doc """
   Creates a new interval with DateTime values.
-  
+
   Both start_time and end_time must be DateTime structs with timezone information.
   This ensures all temporal data has explicit timezone context.
 
@@ -70,7 +70,7 @@ defmodule Timeline.Interval do
   @spec new(DateTime.t(), DateTime.t()) :: t()
   def new(%DateTime{} = start_time, %DateTime{} = end_time) do
     validate_time_ordering!(start_time, end_time)
-    
+
     %__MODULE__{
       id: generate_id(),
       start_time: start_time,
@@ -81,7 +81,7 @@ defmodule Timeline.Interval do
 
   @doc """
   Creates a new interval with DateTime values and options.
-  
+
   Both start_time and end_time must be DateTime structs with timezone information.
 
   ## Options
@@ -102,7 +102,7 @@ defmodule Timeline.Interval do
   @spec new(DateTime.t(), DateTime.t(), keyword()) :: t()
   def new(%DateTime{} = start_time, %DateTime{} = end_time, opts) when is_list(opts) do
     validate_time_ordering!(start_time, end_time)
-    
+
     %__MODULE__{
       id: generate_id(),
       start_time: start_time,
@@ -164,8 +164,8 @@ defmodule Timeline.Interval do
   """
   @spec contains?(t(), DateTime.t()) :: boolean()
   def contains?(%__MODULE__{start_time: start_time, end_time: end_time}, %DateTime{} = time_point) do
-    DateTime.compare(start_time, time_point) in [:lt, :eq] and 
-    DateTime.compare(time_point, end_time) == :lt
+    DateTime.compare(start_time, time_point) in [:lt, :eq] and
+      DateTime.compare(time_point, end_time) == :lt
   end
 
   @doc """
@@ -218,7 +218,8 @@ defmodule Timeline.Interval do
       60
 
   """
-  @spec duration_in_unit(t(), :microsecond | :millisecond | :second | :minute | :hour | :day) :: integer()
+  @spec duration_in_unit(t(), :microsecond | :millisecond | :second | :minute | :hour | :day) ::
+          integer()
   def duration_in_unit(%__MODULE__{start_time: start_time, end_time: end_time}, unit) do
     case unit do
       :microsecond -> DateTime.diff(end_time, start_time, :microsecond)
@@ -241,7 +242,11 @@ defmodule Timeline.Interval do
       30
 
   """
-  @spec from_duration(DateTime.t(), integer(), :microsecond | :millisecond | :second | :minute | :hour | :day) :: t()
+  @spec from_duration(
+          DateTime.t(),
+          integer(),
+          :microsecond | :millisecond | :second | :minute | :hour | :day
+        ) :: t()
   def from_duration(%DateTime{} = start_time, duration, unit) do
     microseconds = duration * unit_to_microseconds(unit)
     end_time = DateTime.add(start_time, microseconds, :microsecond)
@@ -250,7 +255,7 @@ defmodule Timeline.Interval do
 
   @doc """
   Converts the interval to STN time points with explicit unit and LOD information.
-  
+
   This provides metadata that STN can use for automatic rescaling.
 
   ## Examples
@@ -263,7 +268,8 @@ defmodule Timeline.Interval do
       300
 
   """
-  @spec to_stn_points(t(), :microsecond | :millisecond | :second | :minute | :hour | :day) :: {String.t(), String.t(), integer()}
+  @spec to_stn_points(t(), :microsecond | :millisecond | :second | :minute | :hour | :day) ::
+          {String.t(), String.t(), integer()}
   def to_stn_points(%__MODULE__{id: id} = interval, unit) do
     start_point = "#{id}_start"
     end_point = "#{id}_end"
@@ -287,13 +293,16 @@ defmodule Timeline.Interval do
 
   """
   @spec overlaps?(t(), t()) :: boolean()
-  def overlaps?(%__MODULE__{start_time: start1, end_time: end1}, %__MODULE__{start_time: start2, end_time: end2}) do
+  def overlaps?(%__MODULE__{start_time: start1, end_time: end1}, %__MODULE__{
+        start_time: start2,
+        end_time: end2
+      }) do
     DateTime.compare(start1, end2) == :lt and DateTime.compare(start2, end1) == :lt
   end
 
   @doc """
   Calculates the temporal relationship between two intervals using Allen's interval algebra.
-  
+
   Returns one of: :before, :meets, :overlaps, :finished_by, :contains, :starts, :equals,
   :started_by, :during, :finishes, :overlapped_by, :met_by, :after
 
@@ -310,27 +319,59 @@ defmodule Timeline.Interval do
 
   """
   @spec allen_relation(t(), t()) :: atom()
-  def allen_relation(%__MODULE__{start_time: s1, end_time: e1}, %__MODULE__{start_time: s2, end_time: e2}) do
+  def allen_relation(%__MODULE__{start_time: s1, end_time: e1}, %__MODULE__{
+        start_time: s2,
+        end_time: e2
+      }) do
     cond do
-      DateTime.compare(e1, s2) == :lt -> :before
-      DateTime.compare(e1, s2) == :eq -> :meets
-      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :eq -> :equals
-      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :lt -> :starts
-      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :gt -> :started_by
-      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :eq -> :finishes
-      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :eq -> :finished_by
-      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :lt -> :during
-      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :gt -> :contains
-      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :lt and DateTime.compare(e1, s2) == :gt -> :overlaps
-      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :gt and DateTime.compare(s1, e2) == :lt -> :overlapped_by
-      DateTime.compare(s1, e2) == :eq -> :met_by
-      DateTime.compare(s1, e2) == :gt -> :after
-      true -> :unknown
+      DateTime.compare(e1, s2) == :lt ->
+        :before
+
+      DateTime.compare(e1, s2) == :eq ->
+        :meets
+
+      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :eq ->
+        :equals
+
+      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :lt ->
+        :starts
+
+      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :gt ->
+        :started_by
+
+      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :eq ->
+        :finishes
+
+      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :eq ->
+        :finished_by
+
+      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :lt ->
+        :during
+
+      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :gt ->
+        :contains
+
+      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :lt and
+          DateTime.compare(e1, s2) == :gt ->
+        :overlaps
+
+      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :gt and
+          DateTime.compare(s1, e2) == :lt ->
+        :overlapped_by
+
+      DateTime.compare(s1, e2) == :eq ->
+        :met_by
+
+      DateTime.compare(s1, e2) == :gt ->
+        :after
+
+      true ->
+        :unknown
     end
   end
 
   # Private helper functions
-  
+
   defp unit_to_microseconds(:microsecond), do: 1
   defp unit_to_microseconds(:millisecond), do: 1_000
   defp unit_to_microseconds(:second), do: 1_000_000
@@ -339,11 +380,12 @@ defmodule Timeline.Interval do
   defp unit_to_microseconds(:day), do: 86_400_000_000
 
   # Private helper functions
-  
+
   defp validate_time_ordering!(start_time, end_time) do
     case DateTime.compare(start_time, end_time) do
       :gt -> raise ArgumentError, "start_time must be before or equal to end_time"
-      _ -> :ok # Allow :eq and :lt
+      # Allow :eq and :lt
+      _ -> :ok
     end
   end
 

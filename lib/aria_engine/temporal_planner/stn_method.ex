@@ -83,7 +83,8 @@ defmodule TemporalPlanner.STNMethod do
 
   """
   @spec new(method_id(), decomposition_pattern(), [STNAction.t()], keyword()) :: t()
-  def new(method_id, pattern, stn_actions, opts \\ []) when pattern in [:sequential, :parallel, :alternative, :conditional] do
+  def new(method_id, pattern, stn_actions, opts \\ [])
+      when pattern in [:sequential, :parallel, :alternative, :conditional] do
     bridge_actions = Keyword.get(opts, :bridge_actions, [])
     preconditions = Keyword.get(opts, :preconditions, [])
     effects = Keyword.get(opts, :effects, [])
@@ -91,10 +92,10 @@ defmodule TemporalPlanner.STNMethod do
 
     # Compute method-level STN based on decomposition pattern
     method_stn = compute_method_stn(pattern, stn_actions, bridge_actions)
-    
+
     # Create temporal segments separated by bridge actions
     temporal_segments = create_temporal_segments(stn_actions, bridge_actions, pattern)
-    
+
     # Estimate overall method duration
     estimated_duration = estimate_method_duration(pattern, stn_actions, bridge_actions)
 
@@ -130,25 +131,28 @@ defmodule TemporalPlanner.STNMethod do
   @spec add_bridge_action(t(), bridge_action()) :: t()
   def add_bridge_action(%__MODULE__{} = method, bridge_action) do
     updated_bridges = method.bridge_actions ++ [bridge_action]
-    
-    # Recompute method STN with new bridge
-    updated_method_stn = compute_method_stn(
-      method.decomposition_pattern, 
-      method.stn_actions, 
-      updated_bridges
-    )
-    
-    # Recreate temporal segments
-    updated_segments = create_temporal_segments(
-      method.stn_actions, 
-      updated_bridges,
-      method.decomposition_pattern
-    )
 
-    %{method | 
-      bridge_actions: updated_bridges,
-      method_stn: updated_method_stn,
-      temporal_segments: updated_segments
+    # Recompute method STN with new bridge
+    updated_method_stn =
+      compute_method_stn(
+        method.decomposition_pattern,
+        method.stn_actions,
+        updated_bridges
+      )
+
+    # Recreate temporal segments
+    updated_segments =
+      create_temporal_segments(
+        method.stn_actions,
+        updated_bridges,
+        method.decomposition_pattern
+      )
+
+    %{
+      method
+      | bridge_actions: updated_bridges,
+        method_stn: updated_method_stn,
+        temporal_segments: updated_segments
     }
   end
 
@@ -168,7 +172,7 @@ defmodule TemporalPlanner.STNMethod do
 
   @doc """
   Converts the STN method to a standard STN for composition with other methods.
-  
+
   Deprecated: Use to_timeline/1 instead.
   """
   @spec to_stn(t()) :: Timeline.t()
@@ -248,8 +252,12 @@ defmodule TemporalPlanner.STNMethod do
   @spec solve_parallel(t()) :: Timeline.t()
   def solve_parallel(%__MODULE__{temporal_segments: segments, decomposition_pattern: _pattern}) do
     case length(segments) do
-      0 -> Timeline.new()
-      1 -> hd(segments) |> Timeline.apply_pc2()
+      0 ->
+        Timeline.new()
+
+      1 ->
+        hd(segments) |> Timeline.apply_pc2()
+
       _segment_count ->
         :not_implemented
         # Solve segments in parallel using ConvergenceFlow
@@ -258,7 +266,7 @@ defmodule TemporalPlanner.STNMethod do
         #   max_iterations: 20,
         #   convergence_threshold: 0.01
         # )
-        
+
         # Compose solved segments based on decomposition pattern
         # compose_solved_segments(solved_segments, pattern)
     end
@@ -299,16 +307,18 @@ defmodule TemporalPlanner.STNMethod do
     actual_start = Keyword.get(opts, :actual_start)
     actual_end = Keyword.get(opts, :actual_end)
 
-    updated_metadata = Map.merge(method.metadata, %{
-      execution_history: [
-        %{
-          actual_duration: actual_duration,
-          actual_start: actual_start,
-          actual_end: actual_end,
-          timestamp: DateTime.utc_now()
-        } | Map.get(method.metadata, :execution_history, [])
-      ]
-    })
+    updated_metadata =
+      Map.merge(method.metadata, %{
+        execution_history: [
+          %{
+            actual_duration: actual_duration,
+            actual_start: actual_start,
+            actual_end: actual_end,
+            timestamp: DateTime.utc_now()
+          }
+          | Map.get(method.metadata, :execution_history, [])
+        ]
+      })
 
     %{method | metadata: updated_metadata}
   end
@@ -318,28 +328,32 @@ defmodule TemporalPlanner.STNMethod do
   defp compute_method_stn(pattern, stn_actions, bridge_actions) do
     # Convert actions to Timelines
     action_timelines = Enum.map(stn_actions, &STNAction.to_timeline/1)
-    
+
     # Apply decomposition pattern
-    composed_timeline = case pattern do
-      :sequential -> 
-        Timeline.chain(action_timelines)
-      :parallel -> 
-        Timeline.parallel_join(action_timelines)
-      :alternative ->
-        case action_timelines do
-          [] -> Timeline.new()
-          [single] -> single
-          multiple -> Enum.reduce(multiple, &Timeline.union/2)
-        end
-      :conditional ->
-        # Conditional methods use intersection to tighten constraints
-        case action_timelines do
-          [] -> Timeline.new()
-          [single] -> single
-          multiple -> Enum.reduce(multiple, &Timeline.intersection/2)
-        end
-    end
-    
+    composed_timeline =
+      case pattern do
+        :sequential ->
+          Timeline.chain(action_timelines)
+
+        :parallel ->
+          Timeline.parallel_join(action_timelines)
+
+        :alternative ->
+          case action_timelines do
+            [] -> Timeline.new()
+            [single] -> single
+            multiple -> Enum.reduce(multiple, &Timeline.union/2)
+          end
+
+        :conditional ->
+          # Conditional methods use intersection to tighten constraints
+          case action_timelines do
+            [] -> Timeline.new()
+            [single] -> single
+            multiple -> Enum.reduce(multiple, &Timeline.intersection/2)
+          end
+      end
+
     # Add bridge action constraints (instantaneous, so they don't affect duration)
     add_bridge_constraints(composed_timeline, bridge_actions)
   end
@@ -359,16 +373,21 @@ defmodule TemporalPlanner.STNMethod do
 
   defp compute_actions_stn(actions, pattern) do
     action_timelines = Enum.map(actions, &STNAction.to_timeline/1)
-    
+
     case pattern do
-      :sequential -> Timeline.chain(action_timelines)
-      :parallel -> Timeline.parallel_join(action_timelines)
-      :alternative -> 
+      :sequential ->
+        Timeline.chain(action_timelines)
+
+      :parallel ->
+        Timeline.parallel_join(action_timelines)
+
+      :alternative ->
         case action_timelines do
           [] -> Timeline.new()
           [single] -> single
           multiple -> Enum.reduce(multiple, &Timeline.union/2)
         end
+
       :conditional ->
         case action_timelines do
           [] -> Timeline.new()
@@ -392,6 +411,7 @@ defmodule TemporalPlanner.STNMethod do
     # but don't add duration constraints
     Enum.reduce(bridge_actions, timeline, fn bridge, acc_timeline ->
       bridge_timepoint = "#{bridge.action_id}_bridge"
+
       acc_timeline
       |> Timeline.add_time_point(bridge_timepoint)
       |> Timeline.add_constraint(bridge_timepoint, bridge_timepoint, {0, 0})
@@ -400,45 +420,60 @@ defmodule TemporalPlanner.STNMethod do
 
   defp estimate_method_duration(pattern, stn_actions, _bridge_actions) do
     action_durations = Enum.map(stn_actions, & &1.estimated_duration)
-    
+
     case pattern do
       :sequential ->
         # Sum all durations for sequential execution
         Enum.reduce(action_durations, {0, 0}, fn
           {min, max}, {acc_min, acc_max} ->
-            new_max = if max == :infinity or acc_max == :infinity, do: :infinity, else: max + acc_max
+            new_max =
+              if max == :infinity or acc_max == :infinity, do: :infinity, else: max + acc_max
+
             {min + acc_min, new_max}
         end)
+
       :parallel ->
         # Take maximum duration for parallel execution
         Enum.reduce(action_durations, {0, 0}, fn
           {min, max}, {acc_min, acc_max} ->
-            new_max = if max == :infinity or acc_max == :infinity, do: :infinity, else: max(max, acc_max)
+            new_max =
+              if max == :infinity or acc_max == :infinity, do: :infinity, else: max(max, acc_max)
+
             {max(min, acc_min), new_max}
         end)
+
       :alternative ->
         # Take average duration for alternative execution
         case action_durations do
-          [] -> {0, 0}
+          [] ->
+            {0, 0}
+
           durations ->
             avg_min = durations |> Enum.map(&elem(&1, 0)) |> Enum.sum() |> div(length(durations))
-            avg_max = 
-              durations 
+
+            avg_max =
+              durations
               |> Enum.map(&elem(&1, 1))
               |> Enum.filter(&(&1 != :infinity))
               |> case do
                 [] -> :infinity
                 finite_maxes -> finite_maxes |> Enum.sum() |> div(length(durations))
               end
+
             {avg_min, avg_max}
         end
+
       :conditional ->
         # Take minimum duration for conditional execution (most optimistic)
         Enum.reduce(action_durations, {:infinity, :infinity}, fn
           {min, max}, {acc_min, acc_max} ->
             new_min = if acc_min == :infinity, do: min, else: min(min, acc_min)
-            new_max = if max == :infinity, do: acc_max, 
-                     else: (if acc_max == :infinity, do: max, else: min(max, acc_max))
+
+            new_max =
+              if max == :infinity,
+                do: acc_max,
+                else: if(acc_max == :infinity, do: max, else: min(max, acc_max))
+
             {new_min, new_max}
         end)
     end

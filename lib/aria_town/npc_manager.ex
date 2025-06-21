@@ -4,25 +4,25 @@
 defmodule AriaTown.NPCManager do
   @moduledoc """
   NPC management system for Aria Town.
-  
+
   This is currently a stub implementation that provides the basic GenServer
   structure needed for the supervision tree. Future development will add:
-  
+
   - NPC lifecycle management (spawn, despawn, persistence)
   - Behavior coordination and AI planning integration
   - NPC state synchronization and updates
   - Social interaction and relationship management
-  
+
   ## Architecture Notes
-  
+
   The NPCManager should eventually coordinate with:
   - TimeManager for scheduled behaviors and time-based actions
   - Planner for NPC goal-directed behavior
   - KnowledgeBase for NPC knowledge and memory
   - PersistenceManager for NPC state storage
-  
+
   ## Planned Integration
-  
+
   Future NPCs will use AriaEngine's hybrid planner for:
   - Goal-oriented behavior planning
   - Temporal scheduling of activities
@@ -70,13 +70,13 @@ defmodule AriaTown.NPCManager do
   @impl GenServer
   def init(_opts) do
     Logger.info("NPCManager started (stub implementation)")
-    
+
     # Initialize with empty NPC registry
     initial_state = %{
       npcs: %{},
       next_id: 1
     }
-    
+
     {:ok, initial_state}
   end
 
@@ -95,7 +95,7 @@ defmodule AriaTown.NPCManager do
   @impl GenServer
   def handle_call({:spawn_npc, npc_config}, _from, state) do
     npc_id = "npc_#{state.next_id}"
-    
+
     npc = %{
       id: npc_id,
       name: Map.get(npc_config, :name, "NPC"),
@@ -103,10 +103,10 @@ defmodule AriaTown.NPCManager do
       state: :idle,
       created_at: DateTime.utc_now()
     }
-    
+
     new_npcs = Map.put(state.npcs, npc_id, npc)
     new_state = %{state | npcs: new_npcs, next_id: state.next_id + 1}
-    
+
     Logger.info("Spawned NPC: #{npc_id}")
     {:reply, {:ok, npc}, new_state}
   end
@@ -116,12 +116,12 @@ defmodule AriaTown.NPCManager do
     case Map.get(state.npcs, npc_id) do
       nil ->
         {:reply, {:error, :not_found}, state}
-      
+
       npc ->
         updated_npc = Map.merge(npc, updates)
         new_npcs = Map.put(state.npcs, npc_id, updated_npc)
         new_state = %{state | npcs: new_npcs}
-        
+
         Logger.debug("Updated NPC #{npc_id}: #{inspect(updates)}")
         {:reply, {:ok, updated_npc}, new_state}
     end
@@ -132,11 +132,11 @@ defmodule AriaTown.NPCManager do
     case Map.get(state.npcs, npc_id) do
       nil ->
         {:reply, {:error, :not_found}, state}
-      
+
       _npc ->
         new_npcs = Map.delete(state.npcs, npc_id)
         new_state = %{state | npcs: new_npcs}
-        
+
         Logger.info("Despawned NPC: #{npc_id}")
         {:reply, :ok, new_state}
     end

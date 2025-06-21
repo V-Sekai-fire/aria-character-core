@@ -6,7 +6,6 @@ defmodule Core do
   Core components and types for the Aria Engine.
   """
 
-  
   # Core types
   @type domain :: Domain.Core.t()
   @type state :: AriaEngine.StateV2.t()
@@ -17,7 +16,8 @@ defmodule Core do
   # Goal and task types
   @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
   @type task :: {String.t(), list()}
-  @type todo_item :: Plan.todo_item() # Use fully qualified name
+  # Use fully qualified name
+  @type todo_item :: Plan.todo_item()
 
   # Function types
   @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
@@ -31,41 +31,41 @@ defmodule Core do
 
   # Main AriaEngine definition type
   @type t :: %__MODULE__{
-    # Identity
-    id: String.t(),
-    name: String.t(),
-    execution_id: reference() | nil,
+          # Identity
+          id: String.t(),
+          name: String.t(),
+          execution_id: reference() | nil,
 
-    # Domain Capabilities
-    actions: %{atom() => action_fn()},
-    task_methods: %{String.t() => [task_method_fn()]},
-    unigoal_methods: %{String.t() => [goal_method_fn()]},
-    multigoal_methods: [goal_method_fn()],
+          # Domain Capabilities
+          actions: %{atom() => action_fn()},
+          task_methods: %{String.t() => [task_method_fn()]},
+          unigoal_methods: %{String.t() => [goal_method_fn()]},
+          multigoal_methods: [goal_method_fn()],
 
-    # Planning Goals
-    goals: [todo_item()],
+          # Planning Goals
+          goals: [todo_item()],
 
-    # Execution State
-    current_state: AriaEngine.StateV2.t(),
-    initial_state: AriaEngine.StateV2.t(),
-    status: status(),
-    solution_tree: solution_tree() | nil,
+          # Execution State
+          current_state: AriaEngine.StateV2.t(),
+          initial_state: AriaEngine.StateV2.t(),
+          status: status(),
+          solution_tree: solution_tree() | nil,
 
-    # Execution Progress
-    progress: %{
-      total_steps: non_neg_integer(),
-      completed_steps: non_neg_integer(),
-      current_step: String.t() | nil
-    },
-    error: term() | nil,
+          # Execution Progress
+          progress: %{
+            total_steps: non_neg_integer(),
+            completed_steps: non_neg_integer(),
+            current_step: String.t() | nil
+          },
+          error: term() | nil,
 
-    # Metadata
-    documentation: %{atom() => String.t()},
-    metadata: %{atom() => term()},
-    created_at: DateTime.t(),
-    started_at: DateTime.t() | nil,
-    completed_at: DateTime.t() | nil
-  }
+          # Metadata
+          documentation: %{atom() => String.t()},
+          metadata: %{atom() => term()},
+          created_at: DateTime.t(),
+          started_at: DateTime.t() | nil,
+          completed_at: DateTime.t() | nil
+        }
 
   defstruct [
     # Identity
@@ -106,7 +106,8 @@ defmodule Core do
   @spec new(String.t(), map()) :: t()
   def new(id, definition \\ %{}) do
     now = DateTime.utc_now()
-    initial_state = Map.get(definition, :initial_state, AriaEngine.StateV2.new()) # Use fully qualified name
+    # Use fully qualified name
+    initial_state = Map.get(definition, :initial_state, AriaEngine.StateV2.new())
 
     %__MODULE__{
       id: id,

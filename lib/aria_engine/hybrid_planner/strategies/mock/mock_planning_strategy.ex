@@ -4,28 +4,28 @@
 defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   @moduledoc """
   Mock planning strategy for testing purposes.
-  
+
   This strategy provides predictable, configurable behavior for testing
   the hybrid planner without dependencies on actual planning algorithms.
   Uses static configuration via application environment for simplicity.
-  
+
   ## Configuration
-  
+
   Configure mock behavior via application environment:
-  
+
   ```elixir
   # Set custom results for testing
   Application.put_env(:aria_engine, :mock_plan_result, {:ok, [%{action: :test_action, args: ["result"]}]})
   Application.put_env(:aria_engine, :mock_replan_result, {:error, "replan failed"})
   Application.put_env(:aria_engine, :mock_validate_result, {:ok, %AriaEngine.StateV2{}})
   ```
-  
+
   ## Usage
-  
+
   ```elixir
   # Use in tests with default successful behavior
   factory = StrategyFactory.new(%{planning_strategy: MockPlanningStrategy})
-  
+
   # Configure specific results for test scenarios
   Application.put_env(:aria_engine, :mock_plan_result, {:error, "planning failed"})
   result = MockPlanningStrategy.plan(domain, state, goals, [])
@@ -36,8 +36,16 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   @behaviour HybridPlanner.Strategies.PlanningStrategy
 
   # Default static configuration
-  @default_plan_result {:ok, [%{action: :mock_action, args: ["mock_result"], node_id: "mock_node_1"}]}
-  @default_replan_result {:ok, [%{action: :mock_replan_action, args: ["mock_replan_result"], node_id: "mock_node_2"}]}
+  @default_plan_result {:ok,
+                        [%{action: :mock_action, args: ["mock_result"], node_id: "mock_node_1"}]}
+  @default_replan_result {:ok,
+                          [
+                            %{
+                              action: :mock_replan_action,
+                              args: ["mock_replan_result"],
+                              node_id: "mock_node_2"
+                            }
+                          ]}
   @default_validate_result {:ok, %AriaEngine.StateV2{}}
 
   # ==================== BEHAVIOR IMPLEMENTATION ====================
@@ -46,7 +54,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   def plan(_domain, _state, _goals, opts \\ []) do
     # Check for artificial delay configuration
     apply_delay(opts)
-    
+
     # Return configured result or default
     Application.get_env(:aria_engine, :mock_plan_result, @default_plan_result)
   end
@@ -55,7 +63,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   def replan(_domain, _state, _solution_tree, _fail_node_id, opts \\ []) do
     # Check for artificial delay configuration
     apply_delay(opts)
-    
+
     # Return configured result or default
     Application.get_env(:aria_engine, :mock_replan_result, @default_replan_result)
   end
@@ -85,8 +93,10 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
       ],
       configuration: %{
         plan_result: Application.get_env(:aria_engine, :mock_plan_result, @default_plan_result),
-        replan_result: Application.get_env(:aria_engine, :mock_replan_result, @default_replan_result),
-        validate_result: Application.get_env(:aria_engine, :mock_validate_result, @default_validate_result)
+        replan_result:
+          Application.get_env(:aria_engine, :mock_replan_result, @default_replan_result),
+        validate_result:
+          Application.get_env(:aria_engine, :mock_validate_result, @default_validate_result)
       }
     }
   end
@@ -95,13 +105,13 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
 
   @doc """
   Backward compatibility constructor - converts old instance pattern to static config.
-  
+
   This function provides compatibility with existing tests that use the old API.
   Instead of returning a struct, it configures the static mock behavior.
-  
+
   ## Parameters
   - `opts`: Configuration options (same as old API)
-  
+
   ## Returns
   - Module name for use with strategy factory
   """
@@ -109,34 +119,38 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   def new(opts \\ []) do
     # Convert old options to new static configuration
     initial_config = %{}
-    
-    config = if Keyword.has_key?(opts, :plan_result) do
-      Map.put(initial_config, :plan_result, Keyword.get(opts, :plan_result))
-    else
-      initial_config
-    end
-    
-    config = if Keyword.has_key?(opts, :replan_result) do
-      Map.put(config, :replan_result, Keyword.get(opts, :replan_result))
-    else
-      config
-    end
-    
-    config = if Keyword.has_key?(opts, :validate_result) do
-      Map.put(config, :validate_result, Keyword.get(opts, :validate_result))
-    else
-      config
-    end
-    
-    config = if Keyword.has_key?(opts, :call_delay) do
-      Map.put(config, :delay_ms, Keyword.get(opts, :call_delay))
-    else
-      config
-    end
-    
+
+    config =
+      if Keyword.has_key?(opts, :plan_result) do
+        Map.put(initial_config, :plan_result, Keyword.get(opts, :plan_result))
+      else
+        initial_config
+      end
+
+    config =
+      if Keyword.has_key?(opts, :replan_result) do
+        Map.put(config, :replan_result, Keyword.get(opts, :replan_result))
+      else
+        config
+      end
+
+    config =
+      if Keyword.has_key?(opts, :validate_result) do
+        Map.put(config, :validate_result, Keyword.get(opts, :validate_result))
+      else
+        config
+      end
+
+    config =
+      if Keyword.has_key?(opts, :call_delay) do
+        Map.put(config, :delay_ms, Keyword.get(opts, :call_delay))
+      else
+        config
+      end
+
     # Apply the configuration
     configure(config)
-    
+
     # Return the module name for use with strategy factory
     __MODULE__
   end
@@ -145,12 +159,12 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
 
   @doc """
   Configure mock planning result.
-  
+
   ## Parameters
   - `result`: Result to return from plan/4 calls
-  
+
   ## Examples
-  
+
       MockPlanningStrategy.set_plan_result({:ok, [action1, action2]})
       MockPlanningStrategy.set_plan_result({:error, "planning failed"})
   """
@@ -161,7 +175,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
 
   @doc """
   Configure mock replanning result.
-  
+
   ## Parameters
   - `result`: Result to return from replan/5 calls
   """
@@ -172,7 +186,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
 
   @doc """
   Configure mock validation result.
-  
+
   ## Parameters
   - `result`: Result to return from validate_plan/3 calls
   """
@@ -195,7 +209,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
 
   @doc """
   Configure artificial delay for all mock operations.
-  
+
   ## Parameters
   - `delay_ms`: Delay in milliseconds (0 to disable)
   """
@@ -206,12 +220,12 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
 
   @doc """
   Configure multiple mock results at once.
-  
+
   ## Parameters
   - `config`: Map with `:plan_result`, `:replan_result`, `:validate_result` keys
-  
+
   ## Example
-  
+
       MockPlanningStrategy.configure(%{
         plan_result: {:ok, [action1]},
         replan_result: {:error, "replan failed"},
@@ -223,19 +237,19 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
     if Map.has_key?(config, :plan_result) do
       set_plan_result(config.plan_result)
     end
-    
+
     if Map.has_key?(config, :replan_result) do
       set_replan_result(config.replan_result)
     end
-    
+
     if Map.has_key?(config, :validate_result) do
       set_validate_result(config.validate_result)
     end
-    
+
     if Map.has_key?(config, :delay_ms) do
       set_delay(config.delay_ms)
     end
-    
+
     :ok
   end
 
@@ -243,10 +257,10 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
 
   @doc """
   Create a simple successful solution tree for testing.
-  
+
   ## Parameters
   - `actions`: List of action names to include (default: [:mock_action])
-  
+
   ## Returns
   - Solution tree structure suitable for testing
   """
@@ -266,7 +280,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
 
   @doc """
   Create a mock state with basic test data.
-  
+
   ## Returns
   - StateV2 instance suitable for testing
   """
@@ -274,13 +288,14 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   def create_mock_state do
     # Create a basic StateV2 with some test facts
     state = %AriaEngine.StateV2{}
-    
+
     # Add facts using the correct StateV2 API if available, or return basic state
     case function_exported?(AriaEngine.StateV2, :add_fact, 4) do
       true ->
         state
         |> AriaEngine.StateV2.add_fact("mock_predicate", "mock_subject", "mock_value")
         |> AriaEngine.StateV2.add_fact("test_ready", "system", true)
+
       false ->
         # Return basic state if add_fact/4 is not available
         state
@@ -292,9 +307,10 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   # Apply artificial delay if configured
   defp apply_delay(opts) do
     # Check for delay in opts first, then application config
-    delay_ms = Keyword.get(opts, :mock_delay_ms) || 
-               Application.get_env(:aria_engine, :mock_delay_ms, 0)
-    
+    delay_ms =
+      Keyword.get(opts, :mock_delay_ms) ||
+        Application.get_env(:aria_engine, :mock_delay_ms, 0)
+
     if delay_ms > 0 do
       Process.sleep(delay_ms)
     end

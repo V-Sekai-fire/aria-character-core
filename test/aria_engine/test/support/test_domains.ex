@@ -294,7 +294,8 @@ defmodule TestDomains do
       if player_location == item_location do
         StateV2.set_fact(state, "player", "has", item)
       else
-        false  # Can't pickup item not in same location
+        # Can't pickup item not in same location
+        false
       end
     end
 
@@ -454,6 +455,7 @@ defmodule TestDomains do
 
   defp getv_action(state, [flag_val]) do
     current_flag = StateV2.get_fact(state, "system", "flag")
+
     if current_flag == flag_val do
       state
     else
@@ -485,6 +487,7 @@ defmodule TestDomains do
 
   defp walk_action(state, [person, from, to]) do
     current_loc = StateV2.get_fact(state, person, "loc")
+
     if current_loc == from do
       StateV2.set_fact(state, person, "loc", to)
     else
@@ -500,6 +503,7 @@ defmodule TestDomains do
   defp ride_taxi_action(state, [person, taxi, to]) do
     person_loc = StateV2.get_fact(state, person, "loc")
     taxi_loc = StateV2.get_fact(state, taxi, "loc")
+
     if person_loc == taxi_loc do
       state
       |> StateV2.set_fact(person, "loc", to)
@@ -512,6 +516,7 @@ defmodule TestDomains do
   defp pay_driver_action(state, [person, taxi]) do
     fare = taxi_fare(StateV2.get_fact(state, person, "loc"), StateV2.get_fact(state, taxi, "loc"))
     cash = StateV2.get_fact(state, person, "cash")
+
     if cash >= fare do
       StateV2.set_fact(state, person, "cash", cash - fare)
     else
@@ -522,6 +527,7 @@ defmodule TestDomains do
   defp travel_by_foot(state, [["loc", person, destination]]) do
     current_loc = StateV2.get_fact(state, person, "loc")
     distance = distance_between(current_loc, destination)
+
     if distance <= 2 do
       [{"walk", person, current_loc, destination}]
     else
@@ -534,11 +540,13 @@ defmodule TestDomains do
     taxis = ["taxi1", "taxi2"]
 
     case Enum.find(taxis, fn _taxi ->
-      cash = StateV2.get_fact(state, person, "cash")
-      fare = taxi_fare(current_loc, destination)
-      cash >= fare
-    end) do
-      nil -> false
+           cash = StateV2.get_fact(state, person, "cash")
+           fare = taxi_fare(current_loc, destination)
+           cash >= fare
+         end) do
+      nil ->
+        false
+
       taxi ->
         [
           {"call_taxi", person, taxi},
@@ -552,6 +560,7 @@ defmodule TestDomains do
 
   defp walk_action_htn(state, [person, from, to]) do
     current_loc = StateV2.get_fact(state, person, "loc")
+
     if current_loc == from do
       StateV2.set_fact(state, person, "loc", to)
     else
@@ -567,6 +576,7 @@ defmodule TestDomains do
   defp ride_taxi_action_htn(state, [person, taxi, to]) do
     person_loc = StateV2.get_fact(state, person, "loc")
     taxi_loc = StateV2.get_fact(state, taxi, "loc")
+
     if person_loc == taxi_loc do
       state
       |> StateV2.set_fact(person, "loc", to)
@@ -579,6 +589,7 @@ defmodule TestDomains do
   defp pay_driver_action_htn(state, [person, taxi]) do
     fare = taxi_fare(StateV2.get_fact(state, person, "loc"), StateV2.get_fact(state, taxi, "loc"))
     cash = StateV2.get_fact(state, person, "cash")
+
     if cash >= fare do
       StateV2.set_fact(state, person, "cash", cash - fare)
     else
@@ -588,6 +599,7 @@ defmodule TestDomains do
 
   defp walk_command_htn(state, [person, from, to]) do
     current_loc = StateV2.get_fact(state, person, "loc")
+
     if current_loc == from do
       StateV2.set_fact(state, person, "loc", to)
     else
@@ -597,6 +609,7 @@ defmodule TestDomains do
 
   defp call_taxi_command_htn(state, [person, taxi]) do
     taxi_condition = StateV2.get_fact(state, taxi, "taxi_condition")
+
     if taxi_condition == "good" do
       person_loc = StateV2.get_fact(state, person, "loc")
       StateV2.set_fact(state, taxi, "loc", person_loc)
@@ -622,6 +635,7 @@ defmodule TestDomains do
   defp pay_driver_command_htn(state, [person, taxi]) do
     fare = taxi_fare(StateV2.get_fact(state, person, "loc"), StateV2.get_fact(state, taxi, "loc"))
     cash = StateV2.get_fact(state, person, "cash")
+
     if cash >= fare do
       StateV2.set_fact(state, person, "cash", cash - fare)
     else
@@ -634,6 +648,7 @@ defmodule TestDomains do
   defp travel_by_foot_htn(state, ["travel", person, destination]) do
     current_loc = StateV2.get_fact(state, person, "loc")
     distance = distance_between(current_loc, destination)
+
     if distance <= 2 do
       [{"walk", person, current_loc, destination}]
     else
@@ -646,11 +661,13 @@ defmodule TestDomains do
     taxis = ["taxi1", "taxi2"]
 
     case Enum.find(taxis, fn _taxi ->
-      cash = StateV2.get_fact(state, person, "cash")
-      fare = taxi_fare(current_loc, destination)
-      cash >= fare
-    end) do
-      nil -> false
+           cash = StateV2.get_fact(state, person, "cash")
+           fare = taxi_fare(current_loc, destination)
+           cash >= fare
+         end) do
+      nil ->
+        false
+
       taxi ->
         [
           {"call_taxi", person, taxi},

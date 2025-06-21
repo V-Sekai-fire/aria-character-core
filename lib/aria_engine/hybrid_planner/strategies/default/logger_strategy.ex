@@ -4,7 +4,7 @@
 defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
   @moduledoc """
   Default logging strategy implementation using Elixir's Logger.
-  
+
   This strategy encapsulates logging operations while providing the clean
   strategy interface defined in ADR-091.
   """
@@ -17,26 +17,30 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
   def log(level, message, metadata \\ %{}, opts \\ []) do
     try do
       # Convert our log levels to Logger levels
-      logger_level = case level do
-        :debug -> :debug
-        :info -> :info
-        :warning -> :warning
-        :error -> :error
-        _ -> :info
-      end
+      logger_level =
+        case level do
+          :debug -> :debug
+          :info -> :info
+          :warning -> :warning
+          :error -> :error
+          _ -> :info
+        end
 
       # Add timestamp and strategy info to metadata
-      enhanced_metadata = metadata
+      enhanced_metadata =
+        metadata
         |> Map.put(:timestamp, System.system_time(:millisecond))
         |> Map.put(:strategy_source, "HybridPlanner")
 
       # Format message with metadata if verbose logging is enabled
       verbose = Keyword.get(opts, :verbose, 0)
-      formatted_message = if verbose > 2 and map_size(enhanced_metadata) > 0 do
-        "#{message} | Metadata: #{inspect(enhanced_metadata)}"
-      else
-        message
-      end
+
+      formatted_message =
+        if verbose > 2 and map_size(enhanced_metadata) > 0 do
+          "#{message} | Metadata: #{inspect(enhanced_metadata)}"
+        else
+          message
+        end
 
       # Log using Elixir's Logger
       Logger.log(logger_level, formatted_message)
@@ -52,27 +56,27 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
   @impl true
   def log_progress(phase, progress, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
-    
+
     if verbose > 0 do
       progress_info = Map.merge(progress, %{phase: phase, type: :progress})
-      
+
       case phase do
         "planning" ->
           message = "Planning phase: #{Map.get(progress, :status, "unknown")}"
           log(:info, message, progress_info, opts)
-        
+
         "temporal_validation" ->
           message = "Temporal validation: #{Map.get(progress, :status, "unknown")}"
           log(:info, message, progress_info, opts)
-        
+
         "execution" ->
           message = "Execution phase: #{Map.get(progress, :status, "unknown")}"
           log(:info, message, progress_info, opts)
-        
+
         "replanning" ->
           message = "Replanning phase: #{Map.get(progress, :status, "unknown")}"
           log(:info, message, progress_info, opts)
-        
+
         _ ->
           message = "#{phase}: #{Map.get(progress, :status, "unknown")}"
           log(:info, message, progress_info, opts)
@@ -84,30 +88,34 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
 
   @impl true
   def log_error(error, context \\ %{}, opts \\ []) do
-    error_message = case error do
-      %{__exception__: true} = exception ->
-        "Exception: #{Exception.message(exception)}"
-      
-      error_string when is_binary(error_string) ->
-        error_string
-      
-      other ->
-        "Error: #{inspect(other)}"
-    end
+    error_message =
+      case error do
+        %{__exception__: true} = exception ->
+          "Exception: #{Exception.message(exception)}"
 
-    error_metadata = Map.merge(context, %{
-      type: :error,
-      timestamp: System.system_time(:millisecond)
-    })
+        error_string when is_binary(error_string) ->
+          error_string
+
+        other ->
+          "Error: #{inspect(other)}"
+      end
+
+    error_metadata =
+      Map.merge(context, %{
+        type: :error,
+        timestamp: System.system_time(:millisecond)
+      })
 
     # Include stack trace if it's an exception and verbose logging is enabled
     verbose = Keyword.get(opts, :verbose, 0)
-    enhanced_message = if verbose > 1 and is_exception_value(error) do
-      stacktrace = Process.info(self(), :current_stacktrace) |> elem(1)
-      "#{error_message}\nStacktrace: #{Exception.format_stacktrace(stacktrace)}"
-    else
-      error_message
-    end
+
+    enhanced_message =
+      if verbose > 1 and is_exception_value(error) do
+        stacktrace = Process.info(self(), :current_stacktrace) |> elem(1)
+        "#{error_message}\nStacktrace: #{Exception.format_stacktrace(stacktrace)}"
+      else
+        error_message
+      end
 
     log(:error, enhanced_message, error_metadata, opts)
   end
@@ -121,18 +129,24 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
           # Note: In a real implementation, this might set the Logger level
           # For now, we just acknowledge the configuration
           log(:info, "LoggerStrategy configured with level: #{level}", %{config: config}, opts)
-        
+
         %{format: format} when is_binary(format) ->
           log(:info, "LoggerStrategy configured with format: #{format}", %{config: config}, opts)
-        
+
         _ ->
           log(:warning, "LoggerStrategy: Unknown configuration options", %{config: config}, opts)
       end
-      
+
       :ok
     rescue
       e ->
-        log(:error, "LoggerStrategy configuration error: #{Exception.message(e)}", %{config: config}, opts)
+        log(
+          :error,
+          "LoggerStrategy configuration error: #{Exception.message(e)}",
+          %{config: config},
+          opts
+        )
+
         :ok
     end
   end
@@ -185,7 +199,7 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
 
   @doc """
   Create a scoped logger for a specific component.
-  
+
   This allows different parts of the hybrid planner to have
   contextualized logging while using the same strategy.
   """

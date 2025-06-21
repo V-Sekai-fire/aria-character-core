@@ -16,12 +16,17 @@ defmodule AriaStorage.WaffleExample do
   Example: Store a file using local Waffle storage.
   """
   def store_file_locally(file_path, opts \\ []) do
-    storage_opts = Keyword.merge([
-      backend: :local,
-      directory: "/tmp/aria-chunks",
-      chunk_size: 64 * 1024,  # 64KB chunks
-      compress: true
-    ], opts)
+    storage_opts =
+      Keyword.merge(
+        [
+          backend: :local,
+          directory: "/tmp/aria-chunks",
+          # 64KB chunks
+          chunk_size: 64 * 1024,
+          compress: true
+        ],
+        opts
+      )
 
     case Storage.store_file_with_waffle(file_path, storage_opts) do
       {:ok, result} ->
@@ -42,20 +47,25 @@ defmodule AriaStorage.WaffleExample do
   """
   def store_file_s3(file_path, bucket, opts \\ []) do
     # Configure AWS credentials (should be set via environment variables)
-    storage_opts = Keyword.merge([
-      backend: :s3,
-      bucket: bucket,
-      region: "us-east-1",
-      chunk_size: 1024 * 1024,  # 1MB chunks for S3
-      compress: true
-    ], opts)
+    storage_opts =
+      Keyword.merge(
+        [
+          backend: :s3,
+          bucket: bucket,
+          region: "us-east-1",
+          # 1MB chunks for S3
+          chunk_size: 1024 * 1024,
+          compress: true
+        ],
+        opts
+      )
 
     # First configure Waffle for S3
     case Storage.configure_waffle_storage(%{
-      storage: :s3,
-      bucket: bucket,
-      region: storage_opts[:region]
-    }) do
+           storage: :s3,
+           bucket: bucket,
+           region: storage_opts[:region]
+         }) do
       {:ok, _config} ->
         Storage.store_file_with_waffle(file_path, storage_opts)
 
@@ -68,9 +78,13 @@ defmodule AriaStorage.WaffleExample do
   Example: Retrieve and save a file from Waffle storage.
   """
   def retrieve_and_save(index_ref, output_path, opts \\ []) do
-    storage_opts = Keyword.merge([
-      backend: :local
-    ], opts)
+    storage_opts =
+      Keyword.merge(
+        [
+          backend: :local
+        ],
+        opts
+      )
 
     case Storage.get_file_with_waffle(index_ref, storage_opts) do
       {:ok, result} ->
@@ -95,20 +109,27 @@ defmodule AriaStorage.WaffleExample do
   Example: Batch upload multiple files.
   """
   def batch_upload(file_paths, opts \\ []) do
-    storage_opts = Keyword.merge([
-      backend: :local,
-      chunk_size: 128 * 1024,  # 128KB chunks
-      compress: true
-    ], opts)
+    storage_opts =
+      Keyword.merge(
+        [
+          backend: :local,
+          # 128KB chunks
+          chunk_size: 128 * 1024,
+          compress: true
+        ],
+        opts
+      )
 
-    results = Enum.map(file_paths, fn file_path ->
-      case Storage.store_file_with_waffle(file_path, storage_opts) do
-        {:ok, result} ->
-          {:ok, %{file: file_path, result: result}}
-        {:error, reason} ->
-          {:error, %{file: file_path, reason: reason}}
-      end
-    end)
+    results =
+      Enum.map(file_paths, fn file_path ->
+        case Storage.store_file_with_waffle(file_path, storage_opts) do
+          {:ok, result} ->
+            {:ok, %{file: file_path, result: result}}
+
+          {:error, reason} ->
+            {:error, %{file: file_path, reason: reason}}
+        end
+      end)
 
     {successful, failed} = Enum.split_with(results, &match?({:ok, _}, &1))
 
@@ -116,20 +137,25 @@ defmodule AriaStorage.WaffleExample do
     Logger.debug("   Successful: #{length(successful)}")
     Logger.error("   Failed: #{length(failed)}")
 
-    {:ok, %{
-      successful: Enum.map(successful, fn {:ok, data} -> data end),
-      failed: Enum.map(failed, fn {:error, data} -> data end)
-    }}
+    {:ok,
+     %{
+       successful: Enum.map(successful, fn {:ok, data} -> data end),
+       failed: Enum.map(failed, fn {:error, data} -> data end)
+     }}
   end
 
   @doc """
   Example: Migrate existing storage to Waffle.
   """
   def migrate_to_waffle(target_backend, opts \\ []) do
-    migration_opts = Keyword.merge([
-      batch_size: 10,
-      bucket: "aria-chunks-migrated"
-    ], opts)
+    migration_opts =
+      Keyword.merge(
+        [
+          batch_size: 10,
+          bucket: "aria-chunks-migrated"
+        ],
+        opts
+      )
 
     Logger.info(" Starting migration to #{target_backend}...")
 
@@ -170,6 +196,7 @@ defmodule AriaStorage.WaffleExample do
         case Storage.list_waffle_files(backend: backend, limit: 5) do
           {:ok, files} ->
             Logger.info(" Recent files (#{length(files)}):")
+
             Enum.each(files, fn file ->
               Logger.debug("   - #{file.index_ref} (#{format_bytes(file.size)})")
             end)
@@ -192,11 +219,11 @@ defmodule AriaStorage.WaffleExample do
   """
   def cleanup_test_data(pattern \\ "aria_waffle_test_*") do
     temp_dir = System.tmp_dir!()
-    
+
     case File.ls(temp_dir) do
       {:ok, files} ->
         test_files = Enum.filter(files, &String.match?(&1, ~r/#{pattern}/))
-        
+
         Enum.each(test_files, fn file ->
           file_path = Path.join(temp_dir, file)
           File.rm(file_path)
@@ -216,10 +243,13 @@ defmodule AriaStorage.WaffleExample do
     cond do
       bytes >= 1024 * 1024 * 1024 ->
         "#{Float.round(bytes / (1024 * 1024 * 1024), 2)} GB"
+
       bytes >= 1024 * 1024 ->
         "#{Float.round(bytes / (1024 * 1024), 2)} MB"
+
       bytes >= 1024 ->
         "#{Float.round(bytes / 1024, 2)} KB"
+
       true ->
         "#{bytes} bytes"
     end

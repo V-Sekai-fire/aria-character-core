@@ -57,10 +57,12 @@ defmodule BlocksWorldMethods do
       true ->
         # Block is on another block, need to unstack it
         target = State.get_fact(state, "on", block)
+
         if target do
           [{:unstack, [block, target]}]
         else
-          []  # Invalid state
+          # Invalid state
+          []
         end
     end
   end
@@ -178,8 +180,6 @@ defmodule BlocksWorldMethods do
 
   # Methods for GTN (Goal-Task-Network) domain
 
-
-
   # Methods for HGN (Hierarchical Goal Network) and goal splitting domains
 
   @doc """
@@ -225,11 +225,12 @@ defmodule BlocksWorldMethods do
 
       true ->
         # Need to get the block first, ensure target is clear, then stack
-        clear_target_goals = if State.get_fact(state, "clear", target) do
-          []
-        else
-          [["pos", find_block_on_top(state, target), "table"]]
-        end
+        clear_target_goals =
+          if State.get_fact(state, "clear", target) do
+            []
+          else
+            [["pos", find_block_on_top(state, target), "table"]]
+          end
 
         [{"take", [block]} | clear_target_goals] ++ [{"put", [block, target]}]
     end
@@ -264,9 +265,10 @@ defmodule BlocksWorldMethods do
   """
   def achieve_blocks_multigoal(%State{} = state, goals) do
     # Filter out goals that are already satisfied
-    unsatisfied_goals = Enum.filter(goals, fn goal ->
-      not goal_satisfied?(state, goal)
-    end)
+    unsatisfied_goals =
+      Enum.filter(goals, fn goal ->
+        not goal_satisfied?(state, goal)
+      end)
 
     case unsatisfied_goals do
       [] ->
@@ -355,6 +357,7 @@ defmodule BlocksWorldMethods do
     cond do
       State.get_fact(state, "on_table", block) and State.get_fact(state, "clear", block) ->
         [{:pickup, [block]}]
+
       true ->
         false
     end
@@ -365,9 +368,11 @@ defmodule BlocksWorldMethods do
   """
   def take_from_block(%State{} = state, ["take", block]) do
     under_block = find_block_under(state, block)
+
     cond do
       under_block and State.get_fact(state, "clear", block) ->
         [{:unstack, [block, under_block]}]
+
       true ->
         false
     end
@@ -380,6 +385,7 @@ defmodule BlocksWorldMethods do
     cond do
       State.get_fact(state, "holding", "hand") == block ->
         [{:putdown, [block]}]
+
       true ->
         false
     end
@@ -391,12 +397,11 @@ defmodule BlocksWorldMethods do
   def put_on_block(%State{} = state, ["put", block, target]) when target != "table" do
     cond do
       State.get_fact(state, "holding", "hand") == block and
-      State.get_fact(state, "clear", target) ->
+          State.get_fact(state, "clear", target) ->
         [{:stack, [block, target]}]
+
       true ->
         false
     end
   end
-
-
 end

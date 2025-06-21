@@ -37,7 +37,6 @@ config :aria_data, AriaData.EngineRepo,
   pool_size: String.to_integer(System.get_env("ENGINE_POOL_SIZE") || "6"),
   ssl: true
 
-
 # Production Oban configuration
 # config :aria_queue, Oban,
 #   repo: AriaData.QueueRepo,
@@ -66,7 +65,6 @@ config :aria_data, AriaData.EngineRepo,
 config :aria_security,
   openbao_url: System.get_env("OPENBAO_URL"),
   openbao_token: System.get_env("OPENBAO_TOKEN")
-
 
 # Production Hammer rate limiting configuration
 config :hammer,

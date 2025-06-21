@@ -14,9 +14,10 @@ defmodule GoalTest do
 
   describe "Goal management" do
     test "creates and manages multigoals" do
-      multigoal = create_multigoal()
-      |> Multigoal.add_goal("player", "location", "treasure_room")
-      |> Multigoal.add_goal("player", "has", "treasure")
+      multigoal =
+        create_multigoal()
+        |> Multigoal.add_goal("player", "location", "treasure_room")
+        |> Multigoal.add_goal("player", "has", "treasure")
 
       assert Multigoal.size(multigoal) == 2
       refute Multigoal.empty?(multigoal)
@@ -28,13 +29,15 @@ defmodule GoalTest do
 
     test "checks goal satisfaction" do
       # Create a state where player is in treasure_room and has treasure
-      state = StateV2.new()
-      |> StateV2.set_fact("player", "location", "treasure_room")
-      |> StateV2.set_fact("player", "has", "treasure")
+      state =
+        StateV2.new()
+        |> StateV2.set_fact("player", "location", "treasure_room")
+        |> StateV2.set_fact("player", "has", "treasure")
 
-      multigoal = create_multigoal()
-      |> Multigoal.add_goal("player", "location", "treasure_room")
-      |> Multigoal.add_goal("player", "has", "treasure")
+      multigoal =
+        create_multigoal()
+        |> Multigoal.add_goal("player", "location", "treasure_room")
+        |> Multigoal.add_goal("player", "has", "treasure")
 
       assert Multigoal.satisfied?(multigoal, state)
 

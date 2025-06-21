@@ -11,7 +11,7 @@ Code.require_file("test/aria_engine/test/support/state_v2_mock.ex")
 defmodule TestOutput do
   @moduledoc """
   Conditional test output helpers that respect trace mode.
-  
+
   According to INST-006: Passing tests should be silent and produce no log output.
   Only --trace mode should provide normal logging output.
   """

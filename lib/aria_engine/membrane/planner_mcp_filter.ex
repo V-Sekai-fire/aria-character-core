@@ -4,17 +4,17 @@
 defmodule AriaEngine.Membrane.PlannerMCPFilter do
   @moduledoc """
   Membrane Filter element that converts PlanningResult to MCPResponse format.
-  
+
   This element bridges the gap between the planning execution (PlannerSink) 
   and MCP response delivery (MCPSink) by transforming planning results into
   the MCP-compatible response format.
-  
+
   ## Pipeline Position
-  
+
   ```
   MCPSource → PlanFilter → PlannerSink → ResponseFilter → MCPSink
   ```
-  
+
   This filter enables the MCPSink to remain generic while providing the
   necessary format transformation for the complete pipeline.
   """
@@ -24,19 +24,23 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
   alias AriaEngine.Membrane.Format.{PlanningResult, MCPResponse}
   alias Membrane.Buffer
 
-  def_input_pad :input,
+  def_input_pad(:input,
     accepted_format: PlanningResult,
     flow_control: :auto
+  )
 
-  def_output_pad :output,
+  def_output_pad(:output,
     accepted_format: MCPResponse,
     flow_control: :auto
+  )
 
-  def_options telemetry_prefix: [
-                spec: [atom()],
-                default: [:aria_engine, :membrane, :response_filter],
-                description: "Telemetry event prefix for monitoring"
-              ]
+  def_options(
+    telemetry_prefix: [
+      spec: [atom()],
+      default: [:aria_engine, :membrane, :response_filter],
+      description: "Telemetry event prefix for monitoring"
+    ]
+  )
 
   @impl true
   def handle_init(_ctx, opts) do
@@ -46,44 +50,49 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
       success_transforms: 0,
       error_transforms: 0
     }
-    
+
     {[], state}
   end
 
   @impl true
   def handle_buffer(:input, %Buffer{payload: %PlanningResult{} = planning_result}, _ctx, state) do
     start_time = System.monotonic_time(:microsecond)
-    
+
     mcp_response = transform_planning_result_to_mcp_response(planning_result)
-    
+
     # Emit telemetry based on result status
-    telemetry_event = case planning_result.status do
-      :success -> :success_transform
-      _ -> :error_transform
-    end
-    
+    telemetry_event =
+      case planning_result.status do
+        :success -> :success_transform
+        _ -> :error_transform
+      end
+
     emit_telemetry(state.telemetry_prefix, telemetry_event, %{
       request_id: planning_result.request_id,
       original_status: planning_result.status,
       processing_time: System.monotonic_time(:microsecond) - start_time
     })
-    
+
     output_buffer = %Buffer{payload: mcp_response}
-    
+
     # Update state counters
-    new_state = case planning_result.status do
-      :success ->
-        %{state | 
-          processed_count: state.processed_count + 1,
-          success_transforms: state.success_transforms + 1
-        }
-      _ ->
-        %{state | 
-          processed_count: state.processed_count + 1,
-          error_transforms: state.error_transforms + 1
-        }
-    end
-    
+    new_state =
+      case planning_result.status do
+        :success ->
+          %{
+            state
+            | processed_count: state.processed_count + 1,
+              success_transforms: state.success_transforms + 1
+          }
+
+        _ ->
+          %{
+            state
+            | processed_count: state.processed_count + 1,
+              error_transforms: state.error_transforms + 1
+          }
+      end
+
     {[buffer: {:output, output_buffer}], new_state}
   end
 
@@ -114,7 +123,7 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
 
   defp transform_planning_result_to_mcp_response(%PlanningResult{status: :error} = result) do
     error_reason = get_in(result.execution_metadata, [:error_reason]) || "Unknown planning error"
-    
+
     %MCPResponse{
       status: "error",
       schedule: nil,
@@ -165,7 +174,7 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
   end
 
   # Plan extraction functions (these would integrate with existing MCPTools logic)
-  
+
   defp extract_activities_from_plan(plan) do
     case plan do
       %{actions: actions} when is_list(actions) ->
@@ -177,8 +186,9 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
             "status" => "scheduled"
           }
         end)
-      
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
@@ -190,8 +200,9 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
           "end" => get_field(timeline, [:end, "end"]) || 0,
           "duration" => get_field(timeline, [:duration, "duration"]) || 0
         }
-      
-      _ -> %{}
+
+      _ ->
+        %{}
     end
   end
 
@@ -204,13 +215,15 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
 
   defp extract_plan_metadata(plan) do
     case plan do
-      %{metadata: metadata} when is_map(metadata) -> 
+      %{metadata: metadata} when is_map(metadata) ->
         # Convert atom keys to string keys for JSON compatibility
         Enum.reduce(metadata, %{}, fn {key, value}, acc ->
           string_key = if is_atom(key), do: Atom.to_string(key), else: key
           Map.put(acc, string_key, value)
         end)
-      _ -> %{}
+
+      _ ->
+        %{}
     end
   end
 
@@ -218,11 +231,13 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
   defp get_action_field(action, keys) when is_map(action) do
     Enum.find_value(keys, fn key -> Map.get(action, key) end)
   end
+
   defp get_action_field(_action, _keys), do: nil
 
   defp get_field(map, keys) when is_map(map) do
     Enum.find_value(keys, fn key -> Map.get(map, key) end)
   end
+
   defp get_field(_map, _keys), do: nil
 
   defp emit_telemetry(prefix, event, metadata) do
@@ -237,7 +252,7 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
   @spec get_stats(pid()) :: map()
   def get_stats(filter_pid) do
     send(filter_pid, {:get_stats, self()})
-    
+
     receive do
       {:response_filter_stats, stats} -> stats
     after
@@ -253,7 +268,7 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
       error_transforms: state.error_transforms,
       success_rate: calculate_success_rate(state.success_transforms, state.processed_count)
     }
-    
+
     send(from, {:response_filter_stats, stats})
     {[], state}
   end

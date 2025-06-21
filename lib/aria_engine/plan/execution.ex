@@ -5,31 +5,33 @@ defmodule Plan.Execution do
   @moduledoc """
   Functions for executing the planned solution using Run-Lazy-Refineahead.
   """
-  
+
   require Logger
-  alias Plan.{Backtracking, Blacklisting, Core} # Added Core alias
+  # Added Core alias
+  alias Plan.{Backtracking, Blacklisting, Core}
   alias AriaEngine.Plan.Utils
 
   @type node_id :: String.t()
   @type solution_node :: %{
-    id: node_id(),
-    task: term(), # Using term() as task type is defined in Core
-    parent_id: node_id() | nil,
-    children_ids: [node_id()],
-    state: AriaEngine.StateV2.t() | nil,
-    visited: boolean(),
-    expanded: boolean(),
-    method_tried: String.t() | nil,
-    blacklisted_methods: [String.t()],
-    is_primitive: boolean()
-  }
+          id: node_id(),
+          # Using term() as task type is defined in Core
+          task: term(),
+          parent_id: node_id() | nil,
+          children_ids: [node_id()],
+          state: AriaEngine.StateV2.t() | nil,
+          visited: boolean(),
+          expanded: boolean(),
+          method_tried: String.t() | nil,
+          blacklisted_methods: [String.t()],
+          is_primitive: boolean()
+        }
 
   @type solution_tree :: %{
-    root_id: node_id(),
-    nodes: %{node_id() => solution_node()},
-    blacklisted_commands: MapSet.t(),
-    goal_network: %{node_id() => [node_id()]}
-  }
+          root_id: node_id(),
+          nodes: %{node_id() => solution_node()},
+          blacklisted_commands: MapSet.t(),
+          goal_network: %{node_id() => [node_id()]}
+        }
 
   @type plan_step :: {atom(), list()}
 
@@ -50,9 +52,15 @@ defmodule Plan.Execution do
   Run-Lazy-Refineahead: Execute plan with replanning on failure.
   """
   @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
-    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
-  def run_lazy_refineahead(%Domain.Core{} = domain, %AriaEngine.StateV2{} = initial_state, solution_tree, opts \\ []) do
-    verbose = Keyword.get(opts, :verbose, Core.get_default_verbose()) # Get from Core
+          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  def run_lazy_refineahead(
+        %Domain.Core{} = domain,
+        %AriaEngine.StateV2{} = initial_state,
+        solution_tree,
+        opts \\ []
+      ) do
+    # Get from Core
+    verbose = Keyword.get(opts, :verbose, Core.get_default_verbose())
 
     if verbose > 2 do
       debug_puts("Starting Run-Lazy-Refineahead execution")
@@ -68,9 +76,10 @@ defmodule Plan.Execution do
 
   # Run execution loop for Run-Lazy-Refineahead
   @spec run_execution_loop(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
-    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp run_execution_loop(domain, current_state, solution_tree, opts) do
-    verbose = Keyword.get(opts, :verbose, Core.get_default_verbose()) # Get from Core
+    # Get from Core
+    verbose = Keyword.get(opts, :verbose, Core.get_default_verbose())
 
     # Get primitive actions from the solution tree
     actions = Utils.get_primitive_actions_dfs(solution_tree)
@@ -84,14 +93,21 @@ defmodule Plan.Execution do
   end
 
   # Execute actions with lazy failure checking and replanning
-  @spec execute_actions_lazily(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()], solution_tree(), keyword()) ::
-    {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @spec execute_actions_lazily(
+          Domain.Core.t(),
+          AriaEngine.StateV2.t(),
+          [plan_step()],
+          solution_tree(),
+          keyword()
+        ) ::
+          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp execute_actions_lazily(_domain, state, [], _solution_tree, _opts) do
     {:ok, state}
   end
 
   defp execute_actions_lazily(domain, state, [action | remaining_actions], solution_tree, opts) do
-    verbose = Keyword.get(opts, :verbose, Core.get_default_verbose()) # Get from Core
+    # Get from Core
+    verbose = Keyword.get(opts, :verbose, Core.get_default_verbose())
 
     {action_name, args} = action
     action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name

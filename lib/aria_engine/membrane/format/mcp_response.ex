@@ -4,7 +4,7 @@
 defmodule AriaEngine.Membrane.Format.MCPResponse do
   @moduledoc """
   Membrane format for MCP-formatted responses.
-  
+
   This format represents the final MCP-compatible response that will be
   sent back to the MCP client. It includes the status, schedule data,
   error details, and response metadata.
@@ -19,18 +19,18 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
   ]
 
   @type t :: %__MODULE__{
-    status: String.t(),
-    schedule: map() | nil,
-    error_details: String.t() | nil,
-    request_id: String.t(),
-    response_metadata: map()
-  }
+          status: String.t(),
+          schedule: map() | nil,
+          error_details: String.t() | nil,
+          request_id: String.t(),
+          response_metadata: map()
+        }
 
   @doc """
   Validates an MCP response format structure.
-  
+
   ## Examples
-  
+
       iex> response = %AriaEngine.Membrane.Format.MCPResponse{
       ...>   status: "success",
       ...>   schedule: %{},
@@ -44,19 +44,19 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
   @spec valid?(t()) :: boolean()
   def valid?(%__MODULE__{} = response) do
     is_binary(response.status) and
-    (is_map(response.schedule) or is_nil(response.schedule)) and
-    (is_binary(response.error_details) or is_nil(response.error_details)) and
-    is_binary(response.request_id) and
-    is_map(response.response_metadata)
+      (is_map(response.schedule) or is_nil(response.schedule)) and
+      (is_binary(response.error_details) or is_nil(response.error_details)) and
+      is_binary(response.request_id) and
+      is_map(response.response_metadata)
   end
 
   def valid?(_), do: false
 
   @doc """
   Creates a successful MCP response.
-  
+
   ## Examples
-  
+
       iex> schedule = %{"activities" => [], "timeline" => %{}}
       iex> metadata = %{formatted_at: DateTime.utc_now()}
       iex> response = AriaEngine.Membrane.Format.MCPResponse.success(
@@ -72,17 +72,18 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
       schedule: schedule,
       error_details: nil,
       request_id: request_id,
-      response_metadata: Map.merge(response_metadata, %{
-        formatted_at: DateTime.utc_now()
-      })
+      response_metadata:
+        Map.merge(response_metadata, %{
+          formatted_at: DateTime.utc_now()
+        })
     }
   end
 
   @doc """
   Creates an error MCP response.
-  
+
   ## Examples
-  
+
       iex> metadata = %{formatted_at: DateTime.utc_now()}
       iex> response = AriaEngine.Membrane.Format.MCPResponse.error(
       ...>   "Planning failed", "req_123", metadata
@@ -97,17 +98,18 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
       schedule: nil,
       error_details: error_details,
       request_id: request_id,
-      response_metadata: Map.merge(response_metadata, %{
-        formatted_at: DateTime.utc_now()
-      })
+      response_metadata:
+        Map.merge(response_metadata, %{
+          formatted_at: DateTime.utc_now()
+        })
     }
   end
 
   @doc """
   Creates an MCP response from a planning result.
-  
+
   ## Examples
-  
+
       iex> planning_result = %AriaEngine.Membrane.Format.PlanningResult{
       ...>   status: :success,
       ...>   result: %{plan: []},
@@ -122,33 +124,33 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
   @spec from_planning_result(AriaEngine.Membrane.Format.PlanningResult.t()) :: t()
   def from_planning_result(%AriaEngine.Membrane.Format.PlanningResult{status: :success} = result) do
     schedule = format_schedule(result.result)
-    
+
     response_metadata = %{
       formatted_at: DateTime.utc_now(),
       execution_time_ms: Map.get(result.performance_metrics, :execution_time_ms),
       coordinator_metadata: result.execution_metadata
     }
-    
+
     success(schedule, result.request_id, response_metadata)
   end
 
-  def from_planning_result(%AriaEngine.Membrane.Format.PlanningResult{status: status} = result) 
+  def from_planning_result(%AriaEngine.Membrane.Format.PlanningResult{status: status} = result)
       when status in [:error, :failure] do
     error_details = get_error_details(result)
-    
+
     response_metadata = %{
       formatted_at: DateTime.utc_now(),
       execution_time_ms: Map.get(result.performance_metrics, :execution_time_ms)
     }
-    
+
     error(error_details, result.request_id, response_metadata)
   end
 
   @doc """
   Checks if the MCP response represents a successful result.
-  
+
   ## Examples
-  
+
       iex> response = AriaEngine.Membrane.Format.MCPResponse.success(
       ...>   %{}, "req_123", %{}
       ...> )
@@ -161,9 +163,9 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
 
   @doc """
   Gets the execution time from response metadata.
-  
+
   ## Examples
-  
+
       iex> metadata = %{execution_time_ms: 150}
       iex> response = AriaEngine.Membrane.Format.MCPResponse.success(
       ...>   %{}, "req_123", metadata
@@ -189,10 +191,10 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
     case response.status do
       "success" ->
         Map.put(base_response, "schedule", response.schedule)
-      
+
       "error" ->
         Map.put(base_response, "error", response.error_details)
-      
+
       _ ->
         base_response
     end
@@ -228,7 +230,7 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
     # Extract activities from plan result
     # This would integrate with existing MCPTools formatting logic
     case Map.get(plan_result, :plan) do
-      plan when is_list(plan) -> 
+      plan when is_list(plan) ->
         Enum.map(plan, fn action ->
           %{
             "name" => Map.get(action, :name, "unknown"),
@@ -237,7 +239,9 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
             "parameters" => Map.get(action, :parameters, %{})
           }
         end)
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
@@ -258,8 +262,8 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
   end
 
   defp get_error_details(%AriaEngine.Membrane.Format.PlanningResult{execution_metadata: metadata}) do
-    Map.get(metadata, :error_reason) || 
-    Map.get(metadata, :failure_reason) || 
-    "Unknown planning error"
+    Map.get(metadata, :error_reason) ||
+      Map.get(metadata, :failure_reason) ||
+      "Unknown planning error"
   end
 end

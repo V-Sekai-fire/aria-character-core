@@ -4,31 +4,31 @@
 defmodule AriaEngine.StateV2 do
   @moduledoc """
   Modernized state management using subject-predicate-fact triples for entity-centric architecture.
-  
+
   This module provides functionality to manage world state using entity-first RDF-like triples,
   where each fact is represented as {subject, predicate} -> fact_value.
-  
+
   Supports any reasonable Elixir type for subjects and predicates:
-  
+
   ```elixir
   state = StateV2.new()
   # String-based entities (traditional approach)
   |> StateV2.set_fact("player", "location", "room1")
   |> StateV2.set_fact("player", "has", "sword")
-  
+
   # Integer node IDs (for computational graphs)
   |> StateV2.set_fact(42, :value, 3.14159)
   |> StateV2.set_fact(43, :operation, :add)
-  
+
   # Atom predicates for performance
   |> StateV2.set_fact("npc1", :status, :active)
   |> StateV2.set_fact("npc1", :ai_state, {:planning, "attack_player"})
-  
+
   # Mixed types work naturally
   StateV2.get_fact(state, 42, :value)  # => 3.14159
   StateV2.get_fact(state, "player", "location")  # => "room1"
   ```
-  
+
   This entity-first approach aligns with game networking ECS patterns and supports
   the timeline-per-entity architecture defined in ADR-087.
   """
@@ -38,8 +38,8 @@ defmodule AriaEngine.StateV2 do
   @type fact_value :: term()
   @type triple_key :: {subject(), predicate()}
   @type t :: %__MODULE__{
-    data: %{triple_key() => fact_value()}
-  }
+          data: %{triple_key() => fact_value()}
+        }
 
   defstruct data: %{}
 
@@ -62,7 +62,7 @@ defmodule AriaEngine.StateV2 do
   @doc """
   Gets the fact_value for a given subject and predicate.
   Returns nil if the triple doesn't exist.
-  
+
   Entity-first API: get_fact(state, subject, predicate)
   """
   @spec get_fact(t(), subject(), predicate()) :: fact_value() | nil
@@ -72,7 +72,7 @@ defmodule AriaEngine.StateV2 do
 
   @doc """
   Sets the fact_value for a given subject and predicate.
-  
+
   Entity-first API: set_fact(state, subject, predicate, fact_value)
   """
   @spec set_fact(t(), subject(), predicate(), fact_value()) :: t()
@@ -82,7 +82,7 @@ defmodule AriaEngine.StateV2 do
 
   @doc """
   Alias for set_fact/4 for backward compatibility.
-  
+
   Entity-first API: update_fact(state, subject, predicate, fact_value)
   """
   @spec update_fact(t(), subject(), predicate(), fact_value()) :: t()
@@ -92,7 +92,7 @@ defmodule AriaEngine.StateV2 do
 
   @doc """
   Alias for set_fact/4 for backward compatibility.
-  
+
   Entity-first API: add_fact(state, predicate, subject, fact_value)
   Note: Parameters are in different order for legacy compatibility.
   """
@@ -103,7 +103,7 @@ defmodule AriaEngine.StateV2 do
 
   @doc """
   Removes a triple from the state.
-  
+
   Entity-first API: remove_fact(state, subject, predicate)
   """
   @spec remove_fact(t(), subject(), predicate()) :: t()
@@ -113,7 +113,7 @@ defmodule AriaEngine.StateV2 do
 
   @doc """
   Checks if a subject has a given predicate with any fact_value.
-  
+
   Entity-first API: has_predicate?(state, subject, predicate)
   """
   @spec has_predicate?(t(), subject(), predicate()) :: boolean()
@@ -144,7 +144,7 @@ defmodule AriaEngine.StateV2 do
 
   @doc """
   Gets all predicates for a given subject.
-  
+
   Entity-first API: get_predicates(state, subject)
   """
   @spec get_predicates(t(), subject()) :: [predicate()]
@@ -157,7 +157,7 @@ defmodule AriaEngine.StateV2 do
 
   @doc """
   Gets all properties for a given subject as a map.
-  
+
   Entity-first API: get_properties(state, subject)
   """
   @spec get_properties(t(), subject()) :: %{predicate() => fact_value()}
@@ -183,13 +183,13 @@ defmodule AriaEngine.StateV2 do
   """
   @spec from_triples([{subject(), predicate(), fact_value()}]) :: t()
   def from_triples(triples) do
-    data = 
+    data =
       triples
-      |> Enum.map(fn {subject, predicate, fact_value} -> 
-        {{subject, predicate}, fact_value} 
+      |> Enum.map(fn {subject, predicate, fact_value} ->
+        {{subject, predicate}, fact_value}
       end)
       |> Map.new()
-    
+
     %__MODULE__{data: data}
   end
 
@@ -211,7 +211,7 @@ defmodule AriaEngine.StateV2 do
 
   @doc """
   Checks if the state matches a specific subject, predicate, and fact_value pattern.
-  
+
   Entity-first API: matches_exactly?(state, subject, predicate, fact_value)
   """
   @spec matches_exactly?(t(), subject(), predicate(), fact_value()) :: boolean()
@@ -225,9 +225,9 @@ defmodule AriaEngine.StateV2 do
   @doc """
   Evaluates existential quantifier: checks if there exists at least one subject 
   that matches the given subject_filter, predicate, and fact_value pattern.
-  
+
   Entity-first API: exists?(state, subject_filter, predicate, fact_value)
-  
+
   Example:
   ```elixir
   # Check if there exists any chair that is available
@@ -244,16 +244,18 @@ defmodule AriaEngine.StateV2 do
           filter_fn when is_function(filter_fn, 1) -> filter_fn.(subject)
           _ -> false
         end
-      _ -> false
+
+      _ ->
+        false
     end)
   end
 
   @doc """
   Evaluates universal quantifier: checks if all subjects matching the pattern
   have the specified predicate and fact_value.
-  
+
   Entity-first API: forall?(state, subject_filter, predicate, fact_value)
-  
+
   Example:
   ```elixir
   # Check if all doors are locked
@@ -261,16 +263,16 @@ defmodule AriaEngine.StateV2 do
   ```
   """
   @spec forall?(t(), (subject() -> boolean()), predicate(), fact_value()) :: boolean()
-  def forall?(%__MODULE__{data: data}, subject_filter, predicate, fact_value) 
+  def forall?(%__MODULE__{data: data}, subject_filter, predicate, fact_value)
       when is_function(subject_filter, 1) do
     # Find all subjects that match the filter
-    matching_subjects = 
+    matching_subjects =
       data
       |> Map.keys()
       |> Enum.map(fn {subj, _pred} -> subj end)
       |> Enum.uniq()
       |> Enum.filter(subject_filter)
-    
+
     # If no subjects match the filter, vacuous truth applies (return true)
     if Enum.empty?(matching_subjects) do
       true
@@ -284,7 +286,7 @@ defmodule AriaEngine.StateV2 do
 
   @doc """
   Gets all subjects that have a specific predicate with a specific fact_value.
-  
+
   Example:
   ```elixir
   # Get all subjects with status "available"
@@ -295,15 +297,15 @@ defmodule AriaEngine.StateV2 do
   @spec get_subjects_with_fact(t(), predicate(), fact_value()) :: [subject()]
   def get_subjects_with_fact(%__MODULE__{data: data}, predicate, fact_value) do
     data
-    |> Enum.filter(fn {{_subj, pred}, val} -> 
-      pred == predicate and val == fact_value 
+    |> Enum.filter(fn {{_subj, pred}, val} ->
+      pred == predicate and val == fact_value
     end)
     |> Enum.map(fn {{subj, _pred}, _val} -> subj end)
   end
 
   @doc """
   Gets all subjects that match a predicate pattern, regardless of fact_value.
-  
+
   Example:
   ```elixir
   # Get all subjects that have a "location" predicate
@@ -322,31 +324,31 @@ defmodule AriaEngine.StateV2 do
 
   @doc """
   Evaluates a quantified condition structure using entity-first patterns.
-  
+
   Supports both existential and universal quantifiers with flexible condition patterns.
-  
+
   ## Condition Format
   ```elixir
   # Existential quantifier (entity-first)
   {:exists, subject_filter, predicate, fact_value}
-  
+
   # Universal quantifier (entity-first)
   {:forall, subject_filter, predicate, fact_value}
-  
+
   # Regular condition (entity-first)
   {subject, predicate, fact_value}
   ```
-  
+
   ## Examples
   ```elixir
   # Check if any chair is available
   condition = {:exists, &String.contains?(&1, "chair"), "status", "available"}
   StateV2.evaluate_condition(state, condition)
-  
+
   # Check if all doors are locked
   condition = {:forall, &String.contains?(&1, "door"), "status", "locked"}
   StateV2.evaluate_condition(state, condition)
-  
+
   # Regular condition check (entity-first)
   condition = {"player", "location", "room1"}
   StateV2.evaluate_condition(state, condition)
@@ -373,42 +375,43 @@ defmodule AriaEngine.StateV2 do
       require Logger
       Logger.warning("Unknown condition format: #{inspect(condition)}")
     end
+
     false
   end
 
   @doc """
   Converts from legacy State format to StateV2 format.
-  
+
   This function helps with migration from the old {predicate, subject} format
   to the new entity-first {subject, predicate} format.
   """
   @spec from_legacy_state(AriaEngine.StateV2.t()) :: t()
   def from_legacy_state(%AriaEngine.StateV2{data: legacy_data}) do
-    converted_data = 
+    converted_data =
       legacy_data
       |> Enum.map(fn {{predicate, subject}, fact_value} ->
         {{subject, predicate}, fact_value}
       end)
       |> Map.new()
-    
+
     %__MODULE__{data: converted_data}
   end
 
   @doc """
   Converts to legacy State format for backward compatibility.
-  
+
   This function helps with migration by allowing StateV2 to be used
   with existing code that expects the old format.
   """
   @spec to_legacy_state(t()) :: AriaEngine.StateV2.t()
   def to_legacy_state(%__MODULE__{data: data}) do
-    converted_data = 
+    converted_data =
       data
       |> Enum.map(fn {{subject, predicate}, fact_value} ->
         {{predicate, subject}, fact_value}
       end)
       |> Map.new()
-    
+
     %AriaEngine.StateV2{data: converted_data}
   end
 end

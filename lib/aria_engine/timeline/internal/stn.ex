@@ -3,10 +3,10 @@
 
 defmodule Timeline.Internal.STN do
   @moduledoc false
-  
+
   # This module is part of the internal Timeline implementation.
   # External modules should use the Timeline API instead of accessing STN directly.
-  
+
   # Simple Temporal Network (STN) implementation with composable, parallelizable operations
   # and Path Consistency (PC-2) algorithm.
 
@@ -82,12 +82,14 @@ defmodule Timeline.Internal.STN do
   alias Timeline.Internal.STN.Units
   alias Timeline.Internal.STN.Operations
 
-  @type constraint :: {number(), number()}  # {min_distance, max_distance}
+  # {min_distance, max_distance}
+  @type constraint :: {number(), number()}
   @type time_point :: String.t()
   @type constraint_matrix :: %{optional({time_point(), time_point()}) => constraint()}
   @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low
-  @type lod_resolution :: 1 | 10 | 100 | 1000 | 10000  # time units per tick
+  # time units per tick
+  @type lod_resolution :: 1 | 10 | 100 | 1000 | 10000
 
   @type t :: %__MODULE__{
           time_points: MapSet.t(time_point()),
@@ -135,7 +137,7 @@ defmodule Timeline.Internal.STN do
 
   @doc """
   Creates a new empty Simple Temporal Network.
-  
+
   Uses seconds as the default time unit for human-readable temporal constraints.
   """
   @spec new() :: t()
@@ -144,7 +146,8 @@ defmodule Timeline.Internal.STN do
       time_points: MapSet.new(),
       constraints: %{},
       consistent: true,
-      time_unit: :second  # Default to seconds instead of milliseconds
+      # Default to seconds instead of milliseconds
+      time_unit: :second
     }
   end
 
@@ -157,7 +160,7 @@ defmodule Timeline.Internal.STN do
     lod_level = Keyword.get(opts, :lod_level, :medium)
     max_timepoints = Keyword.get(opts, :max_timepoints, 64)
     constant_work_enabled = Keyword.get(opts, :constant_work_enabled, false)
-    
+
     stn = %__MODULE__{
       time_points: MapSet.new(),
       constraints: %{},
@@ -171,7 +174,7 @@ defmodule Timeline.Internal.STN do
       constant_work_enabled: constant_work_enabled,
       dummy_constraints: %{}
     }
-    
+
     if constant_work_enabled do
       initialize_constant_work_structure(stn)
     else
@@ -199,7 +202,7 @@ defmodule Timeline.Internal.STN do
   defdelegate time_points(stn), to: Core
   defdelegate get_constraint(stn, from_point, to_point), to: Core
   defdelegate add_time_point(stn, time_point), to: Core
-  
+
   # Interval query functions for scheduling
   defdelegate get_intervals(stn), to: Core
   defdelegate get_overlapping_intervals(stn, query_start, query_end), to: Core
@@ -209,7 +212,8 @@ defmodule Timeline.Internal.STN do
 
   # PC2 functions
   defdelegate apply_pc2(stn), to: PC2
-  defdelegate solve(stn), to: Operations # solve is in operations now
+  # solve is in operations now
+  defdelegate solve(stn), to: Operations
 
   # Units functions
   defdelegate rescale_lod(stn, new_lod_level), to: Units
@@ -230,22 +234,23 @@ defmodule Timeline.Internal.STN do
   # Private helper functions that were in the original STN module
   defp initialize_constant_work_structure(stn) do
     # Pre-allocate dummy timepoints for constant work pattern
-    dummy_points = 
+    dummy_points =
       for i <- 1..stn.max_timepoints do
         "dummy_#{i}"
       end
       |> MapSet.new()
-    
+
     # Add self-constraints for dummy points
-    dummy_constraints = 
+    dummy_constraints =
       Enum.reduce(dummy_points, %{}, fn point, acc ->
         Map.put(acc, {point, point}, {0, 0})
       end)
-    
-    %{stn | 
-      time_points: MapSet.union(stn.time_points, dummy_points),
-      dummy_constraints: dummy_constraints,
-      constraints: Map.merge(stn.constraints, dummy_constraints)
+
+    %{
+      stn
+      | time_points: MapSet.union(stn.time_points, dummy_points),
+        dummy_constraints: dummy_constraints,
+        constraints: Map.merge(stn.constraints, dummy_constraints)
     }
   end
 end

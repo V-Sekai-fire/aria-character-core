@@ -14,25 +14,25 @@ defmodule AriaEngine.Plan.Utils do
 
   @type node_id :: String.t()
   @type solution_node :: %{
-    id: node_id(),
-    task: todo_item(),
-    parent_id: node_id() | nil,
-    children_ids: [node_id()],
-    state: StateV2.t() | nil,
-    visited: boolean(),
-    expanded: boolean(),
-    method_tried: String.t() | nil,
-    blacklisted_methods: [String.t()],
-    is_primitive: boolean(),
-    is_durative: boolean()
-  }
+          id: node_id(),
+          task: todo_item(),
+          parent_id: node_id() | nil,
+          children_ids: [node_id()],
+          state: StateV2.t() | nil,
+          visited: boolean(),
+          expanded: boolean(),
+          method_tried: String.t() | nil,
+          blacklisted_methods: [String.t()],
+          is_primitive: boolean(),
+          is_durative: boolean()
+        }
 
   @type solution_tree :: %{
-    root_id: node_id(),
-    nodes: %{node_id() => solution_node()},
-    blacklisted_commands: MapSet.t(),
-    goal_network: %{node_id() => [node_id()]}
-  }
+          root_id: node_id(),
+          nodes: %{node_id() => solution_node()},
+          blacklisted_commands: MapSet.t(),
+          goal_network: %{node_id() => [node_id()]}
+        }
 
   # Create initial solution tree with goal-task network
   @spec create_initial_solution_tree([todo_item()], StateV2.t()) :: solution_tree()
@@ -50,8 +50,10 @@ defmodule AriaEngine.Plan.Utils do
       expanded: false,
       method_tried: nil,
       blacklisted_methods: [],
-      is_primitive: false,  # Root node is never primitive
-      is_durative: false    # Root node is never durative
+      # Root node is never primitive
+      is_primitive: false,
+      # Root node is never durative
+      is_durative: false
     }
 
     %{
@@ -74,7 +76,7 @@ defmodule AriaEngine.Plan.Utils do
     # All nodes should be expanded and all leaves should be primitive actions
     # Root node is complete if expanded (even with no children for empty goals)
     Enum.all?(solution_tree.nodes, fn {id, node} ->
-      is_root = (id == solution_tree.root_id)
+      is_root = id == solution_tree.root_id
       node.expanded and (node.is_primitive or not Enum.empty?(node.children_ids) or is_root)
     end)
   end
@@ -85,9 +87,10 @@ defmodule AriaEngine.Plan.Utils do
     # Update all node states to the current state
     # This is a simplified implementation - a full implementation would
     # propagate state changes appropriately through the tree
-    updated_nodes = Map.new(solution_tree.nodes, fn {id, node} ->
-      {id, %{node | state: new_state}}
-    end)
+    updated_nodes =
+      Map.new(solution_tree.nodes, fn {id, node} ->
+        {id, %{node | state: new_state}}
+      end)
 
     %{solution_tree | nodes: updated_nodes}
   end
@@ -96,12 +99,17 @@ defmodule AriaEngine.Plan.Utils do
   @spec get_all_descendants(solution_tree(), node_id()) :: [node_id()]
   def get_all_descendants(solution_tree, node_id) do
     case solution_tree.nodes[node_id] do
-      nil -> []
+      nil ->
+        []
+
       node ->
         direct_children = node.children_ids
-        all_descendants = Enum.flat_map(direct_children, fn child_id ->
-          [child_id | get_all_descendants(solution_tree, child_id)]
-        end)
+
+        all_descendants =
+          Enum.flat_map(direct_children, fn child_id ->
+            [child_id | get_all_descendants(solution_tree, child_id)]
+          end)
+
         all_descendants
     end
   end
@@ -115,7 +123,9 @@ defmodule AriaEngine.Plan.Utils do
   @spec get_actions_from_node(solution_tree(), node_id()) :: [plan_step()]
   defp get_actions_from_node(solution_tree, node_id) do
     case solution_tree.nodes[node_id] do
-      nil -> []
+      nil ->
+        []
+
       node ->
         if node.is_primitive and node.expanded do
           # This is a primitive action
@@ -138,14 +148,20 @@ defmodule AriaEngine.Plan.Utils do
   Validates a plan by executing it step by step.
   For compatibility with existing AriaEngine usage.
   """
-  @spec validate_plan(Domain.Core.t(), StateV2.t(), [plan_step()] | solution_tree()) :: {:ok, StateV2.t()} | {:error, String.t()}
-  def validate_plan(%Domain.Core{} = domain, %StateV2{} = initial_state, %{root_id: _} = solution_tree) do
+  @spec validate_plan(Domain.Core.t(), StateV2.t(), [plan_step()] | solution_tree()) ::
+          {:ok, StateV2.t()} | {:error, String.t()}
+  def validate_plan(
+        %Domain.Core{} = domain,
+        %StateV2{} = initial_state,
+        %{root_id: _} = solution_tree
+      ) do
     # Extract primitive actions from solution tree
     actions = get_primitive_actions_dfs(solution_tree)
     validate_plan(domain, initial_state, actions)
   end
 
-  def validate_plan(%Domain.Core{} = domain, %StateV2{} = initial_state, plan) when is_list(plan) do
+  def validate_plan(%Domain.Core{} = domain, %StateV2{} = initial_state, plan)
+      when is_list(plan) do
     Enum.reduce_while(plan, {:ok, initial_state}, fn {action_name, args}, {:ok, state} ->
       action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 
@@ -177,11 +193,11 @@ defmodule AriaEngine.Plan.Utils do
   Get statistics about the solution tree.
   """
   @spec tree_stats(solution_tree()) :: %{
-    total_nodes: integer(),
-    expanded_nodes: integer(),
-    primitive_actions: integer(),
-    max_depth: integer()
-  }
+          total_nodes: integer(),
+          expanded_nodes: integer(),
+          primitive_actions: integer(),
+          max_depth: integer()
+        }
   def tree_stats(solution_tree) do
     nodes = Map.values(solution_tree.nodes)
 
@@ -196,7 +212,9 @@ defmodule AriaEngine.Plan.Utils do
   @spec calculate_max_depth(solution_tree(), node_id(), integer()) :: integer()
   defp calculate_max_depth(solution_tree, node_id, current_depth) do
     case solution_tree.nodes[node_id] do
-      nil -> current_depth
+      nil ->
+        current_depth
+
       node ->
         if Enum.empty?(node.children_ids) do
           current_depth
@@ -212,6 +230,7 @@ defmodule AriaEngine.Plan.Utils do
   # Check if a task is primitive (an action)
   @spec is_primitive_task?(todo_item()) :: boolean()
   def is_primitive_task?({name, _args}) when is_atom(name), do: true
-  def is_primitive_task?({name, _args}) when is_binary(name), do: false  # Could be action or task
+  # Could be action or task
+  def is_primitive_task?({name, _args}) when is_binary(name), do: false
   def is_primitive_task?(_), do: false
 end

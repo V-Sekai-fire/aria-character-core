@@ -6,27 +6,26 @@ defmodule AriaCharacterCore.Application do
 
   use Application
 
-
   @impl true
   def start(_type, _args) do
     children = [
       # AriaEngine components (planning and AI core)
       AriaEngine.Membrane.PipelineManager,
-      
+
       # AriaTown components (NPC management)
       AriaTown.PersistenceManager,
       AriaTown.TimeManager,
-      AriaTown.NPCManager,
-      
+      AriaTown.NPCManager
+
       # AriaAuth components
       # Authentication supervisors can be added here as needed
-      
+
       # AriaSecurity components
       # Security supervisors can be added here as needed
-      
+
       # AriaStorage components
       # Storage supervisors can be added here as needed
-      
+
       # AriaMonitor components
       # Monitoring supervisors can be added here as needed
     ]

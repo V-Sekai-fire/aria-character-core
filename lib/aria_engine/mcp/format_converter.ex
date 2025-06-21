@@ -4,7 +4,7 @@
 defmodule AriaEngine.MCP.FormatConverter do
   @moduledoc """
   Converts HybridCoordinatorV2 plan results to MCP format.
-  
+
   Handles the conversion between internal planning representations
   and the external MCP tool response format.
   """
@@ -59,7 +59,7 @@ defmodule AriaEngine.MCP.FormatConverter do
   defp extract_analysis_from_plan(plan) do
     metadata = Map.get(plan, :metadata, %{})
     temporal_constraints = Map.get(plan, :temporal_constraints, %{})
-    
+
     %{
       planning_time: Map.get(metadata, :planning_time),
       domain_name: Map.get(metadata, :domain_name),
@@ -80,7 +80,7 @@ defmodule AriaEngine.MCP.FormatConverter do
   # Extract metadata from plan
   defp extract_metadata_from_plan(plan) do
     metadata = Map.get(plan, :metadata, %{})
-    
+
     %{
       created_at: Map.get(metadata, :planning_time, System.system_time(:millisecond)),
       domain_name: Map.get(metadata, :domain_name),
@@ -99,8 +99,10 @@ defmodule AriaEngine.MCP.FormatConverter do
           id: "action_#{index}",
           action: action_name,
           arguments: args || [],
-          start_time: index * 60, # Simple sequential timing
-          duration: 60, # Default 1 minute duration
+          # Simple sequential timing
+          start_time: index * 60,
+          # Default 1 minute duration
+          duration: 60,
           status: "planned"
         }
       end)
@@ -116,13 +118,13 @@ defmodule AriaEngine.MCP.FormatConverter do
     case solution_tree do
       %{children: children} when is_list(children) ->
         Enum.flat_map(children, &extract_primitive_actions_from_tree/1)
-      
+
       %{task: {action_name, args}, status: :primitive} ->
         [{action_name, args}]
-      
+
       %{task: task} when is_tuple(task) ->
         [task]
-      
+
       _ ->
         []
     end
@@ -132,7 +134,8 @@ defmodule AriaEngine.MCP.FormatConverter do
   defp convert_temporal_constraints_to_timeline(constraints) do
     try do
       constraints
-      |> Enum.take(10) # Limit to first 10 for brevity
+      # Limit to first 10 for brevity
+      |> Enum.take(10)
       |> Enum.with_index()
       |> Enum.map(fn {{constraint_type, constraint_data}, index} ->
         %{
@@ -144,7 +147,10 @@ defmodule AriaEngine.MCP.FormatConverter do
       end)
     rescue
       e ->
-        Logger.warning("Error converting temporal constraints to timeline: #{Exception.message(e)}")
+        Logger.warning(
+          "Error converting temporal constraints to timeline: #{Exception.message(e)}"
+        )
+
         []
     end
   end

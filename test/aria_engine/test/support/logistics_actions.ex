@@ -38,7 +38,7 @@ defmodule LogisticsActions do
   def unload_plane(%State{} = state, [object, airport]) do
     plane = State.get_fact(state, "at", object)
     plane_at = State.get_fact(state, "plane_at", plane)
-    
+
     if plane_at == airport do
       State.set_fact(state, "at", object, airport)
     else
@@ -49,7 +49,7 @@ defmodule LogisticsActions do
   def unload_truck(%State{} = state, [object, location]) do
     truck = State.get_fact(state, "at", object)
     truck_at = State.get_fact(state, "truck_at", truck)
-    
+
     if truck_at == location do
       State.set_fact(state, "at", object, location)
     else
@@ -60,7 +60,7 @@ defmodule LogisticsActions do
   # Helper functions
   def find_truck(%State{} = state, object) do
     trucks = State.get_fact(state, "trucks", "list") || []
-    
+
     Enum.find(trucks, fn truck ->
       truck_at = State.get_fact(state, "truck_at", truck)
       object_at = State.get_fact(state, "at", object)
@@ -72,23 +72,24 @@ defmodule LogisticsActions do
 
   def find_plane(%State{} = state, object) do
     airplanes = State.get_fact(state, "airplanes", "list") || []
-    
+
     # Try to find a plane in the same city
-    same_city_plane = Enum.find(airplanes, fn plane ->
-      plane_at = State.get_fact(state, "plane_at", plane)
-      object_at = State.get_fact(state, "at", object)
-      plane_city = State.get_fact(state, "in_city", plane_at)
-      object_city = State.get_fact(state, "in_city", object_at)
-      plane_city == object_city
-    end)
-    
+    same_city_plane =
+      Enum.find(airplanes, fn plane ->
+        plane_at = State.get_fact(state, "plane_at", plane)
+        object_at = State.get_fact(state, "at", object)
+        plane_city = State.get_fact(state, "in_city", plane_at)
+        object_city = State.get_fact(state, "in_city", object_at)
+        plane_city == object_city
+      end)
+
     # If no plane in same city, return any plane
     same_city_plane || List.last(airplanes)
   end
 
   def find_airport(%State{} = state, location) do
     airports = State.get_fact(state, "airports", "list") || []
-    
+
     Enum.find(airports, fn airport ->
       airport_city = State.get_fact(state, "in_city", airport)
       location_city = State.get_fact(state, "in_city", location)

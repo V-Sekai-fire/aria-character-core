@@ -4,7 +4,7 @@
 defmodule Test.FlowTestHelpers do
   @moduledoc """
   Test support modules for Flow-based processing tests.
-  
+
   These modules provide reusable test functionality for Flow backflow,
   convergence, and parallel processing tests.
   """
@@ -12,7 +12,7 @@ defmodule Test.FlowTestHelpers do
   defmodule FlowBackflowTester do
     @moduledoc """
     Flow-based backflow testing that replaces Membrane functionality.
-    
+
     Implements the same backflow optimization concepts but using our
     centralized Flow processor through the FlowBehaviour interface.
     """
@@ -24,22 +24,24 @@ defmodule Test.FlowTestHelpers do
     end
 
     def process_with_backflow_optimization(_pipeline_name, actions, processing_opts \\ []) do
-      FlowWorkflow.process_actions_with_backflow(actions, Keyword.get(processing_opts, :stages, System.schedulers_online()))
+      FlowWorkflow.process_actions_with_backflow(
+        actions,
+        Keyword.get(processing_opts, :stages, System.schedulers_online())
+      )
     end
-
   end
 
   defmodule FlowConvergenceResultCollector do
     @moduledoc """
     Flow-based convergence collector that aggregates results hierarchically.
-    
+
     This replaces the Membrane ConvergenceResultCollector with equivalent functionality
     using our Flow-based system.
     """
-    
+
     def collect_convergence_results(flow_result, core_count) do
       results = Map.get(flow_result, :results, [])
-      
+
       %{
         total_processed: length(results),
         core_count: core_count,
@@ -63,6 +65,7 @@ defmodule Test.FlowTestHelpers do
     end
 
     defp merge_results([single]), do: single
+
     defp merge_results([left, right]) do
       %{
         combined: true,
@@ -77,9 +80,9 @@ defmodule Test.FlowTestHelpers do
     @moduledoc """
     Collects and aggregates results from Flow backflow processing.
     """
-    
+
     def collect_results(pipeline_results, batch_size \\ 100) do
-      results = 
+      results =
         pipeline_results
         |> Enum.flat_map(&extract_results/1)
         |> Enum.chunk_every(batch_size)
@@ -96,6 +99,7 @@ defmodule Test.FlowTestHelpers do
     defp extract_results(result) when is_map(result) do
       Map.get(result, :items, [result])
     end
+
     defp extract_results(result), do: [result]
 
     defp process_batch(batch) do
@@ -108,7 +112,7 @@ defmodule Test.FlowTestHelpers do
 
     defp summarize_results(results) do
       total_items = Enum.sum(Enum.map(results, & &1.count))
-      
+
       %{
         total_items: total_items,
         batch_count: length(results),
@@ -125,7 +129,7 @@ defmodule Test.FlowTestHelpers do
     def process_movement(action) do
       # Simulate processing time
       :timer.sleep(1)
-      
+
       %{
         original: action,
         processed_at: DateTime.utc_now(),
@@ -157,15 +161,21 @@ defmodule Test.FlowTestHelpers do
     """
 
     def collect_fps_stats(start_time, end_time, processed_count) do
-      duration_ms = max(DateTime.diff(end_time, start_time, :millisecond), 1)  # Ensure minimum 1ms
-      
+      # Ensure minimum 1ms
+      duration_ms = max(DateTime.diff(end_time, start_time, :millisecond), 1)
+
       %{
         start_time: start_time,
         end_time: end_time,
         duration_ms: duration_ms,
         processed_count: processed_count,
-        fps: if(duration_ms > 0, do: processed_count * 1000 / duration_ms, else: processed_count * 1000),
-        avg_processing_time_ms: if(processed_count > 0, do: duration_ms / processed_count, else: 0)
+        fps:
+          if(duration_ms > 0,
+            do: processed_count * 1000 / duration_ms,
+            else: processed_count * 1000
+          ),
+        avg_processing_time_ms:
+          if(processed_count > 0, do: duration_ms / processed_count, else: 0)
       }
     end
 

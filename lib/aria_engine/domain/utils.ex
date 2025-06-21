@@ -1,4 +1,3 @@
-
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
@@ -19,8 +18,24 @@ defmodule Domain.Utils do
 
   This is used for goal verification during planning.
   """
-  @spec verify_goal(AriaEngine.StateV2.t(), String.t(), String.t(), list(), AriaEngine.StateV2.fact_value(), integer(), integer()) :: AriaEngine.StateV2.fact_value() | false
-  def verify_goal(%AriaEngine.StateV2{} = state, _method_name, state_var, args, desired_values, _depth, _verbose) do
+  @spec verify_goal(
+          AriaEngine.StateV2.t(),
+          String.t(),
+          String.t(),
+          list(),
+          AriaEngine.StateV2.fact_value(),
+          integer(),
+          integer()
+        ) :: AriaEngine.StateV2.fact_value() | false
+  def verify_goal(
+        %AriaEngine.StateV2{} = state,
+        _method_name,
+        state_var,
+        args,
+        desired_values,
+        _depth,
+        _verbose
+      ) do
     # This is a placeholder for goal verification logic
     # In the original C++ code, this would check if a goal is satisfied
     case AriaEngine.StateV2.get_fact(state, List.first(args) || "", state_var) do
@@ -33,12 +48,12 @@ defmodule Domain.Utils do
   Gets a summary of the domain contents.
   """
   @spec summary(t()) :: %{
-    name: String.t(),
-    actions: [action_name()],
-    task_methods: [task_name()],
-    unigoal_methods: [String.t()],
-    multigoal_method_count: non_neg_integer()
-  }
+          name: String.t(),
+          actions: [action_name()],
+          task_methods: [task_name()],
+          unigoal_methods: [String.t()],
+          multigoal_method_count: non_neg_integer()
+        }
   def summary(%{} = domain) do
     %{
       name: domain.name,
@@ -49,7 +64,7 @@ defmodule Domain.Utils do
     }
   end
 
-  @doc  """
+  @doc """
   Adds Porcelain-based actions to the domain.
 
   This convenience method adds all the external process actions from Actions.
@@ -89,6 +104,7 @@ defmodule Domain.Utils do
   def infer_method_name(fun) when is_function(fun, 2) do
     # Convert function to string and extract name
     fun_string = inspect(fun)
+
     case Regex.run(~r/&([^\/]+)\/\d+/, fun_string) do
       [_, name] ->
         # Remove module prefix if present (e.g., "Module.function" -> "function")
@@ -96,6 +112,7 @@ defmodule Domain.Utils do
           [single_name] -> single_name
           parts -> List.last(parts)
         end
+
       _ ->
         # Fallback for anonymous functions or complex cases
         "method_#{:erlang.phash2(fun)}"
@@ -105,6 +122,7 @@ defmodule Domain.Utils do
   def infer_method_name(fun) when is_function(fun) do
     # Convert function to string and extract name
     fun_string = inspect(fun)
+
     case Regex.run(~r/&([^\/]+)\/\d+/, fun_string) do
       [_, name] ->
         # Remove module prefix if present (e.g., "Module.function" -> "function")
@@ -112,6 +130,7 @@ defmodule Domain.Utils do
           [single_name] -> single_name
           parts -> List.last(parts)
         end
+
       _ ->
         # Fallback for anonymous functions or complex cases
         "method_#{:erlang.phash2(fun)}"

@@ -5,7 +5,7 @@ defmodule AriaTown.Application do
   @moduledoc false
 
   use Application
-  
+
   # Ensure JSON encoders are loaded
   require AriaTown.JSONEncoders
 
@@ -14,11 +14,11 @@ defmodule AriaTown.Application do
     children = [
       # Persistence
       AriaTown.PersistenceManager,
-      
+
       # Time and NPC Management
       AriaTown.TimeManager,
       AriaTown.NPCManager
-      
+
       # Phoenix Endpoint (not implemented yet)
       # AriaTownWeb.Endpoint
     ]

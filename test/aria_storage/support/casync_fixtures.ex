@@ -11,51 +11,68 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   """
 
   # Constants from desync source (matching parser)
-  @ca_format_index 0x96824d9c7b129ff9
-  @ca_format_table 0xe75b9e112f17417d
-  @ca_format_table_tail_marker 0x4b4f050e5549ecd1
+  @ca_format_index 0x96824D9C7B129FF9
+  @ca_format_table 0xE75B9E112F17417D
+  @ca_format_table_tail_marker 0x4B4F050E5549ECD1
   @ca_format_sha512_256 0x2000000000000000
-  @ca_format_entry 0x1396fabcea5bbb51
+  @ca_format_entry 0x1396FABCEA5BBB51
 
   @doc """
   Creates a synthetic multi-chunk ARCX (caibx-compatible) file with the specified number of chunks.
   Generates proper desync FormatIndex/FormatTable structure.
   """
-  def create_multi_chunk_caibx(chunk_count, feature_flags \\ @ca_format_sha512_256) when is_integer(chunk_count) and chunk_count > 0 do
+  def create_multi_chunk_caibx(chunk_count, feature_flags \\ @ca_format_sha512_256)
+      when is_integer(chunk_count) and chunk_count > 0 do
     # Create desync-compatible binary format
     # FormatIndex (48 bytes): 8-byte size + 8-byte type + 32 bytes of fields
     format_index = <<
-      48::little-64,                    # Size of FormatIndex
-      @ca_format_index::little-64,      # Magic for FormatIndex
-      feature_flags::little-64,         # Feature flags (SHA512-256 for blobs)
-      1024::little-64,                  # chunk_size_min
-      1024::little-64,                  # chunk_size_avg
-      1024::little-64                   # chunk_size_max
+      # Size of FormatIndex
+      48::little-64,
+      # Magic for FormatIndex
+      @ca_format_index::little-64,
+      # Feature flags (SHA512-256 for blobs)
+      feature_flags::little-64,
+      # chunk_size_min
+      1024::little-64,
+      # chunk_size_avg
+      1024::little-64,
+      # chunk_size_max
+      1024::little-64
     >>
 
     # FormatTable header (16 bytes)
     table_header = <<
-      0xFFFFFFFFFFFFFFFF::little-64,    # Table marker
-      @ca_format_table::little-64       # Table type
+      # Table marker
+      0xFFFFFFFFFFFFFFFF::little-64,
+      # Table type
+      @ca_format_table::little-64
     >>
 
     # Create table items (40 bytes each: 8-byte offset + 32-byte chunk_id)
-    table_items = for i <- 1..chunk_count do
-      chunk_id = :crypto.hash(:sha256, "test_chunk_#{i}")
-      offset = i * 1024  # Each chunk ends at 1KB intervals (cumulative offsets)
-      <<offset::little-64, chunk_id::binary-size(32)>>
-    end
+    table_items =
+      for i <- 1..chunk_count do
+        chunk_id = :crypto.hash(:sha256, "test_chunk_#{i}")
+        # Each chunk ends at 1KB intervals (cumulative offsets)
+        offset = i * 1024
+        <<offset::little-64, chunk_id::binary-size(32)>>
+      end
 
     table_items_binary = Enum.join(table_items)
-    table_size = byte_size(table_items_binary) + 48  # 16 bytes header + 40 bytes tail
+    # 16 bytes header + 40 bytes tail
+    table_size = byte_size(table_items_binary) + 48
 
     # Table tail marker (40 bytes)
     table_tail = <<
-      0::little-64,                     # Zero offset
-      0::little-64,                     # Zero pad
-      48::little-64,                    # Size field
-      table_size::little-64,            # Table size
-      @ca_format_table_tail_marker::little-64 # Tail marker
+      # Zero offset
+      0::little-64,
+      # Zero pad
+      0::little-64,
+      # Size field
+      48::little-64,
+      # Table size
+      table_size::little-64,
+      # Tail marker
+      @ca_format_table_tail_marker::little-64
     >>
 
     # Combine all parts
@@ -98,14 +115,23 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   def create_complex_catar do
     # CATAR files start directly with entry data, no magic bytes
     # Create a simple directory entry using proper CATAR format constants
-    entry_header = <<64::little-64>> <>                      # size
-                   <<@ca_format_entry::little-64>> <>        # type (CaFormatEntry)
-                   <<0::little-64>> <>                       # feature_flags
-                   <<0o755::little-64>> <>                   # mode (directory permissions)
-                   <<0::little-64>> <>                       # field5 (unknown, set to 0)
-                   <<1000::little-64>> <>                    # gid
-                   <<1000::little-64>> <>                    # uid
-                   <<1640995200::little-64>>                 # mtime
+    # size
+    # type (CaFormatEntry)
+    # feature_flags
+    # mode (directory permissions)
+    # field5 (unknown, set to 0)
+    # gid
+    # uid
+    # mtime
+    entry_header =
+      <<64::little-64>> <>
+        <<@ca_format_entry::little-64>> <>
+        <<0::little-64>> <>
+        <<0o755::little-64>> <>
+        <<0::little-64>> <>
+        <<1000::little-64>> <>
+        <<1000::little-64>> <>
+        <<1_640_995_200::little-64>>
 
     entry_header
   end
@@ -115,38 +141,51 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
   """
   def create_catar_entry(feature_flags, mode, uid, gid, mtime) do
     cond do
-      Bitwise.band(feature_flags, 0x1) != 0 ->  # CaFormatWith16BitUIDs
-        size = 52  # Size for 16-bit UIDs/GIDs
+      # CaFormatWith16BitUIDs
+      Bitwise.band(feature_flags, 0x1) != 0 ->
+        # Size for 16-bit UIDs/GIDs
+        size = 52
+
         <<
           size::little-64,
           @ca_format_entry::little-64,
           feature_flags::little-64,
           mode::little-64,
-          0::little-64,  # field5 (unknown, set to 0)
+          # field5 (unknown, set to 0)
+          0::little-64,
           gid::little-16,
           uid::little-16,
           mtime::little-64
         >>
-      Bitwise.band(feature_flags, 0x2) != 0 ->  # CaFormatWith32BitUIDs
-        size = 56  # Size for 32-bit UIDs/GIDs
+
+      # CaFormatWith32BitUIDs
+      Bitwise.band(feature_flags, 0x2) != 0 ->
+        # Size for 32-bit UIDs/GIDs
+        size = 56
+
         <<
           size::little-64,
           @ca_format_entry::little-64,
           feature_flags::little-64,
           mode::little-64,
-          0::little-64,  # field5 (unknown, set to 0)
+          # field5 (unknown, set to 0)
+          0::little-64,
           gid::little-32,
           uid::little-32,
           mtime::little-64
         >>
+
       true ->
-        size = 64  # Size for 64-bit UIDs/GIDs (default)
+        # Size for 64-bit UIDs/GIDs (default)
+        size = 64
+
         <<
           size::little-64,
           @ca_format_entry::little-64,
           feature_flags::little-64,
           mode::little-64,
-          0::little-64,  # field5 (unknown, set to 0)
+          # field5 (unknown, set to 0)
+          0::little-64,
           gid::little-64,
           uid::little-64,
           mtime::little-64
@@ -161,15 +200,17 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
     case parsed_result do
       %{chunks: chunks, header: header} when is_list(chunks) and is_map(header) ->
         # Validate that all chunks have required fields and header is present
-        has_valid_chunks = Enum.all?(chunks, fn chunk ->
-          is_map(chunk) and
-          Map.has_key?(chunk, :chunk_id) and
-          Map.has_key?(chunk, :size) and
-          Map.has_key?(chunk, :offset)
-        end)
+        has_valid_chunks =
+          Enum.all?(chunks, fn chunk ->
+            is_map(chunk) and
+              Map.has_key?(chunk, :chunk_id) and
+              Map.has_key?(chunk, :size) and
+              Map.has_key?(chunk, :offset)
+          end)
 
-        has_valid_header = Map.has_key?(header, :chunk_count) and
-                          Map.has_key?(header, :total_size)
+        has_valid_header =
+          Map.has_key?(header, :chunk_count) and
+            Map.has_key?(header, :total_size)
 
         has_valid_chunks and has_valid_header
 
@@ -187,8 +228,8 @@ defmodule AriaStorage.TestFixtures.CasyncFixtures do
         # Validate that all entries have required fields
         Enum.all?(entries, fn entry ->
           is_map(entry) and
-          Map.has_key?(entry, :type) and
-          Map.has_key?(entry, :name)
+            Map.has_key?(entry, :type) and
+            Map.has_key?(entry, :name)
         end)
 
       _ ->

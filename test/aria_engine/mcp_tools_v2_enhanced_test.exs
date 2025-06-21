@@ -2,28 +2,28 @@ defmodule AriaEngine.MCPToolsV2EnhancedTest do
   @moduledoc """
   Test for enhanced schedule_activities schema with all new fields.
   """
-  
+
   use ExUnit.Case
   alias AriaEngine.MCPToolsV2
   alias AriaEngine.Membrane.PipelineManager
-  
+
   setup do
     # Start the pipeline manager for testing
     case GenServer.start_link(PipelineManager, [], name: PipelineManager) do
       {:ok, _pid} -> :ok
       {:error, {:already_started, _pid}} -> :ok
     end
-    
+
     on_exit(fn ->
       # Only stop if it's still running
       if Process.whereis(PipelineManager) do
         GenServer.stop(PipelineManager)
       end
     end)
-    
+
     :ok
   end
-  
+
   describe "enhanced schedule_activities schema" do
     test "accepts all new schema fields" do
       enhanced_params = %{
@@ -40,7 +40,7 @@ defmodule AriaEngine.MCPToolsV2EnhancedTest do
             "type" => "development"
           },
           %{
-            "id" => "activity_2", 
+            "id" => "activity_2",
             "name" => "Code Review",
             "duration" => %{
               "start" => "2025-06-20T14:00:00Z",
@@ -68,7 +68,7 @@ defmodule AriaEngine.MCPToolsV2EnhancedTest do
           },
           %{
             "id" => "dev_2",
-            "type" => "developer", 
+            "type" => "developer",
             "capabilities" => ["elixir", "testing"],
             "availability" => "PT8H",
             "current_activity" => nil,
@@ -126,7 +126,10 @@ defmodule AriaEngine.MCPToolsV2EnhancedTest do
                 "end" => "2025-06-20T17:00:00Z"
               }
             ],
-            "metadata" => %{"location" => "Building A, Floor 2", "equipment" => ["projector", "whiteboard"]}
+            "metadata" => %{
+              "location" => "Building A, Floor 2",
+              "equipment" => ["projector", "whiteboard"]
+            }
           }
         },
         "constraints" => %{
@@ -145,17 +148,17 @@ defmodule AriaEngine.MCPToolsV2EnhancedTest do
         },
         "pipeline_topology" => "full_pipeline"
       }
-      
+
       # Test that the enhanced schema is accepted
       result = MCPToolsV2.handle_tool_call(:schedule_activities, enhanced_params)
-      
+
       # Should not error and should return a structured response
       assert is_map(result)
       assert Map.has_key?(result, "status")
-      
+
       # Should indicate processing or success
       assert result["status"] in ["processing", "success", "error"]
-      
+
       # If processing, should have pipeline information
       if result["status"] == "processing" do
         assert Map.has_key?(result, "pipeline_id")
@@ -163,7 +166,7 @@ defmodule AriaEngine.MCPToolsV2EnhancedTest do
         assert result["topology"] == "full_pipeline"
       end
     end
-    
+
     test "handles ISO 8601 duration strings" do
       params = %{
         "schedule_name" => "iso_duration_test",
@@ -174,12 +177,12 @@ defmodule AriaEngine.MCPToolsV2EnhancedTest do
           }
         ]
       }
-      
+
       result = MCPToolsV2.handle_tool_call(:schedule_activities, params)
       assert is_map(result)
       assert Map.has_key?(result, "status")
     end
-    
+
     test "handles open-ended intervals" do
       params = %{
         "schedule_name" => "open_interval_test",
@@ -191,19 +194,19 @@ defmodule AriaEngine.MCPToolsV2EnhancedTest do
             }
           },
           %{
-            "id" => "open_end_activity", 
+            "id" => "open_end_activity",
             "duration" => %{
               "start" => "2025-06-20T09:00:00Z"
             }
           }
         ]
       }
-      
+
       result = MCPToolsV2.handle_tool_call(:schedule_activities, params)
       assert is_map(result)
       assert Map.has_key?(result, "status")
     end
-    
+
     test "maintains backward compatibility" do
       # Test with minimal old-style parameters
       minimal_params = %{
@@ -215,7 +218,7 @@ defmodule AriaEngine.MCPToolsV2EnhancedTest do
           }
         ]
       }
-      
+
       result = MCPToolsV2.handle_tool_call(:schedule_activities, minimal_params)
       assert is_map(result)
       assert Map.has_key?(result, "status")

@@ -104,13 +104,15 @@ defmodule TemporalPlanner.STNAction do
     end_timepoint = "#{action_id}_end"
 
     # Create base Timeline with action duration constraint
-    base_timeline = Timeline.new()
-    |> Timeline.add_constraint(start_timepoint, end_timepoint, duration)
+    base_timeline =
+      Timeline.new()
+      |> Timeline.add_constraint(start_timepoint, end_timepoint, duration)
 
     # Add precondition constraints
-    timeline_with_preconditions = 
+    timeline_with_preconditions =
       Enum.reduce(preconditions, base_timeline, fn precond, timeline ->
         precond_timepoint = "#{action_id}_precond_#{precond.resource}"
+
         timeline
         |> Timeline.add_constraint(precond_timepoint, start_timepoint, precond.constraint)
       end)
@@ -119,6 +121,7 @@ defmodule TemporalPlanner.STNAction do
     timeline_with_effects =
       Enum.reduce(effects, timeline_with_preconditions, fn effect, timeline ->
         effect_timepoint = "#{action_id}_effect_#{effect.resource}"
+
         timeline
         |> Timeline.add_constraint(end_timepoint, effect_timepoint, effect.constraint)
       end)
@@ -128,6 +131,7 @@ defmodule TemporalPlanner.STNAction do
       Enum.reduce(resource_requirements, timeline_with_effects, fn req, timeline ->
         resource_start = "#{action_id}_resource_#{req.resource}_start"
         resource_end = "#{action_id}_resource_#{req.resource}_end"
+
         timeline
         |> Timeline.add_constraint(resource_start, resource_end, req.duration)
         |> Timeline.add_constraint(start_timepoint, resource_start, {0, 0})
@@ -249,16 +253,18 @@ defmodule TemporalPlanner.STNAction do
     actual_start = Keyword.get(opts, :actual_start)
     actual_end = Keyword.get(opts, :actual_end)
 
-    updated_metadata = Map.merge(action.metadata, %{
-      execution_history: [
-        %{
-          actual_duration: actual_duration,
-          actual_start: actual_start,
-          actual_end: actual_end,
-          timestamp: DateTime.utc_now()
-        } | Map.get(action.metadata, :execution_history, [])
-      ]
-    })
+    updated_metadata =
+      Map.merge(action.metadata, %{
+        execution_history: [
+          %{
+            actual_duration: actual_duration,
+            actual_start: actual_start,
+            actual_end: actual_end,
+            timestamp: DateTime.utc_now()
+          }
+          | Map.get(action.metadata, :execution_history, [])
+        ]
+      })
 
     %{action | metadata: updated_metadata}
   end
@@ -273,7 +279,9 @@ defmodule TemporalPlanner.STNAction do
           constraint: constraint,
           timepoint: "#{action_id}_precond_#{resource}"
         }
-      precond -> precond
+
+      precond ->
+        precond
     end)
   end
 
@@ -285,7 +293,9 @@ defmodule TemporalPlanner.STNAction do
           constraint: constraint,
           timepoint: "#{action_id}_effect_#{resource}"
         }
-      effect -> effect
+
+      effect ->
+        effect
     end)
   end
 end

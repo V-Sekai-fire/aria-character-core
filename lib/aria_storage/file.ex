@@ -16,14 +16,14 @@ defmodule AriaStorage.File do
   @foreign_key_type :binary_id
 
   schema "storage_files" do
-    field :filename, :string
-    field :content_type, :string
-    field :size, :integer
-    field :checksum, :string
-    field :index_ref, :string
-    field :metadata, :map, default: %{}
-    field :status, :string, default: "pending"
-    field :uploaded_at, :utc_datetime
+    field(:filename, :string)
+    field(:content_type, :string)
+    field(:size, :integer)
+    field(:checksum, :string)
+    field(:index_ref, :string)
+    field(:metadata, :map, default: %{})
+    field(:status, :string, default: "pending")
+    field(:uploaded_at, :utc_datetime)
 
     timestamps()
   end
@@ -36,7 +36,16 @@ defmodule AriaStorage.File do
   @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(file, attrs) do
     file
-    |> cast(attrs, [:filename, :content_type, :size, :checksum, :index_ref, :metadata, :status, :uploaded_at])
+    |> cast(attrs, [
+      :filename,
+      :content_type,
+      :size,
+      :checksum,
+      :index_ref,
+      :metadata,
+      :status,
+      :uploaded_at
+    ])
     |> validate_required([:filename, :size])
     |> validate_inclusion(:status, ["pending", "chunked", "stored", "failed"])
     |> validate_number(:size, greater_than: 0)

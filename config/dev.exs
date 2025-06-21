@@ -3,10 +3,8 @@
 
 import Config
 
-
 # Development environment configuration
 config :logger, level: :info
-
 
 # Configure Membrane Job Processor for development (replaces Oban)
 # config :aria_queue, AriaQueue.MembraneJobProcessor,
@@ -21,7 +19,6 @@ config :logger, level: :info
 #     storage_sync: 3,
 #     monitoring: 2
 #   }
-
 
 # Development Hammer rate limiting configuration
 config :hammer,

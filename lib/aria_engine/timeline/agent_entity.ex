@@ -211,7 +211,8 @@ defmodule Timeline.AgentEntity do
     capability in capabilities
   end
 
-  def has_capability?(%{properties: %{capabilities: capabilities}}, capability) when is_list(capabilities) do
+  def has_capability?(%{properties: %{capabilities: capabilities}}, capability)
+      when is_list(capabilities) do
     capability in capabilities
   end
 
@@ -262,10 +263,11 @@ defmodule Timeline.AgentEntity do
 
   """
   @spec remove_capabilities(participant(), [atom()]) :: participant()
-  def remove_capabilities(participant, capabilities_to_remove) when is_list(capabilities_to_remove) do
+  def remove_capabilities(participant, capabilities_to_remove)
+      when is_list(capabilities_to_remove) do
     current_capabilities = Map.get(participant, :capabilities, [])
     updated_capabilities = current_capabilities -- capabilities_to_remove
-    
+
     Map.put(participant, :capabilities, updated_capabilities)
   end
 
@@ -475,12 +477,14 @@ defmodule Timeline.AgentEntity do
       %{capabilities: capabilities} when is_list(capabilities) ->
         required_capability = action_to_capability(action)
         required_capability in capabilities
-      
+
       %{type: :agent, capabilities: capabilities} when is_list(capabilities) ->
         required_capability = action_to_capability(action)
         required_capability in capabilities
-      
-      _ -> false  # No action capabilities = entity behavior
+
+      # No action capabilities = entity behavior
+      _ ->
+        false
     end
   end
 
@@ -511,8 +515,9 @@ defmodule Timeline.AgentEntity do
       %{capabilities: capabilities} when is_list(capabilities) and capabilities != [] ->
         # Has action capabilities = currently acting as agent
         Enum.any?(capabilities, &is_action_capability?/1)
-      
-      _ -> false
+
+      _ ->
+        false
     end
   end
 
@@ -534,7 +539,7 @@ defmodule Timeline.AgentEntity do
   def add_capabilities(participant, new_capabilities) when is_list(new_capabilities) do
     current_capabilities = Map.get(participant, :capabilities, [])
     updated_capabilities = Enum.uniq(current_capabilities ++ new_capabilities)
-    
+
     Map.put(participant, :capabilities, updated_capabilities)
   end
 

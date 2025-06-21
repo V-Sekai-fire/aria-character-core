@@ -30,9 +30,10 @@ defmodule PlanningTest do
       domain = build_simple_test_domain()
 
       # Set up initial state
-      initial_state = StateV2.new()
-      |> StateV2.update_fact("player", "location", "room1")
-      |> StateV2.update_fact("sword", "location", "room2")
+      initial_state =
+        StateV2.new()
+        |> StateV2.update_fact("player", "location", "room1")
+        |> StateV2.update_fact("sword", "location", "room2")
 
       # Simple task: get the sword
       tasks = [{"get_item", ["sword"]}]
@@ -42,18 +43,20 @@ defmodule PlanningTest do
         {:ok, _plan} ->
           # Planning succeeded as expected
           assert true
+
         {:error, reason} ->
           # If planning fails, that's also acceptable for this basic test
-          assert String.contains?(reason, "No methods found") or 
-                 String.contains?(reason, "Planning failed")
+          assert String.contains?(reason, "No methods found") or
+                   String.contains?(reason, "Planning failed")
       end
     end
 
     test "validates plan execution" do
       domain = build_simple_test_domain()
 
-      initial_state = StateV2.new()
-      |> StateV2.update_fact("player", "location", "room1")
+      initial_state =
+        StateV2.new()
+        |> StateV2.update_fact("player", "location", "room1")
 
       # Manual plan
       plan = [{:move, ["room1", "room2"]}, {:move, ["room2", "room3"]}]
@@ -61,10 +64,11 @@ defmodule PlanningTest do
       case Planning.execute_plan(domain, initial_state, plan) do
         {:ok, final_state} ->
           assert StateV2.get_fact(final_state, "player", "location") == "room3"
+
         {:error, reason} ->
           # Plan execution may fail, which is acceptable for this test
           assert String.contains?(reason, "Action not found") or
-                 String.contains?(reason, "Execution failed")
+                   String.contains?(reason, "Execution failed")
       end
     end
   end
@@ -73,9 +77,10 @@ defmodule PlanningTest do
     test "decomposes tasks into actions" do
       domain = build_simple_test_domain()
 
-      initial_state = StateV2.new()
-      |> StateV2.update_fact("player", "location", "room1")
-      |> StateV2.update_fact("sword", "location", "room2")
+      initial_state =
+        StateV2.new()
+        |> StateV2.update_fact("player", "location", "room1")
+        |> StateV2.update_fact("sword", "location", "room2")
 
       # Task: get the sword
       tasks = [{"get_item", ["sword"]}]
@@ -87,8 +92,8 @@ defmodule PlanningTest do
 
         {:error, reason} ->
           # Planning may fail, which is acceptable for this basic test
-          assert String.contains?(reason, "No methods found") or 
-                 String.contains?(reason, "Planning failed")
+          assert String.contains?(reason, "No methods found") or
+                   String.contains?(reason, "Planning failed")
       end
     end
   end
