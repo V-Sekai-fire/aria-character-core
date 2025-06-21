@@ -91,17 +91,18 @@ defmodule AriaEngine.Membrane.PlanFilter do
     case MCPRequest.get_tool_params(request, "schedule_activities") do
       {:ok, mcp_params} ->
         case PlanTransformer.convert_to_planning_params(mcp_params) do
-          {:ok, {domain, state, goals}} ->
+          {:ok, transformer_result} ->
             planning_params = %PlanningParams{
-              domain: domain,
-              state: state,
-              goals: goals,
+              domain: transformer_result.domain,
+              state: transformer_result.initial_state,
+              goals: transformer_result.goals,
               options: [],
               request_id: request.request_id,
               conversion_metadata: %{
                 original_activities: length(mcp_params["activities"] || []),
                 converted_at: DateTime.utc_now(),
-                schedule_name: mcp_params["schedule_name"]
+                schedule_name: mcp_params["schedule_name"],
+                transformer_metadata: transformer_result.metadata
               }
             }
             {:ok, planning_params}

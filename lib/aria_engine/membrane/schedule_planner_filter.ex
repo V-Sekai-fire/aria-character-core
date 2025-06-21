@@ -219,11 +219,11 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
 
   defp perform_conversion(%MCPRequest{} = request, schedule_params) do
     case CoreTransformer.convert_to_planning_params(schedule_params) do
-      {:ok, {domain, state, goals}} ->
+      {:ok, transformer_result} ->
         planning_params = %PlanningParams{
-          domain: domain,
-          state: state,
-          goals: goals,
+          domain: transformer_result.domain,
+          state: transformer_result.initial_state,
+          goals: transformer_result.goals,
           options: [],
           request_id: request.request_id,
           conversion_metadata: %{
@@ -231,7 +231,8 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
             converted_at: DateTime.utc_now(),
             activities_count: length(schedule_params["activities"] || []),
             entities_count: length(schedule_params["entities"] || []),
-            legacy_format: Map.get(request.metadata, :legacy_format, false)
+            legacy_format: Map.get(request.metadata, :legacy_format, false),
+            transformer_metadata: transformer_result.metadata
           }
         }
         

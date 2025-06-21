@@ -156,26 +156,19 @@ defmodule AriaEngine.Membrane.PlannerFilter do
 
   defp execute_planning(%PlanningParams{} = params) do
     try do
-      # Convert goals to activities for the scheduler
-      activities = convert_goals_to_activities(params.goals)
-      
-      # Use the Scheduler which integrates with HybridCoordinatorV2
-      case Scheduler.schedule_activities("planning_request", activities, [
-        entities: [],
-        resources: [],
-        constraints: %{},
-        simulation_mode: false
-      ]) do
-        {:ok, schedule} ->
+      # Use HybridCoordinatorV2 directly for planning
+      case HybridCoordinatorV2.plan(params.domain, params.state, params.goals) do
+        {:ok, plan} ->
           {:ok, %{
-            schedule: schedule,
+            plan: plan,
             planning_method: "hybrid_coordinator_v2",
             goals_processed: length(params.goals || []),
-            domain_info: extract_domain_info(params.domain)
+            domain_info: extract_domain_info(params.domain),
+            state_info: extract_state_info(params.state)
           }}
           
         {:error, reason} ->
-          {:error, "Scheduler execution failed: #{inspect(reason)}"}
+          {:error, "HybridCoordinatorV2 planning failed: #{inspect(reason)}"}
       end
     rescue
       error ->
@@ -221,6 +214,15 @@ defmodule AriaEngine.Membrane.PlannerFilter do
     }
   end
   defp extract_domain_info(_), do: %{type: "unknown", size: 0}
+
+  defp extract_state_info(nil), do: %{type: "unknown", facts_count: 0}
+  defp extract_state_info(state) when is_map(state) do
+    %{
+      type: "StateV2",
+      facts_count: Map.get(state, :facts, %{}) |> map_size()
+    }
+  end
+  defp extract_state_info(_), do: %{type: "unknown", facts_count: 0}
 
   defp emit_telemetry(prefix, event, metadata) do
     :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
