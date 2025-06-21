@@ -4,17 +4,13 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
   """
 
   require Logger
+  alias AriaEngine.MiniZinc.Executor
 
   @doc """
   Checks if MiniZinc is available on the system.
   """
   def check_availability do
-    case System.cmd("minizinc", ["--version"], stderr_to_stdout: true) do
-      {_output, 0} -> true
-      _ -> false
-    end
-  rescue
-    _ -> false
+    Executor.check_availability()
   end
 
   @doc """
@@ -29,15 +25,57 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
     if String.contains?(schedule_name, "widget") do
       solve_widget_assembly(state)
     else
-      # For other problems, return unsupported for now
-      %{
-        status: :unsupported,
-        reason: "MiniZinc model not available for this problem type"
-      }
+      # For STN temporal problems, use the template-based approach
+      solve_stn_temporal(params, state)
     end
   end
 
   # Private functions
+
+  defp solve_stn_temporal(params, state) do
+    Logger.info("🔧 Solving STN temporal problem with MiniZinc")
+
+    try do
+      # Convert MCP schedule_activities format to MiniZinc template variables
+      template_vars = convert_to_minizinc_format(params)
+      
+      Logger.info("🔧 Template variables: #{inspect(template_vars, pretty: true)}")
+
+      # Use the EEx-based executor to solve with STN temporal template
+      case Executor.exec("stn_temporal", template_vars: template_vars, timeout: state.timeout) do
+        {:ok, result} ->
+          Logger.info("✅ MiniZinc STN temporal completed in #{result.solve_time_ms}ms")
+          
+          converted_solution = convert_minizinc_solution(result.solution, params)
+          Logger.info("🎯 MiniZinc Solution: #{inspect(converted_solution, pretty: true)}")
+          
+          %{
+            status: :success,
+            solution: converted_solution,
+            solve_time_ms: result.solve_time_ms,
+            raw_output: result.raw_output
+          }
+
+        {:error, error} ->
+          Logger.error("❌ MiniZinc STN temporal failed: #{inspect(error)}")
+          
+          %{
+            status: :error,
+            error: "MiniZinc STN temporal solver failed: #{inspect(error)}",
+            solve_time_ms: 0
+          }
+      end
+    rescue
+      error ->
+        Logger.error("❌ STN temporal conversion failed: #{inspect(error)}")
+        
+        %{
+          status: :error,
+          error: "STN temporal conversion failed: #{Exception.message(error)}",
+          solve_time_ms: 0
+        }
+    end
+  end
 
   defp solve_widget_assembly(state) do
     start_time = System.monotonic_time(:millisecond)
@@ -63,6 +101,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
 
         # Parse MiniZinc output
         solution = parse_output(output)
+        Logger.info("🎯 MiniZinc Widget Assembly Solution: #{inspect(solution, pretty: true)}")
 
         %{
           status: :success,
@@ -168,5 +207,98 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
       # Default fallback
       75
     end
+  end
+
+  # Convert MCP schedule_activities format to MiniZinc template variables
+  defp convert_to_minizinc_format(params) do
+    activities = params["activities"] || []
+    
+    # Extract durations from activities
+    durations = 
+      activities
+      |> Enum.map(fn activity ->
+        case activity["duration"] do
+          duration when is_integer(duration) -> duration
+          duration_str when is_binary(duration_str) -> 
+            # Parse duration string like "PT30M" or just "30"
+            parse_duration_string(duration_str)
+          _ -> 30  # Default duration
+        end
+      end)
+
+    # Create simple temporal constraints (sequential for now)
+    constraints = create_sequential_constraints(length(activities))
+
+    %{
+      num_activities: length(activities),
+      num_constraints: length(constraints),
+      durations: durations,
+      constraints: constraints
+    }
+  end
+
+  defp parse_duration_string(duration_str) do
+    cond do
+      # ISO 8601 duration format like "PT30M"
+      String.starts_with?(duration_str, "PT") ->
+        case Regex.run(~r/PT(\d+)M/, duration_str) do
+          [_, minutes] -> String.to_integer(minutes)
+          _ -> 30
+        end
+      
+      # Simple number string
+      String.match?(duration_str, ~r/^\d+$/) ->
+        String.to_integer(duration_str)
+      
+      # Default fallback
+      true -> 30
+    end
+  end
+
+  defp create_sequential_constraints(num_activities) when num_activities <= 1 do
+    []
+  end
+
+  defp create_sequential_constraints(num_activities) do
+    # Create sequential constraints: activity i must finish before activity i+1 starts
+    1..(num_activities - 1)
+    |> Enum.map(fn i ->
+      %{
+        from_activity: i,
+        to_activity: i + 1,
+        min_distance: 0,  # No minimum gap
+        max_distance: 1000  # Large maximum gap
+      }
+    end)
+  end
+
+  # Convert MiniZinc solution back to MCP format
+  defp convert_minizinc_solution(minizinc_solution, params) do
+    activities = params["activities"] || []
+    start_times = minizinc_solution[:start_times] || []
+    end_times = minizinc_solution[:end_times] || []
+
+    # Create activity results
+    activity_results = 
+      activities
+      |> Enum.with_index()
+      |> Enum.map(fn {activity, index} ->
+        start_time = Enum.at(start_times, index, 0)
+        end_time = Enum.at(end_times, index, start_time + 30)
+        
+        %{
+          id: activity["id"] || "activity_#{index + 1}",
+          start_time: start_time,
+          end_time: end_time,
+          duration: end_time - start_time
+        }
+      end)
+
+    %{
+      activities: activity_results,
+      makespan: minizinc_solution[:makespan] || 0,
+      start_times: start_times,
+      end_times: end_times
+    }
   end
 end
