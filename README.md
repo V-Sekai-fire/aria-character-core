@@ -25,7 +25,7 @@ mix schedule.samples  # Runs 3 core scheduling scenarios
 ## Core Capabilities
 
 - **Hybrid HTN+STN Planning**: Combines goal decomposition with temporal constraints
-- **Temporal Scheduling**: Resource and time management with millisecond precision
+- **Temporal Scheduling**: Resource and time management with ~~millisecond precision~~ (Replaced with configurable time units and LOD resolution v0.2.0)
 - ~~**MCP Integration**~~ (Removed in v0.2.0): Schedule activities interface for external tool access
 
 ---
