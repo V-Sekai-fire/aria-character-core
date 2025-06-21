@@ -10,7 +10,7 @@ defmodule Timeline.Internal.STN.Units do
   @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low
   # time units per tick
-  @type lod_resolution :: 1 | 10 | 100 | 1000 | 10000
+  @type lod_resolution :: 1 | 10 | 100 | 1000 | 10_000
 
   @doc """
   Changes the LOD level of an STN, rescaling all constraints appropriately.
@@ -82,7 +82,7 @@ defmodule Timeline.Internal.STN.Units do
   def lod_resolution_for_level(:high), do: 10
   def lod_resolution_for_level(:medium), do: 100
   def lod_resolution_for_level(:low), do: 1000
-  def lod_resolution_for_level(:very_low), do: 10000
+  def lod_resolution_for_level(:very_low), do: 10_000
 
   @spec unit_conversion_factor(time_unit(), time_unit()) :: float()
   def unit_conversion_factor(from_unit, to_unit) do

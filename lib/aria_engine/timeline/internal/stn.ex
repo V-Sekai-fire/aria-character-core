@@ -89,7 +89,7 @@ defmodule Timeline.Internal.STN do
   @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low
   # time units per tick
-  @type lod_resolution :: 1 | 10 | 100 | 1000 | 10000
+  @type lod_resolution :: 1 | 10 | 100 | 1000 | 10_000
 
   @type t :: %__MODULE__{
           time_points: MapSet.t(time_point()),

@@ -12,7 +12,7 @@ defmodule TimelineGraph do
   ## Core Concepts
 
   - **Every Entity has a Timeline**: Created automatically when entities are instantiated
-  - **Timeline Growth**: Automatic based on entity capabilities and interactions  
+  - **Timeline Growth**: Automatic based on entity capabilities and interactions
   - **LOD Management**: Level of Detail scaling based on relevance and proximity
   - **Bridge Management**: Inter-timeline connections for coordination
 
@@ -90,7 +90,7 @@ defmodule TimelineGraph do
     %{type: "furniture", material: "wood"}
   )
 
-  # Create potential agent (NPC)  
+  # Create potential agent (NPC)
   {:ok, timeline_graph, "guard"} = TimelineGraph.create_entity(
     timeline_graph,
     "guard", 
@@ -631,7 +631,7 @@ defmodule TimelineGraph do
   defp grow_timeline_for_property_change(timeline, predicate, value) do
     now = DateTime.utc_now()
 
-    # Add interval for property change  
+    # Add interval for property change
     property_interval =
       Interval.new(
         now,

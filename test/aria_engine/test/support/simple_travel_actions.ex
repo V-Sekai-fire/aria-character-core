@@ -25,13 +25,13 @@ defmodule SimpleTravelActions do
   """
   def walk(state, [p, x, y]) do
     cond do
-      not is_person(p) ->
+      not person?(p) ->
         false
 
-      not is_location(x) ->
+      not location?(x) ->
         false
 
-      not is_location(y) ->
+      not location?(y) ->
         false
 
       x == y ->
@@ -58,10 +58,10 @@ defmodule SimpleTravelActions do
   """
   def call_taxi(state, [p, x]) do
     cond do
-      not is_person(p) ->
+      not person?(p) ->
         false
 
-      not is_location(x) ->
+      not location?(x) ->
         false
 
       true ->
@@ -88,13 +88,13 @@ defmodule SimpleTravelActions do
     person_loc = State.get_fact(state, "loc", p)
 
     cond do
-      not is_person(p) ->
+      not person?(p) ->
         false
 
-      not is_taxi(person_loc) ->
+      not taxi?(person_loc) ->
         false
 
-      not is_location(y) ->
+      not location?(y) ->
         false
 
       true ->
@@ -102,7 +102,7 @@ defmodule SimpleTravelActions do
         x = State.get_fact(state, "loc", taxi)
 
         cond do
-          not is_location(x) ->
+          not location?(x) ->
             false
 
           x == y ->
@@ -135,7 +135,7 @@ defmodule SimpleTravelActions do
     owe = State.get_fact(state, "owe", p)
 
     cond do
-      not is_person(p) ->
+      not person?(p) ->
         false
 
       cash < owe ->
@@ -151,15 +151,15 @@ defmodule SimpleTravelActions do
 
   # Helper functions
 
-  defp is_person(p) do
+  defp person?(p) do
     p in ["alice", "bob"]
   end
 
-  defp is_location(loc) do
+  defp location?(loc) do
     loc in ["home_a", "home_b", "park", "station"]
   end
 
-  defp is_taxi(taxi) do
+  defp taxi?(taxi) do
     taxi in ["taxi1", "taxi2"]
   end
 
@@ -189,13 +189,13 @@ defmodule SimpleTravelActions do
   """
   def ride_taxi_simple(state, [p, taxi, y]) do
     cond do
-      not is_person(p) ->
+      not person?(p) ->
         false
 
-      not is_taxi(taxi) ->
+      not taxi?(taxi) ->
         false
 
-      not is_location(y) ->
+      not location?(y) ->
         false
 
       State.get_fact(state, "loc", p) != State.get_fact(state, "loc", taxi) ->
@@ -213,10 +213,10 @@ defmodule SimpleTravelActions do
   """
   def pay_driver_simple(state, [p, taxi]) do
     cond do
-      not is_person(p) ->
+      not person?(p) ->
         false
 
-      not is_taxi(taxi) ->
+      not taxi?(taxi) ->
         false
 
       true ->

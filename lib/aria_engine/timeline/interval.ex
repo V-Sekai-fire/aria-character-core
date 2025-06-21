@@ -227,7 +227,7 @@ defmodule Timeline.Interval do
       :second -> DateTime.diff(end_time, start_time, :second)
       :minute -> div(DateTime.diff(end_time, start_time, :second), 60)
       :hour -> div(DateTime.diff(end_time, start_time, :second), 3600)
-      :day -> div(DateTime.diff(end_time, start_time, :second), 86400)
+      :day -> div(DateTime.diff(end_time, start_time, :second), 86_400)
     end
   end
 
@@ -323,50 +323,16 @@ defmodule Timeline.Interval do
         start_time: s2,
         end_time: e2
       }) do
-    cond do
-      DateTime.compare(e1, s2) == :lt ->
-        :before
+    # Pre-compute all comparisons to avoid redundant calculations
+    s1_vs_s2 = DateTime.compare(s1, s2)
+    e1_vs_e2 = DateTime.compare(e1, e2)
+    e1_vs_s2 = DateTime.compare(e1, s2)
+    s1_vs_e2 = DateTime.compare(s1, e2)
 
-      DateTime.compare(e1, s2) == :eq ->
-        :meets
-
-      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :eq ->
-        :equals
-
-      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :lt ->
-        :starts
-
-      DateTime.compare(s1, s2) == :eq and DateTime.compare(e1, e2) == :gt ->
-        :started_by
-
-      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :eq ->
-        :finishes
-
-      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :eq ->
-        :finished_by
-
-      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :lt ->
-        :during
-
-      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :gt ->
-        :contains
-
-      DateTime.compare(s1, s2) == :lt and DateTime.compare(e1, e2) == :lt and
-          DateTime.compare(e1, s2) == :gt ->
-        :overlaps
-
-      DateTime.compare(s1, s2) == :gt and DateTime.compare(e1, e2) == :gt and
-          DateTime.compare(s1, e2) == :lt ->
-        :overlapped_by
-
-      DateTime.compare(s1, e2) == :eq ->
-        :met_by
-
-      DateTime.compare(s1, e2) == :gt ->
-        :after
-
-      true ->
-        :unknown
+    # Check for simple temporal ordering first
+    case check_simple_relations(e1_vs_s2, s1_vs_e2) do
+      nil -> check_complex_relations(s1_vs_s2, e1_vs_e2, e1_vs_s2, s1_vs_e2)
+      relation -> relation
     end
   end
 
@@ -391,5 +357,52 @@ defmodule Timeline.Interval do
 
   defp generate_id do
     :crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)
+  end
+
+  # Helper functions for allen_relation to reduce complexity
+
+  defp check_simple_relations(e1_vs_s2, s1_vs_e2) do
+    cond do
+      e1_vs_s2 == :lt -> :before
+      e1_vs_s2 == :eq -> :meets
+      s1_vs_e2 == :eq -> :met_by
+      s1_vs_e2 == :gt -> :after
+      true -> nil
+    end
+  end
+
+  defp check_complex_relations(s1_vs_s2, e1_vs_e2, e1_vs_s2, s1_vs_e2) do
+    cond do
+      s1_vs_s2 == :eq and e1_vs_e2 == :eq -> :equals
+      s1_vs_s2 == :eq -> check_start_relations(e1_vs_e2)
+      e1_vs_e2 == :eq -> check_end_relations(s1_vs_s2)
+      true -> check_overlap_relations(s1_vs_s2, e1_vs_e2, e1_vs_s2, s1_vs_e2)
+    end
+  end
+
+  defp check_start_relations(e1_vs_e2) do
+    case e1_vs_e2 do
+      :lt -> :starts
+      :gt -> :started_by
+      _ -> :unknown
+    end
+  end
+
+  defp check_end_relations(s1_vs_s2) do
+    case s1_vs_s2 do
+      :gt -> :finishes
+      :lt -> :finished_by
+      _ -> :unknown
+    end
+  end
+
+  defp check_overlap_relations(s1_vs_s2, e1_vs_e2, e1_vs_s2, s1_vs_e2) do
+    cond do
+      s1_vs_s2 == :gt and e1_vs_e2 == :lt -> :during
+      s1_vs_s2 == :lt and e1_vs_e2 == :gt -> :contains
+      s1_vs_s2 == :lt and e1_vs_e2 == :lt and e1_vs_s2 == :gt -> :overlaps
+      s1_vs_s2 == :gt and e1_vs_e2 == :gt and s1_vs_e2 == :lt -> :overlapped_by
+      true -> :unknown
+    end
   end
 end
