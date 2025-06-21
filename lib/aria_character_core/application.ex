@@ -13,8 +13,7 @@ defmodule AriaCharacterCore.Application do
       # AriaEngine components (planning and AI core)
       AriaEngine.Membrane.PipelineManager,
       
-      # AriaTown components (knowledge base and NPC management)
-      AriaTown.KnowledgeBase,
+      # AriaTown components (NPC management)
       AriaTown.PersistenceManager,
       AriaTown.TimeManager,
       AriaTown.NPCManager,

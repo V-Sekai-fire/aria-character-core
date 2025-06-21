@@ -235,6 +235,8 @@ defmodule AriaEngine.ScalingProblemGeneratorTest do
   end
   
   describe "MCP tool integration" do
+    @describetag :integration
+    
     test "validate_scheduling_solutions tool creates and processes problems" do
       params = %{
         "problem_name" => "mcp_integration_test"

@@ -12,8 +12,7 @@ defmodule AriaTown.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Knowledge Base and Persistence
-      AriaTown.KnowledgeBase,
+      # Persistence
       AriaTown.PersistenceManager,
       
       # Time and NPC Management

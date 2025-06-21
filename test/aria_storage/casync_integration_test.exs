@@ -5,6 +5,7 @@ Code.require_file("support/casync_fixtures.ex", __DIR__)
 
 defmodule AriaStorage.CasyncIntegrationTest do
   use ExUnit.Case
+  @moduletag :integration
 
   alias AriaStorage.Parsers.CasyncFormat
   alias AriaStorage.ChunkUploader
