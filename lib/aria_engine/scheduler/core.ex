@@ -316,7 +316,7 @@ defmodule AriaEngine.Scheduler.Core do
       activity_id = activity.id
       duration_val = Map.get(activity, :duration)
 
-      {duration, fixed_start, fixed_end} =
+      {duration, _fixed_start, _fixed_end} =
         cond do
           is_map(duration_val) and Map.has_key?(duration_val, :start) and
               Map.has_key?(duration_val, :end) ->
@@ -520,7 +520,7 @@ defmodule AriaEngine.Scheduler.Core do
       action_name = String.to_atom(activity.id)
       duration_val = Map.get(activity, :duration)
 
-      {duration, fixed_start, fixed_end} =
+      {duration, _fixed_start, _fixed_end} =
         cond do
           is_map(duration_val) and Map.has_key?(duration_val, :start) and
               Map.has_key?(duration_val, :end) ->

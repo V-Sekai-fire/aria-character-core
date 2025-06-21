@@ -11,7 +11,7 @@ defmodule AriaEngine.Membrane.PlannerFilter do
   require Logger
 
   alias AriaEngine.Membrane.Format.{PlanningParams, PlanningResult}
-  alias AriaEngine.HybridPlanner.HybridCoordinatorV2
+  alias HybridPlanner.HybridCoordinatorV2
   alias Membrane.Buffer
 
   def_input_pad(:input,
@@ -169,8 +169,10 @@ defmodule AriaEngine.Membrane.PlannerFilter do
 
   defp execute_planning(%PlanningParams{} = params) do
     try do
-      # Use HybridCoordinatorV2 directly for planning
-      case HybridCoordinatorV2.plan(params.domain, params.state, params.goals) do
+      # Create a default coordinator and use it for planning
+      coordinator = HybridCoordinatorV2.new_default()
+      
+      case HybridCoordinatorV2.plan(coordinator, params.domain, params.state, params.goals) do
         {:ok, plan} ->
           {:ok,
            %{

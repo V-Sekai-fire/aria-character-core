@@ -10,6 +10,7 @@ defmodule AriaStorage.Parsers.CasyncFormat.Encoder do
   """
 
   alias AriaStorage.Parsers.CasyncFormat.Constants
+  require AriaStorage.Parsers.CasyncFormat.Constants
 
   @type encode_result :: {:ok, binary()} | {:error, String.t()}
 

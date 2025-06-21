@@ -31,12 +31,12 @@ defmodule Timeline.Internal.STN.MiniZincSolver do
           {:ok, %{status: :error}} ->
             %{stn | consistent: false}
             
-          {:error, reason} ->
+          {:error, _reason} ->
             # Fall back to marking as inconsistent
             %{stn | consistent: false}
         end
         
-      {:error, reason} ->
+      {:error, _reason} ->
         %{stn | consistent: false}
     end
   end

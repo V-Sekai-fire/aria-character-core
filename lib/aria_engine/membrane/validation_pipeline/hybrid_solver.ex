@@ -8,7 +8,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
   @doc """
   Solves a scheduling problem using the AriaEngine Hybrid solver.
   """
-  def solve(params, state) do
+  def solve(params, _state) do
     Logger.info("🔧 Calling Hybrid solver")
 
     start_time = System.monotonic_time(:millisecond)

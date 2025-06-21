@@ -207,6 +207,7 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   end
 
   # Legacy compatibility functions - delegate to Constants module
+  require Constants
   @doc false
   def ca_format_index, do: Constants.ca_format_index()
   @doc false

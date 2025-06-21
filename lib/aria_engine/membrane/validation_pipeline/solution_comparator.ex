@@ -9,7 +9,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
   Validates and compares results from Hybrid and MiniZinc solvers.
   Returns validation status: success, inconsistent, infeasible, or unknown.
   """
-  def validate_and_compare(hybrid_result, minizinc_result, params, state) do
+  def validate_and_compare(hybrid_result, minizinc_result, _params, _state) do
     cond do
       # MiniZinc not available
       minizinc_result.status == :unavailable ->

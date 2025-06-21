@@ -238,9 +238,20 @@ defmodule AriaEngine.Membrane.PipelineManager do
     end
   end
 
+  @impl true
+  def handle_call(:get_stats, _from, state) do
+    stats = %{
+      active_pipeline_count: map_size(state.active_pipelines),
+      total_pipelines_created: state.pipeline_counter,
+      pipeline_ids: Enum.map(state.active_pipelines, fn {_pid, info} -> info.id end)
+    }
+
+    {:reply, stats, state}
+  end
+
   # Private functions
 
-  defp build_pipeline(config, pipeline_id) do
+  defp build_pipeline(_config, pipeline_id) do
     # Create a simple pipeline structure for testing
     # In a full implementation, this would use Membrane.Pipeline
 
@@ -546,14 +557,4 @@ defmodule AriaEngine.Membrane.PipelineManager do
     GenServer.call(__MODULE__, :get_stats)
   end
 
-  @impl true
-  def handle_call(:get_stats, _from, state) do
-    stats = %{
-      active_pipeline_count: map_size(state.active_pipelines),
-      total_pipelines_created: state.pipeline_counter,
-      pipeline_ids: Enum.map(state.active_pipelines, fn {_pid, info} -> info.id end)
-    }
-
-    {:reply, stats, state}
-  end
 end

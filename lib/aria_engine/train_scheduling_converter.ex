@@ -42,15 +42,6 @@ defmodule AriaEngine.TrainSchedulingConverter do
     }
   end
 
-  @doc """
-  Create activities for all 12 train services from trains05.dzn.
-
-  Each service becomes a sequence of station visit activities with:
-  - Travel time durations between stations
-  - Dependencies for sequential station visits
-  - Required engine capabilities
-  - Platform resource requirements
-  """
   defp create_train_service_activities() do
     # Route 1: A -> B -> C -> D -> E -> F (services R1a through R1f)
     route1_services = [
@@ -99,9 +90,6 @@ defmodule AriaEngine.TrainSchedulingConverter do
     route1_activities ++ route2_activities
   end
 
-  @doc """
-  Create station visit activities for Route 1 (A -> B -> C -> D -> E -> F).
-  """
   defp create_route1_activities(service_id, service_start_time) do
     stations = ["A", "B", "C", "D", "E", "F"]
     travel_times = get_travel_times_route1()
@@ -148,9 +136,6 @@ defmodule AriaEngine.TrainSchedulingConverter do
     Enum.reverse(activities)
   end
 
-  @doc """
-  Create station visit activities for Route 2 (F -> E -> D -> C -> B -> A).
-  """
   defp create_route2_activities(service_id, service_start_time) do
     stations = ["F", "E", "D", "C", "B", "A"]
     travel_times = get_travel_times_route2()
@@ -197,9 +182,6 @@ defmodule AriaEngine.TrainSchedulingConverter do
     Enum.reverse(activities)
   end
 
-  @doc """
-  Create duration specification for station visit.
-  """
   defp create_station_visit_duration(start_time, _station, _service_id) do
     # Create time interval with start time and 2-minute duration
     start_datetime = DateTime.add(DateTime.utc_now(), start_time * 60, :second)
@@ -212,9 +194,6 @@ defmodule AriaEngine.TrainSchedulingConverter do
     }
   end
 
-  @doc """
-  Get dependencies for station visits (must visit stations in sequence).
-  """
   defp get_station_dependencies(service_id, station, stations) do
     station_index = Enum.find_index(stations, &(&1 == station))
 
@@ -227,25 +206,16 @@ defmodule AriaEngine.TrainSchedulingConverter do
     end
   end
 
-  @doc """
-  Get travel times for Route 1 (A -> B -> C -> D -> E -> F) from trains05.dzn.
-  """
   defp get_travel_times_route1() do
     # Travel times from trains05.dzn: A->B=7, B->C=8, C->D=5, D->E=7, E->F=6
     [7, 8, 5, 7, 6]
   end
 
-  @doc """
-  Get travel times for Route 2 (F -> E -> D -> C -> B -> A) from trains05.dzn.
-  """
   defp get_travel_times_route2() do
     # Travel times from trains05.dzn: F->E=6, E->D=7, D->C=5, C->B=9, B->A=7
     [6, 7, 5, 9, 7]
   end
 
-  @doc """
-  Create engine entities with starting locations and capabilities.
-  """
   defp create_engine_entities() do
     [
       # Engines E1, E2, E3 start at station A
@@ -343,9 +313,6 @@ defmodule AriaEngine.TrainSchedulingConverter do
     ]
   end
 
-  @doc """
-  Create station platform resources with capacity constraints from trains05.dzn.
-  """
   defp create_station_resources() do
     %{
       "platform_A" => %{
@@ -448,9 +415,6 @@ defmodule AriaEngine.TrainSchedulingConverter do
     }
   end
 
-  @doc """
-  Create scheduling constraints from trains05.dzn problem.
-  """
   defp create_scheduling_constraints() do
     %{
       # All 12 services can run concurrently

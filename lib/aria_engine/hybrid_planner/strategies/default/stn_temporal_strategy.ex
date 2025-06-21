@@ -345,7 +345,7 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
       ""
     else
       action_outputs = 
-        Enum.map_join(actions, ", ", fn {action_name, _action_data} ->
+        Enum.map_join(actions, ", ", fn {_action_name, _action_data} ->
           "\\"#{action_name}_start\\": \", show(#{action_name}_start), \", \\"#{action_name}_end\\": \", show(#{action_name}_end)"
         end)
       action_outputs <> ", "

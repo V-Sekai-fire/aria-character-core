@@ -137,7 +137,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   defp validate_base_datetime(%DateTime{} = dt), do: {:ok, dt}
   defp validate_base_datetime(_), do: {:error, :invalid_base_datetime}
 
-  defp do_fix_timing_constraints(scheduled_activities, original_activities, base_datetime) do
+  defp do_fix_timing_constraints(scheduled_activities, _original_activities, base_datetime) do
     # Build Timeline.Interval structs
     intervals =
       Enum.with_index(scheduled_activities)
@@ -264,7 +264,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
 
   defp convert_activity_to_scheduled(original_activity, entities, resources, index) do
     duration_val = Map.get(original_activity, :duration)
-    {duration_sec, fixed_start, fixed_end, duration_str} = parse_duration_info(duration_val)
+    {_duration_sec, fixed_start, fixed_end, _duration_str} = parse_duration_info(duration_val)
 
     required_capabilities = Map.get(original_activity, :required_capabilities, [])
     required_resources = Map.get(original_activity, :required_resources, [])

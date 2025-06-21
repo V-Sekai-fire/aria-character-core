@@ -12,7 +12,7 @@ defmodule AriaStorage.WaffleAdapter do
   alias AriaStorage.{ChunkStore, ChunkUploader, Chunks}
   alias AriaStorage.Parsers.CasyncFormat
 
-  @behaviour AriaStorage.ChunkStore.Behaviour
+  # @behaviour AriaStorage.ChunkStore.Behaviour
 
   defstruct [
     # The Waffle storage backend (:local, :s3, etc.)
@@ -71,7 +71,6 @@ defmodule AriaStorage.WaffleAdapter do
 
   # ChunkStore.Behaviour implementation
 
-  @impl true
   def store_chunk(%__MODULE__{} = adapter, %Chunks{} = chunk) do
     case upload_chunk_with_waffle(adapter, chunk) do
       {:ok, urls} ->
@@ -95,7 +94,6 @@ defmodule AriaStorage.WaffleAdapter do
     end
   end
 
-  @impl true
   def get_chunk(%__MODULE__{} = adapter, chunk_id) do
     case download_chunk_with_waffle(adapter, chunk_id) do
       {:ok, binary_data} ->
@@ -137,7 +135,6 @@ defmodule AriaStorage.WaffleAdapter do
     end
   end
 
-  @impl true
   def chunk_exists?(%__MODULE__{} = adapter, chunk_id) do
     chunk_url = build_chunk_url(adapter, chunk_id)
 
@@ -157,7 +154,6 @@ defmodule AriaStorage.WaffleAdapter do
     end
   end
 
-  @impl true
   def delete_chunk(%__MODULE__{} = adapter, chunk_id) do
     case adapter.uploader.delete({chunk_id, %{chunk_id: chunk_id}}) do
       :ok -> :ok
@@ -165,7 +161,6 @@ defmodule AriaStorage.WaffleAdapter do
     end
   end
 
-  @impl true
   def list_chunks(%__MODULE__{} = _adapter, _opts \\ []) do
     # This would depend on the backend implementation
     # For now, return empty list with a warning
@@ -174,7 +169,6 @@ defmodule AriaStorage.WaffleAdapter do
     {:ok, []}
   end
 
-  @impl true
   def get_stats(%__MODULE__{} = adapter) do
     # Basic stats - could be enhanced with backend-specific implementations
     %{

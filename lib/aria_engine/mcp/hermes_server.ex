@@ -31,7 +31,7 @@ defmodule AriaEngine.MCP.HermesServer do
   def handle_request(%{"method" => "tools/list"} = _request, state) do
     Logger.info("Listing available MCP tools")
 
-    tools = AriaEngine.MCPTools.get_all_tools()
+    tools = AriaEngine.MCPToolsV2.get_tools()
 
     response = %{"tools" => tools}
     {:reply, response, state}
@@ -46,7 +46,7 @@ defmodule AriaEngine.MCP.HermesServer do
     Logger.info("Calling tool: #{tool_name} with args: #{inspect(arguments)}")
 
     try do
-      result = AriaEngine.MCPTools.handle_tool_call(tool_name, arguments)
+      result = AriaEngine.MCPToolsV2.handle_tool_call(tool_name, arguments)
 
       # Format the result as MCP content
       response = %{

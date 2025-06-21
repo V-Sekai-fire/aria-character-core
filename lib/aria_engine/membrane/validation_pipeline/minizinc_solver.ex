@@ -64,7 +64,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
     end
   end
 
-  defp solve_widget_assembly(state) do
+  defp solve_widget_assembly(_state) do
     start_time = System.monotonic_time(:millisecond)
 
     # Execute MiniZinc command

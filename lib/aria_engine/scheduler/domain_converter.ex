@@ -140,7 +140,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
           {"variable/set", [0, activity_id, "status", "completed"]}
           
         "durative_action" ->
-          activity_id = Map.get(parameters, :activity_id)
+          _activity_id = Map.get(parameters, :activity_id)
           {"flow/setDelay", [0, 1]}
           
         _ ->

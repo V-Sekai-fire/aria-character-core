@@ -182,12 +182,16 @@ defmodule Timeline do
   end
 
   @doc """
-  Applies Path Consistency (PC-2) algorithm to the Timeline.
+  Applies Path Consistency (PC-2) algorithm to the Timeline using MiniZinc solver.
   """
   @spec apply_pc2(t()) :: t()
   def apply_pc2(timeline) do
-    stn = STN.apply_pc2(timeline.stn)
-    %{timeline | stn: stn}
+    alias Timeline.Internal.STN.MiniZincSolver
+    
+    case MiniZincSolver.solve_stn(timeline.stn) do
+      {:ok, solved_stn} -> %{timeline | stn: solved_stn}
+      {:error, _reason} -> timeline  # Return original timeline if solving fails
+    end
   end
 
   # STN Composition Operations

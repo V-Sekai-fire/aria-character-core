@@ -107,7 +107,7 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
 
   # Private functions
 
-  defp solve_with_minizinc(request_data, state) do
+  defp solve_with_minizinc(_request_data, state) do
     Logger.info("🔧 Calling MiniZinc solver")
 
     start_time = System.monotonic_time(:millisecond)
@@ -240,7 +240,7 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
     end
   end
 
-  defp create_minizinc_response(request_data, result, state) do
+  defp create_minizinc_response(_request_data, result, state) do
     case result.status do
       :success ->
         %{
