@@ -45,32 +45,32 @@ defmodule AriaEngine.PlannerAdapter do
   def plan_tasks(domain, %AriaEngine.StateV2{} = state, tasks, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
     
+    # ALWAYS log to prove this function is being called
+    Logger.info("🔧 PlannerAdapter.plan_tasks() called with #{length(tasks)} tasks, verbose=#{verbose}")
+    Logger.info("🔧 Tasks: #{inspect(tasks)}")
+    Logger.info("🔧 Opts: #{inspect(opts)}")
+    
     if verbose > 1 do
-      Logger.debug("PlannerAdapter: Starting HTN task decomposition for #{length(tasks)} tasks")
+      Logger.debug("PlannerAdapter: Starting HTN task decomposition using HybridCoordinatorV2 for #{length(tasks)} tasks")
     end
 
-    # Use Plan.plan directly for HTN task decomposition
-    case Plan.plan(domain, state, tasks, opts) do
-      {:ok, solution_tree} ->
+    # Use HybridCoordinatorV2 for sophisticated planning instead of old Plan.plan
+    Logger.info("🔧 Creating HybridCoordinatorV2 with opts: #{inspect(opts)}")
+    coordinator = HybridCoordinatorV2.new_default(opts)
+    Logger.info("🔧 Calling HybridCoordinatorV2.plan() with coordinator: #{inspect(coordinator)}")
+    
+    case HybridCoordinatorV2.plan(coordinator, domain, state, tasks, opts) do
+      {:ok, %{solution_tree: solution_tree}} ->
+        Logger.info("🔧 PlannerAdapter: HybridCoordinatorV2 planning completed successfully")
         if verbose > 1 do
-          Logger.debug("PlannerAdapter: HTN task decomposition completed, applying temporal validation")
+          Logger.debug("PlannerAdapter: HybridCoordinatorV2 planning completed successfully")
         end
-        
-        # Apply temporal validation using HybridCoordinator's temporal engine
-        case apply_temporal_validation(solution_tree, domain, opts) do
-          {:ok, validated_tree} ->
-            if verbose > 1 do
-              Logger.debug("PlannerAdapter: Temporal validation completed successfully")
-            end
-            {:ok, validated_tree}
-          {:error, reason} ->
-            Logger.warning("PlannerAdapter: Temporal validation failed - #{reason}")
-            {:error, "Temporal validation failed: #{reason}"}
-        end
+        {:ok, solution_tree}
       
       {:error, reason} -> 
+        Logger.warning("🔧 PlannerAdapter: HybridCoordinatorV2 planning failed - #{reason}")
         if verbose > 0 do
-          Logger.warning("PlannerAdapter: HTN task decomposition failed - #{reason}")
+          Logger.warning("PlannerAdapter: HybridCoordinatorV2 planning failed - #{reason}")
         end
         {:error, reason}
     end

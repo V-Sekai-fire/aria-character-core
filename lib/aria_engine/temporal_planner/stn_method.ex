@@ -22,7 +22,7 @@ defmodule TemporalPlanner.STNMethod do
   Methods can contain non-temporal actions that act as bridges between temporal segments:
   - **Bridge actions**: Instantaneous decisions, computations, conditions
   - **Segment boundaries**: Natural breaking points for STN composition
-  - **Temporal consistency**: Maintain constraint propagation across bridges
+  - **Temporal consistency**: Maintain timeline consistency across bridges
 
   ## Hierarchical Composition
 

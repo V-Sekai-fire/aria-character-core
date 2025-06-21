@@ -106,18 +106,27 @@ defmodule AriaEngine.Scheduler.Core do
   Enhanced scheduling with entity/resource management.
   """
   def attempt_enhanced_scheduling(_schedule_name, activities, entities, resources, constraints, simulation_mode, activity_log, verbose, opts \\ []) do
+    Logger.info("🔧 Scheduler.Core.attempt_enhanced_scheduling() called with #{length(activities)} activities")
+    Logger.info("🔧 Entities: #{length(entities)}, Resources: #{length(resources)}")
+    Logger.info("🔧 Verbose: #{verbose}, Simulation mode: #{simulation_mode}")
+    
     if verbose > 1 do
       Logger.debug("AriaEngine.Scheduler: Attempting enhanced scheduling with #{length(entities)} entities and #{length(resources)} resources")
     end
     
     # Convert to domain format for hybrid planner
+    Logger.info("🔧 Calling convert_activities_to_enhanced_domain()...")
     case convert_activities_to_enhanced_domain(activities, entities, resources, constraints) do
       {:ok, domain} ->
+        Logger.info("🔧 Domain conversion successful!")
         # Create enhanced initial state with entities and resources
+        Logger.info("🔧 Creating enhanced initial state...")
         initial_state = create_enhanced_initial_state(entities, resources)
         
         # Generate tasks and goals from activities
+        Logger.info("🔧 Converting activities to tasks and goals...")
         {tasks, goals} = StateManager.convert_activities_to_tasks_and_goals(activities)
+        Logger.info("🔧 Generated #{length(tasks)} tasks and #{length(goals)} goals")
         
         if verbose > 2 do
           Logger.debug("AriaEngine.Scheduler: Created enhanced domain with #{map_size(domain.actions)} actions")
@@ -125,6 +134,7 @@ defmodule AriaEngine.Scheduler.Core do
         end
         
         # Use AriaEngine.PlannerAdapter for HTN task decomposition with temporal validation
+        Logger.info("🔧 About to call AriaEngine.PlannerAdapter.plan_tasks()...")
         planner_opts = [verbose: verbose]
         case AriaEngine.PlannerAdapter.plan_tasks(domain, initial_state, tasks, planner_opts) do
           {:ok, solution_tree} ->
@@ -150,6 +160,7 @@ defmodule AriaEngine.Scheduler.Core do
             {:error, "Enhanced planning failed: #{reason}"}
         end
       {:error, reason} ->
+        Logger.error("🔧 Domain conversion FAILED: #{reason}")
         {:error, "Enhanced domain conversion failed: #{reason}"}
     end
   end

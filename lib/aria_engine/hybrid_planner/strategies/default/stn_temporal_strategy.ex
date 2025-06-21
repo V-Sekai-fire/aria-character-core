@@ -238,7 +238,7 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
         :temporal_constraints,
         :consistency_checking,
         :schedule_generation,
-        :constraint_propagation,
+        :timeline_based_reasoning,
         :conflict_detection,
         :hierarchical_planning,
         :discrete_time_reasoning
@@ -259,7 +259,7 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
       configuration_options: [
         :verbose,
         :current_time,
-        :constraint_propagation_level,
+        :timeline_reasoning_level,
         :consistency_check_frequency
       ],
       dependencies: [

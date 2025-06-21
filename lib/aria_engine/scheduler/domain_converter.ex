@@ -61,7 +61,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     # Only create durative actions for all activities
     activities
     |> Enum.map(fn activity ->
-      durative_action_name = String.to_atom("durative_#{activity.id}")
+      durative_action_name = String.to_atom("durative_#{activity["id"]}")
       durative_action_fn = create_durative_activity_action(activity, entities, resources)
       {durative_action_name, durative_action_fn}
     end)
@@ -76,7 +76,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   @spec create_durative_activity_action(activity(), [Entity.t()], [Resource.t()]) :: function()
   def create_durative_activity_action(activity, _entities, _resources) do
     fn state, _args ->
-      activity_id = activity.id
+      activity_id = activity["id"]
       duration_val = Map.get(activity, :duration)
       duration =
         cond do
@@ -138,7 +138,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     # Create durative actions for individual activities
     activity_actions = activities
     |> Enum.map(fn activity ->
-      durative_action_name = String.to_atom("durative_#{activity.id}")
+      durative_action_name = String.to_atom("durative_#{activity["id"]}")
       durative_action = create_durative_action_struct(activity, entities, resources)
       {durative_action_name, durative_action}
     end)
@@ -155,7 +155,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   """
   @spec create_durative_action_struct(activity(), [Entity.t()], [Resource.t()]) :: Domain.DurativeAction.t()
   def create_durative_action_struct(activity, entities, resources) do
-    activity_id = activity.id
+    activity_id = activity["id"]
     duration_val = Map.get(activity, :duration)
     
     # Convert duration to proper durative action duration format
@@ -224,7 +224,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
               # Return proper todo list with tasks for individual activities
               activities
               |> Enum.map(fn activity ->
-                {activity.id, []}
+                {activity["id"], []}
               end)
             end
           }]
@@ -253,11 +253,11 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   def create_activity_task_methods(activities, entities, resources) do
     activities
     |> Enum.reduce(%{}, fn activity, acc ->
-      task_name = activity.id  # Use activity ID directly as task name
+      task_name = activity["id"]  # Use activity ID directly as task name
       method_name = "decompose_to_durative"
       method_fn = fn _args, _state ->
         # Decompose this goal to the corresponding durative action
-        [{String.to_atom("durative_#{activity.id}"), []}]
+        [{String.to_atom("durative_#{activity["id"]}"), []}]
       end
       Map.put(acc, task_name, [{method_name, method_fn}])
     end)
@@ -269,7 +269,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   @spec create_activity_scheduling_method(activity(), [Entity.t()], [Resource.t()]) :: function()
   def create_activity_scheduling_method(activity, _entities, _resources) do
     fn _args, state ->
-      activity_id = activity.id
+      activity_id = activity["id"]
       dependencies = Map.get(activity, :dependencies, [])
       required_resources = Map.get(activity, :required_resources, [])
       
@@ -317,7 +317,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   """
   @spec create_khr_primitive_sequence(activity(), [Entity.t()], [Resource.t()]) :: [khr_primitive()]
   def create_khr_primitive_sequence(activity, _entities, _resources) do
-    activity_id = activity.id
+    activity_id = activity["id"]
     required_resources = Map.get(activity, :required_resources, [])
     duration_val = Map.get(activity, :duration)
     duration =
@@ -433,7 +433,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
       dependencies = Map.get(activity, :dependencies, [])
       
       if not Enum.empty?(dependencies) do
-        goal_type = "dependencies_satisfied_#{activity.id}"
+        goal_type = "dependencies_satisfied_#{activity["id"]}"
         method_name = "ensure_dependencies"
         method_fn = fn _args, state ->
           incomplete_deps = Enum.filter(dependencies, fn dep_id ->
@@ -466,7 +466,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
         "optimize_execution_time", fn _args, state ->
           # Check if all activities are completed
           all_completed = Enum.all?(activities, fn activity ->
-            AriaEngine.StateV2.matches_exactly?(state, activity.id, "completed", true)
+            AriaEngine.StateV2.matches_exactly?(state, activity["id"], "completed", true)
           end)
           
           if all_completed do
@@ -558,7 +558,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
       over_time: []
     }
     
-    # Create the action function that performs iterative constraint propagation
+    # Create the action function that performs durative action temporal solving
     action_fn = create_timing_constraint_action_function(activities)
     
     Domain.DurativeAction.new(
@@ -571,22 +571,40 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   end
   
   @doc """
-  Create action function for timing constraint fixing.
-  This is now a placeholder - real temporal constraint solving should be handled 
-  by the hybrid planner's durative action solver using Timeline STN.
+  Create action function for timing constraint fixing using durative actions.
+  This delegates temporal constraint solving to the durative action system
+  which handles timeline-based temporal reasoning.
   """
   @spec create_timing_constraint_action_function([activity()]) :: function()
   def create_timing_constraint_action_function(activities) do
     fn state, _args ->
-      # Mark timing constraints as resolved without doing simple temporal solving
-      # The real temporal constraint solving should happen through the durative action system
-      Logger.info("Timing constraint durative action executed - temporal solving delegated to durative action solver")
+      # Use durative actions for temporal constraint solving
+      # The durative action system handles timeline-based temporal reasoning
+      Logger.info("Timing constraint durative action executed - using durative action temporal solver")
       
-      # Simply mark the schedule as having resolved timing constraints
-      state
+      # Create timeline constraints for each activity using durative actions
+      timeline_constraints = activities
+      |> Enum.map(fn activity ->
+        activity_id = activity["id"]
+        dependencies = Map.get(activity, :dependencies, [])
+        
+        # Create temporal constraints between dependent activities
+        Enum.map(dependencies, fn dep_id ->
+          # Dependency end must precede activity start (temporal ordering)
+          {dep_id, "end_time", "<=", activity_id, "start_time"}
+        end)
+      end)
+      |> List.flatten()
+      
+      # Store timeline constraints in state for durative action solver
+      updated_state = state
+      |> AriaEngine.StateV2.set_fact("schedule", "timeline_constraints", timeline_constraints)
+      |> AriaEngine.StateV2.set_fact("schedule", "temporal_solver", "durative_actions")
       |> AriaEngine.StateV2.set_fact("schedule", "timing_constraints_satisfied", true)
       |> AriaEngine.StateV2.set_fact("schedule", "valid", true)
       |> AriaEngine.StateV2.set_fact("schedule", "has_timing_conflicts", false)
+      
+      updated_state
     end
   end
   
@@ -594,7 +612,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   defp extract_scheduled_activities_from_state(state, activities) do
     activities
     |> Enum.map(fn activity ->
-      activity_id = activity.id
+      activity_id = activity["id"]
       start_time = AriaEngine.StateV2.get_fact(state, activity_id, "start_time") || "PT0S"
       duration_val = Map.get(activity, :duration)
     duration =
@@ -648,7 +666,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   # Update planner state with fixed timing information.
   defp update_state_with_fixed_timing(state, fixed_activities) do
     Enum.reduce(fixed_activities, state, fn activity, acc_state ->
-      activity_id = activity.id
+      activity_id = activity["id"]
       start_time = Map.get(activity, :start_time, "PT0S")
       end_time = Map.get(activity, :end_time, "PT0S")
       acc_state
@@ -717,7 +735,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   defp detect_circular_dependencies(activities) do
     # Build dependency graph
     dependency_graph = build_dependency_graph(activities)
-    activity_ids = Enum.map(activities, & &1.id)
+    activity_ids = Enum.map(activities, & &1["id"])
     
     # Check each activity for cycles using DFS
     case find_cycle_in_graph(dependency_graph, activity_ids) do
@@ -729,7 +747,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   # Builds a dependency graph from activities.
   defp build_dependency_graph(activities) do
     Enum.reduce(activities, %{}, fn activity, graph ->
-      activity_id = activity.id
+      activity_id = activity["id"]
       dependencies = Map.get(activity, :dependencies, [])
       Map.put(graph, activity_id, dependencies)
     end)

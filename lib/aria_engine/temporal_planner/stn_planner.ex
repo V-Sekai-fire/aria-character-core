@@ -6,8 +6,8 @@ defmodule TemporalPlanner.STNPlanner do
   STN-based hierarchical temporal planner for goal-level coordination.
 
   This module is the top-level coordinator in the hierarchical STN composition:
-  Action → Method → Goal. It handles goal decomposition, cross-method constraint
-  propagation, and reentrant execution with real-time constraint updates.
+  Action → Method → Goal. It handles goal decomposition, cross-method timeline
+  coordination, and reentrant execution with real-time constraint updates.
 
   ## Hierarchical STN Architecture
 
@@ -27,7 +27,7 @@ defmodule TemporalPlanner.STNPlanner do
 
   Achieves O(k * (n/k)³) complexity reduction through:
   - Independent method segment solving
-  - Cross-segment constraint propagation
+  - Cross-segment timeline coordination
   - Parallel composition using STN boolean operations
 
   ## Reentrant Execution
