@@ -55,9 +55,6 @@ defmodule AriaEngine.MiniZinc.Executor do
     
     with {:ok, model_file} <- prepare_model_file(model_name, opts) do
       args = build_minizinc_args(model_file, opts)
-      
-      Logger.debug("🔧 Spawning MiniZinc: minizinc #{Enum.join(args, " ")}")
-      
       proc = Porcelain.spawn("minizinc", args, opts[:porcelain_opts] || [])
       
       # Schedule cleanup after process completion
@@ -128,24 +125,16 @@ defmodule AriaEngine.MiniZinc.Executor do
         template_vars = prepare_eex_vars(vars)
         
         # Debug: Log template variables
-        Logger.debug("🔍 Template variables: #{inspect(template_vars, pretty: true)}")
-        
         # Render with EEx
         rendered_content = EEx.eval_string(template_content, assigns: template_vars)
-        
-        # Debug: Log rendered content
-        Logger.debug("🔍 Rendered content:\n#{rendered_content}")
         
         # Write to temporary file
         temp_file = Path.join(opts[:temp_dir], "#{template_name}_#{:rand.uniform(10000)}.mzn")
         File.write!(temp_file, rendered_content)
-        
-        Logger.debug("🔧 Rendered template #{template_name} to #{temp_file}")
         {:ok, temp_file}
         
       rescue
         error ->
-          Logger.error("❌ Template rendering failed: #{inspect(error)}")
           {:error, "Template rendering failed: #{Exception.message(error)}"}
       end
     else
@@ -173,9 +162,6 @@ defmodule AriaEngine.MiniZinc.Executor do
 
   defp execute_minizinc(model_file, opts) do
     args = build_minizinc_args(model_file, opts)
-    
-    Logger.debug("🔧 Executing MiniZinc: minizinc #{Enum.join(args, " ")}")
-    
     start_time = System.monotonic_time(:millisecond)
     
     result = Porcelain.exec("minizinc", args, out: :string, err: :string)
@@ -185,8 +171,6 @@ defmodule AriaEngine.MiniZinc.Executor do
     
     case result do
       %{status: 0, out: output} ->
-        Logger.debug("✅ MiniZinc completed in #{solve_time}ms")
-        
         parsed_solution = parse_minizinc_output(output)
         
         {:ok, %{
@@ -197,8 +181,6 @@ defmodule AriaEngine.MiniZinc.Executor do
         }}
         
       %{status: exit_code, out: output, err: error} ->
-        Logger.error("❌ MiniZinc failed with exit code #{exit_code}")
-        
         {:error, %{
           status: :error,
           exit_code: exit_code,
@@ -208,8 +190,6 @@ defmodule AriaEngine.MiniZinc.Executor do
         }}
         
       %{status: :timeout} ->
-        Logger.error("❌ MiniZinc execution timed out after #{opts[:timeout]}ms")
-        
         {:error, %{
           status: :timeout,
           timeout_ms: opts[:timeout],
@@ -311,7 +291,6 @@ defmodule AriaEngine.MiniZinc.Executor do
   defp cleanup_temp_file(file_path, opts) do
     if opts[:cleanup] && String.contains?(file_path, opts[:temp_dir]) do
       File.rm(file_path)
-      Logger.debug("🧹 Cleaned up temporary file: #{file_path}")
     end
     :ok
   end

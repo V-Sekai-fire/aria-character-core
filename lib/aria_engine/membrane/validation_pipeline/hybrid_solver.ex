@@ -14,13 +14,19 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
     start_time = System.monotonic_time(:millisecond)
 
     try do
+      # Ensure proper data types for scheduler
+      activities = ensure_list(params["activities"])
+      entities = ensure_list(params["entities"])
+      resources = ensure_list(params["resources"])
+      constraints = params["constraints"] || %{}
+
       # Call the real AriaEngine scheduler
       case AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
              params["schedule_name"] || "validation_test",
-             params["activities"] || [],
-             params["entities"] || [],
-             params["resources"] || %{},
-             params["constraints"] || %{},
+             activities,
+             entities,
+             resources,
+             constraints,
              # simulation_mode
              true,
              # activity_log
@@ -134,4 +140,13 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
       _ -> %{}
     end
   end
+
+  # Helper function to ensure data is a list
+  defp ensure_list(nil), do: []
+  defp ensure_list(data) when is_list(data), do: data
+  defp ensure_list(data) when is_map(data) do
+    # Convert map to list of values if it's a map
+    Map.values(data)
+  end
+  defp ensure_list(_), do: []
 end

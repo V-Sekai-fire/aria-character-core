@@ -10,7 +10,7 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilterTest do
   describe "ValidationPipelineFilter with failing STN cases" do
     test "detects inconsistent STN through validation pipeline" do
       # Create an STN that should be inconsistent
-      stn = STN.new()
+      _stn = STN.new()
       |> STN.add_time_point("task_a")
       |> STN.add_time_point("task_b")
       # Task A must finish at least 20 time units before Task B starts

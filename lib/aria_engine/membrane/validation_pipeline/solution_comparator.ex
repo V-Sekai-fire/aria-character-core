@@ -33,13 +33,43 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
 
       # Both solvers failed
       hybrid_result.status != :success and minizinc_result.status != :success ->
-        %{
-          overall_status: :infeasible,
-          reason: "Both solvers failed to find solution",
-          hybrid_solved: false,
-          minizinc_solved: false,
-          solutions_match: false
-        }
+        cond do
+          hybrid_result.status == :error and minizinc_result.status == :error ->
+            %{
+              overall_status: :infeasible,
+              reason: "Both solvers failed with errors",
+              hybrid_solved: false,
+              minizinc_solved: false,
+              solutions_match: false
+            }
+          
+          hybrid_result.status == :error ->
+            %{
+              overall_status: :inconsistent,
+              reason: "Hybrid solver failed, MiniZinc solver also failed",
+              hybrid_solved: false,
+              minizinc_solved: false,
+              solutions_match: false
+            }
+          
+          minizinc_result.status == :error ->
+            %{
+              overall_status: :inconsistent,
+              reason: "MiniZinc solver failed, Hybrid solver also failed",
+              hybrid_solved: false,
+              minizinc_solved: false,
+              solutions_match: false
+            }
+          
+          true ->
+            %{
+              overall_status: :infeasible,
+              reason: "Both solvers failed to find solution",
+              hybrid_solved: false,
+              minizinc_solved: false,
+              solutions_match: false
+            }
+        end
 
       # Only one solver succeeded
       hybrid_result.status == :success and minizinc_result.status != :success ->

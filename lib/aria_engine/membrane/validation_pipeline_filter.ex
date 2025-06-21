@@ -60,12 +60,25 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilter do
       params = mcp_request["params"]["arguments"]
 
       # Step 1: Solve with Hybrid solver (using existing MCP format)
-      hybrid_result = HybridSolver.solve(params, state)
+      hybrid_result = 
+        try do
+          HybridSolver.solve(params, state)
+        rescue
+          error ->
+            Logger.error("Hybrid solver failed with exception: #{Exception.message(error)}")
+            %{status: :error, error: Exception.message(error)}
+        end
 
       # Step 2: Handle MiniZinc solving based on availability
       minizinc_result =
         if state.minizinc_available do
-          MiniZincSolver.solve(params, state)
+          try do
+            MiniZincSolver.solve(params, state)
+          rescue
+            error ->
+              Logger.error("MiniZinc solver failed with exception: #{Exception.message(error)}")
+              %{status: :error, error: Exception.message(error)}
+          end
         else
           %{status: :unavailable, reason: "MiniZinc not installed"}
         end

@@ -19,15 +19,13 @@ defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
       "id" => mcp_request["id"],
       "jsonrpc" => "2.0",
       "result" => %{
-        "status" => "success",
-        "validation" => %{
-          "overall_status" => Atom.to_string(validation_result.overall_status),
-          "reason" => validation_result.reason,
-          "hybrid_solved" => validation_result.hybrid_solved,
-          "minizinc_solved" => validation_result.minizinc_solved,
-          "solutions_match" => validation_result.solutions_match,
-          "minizinc_available" => state.minizinc_available
-        },
+        "status" => Atom.to_string(validation_result.overall_status),
+        "validation_type" => "pipeline_validation",
+        "reason" => validation_result.reason,
+        "hybrid_solved" => validation_result.hybrid_solved,
+        "minizinc_solved" => validation_result.minizinc_solved,
+        "solutions_match" => validation_result.solutions_match,
+        "minizinc_available" => state.minizinc_available,
         "hybrid_result" => format_solver_result(hybrid_result, "hybrid"),
         "minizinc_result" => format_solver_result(minizinc_result, "minizinc"),
         "solution_trees" => %{
@@ -50,10 +48,10 @@ defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
     %{
       "solver" => solver_name,
       "status" => Atom.to_string(result.status),
-      "solve_time_ms" => result[:solve_time_ms],
-      "solution" => result[:solution],
-      "error" => result[:error],
-      "reason" => result[:reason]
+      "solve_time_ms" => Map.get(result, :solve_time_ms),
+      "solution" => Map.get(result, :solution),
+      "error" => Map.get(result, :error),
+      "reason" => Map.get(result, :reason)
     }
   end
 
@@ -63,34 +61,34 @@ defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
   def create_solution_tree(result) do
     case result.status do
       :success ->
-        solution = result.solution || %{}
-        activities = solution.activities || []
+        solution = Map.get(result, :solution, %{})
+        activities = Map.get(solution, :activities, [])
 
         %{
           "type" => "solution",
-          "makespan" => solution.makespan || 0,
+          "makespan" => Map.get(solution, :makespan, 0),
           "activities" => Enum.map(activities, &format_activity_node/1),
-          "resource_utilization" => solution.resource_utilization || %{},
-          "solve_time_ms" => result.solve_time_ms || 0
+          "resource_utilization" => Map.get(solution, :resource_utilization, %{}),
+          "solve_time_ms" => Map.get(result, :solve_time_ms, 0)
         }
 
       :error ->
         %{
           "type" => "error",
-          "error" => result.error || "Unknown error",
-          "solve_time_ms" => result.solve_time_ms || 0
+          "error" => Map.get(result, :error, "Unknown error"),
+          "solve_time_ms" => Map.get(result, :solve_time_ms, 0)
         }
 
       :unavailable ->
         %{
           "type" => "unavailable",
-          "reason" => result.reason || "Solver not available"
+          "reason" => Map.get(result, :reason, "Solver not available")
         }
 
       :unsupported ->
         %{
           "type" => "unsupported",
-          "reason" => result.reason || "Problem type not supported"
+          "reason" => Map.get(result, :reason, "Problem type not supported")
         }
 
       _ ->
