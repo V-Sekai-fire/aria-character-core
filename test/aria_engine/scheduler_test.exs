@@ -3,8 +3,27 @@
 
 defmodule AriaEngine.SchedulerTest do
   use ExUnit.Case, async: true
+  require Logger
 
   alias AriaEngine.Scheduler
+
+  # Custom assertion helper for DateTime comparison using Timex
+  defp assert_datetime_equal(actual_iso_string, expected_datetime, tolerance_ms \\ 0) do
+    # Parse the actual ISO string to DateTime
+    {:ok, actual_datetime, _} = DateTime.from_iso8601(actual_iso_string)
+    
+    # Calculate difference in milliseconds
+    diff_ms = abs(Timex.diff(actual_datetime, expected_datetime, :milliseconds))
+    
+    # Assert within tolerance
+    assert diff_ms <= tolerance_ms,
+      """
+      DateTime difference exceeds tolerance:
+      Expected: #{DateTime.to_iso8601(expected_datetime)}
+      Actual:   #{actual_iso_string}
+      Difference: #{diff_ms}ms (tolerance: #{tolerance_ms}ms)
+      """
+  end
 
   describe "schedule_activities/3" do
     test "handles empty activity list correctly" do
@@ -182,6 +201,13 @@ defmodule AriaEngine.SchedulerTest do
       # Parse the base datetime from activity a's start time
       {:ok, base_time, _offset} = DateTime.from_iso8601(a.start_time)
       
+      # Debug: Log actual schedule times
+      Logger.error("=== DEBUG: Actual Schedule Times ===")
+      Logger.error("a: #{a.start_time} -> #{a.end_time}")
+      Logger.error("b: #{b.start_time} -> #{b.end_time}")
+      Logger.error("c: #{c.start_time} -> #{c.end_time}")
+      Logger.error("d: #{d.start_time} -> #{d.end_time}")
+      
       # Expected times using Timex for datetime arithmetic
       expected_a_end = Timex.add(base_time, Timex.Duration.from_seconds(2))
       expected_b_start = expected_a_end
@@ -191,16 +217,27 @@ defmodule AriaEngine.SchedulerTest do
       expected_d_start = Enum.max([expected_b_end, expected_c_end], DateTime)
       expected_d_end = Timex.add(expected_d_start, Timex.Duration.from_seconds(4))
 
-      # Convert to ISO strings for comparison
-      assert a.start_time == DateTime.to_iso8601(base_time)
-      assert a.end_time == DateTime.to_iso8601(expected_a_end)
-      assert b.start_time == DateTime.to_iso8601(expected_b_start)
-      assert b.end_time == DateTime.to_iso8601(expected_b_end)
-      assert c.start_time == DateTime.to_iso8601(expected_c_start)
-      assert c.end_time == DateTime.to_iso8601(expected_c_end)
+      # Debug: Log expected times
+      Logger.error("=== DEBUG: Expected Times ===")
+      Logger.error("base_time: #{DateTime.to_iso8601(base_time)}")
+      Logger.error("expected_a_end: #{DateTime.to_iso8601(expected_a_end)}")
+      Logger.error("expected_b_start: #{DateTime.to_iso8601(expected_b_start)}")
+      Logger.error("expected_b_end: #{DateTime.to_iso8601(expected_b_end)}")
+      Logger.error("expected_c_start: #{DateTime.to_iso8601(expected_c_start)}")
+      Logger.error("expected_c_end: #{DateTime.to_iso8601(expected_c_end)}")
+      Logger.error("expected_d_start: #{DateTime.to_iso8601(expected_d_start)}")
+      Logger.error("expected_d_end: #{DateTime.to_iso8601(expected_d_end)}")
+
+      # Use custom DateTime comparison to avoid precision issues
+      assert_datetime_equal(a.start_time, base_time)
+      assert_datetime_equal(a.end_time, expected_a_end)
+      assert_datetime_equal(b.start_time, expected_b_start)
+      assert_datetime_equal(b.end_time, expected_b_end)
+      assert_datetime_equal(c.start_time, expected_c_start)
+      assert_datetime_equal(c.end_time, expected_c_end)
       # d should start after both b and c finish
-      assert d.start_time == DateTime.to_iso8601(expected_d_start)
-      assert d.end_time == DateTime.to_iso8601(expected_d_end)
+      assert_datetime_equal(d.start_time, expected_d_start)
+      assert_datetime_equal(d.end_time, expected_d_end)
     end
   end
 
