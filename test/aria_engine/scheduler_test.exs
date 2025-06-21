@@ -201,13 +201,6 @@ defmodule AriaEngine.SchedulerTest do
       # Parse the base datetime from activity a's start time
       {:ok, base_time, _offset} = DateTime.from_iso8601(a.start_time)
       
-      # Debug: Log actual schedule times
-      Logger.error("=== DEBUG: Actual Schedule Times ===")
-      Logger.error("a: #{a.start_time} -> #{a.end_time}")
-      Logger.error("b: #{b.start_time} -> #{b.end_time}")
-      Logger.error("c: #{c.start_time} -> #{c.end_time}")
-      Logger.error("d: #{d.start_time} -> #{d.end_time}")
-      
       # Expected times using Timex for datetime arithmetic
       expected_a_end = Timex.add(base_time, Timex.Duration.from_seconds(2))
       expected_b_start = expected_a_end
@@ -216,17 +209,6 @@ defmodule AriaEngine.SchedulerTest do
       expected_c_end = Timex.add(expected_c_start, Timex.Duration.from_seconds(1))
       expected_d_start = Enum.max([expected_b_end, expected_c_end], DateTime)
       expected_d_end = Timex.add(expected_d_start, Timex.Duration.from_seconds(4))
-
-      # Debug: Log expected times
-      Logger.error("=== DEBUG: Expected Times ===")
-      Logger.error("base_time: #{DateTime.to_iso8601(base_time)}")
-      Logger.error("expected_a_end: #{DateTime.to_iso8601(expected_a_end)}")
-      Logger.error("expected_b_start: #{DateTime.to_iso8601(expected_b_start)}")
-      Logger.error("expected_b_end: #{DateTime.to_iso8601(expected_b_end)}")
-      Logger.error("expected_c_start: #{DateTime.to_iso8601(expected_c_start)}")
-      Logger.error("expected_c_end: #{DateTime.to_iso8601(expected_c_end)}")
-      Logger.error("expected_d_start: #{DateTime.to_iso8601(expected_d_start)}")
-      Logger.error("expected_d_end: #{DateTime.to_iso8601(expected_d_end)}")
 
       # Use custom DateTime comparison to avoid precision issues
       assert_datetime_equal(a.start_time, base_time)
