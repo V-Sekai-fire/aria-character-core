@@ -14,7 +14,7 @@ This ADR documents the closure of the temporal planning development segment and 
 
 **HybridCoordinatorV2 System:**
 - ✅ Fully functional temporal planning coordinator
-- ✅ Multiple strategy support (STN, Optimizer, Default)
+- ✅ Multiple strategy support (STN, ~~Optimizer~~ (Proposed in ADR-109, not implemented), Default)
 - ✅ Clean architecture with strategy pattern
 - ✅ Comprehensive test coverage (382 tests, 0 failures)
 - ✅ Production-ready stability

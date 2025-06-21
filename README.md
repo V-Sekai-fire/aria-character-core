@@ -36,7 +36,7 @@ Aria Character Core is a research codebase for experimenting with AI planning, t
 
 ### Architecture Highlights
 
-- **HybridCoordinatorV2**: Multi-strategy planning system with STN, Optimizer, and Default strategies
+- **HybridCoordinatorV2**: Multi-strategy planning system with STN, ~~Optimizer~~ (Proposed in ADR-109, not implemented), and Default strategies
 - **Timeline Module**: Complete temporal reasoning with Allen's Interval Algebra (IntervalRelations)
 - **MiniZinc Integration**: Constraint programming for Simple Temporal Network solving
 - **Strategy Pattern**: Extensible planning approaches for different problem types

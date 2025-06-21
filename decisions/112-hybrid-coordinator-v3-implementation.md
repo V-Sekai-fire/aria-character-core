@@ -146,7 +146,7 @@ end
 
 - **ADR-111**: Convert schedule_activities to Plan Transformer (implements this approach)
 - **ADR-110**: MCP Strategy Testing Interface (uses V2 directly)
-- **ADR-109**: Integrate Exhort OR-Tools Strategy (provides OptimizerStrategy for V2)
+- **ADR-109**: Integrate Exhort OR-Tools Strategy (~~provides OptimizerStrategy for V2~~ - Proposed, not implemented)
 
 ## Examples
 
