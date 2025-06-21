@@ -203,7 +203,8 @@ defmodule AriaEngine.Scheduler do
 
   - `schedule_name` - Name for this scheduling request
   - `activities` - List of activities to schedule (can be empty)
-  - `opts` - Optional parameters:
+  - `opts` - Required and optional parameters:
+    - `:base_datetime` - Base datetime for scheduling (REQUIRED)
     - `:entities` - List of Entity structs with capabilities
     - `:resources` - List of Resource structs with capacity
     - `:constraints` - Scheduling constraints and limits
@@ -218,12 +219,47 @@ defmodule AriaEngine.Scheduler do
   @spec schedule_activities(String.t(), list(), keyword()) ::
           {:ok, SimulationResult.t()} | {:error, String.t()}
   def schedule_activities(schedule_name, activities, opts \\ []) do
-    entities = Keyword.get(opts, :entities, [])
-    raw_resources = Keyword.get(opts, :resources, [])
-    constraints = Keyword.get(opts, :constraints, %{})
-    simulation_mode = Keyword.get(opts, :simulation_mode, false)
-    verbose = Keyword.get(opts, :verbose, 0)
-    log_activities = Keyword.get(opts, :log_activities, true)
+    # Validate required base_datetime parameter
+    case Keyword.get(opts, :base_datetime) do
+      nil ->
+        {:error, "base_datetime is required but not provided"}
+      
+      %DateTime{} = base_datetime ->
+        entities = Keyword.get(opts, :entities, [])
+        raw_resources = Keyword.get(opts, :resources, [])
+        constraints = Keyword.get(opts, :constraints, %{})
+        simulation_mode = Keyword.get(opts, :simulation_mode, false)
+        verbose = Keyword.get(opts, :verbose, 0)
+        log_activities = Keyword.get(opts, :log_activities, true)
+        
+        schedule_activities_with_base_datetime(
+          schedule_name,
+          activities,
+          base_datetime,
+          entities,
+          raw_resources,
+          constraints,
+          simulation_mode,
+          verbose,
+          log_activities
+        )
+      
+      _ ->
+        {:error, "base_datetime must be a DateTime struct"}
+    end
+  end
+
+  defp schedule_activities_with_base_datetime(
+         schedule_name,
+         activities,
+         base_datetime,
+         entities,
+         raw_resources,
+         constraints,
+         simulation_mode,
+         verbose,
+         log_activities
+       ) do
 
     # Convert resources from map format to struct format if needed
     resources = convert_resources_to_structs(raw_resources)
@@ -242,7 +278,7 @@ defmodule AriaEngine.Scheduler do
       # Initialize activity log
       activity_log = if log_activities, do: [], else: nil
 
-      # Delegate to core implementation
+      # Delegate to core implementation with base_datetime
       AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
         schedule_name,
         activities,
@@ -251,7 +287,8 @@ defmodule AriaEngine.Scheduler do
         constraints,
         simulation_mode,
         activity_log,
-        verbose
+        verbose,
+        base_datetime
       )
     rescue
       e ->

@@ -26,7 +26,8 @@ defmodule AriaEngine.Scheduler.Core do
         constraints,
         simulation_mode,
         activity_log,
-        verbose
+        verbose,
+        base_datetime
       ) do
     if verbose > 1 do
       Logger.debug("AriaEngine.Scheduler: Initializing enhanced scheduling system")
@@ -52,6 +53,7 @@ defmodule AriaEngine.Scheduler.Core do
         simulation_mode: simulation_mode,
         activity_log: activity_log,
         verbose: verbose,
+        base_datetime: base_datetime,
         opts: []
       }
 
@@ -153,6 +155,7 @@ defmodule AriaEngine.Scheduler.Core do
       simulation_mode: simulation_mode,
       activity_log: activity_log,
       verbose: verbose,
+      base_datetime: base_datetime,
       opts: opts
     } = scheduling_params
     Logger.info(
@@ -222,11 +225,7 @@ defmodule AriaEngine.Scheduler.Core do
                 verbose
               )
             else
-              # Convert plan to schedule format
-              base_datetime =
-                Keyword.get(opts, :base_datetime) ||
-                  DateTime.utc_now()
-
+              # Convert plan to schedule format using passed base_datetime
               schedule =
                 convert_plan_to_enhanced_schedule(
                   encapsulated_plan,

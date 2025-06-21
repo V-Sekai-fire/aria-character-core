@@ -239,12 +239,50 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     # Solve Timeline for consistent timing
     solved_timeline = Timeline.solve(timeline_with_constraints)
 
-    # Extract timing for each activity from solved Timeline
+    # Extract timing for each activity from solved Timeline and preserve durations
+    duration_map =
+      Enum.into(scheduled_activities, %{}, fn activity ->
+        activity_id = if is_map(activity) and Map.has_key?(activity, "id") do
+          Map.get(activity, "id")
+        else
+          Map.get(activity, :id)
+        end
+        
+        # Parse duration to get seconds
+        duration_seconds =
+          case Map.get(activity, :duration, "PT0S") do
+            duration_str when is_binary(duration_str) ->
+              case :iso8601.parse_duration(String.to_charlist(duration_str)) do
+                parsed when is_list(parsed) ->
+                  map = Enum.into(parsed, %{})
+                  (map[:hours] || 0) * 3600 + (map[:minutes] || 0) * 60 + (map[:seconds] || 0)
+
+                _ ->
+                  0
+              end
+
+            duration_map when is_map(duration_map) ->
+              (duration_map[:hours] || 0) * 3600 + (duration_map[:minutes] || 0) * 60 +
+                (duration_map[:seconds] || 0)
+
+            _ ->
+              0
+          end
+        
+        {activity_id, duration_seconds}
+      end)
+
     time_map =
       solved_timeline.intervals
       |> Enum.into(%{}, fn {_interval_id, interval} ->
         activity_id = interval.metadata[:id]
-        {activity_id, {interval.start_time, interval.end_time}}
+        start_time = interval.start_time
+        
+        # Calculate end_time based on start_time + duration to ensure duration is respected
+        duration_seconds = Map.get(duration_map, activity_id, 0)
+        end_time = DateTime.add(start_time, duration_seconds, :second)
+        
+        {activity_id, {start_time, end_time}}
       end)
 
     # Update scheduled_activities with computed times
@@ -258,16 +296,18 @@ defmodule AriaEngine.Scheduler.PlanConverter do
         
         case Map.get(time_map, activity_id) do
           {start_time, end_time} when not is_nil(start_time) and not is_nil(end_time) ->
-            # Convert DateTime back to seconds offset from base
-            start_offset = DateTime.diff(start_time, base_datetime, :second)
-            end_offset = DateTime.diff(end_time, base_datetime, :second)
+            # Convert DateTime objects to ISO strings
+            start_iso = DateTime.to_iso8601(start_time)
+            end_iso = DateTime.to_iso8601(end_time)
 
-            Map.put(activity, :start_time, start_offset)
-            |> Map.put(:end_time, end_offset)
+            Map.put(activity, :start_time, start_iso)
+            |> Map.put(:end_time, end_iso)
 
           _ ->
-            Map.put(activity, :start_time, 0)
-            |> Map.put(:end_time, 0)
+            # Fallback to base datetime if no timing found
+            base_iso = DateTime.to_iso8601(base_datetime)
+            Map.put(activity, :start_time, base_iso)
+            |> Map.put(:end_time, base_iso)
         end
       end)
 
@@ -390,6 +430,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
 
       is_map(duration_val) ->
         parse_duration_struct(duration_val)
+
 
       true ->
         {0, nil, nil, "PT0S"}

@@ -8,7 +8,11 @@ defmodule AriaEngine.SchedulerTest do
 
   describe "schedule_activities/3" do
     test "handles empty activity list correctly" do
-      {:ok, result} = Scheduler.schedule_activities("Empty Project", [])
+      {:ok, result} = Scheduler.schedule_activities(
+        "Empty Project", 
+        [],
+        base_datetime: ~U[2025-01-01 00:00:00Z]
+      )
 
       assert result.status == "success"
 
@@ -29,13 +33,17 @@ defmodule AriaEngine.SchedulerTest do
 
     test "schedules simple activities with dependencies" do
       activities = [
-        %{"id" => "design", "duration" => 5, "dependencies" => []},
-        %{"id" => "develop", "duration" => 10, "dependencies" => ["design"]},
-        %{"id" => "test", "duration" => 3, "dependencies" => ["develop"]},
-        %{"id" => "deploy", "duration" => 1, "dependencies" => ["test"]}
+        %{"id" => "design", "duration" => "PT5S", "dependencies" => []},
+        %{"id" => "develop", "duration" => "PT10S", "dependencies" => ["design"]},
+        %{"id" => "test", "duration" => "PT3S", "dependencies" => ["develop"]},
+        %{"id" => "deploy", "duration" => "PT1S", "dependencies" => ["test"]}
       ]
 
-      {:ok, result} = Scheduler.schedule_activities("Website Launch", activities)
+      {:ok, result} = Scheduler.schedule_activities(
+        "Website Launch", 
+        activities,
+        base_datetime: ~U[2025-01-01 00:00:00Z]
+      )
 
       assert result.status == "success"
       assert is_list(result.schedule)
@@ -44,8 +52,8 @@ defmodule AriaEngine.SchedulerTest do
 
     test "schedules activities with resources and constraints" do
       activities = [
-        %{"id" => "task1", "duration" => 2, "dependencies" => [], "resources" => ["developer"]},
-        %{"id" => "task2", "duration" => 3, "dependencies" => [], "resources" => ["developer"]}
+        %{"id" => "task1", "duration" => "PT2S", "dependencies" => [], "resources" => ["developer"]},
+        %{"id" => "task2", "duration" => "PT3S", "dependencies" => [], "resources" => ["developer"]}
       ]
 
       resources = %{developer: %{capacity: 1}}
@@ -56,7 +64,8 @@ defmodule AriaEngine.SchedulerTest do
           "Resource Test",
           activities,
           resources: resources,
-          constraints: constraints
+          constraints: constraints,
+          base_datetime: ~U[2025-01-01 00:00:00Z]
         )
 
       assert result.status == "success"
@@ -65,13 +74,14 @@ defmodule AriaEngine.SchedulerTest do
     end
 
     test "handles verbose logging" do
-      activities = [%{"id" => "task1", "duration" => 1, "dependencies" => []}]
+      activities = [%{"id" => "task1", "duration" => "PT1S", "dependencies" => []}]
 
       {:ok, result} =
         Scheduler.schedule_activities(
           "Verbose Test",
           activities,
-          verbose: 3
+          verbose: 3,
+          base_datetime: ~U[2025-01-01 00:00:00Z]
         )
 
       assert result.status == "success"
@@ -80,20 +90,28 @@ defmodule AriaEngine.SchedulerTest do
 
     test "returns analysis with correct structure" do
       activities = [
-        %{"id" => "a", "duration" => 1, "dependencies" => []},
-        %{"id" => "b", "duration" => 2, "dependencies" => ["a"]}
+        %{"id" => "a", "duration" => "PT1S", "dependencies" => []},
+        %{"id" => "b", "duration" => "PT2S", "dependencies" => ["a"]}
       ]
 
-      {:ok, _result} = Scheduler.schedule_activities("Analysis Test", activities)
+      {:ok, _result} = Scheduler.schedule_activities(
+        "Analysis Test", 
+        activities,
+        base_datetime: ~U[2025-01-01 00:00:00Z]
+      )
     end
 
     test "scheduled activities have timing information" do
       activities = [
-        %{"id" => "first", "duration" => 5, "dependencies" => []},
-        %{"id" => "second", "duration" => 3, "dependencies" => ["first"]}
+        %{"id" => "first", "duration" => "PT5S", "dependencies" => []},
+        %{"id" => "second", "duration" => "PT3S", "dependencies" => ["first"]}
       ]
 
-      {:ok, result} = Scheduler.schedule_activities("Timing Test", activities)
+      {:ok, result} = Scheduler.schedule_activities(
+        "Timing Test", 
+        activities,
+        base_datetime: ~U[2025-01-01 00:00:00Z]
+      )
 
       scheduled = result.schedule
       assert length(scheduled) == 2
@@ -112,7 +130,11 @@ defmodule AriaEngine.SchedulerTest do
         %{"id" => "no_duration", "dependencies" => []}
       ]
 
-      {:ok, result} = Scheduler.schedule_activities("No Duration Test", activities)
+      {:ok, result} = Scheduler.schedule_activities(
+        "No Duration Test", 
+        activities,
+        base_datetime: ~U[2025-01-01 00:00:00Z]
+      )
 
       assert result.status == "success"
       assert is_list(result.schedule)
@@ -121,11 +143,15 @@ defmodule AriaEngine.SchedulerTest do
 
     test "handles activities with empty dependencies" do
       activities = [
-        %{"id" => "independent1", "duration" => 1, "dependencies" => []},
-        %{"id" => "independent2", "duration" => 2, "dependencies" => []}
+        %{"id" => "independent1", "duration" => "PT1S", "dependencies" => []},
+        %{"id" => "independent2", "duration" => "PT2S", "dependencies" => []}
       ]
 
-      {:ok, result} = Scheduler.schedule_activities("Independent Test", activities)
+      {:ok, result} = Scheduler.schedule_activities(
+        "Independent Test", 
+        activities,
+        base_datetime: ~U[2025-01-01 00:00:00Z]
+      )
 
       assert result.status == "success"
       assert is_list(result.schedule)
@@ -135,13 +161,17 @@ defmodule AriaEngine.SchedulerTest do
 
     test "timing constraints are respected with multiple dependencies (STN logic)" do
       activities = [
-        %{"id" => "a", "duration" => 2, "dependencies" => []},
-        %{"id" => "b", "duration" => 3, "dependencies" => ["a"]},
-        %{"id" => "c", "duration" => 1, "dependencies" => ["a"]},
-        %{"id" => "d", "duration" => 4, "dependencies" => ["b", "c"]}
+        %{"id" => "a", "duration" => "PT2S", "dependencies" => []},
+        %{"id" => "b", "duration" => "PT3S", "dependencies" => ["a"]},
+        %{"id" => "c", "duration" => "PT1S", "dependencies" => ["a"]},
+        %{"id" => "d", "duration" => "PT4S", "dependencies" => ["b", "c"]}
       ]
 
-      {:ok, result} = Scheduler.schedule_activities("STN Timing Test", activities)
+      {:ok, result} = Scheduler.schedule_activities(
+      "STN Timing Test", 
+      activities,
+      base_datetime: ~U[2025-01-01 00:00:00Z]
+    )
       schedule = Enum.sort_by(result.schedule, & &1["id"])
 
       a = Enum.find(schedule, &(&1["id"] == "a"))
@@ -149,22 +179,39 @@ defmodule AriaEngine.SchedulerTest do
       c = Enum.find(schedule, &(&1["id"] == "c"))
       d = Enum.find(schedule, &(&1["id"] == "d"))
 
-      assert a.start_time == 0
-      assert a.end_time == 2
-      assert b.start_time == 2
-      assert b.end_time == 5
-      assert c.start_time == 2
-      assert c.end_time == 3
+      # Parse the base datetime from activity a's start time
+      {:ok, base_time, _offset} = DateTime.from_iso8601(a.start_time)
+      
+      # Expected times using Timex for datetime arithmetic
+      expected_a_end = Timex.add(base_time, Timex.Duration.from_seconds(2))
+      expected_b_start = expected_a_end
+      expected_b_end = Timex.add(expected_b_start, Timex.Duration.from_seconds(3))
+      expected_c_start = expected_a_end
+      expected_c_end = Timex.add(expected_c_start, Timex.Duration.from_seconds(1))
+      expected_d_start = Enum.max([expected_b_end, expected_c_end], DateTime)
+      expected_d_end = Timex.add(expected_d_start, Timex.Duration.from_seconds(4))
+
+      # Convert to ISO strings for comparison
+      assert a.start_time == DateTime.to_iso8601(base_time)
+      assert a.end_time == DateTime.to_iso8601(expected_a_end)
+      assert b.start_time == DateTime.to_iso8601(expected_b_start)
+      assert b.end_time == DateTime.to_iso8601(expected_b_end)
+      assert c.start_time == DateTime.to_iso8601(expected_c_start)
+      assert c.end_time == DateTime.to_iso8601(expected_c_end)
       # d should start after both b and c finish
-      assert d.start_time == 5
-      assert d.end_time == 9
+      assert d.start_time == DateTime.to_iso8601(expected_d_start)
+      assert d.end_time == DateTime.to_iso8601(expected_d_end)
     end
   end
 
   describe "error handling" do
     test "handles invalid input gracefully" do
       # This should not crash, even with unusual input
-      {:ok, result} = Scheduler.schedule_activities("", [])
+      {:ok, result} = Scheduler.schedule_activities(
+        "", 
+        [],
+        base_datetime: ~U[2025-01-01 00:00:00Z]
+      )
       assert result.status == "success"
     end
   end
