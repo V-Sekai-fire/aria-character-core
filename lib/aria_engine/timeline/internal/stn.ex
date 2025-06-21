@@ -78,7 +78,7 @@ defmodule Timeline.Internal.STN do
   # - [AWS Builders Library - Reliability and Constant Work](https://aws.amazon.com/builders-library/reliability-and-constant-work/)
 
   alias Timeline.Internal.STN.Core
-  alias Timeline.Internal.STN.PC2
+  alias Timeline.Internal.STN.MiniZincSolver
   alias Timeline.Internal.STN.Units
   alias Timeline.Internal.STN.Operations
 
@@ -210,8 +210,8 @@ defmodule Timeline.Internal.STN do
   defdelegate check_interval_conflicts(stn, new_start, new_end), to: Core
   defdelegate find_next_available_slot(stn, duration, earliest_start), to: Core
 
-  # PC2 functions
-  defdelegate apply_pc2(stn), to: PC2
+  # MiniZinc solver functions
+  defdelegate apply_pc2(stn), to: MiniZincSolver, as: :solve_stn
   # solve is in operations now
   defdelegate solve(stn), to: Operations
 

@@ -6,6 +6,7 @@ defmodule Timeline.Internal.STN.Operations do
   @moduledoc false
 
   alias Timeline.Internal.STN
+  alias Timeline.Internal.STN.MiniZincSolver
 
   # alias AriaEngine.ConvergenceFlow
 
@@ -42,7 +43,7 @@ defmodule Timeline.Internal.STN.Operations do
       dummy_constraints:
         Map.merge(compatible_stn1.dummy_constraints, compatible_stn2.dummy_constraints)
     }
-    |> STN.PC2.apply_pc2()
+    |> MiniZincSolver.solve_stn()
   end
 
   @doc """
@@ -76,7 +77,7 @@ defmodule Timeline.Internal.STN.Operations do
       constant_work_enabled: compatible_stn1.constant_work_enabled,
       dummy_constraints: compatible_stn1.dummy_constraints
     }
-    |> STN.PC2.apply_pc2()
+    |> MiniZincSolver.solve_stn()
   end
 
   @doc """
@@ -134,7 +135,7 @@ defmodule Timeline.Internal.STN.Operations do
       dummy_constraints:
         Map.merge(compatible_stn1.dummy_constraints, compatible_stn2.dummy_constraints)
     }
-    |> STN.PC2.apply_pc2()
+    |> MiniZincSolver.solve_stn()
   end
 
   @doc """
@@ -178,14 +179,14 @@ defmodule Timeline.Internal.STN.Operations do
         # )
         # |> Map.get(:constraints, %{})
         # |> (&%STN{constraints: &1}).()
-        # |> STN.PC2.apply_pc2()
+        # |> MiniZincSolver.solve_stn()
         %STN{}
 
       _ ->
         # Direct processing for small sets
         stns
         |> Enum.reduce(&union/2)
-        |> STN.PC2.apply_pc2()
+        |> MiniZincSolver.solve_stn()
     end
   end
 
@@ -244,14 +245,14 @@ defmodule Timeline.Internal.STN.Operations do
     case length(segments) do
       1 ->
         # Single segment, no need for parallel processing
-        STN.PC2.apply_pc2(hd(segments))
+        MiniZincSolver.solve_stn(hd(segments))
 
       _segment_count ->
         # Use convergence-based solving for parallel segment solving
         # Apply PC2 to each segment individually, then merge
         solved_segments =
           segments
-          |> Enum.map(&STN.PC2.apply_pc2/1)
+          |> Enum.map(&MiniZincSolver.solve_stn/1)
 
         # Merge the solved segments
         parallel_join(solved_segments)
@@ -263,7 +264,7 @@ defmodule Timeline.Internal.STN.Operations do
   """
   @spec solve(STN.t()) :: STN.t()
   def solve(stn) do
-    STN.PC2.apply_pc2(stn)
+    MiniZincSolver.solve_stn(stn)
   end
 
   # Private helper functions for composable operations
