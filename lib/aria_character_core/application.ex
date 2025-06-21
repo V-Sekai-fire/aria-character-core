@@ -12,12 +12,6 @@ defmodule AriaCharacterCore.Application do
       # AriaEngine components (planning and AI core)
       AriaEngine.Membrane.PipelineManager,
 
-      # MCP Server Registry (required for Hermes servers)
-      Hermes.Server.Registry,
-
-      # MCP Server for external tool access
-      {AriaEngine.MCP.HermesServer, [transport: :stdio]},
-
       # AriaTown components (NPC management)
       AriaTown.PersistenceManager,
       AriaTown.TimeManager,
