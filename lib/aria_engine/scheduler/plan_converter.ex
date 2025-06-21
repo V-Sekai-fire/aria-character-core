@@ -167,21 +167,16 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   defp do_fix_timing_constraints_with_allen_relations(scheduled_activities, _original_activities, base_datetime) do
     require Logger
     
-    Logger.error("🔧 PlanConverter: STARTING Allen Relations for dependency constraints")
-    Logger.error("🔧 PlanConverter: Processing #{length(scheduled_activities)} activities")
+    Logger.debug("PlanConverter: Processing #{length(scheduled_activities)} activities with Allen Relations")
     
     # Build Timeline.Interval structs with proper IDs
     {intervals, activity_id_map} = build_intervals_with_dependencies(scheduled_activities, base_datetime)
-    
-    Logger.error("🔧 PlanConverter: Created #{length(intervals)} intervals")
     
     # Create Timeline and add intervals
     timeline = Timeline.new()
     timeline_with_intervals = Enum.reduce(intervals, timeline, fn interval, acc_timeline ->
       Timeline.add_interval(acc_timeline, interval)
     end)
-    
-    Logger.error("🔧 PlanConverter: Added intervals to Timeline")
     
     # Apply Allen Relations as STN constraints
     timeline_with_constraints = apply_allen_dependency_constraints(
@@ -190,19 +185,11 @@ defmodule AriaEngine.Scheduler.PlanConverter do
       activity_id_map
     )
     
-    Logger.error("🔧 PlanConverter: Applied dependency constraints, solving Timeline...")
-    
     # Solve Timeline for consistent timing
     solved_timeline = Timeline.solve(timeline_with_constraints)
     
-    Logger.error("🔧 PlanConverter: Timeline solved, extracting timing information")
-    
     # Extract timing and update activities
-    result = extract_timing_from_solved_timeline(scheduled_activities, solved_timeline, activity_id_map)
-    
-    Logger.error("🔧 PlanConverter: COMPLETED Allen Relations processing")
-    
-    result
+    extract_timing_from_solved_timeline(scheduled_activities, solved_timeline, activity_id_map)
   end
 
   defp build_intervals_with_dependencies(scheduled_activities, base_datetime) do
@@ -244,21 +231,9 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   end
 
   defp apply_allen_dependency_constraints(timeline, scheduled_activities, activity_id_map) do
-    require Logger
-    
-    # Debug: Log all available time points in the timeline
-    time_points = Timeline.time_points(timeline)
-    Logger.error("🔧 PlanConverter: Available time points in Timeline: #{inspect(time_points)}")
-    
-    # Debug: Log all activity IDs in the map
-    activity_ids = Map.keys(activity_id_map)
-    Logger.error("🔧 PlanConverter: Activity IDs in map: #{inspect(activity_ids)}")
-    
-    result_timeline = Enum.reduce(scheduled_activities, timeline, fn activity, acc_timeline ->
+    Enum.reduce(scheduled_activities, timeline, fn activity, acc_timeline ->
       dependencies = get_activity_dependencies(activity)
       activity_id = get_activity_id(activity)
-      
-      Logger.error("🔧 PlanConverter: Processing activity #{activity_id} with dependencies: #{inspect(dependencies)}")
       
       Enum.reduce(dependencies, acc_timeline, fn dep_id, inner_timeline ->
         # Get the intervals for dependency and current activity
@@ -267,50 +242,29 @@ defmodule AriaEngine.Scheduler.PlanConverter do
         
         if dep_interval && activity_interval do
           # Apply Allen "before" relation: dependency must finish before activity starts
-          # This translates to: dep_end <= activity_start with gap {0, 0} (immediate succession)
           dep_end_point = "#{dep_id}_end"
           activity_start_point = "#{activity_id}_start"
-          
-          Logger.error("🔧 PlanConverter: Applying Allen 'before' relation: #{dep_id} before #{activity_id}")
-          Logger.error("🔧 PlanConverter: Constraint: #{dep_end_point} <= #{activity_start_point} with gap {0, 0}")
           
           # Check if the time points exist
           current_time_points = Timeline.time_points(inner_timeline)
           if dep_end_point in current_time_points and activity_start_point in current_time_points do
-            Logger.error("🔧 PlanConverter: Time points exist, adding constraint")
-            
-            # Add the constraint and log the result
+            # Add the constraint
             # Use 10 seconds worth of STN units based on timeline's STN LOD resolution
             max_gap = 10 * inner_timeline.stn.lod_resolution
-            constrained_timeline = Timeline.add_constraint(
+            Timeline.add_constraint(
               inner_timeline,
               dep_end_point,
               activity_start_point,
               {0, max_gap}  # Allen "before" relation: 0 to 10 second gap between dependency end and activity start
             )
-            
-            # Check if constraint was added successfully
-            constraint_check = Timeline.get_constraint(constrained_timeline, dep_end_point, activity_start_point)
-            Logger.error("🔧 PlanConverter: Constraint added successfully: #{inspect(constraint_check)}")
-            
-            constrained_timeline
           else
-            Logger.error("🔧 PlanConverter: Missing time points - dep_end: #{dep_end_point in current_time_points}, activity_start: #{activity_start_point in current_time_points}")
-            Logger.error("🔧 PlanConverter: Available points: #{inspect(current_time_points)}")
             inner_timeline
           end
         else
-          Logger.error("🔧 PlanConverter: Missing interval for dependency #{dep_id} -> #{activity_id}")
           inner_timeline
         end
       end)
     end)
-    
-    # Log final constraint state
-    final_time_points = Timeline.time_points(result_timeline)
-    Logger.error("🔧 PlanConverter: Final timeline has #{length(final_time_points)} time points")
-    
-    result_timeline
   end
 
   defp extract_timing_from_solved_timeline(scheduled_activities, solved_timeline, _activity_id_map) do
@@ -349,7 +303,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
           _ ->
             # This should not happen with proper Allen Relations, but provide fallback
             require Logger
-            Logger.error("🔧 PlanConverter: No timing found for activity #{activity_id}")
+            Logger.warning("PlanConverter: No timing found for activity #{activity_id}")
             
             # Use base datetime as fallback
             base_datetime = DateTime.utc_now()
