@@ -11,7 +11,7 @@ defmodule AriaCharacterCore.Application do
   def start(_type, _args) do
     children = [
       # AriaEngine components (planning and AI core)
-      # Worker can be added here when needed
+      AriaEngine.Membrane.PipelineManager,
       
       # AriaTown components (knowledge base and NPC management)
       AriaTown.KnowledgeBase,

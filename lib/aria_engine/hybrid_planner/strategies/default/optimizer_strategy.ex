@@ -10,11 +10,8 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
   maintaining functionality through HTN adapter when Exhort is unavailable.
   """
 
-  @behaviour AriaEngine.HybridPlanner.OptimizerStrategy
-
   alias HybridPlanner.Strategies.Default.HTNPlanningStrategy
 
-  @impl true
   def solve(problem, options \\ []) do
     case detect_solver_availability() do
       :exhort_available ->
@@ -25,7 +22,6 @@ defmodule HybridPlanner.Strategies.Default.OptimizerStrategy do
     end
   end
 
-  @impl true
   def validate_problem(problem) do
     if is_map(problem) and Map.has_key?(problem, "variables") do
       :ok
