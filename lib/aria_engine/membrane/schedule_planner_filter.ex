@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Membrane.ScheduleFilter do
+defmodule AriaEngine.Membrane.SchedulePlannerFilter do
   @moduledoc """
   Membrane Filter element that processes schedule_activities MCP requests.
   

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Membrane.ResponseFilter do
+defmodule AriaEngine.Membrane.PlannerMCPFilter do
   @moduledoc """
   Membrane Filter element that converts PlanningResult to MCPResponse format.
   
