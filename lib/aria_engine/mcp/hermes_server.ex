@@ -14,7 +14,18 @@ defmodule AriaEngine.MCP.HermesServer do
     version: "1.0.0",
     capabilities: [:tools]
 
-  alias Hermes.MCP.Error
+  # Register Hermes tool components
+  component AriaEngine.MCP.Tools.ScheduleActivities
+  component AriaEngine.MCP.Tools.ValidateSchedulingSolutions
+  component AriaEngine.MCP.Tools.ConfigurePipelineLayout
+  component AriaEngine.MCP.Tools.SetupElementConfig
+  component AriaEngine.MCP.Tools.StartPlanningPipeline
+  component AriaEngine.MCP.Tools.StopPlanningPipeline
+  component AriaEngine.MCP.Tools.GetPipelineStatus
+  component AriaEngine.MCP.Tools.GetPipelineMetrics
+  component AriaEngine.MCP.Tools.ListActivePipelines
+  component AriaEngine.MCP.Tools.SendPipelineRequest
+
   require Logger
 
   def start_link(opts \\ []) do
@@ -28,50 +39,9 @@ defmodule AriaEngine.MCP.HermesServer do
   end
 
   @impl true
-  def handle_request(%{"method" => "tools/list"} = _request, state) do
-    Logger.info("Listing available MCP tools")
-
-    tools = AriaEngine.MCPToolsV2.get_tools()
-
-    response = %{"tools" => tools}
-    {:reply, response, state}
-  end
-
-  @impl true
-  def handle_request(
-        %{"method" => "tools/call", "params" => %{"name" => tool_name, "arguments" => arguments}} =
-          _request,
-        state
-      ) do
-    Logger.info("Calling tool: #{tool_name} with args: #{inspect(arguments)}")
-
-    try do
-      result = AriaEngine.MCPToolsV2.handle_tool_call(tool_name, arguments)
-
-      # Format the result as MCP content
-      response = %{
-        "content" => [
-          %{
-            "type" => "text",
-            "text" => Jason.encode!(result, pretty: true)
-          }
-        ],
-        "isError" => false
-      }
-
-      {:reply, response, state}
-    rescue
-      e ->
-        Logger.error("Tool call failed: #{Exception.message(e)}")
-
-        {:error, Error.execution("Tool execution failed: #{Exception.message(e)}"), state}
-    end
-  end
-
-  @impl true
   def handle_request(request, state) do
     Logger.warning("Unknown method: #{request["method"]}")
-    {:error, Error.protocol(:method_not_found, %{method: request["method"]}), state}
+    {:error, Hermes.MCP.Error.protocol(:method_not_found, %{method: request["method"]}), state}
   end
 
   @impl true

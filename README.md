@@ -4,6 +4,8 @@
 
 AI planning research project exploring intelligent NPC behavior through hybrid HTN+STN planning systems.
 
+NOTE: We use elixir 18.
+
 ## Status Overview
 
 | Component           | Status      | Tests        | Notes                                                      |
