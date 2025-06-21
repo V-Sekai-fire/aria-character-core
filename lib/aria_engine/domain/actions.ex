@@ -14,25 +14,58 @@ defmodule Domain.Actions do
   @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
 
   @doc """
-  Adds an action to the domain.
+  Adds an action to the domain using the unified API.
 
-  Actions are functions that take a state and arguments, returning either:
-  - A new state (success)
-  - false (failure)
+  Actions can be:
+  - Functions (for instantaneous actions)
+  - DurativeAction structs with duration = 0 (instantaneous actions)
+  - DurativeAction structs with duration > 0 (durative actions)
 
   When an action is added, it also creates a corresponding task method
   so the action can be used directly in task decompositions.
 
   Optional `metadata` can be provided for the action, e.g., `duration: {min, max}`.
   """
-  @spec add_action(t(), action_name(), action_fn(), map()) :: t()
+  @spec add_action(t(), action_name(), action_fn() | Domain.DurativeAction.t(), map()) :: t()
   def add_action(
-        %{actions: actions, action_metadata: action_metadata, task_methods: methods} = domain,
+        domain,
         name,
-        action_fn,
+        action_or_durative,
         metadata \\ %{}
       )
-      when is_atom(name) and is_function(action_fn, 2) and is_map(metadata) do
+      when is_atom(name) and is_map(metadata) do
+    
+    cond do
+      # Case 1: Regular function (instantaneous action)
+      is_function(action_or_durative, 2) ->
+        add_instantaneous_action(domain, name, action_or_durative, metadata)
+      
+      # Case 2: DurativeAction struct
+      match?(%Domain.DurativeAction{}, action_or_durative) ->
+        case action_or_durative.duration do
+          # Duration = 0: treat as instantaneous action
+          {:fixed, 0} ->
+            add_instantaneous_action(domain, name, action_or_durative.action_fn, metadata)
+          
+          # Duration > 0: treat as durative action
+          _ ->
+            add_durative_action_to_domain(domain, name, action_or_durative, metadata)
+        end
+      
+      # Case 3: Unknown type
+      true ->
+        Logger.warning("Invalid action type for #{name}: #{inspect(action_or_durative)}")
+        domain
+    end
+  end
+
+  # Helper function to add instantaneous actions
+  defp add_instantaneous_action(
+         %{actions: actions, action_metadata: action_metadata, task_methods: methods} = domain,
+         name,
+         action_fn,
+         metadata
+       ) do
     # Normalize duration in metadata if present
     normalized_metadata =
       if Map.has_key?(metadata, :duration) do
@@ -66,8 +99,38 @@ defmodule Domain.Actions do
     %{
       domain
       | actions: updated_actions,
-        # Update action metadata
         action_metadata: updated_action_metadata,
+        task_methods: updated_task_methods
+    }
+  end
+
+  # Helper function to add durative actions
+  defp add_durative_action_to_domain(
+         %{durative_actions: durative_actions, task_methods: methods} = domain,
+         name,
+         durative_action,
+         _metadata
+       ) do
+    # Store the durative action
+    updated_durative_actions = Map.put(durative_actions, name, durative_action)
+
+    # Create a task method for the durative action
+    task_name = Atom.to_string(name)
+    primitive_method_fn = fn _state, args -> [{name, args}] end
+    method_name = "primitive_#{task_name}"
+
+    # Create a {name, function} tuple for the primitive method
+    primitive_method = {method_name, primitive_method_fn}
+
+    # Add the primitive method to task methods
+    current_methods = Map.get(methods, task_name, [])
+    # Put primitive method first
+    updated_methods = [primitive_method | current_methods]
+    updated_task_methods = Map.put(methods, task_name, updated_methods)
+
+    %{
+      domain
+      | durative_actions: updated_durative_actions,
         task_methods: updated_task_methods
     }
   end

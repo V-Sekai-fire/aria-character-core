@@ -67,7 +67,7 @@ defmodule AriaEngine.Scheduler.Core do
             critical_path_length: 0,
             simulation_mode: simulation_mode,
             entities_used: length(entities),
-            resources_managed: map_size(resources),
+            resources_managed: length(resources),
             hybrid_planner_used: true,
             empty_plan_reason: "Empty todo list results in empty plan (valid solution)"
           }
@@ -86,7 +86,7 @@ defmodule AriaEngine.Scheduler.Core do
               generated_at: DateTime.utc_now(),
               simulation_duration: 0,
               entities_count: length(entities),
-              resources_count: map_size(resources)
+              resources_count: length(resources)
             }
           }
 
@@ -118,7 +118,7 @@ defmodule AriaEngine.Scheduler.Core do
       critical_path_length: 0,
       simulation_mode: simulation_mode,
       entities_used: length(entities),
-      resources_managed: map_size(resources),
+      resources_managed: length(resources),
       hybrid_planner_used: true,
       empty_plan_reason: "Empty todo list results in empty plan (valid solution)"
     }
@@ -133,7 +133,7 @@ defmodule AriaEngine.Scheduler.Core do
         generated_at: DateTime.utc_now(),
         simulation_duration: 0,
         entities_count: length(entities),
-        resources_count: map_size(resources)
+        resources_count: length(resources)
       }
     }
 
@@ -159,12 +159,12 @@ defmodule AriaEngine.Scheduler.Core do
       "🔧 Scheduler.Core.attempt_enhanced_scheduling() called with #{length(activities)} activities"
     )
 
-    Logger.info("🔧 Entities: #{length(entities)}, Resources: #{map_size(resources)}")
+    Logger.info("🔧 Entities: #{length(entities)}, Resources: #{length(resources)}")
     Logger.info("🔧 Verbose: #{verbose}, Simulation mode: #{simulation_mode}")
 
     if verbose > 1 do
       Logger.debug(
-        "AriaEngine.Scheduler: Attempting enhanced scheduling with #{length(entities)} entities and #{map_size(resources)} resources"
+        "AriaEngine.Scheduler: Attempting enhanced scheduling with #{length(entities)} entities and #{length(resources)} resources"
       )
     end
 

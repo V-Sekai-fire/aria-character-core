@@ -154,7 +154,11 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   @spec add_task_methods_to_domain(Domain.t(), task_methods()) :: Domain.t()
   defp add_task_methods_to_domain(domain, task_methods) do
     Enum.reduce(task_methods, domain, fn {task_name, methods}, acc_domain ->
-      Domain.add_task_methods(acc_domain, task_name, methods)
+      # Ensure task_name is a string (convert atom to string if needed)
+      task_name_str = to_string(task_name)
+      # Debug logging to see what's being passed
+      Logger.debug("Adding task methods for task: #{inspect(task_name_str)}, methods: #{inspect(methods)}")
+      Domain.add_task_methods(acc_domain, task_name_str, methods)
     end)
   end
 
@@ -168,19 +172,8 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   @spec add_durative_actions_to_domain(Domain.t(), %{atom() => Domain.DurativeAction.t()}) :: Domain.t()
   defp add_durative_actions_to_domain(domain, durative_actions) do
     Enum.reduce(durative_actions, domain, fn {name, durative_action}, acc_domain ->
-      # Extract the action function from the durative action struct
-      action_fn = durative_action.action_fn
-      
-      # Create metadata containing the durative action information
-      metadata = %{
-        durative_action: durative_action,
-        duration: durative_action.duration,
-        conditions: durative_action.conditions,
-        effects: durative_action.effects
-      }
-      
-      # Add the action with the extracted function and durative action metadata
-      Domain.add_action(acc_domain, name, action_fn, metadata)
+      # Use the unified API - pass the DurativeAction struct directly
+      Domain.add_action(acc_domain, name, durative_action)
     end)
   end
 

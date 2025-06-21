@@ -25,19 +25,29 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     internal_plan =
       HybridPlanner.DataStructures.EncapsulatedPlan.get_internal_plan(encapsulated_plan)
 
+    Logger.debug("Internal plan: #{inspect(internal_plan)}")
+    
     primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(internal_plan)
+    
+    Logger.debug("Primitive actions: #{inspect(primitive_actions)}")
+    Logger.debug("Number of primitive actions: #{length(primitive_actions)}")
 
     # Convert actions to scheduled activities with proper timing and assignments
     scheduled_activities =
       primitive_actions
       |> Enum.with_index()
       |> Enum.map(fn {action_step, index} ->
+        Logger.debug("Processing action_step #{index}: #{inspect(action_step)}")
         activity_id = extract_activity_id(action_step, index)
+        Logger.debug("Extracted activity_id: #{inspect(activity_id)}")
         original_activity = find_original_activity(activities, activity_id)
+        Logger.debug("Found original_activity: #{inspect(original_activity != nil)}")
 
         if original_activity do
           convert_activity_to_scheduled(original_activity, entities, resources, index)
         else
+          Logger.error("Activity #{inspect(activity_id)} from plan not found in original activities list")
+          Logger.debug("Available activities: #{inspect(Enum.map(activities, &Map.get(&1, "id")))}")
           raise "Activity #{activity_id} from plan not found in original activities list"
         end
       end)
@@ -267,23 +277,54 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   # Private helper functions for duration parsing and activity conversion
 
   defp extract_activity_id(action_step, index) do
-    case action_step do
+    Logger.debug("Extracting activity ID from action_step: #{inspect(action_step)}, index: #{index}")
+    
+    result = case action_step do
       {action_name, _args} when is_atom(action_name) ->
-        Atom.to_string(action_name)
+        action_name_str = Atom.to_string(action_name)
+        # Handle durative action names by removing the "durative_" prefix
+        if String.starts_with?(action_name_str, "durative_") do
+          String.replace_prefix(action_name_str, "durative_", "")
+        else
+          action_name_str
+        end
 
       {action_name, _args} when is_binary(action_name) ->
-        action_name
+        # Handle durative action names by removing the "durative_" prefix
+        if String.starts_with?(action_name, "durative_") do
+          String.replace_prefix(action_name, "durative_", "")
+        else
+          action_name
+        end
 
       action_name when is_atom(action_name) ->
-        Atom.to_string(action_name)
+        action_name_str = Atom.to_string(action_name)
+        # Handle durative action names by removing the "durative_" prefix
+        if String.starts_with?(action_name_str, "durative_") do
+          String.replace_prefix(action_name_str, "durative_", "")
+        else
+          action_name_str
+        end
 
       action_name when is_binary(action_name) ->
-        action_name
+        # Handle durative action names by removing the "durative_" prefix
+        if String.starts_with?(action_name, "durative_") do
+          String.replace_prefix(action_name, "durative_", "")
+        else
+          action_name
+        end
+
+      nil ->
+        Logger.warning("Action step is nil at index #{index}")
+        "unknown_action_#{index}"
 
       other ->
         Logger.warning("Unexpected action step format: #{inspect(other)}")
         "unknown_action_#{index}"
     end
+    
+    Logger.debug("Extracted activity ID: #{inspect(result)}")
+    result
   end
 
   defp find_original_activity(activities, activity_id) do
