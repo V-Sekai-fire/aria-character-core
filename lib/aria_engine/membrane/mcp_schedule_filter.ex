@@ -221,8 +221,8 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
       is_nil(request.tool_name) or request.tool_name == "" ->
         {:error, "Missing or empty tool_name"}
         
-      not is_map(request.params) ->
-        {:error, "Invalid params format - must be a map"}
+      not is_map(request.parameters) ->
+        {:error, "Invalid parameters format - must be a map"}
         
       true ->
         :ok
@@ -262,7 +262,8 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
     %MCPRequest{
       request_id: original_request.request_id,
       tool_name: original_request.tool_name,
-      params: original_request.params,
+      parameters: original_request.parameters,
+      timestamp: original_request.timestamp,
       metadata: Map.merge(original_request.metadata || %{}, %{
         mcp_schedule_filter: %{
           status: :rejected,
@@ -277,7 +278,8 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
     %MCPRequest{
       request_id: original_request.request_id,
       tool_name: original_request.tool_name,
-      params: original_request.params,
+      parameters: original_request.parameters,
+      timestamp: original_request.timestamp,
       metadata: Map.merge(original_request.metadata || %{}, %{
         mcp_schedule_filter: %{
           status: :error,
