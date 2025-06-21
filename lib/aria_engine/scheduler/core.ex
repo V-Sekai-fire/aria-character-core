@@ -67,7 +67,7 @@ defmodule AriaEngine.Scheduler.Core do
             critical_path_length: 0,
             simulation_mode: simulation_mode,
             entities_used: length(entities),
-            resources_managed: length(resources),
+            resources_managed: map_size(resources),
             hybrid_planner_used: true,
             empty_plan_reason: "Empty todo list results in empty plan (valid solution)"
           }
@@ -86,7 +86,7 @@ defmodule AriaEngine.Scheduler.Core do
               generated_at: DateTime.utc_now(),
               simulation_duration: 0,
               entities_count: length(entities),
-              resources_count: length(resources)
+              resources_count: map_size(resources)
             }
           }
 
@@ -118,7 +118,7 @@ defmodule AriaEngine.Scheduler.Core do
       critical_path_length: 0,
       simulation_mode: simulation_mode,
       entities_used: length(entities),
-      resources_managed: length(resources),
+      resources_managed: map_size(resources),
       hybrid_planner_used: true,
       empty_plan_reason: "Empty todo list results in empty plan (valid solution)"
     }
@@ -133,7 +133,7 @@ defmodule AriaEngine.Scheduler.Core do
         generated_at: DateTime.utc_now(),
         simulation_duration: 0,
         entities_count: length(entities),
-        resources_count: length(resources)
+        resources_count: map_size(resources)
       }
     }
 
@@ -159,12 +159,12 @@ defmodule AriaEngine.Scheduler.Core do
       "🔧 Scheduler.Core.attempt_enhanced_scheduling() called with #{length(activities)} activities"
     )
 
-    Logger.info("🔧 Entities: #{length(entities)}, Resources: #{length(resources)}")
+    Logger.info("🔧 Entities: #{length(entities)}, Resources: #{map_size(resources)}")
     Logger.info("🔧 Verbose: #{verbose}, Simulation mode: #{simulation_mode}")
 
     if verbose > 1 do
       Logger.debug(
-        "AriaEngine.Scheduler: Attempting enhanced scheduling with #{length(entities)} entities and #{length(resources)} resources"
+        "AriaEngine.Scheduler: Attempting enhanced scheduling with #{length(entities)} entities and #{map_size(resources)} resources"
       )
     end
 
@@ -176,7 +176,10 @@ defmodule AriaEngine.Scheduler.Core do
         Logger.info("🔧 Domain conversion successful!")
         # Create enhanced initial state with entities and resources
         Logger.info("🔧 Creating enhanced initial state...")
-        initial_state = create_enhanced_initial_state(entities, resources)
+        # Convert resources from map format to list of structs format
+        resources_list = convert_resources_map_to_list(resources)
+        entities_list = convert_entities_to_list(entities)
+        initial_state = create_enhanced_initial_state(entities_list, resources_list)
 
         # Generate tasks and goals from activities
         Logger.info("🔧 Converting activities to tasks and goals...")
@@ -291,7 +294,11 @@ defmodule AriaEngine.Scheduler.Core do
   Convert activities to KHR domain with two-phase planning.
   """
   def convert_activities_to_enhanced_domain(activities, entities, resources, constraints) do
-    DomainConverter.convert_activities_to_khr_domain(activities, entities, resources, constraints)
+    # Convert resources from map format to list of structs format
+    resources_list = convert_resources_map_to_list(resources)
+    entities_list = convert_entities_to_list(entities)
+    
+    DomainConverter.convert_activities_to_khr_domain(activities, entities_list, resources_list, constraints)
   end
 
   @doc """
@@ -599,4 +606,55 @@ defmodule AriaEngine.Scheduler.Core do
   # Entity and resource assignment helpers (delegated to specialized modules)
 
   # Resource utilization calculation functions
+
+  # Convert resources map to list of structs with :id field.
+  defp convert_resources_map_to_list(resources) when is_map(resources) do
+    Enum.map(resources, fn {resource_id, resource_data} ->
+      %{
+        id: resource_id,
+        type: Map.get(resource_data, "type", "unknown"),
+        capacity: Map.get(resource_data, "capacity", 1),
+        current_usage: Map.get(resource_data, "current_usage", 0),
+        constraints: Map.get(resource_data, "constraints", %{}),
+        availability_schedule: Map.get(resource_data, "availability_schedule", []),
+        metadata: Map.get(resource_data, "metadata", %{})
+      }
+    end)
+  end
+
+  defp convert_resources_map_to_list(resources) when is_list(resources), do: resources
+
+  # Convert entities to list format if needed.
+  defp convert_entities_to_list(entities) when is_list(entities) do
+    # Convert maps to structs with atom keys if needed
+    Enum.map(entities, fn entity ->
+      if is_map(entity) and Map.has_key?(entity, "id") do
+        %{
+          id: Map.get(entity, "id"),
+          type: Map.get(entity, "type", "unknown"),
+          capabilities: Map.get(entity, "capabilities", []),
+          availability: Map.get(entity, "availability", %{}),
+          current_activity: Map.get(entity, "current_activity"),
+          resources_held: Map.get(entity, "resources_held", []),
+          metadata: Map.get(entity, "metadata", %{})
+        }
+      else
+        entity
+      end
+    end)
+  end
+
+  defp convert_entities_to_list(entities) when is_map(entities) do
+    Enum.map(entities, fn {entity_id, entity_data} ->
+      %{
+        id: entity_id,
+        type: Map.get(entity_data, "type", "unknown"),
+        capabilities: Map.get(entity_data, "capabilities", []),
+        availability: Map.get(entity_data, "availability", %{}),
+        current_activity: Map.get(entity_data, "current_activity"),
+        resources_held: Map.get(entity_data, "resources_held", []),
+        metadata: Map.get(entity_data, "metadata", %{})
+      }
+    end)
+  end
 end

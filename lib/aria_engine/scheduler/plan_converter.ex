@@ -169,10 +169,22 @@ defmodule AriaEngine.Scheduler.PlanConverter do
         end_time = DateTime.add(start_time, duration_seconds, :second)
 
         # Create Timeline.Interval struct
+        activity_id = if is_map(activity) and Map.has_key?(activity, "id") do
+          Map.get(activity, "id")
+        else
+          Map.get(activity, :id)
+        end
+        
+        dependencies = if Map.has_key?(activity, "dependencies") do
+          Map.get(activity, "dependencies", [])
+        else
+          Map.get(activity, :dependencies, [])
+        end
+        
         Timeline.Interval.new(start_time, end_time,
           metadata: %{
-            id: activity.id,
-            dependencies: Map.get(activity, :dependencies, []),
+            id: activity_id,
+            dependencies: dependencies,
             original_activity: activity
           }
         )
@@ -182,12 +194,24 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     timeline = Timeline.new()
 
     # Add intervals to Timeline
-    timeline_with_intervals = Timeline.add_intervals(timeline, intervals)
+    timeline_with_intervals = Enum.reduce(intervals, timeline, fn interval, acc_timeline ->
+      Timeline.add_interval(acc_timeline, interval)
+    end)
 
     # Add dependency constraints using Timeline API
     timeline_with_constraints =
       Enum.reduce(scheduled_activities, timeline_with_intervals, fn activity, acc_timeline ->
-        dependencies = Map.get(activity, :dependencies, [])
+        dependencies = if Map.has_key?(activity, "dependencies") do
+          Map.get(activity, "dependencies", [])
+        else
+          Map.get(activity, :dependencies, [])
+        end
+
+        activity_id = if is_map(activity) and Map.has_key?(activity, "id") do
+          Map.get(activity, "id")
+        else
+          Map.get(activity, :id)
+        end
 
         Enum.reduce(dependencies, acc_timeline, fn dep_id, inner_timeline ->
           # Add constraint that dependency must finish before this activity starts
@@ -195,7 +219,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
           Timeline.add_constraint(
             inner_timeline,
             "#{dep_id}_end",
-            "#{activity.id}_start",
+            "#{activity_id}_start",
             # Dependency end must be <= activity start (with 0 to 24 hours gap in seconds)
             {0, 86_400}
           )
@@ -216,7 +240,13 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     # Update scheduled_activities with computed times
     updated_activities =
       Enum.map(scheduled_activities, fn activity ->
-        case Map.get(time_map, activity.id) do
+        activity_id = if is_map(activity) and Map.has_key?(activity, "id") do
+          Map.get(activity, "id")
+        else
+          Map.get(activity, :id)
+        end
+        
+        case Map.get(time_map, activity_id) do
           {start_time, end_time} when not is_nil(start_time) and not is_nil(end_time) ->
             # Convert DateTime back to seconds offset from base
             start_offset = DateTime.diff(start_time, base_datetime, :second)
@@ -258,7 +288,12 @@ defmodule AriaEngine.Scheduler.PlanConverter do
 
   defp find_original_activity(activities, activity_id) do
     Enum.find(activities, fn act ->
-      act.id == activity_id or "durative_#{act.id}" == activity_id
+      actual_id = if is_map(act) and Map.has_key?(act, "id") do
+        Map.get(act, "id")
+      else
+        Map.get(act, :id)
+      end
+      actual_id == activity_id or "durative_#{actual_id}" == activity_id
     end)
   end
 

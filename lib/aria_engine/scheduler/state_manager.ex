@@ -51,7 +51,12 @@ defmodule AriaEngine.Scheduler.StateManager do
     goals =
       activities
       |> Enum.map(fn activity ->
-        {activity.id, "completed", true}
+        activity_id = if is_map(activity) and Map.has_key?(activity, "id") do
+          Map.get(activity, "id")
+        else
+          Map.get(activity, :id)
+        end
+        {activity_id, "completed", true}
       end)
 
     {tasks, goals}
