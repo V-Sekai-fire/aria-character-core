@@ -90,7 +90,7 @@ end
 ### Phase 3: Social Interaction Layer (2 hours)
 
 - [ ] Proximity-based conversation triggering
-- [ ] SPARQL-powered dialogue generation using shared knowledge
+- [ ] ~~SPARQL-powered~~ (Removed v0.2.0, RDF remains) dialogue generation using shared knowledge
 - [ ] Speech bubble UI matching paper's visual style
 - [ ] Information diffusion tracking and visualization
 - [ ] Conversation memory persistence in RDF with timestamps
@@ -109,7 +109,7 @@ end
 
 ```elixir
 {:rdf, "~> 1.1"},
-{:sparql, "~> 0.3"},  
+{:sparql, "~> 0.3"},  # ~~SPARQL removed v0.2.0, RDF remains~~
 {:phoenix_live_view, "~> 0.20"},
 {:jason, "~> 1.4"}
 ```
@@ -203,7 +203,7 @@ end
 ### Risks
 
 - **Performance Under Continuous Operation**: 20-minute cycles require stable real-time processing
-- **RDF Query Performance**: Complex SPARQL queries at 30-second intervals
+- **RDF Query Performance**: Complex ~~SPARQL queries~~ (Removed v0.2.0, RDF remains) at 30-second intervals
 - **Visual Complexity**: Rich interactions may overwhelm core scheduling demonstrations
 - **Memory Management**: Continuous RDF growth without cleanup
 
