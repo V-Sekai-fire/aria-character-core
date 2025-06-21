@@ -120,10 +120,11 @@ defmodule Timeline.Internal.STN.Units do
     target_unit_microseconds = unit_to_microseconds(target_unit)
     duration_in_target_units = duration_microseconds / target_unit_microseconds
 
-    # Apply LOD rescaling
-    rescaled_duration = duration_in_target_units / lod_resolution
+    # Apply LOD resolution as precision multiplier for scheduling
+    # lod_resolution represents units per second for fine-grained scheduling
+    # Example: lod_resolution = 100 means 0.01s precision (100 units per second)
+    duration_in_stn_units = duration_in_target_units * lod_resolution
 
-    # Round to ensure integer constraints
-    round(rescaled_duration)
+    round(duration_in_stn_units)
   end
 end

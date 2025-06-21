@@ -111,8 +111,24 @@ defmodule Timeline do
 
   @spec solve(t()) :: t()
   def solve(timeline) do
+    require Logger
     stn = STN.solve(timeline.stn)
-    %{timeline | stn: stn}
+    
+    # Apply solved times from STN back to intervals if available
+    updated_timeline = %{timeline | stn: stn}
+    
+    Logger.error("DEBUG: STN metadata after solve: #{inspect(Map.get(stn.metadata, :solved_times))}")
+    
+    case Map.get(stn.metadata, :solved_times) do
+      nil -> 
+        Logger.error("DEBUG: No solved times found in STN metadata")
+        updated_timeline
+      solved_times ->
+        Logger.error("DEBUG: Applying solved times to intervals: #{inspect(solved_times)}")
+        result = apply_solved_times_to_intervals(updated_timeline, solved_times)
+        Logger.error("DEBUG: Updated intervals after applying solved times")
+        result
+    end
   end
 
   # STN Encapsulation API - Functions needed by external modules
@@ -366,5 +382,61 @@ defmodule Timeline do
       stn: stn,
       metadata: %{}
     }
+  end
+
+  # Private helper functions
+
+  defp apply_solved_times_to_intervals(timeline, solved_times) do
+    # Get the base time from the first interval or use epoch
+    base_time = get_base_time(timeline)
+    
+    # Get the LOD resolution from the STN (default to 100 if not available)
+    lod_resolution = Map.get(timeline.stn, :lod_resolution, 100)
+    
+    # Update each interval with its solved start time
+    updated_intervals = 
+      timeline.intervals
+      |> Enum.map(fn {interval_id, interval} ->
+        start_point = "#{interval_id}_start"
+        end_point = "#{interval_id}_end"
+        
+        case {Map.get(solved_times, start_point), Map.get(solved_times, end_point)} do
+          {start_offset, end_offset} when not is_nil(start_offset) and not is_nil(end_offset) ->
+            # Convert STN time units to seconds
+            # STN uses lod_resolution units per second (e.g., 100 = centiseconds)
+            start_seconds = start_offset / lod_resolution
+            end_seconds = end_offset / lod_resolution
+            
+            # Convert to DateTime
+            new_start_time = DateTime.add(base_time, round(start_seconds * 1000), :millisecond)
+            new_end_time = DateTime.add(base_time, round(end_seconds * 1000), :millisecond)
+            
+            updated_interval = %{interval | 
+              start_time: new_start_time,
+              end_time: new_end_time
+            }
+            {interval_id, updated_interval}
+            
+          _ ->
+            # Keep original interval if no solved times available
+            {interval_id, interval}
+        end
+      end)
+      |> Map.new()
+    
+    %{timeline | intervals: updated_intervals}
+  end
+
+  defp get_base_time(timeline) do
+    case timeline.intervals |> Map.values() |> List.first() do
+      nil -> 
+        # No intervals, use epoch
+        DateTime.from_naive!(~N[2025-01-01 00:00:00], "Etc/UTC")
+      first_interval ->
+        # Use the start time of the first interval as base, but round down to the minute
+        # This ensures we have a clean base time for the solved schedule
+        start_time = first_interval.start_time
+        %{start_time | second: 0, microsecond: {0, 0}}
+    end
   end
 end

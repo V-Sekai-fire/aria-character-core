@@ -217,17 +217,30 @@ defmodule AriaEngine.MiniZinc.Executor do
 
   defp parse_minizinc_output(output) do
     try do
+      # Extract just the JSON part (before the "----------" separator)
+      json_part = output
+      |> String.split("----------")
+      |> List.first()
+      |> String.trim()
+      
+      Logger.error("DEBUG: Extracted JSON part: #{inspect(json_part)}")
+      
       # Try to parse as JSON first
-      case Jason.decode(output) do
+      case Jason.decode(json_part) do
         {:ok, json_data} ->
-          parse_json_solution(json_data)
+          Logger.error("DEBUG: Parsed JSON data: #{inspect(json_data)}")
+          result = parse_json_solution(json_data)
+          Logger.error("DEBUG: Final parsed result: #{inspect(result)}")
+          result
           
-        {:error, _} ->
+        {:error, error} ->
+          Logger.error("DEBUG: JSON parsing failed: #{inspect(error)}")
           # Fall back to text parsing
           parse_text_solution(output)
       end
     rescue
-      _ ->
+      error ->
+        Logger.error("DEBUG: Exception in parsing: #{inspect(error)}")
         # If all parsing fails, return raw output
         %{raw: output}
     end
@@ -235,13 +248,12 @@ defmodule AriaEngine.MiniZinc.Executor do
 
   defp parse_json_solution(json_data) when is_map(json_data) do
     # Extract solution from MiniZinc JSON output
-    solution = Map.get(json_data, "solution", %{})
-    
+    # MiniZinc puts solution data at top level, not nested under "solution"
     %{
-      start_times: Map.get(solution, "start_times", []),
-      end_times: Map.get(solution, "end_times", []),
-      makespan: Map.get(solution, "makespan"),
-      objective: Map.get(json_data, "objective"),
+      start_times: Map.get(json_data, "start_times", []),
+      end_times: Map.get(json_data, "end_times", []),
+      makespan: Map.get(json_data, "makespan"),
+      objective: Map.get(json_data, "_objective") || Map.get(json_data, "objective"),
       status: Map.get(json_data, "status", "SATISFIED")
     }
   end

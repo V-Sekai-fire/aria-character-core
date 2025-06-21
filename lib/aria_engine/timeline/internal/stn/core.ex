@@ -44,7 +44,6 @@ defmodule Timeline.Internal.STN.Core do
     |> add_time_point(start_point)
     |> add_time_point(end_point)
     |> add_constraint(start_point, end_point, duration_constraint)
-    |> STN.MiniZincSolver.solve_stn()
   end
 
   @doc """
@@ -81,7 +80,6 @@ defmodule Timeline.Internal.STN.Core do
       |> MapSet.delete(end_point)
 
     %{stn | time_points: updated_time_points, constraints: updated_constraints}
-    |> STN.MiniZincSolver.solve_stn()
   end
 
   @doc """
@@ -125,12 +123,8 @@ defmodule Timeline.Internal.STN.Core do
     # Create the updated STN with the final consistency state
     updated_stn = %{stn | constraints: updated_constraints_2, consistent: final_consistent}
 
-    # Apply MiniZinc solver only if still consistent, otherwise return the inconsistent STN
-    if final_consistent do
-      STN.MiniZincSolver.solve_stn(updated_stn)
-    else
-      updated_stn
-    end
+    # Return the updated STN - solving will be done at the Timeline level
+    updated_stn
   end
 
   @doc """

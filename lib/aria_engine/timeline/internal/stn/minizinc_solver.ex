@@ -25,18 +25,22 @@ defmodule Timeline.Internal.STN.MiniZincSolver do
     case convert_stn_to_minizinc(stn) do
       {:ok, template_vars} ->
         case Executor.exec("stn_temporal", template_vars: template_vars) do
-          {:ok, %{status: :success, solution: solution}} ->
+          {:ok, %{status: :success, solution: solution, raw_output: raw_output}} ->
+            Logger.error("DEBUG: MiniZinc raw output: #{inspect(raw_output)}")
             update_stn_with_solution(stn, solution)
             
-          {:ok, %{status: :error}} ->
+          {:ok, %{status: :error} = result} ->
+            Logger.error("DEBUG: MiniZinc execution error: #{inspect(result)}")
             %{stn | consistent: false}
             
-          {:error, _reason} ->
+          {:error, reason} ->
+            Logger.error("DEBUG: MiniZinc execution failed: #{inspect(reason)}")
             # Fall back to marking as inconsistent
             %{stn | consistent: false}
         end
         
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.error("DEBUG: STN to MiniZinc conversion failed: #{inspect(reason)}")
         %{stn | consistent: false}
     end
   end
@@ -48,6 +52,9 @@ defmodule Timeline.Internal.STN.MiniZincSolver do
   def convert_stn_to_minizinc(stn) do
     time_points = MapSet.to_list(stn.time_points)
     
+    Logger.error("DEBUG: STN time_points: #{inspect(time_points)}")
+    Logger.error("DEBUG: STN constraints: #{inspect(stn.constraints)}")
+    
     if Enum.empty?(time_points) do
       {:error, "Empty STN - no time points to solve"}
     else
@@ -57,11 +64,17 @@ defmodule Timeline.Internal.STN.MiniZincSolver do
         |> Enum.with_index(1)
         |> Map.new(fn {point, index} -> {point, index} end)
       
+      Logger.error("DEBUG: time_point_map: #{inspect(time_point_map)}")
+      
       # Convert constraints to MiniZinc format
       constraints = convert_constraints(stn.constraints, time_point_map)
       
-      # Create dummy durations (all zero since we're solving for time points, not activities)
-      durations = List.duplicate(0, length(time_points))
+      Logger.error("DEBUG: converted constraints: #{inspect(constraints)}")
+      
+      # Extract durations from interval constraints (start->end with fixed duration)
+      durations = extract_durations(stn.constraints, time_point_map)
+      
+      Logger.error("DEBUG: extracted durations: #{inspect(durations)}")
       
       template_vars = %{
         num_activities: length(time_points),
@@ -70,6 +83,8 @@ defmodule Timeline.Internal.STN.MiniZincSolver do
         constraints: constraints,
         time_point_map: time_point_map
       }
+      
+      Logger.error("DEBUG: template_vars: #{inspect(template_vars)}")
       {:ok, template_vars}
     end
   end
@@ -80,6 +95,7 @@ defmodule Timeline.Internal.STN.MiniZincSolver do
     constraint_map
     |> Enum.filter(fn {{from, to}, {min, max}} ->
       # Skip self-constraints and infinite constraints
+      # Keep duration constraints and dependency constraints
       from != to and is_finite_constraint({min, max})
     end)
     |> Enum.map(fn {{from, to}, {min, max}} ->
@@ -111,12 +127,100 @@ defmodule Timeline.Internal.STN.MiniZincSolver do
   
   defp is_finite_number(_), do: false
 
+  defp is_duration_constraint(from, to) do
+    # Check if this is a duration constraint (start->end for the same interval)
+    String.ends_with?(from, "_start") and String.ends_with?(to, "_end") and
+      String.replace_suffix(from, "_start", "") == String.replace_suffix(to, "_end", "")
+  end
+
+  defp extract_durations(constraint_map, time_point_map) do
+    # For each time point, try to find if it's a start point with a corresponding end point
+    # and extract the duration from the constraint between them
+    time_points = Map.keys(time_point_map)
+    num_points = length(time_points)
+    
+    # Initialize all durations to 0
+    durations = List.duplicate(0, num_points)
+    
+    # Look for start->end constraints that represent durations
+    time_points
+    |> Enum.reduce(durations, fn point, acc_durations ->
+      case extract_duration_for_point(point, constraint_map, time_point_map) do
+        nil -> acc_durations
+        duration ->
+          point_index = Map.get(time_point_map, point) - 1  # Convert to 0-based index
+          List.replace_at(acc_durations, point_index, duration)
+      end
+    end)
+  end
+
+  defp extract_duration_for_point(point, constraint_map, time_point_map) do
+    # Check if this is a start point (ends with "_start")
+    if String.ends_with?(point, "_start") do
+      # Find corresponding end point
+      base_name = String.replace_suffix(point, "_start", "")
+      end_point = base_name <> "_end"
+      
+      # Look for constraint from start to end
+      case Map.get(constraint_map, {point, end_point}) do
+        {min_duration, max_duration} when min_duration == max_duration ->
+          # Fixed duration constraint
+          round(min_duration)
+        _ ->
+          nil
+      end
+    else
+      nil
+    end
+  end
+
   defp update_stn_with_solution(stn, solution) do
     # MiniZinc found a solution, so the STN is consistent
     consistent = solution[:status] != "UNSATISFIABLE"
     
-    # For now, we just update the consistency flag
-    # In the future, we could use the solution to tighten constraints
-    %{stn | consistent: consistent}
+    # Debug logging
+    Logger.error("DEBUG: MiniZinc solution: #{inspect(solution)}")
+    
+    # Apply the solved start times back to the STN metadata for Timeline to use
+    updated_stn = %{stn | consistent: consistent}
+    
+    if consistent and solution[:start_times] do
+      # Store the solved start times in STN metadata for Timeline to apply
+      solved_times = extract_solved_times(stn, solution)
+      Logger.error("DEBUG: Extracted solved times: #{inspect(solved_times)}")
+      %{updated_stn | metadata: Map.put(updated_stn.metadata, :solved_times, solved_times)}
+    else
+      Logger.error("DEBUG: No start_times in solution or not consistent")
+      updated_stn
+    end
+  end
+
+  defp extract_solved_times(stn, solution) do
+    time_points = MapSet.to_list(stn.time_points)
+    start_times = solution[:start_times] || []
+    
+    # Create mapping from time point names to activity indices
+    time_point_map = 
+      time_points
+      |> Enum.with_index(1)
+      |> Map.new(fn {point, index} -> {point, index} end)
+    
+    # Create reverse mapping from indices to time point names
+    index_to_point_map = 
+      time_point_map
+      |> Enum.map(fn {point, index} -> {index, point} end)
+      |> Map.new()
+    
+    # Map solved start times back to time point names
+    start_times
+    |> Enum.with_index(1)
+    |> Enum.map(fn {start_time, index} ->
+      case Map.get(index_to_point_map, index) do
+        nil -> nil
+        time_point -> {time_point, start_time}
+      end
+    end)
+    |> Enum.reject(&is_nil/1)
+    |> Map.new()
   end
 end
