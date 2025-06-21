@@ -150,136 +150,98 @@ defmodule Plan.Backtracking do
         {:error, "Task node not found: #{task_node_id}"}
 
       node ->
-        if verbose > 2 do
-          Logger.debug(
-            "DEBUG: try_alternative_method_for_task - node.method_tried: #{inspect(node.method_tried)}"
-          )
-        end
-
-        case node.task do
-          {task_name, _args} when is_binary(task_name) ->
-            # Add current method to blacklist and reset node
-            current_method = node.method_tried
-
-            blacklisted_methods =
-              if current_method do
-                [current_method | node.blacklisted_methods]
-              else
-                node.blacklisted_methods
-              end
-
-            # Check if there are any non-blacklisted methods left
-            all_methods = Domain.get_task_methods(domain, task_name)
-
-            remaining_methods =
-              Enum.reject(all_methods, fn {method_name, _method_fn} ->
-                method_name in blacklisted_methods
-              end)
-
-            if Enum.empty?(remaining_methods) do
-              if verbose > 2 do
-                Logger.debug("No alternative methods left for task: #{task_name}")
-              end
-
-              # Return no_alternatives if no methods left
-              :no_alternatives
-            else
-              if verbose > 2 do
-                Logger.debug(
-                  "Blacklisting method for task #{task_name}: #{inspect(current_method)}"
-                )
-
-                Logger.debug("Total blacklisted methods: #{inspect(blacklisted_methods)}")
-              end
-
-              # Reset the node for retrying with alternative methods
-              reset_node = %{
-                node
-                | children_ids: [],
-                  expanded: false,
-                  method_tried: nil,
-                  blacklisted_methods: blacklisted_methods
-              }
-
-              # Remove all descendant nodes
-              descendant_ids =
-                AriaEngine.Plan.Utils.get_all_descendants(solution_tree, task_node_id)
-
-              remaining_nodes = Map.drop(solution_tree.nodes, descendant_ids)
-
-              # Update the tree
-              updated_tree = %{
-                solution_tree
-                | nodes: Map.put(remaining_nodes, task_node_id, reset_node)
-              }
-
-              {:ok, updated_tree}
-            end
-
-          # For goal nodes
-          {predicate, _subject, _fact_value} ->
-            # Add current method to blacklist and reset node
-            current_method = node.method_tried
-
-            blacklisted_methods =
-              if current_method do
-                [current_method | node.blacklisted_methods]
-              else
-                node.blacklisted_methods
-              end
-
-            # Check if there are any non-blacklisted methods left
-            all_methods = Domain.get_unigoal_methods(domain, predicate)
-
-            remaining_methods =
-              Enum.reject(all_methods, fn {method_name, _method_fn} ->
-                method_name in blacklisted_methods
-              end)
-
-            if Enum.empty?(remaining_methods) do
-              if verbose > 2 do
-                Logger.debug("No alternative methods left for goal: #{predicate}")
-              end
-
-              # Return no_alternatives if no methods left
-              :no_alternatives
-            else
-              if verbose > 2 do
-                Logger.debug(
-                  "Blacklisting method for goal #{predicate}: #{inspect(current_method)}"
-                )
-
-                Logger.debug("Total blacklisted methods: #{inspect(blacklisted_methods)}")
-              end
-
-              # Reset the node for retrying with alternative methods
-              reset_node = %{
-                node
-                | children_ids: [],
-                  expanded: false,
-                  method_tried: nil,
-                  blacklisted_methods: blacklisted_methods
-              }
-
-              # Remove all descendant nodes
-              descendant_ids =
-                AriaEngine.Plan.Utils.get_all_descendants(solution_tree, task_node_id)
-
-              remaining_nodes = Map.drop(solution_tree.nodes, descendant_ids)
-
-              # Update the tree
-              updated_tree = %{
-                solution_tree
-                | nodes: Map.put(remaining_nodes, task_node_id, reset_node)
-              }
-
-              {:ok, updated_tree}
-            end
-
-          _ ->
-            {:error, "Node is not a task or goal node: #{inspect(node.task)}"}
-        end
+        log_method_attempt(node, verbose)
+        handle_alternative_method(domain, solution_tree, task_node_id, node, verbose)
     end
+  end
+
+  defp log_method_attempt(node, verbose) do
+    if verbose > 2 do
+      Logger.debug(
+        "DEBUG: try_alternative_method_for_task - node.method_tried: #{inspect(node.method_tried)}"
+      )
+    end
+  end
+
+  defp handle_alternative_method(domain, solution_tree, task_node_id, node, verbose) do
+    case node.task do
+      {task_name, _args} when is_binary(task_name) ->
+        try_alternative_for_task(domain, solution_tree, task_node_id, node, task_name, verbose)
+
+      {predicate, _subject, _fact_value} ->
+        try_alternative_for_goal(domain, solution_tree, task_node_id, node, predicate, verbose)
+
+      _ ->
+        {:error, "Node is not a task or goal node: #{inspect(node.task)}"}
+    end
+  end
+
+  defp try_alternative_for_task(domain, solution_tree, task_node_id, node, task_name, verbose) do
+    blacklisted_methods = update_blacklisted_methods(node)
+    all_methods = Domain.get_task_methods(domain, task_name)
+    
+    case check_remaining_methods(all_methods, blacklisted_methods, task_name, verbose) do
+      :no_alternatives -> :no_alternatives
+      :has_alternatives -> reset_node_for_retry(solution_tree, task_node_id, node, blacklisted_methods, task_name, verbose)
+    end
+  end
+
+  defp try_alternative_for_goal(domain, solution_tree, task_node_id, node, predicate, verbose) do
+    blacklisted_methods = update_blacklisted_methods(node)
+    all_methods = Domain.get_unigoal_methods(domain, predicate)
+    
+    case check_remaining_methods(all_methods, blacklisted_methods, predicate, verbose) do
+      :no_alternatives -> :no_alternatives
+      :has_alternatives -> reset_node_for_retry(solution_tree, task_node_id, node, blacklisted_methods, predicate, verbose)
+    end
+  end
+
+  defp update_blacklisted_methods(node) do
+    if node.method_tried do
+      [node.method_tried | node.blacklisted_methods]
+    else
+      node.blacklisted_methods
+    end
+  end
+
+  defp check_remaining_methods(all_methods, blacklisted_methods, identifier, verbose) do
+    remaining_methods = Enum.reject(all_methods, fn {method_name, _method_fn} ->
+      method_name in blacklisted_methods
+    end)
+
+    if Enum.empty?(remaining_methods) do
+      if verbose > 2 do
+        Logger.debug("No alternative methods left for #{identifier}")
+      end
+      :no_alternatives
+    else
+      :has_alternatives
+    end
+  end
+
+  defp reset_node_for_retry(solution_tree, task_node_id, node, blacklisted_methods, identifier, verbose) do
+    if verbose > 2 do
+      Logger.debug("Blacklisting method for #{identifier}: #{inspect(node.method_tried)}")
+      Logger.debug("Total blacklisted methods: #{inspect(blacklisted_methods)}")
+    end
+
+    reset_node = %{
+      node
+      | children_ids: [],
+        expanded: false,
+        method_tried: nil,
+        blacklisted_methods: blacklisted_methods
+    }
+
+    descendant_ids = AriaEngine.Plan.Utils.get_all_descendants(solution_tree, task_node_id)
+    remaining_nodes = Map.drop(solution_tree.nodes, descendant_ids)
+
+    updated_tree = %{
+      solution_tree
+      | nodes: Map.put(remaining_nodes, task_node_id, reset_node)
+    }
+
+    {:ok, updated_tree}
   end
 
   # Backtrack and retry from a failed node
@@ -303,86 +265,58 @@ defmodule Plan.Backtracking do
         {:error, "Failed node not found: #{failed_node_id}"}
 
       failed_node ->
-        # Find the parent node to backtrack to
-        case failed_node.parent_id do
-          nil ->
-            # Root node failed - no solution possible
-            {:error, "Root node failed - no complete solution found"}
+        handle_failed_node(domain, state, solution_tree, failed_node_id, failed_node, depth, max_depth, verbose)
+    end
+  end
 
-          # We will handle backtracking to parent explicitly if needed
-          _parent_id ->
-            # First, try alternative method for the failed node itself
-            case solution_tree.nodes[failed_node_id].task do
-              {task_name, _args} when is_binary(task_name) ->
-                # This is a task node - try next available method for this node
-                # Pass domain
-                case try_alternative_method_for_task(
-                       domain,
-                       solution_tree,
-                       failed_node_id,
-                       verbose
-                     ) do
-                  {:ok, new_tree} ->
-                    {:ok, new_tree}
+  defp handle_failed_node(domain, state, solution_tree, failed_node_id, failed_node, depth, max_depth, verbose) do
+    case failed_node.parent_id do
+      nil ->
+        {:error, "Root node failed - no complete solution found"}
 
-                  :no_alternatives ->
-                    # If no alternatives for this node, then backtrack to parent
-                    backtrack_up_tree(
-                      domain,
-                      state,
-                      solution_tree,
-                      failed_node_id,
-                      depth,
-                      max_depth,
-                      verbose
-                    )
+      _parent_id ->
+        try_alternatives_or_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
+    end
+  end
 
-                  {:error, reason} ->
-                    {:error, reason}
-                end
+  defp try_alternatives_or_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
+    task = solution_tree.nodes[failed_node_id].task
 
-              # Fixed unused variables here
-              {_predicate, _subject, _fact_value} ->
-                # This is a goal node - try next available method for this node
-                # Pass domain
-                case try_alternative_method_for_task(
-                       domain,
-                       solution_tree,
-                       failed_node_id,
-                       verbose
-                     ) do
-                  {:ok, new_tree} ->
-                    {:ok, new_tree}
+    case task do
+      {task_name, _args} when is_binary(task_name) ->
+        handle_task_node_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
 
-                  :no_alternatives ->
-                    # If no alternatives for this node, then backtrack to parent
-                    backtrack_up_tree(
-                      domain,
-                      state,
-                      solution_tree,
-                      failed_node_id,
-                      depth,
-                      max_depth,
-                      verbose
-                    )
+      {_predicate, _subject, _fact_value} ->
+        handle_goal_node_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
 
-                  {:error, reason} ->
-                    {:error, reason}
-                end
+      _ ->
+        backtrack_up_tree(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
+    end
+  end
 
-              _ ->
-                # If it's not a task or goal node, then no alternatives for it, backtrack to parent
-                backtrack_up_tree(
-                  domain,
-                  state,
-                  solution_tree,
-                  failed_node_id,
-                  depth,
-                  max_depth,
-                  verbose
-                )
-            end
-        end
+  defp handle_task_node_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
+    case try_alternative_method_for_task(domain, solution_tree, failed_node_id, verbose) do
+      {:ok, new_tree} ->
+        {:ok, new_tree}
+
+      :no_alternatives ->
+        backtrack_up_tree(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp handle_goal_node_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
+    case try_alternative_method_for_task(domain, solution_tree, failed_node_id, verbose) do
+      {:ok, new_tree} ->
+        {:ok, new_tree}
+
+      :no_alternatives ->
+        backtrack_up_tree(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

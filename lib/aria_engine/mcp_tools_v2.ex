@@ -42,35 +42,43 @@ defmodule AriaEngine.MCPToolsV2 do
     Logger.info("MCP tool call: #{tool_name} with params: #{inspect(params)}")
 
     try do
-      case tool_name do
-        :configure_pipeline_layout -> handle_configure_pipeline_layout(params)
-        :setup_element_config -> handle_setup_element_config(params)
-        :start_planning_pipeline -> handle_start_planning_pipeline(params)
-        :stop_planning_pipeline -> handle_stop_planning_pipeline(params)
-        :get_pipeline_status -> handle_get_pipeline_status(params)
-        :get_pipeline_metrics -> handle_get_pipeline_metrics(params)
-        :schedule_activities -> handle_schedule_activities(params)
-        :validate_scheduling_solutions -> handle_validate_scheduling_solutions(params)
-        :list_active_pipelines -> handle_list_active_pipelines(params)
-        :send_pipeline_request -> handle_send_pipeline_request(params)
-        _ -> %{"error" => "Unknown tool: #{tool_name}"}
-      end
+      execute_tool_handler(tool_name, params)
     rescue
       error ->
-        Logger.error("Error in MCP tool #{tool_name}: #{inspect(error)}")
-
-        %{
-          "error" => "Tool execution failed: #{Exception.message(error)}",
-          "details" => %{
-            "tool" => Atom.to_string(tool_name),
-            "params" => params
-          }
-        }
+        handle_tool_execution_error(tool_name, params, error)
     end
   end
 
   def handle_tool_call(tool_name, params) when is_binary(tool_name) do
     handle_tool_call(String.to_atom(tool_name), params)
+  end
+
+  defp execute_tool_handler(tool_name, params) do
+    case tool_name do
+      :configure_pipeline_layout -> handle_configure_pipeline_layout(params)
+      :setup_element_config -> handle_setup_element_config(params)
+      :start_planning_pipeline -> handle_start_planning_pipeline(params)
+      :stop_planning_pipeline -> handle_stop_planning_pipeline(params)
+      :get_pipeline_status -> handle_get_pipeline_status(params)
+      :get_pipeline_metrics -> handle_get_pipeline_metrics(params)
+      :schedule_activities -> handle_schedule_activities(params)
+      :validate_scheduling_solutions -> handle_validate_scheduling_solutions(params)
+      :list_active_pipelines -> handle_list_active_pipelines(params)
+      :send_pipeline_request -> handle_send_pipeline_request(params)
+      _ -> %{"error" => "Unknown tool: #{tool_name}"}
+    end
+  end
+
+  defp handle_tool_execution_error(tool_name, params, error) do
+    Logger.error("Error in MCP tool #{tool_name}: #{inspect(error)}")
+
+    %{
+      "error" => "Tool execution failed: #{Exception.message(error)}",
+      "details" => %{
+        "tool" => Atom.to_string(tool_name),
+        "params" => params
+      }
+    }
   end
 
   # Public function interfaces for direct calls
@@ -1010,80 +1018,10 @@ defmodule AriaEngine.MCPToolsV2 do
   end
 
   defp generate_scaling_task_problem(base_name, problem_id, activity_count) do
-    # Generate activities that scale in complexity
-    activities =
-      case activity_count do
-        1 ->
-          # Identity case - single task that returns input
-          [
-            %{
-              "id" => "identity_task",
-              "name" => "Identity Task",
-              "duration" => "PT30M",
-              "required_capabilities" => ["basic"],
-              "required_resources" => ["workstation_1"],
-              "dependencies" => []
-            }
-          ]
-
-        count when count > 1 ->
-          # Scaling case - create chain of dependent tasks
-          for i <- 1..count do
-            # Increasing duration: 45, 60, 75, 90, 105 minutes
-            duration = 30 + i * 15
-
-            %{
-              "id" => "task_#{i}",
-              "name" => "Task #{i}",
-              "duration" => "PT#{duration}M",
-              "required_capabilities" => ["basic", "processing"],
-              "required_resources" => ["workstation_#{rem(i - 1, 2) + 1}"],
-              "dependencies" => if(i > 1, do: ["task_#{i - 1}"], else: [])
-            }
-          end
-      end
-
-    # Generate entities based on activity count
-    # Max 3 entities
-    entity_count = min(activity_count, 3)
-
-    entities =
-      for i <- 1..entity_count do
-        %{
-          "id" => "worker_#{i}",
-          "type" => "worker",
-          "capabilities" => ["basic", "processing", "coordination"],
-          "availability" => "PT8H"
-        }
-      end
-
-    # Generate resources based on activity count - fix resource structure for tests
-    resources =
-      case activity_count do
-        1 ->
-          # Identity case - single workstation with numbered key for consistency
-          %{"workstation_1" => %{"type" => "equipment", "capacity" => 1}}
-
-        count when count > 1 ->
-          # Scaling case - multiple numbered workstations plus shared resources
-          base_resources =
-            for i <- 1..min(count, 3), into: %{} do
-              {"workstation_#{i}", %{"type" => "equipment", "capacity" => 1}}
-            end
-
-          # Add shared storage for multi-activity problems
-          Map.put(base_resources, "shared_storage", %{"type" => "storage", "capacity" => count})
-      end
-
-    # Determine complexity based on activity count
-    complexity =
-      case activity_count do
-        1 -> "trivial"
-        2 -> "simple"
-        3 -> "medium"
-        4 -> "medium"
-        _ -> "high"
-      end
+    activities = generate_activities_for_count(activity_count)
+    entities = generate_entities_for_count(activity_count)
+    resources = generate_resources_for_count(activity_count)
+    complexity = determine_complexity(activity_count)
 
     %{
       name: "#{base_name}_scaling_#{activity_count}_#{problem_id}",
@@ -1104,4 +1042,63 @@ defmodule AriaEngine.MCPToolsV2 do
       }
     }
   end
+
+  defp generate_activities_for_count(1) do
+    [
+      %{
+        "id" => "identity_task",
+        "name" => "Identity Task",
+        "duration" => "PT30M",
+        "required_capabilities" => ["basic"],
+        "required_resources" => ["workstation_1"],
+        "dependencies" => []
+      }
+    ]
+  end
+
+  defp generate_activities_for_count(count) when count > 1 do
+    for i <- 1..count do
+      duration = 30 + i * 15
+
+      %{
+        "id" => "task_#{i}",
+        "name" => "Task #{i}",
+        "duration" => "PT#{duration}M",
+        "required_capabilities" => ["basic", "processing"],
+        "required_resources" => ["workstation_#{rem(i - 1, 2) + 1}"],
+        "dependencies" => if(i > 1, do: ["task_#{i - 1}"], else: [])
+      }
+    end
+  end
+
+  defp generate_entities_for_count(activity_count) do
+    entity_count = min(activity_count, 3)
+
+    for i <- 1..entity_count do
+      %{
+        "id" => "worker_#{i}",
+        "type" => "worker",
+        "capabilities" => ["basic", "processing", "coordination"],
+        "availability" => "PT8H"
+      }
+    end
+  end
+
+  defp generate_resources_for_count(1) do
+    %{"workstation_1" => %{"type" => "equipment", "capacity" => 1}}
+  end
+
+  defp generate_resources_for_count(count) when count > 1 do
+    base_resources =
+      for i <- 1..min(count, 3), into: %{} do
+        {"workstation_#{i}", %{"type" => "equipment", "capacity" => 1}}
+      end
+
+    Map.put(base_resources, "shared_storage", %{"type" => "storage", "capacity" => count})
+  end
+
+  defp determine_complexity(1), do: "trivial"
+  defp determine_complexity(2), do: "simple"
+  defp determine_complexity(n) when n in [3, 4], do: "medium"
+  defp determine_complexity(_), do: "high"
 end
