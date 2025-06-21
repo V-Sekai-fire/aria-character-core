@@ -29,10 +29,10 @@ defmodule AriaEngine.SchedulerTest do
 
     test "schedules simple activities with dependencies" do
       activities = [
-        %{id: "design", duration: 5, dependencies: []},
-        %{id: "develop", duration: 10, dependencies: ["design"]},
-        %{id: "test", duration: 3, dependencies: ["develop"]},
-        %{id: "deploy", duration: 1, dependencies: ["test"]}
+        %{"id" => "design", "duration" => 5, "dependencies" => []},
+        %{"id" => "develop", "duration" => 10, "dependencies" => ["design"]},
+        %{"id" => "test", "duration" => 3, "dependencies" => ["develop"]},
+        %{"id" => "deploy", "duration" => 1, "dependencies" => ["test"]}
       ]
 
       {:ok, result} = Scheduler.schedule_activities("Website Launch", activities)
@@ -44,8 +44,8 @@ defmodule AriaEngine.SchedulerTest do
 
     test "schedules activities with resources and constraints" do
       activities = [
-        %{id: "task1", duration: 2, dependencies: [], resources: ["developer"]},
-        %{id: "task2", duration: 3, dependencies: [], resources: ["developer"]}
+        %{"id" => "task1", "duration" => 2, "dependencies" => [], "resources" => ["developer"]},
+        %{"id" => "task2", "duration" => 3, "dependencies" => [], "resources" => ["developer"]}
       ]
 
       resources = %{developer: %{capacity: 1}}
@@ -65,7 +65,7 @@ defmodule AriaEngine.SchedulerTest do
     end
 
     test "handles verbose logging" do
-      activities = [%{id: "task1", duration: 1, dependencies: []}]
+      activities = [%{"id" => "task1", "duration" => 1, "dependencies" => []}]
 
       {:ok, result} =
         Scheduler.schedule_activities(
@@ -80,8 +80,8 @@ defmodule AriaEngine.SchedulerTest do
 
     test "returns analysis with correct structure" do
       activities = [
-        %{id: "a", duration: 1, dependencies: []},
-        %{id: "b", duration: 2, dependencies: ["a"]}
+        %{"id" => "a", "duration" => 1, "dependencies" => []},
+        %{"id" => "b", "duration" => 2, "dependencies" => ["a"]}
       ]
 
       {:ok, _result} = Scheduler.schedule_activities("Analysis Test", activities)
@@ -89,8 +89,8 @@ defmodule AriaEngine.SchedulerTest do
 
     test "scheduled activities have timing information" do
       activities = [
-        %{id: "first", duration: 5, dependencies: []},
-        %{id: "second", duration: 3, dependencies: ["first"]}
+        %{"id" => "first", "duration" => 5, "dependencies" => []},
+        %{"id" => "second", "duration" => 3, "dependencies" => ["first"]}
       ]
 
       {:ok, result} = Scheduler.schedule_activities("Timing Test", activities)
@@ -109,7 +109,7 @@ defmodule AriaEngine.SchedulerTest do
 
     test "handles activities without duration" do
       activities = [
-        %{id: "no_duration", dependencies: []}
+        %{"id" => "no_duration", "dependencies" => []}
       ]
 
       {:ok, result} = Scheduler.schedule_activities("No Duration Test", activities)
@@ -121,8 +121,8 @@ defmodule AriaEngine.SchedulerTest do
 
     test "handles activities with empty dependencies" do
       activities = [
-        %{id: "independent1", duration: 1, dependencies: []},
-        %{id: "independent2", duration: 2, dependencies: []}
+        %{"id" => "independent1", "duration" => 1, "dependencies" => []},
+        %{"id" => "independent2", "duration" => 2, "dependencies" => []}
       ]
 
       {:ok, result} = Scheduler.schedule_activities("Independent Test", activities)
@@ -135,19 +135,19 @@ defmodule AriaEngine.SchedulerTest do
 
     test "timing constraints are respected with multiple dependencies (STN logic)" do
       activities = [
-        %{id: "a", duration: 2, dependencies: []},
-        %{id: "b", duration: 3, dependencies: ["a"]},
-        %{id: "c", duration: 1, dependencies: ["a"]},
-        %{id: "d", duration: 4, dependencies: ["b", "c"]}
+        %{"id" => "a", "duration" => 2, "dependencies" => []},
+        %{"id" => "b", "duration" => 3, "dependencies" => ["a"]},
+        %{"id" => "c", "duration" => 1, "dependencies" => ["a"]},
+        %{"id" => "d", "duration" => 4, "dependencies" => ["b", "c"]}
       ]
 
       {:ok, result} = Scheduler.schedule_activities("STN Timing Test", activities)
-      schedule = Enum.sort_by(result.schedule, & &1.id)
+      schedule = Enum.sort_by(result.schedule, & &1["id"])
 
-      a = Enum.find(schedule, &(&1.id == "a"))
-      b = Enum.find(schedule, &(&1.id == "b"))
-      c = Enum.find(schedule, &(&1.id == "c"))
-      d = Enum.find(schedule, &(&1.id == "d"))
+      a = Enum.find(schedule, &(&1["id"] == "a"))
+      b = Enum.find(schedule, &(&1["id"] == "b"))
+      c = Enum.find(schedule, &(&1["id"] == "c"))
+      d = Enum.find(schedule, &(&1["id"] == "d"))
 
       assert a.start_time == 0
       assert a.end_time == 2

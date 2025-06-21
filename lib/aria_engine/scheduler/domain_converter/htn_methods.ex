@@ -29,11 +29,11 @@ defmodule AriaEngine.Scheduler.DomainConverter.HTNMethods do
           "schedule_activities" => [
             {
               "htn_decomposition_method",
-              fn _args, _state ->
-                # Return proper todo list with tasks for individual activities
+              fn _state, _args ->
+                # Return proper todo list with action names for individual activities
                 activities
                 |> Enum.map(fn activity ->
-                  {activity["id"], []}
+                  {String.to_atom(activity["id"]), []}
                 end)
               end
             }
@@ -51,7 +51,7 @@ defmodule AriaEngine.Scheduler.DomainConverter.HTNMethods do
           "schedule_activities" => [
             {
               "safe_method",
-              fn _args, _state ->
+              fn _state, _args ->
                 Logger.warning(
                   "DomainConverter: Refusing to create methods due to circular dependencies"
                 )
@@ -77,7 +77,7 @@ defmodule AriaEngine.Scheduler.DomainConverter.HTNMethods do
       task_name = activity["id"]
       method_name = "decompose_to_durative"
 
-      method_fn = fn _args, _state ->
+      method_fn = fn _state, _args ->
         # Decompose this goal to the corresponding durative action
         [{String.to_atom("durative_#{activity["id"]}"), []}]
       end
