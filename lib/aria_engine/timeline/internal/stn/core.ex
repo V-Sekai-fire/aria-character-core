@@ -17,7 +17,7 @@ defmodule Timeline.Internal.STN.Core do
   Adds an interval to the STN with automatic unit conversion and LOD rescaling.
 
   This creates two time points (start and end) and adds the necessary
-  temporal constraints. Then applies PC-2 to maintain consistency.
+  temporal constraints. Then applies MiniZinc solver to maintain consistency.
 
   The interval's DateTime values are automatically converted to the STN's
   declared time units and rescaled according to the LOD level.
@@ -44,7 +44,7 @@ defmodule Timeline.Internal.STN.Core do
     |> add_time_point(start_point)
     |> add_time_point(end_point)
     |> add_constraint(start_point, end_point, duration_constraint)
-    |> STN.PC2.apply_pc2()
+    |> STN.MiniZincSolver.solve_stn()
   end
 
   @doc """
@@ -81,7 +81,7 @@ defmodule Timeline.Internal.STN.Core do
       |> MapSet.delete(end_point)
 
     %{stn | time_points: updated_time_points, constraints: updated_constraints}
-    |> STN.PC2.apply_pc2()
+    |> STN.MiniZincSolver.solve_stn()
   end
 
   @doc """
@@ -125,9 +125,9 @@ defmodule Timeline.Internal.STN.Core do
     # Create the updated STN with the final consistency state
     updated_stn = %{stn | constraints: updated_constraints_2, consistent: final_consistent}
 
-    # Apply PC-2 only if still consistent, otherwise return the inconsistent STN
+    # Apply MiniZinc solver only if still consistent, otherwise return the inconsistent STN
     if final_consistent do
-      STN.PC2.apply_pc2(updated_stn)
+      STN.MiniZincSolver.solve_stn(updated_stn)
     else
       updated_stn
     end
@@ -350,7 +350,7 @@ defmodule Timeline.Internal.STN.Core do
         case intersect_constraints(existing_constraint, new_constraint) do
           :inconsistent ->
             # When local intersection fails, add the new constraint anyway
-            # PC2 will detect the global inconsistency through path consistency
+            # MiniZinc solver will detect the global inconsistency through path consistency
             {Map.put(constraints, key, new_constraint), false}
 
           intersected_constraint ->

@@ -8,11 +8,11 @@ defmodule Timeline.Internal.STN do
   # External modules should use the Timeline API instead of accessing STN directly.
 
   # Simple Temporal Network (STN) implementation with composable, parallelizable operations
-  # and Path Consistency (PC-2) algorithm.
+  # using MiniZinc constraint solver.
 
   # This module provides optimal constraint solving for temporal relationships
-  # using composable STN operations that can be parallelized, avoiding O(n³) 
-  # complexity blowup through strategic segmentation and boolean-like operations.
+  # using composable STN operations that can be parallelized through strategic 
+  # segmentation and boolean-like operations.
 
   ## Creating STNs
 
@@ -60,13 +60,12 @@ defmodule Timeline.Internal.STN do
   # Use new_constant_work/1 for production systems requiring consistent response times.
   # See ADR-081 for detailed implementation rationale.
 
-  # ## Algorithm: Path Consistency (PC-2)
+  # ## Algorithm: MiniZinc Constraint Solver
 
-  # The PC-2 algorithm maintains path consistency in the constraint graph by
-  # ensuring that for every triple of variables (i, j, k), the direct constraint
-  # between i and k is consistent with the path i -> j -> k.
+  # Uses MiniZinc constraint programming to solve temporal constraint networks.
+  # Provides robust constraint satisfaction with fallback to hybrid solving.
 
-  # Time complexity: O(n³) per segment, parallelizable across segments
+  # Time complexity: Depends on constraint complexity and MiniZinc solver
   # Space complexity: O(n²) for the constraint matrix
 
   ## References
@@ -211,7 +210,7 @@ defmodule Timeline.Internal.STN do
   defdelegate find_next_available_slot(stn, duration, earliest_start), to: Core
 
   # MiniZinc solver functions
-  defdelegate apply_pc2(stn), to: MiniZincSolver, as: :solve_stn
+  defdelegate solve_stn(stn), to: MiniZincSolver
   # solve is in operations now
   defdelegate solve(stn), to: Operations
 

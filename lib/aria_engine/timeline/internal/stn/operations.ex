@@ -249,7 +249,7 @@ defmodule Timeline.Internal.STN.Operations do
 
       _segment_count ->
         # Use convergence-based solving for parallel segment solving
-        # Apply PC2 to each segment individually, then merge
+        # Apply MiniZinc solver to each segment individually, then merge
         solved_segments =
           segments
           |> Enum.map(&MiniZincSolver.solve_stn/1)

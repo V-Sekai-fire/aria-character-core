@@ -37,7 +37,7 @@ defmodule Timeline.Internal.STN.Units do
           lod_resolution: new_resolution,
           constraints: rescaled_constraints
       }
-      |> STN.PC2.apply_pc2()
+      |> STN.MiniZincSolver.solve_stn()
     end
   end
 
@@ -59,7 +59,7 @@ defmodule Timeline.Internal.STN.Units do
         |> Map.new()
 
       %{stn | time_unit: new_unit, constraints: converted_constraints}
-      |> STN.PC2.apply_pc2()
+      |> STN.MiniZincSolver.solve_stn()
     end
   end
 
