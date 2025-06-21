@@ -302,7 +302,8 @@ defmodule AriaEngine.Membrane.ScheduleFilter do
         error_reason: reason,
         error_type: error_type,
         original_tool: request.tool_name,
-        converted_at: DateTime.utc_now()
+        converted_at: DateTime.utc_now(),
+        legacy_format: Map.get(request.metadata, :legacy_format, false)
       }
     }
   end

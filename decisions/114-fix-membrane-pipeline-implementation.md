@@ -48,9 +48,9 @@ Fix the Membrane pipeline implementation to achieve full functionality and pass 
 **File**: `lib/aria_engine/membrane/mcp_source.ex`
 
 **Issues to Fix:**
-- [ ] MCPSource not sending buffers when receiving MCP requests
-- [ ] Pipeline configuration messages not updating state properly
-- [ ] Demand-based flow control not working correctly
+- [x] MCPSource not sending buffers when receiving MCP requests
+- [x] Pipeline configuration messages not updating state properly
+- [x] Demand-based flow control not working correctly
 
 **Specific Problems:**
 ```elixir

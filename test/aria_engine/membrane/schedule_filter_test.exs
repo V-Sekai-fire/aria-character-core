@@ -205,7 +205,11 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
           "activities" => [
             %{
               "id" => "legacy_activity",
-              "name" => "Legacy Activity"
+              "name" => "Legacy Activity",
+              "duration" => %{
+                "start" => "2025-06-20T09:00:00Z",
+                "end" => "2025-06-20T10:00:00Z"
+              }
             }
           ],
           "entities" => [],
