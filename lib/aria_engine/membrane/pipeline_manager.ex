@@ -316,13 +316,15 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :schedule_processing,
       elements: [
         %{type: MCPSource, id: :mcp_source, config: %{}},
+        %{type: AriaEngine.Membrane.RequestFilter, id: :request_filter, config: %{}},
         %{type: ScheduleFilter, id: :schedule_filter, config: %{strict_validation: true}},
         %{type: AriaEngine.Membrane.PlannerFilter, id: :planner_filter, config: %{timeout_ms: 30_000}},
         %{type: ResponseFilter, id: :response_filter, config: %{}},
         %{type: MCPSink, id: :mcp_sink, config: %{}}
       ],
       connections: [
-        %{from: {:mcp_source, :output}, to: {:schedule_filter, :input}},
+        %{from: {:mcp_source, :output}, to: {:request_filter, :input}},
+        %{from: {:request_filter, :output}, to: {:schedule_filter, :input}},
         %{from: {:schedule_filter, :output}, to: {:planner_filter, :input}},
         %{from: {:planner_filter, :output}, to: {:response_filter, :input}},
         %{from: {:response_filter, :output}, to: {:mcp_sink, :input}}
