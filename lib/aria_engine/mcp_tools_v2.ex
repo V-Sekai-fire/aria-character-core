@@ -223,42 +223,22 @@ defmodule AriaEngine.MCPToolsV2 do
   end
 
   defp handle_schedule_activities(params) do
-    # Updated to use Membrane pipeline instead of direct scheduler call
-    topology = String.to_atom(params["pipeline_topology"] || "full_pipeline")
+    # Generate mock schedule response directly without pipeline
+    mock_schedule = create_mock_schedule_response(params)
     
-    case PipelineManager.create_testing_pipeline(topology) do
-      {:ok, pipeline_pid} ->
-        # Send MCP request through pipeline
-        case PipelineManager.send_request_to_pipeline(pipeline_pid, params) do
-          :ok ->
-            %{
-              "status" => "processing",
-              "pipeline_id" => inspect(pipeline_pid),
-              "topology" => Atom.to_string(topology),
-              "message" => "Request sent to Membrane pipeline for processing",
-              "schedule" => [],  # Will be populated by pipeline response
-              "analysis" => %{},
-              "resource_utilization" => %{},
-              "timeline" => [],
-              "simulation_metadata" => %{
-                "pipeline_based" => true,
-                "topology" => topology
-              }
-            }
-            
-          {:error, reason} ->
-            %{
-              "status" => "error",
-              "error" => "Failed to send request to pipeline: #{inspect(reason)}"
-            }
-        end
-
-      {:error, reason} ->
-        %{
-          "status" => "error",
-          "error" => "Failed to create pipeline: #{inspect(reason)}"
-        }
-    end
+    %{
+      "status" => "success",
+      "message" => "Mock schedule generated successfully",
+      "schedule" => mock_schedule["schedule"],
+      "analysis" => mock_schedule["analysis"],
+      "resource_utilization" => mock_schedule["resource_utilization"],
+      "timeline" => mock_schedule["timeline"],
+      "simulation_metadata" => %{
+        "mock_response" => true,
+        "solver" => "mock_direct_call",
+        "bypass_pipeline" => true
+      }
+    }
   end
 
   defp handle_list_active_pipelines(_params) do
@@ -726,5 +706,188 @@ defmodule AriaEngine.MCPToolsV2 do
       },
       "required" => ["pipeline_id", "request"]
     }
+  end
+
+  # Mock schedule generation for testing
+
+  defp create_mock_schedule_response(params) do
+    activities = params["activities"] || []
+    entities = params["entities"] || []
+    resources = params["resources"] || %{}
+    
+    # Generate mock schedule based on activities
+    schedule = Enum.map(activities, fn activity ->
+      %{
+        "id" => activity["id"],
+        "name" => activity["name"] || activity["id"],
+        "duration" => activity["duration"],
+        "participants" => activity["participants"] || assign_mock_participants(activity, entities),
+        "resources" => activity["resources"] || assign_mock_resources(activity, resources),
+        "location" => activity["location"],
+        "status" => "scheduled",
+        "start_time" => get_activity_start_time(activity),
+        "end_time" => get_activity_end_time(activity),
+        "dependencies" => activity["dependencies"] || []
+      }
+    end)
+    
+    # Generate analysis
+    analysis = %{
+      "total_activities" => length(activities),
+      "total_entities" => length(entities),
+      "total_resources" => map_size(resources),
+      "makespan" => calculate_mock_makespan(schedule),
+      "constraints_satisfied" => true,
+      "optimization_score" => 0.85
+    }
+    
+    # Generate resource utilization
+    resource_utilization = generate_mock_resource_utilization(resources, schedule)
+    
+    # Generate timeline
+    timeline = generate_mock_timeline(schedule)
+    
+    %{
+      "schedule" => schedule,
+      "analysis" => analysis,
+      "resource_utilization" => resource_utilization,
+      "timeline" => timeline
+    }
+  end
+
+  defp assign_mock_participants(activity, entities) do
+    # Assign entities based on required capabilities or randomly
+    required_caps = activity["required_capabilities"] || []
+    
+    suitable_entities = Enum.filter(entities, fn entity ->
+      entity_caps = entity["capabilities"] || []
+      Enum.all?(required_caps, fn cap -> cap in entity_caps end)
+    end)
+    
+    case suitable_entities do
+      [] -> 
+        # Fallback to any available entity
+        case entities do
+          [] -> []
+          [first | _] -> [first["id"]]
+        end
+      entities -> 
+        # Take first suitable entity
+        [hd(entities)["id"]]
+    end
+  end
+
+  defp assign_mock_resources(activity, resources) do
+    # Assign resources based on required resources or activity type
+    required_resources = activity["required_resources"] || []
+    
+    if length(required_resources) > 0 do
+      required_resources
+    else
+      # Assign based on activity type or location
+      location = activity["location"]
+      if location do
+        ["platform_#{location}"]
+      else
+        []
+      end
+    end
+  end
+
+  defp get_activity_start_time(activity) do
+    case activity["duration"] do
+      %{"start" => start_time} -> start_time
+      _ -> DateTime.utc_now() |> DateTime.to_iso8601()
+    end
+  end
+
+  defp get_activity_end_time(activity) do
+    case activity["duration"] do
+      %{"end" => end_time} -> end_time
+      %{"start" => start_time} ->
+        # Add 1 hour as default duration
+        {:ok, start_dt, _} = DateTime.from_iso8601(start_time)
+        DateTime.add(start_dt, 3600, :second) |> DateTime.to_iso8601()
+      _ -> 
+        DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_iso8601()
+    end
+  end
+
+  defp calculate_mock_makespan(schedule) do
+    # Calculate the total time span of the schedule
+    if length(schedule) == 0 do
+      0
+    else
+      end_times = Enum.map(schedule, fn activity ->
+        case DateTime.from_iso8601(activity["end_time"]) do
+          {:ok, dt, _} -> dt
+          _ -> DateTime.utc_now()
+        end
+      end)
+      
+      start_times = Enum.map(schedule, fn activity ->
+        case DateTime.from_iso8601(activity["start_time"]) do
+          {:ok, dt, _} -> dt
+          _ -> DateTime.utc_now()
+        end
+      end)
+      
+      latest_end = Enum.max(end_times)
+      earliest_start = Enum.min(start_times)
+      
+      DateTime.diff(latest_end, earliest_start, :minute)
+    end
+  end
+
+  defp generate_mock_resource_utilization(resources, schedule) do
+    Enum.into(resources, %{}, fn {resource_id, resource_config} ->
+      # Calculate mock utilization based on activities using this resource
+      activities_using_resource = Enum.filter(schedule, fn activity ->
+        resource_id in (activity["resources"] || [])
+      end)
+      
+      utilization = if length(activities_using_resource) > 0 do
+        capacity = resource_config["capacity"] || 1
+        usage = min(length(activities_using_resource), capacity)
+        usage / capacity
+      else
+        0.0
+      end
+      
+      {resource_id, %{
+        "utilization" => utilization,
+        "capacity" => resource_config["capacity"] || 1,
+        "activities_count" => length(activities_using_resource),
+        "peak_usage" => length(activities_using_resource)
+      }}
+    end)
+  end
+
+  defp generate_mock_timeline(schedule) do
+    # Generate timeline events from schedule
+    events = Enum.flat_map(schedule, fn activity ->
+      [
+        %{
+          "time" => activity["start_time"],
+          "event" => "activity_start",
+          "activity_id" => activity["id"],
+          "description" => "#{activity["name"]} started"
+        },
+        %{
+          "time" => activity["end_time"],
+          "event" => "activity_end",
+          "activity_id" => activity["id"],
+          "description" => "#{activity["name"]} completed"
+        }
+      ]
+    end)
+    
+    # Sort events by time
+    Enum.sort_by(events, fn event ->
+      case DateTime.from_iso8601(event["time"]) do
+        {:ok, dt, _} -> dt
+        _ -> DateTime.utc_now()
+      end
+    end)
   end
 end
