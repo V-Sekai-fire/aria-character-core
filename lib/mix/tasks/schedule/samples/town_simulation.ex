@@ -9,7 +9,6 @@ defmodule Mix.Tasks.Schedule.Samples.TownSimulation do
 
   alias AriaEngine.Scheduler
   alias AriaEngine.Scheduler.{Entity, Resource}
-  alias Mix.Tasks.Schedule.Samples.Helpers
 
   def run do
     IO.puts("\n" <> IO.ANSI.yellow() <> "🏘️ Sample 6: Smallville Community Simulation (Emergent Behavior)" <> IO.ANSI.reset())
@@ -391,7 +390,7 @@ defmodule Mix.Tasks.Schedule.Samples.TownSimulation do
     end
   end
 
-  defp print_town_analysis(result, entities, activities) do
+  defp print_town_analysis(_result, entities, activities) do
     IO.puts("\n🏘️ Community Simulation Analysis:")
     IO.puts("  • Residents simulated: #{length(entities)}")
     IO.puts("  • Opportunity types: #{length(activities)}")

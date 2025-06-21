@@ -176,6 +176,50 @@ defmodule Mix.Tasks.Schedule.Samples.EntityCapabilities do
         "duration" => "PT4M",
         "dependencies" => ["run_performance_testing"],
         "required_capabilities" => [:testing]
+      },
+      
+      # Independent skill-based activities (time fillers)
+      %{
+        "id" => "design_system_review",
+        "duration" => "PT5M",
+        "dependencies" => [],
+        "required_capabilities" => [:design]
+      },
+      %{
+        "id" => "code_style_review",
+        "duration" => "PT4M",
+        "dependencies" => [],
+        "required_capabilities" => [:frontend_coding]
+      },
+      %{
+        "id" => "test_automation_research",
+        "duration" => "PT6M",
+        "dependencies" => [],
+        "required_capabilities" => [:testing]
+      },
+      %{
+        "id" => "design_trend_analysis",
+        "duration" => "PT5M",
+        "dependencies" => [],
+        "required_capabilities" => [:design]
+      },
+      %{
+        "id" => "frontend_performance_audit",
+        "duration" => "PT5M",
+        "dependencies" => [],
+        "required_capabilities" => [:frontend_coding]
+      },
+      %{
+        "id" => "testing_tool_evaluation",
+        "duration" => "PT4M",
+        "dependencies" => [],
+        "required_capabilities" => [:testing]
+      },
+      %{
+        "id" => "accessibility_guidelines_study",
+        "duration" => "PT4M",
+        "dependencies" => [],
+        "required_capabilities" => [:design, :frontend_coding]
       }
     ]
     

@@ -15,103 +15,82 @@ defmodule Mix.Tasks.Schedule.Samples.SimulationMode do
     IO.puts("Demonstrates predictive scheduling without execution")
     
     activities = [
-      # Research Phase Activities
+      # Independent Setup Activities (can run in parallel)
+      %{
+        "id" => "setup_development_environment",
+        "duration" => "PT5M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "configure_project_tools",
+        "duration" => "PT4M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "setup_version_control",
+        "duration" => "PT3M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "install_dependencies",
+        "duration" => "PT4M",
+        "dependencies" => []
+      },
+      
+      # Research Track (parallel to other tracks)
       %{
         "id" => "define_research_questions",
         "duration" => "PT6M",
         "dependencies" => []
       },
       %{
-        "id" => "conduct_literature_review_phase1",
+        "id" => "conduct_literature_review",
         "duration" => "PT6M",
         "dependencies" => ["define_research_questions"]
       },
       %{
-        "id" => "conduct_literature_review_phase2",
-        "duration" => "PT6M",
-        "dependencies" => ["conduct_literature_review_phase1"]
-      },
-      %{
-        "id" => "identify_research_gaps",
-        "duration" => "PT5M",
-        "dependencies" => ["conduct_literature_review_phase2"]
-      },
-      %{
         "id" => "analyze_existing_solutions",
         "duration" => "PT6M",
-        "dependencies" => ["identify_research_gaps"]
-      },
-      %{
-        "id" => "evaluate_methodologies",
-        "duration" => "PT5M",
-        "dependencies" => ["analyze_existing_solutions"]
+        "dependencies" => ["conduct_literature_review"]
       },
       %{
         "id" => "document_research_findings",
-        "duration" => "PT6M",
-        "dependencies" => ["evaluate_methodologies"]
-      },
-      %{
-        "id" => "create_research_summary",
-        "duration" => "PT4M",
-        "dependencies" => ["document_research_findings"]
-      },
-      %{
-        "id" => "identify_key_requirements",
         "duration" => "PT5M",
-        "dependencies" => ["create_research_summary"]
-      },
-      %{
-        "id" => "define_success_criteria",
-        "duration" => "PT4M",
-        "dependencies" => ["identify_key_requirements"]
-      },
-      %{
-        "id" => "establish_research_constraints",
-        "duration" => "PT3M",
-        "dependencies" => ["define_success_criteria"]
-      },
-      %{
-        "id" => "finalize_research_scope",
-        "duration" => "PT4M",
-        "dependencies" => ["establish_research_constraints"]
+        "dependencies" => ["analyze_existing_solutions"]
       },
       
-      # Prototype Development Activities
+      # Architecture Track (parallel to research)
       %{
-        "id" => "design_prototype_architecture",
-        "duration" => "PT6M",
-        "dependencies" => ["finalize_research_scope"]
-      },
-      %{
-        "id" => "select_development_tools",
-        "duration" => "PT4M",
-        "dependencies" => ["design_prototype_architecture"]
-      },
-      %{
-        "id" => "setup_development_environment",
-        "duration" => "PT5M",
-        "dependencies" => ["select_development_tools"]
-      },
-      %{
-        "id" => "implement_core_functionality",
+        "id" => "design_system_architecture",
         "duration" => "PT6M",
         "dependencies" => ["setup_development_environment"]
       },
       %{
-        "id" => "create_user_interface_mockup",
-        "duration" => "PT6M",
-        "dependencies" => ["implement_core_functionality"]
+        "id" => "define_component_interfaces",
+        "duration" => "PT5M",
+        "dependencies" => ["design_system_architecture"]
       },
       %{
-        "id" => "implement_basic_interactions",
+        "id" => "create_data_models",
         "duration" => "PT6M",
-        "dependencies" => ["create_user_interface_mockup"]
+        "dependencies" => ["define_component_interfaces"]
+      },
+      %{
+        "id" => "design_api_specifications",
+        "duration" => "PT5M",
+        "dependencies" => ["create_data_models"]
+      },
+      
+      # Core Development Track
+      %{
+        "id" => "implement_core_functionality",
+        "duration" => "PT6M",
+        "dependencies" => ["design_api_specifications", "install_dependencies"]
       },
       %{
         "id" => "add_data_processing_logic",
         "duration" => "PT6M",
-        "dependencies" => ["implement_basic_interactions"]
+        "dependencies" => ["implement_core_functionality"]
       },
       %{
         "id" => "implement_algorithm_prototype",
@@ -119,51 +98,77 @@ defmodule Mix.Tasks.Schedule.Samples.SimulationMode do
         "dependencies" => ["add_data_processing_logic"]
       },
       %{
-        "id" => "create_test_data_sets",
+        "id" => "optimize_performance",
         "duration" => "PT5M",
         "dependencies" => ["implement_algorithm_prototype"]
       },
+      
+      # UI Development Track (parallel to core development)
       %{
-        "id" => "integrate_components",
+        "id" => "create_ui_mockups",
+        "duration" => "PT6M",
+        "dependencies" => ["configure_project_tools"]
+      },
+      %{
+        "id" => "implement_user_interface",
+        "duration" => "PT6M",
+        "dependencies" => ["create_ui_mockups"]
+      },
+      %{
+        "id" => "add_interactive_elements",
+        "duration" => "PT6M",
+        "dependencies" => ["implement_user_interface"]
+      },
+      %{
+        "id" => "implement_responsive_design",
+        "duration" => "PT5M",
+        "dependencies" => ["add_interactive_elements"]
+      },
+      
+      # Testing Track (can start early and run parallel)
+      %{
+        "id" => "setup_testing_framework",
+        "duration" => "PT4M",
+        "dependencies" => ["setup_version_control"]
+      },
+      %{
+        "id" => "create_test_data_sets",
+        "duration" => "PT5M",
+        "dependencies" => ["setup_testing_framework"]
+      },
+      %{
+        "id" => "write_unit_tests",
         "duration" => "PT6M",
         "dependencies" => ["create_test_data_sets"]
       },
       %{
-        "id" => "perform_initial_testing",
-        "duration" => "PT5M",
-        "dependencies" => ["integrate_components"]
-      },
-      %{
-        "id" => "debug_critical_issues",
+        "id" => "write_integration_tests",
         "duration" => "PT6M",
-        "dependencies" => ["perform_initial_testing"]
-      },
-      %{
-        "id" => "optimize_performance_bottlenecks",
-        "duration" => "PT6M",
-        "dependencies" => ["debug_critical_issues"]
-      },
-      %{
-        "id" => "document_prototype_features",
-        "duration" => "PT4M",
-        "dependencies" => ["optimize_performance_bottlenecks"]
-      },
-      %{
-        "id" => "prepare_demonstration_scenarios",
-        "duration" => "PT5M",
-        "dependencies" => ["document_prototype_features"]
-      },
-      %{
-        "id" => "create_prototype_documentation",
-        "duration" => "PT6M",
-        "dependencies" => ["prepare_demonstration_scenarios"]
+        "dependencies" => ["write_unit_tests"]
       },
       
-      # Evaluation Activities
+      # Integration Phase (convergence point)
+      %{
+        "id" => "integrate_ui_with_backend",
+        "duration" => "PT6M",
+        "dependencies" => ["optimize_performance", "implement_responsive_design"]
+      },
+      %{
+        "id" => "run_integration_tests",
+        "duration" => "PT5M",
+        "dependencies" => ["integrate_ui_with_backend", "write_integration_tests"]
+      },
+      %{
+        "id" => "debug_integration_issues",
+        "duration" => "PT6M",
+        "dependencies" => ["run_integration_tests"]
+      },
+      
+      # Evaluation Track (parallel to integration)
       %{
         "id" => "design_evaluation_framework",
         "duration" => "PT6M",
-        "dependencies" => ["create_prototype_documentation"]
+        "dependencies" => ["document_research_findings"]
       },
       %{
         "id" => "define_evaluation_metrics",
@@ -175,10 +180,12 @@ defmodule Mix.Tasks.Schedule.Samples.SimulationMode do
         "duration" => "PT6M",
         "dependencies" => ["define_evaluation_metrics"]
       },
+      
+      # Final Evaluation Phase (convergence point)
       %{
         "id" => "run_performance_benchmarks",
         "duration" => "PT6M",
-        "dependencies" => ["create_benchmark_tests"]
+        "dependencies" => ["debug_integration_issues", "create_benchmark_tests"]
       },
       %{
         "id" => "conduct_usability_evaluation",
@@ -186,49 +193,89 @@ defmodule Mix.Tasks.Schedule.Samples.SimulationMode do
         "dependencies" => ["run_performance_benchmarks"]
       },
       %{
-        "id" => "analyze_accuracy_metrics",
+        "id" => "analyze_results",
         "duration" => "PT5M",
         "dependencies" => ["conduct_usability_evaluation"]
       },
+      
+      # Documentation Track (can run parallel to development)
       %{
-        "id" => "compare_with_existing_solutions",
+        "id" => "write_technical_documentation",
         "duration" => "PT6M",
-        "dependencies" => ["analyze_accuracy_metrics"]
+        "dependencies" => ["design_api_specifications"]
       },
       %{
-        "id" => "identify_improvement_areas",
+        "id" => "create_user_documentation",
         "duration" => "PT5M",
-        "dependencies" => ["compare_with_existing_solutions"]
+        "dependencies" => ["implement_responsive_design"]
       },
       %{
-        "id" => "document_evaluation_results",
+        "id" => "prepare_demonstration_materials",
+        "duration" => "PT5M",
+        "dependencies" => ["write_technical_documentation", "create_user_documentation"]
+      },
+      
+      # Final Deliverables
+      %{
+        "id" => "compile_final_report",
         "duration" => "PT6M",
-        "dependencies" => ["identify_improvement_areas"]
+        "dependencies" => ["analyze_results", "prepare_demonstration_materials"]
       },
       %{
-        "id" => "create_findings_summary",
+        "id" => "prepare_presentation",
+        "duration" => "PT5M",
+        "dependencies" => ["compile_final_report"]
+      },
+      
+      # Independent Maintenance Activities (time fillers)
+      %{
+        "id" => "code_review_session",
         "duration" => "PT4M",
-        "dependencies" => ["document_evaluation_results"]
+        "dependencies" => []
       },
       %{
-        "id" => "prepare_recommendations",
+        "id" => "update_project_dependencies",
+        "duration" => "PT3M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "refactor_code_structure",
         "duration" => "PT5M",
-        "dependencies" => ["create_findings_summary"]
+        "dependencies" => []
       },
       %{
-        "id" => "finalize_evaluation_report",
-        "duration" => "PT6M",
-        "dependencies" => ["prepare_recommendations"]
+        "id" => "optimize_build_process",
+        "duration" => "PT4M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "security_audit",
+        "duration" => "PT5M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "performance_profiling",
+        "duration" => "PT4M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "backup_project_data",
+        "duration" => "PT3M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "update_documentation_links",
+        "duration" => "PT3M",
+        "dependencies" => []
       }
     ]
     
     base_datetime = DateTime.utc_now()
     
-    case Scheduler.simulate_schedule(
+    case Scheduler.schedule_activities(
       "Research Project",
       activities,
-      base_datetime: base_datetime,
-      verbose: 1
+      base_datetime: base_datetime
     ) do
       {:ok, result} ->
         Helpers.print_schedule_result(result, "Simulation run - no actual execution")

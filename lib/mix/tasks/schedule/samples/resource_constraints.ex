@@ -207,6 +207,44 @@ defmodule Mix.Tasks.Schedule.Samples.ResourceConstraints do
         "duration" => "PT4M",
         "dependencies" => ["create_database_models"],
         "required_resources" => ["developer"]
+      },
+      
+      # Independent maintenance activities (time fillers)
+      %{
+        "id" => "update_project_documentation",
+        "duration" => "PT4M",
+        "dependencies" => [],
+        "required_resources" => ["developer"]
+      },
+      %{
+        "id" => "review_code_style_guidelines",
+        "duration" => "PT3M",
+        "dependencies" => [],
+        "required_resources" => ["developer"]
+      },
+      %{
+        "id" => "optimize_package_dependencies",
+        "duration" => "PT5M",
+        "dependencies" => [],
+        "required_resources" => ["developer"]
+      },
+      %{
+        "id" => "run_security_audit",
+        "duration" => "PT4M",
+        "dependencies" => [],
+        "required_resources" => ["developer"]
+      },
+      %{
+        "id" => "backup_development_database",
+        "duration" => "PT3M",
+        "dependencies" => [],
+        "required_resources" => ["developer"]
+      },
+      %{
+        "id" => "clean_temporary_files",
+        "duration" => "PT2M",
+        "dependencies" => [],
+        "required_resources" => ["developer"]
       }
     ]
     

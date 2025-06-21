@@ -237,6 +237,58 @@ defmodule Mix.Tasks.Schedule.Samples.ComplexDependencies do
         "id" => "perform_user_acceptance_testing",
         "duration" => "PT6M",
         "dependencies" => ["run_performance_tests", "conduct_security_testing"]
+      },
+      
+      # Independent quality assurance activities (time fillers)
+      %{
+        "id" => "code_review_session",
+        "duration" => "PT5M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "update_technical_documentation",
+        "duration" => "PT4M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "refactor_common_utilities",
+        "duration" => "PT5M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "optimize_build_pipeline",
+        "duration" => "PT4M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "update_dependency_versions",
+        "duration" => "PT3M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "run_automated_linting",
+        "duration" => "PT3M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "backup_project_repository",
+        "duration" => "PT3M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "research_best_practices",
+        "duration" => "PT6M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "team_knowledge_sharing",
+        "duration" => "PT5M",
+        "dependencies" => []
+      },
+      %{
+        "id" => "environment_health_check",
+        "duration" => "PT4M",
+        "dependencies" => []
       }
     ]
     
