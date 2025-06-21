@@ -26,6 +26,12 @@ NOTE: We use elixir 18.
 # Prerequisites: Elixir 1.16+, Erlang/OTP 26+
 mix deps.get && mix compile
 mix test  # Runs only working tests
+
+# Try the scheduler samples
+mix schedule.samples  # Default 6 residents
+TOWN_SCALE=1 mix schedule.samples    # Small town (1 resident)
+TOWN_SCALE=50 mix schedule.samples   # Medium town (50 residents)
+TOWN_SCALE=1000 mix schedule.samples # Large city (1000 residents)
 ```
 
 **Key Limitation:** Most planning and storage systems non-functional.
@@ -66,6 +72,66 @@ The project includes a working Model Context Protocol (MCP) server that exposes 
 | get_pipeline_metrics          | Get overall metrics for the pipeline manager                                             |
 | list_active_pipelines         | List all currently active pipelines                                                      |
 | send_pipeline_request         | Send a request to a specific active pipeline                                             |
+
+## Scheduler Samples
+
+The project includes comprehensive scheduler samples that demonstrate temporal planning capabilities with scalable community simulations.
+
+### Sample Types
+
+1. **Simple Sequential Activities** - Basic dependency handling and timing calculations
+2. **Resource-Constrained Scheduling** - Resource allocation and capacity management  
+3. **Complex Dependencies** - Parallel execution and critical path analysis
+4. **Entity and Capability Management** - Capability-based task assignment
+5. **Simulation Mode** - Predictive scheduling without execution
+6. **Smallville Community Simulation** - Emergent autonomous behavior with scalable populations
+
+### Scaling System
+
+The scheduler uses an intelligent scaling system that adjusts resources and opportunities based on town size:
+
+- **Small towns (≤10 residents)**: 1-2 resources per resident, 3-4 opportunities per resident
+- **Medium towns (≤100 residents)**: 0.5-1 resource per resident, 2-3 opportunities per resident  
+- **Large cities (>100 residents)**: 0.2-0.5 resources per resident, 1-2 opportunities per resident
+
+### Performance Characteristics
+
+| Scale | Residents | Opportunities | Resources | Planning Time |
+|-------|-----------|---------------|-----------|---------------|
+| Small | 1         | 4             | 2         | ~250ms        |
+| Medium| 50        | 125           | 35        | ~300ms        |
+| Large | 1000      | 1500          | 300       | ~680ms        |
+
+### Sample Town Resident
+
+```elixir
+%{
+  id: "isabella_rodriguez",
+  name: "Isabella Rodriguez", 
+  occupation: "Cafe Owner",
+  personality: "Outgoing, community-focused",
+  social_magnetism: :high,
+  interests: ["local_politics", "community_events", "meeting_people"],
+  capabilities: ["hospitality", "event_planning", "social_coordination"],
+  location: "hobbs_cafe",
+  schedule: [
+    %{
+      activity: "operate_cafe",
+      start_time: "06:00:00",
+      duration: "PT8H",
+      type: :essential
+    },
+    %{
+      activity: "impromptu_cafe_discussion", 
+      start_time: "14:30:00",
+      duration: "PT45M",
+      type: :social
+    }
+  ]
+}
+```
+
+This resident demonstrates the system's capability-driven task assignment, where Isabella's hospitality capabilities naturally align her with cafe operations, while her high social magnetism creates opportunities for community interactions.
 
 ## Development Priorities
 
