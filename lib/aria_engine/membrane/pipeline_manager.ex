@@ -317,15 +317,15 @@ defmodule AriaEngine.Membrane.PipelineManager do
       elements: [
         %{type: MCPSource, id: :mcp_source, config: %{}},
         %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_schedule_filter, config: %{}},
-        %{type: ScheduleFilter, id: :schedule_filter, config: %{strict_validation: true}},
+        %{type: AriaEngine.Membrane.SchedulePlannerFilter, id: :schedule_planner_filter, config: %{strict_validation: true}},
         %{type: AriaEngine.Membrane.PlannerFilter, id: :planner_filter, config: %{timeout_ms: 30_000}},
         %{type: AriaEngine.Membrane.PlannerMCPFilter, id: :planner_mcp_filter, config: %{}},
         %{type: MCPSink, id: :mcp_sink, config: %{}}
       ],
       connections: [
         %{from: {:mcp_source, :output}, to: {:mcp_schedule_filter, :input}},
-        %{from: {:mcp_schedule_filter, :output}, to: {:schedule_filter, :input}},
-        %{from: {:schedule_filter, :output}, to: {:planner_filter, :input}},
+        %{from: {:mcp_schedule_filter, :output}, to: {:schedule_planner_filter, :input}},
+        %{from: {:schedule_planner_filter, :output}, to: {:planner_filter, :input}},
         %{from: {:planner_filter, :output}, to: {:planner_mcp_filter, :input}},
         %{from: {:planner_mcp_filter, :output}, to: {:mcp_sink, :input}}
       ],
