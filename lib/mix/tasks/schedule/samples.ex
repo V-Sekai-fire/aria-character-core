@@ -27,7 +27,6 @@ defmodule Mix.Tasks.Schedule.Samples do
     samples = [
       &Sequential.run/0,
       &ResourceConstraints.run/0,
-      &ComplexDependencies.run/0,
       &EntityCapabilities.run/0
     ]
     
