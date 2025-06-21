@@ -137,31 +137,34 @@ defmodule Timeline.Internal.STN.PC2 do
   end
 
   defp apply_pc2_with_intermediate(time_points, constraints, k) do
-    Enum.reduce_while(time_points, {constraints, true}, fn i,
-                                                           {acc_constraints_i, acc_consistent_i} ->
+    Enum.reduce_while(time_points, {constraints, true}, fn i, {acc_constraints_i, acc_consistent_i} ->
       if not acc_consistent_i do
         {:halt, {acc_constraints_i, false}}
       else
-        {final_constraints_j, final_consistent_j} =
-          Enum.reduce_while(time_points, {acc_constraints_i, acc_consistent_i}, fn j,
-                                                                                   {acc_constraints_j,
-                                                                                    acc_consistent_j} ->
-            if not acc_consistent_j do
-              {:halt, {acc_constraints_j, false}}
-            else
-              case update_constraint_via_path(acc_constraints_j, i, j, k) do
-                {:inconsistent} ->
-                  {:halt, {acc_constraints_j, false}}
-
-                {:ok, new_constraints} ->
-                  {:cont, {new_constraints, true}}
-              end
-            end
-          end)
-
-        {:cont, {final_constraints_j, final_consistent_j}}
+        result = process_intermediate_point_for_i(time_points, acc_constraints_i, i, k)
+        {:cont, result}
       end
     end)
+  end
+
+  defp process_intermediate_point_for_i(time_points, constraints, i, k) do
+    Enum.reduce_while(time_points, {constraints, true}, fn j, {acc_constraints_j, acc_consistent_j} ->
+      if not acc_consistent_j do
+        {:halt, {acc_constraints_j, false}}
+      else
+        process_constraint_update(acc_constraints_j, i, j, k)
+      end
+    end)
+  end
+
+  defp process_constraint_update(constraints, i, j, k) do
+    case update_constraint_via_path(constraints, i, j, k) do
+      {:inconsistent} ->
+        {:halt, {constraints, false}}
+
+      {:ok, new_constraints} ->
+        {:cont, {new_constraints, true}}
+    end
   end
 
   defp update_constraint_via_path(constraints, i, j, k) do

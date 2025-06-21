@@ -422,60 +422,70 @@ defmodule TemporalPlanner.STNMethod do
     action_durations = Enum.map(stn_actions, & &1.estimated_duration)
 
     case pattern do
-      :sequential ->
-        # Sum all durations for sequential execution
-        Enum.reduce(action_durations, {0, 0}, fn
-          {min, max}, {acc_min, acc_max} ->
-            new_max =
-              if max == :infinity or acc_max == :infinity, do: :infinity, else: max + acc_max
-
-            {min + acc_min, new_max}
-        end)
-
-      :parallel ->
-        # Take maximum duration for parallel execution
-        Enum.reduce(action_durations, {0, 0}, fn
-          {min, max}, {acc_min, acc_max} ->
-            new_max =
-              if max == :infinity or acc_max == :infinity, do: :infinity, else: max(max, acc_max)
-
-            {max(min, acc_min), new_max}
-        end)
-
-      :alternative ->
-        # Take average duration for alternative execution
-        case action_durations do
-          [] ->
-            {0, 0}
-
-          durations ->
-            avg_min = durations |> Enum.map(&elem(&1, 0)) |> Enum.sum() |> div(length(durations))
-
-            avg_max =
-              durations
-              |> Enum.map(&elem(&1, 1))
-              |> Enum.filter(&(&1 != :infinity))
-              |> case do
-                [] -> :infinity
-                finite_maxes -> finite_maxes |> Enum.sum() |> div(length(durations))
-              end
-
-            {avg_min, avg_max}
-        end
-
-      :conditional ->
-        # Take minimum duration for conditional execution (most optimistic)
-        Enum.reduce(action_durations, {:infinity, :infinity}, fn
-          {min, max}, {acc_min, acc_max} ->
-            new_min = if acc_min == :infinity, do: min, else: min(min, acc_min)
-
-            new_max =
-              if max == :infinity,
-                do: acc_max,
-                else: if(acc_max == :infinity, do: max, else: min(max, acc_max))
-
-            {new_min, new_max}
-        end)
+      :sequential -> estimate_sequential_duration(action_durations)
+      :parallel -> estimate_parallel_duration(action_durations)
+      :alternative -> estimate_alternative_duration(action_durations)
+      :conditional -> estimate_conditional_duration(action_durations)
     end
+  end
+
+  defp estimate_sequential_duration(action_durations) do
+    # Sum all durations for sequential execution
+    Enum.reduce(action_durations, {0, 0}, fn {min, max}, {acc_min, acc_max} ->
+      new_max = add_durations(max, acc_max)
+      {min + acc_min, new_max}
+    end)
+  end
+
+  defp estimate_parallel_duration(action_durations) do
+    # Take maximum duration for parallel execution
+    Enum.reduce(action_durations, {0, 0}, fn {min, max}, {acc_min, acc_max} ->
+      new_max = max_duration(max, acc_max)
+      {max(min, acc_min), new_max}
+    end)
+  end
+
+  defp estimate_alternative_duration(action_durations) do
+    # Take average duration for alternative execution
+    case action_durations do
+      [] -> {0, 0}
+      durations -> calculate_average_duration(durations)
+    end
+  end
+
+  defp estimate_conditional_duration(action_durations) do
+    # Take minimum duration for conditional execution (most optimistic)
+    Enum.reduce(action_durations, {:infinity, :infinity}, fn {min, max}, {acc_min, acc_max} ->
+      new_min = min_duration(min, acc_min)
+      new_max = min_duration(max, acc_max)
+      {new_min, new_max}
+    end)
+  end
+
+  defp add_durations(:infinity, _), do: :infinity
+  defp add_durations(_, :infinity), do: :infinity
+  defp add_durations(a, b), do: a + b
+
+  defp max_duration(:infinity, _), do: :infinity
+  defp max_duration(_, :infinity), do: :infinity
+  defp max_duration(a, b), do: max(a, b)
+
+  defp min_duration(:infinity, b), do: b
+  defp min_duration(a, :infinity), do: a
+  defp min_duration(a, b), do: min(a, b)
+
+  defp calculate_average_duration(durations) do
+    avg_min = durations |> Enum.map(&elem(&1, 0)) |> Enum.sum() |> div(length(durations))
+
+    avg_max =
+      durations
+      |> Enum.map(&elem(&1, 1))
+      |> Enum.filter(&(&1 != :infinity))
+      |> case do
+        [] -> :infinity
+        finite_maxes -> finite_maxes |> Enum.sum() |> div(length(durations))
+      end
+
+    {avg_min, avg_max}
   end
 end

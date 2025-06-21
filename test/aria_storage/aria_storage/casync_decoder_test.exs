@@ -399,73 +399,47 @@ defmodule AriaStorage.CasyncDecoderTest do
     # Simulate the decompress_and_verify_chunk logic for testing
     case CasyncFormat.parse_chunk(chunk_data) do
       {:ok, %{header: header, data: compressed_data}} ->
-        case decompress_test_data(compressed_data, header.compression) do
-          {:ok, decompressed_data} ->
-            # Try both algorithms for test data compatibility
-            sha256_result = CasyncDecoder.verify_chunk(decompressed_data, chunk_info.chunk_id, 0)
-
-            case sha256_result do
-              {:ok, _} ->
-                sha256_result
-
-              {:error, {:hash_mismatch, _}} ->
-                CasyncDecoder.verify_chunk(
-                  decompressed_data,
-                  chunk_info.chunk_id,
-                  @ca_format_sha512_256
-                )
-
-              {:error, _reason} ->
-                {:error, :verification_failed}
-            end
-
-          {:error, reason} ->
-            {:error, {:decompression_failed, reason}}
-        end
+        handle_parsed_chunk(compressed_data, header.compression, chunk_info)
 
       {:error, "Invalid chunk file magic"} ->
-        case decompress_test_data(chunk_data, :zstd) do
-          {:ok, decompressed_data} ->
-            # Try both algorithms for test data compatibility
-            sha256_result = CasyncDecoder.verify_chunk(decompressed_data, chunk_info.chunk_id, 0)
-
-            case sha256_result do
-              {:ok, _} ->
-                sha256_result
-
-              {:error, {:hash_mismatch, _}} ->
-                CasyncDecoder.verify_chunk(
-                  decompressed_data,
-                  chunk_info.chunk_id,
-                  @ca_format_sha512_256
-                )
-
-              {:error, _reason} ->
-                {:error, :verification_failed}
-            end
-
-          {:error, _reason} ->
-            # Try both algorithms for test data compatibility
-            sha256_result = CasyncDecoder.verify_chunk(chunk_data, chunk_info.chunk_id, 0)
-
-            case sha256_result do
-              {:ok, _} ->
-                sha256_result
-
-              {:error, {:hash_mismatch, _}} ->
-                CasyncDecoder.verify_chunk(
-                  chunk_data,
-                  chunk_info.chunk_id,
-                  @ca_format_sha512_256
-                )
-
-              {:error, _reason} ->
-                {:error, :verification_failed}
-            end
-        end
+        handle_raw_chunk_data(chunk_data, chunk_info)
 
       {:error, reason} ->
         {:error, {:parse_failed, reason}}
+    end
+  end
+
+  defp handle_parsed_chunk(compressed_data, compression, chunk_info) do
+    case decompress_test_data(compressed_data, compression) do
+      {:ok, decompressed_data} ->
+        verify_with_both_algorithms(decompressed_data, chunk_info)
+
+      {:error, reason} ->
+        {:error, {:decompression_failed, reason}}
+    end
+  end
+
+  defp handle_raw_chunk_data(chunk_data, chunk_info) do
+    case decompress_test_data(chunk_data, :zstd) do
+      {:ok, decompressed_data} ->
+        verify_with_both_algorithms(decompressed_data, chunk_info)
+
+      {:error, _reason} ->
+        verify_with_both_algorithms(chunk_data, chunk_info)
+    end
+  end
+
+  defp verify_with_both_algorithms(data, chunk_info) do
+    # Try both algorithms for test data compatibility
+    case CasyncDecoder.verify_chunk(data, chunk_info.chunk_id, 0) do
+      {:ok, _} = result ->
+        result
+
+      {:error, {:hash_mismatch, _}} ->
+        CasyncDecoder.verify_chunk(data, chunk_info.chunk_id, @ca_format_sha512_256)
+
+      {:error, _reason} ->
+        {:error, :verification_failed}
     end
   end
 end

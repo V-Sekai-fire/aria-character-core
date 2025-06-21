@@ -43,16 +43,19 @@ defmodule AriaEngine.Scheduler.Core do
       )
     else
       # Attempt enhanced scheduling
-      case attempt_enhanced_scheduling(
-             schedule_name,
-             activities,
-             entities,
-             resources,
-             constraints,
-             simulation_mode,
-             activity_log,
-             verbose
-           ) do
+      scheduling_params = %{
+        schedule_name: schedule_name,
+        activities: activities,
+        entities: entities,
+        resources: resources,
+        constraints: constraints,
+        simulation_mode: simulation_mode,
+        activity_log: activity_log,
+        verbose: verbose,
+        opts: []
+      }
+
+      case attempt_enhanced_scheduling(scheduling_params) do
         {:ok, schedule} ->
           default_analysis = %{
             schedule_name: schedule_name,
@@ -140,17 +143,18 @@ defmodule AriaEngine.Scheduler.Core do
   @doc """
   Enhanced scheduling with entity/resource management.
   """
-  def attempt_enhanced_scheduling(
-        _schedule_name,
-        activities,
-        entities,
-        resources,
-        constraints,
-        simulation_mode,
-        activity_log,
-        verbose,
-        opts \\ []
-      ) do
+  def attempt_enhanced_scheduling(scheduling_params) do
+    %{
+      schedule_name: _schedule_name,
+      activities: activities,
+      entities: entities,
+      resources: resources,
+      constraints: constraints,
+      simulation_mode: simulation_mode,
+      activity_log: activity_log,
+      verbose: verbose,
+      opts: opts
+    } = scheduling_params
     Logger.info(
       "🔧 Scheduler.Core.attempt_enhanced_scheduling() called with #{length(activities)} activities"
     )
