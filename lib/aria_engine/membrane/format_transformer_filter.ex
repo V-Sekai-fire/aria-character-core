@@ -13,7 +13,6 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
 
   require Logger
 
-  alias AriaEngine.Membrane.Format.MCPRequest
 
   def_input_pad :input,
     accepted_format: _any,

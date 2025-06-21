@@ -608,73 +608,8 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     end
   end
   
-  # Extract scheduled activities from planner state.
-  defp extract_scheduled_activities_from_state(state, activities) do
-    activities
-    |> Enum.map(fn activity ->
-      activity_id = activity["id"]
-      start_time = AriaEngine.StateV2.get_fact(state, activity_id, "start_time") || "PT0S"
-      duration_val = Map.get(activity, :duration)
-    duration =
-      cond do
-        is_map(duration_val) and Map.has_key?(duration_val, :start) and Map.has_key?(duration_val, :end) ->
-          duration_val
-        is_map(duration_val) ->
-          duration_val
-        is_binary(duration_val) ->
-          case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-            parsed when is_list(parsed) ->
-              keys = [:years, :months, :days, :hours, :minutes, :seconds]
-              map = Enum.into(parsed, %{})
-              %{
-                years: Map.get(map, :years, 0),
-                months: Map.get(map, :months, 0),
-                days: Map.get(map, :days, 0),
-                hours: Map.get(map, :hours, 0),
-                minutes: Map.get(map, :minutes, 0),
-                seconds: Map.get(map, :seconds, 0)
-              }
-            _ -> nil
-          end
-        true ->
-          nil
-      end
-      end_time =
-        case {start_time, duration} do
-          {s, %{hours: h, minutes: m, seconds: sec}} when is_binary(s) ->
-            case :iso8601.parse_duration(String.to_charlist(s)) do
-              parsed when is_list(parsed) ->
-                start_map = Enum.into(parsed, %{})
-                total_seconds =
-                  (start_map[:hours] || 0) * 3600 + (start_map[:minutes] || 0) * 60 + (start_map[:seconds] || 0) +
-                  h * 3600 + m * 60 + sec
-                AriaEngine.Utils.duration_to_string(%{hours: div(total_seconds, 3600), minutes: div(rem(total_seconds, 3600), 60), seconds: rem(total_seconds, 60)})
-              _ -> s
-            end
-          _ -> start_time
-        end
-      
-      Map.merge(activity, %{
-        start_time: start_time,
-        end_time: end_time,
-        duration: duration
-      })
-    end)
-  end
   
   
-  # Update planner state with fixed timing information.
-  defp update_state_with_fixed_timing(state, fixed_activities) do
-    Enum.reduce(fixed_activities, state, fn activity, acc_state ->
-      activity_id = activity["id"]
-      start_time = Map.get(activity, :start_time, "PT0S")
-      end_time = Map.get(activity, :end_time, "PT0S")
-      acc_state
-      |> AriaEngine.StateV2.set_fact(activity_id, "start_time", start_time)
-      |> AriaEngine.StateV2.set_fact(activity_id, "end_time", end_time)
-      |> AriaEngine.StateV2.set_fact(activity_id, "timing_fixed", true)
-    end)
-  end
 
   # Convert activity duration to proper durative action duration format
   defp convert_to_durative_duration(duration_val) do

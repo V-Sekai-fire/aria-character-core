@@ -236,19 +236,6 @@ defmodule AriaEngine.PlannerAdapter do
 
   # ==================== PRIVATE HELPER FUNCTIONS ====================
 
-  # Apply temporal validation to a solution tree using HybridCoordinator's temporal engine
-  defp apply_temporal_validation(solution_tree,_domain, opts) do
-    try do
-      # Create a planning context for temporal validation
-      _context = HybridPlanner.DataStructures.PlanningContext.new(opts)
-      # HybridCoordinatorV2 does not expose a direct TemporalEngine; skip or adapt as needed.
-      {:ok, solution_tree}
-      # If temporal validation is needed, implement using V2's temporal_strategy.
-      # See HybridCoordinatorV2.add_temporal_constraints_to_plan/4 and .temporal_strategy.validate_temporal_consistency/2
-    rescue
-      e -> {:error, "Temporal validation error: #{Exception.message(e)}"}
-    end
-  end
 
   # Convert Plan module todos to HybridCoordinator goals format
   defp convert_todos_to_goals(todos) when is_list(todos) do

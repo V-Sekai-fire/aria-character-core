@@ -10,7 +10,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
   require Logger
 
   alias AriaEngine.Membrane.{MCPSource, FormatTransformerFilter, MCPSink}
-  alias Membrane.Pipeline
 
   @type pipeline_config :: %{
     topology: :linear | :parallel | :multi_strategy | :custom,
