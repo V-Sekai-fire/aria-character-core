@@ -344,7 +344,7 @@ defmodule AriaEngine.Membrane.MCPSourceTest do
       
       # Wait for buffer to be processed
       assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %MCPRequest{
-        schedule_name: "integration_test"
+        tool_name: "schedule_activities"
       }})
       
       status = MCPSource.get_status(pipeline, :mcp_source)

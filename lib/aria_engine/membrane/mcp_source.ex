@@ -120,7 +120,7 @@ defmodule AriaEngine.Membrane.MCPSource do
   end
 
   @impl true
-  def handle_demand(:output, size, _ctx, state) do
+  def handle_demand(:output, size, :buffers, _ctx, state) do
     Logger.debug("MCPSource received demand for #{size} buffers")
     
     new_state = %{state | demand: state.demand + size}

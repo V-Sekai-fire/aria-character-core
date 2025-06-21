@@ -4,13 +4,35 @@
 defmodule AriaEngine.Membrane.ScheduleFilterTest do
   use ExUnit.Case, async: true
 
-  import Membrane.Testing.Assertions
-
   alias AriaEngine.Membrane.ScheduleFilter
   alias AriaEngine.Membrane.Format.{MCPRequest, PlanningParams}
-  alias Membrane.Testing
+  alias Membrane.Buffer
 
-  describe "ScheduleFilter" do
+  describe "ScheduleFilter initialization" do
+    test "initializes with default options" do
+      # Test basic initialization
+      assert {[], _state} = ScheduleFilter.handle_init(nil, %{
+        telemetry_prefix: [:aria_engine, :membrane, :schedule_filter],
+        strict_validation: true,
+        allow_non_schedule_requests: false
+      })
+    end
+
+    test "initializes with custom options" do
+      # Test initialization with custom options
+      assert {[], state} = ScheduleFilter.handle_init(nil, %{
+        telemetry_prefix: [:test, :schedule_filter],
+        strict_validation: false,
+        allow_non_schedule_requests: true
+      })
+      
+      assert state.strict_validation == false
+      assert state.allow_non_schedule_requests == true
+      assert state.telemetry_prefix == [:test, :schedule_filter]
+    end
+  end
+
+  describe "ScheduleFilter processes valid schedule_activities requests" do
     test "processes valid schedule_activities requests" do
       # Create a valid schedule_activities MCPRequest
       {:ok, mcp_request} = MCPRequest.from_tool_call(
@@ -41,34 +63,27 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
         %{}
       )
 
-      # Set up pipeline with ScheduleFilter
-      pipeline = Testing.Pipeline.start_link_supervised!()
-
-      children = [
-        child(:source, %Testing.Source{
-          output: [mcp_request]
-        })
-        |> child(:schedule_filter, ScheduleFilter)
-        |> child(:sink, Testing.Sink)
-      ]
-
-      Testing.Pipeline.execute_actions(pipeline, spec: children)
-
-      # Wait for processing
-      assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %PlanningParams{}})
-
-      # Get the result
-      sink_buffers = Testing.Pipeline.get_child_buffers(pipeline, :sink)
-      assert [%Membrane.Buffer{payload: planning_params}] = sink_buffers
-
-      # Verify the conversion
-      assert %PlanningParams{} = planning_params
+      # Initialize filter state
+      {[], state} = ScheduleFilter.handle_init(nil, %{
+        telemetry_prefix: [:test, :schedule_filter],
+        strict_validation: true,
+        allow_non_schedule_requests: false
+      })
+      
+      # Process buffer
+      buffer = %Buffer{payload: mcp_request}
+      {[buffer: {:output, output_buffer}], new_state} = ScheduleFilter.handle_buffer(:input, buffer, nil, state)
+      
+      # Verify output
+      assert %Buffer{payload: %PlanningParams{} = planning_params} = output_buffer
       assert planning_params.request_id == "test_req_123"
       assert planning_params.conversion_metadata.original_tool == "schedule_activities"
       assert planning_params.conversion_metadata.activities_count == 1
       assert planning_params.conversion_metadata.entities_count == 1
-
-      Testing.Pipeline.terminate(pipeline)
+      
+      # Verify state updates
+      assert new_state.processed_count == 1
+      assert new_state.schedule_count == 1
     end
 
     test "rejects non-schedule_activities requests" do
@@ -84,34 +99,27 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
         %{}
       )
 
-      # Set up pipeline with ScheduleFilter
-      pipeline = Testing.Pipeline.start_link_supervised!()
-
-      children = [
-        child(:source, %Testing.Source{
-          output: [mcp_request]
-        })
-        |> child(:schedule_filter, ScheduleFilter)
-        |> child(:sink, Testing.Sink)
-      ]
-
-      Testing.Pipeline.execute_actions(pipeline, spec: children)
-
-      # Wait for processing
-      assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %PlanningParams{}})
-
-      # Get the result
-      sink_buffers = Testing.Pipeline.get_child_buffers(pipeline, :sink)
-      assert [%Membrane.Buffer{payload: planning_params}] = sink_buffers
-
-      # Verify it's an error response
-      assert %PlanningParams{} = planning_params
+      # Initialize filter state
+      {[], state} = ScheduleFilter.handle_init(nil, %{
+        telemetry_prefix: [:test, :schedule_filter],
+        strict_validation: true,
+        allow_non_schedule_requests: false
+      })
+      
+      # Process buffer
+      buffer = %Buffer{payload: mcp_request}
+      {[buffer: {:output, output_buffer}], new_state} = ScheduleFilter.handle_buffer(:input, buffer, nil, state)
+      
+      # Verify output is an error response
+      assert %Buffer{payload: %PlanningParams{} = planning_params} = output_buffer
       assert planning_params.request_id == "test_req_456"
       assert planning_params.conversion_metadata.error == true
       assert planning_params.conversion_metadata.error_type == :rejected
       assert planning_params.options[:error] == true
-
-      Testing.Pipeline.terminate(pipeline)
+      
+      # Verify state updates
+      assert new_state.processed_count == 1
+      assert new_state.rejected_count == 1
     end
 
     test "handles invalid schedule parameters with strict validation" do
@@ -129,34 +137,27 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
         %{}
       )
 
-      # Set up pipeline with strict validation enabled
-      pipeline = Testing.Pipeline.start_link_supervised!()
-
-      children = [
-        child(:source, %Testing.Source{
-          output: [mcp_request]
-        })
-        |> child(:schedule_filter, %ScheduleFilter{strict_validation: true})
-        |> child(:sink, Testing.Sink)
-      ]
-
-      Testing.Pipeline.execute_actions(pipeline, spec: children)
-
-      # Wait for processing
-      assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %PlanningParams{}})
-
-      # Get the result
-      sink_buffers = Testing.Pipeline.get_child_buffers(pipeline, :sink)
-      assert [%Membrane.Buffer{payload: planning_params}] = sink_buffers
-
-      # Verify it's an error response
-      assert %PlanningParams{} = planning_params
+      # Initialize filter state with strict validation enabled
+      {[], state} = ScheduleFilter.handle_init(nil, %{
+        telemetry_prefix: [:test, :schedule_filter],
+        strict_validation: true,
+        allow_non_schedule_requests: false
+      })
+      
+      # Process buffer
+      buffer = %Buffer{payload: mcp_request}
+      {[buffer: {:output, output_buffer}], new_state} = ScheduleFilter.handle_buffer(:input, buffer, nil, state)
+      
+      # Verify output is an error response
+      assert %Buffer{payload: %PlanningParams{} = planning_params} = output_buffer
       assert planning_params.request_id == "test_req_789"
       assert planning_params.conversion_metadata.error == true
       assert planning_params.conversion_metadata.error_type == :validation_error
       assert planning_params.options[:error] == true
-
-      Testing.Pipeline.terminate(pipeline)
+      
+      # Verify state updates
+      assert new_state.processed_count == 1
+      assert new_state.error_count == 1
     end
 
     test "allows invalid parameters with strict validation disabled" do
@@ -174,33 +175,26 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
         %{}
       )
 
-      # Set up pipeline with strict validation disabled
-      pipeline = Testing.Pipeline.start_link_supervised!()
-
-      children = [
-        child(:source, %Testing.Source{
-          output: [mcp_request]
-        })
-        |> child(:schedule_filter, %ScheduleFilter{strict_validation: false})
-        |> child(:sink, Testing.Sink)
-      ]
-
-      Testing.Pipeline.execute_actions(pipeline, spec: children)
-
-      # Wait for processing
-      assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %PlanningParams{}})
-
-      # Get the result
-      sink_buffers = Testing.Pipeline.get_child_buffers(pipeline, :sink)
-      assert [%Membrane.Buffer{payload: planning_params}] = sink_buffers
-
-      # Verify it processed without validation error
-      assert %PlanningParams{} = planning_params
+      # Initialize filter state with strict validation disabled
+      {[], state} = ScheduleFilter.handle_init(nil, %{
+        telemetry_prefix: [:test, :schedule_filter],
+        strict_validation: false,
+        allow_non_schedule_requests: false
+      })
+      
+      # Process buffer
+      buffer = %Buffer{payload: mcp_request}
+      {[buffer: {:output, output_buffer}], new_state} = ScheduleFilter.handle_buffer(:input, buffer, nil, state)
+      
+      # Verify output processed without validation error
+      assert %Buffer{payload: %PlanningParams{} = planning_params} = output_buffer
       assert planning_params.request_id == "test_req_lenient"
       # Should not be an error since validation is disabled
       refute planning_params.conversion_metadata[:error]
-
-      Testing.Pipeline.terminate(pipeline)
+      
+      # Verify state updates
+      assert new_state.processed_count == 1
+      assert new_state.schedule_count == 1
     end
 
     test "handles legacy format MCPRequest" do
@@ -221,32 +215,25 @@ defmodule AriaEngine.Membrane.ScheduleFilterTest do
         "test_req_legacy"
       )
 
-      # Set up pipeline
-      pipeline = Testing.Pipeline.start_link_supervised!()
-
-      children = [
-        child(:source, %Testing.Source{
-          output: [mcp_request]
-        })
-        |> child(:schedule_filter, ScheduleFilter)
-        |> child(:sink, Testing.Sink)
-      ]
-
-      Testing.Pipeline.execute_actions(pipeline, spec: children)
-
-      # Wait for processing
-      assert_sink_buffer(pipeline, :sink, %Membrane.Buffer{payload: %PlanningParams{}})
-
-      # Get the result
-      sink_buffers = Testing.Pipeline.get_child_buffers(pipeline, :sink)
-      assert [%Membrane.Buffer{payload: planning_params}] = sink_buffers
-
+      # Initialize filter state
+      {[], state} = ScheduleFilter.handle_init(nil, %{
+        telemetry_prefix: [:test, :schedule_filter],
+        strict_validation: true,
+        allow_non_schedule_requests: false
+      })
+      
+      # Process buffer
+      buffer = %Buffer{payload: mcp_request}
+      {[buffer: {:output, output_buffer}], new_state} = ScheduleFilter.handle_buffer(:input, buffer, nil, state)
+      
       # Verify the conversion
-      assert %PlanningParams{} = planning_params
+      assert %Buffer{payload: %PlanningParams{} = planning_params} = output_buffer
       assert planning_params.request_id == "test_req_legacy"
       assert planning_params.conversion_metadata.legacy_format == true
-
-      Testing.Pipeline.terminate(pipeline)
+      
+      # Verify state updates
+      assert new_state.processed_count == 1
+      assert new_state.schedule_count == 1
     end
   end
 

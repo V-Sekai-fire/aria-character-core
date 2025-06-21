@@ -336,14 +336,14 @@ defmodule AriaEngine.Membrane.PipelineManager do
       elements: [
         %{type: MCPSource, id: :mcp_source, config: %{}},
         %{type: AriaEngine.Membrane.PlanFilter, id: :plan_filter, config: %{}},
-        %{type: FormatTransformerFilter, id: :format_transformer, config: %{mock_scenario: :success}},
+        %{type: AriaEngine.Membrane.PlannerFilter, id: :planner_filter, config: %{timeout_ms: 30_000}},
         %{type: ResponseFilter, id: :response_filter, config: %{}},
         %{type: MCPSink, id: :mcp_sink, config: %{}}
       ],
       connections: [
         %{from: {:mcp_source, :output}, to: {:plan_filter, :input}},
-        %{from: {:plan_filter, :output}, to: {:format_transformer, :input}},
-        %{from: {:format_transformer, :output}, to: {:response_filter, :input}},
+        %{from: {:plan_filter, :output}, to: {:planner_filter, :input}},
+        %{from: {:planner_filter, :output}, to: {:response_filter, :input}},
         %{from: {:response_filter, :output}, to: {:mcp_sink, :input}}
       ],
       supervision_strategy: :one_for_one

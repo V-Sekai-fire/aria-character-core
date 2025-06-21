@@ -30,6 +30,7 @@ files_to_compile = [
   "lib/aria_engine/membrane/mcp_source.ex",
   "lib/aria_engine/membrane/mcp_sink.ex",
   "lib/aria_engine/membrane/plan_filter.ex",
+  "lib/aria_engine/membrane/planner_filter.ex",
   "lib/aria_engine/membrane/format_transformer_filter.ex",
   "lib/aria_engine/membrane/pipeline_manager.ex"
 ]
