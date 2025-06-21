@@ -9,7 +9,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
   use GenServer
   require Logger
 
-  alias AriaEngine.Membrane.{MCPSource, FormatTransformerFilter, MCPSink, ScheduleFilter, ResponseFilter}
+  alias AriaEngine.Membrane.{MCPSource, FormatTransformerFilter, MCPSink}
   alias Membrane.Pipeline
 
   @type pipeline_config :: %{
@@ -294,6 +294,24 @@ defmodule AriaEngine.Membrane.PipelineManager do
     end
   end
 
+  # Pipeline 1: Simplest - Direct MCPSource -> FormatTransformer -> MCPSink
+  defp get_predefined_config(:direct_pipeline) do
+    %{
+      topology: :direct_passthrough,
+      elements: [
+        %{type: MCPSource, id: :source, config: %{}},
+        %{type: FormatTransformerFilter, id: :passthrough, config: %{mock_scenario: :mcp_request_to_response}},
+        %{type: MCPSink, id: :sink, config: %{}}
+      ],
+      connections: [
+        %{from: {:source, :output}, to: {:passthrough, :input}},
+        %{from: {:passthrough, :output}, to: {:sink, :input}}
+      ],
+      supervision_strategy: :one_for_one
+    }
+  end
+
+  # Pipeline 2: Simple echo - MCPSource -> FormatTransformerFilter -> MCPSink
   defp get_predefined_config(:echo_pipeline) do
     %{
       topology: :echo_testing,
@@ -310,7 +328,70 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
+  # Pipeline 3: MCP filtering - MCPSource -> MCPScheduleFilter -> FormatTransformer -> MCPSink
+  defp get_predefined_config(:mcp_filter_pipeline) do
+    %{
+      topology: :mcp_filtering,
+      elements: [
+        %{type: MCPSource, id: :source, config: %{}},
+        %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_filter, config: %{strict_filtering: false}},
+        %{type: FormatTransformerFilter, id: :format_converter, config: %{mock_scenario: :mcp_request_to_response}},
+        %{type: MCPSink, id: :sink, config: %{}}
+      ],
+      connections: [
+        %{from: {:source, :output}, to: {:mcp_filter, :input}},
+        %{from: {:mcp_filter, :output}, to: {:format_converter, :input}},
+        %{from: {:format_converter, :output}, to: {:sink, :input}}
+      ],
+      supervision_strategy: :one_for_one
+    }
+  end
 
+  # Pipeline 4: Schedule processing - MCPSource -> MCPScheduleFilter -> SchedulePlannerFilter -> FormatTransformer -> MCPSink
+  defp get_predefined_config(:schedule_transform_pipeline) do
+    %{
+      topology: :schedule_transformation,
+      elements: [
+        %{type: MCPSource, id: :source, config: %{}},
+        %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_filter, config: %{}},
+        %{type: AriaEngine.Membrane.SchedulePlannerFilter, id: :schedule_filter, config: %{strict_validation: false}},
+        %{type: FormatTransformerFilter, id: :format_converter, config: %{mock_scenario: :planning_params_to_response}},
+        %{type: MCPSink, id: :sink, config: %{}}
+      ],
+      connections: [
+        %{from: {:source, :output}, to: {:mcp_filter, :input}},
+        %{from: {:mcp_filter, :output}, to: {:schedule_filter, :input}},
+        %{from: {:schedule_filter, :output}, to: {:format_converter, :input}},
+        %{from: {:format_converter, :output}, to: {:sink, :input}}
+      ],
+      supervision_strategy: :one_for_one
+    }
+  end
+
+  # Pipeline 5: Mock planning - MCPSource -> MCPScheduleFilter -> SchedulePlannerFilter -> FormatTransformerFilter -> PlannerMCPFilter -> MCPSink
+  defp get_predefined_config(:mock_planning_pipeline) do
+    %{
+      topology: :mock_planning,
+      elements: [
+        %{type: MCPSource, id: :source, config: %{}},
+        %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_filter, config: %{}},
+        %{type: AriaEngine.Membrane.SchedulePlannerFilter, id: :schedule_filter, config: %{strict_validation: false}},
+        %{type: FormatTransformerFilter, id: :mock_planner, config: %{mock_scenario: :planning_success}},
+        %{type: AriaEngine.Membrane.PlannerMCPFilter, id: :response_filter, config: %{}},
+        %{type: MCPSink, id: :sink, config: %{}}
+      ],
+      connections: [
+        %{from: {:source, :output}, to: {:mcp_filter, :input}},
+        %{from: {:mcp_filter, :output}, to: {:schedule_filter, :input}},
+        %{from: {:schedule_filter, :output}, to: {:mock_planner, :input}},
+        %{from: {:mock_planner, :output}, to: {:response_filter, :input}},
+        %{from: {:response_filter, :output}, to: {:sink, :input}}
+      ],
+      supervision_strategy: :one_for_one
+    }
+  end
+
+  # Pipeline 6: Full schedule pipeline - MCPSource -> MCPScheduleFilter -> SchedulePlannerFilter -> PlannerFilter -> PlannerMCPFilter -> MCPSink
   defp get_predefined_config(:schedule_pipeline) do
     %{
       topology: :schedule_processing,

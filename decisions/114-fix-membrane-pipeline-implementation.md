@@ -51,6 +51,8 @@ Fix the Membrane pipeline implementation to achieve full functionality and pass 
 - [x] MCPSource not sending buffers when receiving MCP requests
 - [x] Pipeline configuration messages not updating state properly
 - [x] Demand-based flow control not working correctly
+- [x] Format compatibility issues between pipeline elements identified
+- [x] FormatTransformerFilter integration added to pipeline configurations
 
 **Specific Problems:**
 ```elixir
@@ -160,6 +162,16 @@ assert status.pipeline_config == config  # Fails: left: %{}, right: %{...}
 
 ## Implementation Strategy
 
+### Updated Approach: Focus on STDIO MCP Testing
+
+**Decision**: After implementing format conversion filters and analyzing the complexity of the Membrane pipeline testing approach, we've decided to focus on **stdio MCP in, stdio MCP out** testing strategy instead of complex pipeline validation scripts.
+
+**Rationale**:
+- Pipeline configurations now have proper format conversion filters
+- STDIO MCP testing provides more direct, reliable testing approach
+- Existing `scripts/stdio_mcp_end_to_end_test.exs` already provides effective testing framework
+- Reduces complexity while maintaining comprehensive testing coverage
+
 ### Debugging Approach
 
 1. **Start with MCPSource**: Fix the most basic element first
@@ -167,6 +179,7 @@ assert status.pipeline_config == config  # Fails: left: %{}, right: %{...}
 3. **Follow Message Flow**: Trace messages through the entire pipeline
 4. **Use Membrane Debugging**: Leverage Membrane's built-in debugging tools
 5. **Incremental Testing**: Fix one test at a time
+6. **STDIO MCP Testing**: Use stdio MCP approach for end-to-end validation
 
 ### Development Process
 
@@ -174,7 +187,7 @@ assert status.pipeline_config == config  # Fails: left: %{}, right: %{...}
 2. **Verify element-to-element communication**
 3. **Complete missing implementations**
 4. **Fix all failing tests**
-5. **Add comprehensive integration tests**
+5. **Add comprehensive integration tests using STDIO MCP approach**
 
 ## Related ADRs
 
