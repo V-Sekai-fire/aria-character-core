@@ -47,7 +47,7 @@ defmodule TemporalPlannerSTNBridgeTest do
         Logger.debug("Constructed timeline: #{inspect(timeline)}")
 
         # 6. Check Timeline consistency (example: check for non-overlapping actions, valid durations, etc.)
-        assert timeline != nil,
+        assert is_tuple(timeline) and tuple_size(timeline) == 2,
                "Timeline should be constructed for unified temporal/non-temporal plan"
 
       # Optionally, add more timeline-specific assertions here

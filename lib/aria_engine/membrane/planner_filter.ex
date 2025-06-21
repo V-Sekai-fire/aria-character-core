@@ -172,15 +172,27 @@ defmodule AriaEngine.Membrane.PlannerFilter do
       # Create a default coordinator and use it for planning
       coordinator = HybridCoordinatorV2.new_default()
       
-      case HybridCoordinatorV2.plan(coordinator, params.domain, params.state, params.goals) do
+      # Create a simple domain if none provided
+      domain = params.domain || create_default_domain()
+      
+      # Create a simple state if none provided
+      state = params.state || AriaEngine.StateV2.new()
+      
+      # Ensure goals is a list
+      goals = params.goals || []
+      
+      # Ensure options is a list
+      options = params.options || []
+      
+      case HybridCoordinatorV2.plan(coordinator, domain, state, goals, options) do
         {:ok, plan} ->
           {:ok,
            %{
              plan: plan,
              planning_method: "hybrid_coordinator_v2",
-             goals_processed: length(params.goals || []),
-             domain_info: extract_domain_info(params.domain),
-             state_info: extract_state_info(params.state)
+             goals_processed: length(goals),
+             domain_info: extract_domain_info(domain),
+             state_info: extract_state_info(state)
            }}
 
         {:error, reason} ->
@@ -191,6 +203,11 @@ defmodule AriaEngine.Membrane.PlannerFilter do
         Logger.error("Planning execution exception: #{inspect(error)}")
         {:error, "Planning execution exception: #{Exception.message(error)}"}
     end
+  end
+
+  # Create a minimal domain for testing
+  defp create_default_domain do
+    Domain.new("test_domain")
   end
 
   defp extract_strategy_info(plan_result) when is_map(plan_result) do
