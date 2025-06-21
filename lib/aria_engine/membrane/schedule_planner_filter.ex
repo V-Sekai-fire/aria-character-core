@@ -268,7 +268,14 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
         {:error, "activities list cannot be empty"}
         
       true ->
-        validate_activities(params["activities"])
+        with :ok <- validate_activities(params["activities"]),
+             :ok <- validate_entities(params["entities"]),
+             :ok <- validate_resources(params["resources"]),
+             :ok <- validate_optional_fields(params) do
+          :ok
+        else
+          {:error, reason} -> {:error, reason}
+        end
     end
   end
 
@@ -281,14 +288,6 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
     end
   end
 
-  defp valid_activity?(activity) when is_map(activity) do
-    Map.has_key?(activity, "id") and
-    Map.has_key?(activity, "name") and
-    is_binary(activity["id"]) and
-    is_binary(activity["name"])
-  end
-
-  defp valid_activity?(_), do: false
 
   defp create_error_planning_params(%MCPRequest{} = request, reason, error_type) do
     %PlanningParams{
@@ -348,4 +347,181 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
   end
 
   def validate_params(_), do: {:error, "Parameters must be a map"}
+
+  # ==================== ENHANCED VALIDATION FUNCTIONS ====================
+
+  defp validate_entities(entities) when is_list(entities) do
+    case Enum.find(entities, &(not valid_entity?(&1))) do
+      nil -> :ok
+      invalid_entity -> {:error, "Invalid entity: #{inspect(invalid_entity)}"}
+    end
+  end
+
+  defp valid_entity?(entity) when is_map(entity) do
+    has_required_fields = Map.has_key?(entity, "id") and
+                         Map.has_key?(entity, "type") and
+                         is_binary(entity["id"]) and
+                         is_binary(entity["type"])
+
+    has_valid_optional_fields = 
+      valid_entity_capabilities?(entity["capabilities"]) and
+      valid_entity_availability?(entity["availability"]) and
+      valid_entity_resources?(entity["resources_held"]) and
+      valid_entity_metadata?(entity["metadata"])
+
+    has_required_fields and has_valid_optional_fields
+  end
+
+  defp valid_entity?(_), do: false
+
+  defp valid_entity_capabilities?(nil), do: true
+  defp valid_entity_capabilities?(capabilities) when is_list(capabilities) do
+    Enum.all?(capabilities, &is_binary/1)
+  end
+  defp valid_entity_capabilities?(_), do: false
+
+  defp valid_entity_availability?(nil), do: true
+  defp valid_entity_availability?(availability) when is_binary(availability), do: true
+  defp valid_entity_availability?(availability) when is_map(availability) do
+    # Validate availability as time interval
+    (is_binary(availability["start"]) or is_nil(availability["start"])) and
+    (is_binary(availability["end"]) or is_nil(availability["end"]))
+  end
+  defp valid_entity_availability?(_), do: false
+
+  defp valid_entity_resources?(nil), do: true
+  defp valid_entity_resources?(resources) when is_list(resources) do
+    Enum.all?(resources, &is_binary/1)
+  end
+  defp valid_entity_resources?(_), do: false
+
+  defp valid_entity_metadata?(nil), do: true
+  defp valid_entity_metadata?(metadata) when is_map(metadata), do: true
+  defp valid_entity_metadata?(_), do: false
+
+  defp validate_resources(resources) when is_map(resources) do
+    case Enum.find(resources, fn {_key, resource} -> not valid_resource?(resource) end) do
+      nil -> :ok
+      {key, invalid_resource} -> {:error, "Invalid resource '#{key}': #{inspect(invalid_resource)}"}
+    end
+  end
+
+  defp valid_resource?(resource) when is_map(resource) do
+    has_valid_type = is_binary(resource["type"]) or is_nil(resource["type"])
+    has_valid_capacity = is_integer(resource["capacity"]) or is_nil(resource["capacity"])
+    has_valid_usage = is_integer(resource["current_usage"]) or is_nil(resource["current_usage"])
+    has_valid_constraints = is_map(resource["constraints"]) or is_nil(resource["constraints"])
+    has_valid_schedule = valid_resource_schedule?(resource["availability_schedule"])
+    has_valid_metadata = is_map(resource["metadata"]) or is_nil(resource["metadata"])
+
+    has_valid_type and has_valid_capacity and has_valid_usage and 
+    has_valid_constraints and has_valid_schedule and has_valid_metadata
+  end
+
+  defp valid_resource?(_), do: false
+
+  defp valid_resource_schedule?(nil), do: true
+  defp valid_resource_schedule?(schedule) when is_list(schedule) do
+    Enum.all?(schedule, fn slot ->
+      is_map(slot) and 
+      (is_binary(slot["start"]) or is_nil(slot["start"])) and
+      (is_binary(slot["end"]) or is_nil(slot["end"]))
+    end)
+  end
+  defp valid_resource_schedule?(_), do: false
+
+  defp validate_optional_fields(params) do
+    with :ok <- validate_simulation_options(params["simulation_options"]),
+         :ok <- validate_resource_management(params["resource_management"]),
+         :ok <- validate_pipeline_topology(params["pipeline_topology"]) do
+      :ok
+    else
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp validate_simulation_options(nil), do: :ok
+  defp validate_simulation_options(options) when is_map(options) do
+    valid_simulation_mode = is_boolean(options["simulation_mode"]) or is_nil(options["simulation_mode"])
+    valid_verbose = is_integer(options["verbose"]) or is_nil(options["verbose"])
+    valid_log_activities = is_boolean(options["log_activities"]) or is_nil(options["log_activities"])
+
+    if valid_simulation_mode and valid_verbose and valid_log_activities do
+      :ok
+    else
+      {:error, "Invalid simulation_options format"}
+    end
+  end
+  defp validate_simulation_options(_), do: {:error, "simulation_options must be a map"}
+
+  defp validate_resource_management(nil), do: :ok
+  defp validate_resource_management(management) when is_map(management) do
+    valid_check_capacity = is_boolean(management["check_capacity"]) or is_nil(management["check_capacity"])
+    valid_auto_allocate = is_boolean(management["auto_allocate"]) or is_nil(management["auto_allocate"])
+    valid_conflict_detection = is_boolean(management["conflict_detection"]) or is_nil(management["conflict_detection"])
+
+    if valid_check_capacity and valid_auto_allocate and valid_conflict_detection do
+      :ok
+    else
+      {:error, "Invalid resource_management format"}
+    end
+  end
+  defp validate_resource_management(_), do: {:error, "resource_management must be a map"}
+
+  defp validate_pipeline_topology(nil), do: :ok
+  defp validate_pipeline_topology(topology) when is_binary(topology), do: :ok
+  defp validate_pipeline_topology(_), do: {:error, "pipeline_topology must be a string"}
+
+  # Enhanced activity validation
+  defp valid_activity?(activity) when is_map(activity) do
+    has_required_fields = Map.has_key?(activity, "id") and
+                         is_binary(activity["id"])
+
+    has_valid_duration = valid_activity_duration?(activity["duration"])
+    has_valid_dependencies = valid_activity_dependencies?(activity["dependencies"])
+    has_valid_capabilities = valid_activity_capabilities?(activity["required_capabilities"])
+    has_valid_resources = valid_activity_resources?(activity["required_resources"])
+    has_valid_participants = valid_activity_participants?(activity["participants"])
+    has_valid_type = is_binary(activity["type"]) or is_nil(activity["type"])
+
+    has_required_fields and has_valid_duration and has_valid_dependencies and
+    has_valid_capabilities and has_valid_resources and has_valid_participants and has_valid_type
+  end
+
+  defp valid_activity_duration?(nil), do: false  # Duration is required
+  defp valid_activity_duration?(duration) when is_binary(duration) do
+    # ISO 8601 duration string
+    String.starts_with?(duration, "PT") or String.starts_with?(duration, "P")
+  end
+  defp valid_activity_duration?(duration) when is_map(duration) do
+    # Time interval with start/end
+    (is_binary(duration["start"]) or is_nil(duration["start"])) and
+    (is_binary(duration["end"]) or is_nil(duration["end"])) and
+    (not is_nil(duration["start"]) or not is_nil(duration["end"]))  # At least one must be present
+  end
+  defp valid_activity_duration?(_), do: false
+
+  defp valid_activity_dependencies?(nil), do: true
+  defp valid_activity_dependencies?(deps) when is_list(deps) do
+    Enum.all?(deps, &is_binary/1)
+  end
+  defp valid_activity_dependencies?(_), do: false
+
+  defp valid_activity_capabilities?(nil), do: true
+  defp valid_activity_capabilities?(caps) when is_list(caps) do
+    Enum.all?(caps, &is_binary/1)
+  end
+  defp valid_activity_capabilities?(_), do: false
+
+  defp valid_activity_resources?(nil), do: true
+  defp valid_activity_resources?(resources) when is_list(resources) do
+    Enum.all?(resources, &is_binary/1)
+  end
+  defp valid_activity_resources?(_), do: false
+
+  defp valid_activity_participants?(nil), do: true
+  defp valid_activity_participants?(participants) when is_list(participants) do
+    Enum.all?(participants, &is_binary/1)
+  end
+  defp valid_activity_participants?(_), do: false
 end

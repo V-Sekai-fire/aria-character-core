@@ -409,7 +409,7 @@ defmodule AriaEngine.MCPToolsV2 do
 
   # Input schemas
 
-  defp get_input_schema(:configure_pipeline_layout) do
+  def get_input_schema(:configure_pipeline_layout) do
     %{
       "type" => "object",
       "properties" => %{
@@ -463,7 +463,7 @@ defmodule AriaEngine.MCPToolsV2 do
     }
   end
 
-  defp get_input_schema(:setup_element_config) do
+  def get_input_schema(:setup_element_config) do
     %{
       "type" => "object",
       "properties" => %{
@@ -481,7 +481,7 @@ defmodule AriaEngine.MCPToolsV2 do
     }
   end
 
-  defp get_input_schema(:start_planning_pipeline) do
+  def get_input_schema(:start_planning_pipeline) do
     %{
       "type" => "object",
       "properties" => %{
@@ -495,7 +495,7 @@ defmodule AriaEngine.MCPToolsV2 do
     }
   end
 
-  defp get_input_schema(:stop_planning_pipeline) do
+  def get_input_schema(:stop_planning_pipeline) do
     %{
       "type" => "object",
       "properties" => %{
@@ -508,7 +508,7 @@ defmodule AriaEngine.MCPToolsV2 do
     }
   end
 
-  defp get_input_schema(:get_pipeline_status) do
+  def get_input_schema(:get_pipeline_status) do
     %{
       "type" => "object",
       "properties" => %{
@@ -521,7 +521,7 @@ defmodule AriaEngine.MCPToolsV2 do
     }
   end
 
-  defp get_input_schema(:get_pipeline_metrics) do
+  def get_input_schema(:get_pipeline_metrics) do
     %{
       "type" => "object",
       "properties" => %{},
@@ -529,7 +529,7 @@ defmodule AriaEngine.MCPToolsV2 do
     }
   end
 
-  defp get_input_schema(:schedule_activities) do
+  def get_input_schema(:schedule_activities) do
     %{
       "type" => "object",
       "properties" => %{
@@ -703,7 +703,7 @@ defmodule AriaEngine.MCPToolsV2 do
     }
   end
 
-  defp get_input_schema(:list_active_pipelines) do
+  def get_input_schema(:list_active_pipelines) do
     %{
       "type" => "object",
       "properties" => %{},
@@ -711,7 +711,7 @@ defmodule AriaEngine.MCPToolsV2 do
     }
   end
 
-  defp get_input_schema(:send_pipeline_request) do
+  def get_input_schema(:send_pipeline_request) do
     %{
       "type" => "object",
       "properties" => %{

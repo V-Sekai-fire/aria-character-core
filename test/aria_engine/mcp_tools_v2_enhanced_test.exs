@@ -8,20 +8,20 @@ defmodule AriaEngine.MCPToolsV2EnhancedTest do
   alias AriaEngine.Membrane.PipelineManager
   
   setup do
-    # Start the pipeline manager for each test
+    # Start the pipeline manager for testing
     case GenServer.start_link(PipelineManager, [], name: PipelineManager) do
-      {:ok, _pid} -> 
-        on_exit(fn -> 
-          try do
-            GenServer.stop(PipelineManager)
-          rescue
-            _ -> :ok
-          end
-        end)
-        :ok
-      {:error, {:already_started, _pid}} -> 
-        :ok
+      {:ok, _pid} -> :ok
+      {:error, {:already_started, _pid}} -> :ok
     end
+    
+    on_exit(fn ->
+      # Only stop if it's still running
+      if Process.whereis(PipelineManager) do
+        GenServer.stop(PipelineManager)
+      end
+    end)
+    
+    :ok
   end
   
   describe "enhanced schedule_activities schema" do

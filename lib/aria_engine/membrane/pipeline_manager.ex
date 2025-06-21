@@ -414,6 +414,44 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
+  # Pipeline 7: Plan transformation - MCPSource -> PlanFilter -> FormatTransformerFilter -> MCPSink
+  defp get_predefined_config(:plan_transform_pipeline) do
+    %{
+      topology: :plan_transformation,
+      elements: [
+        %{type: MCPSource, id: :source, config: %{}},
+        %{type: AriaEngine.Membrane.PlanFilter, id: :plan_filter, config: %{}},
+        %{type: FormatTransformerFilter, id: :format_transformer, config: %{mock_scenario: :planning_params_to_response}},
+        %{type: MCPSink, id: :sink, config: %{}}
+      ],
+      connections: [
+        %{from: {:source, :output}, to: {:plan_filter, :input}},
+        %{from: {:plan_filter, :output}, to: {:format_transformer, :input}},
+        %{from: {:format_transformer, :output}, to: {:sink, :input}}
+      ],
+      supervision_strategy: :one_for_one
+    }
+  end
+
+  # Pipeline 8: Full pipeline - MCPSource -> SchedulePlannerFilter -> PlannerFilter -> MCPSink
+  defp get_predefined_config(:full_pipeline) do
+    %{
+      topology: :full_processing,
+      elements: [
+        %{type: MCPSource, id: :source, config: %{}},
+        %{type: AriaEngine.Membrane.SchedulePlannerFilter, id: :schedule_filter, config: %{strict_validation: false}},
+        %{type: AriaEngine.Membrane.PlannerFilter, id: :planner_filter, config: %{timeout_ms: 30_000}},
+        %{type: MCPSink, id: :sink, config: %{}}
+      ],
+      connections: [
+        %{from: {:source, :output}, to: {:schedule_filter, :input}},
+        %{from: {:schedule_filter, :output}, to: {:planner_filter, :input}},
+        %{from: {:planner_filter, :output}, to: {:sink, :input}}
+      ],
+      supervision_strategy: :one_for_one
+    }
+  end
+
   defp get_predefined_config(topology) do
     Logger.warning("Unknown predefined topology: #{topology}, using default")
     get_predefined_config(:echo_pipeline)

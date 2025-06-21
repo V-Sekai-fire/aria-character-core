@@ -156,14 +156,16 @@ defmodule AriaEngine.Membrane.PlannerFilter do
 
   defp execute_planning(%PlanningParams{} = params) do
     try do
+      # Convert goals to activities for the scheduler
+      activities = convert_goals_to_activities(params.goals)
+      
       # Use the Scheduler which integrates with HybridCoordinatorV2
-      case Scheduler.schedule_activities(%{
-        "schedule_name" => params.request_id,
-        "activities" => convert_goals_to_activities(params.goals),
-        "entities" => [],
-        "resources" => %{},
-        "constraints" => %{}
-      }) do
+      case Scheduler.schedule_activities("planning_request", activities, [
+        entities: [],
+        resources: [],
+        constraints: %{},
+        simulation_mode: false
+      ]) do
         {:ok, schedule} ->
           {:ok, %{
             schedule: schedule,
@@ -185,13 +187,13 @@ defmodule AriaEngine.Membrane.PlannerFilter do
   defp convert_goals_to_activities(goals) when is_list(goals) do
     Enum.with_index(goals, fn goal, index ->
       %{
-        "id" => "goal_activity_#{index}",
-        "name" => "Goal #{index + 1}",
-        "duration" => %{
-          "start" => "2025-06-20T16:00:00Z",
-          "end" => "2025-06-20T17:00:00Z"
-        },
-        "goal_data" => goal
+        id: "goal_activity_#{index}",
+        name: "Goal #{index + 1}",
+        duration: 3600,  # 1 hour in seconds
+        dependencies: [],
+        required_capabilities: [],
+        required_resources: [],
+        goal_data: goal
       }
     end)
   end

@@ -25,6 +25,7 @@ files_to_compile = [
   "lib/aria_engine/membrane/format/planning_response.ex",
   "lib/aria_engine/membrane/format/planning_request.ex", 
   "lib/aria_engine/membrane/format/planning_params.ex",
+  "lib/aria_engine/membrane/format/planning_result.ex",
   "lib/aria_engine/membrane/format/mcp_request.ex",
   "lib/aria_engine/membrane/format/mcp_response.ex",
   "lib/aria_engine/membrane/mcp_source.ex",
@@ -454,7 +455,7 @@ defmodule PipelineFlowTest do
   defp test_plan_transform_pipeline() do
     Logger.info("Testing plan_transform_pipeline topology...")
     
-    case PipelineManager.create_testing_pipeline(:plan_transform_pipeline) do
+    case AriaEngine.Membrane.PipelineManager.create_testing_pipeline(:plan_transform_pipeline) do
       {:ok, pipeline_pid} ->
         Logger.info("✅ Pipeline created successfully: #{inspect(pipeline_pid)}")
         
@@ -467,16 +468,16 @@ defmodule PipelineFlowTest do
           "constraints" => %{}
         }
         
-        case PipelineManager.send_request_to_pipeline(pipeline_pid, test_params) do
+        case AriaEngine.Membrane.PipelineManager.send_request_to_pipeline(pipeline_pid, test_params) do
           :ok ->
             Logger.info("✅ Request sent to pipeline successfully")
             
             # Get pipeline status
-            status = PipelineManager.get_pipeline_status(pipeline_pid)
+            status = AriaEngine.Membrane.PipelineManager.get_pipeline_status(pipeline_pid)
             Logger.info("Pipeline status: #{inspect(status)}")
             
             # Clean up
-            PipelineManager.stop_pipeline(pipeline_pid)
+            AriaEngine.Membrane.PipelineManager.stop_pipeline(pipeline_pid)
             Logger.info("✅ Pipeline stopped successfully")
             
           {:error, reason} ->
