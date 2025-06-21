@@ -192,29 +192,24 @@ defmodule HybridPlanner.StrategyCoordinator do
           coordination_result()
   def coordinate(%__MODULE__{} = coordinator, domain, state, goals, opts \\ []) do
     # Apply middleware if present
-    result =
-      with {:ok, plan} <-
-             call_with_middleware(
-               coordinator.planning_fn,
-               [domain, state, goals, opts],
-               coordinator.middleware
-             ),
-           {:ok, validated_plan} <-
-             call_with_middleware(
-               coordinator.temporal_fn,
-               [plan, domain, opts],
-               coordinator.middleware
-             ),
-           {:ok, final_state} <-
-             call_with_middleware(
-               coordinator.execution_fn,
-               [domain, state, validated_plan, opts],
-               coordinator.middleware
-             ) do
-        {:ok, final_state}
-      end
-
-    result
+    with {:ok, plan} <-
+           call_with_middleware(
+             coordinator.planning_fn,
+             [domain, state, goals, opts],
+             coordinator.middleware
+           ),
+         {:ok, validated_plan} <-
+           call_with_middleware(
+             coordinator.temporal_fn,
+             [plan, domain, opts],
+             coordinator.middleware
+           ) do
+      call_with_middleware(
+        coordinator.execution_fn,
+        [domain, state, validated_plan, opts],
+        coordinator.middleware
+      )
+    end
   end
 
   @doc """
@@ -228,14 +223,12 @@ defmodule HybridPlanner.StrategyCoordinator do
              coordinator.planning_fn,
              [domain, state, goals, opts],
              coordinator.middleware
-           ),
-         {:ok, validated_plan} <-
-           call_with_middleware(
-             coordinator.temporal_fn,
-             [plan, domain, opts],
-             coordinator.middleware
            ) do
-      {:ok, validated_plan}
+      call_with_middleware(
+        coordinator.temporal_fn,
+        [plan, domain, opts],
+        coordinator.middleware
+      )
     end
   end
 

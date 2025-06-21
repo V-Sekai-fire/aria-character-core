@@ -151,10 +151,9 @@ defmodule Info do
 
     actions
     |> Enum.with_index()
-    |> Enum.map(fn {{action_name, args}, index} ->
+    |> Enum.map_join("\n", fn {{action_name, args}, index} ->
       "Step #{index + 1}: #{action_name}(#{inspect(args)})"
     end)
-    |> Enum.join("\n")
   end
 
   @doc """

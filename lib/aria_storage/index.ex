@@ -137,9 +137,8 @@ defmodule AriaStorage.Index do
   """
   def validate(%__MODULE__{} = index) do
     with :ok <- validate_chunks(index.chunks),
-         :ok <- validate_sizes(index),
-         :ok <- validate_checksum(index) do
-      :ok
+         :ok <- validate_sizes(index) do
+      validate_checksum(index)
     end
   end
 
@@ -220,9 +219,7 @@ defmodule AriaStorage.Index do
   end
 
   defp create_chunk_table(chunks) do
-    chunks
-    |> Enum.map(&serialize_chunk/1)
-    |> Enum.join()
+    Enum.map_join(chunks, "", &serialize_chunk/1)
   end
 
   defp serialize_chunk(chunk) do

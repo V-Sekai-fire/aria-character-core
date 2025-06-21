@@ -253,10 +253,7 @@ defmodule AriaEngine.PngGenerator do
   end
 
   defp create_plte_chunk(palette) do
-    data =
-      palette
-      |> Enum.map(fn {r, g, b} -> <<r::8, g::8, b::8>> end)
-      |> Enum.join()
+    data = Enum.map_join(palette, "", fn {r, g, b} -> <<r::8, g::8, b::8>> end)
 
     create_chunk("PLTE", data)
   end
@@ -271,8 +268,7 @@ defmodule AriaEngine.PngGenerator do
         [0 | row]
       end)
       |> List.flatten()
-      |> Enum.map(&<<&1::8>>)
-      |> Enum.join()
+      |> Enum.map_join("", &<<&1::8>>)
 
     # Compress with zlib
     compressed = :zlib.compress(rows)

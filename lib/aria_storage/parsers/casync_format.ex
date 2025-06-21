@@ -1494,15 +1494,12 @@ defmodule AriaStorage.Parsers.CasyncFormat do
 
       hex_part =
         bytes
-        |> Enum.map(&(Integer.to_string(&1, 16) |> String.pad_leading(2, "0")))
-        |> Enum.join(" ")
+        |> Enum.map_join(" ", &(Integer.to_string(&1, 16) |> String.pad_leading(2, "0")))
         # 16 * 3 - 1 = 47
         |> String.pad_trailing(47)
 
       ascii_part =
-        bytes
-        |> Enum.map(fn b -> if b >= 32 and b <= 126, do: <<b>>, else: "." end)
-        |> Enum.join()
+        Enum.map_join(bytes, "", fn b -> if b >= 32 and b <= 126, do: <<b>>, else: "." end)
 
       Logger.debug(
         "#{Integer.to_string(offset, 16) |> String.pad_leading(8, "0") |> String.upcase()}: #{hex_part} |#{ascii_part}|"
