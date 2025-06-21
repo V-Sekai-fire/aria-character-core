@@ -766,12 +766,12 @@ end
 ```
 
 **Implementation Tasks**:
-- [ ] Implement PlanFilter with Membrane.Filter behavior
-- [ ] Add input/output pads with proper format specifications and bins
-- [ ] Integrate with existing CoreTransformer logic
-- [ ] Add telemetry events for monitoring
-- [ ] Handle transformation errors gracefully
-- [ ] Test filter element with various input scenarios
+- ~~[ ] Implement PlanFilter with Membrane.Filter behavior~~ **→ Moved to ADR-114**
+- ~~[ ] Add input/output pads with proper format specifications and bins~~ **→ Moved to ADR-114**
+- ~~[ ] Integrate with existing CoreTransformer logic~~ **→ Moved to ADR-114**
+- ~~[ ] Add telemetry events for monitoring~~ **→ Moved to ADR-114**
+- ~~[ ] Handle transformation errors gracefully~~ **→ Moved to ADR-114**
+- ~~[ ] Test filter element with various input scenarios~~ **→ Moved to ADR-114**
 
 ### Boot Level 4: Membrane Sink Element (Planner Sink)
 
@@ -903,12 +903,12 @@ end
 ```
 
 **Implementation Tasks**:
-- [ ] Implement PlannerSink with Membrane.Sink behavior
-- [ ] Add input pad with PlanningParams format and output pad with PlanningResult format
-- [ ] Integrate with HybridCoordinatorV2 for pure planning execution
-- [ ] Add telemetry events for performance monitoring
-- [ ] Handle planning errors and conversion errors gracefully
-- [ ] Test sink element with various planning scenarios
+- ~~[ ] Implement PlannerSink with Membrane.Sink behavior~~ **→ Moved to ADR-114**
+- ~~[ ] Add input pad with PlanningParams format and output pad with PlanningResult format~~ **→ Moved to ADR-114**
+- ~~[ ] Integrate with HybridCoordinatorV2 for pure planning execution~~ **→ Moved to ADR-114**
+- ~~[ ] Add telemetry events for performance monitoring~~ **→ Moved to ADR-114**
+- ~~[ ] Handle planning errors and conversion errors gracefully~~ **→ Moved to ADR-114**
+- ~~[ ] Test sink element with various planning scenarios~~ **→ Moved to ADR-114**
 
 ### Boot Level 5: Membrane Sink Element (MCP Response Formatter)
 
@@ -1021,12 +1021,12 @@ end
 ```
 
 **Implementation Tasks**:
-- [ ] Implement MCPSink with Membrane.Sink behavior
-- [ ] Add input pad with PlanningResult format
-- [ ] Implement MCP response formatting logic
-- [ ] Add result handler for sending responses back to MCP tools
-- [ ] Add telemetry for response formatting metrics
-- [ ] Test sink element with various planning results
+- ~~[ ] Implement MCPSink with Membrane.Sink behavior~~ **→ Moved to ADR-114**
+- ~~[ ] Add input pad with PlanningResult format~~ **→ Moved to ADR-114**
+- ~~[ ] Implement MCP response formatting logic~~ **→ Moved to ADR-114**
+- ~~[ ] Add result handler for sending responses back to MCP tools~~ **→ Moved to ADR-114**
+- ~~[ ] Add telemetry for response formatting metrics~~ **→ Moved to ADR-114**
+- ~~[ ] Test sink element with various planning results~~ **→ Moved to ADR-114**
 
 ### Boot Level 6: Pipeline Management and Topology Control
 
@@ -1402,6 +1402,7 @@ end
 - **ADR-089**: Migrate planner to StateV2 subject predicate fact
 - **ADR-086**: Implement durative actions
 - **ADR-105**: Reconnect scheduler to MCP (superseded by this pipeline approach)
+- **ADR-114**: Fix Membrane Pipeline Implementation and Testing (continuation of implementation work)
 
 ## Consequences
 
@@ -1446,46 +1447,33 @@ This Membrane Framework pipeline architecture provides a robust, scalable founda
 
 ### What Was Delivered
 
-1. **Complete Membrane Pipeline Architecture**: Implemented all 5 core pipeline elements with full test coverage
-   - MCPSource: 8/8 tests passing
-   - EchoFilter: 9/9 tests passing  
-   - ScheduleFilter: 9/9 tests passing
-   - ResponseFilter: 9/9 tests passing
-   - MCPSink: 9/9 tests passing
+1. **Membrane Pipeline Architecture**: Established the foundational architecture and design
+   - Membrane Framework integration
+   - Pipeline element structure and interfaces
+   - Format definitions (MCPRequest, PlanningParams, PlanningResult, MCPResponse)
+   - Basic element implementations (MCPSource, filters, sinks)
 
-2. **Pipeline Management System**: Full PipelineManager with lifecycle control
-   - Pipeline creation and destruction
-   - Dynamic topology configuration
-   - Process isolation and fault tolerance
-   - Telemetry and monitoring integration
-   - 17/17 tests passing
+2. **Pipeline Management Framework**: Core pipeline management structure
+   - PipelineManager design and interface
+   - Dynamic topology configuration framework
+   - Process isolation architecture
+   - Telemetry and monitoring framework
 
-3. **MCP Tools V2 Integration**: Updated MCP interface with pipeline support
-   - 9 new MCP tools for pipeline management
-   - Backward compatibility with existing MCP interface
-   - Pipeline-based `schedule_activities` implementation
-   - Element configuration validation
+3. **MCP Tools V2 Interface**: Updated MCP interface design
+   - Pipeline-based tool architecture
+   - Element configuration framework
+   - Integration patterns with existing MCP tools
 
-4. **Format Definitions**: Complete data format system
-   - MCPRequest, PlanningParams, PlanningResult, MCPResponse formats
-   - Proper Membrane format derivation
-   - Type safety and validation
+### Architecture Benefits Established
 
-### Key Achievements
+- **Process Isolation**: Framework for running pipeline elements in separate GenServer processes
+- **Fault Tolerance**: Architecture for handling individual element failures
+- **Testability**: Structure for testing each element in isolation
+- **Flexibility**: Framework for different pipeline configurations
+- **Monitoring**: Foundation for comprehensive telemetry
 
-- **Process Isolation**: Each pipeline element runs in separate GenServer processes
-- **Fault Tolerance**: Individual element failures don't crash the entire system
-- **Testing Framework**: Comprehensive test suite with 100% element coverage
-- **Pipeline Topologies**: Support for echo, full, and custom pipeline configurations
-- **Dynamic Reconfiguration**: Runtime pipeline topology changes
-- **Telemetry Integration**: Built-in performance monitoring and metrics
+### Implementation Status
 
-### Architecture Benefits Realized
+This ADR successfully established the **architecture and foundation** for the Membrane pipeline system. The detailed implementation work, debugging, and test fixes are continued in **ADR-114: Fix Membrane Pipeline Implementation and Testing**.
 
-- **Scalability**: Pipeline can handle concurrent requests through process isolation
-- **Maintainability**: Clean separation of concerns between data transformation and planning
-- **Testability**: Each element can be tested in complete isolation
-- **Flexibility**: EchoFilter enables testing without actual planning execution
-- **Monitoring**: Comprehensive telemetry for performance analysis
-
-This implementation successfully transforms the monolithic MCP architecture into a robust, scalable pipeline system that enables individual strategy testing and provides a foundation for future enhancements.
+**Next Steps**: See ADR-114 for completing the implementation and achieving full functionality.
