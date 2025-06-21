@@ -56,7 +56,7 @@ defmodule AriaEngine.MiniZinc.Executor do
     with {:ok, model_file} <- prepare_model_file(model_name, opts) do
       args = build_minizinc_args(model_file, opts)
       
-      Logger.info("🔧 Spawning MiniZinc: minizinc #{Enum.join(args, " ")}")
+      Logger.debug("🔧 Spawning MiniZinc: minizinc #{Enum.join(args, " ")}")
       
       proc = Porcelain.spawn("minizinc", args, opts[:porcelain_opts] || [])
       
@@ -140,7 +140,7 @@ defmodule AriaEngine.MiniZinc.Executor do
         temp_file = Path.join(opts[:temp_dir], "#{template_name}_#{:rand.uniform(10000)}.mzn")
         File.write!(temp_file, rendered_content)
         
-        Logger.info("🔧 Rendered template #{template_name} to #{temp_file}")
+        Logger.debug("🔧 Rendered template #{template_name} to #{temp_file}")
         {:ok, temp_file}
         
       rescue
@@ -174,7 +174,7 @@ defmodule AriaEngine.MiniZinc.Executor do
   defp execute_minizinc(model_file, opts) do
     args = build_minizinc_args(model_file, opts)
     
-    Logger.info("🔧 Executing MiniZinc: minizinc #{Enum.join(args, " ")}")
+    Logger.debug("🔧 Executing MiniZinc: minizinc #{Enum.join(args, " ")}")
     
     start_time = System.monotonic_time(:millisecond)
     
@@ -185,7 +185,7 @@ defmodule AriaEngine.MiniZinc.Executor do
     
     case result do
       %{status: 0, out: output} ->
-        Logger.info("✅ MiniZinc completed in #{solve_time}ms")
+        Logger.debug("✅ MiniZinc completed in #{solve_time}ms")
         
         parsed_solution = parse_minizinc_output(output)
         
