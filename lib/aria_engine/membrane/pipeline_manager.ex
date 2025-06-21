@@ -310,45 +310,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
-  defp get_predefined_config(:full_pipeline) do
-    %{
-      topology: :full_processing,
-      elements: [
-        %{type: MCPSource, id: :source, config: %{}},
-        %{type: ScheduleFilter, id: :schedule, config: %{}},
-        %{type: FormatTransformerFilter, id: :planner, config: %{mock_scenario: :success}},
-        %{type: ResponseFilter, id: :response, config: %{}},
-        %{type: MCPSink, id: :sink, config: %{}}
-      ],
-      connections: [
-        %{from: {:source, :output}, to: {:schedule, :input}},
-        %{from: {:schedule, :output}, to: {:planner, :input}},
-        %{from: {:planner, :output}, to: {:response, :input}},
-        %{from: {:response, :output}, to: {:sink, :input}}
-      ],
-      supervision_strategy: :one_for_one
-    }
-  end
-
-  defp get_predefined_config(:plan_transform_pipeline) do
-    %{
-      topology: :plan_transform_testing,
-      elements: [
-        %{type: MCPSource, id: :mcp_source, config: %{}},
-        %{type: AriaEngine.Membrane.PlanFilter, id: :plan_filter, config: %{}},
-        %{type: AriaEngine.Membrane.PlannerFilter, id: :planner_filter, config: %{timeout_ms: 30_000}},
-        %{type: ResponseFilter, id: :response_filter, config: %{}},
-        %{type: MCPSink, id: :mcp_sink, config: %{}}
-      ],
-      connections: [
-        %{from: {:mcp_source, :output}, to: {:plan_filter, :input}},
-        %{from: {:plan_filter, :output}, to: {:planner_filter, :input}},
-        %{from: {:planner_filter, :output}, to: {:response_filter, :input}},
-        %{from: {:response_filter, :output}, to: {:mcp_sink, :input}}
-      ],
-      supervision_strategy: :one_for_one
-    }
-  end
 
   defp get_predefined_config(:schedule_pipeline) do
     %{
