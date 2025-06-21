@@ -40,7 +40,6 @@ defmodule Domain do
   defdelegate new(name), to: Core
   defdelegate validate(domain), to: Core
 
-  defdelegate add_action(domain, name, action), to: Core
   defdelegate add_action(domain, name, action_fn, metadata \\ %{}), to: Actions
   defdelegate add_actions(domain, new_actions), to: Actions
   defdelegate get_action(domain, name), to: Actions
