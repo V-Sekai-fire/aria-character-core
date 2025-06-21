@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "aria-engine": {
+      "command": "mix",
+      "args": ["run", "--no-halt", "-e", "AriaEngine.MCPServer.start()"],
+      "cwd": "/home/ernest.lee/Developer/aria-character-core",
+      "env": {
+        "MIX_ENV": "dev"
+      }
+    }
+  }
+}
