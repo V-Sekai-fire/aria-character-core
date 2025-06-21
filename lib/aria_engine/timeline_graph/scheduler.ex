@@ -291,8 +291,8 @@ defmodule TimelineGraph.Scheduler do
             {TimeConverter.convert_to_stn_time(start_ms, timeline.time_unit),
              TimeConverter.convert_to_stn_time(end_ms, timeline.time_unit)}
           else
-            # Fallback for malformed intervals
-            {0, 1}
+            # Fallback for malformed intervals - 10 second range using LOD resolution
+            {0, 10 * timeline.stn.lod_resolution}
           end
       end
 
