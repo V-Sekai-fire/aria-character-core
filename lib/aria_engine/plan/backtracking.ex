@@ -155,11 +155,9 @@ defmodule Plan.Backtracking do
     end
   end
 
-  defp log_method_attempt(node, verbose) do
+  defp log_method_attempt(_node, verbose) do
     if verbose > 2 do
-      Logger.debug(
-        "DEBUG: try_alternative_method_for_task - node.method_tried: #{inspect(node.method_tried)}"
-      )
+      Logger.debug("Attempting alternative method for task")
     end
   end
 

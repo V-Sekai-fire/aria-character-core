@@ -95,9 +95,6 @@ defmodule Mix.Tasks.Aria.Validate do
           save_results_to_file(results, opts[:output])
         end
 
-      {:error, reason} ->
-        Mix.shell().error("❌ Validation failed: #{reason}")
-        System.halt(1)
     end
   end
 
@@ -271,7 +268,9 @@ defmodule Mix.Tasks.Aria.Validate do
     activities_list = if is_list(activities), do: activities, else: []
     entities_list = if is_list(entities), do: entities, else: []
 
-    # Call the scheduler
+    # Call the scheduler with deterministic base datetime
+    base_datetime = ~U[2025-01-01 00:00:00Z]
+    
     AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
       schedule_name,
       activities_list,
@@ -280,7 +279,8 @@ defmodule Mix.Tasks.Aria.Validate do
       constraints,
       simulation_mode,
       activity_log,
-      verbose
+      verbose,
+      base_datetime
     )
   end
 

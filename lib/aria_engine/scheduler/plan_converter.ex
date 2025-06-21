@@ -168,7 +168,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
       |> Enum.map(fn {activity, index} ->
         # Parse duration to get seconds - handle both string and atom keys
         duration_val = Map.get(activity, :duration) || Map.get(activity, "duration", "PT0S")
-        Logger.error("DEBUG: Activity #{inspect(Map.get(activity, :id) || Map.get(activity, "id"))} duration_val: #{inspect(duration_val)}")
         
         duration_seconds =
           case duration_val do
@@ -177,11 +176,9 @@ defmodule AriaEngine.Scheduler.PlanConverter do
                 parsed when is_list(parsed) ->
                   map = Enum.into(parsed, %{})
                   seconds = (map[:hours] || 0) * 3600 + (map[:minutes] || 0) * 60 + (map[:seconds] || 0)
-                  Logger.error("DEBUG: Parsed duration #{duration_str} to #{seconds} seconds")
                   seconds
 
                 _ ->
-                  Logger.error("DEBUG: Failed to parse duration #{duration_str}")
                   0
               end
 
@@ -190,7 +187,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
                 (duration_map[:seconds] || 0)
 
             _ ->
-              Logger.error("DEBUG: Unknown duration format: #{inspect(duration_val)}")
               0
           end
 
@@ -212,7 +208,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
           Map.get(activity, :dependencies, [])
         end
         
-        Logger.error("DEBUG: About to create interval for #{activity_id} with start_time: #{inspect(start_time)}, end_time: #{inspect(end_time)}")
         
         interval = Timeline.Interval.new(start_time, end_time,
           metadata: %{
@@ -221,7 +216,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
             original_activity: activity
           }
         )
-        Logger.error("DEBUG: Created interval for #{activity_id}: #{inspect(interval)}")
         interval
       end)
 
@@ -251,7 +245,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
         Enum.reduce(dependencies, acc_timeline, fn dep_id, inner_timeline ->
           # Add constraint that dependency must finish before this activity starts
           # Timeline expects constraints in seconds (external API), converts to 1ms internally
-          Logger.error("DEBUG: Adding constraint: #{dep_id}_end <= #{activity_id}_start")
           Timeline.add_constraint(
             inner_timeline,
             "#{dep_id}_end",
@@ -263,9 +256,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
       end)
 
     # Solve Timeline for consistent timing
-    Logger.error("DEBUG: About to solve timeline with #{length(intervals)} intervals")
     solved_timeline = Timeline.solve(timeline_with_constraints)
-    Logger.error("DEBUG: Timeline solved, intervals: #{inspect(Map.keys(solved_timeline.intervals))}")
 
     # Extract timing for each activity from solved Timeline and preserve durations
     duration_map =
@@ -311,7 +302,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
         duration_seconds = Map.get(duration_map, activity_id, 0)
         end_time = Timex.add(start_time, Timex.Duration.from_seconds(duration_seconds))
         
-        Logger.error("DEBUG: Activity #{activity_id} - start: #{DateTime.to_iso8601(start_time)}, duration: #{duration_seconds}s, calculated_end: #{DateTime.to_iso8601(end_time)}")
         
         {activity_id, {start_time, end_time}}
       end)
@@ -345,11 +335,8 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     {:ok, updated_activities}
   end
 
-  @doc """
-  Convert solution tree to scheduled activities by traversing primitive nodes directly.
-  
-  This replaces the primitive actions extraction approach with direct tree traversal.
-  """
+  # Convert solution tree to scheduled activities by traversing primitive nodes directly.
+  # This replaces the primitive actions extraction approach with direct tree traversal.
   defp convert_solution_tree_to_scheduled_activities(nodes, root_id, activities, entities, resources) do
     Logger.debug("Converting solution tree with #{map_size(nodes)} nodes, root: #{root_id}")
     
@@ -387,9 +374,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     end)
   end
 
-  @doc """
-  Extract activity ID from a task (used for solution tree traversal).
-  """
+  # Extract activity ID from a task (used for solution tree traversal).
   defp extract_activity_id_from_task(task, index) do
     Logger.debug("Extracting activity ID from task: #{inspect(task)}, index: #{index}")
     
@@ -443,56 +428,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
 
   # Private helper functions for duration parsing and activity conversion
 
-  defp extract_activity_id(action_step, index) do
-    Logger.debug("Extracting activity ID from action_step: #{inspect(action_step)}, index: #{index}")
-    
-    result = case action_step do
-      {action_name, _args} when is_atom(action_name) ->
-        action_name_str = Atom.to_string(action_name)
-        # Handle durative action names by removing the "durative_" prefix
-        if String.starts_with?(action_name_str, "durative_") do
-          String.replace_prefix(action_name_str, "durative_", "")
-        else
-          action_name_str
-        end
-
-      {action_name, _args} when is_binary(action_name) ->
-        # Handle durative action names by removing the "durative_" prefix
-        if String.starts_with?(action_name, "durative_") do
-          String.replace_prefix(action_name, "durative_", "")
-        else
-          action_name
-        end
-
-      action_name when is_atom(action_name) ->
-        action_name_str = Atom.to_string(action_name)
-        # Handle durative action names by removing the "durative_" prefix
-        if String.starts_with?(action_name_str, "durative_") do
-          String.replace_prefix(action_name_str, "durative_", "")
-        else
-          action_name_str
-        end
-
-      action_name when is_binary(action_name) ->
-        # Handle durative action names by removing the "durative_" prefix
-        if String.starts_with?(action_name, "durative_") do
-          String.replace_prefix(action_name, "durative_", "")
-        else
-          action_name
-        end
-
-      nil ->
-        Logger.warning("Action step is nil at index #{index}")
-        "unknown_action_#{index}"
-
-      other ->
-        Logger.warning("Unexpected action step format: #{inspect(other)}")
-        "unknown_action_#{index}"
-    end
-    
-    Logger.debug("Extracted activity ID: #{inspect(result)}")
-    result
-  end
 
   defp find_original_activity(activities, activity_id) do
     Enum.find(activities, fn act ->
@@ -508,8 +443,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   defp convert_activity_to_scheduled(original_activity, entities, resources, index) do
     # Handle both string and atom keys for duration
     duration_val = Map.get(original_activity, :duration) || Map.get(original_activity, "duration")
-    Logger.error("DEBUG: convert_activity_to_scheduled - original_activity: #{inspect(original_activity)}")
-    Logger.error("DEBUG: convert_activity_to_scheduled - duration_val: #{inspect(duration_val)}")
     {_duration_sec, fixed_start, fixed_end, _duration_str} = parse_duration_info(duration_val)
 
     required_capabilities = Map.get(original_activity, :required_capabilities, [])
@@ -529,7 +462,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     # Preserve the original duration instead of converting it
     # This ensures ISO 8601 durations like "PT2S" are maintained
     preserved_duration = duration_val || "PT0S"
-    Logger.error("DEBUG: convert_activity_to_scheduled - preserved_duration: #{inspect(preserved_duration)}")
 
     Map.merge(original_activity, %{
       start_time: fixed_start || index * 60,  # Default 1 minute spacing
@@ -629,84 +561,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
      AriaEngine.Utils.duration_to_string(duration_val)}
   end
 
-  defp compute_output_duration(duration_val) do
-    cond do
-      is_datetime_interval_with_strings?(duration_val) ->
-        compute_datetime_interval_strings(duration_val)
-
-      is_datetime_interval_with_atoms?(duration_val) ->
-        compute_datetime_interval_atoms(duration_val)
-
-      is_binary(duration_val) ->
-        compute_iso8601_output(duration_val)
-
-      is_duration_struct?(duration_val) ->
-        compute_duration_struct_output(duration_val)
-
-      is_map(duration_val) ->
-        compute_zero_duration_output()
-
-      true ->
-        {"PT0S", 0}
-    end
-  end
-
-  defp is_duration_struct?(duration_val) do
-    is_map(duration_val) and Map.has_key?(duration_val, :hours) and
-      Map.has_key?(duration_val, :minutes) and Map.has_key?(duration_val, :seconds)
-  end
-
-  defp compute_datetime_interval_strings(duration_val) do
-    start_time = duration_val["start"]
-    end_time = duration_val["end"]
-
-    case {DateTime.from_iso8601(start_time), DateTime.from_iso8601(end_time)} do
-      {{:ok, start_dt, _}, {:ok, end_dt, _}} ->
-        {%{"start" => start_time, "end" => end_time}, DateTime.diff(end_dt, start_dt)}
-
-      _ ->
-        {%{"start" => start_time, "end" => end_time}, 0}
-    end
-  end
-
-  defp compute_datetime_interval_atoms(duration_val) do
-    start_time = duration_val[:start]
-    end_time = duration_val[:end]
-
-    case {DateTime.from_iso8601(start_time), DateTime.from_iso8601(end_time)} do
-      {{:ok, start_dt, _}, {:ok, end_dt, _}} ->
-        {%{start: start_time, end: end_time}, DateTime.diff(end_dt, start_dt)}
-
-      _ ->
-        {%{start: start_time, end: end_time}, 0}
-    end
-  end
-
-  defp compute_iso8601_output(duration_val) do
-    parsed =
-      case duration_val do
-        "PT0S" ->
-          %{hours: 0, minutes: 0, seconds: 0}
-
-        _ ->
-          case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-            parsed when is_list(parsed) -> Enum.into(parsed, %{})
-            _ -> %{hours: 0, minutes: 0, seconds: 0}
-          end
-      end
-
-    {AriaEngine.Utils.duration_to_string(parsed),
-     AriaEngine.Utils.duration_struct_to_seconds(parsed)}
-  end
-
-  defp compute_duration_struct_output(duration_val) do
-    {AriaEngine.Utils.duration_to_string(duration_val),
-     AriaEngine.Utils.duration_struct_to_seconds(duration_val)}
-  end
-
-  defp compute_zero_duration_output do
-    {AriaEngine.Utils.duration_to_string(%{hours: 0, minutes: 0, seconds: 0}), 0}
-  end
 
   # (Removed: iterative timing constraint code, now handled by Timelines STN)
 end

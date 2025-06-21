@@ -117,16 +117,12 @@ defmodule Timeline do
     # Apply solved times from STN back to intervals if available
     updated_timeline = %{timeline | stn: stn}
     
-    Logger.error("DEBUG: STN metadata after solve: #{inspect(Map.get(stn.metadata, :solved_times))}")
     
     case Map.get(stn.metadata, :solved_times) do
       nil -> 
-        Logger.error("DEBUG: No solved times found in STN metadata")
         updated_timeline
       solved_times ->
-        Logger.error("DEBUG: Applying solved times to intervals: #{inspect(solved_times)}")
         result = apply_solved_times_to_intervals(updated_timeline, solved_times)
-        Logger.error("DEBUG: Updated intervals after applying solved times")
         result
     end
   end

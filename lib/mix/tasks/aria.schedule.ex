@@ -163,6 +163,10 @@ defmodule Mix.Tasks.Aria.Schedule do
     entities_list = if is_list(entities), do: entities, else: []
 
     # Call the scheduler
+    # Use a deterministic base datetime for CLI tasks
+    # This ensures reproducible results for testing and debugging
+    base_datetime = ~U[2025-01-01 00:00:00Z]
+    
     AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
       schedule_name,
       activities_list,
@@ -171,7 +175,8 @@ defmodule Mix.Tasks.Aria.Schedule do
       constraints,
       simulation_mode,
       activity_log,
-      verbose
+      verbose,
+      base_datetime
     )
   end
 

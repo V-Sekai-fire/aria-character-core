@@ -223,24 +223,19 @@ defmodule AriaEngine.MiniZinc.Executor do
       |> List.first()
       |> String.trim()
       
-      Logger.error("DEBUG: Extracted JSON part: #{inspect(json_part)}")
       
       # Try to parse as JSON first
       case Jason.decode(json_part) do
         {:ok, json_data} ->
-          Logger.error("DEBUG: Parsed JSON data: #{inspect(json_data)}")
           result = parse_json_solution(json_data)
-          Logger.error("DEBUG: Final parsed result: #{inspect(result)}")
           result
           
-        {:error, error} ->
-          Logger.error("DEBUG: JSON parsing failed: #{inspect(error)}")
+        {:error, _error} ->
           # Fall back to text parsing
           parse_text_solution(output)
       end
     rescue
-      error ->
-        Logger.error("DEBUG: Exception in parsing: #{inspect(error)}")
+      _error ->
         # If all parsing fails, return raw output
         %{raw: output}
     end

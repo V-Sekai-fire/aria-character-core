@@ -20,7 +20,9 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
       resources = ensure_list(params["resources"])
       constraints = params["constraints"] || %{}
 
-      # Call the real AriaEngine scheduler
+      # Call the real AriaEngine scheduler with deterministic base datetime
+      base_datetime = ~U[2025-01-01 00:00:00Z]
+      
       case AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
              params["schedule_name"] || "validation_test",
              activities,
@@ -32,7 +34,9 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
              # activity_log
              true,
              # verbose
-             1
+             1,
+             # base_datetime
+             base_datetime
            ) do
         {:ok, result} ->
           end_time = System.monotonic_time(:millisecond)
