@@ -32,173 +32,12 @@ defmodule AriaEngine.Scheduler.PlanConverter do
       primitive_actions
       |> Enum.with_index()
       |> Enum.map(fn {action_step, index} ->
-        # Handle different action step formats
-        activity_id =
-          case action_step do
-            {action_name, _args} when is_atom(action_name) ->
-              Atom.to_string(action_name)
-
-            {action_name, _args} when is_binary(action_name) ->
-              action_name
-
-            action_name when is_atom(action_name) ->
-              Atom.to_string(action_name)
-
-            action_name when is_binary(action_name) ->
-              action_name
-
-            other ->
-              Logger.warning("Unexpected action step format: #{inspect(other)}")
-              "unknown_action_#{index}"
-          end
-
-        # Find original activity
-        # Accept both "durative_<id>" and "<id>" as matches
-        original_activity =
-          Enum.find(activities, fn act ->
-            act.id == activity_id or "durative_#{act.id}" == activity_id
-          end)
+        activity_id = extract_activity_id(action_step, index)
+        original_activity = find_original_activity(activities, activity_id)
 
         if original_activity do
-          duration_val = Map.get(original_activity, :duration)
-          # All actions are durative; "instantaneous" actions have duration 0 ("PT0S")
-          {duration_sec, fixed_start, fixed_end, duration_str} =
-            cond do
-              is_map(duration_val) and Map.has_key?(duration_val, :start) and
-                  Map.has_key?(duration_val, :end) ->
-                start_time = duration_val[:start] || duration_val["start"]
-                end_time = duration_val[:end] || duration_val["end"]
-
-                case {DateTime.from_iso8601(start_time), DateTime.from_iso8601(end_time)} do
-                  {{:ok, start_dt, _}, {:ok, end_dt, _}} ->
-                    {DateTime.diff(end_dt, start_dt), start_time, end_time,
-                     %{start: start_time, end: end_time}}
-
-                  _ ->
-                    {0, start_time, end_time, %{start: start_time, end: end_time}}
-                end
-
-              is_binary(duration_val) ->
-                case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-                  parsed when is_list(parsed) ->
-                    map = Enum.into(parsed, %{})
-
-                    total_seconds =
-                      (map[:hours] || 0) * 3600 + (map[:minutes] || 0) * 60 + (map[:seconds] || 0)
-
-                    if total_seconds < 0 do
-                      {0, nil, nil, duration_val}
-                    else
-                      {AriaEngine.Utils.duration_struct_to_seconds(map), nil, nil, duration_val}
-                    end
-
-                  _ ->
-                    {0, nil, nil, duration_val}
-                end
-
-              is_map(duration_val) ->
-                {AriaEngine.Utils.duration_struct_to_seconds(duration_val), nil, nil,
-                 AriaEngine.Utils.duration_to_string(duration_val)}
-
-              true ->
-                {0, nil, nil, "PT0S"}
-            end
-
-          required_capabilities = Map.get(original_activity, :required_capabilities, [])
-          required_resources = Map.get(original_activity, :required_resources, [])
-
-          # Assign entities and resources with improved logic
-          assigned_entity = assign_entity_for_activity(original_activity, entities)
-          assigned_resources = assign_resources_for_activity(original_activity, resources)
-
-          # Get the first required resource for compatibility with JSON generator
-          primary_resource =
-            case required_resources do
-              [first_resource | _] -> first_resource
-              [] -> nil
-            end
-
-          # Compute timing and output duration correctly for both ISO8601 and DateTime interval
-          {output_duration, timing_seconds} =
-            cond do
-              is_map(duration_val) and
-                  (Map.has_key?(duration_val, "start") and Map.has_key?(duration_val, "end")) ->
-                # DateTime interval as map with string keys
-                start_time = duration_val["start"]
-                end_time = duration_val["end"]
-
-                case {DateTime.from_iso8601(start_time), DateTime.from_iso8601(end_time)} do
-                  {{:ok, start_dt, _}, {:ok, end_dt, _}} ->
-                    {%{"start" => start_time, "end" => end_time}, DateTime.diff(end_dt, start_dt)}
-
-                  _ ->
-                    {%{"start" => start_time, "end" => end_time}, 0}
-                end
-
-              is_map(duration_val) and
-                  (Map.has_key?(duration_val, :start) and Map.has_key?(duration_val, :end)) ->
-                # DateTime interval as map with atom keys
-                start_time = duration_val[:start]
-                end_time = duration_val[:end]
-
-                case {DateTime.from_iso8601(start_time), DateTime.from_iso8601(end_time)} do
-                  {{:ok, start_dt, _}, {:ok, end_dt, _}} ->
-                    {%{start: start_time, end: end_time}, DateTime.diff(end_dt, start_dt)}
-
-                  _ ->
-                    {%{start: start_time, end: end_time}, 0}
-                end
-
-              is_binary(duration_val) ->
-                # Only parse if string, e.g. "PT0S"
-                parsed =
-                  case duration_val do
-                    "PT0S" ->
-                      %{hours: 0, minutes: 0, seconds: 0}
-
-                    _ ->
-                      case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-                        parsed when is_list(parsed) -> Enum.into(parsed, %{})
-                        _ -> %{hours: 0, minutes: 0, seconds: 0}
-                      end
-                  end
-
-                {AriaEngine.Utils.duration_to_string(parsed),
-                 AriaEngine.Utils.duration_struct_to_seconds(parsed)}
-
-              is_map(duration_val) and Map.has_key?(duration_val, :hours) and
-                Map.has_key?(duration_val, :minutes) and Map.has_key?(duration_val, :seconds) ->
-                # Duration struct
-                {AriaEngine.Utils.duration_to_string(duration_val),
-                 AriaEngine.Utils.duration_struct_to_seconds(duration_val)}
-
-              is_map(duration_val) ->
-                # Not a duration struct or DateTime interval, treat as zero duration
-                {AriaEngine.Utils.duration_to_string(%{hours: 0, minutes: 0, seconds: 0}), 0}
-
-              true ->
-                {"PT0S", 0}
-            end
-
-          Map.merge(original_activity, %{
-            start_time: fixed_start || index * timing_seconds,
-            end_time:
-              fixed_end || if(fixed_start, do: fixed_end, else: (index + 1) * timing_seconds),
-            scheduled: true,
-            execution_order: index,
-            assigned_entity: assigned_entity,
-            assigned_resources: assigned_resources,
-            # Add fields expected by JSON generator
-            agent_id: if(assigned_entity, do: assigned_entity.id, else: nil),
-            resource_id: primary_resource,
-            resource_requirements: %{
-              capabilities: required_capabilities,
-              resources: required_resources
-            },
-            duration: output_duration
-          })
+          convert_activity_to_scheduled(original_activity, entities, resources, index)
         else
-          # Return error if activity not found in original list
           raise "Activity #{activity_id} from plan not found in original activities list"
         end
       end)
@@ -393,6 +232,231 @@ defmodule AriaEngine.Scheduler.PlanConverter do
       end)
 
     {:ok, updated_activities}
+  end
+
+  # Private helper functions for duration parsing and activity conversion
+
+  defp extract_activity_id(action_step, index) do
+    case action_step do
+      {action_name, _args} when is_atom(action_name) ->
+        Atom.to_string(action_name)
+
+      {action_name, _args} when is_binary(action_name) ->
+        action_name
+
+      action_name when is_atom(action_name) ->
+        Atom.to_string(action_name)
+
+      action_name when is_binary(action_name) ->
+        action_name
+
+      other ->
+        Logger.warning("Unexpected action step format: #{inspect(other)}")
+        "unknown_action_#{index}"
+    end
+  end
+
+  defp find_original_activity(activities, activity_id) do
+    Enum.find(activities, fn act ->
+      act.id == activity_id or "durative_#{act.id}" == activity_id
+    end)
+  end
+
+  defp convert_activity_to_scheduled(original_activity, entities, resources, index) do
+    duration_val = Map.get(original_activity, :duration)
+    {duration_sec, fixed_start, fixed_end, duration_str} = parse_duration_info(duration_val)
+
+    required_capabilities = Map.get(original_activity, :required_capabilities, [])
+    required_resources = Map.get(original_activity, :required_resources, [])
+
+    # Assign entities and resources with improved logic
+    assigned_entity = assign_entity_for_activity(original_activity, entities)
+    assigned_resources = assign_resources_for_activity(original_activity, resources)
+
+    # Get the first required resource for compatibility with JSON generator
+    primary_resource =
+      case required_resources do
+        [first_resource | _] -> first_resource
+        [] -> nil
+      end
+
+    # Compute timing and output duration correctly for both ISO8601 and DateTime interval
+    {output_duration, timing_seconds} = compute_output_duration(duration_val)
+
+    Map.merge(original_activity, %{
+      start_time: fixed_start || index * timing_seconds,
+      end_time: fixed_end || if(fixed_start, do: fixed_end, else: (index + 1) * timing_seconds),
+      scheduled: true,
+      execution_order: index,
+      assigned_entity: assigned_entity,
+      assigned_resources: assigned_resources,
+      # Add fields expected by JSON generator
+      agent_id: if(assigned_entity, do: assigned_entity.id, else: nil),
+      resource_id: primary_resource,
+      resource_requirements: %{
+        capabilities: required_capabilities,
+        resources: required_resources
+      },
+      duration: output_duration
+    })
+  end
+
+  defp parse_duration_info(duration_val) do
+    cond do
+      is_datetime_interval_with_atoms?(duration_val) ->
+        parse_datetime_interval_atoms(duration_val)
+
+      is_datetime_interval_with_strings?(duration_val) ->
+        parse_datetime_interval_strings(duration_val)
+
+      is_binary(duration_val) ->
+        parse_iso8601_duration(duration_val)
+
+      is_map(duration_val) ->
+        parse_duration_struct(duration_val)
+
+      true ->
+        {0, nil, nil, "PT0S"}
+    end
+  end
+
+  defp is_datetime_interval_with_atoms?(duration_val) do
+    is_map(duration_val) and Map.has_key?(duration_val, :start) and
+      Map.has_key?(duration_val, :end)
+  end
+
+  defp is_datetime_interval_with_strings?(duration_val) do
+    is_map(duration_val) and Map.has_key?(duration_val, "start") and
+      Map.has_key?(duration_val, "end")
+  end
+
+  defp parse_datetime_interval_atoms(duration_val) do
+    start_time = duration_val[:start]
+    end_time = duration_val[:end]
+
+    case {DateTime.from_iso8601(start_time), DateTime.from_iso8601(end_time)} do
+      {{:ok, start_dt, _}, {:ok, end_dt, _}} ->
+        {DateTime.diff(end_dt, start_dt), start_time, end_time,
+         %{start: start_time, end: end_time}}
+
+      _ ->
+        {0, start_time, end_time, %{start: start_time, end: end_time}}
+    end
+  end
+
+  defp parse_datetime_interval_strings(duration_val) do
+    start_time = duration_val["start"]
+    end_time = duration_val["end"]
+
+    case {DateTime.from_iso8601(start_time), DateTime.from_iso8601(end_time)} do
+      {{:ok, start_dt, _}, {:ok, end_dt, _}} ->
+        {DateTime.diff(end_dt, start_dt), start_time, end_time,
+         %{start: start_time, end: end_time}}
+
+      _ ->
+        {0, start_time, end_time, %{start: start_time, end: end_time}}
+    end
+  end
+
+  defp parse_iso8601_duration(duration_val) do
+    case :iso8601.parse_duration(String.to_charlist(duration_val)) do
+      parsed when is_list(parsed) ->
+        map = Enum.into(parsed, %{})
+        total_seconds = (map[:hours] || 0) * 3600 + (map[:minutes] || 0) * 60 + (map[:seconds] || 0)
+
+        if total_seconds < 0 do
+          {0, nil, nil, duration_val}
+        else
+          {AriaEngine.Utils.duration_struct_to_seconds(map), nil, nil, duration_val}
+        end
+
+      _ ->
+        {0, nil, nil, duration_val}
+    end
+  end
+
+  defp parse_duration_struct(duration_val) do
+    {AriaEngine.Utils.duration_struct_to_seconds(duration_val), nil, nil,
+     AriaEngine.Utils.duration_to_string(duration_val)}
+  end
+
+  defp compute_output_duration(duration_val) do
+    cond do
+      is_datetime_interval_with_strings?(duration_val) ->
+        compute_datetime_interval_strings(duration_val)
+
+      is_datetime_interval_with_atoms?(duration_val) ->
+        compute_datetime_interval_atoms(duration_val)
+
+      is_binary(duration_val) ->
+        compute_iso8601_output(duration_val)
+
+      is_duration_struct?(duration_val) ->
+        compute_duration_struct_output(duration_val)
+
+      is_map(duration_val) ->
+        compute_zero_duration_output()
+
+      true ->
+        {"PT0S", 0}
+    end
+  end
+
+  defp is_duration_struct?(duration_val) do
+    is_map(duration_val) and Map.has_key?(duration_val, :hours) and
+      Map.has_key?(duration_val, :minutes) and Map.has_key?(duration_val, :seconds)
+  end
+
+  defp compute_datetime_interval_strings(duration_val) do
+    start_time = duration_val["start"]
+    end_time = duration_val["end"]
+
+    case {DateTime.from_iso8601(start_time), DateTime.from_iso8601(end_time)} do
+      {{:ok, start_dt, _}, {:ok, end_dt, _}} ->
+        {%{"start" => start_time, "end" => end_time}, DateTime.diff(end_dt, start_dt)}
+
+      _ ->
+        {%{"start" => start_time, "end" => end_time}, 0}
+    end
+  end
+
+  defp compute_datetime_interval_atoms(duration_val) do
+    start_time = duration_val[:start]
+    end_time = duration_val[:end]
+
+    case {DateTime.from_iso8601(start_time), DateTime.from_iso8601(end_time)} do
+      {{:ok, start_dt, _}, {:ok, end_dt, _}} ->
+        {%{start: start_time, end: end_time}, DateTime.diff(end_dt, start_dt)}
+
+      _ ->
+        {%{start: start_time, end: end_time}, 0}
+    end
+  end
+
+  defp compute_iso8601_output(duration_val) do
+    parsed =
+      case duration_val do
+        "PT0S" ->
+          %{hours: 0, minutes: 0, seconds: 0}
+
+        _ ->
+          case :iso8601.parse_duration(String.to_charlist(duration_val)) do
+            parsed when is_list(parsed) -> Enum.into(parsed, %{})
+            _ -> %{hours: 0, minutes: 0, seconds: 0}
+          end
+      end
+
+    {AriaEngine.Utils.duration_to_string(parsed),
+     AriaEngine.Utils.duration_struct_to_seconds(parsed)}
+  end
+
+  defp compute_duration_struct_output(duration_val) do
+    {AriaEngine.Utils.duration_to_string(duration_val),
+     AriaEngine.Utils.duration_struct_to_seconds(duration_val)}
+  end
+
+  defp compute_zero_duration_output do
+    {AriaEngine.Utils.duration_to_string(%{hours: 0, minutes: 0, seconds: 0}), 0}
   end
 
   # (Removed: iterative timing constraint code, now handled by Timelines STN)
