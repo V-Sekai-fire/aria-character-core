@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Schedule.Samples do
   use Mix.Task
   require Logger
   
-  alias Mix.Tasks.Schedule.Samples.{Sequential, ResourceConstraints, ComplexDependencies, EntityCapabilities}
+  alias Mix.Tasks.Schedule.Samples.{Sequential, ResourceConstraints, EntityCapabilities}
 
   @shortdoc "Run scheduling samples to demonstrate AriaEngine.Scheduler capabilities"
 

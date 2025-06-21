@@ -30,8 +30,6 @@ Aria Character Core is a research codebase for experimenting with AI planning, t
 | **Batch Processing** | ⏸️ Paused    | N/A         | Helpers and allocation logic removed; future work paused                        |
 | **KHR System**       | 🧪 R&D       | N/A         | Experimental; under research                                                    |
 
-**Tests:** 333 total, 326 passing, 7 failing (mainly MCP integration), 1 skipped.
-
 ## Quick Start
 
 ```bash
@@ -64,14 +62,11 @@ TOWN_SCALE=1000 mix schedule.samples # Large city (1000 residents)
 
 ## Scheduler Samples
 
-Demonstrates temporal planning and scalable simulations:
+Demonstrates temporal planning with 3 core samples:
 
-1. **Simple Sequential Activities**
-2. **Resource-Constrained Scheduling**
-3. **Complex Dependencies**
-4. **Entity and Capability Management**
-5. **Simulation Mode**
-6. **Smallville Community Simulation**
+1. **Sequential**: Basic sequential activity scheduling
+2. **ResourceConstraints**: Resource conflict detection for locations, props, character availability  
+3. **EntityCapabilities**: Entity-based scheduling with character-specific abilities and limitations
 
 ## Development Priorities
 
