@@ -45,7 +45,7 @@ Aria Character Core is a research codebase for experimenting with AI planning, t
 
 - **Temporal Constraint Solving**: Real-time scheduling with resource conflicts
 - **Parallel Processing**: Multi-agent coordination using Flow-based systems
-- **Knowledge Representation**: RDF/SPARQL integration for decision-making
+- **Knowledge Representation**: RDF integration for decision-making; ~~SPARQL removed v0.2.0~~
 - **Performance Scaling**: Algorithm validation from single to massive agent populations
 
 ## Development Status Matrix
