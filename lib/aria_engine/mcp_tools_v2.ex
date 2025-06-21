@@ -84,6 +84,61 @@ defmodule AriaEngine.MCPToolsV2 do
     ValidationHandlers.handle_validate_scheduling_solutions(params)
   end
 
+  @doc """
+  Generate a new validation problem for testing scaling behavior.
+  Creates problems with 1-6 activities with proper dependency chains.
+  """
+  @spec generate_new_validation_problem(String.t()) :: map()
+  def generate_new_validation_problem(problem_name) do
+    # Random activity count between 1 and 6
+    activity_count = Enum.random(1..6)
+    
+    # Generate unique problem ID
+    problem_id = :rand.uniform(1_000_000)
+    timestamp = DateTime.utc_now()
+    
+    # Create unique problem name with timestamp
+    unique_name = "#{problem_name}_#{activity_count}act_#{problem_id}"
+    
+    # Generate activities based on count
+    activities = generate_activities(activity_count)
+    
+    # Generate entities (max 3)
+    entities = generate_entities(min(activity_count, 3))
+    
+    # Generate resources
+    resources = generate_resources(activity_count)
+    
+    # Generate constraints
+    constraints = generate_constraints(activity_count)
+    
+    # Determine complexity
+    complexity = case activity_count do
+      1 -> "trivial"
+      2 -> "simple"
+      3 -> "medium"
+      4 -> "medium"
+      5 -> "high"
+      6 -> "high"
+    end
+    
+    %{
+      name: unique_name,
+      activities: activities,
+      entities: entities,
+      resources: resources,
+      constraints: constraints,
+      metadata: %{
+        complexity: complexity,
+        problem_type: "scaling_task_chain",
+        activity_count: activity_count,
+        generated_at: timestamp,
+        problem_id: problem_id,
+        scaling_factor: activity_count
+      }
+    }
+  end
+
   # Tool execution dispatcher
 
   @spec execute_tool_handler(atom(), map()) :: tool_result()
@@ -206,5 +261,99 @@ defmodule AriaEngine.MCPToolsV2 do
 
   def get_input_schema(:send_pipeline_request) do
     SchemaDefinitions.get_send_pipeline_request_schema()
+  end
+
+  # Helper functions for problem generation
+
+  @spec generate_activities(integer()) :: [map()]
+  defp generate_activities(1) do
+    # Identity case - single activity
+    [%{
+      "id" => "identity_task",
+      "name" => "Identity Task",
+      "duration" => "PT30M",
+      "required_capabilities" => ["basic"],
+      "required_resources" => ["workstation_1"],
+      "dependencies" => []
+    }]
+  end
+
+  defp generate_activities(count) when count > 1 do
+    # Generate dependency chain: task_1 -> task_2 -> task_3 -> ...
+    for i <- 1..count do
+      dependencies = if i == 1, do: [], else: ["task_#{i - 1}"]
+      duration_minutes = 30 + i * 15  # 45, 60, 75, 90, 105
+      
+      %{
+        "id" => "task_#{i}",
+        "name" => "Task #{i}",
+        "duration" => "PT#{duration_minutes}M",
+        "required_capabilities" => ["basic"],
+        "required_resources" => ["workstation_#{min(i, 3)}"],
+        "dependencies" => dependencies
+      }
+    end
+  end
+
+  @spec generate_entities(integer()) :: [map()]
+  defp generate_entities(count) do
+    for i <- 1..count do
+      %{
+        "id" => "agent_#{i}",
+        "type" => "agent",
+        "capabilities" => ["basic", "advanced"],
+        "availability" => "PT24H"
+      }
+    end
+  end
+
+  @spec generate_resources(integer()) :: map()
+  defp generate_resources(1) do
+    # Single activity: only workstation
+    %{
+      "workstation_1" => %{
+        "type" => "computational",
+        "capacity" => 1
+      }
+    }
+  end
+
+  defp generate_resources(count) when count > 1 do
+    # Multi-activity: workstations + shared storage
+    workstation_count = min(count, 3)
+    
+    workstations = for i <- 1..workstation_count, into: %{} do
+      {"workstation_#{i}", %{
+        "type" => "computational",
+        "capacity" => 1
+      }}
+    end
+    
+    shared_storage = %{
+      "shared_storage" => %{
+        "type" => "storage",
+        "capacity" => count
+      }
+    }
+    
+    Map.merge(workstations, shared_storage)
+  end
+
+  @spec generate_constraints(integer()) :: map()
+  defp generate_constraints(1) do
+    %{
+      "max_concurrent_activities" => 1,
+      "require_resources" => false,
+      "simulation_mode" => true
+    }
+  end
+
+  defp generate_constraints(count) when count > 1 do
+    %{
+      "max_concurrent_activities" => min(count, 3),
+      "require_resources" => true,
+      "simulation_mode" => true,
+      "dependency_validation" => true
+    }
   end
 end

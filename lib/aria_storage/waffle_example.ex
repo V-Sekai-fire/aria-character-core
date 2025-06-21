@@ -159,19 +159,11 @@ defmodule AriaStorage.WaffleExample do
 
     Logger.info(" Starting migration to #{target_backend}...")
 
-    case Storage.migrate_to_waffle(target_backend, migration_opts) do
-      {:ok, result} ->
-        Logger.info(" Migration completed successfully")
-        Logger.debug("   Total chunks: #{result.total_chunks}")
-        Logger.debug("   Migrated: #{result.migrated}")
-        Logger.error("   Failed: #{result.failed}")
-        Logger.debug("   Target backend: #{result.target_backend}")
-        {:ok, result}
-
-      {:error, reason} ->
-        Logger.error(" Migration failed: #{inspect(reason)}")
-        {:error, reason}
-    end
+    {:ok, result} = Storage.migrate_to_waffle(target_backend, migration_opts)
+    
+    Logger.info(" Migration completed successfully")
+    Logger.debug("   Migration started")
+    {:ok, result}
   end
 
   @doc """
@@ -182,15 +174,15 @@ defmodule AriaStorage.WaffleExample do
 
     # Test connectivity
     case Storage.test_waffle_storage(backend, opts) do
-      {:ok, result} ->
-        Logger.info(" Connectivity: #{result.status}")
+      {:ok, _result} ->
+        Logger.info(" Connectivity: test_passed")
 
         # Get configuration
         config = Storage.get_waffle_config()
         Logger.info(" Configuration:")
         Logger.debug("   Storage: #{config.storage}")
         Logger.debug("   Bucket: #{config.bucket}")
-        Logger.debug("   Directory: #{config.storage_dir_prefix}")
+        Logger.debug("   Directory: #{config.storage_dir}")
 
         # List recent files
         case Storage.list_waffle_files(backend: backend, limit: 5) do
@@ -208,9 +200,9 @@ defmodule AriaStorage.WaffleExample do
         {:ok, %{status: :healthy, config: config}}
 
       {:error, result} ->
-        Logger.error(" Connectivity: #{result.status}")
-        Logger.error("   Error: #{inspect(result.error)}")
-        {:error, %{status: :unhealthy, error: result.error}}
+        Logger.error(" Connectivity: test_failed")
+        Logger.error("   Error: #{inspect(result)}")
+        {:error, %{status: :unhealthy, error: result}}
     end
   end
 

@@ -188,10 +188,8 @@ defmodule Timeline do
   def apply_pc2(timeline) do
     alias Timeline.Internal.STN.MiniZincSolver
     
-    case MiniZincSolver.solve_stn(timeline.stn) do
-      {:ok, solved_stn} -> %{timeline | stn: solved_stn}
-      {:error, _reason} -> timeline  # Return original timeline if solving fails
-    end
+    solved_stn = MiniZincSolver.solve_stn(timeline.stn)
+    %{timeline | stn: solved_stn}
   end
 
   # STN Composition Operations

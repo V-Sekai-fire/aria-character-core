@@ -57,35 +57,30 @@ defmodule AriaEngine.HybridPlanner.PlanTransformer do
 
     try do
       # Transform activities to domain format
-      case transform_activities_to_domain(activities, entities, resources, constraints) do
-        {:ok, domain} ->
-          # Create initial state with entities and resources
-          initial_state = create_initial_state(entities, resources)
+      {:ok, domain} = transform_activities_to_domain(activities, entities, resources, constraints)
+      
+      # Create initial state with entities and resources
+      initial_state = create_initial_state(entities, resources)
 
-          # Generate tasks and goals from activities
-          {tasks, goals} = generate_tasks_and_goals(activities)
+      # Generate tasks and goals from activities
+      {tasks, goals} = generate_tasks_and_goals(activities)
 
-          planning_params = %{
-            domain: domain,
-            initial_state: initial_state,
-            tasks: tasks,
-            goals: goals,
-            metadata: %{
-              source: "MCP",
-              activities_count: length(activities),
-              entities_count: length(entities),
-              resources_count: length(resources),
-              transformed_at: DateTime.utc_now()
-            }
-          }
+      planning_params = %{
+        domain: domain,
+        initial_state: initial_state,
+        tasks: tasks,
+        goals: goals,
+        metadata: %{
+          source: "MCP",
+          activities_count: length(activities),
+          entities_count: length(entities),
+          resources_count: length(resources),
+          transformed_at: DateTime.utc_now()
+        }
+      }
 
-          Logger.info("🔧 PlanTransformer: Successfully created planning parameters")
-          {:ok, planning_params}
-
-        {:error, reason} ->
-          Logger.error("🔧 PlanTransformer: Domain transformation failed: #{reason}")
-          {:error, "Domain transformation failed: #{reason}"}
-      end
+      Logger.info("🔧 PlanTransformer: Successfully created planning parameters")
+      {:ok, planning_params}
     rescue
       e ->
         error_msg = "PlanTransformer error: #{Exception.message(e)}"

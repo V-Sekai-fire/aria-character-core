@@ -6,7 +6,7 @@ defmodule AriaEngine.Membrane.PlanFilterTest do
 
   alias AriaEngine.Membrane.PlanFilter
   alias AriaEngine.Membrane.Format.{MCPRequest, PlanningParams}
-  alias Membrane.{Buffer, Testing}
+  alias Membrane.Buffer
 
   describe "PlanFilter initialization" do
     test "initializes with default options" do

@@ -359,14 +359,9 @@ defmodule AriaEngine.Membrane.MCPSource do
         {:error, "Invalid MCP parameters format", state}
 
       true ->
-        case create_mcp_request(mcp_params, state) do
-          {:ok, mcp_request} ->
-            new_state = %{state | request_counter: state.request_counter + 1}
-            {:ok, mcp_request, new_state}
-
-          {:error, reason} ->
-            {:error, reason, state}
-        end
+        {:ok, mcp_request} = create_mcp_request(mcp_params, state)
+        new_state = %{state | request_counter: state.request_counter + 1}
+        {:ok, mcp_request, new_state}
     end
   end
 
@@ -385,13 +380,8 @@ defmodule AriaEngine.Membrane.MCPSource do
   defp create_mcp_request(mcp_params, state) do
     request_id = generate_request_id(state.request_counter)
 
-    case MCPRequest.from_mcp_params(mcp_params, request_id) do
-      {:ok, mcp_request} ->
-        {:ok, mcp_request}
-
-      {:error, reason} ->
-        {:error, "Failed to create MCPRequest: #{reason}"}
-    end
+    {:ok, mcp_request} = MCPRequest.from_mcp_params(mcp_params, request_id)
+    {:ok, mcp_request}
   end
 
   defp generate_request_id(counter) do

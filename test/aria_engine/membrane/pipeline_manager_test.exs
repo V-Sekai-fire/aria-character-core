@@ -5,16 +5,19 @@ defmodule AriaEngine.Membrane.PipelineManagerTest do
   alias AriaEngine.Membrane.{MCPSource, EchoFilter, MCPSink}
 
   setup do
-    # Start the PipelineManager for each test
-    {:ok, manager_pid} = PipelineManager.start_link()
-
-    on_exit(fn ->
-      if Process.alive?(manager_pid) do
-        Process.exit(manager_pid, :normal)
-      end
-    end)
-
-    %{manager: manager_pid}
+    # Start the PipelineManager for each test, handling already started case
+    case PipelineManager.start_link() do
+      {:ok, manager_pid} ->
+        on_exit(fn ->
+          if Process.alive?(manager_pid) do
+            Process.exit(manager_pid, :normal)
+          end
+        end)
+        %{manager: manager_pid}
+      
+      {:error, {:already_started, manager_pid}} ->
+        %{manager: manager_pid}
+    end
   end
 
   describe "pipeline creation" do

@@ -101,35 +101,30 @@ defmodule AriaEngine.Membrane.PipelineManager do
   def handle_call({:create_pipeline, config}, _from, state) do
     pipeline_id = "pipeline_#{state.pipeline_counter}"
 
-    case build_pipeline(config, pipeline_id) do
-      {:ok, pipeline_info} ->
-        new_pipelines =
-          Map.put(state.active_pipelines, pipeline_info.pid, %{
-            config: config,
-            id: pipeline_id,
-            created_at: DateTime.utc_now(),
-            status: :running,
-            request_count: 0,
-            source_pid: pipeline_info.source_pid
-          })
+    {:ok, pipeline_info} = build_pipeline(config, pipeline_id)
+    
+    new_pipelines =
+      Map.put(state.active_pipelines, pipeline_info.pid, %{
+        config: config,
+        id: pipeline_id,
+        created_at: DateTime.utc_now(),
+        status: :running,
+        request_count: 0,
+        source_pid: pipeline_info.source_pid
+      })
 
-        new_state = %{
-          state
-          | active_pipelines: new_pipelines,
-            pipeline_counter: state.pipeline_counter + 1
-        }
+    new_state = %{
+      state
+      | active_pipelines: new_pipelines,
+        pipeline_counter: state.pipeline_counter + 1
+    }
 
-        emit_telemetry(state.telemetry_prefix, :pipeline_created, %{
-          pipeline_id: pipeline_id,
-          topology: config.topology
-        })
+    emit_telemetry(state.telemetry_prefix, :pipeline_created, %{
+      pipeline_id: pipeline_id,
+      topology: config.topology
+    })
 
-        {:reply, {:ok, pipeline_info.pid}, new_state}
-
-      {:error, reason} ->
-        Logger.error("Failed to create pipeline: #{inspect(reason)}")
-        {:reply, {:error, reason}, state}
-    end
+    {:reply, {:ok, pipeline_info.pid}, new_state}
   end
 
   @impl true
@@ -139,22 +134,18 @@ defmodule AriaEngine.Membrane.PipelineManager do
         {:reply, {:error, :pipeline_not_found}, state}
 
       pipeline_info ->
-        case reconfigure_pipeline(pipeline_pid, config) do
-          :ok ->
-            updated_info =
-              Map.merge(pipeline_info, %{
-                config: config,
-                reconfigured_at: DateTime.utc_now()
-              })
+        :ok = reconfigure_pipeline(pipeline_pid, config)
+        
+        updated_info =
+          Map.merge(pipeline_info, %{
+            config: config,
+            reconfigured_at: DateTime.utc_now()
+          })
 
-            new_pipelines = Map.put(state.active_pipelines, pipeline_pid, updated_info)
-            new_state = %{state | active_pipelines: new_pipelines}
+        new_pipelines = Map.put(state.active_pipelines, pipeline_pid, updated_info)
+        new_state = %{state | active_pipelines: new_pipelines}
 
-            {:reply, :ok, new_state}
-
-          {:error, reason} ->
-            {:reply, {:error, reason}, state}
-        end
+        {:reply, :ok, new_state}
     end
   end
 
