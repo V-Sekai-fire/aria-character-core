@@ -105,33 +105,21 @@ The scheduler uses an intelligent scaling system that adjusts resources and oppo
 ### Sample Town Resident
 
 ```elixir
-%{
+%Entity{
   id: "isabella_rodriguez",
-  name: "Isabella Rodriguez", 
-  occupation: "Cafe Owner",
-  personality: "Outgoing, community-focused",
-  social_magnetism: :high,
-  interests: ["local_politics", "community_events", "meeting_people"],
-  capabilities: ["hospitality", "event_planning", "social_coordination"],
-  location: "hobbs_cafe",
-  schedule: [
-    %{
-      activity: "operate_cafe",
-      start_time: "06:00:00",
-      duration: "PT8H",
-      type: :essential
-    },
-    %{
-      activity: "impromptu_cafe_discussion", 
-      start_time: "14:30:00",
-      duration: "PT45M",
-      type: :social
-    }
-  ]
+  type: :resident,
+  capabilities: [:hospitality, :event_planning, :social_coordination, :community_networking],
+  availability: nil,
+  metadata: %{
+    occupation: "Cafe Owner", 
+    personality: "Outgoing, community-focused",
+    interests: [:local_politics, :community_events, :meeting_people],
+    social_magnetism: :high
+  }
 }
 ```
 
-This resident demonstrates the system's capability-driven task assignment, where Isabella's hospitality capabilities naturally align her with cafe operations, while her high social magnetism creates opportunities for community interactions.
+Isabella demonstrates the system's capability-driven task assignment and emergent behavior patterns. Her hospitality capabilities naturally align her with cafe operations, while her high social magnetism creates opportunities for community interactions. The scheduler automatically matches her with activities like `operate_cafe` (essential work) and `impromptu_cafe_discussion` (social coordination), showing how personality traits and capabilities drive realistic daily schedules.
 
 ## Development Priorities
 
