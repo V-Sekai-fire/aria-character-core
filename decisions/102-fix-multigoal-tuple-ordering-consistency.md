@@ -9,11 +9,11 @@ Investigation of the Multigoal.ex module revealed a critical tuple ordering inco
 ### The Problem
 
 **StateV2 uses:** `{subject, predicate, fact_value}` (entity-first)
-**Multigoal uses:** `{predicate, subject, fact_value}` (predicate-first)
+**Multigoal uses:** `{predicate, subject, fact_value}` (~~predicate-first~~ - Replaced with subject-predicate-fact v0.2.0)
 
 This inconsistency was noted in ADR-101 and creates several issues:
 
-1. **Type Definition Mismatch**: Multigoal declares goals as `{predicate, subject, fact_value}` but StateV2 expects `{subject, predicate, fact_value}`
+1. **Type Definition Mismatch**: Multigoal declares goals as `{predicate, subject, fact_value}` (~~predicate-first~~ - Fixed to subject-predicate-fact v0.2.0) but StateV2 expects `{subject, predicate, fact_value}`
 2. **Function Parameter Confusion**: Multigoal functions use `(predicate, subject, fact_value)` order while StateV2 uses `(subject, predicate, fact_value)`
 3. **Fragile Integration**: Current code "works" only because tests use wrong parameter order and `satisfied?()` accidentally compensates
 4. **Future Bug Risk**: Any new code using correct StateV2 format with Multigoal will break

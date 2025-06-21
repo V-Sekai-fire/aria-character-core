@@ -9,7 +9,7 @@
 
 The AriaEngine planner system currently has a critical architectural inconsistency where two different state management formats coexist:
 
-1. **Legacy State format**: Uses predicate-subject-fact pattern `State.get_fact(state, predicate, subject)`
+1. **Legacy State format**: Uses ~~predicate-subject-fact~~ (Replaced with subject-predicate-fact v0.2.0) pattern `State.get_fact(state, predicate, subject)`
 2. **Modern StateV2 format**: Uses entity-first subject-predicate-fact pattern `StateV2.get_fact(state, subject, predicate)`
 
 This inconsistency creates several problems:
