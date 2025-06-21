@@ -169,86 +169,156 @@ defmodule Mix.Tasks.Schedule.Samples.TownSimulation do
   # Generate emergent opportunities that residents can choose from based on interests and circumstances
   defp generate_emergent_opportunities(resident_count \\ 6) do
     base_opportunities = [
-      # Essential Business Operations (residents must maintain their livelihoods) - Updated to 6 minutes max
-      %{"id" => "operate_cafe", "duration" => "PT6M", "dependencies" => [], 
-        "required_capabilities" => [:hospitality, :event_planning], "required_resources" => ["hobbs_cafe"],
+      # Cafe Operations Chain (Isabella's daily work)
+      %{"id" => "unlock_cafe_doors", "duration" => "PT30S", "dependencies" => [], 
+        "required_capabilities" => [:hospitality], "required_resources" => ["hobbs_cafe"],
         "assigned_entity" => "isabella_rodriguez", "opportunity_type" => "essential", "priority" => "high"},
-      %{"id" => "operate_pharmacy", "duration" => "PT6M", "dependencies" => [], 
-        "required_capabilities" => [:customer_service, :health_advice], "required_resources" => ["willow_pharmacy"],
-        "assigned_entity" => "john_lin", "opportunity_type" => "essential", "priority" => "high"},
+      %{"id" => "prepare_coffee_machine", "duration" => "PT2M", "dependencies" => ["unlock_cafe_doors"], 
+        "required_capabilities" => [:hospitality], "required_resources" => ["hobbs_cafe"],
+        "assigned_entity" => "isabella_rodriguez", "opportunity_type" => "essential", "priority" => "high"},
+      %{"id" => "greet_first_customer", "duration" => "PT30S", "dependencies" => ["prepare_coffee_machine"], 
+        "required_capabilities" => [:hospitality], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "essential", "priority" => "high"},
+      %{"id" => "take_coffee_order", "duration" => "PT1M", "dependencies" => ["greet_first_customer"], 
+        "required_capabilities" => [:customer_service], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "essential", "priority" => "medium"},
+      %{"id" => "brew_coffee", "duration" => "PT2M", "dependencies" => ["take_coffee_order"], 
+        "required_capabilities" => [:hospitality], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "essential", "priority" => "medium"},
+      %{"id" => "serve_coffee", "duration" => "PT30S", "dependencies" => ["brew_coffee"], 
+        "required_capabilities" => [:customer_service], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "essential", "priority" => "medium"},
       
-      # Social Gathering Opportunities (emerge when people are in same location)
-      %{"id" => "impromptu_cafe_discussion", "duration" => "PT5M", "dependencies" => [], 
+      # Pharmacy Operations Chain (John's daily work)
+      %{"id" => "open_pharmacy", "duration" => "PT1M", "dependencies" => [], 
+        "required_capabilities" => [:customer_service], "required_resources" => ["willow_pharmacy"],
+        "assigned_entity" => "john_lin", "opportunity_type" => "essential", "priority" => "high"},
+      %{"id" => "check_inventory", "duration" => "PT2M", "dependencies" => ["open_pharmacy"], 
+        "required_capabilities" => [:customer_service], "required_resources" => ["willow_pharmacy"],
+        "assigned_entity" => "john_lin", "opportunity_type" => "essential", "priority" => "high"},
+      %{"id" => "assist_customer_inquiry", "duration" => "PT1M30S", "dependencies" => ["check_inventory"], 
+        "required_capabilities" => [:health_advice], "required_resources" => ["willow_pharmacy"],
+        "opportunity_type" => "essential", "priority" => "medium"},
+      %{"id" => "dispense_medication", "duration" => "PT2M", "dependencies" => ["assist_customer_inquiry"], 
+        "required_capabilities" => [:health_advice], "required_resources" => ["willow_pharmacy"],
+        "opportunity_type" => "essential", "priority" => "medium"},
+      
+      # Social Interaction Chains
+      %{"id" => "notice_familiar_face", "duration" => "PT15S", "dependencies" => [], 
         "required_capabilities" => [:social_coordination], "required_resources" => ["hobbs_cafe"],
         "opportunity_type" => "social", "trigger_condition" => "multiple_people_present"},
-      %{"id" => "political_conversation", "duration" => "PT6M", "dependencies" => [], 
+      %{"id" => "exchange_greetings", "duration" => "PT30S", "dependencies" => ["notice_familiar_face"], 
+        "required_capabilities" => [:social_coordination], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "social", "trigger_condition" => "multiple_people_present"},
+      %{"id" => "start_casual_conversation", "duration" => "PT2M", "dependencies" => ["exchange_greetings"], 
+        "required_capabilities" => [:social_coordination], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "social", "trigger_condition" => "multiple_people_present"},
+      %{"id" => "discuss_local_events", "duration" => "PT3M", "dependencies" => ["start_casual_conversation"], 
+        "required_capabilities" => [:community_networking], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "social", "trigger_condition" => "multiple_people_present"},
+      
+      # Political Discussion Chain
+      %{"id" => "mention_election_topic", "duration" => "PT30S", "dependencies" => [], 
         "required_capabilities" => [:public_speaking], "required_resources" => ["hobbs_cafe"],
-        "opportunity_type" => "social", "trigger_condition" => "political_interest_overlap"},
-      %{"id" => "art_appreciation_moment", "duration" => "PT4M", "dependencies" => [], 
+        "opportunity_type" => "political", "trigger_condition" => "political_interest_overlap"},
+      %{"id" => "share_political_opinion", "duration" => "PT2M", "dependencies" => ["mention_election_topic"], 
+        "required_capabilities" => [:public_speaking], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "political", "trigger_condition" => "political_interest_overlap"},
+      %{"id" => "debate_policy_issue", "duration" => "PT3M", "dependencies" => ["share_political_opinion"], 
+        "required_capabilities" => [:critical_thinking], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "political", "trigger_condition" => "political_interest_overlap"},
+      
+      # Art Studio Activity Chain
+      %{"id" => "enter_art_studio", "duration" => "PT30S", "dependencies" => [], 
+        "required_capabilities" => [:art], "required_resources" => ["art_studio"],
+        "opportunity_type" => "cultural", "trigger_condition" => "creative_work_visible"},
+      %{"id" => "observe_artwork", "duration" => "PT1M", "dependencies" => ["enter_art_studio"], 
+        "required_capabilities" => [:aesthetic_appreciation], "required_resources" => ["art_studio"],
+        "opportunity_type" => "cultural", "trigger_condition" => "creative_work_visible"},
+      %{"id" => "discuss_artistic_technique", "duration" => "PT2M", "dependencies" => ["observe_artwork"], 
         "required_capabilities" => [:aesthetic_appreciation], "required_resources" => ["art_studio"],
         "opportunity_type" => "cultural", "trigger_condition" => "creative_work_visible"},
       
-      # Information Sharing Opportunities (spread based on who knows what)
-      %{"id" => "share_local_news", "duration" => "PT3M", "dependencies" => [], 
+      # Information Sharing Micro-Interactions
+      %{"id" => "overhear_news", "duration" => "PT30S", "dependencies" => [], 
         "required_capabilities" => [:community_networking], 
         "opportunity_type" => "information", "trigger_condition" => "news_to_share"},
-      %{"id" => "discuss_community_needs", "duration" => "PT6M", "dependencies" => [], 
+      %{"id" => "share_neighborhood_update", "duration" => "PT1M", "dependencies" => ["overhear_news"], 
+        "required_capabilities" => [:community_networking], 
+        "opportunity_type" => "information", "trigger_condition" => "news_to_share"},
+      %{"id" => "ask_about_community_issue", "duration" => "PT1M30S", "dependencies" => ["share_neighborhood_update"], 
         "required_capabilities" => [:community_support], 
         "opportunity_type" => "coordination", "trigger_condition" => "community_concern_identified"},
       
-      # Creative Collaboration Opportunities (emerge when artists meet others)
-      %{"id" => "collaborative_art_project", "duration" => "PT6M", "dependencies" => [], 
+      # Creative Collaboration Chain
+      %{"id" => "suggest_art_collaboration", "duration" => "PT1M", "dependencies" => [], 
+        "required_capabilities" => [:creativity], "required_resources" => ["art_studio"],
+        "opportunity_type" => "creative", "trigger_condition" => "creative_synergy"},
+      %{"id" => "brainstorm_creative_ideas", "duration" => "PT3M", "dependencies" => ["suggest_art_collaboration"], 
         "required_capabilities" => [:creativity, :aesthetic_appreciation], "required_resources" => ["art_studio"],
         "opportunity_type" => "creative", "trigger_condition" => "creative_synergy"},
-      %{"id" => "musical_performance_planning", "duration" => "PT6M", "dependencies" => [], 
+      %{"id" => "plan_joint_project", "duration" => "PT2M", "dependencies" => ["brainstorm_creative_ideas"], 
+        "required_capabilities" => [:event_planning], "required_resources" => ["art_studio"],
+        "opportunity_type" => "creative", "trigger_condition" => "creative_synergy"},
+      
+      # Music Session Chain
+      %{"id" => "mention_musical_interest", "duration" => "PT30S", "dependencies" => [], 
+        "required_capabilities" => [:music], 
+        "opportunity_type" => "creative", "trigger_condition" => "performance_opportunity"},
+      %{"id" => "suggest_informal_performance", "duration" => "PT1M", "dependencies" => ["mention_musical_interest"], 
         "required_capabilities" => [:music, :event_planning], 
         "opportunity_type" => "creative", "trigger_condition" => "performance_opportunity"},
-      
-      # Learning and Research Opportunities (driven by curiosity and interests)
-      %{"id" => "research_local_history", "duration" => "PT6M", "dependencies" => [], 
-        "required_capabilities" => [:research], "required_resources" => ["library"],
-        "opportunity_type" => "intellectual", "trigger_condition" => "curiosity_sparked"},
-      %{"id" => "study_community_dynamics", "duration" => "PT6M", "dependencies" => [], 
-        "required_capabilities" => [:academic_work], "required_resources" => ["library"],
-        "opportunity_type" => "intellectual", "trigger_condition" => "academic_interest"},
-      
-      # Community Organization Opportunities (emerge from identified needs)
-      %{"id" => "organize_community_event", "duration" => "PT6M", "dependencies" => [], 
-        "required_capabilities" => [:event_planning], "required_resources" => ["hobbs_cafe"],
-        "opportunity_type" => "organizing", "trigger_condition" => "community_event_needed"},
-      %{"id" => "coordinate_volunteer_effort", "duration" => "PT6M", "dependencies" => [], 
-        "required_capabilities" => [:community_organizing], 
-        "opportunity_type" => "organizing", "trigger_condition" => "volunteer_opportunity"},
-      
-      # Political Engagement Opportunities (driven by civic interests)
-      %{"id" => "campaign_outreach", "duration" => "PT6M", "dependencies" => [], 
-        "required_capabilities" => [:persuasion], "required_resources" => ["willow_pharmacy"],
-        "opportunity_type" => "political", "trigger_condition" => "campaign_opportunity"},
-      %{"id" => "civic_discussion", "duration" => "PT6M", "dependencies" => [], 
-        "required_capabilities" => [:critical_thinking], "required_resources" => ["town_hall"],
-        "opportunity_type" => "political", "trigger_condition" => "civic_issue_raised"},
-      
-      # Spontaneous Social Events (emerge from successful smaller interactions)
-      %{"id" => "impromptu_community_gathering", "duration" => "PT6M", "dependencies" => [], 
-        "required_capabilities" => [:social_coordination], "required_resources" => ["hobbs_cafe"],
-        "opportunity_type" => "emergent_event", "trigger_condition" => "social_momentum_builds"},
-      %{"id" => "informal_music_session", "duration" => "PT6M", "dependencies" => [], 
+      %{"id" => "perform_short_piece", "duration" => "PT3M", "dependencies" => ["suggest_informal_performance"], 
         "required_capabilities" => [:creative_performance], "required_resources" => ["hobbs_cafe"],
         "opportunity_type" => "emergent_event", "trigger_condition" => "musical_interest_expressed"},
       
-      # Knowledge Exchange Opportunities (when experts meet learners)
-      %{"id" => "health_advice_sharing", "duration" => "PT4M", "dependencies" => [], 
+      # Research Activity Chain
+      %{"id" => "browse_library_shelves", "duration" => "PT1M", "dependencies" => [], 
+        "required_capabilities" => [:research], "required_resources" => ["library"],
+        "opportunity_type" => "intellectual", "trigger_condition" => "curiosity_sparked"},
+      %{"id" => "select_historical_book", "duration" => "PT30S", "dependencies" => ["browse_library_shelves"], 
+        "required_capabilities" => [:research], "required_resources" => ["library"],
+        "opportunity_type" => "intellectual", "trigger_condition" => "curiosity_sparked"},
+      %{"id" => "read_local_history_section", "duration" => "PT4M", "dependencies" => ["select_historical_book"], 
+        "required_capabilities" => [:research], "required_resources" => ["library"],
+        "opportunity_type" => "intellectual", "trigger_condition" => "curiosity_sparked"},
+      %{"id" => "take_research_notes", "duration" => "PT1M30S", "dependencies" => ["read_local_history_section"], 
+        "required_capabilities" => [:academic_work], "required_resources" => ["library"],
+        "opportunity_type" => "intellectual", "trigger_condition" => "academic_interest"},
+      
+      # Community Organizing Chain
+      %{"id" => "identify_community_need", "duration" => "PT1M", "dependencies" => [], 
+        "required_capabilities" => [:community_organizing], 
+        "opportunity_type" => "organizing", "trigger_condition" => "community_event_needed"},
+      %{"id" => "propose_event_idea", "duration" => "PT2M", "dependencies" => ["identify_community_need"], 
+        "required_capabilities" => [:event_planning], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "organizing", "trigger_condition" => "community_event_needed"},
+      %{"id" => "gather_initial_support", "duration" => "PT3M", "dependencies" => ["propose_event_idea"], 
+        "required_capabilities" => [:community_organizing], "required_resources" => ["hobbs_cafe"],
+        "opportunity_type" => "organizing", "trigger_condition" => "volunteer_opportunity"},
+      
+      # Health Consultation Chain
+      %{"id" => "customer_asks_health_question", "duration" => "PT30S", "dependencies" => [], 
         "required_capabilities" => [:health_advice], "required_resources" => ["willow_pharmacy"],
         "opportunity_type" => "knowledge_exchange", "trigger_condition" => "health_question_asked"},
-      %{"id" => "academic_mentoring", "duration" => "PT6M", "dependencies" => [], 
-        "required_capabilities" => [:education], "required_resources" => ["library"],
-        "opportunity_type" => "knowledge_exchange", "trigger_condition" => "learning_opportunity"},
+      %{"id" => "provide_health_guidance", "duration" => "PT2M", "dependencies" => ["customer_asks_health_question"], 
+        "required_capabilities" => [:health_advice], "required_resources" => ["willow_pharmacy"],
+        "opportunity_type" => "knowledge_exchange", "trigger_condition" => "health_question_asked"},
+      %{"id" => "recommend_wellness_resources", "duration" => "PT1M", "dependencies" => ["provide_health_guidance"], 
+        "required_capabilities" => [:community_support], "required_resources" => ["willow_pharmacy"],
+        "opportunity_type" => "knowledge_exchange", "trigger_condition" => "health_question_asked"},
       
-      # Serendipitous Encounters (chance meetings that lead to new connections)
-      %{"id" => "chance_encounter_conversation", "duration" => "PT3M", "dependencies" => [], 
+      # Serendipitous Encounter Chain
+      %{"id" => "bump_into_someone", "duration" => "PT15S", "dependencies" => [], 
         "required_capabilities" => [:social_coordination], 
         "opportunity_type" => "serendipitous", "trigger_condition" => "unexpected_meeting"},
-      %{"id" => "discover_shared_interest", "duration" => "PT5M", "dependencies" => [], 
+      %{"id" => "apologize_and_chat", "duration" => "PT1M", "dependencies" => ["bump_into_someone"], 
+        "required_capabilities" => [:social_coordination], 
+        "opportunity_type" => "serendipitous", "trigger_condition" => "unexpected_meeting"},
+      %{"id" => "discover_common_interest", "duration" => "PT2M", "dependencies" => ["apologize_and_chat"], 
+        "required_capabilities" => [:community_networking], 
+        "opportunity_type" => "serendipitous", "trigger_condition" => "interest_alignment_discovered"},
+      %{"id" => "exchange_contact_info", "duration" => "PT30S", "dependencies" => ["discover_common_interest"], 
         "required_capabilities" => [:community_networking], 
         "opportunity_type" => "serendipitous", "trigger_condition" => "interest_alignment_discovered"}
     ]
@@ -323,11 +393,11 @@ defmodule Mix.Tasks.Schedule.Samples.TownSimulation do
   # Generate additional opportunities for scaling up
   defp generate_additional_opportunities(count) do
     opportunity_templates = [
-      %{"id" => "community_workshop", "duration" => "PT6M", "opportunity_type" => "learning"},
-      %{"id" => "neighborhood_meeting", "duration" => "PT6M", "opportunity_type" => "organizing"},
-      %{"id" => "cultural_exchange", "duration" => "PT6M", "opportunity_type" => "cultural"},
-      %{"id" => "skill_sharing", "duration" => "PT6M", "opportunity_type" => "knowledge_exchange"},
-      %{"id" => "social_gathering", "duration" => "PT6M", "opportunity_type" => "social"}
+      %{"id" => "community_workshop", "duration" => "PT2M30S", "opportunity_type" => "learning"},
+      %{"id" => "neighborhood_meeting", "duration" => "PT3M", "opportunity_type" => "organizing"},
+      %{"id" => "cultural_exchange", "duration" => "PT1M30S", "opportunity_type" => "cultural"},
+      %{"id" => "skill_sharing", "duration" => "PT2M", "opportunity_type" => "knowledge_exchange"},
+      %{"id" => "social_gathering", "duration" => "PT1M", "opportunity_type" => "social"}
     ]
     
     1..count
