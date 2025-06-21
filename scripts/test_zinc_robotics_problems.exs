@@ -138,7 +138,7 @@ defmodule ZincRoboticsTest do
       agents
       |> Enum.with_index()
       |> Enum.group_by(fn {agent, _idx} -> agent end)
-      |> Enum.flat_map(fn {arm, tasks} ->
+      |> Enum.flat_map(fn {_arm, tasks} ->
         task_indices = Enum.map(tasks, fn {_, idx} -> idx end)
         
         # Check for spatial conflicts between arms
@@ -181,7 +181,7 @@ defmodule ZincRoboticsTest do
     }
   end
 
-  def validate_task_completion(agents, locations) do
+  def validate_task_completion(_agents, locations) do
     # Ensure all required task types are covered
     unique_locations = Enum.uniq(locations)
     task_coverage = length(unique_locations) >= 5  # Minimum task diversity
@@ -247,7 +247,7 @@ defmodule ZincRoboticsTest do
     }
   end
 
-  def validate_hoist_scheduling(removal_times, hoists, objective) do
+  def validate_hoist_scheduling(removal_times, _hoists, objective) do
     # Check that removal times are properly sequenced
     properly_sequenced = 
       removal_times
@@ -410,7 +410,7 @@ defmodule ZincRoboticsTest do
   def generate_hoist_response(problem_name) do
     # Extract parameters from problem name
     task_count = case Regex.run(~r/PU_(\d+)_(\d+)_(\d+)/, problem_name) do
-      [_, hoists, _, tasks] -> String.to_integer(tasks) * 2
+      [_, _hoists, _, tasks] -> String.to_integer(tasks) * 2
       _ -> 6
     end
     
@@ -425,7 +425,7 @@ defmodule ZincRoboticsTest do
     }
   end
 
-  def generate_aircraft_response(problem_name) do
+  def generate_aircraft_response(_problem_name) do
     # Generate reasonable aircraft disassembly schedule
     task_count = 8
     start_times = 0..(task_count-1) |> Enum.map(fn i -> i * 15 end)
