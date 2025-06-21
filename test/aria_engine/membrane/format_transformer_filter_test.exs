@@ -1,34 +1,34 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Membrane.EchoFilterTest do
+defmodule AriaEngine.Membrane.FormatTransformerFilterTest do
   use ExUnit.Case, async: true
 
-  alias AriaEngine.Membrane.EchoFilter
+  alias AriaEngine.Membrane.FormatTransformerFilter
   alias AriaEngine.Membrane.Format.{MCPRequest, MCPResponse, PlanningParams, PlanningResult}
   alias Membrane.{Buffer, Testing}
 
-  describe "EchoFilter initialization" do
+  describe "FormatTransformerFilter initialization" do
     test "initializes with default options" do
       # Test basic initialization
-      assert {[], _state} = EchoFilter.handle_init(nil, %{
+      assert {[], _state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :success,
         processing_delay_ms: 0,
-        telemetry_prefix: [:aria_engine, :membrane, :echo_filter]
+        telemetry_prefix: [:aria_engine, :membrane, :format_transformer_filter]
       })
     end
 
     test "initializes with custom options" do
       # Test initialization with custom options
-      assert {[], state} = EchoFilter.handle_init(nil, %{
+      assert {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :error,
         processing_delay_ms: 100,
-        telemetry_prefix: [:test, :echo_filter]
+        telemetry_prefix: [:test, :format_transformer_filter]
       })
       
       assert state.mock_scenario == :error
       assert state.processing_delay_ms == 100
-      assert state.telemetry_prefix == [:test, :echo_filter]
+      assert state.telemetry_prefix == [:test, :format_transformer_filter]
     end
   end
 
@@ -52,15 +52,15 @@ defmodule AriaEngine.Membrane.EchoFilterTest do
       )
 
       # Initialize filter state
-      {[], state} = EchoFilter.handle_init(nil, %{
+      {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :success,
         processing_delay_ms: 0,
-        telemetry_prefix: [:test, :echo_filter]
+        telemetry_prefix: [:test, :format_transformer_filter]
       })
       
       # Process buffer
       buffer = %Buffer{payload: request}
-      {[buffer: {:output, output_buffer}], new_state} = EchoFilter.handle_buffer(:input, buffer, nil, state)
+      {[buffer: {:output, output_buffer}], new_state} = FormatTransformerFilter.handle_buffer(:input, buffer, nil, state)
       
       # Verify output
       assert %Buffer{payload: %MCPResponse{} = response} = output_buffer
@@ -92,15 +92,15 @@ defmodule AriaEngine.Membrane.EchoFilterTest do
       )
 
       # Initialize filter state with error scenario
-      {[], state} = EchoFilter.handle_init(nil, %{
+      {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :error,
         processing_delay_ms: 0,
-        telemetry_prefix: [:test, :echo_filter]
+        telemetry_prefix: [:test, :format_transformer_filter]
       })
       
       # Process buffer
       buffer = %Buffer{payload: request}
-      {[buffer: {:output, output_buffer}], new_state} = EchoFilter.handle_buffer(:input, buffer, nil, state)
+      {[buffer: {:output, output_buffer}], new_state} = FormatTransformerFilter.handle_buffer(:input, buffer, nil, state)
       
       # Verify output
       assert %Buffer{payload: %MCPResponse{} = response} = output_buffer
@@ -130,15 +130,15 @@ defmodule AriaEngine.Membrane.EchoFilterTest do
       )
 
       # Initialize filter state with timeout scenario
-      {[], state} = EchoFilter.handle_init(nil, %{
+      {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :timeout,
         processing_delay_ms: 0,
-        telemetry_prefix: [:test, :echo_filter]
+        telemetry_prefix: [:test, :format_transformer_filter]
       })
       
       # Process buffer
       buffer = %Buffer{payload: request}
-      {[buffer: {:output, output_buffer}], new_state} = EchoFilter.handle_buffer(:input, buffer, nil, state)
+      {[buffer: {:output, output_buffer}], new_state} = FormatTransformerFilter.handle_buffer(:input, buffer, nil, state)
       
       # Verify output
       assert %Buffer{payload: %MCPResponse{} = response} = output_buffer
@@ -172,15 +172,15 @@ defmodule AriaEngine.Membrane.EchoFilterTest do
       }
 
       # Initialize filter state
-      {[], state} = EchoFilter.handle_init(nil, %{
+      {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :success,
         processing_delay_ms: 0,
-        telemetry_prefix: [:test, :echo_filter]
+        telemetry_prefix: [:test, :format_transformer_filter]
       })
       
       # Process buffer
       buffer = %Buffer{payload: params}
-      {[buffer: {:output, output_buffer}], new_state} = EchoFilter.handle_buffer(:input, buffer, nil, state)
+      {[buffer: {:output, output_buffer}], new_state} = FormatTransformerFilter.handle_buffer(:input, buffer, nil, state)
       
       # Verify output
       assert %Buffer{payload: %PlanningResult{} = result} = output_buffer
@@ -206,15 +206,15 @@ defmodule AriaEngine.Membrane.EchoFilterTest do
       }
 
       # Initialize filter state with error scenario
-      {[], state} = EchoFilter.handle_init(nil, %{
+      {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :error,
         processing_delay_ms: 0,
-        telemetry_prefix: [:test, :echo_filter]
+        telemetry_prefix: [:test, :format_transformer_filter]
       })
       
       # Process buffer
       buffer = %Buffer{payload: params}
-      {[buffer: {:output, output_buffer}], new_state} = EchoFilter.handle_buffer(:input, buffer, nil, state)
+      {[buffer: {:output, output_buffer}], new_state} = FormatTransformerFilter.handle_buffer(:input, buffer, nil, state)
       
       # Verify output
       assert %Buffer{payload: %PlanningResult{} = result} = output_buffer
@@ -235,17 +235,17 @@ defmodule AriaEngine.Membrane.EchoFilterTest do
       unsupported_payload = %{some: "random", data: 123}
 
       # Initialize filter state
-      {[], state} = EchoFilter.handle_init(nil, %{
+      {[], state} = FormatTransformerFilter.handle_init(nil, %{
         mock_scenario: :success,
         processing_delay_ms: 0,
-        telemetry_prefix: [:test, :echo_filter]
+        telemetry_prefix: [:test, :format_transformer_filter]
       })
       
       # Process buffer with unsupported payload
       buffer = %Buffer{payload: unsupported_payload}
       
       # Should handle gracefully and pass through unchanged
-      {[buffer: {:output, output_buffer}], new_state} = EchoFilter.handle_buffer(:input, buffer, nil, state)
+      {[buffer: {:output, output_buffer}], new_state} = FormatTransformerFilter.handle_buffer(:input, buffer, nil, state)
       
       # Verify output is unchanged
       assert %Buffer{payload: ^unsupported_payload} = output_buffer

@@ -1,27 +1,29 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Membrane.EchoFilter do
+defmodule AriaEngine.Membrane.FormatTransformerFilter do
   @moduledoc """
-  Generic Membrane Filter element that echoes input formats to corresponding output formats.
+  Generic Membrane Filter element that transforms between any defined format types.
   
-  This element provides mock functionality for testing pipeline flows without
-  actual processing. It automatically detects input format and transforms to
+  This element takes existing format definitions and transforms them to any other 
+  format definition we have, providing flexible format conversion for testing and 
+  pipeline composition. It automatically detects input format and transforms to
   the appropriate output format:
   
   - MCPRequest → MCPResponse (direct MCP testing)
   - PlanningParams → PlanningResult (PlannerSink mock)
+  - Any defined format → Any other defined format
   
   ## Pipeline Configurations
   
   **Direct MCP Testing:**
   ```
-  MCPSource → EchoFilter → MCPSink
+  MCPSource → FormatTransformerFilter → MCPSink
   ```
   
   **Full Pipeline Testing:**
   ```
-  MCPSource → PlanFilter → EchoFilter → MCPSink
+  MCPSource → PlanFilter → FormatTransformerFilter → MCPSink
   ```
   """
 
@@ -50,7 +52,7 @@ defmodule AriaEngine.Membrane.EchoFilter do
               ],
               telemetry_prefix: [
                 spec: [atom()],
-                default: [:aria_engine, :membrane, :echo_filter],
+                default: [:aria_engine, :membrane, :format_transformer_filter],
                 description: "Telemetry event prefix for monitoring"
               ]
 
@@ -277,14 +279,14 @@ defmodule AriaEngine.Membrane.EchoFilter do
   # Public API for testing and configuration
 
   @doc """
-  Gets the current processing statistics of the EchoFilter element.
+  Gets the current processing statistics of the FormatTransformerFilter element.
   """
   @spec get_stats(pid()) :: map()
   def get_stats(filter_pid) do
     send(filter_pid, {:get_stats, self()})
     
     receive do
-      {:echo_filter_stats, stats} -> stats
+      {:format_transformer_filter_stats, stats} -> stats
     after
       5000 -> %{error: "Timeout waiting for stats"}
     end
@@ -300,14 +302,14 @@ defmodule AriaEngine.Membrane.EchoFilter do
       processing_delay_ms: state.processing_delay_ms
     }
     
-    send(from, {:echo_filter_stats, stats})
+    send(from, {:format_transformer_filter_stats, stats})
     {[], state}
   end
 
   @impl true
   def handle_info(msg, _ctx, state) do
     require Logger
-    Logger.debug("EchoFilter received unknown message: #{inspect(msg)}")
+    Logger.debug("FormatTransformerFilter received unknown message: #{inspect(msg)}")
     {[], state}
   end
 end

@@ -9,7 +9,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
   use GenServer
   require Logger
 
-  alias AriaEngine.Membrane.{MCPSource, EchoFilter, MCPSink, ScheduleFilter, ResponseFilter}
+  alias AriaEngine.Membrane.{MCPSource, FormatTransformerFilter, MCPSink, ScheduleFilter, ResponseFilter}
   alias Membrane.Pipeline
 
   @type pipeline_config :: %{
@@ -77,7 +77,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :linear,
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
-        %{type: EchoFilter, id: :echo, config: %{mock_scenario: :success}},
+        %{type: FormatTransformerFilter, id: :echo, config: %{mock_scenario: :success}},
         %{type: MCPSink, id: :mcp_sink, config: %{}}
       ],
       connections: [
@@ -299,7 +299,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :echo_testing,
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
-        %{type: EchoFilter, id: :echo, config: %{mock_scenario: :success}},
+        %{type: FormatTransformerFilter, id: :echo, config: %{mock_scenario: :success}},
         %{type: MCPSink, id: :sink, config: %{}}
       ],
       connections: [
@@ -316,7 +316,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
         %{type: ScheduleFilter, id: :schedule, config: %{}},
-        %{type: EchoFilter, id: :planner, config: %{mock_scenario: :success}},
+        %{type: FormatTransformerFilter, id: :planner, config: %{mock_scenario: :success}},
         %{type: ResponseFilter, id: :response, config: %{}},
         %{type: MCPSink, id: :sink, config: %{}}
       ],
