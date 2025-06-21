@@ -34,18 +34,22 @@ defmodule AriaEngine.Membrane.EchoFilterTest do
 
   describe "MCPRequest → MCPResponse transformation" do
     test "transforms MCPRequest to successful MCPResponse" do
-      request = %MCPRequest{
-        schedule_name: "test_schedule",
-        activities: [
-          %{"name" => "activity_1", "duration" => "1h"},
-          %{"name" => "activity_2", "duration" => "30m"}
-        ],
-        entities: [%{"id" => "entity_1", "type" => "person"}],
-        resources: %{"room" => "conference_room_a"},
-        constraints: %{"max_duration" => "8h"},
-        request_id: "test_req_123",
-        timestamp: DateTime.utc_now()
-      }
+      # Create MCPRequest using the correct format
+      {:ok, request} = MCPRequest.from_tool_call(
+        "schedule_activities",
+        %{
+          "schedule_name" => "test_schedule",
+          "activities" => [
+            %{"id" => "activity_1", "name" => "Test Activity"},
+            %{"id" => "activity_2", "name" => "Another Activity"}
+          ],
+          "entities" => [%{"id" => "entity_1", "type" => "person"}],
+          "resources" => %{"room" => "conference_room_a"},
+          "constraints" => %{"max_duration" => "8h"}
+        },
+        "test_req_123",
+        %{}
+      )
 
       # Initialize filter state
       {[], state} = EchoFilter.handle_init(nil, %{
@@ -74,15 +78,18 @@ defmodule AriaEngine.Membrane.EchoFilterTest do
     end
 
     test "transforms MCPRequest to error MCPResponse" do
-      request = %MCPRequest{
-        schedule_name: "error_schedule",
-        activities: [],
-        entities: [],
-        resources: %{},
-        constraints: %{},
-        request_id: "error_req_456",
-        timestamp: DateTime.utc_now()
-      }
+      {:ok, request} = MCPRequest.from_tool_call(
+        "schedule_activities",
+        %{
+          "schedule_name" => "error_schedule",
+          "activities" => [],
+          "entities" => [],
+          "resources" => %{},
+          "constraints" => %{}
+        },
+        "error_req_456",
+        %{}
+      )
 
       # Initialize filter state with error scenario
       {[], state} = EchoFilter.handle_init(nil, %{
@@ -109,15 +116,18 @@ defmodule AriaEngine.Membrane.EchoFilterTest do
     end
 
     test "transforms MCPRequest to timeout MCPResponse" do
-      request = %MCPRequest{
-        schedule_name: "timeout_schedule",
-        activities: [],
-        entities: [],
-        resources: %{},
-        constraints: %{},
-        request_id: "timeout_req_789",
-        timestamp: DateTime.utc_now()
-      }
+      {:ok, request} = MCPRequest.from_tool_call(
+        "schedule_activities",
+        %{
+          "schedule_name" => "timeout_schedule",
+          "activities" => [],
+          "entities" => [],
+          "resources" => %{},
+          "constraints" => %{}
+        },
+        "timeout_req_789",
+        %{}
+      )
 
       # Initialize filter state with timeout scenario
       {[], state} = EchoFilter.handle_init(nil, %{

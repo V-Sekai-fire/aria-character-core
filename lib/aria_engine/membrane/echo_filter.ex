@@ -141,7 +141,7 @@ defmodule AriaEngine.Membrane.EchoFilter do
           response_metadata: %{
             mock: true,
             echoed_at: DateTime.utc_now(),
-            original_activities: length(request.activities),
+            original_activities: length(request.parameters["activities"] || []),
             scenario: :success
           }
         }
@@ -230,8 +230,8 @@ defmodule AriaEngine.Membrane.EchoFilter do
 
   defp create_mock_schedule(%MCPRequest{} = request) do
     %{
-      "schedule_name" => request.schedule_name,
-      "activities" => Enum.map(request.activities, fn activity ->
+      "schedule_name" => request.parameters["schedule_name"],
+      "activities" => Enum.map(request.parameters["activities"] || [], fn activity ->
         Map.merge(activity, %{
           "status" => "scheduled",
           "start_time" => "2025-06-20T16:00:00Z",
@@ -244,7 +244,7 @@ defmodule AriaEngine.Membrane.EchoFilter do
         "end" => "2025-06-20T18:00:00Z",
         "mock" => true
       },
-      "resources" => request.resources,
+      "resources" => request.parameters["resources"] || %{},
       "constraints_satisfied" => true,
       "mock" => true
     }

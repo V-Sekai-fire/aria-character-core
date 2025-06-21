@@ -3,33 +3,51 @@
 
 defmodule AriaEngine.Membrane.MCPSource do
   @moduledoc """
-  Membrane Source element that receives MCP requests and controls pipeline topology.
+  Generic Membrane Source element that receives any MCP tool requests.
   
-  This element acts as both the entry point for planning requests and the
-  controller for dynamic pipeline configuration and element connections.
+  This element acts as the universal entry point for all MCP tool calls,
+  converting them to a standardized MCPRequest format for downstream processing.
+  It supports any MCP tool, not just schedule_activities.
   
   ## Features
   
-  - Receives MCP requests from existing MCP tools
-  - Converts raw MCP parameters to MCPRequest format
+  - Receives any MCP tool requests from existing MCP tools
+  - Converts raw MCP parameters to generic MCPRequest format
   - Generates unique request IDs for tracking
-  - Controls dynamic pipeline topology configuration
+  - Supports both new tool_call format and legacy parameter format
   - Provides backpressure handling through demand-based flow control
   - Emits comprehensive telemetry for monitoring
+  - Tool-agnostic design for maximum flexibility
+  
+  ## Supported Input Formats
+  
+  **New Format (Recommended):**
+  ```elixir
+  {:mcp_tool_call, "schedule_activities", %{"schedule_name" => "test"}, %{}}
+  ```
+  
+  **Legacy Format (Backward Compatibility):**
+  ```elixir
+  {:mcp_request, %{"schedule_name" => "test", "activities" => []}}
+  ```
   
   ## Usage
   
       # In a pipeline spec
       children = [
         child(:mcp_source, MCPSource)
-        |> child(:sink, %Membrane.Testing.Sink{})
+        |> child(:schedule_filter, ScheduleFilter)  # For schedule_activities
+        |> child(:planner_sink, PlannerSink)
+        |> child(:mcp_sink, MCPSink)
       ]
       
-      # Send MCP request to pipeline
-      Membrane.Testing.Pipeline.notify_child(pipeline, :mcp_source, {:mcp_request, mcp_params})
+      # Send new format MCP tool call
+      Membrane.Testing.Pipeline.notify_child(pipeline, :mcp_source, 
+        {:mcp_tool_call, "schedule_activities", params, metadata})
       
-      # Configure pipeline topology
-      Membrane.Testing.Pipeline.notify_child(pipeline, :mcp_source, {:configure_pipeline, config})
+      # Send legacy format (auto-detected)
+      Membrane.Testing.Pipeline.notify_child(pipeline, :mcp_source, 
+        {:mcp_request, legacy_params})
   """
 
   use Membrane.Source
@@ -111,6 +129,67 @@ defmodule AriaEngine.Membrane.MCPSource do
     {actions, final_state} = send_queued_buffers(new_state)
     
     {actions, final_state}
+  end
+
+  @impl true
+  def handle_info({:mcp_tool_call, tool_name, parameters, metadata}, _ctx, state) do
+    start_time = System.monotonic_time(:microsecond)
+    
+    case handle_mcp_tool_call(tool_name, parameters, metadata, state) do
+      {:ok, mcp_request, new_state} ->
+        if new_state.demand > 0 do
+          # Send buffer immediately if there's demand
+          buffer = %Buffer{payload: mcp_request}
+          
+          emit_telemetry(state.telemetry_prefix, :tool_call_processed, %{
+            request_id: mcp_request.request_id,
+            tool_name: tool_name,
+            processing_time: System.monotonic_time(:microsecond) - start_time,
+            queue_size: new_state.queue_size
+          })
+          
+          updated_state = %{new_state | 
+            processed_count: new_state.processed_count + 1,
+            demand: new_state.demand - 1
+          }
+          
+          {[buffer: {:output, buffer}], updated_state}
+        else
+          # Queue the request for later
+          queued_state = %{new_state |
+            request_queue: :queue.in(mcp_request, new_state.request_queue),
+            queue_size: new_state.queue_size + 1
+          }
+          
+          {[], queued_state}
+        end
+        
+      {:error, reason, new_state} ->
+        Logger.warning("MCPSource tool call processing failed: #{reason}")
+        
+        emit_telemetry(state.telemetry_prefix, :tool_call_error, %{
+          tool_name: tool_name,
+          error_reason: reason,
+          processing_time: System.monotonic_time(:microsecond) - start_time
+        })
+        
+        updated_state = %{new_state | 
+          error_count: new_state.error_count + 1
+        }
+        
+        {[], updated_state}
+        
+      {:queue_full, new_state} ->
+        Logger.warning("MCPSource queue full, dropping tool call")
+        
+        emit_telemetry(state.telemetry_prefix, :queue_full, %{
+          tool_name: tool_name,
+          queue_size: new_state.queue_size,
+          max_queue_size: new_state.max_queue_size
+        })
+        
+        {[], new_state}
+    end
   end
 
   @impl true
@@ -240,6 +319,34 @@ defmodule AriaEngine.Membrane.MCPSource do
     end
   end
 
+  defp handle_mcp_tool_call(tool_name, parameters, metadata, state) do
+    cond do
+      state.queue_size >= state.max_queue_size ->
+        {:queue_full, state}
+        
+      not is_binary(tool_name) ->
+        {:error, "Tool name must be a string", state}
+        
+      not is_map(parameters) ->
+        {:error, "Parameters must be a map", state}
+        
+      not is_map(metadata) ->
+        {:error, "Metadata must be a map", state}
+        
+      true ->
+        case create_mcp_request_from_tool_call(tool_name, parameters, metadata, state) do
+          {:ok, mcp_request} ->
+            new_state = %{state | 
+              request_counter: state.request_counter + 1
+            }
+            {:ok, mcp_request, new_state}
+            
+          {:error, reason} ->
+            {:error, reason, state}
+        end
+    end
+  end
+
   defp handle_mcp_request(mcp_params, state) do
     cond do
       state.queue_size >= state.max_queue_size ->
@@ -259,6 +366,18 @@ defmodule AriaEngine.Membrane.MCPSource do
           {:error, reason} ->
             {:error, reason, state}
         end
+    end
+  end
+
+  defp create_mcp_request_from_tool_call(tool_name, parameters, metadata, state) do
+    request_id = generate_request_id(state.request_counter)
+    
+    case MCPRequest.from_tool_call(tool_name, parameters, request_id, metadata) do
+      {:ok, mcp_request} ->
+        {:ok, mcp_request}
+        
+      {:error, reason} ->
+        {:error, "Failed to create MCPRequest from tool call: #{reason}"}
     end
   end
 
