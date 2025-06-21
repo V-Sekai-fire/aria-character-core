@@ -634,10 +634,11 @@ MCPSource → PlanFilter → EchoFilter → MCPSink
 
 **Production Pipeline:**
 ```
-MCPSource → PlanFilter → PlannerSink → MCPSink
+MCPSource → PlanFilter → PlannerSink → ResponseFilter → MCPSink
 ```
 - PlannerSink executes actual planning via HybridCoordinatorV2
 - EchoFilter can be swapped in for testing without code changes
+- ResponseFilter converts PlanningResult to MCPResponse format
 
 ### Boot Level 3: Membrane Filter Element (Plan Transformer)
 

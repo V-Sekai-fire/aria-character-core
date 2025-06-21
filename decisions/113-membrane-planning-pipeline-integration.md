@@ -243,6 +243,9 @@ end
 ## Related ADRs
 
 - **ADR-110**: MCP Strategy Testing Interface (foundation - COMPLETED)
+  - Provides complete testing pipeline: MCPSource → ScheduleFilter → EchoFilter → ResponseFilter → MCPSink
+  - Establishes Membrane Framework architecture and format definitions
+  - All 59/59 tests passing for pipeline elements and management
 - **ADR-101**: Reconnect Scheduler with Hybrid Planner (planning integration)
 - **ADR-112**: Hybrid Coordinator V3 Implementation (future coordinator version)
 
