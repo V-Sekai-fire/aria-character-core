@@ -31,6 +31,18 @@ defmodule Timeline.AgentEntity do
 
   Examples: items, locations, resources, states, conditions
 
+  ## Specialized Modules
+
+  This module delegates to specialized sub-modules for different aspects of functionality:
+
+  - `Timeline.AgentEntity.AgentManagement` - Agent creation and validation
+  - `Timeline.AgentEntity.EntityManagement` - Entity creation and validation
+  - `Timeline.AgentEntity.CapabilityManagement` - Capability checking and management
+  - `Timeline.AgentEntity.StateTransitions` - Agent/entity state transitions
+  - `Timeline.AgentEntity.PropertyManagement` - Property getting/setting
+  - `Timeline.AgentEntity.OwnershipManagement` - Entity ownership operations
+  - `Timeline.AgentEntity.Validation` - Participant validation
+
   ## Usage
 
       iex> alias Timeline.AgentEntity
@@ -46,6 +58,14 @@ defmodule Timeline.AgentEntity do
   - ADR-046: Interval Notation Usability (agent vs entity debate)
   - ADR-078: Timeline Module PC-2 STN Implementation
   """
+
+  alias Timeline.AgentEntity.AgentManagement
+  alias Timeline.AgentEntity.EntityManagement
+  alias Timeline.AgentEntity.CapabilityManagement
+  alias Timeline.AgentEntity.StateTransitions
+  alias Timeline.AgentEntity.PropertyManagement
+  alias Timeline.AgentEntity.OwnershipManagement
+  alias Timeline.AgentEntity.Validation
 
   @type agent :: %{
           type: :agent,
@@ -77,546 +97,157 @@ defmodule Timeline.AgentEntity do
 
   @type participant :: agent() | entity() | hybrid()
 
+  # ==================== AGENT MANAGEMENT ====================
+
   @doc """
   Creates a new agent.
 
-  ## Parameters
-
-  - `id`: Unique identifier for the agent
-  - `name`: Human-readable name
-  - `properties`: Agent-specific properties (e.g., personality, skills)
-  - `opts`: Optional parameters including:
-    - `:capabilities` - List of agent capabilities
-    - `:metadata` - Additional metadata
-
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent(
-      ...>   "aria",
-      ...>   "Aria VTuber",
-      ...>   %{personality: "helpful", skill_level: "expert"},
-      ...>   capabilities: [:decision_making, :communication, :problem_solving]
-      ...> )
-      iex> agent.type
-      :agent
-      iex> agent.name
-      "Aria VTuber"
-
+  Delegates to `Timeline.AgentEntity.AgentManagement.create_agent/4`.
   """
-  @spec create_agent(String.t(), String.t(), map(), keyword()) :: agent()
-  def create_agent(id, name, properties \\ %{}, opts \\ [])
-
-  def create_agent(id, name, opts, []) when is_list(opts) do
-    # Handle case where properties is omitted and opts is passed as third argument
-    create_agent(id, name, %{}, opts)
-  end
-
-  def create_agent(id, name, properties, opts) do
-    %{
-      type: :agent,
-      id: id,
-      name: name,
-      capabilities: Keyword.get(opts, :capabilities, default_agent_capabilities()),
-      properties: properties,
-      metadata: Keyword.get(opts, :metadata, %{})
-    }
-  end
-
-  @doc """
-  Creates a new entity.
-
-  ## Parameters
-
-  - `id`: Unique identifier for the entity
-  - `name`: Human-readable name
-  - `properties`: Entity-specific properties (e.g., location, state)
-  - `opts`: Optional parameters including:
-    - `:owner_agent_id` - ID of the agent that owns this entity
-    - `:metadata` - Additional metadata
-
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.create_entity(
-      ...>   "conference_room",
-      ...>   "Conference Room A",
-      ...>   %{capacity: 10, location: "Building 1, Floor 2"},
-      ...>   owner_agent_id: "facility_manager",
-      ...>   metadata: %{building_id: "bldg_1"}
-      ...> )
-      iex> entity.type
-      :entity
-      iex> entity.name
-      "Conference Room A"
-
-  """
-  @spec create_entity(String.t(), String.t(), map(), keyword()) :: entity()
-  def create_entity(id, name, properties \\ %{}, opts \\ []) do
-    %{
-      type: :entity,
-      id: id,
-      name: name,
-      owner_agent_id: Keyword.get(opts, :owner_agent_id),
-      properties: properties,
-      metadata: Keyword.get(opts, :metadata, %{})
-    }
-  end
+  defdelegate create_agent(id, name, properties \\ %{}, opts \\ []), to: AgentManagement
 
   @doc """
   Checks if a participant is an agent.
 
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> Timeline.AgentEntity.agent?(agent)
-      true
-
+  Delegates to `Timeline.AgentEntity.AgentManagement.agent?/1`.
   """
-  @spec agent?(participant()) :: boolean()
-  def agent?(%{type: :agent}), do: true
-  def agent?(_), do: false
+  defdelegate agent?(participant), to: AgentManagement
+
+  # ==================== ENTITY MANAGEMENT ====================
+
+  @doc """
+  Creates a new entity.
+
+  Delegates to `Timeline.AgentEntity.EntityManagement.create_entity/4`.
+  """
+  defdelegate create_entity(id, name, properties \\ %{}, opts \\ []), to: EntityManagement
 
   @doc """
   Checks if a participant is an entity.
 
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.create_entity("room", "Conference Room")
-      iex> Timeline.AgentEntity.entity?(entity)
-      true
-
+  Delegates to `Timeline.AgentEntity.EntityManagement.entity?/1`.
   """
-  @spec entity?(participant()) :: boolean()
-  def entity?(%{type: :entity}), do: true
-  def entity?(_), do: false
+  defdelegate entity?(participant), to: EntityManagement
+
+  # ==================== CAPABILITY MANAGEMENT ====================
 
   @doc """
   Checks if an agent has a specific capability.
 
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent(
-      ...>   "aria", 
-      ...>   "Aria VTuber",
-      ...>   %{},
-      ...>   capabilities: [:decision_making, :communication]
-      ...> )
-      iex> Timeline.AgentEntity.has_capability?(agent, :decision_making)
-      true
-      iex> Timeline.AgentEntity.has_capability?(agent, :flight)
-      false
-
+  Delegates to `Timeline.AgentEntity.CapabilityManagement.has_capability?/2`.
   """
-  @spec has_capability?(participant(), atom()) :: boolean()
-  def has_capability?(%{capabilities: capabilities}, capability) when is_list(capabilities) do
-    capability in capabilities
-  end
-
-  def has_capability?(%{properties: %{capabilities: capabilities}}, capability)
-      when is_list(capabilities) do
-    capability in capabilities
-  end
-
-  def has_capability?(%{properties: properties}, capability) when is_list(properties) do
-    # Handle case where properties is a keyword list with capabilities
-    case Keyword.get(properties, :capabilities) do
-      capabilities when is_list(capabilities) -> capability in capabilities
-      _ -> false
-    end
-  end
-
-  def has_capability?(_, _), do: false
+  defdelegate has_capability?(participant, capability), to: CapabilityManagement
 
   @doc """
   Adds a capability to an agent.
 
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> updated_agent = Timeline.AgentEntity.add_capability(agent, :new_skill)
-      iex> Timeline.AgentEntity.has_capability?(updated_agent, :new_skill)
-      true
-
+  Delegates to `Timeline.AgentEntity.CapabilityManagement.add_capability/2`.
   """
-  @spec add_capability(agent(), atom()) :: agent()
-  def add_capability(%{type: :agent, capabilities: capabilities} = agent, capability) do
-    if capability in capabilities do
-      agent
-    else
-      %{agent | capabilities: [capability | capabilities]}
-    end
-  end
+  defdelegate add_capability(agent, capability), to: CapabilityManagement
 
   @doc """
-  Removes action capabilities from a participant, potentially transitioning it to entity status.
+  Removes action capabilities from a participant.
 
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent(
-      ...>   "aria", 
-      ...>   "Aria VTuber",
-      ...>   %{},
-      ...>   capabilities: [:decision_making, :communication]
-      ...> )
-      iex> updated_agent = Timeline.AgentEntity.remove_capabilities(agent, [:decision_making])
-      iex> Timeline.AgentEntity.has_capability?(updated_agent, :decision_making)
-      false
-
+  Delegates to `Timeline.AgentEntity.CapabilityManagement.remove_capabilities/2`.
   """
-  @spec remove_capabilities(participant(), [atom()]) :: participant()
-  def remove_capabilities(participant, capabilities_to_remove)
-      when is_list(capabilities_to_remove) do
-    current_capabilities = Map.get(participant, :capabilities, [])
-    updated_capabilities = current_capabilities -- capabilities_to_remove
-
-    Map.put(participant, :capabilities, updated_capabilities)
-  end
+  defdelegate remove_capabilities(participant, capabilities_to_remove), to: CapabilityManagement
 
   @doc """
-  Transitions a participant between agent and entity states based on capabilities.
+  Adds action capabilities to a participant.
 
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.create_entity("car", "Tesla Model 3")
-      iex> agent = Timeline.AgentEntity.transition_to_agent(entity, [:autonomous_driving, :decision_making])
-      iex> Timeline.AgentEntity.is_currently_agent?(agent)
-      true
-      
-      iex> back_to_entity = Timeline.AgentEntity.transition_to_entity(agent)
-      iex> Timeline.AgentEntity.is_currently_agent?(back_to_entity)
-      false
-
+  Delegates to `Timeline.AgentEntity.CapabilityManagement.add_capabilities/2`.
   """
-  @spec transition_to_agent(participant(), [atom()]) :: participant()
-  def transition_to_agent(participant, action_capabilities) when is_list(action_capabilities) do
-    participant
-    |> add_capabilities(action_capabilities)
-    |> Map.put(:type, :agent)
-  end
-
-  @spec transition_to_entity(participant()) :: participant()
-  def transition_to_entity(participant) do
-    participant
-    |> Map.put(:capabilities, [])
-    |> Map.put(:type, :entity)
-  end
-
-  @doc """
-  Updates properties of a participant (agent or entity).
-
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> updated_agent = Timeline.AgentEntity.update_properties(
-      ...>   agent, 
-      ...>   %{mood: "happy", energy: 100}
-      ...> )
-      iex> updated_agent.properties.mood
-      "happy"
-
-  """
-  @spec update_properties(participant(), map()) :: participant()
-  def update_properties(participant, new_properties) do
-    updated_properties = Map.merge(participant.properties, new_properties)
-    %{participant | properties: updated_properties}
-  end
-
-  @doc """
-  Gets a property value from a participant.
-
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent(
-      ...>   "aria", 
-      ...>   "Aria VTuber",
-      ...>   %{personality: "helpful"}
-      ...> )
-      iex> Timeline.AgentEntity.get_property(agent, :personality)
-      "helpful"
-      iex> Timeline.AgentEntity.get_property(agent, :unknown)
-      nil
-
-  """
-  @spec get_property(participant(), atom()) :: any()
-  def get_property(participant, property_key) do
-    Map.get(participant.properties, property_key)
-  end
-
-  @doc """
-  Sets a property value for a participant.
-
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> updated_agent = Timeline.AgentEntity.set_property(agent, :mood, "excited")
-      iex> Timeline.AgentEntity.get_property(updated_agent, :mood)
-      "excited"
-
-  """
-  @spec set_property(participant(), atom(), any()) :: participant()
-  def set_property(participant, property_key, value) do
-    updated_properties = Map.put(participant.properties, property_key, value)
-    %{participant | properties: updated_properties}
-  end
-
-  @doc """
-  Checks if an entity is owned by a specific agent.
-
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.create_entity(
-      ...>   "room",
-      ...>   "Conference Room",
-      ...>   %{},
-      ...>   owner_agent_id: "facility_manager"
-      ...> )
-      iex> Timeline.AgentEntity.owned_by?(entity, "facility_manager")
-      true
-      iex> Timeline.AgentEntity.owned_by?(entity, "other_agent")
-      false
-
-  """
-  @spec owned_by?(entity(), String.t()) :: boolean()
-  def owned_by?(%{type: :entity, owner_agent_id: owner_id}, agent_id) do
-    owner_id == agent_id
-  end
-
-  def owned_by?(_, _), do: false
-
-  @doc """
-  Checks if an entity has an owner.
-
-  ## Examples
-
-      iex> owned_entity = Timeline.AgentEntity.create_entity(
-      ...>   "room",
-      ...>   "Conference Room",
-      ...>   %{},
-      ...>   owner_agent_id: "facility_manager"
-      ...> )
-      iex> Timeline.AgentEntity.has_owner?(owned_entity)
-      true
-      iex> unowned_entity = Timeline.AgentEntity.create_entity("item", "Free Item")
-      iex> Timeline.AgentEntity.has_owner?(unowned_entity)
-      false
-
-  """
-  @spec has_owner?(entity()) :: boolean()
-  def has_owner?(%{type: :entity, owner_agent_id: owner_id}) do
-    not is_nil(owner_id)
-  end
-
-  def has_owner?(_), do: false
-
-  @doc """
-  Transfers ownership of an entity to a new agent.
-
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.create_entity(
-      ...>   "room",
-      ...>   "Conference Room",
-      ...>   %{},
-      ...>   owner_agent_id: "old_manager"
-      ...> )
-      iex> updated_entity = Timeline.AgentEntity.transfer_ownership(entity, "new_manager")
-      iex> updated_entity.owner_agent_id
-      "new_manager"
-
-  """
-  @spec transfer_ownership(entity(), String.t()) :: entity()
-  def transfer_ownership(%{type: :entity} = entity, new_owner_id) do
-    %{entity | owner_agent_id: new_owner_id}
-  end
-
-  @doc """
-  Removes ownership from an entity (makes it unowned).
-
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.create_entity(
-      ...>   "room",
-      ...>   "Conference Room",
-      ...>   %{},
-      ...>   owner_agent_id: "manager"
-      ...> )
-      iex> unowned_entity = Timeline.AgentEntity.remove_ownership(entity)
-      iex> unowned_entity.owner_agent_id
-      nil
-
-  """
-  @spec remove_ownership(entity()) :: entity()
-  def remove_ownership(%{type: :entity} = entity) do
-    %{entity | owner_agent_id: nil}
-  end
+  defdelegate add_capabilities(participant, new_capabilities), to: CapabilityManagement
 
   @doc """
   Checks if a participant can perform an action.
 
-  This is the core capability-based classification: if you can perform actions,
-  you're an agent; otherwise, you're an entity.
-
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent(
-      ...>   "aria", 
-      ...>   "Aria VTuber",
-      ...>   %{},
-      ...>   capabilities: [:decision_making]
-      ...> )
-      iex> Timeline.AgentEntity.can_perform_action?(agent, :make_decision)
-      true
-      iex> entity = Timeline.AgentEntity.create_entity("room", "Conference Room")
-      iex> Timeline.AgentEntity.can_perform_action?(entity, :make_decision)
-      false
-
+  Delegates to `Timeline.AgentEntity.CapabilityManagement.can_perform_action?/2`.
   """
-  @spec can_perform_action?(participant(), atom()) :: boolean()
-  def can_perform_action?(participant, action) do
-    # Capability-based determination: if you have action capabilities, you're an agent
-    case participant do
-      %{capabilities: capabilities} when is_list(capabilities) ->
-        required_capability = action_to_capability(action)
-        required_capability in capabilities
-
-      %{type: :agent, capabilities: capabilities} when is_list(capabilities) ->
-        required_capability = action_to_capability(action)
-        required_capability in capabilities
-
-      # No action capabilities = entity behavior
-      _ ->
-        false
-    end
-  end
+  defdelegate can_perform_action?(participant, action), to: CapabilityManagement
 
   @doc """
   Dynamically determines if a participant is currently acting as an agent.
 
-  Based on capability-based classification: agents have action capabilities,
-  entities do not. This allows for dynamic state transitions.
-
-  ## Examples
-
-      iex> car = Timeline.AgentEntity.create_entity(
-      ...>   "car1", 
-      ...>   "Tesla Model 3",
-      ...>   %{autonomous_mode: false}
-      ...> )
-      iex> Timeline.AgentEntity.is_currently_agent?(car)
-      false
-      
-      iex> autonomous_car = Timeline.AgentEntity.add_capabilities(car, [:autonomous_driving, :decision_making])
-      iex> Timeline.AgentEntity.is_currently_agent?(autonomous_car)
-      true
-
+  Delegates to `Timeline.AgentEntity.CapabilityManagement.is_currently_agent?/1`.
   """
-  @spec is_currently_agent?(participant()) :: boolean()
-  def is_currently_agent?(participant) do
-    case participant do
-      %{capabilities: capabilities} when is_list(capabilities) and capabilities != [] ->
-        # Has action capabilities = currently acting as agent
-        Enum.any?(capabilities, &is_action_capability?/1)
+  defdelegate is_currently_agent?(participant), to: CapabilityManagement
 
-      _ ->
-        false
-    end
-  end
+  # ==================== STATE TRANSITIONS ====================
 
   @doc """
-  Adds action capabilities to a participant, potentially transitioning it to agent status.
+  Transitions a participant to agent state.
 
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.create_entity("car", "Tesla")
-      iex> Timeline.AgentEntity.is_currently_agent?(entity)
-      false
-      
-      iex> agent = Timeline.AgentEntity.add_capabilities(entity, [:autonomous_driving])
-      iex> Timeline.AgentEntity.is_currently_agent?(agent)
-      true
-
+  Delegates to `Timeline.AgentEntity.StateTransitions.transition_to_agent/2`.
   """
-  @spec add_capabilities(participant(), [atom()]) :: participant()
-  def add_capabilities(participant, new_capabilities) when is_list(new_capabilities) do
-    current_capabilities = Map.get(participant, :capabilities, [])
-    updated_capabilities = Enum.uniq(current_capabilities ++ new_capabilities)
+  defdelegate transition_to_agent(participant, action_capabilities), to: StateTransitions
 
-    Map.put(participant, :capabilities, updated_capabilities)
-  end
+  @doc """
+  Transitions a participant to entity state.
+
+  Delegates to `Timeline.AgentEntity.StateTransitions.transition_to_entity/1`.
+  """
+  defdelegate transition_to_entity(participant), to: StateTransitions
+
+  # ==================== PROPERTY MANAGEMENT ====================
+
+  @doc """
+  Updates properties of a participant.
+
+  Delegates to `Timeline.AgentEntity.PropertyManagement.update_properties/2`.
+  """
+  defdelegate update_properties(participant, new_properties), to: PropertyManagement
+
+  @doc """
+  Gets a property value from a participant.
+
+  Delegates to `Timeline.AgentEntity.PropertyManagement.get_property/2`.
+  """
+  defdelegate get_property(participant, property_key), to: PropertyManagement
+
+  @doc """
+  Sets a property value for a participant.
+
+  Delegates to `Timeline.AgentEntity.PropertyManagement.set_property/3`.
+  """
+  defdelegate set_property(participant, property_key, value), to: PropertyManagement
+
+  # ==================== OWNERSHIP MANAGEMENT ====================
+
+  @doc """
+  Checks if an entity is owned by a specific agent.
+
+  Delegates to `Timeline.AgentEntity.OwnershipManagement.owned_by?/2`.
+  """
+  defdelegate owned_by?(entity, agent_id), to: OwnershipManagement
+
+  @doc """
+  Checks if an entity has an owner.
+
+  Delegates to `Timeline.AgentEntity.OwnershipManagement.has_owner?/1`.
+  """
+  defdelegate has_owner?(entity), to: OwnershipManagement
+
+  @doc """
+  Transfers ownership of an entity to a new agent.
+
+  Delegates to `Timeline.AgentEntity.OwnershipManagement.transfer_ownership/2`.
+  """
+  defdelegate transfer_ownership(entity, new_owner_id), to: OwnershipManagement
+
+  @doc """
+  Removes ownership from an entity.
+
+  Delegates to `Timeline.AgentEntity.OwnershipManagement.remove_ownership/1`.
+  """
+  defdelegate remove_ownership(entity), to: OwnershipManagement
+
+  # ==================== VALIDATION ====================
 
   @doc """
   Validates that a participant is properly formed.
 
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> Timeline.AgentEntity.valid?(agent)
-      true
-
+  Delegates to `Timeline.AgentEntity.Validation.valid?/1`.
   """
-  @spec valid?(participant()) :: boolean()
-  def valid?(%{type: :agent, id: id, name: name, capabilities: capabilities})
-      when is_binary(id) and is_binary(name) and is_list(capabilities) do
-    String.length(id) > 0 and String.length(name) > 0
-  end
-
-  def valid?(%{type: :entity, id: id, name: name})
-      when is_binary(id) and is_binary(name) do
-    String.length(id) > 0 and String.length(name) > 0
-  end
-
-  def valid?(_), do: false
-
-  # Private helper functions
-
-  defp default_agent_capabilities do
-    [
-      :decision_making,
-      :action_execution,
-      :communication,
-      :learning,
-      :goal_setting
-    ]
-  end
-
-  # Maps action types to required capabilities
-  defp action_to_capability(action) do
-    case action do
-      :make_decision -> :decision_making
-      :communicate -> :communication
-      :learn -> :learning
-      :set_goal -> :goal_setting
-      :execute_action -> :action_execution
-      :move -> :movement
-      :interact -> :interaction
-      :observe -> :observation
-      :plan -> :planning
-      :reason -> :reasoning
-      :autonomous_driving -> :autonomous_driving
-      :navigate -> :navigation
-      :respond_to_environment -> :environmental_response
-      _ -> :general_capability
-    end
-  end
-
-  # Determines if a capability represents the ability to take actions
-  defp is_action_capability?(capability) do
-    capability in [
-      :decision_making,
-      :action_execution,
-      :movement,
-      :autonomous_driving,
-      :autonomous_operation,
-      :navigation,
-      :interaction,
-      :planning,
-      :goal_setting,
-      :environmental_response,
-      :general_capability,
-      :communication,
-      :manual_operation,
-      :data_transmission,
-      :diagnostic_analysis,
-      :repair_operations
-    ]
-  end
+  defdelegate valid?(participant), to: Validation
 end
