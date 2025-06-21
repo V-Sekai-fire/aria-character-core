@@ -1,4 +1,4 @@
-# ADR-078: Timeline Module with PC-2 STN Implementation
+# ADR-078: Timeline Module with ~~PC-2~~ (Replaced with MiniZinc v0.2.0) STN Implementation
 
 **Status:** Deferred  
 **Date:** June 15, 2025  
@@ -7,13 +7,13 @@
 
 ## Context
 
-Task 10 from ADR-075 requires implementing `AriaEngine.Timeline` module with interval-based storage that uses the Path Consistency (PC-2) algorithm for optimal Simple Temporal Network (STN) solving. This implementation must integrate findings from multiple ADRs regarding Allen's interval algebra, usability improvements, and the agent vs entity distinction.
+Task 10 from ADR-075 requires implementing `AriaEngine.Timeline` module with interval-based storage that uses the ~~Path Consistency (PC-2) algorithm~~ (Replaced with MiniZinc v0.2.0) for optimal Simple Temporal Network (STN) solving. This implementation must integrate findings from multiple ADRs regarding Allen's interval algebra, usability improvements, and the agent vs entity distinction.
 
 ### Key Requirements from ADR Review
 
 **From ADR-040 (Temporal Constraint Solver Selection):**
 
-- PC-2 algorithm is mandatory for STN solving
+- ~~PC-2 algorithm~~ (Replaced with MiniZinc v0.2.0) is mandatory for STN solving
 - Must handle temporal constraint networks efficiently
 - Algorithm provides optimal constraint propagation
 
@@ -37,7 +37,7 @@ Implement `AriaEngine.Timeline` module with the following architecture:
 ### Core Components
 
 1. **Timeline Storage**: Interval-based storage system
-2. **PC-2 STN Solver**: Path Consistency algorithm implementation
+2. **~~PC-2~~ (Replaced with MiniZinc v0.2.0) STN Solver**: Path Consistency algorithm implementation
 3. **Allen's Interval API**: Usability-enhanced interval relationship interface
 4. **Constraint Builder**: Pipeline-based constraint construction
 5. **Agent/Entity Support**: Semantic distinctions for timeline participants
@@ -45,7 +45,7 @@ Implement `AriaEngine.Timeline` module with the following architecture:
 ### Implementation Approach
 
 - Create modular design with clear separation of concerns
-- Implement PC-2 algorithm with optimal performance characteristics
+- Implement ~~PC-2 algorithm~~ (Replaced with MiniZinc v0.2.0) with optimal performance characteristics
 - Provide both low-level and high-level APIs for different use cases
 - Ensure integration with existing AriaEngine workflow systems
 
@@ -58,9 +58,9 @@ Implement `AriaEngine.Timeline` module with the following architecture:
 - [ ] Add basic timeline creation and manipulation functions
 - [ ] Create comprehensive test suite for core functionality
 
-### Phase 2: PC-2 STN Solver Integration
+### Phase 2: ~~PC-2~~ (Replaced with MiniZinc v0.2.0) STN Solver Integration
 
-- [ ] Implement Path Consistency (PC-2) algorithm
+- [ ] Implement ~~Path Consistency (PC-2) algorithm~~ (Replaced with MiniZinc v0.2.0)
 - [ ] Create STN constraint representation system
 - [ ] Add constraint propagation and consistency checking
 - [ ] Implement temporal network solving functions
@@ -85,7 +85,7 @@ Implement `AriaEngine.Timeline` module with the following architecture:
 ## Success Criteria
 
 - [ ] `AriaEngine.Timeline` module successfully created and functional
-- [ ] PC-2 algorithm correctly implements STN solving with optimal performance
+- [ ] ~~PC-2 algorithm~~ (Replaced with MiniZinc v0.2.0) correctly implements STN solving with optimal performance
 - [ ] Allen's interval algebra API provides all identified usability improvements
 - [ ] Fluent APIs enable intuitive timeline constraint construction
 - [ ] Agent/entity semantic distinctions are properly supported
@@ -96,9 +96,9 @@ Implement `AriaEngine.Timeline` module with the following architecture:
 
 ## Technical Specifications
 
-### PC-2 Algorithm Requirements
+### ~~PC-2 Algorithm~~ (Replaced with MiniZinc v0.2.0) Requirements
 
-- Implement full Path Consistency algorithm for STN solving
+- Implement full ~~Path Consistency algorithm~~ (Replaced with MiniZinc v0.2.0) for STN solving
 - Ensure O(n³) time complexity for constraint propagation
 - Support incremental constraint addition and removal
 - Provide consistency checking and conflict detection
@@ -121,7 +121,7 @@ Implement `AriaEngine.Timeline` module with the following architecture:
 
 ### Benefits
 
-- Optimal STN solving performance with PC-2 algorithm
+- Optimal STN solving performance with ~~PC-2 algorithm~~ (Replaced with MiniZinc v0.2.0)
 - Enhanced usability for temporal constraint modeling
 - Improved developer experience with fluent APIs
 - Better semantic modeling with agent/entity distinctions
@@ -129,7 +129,7 @@ Implement `AriaEngine.Timeline` module with the following architecture:
 
 ### Risks
 
-- Implementation complexity of PC-2 algorithm
+- Implementation complexity of ~~PC-2 algorithm~~ (Replaced with MiniZinc v0.2.0)
 - Performance optimization challenges for large timelines
 - Integration complexity with existing systems
 - API design decisions affecting future extensibility

@@ -1,6 +1,6 @@
 # ADR-100: Extract Scheduler and Remove MCP Infrastructure
 
-**Status:** Completed
+**Status:** Completed ~~(Temporary removal, restoration planned)~~
 **Date:** June 18, 2025
 **Completion Date:** June 18, 2025
 **Priority:** HIGH
@@ -17,6 +17,8 @@ The current MCP implementation includes:
 - Mix tasks for MCP interaction
 
 The core scheduling functionality is valuable and should be preserved, but the MCP protocol layer should be removed to simplify the architecture.
+
+**Note (v0.2.0):** This removal is temporary for architectural simplification. MCP restoration is planned for future development phases with improved design.
 
 ## Decision
 

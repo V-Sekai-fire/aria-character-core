@@ -21,12 +21,12 @@ This ADR documents the closure of the temporal planning development segment and 
 
 **STN Temporal Strategy:**
 - ✅ Simple Temporal Network constraint solving
-- ✅ PC-2 algorithm implementation for optimal performance
+- ✅ ~~PC-2 algorithm~~ (Replaced with MiniZinc v0.2.0) implementation for optimal performance
 - ✅ Integration with HybridCoordinatorV2
 - ✅ Real-time temporal constraint validation
 
 **Timeline Module Implementation:**
-- ✅ Complete Timeline system with PC-2 STN integration
+- ✅ Complete Timeline system with ~~PC-2~~ (Replaced with MiniZinc v0.2.0) STN integration
 - ✅ Allen's Interval Algebra (renamed to IntervalRelations)
 - ✅ Agent/Entity capability-based classification
 - ✅ DateTime/float precision time input with millisecond solving
@@ -47,10 +47,10 @@ This ADR documents the closure of the temporal planning development segment and 
 - ✅ Pre-commit hooks for quality enforcement
 - ✅ Continuous integration validation
 
-### MCP Integration ✅
+### ~~MCP Integration~~ (Temporarily removed v0.2.0, restoration planned) ✅
 
 **Scheduler Interface:**
-- ✅ MCP tools for schedule_activities functionality
+- ✅ ~~MCP tools~~ (Temporarily removed v0.2.0) for schedule_activities functionality
 - ✅ Clean data transformation pipeline
 - ✅ Integration with HybridCoordinatorV2
 - ✅ Comprehensive input validation and error handling
@@ -96,10 +96,10 @@ This ADR documents the closure of the temporal planning development segment and 
 - ✅ Performance validation completed
 
 **Core Functionality:**
-- ✅ Temporal constraint solving with PC-2 algorithm
+- ✅ Temporal constraint solving with ~~PC-2 algorithm~~ (Replaced with MiniZinc v0.2.0)
 - ✅ Multi-strategy planning coordination
 - ✅ Real-time schedule optimization
-- ✅ MCP interface for external integration
+- ✅ ~~MCP interface~~ (Temporarily removed v0.2.0, restoration planned) for external integration
 - ✅ Timeline management with interval algebra
 
 ### Architecture Quality ✅
@@ -151,10 +151,10 @@ This ADR documents the closure of the temporal planning development segment and 
 
 ### Functional Requirements ✅
 
-- ✅ **Temporal Constraint Solving**: PC-2 algorithm implementation complete
+- ✅ **Temporal Constraint Solving**: ~~PC-2 algorithm~~ (Replaced with MiniZinc v0.2.0) implementation complete
 - ✅ **Multi-Strategy Planning**: HybridCoordinatorV2 supports multiple approaches
 - ✅ **Real-Time Performance**: Millisecond precision with scalable processing
-- ✅ **External Integration**: MCP interface provides clean API access
+- ✅ **External Integration**: ~~MCP interface~~ (Temporarily removed v0.2.0, restoration planned) provides clean API access
 - ✅ **Timeline Management**: Complete interval algebra and agent/entity support
 
 ### Quality Requirements ✅
@@ -167,7 +167,7 @@ This ADR documents the closure of the temporal planning development segment and 
 
 ### Integration Requirements ✅
 
-- ✅ **MCP Compatibility**: Schedule activities tool fully functional
+- ✅ **~~MCP Compatibility~~** (Temporarily removed v0.2.0, restoration planned): Schedule activities tool fully functional
 - ✅ **Strategy Extensibility**: New strategies can be added without core changes
 - ✅ **Timeline Integration**: Temporal constraints work with planning system
 - ✅ **Error Handling**: Comprehensive validation and error recovery
