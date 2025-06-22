@@ -29,11 +29,11 @@ defmodule Domain do
 
   require Logger
 
-  alias Domain.Core
   alias Domain.Actions
+  alias Domain.BehaviourImpl
+  alias Domain.Core
   alias Domain.Methods
   alias Domain.Utils
-  alias Domain.BehaviourImpl
 
   @type t :: Core.t()
   @type action_name :: Core.action_name()
