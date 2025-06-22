@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.AgentEntity.OwnershipManagement do
+defmodule AriaEngine.Timeline.AgentEntity.OwnershipManagement do
   @moduledoc """
   Ownership management operations for Timeline.AgentEntity.
 
@@ -9,7 +9,7 @@ defmodule Timeline.AgentEntity.OwnershipManagement do
   ownership checking, transfer, and removal.
   """
 
-  @type entity :: Timeline.AgentEntity.entity()
+  @type entity :: AriaEngine.Timeline.AgentEntity.entity()
 
   @doc """
   Checks if an entity is owned by a specific agent.

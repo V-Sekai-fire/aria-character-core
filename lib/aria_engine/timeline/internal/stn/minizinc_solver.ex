@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.Internal.STN.MiniZincSolver do
+defmodule AriaEngine.Timeline.Internal.STN.MiniZincSolver do
   @moduledoc """
   MiniZinc-based STN solver that replaces the PC-2 algorithm.
 
@@ -9,7 +9,7 @@ defmodule Timeline.Internal.STN.MiniZincSolver do
   to determine consistency and find solutions.
   """
 
-  alias Timeline.Internal.STN
+  alias AriaEngine.Timeline.Internal.STN
   alias AriaEngine.MiniZinc.Executor
 
   require Logger

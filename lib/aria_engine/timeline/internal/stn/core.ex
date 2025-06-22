@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.Internal.STN.Core do
+defmodule AriaEngine.Timeline.Internal.STN.Core do
   # This module is part of the internal STN implementation
   @moduledoc false
 
-  alias Timeline.Interval
-  alias Timeline.Internal.STN
+  alias AriaEngine.Timeline.Interval
+  alias AriaEngine.Timeline.Internal.STN
 
   # {min_distance, max_distance}
   @type constraint :: {number(), number()}

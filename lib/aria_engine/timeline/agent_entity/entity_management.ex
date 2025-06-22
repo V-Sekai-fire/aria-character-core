@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.AgentEntity.EntityManagement do
+defmodule AriaEngine.Timeline.AgentEntity.EntityManagement do
   @moduledoc """
   Entity creation and management operations for Timeline.AgentEntity.
 
@@ -9,8 +9,8 @@ defmodule Timeline.AgentEntity.EntityManagement do
   timeline system.
   """
 
-  @type entity :: Timeline.AgentEntity.entity()
-  @type participant :: Timeline.AgentEntity.participant()
+  @type entity :: AriaEngine.Timeline.AgentEntity.entity()
+  @type participant :: AriaEngine.Timeline.AgentEntity.participant()
 
   @doc """
   Creates a new entity.

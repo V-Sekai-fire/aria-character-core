@@ -1,16 +1,16 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.AgentEntity.AgentManagement do
+defmodule AriaEngine.Timeline.AgentEntity.AgentManagement do
   @moduledoc """
-  Agent creation and management operations for Timeline.AgentEntity.
+  Agent creation and management operations for AriaEngine.Timeline.AgentEntity.
 
   Handles the creation, validation, and basic operations for agents in the
   timeline system.
   """
 
-  @type agent :: Timeline.AgentEntity.agent()
-  @type participant :: Timeline.AgentEntity.participant()
+  @type agent :: AriaEngine.Timeline.AgentEntity.agent()
+  @type participant :: AriaEngine.Timeline.AgentEntity.participant()
 
   @doc """
   Creates a new agent.

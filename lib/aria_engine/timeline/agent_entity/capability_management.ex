@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.AgentEntity.CapabilityManagement do
+defmodule AriaEngine.Timeline.AgentEntity.CapabilityManagement do
   @moduledoc """
   Capability management operations for Timeline.AgentEntity.
 
@@ -9,8 +9,8 @@ defmodule Timeline.AgentEntity.CapabilityManagement do
   classification for agents and entities.
   """
 
-  @type participant :: Timeline.AgentEntity.participant()
-  @type agent :: Timeline.AgentEntity.agent()
+  @type participant :: AriaEngine.Timeline.AgentEntity.participant()
+  @type agent :: AriaEngine.Timeline.AgentEntity.agent()
 
   @doc """
   Checks if an agent has a specific capability.

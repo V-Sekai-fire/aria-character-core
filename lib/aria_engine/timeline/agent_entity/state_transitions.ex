@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.AgentEntity.StateTransitions do
+defmodule AriaEngine.Timeline.AgentEntity.StateTransitions do
   @moduledoc """
   State transition operations for Timeline.AgentEntity.
 
@@ -9,9 +9,9 @@ defmodule Timeline.AgentEntity.StateTransitions do
   and dynamic state changes.
   """
 
-  alias Timeline.AgentEntity.CapabilityManagement
+  alias AriaEngine.Timeline.AgentEntity.CapabilityManagement
 
-  @type participant :: Timeline.AgentEntity.participant()
+  @type participant :: AriaEngine.Timeline.AgentEntity.participant()
 
   @doc """
   Transitions a participant between agent and entity states based on capabilities.

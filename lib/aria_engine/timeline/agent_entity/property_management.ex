@@ -1,14 +1,14 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.AgentEntity.PropertyManagement do
+defmodule AriaEngine.Timeline.AgentEntity.PropertyManagement do
   @moduledoc """
   Property management operations for Timeline.AgentEntity.
 
   Handles getting, setting, and updating properties for agents and entities.
   """
 
-  @type participant :: Timeline.AgentEntity.participant()
+  @type participant :: AriaEngine.Timeline.AgentEntity.participant()
 
   @doc """
   Updates properties of a participant (agent or entity).

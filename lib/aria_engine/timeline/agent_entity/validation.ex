@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.AgentEntity.Validation do
+defmodule AriaEngine.Timeline.AgentEntity.Validation do
   @moduledoc """
   Validation operations for Timeline.AgentEntity.
 
@@ -9,10 +9,10 @@ defmodule Timeline.AgentEntity.Validation do
   and meet the requirements for agents and entities.
   """
 
-  alias Timeline.AgentEntity.AgentManagement
-  alias Timeline.AgentEntity.EntityManagement
+  alias AriaEngine.Timeline.AgentEntity.AgentManagement
+  alias AriaEngine.Timeline.AgentEntity.EntityManagement
 
-  @type participant :: Timeline.AgentEntity.participant()
+  @type participant :: AriaEngine.Timeline.AgentEntity.participant()
 
   @doc """
   Validates that a participant is properly formed.

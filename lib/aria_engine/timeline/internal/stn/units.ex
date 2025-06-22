@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.Internal.STN.Units do
+defmodule AriaEngine.Timeline.Internal.STN.Units do
   # This module is part of the internal STN implementation
   @moduledoc false
 
-  alias Timeline.Internal.STN
+  alias AriaEngine.Timeline.Internal.STN
 
   @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day
   @type lod_level :: :ultra_high | :high | :medium | :low | :very_low
