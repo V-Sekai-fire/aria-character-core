@@ -1,10 +1,11 @@
 # ADR-128: STN Solver MiniZinc Fallback Implementation
 
-**Status:** Active  
+**Status:** Paused  
 **Date:** 2025-06-22  
 **Implementation Start:** 2025-06-22  
+**Paused:** 2025-06-22  
 **Priority:** HIGH  
-**Phase:** Implementation  
+**Phase:** Implementation (Paused)  
 
 ## Context
 
