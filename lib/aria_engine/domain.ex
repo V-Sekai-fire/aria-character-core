@@ -53,43 +53,49 @@ defmodule AriaEngine.Domain do
 
   @spec from_module(module()) :: t()
   def from_module(domain_module) do
-    domain_name = domain_module |> Module.split() |> List.last() |> String.downcase()
-    Logger.error("Creating domain: #{domain_name}")
-    domain = Core.new(domain_name)
+    # Use the domain module's build/0 function if it exists
+    if function_exported?(domain_module, :build, 0) do
+      domain_module.build()
+    else
+      # Fallback to the old method for backward compatibility
+      domain_name = domain_module |> Module.split() |> List.last() |> String.downcase()
+      Logger.error("Creating domain: #{domain_name}")
+      domain = Core.new(domain_name)
 
-    actions = domain_module.actions()
-    methods = domain_module.methods()
+      actions = domain_module.actions()
+      methods = domain_module.methods()
 
-    Logger.error("Actions: #{inspect(actions)}")
-    Logger.error("Methods: #{inspect(methods)}")
+      Logger.error("Actions: #{inspect(actions)}")
+      Logger.error("Methods: #{inspect(methods)}")
 
-    domain = Enum.reduce(actions, domain, fn action_name, domain ->
-      Logger.error("Adding action: #{action_name}")
-      add_action(domain, action_name, fn state, args ->
-        apply(domain_module, action_name, [state | args])
+      domain = Enum.reduce(actions, domain, fn action_name, domain ->
+        Logger.error("Adding action: #{action_name}")
+        add_action(domain, action_name, fn state, args ->
+          apply(domain_module, action_name, [state | args])
+        end)
       end)
-    end)
 
-    Enum.reduce(methods, domain, fn method_name, domain ->
-      Logger.error("Adding method: #{method_name}")
-      cond do
-        String.starts_with?(method_name, "solve_multigoal") ->
-          Logger.error("Adding multigoal method: #{method_name}")
-          add_multigoal_method(domain, method_name, fn state, args ->
-            apply(domain_module, :solve_multigoal, [state | args])
-          end)
-        String.starts_with?(method_name, "achieve_goal") ->
-          Logger.error("Adding unigoal method: #{method_name}")
-          add_unigoal_method(domain, "status", method_name, fn state, args ->
-            apply(domain_module, :achieve_goal, [state | args])
-          end)
-        true ->
-          Logger.error("Adding task method: #{method_name}")
-          add_task_method(domain, method_name, method_name, fn state, args ->
-            apply(domain_module, String.to_atom(method_name), [state | args])
-          end)
-      end
-    end)
+      Enum.reduce(methods, domain, fn method_name, domain ->
+        Logger.error("Adding method: #{method_name}")
+        cond do
+          String.starts_with?(method_name, "solve_multigoal") ->
+            Logger.error("Adding multigoal method: #{method_name}")
+            add_multigoal_method(domain, method_name, fn state, args ->
+              apply(domain_module, :solve_multigoal, [state | args])
+            end)
+          String.starts_with?(method_name, "achieve_goal") ->
+            Logger.error("Adding unigoal method: #{method_name}")
+            add_unigoal_method(domain, "status", method_name, fn state, args ->
+              apply(domain_module, :achieve_goal, [state | args])
+            end)
+          true ->
+            Logger.error("Adding task method: #{method_name}")
+            add_task_method(domain, method_name, method_name, fn state, args ->
+              apply(domain_module, String.to_atom(method_name), [state | args])
+            end)
+        end
+      end)
+    end
   end
 
   @spec validate(t()) :: {:ok, t()} | {:error, String.t()}

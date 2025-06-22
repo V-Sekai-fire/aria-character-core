@@ -45,28 +45,37 @@ defmodule AriaEngine.SoftwareDevelopment.Domain do
     Logger.error("IMPLEMENT_MODULE called with module_name: #{inspect(module_name)}")
     Logger.error("IMPLEMENT_MODULE state: #{inspect(StateV2.to_triples(state))}")
 
-    # Check dependencies
-    dependencies =
-      state
-      |> StateV2.to_triples()
-      |> Enum.filter(fn {s, p, _o} -> s == module_name and p == "depends_on" end)
-      |> Enum.map(fn {_s, _p, o} -> o end)
+    # Check current status - if already completed or beyond, don't re-implement
+    current_status = StateV2.get_fact(state, module_name, "status")
+    Logger.error("IMPLEMENT_MODULE current_status: #{inspect(current_status)}")
 
-    Logger.error("IMPLEMENT_MODULE dependencies: #{inspect(dependencies)}")
-
-    all_deps_met = Enum.all?(dependencies, fn dep ->
-      StateV2.get_fact(state, dep, "status") == "documented"
-    end)
-
-    Logger.error("IMPLEMENT_MODULE all_deps_met: #{inspect(all_deps_met)}")
-
-    if all_deps_met do
-      new_state = StateV2.set_fact(state, module_name, "status", "completed")
-      Logger.error("IMPLEMENT_MODULE SUCCESS - new state: #{inspect(StateV2.to_triples(new_state))}")
-      new_state
+    if current_status in ["completed", "tested", "documented"] do
+      Logger.error("IMPLEMENT_MODULE SKIPPED - already implemented")
+      state  # No change needed
     else
-      Logger.error("IMPLEMENT_MODULE FAILED - dependencies not met")
-      false
+      # Check dependencies
+      dependencies =
+        state
+        |> StateV2.to_triples()
+        |> Enum.filter(fn {s, p, _o} -> s == module_name and p == "depends_on" end)
+        |> Enum.map(fn {_s, _p, o} -> o end)
+
+      Logger.error("IMPLEMENT_MODULE dependencies: #{inspect(dependencies)}")
+
+      all_deps_met = Enum.all?(dependencies, fn dep ->
+        StateV2.get_fact(state, dep, "status") == "documented"
+      end)
+
+      Logger.error("IMPLEMENT_MODULE all_deps_met: #{inspect(all_deps_met)}")
+
+      if all_deps_met do
+        new_state = StateV2.set_fact(state, module_name, "status", "completed")
+        Logger.error("IMPLEMENT_MODULE SUCCESS - new state: #{inspect(StateV2.to_triples(new_state))}")
+        new_state
+      else
+        Logger.error("IMPLEMENT_MODULE FAILED - dependencies not met")
+        false
+      end
     end
   end
 
