@@ -24,12 +24,12 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = Timeline.new()
+      iex> timeline = AriaEngine.Timeline.new()
       iex> alias AriaEngine.Timeline.Interval
       iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
       iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
       iex> interval = Interval.new(start_time, end_time)
-      iex> timeline = Timeline.add_interval(timeline, interval)
+      iex> timeline = AriaEngine.Timeline.add_interval(timeline, interval)
       iex> length(Map.keys(timeline.intervals))
       1
 
@@ -119,10 +119,10 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = Timeline.new()
+      iex> timeline = AriaEngine.Timeline.new()
       iex> position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge = Timeline.Bridge.new("decision_1", position, :decision)
-      iex> updated_timeline = Timeline.add_bridge(timeline, bridge)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("decision_1", position, :decision)
+      iex> updated_timeline = AriaEngine.Timeline.add_bridge(timeline, bridge)
       iex> Map.has_key?(updated_timeline.bridges, "decision_1")
       true
 
@@ -139,11 +139,11 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = Timeline.new()
+      iex> timeline = AriaEngine.Timeline.new()
       iex> position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge = Timeline.Bridge.new("decision_1", position, :decision)
-      iex> timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
-      iex> updated_timeline = Timeline.remove_bridge(timeline_with_bridge, "decision_1")
+      iex> bridge = AriaEngine.Timeline.Bridge.new("decision_1", position, :decision)
+      iex> timeline_with_bridge = AriaEngine.Timeline.add_bridge(timeline, bridge)
+      iex> updated_timeline = AriaEngine.Timeline.remove_bridge(timeline_with_bridge, "decision_1")
       iex> Map.has_key?(updated_timeline.bridges, "decision_1")
       false
 
@@ -158,11 +158,11 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = Timeline.new()
+      iex> timeline = AriaEngine.Timeline.new()
       iex> position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge = Timeline.Bridge.new("decision_1", position, :decision)
-      iex> timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
-      iex> retrieved_bridge = Timeline.get_bridge(timeline_with_bridge, "decision_1")
+      iex> bridge = AriaEngine.Timeline.Bridge.new("decision_1", position, :decision)
+      iex> timeline_with_bridge = AriaEngine.Timeline.add_bridge(timeline, bridge)
+      iex> retrieved_bridge = AriaEngine.Timeline.get_bridge(timeline_with_bridge, "decision_1")
       iex> retrieved_bridge.id
       "decision_1"
 
@@ -177,13 +177,13 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = Timeline.new()
+      iex> timeline = AriaEngine.Timeline.new()
       iex> pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
       iex> pos2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge1 = Timeline.Bridge.new("b1", pos1, :decision)
-      iex> bridge2 = Timeline.Bridge.new("b2", pos2, :condition)
-      iex> timeline = timeline |> Timeline.add_bridge(bridge2) |> Timeline.add_bridge(bridge1)
-      iex> [first, second] = Timeline.get_bridges(timeline)
+      iex> bridge1 = AriaEngine.Timeline.Bridge.new("b1", pos1, :decision)
+      iex> bridge2 = AriaEngine.Timeline.Bridge.new("b2", pos2, :condition)
+      iex> timeline = timeline |> AriaEngine.Timeline.add_bridge(bridge2) |> AriaEngine.Timeline.add_bridge(bridge1)
+      iex> [first, _second] = AriaEngine.Timeline.get_bridges(timeline)
       iex> first.id
       "b1"
 
@@ -200,13 +200,13 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = Timeline.new()
+      iex> timeline = AriaEngine.Timeline.new()
       iex> position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge = Timeline.Bridge.new("decision_1", position, :decision)
-      iex> timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
-      iex> updated_bridge = Timeline.Bridge.update_metadata(bridge, %{priority: :high})
-      iex> updated_timeline = Timeline.update_bridge(timeline_with_bridge, updated_bridge)
-      iex> retrieved_bridge = Timeline.get_bridge(updated_timeline, "decision_1")
+      iex> bridge = AriaEngine.Timeline.Bridge.new("decision_1", position, :decision)
+      iex> timeline_with_bridge = AriaEngine.Timeline.add_bridge(timeline, bridge)
+      iex> updated_bridge = AriaEngine.Timeline.Bridge.update_metadata(bridge, %{priority: :high})
+      iex> updated_timeline = AriaEngine.Timeline.update_bridge(timeline_with_bridge, updated_bridge)
+      iex> retrieved_bridge = AriaEngine.Timeline.get_bridge(updated_timeline, "decision_1")
       iex> retrieved_bridge.metadata.priority
       :high
 
@@ -230,15 +230,15 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = Timeline.new()
+      iex> timeline = AriaEngine.Timeline.new()
       iex> start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
       iex> end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
-      iex> interval1 = Timeline.Interval.new(start1, end1)
-      iex> timeline = Timeline.add_interval(timeline, interval1)
+      iex> interval1 = AriaEngine.Timeline.Interval.new(start1, end1)
+      iex> timeline = AriaEngine.Timeline.add_interval(timeline, interval1)
       iex> bridge_pos = DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC")
-      iex> bridge = Timeline.Bridge.new("decision_1", bridge_pos, :decision)
-      iex> timeline = Timeline.add_bridge(timeline, bridge)
-      iex> segments = Timeline.segment_by_bridges(timeline)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("decision_1", bridge_pos, :decision)
+      iex> timeline = AriaEngine.Timeline.add_bridge(timeline, bridge)
+      iex> segments = AriaEngine.Timeline.segment_by_bridges(timeline)
       iex> length(segments)
       2
 
@@ -263,13 +263,13 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = Timeline.new()
+      iex> timeline = AriaEngine.Timeline.new()
       iex> pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
       iex> pos2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge1 = Timeline.Bridge.new("b1", pos1, :decision)
-      iex> bridge2 = Timeline.Bridge.new("b2", pos2, :condition)
-      iex> timeline = timeline |> Timeline.add_bridge(bridge1) |> Timeline.add_bridge(bridge2)
-      iex> positions = Timeline.bridge_positions(timeline)
+      iex> bridge1 = AriaEngine.Timeline.Bridge.new("b1", pos1, :decision)
+      iex> bridge2 = AriaEngine.Timeline.Bridge.new("b2", pos2, :condition)
+      iex> timeline = timeline |> AriaEngine.Timeline.add_bridge(bridge1) |> AriaEngine.Timeline.add_bridge(bridge2)
+      iex> positions = AriaEngine.Timeline.bridge_positions(timeline)
       iex> length(positions)
       2
 
@@ -289,10 +289,10 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = Timeline.new()
+      iex> timeline = AriaEngine.Timeline.new()
       iex> position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge = Timeline.Bridge.new("decision_1", position, :decision)
-      iex> Timeline.validate_bridge_placement(timeline, bridge)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("decision_1", position, :decision)
+      iex> AriaEngine.Timeline.validate_bridge_placement(timeline, bridge)
       :ok
 
   """
@@ -324,15 +324,15 @@ defmodule AriaEngine.Timeline do
 
   ## Examples
 
-      iex> timeline = Timeline.new()
+      iex> timeline = AriaEngine.Timeline.new()
       iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
       iex> end_time = DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC")
       iex> pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
       iex> pos2 = DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC")
-      iex> bridge1 = Timeline.Bridge.new("b1", pos1, :decision)
-      iex> bridge2 = Timeline.Bridge.new("b2", pos2, :decision)
-      iex> timeline = timeline |> Timeline.add_bridge(bridge1) |> Timeline.add_bridge(bridge2)
-      iex> bridges = Timeline.bridges_in_range(timeline, start_time, end_time)
+      iex> bridge1 = AriaEngine.Timeline.Bridge.new("b1", pos1, :decision)
+      iex> bridge2 = AriaEngine.Timeline.Bridge.new("b2", pos2, :decision)
+      iex> timeline = timeline |> AriaEngine.Timeline.add_bridge(bridge1) |> AriaEngine.Timeline.add_bridge(bridge2)
+      iex> bridges = AriaEngine.Timeline.bridges_in_range(timeline, start_time, end_time)
       iex> length(bridges)
       1
 
