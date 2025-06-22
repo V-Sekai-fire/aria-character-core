@@ -1,8 +1,8 @@
 # NOTE:
-# When registering unigoal methods for the planner, you must register for the SUBJECT (e.g., "player")
-# and your method must pattern match on [predicate, object] (e.g., ["has", item]).
-# The planner will call your method as: defp achieve_has_item_unigoal(state, ["has", item])
-# NOT as ["player", "has", item] or ["subject", "predicate", "object"].
+# When registering unigoal methods for the planner, you must register for the PREDICATE (e.g., "has", "location")
+# and your method must pattern match on [subject, object] (e.g., ["player", item]).
+# The planner will call your method as: defp achieve_has_item_unigoal(state, ["player", item])
+# This follows GTPyhop's predicate-based registration pattern.
 # See this test for a working example.
 
 defmodule TemporalPlannerSTNBridgeTest do
@@ -62,8 +62,8 @@ defmodule TemporalPlannerSTNBridgeTest do
     AriaEngine.Domain.new("temporal_hybrid")
     |> AriaEngine.Domain.add_action(:pickup, &pickup_action/2)
     |> AriaEngine.Domain.add_action(:travel, &travel_action/2)
-    |> AriaEngine.Domain.add_unigoal_method("player", &achieve_has_item_unigoal/2)
-    |> AriaEngine.Domain.add_unigoal_method("player", &achieve_location_unigoal/2)
+    |> AriaEngine.Domain.add_unigoal_method("has", &achieve_has_item_unigoal/2)
+    |> AriaEngine.Domain.add_unigoal_method("location", &achieve_location_unigoal/2)
   end
 
   defp pickup_action(state, [item]) do
@@ -95,15 +95,15 @@ defmodule TemporalPlannerSTNBridgeTest do
     end
   end
 
-  defp achieve_has_item_unigoal(state, ["has", item]) do
+  defp achieve_has_item_unigoal(state, [subject, item]) do
     Logger.debug(
-      "achieve_has_item_unigoal (subject, [predicate, object]) called with state=#{inspect(state)}, item=#{inspect(item)}"
+      "achieve_has_item_unigoal (predicate-based) called with state=#{inspect(state)}, subject=#{inspect(subject)}, item=#{inspect(item)}"
     )
 
-    if StateV2.get_fact(state, "player", "has") == item do
+    if StateV2.get_fact(state, subject, "has") == item do
       []
     else
-      player_location = StateV2.get_fact(state, "player", "location")
+      player_location = StateV2.get_fact(state, subject, "location")
       item_location = StateV2.get_fact(state, item, "location") || "middle_location"
 
       [
@@ -121,15 +121,15 @@ defmodule TemporalPlannerSTNBridgeTest do
     false
   end
 
-  defp achieve_location_unigoal(state, ["location", target_location]) do
+  defp achieve_location_unigoal(state, [subject, target_location]) do
     Logger.debug(
-      "achieve_location_unigoal (subject, [predicate, object]) called with state=#{inspect(state)}, target_location=#{inspect(target_location)}"
+      "achieve_location_unigoal (predicate-based) called with state=#{inspect(state)}, subject=#{inspect(subject)}, target_location=#{inspect(target_location)}"
     )
 
-    if StateV2.get_fact(state, "player", "location") == target_location do
+    if StateV2.get_fact(state, subject, "location") == target_location do
       []
     else
-      current_player_loc = StateV2.get_fact(state, "player", "location")
+      current_player_loc = StateV2.get_fact(state, subject, "location")
 
       [
         {:travel, [current_player_loc, target_location, 3000]}

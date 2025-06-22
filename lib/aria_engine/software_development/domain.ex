@@ -36,7 +36,8 @@ defmodule AriaEngine.SoftwareDevelopment.Domain do
     |> Domain.add_action(:verify_typespecs, &verify_typespecs/2, %{duration: "PT1H"})
     |> Domain.add_task_method("develop_module", &develop_module/2)
     |> Domain.add_task_method("develop_system", &develop_system/2)
-    |> Domain.add_unigoal_method("status", &achieve_goal/2)
+    |> Domain.add_unigoal_method("status", &achieve_status_unigoal/2)
+    |> Domain.add_unigoal_method("typespecs", &achieve_typespecs_unigoal/2)
   end
 
   def implement_module(state, [module_name]) do
@@ -122,6 +123,60 @@ defmodule AriaEngine.SoftwareDevelopment.Domain do
 
   # --- Methods ---
 
+  # Unigoal methods following GTPyhop predicate-based pattern
+  def achieve_status_unigoal(state, [subject, target_status]) do
+    require Logger
+    Logger.debug("achieve_status_unigoal called with subject=#{inspect(subject)}, target_status=#{inspect(target_status)}")
+
+    current_status = StateV2.get_fact(state, subject, "status")
+
+    if current_status == target_status do
+      []  # Goal already achieved
+    else
+      case target_status do
+        "completed" -> [{"develop_module", [subject]}]
+        "tested" ->
+          if current_status == "completed" do
+            [{:test_implementation, [subject]}]
+          else
+            [{"develop_module", [subject]}]
+          end
+        "documented" ->
+          case current_status do
+            "tested" -> [{:document_module, [subject]}]
+            "completed" -> [{:test_implementation, [subject]}, {:document_module, [subject]}]
+            _ -> [{"develop_module", [subject]}]
+          end
+        _ -> false  # Unknown target status
+      end
+    end
+  end
+
+  def achieve_typespecs_unigoal(state, [subject, "verified"]) do
+    require Logger
+    Logger.debug("achieve_typespecs_unigoal called with subject=#{inspect(subject)}")
+
+    current_typespecs = StateV2.get_fact(state, subject, "typespecs")
+
+    if current_typespecs == "verified" do
+      []  # Goal already achieved
+    else
+      # Typespecs can only be verified after documentation
+      current_status = StateV2.get_fact(state, subject, "status")
+      if current_status == "documented" do
+        [{:verify_typespecs, [subject]}]
+      else
+        # Need to achieve documented status first
+        [{"achieve_status_unigoal", [subject, "documented"]}, {:verify_typespecs, [subject]}]
+      end
+    end
+  end
+
+  def achieve_typespecs_unigoal(_state, [_subject, _target]) do
+    false  # Only "verified" is supported for typespecs
+  end
+
+  # Legacy method for backward compatibility
   def achieve_goal(state, {subject, "status", "documented"}) do
     require Logger
     Logger.error("ACHIEVE_GOAL called with state: #{inspect(StateV2.to_triples(state))}")
