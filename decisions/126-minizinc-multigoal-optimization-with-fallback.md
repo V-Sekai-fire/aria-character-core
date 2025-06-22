@@ -2,8 +2,9 @@
 
 **Status:** Active  
 **Date:** 2025-06-22  
-**Priority:** MEDIUM  
-**Phase 1 Completed:** 2025-06-22
+**Priority:** HIGH  
+**Phase 1 Completed:** 2025-06-22  
+**Phase 2 Active:** 2025-06-22
 
 ## Context
 
@@ -77,13 +78,51 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 - Metrics calculation (actions, distance, time, parallelism)
 - Scenario generators for reproducible testing
 
-### Phase 2: Production Integration (MEDIUM PRIORITY)
+### Phase 2: Production Integration (🚀 HIGH PRIORITY - ACTIVE)
 
-- [ ] Extract optimizer from test module to `lib/aria_engine/multigoal/optimizer.ex`
-- [ ] Create MiniZinc template `priv/templates/minizinc/multigoal_optimization.mzn.eex`
-- [ ] Integrate with domain registration system
-- [ ] Add configuration options for optimization control
-- [ ] Update execution engine to use new multigoal methods
+**Target Completion:** 2025-06-23
+
+**Step 1: Core Module Extraction**
+- [ ] Extract `MockMiniZincOptimizer` from test to `lib/aria_engine/multigoal/optimizer.ex`
+- [ ] Create `lib/aria_engine/multigoal/` directory structure
+- [ ] Add proper module documentation and typespecs
+- [ ] Remove test-specific mocking and add real MiniZinc integration
+
+**Step 2: MiniZinc Template System**
+- [ ] Create `priv/templates/minizinc/` directory
+- [ ] Implement `multigoal_optimization.mzn.eex` template with EEx variables
+- [ ] Add constraint modeling for spatial, temporal, and resource optimization
+- [ ] Create template rendering pipeline with error handling
+
+**Step 3: Domain Integration**
+- [ ] Update `AriaEngine.Multigoal` to register optimization method
+- [ ] Modify domain registration to include multigoal optimization
+- [ ] Add method priority system (optimization first, splitting fallback)
+- [ ] Ensure backward compatibility with existing multigoal calls
+
+**Step 4: Configuration Management**
+- [ ] Add multigoal optimization config to `config/config.exs`
+- [ ] Create runtime configuration options for timeout, solver selection
+- [ ] Add feature flags for enabling/disabling optimization
+- [ ] Document configuration options and recommended settings
+
+**Step 5: Production Monitoring**
+- [ ] Add telemetry events for optimization success/failure rates
+- [ ] Create performance metrics collection (optimization time, improvement %)
+- [ ] Add logging for fallback triggers and reasons
+- [ ] Implement health checks for MiniZinc solver availability
+
+**Step 6: Integration Testing**
+- [ ] Create integration tests with real MiniZinc solver
+- [ ] Test domain registration and method selection
+- [ ] Validate configuration loading and runtime behavior
+- [ ] Ensure production performance meets requirements
+
+**Step 7: Documentation and Deployment**
+- [ ] Create deployment guide with MiniZinc installation instructions
+- [ ] Document configuration options and tuning recommendations
+- [ ] Add troubleshooting guide for common optimization failures
+- [ ] Update system requirements and dependencies
 
 ### Phase 3: Advanced Features (LOW PRIORITY)
 
@@ -276,5 +315,21 @@ The test framework will provide concrete evidence for the production integration
 - ✅ Fallback behavior validated under all failure conditions (100% success rate)
 - ✅ Performance benchmarks establish clear benefits over naive splitting (exceeds all targets)
 - ✅ Implementation complexity assessed and documented (mock framework complete)
+
+**Phase 2 Completion Criteria:** 🎯 TARGET
+- [ ] Production optimizer module deployed to `lib/aria_engine/multigoal/optimizer.ex`
+- [ ] MiniZinc template system operational with real constraint solving
+- [ ] Domain registration includes multigoal optimization with proper fallback
+- [ ] Configuration system supports runtime optimization control
+- [ ] Telemetry and monitoring capture optimization performance metrics
+- [ ] Integration tests validate production behavior with real MiniZinc solver
+- [ ] Documentation enables deployment and troubleshooting
+
+**Phase 2 Success Validation:**
+- [ ] **Production Performance**: Optimization achieves >15% improvement in real scenarios
+- [ ] **Reliability**: 100% fallback success rate maintained in production
+- [ ] **Integration**: Zero breaking changes to existing multigoal functionality
+- [ ] **Monitoring**: Telemetry captures optimization success rates and performance
+- [ ] **Deployment**: System can be deployed with MiniZinc solver dependencies
 
 This approach ensures the optimization system provides real value while maintaining the reliability and robustness of the existing multigoal handling system.
