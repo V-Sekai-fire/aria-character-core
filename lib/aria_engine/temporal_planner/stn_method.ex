@@ -506,20 +506,16 @@ defmodule TemporalPlanner.STNMethod do
 
   # Bridge segmentation helper functions
 
-  defp create_bridge_position_mapping(stn_actions, bridge_actions) do
-    # Create a mapping of bridge action IDs to their positions in the action sequence
-    # For now, assume bridges are referenced by action metadata or explicit ordering
-    bridge_ids = Enum.map(bridge_actions, & &1.action_id)
-    
-    # Find positions of bridge actions within the STN action sequence
-    stn_actions
-    |> Enum.with_index()
-    |> Enum.filter(fn {action, _index} ->
-      # Check if this action is a bridge or references a bridge
-      action_id = get_action_id(action)
-      action_id in bridge_ids or has_bridge_reference?(action, bridge_ids)
+  defp create_bridge_position_mapping(_stn_actions, bridge_actions) do
+    # Extract explicit positions from bridge metadata
+    bridge_actions
+    |> Enum.map(fn bridge ->
+      case Map.get(bridge, :metadata, %{}) do
+        %{position: position} when is_integer(position) -> position
+        _ -> nil
+      end
     end)
-    |> Enum.map(fn {_action, index} -> index end)
+    |> Enum.filter(&(&1 != nil))
     |> Enum.sort()
   end
 

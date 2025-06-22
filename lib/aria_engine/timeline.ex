@@ -795,4 +795,221 @@ defmodule Timeline do
   defp segment_empty?(%__MODULE__{intervals: intervals}) do
     map_size(intervals) == 0
   end
+
+  # ==================== BRIDGE BUILDER PATTERN FUNCTIONS ====================
+
+  @doc """
+  Enable automatic bridge segmentation for this timeline.
+  
+  This function configures the timeline to automatically insert bridges
+  at logical decision points during timeline construction.
+  """
+  @spec with_bridge_segmentation(t()) :: t()
+  def with_bridge_segmentation(%__MODULE__{} = timeline) do
+    updated_metadata = Map.put(timeline.metadata, :auto_bridge_mode, true)
+    %{timeline | metadata: updated_metadata}
+  end
+
+  @doc """
+  Automatically insert bridges at logical decision points.
+  
+  Analyzes the timeline and inserts bridges based on the provided rules.
+  """
+  @spec auto_insert_bridges(t(), [atom()]) :: t()
+  def auto_insert_bridges(%__MODULE__{} = timeline, rules \\ [:action_type_transitions]) do
+    bridges_to_add = analyze_and_create_bridges(timeline, rules)
+    
+    Enum.reduce(bridges_to_add, timeline, fn bridge, acc_timeline ->
+      add_bridge(acc_timeline, bridge)
+    end)
+  end
+
+  @doc """
+  Add a phase of intervals with automatic bridge insertion.
+  
+  This is part of the fluent API for building timelines with bridges.
+  """
+  @spec add_phase(t(), String.t(), [Interval.t()]) :: t()
+  def add_phase(%__MODULE__{} = timeline, phase_name, intervals) do
+    # Add all intervals in the phase
+    timeline_with_intervals = add_intervals(timeline, intervals)
+    
+    # If auto-bridge mode is enabled, add a bridge at the end of this phase
+    case Map.get(timeline.metadata, :auto_bridge_mode, false) do
+      true ->
+        # Find the end time of this phase
+        phase_end_time = get_phase_end_time(intervals)
+        
+        # Create a bridge at the phase boundary
+        bridge_id = "#{phase_name}_end"
+        bridge = Bridge.new(bridge_id, phase_end_time, :decision, %{phase: phase_name})
+        
+        add_bridge(timeline_with_intervals, bridge)
+      
+      false ->
+        timeline_with_intervals
+    end
+  end
+
+  @doc """
+  Validate all bridge placements in the timeline.
+  
+  Returns :ok if all bridges are valid, or {:error, reason} if any are invalid.
+  """
+  @spec validate_all_bridge_placements(t()) :: :ok | {:error, String.t()}
+  def validate_all_bridge_placements(%__MODULE__{} = timeline) do
+    timeline.bridges
+    |> Map.values()
+    |> Enum.reduce_while(:ok, fn bridge, _acc ->
+      case validate_bridge_placement(timeline, bridge, true) do
+        :ok -> {:cont, :ok}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+  end
+
+  # ==================== PRIVATE BRIDGE HELPER FUNCTIONS ====================
+
+  # Analyze timeline and create bridges based on rules
+  defp analyze_and_create_bridges(%__MODULE__{} = timeline, rules) do
+    intervals = Map.values(timeline.intervals)
+    
+    Enum.flat_map(rules, fn rule ->
+      case rule do
+        :action_type_transitions ->
+          create_action_transition_bridges(intervals)
+        
+        :resource_changes ->
+          create_resource_change_bridges(intervals)
+        
+        :phase_boundaries ->
+          create_phase_boundary_bridges(intervals)
+        
+        :decision_points ->
+          create_decision_point_bridges(intervals)
+        
+        _ ->
+          []
+      end
+    end)
+    |> Enum.uniq_by(& &1.id)
+  end
+
+  # Create bridges at action type transitions
+  defp create_action_transition_bridges(intervals) do
+    intervals
+    |> Enum.sort_by(& &1.start_time, DateTime)
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.with_index()
+    |> Enum.filter_map(
+      fn {[interval1, interval2], _index} ->
+        # Check if action types are different
+        type1 = get_interval_action_type(interval1)
+        type2 = get_interval_action_type(interval2)
+        type1 != type2
+      end,
+      fn {[interval1, interval2], index} ->
+        # Create bridge between the intervals
+        bridge_time = DateTime.add(interval1.end_time, 1, :second)
+        bridge_id = "transition_#{index}"
+        Bridge.new(bridge_id, bridge_time, :decision, %{
+          from_action: interval1.id,
+          to_action: interval2.id,
+          rule: :action_type_transitions
+        })
+      end
+    )
+  end
+
+  # Create bridges at resource changes
+  defp create_resource_change_bridges(intervals) do
+    intervals
+    |> Enum.sort_by(& &1.start_time, DateTime)
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.with_index()
+    |> Enum.filter_map(
+      fn {[interval1, interval2], _index} ->
+        # Check if resource requirements are different
+        resources1 = get_interval_resources(interval1)
+        resources2 = get_interval_resources(interval2)
+        resources1 != resources2
+      end,
+      fn {[interval1, interval2], index} ->
+        # Create resource check bridge
+        bridge_time = DateTime.add(interval1.end_time, 500, :millisecond)
+        bridge_id = "resource_check_#{index}"
+        Bridge.new(bridge_id, bridge_time, :resource_check, %{
+          from_action: interval1.id,
+          to_action: interval2.id,
+          rule: :resource_changes
+        })
+      end
+    )
+  end
+
+  # Create bridges at phase boundaries
+  defp create_phase_boundary_bridges(intervals) do
+    intervals
+    |> Enum.group_by(&get_interval_phase/1)
+    |> Enum.flat_map(fn {phase, phase_intervals} ->
+      case phase_intervals do
+        [] -> []
+        _ ->
+          # Create bridge at end of phase
+          phase_end_time = 
+            phase_intervals
+            |> Enum.map(& &1.end_time)
+            |> Enum.max(DateTime)
+          
+          bridge_id = "phase_#{phase}_end"
+          [Bridge.new(bridge_id, phase_end_time, :synchronization, %{
+            phase: phase,
+            rule: :phase_boundaries
+          })]
+      end
+    end)
+  end
+
+  # Create bridges at decision points
+  defp create_decision_point_bridges(intervals) do
+    intervals
+    |> Enum.filter(&has_decision_metadata?/1)
+    |> Enum.with_index()
+    |> Enum.map(fn {interval, index} ->
+      # Create decision bridge at interval start
+      bridge_id = "decision_#{index}"
+      Bridge.new(bridge_id, interval.start_time, :decision, %{
+        action: interval.id,
+        rule: :decision_points
+      })
+    end)
+  end
+
+  # Helper functions for interval analysis
+  defp get_interval_action_type(%Interval{metadata: metadata}) do
+    Map.get(metadata, :action_type, :default)
+  end
+
+  defp get_interval_resources(%Interval{metadata: metadata}) do
+    Map.get(metadata, :resources, [])
+  end
+
+  defp get_interval_phase(%Interval{metadata: metadata}) do
+    Map.get(metadata, :phase, :default)
+  end
+
+  defp has_decision_metadata?(%Interval{metadata: metadata}) do
+    Map.get(metadata, :has_decision, false) or
+    Map.get(metadata, :decision_point, false)
+  end
+
+  defp get_phase_end_time(intervals) when is_list(intervals) do
+    case intervals do
+      [] -> DateTime.utc_now()
+      _ ->
+        intervals
+        |> Enum.map(& &1.end_time)
+        |> Enum.max(DateTime)
+    end
+  end
 end
