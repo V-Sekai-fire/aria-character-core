@@ -289,10 +289,11 @@ Domain.add_action(:meeting, &meeting/2, %{
 
 **VALIDATION RULES:**
 - ✅ `duration` only (floating effort)
-- ✅ `start` AND `end` only (fixed schedule)  
+- ✅ `start` AND `end` (fixed closed interval)
+- ✅ `start` only (open-ended interval - starts at time, no end constraint)
+- ✅ `end` only (open-ended interval - must finish by time, no start constraint)
 - ❌ Cannot mix `duration` with `start`/`end`
-- ❌ Cannot have `start` without `end`
-- ❌ Cannot have `end` without `start`
+- ❌ Must have at least one temporal specification (`duration` OR `start` OR `end`)
 
 **Standardized formats:**
 - **Goals**: ONLY `{subject, predicate, value}` format
@@ -877,34 +878,42 @@ def validate_action_metadata(metadata) when is_map(metadata) do
   end
 end
 
-# Temporal validation (mutually exclusive)
+# Temporal validation (supports open-ended intervals)
 defp validate_temporal_specification(metadata) do
   temporal_keys = [:duration, :start, :end]
   present_keys = Enum.filter(temporal_keys, &Map.has_key?(metadata, &1))
   
   cond do
-    # No temporal specification (valid)
+    # No temporal specification (invalid - must have at least one)
     Enum.empty?(present_keys) ->
-      {:ok, :no_temporal_spec}
+      {:error, "must have at least one temporal specification: :duration OR :start OR :end"}
     
     # Duration only (floating effort)
     present_keys == [:duration] ->
       validate_iso8601_duration(metadata[:duration])
     
-    # Start and end (fixed interval)
+    # Start only (open-ended interval - starts at time, no end constraint)
+    present_keys == [:start] ->
+      validate_iso8601_datetime(metadata[:start])
+    
+    # End only (open-ended interval - must finish by time, no start constraint)
+    present_keys == [:end] ->
+      validate_iso8601_datetime(metadata[:end])
+    
+    # Start and end (fixed closed interval)
     Enum.sort(present_keys) == [:end, :start] ->
       with {:ok, start_dt} <- validate_iso8601_datetime(metadata[:start]),
            {:ok, end_dt} <- validate_iso8601_datetime(metadata[:end]) do
         if DateTime.compare(start_dt, end_dt) == :lt do
-          {:ok, :fixed_interval}
+          {:ok, :fixed_closed_interval}
         else
           {:error, "start time must be before end time"}
         end
       end
     
-    # Invalid combinations
+    # Invalid combinations (duration cannot mix with start/end)
     true ->
-      {:error, "invalid temporal specification - use either :duration OR (:start AND :end)"}
+      {:error, "invalid temporal specification - cannot mix :duration with :start/:end"}
   end
 end
 
