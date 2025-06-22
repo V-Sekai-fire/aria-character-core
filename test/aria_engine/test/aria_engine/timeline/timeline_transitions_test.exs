@@ -4,9 +4,9 @@
 defmodule Timeline.TransitionsTest do
   use ExUnit.Case, async: true
 
-  alias Timeline
-  alias Timeline.Interval
-  alias Timeline.AgentEntity
+  alias AriaEngine.Timeline
+  alias AriaEngine.Timeline.Interval
+  alias AriaEngine.Timeline.AgentEntity
 
   describe "entity to agent transitions" do
     test "car becomes autonomous agent when gaining capabilities" do

@@ -186,11 +186,11 @@ defmodule AriaEngine.Scheduler.PlanConverter do
       build_intervals_with_dependencies(scheduled_activities, base_datetime)
 
     # Create Timeline and add intervals
-    timeline = Timeline.new()
+    timeline = AriaEngine.Timeline.new()
 
     timeline_with_intervals =
       Enum.reduce(intervals, timeline, fn interval, acc_timeline ->
-        Timeline.add_interval(acc_timeline, interval)
+        AriaEngine.Timeline.add_interval(acc_timeline, interval)
       end)
 
     # Apply Allen Relations as STN constraints
@@ -202,7 +202,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
       )
 
     # Solve Timeline for consistent timing
-    solved_timeline = Timeline.solve(timeline_with_constraints)
+    solved_timeline = AriaEngine.Timeline.solve(timeline_with_constraints)
 
     # Extract timing and update activities
     extract_timing_from_solved_timeline(scheduled_activities, solved_timeline, activity_id_map)
@@ -227,7 +227,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
 
         # Create Timeline.Interval struct with explicit ID
         interval =
-          Timeline.Interval.new(start_time, end_time,
+          AriaEngine.Timeline.Interval.new(start_time, end_time,
             metadata: %{
               id: activity_id,
               dependencies: dependencies,
@@ -263,14 +263,14 @@ defmodule AriaEngine.Scheduler.PlanConverter do
           activity_start_point = "#{activity_id}_start"
 
           # Check if the time points exist
-          current_time_points = Timeline.time_points(inner_timeline)
+          current_time_points = AriaEngine.Timeline.time_points(inner_timeline)
 
           if dep_end_point in current_time_points and activity_start_point in current_time_points do
             # Add the constraint
             # Use 10 seconds worth of STN units based on timeline's STN LOD resolution
             max_gap = 10 * inner_timeline.stn.lod_resolution
 
-            Timeline.add_constraint(
+            AriaEngine.Timeline.add_constraint(
               inner_timeline,
               dep_end_point,
               activity_start_point,

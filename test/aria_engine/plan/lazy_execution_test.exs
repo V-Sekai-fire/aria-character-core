@@ -11,7 +11,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
 
   use ExUnit.Case, async: true
   
-  alias AriaEngine.{StateV2, Plan.Utils}
+  alias AriaEngine.StateV2
   alias Plan.Core
   
   describe "Plan.Core.run_lazy_refineahead/4 - Basic Functionality" do

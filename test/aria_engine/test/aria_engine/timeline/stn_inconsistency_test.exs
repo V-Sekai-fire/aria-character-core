@@ -4,7 +4,7 @@
 defmodule Timeline.InconsistencyTest do
   use ExUnit.Case, async: true
 
-  alias Timeline
+  alias AriaEngine.Timeline
 
   setup do
     :ok

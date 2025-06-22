@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.BridgeTest do
+defmodule AriaEngine.Timeline.BridgeTest do
   use ExUnit.Case, async: true
   doctest AriaEngine.Timeline.Bridge
 

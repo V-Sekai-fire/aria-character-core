@@ -21,7 +21,7 @@ defmodule AriaEngine.Timeline.Bridge do
 
   ## Examples
 
-      iex> bridge = Timeline.Bridge.new("route_decision", 
+      iex> bridge = AriaEngine.Timeline.Bridge.new("route_decision", 
       ...>   DateTime.utc_now(),
       ...>   :decision,
       ...>   metadata: %{options: ["north", "south"]}
@@ -58,7 +58,7 @@ defmodule AriaEngine.Timeline.Bridge do
   ## Examples
 
       iex> position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge = Timeline.Bridge.new("decision_1", position, :decision)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("decision_1", position, :decision)
       iex> bridge.id
       "decision_1"
 
@@ -81,10 +81,10 @@ defmodule AriaEngine.Timeline.Bridge do
 
   ## Examples
 
-      iex> Timeline.Bridge.valid_type?(:decision)
+      iex> AriaEngine.Timeline.Bridge.valid_type?(:decision)
       true
 
-      iex> Timeline.Bridge.valid_type?(:invalid)
+      iex> AriaEngine.Timeline.Bridge.valid_type?(:invalid)
       false
 
   """
@@ -98,8 +98,8 @@ defmodule AriaEngine.Timeline.Bridge do
 
   ## Examples
 
-      iex> bridge = Timeline.Bridge.new("test", DateTime.utc_now(), :decision)
-      iex> Timeline.Bridge.decision?(bridge)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("test", DateTime.utc_now(), :decision)
+      iex> AriaEngine.Timeline.Bridge.decision?(bridge)
       true
 
   """
@@ -112,8 +112,8 @@ defmodule AriaEngine.Timeline.Bridge do
 
   ## Examples
 
-      iex> bridge = Timeline.Bridge.new("test", DateTime.utc_now(), :condition)
-      iex> Timeline.Bridge.condition?(bridge)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("test", DateTime.utc_now(), :condition)
+      iex> AriaEngine.Timeline.Bridge.condition?(bridge)
       true
 
   """
@@ -126,8 +126,8 @@ defmodule AriaEngine.Timeline.Bridge do
 
   ## Examples
 
-      iex> bridge = Timeline.Bridge.new("test", DateTime.utc_now(), :synchronization)
-      iex> Timeline.Bridge.synchronization?(bridge)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("test", DateTime.utc_now(), :synchronization)
+      iex> AriaEngine.Timeline.Bridge.synchronization?(bridge)
       true
 
   """
@@ -140,8 +140,8 @@ defmodule AriaEngine.Timeline.Bridge do
 
   ## Examples
 
-      iex> bridge = Timeline.Bridge.new("test", DateTime.utc_now(), :resource_check)
-      iex> Timeline.Bridge.resource_check?(bridge)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("test", DateTime.utc_now(), :resource_check)
+      iex> AriaEngine.Timeline.Bridge.resource_check?(bridge)
       true
 
   """
@@ -154,8 +154,8 @@ defmodule AriaEngine.Timeline.Bridge do
 
   ## Examples
 
-      iex> bridge = Timeline.Bridge.new("test", DateTime.utc_now(), :decision)
-      iex> updated = Timeline.Bridge.update_metadata(bridge, %{priority: :high})
+      iex> bridge = AriaEngine.Timeline.Bridge.new("test", DateTime.utc_now(), :decision)
+      iex> updated = AriaEngine.Timeline.Bridge.update_metadata(bridge, %{priority: :high})
       iex> updated.metadata.priority
       :high
 
@@ -171,9 +171,9 @@ defmodule AriaEngine.Timeline.Bridge do
   ## Examples
 
       iex> position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge = Timeline.Bridge.new("test", position, :decision)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("test", position, :decision)
       iex> check_time = DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC")
-      iex> Timeline.Bridge.before?(bridge, check_time)
+      iex> AriaEngine.Timeline.Bridge.before?(bridge, check_time)
       true
 
   """
@@ -188,9 +188,9 @@ defmodule AriaEngine.Timeline.Bridge do
   ## Examples
 
       iex> position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge = Timeline.Bridge.new("test", position, :decision)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("test", position, :decision)
       iex> check_time = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
-      iex> Timeline.Bridge.after?(bridge, check_time)
+      iex> AriaEngine.Timeline.Bridge.after?(bridge, check_time)
       true
 
   """
@@ -205,8 +205,8 @@ defmodule AriaEngine.Timeline.Bridge do
   ## Examples
 
       iex> position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge = Timeline.Bridge.new("test", position, :decision)
-      iex> Timeline.Bridge.at?(bridge, position)
+      iex> bridge = AriaEngine.Timeline.Bridge.new("test", position, :decision)
+      iex> AriaEngine.Timeline.Bridge.at?(bridge, position)
       true
 
   """
@@ -222,9 +222,9 @@ defmodule AriaEngine.Timeline.Bridge do
 
       iex> pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
       iex> pos2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      iex> bridge1 = Timeline.Bridge.new("b1", pos1, :decision)
-      iex> bridge2 = Timeline.Bridge.new("b2", pos2, :decision)
-      iex> [sorted1, sorted2] = Timeline.Bridge.sort_by_position([bridge2, bridge1])
+      iex> bridge1 = AriaEngine.Timeline.Bridge.new("b1", pos1, :decision)
+      iex> bridge2 = AriaEngine.Timeline.Bridge.new("b2", pos2, :decision)
+      iex> [sorted1, sorted2] = AriaEngine.Timeline.Bridge.sort_by_position([bridge2, bridge1])
       iex> sorted1.id
       "b1"
 
@@ -245,9 +245,9 @@ defmodule AriaEngine.Timeline.Bridge do
       iex> end_time = DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC")
       iex> pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
       iex> pos2 = DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC")
-      iex> bridge1 = Timeline.Bridge.new("b1", pos1, :decision)
-      iex> bridge2 = Timeline.Bridge.new("b2", pos2, :decision)
-      iex> bridges = Timeline.Bridge.in_range([bridge1, bridge2], start_time, end_time)
+      iex> bridge1 = AriaEngine.Timeline.Bridge.new("b1", pos1, :decision)
+      iex> bridge2 = AriaEngine.Timeline.Bridge.new("b2", pos2, :decision)
+      iex> bridges = AriaEngine.Timeline.Bridge.in_range([bridge1, bridge2], start_time, end_time)
       iex> length(bridges)
       1
 
