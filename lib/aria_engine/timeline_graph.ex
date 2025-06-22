@@ -93,6 +93,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EntityManager.create_entity/5`.
   """
+  @spec create_entity(t(), entity_id(), String.t(), map(), keyword()) :: {:ok, t()} | {:error, String.t()}
   defdelegate create_entity(timeline_graph, entity_id, name, properties \\ %{}, opts \\ []),
     to: EntityManager
 
@@ -101,6 +102,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EntityManager.add_capabilities/3`.
   """
+  @spec add_capabilities(t(), entity_id(), [atom()]) :: {:ok, t()} | {:error, String.t()}
   defdelegate add_capabilities(timeline_graph, entity_id, new_capabilities), to: EntityManager
 
   @doc """
@@ -108,6 +110,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EntityManager.is_currently_agent?/2`.
   """
+  @spec is_currently_agent?(t(), entity_id()) :: boolean()
   defdelegate is_currently_agent?(timeline_graph, entity_id), to: EntityManager
 
   @doc """
@@ -115,6 +118,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EntityManager.get_entity_properties/2`.
   """
+  @spec get_entity_properties(t(), entity_id()) :: map()
   defdelegate get_entity_properties(timeline_graph, entity_id), to: EntityManager
 
   @doc """
@@ -122,6 +126,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EntityManager.set_entity_property/4`.
   """
+  @spec set_entity_property(t(), entity_id(), term(), term()) :: t()
   defdelegate set_entity_property(timeline_graph, entity_id, predicate, value), to: EntityManager
 
   @doc """
@@ -129,6 +134,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EntityManager.get_entity_ids/1`.
   """
+  @spec get_entity_ids(t()) :: [entity_id()]
   defdelegate get_entity_ids(timeline_graph), to: EntityManager
 
   @doc """
@@ -136,6 +142,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EntityManager.get_agent_ids/1`.
   """
+  @spec get_agent_ids(t()) :: [entity_id()]
   defdelegate get_agent_ids(timeline_graph), to: EntityManager
 
   # LOD Management Functions (delegated to LODManager)
@@ -145,6 +152,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.LODManager.get_lod/2`.
   """
+  @spec get_lod(t(), entity_id()) :: lod_level()
   defdelegate get_lod(timeline_graph, entity_id), to: LODManager
 
   @doc """
@@ -152,6 +160,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.LODManager.process_lod_promotions/1`.
   """
+  @spec process_lod_promotions(t()) :: t()
   defdelegate process_lod_promotions(timeline_graph), to: LODManager
 
   @doc """
@@ -159,6 +168,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.LODManager.set_lod/3`.
   """
+  @spec set_lod(t(), entity_id(), lod_level()) :: t()
   defdelegate set_lod(timeline_graph, entity_id, new_lod), to: LODManager
 
   @doc """
@@ -166,6 +176,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.LODManager.queue_for_promotion/2`.
   """
+  @spec queue_for_promotion(t(), entity_id()) :: t()
   defdelegate queue_for_promotion(timeline_graph, entity_id), to: LODManager
 
   @doc """
@@ -173,6 +184,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.LODManager.get_entities_at_lod/2`.
   """
+  @spec get_entities_at_lod(t(), lod_level()) :: [entity_id()]
   defdelegate get_entities_at_lod(timeline_graph, target_lod), to: LODManager
 
   @doc """
@@ -180,6 +192,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.LODManager.get_lod_statistics/1`.
   """
+  @spec get_lod_statistics(t()) :: map()
   defdelegate get_lod_statistics(timeline_graph), to: LODManager
 
   @doc """
@@ -187,6 +200,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.LODManager.auto_adjust_lod/2`.
   """
+  @spec auto_adjust_lod(t(), keyword()) :: t()
   defdelegate auto_adjust_lod(timeline_graph, opts \\ []), to: LODManager
 
   # Scheduling Functions (delegated to Scheduler)
@@ -196,6 +210,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.Scheduler.schedule_routine/4`.
   """
+  @spec schedule_routine(t(), entity_id(), atom(), keyword()) :: {:ok, t()} | {:error, String.t()}
   defdelegate schedule_routine(timeline_graph, entity_id, routine_type, opts), to: Scheduler
 
   @doc """
@@ -203,6 +218,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.Scheduler.resolve_schedule_conflicts/4`.
   """
+  @spec resolve_schedule_conflicts(t(), entity_id(), map(), [map()]) :: {:ok, t()} | {:error, String.t()}
   defdelegate resolve_schedule_conflicts(timeline_graph, entity_id, new_routine, conflicts),
     to: Scheduler
 
@@ -211,6 +227,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.Scheduler.get_scheduled_routines/4`.
   """
+  @spec get_scheduled_routines(t(), entity_id(), DateTime.t(), DateTime.t()) :: [map()]
   defdelegate get_scheduled_routines(timeline_graph, entity_id, start_time, end_time),
     to: Scheduler
 
@@ -219,6 +236,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.Scheduler.cancel_routine/4`.
   """
+  @spec cancel_routine(t(), entity_id(), atom(), keyword()) :: {:ok, t()} | {:error, String.t()}
   defdelegate cancel_routine(timeline_graph, entity_id, routine_type, opts \\ []), to: Scheduler
 
   @doc """
@@ -226,6 +244,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.Scheduler.get_active_routines/2`.
   """
+  @spec get_active_routines(t(), entity_id()) :: [map()]
   defdelegate get_active_routines(timeline_graph, entity_id), to: Scheduler
 
   @doc """
@@ -233,6 +252,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.Scheduler.has_schedule_conflicts?/4`.
   """
+  @spec has_schedule_conflicts?(t(), entity_id(), DateTime.t(), DateTime.t()) :: boolean()
   defdelegate has_schedule_conflicts?(timeline_graph, entity_id, start_time, end_time),
     to: Scheduler
 
@@ -243,6 +263,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EnvironmentalProcesses.add_environmental_process/3`.
   """
+  @spec add_environmental_process(t(), atom(), keyword()) :: {:ok, t()} | {:error, String.t()}
   defdelegate add_environmental_process(timeline_graph, process_type, opts),
     to: EnvironmentalProcesses
 
@@ -251,6 +272,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EnvironmentalProcesses.remove_environmental_process/3`.
   """
+  @spec remove_environmental_process(t(), atom(), keyword()) :: {:ok, t()} | {:error, String.t()}
   defdelegate remove_environmental_process(timeline_graph, process_type, opts \\ []),
     to: EnvironmentalProcesses
 
@@ -259,6 +281,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EnvironmentalProcesses.get_active_processes/3`.
   """
+  @spec get_active_processes(t(), entity_id(), keyword()) :: [map()]
   defdelegate get_active_processes(timeline_graph, entity_id, opts \\ []),
     to: EnvironmentalProcesses
 
@@ -267,6 +290,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EnvironmentalProcesses.get_combined_effects/3`.
   """
+  @spec get_combined_effects(t(), entity_id(), keyword()) :: map()
   defdelegate get_combined_effects(timeline_graph, entity_id, opts \\ []),
     to: EnvironmentalProcesses
 
@@ -275,6 +299,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EnvironmentalProcesses.add_recurring_process/3`.
   """
+  @spec add_recurring_process(t(), atom(), keyword()) :: {:ok, t()} | {:error, String.t()}
   defdelegate add_recurring_process(timeline_graph, process_type, opts),
     to: EnvironmentalProcesses
 end

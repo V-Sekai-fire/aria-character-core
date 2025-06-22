@@ -33,11 +33,11 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [x] `lib/aria_engine/state_v2.ex` (already had comprehensive typespecs)
 - [x] `lib/aria_engine/state.ex` (already had comprehensive typespecs)
 - [x] `lib/aria_engine/domain.ex` (added comprehensive typespecs for all delegated functions)
-- [ ] `lib/aria_engine/plan.ex`
-- [ ] `lib/aria_engine/planning.ex`
-- [ ] `lib/aria_engine/scheduler.ex`
-- [ ] `lib/aria_engine/timeline.ex`
-- [ ] `lib/aria_engine/timeline_graph.ex`
+- [x] `lib/aria_engine/plan.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/planning.ex` (added typespecs for all delegated functions)
+- [x] `lib/aria_engine/scheduler.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/timeline.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/timeline_graph.ex` (added typespecs for all delegated functions)
 
 ### Phase 3: Engine API Modules (HIGH PRIORITY)
 **Files**: API and interface modules
