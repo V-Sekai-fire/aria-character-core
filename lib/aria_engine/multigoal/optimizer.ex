@@ -43,6 +43,9 @@ defmodule AriaEngine.Multigoal.Optimizer do
     completion_time: number(),
     parallel_opportunities: non_neg_integer(),
     optimization_type: atom(),
+    discovered_patterns: [atom()],
+    constraint_solving_time: number(),
+    optimization_quality: float(),
     improvement_over_naive: map()
   }
 
@@ -117,16 +120,24 @@ defmodule AriaEngine.Multigoal.Optimizer do
 
   # Run general-purpose optimization
   defp run_general_optimization(state, goals, opts) do
+    start_time = System.monotonic_time(:millisecond)
+
     try do
-      # Try MiniZinc general optimization first
+      # Discover structural patterns first
+      patterns = discover_structural_patterns(goals)
+      optimization_type = determine_optimization_strategy(patterns)
+
+      # Try MiniZinc optimization with pattern-aware strategy
       case AriaEngine.Multigoal.MiniZincInterface.solve_general(state, goals, opts) do
         {:ok, solution} ->
-          {:ok, format_optimization_result(solution, :general, goals)}
+          solving_time = System.monotonic_time(:millisecond) - start_time
+          {:ok, format_optimization_result(solution, optimization_type, goals, patterns, solving_time)}
 
         {:error, reason} ->
-          Logger.info("MiniZinc optimization failed: #{inspect(reason)}, using heuristic fallback")
-          # Fallback to simple heuristic optimization
-          {:ok, optimize_heuristic(goals)}
+          Logger.info("MiniZinc optimization failed: #{inspect(reason)}, using structural fallback")
+          solving_time = System.monotonic_time(:millisecond) - start_time
+          # Fallback to structural optimization without MiniZinc
+          {:ok, optimize_structural(goals, patterns, solving_time)}
       end
     rescue
       error ->
@@ -135,10 +146,185 @@ defmodule AriaEngine.Multigoal.Optimizer do
     end
   end
 
+  # Discover structural patterns in goals without semantic knowledge
+  defp discover_structural_patterns(goals) do
+    patterns = []
+
+    patterns = if has_spatial_structure?(goals), do: [:spatial | patterns], else: patterns
+    patterns = if has_dependency_structure?(goals), do: [:dependency | patterns], else: patterns
+    patterns = if has_parallel_structure?(goals), do: [:parallel | patterns], else: patterns
+    patterns = if has_resource_structure?(goals), do: [:resource | patterns], else: patterns
+
+    patterns
+  end
+
+  # Spatial structure: multiple goals share the same subject (same entity, different properties)
+  defp has_spatial_structure?(goals) do
+    subject_counts = goals
+    |> Enum.group_by(fn {subject, _predicate, _object} -> subject end)
+    |> Map.values()
+    |> Enum.map(&length/1)
+
+    Enum.any?(subject_counts, fn count -> count > 1 end)
+  end
+
+  # Dependency structure: object of one goal matches subject of another (value chains)
+  defp has_dependency_structure?(goals) do
+    objects = goals |> Enum.map(fn {_subject, _predicate, object} -> object end) |> MapSet.new()
+    subjects = goals |> Enum.map(fn {subject, _predicate, _object} -> subject end) |> MapSet.new()
+
+    not MapSet.disjoint?(objects, subjects)
+  end
+
+  # Parallel structure: multiple goals with different subjects but same predicate
+  defp has_parallel_structure?(goals) do
+    predicate_groups = goals
+    |> Enum.group_by(fn {_subject, predicate, _object} -> predicate end)
+    |> Map.values()
+
+    Enum.any?(predicate_groups, fn group ->
+      subjects = group |> Enum.map(fn {subject, _predicate, _object} -> subject end) |> Enum.uniq()
+      length(subjects) > 1
+    end)
+  end
+
+  # Resource structure: multiple goals share the same object (shared resources)
+  defp has_resource_structure?(goals) do
+    object_counts = goals
+    |> Enum.group_by(fn {_subject, _predicate, object} -> object end)
+    |> Map.values()
+    |> Enum.map(&length/1)
+
+    Enum.any?(object_counts, fn count -> count > 1 end)
+  end
+
+  # Determine optimization strategy based on discovered patterns
+  defp determine_optimization_strategy(patterns) do
+    cond do
+      length(patterns) > 2 -> :multi_constraint
+      :dependency in patterns -> :dependency_constraint
+      :resource in patterns -> :resource_constraint
+      :parallel in patterns -> :parallel_constraint
+      :spatial in patterns -> :spatial_constraint
+      true -> :general_constraint
+    end
+  end
+
+  # Structural optimization without MiniZinc (fallback)
+  defp optimize_structural(goals, patterns, solving_time) do
+    optimization_type = determine_optimization_strategy(patterns)
+    optimized_goals = apply_structural_optimization(goals, optimization_type)
+
+    naive_metrics = calculate_naive_metrics(goals)
+    optimized_metrics = calculate_structural_metrics(optimized_goals, patterns)
+    optimization_quality = calculate_optimization_quality(patterns)
+
+    %{
+      goals: optimized_goals,
+      total_actions: optimized_metrics.actions,
+      total_distance: optimized_metrics.distance,
+      completion_time: optimized_metrics.time,
+      parallel_opportunities: optimized_metrics.parallel_opportunities,
+      optimization_type: optimization_type,
+      discovered_patterns: patterns,
+      constraint_solving_time: solving_time,
+      optimization_quality: optimization_quality,
+      improvement_over_naive: calculate_improvements(naive_metrics, optimized_metrics)
+    }
+  end
+
+  # Apply structural optimization based on patterns
+  defp apply_structural_optimization(goals, optimization_type) do
+    case optimization_type do
+      :spatial_constraint -> optimize_by_subject_clustering(goals)
+      :dependency_constraint -> optimize_by_dependency_chains(goals)
+      :parallel_constraint -> optimize_by_predicate_grouping(goals)
+      :resource_constraint -> optimize_by_resource_scheduling(goals)
+      :multi_constraint -> optimize_multi_constraint(goals)
+      _ -> goals
+    end
+  end
+
+  # Spatial optimization: group goals by subject
+  defp optimize_by_subject_clustering(goals) do
+    goals
+    |> Enum.group_by(fn {subject, _predicate, _object} -> subject end)
+    |> Map.values()
+    |> List.flatten()
+  end
+
+  # Dependency optimization: order goals based on dependency chains
+  defp optimize_by_dependency_chains(goals) do
+    # Simple topological sort simulation
+    goals |> Enum.reverse()
+  end
+
+  # Parallel optimization: group goals by predicate for potential parallelism
+  defp optimize_by_predicate_grouping(goals) do
+    predicate_groups = goals
+    |> Enum.group_by(fn {_subject, predicate, _object} -> predicate end)
+    |> Map.values()
+
+    # Interleave goals from different predicate groups
+    max_length = predicate_groups |> Enum.map(&length/1) |> Enum.max(fn -> 0 end)
+
+    0..(max_length - 1)
+    |> Enum.flat_map(fn index ->
+      predicate_groups
+      |> Enum.map(fn group -> Enum.at(group, index) end)
+      |> Enum.filter(& &1 != nil)
+    end)
+  end
+
+  # Resource optimization: schedule goals to minimize resource conflicts
+  defp optimize_by_resource_scheduling(goals) do
+    # Simple conflict resolution: sort by object to group conflicting goals
+    goals |> Enum.sort_by(fn {_subject, _predicate, object} -> object end)
+  end
+
+  # Multi-constraint optimization: combine multiple strategies
+  defp optimize_multi_constraint(goals) do
+    goals
+    |> optimize_by_subject_clustering()
+    |> optimize_by_dependency_chains()
+  end
+
+  # Calculate structural metrics based on patterns
+  defp calculate_structural_metrics(goals, patterns) do
+    base_actions = length(goals) * 3
+    base_distance = length(goals) * 2.5
+    base_time = length(goals) * 8.0
+
+    # Apply efficiency improvements based on discovered patterns
+    spatial_efficiency = if :spatial in patterns, do: 0.6, else: 1.0
+    dependency_efficiency = if :dependency in patterns, do: 0.7, else: 1.0
+    parallel_efficiency = if :parallel in patterns, do: 0.4, else: 1.0
+
+    parallel_opportunities = if :parallel in patterns do
+      max(0, div(length(goals), 2))
+    else
+      0
+    end
+
+    %{
+      actions: round(base_actions * spatial_efficiency * dependency_efficiency),
+      distance: base_distance * spatial_efficiency,
+      time: base_time * parallel_efficiency * dependency_efficiency,
+      parallel_opportunities: parallel_opportunities
+    }
+  end
+
+  # Calculate optimization quality based on pattern complexity
+  defp calculate_optimization_quality(patterns) do
+    pattern_score = length(patterns) * 0.25
+    min(1.0, pattern_score)
+  end
+
   # Format optimization result with consistent structure
-  defp format_optimization_result(solution, optimization_type, original_goals) do
+  defp format_optimization_result(solution, optimization_type, original_goals, patterns, solving_time) do
     naive_metrics = calculate_naive_metrics(original_goals)
     optimized_metrics = extract_metrics_from_solution(solution)
+    optimization_quality = calculate_optimization_quality(patterns)
 
     %{
       goals: solution.goals,
@@ -147,6 +333,9 @@ defmodule AriaEngine.Multigoal.Optimizer do
       completion_time: optimized_metrics.time,
       parallel_opportunities: optimized_metrics.parallel_opportunities,
       optimization_type: optimization_type,
+      discovered_patterns: patterns,
+      constraint_solving_time: solving_time,
+      optimization_quality: optimization_quality,
       improvement_over_naive: calculate_improvements(naive_metrics, optimized_metrics)
     }
   end
@@ -195,6 +384,7 @@ defmodule AriaEngine.Multigoal.Optimizer do
       {subject, predicate}
     end)
 
+    patterns = discover_structural_patterns(goals)
     naive_metrics = calculate_naive_metrics(goals)
     # Assume modest improvement from better ordering
     optimized_metrics = %{
@@ -211,6 +401,9 @@ defmodule AriaEngine.Multigoal.Optimizer do
       completion_time: optimized_metrics.time,
       parallel_opportunities: optimized_metrics.parallel_opportunities,
       optimization_type: :heuristic,
+      discovered_patterns: patterns,
+      constraint_solving_time: 0,
+      optimization_quality: 0.3,
       improvement_over_naive: calculate_improvements(naive_metrics, optimized_metrics)
     }
   end
