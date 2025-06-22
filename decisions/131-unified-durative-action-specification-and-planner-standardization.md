@@ -121,117 +121,113 @@ Domain.add_action(:meeting, &meeting/2, %{
 
 **Capabilities serve as traits** in this model, providing flexible composition without inheritance hierarchies. This avoids is-a relationships and parent-child type complexity.
 
-**Hybrid Capabilities Model: Both Simple Traits and Rich Entities**
+**Capabilities as Simple Traits Only (Properties Belong in State)**
 
-Capabilities support both simple atoms (for basic traits) and rich entities (for complex capabilities with properties):
+Capabilities are simple atoms that represent what an entity can do or what category it belongs to. All dynamic properties, constraints, and state information belong in StateV2, not in action metadata.
 
 ```elixir
-@type capability :: 
-  atom() |                    # Simple trait: :agent, :consumable, :reusable
-  %{                         # Rich capability entity
-    required(:type) => String.t(),
-    optional(:properties) => map(),
-    optional(:constraints) => map()
-  }
+@type capability :: atom()  # Simple trait only: :agent, :heating, :cutting, :consumable
 ```
 
-**Simple capabilities (atoms)** for basic categorical traits:
+**Capability categories:**
 - **Categorical traits**: `:agent`, `:consumable`, `:tool`, `:appliance`
-- **Basic behaviors**: `:reusable`, `:portable`, `:stackable`
-- **Simple classifications**: `:kitchen_equipment`, `:ingredient`
+- **Behavioral capabilities**: `:heating`, `:cutting`, `:cooking`, `:baking`
+- **Functional traits**: `:reusable`, `:portable`, `:stackable`, `:container`
+- **Domain-specific**: `:kitchen_equipment`, `:ingredient`, `:meeting_space`
 
-**Rich capabilities (entities)** for complex behaviors with properties:
-- **Constrained capabilities**: Temperature ranges, capacity limits, timing
-- **Stateful capabilities**: Durability, charge level, maintenance status
-- **Parameterized behaviors**: Precision levels, speed settings, quality grades
-
-**Examples of hybrid capability composition:**
+**Examples of capability composition (properties in state):**
 ```elixir
-# Kitchen appliance with mixed simple and rich capabilities
+# Kitchen appliance with simple capability traits
 %{type: "oven", capabilities: [
-  :appliance,                                    # Simple trait
-  :kitchen_equipment,                            # Simple trait
-  %{type: "heating", properties: %{             # Rich capability
-    max_temp: 450,
-    min_temp: 150,
-    precision: "±5°F"
-  }},
-  %{type: "baking", properties: %{              # Rich capability
-    timer: true,
-    convection: true,
-    rack_positions: 3
-  }}
+  :appliance,                                    # Categorical trait
+  :kitchen_equipment,                            # Domain classification
+  :heating,                                      # Behavioral capability
+  :baking                                        # Behavioral capability
 ]}
 
-# Agent with mixed capabilities
+# Properties stored in state, not action metadata
+# StateV2.set_fact(state, "oven_1", "max_temp", 450)
+# StateV2.set_fact(state, "oven_1", "min_temp", 150)
+# StateV2.set_fact(state, "oven_1", "precision", "±5°F")
+
+# Agent with simple capability traits
 %{type: "chef", capabilities: [
-  :agent,                                        # Simple trait
-  :human,                                        # Simple trait
-  %{type: "cooking", properties: %{             # Rich capability
-    experience_level: "expert",
-    specialties: ["french", "italian"],
-    certifications: ["food_safety", "wine_pairing"]
-  }},
-  %{type: "knife_skills", properties: %{        # Rich capability
-    precision: "professional",
-    speed: "fast",
-    techniques: ["julienne", "brunoise", "chiffonade"]
-  }}
+  :agent,                                        # Categorical trait
+  :human,                                        # Type classification
+  :cooking,                                      # Behavioral capability
+  :knife_skills                                  # Behavioral capability
 ]}
+
+# Agent properties stored in state
+# StateV2.set_fact(state, "chef_1", "experience_level", "expert")
+# StateV2.set_fact(state, "chef_1", "specialties", ["french", "italian"])
+# StateV2.set_fact(state, "chef_1", "certifications", ["food_safety"])
 
 # Simple consumable with basic traits
 %{type: "flour", capabilities: [
-  :consumable,                                   # Simple trait
-  :ingredient,                                   # Simple trait
-  :pantry_item,                                  # Simple trait
-  :bakeable                                      # Simple trait
+  :consumable,                                   # Categorical trait
+  :ingredient,                                   # Domain classification
+  :pantry_item,                                  # Storage classification
+  :bakeable                                      # Usage capability
 ]}
 
-# Complex tool with durability tracking
+# Consumable quantities in state
+# StateV2.set_fact(state, "flour", "quantity", 5)
+# StateV2.set_fact(state, "flour", "unit", "cups")
+
+# Tool with simple capability traits
 %{type: "knife", capabilities: [
-  :tool,                                         # Simple trait
-  :kitchen_equipment,                            # Simple trait
-  :reusable,                                     # Simple trait
-  %{type: "cutting", properties: %{             # Rich capability
-    sharpness: 85,                              # 0-100 scale
-    blade_material: "carbon_steel",
-    maintenance_due: "2025-07-01"
-  }},
-  %{type: "slicing", properties: %{             # Rich capability
-    thickness_range: {0.5, 10},                # mm
-    precision: "high"
-  }}
+  :tool,                                         # Categorical trait
+  :kitchen_equipment,                            # Domain classification
+  :cutting,                                      # Behavioral capability
+  :slicing,                                      # Behavioral capability
+  :reusable                                      # Functional trait
 ]}
+
+# Tool state tracked separately
+# StateV2.set_fact(state, "knife_1", "sharpness", 85)
+# StateV2.set_fact(state, "knife_1", "blade_material", "carbon_steel")
+# StateV2.set_fact(state, "knife_1", "maintenance_due", "2025-07-01")
 ```
 
-**Query flexibility with hybrid capabilities:**
+**Query flexibility with simple capabilities:**
 ```elixir
-# Simple capability queries (atoms)
+# Simple capability queries (atoms only)
 entities_with_capability(:consumable)
 entities_with_capability(:reusable)
 entities_with_capability(:agent)
+entities_with_capability(:heating)
+entities_with_capability(:cutting)
 
-# Mixed simple and rich capability queries
-entities_with_capabilities([:kitchen_equipment, %{type: "heating"}])
-entities_with_capabilities([:agent, %{type: "cooking"}])
+# Multiple capability queries
+entities_with_capabilities([:kitchen_equipment, :heating])
+entities_with_capabilities([:agent, :cooking])
+entities_with_capabilities([:tool, :cutting, :reusable])
 
-# Rich capability queries with property constraints
-entities_with_capability(%{type: "heating", properties: %{max_temp: 400}})
-entities_with_capability(%{type: "cutting", properties: %{sharpness: 80}})
+# Property constraints handled through state queries
+entities_with_capability(:heating)
+|> Enum.filter(fn entity_id ->
+  StateV2.get_fact(state, entity_id, "max_temp") >= 400
+end)
 
-# Complex queries combining multiple capability types
+# Complex entity matching with state-based property filtering
 find_entities_matching([
-  :tool,                                    # Must be a tool (simple)
-  :kitchen_equipment,                       # Must be kitchen equipment (simple)
-  %{type: "cutting", properties: %{         # Must have cutting capability (rich)
-    sharpness: {:>=, 75},                   # With minimum sharpness
-    maintenance_due: {:after, Date.utc_today()}  # Not due for maintenance
-  }}
+  :tool,                                    # Must be a tool
+  :kitchen_equipment,                       # Must be kitchen equipment
+  :cutting                                  # Must have cutting capability
 ])
+|> Enum.filter(fn entity_id ->
+  sharpness = StateV2.get_fact(state, entity_id, "sharpness")
+  maintenance_due = StateV2.get_fact(state, entity_id, "maintenance_due")
+  
+  sharpness >= 75 and 
+  Date.compare(maintenance_due, Date.utc_today()) == :gt
+end)
 
-# Query by capability type regardless of properties
-entities_with_capability_type("heating")    # All heating capabilities
-entities_with_capability_type("cooking")    # All cooking capabilities
+# Find all entities with specific capabilities
+entities_with_capability(:heating)         # All heating-capable entities
+entities_with_capability(:cooking)         # All cooking-capable entities
+entities_with_capability(:consumable)      # All consumable entities
 ```
 
 **Benefits of capabilities-as-traits:**
