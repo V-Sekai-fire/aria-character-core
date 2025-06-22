@@ -19,9 +19,9 @@ defmodule AriaEngine.Multigoal do
   ```
   """
 
-  alias AriaEngine.StateV2
+  alias State
 
-  @type goal :: {StateV2.subject(), StateV2.predicate(), AriaEngine.StateV2.fact_value()}
+  @type goal :: {State.subject(), State.predicate(), State.fact_value()}
   @type t :: %__MODULE__{
           goals: [goal()]
         }
@@ -45,18 +45,18 @@ defmodule AriaEngine.Multigoal do
   end
 
   @doc """
-  Creates a multigoal from a StateV2 (all triples become goals).
+  Creates a multigoal from a State (all triples become goals).
   """
-  @spec from_state(AriaEngine.StateV2.t()) :: t()
-  def from_state(%AriaEngine.StateV2{} = state) do
-    goals = StateV2.to_triples(state)
+  @spec from_state(State.t()) :: t()
+  def from_state(%State{} = state) do
+    goals = State.to_triples(state)
     %__MODULE__{goals: goals}
   end
 
   @doc """
   Adds a single goal to the multigoal.
   """
-  @spec add_goal(t(), StateV2.subject(), StateV2.predicate(), AriaEngine.StateV2.fact_value()) ::
+  @spec add_goal(t(), State.subject(), State.predicate(), State.fact_value()) ::
           t()
   def add_goal(%__MODULE__{goals: goals} = multigoal, subject, predicate, fact_value) do
     new_goal = {subject, predicate, fact_value}
@@ -74,7 +74,7 @@ defmodule AriaEngine.Multigoal do
   @doc """
   Removes a goal from the multigoal.
   """
-  @spec remove_goal(t(), StateV2.subject(), StateV2.predicate(), AriaEngine.StateV2.fact_value()) ::
+  @spec remove_goal(t(), State.subject(), State.predicate(), State.fact_value()) ::
           t()
   def remove_goal(%__MODULE__{goals: goals} = multigoal, subject, predicate, fact_value) do
     target_goal = {subject, predicate, fact_value}
@@ -85,30 +85,30 @@ defmodule AriaEngine.Multigoal do
   @doc """
   Checks if all goals in the multigoal are satisfied by the given state.
   """
-  @spec satisfied?(t(), AriaEngine.StateV2.t()) :: boolean()
-  def satisfied?(%__MODULE__{goals: goals}, %AriaEngine.StateV2{} = state) do
+  @spec satisfied?(t(), State.t()) :: boolean()
+  def satisfied?(%__MODULE__{goals: goals}, %State{} = state) do
     Enum.all?(goals, fn {subject, predicate, fact_value} ->
-      AriaEngine.StateV2.get_fact(state, subject, predicate) == fact_value
+      State.get_fact(state, subject, predicate) == fact_value
     end)
   end
 
   @doc """
   Returns goals that are not yet satisfied in the given state.
   """
-  @spec unsatisfied_goals(t(), AriaEngine.StateV2.t()) :: [goal()]
-  def unsatisfied_goals(%__MODULE__{goals: goals}, %AriaEngine.StateV2{} = state) do
+  @spec unsatisfied_goals(t(), State.t()) :: [goal()]
+  def unsatisfied_goals(%__MODULE__{goals: goals}, %State{} = state) do
     Enum.reject(goals, fn {subject, predicate, fact_value} ->
-      AriaEngine.StateV2.get_fact(state, subject, predicate) == fact_value
+      State.get_fact(state, subject, predicate) == fact_value
     end)
   end
 
   @doc """
   Returns goals that are satisfied in the given state.
   """
-  @spec satisfied_goals(t(), AriaEngine.StateV2.t()) :: [goal()]
-  def satisfied_goals(%__MODULE__{goals: goals}, %AriaEngine.StateV2{} = state) do
+  @spec satisfied_goals(t(), State.t()) :: [goal()]
+  def satisfied_goals(%__MODULE__{goals: goals}, %State{} = state) do
     Enum.filter(goals, fn {subject, predicate, fact_value} ->
-      AriaEngine.StateV2.get_fact(state, subject, predicate) == fact_value
+      State.get_fact(state, subject, predicate) == fact_value
     end)
   end
 
@@ -131,9 +131,9 @@ defmodule AriaEngine.Multigoal do
   @doc """
   Converts the multigoal to a State.
   """
-  @spec to_state(t()) :: AriaEngine.StateV2.t()
+  @spec to_state(t()) :: State.t()
   def to_state(%__MODULE__{goals: goals}) do
-    StateV2.from_triples(goals)
+    State.from_triples(goals)
   end
 
   @doc """
@@ -218,8 +218,8 @@ defmodule AriaEngine.Multigoal do
       iex> AriaEngine.Multigoal.split_multigoal(state, goals)
       [["on", "a", "b"], ["on", "b", "table"]]
   """
-  @spec split_multigoal(AriaEngine.StateV2.t(), list()) :: list() | false
-  def split_multigoal(%AriaEngine.StateV2{} = _state, goals) when is_list(goals) do
+  @spec split_multigoal(State.t(), list()) :: list() | false
+  def split_multigoal(%State{} = _state, goals) when is_list(goals) do
     # Filter out any nil or invalid goals
     valid_goals = Enum.filter(goals, &valid_goal?/1)
 
@@ -229,7 +229,7 @@ defmodule AriaEngine.Multigoal do
     end
   end
 
-  def split_multigoal(%AriaEngine.StateV2{} = _state, _goals), do: false
+  def split_multigoal(%State{} = _state, _goals), do: false
 
   @doc """
   Check if a goal specification is valid.

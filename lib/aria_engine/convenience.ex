@@ -21,7 +21,7 @@ defmodule Convenience do
   """
   @spec create_state() :: state()
   def create_state do
-    AriaEngine.StateV2.new()
+    State.new()
   end
 
   @doc """
@@ -43,17 +43,17 @@ defmodule Convenience do
   @doc """
   Sets a fact (predicate-subject-fact triple) in the state.
   """
-  @spec set_fact(state(), String.t(), String.t(), AriaEngine.StateV2.fact_value()) :: state()
-  def set_fact(%AriaEngine.StateV2{} = state, predicate, subject, fact_value) do
-    AriaEngine.StateV2.set_fact(state, predicate, subject, fact_value)
+  @spec set_fact(state(), String.t(), String.t(), State.fact_value()) :: state()
+  def set_fact(%State{} = state, predicate, subject, fact_value) do
+    State.set_fact(state, predicate, subject, fact_value)
   end
 
   @doc """
   Gets a fact from the state.
   """
-  @spec get_fact(state(), String.t(), String.t()) :: AriaEngine.StateV2.fact_value() | nil
-  def get_fact(%AriaEngine.StateV2{} = state, predicate, subject) do
-    AriaEngine.StateV2.get_fact(state, predicate, subject)
+  @spec get_fact(state(), String.t(), String.t()) :: State.fact_value() | nil
+  def get_fact(%State{} = state, predicate, subject) do
+    State.get_fact(state, predicate, subject)
   end
 
   @doc """
@@ -68,23 +68,23 @@ defmodule Convenience do
   Merges two states, with the second taking precedence for conflicts.
   """
   @spec merge_states(state(), state()) :: state()
-  def merge_states(%AriaEngine.StateV2{} = state1, %AriaEngine.StateV2{} = state2) do
-    AriaEngine.StateV2.merge(state1, state2)
+  def merge_states(%State{} = state1, %State{} = state2) do
+    State.merge(state1, state2)
   end
 
   @doc """
   Converts a state to a list of triples for inspection.
   """
-  @spec state_to_triples(state()) :: [{String.t(), String.t(), AriaEngine.StateV2.fact_value()}]
-  def state_to_triples(%AriaEngine.StateV2{} = state) do
-    AriaEngine.StateV2.to_triples(state)
+  @spec state_to_triples(state()) :: [{String.t(), String.t(), State.fact_value()}]
+  def state_to_triples(%State{} = state) do
+    State.to_triples(state)
   end
 
   @doc """
   Creates a state from a list of triples.
   """
-  @spec state_from_triples([{String.t(), String.t(), AriaEngine.StateV2.fact_value()}]) :: state()
+  @spec state_from_triples([{String.t(), String.t(), State.fact_value()}]) :: state()
   def state_from_triples(triples) do
-    AriaEngine.StateV2.from_triples(triples)
+    State.from_triples(triples)
   end
 end

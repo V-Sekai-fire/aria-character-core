@@ -10,11 +10,11 @@ defmodule State do
 
   Example:
   ```elixir
-  state = AriaEngine.StateV2.new()
-  |> AriaEngine.StateV2.set_fact("location", "player", "room1")
-  |> AriaEngine.StateV2.set_fact("has", "player", "sword")
+  state = State.new()
+  |> State.set_fact("location", "player", "room1")
+  |> State.set_fact("has", "player", "sword")
 
-  AriaEngine.StateV2.get_fact(state, "location", "player")
+  State.get_fact(state, "location", "player")
   # => "room1"
   ```
   """
@@ -166,13 +166,13 @@ defmodule State do
   end
 
   @doc """
-  Evaluates existential quantifier: checks if there exists at least one subject 
+  Evaluates existential quantifier: checks if there exists at least one subject
   that matches the given predicate and fact_value pattern.
 
   Example:
   ```elixir
   # Check if there exists any chair that is available
-  AriaEngine.StateV2.exists?(state, "status", "available", &String.contains?(&1, "chair"))
+  State.exists?(state, "status", "available", &String.contains?(&1, "chair"))
   ```
   """
   @spec exists?(t(), predicate(), fact_value(), (subject() -> boolean()) | nil) :: boolean()
@@ -198,7 +198,7 @@ defmodule State do
   Example:
   ```elixir
   # Check if all doors are locked
-  AriaEngine.StateV2.forall?(state, "status", "locked", &String.contains?(&1, "door"))
+  State.forall?(state, "status", "locked", &String.contains?(&1, "door"))
   ```
   """
   @spec forall?(t(), predicate(), fact_value(), (subject() -> boolean())) :: boolean()
@@ -229,7 +229,7 @@ defmodule State do
   Example:
   ```elixir
   # Get all subjects with status "available"
-  AriaEngine.StateV2.get_subjects_with_fact(state, "status", "available")
+  State.get_subjects_with_fact(state, "status", "available")
   # => ["chair1", "chair3", "table2"]
   ```
   """
@@ -248,7 +248,7 @@ defmodule State do
   Example:
   ```elixir
   # Get all subjects that have a "location" predicate
-  AriaEngine.StateV2.get_subjects_with_predicate(state, "location")
+  State.get_subjects_with_predicate(state, "location")
   # => ["player", "npc1", "chest"]
   ```
   """
@@ -271,7 +271,7 @@ defmodule State do
   # Existential quantifier
   {:exists, predicate, fact_value, subject_filter}
 
-  # Universal quantifier  
+  # Universal quantifier
   {:forall, predicate, fact_value, subject_filter}
 
   # Regular condition (backward compatibility)
@@ -282,15 +282,15 @@ defmodule State do
   ```elixir
   # Check if any chair is available
   condition = {:exists, "status", "available", &String.contains?(&1, "chair")}
-  AriaEngine.StateV2.evaluate_condition(state, condition)
+  State.evaluate_condition(state, condition)
 
   # Check if all doors are locked
   condition = {:forall, "status", "locked", &String.contains?(&1, "door")}
-  AriaEngine.StateV2.evaluate_condition(state, condition)
+  State.evaluate_condition(state, condition)
 
   # Regular condition check
   condition = {"location", "player", "room1"}
-  AriaEngine.StateV2.evaluate_condition(state, condition)
+  State.evaluate_condition(state, condition)
   ```
   """
   @spec evaluate_condition(t(), tuple()) :: boolean()

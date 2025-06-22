@@ -46,7 +46,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
                               node_id: "mock_node_2"
                             }
                           ]}
-  @default_validate_result {:ok, %AriaEngine.StateV2{}}
+  @default_validate_result {:ok, %State{}}
 
   # ==================== BEHAVIOR IMPLEMENTATION ====================
 
@@ -282,19 +282,19 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   Create a mock state with basic test data.
 
   ## Returns
-  - StateV2 instance suitable for testing
+  - State instance suitable for testing
   """
-  @spec create_mock_state() :: AriaEngine.StateV2.t()
+  @spec create_mock_state() :: State.t()
   def create_mock_state do
-    # Create a basic StateV2 with some test facts
-    state = %AriaEngine.StateV2{}
+    # Create a basic State with some test facts
+    state = %State{}
 
-    # Add facts using the correct StateV2 API if available, or return basic state
-    case function_exported?(AriaEngine.StateV2, :add_fact, 4) do
+    # Add facts using the correct State API if available, or return basic state
+    case function_exported?(State, :add_fact, 4) do
       true ->
         state
-        |> AriaEngine.StateV2.add_fact("mock_predicate", "mock_subject", "mock_value")
-        |> AriaEngine.StateV2.add_fact("test_ready", "system", true)
+        |> State.add_fact("mock_predicate", "mock_subject", "mock_value")
+        |> State.add_fact("test_ready", "system", true)
 
       false ->
         # Return basic state if add_fact/4 is not available

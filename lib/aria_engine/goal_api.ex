@@ -14,8 +14,8 @@ defmodule GoalAPI do
   @doc """
   Sets the initial state for planning.
   """
-  @spec set_initial_state(t(), AriaEngine.StateV2.t()) :: t()
-  def set_initial_state(%Core{} = engine, %AriaEngine.StateV2{} = state) do
+  @spec set_initial_state(t(), State.t()) :: t()
+  def set_initial_state(%Core{} = engine, %State{} = state) do
     %{engine | initial_state: state, current_state: state}
   end
 
@@ -46,7 +46,7 @@ defmodule GoalAPI do
   @doc """
   Creates a goal from predicate, subject, and fact_value.
   """
-  @spec create_goal(String.t(), String.t(), AriaEngine.StateV2.fact_value()) :: goal()
+  @spec create_goal(String.t(), String.t(), State.fact_value()) :: goal()
   def create_goal(predicate, subject, fact_value) do
     {predicate, subject, fact_value}
   end
@@ -62,10 +62,10 @@ defmodule GoalAPI do
   @doc """
   Validates whether goals are satisfied in the given state.
   """
-  @spec goals_satisfied?(AriaEngine.StateV2.t(), [goal()]) :: boolean()
-  def goals_satisfied?(%AriaEngine.StateV2{} = state, goals) do
+  @spec goals_satisfied?(State.t(), [goal()]) :: boolean()
+  def goals_satisfied?(%State{} = state, goals) do
     Enum.all?(goals, fn {predicate, subject, fact_value} ->
-      AriaEngine.StateV2.get_fact(state, predicate, subject) == fact_value
+      State.get_fact(state, predicate, subject) == fact_value
     end)
   end
 end

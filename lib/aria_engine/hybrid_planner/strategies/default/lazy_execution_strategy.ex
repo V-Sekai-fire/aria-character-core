@@ -14,7 +14,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   require Logger
 
   @impl true
-  def execute_plan(solution_tree, %AriaEngine.StateV2{} = initial_state, _strategies, opts \\ []) do
+  def execute_plan(solution_tree, %State{} = initial_state, _strategies, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do
@@ -64,7 +64,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   end
 
   @impl true
-  def execute_step(step, %AriaEngine.StateV2{} = current_state, strategies, opts \\ []) do
+  def execute_step(step, %State{} = current_state, strategies, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 2 do
@@ -118,7 +118,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   @impl true
   def handle_execution_failure(
         failure,
-        %AriaEngine.StateV2{} = current_state,
+        %State{} = current_state,
         strategies,
         opts \\ []
       ) do

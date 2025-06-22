@@ -18,7 +18,7 @@ defmodule AriaEngine.Multigoal.Optimizer do
 
   ## Usage
 
-      iex> state = StateV2.new()
+      iex> state = State.new()
       iex> goals = [{"robot", "location", "station_1"}, {"item", "location", "station_2"}]
       iex> AriaEngine.Multigoal.Optimizer.optimize(state, goals)
       {:ok, %{goals: [...], optimization_type: :spatial, ...}}
@@ -33,9 +33,8 @@ defmodule AriaEngine.Multigoal.Optimizer do
   """
 
   require Logger
-  alias AriaEngine.StateV2
 
-  @type goal :: {StateV2.subject(), StateV2.predicate(), StateV2.fact_value()}
+  @type goal :: {State.subject(), State.predicate(), State.fact_value()}
   @type optimization_result :: %{
     goals: [goal()],
     total_actions: non_neg_integer(),
@@ -74,7 +73,7 @@ defmodule AriaEngine.Multigoal.Optimizer do
   - `:optimization_objective` - Objective function (default: :minimize_time)
   - `:max_goals` - Maximum goals for optimization (default: 15)
   """
-  @spec optimize(StateV2.t(), [goal()], keyword()) ::
+  @spec optimize(State.t(), [goal()], keyword()) ::
     {:ok, optimization_result()} | {:error, term()}
   def optimize(state, goals, opts \\ []) do
     try do
@@ -93,7 +92,7 @@ defmodule AriaEngine.Multigoal.Optimizer do
   end
 
   # Validate optimization inputs
-  defp validate_inputs(%StateV2{}, goals, opts) when is_list(goals) and is_list(opts) do
+  defp validate_inputs(%State{}, goals, opts) when is_list(goals) and is_list(opts) do
     max_goals = Keyword.get(opts, :max_goals, 15)
 
     cond do

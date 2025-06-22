@@ -5,7 +5,7 @@ defmodule AriaEngine.TimelineGraph do
   @moduledoc """
   Manages timeline integration with the Entity Timeline Graph Architecture (ADR-087).
 
-  This module connects the existing Timeline.AgentEntity system with 
+  This module connects the existing Timeline.AgentEntity system with
   auto-growing timelines, implementing the core concept that every entity owns
   a timeline that grows automatically based on their capabilities and interactions.
 
@@ -42,7 +42,7 @@ defmodule AriaEngine.TimelineGraph do
 
   alias AriaEngine.Timeline.AgentEntity
   alias AriaEngine.Timeline
-  alias AriaEngine.StateV2
+  alias State
   alias AriaEngine.TimelineGraph.EntityManager
   alias AriaEngine.TimelineGraph.LODManager
   alias AriaEngine.TimelineGraph.Scheduler
@@ -64,14 +64,14 @@ defmodule AriaEngine.TimelineGraph do
 
   @type t :: %__MODULE__{
           entities: %{entity_id() => entity_timeline()},
-          state: StateV2.t(),
+          state: State.t(),
           bridge_strength: %{{entity_id(), entity_id()} => float()},
           lod_promotion_queue: [entity_id()],
           growth_triggers: %{entity_id() => [atom()]}
         }
 
   defstruct entities: %{},
-            state: %StateV2{},
+            state: %State{},
             bridge_strength: %{},
             lod_promotion_queue: [],
             growth_triggers: %{}
@@ -82,7 +82,7 @@ defmodule AriaEngine.TimelineGraph do
   @spec new() :: t()
   def new do
     %__MODULE__{
-      state: StateV2.new()
+      state: State.new()
     }
   end
 

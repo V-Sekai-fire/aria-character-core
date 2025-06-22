@@ -11,7 +11,7 @@ defmodule AriaEngine.Domain.Utils do
   @type action_name :: atom()
   @type task_name :: String.t()
   @type method_name :: String.t()
-  @type goal_method_fn :: (AriaEngine.StateV2.t(), list() -> list() | false)
+  @type goal_method_fn :: (State.t(), list() -> list() | false)
 
   @doc """
   Validates that a goal is satisfied in the given state.
@@ -19,16 +19,16 @@ defmodule AriaEngine.Domain.Utils do
   This is used for goal verification during planning.
   """
   @spec verify_goal(
-          AriaEngine.StateV2.t(),
+          State.t(),
           String.t(),
           String.t(),
           list(),
-          AriaEngine.StateV2.fact_value(),
+          State.fact_value(),
           integer(),
           integer()
-        ) :: AriaEngine.StateV2.fact_value() | false
+        ) :: State.fact_value() | false
   def verify_goal(
-        %AriaEngine.StateV2{} = state,
+        %State{} = state,
         _method_name,
         state_var,
         args,
@@ -38,7 +38,7 @@ defmodule AriaEngine.Domain.Utils do
       ) do
     # This is a placeholder for goal verification logic
     # In the original C++ code, this would check if a goal is satisfied
-    case AriaEngine.StateV2.get_fact(state, List.first(args) || "", state_var) do
+    case State.get_fact(state, List.first(args) || "", state_var) do
       ^desired_values -> desired_values
       _ -> false
     end
