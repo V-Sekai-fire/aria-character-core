@@ -1,7 +1,9 @@
 # ADR-136: TDD glTF Core Data Structures
 
-**Status:** Active  
+**Status:** Paused  
 **Date:** 2025-06-22  
+**Paused:** 2025-06-22  
+**Pause Reason:** GLTF work temporarily paused to focus on other priorities  
 **Priority:** HIGH  
 **Extracted from:** ADR-135 Phase 1
 

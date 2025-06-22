@@ -1,8 +1,10 @@
 # ADR-139: TDD glTF Mesh Processing
 
-**Status:** Active  
+**Status:** Paused  
 **Date:** 2025-06-22  
-**Priority:** HIGH  
+**Paused:** 2025-06-22  
+**Pause Reason:** GLTF work temporarily paused to focus on other priorities  
+**Priority:** LOW  
 **Extracted from:** ADR-135 Phase 4
 
 ## Context

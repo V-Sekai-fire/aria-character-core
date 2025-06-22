@@ -1,8 +1,10 @@
 # ADR-138: TDD glTF Scene Graph Logic
 
-**Status:** Active  
+**Status:** Paused  
 **Date:** 2025-06-22  
-**Priority:** HIGH  
+**Paused:** 2025-06-22  
+**Pause Reason:** GLTF work temporarily paused to focus on other priorities  
+**Priority:** MEDIUM  
 **Extracted from:** ADR-135 Phase 3
 
 ## Context
