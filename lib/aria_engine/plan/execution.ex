@@ -144,6 +144,10 @@ defmodule AriaEngine.Plan.Execution do
         # Action node - execute the primitive action
         process_action_node(execution_state, node_id, node, action_name, args)
 
+      %AriaEngine.Multigoal{} = multigoal ->
+        # Multigoal node - try to achieve multiple goals
+        process_multigoal_node(execution_state, node_id, node, multigoal)
+
       _ ->
         {:error, "Unknown node type: #{inspect(node.task)}"}
     end
@@ -372,6 +376,119 @@ defmodule AriaEngine.Plan.Execution do
 
       [next_method | rest] ->
         try_goal_method(updated_execution_state, node_id, updated_node, next_method, predicate, subject, fact_value, rest)
+    end
+  end
+
+  # Process a multigoal node
+  @spec process_multigoal_node(map(), String.t(), map(), AriaEngine.Multigoal.t()) ::
+          {:ok, map()} | {:error, String.t()}
+  defp process_multigoal_node(execution_state, node_id, node, multigoal) do
+    # Check if multigoal is already satisfied
+    if AriaEngine.Multigoal.satisfied?(multigoal, execution_state.current_state) do
+      if execution_state.verbose > 2 do
+        Logger.debug("Multigoal already satisfied")
+      end
+
+      {:ok, execution_state}
+    else
+      # Multigoal not satisfied - try to achieve it using methods
+      if node.expanded do
+        process_children_sequentially(execution_state, node.children_ids)
+      else
+        try_multigoal_methods(execution_state, node_id, node, multigoal)
+      end
+    end
+  end
+
+  # Try available methods for a multigoal
+  @spec try_multigoal_methods(map(), String.t(), map(), AriaEngine.Multigoal.t()) ::
+          {:ok, map()} | {:error, String.t()}
+  defp try_multigoal_methods(execution_state, node_id, node, multigoal) do
+    methods = AriaEngine.Domain.get_multigoal_methods(execution_state.domain)
+    available_methods = filter_blacklisted_methods(methods, node.blacklisted_methods)
+
+    case available_methods do
+      [] ->
+        # No multigoal methods available - fall back to splitting into individual goals
+        if execution_state.verbose > 2 do
+          Logger.debug("No multigoal methods available, splitting into individual goals")
+        end
+
+        split_multigoal_into_goals(execution_state, node_id, node, multigoal)
+
+      [method | remaining_methods] ->
+        try_multigoal_method(execution_state, node_id, node, method, multigoal, remaining_methods)
+    end
+  end
+
+  # Try a specific method for a multigoal
+  @spec try_multigoal_method(map(), String.t(), map(), tuple(), AriaEngine.Multigoal.t(), list()) ::
+          {:ok, map()} | {:error, String.t()}
+  defp try_multigoal_method(execution_state, node_id, node, {method_name, method_fn}, multigoal, remaining_methods) do
+    if execution_state.verbose > 2 do
+      Logger.debug("Trying multigoal method #{method_name}")
+    end
+
+    # Convert multigoal to goals list for method call
+    goals = AriaEngine.Multigoal.to_goals(multigoal)
+
+    case apply_method(method_fn, execution_state.current_state, [goals]) do
+      {:ok, subtasks} ->
+        expand_node_with_subtasks(execution_state, node_id, node, subtasks, method_name)
+
+      {:error, _reason} ->
+        handle_multigoal_method_failure(execution_state, node_id, node, method_name, multigoal, remaining_methods)
+    end
+  end
+
+  # Handle multigoal method failure
+  @spec handle_multigoal_method_failure(map(), String.t(), map(), String.t(), AriaEngine.Multigoal.t(), list()) ::
+          {:ok, map()} | {:error, String.t()}
+  defp handle_multigoal_method_failure(execution_state, node_id, node, failed_method, multigoal, remaining_methods) do
+    updated_node = %{
+      node
+      | blacklisted_methods: [failed_method | node.blacklisted_methods]
+    }
+
+    updated_tree = put_node(execution_state.solution_tree, node_id, updated_node)
+    updated_execution_state = %{execution_state | solution_tree: updated_tree}
+
+    case remaining_methods do
+      [] ->
+        # No more multigoal methods - fall back to splitting
+        if execution_state.verbose > 2 do
+          Logger.debug("All multigoal methods failed, splitting into individual goals")
+        end
+
+        split_multigoal_into_goals(updated_execution_state, node_id, updated_node, multigoal)
+
+      [next_method | rest] ->
+        try_multigoal_method(updated_execution_state, node_id, updated_node, next_method, multigoal, rest)
+    end
+  end
+
+  # Split a multigoal into individual goal nodes
+  @spec split_multigoal_into_goals(map(), String.t(), map(), AriaEngine.Multigoal.t()) ::
+          {:ok, map()} | {:error, String.t()}
+  defp split_multigoal_into_goals(execution_state, node_id, node, multigoal) do
+    # Get unsatisfied goals
+    unsatisfied_goals = AriaEngine.Multigoal.unsatisfied_goals(multigoal, execution_state.current_state)
+
+    if Enum.empty?(unsatisfied_goals) do
+      # All goals already satisfied
+      {:ok, execution_state}
+    else
+      # Convert goals to individual goal tasks
+      goal_tasks = Enum.map(unsatisfied_goals, fn {subject, predicate, fact_value} ->
+        {predicate, subject, fact_value}
+      end)
+
+      if execution_state.verbose > 2 do
+        Logger.debug("Splitting multigoal into #{length(goal_tasks)} individual goals")
+      end
+
+      # Expand node with individual goal tasks
+      expand_node_with_subtasks(execution_state, node_id, node, goal_tasks, "split_multigoal")
     end
   end
 
