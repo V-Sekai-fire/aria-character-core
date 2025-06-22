@@ -1,7 +1,8 @@
 # ADR-134: Unified Action Specification Examples
 
-**Status:** Active  
+**Status:** Completed  
 **Date:** 2025-06-22  
+**Completion Date:** 2025-06-22  
 **Priority:** LOW  
 **Extracted from:** ADR-131
 

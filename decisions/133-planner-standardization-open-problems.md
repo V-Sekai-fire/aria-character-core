@@ -1,7 +1,8 @@
 # ADR-133: Planner Standardization Open Problems
 
-**Status:** Active  
+**Status:** Completed  
 **Date:** 2025-06-22  
+**Completion Date:** 2025-06-22  
 **Priority:** MEDIUM  
 **Extracted from:** ADR-131
 
