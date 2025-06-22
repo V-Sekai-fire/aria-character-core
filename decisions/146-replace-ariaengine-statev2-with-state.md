@@ -1,7 +1,7 @@
 # ADR-146: Replace AriaEngine.StateV2 with State
 
 ## Status
-Active (Started: June 22, 2025)
+Completed (Started: June 22, 2025, Completed: June 22, 2025)
 
 ## Context
 Following ADR-145's decision to delete StateV2 and migrate to State v1, the codebase still contains 300+ references to `AriaEngine.StateV2` throughout the system. These references need systematic replacement with `State` to complete the migration.
@@ -16,20 +16,20 @@ Systematically replace all `AriaEngine.StateV2` references with `State` througho
 ### Phase 1: Documentation and Examples (LOW RISK)
 **File**: `lib/state.ex`
 
-**Missing/Required**:
-- [ ] Fix documentation examples to use `State` instead of `AriaEngine.StateV2`
-- [ ] Update module docstring examples
-- [ ] Fix function documentation examples
-- [ ] Update quantifier function examples
+**Completed**:
+- [x] Fix documentation examples to use `State` instead of `AriaEngine.StateV2`
+  - ✅ Updated module docstring examples
+  - ✅ Fixed function documentation examples
+  - ✅ Update quantifier function examples
 
 ### Phase 2: Type Annotations (MEDIUM RISK)
 **Files**: All modules with StateV2 type references
 
-**Missing/Required**:
-- [ ] Replace `AriaEngine.StateV2.t()` with `State.t()` in type specs
-- [ ] Update function parameter types
-- [ ] Fix return type annotations
-- [ ] Update struct field types
+**Completed**:
+- [x] Replace `AriaEngine.StateV2.t()` with `State.t()` in type specs
+- [x] Update function parameter types
+- [x] Fix return type annotations
+- [x] Update struct field types
 
 **Key Files**:
 - `lib/aria_engine/convenience.ex`
@@ -43,12 +43,12 @@ Systematically replace all `AriaEngine.StateV2` references with `State` througho
 - StateV2: `set_fact(state, subject, predicate, value)`
 - State: `set_fact(state, predicate, subject, value)`
 
-**Missing/Required**:
-- [ ] Replace `AriaEngine.StateV2.new()` with `State.new()`
-- [ ] Fix `set_fact/4` parameter order throughout codebase
+**Completed**:
+- [x] Replace `AriaEngine.StateV2.new()` with `State.new()`
+- [x] Fix `set_fact/4` parameter order throughout codebase
 - [x] Fix `get_fact/3` parameter order throughout codebase
 - [x] Update pattern matching on state structs
-- [ ] Fix quantifier function calls (`exists?`, `forall?`, etc.)
+- [x] Fix quantifier function calls (`exists?`, `forall?`, etc.)
 
 **Key Files**:
 - `lib/aria_engine/convenience.ex` (convenience API)
@@ -78,18 +78,18 @@ Systematically replace all `AriaEngine.StateV2` references with `State` througho
 ### Phase 4: Test Infrastructure (HIGH RISK)
 **Files**: Test modules and test utilities
 
-**Missing/Required**:
-- [ ] Update test domains in test files
-- [ ] Fix StateV2Mock references
-- [ ] Update test assertions and expectations
-- [ ] Fix coverage reports and test utilities
+**Completed**:
+- [x] Update test domains in test files
+- [x] Fix StateV2Mock references
+- [x] Update test assertions and expectations
+- [x] Fix coverage reports and test utilities
 
 ### Phase 5: Build and Documentation Cleanup
-**Missing/Required**:
-- [ ] Update ADR references to StateV2
-- [ ] Clean up build artifacts mentioning StateV2
-- [ ] Remove any remaining aliases or imports
-- [ ] Update crash dump references (if possible)
+**Completed**:
+- [x] Update ADR references to StateV2
+- [x] Clean up build artifacts mentioning StateV2
+- [x] Remove any remaining aliases or imports
+- [x] Update crash dump references (if possible)
 
 ## Implementation Strategy
 
@@ -120,17 +120,20 @@ Test entire system after each phase to ensure no regressions.
 **Struct References**: Pattern matching and struct creation needs updating
 
 ## Success Criteria
-- [ ] All compilation errors resolved
-- [ ] All tests passing with State v1 API
-- [ ] No remaining `AriaEngine.StateV2` references in source code
-- [ ] Documentation examples use `State` consistently
-- [ ] Build artifacts updated (where possible)
+- [x] All compilation errors resolved
+- [x] All tests passing with State v1 API
+- [x] No remaining `AriaEngine.StateV2` references in source code
+- [x] Documentation examples use `State` consistently
+- [x] Build artifacts updated (where possible)
 
 ## Consequences
 - **Simplified codebase**: Single state management system
 - **Consistent API**: All modules use same state interface
 - **Reduced confusion**: Clear migration path completed
 - **Potential breaking changes**: External code using StateV2 will break
+
+## Notes
+- There are still some warnings about undefined functions in `lib/aria_engine/blocks_world/domain.ex` and `lib/aria_engine/domain/utils.ex`. These are due to missing modules `AriaEngine.BlocksWorld.Helpers` and `AriaEngine.BlocksWorld.Methods`, and a missing `Actions` module. These are outside the scope of the current task, which is to replace `StateV2` with `State`.
 
 ## Related ADRs
 - **ADR-145**: Parent ADR for StateV2 deletion and migration strategy
