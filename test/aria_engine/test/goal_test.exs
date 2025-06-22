@@ -3,9 +3,9 @@
 
 defmodule GoalTest do
   use ExUnit.Case
-  doctest Multigoal
+  doctest AriaEngine.Multigoal
 
-  alias Multigoal
+  alias AriaEngine.Multigoal
   alias AriaEngine.StateV2
 
   # Helper functions
