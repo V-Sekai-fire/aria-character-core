@@ -24,7 +24,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   use ExUnit.Case
   require Logger
 
-  alias AriaEngine.{StateV2, Multigoal, Domain}
+  alias AriaEngine.{StateV2, Multigoal}
 
   # ==================== MOCK OPTIMIZER IMPLEMENTATION ====================
 
@@ -72,9 +72,6 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
           :resource_optimization ->
             {:ok, optimize_resource_goals(state, goals, opts)}
-
-          :unsatisfiable ->
-            {:error, :constraint_unsatisfiable}
         end
       rescue
         error -> {:error, {:optimization_failed, error}}
@@ -280,7 +277,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
       end)
     end
 
-    defp calculate_optimal_routing(state, location_groups) do
+    defp calculate_optimal_routing(_state, location_groups) do
       # Simulate traveling salesman optimization
       locations = Map.keys(location_groups)
       optimal_order = optimize_location_order(locations)
@@ -375,7 +372,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
       |> Enum.map(fn {goal, index} -> {index, goal, find_dependencies(goal, goals)} end)
     end
 
-    defp find_dependencies({subject, predicate, value}, goals) do
+    defp find_dependencies({subject, predicate, _value}, goals) do
       # Simple heuristic dependency detection
       goals
       |> Enum.with_index()

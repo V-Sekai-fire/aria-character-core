@@ -155,6 +155,7 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
           extract_solution_from_json(json)
 
         {:error, reason} ->
+          Logger.debug("JSON parsing failed: #{inspect(reason)}, trying text parsing")
           # Try parsing as plain text output
           parse_text_output(output)
       end

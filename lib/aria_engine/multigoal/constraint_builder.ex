@@ -38,7 +38,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
   balances completion time, resource conflicts, and parallel opportunities.
   """
   @spec build_general_model(StateV2.t(), [goal()]) :: {:ok, String.t()} | {:error, term()}
-  def build_general_model(state, goals) do
+  def build_general_model(_state, goals) do
     try do
       # Extract general optimization information
       model_data = %{
@@ -179,7 +179,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
   defp analyze_simple_dependencies(goals) do
     goals
     |> Enum.with_index()
-    |> Enum.map(fn {{subject, predicate, value}, index} ->
+    |> Enum.map(fn {{subject, predicate, _value}, index} ->
       # Simple dependency analysis - same subject goals depend on each other
       deps = goals
       |> Enum.with_index()
@@ -192,70 +192,6 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
     end)
   end
 
-  # Spatial model helpers
-
-  defp extract_locations(state, goals) do
-    # Extract all unique locations from state and goals
-    state_locations = StateV2.get_all_facts(state)
-    |> Enum.filter(fn {_subject, predicate, _value} -> predicate == "location" end)
-    |> Enum.map(fn {_subject, _predicate, value} -> value end)
-
-    goal_locations = goals
-    |> Enum.filter(fn {_subject, predicate, _value} -> predicate == "location" end)
-    |> Enum.map(fn {_subject, _predicate, value} -> value end)
-
-    # Also extract locations from subjects (e.g., shelf_1, station_2)
-    subject_locations = goals
-    |> Enum.map(fn {subject, _predicate, _value} -> subject end)
-    |> Enum.filter(&String.contains?(&1, ["shelf", "station", "room"]))
-
-    (state_locations ++ goal_locations ++ subject_locations)
-    |> Enum.uniq()
-    |> Enum.sort()
-  end
-
-  defp calculate_distance_matrix(locations) do
-    # Simple heuristic distance calculation
-    # In a real implementation, this would use actual spatial coordinates
-    num_locations = length(locations)
-
-    for i <- 0..(num_locations - 1) do
-      for j <- 0..(num_locations - 1) do
-        if i == j do
-          0
-        else
-          # Heuristic: distance based on location name similarity
-          loc1 = Enum.at(locations, i)
-          loc2 = Enum.at(locations, j)
-          calculate_heuristic_distance(loc1, loc2)
-        end
-      end
-    end
-  end
-
-  defp calculate_heuristic_distance(loc1, loc2) do
-    # Simple heuristic based on string similarity and common patterns
-    cond do
-      String.contains?(loc1, "shelf") and String.contains?(loc2, "shelf") -> 2
-      String.contains?(loc1, "station") and String.contains?(loc2, "station") -> 2
-      String.contains?(loc1, "shelf") and String.contains?(loc2, "station") -> 3
-      String.contains?(loc1, "station") and String.contains?(loc2, "shelf") -> 3
-      true -> 5  # Default distance for unrelated locations
-    end
-  end
-
-  defp map_goals_to_locations(goals) do
-    goals
-    |> Enum.with_index()
-    |> Enum.map(fn {{subject, predicate, value}, index} ->
-      location = cond do
-        predicate == "location" -> value
-        String.contains?(subject, ["shelf", "station", "room"]) -> subject
-        true -> "unknown"
-      end
-      {index, location}
-    end)
-  end
 
   # Dependency model helpers
 
@@ -268,7 +204,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
     end)
   end
 
-  defp find_goal_dependencies({subject, predicate, value}, goals, state) do
+  defp find_goal_dependencies({subject, predicate, value}, goals, _state) do
     # Analyze what other goals this goal depends on
     goals
     |> Enum.with_index()
@@ -315,7 +251,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
 
   # Parallel model helpers
 
-  defp identify_parallel_groups(state, goals) do
+  defp identify_parallel_groups(_state, goals) do
     # Group goals that can be executed in parallel
     goals
     |> Enum.with_index()
@@ -384,18 +320,9 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
 
   # Resource model helpers
 
-  defp extract_resources(state, goals) do
-    # Extract all resources mentioned in state and goals
-    state_resources = StateV2.get_all_facts(state)
-    |> Enum.filter(fn {subject, predicate, value} ->
-      predicate == "has" or
-      String.contains?(subject, ["tool", "resource"]) or
-      String.contains?(to_string(value), ["tool", "resource", "workstation"])
-    end)
-    |> Enum.flat_map(fn {subject, _predicate, value} ->
-      [subject, to_string(value)]
-    end)
-
+  defp extract_resources(_state, goals) do
+    # Extract all resources mentioned in goals
+    # Note: StateV2 doesn't have get_all_facts/1, so we focus on goal resources
     goal_resources = goals
     |> Enum.filter(fn {subject, predicate, value} ->
       predicate == "has" or
@@ -406,7 +333,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
       [subject, to_string(value)]
     end)
 
-    (state_resources ++ goal_resources)
+    goal_resources
     |> Enum.filter(&String.contains?(&1, ["tool", "resource", "workstation"]))
     |> Enum.uniq()
     |> Enum.sort()

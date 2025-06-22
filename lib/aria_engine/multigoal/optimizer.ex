@@ -33,7 +33,7 @@ defmodule AriaEngine.Multigoal.Optimizer do
   """
 
   require Logger
-  alias AriaEngine.{StateV2, Multigoal}
+  alias AriaEngine.StateV2
 
   @type goal :: {StateV2.subject(), StateV2.predicate(), StateV2.fact_value()}
   @type optimization_result :: %{
