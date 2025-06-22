@@ -295,11 +295,74 @@ Domain.add_action(:meeting, &meeting/2, %{
 - ❌ Cannot mix `duration` with `start`/`end`
 - ❌ Must have at least one temporal specification (`duration` OR `start` OR `end`)
 
+**TIMEX INTEGRATION REQUIREMENT:**
+All temporal validation and parsing MUST use Timex instead of Elixir's base DateTime functionality for enhanced ISO 8601 support, better timezone handling, and more robust duration parsing.
+
+### Timex Implementation Details
+
+**Required Timex Functions:**
+```elixir
+# Replace DateTime.from_iso8601/1 with Timex parsing
+# Before: DateTime.from_iso8601("2025-06-22T10:00:00Z")
+# After: Timex.parse("2025-06-22T10:00:00Z", "{ISO:Extended}")
+
+# Replace basic duration parsing with Timex.Duration
+# Before: Regex-based ISO 8601 duration validation
+# After: Timex.Duration.parse("PT2H")
+
+# Replace DateTime.compare/2 with Timex comparison
+# Before: DateTime.compare(start_dt, end_dt)
+# After: Timex.compare(start_dt, end_dt)
+```
+
+**Validation Function Updates:**
+```elixir
+# ISO 8601 datetime validation using Timex
+defp validate_iso8601_datetime(datetime_string, field_name) when is_binary(datetime_string) do
+  case Timex.parse(datetime_string, "{ISO:Extended}") do
+    {:ok, datetime} ->
+      {:ok, datetime}
+    {:error, reason} ->
+      {:error, "invalid ISO 8601 datetime for #{field_name}: #{reason}"}
+  end
+end
+
+# ISO 8601 duration validation using Timex
+defp validate_iso8601_duration(duration_string) when is_binary(duration_string) do
+  case Timex.Duration.parse(duration_string) do
+    {:ok, duration} ->
+      {:ok, duration}
+    {:error, reason} ->
+      {:error, "invalid ISO 8601 duration: #{reason}"}
+  end
+end
+
+# Start/end time comparison using Timex
+defp validate_start_before_end(start_string, end_string) do
+  with {:ok, start_dt} <- Timex.parse(start_string, "{ISO:Extended}"),
+       {:ok, end_dt} <- Timex.parse(end_string, "{ISO:Extended}") do
+    if Timex.compare(start_dt, end_dt) == -1 do
+      :ok
+    else
+      {:error, "start time must be before end time"}
+    end
+  end
+end
+```
+
+**Benefits of Timex Integration:**
+- **Enhanced ISO 8601 support**: More robust parsing with better error messages
+- **Timezone handling**: Proper timezone conversion and management
+- **Duration arithmetic**: Better duration parsing and manipulation
+- **Scheduling integration**: Better compatibility with scheduling systems
+- **Error reporting**: More descriptive error messages for invalid formats
+
 **Standardized formats:**
 - **Goals**: ONLY `{subject, predicate, value}` format
 - **State validation**: ONLY `StateV2.get_fact/3` direct fact checking (supports temporal queries)
 - **Entity management**: ONLY through Domain actions API
 - **Planning API**: Clear guidance on which API to use when
+- **Temporal parsing**: ONLY Timex for all datetime and duration operations
 
 ## Decision
 
