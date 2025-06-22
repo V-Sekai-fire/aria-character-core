@@ -117,6 +117,54 @@ Domain.add_action(:meeting, &meeting/2, %{
 - **Locations**: `%{type: "kitchen", capabilities: [:workspace]}`
 - **Consumables**: `%{type: "flour", capabilities: [:consumable]}`
 
+## Capabilities as Traits (Composition over Inheritance)
+
+**Capabilities serve as traits** in this model, providing flexible composition without inheritance hierarchies. This avoids is-a relationships and parent-child type complexity.
+
+**Capabilities encompass both:**
+- **Behavioral capabilities**: What the entity can DO (`:heating`, `:cooking`, `:cutting`)
+- **Categorical traits**: What the entity IS (`:appliance`, `:ingredient`, `:agent`, `:consumable`)
+
+**Examples of trait composition:**
+```elixir
+# Kitchen appliance with heating and baking behaviors
+%{type: "oven", capabilities: [:appliance, :kitchen_equipment, :heating, :baking]}
+#                              ^^^^^^^^   ^^^^^^^^^^^^^^^^   ^^^^^^^  ^^^^^^^
+#                              trait      trait              behavior behavior
+
+# Agent with cooking skills and categorical traits
+%{type: "chef", capabilities: [:agent, :human, :cooking, :menu_planning, :knife_skills]}
+
+# Consumable ingredient with pantry categorization
+%{type: "flour", capabilities: [:consumable, :ingredient, :pantry_item, :bakeable]}
+
+# Tool with multiple categorical and behavioral traits
+%{type: "knife", capabilities: [:tool, :kitchen_equipment, :cutting, :slicing, :reusable]}
+```
+
+**Query flexibility with trait composition:**
+```elixir
+# Find all consumables
+entities_with_capability(:consumable)
+
+# Find all kitchen equipment that can heat
+entities_with_capabilities([:kitchen_equipment, :heating])
+
+# Find all agents with cooking skills
+entities_with_capabilities([:agent, :cooking])
+
+# Find all reusable tools
+entities_with_capabilities([:tool, :reusable])
+```
+
+**Benefits of capabilities-as-traits:**
+- **No inheritance complexity**: Avoids is-a relationships and parent-child hierarchies
+- **Flexible composition**: Mix and match any combination of traits and behaviors
+- **Flat namespace**: Easy to understand and query without nested type systems
+- **Extensible**: Add new traits without breaking existing entities
+- **Query-friendly**: Find entities by any trait combination
+- **Domain-agnostic**: Works for any entity type without predefined hierarchies
+
 **Quantities are state, not metadata:**
 ```elixir
 # Action implementation handles quantities through state
