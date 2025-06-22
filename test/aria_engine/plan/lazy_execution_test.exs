@@ -228,12 +228,6 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
     |> Domain.add_task_method("optimizable_task", &optimizable_method/2)
   end
 
-  defp create_deep_plan_domain do
-    Domain.new("deep_plan_test")
-    |> Domain.add_action(:step, &step_action/2)
-    |> Domain.add_task_method("deep_task", &deep_task_method/2)
-  end
-
   defp create_checkpoint_domain do
     Domain.new("checkpoint_test")
     |> Domain.add_action(:checkpoint_move, &checkpoint_move_action/2)
@@ -314,11 +308,6 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
     end
   end
 
-  defp step_action(state, [step_num]) do
-    # Always succeed - just set a fact to track the step
-    StateV2.set_fact(state, "robot", "step_#{step_num}", true)
-  end
-
   defp checkpoint_move_action(state, [from, to]) do
     robot_location = StateV2.get_fact(state, "robot", "location")
     if robot_location == from do
@@ -388,15 +377,6 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
     robot_location = StateV2.get_fact(state, "robot", "location")
     if robot_location == from do
       [{:move_optimized, [from, to]}]
-    else
-      false
-    end
-  end
-
-  defp deep_task_method(state, [from, to]) do
-    robot_location = StateV2.get_fact(state, "robot", "location")
-    if robot_location == from do
-      [{:step, [1]}, {:step, [2]}, {:step, [3]}, {:move, [from, to]}]
     else
       false
     end
