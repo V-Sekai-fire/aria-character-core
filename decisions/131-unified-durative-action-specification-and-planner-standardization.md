@@ -1141,6 +1141,25 @@ end
 - **ADR-132**: Fix Duration Handling Precision Loss (extracted from Phase 5)
 - **ADR-133**: Planner Standardization Open Problems (extracted open problems catalog)
 - **ADR-134**: Unified Action Specification Examples (extracted examples and patterns)
+- **ADR-135**: TDD glTF Scene Foundation Implementation (tombstoned - extracted into ADR-136 through ADR-139)
+
+## ADR-135 Extraction Completed
+
+**Date:** 2025-06-22  
+**Action:** Successfully extracted ADR-135 phases into focused ADRs
+
+**Extracted Phase-Specific ADRs:**
+- **ADR-136**: TDD glTF Core Data Structures (Phase 1)
+- **ADR-137**: TDD glTF Data Loading & Parsing (Phase 2)
+- **ADR-138**: TDD glTF Scene Graph Logic (Phase 3)
+- **ADR-139**: TDD glTF Mesh Processing (Phase 4)
+
+**Benefits Achieved:**
+- ✅ Focused implementation scope per ADR
+- ✅ Clear dependency chain: 136 → 137 → 138 → 139
+- ✅ Better TDD discipline through smaller cycles
+- ✅ Independent tracking and completion of each phase
+- ✅ Maintained historical record through tombstone
 
 ## Progress Tracking
 
