@@ -112,8 +112,19 @@ defmodule Plan.Core do
 
       true ->
         case find_next_node(solution_tree) do
-          nil -> handle_no_more_nodes(solution_tree, verbose)
-          node_id -> expand_node_and_continue(domain, current_state, solution_tree, node_id, depth, max_depth, verbose)
+          nil ->
+            handle_no_more_nodes(solution_tree, verbose)
+
+          node_id ->
+            expand_node_and_continue(
+              domain,
+              current_state,
+              solution_tree,
+              node_id,
+              depth,
+              max_depth,
+              verbose
+            )
         end
     end
   end
@@ -130,6 +141,7 @@ defmodule Plan.Core do
     if verbose > 0 do
       debug_puts("PLAN_DECOMPOSITION_LOOP: Maximum planning depth exceeded at depth #{depth}")
     end
+
     {:error, "Maximum planning depth exceeded"}
   end
 
@@ -138,6 +150,7 @@ defmodule Plan.Core do
       if verbose > 0 do
         debug_puts("PLAN_DECOMPOSITION_LOOP: Solution complete.")
       end
+
       {:ok, solution_tree}
     else
       if verbose > 0 do
@@ -145,11 +158,20 @@ defmodule Plan.Core do
           "PLAN_DECOMPOSITION_LOOP: No complete solution found after all nodes expanded."
         )
       end
+
       {:error, "No complete solution found"}
     end
   end
 
-  defp expand_node_and_continue(domain, current_state, solution_tree, node_id, depth, max_depth, verbose) do
+  defp expand_node_and_continue(
+         domain,
+         current_state,
+         solution_tree,
+         node_id,
+         depth,
+         max_depth,
+         verbose
+       ) do
     if verbose > 3 do
       debug_puts(
         "PLAN_DECOMPOSITION_LOOP: Expanding node #{node_id} (Task: #{inspect(solution_tree.nodes[node_id].task)})"
@@ -158,17 +180,41 @@ defmodule Plan.Core do
 
     case try_expand_node(domain, current_state, solution_tree, node_id, verbose) do
       {:ok, new_tree} ->
-        handle_successful_expansion(domain, current_state, new_tree, node_id, depth, max_depth, verbose)
+        handle_successful_expansion(
+          domain,
+          current_state,
+          new_tree,
+          node_id,
+          depth,
+          max_depth,
+          verbose
+        )
 
       {:error, reason} ->
         handle_expansion_error(reason, node_id, verbose)
 
       {:failure, failed_tree} ->
-        handle_expansion_failure(domain, current_state, failed_tree, node_id, depth, max_depth, verbose)
+        handle_expansion_failure(
+          domain,
+          current_state,
+          failed_tree,
+          node_id,
+          depth,
+          max_depth,
+          verbose
+        )
     end
   end
 
-  defp handle_successful_expansion(domain, current_state, new_tree, node_id, depth, max_depth, verbose) do
+  defp handle_successful_expansion(
+         domain,
+         current_state,
+         new_tree,
+         node_id,
+         depth,
+         max_depth,
+         verbose
+       ) do
     if verbose > 3 do
       debug_puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expanded successfully.")
     end
@@ -180,17 +226,34 @@ defmodule Plan.Core do
     if verbose > 0 do
       debug_puts("PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion failed: #{reason}")
     end
+
     {:error, reason}
   end
 
-  defp handle_expansion_failure(domain, current_state, failed_tree, node_id, depth, max_depth, verbose) do
+  defp handle_expansion_failure(
+         domain,
+         current_state,
+         failed_tree,
+         node_id,
+         depth,
+         max_depth,
+         verbose
+       ) do
     if verbose > 0 do
       debug_puts(
         "PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion returned :failure, attempting backtrack."
       )
     end
 
-    case Backtracking.backtrack_and_retry(domain, current_state, failed_tree, node_id, depth, max_depth, verbose) do
+    case Backtracking.backtrack_and_retry(
+           domain,
+           current_state,
+           failed_tree,
+           node_id,
+           depth,
+           max_depth,
+           verbose
+         ) do
       {:ok, new_tree} ->
         handle_successful_backtrack(domain, current_state, new_tree, depth, max_depth, verbose)
 
@@ -203,6 +266,7 @@ defmodule Plan.Core do
     if verbose > 0 do
       debug_puts("PLAN_DECOMPOSITION_LOOP: Backtrack succeeded, continuing planning.")
     end
+
     plan_decomposition_loop(domain, current_state, new_tree, depth + 1, max_depth, verbose)
   end
 
@@ -210,6 +274,7 @@ defmodule Plan.Core do
     if verbose > 0 do
       debug_puts("PLAN_DECOMPOSITION_LOOP: Backtrack failed: #{reason}")
     end
+
     {:error, reason}
   end
 
@@ -288,10 +353,26 @@ defmodule Plan.Core do
         expand_atom_task(domain, solution_tree, node_id, action_name)
 
       {predicate, subject, fact_value} ->
-        NodeExpansion.expand_goal_node(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose)
+        NodeExpansion.expand_goal_node(
+          domain,
+          state,
+          solution_tree,
+          node_id,
+          predicate,
+          subject,
+          fact_value,
+          verbose
+        )
 
       %Multigoal{} = multigoal ->
-        NodeExpansion.expand_multigoal_node(domain, state, solution_tree, node_id, multigoal, verbose)
+        NodeExpansion.expand_multigoal_node(
+          domain,
+          state,
+          solution_tree,
+          node_id,
+          multigoal,
+          verbose
+        )
 
       _ ->
         {:error, "Unknown task type: #{inspect(task)}"}
@@ -309,7 +390,15 @@ defmodule Plan.Core do
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
 
       true ->
-        NodeExpansion.expand_task_node(domain, state, solution_tree, node_id, task_name, args, verbose)
+        NodeExpansion.expand_task_node(
+          domain,
+          state,
+          solution_tree,
+          node_id,
+          task_name,
+          args,
+          verbose
+        )
     end
   end
 

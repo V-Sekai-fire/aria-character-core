@@ -14,7 +14,14 @@ defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
   @doc """
   Replan from a failure point using injected planning and temporal strategies.
   """
-  @spec replan(coordinator(), Domain.Core.t(), AriaEngine.StateV2.t(), map(), String.t(), keyword()) ::
+  @spec replan(
+          coordinator(),
+          Domain.Core.t(),
+          AriaEngine.StateV2.t(),
+          map(),
+          String.t(),
+          keyword()
+        ) ::
           replan_result()
   def replan(
         %coordinator_module{} = coordinator,

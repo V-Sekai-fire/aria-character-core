@@ -76,13 +76,16 @@ defmodule Mix.Tasks.Aria.Validate do
 
     problem_name = opts[:problem]
     activity_count = opts[:activities]
-    
+
     Mix.shell().info("🔍 Starting validation for problem: #{problem_name}")
 
     # Generate validation problem
     generated_problem = generate_validation_problem(problem_name, activity_count)
-    
-    Mix.shell().info("🎲 Generated problem with #{length(generated_problem.activities)} activities")
+
+    Mix.shell().info(
+      "🎲 Generated problem with #{length(generated_problem.activities)} activities"
+    )
+
     Mix.shell().info("📊 Complexity: #{generated_problem.metadata.complexity}")
 
     # Run validation
@@ -90,11 +93,10 @@ defmodule Mix.Tasks.Aria.Validate do
       {:ok, results} ->
         Mix.shell().info("✅ Validation completed successfully")
         display_validation_results(results)
-        
+
         if opts[:output] do
           save_results_to_file(results, opts[:output])
         end
-
     end
   end
 
@@ -111,7 +113,9 @@ defmodule Mix.Tasks.Aria.Validate do
 
   defp generate_random_activity_count do
     # Use cryptographic hash for truly random distribution
-    entropy_data = "#{System.system_time(:microsecond)}_#{:erlang.unique_integer([:positive])}_#{:erlang.system_time(:nanosecond)}"
+    entropy_data =
+      "#{System.system_time(:microsecond)}_#{:erlang.unique_integer([:positive])}_#{:erlang.system_time(:nanosecond)}"
+
     crypto_hash = :crypto.hash(:sha256, entropy_data)
     <<hash_int::256>> = crypto_hash
     rem(hash_int, 6) + 1
@@ -221,14 +225,16 @@ defmodule Mix.Tasks.Aria.Validate do
     # Run primary scheduler
     Mix.shell().info("🚀 Running primary scheduler...")
     primary_start = System.monotonic_time(:millisecond)
-    
-    primary_result = case call_scheduler(params, %{simulation: true, verbose: 1}) do
-      {:ok, result} -> 
-        primary_end = System.monotonic_time(:millisecond)
-        {:ok, result, primary_end - primary_start}
-      {:error, reason} -> 
-        {:error, reason}
-    end
+
+    primary_result =
+      case call_scheduler(params, %{simulation: true, verbose: 1}) do
+        {:ok, result} ->
+          primary_end = System.monotonic_time(:millisecond)
+          {:ok, result, primary_end - primary_start}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
 
     # Prepare validation results
     validation_results = %{
@@ -243,12 +249,13 @@ defmodule Mix.Tasks.Aria.Validate do
     }
 
     # Add comparison if requested
-    final_results = if compare_solutions do
-      Mix.shell().info("🔄 Running comparison analysis...")
-      add_comparison_analysis(validation_results, params)
-    else
-      validation_results
-    end
+    final_results =
+      if compare_solutions do
+        Mix.shell().info("🔄 Running comparison analysis...")
+        add_comparison_analysis(validation_results, params)
+      else
+        validation_results
+      end
 
     {:ok, final_results}
   end
@@ -270,7 +277,7 @@ defmodule Mix.Tasks.Aria.Validate do
 
     # Call the scheduler with deterministic base datetime
     base_datetime = ~U[2025-01-01 00:00:00Z]
-    
+
     AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
       schedule_name,
       activities_list,
@@ -331,11 +338,11 @@ defmodule Mix.Tasks.Aria.Validate do
     primary = results.primary_solver
     Mix.shell().info("\n🚀 Primary Solver (#{primary.solver}):")
     Mix.shell().info("  Status: #{primary.status}")
-    
+
     if primary.status == "success" do
       Mix.shell().info("  Execution Time: #{primary.execution_time_ms}ms")
       Mix.shell().info("  Schedule Items: #{length(primary.schedule)}")
-      
+
       if primary.analysis != %{} do
         Mix.shell().info("  Analysis: #{inspect(primary.analysis)}")
       end
@@ -357,6 +364,7 @@ defmodule Mix.Tasks.Aria.Validate do
         case File.write(output_path, json) do
           :ok ->
             Mix.shell().info("💾 Results saved to #{output_path}")
+
           {:error, reason} ->
             Mix.shell().error("❌ Failed to write to #{output_path}: #{inspect(reason)}")
         end

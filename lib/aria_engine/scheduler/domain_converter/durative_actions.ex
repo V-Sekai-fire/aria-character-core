@@ -16,7 +16,8 @@ defmodule AriaEngine.Scheduler.DomainConverter.DurativeActions do
   alias AriaEngine.Scheduler.DomainConverter.ActivityActions
 
   @type activity :: map()
-  @type duration_format :: {:fixed, number()} | {:range, number(), number()} | {:open_ended, map()}
+  @type duration_format ::
+          {:fixed, number()} | {:range, number(), number()} | {:open_ended, map()}
 
   @doc """
   Create durative actions for activities.

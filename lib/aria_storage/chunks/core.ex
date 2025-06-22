@@ -4,7 +4,7 @@
 defmodule AriaStorage.Chunks.Core do
   @moduledoc """
   Core chunking algorithms and chunk creation functionality.
-  
+
   This module contains the main chunking logic that uses rolling hash
   to create content-defined chunks from files.
   """
@@ -14,17 +14,20 @@ defmodule AriaStorage.Chunks.Core do
   alias AriaStorage.Chunks.Compression
 
   # Default chunk sizes - these can be overridden when calling create_chunks/2
-  @default_min_chunk_size 16 * 1024  # 16KB
-  @default_avg_chunk_size 64 * 1024  # 64KB
-  @default_max_chunk_size 256 * 1024 # 256KB
+  # 16KB
+  @default_min_chunk_size 16 * 1024
+  # 64KB
+  @default_avg_chunk_size 64 * 1024
+  # 256KB
+  @default_max_chunk_size 256 * 1024
 
   @type chunking_options :: [
-    min_size: pos_integer(),
-    avg_size: pos_integer(),
-    max_size: pos_integer(),
-    parallel: pos_integer(),
-    compression: Compression.compression_algorithm()
-  ]
+          min_size: pos_integer(),
+          avg_size: pos_integer(),
+          max_size: pos_integer(),
+          parallel: pos_integer(),
+          compression: Compression.compression_algorithm()
+        ]
 
   @type chunking_result :: {:ok, [Chunks.t()]} | {:error, atom() | {atom(), any()}}
 
@@ -78,7 +81,13 @@ defmodule AriaStorage.Chunks.Core do
   ## Returns
     - List of chunk structs
   """
-  @spec find_all_chunks_in_data(binary(), pos_integer(), pos_integer(), pos_integer(), Compression.compression_algorithm()) :: [Chunks.t()]
+  @spec find_all_chunks_in_data(
+          binary(),
+          pos_integer(),
+          pos_integer(),
+          pos_integer(),
+          Compression.compression_algorithm()
+        ) :: [Chunks.t()]
   def find_all_chunks_in_data(data, min_size, max_size, discriminator, compression) do
     find_chunks_recursively(data, min_size, max_size, discriminator, compression, 0, [])
   end
@@ -86,7 +95,8 @@ defmodule AriaStorage.Chunks.Core do
   @doc """
   Create a chunk from binary data with specified offset and compression.
   """
-  @spec create_chunk_from_data(binary(), non_neg_integer(), Compression.compression_algorithm()) :: {:ok, Chunks.t()} | {:error, any()}
+  @spec create_chunk_from_data(binary(), non_neg_integer(), Compression.compression_algorithm()) ::
+          {:ok, Chunks.t()} | {:error, any()}
   def create_chunk_from_data(data, offset, compression) do
     case Compression.compress_chunk(data, compression) do
       {:ok, compressed_data} ->
@@ -156,7 +166,13 @@ defmodule AriaStorage.Chunks.Core do
     end
   end
 
-  @spec create_rolling_hash_chunks(String.t(), pos_integer(), pos_integer(), pos_integer(), Compression.compression_algorithm()) :: chunking_result()
+  @spec create_rolling_hash_chunks(
+          String.t(),
+          pos_integer(),
+          pos_integer(),
+          pos_integer(),
+          Compression.compression_algorithm()
+        ) :: chunking_result()
   defp create_rolling_hash_chunks(file_path, min_size, avg_size, max_size, compression) do
     discriminator = RollingHash.discriminator_from_avg(avg_size)
 
@@ -185,7 +201,16 @@ defmodule AriaStorage.Chunks.Core do
     end
   end
 
-  @spec rolling_hash_chunk_file(File.io_device(), pos_integer(), pos_integer(), pos_integer(), pos_integer(), Compression.compression_algorithm(), non_neg_integer(), [Chunks.t()]) :: [Chunks.t()]
+  @spec rolling_hash_chunk_file(
+          File.io_device(),
+          pos_integer(),
+          pos_integer(),
+          pos_integer(),
+          pos_integer(),
+          Compression.compression_algorithm(),
+          non_neg_integer(),
+          [Chunks.t()]
+        ) :: [Chunks.t()]
   defp rolling_hash_chunk_file(
          file,
          min_size,
@@ -215,7 +240,15 @@ defmodule AriaStorage.Chunks.Core do
   end
 
   # Helper function to find chunks recursively with proper offsets
-  @spec find_chunks_recursively(binary(), pos_integer(), pos_integer(), pos_integer(), Compression.compression_algorithm(), non_neg_integer(), [Chunks.t()]) :: [Chunks.t()]
+  @spec find_chunks_recursively(
+          binary(),
+          pos_integer(),
+          pos_integer(),
+          pos_integer(),
+          Compression.compression_algorithm(),
+          non_neg_integer(),
+          [Chunks.t()]
+        ) :: [Chunks.t()]
   defp find_chunks_recursively(
          data,
          _min_size,
@@ -251,7 +284,9 @@ defmodule AriaStorage.Chunks.Core do
       end
     else
       # Find next chunk boundary using rolling hash
-      chunk_end = RollingHash.find_chunk_boundary(data, current_offset, min_size, max_size, discriminator)
+      chunk_end =
+        RollingHash.find_chunk_boundary(data, current_offset, min_size, max_size, discriminator)
+
       chunk_size = chunk_end - current_offset
       chunk_data = binary_part(data, current_offset, chunk_size)
 

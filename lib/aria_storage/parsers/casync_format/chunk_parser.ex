@@ -4,7 +4,7 @@
 defmodule AriaStorage.Parsers.CasyncFormat.ChunkParser do
   @moduledoc """
   Parser for ARCANA chunk files (.cacnk format).
-  
+
   Handles parsing of compressed chunk data with headers containing
   compression information and chunk metadata.
   """

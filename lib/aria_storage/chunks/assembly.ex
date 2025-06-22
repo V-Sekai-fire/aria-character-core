@@ -4,7 +4,7 @@
 defmodule AriaStorage.Chunks.Assembly do
   @moduledoc """
   File assembly utilities for reconstructing files from chunks.
-  
+
   Provides functionality to assemble files from chunks using index information,
   with support for verification, reflinks, and seed files for efficient reconstruction.
   """
@@ -14,10 +14,10 @@ defmodule AriaStorage.Chunks.Assembly do
   alias AriaStorage.Chunks
 
   @type assembly_options :: [
-    seeds: [String.t()],
-    verify: boolean(),
-    reflink: boolean()
-  ]
+          seeds: [String.t()],
+          verify: boolean(),
+          reflink: boolean()
+        ]
 
   @type assembly_result :: {:ok, String.t()} | {:error, atom() | {atom(), any()}}
 
@@ -29,7 +29,8 @@ defmodule AriaStorage.Chunks.Assembly do
   - `:verify` - Verify chunk checksums during assembly (default: true)
   - `:reflink` - Use reflinks/CoW when possible (default: true)
   """
-  @spec assemble_file([Chunks.t()], Index.t(), String.t(), assembly_options()) :: assembly_result()
+  @spec assemble_file([Chunks.t()], Index.t(), String.t(), assembly_options()) ::
+          assembly_result()
   def assemble_file(chunks, index, output_path, opts \\ []) do
     verify = Keyword.get(opts, :verify, true)
     use_reflink = Keyword.get(opts, :reflink, true)
@@ -66,7 +67,8 @@ defmodule AriaStorage.Chunks.Assembly do
   @doc """
   Write chunks to a file in order.
   """
-  @spec write_chunks_to_file(File.io_device(), [Chunks.t()], Index.t(), [String.t()], boolean()) :: :ok | {:error, any()}
+  @spec write_chunks_to_file(File.io_device(), [Chunks.t()], Index.t(), [String.t()], boolean()) ::
+          :ok | {:error, any()}
   def write_chunks_to_file(file, chunks, _index, _seeds, _use_reflink) do
     # Simplified implementation - in production would handle seeds and reflinks
     Enum.reduce_while(chunks, :ok, fn chunk, _acc ->
@@ -103,7 +105,8 @@ defmodule AriaStorage.Chunks.Assembly do
   @doc """
   Assemble file with verification of each chunk.
   """
-  @spec assemble_file_with_verification([Chunks.t()], Index.t(), String.t(), assembly_options()) :: assembly_result()
+  @spec assemble_file_with_verification([Chunks.t()], Index.t(), String.t(), assembly_options()) ::
+          assembly_result()
   def assemble_file_with_verification(chunks, index, output_path, opts \\ []) do
     verify = Keyword.get(opts, :verify, true)
     use_reflink = Keyword.get(opts, :reflink, true)

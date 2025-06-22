@@ -93,7 +93,8 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EntityManager.create_entity/5`.
   """
-  defdelegate create_entity(timeline_graph, entity_id, name, properties \\ %{}, opts \\ []), to: EntityManager
+  defdelegate create_entity(timeline_graph, entity_id, name, properties \\ %{}, opts \\ []),
+    to: EntityManager
 
   @doc """
   Adds capabilities to an entity, potentially transitioning it to agent status.
@@ -202,14 +203,16 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.Scheduler.resolve_schedule_conflicts/4`.
   """
-  defdelegate resolve_schedule_conflicts(timeline_graph, entity_id, new_routine, conflicts), to: Scheduler
+  defdelegate resolve_schedule_conflicts(timeline_graph, entity_id, new_routine, conflicts),
+    to: Scheduler
 
   @doc """
   Gets the current scheduled routines for an entity within a time window.
 
   Delegates to `TimelineGraph.Scheduler.get_scheduled_routines/4`.
   """
-  defdelegate get_scheduled_routines(timeline_graph, entity_id, start_time, end_time), to: Scheduler
+  defdelegate get_scheduled_routines(timeline_graph, entity_id, start_time, end_time),
+    to: Scheduler
 
   @doc """
   Cancels a scheduled routine by routine type and optional time range.
@@ -230,7 +233,8 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.Scheduler.has_schedule_conflicts?/4`.
   """
-  defdelegate has_schedule_conflicts?(timeline_graph, entity_id, start_time, end_time), to: Scheduler
+  defdelegate has_schedule_conflicts?(timeline_graph, entity_id, start_time, end_time),
+    to: Scheduler
 
   # Environmental Process Functions (delegated to EnvironmentalProcesses)
 
@@ -239,33 +243,38 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EnvironmentalProcesses.add_environmental_process/3`.
   """
-  defdelegate add_environmental_process(timeline_graph, process_type, opts), to: EnvironmentalProcesses
+  defdelegate add_environmental_process(timeline_graph, process_type, opts),
+    to: EnvironmentalProcesses
 
   @doc """
   Removes an environmental process from all affected entities.
 
   Delegates to `TimelineGraph.EnvironmentalProcesses.remove_environmental_process/3`.
   """
-  defdelegate remove_environmental_process(timeline_graph, process_type, opts \\ []), to: EnvironmentalProcesses
+  defdelegate remove_environmental_process(timeline_graph, process_type, opts \\ []),
+    to: EnvironmentalProcesses
 
   @doc """
   Gets all active environmental processes affecting a specific entity.
 
   Delegates to `TimelineGraph.EnvironmentalProcesses.get_active_processes/3`.
   """
-  defdelegate get_active_processes(timeline_graph, entity_id, opts \\ []), to: EnvironmentalProcesses
+  defdelegate get_active_processes(timeline_graph, entity_id, opts \\ []),
+    to: EnvironmentalProcesses
 
   @doc """
   Gets the combined effects of all environmental processes affecting an entity.
 
   Delegates to `TimelineGraph.EnvironmentalProcesses.get_combined_effects/3`.
   """
-  defdelegate get_combined_effects(timeline_graph, entity_id, opts \\ []), to: EnvironmentalProcesses
+  defdelegate get_combined_effects(timeline_graph, entity_id, opts \\ []),
+    to: EnvironmentalProcesses
 
   @doc """
   Adds a recurring environmental process (like day/night cycles).
 
   Delegates to `TimelineGraph.EnvironmentalProcesses.add_recurring_process/3`.
   """
-  defdelegate add_recurring_process(timeline_graph, process_type, opts), to: EnvironmentalProcesses
+  defdelegate add_recurring_process(timeline_graph, process_type, opts),
+    to: EnvironmentalProcesses
 end

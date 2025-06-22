@@ -223,7 +223,7 @@ defmodule AriaEngine.Scheduler do
     case Keyword.get(opts, :base_datetime) do
       nil ->
         {:error, "base_datetime is required but not provided"}
-      
+
       %DateTime{} = base_datetime ->
         entities = Keyword.get(opts, :entities, [])
         raw_resources = Keyword.get(opts, :resources, [])
@@ -231,7 +231,7 @@ defmodule AriaEngine.Scheduler do
         simulation_mode = Keyword.get(opts, :simulation_mode, false)
         verbose = Keyword.get(opts, :verbose, 0)
         log_activities = Keyword.get(opts, :log_activities, true)
-        
+
         schedule_activities_with_base_datetime(
           schedule_name,
           activities,
@@ -243,7 +243,7 @@ defmodule AriaEngine.Scheduler do
           verbose,
           log_activities
         )
-      
+
       _ ->
         {:error, "base_datetime must be a DateTime struct"}
     end
@@ -260,7 +260,6 @@ defmodule AriaEngine.Scheduler do
          verbose,
          log_activities
        ) do
-
     # Convert resources from map format to struct format if needed
     resources = convert_resources_to_structs(raw_resources)
 

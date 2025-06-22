@@ -15,11 +15,11 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
   alias AriaStorage.Parsers.CasyncFormat.Constants
 
   @type comparison_result :: %{
-    match: boolean(),
-    size_original: non_neg_integer(),
-    size_encoded: non_neg_integer(),
-    differences: [tuple()]
-  }
+          match: boolean(),
+          size_original: non_neg_integer(),
+          size_encoded: non_neg_integer(),
+          differences: [tuple()]
+        }
 
   @doc """
   Detect the format of binary data based on desync FormatIndex structure.
@@ -162,7 +162,8 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
   Test roundtrip encoding for a given binary data and format.
   Returns detailed comparison results.
   """
-  @spec test_roundtrip_encoding(binary(), Constants.format_type()) :: {:ok, comparison_result() | :perfect_match} | {:error, String.t()}
+  @spec test_roundtrip_encoding(binary(), Constants.format_type()) ::
+          {:ok, comparison_result() | :perfect_match} | {:error, String.t()}
   def test_roundtrip_encoding(binary_data, format_type) do
     Logger.debug("=== TESTING ROUNDTRIP FOR #{String.upcase(to_string(format_type))} ===")
     Logger.debug("Original size: #{byte_size(binary_data)} bytes")
@@ -180,7 +181,8 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
   Test roundtrip encoding for a given file path and parsed data.
   Returns detailed comparison results.
   """
-  @spec test_file_roundtrip_encoding(String.t(), map()) :: {:ok, :perfect_match | {:differences, comparison_result()}} | {:error, String.t()}
+  @spec test_file_roundtrip_encoding(String.t(), map()) ::
+          {:ok, :perfect_match | {:differences, comparison_result()}} | {:error, String.t()}
   def test_file_roundtrip_encoding(file_path, parsed) do
     filename = Path.basename(file_path)
     Logger.debug("=== TESTING ROUNDTRIP FOR #{filename} ===")

@@ -175,7 +175,8 @@ defmodule AriaEngine.Scheduler.DomainConverter.GoalMethods do
   @doc """
   Create goal method for resource availability checking.
   """
-  @spec create_resource_availability_goal(Resource.t()) :: {String.t(), [{String.t(), function()}]}
+  @spec create_resource_availability_goal(Resource.t()) ::
+          {String.t(), [{String.t(), function()}]}
   def create_resource_availability_goal(resource) do
     goal_type = "resource_available_#{resource.id}"
     method_name = "ensure_resource_availability"
@@ -199,7 +200,8 @@ defmodule AriaEngine.Scheduler.DomainConverter.GoalMethods do
   @doc """
   Create goal method for dependency satisfaction.
   """
-  @spec create_dependency_satisfaction_goal(activity()) :: {String.t(), [{String.t(), function()}]} | nil
+  @spec create_dependency_satisfaction_goal(activity()) ::
+          {String.t(), [{String.t(), function()}]} | nil
   def create_dependency_satisfaction_goal(activity) do
     dependencies = Map.get(activity, :dependencies, [])
 
@@ -234,7 +236,8 @@ defmodule AriaEngine.Scheduler.DomainConverter.GoalMethods do
   @doc """
   Create goal method for schedule optimization.
   """
-  @spec create_schedule_optimization_goal([activity()], [Resource.t()]) :: {String.t(), [{String.t(), function()}]}
+  @spec create_schedule_optimization_goal([activity()], [Resource.t()]) ::
+          {String.t(), [{String.t(), function()}]}
   def create_schedule_optimization_goal(activities, resources) do
     goal_type = "optimize_schedule"
     method_name = "minimize_makespan_and_balance_resources"

@@ -80,16 +80,29 @@ defmodule Mix.Tasks.Aria.Pipeline do
     Mix.Task.run("app.start")
 
     case argv do
-      ["start"] -> handle_start_pipeline(opts)
-      ["stop"] -> handle_stop_pipeline(opts)
-      ["status"] -> handle_pipeline_status(opts)
-      ["list"] -> handle_list_pipelines(opts)
-      ["send"] -> handle_send_request(opts)
-      ["metrics"] -> handle_pipeline_metrics(opts)
-      [] -> 
+      ["start"] ->
+        handle_start_pipeline(opts)
+
+      ["stop"] ->
+        handle_stop_pipeline(opts)
+
+      ["status"] ->
+        handle_pipeline_status(opts)
+
+      ["list"] ->
+        handle_list_pipelines(opts)
+
+      ["send"] ->
+        handle_send_request(opts)
+
+      ["metrics"] ->
+        handle_pipeline_metrics(opts)
+
+      [] ->
         Mix.shell().error("Error: Command required")
         Mix.shell().info("Use --help for usage information")
         System.halt(1)
+
       [unknown] ->
         Mix.shell().error("Error: Unknown command '#{unknown}'")
         Mix.shell().info("Use --help for usage information")
@@ -184,7 +197,7 @@ defmodule Mix.Tasks.Aria.Pipeline do
       Mix.shell().info("No active pipelines found")
     else
       Mix.shell().info("Found #{length(pipelines)} active pipeline(s):")
-      
+
       Enum.each(pipelines, fn pipeline ->
         Mix.shell().info("")
         Mix.shell().info("  Pipeline ID: #{pipeline.id}")
@@ -214,16 +227,22 @@ defmodule Mix.Tasks.Aria.Pipeline do
     Mix.shell().info("📤 Sending request to pipeline: #{pipeline_id}")
 
     # Parse request JSON
-    request_params = case Jason.decode(request_json) do
-      {:ok, data} -> data
-      {:error, reason} ->
-        Mix.shell().error("❌ Invalid JSON in request: #{inspect(reason)}")
-        System.halt(1)
-    end
+    request_params =
+      case Jason.decode(request_json) do
+        {:ok, data} ->
+          data
+
+        {:error, reason} ->
+          Mix.shell().error("❌ Invalid JSON in request: #{inspect(reason)}")
+          System.halt(1)
+      end
 
     case parse_pipeline_pid(pipeline_id) do
       {:ok, pipeline_pid} ->
-        case AriaEngine.Membrane.PipelineManager.send_request_to_pipeline(pipeline_pid, request_params) do
+        case AriaEngine.Membrane.PipelineManager.send_request_to_pipeline(
+               pipeline_pid,
+               request_params
+             ) do
           :ok ->
             Mix.shell().info("✅ Request sent successfully")
 
@@ -246,9 +265,10 @@ defmodule Mix.Tasks.Aria.Pipeline do
     Mix.shell().info("✅ Pipeline Manager Metrics:")
     Mix.shell().info("  Active Pipelines: #{stats.active_pipeline_count}")
     Mix.shell().info("  Total Created: #{stats.total_pipelines_created}")
-    
+
     if length(stats.pipeline_ids) > 0 do
       Mix.shell().info("  Pipeline IDs:")
+
       Enum.each(stats.pipeline_ids, fn id ->
         Mix.shell().info("    - #{id}")
       end)

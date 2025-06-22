@@ -12,9 +12,12 @@ defmodule Mix.Tasks.Schedule.Samples.ResourceConstraints do
   alias Mix.Tasks.Schedule.Samples.Helpers
 
   def run do
-    IO.puts("\n" <> IO.ANSI.yellow() <> "🔧 Sample 2: Resource-Constrained Scheduling" <> IO.ANSI.reset())
+    IO.puts(
+      "\n" <> IO.ANSI.yellow() <> "🔧 Sample 2: Resource-Constrained Scheduling" <> IO.ANSI.reset()
+    )
+
     IO.puts("Demonstrates resource allocation and capacity management")
-    
+
     activities = [
       %{
         "id" => "install_frontend_tools",
@@ -208,7 +211,7 @@ defmodule Mix.Tasks.Schedule.Samples.ResourceConstraints do
         "dependencies" => ["create_database_models"],
         "required_resources" => ["developer"]
       },
-      
+
       # Independent maintenance activities (time fillers)
       %{
         "id" => "update_project_documentation",
@@ -247,26 +250,28 @@ defmodule Mix.Tasks.Schedule.Samples.ResourceConstraints do
         "required_resources" => ["developer"]
       }
     ]
-    
+
     resources = [
       %Resource{
         id: "developer",
         type: :human,
-        capacity: 1,  # Only one developer available
+        # Only one developer available
+        capacity: 1,
         current_usage: 0
       }
     ]
-    
+
     base_datetime = DateTime.utc_now()
-    
+
     case Scheduler.schedule_activities(
-      "Resource Constrained Project",
-      activities,
-      base_datetime: base_datetime,
-      resources: resources
-    ) do
+           "Resource Constrained Project",
+           activities,
+           base_datetime: base_datetime,
+           resources: resources
+         ) do
       {:ok, result} ->
         Helpers.print_schedule_result(result, "Tasks competing for limited developer resource")
+
       {:error, reason} ->
         IO.puts(IO.ANSI.red() <> "❌ Scheduling failed: #{reason}" <> IO.ANSI.reset())
     end

@@ -42,14 +42,14 @@ defmodule AriaEngine.MiniZinc.ExecutorTest do
 
     test "handles missing template gracefully" do
       result = Executor.exec("nonexistent_template", template_vars: %{})
-      
+
       assert {:error, error} = result
       assert is_binary(error) or is_map(error)
     end
 
     test "handles empty template variables" do
       result = Executor.exec("stn_temporal", template_vars: %{})
-      
+
       # Should fail due to missing required variables
       assert {:error, _error} = result
     end
@@ -59,16 +59,16 @@ defmodule AriaEngine.MiniZinc.ExecutorTest do
     @tag :integration
     test "executes direct MiniZinc file" do
       # Test will fail naturally if MiniZinc not available
-      
+
       # Create a simple test model
       test_model = """
       var 1..10: x;
       var 1..10: y;
-      
+
       constraint x + y = 10;
-      
+
       solve satisfy;
-      
+
       output ["x = " ++ show(x) ++ ", y = " ++ show(y)];
       """
 
@@ -96,10 +96,9 @@ defmodule AriaEngine.MiniZinc.ExecutorTest do
 
     test "handles missing file gracefully" do
       result = Executor.exec("nonexistent.mzn")
-      
+
       assert {:error, error} = result
       assert String.contains?(error, "not found") or is_map(error)
     end
   end
-
 end

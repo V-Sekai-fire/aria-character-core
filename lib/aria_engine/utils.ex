@@ -43,23 +43,25 @@ defmodule AriaEngine.Utils do
       end)
       |> Enum.into(%{})
 
-    duration_struct = cond do
-      # Handle ISO8601 datetime-based durations (start/end times)
-      Map.has_key?(normalized, :start) or Map.has_key?(normalized, :end) ->
-        normalize_datetime_duration(normalized)
+    duration_struct =
+      cond do
+        # Handle ISO8601 datetime-based durations (start/end times)
+        Map.has_key?(normalized, :start) or Map.has_key?(normalized, :end) ->
+          normalize_datetime_duration(normalized)
 
-      # Handle regular time unit durations
-      Map.has_key?(normalized, :hours) or Map.has_key?(normalized, :minutes) or Map.has_key?(normalized, :seconds) ->
-        %{
-          hours: Map.get(normalized, :hours, 0),
-          minutes: Map.get(normalized, :minutes, 0),
-          seconds: Map.get(normalized, :seconds, 0)
-        }
+        # Handle regular time unit durations
+        Map.has_key?(normalized, :hours) or Map.has_key?(normalized, :minutes) or
+            Map.has_key?(normalized, :seconds) ->
+          %{
+            hours: Map.get(normalized, :hours, 0),
+            minutes: Map.get(normalized, :minutes, 0),
+            seconds: Map.get(normalized, :seconds, 0)
+          }
 
-      # Default fallback
-      true ->
-        %{hours: 0, minutes: 0, seconds: 1}
-    end
+        # Default fallback
+        true ->
+          %{hours: 0, minutes: 0, seconds: 1}
+      end
 
     duration_struct_to_iso8601(duration_struct)
   end
@@ -71,7 +73,8 @@ defmodule AriaEngine.Utils do
     |> duration_struct_to_iso8601()
   end
 
-  def normalize_duration({:range, min_seconds, max_seconds}) when is_number(min_seconds) and is_number(max_seconds) do
+  def normalize_duration({:range, min_seconds, max_seconds})
+      when is_number(min_seconds) and is_number(max_seconds) do
     # Use the minimum duration for normalization
     min_seconds
     |> round()
@@ -97,12 +100,14 @@ defmodule AriaEngine.Utils do
       {:ok, duration} ->
         # Convert Timex duration to our duration struct format, then to ISO8601
         total_seconds = Duration.to_seconds(duration) |> round()
+
         total_seconds
         |> seconds_to_duration_struct()
         |> duration_struct_to_iso8601()
 
       {:error, _} ->
-        "PT1S"  # Default fallback
+        # Default fallback
+        "PT1S"
     end
   end
 
@@ -160,6 +165,7 @@ defmodule AriaEngine.Utils do
     # Create a Time struct and convert to Timex Duration, then to ISO8601 string
     # Timex.Duration.from_time expects a Time.t() struct
     time_struct = Time.new!(hours, minutes, seconds)
+
     Duration.from_time(time_struct)
     |> Duration.to_string()
   end
@@ -280,7 +286,8 @@ defmodule AriaEngine.Utils do
         Duration.to_seconds(duration) |> round()
 
       {:error, _} ->
-        1  # Default fallback
+        # Default fallback
+        1
     end
   end
 

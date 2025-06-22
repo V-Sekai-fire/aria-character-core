@@ -188,7 +188,16 @@ defmodule Plan.NodeExpansion do
         mark_goal_satisfied(solution_tree, node_id)
 
       _ ->
-        try_goal_methods(domain, state, solution_tree, node_id, predicate, subject, fact_value, verbose)
+        try_goal_methods(
+          domain,
+          state,
+          solution_tree,
+          node_id,
+          predicate,
+          subject,
+          fact_value,
+          verbose
+        )
     end
   end
 
@@ -281,7 +290,16 @@ defmodule Plan.NodeExpansion do
     {:ok, final_tree}
   end
 
-  defp try_goal_methods(domain, _state, solution_tree, node_id, predicate, subject, fact_value, verbose) do
+  defp try_goal_methods(
+         domain,
+         _state,
+         solution_tree,
+         node_id,
+         predicate,
+         subject,
+         fact_value,
+         verbose
+       ) do
     node = solution_tree.nodes[node_id]
     methods = Domain.get_unigoal_methods(domain, predicate)
 
@@ -396,7 +414,13 @@ defmodule Plan.NodeExpansion do
     {new_tree, [child_id | ids], child_state}
   end
 
-  defp create_goal_child_node(domain, parent_id, subtask, {tree, ids, current_state, failed_so_far}, verbose) do
+  defp create_goal_child_node(
+         domain,
+         parent_id,
+         subtask,
+         {tree, ids, current_state, failed_so_far},
+         verbose
+       ) do
     child_id = AriaEngine.Plan.Utils.generate_node_id()
     is_primitive = AriaEngine.Plan.Utils.is_primitive_task?(subtask)
 
@@ -404,7 +428,10 @@ defmodule Plan.NodeExpansion do
     is_durative =
       if is_primitive do
         {action_name, _args} = subtask
-        action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
+
+        action_atom =
+          if is_binary(action_name), do: String.to_atom(action_name), else: action_name
+
         Domain.Core.get_durative_action(domain, action_atom) != nil
       else
         false
@@ -434,7 +461,8 @@ defmodule Plan.NodeExpansion do
 
     new_tree = put_in(tree.nodes[child_id], child_node)
 
-    {new_tree, [child_id | ids], child_state, failed_so_far or (is_primitive and not action_succeeded)}
+    {new_tree, [child_id | ids], child_state,
+     failed_so_far or (is_primitive and not action_succeeded)}
   end
 
   defp execute_primitive_action(domain, {action_name, args}, current_state, verbose) do
@@ -445,12 +473,14 @@ defmodule Plan.NodeExpansion do
         if verbose > 2 do
           Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
         end
+
         new_state
 
       false ->
         if verbose > 2 do
           Logger.debug("Primitive action #{action_name}(#{inspect(args)}) failed")
         end
+
         current_state
     end
   end
@@ -463,12 +493,14 @@ defmodule Plan.NodeExpansion do
         if verbose > 2 do
           Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
         end
+
         {new_state, true}
 
       false ->
         if verbose > 2 do
           Logger.debug("Primitive action #{action_name}(#{inspect(args)}) failed")
         end
+
         {current_state, false}
     end
   end

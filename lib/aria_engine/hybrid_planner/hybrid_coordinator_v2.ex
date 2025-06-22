@@ -130,7 +130,8 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   Delegates to `HybridPlanner.HybridCoordinatorV2.ExecutionOperations.execute/5`.
   """
-  defdelegate execute(coordinator, domain, initial_state, plan, opts \\ []), to: ExecutionOperations
+  defdelegate execute(coordinator, domain, initial_state, plan, opts \\ []),
+    to: ExecutionOperations
 
   # ==================== REPLANNING OPERATIONS ====================
 
@@ -139,7 +140,8 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   Delegates to `HybridPlanner.HybridCoordinatorV2.ReplanningOperations.replan/6`.
   """
-  defdelegate replan(coordinator, domain, state, plan, fail_node_id, opts \\ []), to: ReplanningOperations
+  defdelegate replan(coordinator, domain, state, plan, fail_node_id, opts \\ []),
+    to: ReplanningOperations
 
   @doc """
   Simple replan interface for backward compatibility.

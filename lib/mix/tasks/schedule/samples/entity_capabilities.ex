@@ -12,9 +12,13 @@ defmodule Mix.Tasks.Schedule.Samples.EntityCapabilities do
   alias Mix.Tasks.Schedule.Samples.Helpers
 
   def run do
-    IO.puts("\n" <> IO.ANSI.yellow() <> "👥 Sample 4: Entity and Capability Management" <> IO.ANSI.reset())
+    IO.puts(
+      "\n" <>
+        IO.ANSI.yellow() <> "👥 Sample 4: Entity and Capability Management" <> IO.ANSI.reset()
+    )
+
     IO.puts("Demonstrates capability-based task assignment")
-    
+
     activities = [
       # Design Phase Activities
       %{
@@ -65,7 +69,7 @@ defmodule Mix.Tasks.Schedule.Samples.EntityCapabilities do
         "dependencies" => ["create_high_fidelity_mockups"],
         "required_capabilities" => [:design]
       },
-      
+
       # Frontend Development Activities
       %{
         "id" => "setup_development_environment",
@@ -121,7 +125,7 @@ defmodule Mix.Tasks.Schedule.Samples.EntityCapabilities do
         "dependencies" => ["optimize_performance"],
         "required_capabilities" => [:frontend_coding]
       },
-      
+
       # Testing Activities
       %{
         "id" => "setup_testing_framework",
@@ -177,7 +181,7 @@ defmodule Mix.Tasks.Schedule.Samples.EntityCapabilities do
         "dependencies" => ["run_performance_testing"],
         "required_capabilities" => [:testing]
       },
-      
+
       # Independent skill-based activities (time fillers)
       %{
         "id" => "design_system_review",
@@ -222,7 +226,7 @@ defmodule Mix.Tasks.Schedule.Samples.EntityCapabilities do
         "required_capabilities" => [:design, :frontend_coding]
       }
     ]
-    
+
     entities = [
       %Entity{
         id: "alice",
@@ -243,17 +247,18 @@ defmodule Mix.Tasks.Schedule.Samples.EntityCapabilities do
         availability: nil
       }
     ]
-    
+
     base_datetime = DateTime.utc_now()
-    
+
     case Scheduler.schedule_activities(
-      "Team Project",
-      activities,
-      base_datetime: base_datetime,
-      entities: entities
-    ) do
+           "Team Project",
+           activities,
+           base_datetime: base_datetime,
+           entities: entities
+         ) do
       {:ok, result} ->
         Helpers.print_schedule_result(result, "Tasks assigned based on team member capabilities")
+
       {:error, reason} ->
         IO.puts(IO.ANSI.red() <> "❌ Scheduling failed: #{reason}" <> IO.ANSI.reset())
     end

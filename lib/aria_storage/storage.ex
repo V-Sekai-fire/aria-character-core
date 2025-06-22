@@ -63,16 +63,17 @@ defmodule AriaStorage.Storage do
       {:ok, :configured} ->
         # Test basic operations
         test_file = create_test_file()
-        
+
         case store_file_with_waffle(test_file, backend: backend) do
           {:ok, _result} ->
             File.rm(test_file)
             {:ok, :test_passed}
+
           {:error, reason} ->
             File.rm(test_file)
             {:error, {:test_failed, reason}}
         end
-      
+
       {:error, reason} ->
         {:error, {:config_failed, reason}}
     end
@@ -110,7 +111,7 @@ defmodule AriaStorage.Storage do
       {:ok, data} ->
         # Create a chunk from the file data
         chunk_id = :crypto.hash(:sha256, data) |> Base.encode16(case: :lower)
-        
+
         chunk = %AriaStorage.Chunks{
           id: chunk_id,
           data: data,
@@ -130,7 +131,10 @@ defmodule AriaStorage.Storage do
 
   defp create_test_file do
     test_data = "Test file for Waffle storage verification"
-    temp_path = System.tmp_dir!() |> Path.join("waffle_test_#{System.unique_integer([:positive])}.txt")
+
+    temp_path =
+      System.tmp_dir!() |> Path.join("waffle_test_#{System.unique_integer([:positive])}.txt")
+
     File.write!(temp_path, test_data)
     temp_path
   end

@@ -17,8 +17,15 @@ defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
 
   Pure Function as Object implementation - all dependencies are injected strategies.
   """
-  @spec plan(coordinator(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) :: plan_result()
-  def plan(%coordinator_module{} = coordinator, domain, %AriaEngine.StateV2{} = state, goals, opts \\ [])
+  @spec plan(coordinator(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) ::
+          plan_result()
+  def plan(
+        %coordinator_module{} = coordinator,
+        domain,
+        %AriaEngine.StateV2{} = state,
+        goals,
+        opts \\ []
+      )
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
     _verbose = Keyword.get(opts, :verbose, 0)
 
@@ -150,7 +157,10 @@ defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
   Simple plan interface for backward compatibility.
   """
   @spec plan(coordinator(), map()) :: plan_result()
-  def plan(%coordinator_module{} = coordinator, %{domain: domain, state: state, goals: goals} = request)
+  def plan(
+        %coordinator_module{} = coordinator,
+        %{domain: domain, state: state, goals: goals} = request
+      )
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
     opts = Map.get(request, :opts, [])
     plan(coordinator, domain, state, goals, opts)

@@ -92,7 +92,8 @@ defmodule AriaStorage.Parsers.CasyncFormat.IndexParser do
     end
   end
 
-  @spec parse_format_table_with_items_binary(binary()) :: {:ok, [Constants.table_item()]} | {:error, String.t()}
+  @spec parse_format_table_with_items_binary(binary()) ::
+          {:ok, [Constants.table_item()]} | {:error, String.t()}
   defp parse_format_table_with_items_binary(binary_data) do
     case binary_data do
       <<table_marker::little-64, table_type::little-64, remaining_data::binary>> ->
@@ -108,7 +109,8 @@ defmodule AriaStorage.Parsers.CasyncFormat.IndexParser do
     end
   end
 
-  @spec parse_table_items_binary(binary(), [Constants.table_item()]) :: {:ok, [Constants.table_item()]} | {:error, String.t()}
+  @spec parse_table_items_binary(binary(), [Constants.table_item()]) ::
+          {:ok, [Constants.table_item()]} | {:error, String.t()}
   defp parse_table_items_binary(binary_data, acc) do
     case binary_data do
       # Check for table tail (40 bytes)

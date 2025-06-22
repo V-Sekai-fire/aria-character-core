@@ -198,7 +198,8 @@ defmodule TimelineGraph.EntityManager do
   @doc """
   Sets an entity property and triggers timeline growth if appropriate.
   """
-  @spec set_entity_property(map(), entity_id(), String.t(), any()) :: {:ok, map()} | {:error, term()}
+  @spec set_entity_property(map(), entity_id(), String.t(), any()) ::
+          {:ok, map()} | {:error, term()}
   def set_entity_property(timeline_graph, entity_id, predicate, value) do
     case Map.get(timeline_graph.entities, entity_id) do
       nil ->

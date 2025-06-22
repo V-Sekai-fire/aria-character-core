@@ -4,7 +4,7 @@
 defmodule AriaStorage.Chunks.RollingHash do
   @moduledoc """
   Rolling hash implementation using buzhash algorithm.
-  
+
   This module implements the buzhash rolling hash algorithm that's fully compatible
   with the Go implementation of desync/casync. It uses the same hash table values
   and boundary detection algorithm to produce identical chunking results.
@@ -284,7 +284,7 @@ defmodule AriaStorage.Chunks.RollingHash do
 
   @doc """
   Calculate buzhash for a window of data.
-  
+
   The window must be exactly the window size (48 bytes).
   """
   @spec calculate_buzhash(binary()) :: hash_value()
@@ -338,10 +338,16 @@ defmodule AriaStorage.Chunks.RollingHash do
 
   @doc """
   Find chunk boundary in data using rolling hash algorithm.
-  
+
   Returns the position where the chunk should end.
   """
-  @spec find_chunk_boundary(binary(), non_neg_integer(), pos_integer(), pos_integer(), pos_integer()) :: non_neg_integer()
+  @spec find_chunk_boundary(
+          binary(),
+          non_neg_integer(),
+          pos_integer(),
+          pos_integer(),
+          pos_integer()
+        ) :: non_neg_integer()
   def find_chunk_boundary(data, start_pos, min_size, max_size, discriminator) do
     data_size = byte_size(data)
     min_end = start_pos + min_size
@@ -370,7 +376,8 @@ defmodule AriaStorage.Chunks.RollingHash do
   end
 
   # Start the rolling hash algorithm from the minimum position
-  @spec find_boundary_starting_at(binary(), non_neg_integer(), non_neg_integer(), pos_integer()) :: non_neg_integer()
+  @spec find_boundary_starting_at(binary(), non_neg_integer(), non_neg_integer(), pos_integer()) ::
+          non_neg_integer()
   defp find_boundary_starting_at(data, start_pos, max_end, discriminator) do
     data_size = byte_size(data)
 
@@ -393,7 +400,13 @@ defmodule AriaStorage.Chunks.RollingHash do
   end
 
   # Continue the rolling hash search with corrected positioning
-  @spec rolling_search(binary(), non_neg_integer(), non_neg_integer(), hash_value(), pos_integer()) :: non_neg_integer()
+  @spec rolling_search(
+          binary(),
+          non_neg_integer(),
+          non_neg_integer(),
+          hash_value(),
+          pos_integer()
+        ) :: non_neg_integer()
   defp rolling_search(data, pos, max_end, _hash, _discriminator)
        when pos > max_end or pos >= byte_size(data) do
     max_end

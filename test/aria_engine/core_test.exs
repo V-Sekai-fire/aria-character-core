@@ -1,7 +1,7 @@
 defmodule CoreTest do
   @moduledoc """
   Tests for the Core module - foundational AriaEngine type definitions and constructor.
-  
+
   This module tests the core infrastructure that other components depend on,
   including type definitions, struct construction, and default value handling.
   """
@@ -173,7 +173,7 @@ defmodule CoreTest do
 
     test "progress field has correct structure" do
       engine = Core.new("test")
-      
+
       assert is_map(engine.progress)
       assert Map.has_key?(engine.progress, :total_steps)
       assert Map.has_key?(engine.progress, :completed_steps)
@@ -185,7 +185,7 @@ defmodule CoreTest do
 
     test "status field accepts valid status values" do
       valid_statuses = [:pending, :planning, :executing, :completed, :failed, :cancelled]
-      
+
       for status <- valid_statuses do
         engine = %Core{status: status}
         assert engine.status == status

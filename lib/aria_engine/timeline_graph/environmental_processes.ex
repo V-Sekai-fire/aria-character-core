@@ -47,7 +47,8 @@ defmodule TimelineGraph.EnvironmentalProcesses do
   )
   ```
   """
-  @spec add_environmental_process(map(), process_type(), keyword()) :: {:ok, map()} | {:error, term()}
+  @spec add_environmental_process(map(), process_type(), keyword()) ::
+          {:ok, map()} | {:error, term()}
   def add_environmental_process(timeline_graph, process_type, opts) do
     affected_entities = resolve_affected_entities(timeline_graph, Keyword.get(opts, :affects, []))
     start_time = Keyword.get(opts, :start_time, DateTime.utc_now())
@@ -121,11 +122,13 @@ defmodule TimelineGraph.EnvironmentalProcesses do
   )
   ```
   """
-  @spec remove_environmental_process(map(), process_type(), keyword()) :: {:ok, map()} | {:error, term()}
+  @spec remove_environmental_process(map(), process_type(), keyword()) ::
+          {:ok, map()} | {:error, term()}
   def remove_environmental_process(timeline_graph, process_type, opts \\ []) do
-    affected_entities = 
+    affected_entities =
       case Keyword.get(opts, :affects) do
-        nil -> Map.keys(timeline_graph.entities)  # Remove from all entities
+        # Remove from all entities
+        nil -> Map.keys(timeline_graph.entities)
         entities -> resolve_affected_entities(timeline_graph, entities)
       end
 
@@ -137,7 +140,8 @@ defmodule TimelineGraph.EnvironmentalProcesses do
 
         entity_timeline ->
           # Find and remove matching environmental process intervals
-          intervals_to_remove = find_environmental_process_intervals(entity_timeline.timeline, process_type)
+          intervals_to_remove =
+            find_environmental_process_intervals(entity_timeline.timeline, process_type)
 
           updated_timeline =
             Enum.reduce(intervals_to_remove, entity_timeline.timeline, fn interval, timeline ->
@@ -188,7 +192,7 @@ defmodule TimelineGraph.EnvironmentalProcesses do
 
       entity_timeline ->
         check_time = Keyword.get(opts, :at_time, DateTime.utc_now())
-        
+
         # Find all environmental process intervals active at the specified time
         find_active_environmental_processes(entity_timeline.timeline, check_time)
     end
@@ -220,11 +224,14 @@ defmodule TimelineGraph.EnvironmentalProcesses do
       active_processes ->
         # Sort by intensity and priority, then merge effects
         active_processes
-        |> Enum.sort_by(fn interval ->
-          intensity = get_in(interval.metadata, [:intensity]) || :medium
-          priority = get_in(interval.metadata, [:priority]) || :low
-          {intensity_value(intensity), priority_value(priority)}
-        end, :desc)
+        |> Enum.sort_by(
+          fn interval ->
+            intensity = get_in(interval.metadata, [:intensity]) || :medium
+            priority = get_in(interval.metadata, [:priority]) || :low
+            {intensity_value(intensity), priority_value(priority)}
+          end,
+          :desc
+        )
         |> Enum.reduce(%{}, fn interval, acc_effects ->
           process_effects = get_in(interval.metadata, [:effects]) || %{}
           Map.merge(acc_effects, process_effects)
@@ -253,26 +260,27 @@ defmodule TimelineGraph.EnvironmentalProcesses do
   @spec add_recurring_process(map(), process_type(), keyword()) :: {:ok, map()} | {:error, term()}
   def add_recurring_process(timeline_graph, process_type, opts) do
     repeat_every_hours = Keyword.get(opts, :repeat_every_hours, 24)
-    repeat_count = Keyword.get(opts, :repeat_count, 365)  # Default to 1 year
-    
+    # Default to 1 year
+    repeat_count = Keyword.get(opts, :repeat_count, 365)
+
     start_time = Keyword.get(opts, :start_time, DateTime.utc_now())
-    
+
     # Create multiple instances of the process
     Enum.reduce_while(0..(repeat_count - 1), {:ok, timeline_graph}, fn iteration, {:ok, graph} ->
       # Calculate start time for this iteration
       iteration_start = DateTime.add(start_time, iteration * repeat_every_hours * 3600, :second)
-      
+
       # Create process options for this iteration
-      iteration_opts = 
+      iteration_opts =
         opts
         |> Keyword.put(:start_time, iteration_start)
         |> Keyword.delete(:repeat_every_hours)
         |> Keyword.delete(:repeat_count)
-      
+
       case add_environmental_process(graph, process_type, iteration_opts) do
         {:ok, updated_graph} ->
           {:cont, {:ok, updated_graph}}
-        
+
         {:error, reason} ->
           {:halt, {:error, reason}}
       end
@@ -305,20 +313,30 @@ defmodule TimelineGraph.EnvironmentalProcesses do
     all_intervals
     |> Enum.filter(fn interval ->
       get_in(interval.metadata, [:type]) == :environmental_process and
-      get_in(interval.metadata, [:process_type]) == process_type
+        get_in(interval.metadata, [:process_type]) == process_type
     end)
     |> Enum.map(fn stn_interval ->
       # Convert STN times back to DateTime for Interval format
-      start_dt = TimelineGraph.TimeConverter.convert_from_stn_time(stn_interval.start_time, timeline.stn.time_unit)
-      end_dt = TimelineGraph.TimeConverter.convert_from_stn_time(stn_interval.end_time, timeline.stn.time_unit)
-      
+      start_dt =
+        TimelineGraph.TimeConverter.convert_from_stn_time(
+          stn_interval.start_time,
+          timeline.stn.time_unit
+        )
+
+      end_dt =
+        TimelineGraph.TimeConverter.convert_from_stn_time(
+          stn_interval.end_time,
+          timeline.stn.time_unit
+        )
+
       Interval.new(start_dt, end_dt, metadata: stn_interval.metadata)
     end)
   end
 
   defp find_active_environmental_processes(timeline, check_time) do
     # Convert check_time to STN time units
-    stn_time = TimelineGraph.TimeConverter.datetime_to_stn_time(check_time, timeline.stn.time_unit)
+    stn_time =
+      TimelineGraph.TimeConverter.datetime_to_stn_time(check_time, timeline.stn.time_unit)
 
     # Get all intervals from the STN
     all_intervals = Timeline.Internal.STN.Core.get_intervals(timeline.stn)
@@ -327,13 +345,22 @@ defmodule TimelineGraph.EnvironmentalProcesses do
     all_intervals
     |> Enum.filter(fn interval ->
       get_in(interval.metadata, [:type]) == :environmental_process and
-      interval.start_time <= stn_time and stn_time <= interval.end_time
+        interval.start_time <= stn_time and stn_time <= interval.end_time
     end)
     |> Enum.map(fn stn_interval ->
       # Convert STN times back to DateTime for Interval format
-      start_dt = TimelineGraph.TimeConverter.convert_from_stn_time(stn_interval.start_time, timeline.stn.time_unit)
-      end_dt = TimelineGraph.TimeConverter.convert_from_stn_time(stn_interval.end_time, timeline.stn.time_unit)
-      
+      start_dt =
+        TimelineGraph.TimeConverter.convert_from_stn_time(
+          stn_interval.start_time,
+          timeline.stn.time_unit
+        )
+
+      end_dt =
+        TimelineGraph.TimeConverter.convert_from_stn_time(
+          stn_interval.end_time,
+          timeline.stn.time_unit
+        )
+
       Interval.new(start_dt, end_dt, metadata: stn_interval.metadata)
     end)
   end

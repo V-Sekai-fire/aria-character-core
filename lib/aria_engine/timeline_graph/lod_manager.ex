@@ -177,7 +177,13 @@ defmodule TimelineGraph.LODManager do
       cond do
         # Promote active agents if under limits
         should_promote_entity?(entity_timeline, minutes_since_activity, activity_threshold) and
-          can_promote_to_level?(entity_timeline.lod, current_high, current_ultra_high, max_high_lod, max_ultra_high_lod) ->
+            can_promote_to_level?(
+              entity_timeline.lod,
+              current_high,
+              current_ultra_high,
+              max_high_lod,
+              max_ultra_high_lod
+            ) ->
           promoted_lod = promote_lod(entity_timeline.lod)
           updated_entity_timeline = %{entity_timeline | lod: promoted_lod}
           %{graph | entities: Map.put(graph.entities, entity_id, updated_entity_timeline)}
@@ -209,7 +215,13 @@ defmodule TimelineGraph.LODManager do
       entity_timeline.lod != :very_low
   end
 
-  defp can_promote_to_level?(current_lod, current_high, current_ultra_high, max_high, max_ultra_high) do
+  defp can_promote_to_level?(
+         current_lod,
+         current_high,
+         current_ultra_high,
+         max_high,
+         max_ultra_high
+       ) do
     case promote_lod(current_lod) do
       :high -> current_high < max_high
       :ultra_high -> current_ultra_high < max_ultra_high

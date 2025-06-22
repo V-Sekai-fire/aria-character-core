@@ -181,7 +181,7 @@ defmodule TimelineGraph.TimeConverter do
   ```elixir
   start_time = ~U[2025-06-17 08:00:00Z]
   end_time = ~U[2025-06-17 16:00:00Z]
-  
+
   # Get difference in STN hours
   work_hours = TimeConverter.datetime_diff_stn(end_time, start_time, :hour)
   # => 8
@@ -204,10 +204,10 @@ defmodule TimelineGraph.TimeConverter do
 
   ```elixir
   start_time = ~U[2025-06-17 08:00:00Z]
-  
+
   # Add 8 STN hours
   end_time = TimeConverter.add_stn_duration(start_time, 8, :hour)
-  
+
   # Add 30 STN minutes
   break_end = TimeConverter.add_stn_duration(start_time, 30, :minute)
   ```
@@ -236,10 +236,10 @@ defmodule TimelineGraph.TimeConverter do
 
   ```elixir
   end_time = ~U[2025-06-17 16:00:00Z]
-  
+
   # Subtract 8 STN hours to get start time
   start_time = TimeConverter.subtract_stn_duration(end_time, 8, :hour)
-  
+
   # Subtract 15 STN minutes
   earlier_time = TimeConverter.subtract_stn_duration(end_time, 15, :minute)
   ```

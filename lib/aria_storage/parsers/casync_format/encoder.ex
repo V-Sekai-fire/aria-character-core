@@ -28,7 +28,8 @@ defmodule AriaStorage.Parsers.CasyncFormat.Encoder do
         chunk_size_min: chunk_size_min,
         chunk_size_avg: chunk_size_avg,
         chunk_size_max: chunk_size_max
-      }) when format in [:caibx, :caidx] do
+      })
+      when format in [:caibx, :caidx] do
     format_index = <<
       48::little-64,
       Constants.ca_format_index()::little-64,
@@ -50,7 +51,8 @@ defmodule AriaStorage.Parsers.CasyncFormat.Encoder do
         chunk_size_min: chunk_size_min,
         chunk_size_avg: chunk_size_avg,
         chunk_size_max: chunk_size_max
-      }) when format in [:caibx, :caidx] do
+      })
+      when format in [:caibx, :caidx] do
     format_index = <<
       48::little-64,
       Constants.ca_format_index()::little-64,

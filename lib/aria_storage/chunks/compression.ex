@@ -4,7 +4,7 @@
 defmodule AriaStorage.Chunks.Compression do
   @moduledoc """
   Chunk compression and decompression utilities.
-  
+
   Provides compression functionality for chunks using various algorithms,
   with zstd as the primary compression method.
   """

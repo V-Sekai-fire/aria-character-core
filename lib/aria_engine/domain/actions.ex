@@ -34,24 +34,23 @@ defmodule Domain.Actions do
         metadata \\ %{}
       )
       when is_atom(name) and is_map(metadata) do
-    
     cond do
       # Case 1: Regular function (instantaneous action)
       is_function(action_or_durative, 2) ->
         add_instantaneous_action(domain, name, action_or_durative, metadata)
-      
+
       # Case 2: DurativeAction struct
       match?(%Domain.DurativeAction{}, action_or_durative) ->
         case action_or_durative.duration do
           # Duration = 0: treat as instantaneous action
           {:fixed, 0} ->
             add_instantaneous_action(domain, name, action_or_durative.action_fn, metadata)
-          
+
           # Duration > 0: treat as durative action
           _ ->
             add_durative_action_to_domain(domain, name, action_or_durative, metadata)
         end
-      
+
       # Case 3: Unknown type
       true ->
         Logger.warning("Invalid action type for #{name}: #{inspect(action_or_durative)}")

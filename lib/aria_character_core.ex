@@ -21,5 +21,6 @@ defmodule AriaCharacterCore do
   @doc """
   Returns the version of AriaCharacterCore.
   """
+  @spec version() :: String.t()
   def version, do: "0.2.0"
 end

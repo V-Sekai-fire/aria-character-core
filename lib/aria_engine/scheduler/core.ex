@@ -32,13 +32,14 @@ defmodule AriaEngine.Scheduler.Core do
     # Validate that base_datetime is explicitly provided
     case validate_base_datetime(base_datetime) do
       {:error, reason} ->
-        {:error, "Missing or invalid base_datetime parameter: #{reason}. base_datetime must be explicitly provided as a DateTime struct."}
-      
+        {:error,
+         "Missing or invalid base_datetime parameter: #{reason}. base_datetime must be explicitly provided as a DateTime struct."}
+
       {:ok, _validated_datetime} ->
         if verbose > 1 do
           Logger.debug("AriaEngine.Scheduler: Initializing enhanced scheduling system")
         end
-        
+
         do_schedule_with_enhanced_features(
           schedule_name,
           activities,
@@ -58,17 +59,16 @@ defmodule AriaEngine.Scheduler.Core do
   defp validate_base_datetime(_), do: {:error, "base_datetime must be a DateTime struct"}
 
   defp do_schedule_with_enhanced_features(
-        schedule_name,
-        activities,
-        entities,
-        resources,
-        constraints,
-        simulation_mode,
-        activity_log,
-        verbose,
-        base_datetime
-      ) do
-
+         schedule_name,
+         activities,
+         entities,
+         resources,
+         constraints,
+         simulation_mode,
+         activity_log,
+         verbose,
+         base_datetime
+       ) do
     # Handle empty activities case
     if Enum.empty?(activities) do
       return_empty_schedule_result(
@@ -194,6 +194,7 @@ defmodule AriaEngine.Scheduler.Core do
       base_datetime: base_datetime,
       opts: _opts
     } = scheduling_params
+
     Logger.info(
       "🔧 Scheduler.Core.attempt_enhanced_scheduling() called with #{length(activities)} activities"
     )
@@ -332,8 +333,13 @@ defmodule AriaEngine.Scheduler.Core do
     # Convert resources from map format to list of structs format
     resources_list = convert_resources_map_to_list(resources)
     entities_list = convert_entities_to_list(entities)
-    
-    DomainConverter.convert_activities_to_khr_domain(activities, entities_list, resources_list, constraints)
+
+    DomainConverter.convert_activities_to_khr_domain(
+      activities,
+      entities_list,
+      resources_list,
+      constraints
+    )
   end
 
   @doc """

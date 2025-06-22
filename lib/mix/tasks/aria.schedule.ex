@@ -84,14 +84,14 @@ defmodule Mix.Tasks.Aria.Schedule do
     Mix.Task.run("app.start")
 
     schedule_name = opts[:name]
-    
+
     cond do
       opts[:train_mode] ->
         handle_train_scheduling(schedule_name, opts)
-      
+
       opts[:activities] ->
         handle_custom_scheduling(schedule_name, opts)
-      
+
       true ->
         Mix.shell().error("Error: Either --activities or --train-mode must be specified")
         System.halt(1)
@@ -166,7 +166,7 @@ defmodule Mix.Tasks.Aria.Schedule do
     # Use a deterministic base datetime for CLI tasks
     # This ensures reproducible results for testing and debugging
     base_datetime = ~U[2025-01-01 00:00:00Z]
-    
+
     AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
       schedule_name,
       activities_list,
@@ -212,6 +212,7 @@ defmodule Mix.Tasks.Aria.Schedule do
 
     if analysis != %{} do
       Mix.shell().info("\n📈 Analysis:")
+
       Enum.each(analysis, fn {key, value} ->
         Mix.shell().info("  #{key}: #{inspect(value)}")
       end)
@@ -219,6 +220,7 @@ defmodule Mix.Tasks.Aria.Schedule do
 
     if resource_utilization != %{} do
       Mix.shell().info("\n🔧 Resource Utilization:")
+
       Enum.each(resource_utilization, fn {key, value} ->
         Mix.shell().info("  #{key}: #{inspect(value)}")
       end)
@@ -226,6 +228,7 @@ defmodule Mix.Tasks.Aria.Schedule do
 
     if length(schedule) > 0 do
       Mix.shell().info("\n📅 Schedule:")
+
       Enum.each(schedule, fn item ->
         Mix.shell().info("  #{inspect(item)}")
       end)

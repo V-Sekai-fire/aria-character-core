@@ -113,14 +113,14 @@ defmodule Timeline do
   def solve(timeline) do
     require Logger
     stn = STN.solve(timeline.stn)
-    
+
     # Apply solved times from STN back to intervals if available
     updated_timeline = %{timeline | stn: stn}
-    
-    
+
     case Map.get(stn.metadata, :solved_times) do
-      nil -> 
+      nil ->
         updated_timeline
+
       solved_times ->
         result = apply_solved_times_to_intervals(updated_timeline, solved_times)
         result
@@ -195,11 +195,11 @@ defmodule Timeline do
 
   @doc """
   TOMBSTONE: PC-2 algorithm was removed in favor of MiniZinc-based STN solving.
-  
+
   The Path Consistency (PC-2) algorithm implementation was removed as part of
   the temporal planning segment closure. Use Timeline.solve/1 instead, which
   uses the MiniZinc solver for STN constraint solving.
-  
+
   Removed: January 2025
   Replacement: Timeline.solve/1
   """
@@ -391,49 +391,47 @@ defmodule Timeline do
   defp apply_solved_times_to_intervals(timeline, solved_times) do
     # Get the base time from the first interval or use epoch
     base_time = get_base_time(timeline)
-    
+
     # Get the LOD resolution from the STN (default to 100 if not available)
     lod_resolution = Map.get(timeline.stn, :lod_resolution, 100)
-    
+
     # Update each interval with its solved start time
-    updated_intervals = 
+    updated_intervals =
       timeline.intervals
       |> Enum.map(fn {interval_id, interval} ->
         start_point = "#{interval_id}_start"
         end_point = "#{interval_id}_end"
-        
+
         case {Map.get(solved_times, start_point), Map.get(solved_times, end_point)} do
           {start_offset, end_offset} when not is_nil(start_offset) and not is_nil(end_offset) ->
             # Convert STN time units to seconds
             # STN uses lod_resolution units per second (e.g., 100 = centiseconds)
             start_seconds = start_offset / lod_resolution
             end_seconds = end_offset / lod_resolution
-            
+
             # Convert to DateTime
             new_start_time = DateTime.add(base_time, round(start_seconds * 1000), :millisecond)
             new_end_time = DateTime.add(base_time, round(end_seconds * 1000), :millisecond)
-            
-            updated_interval = %{interval | 
-              start_time: new_start_time,
-              end_time: new_end_time
-            }
+
+            updated_interval = %{interval | start_time: new_start_time, end_time: new_end_time}
             {interval_id, updated_interval}
-            
+
           _ ->
             # Keep original interval if no solved times available
             {interval_id, interval}
         end
       end)
       |> Map.new()
-    
+
     %{timeline | intervals: updated_intervals}
   end
 
   defp get_base_time(timeline) do
     case timeline.intervals |> Map.values() |> List.first() do
-      nil -> 
+      nil ->
         # No intervals, use epoch
         DateTime.from_naive!(~N[2025-01-01 00:00:00], "Etc/UTC")
+
       first_interval ->
         # Use the start time of the first interval as base, but round down to the minute
         # This ensures we have a clean base time for the solved schedule

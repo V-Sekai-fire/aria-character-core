@@ -22,43 +22,45 @@ defmodule AriaEngine.Scheduler.PlanConverter do
         base_datetime
       ) do
     Logger.debug("Converting plan to enhanced schedule")
-    
+
     # Handle both EncapsulatedPlan struct and raw plan maps
-    internal_plan = case encapsulated_plan do
-      %{__struct__: HybridPlanner.DataStructures.EncapsulatedPlan} ->
-        # It's a struct, use the proper API
-        HybridPlanner.DataStructures.EncapsulatedPlan.get_internal_plan(encapsulated_plan)
-      
-      %{nodes: _, root_id: _} ->
-        # It's a raw plan map, use it directly
-        Logger.debug("Using raw plan map directly")
-        encapsulated_plan
-        
-      _ ->
-        # Check if it has __struct__ key but is not the expected struct
-        if Map.has_key?(encapsulated_plan, :__struct__) do
-          Logger.error("Unknown struct type: #{inspect(encapsulated_plan.__struct__)}")
-          raise "Unknown plan struct type: #{inspect(encapsulated_plan.__struct__)}"
-        else
-          Logger.error("Unknown plan format: #{inspect(encapsulated_plan)}")
-          raise "Unknown plan format: #{inspect(encapsulated_plan)}"
-        end
-    end
+    internal_plan =
+      case encapsulated_plan do
+        %{__struct__: HybridPlanner.DataStructures.EncapsulatedPlan} ->
+          # It's a struct, use the proper API
+          HybridPlanner.DataStructures.EncapsulatedPlan.get_internal_plan(encapsulated_plan)
+
+        %{nodes: _, root_id: _} ->
+          # It's a raw plan map, use it directly
+          Logger.debug("Using raw plan map directly")
+          encapsulated_plan
+
+        _ ->
+          # Check if it has __struct__ key but is not the expected struct
+          if Map.has_key?(encapsulated_plan, :__struct__) do
+            Logger.error("Unknown struct type: #{inspect(encapsulated_plan.__struct__)}")
+            raise "Unknown plan struct type: #{inspect(encapsulated_plan.__struct__)}"
+          else
+            Logger.error("Unknown plan format: #{inspect(encapsulated_plan)}")
+            raise "Unknown plan format: #{inspect(encapsulated_plan)}"
+          end
+      end
 
     Logger.debug("Internal plan structure - keys: #{inspect(Map.keys(internal_plan))}")
-    
+
     # Work directly with the solution tree structure instead of extracting primitive actions
     case internal_plan do
       %{nodes: nodes, root_id: root_id} ->
         # Convert solution tree to scheduled activities by traversing primitive nodes
-        scheduled_activities = convert_solution_tree_to_scheduled_activities(
-          nodes, 
-          root_id, 
-          activities, 
-          entities, 
-          resources
-        )
-        
+        scheduled_activities =
+          convert_solution_tree_to_scheduled_activities(
+            nodes,
+            root_id,
+            activities,
+            entities,
+            resources
+          )
+
         Logger.debug("Generated #{length(scheduled_activities)} scheduled activities")
 
         # Fix timing to respect dependencies
@@ -69,7 +71,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
           {:error, reason} ->
             raise "Failed to fix timing constraints: #{inspect(reason)}"
         end
-        
+
       _ ->
         Logger.error("Unexpected internal plan format: #{inspect(internal_plan)}")
         raise "Unexpected internal plan format"
@@ -146,14 +148,18 @@ defmodule AriaEngine.Scheduler.PlanConverter do
 
   Uses Allen's Interval Algebra to properly express dependency relationships,
   then applies them as STN constraints through the Timeline API.
-  
+
   Requires explicit base datetime to ensure deterministic scheduling behavior.
   Returns {:ok, activities} on success or {:error, reason} on failure.
   """
   def fix_timing_constraints(scheduled_activities, original_activities, base_datetime) do
     case validate_base_datetime(base_datetime) do
       {:ok, validated_datetime} ->
-        do_fix_timing_constraints_with_allen_relations(scheduled_activities, original_activities, validated_datetime)
+        do_fix_timing_constraints_with_allen_relations(
+          scheduled_activities,
+          original_activities,
+          validated_datetime
+        )
 
       {:error, reason} ->
         {:error, reason}
@@ -164,69 +170,80 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   defp validate_base_datetime(%DateTime{} = dt), do: {:ok, dt}
   defp validate_base_datetime(_), do: {:error, :invalid_base_datetime}
 
-  defp do_fix_timing_constraints_with_allen_relations(scheduled_activities, _original_activities, base_datetime) do
+  defp do_fix_timing_constraints_with_allen_relations(
+         scheduled_activities,
+         _original_activities,
+         base_datetime
+       ) do
     require Logger
-    
-    Logger.debug("PlanConverter: Processing #{length(scheduled_activities)} activities with Allen Relations")
-    
+
+    Logger.debug(
+      "PlanConverter: Processing #{length(scheduled_activities)} activities with Allen Relations"
+    )
+
     # Build Timeline.Interval structs with proper IDs
-    {intervals, activity_id_map} = build_intervals_with_dependencies(scheduled_activities, base_datetime)
-    
+    {intervals, activity_id_map} =
+      build_intervals_with_dependencies(scheduled_activities, base_datetime)
+
     # Create Timeline and add intervals
     timeline = Timeline.new()
-    timeline_with_intervals = Enum.reduce(intervals, timeline, fn interval, acc_timeline ->
-      Timeline.add_interval(acc_timeline, interval)
-    end)
-    
+
+    timeline_with_intervals =
+      Enum.reduce(intervals, timeline, fn interval, acc_timeline ->
+        Timeline.add_interval(acc_timeline, interval)
+      end)
+
     # Apply Allen Relations as STN constraints
-    timeline_with_constraints = apply_allen_dependency_constraints(
-      timeline_with_intervals, 
-      scheduled_activities, 
-      activity_id_map
-    )
-    
+    timeline_with_constraints =
+      apply_allen_dependency_constraints(
+        timeline_with_intervals,
+        scheduled_activities,
+        activity_id_map
+      )
+
     # Solve Timeline for consistent timing
     solved_timeline = Timeline.solve(timeline_with_constraints)
-    
+
     # Extract timing and update activities
     extract_timing_from_solved_timeline(scheduled_activities, solved_timeline, activity_id_map)
   end
 
   defp build_intervals_with_dependencies(scheduled_activities, base_datetime) do
-    intervals_and_ids = 
+    intervals_and_ids =
       Enum.with_index(scheduled_activities)
       |> Enum.map(fn {activity, index} ->
         # Parse duration to get seconds
         duration_seconds = parse_activity_duration(activity)
-        
+
         # Create start and end times (initially sequential, will be adjusted by Timeline)
         start_time = DateTime.add(base_datetime, index * 60, :second)
         end_time = DateTime.add(start_time, duration_seconds, :second)
 
         # Get activity ID
         activity_id = get_activity_id(activity)
-        
+
         # Get dependencies
         dependencies = get_activity_dependencies(activity)
-        
+
         # Create Timeline.Interval struct with explicit ID
-        interval = Timeline.Interval.new(start_time, end_time,
-          metadata: %{
-            id: activity_id,
-            dependencies: dependencies,
-            original_activity: activity
-          }
-        )
-        
+        interval =
+          Timeline.Interval.new(start_time, end_time,
+            metadata: %{
+              id: activity_id,
+              dependencies: dependencies,
+              original_activity: activity
+            }
+          )
+
         # Override the generated ID with our activity ID for STN constraint naming
         interval_with_id = %{interval | id: activity_id}
-        
+
         {interval_with_id, activity_id}
       end)
-    
+
     intervals = Enum.map(intervals_and_ids, fn {interval, _id} -> interval end)
     activity_id_map = Enum.into(intervals_and_ids, %{}, fn {interval, id} -> {id, interval} end)
-    
+
     {intervals, activity_id_map}
   end
 
@@ -234,28 +251,31 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     Enum.reduce(scheduled_activities, timeline, fn activity, acc_timeline ->
       dependencies = get_activity_dependencies(activity)
       activity_id = get_activity_id(activity)
-      
+
       Enum.reduce(dependencies, acc_timeline, fn dep_id, inner_timeline ->
         # Get the intervals for dependency and current activity
         dep_interval = Map.get(activity_id_map, dep_id)
         activity_interval = Map.get(activity_id_map, activity_id)
-        
+
         if dep_interval && activity_interval do
           # Apply Allen "before" relation: dependency must finish before activity starts
           dep_end_point = "#{dep_id}_end"
           activity_start_point = "#{activity_id}_start"
-          
+
           # Check if the time points exist
           current_time_points = Timeline.time_points(inner_timeline)
+
           if dep_end_point in current_time_points and activity_start_point in current_time_points do
             # Add the constraint
             # Use 10 seconds worth of STN units based on timeline's STN LOD resolution
             max_gap = 10 * inner_timeline.stn.lod_resolution
+
             Timeline.add_constraint(
               inner_timeline,
               dep_end_point,
               activity_start_point,
-              {0, max_gap}  # Allen "before" relation: 0 to 10 second gap between dependency end and activity start
+              # Allen "before" relation: 0 to 10 second gap between dependency end and activity start
+              {0, max_gap}
             )
           else
             inner_timeline
@@ -267,22 +287,26 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     end)
   end
 
-  defp extract_timing_from_solved_timeline(scheduled_activities, solved_timeline, _activity_id_map) do
+  defp extract_timing_from_solved_timeline(
+         scheduled_activities,
+         solved_timeline,
+         _activity_id_map
+       ) do
     # Build duration map for preserving original durations
     duration_map = build_duration_map(scheduled_activities)
-    
+
     # Extract timing from solved intervals
-    time_map = 
+    time_map =
       solved_timeline.intervals
       |> Enum.into(%{}, fn {interval_id, interval} ->
         # The interval_id should match our activity_id since we set it explicitly
         activity_id = interval_id
         start_time = interval.start_time
-        
+
         # Calculate end_time based on start_time + duration to ensure duration is respected
         duration_seconds = Map.get(duration_map, activity_id, 0)
         end_time = Timex.add(start_time, Timex.Duration.from_seconds(duration_seconds))
-        
+
         {activity_id, {start_time, end_time}}
       end)
 
@@ -290,7 +314,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     updated_activities =
       Enum.map(scheduled_activities, fn activity ->
         activity_id = get_activity_id(activity)
-        
+
         case Map.get(time_map, activity_id) do
           {start_time, end_time} when not is_nil(start_time) and not is_nil(end_time) ->
             # Convert DateTime objects to ISO strings
@@ -304,10 +328,11 @@ defmodule AriaEngine.Scheduler.PlanConverter do
             # This should not happen with proper Allen Relations, but provide fallback
             require Logger
             Logger.warning("PlanConverter: No timing found for activity #{activity_id}")
-            
+
             # Use base datetime as fallback
             base_datetime = DateTime.utc_now()
             base_iso = DateTime.to_iso8601(base_datetime)
+
             Map.put(activity, :start_time, base_iso)
             |> Map.put(:end_time, base_iso)
         end
@@ -317,7 +342,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   end
 
   # Helper functions for activity data extraction
-  
+
   defp get_activity_id(activity) do
     if is_map(activity) and Map.has_key?(activity, "id") do
       Map.get(activity, "id")
@@ -325,7 +350,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
       Map.get(activity, :id)
     end
   end
-  
+
   defp get_activity_dependencies(activity) do
     if Map.has_key?(activity, "dependencies") do
       Map.get(activity, "dependencies", [])
@@ -333,10 +358,10 @@ defmodule AriaEngine.Scheduler.PlanConverter do
       Map.get(activity, :dependencies, [])
     end
   end
-  
+
   defp parse_activity_duration(activity) do
     duration_val = Map.get(activity, :duration) || Map.get(activity, "duration", "PT0S")
-    
+
     case duration_val do
       duration_str when is_binary(duration_str) ->
         case :iso8601.parse_duration(String.to_charlist(duration_str)) do
@@ -356,7 +381,7 @@ defmodule AriaEngine.Scheduler.PlanConverter do
         0
     end
   end
-  
+
   defp build_duration_map(scheduled_activities) do
     Enum.into(scheduled_activities, %{}, fn activity ->
       activity_id = get_activity_id(activity)
@@ -367,37 +392,47 @@ defmodule AriaEngine.Scheduler.PlanConverter do
 
   # Convert solution tree to scheduled activities by traversing primitive nodes directly.
   # This replaces the primitive actions extraction approach with direct tree traversal.
-  defp convert_solution_tree_to_scheduled_activities(nodes, root_id, activities, entities, resources) do
+  defp convert_solution_tree_to_scheduled_activities(
+         nodes,
+         root_id,
+         activities,
+         entities,
+         resources
+       ) do
     Logger.debug("Converting solution tree with #{map_size(nodes)} nodes, root: #{root_id}")
-    
+
     # Find all primitive nodes (is_primitive: true) and sort them by their position in the tree
-    primitive_nodes = 
+    primitive_nodes =
       nodes
-      |> Enum.filter(fn {_id, node} -> 
-        Map.get(node, :is_primitive, false) == true 
+      |> Enum.filter(fn {_id, node} ->
+        Map.get(node, :is_primitive, false) == true
       end)
       |> Enum.map(fn {_id, node} -> node end)
-      |> Enum.sort_by(fn node -> Map.get(node, :id, "") end)  # Sort for consistent ordering
-    
+      # Sort for consistent ordering
+      |> Enum.sort_by(fn node -> Map.get(node, :id, "") end)
+
     Logger.debug("Found #{length(primitive_nodes)} primitive nodes")
-    
+
     # Convert each primitive node to a scheduled activity
     primitive_nodes
     |> Enum.with_index()
     |> Enum.map(fn {node, index} ->
       task = Map.get(node, :task)
       Logger.debug("Processing primitive node #{index}: #{inspect(task)}")
-      
+
       activity_id = extract_activity_id_from_task(task, index)
       Logger.debug("Extracted activity_id: #{inspect(activity_id)}")
-      
+
       original_activity = find_original_activity(activities, activity_id)
       Logger.debug("Found original_activity: #{inspect(original_activity != nil)}")
 
       if original_activity do
         convert_activity_to_scheduled(original_activity, entities, resources, index)
       else
-        Logger.error("Activity #{inspect(activity_id)} from plan not found in original activities list")
+        Logger.error(
+          "Activity #{inspect(activity_id)} from plan not found in original activities list"
+        )
+
         Logger.debug("Available activities: #{inspect(Enum.map(activities, &Map.get(&1, "id")))}")
         raise "Activity #{activity_id} from plan not found in original activities list"
       end
@@ -407,65 +442,67 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   # Extract activity ID from a task (used for solution tree traversal).
   defp extract_activity_id_from_task(task, index) do
     Logger.debug("Extracting activity ID from task: #{inspect(task)}, index: #{index}")
-    
-    result = case task do
-      {action_name, _args} when is_atom(action_name) ->
-        action_name_str = Atom.to_string(action_name)
-        # Handle durative action names by removing the "durative_" prefix
-        if String.starts_with?(action_name_str, "durative_") do
-          String.replace_prefix(action_name_str, "durative_", "")
-        else
-          action_name_str
-        end
 
-      {action_name, _args} when is_binary(action_name) ->
-        # Handle durative action names by removing the "durative_" prefix
-        if String.starts_with?(action_name, "durative_") do
-          String.replace_prefix(action_name, "durative_", "")
-        else
-          action_name
-        end
+    result =
+      case task do
+        {action_name, _args} when is_atom(action_name) ->
+          action_name_str = Atom.to_string(action_name)
+          # Handle durative action names by removing the "durative_" prefix
+          if String.starts_with?(action_name_str, "durative_") do
+            String.replace_prefix(action_name_str, "durative_", "")
+          else
+            action_name_str
+          end
 
-      action_name when is_atom(action_name) ->
-        action_name_str = Atom.to_string(action_name)
-        # Handle durative action names by removing the "durative_" prefix
-        if String.starts_with?(action_name_str, "durative_") do
-          String.replace_prefix(action_name_str, "durative_", "")
-        else
-          action_name_str
-        end
+        {action_name, _args} when is_binary(action_name) ->
+          # Handle durative action names by removing the "durative_" prefix
+          if String.starts_with?(action_name, "durative_") do
+            String.replace_prefix(action_name, "durative_", "")
+          else
+            action_name
+          end
 
-      action_name when is_binary(action_name) ->
-        # Handle durative action names by removing the "durative_" prefix
-        if String.starts_with?(action_name, "durative_") do
-          String.replace_prefix(action_name, "durative_", "")
-        else
-          action_name
-        end
+        action_name when is_atom(action_name) ->
+          action_name_str = Atom.to_string(action_name)
+          # Handle durative action names by removing the "durative_" prefix
+          if String.starts_with?(action_name_str, "durative_") do
+            String.replace_prefix(action_name_str, "durative_", "")
+          else
+            action_name_str
+          end
 
-      nil ->
-        Logger.warning("Task is nil at index #{index}")
-        "unknown_action_#{index}"
+        action_name when is_binary(action_name) ->
+          # Handle durative action names by removing the "durative_" prefix
+          if String.starts_with?(action_name, "durative_") do
+            String.replace_prefix(action_name, "durative_", "")
+          else
+            action_name
+          end
 
-      other ->
-        Logger.warning("Unexpected task format: #{inspect(other)}")
-        "unknown_action_#{index}"
-    end
-    
+        nil ->
+          Logger.warning("Task is nil at index #{index}")
+          "unknown_action_#{index}"
+
+        other ->
+          Logger.warning("Unexpected task format: #{inspect(other)}")
+          "unknown_action_#{index}"
+      end
+
     Logger.debug("Extracted activity ID: #{inspect(result)}")
     result
   end
 
   # Private helper functions for duration parsing and activity conversion
 
-
   defp find_original_activity(activities, activity_id) do
     Enum.find(activities, fn act ->
-      actual_id = if is_map(act) and Map.has_key?(act, "id") do
-        Map.get(act, "id")
-      else
-        Map.get(act, :id)
-      end
+      actual_id =
+        if is_map(act) and Map.has_key?(act, "id") do
+          Map.get(act, "id")
+        else
+          Map.get(act, :id)
+        end
+
       actual_id == activity_id or "durative_#{actual_id}" == activity_id
     end)
   end
@@ -494,7 +531,8 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     preserved_duration = duration_val || "PT0S"
 
     Map.merge(original_activity, %{
-      start_time: fixed_start || index * 60,  # Default 1 minute spacing
+      # Default 1 minute spacing
+      start_time: fixed_start || index * 60,
       end_time: fixed_end || if(fixed_start, do: fixed_end, else: (index + 1) * 60),
       scheduled: true,
       execution_order: index,
@@ -507,7 +545,8 @@ defmodule AriaEngine.Scheduler.PlanConverter do
         capabilities: required_capabilities,
         resources: required_resources
       },
-      duration: preserved_duration  # Keep original ISO 8601 format
+      # Keep original ISO 8601 format
+      duration: preserved_duration
     })
   end
 
@@ -524,7 +563,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
 
       is_map(duration_val) ->
         parse_duration_struct(duration_val)
-
 
       true ->
         {0, nil, nil, "PT0S"}
@@ -573,7 +611,9 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     case :iso8601.parse_duration(String.to_charlist(duration_val)) do
       parsed when is_list(parsed) ->
         map = Enum.into(parsed, %{})
-        total_seconds = (map[:hours] || 0) * 3600 + (map[:minutes] || 0) * 60 + (map[:seconds] || 0)
+
+        total_seconds =
+          (map[:hours] || 0) * 3600 + (map[:minutes] || 0) * 60 + (map[:seconds] || 0)
 
         if total_seconds < 0 do
           {0, nil, nil, duration_val}
@@ -590,7 +630,6 @@ defmodule AriaEngine.Scheduler.PlanConverter do
     {AriaEngine.Utils.duration_struct_to_seconds(duration_val), nil, nil,
      AriaEngine.Utils.duration_to_string(duration_val)}
   end
-
 
   # (Removed: iterative timing constraint code, now handled by Timelines STN)
 end

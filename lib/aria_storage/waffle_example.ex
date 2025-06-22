@@ -160,7 +160,7 @@ defmodule AriaStorage.WaffleExample do
     Logger.info(" Starting migration to #{target_backend}...")
 
     {:ok, result} = Storage.migrate_to_waffle(target_backend, migration_opts)
-    
+
     Logger.info(" Migration completed successfully")
     Logger.debug("   Migration started")
     {:ok, result}

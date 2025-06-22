@@ -145,7 +145,8 @@ defmodule AriaStorage.Chunks do
 
   Delegates to `AriaStorage.Chunks.Core.find_all_chunks_in_data/5`.
   """
-  defdelegate find_all_chunks_in_data(data, min_size, max_size, discriminator, compression), to: Core
+  defdelegate find_all_chunks_in_data(data, min_size, max_size, discriminator, compression),
+    to: Core
 
   @doc """
   Test function to expose buzhash calculation for debugging.

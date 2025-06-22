@@ -177,20 +177,40 @@ defmodule Plan.Backtracking do
   defp try_alternative_for_task(domain, solution_tree, task_node_id, node, task_name, verbose) do
     blacklisted_methods = update_blacklisted_methods(node)
     all_methods = Domain.get_task_methods(domain, task_name)
-    
+
     case check_remaining_methods(all_methods, blacklisted_methods, task_name, verbose) do
-      :no_alternatives -> :no_alternatives
-      :has_alternatives -> reset_node_for_retry(solution_tree, task_node_id, node, blacklisted_methods, task_name, verbose)
+      :no_alternatives ->
+        :no_alternatives
+
+      :has_alternatives ->
+        reset_node_for_retry(
+          solution_tree,
+          task_node_id,
+          node,
+          blacklisted_methods,
+          task_name,
+          verbose
+        )
     end
   end
 
   defp try_alternative_for_goal(domain, solution_tree, task_node_id, node, predicate, verbose) do
     blacklisted_methods = update_blacklisted_methods(node)
     all_methods = Domain.get_unigoal_methods(domain, predicate)
-    
+
     case check_remaining_methods(all_methods, blacklisted_methods, predicate, verbose) do
-      :no_alternatives -> :no_alternatives
-      :has_alternatives -> reset_node_for_retry(solution_tree, task_node_id, node, blacklisted_methods, predicate, verbose)
+      :no_alternatives ->
+        :no_alternatives
+
+      :has_alternatives ->
+        reset_node_for_retry(
+          solution_tree,
+          task_node_id,
+          node,
+          blacklisted_methods,
+          predicate,
+          verbose
+        )
     end
   end
 
@@ -203,21 +223,30 @@ defmodule Plan.Backtracking do
   end
 
   defp check_remaining_methods(all_methods, blacklisted_methods, identifier, verbose) do
-    remaining_methods = Enum.reject(all_methods, fn {method_name, _method_fn} ->
-      method_name in blacklisted_methods
-    end)
+    remaining_methods =
+      Enum.reject(all_methods, fn {method_name, _method_fn} ->
+        method_name in blacklisted_methods
+      end)
 
     if Enum.empty?(remaining_methods) do
       if verbose > 2 do
         Logger.debug("No alternative methods left for #{identifier}")
       end
+
       :no_alternatives
     else
       :has_alternatives
     end
   end
 
-  defp reset_node_for_retry(solution_tree, task_node_id, node, blacklisted_methods, identifier, verbose) do
+  defp reset_node_for_retry(
+         solution_tree,
+         task_node_id,
+         node,
+         blacklisted_methods,
+         identifier,
+         verbose
+       ) do
     if verbose > 2 do
       Logger.debug("Blacklisting method for #{identifier}: #{inspect(node.method_tried)}")
       Logger.debug("Total blacklisted methods: #{inspect(blacklisted_methods)}")
@@ -263,36 +292,94 @@ defmodule Plan.Backtracking do
         {:error, "Failed node not found: #{failed_node_id}"}
 
       failed_node ->
-        handle_failed_node(domain, state, solution_tree, failed_node_id, failed_node, depth, max_depth, verbose)
+        handle_failed_node(
+          domain,
+          state,
+          solution_tree,
+          failed_node_id,
+          failed_node,
+          depth,
+          max_depth,
+          verbose
+        )
     end
   end
 
-  defp handle_failed_node(domain, state, solution_tree, failed_node_id, failed_node, depth, max_depth, verbose) do
+  defp handle_failed_node(
+         domain,
+         state,
+         solution_tree,
+         failed_node_id,
+         failed_node,
+         depth,
+         max_depth,
+         verbose
+       ) do
     case failed_node.parent_id do
       nil ->
         {:error, "Root node failed - no complete solution found"}
 
       _parent_id ->
-        try_alternatives_or_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
+        try_alternatives_or_backtrack(
+          domain,
+          state,
+          solution_tree,
+          failed_node_id,
+          depth,
+          max_depth,
+          verbose
+        )
     end
   end
 
-  defp try_alternatives_or_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
+  defp try_alternatives_or_backtrack(
+         domain,
+         state,
+         solution_tree,
+         failed_node_id,
+         depth,
+         max_depth,
+         verbose
+       ) do
     task = solution_tree.nodes[failed_node_id].task
 
     case task do
       {task_name, _args} when is_binary(task_name) ->
-        handle_task_node_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
+        handle_task_node_backtrack(
+          domain,
+          state,
+          solution_tree,
+          failed_node_id,
+          depth,
+          max_depth,
+          verbose
+        )
 
       {_predicate, _subject, _fact_value} ->
-        handle_goal_node_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
+        handle_goal_node_backtrack(
+          domain,
+          state,
+          solution_tree,
+          failed_node_id,
+          depth,
+          max_depth,
+          verbose
+        )
 
       _ ->
         backtrack_up_tree(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
     end
   end
 
-  defp handle_task_node_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
+  defp handle_task_node_backtrack(
+         domain,
+         state,
+         solution_tree,
+         failed_node_id,
+         depth,
+         max_depth,
+         verbose
+       ) do
     case try_alternative_method_for_task(domain, solution_tree, failed_node_id, verbose) do
       {:ok, new_tree} ->
         {:ok, new_tree}
@@ -305,7 +392,15 @@ defmodule Plan.Backtracking do
     end
   end
 
-  defp handle_goal_node_backtrack(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
+  defp handle_goal_node_backtrack(
+         domain,
+         state,
+         solution_tree,
+         failed_node_id,
+         depth,
+         max_depth,
+         verbose
+       ) do
     case try_alternative_method_for_task(domain, solution_tree, failed_node_id, verbose) do
       {:ok, new_tree} ->
         {:ok, new_tree}

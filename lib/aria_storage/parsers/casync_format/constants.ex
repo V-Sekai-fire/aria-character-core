@@ -44,36 +44,46 @@ defmodule AriaStorage.Parsers.CasyncFormat.Constants do
 
   @type format_type :: :caibx | :caidx | :cacnk | :catar
   @type compression_type :: :none | :zstd | :unknown
-  @type catar_element_type :: :entry | :filename | :payload | :symlink | :device | :goodbye | :user | :group | :selinux | :xattr | :metadata
+  @type catar_element_type ::
+          :entry
+          | :filename
+          | :payload
+          | :symlink
+          | :device
+          | :goodbye
+          | :user
+          | :group
+          | :selinux
+          | :xattr
+          | :metadata
 
   @type chunk_item :: %{
-    chunk_id: binary(),
-    offset: non_neg_integer(),
-    size: non_neg_integer(),
-    flags: non_neg_integer()
-  }
+          chunk_id: binary(),
+          offset: non_neg_integer(),
+          size: non_neg_integer(),
+          flags: non_neg_integer()
+        }
 
   @type table_item :: %{
-    offset: non_neg_integer(),
-    chunk_id: binary()
-  }
+          offset: non_neg_integer(),
+          chunk_id: binary()
+        }
 
   @type index_header :: %{
-    version: pos_integer(),
-    total_size: non_neg_integer(),
-    chunk_count: non_neg_integer()
-  }
+          version: pos_integer(),
+          total_size: non_neg_integer(),
+          chunk_count: non_neg_integer()
+        }
 
   @type chunk_header :: %{
-    compressed_size: non_neg_integer(),
-    uncompressed_size: non_neg_integer(),
-    compression: compression_type(),
-    flags: non_neg_integer()
-  }
+          compressed_size: non_neg_integer(),
+          uncompressed_size: non_neg_integer(),
+          compression: compression_type(),
+          flags: non_neg_integer()
+        }
 
   @type catar_element :: %{
-    required(:type) => catar_element_type(),
-    optional(atom()) => any()
-  }
-
+          required(:type) => catar_element_type(),
+          optional(atom()) => any()
+        }
 end

@@ -55,12 +55,15 @@ defmodule Mix.Tasks.Aria do
 
   def run(args) do
     case args do
-      ["--help"] -> 
+      ["--help"] ->
         Mix.shell().info(@moduledoc)
-      ["help"] -> 
+
+      ["help"] ->
         Mix.shell().info(@moduledoc)
-      [] -> 
+
+      [] ->
         Mix.shell().info(@moduledoc)
+
       [command | _] ->
         Mix.shell().error("Unknown command: #{command}")
         Mix.shell().info("Use 'mix aria --help' for available commands")

@@ -10,6 +10,7 @@ defmodule AriaEngine do
 
   # Simple aliases for core modules
   alias AriaEngine.StateV2
+  alias AriaEngine.Multigoal
   alias TimelineGraph
 
   @type domain :: map()

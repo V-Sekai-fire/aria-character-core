@@ -20,6 +20,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   require Logger
   alias Domain
   alias AriaEngine.Scheduler.{Entity, Resource}
+
   alias AriaEngine.Scheduler.DomainConverter.{
     ActivityActions,
     DurativeActions,
@@ -42,7 +43,8 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   def convert_activities_to_khr_domain(activities, entities, resources, _constraints) do
     try do
       # Create basic actions for activity execution
-      basic_actions = ActivityActions.create_basic_activity_actions(activities, entities, resources)
+      basic_actions =
+        ActivityActions.create_basic_activity_actions(activities, entities, resources)
 
       # Create durative actions for temporal scheduling
       durative_actions = DurativeActions.create_durative_actions(activities, entities, resources)
@@ -116,33 +118,34 @@ defmodule AriaEngine.Scheduler.DomainConverter do
           khr_primitive()
         ]
   def create_khr_primitive_sequence(activity, entities, resources) do
-    primitive_sequence = KHRPrimitives.create_activity_primitive_sequence(activity, entities, resources)
-    
+    primitive_sequence =
+      KHRPrimitives.create_activity_primitive_sequence(activity, entities, resources)
+
     # Convert KHR primitives to the expected format
     Enum.map(primitive_sequence, fn primitive ->
       action = Map.get(primitive, :action, "unknown")
       parameters = Map.get(primitive, :parameters, %{})
-      
+
       # Extract relevant parameters for the tuple format
       case Map.get(primitive, :type) do
         "resource_operation" ->
           resource_id = Map.get(parameters, :resource_id)
           operation = Map.get(parameters, :operation)
-          
+
           case operation do
             "increment_usage" -> {"math/add", [0, resource_id, "current_usage", 1]}
             "decrement_usage" -> {"math/sub", [0, resource_id, "current_usage", 1]}
             _ -> {action, []}
           end
-          
+
         "state_update" ->
           activity_id = Map.get(parameters, :activity_id)
           {"variable/set", [0, activity_id, "status", "completed"]}
-          
+
         "durative_action" ->
           _activity_id = Map.get(parameters, :activity_id)
           {"flow/setDelay", [0, 1]}
-          
+
         _ ->
           {action, []}
       end
@@ -157,7 +160,10 @@ defmodule AriaEngine.Scheduler.DomainConverter do
       # Ensure task_name is a string (convert atom to string if needed)
       task_name_str = to_string(task_name)
       # Debug logging to see what's being passed
-      Logger.debug("Adding task methods for task: #{inspect(task_name_str)}, methods: #{inspect(methods)}")
+      Logger.debug(
+        "Adding task methods for task: #{inspect(task_name_str)}, methods: #{inspect(methods)}"
+      )
+
       Domain.add_task_methods(acc_domain, task_name_str, methods)
     end)
   end
@@ -169,7 +175,8 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     end)
   end
 
-  @spec add_durative_actions_to_domain(Domain.t(), %{atom() => Domain.DurativeAction.t()}) :: Domain.t()
+  @spec add_durative_actions_to_domain(Domain.t(), %{atom() => Domain.DurativeAction.t()}) ::
+          Domain.t()
   defp add_durative_actions_to_domain(domain, durative_actions) do
     Enum.reduce(durative_actions, domain, fn {name, durative_action}, acc_domain ->
       # Use the unified API - pass the DurativeAction struct directly

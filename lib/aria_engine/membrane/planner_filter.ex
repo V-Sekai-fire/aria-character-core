@@ -171,19 +171,19 @@ defmodule AriaEngine.Membrane.PlannerFilter do
     try do
       # Create a default coordinator and use it for planning
       coordinator = HybridCoordinatorV2.new_default()
-      
+
       # Create a simple domain if none provided
       domain = params.domain || create_default_domain()
-      
+
       # Create a simple state if none provided
       state = params.state || AriaEngine.StateV2.new()
-      
+
       # Ensure goals is a list
       goals = params.goals || []
-      
+
       # Ensure options is a list
       options = params.options || []
-      
+
       case HybridCoordinatorV2.plan(coordinator, domain, state, goals, options) do
         {:ok, plan} ->
           {:ok,

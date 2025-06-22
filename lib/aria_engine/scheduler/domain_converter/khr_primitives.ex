@@ -336,7 +336,8 @@ defmodule AriaEngine.Scheduler.DomainConverter.KHRPrimitives do
   @doc """
   Validate KHR primitive sequence for consistency.
   """
-  @spec validate_primitive_sequence([khr_primitive()]) :: {:ok, [khr_primitive()]} | {:error, String.t()}
+  @spec validate_primitive_sequence([khr_primitive()]) ::
+          {:ok, [khr_primitive()]} | {:error, String.t()}
   def validate_primitive_sequence(primitives) do
     # Check for proper ordering of primitives
     timing_order = ["at_start", "over_all", "at_end"]

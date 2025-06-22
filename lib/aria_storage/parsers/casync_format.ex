@@ -192,7 +192,8 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   Test roundtrip encoding for a given binary data and format.
   Returns detailed comparison results.
   """
-  @spec test_roundtrip_encoding(binary(), format_type()) :: {:ok, Utilities.comparison_result() | :perfect_match} | {:error, String.t()}
+  @spec test_roundtrip_encoding(binary(), format_type()) ::
+          {:ok, Utilities.comparison_result() | :perfect_match} | {:error, String.t()}
   def test_roundtrip_encoding(binary_data, format_type) do
     Utilities.test_roundtrip_encoding(binary_data, format_type)
   end
@@ -201,7 +202,9 @@ defmodule AriaStorage.Parsers.CasyncFormat do
   Test roundtrip encoding for a given file path and parsed data.
   Returns detailed comparison results.
   """
-  @spec test_file_roundtrip_encoding(String.t(), map()) :: {:ok, :perfect_match | {:differences, Utilities.comparison_result()}} | {:error, String.t()}
+  @spec test_file_roundtrip_encoding(String.t(), map()) ::
+          {:ok, :perfect_match | {:differences, Utilities.comparison_result()}}
+          | {:error, String.t()}
   def test_file_roundtrip_encoding(file_path, parsed) do
     Utilities.test_file_roundtrip_encoding(file_path, parsed)
   end
