@@ -24,6 +24,7 @@ This ADR documents the closure of the temporal planning development segment and 
 - ✅ ~~PC-2 algorithm~~ (Replaced with MiniZinc v0.2.0) implementation for optimal performance
 - ✅ Integration with HybridCoordinatorV2
 - ✅ Real-time temporal constraint validation
+- ✅ **RESOLVED**: MiniZinc solver reference conflicts fixed (June 21, 2025)
 
 **Timeline Module Implementation:**
 - ✅ Complete Timeline system with ~~PC-2~~ (Replaced with MiniZinc v0.2.0) STN integration
