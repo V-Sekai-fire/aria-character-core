@@ -63,6 +63,7 @@ defmodule AriaEngine.Domain.Actions do
 
       # Case 5: Duration only (existing floating duration support)
       has_duration ->
+        validate_duration_format(metadata.duration)
         :ok
     end
   end
@@ -125,6 +126,24 @@ defmodule AriaEngine.Domain.Actions do
 
   defp validate_single_entity_requirement(value) do
     raise ArgumentError, "entity requirement must be a map, got #{inspect(value)}"
+  end
+
+  # Validates duration format (must be string and valid ISO 8601 duration)
+  @spec validate_duration_format(term()) :: :ok
+  defp validate_duration_format(duration) when is_binary(duration) do
+    # Check if it's a valid ISO 8601 duration string
+    if String.starts_with?(duration, "PT") do
+      case AriaEngine.Utils.validate_iso8601_duration(duration) do
+        {:ok, _} -> :ok
+        {:error, reason} -> raise ArgumentError, "invalid ISO 8601 duration: #{reason}"
+      end
+    else
+      raise ArgumentError, "duration must be ISO 8601 format starting with 'PT', got: #{inspect(duration)}"
+    end
+  end
+
+  defp validate_duration_format(duration) do
+    raise ArgumentError, "duration must be a string, got #{inspect(duration)}"
   end
 
   @spec add_action(t(), action_name(), action_fn() | AriaEngine.Domain.DurativeAction.t(), map()) :: t()

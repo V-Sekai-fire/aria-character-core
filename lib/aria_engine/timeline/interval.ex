@@ -53,12 +53,28 @@ defmodule AriaEngine.Timeline.Interval do
             metadata: %{}
 
   @doc """
-  Creates a new interval with DateTime values.
+  Creates a new interval with unified temporal specification auto-detection or DateTime values.
 
-  Both start_time and end_time must be DateTime structs with timezone information.
-  This ensures all temporal data has explicit timezone context.
+  This function supports multiple patterns:
+
+  1. **Unified temporal specification (PREFERRED)**: Pass a map with temporal specification
+     - Fixed schedule: `%{start: "2025-06-22T10:00:00Z", end: "2025-06-22T11:00:00Z"}`
+     - Floating duration: `%{duration: "PT2H"}`
+     - Open-ended start: `%{start: "2025-06-22T10:00:00Z"}`
+     - Open-ended end: `%{end: "2025-06-22T17:00:00Z"}`
+
+  2. **DateTime values (DEPRECATED)**: Pass DateTime structs directly
+     - Both start_time and end_time must be DateTime structs with timezone information
 
   ## Examples
+
+      iex> interval = AriaEngine.Timeline.Interval.new(%{start: "2023-01-01T00:00:00Z", end: "2023-01-01T00:05:30Z"})
+      iex> interval.metadata.fixed_schedule
+      true
+
+      iex> interval = AriaEngine.Timeline.Interval.new(%{duration: "PT2H"})
+      iex> interval.metadata.floating_duration
+      true
 
       iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
       iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], "Etc/UTC")
@@ -67,8 +83,12 @@ defmodule AriaEngine.Timeline.Interval do
       ~U[2023-01-01 00:00:00Z]
 
   """
-  @spec new(DateTime.t(), DateTime.t()) :: t()
+  @spec new(map() | DateTime.t(), keyword() | DateTime.t()) :: t()
+  def new(temporal_spec_or_start, opts_or_end \\ [])
+
   def new(%DateTime{} = start_time, %DateTime{} = end_time) do
+    IO.warn("AriaEngine.Timeline.Interval.new/2 with DateTime structs is deprecated. Use new_fixed_schedule/2 with ISO 8601 strings instead.")
+
     validate_time_ordering!(start_time, end_time)
 
     %__MODULE__{
@@ -79,10 +99,109 @@ defmodule AriaEngine.Timeline.Interval do
     }
   end
 
+  def new(temporal_spec, opts) when is_map(temporal_spec) and is_list(opts) do
+    cond do
+      # Fixed closed interval (start + end)
+      Map.has_key?(temporal_spec, :start) and Map.has_key?(temporal_spec, :end) ->
+        new_fixed_schedule(temporal_spec.start, temporal_spec.end, opts)
+
+      # Floating duration
+      Map.has_key?(temporal_spec, :duration) ->
+        new_floating_duration(temporal_spec.duration, opts)
+
+      # Open-ended start only
+      Map.has_key?(temporal_spec, :start) ->
+        new_open_ended_start(temporal_spec.start, opts)
+
+      # Open-ended end only
+      Map.has_key?(temporal_spec, :end) ->
+        new_open_ended_end(temporal_spec.end, opts)
+
+      true ->
+        raise ArgumentError, "Invalid temporal specification. Must include :start, :end, :duration, or combination thereof."
+    end
+  end
+
+  @doc """
+  Creates a new fixed schedule interval from ISO 8601 datetime strings.
+
+  This is the preferred way to create intervals with specific start and end times.
+  Both start_time and end_time must be valid ISO 8601 datetime strings with timezone information.
+
+  ## Examples
+
+      iex> interval = AriaEngine.Timeline.Interval.new_fixed_schedule("2023-01-01T00:00:00Z", "2023-01-01T00:05:30Z")
+      iex> interval.start_time
+      ~U[2023-01-01 00:00:00Z]
+
+      iex> interval = AriaEngine.Timeline.Interval.new_fixed_schedule("2025-06-22T10:00:00Z", "2025-06-22T11:00:00Z")
+      iex> interval.metadata.iso8601_start
+      "2025-06-22T10:00:00Z"
+
+  """
+  @spec new_fixed_schedule(String.t(), String.t(), keyword()) :: t()
+  def new_fixed_schedule(start_iso8601, end_iso8601, opts \\ []) when is_binary(start_iso8601) and is_binary(end_iso8601) do
+    # Parse and validate ISO 8601 strings
+    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+    {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
+
+    validate_time_ordering!(start_dt, end_dt)
+
+    %__MODULE__{
+      id: generate_id(),
+      start_time: start_dt,
+      end_time: end_dt,
+      agent: Keyword.get(opts, :agent),
+      entity: Keyword.get(opts, :entity),
+      metadata: Map.merge(Keyword.get(opts, :metadata, %{}), %{
+        iso8601_start: start_iso8601,
+        iso8601_end: end_iso8601,
+        fixed_schedule: true
+      })
+    }
+  end
+
+  @doc """
+  Creates a new floating duration interval from ISO 8601 duration string.
+
+  This creates an interval that represents effort-based duration without specific start/end times.
+  The interval uses nil for start_time and end_time, with the duration stored in metadata.
+
+  ## Examples
+
+      iex> interval = AriaEngine.Timeline.Interval.new_floating_duration("PT2H")
+      iex> interval.metadata.iso8601_duration
+      "PT2H"
+
+      iex> interval = AriaEngine.Timeline.Interval.new_floating_duration("PT30M", metadata: %{task: "cooking"})
+      iex> interval.metadata.task
+      "cooking"
+
+  """
+  @spec new_floating_duration(String.t(), keyword()) :: t()
+  def new_floating_duration(duration_iso8601, opts \\ []) when is_binary(duration_iso8601) do
+    # Validate the ISO 8601 duration string using AriaEngine.Utils
+    normalized_duration = AriaEngine.Utils.normalize_duration(duration_iso8601)
+
+    %__MODULE__{
+      id: generate_id(),
+      start_time: nil,
+      end_time: nil,
+      agent: Keyword.get(opts, :agent),
+      entity: Keyword.get(opts, :entity),
+      metadata: Map.merge(Keyword.get(opts, :metadata, %{}), %{
+        iso8601_duration: normalized_duration,
+        floating_duration: true
+      })
+    }
+  end
+
   @doc """
   Creates a new interval with DateTime values and options.
 
   Both start_time and end_time must be DateTime structs with timezone information.
+
+  **DEPRECATED**: Use `new_fixed_schedule/3` with ISO 8601 strings instead.
 
   ## Options
 
@@ -101,6 +220,8 @@ defmodule AriaEngine.Timeline.Interval do
   """
   @spec new(DateTime.t(), DateTime.t(), keyword()) :: t()
   def new(%DateTime{} = start_time, %DateTime{} = end_time, opts) when is_list(opts) do
+    IO.warn("AriaEngine.Timeline.Interval.new/3 with DateTime structs is deprecated. Use new_fixed_schedule/3 with ISO 8601 strings instead.")
+
     validate_time_ordering!(start_time, end_time)
 
     %__MODULE__{
@@ -110,6 +231,69 @@ defmodule AriaEngine.Timeline.Interval do
       agent: Keyword.get(opts, :agent),
       entity: Keyword.get(opts, :entity),
       metadata: Keyword.get(opts, :metadata, %{})
+    }
+  end
+
+
+  @doc """
+  Creates a new open-ended interval with start time only.
+
+  This creates an interval that starts at a specific time but has no end constraint.
+  Useful for actions that must start at a specific time but can run indefinitely.
+
+  ## Examples
+
+      iex> interval = AriaEngine.Timeline.Interval.new_open_ended_start("2025-06-22T10:00:00Z")
+      iex> interval.metadata.open_ended_start
+      true
+
+  """
+  @spec new_open_ended_start(String.t(), keyword()) :: t()
+  def new_open_ended_start(start_iso8601, opts \\ []) when is_binary(start_iso8601) do
+    # Parse and validate ISO 8601 string
+    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+
+    %__MODULE__{
+      id: generate_id(),
+      start_time: start_dt,
+      end_time: nil,
+      agent: Keyword.get(opts, :agent),
+      entity: Keyword.get(opts, :entity),
+      metadata: Map.merge(Keyword.get(opts, :metadata, %{}), %{
+        iso8601_start: start_iso8601,
+        open_ended_start: true
+      })
+    }
+  end
+
+  @doc """
+  Creates a new open-ended interval with end time only.
+
+  This creates an interval that must finish by a specific time but has no start constraint.
+  Useful for deadlines where the start time is flexible but completion is required by a deadline.
+
+  ## Examples
+
+      iex> interval = AriaEngine.Timeline.Interval.new_open_ended_end("2025-06-22T17:00:00Z")
+      iex> interval.metadata.open_ended_end
+      true
+
+  """
+  @spec new_open_ended_end(String.t(), keyword()) :: t()
+  def new_open_ended_end(end_iso8601, opts \\ []) when is_binary(end_iso8601) do
+    # Parse and validate ISO 8601 string
+    {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
+
+    %__MODULE__{
+      id: generate_id(),
+      start_time: nil,
+      end_time: end_dt,
+      agent: Keyword.get(opts, :agent),
+      entity: Keyword.get(opts, :entity),
+      metadata: Map.merge(Keyword.get(opts, :metadata, %{}), %{
+        iso8601_end: end_iso8601,
+        open_ended_end: true
+      })
     }
   end
 

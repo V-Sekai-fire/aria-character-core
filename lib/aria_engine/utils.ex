@@ -343,6 +343,32 @@ defmodule AriaEngine.Utils do
   end
 
   @doc """
+  Validates an ISO 8601 duration string.
+
+  Returns {:ok, duration} if valid, {:error, reason} if invalid.
+  Accepts duration strings in PT format (e.g., "PT1H30M", "PT5M", "PT30S").
+
+  ## Examples
+
+      iex> AriaEngine.Utils.validate_iso8601_duration("PT1H30M")
+      {:ok, %Timex.Duration{}}
+
+      iex> AriaEngine.Utils.validate_iso8601_duration("invalid")
+      {:error, "invalid ISO 8601 duration format"}
+  """
+  @spec validate_iso8601_duration(String.t()) :: {:ok, Duration.t()} | {:error, String.t()}
+  def validate_iso8601_duration(duration_string) when is_binary(duration_string) do
+    case Duration.parse(duration_string) do
+      {:ok, duration} -> {:ok, duration}
+      {:error, _reason} -> {:error, "invalid ISO 8601 duration format"}
+    end
+  end
+
+  def validate_iso8601_duration(value) do
+    {:error, "expected string, got #{inspect(value)}"}
+  end
+
+  @doc """
   Validates that start datetime comes before end datetime.
 
   ## Examples

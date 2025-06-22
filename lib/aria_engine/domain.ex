@@ -158,6 +158,40 @@ defmodule AriaEngine.Domain do
   @spec has_unigoal_methods?(t(), String.t()) :: boolean()
   defdelegate has_unigoal_methods?(domain, goal_type), to: Methods
 
+  @doc """
+  Resolves an action or task method name with priority rules.
+
+  Priority order:
+  1. Action atoms (e.g., :move) resolve to {:action, action_fn}
+  2. Task method strings (e.g., "task_move") resolve to {:task_method, method_fn}
+  3. Primitive task methods (e.g., "move") resolve to {:task_method, primitive_method_fn}
+
+  This implements the Action Atom Priority Rule from ADR-131.
+  """
+  @spec resolve(atom() | String.t(), t()) :: {:action, action_fn()} | {:task_method, task_method_fn()} | nil
+  def resolve(name, domain) when is_atom(name) do
+    # Priority 1: Check for action atoms first
+    case get_action(domain, name) do
+      nil ->
+        # If no action atom, check for primitive task method
+        task_name = Atom.to_string(name)
+        case get_task_methods(domain, task_name) do
+          [] -> nil
+          [method | _] -> {:task_method, elem(method, 1)}
+        end
+      action_fn ->
+        {:action, action_fn}
+    end
+  end
+
+  def resolve(name, domain) when is_binary(name) do
+    # Priority 2: Check for task methods
+    case get_task_methods(domain, name) do
+      [] -> nil
+      [method | _] -> {:task_method, elem(method, 1)}
+    end
+  end
+
   @spec verify_goal(state(), method_name(), term(), list(), list(), integer(), boolean()) :: boolean()
   defdelegate verify_goal(state, method_name, state_var, args, desired_values, depth, verbose),
     to: Utils
