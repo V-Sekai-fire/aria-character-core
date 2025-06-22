@@ -3,11 +3,11 @@
 
 defmodule Timeline.TimelineBridgeTest do
   use ExUnit.Case, async: true
-  doctest Timeline
+  doctest AriaEngine.Timeline
 
-  alias Timeline
-  alias Timeline.Bridge
-  alias Timeline.Interval
+  alias AriaEngine.Timeline
+  alias AriaEngine.Timeline.Bridge
+  alias AriaEngine.Timeline.Interval
 
   describe "bridge management" do
     test "add_bridge/2 adds a bridge to timeline" do

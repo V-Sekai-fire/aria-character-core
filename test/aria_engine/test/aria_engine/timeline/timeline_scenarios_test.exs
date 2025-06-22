@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.ScenariosTest do
+defmodule AriaEngine.Timeline.ScenariosTest do
   use ExUnit.Case, async: true
 
-  alias Timeline
-  alias Timeline.Interval
-  alias Timeline.AgentEntity
+  alias AriaEngine.Timeline
+  alias AriaEngine.Timeline.Interval
+  alias AriaEngine.Timeline.AgentEntity
 
   describe "autonomous vehicle fleet coordination" do
     test "coordinates multiple autonomous vehicles with dynamic capabilities" do

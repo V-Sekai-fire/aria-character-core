@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule TimelineGraph.EntityManager do
+defmodule AriaEngine.TimelineGraph.EntityManager do
   @moduledoc """
   Manages entity creation, capabilities, and basic timeline operations.
 
@@ -10,9 +10,9 @@ defmodule TimelineGraph.EntityManager do
   and entity property operations.
   """
 
-  alias Timeline.AgentEntity
-  alias Timeline
-  alias Timeline.Interval
+  alias AriaEngine.Timeline.AgentEntity
+  alias AriaEngine.Timeline
+  alias AriaEngine.Timeline.Interval
   alias AriaEngine.StateV2
 
   @type entity_id :: String.t()
@@ -139,7 +139,7 @@ defmodule TimelineGraph.EntityManager do
         # Determine new LOD based on agent status
         new_lod =
           if is_now_agent do
-            TimelineGraph.LODManager.promote_lod(entity_timeline.lod)
+            AriaEngine.TimelineGraph.LODManager.promote_lod(entity_timeline.lod)
           else
             entity_timeline.lod
           end

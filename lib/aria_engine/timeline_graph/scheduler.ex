@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule TimelineGraph.Scheduler do
+defmodule AriaEngine.TimelineGraph.Scheduler do
   @moduledoc """
   Handles scheduling and routine management for entities in the timeline graph.
 
@@ -9,9 +9,9 @@ defmodule TimelineGraph.Scheduler do
   follow complex, time-sensitive routines like work shifts, meal times, and sleep cycles.
   """
 
-  alias Timeline
-  alias Timeline.Interval
-  alias TimelineGraph.TimeConverter
+  alias AriaEngine.Timeline
+  alias AriaEngine.Timeline.Interval
+  alias AriaEngine.TimelineGraph.TimeConverter
 
   @type entity_id :: String.t()
   @type priority :: :low | :medium | :high | :critical

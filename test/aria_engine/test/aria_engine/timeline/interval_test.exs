@@ -3,9 +3,9 @@
 
 defmodule Timeline.IntervalTest do
   use ExUnit.Case, async: true
-  doctest Timeline.Interval
+  doctest AriaEngine.Timeline.Interval
 
-  alias Timeline.{AgentEntity, Interval}
+  alias AriaEngine.Timeline.{AgentEntity, Interval}
 
   describe "interval creation" do
     @describetag :timeline_stn

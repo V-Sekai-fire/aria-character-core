@@ -3,9 +3,9 @@
 
 defmodule Timeline.BridgeTest do
   use ExUnit.Case, async: true
-  doctest Timeline.Bridge
+  doctest AriaEngine.Timeline.Bridge
 
-  alias Timeline.Bridge
+  alias AriaEngine.Timeline.Bridge
 
   # TODO: 2025-06-21 Autobridge timelines.
 

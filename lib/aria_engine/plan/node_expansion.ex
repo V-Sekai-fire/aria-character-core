@@ -7,6 +7,7 @@ defmodule Plan.NodeExpansion do
   """
 
   require Logger
+  alias AriaEngine.Multigoal
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}

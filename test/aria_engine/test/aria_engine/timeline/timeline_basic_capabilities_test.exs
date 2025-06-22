@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.BasicCapabilitiesTest do
+defmodule AriaEngine.Timeline.BasicCapabilitiesTest do
   use ExUnit.Case, async: true
 
-  alias Timeline
-  alias Timeline.Interval
-  alias Timeline.AgentEntity
+  alias AriaEngine.Timeline
+  alias AriaEngine.Timeline.Interval
+  alias AriaEngine.Timeline.AgentEntity
 
   describe "basic agent and entity creation" do
     test "creates agent with capabilities" do

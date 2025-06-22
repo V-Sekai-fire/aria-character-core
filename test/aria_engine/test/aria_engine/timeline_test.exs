@@ -3,10 +3,10 @@
 
 defmodule TimelineTest do
   use ExUnit.Case, async: true
-  doctest Timeline
+  doctest AriaEngine.Timeline
 
-  alias Timeline
-  alias Timeline.Interval
+  alias AriaEngine.Timeline
+  alias AriaEngine.Timeline.Interval
 
   describe "timeline creation and basic operations" do
     test "creates a new empty timeline" do

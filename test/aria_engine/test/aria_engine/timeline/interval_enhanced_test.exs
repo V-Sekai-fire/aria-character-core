@@ -3,9 +3,9 @@
 
 defmodule Timeline.IntervalEnhancedTest do
   use ExUnit.Case
-  doctest Timeline.Interval
+  doctest AriaEngine.Timeline.Interval
 
-  alias Timeline.Interval
+  alias AriaEngine.Timeline.Interval
 
   describe "Enhanced Duration Functions" do
     test "duration_in_unit works for all supported units" do

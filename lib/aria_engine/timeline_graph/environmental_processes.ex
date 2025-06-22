@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule TimelineGraph.EnvironmentalProcesses do
+defmodule AriaEngine.TimelineGraph.EnvironmentalProcesses do
   @moduledoc """
   Manages environmental processes that affect multiple entities over time.
 
@@ -10,8 +10,8 @@ defmodule TimelineGraph.EnvironmentalProcesses do
   day/night cycles, and other world-state changes.
   """
 
-  alias Timeline
-  alias Timeline.Interval
+  alias AriaEngine.Timeline
+  alias AriaEngine.Timeline.Interval
 
   @type entity_id :: String.t()
   @type process_type :: atom()
@@ -318,13 +318,13 @@ defmodule TimelineGraph.EnvironmentalProcesses do
     |> Enum.map(fn stn_interval ->
       # Convert STN times back to DateTime for Interval format
       start_dt =
-        TimelineGraph.TimeConverter.convert_from_stn_time(
+        AriaEngine.TimelineGraph.TimeConverter.convert_from_stn_time(
           stn_interval.start_time,
           timeline.stn.time_unit
         )
 
       end_dt =
-        TimelineGraph.TimeConverter.convert_from_stn_time(
+        AriaEngine.TimelineGraph.TimeConverter.convert_from_stn_time(
           stn_interval.end_time,
           timeline.stn.time_unit
         )
@@ -336,7 +336,7 @@ defmodule TimelineGraph.EnvironmentalProcesses do
   defp find_active_environmental_processes(timeline, check_time) do
     # Convert check_time to STN time units
     stn_time =
-      TimelineGraph.TimeConverter.datetime_to_stn_time(check_time, timeline.stn.time_unit)
+      AriaEngine.TimelineGraph.TimeConverter.datetime_to_stn_time(check_time, timeline.stn.time_unit)
 
     # Get all intervals from the STN
     all_intervals = Timeline.Internal.STN.Core.get_intervals(timeline.stn)
@@ -350,13 +350,13 @@ defmodule TimelineGraph.EnvironmentalProcesses do
     |> Enum.map(fn stn_interval ->
       # Convert STN times back to DateTime for Interval format
       start_dt =
-        TimelineGraph.TimeConverter.convert_from_stn_time(
+        AriaEngine.TimelineGraph.TimeConverter.convert_from_stn_time(
           stn_interval.start_time,
           timeline.stn.time_unit
         )
 
       end_dt =
-        TimelineGraph.TimeConverter.convert_from_stn_time(
+        AriaEngine.TimelineGraph.TimeConverter.convert_from_stn_time(
           stn_interval.end_time,
           timeline.stn.time_unit
         )

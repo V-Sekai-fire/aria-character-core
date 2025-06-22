@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.Internal.STN.OperationsTest do
+defmodule AriaEngine.Timeline.Internal.STN.OperationsTest do
   use ExUnit.Case, async: true
 
-  alias Timeline.Internal.STN
-  alias Timeline.Internal.STN.Operations
+  alias AriaEngine.Timeline.Internal.STN
+  alias AriaEngine.Timeline.Internal.STN.Operations
 
   describe "segment/2" do
     test "returns single STN when time points <= 5" do

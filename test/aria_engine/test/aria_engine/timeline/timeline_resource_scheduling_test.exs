@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.ResourceSchedulingTest do
+defmodule AriaEngine.Timeline.ResourceSchedulingTest do
   use ExUnit.Case, async: true
 
-  alias Timeline
-  alias Timeline.Interval
-  alias Timeline.AgentEntity
+  alias AriaEngine.Timeline
+  alias AriaEngine.Timeline.Interval
+  alias AriaEngine.Timeline.AgentEntity
 
   describe "capability-dependent activity assignment" do
     test "assigns surgery to qualified surgeon" do

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule TimelineGraph do
+defmodule AriaEngine.TimelineGraph do
   @moduledoc """
   Manages timeline integration with the Entity Timeline Graph Architecture (ADR-087).
 
@@ -40,13 +40,13 @@ defmodule TimelineGraph do
   ```
   """
 
-  alias Timeline.AgentEntity
-  alias Timeline
+  alias AriaEngine.Timeline.AgentEntity
+  alias AriaEngine.Timeline
   alias AriaEngine.StateV2
-  alias TimelineGraph.EntityManager
-  alias TimelineGraph.LODManager
-  alias TimelineGraph.Scheduler
-  alias TimelineGraph.EnvironmentalProcesses
+  alias AriaEngine.TimelineGraph.EntityManager
+  alias AriaEngine.TimelineGraph.LODManager
+  alias AriaEngine.TimelineGraph.Scheduler
+  alias AriaEngine.TimelineGraph.EnvironmentalProcesses
 
   @type entity_id :: String.t()
   @type timeline_id :: String.t()
@@ -86,23 +86,24 @@ defmodule TimelineGraph do
     }
   end
 
-  # Entity Management Functions (delegated to EntityManager)
+  # Entity Management Functions (stub implementations until EntityManager is created)
 
   @doc """
   Creates a new entity with automatic timeline attachment.
 
   Delegates to `TimelineGraph.EntityManager.create_entity/5`.
   """
-  @spec create_entity(t(), entity_id(), String.t(), map(), keyword()) :: {:ok, t()} | {:error, String.t()}
-  defdelegate create_entity(timeline_graph, entity_id, name, properties \\ %{}, opts \\ []),
-    to: EntityManager
+  @spec create_entity(t(), entity_id(), String.t(), map(), keyword()) :: {:ok, t(), entity_id()}
+  def create_entity(timeline_graph, entity_id, name, properties \\ %{}, opts \\ []) do
+    EntityManager.create_entity(timeline_graph, entity_id, name, properties, opts)
+  end
 
   @doc """
   Adds capabilities to an entity, potentially transitioning it to agent status.
 
   Delegates to `TimelineGraph.EntityManager.add_capabilities/3`.
   """
-  @spec add_capabilities(t(), entity_id(), [atom()]) :: {:ok, t()} | {:error, String.t()}
+  @spec add_capabilities(t(), entity_id(), [atom()]) :: {:ok, t()} | {:error, term()}
   defdelegate add_capabilities(timeline_graph, entity_id, new_capabilities), to: EntityManager
 
   @doc """
@@ -126,7 +127,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.EntityManager.set_entity_property/4`.
   """
-  @spec set_entity_property(t(), entity_id(), term(), term()) :: t()
+  @spec set_entity_property(t(), entity_id(), term(), term()) :: {:ok, t()} | {:error, term()}
   defdelegate set_entity_property(timeline_graph, entity_id, predicate, value), to: EntityManager
 
   @doc """
@@ -145,14 +146,14 @@ defmodule TimelineGraph do
   @spec get_agent_ids(t()) :: [entity_id()]
   defdelegate get_agent_ids(timeline_graph), to: EntityManager
 
-  # LOD Management Functions (delegated to LODManager)
+  # LOD Management Functions (stub implementations until LODManager is created)
 
   @doc """
   Gets the current LOD level for an entity's timeline.
 
   Delegates to `TimelineGraph.LODManager.get_lod/2`.
   """
-  @spec get_lod(t(), entity_id()) :: lod_level()
+  @spec get_lod(t(), entity_id()) :: {:ok, lod_level()} | {:error, term()}
   defdelegate get_lod(timeline_graph, entity_id), to: LODManager
 
   @doc """
@@ -168,8 +169,10 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.LODManager.set_lod/3`.
   """
-  @spec set_lod(t(), entity_id(), lod_level()) :: t()
-  defdelegate set_lod(timeline_graph, entity_id, new_lod), to: LODManager
+  @spec set_lod(t(), entity_id(), lod_level()) :: {:ok, t()} | {:error, term()}
+  def set_lod(timeline_graph, entity_id, new_lod) do
+    LODManager.set_lod(timeline_graph, entity_id, new_lod)
+  end
 
   @doc """
   Adds an entity to the LOD promotion queue.
@@ -192,7 +195,7 @@ defmodule TimelineGraph do
 
   Delegates to `TimelineGraph.LODManager.get_lod_statistics/1`.
   """
-  @spec get_lod_statistics(t()) :: map()
+  @spec get_lod_statistics(t()) :: %{lod_level() => non_neg_integer()}
   defdelegate get_lod_statistics(timeline_graph), to: LODManager
 
   @doc """

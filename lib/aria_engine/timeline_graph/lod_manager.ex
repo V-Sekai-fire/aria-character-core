@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule TimelineGraph.LODManager do
+defmodule AriaEngine.TimelineGraph.LODManager do
   @moduledoc """
   Manages Level of Detail (LOD) for entity timelines.
 
@@ -204,7 +204,7 @@ defmodule TimelineGraph.LODManager do
 
   defp should_promote_entity?(entity_timeline, minutes_since_activity, activity_threshold) do
     # Promote if entity is an agent and has been active recently
-    Timeline.AgentEntity.is_currently_agent?(entity_timeline.entity) and
+    AriaEngine.Timeline.AgentEntity.is_currently_agent?(entity_timeline.entity) and
       minutes_since_activity < activity_threshold and
       entity_timeline.lod != :ultra_high
   end

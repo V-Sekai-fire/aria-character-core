@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.STNCapabilitiesTest do
+defmodule AriaEngine.Timeline.STNCapabilitiesTest do
   use ExUnit.Case, async: true
 
-  alias Timeline
-  alias Timeline.Interval
-  alias Timeline.AgentEntity
+  alias AriaEngine.Timeline
+  alias AriaEngine.Timeline.Interval
+  alias AriaEngine.Timeline.AgentEntity
 
   describe "PC-2 algorithm with capability constraints" do
     test "propagates constraints through capability-dependent chain" do

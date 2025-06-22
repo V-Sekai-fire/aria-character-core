@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule TimelineGraph.TimeConverter do
+defmodule AriaEngine.TimelineGraph.TimeConverter do
   @moduledoc """
   Utility functions for converting between different time formats and units.
 

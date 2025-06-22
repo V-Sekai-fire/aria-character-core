@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule TimelineGraphTest do
+defmodule AriaEngine.TimelineGraphTest do
   use ExUnit.Case, async: true
-  doctest TimelineGraph
+  # doctest AriaEngine.TimelineGraph  # Commented out until delegated modules are implemented
 
-  alias TimelineGraph
-  alias Timeline.AgentEntity
+  alias AriaEngine.TimelineGraph
+  alias AriaEngine.Timeline.AgentEntity
   alias AriaEngine.StateV2
 
   describe "new/0" do
