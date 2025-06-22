@@ -8,7 +8,7 @@ defmodule Plan do
   """
 
   # Removed NodeExpansion
-  alias AriaEngine.Plan.{Core, Backtracking, Blacklisting}
+  alias AriaEngine.Plan.{Core, Backtracking}
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
@@ -37,7 +37,7 @@ defmodule Plan do
   # Delegate to Blacklisting
   @spec blacklist_command(solution_tree(), todo_item()) :: solution_tree()
   def blacklist_command(solution_tree, command),
-    do: Blacklisting.blacklist_command(solution_tree, command)
+    do: Backtracking.blacklist_command(solution_tree, command)
 
 
   # Delegate to Utils

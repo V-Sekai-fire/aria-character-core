@@ -53,8 +53,6 @@ defmodule HybridPlanner.StrategyRegistry do
     %{
       planning: %{
         htn: &htn_planning_strategy/4,
-        strips: &strips_planning_strategy/4,
-        reactive: &reactive_planning_strategy/4
       },
       temporal: %{
         stn: &stn_temporal_strategy/3,
@@ -63,7 +61,6 @@ defmodule HybridPlanner.StrategyRegistry do
       },
       execution: %{
         lazy: &lazy_execution_strategy/4,
-        eager: &eager_execution_strategy/4,
         streaming: &streaming_execution_strategy/4
       }
     }

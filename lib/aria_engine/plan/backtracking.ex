@@ -8,6 +8,10 @@ defmodule AriaEngine.Plan.Backtracking do
 
   require Logger
 
+  @type task :: {String.t(), list()}
+  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
+  @type plan_step :: {atom(), list()}
+  @type todo_item :: task() | goal() | Multigoal.t()
   @type node_id :: String.t()
   @type solution_node :: %{
           id: node_id(),
@@ -33,6 +37,17 @@ defmodule AriaEngine.Plan.Backtracking do
   @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure
 
   # @default_replan_depth 10 # Removed this module attribute
+
+  @doc """
+  Blacklist a command to prevent it from being tried again.
+  """
+  @spec blacklist_command(solution_tree(), todo_item()) :: solution_tree()
+  def blacklist_command(solution_tree, command) do
+    %{
+      solution_tree
+      | blacklisted_commands: MapSet.put(solution_tree.blacklisted_commands, command)
+    }
+  end
 
   @doc """
   Replan from a specific failure node in the solution tree.

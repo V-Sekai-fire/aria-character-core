@@ -21,14 +21,14 @@ defmodule HybridPlanner.StrategyCoordinator do
       # Basic composition
       coordinator = StrategyCoordinator.hybrid_htn_stn()
       result = StrategyCoordinator.coordinate(coordinator, domain, state, goals)
-      
+
       # Custom composition
       custom_coordinator = StrategyCoordinator.new(
         &MyPlanner.plan/4,
         &MyTemporal.validate/3,
         &MyExecutor.run/4
       )
-      
+
       # Runtime strategy selection
       coordinator = case problem_complexity do
         :simple -> StrategyCoordinator.pure_strips()
@@ -117,50 +117,6 @@ defmodule HybridPlanner.StrategyCoordinator do
           name: "Hybrid HTN+STN",
           description: "HTN planning with STN temporal validation and lazy execution",
           strategy_types: [:htn, :stn, :lazy]
-        },
-        metadata
-      )
-    )
-  end
-
-  @doc """
-  Create pure STRIPS coordinator (no temporal reasoning).
-  """
-  @spec pure_strips(map()) :: t()
-  def pure_strips(metadata \\ %{}) do
-    strategies = StrategyRegistry.default_strategies()
-
-    new(
-      strategies.planning.strips,
-      strategies.temporal.none,
-      strategies.execution.eager,
-      Map.merge(
-        %{
-          name: "Pure STRIPS",
-          description: "Classical STRIPS planning without temporal reasoning",
-          strategy_types: [:strips, :none, :eager]
-        },
-        metadata
-      )
-    )
-  end
-
-  @doc """
-  Create reactive planning coordinator (fast replanning).
-  """
-  @spec reactive_planner(map()) :: t()
-  def reactive_planner(metadata \\ %{}) do
-    strategies = StrategyRegistry.default_strategies()
-
-    new(
-      strategies.planning.reactive,
-      strategies.temporal.none,
-      strategies.execution.streaming,
-      Map.merge(
-        %{
-          name: "Reactive Planner",
-          description: "Fast reactive planning with streaming execution",
-          strategy_types: [:reactive, :none, :streaming]
         },
         metadata
       )
