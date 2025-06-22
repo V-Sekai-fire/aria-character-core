@@ -12,7 +12,11 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
 
   @behaviour HybridPlanner.Strategies.TemporalStrategy
 
-  alias AriaEngine.Membrane.ValidationPipeline.MiniZincSolver
+  # TOMBSTONE: AriaEngine.Membrane.ValidationPipeline.MiniZincSolver was removed during temporal planning segment closure
+  # The MiniZinc validation pipeline was removed in favor of direct STN solving
+  # Removed: January 2025
+  # NOTE: Timeline.Internal.STN.MiniZincSolver exists but is not used by this strategy implementation
+  
   require Logger
 
   @impl true
@@ -26,42 +30,36 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
       )
     end
 
-    case MiniZincSolver.check_availability() do
-      false ->
-        {:error, "MiniZinc solver is not available"}
-
-      true ->
-        try do
-          # Start with existing constraints or create new temporal problem
-          temporal_problem =
-            case existing_constraints do
-              %{temporal_problem: problem} when not is_nil(problem) -> problem
-              _ -> %{actions: [], constraints: [], current_time: current_time}
-            end
-
-          # Add new actions to the temporal problem
-          updated_problem = %{
-            temporal_problem
-            | actions: temporal_problem.actions ++ actions,
-              current_time: current_time
-          }
-
-          if verbose > 1 do
-            action_count = length(updated_problem.actions)
-            constraint_count = length(updated_problem.constraints)
-
-            Logger.debug(
-              "STNTemporalStrategy: Successfully added constraints (#{action_count} actions, #{constraint_count} constraints)"
-            )
-          end
-
-          {:ok, %{temporal_problem: updated_problem, last_update: System.system_time(:millisecond)}}
-        rescue
-          e ->
-            error_msg = "STNTemporalStrategy constraint addition error: #{Exception.message(e)}"
-            Logger.error(error_msg)
-            {:error, error_msg}
+    try do
+      # Start with existing constraints or create new temporal problem
+      temporal_problem =
+        case existing_constraints do
+          %{temporal_problem: problem} when not is_nil(problem) -> problem
+          _ -> %{actions: [], constraints: [], current_time: current_time}
         end
+
+      # Add new actions to the temporal problem
+      updated_problem = %{
+        temporal_problem
+        | actions: temporal_problem.actions ++ actions,
+          current_time: current_time
+      }
+
+      if verbose > 1 do
+        action_count = length(updated_problem.actions)
+        constraint_count = length(updated_problem.constraints)
+
+        Logger.debug(
+          "STNTemporalStrategy: Successfully added constraints (#{action_count} actions, #{constraint_count} constraints)"
+        )
+      end
+
+      {:ok, %{temporal_problem: updated_problem, last_update: System.system_time(:millisecond)}}
+    rescue
+      e ->
+        error_msg = "STNTemporalStrategy constraint addition error: #{Exception.message(e)}"
+        Logger.error(error_msg)
+        {:error, error_msg}
     end
   end
 
@@ -73,54 +71,48 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
       Logger.debug("STNTemporalStrategy: Validating temporal consistency")
     end
 
-    case MiniZincSolver.check_availability() do
-      false ->
-        {:error, "MiniZinc solver is not available"}
-
-      true ->
-        try do
-          case constraints do
-            %{temporal_problem: problem} when not is_nil(problem) ->
-              # Build and solve MiniZinc model to check consistency
-              case build_temporal_model(problem) do
-                {:ok, mzn_content} ->
-                  case solve_temporal_model(mzn_content, opts) do
-                    {:ok, %{status: "OPTIMAL"}} ->
-                      if verbose > 1 do
-                        Logger.debug("STNTemporalStrategy: Temporal constraints are consistent")
-                      end
-
-                      {:ok, true}
-
-                    {:ok, %{status: "INFEASIBLE"}} ->
-                      if verbose > 0 do
-                        Logger.warning("STNTemporalStrategy: Temporal constraints are inconsistent")
-                      end
-
-                      {:ok, false}
-
-                    {:error, reason} ->
-                      {:error, "Consistency check failed: #{reason}"}
+    try do
+      case constraints do
+        %{temporal_problem: problem} when not is_nil(problem) ->
+          # Build and solve MiniZinc model to check consistency
+          case build_temporal_model(problem) do
+            {:ok, mzn_content} ->
+              case solve_temporal_model(mzn_content, opts) do
+                {:ok, %{status: "OPTIMAL"}} ->
+                  if verbose > 1 do
+                    Logger.debug("STNTemporalStrategy: Temporal constraints are consistent")
                   end
 
+                  {:ok, true}
+
+                {:ok, %{status: "INFEASIBLE"}} ->
+                  if verbose > 0 do
+                    Logger.warning("STNTemporalStrategy: Temporal constraints are inconsistent")
+                  end
+
+                  {:ok, false}
+
                 {:error, reason} ->
-                  {:error, "Model building failed: #{reason}"}
+                  {:error, "Consistency check failed: #{reason}"}
               end
 
-            _ ->
-              # No constraints means trivially consistent
-              if verbose > 1 do
-                Logger.debug("STNTemporalStrategy: No constraints present, trivially consistent")
-              end
-
-              {:ok, true}
+            {:error, reason} ->
+              {:error, "Model building failed: #{reason}"}
           end
-        rescue
-          e ->
-            error_msg = "STNTemporalStrategy consistency validation error: #{Exception.message(e)}"
-            Logger.error(error_msg)
-            {:error, error_msg}
-        end
+
+        _ ->
+          # No constraints means trivially consistent
+          if verbose > 1 do
+            Logger.debug("STNTemporalStrategy: No constraints present, trivially consistent")
+          end
+
+          {:ok, true}
+      end
+    rescue
+      e ->
+        error_msg = "STNTemporalStrategy consistency validation error: #{Exception.message(e)}"
+        Logger.error(error_msg)
+        {:error, error_msg}
     end
   end
 
@@ -134,35 +126,29 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
       )
     end
 
-    case MiniZincSolver.check_availability() do
-      false ->
-        {:error, "MiniZinc solver is not available"}
-
-      true ->
-        try do
-          temporal_problem =
-            case constraints do
-              %{temporal_problem: problem} when not is_nil(problem) -> problem
-              _ -> %{actions: [], constraints: [], current_time: 0}
-            end
-
-          # Apply each modification to the temporal problem
-          updated_problem =
-            Enum.reduce(modifications, temporal_problem, fn modification, acc_problem ->
-              apply_temporal_modification(acc_problem, modification, opts)
-            end)
-
-          if verbose > 1 do
-            Logger.debug("STNTemporalStrategy: Successfully updated constraints")
-          end
-
-          {:ok, %{temporal_problem: updated_problem, last_update: System.system_time(:millisecond)}}
-        rescue
-          e ->
-            error_msg = "STNTemporalStrategy constraint update error: #{Exception.message(e)}"
-            Logger.error(error_msg)
-            {:error, error_msg}
+    try do
+      temporal_problem =
+        case constraints do
+          %{temporal_problem: problem} when not is_nil(problem) -> problem
+          _ -> %{actions: [], constraints: [], current_time: 0}
         end
+
+      # Apply each modification to the temporal problem
+      updated_problem =
+        Enum.reduce(modifications, temporal_problem, fn modification, acc_problem ->
+          apply_temporal_modification(acc_problem, modification, opts)
+        end)
+
+      if verbose > 1 do
+        Logger.debug("STNTemporalStrategy: Successfully updated constraints")
+      end
+
+      {:ok, %{temporal_problem: updated_problem, last_update: System.system_time(:millisecond)}}
+    rescue
+      e ->
+        error_msg = "STNTemporalStrategy constraint update error: #{Exception.message(e)}"
+        Logger.error(error_msg)
+        {:error, error_msg}
     end
   end
 
@@ -174,62 +160,56 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
       Logger.debug("STNTemporalStrategy: Generating temporal schedule")
     end
 
-    case MiniZincSolver.check_availability() do
-      false ->
-        {:error, "MiniZinc solver is not available"}
+    try do
+      case constraints do
+        %{temporal_problem: problem} when not is_nil(problem) ->
+          # Build and solve MiniZinc model to generate schedule
+          case build_temporal_model(problem) do
+            {:ok, mzn_content} ->
+              case solve_temporal_model(mzn_content, opts) do
+                {:ok, %{status: "OPTIMAL", variables: variables}} ->
+                  schedule = extract_schedule_from_solution(variables, problem.actions)
 
-      true ->
-        try do
-          case constraints do
-            %{temporal_problem: problem} when not is_nil(problem) ->
-              # Build and solve MiniZinc model to generate schedule
-              case build_temporal_model(problem) do
-                {:ok, mzn_content} ->
-                  case solve_temporal_model(mzn_content, opts) do
-                    {:ok, %{status: "OPTIMAL", variables: variables}} ->
-                      schedule = extract_schedule_from_solution(variables, problem.actions)
-
-                      if verbose > 1 do
-                        Logger.debug("STNTemporalStrategy: Generated temporal schedule")
-                      end
-
-                      {:ok,
-                       %{
-                         schedule: schedule,
-                         generated_at: System.system_time(:millisecond),
-                         problem_hash: :erlang.phash2(problem)
-                       }}
-
-                    {:ok, %{status: "INFEASIBLE"}} ->
-                      {:error, "No feasible temporal schedule exists"}
-
-                    {:error, reason} ->
-                      {:error, "Schedule generation failed: #{reason}"}
+                  if verbose > 1 do
+                    Logger.debug("STNTemporalStrategy: Generated temporal schedule")
                   end
 
+                  {:ok,
+                   %{
+                     schedule: schedule,
+                     generated_at: System.system_time(:millisecond),
+                     problem_hash: :erlang.phash2(problem)
+                   }}
+
+                {:ok, %{status: "INFEASIBLE"}} ->
+                  {:error, "No feasible temporal schedule exists"}
+
                 {:error, reason} ->
-                  {:error, "Model building failed: #{reason}"}
+                  {:error, "Schedule generation failed: #{reason}"}
               end
 
-            _ ->
-              # No constraints means empty schedule
-              if verbose > 1 do
-                Logger.debug("STNTemporalStrategy: No constraints, returning empty schedule")
-              end
-
-              {:ok,
-               %{
-                 schedule: %{},
-                 generated_at: System.system_time(:millisecond),
-                 problem_hash: nil
-               }}
+            {:error, reason} ->
+              {:error, "Model building failed: #{reason}"}
           end
-        rescue
-          e ->
-            error_msg = "STNTemporalStrategy schedule generation error: #{Exception.message(e)}"
-            Logger.error(error_msg)
-            {:error, error_msg}
-        end
+
+        _ ->
+          # No constraints means empty schedule
+          if verbose > 1 do
+            Logger.debug("STNTemporalStrategy: No constraints, returning empty schedule")
+          end
+
+          {:ok,
+           %{
+             schedule: %{},
+             generated_at: System.system_time(:millisecond),
+             problem_hash: nil
+           }}
+      end
+    rescue
+      e ->
+        error_msg = "STNTemporalStrategy schedule generation error: #{Exception.message(e)}"
+        Logger.error(error_msg)
+        {:error, error_msg}
     end
   end
 
