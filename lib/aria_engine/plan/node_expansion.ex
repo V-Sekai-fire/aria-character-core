@@ -134,24 +134,47 @@ defmodule AriaEngine.Plan.NodeExpansion do
           end
 
           # Create child nodes for subtasks and execute primitive actions immediately
-          {new_tree, child_ids, _final_state} =
-            Enum.reduce(subtasks, {solution_tree, [], node.state}, fn subtask, acc ->
-              create_task_child_node(domain, node_id, subtask, acc, verbose)
+          {result_tree, result_ids, result_state, any_failed} =
+            Enum.reduce(subtasks, {solution_tree, [], node.state, false}, fn subtask, {tree, ids, state, failed} ->
+              case create_task_child_node(domain, node_id, subtask, {tree, ids, state}, verbose) do
+                {new_tree, new_ids, new_state, :action_failed} ->
+                  {new_tree, new_ids, new_state, true}
+                {new_tree, new_ids, new_state} ->
+                  {new_tree, new_ids, new_state, failed}
+              end
             end)
 
-          # Reverse child_ids to maintain original order
-          child_ids = Enum.reverse(child_ids)
+          if any_failed do
+            # One of the primitive actions failed, trigger backtracking
+            if verbose > 2 do
+              Logger.debug("Primitive action failed during method execution, triggering backtracking")
+            end
 
-          # Update parent node
-          updated_node = %{
-            node
-            | children_ids: child_ids,
-              expanded: true,
-              method_tried: method_id
-          }
+            # Update the node to mark the method as tried but failed
+            updated_node = %{
+              node
+              | expanded: false,
+                method_tried: method_id
+            }
 
-          final_tree = put_in(new_tree.nodes[node_id], updated_node)
-          {:ok, final_tree}
+            updated_solution_tree = put_in(solution_tree.nodes[node_id], updated_node)
+            {:failure, updated_solution_tree}
+          else
+            # All actions succeeded, continue normally
+            # Reverse child_ids to maintain original order
+            child_ids = Enum.reverse(result_ids)
+
+            # Update parent node
+            updated_node = %{
+              node
+              | children_ids: child_ids,
+                expanded: true,
+                method_tried: method_id
+            }
+
+            final_tree = put_in(result_tree.nodes[node_id], updated_node)
+            {:ok, final_tree}
+          end
 
         _ ->
           {:error, "Invalid method result for task: #{task_name}"}
@@ -389,13 +412,19 @@ defmodule AriaEngine.Plan.NodeExpansion do
     child_id = AriaEngine.Plan.Utils.generate_node_id()
     is_primitive = AriaEngine.Plan.Utils.is_primitive_task?(subtask)
 
-    # If this is a primitive action, execute it immediately to get the new state
-    child_state =
-      if is_primitive do
-        execute_primitive_action(domain, subtask, current_state, verbose)
+    # Check if this primitive action is blacklisted
+    is_blacklisted = is_primitive and MapSet.member?(tree.blacklisted_commands, subtask)
+
+    # If this is a primitive action, test it during planning
+    {child_state, action_succeeded} =
+      if is_primitive and not is_blacklisted do
+        execute_primitive_action_with_result(domain, subtask, current_state, verbose)
       else
-        current_state
+        {current_state, not is_blacklisted}
       end
+
+    # Mark as expanded only if the action succeeded (or it's not primitive)
+    expanded = (is_primitive and action_succeeded) or not is_primitive
 
     new_tree =
       put_in(tree.nodes[child_id], %{
@@ -405,14 +434,20 @@ defmodule AriaEngine.Plan.NodeExpansion do
         children_ids: [],
         state: child_state,
         visited: false,
-        expanded: is_primitive,
+        expanded: expanded,
         method_tried: nil,
         blacklisted_methods: [],
         is_primitive: is_primitive,
         is_durative: false
       })
 
-    {new_tree, [child_id | ids], child_state}
+    # If this is a primitive action that failed, we need to signal failure to trigger backtracking
+    if is_primitive and not action_succeeded do
+      # Return a special marker to indicate this subtask failed
+      {new_tree, [child_id | ids], child_state, :action_failed}
+    else
+      {new_tree, [child_id | ids], child_state}
+    end
   end
 
   defp create_goal_child_node(
@@ -424,6 +459,9 @@ defmodule AriaEngine.Plan.NodeExpansion do
        ) do
     child_id = AriaEngine.Plan.Utils.generate_node_id()
     is_primitive = AriaEngine.Plan.Utils.is_primitive_task?(subtask)
+
+    # Check if this primitive action is blacklisted
+    is_blacklisted = is_primitive and MapSet.member?(tree.blacklisted_commands, subtask)
 
     # Check if this is a durative action
     is_durative =
@@ -438,12 +476,12 @@ defmodule AriaEngine.Plan.NodeExpansion do
         false
       end
 
-    # If this is a primitive action, execute it immediately to check preconditions
+    # If this is a primitive action and not blacklisted, execute it immediately to check preconditions
     {child_state, action_succeeded} =
-      if is_primitive do
+      if is_primitive and not is_blacklisted do
         execute_primitive_action_with_result(domain, subtask, current_state, verbose)
       else
-        {current_state, true}
+        {current_state, not is_blacklisted}
       end
 
     child_node = %{

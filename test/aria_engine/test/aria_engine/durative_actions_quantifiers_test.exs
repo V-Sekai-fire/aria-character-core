@@ -11,7 +11,7 @@ defmodule DurativeActionsQuantifiersTest do
 
   use ExUnit.Case, async: true
   alias AriaEngine.StateV2
-  alias AriaEngine.Domain.{Core, DurativeAction, Actions}
+  alias AriaEngine.Domain.{Core, Actions}
 
   describe "durative actions with existential quantifiers" do
     test "NPC can find any available seating" do

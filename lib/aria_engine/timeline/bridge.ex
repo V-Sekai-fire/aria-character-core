@@ -21,7 +21,7 @@ defmodule AriaEngine.Timeline.Bridge do
 
   ## Examples
 
-      iex> bridge = AriaEngine.Timeline.Bridge.new("route_decision", 
+      iex> bridge = AriaEngine.Timeline.Bridge.new("route_decision",
       ...>   DateTime.utc_now(),
       ...>   :decision,
       ...>   metadata: %{options: ["north", "south"]}
@@ -224,7 +224,7 @@ defmodule AriaEngine.Timeline.Bridge do
       iex> pos2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
       iex> bridge1 = AriaEngine.Timeline.Bridge.new("b1", pos1, :decision)
       iex> bridge2 = AriaEngine.Timeline.Bridge.new("b2", pos2, :decision)
-      iex> [sorted1, sorted2] = AriaEngine.Timeline.Bridge.sort_by_position([bridge2, bridge1])
+      iex> [sorted1, _sorted2] = AriaEngine.Timeline.Bridge.sort_by_position([bridge2, bridge1])
       iex> sorted1.id
       "b1"
 

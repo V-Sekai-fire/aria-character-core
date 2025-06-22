@@ -3,6 +3,9 @@
 
 import Config
 
+# Production configuration
+config :logger, level: :info
+
 # Set a higher stacktrace limit for more detailed errors
 config :phoenix, :stacktrace_depth, 20
 
