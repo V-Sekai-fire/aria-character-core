@@ -5,8 +5,8 @@ defmodule Test.FlowTestHelpers do
   @moduledoc """
   Test support modules for Flow-based processing tests.
 
-  These modules provide reusable test functionality for Flow backflow,
-  convergence, and parallel processing tests.
+  These modules provide reusable test functionality for Flow backflow
+  and parallel processing tests.
   """
 
   defmodule FlowBackflowTester do

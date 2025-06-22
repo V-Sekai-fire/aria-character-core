@@ -8,7 +8,6 @@ defmodule AriaEngine.Timeline.Internal.STN.Operations do
   alias AriaEngine.Timeline.Internal.STN
   alias AriaEngine.Timeline.Internal.STN.MiniZincSolver
 
-  # alias AriaEngine.ConvergenceFlow
 
   @doc """
   Performs intersection operation on two STNs.
@@ -170,17 +169,10 @@ defmodule AriaEngine.Timeline.Internal.STN.Operations do
     # Use Flow adapter for parallel processing of STN unions
     case length(stns) do
       count when count > 4 ->
-        # Use convergence-based solving for larger sets
-        # ConvergenceFlow.solve_stn_with_convergence(
-        #   %{constraints: Enum.reduce(stns, %{}, fn stn, acc -> Map.merge(acc, stn.constraints) end)},
-        #   stages: System.schedulers_online(),
-        #   max_iterations: 30,
-        #   convergence_threshold: 0.01
-        # )
-        # |> Map.get(:constraints, %{})
-        # |> (&%STN{constraints: &1}).()
-        # |> MiniZincSolver.solve_stn()
-        %STN{}
+        # Use direct processing for larger sets
+        stns
+        |> Enum.reduce(&union/2)
+        |> MiniZincSolver.solve_stn()
 
       _ ->
         # Direct processing for small sets

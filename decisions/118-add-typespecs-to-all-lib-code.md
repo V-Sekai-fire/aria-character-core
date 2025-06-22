@@ -52,13 +52,13 @@ Systematically add `@spec` annotations to all public and private functions acros
 **Files**: Utility and helper modules
 
 - [x] `lib/aria_engine/actions.ex` (already had comprehensive typespecs)
-- [x] `lib/aria_engine/batch_processor.ex` (added comprehensive typespecs)
 - [x] `lib/aria_engine/convenience.ex` (already had comprehensive typespecs)
-- [x] `lib/aria_engine/convergence.ex` (added comprehensive typespecs)
 - [x] `lib/aria_engine/info.ex` (already had comprehensive typespecs)
 - [x] `lib/aria_engine/multigoal.ex` (already had comprehensive typespecs)
 - [x] `lib/aria_engine/train_scheduling_converter.ex` (file does not exist)
 - [x] `lib/aria_engine/utils.ex` (already had comprehensive typespecs)
+
+**Note**: `batch_processor.ex` and `convergence.ex` were removed (see ADR-140)
 
 ### Phase 5: Domain Modules (MEDIUM PRIORITY)
 **Files**: `lib/aria_engine/domain/` modules
