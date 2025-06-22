@@ -33,6 +33,13 @@ This ADR documents the closure of the temporal planning development segment and 
 - ✅ DateTime/float precision time input with millisecond solving
 - ✅ Parallel STN solving for performance scalability
 
+**TimelineGraph STN Integration ✅ (June 21, 2025):**
+- ✅ Complete STN integration for TimelineGraph.Scheduler module
+- ✅ Complete STN integration for TimelineGraph.EnvironmentalProcesses module
+- ✅ Real STN query functions replacing placeholder implementations
+- ✅ Full end-to-end functionality for schedule management and environmental processes
+- ✅ Proper time unit conversion between DateTime and STN formats
+
 ### Test Infrastructure ✅
 
 **Comprehensive Test Coverage:**

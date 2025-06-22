@@ -298,19 +298,44 @@ defmodule TimelineGraph.EnvironmentalProcesses do
   end
 
   defp find_environmental_process_intervals(timeline, process_type) do
-    # This is a placeholder implementation
-    # In a real implementation, this would query the STN for intervals
-    # that match the environmental process type
-    _ = {timeline, process_type}
-    []
+    # Get all intervals from the STN
+    all_intervals = Timeline.Internal.STN.Core.get_intervals(timeline.stn)
+
+    # Filter for matching environmental process type
+    all_intervals
+    |> Enum.filter(fn interval ->
+      get_in(interval.metadata, [:type]) == :environmental_process and
+      get_in(interval.metadata, [:process_type]) == process_type
+    end)
+    |> Enum.map(fn stn_interval ->
+      # Convert STN times back to DateTime for Interval format
+      start_dt = TimelineGraph.TimeConverter.convert_from_stn_time(stn_interval.start_time, timeline.stn.time_unit)
+      end_dt = TimelineGraph.TimeConverter.convert_from_stn_time(stn_interval.end_time, timeline.stn.time_unit)
+      
+      Interval.new(start_dt, end_dt, metadata: stn_interval.metadata)
+    end)
   end
 
   defp find_active_environmental_processes(timeline, check_time) do
-    # This is a placeholder implementation
-    # In a real implementation, this would query the STN for environmental
-    # process intervals that are active at the specified time
-    _ = {timeline, check_time}
-    []
+    # Convert check_time to STN time units
+    stn_time = TimelineGraph.TimeConverter.datetime_to_stn_time(check_time, timeline.stn.time_unit)
+
+    # Get all intervals from the STN
+    all_intervals = Timeline.Internal.STN.Core.get_intervals(timeline.stn)
+
+    # Filter for environmental processes active at the specified time
+    all_intervals
+    |> Enum.filter(fn interval ->
+      get_in(interval.metadata, [:type]) == :environmental_process and
+      interval.start_time <= stn_time and stn_time <= interval.end_time
+    end)
+    |> Enum.map(fn stn_interval ->
+      # Convert STN times back to DateTime for Interval format
+      start_dt = TimelineGraph.TimeConverter.convert_from_stn_time(stn_interval.start_time, timeline.stn.time_unit)
+      end_dt = TimelineGraph.TimeConverter.convert_from_stn_time(stn_interval.end_time, timeline.stn.time_unit)
+      
+      Interval.new(start_dt, end_dt, metadata: stn_interval.metadata)
+    end)
   end
 
   defp intensity_value(intensity) do

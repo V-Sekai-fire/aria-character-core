@@ -186,16 +186,35 @@ defmodule TimelineGraph.Scheduler do
   """
   @spec get_scheduled_routines(map(), entity_id(), DateTime.t(), DateTime.t()) ::
           [Interval.t()] | {:error, term()}
-  def get_scheduled_routines(timeline_graph, entity_id, _start_time, _end_time) do
+  def get_scheduled_routines(timeline_graph, entity_id, start_time, end_time) do
     case Map.get(timeline_graph.entities, entity_id) do
       nil ->
         {:error, :entity_not_found}
 
-      _entity_timeline ->
-        # Extract intervals from STN that overlap with time window
-        # This would need to be implemented in the STN module
-        # For now, return empty list as placeholder
-        []
+      entity_timeline ->
+        # Convert DateTime to STN time units
+        stn_start = TimeConverter.datetime_to_stn_time(start_time, entity_timeline.timeline.stn.time_unit)
+        stn_end = TimeConverter.datetime_to_stn_time(end_time, entity_timeline.timeline.stn.time_unit)
+
+        # Get overlapping intervals from STN
+        overlapping_intervals = Timeline.Internal.STN.Core.get_overlapping_intervals(
+          entity_timeline.timeline.stn, 
+          stn_start, 
+          stn_end
+        )
+
+        # Filter for scheduled routines and convert back to Interval format
+        overlapping_intervals
+        |> Enum.filter(fn interval ->
+          get_in(interval.metadata, [:type]) == :scheduled_routine
+        end)
+        |> Enum.map(fn stn_interval ->
+          # Convert STN times back to DateTime
+          start_dt = TimeConverter.convert_from_stn_time(stn_interval.start_time, entity_timeline.timeline.stn.time_unit)
+          end_dt = TimeConverter.convert_from_stn_time(stn_interval.end_time, entity_timeline.timeline.stn.time_unit)
+          
+          Interval.new(start_dt, end_dt, metadata: stn_interval.metadata)
+        end)
     end
   end
 
@@ -365,10 +384,63 @@ defmodule TimelineGraph.Scheduler do
   end
 
   defp find_matching_routines(timeline, routine_type, start_time, end_time) do
-    # This is a placeholder implementation
-    # In a real implementation, this would query the STN for intervals
-    # that match the routine type and fall within the time range
-    _ = {timeline, routine_type, start_time, end_time}
-    []
+    # Get all intervals from the STN
+    all_intervals = Timeline.Internal.STN.Core.get_intervals(timeline.stn)
+
+    # Filter for matching routine type
+    matching_intervals = 
+      all_intervals
+      |> Enum.filter(fn interval ->
+        get_in(interval.metadata, [:type]) == :scheduled_routine and
+        get_in(interval.metadata, [:routine_type]) == routine_type
+      end)
+
+    # Apply time range filter if specified
+    case {start_time, end_time} do
+      {nil, nil} ->
+        # No time filter - return all matching routines
+        convert_stn_intervals_to_timeline_intervals(matching_intervals, timeline.stn.time_unit)
+
+      {%DateTime{} = start_dt, nil} ->
+        # Filter for routines starting after start_time
+        stn_start = TimeConverter.datetime_to_stn_time(start_dt, timeline.stn.time_unit)
+        
+        matching_intervals
+        |> Enum.filter(fn interval -> interval.start_time >= stn_start end)
+        |> convert_stn_intervals_to_timeline_intervals(timeline.stn.time_unit)
+
+      {nil, %DateTime{} = end_dt} ->
+        # Filter for routines ending before end_time
+        stn_end = TimeConverter.datetime_to_stn_time(end_dt, timeline.stn.time_unit)
+        
+        matching_intervals
+        |> Enum.filter(fn interval -> interval.end_time <= stn_end end)
+        |> convert_stn_intervals_to_timeline_intervals(timeline.stn.time_unit)
+
+      {%DateTime{} = start_dt, %DateTime{} = end_dt} ->
+        # Filter for routines within the time range
+        stn_start = TimeConverter.datetime_to_stn_time(start_dt, timeline.stn.time_unit)
+        stn_end = TimeConverter.datetime_to_stn_time(end_dt, timeline.stn.time_unit)
+        
+        matching_intervals
+        |> Enum.filter(fn interval ->
+          # Check for overlap: intervals overlap if start1 <= end2 and start2 <= end1
+          interval.start_time <= stn_end and stn_start <= interval.end_time
+        end)
+        |> convert_stn_intervals_to_timeline_intervals(timeline.stn.time_unit)
+
+      _ ->
+        # Invalid time parameters
+        []
+    end
+  end
+
+  defp convert_stn_intervals_to_timeline_intervals(stn_intervals, time_unit) do
+    Enum.map(stn_intervals, fn stn_interval ->
+      start_dt = TimeConverter.convert_from_stn_time(stn_interval.start_time, time_unit)
+      end_dt = TimeConverter.convert_from_stn_time(stn_interval.end_time, time_unit)
+      
+      Interval.new(start_dt, end_dt, metadata: stn_interval.metadata)
+    end)
   end
 end
