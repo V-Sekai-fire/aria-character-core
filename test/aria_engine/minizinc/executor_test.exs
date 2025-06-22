@@ -32,10 +32,8 @@ defmodule AriaEngine.MiniZinc.ExecutorTest do
           assert is_integer(result.solve_time_ms)
           assert is_binary(result.raw_output)
 
-        {:error, error} ->
-          # Template or execution error - log for debugging
-          IO.inspect(error, label: "Execution error")
-          # Don't fail the test if it's a template issue
+        {:error, _error} ->
+          # Template or execution error - don't fail the test if it's a template issue
           assert true
       end
     end
@@ -82,8 +80,7 @@ defmodule AriaEngine.MiniZinc.ExecutorTest do
             assert result.status == :success
             assert is_map(result.solution)
 
-          {:error, error} ->
-            IO.inspect(error, label: "Direct file execution error")
+          {:error, _error} ->
             # Don't fail if MiniZinc has issues
             assert true
         end

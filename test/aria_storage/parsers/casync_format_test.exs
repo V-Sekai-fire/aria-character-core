@@ -372,8 +372,8 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
           assert is_list(elements)
 
           # flat.catar should contain files but no directories
-          assert length(files) > 0
-          assert length(directories) == 0
+          refute Enum.empty?(files)
+          assert Enum.empty?(directories)
 
           # Verify file structure
           Enum.each(files, fn file ->
@@ -401,8 +401,8 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
           assert is_list(directories)
 
           # nested.catar should contain both files and directories
-          assert length(files) > 0
-          assert length(directories) > 0
+          refute Enum.empty?(files)
+          refute Enum.empty?(directories)
 
         {:error, _} ->
           # Skip if file doesn't exist
@@ -423,7 +423,7 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
           assert is_list(directories)
 
           # complex.catar should contain various file types
-          assert length(files) > 0
+          refute Enum.empty?(files)
 
         {:error, _} ->
           # Skip if file doesn't exist
@@ -444,8 +444,8 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
           assert is_list(directories)
 
           # flatdir.catar should contain only directories
-          assert length(files) == 0
-          assert length(directories) > 0
+          assert Enum.empty?(files)
+          refute Enum.empty?(directories)
 
         {:error, _} ->
           # Skip if file doesn't exist

@@ -179,8 +179,8 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
           assert is_list(directories)
 
           # Should have both files and directories for nested structure
-          assert length(files) > 0
-          assert length(directories) > 0
+          refute Enum.empty?(files)
+          refute Enum.empty?(directories)
 
           # Test roundtrip encoding with hex comparison
           CasyncFormat.test_file_roundtrip_encoding(file_path, parsed)
@@ -206,7 +206,7 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
           assert is_list(directories)
 
           # Complex archive should have multiple files
-          assert length(files) > 0
+          refute Enum.empty?(files)
 
           # Test roundtrip encoding with hex comparison
           CasyncFormat.test_file_roundtrip_encoding(file_path, parsed)
@@ -232,8 +232,8 @@ defmodule AriaStorage.Parsers.CasyncFormatRoundtripTest do
           assert is_list(directories)
 
           # Flatdir should have directories but no files
-          assert length(files) == 0
-          assert length(directories) > 0
+          assert Enum.empty?(files)
+          refute Enum.empty?(directories)
 
           # Test roundtrip encoding with hex comparison
           CasyncFormat.test_file_roundtrip_encoding(file_path, parsed)
