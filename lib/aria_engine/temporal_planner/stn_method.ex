@@ -398,12 +398,26 @@ defmodule TemporalPlanner.STNMethod do
     end
   end
 
-  defp split_actions_by_bridges(stn_actions, _bridge_actions, pattern) do
-    # For now, create a single segment with all actions
-    # See ADR-119 for bridge-based segmentation implementation plan
-    case stn_actions do
-      [] -> []
-      actions -> [compute_actions_stn(actions, pattern)]
+  defp split_actions_by_bridges(stn_actions, bridge_actions, pattern) do
+    case bridge_actions do
+      [] ->
+        # No bridges, single segment
+        case stn_actions do
+          [] -> []
+          actions -> [compute_actions_stn(actions, pattern)]
+        end
+
+      bridges ->
+        # Create bridge position mapping
+        bridge_positions = create_bridge_position_mapping(stn_actions, bridges)
+        
+        # Split actions into segments based on bridge positions
+        segments = split_actions_into_segments(stn_actions, bridge_positions)
+        
+        # Convert each segment to Timeline
+        Enum.map(segments, fn segment_actions ->
+          compute_actions_stn(segment_actions, pattern)
+        end)
     end
   end
 
@@ -488,5 +502,71 @@ defmodule TemporalPlanner.STNMethod do
       end
 
     {avg_min, avg_max}
+  end
+
+  # Bridge segmentation helper functions
+
+  defp create_bridge_position_mapping(stn_actions, bridge_actions) do
+    # Create a mapping of bridge action IDs to their positions in the action sequence
+    # For now, assume bridges are referenced by action metadata or explicit ordering
+    bridge_ids = Enum.map(bridge_actions, & &1.action_id)
+    
+    # Find positions of bridge actions within the STN action sequence
+    stn_actions
+    |> Enum.with_index()
+    |> Enum.filter(fn {action, _index} ->
+      # Check if this action is a bridge or references a bridge
+      action_id = get_action_id(action)
+      action_id in bridge_ids or has_bridge_reference?(action, bridge_ids)
+    end)
+    |> Enum.map(fn {_action, index} -> index end)
+    |> Enum.sort()
+  end
+
+  defp split_actions_into_segments(stn_actions, bridge_positions) do
+    case bridge_positions do
+      [] ->
+        # No bridge positions found, return all actions as single segment
+        [stn_actions]
+
+      positions ->
+        # Split actions into segments at bridge positions
+        split_at_positions(stn_actions, positions)
+    end
+  end
+
+  defp get_action_id(%STNAction{action_id: action_id}), do: action_id
+  defp get_action_id(action) when is_map(action), do: Map.get(action, :action_id, "")
+  defp get_action_id(_), do: ""
+
+  defp has_bridge_reference?(action, bridge_ids) do
+    # Check if action metadata references any bridge actions
+    metadata = get_action_metadata(action)
+    
+    case metadata do
+      %{bridge_after: bridge_id} when bridge_id in bridge_ids -> true
+      %{bridge_before: bridge_id} when bridge_id in bridge_ids -> true
+      %{bridges: bridges} when is_list(bridges) ->
+        Enum.any?(bridges, &(&1 in bridge_ids))
+      _ -> false
+    end
+  end
+
+  defp get_action_metadata(%STNAction{metadata: metadata}), do: metadata
+  defp get_action_metadata(action) when is_map(action), do: Map.get(action, :metadata, %{})
+  defp get_action_metadata(_), do: %{}
+
+  defp split_at_positions(actions, positions) do
+    # Add start and end positions for complete segmentation
+    all_positions = [0] ++ positions ++ [length(actions)]
+    unique_positions = all_positions |> Enum.uniq() |> Enum.sort()
+
+    # Create segments between consecutive positions
+    unique_positions
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.map(fn [start_pos, end_pos] ->
+      Enum.slice(actions, start_pos, end_pos - start_pos)
+    end)
+    |> Enum.filter(&(length(&1) > 0))
   end
 end
