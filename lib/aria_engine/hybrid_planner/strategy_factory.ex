@@ -352,7 +352,9 @@ defmodule HybridPlanner.StrategyFactory do
   defp register_default_strategies(factory) do
     default_strategies = [
       {:planning_strategy, :default, Strategies.Default.HTNPlanningStrategy},
-      {:temporal_strategy, :stn, Strategies.Default.STNTemporalStrategy},
+      {:temporal_strategy, :stn, Strategies.Default.STNBridgeTemporalStrategy},
+      {:temporal_strategy, :stn_legacy, Strategies.Default.STNTemporalStrategy},
+      {:temporal_strategy, :stn_bridge, Strategies.Default.STNBridgeTemporalStrategy},
       {:state_strategy, :statev2, Strategies.Default.StateV2Strategy},
       {:domain_strategy, :default, Strategies.Default.DomainStrategy},
       {:logging_strategy, :default, Strategies.Default.LoggerStrategy},
@@ -393,10 +395,31 @@ defmodule HybridPlanner.StrategyFactory do
       execution_strategy: :lazy
     }
 
+    # Bridge-enabled configurations
+    always_bridge_config = %{
+      planning_strategy: :default,
+      temporal_strategy: :stn_bridge,
+      state_strategy: :statev2,
+      domain_strategy: :default,
+      logging_strategy: :default,
+      execution_strategy: :lazy
+    }
+
+    bridge_verbose_config = %{
+      planning_strategy: :default,
+      temporal_strategy: :stn_bridge,
+      state_strategy: :statev2,
+      domain_strategy: :default,
+      logging_strategy: :verbose,
+      execution_strategy: :lazy
+    }
+
     factory
     |> register_configuration(:default, default_config)
     |> register_configuration(:verbose, verbose_config)
     |> register_configuration(:quiet, quiet_config)
+    |> register_configuration(:always_bridge, always_bridge_config)
+    |> register_configuration(:bridge_verbose, bridge_verbose_config)
   end
 
   # Resolve strategy configuration to actual strategy modules
