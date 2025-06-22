@@ -35,7 +35,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
 
         %Domain.Core{} = domain ->
           # Use existing Plan.Core.run_lazy_refineahead logic
-          # TODO: Implement Plan.Core.run_lazy_refineahead/4 function  
+          # See ADR-121 for lazy refinement implementation plan
           Logger.warning(
             "LazyExecutionStrategy: Plan.Core.run_lazy_refineahead/4 not yet implemented"
           )

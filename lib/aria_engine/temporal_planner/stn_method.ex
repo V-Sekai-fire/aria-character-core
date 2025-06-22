@@ -400,7 +400,7 @@ defmodule TemporalPlanner.STNMethod do
 
   defp split_actions_by_bridges(stn_actions, _bridge_actions, pattern) do
     # For now, create a single segment with all actions
-    # TODO: Implement proper segmentation based on bridge action positions
+    # See ADR-119 for bridge-based segmentation implementation plan
     case stn_actions do
       [] -> []
       actions -> [compute_actions_stn(actions, pattern)]

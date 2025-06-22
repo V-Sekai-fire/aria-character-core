@@ -106,7 +106,7 @@ defmodule HybridPlanner.StrategyFactory do
 
     # Validate strategy module implements required behavior
     # Temporarily disabled due to compilation order issues
-    # TODO: Re-enable validation after addressing module loading order
+    # See ADR-120 for validation reactivation implementation plan
     # case validate_strategy_module(strategy_type, strategy_module) do
     #   :ok -> :ok
     #   {:error, reason} -> raise ArgumentError, "Strategy validation failed: #{reason}"
