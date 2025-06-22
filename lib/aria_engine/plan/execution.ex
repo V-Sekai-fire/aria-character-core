@@ -12,7 +12,7 @@ defmodule AriaEngine.Plan.Execution do
 
   require Logger
 
-  @type execution_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @type execution_result :: {:ok, State.t()} | {:error, String.t()}
 
   @doc """
   Execute a solution tree using lazy refinement with backtracking.
@@ -53,13 +53,13 @@ defmodule AriaEngine.Plan.Execution do
   """
   @spec run_lazy_refineahead(
           AriaEngine.Domain.Core.t(),
-          AriaEngine.StateV2.t(),
+          State.t(),
           AriaEngine.Plan.Core.solution_tree(),
           keyword()
         ) :: execution_result()
   def run_lazy_refineahead(
         %AriaEngine.Domain.Core{} = domain,
-        %AriaEngine.StateV2{} = initial_state,
+        %State{} = initial_state,
         solution_tree,
         opts \\ []
       ) do
@@ -221,7 +221,7 @@ defmodule AriaEngine.Plan.Execution do
   end
 
   # Apply a method function safely
-  @spec apply_method(function(), AriaEngine.StateV2.t(), list()) ::
+  @spec apply_method(function(), State.t(), list()) ::
           {:ok, list()} | {:error, String.t()}
   defp apply_method(method_fn, state, args) do
     try do
@@ -307,7 +307,7 @@ defmodule AriaEngine.Plan.Execution do
           {:ok, map()} | {:error, String.t()}
   defp process_goal_node(execution_state, node_id, node, predicate, subject, fact_value) do
     # Check if goal is already achieved
-    current_value = AriaEngine.StateV2.get_fact(execution_state.current_state, subject, predicate)
+    current_value = State.get_fact(execution_state.current_state, predicate, subject)
 
     if current_value == fact_value do
       if execution_state.verbose > 2 do
@@ -575,8 +575,8 @@ defmodule AriaEngine.Plan.Execution do
   end
 
   # Apply an action function safely
-  @spec apply_action(function(), AriaEngine.StateV2.t(), list()) ::
-          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @spec apply_action(function(), State.t(), list()) ::
+          {:ok, State.t()} | {:error, String.t()}
   defp apply_action(action_fn, state, args) do
     try do
       case apply(action_fn, [state, args]) do
@@ -586,7 +586,7 @@ defmodule AriaEngine.Plan.Execution do
         nil ->
           {:error, "Action returned nil"}
 
-        %AriaEngine.StateV2{} = new_state ->
+        %State{} = new_state ->
           {:ok, new_state}
 
         other ->

@@ -17,12 +17,12 @@ defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
 
   Pure Function as Object implementation - all dependencies are injected strategies.
   """
-  @spec plan(coordinator(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) ::
+  @spec plan(coordinator(), Domain.Core.t(), State.t(), [term()], keyword()) ::
           plan_result()
   def plan(
         %coordinator_module{} = coordinator,
         domain,
-        %AriaEngine.StateV2{} = state,
+        %State{} = state,
         goals,
         opts \\ []
       )
@@ -129,12 +129,12 @@ defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
   @doc """
   Validate a plan using injected planning strategy.
   """
-  @spec validate_plan(coordinator(), Domain.Core.t(), AriaEngine.StateV2.t(), map()) ::
-          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @spec validate_plan(coordinator(), Domain.Core.t(), State.t(), map()) ::
+          {:ok, State.t()} | {:error, String.t()}
   def validate_plan(
         %coordinator_module{} = coordinator,
         domain,
-        %AriaEngine.StateV2{} = initial_state,
+        %State{} = initial_state,
         plan
       )
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do

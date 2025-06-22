@@ -17,7 +17,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
   @spec replan(
           coordinator(),
           Domain.Core.t(),
-          AriaEngine.StateV2.t(),
+          State.t(),
           map(),
           String.t(),
           keyword()
@@ -26,7 +26,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
   def replan(
         %coordinator_module{} = coordinator,
         domain,
-        %AriaEngine.StateV2{} = state,
+        %State{} = state,
         plan,
         fail_node_id,
         opts \\ []

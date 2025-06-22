@@ -9,17 +9,17 @@ defmodule HybridPlanner.HybridCoordinatorV2.ExecutionOperations do
   """
 
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()
-  @type execution_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @type execution_result :: {:ok, State.t()} | {:error, String.t()}
 
   @doc """
   Execute a plan using injected execution strategy.
   """
-  @spec execute(coordinator(), Domain.Core.t(), AriaEngine.StateV2.t(), map(), keyword()) ::
+  @spec execute(coordinator(), Domain.Core.t(), State.t(), map(), keyword()) ::
           execution_result()
   def execute(
         %coordinator_module{} = coordinator,
         domain,
-        %AriaEngine.StateV2{} = initial_state,
+        %State{} = initial_state,
         plan,
         opts \\ []
       )
