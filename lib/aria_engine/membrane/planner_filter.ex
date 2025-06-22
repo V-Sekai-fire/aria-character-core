@@ -176,7 +176,7 @@ defmodule AriaEngine.Membrane.PlannerFilter do
       domain = params.domain || create_default_domain()
 
       # Create a simple state if none provided
-      state = params.state || AriaEngine.StateV2.new()
+      state = params.state || State.new()
 
       # Ensure goals is a list
       goals = params.goals || []

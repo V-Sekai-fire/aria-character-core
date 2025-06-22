@@ -67,8 +67,8 @@ defmodule AriaEngine.BlocksWorldDomainTest do
       state = StateV2.new()
 
       # Test basic fact operations
-      state = StateV2.set_fact(state, "pos", "a", "table")
-      assert StateV2.get_fact(state, "pos", "a") == "table"
+      state = State.set_fact(state, "pos", "a", "table")
+      assert State.get_fact(state, "pos", "a") == "table"
 
       # Test what API functions are actually available
       functions = StateV2.__info__(:functions)

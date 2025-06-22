@@ -12,7 +12,7 @@ defmodule AriaEngine.Scheduler.DomainConverterTest do
       domain = Domain.new("test_domain")
 
       action_fn = fn state, _args ->
-        StateV2.set_fact(state, "test_activity", "completed", "true")
+        State.set_fact(state, "test_activity", "completed", "true")
       end
 
       domain_with_action = Domain.add_action(domain, :test_activity, action_fn)
@@ -26,7 +26,7 @@ defmodule AriaEngine.Scheduler.DomainConverterTest do
 
       assert %StateV2{} = result_state
 
-      assert StateV2.get_fact(result_state, "test_activity", "completed") == "true"
+      assert State.get_fact(result_state, "test_activity", "completed") == "true"
     end
   end
 end

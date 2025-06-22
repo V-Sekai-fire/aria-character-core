@@ -752,17 +752,17 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   defp setup_warehouse_scenario do
     # Create warehouse state
     state = StateV2.new()
-    |> StateV2.set_fact("robot", "location", "dock")
-    |> StateV2.set_fact("robot", "battery", 100)
-    |> StateV2.set_fact("robot", "carrying", nil)
-    |> StateV2.set_fact("item_a", "location", "shelf_1")
-    |> StateV2.set_fact("item_a", "status", "available")
-    |> StateV2.set_fact("item_b", "location", "shelf_3")
-    |> StateV2.set_fact("item_b", "status", "available")
-    |> StateV2.set_fact("item_c", "location", "shelf_1")
-    |> StateV2.set_fact("item_c", "status", "available")
-    |> StateV2.set_fact("station_1", "status", "ready")
-    |> StateV2.set_fact("station_2", "status", "ready")
+    |> State.set_fact("robot", "location", "dock")
+    |> State.set_fact("robot", "battery", 100)
+    |> State.set_fact("robot", "carrying", nil)
+    |> State.set_fact("item_a", "location", "shelf_1")
+    |> State.set_fact("item_a", "status", "available")
+    |> State.set_fact("item_b", "location", "shelf_3")
+    |> State.set_fact("item_b", "status", "available")
+    |> State.set_fact("item_c", "location", "shelf_1")
+    |> State.set_fact("item_c", "status", "available")
+    |> State.set_fact("station_1", "status", "ready")
+    |> State.set_fact("station_2", "status", "ready")
 
     # Define multigoal
     goals = [
@@ -778,12 +778,12 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   defp setup_multi_agent_scenario do
     # Create multi-agent state
     state = StateV2.new()
-    |> StateV2.set_fact("robot_1", "location", "base")
-    |> StateV2.set_fact("robot_2", "location", "base")
-    |> StateV2.set_fact("task_a", "assigned_to", nil)
-    |> StateV2.set_fact("task_b", "assigned_to", nil)
-    |> StateV2.set_fact("task_c", "assigned_to", nil)
-    |> StateV2.set_fact("task_d", "assigned_to", nil)
+    |> State.set_fact("robot_1", "location", "base")
+    |> State.set_fact("robot_2", "location", "base")
+    |> State.set_fact("task_a", "assigned_to", nil)
+    |> State.set_fact("task_b", "assigned_to", nil)
+    |> State.set_fact("task_c", "assigned_to", nil)
+    |> State.set_fact("task_d", "assigned_to", nil)
 
     # Define parallel goals
     goals = [
@@ -799,11 +799,11 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   defp setup_dependency_chain_scenario do
     # Create dependency chain state
     state = StateV2.new()
-    |> StateV2.set_fact("player", "location", "start")
-    |> StateV2.set_fact("player", "has_key", false)
-    |> StateV2.set_fact("door", "state", "locked")
-    |> StateV2.set_fact("treasure", "location", "treasure_room")
-    |> StateV2.set_fact("key", "location", "key_room")
+    |> State.set_fact("player", "location", "start")
+    |> State.set_fact("player", "has_key", false)
+    |> State.set_fact("door", "state", "locked")
+    |> State.set_fact("treasure", "location", "treasure_room")
+    |> State.set_fact("key", "location", "key_room")
 
     # Define dependent goals
     goals = [
@@ -819,14 +819,14 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   defp setup_resource_contention_scenario do
     # Create resource contention state
     state = StateV2.new()
-    |> StateV2.set_fact("worker_1", "location", "base")
-    |> StateV2.set_fact("worker_2", "location", "base")
-    |> StateV2.set_fact("tool_drill", "location", "tool_room")
-    |> StateV2.set_fact("tool_drill", "status", "available")
-    |> StateV2.set_fact("tool_saw", "location", "tool_room")
-    |> StateV2.set_fact("tool_saw", "status", "available")
-    |> StateV2.set_fact("workstation_1", "status", "ready")
-    |> StateV2.set_fact("workstation_2", "status", "ready")
+    |> State.set_fact("worker_1", "location", "base")
+    |> State.set_fact("worker_2", "location", "base")
+    |> State.set_fact("tool_drill", "location", "tool_room")
+    |> State.set_fact("tool_drill", "status", "available")
+    |> State.set_fact("tool_saw", "location", "tool_room")
+    |> State.set_fact("tool_saw", "status", "available")
+    |> State.set_fact("workstation_1", "status", "ready")
+    |> State.set_fact("workstation_2", "status", "ready")
 
     # Define resource contention goals
     goals = [
@@ -842,10 +842,10 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   defp setup_unsatisfiable_scenario do
     # Create scenario with impossible constraints
     state = StateV2.new()
-    |> StateV2.set_fact("robot", "location", "room_a")
-    |> StateV2.set_fact("robot", "battery", 0)  # No battery
-    |> StateV2.set_fact("door", "state", "locked")
-    |> StateV2.set_fact("key", "location", "room_b")  # Key in different room
+    |> State.set_fact("robot", "location", "room_a")
+    |> State.set_fact("robot", "battery", 0)  # No battery
+    |> State.set_fact("door", "state", "locked")
+    |> State.set_fact("key", "location", "room_b")  # Key in different room
 
     # Define impossible goals (robot can't move without battery)
     goals = [

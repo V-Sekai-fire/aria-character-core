@@ -64,38 +64,6 @@ defmodule AriaEngine.Domain.Utils do
     }
   end
 
-  @doc """
-  Adds Porcelain-based actions to the domain.
-
-  This convenience method adds all the external process actions from Actions.
-  """
-  @spec add_porcelain_actions(t()) :: t()
-  def add_porcelain_actions(%{} = domain) do
-    porcelain_actions = %{
-      execute_command: &Actions.execute_command/2,
-      copy_file: &Actions.copy_file/2,
-      move_file: &Actions.move_file/2,
-      create_directory: &Actions.create_directory/2,
-      remove_path: &Actions.remove_path/2,
-      download_file: &Actions.download_file/2,
-      change_permissions: &Actions.change_permissions/2
-    }
-
-    AriaEngine.Domain.Actions.add_actions(domain, porcelain_actions)
-  end
-
-  @doc """
-  Creates a complete domain with all Porcelain-based actions and methods.
-
-  This is a convenience method for creating a fully-featured domain with basic actions.
-  Domain-specific methods should be added by the respective domain modules.
-  """
-  @spec create_complete_domain(String.t()) :: t()
-  def create_complete_domain(name \\ "complete") do
-    AriaEngine.Domain.Core.new(name)
-    |> add_porcelain_actions()
-  end
-
   # Private helper to infer method name from function reference
   @doc """
   Infers a method name from a function reference for tuple-based method storage.

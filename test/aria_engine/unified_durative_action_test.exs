@@ -170,8 +170,8 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
 
       # Verify action can be executed
       state = StateV2.new()
-      |> StateV2.set_fact("chef", "capabilities", [:cooking])
-      |> StateV2.set_fact("oven", "capabilities", [:heating])
+      |> State.set_fact("chef", "capabilities", [:cooking])
+      |> State.set_fact("oven", "capabilities", [:heating])
 
       assert {:ok, _new_state} = Domain.execute_action(domain, state, :cook_meal, ["pasta"])
     end
@@ -185,7 +185,7 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
   defp cook_action(state, _args), do: state
 
   defp cook_meal_implementation(state, [meal_type]) do
-    StateV2.set_fact(state, "meal", "status", "cooked")
-    |> StateV2.set_fact("meal", "type", meal_type)
+    State.set_fact(state, "meal", "status", "cooked")
+    |> State.set_fact("meal", "type", meal_type)
   end
 end

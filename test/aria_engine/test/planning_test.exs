@@ -64,7 +64,7 @@ defmodule PlanningTest do
 
       case Planning.execute_plan(domain, initial_state, plan) do
         {:ok, final_state} ->
-          assert StateV2.get_fact(final_state, "player", "location") == "room3"
+          assert State.get_fact(final_state, "player", "location") == "room3"
 
         {:error, reason} ->
           # Plan execution may fail, which is acceptable for this test

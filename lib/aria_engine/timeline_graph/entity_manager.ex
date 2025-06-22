@@ -13,7 +13,6 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
   alias AriaEngine.Timeline.AgentEntity
   alias AriaEngine.Timeline
   alias AriaEngine.Timeline.Interval
-  alias AriaEngine.StateV2
 
   @type entity_id :: String.t()
   @type lod_level :: :very_low | :low | :medium | :high | :ultra_high
@@ -36,17 +35,17 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
   ```elixir
   # Create passive entity (furniture)
   {:ok, timeline_graph, "chair1"} = TimelineGraph.EntityManager.create_entity(
-    timeline_graph, 
-    "chair1", 
-    "Wooden Chair", 
+    timeline_graph,
+    "chair1",
+    "Wooden Chair",
     %{type: "furniture", material: "wood"}
   )
 
   # Create potential agent (NPC)
   {:ok, timeline_graph, "guard"} = TimelineGraph.EntityManager.create_entity(
     timeline_graph,
-    "guard", 
-    "Tower Guard", 
+    "guard",
+    "Tower Guard",
     %{type: "humanoid", location: "tower"}
   )
   ```
@@ -79,7 +78,7 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
     # Update state with entity properties (using entity-first StateV2)
     updated_state =
       Enum.reduce(properties, timeline_graph.state, fn {predicate, value}, state ->
-        StateV2.set_fact(state, entity_id, predicate, value)
+        State.set_fact(state, entity_id, predicate, value)
       end)
 
     # Add entity to timeline graph
@@ -104,8 +103,8 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
   ```elixir
   # Transform passive door into autonomous door
   {:ok, updated_graph} = TimelineGraph.EntityManager.add_capabilities(
-    timeline_graph, 
-    "door1", 
+    timeline_graph,
+    "door1",
     [:autonomous_operation, :decision_making]
   )
 
@@ -192,7 +191,7 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
   """
   @spec get_entity_properties(map(), entity_id()) :: %{String.t() => any()}
   def get_entity_properties(timeline_graph, entity_id) do
-    StateV2.get_properties(timeline_graph.state, entity_id)
+    State.get_properties(timeline_graph.state, entity_id)
   end
 
   @doc """
@@ -207,7 +206,7 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
 
       entity_timeline ->
         # Update state using entity-first API
-        updated_state = StateV2.set_fact(timeline_graph.state, entity_id, predicate, value)
+        updated_state = State.set_fact(timeline_graph.state, entity_id, predicate, value)
 
         # Trigger timeline growth for property change
         updated_timeline =

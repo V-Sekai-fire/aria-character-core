@@ -26,12 +26,4 @@ defmodule AriaEngine do
   def create_multigoal do
     Multigoal.new()
   end
-
-  @doc """
-  Creates a new empty state using StateV2.
-  """
-  @spec create_state() :: StateV2.t()
-  def create_state do
-    StateV2.new()
-  end
 end

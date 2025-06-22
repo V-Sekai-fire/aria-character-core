@@ -198,12 +198,6 @@ defmodule AriaEngine.Domain do
   @spec summary(t()) :: String.t()
   defdelegate summary(domain), to: Utils
 
-  @spec add_porcelain_actions(t()) :: t()
-  defdelegate add_porcelain_actions(domain), to: Utils
-
-  @spec create_complete_domain(String.t()) :: t()
-  defdelegate create_complete_domain(name \\ "complete"), to: Utils
-
   @spec infer_method_name(function()) :: String.t()
   defdelegate infer_method_name(fun), to: Utils
 

@@ -231,9 +231,9 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       status_ready = StructureStringGenerator.generate_random_string("#{seed}_ready")
 
       state = StateV2.new()
-      |> StateV2.set_fact(entity_a, location_pred, location_1)
-      |> StateV2.set_fact(entity_b, location_pred, location_1)
-      |> StateV2.set_fact(entity_c, location_pred, location_2)
+      |> State.set_fact(entity_a, location_pred, location_1)
+      |> State.set_fact(entity_b, location_pred, location_1)
+      |> State.set_fact(entity_c, location_pred, location_2)
 
       # Goals: move entities to different locations (spatial optimization opportunity)
       goals = [
@@ -260,9 +260,9 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       has_pred = StructureStringGenerator.generate_random_string("#{seed}_has")
 
       state = StateV2.new()
-      |> StateV2.set_fact(entity_a, has_pred, "false")
-      |> StateV2.set_fact(entity_b, has_pred, "false")
-      |> StateV2.set_fact(entity_c, has_pred, "false")
+      |> State.set_fact(entity_a, has_pred, "false")
+      |> State.set_fact(entity_b, has_pred, "false")
+      |> State.set_fact(entity_c, has_pred, "false")
 
       # Dependency chain: entity_a -> entity_b -> entity_c -> entity_d
       goals = [
@@ -293,9 +293,9 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       location_x = StructureStringGenerator.generate_random_string("#{seed}_loc_x")
 
       state = StateV2.new()
-      |> StateV2.set_fact(agent_1, location_pred, location_x)
-      |> StateV2.set_fact(agent_2, location_pred, location_x)
-      |> StateV2.set_fact(agent_3, location_pred, location_x)
+      |> State.set_fact(agent_1, location_pred, location_x)
+      |> State.set_fact(agent_2, location_pred, location_x)
+      |> State.set_fact(agent_3, location_pred, location_x)
 
       # Goals: different agents can work on different tasks in parallel
       goals = [
@@ -326,9 +326,9 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       station_z = StructureStringGenerator.generate_random_string("#{seed}_station_z")
 
       state = StateV2.new()
-      |> StateV2.set_fact(worker_1, location_pred, station_z)
-      |> StateV2.set_fact(worker_2, location_pred, station_z)
-      |> StateV2.set_fact(worker_3, location_pred, station_z)
+      |> State.set_fact(worker_1, location_pred, station_z)
+      |> State.set_fact(worker_2, location_pred, station_z)
+      |> State.set_fact(worker_3, location_pred, station_z)
 
       # Goals: workers compete for shared tools (resource optimization opportunity)
       goals = [

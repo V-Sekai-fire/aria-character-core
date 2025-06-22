@@ -17,9 +17,9 @@ defmodule DomainAPI do
   @doc """
   Creates an AriaEngine definition from an existing Domain.
   """
-  @spec from_domain(Domain.Core.t(), [todo_item()], AriaEngine.StateV2.t() | nil) :: t()
+  @spec from_domain(Domain.Core.t(), [todo_item()], State.t() | nil) :: t()
   def from_domain(%AriaEngine.Domain.Core{} = domain, goals, initial_state \\ nil) do
-    initial_state = initial_state || AriaEngine.StateV2.new()
+    initial_state = initial_state || State.new()
 
     # Preserve the method formats exactly as they are in the domain
     # This ensures that method tuples remain as tuples in the engine

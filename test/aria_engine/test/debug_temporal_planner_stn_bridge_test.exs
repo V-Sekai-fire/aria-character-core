@@ -22,10 +22,10 @@ defmodule TemporalPlannerSTNBridgeTest do
     # 2. Define initial state with time
     initial_state =
       StateV2.new()
-      |> StateV2.set_fact("player", "location", "start_location")
-      |> StateV2.set_fact("player", "has", "nothing")
-      |> StateV2.set_fact("item", "location", "middle_location")
-      |> StateV2.set_fact("time", "current", 0)
+      |> State.set_fact("player", "location", "start_location")
+      |> State.set_fact("player", "has", "nothing")
+      |> State.set_fact("item", "location", "middle_location")
+      |> State.set_fact("time", "current", 0)
 
     # 3. Define goals
     goals = [
@@ -68,11 +68,11 @@ defmodule TemporalPlannerSTNBridgeTest do
 
   defp pickup_action(state, [item]) do
     Logger.debug("pickup_action called with state=#{inspect(state)}, args=#{inspect([item])}")
-    player_location = StateV2.get_fact(state, "player", "location")
-    item_location = StateV2.get_fact(state, item, "location")
+    player_location = State.get_fact(state, "player", "location")
+    item_location = State.get_fact(state, item, "location")
 
     if player_location == item_location do
-      StateV2.set_fact(state, "player", "has", item)
+      State.set_fact(state, "player", "has", item)
     else
       false
     end
@@ -83,13 +83,13 @@ defmodule TemporalPlannerSTNBridgeTest do
       "travel_action called with state=#{inspect(state)}, args=#{inspect([from_loc, to_loc, duration_ms])}"
     )
 
-    current_loc = StateV2.get_fact(state, "player", "location")
+    current_loc = State.get_fact(state, "player", "location")
 
     if current_loc == from_loc do
-      new_time = StateV2.get_fact(state, "time", "current") + duration_ms
+      new_time = State.get_fact(state, "time", "current") + duration_ms
 
-      StateV2.set_fact(state, "player", "location", to_loc)
-      |> StateV2.set_fact("time", "current", new_time)
+      State.set_fact(state, "player", "location", to_loc)
+      |> State.set_fact("time", "current", new_time)
     else
       false
     end
@@ -100,11 +100,11 @@ defmodule TemporalPlannerSTNBridgeTest do
       "achieve_has_item_unigoal (predicate-based) called with state=#{inspect(state)}, subject=#{inspect(subject)}, item=#{inspect(item)}"
     )
 
-    if StateV2.get_fact(state, subject, "has") == item do
+    if State.get_fact(state, subject, "has") == item do
       []
     else
-      player_location = StateV2.get_fact(state, subject, "location")
-      item_location = StateV2.get_fact(state, item, "location") || "middle_location"
+      player_location = State.get_fact(state, subject, "location")
+      item_location = State.get_fact(state, item, "location") || "middle_location"
 
       [
         {:travel, [player_location, item_location, 2000]},
@@ -126,10 +126,10 @@ defmodule TemporalPlannerSTNBridgeTest do
       "achieve_location_unigoal (predicate-based) called with state=#{inspect(state)}, subject=#{inspect(subject)}, target_location=#{inspect(target_location)}"
     )
 
-    if StateV2.get_fact(state, subject, "location") == target_location do
+    if State.get_fact(state, subject, "location") == target_location do
       []
     else
-      current_player_loc = StateV2.get_fact(state, subject, "location")
+      current_player_loc = State.get_fact(state, subject, "location")
 
       [
         {:travel, [current_player_loc, target_location, 3000]}

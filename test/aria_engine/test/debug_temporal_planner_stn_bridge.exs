@@ -31,10 +31,10 @@ defmodule TemporalPlannerSTNBridgeDebug do
     # 2. Define initial state with time
     initial_state =
       StateV2.new()
-      |> StateV2.set_fact("location", "player", "start_location")
-      |> StateV2.set_fact("has", "player", "nothing")
+      |> State.set_fact("location", "player", "start_location")
+      |> State.set_fact("has", "player", "nothing")
       # Current time in milliseconds
-      |> StateV2.set_fact("time", "current", 0)
+      |> State.set_fact("time", "current", 0)
 
     # 3. Define goals
     # Goal: Player has the item and is at the end location
@@ -96,11 +96,11 @@ defmodule TemporalPlannerSTNBridgeDebug do
 
   # Non-temporal action: pickup
   defp pickup_action(state, [item]) do
-    player_location = StateV2.get_fact(state, "player", "location")
-    item_location = StateV2.get_fact(state, "location", item)
+    player_location = State.get_fact(state, "player", "location")
+    item_location = State.get_fact(state, "location", item)
 
     if player_location == item_location do
-      StateV2.set_fact(state, "has", "player", "item")
+      State.set_fact(state, "has", "player", "item")
     else
       # Cannot pickup if not in same location
       false
@@ -110,13 +110,13 @@ defmodule TemporalPlannerSTNBridgeDebug do
   # Temporal action: travel
   # This action will return a new state and the duration it took
   defp travel_action(state, [from_loc, to_loc, duration_ms]) do
-    current_loc = StateV2.get_fact(state, "player", "location")
+    current_loc = State.get_fact(state, "player", "location")
 
     if current_loc == from_loc do
-      new_time = StateV2.get_fact(state, "current", "time") + duration_ms
+      new_time = State.get_fact(state, "current", "time") + duration_ms
 
-      StateV2.set_fact(state, "location", "player", "to_loc")
-      |> StateV2.set_fact("time", "current", new_time)
+      State.set_fact(state, "location", "player", "to_loc")
+      |> State.set_fact("time", "current", new_time)
     else
       # Cannot travel from wrong location
       false
@@ -125,11 +125,11 @@ defmodule TemporalPlannerSTNBridgeDebug do
 
   # Unigoal method for "has" goal
   defp achieve_has_item_unigoal(state, ["has", "player", item]) do
-    if StateV2.get_fact(state, "player", "has") == item do
+    if State.get_fact(state, "player", "has") == item do
       # Already has the item, no actions needed
       []
     else
-      player_location = StateV2.get_fact(state, "player", "location")
+      player_location = State.get_fact(state, "player", "location")
       # Assume item is here
       item_location = "middle_location"
 
@@ -144,11 +144,11 @@ defmodule TemporalPlannerSTNBridgeDebug do
 
   # Unigoal method for "location" goal
   defp achieve_location_unigoal(state, ["location", "player", target_location]) do
-    if StateV2.get_fact(state, "player", "location") == target_location do
+    if State.get_fact(state, "player", "location") == target_location do
       # Already at target location, no actions needed
       []
     else
-      current_player_loc = StateV2.get_fact(state, "player", "location")
+      current_player_loc = State.get_fact(state, "player", "location")
       # Plan to travel to the target location
       [
         # Travel to target (3 seconds)
@@ -161,7 +161,7 @@ defmodule TemporalPlannerSTNBridgeDebug do
 
   defp build_stn_from_plan(plan, initial_state) do
     stn = STN.new(time_unit: :millisecond)
-    current_time = StateV2.get_fact(initial_state, "current", "time")
+    current_time = State.get_fact(initial_state, "current", "time")
 
     # Add a time point for the start of the plan
     stn = STN.add_time_point(stn, "t_start_plan_#{current_time}")

@@ -208,7 +208,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
     node = solution_tree.nodes[node_id]
 
     # Check if goal is already satisfied
-    case AriaEngine.StateV2.get_fact(node.state, subject, predicate) do
+    case State.get_fact(node.state, subject, predicate) do
       ^fact_value ->
         mark_goal_satisfied(solution_tree, node_id)
 
