@@ -4,6 +4,18 @@
 **Date:** 2025-06-22  
 **Priority:** HIGH
 
+## ❌ TOMBSTONE WARNING: FALSE COMPLETION CLAIMS
+
+**CRITICAL**: This ADR was previously marked as "Completed" but this was incorrect.
+Significant implementation work remains incomplete. Status corrected to "Active".
+
+**Misleading Claims Removed:**
+- False "Completed" status 
+- Premature completion date (2025-06-22)
+- Inaccurate progress tracking
+
+**Actual Status**: Active development required for Phases 6 & 7 (22% of work remaining).
+
 **Current Implementation Summary:**
 - ✅ ISO 8601 string-based interval constructors implemented (Phase 8)
 - ✅ Unified temporal specification auto-detection working (Phase 8)
@@ -1147,8 +1159,8 @@ end
 **Phase 3**: ✅ COMPLETED - Goal Format Standardization (already using correct format)
 **Phase 4**: ✅ COMPLETED - State Validation Simplification (StateV2.get_fact/3 standard)
 **Phase 5**: ✅ **COMPLETED** → **ADR-132**: Fix Duration Handling Precision Loss
-**Phase 6**: 📋 PLANNED - Action Atom Priority Rule Implementation (task_ prefix)
-**Phase 7**: 📋 PLANNED - Enhanced Metadata Support (capability/resource integration)
+**Phase 6**: ❌ NOT IMPLEMENTED - Action Atom Priority Rule Implementation (task_ prefix)
+**Phase 7**: ❌ NOT IMPLEMENTED - Enhanced Metadata Support (capability/resource integration)
 **Phase 8**: ✅ **COMPLETED** - Interval Module ISO 8601 Refactor (implemented with comprehensive test coverage)
 **Phase 9**: ✅ **COMPLETED** - Default Duration Implementation (missing temporal specs default to PT0S)
 

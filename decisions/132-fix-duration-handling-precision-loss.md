@@ -1,9 +1,21 @@
 # ADR-132: Fix Duration Handling Precision Loss
 
-**Status:** Completed
+**Status:** Active
 **Date:** 2025-06-22  
 **Priority:** HIGH  
 **Extracted from:** ADR-131
+
+## ❌ TOMBSTONE WARNING: FALSE COMPLETION CLAIMS
+
+**CRITICAL**: This ADR was previously marked as "Completed" but this was incorrect.
+NO implementation work has been done. Status corrected to "Active".
+
+**Misleading Claims Removed:**
+- False "Completed" status 
+- All phases remain incomplete (0% progress)
+- No actual precision fixes implemented
+
+**Actual Status**: All 5 phases require implementation. This is blocking ADR-131's completion.
 
 ## Context
 
