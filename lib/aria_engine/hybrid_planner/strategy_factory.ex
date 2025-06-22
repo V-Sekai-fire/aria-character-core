@@ -41,7 +41,8 @@ defmodule HybridPlanner.StrategyFactory do
   defstruct [
     :strategies,
     :configurations,
-    :metadata
+    :metadata,
+    :validation_cache
   ]
 
   @type strategy_type ::
@@ -59,7 +60,8 @@ defmodule HybridPlanner.StrategyFactory do
   @type t :: %__MODULE__{
           strategies: %{strategy_type() => %{strategy_key() => strategy_module()}},
           configurations: %{atom() => strategy_config()},
-          metadata: map()
+          metadata: map(),
+          validation_cache: %{strategy_module() => :ok | {:error, String.t()}}
         }
 
   # ==================== CONSTRUCTOR ====================
@@ -82,7 +84,8 @@ defmodule HybridPlanner.StrategyFactory do
       metadata: %{
         created_at: System.system_time(:millisecond),
         options: opts
-      }
+      },
+      validation_cache: %{}
     }
 
     # Register default strategies
@@ -210,8 +213,15 @@ defmodule HybridPlanner.StrategyFactory do
       # Resolve strategy modules from configuration
       case resolve_strategy_modules(factory, strategy_config) do
         {:ok, strategy_modules} ->
-          coordinator = HybridCoordinatorV2.new(strategy_modules, opts)
-          {:ok, coordinator}
+          # Validate all strategy modules before creating coordinator
+          case validate_all_strategy_modules(factory, strategy_modules) do
+            {:ok, updated_factory} ->
+              coordinator = HybridCoordinatorV2.new(strategy_modules, opts)
+              {:ok, coordinator}
+              
+            {:error, reason} ->
+              {:error, "Strategy validation failed: #{reason}"}
+          end
 
         {:error, reason} ->
           {:error, reason}
@@ -346,6 +356,71 @@ defmodule HybridPlanner.StrategyFactory do
     end
   end
 
+  # ==================== STRATEGY VALIDATION ====================
+
+  @doc """
+  Validate that a strategy module implements the required behavior for its type.
+  
+  Uses deferred validation with caching to avoid compilation order issues.
+  """
+  @spec validate_strategy_module(t(), strategy_type(), strategy_module()) :: 
+          {:ok, t()} | {:error, String.t()}
+  def validate_strategy_module(%__MODULE__{} = factory, strategy_type, strategy_module) do
+    # Check cache first
+    case Map.get(factory.validation_cache, strategy_module) do
+      nil ->
+        # Perform validation and cache result
+        result = perform_strategy_validation(strategy_type, strategy_module)
+        updated_cache = Map.put(factory.validation_cache, strategy_module, result)
+        updated_factory = %{factory | validation_cache: updated_cache}
+        
+        case result do
+          :ok -> {:ok, updated_factory}
+          {:error, reason} -> {:error, reason}
+        end
+        
+      cached_result ->
+        # Return cached result
+        case cached_result do
+          :ok -> {:ok, factory}
+          {:error, reason} -> {:error, reason}
+        end
+    end
+  end
+
+  @doc """
+  Validate all strategy modules in a strategy configuration.
+  
+  This is used during coordinator creation to ensure all strategies are valid.
+  """
+  @spec validate_all_strategy_modules(t(), %{strategy_type() => strategy_module()}) ::
+          {:ok, t()} | {:error, String.t()}
+  def validate_all_strategy_modules(%__MODULE__{} = factory, strategy_modules) do
+    try do
+      # Validate each strategy module
+      {final_factory, final_status} = 
+        Enum.reduce(strategy_modules, {factory, :ok}, fn {strategy_type, strategy_module}, {acc_factory, status} ->
+          case status do
+            :ok ->
+              case validate_strategy_module(acc_factory, strategy_type, strategy_module) do
+                {:ok, updated_factory} -> {updated_factory, :ok}
+                {:error, reason} -> {acc_factory, {:error, reason}}
+              end
+            {:error, _} = error ->
+              {acc_factory, error}
+          end
+        end)
+      
+      case final_status do
+        :ok -> {:ok, final_factory}
+        {:error, reason} -> {:error, reason}
+      end
+    rescue
+      e ->
+        {:error, "Strategy validation failed: #{Exception.message(e)}"}
+    end
+  end
+
   # ==================== PRIVATE HELPER FUNCTIONS ====================
 
   # Register default strategy implementations
@@ -436,6 +511,119 @@ defmodule HybridPlanner.StrategyFactory do
       {:ok, Enum.into(resolved_modules, %{})}
     catch
       {:error, reason} -> {:error, reason}
+    end
+  end
+
+  # Perform actual strategy validation by checking behavior implementation
+  defp perform_strategy_validation(strategy_type, strategy_module) do
+    try do
+      # Check if module exists and is loaded
+      unless Code.ensure_loaded?(strategy_module) do
+        {:error, "Strategy module #{strategy_module} could not be loaded"}
+      else
+        # Get expected behavior module for strategy type
+        behavior_module = get_behavior_module_for_strategy_type(strategy_type)
+        
+        # Check if strategy implements the required behavior
+        case validate_behavior_implementation(strategy_module, behavior_module) do
+          :ok -> :ok
+          {:error, reason} -> {:error, "#{strategy_module} validation failed: #{reason}"}
+        end
+      end
+    rescue
+      e ->
+        {:error, "Strategy validation error: #{Exception.message(e)}"}
+    end
+  end
+
+  # Map strategy types to their corresponding behavior modules
+  defp get_behavior_module_for_strategy_type(strategy_type) do
+    case strategy_type do
+      :planning_strategy -> Strategies.PlanningStrategy
+      :temporal_strategy -> Strategies.TemporalStrategy
+      :state_strategy -> Strategies.StateStrategy
+      :domain_strategy -> Strategies.DomainStrategy
+      :logging_strategy -> Strategies.LoggingStrategy
+      :execution_strategy -> Strategies.ExecutionStrategy
+      _ -> nil
+    end
+  end
+
+  # Validate that a module implements a specific behavior
+  defp validate_behavior_implementation(strategy_module, behavior_module) do
+    if behavior_module == nil do
+      {:error, "Unknown behavior module"}
+    else
+      # Get required callbacks from behavior module
+      required_callbacks = get_behavior_callbacks(behavior_module)
+      
+      # Check if all required callbacks are implemented
+      missing_callbacks = 
+        Enum.filter(required_callbacks, fn {function, arity} ->
+          not function_exported?(strategy_module, function, arity)
+        end)
+
+      if length(missing_callbacks) == 0 do
+        :ok
+      else
+        callback_list = Enum.map(missing_callbacks, fn {f, a} -> "#{f}/#{a}" end)
+        {:error, "Missing required callbacks: #{Enum.join(callback_list, ", ")}"}
+      end
+    end
+  end
+
+  # Get required callbacks for each behavior module
+  defp get_behavior_callbacks(behavior_module) do
+    case behavior_module do
+      Strategies.PlanningStrategy ->
+        [
+          {:plan, 4},
+          {:replan, 5}, 
+          {:validate_plan, 3},
+          {:strategy_info, 0}
+        ]
+      
+      Strategies.TemporalStrategy ->
+        [
+          {:add_temporal_constraints, 3},
+          {:validate_temporal_consistency, 2},
+          {:update_constraints, 3},
+          {:get_temporal_schedule, 2}
+        ]
+      
+      Strategies.StateStrategy ->
+        [
+          {:apply_action, 4},
+          {:query_state, 3},
+          {:create_checkpoint, 3},
+          {:rollback_to_checkpoint, 3}
+        ]
+      
+      Strategies.DomainStrategy ->
+        [
+          {:get_action_metadata, 3},
+          {:get_task_methods, 3},
+          {:get_goal_methods, 3},
+          {:validate_domain, 2}
+        ]
+      
+      Strategies.LoggingStrategy ->
+        [
+          {:log, 4},
+          {:log_progress, 3},
+          {:log_error, 3},
+          {:configure, 2}
+        ]
+      
+      Strategies.ExecutionStrategy ->
+        [
+          {:execute_plan, 4},
+          {:execute_step, 4},
+          {:handle_execution_failure, 4}
+        ]
+      
+      _ ->
+        []
     end
   end
 end
