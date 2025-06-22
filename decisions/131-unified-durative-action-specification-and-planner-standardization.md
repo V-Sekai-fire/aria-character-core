@@ -61,7 +61,19 @@ Domain.from_module(SomeModule)
 
 ### Target State
 
-**Perfect! Now I have the correct unified metadata structure that aligns with the existing entity-agent architecture:**
+**FINAL: Unified entity+capabilities model with tombstoned concepts**
+
+## ❌ TOMBSTONED CONCEPTS (DO NOT IMPLEMENT)
+
+The following concepts were considered but explicitly rejected during design:
+
+1. **❌ TOMBSTONE: `quantity` field in action metadata** - Quantities are state fluents, not action metadata
+2. **❌ TOMBSTONE: Separate `resources` map with `consumables`, `tools`, `locations`** - Everything is entities with capabilities
+3. **❌ TOMBSTONE: `properties` field in entity requirements** - Use capabilities instead
+4. **❌ TOMBSTONE: Separate `requires_agent` field** - Agents are entities with capabilities
+5. **❌ TOMBSTONE: `location` field in action metadata** - Locations are entities in `requires_entities`
+
+## ✅ FINAL CLEAN MODEL
 
 ```elixir
 # FINAL: Unified entity-based metadata structure
@@ -69,18 +81,18 @@ Domain.add_action(:cook_meal, &cook_meal/2, %{
   # Temporal specification (floating duration)
   duration: "PT2H",
   
-  # Entity requirements (unified: agents + other entities)
+  # Unified entity requirements (everything is an entity with capabilities)
   requires_entities: [
     %{type: "agent", capabilities: [:cooking, :menu_planning]},
-    %{type: "oven"},
-    %{type: "workspace"}
+    %{type: "oven", capabilities: [:heating, :baking]},
+    %{type: "kitchen", capabilities: [:workspace]},
+    %{type: "flour", capabilities: [:consumable]},
+    %{type: "eggs", capabilities: [:consumable]},
+    %{type: "mixing_bowl", capabilities: [:container, :reusable]}
   ],
   
-  # Resource requirements (consumables/tools)
-  resources: %{
-    ingredients: ["flour", "eggs"], 
-    tools: ["mixing_bowl"]
-  }
+  # Static documentation (like database column comment)
+  description: "Prepare a meal using specified ingredients and cooking equipment"
 })
 
 # Fixed scheduling example
@@ -89,14 +101,38 @@ Domain.add_action(:meeting, &meeting/2, %{
   start: "2025-06-22T10:00:00Z",
   end: "2025-06-22T11:00:00Z",
   
-  # Entity requirements
+  # Unified entity requirements
   requires_entities: [
-    %{type: "agent", capabilities: [:communication]}
+    %{type: "agent", capabilities: [:communication]},
+    %{type: "conference_room_1", capabilities: [:meeting_space]}
   ],
   
-  # Location specification
-  location: "conference_room_1"
+  description: "Scheduled team meeting in conference room"
 })
+```
+
+**Key insight: Everything is an entity with capabilities that define behavior:**
+- **Agents**: `%{type: "chef", capabilities: [:cooking, :menu_planning]}`
+- **Tools**: `%{type: "oven", capabilities: [:heating, :baking]}`
+- **Locations**: `%{type: "kitchen", capabilities: [:workspace]}`
+- **Consumables**: `%{type: "flour", capabilities: [:consumable]}`
+
+**Quantities are state, not metadata:**
+```elixir
+# Action implementation handles quantities through state
+def cook_meal(state, [meal_type]) do
+  flour_available = StateV2.get_fact(state, "flour", "quantity")
+  eggs_available = StateV2.get_fact(state, "eggs", "quantity")
+  
+  if flour_available >= 2 and eggs_available >= 6 do
+    state
+    |> StateV2.set_fact("flour", "quantity", flour_available - 2)
+    |> StateV2.set_fact("eggs", "quantity", eggs_available - 6)
+    |> StateV2.set_fact("meal", "status", "cooked")
+  else
+    {:error, :insufficient_ingredients}
+  end
+end
 ```
 
 ## Phase 1: Core Duration Support - BOTH Fixed and Floating Schedules
@@ -698,27 +734,13 @@ end
   optional(:start) => String.t(),     # ISO 8601 datetime: "2025-06-22T10:00:00Z"
   optional(:end) => String.t(),       # ISO 8601 datetime: "2025-06-22T11:00:00Z"
   
-  # Agent requirements
-  optional(:requires_agent) => %{
-    optional(:capabilities) => [atom()],
-    optional(:properties) => map()
-  },
-  
-  # Entity requirements
+  # Unified entity requirements (everything is an entity with capabilities)
   optional(:requires_entities) => [%{
     required(:type) => String.t(),
-    optional(:properties) => map()
+    optional(:capabilities) => [atom()]  # What this entity can do
   }],
   
-  # Resource requirements
-  optional(:resources) => %{
-    optional(:consumables) => [String.t()],
-    optional(:tools) => [String.t()],
-    optional(:locations) => [String.t()]
-  },
-  
   # Additional metadata
-  optional(:location) => String.t(),
   optional(:description) => String.t()
 }
 
@@ -1000,19 +1022,27 @@ Domain.add_action(:bake, %DurativeAction{...})  # Complex struct
 ### After (Unified Clear Patterns)
 
 ```elixir
-# Unified action specification with everything
+# Unified action specification with clean entity+capabilities model
 Domain.add_action(:cook_meal, &cook_meal/2, %{
   duration: "PT2H",  # Floating effort
-  requires_agent: %{capabilities: [:cooking, :menu_planning]},
-  requires_entities: [%{type: "oven", properties: %{temperature_max: 400}}],
-  resources: %{ingredients: ["flour", "eggs"], tools: ["mixing_bowl"]}
+  requires_entities: [
+    %{type: "agent", capabilities: [:cooking, :menu_planning]},
+    %{type: "oven", capabilities: [:heating, :baking]},
+    %{type: "flour", capabilities: [:consumable]},
+    %{type: "eggs", capabilities: [:consumable]},
+    %{type: "mixing_bowl", capabilities: [:container, :reusable]}
+  ],
+  description: "Prepare a meal using specified ingredients and cooking equipment"
 })
 
 Domain.add_action(:meeting, &meeting/2, %{
   start: "2025-06-22T10:00:00Z",  # Fixed scheduling
   end: "2025-06-22T11:00:00Z",
-  requires_agent: %{capabilities: [:communication]},
-  location: "conference_room_1"
+  requires_entities: [
+    %{type: "agent", capabilities: [:communication]},
+    %{type: "conference_room_1", capabilities: [:meeting_space]}
+  ],
+  description: "Scheduled team meeting in conference room"
 })
 
 # Standardized goal format (subject-first)
@@ -1024,6 +1054,21 @@ StateV2.get_fact(state, subject, predicate) == required_value
 
 # Temporal state validation (past/future checking)
 StateV2.get_fact(state, subject, predicate, time) == required_value
+
+# Quantities handled in action implementation through state
+def cook_meal(state, [meal_type]) do
+  flour_available = StateV2.get_fact(state, "flour", "quantity")
+  eggs_available = StateV2.get_fact(state, "eggs", "quantity")
+  
+  if flour_available >= 2 and eggs_available >= 6 do
+    state
+    |> StateV2.set_fact("flour", "quantity", flour_available - 2)
+    |> StateV2.set_fact("eggs", "quantity", eggs_available - 6)
+    |> StateV2.set_fact("meal", "status", "cooked")
+  else
+    {:error, :insufficient_ingredients}
+  end
+end
 ```
 
 This unified approach eliminates confusion by providing exactly ONE way to accomplish each task, with clear examples and migration guidance.
