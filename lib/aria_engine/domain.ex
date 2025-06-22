@@ -44,7 +44,7 @@ defmodule AriaEngine.Domain do
   @type named_method :: Core.named_method()
   @type durative_action_name :: Core.durative_action_name()
   @type durative_action :: Core.durative_action()
-  @type state :: AriaEngine.StateV2.t()
+  @type state :: State.t()
 
   @spec new(String.t()) :: t()
   def new(name) do

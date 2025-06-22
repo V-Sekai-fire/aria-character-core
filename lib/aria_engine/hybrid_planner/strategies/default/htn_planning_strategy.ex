@@ -15,7 +15,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   require Logger
 
   @impl true
-  def plan(domain, %AriaEngine.StateV2{} = state, goals, opts \\ []) do
+  def plan(domain, %State{} = state, goals, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do
@@ -53,7 +53,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   end
 
   @impl true
-  def replan(domain, %AriaEngine.StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
+  def replan(domain, %State{} = state, solution_tree, fail_node_id, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do
@@ -100,7 +100,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   end
 
   @impl true
-  def validate_plan(domain, %AriaEngine.StateV2{} = initial_state, solution_tree) do
+  def validate_plan(domain, %State{} = initial_state, solution_tree) do
     try do
       # Extract primitive actions from solution tree
       primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)

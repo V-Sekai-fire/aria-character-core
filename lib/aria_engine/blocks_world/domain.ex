@@ -3,7 +3,7 @@ defmodule AriaEngine.BlocksWorld.Domain do
   Blocks World domain implementation based on GTPyhop blocks_gtn example.
 
   This domain implements the Gupta-Nau optimal blocks-world planning algorithm
-  using predicate-based state representation compatible with AriaEngine.StateV2.
+  using predicate-based state representation compatible with AriaEngine.State.
 
   State Representation:
   - pos: {"pos", ["block_a", "table"]} - block_a is on the table
@@ -16,7 +16,6 @@ defmodule AriaEngine.BlocksWorld.Domain do
   """
 
   alias AriaEngine.Domain
-  alias AriaEngine.StateV2
   alias AriaEngine.BlocksWorld.{Actions, Methods, Helpers, StateUtils}
 
   @doc """
@@ -59,7 +58,7 @@ defmodule AriaEngine.BlocksWorld.Domain do
       ...>   clear: %{"a" => true, "b" => false, "c" => true},
       ...>   holding: %{"hand" => false}
       ...> })
-      %AriaEngine.StateV2{...}
+      %AriaEngine.State{...}
   """
   def create_state(config) do
     StateUtils.from_gtpyhop_format(config)

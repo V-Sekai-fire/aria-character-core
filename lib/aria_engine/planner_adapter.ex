@@ -24,7 +24,7 @@ defmodule AriaEngine.PlannerAdapter do
 
   # Type compatibility with Plan module
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
+  @type goal :: {String.t(), String.t(), State.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
@@ -41,8 +41,8 @@ defmodule AriaEngine.PlannerAdapter do
   This function bypasses the goal-based HybridCoordinator.plan/4 and uses
   direct HTN task decomposition while preserving temporal planning capabilities.
   """
-  @spec plan_tasks(Domain.Core.t(), AriaEngine.StateV2.t(), [task()], keyword()) :: plan_result()
-  def plan_tasks(domain, %AriaEngine.StateV2{} = state, tasks, opts \\ []) do
+  @spec plan_tasks(Domain.Core.t(), State.t(), [task()], keyword()) :: plan_result()
+  def plan_tasks(domain, %State{} = state, tasks, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     # ALWAYS log to prove this function is being called
@@ -90,8 +90,8 @@ defmodule AriaEngine.PlannerAdapter do
 
   Converts between Plan module API and HybridCoordinator API seamlessly.
   """
-  @spec plan(Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
-  def plan(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
+  @spec plan(Domain.Core.t(), State.t(), [todo_item()], keyword()) :: plan_result()
+  def plan(domain, %State{} = state, todos, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do
@@ -121,9 +121,9 @@ defmodule AriaEngine.PlannerAdapter do
   @doc """
   Replan using HybridCoordinator while maintaining Plan.replan/5 API compatibility.
   """
-  @spec replan(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) ::
+  @spec replan(Domain.Core.t(), State.t(), solution_tree(), node_id(), keyword()) ::
           replan_result()
-  def replan(domain, %AriaEngine.StateV2{} = state, solution_tree, fail_node_id, opts \\ []) do
+  def replan(domain, %State{} = state, solution_tree, fail_node_id, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do
@@ -162,9 +162,9 @@ defmodule AriaEngine.PlannerAdapter do
   @doc """
   Validate plan using HybridCoordinator while maintaining Plan.validate_plan/3 API compatibility.
   """
-  @spec validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) ::
-          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
-  def validate_plan(domain, %AriaEngine.StateV2{} = initial_state, plan) do
+  @spec validate_plan(Domain.Core.t(), State.t(), [plan_step()] | solution_tree()) ::
+          {:ok, State.t()} | {:error, String.t()}
+  def validate_plan(domain, %State{} = initial_state, plan) do
     case plan do
       plan when is_list(plan) ->
         # For list of plan steps, use existing Utils validation
@@ -293,7 +293,7 @@ defmodule AriaEngine.PlannerAdapter do
   @doc """
   Test compatibility between Plan and HybridCoordinator results.
   """
-  @spec test_compatibility(Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) ::
+  @spec test_compatibility(Domain.Core.t(), State.t(), [todo_item()], keyword()) ::
           {:compatible | :incompatible, map()}
   def test_compatibility(domain, state, todos, opts \\ []) do
     # This function can be used during migration to validate behavior parity

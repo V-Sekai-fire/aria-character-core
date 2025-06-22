@@ -9,7 +9,7 @@ defmodule AriaEngine.Plan.Backtracking do
   require Logger
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
+  @type goal :: {String.t(), String.t(), State.fact_value()}
   @type plan_step :: {atom(), list()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type node_id :: String.t()
@@ -19,7 +19,7 @@ defmodule AriaEngine.Plan.Backtracking do
           task: term(),
           parent_id: node_id() | nil,
           children_ids: [node_id()],
-          state: AriaEngine.StateV2.t() | nil,
+          state: State.t() | nil,
           visited: boolean(),
           expanded: boolean(),
           method_tried: String.t() | nil,
@@ -52,11 +52,11 @@ defmodule AriaEngine.Plan.Backtracking do
   @doc """
   Replan from a specific failure node in the solution tree.
   """
-  @spec replan(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) ::
+  @spec replan(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), node_id(), keyword()) ::
           replan_result()
   def replan(
         %AriaEngine.Domain.Core{} = domain,
-        %AriaEngine.StateV2{} = state,
+        %State{} = state,
         solution_tree,
         fail_node_id,
         opts \\ []
@@ -274,7 +274,7 @@ defmodule AriaEngine.Plan.Backtracking do
   # Backtrack and retry from a failed node
   @spec backtrack_and_retry(
           AriaEngine.Domain.Core.t(),
-          AriaEngine.StateV2.t(),
+          State.t(),
           solution_tree(),
           node_id(),
           integer(),
@@ -416,7 +416,7 @@ defmodule AriaEngine.Plan.Backtracking do
   # Helper to backtrack up the tree
   @spec backtrack_up_tree(
           AriaEngine.Domain.Core.t(),
-          AriaEngine.StateV2.t(),
+          State.t(),
           solution_tree(),
           node_id(),
           integer(),

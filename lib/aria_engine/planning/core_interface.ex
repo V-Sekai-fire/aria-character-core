@@ -20,7 +20,7 @@ defmodule AriaEngine.Planning.CoreInterface do
   """
   @spec plan(DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
           {:ok, solution_tree()} | {:error, String.t()}
-  def plan(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
+  def plan(domain, %State{} = state, todos, opts \\ []) do
     case AriaEngine.PlannerAdapter.plan(domain, state, todos, opts) do
       {:ok, solution_tree} ->
         {:ok, solution_tree}
@@ -35,7 +35,7 @@ defmodule AriaEngine.Planning.CoreInterface do
   """
   @spec plan_with_tree(DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
           {:ok, solution_tree()} | {:error, String.t()}
-  def plan_with_tree(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
+  def plan_with_tree(domain, %State{} = state, todos, opts \\ []) do
     AriaEngine.PlannerAdapter.plan(domain, state, todos, opts)
   end
 
@@ -44,7 +44,7 @@ defmodule AriaEngine.Planning.CoreInterface do
   """
   @spec execute_plan(DomainBehaviour.t(), Core.state(), [plan_step()]) ::
           {:ok, Core.state()} | {:error, String.t()}
-  def execute_plan(domain, %AriaEngine.StateV2{} = initial_state, plan) do
+  def execute_plan(domain, %State{} = initial_state, plan) do
     AriaEngine.PlannerAdapter.validate_plan(domain, initial_state, plan)
   end
 
@@ -89,7 +89,7 @@ defmodule AriaEngine.Planning.CoreInterface do
   @doc """
   Validate the current plan.
   """
-  @spec validate_plan(Core.t()) :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @spec validate_plan(Core.t()) :: {:ok, State.t()} | {:error, String.t()}
   def validate_plan(%Core{solution_tree: solution_tree} = engine)
       when not is_nil(solution_tree) do
     domain_interface = Internal.to_planner_interface(engine)

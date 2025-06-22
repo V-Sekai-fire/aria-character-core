@@ -27,39 +27,36 @@ defmodule AriaEngine.BlocksWorld.StateUtils do
       }
   """
   def from_gtpyhop_format(config) do
-    facts = %{}
+    state = StateV2.new()
 
     # Convert position facts
-    facts = if Map.has_key?(config, :pos) do
-      pos_facts = Enum.map(config.pos, fn {block, position} ->
-        [block, position]
+    state = if Map.has_key?(config, :pos) do
+      Enum.reduce(config.pos, state, fn {block, position}, acc_state ->
+        StateV2.set_fact(acc_state, block, "pos", position)
       end)
-      Map.put(facts, "pos", pos_facts)
     else
-      facts
+      state
     end
 
     # Convert clear facts
-    facts = if Map.has_key?(config, :clear) do
-      clear_facts = Enum.map(config.clear, fn {block, is_clear} ->
-        [block, to_string(is_clear)]
+    state = if Map.has_key?(config, :clear) do
+      Enum.reduce(config.clear, state, fn {block, is_clear}, acc_state ->
+        StateV2.set_fact(acc_state, block, "clear", to_string(is_clear))
       end)
-      Map.put(facts, "clear", clear_facts)
     else
-      facts
+      state
     end
 
     # Convert holding facts
-    facts = if Map.has_key?(config, :holding) do
-      holding_facts = Enum.map(config.holding, fn {hand, held_block} ->
-        [hand, to_string(held_block)]
+    state = if Map.has_key?(config, :holding) do
+      Enum.reduce(config.holding, state, fn {hand, held_block}, acc_state ->
+        StateV2.set_fact(acc_state, hand, "holding", to_string(held_block))
       end)
-      Map.put(facts, "holding", holding_facts)
     else
-      facts
+      state
     end
 
-    StateV2.new(facts)
+    state
   end
 
   @doc """
@@ -69,11 +66,14 @@ defmodule AriaEngine.BlocksWorld.StateUtils do
 
   ## Examples
 
-      iex> state = AriaEngine.StateV2.new(%{
-      ...>   "pos" => [["a", "b"], ["b", "table"], ["c", "table"]],
-      ...>   "clear" => [["a", "true"], ["b", "false"], ["c", "true"]],
-      ...>   "holding" => [["hand", "false"]]
-      ...> })
+      iex> state = AriaEngine.StateV2.new()
+      ...> |> AriaEngine.StateV2.set_fact("a", "pos", "b")
+      ...> |> AriaEngine.StateV2.set_fact("b", "pos", "table")
+      ...> |> AriaEngine.StateV2.set_fact("c", "pos", "table")
+      ...> |> AriaEngine.StateV2.set_fact("a", "clear", "true")
+      ...> |> AriaEngine.StateV2.set_fact("b", "clear", "false")
+      ...> |> AriaEngine.StateV2.set_fact("c", "clear", "true")
+      ...> |> AriaEngine.StateV2.set_fact("hand", "holding", "false")
       iex> AriaEngine.BlocksWorld.StateUtils.to_gtpyhop_format(state)
       %{
         pos: %{"a" => "b", "b" => "table", "c" => "table"},
@@ -84,10 +84,11 @@ defmodule AriaEngine.BlocksWorld.StateUtils do
   def to_gtpyhop_format(state) do
     result = %{}
 
-    # Convert position facts
-    result = if StateV2.has_predicate?(state, "pos") do
-      pos_facts = StateV2.get_all_facts(state, "pos")
-      pos_map = Enum.into(pos_facts, %{}, fn [block, position] ->
+    # Convert position facts - get all subjects that have "pos" predicate
+    pos_subjects = StateV2.get_subjects_with_predicate(state, "pos")
+    result = if length(pos_subjects) > 0 do
+      pos_map = Enum.into(pos_subjects, %{}, fn block ->
+        position = StateV2.get_fact(state, block, "pos")
         {block, position}
       end)
       Map.put(result, :pos, pos_map)
@@ -95,10 +96,11 @@ defmodule AriaEngine.BlocksWorld.StateUtils do
       result
     end
 
-    # Convert clear facts
-    result = if StateV2.has_predicate?(state, "clear") do
-      clear_facts = StateV2.get_all_facts(state, "clear")
-      clear_map = Enum.into(clear_facts, %{}, fn [block, is_clear_str] ->
+    # Convert clear facts - get all subjects that have "clear" predicate
+    clear_subjects = StateV2.get_subjects_with_predicate(state, "clear")
+    result = if length(clear_subjects) > 0 do
+      clear_map = Enum.into(clear_subjects, %{}, fn block ->
+        is_clear_str = StateV2.get_fact(state, block, "clear")
         is_clear = case is_clear_str do
           "true" -> true
           "false" -> false
@@ -111,10 +113,11 @@ defmodule AriaEngine.BlocksWorld.StateUtils do
       result
     end
 
-    # Convert holding facts
-    result = if StateV2.has_predicate?(state, "holding") do
-      holding_facts = StateV2.get_all_facts(state, "holding")
-      holding_map = Enum.into(holding_facts, %{}, fn [hand, held_block_str] ->
+    # Convert holding facts - get all subjects that have "holding" predicate
+    holding_subjects = StateV2.get_subjects_with_predicate(state, "holding")
+    result = if length(holding_subjects) > 0 do
+      holding_map = Enum.into(holding_subjects, %{}, fn hand ->
+        held_block_str = StateV2.get_fact(state, hand, "holding")
         held_block = case held_block_str do
           "false" -> false
           block -> block

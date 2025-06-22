@@ -8,21 +8,21 @@ defmodule Core do
 
   # Core types
   @type domain :: Domain.Core.t()
-  @type state :: AriaEngine.StateV2.t()
+  @type state :: State.t()
   @type multigoal :: Multigoal.t()
   @type solution_tree :: Plan.solution_tree()
   @type plan_step :: Plan.plan_step()
 
   # Goal and task types
-  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
+  @type goal :: {String.t(), String.t(), State.fact_value()}
   @type task :: {String.t(), list()}
   # Use fully qualified name
   @type todo_item :: Plan.todo_item()
 
   # Function types
-  @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
-  @type task_method_fn :: (AriaEngine.StateV2.t(), list() -> list() | false)
-  @type goal_method_fn :: (AriaEngine.StateV2.t(), list() -> list() | false)
+  @type action_fn :: (State.t(), list() -> State.t() | false)
+  @type task_method_fn :: (State.t(), list() -> list() | false)
+  @type goal_method_fn :: (State.t(), list() -> list() | false)
 
   # Status and execution types
   @type status :: :pending | :planning | :executing | :completed | :failed | :cancelled
@@ -46,8 +46,8 @@ defmodule Core do
           goals: [todo_item()],
 
           # Execution State
-          current_state: AriaEngine.StateV2.t(),
-          initial_state: AriaEngine.StateV2.t(),
+          current_state: State.t(),
+          initial_state: State.t(),
           status: status(),
           solution_tree: solution_tree() | nil,
 
@@ -107,7 +107,7 @@ defmodule Core do
   def new(id, definition \\ %{}) do
     now = DateTime.utc_now()
     # Use fully qualified name
-    initial_state = Map.get(definition, :initial_state, AriaEngine.StateV2.new())
+    initial_state = Map.get(definition, :initial_state, State.new())
 
     %__MODULE__{
       id: id,

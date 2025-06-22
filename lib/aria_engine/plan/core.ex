@@ -12,7 +12,7 @@ defmodule AriaEngine.Plan.Core do
   # alias DomainBehaviour # Removed unused alias
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
+  @type goal :: {String.t(), String.t(), State.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -22,7 +22,7 @@ defmodule AriaEngine.Plan.Core do
           task: todo_item(),
           parent_id: node_id() | nil,
           children_ids: [node_id()],
-          state: AriaEngine.StateV2.t() | nil,
+          state: State.t() | nil,
           visited: boolean(),
           expanded: boolean(),
           method_tried: String.t() | nil,
@@ -67,8 +67,8 @@ defmodule AriaEngine.Plan.Core do
   @doc """
   Main IPyHOP planning function that creates a solution tree to achieve the given todos.
   """
-  @spec plan(AriaEngine.Domain.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
-  def plan(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
+  @spec plan(AriaEngine.Domain.t(), State.t(), [todo_item()], keyword()) :: plan_result()
+  def plan(domain, %State{} = state, todos, opts \\ []) do
     # Logger.debug("Starting IPyHOP planning for ", length(todos), " todos")
     # Commented out to reduce test output noise
 
@@ -84,9 +84,9 @@ defmodule AriaEngine.Plan.Core do
   end
 
   # Core IPyHOP Algorithm (Algorithm 2 from the paper)
-  @spec ipyhop(AriaEngine.Domain.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+  @spec ipyhop(AriaEngine.Domain.t(), State.t(), solution_tree(), keyword()) ::
           plan_result()
-  def ipyhop(domain, %AriaEngine.StateV2{} = current_state, solution_tree, opts) do
+  def ipyhop(domain, %State{} = current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
     max_depth = Keyword.get(opts, :max_depth, @default_max_depth)
 
@@ -96,7 +96,7 @@ defmodule AriaEngine.Plan.Core do
 
   @spec plan_decomposition_loop(
           AriaEngine.Domain.t(),
-          AriaEngine.StateV2.t(),
+          State.t(),
           solution_tree(),
           integer(),
           integer(),
@@ -318,7 +318,7 @@ defmodule AriaEngine.Plan.Core do
   # Try to expand a node
   @spec try_expand_node(
           AriaEngine.Domain.t(),
-          AriaEngine.StateV2.t(),
+          State.t(),
           solution_tree(),
           node_id(),
           integer()
