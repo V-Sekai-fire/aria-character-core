@@ -7,7 +7,7 @@ defmodule AriaCharacterCore.MixProject do
   def project do
     [
       app: :aria_character_core,
-      version: "0.2.0",
+      version: "0.3.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
