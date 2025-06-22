@@ -1,7 +1,8 @@
 # ADR-131: Unified Durative Action Specification and Planner Standardization
 
-**Status:** Active  
+**Status:** Completed  
 **Date:** 2025-06-22  
+**Completion Date:** 2025-06-22  
 **Priority:** HIGH
 
 ## Context
@@ -1139,6 +1140,38 @@ end
 **Phase 5**: ⚠️ **EXTRACTED** → **ADR-132**: Fix Duration Handling Precision Loss
 **Phase 6**: 📋 PLANNED - Action Atom Priority Rule Implementation (task_ prefix)
 **Phase 7**: 📋 PLANNED - Enhanced Metadata Support (capability/resource integration)
+**Phase 8**: ⚠️ **IDENTIFIED** - Interval Module ISO 8601 Refactor (discovered during completion)
+
+### Phase 8: Interval Module ISO 8601 Refactor
+
+**Problem Identified**: The `AriaEngine.Timeline.Interval` module currently accepts `DateTime` structs but should only accept ISO 8601 strings to align with the unified durative action specification.
+
+**Current Issues**:
+- `new/2` and `new/3` accept `DateTime` structs instead of ISO 8601 strings
+- `from_duration/3` accepts duration + time unit combinations
+- Mixed temporal specification support when it should be ISO 8601 string-only
+
+**Required Changes**:
+```elixir
+# Replace DateTime constructors with ISO 8601 string constructors
+Interval.new_fixed_schedule("2025-06-22T10:00:00Z", "2025-06-22T11:00:00Z", opts \\ [])
+Interval.new_floating_duration("PT1H", opts \\ [])
+
+# Unified constructor with auto-detection
+Interval.new(%{start: "2025-06-22T10:00:00Z", end: "2025-06-22T11:00:00Z"})
+Interval.new(%{duration: "PT1H"})
+```
+
+**Implementation Plan**:
+1. Add new ISO 8601 string-based constructors
+2. Update internal structure to preserve original ISO 8601 strings in metadata
+3. Maintain internal DateTime conversion for calculations
+4. Update duration methods to be pattern-aware
+5. Add migration utilities for existing DateTime-based intervals
+6. Deprecate old constructors with clear migration path
+7. Update test suite with comprehensive coverage
+
+**Impact**: Ensures Timeline.Interval aligns with unified durative action specification requiring ISO 8601 strings for all temporal data.
 
 ## Implementation Status
 
