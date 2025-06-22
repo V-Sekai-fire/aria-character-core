@@ -256,7 +256,8 @@ defmodule TemporalPlanner.STNMethod do
         Timeline.new()
 
       1 ->
-        hd(segments) |> Timeline.apply_pc2()
+        # TOMBSTONE: PC-2 algorithm was removed, using Timeline.solve/1 instead
+        hd(segments) |> Timeline.solve()
 
       _segment_count ->
         :not_implemented

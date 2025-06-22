@@ -194,14 +194,20 @@ defmodule Timeline do
   end
 
   @doc """
-  Applies Path Consistency (PC-2) algorithm to the Timeline using MiniZinc solver.
+  TOMBSTONE: PC-2 algorithm was removed in favor of MiniZinc-based STN solving.
+  
+  The Path Consistency (PC-2) algorithm implementation was removed as part of
+  the temporal planning segment closure. Use Timeline.solve/1 instead, which
+  uses the MiniZinc solver for STN constraint solving.
+  
+  Removed: January 2025
+  Replacement: Timeline.solve/1
   """
   @spec apply_pc2(t()) :: t()
   def apply_pc2(timeline) do
-    alias Timeline.Internal.STN.MiniZincSolver
-    
-    solved_stn = MiniZincSolver.solve_stn(timeline.stn)
-    %{timeline | stn: solved_stn}
+    require Logger
+    Logger.warning("TOMBSTONE: apply_pc2/1 is deprecated. Use Timeline.solve/1 instead.")
+    solve(timeline)
   end
 
   # STN Composition Operations

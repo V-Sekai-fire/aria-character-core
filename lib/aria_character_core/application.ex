@@ -9,8 +9,8 @@ defmodule AriaCharacterCore.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # AriaEngine components (planning and AI core)
-      AriaEngine.Membrane.PipelineManager,
+      # TOMBSTONE: AriaEngine.Membrane.PipelineManager was removed during temporal planning segment closure
+      # The membrane pipeline infrastructure was removed in favor of direct hybrid planner integration
 
       # AriaTown components (NPC management)
       AriaTown.PersistenceManager,

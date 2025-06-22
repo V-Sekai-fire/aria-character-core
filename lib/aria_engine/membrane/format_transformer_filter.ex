@@ -88,7 +88,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
       "id" => "mock_response_#{System.unique_integer()}",
       "result" => %{
         "status" => "success",
-        "message" => "Mock MCP response",
+        "message" => "Mock response",
         "data" => payload
       }
     }
