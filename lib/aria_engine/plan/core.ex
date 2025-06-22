@@ -69,7 +69,7 @@ defmodule Plan.Core do
   @doc """
   Main IPyHOP planning function that creates a solution tree to achieve the given todos.
   """
-  @spec plan(Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
+  @spec plan(AriaEngine.Domain.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
   def plan(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
     # Add replan_depth to opts with a default value
     opts = Keyword.put_new(opts, :replan_depth, @default_replan_depth)
@@ -84,7 +84,7 @@ defmodule Plan.Core do
   end
 
   # Core IPyHOP Algorithm (Algorithm 2 from the paper)
-  @spec ipyhop(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+  @spec ipyhop(AriaEngine.Domain.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
           plan_result()
   def ipyhop(domain, %AriaEngine.StateV2{} = current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
@@ -95,7 +95,7 @@ defmodule Plan.Core do
   end
 
   @spec plan_decomposition_loop(
-          Domain.Core.t(),
+          AriaEngine.Domain.t(),
           AriaEngine.StateV2.t(),
           solution_tree(),
           integer(),
@@ -317,7 +317,7 @@ defmodule Plan.Core do
 
   # Try to expand a node
   @spec try_expand_node(
-          Domain.Core.t(),
+          AriaEngine.Domain.t(),
           AriaEngine.StateV2.t(),
           solution_tree(),
           node_id(),
@@ -386,7 +386,7 @@ defmodule Plan.Core do
       Domain.has_action?(domain, action_atom) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
 
-      Domain.Core.get_durative_action(domain, action_atom) ->
+      Domain.get_durative_action(domain, action_atom) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
 
       true ->
@@ -407,7 +407,7 @@ defmodule Plan.Core do
       Domain.has_action?(domain, action_name) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
 
-      Domain.Core.get_durative_action(domain, action_name) ->
+      Domain.get_durative_action(domain, action_name) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
 
       true ->
@@ -440,7 +440,7 @@ defmodule Plan.Core do
   with state updates, supporting refinement-ahead strategies and replanning when
   actions fail during execution.
   """
-  @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+  @spec run_lazy_refineahead(AriaEngine.Domain.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def run_lazy_refineahead(domain, %AriaEngine.StateV2{} = initial_state, solution_tree, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
@@ -489,7 +489,7 @@ defmodule Plan.Core do
   end
 
   # Execute actions incrementally with lazy refinement
-  @spec execute_actions_lazily(Domain.Core.t(), map(), solution_tree(), keyword()) ::
+  @spec execute_actions_lazily(AriaEngine.Domain.t(), map(), solution_tree(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp execute_actions_lazily(domain, context, solution_tree, opts) do
     case context.remaining_actions do
@@ -511,7 +511,7 @@ defmodule Plan.Core do
   end
 
   # Execute single action without refinement-ahead
-  @spec execute_single_action(Domain.Core.t(), map(), plan_step(), [plan_step()], solution_tree(), keyword()) ::
+  @spec execute_single_action(AriaEngine.Domain.t(), map(), plan_step(), [plan_step()], solution_tree(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp execute_single_action(domain, context, action, remaining_actions, solution_tree, opts) do
     if context.verbose > 2 do
@@ -544,7 +544,7 @@ defmodule Plan.Core do
   end
 
   # Execute action with refinement-ahead optimization
-  @spec execute_with_refinement_ahead(Domain.Core.t(), map(), plan_step(), [plan_step()], solution_tree(), keyword()) ::
+  @spec execute_with_refinement_ahead(AriaEngine.Domain.t(), map(), plan_step(), [plan_step()], solution_tree(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp execute_with_refinement_ahead(domain, context, action, remaining_actions, solution_tree, opts) do
     if context.verbose > 2 do
@@ -575,7 +575,7 @@ defmodule Plan.Core do
   end
 
   # Apply refinement optimization based on lookahead
-  @spec apply_refinement_optimization(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()], keyword()) ::
+  @spec apply_refinement_optimization(AriaEngine.Domain.t(), AriaEngine.StateV2.t(), [plan_step()], keyword()) ::
           AriaEngine.StateV2.t()
   defp apply_refinement_optimization(_domain, state, lookahead_actions, _opts) do
     # Simple optimization: if we can detect that upcoming actions will set "optimized" flag,
@@ -593,7 +593,7 @@ defmodule Plan.Core do
   end
 
   # Handle action execution failure with replanning
-  @spec handle_action_failure(Domain.Core.t(), map(), plan_step(), [plan_step()], solution_tree(), String.t(), keyword()) ::
+  @spec handle_action_failure(AriaEngine.Domain.t(), map(), plan_step(), [plan_step()], solution_tree(), String.t(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp handle_action_failure(domain, context, failed_action, remaining_actions, solution_tree, reason, opts) do
     if context.verbose > 1 do
@@ -615,7 +615,7 @@ defmodule Plan.Core do
   end
 
   # Attempt rollback to previous checkpoint and replan
-  @spec attempt_rollback_and_replan(Domain.Core.t(), map(), plan_step(), [plan_step()], solution_tree(), keyword()) ::
+  @spec attempt_rollback_and_replan(AriaEngine.Domain.t(), map(), plan_step(), [plan_step()], solution_tree(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp attempt_rollback_and_replan(domain, context, _failed_action, remaining_actions, _solution_tree, opts) do
     case context.checkpoints do
@@ -653,7 +653,7 @@ defmodule Plan.Core do
   end
 
   # Attempt replanning from current state
-  @spec attempt_replan_from_current_state(Domain.Core.t(), map(), plan_step(), [plan_step()], solution_tree(), keyword()) ::
+  @spec attempt_replan_from_current_state(AriaEngine.Domain.t(), map(), plan_step(), [plan_step()], solution_tree(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp attempt_replan_from_current_state(domain, context, _failed_action, remaining_actions, _solution_tree, opts) do
     if context.verbose > 1 do
@@ -683,7 +683,7 @@ defmodule Plan.Core do
   end
 
   # Apply a single action to the current state
-  @spec apply_action_to_state(Domain.Core.t(), AriaEngine.StateV2.t(), plan_step(), keyword()) ::
+  @spec apply_action_to_state(AriaEngine.Domain.t(), AriaEngine.StateV2.t(), plan_step(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp apply_action_to_state(domain, state, {action_name, args}, opts) when is_atom(action_name) do
     verbose = Keyword.get(opts, :verbose, 0)
@@ -706,7 +706,7 @@ defmodule Plan.Core do
 
       false ->
         # Check if it's a durative action
-        case Domain.Core.get_durative_action(domain, action_name) do
+        case Domain.get_durative_action(domain, action_name) do
           nil ->
             {:error, "Unknown action: #{action_name}"}
           _durative_action ->
