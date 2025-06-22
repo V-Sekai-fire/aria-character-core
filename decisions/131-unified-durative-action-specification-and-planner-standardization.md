@@ -1,16 +1,18 @@
 # ADR-131: Unified Durative Action Specification and Planner Standardization
 
-**Status:** Completed  
+**Status:** Active  
 **Date:** 2025-06-22  
-**Completion Date:** 2025-06-22  
 **Priority:** HIGH
 
-**Final Implementation Summary:**
-- ✅ ISO 8601 string-based interval constructors implemented
-- ✅ Unified temporal specification auto-detection working
-- ✅ Backward compatibility preserved with deprecation warnings
-- ✅ Comprehensive test coverage (16 tests passing)
-- ✅ All existing unified durative action tests still passing (8 tests)
+**Current Implementation Summary:**
+- ✅ ISO 8601 string-based interval constructors implemented (Phase 8)
+- ✅ Unified temporal specification auto-detection working (Phase 8)
+- ✅ Backward compatibility preserved with deprecation warnings (Phase 8)
+- ✅ Comprehensive test coverage (16 tests passing) (Phase 8)
+- ✅ All existing unified durative action tests still passing (8 tests) (Phase 8)
+- ⚠️ Duration precision loss issues identified → ADR-132 (Phase 5)
+- 📋 Action atom priority rule implementation pending (Phase 6)
+- 📋 Enhanced metadata support implementation pending (Phase 7)
 
 ## Context
 
@@ -1147,7 +1149,7 @@ end
 **Phase 5**: ⚠️ **EXTRACTED** → **ADR-132**: Fix Duration Handling Precision Loss
 **Phase 6**: 📋 PLANNED - Action Atom Priority Rule Implementation (task_ prefix)
 **Phase 7**: 📋 PLANNED - Enhanced Metadata Support (capability/resource integration)
-**Phase 8**: ⚠️ **IDENTIFIED** - Interval Module ISO 8601 Refactor (discovered during completion)
+**Phase 8**: ✅ **COMPLETED** - Interval Module ISO 8601 Refactor (implemented with comprehensive test coverage)
 
 ### Phase 8: Interval Module ISO 8601 Refactor
 
@@ -1280,3 +1282,80 @@ end
 ```
 
 This unified approach eliminates confusion by providing exactly ONE way to accomplish each task, with clear examples and migration guidance.
+
+## Next Steps
+
+To complete ADR-131, the following phases need implementation:
+
+### Phase 6: Action Atom Priority Rule Implementation (HIGH PRIORITY)
+**Status:** 📋 PLANNED  
+**Scope:** Implement `task_` prefix resolution logic in Domain module
+
+**Implementation Tasks:**
+- [ ] Update `Domain.resolve/2` to prioritize action atoms over task methods
+- [ ] Implement `task_` prefix approach for zero aliasing conflicts
+- [ ] Add resolution priority tests (action atoms first, then task methods)
+- [ ] Update automatic primitive method creation to use `task_` prefix
+- [ ] Add deprecation warnings for conflicting method names
+- [ ] Update documentation with resolution priority rules
+
+**Success Criteria:**
+- Action atoms (`:move`) resolve before task methods (`"task_move"`)
+- Zero aliasing conflicts between actions and methods
+- Clear error messages for naming conflicts
+- All existing functionality preserved
+
+### Phase 7: Enhanced Metadata Support (MEDIUM PRIORITY)
+**Status:** 📋 PLANNED  
+**Scope:** Full capability/resource integration with unified specification
+
+**Implementation Tasks:**
+- [ ] Implement capability-based entity filtering in Domain module
+- [ ] Add state-based property constraint validation
+- [ ] Create entity requirement matching during planning
+- [ ] Integrate with StateV2 for dynamic property queries
+- [ ] Add comprehensive metadata validation for all entity types
+- [ ] Update planning system to use entity requirements
+
+**Success Criteria:**
+- Entity requirements fully integrated with planning system
+- Capability-based filtering works with state queries
+- Property constraints validated through StateV2
+- Enhanced metadata validation covers all use cases
+
+### Phase 5 Dependency: ADR-132 (HIGH PRIORITY)
+**Status:** ⚠️ ACTIVE (Blocking)  
+**Scope:** Fix duration handling precision loss in AriaEngine.Utils
+
+**Critical Issues:**
+- Microsecond precision lost through unnecessary `round()` calls
+- Timex precision capabilities not utilized
+- Duration conversion chain destroys fractional seconds
+
+**Impact on ADR-131:**
+- Blocks full temporal specification accuracy
+- Affects ISO 8601 duration string precision
+- Required for complete unified temporal support
+
+**Next Action:** Complete ADR-132 implementation before finalizing ADR-131
+
+### Implementation Priority Order
+
+1. **ADR-132 (Duration Precision)** - Unblocks temporal accuracy
+2. **Phase 6 (Action Atom Priority)** - Core infrastructure for method resolution
+3. **Phase 7 (Enhanced Metadata)** - Complete unified specification support
+
+### Completion Timeline
+
+**Target Completion:** When all phases are implemented and tested
+**Estimated Effort:** 2-3 development sessions
+**Dependencies:** ADR-132 completion required first
+
+### Success Verification
+
+ADR-131 will be complete when:
+- [ ] All 8 phases show ✅ COMPLETED status
+- [ ] ADR-132 dependency resolved
+- [ ] Comprehensive test coverage for all unified specification features
+- [ ] All existing functionality preserved with enhanced capabilities
+- [ ] Clear migration path documented for legacy patterns
