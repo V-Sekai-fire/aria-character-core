@@ -215,7 +215,7 @@ defmodule AriaEngine.Multigoal do
 
       iex> state = create_state()
       iex> goals = [["on", "a", "b"], ["on", "b", "table"]]
-      iex> Multigoal.split_multigoal(state, goals)
+      iex> AriaEngine.Multigoal.split_multigoal(state, goals)
       [["on", "a", "b"], ["on", "b", "table"]]
   """
   @spec split_multigoal(AriaEngine.StateV2.t(), list()) :: list() | false
