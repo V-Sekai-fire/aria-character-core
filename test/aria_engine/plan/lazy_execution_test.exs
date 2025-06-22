@@ -16,10 +16,10 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
   alias AriaEngine.Plan.Execution
   alias AriaEngine.Domain
   
-  describe "Plan.Core.run_lazy_refineahead/4 - Basic Functionality" do
+  describe "Plan.Execution.run_lazy_refineahead/4 - Basic Functionality" do
     test "function exists and has correct signature" do
       # This test will fail initially since the function doesn't exist
-      assert function_exported?(Core, :run_lazy_refineahead, 4)
+      assert function_exported?(Execution, :run_lazy_refineahead, 4)
     end
     
     test "executes simple plan with single action successfully" do
@@ -69,7 +69,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
     end
   end
   
-  describe "Plan.Core.run_lazy_refineahead/4 - Failure Handling and Replanning" do
+  describe "Plan.Execution.run_lazy_refineahead/4 - Failure Handling and Replanning" do
     test "handles action failure with replanning" do
       domain = create_failing_domain()
       initial_state = create_unprepared_state()
@@ -121,7 +121,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
     end
   end
   
-  describe "Plan.Core.run_lazy_refineahead/4 - Refinement-Ahead Logic" do
+  describe "Plan.Execution.run_lazy_refineahead/4 - Refinement-Ahead Logic" do
     test "optimizes execution with lookahead" do
       domain = create_optimization_domain()
       initial_state = create_initial_state()
@@ -153,7 +153,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
     end
   end
   
-  describe "Plan.Core.run_lazy_refineahead/4 - State Management" do
+  describe "Plan.Execution.run_lazy_refineahead/4 - State Management" do
     test "maintains execution checkpoints" do
       domain = create_checkpoint_domain()
       initial_state = create_initial_state()
@@ -187,7 +187,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
     end
   end
   
-  describe "Plan.Core.run_lazy_refineahead/4 - Integration with LazyExecutionStrategy" do
+  describe "Plan.Execution.run_lazy_refineahead/4 - Integration with LazyExecutionStrategy" do
     test "integrates correctly with strategy interface" do
       domain = create_simple_domain()
       initial_state = create_initial_state()
@@ -210,8 +210,8 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
   # Helper functions to create test domains and states
   
   defp create_simple_domain do
-    Domain.new("simple_test")
-    |> Domain.add_action(:move, &move_action/2)
+    AriaEngine.Domain.Core.new("simple_test")
+    |> AriaEngine.Domain.Actions.add_action(:move, &move_action/2)
   end
   
   defp create_multi_step_domain do

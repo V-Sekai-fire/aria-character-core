@@ -119,6 +119,10 @@ defmodule AriaEngine.Plan.Execution do
         # Action succeeded, continue with remaining actions
         execute_actions_lazily(domain, new_state, remaining_actions, solution_tree, opts)
 
+      new_state when is_struct(new_state, AriaEngine.StateV2) ->
+        # Action succeeded (legacy format), continue with remaining actions
+        execute_actions_lazily(domain, new_state, remaining_actions, solution_tree, opts)
+
       false ->
         # Action failed - trigger replanning (Run-Lazy-Refineahead core feature)
         if verbose > 2 do
@@ -149,6 +153,9 @@ defmodule AriaEngine.Plan.Execution do
 
               {:error, reason} ->
                 {:error, "Replanning failed: #{reason}"}
+
+              :no_alternatives ->
+                {:error, "No alternative methods available for replanning"}
             end
         end
     end
