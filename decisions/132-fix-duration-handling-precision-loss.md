@@ -1,6 +1,6 @@
 # ADR-132: Fix Duration Handling Precision Loss
 
-**Status:** Active  
+**Status:** Completed
 **Date:** 2025-06-22  
 **Priority:** HIGH  
 **Extracted from:** ADR-131

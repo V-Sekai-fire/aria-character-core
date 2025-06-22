@@ -68,7 +68,6 @@ defmodule AriaEngine.Utils do
 
   def normalize_duration({:fixed, seconds}) when is_number(seconds) do
     seconds
-    |> round()
     |> seconds_to_duration_struct()
     |> duration_struct_to_iso8601()
   end
@@ -77,7 +76,6 @@ defmodule AriaEngine.Utils do
       when is_number(min_seconds) and is_number(max_seconds) do
     # Use the minimum duration for normalization
     min_seconds
-    |> round()
     |> seconds_to_duration_struct()
     |> duration_struct_to_iso8601()
   end
@@ -89,7 +87,6 @@ defmodule AriaEngine.Utils do
 
   def normalize_duration(seconds) when is_number(seconds) do
     seconds
-    |> round()
     |> seconds_to_duration_struct()
     |> duration_struct_to_iso8601()
   end
@@ -99,7 +96,7 @@ defmodule AriaEngine.Utils do
     case Duration.parse(iso8601_string) do
       {:ok, duration} ->
         # Convert Timex duration to our duration struct format, then to ISO8601
-        total_seconds = Duration.to_seconds(duration) |> round()
+        total_seconds = Duration.to_seconds(duration)
 
         total_seconds
         |> seconds_to_duration_struct()
@@ -155,6 +152,9 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.duration_struct_to_iso8601(%{hours: 0, minutes: 5, seconds: 30})
       "PT5M30S"
+
+      iex> AriaEngine.Utils.duration_struct_to_iso8601(%{hours: 1, minutes: 30, seconds: 15.123})
+      "PT1H30M15.123S"
   """
   @spec duration_struct_to_iso8601(map()) :: String.t()
   def duration_struct_to_iso8601(duration) when is_map(duration) do
@@ -162,11 +162,10 @@ defmodule AriaEngine.Utils do
     minutes = Map.get(duration, :minutes, 0)
     seconds = Map.get(duration, :seconds, 0)
 
-    # Create a Time struct and convert to Timex Duration, then to ISO8601 string
-    # Timex.Duration.from_time expects a Time.t() struct
-    time_struct = Time.new!(hours, minutes, seconds)
+    # Convert to total seconds and use Timex.Duration.from_seconds for precision
+    total_seconds = hours * 3600 + minutes * 60 + seconds
 
-    Duration.from_time(time_struct)
+    Duration.from_seconds(total_seconds)
     |> Duration.to_string()
   end
 
@@ -180,8 +179,11 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.duration_struct_to_seconds(%{hours: 0, minutes: 5, seconds: 0})
       300
+
+      iex> AriaEngine.Utils.duration_struct_to_seconds(%{hours: 1, minutes: 30, seconds: 15.123})
+      5415.123
   """
-  @spec duration_struct_to_seconds(map()) :: integer()
+  @spec duration_struct_to_seconds(map()) :: number()
   def duration_struct_to_seconds(duration) when is_map(duration) do
     hours = Map.get(duration, :hours, 0)
     minutes = Map.get(duration, :minutes, 0)
@@ -229,13 +231,16 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.seconds_to_duration_struct(300)
       %{hours: 0, minutes: 5, seconds: 0}
+
+      iex> AriaEngine.Utils.seconds_to_duration_struct(3665.123)
+      %{hours: 1, minutes: 1, seconds: 5.123}
   """
-  @spec seconds_to_duration_struct(integer()) :: map()
-  def seconds_to_duration_struct(total_seconds) when is_integer(total_seconds) do
-    hours = div(total_seconds, 3600)
-    remaining_seconds = rem(total_seconds, 3600)
-    minutes = div(remaining_seconds, 60)
-    seconds = rem(remaining_seconds, 60)
+  @spec seconds_to_duration_struct(number()) :: map()
+  def seconds_to_duration_struct(total_seconds) when is_number(total_seconds) do
+    hours = trunc(total_seconds / 3600)
+    remaining_seconds = total_seconds - (hours * 3600)
+    minutes = trunc(remaining_seconds / 60)
+    seconds = remaining_seconds - (minutes * 60)
 
     %{
       hours: hours,
@@ -254,6 +259,9 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.valid_duration?(%{hours: -1, minutes: 30, seconds: 0})
       false
+
+      iex> AriaEngine.Utils.valid_duration?(%{hours: 1, minutes: 30, seconds: 15.123})
+      true
   """
   @spec valid_duration?(map()) :: boolean()
   def valid_duration?(duration) when is_map(duration) do
@@ -263,7 +271,7 @@ defmodule AriaEngine.Utils do
 
     is_integer(hours) and hours >= 0 and
       is_integer(minutes) and minutes >= 0 and minutes < 60 and
-      is_integer(seconds) and seconds >= 0 and seconds < 60
+      is_number(seconds) and seconds >= 0 and seconds < 60
   end
 
   def valid_duration?(_), do: false
@@ -279,11 +287,11 @@ defmodule AriaEngine.Utils do
       iex> AriaEngine.Utils.iso8601_to_seconds("PT5M30S")
       330
   """
-  @spec iso8601_to_seconds(String.t()) :: integer()
+  @spec iso8601_to_seconds(String.t()) :: number()
   def iso8601_to_seconds(iso8601_string) when is_binary(iso8601_string) do
     case Duration.parse(iso8601_string) do
       {:ok, duration} ->
-        Duration.to_seconds(duration) |> round()
+        Duration.to_seconds(duration)
 
       {:error, _} ->
         # Default fallback
