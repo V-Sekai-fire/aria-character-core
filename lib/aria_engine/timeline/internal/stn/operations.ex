@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.Internal.STN.Operations do
+defmodule AriaEngine.Timeline.Internal.STN.Operations do
   # This module is part of the internal STN implementation
   @moduledoc false
 
-  alias Timeline.Internal.STN
-  alias Timeline.Internal.STN.MiniZincSolver
+  alias AriaEngine.Timeline.Internal.STN
+  alias AriaEngine.Timeline.Internal.STN.MiniZincSolver
 
   # alias AriaEngine.ConvergenceFlow
 

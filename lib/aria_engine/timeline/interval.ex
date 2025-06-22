@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.Interval do
+defmodule AriaEngine.Timeline.Interval do
   @moduledoc """
   Represents a temporal interval with start and end points using DateTime with timezone information.
 
@@ -33,7 +33,7 @@ defmodule Timeline.Interval do
   to any time unit as needed.
   """
 
-  alias Timeline.AgentEntity
+  alias AriaEngine.Timeline.AgentEntity
 
   @type id :: String.t()
   @type t :: %__MODULE__{

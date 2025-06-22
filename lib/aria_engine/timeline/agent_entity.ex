@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.AgentEntity do
+defmodule AriaEngine.Timeline.AgentEntity do
   @moduledoc """
   Defines the semantic distinction between agents and entities in the timeline system.
 
@@ -59,13 +59,13 @@ defmodule Timeline.AgentEntity do
   - ADR-078: Timeline Module PC-2 STN Implementation
   """
 
-  alias Timeline.AgentEntity.AgentManagement
-  alias Timeline.AgentEntity.EntityManagement
-  alias Timeline.AgentEntity.CapabilityManagement
-  alias Timeline.AgentEntity.StateTransitions
-  alias Timeline.AgentEntity.PropertyManagement
-  alias Timeline.AgentEntity.OwnershipManagement
-  alias Timeline.AgentEntity.Validation
+  alias AriaEngine.Timeline.AgentEntity.AgentManagement
+  alias AriaEngine.Timeline.AgentEntity.EntityManagement
+  alias AriaEngine.Timeline.AgentEntity.CapabilityManagement
+  alias AriaEngine.Timeline.AgentEntity.StateTransitions
+  alias AriaEngine.Timeline.AgentEntity.PropertyManagement
+  alias AriaEngine.Timeline.AgentEntity.OwnershipManagement
+  alias AriaEngine.Timeline.AgentEntity.Validation
 
   @type agent :: %{
           type: :agent,

@@ -289,9 +289,9 @@ defmodule HybridPlanner.StrategyRegistry do
 
   defp get_action_duration(action_name, domain) do
     case Domain.get_action_metadata(domain, action_name) do
-      %{duration: %Timeline.Interval{} = interval} ->
+      %{duration: %AriaEngine.Timeline.Interval{} = interval} ->
         # If duration is an Interval struct, use its duration_ms as fixed min/max
-        fixed_duration = Timeline.Interval.duration_ms(interval)
+        fixed_duration = AriaEngine.Timeline.Interval.duration_ms(interval)
         {fixed_duration, fixed_duration}
 
       %{duration: {min, max}} when is_integer(min) and is_integer(max) and min <= max ->

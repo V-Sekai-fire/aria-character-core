@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.Internal.STN do
+defmodule AriaEngine.Timeline.Internal.STN do
   @moduledoc false
 
   # This module is part of the internal Timeline implementation.
@@ -76,10 +76,10 @@ defmodule Timeline.Internal.STN do
   # - "Parallelizing Constraint Satisfaction" for segmentation approaches
   # - [AWS Builders Library - Reliability and Constant Work](https://aws.amazon.com/builders-library/reliability-and-constant-work/)
 
-  alias Timeline.Internal.STN.Core
-  alias Timeline.Internal.STN.MiniZincSolver
-  alias Timeline.Internal.STN.Units
-  alias Timeline.Internal.STN.Operations
+  alias AriaEngine.Timeline.Internal.STN.Core
+  alias AriaEngine.Timeline.Internal.STN.MiniZincSolver
+  alias AriaEngine.Timeline.Internal.STN.Units
+  alias AriaEngine.Timeline.Internal.STN.Operations
 
   # {min_distance, max_distance}
   @type constraint :: {number(), number()}

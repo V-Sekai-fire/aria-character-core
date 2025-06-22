@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.IntervalRelations do
+defmodule AriaEngine.Timeline.IntervalRelations do
   @moduledoc """
   Implementation of Allen's Interval Algebra for temporal reasoning.
 
@@ -29,7 +29,7 @@ defmodule Timeline.IntervalRelations do
 
   ## Examples
 
-      iex> alias Timeline.{Interval, IntervalRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 13:00:00], ~N[2025-01-01 15:00:00])
       iex> IntervalRelations.before?(i1, i2)
@@ -39,7 +39,7 @@ defmodule Timeline.IntervalRelations do
 
   Using the pipe operator for functional composition:
 
-      iex> alias Timeline.{Interval, IntervalRelations}
+      iex> alias AriaEngine.Timeline.{Interval, IntervalRelations}
       iex> i1 = Interval.new(~N[2025-01-01 10:00:00], ~N[2025-01-01 12:00:00])
       iex> i2 = Interval.new(~N[2025-01-01 11:00:00], ~N[2025-01-01 13:00:00])
       iex> IntervalRelations.relation(i1, i2) |> IntervalRelations.valid_relation?()
@@ -52,7 +52,7 @@ defmodule Timeline.IntervalRelations do
   - ADR-046: Interval Notation Usability
   """
 
-  alias Timeline.Interval
+  alias AriaEngine.Timeline.Interval
 
   # :en, :es, :fr, :de, etc.
   @type locale :: atom()

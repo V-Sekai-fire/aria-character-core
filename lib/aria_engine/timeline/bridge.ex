@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Timeline.Bridge do
+defmodule AriaEngine.Timeline.Bridge do
   @moduledoc """
   Represents a bridge point in a Timeline where execution can pause, make decisions, or branch.
 
