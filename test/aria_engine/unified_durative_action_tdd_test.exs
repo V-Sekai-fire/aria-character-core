@@ -76,10 +76,20 @@ defmodule AriaEngine.UnifiedDurativeActionTDDTest do
     test "error message clarity and specificity" do
       domain = Domain.new("test_domain")
 
-      # Missing temporal specification
-      assert_raise ArgumentError, ~r/must have at least one temporal specification/, fn ->
-        Domain.add_action(domain, :no_temporal, &test_action/2, %{
-          agent: "robot"
+      # Missing temporal specification should default to PT0S (per ADR-131)
+      domain = Domain.add_action(domain, :no_temporal, &test_action/2, %{
+        agent: "robot"
+      })
+
+      metadata = Domain.get_action_metadata(domain, :no_temporal)
+      # Should default to zero duration
+      assert %AriaEngine.Timeline.Interval{} = metadata.duration
+
+      # Invalid temporal specification mixing should raise error
+      assert_raise ArgumentError, ~r/cannot mix duration with start\/end/, fn ->
+        Domain.add_action(domain, :mixed_temporal, &test_action/2, %{
+          duration: "PT1H",
+          start: "2025-06-22T10:00:00Z"
         })
       end
     end
