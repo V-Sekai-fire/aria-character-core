@@ -7,6 +7,17 @@ defmodule AriaEngine.SoftwareDevelopment.Domain do
   alias AriaEngine.Domain
   alias AriaEngine.StateV2
 
+  def actions() do
+    [
+      {:implement_module, &implement_module/2, %{duration: "PT8H"}},
+      {:integrate_modules, &integrate_modules/2, %{duration: "PT16H"}},
+      {:test_implementation, &test_implementation/2, %{duration: "PT4H"}},
+      {:document_module, &document_module/2, %{duration: "PT2H"}},
+      {:refactor_module, &refactor_module/2, %{duration: "PT8H"}},
+      {:verify_typespecs, &verify_typespecs/2, %{duration: "PT1H"}}
+    ]
+  end
+
   def build() do
     Domain.new("software_development")
     |> Domain.add_action(:implement_module, &implement_module/2, %{duration: "PT8H"})

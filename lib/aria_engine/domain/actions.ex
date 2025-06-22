@@ -20,19 +20,20 @@ defmodule AriaEngine.Domain.Actions do
   # - Entity requirements: structured entity specifications
   @spec validate_action_metadata(map()) :: map()
   defp validate_action_metadata(metadata) when is_map(metadata) do
-    # Check temporal specification validity
-    validate_temporal_specification(metadata)
+    # Check temporal specification validity and get updated metadata
+    updated_metadata = validate_temporal_specification(metadata)
 
     # Validate entity requirements if present
-    if Map.has_key?(metadata, :requires_entities) do
-      validate_entity_requirements(metadata.requires_entities)
+    if Map.has_key?(updated_metadata, :requires_entities) do
+      validate_entity_requirements(updated_metadata.requires_entities)
     end
 
-    metadata
+    updated_metadata
   end
 
   # Validates temporal specification according to unified durative action spec
-  @spec validate_temporal_specification(map()) :: :ok
+  # Returns updated metadata with default duration if none provided
+  @spec validate_temporal_specification(map()) :: map()
   defp validate_temporal_specification(metadata) do
     has_duration = Map.has_key?(metadata, :duration)
     has_start = Map.has_key?(metadata, :start)
@@ -43,9 +44,9 @@ defmodule AriaEngine.Domain.Actions do
       has_duration and (has_start or has_end) ->
         raise ArgumentError, "invalid temporal specification: cannot mix duration with start/end times"
 
-      # Case 2: Must have at least one temporal specification
+      # Case 2: No temporal specification - default to zero duration
       not (has_duration or has_start or has_end) ->
-        raise ArgumentError, "must have at least one temporal specification (duration, start, or end)"
+        Map.put(metadata, :duration, "PT0S")
 
       # Case 3: Validate ISO 8601 datetime formats for start/end
       has_start ->
@@ -54,17 +55,17 @@ defmodule AriaEngine.Domain.Actions do
           validate_iso8601_datetime(metadata.end, "end")
           validate_start_before_end(metadata.start, metadata.end)
         end
-        :ok
+        metadata
 
       # Case 4: Validate end time only
       has_end ->
         validate_iso8601_datetime(metadata.end, "end")
-        :ok
+        metadata
 
       # Case 5: Duration only (existing floating duration support)
       has_duration ->
         validate_duration_format(metadata.duration)
-        :ok
+        metadata
     end
   end
 

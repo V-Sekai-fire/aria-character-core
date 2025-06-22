@@ -15,10 +15,10 @@ defmodule PlanningTest do
       state
       |> StateV2.update_fact("player", "location", to)
       |> StateV2.update_fact("player", "previous_location", from)
-    end)
+    end, %{duration: "PT1M"})
     |> Domain.add_action(:pickup, fn state, [item] ->
       StateV2.update_fact(state, "player", "has", item)
-    end)
+    end, %{duration: "PT30S"})
     |> Domain.add_task_method("get_item", "basic_get", fn _state, [item] ->
       [{"move", ["room2"]}, {"pickup", [item]}]
     end)

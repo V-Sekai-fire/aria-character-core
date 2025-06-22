@@ -303,7 +303,7 @@ Domain.add_action(:meeting, &meeting/2, %{
 - ✅ `start` only (open-ended interval - starts at time, no end constraint)
 - ✅ `end` only (open-ended interval - must finish by time, no start constraint)
 - ❌ Cannot mix `duration` with `start`/`end`
-- ❌ Must have at least one temporal specification (`duration` OR `start` OR `end`)
+- ✅ **NEW**: Missing temporal specification defaults to `duration: "PT0S"` (zero duration floating)
 
 **TIMEX INTEGRATION REQUIREMENT:**
 All temporal validation and parsing MUST use Timex instead of Elixir's base DateTime functionality for enhanced ISO 8601 support, better timezone handling, and more robust duration parsing.
@@ -1150,6 +1150,7 @@ end
 **Phase 6**: 📋 PLANNED - Action Atom Priority Rule Implementation (task_ prefix)
 **Phase 7**: 📋 PLANNED - Enhanced Metadata Support (capability/resource integration)
 **Phase 8**: ✅ **COMPLETED** - Interval Module ISO 8601 Refactor (implemented with comprehensive test coverage)
+**Phase 9**: ✅ **COMPLETED** - Default Duration Implementation (missing temporal specs default to PT0S)
 
 ### Phase 8: Interval Module ISO 8601 Refactor
 

@@ -44,12 +44,15 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
         })
       end
 
-      # Must have at least one temporal specification
-      assert_raise ArgumentError, ~r/must have at least one temporal specification/, fn ->
-        Domain.add_action(domain, :invalid_action, &test_action/2, %{
-          description: "No temporal info"
-        })
-      end
+      # Missing temporal specification now defaults to PT0S duration
+      domain = Domain.add_action(domain, :default_duration_action, &test_action/2, %{
+        description: "No temporal info - should default to PT0S"
+      })
+
+      # Verify action was added with default duration
+      assert Domain.has_action?(domain, :default_duration_action)
+      metadata = Domain.get_action_metadata(domain, :default_duration_action)
+      assert %AriaEngine.Timeline.Interval{} = metadata.duration
     end
 
     test "validates ISO 8601 datetime format" do
