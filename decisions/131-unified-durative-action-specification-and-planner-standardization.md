@@ -61,25 +61,81 @@ Domain.from_module(SomeModule)
 
 ### Target State
 
-**ONE unified way to define durative actions with entities, capabilities, and resources:**
+**Perfect! Now I have the correct unified metadata structure that aligns with the existing entity-agent architecture:**
 
 ```elixir
-# Floating duration (effort-based scheduling)
+# FINAL: Unified entity-based metadata structure
 Domain.add_action(:cook_meal, &cook_meal/2, %{
+  # Temporal specification (floating duration)
   duration: "PT2H",
-  requires_agent: %{capabilities: [:cooking, :menu_planning]},
-  requires_entities: [%{type: "oven", properties: %{temperature_max: 400}}],
-  resources: %{ingredients: ["flour", "eggs"], tools: ["mixing_bowl"]}
+  
+  # Entity requirements (unified: agents + other entities)
+  requires_entities: [
+    %{type: "agent", capabilities: [:cooking, :menu_planning]},
+    %{type: "oven"},
+    %{type: "workspace"}
+  ],
+  
+  # Resource requirements (consumables/tools)
+  resources: %{
+    ingredients: ["flour", "eggs"], 
+    tools: ["mixing_bowl"]
+  }
 })
 
-# Fixed time interval (scheduled actions)
+# Fixed scheduling example
 Domain.add_action(:meeting, &meeting/2, %{
+  # Temporal specification (fixed interval)
   start: "2025-06-22T10:00:00Z",
-  end: "2025-06-22T11:00:00Z", 
-  requires_agent: %{capabilities: [:communication]},
+  end: "2025-06-22T11:00:00Z",
+  
+  # Entity requirements
+  requires_entities: [
+    %{type: "agent", capabilities: [:communication]}
+  ],
+  
+  # Location specification
   location: "conference_room_1"
 })
 ```
+
+## Phase 1: Core Duration Support - BOTH Fixed and Floating Schedules
+
+**CURRENT STATE:**
+- ✅ **Floating Duration Support**: `duration: "PT2H"` (ISO 8601 duration strings) - ALREADY WORKS
+- ❌ **Fixed Schedule Support**: `start: "2025-06-22T10:00:00Z", end: "2025-06-22T11:00:00Z"` (ISO 8601 datetime strings) - MISSING
+
+**REQUIRED IMPLEMENTATION:**
+Must support BOTH scheduling patterns with unified validation:
+
+```elixir
+# Pattern 1: Floating Duration (effort-based scheduling) - EXISTING ✅
+Domain.add_action(:cook_meal, &cook_meal/2, %{
+  duration: "PT2H",  # ISO 8601 duration string - ALREADY SUPPORTED
+  requires_entities: [
+    %{type: "agent", capabilities: [:cooking, :menu_planning]},
+    %{type: "oven"}
+  ],
+  resources: %{ingredients: ["flour", "eggs"], tools: ["mixing_bowl"]}
+})
+
+# Pattern 2: Fixed Schedule (time-based scheduling) - NEW ❌
+Domain.add_action(:meeting, &meeting/2, %{
+  start: "2025-06-22T10:00:00Z",  # ISO 8601 datetime string - NEEDS IMPLEMENTATION
+  end: "2025-06-22T11:00:00Z",    # ISO 8601 datetime string - NEEDS IMPLEMENTATION
+  requires_entities: [
+    %{type: "agent", capabilities: [:communication]}
+  ],
+  location: "conference_room_1"
+})
+```
+
+**VALIDATION RULES:**
+- ✅ `duration` only (floating effort)
+- ✅ `start` AND `end` only (fixed schedule)  
+- ❌ Cannot mix `duration` with `start`/`end`
+- ❌ Cannot have `start` without `end`
+- ❌ Cannot have `end` without `start`
 
 **Standardized formats:**
 - **Goals**: ONLY `{subject, predicate, value}` format
@@ -270,26 +326,80 @@ end
 
 ## Implementation Strategy
 
-### Step 1: Duration Support Extension
-1. Add ISO 8601 datetime string support for fixed intervals
-2. Maintain existing ISO 8601 duration string support
-3. Create unified validation and conversion logic
+### Approach Requirements
+1. **Clean Evolution**: Prioritize evolving codebase with all tests and warnings resolved over internal backward compatibility
+2. **Testing Strategy**: Comprehensive unit tests for each phase with zero warnings/errors
+3. **Sequential Implementation**: One phase at a time with complete test suite passing and clean compilation
+4. **Phase 1 Priority**: Core Duration Support must support both fixed schedule (ISO 8601 datetime strings) and floating duration schedule (ISO 8601 duration strings)
 
-### Step 2: Entity/Capability/Resource Integration
-1. Extend action metadata to support requirements
-2. Create validation logic for agent capabilities
-3. Add entity and resource requirement checking
-4. Integrate with planning system for resource allocation
+### Current State Analysis (June 22, 2025)
 
-### Step 3: Format Standardization
-1. Audit and convert goal formats to subject-first
-2. Simplify state validation to direct fact checking
-3. Remove deprecated validation functions
-4. Update all examples and documentation
+**✅ ALREADY IMPLEMENTED:**
+- **Goal Format Standardization**: All 87 test instances use correct `{subject, predicate, value}` format
+- **State Validation**: `StateV2.get_fact/3` is already the standard approach throughout codebase
+- **Floating Duration Support**: ISO 8601 duration strings (`"PT8H"`) already supported via `Interval.from_iso8601_duration/1`
 
-### Current Focus: Phase 1 - Duration Support Extension
+**❌ MISSING IMPLEMENTATION:**
+- **Fixed Schedule Support**: ISO 8601 datetime strings for `start`/`end` times not supported
+- **Unified Metadata Validation**: No validation for agent/entity/resource requirements
+- **Action Atom Priority Rule**: Automatic primitive method creation causes aliasing conflicts
+- **Deprecated Function Cleanup**: Some legacy validation functions still present
 
-**Rationale**: Need to complete the missing start/end time variation before building the unified specification system on top of it.
+### Step 1: Phase 1 - Core Duration Support Extension
+**Status**: ⏳ IN PROGRESS
+**Priority**: HIGH
+
+1. Add ISO 8601 datetime string support for fixed intervals (`start`/`end` metadata)
+2. Maintain existing ISO 8601 duration string support (`duration` metadata)
+3. Create unified temporal specification validation (duration XOR start+end)
+4. Comprehensive unit tests for both fixed and floating duration patterns
+
+### Step 2: Phase 2 - Unified Metadata Validation
+**Status**: 📋 PLANNED
+**Priority**: HIGH
+
+1. Extend action metadata to support `requires_agent`, `requires_entities`, `resources`
+2. Create comprehensive validation logic with type specifications
+3. Add runtime validation with clear error messages
+4. Integrate validation into `Domain.add_action/4`
+
+### Step 3: Phase 3 - Goal Format Standardization
+**Status**: ✅ COMPLETED
+**Priority**: ~~HIGH~~ COMPLETE
+
+~~1. Audit and convert goal formats to subject-first~~ ✅ Already using `{subject, predicate, value}` format
+~~2. Add deprecation warnings for old format~~ ✅ No old format found in codebase
+~~3. Update documentation and examples~~ ✅ All examples already use correct format
+
+### Step 4: Phase 4 - State Validation Simplification  
+**Status**: ✅ MOSTLY COMPLETE
+**Priority**: ~~MEDIUM~~ LOW
+
+~~1. Remove `validate_temporal_condition/2` function~~ ⚠️ Still present but not widely used
+~~2. Replace all with direct `StateV2.get_fact/3` calls~~ ✅ Already standard practice
+~~3. Update condition validation logic~~ ✅ `StateV2.evaluate_condition/2` handles complex cases
+
+### Step 5: Phase 5 - Action Atom Priority Rule Implementation
+**Status**: 📋 PLANNED  
+**Priority**: HIGH
+
+1. Implement `task_` prefix for automatic primitive method creation
+2. Fix aliasing conflicts between action atoms and task method strings
+3. Update method resolution logic for zero conflicts
+4. Comprehensive tests for action/task namespace separation
+
+### Step 6: Phase 6 - Enhanced Metadata Support
+**Status**: 📋 PLANNED
+**Priority**: MEDIUM
+
+1. Add agent capability requirement checking
+2. Add entity and resource requirement validation
+3. Integrate with planning system for resource allocation
+4. Update all domain examples with new metadata patterns
+
+### Current Focus: Phase 1 - Core Duration Support Extension
+
+**Rationale**: Complete the missing ISO 8601 datetime string support for fixed scheduling before building unified specification system. This enables both floating duration (effort-based) and fixed schedule (time-based) action definitions.
 
 ## Success Criteria
 
@@ -857,12 +967,12 @@ end
 
 ## Progress Tracking
 
-**Phase 1**: ⏳ In Progress - Duration support extension
-**Phase 2**: 📋 Planned - Entity/capability/resource specification  
-**Phase 3**: 📋 Planned - Goal format standardization
-**Phase 4**: 📋 Planned - State validation simplification
-**Phase 5**: 📋 Planned - Planning API standardization
-**Phase 6**: 📋 Planned - Action definition standardization
+**Phase 1**: ⏳ IN PROGRESS - Core Duration Support (missing ISO 8601 datetime strings)
+**Phase 2**: 📋 PLANNED - Unified Metadata Validation (agent/entity/resource requirements)  
+**Phase 3**: ✅ COMPLETED - Goal Format Standardization (already using correct format)
+**Phase 4**: ✅ MOSTLY COMPLETE - State Validation Simplification (StateV2.get_fact/3 standard)
+**Phase 5**: 📋 PLANNED - Action Atom Priority Rule Implementation (task_ prefix)
+**Phase 6**: 📋 PLANNED - Enhanced Metadata Support (capability/resource integration)
 
 ## Examples
 
