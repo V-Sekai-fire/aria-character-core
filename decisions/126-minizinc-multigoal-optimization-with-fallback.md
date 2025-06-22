@@ -400,8 +400,41 @@ AriaEngine.Multigoal.Telemetry.track_optimization/2
 - **Production Monitoring**: Real-time performance tracking and alerting
 - **Feature Flags**: Runtime control to disable optimization if needed
 
+## Scope and Boundaries
+
+### What This ADR Covers (Static Multigoal Optimization)
+
+**Primary Responsibility:**
+- **Pre-execution multigoal optimization** using MiniZinc constraint programming
+- **Static constraint modeling** based on initial state and predicted execution patterns
+- **Template-based optimization** with fixed constraint parameters
+- **Fallback mechanisms** from optimization to naive splitting
+
+**Specific Implementation Areas:**
+- `AriaEngine.Multigoal.Optimizer.optimize_multigoal/3` for static optimization
+- MiniZinc template system with static constraint generation
+- Domain registration and method blacklisting for static optimization
+- Performance benchmarking and validation of static optimization improvements
+
+### What This ADR Does NOT Cover (Tombstoned Responsibilities)
+
+**Runtime Optimization (→ ADR-127):**
+- ❌ **Runtime-informed re-optimization** during lazy execution
+- ❌ **Dynamic constraint adjustment** based on execution performance
+- ❌ **Execution context integration** with multigoal optimization
+- ❌ **Adaptive optimization** using method failure patterns and performance metrics
+
+**Execution Engine Integration (→ ADR-125):**
+- ❌ **Lazy execution implementation** and backtracking logic
+- ❌ **Plan execution strategies** and execution context management
+- ❌ **Runtime state management** during plan execution
+
+**Rationale for Boundaries:**
+Static optimization provides excellent baseline performance improvements (18.8-50% efficiency gains) while maintaining simplicity and reliability. Runtime optimization (ADR-127) builds on this foundation to provide adaptive intelligence during execution, but requires the static optimization system to be stable and proven first.
+
 ## Related ADRs
 
+- **ADR-127**: Runtime-Informed Multigoal Optimization During Lazy Execution (builds on this ADR's static optimization foundation)
 - **ADR-125**: Restore run_lazy_refineahead from IPyHOP (execution engine improvements)
 - **ADR-091**: Hybrid Planner Dependency Encapsulation (strategy architecture)
 - **ADR-078**: Timeline Module PC-2 STN Implementation (temporal constraint foundation)
