@@ -117,11 +117,6 @@ defmodule Mix.Tasks.Aria.Pipeline do
     Mix.shell().info("🚀 Starting pipeline with topology: #{topology}")
 
     case AriaEngine.Membrane.PipelineManager.create_testing_pipeline(topology_atom) do
-      {:ok, pipeline_pid} ->
-        Mix.shell().info("✅ Pipeline started successfully")
-        Mix.shell().info("Pipeline ID: #{inspect(pipeline_pid)}")
-        Mix.shell().info("Topology: #{topology}")
-
       {:error, reason} ->
         Mix.shell().error("❌ Failed to start pipeline: #{inspect(reason)}")
         System.halt(1)
@@ -140,9 +135,6 @@ defmodule Mix.Tasks.Aria.Pipeline do
     case parse_pipeline_pid(pipeline_id) do
       {:ok, pipeline_pid} ->
         case AriaEngine.Membrane.PipelineManager.stop_pipeline(pipeline_pid) do
-          :ok ->
-            Mix.shell().info("✅ Pipeline stopped successfully")
-
           {:error, reason} ->
             Mix.shell().error("❌ Failed to stop pipeline: #{inspect(reason)}")
             System.halt(1)
@@ -170,16 +162,6 @@ defmodule Mix.Tasks.Aria.Pipeline do
         case status do
           %{error: error} ->
             Mix.shell().error("❌ Error getting status: #{error}")
-
-          _ ->
-            Mix.shell().info("✅ Pipeline Status:")
-            Mix.shell().info("  ID: #{status.id}")
-            Mix.shell().info("  Topology: #{status.topology}")
-            Mix.shell().info("  Status: #{status.status}")
-            Mix.shell().info("  Created: #{DateTime.to_iso8601(status.created_at)}")
-            Mix.shell().info("  Request Count: #{status.request_count}")
-            Mix.shell().info("  Uptime: #{status.uptime_seconds}s")
-            Mix.shell().info("  Elements: #{status.element_count}")
         end
 
       {:error, reason} ->
@@ -243,9 +225,6 @@ defmodule Mix.Tasks.Aria.Pipeline do
                pipeline_pid,
                request_params
              ) do
-          :ok ->
-            Mix.shell().info("✅ Request sent successfully")
-
           {:error, reason} ->
             Mix.shell().error("❌ Failed to send request: #{inspect(reason)}")
             System.halt(1)
