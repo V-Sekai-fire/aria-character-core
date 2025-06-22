@@ -504,26 +504,6 @@ defmodule AriaEngine.Plan.NodeExpansion do
      failed_so_far or (is_primitive and not action_succeeded)}
   end
 
-  defp execute_primitive_action(domain, {action_name, args}, current_state, verbose) do
-    action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
-
-    case AriaEngine.Domain.execute_action(domain, current_state, action_atom, args) do
-      {:ok, new_state} ->
-        if verbose > 2 do
-          Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
-        end
-
-        new_state
-
-      false ->
-        if verbose > 2 do
-          Logger.debug("Primitive action #{action_name}(#{inspect(args)}) failed")
-        end
-
-        current_state
-    end
-  end
-
   defp execute_primitive_action_with_result(domain, {action_name, args}, current_state, verbose) do
     action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 
