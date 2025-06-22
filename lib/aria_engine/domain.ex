@@ -47,71 +47,114 @@ defmodule AriaEngine.Domain do
   @type state :: AriaEngine.StateV2.t()
 
   @spec new(String.t()) :: t()
-  defdelegate new(name), to: Core
-  
+  def new(name) do
+    Core.new(name)
+  end
+
+  @spec from_module(module()) :: t()
+  def from_module(domain_module) do
+    domain_name = domain_module |> Module.split() |> List.last() |> String.downcase()
+    Logger.error("Creating domain: #{domain_name}")
+    domain = Core.new(domain_name)
+
+    actions = domain_module.actions()
+    methods = domain_module.methods()
+
+    Logger.error("Actions: #{inspect(actions)}")
+    Logger.error("Methods: #{inspect(methods)}")
+
+    domain = Enum.reduce(actions, domain, fn action_name, domain ->
+      Logger.error("Adding action: #{action_name}")
+      add_action(domain, action_name, fn state, args ->
+        apply(domain_module, action_name, [state | args])
+      end)
+    end)
+
+    Enum.reduce(methods, domain, fn method_name, domain ->
+      Logger.error("Adding method: #{method_name}")
+      cond do
+        String.starts_with?(method_name, "solve_multigoal") ->
+          Logger.error("Adding multigoal method: #{method_name}")
+          add_multigoal_method(domain, method_name, fn state, args ->
+            apply(domain_module, :solve_multigoal, [state | args])
+          end)
+        String.starts_with?(method_name, "achieve_goal") ->
+          Logger.error("Adding unigoal method: #{method_name}")
+          add_unigoal_method(domain, "status", method_name, fn state, args ->
+            apply(domain_module, :achieve_goal, [state | args])
+          end)
+        true ->
+          Logger.error("Adding task method: #{method_name}")
+          add_task_method(domain, method_name, method_name, fn state, args ->
+            apply(domain_module, String.to_atom(method_name), [state | args])
+          end)
+      end
+    end)
+  end
+
   @spec validate(t()) :: {:ok, t()} | {:error, String.t()}
   defdelegate validate(domain), to: Core
 
   @spec add_action(t(), action_name(), action_fn(), map()) :: t()
   defdelegate add_action(domain, name, action_fn, metadata \\ %{}), to: Actions
-  
+
   @spec add_actions(t(), map()) :: t()
   defdelegate add_actions(domain, new_actions), to: Actions
-  
+
   @spec get_action(t(), action_name()) :: action_fn() | nil
   defdelegate get_action(domain, name), to: Actions
-  
+
   @spec get_action_metadata(t(), action_name()) :: map() | nil
   defdelegate get_action_metadata(domain, name), to: Actions
-  
+
   @spec has_action?(t(), action_name()) :: boolean()
   defdelegate has_action?(domain, name), to: Actions
-  
+
   @spec execute_action(t(), state(), action_name(), list()) :: state() | false
   defdelegate execute_action(domain, state, action_name, args), to: Actions
 
   @spec add_task_method(t(), task_name(), method_name(), task_method_fn()) :: t()
   defdelegate add_task_method(domain, task_name, method_name, method_fn), to: Methods
-  
+
   @spec add_task_method(t(), task_name(), task_method_fn()) :: t()
   defdelegate add_task_method(domain, task_name, method_fn), to: Methods
-  
+
   @spec add_task_methods(t(), task_name(), list()) :: t()
   defdelegate add_task_methods(domain, task_name, method_tuples_or_functions), to: Methods
-  
+
   @spec add_unigoal_method(t(), String.t(), method_name(), goal_method_fn()) :: t()
   defdelegate add_unigoal_method(domain, goal_type, method_name, method_fn), to: Methods
-  
+
   @spec add_unigoal_method(t(), String.t(), goal_method_fn()) :: t()
   defdelegate add_unigoal_method(domain, goal_type, method_fn), to: Methods
-  
+
   @spec add_unigoal_methods(t(), String.t(), [named_method()]) :: t()
   defdelegate add_unigoal_methods(domain, goal_type, method_tuples), to: Methods
-  
+
   @spec add_multigoal_method(t(), method_name(), goal_method_fn()) :: t()
   defdelegate add_multigoal_method(domain, method_name, method_fn), to: Methods
-  
+
   @spec add_multigoal_method(t(), goal_method_fn()) :: t()
   defdelegate add_multigoal_method(domain, method_fn), to: Methods
-  
+
   @spec get_task_methods(t(), task_name()) :: [named_method()]
   defdelegate get_task_methods(domain, task_name), to: Methods
-  
+
   @spec get_unigoal_methods(t(), String.t()) :: [named_method()]
   defdelegate get_unigoal_methods(domain, goal_type), to: Methods
-  
+
   @spec get_multigoal_methods(t()) :: [named_method()]
   defdelegate get_multigoal_methods(domain), to: Methods
-  
+
   @spec get_goal_methods(t(), String.t()) :: [named_method()]
   defdelegate get_goal_methods(domain, predicate), to: Methods
-  
+
   @spec get_method(t(), method_name()) :: {task_method_fn() | goal_method_fn()} | nil
   defdelegate get_method(domain, method_name), to: Methods
-  
+
   @spec has_task_methods?(t(), task_name()) :: boolean()
   defdelegate has_task_methods?(domain, task_name), to: Methods
-  
+
   @spec has_unigoal_methods?(t(), String.t()) :: boolean()
   defdelegate has_unigoal_methods?(domain, goal_type), to: Methods
 
@@ -121,29 +164,29 @@ defmodule AriaEngine.Domain do
 
   @spec summary(t()) :: String.t()
   defdelegate summary(domain), to: Utils
-  
+
   @spec add_porcelain_actions(t()) :: t()
   defdelegate add_porcelain_actions(domain), to: Utils
-  
+
   @spec create_complete_domain(String.t()) :: t()
   defdelegate create_complete_domain(name \\ "complete"), to: Utils
-  
+
   @spec infer_method_name(function()) :: String.t()
   defdelegate infer_method_name(fun), to: Utils
 
   # Behaviour callbacks
   @spec actions(t()) :: %{action_name() => action_fn()}
   def actions(%Core{actions: actions}), do: actions
-  
+
   @spec task_methods(t()) :: %{task_name() => [named_method()]}
   def task_methods(%Core{task_methods: task_methods}), do: task_methods
-  
+
   @spec unigoal_methods(t()) :: %{String.t() => [named_method()]}
   def unigoal_methods(%Core{unigoal_methods: unigoal_methods}), do: unigoal_methods
-  
+
   @spec multigoal_methods(t()) :: [named_method()]
   def multigoal_methods(%Core{multigoal_methods: multigoal_methods}), do: multigoal_methods
-  
+
   @spec durative_actions(t()) :: %{durative_action_name() => durative_action()}
   def durative_actions(%Core{durative_actions: durative_actions}), do: durative_actions
 

@@ -13,6 +13,8 @@ defmodule DurativeActionsQuantifiersTest do
   alias AriaEngine.StateV2
   alias AriaEngine.Domain.{Core, Actions}
 
+  # FIXME: Suspect this is a bug in the test suite because of integer durations that aren't ISO String
+
   describe "durative actions with existential quantifiers" do
     test "NPC can find any available seating" do
       # Create domain with seating-finding action

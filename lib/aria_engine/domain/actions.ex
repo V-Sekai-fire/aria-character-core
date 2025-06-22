@@ -69,7 +69,18 @@ defmodule AriaEngine.Domain.Actions do
     normalized_metadata =
       if Map.has_key?(metadata, :duration) do
         duration = metadata[:duration]
-        Map.put(metadata, :duration, AriaEngine.Utils.normalize_duration(duration))
+
+        # Check if duration is an ISO 8601 string and convert to Interval
+        normalized_duration =
+          if is_binary(duration) and String.starts_with?(duration, "PT") do
+            # Create a floating duration interval from ISO 8601 string
+            AriaEngine.Timeline.Interval.from_iso8601_duration(duration)
+          else
+            # Use existing normalization for other duration formats
+            AriaEngine.Utils.normalize_duration(duration)
+          end
+
+        Map.put(metadata, :duration, normalized_duration)
       else
         metadata
       end

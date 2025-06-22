@@ -87,7 +87,7 @@ defmodule AriaEngine.Timeline.Interval do
   ## Options
 
   - `:agent` - The agent associated with this interval
-  - `:entity` - The entity associated with this interval  
+  - `:entity` - The entity associated with this interval
   - `:metadata` - Additional metadata for the interval
 
   ## Examples
@@ -251,6 +251,40 @@ defmodule AriaEngine.Timeline.Interval do
     microseconds = duration * unit_to_microseconds(unit)
     end_time = DateTime.add(start_time, microseconds, :microsecond)
     new(start_time, end_time)
+  end
+
+  @doc """
+  Creates a floating duration interval from an ISO 8601 duration string.
+
+  This creates an interval that represents a duration without specific start/end times.
+  The interval uses nil for start_time and end_time, with the duration stored in metadata.
+  This is useful for planning where the duration represents effort required, not a specific time window.
+
+  ## Examples
+
+      iex> interval = AriaEngine.Timeline.Interval.from_iso8601_duration("PT8H")
+      iex> interval.metadata.iso8601_duration
+      "PT8H"
+
+      iex> interval = AriaEngine.Timeline.Interval.from_iso8601_duration("PT2H30M")
+      iex> interval.metadata.iso8601_duration
+      "PT2H30M"
+
+  """
+  @spec from_iso8601_duration(String.t()) :: t()
+  def from_iso8601_duration(iso8601_string) when is_binary(iso8601_string) do
+    # Validate the ISO 8601 duration string using AriaEngine.Utils
+    normalized_duration = AriaEngine.Utils.normalize_duration(iso8601_string)
+
+    %__MODULE__{
+      id: generate_id(),
+      start_time: nil,
+      end_time: nil,
+      metadata: %{
+        iso8601_duration: normalized_duration,
+        floating_duration: true
+      }
+    }
   end
 
   @doc """

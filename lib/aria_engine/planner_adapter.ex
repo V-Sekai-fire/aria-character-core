@@ -210,7 +210,7 @@ defmodule AriaEngine.PlannerAdapter do
   """
   @spec blacklist_command(solution_tree(), todo_item()) :: solution_tree()
   def blacklist_command(solution_tree, command),
-    do: AriaEngine.Plan.Blacklisting.blacklist_command(solution_tree, command)
+    do: AriaEngine.Plan.Backtracking.blacklist_command(solution_tree, command)
 
   # ==================== HYBRID PLANNER INTEGRATION ====================
 
