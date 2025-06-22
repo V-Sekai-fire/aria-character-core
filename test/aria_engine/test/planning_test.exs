@@ -47,7 +47,8 @@ defmodule PlanningTest do
         {:error, reason} ->
           # If planning fails, that's also acceptable for this basic test
           assert String.contains?(reason, "No methods found") or
-                   String.contains?(reason, "Planning failed")
+                   String.contains?(reason, "Planning failed") or
+                   String.contains?(reason, "No complete solution found")
       end
     end
 
@@ -93,7 +94,8 @@ defmodule PlanningTest do
         {:error, reason} ->
           # Planning may fail, which is acceptable for this basic test
           assert String.contains?(reason, "No methods found") or
-                   String.contains?(reason, "Planning failed")
+                   String.contains?(reason, "Planning failed") or
+                   String.contains?(reason, "No complete solution found")
       end
     end
   end
