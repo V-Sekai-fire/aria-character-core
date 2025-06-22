@@ -86,12 +86,12 @@ defmodule AriaEngine.MultigoalOptimizationTest do
       dependency = has_dependency_patterns?(goals)
       spatial = has_spatial_patterns?(goals)
 
-      Logger.error("Pattern Detection Debug:")
-      Logger.error("  Goals: #{inspect(goals)}")
-      Logger.error("  Parallel: #{parallel}")
-      Logger.error("  Resource: #{resource}")
-      Logger.error("  Dependency: #{dependency}")
-      Logger.error("  Spatial: #{spatial}")
+      Logger.debug("Pattern Detection Debug:")
+      Logger.debug("  Goals: #{inspect(goals)}")
+      Logger.debug("  Parallel: #{parallel}")
+      Logger.debug("  Resource: #{resource}")
+      Logger.debug("  Dependency: #{dependency}")
+      Logger.debug("  Spatial: #{spatial}")
 
       cond do
         has_dependency_patterns?(goals) -> :dependency_optimization
