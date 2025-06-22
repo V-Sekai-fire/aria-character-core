@@ -260,10 +260,10 @@ Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contain
 - Planning test failures: 🔄 ACTIVE (namespace conversion in progress, 5 failures remain)
 - Bridge.ex warning: ✅ RESOLVED (confirmed not present in current code)
 
-**Test Results Summary (June 21, 2025 - 21:20):**
+**Test Results Summary (June 21, 2025 - 21:32):**
 - **Total Tests**: 420 tests + 59 doctests + 12 properties
-- **Passing**: 414 tests + 59 doctests + 12 properties
-- **Failing**: 6 tests (down from 10+ failures)
+- **Passing**: 416 tests + 59 doctests + 12 properties
+- **Failing**: 4 tests (down from 10+ failures) ✅ **MAJOR IMPROVEMENT**
 - **Warnings**: 6 compilation warnings (down from 30+ warnings)
 
 **Major Progress Achieved:**
@@ -306,3 +306,12 @@ Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contain
 2. Fix lazy_execution_test.exs to use `AriaEngine.Plan.Core` 
 3. Address BehaviourImpl module references
 4. Final validation and completion
+
+**Latest Progress Update (June 21, 2025 - 21:32):**
+- ✅ **Plan.Execution module converted**: Successfully changed to `AriaEngine.Plan.Execution`
+- ✅ **Error handling improved**: Added support for both `{:ok, state}` and legacy state formats
+- ✅ **Replanning logic fixed**: Added `:no_alternatives` case handling
+- ✅ **Test failures reduced**: From 6 failures down to 4 failures
+- ✅ **Domain creation fixed**: Updated test helper to use `AriaEngine.Domain.Core.new()`
+
+**Current Status**: 4 remaining test failures are all related to domain creation in test files that still use old `Domain.new()` calls instead of the correct `AriaEngine.Domain.Core.new()`. These are straightforward import/alias fixes.
