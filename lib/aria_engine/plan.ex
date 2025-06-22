@@ -56,13 +56,6 @@ defmodule Plan do
     do: AriaEngine.Plan.Utils.validate_plan(domain, initial_state, plan)
 
   @doc """
-  Estimates the cost of a plan (simple step count for now).
-  For compatibility with existing AriaEngine usage.
-  """
-  @spec plan_cost([plan_step()] | solution_tree()) :: non_neg_integer()
-  def plan_cost(plan), do: AriaEngine.Plan.Utils.plan_cost(plan)
-
-  @doc """
   Get statistics about the solution tree.
   """
   @spec tree_stats(solution_tree()) :: %{

@@ -71,7 +71,7 @@ defmodule AriaEngine.Planning.CoreInterface do
           | solution_tree: new_solution_tree,
             progress: %{
               engine.progress
-              | total_steps: AriaEngine.PlannerAdapter.plan_cost(new_solution_tree)
+              | total_steps: length(AriaEngine.Plan.Utils.get_primitive_actions_dfs(new_solution_tree))
             }
         }
 

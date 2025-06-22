@@ -57,14 +57,6 @@ defmodule Convenience do
   end
 
   @doc """
-  Gets the cost (number of steps) of a plan.
-  """
-  @spec plan_cost([plan_step()]) :: non_neg_integer()
-  def plan_cost(plan) do
-    AriaEngine.PlannerAdapter.plan_cost(plan)
-  end
-
-  @doc """
   Gets a summary of domain capabilities.
   """
   @spec domain_summary(Domain.Core.t()) :: map()

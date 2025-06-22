@@ -229,12 +229,6 @@ defmodule AriaEngine.PlannerAdapter do
   # ==================== UTILITY FUNCTIONS ====================
 
   @doc """
-  Calculate plan cost - delegates to existing Utils for compatibility.
-  """
-  @spec plan_cost([plan_step()] | solution_tree()) :: non_neg_integer()
-  def plan_cost(plan), do: Utils.plan_cost(plan)
-
-  @doc """
   Get tree statistics - delegates to existing Utils for compatibility.
   """
   @spec tree_stats(solution_tree()) :: %{
@@ -345,7 +339,7 @@ defmodule AriaEngine.PlannerAdapter do
       compatibility_metrics = %{
         adapter_success: true,
         result_type: :solution_tree,
-        action_count: Utils.plan_cost(adapter_result)
+        action_count: length(Utils.get_primitive_actions_dfs(adapter_result))
       }
 
       {:compatible, compatibility_metrics}

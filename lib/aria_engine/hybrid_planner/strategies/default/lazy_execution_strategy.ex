@@ -18,7 +18,8 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do
-      action_count = AriaEngine.Plan.Utils.plan_cost(solution_tree)
+      actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
+      action_count = length(actions)
 
       Logger.debug(
         "LazyExecutionStrategy: Starting execution of plan with #{action_count} actions"

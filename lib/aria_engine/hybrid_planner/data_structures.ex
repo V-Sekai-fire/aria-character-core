@@ -63,7 +63,8 @@ defmodule HybridPlanner.DataStructures do
     """
     @spec get_cost(t()) :: non_neg_integer()
     def get_cost(%__MODULE__{internal_plan: plan}) do
-      AriaEngine.Plan.Utils.plan_cost(plan)
+      actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(plan)
+      length(actions)
     end
 
     @doc """

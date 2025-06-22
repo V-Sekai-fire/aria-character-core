@@ -175,19 +175,6 @@ defmodule AriaEngine.Plan.Utils do
     end)
   end
 
-  @doc """
-  Estimates the cost of a plan (simple step count for now).
-  For compatibility with existing AriaEngine usage.
-  """
-  @spec plan_cost([plan_step()] | solution_tree()) :: non_neg_integer()
-  def plan_cost(%{root_id: _} = solution_tree) do
-    actions = get_primitive_actions_dfs(solution_tree)
-    length(actions)
-  end
-
-  def plan_cost(plan) when is_list(plan) do
-    length(plan)
-  end
 
   @doc """
   Get statistics about the solution tree.

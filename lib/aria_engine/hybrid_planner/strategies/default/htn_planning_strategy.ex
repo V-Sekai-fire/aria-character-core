@@ -30,7 +30,8 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
       case AriaEngine.Plan.Core.plan(domain, state, todos, opts) do
         {:ok, solution_tree} ->
           if verbose > 1 do
-            action_count = AriaEngine.Plan.Utils.plan_cost(solution_tree)
+            actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
+            action_count = length(actions)
             Logger.debug("HTNPlanningStrategy: Planning successful with #{action_count} actions")
           end
 
@@ -64,7 +65,8 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
       case Plan.replan(domain, state, solution_tree, fail_node_id, opts) do
         {:ok, new_solution_tree} ->
           if verbose > 1 do
-            action_count = AriaEngine.Plan.Utils.plan_cost(new_solution_tree)
+            actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(new_solution_tree)
+            action_count = length(actions)
 
             Logger.debug(
               "HTNPlanningStrategy: Replanning successful with #{action_count} actions"
