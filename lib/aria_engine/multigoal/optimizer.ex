@@ -377,34 +377,4 @@ defmodule AriaEngine.Multigoal.Optimizer do
     end
   end
 
-  # Simple heuristic fallback - just reorder goals for better performance
-  defp optimize_heuristic(goals) do
-    # Simple goal reordering: sort by subject then predicate for consistency
-    optimized_sequence = Enum.sort_by(goals, fn {subject, predicate, _value} ->
-      {subject, predicate}
-    end)
-
-    patterns = discover_structural_patterns(goals)
-    naive_metrics = calculate_naive_metrics(goals)
-    # Assume modest improvement from better ordering
-    optimized_metrics = %{
-      actions: round(length(goals) * 3.5),
-      distance: length(goals) * 2.5,
-      time: length(goals) * 8.5,
-      parallel_opportunities: max(0, div(length(goals), 3))
-    }
-
-    %{
-      goals: optimized_sequence,
-      total_actions: optimized_metrics.actions,
-      total_distance: optimized_metrics.distance,
-      completion_time: optimized_metrics.time,
-      parallel_opportunities: optimized_metrics.parallel_opportunities,
-      optimization_type: :heuristic,
-      discovered_patterns: patterns,
-      constraint_solving_time: 0,
-      optimization_quality: 0.3,
-      improvement_over_naive: calculate_improvements(naive_metrics, optimized_metrics)
-    }
-  end
 end

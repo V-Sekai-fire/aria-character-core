@@ -366,7 +366,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     Optimize goals based purely on structural pattern discovery.
     """
     @spec optimize_structural(StateV2.t(), [goal()]) :: {:ok, optimization_result()} | {:error, term()}
-    def optimize_structural(state, goals) do
+    def optimize_structural(_state, goals) do
       try do
         # Discover structural patterns
         patterns = StructuralPatternDiscovery.discover_patterns(goals)
@@ -673,7 +673,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     MiniZinc-based optimization with advanced constraint solving and pattern discovery.
     """
     @spec optimize_minizinc(StateV2.t(), [goal()]) :: {:ok, optimization_result()}
-    def optimize_minizinc(state, goals) do
+    def optimize_minizinc(_state, goals) do
       start_time = System.monotonic_time(:millisecond)
 
       # Advanced pattern discovery using constraint analysis
@@ -702,7 +702,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       {:ok, result}
     end
 
-    defp determine_minizinc_strategy(patterns, clusters) do
+    defp determine_minizinc_strategy(patterns, _clusters) do
       # MiniZinc can handle multiple patterns simultaneously
       cond do
         length(patterns) > 2 -> :multi_constraint  # Multiple patterns = complex constraints
