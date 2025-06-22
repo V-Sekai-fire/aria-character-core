@@ -35,7 +35,6 @@ defmodule AriaEngine.Plan.Execution do
   @type plan_step :: {atom(), list()}
 
   @default_verbose 0
-  @default_replan_depth 10
 
   # Helper to conditionally output debug information
   defp debug_puts(message) do
@@ -61,7 +60,6 @@ defmodule AriaEngine.Plan.Execution do
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def run_lazy_refineahead(domain, %AriaEngine.StateV2{} = initial_state, solution_tree, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
-    replan_depth = Keyword.get(opts, :replan_depth, @default_replan_depth)
     refinement_ahead = Keyword.get(opts, :refinement_ahead, false)
     lookahead_depth = Keyword.get(opts, :lookahead_depth, 1)
     enable_checkpoints = Keyword.get(opts, :enable_checkpoints, false)
@@ -85,8 +83,6 @@ defmodule AriaEngine.Plan.Execution do
         remaining_actions: actions,
         executed_actions: [],
         checkpoints: if(enable_checkpoints, do: [initial_state], else: []),
-        replan_attempts: 0,
-        max_replan_attempts: replan_depth,
         refinement_ahead: refinement_ahead,
         lookahead_depth: lookahead_depth,
         enable_rollback: enable_rollback,
@@ -237,9 +233,6 @@ defmodule AriaEngine.Plan.Execution do
     end
 
     cond do
-      context.replan_attempts >= context.max_replan_attempts ->
-        {:error, "Replanning failed: maximum replan attempts (#{context.max_replan_attempts}) exceeded"}
-
       context.enable_rollback and length(context.checkpoints) > 1 ->
         # Attempt rollback to previous checkpoint
         attempt_rollback_and_replan(domain, context, failed_action, remaining_actions, solution_tree, opts)
@@ -273,7 +266,6 @@ defmodule AriaEngine.Plan.Execution do
               context
               | current_state: previous_state,
                 remaining_actions: new_actions,
-                replan_attempts: context.replan_attempts + 1,
                 checkpoints: tl(context.checkpoints)  # Remove current checkpoint
             }
 
@@ -310,8 +302,7 @@ defmodule AriaEngine.Plan.Execution do
 
         updated_context = %{
           context
-          | remaining_actions: new_actions,
-            replan_attempts: context.replan_attempts + 1
+          | remaining_actions: new_actions
         }
 
         execute_actions_lazily(domain, updated_context, new_solution_tree, opts)
@@ -408,8 +399,7 @@ defmodule AriaEngine.Plan.Execution do
 
           updated_context = %{
             context
-            | remaining_actions: new_actions,
-              replan_attempts: context.replan_attempts + 1
+            | remaining_actions: new_actions
           }
 
           execute_actions_lazily(domain, updated_context, updated_solution_tree, opts)

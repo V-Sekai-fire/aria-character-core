@@ -164,12 +164,13 @@ defmodule AriaEngine.Plan.NodeExpansion do
             # Reverse child_ids to maintain original order
             child_ids = Enum.reverse(result_ids)
 
-            # Update parent node
+            # Update parent node with the final state from executing all actions
             updated_node = %{
               node
               | children_ids: child_ids,
                 expanded: true,
-                method_tried: method_id
+                method_tried: method_id,
+                state: result_state
             }
 
             final_tree = put_in(result_tree.nodes[node_id], updated_node)

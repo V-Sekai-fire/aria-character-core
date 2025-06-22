@@ -42,8 +42,6 @@ defmodule AriaEngine.Plan.Core do
   @type plan_result :: {:ok, solution_tree()} | {:error, String.t()}
 
   @default_max_depth 100
-  # New default replanning depth
-  @default_replan_depth 10
   @default_verbose 0
 
   # Helper to conditionally output debug information
@@ -71,8 +69,6 @@ defmodule AriaEngine.Plan.Core do
   """
   @spec plan(AriaEngine.Domain.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
   def plan(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
-    # Add replan_depth to opts with a default value
-    opts = Keyword.put_new(opts, :replan_depth, @default_replan_depth)
     # Logger.debug("Starting IPyHOP planning for ", length(todos), " todos")
     # Commented out to reduce test output noise
 
@@ -432,10 +428,4 @@ defmodule AriaEngine.Plan.Core do
   # Helper to get default verbose level
   @spec get_default_verbose() :: integer()
   def get_default_verbose(), do: @default_verbose
-
-  # Helper to get default replan depth
-  @spec get_default_replan_depth() :: integer()
-  def get_default_replan_depth(), do: @default_replan_depth
-
-
 end

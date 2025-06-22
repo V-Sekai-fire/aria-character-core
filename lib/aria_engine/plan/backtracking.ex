@@ -46,54 +46,41 @@ defmodule AriaEngine.Plan.Backtracking do
         fail_node_id,
         opts \\ []
       ) do
-    # Decrement replan_depth for recursive calls
-    # Get from Core
-    replan_depth = Keyword.get(opts, :replan_depth, AriaEngine.Plan.Core.get_default_replan_depth())
+    verbose = Keyword.get(opts, :verbose, AriaEngine.Plan.Core.get_default_verbose())
 
-    if replan_depth <= 0 do
-      Logger.debug("REPLAN: Maximum replanning depth exceeded.")
-      {:error, "Maximum replanning depth exceeded"}
-    else
-      opts = Keyword.put(opts, :replan_depth, replan_depth - 1)
-      # Assuming Core has default_verbose
-      verbose = Keyword.get(opts, :verbose, AriaEngine.Plan.Core.get_default_verbose())
-
-      if verbose > 2 do
-        Logger.debug("Replanning from failure node: #{fail_node_id}")
-      end
-
-      # Find the task node that produced this action (walk up the tree)
-      case find_responsible_task_node(solution_tree, fail_node_id, verbose) do
-        nil ->
-          {:error, "Could not find responsible task node for failed action"}
-
-        task_node_id ->
-          if verbose > 2 do
-            Logger.debug("Found responsible task node: #{task_node_id}")
-          end
-
-          # Update cached states to current execution state
-          updated_tree = AriaEngine.Plan.Utils.update_cached_states(solution_tree, state)
-
-          # Try alternative method for the responsible task
-          # Pass domain
-          case try_alternative_method_for_task(domain, updated_tree, task_node_id, verbose) do
-            {:ok, new_tree} ->
-              # Resume planning from the updated tree
-              AriaEngine.Plan.Core.ipyhop(domain, state, new_tree, opts)
-
-            {:error, reason} ->
-              {:error, reason}
-
-            # Added this clause
-            :no_alternatives ->
-              # Propagate no_alternatives
-              :no_alternatives
-          end
-      end
+    if verbose > 2 do
+      Logger.debug("Replanning from failure node: #{fail_node_id}")
     end
 
-    # This 'end' closes the 'else' block
+    # Find the task node that produced this action (walk up the tree)
+    case find_responsible_task_node(solution_tree, fail_node_id, verbose) do
+      nil ->
+        {:error, "Could not find responsible task node for failed action"}
+
+      task_node_id ->
+        if verbose > 2 do
+          Logger.debug("Found responsible task node: #{task_node_id}")
+        end
+
+        # Update cached states to current execution state
+        updated_tree = AriaEngine.Plan.Utils.update_cached_states(solution_tree, state)
+
+        # Try alternative method for the responsible task
+        # Pass domain
+        case try_alternative_method_for_task(domain, updated_tree, task_node_id, verbose) do
+          {:ok, new_tree} ->
+            # Resume planning from the updated tree
+            AriaEngine.Plan.Core.ipyhop(domain, state, new_tree, opts)
+
+          {:error, reason} ->
+            {:error, reason}
+
+          # Added this clause
+          :no_alternatives ->
+            # Propagate no_alternatives
+            :no_alternatives
+        end
+    end
   end
 
   # Find the task node responsible for producing a failed action

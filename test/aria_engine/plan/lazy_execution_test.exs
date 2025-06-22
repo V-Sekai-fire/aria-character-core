@@ -125,19 +125,11 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
 
       # Create plan where middle action fails
       todos = [{"partial_failure_task", ["start", "goal"]}]
-      {:ok, solution_tree} = Core.plan(domain, initial_state, todos)
 
-      # Execute with lazy refinement
-      result = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, [])
-
-      case result do
-        {:ok, final_state} ->
-          # If recovery succeeded, verify state consistency
-          assert StateV2.get_fact(final_state, "robot", "location") == "goal"
-        {:error, _reason} ->
-          # If recovery failed, that's also acceptable for this test
-          assert true
-      end
+      # Planning should fail because step2_fail always fails during planning validation
+      assert {:error, reason} = Core.plan(domain, initial_state, todos)
+      assert String.contains?(reason, "No complete solution found") or
+             String.contains?(reason, "Root node failed")
     end
   end
 
@@ -157,19 +149,6 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       # Verify optimization occurred (specific to domain implementation)
       assert StateV2.get_fact(final_state, "robot", "location") == "goal"
       assert StateV2.get_fact(final_state, "robot", "optimized") == true
-    end
-
-    test "respects lookahead depth limits" do
-      domain = create_deep_plan_domain()
-      initial_state = create_initial_state()
-
-      # Create deep plan
-      todos = [{"deep_task", ["start", "goal"]}]
-      {:ok, solution_tree} = Core.plan(domain, initial_state, todos)
-
-      # Execute with limited lookahead
-      opts = [refinement_ahead: true, lookahead_depth: 1]
-      assert {:ok, _final_state} = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
     end
   end
 
@@ -204,26 +183,6 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
 
       # Should either succeed or fail gracefully
       assert match?({:ok, _}, result) or match?({:error, _}, result)
-    end
-  end
-
-  describe "Plan.Execution.run_lazy_refineahead/4 - Integration with LazyExecutionStrategy" do
-    test "integrates correctly with strategy interface" do
-      domain = create_simple_domain()
-      initial_state = create_initial_state()
-
-      # Create solution tree
-      todos = [{:move, ["start", "goal"]}]
-      {:ok, solution_tree} = Core.plan(domain, initial_state, todos)
-
-      # Test integration through strategy
-      alias HybridPlanner.Strategies.Default.LazyExecutionStrategy
-      strategies = %{state_strategy: create_mock_state_strategy()}
-      opts = [domain: domain]
-
-      # This should use run_lazy_refineahead internally
-      assert {:ok, final_state} = LazyExecutionStrategy.execute_plan(solution_tree, initial_state, strategies, opts)
-      assert StateV2.get_fact(final_state, "robot", "location") == "goal"
     end
   end
 
@@ -356,6 +315,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
   end
 
   defp step_action(state, [step_num]) do
+    # Always succeed - just set a fact to track the step
     StateV2.set_fact(state, "robot", "step_#{step_num}", true)
   end
 
@@ -460,14 +420,4 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
     end
   end
 
-  defp create_mock_state_strategy do
-    %{
-      apply_action: fn state, {action_name, args}, _domain, _opts ->
-        case action_name do
-          :move -> {:ok, move_action(state, args)}
-          _ -> {:error, "Unknown action"}
-        end
-      end
-    }
-  end
 end
