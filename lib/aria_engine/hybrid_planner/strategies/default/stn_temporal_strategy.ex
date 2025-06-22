@@ -488,7 +488,7 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
         :consistency_check_frequency
       ],
       dependencies: [
-        "TemporalPlanner.STNPlanner",
+        "Timeline",
         "Logger"
       ],
       action_compatibility: [
@@ -496,7 +496,7 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
         :instantaneous_actions,
         :hierarchical_actions
       ],
-      underlying_implementation: "TemporalPlanner.STNPlanner",
+      underlying_implementation: "Timeline",
       performance_characteristics: %{
         best_case_actions: 1000,
         worst_case_complexity: "O(n³)",
