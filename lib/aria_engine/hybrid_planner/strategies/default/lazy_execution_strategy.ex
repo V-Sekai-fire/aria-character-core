@@ -35,8 +35,8 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
           {:error, "Domain required for execution but not provided in options"}
 
         %AriaEngine.Domain.Core{} = domain ->
-          # Use plan validation for execution since run_lazy_refineahead was removed
-          case Plan.validate_plan(domain, initial_state, solution_tree) do
+          # Use restored run_lazy_refineahead for true lazy execution with backtracking
+          case AriaEngine.Plan.Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts) do
             {:ok, final_state} ->
               if verbose > 1 do
                 Logger.debug("LazyExecutionStrategy: Execution completed successfully")
@@ -212,7 +212,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
         :simple_recovery_model,
         :no_rollback_support
       ],
-      underlying_implementation: "Plan.validate_plan"
+      underlying_implementation: "AriaEngine.Plan.Execution.run_lazy_refineahead"
     }
   end
 
