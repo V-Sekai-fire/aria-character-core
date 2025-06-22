@@ -12,6 +12,37 @@ defmodule AriaEngine.Convergence do
 
   require Logger
 
+  # Type definitions
+  @type constraint :: map()
+  @type activity :: map()
+  @type solve_options :: [
+          max_iterations: pos_integer(),
+          stages: pos_integer()
+        ]
+  @type solve_result :: {:ok, term()} | {:error, String.t()}
+  @type approach_info :: %{
+          description: String.t(),
+          strengths: [String.t()],
+          backend: String.t()
+        }
+  @type system_info :: %{
+          total_cores: pos_integer(),
+          architecture: String.t(),
+          recommended_approach: atom()
+        }
+  @type core_strategies :: %{
+          all_cores: String.t(),
+          single_core: String.t()
+        }
+  @type convergence_info :: %{
+          approaches: %{
+            flow: approach_info(),
+            batch_processor: approach_info()
+          },
+          system: system_info(),
+          core_strategies: core_strategies()
+        }
+
   @doc """
   Solve STN constraints using Flow-based parallel processing.
 
@@ -24,10 +55,11 @@ defmodule AriaEngine.Convergence do
 
       # Single problem
       Convergence.solve_stn(constraints)
-      
+
       # With custom options
       Convergence.solve_stn(constraints, max_iterations: 200, stages: 8)
   """
+  @spec solve_stn([constraint()], solve_options()) :: solve_result()
   def solve_stn(_constraints, _opts \\ []) do
     raise "ConvergenceFlow.solve_stn_with_convergence/2 is not implemented"
   end
@@ -44,10 +76,11 @@ defmodule AriaEngine.Convergence do
 
       # Single problem
       Convergence.solve_activities(activities)
-      
+
       # With custom options
       Convergence.solve_activities(activities, max_iterations: 100, stages: 4)
   """
+  @spec solve_activities([activity()], solve_options()) :: solve_result()
   def solve_activities(_activities, _opts \\ []) do
     raise "ConvergenceFlow.solve_activities_with_convergence/2 is not implemented"
   end
@@ -55,6 +88,7 @@ defmodule AriaEngine.Convergence do
   @doc """
   Get information about available convergence approaches and their capabilities.
   """
+  @spec info() :: convergence_info()
   def info do
     %{
       approaches: %{
@@ -93,6 +127,7 @@ defmodule AriaEngine.Convergence do
 
   # Private helper functions
 
+  @spec get_system_architecture() :: String.t()
   defp get_system_architecture do
     case :erlang.system_info(:system_architecture) do
       arch when is_list(arch) -> List.to_string(arch)

@@ -17,11 +17,33 @@ defmodule AriaEngine.BatchProcessor do
 
   require Logger
 
+  # Type definitions
+  @type problem_id :: pos_integer()
+  @type activity_id :: pos_integer()
+  @type resource_name :: String.t()
+  @type constraint :: %{
+          type: :start_after | :finish_before,
+          time: non_neg_integer()
+        }
+  @type test_activity :: %{
+          id: activity_id(),
+          problem_id: problem_id(),
+          name: String.t(),
+          duration: pos_integer(),
+          resources: [resource_name()],
+          dependencies: [activity_id()],
+          priority: pos_integer(),
+          constraints: [constraint()]
+        }
+  @type test_problem :: [test_activity()]
+  @type test_problems :: [test_problem()]
+
   @doc """
   Generate test problems for batch processing benchmarks.
 
   Creates multiple independent activity sets for testing batch processing performance.
   """
+  @spec generate_test_problems(pos_integer(), pos_integer()) :: test_problems()
   def generate_test_problems(problem_count, activities_per_problem \\ 1000) do
     Logger.debug(
       "Generating #{problem_count} test problems with #{activities_per_problem} activities each"
@@ -34,6 +56,7 @@ defmodule AriaEngine.BatchProcessor do
 
   # Private functions
 
+  @spec generate_single_test_problem(problem_id(), pos_integer()) :: test_problem()
   defp generate_single_test_problem(problem_id, activity_count) do
     # Generate realistic test activities for a single problem
     base_seed = problem_id * 1000
@@ -53,6 +76,7 @@ defmodule AriaEngine.BatchProcessor do
     end
   end
 
+  @spec generate_test_resources(activity_id(), problem_id()) :: [resource_name()]
   defp generate_test_resources(activity_id, problem_id) do
     # Generate 1-3 resources per activity, scoped to the problem
     resource_count = :rand.uniform(3)
@@ -64,6 +88,7 @@ defmodule AriaEngine.BatchProcessor do
     end
   end
 
+  @spec generate_test_dependencies(activity_id(), pos_integer()) :: [activity_id()]
   defp generate_test_dependencies(activity_id, _max_activities) do
     # Generate 0-2 dependencies per activity
     if activity_id > 1 and :rand.uniform(3) == 1 do
@@ -74,6 +99,7 @@ defmodule AriaEngine.BatchProcessor do
     end
   end
 
+  @spec generate_test_constraints(activity_id()) :: [constraint()]
   defp generate_test_constraints(_activity_id) do
     # Generate realistic temporal constraints
     [
