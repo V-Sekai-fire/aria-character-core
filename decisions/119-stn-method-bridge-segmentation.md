@@ -9,9 +9,13 @@
 The `TemporalPlanner.STNMethod` module currently has a TODO comment indicating the need to implement proper segmentation based on bridge action positions. The current implementation in `split_actions_by_bridges/3` creates a single segment with all actions, which doesn't leverage the hierarchical STN composition benefits that bridge actions are designed to provide.
 
 Bridge actions are non-temporal (instantaneous) actions that act as natural breaking points for STN composition, enabling:
-- O(k * (n/k)³) complexity reduction by solving segments in parallel
-- Better temporal consistency across method boundaries
+- Problem decomposition into smaller, more manageable Timeline segments
+- Parallel solving of independent temporal segments via `Timeline.solve()`
+- Better memory usage for large temporal planning problems
+- Improved error isolation and debugging capabilities
 - Cleaner hierarchical composition of temporal plans
+
+The underlying constraint solving is handled by MiniZinc (abstracted behind the Timeline interface), but segmentation still provides architectural and performance benefits at the STN interface layer.
 
 ## Decision
 
@@ -48,21 +52,27 @@ Implement proper bridge-based segmentation in the `split_actions_by_bridges/3` f
 - [ ] `split_actions_by_bridges/3` creates multiple segments when bridges are present
 - [ ] Bridge actions properly separate temporal segments
 - [ ] Segment composition maintains method-level temporal consistency
-- [ ] Performance tests show expected O(k * (n/k)³) complexity reduction
+- [ ] Each segment solves correctly via `Timeline.solve()` interface
+- [ ] Performance improvements demonstrated for large temporal problems
+- [ ] Memory usage reduced for complex method hierarchies
 - [ ] All existing STNMethod tests continue to pass
 
 ## Consequences
 
 **Benefits:**
-- Enables true hierarchical STN composition with complexity reduction
-- Improves scalability for complex temporal planning scenarios
+- Enables hierarchical STN composition with problem decomposition benefits
+- Improves scalability for complex temporal planning scenarios through smaller problem sizes
 - Provides cleaner separation of temporal and non-temporal actions
-- Supports parallel solving of method segments
+- Supports parallel solving of method segments via `Timeline.solve()`
+- Better memory usage patterns for large temporal problems
+- Improved error isolation when debugging temporal constraint issues
+- Maintains clean STN interface while leveraging MiniZinc performance underneath
 
 **Risks:**
 - Increased implementation complexity in segmentation logic
 - Potential for subtle bugs in bridge constraint handling
 - Need for comprehensive testing of edge cases
+- Possible overhead from segment composition if problems are already small
 
 ## Related ADRs
 
