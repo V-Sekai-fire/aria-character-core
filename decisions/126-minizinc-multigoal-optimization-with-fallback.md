@@ -4,7 +4,8 @@
 **Date:** 2025-06-22  
 **Priority:** HIGH  
 **Phase 1 Completed:** 2025-06-22  
-**Phase 2 Active:** 2025-06-22
+**Phase 2 Active:** 2025-06-22  
+**Implementation Started:** 2025-06-22
 
 ## Context
 
@@ -84,21 +85,25 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 
 **Step 1: Core Module Extraction**
 - [ ] Extract `MockMiniZincOptimizer` from test to `lib/aria_engine/multigoal/optimizer.ex`
-- [ ] Create `lib/aria_engine/multigoal/` directory structure
-- [ ] Add proper module documentation and typespecs
-- [ ] Remove test-specific mocking and add real MiniZinc integration
+- [ ] Create `lib/aria_engine/multigoal/minizinc_interface.ex` for system integration
+- [ ] Create `lib/aria_engine/multigoal/constraint_builder.ex` for constraint generation
+- [ ] Create `lib/aria_engine/multigoal/template_renderer.ex` for EEx processing
+- [ ] Add proper module documentation and typespecs throughout
 
 **Step 2: MiniZinc Template System**
-- [ ] Create `priv/templates/minizinc/` directory
-- [ ] Implement `multigoal_optimization.mzn.eex` template with EEx variables
-- [ ] Add constraint modeling for spatial, temporal, and resource optimization
-- [ ] Create template rendering pipeline with error handling
+- [ ] Create `priv/templates/minizinc/` directory structure
+- [ ] Implement `multigoal_optimization.mzn.eex` with spatial optimization constraints
+- [ ] Add `dependency_optimization.mzn.eex` for precondition handling
+- [ ] Add `parallel_optimization.mzn.eex` for multi-agent coordination
+- [ ] Add `resource_optimization.mzn.eex` for conflict resolution
+- [ ] Create template selection logic based on goal patterns
 
 **Step 3: Domain Integration**
-- [ ] Update `AriaEngine.Multigoal` to register optimization method
-- [ ] Modify domain registration to include multigoal optimization
-- [ ] Add method priority system (optimization first, splitting fallback)
-- [ ] Ensure backward compatibility with existing multigoal calls
+- [ ] Add `optimize_multigoal/3` function to `AriaEngine.Multigoal`
+- [ ] Implement method registration with priority: optimization → splitting → manual
+- [ ] Add configuration-based method selection (enable/disable optimization)
+- [ ] Ensure zero breaking changes to existing `split_multigoal/2` calls
+- [ ] Add method blacklisting support for automatic fallback
 
 **Step 4: Configuration Management**
 - [ ] Add multigoal optimization config to `config/config.exs`
@@ -268,11 +273,30 @@ multigoal_opts = [
   optimization_timeout: 5_000,
   max_goals_for_optimization: 15,
   fallback_to_splitting: true,
-  solver_preference: ["gecode", "chuffed", "or-tools"],
+  solver_preference: ["or-tools", "gecode", "chuffed"],  # or-tools preferred (MiniZinc 2024 winner)
   optimization_objective: :minimize_time,  # :minimize_distance, :minimize_actions
   telemetry_enabled: true,
-  health_check_interval: 30_000
+  health_check_interval: 30_000,
+  template_selection: :automatic  # :spatial, :dependency, :parallel, :resource
 ]
+```
+
+**Module Architecture**:
+```elixir
+# Main optimizer entry point
+AriaEngine.Multigoal.Optimizer.optimize_multigoal/3
+
+# MiniZinc system integration
+AriaEngine.Multigoal.MiniZincInterface.run_solver/3
+
+# Constraint model generation
+AriaEngine.Multigoal.ConstraintBuilder.build_constraints/3
+
+# Template processing
+AriaEngine.Multigoal.TemplateRenderer.render_template/3
+
+# Performance monitoring
+AriaEngine.Multigoal.Telemetry.track_optimization/2
 ```
 
 ## Consequences
