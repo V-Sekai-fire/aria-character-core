@@ -305,259 +305,203 @@ Domain.add_action(:meeting, &meeting/2, %{
 
 Create a unified durative action specification system that eliminates confusion by providing ONE clear way to define actions with entities, capabilities, resources, and temporal constraints.
 
-## Implementation Plan
+## Test-Driven Implementation Strategy
 
-### Phase 1: Core Duration Support (HIGH PRIORITY)
-**File**: `lib/aria_engine/domain/actions.ex`
+Following Martin Fowler's TDD methodology, we implement the unified durative action specification through **Red-Green-Refactor** cycles, writing tests first to drive the design.
 
-**Missing/Required**:
-- [ ] Add support for ISO 8601 datetime strings (start/end times)
-- [ ] Extend existing ISO 8601 duration string support
-- [ ] Unified metadata validation for both formats
+### TDD Process Overview
 
-**Implementation Patterns Needed**:
+1. **Write comprehensive test list first** - Identify all test cases before any implementation
+2. **Sequence tests by design impact** - Pick tests that drive us to key design decisions
+3. **Red-Green-Refactor iterations** - For each test: write failing test → make it pass → refactor
+4. **Interface-first thinking** - Tests force us to design the API before implementation
+
+### Complete Test Case Inventory
+
+**Infrastructure Tests (Foundation)**
+- [ ] Action atom registration without aliasing conflicts
+- [ ] Task method registration with `task_` prefix
+- [ ] Action vs task method resolution priority
+- [ ] Automatic primitive method creation
+- [ ] Domain creation and action registration
+
+**Metadata Validation Framework Tests**
+- [ ] Basic metadata structure validation
+- [ ] Type specification enforcement
+- [ ] Error message clarity and specificity
+- [ ] Validation integration with `Domain.add_action/3`
+- [ ] Invalid metadata rejection
+
+**Temporal Specification Tests**
+- [ ] ISO 8601 duration string validation (`"PT2H"`)
+- [ ] ISO 8601 datetime string validation (`"2025-06-22T10:00:00Z"`)
+- [ ] Fixed closed interval validation (start + end)
+- [ ] Open-ended interval validation (start only, end only)
+- [ ] Temporal specification mutual exclusion (duration XOR start/end)
+- [ ] Missing temporal specification rejection
+- [ ] Invalid temporal format rejection
+
+**Entity Requirement Tests**
+- [ ] Simple capability validation (atoms only)
+- [ ] Entity type requirement validation
+- [ ] Multiple entity requirement validation
+- [ ] Invalid entity requirement rejection
+- [ ] Entity requirement integration with state queries
+
+**State Integration Tests**
+- [ ] Property queries through StateV2.get_fact/3
+- [ ] Temporal state queries (past/future checking)
+- [ ] Capability-based entity filtering
+- [ ] State-based property constraints
+- [ ] Dynamic property management
+
+**End-to-End Integration Tests**
+- [ ] Complete action definition with all metadata types
+- [ ] Planning integration with unified specification
+- [ ] Goal achievement with entity requirements
+- [ ] Resource allocation during planning
+- [ ] Temporal constraint satisfaction
+
+### Test-First Implementation Sequence
+
+**Iteration 1: Infrastructure Foundation (Action Atom Priority Rule)**
 ```elixir
-# Detect fixed time intervals
-if Map.has_key?(metadata, :start) and Map.has_key?(metadata, :end) do
-  # Create fixed interval from ISO 8601 datetime strings
-  start_time = DateTime.from_iso8601!(metadata[:start])
-  end_time = DateTime.from_iso8601!(metadata[:end])
-  interval = Interval.new(start_time, end_time)
+# RED: Write failing test
+test "action atoms resolve with higher priority than task methods" do
+  domain = Domain.new()
+  |> Domain.add_action(:move, &move_action/2)
+  |> Domain.add_task_method("task_move", &move_task/2)
   
-# Detect floating durations  
-elsif Map.has_key?(metadata, :duration) do
-  # Create floating interval from ISO 8601 duration string
-  interval = Interval.from_iso8601_duration(metadata[:duration])
-end
-```
-
-### Phase 2: Unified Entity/Capability/Resource Specification (HIGH PRIORITY)
-**File**: `lib/aria_engine/domain/actions.ex`
-
-**Missing/Required**:
-- [ ] Add `requires_agent` metadata support
-- [ ] Add `requires_entities` metadata support  
-- [ ] Add `resources` metadata support
-- [ ] Validation logic for requirements
-
-**Implementation Patterns Needed**:
-```elixir
-# Agent capability requirements
-requires_agent: %{
-  capabilities: [:cooking, :menu_planning],
-  properties: %{experience_level: "expert"}
-}
-
-# Entity requirements
-requires_entities: [
-  %{type: "oven", properties: %{temperature_max: 400}},
-  %{type: "workspace", properties: %{size: "large"}}
-]
-
-# Resource requirements
-resources: %{
-  consumables: ["flour", "eggs", "milk"],
-  tools: ["mixing_bowl", "whisk"],
-  locations: ["kitchen"]
-}
-```
-
-### Phase 3: Goal Format Standardization (HIGH PRIORITY)
-**File**: Multiple files across codebase
-
-**Missing/Required**:
-- [ ] Audit all goal usage for `{predicate, subject, value}` format
-- [ ] Convert to `{subject, predicate, value}` format
-- [ ] Add deprecation warnings for old format
-- [ ] Update documentation and examples
-
-**Implementation Patterns Needed**:
-```elixir
-# CORRECT format (subject-first)
-{subject, predicate, value}
-{"player", "location", "room1"}
-{"door", "state", "open"}
-
-# DEPRECATED format (predicate-first) - TOMBSTONE
-{predicate, subject, value}  # ❌ DO NOT USE
-```
-
-### Phase 4: State Validation Simplification (MEDIUM PRIORITY)
-**File**: `lib/aria_engine/domain/actions.ex`
-
-**Missing/Required**:
-- [ ] Remove `validate_temporal_condition/2` function
-- [ ] Remove `StateV2.evaluate_condition/2` usage
-- [ ] Replace all with direct `StateV2.get_fact/3` calls
-- [ ] Update condition validation logic
-
-**Implementation Patterns Needed**:
-```elixir
-# ONLY use direct fact checking (supports temporal queries)
-def validate_condition(state, {subject, predicate, required_value}) do
-  StateV2.get_fact(state, subject, predicate) == required_value
+  # Action atom should resolve first
+  assert {:action, _} = Domain.resolve(:move, domain)
+  assert {:task_method, _} = Domain.resolve("task_move", domain)
 end
 
-# For temporal validation (past/future state checking)
-def validate_temporal_condition(state, {subject, predicate, required_value}, time) do
-  StateV2.get_fact(state, subject, predicate, time) == required_value
+# GREEN: Implement minimal resolution logic
+# REFACTOR: Clean up implementation
+```
+
+**Iteration 2: Metadata Validation Framework**
+```elixir
+# RED: Write failing test
+test "validates action metadata structure and types" do
+  metadata = %{
+    duration: "PT2H",
+    requires_entities: [%{type: "oven", capabilities: [:heating]}]
+  }
+  
+  assert {:ok, _} = validate_action_metadata(metadata)
+  assert {:error, _} = validate_action_metadata(%{invalid: "data"})
 end
 
-# Remove complex condition evaluators
+# GREEN: Implement validation framework
+# REFACTOR: Extract validation functions
 ```
 
-### Phase 5: Planning API Standardization (MEDIUM PRIORITY)
-**File**: Documentation and usage guidelines
-
-**Missing/Required**:
-- [ ] Create clear API usage guidelines
-- [ ] Document when to use each planning API
-- [ ] Provide migration path from legacy APIs
-- [ ] Add deprecation warnings
-
-**Implementation Patterns Needed**:
+**Iteration 3: Temporal Specification Support**
 ```elixir
-# For new code: Use HybridCoordinatorV2 directly
-coordinator = HybridCoordinatorV2.new_default(opts)
-HybridCoordinatorV2.plan(coordinator, domain, state, goals, opts)
-
-# For legacy compatibility: Use PlannerAdapter
-PlannerAdapter.plan(domain, state, todos, opts)
-
-# For direct HTN: Use plan_tasks
-PlannerAdapter.plan_tasks(domain, state, tasks, opts)
-```
-
-### Phase 6: Action Definition Standardization (HIGH PRIORITY)
-**File**: `lib/aria_engine/domain.ex` and `lib/aria_engine/domain/actions.ex`
-
-**Missing/Required**:
-- [ ] Implement Action Atom Priority Rule to prevent aliasing
-- [ ] Fix automatic primitive method creation naming conflicts
-- [ ] Standardize on `Domain.add_action/3` with metadata
-- [ ] Deprecate complex DurativeAction struct usage
-- [ ] Simplify module-based domain creation
-- [ ] Update all domain examples
-
-**Action Atom Priority Rule (CRITICAL)**:
-```elixir
-# PROBLEM: Current automatic primitive method creation causes aliasing
-task_name = Atom.to_string(name)  # "move" - CONFLICTS with :move atom
-
-# SOLUTION: Use task_ prefix to eliminate ALL aliasing
-task_name = "task_#{Atom.to_string(name)}"  # "task_move"
-primitive_method_fn = fn _state, args -> [{name, args}] end  # returns {:move, args}
-
-# Zero aliasing achieved:
-# - Action atoms: :move, :cook, :build (direct execution)
-# - Task methods: "task_move", "task_cook", "task_build" (decomposition)
-# - NO conflicts between atom and string identifiers
-```
-
-**Implementation Patterns Needed**:
-```elixir
-# Clear separation with zero aliasing
-# Action atoms: :move, :cook, :build (direct execution, high priority)
-# Task methods: "task_move", "task_cook", "task_build" (decomposition, lower priority)
-
-# No resolution conflicts - completely different namespaces
-def resolve_action_or_task(domain, identifier) do
-  cond do
-    is_atom(identifier) and has_action?(domain, identifier) ->
-      {:action, get_action(domain, identifier)}
-    
-    is_binary(identifier) and has_task_methods?(domain, identifier) ->
-      {:task_methods, get_task_methods(domain, identifier)}
-    
-    true ->
-      {:error, "No action or task method found for #{inspect(identifier)}"}
-  end
+# RED: Write failing test
+test "supports all temporal specification patterns" do
+  # Duration only
+  assert {:ok, _} = validate_temporal(%{duration: "PT2H"})
+  
+  # Fixed interval
+  assert {:ok, _} = validate_temporal(%{
+    start: "2025-06-22T10:00:00Z",
+    end: "2025-06-22T11:00:00Z"
+  })
+  
+  # Open-ended intervals
+  assert {:ok, _} = validate_temporal(%{start: "2025-06-22T10:00:00Z"})
+  assert {:ok, _} = validate_temporal(%{end: "2025-06-22T11:00:00Z"})
+  
+  # Invalid combinations
+  assert {:error, _} = validate_temporal(%{duration: "PT2H", start: "2025-06-22T10:00:00Z"})
 end
 
-# Automatic primitive method creation with task_ prefix
-def create_primitive_method(domain, action_name) do
-  task_name = "task_#{Atom.to_string(action_name)}"
-  primitive_method_fn = fn _state, args -> [{action_name, args}] end
-  Domain.add_task_method(domain, task_name, primitive_method_fn)
-end
+# GREEN: Implement temporal validation
+# REFACTOR: Extract ISO 8601 parsing
 ```
 
-## Implementation Strategy
+**Iteration 4: Entity Requirements**
+```elixir
+# RED: Write failing test
+test "validates entity requirements with capabilities" do
+  entities = [
+    %{type: "agent", capabilities: [:cooking]},
+    %{type: "oven", capabilities: [:heating, :baking]}
+  ]
+  
+  assert {:ok, _} = validate_entity_requirements(entities)
+  assert {:error, _} = validate_entity_requirements([%{invalid: "entity"}])
+end
 
-### Approach Requirements
-1. **Clean Evolution**: Prioritize evolving codebase with all tests and warnings resolved over internal backward compatibility
-2. **Testing Strategy**: Comprehensive unit tests for each phase with zero warnings/errors
-3. **Sequential Implementation**: One phase at a time with complete test suite passing and clean compilation
-4. **Phase 1 Priority**: Core Duration Support must support both fixed schedule (ISO 8601 datetime strings) and floating duration schedule (ISO 8601 duration strings)
+# GREEN: Implement entity validation
+# REFACTOR: Extract capability validation
+```
 
-### Current State Analysis (June 22, 2025)
+**Iteration 5: State Integration**
+```elixir
+# RED: Write failing test
+test "integrates with StateV2 for property queries" do
+  state = StateV2.new()
+  |> StateV2.set_fact("oven_1", "max_temp", 450)
+  
+  entities = find_entities_with_capability(state, :heating)
+  |> filter_by_property(state, "max_temp", {:>=, 400})
+  
+  assert "oven_1" in entities
+end
 
-**✅ ALREADY IMPLEMENTED:**
-- **Goal Format Standardization**: All 87 test instances use correct `{subject, predicate, value}` format
-- **State Validation**: `StateV2.get_fact/3` is already the standard approach throughout codebase
-- **Floating Duration Support**: ISO 8601 duration strings (`"PT8H"`) already supported via `Interval.from_iso8601_duration/1`
+# GREEN: Implement state integration
+# REFACTOR: Extract query helpers
+```
 
-**❌ MISSING IMPLEMENTATION:**
-- **Fixed Schedule Support**: ISO 8601 datetime strings for `start`/`end` times not supported
-- **Unified Metadata Validation**: No validation for agent/entity/resource requirements
-- **Action Atom Priority Rule**: Automatic primitive method creation causes aliasing conflicts
-- **Deprecated Function Cleanup**: Some legacy validation functions still present
+**Iteration 6: End-to-End Integration**
+```elixir
+# RED: Write failing test
+test "complete unified action specification works end-to-end" do
+  domain = Domain.new()
+  |> Domain.add_action(:cook_meal, &cook_meal/2, %{
+    duration: "PT2H",
+    requires_entities: [
+      %{type: "agent", capabilities: [:cooking]},
+      %{type: "oven", capabilities: [:heating]}
+    ]
+  })
+  
+  # Should integrate with planning system
+  {:ok, plan} = plan_with_unified_specification(domain, state, goals)
+  assert plan.actions |> Enum.any?(&(&1.name == :cook_meal))
+end
 
-### Step 1: Phase 1 - Core Duration Support Extension
-**Status**: ⏳ IN PROGRESS
-**Priority**: HIGH
+# GREEN: Implement end-to-end integration
+# REFACTOR: Clean up integration points
+```
 
-1. Add ISO 8601 datetime string support for fixed intervals (`start`/`end` metadata)
-2. Maintain existing ISO 8601 duration string support (`duration` metadata)
-3. Create unified temporal specification validation (duration XOR start+end)
-4. Comprehensive unit tests for both fixed and floating duration patterns
+### Red-Green-Refactor Guidelines
 
-### Step 2: Phase 2 - Unified Metadata Validation
-**Status**: 📋 PLANNED
-**Priority**: HIGH
+**Red Phase (Write Failing Test)**
+- Focus on interface design - how should the API work?
+- Write the test you wish you could call
+- Make it fail for the right reason (missing implementation, not syntax error)
 
-1. Extend action metadata to support `requires_agent`, `requires_entities`, `resources`
-2. Create comprehensive validation logic with type specifications
-3. Add runtime validation with clear error messages
-4. Integrate validation into `Domain.add_action/4`
+**Green Phase (Make Test Pass)**
+- Write minimal code to make the test pass
+- Don't worry about perfect design yet
+- Get to green as quickly as possible
 
-### Step 3: Phase 3 - Goal Format Standardization
-**Status**: ✅ COMPLETED
-**Priority**: ~~HIGH~~ COMPLETE
+**Refactor Phase (Clean Up)**
+- Improve both test and implementation code
+- Extract common patterns
+- Ensure code is well-structured and maintainable
+- All tests must still pass after refactoring
 
-~~1. Audit and convert goal formats to subject-first~~ ✅ Already using `{subject, predicate, value}` format
-~~2. Add deprecation warnings for old format~~ ✅ No old format found in codebase
-~~3. Update documentation and examples~~ ✅ All examples already use correct format
+### Current Focus: Iteration 1 - Infrastructure Foundation
 
-### Step 4: Phase 4 - State Validation Simplification  
-**Status**: ✅ MOSTLY COMPLETE
-**Priority**: ~~MEDIUM~~ LOW
+**Next Test to Implement**: Action atom priority rule test to establish foundational infrastructure before building validation framework.
 
-~~1. Remove `validate_temporal_condition/2` function~~ ⚠️ Still present but not widely used
-~~2. Replace all with direct `StateV2.get_fact/3` calls~~ ✅ Already standard practice
-~~3. Update condition validation logic~~ ✅ `StateV2.evaluate_condition/2` handles complex cases
-
-### Step 5: Phase 5 - Action Atom Priority Rule Implementation
-**Status**: 📋 PLANNED  
-**Priority**: HIGH
-
-1. Implement `task_` prefix for automatic primitive method creation
-2. Fix aliasing conflicts between action atoms and task method strings
-3. Update method resolution logic for zero conflicts
-4. Comprehensive tests for action/task namespace separation
-
-### Step 6: Phase 6 - Enhanced Metadata Support
-**Status**: 📋 PLANNED
-**Priority**: MEDIUM
-
-1. Add agent capability requirement checking
-2. Add entity and resource requirement validation
-3. Integrate with planning system for resource allocation
-4. Update all domain examples with new metadata patterns
-
-### Current Focus: Phase 1 - Core Duration Support Extension
-
-**Rationale**: Complete the missing ISO 8601 datetime string support for fixed scheduling before building unified specification system. This enables both floating duration (effort-based) and fixed schedule (time-based) action definitions.
+**Rationale**: Following TDD principles, we start with the test that drives the most fundamental design decision - how actions and task methods are resolved. This infrastructure must work correctly before we can build the metadata validation and temporal specification features on top of it.
 
 ## Success Criteria
 
