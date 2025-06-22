@@ -3,12 +3,12 @@
 
 defmodule Plan do
   @moduledoc """
-  IPyHOP-style reentrant HTN planning implementation with Run-Lazy-Refineahead.
+  IPyHOP-style reentrant HTN planning implementation.
   This module acts as a facade for the new, modularized planning components.
   """
 
   # Removed NodeExpansion
-  alias AriaEngine.Plan.{Core, Backtracking, Execution, Blacklisting}
+  alias AriaEngine.Plan.{Core, Backtracking, Blacklisting}
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
@@ -39,11 +39,6 @@ defmodule Plan do
   def blacklist_command(solution_tree, command),
     do: Blacklisting.blacklist_command(solution_tree, command)
 
-  # Delegate to Execution
-  @spec run_lazy_refineahead(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
-          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
-  def run_lazy_refineahead(domain, initial_state, solution_tree, opts \\ []),
-    do: Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
 
   # Delegate to Utils
   @doc """

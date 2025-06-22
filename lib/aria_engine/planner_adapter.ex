@@ -158,40 +158,6 @@ defmodule AriaEngine.PlannerAdapter do
     end
   end
 
-  @doc """
-  Execute plan using HybridCoordinator while maintaining run_lazy_refineahead API compatibility.
-  """
-  @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
-          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
-  def run_lazy_refineahead(
-        domain,
-        %AriaEngine.StateV2{} = initial_state,
-        solution_tree,
-        opts \\ []
-      ) do
-    verbose = Keyword.get(opts, :verbose, 0)
-
-    if verbose > 1 do
-      Logger.debug(
-        "PlannerAdapter: Converting run_lazy_refineahead call to HybridCoordinator.execute/4"
-      )
-    end
-
-    # Wrap solution tree in EncapsulatedPlan for HybridCoordinator
-    encapsulated_plan =
-      DataStructures.EncapsulatedPlan.new(solution_tree, %{
-        adapter_wrapped: true,
-        original_api: "Plan.run_lazy_refineahead"
-      })
-
-    # Use HybridCoordinator execution engine
-    coordinator = HybridCoordinatorV2.new_default(opts)
-
-    case HybridCoordinatorV2.execute(coordinator, domain, initial_state, encapsulated_plan, opts) do
-      {:ok, final_state} -> {:ok, final_state}
-      {:error, reason} -> {:error, reason}
-    end
-  end
 
   @doc """
   Validate plan using HybridCoordinator while maintaining Plan.validate_plan/3 API compatibility.

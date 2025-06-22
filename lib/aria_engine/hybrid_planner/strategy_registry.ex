@@ -23,7 +23,7 @@ defmodule HybridPlanner.StrategyRegistry do
       planning_fn = strategies.planning.htn
       temporal_fn = strategies.temporal.stn
       execution_fn = strategies.execution.lazy
-      
+
       # Compose them in a coordinator
       coordinator = StrategyCoordinator.new(planning_fn, temporal_fn, execution_fn)
   """
@@ -111,20 +111,6 @@ defmodule HybridPlanner.StrategyRegistry do
     Plan.plan(domain, state, goals, opts)
   end
 
-  @doc false
-  def strips_planning_strategy(domain, state, goals, opts) do
-    # Future: STRIPS implementation
-    # For now, delegate to HTN but could be replaced with actual STRIPS planner
-    Plan.plan(domain, state, goals, opts)
-  end
-
-  @doc false
-  def reactive_planning_strategy(domain, state, goals, opts) do
-    # Future: Reactive planning implementation
-    # For now, delegate to HTN
-    Plan.plan(domain, state, goals, opts)
-  end
-
   # ==================== TEMPORAL STRATEGIES ====================
 
   @doc false
@@ -151,23 +137,16 @@ defmodule HybridPlanner.StrategyRegistry do
   # ==================== EXECUTION STRATEGIES ====================
 
   @doc false
-  def lazy_execution_strategy(domain, state, plan, opts) do
-    # Use Run-Lazy-Refineahead execution
-    Plan.run_lazy_refineahead(domain, state, plan, opts)
+  def lazy_execution_strategy(domain, state, plan, _opts) do
+    # Use plan validation for execution
+    Plan.validate_plan(domain, state, plan)
   end
 
   @doc false
-  def eager_execution_strategy(domain, state, plan, opts) do
-    # Future: Eager execution (validate entire plan first)
-    # For now, delegate to lazy
-    Plan.run_lazy_refineahead(domain, state, plan, opts)
-  end
-
-  @doc false
-  def streaming_execution_strategy(domain, state, plan, opts) do
+  def streaming_execution_strategy(domain, state, plan, _opts) do
     # Future: Streaming execution with live updates
-    # For now, delegate to lazy
-    Plan.run_lazy_refineahead(domain, state, plan, opts)
+    # For now, delegate to plan validation
+    Plan.validate_plan(domain, state, plan)
   end
 
 end

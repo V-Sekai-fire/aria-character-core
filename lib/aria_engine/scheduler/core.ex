@@ -250,7 +250,7 @@ defmodule AriaEngine.Scheduler.Core do
               })
 
             if simulation_mode do
-              # Run simulation using run_lazy_refineahead
+              # Run simulation using plan validation
               simulate_plan_execution(
                 domain,
                 initial_state,
@@ -286,7 +286,7 @@ defmodule AriaEngine.Scheduler.Core do
   end
 
   @doc """
-  Simulate plan execution using run_lazy_refineahead.
+  Simulate plan execution using plan validation.
   """
   def simulate_plan_execution(
         domain,
@@ -299,15 +299,15 @@ defmodule AriaEngine.Scheduler.Core do
         verbose
       ) do
     if verbose > 1 do
-      Logger.debug("AriaEngine.Scheduler: Running simulation with run_lazy_refineahead")
+      Logger.debug("AriaEngine.Scheduler: Running simulation with plan validation")
     end
 
     # Extract internal plan from encapsulated plan
     internal_plan =
       HybridPlanner.DataStructures.EncapsulatedPlan.get_internal_plan(encapsulated_plan)
 
-    # Execute plan using run_lazy_refineahead
-    case Plan.run_lazy_refineahead(domain, initial_state, internal_plan, verbose: verbose) do
+    # Since run_lazy_refineahead has been removed, use plan validation instead
+    case Plan.validate_plan(domain, initial_state, internal_plan) do
       {:ok, final_state} ->
         # Convert simulation results to schedule format
         schedule =
