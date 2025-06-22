@@ -901,24 +901,22 @@ defmodule Timeline do
     |> Enum.sort_by(& &1.start_time, DateTime)
     |> Enum.chunk_every(2, 1, :discard)
     |> Enum.with_index()
-    |> Enum.filter_map(
-      fn {[interval1, interval2], _index} ->
-        # Check if action types are different
-        type1 = get_interval_action_type(interval1)
-        type2 = get_interval_action_type(interval2)
-        type1 != type2
-      end,
-      fn {[interval1, interval2], index} ->
-        # Create bridge between the intervals
-        bridge_time = DateTime.add(interval1.end_time, 1, :second)
-        bridge_id = "transition_#{index}"
-        Bridge.new(bridge_id, bridge_time, :decision, %{
-          from_action: interval1.id,
-          to_action: interval2.id,
-          rule: :action_type_transitions
-        })
-      end
-    )
+    |> Enum.filter(fn {[interval1, interval2], _index} ->
+      # Check if action types are different
+      type1 = get_interval_action_type(interval1)
+      type2 = get_interval_action_type(interval2)
+      type1 != type2
+    end)
+    |> Enum.map(fn {[interval1, interval2], index} ->
+      # Create bridge between the intervals
+      bridge_time = DateTime.add(interval1.end_time, 1, :second)
+      bridge_id = "transition_#{index}"
+      Bridge.new(bridge_id, bridge_time, :decision, %{
+        from_action: interval1.id,
+        to_action: interval2.id,
+        rule: :action_type_transitions
+      })
+    end)
   end
 
   # Create bridges at resource changes
@@ -927,24 +925,22 @@ defmodule Timeline do
     |> Enum.sort_by(& &1.start_time, DateTime)
     |> Enum.chunk_every(2, 1, :discard)
     |> Enum.with_index()
-    |> Enum.filter_map(
-      fn {[interval1, interval2], _index} ->
-        # Check if resource requirements are different
-        resources1 = get_interval_resources(interval1)
-        resources2 = get_interval_resources(interval2)
-        resources1 != resources2
-      end,
-      fn {[interval1, interval2], index} ->
-        # Create resource check bridge
-        bridge_time = DateTime.add(interval1.end_time, 500, :millisecond)
-        bridge_id = "resource_check_#{index}"
-        Bridge.new(bridge_id, bridge_time, :resource_check, %{
-          from_action: interval1.id,
-          to_action: interval2.id,
-          rule: :resource_changes
-        })
-      end
-    )
+    |> Enum.filter(fn {[interval1, interval2], _index} ->
+      # Check if resource requirements are different
+      resources1 = get_interval_resources(interval1)
+      resources2 = get_interval_resources(interval2)
+      resources1 != resources2
+    end)
+    |> Enum.map(fn {[interval1, interval2], index} ->
+      # Create resource check bridge
+      bridge_time = DateTime.add(interval1.end_time, 500, :millisecond)
+      bridge_id = "resource_check_#{index}"
+      Bridge.new(bridge_id, bridge_time, :resource_check, %{
+        from_action: interval1.id,
+        to_action: interval2.id,
+        rule: :resource_changes
+      })
+    end)
   end
 
   # Create bridges at phase boundaries

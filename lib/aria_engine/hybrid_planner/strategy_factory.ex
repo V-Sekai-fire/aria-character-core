@@ -211,17 +211,19 @@ defmodule HybridPlanner.StrategyFactory do
       when is_map(strategy_config) do
     try do
       # Resolve strategy modules from configuration
-      case resolve_strategy_modules(factory, strategy_config) do
-        {:ok, strategy_modules} ->
-          # Validate all strategy modules before creating coordinator
-          case validate_all_strategy_modules(factory, strategy_modules) do
-            {:ok, updated_factory} ->
-              coordinator = HybridCoordinatorV2.new(strategy_modules, opts)
-              {:ok, coordinator}
-              
-            {:error, reason} ->
-              {:error, "Strategy validation failed: #{reason}"}
-          end
+        case resolve_strategy_modules(factory, strategy_config) do
+          {:ok, strategy_modules} ->
+            # Validate all strategy modules before creating coordinator
+            case validate_all_strategy_modules(factory, strategy_modules) do
+              {:ok, _updated_factory} ->
+                # Note: updated_factory contains validation cache but we don't need to return it
+                # since we're only creating a coordinator here
+                coordinator = HybridCoordinatorV2.new(strategy_modules, opts)
+                {:ok, coordinator}
+                
+              {:error, reason} ->
+                {:error, "Strategy validation failed: #{reason}"}
+            end
 
         {:error, reason} ->
           {:error, reason}

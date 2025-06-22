@@ -37,7 +37,6 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
 
   alias HybridPlanner.Strategies.Default.STNTemporalStrategy
   alias AriaEngine.Timeline
-  alias AriaEngine.Timeline.Bridge
 
   require Logger
 
@@ -484,13 +483,17 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
 
   # Helper functions for finding actions relative to bridge positions
   defp find_actions_before_position(action_names, position) do
-    # Simplified implementation - in practice would analyze actual action timing
-    Enum.take(action_names, max(1, div(length(action_names), 2)))
+    # Filter actions that occur before the bridge position
+    # For now, use position as an index into the action list
+    position_index = max(0, min(position, length(action_names) - 1))
+    Enum.take(action_names, position_index)
   end
 
   defp find_actions_after_position(action_names, position) do
-    # Simplified implementation - in practice would analyze actual action timing
-    Enum.drop(action_names, div(length(action_names), 2))
+    # Filter actions that occur after the bridge position
+    # For now, use position as an index into the action list
+    position_index = max(0, min(position, length(action_names) - 1))
+    Enum.drop(action_names, position_index + 1)
   end
 
   defp find_actions_at_position(action_names, _position) do
@@ -624,12 +627,11 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
   def performance_profile do
     base_profile = STNTemporalStrategy.performance_profile()
 
-    %{
-      base_profile
-      | constraint_addition_complexity: :linear_with_bridge_overhead,
-        memory_usage: :moderate_plus_bridges,
-        scalability: :good_with_segmentation,
-        additional_features: [:bridge_segmentation, :automatic_decision_points]
-    }
+    Map.merge(base_profile, %{
+      constraint_addition_complexity: :linear_with_bridge_overhead,
+      memory_usage: :moderate_plus_bridges,
+      scalability: :good_with_segmentation,
+      additional_features: [:bridge_segmentation, :automatic_decision_points]
+    })
   end
 end
