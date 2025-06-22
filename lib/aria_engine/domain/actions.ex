@@ -13,19 +13,120 @@ defmodule AriaEngine.Domain.Actions do
   @type action_name :: atom()
   @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
 
-  @doc """
-  Adds an action to the domain using the unified API.
+  # Validates action metadata according to the unified durative action specification.
+  # Supports:
+  # - Fixed schedule: start/end ISO 8601 datetime strings
+  # - Floating duration: ISO 8601 duration strings (PT format)
+  # - Entity requirements: structured entity specifications
+  @spec validate_action_metadata(map()) :: map()
+  defp validate_action_metadata(metadata) when is_map(metadata) do
+    # Check temporal specification validity
+    validate_temporal_specification(metadata)
 
-  Actions can be:
-  - Functions (for instantaneous actions)
-  - DurativeAction structs with duration = 0 (instantaneous actions)
-  - DurativeAction structs with duration > 0 (durative actions)
+    # Validate entity requirements if present
+    if Map.has_key?(metadata, :requires_entities) do
+      validate_entity_requirements(metadata.requires_entities)
+    end
 
-  When an action is added, it also creates a corresponding task method
-  so the action can be used directly in task decompositions.
+    metadata
+  end
 
-  Optional `metadata` can be provided for the action, e.g., `duration: {min, max}`.
-  """
+  # Validates temporal specification according to unified durative action spec
+  @spec validate_temporal_specification(map()) :: :ok
+  defp validate_temporal_specification(metadata) do
+    has_duration = Map.has_key?(metadata, :duration)
+    has_start = Map.has_key?(metadata, :start)
+    has_end = Map.has_key?(metadata, :end)
+
+    cond do
+      # Case 1: Duration with start/end is invalid
+      has_duration and (has_start or has_end) ->
+        raise ArgumentError, "invalid temporal specification: cannot mix duration with start/end times"
+
+      # Case 2: Must have at least one temporal specification
+      not (has_duration or has_start or has_end) ->
+        raise ArgumentError, "must have at least one temporal specification (duration, start, or end)"
+
+      # Case 3: Validate ISO 8601 datetime formats for start/end
+      has_start ->
+        validate_iso8601_datetime(metadata.start, "start")
+        if has_end do
+          validate_iso8601_datetime(metadata.end, "end")
+          validate_start_before_end(metadata.start, metadata.end)
+        end
+        :ok
+
+      # Case 4: Validate end time only
+      has_end ->
+        validate_iso8601_datetime(metadata.end, "end")
+        :ok
+
+      # Case 5: Duration only (existing floating duration support)
+      has_duration ->
+        :ok
+    end
+  end
+
+  # Validates ISO 8601 datetime string format using AriaEngine.Utils
+  @spec validate_iso8601_datetime(String.t(), String.t()) :: :ok
+  defp validate_iso8601_datetime(datetime_string, field_name) when is_binary(datetime_string) do
+    case AriaEngine.Utils.validate_iso8601_datetime(datetime_string) do
+      {:ok, _datetime} ->
+        :ok
+      {:error, reason} ->
+        raise ArgumentError, "invalid ISO 8601 datetime for #{field_name}: #{reason}"
+    end
+  end
+
+  defp validate_iso8601_datetime(value, field_name) do
+    raise ArgumentError, "invalid ISO 8601 datetime for #{field_name}: expected string, got #{inspect(value)}"
+  end
+
+  # Validates that start time is before end time using AriaEngine.Utils
+  @spec validate_start_before_end(String.t(), String.t()) :: :ok
+  defp validate_start_before_end(start_string, end_string) do
+    case AriaEngine.Utils.validate_datetime_order(start_string, end_string) do
+      :ok ->
+        :ok
+      {:error, reason} ->
+        raise ArgumentError, reason
+    end
+  end
+
+  # Validates entity requirements structure
+  @spec validate_entity_requirements(list()) :: :ok
+  defp validate_entity_requirements(requires_entities) when is_list(requires_entities) do
+    Enum.each(requires_entities, &validate_single_entity_requirement/1)
+    :ok
+  end
+
+  defp validate_entity_requirements(value) do
+    raise ArgumentError, "requires_entities must be a list, got #{inspect(value)}"
+  end
+
+  # Validates a single entity requirement
+  @spec validate_single_entity_requirement(map()) :: :ok
+  defp validate_single_entity_requirement(entity_req) when is_map(entity_req) do
+    # Must have :type field
+    unless Map.has_key?(entity_req, :type) do
+      raise ArgumentError, "entity requirement must have :type field"
+    end
+
+    # If capabilities are present, they must be a list of atoms
+    if Map.has_key?(entity_req, :capabilities) do
+      capabilities = entity_req.capabilities
+      unless is_list(capabilities) and Enum.all?(capabilities, &is_atom/1) do
+        raise ArgumentError, "capabilities must be list of atoms"
+      end
+    end
+
+    :ok
+  end
+
+  defp validate_single_entity_requirement(value) do
+    raise ArgumentError, "entity requirement must be a map, got #{inspect(value)}"
+  end
+
   @spec add_action(t(), action_name(), action_fn() | AriaEngine.Domain.DurativeAction.t(), map()) :: t()
   def add_action(
         domain,
@@ -65,10 +166,13 @@ defmodule AriaEngine.Domain.Actions do
          action_fn,
          metadata
        ) do
+    # Validate metadata according to unified durative action specification
+    validated_metadata = validate_action_metadata(metadata)
+
     # Normalize duration in metadata if present
     normalized_metadata =
-      if Map.has_key?(metadata, :duration) do
-        duration = metadata[:duration]
+      if Map.has_key?(validated_metadata, :duration) do
+        duration = validated_metadata[:duration]
 
         # Check if duration is an ISO 8601 string and convert to Interval
         normalized_duration =
@@ -80,9 +184,9 @@ defmodule AriaEngine.Domain.Actions do
             AriaEngine.Utils.normalize_duration(duration)
           end
 
-        Map.put(metadata, :duration, normalized_duration)
+        Map.put(validated_metadata, :duration, normalized_duration)
       else
-        metadata
+        validated_metadata
       end
 
     # Add the action to the actions map

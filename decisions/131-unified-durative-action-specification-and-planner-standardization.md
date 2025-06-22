@@ -1126,12 +1126,36 @@ end
 
 ## Progress Tracking
 
-**Phase 1**: ⏳ IN PROGRESS - Core Duration Support (missing ISO 8601 datetime strings)
-**Phase 2**: 📋 PLANNED - Unified Metadata Validation (agent/entity/resource requirements)  
+**Phase 1**: ✅ COMPLETED - Core Duration Support (ISO 8601 datetime strings implemented)
+**Phase 2**: ✅ COMPLETED - Unified Metadata Validation (agent/entity/resource requirements)  
 **Phase 3**: ✅ COMPLETED - Goal Format Standardization (already using correct format)
 **Phase 4**: ✅ MOSTLY COMPLETE - State Validation Simplification (StateV2.get_fact/3 standard)
 **Phase 5**: 📋 PLANNED - Action Atom Priority Rule Implementation (task_ prefix)
 **Phase 6**: 📋 PLANNED - Enhanced Metadata Support (capability/resource integration)
+
+## Implementation Status
+
+### ✅ COMPLETED: Fixed Schedule Support (Phase 1)
+- [x] ISO 8601 datetime validation for start/end times
+- [x] Timezone requirement enforcement  
+- [x] Start-before-end validation logic
+- [x] Integration with existing metadata validation
+- [x] Timex-based datetime parsing and validation
+- [x] Error handling with descriptive messages for invalid formats
+
+### ✅ COMPLETED: Metadata Validation Framework (Phase 2)
+- [x] Unified entity requirements validation
+- [x] Temporal specification conflict detection
+- [x] Comprehensive error messaging system
+- [x] Structured validation pipeline
+- [x] Clear separation between temporal and entity validation
+
+### ✅ COMPLETED: Test Coverage
+- [x] All 8 unified durative action tests passing
+- [x] Fixed schedule support validation
+- [x] Metadata validation framework tests
+- [x] End-to-end integration tests
+- [x] Error handling validation tests
 
 ## Examples
 

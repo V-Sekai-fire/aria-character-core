@@ -25,10 +25,10 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.normalize_duration(%{hours: 1, minutes: 30})
       "PT1H30M"
-      
+
       iex> AriaEngine.Utils.normalize_duration(%{"start" => "2025-06-20T09:00:00Z", "end" => "2025-06-20T10:00:00Z"})
       "PT1H"
-      
+
       iex> AriaEngine.Utils.normalize_duration({:fixed, 3600})
       "PT1H"
   """
@@ -152,7 +152,7 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.duration_struct_to_iso8601(%{hours: 1, minutes: 30, seconds: 0})
       "PT1H30M"
-      
+
       iex> AriaEngine.Utils.duration_struct_to_iso8601(%{hours: 0, minutes: 5, seconds: 30})
       "PT5M30S"
   """
@@ -177,7 +177,7 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.duration_struct_to_seconds(%{hours: 1, minutes: 30, seconds: 15})
       5415
-      
+
       iex> AriaEngine.Utils.duration_struct_to_seconds(%{hours: 0, minutes: 5, seconds: 0})
       300
   """
@@ -197,7 +197,7 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.duration_to_string(%{hours: 1, minutes: 30, seconds: 0})
       "1h 30m"
-      
+
       iex> AriaEngine.Utils.duration_to_string(%{hours: 0, minutes: 0, seconds: 45})
       "45s"
   """
@@ -226,7 +226,7 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.seconds_to_duration_struct(3665)
       %{hours: 1, minutes: 1, seconds: 5}
-      
+
       iex> AriaEngine.Utils.seconds_to_duration_struct(300)
       %{hours: 0, minutes: 5, seconds: 0}
   """
@@ -251,7 +251,7 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.valid_duration?(%{hours: 1, minutes: 30, seconds: 0})
       true
-      
+
       iex> AriaEngine.Utils.valid_duration?(%{hours: -1, minutes: 30, seconds: 0})
       false
   """
@@ -275,7 +275,7 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.iso8601_to_seconds("PT1H30M")
       5400
-      
+
       iex> AriaEngine.Utils.iso8601_to_seconds("PT5M30S")
       330
   """
@@ -298,7 +298,7 @@ defmodule AriaEngine.Utils do
 
       iex> AriaEngine.Utils.iso8601_to_duration_struct("PT1H30M")
       %{hours: 1, minutes: 30, seconds: 0}
-      
+
       iex> AriaEngine.Utils.iso8601_to_duration_struct("PT5M30S")
       %{hours: 0, minutes: 5, seconds: 30}
   """
@@ -307,5 +307,61 @@ defmodule AriaEngine.Utils do
     iso8601_string
     |> iso8601_to_seconds()
     |> seconds_to_duration_struct()
+  end
+
+  @doc """
+  Validates an ISO 8601 datetime string with timezone information.
+
+  Returns {:ok, datetime} if valid, {:error, reason} if invalid.
+  Requires timezone information (Z, +, or - offset).
+
+  ## Examples
+
+      iex> AriaEngine.Utils.validate_iso8601_datetime("2025-06-22T10:00:00Z")
+      {:ok, ~U[2025-06-22 10:00:00Z]}
+
+      iex> AriaEngine.Utils.validate_iso8601_datetime("2025-06-22T10:00:00")
+      {:error, "missing timezone information"}
+  """
+  @spec validate_iso8601_datetime(String.t()) :: {:ok, DateTime.t()} | {:error, String.t()}
+  def validate_iso8601_datetime(datetime_string) when is_binary(datetime_string) do
+    # Check timezone requirement first
+    unless String.contains?(datetime_string, "Z") or
+           String.contains?(datetime_string, "+") or
+           String.contains?(datetime_string, "-") do
+      {:error, "missing timezone information"}
+    else
+      case DateTime.from_iso8601(datetime_string) do
+        {:ok, datetime, _offset} -> {:ok, datetime}
+        {:error, reason} -> {:error, "invalid ISO 8601 format: #{reason}"}
+      end
+    end
+  end
+
+  def validate_iso8601_datetime(value) do
+    {:error, "expected string, got #{inspect(value)}"}
+  end
+
+  @doc """
+  Validates that start datetime comes before end datetime.
+
+  ## Examples
+
+      iex> AriaEngine.Utils.validate_datetime_order("2025-06-22T10:00:00Z", "2025-06-22T11:00:00Z")
+      :ok
+
+      iex> AriaEngine.Utils.validate_datetime_order("2025-06-22T11:00:00Z", "2025-06-22T10:00:00Z")
+      {:error, "start time must be before end time"}
+  """
+  @spec validate_datetime_order(String.t(), String.t()) :: :ok | {:error, String.t()}
+  def validate_datetime_order(start_string, end_string) do
+    with {:ok, start_dt} <- validate_iso8601_datetime(start_string),
+         {:ok, end_dt} <- validate_iso8601_datetime(end_string) do
+      if DateTime.compare(start_dt, end_dt) == :lt do
+        :ok
+      else
+        {:error, "start time must be before end time"}
+      end
+    end
   end
 end
