@@ -544,8 +544,8 @@ defmodule TemporalPlanner.STNMethod do
     metadata = get_action_metadata(action)
     
     case metadata do
-      %{bridge_after: bridge_id} when bridge_id in bridge_ids -> true
-      %{bridge_before: bridge_id} when bridge_id in bridge_ids -> true
+      %{bridge_after: bridge_id} -> bridge_id in bridge_ids
+      %{bridge_before: bridge_id} -> bridge_id in bridge_ids
       %{bridges: bridges} when is_list(bridges) ->
         Enum.any?(bridges, &(&1 in bridge_ids))
       _ -> false

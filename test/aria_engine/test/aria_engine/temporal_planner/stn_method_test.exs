@@ -112,6 +112,161 @@ defmodule TemporalPlanner.STNMethodTest do
       # Should have temporal segments
       assert length(updated_method.temporal_segments) >= 1
     end
+
+    test "creates multiple segments when bridges are present" do
+      actions = [
+        STNAction.new("phase1_action1", duration: {1000, 2000}),
+        STNAction.new("phase1_action2", duration: {1500, 2500}),
+        STNAction.new("phase2_action1", duration: {2000, 3000}),
+        STNAction.new("phase2_action2", duration: {1000, 1500})
+      ]
+
+      method = STNMethod.new("multi_phase", :sequential, actions)
+
+      # Add bridge between phase 1 and phase 2 (after first 2 actions)
+      bridge = %{
+        action_id: "phase_checkpoint",
+        type: :decision,
+        duration: :instantaneous,
+        metadata: %{position: 2}
+      }
+
+      updated_method = STNMethod.add_bridge_action(method, bridge)
+
+      # THIS SHOULD FAIL - currently creates only 1 segment
+      assert length(updated_method.temporal_segments) == 2
+
+      # Verify segment contents
+      [segment1, segment2] = updated_method.temporal_segments
+      segment1_points = Timeline.time_points(segment1)
+      segment2_points = Timeline.time_points(segment2)
+      
+      # Each segment should have timepoints for its actions
+      assert length(segment1_points) >= 4  # 2 actions = 4 timepoints (start/end each)
+      assert length(segment2_points) >= 4  # 2 actions = 4 timepoints (start/end each)
+    end
+
+    test "bridge positions correctly split action sequences" do
+      actions = [
+        STNAction.new("setup", duration: {1000, 2000}),
+        STNAction.new("prepare", duration: {1500, 2500}),
+        STNAction.new("execute", duration: {2000, 3000}),
+        STNAction.new("cleanup", duration: {1000, 1500})
+      ]
+
+      # Bridge after action 2 (index 1, so position 2)
+      bridge = %{
+        action_id: "checkpoint",
+        type: :condition,
+        duration: :instantaneous,
+        metadata: %{position: 2}
+      }
+
+      method = STNMethod.new("test_method", :sequential, actions, bridge_actions: [bridge])
+
+      # THIS SHOULD FAIL - bridge position detection is broken
+      assert length(method.temporal_segments) == 2
+
+      # Verify first segment has first 2 actions worth of timepoints
+      # Verify second segment has last 2 actions worth of timepoints
+      [segment1, segment2] = method.temporal_segments
+      segment1_points = Timeline.time_points(segment1)
+      segment2_points = Timeline.time_points(segment2)
+      
+      # Each segment should have timepoints for its respective actions
+      assert length(segment1_points) >= 4  # setup + prepare actions
+      assert length(segment2_points) >= 4  # execute + cleanup actions
+    end
+
+    test "handles bridge edge cases correctly" do
+      actions = [
+        STNAction.new("action1", duration: {1000, 2000}),
+        STNAction.new("action2", duration: {1500, 2500}),
+        STNAction.new("action3", duration: {2000, 3000})
+      ]
+
+      # Bridge at start
+      bridge_start = %{
+        action_id: "start_bridge",
+        type: :decision,
+        duration: :instantaneous,
+        metadata: %{position: 0}
+      }
+
+      # Bridge at end
+      bridge_end = %{
+        action_id: "end_bridge",
+        type: :decision,
+        duration: :instantaneous,
+        metadata: %{position: 3}
+      }
+
+      method = STNMethod.new("edge_test", :sequential, actions, bridge_actions: [bridge_start, bridge_end])
+
+      # THIS SHOULD FAIL - edge case handling is broken
+      segments = method.temporal_segments
+      assert length(segments) >= 1
+      
+      # Should handle start/end bridges gracefully without creating empty segments
+      # All segments should have at least some timepoints
+      Enum.each(segments, fn segment ->
+        timepoints = Timeline.time_points(segment)
+        assert length(timepoints) > 0, "Segment should not be empty"
+      end)
+    end
+
+    test "handles consecutive bridges correctly" do
+      actions = [
+        STNAction.new("action1", duration: {1000, 2000}),
+        STNAction.new("action2", duration: {1500, 2500}),
+        STNAction.new("action3", duration: {2000, 3000})
+      ]
+
+      # Two consecutive bridges
+      bridge1 = %{
+        action_id: "bridge1",
+        type: :decision,
+        duration: :instantaneous,
+        metadata: %{position: 1}
+      }
+
+      bridge2 = %{
+        action_id: "bridge2",
+        type: :condition,
+        duration: :instantaneous,
+        metadata: %{position: 2}
+      }
+
+      method = STNMethod.new("consecutive_test", :sequential, actions, bridge_actions: [bridge1, bridge2])
+
+      # THIS SHOULD FAIL - consecutive bridge handling is broken
+      segments = method.temporal_segments
+      
+      # Should create appropriate segments without empty ones
+      assert length(segments) >= 1
+      
+      # Verify no empty segments
+      Enum.each(segments, fn segment ->
+        timepoints = Timeline.time_points(segment)
+        assert length(timepoints) > 0, "No segment should be empty with consecutive bridges"
+      end)
+    end
+
+    test "handles no bridges gracefully" do
+      actions = [
+        STNAction.new("action1", duration: {1000, 2000}),
+        STNAction.new("action2", duration: {1500, 2500})
+      ]
+
+      method = STNMethod.new("no_bridge_test", :sequential, actions, bridge_actions: [])
+
+      # Should create single segment when no bridges
+      assert length(method.temporal_segments) == 1
+      
+      segment = hd(method.temporal_segments)
+      timepoints = Timeline.time_points(segment)
+      assert length(timepoints) >= 4  # 2 actions = 4 timepoints minimum
+    end
   end
 
   describe "method composition" do
