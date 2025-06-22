@@ -24,10 +24,10 @@ defmodule RunLazyRefineaheadTest do
     todos = [{"move_with_failure", ["start", "goal"]}]
 
     # Plan using IPyHOP
-    case Plan.plan(domain, initial_state, todos, verbose: 1) do
+    case AriaEngine.Plan.Core.plan(domain, initial_state, todos, verbose: 1) do
       {:ok, solution_tree} ->
         TestOutput.trace_puts("Initial planning succeeded!")
-        TestOutput.trace_inspect(Plan.tree_stats(solution_tree))
+        TestOutput.trace_inspect(AriaEngine.Plan.Utils.tree_stats(solution_tree))
 
         # Extract actions for inspection
         initial_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
@@ -35,7 +35,7 @@ defmodule RunLazyRefineaheadTest do
 
         # Execute with Run-Lazy-Refineahead (this should trigger replanning)
         # Increased verbose level
-        case Plan.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 3) do
+        case AriaEngine.Plan.Execution.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 3) do
           {:ok, final_state} ->
             # Verify we reached the goal despite initial failures
             robot_location = AriaEngine.StateV2.get_fact(final_state, "robot", "location")
@@ -61,15 +61,15 @@ defmodule RunLazyRefineaheadTest do
   # Create domain with actions that can fail on first attempt
   defp create_failing_domain do
     domain =
-      Domain.new("failing_test")
+      AriaEngine.Domain.new("failing_test")
 
       # Add actions that may fail initially
-      |> Domain.add_action(:move_unreliable, &move_unreliable_action/2)
-      |> Domain.add_action(:move_reliable, &move_reliable_action/2)
+      |> AriaEngine.Domain.add_action(:move_unreliable, &move_unreliable_action/2)
+      |> AriaEngine.Domain.add_action(:move_reliable, &move_reliable_action/2)
 
       # Add task methods - first method uses unreliable action, second uses reliable
-      |> Domain.add_task_method("move_with_failure", &method_unreliable_move/2)
-      |> Domain.add_task_method("move_with_failure", &method_reliable_move/2)
+      |> AriaEngine.Domain.add_task_method("move_with_failure", &method_unreliable_move/2)
+      |> AriaEngine.Domain.add_task_method("move_with_failure", &method_reliable_move/2)
 
     domain
   end

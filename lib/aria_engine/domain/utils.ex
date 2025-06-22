@@ -1,13 +1,13 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Domain.Utils do
+defmodule AriaEngine.Domain.Utils do
   @moduledoc """
   Domain utilities and helper functions.
   """
   alias Actions
 
-  @type t :: Domain.Core.t()
+  @type t :: AriaEngine.Domain.Core.t()
   @type action_name :: atom()
   @type task_name :: String.t()
   @type method_name :: String.t()
@@ -81,7 +81,7 @@ defmodule Domain.Utils do
       change_permissions: &Actions.change_permissions/2
     }
 
-    Domain.Actions.add_actions(domain, porcelain_actions)
+    AriaEngine.Domain.Actions.add_actions(domain, porcelain_actions)
   end
 
   @doc """
@@ -92,7 +92,7 @@ defmodule Domain.Utils do
   """
   @spec create_complete_domain(String.t()) :: t()
   def create_complete_domain(name \\ "complete") do
-    Domain.Core.new(name)
+    AriaEngine.Domain.Core.new(name)
     |> add_porcelain_actions()
   end
 

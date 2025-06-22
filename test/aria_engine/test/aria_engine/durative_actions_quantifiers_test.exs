@@ -11,7 +11,7 @@ defmodule DurativeActionsQuantifiersTest do
 
   use ExUnit.Case, async: true
   alias AriaEngine.StateV2
-  alias Domain.{Core, DurativeAction, Actions}
+  alias AriaEngine.Domain.{Core, DurativeAction, Actions}
 
   describe "durative actions with existential quantifiers" do
     test "NPC can find any available seating" do
@@ -19,7 +19,7 @@ defmodule DurativeActionsQuantifiersTest do
       domain = Core.new("seating_domain")
 
       # Define a durative action that requires ANY chair to be available
-      find_seating_action = %DurativeAction{
+      find_seating_action = %AriaEngine.Domain.DurativeAction{
         name: :find_seating,
         # 5 seconds
         duration: {:fixed, 5000},
@@ -57,7 +57,7 @@ defmodule DurativeActionsQuantifiersTest do
         end
       }
 
-      domain = Domain.add_action(domain, :find_seating, find_seating_action)
+      domain = AriaEngine.Domain.add_action(domain, :find_seating, find_seating_action)
 
       # Test scenario 1: Chairs available
       state_with_chairs =
@@ -93,7 +93,7 @@ defmodule DurativeActionsQuantifiersTest do
       domain = Core.new("crafting_domain")
 
       # Simple crafting action that requires ANY wood to be available
-      craft_simple_action = %DurativeAction{
+      craft_simple_action = %AriaEngine.Domain.DurativeAction{
         name: :craft_simple,
         # 5 seconds
         duration: {:fixed, 5000},
@@ -114,7 +114,7 @@ defmodule DurativeActionsQuantifiersTest do
         end
       }
 
-      domain = Domain.add_action(domain, :craft_simple, craft_simple_action)
+      domain = AriaEngine.Domain.add_action(domain, :craft_simple, craft_simple_action)
 
       state_simple =
         StateV2.new()
@@ -132,7 +132,7 @@ defmodule DurativeActionsQuantifiersTest do
       domain = Core.new("security_domain")
 
       # Security patrol action that requires ALL doors to be locked
-      security_patrol_action = %DurativeAction{
+      security_patrol_action = %AriaEngine.Domain.DurativeAction{
         name: :security_patrol,
         # 30 seconds
         duration: {:fixed, 30000},
@@ -158,7 +158,7 @@ defmodule DurativeActionsQuantifiersTest do
         end
       }
 
-      domain = Domain.add_action(domain, :security_patrol, security_patrol_action)
+      domain = AriaEngine.Domain.add_action(domain, :security_patrol, security_patrol_action)
 
       # Test scenario 1: All doors locked (should succeed)
       secure_state =
@@ -203,7 +203,7 @@ defmodule DurativeActionsQuantifiersTest do
       domain = Core.new("maintenance_domain")
 
       # Maintenance check that requires all equipment to be operational
-      maintenance_check_action = %DurativeAction{
+      maintenance_check_action = %AriaEngine.Domain.DurativeAction{
         name: :maintenance_check,
         # 15 seconds
         duration: {:fixed, 15000},
@@ -229,7 +229,7 @@ defmodule DurativeActionsQuantifiersTest do
         end
       }
 
-      domain = Domain.add_action(domain, :maintenance_check, maintenance_check_action)
+      domain = AriaEngine.Domain.add_action(domain, :maintenance_check, maintenance_check_action)
 
       # All equipment operational
       operational_state =
@@ -261,7 +261,7 @@ defmodule DurativeActionsQuantifiersTest do
       domain = Core.new("restaurant_domain")
 
       # Service action with both existential and universal conditions
-      serve_meal_action = %DurativeAction{
+      serve_meal_action = %AriaEngine.Domain.DurativeAction{
         name: :serve_meal,
         # 10 seconds
         duration: {:fixed, 10000},
@@ -301,7 +301,7 @@ defmodule DurativeActionsQuantifiersTest do
         end
       }
 
-      domain = Domain.add_action(domain, :serve_meal, serve_meal_action)
+      domain = AriaEngine.Domain.add_action(domain, :serve_meal, serve_meal_action)
 
       # Test: Table available and all ingredients ready (should succeed)
       ready_state =

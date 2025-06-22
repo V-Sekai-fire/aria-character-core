@@ -18,7 +18,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   """
 
   require Logger
-  alias Domain
+  alias AriaEngine.Domain
   alias AriaEngine.Scheduler.{Entity, Resource}
 
   alias AriaEngine.Scheduler.DomainConverter.{

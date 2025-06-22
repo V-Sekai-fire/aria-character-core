@@ -1,13 +1,13 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Plan.Core do
+defmodule AriaEngine.Plan.Core do
   @moduledoc """
   Core IPyHOP planning algorithm and decomposition loop.
   """
 
   require Logger
-  alias Plan.{NodeExpansion, Backtracking}
+  alias AriaEngine.Plan.{NodeExpansion, Backtracking}
   alias AriaEngine.Plan.Utils
   # alias DomainBehaviour # Removed unused alias
 
@@ -383,10 +383,10 @@ defmodule Plan.Core do
     action_atom = String.to_atom(task_name)
 
     cond do
-      Domain.has_action?(domain, action_atom) ->
+      AriaEngine.Domain.has_action?(domain, action_atom) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
 
-      Domain.get_durative_action(domain, action_atom) ->
+      AriaEngine.Domain.get_durative_action(domain, action_atom) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
 
       true ->
@@ -404,10 +404,10 @@ defmodule Plan.Core do
 
   defp expand_atom_task(domain, solution_tree, node_id, action_name) do
     cond do
-      Domain.has_action?(domain, action_name) ->
+      AriaEngine.Domain.has_action?(domain, action_name) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
 
-      Domain.get_durative_action(domain, action_name) ->
+      AriaEngine.Domain.get_durative_action(domain, action_name) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
 
       true ->
@@ -688,10 +688,10 @@ defmodule Plan.Core do
   defp apply_action_to_state(domain, state, {action_name, args}, opts) when is_atom(action_name) do
     verbose = Keyword.get(opts, :verbose, 0)
 
-    case Domain.has_action?(domain, action_name) do
+    case AriaEngine.Domain.has_action?(domain, action_name) do
       true ->
         # Execute primitive action
-        action_func = Domain.get_action(domain, action_name)
+        action_func = AriaEngine.Domain.get_action(domain, action_name)
         
         case action_func.(state, args) do
           %AriaEngine.StateV2{} = new_state ->
@@ -706,7 +706,7 @@ defmodule Plan.Core do
 
       false ->
         # Check if it's a durative action
-        case Domain.get_durative_action(domain, action_name) do
+        case AriaEngine.Domain.get_durative_action(domain, action_name) do
           nil ->
             {:error, "Unknown action: #{action_name}"}
           _durative_action ->

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Domain.Core do
+defmodule AriaEngine.Domain.Core do
   @moduledoc """
   Represents a planning domain in the GTPhop planner (Elixir port of GTPyhop).
 
@@ -37,7 +37,7 @@ defmodule Domain.Core do
   @type goal_method_fn :: (AriaEngine.StateV2.t(), list() -> list() | false)
   @type named_method :: {method_name(), task_method_fn() | goal_method_fn()}
 
-  alias Domain.DurativeAction, as: DurativeAction
+  alias AriaEngine.Domain.DurativeAction, as: DurativeAction
 
   @type durative_action_name :: DurativeAction.durative_action_name()
   @type durative_action :: DurativeAction.t()

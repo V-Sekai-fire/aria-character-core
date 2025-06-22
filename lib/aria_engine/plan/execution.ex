@@ -1,14 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Plan.Execution do
+defmodule AriaEngine.Plan.Execution do
   @moduledoc """
   Functions for executing the planned solution using Run-Lazy-Refineahead.
   """
 
   require Logger
-  # Added Core alias
-  alias Plan.{Backtracking, Blacklisting, Core}
   alias AriaEngine.Plan.Utils
 
   @type node_id :: String.t()
@@ -51,16 +49,16 @@ defmodule Plan.Execution do
   @doc """
   Run-Lazy-Refineahead: Execute plan with replanning on failure.
   """
-  @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+  @spec run_lazy_refineahead(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def run_lazy_refineahead(
-        %Domain.Core{} = domain,
+        %AriaEngine.Domain.Core{} = domain,
         %AriaEngine.StateV2{} = initial_state,
         solution_tree,
         opts \\ []
       ) do
     # Get from Core
-    verbose = Keyword.get(opts, :verbose, Core.get_default_verbose())
+    verbose = Keyword.get(opts, :verbose, AriaEngine.Plan.Core.get_default_verbose())
 
     if verbose > 2 do
       debug_puts("Starting Run-Lazy-Refineahead execution")
@@ -75,11 +73,11 @@ defmodule Plan.Execution do
   end
 
   # Run execution loop for Run-Lazy-Refineahead
-  @spec run_execution_loop(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+  @spec run_execution_loop(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   defp run_execution_loop(domain, current_state, solution_tree, opts) do
     # Get from Core
-    verbose = Keyword.get(opts, :verbose, Core.get_default_verbose())
+    verbose = Keyword.get(opts, :verbose, AriaEngine.Plan.Core.get_default_verbose())
 
     # Get primitive actions from the solution tree
     actions = Utils.get_primitive_actions_dfs(solution_tree)
@@ -94,7 +92,7 @@ defmodule Plan.Execution do
 
   # Execute actions with lazy failure checking and replanning
   @spec execute_actions_lazily(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.StateV2.t(),
           [plan_step()],
           solution_tree(),
@@ -107,7 +105,7 @@ defmodule Plan.Execution do
 
   defp execute_actions_lazily(domain, state, [action | remaining_actions], solution_tree, opts) do
     # Get from Core
-    verbose = Keyword.get(opts, :verbose, Core.get_default_verbose())
+    verbose = Keyword.get(opts, :verbose, AriaEngine.Plan.Core.get_default_verbose())
 
     {action_name, args} = action
     action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
@@ -116,7 +114,7 @@ defmodule Plan.Execution do
       debug_puts("Executing action: #{action_name}(#{inspect(args)})")
     end
 
-    case Domain.execute_action(domain, state, action_atom, args) do
+    case AriaEngine.Domain.execute_action(domain, state, action_atom, args) do
       {:ok, new_state} ->
         # Action succeeded, continue with remaining actions
         execute_actions_lazily(domain, new_state, remaining_actions, solution_tree, opts)
@@ -134,10 +132,10 @@ defmodule Plan.Execution do
 
           fail_node_id ->
             # Blacklist the failed command to prevent trying it again
-            updated_tree = Blacklisting.blacklist_command(solution_tree, {action_name, args})
+            updated_tree = AriaEngine.Plan.Blacklisting.blacklist_command(solution_tree, {action_name, args})
 
             # Attempt replanning from the failure point
-            case Backtracking.replan(domain, state, updated_tree, fail_node_id, opts) do
+            case AriaEngine.Plan.Backtracking.replan(domain, state, updated_tree, fail_node_id, opts) do
               {:ok, new_solution_tree} ->
                 # Get new action sequence from replanned tree
                 new_actions = Utils.get_primitive_actions_dfs(new_solution_tree)

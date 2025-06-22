@@ -27,7 +27,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
       todos = convert_goals_to_todos(goals)
 
       # Use existing Plan.Core.plan/4 logic
-      case Plan.Core.plan(domain, state, todos, opts) do
+      case AriaEngine.Plan.Core.plan(domain, state, todos, opts) do
         {:ok, solution_tree} ->
           if verbose > 1 do
             action_count = AriaEngine.Plan.Utils.plan_cost(solution_tree)

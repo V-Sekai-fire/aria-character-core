@@ -6,7 +6,7 @@ defmodule Convenience do
   Provides convenience API for State and Domain operations for the Aria Engine.
   """
   alias Core
-  alias Domain
+  alias AriaEngine.Domain
   alias Multigoal
   alias PlannerAdapter
 
@@ -68,7 +68,7 @@ defmodule Convenience do
   Gets a summary of domain capabilities.
   """
   @spec domain_summary(Domain.Core.t()) :: map()
-  def domain_summary(%Domain.Core{} = domain) do
+  def domain_summary(%AriaEngine.Domain.Core{} = domain) do
     Domain.summary(domain)
   end
 

@@ -104,7 +104,7 @@ defmodule AriaEngine.Scheduler.DomainConverter.DurativeActions do
     # Create the action function
     action_fn = ActivityActions.create_durative_activity_action(activity, entities, resources)
 
-    Domain.DurativeAction.new(
+    AriaEngine.Domain.DurativeAction.new(
       String.to_atom("durative_#{activity_id}"),
       duration,
       conditions,
@@ -151,7 +151,7 @@ defmodule AriaEngine.Scheduler.DomainConverter.DurativeActions do
     # Create the action function that performs durative action temporal solving
     action_fn = create_timing_constraint_action_function(activities)
 
-    Domain.DurativeAction.new(
+    AriaEngine.Domain.DurativeAction.new(
       :fix_timing_constraints,
       # Duration between 1-10 time units depending on convergence
       {:range, 1, 10},

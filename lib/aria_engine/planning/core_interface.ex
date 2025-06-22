@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Planning.CoreInterface do
+defmodule AriaEngine.Planning.CoreInterface do
   @moduledoc """
   Replan from a failure point using HybridPlanner.HybridCoordinatorV2.
   """

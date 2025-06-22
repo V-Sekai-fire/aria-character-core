@@ -151,7 +151,7 @@ defmodule AriaEngine.Plan.Utils do
   @spec validate_plan(Domain.Core.t(), StateV2.t(), [plan_step()] | solution_tree()) ::
           {:ok, StateV2.t()} | {:error, String.t()}
   def validate_plan(
-        %Domain.Core{} = domain,
+        %AriaEngine.Domain.Core{} = domain,
         %StateV2{} = initial_state,
         %{root_id: _} = solution_tree
       ) do
@@ -160,12 +160,12 @@ defmodule AriaEngine.Plan.Utils do
     validate_plan(domain, initial_state, actions)
   end
 
-  def validate_plan(%Domain.Core{} = domain, %StateV2{} = initial_state, plan)
+  def validate_plan(%AriaEngine.Domain.Core{} = domain, %StateV2{} = initial_state, plan)
       when is_list(plan) do
     Enum.reduce_while(plan, {:ok, initial_state}, fn {action_name, args}, {:ok, state} ->
       action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 
-      case Domain.execute_action(domain, state, action_atom, args) do
+      case AriaEngine.Domain.execute_action(domain, state, action_atom, args) do
         false ->
           {:halt, {:error, "Action #{action_name} failed during validation"}}
 

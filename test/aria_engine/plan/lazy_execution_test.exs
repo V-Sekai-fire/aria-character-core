@@ -12,12 +12,14 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
   use ExUnit.Case, async: true
   
   alias AriaEngine.StateV2
-  alias Plan.Core
+  alias AriaEngine.Plan.Core
+  alias AriaEngine.Plan.Execution
+  alias AriaEngine.Domain
   
   describe "Plan.Core.run_lazy_refineahead/4 - Basic Functionality" do
     test "function exists and has correct signature" do
       # This test will fail initially since the function doesn't exist
-      assert function_exported?(Plan.Core, :run_lazy_refineahead, 4)
+      assert function_exported?(Core, :run_lazy_refineahead, 4)
     end
     
     test "executes simple plan with single action successfully" do
@@ -29,7 +31,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       {:ok, solution_tree} = Core.plan(domain, initial_state, todos)
       
       # Execute with lazy refinement
-      assert {:ok, final_state} = Core.run_lazy_refineahead(domain, initial_state, solution_tree, [])
+      assert {:ok, final_state} = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, [])
       
       # Verify the action was executed
       assert StateV2.get_fact(final_state, "robot", "location") == "goal"
@@ -44,7 +46,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       {:ok, solution_tree} = Core.plan(domain, initial_state, todos)
       
       # Execute with lazy refinement
-      assert {:ok, final_state} = Core.run_lazy_refineahead(domain, initial_state, solution_tree, [])
+      assert {:ok, final_state} = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, [])
       
       # Verify all steps were executed
       assert StateV2.get_fact(final_state, "robot", "location") == "goal"
@@ -60,7 +62,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       {:ok, solution_tree} = Core.plan(domain, initial_state, todos)
       
       # Execute with lazy refinement
-      assert {:ok, final_state} = Core.run_lazy_refineahead(domain, initial_state, solution_tree, [])
+      assert {:ok, final_state} = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, [])
       
       # State should be unchanged
       assert final_state == initial_state
@@ -77,7 +79,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       {:ok, solution_tree} = Core.plan(domain, initial_state, todos)
       
       # Execute with lazy refinement - should trigger replanning
-      assert {:ok, final_state} = Core.run_lazy_refineahead(domain, initial_state, solution_tree, [])
+      assert {:ok, final_state} = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, [])
       
       # Verify we reached the goal despite initial failure
       assert StateV2.get_fact(final_state, "robot", "location") == "goal"
@@ -93,7 +95,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       {:ok, solution_tree} = Core.plan(domain, initial_state, todos)
       
       # Execute with lazy refinement - should fail
-      assert {:error, reason} = Core.run_lazy_refineahead(domain, initial_state, solution_tree, [])
+      assert {:error, reason} = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, [])
       assert String.contains?(reason, "execution failed") or String.contains?(reason, "no alternatives")
     end
     
@@ -106,7 +108,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       {:ok, solution_tree} = Core.plan(domain, initial_state, todos)
       
       # Execute with lazy refinement
-      result = Core.run_lazy_refineahead(domain, initial_state, solution_tree, [])
+      result = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, [])
       
       case result do
         {:ok, final_state} ->
@@ -130,7 +132,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       
       # Execute with refinement-ahead enabled
       opts = [refinement_ahead: true, lookahead_depth: 2]
-      assert {:ok, final_state} = Core.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
+      assert {:ok, final_state} = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
       
       # Verify optimization occurred (specific to domain implementation)
       assert StateV2.get_fact(final_state, "robot", "location") == "goal"
@@ -147,7 +149,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       
       # Execute with limited lookahead
       opts = [refinement_ahead: true, lookahead_depth: 1]
-      assert {:ok, _final_state} = Core.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
+      assert {:ok, _final_state} = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
     end
   end
   
@@ -162,7 +164,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       
       # Execute with checkpointing enabled
       opts = [enable_checkpoints: true]
-      assert {:ok, final_state} = Core.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
+      assert {:ok, final_state} = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
       
       # Verify execution completed
       assert StateV2.get_fact(final_state, "robot", "location") == "goal"
@@ -178,7 +180,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       
       # Execute with rollback capability
       opts = [enable_checkpoints: true, enable_rollback: true]
-      result = Core.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
+      result = Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
       
       # Should either succeed or fail gracefully
       assert match?({:ok, _}, result) or match?({:error, _}, result)
@@ -195,7 +197,7 @@ defmodule AriaEngine.Plan.LazyExecutionTest do
       {:ok, solution_tree} = Core.plan(domain, initial_state, todos)
       
       # Test integration through strategy
-      strategy = HybridPlanner.Strategies.Default.LazyExecutionStrategy
+      strategy = AriaEngine.HybridPlanner.Strategies.Default.LazyExecutionStrategy
       strategies = %{state_strategy: create_mock_state_strategy()}
       opts = [domain: domain]
       

@@ -207,7 +207,7 @@ defmodule AriaEngine.Membrane.PlannerFilter do
 
   # Create a minimal domain for testing
   defp create_default_domain do
-    Domain.new("test_domain")
+    AriaEngine.Domain.new("test_domain")
   end
 
   defp extract_strategy_info(plan_result) when is_map(plan_result) do

@@ -1,19 +1,19 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Planning do
+defmodule AriaEngine.Planning do
   @moduledoc """
   Provides core planning and execution functionalities for the Aria Engine.
   """
 
-  alias Planning.CoreInterface
-  alias Core
+  alias AriaEngine.Planning.CoreInterface
+  alias AriaEngine.Plan.Core
 
   @type t :: Core.t()
   @type solution_tree :: Core.solution_tree()
   @type plan_step :: Core.plan_step()
   @type todo_item :: Core.todo_item()
-  @type domain :: Domain.Core.t()
+  @type domain :: AriaEngine.Domain.Core.t()
   @type state :: AriaEngine.StateV2.t()
 
   # CoreInterface functions

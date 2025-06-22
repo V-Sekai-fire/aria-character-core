@@ -8,7 +8,7 @@ defmodule Plan do
   """
 
   # Removed NodeExpansion
-  alias Plan.{Core, Backtracking, Execution, Blacklisting}
+  alias AriaEngine.Plan.{Core, Backtracking, Execution, Blacklisting}
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
@@ -25,11 +25,11 @@ defmodule Plan do
   @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure
 
   # Delegate to Core
-  @spec plan(Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
+  @spec plan(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
   def plan(domain, state, todos, opts \\ []), do: Core.plan(domain, state, todos, opts)
 
   # Delegate to Backtracking
-  @spec replan(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) ::
+  @spec replan(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) ::
           replan_result()
   def replan(domain, state, solution_tree, fail_node_id, opts \\ []),
     do: Backtracking.replan(domain, state, solution_tree, fail_node_id, opts)
@@ -40,7 +40,7 @@ defmodule Plan do
     do: Blacklisting.blacklist_command(solution_tree, command)
 
   # Delegate to Execution
-  @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
+  @spec run_lazy_refineahead(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), keyword()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def run_lazy_refineahead(domain, initial_state, solution_tree, opts \\ []),
     do: Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts)
@@ -50,7 +50,7 @@ defmodule Plan do
   Validates a plan by executing it step by step.
   For compatibility with existing AriaEngine usage.
   """
-  @spec validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) ::
+  @spec validate_plan(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) ::
           {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
   def validate_plan(domain, initial_state, plan),
     do: AriaEngine.Plan.Utils.validate_plan(domain, initial_state, plan)

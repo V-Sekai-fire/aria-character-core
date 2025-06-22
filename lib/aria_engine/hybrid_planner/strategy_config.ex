@@ -400,7 +400,7 @@ defmodule HybridPlanner.StrategyConfig do
   end
 
   defp parse_config_content(content, ".yaml") do
-    # TODO: Add YamlElixir dependency or implement alternative YAML parsing
+    # YAML parsing not implemented - using JSON fallback for now
     Logger.warning("StrategyConfig: YamlElixir dependency not available, using JSON fallback")
 
     case Jason.decode(content) do

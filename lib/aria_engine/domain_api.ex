@@ -18,7 +18,7 @@ defmodule DomainAPI do
   Creates an AriaEngine definition from an existing Domain.
   """
   @spec from_domain(Domain.Core.t(), [todo_item()], AriaEngine.StateV2.t() | nil) :: t()
-  def from_domain(%Domain.Core{} = domain, goals, initial_state \\ nil) do
+  def from_domain(%AriaEngine.Domain.Core{} = domain, goals, initial_state \\ nil) do
     initial_state = initial_state || AriaEngine.StateV2.new()
 
     # Preserve the method formats exactly as they are in the domain
@@ -40,7 +40,7 @@ defmodule DomainAPI do
   @spec to_domain(t()) :: Domain.Core.t()
   def to_domain(%Core{} = engine) do
     # Create domain with the same name
-    domain = Domain.new(engine.name)
+    domain = AriaEngine.Domain.new(engine.name)
 
     # Add actions directly (they don't need conversion)
     domain_with_actions = %{domain | actions: engine.actions}

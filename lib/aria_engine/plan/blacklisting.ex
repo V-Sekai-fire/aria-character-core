@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Plan.Blacklisting do
+defmodule AriaEngine.Plan.Blacklisting do
   @moduledoc """
   Functions for handling blacklisting of commands and methods.
   """
@@ -11,7 +11,7 @@ defmodule Plan.Blacklisting do
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
-  @type todo_item :: task() | goal() | Multigoal.t()
+  @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
   @type plan_step :: {atom(), list()}
 
   @type node_id :: String.t()

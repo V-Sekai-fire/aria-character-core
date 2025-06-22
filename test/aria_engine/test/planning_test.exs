@@ -4,8 +4,8 @@
 defmodule PlanningTest do
   use ExUnit.Case
 
-  alias Planning
-  alias Domain
+  alias AriaEngine.Planning
+  alias AriaEngine.Domain
   alias AriaEngine.StateV2
 
   # Helper function to build a simple test domain

@@ -8,7 +8,6 @@ defmodule Planning.Internal do
 
   alias Core
   alias DomainBehaviour
-  alias Domain.Core, as: DomainCore
 
   @doc """
   Converts an engine struct into a planner interface compatible domain.
@@ -21,7 +20,7 @@ defmodule Planning.Internal do
         multigoal_methods: multigoal_methods
       }) do
     # Construct a domain interface from the engine's capabilities
-    %DomainCore{
+    %AriaEngine.Domain.Core{
       # A default name for the dynamically created domain
       name: "dynamic_engine_domain",
       actions: actions,

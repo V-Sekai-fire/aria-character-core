@@ -19,7 +19,6 @@ defmodule AriaEngine.PlannerAdapter do
 
   alias HybridPlanner.{HybridCoordinatorV2, DataStructures}
   alias AriaEngine.Plan.Utils
-  alias Plan.Blacklisting
 
   require Logger
 
@@ -251,7 +250,7 @@ defmodule AriaEngine.PlannerAdapter do
   """
   @spec blacklist_command(solution_tree(), todo_item()) :: solution_tree()
   def blacklist_command(solution_tree, command),
-    do: Blacklisting.blacklist_command(solution_tree, command)
+    do: AriaEngine.Plan.Blacklisting.blacklist_command(solution_tree, command)
 
   # ==================== HYBRID PLANNER INTEGRATION ====================
 

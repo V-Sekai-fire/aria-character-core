@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Plan.NodeExpansion do
+defmodule AriaEngine.Plan.NodeExpansion do
   @moduledoc """
   Functions for expanding different types of nodes in the solution tree.
   """
@@ -11,7 +11,7 @@ defmodule Plan.NodeExpansion do
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
-  @type todo_item :: task() | goal() | Multigoal.t()
+  @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
   @type plan_step :: {atom(), list()}
 
   @type node_id :: String.t()
@@ -79,7 +79,7 @@ defmodule Plan.NodeExpansion do
 
   # Expand task node using methods
   @spec expand_task_node(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.StateV2.t(),
           solution_tree(),
           node_id(),
@@ -90,7 +90,7 @@ defmodule Plan.NodeExpansion do
           {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_task_node(domain, _state, solution_tree, node_id, task_name, args, verbose) do
     node = solution_tree.nodes[node_id]
-    methods = Domain.get_task_methods(domain, task_name)
+    methods = AriaEngine.Domain.get_task_methods(domain, task_name)
 
     # Filter out blacklisted methods
     available_methods =
@@ -161,7 +161,7 @@ defmodule Plan.NodeExpansion do
 
   # Expand goal node
   @spec expand_goal_node(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.StateV2.t(),
           solution_tree(),
           node_id(),
@@ -204,7 +204,7 @@ defmodule Plan.NodeExpansion do
 
   # Expand multigoal node
   @spec expand_multigoal_node(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.StateV2.t(),
           solution_tree(),
           node_id(),
@@ -302,7 +302,7 @@ defmodule Plan.NodeExpansion do
          verbose
        ) do
     node = solution_tree.nodes[node_id]
-    methods = Domain.get_unigoal_methods(domain, predicate)
+    methods = AriaEngine.Domain.get_unigoal_methods(domain, predicate)
 
     # Filter out blacklisted methods
     available_methods =
@@ -433,7 +433,7 @@ defmodule Plan.NodeExpansion do
         action_atom =
           if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 
-        Domain.Core.get_durative_action(domain, action_atom) != nil
+        AriaEngine.Domain.Core.get_durative_action(domain, action_atom) != nil
       else
         false
       end
@@ -469,7 +469,7 @@ defmodule Plan.NodeExpansion do
   defp execute_primitive_action(domain, {action_name, args}, current_state, verbose) do
     action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 
-    case Domain.execute_action(domain, current_state, action_atom, args) do
+    case AriaEngine.Domain.execute_action(domain, current_state, action_atom, args) do
       {:ok, new_state} ->
         if verbose > 2 do
           Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
@@ -489,7 +489,7 @@ defmodule Plan.NodeExpansion do
   defp execute_primitive_action_with_result(domain, {action_name, args}, current_state, verbose) do
     action_atom = if is_binary(action_name), do: String.to_atom(action_name), else: action_name
 
-    case Domain.execute_action(domain, current_state, action_atom, args) do
+    case AriaEngine.Domain.execute_action(domain, current_state, action_atom, args) do
       {:ok, new_state} ->
         if verbose > 2 do
           Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")

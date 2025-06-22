@@ -344,7 +344,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   Test if a coordinator is compatible with a domain (checks function signatures).
   """
   @spec compatible_with_domain?(t(), Domain.Core.t()) :: boolean()
-  def compatible_with_domain?(%__MODULE__{} = coordinator, %Domain.Core{}) do
+  def compatible_with_domain?(%__MODULE__{} = coordinator, %AriaEngine.Domain.Core{}) do
     # Test function signatures by checking if they accept the right number of arguments
     try do
       # This is a basic compatibility check - in a full implementation you'd check more thoroughly

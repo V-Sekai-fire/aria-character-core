@@ -9,8 +9,6 @@ defmodule TemporalPlannerSTNBridgeTest do
   use ExUnit.Case
 
   require Logger
-  alias Domain
-  alias State
   alias AriaEngine.StateV2
 
   @moduledoc """
@@ -61,11 +59,11 @@ defmodule TemporalPlannerSTNBridgeTest do
   # --- Domain and Action Definitions ---
 
   defp build_temporal_hybrid_domain do
-    Domain.new("temporal_hybrid")
-    |> Domain.add_action(:pickup, &pickup_action/2)
-    |> Domain.add_action(:travel, &travel_action/2)
-    |> Domain.add_unigoal_method("player", &achieve_has_item_unigoal/2)
-    |> Domain.add_unigoal_method("player", &achieve_location_unigoal/2)
+    AriaEngine.Domain.new("temporal_hybrid")
+    |> AriaEngine.Domain.add_action(:pickup, &pickup_action/2)
+    |> AriaEngine.Domain.add_action(:travel, &travel_action/2)
+    |> AriaEngine.Domain.add_unigoal_method("player", &achieve_has_item_unigoal/2)
+    |> AriaEngine.Domain.add_unigoal_method("player", &achieve_location_unigoal/2)
   end
 
   defp pickup_action(state, [item]) do

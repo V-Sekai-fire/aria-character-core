@@ -61,7 +61,7 @@ defmodule AriaEngine.Scheduler.DomainConverterTest do
                )
 
       # Domain should be a proper Domain struct
-      assert %Domain.Core{} = domain
+      assert %AriaEngine.Domain.Core{} = domain
     end
   end
 

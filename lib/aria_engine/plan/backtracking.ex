@@ -1,14 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Plan.Backtracking do
+defmodule AriaEngine.Plan.Backtracking do
   @moduledoc """
   Functions for handling backtracking and replanning in the solution tree.
   """
 
   require Logger
-  # Assuming Core will have ipyhop
-  alias Plan.Core
 
   @type node_id :: String.t()
   @type solution_node :: %{
@@ -39,10 +37,10 @@ defmodule Plan.Backtracking do
   @doc """
   Replan from a specific failure node in the solution tree.
   """
-  @spec replan(Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) ::
+  @spec replan(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) ::
           replan_result()
   def replan(
-        %Domain.Core{} = domain,
+        %AriaEngine.Domain.Core{} = domain,
         %AriaEngine.StateV2{} = state,
         solution_tree,
         fail_node_id,
@@ -50,7 +48,7 @@ defmodule Plan.Backtracking do
       ) do
     # Decrement replan_depth for recursive calls
     # Get from Core
-    replan_depth = Keyword.get(opts, :replan_depth, Core.get_default_replan_depth())
+    replan_depth = Keyword.get(opts, :replan_depth, AriaEngine.Plan.Core.get_default_replan_depth())
 
     if replan_depth <= 0 do
       Logger.debug("REPLAN: Maximum replanning depth exceeded.")
@@ -58,7 +56,7 @@ defmodule Plan.Backtracking do
     else
       opts = Keyword.put(opts, :replan_depth, replan_depth - 1)
       # Assuming Core has default_verbose
-      verbose = Keyword.get(opts, :verbose, Core.get_default_verbose())
+      verbose = Keyword.get(opts, :verbose, AriaEngine.Plan.Core.get_default_verbose())
 
       if verbose > 2 do
         Logger.debug("Replanning from failure node: #{fail_node_id}")
@@ -82,7 +80,7 @@ defmodule Plan.Backtracking do
           case try_alternative_method_for_task(domain, updated_tree, task_node_id, verbose) do
             {:ok, new_tree} ->
               # Resume planning from the updated tree
-              Core.ipyhop(domain, state, new_tree, opts)
+              AriaEngine.Plan.Core.ipyhop(domain, state, new_tree, opts)
 
             {:error, reason} ->
               {:error, reason}
@@ -142,7 +140,7 @@ defmodule Plan.Backtracking do
   end
 
   # Try alternative method for a specific task node
-  @spec try_alternative_method_for_task(Domain.Core.t(), solution_tree(), node_id(), integer()) ::
+  @spec try_alternative_method_for_task(AriaEngine.Domain.Core.t(), solution_tree(), node_id(), integer()) ::
           {:ok, solution_tree()} | :no_alternatives | {:error, String.t()}
   def try_alternative_method_for_task(domain, solution_tree, task_node_id, verbose) do
     case solution_tree.nodes[task_node_id] do
@@ -176,7 +174,7 @@ defmodule Plan.Backtracking do
 
   defp try_alternative_for_task(domain, solution_tree, task_node_id, node, task_name, verbose) do
     blacklisted_methods = update_blacklisted_methods(node)
-    all_methods = Domain.get_task_methods(domain, task_name)
+    all_methods = AriaEngine.Domain.get_task_methods(domain, task_name)
 
     case check_remaining_methods(all_methods, blacklisted_methods, task_name, verbose) do
       :no_alternatives ->
@@ -196,7 +194,7 @@ defmodule Plan.Backtracking do
 
   defp try_alternative_for_goal(domain, solution_tree, task_node_id, node, predicate, verbose) do
     blacklisted_methods = update_blacklisted_methods(node)
-    all_methods = Domain.get_unigoal_methods(domain, predicate)
+    all_methods = AriaEngine.Domain.get_unigoal_methods(domain, predicate)
 
     case check_remaining_methods(all_methods, blacklisted_methods, predicate, verbose) do
       :no_alternatives ->
@@ -273,7 +271,7 @@ defmodule Plan.Backtracking do
 
   # Backtrack and retry from a failed node
   @spec backtrack_and_retry(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.StateV2.t(),
           solution_tree(),
           node_id(),
@@ -415,7 +413,7 @@ defmodule Plan.Backtracking do
 
   # Helper to backtrack up the tree
   @spec backtrack_up_tree(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.StateV2.t(),
           solution_tree(),
           node_id(),
