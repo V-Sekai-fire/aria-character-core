@@ -121,40 +121,117 @@ Domain.add_action(:meeting, &meeting/2, %{
 
 **Capabilities serve as traits** in this model, providing flexible composition without inheritance hierarchies. This avoids is-a relationships and parent-child type complexity.
 
-**Capabilities encompass both:**
-- **Behavioral capabilities**: What the entity can DO (`:heating`, `:cooking`, `:cutting`)
-- **Categorical traits**: What the entity IS (`:appliance`, `:ingredient`, `:agent`, `:consumable`)
+**Hybrid Capabilities Model: Both Simple Traits and Rich Entities**
 
-**Examples of trait composition:**
+Capabilities support both simple atoms (for basic traits) and rich entities (for complex capabilities with properties):
+
 ```elixir
-# Kitchen appliance with heating and baking behaviors
-%{type: "oven", capabilities: [:appliance, :kitchen_equipment, :heating, :baking]}
-#                              ^^^^^^^^   ^^^^^^^^^^^^^^^^   ^^^^^^^  ^^^^^^^
-#                              trait      trait              behavior behavior
-
-# Agent with cooking skills and categorical traits
-%{type: "chef", capabilities: [:agent, :human, :cooking, :menu_planning, :knife_skills]}
-
-# Consumable ingredient with pantry categorization
-%{type: "flour", capabilities: [:consumable, :ingredient, :pantry_item, :bakeable]}
-
-# Tool with multiple categorical and behavioral traits
-%{type: "knife", capabilities: [:tool, :kitchen_equipment, :cutting, :slicing, :reusable]}
+@type capability :: 
+  atom() |                    # Simple trait: :agent, :consumable, :reusable
+  %{                         # Rich capability entity
+    required(:type) => String.t(),
+    optional(:properties) => map(),
+    optional(:constraints) => map()
+  }
 ```
 
-**Query flexibility with trait composition:**
+**Simple capabilities (atoms)** for basic categorical traits:
+- **Categorical traits**: `:agent`, `:consumable`, `:tool`, `:appliance`
+- **Basic behaviors**: `:reusable`, `:portable`, `:stackable`
+- **Simple classifications**: `:kitchen_equipment`, `:ingredient`
+
+**Rich capabilities (entities)** for complex behaviors with properties:
+- **Constrained capabilities**: Temperature ranges, capacity limits, timing
+- **Stateful capabilities**: Durability, charge level, maintenance status
+- **Parameterized behaviors**: Precision levels, speed settings, quality grades
+
+**Examples of hybrid capability composition:**
 ```elixir
-# Find all consumables
+# Kitchen appliance with mixed simple and rich capabilities
+%{type: "oven", capabilities: [
+  :appliance,                                    # Simple trait
+  :kitchen_equipment,                            # Simple trait
+  %{type: "heating", properties: %{             # Rich capability
+    max_temp: 450,
+    min_temp: 150,
+    precision: "±5°F"
+  }},
+  %{type: "baking", properties: %{              # Rich capability
+    timer: true,
+    convection: true,
+    rack_positions: 3
+  }}
+]}
+
+# Agent with mixed capabilities
+%{type: "chef", capabilities: [
+  :agent,                                        # Simple trait
+  :human,                                        # Simple trait
+  %{type: "cooking", properties: %{             # Rich capability
+    experience_level: "expert",
+    specialties: ["french", "italian"],
+    certifications: ["food_safety", "wine_pairing"]
+  }},
+  %{type: "knife_skills", properties: %{        # Rich capability
+    precision: "professional",
+    speed: "fast",
+    techniques: ["julienne", "brunoise", "chiffonade"]
+  }}
+]}
+
+# Simple consumable with basic traits
+%{type: "flour", capabilities: [
+  :consumable,                                   # Simple trait
+  :ingredient,                                   # Simple trait
+  :pantry_item,                                  # Simple trait
+  :bakeable                                      # Simple trait
+]}
+
+# Complex tool with durability tracking
+%{type: "knife", capabilities: [
+  :tool,                                         # Simple trait
+  :kitchen_equipment,                            # Simple trait
+  :reusable,                                     # Simple trait
+  %{type: "cutting", properties: %{             # Rich capability
+    sharpness: 85,                              # 0-100 scale
+    blade_material: "carbon_steel",
+    maintenance_due: "2025-07-01"
+  }},
+  %{type: "slicing", properties: %{             # Rich capability
+    thickness_range: {0.5, 10},                # mm
+    precision: "high"
+  }}
+]}
+```
+
+**Query flexibility with hybrid capabilities:**
+```elixir
+# Simple capability queries (atoms)
 entities_with_capability(:consumable)
+entities_with_capability(:reusable)
+entities_with_capability(:agent)
 
-# Find all kitchen equipment that can heat
-entities_with_capabilities([:kitchen_equipment, :heating])
+# Mixed simple and rich capability queries
+entities_with_capabilities([:kitchen_equipment, %{type: "heating"}])
+entities_with_capabilities([:agent, %{type: "cooking"}])
 
-# Find all agents with cooking skills
-entities_with_capabilities([:agent, :cooking])
+# Rich capability queries with property constraints
+entities_with_capability(%{type: "heating", properties: %{max_temp: 400}})
+entities_with_capability(%{type: "cutting", properties: %{sharpness: 80}})
 
-# Find all reusable tools
-entities_with_capabilities([:tool, :reusable])
+# Complex queries combining multiple capability types
+find_entities_matching([
+  :tool,                                    # Must be a tool (simple)
+  :kitchen_equipment,                       # Must be kitchen equipment (simple)
+  %{type: "cutting", properties: %{         # Must have cutting capability (rich)
+    sharpness: {:>=, 75},                   # With minimum sharpness
+    maintenance_due: {:after, Date.utc_today()}  # Not due for maintenance
+  }}
+])
+
+# Query by capability type regardless of properties
+entities_with_capability_type("heating")    # All heating capabilities
+entities_with_capability_type("cooking")    # All cooking capabilities
 ```
 
 **Benefits of capabilities-as-traits:**
