@@ -1124,55 +1124,21 @@ end
 - **ADR-091**: Hybrid Planner Dependency Encapsulation (planning system)
 - **ADR-129**: Aria Engine Plans glTF KHR Interactivity Implementation (related planning work)
 
+## Extracted ADRs
+
+- **ADR-132**: Fix Duration Handling Precision Loss (extracted from Phase 5)
+- **ADR-133**: Planner Standardization Open Problems (extracted open problems catalog)
+- **ADR-134**: Unified Action Specification Examples (extracted examples and patterns)
+
 ## Progress Tracking
 
 **Phase 1**: ✅ COMPLETED - Core Duration Support (ISO 8601 datetime strings implemented)
 **Phase 2**: ✅ COMPLETED - Unified Metadata Validation (agent/entity/resource requirements)  
 **Phase 3**: ✅ COMPLETED - Goal Format Standardization (already using correct format)
 **Phase 4**: ✅ COMPLETED - State Validation Simplification (StateV2.get_fact/3 standard)
-**Phase 5**: ⚠️ PRECISION ISSUE IDENTIFIED - Duration Handling Precision Loss
+**Phase 5**: ⚠️ **EXTRACTED** → **ADR-132**: Fix Duration Handling Precision Loss
 **Phase 6**: 📋 PLANNED - Action Atom Priority Rule Implementation (task_ prefix)
 **Phase 7**: 📋 PLANNED - Enhanced Metadata Support (capability/resource integration)
-
-### Phase 5: Fix Duration Handling Precision Loss ⚠️ CRITICAL
-
-**Problem Identified**: AriaEngine.Utils loses microsecond precision through unnecessary `round()` calls
-
-**Precision Loss Points**:
-- Line 95: `Duration.to_seconds(duration) |> round()` ❌ Destroys Timex microsecond precision
-- Line 67: `seconds |> round() |> seconds_to_duration_struct()` ❌ Rounds float input
-- Line 75: `min_seconds |> round() |> seconds_to_duration_struct()` ❌ Rounds range values  
-- Line 83: `seconds |> round() |> seconds_to_duration_struct()` ❌ Rounds numeric input
-- Line 280: `Duration.to_seconds(duration) |> round()` ❌ Rounds ISO8601 conversion
-
-**Impact**: 
-- Milliseconds lost: `1.500` seconds becomes `2` seconds
-- Microseconds lost: `1.000001` seconds becomes `1` second
-- Fractional durations lost: `PT1.5S` becomes `PT2S`
-- Affects temporal accuracy for scheduling, animation, and scientific calculations
-
-**Solution Strategy**:
-- [ ] Remove all `round()` calls that destroy Timex precision
-- [ ] Update duration struct to support float seconds (not just integers)
-- [ ] Preserve microsecond precision through entire conversion chain
-- [ ] Update helper functions (`seconds_to_duration_struct/1`, `duration_struct_to_seconds/1`, etc.)
-- [ ] Update type specifications to reflect float support
-- [ ] Add tests for fractional second preservation
-
-**Technical Details**:
-```elixir
-# Before (precision loss):
-%{hours: 1, minutes: 30, seconds: 45}  # Integer seconds only
-
-# After (precision preserved):
-%{hours: 1, minutes: 30, seconds: 45.123456}  # Float seconds with microsecond precision
-
-# Timex already provides microsecond precision:
-Duration.to_seconds(duration)  # Returns float with microseconds - DON'T ROUND!
-```
-
-**Priority**: HIGH - Affects temporal accuracy across the entire system
-**Backward Compatibility**: Safe - integers work as floats, existing callers get more precision
 
 ## Implementation Status
 
