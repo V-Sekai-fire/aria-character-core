@@ -32,7 +32,12 @@ Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contain
 
 ## Decision
 
-**Implement targeted fixes for both Timeline doctests and planning strategy failures** to restore test suite health and ensure core functionality works correctly.
+**Implement sequential fixes prioritizing Timeline doctests first, then re-evaluate planning strategy failures** to restore test suite health using the established fully qualified module naming strategy from ADR-122.
+
+### Sequential Implementation Strategy
+
+**Phase 1 (IMMEDIATE):** Fix all Timeline doctest issues using ADR-122's "no aliases" approach  
+**Phase 2 (CONDITIONAL):** Re-evaluate planning failures only after Phase 1 completion to determine if issues persist independently
 
 ## Implementation Plan
 
@@ -85,22 +90,26 @@ Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contain
 
 ## Implementation Strategy
 
-### Step 1: Timeline Doctest Fixes
-1. Update all doctest examples in `lib/aria_engine/timeline/interval.ex`
-2. Use systematic search and replace for module references
+### Step 1: Timeline Doctest Fixes (IMMEDIATE PRIORITY)
+1. Apply ADR-122's "no aliases" strategy to `lib/aria_engine/timeline/interval.ex`
+2. Use systematic search and replace: `Timeline.Interval.*` → `AriaEngine.Timeline.Interval.*`
 3. Test doctests specifically: `mix test --only doctest`
 4. Verify no remaining `Timeline.Interval.*` references
+5. **CHECKPOINT:** Confirm 7 doctest failures resolved before proceeding
 
-### Step 2: Planning Strategy Investigation
-1. Run failing tests in isolation to understand root cause
-2. Check if domain setup or initial state is incorrect
-3. Verify Plan.Core.plan/3 logic and error conditions
-4. Test with simplified scenarios to isolate the issue
+### Step 2: Re-evaluate Planning Strategy (CONDITIONAL)
+1. **Only proceed after Step 1 completion**
+2. Re-run full test suite to assess remaining failures
+3. If planning failures persist, then investigate:
+   - Plan.Core.plan/3 logic and error conditions
+   - Domain setup and initial state in failing tests
+   - Lazy execution strategy integration issues
+4. **Decision Point:** Determine if planning issues are independent or were Timeline-related
 
-### Step 3: Incremental Testing
-- Fix Timeline doctests first (simpler, well-defined)
-- Address planning failures with targeted investigation
-- Test each fix independently before moving to next issue
+### Step 3: Sequential Validation Approach
+- **Phase 1 Complete:** Timeline doctests fixed, 7/10 failures resolved
+- **Phase 2 Assessment:** Re-evaluate if 3 planning failures still exist
+- **Targeted Investigation:** Only investigate planning if issues persist independently
 
 ## Success Criteria
 
@@ -125,7 +134,9 @@ Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contain
 
 ## Current Focus
 
-Starting with Phase 1 - Timeline doctest fixes as these are well-defined and should resolve 7 of the 10 test failures quickly.
+**IMMEDIATE PRIORITY: Phase 1 Only** - Timeline doctest fixes using ADR-122's fully qualified strategy. Phase 2 planning investigation is **CONDITIONAL** and will only proceed after Phase 1 completion and re-evaluation of remaining test failures.
+
+**Next Action:** Apply systematic `Timeline.Interval.*` → `AriaEngine.Timeline.Interval.*` replacements in `lib/aria_engine/timeline/interval.ex` doctests.
 
 ## Related ADRs
 
