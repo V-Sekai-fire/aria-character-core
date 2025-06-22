@@ -193,7 +193,7 @@ defmodule Mix.Tasks.Aria.Pipeline do
 
     pipelines = AriaEngine.Membrane.PipelineManager.list_active_pipelines()
 
-    if length(pipelines) == 0 do
+    if Enum.empty?(pipelines) do
       Mix.shell().info("No active pipelines found")
     else
       Mix.shell().info("Found #{length(pipelines)} active pipeline(s):")

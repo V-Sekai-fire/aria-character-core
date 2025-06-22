@@ -34,7 +34,7 @@ defmodule AriaEngine.PngGenerator do
   }
 
   def generate_timeline_png(schedule, filename \\ nil) do
-    if length(schedule) == 0 do
+    if Enum.empty?(schedule) do
       {:error, "Empty schedule"}
     else
       # Calculate dimensions

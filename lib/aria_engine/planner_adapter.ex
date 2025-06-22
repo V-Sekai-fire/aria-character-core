@@ -298,9 +298,9 @@ defmodule AriaEngine.PlannerAdapter do
     {predicate, subject, value}
   end
 
-  defp convert_todo_to_goal(%Multigoal{} = multigoal) do
+  defp convert_todo_to_goal(%AriaEngine.Multigoal{} = multigoal) do
     # Multigoal: extract goals and convert each
-    goals = Multigoal.to_goals(multigoal)
+    goals = AriaEngine.Multigoal.to_goals(multigoal)
     convert_todos_to_goals(goals)
   end
 

@@ -137,7 +137,7 @@ defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
     {predicate, subject, value}
   end
 
-  defp convert_goal_to_todo(%Multigoal{} = multigoal) do
+  defp convert_goal_to_todo(%AriaEngine.Multigoal{} = multigoal) do
     # Multigoal: pass through, Plan.Core handles this
     multigoal
   end

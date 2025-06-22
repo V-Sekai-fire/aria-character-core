@@ -267,7 +267,7 @@ defmodule AriaStorage.CasyncDecoder do
   end
 
   defp assemble_from_chunks(parsed_data, opts, output_dir, progress_callback) do
-    if length(parsed_data.chunks) == 0 do
+    if Enum.empty?(parsed_data.chunks) do
       {:error, :no_chunks_to_assemble}
     else
       # Sort chunks by offset to ensure correct order

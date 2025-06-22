@@ -37,7 +37,7 @@ defmodule Convenience do
   """
   @spec create_multigoal() :: multigoal()
   def create_multigoal do
-    Multigoal.new()
+    AriaEngine.Multigoal.new()
   end
 
   @doc """

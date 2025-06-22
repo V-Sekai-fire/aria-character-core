@@ -364,7 +364,7 @@ defmodule Plan.Core do
           verbose
         )
 
-      %Multigoal{} = multigoal ->
+      %AriaEngine.Multigoal{} = multigoal ->
         NodeExpansion.expand_multigoal_node(
           domain,
           state,

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Multigoal do
+defmodule AriaEngine.Multigoal do
   @moduledoc """
   Represents a collection of goals in the GTPyhop planner.
 
