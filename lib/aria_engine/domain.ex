@@ -30,7 +30,6 @@ defmodule AriaEngine.Domain do
   require Logger
 
   alias AriaEngine.Domain.Actions
-  alias AriaEngine.Domain.BehaviourImpl
   alias AriaEngine.Domain.Core
   alias AriaEngine.Domain.Methods
   alias AriaEngine.Domain.Utils
@@ -134,19 +133,19 @@ defmodule AriaEngine.Domain do
 
   # Behaviour callbacks
   @spec actions(t()) :: %{action_name() => action_fn()}
-  defdelegate actions(domain), to: BehaviourImpl
+  def actions(%Core{actions: actions}), do: actions
   
   @spec task_methods(t()) :: %{task_name() => [named_method()]}
-  defdelegate task_methods(domain), to: BehaviourImpl
+  def task_methods(%Core{task_methods: task_methods}), do: task_methods
   
   @spec unigoal_methods(t()) :: %{String.t() => [named_method()]}
-  defdelegate unigoal_methods(domain), to: BehaviourImpl
+  def unigoal_methods(%Core{unigoal_methods: unigoal_methods}), do: unigoal_methods
   
   @spec multigoal_methods(t()) :: [named_method()]
-  defdelegate multigoal_methods(domain), to: BehaviourImpl
+  def multigoal_methods(%Core{multigoal_methods: multigoal_methods}), do: multigoal_methods
   
   @spec durative_actions(t()) :: %{durative_action_name() => durative_action()}
-  defdelegate durative_actions(domain), to: BehaviourImpl
+  def durative_actions(%Core{durative_actions: durative_actions}), do: durative_actions
 
   @spec get_durative_action(t(), durative_action_name()) :: durative_action() | nil
   defdelegate get_durative_action(domain, name), to: Core
