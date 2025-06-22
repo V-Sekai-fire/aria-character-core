@@ -1,6 +1,6 @@
 # ADR-118: Add Typespecs to All Lib Code
 
-**Status:** Completed (June 21, 2025)
+**Status:** Active (June 22, 2025)
 **Date:** June 21, 2025  
 **Priority:** HIGH
 
@@ -42,33 +42,33 @@ Systematically add `@spec` annotations to all public and private functions acros
 ### Phase 3: Engine API Modules (HIGH PRIORITY)
 **Files**: API and interface modules
 
-- [ ] `lib/aria_engine/domain_api.ex`
-- [ ] `lib/aria_engine/goal_api.ex`
-- [ ] `lib/aria_engine/domain_behaviour.ex`
-- [ ] `lib/aria_engine/planner_adapter.ex`
-- [ ] `lib/aria_engine/validation.ex`
+- [x] `lib/aria_engine/domain_api.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/goal_api.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/domain_behaviour.ex` (behaviour module with proper callbacks)
+- [x] `lib/aria_engine/planner_adapter.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/validation.ex` (already had comprehensive typespecs)
 
 ### Phase 4: Engine Utilities (MEDIUM PRIORITY)
 **Files**: Utility and helper modules
 
-- [ ] `lib/aria_engine/actions.ex`
-- [ ] `lib/aria_engine/batch_processor.ex`
-- [ ] `lib/aria_engine/convenience.ex`
-- [ ] `lib/aria_engine/convergence.ex`
-- [ ] `lib/aria_engine/info.ex`
-- [ ] `lib/aria_engine/multigoal.ex`
-- [ ] `lib/aria_engine/train_scheduling_converter.ex`
-- [ ] `lib/aria_engine/utils.ex`
+- [x] `lib/aria_engine/actions.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/batch_processor.ex` (added comprehensive typespecs)
+- [x] `lib/aria_engine/convenience.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/convergence.ex` (added comprehensive typespecs)
+- [x] `lib/aria_engine/info.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/multigoal.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/train_scheduling_converter.ex` (file does not exist)
+- [x] `lib/aria_engine/utils.ex` (already had comprehensive typespecs)
 
 ### Phase 5: Domain Modules (MEDIUM PRIORITY)
 **Files**: `lib/aria_engine/domain/` modules
 
-- [ ] `lib/aria_engine/domain/actions.ex`
-- [ ] `lib/aria_engine/domain/behaviour_impl.ex`
-- [ ] `lib/aria_engine/domain/core.ex`
-- [ ] `lib/aria_engine/domain/durative_action.ex`
-- [ ] `lib/aria_engine/domain/methods.ex`
-- [ ] `lib/aria_engine/domain/utils.ex`
+- [x] `lib/aria_engine/domain/actions.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/domain/behaviour_impl.ex` (file does not exist)
+- [x] `lib/aria_engine/domain/core.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/domain/durative_action.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/domain/methods.ex` (already had comprehensive typespecs)
+- [x] `lib/aria_engine/domain/utils.ex` (already had comprehensive typespecs)
 
 ### Phase 6: Hybrid Planner (MEDIUM PRIORITY)
 **Files**: `lib/aria_engine/hybrid_planner/` modules
@@ -317,9 +317,17 @@ Systematically add `@spec` annotations to all public and private functions acros
 2. Verify all functions have appropriate typespecs
 3. Ensure type consistency across module boundaries
 
-## Current Focus: Phase 1 - Core Modules
+## Current Focus: Phase 6 - Hybrid Planner
 
-Starting with the core application modules to establish foundation patterns and identify common types that will be used throughout the codebase.
+Phase 5 domain modules are complete. Moving to hybrid planner modules.
+
+### Progress Summary
+- **Phase 1**: ✅ Completed - Core modules already had typespecs
+- **Phase 2**: ✅ Completed - Engine core modules already had typespecs  
+- **Phase 3**: ✅ Completed - API modules already had typespecs
+- **Phase 4**: ✅ Completed - Utility modules (8/8 complete)
+- **Phase 5**: ✅ Completed - Domain modules (6/6 complete)
+- **Phase 6+**: ⏳ Pending - Specialized modules
 
 ## Success Criteria
 
