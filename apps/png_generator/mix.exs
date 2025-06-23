@@ -35,7 +35,7 @@ defmodule PngGenerator.MixProject do
 
   defp description do
     """
-    Pure Elixir PNG generation for timeline and Gantt chart visualization.
+    Independent Elixir PNG generation for timeline and Gantt chart visualization.
     No external dependencies required - generates PNG files directly from Elixir data structures.
     """
   end
