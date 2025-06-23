@@ -1,19 +1,8 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.TimelineGraph.EntityManager do
-  @moduledoc """
-  Manages entity creation, capabilities, and basic timeline operations.
-
-  This module handles the core entity lifecycle within the TimelineGraph system,
-  including entity creation with automatic timeline attachment, capability management,
-  and entity property operations.
-  """
-
+  @moduledoc "Manages entity creation, capabilities, and basic timeline operations.\n\nThis module handles the core entity lifecycle within the TimelineGraph system,\nincluding entity creation with automatic timeline attachment, capability management,\nand entity property operations.\n"
   alias AriaEngine.Timeline.AgentEntity
   alias AriaEngine.Timeline
   alias AriaEngine.Timeline.Interval
-
   @type entity_id :: String.t()
   @type lod_level :: :very_low | :low | :medium | :high | :ultra_high
   @type entity_timeline :: %{
@@ -23,50 +12,16 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
           last_growth: DateTime.t(),
           bridges: %{entity_id() => atom()}
         }
-
-  @doc """
-  Creates a new entity with automatic timeline attachment.
-
-  This implements the core ADR-087 principle: every entity owns an auto-growing timeline.
-  The timeline starts with basic LOD and grows based on entity capabilities and interactions.
-
-  ## Examples
-
-  ```elixir
-  # Create passive entity (furniture)
-  {:ok, timeline_graph, "chair1"} = TimelineGraph.EntityManager.create_entity(
-    timeline_graph,
-    "chair1",
-    "Wooden Chair",
-    %{type: "furniture", material: "wood"}
-  )
-
-  # Create potential agent (NPC)
-  {:ok, timeline_graph, "guard"} = TimelineGraph.EntityManager.create_entity(
-    timeline_graph,
-    "guard",
-    "Tower Guard",
-    %{type: "humanoid", location: "tower"}
-  )
-  ```
-  """
+  @doc "Creates a new entity with automatic timeline attachment.\n\nThis implements the core ADR-087 principle: every entity owns an auto-growing timeline.\nThe timeline starts with basic LOD and grows based on entity capabilities and interactions.\n\n## Examples\n\n```elixir\n# Create passive entity (furniture)\n{:ok, timeline_graph, \"chair1\"} = TimelineGraph.EntityManager.create_entity(\n  timeline_graph,\n  \"chair1\",\n  \"Wooden Chair\",\n  %{type: \"furniture\", material: \"wood\"}\n)\n\n# Create potential agent (NPC)\n{:ok, timeline_graph, \"guard\"} = TimelineGraph.EntityManager.create_entity(\n  timeline_graph,\n  \"guard\",\n  \"Tower Guard\",\n  %{type: \"humanoid\", location: \"tower\"}\n)\n```\n"
   @spec create_entity(map(), entity_id(), String.t(), map(), keyword()) ::
           {:ok, map(), entity_id()} | {:error, term()}
   def create_entity(timeline_graph, entity_id, name, properties \\ %{}, opts \\ []) do
-    # Create entity using existing AgentEntity system
     entity = AgentEntity.create_entity(entity_id, name, properties, opts)
-
-    # Create timeline for this entity (Timeline.new/0 for basic usage)
     timeline = Timeline.new()
-
-    # Determine initial LOD based on entity type
     initial_lod = determine_initial_lod(entity)
-
-    # Add timeline growth trigger for current time (entity creation event)
     now = DateTime.utc_now()
     timeline_with_creation = add_creation_interval(timeline, now)
 
-    # Create entity timeline record
     entity_timeline = %{
       entity: entity,
       timeline: timeline_with_creation,
@@ -75,13 +30,11 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
       bridges: %{}
     }
 
-    # Update state with entity properties (using predicate-first State API)
     updated_state =
       Enum.reduce(properties, timeline_graph.state, fn {predicate, value}, state ->
         State.set_fact(state, predicate, entity_id, value)
       end)
 
-    # Add entity to timeline graph
     updated_timeline_graph = %{
       timeline_graph
       | entities: Map.put(timeline_graph.entities, entity_id, entity_timeline),
@@ -92,26 +45,7 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
     {:ok, updated_timeline_graph, entity_id}
   end
 
-  @doc """
-  Adds capabilities to an entity, potentially transitioning it to agent status.
-
-  This triggers timeline growth when the entity gains action capabilities,
-  implementing the ADR-087 principle that agents are entities with action capabilities.
-
-  ## Examples
-
-  ```elixir
-  # Transform passive door into autonomous door
-  {:ok, updated_graph} = TimelineGraph.EntityManager.add_capabilities(
-    timeline_graph,
-    "door1",
-    [:autonomous_operation, :decision_making]
-  )
-
-  # Entity is now an agent with enhanced timeline growth
-  TimelineGraph.is_currently_agent?(updated_graph, "door1") # => true
-  ```
-  """
+  @doc "Adds capabilities to an entity, potentially transitioning it to agent status.\n\nThis triggers timeline growth when the entity gains action capabilities,\nimplementing the ADR-087 principle that agents are entities with action capabilities.\n\n## Examples\n\n```elixir\n# Transform passive door into autonomous door\n{:ok, updated_graph} = TimelineGraph.EntityManager.add_capabilities(\n  timeline_graph,\n  \"door1\",\n  [:autonomous_operation, :decision_making]\n)\n\n# Entity is now an agent with enhanced timeline growth\nTimelineGraph.is_currently_agent?(updated_graph, \"door1\") # => true\n```\n"
   @spec add_capabilities(map(), entity_id(), [atom()]) :: {:ok, map()} | {:error, term()}
   def add_capabilities(timeline_graph, entity_id, new_capabilities) do
     case Map.get(timeline_graph.entities, entity_id) do
@@ -119,15 +53,11 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
         {:error, :entity_not_found}
 
       entity_timeline ->
-        # Update entity with new capabilities
         old_entity = entity_timeline.entity
         updated_entity = AgentEntity.add_capabilities(old_entity, new_capabilities)
-
-        # Check if this transitions entity to agent status
         was_agent = AgentEntity.is_currently_agent?(old_entity)
         is_now_agent = AgentEntity.is_currently_agent?(updated_entity)
 
-        # Grow timeline if transitioning to agent or gaining significant capabilities
         updated_timeline =
           grow_timeline_for_capabilities(
             entity_timeline.timeline,
@@ -135,7 +65,6 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
             transition_to_agent: !was_agent && is_now_agent
           )
 
-        # Determine new LOD based on agent status
         new_lod =
           if is_now_agent do
             AriaEngine.TimelineGraph.LODManager.promote_lod(entity_timeline.lod)
@@ -143,7 +72,6 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
             entity_timeline.lod
           end
 
-        # Update entity timeline record
         updated_entity_timeline = %{
           entity_timeline
           | entity: updated_entity,
@@ -152,13 +80,11 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
             last_growth: DateTime.utc_now()
         }
 
-        # Update timeline graph
         updated_timeline_graph = %{
           timeline_graph
           | entities: Map.put(timeline_graph.entities, entity_id, updated_entity_timeline)
         }
 
-        # Add to LOD promotion queue if became agent
         final_timeline_graph =
           if !was_agent && is_now_agent do
             %{
@@ -173,11 +99,7 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
     end
   end
 
-  @doc """
-  Checks if an entity is currently acting as an agent.
-
-  Uses the existing AgentEntity capability-based determination.
-  """
+  @doc "Checks if an entity is currently acting as an agent.\n\nUses the existing AgentEntity capability-based determination.\n"
   @spec is_currently_agent?(map(), entity_id()) :: boolean()
   def is_currently_agent?(timeline_graph, entity_id) do
     case Map.get(timeline_graph.entities, entity_id) do
@@ -186,17 +108,13 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
     end
   end
 
-  @doc """
-  Gets entity properties using predicate-first State API.
-  """
+  @doc "Gets entity properties using predicate-first State API.\n"
   @spec get_entity_properties(map(), entity_id()) :: %{String.t() => any()}
   def get_entity_properties(timeline_graph, entity_id) do
     State.get_subject_properties(timeline_graph.state, entity_id)
   end
 
-  @doc """
-  Sets an entity property and triggers timeline growth if appropriate.
-  """
+  @doc "Sets an entity property and triggers timeline growth if appropriate.\n"
   @spec set_entity_property(map(), entity_id(), String.t(), any()) ::
           {:ok, map()} | {:error, term()}
   def set_entity_property(timeline_graph, entity_id, predicate, value) do
@@ -205,10 +123,8 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
         {:error, :entity_not_found}
 
       entity_timeline ->
-        # Update state using predicate-first API
         updated_state = State.set_fact(timeline_graph.state, predicate, entity_id, value)
 
-        # Trigger timeline growth for property change
         updated_timeline =
           grow_timeline_for_property_change(
             entity_timeline.timeline,
@@ -216,14 +132,12 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
             value
           )
 
-        # Update entity timeline record
         updated_entity_timeline = %{
           entity_timeline
           | timeline: updated_timeline,
             last_growth: DateTime.utc_now()
         }
 
-        # Update timeline graph
         updated_timeline_graph = %{
           timeline_graph
           | entities: Map.put(timeline_graph.entities, entity_id, updated_entity_timeline),
@@ -234,17 +148,13 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
     end
   end
 
-  @doc """
-  Gets all entity IDs currently managed by the timeline graph.
-  """
+  @doc "Gets all entity IDs currently managed by the timeline graph.\n"
   @spec get_entity_ids(map()) :: [entity_id()]
   def get_entity_ids(timeline_graph) do
     Map.keys(timeline_graph.entities)
   end
 
-  @doc """
-  Gets all agent IDs (entities with action capabilities).
-  """
+  @doc "Gets all agent IDs (entities with action capabilities).\n"
   @spec get_agent_ids(map()) :: [entity_id()]
   def get_agent_ids(timeline_graph) do
     timeline_graph.entities
@@ -253,8 +163,6 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
     end)
     |> Enum.map(fn {id, _timeline} -> id end)
   end
-
-  # Private helper functions
 
   defp determine_initial_lod(entity) do
     cond do
@@ -265,15 +173,12 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
   end
 
   defp add_creation_interval(timeline, creation_time) do
-    # Add interval representing entity creation/existence
-    # Use a far future time for "indefinite" existence
-    # 1 year from creation
     far_future = DateTime.add(creation_time, 365 * 24 * 3600, :second)
 
     creation_interval =
-      Interval.new(
-        creation_time,
-        far_future,
+      Interval.new_fixed_schedule(
+        DateTime.to_iso8601(creation_time),
+        DateTime.to_iso8601(far_future),
         metadata: %{type: :creation, event: "entity_created"}
       )
 
@@ -284,11 +189,9 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
     transition_to_agent = Keyword.get(opts, :transition_to_agent, false)
     now = DateTime.utc_now()
 
-    # Add interval for capability acquisition
     capability_interval =
-      Interval.new(
-        now,
-        # Instantaneous event
+      Interval.new_fixed_schedule(
+        DateTime.to_iso8601(now),
         DateTime.add(now, 1, :second),
         metadata: %{
           type: :capability_change,
@@ -303,17 +206,11 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
   defp grow_timeline_for_property_change(timeline, predicate, value) do
     now = DateTime.utc_now()
 
-    # Add interval for property change
     property_interval =
-      Interval.new(
-        now,
-        # Instantaneous event
+      Interval.new_fixed_schedule(
+        DateTime.to_iso8601(now),
         DateTime.add(now, 1, :second),
-        metadata: %{
-          type: :property_change,
-          predicate: predicate,
-          new_value: value
-        }
+        metadata: %{type: :property_change, predicate: predicate, new_value: value}
       )
 
     Timeline.add_interval(timeline, property_interval)
