@@ -23,7 +23,7 @@ defmodule AriaEngine.Membrane.Planning.BlocksDomainTest do
         domain: :blocks_world,
         state: initial_state,
         goals: goals,
-        strategy_preferences: [:mock],
+        strategy_preferences: [:minizinc, :mock],
         options: %{timeout_ms: 5000}
       )
 
@@ -31,7 +31,7 @@ defmodule AriaEngine.Membrane.Planning.BlocksDomainTest do
       assert request.domain == :blocks_world
       assert request.state == initial_state
       assert request.goals == goals
-      assert request.strategy_preferences == [:mock]
+      assert request.strategy_preferences == [:minizinc, :mock]
       assert request.options.timeout_ms == 5000
       assert is_binary(request.request_id)
     end

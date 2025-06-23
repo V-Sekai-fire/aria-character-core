@@ -365,24 +365,268 @@ defmodule AriaEngine.Membrane.Planning.StrategyRouterFilter do
     end
   end
 
-  defp execute_hybrid_coordinator(planning_params, _state) do
-    # Call the HybridCoordinatorV2 directly
+  defp execute_hybrid_coordinator(planning_params, state) do
+    # Route through the decomposed membrane pipeline:
+    # HTNPlanning → TemporalConstraint → TemporalValidation → Response
+    Logger.info("🔧 Routing hybrid coordinator request through decomposed pipeline")
+
+    # Create strategy request for the decomposed pipeline
+    strategy_request = %AriaEngine.Membrane.Planning.Format.StrategyRequest{
+      request_id: planning_params.request_id,
+      strategy: :hybrid_coordinator,
+      planning_params: planning_params,
+      timeout_ms: Keyword.get(planning_params.options, :timeout_ms, 30_000),
+      strategy_config: Map.get(state.strategy_config, :hybrid_coordinator, %{}),
+      routing_metadata: %{
+        routed_at: DateTime.utc_now(),
+        routing_reason: "hybrid_coordinator_decomposed",
+        pipeline_stages: [:htn_planning, :temporal_constraint, :temporal_validation]
+      }
+    }
+
+    # Execute the decomposed pipeline
+    execute_decomposed_hybrid_pipeline(strategy_request, state)
+  end
+
+  defp execute_decomposed_hybrid_pipeline(strategy_request, state) do
+    start_time = System.monotonic_time(:millisecond)
+
+    try do
+      # Stage 1: HTN Planning
+      htn_result = execute_htn_planning_stage(strategy_request, state)
+
+      case htn_result do
+        {:ok, htn_planning_result} ->
+          # Stage 2: Temporal Constraints
+          constraint_result = execute_temporal_constraint_stage(htn_planning_result, state)
+
+          case constraint_result do
+            {:ok, temporal_constraint_result} ->
+              # Stage 3: Temporal Validation
+              validation_result = execute_temporal_validation_stage(temporal_constraint_result, state)
+
+              case validation_result do
+                {:ok, temporal_validation_result} ->
+                  end_time = System.monotonic_time(:millisecond)
+                  execution_time = end_time - start_time
+
+                  # Convert to final result format
+                  {:ok, %{
+                    strategy: :hybrid_coordinator,
+                    plan: %{
+                      solution_tree: temporal_validation_result.solution_tree,
+                      temporal_constraints: temporal_validation_result.temporal_constraints,
+                      validation_result: temporal_validation_result.validation_result,
+                      metadata: %{
+                        htn_metadata: temporal_validation_result.original_constraint_result.original_htn_result.planning_metadata,
+                        constraint_metadata: temporal_validation_result.original_constraint_result.constraint_metadata,
+                        validation_metadata: temporal_validation_result.validation_metadata,
+                        pipeline_execution_time_ms: execution_time
+                      }
+                    },
+                    success: temporal_validation_result.validation_result == true,
+                    execution_time: execution_time,
+                    pipeline_stages_completed: [:htn_planning, :temporal_constraint, :temporal_validation]
+                  }}
+
+                {:error, reason} ->
+                  {:error, "Temporal validation failed: #{reason}"}
+              end
+
+            {:error, reason} ->
+              {:error, "Temporal constraint processing failed: #{reason}"}
+          end
+
+        {:error, reason} ->
+          {:error, "HTN planning failed: #{reason}"}
+      end
+
+    rescue
+      error ->
+        Logger.error("❌ Decomposed pipeline execution failed: #{inspect(error)}")
+        {:error, "Pipeline execution failed: #{Exception.message(error)}"}
+    end
+  end
+
+  defp execute_htn_planning_stage(strategy_request, state) do
+    Logger.info("🔧 Executing HTN Planning stage")
+
+    # Get HTN planning strategy from config
+    htn_config = get_in(state.strategy_config, [:hybrid_coordinator, :htn_planning]) || %{}
+    planning_strategy = Map.get(htn_config, :planning_strategy, AriaEngine.Planning.LazyExecution)
+    logging_strategy = Map.get(htn_config, :logging_strategy, AriaEngine.Membrane.Planning.DefaultLoggingStrategy)
+
+    # Create HTN planning filter instance (simulate filter execution)
+    htn_filter = %AriaEngine.Membrane.Planning.HTNPlanningFilter{
+      planning_strategy: planning_strategy,
+      logging_strategy: logging_strategy,
+      max_planning_time_ms: Map.get(htn_config, :max_planning_time_ms, 30_000)
+    }
+
+    # Execute HTN planning logic directly
+    planning_params = strategy_request.planning_params
     domain = planning_params.domain
     state_data = planning_params.state
     goals = planning_params.goals
     options = planning_params.options
 
-    case AriaEngine.HybridPlanner.HybridCoordinatorV2.plan(domain, state_data, goals, options) do
-      {:ok, plan} ->
-        {:ok, %{
-          strategy: :hybrid_coordinator,
-          plan: plan,
-          success: true,
-          execution_time: 0  # Could be measured
-        }}
+    case planning_strategy.plan(domain, state_data, goals, options) do
+      {:ok, solution_tree} ->
+        htn_result = %AriaEngine.Membrane.Planning.HTNPlanningFilter.HTNPlanningResult{
+          request_id: strategy_request.request_id,
+          solution_tree: solution_tree,
+          planning_metadata: %{
+            planning_time_ms: 0,  # Would be measured in real filter
+            solution_tree_size: count_solution_tree_nodes(solution_tree),
+            strategy_used: :htn_planning,
+            completed_at: DateTime.utc_now()
+          },
+          original_request: strategy_request,
+          domain: domain,
+          state: state_data,
+          goals: goals,
+          options: options
+        }
+
+        {:ok, htn_result}
 
       {:error, reason} ->
-        {:error, "HybridCoordinator failed: #{reason}"}
+        {:error, reason}
+    end
+  end
+
+  defp execute_temporal_constraint_stage(htn_result, state) do
+    Logger.info("🔧 Executing Temporal Constraint stage")
+
+    # Get temporal constraint strategy from config
+    temporal_config = get_in(state.strategy_config, [:hybrid_coordinator, :temporal_constraint]) || %{}
+    temporal_strategy = Map.get(temporal_config, :temporal_strategy, AriaEngine.Timeline.DefaultTemporalStrategy)
+    logging_strategy = Map.get(temporal_config, :logging_strategy, AriaEngine.Membrane.Planning.DefaultLoggingStrategy)
+
+    if htn_result.solution_tree do
+      # Extract primitive actions from solution tree
+      primitive_actions = extract_primitive_actions_from_solution_tree(htn_result.solution_tree)
+      current_time = Keyword.get(htn_result.options, :current_time, 0)
+
+      case temporal_strategy.add_temporal_constraints(
+             %{},
+             primitive_actions,
+             Keyword.merge(htn_result.options, current_time: current_time)
+           ) do
+        {:ok, temporal_constraints} ->
+          constraint_result = %AriaEngine.Membrane.Planning.TemporalConstraintFilter.TemporalConstraintResult{
+            request_id: htn_result.request_id,
+            solution_tree: htn_result.solution_tree,
+            temporal_constraints: temporal_constraints,
+            constraint_metadata: %{
+              constraint_time_ms: 0,  # Would be measured in real filter
+              constraint_count: count_temporal_constraints(temporal_constraints),
+              strategy_used: :temporal_constraint,
+              completed_at: DateTime.utc_now()
+            },
+            original_htn_result: htn_result,
+            domain: htn_result.domain,
+            state: htn_result.state,
+            goals: htn_result.goals,
+            options: htn_result.options
+          }
+
+          {:ok, constraint_result}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
+    else
+      {:error, "No solution tree available for temporal constraint processing"}
+    end
+  end
+
+  defp execute_temporal_validation_stage(constraint_result, state) do
+    Logger.info("🔧 Executing Temporal Validation stage")
+
+    # Get temporal validation strategy from config
+    temporal_config = get_in(state.strategy_config, [:hybrid_coordinator, :temporal_validation]) || %{}
+    temporal_strategy = Map.get(temporal_config, :temporal_strategy, AriaEngine.Timeline.DefaultTemporalStrategy)
+    logging_strategy = Map.get(temporal_config, :logging_strategy, AriaEngine.Membrane.Planning.DefaultLoggingStrategy)
+
+    if constraint_result.temporal_constraints do
+      case temporal_strategy.validate_temporal_consistency(
+             constraint_result.temporal_constraints,
+             constraint_result.options
+           ) do
+        {:ok, validation_result} when is_boolean(validation_result) ->
+          validation_result_struct = %AriaEngine.Membrane.Planning.TemporalValidationFilter.TemporalValidationResult{
+            request_id: constraint_result.request_id,
+            solution_tree: constraint_result.solution_tree,
+            temporal_constraints: constraint_result.temporal_constraints,
+            validation_result: validation_result,
+            validation_metadata: %{
+              validation_time_ms: 0,  # Would be measured in real filter
+              constraints_validated: count_temporal_constraints(constraint_result.temporal_constraints),
+              strategy_used: :temporal_validation,
+              completed_at: DateTime.utc_now()
+            },
+            original_constraint_result: constraint_result,
+            domain: constraint_result.domain,
+            state: constraint_result.state,
+            goals: constraint_result.goals,
+            options: constraint_result.options
+          }
+
+          {:ok, validation_result_struct}
+
+        {:error, reason} ->
+          {:error, reason}
+
+        other ->
+          {:error, "Unexpected validation result: #{inspect(other)}"}
+      end
+    else
+      {:error, "No temporal constraints available for validation"}
+    end
+  end
+
+  # Helper functions for the decomposed pipeline
+
+  defp count_solution_tree_nodes(solution_tree) do
+    case solution_tree do
+      %{children: children} when is_list(children) ->
+        1 + Enum.sum(Enum.map(children, &count_solution_tree_nodes/1))
+
+      _ ->
+        1
+    end
+  end
+
+  defp extract_primitive_actions_from_solution_tree(solution_tree) do
+    case solution_tree do
+      %{children: children} when is_list(children) ->
+        Enum.flat_map(children, &extract_primitive_actions_from_solution_tree/1)
+
+      %{task: {action_name, args}, status: :primitive} ->
+        [{action_name, args}]
+
+      %{task: task} when is_tuple(task) ->
+        [task]
+
+      _ ->
+        []
+    end
+  end
+
+  defp count_temporal_constraints(temporal_constraints) do
+    case temporal_constraints do
+      %{constraints: constraints} when is_list(constraints) ->
+        length(constraints)
+
+      constraints when is_list(constraints) ->
+        length(constraints)
+
+      %{} = constraint_map ->
+        Map.keys(constraint_map) |> length()
+
+      _ ->
+        0
     end
   end
 
