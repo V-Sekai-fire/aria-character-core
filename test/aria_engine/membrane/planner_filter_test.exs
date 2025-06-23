@@ -71,7 +71,7 @@ defmodule AriaEngine.Membrane.PlannerFilterTest do
         domain: nil,
         state: nil,
         goals: [
-          {"entity", "has", "goal_1"},
+          {"has", "entity", "goal_1"},
           {"entity", "at", "goal_2"}
         ],
         options: [],

@@ -11,7 +11,7 @@ defmodule Plan do
   alias AriaEngine.Plan.{Core, Backtracking}
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
+  @type goal :: {String.t(), String.t(), State.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 

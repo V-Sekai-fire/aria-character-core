@@ -6,7 +6,7 @@ defmodule AriaEngine.SoftwareDevelopment.Domain do
 
   def build do
     Domain.new("software_development")
-    |> Domain.add_action("write_code", fn state, _args -> {:ok, state} end)
-    |> Domain.add_action("test_code", fn state, _args -> {:ok, state} end)
+    |> Domain.add_action(:write_code, fn state, _args -> {:ok, state} end)
+    |> Domain.add_action(:test_code, fn state, _args -> {:ok, state} end)
   end
 end

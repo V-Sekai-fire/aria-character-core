@@ -29,8 +29,8 @@ defmodule TemporalPlannerSTNBridgeTest do
 
     # 3. Define goals
     goals = [
-      {"player", "has", "item"},
-      {"player", "location", "end_location"}
+      {"has", "player", "item"},
+      {"location", "player", "end_location"}
     ]
 
     # 4. Attempt to generate a plan

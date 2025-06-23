@@ -23,8 +23,8 @@ defmodule GoalTest do
       refute Multigoal.empty?(multigoal)
 
       goals_list = Multigoal.to_list(multigoal)
-      assert {"player", "location", "treasure_room"} in goals_list
-      assert {"player", "has", "treasure"} in goals_list
+      assert {"location", "player", "treasure_room"} in goals_list
+      assert {"has", "player", "treasure"} in goals_list
     end
 
     test "checks goal satisfaction" do

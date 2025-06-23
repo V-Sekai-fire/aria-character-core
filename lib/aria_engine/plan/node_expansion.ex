@@ -10,7 +10,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   alias AriaEngine.Multigoal
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
+  @type goal :: {String.t(), String.t(), State.fact_value()}
   @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -191,7 +191,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
           node_id(),
           String.t(),
           String.t(),
-          AriaEngine.State.fact_value(),
+          State.fact_value(),
           integer()
         ) ::
           {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}

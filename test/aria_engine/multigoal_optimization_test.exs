@@ -24,7 +24,8 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   use ExUnit.Case
   require Logger
 
-  alias AriaEngine.{State, Multigoal}
+  alias State
+  alias AriaEngine.Multigoal
 
   # ==================== MOCK OPTIMIZER IMPLEMENTATION ====================
 
@@ -766,10 +767,10 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
     # Define multigoal
     goals = [
-      {"item_a", "location", "station_1"},  # Move item_a to station_1
-      {"item_b", "location", "station_2"},  # Move item_b to station_2
-      {"item_c", "location", "station_1"},  # Move item_c to station_1
-      {"robot", "location", "dock"}         # Return robot to dock
+      {"location", "item_a", "station_1"},  # Move item_a to station_1
+      {"location", "item_b", "station_2"},  # Move item_b to station_2
+      {"location", "item_c", "station_1"},  # Move item_c to station_1
+      {"location", "robot", "dock"}         # Return robot to dock
     ]
 
     {state, goals}
@@ -787,10 +788,10 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
     # Define parallel goals
     goals = [
-      {"task_a", "assigned_to", "robot_1"},
-      {"task_b", "assigned_to", "robot_2"},
-      {"task_c", "assigned_to", "robot_1"},
-      {"task_d", "assigned_to", "robot_2"}
+      {"assigned_to", "task_a", "robot_1"},
+      {"assigned_to", "task_b", "robot_2"},
+      {"assigned_to", "task_c", "robot_1"},
+      {"assigned_to", "task_d", "robot_2"}
     ]
 
     {state, goals}
@@ -807,10 +808,10 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
     # Define dependent goals
     goals = [
-      {"player", "has_key", true},          # Must get key first
-      {"door", "state", "open"},            # Then open door (requires key)
-      {"player", "location", "treasure_room"}, # Then enter room (requires open door)
-      {"player", "has", "treasure"}         # Finally get treasure
+      {"has_key", "player", true},          # Must get key first
+      {"state", "door", "open"},            # Then open door (requires key)
+      {"location", "player", "treasure_room"}, # Then enter room (requires open door)
+      {"has", "player", "treasure"}         # Finally get treasure
     ]
 
     {state, goals}
@@ -830,10 +831,10 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
     # Define resource contention goals
     goals = [
-      {"worker_1", "has", "tool_drill"},    # Both workers need tools
-      {"worker_2", "has", "tool_saw"},      # Resource allocation required
-      {"worker_1", "location", "workstation_1"}, # Workstation assignment
-      {"worker_2", "location", "workstation_2"}  # Parallel work possible
+      {"has", "worker_1", "tool_drill"},    # Both workers need tools
+      {"has", "worker_2", "tool_saw"},      # Resource allocation required
+      {"location", "worker_1", "workstation_1"}, # Workstation assignment
+      {"location", "worker_2", "workstation_2"}  # Parallel work possible
     ]
 
     {state, goals}
@@ -849,9 +850,9 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
     # Define impossible goals (robot can't move without battery)
     goals = [
-      {"robot", "location", "room_b"},      # Can't move without battery
-      {"robot", "has", "key"},              # Can't get key without moving
-      {"door", "state", "open"}             # Can't open door without key
+      {"location", "robot", "room_b"},      # Can't move without battery
+      {"has", "robot", "key"},              # Can't get key without moving
+      {"state", "door", "open"}             # Can't open door without key
     ]
 
     {state, goals}

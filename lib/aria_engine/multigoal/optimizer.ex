@@ -19,7 +19,7 @@ defmodule AriaEngine.Multigoal.Optimizer do
   ## Usage
 
       iex> state = State.new()
-      iex> goals = [{"robot", "location", "station_1"}, {"item", "location", "station_2"}]
+      iex> goals = [{"location", "robot", "station_1"}, {"location", "item", "station_2"}]
       iex> AriaEngine.Multigoal.Optimizer.optimize(state, goals)
       {:ok, %{goals: [...], optimization_type: :spatial, ...}}
 

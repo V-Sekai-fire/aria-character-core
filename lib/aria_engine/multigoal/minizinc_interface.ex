@@ -17,7 +17,7 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
   ## Usage
 
       iex> state = State.new()
-      iex> goals = [{"robot", "location", "station_1"}]
+      iex> goals = [{"location", "robot", "station_1"}]
       iex> AriaEngine.Multigoal.MiniZincInterface.solve_spatial(state, goals)
       {:ok, %{goals: [...], total_actions: 12, ...}}
 

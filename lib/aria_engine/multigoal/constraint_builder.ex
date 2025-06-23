@@ -19,7 +19,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
   ## Usage
 
       iex> state = State.new()
-      iex> goals = [{"robot", "location", "station_1"}]
+      iex> goals = [{"location", "robot", "station_1"}]
       iex> AriaEngine.Multigoal.ConstraintBuilder.build_spatial_model(state, goals)
       {:ok, "% MiniZinc spatial optimization model..."}
 

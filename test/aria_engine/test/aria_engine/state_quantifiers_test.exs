@@ -165,10 +165,10 @@ defmodule StateQuantifiersTest do
         |> State.set_fact("door1", "status", "locked")
 
       # Regular condition check
-      regular_condition = {"player", "location", "room1"}
+      regular_condition = {"location", "player", "room1"}
       assert State.evaluate_condition(state, regular_condition) == true
 
-      false_condition = {"player", "location", "room2"}
+      false_condition = {"location", "player", "room2"}
       assert State.evaluate_condition(state, false_condition) == false
     end
 

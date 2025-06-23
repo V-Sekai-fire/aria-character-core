@@ -6,7 +6,7 @@ defmodule AriaEngine.BlocksWorld.Domain do
 
   def build do
     Domain.new("blocks_world")
-    |> Domain.add_action("pickup", &AriaEngine.BlocksWorld.Actions.pickup/2)
-    |> Domain.add_action("putdown", &AriaEngine.BlocksWorld.Actions.putdown/2)
+    |> Domain.add_action(:pickup, &AriaEngine.BlocksWorld.Actions.pickup/2)
+    |> Domain.add_action(:putdown, &AriaEngine.BlocksWorld.Actions.putdown/2)
   end
 end
