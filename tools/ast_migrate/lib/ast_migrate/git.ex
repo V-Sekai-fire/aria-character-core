@@ -1,6 +1,13 @@
 defmodule AstMigrate.Git do
-  @moduledoc "Git operations using system Git commands for reliable integration.\n\nThis module provides structured error handling and type safety for all\nGit operations used by the AST migration tool.\n"
+  @moduledoc """
+  Git operations using system Git commands for reliable integration.
+
+  This module provides structured error handling and type safety for all
+  Git operations used by the AST migration tool.
+  """
+
   require Logger
+
   @type commit_hash :: String.t()
   @type branch_name :: String.t()
   @type file_path :: String.t()
@@ -16,7 +23,7 @@ defmodule AstMigrate.Git do
     end
   end
 
-  @doc "Ensure the working tree is clean before applying transformations.\n"
+  @doc "Ensure the working tree is clean before applying transformations."
   @spec ensure_clean_working_tree(String.t()) :: :ok | {:error, String.t()}
   def ensure_clean_working_tree(_repo_path \\ ".") do
     case run_git_command(["status", "--porcelain=v1"]) do
@@ -26,14 +33,14 @@ defmodule AstMigrate.Git do
     end
   end
 
-  @doc "Commit transformations with proper AST migration metadata.\n"
+  @doc "Commit transformations with proper AST migration metadata."
   @spec commit_transformations([file_path()], String.t()) ::
           {:ok, commit_hash()} | {:error, String.t()}
   def commit_transformations(files, message) do
     commit_transformations(".", message, files)
   end
 
-  @doc "Commit transformations with proper AST migration metadata (3-arity version).\n"
+  @doc "Commit transformations with proper AST migration metadata (3-arity version)."
   @spec commit_transformations(String.t(), String.t(), [file_path()]) ::
           {:ok, commit_hash()} | {:error, String.t()}
   def commit_transformations(_repo_path, message, files) do
@@ -72,7 +79,7 @@ defmodule AstMigrate.Git do
     end
   end
 
-  @doc "Create a transformation branch for parallel development.\n"
+  @doc "Create a transformation branch for parallel development."
   @spec create_transformation_branch(String.t()) :: {:ok, branch_name()} | {:error, String.t()}
   def create_transformation_branch(rule_name) do
     branch_name = "ast-migration/#{rule_name}-#{timestamp()}"
@@ -85,7 +92,7 @@ defmodule AstMigrate.Git do
     end
   end
 
-  @doc "Rollback a transformation by reverting the commit.\n"
+  @doc "Rollback a transformation by reverting the commit."
   @spec rollback_transformation(commit_hash()) :: {:ok, commit_hash()} | {:error, String.t()}
   def rollback_transformation(commit_hash) do
     with {:ok, _} <- run_git_command(["revert", "--no-edit", commit_hash]),
@@ -97,7 +104,7 @@ defmodule AstMigrate.Git do
     end
   end
 
-  @doc "Merge a transformation branch back to main.\n"
+  @doc "Merge a transformation branch back to main."
   @spec merge_transformation_branch(branch_name()) :: {:ok, commit_hash()} | {:error, String.t()}
   def merge_transformation_branch(branch_name) do
     with {:ok, _} <- run_git_command(["merge", branch_name]),
@@ -109,7 +116,7 @@ defmodule AstMigrate.Git do
     end
   end
 
-  @doc "Get transformation history by filtering commits with [AST] prefix.\n"
+  @doc "Get transformation history by filtering commits with [AST] prefix."
   @spec get_transformation_history() :: {:ok, [map()]} | {:error, String.t()}
   def get_transformation_history do
     with {:ok, output} <- run_git_command(["log", "--format=%H %s", "--grep=\\[AST\\]"]) do
@@ -128,7 +135,7 @@ defmodule AstMigrate.Git do
     end
   end
 
-  @doc "Check if the current repository is a valid Git repository.\n"
+  @doc "Check if the current repository is a valid Git repository."
   @spec validate_repository() :: :ok | {:error, String.t()}
   def validate_repository do
     case run_git_command(["rev-parse", "--git-dir"]) do

@@ -1,11 +1,21 @@
 defmodule AstMigrate do
-  @moduledoc "Git-Native Elixir AST Migration Tool\n\nThis module provides systematic code transformations with Git integration\nfor large-scale Elixir codebases. It leverages Git directly as the version\ncontrol backend for transformation tracking and rollback capabilities.\n\n## Phase 0: Immediate Relief\n\nThe initial implementation focuses on StateV2 → State migration with:\n- AST-based transformations using Code.string_to_quoted/2\n- Git integration for automatic commits using egit\n- Basic pattern matching on AST nodes\n- Safe rollback capabilities\n\n## Usage\n\n    # Apply transformation and commit in one step\n    mix ast.simple --rule state_v2_to_state --commit \"Convert StateV2 to State\"\n\n## Architecture\n\nThe tool uses a rule-based system where each transformation rule:\n- Defines AST pattern matching for specific code patterns\n- Provides transformation logic for converting matched patterns\n- Includes validation for ensuring syntax correctness\n- Integrates with Git for version control\n\n## Safety Features\n\n- Syntax validation before and after transformations\n- Atomic Git commits for rollback capability\n- Backup creation before applying transformations\n- Comprehensive error handling and recovery\n"
+  @moduledoc """
+  Git-Native Elixir AST Migration Tool
+
+  This module provides systematic code transformations with Git integration
+  for large-scale Elixir codebases.
+  """
+
   require Logger
   alias AstMigrate.{Git, Rules}
+
   @type transformation_result :: {:ok, String.t()} | {:error, String.t()}
   @type file_result :: {:ok, String.t()} | {:error, String.t()}
   @type rule_name :: atom()
-  @doc "Apply a transformation rule to files and optionally commit the changes.\n\n## Options\n\n- `:commit` - Commit message for automatic Git commit\n- `:files` - List of file patterns to transform (default: all .ex and .exs files)\n- `:dry_run` - Preview changes without applying them\n\n## Examples\n\n    # Apply transformation and commit\n    AstMigrate.apply_rule(:state_v2_to_state, commit: \"Convert StateV2 to State\")\n\n    # Dry run to preview changes\n    AstMigrate.apply_rule(:state_v2_to_state, dry_run: true)\n\n    # Apply to specific files only\n    AstMigrate.apply_rule(:state_v2_to_state, files: [\"lib/aria_engine/*.ex\"])\n"
+
+  @doc """
+  Apply a transformation rule to files and optionally commit the changes.
+  """
   @spec apply_rule(rule_name(), keyword()) :: {:ok, map()} | {:error, String.t()}
   def apply_rule(rule_name, opts \\ []) do
     start_time = System.monotonic_time(:millisecond)
@@ -58,13 +68,13 @@ defmodule AstMigrate do
     end
   end
 
-  @doc "List available transformation rules.\n"
+  @doc "List available transformation rules."
   @spec list_rules() :: [atom()]
   def list_rules do
-    [:state_v2_to_state]
+    [:unit_test_improvements]
   end
 
-  @doc "Get information about a specific transformation rule.\n"
+  @doc "Get information about a specific transformation rule."
   @spec rule_info(rule_name()) :: {:ok, map()} | {:error, String.t()}
   def rule_info(rule_name) do
     case get_rule_module(rule_name) do
@@ -73,10 +83,7 @@ defmodule AstMigrate do
          %{
            name: rule_name,
            module: module,
-           description: module.description(),
-           file_patterns: module.file_patterns(),
-           preconditions: length(module.preconditions()),
-           postconditions: length(module.postconditions())
+           description: module.description()
          }}
 
       error ->
@@ -84,8 +91,8 @@ defmodule AstMigrate do
     end
   end
 
-  defp get_rule_module(:state_v2_to_state) do
-    {:ok, Rules.StateV2ToState}
+  defp get_rule_module(:unit_test_improvements) do
+    {:ok, Rules.UnitTestImprovements}
   end
 
   defp get_rule_module(rule_name) do
@@ -136,41 +143,17 @@ defmodule AstMigrate do
             original_content = File.read!(file)
 
             if original_content != transformed_content do
-              Logger.debug("File would be changed in preview",
-                module: :ast_migrate,
-                operation: :preview_transformations,
-                file: file,
-                original_size: byte_size(original_content),
-                transformed_size: byte_size(transformed_content)
-              )
-
               {:changed, file, original_content, transformed_content}
             else
               {:unchanged, file}
             end
 
           {:error, reason} ->
-            Logger.warning("File transformation failed in preview",
-              module: :ast_migrate,
-              operation: :preview_transformations,
-              file: file,
-              error: inspect(reason)
-            )
-
             {:error, file, reason}
         end
       end)
 
     changed_files = Enum.filter(results, &match?({:changed, _, _, _}, &1))
-    error_files = Enum.filter(results, &match?({:error, _, _}, &1))
-
-    Logger.info("Preview transformations completed",
-      module: :ast_migrate,
-      operation: :preview_transformations,
-      files_processed: length(files),
-      files_changed: length(changed_files),
-      files_errors: length(error_files)
-    )
 
     {:ok,
      %{
@@ -197,28 +180,12 @@ defmodule AstMigrate do
 
             if original_content != transformed_content do
               File.write!(file, transformed_content)
-
-              Logger.debug("File transformed and written",
-                module: :ast_migrate,
-                operation: :execute_transformations,
-                file: file,
-                original_size: byte_size(original_content),
-                transformed_size: byte_size(transformed_content)
-              )
-
               {:changed, file}
             else
               {:unchanged, file}
             end
 
           {:error, reason} ->
-            Logger.error("File transformation failed",
-              module: :ast_migrate,
-              operation: :execute_transformations,
-              file: file,
-              error: inspect(reason)
-            )
-
             {:error, file, reason}
         end
       end)
@@ -226,16 +193,6 @@ defmodule AstMigrate do
     changed_files =
       Enum.filter(results, &match?({:changed, _}, &1))
       |> Enum.map(fn {:changed, file} -> file end)
-
-    error_files = Enum.filter(results, &match?({:error, _, _}, &1))
-
-    Logger.info("File transformations completed",
-      module: :ast_migrate,
-      operation: :execute_transformations,
-      files_processed: length(files),
-      files_changed: length(changed_files),
-      files_errors: length(error_files)
-    )
 
     {:ok, %{transformed_files: files, changed_files: changed_files, commit_hash: nil}}
   end
