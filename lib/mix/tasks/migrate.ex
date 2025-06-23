@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Migrate do
   """
 
   use Mix.Task
-  alias Mix.Tasks.Migrate.{RuleRegistry, MigrationCoordinator}
+  alias AriaEngine.Membrane.Migration.{Pipeline, Registry}
 
   @shortdoc "Unified migration system for code transformations"
 
@@ -84,7 +84,7 @@ defmodule Mix.Tasks.Migrate do
     Mix.shell().info("Available Migration Rules:")
     Mix.shell().info("=" <> String.duplicate("=", 25))
 
-    RuleRegistry.list_rules()
+    Registry.list_rules()
     |> Enum.group_by(& &1.category)
     |> Enum.each(fn {category, rules} ->
       Mix.shell().info("\n#{String.upcase(to_string(category))}:")
@@ -101,10 +101,26 @@ defmodule Mix.Tasks.Migrate do
       dry_run: opts[:dry_run] || false,
       backup_dir: opts[:backup_dir] || ".migration_backup",
       verbose: opts[:verbose] || false,
-      files: files
+      files: if(Enum.empty?(files), do: ["."], else: files)
     }
 
-    MigrationCoordinator.execute(config)
+    # Start the Membrane pipeline
+    {:ok, _supervisor_pid, pipeline_pid} = Membrane.Pipeline.start_link(Pipeline, config)
+
+    # Wait for pipeline completion
+    ref = Process.monitor(pipeline_pid)
+
+    receive do
+      {:DOWN, ^ref, :process, ^pipeline_pid, reason} ->
+        case reason do
+          :normal -> :ok
+          :shutdown -> :ok
+          {:shutdown, _} -> :ok
+          other ->
+            Mix.shell().error("Pipeline failed: #{inspect(other)}")
+            System.halt(1)
+        end
+    end
   end
 
   defp parse_rules(nil), do: :all
