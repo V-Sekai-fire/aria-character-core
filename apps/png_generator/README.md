@@ -17,7 +17,7 @@ This standalone tool generates PNG images from schedule data without requiring a
 ## Installation
 
 ```bash
-cd tools/png_generator
+cd apps/png_generator
 mix deps.get
 ```
 

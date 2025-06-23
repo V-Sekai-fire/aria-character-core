@@ -15,7 +15,7 @@ A powerful AST-based code migration tool for Elixir projects. This tool allows y
 Clone this repository and install dependencies:
 
 ```bash
-cd tools/ast_migrate
+cd apps/ast_migrate
 mix deps.get
 mix compile
 ```
