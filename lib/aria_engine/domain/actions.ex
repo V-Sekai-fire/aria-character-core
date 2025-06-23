@@ -42,7 +42,8 @@ defmodule AriaEngine.Domain.Actions do
     cond do
       # Case 1: Duration with start/end is invalid
       has_duration and (has_start or has_end) ->
-        raise ArgumentError, "invalid temporal specification: cannot mix duration with start/end times"
+        raise ArgumentError,
+              "invalid temporal specification: cannot mix duration with start/end times"
 
       # Case 2: No temporal specification - default to zero duration
       not (has_duration or has_start or has_end) ->
@@ -51,10 +52,12 @@ defmodule AriaEngine.Domain.Actions do
       # Case 3: Validate ISO 8601 datetime formats for start/end
       has_start ->
         validate_iso8601_datetime(metadata.start, "start")
+
         if has_end do
           validate_iso8601_datetime(metadata.end, "end")
           validate_start_before_end(metadata.start, metadata.end)
         end
+
         metadata
 
       # Case 4: Validate end time only
@@ -75,13 +78,15 @@ defmodule AriaEngine.Domain.Actions do
     case AriaEngine.Utils.validate_iso8601_datetime(datetime_string) do
       {:ok, _datetime} ->
         :ok
+
       {:error, reason} ->
         raise ArgumentError, "invalid ISO 8601 datetime for #{field_name}: #{reason}"
     end
   end
 
   defp validate_iso8601_datetime(value, field_name) do
-    raise ArgumentError, "invalid ISO 8601 datetime for #{field_name}: expected string, got #{inspect(value)}"
+    raise ArgumentError,
+          "invalid ISO 8601 datetime for #{field_name}: expected string, got #{inspect(value)}"
   end
 
   # Validates that start time is before end time using AriaEngine.Utils
@@ -90,6 +95,7 @@ defmodule AriaEngine.Domain.Actions do
     case AriaEngine.Utils.validate_datetime_order(start_string, end_string) do
       :ok ->
         :ok
+
       {:error, reason} ->
         raise ArgumentError, reason
     end
@@ -117,6 +123,7 @@ defmodule AriaEngine.Domain.Actions do
     # If capabilities are present, they must be a list of atoms
     if Map.has_key?(entity_req, :capabilities) do
       capabilities = entity_req.capabilities
+
       unless is_list(capabilities) and Enum.all?(capabilities, &is_atom/1) do
         raise ArgumentError, "capabilities must be list of atoms"
       end
@@ -139,7 +146,8 @@ defmodule AriaEngine.Domain.Actions do
         {:error, reason} -> raise ArgumentError, "invalid ISO 8601 duration: #{reason}"
       end
     else
-      raise ArgumentError, "duration must be ISO 8601 format starting with 'PT', got: #{inspect(duration)}"
+      raise ArgumentError,
+            "duration must be ISO 8601 format starting with 'PT', got: #{inspect(duration)}"
     end
   end
 
@@ -147,7 +155,8 @@ defmodule AriaEngine.Domain.Actions do
     raise ArgumentError, "duration must be a string, got #{inspect(duration)}"
   end
 
-  @spec add_action(t(), action_name(), action_fn() | AriaEngine.Domain.DurativeAction.t(), map()) :: t()
+  @spec add_action(t(), action_name(), action_fn() | AriaEngine.Domain.DurativeAction.t(), map()) ::
+          t()
   def add_action(
         domain,
         name,

@@ -20,6 +20,7 @@ Implement glTF mesh and primitive processing using strict Test-Driven Developmen
 ## TDD Implementation Plan
 
 ### 4.1 Vertex Data Retrieval (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for POSITION attribute extraction
 - [ ] **RED**: Write failing test for NORMAL attribute extraction
 - [ ] **RED**: Write failing test for TEXCOORD_0 attribute extraction
@@ -28,6 +29,7 @@ Implement glTF mesh and primitive processing using strict Test-Driven Developmen
 - [ ] **REFACTOR**: Clean up attribute processing
 
 ### 4.2 Indexed Geometry (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for indices accessor processing
 - [ ] **RED**: Write failing test for triangle assembly from indices
 - [ ] **RED**: Write failing test for non-indexed primitive handling
@@ -36,6 +38,7 @@ Implement glTF mesh and primitive processing using strict Test-Driven Developmen
 - [ ] **REFACTOR**: Clean up indexing logic
 
 ### 4.3 Morph Targets (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for morph target weight application
 - [ ] **RED**: Write failing test for multiple morph targets
 - [ ] **RED**: Write failing test for morph target attribute blending
@@ -43,6 +46,7 @@ Implement glTF mesh and primitive processing using strict Test-Driven Developmen
 - [ ] **REFACTOR**: Clean up morphing implementation
 
 ### 4.4 Skinning Support (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for joint and weight attribute processing
 - [ ] **RED**: Write failing test for skin matrix calculation
 - [ ] **RED**: Write failing test for vertex skinning transformation

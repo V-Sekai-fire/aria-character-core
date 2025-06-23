@@ -101,6 +101,7 @@ MCPSource → PlanFilter → PlannerSink → MCPSink
 ```
 
 This will provide:
+
 - Process isolation for scheduler execution
 - Better fault tolerance and error recovery
 - Individual strategy testing capabilities

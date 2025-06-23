@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.TimelineGraph.EntityManager do
   @moduledoc "Manages entity creation, capabilities, and basic timeline operations.\n\nThis module handles the core entity lifecycle within the TimelineGraph system,\nincluding entity creation with automatic timeline attachment, capability management,\nand entity property operations.\n"
   alias AriaEngine.Timeline.AgentEntity

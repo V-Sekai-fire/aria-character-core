@@ -167,11 +167,16 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
     goals
     |> Enum.map(fn {_subject, predicate, _value} ->
       case predicate do
-        "location" -> 5  # Movement actions
-        "has" -> 3       # Pickup/manipulation actions
-        "state" -> 4     # State change actions
-        "assigned_to" -> 2  # Assignment actions
-        _ -> 3           # Default action cost
+        # Movement actions
+        "location" -> 5
+        # Pickup/manipulation actions
+        "has" -> 3
+        # State change actions
+        "state" -> 4
+        # Assignment actions
+        "assigned_to" -> 2
+        # Default action cost
+        _ -> 3
       end
     end)
   end
@@ -181,17 +186,17 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
     |> Enum.with_index()
     |> Enum.map(fn {{subject, predicate, _value}, index} ->
       # Simple dependency analysis - same subject goals depend on each other
-      deps = goals
-      |> Enum.with_index()
-      |> Enum.filter(fn {{dep_subject, dep_predicate, _dep_value}, dep_index} ->
-        dep_index != index and subject == dep_subject and predicate != dep_predicate
-      end)
-      |> Enum.map(fn {_goal, dep_index} -> dep_index end)
+      deps =
+        goals
+        |> Enum.with_index()
+        |> Enum.filter(fn {{dep_subject, dep_predicate, _dep_value}, dep_index} ->
+          dep_index != index and subject == dep_subject and predicate != dep_predicate
+        end)
+        |> Enum.map(fn {_goal, dep_index} -> dep_index end)
 
       {index, deps}
     end)
   end
-
 
   # Dependency model helpers
 
@@ -212,17 +217,21 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
       # Simple dependency heuristics
       cond do
         # Same subject, different predicate (e.g., get key before open door)
-        subject == dep_subject and predicate != dep_predicate -> true
+        subject == dep_subject and predicate != dep_predicate ->
+          true
 
         # Key-door dependencies
         predicate == "state" and value == "open" and
-        dep_predicate == "has_key" and dep_value == true -> true
+          dep_predicate == "has_key" and dep_value == true ->
+          true
 
         # Location dependencies (must have item before moving it)
         predicate == "location" and
-        dep_predicate == "has" and String.contains?(subject, to_string(dep_value)) -> true
+          dep_predicate == "has" and String.contains?(subject, to_string(dep_value)) ->
+          true
 
-        true -> false
+        true ->
+          false
       end
     end)
     |> Enum.map(fn {_goal, index} -> index end)
@@ -241,10 +250,14 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
     goals
     |> Enum.map(fn {_subject, predicate, _value} ->
       case predicate do
-        "location" -> 5  # Movement actions
-        "has" -> 3       # Pickup/manipulation actions
-        "state" -> 4     # State change actions
-        _ -> 2           # Default action cost
+        # Movement actions
+        "location" -> 5
+        # Pickup/manipulation actions
+        "has" -> 3
+        # State change actions
+        "state" -> 4
+        # Default action cost
+        _ -> 2
       end
     end)
   end
@@ -281,11 +294,13 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
     goals
     |> Enum.with_index()
     |> Enum.map(fn {{subject, predicate, value}, index} ->
-      agent = cond do
-        String.contains?(subject, ["robot", "worker", "agent"]) -> subject
-        predicate == "assigned_to" -> value
-        true -> "default_agent"
-      end
+      agent =
+        cond do
+          String.contains?(subject, ["robot", "worker", "agent"]) -> subject
+          predicate == "assigned_to" -> value
+          true -> "default_agent"
+        end
+
       {index, agent}
     end)
   end
@@ -323,15 +338,16 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
   defp extract_resources(_state, goals) do
     # Extract all resources mentioned in goals
     # Note: State doesn't have get_all_facts/1, so we focus on goal resources
-    goal_resources = goals
-    |> Enum.filter(fn {subject, predicate, value} ->
-      predicate == "has" or
-      String.contains?(subject, ["tool", "resource"]) or
-      String.contains?(to_string(value), ["tool", "resource", "workstation"])
-    end)
-    |> Enum.flat_map(fn {subject, _predicate, value} ->
-      [subject, to_string(value)]
-    end)
+    goal_resources =
+      goals
+      |> Enum.filter(fn {subject, predicate, value} ->
+        predicate == "has" or
+          String.contains?(subject, ["tool", "resource"]) or
+          String.contains?(to_string(value), ["tool", "resource", "workstation"])
+      end)
+      |> Enum.flat_map(fn {subject, _predicate, value} ->
+        [subject, to_string(value)]
+      end)
 
     goal_resources
     |> Enum.filter(&String.contains?(&1, ["tool", "resource", "workstation"]))
@@ -346,23 +362,26 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
       required_resources = []
 
       # Check if goal requires specific resources
-      required_resources = if predicate == "has" and
-        String.contains?(to_string(value), ["tool", "resource"]) do
-        [to_string(value) | required_resources]
-      else
-        required_resources
-      end
+      required_resources =
+        if predicate == "has" and
+             String.contains?(to_string(value), ["tool", "resource"]) do
+          [to_string(value) | required_resources]
+        else
+          required_resources
+        end
 
-      required_resources = if String.contains?(subject, ["tool", "resource"]) do
-        [subject | required_resources]
-      else
-        required_resources
-      end
+      required_resources =
+        if String.contains?(subject, ["tool", "resource"]) do
+          [subject | required_resources]
+        else
+          required_resources
+        end
 
       # Map to resource indices
-      resource_indices = required_resources
-      |> Enum.map(fn resource -> Enum.find_index(resources, &(&1 == resource)) end)
-      |> Enum.filter(& &1 != nil)
+      resource_indices =
+        required_resources
+        |> Enum.map(fn resource -> Enum.find_index(resources, &(&1 == resource)) end)
+        |> Enum.filter(&(&1 != nil))
 
       {index, resource_indices}
     end)

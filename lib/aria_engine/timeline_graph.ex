@@ -221,7 +221,8 @@ defmodule AriaEngine.TimelineGraph do
 
   Delegates to `TimelineGraph.Scheduler.resolve_schedule_conflicts/4`.
   """
-  @spec resolve_schedule_conflicts(t(), entity_id(), map(), [map()]) :: {:ok, t()} | {:error, String.t()}
+  @spec resolve_schedule_conflicts(t(), entity_id(), map(), [map()]) ::
+          {:ok, t()} | {:error, String.t()}
   defdelegate resolve_schedule_conflicts(timeline_graph, entity_id, new_routine, conflicts),
     to: Scheduler
 

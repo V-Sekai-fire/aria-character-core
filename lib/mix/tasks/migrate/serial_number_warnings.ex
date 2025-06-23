@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Mix.Tasks.Migrate.SerialNumberWarnings do
   @moduledoc "Migration tool to suppress unused @serial_number warnings.\n\nAdds @compile {:no_warn_unused, [:serial_number]} directive to modules\nthat have @serial_number attributes to suppress compiler warnings.\n"
   use Mix.Task

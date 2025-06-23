@@ -199,12 +199,14 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 **This ADR has been superseded by ADR-111** due to architectural improvements that separate data transformation from planning execution.
 
 **Key Changes in ADR-111:**
+
 - Convert `schedule_activities` from full execution pipeline to pure data transformer
 - Separate MCP layer (data conversion) from domain layer (planning execution)
 - Enable individual strategy testing through clean architectural boundaries
 - Maintain all validation and conversion logic in dedicated plan converter module
 
 **Migration Path:**
+
 - The MCP tool functionality implemented in this ADR remains functional
 - ADR-111 provides a cleaner architectural approach for the same capabilities
 - Existing MCP clients will need updates for the new response format

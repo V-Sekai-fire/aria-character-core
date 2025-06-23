@@ -173,7 +173,6 @@ defmodule AriaEngine.Plan.Utils do
     end)
   end
 
-
   @doc """
   Get statistics about the solution tree.
   """

@@ -12,12 +12,14 @@ ADR-126 provides excellent static multigoal optimization before execution begins
 ### The Gap Between Static and Runtime Optimization
 
 **Current Static Optimization (ADR-126):**
+
 - Optimizes multigoals based on initial state and predicted execution patterns
 - Uses estimated action costs, movement distances, and resource availability
 - Cannot account for actual execution performance or dynamic state changes
 - Provides excellent baseline optimization but lacks adaptability
 
 **Available Runtime Information During Lazy Execution:**
+
 1. **Execution State Context** - actual current state vs. predicted state during execution
 2. **Performance Metrics** - real action execution times, movement costs, resource access patterns
 3. **Method Failure History** - which methods have been blacklisted and failure reasons
@@ -29,6 +31,7 @@ ADR-126 provides excellent static multigoal optimization before execution begins
 ### Current Multigoal Processing Limitations
 
 In `AriaEngine.Plan.Execution.process_multigoal_node/4`, multigoal optimization currently:
+
 - Uses only the current execution state
 - Cannot leverage execution history or performance metrics
 - Applies static optimization methods without runtime context
@@ -37,6 +40,7 @@ In `AriaEngine.Plan.Execution.process_multigoal_node/4`, multigoal optimization 
 ### The Opportunity
 
 During `run_lazy_refineahead`, when encountering multigoal nodes, we can:
+
 - Use actual execution performance to refine optimization constraints
 - Leverage method failure patterns to avoid problematic approaches
 - Dynamically adjust goal priorities based on execution progress
@@ -50,11 +54,13 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 ### Architecture Approach
 
 **Hierarchical Optimization Strategy:**
+
 1. **Static Optimization** (ADR-126): Initial multigoal optimization before execution
 2. **Runtime Re-optimization** (This ADR): Dynamic optimization during lazy execution
 3. **Fallback Chain**: Runtime → Static → Naive splitting
 
 **Integration Strategy:**
+
 - Extend existing multigoal processing in `plan/execution.ex`
 - Enhance ADR-126's optimizer interface to accept runtime context
 - Maintain backward compatibility with current lazy execution behavior
@@ -67,12 +73,14 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 **File**: `lib/aria_engine/plan/execution.ex`
 
 **Runtime Context Structure:**
+
 - [ ] Design `RuntimeContext` data structure with execution metrics
 - [ ] Modify `process_multigoal_node/4` to collect runtime execution context
 - [ ] Extend multigoal method interface to accept execution context parameters
 - [ ] Create execution metrics tracking throughout lazy execution
 
 **Implementation Tasks:**
+
 - [ ] Create `RuntimeContext` struct with execution state, performance metrics, failure history
 - [ ] Integrate context collection in `execute_from_node/2` and related functions
 - [ ] Pass runtime context to multigoal methods in `try_multigoal_methods/4`
@@ -83,12 +91,14 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 **File**: `lib/aria_engine/multigoal/optimizer.ex`
 
 **Runtime-Aware Optimization:**
+
 - [ ] Extend `optimize/3` to accept optional runtime context parameter
 - [ ] Create runtime-specific optimization logic that uses execution data
 - [ ] Implement cost-benefit analysis for when to trigger re-optimization
 - [ ] Add runtime optimization caching to avoid redundant constraint solving
 
 **Implementation Tasks:**
+
 - [ ] Add `runtime_optimize/4` function for context-aware optimization
 - [ ] Create runtime context validation and preprocessing
 - [ ] Implement re-optimization triggers (state changes, method failures, performance deviations)
@@ -99,6 +109,7 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 **File**: `lib/aria_engine/multigoal/constraint_builder.ex`
 
 **Execution-Informed Constraints:**
+
 - [ ] Create runtime-aware constraint building that incorporates execution data
 - [ ] Use actual action execution times vs. estimated times in optimization
 - [ ] Apply real movement costs based on execution history
@@ -106,6 +117,7 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 - [ ] Use method failure patterns and success probabilities
 
 **Implementation Tasks:**
+
 - [ ] Add `build_runtime_constraints/3` function for execution-informed constraint generation
 - [ ] Create constraint templates that use runtime performance data
 - [ ] Implement dynamic resource modeling based on actual availability
@@ -116,12 +128,14 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 **File**: `lib/aria_engine/multigoal/template_renderer.ex`
 
 **Runtime-Informed Templates:**
+
 - [ ] Create MiniZinc templates that incorporate runtime execution data
 - [ ] Add template selection logic based on execution patterns
 - [ ] Implement dynamic constraint generation using execution metrics
 - [ ] Create execution-aware optimization objectives
 
 **Implementation Tasks:**
+
 - [ ] Create `runtime_multigoal_optimization.mzn.eex` template
 - [ ] Add runtime data binding in template rendering
 - [ ] Implement execution-informed objective functions
@@ -130,6 +144,7 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 ### Phase 5: New Supporting Modules
 
 **Runtime Context Management:**
+
 - [ ] `AriaEngine.Multigoal.RuntimeContext` - context data structure and collection
 - [ ] `AriaEngine.Multigoal.RuntimeOptimizer` - runtime-specific optimization logic
 - [ ] `AriaEngine.Multigoal.ExecutionMetrics` - performance tracking and analysis
@@ -138,12 +153,14 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 ### Phase 6: Integration Testing and Validation
 
 **Testing Framework:**
+
 - [ ] Create runtime optimization test scenarios
 - [ ] Validate performance improvements over static optimization
 - [ ] Test fallback behavior when runtime optimization fails
 - [ ] Ensure backward compatibility with existing lazy execution
 
 **Performance Validation:**
+
 - [ ] Measure additional efficiency gains beyond ADR-126's static optimization
 - [ ] Validate re-optimization timing and performance impact
 - [ ] Test scalability with different multigoal complexity levels
@@ -154,12 +171,14 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 ### Quantifiable Improvements Over Static Optimization
 
 **Additional Performance Gains Beyond ADR-126:**
+
 - **Action Efficiency**: 15-25% additional reduction in total actions beyond static optimization
 - **Resource Utilization**: 20-30% better resource scheduling through runtime-informed decisions
 - **Method Selection**: 10-20% reduction in method failures through execution-informed selection
 - **Temporal Optimization**: 15-25% additional improvement in completion time through dynamic re-optimization
 
 **Runtime Performance Requirements:**
+
 - **Re-optimization Time**: Sub-second constraint solving for runtime re-optimization
 - **Memory Overhead**: <10% additional memory usage for runtime context tracking
 - **Execution Impact**: <5% overhead on lazy execution performance
@@ -167,11 +186,13 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 ### Integration and Reliability Requirements
 
 **Backward Compatibility:**
+
 - **Zero Breaking Changes**: No impact on existing lazy execution behavior
 - **Graceful Fallback**: 100% success rate falling back to static optimization when runtime optimization fails
 - **Fallback Chain**: Maintain ADR-126's fallback sequence (runtime → static → naive splitting)
 
 **Robustness:**
+
 - **Context Collection**: Reliable runtime context gathering without execution failures
 - **Re-optimization Triggers**: Intelligent decision-making for when to re-optimize
 - **Performance Monitoring**: Track optimization success rates and performance impact
@@ -309,12 +330,14 @@ solve minimize sum(i in 1..num_goals)(
 ### Benefits
 
 **Superior Optimization Performance:**
+
 - **Adaptive Intelligence**: Optimization improves based on actual execution experience
 - **Dynamic Responsiveness**: Re-optimization responds to changing execution conditions
 - **Execution-Informed Decisions**: Uses real performance data rather than estimates
 - **Continuous Learning**: Method and action performance tracking improves over time
 
 **Enhanced System Capabilities:**
+
 - **Runtime Adaptability**: System adapts to unexpected execution patterns
 - **Performance Optimization**: Leverages actual execution data for better decisions
 - **Failure Recovery**: Uses failure patterns to avoid problematic optimization paths
@@ -323,24 +346,29 @@ solve minimize sum(i in 1..num_goals)(
 ### Risks and Mitigation Strategies
 
 **Implementation Complexity:**
+
 - **Risk**: Runtime optimization adds significant complexity to lazy execution
 - **Mitigation**: Comprehensive testing framework and graceful fallback to static optimization
 
 **Performance Overhead:**
+
 - **Risk**: Runtime context collection and re-optimization may impact execution performance
 - **Mitigation**: Intelligent re-optimization triggers and performance monitoring with thresholds
 
 **Integration Challenges:**
+
 - **Risk**: Complex integration with existing lazy execution and static optimization systems
 - **Mitigation**: Backward compatibility requirements and extensive integration testing
 
 **Runtime Optimization Failures:**
+
 - **Risk**: Runtime optimization may fail more frequently than static optimization
 - **Mitigation**: Robust fallback chain and comprehensive error handling
 
 ### Long-term Implications
 
 **System Evolution:**
+
 - **Learning System**: Creates foundation for machine learning-enhanced optimization
 - **Performance Intelligence**: Builds execution performance database for future improvements
 - **Adaptive Planning**: Enables planning systems that improve through execution experience
@@ -351,12 +379,14 @@ solve minimize sum(i in 1..num_goals)(
 ### What This ADR Covers (Runtime Multigoal Optimization)
 
 **Primary Responsibility:**
+
 - **Runtime-informed multigoal re-optimization** during lazy execution using execution context
 - **Dynamic constraint adjustment** based on actual execution performance and patterns
 - **Execution context integration** with multigoal optimization systems
 - **Adaptive optimization** using method failure patterns, performance metrics, and resource availability
 
 **Specific Implementation Areas:**
+
 - Enhanced `AriaEngine.Multigoal.Optimizer.optimize_multigoal/3` with runtime context support
 - Runtime context collection and management during lazy execution
 - Execution-informed MiniZinc templates and constraint generation
@@ -366,6 +396,7 @@ solve minimize sum(i in 1..num_goals)(
 ### What This ADR Does NOT Cover (Tombstoned Responsibilities)
 
 **Static Optimization (→ ADR-126):**
+
 - ❌ **Pre-execution multigoal optimization** using initial state and predicted patterns
 - ❌ **Static constraint modeling** with fixed parameters and template-based optimization
 - ❌ **Basic MiniZinc integration** and template system foundation
@@ -373,6 +404,7 @@ solve minimize sum(i in 1..num_goals)(
 - ❌ **Fallback mechanisms** from optimization to naive splitting (handled by ADR-126)
 
 **Lazy Execution Engine (→ ADR-125):**
+
 - ❌ **Core lazy execution implementation** and backtracking logic
 - ❌ **Plan execution strategies** and basic execution context management
 - ❌ **Solution tree processing** and node execution logic
@@ -411,12 +443,14 @@ When resumed, implementation will follow a careful, incremental approach:
 ### Success Metrics for Resumption
 
 **Prerequisites for resuming this ADR:**
+
 - ADR-126 static optimization demonstrates consistent 15%+ improvements in production
 - `run_lazy_refineahead` execution is stable and performant across diverse scenarios
 - Clear performance baselines established for comparison with runtime optimization
 - Development team capacity available for complex optimization system enhancement
 
 **Resumption Triggers:**
+
 - Production deployment reveals optimization opportunities that require runtime context
 - User scenarios demonstrate clear need for adaptive optimization during execution
 - System performance analysis shows significant potential for runtime-informed improvements

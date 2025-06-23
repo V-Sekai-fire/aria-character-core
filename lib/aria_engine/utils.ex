@@ -238,9 +238,9 @@ defmodule AriaEngine.Utils do
   @spec seconds_to_duration_struct(number()) :: map()
   def seconds_to_duration_struct(total_seconds) when is_number(total_seconds) do
     hours = trunc(total_seconds / 3600)
-    remaining_seconds = total_seconds - (hours * 3600)
+    remaining_seconds = total_seconds - hours * 3600
     minutes = trunc(remaining_seconds / 60)
-    seconds = remaining_seconds - (minutes * 60)
+    seconds = remaining_seconds - minutes * 60
 
     %{
       hours: hours,
@@ -335,8 +335,8 @@ defmodule AriaEngine.Utils do
   def validate_iso8601_datetime(datetime_string) when is_binary(datetime_string) do
     # Check timezone requirement first
     unless String.contains?(datetime_string, "Z") or
-           String.contains?(datetime_string, "+") or
-           String.contains?(datetime_string, "-") do
+             String.contains?(datetime_string, "+") or
+             String.contains?(datetime_string, "-") do
       {:error, "missing timezone information"}
     else
       case DateTime.from_iso8601(datetime_string) do

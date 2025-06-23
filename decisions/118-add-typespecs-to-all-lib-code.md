@@ -20,6 +20,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 ## Implementation Plan
 
 ### Phase 1: Core Modules (HIGH PRIORITY)
+
 **Files**: Core application modules
 
 - [x] `lib/aria_character_core.ex`
@@ -27,6 +28,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [x] `lib/aria_auth.ex`
 
 ### Phase 2: Engine Core (HIGH PRIORITY)
+
 **Files**: `lib/aria_engine/` core modules
 
 - [x] `lib/aria_engine/core.ex` (already had comprehensive typespecs)
@@ -40,6 +42,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [x] `lib/aria_engine/timeline_graph.ex` (added typespecs for all delegated functions)
 
 ### Phase 3: Engine API Modules (HIGH PRIORITY)
+
 **Files**: API and interface modules
 
 - [x] `lib/aria_engine/domain_api.ex` (already had comprehensive typespecs)
@@ -49,6 +52,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [x] `lib/aria_engine/validation.ex` (already had comprehensive typespecs)
 
 ### Phase 4: Engine Utilities (MEDIUM PRIORITY)
+
 **Files**: Utility and helper modules
 
 - [x] `lib/aria_engine/actions.ex` (already had comprehensive typespecs)
@@ -61,6 +65,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 **Note**: `batch_processor.ex` and `convergence.ex` were removed (see ADR-140)
 
 ### Phase 5: Domain Modules (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/domain/` modules
 
 - [x] `lib/aria_engine/domain/actions.ex` (already had comprehensive typespecs)
@@ -71,6 +76,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [x] `lib/aria_engine/domain/utils.ex` (already had comprehensive typespecs)
 
 ### Phase 6: Hybrid Planner (MEDIUM PRIORITY) ✅
+
 **Files**: `lib/aria_engine/hybrid_planner/` modules
 
 - [x] `lib/aria_engine/hybrid_planner/data_structures.ex` (already had comprehensive typespecs)
@@ -82,6 +88,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [x] `lib/aria_engine/hybrid_planner/strategy_registry.ex` (already had comprehensive typespecs)
 
 ### Phase 7: Hybrid Planner V2 (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/hybrid_planner/hybrid_coordinator_v2/` modules
 
 - [ ] `lib/aria_engine/hybrid_planner/hybrid_coordinator_v2/constructor.ex`
@@ -91,6 +98,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/hybrid_planner/hybrid_coordinator_v2/strategy_management.ex`
 
 ### Phase 8: Strategy Implementations (MEDIUM PRIORITY)
+
 **Files**: Strategy implementation modules
 
 - [ ] `lib/aria_engine/hybrid_planner/strategies/default/domain_strategy.ex`
@@ -102,6 +110,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/hybrid_planner/strategies/mock/mock_planning_strategy.ex`
 
 ### Phase 9: Timeline Modules (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/timeline/` modules
 
 - [ ] `lib/aria_engine/timeline/agent_entity.ex`
@@ -110,6 +119,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/timeline/time_converter.ex`
 
 ### Phase 10: Timeline Agent Entity (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/timeline/agent_entity/` modules
 
 - [ ] `lib/aria_engine/timeline/agent_entity/agent_management.ex`
@@ -121,6 +131,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/timeline/agent_entity/validation.ex`
 
 ### Phase 11: Timeline Internal (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/timeline/internal/` modules
 
 - [ ] `lib/aria_engine/timeline/internal/stn.ex`
@@ -130,6 +141,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/timeline/internal/stn/units.ex`
 
 ### Phase 12: Timeline Graph (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/timeline_graph/` modules
 
 - [ ] `lib/aria_engine/timeline_graph/entity_manager.ex`
@@ -139,6 +151,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/timeline_graph/time_converter.ex`
 
 ### Phase 13: Scheduler Modules (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/scheduler/` modules
 
 - [ ] `lib/aria_engine/scheduler/core.ex`
@@ -149,6 +162,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/scheduler/state_manager.ex`
 
 ### Phase 14: Scheduler Domain Converter (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/scheduler/domain_converter/` modules
 
 - [ ] `lib/aria_engine/scheduler/domain_converter/activity_actions.ex`
@@ -158,6 +172,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/scheduler/domain_converter/khr_primitives.ex`
 
 ### Phase 15: Temporal Planner (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/temporal_planner/` modules
 
 - [ ] `lib/aria_engine/temporal_planner/stn_action.ex`
@@ -165,6 +180,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/temporal_planner/stn_planner.ex`
 
 ### Phase 16: Plan Modules (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/plan/` modules
 
 - [ ] `lib/aria_engine/plan/backtracking.ex`
@@ -175,12 +191,14 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/plan/utils.ex`
 
 ### Phase 17: Planning Modules (MEDIUM PRIORITY)
+
 **Files**: `lib/aria_engine/planning/` modules
 
 - [ ] `lib/aria_engine/planning/core_interface.ex`
 - [ ] `lib/aria_engine/planning/internal.ex`
 
 ### Phase 18: Membrane Modules (LOW PRIORITY)
+
 **Files**: `lib/aria_engine/membrane/` modules
 
 - [ ] `lib/aria_engine/membrane/format_transformer_filter.ex`
@@ -190,6 +208,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/membrane/testing_filter.ex`
 
 ### Phase 19: Membrane Format (LOW PRIORITY)
+
 **Files**: `lib/aria_engine/membrane/format/` modules
 
 - [ ] `lib/aria_engine/membrane/format/planning_params.ex`
@@ -197,11 +216,13 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_engine/membrane/format/planning_response.ex`
 
 ### Phase 20: MiniZinc (LOW PRIORITY)
+
 **Files**: `lib/aria_engine/minizinc/` modules
 
 - [ ] `lib/aria_engine/minizinc/executor.ex`
 
 ### Phase 21: Auth Modules (LOW PRIORITY)
+
 **Files**: `lib/aria_auth/` modules
 
 - [ ] `lib/aria_auth/accounts.ex`
@@ -213,16 +234,19 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_auth/sessions/session.ex`
 
 ### Phase 22: Character Core (LOW PRIORITY)
+
 **Files**: `lib/aria_character_core/` modules
 
 - [ ] `lib/aria_character_core/application.ex`
 
 ### Phase 23: PNG Generator (LOW PRIORITY)
+
 **Files**: `lib/aria_png_generator/` modules
 
 - [ ] `lib/aria_png_generator/png_generator.ex`
 
 ### Phase 24: Security Modules (LOW PRIORITY)
+
 **Files**: `lib/aria_security/` modules
 
 - [ ] `lib/aria_security/application.ex`
@@ -233,6 +257,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_security/softhsm.ex`
 
 ### Phase 25: Storage Modules (LOW PRIORITY)
+
 **Files**: `lib/aria_storage/` modules
 
 - [ ] `lib/aria_storage/application.ex`
@@ -251,6 +276,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_storage/waffle_example.ex`
 
 ### Phase 26: Storage Chunks (LOW PRIORITY)
+
 **Files**: `lib/aria_storage/chunks/` modules
 
 - [ ] `lib/aria_storage/chunks/assembly.ex`
@@ -259,6 +285,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_storage/chunks/rolling_hash.ex`
 
 ### Phase 27: Storage Parsers (LOW PRIORITY)
+
 **Files**: `lib/aria_storage/parsers/` modules
 
 - [ ] `lib/aria_storage/parsers/casync_format.ex`
@@ -270,6 +297,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_storage/parsers/casync_format/utilities.ex`
 
 ### Phase 28: Town Modules (LOW PRIORITY)
+
 **Files**: `lib/aria_town/` modules
 
 - [ ] `lib/aria_town/application.ex`
@@ -281,6 +309,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 - [ ] `lib/aria_town/time_manager.ex`
 
 ### Phase 29: Mix Tasks (LOW PRIORITY)
+
 **Files**: `lib/mix/` modules
 
 - [ ] `lib/mix/tasks/app.ex`
@@ -297,22 +326,26 @@ Systematically add `@spec` annotations to all public and private functions acros
 ## Implementation Strategy
 
 ### Step 1: Analyze Current State
+
 1. Survey existing typespec coverage across all modules
 2. Identify patterns and common types used throughout codebase
 3. Document any existing custom types that should be reused
 
 ### Step 2: Define Common Types
+
 1. Create shared type definitions for commonly used data structures
 2. Establish consistent naming conventions for types
 3. Document type patterns for complex data structures
 
 ### Step 3: Systematic Implementation
+
 1. Work through phases in priority order
 2. Add typespecs to all public functions first, then private functions
 3. Include comprehensive documentation for complex types
 4. Test compilation and Dialyzer warnings after each phase
 
 ### Step 4: Validation
+
 1. Run `mix dialyzer` after each phase to catch type errors
 2. Verify all functions have appropriate typespecs
 3. Ensure type consistency across module boundaries
@@ -322,6 +355,7 @@ Systematically add `@spec` annotations to all public and private functions acros
 Phase 6 hybrid planner modules are complete. Moving to hybrid planner v2 modules.
 
 ### Progress Summary
+
 - **Phase 1**: ✅ Completed - Core modules already had typespecs
 - **Phase 2**: ✅ Completed - Engine core modules already had typespecs  
 - **Phase 3**: ✅ Completed - API modules already had typespecs

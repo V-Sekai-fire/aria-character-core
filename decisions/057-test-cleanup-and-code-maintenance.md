@@ -220,6 +220,7 @@ We will implement a systematic maintenance approach with the following prioritiz
 - Additional type annotations (ongoing)
 
 **Analysis Results:**
+
 - ✅ **No obsolete test files found** (membrane_workflow_test_old.exs, membrane_workflow_test_new.exs already removed)
 - ✅ **No commented-out code blocks found** (clean codebase)
 - ✅ **No TODO/FIXME comments found** (well-maintained code)

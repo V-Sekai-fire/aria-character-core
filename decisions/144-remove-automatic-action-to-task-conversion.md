@@ -29,6 +29,7 @@ end
 ### GTpyHOP Design Principles
 
 In GTpyHOP:
+
 - **Actions** are primitive operations that directly modify state
 - **Tasks** are higher-level operations that decompose into subtasks/actions  
 - **No automatic conversion** between them - they exist in separate namespaces
@@ -41,12 +42,14 @@ Remove automatic action-to-task conversion while maintaining backward compatibil
 ## Implementation Plan
 
 ### Phase 1: Audit Current Dependencies
+
 - [ ] Search codebase for places relying on action→task conversion
 - [ ] Identify affected domains (blocks_world, software_development, etc.)
 - [ ] Map which actions are being used as tasks through automatic conversion
 - [ ] Document current usage patterns
 
 ### Phase 2: Generate Primitive Task Methods
+
 For each action that's being used as a task, create explicit primitive task methods:
 
 ```elixir
@@ -65,24 +68,28 @@ end
 ```
 
 ### Phase 3: Update Domain Builders
+
 - [ ] Scan existing domain modules for actions needing primitive task wrappers
 - [ ] Auto-generate primitive task method declarations
 - [ ] Update domain `build/0` functions with explicit task method declarations
 - [ ] Ensure naming consistency (action `:pickup` → task `"pickup"`)
 
 ### Phase 4: Remove Automatic Conversion
+
 - [x] Update `Domain.resolve/2` to remove fallback logic
 - [x] Ensure strict action/task separation in resolution
 - [ ] Update error messages to be clear about namespace separation
 - [ ] Update planning logic to handle strict separation
 
 ### Phase 5: Update Execution Logic
+
 - [ ] Review `Plan.Execution` for any action→task conversion dependencies
 - [ ] Ensure execution properly distinguishes actions from tasks
 - [ ] Update error handling for missing actions vs missing tasks
 - [ ] Verify primitive task methods work correctly in execution
 
 ### Phase 6: Testing & Validation
+
 - [ ] Create tests for strict action/task separation
 - [ ] Verify all existing functionality continues to work
 - [ ] Test primitive task method generation and execution
@@ -100,6 +107,7 @@ end
 ## Example Transformation
 
 **Current (with automatic conversion):**
+
 ```elixir
 # Domain has action :pickup but no task "pickup"
 # resolve(:pickup) → {:action, pickup_fn}
@@ -107,6 +115,7 @@ end
 ```
 
 **Target (explicit primitive tasks):**
+
 ```elixir
 # Domain has both action :pickup AND task "pickup"
 domain
@@ -122,6 +131,7 @@ end)
 ## Consequences
 
 ### Positive
+
 - **GTpyHOP Compliance**: Full alignment with established planning patterns
 - **Clear Semantics**: Explicit distinction between actions and tasks
 - **Better Error Messages**: Clear feedback when something isn't found in the right namespace
@@ -129,11 +139,13 @@ end)
 - **Future-Proof**: Prevents confusion as the codebase grows
 
 ### Negative
+
 - **Initial Complexity**: Need to audit and update existing domains
 - **More Boilerplate**: Explicit primitive task methods for simple actions
 - **Migration Effort**: Requires systematic update of domain definitions
 
 ### Risks
+
 - **Breaking Changes**: If audit misses dependencies on automatic conversion
 - **Performance**: Slight overhead from additional primitive task methods
 - **Developer Confusion**: Need to educate team on new explicit requirements
@@ -147,6 +159,7 @@ end)
 ## Implementation Notes
 
 ### Primitive Task Method Pattern
+
 ```elixir
 # Standard pattern for primitive task methods
 def add_primitive_task_for_action(domain, action_name) do
@@ -160,6 +173,7 @@ end
 ```
 
 ### Domain Builder Helper
+
 ```elixir
 # Helper function to automatically generate primitive tasks for all actions
 def add_primitive_tasks_for_all_actions(domain) do

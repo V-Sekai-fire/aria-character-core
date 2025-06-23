@@ -109,6 +109,7 @@ defp validate_base_datetime(_), do: {:error, :invalid_base_datetime}
 ### Step 3: Update Call Chain
 
 Ensure base datetime flows through:
+
 - Scheduler.Core → PlanConverter
 - MCP interface → Scheduler functions
 - Test fixtures provide deterministic base datetime

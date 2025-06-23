@@ -44,6 +44,7 @@ Restore `run_lazy_refineahead` in `AriaEngine.Plan.Execution` based on the IPyHO
 - [x] Integrate with existing blacklisting functionality
 
 **Implementation Patterns Needed**:
+
 - [x] Solution tree traversal using our existing tree structures
 - [x] Method iteration and selection logic
 - [x] Backtracking algorithm with proper state restoration
@@ -80,6 +81,7 @@ Restore `run_lazy_refineahead` in `AriaEngine.Plan.Execution` based on the IPyHO
 ### Node Types and Processing
 
 From IPyHOP analysis:
+
 - **Task nodes ('T')**: Decomposed using task methods
 - **Action nodes ('A')**: Executed directly, can be blacklisted
 - **Goal nodes ('G')**: Achieved using goal methods
@@ -139,17 +141,20 @@ From IPyHOP analysis:
 ## Implementation Strategy
 
 ### Step 1: Algorithm Study and Design
+
 1. Analyze IPyHOP `_planning` method in detail
 2. Map IPyHOP concepts to AriaEngine data structures
 3. Design Elixir-idiomatic implementation approach
 
 ### Step 2: Core Implementation
+
 1. Implement basic refinement loop structure
 2. Add node processing for different node types
 3. Implement backtracking mechanism
 4. Integrate state save/restore
 
 ### Step 3: Integration and Testing
+
 1. Connect with lazy execution strategy
 2. Add comprehensive test coverage
 3. Validate against IPyHOP behavior

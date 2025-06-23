@@ -36,17 +36,17 @@ defmodule AriaEngine.Multigoal.Optimizer do
 
   @type goal :: {State.subject(), State.predicate(), State.fact_value()}
   @type optimization_result :: %{
-    goals: [goal()],
-    total_actions: non_neg_integer(),
-    total_distance: number(),
-    completion_time: number(),
-    parallel_opportunities: non_neg_integer(),
-    optimization_type: atom(),
-    discovered_patterns: [atom()],
-    constraint_solving_time: number(),
-    optimization_quality: float(),
-    improvement_over_naive: map()
-  }
+          goals: [goal()],
+          total_actions: non_neg_integer(),
+          total_distance: number(),
+          completion_time: number(),
+          parallel_opportunities: non_neg_integer(),
+          optimization_type: atom(),
+          discovered_patterns: [atom()],
+          constraint_solving_time: number(),
+          optimization_quality: float(),
+          improvement_over_naive: map()
+        }
 
   @doc """
   Optimize multigoal using MiniZinc constraint solving.
@@ -74,7 +74,7 @@ defmodule AriaEngine.Multigoal.Optimizer do
   - `:max_goals` - Maximum goals for optimization (default: 15)
   """
   @spec optimize(State.t(), [goal()], keyword()) ::
-    {:ok, optimization_result()} | {:error, term()}
+          {:ok, optimization_result()} | {:error, term()}
   def optimize(state, goals, opts \\ []) do
     try do
       # Validate inputs
@@ -114,7 +114,9 @@ defmodule AriaEngine.Multigoal.Optimizer do
 
   # Check if a goal is valid
   defp valid_goal?({subject, predicate, _value})
-    when is_binary(subject) and is_binary(predicate), do: true
+       when is_binary(subject) and is_binary(predicate),
+       do: true
+
   defp valid_goal?(_), do: false
 
   # Run general-purpose optimization
@@ -130,10 +132,15 @@ defmodule AriaEngine.Multigoal.Optimizer do
       case AriaEngine.Multigoal.MiniZincInterface.solve_general(state, goals, opts) do
         {:ok, solution} ->
           solving_time = System.monotonic_time(:millisecond) - start_time
-          {:ok, format_optimization_result(solution, optimization_type, goals, patterns, solving_time)}
+
+          {:ok,
+           format_optimization_result(solution, optimization_type, goals, patterns, solving_time)}
 
         {:error, reason} ->
-          Logger.info("MiniZinc optimization failed: #{inspect(reason)}, using structural fallback")
+          Logger.info(
+            "MiniZinc optimization failed: #{inspect(reason)}, using structural fallback"
+          )
+
           solving_time = System.monotonic_time(:millisecond) - start_time
           # Fallback to structural optimization without MiniZinc
           {:ok, optimize_structural(goals, patterns, solving_time)}
@@ -159,10 +166,11 @@ defmodule AriaEngine.Multigoal.Optimizer do
 
   # Spatial structure: multiple goals share the same subject (same entity, different properties)
   defp has_spatial_structure?(goals) do
-    subject_counts = goals
-    |> Enum.group_by(fn {subject, _predicate, _object} -> subject end)
-    |> Map.values()
-    |> Enum.map(&length/1)
+    subject_counts =
+      goals
+      |> Enum.group_by(fn {subject, _predicate, _object} -> subject end)
+      |> Map.values()
+      |> Enum.map(&length/1)
 
     Enum.any?(subject_counts, fn count -> count > 1 end)
   end
@@ -177,22 +185,26 @@ defmodule AriaEngine.Multigoal.Optimizer do
 
   # Parallel structure: multiple goals with different subjects but same predicate
   defp has_parallel_structure?(goals) do
-    predicate_groups = goals
-    |> Enum.group_by(fn {_subject, predicate, _object} -> predicate end)
-    |> Map.values()
+    predicate_groups =
+      goals
+      |> Enum.group_by(fn {_subject, predicate, _object} -> predicate end)
+      |> Map.values()
 
     Enum.any?(predicate_groups, fn group ->
-      subjects = group |> Enum.map(fn {subject, _predicate, _object} -> subject end) |> Enum.uniq()
+      subjects =
+        group |> Enum.map(fn {subject, _predicate, _object} -> subject end) |> Enum.uniq()
+
       length(subjects) > 1
     end)
   end
 
   # Resource structure: multiple goals share the same object (shared resources)
   defp has_resource_structure?(goals) do
-    object_counts = goals
-    |> Enum.group_by(fn {_subject, _predicate, object} -> object end)
-    |> Map.values()
-    |> Enum.map(&length/1)
+    object_counts =
+      goals
+      |> Enum.group_by(fn {_subject, _predicate, object} -> object end)
+      |> Map.values()
+      |> Enum.map(&length/1)
 
     Enum.any?(object_counts, fn count -> count > 1 end)
   end
@@ -260,9 +272,10 @@ defmodule AriaEngine.Multigoal.Optimizer do
 
   # Parallel optimization: group goals by predicate for potential parallelism
   defp optimize_by_predicate_grouping(goals) do
-    predicate_groups = goals
-    |> Enum.group_by(fn {_subject, predicate, _object} -> predicate end)
-    |> Map.values()
+    predicate_groups =
+      goals
+      |> Enum.group_by(fn {_subject, predicate, _object} -> predicate end)
+      |> Map.values()
 
     # Interleave goals from different predicate groups
     max_length = predicate_groups |> Enum.map(&length/1) |> Enum.max(fn -> 0 end)
@@ -271,7 +284,7 @@ defmodule AriaEngine.Multigoal.Optimizer do
     |> Enum.flat_map(fn index ->
       predicate_groups
       |> Enum.map(fn group -> Enum.at(group, index) end)
-      |> Enum.filter(& &1 != nil)
+      |> Enum.filter(&(&1 != nil))
     end)
   end
 
@@ -299,11 +312,12 @@ defmodule AriaEngine.Multigoal.Optimizer do
     dependency_efficiency = if :dependency in patterns, do: 0.7, else: 1.0
     parallel_efficiency = if :parallel in patterns, do: 0.4, else: 1.0
 
-    parallel_opportunities = if :parallel in patterns do
-      max(0, div(length(goals), 2))
-    else
-      0
-    end
+    parallel_opportunities =
+      if :parallel in patterns do
+        max(0, div(length(goals), 2))
+      else
+        0
+      end
 
     %{
       actions: round(base_actions * spatial_efficiency * dependency_efficiency),
@@ -320,7 +334,13 @@ defmodule AriaEngine.Multigoal.Optimizer do
   end
 
   # Format optimization result with consistent structure
-  defp format_optimization_result(solution, optimization_type, original_goals, patterns, solving_time) do
+  defp format_optimization_result(
+         solution,
+         optimization_type,
+         original_goals,
+         patterns,
+         solving_time
+       ) do
     naive_metrics = calculate_naive_metrics(original_goals)
     optimized_metrics = extract_metrics_from_solution(solution)
     optimization_quality = calculate_optimization_quality(patterns)
@@ -352,10 +372,14 @@ defmodule AriaEngine.Multigoal.Optimizer do
   # Calculate baseline metrics for comparison
   defp calculate_naive_metrics(goals) do
     num_goals = length(goals)
+
     %{
-      actions: num_goals * 4,      # Assume 4 actions per goal on average
-      distance: num_goals * 3.0,   # Assume 3 units travel per goal
-      time: num_goals * 10.0       # Assume 10 time units per goal
+      # Assume 4 actions per goal on average
+      actions: num_goals * 4,
+      # Assume 3 units travel per goal
+      distance: num_goals * 3.0,
+      # Assume 10 time units per goal
+      time: num_goals * 10.0
     }
   end
 
@@ -363,17 +387,17 @@ defmodule AriaEngine.Multigoal.Optimizer do
   defp calculate_improvements(naive_metrics, optimized_metrics) do
     %{
       actions: calculate_percentage_improvement(naive_metrics.actions, optimized_metrics.actions),
-      distance: calculate_percentage_improvement(naive_metrics.distance, optimized_metrics.distance),
+      distance:
+        calculate_percentage_improvement(naive_metrics.distance, optimized_metrics.distance),
       time: calculate_percentage_improvement(naive_metrics.time, optimized_metrics.time)
     }
   end
 
   defp calculate_percentage_improvement(baseline, optimized) do
     if baseline > 0 do
-      ((baseline - optimized) / baseline) * 100
+      (baseline - optimized) / baseline * 100
     else
       0
     end
   end
-
 end

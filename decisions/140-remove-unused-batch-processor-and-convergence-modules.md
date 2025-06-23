@@ -13,12 +13,14 @@ The codebase contains two modules that are effectively unused and contain only p
 - `lib/aria_engine/convergence.ex` - Contains placeholder functions that raise "not implemented" errors
 
 **Current State Analysis:**
+
 - Both modules have minimal actual usage in the codebase
 - Primary references are documentation cross-references and test infrastructure
 - All core functions raise "not implemented" exceptions
 - These modules add maintenance overhead without providing functionality
 
 **References Found:**
+
 - `convergence.ex` references `batch_processor` in documentation
 - `test/aria_engine/test/support/flow_test_helpers.ex` uses convergence terminology
 - `lib/aria_engine/timeline/internal/stn/operations.ex` has commented ConvergenceFlow code
@@ -31,6 +33,7 @@ Remove both modules to reduce codebase cruft and eliminate maintenance overhead 
 ## Implementation Plan
 
 ### Phase 1: Reference Cleanup (HIGH PRIORITY) ✅ COMPLETED
+
 **Files**: Clean up cross-references and dependencies
 
 - [x] Update `convergence.ex` documentation to remove batch_processor references
@@ -39,6 +42,7 @@ Remove both modules to reduce codebase cruft and eliminate maintenance overhead 
 - [x] Verify no import statements reference these modules
 
 ### Phase 2: Module Tombstoning (HIGH PRIORITY) ✅ COMPLETED
+
 **Files**: Replace modules with tombstone documentation
 
 - [x] Replace `lib/aria_engine/batch_processor.ex` with tombstone explaining removal
@@ -46,6 +50,7 @@ Remove both modules to reduce codebase cruft and eliminate maintenance overhead 
 - [x] Document removal rationale and date in tombstones
 
 ### Phase 3: Documentation Updates (MEDIUM PRIORITY) ✅ COMPLETED
+
 **Files**: Update related documentation
 
 - [x] Update ADR-118 typespecs list to remove these modules from Phase 4
@@ -53,6 +58,7 @@ Remove both modules to reduce codebase cruft and eliminate maintenance overhead 
 - [x] Update module lists in relevant documentation
 
 ### Phase 4: Verification (HIGH PRIORITY) ✅ COMPLETED
+
 **Files**: Ensure clean removal
 
 - [x] Verify compilation succeeds after removal
@@ -63,21 +69,25 @@ Remove both modules to reduce codebase cruft and eliminate maintenance overhead 
 ## Implementation Strategy
 
 ### Step 1: Analyze Dependencies
+
 1. Search for all references to BatchProcessor and Convergence modules
 2. Identify which references are essential vs documentation
 3. Plan cleanup approach for each reference type
 
 ### Step 2: Clean References
+
 1. Update test helpers to remove convergence-specific terminology
 2. Remove commented code that references these modules
 3. Update documentation cross-references
 
 ### Step 3: Tombstone Modules
+
 1. Replace module content with tombstone documentation
 2. Explain removal rationale and date
 3. Provide guidance for anyone looking for this functionality
 
 ### Step 4: Validate Removal
+
 1. Compile codebase to ensure no broken imports
 2. Run full test suite
 3. Search for any remaining references
@@ -135,6 +145,7 @@ end
 ## Change Log
 
 ### June 22, 2025
+
 - Created ADR for systematic removal of unused modules
 - Identified cross-references requiring cleanup
 - Planned tombstone approach for clean removal

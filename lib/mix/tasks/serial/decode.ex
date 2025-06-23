@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Mix.Tasks.Serial.Decode do
   @moduledoc """
   Decode Aria project serial numbers.
@@ -115,7 +118,11 @@ defmodule Mix.Tasks.Serial.Decode do
     Mix.shell().info("Factory:        #{decoded.factory}")
     Mix.shell().info("Year:           #{decoded.year}")
     Mix.shell().info("Week:           #{decoded.week}")
-    Mix.shell().info("Unit Number:    #{String.pad_leading(to_string(decoded.unit), 3, "0")} (#{ordinal(decoded.unit)} tool created that week)")
+
+    Mix.shell().info(
+      "Unit Number:    #{String.pad_leading(to_string(decoded.unit), 3, "0")} (#{ordinal(decoded.unit)} tool created that week)"
+    )
+
     Mix.shell().info("Tool Code:      #{decoded.tool_code}")
 
     if decoded.date_range do
@@ -195,14 +202,19 @@ defmodule Mix.Tasks.Serial.Decode do
 
     # Show weeks 1-9
     Mix.shell().info("Weeks 1-9:")
+
     for week <- 1..9 do
       char = Registry.encode_week(week)
       {start_date, end_date} = calculate_week_dates(year, week)
-      Mix.shell().info("  Week #{String.pad_leading(to_string(week), 2)} (#{char}): #{start_date} to #{end_date}")
+
+      Mix.shell().info(
+        "  Week #{String.pad_leading(to_string(week), 2)} (#{char}): #{start_date} to #{end_date}"
+      )
     end
 
     Mix.shell().info("")
     Mix.shell().info("Weeks 10-28:")
+
     for week <- 10..28 do
       char = Registry.encode_week(week)
       {start_date, end_date} = calculate_week_dates(year, week)
@@ -211,6 +223,7 @@ defmodule Mix.Tasks.Serial.Decode do
 
     Mix.shell().info("")
     Mix.shell().info("Weeks 29-52:")
+
     for week <- 29..52 do
       char = Registry.encode_week(week)
       {start_date, end_date} = calculate_week_dates(year, week)

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule CoreTest do
   @moduledoc """
   Tests for the Core module - foundational AriaEngine type definitions and constructor.

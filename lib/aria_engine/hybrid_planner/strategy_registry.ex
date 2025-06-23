@@ -28,7 +28,6 @@ defmodule HybridPlanner.StrategyRegistry do
       coordinator = StrategyCoordinator.new(planning_fn, temporal_fn, execution_fn)
   """
 
-
   # Strategy function type definitions
   @type planning_strategy :: (Domain.Core.t(), State.t(), [term()], keyword() ->
                                 {:ok, term()} | {:error, String.t()})
@@ -52,7 +51,7 @@ defmodule HybridPlanner.StrategyRegistry do
   def default_strategies() do
     %{
       planning: %{
-        htn: &htn_planning_strategy/4,
+        htn: &htn_planning_strategy/4
       },
       temporal: %{
         stn: &stn_temporal_strategy/3,
@@ -145,5 +144,4 @@ defmodule HybridPlanner.StrategyRegistry do
     # For now, delegate to plan validation
     Plan.validate_plan(domain, state, plan)
   end
-
 end

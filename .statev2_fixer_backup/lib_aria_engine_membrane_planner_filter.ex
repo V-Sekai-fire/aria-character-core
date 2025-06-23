@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.PlannerFilter do
   @moduledoc """
   Membrane Filter element that executes actual planning using HybridCoordinatorV2.

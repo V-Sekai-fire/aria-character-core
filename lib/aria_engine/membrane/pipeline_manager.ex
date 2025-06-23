@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.PipelineManager do
   @moduledoc "Pipeline manager for AriaEngine Membrane pipelines.\n\nThis module provides functionality to create, manage, and monitor\nMembrane-based processing pipelines.\n"
   @compile {:no_warn_unused, [:serial_number]}

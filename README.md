@@ -93,12 +93,14 @@ Based on ADR-117 (Temporal Planning Segment Closure), the project has successful
 ## Development Priorities
 
 **Current Alpha Validation Focus:**
+
 - Broader algorithm testing across diverse scenarios
 - Performance benchmarking and optimization
 - Integration testing with external systems
 - Documentation and research publication preparation
 
 **Future Development:**
+
 - Novel writing system integration
 - ~~Enhanced MCP server ecosystem~~ (Removed in v0.2.0)
 - Creative workflow optimization tools
@@ -107,6 +109,7 @@ Based on ADR-117 (Temporal Planning Segment Closure), the project has successful
 ## Contributing
 
 This is active research code focused on:
+
 - Algorithm implementation and validation
 - Performance testing and optimization
 - Test coverage expansion

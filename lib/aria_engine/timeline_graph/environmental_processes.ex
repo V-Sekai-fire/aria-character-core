@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.TimelineGraph.EnvironmentalProcesses do
   @moduledoc "Manages environmental processes that affect multiple entities over time.\n\nThis module supports Phase 2 environmental dynamics from ADR-085, enabling\nNPCs to react to environmental changes like weather, resource depletion,\nday/night cycles, and other world-state changes.\n"
   alias AriaEngine.Timeline

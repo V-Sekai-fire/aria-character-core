@@ -38,6 +38,7 @@ The test suite has systematic module aliasing issues where tests reference `Time
 ### Phase 1: Remove All Alias Declarations (PRIORITY: HIGH)
 
 **Test Files to Process:**
+
 - [x] `test/aria_engine/test/aria_engine/timeline/timeline_transitions_test.exs`
 - [x] `test/aria_engine/timeline/bridge_test.exs`
 - [x] `test/aria_engine/test/aria_engine/timeline_test.exs`
@@ -46,6 +47,7 @@ The test suite has systematic module aliasing issues where tests reference `Time
 - [x] `test/aria_engine/test/aria_engine/timeline/interval_enhanced_test.exs`
 
 **Alias Removal Patterns:**
+
 - [x] Remove all `alias Timeline` declarations
 - [x] Remove all `alias Timeline.Bridge` declarations
 - [x] Remove all `alias Timeline.Interval` declarations
@@ -55,6 +57,7 @@ The test suite has systematic module aliasing issues where tests reference `Time
 ### Phase 2: Convert to Fully Qualified Names (PRIORITY: HIGH)
 
 **Module Reference Updates:**
+
 - [x] Replace `Timeline.new()` → `AriaEngine.Timeline.new()`
 - [x] Replace `Timeline.Bridge.new()` → `AriaEngine.Timeline.Bridge.new()`
 - [x] Replace `Timeline.Interval.new()` → `AriaEngine.Timeline.Interval.new()`
@@ -65,6 +68,7 @@ The test suite has systematic module aliasing issues where tests reference `Time
 ### Phase 3: Fix Doctest Examples (PRIORITY: MEDIUM)
 
 **Source Files to Update:**
+
 - [x] `lib/aria_engine/timeline.ex` - Convert all doctest examples to fully qualified names
 - [x] `lib/aria_engine/timeline/bridge.ex` - Convert all doctest examples to fully qualified names
 - [x] `lib/aria_engine/timeline/interval.ex` - Convert all doctest examples to fully qualified names
@@ -73,6 +77,7 @@ The test suite has systematic module aliasing issues where tests reference `Time
 ### Phase 4: Comprehensive Validation (PRIORITY: HIGH)
 
 **Validation Steps:**
+
 - [x] Run `mix compile --warnings-as-errors` to check for compilation issues
 - [x] Run `mix test --max-failures 20` to verify test fixes
 - [x] Search codebase for any remaining `alias.*Timeline` declarations
@@ -83,6 +88,7 @@ The test suite has systematic module aliasing issues where tests reference `Time
 ## Implementation Strategy
 
 ### Step 1: Systematic File Processing
+
 1. Process one test file at a time
 2. Update alias declarations first
 3. Fix direct module references
@@ -90,11 +96,13 @@ The test suite has systematic module aliasing issues where tests reference `Time
 5. Mark tasks as complete in this ADR
 
 ### Step 2: Pattern-Based Search and Replace
+
 - Use consistent search patterns to find all instances
 - Verify each replacement maintains correct functionality
 - Test incrementally to catch issues early
 
 ### Step 3: Validation Loop
+
 - Compile after each major change
 - Run targeted tests for modified files
 - Update ADR progress tracking
@@ -139,6 +147,7 @@ Starting with Phase 1 - cataloging all affected files and beginning systematic f
 ## Implementation Summary
 
 **What Was Actually Done:**
+
 - Fixed doctests in `lib/aria_engine/timeline.ex` to use fully qualified module names
 - Updated all `Timeline.` references to `AriaEngine.Timeline.` in doctests
 - Updated all `Timeline.Bridge.` references to `AriaEngine.Timeline.Bridge.` in doctests  

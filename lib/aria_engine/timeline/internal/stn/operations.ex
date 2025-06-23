@@ -8,7 +8,6 @@ defmodule AriaEngine.Timeline.Internal.STN.Operations do
   alias AriaEngine.Timeline.Internal.STN
   alias AriaEngine.Timeline.Internal.STN.MiniZincSolver
 
-
   @doc """
   Performs intersection operation on two STNs.
   """

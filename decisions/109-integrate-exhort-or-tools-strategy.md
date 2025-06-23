@@ -21,6 +21,7 @@ The existing OmniStrategy in aria_engine has significant limitations in solving 
 Analysis of competition problems reveals major capability gaps:
 
 **Cannot Currently Solve:**
+
 - **Constraint Satisfaction**: Peaceable Queens, Train Scheduling, Vehicle Routing
 - **Combinatorial Optimization**: Cable Tree Wiring, Community Detection, Network Optimization
 - **Resource Scheduling**: Aircraft Disassembly, Concert Hall Capacity
@@ -56,6 +57,7 @@ Integrate Exhort OR-Tools library into aria_engine's hybrid planning architectur
 **File**: `lib/aria_engine/hybrid_planner/strategies/or_tools/exhort_strategy.ex`
 
 **Missing/Required**:
+
 - [ ] Add Exhort dependency to mix.exs
 - [ ] Create ExhortStrategy module implementing PlanningStrategy behaviour
 - [ ] Implement aria_engine → Exhort.SAT.Builder translation layer
@@ -63,6 +65,7 @@ Integrate Exhort OR-Tools library into aria_engine's hybrid planning architectur
 - [ ] Add basic CP-SAT solver integration using Model.solve/1
 
 **Implementation Patterns Needed**:
+
 - [ ] Strategy behaviour implementation pattern
 - [ ] Enum.map/2 patterns for generating lists of variables and constraints
 - [ ] Expr.new() and Expr.def_int_var/def_bool_var patterns
@@ -73,6 +76,7 @@ Integrate Exhort OR-Tools library into aria_engine's hybrid planning architectur
 **File**: `lib/aria_engine/hybrid_planner/strategies/or_tools/solver_adapters.ex`
 
 **Missing/Required**:
+
 - [ ] CP-SAT solver adapter using Exhort.SAT.Builder API
 - [ ] Variable generation patterns (def_int_var, def_bool_var with ranges)
 - [ ] Constraint expression builders using Exhort DSL (>=, ==, sum, etc.)
@@ -80,17 +84,18 @@ Integrate Exhort OR-Tools library into aria_engine's hybrid planning architectur
 - [ ] SolverResponse parsing (int_val, bool_val extraction)
 
 **Implementation Patterns Needed**:
+
 - [ ] Enum.map/2 for generating variable and constraint lists
 - [ ] Expr.new() for constraint expressions with Exhort DSL
 - [ ] List.flatten() for nested constraint collections
 - [ ] Builder.add() for bulk addition of variables and constraints
-
 
 ### Phase 3: HybridCoordinatorV2 Integration (MEDIUM PRIORITY)
 
 **File**: `lib/aria_engine/hybrid_planner/hybrid_coordinator_v2.ex`
 
 **Missing/Required**:
+
 - [ ] Add ExhortStrategy as 7th strategy type in coordinator structure
 - [ ] Update strategy validation to include optimization_strategy
 - [ ] Modify strategy selection logic to route optimization problems to ExhortStrategy
@@ -98,6 +103,7 @@ Integrate Exhort OR-Tools library into aria_engine's hybrid planning architectur
 - [ ] Update strategy composition info and performance metrics
 
 **Implementation Patterns Needed**:
+
 - [ ] Strategy type extension patterns
 - [ ] Problem classification within coordinator
 - [ ] Strategy selection and routing logic
@@ -108,6 +114,7 @@ Integrate Exhort OR-Tools library into aria_engine's hybrid planning architectur
 **File**: `test/aria_engine/hybrid_planner/hybrid_coordinator_v2_test.exs`
 
 **Missing/Required**:
+
 - [ ] Test ExhortStrategy integration within HybridCoordinatorV2
 - [ ] Comprehensive test suite covering MiniZinc problem types
 - [ ] Durative actions output validation tests
@@ -115,6 +122,7 @@ Integrate Exhort OR-Tools library into aria_engine's hybrid planning architectur
 - [ ] Performance benchmarking against specialized solvers
 
 **Implementation Patterns Needed**:
+
 - [ ] Strategy integration testing patterns
 - [ ] Problem type routing validation
 - [ ] Durative actions format validation
@@ -125,6 +133,7 @@ Integrate Exhort OR-Tools library into aria_engine's hybrid planning architectur
 **File**: `lib/aria_engine/hybrid_planner/strategies/or_tools/advanced.ex`
 
 **Missing/Required**:
+
 - [ ] Advanced constraint modeling patterns
 - [ ] Performance tuning and caching mechanisms
 - [ ] Documentation and usage examples
@@ -155,6 +164,7 @@ Actions[] → Scheduler → Execution
 ### Exhort Solution Translation Design
 
 **From Existing Strategies**:
+
 ```elixir
 # HTN planning results → actions
 HTNSolution → ActionConverter → [Action]
@@ -164,6 +174,7 @@ STNConstraints → TemporalMapper → Action.timing
 ```
 
 **From Exhort Strategy**:
+
 ```elixir
 # Exhort SAT solutions → actions
 %SolverResponse{} → ExhortActionTranslator → [Action]
@@ -176,6 +187,7 @@ SolverResponse.bool_val(response, "decision") → ConditionalActionGenerator →
 ```
 
 **Exhort API Integration**:
+
 ```elixir
 # Generate variables using Enum.map/2
 action_variables = 
@@ -201,6 +213,7 @@ Builder.new()
 ### Solver Selection Strategy
 
 **Problem Classification**:
+
 - **Constraint Satisfaction**: Use ExhortStrategy with CP-SAT solver
 - **Linear Optimization**: Use ExhortStrategy with GLOP solver
 - **HTN Planning**: Use existing HybridCoordinatorV2 strategies
@@ -210,11 +223,13 @@ Builder.new()
 ### Integration Points
 
 **Within HybridCoordinatorV2**:
+
 - Add ExhortStrategy as 7th strategy alongside HTN, STN, StateV2, Domain, Logging, and Execution
 - Configure fallback chains: ExhortStrategy → HTNPlanningStrategy → MockStrategy
 - Implement strategy selection based on problem type analysis within coordinator
 
 **With Existing Systems**:
+
 - Durative actions integration with scheduler and execution system
 - Timeline integration for temporal constraint modeling
 - StateV2 integration for state management during execution
@@ -222,18 +237,21 @@ Builder.new()
 ## Success Criteria
 
 ### Problem Coverage Metrics
+
 - **Target**: Solve 70-80% of MiniZinc 2024 competition problems (vs current 15%)
 - **Constraint Problems**: Successfully solve Peaceable Queens, Train Scheduling
 - **Optimization Problems**: Successfully solve Vehicle Routing, Network Optimization
 - **Graph Problems**: Successfully solve shortest path and flow problems
 
 ### Performance Benchmarks
+
 - **Constraint Satisfaction**: Within 10x performance of specialized CP solvers
 - **Linear Programming**: Within 5x performance of commercial LP solvers
 - **Integration Overhead**: <20% overhead for translation layer
 - **Memory Usage**: Reasonable memory scaling for problems up to 10,000 variables
 
 ### Integration Quality
+
 - **Seamless Fallback**: Automatic fallback to HTN planning when OR-Tools fails
 - **Error Handling**: Robust error handling and timeout management
 - **Test Coverage**: >90% test coverage for all solver adapters
@@ -242,6 +260,7 @@ Builder.new()
 ## Capability Analysis: Exhort vs OmniStrategy
 
 ### What Exhort/OR-Tools Excels At
+
 - **Mathematical Optimization**: Linear programming, mixed-integer programming
 - **Constraint Satisfaction**: Global constraints, resource allocation, scheduling
 - **Graph Problems**: Shortest path, max flow, network optimization
@@ -249,6 +268,7 @@ Builder.new()
 - **Performance**: 100x-1000x faster than custom implementations for these domains
 
 ### What Existing HybridCoordinatorV2 Strategies Excel At (Cannot be Replaced by Exhort)
+
 - **HTN Planning**: Hierarchical task decomposition with domain methods
 - **Domain Reasoning**: Action preconditions, effects, and semantic understanding
 - **Execution Management**: Plan execution, monitoring, and reactive replanning
@@ -260,12 +280,14 @@ Builder.new()
 ### Complementary Relationship
 
 **Exhort Strategy Best For**:
+
 - Resource allocation problems (crew scheduling, facility assignment)
 - Optimization problems (shortest path, cost minimization)
 - Constraint satisfaction (puzzle solving, configuration problems)
 - Mathematical modeling problems
 
 **Existing Strategies Best For**:
+
 - Domain-specific planning (NPC behavior, story generation)
 - Hierarchical task execution (complex multi-step procedures)
 - Reactive planning (adapting to changing conditions)
@@ -280,6 +302,7 @@ Problem → [Existing HybridCoordinatorV2 OR ExhortStrategy] → Durative Action
 ```
 
 **Durative Actions Support**:
+
 - **Instant Actions**: Duration = 0 (traditional planning actions)
 - **Durative Actions**: Duration > 0 (temporal actions with start/end times)
 - **Unified Interface**: Same execution path regardless of solver used
@@ -287,6 +310,7 @@ Problem → [Existing HybridCoordinatorV2 OR ExhortStrategy] → Durative Action
 ### Integration Strategy
 
 Implement **ExhortStrategy as 7th Strategy**:
+
 1. **Strategy Integration**: Add ExhortStrategy to HybridCoordinatorV2's strategy collection
 2. **Strategy Selection**: HybridCoordinatorV2 selects ExhortStrategy for optimization problems
 3. **Durative Actions Translation**: Convert all strategy outputs to durative action sequences
@@ -297,21 +321,25 @@ Implement **ExhortStrategy as 7th Strategy**:
 ### Positive Consequences
 
 **Massive Capability Expansion**:
+
 - 4-5x increase in solvable problem types
 - Access to world-class optimization algorithms
 - Competitive performance with specialized systems
 
 **Enhanced Problem Coverage**:
+
 - Mathematical optimization problems (previously impossible)
 - Complex constraint satisfaction (previously impossible)
 - Hybrid planning-optimization problems (new capability)
 
 **Complementary Strengths**:
+
 - Exhort handles mathematical optimization
 - OmniStrategy handles domain reasoning and execution
 - Combined system covers both paradigms effectively
 
 **Real-World Applications**:
+
 - NPC scheduling and resource allocation
 - Complex multi-agent coordination
 - Large-scale optimization problems
@@ -319,16 +347,19 @@ Implement **ExhortStrategy as 7th Strategy**:
 ### Negative Consequences
 
 **Increased Complexity**:
+
 - Additional dependency on large C++ library (OR-Tools)
 - Complex build and deployment requirements
 - Translation layer maintenance overhead
 
 **Performance Overhead**:
+
 - Translation between aria_engine and OR-Tools models
 - Potential memory overhead for large problems
 - Integration coordination costs
 
 **Development Challenges**:
+
 - Learning curve for OR-Tools APIs
 - Complex testing requirements across multiple solvers
 - Debugging across language boundaries (Elixir ↔ C++)
@@ -336,33 +367,41 @@ Implement **ExhortStrategy as 7th Strategy**:
 ## Risks and Mitigation
 
 ### Risk: OR-Tools Dependency Complexity
+
 **Impact**: HIGH  
 **Probability**: MEDIUM  
-**Mitigation**: 
+**Mitigation**:
+
 - Use Exhort library for simplified Elixir integration
 - Comprehensive CI/CD testing across platforms
 - Docker-based development environment for consistency
 
 ### Risk: Translation Layer Performance
+
 **Impact**: MEDIUM  
 **Probability**: MEDIUM  
 **Mitigation**:
+
 - Benchmark translation overhead early
 - Implement caching for repeated model patterns
 - Optimize hot paths in translation layer
 
 ### Risk: Integration Testing Complexity
+
 **Impact**: MEDIUM  
 **Probability**: HIGH  
 **Mitigation**:
+
 - Start with simple problem types and expand gradually
 - Use MiniZinc problems as comprehensive test suite
 - Implement property-based testing for translation correctness
 
 ### Risk: Solver Selection Complexity
+
 **Impact**: MEDIUM  
 **Probability**: MEDIUM  
 **Mitigation**:
+
 - Start with simple heuristics for solver selection
 - Implement machine learning-based selection over time
 - Provide manual solver override capabilities
@@ -370,24 +409,28 @@ Implement **ExhortStrategy as 7th Strategy**:
 ## Implementation Strategy
 
 ### Step 1: Dependency and Foundation
+
 1. Add Exhort to mix.exs and verify installation
 2. Create basic ExhortStrategy module structure
 3. Implement Enum.map/2 patterns for variable and constraint generation
 4. Test with simple problems using Expr.new() and Builder.add()
 
 ### Step 2: Core Solver Integration
+
 1. Implement variable generation using Enum.map/2 and Expr.def_int_var/def_bool_var
 2. Create constraint generation patterns using Enum.map/2 and Expr.new()
 3. Build constraint collections with List.flatten() for nested structures
 4. Implement SolverResponse parsing and action extraction
 
 ### Step 3: HybridCoordinatorV2 Integration
+
 1. Integrate ExhortStrategy into HybridCoordinatorV2 as 7th strategy
 2. Configure strategy selection for optimization problems
 3. Implement fallback mechanisms within coordinator
 4. Test end-to-end integration with existing strategies
 
 ### Step 4: Advanced Features and Optimization
+
 1. Expand Exhort expression usage (sum, for comprehensions)
 2. Implement performance monitoring and tuning
 3. Create comprehensive test suite using MiniZinc problems
@@ -398,6 +441,7 @@ Implement **ExhortStrategy as 7th Strategy**:
 Starting with Phase 1 to establish the basic integration framework using Exhort.SAT.Builder API. Focus on learning the Builder pipeline patterns and Exhort expression language before expanding to complex optimization scenarios.
 
 **Priority Order**:
+
 1. **Phase 1**: Basic ExhortStrategy implementation
 2. **Phase 2**: Core solver adapters
 3. **Phase 3**: HybridCoordinatorV2 integration (add as 7th strategy)
@@ -416,18 +460,21 @@ Based on analysis of `thirdparty/mznc2024_probs/`, the CP-SAT solver via Exhort 
 ### High Suitability (Excellent CP-SAT Match)
 
 **Constraint Satisfaction Problems:**
+
 - **`peacable_queens/`**: Peaceable Queens placement problem - classic constraint satisfaction
 - **`neighbours/`**: Neighbor placement constraints - spatial constraint satisfaction
 - **`harmony/`**: Musical harmony constraints - rule-based constraint satisfaction
 - **`word-equations/`**: String constraint solving - symbolic constraint satisfaction
 
 **Scheduling and Resource Allocation:**
+
 - **`train-scheduling/`**: Train scheduling with temporal constraints - perfect for CP-SAT
 - **`hoist-benchmark/`**: Hoist scheduling benchmark - resource allocation with timing
 - **`yumi-dynamic/`**: Robot arm scheduling - temporal and spatial constraints
 - **`concert-hall-cap/`**: Concert hall capacity planning - resource allocation
 
 **Combinatorial Optimization:**
+
 - **`community-detection/`**: Graph community detection - combinatorial optimization
 - **`graph-clear/`**: Graph clearing problems - combinatorial graph algorithms
 - **`triangular/`**: Triangular number problems - mathematical constraint satisfaction
@@ -435,22 +482,26 @@ Based on analysis of `thirdparty/mznc2024_probs/`, the CP-SAT solver via Exhort 
 ### Medium Suitability (Good CP-SAT Match)
 
 **Vehicle Routing and Logistics:**
+
 - **`tiny-cvrp/`**: Capacitated Vehicle Routing Problem - OR-Tools specialty
 - **`aircraft-disassembly/`**: Aircraft disassembly sequencing - complex scheduling
 - **`cable-tree-wiring/`**: Cable routing optimization - path optimization
 
 **Packing and Assignment:**
+
 - **`compression/`**: Data compression optimization - assignment problems
 - **`portal/`**: Portal placement problems - spatial assignment
 - **`accap/`**: Capacity allocation problems - resource assignment
 
 **Network and Flow:**
+
 - **`monitor-placement-1id/`**: Network monitor placement - facility location
 - **`network_50_cstr/`**: Network constraint problems - flow and connectivity
 
 ### Lower Suitability (Possible but Not Optimal)
 
 **Mathematical Puzzles:**
+
 - **`fox-geese-corn/`**: Logic puzzles - simple constraint satisfaction (could use simpler methods)
 
 ### Problem Type Analysis
@@ -465,6 +516,7 @@ Based on analysis of `thirdparty/mznc2024_probs/`, the CP-SAT solver via Exhort 
 ### Specific Problem Characteristics Favoring CP-SAT
 
 **Constraint Types Well-Suited for CP-SAT:**
+
 - **AllDifferent constraints**: Peaceable Queens, Train Scheduling
 - **Cumulative constraints**: Hoist Benchmark, Aircraft Disassembly
 - **Global constraints**: Community Detection, Graph Clear
@@ -472,6 +524,7 @@ Based on analysis of `thirdparty/mznc2024_probs/`, the CP-SAT solver via Exhort 
 - **Boolean satisfiability**: Harmony, Word Equations
 
 **Problem Sizes Suitable for CP-SAT:**
+
 - **Small to medium instances**: Most provided instances (10-200 variables)
 - **Complex constraint networks**: High constraint density problems
 - **Mixed integer/boolean**: Problems with both integer and boolean variables
@@ -486,15 +539,19 @@ Based on analysis of `thirdparty/mznc2024_probs/`, the CP-SAT solver via Exhort 
 ### Implementation Priority by Problem Type
 
 **Phase 1 (Foundation)**: Start with simple constraint satisfaction
+
 - Peaceable Queens, Neighbors, Harmony
 
 **Phase 2 (Scheduling)**: Add temporal constraints
+
 - Train Scheduling, Hoist Benchmark, Concert Hall
 
 **Phase 3 (Optimization)**: Add optimization objectives
+
 - Vehicle Routing, Community Detection, Network Problems
 
 **Phase 4 (Advanced)**: Complex multi-objective problems
+
 - Aircraft Disassembly, Cable Tree Wiring, Monitor Placement
 
 This analysis demonstrates that CP-SAT solver integration would dramatically expand aria_engine's problem-solving capabilities, covering nearly all MiniZinc 2024 competition problem types with world-class performance.

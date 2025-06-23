@@ -251,11 +251,13 @@ defmodule AriaEngine.Timeline.BridgeOperations do
         # Bridge should not be placed exactly at interval start or end times
         # to avoid ambiguity in segmentation
         DateTime.compare(bridge.position, interval.start_time) == :eq or
-        DateTime.compare(bridge.position, interval.end_time) == :eq
+          DateTime.compare(bridge.position, interval.end_time) == :eq
       end)
 
     case conflicts do
-      [] -> :ok
+      [] ->
+        :ok
+
       [conflict | _] ->
         {:error, "Bridge position conflicts with interval '#{conflict.id}' boundary"}
     end

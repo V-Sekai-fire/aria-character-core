@@ -142,7 +142,12 @@ defmodule AriaEngine.Plan.Backtracking do
   end
 
   # Try alternative method for a specific task node
-  @spec try_alternative_method_for_task(AriaEngine.Domain.Core.t(), solution_tree(), node_id(), integer()) ::
+  @spec try_alternative_method_for_task(
+          AriaEngine.Domain.Core.t(),
+          solution_tree(),
+          node_id(),
+          integer()
+        ) ::
           {:ok, solution_tree()} | :no_alternatives | {:error, String.t()}
   def try_alternative_method_for_task(domain, solution_tree, task_node_id, verbose) do
     case solution_tree.nodes[task_node_id] do

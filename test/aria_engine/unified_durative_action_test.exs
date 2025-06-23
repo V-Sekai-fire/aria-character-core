@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.UnifiedDurativeActionTest do
   use ExUnit.Case, async: true
 
@@ -9,23 +12,26 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
       domain = Domain.new("test_domain")
 
       # Valid fixed interval (start + end)
-      domain = Domain.add_action(domain, :meeting, &meeting_action/2, %{
-        start: "2025-06-22T10:00:00Z",
-        end: "2025-06-22T11:00:00Z",
-        description: "Team meeting"
-      })
+      domain =
+        Domain.add_action(domain, :meeting, &meeting_action/2, %{
+          start: "2025-06-22T10:00:00Z",
+          end: "2025-06-22T11:00:00Z",
+          description: "Team meeting"
+        })
 
       # Valid open-ended interval (start only)
-      domain = Domain.add_action(domain, :project_start, &project_action/2, %{
-        start: "2025-06-22T09:00:00Z",
-        description: "Project kickoff"
-      })
+      domain =
+        Domain.add_action(domain, :project_start, &project_action/2, %{
+          start: "2025-06-22T09:00:00Z",
+          description: "Project kickoff"
+        })
 
       # Valid open-ended interval (end only)
-      domain = Domain.add_action(domain, :deadline, &deadline_action/2, %{
-        end: "2025-06-22T17:00:00Z",
-        description: "Must finish by end of day"
-      })
+      domain =
+        Domain.add_action(domain, :deadline, &deadline_action/2, %{
+          end: "2025-06-22T17:00:00Z",
+          description: "Must finish by end of day"
+        })
 
       # Verify all actions were added successfully
       assert Domain.has_action?(domain, :meeting)
@@ -45,9 +51,10 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
       end
 
       # Missing temporal specification now defaults to PT0S duration
-      domain = Domain.add_action(domain, :default_duration_action, &test_action/2, %{
-        description: "No temporal info - should default to PT0S"
-      })
+      domain =
+        Domain.add_action(domain, :default_duration_action, &test_action/2, %{
+          description: "No temporal info - should default to PT0S"
+        })
 
       # Verify action was added with default duration
       assert Domain.has_action?(domain, :default_duration_action)
@@ -89,10 +96,11 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
       domain = Domain.new("test_domain")
 
       # Existing floating duration should still work
-      domain = Domain.add_action(domain, :cook_meal, &cook_action/2, %{
-        duration: "PT2H",
-        description: "Cooking task"
-      })
+      domain =
+        Domain.add_action(domain, :cook_meal, &cook_action/2, %{
+          duration: "PT2H",
+          description: "Cooking task"
+        })
 
       metadata = Domain.get_action_metadata(domain, :cook_meal)
       assert metadata.description == "Cooking task"
@@ -106,16 +114,17 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
       domain = Domain.new("test_domain")
 
       # Valid entity requirements
-      domain = Domain.add_action(domain, :cook_meal, &cook_action/2, %{
-        duration: "PT2H",
-        requires_entities: [
-          %{type: "agent", capabilities: [:cooking, :menu_planning]},
-          %{type: "oven", capabilities: [:heating, :baking]},
-          %{type: "flour", capabilities: [:consumable]},
-          %{type: "mixing_bowl", capabilities: [:container, :reusable]}
-        ],
-        description: "Prepare a meal"
-      })
+      domain =
+        Domain.add_action(domain, :cook_meal, &cook_action/2, %{
+          duration: "PT2H",
+          requires_entities: [
+            %{type: "agent", capabilities: [:cooking, :menu_planning]},
+            %{type: "oven", capabilities: [:heating, :baking]},
+            %{type: "flour", capabilities: [:consumable]},
+            %{type: "mixing_bowl", capabilities: [:container, :reusable]}
+          ],
+          description: "Prepare a meal"
+        })
 
       # Verify action was added successfully
       assert Domain.has_action?(domain, :cook_meal)
@@ -129,7 +138,8 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
         Domain.add_action(domain, :invalid_action, &test_action/2, %{
           duration: "PT1H",
           requires_entities: [
-            %{capabilities: [:cooking]}  # Missing type
+            # Missing type
+            %{capabilities: [:cooking]}
           ]
         })
       end
@@ -139,7 +149,8 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
         Domain.add_action(domain, :invalid_action, &test_action/2, %{
           duration: "PT1H",
           requires_entities: [
-            %{type: "agent", capabilities: "cooking"}  # String instead of list
+            # String instead of list
+            %{type: "agent", capabilities: "cooking"}
           ]
         })
       end
@@ -151,14 +162,15 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
       domain = Domain.new("test_domain")
 
       # Add action with full unified specification
-      domain = Domain.add_action(domain, :cook_meal, &cook_meal_implementation/2, %{
-        duration: "PT2H",
-        requires_entities: [
-          %{type: "agent", capabilities: [:cooking]},
-          %{type: "oven", capabilities: [:heating]}
-        ],
-        description: "Complete cooking action"
-      })
+      domain =
+        Domain.add_action(domain, :cook_meal, &cook_meal_implementation/2, %{
+          duration: "PT2H",
+          requires_entities: [
+            %{type: "agent", capabilities: [:cooking]},
+            %{type: "oven", capabilities: [:heating]}
+          ],
+          description: "Complete cooking action"
+        })
 
       # Verify action was added
       assert Domain.has_action?(domain, :cook_meal)
@@ -169,9 +181,10 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
       assert length(metadata.requires_entities) == 2
 
       # Verify action can be executed
-      state = State.new()
-      |> State.set_fact("chef", "capabilities", [:cooking])
-      |> State.set_fact("oven", "capabilities", [:heating])
+      state =
+        State.new()
+        |> State.set_fact("chef", "capabilities", [:cooking])
+        |> State.set_fact("oven", "capabilities", [:heating])
 
       assert {:ok, _new_state} = Domain.execute_action(domain, state, :cook_meal, ["pasta"])
     end

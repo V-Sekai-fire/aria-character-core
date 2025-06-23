@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Justfile for Widget Assembly Solver Benchmarking
 # Uses hyperfine for performance measurement
 

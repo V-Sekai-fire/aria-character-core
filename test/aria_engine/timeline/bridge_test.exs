@@ -103,7 +103,9 @@ defmodule AriaEngine.Timeline.BridgeTest do
 
     test "merges with existing metadata" do
       position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      bridge = Bridge.new("test", position, :decision, metadata: %{priority: :low, options: ["a", "b"]})
+
+      bridge =
+        Bridge.new("test", position, :decision, metadata: %{priority: :low, options: ["a", "b"]})
 
       updated_bridge = Bridge.update_metadata(bridge, %{priority: :high})
 
@@ -184,10 +186,14 @@ defmodule AriaEngine.Timeline.BridgeTest do
       start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
       end_time = DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC")
 
-      pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")  # In range
-      pos2 = DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC")  # Out of range
-      pos3 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")  # In range
-      pos4 = DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC")  # Out of range
+      # In range
+      pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      # Out of range
+      pos2 = DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC")
+      # In range
+      pos3 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      # Out of range
+      pos4 = DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC")
 
       bridge1 = Bridge.new("b1", pos1, :decision)
       bridge2 = Bridge.new("b2", pos2, :decision)

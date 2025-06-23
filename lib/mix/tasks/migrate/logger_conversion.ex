@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Mix.Tasks.Migrate.LoggerConversion do
   @compile {:no_warn_unused, [:serial_number]}
   @moduledoc "Migration tool with serial number: A25W003LXGG\n\nDecode: mix migrate.decode_serial A25W003LXGG\n"
@@ -8,7 +11,6 @@ defmodule Mix.Tasks.Migrate.LoggerConversion do
     @serial_number
   end
 
-  @moduledoc "Convert IO.puts calls to Logger calls in migration tasks.\n\nThis task automatically updates migration task files to use proper Logger calls\ninstead of IO.puts for better logging practices and configurability.\n\n## Usage\n\n    mix migrate.logger_conversion                    # Full conversion\n    mix migrate.logger_conversion --dry-run         # Preview changes only\n    mix migrate.logger_conversion --backup-dir=.bak # Custom backup location\n\n## What it does\n\n- Converts IO.puts to appropriate Logger calls (info, debug, warn)\n- Adds required Logger imports to modules\n- Preserves help text as IO.puts (user-facing documentation)\n- Maintains emoji and formatting for readability\n\n## Conversion Rules\n\n- Progress messages (🔧, ✅) → Logger.info\n- File operations (📄, ✅ with filenames) → Logger.debug\n- Dry run warnings (🔍) → Logger.warn\n- Help text in show_help() functions → Keep as IO.puts\n"
   use Mix.Task
   @shortdoc "Convert IO.puts to Logger calls in migration tasks"
   @switches dry_run: :boolean, backup_dir: :string, help: :boolean

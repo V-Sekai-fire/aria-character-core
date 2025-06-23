@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Mix.Tasks.Serial.Registry do
   @moduledoc """
   Embedded serial number registry for Aria project files.
@@ -148,13 +151,59 @@ defmodule Mix.Tasks.Serial.Registry do
 
   @allowed_chars "0123456789ABCDEFGHJKLMNPQRSTVWXY"
   @week_encoding %{
-    1 => "1", 2 => "2", 3 => "3", 4 => "4", 5 => "5", 6 => "6", 7 => "7", 8 => "8", 9 => "9",
-    10 => "C", 11 => "D", 12 => "F", 13 => "G", 14 => "H", 15 => "J", 16 => "K", 17 => "L",
-    18 => "M", 19 => "N", 20 => "P", 21 => "Q", 22 => "R", 23 => "S", 24 => "T", 25 => "V",
-    26 => "W", 27 => "X", 28 => "Y", 29 => "C", 30 => "D", 31 => "F", 32 => "G", 33 => "H",
-    34 => "J", 35 => "K", 36 => "L", 37 => "M", 38 => "N", 39 => "P", 40 => "Q", 41 => "R",
-    42 => "S", 43 => "T", 44 => "V", 45 => "W", 46 => "X", 47 => "Y", 48 => "C", 49 => "D",
-    50 => "F", 51 => "G", 52 => "H", 53 => "Z"
+    1 => "1",
+    2 => "2",
+    3 => "3",
+    4 => "4",
+    5 => "5",
+    6 => "6",
+    7 => "7",
+    8 => "8",
+    9 => "9",
+    10 => "C",
+    11 => "D",
+    12 => "F",
+    13 => "G",
+    14 => "H",
+    15 => "J",
+    16 => "K",
+    17 => "L",
+    18 => "M",
+    19 => "N",
+    20 => "P",
+    21 => "Q",
+    22 => "R",
+    23 => "S",
+    24 => "T",
+    25 => "V",
+    26 => "W",
+    27 => "X",
+    28 => "Y",
+    29 => "C",
+    30 => "D",
+    31 => "F",
+    32 => "G",
+    33 => "H",
+    34 => "J",
+    35 => "K",
+    36 => "L",
+    37 => "M",
+    38 => "N",
+    39 => "P",
+    40 => "Q",
+    41 => "R",
+    42 => "S",
+    43 => "T",
+    44 => "V",
+    45 => "W",
+    46 => "X",
+    47 => "Y",
+    48 => "C",
+    49 => "D",
+    50 => "F",
+    51 => "G",
+    52 => "H",
+    53 => "Z"
   }
 
   @week_decoding Map.new(@week_encoding, fn {k, v} -> {v, k} end)
@@ -179,7 +228,8 @@ defmodule Mix.Tasks.Serial.Registry do
   @doc "Detect serial number format version"
   def detect_version(serial) do
     case String.length(serial) do
-      11 -> :v1  # Allow 11 characters for shorter tool codes
+      # Allow 11 characters for shorter tool codes
+      11 -> :v1
       12 -> :v1
       13 -> :v2
       14 -> :v3
@@ -217,24 +267,43 @@ defmodule Mix.Tasks.Serial.Registry do
     base_name = String.replace(filename, ".ex", "")
 
     # Handle specific component patterns
-    code = case base_name do
-      "pipeline_manager" -> "PXPE"
-      "format_transformer_filter" -> "FMTR"
-      "minizinc_solver_filter" -> "SLVR"
-      "minizinc_template_filter" -> "TMPL"
-      "planner_filter" -> "PLNR"
-      "testing_filter" -> "TEST"
-      "planning_params" -> "PRMS"
-      "planning_request" -> "RQST"
-      "planning_response" -> "RESP"
-      _ ->
-        # Fallback to original algorithm for other files
-        base_name
-        |> String.replace("_", "")
-        |> String.upcase()
-        |> String.slice(0, 4)
-        |> String.pad_trailing(4, "X")
-    end
+    code =
+      case base_name do
+        "pipeline_manager" ->
+          "PXPE"
+
+        "format_transformer_filter" ->
+          "FMTR"
+
+        "minizinc_solver_filter" ->
+          "SLVR"
+
+        "minizinc_template_filter" ->
+          "TMPL"
+
+        "planner_filter" ->
+          "PLNR"
+
+        "testing_filter" ->
+          "TEST"
+
+        "planning_params" ->
+          "PRMS"
+
+        "planning_request" ->
+          "RQST"
+
+        "planning_response" ->
+          "RESP"
+
+        _ ->
+          # Fallback to original algorithm for other files
+          base_name
+          |> String.replace("_", "")
+          |> String.upcase()
+          |> String.slice(0, 4)
+          |> String.pad_trailing(4, "X")
+      end
 
     ensure_valid_chars(code)
   end
@@ -255,7 +324,6 @@ defmodule Mix.Tasks.Serial.Registry do
     with {:ok, week} <- decode_week_safe(week_char),
          {:ok, year_int} <- parse_year(year),
          {:ok, unit_int} <- parse_unit(unit) do
-
       registry_info = lookup(serial)
 
       %{

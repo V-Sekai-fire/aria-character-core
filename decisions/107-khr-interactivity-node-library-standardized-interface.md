@@ -63,4 +63,5 @@ end
 ## Change Log
 
 ### June 19, 2025
+
 - Initial ADR created from node library README to formalize architecture and implementation plan.

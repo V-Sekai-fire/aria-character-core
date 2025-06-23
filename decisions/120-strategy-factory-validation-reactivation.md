@@ -10,6 +10,7 @@
 The `HybridPlanner.StrategyFactory` module currently has disabled strategy validation due to module loading order issues. The TODO comment on line 109 indicates the need to re-enable validation after addressing these compilation dependencies.
 
 Currently, the `register_strategy/4` function has commented out validation code:
+
 ```elixir
 # TODO: Re-enable validation after addressing module loading order
 # case validate_strategy_module(strategy_type, strategy_module) do
@@ -23,6 +24,7 @@ This creates a potential runtime safety issue where invalid strategy modules cou
 ## Decision
 
 Implement a robust strategy validation system that:
+
 1. Resolves module loading order dependencies
 2. Validates strategy modules implement required behaviors
 3. Provides clear error messages for validation failures
@@ -31,6 +33,7 @@ Implement a robust strategy validation system that:
 ## Implementation Plan
 
 ### Phase 1: Module Loading Analysis
+
 - [x] Analyze current module loading dependencies causing validation issues
   - ✅ Found that validation was disabled due to compilation order between StrategyFactory and strategy modules
   - ✅ Strategy behaviors are defined in `HybridPlanner.Strategies` module with clear callback definitions
@@ -43,6 +46,7 @@ Implement a robust strategy validation system that:
   - ✅ Cache validation results to avoid repeated behavior checks
 
 ### Phase 2: Validation Architecture
+
 - [x] Implement deferred validation system for compile-time safety
   - ✅ Added validation_cache field to StrategyFactory struct
   - ✅ Implemented validate_strategy_module/3 with caching
@@ -56,6 +60,7 @@ Implement a robust strategy validation system that:
   - ✅ Cache checked before performing validation to avoid repeated work
 
 ### Phase 3: Validation Implementation
+
 - [x] Re-enable `validate_strategy_module/2` function
   - ✅ Implemented validate_strategy_module/3 with caching support
   - ✅ Added validate_all_strategy_modules/2 for coordinator creation
@@ -69,6 +74,7 @@ Implement a robust strategy validation system that:
   - ✅ `ExecutionStrategy` behavior validation (execute_plan/4, execute_step/4, handle_execution_failure/4)
 
 ### Phase 4: Error Handling and Testing
+
 - [x] Implement comprehensive error reporting
   - ✅ Clear error messages for missing callbacks and validation failures
   - ✅ Proper exception handling in validation functions
@@ -96,12 +102,14 @@ Implement a robust strategy validation system that:
 ## Consequences
 
 **Benefits:**
+
 - Improved runtime safety through strategy validation
 - Better error messages for invalid strategy configurations
 - Prevents registration of incompatible strategy modules
 - Maintains strategy interface contracts
 
 **Risks:**
+
 - Potential compilation issues if module loading order isn't properly resolved
 - Performance impact from validation checks
 - Possible breaking changes if existing strategies don't meet validation requirements
@@ -109,12 +117,15 @@ Implement a robust strategy validation system that:
 ## Implementation Strategy
 
 ### Deferred Validation Approach
+
 Use a deferred validation system where:
+
 1. Strategies are registered immediately for compilation compatibility
 2. Validation occurs during first coordinator creation
 3. Validation results are cached for subsequent uses
 
 ### Behavior Validation Methods
+
 - Use `function_exported?/3` to check required callback implementations
 - Validate strategy module attributes and metadata
 - Test strategy initialization with sample parameters

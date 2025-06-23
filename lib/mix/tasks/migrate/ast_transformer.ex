@@ -23,6 +23,7 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
     rescue
       e in SyntaxError ->
         {:error, "Syntax error: #{Exception.message(e)}"}
+
       e ->
         {:error, "Parse error: #{Exception.message(e)}"}
     end
@@ -85,7 +86,9 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
         # Match: Module.function(args)
         {{:., meta, [{:__aliases__, alias_meta, ^module_path}, ^old_function]}, call_meta, args} ->
           transformed_args = if arg_transformer, do: arg_transformer.(args), else: args
-          {{:., meta, [{:__aliases__, alias_meta, module_path}, new_function]}, call_meta, transformed_args}
+
+          {{:., meta, [{:__aliases__, alias_meta, module_path}, new_function]}, call_meta,
+           transformed_args}
 
         # Match: function(args) when module is aliased
         {^old_function, _call_meta, _args} ->
@@ -148,7 +151,6 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
     with {:ok, ast} <- parse_code(source_code),
          transformed_ast = transform_ast(ast, transformation_rules),
          {:ok, new_code} <- ast_to_code(transformed_ast) do
-
       if new_code == source_code do
         :unchanged
       else
@@ -237,6 +239,7 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
           case transform_doctest_string(doc_string, transformation_rules) do
             {:changed, new_doc_string} ->
               {:@, meta, [{doc_type, doc_meta, [new_doc_string]}]}
+
             :unchanged ->
               node
           end
@@ -264,12 +267,15 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
               {:changed, new_code} ->
                 new_line = rebuild_doctest_line(line, new_code)
                 {new_line, true}
+
               :unchanged ->
                 {line, acc_changed}
+
               {:error, _reason} ->
                 # Keep original line on error
                 {line, acc_changed}
             end
+
           :no_doctest ->
             {line, acc_changed}
         end
@@ -294,6 +300,7 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
     case Regex.run(~r/^(\s*iex>\s*)(.+)$/, line) do
       [_full, _prefix, code] ->
         {:ok, String.trim(code)}
+
       nil ->
         :no_doctest
     end
@@ -306,6 +313,7 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
     case Regex.run(~r/^(\s*iex>\s*)(.+)$/, original_line) do
       [_full, prefix, _old_code] ->
         prefix <> new_code
+
       nil ->
         # Shouldn't happen, but return original as fallback
         original_line
@@ -367,10 +375,12 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
     fn ast_node ->
       case ast_node do
         # Match: DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
-        {{:., _, [{:__aliases__, _, [:DateTime]}, :from_naive!]}, _, [
-          {:sigil_N, _, [{_, _, [date_string]}, []]},
-          timezone
-        ]} when is_binary(timezone) ->
+        {{:., _, [{:__aliases__, _, [:DateTime]}, :from_naive!]}, _,
+         [
+           {:sigil_N, _, [{_, _, [date_string]}, []]},
+           timezone
+         ]}
+        when is_binary(timezone) ->
           # Convert to ISO 8601 string literal
           iso_string = convert_naive_to_iso8601(date_string, timezone)
           {:__block__, [], [iso_string]}
@@ -390,6 +400,7 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
         # Match variable assignments like start_dt, end_dt
         {var_name, meta, context} when is_atom(var_name) and is_atom(context) ->
           var_name_str = Atom.to_string(var_name)
+
           if String.ends_with?(var_name_str, "_dt") do
             # Convert DateTime variable to ISO 8601 string
             # This is a simplified approach for doctests
@@ -455,12 +466,16 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
         # Match: assert is_list(plan)
         {:assert, meta, [{:is_list, call_meta, [plan_var]}]} ->
           # Replace with: assert %{nodes: _, root_id: _} = plan
-          pattern = {:%, [], [
-            {:%{}, [], [
-              {:nodes, {:_, [], nil}},
-              {:root_id, {:_, [], nil}}
-            ]}
-          ]}
+          pattern =
+            {:%, [],
+             [
+               {:%{}, [],
+                [
+                  {:nodes, {:_, [], nil}},
+                  {:root_id, {:_, [], nil}}
+                ]}
+             ]}
+
           {:assert, meta, [{:=, call_meta, [pattern, plan_var]}]}
 
         _ ->
@@ -476,14 +491,21 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
     fn ast_node ->
       case ast_node do
         # Match: assert length(plan) > 0
-        {:assert, meta, [{:>, op_meta, [
-          {:length, length_meta, [plan_var]},
-          0
-        ]}]} ->
+        {:assert, meta,
+         [
+           {:>, op_meta,
+            [
+              {:length, length_meta, [plan_var]},
+              0
+            ]}
+         ]} ->
           # Replace with: assert map_size(plan.nodes) > 0
-          new_call = {{:., [], [{:__aliases__, [], [:Map]}, :size]}, length_meta, [
-            {{:., [], [plan_var, :nodes]}, [], []}
-          ]}
+          new_call =
+            {{:., [], [{:__aliases__, [], [:Map]}, :size]}, length_meta,
+             [
+               {{:., [], [plan_var, :nodes]}, [], []}
+             ]}
+
           {:assert, meta, [{:>, op_meta, [new_call, 0]}]}
 
         _ ->
@@ -499,14 +521,21 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
     fn ast_node ->
       case ast_node do
         # Match: assert length(plan) == N
-        {:assert, meta, [{:==, op_meta, [
-          {:length, length_meta, [plan_var]},
-          n
-        ]}]} ->
+        {:assert, meta,
+         [
+           {:==, op_meta,
+            [
+              {:length, length_meta, [plan_var]},
+              n
+            ]}
+         ]} ->
           # Replace with: assert map_size(plan.nodes) == N
-          new_call = {{:., [], [{:__aliases__, [], [:Map]}, :size]}, length_meta, [
-            {{:., [], [plan_var, :nodes]}, [], []}
-          ]}
+          new_call =
+            {{:., [], [{:__aliases__, [], [:Map]}, :size]}, length_meta,
+             [
+               {{:., [], [plan_var, :nodes]}, [], []}
+             ]}
+
           {:assert, meta, [{:==, op_meta, [new_call, n]}]}
 
         _ ->
@@ -520,6 +549,6 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
   """
   def needs_plan_format_transformation?(source_code) do
     String.contains?(source_code, "is_list(plan)") or
-    String.contains?(source_code, "length(plan)")
+      String.contains?(source_code, "length(plan)")
   end
 end

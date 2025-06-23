@@ -17,6 +17,7 @@ Use AriaEngine's hybrid planning system to model the complete glTF KHR Interacti
 ## Implementation Plan
 
 ### Phase 1: Software Development Domain Creation
+
 - [x] Create `SoftwareDevelopmentDomain` with actions for:
   - `implement_module(module_name, dependencies, effort_hours)`
   - `integrate_modules(module_list, integration_effort)`
@@ -24,12 +25,14 @@ Use AriaEngine's hybrid planning system to model the complete glTF KHR Interacti
   - `document_module(module_name, doc_effort)`
 
 ### Phase 2: glTF Scene Foundation Modeling (from ADR-130)
+
 - [ ] **Core Data Structures:** Implement Elixir structs for `Scene`, `Node`, `Mesh`, `Accessor`, `Buffer`, `BufferView`, `Material`, `Texture`, `Image`, `Sampler`, `Animation`, `Camera`, and `Skin`.
 - [ ] **Data Loading & Parsing:** Create `Gltf.Loader` for `.gltf`/`.glb` files and a `Gltf.AccessorView` for typed buffer access.
 - [ ] **Scene Graph Logic:** Implement local and global transformation calculations and scene traversal.
 - [ ] **Mesh and Primitive Processing:** Develop utilities for vertex data retrieval, indexed geometry, morph targets, and skinning.
 
 ### Phase 3: KHR Interactivity Node Modeling (from Specification.adoc)
+
 - [ ] Model all KHR Interactivity behavior nodes by category:
   - **Math Nodes:**
     - [ ] Constants: `E`, `Pi`, `Infinity`, `NaN`
@@ -63,6 +66,7 @@ Use AriaEngine's hybrid planning system to model the complete glTF KHR Interacti
     - [ ] `Log`
 
 ### Phase 4: Dependency Chain Modeling
+
 - [ ] Define critical dependency relationships:
   - **Foundation Dependencies**: All KHR nodes depend on glTF Scene system
   - **Math Dependencies**: Complex math operations depend on basic math
@@ -70,6 +74,7 @@ Use AriaEngine's hybrid planning system to model the complete glTF KHR Interacti
   - **Integration Dependencies**: Runtime systems depend on all node implementations
 
 ### Phase 5: Temporal Constraints Implementation
+
 - [ ] Add durative actions with time estimates:
   - Foundation modules: 40-80 hours each
   - Basic nodes: 4-8 hours each
@@ -79,6 +84,7 @@ Use AriaEngine's hybrid planning system to model the complete glTF KHR Interacti
   - Documentation: 15% of implementation time
 
 ### Phase 6: Planning Problem Execution
+
 - [ ] Create initial state with:
   - Available developer resources
   - Current implementation status (empty)
@@ -99,6 +105,7 @@ Use AriaEngine's hybrid planning system to model the complete glTF KHR Interacti
   - MinZinc fallback for constraint optimization
 
 ### Phase 7: Solution Analysis and ADR Generation
+
 - [ ] Analyze planner output for:
   - Optimal implementation sequence
   - Critical path identification
@@ -116,18 +123,21 @@ Use AriaEngine's hybrid planning system to model the complete glTF KHR Interacti
 ## Expected Outcomes
 
 ### Planning Problem Complexity
+
 - **150+ tasks** (glTF Scene + KHR nodes + integration)
 - **500+ dependency relationships**
 - **Multi-level temporal constraints**
 - **Resource optimization across 2000+ development hours**
 
 ### Planner Capabilities Demonstrated
+
 - **Dependency resolution** at massive scale
 - **Temporal constraint satisfaction** with durative actions
 - **Multi-objective optimization** (time, quality, risk)
 - **Hybrid strategy coordination** for complex problems
 
 ### Implementation Benefits
+
 - **Optimal development sequence** based on mathematical optimization
 - **Risk minimization** through dependency-aware scheduling
 - **Resource efficiency** through intelligent task ordering

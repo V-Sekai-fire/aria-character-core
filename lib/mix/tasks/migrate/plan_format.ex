@@ -48,9 +48,10 @@ defmodule Mix.Tasks.Migrate.PlanFormat do
     end
 
     # Process each file
-    results = Enum.map(test_files, fn file_path ->
-      process_file(file_path, dry_run, verbose)
-    end)
+    results =
+      Enum.map(test_files, fn file_path ->
+        process_file(file_path, dry_run, verbose)
+      end)
 
     # Report results
     report_results(results, dry_run)
@@ -68,7 +69,10 @@ defmodule Mix.Tasks.Migrate.PlanFormat do
             Mix.shell().info("Processing: #{file_path}")
           end
 
-          case AstTransformer.transform_code(content, AstTransformer.plan_format_migration_rules()) do
+          case AstTransformer.transform_code(
+                 content,
+                 AstTransformer.plan_format_migration_rules()
+               ) do
             {:changed, new_content} ->
               if not dry_run do
                 File.write!(file_path, new_content)
@@ -106,22 +110,29 @@ defmodule Mix.Tasks.Migrate.PlanFormat do
   end
 
   defp report_results(results, dry_run) do
-    changed = Enum.count(results, fn
-      {:changed, _} -> true
-      _ -> false
-    end)
-    unchanged = Enum.count(results, fn
-      {:unchanged, _} -> true
-      _ -> false
-    end)
-    skipped = Enum.count(results, fn
-      {:skipped, _} -> true
-      _ -> false
-    end)
-    errors = Enum.count(results, fn
-      {:error, _, _} -> true
-      _ -> false
-    end)
+    changed =
+      Enum.count(results, fn
+        {:changed, _} -> true
+        _ -> false
+      end)
+
+    unchanged =
+      Enum.count(results, fn
+        {:unchanged, _} -> true
+        _ -> false
+      end)
+
+    skipped =
+      Enum.count(results, fn
+        {:skipped, _} -> true
+        _ -> false
+      end)
+
+    errors =
+      Enum.count(results, fn
+        {:error, _, _} -> true
+        _ -> false
+      end)
 
     Mix.shell().info("\nMigration Summary:")
     Mix.shell().info("  Changed: #{changed}")

@@ -264,7 +264,8 @@ defmodule AriaEngine.Timeline.Bridge do
 
   defp validate_bridge_type!(type) do
     unless valid_type?(type) do
-      raise ArgumentError, "Invalid bridge type: #{inspect(type)}. Must be one of: :decision, :condition, :synchronization, :resource_check"
+      raise ArgumentError,
+            "Invalid bridge type: #{inspect(type)}. Must be one of: :decision, :condition, :synchronization, :resource_check"
     end
   end
 end

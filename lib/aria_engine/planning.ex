@@ -17,18 +17,20 @@ defmodule AriaEngine.Planning do
   @type state :: State.t()
 
   # CoreInterface functions
-  @spec plan(domain(), state(), [todo_item()], keyword()) :: {:ok, solution_tree()} | {:error, String.t()}
+  @spec plan(domain(), state(), [todo_item()], keyword()) ::
+          {:ok, solution_tree()} | {:error, String.t()}
   defdelegate plan(domain, state, todos, opts), to: CoreInterface
-  
-  @spec plan_with_tree(domain(), state(), [todo_item()], keyword()) :: {:ok, {solution_tree(), t()}} | {:error, String.t()}
+
+  @spec plan_with_tree(domain(), state(), [todo_item()], keyword()) ::
+          {:ok, {solution_tree(), t()}} | {:error, String.t()}
   defdelegate plan_with_tree(domain, state, todos, opts), to: CoreInterface
-  
+
   @spec execute_plan(domain(), state(), [plan_step()]) :: {:ok, state()} | {:error, String.t()}
   defdelegate execute_plan(domain, initial_state, plan), to: CoreInterface
-  
+
   @spec replan(t(), String.t(), keyword()) :: {:ok, solution_tree()} | {:error, String.t()}
   defdelegate replan(engine, fail_node_id, opts), to: CoreInterface
-  
+
   @spec validate_plan(t()) :: {:ok, state()} | {:error, String.t()}
   defdelegate validate_plan(engine), to: CoreInterface
 

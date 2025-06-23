@@ -28,11 +28,13 @@ defmodule AriaEngine.BlocksWorldDomainTest do
       assert domain.name == "blocks_world"
 
       # Domain has 4 actions
-      assert map_size(domain.actions) == 4  # pickup, putdown, stack, unstack
+      # pickup, putdown, stack, unstack
+      assert map_size(domain.actions) == 4
 
       # GTpyHOP automatically creates task methods for each action!
       # This answers the original question about automatic action-to-task conversion
-      assert map_size(domain.task_methods) == 6  # 4 primitive actions + 2 custom methods
+      # 4 primitive actions + 2 custom methods
+      assert map_size(domain.task_methods) == 6
 
       # Check that actions are automatically converted to tasks
       assert Map.has_key?(domain.task_methods, "pickup")
@@ -75,7 +77,8 @@ defmodule AriaEngine.BlocksWorldDomainTest do
 
       # Document API mismatch: StateUtils uses has_predicate?/2 but State has has_predicate?/3
       assert Keyword.has_key?(functions, :has_predicate?)
-      assert functions[:has_predicate?] == 3  # State has 3-arity version
+      # State has 3-arity version
+      assert functions[:has_predicate?] == 3
 
       # Document missing functions that StateUtils tries to use
       refute Keyword.has_key?(functions, :get_all_facts)

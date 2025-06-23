@@ -135,10 +135,13 @@ defmodule AriaEngine.Plan.NodeExpansion do
 
           # Create child nodes for subtasks and execute primitive actions immediately
           {result_tree, result_ids, result_state, any_failed} =
-            Enum.reduce(subtasks, {solution_tree, [], node.state, false}, fn subtask, {tree, ids, state, failed} ->
+            Enum.reduce(subtasks, {solution_tree, [], node.state, false}, fn subtask,
+                                                                             {tree, ids, state,
+                                                                              failed} ->
               case create_task_child_node(domain, node_id, subtask, {tree, ids, state}, verbose) do
                 {new_tree, new_ids, new_state, :action_failed} ->
                   {new_tree, new_ids, new_state, true}
+
                 {new_tree, new_ids, new_state} ->
                   {new_tree, new_ids, new_state, failed}
               end
@@ -147,7 +150,9 @@ defmodule AriaEngine.Plan.NodeExpansion do
           if any_failed do
             # One of the primitive actions failed, trigger backtracking
             if verbose > 2 do
-              Logger.debug("Primitive action failed during method execution, triggering backtracking")
+              Logger.debug(
+                "Primitive action failed during method execution, triggering backtracking"
+              )
             end
 
             # Update the node to mark the method as tried but failed

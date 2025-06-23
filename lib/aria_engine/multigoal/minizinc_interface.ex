@@ -29,12 +29,12 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
 
   @type goal :: {State.subject(), State.predicate(), State.fact_value()}
   @type solution :: %{
-    goals: [goal()],
-    total_actions: non_neg_integer(),
-    total_distance: number(),
-    completion_time: number(),
-    parallel_opportunities: non_neg_integer()
-  }
+          goals: [goal()],
+          total_actions: non_neg_integer(),
+          total_distance: number(),
+          completion_time: number(),
+          parallel_opportunities: non_neg_integer()
+        }
 
   # Default configuration
   @default_timeout 5_000
@@ -48,10 +48,11 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
   completion time, resource conflicts, and parallel opportunities.
   """
   @spec solve_general(State.t(), [goal()], keyword()) ::
-    {:ok, solution()} | {:error, term()}
+          {:ok, solution()} | {:error, term()}
   def solve_general(state, goals, opts \\ []) do
     try do
-      with {:ok, model} <- AriaEngine.Multigoal.ConstraintBuilder.build_general_model(state, goals),
+      with {:ok, model} <-
+             AriaEngine.Multigoal.ConstraintBuilder.build_general_model(state, goals),
            {:ok, solution} <- execute_minizinc(model, opts) do
         {:ok, parse_solution(solution, goals)}
       else
@@ -123,7 +124,7 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
 
   # Write MiniZinc model to temporary file
   defp write_temp_model(model) do
-    temp_file = Path.join(System.tmp_dir!(), "multigoal_#{:rand.uniform(1000000)}.mzn")
+    temp_file = Path.join(System.tmp_dir!(), "multigoal_#{:rand.uniform(1_000_000)}.mzn")
 
     case File.write(temp_file, model) do
       :ok -> {:ok, temp_file}
@@ -176,6 +177,7 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
           completion_time: Map.get(json, "completion_time", 0.0),
           parallel_opportunities: Map.get(json, "parallel_opportunities", 0)
         }
+
         {:ok, solution}
 
       %{"status" => "UNSATISFIABLE"} ->
@@ -206,13 +208,14 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
 
       _solution_line ->
         # Extract basic solution (simplified parsing)
-        {:ok, %{
-          goal_order: [],
-          total_actions: 0,
-          total_distance: 0.0,
-          completion_time: 0.0,
-          parallel_opportunities: 0
-        }}
+        {:ok,
+         %{
+           goal_order: [],
+           total_actions: 0,
+           total_distance: 0.0,
+           completion_time: 0.0,
+           parallel_opportunities: 0
+         }}
     end
   end
 
@@ -221,13 +224,14 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
     goal_order = Map.get(solution, :goal_order, [])
 
     # Map goal indices back to actual goals
-    ordered_goals = if length(goal_order) > 0 do
-      goal_order
-      |> Enum.map(fn index -> Enum.at(original_goals, index - 1) end)
-      |> Enum.filter(& &1)
-    else
-      original_goals
-    end
+    ordered_goals =
+      if length(goal_order) > 0 do
+        goal_order
+        |> Enum.map(fn index -> Enum.at(original_goals, index - 1) end)
+        |> Enum.filter(& &1)
+      else
+        original_goals
+      end
 
     %{
       goals: ordered_goals,
@@ -283,7 +287,7 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
           |> List.first()
           |> String.trim()
         end)
-        |> Enum.filter(& &1 != "")
+        |> Enum.filter(&(&1 != ""))
 
       {_output, _exit_code} ->
         []

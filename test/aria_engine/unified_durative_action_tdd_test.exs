@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.UnifiedDurativeActionTDDTest do
   use ExUnit.Case, async: true
 
@@ -6,9 +9,10 @@ defmodule AriaEngine.UnifiedDurativeActionTDDTest do
 
   describe "Iteration 1: Infrastructure Foundation (Action Atom Priority Rule)" do
     test "action atoms resolve with higher priority than task methods" do
-      domain = Domain.new("test_domain")
-      |> Domain.add_action(:move, &move_action/2, %{duration: "PT1H"})
-      |> Domain.add_task_method("task_move", &move_task/2)
+      domain =
+        Domain.new("test_domain")
+        |> Domain.add_action(:move, &move_action/2, %{duration: "PT1H"})
+        |> Domain.add_task_method("task_move", &move_task/2)
 
       # Action atom should resolve first
       assert {:action, _} = Domain.resolve(:move, domain)
@@ -16,9 +20,10 @@ defmodule AriaEngine.UnifiedDurativeActionTDDTest do
     end
 
     test "task methods use task_ prefix to avoid aliasing conflicts" do
-      domain = Domain.new("test_domain")
-      |> Domain.add_action(:cook, &cook_action/2, %{duration: "PT2H"})
-      |> Domain.add_task_method("task_cook", &cook_task/2)
+      domain =
+        Domain.new("test_domain")
+        |> Domain.add_action(:cook, &cook_action/2, %{duration: "PT2H"})
+        |> Domain.add_task_method("task_cook", &cook_task/2)
 
       # Both should be resolvable without conflicts
       assert {:action, _} = Domain.resolve(:cook, domain)
@@ -29,8 +34,9 @@ defmodule AriaEngine.UnifiedDurativeActionTDDTest do
     end
 
     test "automatic primitive method creation for actions" do
-      domain = Domain.new("test_domain")
-      |> Domain.add_action(:build, &build_action/2, %{duration: "PT30M"})
+      domain =
+        Domain.new("test_domain")
+        |> Domain.add_action(:build, &build_action/2, %{duration: "PT30M"})
 
       # Should automatically create primitive task method
       assert {:task_method, _} = Domain.resolve("build", domain)
@@ -53,11 +59,12 @@ defmodule AriaEngine.UnifiedDurativeActionTDDTest do
       domain = Domain.new("test_domain")
 
       # Valid metadata should work
-      domain = Domain.add_action(domain, :valid_action, &test_action/2, %{
-        duration: "PT1H",
-        agent: "robot",
-        entity: "package"
-      })
+      domain =
+        Domain.add_action(domain, :valid_action, &test_action/2, %{
+          duration: "PT1H",
+          agent: "robot",
+          entity: "package"
+        })
 
       assert Domain.has_action?(domain, :valid_action)
     end
@@ -68,7 +75,8 @@ defmodule AriaEngine.UnifiedDurativeActionTDDTest do
       # Duration must be string
       assert_raise ArgumentError, fn ->
         Domain.add_action(domain, :invalid_duration, &test_action/2, %{
-          duration: 3600  # Should be "PT1H"
+          # Should be "PT1H"
+          duration: 3600
         })
       end
     end
@@ -77,9 +85,10 @@ defmodule AriaEngine.UnifiedDurativeActionTDDTest do
       domain = Domain.new("test_domain")
 
       # Missing temporal specification should default to PT0S (per ADR-131)
-      domain = Domain.add_action(domain, :no_temporal, &test_action/2, %{
-        agent: "robot"
-      })
+      domain =
+        Domain.add_action(domain, :no_temporal, &test_action/2, %{
+          agent: "robot"
+        })
 
       metadata = Domain.get_action_metadata(domain, :no_temporal)
       # Should default to zero duration
@@ -98,11 +107,12 @@ defmodule AriaEngine.UnifiedDurativeActionTDDTest do
       domain = Domain.new("test_domain")
 
       # Should validate metadata during action addition
-      domain = Domain.add_action(domain, :integrated_action, &test_action/2, %{
-        duration: "PT2H",
-        agent: "worker",
-        resource: "tool"
-      })
+      domain =
+        Domain.add_action(domain, :integrated_action, &test_action/2, %{
+          duration: "PT2H",
+          agent: "worker",
+          resource: "tool"
+        })
 
       metadata = Domain.get_action_metadata(domain, :integrated_action)
       # Duration gets converted to an Interval struct

@@ -39,7 +39,6 @@ defmodule Plan do
   def blacklist_command(solution_tree, command),
     do: Backtracking.blacklist_command(solution_tree, command)
 
-
   # Delegate to Utils
   @doc """
   Validates a plan by executing it step by step.

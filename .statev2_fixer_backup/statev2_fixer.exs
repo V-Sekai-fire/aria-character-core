@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # StateV2 to State Migration Fixer Tool
 # Comprehensive tool for migrating StateV2 references to State throughout codebase
 # Based on successful migration patterns from migrate_statev2.exs

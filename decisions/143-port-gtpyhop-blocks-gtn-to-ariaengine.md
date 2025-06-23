@@ -24,6 +24,7 @@ Port the complete GTPyhop blocks_gtn domain to AriaEngine using predicate-based 
 **Objective**: Design predicate mappings for blocks-world state variables
 
 **GTPyhop → AriaEngine StateV2 Mapping**:
+
 - `pos[b] = 'table'` → `{"pos", ["block_b", "table"]}`
 - `pos[b] = 'hand'` → `{"pos", ["block_b", "hand"]}`
 - `pos[b1] = b2` → `{"pos", ["block_b1", "block_b2"]}`
@@ -33,6 +34,7 @@ Port the complete GTPyhop blocks_gtn domain to AriaEngine using predicate-based 
 - `holding['hand'] = False` → `{"holding", ["hand", "false"]}`
 
 **Tasks**:
+
 - [ ] Create `AriaEngine.BlocksWorld.Domain` module
 - [ ] Implement state conversion utilities
 - [ ] Design predicate query helper functions
@@ -44,12 +46,14 @@ Port the complete GTPyhop blocks_gtn domain to AriaEngine using predicate-based 
 **Objective**: Port all four primitive actions with predicate-based state changes
 
 **Actions to Port**:
+
 - [ ] `pickup(s,x)` - Pick up block from table
 - [ ] `unstack(s,b1,b2)` - Remove b1 from top of b2
 - [ ] `putdown(s,b1)` - Place held block on table
 - [ ] `stack(s,b1,b2)` - Place held block b1 on top of b2
 
 **Implementation Requirements**:
+
 - [ ] Proper precondition checking using predicate queries
 - [ ] State updates using predicate modifications
 - [ ] Error handling for invalid actions
@@ -60,12 +64,14 @@ Port the complete GTPyhop blocks_gtn domain to AriaEngine using predicate-based 
 **Objective**: Convert GTPyhop helper functions to work with predicate-based state
 
 **Helper Functions**:
+
 - [ ] `is_done(b1, state, mgoal)` - Check if block and blocks below are in final position
 - [ ] `status(b1, state, mgoal)` - Determine block status (done, inaccessible, move-to-table, move-to-block, waiting)
 - [ ] `all_blocks(state)` - Get all blocks in the state
 - [ ] `all_clear_blocks(state)` - Get all clear blocks
 
 **Implementation Strategy**:
+
 - Use StateV2.get_fact/3 for predicate queries
 - Use StateV2.get_subjects_with_fact/3 for finding blocks
 - Maintain original algorithm logic while adapting to predicate format
@@ -75,16 +81,19 @@ Port the complete GTPyhop blocks_gtn domain to AriaEngine using predicate-based 
 **Objective**: Port multigoal and task methods to our method system
 
 **Multigoal Method**:
+
 - [ ] `m_moveblocks(s, mgoal)` - Implements Gupta-Nau algorithm
   - Find clear blocks that can move to final location
   - Find clear blocks that need to move out of the way
   - Return appropriate task sequence
 
 **Task Methods**:
+
 - [ ] `m_take(s, x)` - Generate pickup or unstack action
 - [ ] `m_put(s, x, y)` - Generate putdown or stack action
 
 **Integration Requirements**:
+
 - [ ] Register with AriaEngine.Domain.add_multigoal_method/3
 - [ ] Register with AriaEngine.Domain.add_task_method/3
 - [ ] Ensure proper return format for our planner
@@ -96,11 +105,13 @@ Port the complete GTPyhop blocks_gtn domain to AriaEngine using predicate-based 
 **Goal Conversion Examples**:
 
 **GTPyhop Multigoal**:
+
 ```python
 goal.pos = {'c':'b', 'b':'a', 'a':'table'}
 ```
 
 **AriaEngine Predicate Goals**:
+
 ```elixir
 [
   {"pos", ["c", "b"]},
@@ -110,6 +121,7 @@ goal.pos = {'c':'b', 'b':'a', 'a':'table'}
 ```
 
 **Tasks**:
+
 - [ ] Design goal conversion utilities
 - [ ] Implement goal satisfaction checking
 - [ ] Test complex multigoals (Sussman anomaly scenarios)
@@ -119,6 +131,7 @@ goal.pos = {'c':'b', 'b':'a', 'a':'table'}
 **Objective**: Port all test cases and validate against expected solutions
 
 **Test Scenarios from GTPyhop**:
+
 - [ ] Basic action tests (pickup, unstack, putdown, stack)
 - [ ] Simple goal achievement tests
 - [ ] Sussman anomaly problem
@@ -126,6 +139,7 @@ goal.pos = {'c':'b', 'b':'a', 'a':'table'}
 - [ ] Large-scale problems (IPC-2011 BW-rand-50)
 
 **Expected Solutions Validation**:
+
 - [ ] Verify plans match GTPyhop expected results
 - [ ] Performance benchmarking against original
 - [ ] Edge case handling validation
@@ -135,6 +149,7 @@ goal.pos = {'c':'b', 'b':'a', 'a':'table'}
 **Objective**: Prepare for future temporal planning integration
 
 **Design Considerations**:
+
 - [ ] Identify duration integration points
 - [ ] Document temporal constraint opportunities
 - [ ] Design durative action conversion strategy

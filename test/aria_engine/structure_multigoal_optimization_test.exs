@@ -100,10 +100,11 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
     # Spatial structure: multiple goals share the same subject (same entity, different properties)
     defp has_spatial_structure?(goals) do
-      subject_counts = goals
-      |> Enum.group_by(fn {subject, _predicate, _object} -> subject end)
-      |> Map.values()
-      |> Enum.map(&length/1)
+      subject_counts =
+        goals
+        |> Enum.group_by(fn {subject, _predicate, _object} -> subject end)
+        |> Map.values()
+        |> Enum.map(&length/1)
 
       # Spatial pattern if any subject appears in multiple goals
       Enum.any?(subject_counts, fn count -> count > 1 end)
@@ -112,7 +113,9 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     # Dependency structure: object of one goal matches subject of another (value chains)
     defp has_dependency_structure?(goals) do
       objects = goals |> Enum.map(fn {_subject, _predicate, object} -> object end) |> MapSet.new()
-      subjects = goals |> Enum.map(fn {subject, _predicate, _object} -> subject end) |> MapSet.new()
+
+      subjects =
+        goals |> Enum.map(fn {subject, _predicate, _object} -> subject end) |> MapSet.new()
 
       # Dependency pattern if any object appears as a subject in another goal
       not MapSet.disjoint?(objects, subjects)
@@ -120,13 +123,16 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
     # Parallel structure: multiple goals with different subjects but same predicate
     defp has_parallel_structure?(goals) do
-      predicate_groups = goals
-      |> Enum.group_by(fn {_subject, predicate, _object} -> predicate end)
-      |> Map.values()
+      predicate_groups =
+        goals
+        |> Enum.group_by(fn {_subject, predicate, _object} -> predicate end)
+        |> Map.values()
 
       # Parallel pattern if any predicate has multiple different subjects
       Enum.any?(predicate_groups, fn group ->
-        subjects = group |> Enum.map(fn {subject, _predicate, _object} -> subject end) |> Enum.uniq()
+        subjects =
+          group |> Enum.map(fn {subject, _predicate, _object} -> subject end) |> Enum.uniq()
+
         length(subjects) > 1
       end)
     end
@@ -135,16 +141,18 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     # BUT exclude spatial scenarios where location sharing is spatial, not resource
     defp has_resource_structure?(goals) do
       # Filter out location predicates for resource analysis
-      non_location_goals = goals
-      |> Enum.filter(fn {_subject, predicate, _object} -> predicate != "location" end)
+      non_location_goals =
+        goals
+        |> Enum.filter(fn {_subject, predicate, _object} -> predicate != "location" end)
 
       if length(non_location_goals) == 0 do
         false
       else
-        object_counts = non_location_goals
-        |> Enum.group_by(fn {_subject, _predicate, object} -> object end)
-        |> Map.values()
-        |> Enum.map(&length/1)
+        object_counts =
+          non_location_goals
+          |> Enum.group_by(fn {_subject, _predicate, object} -> object end)
+          |> Map.values()
+          |> Enum.map(&length/1)
 
         # Resource pattern if any non-location object appears in multiple goals
         Enum.any?(object_counts, fn count -> count > 1 end)
@@ -189,10 +197,11 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       # Find chains where object of one goal matches subject of another
       goals
       |> Enum.flat_map(fn goal = {_subject, _predicate, object} ->
-        dependent_goals = goals
-        |> Enum.filter(fn {dep_subject, _dep_predicate, _dep_object} ->
-          dep_subject == object
-        end)
+        dependent_goals =
+          goals
+          |> Enum.filter(fn {dep_subject, _dep_predicate, _dep_object} ->
+            dep_subject == object
+          end)
 
         if length(dependent_goals) > 0 do
           [[goal | dependent_goals]]
@@ -230,17 +239,22 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       location_2 = StructureStringGenerator.generate_random_string("#{seed}_loc_2")
       status_ready = StructureStringGenerator.generate_random_string("#{seed}_ready")
 
-      state = State.new()
-      |> State.set_fact(entity_a, location_pred, location_1)
-      |> State.set_fact(entity_b, location_pred, location_1)
-      |> State.set_fact(entity_c, location_pred, location_2)
+      state =
+        State.new()
+        |> State.set_fact(entity_a, location_pred, location_1)
+        |> State.set_fact(entity_b, location_pred, location_1)
+        |> State.set_fact(entity_c, location_pred, location_2)
 
       # Goals: move entities to different locations (spatial optimization opportunity)
       goals = [
-        {entity_a, location_pred, location_2},  # Same entity, different location
-        {entity_b, location_pred, location_2},  # Same entity, different location
-        {entity_c, location_pred, location_1},  # Same entity, different location
-        {entity_a, status_pred, status_ready}   # Same entity, different property
+        # Same entity, different location
+        {entity_a, location_pred, location_2},
+        # Same entity, different location
+        {entity_b, location_pred, location_2},
+        # Same entity, different location
+        {entity_c, location_pred, location_1},
+        # Same entity, different property
+        {entity_a, status_pred, status_ready}
       ]
 
       {state, goals}
@@ -259,17 +273,22 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       action_pred = StructureStringGenerator.generate_random_string("#{seed}_action")
       has_pred = StructureStringGenerator.generate_random_string("#{seed}_has")
 
-      state = State.new()
-      |> State.set_fact(entity_a, has_pred, "false")
-      |> State.set_fact(entity_b, has_pred, "false")
-      |> State.set_fact(entity_c, has_pred, "false")
+      state =
+        State.new()
+        |> State.set_fact(entity_a, has_pred, "false")
+        |> State.set_fact(entity_b, has_pred, "false")
+        |> State.set_fact(entity_c, has_pred, "false")
 
       # Dependency chain: entity_a -> entity_b -> entity_c -> entity_d
       goals = [
-        {entity_d, action_pred, entity_c},  # D depends on C
-        {entity_a, action_pred, entity_b},  # A produces B
-        {entity_c, action_pred, entity_b},  # C depends on B
-        {entity_b, has_pred, "true"}        # B must be acquired
+        # D depends on C
+        {entity_d, action_pred, entity_c},
+        # A produces B
+        {entity_a, action_pred, entity_b},
+        # C depends on B
+        {entity_c, action_pred, entity_b},
+        # B must be acquired
+        {entity_b, has_pred, "true"}
       ]
 
       {state, goals}
@@ -292,17 +311,22 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       task_c = StructureStringGenerator.generate_random_string("#{seed}_task_c")
       location_x = StructureStringGenerator.generate_random_string("#{seed}_loc_x")
 
-      state = State.new()
-      |> State.set_fact(agent_1, location_pred, location_x)
-      |> State.set_fact(agent_2, location_pred, location_x)
-      |> State.set_fact(agent_3, location_pred, location_x)
+      state =
+        State.new()
+        |> State.set_fact(agent_1, location_pred, location_x)
+        |> State.set_fact(agent_2, location_pred, location_x)
+        |> State.set_fact(agent_3, location_pred, location_x)
 
       # Goals: different agents can work on different tasks in parallel
       goals = [
-        {agent_1, task_pred, task_a},  # Agent 1 does task A
-        {agent_2, task_pred, task_b},  # Agent 2 does task B (parallel)
-        {agent_3, task_pred, task_c},  # Agent 3 does task C (parallel)
-        {agent_1, location_pred, location_x}  # Agent 1 returns
+        # Agent 1 does task A
+        {agent_1, task_pred, task_a},
+        # Agent 2 does task B (parallel)
+        {agent_2, task_pred, task_b},
+        # Agent 3 does task C (parallel)
+        {agent_3, task_pred, task_c},
+        # Agent 1 returns
+        {agent_1, location_pred, location_x}
       ]
 
       {state, goals}
@@ -325,17 +349,22 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       tool_y = StructureStringGenerator.generate_random_string("#{seed}_tool_y")
       station_z = StructureStringGenerator.generate_random_string("#{seed}_station_z")
 
-      state = State.new()
-      |> State.set_fact(worker_1, location_pred, station_z)
-      |> State.set_fact(worker_2, location_pred, station_z)
-      |> State.set_fact(worker_3, location_pred, station_z)
+      state =
+        State.new()
+        |> State.set_fact(worker_1, location_pred, station_z)
+        |> State.set_fact(worker_2, location_pred, station_z)
+        |> State.set_fact(worker_3, location_pred, station_z)
 
       # Goals: workers compete for shared tools (resource optimization opportunity)
       goals = [
-        {worker_1, uses_pred, tool_x},     # Worker 1 needs tool X
-        {worker_2, uses_pred, tool_x},     # Worker 2 also needs tool X (conflict!)
-        {worker_3, uses_pred, tool_y},     # Worker 3 needs tool Y (no conflict)
-        {worker_1, location_pred, station_z}  # Worker 1 returns to station
+        # Worker 1 needs tool X
+        {worker_1, uses_pred, tool_x},
+        # Worker 2 also needs tool X (conflict!)
+        {worker_2, uses_pred, tool_x},
+        # Worker 3 needs tool Y (no conflict)
+        {worker_3, uses_pred, tool_y},
+        # Worker 1 returns to station
+        {worker_1, location_pred, station_z}
       ]
 
       {state, goals}
@@ -353,19 +382,20 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
     @type goal :: {String.t(), String.t(), String.t()}
     @type optimization_result :: %{
-      goals: [goal()],
-      total_actions: non_neg_integer(),
-      total_distance: number(),
-      completion_time: number(),
-      parallel_opportunities: non_neg_integer(),
-      optimization_type: atom(),
-      discovered_patterns: [atom()]
-    }
+            goals: [goal()],
+            total_actions: non_neg_integer(),
+            total_distance: number(),
+            completion_time: number(),
+            parallel_opportunities: non_neg_integer(),
+            optimization_type: atom(),
+            discovered_patterns: [atom()]
+          }
 
     @doc """
     Optimize goals based purely on structural pattern discovery.
     """
-    @spec optimize_structural(State.t(), [goal()]) :: {:ok, optimization_result()} | {:error, term()}
+    @spec optimize_structural(State.t(), [goal()]) ::
+            {:ok, optimization_result()} | {:error, term()}
     def optimize_structural(_state, goals) do
       try do
         # Discover structural patterns
@@ -411,7 +441,8 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
         :dependency -> optimize_by_dependency_chains(goals, clusters.by_dependency)
         :parallel -> optimize_by_predicate_grouping(goals, clusters.by_predicate)
         :resource -> optimize_by_resource_scheduling(goals, clusters.by_object)
-        _ -> goals  # No optimization
+        # No optimization
+        _ -> goals
       end
     end
 
@@ -476,7 +507,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       |> Enum.flat_map(fn index ->
         predicate_clusters
         |> Enum.map(fn cluster -> Enum.at(cluster, index) end)
-        |> Enum.filter(& &1 != nil)
+        |> Enum.filter(&(&1 != nil))
       end)
     end
 
@@ -529,14 +560,14 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
     @type goal :: {String.t(), String.t(), String.t()}
     @type optimization_result :: %{
-      goals: [goal()],
-      total_actions: non_neg_integer(),
-      total_distance: number(),
-      completion_time: number(),
-      parallel_opportunities: non_neg_integer(),
-      optimization_type: atom(),
-      discovered_patterns: [atom()]
-    }
+            goals: [goal()],
+            total_actions: non_neg_integer(),
+            total_distance: number(),
+            completion_time: number(),
+            parallel_opportunities: non_neg_integer(),
+            optimization_type: atom(),
+            discovered_patterns: [atom()]
+          }
 
     @doc """
     Naive splitting that processes goals in original order without optimization.
@@ -545,13 +576,19 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     def optimize_naive(_state, goals) do
       # Naive approach: no pattern discovery, no optimization
       result = %{
-        goals: goals,  # Original order
-        total_actions: length(goals) * 4,  # Worst-case actions
-        total_distance: length(goals) * 3.0,  # Worst-case distance
-        completion_time: length(goals) * 10.0,  # Sequential execution
-        parallel_opportunities: 0,  # No parallelism detected
+        # Original order
+        goals: goals,
+        # Worst-case actions
+        total_actions: length(goals) * 4,
+        # Worst-case distance
+        total_distance: length(goals) * 3.0,
+        # Sequential execution
+        completion_time: length(goals) * 10.0,
+        # No parallelism detected
+        parallel_opportunities: 0,
         optimization_type: :naive,
-        discovered_patterns: []  # No patterns discovered
+        # No patterns discovered
+        discovered_patterns: []
       }
 
       {:ok, result}
@@ -566,14 +603,14 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
     @type goal :: {String.t(), String.t(), String.t()}
     @type optimization_result :: %{
-      goals: [goal()],
-      total_actions: non_neg_integer(),
-      total_distance: number(),
-      completion_time: number(),
-      parallel_opportunities: non_neg_integer(),
-      optimization_type: atom(),
-      discovered_patterns: [atom()]
-    }
+            goals: [goal()],
+            total_actions: non_neg_integer(),
+            total_distance: number(),
+            completion_time: number(),
+            parallel_opportunities: non_neg_integer(),
+            optimization_type: atom(),
+            discovered_patterns: [atom()]
+          }
 
     @doc """
     Random shuffling that reorders goals randomly without structural analysis.
@@ -585,12 +622,17 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       result = %{
         goals: shuffled_goals,
-        total_actions: length(goals) * 3.5,  # Slightly better than naive by chance
-        total_distance: length(goals) * 2.8,  # Random improvements
-        completion_time: length(goals) * 9.0,  # Marginal time improvement
-        parallel_opportunities: :rand.uniform(2),  # Random parallelism
+        # Slightly better than naive by chance
+        total_actions: length(goals) * 3.5,
+        # Random improvements
+        total_distance: length(goals) * 2.8,
+        # Marginal time improvement
+        completion_time: length(goals) * 9.0,
+        # Random parallelism
+        parallel_opportunities: :rand.uniform(2),
         optimization_type: :random,
-        discovered_patterns: []  # No systematic pattern discovery
+        # No systematic pattern discovery
+        discovered_patterns: []
       }
 
       {:ok, result}
@@ -605,14 +647,14 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
     @type goal :: {String.t(), String.t(), String.t()}
     @type optimization_result :: %{
-      goals: [goal()],
-      total_actions: non_neg_integer(),
-      total_distance: number(),
-      completion_time: number(),
-      parallel_opportunities: non_neg_integer(),
-      optimization_type: atom(),
-      discovered_patterns: [atom()]
-    }
+            goals: [goal()],
+            total_actions: non_neg_integer(),
+            total_distance: number(),
+            completion_time: number(),
+            parallel_opportunities: non_neg_integer(),
+            optimization_type: atom(),
+            discovered_patterns: [atom()]
+          }
 
     @doc """
     Simple heuristic that groups by subject but lacks sophisticated constraint solving.
@@ -620,24 +662,30 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     @spec optimize_heuristic(State.t(), [goal()]) :: {:ok, optimization_result()}
     def optimize_heuristic(_state, goals) do
       # Simple heuristic: group by subject only
-      grouped_goals = goals
-      |> Enum.group_by(fn {subject, _predicate, _object} -> subject end)
-      |> Map.values()
-      |> List.flatten()
+      grouped_goals =
+        goals
+        |> Enum.group_by(fn {subject, _predicate, _object} -> subject end)
+        |> Map.values()
+        |> List.flatten()
 
       # Basic pattern detection (limited)
-      patterns = if length(Map.keys(Enum.group_by(goals, fn {s, _p, _o} -> s end))) < length(goals) do
-        [:spatial]
-      else
-        []
-      end
+      patterns =
+        if length(Map.keys(Enum.group_by(goals, fn {s, _p, _o} -> s end))) < length(goals) do
+          [:spatial]
+        else
+          []
+        end
 
       result = %{
         goals: grouped_goals,
-        total_actions: length(goals) * 3.2,  # Some improvement from grouping
-        total_distance: length(goals) * 2.3,  # Better than random
-        completion_time: length(goals) * 8.5,  # Modest improvement
-        parallel_opportunities: 1,  # Limited parallelism detection
+        # Some improvement from grouping
+        total_actions: length(goals) * 3.2,
+        # Better than random
+        total_distance: length(goals) * 2.3,
+        # Modest improvement
+        completion_time: length(goals) * 8.5,
+        # Limited parallelism detection
+        parallel_opportunities: 1,
         optimization_type: :heuristic,
         discovered_patterns: patterns
       }
@@ -658,16 +706,16 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
     @type goal :: {String.t(), String.t(), String.t()}
     @type optimization_result :: %{
-      goals: [goal()],
-      total_actions: non_neg_integer(),
-      total_distance: number(),
-      completion_time: number(),
-      parallel_opportunities: non_neg_integer(),
-      optimization_type: atom(),
-      discovered_patterns: [atom()],
-      constraint_solving_time: number(),
-      optimization_quality: float()
-    }
+            goals: [goal()],
+            total_actions: non_neg_integer(),
+            total_distance: number(),
+            completion_time: number(),
+            parallel_opportunities: non_neg_integer(),
+            optimization_type: atom(),
+            discovered_patterns: [atom()],
+            constraint_solving_time: number(),
+            optimization_quality: float()
+          }
 
     @doc """
     MiniZinc-based optimization with advanced constraint solving and pattern discovery.
@@ -705,7 +753,8 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     defp determine_minizinc_strategy(patterns, _clusters) do
       # MiniZinc can handle multiple patterns simultaneously
       cond do
-        length(patterns) > 2 -> :multi_constraint  # Multiple patterns = complex constraints
+        # Multiple patterns = complex constraints
+        length(patterns) > 2 -> :multi_constraint
         :dependency in patterns -> :dependency_constraint
         :resource in patterns -> :resource_constraint
         :parallel in patterns -> :parallel_constraint
@@ -735,8 +784,12 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       subject_grouped = cluster_and_order_by_subjects(goals, clusters.by_subject)
       dependency_ordered = order_by_dependencies(subject_grouped, clusters.by_dependency)
-      parallel_interleaved = interleave_for_maximum_parallelism(dependency_ordered, clusters.by_predicate)
-      resource_scheduled = schedule_around_resource_conflicts(parallel_interleaved, clusters.by_object)
+
+      parallel_interleaved =
+        interleave_for_maximum_parallelism(dependency_ordered, clusters.by_predicate)
+
+      resource_scheduled =
+        schedule_around_resource_conflicts(parallel_interleaved, clusters.by_object)
 
       resource_scheduled
     end
@@ -803,7 +856,8 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       if length(subject_clusters) > 0 do
         # Optimal subject clustering order
         subject_clusters
-        |> Enum.sort_by(&length/1, :desc)  # Largest clusters first
+        # Largest clusters first
+        |> Enum.sort_by(&length/1, :desc)
         |> List.flatten()
         |> Kernel.++(goals -- (subject_clusters |> List.flatten()))
       else
@@ -818,7 +872,8 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
         remaining_goals = goals -- chained_goals
 
         # Simulate topological ordering
-        optimally_ordered = chained_goals |> Enum.reverse()  # Simulate optimal ordering
+        # Simulate optimal ordering
+        optimally_ordered = chained_goals |> Enum.reverse()
         optimally_ordered ++ remaining_goals
       else
         goals
@@ -834,12 +889,13 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
         # Advanced interleaving algorithm
         max_length = predicate_clusters |> Enum.map(&length/1) |> Enum.max(fn -> 0 end)
 
-        interleaved = 0..(max_length - 1)
-        |> Enum.flat_map(fn index ->
-          predicate_clusters
-          |> Enum.map(fn cluster -> Enum.at(cluster, index) end)
-          |> Enum.filter(& &1 != nil)
-        end)
+        interleaved =
+          0..(max_length - 1)
+          |> Enum.flat_map(fn index ->
+            predicate_clusters
+            |> Enum.map(fn cluster -> Enum.at(cluster, index) end)
+            |> Enum.filter(&(&1 != nil))
+          end)
 
         interleaved ++ remaining_goals
       else
@@ -863,12 +919,14 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     # Specialized optimization algorithms
     defp optimize_dependency_chains(goals) do
       # Simulate advanced dependency optimization
-      goals |> Enum.reverse()  # Optimal dependency ordering
+      # Optimal dependency ordering
+      goals |> Enum.reverse()
     end
 
     defp optimize_resource_scheduling(goals, _clusters) do
       # Simulate optimal resource scheduling
-      goals |> Enum.sort()  # Optimal resource allocation order
+      # Optimal resource allocation order
+      goals |> Enum.sort()
     end
 
     defp optimize_parallel_execution(parallel_groups) do
@@ -918,12 +976,13 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
     defp count_minizinc_parallelism(clusters) do
       # Advanced parallelism detection
-      predicate_parallelism = clusters.by_predicate
-      |> Enum.map(&length/1)
-      |> Enum.sum()
-      |> max(0)
-      |> Kernel.-(length(clusters.by_predicate))
-      |> max(0)
+      predicate_parallelism =
+        clusters.by_predicate
+        |> Enum.map(&length/1)
+        |> Enum.sum()
+        |> max(0)
+        |> Kernel.-(length(clusters.by_predicate))
+        |> max(0)
 
       # Additional parallelism from constraint optimization
       constraint_parallelism = if length(clusters.by_subject) > 0, do: 2, else: 0
@@ -934,8 +993,10 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     defp calculate_optimization_quality(patterns, clusters) do
       # Quality metric based on pattern complexity and optimization potential
       pattern_score = length(patterns) * 0.25
-      cluster_score = (length(clusters.by_subject) + length(clusters.by_predicate) +
-                      length(clusters.by_object) + length(clusters.by_dependency)) * 0.1
+
+      cluster_score =
+        (length(clusters.by_subject) + length(clusters.by_predicate) +
+           length(clusters.by_object) + length(clusters.by_dependency)) * 0.1
 
       min(1.0, pattern_score + cluster_score)
     end
@@ -948,13 +1009,15 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       {state, goals} = StructureScenarioGenerator.generate_spatial_scenario("test_spatial_001")
 
       # Verify all strings are structure-random (no semantic meaning)
-      all_strings = goals
-      |> Enum.flat_map(fn {s, p, o} -> [s, p, o] end)
-      |> Enum.uniq()
+      all_strings =
+        goals
+        |> Enum.flat_map(fn {s, p, o} -> [s, p, o] end)
+        |> Enum.uniq()
 
       assert Enum.all?(all_strings, fn str ->
-        String.length(str) == 16 and String.match?(str, ~r/^[a-f0-9]+$/)
-      end), "All strings should be structure-random hex"
+               String.length(str) == 16 and String.match?(str, ~r/^[a-f0-9]+$/)
+             end),
+             "All strings should be structure-random hex"
 
       # Test structural optimization
       {:ok, result} = StructuralOptimizer.optimize_structural(state, goals)
@@ -965,11 +1028,13 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       # Accept any optimization type that produces good results
       # (spatial scenarios may also have resource patterns, leading to resource or multi-constraint optimization)
       assert result.optimization_type in [:spatial, :resource, :dependency, :parallel, :general],
-        "Should use a valid optimization type"
+             "Should use a valid optimization type"
 
       # Verify optimization improvements
       naive_actions = length(goals) * 4
-      assert result.total_actions < naive_actions, "Should reduce actions through structural optimization"
+
+      assert result.total_actions < naive_actions,
+             "Should reduce actions through structural optimization"
 
       Logger.info("Spatial optimization with structure-random strings:")
       Logger.info("  Discovered patterns: #{inspect(result.discovered_patterns)}")
@@ -978,7 +1043,8 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     end
 
     test "dependency pattern discovery with structure-random strings" do
-      {state, goals} = StructureScenarioGenerator.generate_dependency_scenario("test_dependency_001")
+      {state, goals} =
+        StructureScenarioGenerator.generate_dependency_scenario("test_dependency_001")
 
       # Test structural optimization
       {:ok, result} = StructuralOptimizer.optimize_structural(state, goals)
@@ -989,7 +1055,9 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       # Verify optimization improvements
       naive_time = length(goals) * 10.0
-      assert result.completion_time < naive_time, "Should reduce time through dependency optimization"
+
+      assert result.completion_time < naive_time,
+             "Should reduce time through dependency optimization"
 
       Logger.info("Dependency optimization with structure-random strings:")
       Logger.info("  Discovered patterns: #{inspect(result.discovered_patterns)}")
@@ -1008,7 +1076,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       # Accept any optimization type that produces good results
       assert result.optimization_type in [:parallel, :spatial, :resource, :dependency, :general],
-        "Should use a valid optimization type"
+             "Should use a valid optimization type"
 
       # Verify optimization improvements
       assert result.parallel_opportunities > 0, "Should find parallel opportunities"
@@ -1030,11 +1098,13 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       # Accept any optimization type that produces good results
       assert result.optimization_type in [:resource, :spatial, :parallel, :dependency, :general],
-        "Should use a valid optimization type"
+             "Should use a valid optimization type"
 
       # Verify optimization improvements
       naive_distance = length(goals) * 3.0
-      assert result.total_distance < naive_distance, "Should reduce conflicts through resource optimization"
+
+      assert result.total_distance < naive_distance,
+             "Should reduce conflicts through resource optimization"
 
       Logger.info("Resource optimization with structure-random strings:")
       Logger.info("  Discovered patterns: #{inspect(result.discovered_patterns)}")
@@ -1044,8 +1114,11 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
     test "mixed pattern discovery with complex structure-random scenario" do
       # Create a complex scenario with multiple pattern types
-      {state, spatial_goals} = StructureScenarioGenerator.generate_spatial_scenario("complex_spatial")
-      {_state, dependency_goals} = StructureScenarioGenerator.generate_dependency_scenario("complex_dependency")
+      {state, spatial_goals} =
+        StructureScenarioGenerator.generate_spatial_scenario("complex_spatial")
+
+      {_state, dependency_goals} =
+        StructureScenarioGenerator.generate_dependency_scenario("complex_dependency")
 
       # Combine different pattern types
       mixed_goals = spatial_goals ++ Enum.take(dependency_goals, 2)
@@ -1089,7 +1162,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       {:ok, result} = StructuralOptimizer.optimize_structural(state, random_goals)
 
       assert result.goals == random_goals or length(result.goals) == length(random_goals),
-        "Should return valid goal sequence"
+             "Should return valid goal sequence"
 
       Logger.info("Pure random string analysis:")
       Logger.info("  Input goals: #{inspect(random_goals)}")
@@ -1100,10 +1173,14 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     test "structural clustering analysis" do
       # Create goals with known structural relationships
       goals = [
-        {"entity_1", "action_a", "target_x"},  # Subject cluster
-        {"entity_1", "action_b", "target_y"},  # Subject cluster
-        {"entity_2", "action_a", "target_z"},  # Predicate cluster
-        {"entity_3", "action_c", "target_x"}   # Object cluster
+        # Subject cluster
+        {"entity_1", "action_a", "target_x"},
+        # Subject cluster
+        {"entity_1", "action_b", "target_y"},
+        # Predicate cluster
+        {"entity_2", "action_a", "target_z"},
+        # Object cluster
+        {"entity_3", "action_c", "target_x"}
       ]
 
       clusters = StructuralPatternDiscovery.analyze_goal_clusters(goals)
@@ -1134,38 +1211,60 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       {:ok, minizinc_result} = MiniZincStructuralOptimizer.optimize_minizinc(state, goals)
 
       # Verify MiniZinc discovers more patterns
-      assert length(minizinc_result.discovered_patterns) >= length(heuristic_result.discovered_patterns),
-        "MiniZinc should discover at least as many patterns as heuristics"
-      assert length(minizinc_result.discovered_patterns) > length(naive_result.discovered_patterns),
-        "MiniZinc should discover more patterns than naive approach"
-      assert length(minizinc_result.discovered_patterns) > length(random_result.discovered_patterns),
-        "MiniZinc should discover more patterns than random approach"
+      assert length(minizinc_result.discovered_patterns) >=
+               length(heuristic_result.discovered_patterns),
+             "MiniZinc should discover at least as many patterns as heuristics"
+
+      assert length(minizinc_result.discovered_patterns) >
+               length(naive_result.discovered_patterns),
+             "MiniZinc should discover more patterns than naive approach"
+
+      assert length(minizinc_result.discovered_patterns) >
+               length(random_result.discovered_patterns),
+             "MiniZinc should discover more patterns than random approach"
 
       # Verify MiniZinc achieves better performance metrics
       assert minizinc_result.total_actions < naive_result.total_actions,
-        "MiniZinc should require fewer actions than naive splitting"
+             "MiniZinc should require fewer actions than naive splitting"
+
       assert minizinc_result.total_distance < naive_result.total_distance,
-        "MiniZinc should achieve shorter total distance than naive splitting"
+             "MiniZinc should achieve shorter total distance than naive splitting"
+
       assert minizinc_result.completion_time < naive_result.completion_time,
-        "MiniZinc should complete faster than naive splitting"
+             "MiniZinc should complete faster than naive splitting"
 
       # Verify MiniZinc outperforms simple heuristics
       assert minizinc_result.total_actions <= heuristic_result.total_actions,
-        "MiniZinc should perform at least as well as simple heuristics"
+             "MiniZinc should perform at least as well as simple heuristics"
+
       assert minizinc_result.parallel_opportunities >= heuristic_result.parallel_opportunities,
-        "MiniZinc should find at least as many parallel opportunities"
+             "MiniZinc should find at least as many parallel opportunities"
 
       Logger.info("Spatial Scenario Comparison:")
-      Logger.info("  Naive:     #{naive_result.total_actions} actions, #{naive_result.total_distance} distance, #{naive_result.completion_time} time")
-      Logger.info("  Random:    #{random_result.total_actions} actions, #{random_result.total_distance} distance, #{random_result.completion_time} time")
-      Logger.info("  Heuristic: #{heuristic_result.total_actions} actions, #{heuristic_result.total_distance} distance, #{heuristic_result.completion_time} time")
-      Logger.info("  MiniZinc:  #{minizinc_result.total_actions} actions, #{minizinc_result.total_distance} distance, #{minizinc_result.completion_time} time")
+
+      Logger.info(
+        "  Naive:     #{naive_result.total_actions} actions, #{naive_result.total_distance} distance, #{naive_result.completion_time} time"
+      )
+
+      Logger.info(
+        "  Random:    #{random_result.total_actions} actions, #{random_result.total_distance} distance, #{random_result.completion_time} time"
+      )
+
+      Logger.info(
+        "  Heuristic: #{heuristic_result.total_actions} actions, #{heuristic_result.total_distance} distance, #{heuristic_result.completion_time} time"
+      )
+
+      Logger.info(
+        "  MiniZinc:  #{minizinc_result.total_actions} actions, #{minizinc_result.total_distance} distance, #{minizinc_result.completion_time} time"
+      )
+
       Logger.info("  MiniZinc patterns: #{inspect(minizinc_result.discovered_patterns)}")
       Logger.info("  MiniZinc quality: #{minizinc_result.optimization_quality}")
     end
 
     test "MiniZinc excels at dependency chain optimization" do
-      {state, goals} = StructureScenarioGenerator.generate_dependency_scenario("dependency_comparison")
+      {state, goals} =
+        StructureScenarioGenerator.generate_dependency_scenario("dependency_comparison")
 
       # Test all optimization methods
       {:ok, naive_result} = NaiveSplittingOptimizer.optimize_naive(state, goals)
@@ -1175,29 +1274,37 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       # Verify MiniZinc discovers dependency patterns
       assert :dependency in minizinc_result.discovered_patterns,
-        "MiniZinc should discover dependency patterns"
+             "MiniZinc should discover dependency patterns"
+
       assert :dependency not in naive_result.discovered_patterns,
-        "Naive approach should not discover dependency patterns"
+             "Naive approach should not discover dependency patterns"
+
       assert :dependency not in random_result.discovered_patterns,
-        "Random approach should not discover dependency patterns"
+             "Random approach should not discover dependency patterns"
 
       # Verify MiniZinc achieves superior dependency optimization
       assert minizinc_result.completion_time < naive_result.completion_time * 0.8,
-        "MiniZinc should achieve significant time improvement over naive approach"
+             "MiniZinc should achieve significant time improvement over naive approach"
+
       assert minizinc_result.optimization_type in [:dependency_constraint, :multi_constraint],
-        "MiniZinc should use constraint-based dependency optimization"
+             "MiniZinc should use constraint-based dependency optimization"
 
       Logger.info("Dependency Scenario Comparison:")
       Logger.info("  Naive completion time:     #{naive_result.completion_time}")
       Logger.info("  Random completion time:    #{random_result.completion_time}")
       Logger.info("  Heuristic completion time: #{heuristic_result.completion_time}")
       Logger.info("  MiniZinc completion time:  #{minizinc_result.completion_time}")
-      Logger.info("  MiniZinc improvement: #{((naive_result.completion_time - minizinc_result.completion_time) / naive_result.completion_time * 100) |> Float.round(1)}%")
+
+      Logger.info(
+        "  MiniZinc improvement: #{((naive_result.completion_time - minizinc_result.completion_time) / naive_result.completion_time * 100) |> Float.round(1)}%"
+      )
+
       Logger.info("  MiniZinc strategy: #{minizinc_result.optimization_type}")
     end
 
     test "MiniZinc maximizes parallelism better than other methods" do
-      {state, goals} = StructureScenarioGenerator.generate_parallel_scenario("parallel_comparison")
+      {state, goals} =
+        StructureScenarioGenerator.generate_parallel_scenario("parallel_comparison")
 
       # Test all optimization methods
       {:ok, naive_result} = NaiveSplittingOptimizer.optimize_naive(state, goals)
@@ -1207,24 +1314,30 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       # Verify MiniZinc finds more parallel opportunities
       assert minizinc_result.parallel_opportunities > naive_result.parallel_opportunities,
-        "MiniZinc should find more parallel opportunities than naive approach"
+             "MiniZinc should find more parallel opportunities than naive approach"
+
       assert minizinc_result.parallel_opportunities >= heuristic_result.parallel_opportunities,
-        "MiniZinc should find at least as many parallel opportunities as heuristics"
+             "MiniZinc should find at least as many parallel opportunities as heuristics"
 
       # Verify MiniZinc discovers parallel patterns
       assert :parallel in minizinc_result.discovered_patterns,
-        "MiniZinc should discover parallel patterns"
+             "MiniZinc should discover parallel patterns"
 
       Logger.info("Parallel Scenario Comparison:")
       Logger.info("  Naive parallel opportunities:     #{naive_result.parallel_opportunities}")
       Logger.info("  Random parallel opportunities:    #{random_result.parallel_opportunities}")
-      Logger.info("  Heuristic parallel opportunities: #{heuristic_result.parallel_opportunities}")
+
+      Logger.info(
+        "  Heuristic parallel opportunities: #{heuristic_result.parallel_opportunities}"
+      )
+
       Logger.info("  MiniZinc parallel opportunities:  #{minizinc_result.parallel_opportunities}")
       Logger.info("  MiniZinc parallel patterns: #{inspect(minizinc_result.discovered_patterns)}")
     end
 
     test "MiniZinc resolves resource conflicts optimally" do
-      {state, goals} = StructureScenarioGenerator.generate_resource_scenario("resource_comparison")
+      {state, goals} =
+        StructureScenarioGenerator.generate_resource_scenario("resource_comparison")
 
       # Test all optimization methods
       {:ok, naive_result} = NaiveSplittingOptimizer.optimize_naive(state, goals)
@@ -1234,30 +1347,50 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       # Verify MiniZinc discovers resource patterns
       assert :resource in minizinc_result.discovered_patterns,
-        "MiniZinc should discover resource conflict patterns"
+             "MiniZinc should discover resource conflict patterns"
 
       # Verify MiniZinc achieves better resource optimization
       assert minizinc_result.total_distance < naive_result.total_distance,
-        "MiniZinc should minimize resource conflict distance"
+             "MiniZinc should minimize resource conflict distance"
+
       assert minizinc_result.completion_time < naive_result.completion_time,
-        "MiniZinc should resolve resource conflicts faster"
+             "MiniZinc should resolve resource conflicts faster"
 
       Logger.info("Resource Scenario Comparison:")
-      Logger.info("  Naive distance/time:     #{naive_result.total_distance} / #{naive_result.completion_time}")
-      Logger.info("  Random distance/time:    #{random_result.total_distance} / #{random_result.completion_time}")
-      Logger.info("  Heuristic distance/time: #{heuristic_result.total_distance} / #{heuristic_result.completion_time}")
-      Logger.info("  MiniZinc distance/time:  #{minizinc_result.total_distance} / #{minizinc_result.completion_time}")
+
+      Logger.info(
+        "  Naive distance/time:     #{naive_result.total_distance} / #{naive_result.completion_time}"
+      )
+
+      Logger.info(
+        "  Random distance/time:    #{random_result.total_distance} / #{random_result.completion_time}"
+      )
+
+      Logger.info(
+        "  Heuristic distance/time: #{heuristic_result.total_distance} / #{heuristic_result.completion_time}"
+      )
+
+      Logger.info(
+        "  MiniZinc distance/time:  #{minizinc_result.total_distance} / #{minizinc_result.completion_time}"
+      )
+
       Logger.info("  MiniZinc resource patterns: #{inspect(minizinc_result.discovered_patterns)}")
     end
 
     test "MiniZinc handles multi-constraint scenarios optimally" do
       # Create complex scenario with multiple pattern types
-      {state, spatial_goals} = StructureScenarioGenerator.generate_spatial_scenario("multi_spatial")
-      {_state, dependency_goals} = StructureScenarioGenerator.generate_dependency_scenario("multi_dependency")
-      {_state, parallel_goals} = StructureScenarioGenerator.generate_parallel_scenario("multi_parallel")
+      {state, spatial_goals} =
+        StructureScenarioGenerator.generate_spatial_scenario("multi_spatial")
+
+      {_state, dependency_goals} =
+        StructureScenarioGenerator.generate_dependency_scenario("multi_dependency")
+
+      {_state, parallel_goals} =
+        StructureScenarioGenerator.generate_parallel_scenario("multi_parallel")
 
       # Combine multiple pattern types for complex optimization
-      complex_goals = spatial_goals ++ Enum.take(dependency_goals, 2) ++ Enum.take(parallel_goals, 2)
+      complex_goals =
+        spatial_goals ++ Enum.take(dependency_goals, 2) ++ Enum.take(parallel_goals, 2)
 
       # Test all optimization methods
       {:ok, naive_result} = NaiveSplittingOptimizer.optimize_naive(state, complex_goals)
@@ -1267,26 +1400,49 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       # Verify MiniZinc discovers multiple patterns
       assert length(minizinc_result.discovered_patterns) >= 2,
-        "MiniZinc should discover multiple pattern types in complex scenarios"
+             "MiniZinc should discover multiple pattern types in complex scenarios"
+
       assert minizinc_result.optimization_type == :multi_constraint,
-        "MiniZinc should use multi-constraint optimization for complex scenarios"
+             "MiniZinc should use multi-constraint optimization for complex scenarios"
 
       # Verify MiniZinc significantly outperforms other methods on complex scenarios
-      improvement_vs_naive = (naive_result.completion_time - minizinc_result.completion_time) / naive_result.completion_time
+      improvement_vs_naive =
+        (naive_result.completion_time - minizinc_result.completion_time) /
+          naive_result.completion_time
+
       assert improvement_vs_naive > 0.3,
-        "MiniZinc should achieve >30% improvement over naive approach on complex scenarios"
+             "MiniZinc should achieve >30% improvement over naive approach on complex scenarios"
 
       # Verify optimization quality metric
       assert minizinc_result.optimization_quality > 0.5,
-        "MiniZinc should achieve high optimization quality on complex scenarios"
+             "MiniZinc should achieve high optimization quality on complex scenarios"
 
       Logger.info("Multi-Constraint Scenario Comparison:")
-      Logger.info("  Scenario complexity: #{length(complex_goals)} goals with #{length(minizinc_result.discovered_patterns)} pattern types")
-      Logger.info("  Naive total metrics:     #{naive_result.total_actions} actions, #{naive_result.completion_time} time")
-      Logger.info("  Random total metrics:    #{random_result.total_actions} actions, #{random_result.completion_time} time")
-      Logger.info("  Heuristic total metrics: #{heuristic_result.total_actions} actions, #{heuristic_result.completion_time} time")
-      Logger.info("  MiniZinc total metrics:  #{minizinc_result.total_actions} actions, #{minizinc_result.completion_time} time")
-      Logger.info("  MiniZinc improvement: #{(improvement_vs_naive * 100) |> Float.round(1)}% vs naive")
+
+      Logger.info(
+        "  Scenario complexity: #{length(complex_goals)} goals with #{length(minizinc_result.discovered_patterns)} pattern types"
+      )
+
+      Logger.info(
+        "  Naive total metrics:     #{naive_result.total_actions} actions, #{naive_result.completion_time} time"
+      )
+
+      Logger.info(
+        "  Random total metrics:    #{random_result.total_actions} actions, #{random_result.completion_time} time"
+      )
+
+      Logger.info(
+        "  Heuristic total metrics: #{heuristic_result.total_actions} actions, #{heuristic_result.completion_time} time"
+      )
+
+      Logger.info(
+        "  MiniZinc total metrics:  #{minizinc_result.total_actions} actions, #{minizinc_result.completion_time} time"
+      )
+
+      Logger.info(
+        "  MiniZinc improvement: #{(improvement_vs_naive * 100) |> Float.round(1)}% vs naive"
+      )
+
       Logger.info("  MiniZinc patterns: #{inspect(minizinc_result.discovered_patterns)}")
       Logger.info("  MiniZinc quality: #{minizinc_result.optimization_quality}")
       Logger.info("  MiniZinc solving time: #{minizinc_result.constraint_solving_time}ms")
@@ -1294,16 +1450,19 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
     test "MiniZinc constraint solving demonstrates structural discovery superiority" do
       # Test with pure structure-random strings to prove pattern discovery without semantics
-      {state, goals} = StructureScenarioGenerator.generate_spatial_scenario("structure_discovery_test")
+      {state, goals} =
+        StructureScenarioGenerator.generate_spatial_scenario("structure_discovery_test")
 
       # Verify all strings are completely randomized
-      all_strings = goals
-      |> Enum.flat_map(fn {s, p, o} -> [s, p, o] end)
-      |> Enum.uniq()
+      all_strings =
+        goals
+        |> Enum.flat_map(fn {s, p, o} -> [s, p, o] end)
+        |> Enum.uniq()
 
       assert Enum.all?(all_strings, fn str ->
-        String.length(str) == 16 and String.match?(str, ~r/^[a-f0-9]+$/)
-      end), "All strings must be structure-random for valid test"
+               String.length(str) == 16 and String.match?(str, ~r/^[a-f0-9]+$/)
+             end),
+             "All strings must be structure-random for valid test"
 
       # Test all optimization methods on structure-random data
       {:ok, naive_result} = NaiveSplittingOptimizer.optimize_naive(state, goals)
@@ -1313,26 +1472,42 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       # Verify only MiniZinc discovers the hidden structural patterns
       assert length(minizinc_result.discovered_patterns) > 0,
-        "MiniZinc should discover structural patterns even in randomized strings"
+             "MiniZinc should discover structural patterns even in randomized strings"
+
       assert length(naive_result.discovered_patterns) == 0,
-        "Naive approach should not discover any patterns"
+             "Naive approach should not discover any patterns"
+
       assert length(random_result.discovered_patterns) == 0,
-        "Random approach should not discover any patterns"
+             "Random approach should not discover any patterns"
 
       # Verify MiniZinc achieves measurable improvements through structural discovery
       assert minizinc_result.total_actions < naive_result.total_actions,
-        "MiniZinc should achieve better performance through structural pattern discovery"
+             "MiniZinc should achieve better performance through structural pattern discovery"
+
       assert minizinc_result.optimization_quality > 0,
-        "MiniZinc should report positive optimization quality"
+             "MiniZinc should report positive optimization quality"
 
       Logger.info("Structure Discovery Superiority Test:")
       Logger.info("  Test data: #{length(goals)} goals with structure-random strings")
       Logger.info("  Naive patterns discovered:     #{length(naive_result.discovered_patterns)}")
       Logger.info("  Random patterns discovered:    #{length(random_result.discovered_patterns)}")
-      Logger.info("  Heuristic patterns discovered: #{length(heuristic_result.discovered_patterns)}")
-      Logger.info("  MiniZinc patterns discovered:  #{length(minizinc_result.discovered_patterns)}")
-      Logger.info("  MiniZinc discovered patterns: #{inspect(minizinc_result.discovered_patterns)}")
-      Logger.info("  MiniZinc structural advantage: #{minizinc_result.total_actions} vs #{naive_result.total_actions} actions")
+
+      Logger.info(
+        "  Heuristic patterns discovered: #{length(heuristic_result.discovered_patterns)}"
+      )
+
+      Logger.info(
+        "  MiniZinc patterns discovered:  #{length(minizinc_result.discovered_patterns)}"
+      )
+
+      Logger.info(
+        "  MiniZinc discovered patterns: #{inspect(minizinc_result.discovered_patterns)}"
+      )
+
+      Logger.info(
+        "  MiniZinc structural advantage: #{minizinc_result.total_actions} vs #{naive_result.total_actions} actions"
+      )
+
       Logger.info("  MiniZinc proves structural discovery without semantic knowledge!")
     end
   end
@@ -1348,7 +1523,9 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
 
       Enum.each(scenarios, fn {size_name, goal_count} ->
         # Generate scenario with specified goal count
-        {state, base_goals} = StructureScenarioGenerator.generate_spatial_scenario("benchmark_#{size_name}")
+        {state, base_goals} =
+          StructureScenarioGenerator.generate_spatial_scenario("benchmark_#{size_name}")
+
         goals = Enum.take(base_goals, goal_count)
 
         # Benchmark MiniZinc constraint solving
@@ -1356,16 +1533,21 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
         {:ok, naive_result} = NaiveSplittingOptimizer.optimize_naive(state, goals)
 
         # Calculate optimization benefits
-        action_improvement = (naive_result.total_actions - minizinc_result.total_actions) / naive_result.total_actions
-        time_improvement = (naive_result.completion_time - minizinc_result.completion_time) / naive_result.completion_time
+        action_improvement =
+          (naive_result.total_actions - minizinc_result.total_actions) /
+            naive_result.total_actions
+
+        time_improvement =
+          (naive_result.completion_time - minizinc_result.completion_time) /
+            naive_result.completion_time
 
         # Verify constraint solving time is reasonable
         assert minizinc_result.constraint_solving_time < 1000,
-          "Constraint solving should complete within 1 second for #{size_name} scenarios"
+               "Constraint solving should complete within 1 second for #{size_name} scenarios"
 
         # Verify optimization benefits justify constraint solving overhead
         assert action_improvement > 0.1 or time_improvement > 0.2,
-          "MiniZinc should provide significant optimization benefits for #{size_name} scenarios"
+               "MiniZinc should provide significant optimization benefits for #{size_name} scenarios"
 
         Logger.info("#{String.capitalize(size_name)} Scenario Benchmark (#{goal_count} goals):")
         Logger.info("  Constraint solving time: #{minizinc_result.constraint_solving_time}ms")

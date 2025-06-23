@@ -36,7 +36,12 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
 
         %AriaEngine.Domain.Core{} = domain ->
           # Use restored run_lazy_refineahead for true lazy execution with backtracking
-          case AriaEngine.Plan.Execution.run_lazy_refineahead(domain, initial_state, solution_tree, opts) do
+          case AriaEngine.Plan.Execution.run_lazy_refineahead(
+                 domain,
+                 initial_state,
+                 solution_tree,
+                 opts
+               ) do
             {:ok, final_state} ->
               if verbose > 1 do
                 Logger.debug("LazyExecutionStrategy: Execution completed successfully")

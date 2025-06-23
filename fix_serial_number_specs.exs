@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Quick fix script to correct malformed @spec lines in serial_number functions
 
 defmodule SerialNumberSpecFixer do

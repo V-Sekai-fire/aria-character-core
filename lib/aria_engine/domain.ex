@@ -68,28 +68,36 @@ defmodule AriaEngine.Domain do
       Logger.error("Actions: #{inspect(actions)}")
       Logger.error("Methods: #{inspect(methods)}")
 
-      domain = Enum.reduce(actions, domain, fn action_name, domain ->
-        Logger.error("Adding action: #{action_name}")
-        add_action(domain, action_name, fn state, args ->
-          apply(domain_module, action_name, [state | args])
+      domain =
+        Enum.reduce(actions, domain, fn action_name, domain ->
+          Logger.error("Adding action: #{action_name}")
+
+          add_action(domain, action_name, fn state, args ->
+            apply(domain_module, action_name, [state | args])
+          end)
         end)
-      end)
 
       Enum.reduce(methods, domain, fn method_name, domain ->
         Logger.error("Adding method: #{method_name}")
+
         cond do
           String.starts_with?(method_name, "solve_multigoal") ->
             Logger.error("Adding multigoal method: #{method_name}")
+
             add_multigoal_method(domain, method_name, fn state, args ->
               apply(domain_module, :solve_multigoal, [state | args])
             end)
+
           String.starts_with?(method_name, "achieve_goal") ->
             Logger.error("Adding unigoal method: #{method_name}")
+
             add_unigoal_method(domain, "status", method_name, fn state, args ->
               apply(domain_module, :achieve_goal, [state | args])
             end)
+
           true ->
             Logger.error("Adding task method: #{method_name}")
+
             add_task_method(domain, method_name, method_name, fn state, args ->
               apply(domain_module, String.to_atom(method_name), [state | args])
             end)
@@ -174,7 +182,8 @@ defmodule AriaEngine.Domain do
 
   This implements strict action/task separation from ADR-144.
   """
-  @spec resolve(atom() | String.t(), t()) :: {:action, action_fn()} | {:task_method, task_method_fn()} | nil
+  @spec resolve(atom() | String.t(), t()) ::
+          {:action, action_fn()} | {:task_method, task_method_fn()} | nil
   def resolve(name, domain) when is_atom(name) do
     # Actions only: Check for action atoms, no fallback to tasks
     case get_action(domain, name) do
@@ -191,7 +200,8 @@ defmodule AriaEngine.Domain do
     end
   end
 
-  @spec verify_goal(state(), method_name(), term(), list(), list(), integer(), boolean()) :: boolean()
+  @spec verify_goal(state(), method_name(), term(), list(), list(), integer(), boolean()) ::
+          boolean()
   defdelegate verify_goal(state, method_name, state_var, args, desired_values, depth, verbose),
     to: Utils
 

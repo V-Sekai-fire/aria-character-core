@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # NOTE:
 # When registering unigoal methods for the planner, you must register for the PREDICATE (e.g., "has", "location")
 # and your method must pattern match on [subject, object] (e.g., ["player", item]).

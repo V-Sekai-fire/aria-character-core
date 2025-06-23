@@ -21,6 +21,7 @@ The current STN (Simple Temporal Network) solver in `AriaEngine.Timeline.Interna
 ```
 
 **Critical Issues:**
+
 - **Complete System Failure**: Timeline scheduling becomes impossible when MiniZinc unavailable
 - **No Graceful Degradation**: System fails hard rather than falling back to alternative solving
 - **Production Risk**: Deployment environments may not have MiniZinc properly configured
@@ -29,6 +30,7 @@ The current STN (Simple Temporal Network) solver in `AriaEngine.Timeline.Interna
 ### Comparison with Multigoal Optimization
 
 ADR-126 successfully implemented MiniZinc fallback for multigoal optimization with excellent results:
+
 - **Hierarchical solver strategy**: MiniZinc → naive splitting → manual decomposition
 - **100% fallback success rate**: System never fails completely
 - **Graceful degradation**: Reduced functionality but continued operation
@@ -43,6 +45,7 @@ The STN solver needs similar robustness for temporal reasoning operations.
 **Focus:** Implementing core Floyd-Warshall algorithm for STN constraint solving
 
 ### Phase 1 Progress
+
 - [ ] Algorithm research and mathematical validation
 - [ ] Core FloydWarshallSolver module implementation  
 - [ ] Distance matrix conversion functions
@@ -51,6 +54,7 @@ The STN solver needs similar robustness for temporal reasoning operations.
 - [ ] Comprehensive test suite for Floyd-Warshall solver
 
 ### Implementation Notes
+
 *Implementation progress and discoveries will be documented here as work proceeds.*
 
 ## Decision
@@ -60,11 +64,13 @@ Implement hierarchical STN solver strategy with Floyd-Warshall algorithm as the 
 ### Architecture
 
 **Hierarchical STN Solver Strategy:**
+
 1. **Primary**: MiniZinc constraint solver (existing)
 2. **Fallback**: Floyd-Warshall based STN solver (new)
 3. **Final Fallback**: Conservative consistency checking (new)
 
 **Integration Strategy:**
+
 - Follow ADR-126 pattern for fallback implementation
 - Use method blacklisting for automatic fallback
 - Maintain backward compatibility with existing Timeline API
@@ -77,6 +83,7 @@ Implement hierarchical STN solver strategy with Floyd-Warshall algorithm as the 
 **File**: `lib/aria_engine/timeline/internal/stn/floyd_warshall_solver.ex`
 
 **Core Algorithm Implementation:**
+
 - [ ] Convert STN constraints to distance matrix representation
 - [ ] Implement Floyd-Warshall algorithm for shortest path computation
 - [ ] Add negative cycle detection for inconsistency identification
@@ -84,6 +91,7 @@ Implement hierarchical STN solver strategy with Floyd-Warshall algorithm as the 
 - [ ] Handle infinite constraints and boundary conditions
 
 **Key Functions:**
+
 ```elixir
 @spec solve_stn(STN.t()) :: STN.t()
 def solve_stn(stn)
@@ -103,12 +111,14 @@ defp extract_solution(solved_matrix, point_map, original_stn)
 **File**: `lib/aria_engine/timeline/internal/stn/fallback_solver.ex`
 
 **Hierarchical Solver Orchestration:**
+
 - [ ] Implement solver method selection and blacklisting
 - [ ] Add timeout handling for each solver attempt
 - [ ] Create unified interface for Timeline module integration
 - [ ] Add telemetry and logging for fallback triggers
 
 **Solver Strategy Implementation:**
+
 ```elixir
 @spec solve_with_fallback(STN.t(), keyword()) :: STN.t()
 def solve_with_fallback(stn, opts \\ [])
@@ -128,12 +138,14 @@ defp try_conservative_solver(stn, opts)
 **File**: `lib/aria_engine/timeline/internal/stn/operations.ex`
 
 **Update Existing solve/1 Function:**
+
 - [ ] Replace direct MiniZinc calls with hierarchical fallback system
 - [ ] Add configuration options for solver preferences
 - [ ] Implement performance monitoring and metrics collection
 - [ ] Add solver method blacklisting persistence
 
 **Configuration Options:**
+
 ```elixir
 stn_solver_opts = [
   primary_solver: :minizinc,
@@ -151,6 +163,7 @@ stn_solver_opts = [
 **File**: `lib/aria_engine/timeline/internal/stn/conservative_solver.ex`
 
 **Basic Consistency Validation:**
+
 - [ ] Implement simple constraint validation without full solving
 - [ ] Detect obviously inconsistent constraints (negative cycles)
 - [ ] Provide conservative estimates for constraint tightening
@@ -161,18 +174,21 @@ stn_solver_opts = [
 ### Floyd-Warshall Algorithm Adaptation
 
 **STN Constraint Representation:**
+
 - Convert STN constraints `{min_distance, max_distance}` to distance matrix
 - Handle infinite constraints as matrix boundary values
 - Use negative cycle detection to identify temporal inconsistencies
 - Extract tightened constraints from solved shortest path matrix
 
 **Performance Characteristics:**
+
 - **Time Complexity**: O(n³) where n = number of time points
 - **Space Complexity**: O(n²) for distance matrix storage
 - **Target Performance**: <100ms for typical STN sizes (<50 time points)
 - **Scalability**: Parallelizable for larger constraint networks
 
 **Algorithm Implementation:**
+
 ```elixir
 # Distance matrix initialization
 for i <- 1..n, j <- 1..n do
@@ -195,18 +211,21 @@ end
 ### Integration Points
 
 **Timeline Module Integration:**
+
 - `Timeline.solve/1` - Primary entry point using hierarchical fallback
 - `STN.solve/1` - Internal STN solving with method selection
 - Configuration system for solver preferences and timeouts
 - Telemetry events for monitoring solver performance
 
 **Fallback Triggers:**
+
 - **MiniZinc Unavailable**: Binary not installed or accessible
 - **MiniZinc Timeout**: Constraint solving exceeds configured timeout
 - **MiniZinc Execution Error**: Solver returns error status or crashes
 - **Template Rendering Error**: EEx template processing fails
 
 **Fallback Behavior:**
+
 1. **Method Blacklisting**: Failed solver method blacklisted for current session
 2. **Automatic Retry**: System automatically tries next available solver
 3. **Graceful Degradation**: Reduced solving capability but continued operation
@@ -239,6 +258,7 @@ end
 ## Test Scenarios
 
 ### Scenario 1: MiniZinc Unavailable
+
 ```
 Initial State:
 - MiniZinc binary not installed or accessible
@@ -252,6 +272,7 @@ Expected Behavior:
 ```
 
 ### Scenario 2: MiniZinc Timeout
+
 ```
 Initial State:
 - Complex STN with many constraints
@@ -265,6 +286,7 @@ Expected Behavior:
 ```
 
 ### Scenario 3: Inconsistent Temporal Network
+
 ```
 Initial State:
 - STN with contradictory temporal constraints
@@ -278,6 +300,7 @@ Expected Behavior:
 ```
 
 ### Scenario 4: Large Constraint Network
+
 ```
 Initial State:
 - STN with >100 time points and constraints
@@ -303,16 +326,19 @@ Expected Behavior:
 ### Risks
 
 **Implementation Complexity:**
+
 - Floyd-Warshall algorithm requires careful implementation for STN constraints
 - Distance matrix conversion must handle infinite and boundary constraints correctly
 - Integration with existing STN data structures needs thorough testing
 
 **Performance Considerations:**
+
 - O(n³) complexity may be slower than MiniZinc for very large constraint networks
 - Memory usage increases quadratically with number of time points
 - Fallback overhead adds latency to solver selection process
 
 **Maintenance Overhead:**
+
 - Multiple solver implementations require ongoing maintenance
 - Test coverage must validate all solver combinations
 - Configuration complexity increases with multiple fallback options
@@ -320,16 +346,19 @@ Expected Behavior:
 ### Mitigation Strategies
 
 **Algorithm Correctness:**
+
 - Comprehensive test suite with known STN problems and solutions
 - Mathematical validation against temporal reasoning literature
 - Edge case testing for boundary conditions and infinite constraints
 
 **Performance Optimization:**
+
 - Parallel processing for large constraint networks using `Task.async_stream/3`
 - Memory optimization for distance matrix operations
 - Performance benchmarking and profiling for typical use cases
 
 **Integration Testing:**
+
 - End-to-end testing with Timeline module operations
 - Stress testing with various STN sizes and complexity levels
 - Production monitoring to track solver performance and fallback rates
@@ -346,12 +375,14 @@ Expected Behavior:
 ### Current Focus: Phase 1 - Core Floyd-Warshall Implementation
 
 **Immediate Priority:**
+
 1. **Algorithm Research**: Review Floyd-Warshall adaptations for temporal constraint networks
 2. **Core Implementation**: Create `FloydWarshallSolver` module with distance matrix operations
 3. **Mathematical Validation**: Test against known STN problems with verified solutions
 4. **Performance Benchmarking**: Establish baseline performance characteristics
 
 **Success Metrics for Phase 1:**
+
 - Floyd-Warshall solver correctly solves all test STN problems
 - Performance meets <100ms target for typical constraint network sizes
 - Negative cycle detection accurately identifies inconsistent temporal networks

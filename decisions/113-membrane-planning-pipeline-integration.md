@@ -7,6 +7,7 @@
 ## Context
 
 ADR-110 successfully implemented the MCP strategy testing interface using Membrane Framework, providing:
+
 - Complete pipeline architecture with 5 core elements
 - MCPSource, EchoFilter, ScheduleFilter, ResponseFilter, MCPSink
 - PipelineManager for lifecycle control
@@ -18,11 +19,13 @@ However, the actual planning integration components (PlanFilter and PlannerSink)
 ### Current State
 
 **Implemented (ADR-110)**:
+
 ```
 MCPSource → ScheduleFilter → EchoFilter → ResponseFilter → MCPSink
 ```
 
 **Missing for Production**:
+
 ```
 MCPSource → PlanFilter → PlannerSink → ResponseFilter → MCPSink
 ```
@@ -47,6 +50,7 @@ Implement the production planning pipeline components to enable actual planning 
 **File**: `lib/aria_engine/membrane/plan_filter.ex`
 
 **Missing Implementation**:
+
 - [ ] Membrane.Filter behavior with proper input/output pads
 - [ ] Integration with existing `AriaEngine.HybridPlanner.PlanTransformer`
 - [ ] Error handling for conversion failures
@@ -54,6 +58,7 @@ Implement the production planning pipeline components to enable actual planning 
 - [ ] Comprehensive test suite
 
 **Key Requirements**:
+
 - Input: MCPRequest format from MCPSource
 - Output: PlanningParams format for PlannerSink
 - Use existing `PlanTransformer.convert_to_planning_params/1`
@@ -65,6 +70,7 @@ Implement the production planning pipeline components to enable actual planning 
 **File**: `lib/aria_engine/membrane/planner_sink.ex`
 
 **Missing Implementation**:
+
 - [ ] Membrane.Sink behavior with input pad and output pad
 - [ ] Integration with HybridCoordinatorV2 for actual planning
 - [ ] Strategy selection and execution
@@ -73,6 +79,7 @@ Implement the production planning pipeline components to enable actual planning 
 - [ ] Comprehensive test suite
 
 **Key Requirements**:
+
 - Input: PlanningParams format from PlanFilter
 - Output: PlanningResult format for ResponseFilter
 - Execute planning via `HybridCoordinatorV2.plan/5`
@@ -82,6 +89,7 @@ Implement the production planning pipeline components to enable actual planning 
 ### Phase 3: Production Pipeline Integration
 
 **Tasks**:
+
 - [ ] Update PipelineManager to support production topology
 - [ ] Add production pipeline configuration to MCPToolsV2
 - [ ] Implement pipeline switching (testing vs production)
@@ -91,6 +99,7 @@ Implement the production planning pipeline components to enable actual planning 
 ### Phase 4: End-to-End Testing
 
 **Tasks**:
+
 - [ ] Integration tests with real planning scenarios
 - [ ] Performance benchmarking against existing MCP interface
 - [ ] Load testing with concurrent requests

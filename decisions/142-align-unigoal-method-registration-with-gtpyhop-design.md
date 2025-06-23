@@ -9,6 +9,7 @@
 AriaEngine's current unigoal method registration diverges from the original GTPyhop design in a fundamental way that breaks established HTN planning patterns.
 
 ### Current AriaEngine Design (Subject-Based)
+
 ```elixir
 |> Domain.add_unigoal_method("player", &achieve_has_item_unigoal/2)
 |> Domain.add_unigoal_method("gltf_buffer", &achieve_status_unigoal/2)
@@ -17,6 +18,7 @@ AriaEngine's current unigoal method registration diverges from the original GTPy
 **Registration by subject (entity)**: Methods are organized around specific entities like "player" or "gltf_buffer".
 
 ### Original GTPyhop Design (Predicate-Based)
+
 ```python
 gtpyhop.declare_unigoal_methods('loc', travel_by_foot, travel_by_taxi)
 gtpyhop.declare_unigoal_methods('at', m_load_truck, m_unload_truck)
@@ -28,12 +30,14 @@ gtpyhop.declare_unigoal_methods('status', achieve_status_completed)
 ### Design Rationale Analysis
 
 **GTPyhop's predicate-based approach provides:**
+
 - **Property-type specialization**: Each state variable type gets specialized achievement strategies
 - **Domain knowledge organization**: Methods are grouped by the type of property they handle
 - **Established HTN patterns**: Follows proven hierarchical task network conventions
 - **Method reusability**: Same property-handling logic works across different entities
 
 **AriaEngine's subject-based approach provides:**
+
 - **Entity-specific strategies**: Different entities can have different goal achievement approaches
 - **RDF triple compatibility**: Natural fit for subject-predicate-object triples
 - **Flexible entity behavior**: Each entity type can have custom goal handling
@@ -52,25 +56,31 @@ gtpyhop.declare_unigoal_methods('status', achieve_status_completed)
 ## Implementation Plan
 
 ### Phase 1: Update Domain API
+
 - [ ] Modify `Domain.add_unigoal_method/3` to register by predicate instead of subject
 - [ ] Update internal unigoal method lookup to use predicate-based keys
 - [ ] Ensure method signature remains `method(state, [subject, object])`
 
 ### Phase 2: Fix Software Development Domain
+
 - [x] Change registration from subject-based to predicate-based:
+
   ```elixir
   # Old: Domain.add_unigoal_method("gltf_buffer", &achieve_status_unigoal/2)
   # New: Domain.add_unigoal_method("status", &achieve_status_unigoal/2)
   ```
+
 - [x] Add unigoal methods for "status" and "typespecs" predicates
 - [x] Update method implementations to handle any subject with the given predicate
 
 ### Phase 3: Update Test Cases
+
 - [x] Fix `debug_temporal_planner_stn_bridge_test.exs` registration
 - [ ] Update all other test files using unigoal methods
 - [ ] Verify software development domain test passes
 
 ### Phase 4: Update Documentation
+
 - [ ] Document the predicate-based registration pattern
 - [ ] Update examples to show correct usage
 - [ ] Add migration guide for existing code
@@ -78,6 +88,7 @@ gtpyhop.declare_unigoal_methods('status', achieve_status_completed)
 ## Migration Strategy
 
 ### Before (Subject-Based)
+
 ```elixir
 domain
 |> Domain.add_unigoal_method("player", &achieve_location_unigoal/2)
@@ -88,6 +99,7 @@ domain
 ```
 
 ### After (Predicate-Based)
+
 ```elixir
 domain
 |> Domain.add_unigoal_method("location", &achieve_location_unigoal/2)
@@ -98,6 +110,7 @@ domain
 ```
 
 ### Method Signature Changes
+
 ```elixir
 # Before: method receives [predicate, object]
 defp achieve_status_unigoal(state, ["status", target_status]) do
@@ -130,17 +143,20 @@ end
 ## Consequences
 
 ### Positive
+
 - **HTN Compatibility**: Aligns with established hierarchical task network patterns
 - **Method Reusability**: Same property-handling logic works across entities
 - **Proven Design**: Leverages GTPyhop's validated architecture
 - **Better Abstraction**: Property types are more stable than specific entities
 
 ### Negative
+
 - **Breaking Change**: Requires updating all existing unigoal method registrations
 - **Migration Effort**: All test cases and domains need updates
 - **Temporary Disruption**: Planning will break until migration is complete
 
 ### Risks
+
 - **Test Failures**: Existing tests will fail until updated
 - **Planning Disruption**: Current planning functionality will break during migration
 - **Method Signature Confusion**: Developers need to understand the new parameter order

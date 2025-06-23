@@ -203,7 +203,15 @@ defmodule AriaEngine.Plan.Execution do
   # Try a specific method for a task
   @spec try_method(map(), String.t(), map(), tuple(), String.t(), list(), list()) ::
           {:ok, map()} | {:error, String.t()}
-  defp try_method(execution_state, node_id, node, {method_name, method_fn}, task_name, args, remaining_methods) do
+  defp try_method(
+         execution_state,
+         node_id,
+         node,
+         {method_name, method_fn},
+         task_name,
+         args,
+         remaining_methods
+       ) do
     if execution_state.verbose > 2 do
       Logger.debug("Trying method #{method_name} for task #{task_name}")
     end
@@ -216,7 +224,15 @@ defmodule AriaEngine.Plan.Execution do
 
       {:error, _reason} ->
         # Method failed - try next method or backtrack
-        handle_method_failure(execution_state, node_id, node, method_name, task_name, args, remaining_methods)
+        handle_method_failure(
+          execution_state,
+          node_id,
+          node,
+          method_name,
+          task_name,
+          args,
+          remaining_methods
+        )
     end
   end
 
@@ -253,7 +269,8 @@ defmodule AriaEngine.Plan.Execution do
     end
 
     # Create child nodes for subtasks
-    {updated_tree, child_ids} = create_child_nodes(execution_state.solution_tree, node_id, subtasks)
+    {updated_tree, child_ids} =
+      create_child_nodes(execution_state.solution_tree, node_id, subtasks)
 
     # Update the node as expanded
     updated_node = %{
@@ -277,7 +294,15 @@ defmodule AriaEngine.Plan.Execution do
   # Handle method failure by trying alternatives or backtracking
   @spec handle_method_failure(map(), String.t(), map(), String.t(), String.t(), list(), list()) ::
           {:ok, map()} | {:error, String.t()}
-  defp handle_method_failure(execution_state, node_id, node, failed_method, task_name, args, remaining_methods) do
+  defp handle_method_failure(
+         execution_state,
+         node_id,
+         node,
+         failed_method,
+         task_name,
+         args,
+         remaining_methods
+       ) do
     if execution_state.verbose > 2 do
       Logger.debug("Method #{failed_method} failed for task #{task_name}")
     end
@@ -298,7 +323,15 @@ defmodule AriaEngine.Plan.Execution do
 
       [next_method | rest] ->
         # Try the next method
-        try_method(updated_execution_state, node_id, updated_node, next_method, task_name, args, rest)
+        try_method(
+          updated_execution_state,
+          node_id,
+          updated_node,
+          next_method,
+          task_name,
+          args,
+          rest
+        )
     end
   end
 
@@ -334,17 +367,36 @@ defmodule AriaEngine.Plan.Execution do
 
     case available_methods do
       [] ->
-        {:error, "No methods available for goal: #{subject}.#{predicate} = #{inspect(fact_value)}"}
+        {:error,
+         "No methods available for goal: #{subject}.#{predicate} = #{inspect(fact_value)}"}
 
       [method | remaining_methods] ->
-        try_goal_method(execution_state, node_id, node, method, predicate, subject, fact_value, remaining_methods)
+        try_goal_method(
+          execution_state,
+          node_id,
+          node,
+          method,
+          predicate,
+          subject,
+          fact_value,
+          remaining_methods
+        )
     end
   end
 
   # Try a specific method for a goal
   @spec try_goal_method(map(), String.t(), map(), tuple(), String.t(), String.t(), term(), list()) ::
           {:ok, map()} | {:error, String.t()}
-  defp try_goal_method(execution_state, node_id, node, {method_name, method_fn}, predicate, subject, fact_value, remaining_methods) do
+  defp try_goal_method(
+         execution_state,
+         node_id,
+         node,
+         {method_name, method_fn},
+         predicate,
+         subject,
+         fact_value,
+         remaining_methods
+       ) do
     if execution_state.verbose > 2 do
       Logger.debug("Trying goal method #{method_name} for #{subject}.#{predicate}")
     end
@@ -354,14 +406,41 @@ defmodule AriaEngine.Plan.Execution do
         expand_node_with_subtasks(execution_state, node_id, node, subtasks, method_name)
 
       {:error, _reason} ->
-        handle_goal_method_failure(execution_state, node_id, node, method_name, predicate, subject, fact_value, remaining_methods)
+        handle_goal_method_failure(
+          execution_state,
+          node_id,
+          node,
+          method_name,
+          predicate,
+          subject,
+          fact_value,
+          remaining_methods
+        )
     end
   end
 
   # Handle goal method failure
-  @spec handle_goal_method_failure(map(), String.t(), map(), String.t(), String.t(), String.t(), term(), list()) ::
+  @spec handle_goal_method_failure(
+          map(),
+          String.t(),
+          map(),
+          String.t(),
+          String.t(),
+          String.t(),
+          term(),
+          list()
+        ) ::
           {:ok, map()} | {:error, String.t()}
-  defp handle_goal_method_failure(execution_state, node_id, node, failed_method, predicate, subject, fact_value, remaining_methods) do
+  defp handle_goal_method_failure(
+         execution_state,
+         node_id,
+         node,
+         failed_method,
+         predicate,
+         subject,
+         fact_value,
+         remaining_methods
+       ) do
     updated_node = %{
       node
       | blacklisted_methods: [failed_method | node.blacklisted_methods]
@@ -375,7 +454,16 @@ defmodule AriaEngine.Plan.Execution do
         {:error, "All methods failed for goal: #{subject}.#{predicate} = #{inspect(fact_value)}"}
 
       [next_method | rest] ->
-        try_goal_method(updated_execution_state, node_id, updated_node, next_method, predicate, subject, fact_value, rest)
+        try_goal_method(
+          updated_execution_state,
+          node_id,
+          updated_node,
+          next_method,
+          predicate,
+          subject,
+          fact_value,
+          rest
+        )
     end
   end
 
@@ -424,7 +512,14 @@ defmodule AriaEngine.Plan.Execution do
   # Try a specific method for a multigoal
   @spec try_multigoal_method(map(), String.t(), map(), tuple(), AriaEngine.Multigoal.t(), list()) ::
           {:ok, map()} | {:error, String.t()}
-  defp try_multigoal_method(execution_state, node_id, node, {method_name, method_fn}, multigoal, remaining_methods) do
+  defp try_multigoal_method(
+         execution_state,
+         node_id,
+         node,
+         {method_name, method_fn},
+         multigoal,
+         remaining_methods
+       ) do
     if execution_state.verbose > 2 do
       Logger.debug("Trying multigoal method #{method_name}")
     end
@@ -437,14 +532,35 @@ defmodule AriaEngine.Plan.Execution do
         expand_node_with_subtasks(execution_state, node_id, node, subtasks, method_name)
 
       {:error, _reason} ->
-        handle_multigoal_method_failure(execution_state, node_id, node, method_name, multigoal, remaining_methods)
+        handle_multigoal_method_failure(
+          execution_state,
+          node_id,
+          node,
+          method_name,
+          multigoal,
+          remaining_methods
+        )
     end
   end
 
   # Handle multigoal method failure
-  @spec handle_multigoal_method_failure(map(), String.t(), map(), String.t(), AriaEngine.Multigoal.t(), list()) ::
+  @spec handle_multigoal_method_failure(
+          map(),
+          String.t(),
+          map(),
+          String.t(),
+          AriaEngine.Multigoal.t(),
+          list()
+        ) ::
           {:ok, map()} | {:error, String.t()}
-  defp handle_multigoal_method_failure(execution_state, node_id, node, failed_method, multigoal, remaining_methods) do
+  defp handle_multigoal_method_failure(
+         execution_state,
+         node_id,
+         node,
+         failed_method,
+         multigoal,
+         remaining_methods
+       ) do
     updated_node = %{
       node
       | blacklisted_methods: [failed_method | node.blacklisted_methods]
@@ -463,7 +579,14 @@ defmodule AriaEngine.Plan.Execution do
         split_multigoal_into_goals(updated_execution_state, node_id, updated_node, multigoal)
 
       [next_method | rest] ->
-        try_multigoal_method(updated_execution_state, node_id, updated_node, next_method, multigoal, rest)
+        try_multigoal_method(
+          updated_execution_state,
+          node_id,
+          updated_node,
+          next_method,
+          multigoal,
+          rest
+        )
     end
   end
 
@@ -472,16 +595,18 @@ defmodule AriaEngine.Plan.Execution do
           {:ok, map()} | {:error, String.t()}
   defp split_multigoal_into_goals(execution_state, node_id, node, multigoal) do
     # Get unsatisfied goals
-    unsatisfied_goals = AriaEngine.Multigoal.unsatisfied_goals(multigoal, execution_state.current_state)
+    unsatisfied_goals =
+      AriaEngine.Multigoal.unsatisfied_goals(multigoal, execution_state.current_state)
 
     if Enum.empty?(unsatisfied_goals) do
       # All goals already satisfied
       {:ok, execution_state}
     else
       # Convert goals to individual goal tasks
-      goal_tasks = Enum.map(unsatisfied_goals, fn {subject, predicate, fact_value} ->
-        {predicate, subject, fact_value}
-      end)
+      goal_tasks =
+        Enum.map(unsatisfied_goals, fn {subject, predicate, fact_value} ->
+          {predicate, subject, fact_value}
+        end)
 
       if execution_state.verbose > 2 do
         Logger.debug("Splitting multigoal into #{length(goal_tasks)} individual goals")
@@ -543,9 +668,11 @@ defmodule AriaEngine.Plan.Execution do
 
             # Blacklist the failed action
             action_tuple = {action_name, args}
+
             updated_execution_state = %{
               execution_state
-              | blacklisted_commands: MapSet.put(execution_state.blacklisted_commands, action_tuple)
+              | blacklisted_commands:
+                  MapSet.put(execution_state.blacklisted_commands, action_tuple)
             }
 
             # Use backtracking to find alternative

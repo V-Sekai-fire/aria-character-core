@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.Format.PlanningParams do
   @moduledoc "Membrane format for converted planning parameters.\n\nThis format represents the converted planning parameters that are ready\nfor execution by the HybridCoordinator. It contains the domain, state,\ngoals, and options needed for planning execution.\n"
   @compile {:no_warn_unused, [:serial_number]}

@@ -20,6 +20,7 @@ Implement glTF data loading and parsing capabilities using strict Test-Driven De
 ## TDD Implementation Plan
 
 ### 2.1 Gltf.Loader Module (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for `AriaEngine.Gltf.Loader.load_file/1` with .gltf file
 - [ ] **RED**: Write failing test for .glb binary file loading
 - [ ] **RED**: Write failing test for invalid file format handling
@@ -28,6 +29,7 @@ Implement glTF data loading and parsing capabilities using strict Test-Driven De
 - [ ] **REFACTOR**: Clean up file loading implementation
 
 ### 2.2 Binary Data Handling (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for external .bin file loading
 - [ ] **RED**: Write failing test for Base64 data URI parsing
 - [ ] **RED**: Write failing test for binary data validation
@@ -36,6 +38,7 @@ Implement glTF data loading and parsing capabilities using strict Test-Driven De
 - [ ] **REFACTOR**: Clean up binary data implementation
 
 ### 2.3 AccessorView Module (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for `AriaEngine.Gltf.AccessorView.new/2`
 - [ ] **RED**: Write failing test for typed data iteration (SCALAR, VEC2, VEC3, VEC4)
 - [ ] **RED**: Write failing test for component type handling (BYTE, FLOAT, etc.)

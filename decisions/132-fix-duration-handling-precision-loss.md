@@ -11,6 +11,7 @@
 **IMPLEMENTATION STATUS**: All precision loss issues have been resolved in the current codebase.
 
 **Verification Results:**
+
 - ✅ All precision loss points eliminated from `lib/aria_engine/utils.ex`
 - ✅ Float precision preserved throughout duration conversion chain
 - ✅ Timex microsecond precision capabilities fully utilized
@@ -26,6 +27,7 @@ AriaEngine.Utils loses microsecond precision through unnecessary `round()` calls
 ## Problem Identified
 
 **Precision Loss Points in `lib/aria_engine/utils.ex`:**
+
 - Line 95: `Duration.to_seconds(duration) |> round()` ❌ Destroys Timex microsecond precision
 - Line 67: `seconds |> round() |> seconds_to_duration_struct()` ❌ Rounds float input
 - Line 75: `min_seconds |> round() |> seconds_to_duration_struct()` ❌ Rounds range values  
@@ -35,11 +37,13 @@ AriaEngine.Utils loses microsecond precision through unnecessary `round()` calls
 ## Impact Analysis
 
 **What gets lost:**
+
 - Milliseconds: `1.500` seconds becomes `2` seconds
 - Microseconds: `1.000001` seconds becomes `1` second
 - Fractional durations: `PT1.5S` becomes `PT2S`
 
 **Where this matters:**
+
 - High-precision timing systems
 - Animation/media synchronization
 - Scientific calculations
@@ -75,6 +79,7 @@ Preserve Timex's microsecond precision throughout the entire duration conversion
 ## Implementation Plan
 
 ### Phase 1: Remove Precision Loss Points
+
 **Target locations where `round()` is destroying precision:**
 
 - [ ] **Line 95**: `Duration.to_seconds(duration) |> round()` → Remove `round()`
@@ -84,6 +89,7 @@ Preserve Timex's microsecond precision throughout the entire duration conversion
 - [ ] **Line 280**: `Duration.to_seconds(duration) |> round()` → Remove `round()`
 
 ### Phase 2: Update Duration Struct Format
+
 **Change from integer-only to float-supporting:**
 
 ```elixir
@@ -95,6 +101,7 @@ Preserve Timex's microsecond precision throughout the entire duration conversion
 ```
 
 ### Phase 3: Update Helper Functions
+
 **Functions that need float support:**
 
 - [ ] **`seconds_to_duration_struct/1`**: Accept float input, preserve fractional seconds
@@ -103,6 +110,7 @@ Preserve Timex's microsecond precision throughout the entire duration conversion
 - [ ] **`duration_to_string/1`**: Format float seconds appropriately
 
 ### Phase 4: Update Type Specifications
+
 **Fix typespecs to reflect new float support:**
 
 ```elixir
@@ -112,6 +120,7 @@ Preserve Timex's microsecond precision throughout the entire duration conversion
 ```
 
 ### Phase 5: Test Precision Preservation
+
 **Verify end-to-end precision:**
 
 - [ ] Test fractional seconds survive full conversion chain
@@ -182,6 +191,7 @@ end
 ## Backward Compatibility Strategy
 
 **Safe approach:** The changes are backward compatible because:
+
 - Integer seconds still work (1 is a valid float)
 - Existing callers get more precision, not less
 - Duration struct format is internal to Utils module
@@ -199,6 +209,7 @@ end
 ## Consequences
 
 **Benefits:**
+
 - Preserves Timex's microsecond precision capabilities
 - Better temporal accuracy for scheduling systems
 - Enhanced support for animation and media synchronization
@@ -206,11 +217,13 @@ end
 - No breaking changes to existing code
 
 **Risks:**
+
 - Slightly more complex arithmetic with floats
 - Potential floating-point precision edge cases
 - Need to update documentation and examples
 
 **Mitigation:**
+
 - Comprehensive test coverage for edge cases
 - Clear documentation of precision capabilities
 - Gradual rollout with monitoring

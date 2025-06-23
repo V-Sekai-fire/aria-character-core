@@ -35,7 +35,9 @@ defmodule RunLazyRefineaheadTest do
 
         # Execute with Run-Lazy-Refineahead (this should trigger replanning)
         # Increased verbose level
-        case AriaEngine.Plan.Execution.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 3) do
+        case AriaEngine.Plan.Execution.run_lazy_refineahead(domain, initial_state, solution_tree,
+               verbose: 3
+             ) do
           {:ok, final_state} ->
             # Verify we reached the goal despite initial failures
             robot_location = State.get_fact(final_state, "robot", "location")
@@ -46,8 +48,8 @@ defmodule RunLazyRefineaheadTest do
           {:error, reason} ->
             # Check if this is the expected "no more alternatives" error
             if String.contains?(reason, "Replanning failed") or
-               String.contains?(reason, "No methods available") or
-               String.contains?(reason, "No complete solution found") do
+                 String.contains?(reason, "No methods available") or
+                 String.contains?(reason, "No complete solution found") do
               TestOutput.trace_puts("Expected failure: #{reason}")
               assert true
             else

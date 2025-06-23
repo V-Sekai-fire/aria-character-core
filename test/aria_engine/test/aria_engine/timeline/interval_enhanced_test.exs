@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Timeline.IntervalEnhancedTest do
   use ExUnit.Case
   doctest AriaEngine.Timeline.Interval

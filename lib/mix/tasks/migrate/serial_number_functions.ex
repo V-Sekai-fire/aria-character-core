@@ -49,7 +49,9 @@ defmodule Mix.Tasks.Migrate.SerialNumberFunctions do
       if Enum.empty?(files_with_serial_numbers) do
         Logger.info("✅ No files found with @serial_number attributes")
       else
-        Logger.info("📋 Found #{length(files_with_serial_numbers)} files with @serial_number attributes")
+        Logger.info(
+          "📋 Found #{length(files_with_serial_numbers)} files with @serial_number attributes"
+        )
 
         Enum.each(files_with_serial_numbers, fn file ->
           process_file(file, dry_run)
@@ -63,6 +65,7 @@ defmodule Mix.Tasks.Migrate.SerialNumberFunctions do
 
   defp show_help do
     IO.puts(@moduledoc)
+
     IO.puts("""
 
     ## Usage
@@ -90,17 +93,18 @@ defmodule Mix.Tasks.Migrate.SerialNumberFunctions do
     |> Enum.filter(&should_check_file?/1)
     |> Enum.filter(fn file ->
       content = File.read!(file)
+
       String.contains?(content, "@serial_number") and
-      not String.contains?(content, "def serial_number")
+        not String.contains?(content, "def serial_number")
     end)
   end
 
   defp should_check_file?(file) do
     # Check all lib files, not just membrane
     String.starts_with?(file, "lib/") and
-    not String.contains?(file, "_build/") and
-    not String.contains?(file, "deps/") and
-    not String.contains?(file, ".elixir_ls/")
+      not String.contains?(file, "_build/") and
+      not String.contains?(file, "deps/") and
+      not String.contains?(file, ".elixir_ls/")
   end
 
   defp process_file(file, dry_run) do
@@ -131,6 +135,7 @@ defmodule Mix.Tasks.Migrate.SerialNumberFunctions do
       case AstTransformer.parse_code(source_code) do
         {:ok, ast} ->
           transformed_ast = add_serial_number_function_to_ast(ast)
+
           case AstTransformer.ast_to_code(transformed_ast) do
             {:ok, new_code} ->
               if new_code == source_code do
@@ -138,6 +143,7 @@ defmodule Mix.Tasks.Migrate.SerialNumberFunctions do
               else
                 {:changed, new_code}
               end
+
             {:error, reason} ->
               {:error, reason}
           end
@@ -187,6 +193,7 @@ defmodule Mix.Tasks.Migrate.SerialNumberFunctions do
           {:@, _, [{:serial_number, _, _}]} ->
             # Wrap in block with function
             {:__block__, [], [single_statement | create_serial_number_function()]}
+
           _ ->
             single_statement
         end
@@ -200,6 +207,7 @@ defmodule Mix.Tasks.Migrate.SerialNumberFunctions do
       [] ->
         # @serial_number not found, return original
         statements
+
       [serial_number_stmt | rest] ->
         # Insert function after @serial_number
         before_serial ++ [serial_number_stmt] ++ create_serial_number_function() ++ rest
@@ -218,25 +226,30 @@ defmodule Mix.Tasks.Migrate.SerialNumberFunctions do
   defp create_serial_number_function do
     [
       # @doc "Returns the module's serial number for tracking and identification."
-      {:@, [], [
-        {:doc, [], ["Returns the module's serial number for tracking and identification."]}
-      ]},
+      {:@, [],
+       [
+         {:doc, [], ["Returns the module's serial number for tracking and identification."]}
+       ]},
 
       # @spec serial_number() :: String.t()
-      {:@, [], [
-        {:spec, [], [
-          {:":::", [], [
-            {:serial_number, [], []},
-            {{:., [], [{:__aliases__, [], [:String]}, :t]}, [], []}
+      {:@, [],
+       [
+         {:spec, [],
+          [
+            {:":::", [],
+             [
+               {:serial_number, [], []},
+               {{:., [], [{:__aliases__, [], [:String]}, :t]}, [], []}
+             ]}
           ]}
-        ]}
-      ]},
+       ]},
 
       # def serial_number, do: @serial_number
-      {:def, [], [
-        {:serial_number, [], []},
-        [do: {:@, [], [{:serial_number, [], nil}]}]
-      ]}
+      {:def, [],
+       [
+         {:serial_number, [], []},
+         [do: {:@, [], [{:serial_number, [], nil}]}]
+       ]}
     ]
   end
 
@@ -250,6 +263,7 @@ defmodule Mix.Tasks.Migrate.SerialNumberFunctions do
     case AstTransformer.parse_code(source_code) do
       {:ok, ast} ->
         cleaned_ast = remove_serial_number_compile_directives(ast)
+
         case AstTransformer.ast_to_code(cleaned_ast) do
           {:ok, new_code} -> {:ok, new_code}
           {:error, reason} -> {:error, reason}
@@ -284,6 +298,7 @@ defmodule Mix.Tasks.Migrate.SerialNumberFunctions do
         {:__block__, meta, statements} ->
           filtered_statements = Enum.reject(statements, &is_nil/1)
           {:__block__, meta, filtered_statements}
+
         _ ->
           node
       end

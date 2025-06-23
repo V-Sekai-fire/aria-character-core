@@ -194,12 +194,14 @@ end
 **This ADR has been superseded by ADR-111** due to architectural improvements that separate data transformation from planning execution.
 
 **Key Changes in ADR-111:**
+
 - Convert `schedule_activities` from full execution pipeline to pure data transformer
 - Return HybridCoordinatorV2 input format instead of execution results
 - Enable clean separation between MCP layer (data conversion) and domain layer (planning execution)
 - Preserve all validation and conversion logic designed in this ADR
 
 **Migration Impact:**
+
 - The interface design and validation logic from this ADR remains valuable
 - ADR-111 changes the output format but preserves the input schema and validation approach
 - The "empty plan for empty inputs" principle is maintained in the new architecture

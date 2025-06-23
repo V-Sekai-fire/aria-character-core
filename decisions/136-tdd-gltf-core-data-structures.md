@@ -20,6 +20,7 @@ Implement all core glTF data structures using strict Test-Driven Development, wr
 ## TDD Implementation Plan
 
 ### 1.1 Scene Struct (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for `%AriaEngine.Gltf.Scene{}` struct creation
 - [ ] **RED**: Write failing test for scene with nodes list
 - [ ] **RED**: Write failing test for scene name validation
@@ -27,6 +28,7 @@ Implement all core glTF data structures using strict Test-Driven Development, wr
 - [ ] **REFACTOR**: Clean up Scene struct implementation
 
 ### 1.2 Node Struct (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for `%AriaEngine.Gltf.Node{}` struct creation
 - [ ] **RED**: Write failing test for TRS properties (translation, rotation, scale)
 - [ ] **RED**: Write failing test for matrix property (alternative to TRS)
@@ -36,6 +38,7 @@ Implement all core glTF data structures using strict Test-Driven Development, wr
 - [ ] **REFACTOR**: Clean up Node struct implementation
 
 ### 1.3 Mesh and Primitive Structs (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for `%AriaEngine.Gltf.Mesh{}` struct creation
 - [ ] **RED**: Write failing test for mesh primitives list
 - [ ] **RED**: Write failing test for `%AriaEngine.Gltf.Mesh.Primitive{}` struct
@@ -45,6 +48,7 @@ Implement all core glTF data structures using strict Test-Driven Development, wr
 - [ ] **REFACTOR**: Clean up mesh-related implementations
 
 ### 1.4 Buffer and Accessor Structs (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for `%AriaEngine.Gltf.Buffer{}` struct
 - [ ] **RED**: Write failing test for `%AriaEngine.Gltf.BufferView{}` struct
 - [ ] **RED**: Write failing test for `%AriaEngine.Gltf.Accessor{}` struct
@@ -54,6 +58,7 @@ Implement all core glTF data structures using strict Test-Driven Development, wr
 - [ ] **REFACTOR**: Clean up data structure implementations
 
 ### 1.5 Material and Texture Structs (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for `%AriaEngine.Gltf.Material{}` struct
 - [ ] **RED**: Write failing test for PBR metallic roughness properties
 - [ ] **RED**: Write failing test for `%AriaEngine.Gltf.Texture{}` struct

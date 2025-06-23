@@ -40,13 +40,13 @@ defmodule AriaEngine.MultigoalOptimizationTest do
     @type goal :: {State.subject(), State.predicate(), State.fact_value()}
     @type location :: String.t()
     @type optimization_result :: %{
-      goals: [goal()],
-      total_actions: non_neg_integer(),
-      total_distance: number(),
-      completion_time: number(),
-      parallel_opportunities: non_neg_integer(),
-      optimization_type: atom()
-    }
+            goals: [goal()],
+            total_actions: non_neg_integer(),
+            total_distance: number(),
+            completion_time: number(),
+            parallel_opportunities: non_neg_integer(),
+            optimization_type: atom()
+          }
 
     @doc """
     Optimize multigoal using simulated constraint solving.
@@ -55,7 +55,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
     detection to find improved goal achievement sequences.
     """
     @spec optimize_multigoal(State.t(), [goal()], keyword()) ::
-      {:ok, optimization_result()} | {:error, term()}
+            {:ok, optimization_result()} | {:error, term()}
     def optimize_multigoal(state, goals, opts \\ []) do
       try do
         # Simulate MiniZinc constraint solving
@@ -99,7 +99,8 @@ defmodule AriaEngine.MultigoalOptimizationTest do
         has_resource_patterns?(goals) -> :resource_optimization
         has_parallel_patterns?(goals) -> :parallel_optimization
         has_spatial_patterns?(goals) -> :spatial_optimization
-        true -> :spatial_optimization  # Default fallback
+        # Default fallback
+        true -> :spatial_optimization
       end
     end
 
@@ -124,7 +125,8 @@ defmodule AriaEngine.MultigoalOptimizationTest do
         optimization_type: :spatial,
         improvement_over_naive: %{
           actions: (naive_metrics.actions - optimized_metrics.actions) / naive_metrics.actions,
-          distance: (naive_metrics.distance - optimized_metrics.distance) / naive_metrics.distance,
+          distance:
+            (naive_metrics.distance - optimized_metrics.distance) / naive_metrics.distance,
           time: (naive_metrics.time - optimized_metrics.time) / naive_metrics.time
         }
       }
@@ -151,7 +153,8 @@ defmodule AriaEngine.MultigoalOptimizationTest do
         optimization_type: :dependency,
         improvement_over_naive: %{
           actions: (naive_metrics.actions - optimized_metrics.actions) / naive_metrics.actions,
-          distance: (naive_metrics.distance - optimized_metrics.distance) / naive_metrics.distance,
+          distance:
+            (naive_metrics.distance - optimized_metrics.distance) / naive_metrics.distance,
           time: (naive_metrics.time - optimized_metrics.time) / naive_metrics.time
         }
       }
@@ -167,7 +170,9 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
       # Calculate metrics
       naive_metrics = calculate_naive_metrics(goals)
-      optimized_metrics = calculate_optimized_parallel_metrics(optimized_sequence, parallel_groups)
+
+      optimized_metrics =
+        calculate_optimized_parallel_metrics(optimized_sequence, parallel_groups)
 
       %{
         goals: optimized_sequence,
@@ -178,7 +183,8 @@ defmodule AriaEngine.MultigoalOptimizationTest do
         optimization_type: :parallel,
         improvement_over_naive: %{
           actions: (naive_metrics.actions - optimized_metrics.actions) / naive_metrics.actions,
-          distance: (naive_metrics.distance - optimized_metrics.distance) / naive_metrics.distance,
+          distance:
+            (naive_metrics.distance - optimized_metrics.distance) / naive_metrics.distance,
           time: (naive_metrics.time - optimized_metrics.time) / naive_metrics.time
         }
       }
@@ -205,7 +211,8 @@ defmodule AriaEngine.MultigoalOptimizationTest do
         optimization_type: :resource,
         improvement_over_naive: %{
           actions: (naive_metrics.actions - optimized_metrics.actions) / naive_metrics.actions,
-          distance: (naive_metrics.distance - optimized_metrics.distance) / naive_metrics.distance,
+          distance:
+            (naive_metrics.distance - optimized_metrics.distance) / naive_metrics.distance,
           time: (naive_metrics.time - optimized_metrics.time) / naive_metrics.time
         }
       }
@@ -222,47 +229,45 @@ defmodule AriaEngine.MultigoalOptimizationTest do
     defp has_dependency_patterns?(goals) do
       # Check for goals that likely have dependencies (key-door-treasure chains)
       length(goals) > 2 and
-      Enum.any?(goals, fn {subject, predicate, value} ->
-        # Look for key-door-treasure patterns
-        (predicate == "has_key" and is_boolean(value)) or
-        (predicate == "state" and value == "open") or
-        (predicate == "has" and String.contains?(to_string(value), "treasure")) or
-        (predicate == "location" and String.contains?(to_string(value), "treasure")) or
-        String.contains?(subject, ["player", "door"])
-      end)
+        Enum.any?(goals, fn {subject, predicate, value} ->
+          # Look for key-door-treasure patterns
+          (predicate == "has_key" and is_boolean(value)) or
+            (predicate == "state" and value == "open") or
+            (predicate == "has" and String.contains?(to_string(value), "treasure")) or
+            (predicate == "location" and String.contains?(to_string(value), "treasure")) or
+            String.contains?(subject, ["player", "door"])
+        end)
     end
 
     defp has_parallel_patterns?(goals) do
       # Check for goals that could be parallelized (multi-agent scenarios)
       # Exclude warehouse scenarios which should use spatial optimization
+      # Multi-agent task assignment patterns
+      # Multi-worker scenarios (but not warehouse item movement)
       length(goals) > 1 and
-      (
-        # Multi-agent task assignment patterns
-        Enum.any?(goals, fn {subject, predicate, value} ->
-          predicate == "assigned_to" and
-          String.contains?(subject, "task") and
-          String.contains?(to_string(value), "robot")
-        end) or
-        # Multi-worker scenarios (but not warehouse item movement)
-        Enum.any?(goals, fn {subject, predicate, _value} ->
-          String.contains?(subject, ["agent", "worker"]) and
-          predicate in ["location", "has"] and
-          not String.contains?(subject, ["item", "robot"])
-        end)
-      )
+        (Enum.any?(goals, fn {subject, predicate, value} ->
+           predicate == "assigned_to" and
+             String.contains?(subject, "task") and
+             String.contains?(to_string(value), "robot")
+         end) or
+           Enum.any?(goals, fn {subject, predicate, _value} ->
+             String.contains?(subject, ["agent", "worker"]) and
+               predicate in ["location", "has"] and
+               not String.contains?(subject, ["item", "robot"])
+           end))
     end
 
     defp has_resource_patterns?(goals) do
       # Check for shared resource usage (tools, workstations, etc.)
       # Exclude warehouse scenarios which should use spatial optimization
       length(goals) > 1 and
-      Enum.any?(goals, fn {subject, predicate, value} ->
-        predicate == "has" and String.contains?(to_string(value), ["tool", "resource"]) and
-        not String.contains?(to_string(value), ["item", "station"]) or
-        String.contains?(subject, ["worker", "tool"]) or
-        String.contains?(to_string(value), ["workstation"]) and
-        not String.contains?(to_string(value), ["station_"])
-      end)
+        Enum.any?(goals, fn {subject, predicate, value} ->
+          (predicate == "has" and String.contains?(to_string(value), ["tool", "resource"]) and
+             not String.contains?(to_string(value), ["item", "station"])) or
+            String.contains?(subject, ["worker", "tool"]) or
+            (String.contains?(to_string(value), ["workstation"]) and
+               not String.contains?(to_string(value), ["station_"]))
+        end)
     end
 
     # Spatial optimization helpers
@@ -314,9 +319,12 @@ defmodule AriaEngine.MultigoalOptimizationTest do
       num_goals = length(goals)
 
       %{
-        actions: num_goals * 4,  # Assume 4 actions per goal on average
-        distance: num_goals * 3.0,  # Assume 3 units travel per goal
-        time: num_goals * 10.0  # Assume 10 time units per goal
+        # Assume 4 actions per goal on average
+        actions: num_goals * 4,
+        # Assume 3 units travel per goal
+        distance: num_goals * 3.0,
+        # Assume 10 time units per goal
+        time: num_goals * 10.0
       }
     end
 
@@ -325,9 +333,12 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
       # Spatial optimization reduces travel by ~25% for significant improvement
       %{
-        actions: round(num_goals * 3.2),  # Fewer movement actions
-        distance: num_goals * 2.0,  # Significant travel distance reduction (>16%)
-        time: num_goals * 7.8  # Faster completion
+        # Fewer movement actions
+        actions: round(num_goals * 3.2),
+        # Significant travel distance reduction (>16%)
+        distance: num_goals * 2.0,
+        # Faster completion
+        time: num_goals * 7.8
       }
     end
 
@@ -336,21 +347,28 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
       # Dependency optimization reduces redundant actions by ~20%
       %{
-        actions: round(num_goals * 3.2),  # Significant action reduction
-        distance: num_goals * 2.4,       # Better path planning
-        time: num_goals * 7.5             # Faster due to proper ordering
+        # Significant action reduction
+        actions: round(num_goals * 3.2),
+        # Better path planning
+        distance: num_goals * 2.4,
+        # Faster due to proper ordering
+        time: num_goals * 7.5
       }
     end
 
     defp calculate_optimized_parallel_metrics(optimized_sequence, parallel_groups) do
       num_goals = length(optimized_sequence)
-      parallelism_factor = max(1.5, length(parallel_groups))  # Ensure significant parallelism
+      # Ensure significant parallelism
+      parallelism_factor = max(1.5, length(parallel_groups))
 
       # Parallel execution reduces total time significantly
       %{
-        actions: num_goals * 4,  # Same actions, but parallel
-        distance: num_goals * 3.0,  # Same distance
-        time: (num_goals * 10.0) / parallelism_factor  # Parallel time reduction
+        # Same actions, but parallel
+        actions: num_goals * 4,
+        # Same distance
+        distance: num_goals * 3.0,
+        # Parallel time reduction
+        time: num_goals * 10.0 / parallelism_factor
       }
     end
 
@@ -426,7 +444,9 @@ defmodule AriaEngine.MultigoalOptimizationTest do
       # Extract resource requirements from goal
       resources = []
 
-      resources = if String.contains?(subject, "robot"), do: ["robot" | resources], else: resources
+      resources =
+        if String.contains?(subject, "robot"), do: ["robot" | resources], else: resources
+
       resources = if predicate == "location", do: [value | resources], else: resources
       resources = if predicate == "has", do: [value | resources], else: resources
 
@@ -483,12 +503,12 @@ defmodule AriaEngine.MultigoalOptimizationTest do
     """
 
     @type benchmark_result :: %{
-      scenario: atom(),
-      naive_result: map(),
-      optimized_result: map(),
-      improvements: map(),
-      test_passed: boolean()
-    }
+            scenario: atom(),
+            naive_result: map(),
+            optimized_result: map(),
+            improvements: map(),
+            test_passed: boolean()
+          }
 
     @doc """
     Run comparative benchmark between naive and optimized approaches.
@@ -541,6 +561,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
         {:error, reason} ->
           # Fallback to naive approach
           naive_result = run_naive_approach(state, goals)
+
           Map.merge(naive_result, %{
             approach: :fallback_to_naive,
             fallback_reason: reason
@@ -550,25 +571,29 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
     defp calculate_improvements(naive_result, optimized_result) do
       %{
-        action_reduction: calculate_percentage_improvement(
-          naive_result.total_actions,
-          optimized_result.total_actions
-        ),
-        distance_reduction: calculate_percentage_improvement(
-          naive_result.total_distance,
-          optimized_result.total_distance
-        ),
-        time_reduction: calculate_percentage_improvement(
-          naive_result.completion_time,
-          optimized_result.completion_time
-        ),
-        parallel_opportunities_gained: optimized_result.parallel_opportunities - naive_result.parallel_opportunities
+        action_reduction:
+          calculate_percentage_improvement(
+            naive_result.total_actions,
+            optimized_result.total_actions
+          ),
+        distance_reduction:
+          calculate_percentage_improvement(
+            naive_result.total_distance,
+            optimized_result.total_distance
+          ),
+        time_reduction:
+          calculate_percentage_improvement(
+            naive_result.completion_time,
+            optimized_result.completion_time
+          ),
+        parallel_opportunities_gained:
+          optimized_result.parallel_opportunities - naive_result.parallel_opportunities
       }
     end
 
     defp calculate_percentage_improvement(baseline, optimized) do
       if baseline > 0 do
-        ((baseline - optimized) / baseline) * 100
+        (baseline - optimized) / baseline * 100
       else
         0
       end
@@ -577,9 +602,9 @@ defmodule AriaEngine.MultigoalOptimizationTest do
     defp validate_improvements(improvements) do
       # Test passes if we see meaningful improvements in any metric
       improvements.action_reduction > 5 or
-      improvements.distance_reduction > 10 or
-      improvements.time_reduction > 15 or
-      improvements.parallel_opportunities_gained > 0
+        improvements.distance_reduction > 10 or
+        improvements.time_reduction > 15 or
+        improvements.parallel_opportunities_gained > 0
     end
 
     @doc """
@@ -635,8 +660,12 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
       # Assertions
       assert benchmark.test_passed, "Optimization should show measurable improvements"
-      assert benchmark.improvements.distance_reduction > 10, "Should reduce travel distance by >10%"
-      assert benchmark.optimized_result.optimization_type == :spatial, "Should use spatial optimization"
+
+      assert benchmark.improvements.distance_reduction > 10,
+             "Should reduce travel distance by >10%"
+
+      assert benchmark.optimized_result.optimization_type == :spatial,
+             "Should use spatial optimization"
     end
 
     test "multi-agent coordination scenario - parallel execution" do
@@ -653,7 +682,9 @@ defmodule AriaEngine.MultigoalOptimizationTest do
       # Assertions
       assert benchmark.test_passed, "Optimization should show measurable improvements"
       assert benchmark.improvements.time_reduction > 15, "Should reduce completion time by >15%"
-      assert benchmark.improvements.parallel_opportunities_gained > 0, "Should find parallel opportunities"
+
+      assert benchmark.improvements.parallel_opportunities_gained > 0,
+             "Should find parallel opportunities"
     end
 
     test "dependency chain scenario - intelligent ordering" do
@@ -670,7 +701,9 @@ defmodule AriaEngine.MultigoalOptimizationTest do
       # Assertions
       assert benchmark.test_passed, "Optimization should show measurable improvements"
       assert benchmark.improvements.action_reduction > 5, "Should reduce total actions by >5%"
-      assert benchmark.optimized_result.optimization_type == :dependency, "Should use dependency optimization"
+
+      assert benchmark.optimized_result.optimization_type == :dependency,
+             "Should use dependency optimization"
     end
 
     test "resource contention scenario - conflict resolution" do
@@ -687,7 +720,9 @@ defmodule AriaEngine.MultigoalOptimizationTest do
       # Assertions
       assert benchmark.test_passed, "Optimization should show measurable improvements"
       assert benchmark.improvements.time_reduction > 10, "Should reduce completion time by >10%"
-      assert benchmark.optimized_result.optimization_type == :resource, "Should use resource optimization"
+
+      assert benchmark.optimized_result.optimization_type == :resource,
+             "Should use resource optimization"
     end
   end
 
@@ -723,7 +758,9 @@ defmodule AriaEngine.MultigoalOptimizationTest do
         {:error, :constraint_unsatisfiable} ->
           # Expected behavior - should fallback
           fallback_result = Multigoal.split_multigoal(state, goals)
-          assert length(fallback_result) == length(goals), "Fallback should handle unsatisfiable constraints"
+
+          assert length(fallback_result) == length(goals),
+                 "Fallback should handle unsatisfiable constraints"
 
         {:ok, _optimized} ->
           # Mock found a solution anyway
@@ -752,25 +789,30 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
   defp setup_warehouse_scenario do
     # Create warehouse state
-    state = State.new()
-    |> State.set_fact("location", "robot", "dock")
-    |> State.set_fact("robot", "battery", 100)
-    |> State.set_fact("robot", "carrying", nil)
-    |> State.set_fact("location", "item_a", "shelf_1")
-    |> State.set_fact("status", "item_a", "available")
-    |> State.set_fact("location", "item_b", "shelf_3")
-    |> State.set_fact("status", "item_b", "available")
-    |> State.set_fact("location", "item_c", "shelf_1")
-    |> State.set_fact("status", "item_c", "available")
-    |> State.set_fact("status", "station_1", "ready")
-    |> State.set_fact("status", "station_2", "ready")
+    state =
+      State.new()
+      |> State.set_fact("location", "robot", "dock")
+      |> State.set_fact("robot", "battery", 100)
+      |> State.set_fact("robot", "carrying", nil)
+      |> State.set_fact("location", "item_a", "shelf_1")
+      |> State.set_fact("status", "item_a", "available")
+      |> State.set_fact("location", "item_b", "shelf_3")
+      |> State.set_fact("status", "item_b", "available")
+      |> State.set_fact("location", "item_c", "shelf_1")
+      |> State.set_fact("status", "item_c", "available")
+      |> State.set_fact("status", "station_1", "ready")
+      |> State.set_fact("status", "station_2", "ready")
 
     # Define multigoal
     goals = [
-      {"location", "item_a", "station_1"},  # Move item_a to station_1
-      {"location", "item_b", "station_2"},  # Move item_b to station_2
-      {"location", "item_c", "station_1"},  # Move item_c to station_1
-      {"location", "robot", "dock"}         # Return robot to dock
+      # Move item_a to station_1
+      {"location", "item_a", "station_1"},
+      # Move item_b to station_2
+      {"location", "item_b", "station_2"},
+      # Move item_c to station_1
+      {"location", "item_c", "station_1"},
+      # Return robot to dock
+      {"location", "robot", "dock"}
     ]
 
     {state, goals}
@@ -778,13 +820,14 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
   defp setup_multi_agent_scenario do
     # Create multi-agent state
-    state = State.new()
-    |> State.set_fact("location", "robot_1", "base")
-    |> State.set_fact("location", "robot_2", "base")
-    |> State.set_fact("task_a", "assigned_to", nil)
-    |> State.set_fact("task_b", "assigned_to", nil)
-    |> State.set_fact("task_c", "assigned_to", nil)
-    |> State.set_fact("task_d", "assigned_to", nil)
+    state =
+      State.new()
+      |> State.set_fact("location", "robot_1", "base")
+      |> State.set_fact("location", "robot_2", "base")
+      |> State.set_fact("task_a", "assigned_to", nil)
+      |> State.set_fact("task_b", "assigned_to", nil)
+      |> State.set_fact("task_c", "assigned_to", nil)
+      |> State.set_fact("task_d", "assigned_to", nil)
 
     # Define parallel goals
     goals = [
@@ -799,19 +842,24 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
   defp setup_dependency_chain_scenario do
     # Create dependency chain state
-    state = State.new()
-    |> State.set_fact("location", "player", "start")
-    |> State.set_fact("player", "has_key", false)
-    |> State.set_fact("state", "door", "locked")
-    |> State.set_fact("location", "treasure", "treasure_room")
-    |> State.set_fact("location", "key", "key_room")
+    state =
+      State.new()
+      |> State.set_fact("location", "player", "start")
+      |> State.set_fact("player", "has_key", false)
+      |> State.set_fact("state", "door", "locked")
+      |> State.set_fact("location", "treasure", "treasure_room")
+      |> State.set_fact("location", "key", "key_room")
 
     # Define dependent goals
     goals = [
-      {"has_key", "player", true},          # Must get key first
-      {"state", "door", "open"},            # Then open door (requires key)
-      {"location", "player", "treasure_room"}, # Then enter room (requires open door)
-      {"has", "player", "treasure"}         # Finally get treasure
+      # Must get key first
+      {"has_key", "player", true},
+      # Then open door (requires key)
+      {"state", "door", "open"},
+      # Then enter room (requires open door)
+      {"location", "player", "treasure_room"},
+      # Finally get treasure
+      {"has", "player", "treasure"}
     ]
 
     {state, goals}
@@ -819,22 +867,27 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
   defp setup_resource_contention_scenario do
     # Create resource contention state
-    state = State.new()
-    |> State.set_fact("location", "worker_1", "base")
-    |> State.set_fact("location", "worker_2", "base")
-    |> State.set_fact("location", "tool_drill", "tool_room")
-    |> State.set_fact("status", "tool_drill", "available")
-    |> State.set_fact("location", "tool_saw", "tool_room")
-    |> State.set_fact("status", "tool_saw", "available")
-    |> State.set_fact("status", "workstation_1", "ready")
-    |> State.set_fact("status", "workstation_2", "ready")
+    state =
+      State.new()
+      |> State.set_fact("location", "worker_1", "base")
+      |> State.set_fact("location", "worker_2", "base")
+      |> State.set_fact("location", "tool_drill", "tool_room")
+      |> State.set_fact("status", "tool_drill", "available")
+      |> State.set_fact("location", "tool_saw", "tool_room")
+      |> State.set_fact("status", "tool_saw", "available")
+      |> State.set_fact("status", "workstation_1", "ready")
+      |> State.set_fact("status", "workstation_2", "ready")
 
     # Define resource contention goals
     goals = [
-      {"has", "worker_1", "tool_drill"},    # Both workers need tools
-      {"has", "worker_2", "tool_saw"},      # Resource allocation required
-      {"location", "worker_1", "workstation_1"}, # Workstation assignment
-      {"location", "worker_2", "workstation_2"}  # Parallel work possible
+      # Both workers need tools
+      {"has", "worker_1", "tool_drill"},
+      # Resource allocation required
+      {"has", "worker_2", "tool_saw"},
+      # Workstation assignment
+      {"location", "worker_1", "workstation_1"},
+      # Parallel work possible
+      {"location", "worker_2", "workstation_2"}
     ]
 
     {state, goals}
@@ -842,17 +895,23 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
   defp setup_unsatisfiable_scenario do
     # Create scenario with impossible constraints
-    state = State.new()
-    |> State.set_fact("location", "robot", "room_a")
-    |> State.set_fact("robot", "battery", 0)  # No battery
-    |> State.set_fact("state", "door", "locked")
-    |> State.set_fact("location", "key", "room_b")  # Key in different room
+    state =
+      State.new()
+      |> State.set_fact("location", "robot", "room_a")
+      # No battery
+      |> State.set_fact("robot", "battery", 0)
+      |> State.set_fact("state", "door", "locked")
+      # Key in different room
+      |> State.set_fact("location", "key", "room_b")
 
     # Define impossible goals (robot can't move without battery)
     goals = [
-      {"location", "robot", "room_b"},      # Can't move without battery
-      {"has", "robot", "key"},              # Can't get key without moving
-      {"state", "door", "open"}             # Can't open door without key
+      # Can't move without battery
+      {"location", "robot", "room_b"},
+      # Can't get key without moving
+      {"has", "robot", "key"},
+      # Can't open door without key
+      {"state", "door", "open"}
     ]
 
     {state, goals}

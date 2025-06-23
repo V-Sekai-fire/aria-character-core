@@ -65,7 +65,10 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
               {:ok, bridge_enhanced_constraints}
 
             {:error, reason} ->
-              Logger.warning("STNBridgeTemporalStrategy: Bridge constraint addition failed: #{reason}")
+              Logger.warning(
+                "STNBridgeTemporalStrategy: Bridge constraint addition failed: #{reason}"
+              )
+
               # Fall back to standard constraints if bridge enhancement fails
               {:ok, updated_constraints}
           end
@@ -115,7 +118,9 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
       end
     rescue
       e ->
-        error_msg = "STNBridgeTemporalStrategy consistency validation error: #{Exception.message(e)}"
+        error_msg =
+          "STNBridgeTemporalStrategy consistency validation error: #{Exception.message(e)}"
+
         Logger.error(error_msg)
         {:error, error_msg}
     end
@@ -145,7 +150,10 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
               {:ok, bridge_updated_constraints}
 
             {:error, reason} ->
-              Logger.warning("STNBridgeTemporalStrategy: Bridge constraint update failed: #{reason}")
+              Logger.warning(
+                "STNBridgeTemporalStrategy: Bridge constraint update failed: #{reason}"
+              )
+
               # Fall back to standard update if bridge enhancement fails
               {:ok, updated_constraints}
           end
@@ -183,7 +191,10 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
               {:ok, bridge_enhanced_schedule}
 
             {:error, reason} ->
-              Logger.warning("STNBridgeTemporalStrategy: Bridge schedule enhancement failed: #{reason}")
+              Logger.warning(
+                "STNBridgeTemporalStrategy: Bridge schedule enhancement failed: #{reason}"
+              )
+
               # Fall back to standard schedule if bridge enhancement fails
               {:ok, schedule_result}
           end
@@ -245,7 +256,10 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
         _ ->
           # No existing problem, create new one with bridges
           timeline = create_timeline_from_actions(actions)
-          bridge_enhanced_timeline = Timeline.auto_insert_bridges(timeline, get_bridge_insertion_rules(opts))
+
+          bridge_enhanced_timeline =
+            Timeline.auto_insert_bridges(timeline, get_bridge_insertion_rules(opts))
+
           bridges = Timeline.get_bridges(bridge_enhanced_timeline)
           bridge_constraints = convert_bridges_to_constraints(bridges, actions)
 
@@ -285,7 +299,9 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
 
             {:error, reason} ->
               if verbose > 0 do
-                Logger.warning("STNBridgeTemporalStrategy: Bridge placement validation failed: #{reason}")
+                Logger.warning(
+                  "STNBridgeTemporalStrategy: Bridge placement validation failed: #{reason}"
+                )
               end
 
               {:ok, false}
@@ -347,7 +363,7 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
         %{temporal_problem: %{bridges: bridges, timeline: timeline}} when not is_nil(bridges) ->
           # Add bridge information to schedule
           bridge_schedule = create_bridge_schedule(bridges, timeline)
-          
+
           enhanced_schedule = %{
             schedule_result
             | bridge_schedule: bridge_schedule,
@@ -356,7 +372,9 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
           }
 
           if verbose > 1 do
-            Logger.debug("STNBridgeTemporalStrategy: Enhanced schedule with #{length(bridges)} bridges")
+            Logger.debug(
+              "STNBridgeTemporalStrategy: Enhanced schedule with #{length(bridges)} bridges"
+            )
           end
 
           {:ok, enhanced_schedule}
@@ -562,17 +580,18 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
 
     %{
       total_segments: length(segments),
-      segment_details: Enum.map(segments, fn segment ->
-        %{
-          number: segment.number,
-          interval_count: length(segment.intervals),
-          time_range: {
-            segment.start_time,
-            segment.end_time
-          },
-          preceding_bridge: segment.preceding_bridge
-        }
-      end)
+      segment_details:
+        Enum.map(segments, fn segment ->
+          %{
+            number: segment.number,
+            interval_count: length(segment.intervals),
+            time_range: {
+              segment.start_time,
+              segment.end_time
+            },
+            preceding_bridge: segment.preceding_bridge
+          }
+        end)
     }
   end
 
@@ -589,19 +608,23 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
       | name: "STN Bridge Temporal Strategy",
         version: "1.0.0",
         description: "Bridge-enabled STN temporal strategy with automatic segmentation",
-        capabilities: base_info.capabilities ++ [
-          :automatic_bridge_insertion,
-          :bridge_based_segmentation,
-          :decision_point_detection,
-          :phase_boundary_management,
-          :resource_transition_handling
-        ],
-        configuration_options: base_info.configuration_options ++ [
-          :bridge_mode,
-          :bridge_insertion_rules,
-          :auto_segmentation,
-          :bridge_validation_level
-        ],
+        capabilities:
+          base_info.capabilities ++
+            [
+              :automatic_bridge_insertion,
+              :bridge_based_segmentation,
+              :decision_point_detection,
+              :phase_boundary_management,
+              :resource_transition_handling
+            ],
+        configuration_options:
+          base_info.configuration_options ++
+            [
+              :bridge_mode,
+              :bridge_insertion_rules,
+              :auto_segmentation,
+              :bridge_validation_level
+            ],
         underlying_implementation: "STNTemporalStrategy + Timeline.Bridge"
     }
   end

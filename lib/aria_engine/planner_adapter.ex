@@ -158,7 +158,6 @@ defmodule AriaEngine.PlannerAdapter do
     end
   end
 
-
   @doc """
   Validate plan using HybridCoordinator while maintaining Plan.validate_plan/3 API compatibility.
   """

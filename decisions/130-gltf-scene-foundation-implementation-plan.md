@@ -15,6 +15,7 @@ Implement the glTF Scene foundation by creating the necessary Elixir data struct
 ## Implementation Plan
 
 ### Phase 1: Core Data Structures
+
 - [ ] Define Elixir structs for core glTF components to ensure type safety and structured data access.
   - [ ] **Scene Graph:** `Scene`, `Node` (with `translation`, `rotation`, `scale`, `matrix` properties).
   - [ ] **Geometry:** `Mesh`, `Mesh.Primitive`, `Accessor` (including `sparse` accessors).
@@ -25,18 +26,21 @@ Implement the glTF Scene foundation by creating the necessary Elixir data struct
   - [ ] **Skinning:** `Skin`.
 
 ### Phase 2: Data Loading & Parsing
+
 - [ ] Implement modules to load and parse `.gltf` (JSON) and `.glb` (binary) files.
   - [ ] **`Gltf.Loader` Module:** Create a module to handle file reading and initial JSON parsing.
   - [ ] **Binary Data Handling:** Implement logic to load data from external `.bin` files and from embedded Base64-encoded data URIs.
   - [ ] **`Gltf.AccessorView` Module:** Develop a helper module to provide a typed, iterable view into raw buffer data based on an `accessor`'s definition, correctly handling `byteOffset`, `componentType`, `type`, and `byteStride`.
 
 ### Phase 3: Scene Graph Logic
+
 - [ ] Implement the logic required to interpret and manipulate the scene hierarchy.
   - [ ] **Node Transformations:** Create functions to compute a node's local transformation matrix from its TRS properties (or use its `matrix` property directly).
   - [ ] **Global Transformations:** Implement a function to compute a node's global transformation matrix by traversing the parent hierarchy.
   - [ ] **Scene Traversal:** Build a mechanism to recursively traverse a `scene`'s node graph.
 
 ### Phase 4: Mesh and Primitive Processing
+
 - [ ] Develop utilities to translate raw glTF data into usable geometric representations.
   - [ ] **Vertex Data Retrieval:** Implement functions to extract vertex attributes (e.g., `POSITION`, `NORMAL`, `TEXCOORD_0`) for a `Mesh.Primitive` using its `attributes` accessors.
   - [ ] **Indexed Geometry:** Add support for handling the `indices` accessor to correctly assemble indexed primitives.

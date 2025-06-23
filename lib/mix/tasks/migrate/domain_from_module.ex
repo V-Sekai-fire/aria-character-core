@@ -45,20 +45,22 @@ defmodule Mix.Tasks.Migrate.DomainFromModule do
     end
 
     # Determine which files to process
-    target_files = if Enum.empty?(files) do
-      find_test_files()
-    else
-      files
-    end
+    target_files =
+      if Enum.empty?(files) do
+        find_test_files()
+      else
+        files
+      end
 
     if verbose do
       Mix.shell().info("Found #{length(target_files)} files to check")
     end
 
     # Process each file
-    results = Enum.map(target_files, fn file_path ->
-      process_file(file_path, dry_run, verbose)
-    end)
+    results =
+      Enum.map(target_files, fn file_path ->
+        process_file(file_path, dry_run, verbose)
+      end)
 
     # Report results
     report_results(results, dry_run)
@@ -125,16 +127,20 @@ defmodule Mix.Tasks.Migrate.DomainFromModule do
     fn ast_node ->
       case ast_node do
         # Match: AriaEngine.Domain.from_module(AriaEngine.SoftwareDevelopment.Domain)
-        {{:., meta, [{:__aliases__, _alias_meta, [:AriaEngine, :Domain]}, :from_module]}, call_meta,
-         [{:__aliases__, domain_alias_meta, domain_module_path}]} when is_list(domain_module_path) ->
+        {{:., meta, [{:__aliases__, _alias_meta, [:AriaEngine, :Domain]}, :from_module]},
+         call_meta, [{:__aliases__, domain_alias_meta, domain_module_path}]}
+        when is_list(domain_module_path) ->
           # Replace with: DomainModule.build()
-          {{:., meta, [{:__aliases__, domain_alias_meta, domain_module_path}, :build]}, call_meta, []}
+          {{:., meta, [{:__aliases__, domain_alias_meta, domain_module_path}, :build]}, call_meta,
+           []}
 
         # Match: Domain.from_module(SomeDomain) when Domain is aliased
         {{:., meta, [{:__aliases__, _alias_meta, [:Domain]}, :from_module]}, call_meta,
-         [{:__aliases__, domain_alias_meta, domain_module_path}]} when is_list(domain_module_path) ->
+         [{:__aliases__, domain_alias_meta, domain_module_path}]}
+        when is_list(domain_module_path) ->
           # Replace with: DomainModule.build()
-          {{:., meta, [{:__aliases__, domain_alias_meta, domain_module_path}, :build]}, call_meta, []}
+          {{:., meta, [{:__aliases__, domain_alias_meta, domain_module_path}, :build]}, call_meta,
+           []}
 
         _ ->
           ast_node
@@ -143,22 +149,29 @@ defmodule Mix.Tasks.Migrate.DomainFromModule do
   end
 
   defp report_results(results, dry_run) do
-    changed = Enum.count(results, fn
-      {:changed, _} -> true
-      _ -> false
-    end)
-    unchanged = Enum.count(results, fn
-      {:unchanged, _} -> true
-      _ -> false
-    end)
-    skipped = Enum.count(results, fn
-      {:skipped, _} -> true
-      _ -> false
-    end)
-    errors = Enum.count(results, fn
-      {:error, _, _} -> true
-      _ -> false
-    end)
+    changed =
+      Enum.count(results, fn
+        {:changed, _} -> true
+        _ -> false
+      end)
+
+    unchanged =
+      Enum.count(results, fn
+        {:unchanged, _} -> true
+        _ -> false
+      end)
+
+    skipped =
+      Enum.count(results, fn
+        {:skipped, _} -> true
+        _ -> false
+      end)
+
+    errors =
+      Enum.count(results, fn
+        {:error, _, _} -> true
+        _ -> false
+      end)
 
     Mix.shell().info("\nMigration Summary:")
     Mix.shell().info("  Changed: #{changed}")

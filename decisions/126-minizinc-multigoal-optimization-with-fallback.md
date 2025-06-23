@@ -50,11 +50,13 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 ### Architecture
 
 **Hierarchical Multigoal Method System:**
+
 1. **Primary**: MiniZinc constraint optimization (`optimize_multigoal/3`)
 2. **Fallback**: Naive splitting (`split_multigoal/2`)
 3. **Final Fallback**: Manual goal decomposition in execution engine
 
 **Integration Strategy:**
+
 - Use existing multigoal method registration system
 - Leverage method blacklisting for automatic fallback
 - Maintain backward compatibility with current behavior
@@ -75,6 +77,7 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 - [x] Performance metrics collection and analysis
 
 **Test Framework Components:**
+
 - Mock MiniZinc optimizer with constraint solving simulation
 - Baseline naive splitting implementation for comparison
 - Metrics calculation (actions, distance, time, parallelism)
@@ -86,6 +89,7 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 **Actual Completion:** 2025-06-22
 
 **Step 1: Core Module Extraction**
+
 - [x] Extract `MockMiniZincOptimizer` from test to `lib/aria_engine/multigoal/optimizer.ex`
 - [x] Create `lib/aria_engine/multigoal/minizinc_interface.ex` for system integration
 - [x] Create `lib/aria_engine/multigoal/constraint_builder.ex` for constraint generation
@@ -93,6 +97,7 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 - [x] Add proper module documentation and typespecs throughout
 
 **Step 2: MiniZinc Template System**
+
 - [x] Create `priv/templates/minizinc/` directory structure
 - [x] Implement `multigoal_optimization.mzn.eex` with spatial optimization constraints
 - [x] Add `dependency_optimization.mzn.eex` for precondition handling
@@ -101,6 +106,7 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 - [x] Create template selection logic based on goal patterns
 
 **Step 3: Domain Integration**
+
 - [x] Add `optimize_multigoal/3` function to `AriaEngine.Multigoal`
 - [x] Implement method registration with priority: optimization → splitting → manual
 - [x] Add configuration-based method selection (enable/disable optimization)
@@ -108,24 +114,28 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 - [x] Add method blacklisting support for automatic fallback
 
 **Step 4: Configuration Management**
+
 - [x] Add multigoal optimization config to `config/config.exs`
 - [x] Create runtime configuration options for timeout, solver selection
 - [x] Add feature flags for enabling/disabling optimization
 - [x] Document configuration options and recommended settings
 
 **Step 5: Production Monitoring**
+
 - [x] Add telemetry events for optimization success/failure rates
 - [x] Create performance metrics collection (optimization time, improvement %)
 - [x] Add logging for fallback triggers and reasons
 - [x] Implement health checks for MiniZinc solver availability
 
 **Step 6: Integration Testing**
+
 - [x] Create integration tests with real MiniZinc solver
 - [x] Test domain registration and method selection
 - [x] Validate configuration loading and runtime behavior
 - [x] Ensure production performance meets requirements
 
 **Step 7: Documentation and Deployment**
+
 - [x] Create deployment guide with MiniZinc installation instructions
 - [x] Document configuration options and tuning recommendations
 - [x] Add troubleshooting guide for common optimization failures
@@ -139,6 +149,7 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 **File**: `test/aria_engine/structure_multigoal_optimization_test.exs`
 
 **Advanced Testing Capabilities:**
+
 - [x] Structure-randomized string generation for semantic-free testing
 - [x] Structural pattern discovery algorithms (spatial, dependency, parallel, resource)
 - [x] Pure structural optimization without semantic knowledge
@@ -149,11 +160,13 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 **Key Components:**
 
 **Structure-Randomized String Generator:**
+
 - [x] Deterministic generation using cryptographic hashing for reproducible tests
 - [x] Related string generation maintaining structural relationships
 - [x] Complete elimination of semantic meaning from test data
 
 **Structural Pattern Discovery:**
+
 - [x] Spatial structure detection (subject clustering)
 - [x] Dependency structure detection (object-to-subject chains)
 - [x] Parallel structure detection (predicate grouping)
@@ -161,6 +174,7 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 - [x] Goal clustering analysis by structural relationships
 
 **Structure-Randomized Scenario Generators:**
+
 - [x] Spatial optimization scenarios with movement patterns
 - [x] Dependency chain scenarios with precondition relationships
 - [x] Parallel execution scenarios with independent agents
@@ -168,12 +182,14 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 - [x] Mixed pattern scenarios combining multiple optimization types
 
 **Structural Optimizer:**
+
 - [x] Pure structural optimization without semantic knowledge
 - [x] Pattern-based optimization strategy selection
 - [x] Structural metrics calculation (actions, distance, time, parallelism)
 - [x] Optimization validation through measurable improvements
 
 **Advanced Test Scenarios:**
+
 - [x] Spatial pattern discovery with structure-random strings
 - [x] Dependency pattern discovery with structure-random strings
 - [x] Parallel pattern discovery with structure-random strings
@@ -219,6 +235,7 @@ Implement MiniZinc-based multigoal optimization as the primary multigoal method 
 ## Test Scenarios
 
 ### Scenario 1: Warehouse Robot Optimization
+
 ```
 Initial State:
 - Robot at dock
@@ -238,6 +255,7 @@ Expected Optimization:
 ```
 
 ### Scenario 2: Multi-Agent Coordination
+
 ```
 Multiple robots with shared resources and locations
 - Parallel task execution where possible
@@ -246,6 +264,7 @@ Multiple robots with shared resources and locations
 ```
 
 ### Scenario 3: Dependency Chain Optimization
+
 ```
 Goals with complex precondition relationships
 - Intelligent ordering based on dependencies
@@ -254,6 +273,7 @@ Goals with complex precondition relationships
 ```
 
 ### Scenario 4: Resource Contention Resolution
+
 ```
 Limited shared resources (tools, locations, objects)
 - Conflict-free scheduling
@@ -290,6 +310,7 @@ Limited shared resources (tools, locations, objects)
 ### MiniZinc Integration
 
 **Template Structure**: `multigoal_optimization.mzn.eex`
+
 ```minizinc
 % Decision variables
 array[1..num_goals] of var 1..max_time: goal_completion_time;
@@ -312,6 +333,7 @@ solve minimize max(goal_completion_time);
 ```
 
 **Optimizer Module**: `AriaEngine.Multigoal.Optimizer`
+
 ```elixir
 def optimize_multigoal(state, goals, opts \\ []) do
   case run_minizinc_optimization(state, goals, opts) do
@@ -324,6 +346,7 @@ end
 ### Domain Integration
 
 **Automatic Registration**:
+
 ```elixir
 domain
 |> add_multigoal_method("optimize_multigoal", &AriaEngine.Multigoal.Optimizer.optimize_multigoal/3)
@@ -331,6 +354,7 @@ domain
 ```
 
 **Configuration Options**:
+
 ```elixir
 multigoal_opts = [
   optimization_enabled: true,
@@ -346,6 +370,7 @@ multigoal_opts = [
 ```
 
 **Module Architecture**:
+
 ```elixir
 # Main optimizer entry point
 AriaEngine.Multigoal.Optimizer.optimize_multigoal/3
@@ -376,10 +401,12 @@ AriaEngine.Multigoal.Telemetry.track_optimization/2
 ### Risks
 
 **Phase 1 Risks (Mitigated):**
+
 - **Complexity**: MiniZinc integration adds system complexity ✅ (validated in test framework)
 - **Performance Overhead**: Optimization attempt adds latency ✅ (mitigated by timeout)
 
 **Phase 2 Production Risks:**
+
 - **Deployment Dependencies**: Requires MiniZinc solver installation and configuration
 - **Template Complexity**: EEx template rendering and constraint modeling errors
 - **Integration Conflicts**: Potential conflicts with existing domain registration system
@@ -389,11 +416,13 @@ AriaEngine.Multigoal.Telemetry.track_optimization/2
 ### Mitigation Strategies
 
 **Proven Mitigations (Phase 1):**
+
 - **Comprehensive Testing**: Extensive test coverage for optimization and fallback ✅
 - **Graceful Degradation**: Multiple fallback layers ensure system reliability ✅
 - **Performance Monitoring**: Track optimization success rates and performance ✅
 
 **Phase 2 Mitigations:**
+
 - **Deployment Documentation**: Comprehensive installation and configuration guides
 - **Template Validation**: Robust error handling and template testing framework
 - **Backward Compatibility**: Zero breaking changes to existing multigoal functionality
@@ -405,12 +434,14 @@ AriaEngine.Multigoal.Telemetry.track_optimization/2
 ### What This ADR Covers (Static Multigoal Optimization)
 
 **Primary Responsibility:**
+
 - **Pre-execution multigoal optimization** using MiniZinc constraint programming
 - **Static constraint modeling** based on initial state and predicted execution patterns
 - **Template-based optimization** with fixed constraint parameters
 - **Fallback mechanisms** from optimization to naive splitting
 
 **Specific Implementation Areas:**
+
 - `AriaEngine.Multigoal.Optimizer.optimize_multigoal/3` for static optimization
 - MiniZinc template system with static constraint generation
 - Domain registration and method blacklisting for static optimization
@@ -419,17 +450,20 @@ AriaEngine.Multigoal.Telemetry.track_optimization/2
 ### What This ADR Does NOT Cover (Runtime-Informed Optimization)
 
 **Runtime Optimization During Lazy Execution (→ ADR-127):**
+
 - ❌ **Runtime-informed re-optimization** during `run_lazy` execution cycles
 - ❌ **Dynamic constraint adjustment** based on previous plan execution results
 - ❌ **Execution context integration** with multigoal optimization using last plan performance data
 - ❌ **Adaptive optimization** using method failure patterns and execution metrics from previous plans
 
 **Key Insight: Single Plan vs Lazy Execution Context**
+
 - **Single Plan Limitation**: Cannot get runtime info from a single plan execution
 - **Lazy Execution Opportunity**: During `run_lazy` solve cycles, we have access to information from the last plan execution that can inform optimization of the next plan
 - **Runtime Data Sources**: Previous plan performance, execution timing, resource utilization, backtracking patterns, method success/failure rates
 
 **Execution Engine Integration (→ ADR-125):**
+
 - ❌ **Lazy execution implementation** and backtracking logic
 - ❌ **Plan execution strategies** and execution context management
 - ❌ **Runtime state management** during plan execution
@@ -442,10 +476,12 @@ Static optimization provides excellent baseline performance improvements (18.8-5
 ### Key Insight: Lazy Execution Context Advantage
 
 **Problem Statement:**
+
 - **Single Plan Limitation**: We cannot get any runtime info from a single plan execution
 - **Lazy Execution Opportunity**: During `run_lazy` solve cycles, we have access to information from the last plan to use to optimize the next plan
 
 **Runtime Data Available During Lazy Execution:**
+
 - **Previous Plan Performance**: Actual execution time vs predicted time
 - **Method Success/Failure Rates**: Which domain methods succeeded or failed during execution
 - **Resource Utilization Patterns**: Actual resource usage vs predicted usage
@@ -454,6 +490,7 @@ Static optimization provides excellent baseline performance improvements (18.8-5
 - **State Transition Efficiency**: How efficiently the state changed during execution
 
 **Optimization Opportunities:**
+
 - **Dynamic Constraint Adjustment**: Modify constraint weights based on previous plan performance
 - **Method Preference Learning**: Bias optimization toward methods that succeeded in previous plans
 - **Resource Allocation Refinement**: Adjust resource scheduling based on actual usage patterns
@@ -461,6 +498,7 @@ Static optimization provides excellent baseline performance improvements (18.8-5
 - **Spatial Optimization Learning**: Refine movement and routing based on actual travel times
 
 **Implementation Strategy for ADR-127:**
+
 1. **Execution Context Capture**: Collect performance data during plan execution
 2. **Performance Analysis**: Analyze gaps between predicted and actual performance
 3. **Constraint Model Adaptation**: Dynamically adjust MiniZinc constraints based on runtime data
@@ -468,12 +506,14 @@ Static optimization provides excellent baseline performance improvements (18.8-5
 5. **Continuous Learning**: Build performance models that improve over multiple execution cycles
 
 **Integration with Current ADR-126:**
+
 - Static optimization (this ADR) provides the baseline optimization capability
 - Runtime-informed optimization (ADR-127) enhances the static system with adaptive learning
 - Both systems use the same MiniZinc infrastructure and fallback mechanisms
 - Runtime optimization builds on the proven static optimization foundation
 
 This creates a two-tier optimization system:
+
 1. **Tier 1 (ADR-126)**: Static pre-execution optimization using initial state and goal analysis
 2. **Tier 2 (ADR-127)**: Runtime-informed re-optimization using performance data from previous plans
 
@@ -501,12 +541,14 @@ The proven test framework provides the foundation and validation for production 
 ### Success Metrics
 
 **Phase 1 Completion Criteria:** ✅ ACHIEVED
+
 - ✅ All test scenarios demonstrate measurable optimization improvements (18.8-50% gains)
 - ✅ Fallback behavior validated under all failure conditions (100% success rate)
 - ✅ Performance benchmarks establish clear benefits over naive splitting (exceeds all targets)
 - ✅ Implementation complexity assessed and documented (mock framework complete)
 
 **Phase 2 Completion Criteria:** ✅ ACHIEVED
+
 - [x] Production optimizer module deployed to `lib/aria_engine/multigoal/optimizer.ex`
 - [x] MiniZinc interface module created at `lib/aria_engine/multigoal/minizinc_interface.ex`
 - [x] Constraint builder module created at `lib/aria_engine/multigoal/constraint_builder.ex`
@@ -516,6 +558,7 @@ The proven test framework provides the foundation and validation for production 
 - [x] Test framework validates optimization behavior and fallback mechanisms
 
 **Phase 2 Success Validation:**
+
 - [ ] **Production Performance**: Optimization achieves >15% improvement in real scenarios
 - [ ] **Reliability**: 100% fallback success rate maintained in production
 - [ ] **Integration**: Zero breaking changes to existing multigoal functionality
@@ -523,6 +566,7 @@ The proven test framework provides the foundation and validation for production 
 - [ ] **Deployment**: System can be deployed with MiniZinc solver dependencies
 
 **Phase 3 Completion Criteria:** ✅ ACHIEVED
+
 - [x] Structure-randomized testing framework operational at `test/aria_engine/structure_multigoal_optimization_test.exs`
 - [x] Structural pattern discovery algorithms validate optimization without semantic knowledge
 - [x] All optimization types (spatial, dependency, parallel, resource) tested with structure-random strings
@@ -532,6 +576,7 @@ The proven test framework provides the foundation and validation for production 
 - [x] Framework proves optimizer works on structural patterns alone
 
 **Phase 3 Enhanced Comparative Testing:** ✅ ACHIEVED
+
 - [x] Comparative optimization methods implemented (naive, random, heuristic vs MiniZinc)
 - [x] MiniZinc demonstrates superior pattern discovery across all scenario types
 - [x] Quantifiable performance advantages: 25-40% action reduction, 20-50% distance optimization, 20-60% time improvement

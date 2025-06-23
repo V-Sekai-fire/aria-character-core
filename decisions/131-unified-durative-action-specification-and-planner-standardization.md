@@ -10,6 +10,7 @@
 **All 9 phases of unified durative action specification are now implemented and tested.**
 
 **Implementation Summary:**
+
 - ✅ All core functionality working (Phases 1-9)
 - ⚠️ ADR-132 dependency identified but not blocking core functionality
 - ✅ Comprehensive test coverage (8/8 unified durative action tests passing)
@@ -23,11 +24,13 @@ The AriaEngine planner has evolved multiple confusing and inconsistent patterns 
 ### Current Confusing Patterns
 
 **1. Multiple Duration Formats:**
+
 - ISO 8601 duration strings: `"PT8H"` (floating effort)
 - **MISSING**: ISO 8601 datetime strings: `"2025-06-22T10:00:00Z"` (fixed scheduling)
 - Complex Interval structs with various constructors
 
 **2. Multiple Entity/Capability/Resource Patterns:**
+
 ```elixir
 # TimelineGraph pattern
 TimelineGraph.create_entity(graph, "guard", "Tower Guard", %{})
@@ -42,21 +45,25 @@ interval = Interval.new(start, end, agent: agent)
 ```
 
 **3. Inconsistent Goal Formats:**
+
 - **DEPRECATED**: `{subject, predicate, value}` ❌ TOMBSTONE THIS
 - **CORRECT**: `{predicate, subject, value}` ✅ ONLY USE THIS
 
 **4. Multiple State Validation Approaches:**
+
 - `validate_temporal_condition/2` ❌ REMOVE
 - `State.evaluate_condition/2` ❌ REMOVE  
 - **ONLY USE**: `State.get_fact/3` ✅ DIRECT FACT CHECKING (supports temporal queries)
 
 **5. Multiple Planning APIs:**
+
 - `Plan.plan/4` (legacy)
 - `PlannerAdapter.plan/4` (migration wrapper)
 - `HybridCoordinatorV2.plan/4` (new system)
 - `PlannerAdapter.plan_tasks/4` (direct HTN)
 
 **6. Inconsistent Action Definition:**
+
 ```elixir
 # Pattern 1: Simple function
 Domain.add_action(:move, &move/2)
@@ -124,6 +131,7 @@ Domain.add_action(:meeting, &meeting/2, %{
 ```
 
 **Key insight: Everything is an entity with capabilities that define behavior:**
+
 - **Agents**: `%{type: "chef", capabilities: [:cooking, :menu_planning]}`
 - **Tools**: `%{type: "oven", capabilities: [:heating, :baking]}`
 - **Locations**: `%{type: "kitchen", capabilities: [:workspace]}`
@@ -142,12 +150,14 @@ Capabilities are simple atoms that represent what an entity can do or what categ
 ```
 
 **Capability categories:**
+
 - **Categorical traits**: `:agent`, `:consumable`, `:tool`, `:appliance`
 - **Behavioral capabilities**: `:heating`, `:cutting`, `:cooking`, `:baking`
 - **Functional traits**: `:reusable`, `:portable`, `:stackable`, `:container`
 - **Domain-specific**: `:kitchen_equipment`, `:ingredient`, `:meeting_space`
 
 **Examples of capability composition (properties in state):**
+
 ```elixir
 # Kitchen appliance with simple capability traits
 %{type: "oven", capabilities: [
@@ -203,6 +213,7 @@ Capabilities are simple atoms that represent what an entity can do or what categ
 ```
 
 **Query flexibility with simple capabilities:**
+
 ```elixir
 # Simple capability queries (atoms only)
 entities_with_capability(:consumable)
@@ -243,6 +254,7 @@ entities_with_capability(:consumable)      # All consumable entities
 ```
 
 **Benefits of capabilities-as-traits:**
+
 - **No inheritance complexity**: Avoids is-a relationships and parent-child hierarchies
 - **Flexible composition**: Mix and match any combination of traits and behaviors
 - **Flat namespace**: Easy to understand and query without nested type systems
@@ -251,6 +263,7 @@ entities_with_capability(:consumable)      # All consumable entities
 - **Domain-agnostic**: Works for any entity type without predefined hierarchies
 
 **Quantities are state, not metadata:**
+
 ```elixir
 # Action implementation handles quantities through state
 def cook_meal(state, [meal_type]) do
@@ -271,6 +284,7 @@ end
 ## Phase 1: Core Duration Support - BOTH Fixed and Floating Schedules
 
 **CURRENT STATE:**
+
 - ✅ **Floating Duration Support**: `duration: "PT2H"` (ISO 8601 duration strings) - ALREADY WORKS
 - ❌ **Fixed Schedule Support**: `start: "2025-06-22T10:00:00Z", end: "2025-06-22T11:00:00Z"` (ISO 8601 datetime strings) - MISSING
 
@@ -300,6 +314,7 @@ Domain.add_action(:meeting, &meeting/2, %{
 ```
 
 **VALIDATION RULES:**
+
 - ✅ `duration` only (floating effort)
 - ✅ `start` AND `end` (fixed closed interval)
 - ✅ `start` only (open-ended interval - starts at time, no end constraint)
@@ -313,6 +328,7 @@ All temporal validation and parsing MUST use Timex instead of Elixir's base Date
 ### Timex Implementation Details
 
 **Required Timex Functions:**
+
 ```elixir
 # Replace DateTime.from_iso8601/1 with Timex parsing
 # Before: DateTime.from_iso8601("2025-06-22T10:00:00Z")
@@ -328,6 +344,7 @@ All temporal validation and parsing MUST use Timex instead of Elixir's base Date
 ```
 
 **Validation Function Updates:**
+
 ```elixir
 # ISO 8601 datetime validation using Timex
 defp validate_iso8601_datetime(datetime_string, field_name) when is_binary(datetime_string) do
@@ -363,6 +380,7 @@ end
 ```
 
 **Benefits of Timex Integration:**
+
 - **Enhanced ISO 8601 support**: More robust parsing with better error messages
 - **Timezone handling**: Proper timezone conversion and management
 - **Duration arithmetic**: Better duration parsing and manipulation
@@ -370,6 +388,7 @@ end
 - **Error reporting**: More descriptive error messages for invalid formats
 
 **Standardized formats:**
+
 - **Goals**: ONLY `{predicate, subject, value}` format
 - **State validation**: ONLY `State.get_fact/3` direct fact checking (supports temporal queries)
 - **Entity management**: ONLY through Domain actions API
@@ -394,6 +413,7 @@ Following Martin Fowler's TDD methodology, we implement the unified durative act
 ### Complete Test Case Inventory
 
 **Infrastructure Tests (Foundation)**
+
 - [ ] Action atom registration without aliasing conflicts
 - [ ] Task method registration with `task_` prefix
 - [ ] Action vs task method resolution priority
@@ -401,6 +421,7 @@ Following Martin Fowler's TDD methodology, we implement the unified durative act
 - [ ] Domain creation and action registration
 
 **Metadata Validation Framework Tests**
+
 - [ ] Basic metadata structure validation
 - [ ] Type specification enforcement
 - [ ] Error message clarity and specificity
@@ -408,6 +429,7 @@ Following Martin Fowler's TDD methodology, we implement the unified durative act
 - [ ] Invalid metadata rejection
 
 **Temporal Specification Tests**
+
 - [ ] ISO 8601 duration string validation (`"PT2H"`)
 - [ ] ISO 8601 datetime string validation (`"2025-06-22T10:00:00Z"`)
 - [ ] Fixed closed interval validation (start + end)
@@ -417,6 +439,7 @@ Following Martin Fowler's TDD methodology, we implement the unified durative act
 - [ ] Invalid temporal format rejection
 
 **Entity Requirement Tests**
+
 - [ ] Simple capability validation (atoms only)
 - [ ] Entity type requirement validation
 - [ ] Multiple entity requirement validation
@@ -424,6 +447,7 @@ Following Martin Fowler's TDD methodology, we implement the unified durative act
 - [ ] Entity requirement integration with state queries
 
 **State Integration Tests**
+
 - [ ] Property queries through State.get_fact/3
 - [ ] Temporal state queries (past/future checking)
 - [ ] Capability-based entity filtering
@@ -431,6 +455,7 @@ Following Martin Fowler's TDD methodology, we implement the unified durative act
 - [ ] Dynamic property management
 
 **End-to-End Integration Tests**
+
 - [ ] Complete action definition with all metadata types
 - [ ] Planning integration with unified specification
 - [ ] Goal achievement with entity requirements
@@ -440,6 +465,7 @@ Following Martin Fowler's TDD methodology, we implement the unified durative act
 ### Test-First Implementation Sequence
 
 **Iteration 1: Infrastructure Foundation (Action Atom Priority Rule)**
+
 ```elixir
 # RED: Write failing test
 test "action atoms resolve with higher priority than task methods" do
@@ -457,6 +483,7 @@ end
 ```
 
 **Iteration 2: Metadata Validation Framework**
+
 ```elixir
 # RED: Write failing test
 test "validates action metadata structure and types" do
@@ -474,6 +501,7 @@ end
 ```
 
 **Iteration 3: Temporal Specification Support**
+
 ```elixir
 # RED: Write failing test
 test "supports all temporal specification patterns" do
@@ -499,6 +527,7 @@ end
 ```
 
 **Iteration 4: Entity Requirements**
+
 ```elixir
 # RED: Write failing test
 test "validates entity requirements with capabilities" do
@@ -516,6 +545,7 @@ end
 ```
 
 **Iteration 5: State Integration**
+
 ```elixir
 # RED: Write failing test
 test "integrates with State for property queries" do
@@ -533,6 +563,7 @@ end
 ```
 
 **Iteration 6: End-to-End Integration**
+
 ```elixir
 # RED: Write failing test
 test "complete unified action specification works end-to-end" do
@@ -557,16 +588,19 @@ end
 ### Red-Green-Refactor Guidelines
 
 **Red Phase (Write Failing Test)**
+
 - Focus on interface design - how should the API work?
 - Write the test you wish you could call
 - Make it fail for the right reason (missing implementation, not syntax error)
 
 **Green Phase (Make Test Pass)**
+
 - Write minimal code to make the test pass
 - Don't worry about perfect design yet
 - Get to green as quickly as possible
 
 **Refactor Phase (Clean Up)**
+
 - Improve both test and implementation code
 - Extract common patterns
 - Ensure code is well-structured and maintainable
@@ -592,6 +626,7 @@ end
 ## Consequences
 
 **Benefits:**
+
 - Eliminates confusion by providing ONE way to do each task
 - Unified API for durative actions with full resource specification
 - Consistent data formats across the entire system
@@ -600,12 +635,14 @@ end
 - Better integration between Domain actions and Timeline execution
 
 **Risks:**
+
 - Large scope requires careful migration to avoid breaking changes
 - Multiple files need coordinated updates
 - Existing code using deprecated patterns needs migration
 - Comprehensive testing required to ensure compatibility
 
 **Migration Strategy:**
+
 - Maintain backward compatibility during transition
 - Add deprecation warnings for old patterns
 - Provide clear migration examples
@@ -616,12 +653,15 @@ end
 The following additional issues were identified during analysis but are not yet addressed in the current implementation plan:
 
 ### 1. Method Registration Inconsistencies (MEDIUM PRIORITY) ✅ SOLUTION IDENTIFIED
+
 **Problem**: Multiple function arities with unclear usage patterns
+
 - `add_task_method/3` vs `add_task_method/4` - when to use which arity?
 - `add_unigoal_method/3` vs `add_unigoal_method/4` - same inconsistency
 - Manual vs automatic primitive method registration confusion
 
 **Solution**: Single Unified Method with Options Map
+
 ```elixir
 # Replace all variants with single unified method
 Domain.add_method(domain, name, function, opts \\ %{})
@@ -640,6 +680,7 @@ end
 ```
 
 **Benefits**:
+
 - Single function to learn (no arity confusion)
 - Self-documenting options make intent clear
 - Extensible without breaking changes
@@ -648,12 +689,15 @@ end
 **Impact**: Eliminates developer confusion about which method registration approach to use
 
 ### 2. Multigoal vs Unigoal Confusion (MEDIUM PRIORITY) ✅ SOLUTION IDENTIFIED
+
 **Problem**: Unclear distinction and integration patterns
+
 - When to use multigoal methods vs unigoal methods
 - How multigoal optimization integrates with unified action specification
 - Unclear relationship between `AriaEngine.Multigoal` and domain methods
 
 **Solution**: Clear Hierarchical Decomposition Pattern
+
 ```elixir
 # Unigoal methods: Decompose single goal into todo list
 # Input: {"predicate", "subject", "object"} 
@@ -687,12 +731,14 @@ end
 ```
 
 **Clear Hierarchy**:
+
 1. **Multigoal methods** → constraint-based strategic optimizers for `%AriaEngine.Multigoal{}` (special case)
 2. **Unigoal methods** → decompose single goal into task todos (can backtrack)
 3. **Task methods** → decompose tasks into more todos (can backtrack)
 4. **Actions** → change state directly (can backtrack)
 
 **Benefits**:
+
 - Clear separation of concerns at each level
 - Multigoal methods use constraint satisfaction (MiniZinc) to optimize goal achievement
 - Unigoal methods focus on single goal decomposition strategies
@@ -703,12 +749,15 @@ end
 **Impact**: Eliminates confusion about decomposition levels and enables proper goal optimization
 
 ### 3. Domain Module Creation Patterns (LOW PRIORITY) ✅ SOLUTION IDENTIFIED
+
 **Problem**: Multiple domain creation approaches without clear guidance
+
 - `Domain.new()` vs `Domain.from_module()` - different creation patterns
 - Module-based domain definition vs programmatic building
 - Inconsistent patterns for domain initialization
 
 **Solution**: Module-First Pattern with Elixir Conventions
+
 ```elixir
 # RECOMMENDED: Module-based domain definition (follows Elixir conventions)
 defmodule MyApp.Domains.CookingDomain do

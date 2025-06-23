@@ -50,16 +50,16 @@ defmodule Mix.Tasks.Migrate.Base do
   """
   def should_skip_file?(file) do
     String.contains?(file, "migrate") or
-    String.contains?(file, "migration") or
-    String.contains?(file, ".migration_backup") or
-    String.contains?(file, "statev2_fixer") or
-    String.ends_with?(file, "_fixer.exs") or
-    String.ends_with?(file, "_migration.exs") or
-    String.contains?(file, "_build/") or
-    String.starts_with?(file, "deps/") or
-    String.contains?(file, ".elixir_ls/") or
-    String.contains?(file, "priv/templates/") or
-    String.contains?(file, "thirdparty/")
+      String.contains?(file, "migration") or
+      String.contains?(file, ".migration_backup") or
+      String.contains?(file, "statev2_fixer") or
+      String.ends_with?(file, "_fixer.exs") or
+      String.ends_with?(file, "_migration.exs") or
+      String.contains?(file, "_build/") or
+      String.starts_with?(file, "deps/") or
+      String.contains?(file, ".elixir_ls/") or
+      String.contains?(file, "priv/templates/") or
+      String.contains?(file, "thirdparty/")
   end
 
   @doc """
@@ -137,6 +137,7 @@ defmodule Mix.Tasks.Migrate.Base do
           File.write!(file, new_content)
           Logger.debug("   ✅ Modified: #{file}")
         end
+
         :changed
 
       :unchanged ->
@@ -153,14 +154,17 @@ defmodule Mix.Tasks.Migrate.Base do
   Process multiple files with a transformation function.
   """
   def process_files(files, transformation_fn, dry_run, backup_dir) do
-    results = Enum.map(files, fn file ->
-      {file, process_file(file, transformation_fn, dry_run, backup_dir)}
-    end)
+    results =
+      Enum.map(files, fn file ->
+        {file, process_file(file, transformation_fn, dry_run, backup_dir)}
+      end)
 
     changed_count = Enum.count(results, fn {_, result} -> result == :changed end)
     error_count = Enum.count(results, fn {_, result} -> result == :error end)
 
-    Logger.info("📊 Processed #{length(files)} files: #{changed_count} changed, #{error_count} errors")
+    Logger.info(
+      "📊 Processed #{length(files)} files: #{changed_count} changed, #{error_count} errors"
+    )
 
     results
   end

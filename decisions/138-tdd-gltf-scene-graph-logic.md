@@ -20,6 +20,7 @@ Implement glTF scene graph logic using strict Test-Driven Development, writing f
 ## TDD Implementation Plan
 
 ### 3.1 Node Transformations (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for TRS to matrix conversion
 - [ ] **RED**: Write failing test for matrix property usage (bypassing TRS)
 - [ ] **RED**: Write failing test for identity transformation handling
@@ -28,6 +29,7 @@ Implement glTF scene graph logic using strict Test-Driven Development, writing f
 - [ ] **REFACTOR**: Clean up transformation calculations
 
 ### 3.2 Global Transformations (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for parent-child transformation chain
 - [ ] **RED**: Write failing test for root node global transformation
 - [ ] **RED**: Write failing test for deep hierarchy transformation
@@ -36,6 +38,7 @@ Implement glTF scene graph logic using strict Test-Driven Development, writing f
 - [ ] **REFACTOR**: Clean up hierarchy traversal
 
 ### 3.3 Scene Traversal (Red-Green-Refactor)
+
 - [ ] **RED**: Write failing test for depth-first scene traversal
 - [ ] **RED**: Write failing test for breadth-first scene traversal
 - [ ] **RED**: Write failing test for node visitor pattern

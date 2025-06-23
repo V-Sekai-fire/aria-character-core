@@ -11,14 +11,22 @@ defmodule PlanningTest do
   # Helper function to build a simple test domain
   defp build_simple_test_domain do
     Domain.new("simple_test")
-    |> Domain.add_action(:move, fn state, [from, to] ->
-      state
-      |> State.set_fact("location", "player", to)
-      |> State.set_fact("previous_location", "player", from)
-    end, %{duration: "PT1M"})
-    |> Domain.add_action(:pickup, fn state, [item] ->
-      State.set_fact(state, "has", "player", item)
-    end, %{duration: "PT30S"})
+    |> Domain.add_action(
+      :move,
+      fn state, [from, to] ->
+        state
+        |> State.set_fact("location", "player", to)
+        |> State.set_fact("previous_location", "player", from)
+      end,
+      %{duration: "PT1M"}
+    )
+    |> Domain.add_action(
+      :pickup,
+      fn state, [item] ->
+        State.set_fact(state, "has", "player", item)
+      end,
+      %{duration: "PT30S"}
+    )
     |> Domain.add_task_method("get_item", "basic_get", fn _state, [item] ->
       [{"move", ["room2"]}, {"pickup", [item]}]
     end)

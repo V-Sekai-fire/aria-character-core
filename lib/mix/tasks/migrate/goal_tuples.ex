@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Mix.Tasks.Migrate.GoalTuples do
   @compile {:no_warn_unused, [:serial_number]}
   @moduledoc "Migration tool with serial number: A25W002GXAL\n\nDecode: mix migrate.decode_serial A25W002GXAL\n"

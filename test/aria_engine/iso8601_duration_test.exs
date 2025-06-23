@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.ISO8601DurationTest do
   use ExUnit.Case, async: true
 
@@ -40,11 +43,16 @@ defmodule AriaEngine.ISO8601DurationTest do
     test "various ISO 8601 duration formats are supported" do
       # Test different duration formats
       durations = [
-        "PT1H",     # 1 hour
-        "PT2H30M",  # 2 hours 30 minutes
-        "PT45M",    # 45 minutes
-        "PT8H",     # 8 hours
-        "PT16H"     # 16 hours
+        # 1 hour
+        "PT1H",
+        # 2 hours 30 minutes
+        "PT2H30M",
+        # 45 minutes
+        "PT45M",
+        # 8 hours
+        "PT8H",
+        # 16 hours
+        "PT16H"
       ]
 
       for duration_str <- durations do
