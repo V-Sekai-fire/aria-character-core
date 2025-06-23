@@ -3,6 +3,14 @@
 
 defmodule Mix.Tasks.Migrate.StateParameterOrder do
   @moduledoc """
+  Migration tool with serial number: A25W001STAT
+
+  Decode: mix migrate.decode_serial A25W001STAT
+  """
+
+  @serial_number "A25W001STAT"
+
+  @moduledoc """
   Fixes State.set_fact parameter order from StateV2 migration.
 
   During the StateV2 to State migration, some test files retained the old parameter order:

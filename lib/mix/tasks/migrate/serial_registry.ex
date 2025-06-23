@@ -24,52 +24,52 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
   """
 
   @registry %{
-    "A25V001GLTL" => %{
-      format: :v1,
-      file: "goal_tuples.ex",
-      purpose: "Fix goal tuple parameter order",
-      created: ~D[2025-06-22],
-      week: 25,
-      sequence: 1
-    },
-    "A25V002LGGR" => %{
-      format: :v1,
-      file: "logger_conversion.ex",
-      purpose: "Convert IO.puts to Logger calls",
-      created: ~D[2025-06-22],
-      week: 25,
-      sequence: 2
-    },
-    "A25V003PRDR" => %{
+    "A25W001STAT" => %{
       format: :v1,
       file: "state_parameter_order.ex",
       purpose: "Fix parameter order in State function calls",
       created: ~D[2025-06-22],
-      week: 25,
+      week: 26,
+      sequence: 1
+    },
+    "A25W002GXAL" => %{
+      format: :v1,
+      file: "goal_tuples.ex",
+      purpose: "Fix goal tuple parameter order",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 2
+    },
+    "A25W003LXGG" => %{
+      format: :v1,
+      file: "logger_conversion.ex",
+      purpose: "Convert IO.puts to Logger calls",
+      created: ~D[2025-06-22],
+      week: 26,
       sequence: 3
     },
-    "A25V004PRMS" => %{
-      format: :v1,
-      file: "state_parameters.ex",
-      purpose: "Update State function parameters",
-      created: ~D[2025-06-22],
-      week: 25,
-      sequence: 4
-    },
-    "A25V005STV2" => %{
-      format: :v1,
-      file: "state_v2.ex",
-      purpose: "Migrate StateV2 to State",
-      created: ~D[2025-06-22],
-      week: 25,
-      sequence: 5
-    },
-    "A25V006SAPX" => %{
+    "A25W004STAT" => %{
       format: :v1,
       file: "statev2_api.ex",
       purpose: "Update StateV2 API calls",
       created: ~D[2025-06-22],
-      week: 25,
+      week: 26,
+      sequence: 4
+    },
+    "A25W005STAT" => %{
+      format: :v1,
+      file: "state_parameters.ex",
+      purpose: "Update State function parameters",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 5
+    },
+    "A25W006STAT" => %{
+      format: :v1,
+      file: "state_v2.ex",
+      purpose: "Migrate StateV2 to State",
+      created: ~D[2025-06-22],
+      week: 26,
       sequence: 6
     }
   }
@@ -107,6 +107,7 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
   @doc "Detect serial number format version"
   def detect_version(serial) do
     case String.length(serial) do
+      11 -> :v1  # Allow 11 characters for shorter tool codes
       12 -> :v1
       13 -> :v2
       14 -> :v3
@@ -159,13 +160,15 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
     |> Enum.join()
   end
 
-  defp decode_v1(<<factory::binary-size(1), year::binary-size(2), week_char::binary-size(1),
-                   unit::binary-size(3), tool_code::binary-size(4)>>) do
+  defp decode_v1(serial) when byte_size(serial) >= 7 do
+    <<factory::binary-size(1), year::binary-size(2), week_char::binary-size(1),
+      unit::binary-size(3), tool_code::binary>> = serial
+
     with {:ok, week} <- decode_week_safe(week_char),
          {:ok, year_int} <- parse_year(year),
          {:ok, unit_int} <- parse_unit(unit) do
 
-      registry_info = lookup(factory <> year <> week_char <> unit <> tool_code)
+      registry_info = lookup(serial)
 
       %{
         format: :v1,
@@ -181,6 +184,8 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
       error -> error
     end
   end
+
+  defp decode_v1(_serial), do: {:error, :invalid_format}
 
   defp decode_v2(_serial), do: {:error, :v2_not_implemented}
   defp decode_v3(_serial), do: {:error, :v3_not_implemented}

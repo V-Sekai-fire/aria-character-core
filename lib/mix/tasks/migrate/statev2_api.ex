@@ -3,6 +3,14 @@
 
 defmodule Mix.Tasks.Migrate.Statev2Api do
   @moduledoc """
+  Migration tool with serial number: A25W004STAT
+
+  Decode: mix migrate.decode_serial A25W004STAT
+  """
+
+  @serial_number "A25W004STAT"
+
+  @moduledoc """
   Migrate StateV2 API calls to State API.
 
   This task converts StateV2 function calls to their State equivalents with proper parameter ordering.

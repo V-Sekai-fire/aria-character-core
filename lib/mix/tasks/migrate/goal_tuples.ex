@@ -3,6 +3,14 @@
 
 defmodule Mix.Tasks.Migrate.GoalTuples do
   @moduledoc """
+  Migration tool with serial number: A25W002GXAL
+
+  Decode: mix migrate.decode_serial A25W002GXAL
+  """
+
+  @serial_number "A25W002GXAL"
+
+  @moduledoc """
   Fix goal tuple ordering from {subject, predicate, object} to {predicate, subject, object}.
 
   This task updates goal tuple patterns throughout the codebase to match the State API format.

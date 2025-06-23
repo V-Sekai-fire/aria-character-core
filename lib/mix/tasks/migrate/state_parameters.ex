@@ -3,6 +3,14 @@
 
 defmodule Mix.Tasks.Migrate.StateParameters do
   @moduledoc """
+  Migration tool with serial number: A25W005STAT
+
+  Decode: mix migrate.decode_serial A25W005STAT
+  """
+
+  @serial_number "A25W005STAT"
+
+  @moduledoc """
   Fix State API parameter ordering to match State.set_fact(state, predicate, subject, value).
 
   This task updates State.set_fact calls to use the correct parameter order.
