@@ -11,8 +11,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       assert interval.start_time == start_time
@@ -25,8 +25,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       assert Interval.duration_seconds(interval) == 3600.0
@@ -39,8 +39,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time),
+          start_time,
+          end_time,
           agent: agent
         )
 
@@ -56,8 +56,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time),
+          start_time,
+          end_time,
           entity: entity
         )
 
@@ -73,8 +73,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time),
+          start_time,
+          end_time,
           metadata: metadata
         )
 
@@ -87,14 +87,14 @@ defmodule Timeline.IntervalTest do
 
       interval1 =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       interval2 =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       assert interval1.id != interval2.id
@@ -108,8 +108,8 @@ defmodule Timeline.IntervalTest do
 
       assert_raise ArgumentError, ~r/start_time must be before or equal to end_time/, fn ->
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
       end
     end
@@ -120,8 +120,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       assert DateTime.compare(interval.start_time, interval.end_time) == :lt
@@ -133,8 +133,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       assert DateTime.compare(interval.start_time, interval.end_time) == :eq
@@ -148,8 +148,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       assert Interval.duration_seconds(interval) == 9000.0
@@ -161,8 +161,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       assert Interval.duration_seconds(interval) == 400.0
@@ -177,8 +177,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       assert Interval.contains?(interval, test_time)
@@ -190,8 +190,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       test_time = "1970-01-01T00:03:20Z"
@@ -213,8 +213,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time),
+          start_time,
+          end_time,
           agent: agent
         )
 
@@ -229,8 +229,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time),
+          start_time,
+          end_time,
           entity: entity
         )
 
@@ -244,8 +244,8 @@ defmodule Timeline.IntervalTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       refute Interval.agent?(interval)

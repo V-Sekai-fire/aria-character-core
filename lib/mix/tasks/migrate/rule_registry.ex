@@ -54,6 +54,34 @@ defmodule Mix.Tasks.Migrate.RuleRegistry do
         transformation_fn: &Mix.Tasks.Migrate.Rules.LoggerConversion.transformation_rules/0,
         detection_fn: &Mix.Tasks.Migrate.Rules.LoggerConversion.needs_transformation?/1,
         dependencies: []
+      },
+
+      # Bug fixes
+      %__MODULE__{
+        name: :datetime_string_fix,
+        description: "Fix DateTime.to_iso8601 calls with string arguments",
+        category: :bug_fix,
+        transformation_fn: &Mix.Tasks.Migrate.Rules.DatetimeStringFix.transformation_rules/0,
+        detection_fn: &Mix.Tasks.Migrate.Rules.DatetimeStringFix.needs_transformation?/1,
+        dependencies: []
+      },
+
+      %__MODULE__{
+        name: :interval_constructor_fix,
+        description: "Fix Interval.new_fixed_schedule calls missing end time parameters",
+        category: :bug_fix,
+        transformation_fn: &Mix.Tasks.Migrate.Rules.IntervalConstructorFix.transformation_rules/0,
+        detection_fn: &Mix.Tasks.Migrate.Rules.IntervalConstructorFix.needs_transformation?/1,
+        dependencies: []
+      },
+
+      %__MODULE__{
+        name: :debug_datetime,
+        description: "Debug DateTime AST patterns",
+        category: :debug,
+        transformation_fn: &Mix.Tasks.Migrate.Rules.DebugDatetime.transformation_rules/0,
+        detection_fn: &Mix.Tasks.Migrate.Rules.DebugDatetime.needs_transformation?/1,
+        dependencies: []
       }
     ]
   end

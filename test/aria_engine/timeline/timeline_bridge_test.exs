@@ -106,8 +106,8 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       timeline_with_interval = Timeline.add_interval(timeline, interval)
@@ -131,8 +131,8 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
       interval =
         Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time)
+          start_time,
+          end_time
         )
 
       timeline_with_interval = Timeline.add_interval(timeline, interval)

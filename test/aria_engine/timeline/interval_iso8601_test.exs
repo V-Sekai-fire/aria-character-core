@@ -118,8 +118,8 @@ defmodule AriaEngine.Timeline.IntervalISO8601Test do
         capture_io(:stderr, fn ->
           interval =
             Interval.new_fixed_schedule(
-              DateTime.to_iso8601(start_dt),
-              DateTime.to_iso8601(end_dt)
+              start_dt,
+              end_dt
             )
 
           assert interval.start_time == start_dt
@@ -139,8 +139,8 @@ defmodule AriaEngine.Timeline.IntervalISO8601Test do
         capture_io(:stderr, fn ->
           interval =
             Interval.new_fixed_schedule(
-              DateTime.to_iso8601(start_dt),
-              DateTime.to_iso8601(end_dt),
+              start_dt,
+              end_dt,
               metadata: %{type: :action}
             )
 
