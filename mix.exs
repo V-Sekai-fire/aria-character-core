@@ -136,7 +136,8 @@ defmodule AriaCharacterCore.MixProject do
       {:aria_town, path: "apps/aria_town"},
       {:aria_temporal_planner, path: "apps/aria_temporal_planner"},
       {:aria_hybrid_planner, path: "apps/aria_hybrid_planner"},
-      {:aria_scheduler, path: "apps/aria_scheduler"}
+      {:aria_scheduler, path: "apps/aria_scheduler"},
+      {:aria_membrane_pipeline, path: "apps/aria_membrane_pipeline"}
     ]
   end
 
