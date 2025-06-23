@@ -33,7 +33,7 @@ defmodule AriaEngine.Timeline.TimelineBuilder do
     IntervalOperations.new(metadata: metadata)
   end
 
-  @doc "Adds an interval to the timeline with automatic bridge insertion.\n\nIf auto_bridges is enabled, this will automatically insert bridges\nbased on the configured spacing rules.\n\n## Examples\n\n    iex> builder = AriaEngine.Timeline.Builder.new(auto_bridges: true, bridge_spacing: 1800)\n    iex> start_time = DateTime.from_naive!(2025-01-01T10:00:00Z, \"Etc/UTC\")\n    iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_time),\n    DateTime.to_iso8601(end_time)\n  )\n    iex> updated_builder = AriaEngine.Timeline.Builder.add_interval(builder, interval)\n    iex> map_size(updated_builder.intervals)\n    1\n\n"
+  @doc "Adds an interval to the timeline with automatic bridge insertion.\n\nIf auto_bridges is enabled, this will automatically insert bridges\nbased on the configured spacing rules.\n\n## Examples\n\n    iex> builder = AriaEngine.Timeline.Builder.new(auto_bridges: true, bridge_spacing: 1800)\n    iex> start_time = DateTime.from_naive!(2025-01-01T10:00:00Z, \"Etc/UTC\")\n    iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    start_time,\n    end_time\n  )\n    iex> updated_builder = AriaEngine.Timeline.Builder.add_interval(builder, interval)\n    iex> map_size(updated_builder.intervals)\n    1\n\n"
   @spec add_interval(timeline(), Interval.t()) :: timeline()
   def add_interval(timeline, %Interval{} = interval) do
     updated_timeline = IntervalOperations.add_interval(timeline, interval)

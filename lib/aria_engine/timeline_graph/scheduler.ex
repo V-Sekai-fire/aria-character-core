@@ -25,8 +25,8 @@ defmodule AriaEngine.TimelineGraph.Scheduler do
 
         routine_interval =
           Interval.new_fixed_schedule(
-            DateTime.to_iso8601(start_time),
-            DateTime.to_iso8601(end_time),
+            start_time,
+            end_time,
             metadata: %{
               type: :scheduled_routine,
               routine_type: routine_type,
@@ -145,7 +145,7 @@ defmodule AriaEngine.TimelineGraph.Scheduler do
               entity_timeline.timeline.stn.time_unit
             )
 
-          Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt),
+          Interval.new_fixed_schedule(start_dt, end_dt,
             metadata: stn_interval.metadata
           )
         end)
@@ -203,8 +203,8 @@ defmodule AriaEngine.TimelineGraph.Scheduler do
       entity_timeline ->
         test_interval =
           Interval.new_fixed_schedule(
-            DateTime.to_iso8601(start_time),
-            DateTime.to_iso8601(end_time),
+            start_time,
+            end_time,
             metadata: %{type: :test}
           )
 
@@ -289,7 +289,7 @@ defmodule AriaEngine.TimelineGraph.Scheduler do
         end_dt = TimeConverter.convert_from_stn_time(slot_end, timeline.time_unit)
 
         {:ok,
-         Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt),
+         Interval.new_fixed_schedule(start_dt, end_dt,
            metadata: activity.metadata
          )}
 
@@ -346,7 +346,7 @@ defmodule AriaEngine.TimelineGraph.Scheduler do
       start_dt = TimeConverter.convert_from_stn_time(stn_interval.start_time, time_unit)
       end_dt = TimeConverter.convert_from_stn_time(stn_interval.end_time, time_unit)
 
-      Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt),
+      Interval.new_fixed_schedule(start_dt, end_dt,
         metadata: stn_interval.metadata
       )
     end)

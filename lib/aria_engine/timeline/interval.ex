@@ -89,8 +89,8 @@ defmodule AriaEngine.Timeline.Interval do
       entity: Keyword.get(opts, :entity),
       metadata:
         Map.merge(Keyword.get(opts, :metadata, %{}), %{
-          iso8601_start: DateTime.to_iso8601(start_dt),
-          iso8601_end: DateTime.to_iso8601(end_dt),
+          iso8601_start: start_dt,
+          iso8601_end: end_dt,
           fixed_schedule: true
         })
     }

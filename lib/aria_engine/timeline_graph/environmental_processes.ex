@@ -28,8 +28,8 @@ defmodule AriaEngine.TimelineGraph.EnvironmentalProcesses do
         entity_timeline ->
           process_interval =
             Interval.new_fixed_schedule(
-              DateTime.to_iso8601(start_time),
-              DateTime.to_iso8601(end_time),
+              start_time,
+              end_time,
               metadata: %{
                 type: :environmental_process,
                 process_type: process_type,
@@ -196,7 +196,7 @@ defmodule AriaEngine.TimelineGraph.EnvironmentalProcesses do
           timeline.stn.time_unit
         )
 
-      Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt),
+      Interval.new_fixed_schedule(start_dt, end_dt,
         metadata: stn_interval.metadata
       )
     end)
@@ -229,7 +229,7 @@ defmodule AriaEngine.TimelineGraph.EnvironmentalProcesses do
           timeline.stn.time_unit
         )
 
-      Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt),
+      Interval.new_fixed_schedule(start_dt, end_dt,
         metadata: stn_interval.metadata
       )
     end)

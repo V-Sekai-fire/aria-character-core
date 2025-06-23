@@ -180,7 +180,7 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
 
     creation_interval =
       Interval.new_fixed_schedule(
-        DateTime.to_iso8601(creation_time),
+        creation_time,
         DateTime.to_iso8601(far_future),
         metadata: %{type: :creation, event: "entity_created"}
       )
