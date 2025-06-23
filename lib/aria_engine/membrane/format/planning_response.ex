@@ -3,12 +3,12 @@
 
 defmodule AriaEngine.Membrane.Format.PlanningResult do
   @moduledoc """
-  Migration tool with serial number: A25W007RESP
+  Migration tool with serial number: R25W016RESP
 
-  Decode: mix migrate.decode_serial A25W007RESP
+  Decode: mix migrate.decode_serial R25W016RESP
   """
 
-  @serial_number "A25W007RESP"
+  @serial_number "R25W016RESP"
 
   @moduledoc """
   Membrane format for planning execution results.

@@ -3,12 +3,12 @@
 
 defmodule AriaEngine.Membrane.Format.PlanningParams do
   @moduledoc """
-  Migration tool with serial number: A25W008PRMS
+  Migration tool with serial number: R25W017PRMS
 
-  Decode: mix migrate.decode_serial A25W008PRMS
+  Decode: mix migrate.decode_serial R25W017PRMS
   """
 
-  @serial_number "A25W008PRMS"
+  @serial_number "R25W017PRMS"
 
   @moduledoc """
   Membrane format for converted planning parameters.

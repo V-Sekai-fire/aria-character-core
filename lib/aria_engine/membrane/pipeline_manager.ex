@@ -3,16 +3,16 @@
 
 defmodule AriaEngine.Membrane.PipelineManager do
   @moduledoc """
-  Migration tool with serial number: A25W011PXPE
+  Migration tool with serial number: R25W020PXPE
 
-  Decode: mix migrate.decode_serial A25W011PXPE
+  Decode: mix migrate.decode_serial R25W020PXPE
   """
 
-  @serial_number "A25W011PXPE"
+  @serial_number "R25W020PXPE"
 
   @moduledoc """
   Pipeline manager for AriaEngine Membrane pipelines.
-  
+
   This module provides functionality to create, manage, and monitor
   Membrane-based processing pipelines.
   """
@@ -61,7 +61,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
   @spec get_pipeline_status(pipeline_id()) :: pipeline_status()
   def get_pipeline_status(pipeline_pid) do
     Logger.warning("PipelineManager.get_pipeline_status/1 not implemented for pid: #{inspect(pipeline_pid)}")
-    
+
     %{
       error: "Pipeline status not available - PipelineManager not implemented"
     }
@@ -91,7 +91,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
   @spec get_manager_stats() :: manager_stats()
   def get_manager_stats do
     Logger.warning("PipelineManager.get_manager_stats/0 not implemented")
-    
+
     %{
       active_pipeline_count: 0,
       total_pipelines_created: 0,

@@ -1,11 +1,11 @@
 defmodule AriaEngine.Membrane.MiniZincTemplateFilter do
   @moduledoc """
-  Migration tool with serial number: A25W010TMPL
+  Migration tool with serial number: R25W019TMPL
 
-  Decode: mix migrate.decode_serial A25W010TMPL
+  Decode: mix migrate.decode_serial R25W019TMPL
   """
 
-  @serial_number "A25W010TMPL"
+  @serial_number "R25W019TMPL"
 
   @moduledoc """
   Membrane filter that processes MiniZinc problems using EEx templates and Porcelain execution.
