@@ -129,7 +129,10 @@ defmodule AriaCharacterCore.MixProject do
 
       # Test dependencies
       {:stream_data, "~> 1.2", only: :test},
-      {:ex_unit_notifier, "~> 1.3", only: :test}
+      {:ex_unit_notifier, "~> 1.3", only: :test},
+
+      # Internal applications
+      {:aria_town, path: "apps/aria_town"}
     ]
   end
 

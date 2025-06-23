@@ -17,7 +17,9 @@ Current state shows mixed encapsulation:
 **Recent Progress:**
 - ✅ `aria_security` successfully extracted (2025-06-23)
 - ✅ `aria_storage` successfully extracted (2025-06-23)
-- 🔄 Next target: `aria_auth` (depends only on aria_security)
+- ✅ `aria_auth` successfully extracted (2025-06-23)
+- ✅ `aria_town` successfully extracted (2025-06-23)
+- 🔄 Next target: `aria_engine` (complex, requires subdomain splitting)
 
 ## The Strict Encapsulation Principle
 
@@ -238,17 +240,25 @@ Each library extraction follows this complete process:
   - ✅ Zero internal aria_* dependencies confirmed
   - ✅ Migration tombstone created
   - ✅ Main delegation module created for API compatibility
+- [x] Extract `aria_town` (NPC management) ✅ **COMPLETED 2025-06-23**
+  - ✅ Created `apps/aria_town/` with proper structure
+  - ✅ Moved all source files preserving namespaces
+  - ✅ Configured dependencies (gen_server, logger)
+  - ✅ Independent test suite (3 tests, 0 failures)
+  - ✅ Stub implementation with clear API boundaries
+  - ✅ Migration tombstone created
+  - ✅ Updated main application to remove direct GenServer starts
 - [ ] Extract remaining `aria_png_generator` functionality
 - [ ] Verify independent test suites for each
 
-**Phase 2 Progress:** 3/4 tasks completed (aria_security, aria_storage, and aria_auth extractions successful)
+**Phase 2 Progress:** 4/4 tasks completed (aria_security, aria_storage, aria_auth, and aria_town extractions successful)
 
 ### Phase 3: Extract Intermediate Dependencies
 - [x] Extract `aria_auth` (depends on aria_security) ✅ **COMPLETED 2025-06-23**
-- [ ] Extract `aria_town` (depends on aria_engine)
+- [x] Extract `aria_town` (depends on aria_engine) ✅ **COMPLETED 2025-06-23**
 - [ ] Resolve any circular dependencies discovered
 
-**Phase 3 Progress:** 1/3 tasks completed (aria_auth extraction successful)
+**Phase 3 Progress:** 2/3 tasks completed (aria_auth and aria_town extractions successful)
 
 ### Phase 4: Extract Core Dependencies
 - [ ] Extract `aria_engine` components by subdomain

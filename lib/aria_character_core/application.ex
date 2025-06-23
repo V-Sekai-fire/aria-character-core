@@ -7,10 +7,7 @@ defmodule AriaCharacterCore.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      AriaEngine.Membrane.PipelineManager,
-      AriaTown.PersistenceManager,
-      AriaTown.TimeManager,
-      AriaTown.NPCManager
+      AriaEngine.Membrane.PipelineManager
     ]
 
     opts = [strategy: :one_for_one, name: AriaCharacterCore.Supervisor]
