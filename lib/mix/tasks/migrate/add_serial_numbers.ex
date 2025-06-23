@@ -6,13 +6,12 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
 
       mix migrate.add_serial_numbers
       mix migrate.add_serial_numbers --dry-run
-      mix migrate.add_serial_numbers --factory V  # For V-Sekai projects
 
   ## Serial Number Format
 
   Generates serial numbers in standard format: `[F][YY][W][UUU][MMMM]`
 
-  - F: Factory/Organization (A=Aria, V=V-Sekai)
+  - F: Factory/Organization (R=aRia Character Core)
   - YY: Year (25=2025)
   - W: Week (encoded using standard system)
   - UUU: Sequential unit number (001, 002, etc.)
@@ -35,9 +34,6 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
 
       # Preview changes without applying them
       mix migrate.add_serial_numbers --dry-run
-
-      # Use different factory code
-      mix migrate.add_serial_numbers --factory V
   """
 
   use Mix.Task
@@ -47,14 +43,12 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
 
   @switches [
     dry_run: :boolean,
-    factory: :string,
     help: :boolean,
     membrane: :boolean
   ]
 
   @aliases [
     d: :dry_run,
-    f: :factory,
     h: :help,
     m: :membrane
   ]
@@ -70,7 +64,7 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
   end
 
   defp add_serial_numbers(opts) do
-    factory = opts[:factory] || "R"
+    factory = "R"
     dry_run = opts[:dry_run] || false
     membrane = opts[:membrane] || false
 
@@ -321,12 +315,6 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
   end
 
   defp decode_factory("R"), do: "aRia Character Core"
-  defp decode_factory("E"), do: "Elixir Projects"
-  defp decode_factory("M"), do: "Membrane Components"
-  defp decode_factory("T"), do: "Timeline Systems"
-  defp decode_factory("P"), do: "Planning Tools"
-  defp decode_factory("V"), do: "V-Sekai"
-  defp decode_factory("G"), do: "Godot Projects"
   defp decode_factory(f), do: "Unknown Factory (#{f})"
 
   defp show_help do

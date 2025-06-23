@@ -300,12 +300,6 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
   end
 
   defp decode_factory("R"), do: "aRia Character Core"
-  defp decode_factory("E"), do: "Elixir Projects"
-  defp decode_factory("M"), do: "Membrane Components"
-  defp decode_factory("T"), do: "Timeline Systems"
-  defp decode_factory("P"), do: "Planning Tools"
-  defp decode_factory("V"), do: "V-Sekai"
-  defp decode_factory("G"), do: "Godot Projects"
   defp decode_factory(f), do: "Unknown Factory (#{f})"
 
   defp calculate_week_range(year, week) do
