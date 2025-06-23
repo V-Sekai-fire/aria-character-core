@@ -92,6 +92,79 @@ Layer N-2: Unit Tests (test Layer N-2 logic)
 **GenServer Isolation**: Process boundaries mirror library boundaries
 **Application Boundaries**: Clear start/stop semantics per library
 
+## AST Migration Tool Integration
+
+### Using ast_migrate for Testing Architecture
+
+The `ast_migrate` app provides powerful AST-based transformations to systematically improve code quality and fix testing issues across all extracted apps.
+
+#### Available AST Migration Commands
+
+**Basic Migration:**
+```bash
+# From the ast_migrate directory
+mix ast.simple --rule unit_test_improvements --target /path/to/app
+```
+
+**Git-Integrated Migration:**
+```bash
+mix ast.commit --rule unit_test_improvements --target /path/to/app
+```
+
+#### Key Transformation Rules
+
+**1. Unit Test Improvements Rule**
+- Extracts intermediate variables in assertions for better readability
+- Adds missing assertions to bare function calls
+- Improves test structure and debugging capabilities
+
+**2. Namespace Reference Fixes (Custom Rule)**
+- Systematically updates module references after app extraction
+- Fixes `AriaEngine.Timeline` → `Timeline` namespace issues
+- Resolves import statement conflicts
+
+**3. Test Isolation Improvements (Custom Rule)**
+- Identifies and removes cross-app dependencies in tests
+- Converts integration tests to proper unit tests
+- Adds mocking for external dependencies
+
+#### Integration with Testing Workflow
+
+**Phase 5a: Systematic Test Fixes**
+```bash
+# Fix namespace issues across all apps
+for app in apps/*/; do
+  cd apps/ast_migrate
+  mix ast.simple --rule namespace_fixes --target "../../$app"
+done
+
+# Apply unit test improvements
+for app in apps/*/; do
+  cd apps/ast_migrate
+  mix ast.simple --rule unit_test_improvements --target "../../$app"
+done
+```
+
+**Phase 5b: Contract Test Generation**
+```bash
+# Generate contract test templates
+mix ast.simple --rule contract_test_generator --target ../../apps/aria_temporal_planner
+```
+
+**Phase 5c: Test Isolation Validation**
+```bash
+# Identify and fix cross-app test dependencies
+mix ast.simple --rule test_isolation_checker --target ../../apps/aria_hybrid_planner
+```
+
+#### Benefits of AST Migration Approach
+
+- **Systematic**: Applies transformations consistently across all apps
+- **Safe**: Git integration provides rollback capabilities
+- **Trackable**: Each transformation creates a commit with detailed history
+- **Extensible**: Easy to add new rules for project-specific patterns
+- **Precise**: AST-level transformations avoid regex-based errors
+
 ## Implementation Strategy
 
 ### Library Extraction Workflow
@@ -350,12 +423,29 @@ Based on directory structure analysis, aria_engine contains these logical subdom
 **Phase 4 Progress:** 5/5 subdomain extractions completed (aria_temporal_planner, aria_hybrid_planner, aria_scheduler, aria_membrane_pipeline, and aria_engine_core) ✅ **ALL COMPLETED 2025-06-23**
 
 ### Phase 5: Verify Testing Architecture
-- [ ] Audit all test suites for proper isolation
-- [ ] Implement contract tests between library boundaries
-- [ ] Verify layered testing pattern implementation
-- [ ] Document testing guidelines per library
+- [x] **AST Migration Tool Integration** ✅ **COMPLETED 2025-06-23**
+  - ✅ Integrated `ast_migrate` app for systematic code transformations
+  - ✅ Available for fixing test warnings, namespace issues, and code improvements
+  - ✅ Git-integrated migrations with automatic commit creation
+  - ✅ Rule-based transformation system for consistent code changes
+- [ ] **Audit all test suites for proper isolation**
+  - [ ] Use `ast_migrate` to systematically fix namespace references
+  - [ ] Apply unit test improvement rules across all apps
+  - [ ] Identify and resolve cross-app dependencies in tests
+- [ ] **Implement contract tests between library boundaries**
+  - [ ] Define API contract specifications for each app
+  - [ ] Create contract test suites using `ast_migrate` templates
+  - [ ] Verify interface compatibility between apps
+- [ ] **Verify layered testing pattern implementation**
+  - [ ] Validate test isolation at each layer
+  - [ ] Ensure unit tests don't become integration tests
+  - [ ] Document testing boundaries and responsibilities
+- [ ] **Document testing guidelines per library**
+  - [ ] Create testing standards documentation
+  - [ ] Define AST migration rules for common test patterns
+  - [ ] Establish code quality automation workflows
 
-**Phase 5 Progress:** 0/4 tasks completed
+**Phase 5 Progress:** 1/5 tasks completed (AST migration tool integration)
 
 ## Success Criteria
 
