@@ -34,8 +34,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         })
 
       delivery_route =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
           agent: delivery_van,
           label: "Morning Delivery Route",
@@ -46,8 +45,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         )
 
       passenger_service =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
           agent: passenger_car,
           label: "Passenger Service",
@@ -61,8 +59,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         AgentEntity.remove_capabilities(delivery_van, [:autonomous_driving, :route_optimization])
 
       charging_period =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
           entity: charging_van,
           label: "Charging and Maintenance",
@@ -76,8 +73,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         ])
 
       maintenance_service =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 12:30:00], "Etc/UTC"),
           agent: active_maintenance,
           label: "Fleet Maintenance",
@@ -131,8 +127,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         )
 
       routine_patrol =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
           agent: patrol_car,
           label: "Routine Patrol",
@@ -143,8 +138,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         )
 
       emergency_response =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 12:30:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 12:30:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 13:30:00], "Etc/UTC"),
           agent: ambulance,
           label: "Emergency Medical Response",
@@ -156,8 +150,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         )
 
       traffic_support =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 12:30:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 12:30:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 13:30:00], "Etc/UTC"),
           agent: patrol_car,
           label: "Emergency Traffic Control",
@@ -220,8 +213,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         AgentEntity.add_capabilities(traffic_light_a, [:adaptive_timing, :vehicle_communication])
 
       traffic_optimization =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 07:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 07:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
           agent: traffic_controller,
           label: "Rush Hour Traffic Optimization",
@@ -232,8 +224,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         )
 
       adaptive_timing =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 07:30:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 07:30:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 08:30:00], "Etc/UTC"),
           agent: smart_light,
           label: "Adaptive Signal Timing",
@@ -244,8 +235,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         )
 
       priority_route =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 08:45:00], "Etc/UTC"),
           agent: autonomous_bus,
           label: "Priority Bus Route",
@@ -303,8 +293,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         )
 
       load_balancing =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 17:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 17:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 20:00:00], "Etc/UTC"),
           agent: power_station,
           label: "Peak Load Management",
@@ -318,8 +307,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         AgentEntity.add_capabilities(charging_station, [:dynamic_pricing, :load_management])
 
       smart_charging =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 18:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 18:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 20:00:00], "Etc/UTC"),
           agent: smart_charger,
           label: "Smart Charging Management",
@@ -330,8 +318,7 @@ defmodule AriaEngine.Timeline.ScenariosTest do
         )
 
       vehicle_charging =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 18:30:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 18:30:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 19:30:00], "Etc/UTC"),
           entity: smart_charger,
           agent: electric_vehicle,

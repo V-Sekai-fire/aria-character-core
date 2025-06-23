@@ -88,8 +88,7 @@ defmodule AriaEngine.Timeline.BasicCapabilitiesTest do
         )
 
       cooking_interval =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
           agent: agent,
           label: "Lunch Preparation"
@@ -110,8 +109,7 @@ defmodule AriaEngine.Timeline.BasicCapabilitiesTest do
         })
 
       baking_interval =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC"),
           entity: oven,
           label: "Bread Baking"
@@ -133,16 +131,14 @@ defmodule AriaEngine.Timeline.BasicCapabilitiesTest do
       oven = AgentEntity.create_entity("oven1", "Bakery Oven")
 
       prep_interval =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
           agent: baker,
           label: "Dough Preparation"
         )
 
       bake_interval =
-        Interval.new_fixed_schedule(
-          DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
           DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
           entity: oven,
           label: "Baking Process"

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngine.Timeline do
-  @moduledoc "Timeline module with interval-based storage using Path Consistency (PC-2) algorithm\nfor Simple Temporal Network (STN) solving.\n\nAccepts time input in seconds but solves at 1ms tick precision.\nSupports Allen's interval algebra with usability improvements.\nRespects agent vs entity distinction in temporal constraints.\n\n## Time Representation\n- External API: seconds (float/integer)\n- Internal storage/solving: milliseconds (integer)\n- Precision: 1ms ticks as per ADR-006\n\n## Features\n- All 13 Allen interval relations\n- Path Consistency (PC-2) STN solving\n- Agent/entity distinction\n- Fluent API for constraint building\n- Comprehensive edge case handling\n\n## Module Organization\n\nThis module has been split into focused sub-modules for better maintainability:\n\n- `AriaEngine.Timeline.Core` - Core Timeline operations and STN integration\n- `AriaEngine.Timeline.Bridges` - Bridge management and validation\n- `AriaEngine.Timeline.Segmentation` - Timeline segmentation functionality\n- `AriaEngine.Timeline.Builder` - Builder pattern and fluent API\n\n## Examples\n\n    iex> timeline = AriaEngine.Timeline.new()\n    iex> alias AriaEngine.Timeline.Interval\n    iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval =\n  Interval.new_fixed_schedule(DateTime.to_iso8601(start_time), DateTime.to_iso8601(end_time))\n    iex> timeline = AriaEngine.Timeline.add_interval(timeline, interval)\n    iex> length(Map.keys(timeline.intervals))\n    1\n\n## References\n\n- ADR-078: Timeline Module PC-2 STN Implementation\n- ADR-079: Timeline Module Implementation Progress\n- ADR-045: Allen's Interval Algebra Temporal Relationships\n- ADR-040: Temporal Constraint Solver Selection\n- ADR-046: Interval Notation Usability\n- ADR-006: Game Engine Real-time Execution (1ms tick requirement)\n"
   alias AriaEngine.Timeline.IntervalOperations
   alias AriaEngine.Timeline.BridgeOperations
   alias AriaEngine.Timeline.TimelineSegmenter
@@ -18,14 +17,12 @@ defmodule AriaEngine.Timeline do
         }
   defstruct intervals: %{}, bridges: %{}, stn: STN.new(), metadata: %{}
 
-  @doc "Creates a new Timeline.\n\n## Examples\n\n    iex> timeline = AriaEngine.Timeline.new()\n    iex> map_size(timeline.intervals)\n    0\n\n"
   @spec new(keyword()) :: t()
   def new(opts \\ []) do
     core_timeline = IntervalOperations.new(opts)
     struct(__MODULE__, core_timeline)
   end
 
-  @doc "Adds an interval to the timeline.\n\n## Examples\n\n    iex> timeline = AriaEngine.Timeline.new()\n    iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_time),\n    DateTime.to_iso8601(end_time)\n  )\n    iex> updated_timeline = AriaEngine.Timeline.add_interval(timeline, interval)\n    iex> map_size(updated_timeline.intervals)\n    1\n\n"
   @spec add_interval(t(), Interval.t()) :: t()
   def add_interval(%__MODULE__{} = timeline, interval) do
     core_timeline = to_core_timeline(timeline)
@@ -33,7 +30,6 @@ defmodule AriaEngine.Timeline do
     struct(__MODULE__, updated_core)
   end
 
-  @doc "Adds multiple intervals to the timeline.\n\n## Examples\n\n    iex> timeline = AriaEngine.Timeline.new()\n    iex> start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], \"Etc/UTC\")\n    iex> start2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> end2 = DateTime.from_naive!(~N[2025-01-01 13:00:00], \"Etc/UTC\")\n    iex> interval1 =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start1),\n    DateTime.to_iso8601(end1)\n  )\n    iex> interval2 =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start2),\n    DateTime.to_iso8601(end2)\n  )\n    iex> updated_timeline = AriaEngine.Timeline.add_intervals(timeline, [interval1, interval2])\n    iex> map_size(updated_timeline.intervals)\n    2\n\n"
   @spec add_intervals(t(), list(Interval.t())) :: t()
   def add_intervals(%__MODULE__{} = timeline, intervals) do
     core_timeline = to_core_timeline(timeline)
@@ -41,7 +37,6 @@ defmodule AriaEngine.Timeline do
     struct(__MODULE__, updated_core)
   end
 
-  @doc "Gets an interval by ID.\n\n## Examples\n\n    iex> timeline = AriaEngine.Timeline.new()\n    iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_time),\n    DateTime.to_iso8601(end_time)\n  )\n    iex> timeline = AriaEngine.Timeline.add_interval(timeline, interval)\n    iex> retrieved = AriaEngine.Timeline.get_interval(timeline, interval.id)\n    iex> retrieved.id == interval.id\n    true\n\n"
   @spec get_interval(t(), Interval.id()) :: Interval.t() | nil
   def get_interval(%__MODULE__{} = timeline, id) do
     core_timeline = to_core_timeline(timeline)
@@ -83,7 +78,6 @@ defmodule AriaEngine.Timeline do
     struct(__MODULE__, updated_core)
   end
 
-  @doc "Adds a bridge to the timeline.\n\n## Examples\n\n    iex> timeline = AriaEngine.Timeline.new()\n    iex> position = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> bridge = AriaEngine.Timeline.Bridge.new(\"decision_1\", position, :decision)\n    iex> updated_timeline = AriaEngine.Timeline.add_bridge(timeline, bridge)\n    iex> Map.has_key?(updated_timeline.bridges, \"decision_1\")\n    true\n\n"
   @spec add_bridge(t(), Bridge.t()) :: t()
   def add_bridge(%__MODULE__{} = timeline, bridge) do
     core_timeline = to_core_timeline(timeline)
@@ -149,7 +143,6 @@ defmodule AriaEngine.Timeline do
     BridgeOperations.validate_all_bridge_placements(core_timeline)
   end
 
-  @doc "Segments the timeline by bridge positions.\n\nReturns a list of timeline segments, where each segment contains intervals\nthat occur between bridge points.\n\n## Examples\n\n    iex> timeline = AriaEngine.Timeline.new()\n    iex> start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], \"Etc/UTC\")\n    iex> interval1 =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start1),\n    DateTime.to_iso8601(end1)\n  )\n    iex> timeline = AriaEngine.Timeline.add_interval(timeline, interval1)\n    iex> bridge_pos = DateTime.from_naive!(~N[2025-01-01 10:30:00], \"Etc/UTC\")\n    iex> bridge = AriaEngine.Timeline.Bridge.new(\"decision_1\", bridge_pos, :decision)\n    iex> timeline = AriaEngine.Timeline.add_bridge(timeline, bridge)\n    iex> segments = AriaEngine.Timeline.segment_by_bridges(timeline)\n    iex> length(segments)\n    2\n\n"
   @spec segment_by_bridges(t()) :: [t()]
   def segment_by_bridges(%__MODULE__{} = timeline) do
     core_timeline = to_core_timeline(timeline)
