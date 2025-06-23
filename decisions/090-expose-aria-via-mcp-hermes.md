@@ -110,17 +110,20 @@ The server includes a bidirectional translation layer:
 **This ADR has been paused** because the MCP functionality has been successfully implemented through a different approach:
 
 **Current MCP Implementation:**
+
 - **ADR-097**: Designed MCP scheduler interface with proper tool schema
 - **ADR-105**: Implemented MCP server with `schedule_activities` tool
 - **ADR-111**: Enhanced architecture with plan converter for clean separation
 
 **Key Differences from This ADR:**
+
 - **Simpler Implementation**: Uses custom MCP server instead of Hermes framework
 - **Direct Scheduling**: Focuses on scheduling tool rather than KHR_interactivity behavior graphs
 - **Proven Approach**: Working implementation with VSCode integration
 - **Cleaner Architecture**: Separates data transformation from planning execution
 
 **Status of Original Goals:**
+
 - ✅ **MCP Integration**: Successfully achieved through ADR-105
 - ✅ **External Tool Access**: Working with VSCode and other MCP clients
 - ❌ **KHR_interactivity Output**: Not implemented (different output format chosen)

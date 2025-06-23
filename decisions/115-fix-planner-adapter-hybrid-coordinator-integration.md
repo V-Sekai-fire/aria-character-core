@@ -10,11 +10,13 @@
 During investigation of the membrane pipeline integration, we discovered that `AriaEngine.PlannerAdapter.plan_tasks()` is **NOT** using HybridCoordinatorV2 as intended. Instead, it's calling the old `Plan.plan()` module directly, bypassing the sophisticated planning capabilities we've built.
 
 ### Current Broken Flow
+
 ```
 PlannerFilter → Scheduler → Core → PlannerAdapter.plan_tasks() → OLD Plan.plan() ❌
 ```
 
 ### Intended Flow
+
 ```
 PlannerFilter → Scheduler → Core → PlannerAdapter.plan_tasks() → HybridCoordinatorV2.plan() ✅
 ```
@@ -28,6 +30,7 @@ PlannerFilter → Scheduler → Core → PlannerAdapter.plan_tasks() → HybridC
 ### Code Evidence
 
 In `lib/aria_engine/planner_adapter.ex`, line 42:
+
 ```elixir
 def plan_tasks(domain, %AriaEngine.StateV2{} = state, tasks, opts \\ []) do
   # Use Plan.plan directly for HTN task decomposition
@@ -35,6 +38,7 @@ def plan_tasks(domain, %AriaEngine.StateV2{} = state, tasks, opts \\ []) do
 ```
 
 While `plan/4` correctly uses HybridCoordinatorV2:
+
 ```elixir
 def plan(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
   coordinator = HybridCoordinatorV2.new_default(opts)
@@ -52,18 +56,21 @@ def plan(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
 ## Implementation Plan
 
 ### Phase 1: Investigation (COMPLETED)
+
 - [x] **Check HybridCoordinatorV2.execute()** - Does it support activity logging?
 - [x] **Verify run_lazy_refineahead wrapper** - Does it preserve logging functionality?
 - [x] **Identify logging interface** - Where was the activity logger integration lost?
 - [x] **Test current logging behavior** - What logging do we get from HybridCoordinatorV2?
 
 ### Phase 2: Fix PlannerAdapter.plan_tasks() (COMPLETED)
+
 - [x] **Modify plan_tasks()** to use HybridCoordinatorV2 like plan() does
 - [x] **Add task-to-goal conversion** for HybridCoordinatorV2 interface
 - [x] **Preserve activity logging** functionality
 - [x] **Add integration tests** to verify HybridCoordinatorV2 is actually invoked
 
 ### Phase 3: Validation (COMPLETED)
+
 - [x] **Test membrane pipeline** with corrected planner integration
 - [x] **Verify activity logging** works end-to-end
 - [x] **Add logging verification** to prevent regression
@@ -81,16 +88,18 @@ def plan(domain, %AriaEngine.StateV2{} = state, todos, opts \\ []) do
 
 **All critical integration issues have been resolved!** The PlannerAdapter has been successfully updated to use HybridCoordinatorV2:
 
-### Key Achievements:
+### Key Achievements
+
 - **✅ HybridCoordinatorV2 Integration**: `plan_tasks()` now uses `HybridCoordinatorV2.plan()` instead of old `Plan.plan()`
 - **✅ Comprehensive Logging**: Extensive logging added to track execution and prove correct planner usage
 - **✅ Error Handling**: Proper error propagation from HybridCoordinatorV2
 - **✅ API Compatibility**: Maintains existing function signatures while using sophisticated planning
 - **✅ Performance**: No regression in planning performance
 
-### Technical Implementation:
+### Technical Implementation
+
 - **Coordinator Creation**: `HybridCoordinatorV2.new_default(opts)` for proper initialization
-- **Direct Planning**: `HybridCoordinatorV2.plan(coordinator, domain, state, tasks, opts)` 
+- **Direct Planning**: `HybridCoordinatorV2.plan(coordinator, domain, state, tasks, opts)`
 - **Result Extraction**: Proper `solution_tree` extraction from HybridCoordinatorV2 results
 - **Logging Integration**: Comprehensive logging to track planning execution
 
@@ -113,7 +122,7 @@ The membrane pipeline now receives sophisticated planning results from HybridCoo
 
 **User Observation**: "I think the run_lazy works but the activity logger is gone."
 
-### Key Findings from Investigation:
+### Key Findings from Investigation
 
 1. **HybridCoordinatorV2 Logging Architecture**:
    - Uses a `logging_strategy` (LoggerStrategy) for general logging
@@ -134,14 +143,16 @@ The membrane pipeline now receives sophisticated planning results from HybridCoo
    - Even when HybridCoordinatorV2 is used, it doesn't populate ActivityLogEntry structures
    - The activity_log parameter is passed through but never used
 
-### Technical Analysis:
+### Technical Analysis
 
 **Current Flow (Broken)**:
+
 ```
 Scheduler → Core → PlannerAdapter.plan_tasks() → Plan.plan() → No ActivityLogEntry
 ```
 
 **Intended Flow (Needs Implementation)**:
+
 ```
 Scheduler → Core → PlannerAdapter.plan_tasks() → HybridCoordinatorV2 → ActivityLogEntry population
 ```

@@ -16,6 +16,7 @@ MCP Tool → Scheduler → HybridCoordinatorV2 → [All 6 Strategies] → Schedu
 ```
 
 This creates several architectural issues:
+
 - Mixed concerns between data transformation and planning logic
 - Difficult to test individual strategies in isolation
 - No backpressure handling for concurrent requests
@@ -42,11 +43,13 @@ Implement a **Membrane Framework pipeline architecture** that provides clean sep
 Transform the monolithic architecture into a proper multimedia-style processing pipeline:
 
 **Current Architecture (Monolithic)**:
+
 ```
 MCP Tool → validate → convert → AriaEngine.Scheduler → HybridCoordinatorV2 → [Strategies] → Result
 ```
 
 **New Architecture (Membrane Pipeline)**:
+
 ```
 MCPSource → PlanFilter → PlannerSink → MCPSink
     ↓             ↓              ↓         ↓
@@ -197,6 +200,7 @@ end
 ```
 
 **Implementation Tasks**:
+
 - [x] Add Membrane Framework dependencies to mix.exs
 - [x] Run `mix deps.get` to install Membrane
 - [x] Define 4 custom format modules with proper `@derive Membrane.Format`
@@ -308,12 +312,16 @@ defmodule AriaEngine.Membrane.EchoFilter do
   
   **Direct MCP Testing:**
   ```
+
   MCPSource → EchoFilter → MCPSink
+
   ```
   
   **Full Pipeline Testing:**
   ```
+
   MCPSource → PlanFilter → EchoFilter → MCPSink
+
   ```
   """
 
@@ -597,6 +605,7 @@ end
 ```
 
 **Implementation Tasks**:
+
 - [x] MCPSource implementation completed
 - [x] MCPSource tests implemented  
 - [x] Implement Generic EchoFilter with dynamic format detection
@@ -617,26 +626,32 @@ end
 **Pipeline Testing Configurations**:
 
 **Direct MCP Testing:**
+
 ```
 MCPSource → EchoFilter → MCPSink
 ```
+
 - EchoFilter receives `MCPRequest` format
 - Automatically outputs `MCPResponse` format
 - Tests end-to-end MCP flow without planning transformation
 
 **Full Pipeline Testing:**
+
 ```
 MCPSource → PlanFilter → EchoFilter → MCPSink
 ```
+
 - EchoFilter receives `PlanningParams` format (from PlanFilter)
 - Automatically outputs `PlanningResult` format
 - Tests complete pipeline with planning parameter transformation
 - EchoFilter acts as mock replacement for PlannerSink
 
 **Production Pipeline:**
+
 ```
 MCPSource → PlanFilter → PlannerSink → ResponseFilter → MCPSink
 ```
+
 - PlannerSink executes actual planning via HybridCoordinatorV2
 - EchoFilter can be swapped in for testing without code changes
 - ResponseFilter converts PlanningResult to MCPResponse format
@@ -766,6 +781,7 @@ end
 ```
 
 **Implementation Tasks**:
+
 - ~~[ ] Implement PlanFilter with Membrane.Filter behavior~~ **→ Moved to ADR-114**
 - ~~[ ] Add input/output pads with proper format specifications and bins~~ **→ Moved to ADR-114**
 - ~~[ ] Integrate with existing CoreTransformer logic~~ **→ Moved to ADR-114**
@@ -903,6 +919,7 @@ end
 ```
 
 **Implementation Tasks**:
+
 - ~~[ ] Implement PlannerSink with Membrane.Sink behavior~~ **→ Moved to ADR-114**
 - ~~[ ] Add input pad with PlanningParams format and output pad with PlanningResult format~~ **→ Moved to ADR-114**
 - ~~[ ] Integrate with HybridCoordinatorV2 for pure planning execution~~ **→ Moved to ADR-114**
@@ -1021,6 +1038,7 @@ end
 ```
 
 **Implementation Tasks**:
+
 - ~~[ ] Implement MCPSink with Membrane.Sink behavior~~ **→ Moved to ADR-114**
 - ~~[ ] Add input pad with PlanningResult format~~ **→ Moved to ADR-114**
 - ~~[ ] Implement MCP response formatting logic~~ **→ Moved to ADR-114**
@@ -1182,6 +1200,7 @@ end
 ```
 
 **Implementation Tasks**:
+
 - [ ] Implement PipelineManager GenServer for lifecycle management
 - [ ] Add pipeline creation with configurable topology
 - [ ] Implement dynamic pipeline reconfiguration
@@ -1365,6 +1384,7 @@ end
 ```
 
 **Implementation Tasks**:
+
 - [ ] Update MCPTools to use Membrane pipeline instead of direct scheduler calls
 - [ ] Add MCP tools for pipeline management and configuration
 - [ ] Implement element configuration validation

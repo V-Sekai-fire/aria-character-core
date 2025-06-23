@@ -30,12 +30,14 @@ Create plan transformer module, integrate directly with HybridCoordinatorV2. Dro
 ### Implementation Strategy
 
 **Phase 1: Plan Transformer Creation**
+
 - Extract validation/conversion logic from `AriaEngine.MCPTools`
 - Create `lib/aria_engine/hybrid_planner/plan_transformer.ex`
 - Convert MCP input → (domain, state, goals) format
 - Pure function with comprehensive validation
 
 **Phase 2: MCP Integration**
+
 - Update `schedule_activities` to use plan transformer
 - Call HybridCoordinatorV2 directly with converted parameters
 - Return MCP-formatted results
@@ -97,7 +99,6 @@ def handle_schedule_activities_tool_call(params) do
   end
 end
 ```
-
 
 ## Success Criteria
 

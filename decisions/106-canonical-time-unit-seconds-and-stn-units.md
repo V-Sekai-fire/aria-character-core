@@ -1,9 +1,11 @@
 # ADR 106: Canonical Time Unit for Scheduling and Temporal Reasoning
 
 ## Status
+
 Completed (June 19, 2025)
 
 ## Context
+
 The AriaEngine codebase handles scheduling, planning, and temporal reasoning across multiple modules (MCPTools, Scheduler, Timeline, STN, etc.). Durations, start_times, and end_times are parsed from user input, JSON, and APIs in various formats (ISO 8601, DateTime intervals, integers). The system also supports multi-level-of-detail (LOD) temporal planning, where each STN (Simple Temporal Network) may use a different time resolution.
 
 Historically, there has been ambiguity and inconsistency in the units used for durations and time points (minutes, seconds, integers, floats), leading to subtle bugs and integration issues.
@@ -11,19 +13,23 @@ Historically, there has been ambiguity and inconsistency in the units used for d
 ## Decision
 
 **Canonical Unit:**
+
 - All durations, start_times, and end_times in activities, scheduler, timeline, and plan representations will be normalized to **float seconds** as early as possible.
 - All arithmetic, comparisons, and state updates outside of STNs will use float seconds.
 
 **STN Unit Handling:**
+
 - Each STN instance will store its own explicit unit or resolution (e.g., seconds, minutes, abstract steps, or a scaling factor).
 - All time points and constraints inside an STN are stored as unitless integers (or floats if needed).
 - Conversion between float seconds and STN units will be explicit and centralized at the STN boundary, using the STN's unit/resolution field.
 
 **Multi-LOD Support:**
+
 - When converting between LODs (e.g., coarse to fine), use the unit/resolution fields to scale constraints and time points appropriately.
 - The Timeline/context layer manages the mapping between real-world time and each STN's unit.
 
 **Testing and Documentation:**
+
 - All test cases and assertions will use float seconds for expected values, with `assert_in_delta` for comparisons where appropriate.
 - All relevant documentation and comments will specify that durations, start_times, and end_times are in float seconds (except inside STNs).
 

@@ -15,6 +15,7 @@ Current: MCP Tool → validate → convert → AriaEngine.Scheduler → HybridCo
 ```
 
 **Problems:**
+
 - Mixed concerns: conversion coupled with execution
 - Testing difficulty: cannot test conversion separately
 - Architectural violation: MCP layer executes instead of converting
@@ -28,6 +29,7 @@ Proposed: MCP Tool → Plan Transformer → HybridCoordinatorV2 → [Strategies]
 ```
 
 **Benefits:**
+
 - Pure data transformation: MCP tools only format data
 - Clean testing: test conversion separately from execution
 - Better separation: MCP converts, domain executes
@@ -40,12 +42,14 @@ Extract plan transformer from `schedule_activities`, integrate directly with Hyb
 ### Implementation Strategy
 
 **Phase 1: Plan Transformer Module**
+
 - Extract validation/conversion logic from `AriaEngine.MCPTools`
 - Create `lib/aria_engine/hybrid_planner/plan_transformer.ex`
 - Convert MCP input → (domain, state, goals) format
 - Preserve all existing validation logic
 
 **Phase 2: MCP Integration**
+
 - Update `schedule_activities` to use plan transformer
 - Call HybridCoordinatorV2 directly with converted parameters
 - Return MCP-formatted results
@@ -164,16 +168,19 @@ end
 ### Backward Compatibility Approach
 
 **Option 1: Versioned Tools**
+
 - Add `schedule_activities_v2` tool with new format
 - Maintain `schedule_activities` with current behavior
 - Deprecate old tool after migration period
 
 **Option 2: Response Format Flag**
+
 - Add `output_format` parameter to control response type
 - Default to current format for compatibility
 - Allow clients to opt into new format
 
 **Option 3: Direct Migration**
+
 - Update tool immediately with new format
 - Provide clear migration documentation
 - Support clients during transition
