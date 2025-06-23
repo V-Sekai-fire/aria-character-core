@@ -4,9 +4,6 @@ defmodule AstMigrate.Git do
   @type commit_hash :: String.t()
   @type branch_name :: String.t()
   @type file_path :: String.t()
-  defp get_author do
-    %{name: "AST Migration Tool", email: "ast-migrate@localhost"}
-  end
 
   defp timestamp do
     DateTime.utc_now() |> DateTime.to_unix()
@@ -22,10 +19,9 @@ defmodule AstMigrate.Git do
   @doc "Ensure the working tree is clean before applying transformations.\n"
   @spec ensure_clean_working_tree(String.t()) :: :ok | {:error, String.t()}
   def ensure_clean_working_tree(_repo_path \\ ".") do
-    case run_git_command(["status", "--porcelain"]) do
+    case run_git_command(["status", "--porcelain=v1"]) do
       {:ok, ""} -> :ok
-      {:ok, output} -> {:error, "Working tree not clean:
-#{output}"}
+      {:ok, output} -> {:error, "Working tree not clean:\n#{output}"}
       {:error, reason} -> {:error, "Failed to check Git status: #{reason}"}
     end
   end
@@ -49,8 +45,8 @@ defmodule AstMigrate.Git do
     )
 
     with :ok <- ensure_clean_working_tree(),
-         {:ok, _} <- run_git_command(["add"] ++ files),
-         {:ok, _} <- run_git_command(["commit", "-m", "[AST] #{message}"]),
+         {:ok, _} <- run_git_command(["add", "--"] ++ files),
+         {:ok, _} <- run_git_command(["commit", "--message", "[AST] #{message}"]),
          {:ok, commit_hash} <- run_git_command(["rev-parse", "HEAD"]) do
       Logger.info("AST transformation committed successfully",
         module: :ast_migrate_git,
@@ -116,7 +112,7 @@ defmodule AstMigrate.Git do
   @doc "Get transformation history by filtering commits with [AST] prefix.\n"
   @spec get_transformation_history() :: {:ok, [map()]} | {:error, String.t()}
   def get_transformation_history do
-    with {:ok, output} <- run_git_command(["log", "--oneline", "--grep=\\[AST\\]"]) do
+    with {:ok, output} <- run_git_command(["log", "--format=%H %s", "--grep=\\[AST\\]"]) do
       commits =
         output
         |> String.split("\n", trim: true)
