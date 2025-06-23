@@ -26,9 +26,11 @@ defmodule AriaEngineCore.MixProject do
 
   defp deps do
     [
+      # External dependencies
       {:jason, "~> 1.4"},
       {:libgraph, "~> 0.16"},
       {:porcelain, "~> 2.0"},
+      {:timex, "~> 3.7"},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end

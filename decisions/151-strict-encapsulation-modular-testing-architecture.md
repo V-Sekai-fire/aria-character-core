@@ -310,16 +310,28 @@ Based on directory structure analysis, aria_engine contains these logical subdom
   - ✅ Configured dependencies on aria_temporal_planner and aria_engine_core
   - ✅ Verified compilation with expected warnings for missing modules
 
-- [ ] **Phase 4c**: Extract `aria_scheduler` (scheduling layer)
-  - Move `scheduler/` subdirectory
-  - Extract scheduler root file (`scheduler.ex`)
-  - Migrate scheduling tests
-  - Configure dependencies on aria_hybrid_planner
+- [x] **Phase 4c**: Extract `aria_scheduler` (scheduling layer) ✅ **COMPLETED 2025-06-23**
+  - ✅ Created `apps/aria_scheduler/` with proper structure
+  - ✅ Moved `scheduler/` subdirectory with all scheduling components
+  - ✅ Extracted scheduler root file (`scheduler.ex`)
+  - ✅ Migrated scheduling tests (compiled successfully)
+  - ✅ Configured dependencies on aria_hybrid_planner, aria_engine_core, aria_temporal_planner
+  - ✅ Created AriaScheduler.Core delegation module for API compatibility
+  - ✅ Resolved circular dependency issues by removing aria_hybrid_planner from aria_engine_core
+  - ✅ Verified compilation with expected warnings for missing external dependencies
+  - ✅ Created migration tombstone documenting extraction
 
-- [ ] **Phase 4d**: Extract `aria_membrane_pipeline` (pipeline layer)
-  - Move `membrane/` subdirectory
-  - Migrate membrane pipeline tests
-  - Configure dependencies on aria_scheduler
+- [x] **Phase 4d**: Extract `aria_membrane_pipeline` (pipeline layer) ✅ **COMPLETED 2025-06-23**
+  - ✅ Created `apps/aria_membrane_pipeline/` with proper structure
+  - ✅ Moved `membrane/` subdirectory with all pipeline components
+  - ✅ Migrated membrane pipeline tests (23 files compiled successfully)
+  - ✅ Configured dependencies on aria_engine_core, aria_hybrid_planner, aria_temporal_planner, aria_scheduler
+  - ✅ Added Membrane Framework dependencies (membrane_core, membrane_file_plugin)
+  - ✅ Created main AriaMembranePipeline module with API delegation
+  - ✅ Updated main mix.exs to include aria_membrane_pipeline dependency
+  - ✅ Verified compilation with expected warnings for missing modules
+  - ✅ Created migration tombstone documenting extraction
+  - ✅ Removed duplicated files from original lib/aria_engine location
 
 - [x] **Phase 4e**: Consolidate `aria_engine_core` (core utilities) ✅ **COMPLETED 2025-06-23**
   - ✅ Created `apps/aria_engine_core/` with proper structure
@@ -335,7 +347,7 @@ Based on directory structure analysis, aria_engine contains these logical subdom
   - ✅ Verified independent test suite and compilation
   - ✅ Created migration tombstone documenting extraction
 
-**Phase 4 Progress:** 3/5 subdomain extractions completed (aria_temporal_planner, aria_hybrid_planner, and aria_engine_core)
+**Phase 4 Progress:** 5/5 subdomain extractions completed (aria_temporal_planner, aria_hybrid_planner, aria_scheduler, aria_membrane_pipeline, and aria_engine_core) ✅ **ALL COMPLETED 2025-06-23**
 
 ### Phase 5: Verify Testing Architecture
 - [ ] Audit all test suites for proper isolation
