@@ -1,6 +1,6 @@
-defmodule Mix.Tasks.Migrate.SerialRegistry do
+defmodule Mix.Tasks.Serial.Registry do
   @moduledoc """
-  Embedded serial number registry for Aria migration tools.
+  Embedded serial number registry for Aria project files.
 
   ## Serial Number Format
 
@@ -72,77 +72,77 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
       week: 26,
       sequence: 6
     },
-    "R25W007RESP" => %{
+    "R25W016RESP" => %{
       format: :v1,
       file: "planning_response.ex",
       purpose: "Membrane planning response data structure",
       created: ~D[2025-06-22],
       week: 26,
-      sequence: 7
+      sequence: 16
     },
-    "R25W008PRMS" => %{
+    "R25W017PRMS" => %{
       format: :v1,
       file: "planning_params.ex",
       purpose: "Membrane planning parameters data structure",
       created: ~D[2025-06-22],
       week: 26,
-      sequence: 8
+      sequence: 17
     },
-    "R25W009RQST" => %{
+    "R25W018RQST" => %{
       format: :v1,
       file: "planning_request.ex",
       purpose: "Membrane planning request data structure",
       created: ~D[2025-06-22],
       week: 26,
-      sequence: 9
+      sequence: 18
     },
-    "R25W010TMPL" => %{
+    "R25W019TMPL" => %{
       format: :v1,
       file: "minizinc_template_filter.ex",
       purpose: "Membrane MiniZinc template processing filter",
       created: ~D[2025-06-22],
       week: 26,
-      sequence: 10
+      sequence: 19
     },
-    "R25W011PIPE" => %{
+    "R25W020PXPE" => %{
       format: :v1,
       file: "pipeline_manager.ex",
       purpose: "Membrane pipeline coordination and management",
       created: ~D[2025-06-22],
       week: 26,
-      sequence: 11
+      sequence: 20
     },
-    "R25W012FMTR" => %{
+    "R25W021FMTR" => %{
       format: :v1,
       file: "format_transformer_filter.ex",
       purpose: "Membrane data format transformation filter",
       created: ~D[2025-06-22],
       week: 26,
-      sequence: 12
+      sequence: 21
     },
-    "R25W013PLNR" => %{
+    "R25W022PLNR" => %{
       format: :v1,
       file: "planner_filter.ex",
       purpose: "Membrane planning logic processing filter",
       created: ~D[2025-06-22],
       week: 26,
-      sequence: 13
+      sequence: 22
     },
-    "R25W014TEST" => %{
+    "R25W023TEST" => %{
       format: :v1,
       file: "testing_filter.ex",
       purpose: "Membrane testing utilities and validation filter",
       created: ~D[2025-06-22],
       week: 26,
-      sequence: 14
+      sequence: 23
     },
-    "R25W015SLVR" => %{
+    "R25W024SLVR" => %{
       format: :v1,
       file: "minizinc_solver_filter.ex",
       purpose: "Membrane MiniZinc solver integration filter",
       created: ~D[2025-06-22],
       week: 26,
-      sequence: 15
+      sequence: 24
     }
   }
 
@@ -216,9 +216,9 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
   def generate_tool_code(filename) do
     base_name = String.replace(filename, ".ex", "")
 
-    # Handle specific membrane component patterns
+    # Handle specific component patterns
     code = case base_name do
-      "pipeline_manager" -> "PIPE"
+      "pipeline_manager" -> "PXPE"
       "format_transformer_filter" -> "FMTR"
       "minizinc_solver_filter" -> "SLVR"
       "minizinc_template_filter" -> "TMPL"

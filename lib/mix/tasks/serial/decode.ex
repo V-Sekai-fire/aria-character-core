@@ -1,12 +1,12 @@
-defmodule Mix.Tasks.Migrate.DecodeSerial do
+defmodule Mix.Tasks.Serial.Decode do
   @moduledoc """
-  Decode Aria migration tool serial numbers.
+  Decode Aria project serial numbers.
 
   ## Usage
 
-      mix migrate.decode_serial A25W001GLTL
-      mix migrate.decode_serial --all
-      mix migrate.decode_serial --calendar 2025
+      mix serial.decode A25W001GLTL
+      mix serial.decode --all
+      mix serial.decode --calendar 2025
 
   ## Serial Number Format
 
@@ -30,22 +30,22 @@ defmodule Mix.Tasks.Migrate.DecodeSerial do
   ## Examples
 
       # Decode a specific serial number
-      mix migrate.decode_serial A25W001GLTL
+      mix serial.decode A25W001GLTL
 
       # Show all registered serial numbers
-      mix migrate.decode_serial --all
+      mix serial.decode --all
 
       # Show week calendar for 2025
-      mix migrate.decode_serial --calendar 2025
+      mix serial.decode --calendar 2025
 
       # Validate serial format
-      mix migrate.decode_serial INVALID123
+      mix serial.decode INVALID123
   """
 
   use Mix.Task
-  alias Mix.Tasks.Migrate.SerialRegistry
+  alias Mix.Tasks.Serial.Registry
 
-  @shortdoc "Decode Aria migration tool serial numbers"
+  @shortdoc "Decode Aria project serial numbers"
 
   @switches [
     all: :boolean,
@@ -78,23 +78,23 @@ defmodule Mix.Tasks.Migrate.DecodeSerial do
         decode_serial(hd(args), opts)
 
       true ->
-        Mix.shell().error("Usage: mix migrate.decode_serial <serial_number>")
-        Mix.shell().error("       mix migrate.decode_serial --all")
-        Mix.shell().error("       mix migrate.decode_serial --calendar <year>")
-        Mix.shell().error("       mix migrate.decode_serial --help")
+        Mix.shell().error("Usage: mix serial.decode <serial_number>")
+        Mix.shell().error("       mix serial.decode --all")
+        Mix.shell().error("       mix serial.decode --calendar <year>")
+        Mix.shell().error("       mix serial.decode --help")
     end
   end
 
   defp decode_serial(serial, opts) do
     verbose = opts[:verbose] || false
 
-    Mix.shell().info("Aria Migration Tool Serial Number Decoder")
-    Mix.shell().info("=========================================")
+    Mix.shell().info("Aria Project Serial Number Decoder")
+    Mix.shell().info("===================================")
     Mix.shell().info("")
     Mix.shell().info("Serial Number: #{serial}")
     Mix.shell().info("")
 
-    case SerialRegistry.decode(serial) do
+    case Registry.decode(serial) do
       %{} = decoded ->
         display_decoded_info(decoded, verbose)
 
@@ -154,10 +154,10 @@ defmodule Mix.Tasks.Migrate.DecodeSerial do
 
   defp show_all_serials(opts) do
     verbose = opts[:verbose] || false
-    serials = SerialRegistry.all_serials()
+    serials = Registry.all_serials()
 
-    Mix.shell().info("All Registered Aria Migration Tool Serial Numbers")
-    Mix.shell().info("================================================")
+    Mix.shell().info("All Registered Aria Project Serial Numbers")
+    Mix.shell().info("==========================================")
     Mix.shell().info("")
     Mix.shell().info("Total: #{length(serials)} tools")
     Mix.shell().info("")
@@ -165,7 +165,7 @@ defmodule Mix.Tasks.Migrate.DecodeSerial do
     serials
     |> Enum.sort()
     |> Enum.each(fn serial ->
-      case SerialRegistry.lookup(serial) do
+      case Registry.lookup(serial) do
         %{} = info ->
           Mix.shell().info("#{serial} - #{info.file}")
 
@@ -196,7 +196,7 @@ defmodule Mix.Tasks.Migrate.DecodeSerial do
     # Show weeks 1-9
     Mix.shell().info("Weeks 1-9:")
     for week <- 1..9 do
-      char = SerialRegistry.encode_week(week)
+      char = Registry.encode_week(week)
       {start_date, end_date} = calculate_week_dates(year, week)
       Mix.shell().info("  Week #{String.pad_leading(to_string(week), 2)} (#{char}): #{start_date} to #{end_date}")
     end
@@ -204,7 +204,7 @@ defmodule Mix.Tasks.Migrate.DecodeSerial do
     Mix.shell().info("")
     Mix.shell().info("Weeks 10-28:")
     for week <- 10..28 do
-      char = SerialRegistry.encode_week(week)
+      char = Registry.encode_week(week)
       {start_date, end_date} = calculate_week_dates(year, week)
       Mix.shell().info("  Week #{week} (#{char}): #{start_date} to #{end_date}")
     end
@@ -212,7 +212,7 @@ defmodule Mix.Tasks.Migrate.DecodeSerial do
     Mix.shell().info("")
     Mix.shell().info("Weeks 29-52:")
     for week <- 29..52 do
-      char = SerialRegistry.encode_week(week)
+      char = Registry.encode_week(week)
       {start_date, end_date} = calculate_week_dates(year, week)
       Mix.shell().info("  Week #{week} (#{char}): #{start_date} to #{end_date}")
     end
@@ -232,7 +232,7 @@ defmodule Mix.Tasks.Migrate.DecodeSerial do
   end
 
   defp suggest_similar_serials(invalid_serial) do
-    all_serials = SerialRegistry.all_serials()
+    all_serials = Registry.all_serials()
 
     if not Enum.empty?(all_serials) do
       Mix.shell().info("")
@@ -247,7 +247,7 @@ defmodule Mix.Tasks.Migrate.DecodeSerial do
       if length(all_serials) > 3 do
         Mix.shell().info("  ... and #{length(all_serials) - 3} more")
         Mix.shell().info("")
-        Mix.shell().info("Use 'mix migrate.decode_serial --all' to see all serial numbers")
+        Mix.shell().info("Use 'mix serial.decode --all' to see all serial numbers")
       end
     end
   end

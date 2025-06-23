@@ -1,11 +1,12 @@
-defmodule Mix.Tasks.Migrate.AddSerialNumbers do
+defmodule Mix.Tasks.Generate.Serial do
   @moduledoc """
-  Add industrial-grade serial numbers to Aria migration tools.
+  Generate industrial-grade serial numbers for Aria project files.
 
   ## Usage
 
-      mix migrate.add_serial_numbers
-      mix migrate.add_serial_numbers --dry-run
+      mix generate.serial
+      mix generate.serial --dir lib/aria_engine/membrane/
+      mix generate.serial --dry-run
 
   ## Serial Number Format
 
@@ -19,9 +20,9 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
 
   ## Features
 
-  - Scans existing migration tools in lib/mix/tasks/migrate/
+  - Scans Elixir files in specified directory
   - Generates unique serial numbers following character validation rules
-  - Adds @serial_number module attribute to each tool
+  - Adds @serial_number module attribute to each file
   - Updates module documentation with serial information
   - Backs up original files before modification
   - Blocks deps folder from processing
@@ -29,21 +30,28 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
 
   ## Examples
 
-      # Add serial numbers to all migration tools
-      mix migrate.add_serial_numbers
+      # Generate serials for membrane files
+      mix generate.serial --dir lib/aria_engine/membrane/
+
+      # Generate serials for migration tools
+      mix generate.serial --dir lib/mix/tasks/migrate/
 
       # Preview changes without applying them
-      mix migrate.add_serial_numbers --dry-run
+      mix generate.serial --dir lib/aria_engine/ --dry-run
+
+      # Generate for current directory
+      mix generate.serial
   """
 
   use Mix.Task
-  alias Mix.Tasks.Migrate.SerialRegistry
+  alias Mix.Tasks.Serial.Registry
 
-  @shortdoc "Add industrial-grade serial numbers to migration tools"
+  @shortdoc "Generate industrial-grade serial numbers for project files"
 
   @switches [
     dry_run: :boolean,
-    help: :boolean
+    help: :boolean,
+    dir: :string
   ]
 
   @aliases [
@@ -57,30 +65,32 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
     if opts[:help] do
       show_help()
     else
-      add_serial_numbers(opts)
+      generate_serials(opts)
     end
   end
 
-  defp add_serial_numbers(opts) do
+  defp generate_serials(opts) do
     factory = "R"
     dry_run = opts[:dry_run] || false
+    target_dir = opts[:dir] || "."
 
-    Mix.shell().info("Adding industrial-grade serial numbers to migration tools...")
+    Mix.shell().info("Generating industrial-grade serial numbers for project files...")
     Mix.shell().info("Factory: #{decode_factory(factory)}")
+    Mix.shell().info("Target Directory: #{target_dir}")
     Mix.shell().info("Mode: #{if dry_run, do: "DRY RUN", else: "LIVE"}")
     Mix.shell().info("")
 
-    files = find_migration_files()
+    files = find_elixir_files(target_dir)
 
     if Enum.empty?(files) do
-      Mix.shell().info("No migration tools found in lib/mix/tasks/migrate/")
+      Mix.shell().info("No Elixir files found in #{target_dir}")
       :ok
     else
       current_week = get_current_week()
       year = get_current_year()
 
       Mix.shell().info("Current week: #{current_week} (#{year})")
-      Mix.shell().info("Found #{length(files)} migration tools:")
+      Mix.shell().info("Found #{length(files)} Elixir files:")
       Mix.shell().info("")
 
       files
@@ -95,47 +105,65 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
         Mix.shell().info("Run without --dry-run to apply changes.")
       else
         Mix.shell().info("")
-        Mix.shell().info("Serial numbers added successfully!")
-        Mix.shell().info("Use 'mix migrate.decode_serial <serial>' to decode any serial number.")
+        Mix.shell().info("Serial numbers generated successfully!")
+        Mix.shell().info("Use 'mix serial.decode <serial>' to decode any serial number.")
       end
     end
   end
 
-  defp find_migration_files do
-    migrate_dir = "lib/mix/tasks/migrate"
-
-    if File.exists?(migrate_dir) do
-      migrate_dir
-      |> File.ls!()
-      |> Enum.filter(fn file ->
-        String.ends_with?(file, ".ex") and
-          file != "serial_registry.ex" and
-          file != "add_serial_numbers.ex" and
-          file != "decode_serial.ex" and
-          not String.starts_with?(file, ".")
-      end)
-      |> Enum.map(&Path.join(migrate_dir, &1))
-      |> Enum.filter(&File.exists?/1)
+  defp find_elixir_files(dir) do
+    if File.exists?(dir) do
+      find_elixir_files_recursive(dir)
       |> Enum.reject(&is_deps_file?/1)
+      |> Enum.reject(&has_serial_number?/1)
     else
       []
     end
   end
 
+  defp find_elixir_files_recursive(dir) do
+    dir
+    |> File.ls!()
+    |> Enum.flat_map(fn item ->
+      path = Path.join(dir, item)
+
+      cond do
+        File.dir?(path) ->
+          find_elixir_files_recursive(path)
+
+        String.ends_with?(item, ".ex") and not String.starts_with?(item, ".") ->
+          [path]
+
+        true ->
+          []
+      end
+    end)
+  end
 
   defp is_deps_file?(file_path) do
     String.contains?(file_path, "/deps/") or String.contains?(file_path, "\\deps\\")
   end
 
+  defp has_serial_number?(file_path) do
+    case File.read(file_path) do
+      {:ok, content} ->
+        String.contains?(content, "@serial_number")
+
+      {:error, _} ->
+        false
+    end
+  end
+
   defp process_file(file_path, factory, year, week, sequence, dry_run) do
     filename = Path.basename(file_path)
-    tool_code = SerialRegistry.generate_tool_code(filename)
-    week_char = SerialRegistry.encode_week(week)
+    tool_code = Registry.generate_tool_code(filename)
+    week_char = Registry.encode_week(week)
     serial = generate_serial(factory, year, week_char, sequence, tool_code)
 
     Mix.shell().info("#{sequence}. #{filename}")
     Mix.shell().info("   Serial: #{serial}")
     Mix.shell().info("   Tool Code: #{tool_code}")
+    Mix.shell().info("   Path: #{file_path}")
 
     if dry_run do
       Mix.shell().info("   [DRY RUN] Would add serial number")
@@ -243,9 +271,9 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
 
     serial_lines = [
       "  @moduledoc \"\"\"",
-      "  Migration tool with serial number: #{serial}",
+      "  Project file with serial number: #{serial}",
       "",
-      "  Decode: mix migrate.decode_serial #{serial}",
+      "  Decode: mix serial.decode #{serial}",
       "  \"\"\"",
       "",
       "  @serial_number \"#{serial}\"",
