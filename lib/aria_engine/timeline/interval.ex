@@ -12,7 +12,7 @@ defmodule AriaEngine.Timeline.Interval do
         }
   defstruct id: nil, start_time: nil, end_time: nil, agent: nil, entity: nil, metadata: %{}
 
-  @doc "Creates a new interval with unified temporal specification auto-detection or DateTime values.\n\nThis function supports multiple patterns:\n\n1. **Unified temporal specification (PREFERRED)**: Pass a map with temporal specification\n   - Fixed schedule: `%{start: \"2025-06-22T10:00:00Z\", end: \"2025-06-22T11:00:00Z\"}`\n   - Floating duration: `%{duration: \"PT2H\"}`\n   - Open-ended start: `%{start: \"2025-06-22T10:00:00Z\"}`\n   - Open-ended end: `%{end: \"2025-06-22T17:00:00Z\"}`\n\n2. **DateTime values (DEPRECATED)**: Pass DateTime structs directly\n   - Both start_time and end_time must be DateTime structs with timezone information\n\n## Examples\n\n    iex> interval = AriaEngine.Timeline.Interval.new(%{start: \"2023-01-01T00:00:00Z\", end: \"2023-01-01T00:05:30Z\"})\n    iex> interval.metadata.fixed_schedule\n    true\n\n    iex> interval = AriaEngine.Timeline.Interval.new(%{duration: \"PT2H\"})\n    iex> interval.metadata.floating_duration\n    true\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], \"Etc/UTC\")\n    iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)\n    iex> interval.start_time\n    ~U[2023-01-01 00:00:00Z]\n\n"
+  @doc "Creates a new interval with unified temporal specification auto-detection or DateTime values.\n\nThis function supports multiple patterns:\n\n1. **Unified temporal specification (PREFERRED)**: Pass a map with temporal specification\n   - Fixed schedule: `%{start: \"2025-06-22T10:00:00Z\", end: \"2025-06-22T11:00:00Z\"}`\n   - Floating duration: `%{duration: \"PT2H\"}`\n   - Open-ended start: `%{start: \"2025-06-22T10:00:00Z\"}`\n   - Open-ended end: `%{end: \"2025-06-22T17:00:00Z\"}`\n\n2. **DateTime values (DEPRECATED)**: Pass DateTime structs directly\n   - Both start_time and end_time must be DateTime structs with timezone information\n\n## Examples\n\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(%{\n    start: \"2023-01-01T00:00:00Z\",\n    end: \"2023-01-01T00:05:30Z\"\n  })\n    iex> interval.metadata.fixed_schedule\n    true\n\n    iex> interval = AriaEngine.Timeline.Interval.new_fixed_schedule(%{duration: \"PT2H\"})\n    iex> interval.metadata.floating_duration\n    true\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_dt),\n    DateTime.to_iso8601(end_dt)\n  )\n    iex> interval.start_time\n    ~U[2023-01-01 00:00:00Z]\n\n"
   @spec new(map() | DateTime.t(), keyword() | DateTime.t()) :: t()
   def new(temporal_spec_or_start, opts_or_end \\ [])
 
@@ -45,7 +45,7 @@ defmodule AriaEngine.Timeline.Interval do
     end
   end
 
-  @doc "Creates a new fixed schedule interval from ISO 8601 datetime strings.\n\nThis is the preferred way to create intervals with specific start and end times.\nBoth start_time and end_time must be valid ISO 8601 datetime strings with timezone information.\n\n## Examples\n\n    iex> interval = AriaEngine.Timeline.Interval.new_fixed_schedule(\"2023-01-01T00:00:00Z\", \"2023-01-01T00:05:30Z\")\n    iex> interval.start_time\n    ~U[2023-01-01 00:00:00Z]\n\n    iex> interval = AriaEngine.Timeline.Interval.new_fixed_schedule(\"2025-06-22T10:00:00Z\", \"2025-06-22T11:00:00Z\")\n    iex> interval.metadata.iso8601_start\n    \"2025-06-22T10:00:00Z\"\n\n"
+  @doc "Creates a new fixed schedule interval from ISO 8601 datetime strings.\n\nThis is the preferred way to create intervals with specific start and end times.\nBoth start_time and end_time must be valid ISO 8601 datetime strings with timezone information.\n\n## Examples\n\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\"2023-01-01T00:00:00Z\", \"2023-01-01T00:05:30Z\")\n    iex> interval.start_time\n    ~U[2023-01-01 00:00:00Z]\n\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\"2025-06-22T10:00:00Z\", \"2025-06-22T11:00:00Z\")\n    iex> interval.metadata.iso8601_start\n    \"2025-06-22T10:00:00Z\"\n\n"
   @spec new_fixed_schedule(String.t(), String.t(), keyword()) :: t()
   def new_fixed_schedule(start_iso8601, end_iso8601, opts \\ [])
       when is_binary(start_iso8601) and is_binary(end_iso8601) do
@@ -68,7 +68,7 @@ defmodule AriaEngine.Timeline.Interval do
     }
   end
 
-  @doc "Creates a new floating duration interval from ISO 8601 duration string.\n\nThis creates an interval that represents effort-based duration without specific start/end times.\nThe interval uses nil for start_time and end_time, with the duration stored in metadata.\n\n## Examples\n\n    iex> interval = AriaEngine.Timeline.Interval.new_floating_duration(\"PT2H\")\n    iex> interval.metadata.iso8601_duration\n    \"PT2H\"\n\n    iex> interval = AriaEngine.Timeline.Interval.new_floating_duration(\"PT30M\", metadata: %{task: \"cooking\"})\n    iex> interval.metadata.task\n    \"cooking\"\n\n"
+  @doc "Creates a new floating duration interval from ISO 8601 duration string.\n\nThis creates an interval that represents effort-based duration without specific start/end times.\nThe interval uses nil for start_time and end_time, with the duration stored in metadata.\n\n## Examples\n\n    iex> interval = AriaEngine.Timeline.Interval.new_floating_duration(\"PT2H\")\n    iex> interval.metadata.iso8601_duration\n    \"PT2H\"\n\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_floating_duration(\"PT30M\", metadata: %{task: \"cooking\"})\n    iex> interval.metadata.task\n    \"cooking\"\n\n"
   @spec new_floating_duration(String.t(), keyword()) :: t()
   def new_floating_duration(duration_iso8601, opts \\ []) when is_binary(duration_iso8601) do
     normalized_duration = AriaEngine.Utils.normalize_duration(duration_iso8601)
@@ -87,7 +87,7 @@ defmodule AriaEngine.Timeline.Interval do
     }
   end
 
-  @doc "Creates a new interval with DateTime values and options.\n\nBoth start_time and end_time must be DateTime structs with timezone information.\n\n**DEPRECATED**: Use `new_fixed_schedule/3` with ISO 8601 strings instead.\n\n## Options\n\n- `:agent` - The agent associated with this interval\n- `:entity` - The entity associated with this interval\n- `:metadata` - Additional metadata for the interval\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], \"Etc/UTC\")\n    iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt, metadata: %{type: :action})\n    iex> interval.metadata\n    %{type: :action}\n\n"
+  @doc "Creates a new interval with DateTime values and options.\n\nBoth start_time and end_time must be DateTime structs with timezone information.\n\n**DEPRECATED**: Use `new_fixed_schedule/3` with ISO 8601 strings instead.\n\n## Options\n\n- `:agent` - The agent associated with this interval\n- `:entity` - The entity associated with this interval\n- `:metadata` - Additional metadata for the interval\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_dt),\n    DateTime.to_iso8601(end_dt),\n    metadata: %{type: :action}\n  )\n    iex> interval.metadata\n    %{type: :action}\n\n"
   @spec new(DateTime.t(), DateTime.t(), keyword()) :: t()
   def new(%DateTime{} = start_time, %DateTime{} = end_time, opts) when is_list(opts) do
     IO.warn(
@@ -144,32 +144,32 @@ defmodule AriaEngine.Timeline.Interval do
     }
   end
 
-  @doc "Gets the duration of the interval in milliseconds.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], \"Etc/UTC\")\n    iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)\n    iex> AriaEngine.Timeline.Interval.duration_ms(interval)\n    330000\n\n"
+  @doc "Gets the duration of the interval in milliseconds.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_dt),\n    DateTime.to_iso8601(end_dt)\n  )\n    iex> AriaEngine.Timeline.Interval.duration_ms(interval)\n    330000\n\n"
   @spec duration_ms(t()) :: integer()
   def duration_ms(%__MODULE__{start_time: start_time, end_time: end_time}) do
     DateTime.diff(end_time, start_time, :millisecond)
   end
 
-  @doc "Gets the duration of the interval in seconds.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], \"Etc/UTC\")\n    iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)\n    iex> AriaEngine.Timeline.Interval.duration_seconds(interval)\n    330.0\n\n"
+  @doc "Gets the duration of the interval in seconds.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:30], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_dt),\n    DateTime.to_iso8601(end_dt)\n  )\n    iex> AriaEngine.Timeline.Interval.duration_seconds(interval)\n    330.0\n\n"
   @spec duration_seconds(t()) :: float()
   def duration_seconds(%__MODULE__{start_time: start_time, end_time: end_time}) do
     DateTime.diff(end_time, start_time, :microsecond) / 1_000_000.0
   end
 
-  @doc "Checks if a DateTime point is contained within the interval.\n\nOnly DateTime values are supported for time points to maintain timezone consistency.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)\n    iex> check_time = DateTime.from_naive!(~N[2025-01-01 11:00:00], \"Etc/UTC\")\n    iex> AriaEngine.Timeline.Interval.contains?(interval, check_time)\n    true\n\n"
+  @doc "Checks if a DateTime point is contained within the interval.\n\nOnly DateTime values are supported for time points to maintain timezone consistency.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_dt),\n    DateTime.to_iso8601(end_dt)\n  )\n    iex> check_time = DateTime.from_naive!(~N[2025-01-01 11:00:00], \"Etc/UTC\")\n    iex> AriaEngine.Timeline.Interval.contains?(interval, check_time)\n    true\n\n"
   @spec contains?(t(), DateTime.t()) :: boolean()
   def contains?(%__MODULE__{start_time: start_time, end_time: end_time}, %DateTime{} = time_point) do
     DateTime.compare(start_time, time_point) in [:lt, :eq] and
       DateTime.compare(time_point, end_time) == :lt
   end
 
-  @doc "Checks if the interval is associated with an agent.\n\n## Examples\n\n    iex> agent = %{type: :agent, id: \"agent1\", name: \"Alice\"}\n    iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt, agent: agent)\n    iex> AriaEngine.Timeline.Interval.agent?(interval)\n    true\n\n"
+  @doc "Checks if the interval is associated with an agent.\n\n## Examples\n\n    iex> agent = %{type: :agent, id: \"agent1\", name: \"Alice\"}\n    iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_dt),\n    DateTime.to_iso8601(end_dt),\n    agent: agent\n  )\n    iex> AriaEngine.Timeline.Interval.agent?(interval)\n    true\n\n"
   @spec agent?(t()) :: boolean()
   def agent?(%__MODULE__{agent: agent}) do
     not is_nil(agent)
   end
 
-  @doc "Checks if the interval is associated with an entity.\n\n## Examples\n\n    iex> entity = %{type: :entity, id: \"entity1\", name: \"Conference Room\"}\n    iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt, entity: entity)\n    iex> AriaEngine.Timeline.Interval.entity?(interval)\n    true\n\n"
+  @doc "Checks if the interval is associated with an entity.\n\n## Examples\n\n    iex> entity = %{type: :entity, id: \"entity1\", name: \"Conference Room\"}\n    iex> start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_dt),\n    DateTime.to_iso8601(end_dt),\n    entity: entity\n  )\n    iex> AriaEngine.Timeline.Interval.entity?(interval)\n    true\n\n"
   @spec entity?(t()) :: boolean()
   def entity?(%__MODULE__{entity: entity}) do
     not is_nil(entity)
@@ -181,7 +181,7 @@ defmodule AriaEngine.Timeline.Interval do
     duration_ms(interval)
   end
 
-  @doc "Gets the duration of the interval in a specific time unit.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 01:00:00], \"Etc/UTC\")\n    iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)\n    iex> AriaEngine.Timeline.Interval.duration_in_unit(interval, :minute)\n    60\n\n"
+  @doc "Gets the duration of the interval in a specific time unit.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 01:00:00], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_dt),\n    DateTime.to_iso8601(end_dt)\n  )\n    iex> AriaEngine.Timeline.Interval.duration_in_unit(interval, :minute)\n    60\n\n"
   @spec duration_in_unit(t(), :microsecond | :millisecond | :second | :minute | :hour | :day) ::
           integer()
   def duration_in_unit(%__MODULE__{start_time: start_time, end_time: end_time}, unit) do
@@ -220,7 +220,7 @@ defmodule AriaEngine.Timeline.Interval do
     }
   end
 
-  @doc "Converts the interval to STN time points with explicit unit and LOD information.\n\nThis provides metadata that STN can use for automatic rescaling.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:00], \"Etc/UTC\")\n    iex> interval = AriaEngine.Timeline.Interval.new(start_dt, end_dt)\n    iex> {_start_point, _end_point, duration} = AriaEngine.Timeline.Interval.to_stn_points(interval, :second)\n    iex> duration\n    300\n\n"
+  @doc "Converts the interval to STN time points with explicit unit and LOD information.\n\nThis provides metadata that STN can use for automatic rescaling.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 00:05:00], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start_dt),\n    DateTime.to_iso8601(end_dt)\n  )\n    iex> {_start_point, _end_point, duration} =\n  AriaEngine.Timeline.Interval.to_stn_points(interval, :second)\n    iex> duration\n    300\n\n"
   @spec to_stn_points(t(), :microsecond | :millisecond | :second | :minute | :hour | :day) ::
           {String.t(), String.t(), integer()}
   def to_stn_points(%__MODULE__{id: id} = interval, unit) do
@@ -230,7 +230,7 @@ defmodule AriaEngine.Timeline.Interval do
     {start_point, end_point, duration}
   end
 
-  @doc "Checks if two intervals overlap in time.\n\n## Examples\n\n    iex> start1 = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end1 = DateTime.from_naive!(~N[2023-01-01 01:00:00], \"Etc/UTC\")\n    iex> interval1 = AriaEngine.Timeline.Interval.new(start1, end1)\n    iex> start2 = DateTime.from_naive!(~N[2023-01-01 00:30:00], \"Etc/UTC\")\n    iex> end2 = DateTime.from_naive!(~N[2023-01-01 01:30:00], \"Etc/UTC\")\n    iex> interval2 = AriaEngine.Timeline.Interval.new(start2, end2)\n    iex> AriaEngine.Timeline.Interval.overlaps?(interval1, interval2)\n    true\n\n"
+  @doc "Checks if two intervals overlap in time.\n\n## Examples\n\n    iex> start1 = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end1 = DateTime.from_naive!(~N[2023-01-01 01:00:00], \"Etc/UTC\")\n    iex> interval1 =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start1),\n    DateTime.to_iso8601(end1)\n  )\n    iex> start2 = DateTime.from_naive!(~N[2023-01-01 00:30:00], \"Etc/UTC\")\n    iex> end2 = DateTime.from_naive!(~N[2023-01-01 01:30:00], \"Etc/UTC\")\n    iex> interval2 =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start2),\n    DateTime.to_iso8601(end2)\n  )\n    iex> AriaEngine.Timeline.Interval.overlaps?(interval1, interval2)\n    true\n\n"
   @spec overlaps?(t(), t()) :: boolean()
   def overlaps?(%__MODULE__{start_time: start1, end_time: end1}, %__MODULE__{
         start_time: start2,
@@ -239,7 +239,7 @@ defmodule AriaEngine.Timeline.Interval do
     DateTime.compare(start1, end2) == :lt and DateTime.compare(start2, end1) == :lt
   end
 
-  @doc "Calculates the temporal relationship between two intervals using Allen's interval algebra.\n\nReturns one of: :before, :meets, :overlaps, :finished_by, :contains, :starts, :equals,\n:started_by, :during, :finishes, :overlapped_by, :met_by, :after\n\n## Examples\n\n    iex> start1 = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end1 = DateTime.from_naive!(~N[2023-01-01 01:00:00], \"Etc/UTC\")\n    iex> interval1 = AriaEngine.Timeline.Interval.new(start1, end1)\n    iex> start2 = DateTime.from_naive!(~N[2023-01-01 01:00:00], \"Etc/UTC\")\n    iex> end2 = DateTime.from_naive!(~N[2023-01-01 02:00:00], \"Etc/UTC\")\n    iex> interval2 = AriaEngine.Timeline.Interval.new(start2, end2)\n    iex> AriaEngine.Timeline.Interval.allen_relation(interval1, interval2)\n    :meets\n\n"
+  @doc "Calculates the temporal relationship between two intervals using Allen's interval algebra.\n\nReturns one of: :before, :meets, :overlaps, :finished_by, :contains, :starts, :equals,\n:started_by, :during, :finishes, :overlapped_by, :met_by, :after\n\n## Examples\n\n    iex> start1 = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end1 = DateTime.from_naive!(~N[2023-01-01 01:00:00], \"Etc/UTC\")\n    iex> interval1 =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start1),\n    DateTime.to_iso8601(end1)\n  )\n    iex> start2 = DateTime.from_naive!(~N[2023-01-01 01:00:00], \"Etc/UTC\")\n    iex> end2 = DateTime.from_naive!(~N[2023-01-01 02:00:00], \"Etc/UTC\")\n    iex> interval2 =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start2),\n    DateTime.to_iso8601(end2)\n  )\n    iex> AriaEngine.Timeline.Interval.allen_relation(interval1, interval2)\n    :meets\n\n"
   @spec allen_relation(t(), t()) :: atom()
   def allen_relation(%__MODULE__{start_time: s1, end_time: e1}, %__MODULE__{
         start_time: s2,

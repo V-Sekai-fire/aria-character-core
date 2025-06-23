@@ -81,19 +81,28 @@ defmodule Mix.Tasks.Migrate.TimelineIntervalApi do
     files = Base.discover_elixir_files()
     |> Enum.filter(fn file ->
       content = File.read!(file)
-      AstTransformer.needs_timeline_interval_transformation?(content)
+      AstTransformer.needs_timeline_interval_transformation?(content) or
+      needs_doctest_transformation?(content)
     end)
 
     if Enum.empty?(files) do
-      Logger.info("📊 No files found with Timeline.Interval.new calls")
+      Logger.info("📊 No files found with Timeline.Interval.new calls or doctests")
     else
-      Logger.info("📊 Found #{length(files)} files with Timeline.Interval.new calls")
+      Logger.info("📊 Found #{length(files)} files with Timeline.Interval.new calls or doctests")
 
       transformation_fn = fn content ->
-        AstTransformer.transform_code(content, AstTransformer.timeline_interval_rules())
+        # Use enhanced transformation that handles both code and doctests
+        AstTransformer.transform_code_and_doctests(content, AstTransformer.timeline_interval_rules())
       end
 
       Base.process_files(files, transformation_fn, dry_run, backup_dir)
     end
+  end
+
+  defp needs_doctest_transformation?(content) do
+    # Check for doctest patterns that use deprecated Timeline.Interval.new
+    String.contains?(content, "iex>") and
+    String.contains?(content, "Interval.new(") and
+    String.contains?(content, "DateTime.from_naive!")
   end
 end
