@@ -454,7 +454,8 @@ defmodule Mix.Tasks.Serial.Decode do
   defp calculate_week_dates(year, week) do
     try do
       if Code.ensure_loaded?(Timex) do
-        start_date = Timex.beginning_of_week(Date.from_iso_week_date!(year, week, 1))
+        # Use Timex.from_iso_triplet to create a date from ISO week
+        start_date = Timex.from_iso_triplet({year, week, 1})
         end_date = Timex.end_of_week(start_date)
         {Date.to_string(start_date), Date.to_string(end_date)}
       else
@@ -474,7 +475,13 @@ defmodule Mix.Tasks.Serial.Decode do
 
   defp has_week_53?(year) do
     if Code.ensure_loaded?(Timex) do
-      Timex.iso_weeks_in_year(year) == 53
+      # Check if week 53 exists by trying to create a date for it
+      try do
+        Timex.from_iso_triplet({year, 53, 1})
+        true
+      rescue
+        _ -> false
+      end
     else
       # Basic check: years starting on Thursday or leap years starting on Wednesday
       jan_1 = Date.new!(year, 1, 1)

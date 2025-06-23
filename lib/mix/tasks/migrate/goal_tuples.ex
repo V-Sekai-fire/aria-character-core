@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Mix.Tasks.Migrate.GoalTuples do
-  @compile {:no_warn_unused, [:serial_number]}
-  @moduledoc "Migration tool with serial number: A25W002GXAL\n\nDecode: mix migrate.decode_serial A25W002GXAL\n"
   @serial_number "R25W002GXAL"
   @doc "Returns the module's serial number for tracking and identification."
   @spec serial_number() :: String.t()

@@ -374,7 +374,7 @@ defmodule Mix.Tasks.Serial.Registry do
     try do
       # Use Timex if available, fallback to basic calculation
       if Code.ensure_loaded?(Timex) do
-        start_date = Timex.beginning_of_week(Timex.from_iso_week(year, week))
+        start_date = Timex.from_iso_triplet({year, week, 1})
         end_date = Timex.end_of_week(start_date)
         {Date.to_string(start_date), Date.to_string(end_date)}
       else

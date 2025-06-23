@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Mix.Tasks.Migrate.StateV2 do
-  @compile {:no_warn_unused, [:serial_number]}
-  @moduledoc "Migration tool with serial number: A25W006STAT\n\nDecode: mix migrate.decode_serial A25W006STAT\n"
   @serial_number "R25W006STAT"
   @doc "Returns the module's serial number for tracking and identification."
   @spec serial_number() :: String.t()
