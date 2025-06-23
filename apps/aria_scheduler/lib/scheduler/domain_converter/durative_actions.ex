@@ -5,7 +5,7 @@ defmodule AriaEngine.Scheduler.DomainConverter.DurativeActions do
   @moduledoc "Creates durative actions for activities with temporal constraints.\n\nThis module handles the creation of Domain.DurativeAction structs\nthat represent activities with explicit temporal durations, conditions,\nand effects that occur at different time points.\n"
   require Logger
   alias Domain
-  alias AriaEngine.Scheduler.{Entity, Resource}
+  alias AriaEngine.Scheduler.{Entity, Resource, DurationParser}
   alias AriaEngine.Scheduler.DomainConverter.ActivityActions
   @type activity :: map()
   @type duration_format ::
@@ -162,13 +162,12 @@ defmodule AriaEngine.Scheduler.DomainConverter.DurativeActions do
         {:fixed, seconds}
 
       is_binary(duration_val) ->
-        case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-          parsed when is_list(parsed) ->
-            duration_map = Enum.into(parsed, %{})
+        case DurationParser.parse_duration(duration_val) do
+          {:ok, duration_map} ->
             seconds = convert_duration_map_to_seconds(duration_map)
             {:fixed, seconds}
 
-          _ ->
+          {:error, _reason} ->
             {:fixed, 1}
         end
 

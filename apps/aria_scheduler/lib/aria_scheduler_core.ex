@@ -33,7 +33,7 @@ defmodule AriaScheduler.Core do
   end
 
   # Simple schedule/3 function that delegates to the enhanced version
-  def schedule(scheduler, activities, constraints \\ []) do
+  def schedule(_scheduler, activities, constraints \\ []) do
     # Extract basic parameters and use defaults for enhanced features
     schedule_name = "default_schedule"
     entities = []

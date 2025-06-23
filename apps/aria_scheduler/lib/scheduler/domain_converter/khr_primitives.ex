@@ -4,7 +4,7 @@
 defmodule AriaEngine.Scheduler.DomainConverter.KHRPrimitives do
   @moduledoc "Creates KHR (Khronos Interactivity) primitive sequences for activities.\n\nThis module handles the creation of KHR primitive action sequences\nthat represent the low-level execution steps for activities,\nproviding detailed temporal and resource management primitives.\n"
   require Logger
-  alias AriaEngine.Scheduler.{Entity, Resource}
+  alias AriaEngine.Scheduler.{Entity, Resource, DurationParser}
   @type activity :: map()
   @type khr_primitive :: %{type: String.t(), action: String.t(), parameters: map(), timing: map()}
   @doc "Create KHR primitive sequences for activities.\n"
@@ -168,13 +168,12 @@ defmodule AriaEngine.Scheduler.DomainConverter.KHRPrimitives do
         %{when: "over_all", duration: seconds, priority: "medium"}
 
       is_binary(duration_val) ->
-        case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-          parsed when is_list(parsed) ->
-            duration_map = Enum.into(parsed, %{})
+        case DurationParser.parse_duration(duration_val) do
+          {:ok, duration_map} ->
             seconds = convert_duration_to_seconds(duration_map)
             %{when: "over_all", duration: seconds, priority: "medium"}
 
-          _ ->
+          {:error, _reason} ->
             %{when: "over_all", duration: 1, priority: "medium"}
         end
 

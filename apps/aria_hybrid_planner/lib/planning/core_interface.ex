@@ -14,10 +14,9 @@ defmodule Planning.CoreInterface do
   @spec plan(DomainBehaviour.t(), Core.state(), [todo_item()], keyword()) ::
           {:ok, solution_tree()} | {:error, String.t()}
   def plan(domain, %AriaEngine.State{} = state, todos, opts \\ []) do
-    case AriaEngine.PlannerAdapter.plan(domain, state, todos, opts) do
-      {:ok, solution_tree} -> {:ok, solution_tree}
-      {:error, reason} -> {:error, reason}
-    end
+    # Note: AriaEngine.PlannerAdapter.plan currently only returns {:error, String.t()}
+    # This is a stub implementation - full planning requires aria_hybrid_planner integration
+    AriaEngine.PlannerAdapter.plan(domain, state, todos, opts)
   end
 
   @doc "Advanced planning interface - returns the full solution tree.\n"
@@ -42,28 +41,15 @@ defmodule Planning.CoreInterface do
       when not is_nil(solution_tree) do
     domain_interface = Internal.to_planner_interface(engine)
 
-    case AriaEngine.PlannerAdapter.replan(
-           domain_interface,
-           engine.current_state,
-           solution_tree,
-           fail_node_id,
-           opts
-         ) do
-      {:ok, new_solution_tree} ->
-        updated_engine = %{
-          engine
-          | solution_tree: new_solution_tree,
-            progress: %{
-              engine.progress
-              | total_steps: AriaEngine.PlannerAdapter.plan_cost(new_solution_tree)
-            }
-        }
-
-        {:ok, updated_engine}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
+    # Note: AriaEngine.PlannerAdapter.replan currently only returns {:error, String.t()}
+    # This is a stub implementation - full replanning requires aria_hybrid_planner integration
+    AriaEngine.PlannerAdapter.replan(
+      domain_interface,
+      engine.current_state,
+      solution_tree,
+      fail_node_id,
+      opts
+    )
   end
 
   def replan(%Core{solution_tree: nil}, _fail_node_id, _opts) do

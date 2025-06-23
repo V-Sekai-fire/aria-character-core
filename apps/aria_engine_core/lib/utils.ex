@@ -3,6 +3,8 @@
 
 defmodule AriaEngine.Utils do
   @moduledoc "Utility functions for AriaEngine.\n\nThis module provides common utility functions used across the AriaEngine\nsystem, including duration handling, string formatting, and data conversion.\n"
+
+  require Timex
   alias Timex.Duration
 
   @doc "Normalizes a duration to ISO8601 duration string format.\n\nAccepts various duration formats:\n- Maps with time units (hours, minutes, seconds)\n- Maps with ISO8601 datetime strings (start/end)\n- Tuples like {:fixed, seconds}, {:range, min, max}, {:open_ended, map}\n- Numbers (interpreted as seconds)\n- ISO8601 duration strings\n\n## Examples\n\n    iex> AriaEngine.Utils.normalize_duration(%{hours: 1, minutes: 30})\n    \"PT1H30M\"\n    \n    iex> AriaEngine.Utils.normalize_duration(%{\"start\" => \"2025-06-20T09:00:00Z\", \"end\" => \"2025-06-20T10:00:00Z\"})\n    \"PT1H\"\n    \n    iex> AriaEngine.Utils.normalize_duration({:fixed, 3600})\n    \"PT1H\"\n"

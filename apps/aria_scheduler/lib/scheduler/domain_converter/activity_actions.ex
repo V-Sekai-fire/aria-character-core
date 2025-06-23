@@ -4,7 +4,7 @@
 defmodule AriaEngine.Scheduler.DomainConverter.ActivityActions do
   @moduledoc "Creates basic activity actions for the domain.\n\nThis module handles the creation of durative actions for activities,\nconverting activity definitions into executable domain actions with\nproper resource allocation and temporal constraints.\n"
   require Logger
-  alias AriaEngine.Scheduler.{Entity, Resource}
+  alias AriaEngine.Scheduler.{Entity, Resource, DurationParser}
   @type activity :: map()
   @type duration_value :: map() | binary() | number()
   @doc "Create basic activity actions for the domain.\nAll actions are now durative actions; \"instantaneous\" actions are durative actions with duration 0.\n"
@@ -68,21 +68,11 @@ defmodule AriaEngine.Scheduler.DomainConverter.ActivityActions do
         duration_val
 
       is_binary(duration_val) ->
-        case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-          parsed when is_list(parsed) ->
-            _keys = [:years, :months, :days, :hours, :minutes, :seconds]
-            map = Enum.into(parsed, %{})
+        case DurationParser.parse_duration(duration_val) do
+          {:ok, duration_map} ->
+            duration_map
 
-            %{
-              years: Map.get(map, :years, 0),
-              months: Map.get(map, :months, 0),
-              days: Map.get(map, :days, 0),
-              hours: Map.get(map, :hours, 0),
-              minutes: Map.get(map, :minutes, 0),
-              seconds: Map.get(map, :seconds, 0)
-            }
-
-          _ ->
+          {:error, _reason} ->
             nil
         end
 

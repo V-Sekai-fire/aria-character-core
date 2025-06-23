@@ -4,7 +4,7 @@
 defmodule AriaEngine.Scheduler.Core do
   @moduledoc "Private implementation core for AriaEngine.Scheduler.\n\nOrchestrates the scheduling process by coordinating between specialized modules\nfor domain conversion, state management, plan conversion, and analysis.\n\nThis module should not be used directly - use AriaEngine.Scheduler instead.\n"
   require Logger
-  alias AriaEngine.Scheduler.{DomainConverter, StateManager, PlanConverter, ResourceManager}
+  alias AriaEngine.Scheduler.{DomainConverter, StateManager, PlanConverter, ResourceManager, DurationParser}
   @doc "Main scheduling function with enhanced features.\n"
   def schedule_with_enhanced_features(
         schedule_name,
@@ -86,44 +86,9 @@ defmodule AriaEngine.Scheduler.Core do
         opts: []
       }
 
+      # Note: attempt_enhanced_scheduling currently only returns {:error, String.t()}
+      # This is a stub implementation - full scheduling requires aria_hybrid_planner integration
       case attempt_enhanced_scheduling(scheduling_params) do
-        {:ok, schedule} ->
-          default_analysis = %{
-            schedule_name: schedule_name,
-            method: "Critical Path Method with Enhanced Resource-Aware Scheduling",
-            activities_analyzed: 0,
-            dependencies_found: 0,
-            resource_conflicts: 0,
-            circular_dependencies: 0,
-            critical_path_length: 0,
-            simulation_mode: simulation_mode,
-            entities_used: length(entities),
-            resources_managed: length(resources),
-            hybrid_planner_used: true,
-            empty_plan_reason: "Empty todo list results in empty plan (valid solution)"
-          }
-
-          result = %AriaEngine.Scheduler.SimulationResult{
-            status: "success",
-            reason:
-              if simulation_mode do
-                "Simulation completed successfully"
-              else
-                "Schedule successfully generated"
-              end,
-            schedule: schedule,
-            analysis: default_analysis,
-            resource_utilization: %{},
-            simulation_metadata: %{
-              generated_at: DateTime.utc_now(),
-              simulation_duration: 0,
-              entities_count: length(entities),
-              resources_count: length(resources)
-            }
-          }
-
-          {:ok, result}
-
         {:error, reason} ->
           {:error, reason}
       end
@@ -179,9 +144,9 @@ defmodule AriaEngine.Scheduler.Core do
       resources: resources,
       constraints: constraints,
       simulation_mode: simulation_mode,
-      activity_log: activity_log,
+      activity_log: _activity_log,
       verbose: verbose,
-      base_datetime: base_datetime,
+      base_datetime: _base_datetime,
       opts: _opts
     } = scheduling_params
 
@@ -224,38 +189,9 @@ defmodule AriaEngine.Scheduler.Core do
         Logger.info("🔧 About to call AriaEngine.PlannerAdapter.plan_tasks()...")
         planner_opts = [verbose: verbose]
 
+        # Note: AriaEngine.PlannerAdapter.plan_tasks currently only returns {:error, String.t()}
+        # This is a stub implementation - full planning requires aria_hybrid_planner integration
         case AriaEngine.PlannerAdapter.plan_tasks(domain, initial_state, tasks, planner_opts) do
-          {:ok, solution_tree} ->
-            encapsulated_plan =
-              HybridPlanner.DataStructures.EncapsulatedPlan.new(solution_tree, %{
-                source: "AriaEngine.PlannerAdapter.plan_tasks",
-                scheduler_wrapped: true
-              })
-
-            if simulation_mode do
-              simulate_plan_execution(
-                domain,
-                initial_state,
-                encapsulated_plan,
-                activities,
-                entities,
-                resources,
-                activity_log,
-                verbose
-              )
-            else
-              schedule =
-                convert_plan_to_enhanced_schedule(
-                  encapsulated_plan,
-                  activities,
-                  entities,
-                  resources,
-                  base_datetime
-                )
-
-              {:ok, schedule}
-            end
-
           {:error, reason} ->
             {:error, "Enhanced planning failed: #{reason}"}
         end
@@ -341,12 +277,11 @@ defmodule AriaEngine.Scheduler.Core do
             {duration_val, nil, nil}
 
           is_binary(duration_val) ->
-            case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-              parsed when is_list(parsed) ->
-                map = Enum.into(parsed, %{})
-                {map, nil, nil}
+            case DurationParser.parse_duration(duration_val) do
+              {:ok, duration_map} ->
+                {duration_map, nil, nil}
 
-              _ ->
+              {:error, _reason} ->
                 {nil, nil, nil}
             end
 
@@ -516,12 +451,11 @@ defmodule AriaEngine.Scheduler.Core do
             {duration_val, nil, nil}
 
           is_binary(duration_val) ->
-            case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-              parsed when is_list(parsed) ->
-                map = Enum.into(parsed, %{})
-                {map, nil, nil}
+            case DurationParser.parse_duration(duration_val) do
+              {:ok, duration_map} ->
+                {duration_map, nil, nil}
 
-              _ ->
+              {:error, _reason} ->
                 {nil, nil, nil}
             end
 

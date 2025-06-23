@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngine.Scheduler.EntityManager do
-  @moduledoc "Entity assignment and management for the scheduler.\n\nHandles entity capability matching, assignment, and availability tracking\nfor activities with specific capability requirements.\n"
+  @moduledoc "Manages entity allocation and capabilities.\n\nHandles the assignment of entities to activities based on required\ncapabilities and availability constraints.\n"
   require Logger
+  alias AriaEngine.Scheduler.DurationParser
   @type entity :: AriaEngine.Scheduler.Entity.t()
   @type activity :: AriaEngine.Scheduler.activity()
   @type state :: AriaEngine.Scheduler.state()
@@ -299,12 +300,11 @@ defmodule AriaEngine.Scheduler.EntityManager do
             AriaEngine.Utils.duration_struct_to_seconds(duration_val)
 
           is_binary(duration_val) ->
-            case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-              parsed when is_list(parsed) ->
-                map = Enum.into(parsed, %{})
-                AriaEngine.Utils.duration_struct_to_seconds(map)
+            case DurationParser.parse_duration(duration_val) do
+              {:ok, duration_map} ->
+                AriaEngine.Utils.duration_struct_to_seconds(duration_map)
 
-              _ ->
+              {:error, _reason} ->
                 0
             end
 

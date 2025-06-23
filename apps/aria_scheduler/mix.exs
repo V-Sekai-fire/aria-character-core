@@ -35,8 +35,7 @@ defmodule AriaScheduler.MixProject do
       {:jason, "~> 1.4"},
       {:libgraph, "~> 0.16"},
       {:telemetry, "~> 1.2"},
-      {:timex, "~> 3.7"},
-      {:iso8601, "~> 1.1"}
+      {:timex, "~> 3.7"}
     ]
   end
 end

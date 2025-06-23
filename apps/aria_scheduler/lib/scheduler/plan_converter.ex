@@ -4,6 +4,7 @@
 defmodule AriaEngine.Scheduler.PlanConverter do
   @moduledoc "Converts planning results back to scheduler format.\n\nHandles the translation from hybrid planner results (encapsulated plans)\nback to scheduler concepts (schedules with timing and resource assignments).\n"
   require Logger
+  alias AriaEngine.Scheduler.DurationParser
   @doc "Convert plan to enhanced schedule format.\n"
   def convert_plan_to_enhanced_schedule(
         encapsulated_plan,
@@ -295,12 +296,11 @@ defmodule AriaEngine.Scheduler.PlanConverter do
 
     case duration_val do
       duration_str when is_binary(duration_str) ->
-        case :iso8601.parse_duration(String.to_charlist(duration_str)) do
-          parsed when is_list(parsed) ->
-            map = Enum.into(parsed, %{})
-            (map[:hours] || 0) * 3600 + (map[:minutes] || 0) * 60 + (map[:seconds] || 0)
+        case DurationParser.parse_duration(duration_str) do
+          {:ok, duration_map} ->
+            (duration_map.hours || 0) * 3600 + (duration_map.minutes || 0) * 60 + (duration_map.seconds || 0)
 
-          _ ->
+          {:error, _reason} ->
             0
         end
 
@@ -523,20 +523,18 @@ defmodule AriaEngine.Scheduler.PlanConverter do
   end
 
   defp parse_iso8601_duration(duration_val) do
-    case :iso8601.parse_duration(String.to_charlist(duration_val)) do
-      parsed when is_list(parsed) ->
-        map = Enum.into(parsed, %{})
-
+    case DurationParser.parse_duration(duration_val) do
+      {:ok, duration_map} ->
         total_seconds =
-          (map[:hours] || 0) * 3600 + (map[:minutes] || 0) * 60 + (map[:seconds] || 0)
+          (duration_map.hours || 0) * 3600 + (duration_map.minutes || 0) * 60 + (duration_map.seconds || 0)
 
         if total_seconds < 0 do
           {0, nil, nil, duration_val}
         else
-          {AriaEngine.Utils.duration_struct_to_seconds(map), nil, nil, duration_val}
+          {AriaEngine.Utils.duration_struct_to_seconds(duration_map), nil, nil, duration_val}
         end
 
-      _ ->
+      {:error, _reason} ->
         {0, nil, nil, duration_val}
     end
   end
