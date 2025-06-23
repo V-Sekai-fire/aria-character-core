@@ -107,8 +107,17 @@ Each library extraction follows this complete process:
    - Ensure test isolation and independence
 
 4. **Configure Dependencies**
-   - Update umbrella `mix.exs` to include new app
-   - Configure new app dependencies in its `mix.exs`
+   - Update umbrella `mix.exs` to include new app in applications list
+   - Configure new app dependencies using umbrella path pattern:
+     ```elixir
+     defp deps do
+       [
+         {:aria_security, path: "../aria_security"},
+         {:aria_storage, path: "../aria_storage"},
+         # external deps...
+       ]
+     end
+     ```
    - Resolve any circular dependency issues
 
 5. **Verify Independent Operation**
