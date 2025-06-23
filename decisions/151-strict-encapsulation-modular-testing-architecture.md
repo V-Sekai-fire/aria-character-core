@@ -302,11 +302,13 @@ Based on directory structure analysis, aria_engine contains these logical subdom
   - ✅ Migrated temporal planning tests (26 files compiled successfully)
   - ✅ Verified STN solving and timeline functionality
 
-- [ ] **Phase 4b**: Extract `aria_hybrid_planner` (planning layer)
-  - Move `hybrid_planner/` and `plan/` subdirectories
-  - Extract planning-related root files (`planning.ex`, `planner_adapter.ex`)
-  - Migrate hybrid planning tests
-  - Configure dependency on aria_temporal_planner
+- [x] **Phase 4b**: Extract `aria_hybrid_planner` (planning layer) ✅ **COMPLETED 2025-06-23**
+  - ✅ Created `apps/aria_hybrid_planner/` with proper structure
+  - ✅ Moved `hybrid_planner/`, `plan/`, and `planning/` subdirectories
+  - ✅ Extracted planning-related root files (`planning.ex`, `planner_adapter.ex`)
+  - ✅ Migrated hybrid planning tests (31 files compiled successfully)
+  - ✅ Configured dependencies on aria_temporal_planner and aria_engine_core
+  - ✅ Verified compilation with expected warnings for missing modules
 
 - [ ] **Phase 4c**: Extract `aria_scheduler` (scheduling layer)
   - Move `scheduler/` subdirectory
@@ -333,7 +335,7 @@ Based on directory structure analysis, aria_engine contains these logical subdom
   - ✅ Verified independent test suite and compilation
   - ✅ Created migration tombstone documenting extraction
 
-**Phase 4 Progress:** 2/5 subdomain extractions completed (aria_temporal_planner and aria_engine_core)
+**Phase 4 Progress:** 3/5 subdomain extractions completed (aria_temporal_planner, aria_hybrid_planner, and aria_engine_core)
 
 ### Phase 5: Verify Testing Architecture
 - [ ] Audit all test suites for proper isolation
