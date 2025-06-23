@@ -1,8 +1,8 @@
 defmodule AriaEngine.Timeline.TimelineSegmenter do
   @moduledoc "Timeline segmentation functionality for breaking timelines into manageable chunks.\n\nThis module handles:\n- Timeline segmentation by bridge positions\n- Segment creation and validation\n- Time range analysis and bounds calculation\n- Segment metadata management\n\nSegmentation is useful for parallel processing, analysis, and execution\nof large timelines by breaking them into smaller, independent segments.\n"
   alias AriaEngine.Timeline.Bridge
-  alias AriaEngine.Timeline.Interval
-  alias AriaEngine.Timeline.Internal.STN
+  alias Timeline.Interval
+  alias Timeline.Internal.STN
 
   @type timeline :: %{
           intervals: %{Interval.id() => Interval.t()},
