@@ -3,7 +3,7 @@
 
 defmodule AstMigrate.Git do
   @moduledoc """
-  Git operations using egit library for native Elixir Git integration.
+  Git operations using system Git commands for reliable integration.
 
   This module provides structured error handling and type safety for all
   Git operations used by the AST migration tool.
@@ -17,14 +17,6 @@ defmodule AstMigrate.Git do
 
   # Private functions first
 
-  defp open_repository do
-    case :git.open(".") do
-      repo when is_reference(repo) -> {:ok, repo}
-      {:error, reason} -> {:error, reason}
-      error -> {:error, error}
-    end
-  end
-
   defp get_author do
     %{
       name: "AST Migration Tool",
@@ -36,14 +28,11 @@ defmodule AstMigrate.Git do
     DateTime.utc_now() |> DateTime.to_unix()
   end
 
-  defp format_commit(commit) do
-    %{
-      hash: commit.hash,
-      message: commit.message,
-      author: commit.author,
-      date: commit.date,
-      files_changed: length(commit.files || [])
-    }
+  defp run_git_command(args, opts \\ []) do
+    case System.cmd("git", args, opts) do
+      {output, 0} -> {:ok, String.trim(output)}
+      {error, code} -> {:error, "Git command failed (exit #{code}): #{String.trim(error)}"}
+    end
   end
 
   # Public API
@@ -52,22 +41,14 @@ defmodule AstMigrate.Git do
   Ensure the working tree is clean before applying transformations.
   """
   @spec ensure_clean_working_tree(String.t()) :: :ok | {:error, String.t()}
-  def ensure_clean_working_tree(repo_path \\ ".") do
-    with {:ok, repo} <- open_repository(),
-         status when is_list(status) <- :git.status(repo) do
-      case status do
-        [] ->
-          :ok
-        [%{index: []}] ->
-          :ok
-        _ ->
-          {:error, "Working tree not clean: #{inspect(status)}"}
-      end
-    else
+  def ensure_clean_working_tree(_repo_path \\ ".") do
+    case run_git_command(["status", "--porcelain"]) do
+      {:ok, ""} ->
+        :ok
+      {:ok, output} ->
+        {:error, "Working tree not clean:\n#{output}"}
       {:error, reason} ->
-        {:error, "Failed to check Git status: #{inspect(reason)}"}
-      error ->
-        {:error, "Git status error: #{inspect(error)}"}
+        {:error, "Failed to check Git status: #{reason}"}
     end
   end
 
@@ -83,7 +64,7 @@ defmodule AstMigrate.Git do
   Commit transformations with proper AST migration metadata (3-arity version).
   """
   @spec commit_transformations(String.t(), String.t(), [file_path()]) :: {:ok, commit_hash()} | {:error, String.t()}
-  def commit_transformations(repo_path, message, files) do
+  def commit_transformations(_repo_path, message, files) do
     Logger.debug("Starting Git commit for transformations",
       module: :ast_migrate_git,
       operation: :commit_transformations,
@@ -91,9 +72,10 @@ defmodule AstMigrate.Git do
       commit_message: message
     )
 
-    with {:ok, repo} <- open_repository(),
-         %{mode: :added} <- :git.add(repo, files),
-         {:ok, commit_hash} <- :git.commit(repo, "[AST] #{message}") do
+    with :ok <- ensure_clean_working_tree(),
+         {:ok, _} <- run_git_command(["add"] ++ files),
+         {:ok, _} <- run_git_command(["commit", "-m", "[AST] #{message}"]),
+         {:ok, commit_hash} <- run_git_command(["rev-parse", "HEAD"]) do
 
       Logger.info("AST transformation committed successfully",
         module: :ast_migrate_git,
@@ -111,19 +93,10 @@ defmodule AstMigrate.Git do
           module: :ast_migrate_git,
           operation: :commit_transformations,
           files_count: length(files),
-          error: inspect(reason),
+          error: reason,
           commit_message: message
         )
-        {:error, "Git commit failed: #{inspect(reason)}"}
-      error ->
-        Logger.error("Git commit error",
-          module: :ast_migrate_git,
-          operation: :commit_transformations,
-          files_count: length(files),
-          error: inspect(error),
-          commit_message: message
-        )
-        {:error, "Git commit error: #{inspect(error)}"}
+        {:error, "Git commit failed: #{reason}"}
     end
   end
 
@@ -134,16 +107,12 @@ defmodule AstMigrate.Git do
   def create_transformation_branch(rule_name) do
     branch_name = "ast-migration/#{rule_name}-#{timestamp()}"
 
-    with {:ok, repo} <- open_repository(),
-         :ok <- :git.branch_create(repo, branch_name),
-         :ok <- :git.checkout(repo, branch_name) do
+    with {:ok, _} <- run_git_command(["checkout", "-b", branch_name]) do
       Logger.info("AST Migration: Created branch #{branch_name}")
       {:ok, branch_name}
     else
       {:error, reason} ->
-        {:error, "Failed to create branch: #{inspect(reason)}"}
-      error ->
-        {:error, "Branch creation error: #{inspect(error)}"}
+        {:error, "Failed to create branch: #{reason}"}
     end
   end
 
@@ -152,15 +121,13 @@ defmodule AstMigrate.Git do
   """
   @spec rollback_transformation(commit_hash()) :: {:ok, commit_hash()} | {:error, String.t()}
   def rollback_transformation(commit_hash) do
-    with {:ok, repo} <- open_repository(),
-         :ok <- :git.revert(repo, commit_hash) do
+    with {:ok, _} <- run_git_command(["revert", "--no-edit", commit_hash]),
+         {:ok, new_commit_hash} <- run_git_command(["rev-parse", "HEAD"]) do
       Logger.info("AST Migration: Reverted commit #{commit_hash}")
-      {:ok, commit_hash}
+      {:ok, new_commit_hash}
     else
       {:error, reason} ->
-        {:error, "Failed to revert: #{inspect(reason)}"}
-      error ->
-        {:error, "Revert error: #{inspect(error)}"}
+        {:error, "Failed to revert: #{reason}"}
     end
   end
 
@@ -169,15 +136,13 @@ defmodule AstMigrate.Git do
   """
   @spec merge_transformation_branch(branch_name()) :: {:ok, commit_hash()} | {:error, String.t()}
   def merge_transformation_branch(branch_name) do
-    with {:ok, repo} <- open_repository(),
-         {:ok, commit_hash} <- :git.merge(repo, branch_name) do
+    with {:ok, _} <- run_git_command(["merge", branch_name]),
+         {:ok, commit_hash} <- run_git_command(["rev-parse", "HEAD"]) do
       Logger.info("AST Migration: Merged branch #{branch_name} with #{commit_hash}")
       {:ok, commit_hash}
     else
       {:error, reason} ->
-        {:error, "Failed to merge: #{inspect(reason)}"}
-      error ->
-        {:error, "Merge error: #{inspect(error)}"}
+        {:error, "Failed to merge: #{reason}"}
     end
   end
 
@@ -186,14 +151,20 @@ defmodule AstMigrate.Git do
   """
   @spec get_transformation_history() :: {:ok, [map()]} | {:error, String.t()}
   def get_transformation_history do
-    with {:ok, repo} <- open_repository(),
-         {:ok, commits} <- :git.log(repo, grep: "[AST]") do
-      {:ok, Enum.map(commits, &format_commit/1)}
+    with {:ok, output} <- run_git_command(["log", "--oneline", "--grep=\\[AST\\]"]) do
+      commits =
+        output
+        |> String.split("\n", trim: true)
+        |> Enum.map(fn line ->
+          [hash | message_parts] = String.split(line, " ", parts: 2)
+          message = Enum.join(message_parts, " ")
+          %{hash: hash, message: message}
+        end)
+
+      {:ok, commits}
     else
       {:error, reason} ->
-        {:error, "Failed to get history: #{inspect(reason)}"}
-      error ->
-        {:error, "History error: #{inspect(error)}"}
+        {:error, "Failed to get history: #{reason}"}
     end
   end
 
@@ -202,12 +173,10 @@ defmodule AstMigrate.Git do
   """
   @spec validate_repository() :: :ok | {:error, String.t()}
   def validate_repository do
-    case open_repository() do
-      {:ok, _repo} -> :ok
-      {:error, :not_a_repository} ->
-        {:error, "Current directory is not a Git repository"}
+    case run_git_command(["rev-parse", "--git-dir"]) do
+      {:ok, _} -> :ok
       {:error, reason} ->
-        {:error, "Git repository validation failed: #{inspect(reason)}"}
+        {:error, "Git repository validation failed: #{reason}"}
     end
   end
 end
