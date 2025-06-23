@@ -24,7 +24,7 @@ defmodule AriaEngine.Membrane.Planning.StrategyRouterFilter do
   use Membrane.Filter
   require Logger
 
-  alias AriaEngine.Membrane.Planning.Format.{PlanningRequest, StrategyRequest}
+  alias AriaEngine.Membrane.Planning.Format.{PlanningRequest, PlanningResponse, StrategyRequest}
   alias AriaEngine.Membrane.Format.PlanningParams
 
   def_input_pad(:input,
@@ -33,7 +33,7 @@ defmodule AriaEngine.Membrane.Planning.StrategyRouterFilter do
   )
 
   def_output_pad(:output,
-    accepted_format: %Membrane.RemoteStream{content_format: StrategyRequest},
+    accepted_format: %Membrane.RemoteStream{content_format: PlanningResponse},
     flow_control: :auto
   )
 
@@ -91,42 +91,35 @@ defmodule AriaEngine.Membrane.Planning.StrategyRouterFilter do
 
       # Validate planning params
       if PlanningParams.valid?(planning_params) do
-        # Route to appropriate strategy
+        # Route to appropriate strategy and execute it
         {strategy, fallback_strategies} = select_strategy(planning_params, state)
 
-        # Create strategy request
-        strategy_request = StrategyRequest.new(
-          planning_params,
-          strategy,
-          fallback_strategies,
-          strategy_config: state.strategy_config,
-          routing_metadata: %{
-            routed_at: DateTime.utc_now(),
-            routing_reason: determine_routing_reason(planning_params, strategy),
-            available_strategies: get_available_strategies(state),
-            routing_rules_applied: get_applied_rules(planning_params, state)
-          }
-        )
+        # Execute the selected strategy
+        execution_result = execute_strategy(strategy, planning_params, state)
 
         # Update routing statistics
         updated_stats = update_routing_stats(state.routing_stats, strategy)
         new_state = %{state | routing_stats: updated_stats}
 
-        # Send notification about strategy selection
-        send_notification({:strategy_selected, planning_params.request_id, strategy, fallback_strategies})
+        # Send notification about strategy execution
+        send_notification({:strategy_executed, planning_params.request_id, strategy, execution_result})
 
-        # Create output buffer
+        # Convert execution result to PlanningResponse
+        planning_response = convert_to_planning_response(planning_params, execution_result, strategy)
+
+        # Create output buffer with planning response
         output_buffer = %Membrane.Buffer{
-          payload: strategy_request,
+          payload: planning_response,
           metadata: %{
             strategy: strategy,
             fallback_strategies: fallback_strategies,
             request_id: planning_params.request_id,
-            routed_at: DateTime.utc_now()
+            executed_at: DateTime.utc_now(),
+            success: match?({:ok, _}, execution_result)
           }
         }
 
-        Logger.info("✅ Routed request #{planning_params.request_id} to strategy: #{strategy}")
+        Logger.info("✅ Executed strategy #{strategy} for request #{planning_params.request_id}")
         {[buffer: {:output, output_buffer}], new_state}
       else
         Logger.error("❌ Invalid planning params for request: #{planning_params.request_id}")
@@ -342,6 +335,190 @@ defmodule AriaEngine.Membrane.Planning.StrategyRouterFilter do
       total_requests: stats.total_requests + 1,
       strategy_selections: Map.update(stats.strategy_selections, strategy, 1, &(&1 + 1))
     }
+  end
+
+  defp execute_strategy(strategy, planning_params, state) do
+    Logger.info("🔧 Executing strategy: #{strategy}")
+
+    try do
+      case strategy do
+        :hybrid_coordinator ->
+          execute_hybrid_coordinator(planning_params, state)
+
+        :minizinc ->
+          execute_minizinc_solver(planning_params, state)
+
+        :lazy_execution ->
+          execute_lazy_execution(planning_params, state)
+
+        :mock ->
+          execute_mock_strategy(planning_params, state)
+
+        _ ->
+          Logger.warn("⚠️ Unknown strategy: #{strategy}, falling back to mock")
+          execute_mock_strategy(planning_params, state)
+      end
+    rescue
+      error ->
+        Logger.error("❌ Strategy execution failed: #{inspect(error)}")
+        {:error, "Strategy execution failed: #{Exception.message(error)}"}
+    end
+  end
+
+  defp execute_hybrid_coordinator(planning_params, _state) do
+    # Call the HybridCoordinatorV2 directly
+    domain = planning_params.domain
+    state_data = planning_params.state
+    goals = planning_params.goals
+    options = planning_params.options
+
+    case AriaEngine.HybridPlanner.HybridCoordinatorV2.plan(domain, state_data, goals, options) do
+      {:ok, plan} ->
+        {:ok, %{
+          strategy: :hybrid_coordinator,
+          plan: plan,
+          success: true,
+          execution_time: 0  # Could be measured
+        }}
+
+      {:error, reason} ->
+        {:error, "HybridCoordinator failed: #{reason}"}
+    end
+  end
+
+  defp execute_minizinc_solver(planning_params, _state) do
+    # Call MiniZinc solver directly
+    domain = planning_params.domain
+    state_data = planning_params.state
+    goals = planning_params.goals
+    options = planning_params.options
+
+    case AriaEngine.MiniZinc.Solver.solve(goals, options) do
+      {:ok, solution} ->
+        {:ok, %{
+          strategy: :minizinc,
+          solution: solution,
+          success: true,
+          execution_time: Map.get(solution, :solving_time, 0)
+        }}
+
+      {:error, reason} ->
+        {:error, "MiniZinc solver failed: #{reason}"}
+    end
+  end
+
+  defp execute_lazy_execution(planning_params, _state) do
+    # Call LazyExecution directly
+    domain = planning_params.domain
+    state_data = planning_params.state
+    goals = planning_params.goals
+    options = planning_params.options
+
+    case AriaEngine.Planning.LazyExecution.plan_goals_sequentially(domain, state_data, goals, options) do
+      {:ok, plan, final_state} ->
+        {:ok, %{
+          strategy: :lazy_execution,
+          plan: plan,
+          final_state: final_state,
+          success: true,
+          execution_time: 0  # Could be measured
+        }}
+
+      {:error, reason} ->
+        {:error, "LazyExecution failed: #{reason}"}
+    end
+  end
+
+  defp execute_mock_strategy(planning_params, _state) do
+    # Mock strategy for testing
+    Logger.info("🔧 Executing mock strategy for request: #{planning_params.request_id}")
+
+    {:ok, %{
+      strategy: :mock,
+      plan: [
+        %{
+          action: "mock_action",
+          entity: "mock_entity",
+          start_time: 0,
+          duration: 1,
+          cost: 1
+        }
+      ],
+      success: true,
+      execution_time: 10,
+      mock: true
+    }}
+  end
+
+  defp convert_to_planning_response(planning_params, execution_result, strategy) do
+    case execution_result do
+      {:ok, result} ->
+        # Extract actions and timeline from result
+        actions = extract_actions_from_result(result)
+        timeline = extract_timeline_from_result(result)
+
+        # Create plan result structure
+        plan_result = %{
+          actions: actions,
+          timeline: timeline,
+          resource_allocation: %{},
+          validation_status: :valid
+        }
+
+        # Create performance metrics
+        performance_metrics = %{
+          execution_time_ms: Map.get(result, :execution_time, 0),
+          strategy_used: strategy,
+          success: true
+        }
+
+        PlanningResponse.success(
+          plan_result,
+          strategy,
+          planning_params.request_id,
+          performance_metrics
+        )
+
+      {:error, reason} ->
+        performance_metrics = %{
+          execution_time_ms: 0,
+          strategy_used: strategy,
+          success: false
+        }
+
+        PlanningResponse.error(
+          reason,
+          planning_params.request_id,
+          performance_metrics,
+          strategy_used: strategy
+        )
+    end
+  end
+
+  defp extract_actions_from_result(result) do
+    case result do
+      %{plan: plan} when is_list(plan) -> plan
+      %{actions: actions} when is_list(actions) -> actions
+      %{solution: %{actions: actions}} when is_list(actions) -> actions
+      _ -> []
+    end
+  end
+
+  defp extract_timeline_from_result(result) do
+    case result do
+      %{timeline: timeline} when is_list(timeline) -> timeline
+      %{solution: %{timeline: timeline}} when is_list(timeline) -> timeline
+      %{plan: plan} when is_list(plan) ->
+        # Convert plan to timeline events
+        Enum.with_index(plan, fn action, index ->
+          %{
+            time: Map.get(action, :start_time, index),
+            action: action,
+            effects: Map.get(action, :effects, [])
+          }
+        end)
+      _ -> []
+    end
   end
 
   defp send_notification(notification) do

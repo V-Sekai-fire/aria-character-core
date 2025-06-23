@@ -71,30 +71,11 @@ defmodule AriaEngine.Membrane.Planning.PlannerBin do
       child(:request_validator, %AriaEngine.Membrane.Planning.RequestValidatorFilter{})
       |> child(:request_converter, %AriaEngine.Membrane.Planning.RequestConverterFilter{})
 
-      # Strategy routing and execution
+      # Strategy routing and execution - the router handles internal routing to strategies
       |> child(:strategy_router, %AriaEngine.Membrane.Planning.StrategyRouterFilter{
         strategy_config: opts.strategy_config,
-        enable_fallback: opts.enable_fallback
-      })
-
-      # Strategy execution filters
-      |> child(:hybrid_coordinator_filter, %AriaEngine.Membrane.Planning.HybridCoordinatorFilter{
-        config: Map.get(opts.strategy_config, :hybrid_coordinator, %{})
-      })
-      |> child(:minizinc_solver_filter, %AriaEngine.Membrane.Planning.MiniZincSolverFilter{
-        solver_timeout_ms: Map.get(opts.strategy_config, :minizinc, %{}) |> Map.get(:solver_timeout_ms, 30_000),
-        max_solutions: Map.get(opts.strategy_config, :minizinc, %{}) |> Map.get(:max_solutions, 1),
-        optimization_level: Map.get(opts.strategy_config, :minizinc, %{}) |> Map.get(:optimization_level, :basic),
-        enable_fallback: Map.get(opts.strategy_config, :minizinc, %{}) |> Map.get(:enable_fallback, true)
-      })
-      |> child(:lazy_execution_filter, %AriaEngine.Membrane.Planning.LazyExecutionFilter{
-        execution_timeout_ms: Map.get(opts.strategy_config, :lazy_execution, %{}) |> Map.get(:execution_timeout_ms, 10_000),
-        max_depth: Map.get(opts.strategy_config, :lazy_execution, %{}) |> Map.get(:max_depth, 100),
-        enable_refinement: Map.get(opts.strategy_config, :lazy_execution, %{}) |> Map.get(:enable_refinement, true),
-        enable_backtracking: Map.get(opts.strategy_config, :lazy_execution, %{}) |> Map.get(:enable_backtracking, true)
-      })
-      |> child(:mock_strategy_filter, %AriaEngine.Membrane.Planning.MockStrategyFilter{
-        config: Map.get(opts.strategy_config, :mock, %{})
+        enable_fallback: opts.enable_fallback,
+        routing_rules: %{}
       })
 
       # Response processing and aggregation
@@ -103,6 +84,8 @@ defmodule AriaEngine.Membrane.Planning.PlannerBin do
         selection_strategy: Map.get(opts.strategy_config, :aggregator, %{}) |> Map.get(:selection_strategy, :best_quality),
         enable_multi_strategy: Map.get(opts.strategy_config, :aggregator, %{}) |> Map.get(:enable_multi_strategy, false)
       })
+
+      # Final response formatting
       |> child(:response_formatter, %AriaEngine.Membrane.Planning.ResponseFormatterFilter{})
     ]
 

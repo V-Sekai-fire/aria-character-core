@@ -8,5 +8,7 @@ defmodule AriaEngine.BlocksWorld.Domain do
     Domain.new("blocks_world")
     |> Domain.add_action(:pickup, &AriaEngine.BlocksWorld.Actions.pickup/2)
     |> Domain.add_action(:putdown, &AriaEngine.BlocksWorld.Actions.putdown/2)
+    |> Domain.add_action(:stack, &AriaEngine.BlocksWorld.Actions.stack/2)
+    |> Domain.add_action(:unstack, &AriaEngine.BlocksWorld.Actions.unstack/2)
   end
 end
