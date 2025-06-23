@@ -32,8 +32,8 @@ defmodule PlanningTest do
       # Set up initial state
       initial_state =
         State.new()
-        |> State.set_fact("location", "player", "room1")
-        |> State.set_fact("location", "sword", "room2")
+        |> State.set_fact("player", "location", "room1")
+        |> State.set_fact("sword", "location", "room2")
 
       # Simple task: get the sword
       tasks = [{"get_item", ["sword"]}]
@@ -57,7 +57,7 @@ defmodule PlanningTest do
 
       initial_state =
         State.new()
-        |> State.set_fact("location", "player", "room1")
+        |> State.set_fact("player", "location", "room1")
 
       # Manual plan
       plan = [{:move, ["room1", "room2"]}, {:move, ["room2", "room3"]}]
@@ -80,8 +80,8 @@ defmodule PlanningTest do
 
       initial_state =
         State.new()
-        |> State.set_fact("location", "player", "room1")
-        |> State.set_fact("location", "sword", "room2")
+        |> State.set_fact("player", "location", "room1")
+        |> State.set_fact("sword", "location", "room2")
 
       # Task: get the sword
       tasks = [{"get_item", ["sword"]}]

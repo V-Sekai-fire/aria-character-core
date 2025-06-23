@@ -31,8 +31,8 @@ defmodule GoalTest do
       # Create a state where player is in treasure_room and has treasure
       state =
         State.new()
-        |> State.set_fact("player", "location", "treasure_room")
-        |> State.set_fact("player", "has", "treasure")
+        |> State.set_fact("location", "player", "treasure_room")
+        |> State.set_fact("has", "player", "treasure")
 
       multigoal =
         create_multigoal()

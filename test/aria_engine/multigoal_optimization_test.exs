@@ -753,17 +753,17 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   defp setup_warehouse_scenario do
     # Create warehouse state
     state = State.new()
-    |> State.set_fact("robot", "location", "dock")
+    |> State.set_fact("location", "robot", "dock")
     |> State.set_fact("robot", "battery", 100)
     |> State.set_fact("robot", "carrying", nil)
-    |> State.set_fact("item_a", "location", "shelf_1")
-    |> State.set_fact("item_a", "status", "available")
-    |> State.set_fact("item_b", "location", "shelf_3")
-    |> State.set_fact("item_b", "status", "available")
-    |> State.set_fact("item_c", "location", "shelf_1")
-    |> State.set_fact("item_c", "status", "available")
-    |> State.set_fact("station_1", "status", "ready")
-    |> State.set_fact("station_2", "status", "ready")
+    |> State.set_fact("location", "item_a", "shelf_1")
+    |> State.set_fact("status", "item_a", "available")
+    |> State.set_fact("location", "item_b", "shelf_3")
+    |> State.set_fact("status", "item_b", "available")
+    |> State.set_fact("location", "item_c", "shelf_1")
+    |> State.set_fact("status", "item_c", "available")
+    |> State.set_fact("status", "station_1", "ready")
+    |> State.set_fact("status", "station_2", "ready")
 
     # Define multigoal
     goals = [
@@ -779,8 +779,8 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   defp setup_multi_agent_scenario do
     # Create multi-agent state
     state = State.new()
-    |> State.set_fact("robot_1", "location", "base")
-    |> State.set_fact("robot_2", "location", "base")
+    |> State.set_fact("location", "robot_1", "base")
+    |> State.set_fact("location", "robot_2", "base")
     |> State.set_fact("task_a", "assigned_to", nil)
     |> State.set_fact("task_b", "assigned_to", nil)
     |> State.set_fact("task_c", "assigned_to", nil)
@@ -800,11 +800,11 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   defp setup_dependency_chain_scenario do
     # Create dependency chain state
     state = State.new()
-    |> State.set_fact("player", "location", "start")
+    |> State.set_fact("location", "player", "start")
     |> State.set_fact("player", "has_key", false)
-    |> State.set_fact("door", "state", "locked")
-    |> State.set_fact("treasure", "location", "treasure_room")
-    |> State.set_fact("key", "location", "key_room")
+    |> State.set_fact("state", "door", "locked")
+    |> State.set_fact("location", "treasure", "treasure_room")
+    |> State.set_fact("location", "key", "key_room")
 
     # Define dependent goals
     goals = [
@@ -820,14 +820,14 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   defp setup_resource_contention_scenario do
     # Create resource contention state
     state = State.new()
-    |> State.set_fact("worker_1", "location", "base")
-    |> State.set_fact("worker_2", "location", "base")
-    |> State.set_fact("tool_drill", "location", "tool_room")
-    |> State.set_fact("tool_drill", "status", "available")
-    |> State.set_fact("tool_saw", "location", "tool_room")
-    |> State.set_fact("tool_saw", "status", "available")
-    |> State.set_fact("workstation_1", "status", "ready")
-    |> State.set_fact("workstation_2", "status", "ready")
+    |> State.set_fact("location", "worker_1", "base")
+    |> State.set_fact("location", "worker_2", "base")
+    |> State.set_fact("location", "tool_drill", "tool_room")
+    |> State.set_fact("status", "tool_drill", "available")
+    |> State.set_fact("location", "tool_saw", "tool_room")
+    |> State.set_fact("status", "tool_saw", "available")
+    |> State.set_fact("status", "workstation_1", "ready")
+    |> State.set_fact("status", "workstation_2", "ready")
 
     # Define resource contention goals
     goals = [
@@ -843,10 +843,10 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   defp setup_unsatisfiable_scenario do
     # Create scenario with impossible constraints
     state = State.new()
-    |> State.set_fact("robot", "location", "room_a")
+    |> State.set_fact("location", "robot", "room_a")
     |> State.set_fact("robot", "battery", 0)  # No battery
-    |> State.set_fact("door", "state", "locked")
-    |> State.set_fact("key", "location", "room_b")  # Key in different room
+    |> State.set_fact("state", "door", "locked")
+    |> State.set_fact("location", "key", "room_b")  # Key in different room
 
     # Define impossible goals (robot can't move without battery)
     goals = [

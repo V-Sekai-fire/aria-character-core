@@ -7,7 +7,7 @@ defmodule AriaEngine.SoftwareDevelopment.MinimalDomainTest do
   test "plan the development of a single module" do
     initial_state =
       State.new()
-      # |> State.set_fact("gltf_buffer", "type", "module")  # GLTF work paused
+      # |> State.set_fact("type", "gltf_buffer", "module")  # GLTF work paused
 
     todos = [
       # {"develop_module", ["gltf_buffer"]}  # GLTF work paused

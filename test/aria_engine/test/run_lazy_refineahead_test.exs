@@ -141,7 +141,7 @@ defmodule RunLazyRefineaheadTest do
   # Create test state
   defp create_test_state do
     State.new()
-    |> State.set_fact("robot", "location", "start")
+    |> State.set_fact("location", "robot", "start")
     # Robot not prepared initially
     |> State.set_fact("robot", "prepared", false)
   end

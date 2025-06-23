@@ -14,10 +14,10 @@ defmodule StateQuantifiersTest do
     test "finds existing subjects matching predicate and value" do
       state =
         State.new()
-        |> State.set_fact("chair1", "status", "available")
-        |> State.set_fact("chair2", "status", "occupied")
-        |> State.set_fact("table1", "status", "available")
-        |> State.set_fact("chair1", "type", "furniture")
+        |> State.set_fact("status", "chair1", "available")
+        |> State.set_fact("status", "chair2", "occupied")
+        |> State.set_fact("status", "table1", "available")
+        |> State.set_fact("type", "chair1", "furniture")
 
       # Check if any chair is available
       chair_filter = &String.contains?(&1, "chair")
@@ -34,8 +34,8 @@ defmodule StateQuantifiersTest do
     test "returns false when no subjects match" do
       state =
         State.new()
-        |> State.set_fact("door1", "status", "locked")
-        |> State.set_fact("door2", "status", "locked")
+        |> State.set_fact("status", "door1", "locked")
+        |> State.set_fact("status", "door2", "locked")
 
       # Check if any chair is available (no chairs exist)
       chair_filter = &String.contains?(&1, "chair")
@@ -49,8 +49,8 @@ defmodule StateQuantifiersTest do
     test "works without subject filter" do
       state =
         State.new()
-        |> State.set_fact("chair1", "status", "available")
-        |> State.set_fact("table1", "status", "available")
+        |> State.set_fact("status", "chair1", "available")
+        |> State.set_fact("status", "table1", "available")
 
       # Check if anything has status "available"
       assert State.exists?(state, "status", "available", nil) == true
@@ -72,10 +72,10 @@ defmodule StateQuantifiersTest do
     test "returns true when all matching subjects have required property" do
       state =
         State.new()
-        |> State.set_fact("door1", "status", "locked")
-        |> State.set_fact("door2", "status", "locked")
-        |> State.set_fact("door3", "status", "locked")
-        |> State.set_fact("chair1", "status", "available")
+        |> State.set_fact("status", "door1", "locked")
+        |> State.set_fact("status", "door2", "locked")
+        |> State.set_fact("status", "door3", "locked")
+        |> State.set_fact("status", "chair1", "available")
 
       # Check if all doors are locked
       door_filter = &String.contains?(&1, "door")
@@ -89,9 +89,9 @@ defmodule StateQuantifiersTest do
     test "returns false when some subjects don't have required property" do
       state =
         State.new()
-        |> State.set_fact("door1", "status", "locked")
-        |> State.set_fact("door2", "status", "unlocked")
-        |> State.set_fact("door3", "status", "locked")
+        |> State.set_fact("status", "door1", "locked")
+        |> State.set_fact("status", "door2", "unlocked")
+        |> State.set_fact("status", "door3", "locked")
 
       # Check if all doors are locked (door2 is unlocked)
       door_filter = &String.contains?(&1, "door")
@@ -101,8 +101,8 @@ defmodule StateQuantifiersTest do
     test "returns true for vacuous truth when no subjects match filter" do
       state =
         State.new()
-        |> State.set_fact("chair1", "status", "available")
-        |> State.set_fact("table1", "status", "available")
+        |> State.set_fact("status", "chair1", "available")
+        |> State.set_fact("status", "table1", "available")
 
       # Check if all doors are locked (no doors exist, so vacuously true)
       door_filter = &String.contains?(&1, "door")
@@ -112,8 +112,8 @@ defmodule StateQuantifiersTest do
     test "handles missing predicates correctly" do
       state =
         State.new()
-        |> State.set_fact("door1", "location", "room1")
-        |> State.set_fact("door2", "location", "room2")
+        |> State.set_fact("location", "door1", "room1")
+        |> State.set_fact("location", "door2", "room2")
 
       # Check if all doors are locked (doors exist but no status predicate)
       door_filter = &String.contains?(&1, "door")
@@ -125,44 +125,44 @@ defmodule StateQuantifiersTest do
     test "handles existential quantifier conditions" do
       state =
         State.new()
-        |> State.set_fact("chair1", "status", "available")
-        |> State.set_fact("chair2", "status", "occupied")
-        |> State.set_fact("table1", "status", "available")
+        |> State.set_fact("status", "chair1", "available")
+        |> State.set_fact("status", "chair2", "occupied")
+        |> State.set_fact("status", "table1", "available")
 
       # Existential: any chair is available
       chair_filter = &String.contains?(&1, "chair")
-      exists_condition = {:exists, chair_filter, "status", "available"}
+      exists_condition = {:exists, "status", "available", chair_filter}
       assert State.evaluate_condition(state, exists_condition) == true
 
       # Existential: any desk is available (no desks exist)
       desk_filter = &String.contains?(&1, "desk")
-      no_exists_condition = {:exists, desk_filter, "status", "available"}
+      no_exists_condition = {:exists, "status", "available", desk_filter}
       assert State.evaluate_condition(state, no_exists_condition) == false
     end
 
     test "handles universal quantifier conditions" do
       state =
         State.new()
-        |> State.set_fact("door1", "status", "locked")
-        |> State.set_fact("door2", "status", "locked")
-        |> State.set_fact("chair1", "status", "available")
+        |> State.set_fact("status", "door1", "locked")
+        |> State.set_fact("status", "door2", "locked")
+        |> State.set_fact("status", "chair1", "available")
 
       # Universal: all doors are locked
       door_filter = &String.contains?(&1, "door")
-      forall_condition = {:forall, door_filter, "status", "locked"}
+      forall_condition = {:forall, "status", "locked", door_filter}
       assert State.evaluate_condition(state, forall_condition) == true
 
       # Universal: all chairs are locked (chair1 is available, not locked)
       chair_filter = &String.contains?(&1, "chair")
-      false_forall_condition = {:forall, chair_filter, "status", "locked"}
+      false_forall_condition = {:forall, "status", "locked", chair_filter}
       assert State.evaluate_condition(state, false_forall_condition) == false
     end
 
     test "handles regular conditions (backward compatibility)" do
       state =
         State.new()
-        |> State.set_fact("player", "location", "room1")
-        |> State.set_fact("door1", "status", "locked")
+        |> State.set_fact("location", "player", "room1")
+        |> State.set_fact("status", "door1", "locked")
 
       # Regular condition check
       regular_condition = {"location", "player", "room1"}
@@ -185,10 +185,10 @@ defmodule StateQuantifiersTest do
     test "get_subjects_with_fact/3" do
       state =
         State.new()
-        |> State.set_fact("chair1", "status", "available")
-        |> State.set_fact("chair2", "status", "occupied")
-        |> State.set_fact("table1", "status", "available")
-        |> State.set_fact("chair1", "location", "room1")
+        |> State.set_fact("status", "chair1", "available")
+        |> State.set_fact("status", "chair2", "occupied")
+        |> State.set_fact("status", "table1", "available")
+        |> State.set_fact("location", "chair1", "room1")
 
       # Get all subjects with status "available"
       available_subjects = State.get_subjects_with_fact(state, "status", "available")
@@ -206,10 +206,10 @@ defmodule StateQuantifiersTest do
     test "get_subjects_with_predicate/2" do
       state =
         State.new()
-        |> State.set_fact("chair1", "status", "available")
-        |> State.set_fact("chair2", "status", "occupied")
-        |> State.set_fact("chair1", "location", "room1")
-        |> State.set_fact("player", "location", "room1")
+        |> State.set_fact("status", "chair1", "available")
+        |> State.set_fact("status", "chair2", "occupied")
+        |> State.set_fact("location", "chair1", "room1")
+        |> State.set_fact("location", "player", "room1")
 
       # Get all subjects with "status" predicate
       status_subjects = State.get_subjects_with_predicate(state, "status")
@@ -230,14 +230,14 @@ defmodule StateQuantifiersTest do
       # Scenario: NPC needs to find any chair or bench that's available
       state =
         State.new()
-        |> State.set_fact("chair1", "type", "seating")
-        |> State.set_fact("chair2", "type", "seating")
-        |> State.set_fact("bench1", "type", "seating")
-        |> State.set_fact("table1", "type", "furniture")
-        |> State.set_fact("chair1", "status", "occupied")
-        |> State.set_fact("chair2", "status", "available")
-        |> State.set_fact("bench1", "status", "available")
-        |> State.set_fact("table1", "status", "available")
+        |> State.set_fact("type", "chair1", "seating")
+        |> State.set_fact("type", "chair2", "seating")
+        |> State.set_fact("type", "bench1", "seating")
+        |> State.set_fact("type", "table1", "furniture")
+        |> State.set_fact("status", "chair1", "occupied")
+        |> State.set_fact("status", "chair2", "available")
+        |> State.set_fact("status", "bench1", "available")
+        |> State.set_fact("status", "table1", "available")
 
       # Find any seating that's available
       seating_subjects = State.get_subjects_with_fact(state, "type", "seating")
@@ -261,18 +261,18 @@ defmodule StateQuantifiersTest do
       # Scenario: Security NPC needs to ensure all doors in a building wing are locked
       state =
         State.new()
-        |> State.set_fact("door1", "type", "door")
-        |> State.set_fact("door2", "type", "door")
-        |> State.set_fact("door3", "type", "door")
-        |> State.set_fact("window1", "type", "window")
-        |> State.set_fact("door1", "location", "west_wing")
-        |> State.set_fact("door2", "location", "west_wing")
-        |> State.set_fact("door3", "location", "east_wing")
-        |> State.set_fact("window1", "location", "west_wing")
-        |> State.set_fact("door1", "status", "locked")
-        |> State.set_fact("door2", "status", "locked")
-        |> State.set_fact("door3", "status", "unlocked")
-        |> State.set_fact("window1", "status", "closed")
+        |> State.set_fact("type", "door1", "door")
+        |> State.set_fact("type", "door2", "door")
+        |> State.set_fact("type", "door3", "door")
+        |> State.set_fact("type", "window1", "window")
+        |> State.set_fact("location", "door1", "west_wing")
+        |> State.set_fact("location", "door2", "west_wing")
+        |> State.set_fact("location", "door3", "east_wing")
+        |> State.set_fact("location", "window1", "west_wing")
+        |> State.set_fact("status", "door1", "locked")
+        |> State.set_fact("status", "door2", "locked")
+        |> State.set_fact("status", "door3", "unlocked")
+        |> State.set_fact("status", "window1", "closed")
 
       # Check if all doors in west wing are locked
       west_wing_doors_filter = fn subject ->
@@ -294,18 +294,18 @@ defmodule StateQuantifiersTest do
       # Scenario: Crafting NPC needs to find available materials
       state =
         State.new()
-        |> State.set_fact("wood1", "type", "material")
-        |> State.set_fact("wood2", "type", "material")
-        |> State.set_fact("iron1", "type", "material")
-        |> State.set_fact("iron2", "type", "material")
-        |> State.set_fact("wood1", "subtype", "wood")
-        |> State.set_fact("wood2", "subtype", "wood")
-        |> State.set_fact("iron1", "subtype", "iron")
-        |> State.set_fact("iron2", "subtype", "iron")
-        |> State.set_fact("wood1", "status", "available")
-        |> State.set_fact("wood2", "status", "reserved")
-        |> State.set_fact("iron1", "status", "available")
-        |> State.set_fact("iron2", "status", "available")
+        |> State.set_fact("type", "wood1", "material")
+        |> State.set_fact("type", "wood2", "material")
+        |> State.set_fact("type", "iron1", "material")
+        |> State.set_fact("type", "iron2", "material")
+        |> State.set_fact("subtype", "wood1", "wood")
+        |> State.set_fact("subtype", "wood2", "wood")
+        |> State.set_fact("subtype", "iron1", "iron")
+        |> State.set_fact("subtype", "iron2", "iron")
+        |> State.set_fact("status", "wood1", "available")
+        |> State.set_fact("status", "wood2", "reserved")
+        |> State.set_fact("status", "iron1", "available")
+        |> State.set_fact("status", "iron2", "available")
 
       # Check if any wood is available
       wood_filter = fn subject ->

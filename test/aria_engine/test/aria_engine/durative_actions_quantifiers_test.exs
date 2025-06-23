@@ -48,7 +48,7 @@ defmodule DurativeActionsQuantifiersTest do
           case available_chairs do
             [chair | _] ->
               state
-              |> State.set_fact("npc", "activity", "sitting")
+              |> State.set_fact("activity", "npc", "sitting")
               |> State.set_fact(chair, "status", "occupied")
               |> State.set_fact("npc", "location", chair)
 
@@ -64,13 +64,13 @@ defmodule DurativeActionsQuantifiersTest do
       # Test scenario 1: Chairs available
       state_with_chairs =
         State.new()
-        |> State.set_fact("chair1", "type", "furniture")
-        |> State.set_fact("chair2", "type", "furniture")
-        |> State.set_fact("table1", "type", "furniture")
-        |> State.set_fact("chair1", "status", "available")
-        |> State.set_fact("chair2", "status", "occupied")
-        |> State.set_fact("table1", "status", "available")
-        |> State.set_fact("npc", "activity", "standing")
+        |> State.set_fact("type", "chair1", "furniture")
+        |> State.set_fact("type", "chair2", "furniture")
+        |> State.set_fact("type", "table1", "furniture")
+        |> State.set_fact("status", "chair1", "available")
+        |> State.set_fact("status", "chair2", "occupied")
+        |> State.set_fact("status", "table1", "available")
+        |> State.set_fact("activity", "npc", "standing")
 
       # Action should succeed because chair1 is available
       result = Actions.execute_action(domain, state_with_chairs, :find_seating, [])
@@ -81,10 +81,10 @@ defmodule DurativeActionsQuantifiersTest do
       # Test scenario 2: No chairs available
       state_no_chairs =
         State.new()
-        |> State.set_fact("table1", "type", "furniture")
-        |> State.set_fact("table2", "type", "furniture")
-        |> State.set_fact("table1", "status", "available")
-        |> State.set_fact("table2", "status", "available")
+        |> State.set_fact("type", "table1", "furniture")
+        |> State.set_fact("type", "table2", "furniture")
+        |> State.set_fact("status", "table1", "available")
+        |> State.set_fact("status", "table2", "available")
 
       # Action should fail because no chairs exist
       result = Actions.execute_action(domain, state_no_chairs, :find_seating, [])
@@ -120,8 +120,8 @@ defmodule DurativeActionsQuantifiersTest do
 
       state_simple =
         State.new()
-        |> State.set_fact("wood1", "status", "available")
-        |> State.set_fact("iron1", "status", "unavailable")
+        |> State.set_fact("status", "wood1", "available")
+        |> State.set_fact("status", "iron1", "unavailable")
 
       result = Actions.execute_action(domain, state_simple, :craft_simple, [])
       assert {:ok, new_state} = result
@@ -155,8 +155,8 @@ defmodule DurativeActionsQuantifiersTest do
         },
         action_fn: fn state, _args ->
           state
-          |> State.set_fact("security_npc", "activity", "patrol_complete")
-          |> State.set_fact("building", "security_status", "secure")
+          |> State.set_fact("activity", "security_npc", "patrol_complete")
+          |> State.set_fact("security_status", "building", "secure")
         end
       }
 
@@ -165,14 +165,14 @@ defmodule DurativeActionsQuantifiersTest do
       # Test scenario 1: All doors locked (should succeed)
       secure_state =
         State.new()
-        |> State.set_fact("door1", "type", "entrance")
-        |> State.set_fact("door2", "type", "entrance")
-        |> State.set_fact("door3", "type", "entrance")
-        |> State.set_fact("window1", "type", "opening")
-        |> State.set_fact("door1", "status", "locked")
-        |> State.set_fact("door2", "status", "locked")
-        |> State.set_fact("door3", "status", "locked")
-        |> State.set_fact("window1", "status", "closed")
+        |> State.set_fact("type", "door1", "entrance")
+        |> State.set_fact("type", "door2", "entrance")
+        |> State.set_fact("type", "door3", "entrance")
+        |> State.set_fact("type", "window1", "opening")
+        |> State.set_fact("status", "door1", "locked")
+        |> State.set_fact("status", "door2", "locked")
+        |> State.set_fact("status", "door3", "locked")
+        |> State.set_fact("status", "window1", "closed")
 
       result = Actions.execute_action(domain, secure_state, :security_patrol, [])
       assert {:ok, new_state} = result
@@ -181,11 +181,11 @@ defmodule DurativeActionsQuantifiersTest do
       # Test scenario 2: One door unlocked (should fail)
       insecure_state =
         State.new()
-        |> State.set_fact("door1", "type", "entrance")
-        |> State.set_fact("door2", "type", "entrance")
-        |> State.set_fact("door1", "status", "locked")
+        |> State.set_fact("type", "door1", "entrance")
+        |> State.set_fact("type", "door2", "entrance")
+        |> State.set_fact("status", "door1", "locked")
         # This breaks the universal condition
-        |> State.set_fact("door2", "status", "unlocked")
+        |> State.set_fact("status", "door2", "unlocked")
 
       result = Actions.execute_action(domain, insecure_state, :security_patrol, [])
       assert result == false
@@ -193,8 +193,8 @@ defmodule DurativeActionsQuantifiersTest do
       # Test scenario 3: No doors exist (vacuous truth, should succeed)
       no_doors_state =
         State.new()
-        |> State.set_fact("window1", "type", "opening")
-        |> State.set_fact("window1", "status", "closed")
+        |> State.set_fact("type", "window1", "opening")
+        |> State.set_fact("status", "window1", "closed")
 
       result = Actions.execute_action(domain, no_doors_state, :security_patrol, [])
       assert {:ok, new_state} = result
@@ -226,8 +226,8 @@ defmodule DurativeActionsQuantifiersTest do
         },
         action_fn: fn state, _args ->
           state
-          |> State.set_fact("facility", "maintenance_status", "checked")
-          |> State.set_fact("facility", "last_check", "today")
+          |> State.set_fact("maintenance_status", "facility", "checked")
+          |> State.set_fact("last_check", "facility", "today")
         end
       }
 
@@ -236,10 +236,10 @@ defmodule DurativeActionsQuantifiersTest do
       # All equipment operational
       operational_state =
         State.new()
-        |> State.set_fact("equipment1", "type", "machinery")
-        |> State.set_fact("equipment2", "type", "machinery")
-        |> State.set_fact("equipment1", "status", "operational")
-        |> State.set_fact("equipment2", "status", "operational")
+        |> State.set_fact("type", "equipment1", "machinery")
+        |> State.set_fact("type", "equipment2", "machinery")
+        |> State.set_fact("status", "equipment1", "operational")
+        |> State.set_fact("status", "equipment2", "operational")
 
       result = Actions.execute_action(domain, operational_state, :maintenance_check, [])
       assert {:ok, new_state} = result
@@ -248,10 +248,10 @@ defmodule DurativeActionsQuantifiersTest do
       # One equipment broken
       broken_state =
         State.new()
-        |> State.set_fact("equipment1", "type", "machinery")
-        |> State.set_fact("equipment2", "type", "machinery")
-        |> State.set_fact("equipment1", "status", "operational")
-        |> State.set_fact("equipment2", "status", "broken")
+        |> State.set_fact("type", "equipment1", "machinery")
+        |> State.set_fact("type", "equipment2", "machinery")
+        |> State.set_fact("status", "equipment1", "operational")
+        |> State.set_fact("status", "equipment2", "broken")
 
       result = Actions.execute_action(domain, broken_state, :maintenance_check, [])
       assert result == false
@@ -293,9 +293,9 @@ defmodule DurativeActionsQuantifiersTest do
           case available_tables do
             [table | _] ->
               state
-              |> State.set_fact("chef", "activity", "meal_served")
+              |> State.set_fact("activity", "chef", "meal_served")
               |> State.set_fact("status", table, "occupied")
-              |> State.set_fact("restaurant", "customer_status", "satisfied")
+              |> State.set_fact("customer_status", "restaurant", "satisfied")
 
             [] ->
               false
@@ -308,14 +308,14 @@ defmodule DurativeActionsQuantifiersTest do
       # Test: Table available and all ingredients ready (should succeed)
       ready_state =
         State.new()
-        |> State.set_fact("table1", "type", "furniture")
-        |> State.set_fact("table2", "type", "furniture")
-        |> State.set_fact("table1", "status", "available")
-        |> State.set_fact("table2", "status", "occupied")
-        |> State.set_fact("ingredient1", "type", "food")
-        |> State.set_fact("ingredient2", "type", "food")
-        |> State.set_fact("ingredient1", "status", "ready")
-        |> State.set_fact("ingredient2", "status", "ready")
+        |> State.set_fact("type", "table1", "furniture")
+        |> State.set_fact("type", "table2", "furniture")
+        |> State.set_fact("status", "table1", "available")
+        |> State.set_fact("status", "table2", "occupied")
+        |> State.set_fact("type", "ingredient1", "food")
+        |> State.set_fact("type", "ingredient2", "food")
+        |> State.set_fact("status", "ingredient1", "ready")
+        |> State.set_fact("status", "ingredient2", "ready")
 
       result = Actions.execute_action(domain, ready_state, :serve_meal, [])
       assert {:ok, new_state} = result
@@ -324,13 +324,13 @@ defmodule DurativeActionsQuantifiersTest do
       # Test: Table available but one ingredient not ready (should fail)
       not_ready_state =
         State.new()
-        |> State.set_fact("table1", "type", "furniture")
-        |> State.set_fact("table1", "status", "available")
-        |> State.set_fact("ingredient1", "type", "food")
-        |> State.set_fact("ingredient2", "type", "food")
-        |> State.set_fact("ingredient1", "status", "ready")
+        |> State.set_fact("type", "table1", "furniture")
+        |> State.set_fact("status", "table1", "available")
+        |> State.set_fact("type", "ingredient1", "food")
+        |> State.set_fact("type", "ingredient2", "food")
+        |> State.set_fact("status", "ingredient1", "ready")
         # Not ready
-        |> State.set_fact("ingredient2", "status", "preparing")
+        |> State.set_fact("status", "ingredient2", "preparing")
 
       result = Actions.execute_action(domain, not_ready_state, :serve_meal, [])
       assert result == false
@@ -338,12 +338,12 @@ defmodule DurativeActionsQuantifiersTest do
       # Test: All ingredients ready but no table available (should fail)
       no_table_state =
         State.new()
-        |> State.set_fact("table1", "type", "furniture")
-        |> State.set_fact("table2", "type", "furniture")
-        |> State.set_fact("table1", "status", "occupied")
-        |> State.set_fact("table2", "status", "occupied")
-        |> State.set_fact("ingredient1", "type", "food")
-        |> State.set_fact("ingredient1", "status", "ready")
+        |> State.set_fact("type", "table1", "furniture")
+        |> State.set_fact("type", "table2", "furniture")
+        |> State.set_fact("status", "table1", "occupied")
+        |> State.set_fact("status", "table2", "occupied")
+        |> State.set_fact("type", "ingredient1", "food")
+        |> State.set_fact("status", "ingredient1", "ready")
 
       result = Actions.execute_action(domain, no_table_state, :serve_meal, [])
       assert result == false

@@ -11,8 +11,8 @@ defmodule State do
   Example:
   ```elixir
   state = State.new()
-  |> State.set_fact("location", "player", "room1")
-  |> State.set_fact("has", "player", "sword")
+  |> State.set_fact("player", "location", "room1")
+  |> State.set_fact("player", "has", "sword")
 
   State.get_fact(state, "location", "player")
   # => "room1"

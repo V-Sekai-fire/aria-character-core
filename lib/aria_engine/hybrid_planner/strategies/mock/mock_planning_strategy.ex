@@ -288,7 +288,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   def create_mock_state do
     # Create a basic State with some test facts
     %State{}
-    |> State.set_fact("mock_predicate", "mock_subject", "mock_value")
+    |> State.set_fact("mock_subject", "mock_predicate", "mock_value")
     |> State.set_fact("test_ready", "system", true)
   end
 
