@@ -1,64 +1,10 @@
 defmodule Mix.Tasks.Generate.Serial do
-  @moduledoc """
-  Generate industrial-grade serial numbers for Aria project files.
-
-  ## Usage
-
-      mix generate.serial
-      mix generate.serial --dir lib/aria_engine/membrane/
-      mix generate.serial --dry-run
-
-  ## Serial Number Format
-
-  Generates serial numbers in standard format: `[F][YY][W][UUU][MMMM]`
-
-  - F: Factory/Organization (R=aRia Character Core)
-  - YY: Year (25=2025)
-  - W: Week (encoded using standard system)
-  - UUU: Sequential unit number (001, 002, etc.)
-  - MMMM: Tool code derived from filename
-
-  ## Features
-
-  - Scans Elixir files in specified directory
-  - Generates unique serial numbers following character validation rules
-  - Adds @serial_number module attribute to each file
-  - Updates module documentation with serial information
-  - Backs up original files before modification
-  - Blocks deps folder from processing
-  - Uses Timex for accurate date calculations
-
-  ## Examples
-
-      # Generate serials for membrane files
-      mix generate.serial --dir lib/aria_engine/membrane/
-
-      # Generate serials for migration tools
-      mix generate.serial --dir lib/mix/tasks/migrate/
-
-      # Preview changes without applying them
-      mix generate.serial --dir lib/aria_engine/ --dry-run
-
-      # Generate for current directory
-      mix generate.serial
-  """
-
+  @moduledoc "Generate industrial-grade serial numbers for Aria project files.\n\n## Usage\n\n    mix generate.serial\n    mix generate.serial --dir lib/aria_engine/membrane/\n    mix generate.serial --dry-run\n\n## Serial Number Format\n\nGenerates serial numbers in standard format: `[F][YY][W][UUU][MMMM]`\n\n- F: Factory/Organization (R=aRia Character Core)\n- YY: Year (25=2025)\n- W: Week (encoded using standard system)\n- UUU: Sequential unit number (001, 002, etc.)\n- MMMM: Tool code derived from filename\n\n## Features\n\n- Scans Elixir files in specified directory\n- Generates unique serial numbers following character validation rules\n- Adds @serial_number module attribute to each file\n- Updates module documentation with serial information\n- Backs up original files before modification\n- Blocks deps folder from processing\n- Uses Timex for accurate date calculations\n\n## Examples\n\n    # Generate serials for membrane files\n    mix generate.serial --dir lib/aria_engine/membrane/\n\n    # Generate serials for migration tools\n    mix generate.serial --dir lib/mix/tasks/migrate/\n\n    # Preview changes without applying them\n    mix generate.serial --dir lib/aria_engine/ --dry-run\n\n    # Generate for current directory\n    mix generate.serial\n"
   use Mix.Task
   alias Mix.Tasks.Serial.Registry
-
   @shortdoc "Generate industrial-grade serial numbers for project files"
-
-  @switches [
-    dry_run: :boolean,
-    help: :boolean,
-    dir: :string
-  ]
-
-  @aliases [
-    d: :dry_run,
-    h: :help
-  ]
-
+  @switches dry_run: :boolean, help: :boolean, dir: :string
+  @aliases d: :dry_run, h: :help
   def run(args) do
     {opts, _args, _invalid} = OptionParser.parse(args, switches: @switches, aliases: @aliases)
 
@@ -73,13 +19,19 @@ defmodule Mix.Tasks.Generate.Serial do
     factory = "R"
     dry_run = opts[:dry_run] || false
     target_dir = opts[:dir] || "."
-
     Mix.shell().info("Generating industrial-grade serial numbers for project files...")
     Mix.shell().info("Factory: #{decode_factory(factory)}")
     Mix.shell().info("Target Directory: #{target_dir}")
-    Mix.shell().info("Mode: #{if dry_run, do: "DRY RUN", else: "LIVE"}")
-    Mix.shell().info("")
 
+    Mix.shell().info(
+      "Mode: #{if dry_run do
+        "DRY RUN"
+      else
+        "LIVE"
+      end}"
+    )
+
+    Mix.shell().info("")
     files = find_elixir_files(target_dir)
 
     if Enum.empty?(files) do
@@ -88,7 +40,6 @@ defmodule Mix.Tasks.Generate.Serial do
     else
       current_week = get_current_week()
       year = get_current_year()
-
       Mix.shell().info("Current week: #{current_week} (#{year})")
       Mix.shell().info("Found #{length(files)} Elixir files:")
       Mix.shell().info("")
@@ -128,14 +79,9 @@ defmodule Mix.Tasks.Generate.Serial do
       path = Path.join(dir, item)
 
       cond do
-        File.dir?(path) ->
-          find_elixir_files_recursive(path)
-
-        String.ends_with?(item, ".ex") and not String.starts_with?(item, ".") ->
-          [path]
-
-        true ->
-          []
+        File.dir?(path) -> find_elixir_files_recursive(path)
+        String.ends_with?(item, ".ex") and not String.starts_with?(item, ".") -> [path]
+        true -> []
       end
     end)
   end
@@ -146,11 +92,8 @@ defmodule Mix.Tasks.Generate.Serial do
 
   defp has_serial_number?(file_path) do
     case File.read(file_path) do
-      {:ok, content} ->
-        String.contains?(content, "@serial_number")
-
-      {:error, _} ->
-        false
+      {:ok, content} -> String.contains?(content, "@serial_number")
+      {:error, _} -> false
     end
   end
 
@@ -159,7 +102,6 @@ defmodule Mix.Tasks.Generate.Serial do
     tool_code = Registry.generate_tool_code(filename)
     week_char = Registry.encode_week(week)
     serial = generate_serial(factory, year, week_char, sequence, tool_code)
-
     Mix.shell().info("#{sequence}. #{filename}")
     Mix.shell().info("   Serial: #{serial}")
     Mix.shell().info("   Tool Code: #{tool_code}")
@@ -169,11 +111,8 @@ defmodule Mix.Tasks.Generate.Serial do
       Mix.shell().info("   [DRY RUN] Would add serial number")
     else
       case add_serial_to_file(file_path, serial) do
-        :ok ->
-          Mix.shell().info("   ✅ Serial number added")
-
-        {:error, reason} ->
-          Mix.shell().error("   ❌ Failed: #{reason}")
+        :ok -> Mix.shell().info("   ✅ Serial number added")
+        {:error, reason} -> Mix.shell().error("   ❌ Failed: #{reason}")
       end
     end
 
@@ -211,14 +150,9 @@ defmodule Mix.Tasks.Generate.Serial do
     lines = String.split(content, "\n")
 
     case find_injection_point(lines) do
-      {:moduledoc, line_index} ->
-        inject_after_moduledoc(lines, line_index, serial)
-
-      {:defmodule, line_index} ->
-        inject_after_defmodule(lines, line_index, serial)
-
-      :not_found ->
-        {:error, "Could not find suitable injection point"}
+      {:moduledoc, line_index} -> inject_after_moduledoc(lines, line_index, serial)
+      {:defmodule, line_index} -> inject_after_defmodule(lines, line_index, serial)
+      :not_found -> {:error, "Could not find suitable injection point"}
     end
   end
 
@@ -227,14 +161,9 @@ defmodule Mix.Tasks.Generate.Serial do
     |> Enum.with_index()
     |> Enum.find_value(fn {line, index} ->
       cond do
-        String.contains?(line, "@moduledoc") ->
-          find_moduledoc_end(lines, index)
-
-        String.contains?(line, "defmodule") ->
-          {:defmodule, index}
-
-        true ->
-          nil
+        String.contains?(line, "@moduledoc") -> find_moduledoc_end(lines, index)
+        String.contains?(line, "defmodule") -> {:defmodule, index}
+        true -> nil
       end
     end) || :not_found
   end
@@ -252,17 +181,8 @@ defmodule Mix.Tasks.Generate.Serial do
 
   defp inject_after_moduledoc(lines, moduledoc_end_index, serial) do
     {before, after_lines} = Enum.split(lines, moduledoc_end_index + 1)
-
-    serial_lines = [
-      "",
-      "  @serial_number \"#{serial}\"",
-      ""
-    ]
-
-    new_content =
-      (before ++ serial_lines ++ after_lines)
-      |> Enum.join("\n")
-
+    serial_lines = ["", "  @serial_number \"#{serial}\"", ""]
+    new_content = (before ++ serial_lines ++ after_lines) |> Enum.join("\n")
     {:ok, new_content}
   end
 
@@ -280,10 +200,7 @@ defmodule Mix.Tasks.Generate.Serial do
       ""
     ]
 
-    new_content =
-      (before ++ serial_lines ++ after_lines)
-      |> Enum.join("\n")
-
+    new_content = (before ++ serial_lines ++ after_lines) |> Enum.join("\n")
     {:ok, new_content}
   end
 
@@ -291,7 +208,6 @@ defmodule Mix.Tasks.Generate.Serial do
     if Code.ensure_loaded?(Timex) do
       Timex.iso_week(Date.utc_today()) |> elem(1)
     else
-      # Basic week calculation
       today = Date.utc_today()
       start_of_year = Date.new!(today.year, 1, 1)
       days_diff = Date.diff(today, start_of_year)
@@ -303,8 +219,13 @@ defmodule Mix.Tasks.Generate.Serial do
     Date.utc_today().year
   end
 
-  defp decode_factory("R"), do: "aRia Character Core"
-  defp decode_factory(f), do: "Unknown Factory (#{f})"
+  defp decode_factory("R") do
+    "aRia Character Core"
+  end
+
+  defp decode_factory(f) do
+    "Unknown Factory (#{f})"
+  end
 
   defp show_help do
     Mix.shell().info(@moduledoc)
