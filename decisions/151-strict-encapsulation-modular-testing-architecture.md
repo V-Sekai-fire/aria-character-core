@@ -135,7 +135,22 @@ Each library extraction follows this complete process:
    - Delete `test/[library]/` directory completely
    - Ensure no duplicate code remains
 
-8. **Final Verification**
+8. **Create Migration Tombstone**
+   - Create `lib/[library].tombstone.md` file documenting extraction
+   - Include extraction date, new location, and ADR reference
+   - Example format:
+     ```markdown
+     # [Library] Migration Tombstone
+     
+     **Extracted:** 2025-06-23  
+     **New Location:** `apps/[library]/`  
+     **ADR Reference:** ADR-151 Strict Encapsulation
+     
+     This module was extracted to maintain strict encapsulation boundaries.
+     All functionality now available in the dedicated umbrella app.
+     ```
+
+9. **Final Verification**
    - Run full umbrella test suite
    - Confirm no broken references or missing modules
    - Validate all functionality preserved
