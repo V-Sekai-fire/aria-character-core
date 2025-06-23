@@ -87,6 +87,50 @@ Layer N-2: Unit Tests (test Layer N-2 logic)
 
 ## Implementation Strategy
 
+### Library Extraction Workflow
+
+Each library extraction follows this complete process:
+
+1. **Create New App Structure**
+   - Generate `apps/[library_name]/` directory
+   - Create `mix.exs` with proper dependencies
+   - Set up standard Elixir app structure
+
+2. **Copy Source Code**
+   - Move all files from `lib/[library]/` to `apps/[library]/lib/`
+   - Preserve directory structure and file organization
+   - Maintain existing module namespaces
+
+3. **Migrate Test Suite**
+   - Move all files from `test/[library]/` to `apps/[library]/test/`
+   - Update test helper and configuration files
+   - Ensure test isolation and independence
+
+4. **Configure Dependencies**
+   - Update umbrella `mix.exs` to include new app
+   - Configure new app dependencies in its `mix.exs`
+   - Resolve any circular dependency issues
+
+5. **Verify Independent Operation**
+   - Run isolated test suite: `cd apps/[library] && mix test`
+   - Confirm all tests pass without external dependencies
+   - Validate compilation and functionality
+
+6. **Update Import References**
+   - Find all imports of moved modules throughout codebase
+   - Update import statements to reference new app location
+   - Fix any broken module references
+
+7. **Remove Original Code**
+   - Delete `lib/[library]/` directory completely
+   - Delete `test/[library]/` directory completely
+   - Ensure no duplicate code remains
+
+8. **Final Verification**
+   - Run full umbrella test suite
+   - Confirm no broken references or missing modules
+   - Validate all functionality preserved
+
 ### Phase 1: Analyze Current Dependencies
 - [ ] Map dependency graph for all lib/ modules
 - [ ] Identify leaf modules (minimal dependencies)
