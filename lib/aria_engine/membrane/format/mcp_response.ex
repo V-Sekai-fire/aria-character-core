@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.Format.MCPResponse do
   @moduledoc "Membrane format for MCP-formatted responses.\n\nThis format represents the final MCP-compatible response that will be\nsent back to the MCP client. It includes the status, schedule data,\nerror details, and response metadata.\n"
   defstruct [:status, :schedule, :error_details, :request_id, :response_metadata]

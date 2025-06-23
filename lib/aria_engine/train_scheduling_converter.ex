@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.TrainSchedulingConverter do
   @moduledoc "Converts trains05.dzn MiniZinc train scheduling problem into schedule_activities format\nfor use with the hybrid coordinator system.\n\nThis module transforms the constraint satisfaction problem from MiniZinc format\ninto the activities/entities/resources format expected by AriaEngine.Scheduler.\n"
   require Logger

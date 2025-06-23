@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AstMigrate.Rules.UnitTestImprovements do
   @moduledoc """
   Improves unit test readability and structure using AST transformations.

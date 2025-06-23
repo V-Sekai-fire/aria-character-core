@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule BlocksGTNTest do
   @moduledoc "Test suite for Blocks World Goal-Task-Network (GTN) planning.\n\nThis implements the blocks_gtn example from GTPyhop, which uses both\ngoals and tasks for blocks world planning using the near-optimal\nalgorithm from Gupta & Nau (1992).\n"
   use ExUnit.Case

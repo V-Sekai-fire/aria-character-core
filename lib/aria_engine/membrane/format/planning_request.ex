@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.Format.PlanningRequest do
   @moduledoc "Membrane format for converted planning requests.\n\nThis format represents the converted planning parameters that are ready\nfor execution by the HybridCoordinator. It contains the domain, state,\ngoals, and options needed for planning execution.\n"
   defstruct [:domain, :state, :goals, :options, :request_id, :conversion_metadata]

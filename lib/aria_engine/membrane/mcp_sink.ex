@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.MCPSink do
   @moduledoc "Membrane Sink element for MCP responses.\n\nThis sink receives processed MCP responses and can store them,\nlog them, or forward them to external systems.\n"
   use Membrane.Sink

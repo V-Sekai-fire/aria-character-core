@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.CasyncDecoder do
   @moduledoc "Advanced casync file decoder and analyzer.\n\nThis module provides comprehensive decoding and analysis capabilities for all casync file formats:\n- .caibx (Content Archive Index for Blobs)\n- .caidx (Content Archive Index for Directory Trees)\n- .catar (Archive Container format)\n- .cacnk (Compressed Chunk files)\n\nThe decoder supports both local and remote file processing, with full chunk reconstruction\nand integrity verification capabilities.\n\n## Examples\n\n    # Decode a local CAIDX file with store\n    {:ok, result} = AriaStorage.CasyncDecoder.decode_file(\"/path/to/file.caidx\",\n      store_path: \"/path/to/file.store\")\n\n    # Decode a remote CAIDX file with remote store\n    {:ok, result} = AriaStorage.CasyncDecoder.decode_uri(\"https://example.com/file.caidx\",\n      store_uri: \"https://example.com/store/\")\n\n    # Assemble and verify complete file from chunks\n    {:ok, assembled_file} = AriaStorage.CasyncDecoder.assemble_file(parsed_data,\n      store_path: \"/path/to/store\", output_path: \"/path/to/output.bin\")\n\n"
   require Logger

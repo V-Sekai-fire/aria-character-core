@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Domain.Methods do
   @moduledoc "Handles method-related operations for the planning domain.\n"
   @type t :: Domain.Core.t()

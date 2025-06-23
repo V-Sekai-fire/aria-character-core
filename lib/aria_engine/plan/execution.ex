@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Plan.Execution do
   @moduledoc "Functions for executing the planned solution using Run-Lazy-Refineahead.\n"
   require Logger

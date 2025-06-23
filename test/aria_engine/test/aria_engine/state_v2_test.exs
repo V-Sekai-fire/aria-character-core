@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule StateV2Test do
   use ExUnit.Case, async: true
   doctest AriaEngine.State

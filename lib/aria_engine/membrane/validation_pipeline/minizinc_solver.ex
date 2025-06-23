@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
   @moduledoc "Handles solving scheduling problems using MiniZinc constraint solver.\n"
   require Logger

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
   @moduledoc "Utility functions for ARCANA format processing.\n\nProvides helper functions for format detection, hex comparison,\nroundtrip testing, and debugging binary data.\n"
   require Logger

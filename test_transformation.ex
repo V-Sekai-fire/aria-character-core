@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule TestModule do
   @type state :: AriaEngine.StateV2.t()
   @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.HybridCoordinatorV2.StrategyManagement do
   @moduledoc "Strategy management operations for HybridCoordinatorV2.\n\nHandles strategy replacement, information retrieval, and performance metrics\nfor the injected strategy dependencies.\n"
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()

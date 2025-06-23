@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule TemporalPlanner.STNAction do
   @moduledoc "STN-based action representation for unified temporal planning.\n\nThis module converts individual actions into STN segments with temporal constraints,\nenabling seamless integration between action execution and temporal constraint solving.\nEach action becomes an atomic STN segment with start/end timepoints and associated\ntemporal constraints for preconditions, effects, and resource usage.\n\n## Action-to-STN Mapping\n\n- **Action execution** → STN segment with duration constraints\n- **Preconditions** → Temporal constraints on start timepoint\n- **Effects** → Temporal constraints on end timepoint  \n- **Resource usage** → Duration constraints spanning execution interval\n- **Dependencies** → Inter-segment boundary constraints\n\n## Integration with STN Operations\n\nActions represented as STN segments can leverage all STN boolean operations:\n- **Sequential actions** → `chain/1` operation\n- **Parallel actions** → `parallel_join/1` operation\n- **Alternative actions** → `union/2` operation\n- **Resource conflicts** → `intersection/2` for constraint tightening\n"
   alias Timeline

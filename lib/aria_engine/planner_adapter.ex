@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.PlannerAdapter do
   @moduledoc "Migration adapter that provides the Plan API while delegating to HybridCoordinator.\n\nThis module allows seamless migration from the old Plan module to the new HybridCoordinator\nby maintaining the same public API and function signatures while using the hybrid planner\ninternally.\n\n## Migration Strategy\n\n1. Replace Plan usages with PlannerAdapter\n2. Test compatibility and behavior parity\n3. Gradually migrate to direct HybridCoordinator usage\n4. Remove this adapter once migration is complete\n"
   alias HybridPlanner.{HybridCoordinatorV2, DataStructures}

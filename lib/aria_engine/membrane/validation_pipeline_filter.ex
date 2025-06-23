@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.ValidationPipelineFilter do
   @moduledoc "Membrane filter that validates scheduling problems by:\n1. Taking MCP schedule_activities format as input\n2. Converting to both Hybrid solver and MiniZinc formats\n3. Solving with both approaches\n4. Comparing results and returning validation status:\n   - success: both solve and solutions match\n   - inconsistent: both solve but solutions don't match\n   - infeasible: neither can solve\n   - unknown: MiniZinc not available or other issues\n5. Providing solution trees for both approaches\n"
   use Membrane.Filter

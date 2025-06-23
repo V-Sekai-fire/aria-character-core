@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.DataStructures do
   @moduledoc "Encapsulated data structures with clean public interfaces.\nInternal structure is completely hidden from external access.\n"
   defmodule EncapsulatedPlan do

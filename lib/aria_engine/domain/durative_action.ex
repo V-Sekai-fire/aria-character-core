@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Domain.DurativeAction do
   @moduledoc "Represents a durative action in the Aria Engine planning domain.\n"
   @type durative_action_name :: atom()

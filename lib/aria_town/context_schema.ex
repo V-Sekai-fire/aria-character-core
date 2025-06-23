@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaTown.ContextSchema do
   @moduledoc "Chibifire.com JSON-LD context schema definitions for semantic web compatibility.\nProvides RDF properties and classes with full URL identifiers.\n"
   @base_schema "https://chibifire.com/schema/"

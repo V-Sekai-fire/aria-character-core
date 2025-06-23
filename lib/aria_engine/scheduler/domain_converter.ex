@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.DomainConverter do
   @moduledoc "Converts activities and resources into domain format for the hybrid planner.\n\nUses two-phase approach:\n1. HTN decomposition with KHR primitives for feasibility\n2. Goal-based optimization for optimality\n\nThis module has been split into focused sub-modules for better maintainability:\n- ActivityActions: Basic activity action creation\n- DurativeActions: Durative action structs and temporal constraints\n- HTNMethods: HTN task methods and dependency handling\n- GoalMethods: Resource constraints and optimization goals\n- KHRPrimitives: KHR primitive sequences for activities\n"
   require Logger

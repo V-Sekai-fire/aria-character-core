@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.MiniZinc.ExecutorTest do
   use ExUnit.Case, async: true
   alias AriaEngine.MiniZinc.Executor

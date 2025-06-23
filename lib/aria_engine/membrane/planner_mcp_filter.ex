@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.PlannerMCPFilter do
   @moduledoc "Membrane Filter element that converts PlanningResult to MCPResponse format.\n\nThis element bridges the gap between the planning execution (PlannerSink) \nand MCP response delivery (MCPSink) by transforming planning results into\nthe MCP-compatible response format.\n\n## Pipeline Position\n\n```\nMCPSource → PlanFilter → PlannerSink → ResponseFilter → MCPSink\n```\n\nThis filter enables the MCPSink to remain generic while providing the\nnecessary format transformation for the complete pipeline.\n"
   use Membrane.Filter

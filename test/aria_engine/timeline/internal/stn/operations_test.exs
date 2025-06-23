@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Timeline.Internal.STN.OperationsTest do
   use ExUnit.Case, async: true
   alias Timeline.Internal.STN

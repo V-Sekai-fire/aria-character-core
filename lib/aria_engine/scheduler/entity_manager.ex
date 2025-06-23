@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.EntityManager do
   @moduledoc "Entity assignment and management for the scheduler.\n\nHandles entity capability matching, assignment, and availability tracking\nfor activities with specific capability requirements.\n"
   require Logger

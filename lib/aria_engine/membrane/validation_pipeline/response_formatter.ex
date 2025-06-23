@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
   @moduledoc "Handles formatting validation pipeline responses for MCP protocol.\n"
   require Logger

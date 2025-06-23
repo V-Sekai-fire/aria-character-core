@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Plan do
   @moduledoc "IPyHOP-style reentrant HTN planning implementation with Run-Lazy-Refineahead.\nThis module acts as a facade for the new, modularized planning components.\n"
   alias Plan.{Core, Backtracking, Execution, Blacklisting}

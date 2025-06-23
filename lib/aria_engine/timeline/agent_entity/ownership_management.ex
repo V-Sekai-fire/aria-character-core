@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Timeline.AgentEntity.OwnershipManagement do
   @moduledoc "Ownership management operations for Timeline.AgentEntity.\n\nHandles ownership relationships between agents and entities, including\nownership checking, transfer, and removal.\n"
   @type entity :: Timeline.AgentEntity.entity()

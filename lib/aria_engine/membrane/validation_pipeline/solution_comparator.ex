@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
   @moduledoc "Handles comparing solutions from different solvers and determining validation status.\n"
   require Logger

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.WaffleChunkStore do
   @moduledoc "Waffle-based chunk store for desync compatibility.\n\nThis module integrates Waffle's file storage capabilities with our\ndesync chunking system, providing a flexible storage backend that\ncan work with local filesystem, S3, or other Waffle-supported backends.\n"
   use Waffle.Definition

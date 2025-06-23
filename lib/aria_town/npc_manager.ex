@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaTown.NPCManager do
   @moduledoc "NPC management system for Aria Town.\n\nThis is currently a stub implementation that provides the basic GenServer\nstructure needed for the supervision tree. Future development will add:\n\n- NPC lifecycle management (spawn, despawn, persistence)\n- Behavior coordination and AI planning integration\n- NPC state synchronization and updates\n- Social interaction and relationship management\n\n## Architecture Notes\n\nThe NPCManager should eventually coordinate with:\n- TimeManager for scheduled behaviors and time-based actions\n- Planner for NPC goal-directed behavior\n- KnowledgeBase for NPC knowledge and memory\n- PersistenceManager for NPC state storage\n\n## Planned Integration\n\nFuture NPCs will use AriaEngine's hybrid planner for:\n- Goal-oriented behavior planning\n- Temporal scheduling of activities\n- Social interaction planning\n- Resource and spatial reasoning\n"
   use GenServer

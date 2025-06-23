@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Domain.Actions do
   @moduledoc "Core action execution functions for domains.\n"
   alias AriaEngine.State

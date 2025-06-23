@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Plan.Core do
   @moduledoc "Core IPyHOP planning algorithm and decomposition loop.\n"
   require Logger

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.PlannerFilter do
   @moduledoc "Membrane Filter element that executes actual planning using HybridCoordinatorV2.\n\nThis element receives PlanningParams and executes real planning to produce PlanningResult.\nIt's the core planning engine in the pipeline that bridges the gap between\ndata transformation and response formatting.\n"
   use Membrane.Filter

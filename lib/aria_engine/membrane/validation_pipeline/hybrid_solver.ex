@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
   @moduledoc "Handles solving scheduling problems using the AriaEngine Hybrid solver.\n"
   require Logger

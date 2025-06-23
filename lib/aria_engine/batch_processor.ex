@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.BatchProcessor do
   @moduledoc "Batch processing for multiple convergence problems with optimal core distribution.\n\nDistributes CPU cores across multiple problems to achieve maximum utilization\nwhen solving multiple independent convergence problems simultaneously.\n\nThis approach addresses the core utilization bottleneck observed in single-problem\nFlow processing by running multiple problems in parallel, each with its allocated\nsubset of CPU cores.\n\nExpected performance improvement: 3-4x for multiple problem scenarios.\n"
   require Logger

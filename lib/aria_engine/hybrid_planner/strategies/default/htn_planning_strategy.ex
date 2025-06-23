@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.Strategies.Default.HTNPlanningStrategy do
   @moduledoc "Default HTN planning strategy implementation wrapping existing Plan.Core logic.\n\nThis strategy encapsulates the current HTN planning functionality from\nPlan.Core while providing the clean strategy interface defined in ADR-091.\nIt serves as the default implementation during the migration period.\n"
   @behaviour HybridPlanner.Strategies.PlanningStrategy

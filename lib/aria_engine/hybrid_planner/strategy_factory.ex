@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.StrategyFactory do
   @moduledoc "Factory and registry for creating and managing hybrid planner strategies.\n\nThis module provides centralized strategy management including:\n- Strategy registration and lookup\n- Dynamic strategy composition\n- Configuration-based strategy selection\n- Runtime strategy validation and swapping\n\n## Usage\n\n    # Register strategies\n    factory = StrategyFactory.new()\n    |> StrategyFactory.register_strategy(:planning, :default, \n         HybridPlanner.Strategies.Default.HTNPlanningStrategy)\n    |> StrategyFactory.register_strategy(:planning, :optimized,\n         HybridPlanner.Strategies.Optimized.HTNPlanningStrategy)\n    \n    # Create coordinator from configuration\n    config = %{\n      planning_strategy: :default,\n      temporal_strategy: :stn,\n      state_strategy: :statev2,\n      domain_strategy: :default,\n      logging_strategy: :verbose,\n      execution_strategy: :lazy\n    }\n    \n    coordinator = StrategyFactory.create_coordinator(factory, config)\n    \n    # Runtime strategy swapping\n    new_coordinator = StrategyFactory.swap_strategy(coordinator, :planning, :optimized)\n"
   alias HybridPlanner.{HybridCoordinatorV2, Strategies}

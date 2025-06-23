@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.PlannerFilterTest do
   @moduledoc "Isolated unit tests for the PlannerFilter Membrane element.\n\nThese tests focus specifically on the PlannerFilter's core functionality:\n- Planning execution with valid inputs\n- Error handling for invalid inputs\n- Timeout handling\n- Statistics tracking\n- Telemetry emission\n"
   use ExUnit.Case, async: true

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.DomainConverter.GoalMethods do
   @moduledoc "Creates goal methods for resource constraints and optimization.\n\nThis module handles the creation of unigoal methods that manage\nresource constraints, dependency constraints, and optimization\ngoals for the scheduling domain.\n"
   require Logger

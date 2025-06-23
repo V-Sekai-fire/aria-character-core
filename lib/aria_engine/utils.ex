@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Utils do
   @moduledoc "Utility functions for AriaEngine.\n\nThis module provides common utility functions used across the AriaEngine\nsystem, including duration handling, string formatting, and data conversion.\n"
   alias Timex.Duration

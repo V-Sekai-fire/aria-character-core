@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.Chunks.Compression do
   @moduledoc "Chunk compression and decompression utilities.\n\nProvides compression functionality for chunks using various algorithms,\nwith zstd as the primary compression method.\n"
   @type compression_algorithm :: :zstd | :none

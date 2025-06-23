@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaAuthTest do
   use ExUnit.Case
   alias AriaAuth.Accounts.User

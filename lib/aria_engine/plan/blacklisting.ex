@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Plan.Blacklisting do
   @moduledoc "Functions for handling blacklisting of commands and methods.\n"
   @type task :: {String.t(), list()}

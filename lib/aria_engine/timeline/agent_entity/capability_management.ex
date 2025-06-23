@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Timeline.AgentEntity.CapabilityManagement do
   @moduledoc "Capability management operations for Timeline.AgentEntity.\n\nHandles capability checking, addition, removal, and action-based\nclassification for agents and entities.\n"
   @type participant :: Timeline.AgentEntity.participant()

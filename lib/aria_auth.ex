@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaAuth do
   @moduledoc "Top-level AriaAuth module providing convenience functions for authentication.\n\nThis module delegates to the appropriate sub-modules for token generation,\nverification, and user management.\n"
   @doc "Generates a macaroon token for a user.\n\nDelegates to AriaAuth.Macaroons.generate_token/2.\n"

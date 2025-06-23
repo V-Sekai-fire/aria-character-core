@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule RunLazyRefineaheadTest do
   @moduledoc "Test the Run-Lazy-Refineahead execution with replanning on failure.\n\nThis test creates scenarios where actions fail during execution, triggering\nthe replanning mechanism to find alternative solutions.\n"
   use ExUnit.Case

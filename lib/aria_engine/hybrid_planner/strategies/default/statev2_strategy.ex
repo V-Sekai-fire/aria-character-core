@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
   @moduledoc "Default StateV2 strategy implementation wrapping existing state management logic.\n\nThis strategy encapsulates StateV2 operations while providing the clean\nstrategy interface defined in ADR-091.\n"
   @behaviour HybridPlanner.Strategies.StateStrategy

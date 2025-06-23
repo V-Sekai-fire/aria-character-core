@@ -11,6 +11,7 @@
 ## Where it went
 
 The PNG generation functionality has been moved to:
+
 - **New location:** `apps/png_generator/`
 - **Module name:** `PngGenerator` (simplified from `AriaEngine.PngGenerator`)
 

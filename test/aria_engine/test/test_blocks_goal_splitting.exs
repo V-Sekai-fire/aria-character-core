@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule BlocksGoalSplittingTest do
   @moduledoc "Test suite for Blocks World Goal Splitting planning.\n\nThis implements the blocks_goal_splitting example from GTPyhop, which\ndemonstrates how to achieve blocks-world multigoals using GTPyhop's\nbuilt-in goal splitting method that separates multigoals into unigoals\nand tries to achieve them sequentially.\n\nNote: This approach usually won't produce optimal plans due to\ndeleted-condition interactions, but will eventually find solutions.\n"
   use ExUnit.Case

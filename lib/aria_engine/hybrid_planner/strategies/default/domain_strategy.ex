@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.Strategies.Default.DomainStrategy do
   @moduledoc "Default domain strategy implementation wrapping existing domain operations.\n\nThis strategy encapsulates domain queries and metadata operations while\nproviding the clean strategy interface defined in ADR-091.\n"
   @behaviour HybridPlanner.Strategies.DomainStrategy

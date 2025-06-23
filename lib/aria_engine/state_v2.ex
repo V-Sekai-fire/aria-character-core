@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.State do
   @moduledoc "Modernized state management using subject-predicate-fact triples for entity-centric architecture.\n\nThis module provides functionality to manage world state using entity-first RDF-like triples,\nwhere each fact is represented as {subject, predicate} -> fact_value.\n\nSupports any reasonable Elixir type for subjects and predicates:\n\n```elixir\nstate = StateV2.new()\n# String-based entities (traditional approach)\n|> StateV2.set_fact(\"player\", \"location\", \"room1\")\n|> StateV2.set_fact(\"player\", \"has\", \"sword\")\n\n# Integer node IDs (for computational graphs)\n|> StateV2.set_fact(42, :value, 3.14159)\n|> StateV2.set_fact(43, :operation, :add)\n\n# Atom predicates for performance\n|> StateV2.set_fact(\"npc1\", :status, :active)\n|> StateV2.set_fact(\"npc1\", :ai_state, {:planning, \"attack_player\"})\n\n# Mixed types work naturally\nStateV2.get_fact(state, 42, :value)  # => 3.14159\nStateV2.get_fact(state, \"player\", \"location\")  # => \"room1\"\n```\n\nThis entity-first approach aligns with game networking ECS patterns and supports\nthe timeline-per-entity architecture defined in ADR-087.\n"
   @type subject :: term()

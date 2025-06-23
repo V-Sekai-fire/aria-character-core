@@ -47,6 +47,7 @@ This rule demonstrates AST transformation capabilities while providing useful im
 **Transformations Applied:**
 
 1. **Extract intermediate variables in assertions:**
+
    ```elixir
    # Before
    assert some_function(arg) == expected
@@ -57,6 +58,7 @@ This rule demonstrates AST transformation capabilities while providing useful im
    ```
 
 2. **Add missing assertions to bare function calls:**
+
    ```elixir
    # Before
    test "some test" do

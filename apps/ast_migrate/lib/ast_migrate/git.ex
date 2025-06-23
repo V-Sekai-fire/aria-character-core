@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AstMigrate.Git do
   @moduledoc """
   Git operations using system Git commands for reliable integration.

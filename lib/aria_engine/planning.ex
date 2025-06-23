@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Planning do
   @moduledoc "Provides core planning and execution functionalities for the Aria Engine.\n"
   alias Planning.CoreInterface

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine do
   @moduledoc "Main AriaEngine module providing utility functions.\n\nThis module contains utility functions that are used across the AriaEngine system.\n"
   alias AriaEngine.State

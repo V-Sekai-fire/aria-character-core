@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule TimelineGraph.Scheduler do
   @moduledoc "Handles scheduling and routine management for entities in the timeline graph.\n\nThis module implements Enhanced Scheduling for Phase 1 of ADR-085, enabling NPCs to \nfollow complex, time-sensitive routines like work shifts, meal times, and sleep cycles.\n"
   alias Timeline

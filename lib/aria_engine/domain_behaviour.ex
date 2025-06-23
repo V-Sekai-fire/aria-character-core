@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule DomainBehaviour do
   @moduledoc "Behaviour for modules that define a planning domain for Plan.\n"
   defmacro __using__(_opts) do

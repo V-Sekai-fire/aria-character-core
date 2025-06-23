@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.MiniZinc.Executor do
   @moduledoc "Porcelain-based MiniZinc executor with EEx templating support.\n\nProvides clean API for executing MiniZinc models with automatic\ntemporary file management and template rendering.\n"
   require Logger

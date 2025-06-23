@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Domain.Utils do
   @moduledoc "Domain utilities and helper functions.\n"
   alias Actions

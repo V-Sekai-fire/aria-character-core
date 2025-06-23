@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Timeline.Internal.STN.MiniZincSolver do
   @moduledoc "MiniZinc-based STN solver that replaces the PC-2 algorithm.\n\nConverts STN constraints to MiniZinc format and uses the constraint solver\nto determine consistency and find solutions.\n"
   alias Timeline.Internal.STN

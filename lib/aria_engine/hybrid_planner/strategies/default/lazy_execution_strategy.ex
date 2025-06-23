@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   @moduledoc "Default lazy execution strategy implementation wrapping existing execution logic.\n\nThis strategy encapsulates the lazy refinement execution model from Plan.Core\nwhile providing the clean strategy interface defined in ADR-091.\n"
   @behaviour HybridPlanner.Strategies.ExecutionStrategy

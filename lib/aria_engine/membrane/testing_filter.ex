@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Membrane.Testing.Filter do
   @moduledoc "Mock testing filter for Membrane pipeline tests.\n\nThis module provides a simple pass-through filter that can be used\nin tests to verify pipeline structure and data flow without complex\nprocessing logic.\n"
   use Membrane.Filter

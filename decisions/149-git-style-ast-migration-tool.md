@@ -8,12 +8,14 @@
 ## Context
 
 Large-scale Elixir codebases require systematic code transformations that are:
+
 - Too complex for find-and-replace operations
 - Too numerous for manual refactoring  
 - Too risky for batch processing without granular control
 - Too interdependent for simple linear transformations
 
 Our project urgently needs StateV2 → State migration across 1000+ files. Current approaches lack:
+
 - **Incremental application** of transformations
 - **Logical rollback** capabilities with proper dependency tracking
 - **Conflict resolution** for overlapping changes
@@ -212,6 +214,7 @@ end
 ### **AST Transformation Example**
 
 **Input Elixir code:**
+
 ```elixir
 defmodule MyModule do
   alias AriaEngine.StateV2
@@ -224,6 +227,7 @@ end
 ```
 
 **AST representation (simplified):**
+
 ```elixir
 {:defmodule, [line: 1], [
   {:__aliases__, [line: 1], [:MyModule]},
@@ -245,6 +249,7 @@ end
 ```
 
 **Transformed output:**
+
 ```elixir
 defmodule MyModule do
   alias AriaEngine.State
@@ -277,6 +282,7 @@ fi
 ### **No Custom Storage Required**
 
 **Git provides all version control features:**
+
 - **Transformations**: Git commits with `[AST]` prefix
 - **Rollback**: `git revert` for atomic rollback
 - **History**: `git log` for transformation audit trail
@@ -287,6 +293,7 @@ fi
 ## Implementation Plan
 
 ### **Phase 0: Immediate Relief (1 week)**
+
 - [x] Create AST-based StateV2→State transformation using Code.string_to_quoted/2
 - [x] Add EGit integration for automatic commits
 - [x] Implement basic pattern matching on AST nodes
@@ -294,6 +301,7 @@ fi
 - [x] **Deliverable**: `mix ast.simple --rule state_v2_to_state --commit "Convert StateV2"`
 
 ### **Phase 1: Git-Integrated AST Foundation (2 weeks)**
+
 - [x] Build AST parser using Sourceror for robust parsing
 - [x] Implement transformation rule system with Git integration
 - [x] Create file processing with Task.async_stream
@@ -301,6 +309,7 @@ fi
 - [x] **Deliverable**: `mix ast.commit --rule state_v2_to_state --message "Convert StateV2"`
 
 ### **Phase 2: Branch-Based Workflows (2 weeks)**
+
 - [ ] Implement Git branch creation for transformations
 - [ ] Build dependency management via Git merges
 - [ ] Add interactive transformation review with Git staging
@@ -308,6 +317,7 @@ fi
 - [ ] **Deliverable**: `mix ast.branch --rule function_signatures --from main`
 
 ### **Phase 3: Production Features (1 week)**
+
 - [ ] Add performance optimization and telemetry
 - [ ] Implement comprehensive error handling and recovery
 - [ ] Create extensive test suite with property-based testing
@@ -319,6 +329,7 @@ fi
 ## Success Criteria
 
 ### **Phase 0 Success (1 week)**
+
 - [x] **PRIMARY**: Zero `mix compile` errors and warnings
 - [x] **PRIMARY**: Zero `mix test` errors and warnings  
 - [x] **SECONDARY**: Reduce `mix credo` issues (delayed priority)
@@ -329,18 +340,21 @@ fi
 ### **Overall Success Criteria**
 
 **Functional Requirements**:
+
 - Successfully migrate StateV2 → State across entire codebase
 - Handle 1000+ file codebases without memory issues
 - Maintain 100% syntax validity of transformed code
 - Provide atomic rollback for any changeset
 
 **Quality Requirements**:
+
 - 95%+ test coverage with property-based testing
 - Zero data loss with comprehensive backup system
 - 95% accuracy rate for automatic transformations
 - <2 seconds per file processing time
 
 **Usability Requirements**:
+
 - Git-familiar interface for developers
 - Interactive review mode for complex changes
 - Clear error reporting and recovery guidance
@@ -349,6 +363,7 @@ fi
 ## Technical Decisions
 
 ### **Why Git-Native Instead of Custom Version Control?**
+
 - **Zero Storage Complexity**: No need to build custom changeset storage
 - **Battle-Tested Reliability**: Git's proven integrity and performance
 - **Native Tooling**: All Git tools work (log, diff, blame, bisect, merge)
@@ -357,6 +372,7 @@ fi
 - **Reduced Development Time**: 6 weeks instead of 10+ weeks
 
 ### **Why Git Commits for Transformations?**
+
 - **Logical Grouping**: Each commit represents one semantic transformation
 - **Atomic Operations**: Git's atomic commits prevent inconsistent states
 - **Dependency Management**: Git branches and merges handle dependencies naturally
@@ -364,6 +380,7 @@ fi
 - **Collaborative Workflow**: Multiple developers can work on different transformation branches
 
 ### **Why Branch-Based Transformation Workflows?**
+
 - **Parallel Development**: Multiple transformations can proceed simultaneously
 - **Safe Experimentation**: Branches allow testing transformations without affecting main
 - **Natural Dependencies**: Git merges handle transformation dependencies
@@ -371,6 +388,7 @@ fi
 - **Review Process**: Pull requests for transformation review and approval
 
 ### **EGit Integration Strategy**
+
 ```elixir
 defmodule AstMigrate.Git do
   @moduledoc """
@@ -410,6 +428,7 @@ end
 ```
 
 ### **Why EGit Over System.cmd?**
+
 - **Native Elixir**: No shell command dependencies
 - **Structured Errors**: Proper error types instead of parsing shell output
 - **Type Safety**: Elixir data structures for all Git operations
@@ -418,6 +437,7 @@ end
 - **Reliability**: No shell escaping or command injection risks
 
 ### **Error Handling Strategy**
+
 - **Parse Errors**: Skip file, log error, continue with others
 - **Transform Errors**: Create partial commit, mark files for manual review
 - **Git Errors**: Provide clear guidance for resolution (conflicts, dirty tree)
@@ -427,6 +447,7 @@ end
 ## Consequences
 
 ### **Benefits**
+
 - **Immediate Relief**: Phase 0 solves urgent StateV2 migration need
 - **Risk Mitigation**: Logical changesets prevent inconsistent states
 - **Developer Confidence**: Familiar Git-like interface and atomic rollback
@@ -449,6 +470,7 @@ end
 **Mitigation**: Clear error messages, interactive resolution mode, dependency visualization
 
 ### **Trade-offs**
+
 - **Complexity vs Safety**: More complex architecture for safer transformations
 - **Performance vs Features**: Some overhead for version control capabilities
 - **Time vs Quality**: Longer development for production-ready tool
@@ -456,6 +478,7 @@ end
 ## Validation Strategy
 
 ### **Testing Approach**
+
 ```elixir
 # Property-based testing
 property "transformed AST is always valid Elixir" do
@@ -480,6 +503,7 @@ end
 ```
 
 ### **Validation Pipeline**
+
 1. **Syntax Check**: Code.string_to_quoted/1 validates syntax
 2. **Compilation Check**: `mix compile --warnings-as-errors` ensures clean compilation
 3. **Test Check**: `mix test` verifies behavior preservation and reduces failures
@@ -492,6 +516,7 @@ end
 ### **Core AST Transformation Tests**
 
 **StateV2 Struct Transformation**
+
 ```elixir
 test "transforms StateV2 struct to State struct" do
   input_ast = quote do: %StateV2{entities: data, status: :active}
@@ -503,6 +528,7 @@ end
 ```
 
 **Module Call Transformation**
+
 ```elixir
 test "transforms StateV2 module calls to State calls" do
   input_ast = quote do: StateV2.update(state, :field, value)
@@ -514,6 +540,7 @@ end
 ```
 
 **Alias Statement Transformation**
+
 ```elixir
 test "transforms simple alias statements" do
   input_ast = quote do: alias AriaEngine.StateV2
@@ -535,6 +562,7 @@ end
 ### **File Processing Tests**
 
 **Complete File Transformation**
+
 ```elixir
 test "transforms complete Elixir file" do
   input_code = """
@@ -561,6 +589,7 @@ end
 ```
 
 **Syntax Preservation**
+
 ```elixir
 test "maintains valid Elixir syntax after transformation" do
   input_code = """
@@ -590,6 +619,7 @@ end
 ### **Edge Cases and Error Handling**
 
 **Malformed AST Handling**
+
 ```elixir
 test "handles malformed AST gracefully" do
   # Test with invalid/incomplete AST structures
@@ -602,6 +632,7 @@ end
 ```
 
 **Deeply Nested Structures**
+
 ```elixir
 test "handles deeply nested structures" do
   input_ast = quote do
@@ -622,6 +653,7 @@ end
 ```
 
 **Nested AST Preservation**
+
 ```elixir
 test "preserves unrelated AST nodes" do
   input_ast = quote do
@@ -646,6 +678,7 @@ end
 ### **Property-Based Tests**
 
 **AST Validity Property**
+
 ```elixir
 @tag :property
 property "transformed AST always produces valid Elixir code" do
@@ -660,6 +693,7 @@ end
 ```
 
 **Transformation Idempotency**
+
 ```elixir
 @tag :property
 property "transformations are idempotent" do
@@ -676,6 +710,7 @@ end
 ### **Git Integration Tests**
 
 **Commit Creation**
+
 ```elixir
 test "creates proper Git commits for transformations" do
   repo = setup_test_repo()
@@ -690,6 +725,7 @@ end
 ```
 
 **Branch Management**
+
 ```elixir
 test "creates and manages transformation branches" do
   repo = setup_test_repo()
@@ -704,6 +740,7 @@ end
 ```
 
 **Rollback Functionality**
+
 ```elixir
 test "successfully rolls back transformations" do
   repo = setup_test_repo()
@@ -724,6 +761,7 @@ end
 ### **Test Coverage Requirements**
 
 **Minimum Coverage Targets**:
+
 - **AST Transformation Logic**: 95% line coverage
 - **File Processing**: 90% line coverage  
 - **Git Integration**: 85% line coverage
@@ -731,6 +769,7 @@ end
 - **Edge Cases**: 80% line coverage
 
 **Test Categories**:
+
 - **Unit Tests**: Individual function testing (60% of test suite)
 - **Integration Tests**: Component interaction testing (25% of test suite)
 - **Property Tests**: Invariant verification (10% of test suite)
@@ -741,30 +780,35 @@ This comprehensive unit testing strategy ensures the AST migration tool is robus
 ## Monitoring and Success Metrics
 
 ### **Transformation Quality**
+
 - Syntax validity rate: 100% (target)
 - Semantic preservation: 95% (measured by test pass rate)
 - Confidence score accuracy: 90% (predicted vs actual success)
 - Manual review rate: <10% (transformations requiring human input)
 
 ### **Performance Metrics**
+
 - Processing speed: <2s per file (target for complex AST work)
 - Memory usage: <200MB for 1000 files (realistic for AST processing)
 - Changeset creation time: <5s for typical changeset
 - Rollback speed: <1s per changeset
 
 ### **Usability Metrics**
+
 - Developer adoption rate (usage frequency)
 - Time to configure new rules: <5 minutes (target)
 - Error recovery success rate: 95% (target)
 - User satisfaction scores from team feedback
 
 ### **System Reliability**
+
 - Data corruption rate: 0% (absolute requirement)
 - Changeset failure rate: <1% (target)
 - Rollback success rate: 100% (target)
 - System uptime during migrations: 99.9% (target)
 
 ## Related ADRs
+
 - **ADR-052**: Replace Membrane with Flow (context for architecture evolution)
 - **ADR-146**: Replace AriaEngine StateV2 with State (primary immediate use case)
 - **ADR-022**: Test-Driven Development (methodology alignment)
@@ -780,6 +824,7 @@ This comprehensive unit testing strategy ensures the AST migration tool is robus
 **Total: 6 weeks** (reduced from 10+ weeks by leveraging Git instead of custom version control)
 
 ## Future Considerations
+
 - Integration with language servers for real-time suggestions
 - Machine learning for automatic rule generation from examples
 - Distributed processing for extremely large codebases

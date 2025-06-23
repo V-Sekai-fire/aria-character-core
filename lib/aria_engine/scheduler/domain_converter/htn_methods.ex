@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.DomainConverter.HTNMethods do
   @moduledoc "Creates HTN (Hierarchical Task Network) scheduling methods for Phase 1 feasibility.\n\nThis module handles the creation of task methods that decompose high-level\nscheduling goals into executable actions, with proper dependency handling\nand circular dependency detection.\n"
   require Logger

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule DurativeActionsQuantifiersTest do
   @moduledoc "Integration tests for durative actions with quantifier support.\n\nTests verify that durative actions can use existential and universal quantifiers\nin their preconditions, enabling more sophisticated NPC reasoning patterns.\n"
   use ExUnit.Case, async: true

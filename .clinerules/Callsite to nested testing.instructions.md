@@ -37,7 +37,7 @@ When modifying a schema or interface, trace changes from the call site down to a
 
 1. **Schema Change**: Update `duration` to allow open-ended intervals
 2. **Call Site**: `get_schedule_activities_definition`
-3. **Leaf Nodes**: 
+3. **Leaf Nodes**:
    - `validate_duration/1` (validation logic)
    - `parse_datetime/2` (datetime parsing)
    - `convert_activities/1` (conversion to internal format)

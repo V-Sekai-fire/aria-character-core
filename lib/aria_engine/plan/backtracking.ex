@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Plan.Backtracking do
   @moduledoc "Functions for handling backtracking and replanning in the solution tree.\n"
   require Logger

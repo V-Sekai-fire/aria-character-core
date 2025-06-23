@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.HybridCoordinatorV2.Constructor do
   @moduledoc "Constructor and validation logic for HybridCoordinatorV2.\n\nHandles strategy dependency injection, validation, and coordinator creation\nfollowing the Function as Object pattern.\n"
   alias HybridPlanner.Strategies

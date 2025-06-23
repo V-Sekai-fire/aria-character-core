@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Validation do
   @moduledoc "Provides validation functions for the Aria Engine definition.\n"
   alias Core

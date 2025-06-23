@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.DomainConverter.ActivityActions do
   @moduledoc "Creates basic activity actions for the domain.\n\nThis module handles the creation of durative actions for activities,\nconverting activity definitions into executable domain actions with\nproper resource allocation and temporal constraints.\n"
   require Logger

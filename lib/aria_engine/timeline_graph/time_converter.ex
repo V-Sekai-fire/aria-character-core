@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule TimelineGraph.TimeConverter do
   @moduledoc "Utility functions for converting between different time formats and units.\n\nThis module handles conversions between DateTime, STN time units, and various\ntime representations used throughout the timeline graph system.\n"
   @type time_unit :: :microsecond | :millisecond | :second | :minute | :hour | :day

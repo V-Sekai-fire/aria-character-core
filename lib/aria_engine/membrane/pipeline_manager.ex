@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.PipelineManager do
   @moduledoc "Manager for Membrane pipeline lifecycle and dynamic topology configuration.\n\nHandles pipeline creation, element linking, supervision, and runtime\nreconfiguration of the planning pipeline.\n"
   use GenServer

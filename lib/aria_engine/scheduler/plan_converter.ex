@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.PlanConverter do
   @moduledoc "Converts planning results back to scheduler format.\n\nHandles the translation from hybrid planner results (encapsulated plans)\nback to scheduler concepts (schedules with timing and resource assignments).\n"
   require Logger

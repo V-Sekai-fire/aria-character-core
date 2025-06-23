@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Plan.NodeExpansion do
   @moduledoc "Functions for expanding different types of nodes in the solution tree.\n"
   require Logger

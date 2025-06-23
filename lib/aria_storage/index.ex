@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.Index do
   @moduledoc "Index file handling for desync-compatible format.\n\nSupports:\n- .caibx files (chunk index for blobs)\n- .caidx files (chunk index for catar archives)\n- Efficient index serialization/deserialization\n- Index metadata and validation\n"
   alias AriaStorage.Chunks

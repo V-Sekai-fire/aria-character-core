@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaTown.TimeManager do
   @moduledoc "Time management system for Aria Town.\n\nThis is currently a stub implementation that provides the basic GenServer\nstructure needed for the supervision tree. Future development will add:\n\n- Game time progression and scheduling\n- Day/night cycles and temporal events\n- NPC scheduling coordination\n- Time-based triggers and automation\n\n## Architecture Notes\n\nThe TimeManager should eventually coordinate with:\n- NPCManager for scheduled behaviors\n- AriaEngine temporal planner for time-based planning\n- Event system for temporal triggers\n"
   use GenServer

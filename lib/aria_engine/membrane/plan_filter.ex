@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.PlanFilter do
   @moduledoc "Membrane Filter element that converts MCP requests to planning parameters.\n\nThis element validates MCP input and transforms it into the format expected\nby the HybridCoordinator planning system using the existing PlanTransformer.\n"
   use Membrane.Filter

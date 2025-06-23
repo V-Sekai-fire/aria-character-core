@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaAuth.Macaroons do
   @moduledoc "Macaroon-based authentication tokens using Fly.io's macfly library.\n\nMacaroons provide better security than JWT tokens because they support:\n- Attenuation: Restricting tokens without server communication\n- Delegation: Safely passing tokens with reduced permissions\n- Third-party caveats: External authorization integration\n- Contextual constraints: Time, location, action restrictions\n"
   alias AriaAuth.Accounts.User

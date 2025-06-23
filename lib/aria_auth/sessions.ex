@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaAuth.Sessions do
   @moduledoc "The Sessions context for managing user sessions.\n"
   import Ecto.Query, warn: false

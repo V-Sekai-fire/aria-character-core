@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.HybridCoordinatorV2.ExecutionOperations do
   @moduledoc "Execution operations for HybridCoordinatorV2.\n\nHandles plan execution using injected execution strategy dependencies.\n"
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()

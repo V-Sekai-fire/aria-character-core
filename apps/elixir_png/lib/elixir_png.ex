@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule ElixirPng do
   @moduledoc """
   Pure Elixir PNG binary format generation library.

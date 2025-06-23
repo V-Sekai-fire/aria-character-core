@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Domain.BehaviourImpl do
   @moduledoc "Contains the implementation of `DomainBehaviour` callbacks.\n"
   @behaviour DomainBehaviour

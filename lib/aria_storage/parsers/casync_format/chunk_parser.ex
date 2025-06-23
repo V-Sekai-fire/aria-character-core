@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.Parsers.CasyncFormat.ChunkParser do
   @moduledoc "Parser for ARCANA chunk files (.cacnk format).\n\nHandles parsing of compressed chunk data with headers containing\ncompression information and chunk metadata.\n"
   require AriaStorage.Parsers.CasyncFormat.Constants

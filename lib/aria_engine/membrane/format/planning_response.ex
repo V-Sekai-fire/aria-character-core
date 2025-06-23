@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.Format.PlanningResult do
   @moduledoc "Membrane format for planning execution results.\n\nThis format represents the results from planning execution by the\nHybridCoordinator. It includes the planning status, result data,\nexecution metadata, and performance metrics.\n"
   defstruct [:status, :result, :execution_metadata, :request_id, :performance_metrics]

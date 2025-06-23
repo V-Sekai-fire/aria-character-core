@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.Strategies do
   @doc "Validate that a set of strategies are compatible with each other.\n\nThis ensures that strategies can work together without conflicts.\n"
   @spec validate_strategy_compatibility(map()) :: :ok | {:error, String.t()}

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 ExUnit.start()
 Code.require_file("test/aria_engine/test/support/state_v2_mock.ex")
 

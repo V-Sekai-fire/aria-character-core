@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.DomainConverter.DurativeActions do
   @moduledoc "Creates durative actions for activities with temporal constraints.\n\nThis module handles the creation of Domain.DurativeAction structs\nthat represent activities with explicit temporal durations, conditions,\nand effects that occur at different time points.\n"
   require Logger

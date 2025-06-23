@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Domain.Core do
   @moduledoc "Represents a planning domain in the GTPhop planner (Elixir port of GTPyhop).\n\nA domain contains:\n- Actions: Named functions that modify the world state\n- Task methods: Named functions that decompose tasks into subtasks\n- Unigoal methods: Named functions that achieve single goals\n- Multigoal methods: Named functions that achieve multiple goals simultaneously\n\nThis implementation aligns with GTPyhop's approach where:\n- Actions are stored as name -> function mappings\n- Methods are stored as task_name -> list of {name, function} tuples\n- Method names are preserved for logging, blacklisting, and error reporting\n\nExample:\n```elixir\ndomain = Domain.new(\"logistics\")\n|> Domain.add_action(:move, &move_action/2)\n|> Domain.add_task_methods(\"transport\", [\n     {\"transport\", &transport_by_truck/2},\n     {\"transport\", &transport_by_plane/2}\n   ])\n```\n"
   require Logger

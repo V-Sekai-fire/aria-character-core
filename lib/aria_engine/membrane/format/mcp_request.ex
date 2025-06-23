@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.Format.MCPRequest do
   @moduledoc "Membrane format for MCP (Model Context Protocol) requests.\n\nThis format represents a standardized MCP request that can flow through\nthe Membrane pipeline for processing by various filters and elements.\n"
   @derive Jason.Encoder

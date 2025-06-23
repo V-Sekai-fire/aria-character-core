@@ -26,18 +26,20 @@ The lib/ directory contains these major module groups:
 Based on code analysis, the dependency relationships are:
 
 **Leaf Modules (minimal dependencies):**
+
 - `aria_png_generator` - Only depends on standard library
 - `aria_security` - Self-contained security utilities
 - `aria_storage` - Self-contained storage system
 
 **Intermediate Dependencies:**
+
 - `aria_auth` - Depends on aria_security for some functionality
 - `aria_town` - Depends on aria_engine for planning
 
 **Core Dependencies:**
+
 - `aria_engine` - Central module that many others depend on
 
 ## Decision
 
 Extract modules in dependency order, starting with leaf modules that have no internal dependencies.
-

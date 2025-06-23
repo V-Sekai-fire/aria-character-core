@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaSecurity.Secrets do
   @moduledoc "Security service for managing secrets using OpenBao (open-source Vault alternative).\n\nThis module provides a secure interface for storing and retrieving secrets\nusing OpenBao as the backend. It uses the Vaultex library for communication\nwith OpenBao.\n\n## Configuration\n\nThe module expects OpenBao to be configured with:\n- Host: The OpenBao server hostname\n- Port: The OpenBao server port\n- Scheme: The protocol scheme (http/https)\n- Auth: Authentication configuration with token method\n\n## Examples\n\n    # Initialize connection to OpenBao\n    config = %{\n      host: \"localhost\",\n      port: 8200,\n      scheme: \"http\",\n      auth: %{\n        method: :token,\n        credentials: %{token: \"your-token\"}\n      }\n    }\n    \n    {:ok, status} = AriaSecurity.Secrets.init(config)\n    \n    # Store a secret\n    {:ok, _} = AriaSecurity.Secrets.write(\"secret/myapp\", %{password: \"secret123\"})\n    \n    # Retrieve a secret\n    {:ok, data} = AriaSecurity.Secrets.read(\"secret/myapp\")\n"
   require Logger

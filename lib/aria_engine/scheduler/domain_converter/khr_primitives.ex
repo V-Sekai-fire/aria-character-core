@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.DomainConverter.KHRPrimitives do
   @moduledoc "Creates KHR (Khronos Interactivity) primitive sequences for activities.\n\nThis module handles the creation of KHR primitive action sequences\nthat represent the low-level execution steps for activities,\nproviding detailed temporal and resource management primitives.\n"
   require Logger

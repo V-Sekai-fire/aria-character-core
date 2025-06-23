@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.Core do
   @moduledoc "Private implementation core for AriaEngine.Scheduler.\n\nOrchestrates the scheduling process by coordinating between specialized modules\nfor domain conversion, state management, plan conversion, and analysis.\n\nThis module should not be used directly - use AriaEngine.Scheduler instead.\n"
   require Logger

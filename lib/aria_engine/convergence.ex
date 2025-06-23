@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Convergence do
   @moduledoc "Unified convergence solving API with Flow-based parallel processing.\n\nThis module provides a clean interface for solving convergence problems\nusing Flow-based parallel processing with automatic batch optimization\nfor multiple problems via the new BatchProcessor.\n"
   require Logger

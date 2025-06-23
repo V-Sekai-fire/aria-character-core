@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule TemporalPlanner.STNMethodTest do
   use ExUnit.Case, async: true
   alias TemporalPlanner.STNMethod

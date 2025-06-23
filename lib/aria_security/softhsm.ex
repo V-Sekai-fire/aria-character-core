@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaSecurity.SoftHSM do
   @moduledoc "SoftHSM integration module for managing PKCS#11 operations.\n\nThis module provides a high-level interface for working with SoftHSM\ntokens, keys, and cryptographic operations through the PKCS#11 standard.\n"
   require Logger

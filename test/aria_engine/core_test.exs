@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule CoreTest do
   @moduledoc "Tests for the Core module - foundational AriaEngine type definitions and constructor.\n\nThis module tests the core infrastructure that other components depend on,\nincluding type definitions, struct construction, and default value handling.\n"
   use ExUnit.Case, async: true

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule TimelineGraph.LODManager do
   @moduledoc "Manages Level of Detail (LOD) for entity timelines.\n\nThis module handles the promotion and management of timeline detail levels\nbased on entity activity, agent status, and system performance requirements.\n"
   @type entity_id :: String.t()

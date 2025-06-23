@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
   @moduledoc "Default logging strategy implementation using Elixir's Logger.\n\nThis strategy encapsulates logging operations while providing the clean\nstrategy interface defined in ADR-091.\n"
   @behaviour HybridPlanner.Strategies.LoggingStrategy

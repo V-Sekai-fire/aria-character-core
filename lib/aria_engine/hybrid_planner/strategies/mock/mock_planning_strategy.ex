@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   @moduledoc "Mock planning strategy for testing purposes.\n\nThis strategy provides predictable, configurable behavior for testing\nthe hybrid planner without dependencies on actual planning algorithms.\nUses static configuration via application environment for simplicity.\n\n## Configuration\n\nConfigure mock behavior via application environment:\n\n```elixir\n# Set custom results for testing\nApplication.put_env(:aria_engine, :mock_plan_result, {:ok, [%{action: :test_action, args: [\"result\"]}]})\nApplication.put_env(:aria_engine, :mock_replan_result, {:error, \"replan failed\"})\nApplication.put_env(:aria_engine, :mock_validate_result, {:ok, %AriaEngine.StateV2{}})\n```\n\n## Usage\n\n```elixir\n# Use in tests with default successful behavior\nfactory = StrategyFactory.new(%{planning_strategy: MockPlanningStrategy})\n\n# Configure specific results for test scenarios\nApplication.put_env(:aria_engine, :mock_plan_result, {:error, \"planning failed\"})\nresult = MockPlanningStrategy.plan(domain, state, goals, [])\n# => {:error, \"planning failed\"}\n```\n"
   @behaviour HybridPlanner.Strategies.PlanningStrategy

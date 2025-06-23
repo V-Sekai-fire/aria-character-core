@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.Chunks.RollingHash do
   @moduledoc "Rolling hash implementation using buzhash algorithm.\n\nThis module implements the buzhash rolling hash algorithm that's fully compatible\nwith the Go implementation of desync/casync. It uses the same hash table values\nand boundary detection algorithm to produce identical chunking results.\n"
   import Bitwise

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule TemporalPuzzleDebug do
   alias {Domain, State, Planner}
   alias Timeline.Interval

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
   @moduledoc "Core planning operations for HybridCoordinatorV2.\n\nHandles HTN planning, temporal constraint validation, and plan creation\nusing injected strategy dependencies.\n"
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()

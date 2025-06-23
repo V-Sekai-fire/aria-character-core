@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.StateManager do
   @moduledoc "Manages state creation and resource allocation for the scheduler.\n\nHandles the creation of initial states with entities and resources,\nand manages resource allocation during planning execution.\n"
   require Logger

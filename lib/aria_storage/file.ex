@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaStorage.File do
   @moduledoc "Ecto schema for tracking file metadata in the storage system.\n\nThis struct represents file records that track the relationship between\nuploaded files and their chunked storage representation.\n"
   use Ecto.Schema

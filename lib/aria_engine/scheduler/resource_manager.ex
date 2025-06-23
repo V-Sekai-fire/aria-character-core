@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Scheduler.ResourceManager do
   @moduledoc "Resource allocation and management for the scheduler.\n\nHandles resource availability checking, allocation, and release operations\nfor activities with resource requirements.\n"
   require Logger

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule StateQuantifiersTest do
   @moduledoc "Tests for quantifier support (existential and universal) in State.\n\nThese tests verify the implementation of Phase 1 from ADR-085: Quantifiers Support.\n"
   use ExUnit.Case, async: true
