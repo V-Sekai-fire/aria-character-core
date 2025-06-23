@@ -118,6 +118,9 @@ defmodule AriaCharacterCore.MixProject do
       # Git operations
       {:egit, "~> 0.1.9"},
 
+      # AST parsing and manipulation
+      {:sourceror, "~> 1.0"},
+
       # UUID Generation
       {:elixir_uuid, "~> 1.2"},
       {:uuid, "~> 1.1", app: false},

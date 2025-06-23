@@ -77,17 +77,12 @@ defmodule AstMigrate.Rules.StateV2ToState do
     )
 
     with {:ok, content} <- File.read(file_path),
-         {:ok, ast} <- Code.string_to_quoted(content),
-         transformed_ast <- transform_ast(ast),
-         transformed_code <- Macro.to_string(transformed_ast) do
-
-      transformations_applied = count_transformations(content, transformed_code)
+         {:ok, transformed_code} <- transform_file_content(content) do
 
       Logger.debug("AST transformation completed for file",
         module: :ast_migrate_rules_state_v2_to_state,
         operation: :transform_file,
         file: file_path,
-        transformations_applied: transformations_applied,
         original_size: byte_size(content),
         transformed_size: byte_size(transformed_code)
       )
@@ -102,6 +97,43 @@ defmodule AstMigrate.Rules.StateV2ToState do
           error: inspect(reason)
         )
         {:error, "Failed to transform #{file_path}: #{inspect(reason)}"}
+    end
+  end
+
+  @doc """
+  Transform file content directly (used by advanced rule system).
+  """
+  @spec transform_file_content(String.t()) :: {:ok, String.t()} | {:error, String.t()}
+  def transform_file_content(content) do
+    Logger.debug("Starting AST transformation for content",
+      module: :ast_migrate_rules_state_v2_to_state,
+      operation: :transform_file_content,
+      content_size: byte_size(content)
+    )
+
+    with {:ok, ast} <- Code.string_to_quoted(content),
+         transformed_ast <- transform_ast(ast),
+         transformed_code <- Macro.to_string(transformed_ast) do
+
+      transformations_applied = count_transformations(content, transformed_code)
+
+      Logger.debug("AST transformation completed for content",
+        module: :ast_migrate_rules_state_v2_to_state,
+        operation: :transform_file_content,
+        transformations_applied: transformations_applied,
+        original_size: byte_size(content),
+        transformed_size: byte_size(transformed_code)
+      )
+
+      {:ok, transformed_code}
+    else
+      {:error, reason} ->
+        Logger.error("AST transformation failed for content",
+          module: :ast_migrate_rules_state_v2_to_state,
+          operation: :transform_file_content,
+          error: inspect(reason)
+        )
+        {:error, "Failed to transform content: #{inspect(reason)}"}
     end
   end
 

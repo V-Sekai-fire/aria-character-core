@@ -51,8 +51,8 @@ defmodule AstMigrate.Git do
   @doc """
   Ensure the working tree is clean before applying transformations.
   """
-  @spec ensure_clean_working_tree() :: :ok | {:error, String.t()}
-  def ensure_clean_working_tree do
+  @spec ensure_clean_working_tree(String.t()) :: :ok | {:error, String.t()}
+  def ensure_clean_working_tree(repo_path \\ ".") do
     with {:ok, repo} <- open_repository(),
          status when is_list(status) <- :git.status(repo) do
       case status do
@@ -76,6 +76,14 @@ defmodule AstMigrate.Git do
   """
   @spec commit_transformations([file_path()], String.t()) :: {:ok, commit_hash()} | {:error, String.t()}
   def commit_transformations(files, message) do
+    commit_transformations(".", message, files)
+  end
+
+  @doc """
+  Commit transformations with proper AST migration metadata (3-arity version).
+  """
+  @spec commit_transformations(String.t(), String.t(), [file_path()]) :: {:ok, commit_hash()} | {:error, String.t()}
+  def commit_transformations(repo_path, message, files) do
     Logger.debug("Starting Git commit for transformations",
       module: :ast_migrate_git,
       operation: :commit_transformations,
