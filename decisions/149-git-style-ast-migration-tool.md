@@ -290,8 +290,8 @@ fi
 - [x] Create AST-based StateV2→State transformation using Code.string_to_quoted/2
 - [x] Add EGit integration for automatic commits
 - [x] Implement basic pattern matching on AST nodes
-- [ ] Test on subset of current codebase with real AST transformations
-- [ ] **Deliverable**: `mix ast.simple --rule state_v2_to_state --commit "Convert StateV2"`
+- [x] Test on subset of current codebase with real AST transformations
+- [x] **Deliverable**: `mix ast.simple --rule state_v2_to_state --commit "Convert StateV2"`
 
 ### **Phase 1: Git-Integrated AST Foundation (2 weeks)**
 - [ ] Build AST parser using Sourceror for robust parsing

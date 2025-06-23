@@ -112,9 +112,24 @@ defmodule AstMigrate.Rules.StateV2ToState do
     {:%, meta, [{:__aliases__, alias_meta, [:State]}, fields]}
   end
 
+  # Transform fully qualified StateV2 struct usage: %AriaEngine.StateV2{} -> %AriaEngine.State{}
+  defp transform_ast({:%, meta, [{:__aliases__, alias_meta, [:AriaEngine, :StateV2]}, fields]}) do
+    {:%, meta, [{:__aliases__, alias_meta, [:AriaEngine, :State]}, fields]}
+  end
+
   # Transform StateV2 module calls: StateV2.function() -> State.function()
   defp transform_ast({{:., dot_meta, [{:__aliases__, alias_meta, [:StateV2]}, function]}, call_meta, args}) do
     {{:., dot_meta, [{:__aliases__, alias_meta, [:State]}, function]}, call_meta, args}
+  end
+
+  # Transform fully qualified StateV2 module calls: AriaEngine.StateV2.function() -> AriaEngine.State.function()
+  defp transform_ast({{:., dot_meta, [{:__aliases__, alias_meta, [:AriaEngine, :StateV2]}, function]}, call_meta, args}) do
+    {{:., dot_meta, [{:__aliases__, alias_meta, [:AriaEngine, :State]}, function]}, call_meta, args}
+  end
+
+  # Transform StateV2 type references: AriaEngine.StateV2.t() -> AriaEngine.State.t()
+  defp transform_ast({:__aliases__, meta, [:AriaEngine, :StateV2]}) do
+    {:__aliases__, meta, [:AriaEngine, :State]}
   end
 
   # Transform alias statements: alias AriaEngine.StateV2 -> alias AriaEngine.State
