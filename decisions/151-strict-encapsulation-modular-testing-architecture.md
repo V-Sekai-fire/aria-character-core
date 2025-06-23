@@ -248,10 +248,15 @@ Each library extraction follows this complete process:
   - ✅ Stub implementation with clear API boundaries
   - ✅ Migration tombstone created
   - ✅ Updated main application to remove direct GenServer starts
-- [ ] Extract remaining `aria_png_generator` functionality
-- [ ] Verify independent test suites for each
+- [x] Extract remaining `aria_png_generator` functionality ✅ **COMPLETED (pre-existing)**
+  - ✅ Already extracted to `apps/png_generator/` 
+  - ✅ Tombstone file created documenting migration
+  - ✅ Module renamed from AriaEngine.PngGenerator to PngGenerator
+- [x] Verify independent test suites for each ✅ **COMPLETED 2025-06-23**
+  - ✅ All extracted apps have independent test suites
+  - ✅ Zero cross-dependencies in unit tests confirmed
 
-**Phase 2 Progress:** 4/4 tasks completed (aria_security, aria_storage, aria_auth, and aria_town extractions successful)
+**Phase 2 Progress:** 5/5 tasks completed (all leaf modules successfully extracted)
 
 ### Phase 3: Extract Intermediate Dependencies
 - [x] Extract `aria_auth` (depends on aria_security) ✅ **COMPLETED 2025-06-23**
@@ -261,11 +266,72 @@ Each library extraction follows this complete process:
 **Phase 3 Progress:** 2/3 tasks completed (aria_auth and aria_town extractions successful)
 
 ### Phase 4: Extract Core Dependencies
-- [ ] Extract `aria_engine` components by subdomain
-- [ ] Split large modules using existing patterns
-- [ ] Maintain API compatibility during transition
 
-**Phase 4 Progress:** 0/3 tasks completed
+**AriaEngine Subdomain Analysis:**
+
+Based on directory structure analysis, aria_engine contains these logical subdomains:
+
+1. **aria_temporal_planner** - Temporal reasoning and STN solving
+   - `temporal_planner/` - STN planner, actions, methods
+   - `timeline/` - Timeline management, intervals, Allen relations
+   - Dependencies: External (MiniZinc), minimal internal coupling
+
+2. **aria_hybrid_planner** - Hybrid planning coordination
+   - `hybrid_planner/` - Strategy coordination, factory patterns
+   - `plan/` - Core planning logic, backtracking, execution
+   - Dependencies: aria_temporal_planner, external (libgraph)
+
+3. **aria_scheduler** - Activity scheduling and domain conversion
+   - `scheduler/` - Core scheduling, domain conversion, resource management
+   - Dependencies: aria_hybrid_planner, aria_temporal_planner
+
+4. **aria_membrane_pipeline** - Membrane-based processing pipelines
+   - `membrane/` - Filters, sources, sinks, pipeline management
+   - Dependencies: External (Membrane), aria_scheduler
+
+5. **aria_engine_core** - Core state, domain, and utility functions
+   - Root level files: `state.ex`, `domain.ex`, `multigoal.ex`, etc.
+   - Dependencies: Minimal, mostly self-contained
+
+**Extraction Strategy:**
+
+- [x] **Phase 4a**: Extract `aria_temporal_planner` (foundation layer) ✅ **COMPLETED 2025-06-23**
+  - ✅ Created `apps/aria_temporal_planner/` with proper structure
+  - ✅ Moved `temporal_planner/` and `timeline/` subdirectories
+  - ✅ Extracted related root files (`timeline.ex`, `timeline_graph.ex`)
+  - ✅ Migrated temporal planning tests (26 files compiled successfully)
+  - ✅ Verified STN solving and timeline functionality
+
+- [ ] **Phase 4b**: Extract `aria_hybrid_planner` (planning layer)
+  - Move `hybrid_planner/` and `plan/` subdirectories
+  - Extract planning-related root files (`planning.ex`, `planner_adapter.ex`)
+  - Migrate hybrid planning tests
+  - Configure dependency on aria_temporal_planner
+
+- [ ] **Phase 4c**: Extract `aria_scheduler` (scheduling layer)
+  - Move `scheduler/` subdirectory
+  - Extract scheduler root file (`scheduler.ex`)
+  - Migrate scheduling tests
+  - Configure dependencies on aria_hybrid_planner
+
+- [ ] **Phase 4d**: Extract `aria_membrane_pipeline` (pipeline layer)
+  - Move `membrane/` subdirectory
+  - Migrate membrane pipeline tests
+  - Configure dependencies on aria_scheduler
+
+- [*] **Phase 4e**: Consolidate `aria_engine_core` (core utilities) 🔄 **IN PROGRESS 2025-06-23**
+  - ✅ Created `apps/aria_engine_core/` with proper structure
+  - ✅ Moved core files: `state.ex`, `domain.ex`, `multigoal.ex`, `utils.ex`, `info.ex`, `validation.ex`, `state_v2.ex`
+  - ✅ Moved `minizinc/` subdirectory for external solver execution
+  - ✅ Configured dependencies (jason, libgraph, porcelain)
+  - ✅ Updated main `mix.exs` to include aria_engine_core dependency
+  - ✅ Updated aria_temporal_planner to depend on aria_engine_core
+  - ✅ Verified compilation of all apps (with expected warnings for missing domain subdirectories)
+  - [ ] Move remaining domain subdirectories from lib/aria_engine/domain/
+  - [ ] Migrate core utility tests
+  - [ ] Remove duplicated modules from main lib/aria_engine/
+
+**Phase 4 Progress:** 0/5 subdomain extractions completed
 
 ### Phase 5: Verify Testing Architecture
 - [ ] Audit all test suites for proper isolation
