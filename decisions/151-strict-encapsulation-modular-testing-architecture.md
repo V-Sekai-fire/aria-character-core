@@ -319,19 +319,21 @@ Based on directory structure analysis, aria_engine contains these logical subdom
   - Migrate membrane pipeline tests
   - Configure dependencies on aria_scheduler
 
-- [*] **Phase 4e**: Consolidate `aria_engine_core` (core utilities) 🔄 **IN PROGRESS 2025-06-23**
+- [x] **Phase 4e**: Consolidate `aria_engine_core` (core utilities) ✅ **COMPLETED 2025-06-23**
   - ✅ Created `apps/aria_engine_core/` with proper structure
   - ✅ Moved core files: `state.ex`, `domain.ex`, `multigoal.ex`, `utils.ex`, `info.ex`, `validation.ex`, `state_v2.ex`
   - ✅ Moved `minizinc/` subdirectory for external solver execution
+  - ✅ Moved domain subdirectory with actions, methods, and durative actions
+  - ✅ Moved `domain_behaviour.ex` and `actions.ex` root files
   - ✅ Configured dependencies (jason, libgraph, porcelain)
   - ✅ Updated main `mix.exs` to include aria_engine_core dependency
   - ✅ Updated aria_temporal_planner to depend on aria_engine_core
-  - ✅ Verified compilation of all apps (with expected warnings for missing domain subdirectories)
-  - [ ] Move remaining domain subdirectories from lib/aria_engine/domain/
-  - [ ] Migrate core utility tests
-  - [ ] Remove duplicated modules from main lib/aria_engine/
+  - ✅ Migrated core utility tests (26 tests, 0 failures)
+  - ✅ Removed duplicated modules from main lib/aria_engine/
+  - ✅ Verified independent test suite and compilation
+  - ✅ Created migration tombstone documenting extraction
 
-**Phase 4 Progress:** 0/5 subdomain extractions completed
+**Phase 4 Progress:** 2/5 subdomain extractions completed (aria_temporal_planner and aria_engine_core)
 
 ### Phase 5: Verify Testing Architecture
 - [ ] Audit all test suites for proper isolation
