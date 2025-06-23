@@ -5,6 +5,7 @@ defmodule Timeline do
   @moduledoc "Timeline module with interval-based storage using Path Consistency (PC-2) algorithm\nfor Simple Temporal Network (STN) solving.\n\nAccepts time input in seconds but solves at 1ms tick precision.\nSupports Allen's interval algebra with usability improvements.\nRespects agent vs entity distinction in temporal constraints.\n\n## Time Representation\n- External API: seconds (float/integer)\n- Internal storage/solving: milliseconds (integer)\n- Precision: 1ms ticks as per ADR-006\n\n## Features\n- All 13 Allen interval relations\n- Path Consistency (PC-2) STN solving\n- Agent/entity distinction\n- Fluent API for constraint building\n- Comprehensive edge case handling\n\n## Examples\n\n    iex> timeline = Timeline.new()\n    iex> alias Timeline.Interval\n    iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval = Interval.new(start_time, end_time)\n    iex> timeline = Timeline.add_interval(timeline, interval)\n    iex> length(Map.keys(timeline.intervals))\n    1\n\n## References\n\n- ADR-078: Timeline Module PC-2 STN Implementation\n- ADR-079: Timeline Module Implementation Progress\n- ADR-045: Allen's Interval Algebra Temporal Relationships\n- ADR-040: Temporal Constraint Solver Selection\n- ADR-046: Interval Notation Usability\n- ADR-006: Game Engine Real-time Execution (1ms tick requirement)\n"
   alias Timeline.Interval
   alias Timeline.Internal.STN
+  alias AriaEngine.Timeline.Bridge, as: Bridge
   @type t :: %__MODULE__{intervals: %{Interval.id() => Interval.t()}, stn: STN.t()}
   defstruct intervals: %{}, stn: STN.new(), metadata: %{}
   @spec new(keyword()) :: t()
@@ -204,6 +205,133 @@ defmodule Timeline do
   @spec from_stn(STN.t()) :: t()
   def from_stn(stn) do
     %__MODULE__{intervals: %{}, stn: stn, metadata: %{}}
+  end
+
+  # Bridge management functions
+  @doc "Adds a bridge to the timeline.\n"
+  @spec add_bridge(t(), Bridge.t()) :: t()
+  def add_bridge(%__MODULE__{} = timeline, bridge) do
+    bridges = Map.get(timeline.metadata, :bridges, %{})
+    updated_bridges = Map.put(bridges, bridge.id, bridge)
+    put_in(timeline.metadata[:bridges], updated_bridges)
+  end
+
+  @doc "Removes a bridge from the timeline.\n"
+  @spec remove_bridge(t(), String.t()) :: t()
+  def remove_bridge(%__MODULE__{} = timeline, bridge_id) do
+    bridges = Map.get(timeline.metadata, :bridges, %{})
+    updated_bridges = Map.delete(bridges, bridge_id)
+    put_in(timeline.metadata[:bridges], updated_bridges)
+  end
+
+  @doc "Gets a bridge by ID from the timeline.\n"
+  @spec get_bridge(t(), String.t()) :: Bridge.t() | nil
+  def get_bridge(%__MODULE__{} = timeline, bridge_id) do
+    bridges = Map.get(timeline.metadata, :bridges, %{})
+    Map.get(bridges, bridge_id)
+  end
+
+  @doc "Gets all bridges from the timeline, sorted by position.\n"
+  @spec get_bridges(t()) :: [Bridge.t()]
+  def get_bridges(%__MODULE__{} = timeline) do
+    bridges = Map.get(timeline.metadata, :bridges, %{})
+    bridges
+    |> Map.values()
+    |> Enum.sort_by(& &1.position, DateTime)
+  end
+
+  @doc "Updates a bridge in the timeline.\n"
+  @spec update_bridge(t(), Bridge.t()) :: t()
+  def update_bridge(%__MODULE__{} = timeline, bridge) do
+    bridges = Map.get(timeline.metadata, :bridges, %{})
+    updated_bridges = Map.put(bridges, bridge.id, bridge)
+    put_in(timeline.metadata[:bridges], updated_bridges)
+  end
+
+  @doc "Validates bridge placement in the timeline.\n"
+  @spec validate_bridge_placement(t(), Bridge.t()) :: :ok | {:error, String.t()}
+  def validate_bridge_placement(%__MODULE__{} = timeline, bridge) do
+    bridges = Map.get(timeline.metadata, :bridges, %{})
+
+    cond do
+      Map.has_key?(bridges, bridge.id) ->
+        {:error, "Bridge with ID '#{bridge.id}' already exists"}
+
+      bridge_at_interval_boundary?(timeline, bridge) ->
+        {:error, "Bridge cannot be placed at interval boundary"}
+
+      true ->
+        :ok
+    end
+  end
+
+  @doc "Segments the timeline by bridges.\n"
+  @spec segment_by_bridges(t()) :: [map()]
+  def segment_by_bridges(%__MODULE__{} = timeline) do
+    bridges = get_bridges(timeline)
+    intervals = Map.values(timeline.intervals)
+
+    case bridges do
+      [] ->
+        [%{start_time: nil, end_time: nil, intervals: intervals}]
+
+      _ ->
+        create_segments_from_bridges(bridges, intervals)
+    end
+  end
+
+  @doc "Gets all bridge positions from the timeline, sorted.\n"
+  @spec bridge_positions(t()) :: [DateTime.t()]
+  def bridge_positions(%__MODULE__{} = timeline) do
+    timeline
+    |> get_bridges()
+    |> Enum.map(& &1.position)
+    |> Enum.sort(DateTime)
+  end
+
+  @doc "Gets bridges within a time range.\n"
+  @spec bridges_in_range(t(), DateTime.t(), DateTime.t()) :: [Bridge.t()]
+  def bridges_in_range(%__MODULE__{} = timeline, start_time, end_time) do
+    timeline
+    |> get_bridges()
+    |> Enum.filter(fn bridge ->
+      DateTime.compare(bridge.position, start_time) != :lt and
+      DateTime.compare(bridge.position, end_time) != :gt
+    end)
+  end
+
+  # Private helper functions for bridge management
+  defp bridge_at_interval_boundary?(%__MODULE__{} = timeline, bridge) do
+    timeline.intervals
+    |> Map.values()
+    |> Enum.any?(fn interval ->
+      DateTime.compare(bridge.position, interval.start_time) == :eq or
+      DateTime.compare(bridge.position, interval.end_time) == :eq
+    end)
+  end
+
+  defp create_segments_from_bridges(bridges, intervals) do
+    bridge_positions = Enum.map(bridges, & &1.position)
+
+    # Create segments between bridges
+    segments =
+      [nil | bridge_positions] ++ [nil]
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.map(fn [start_pos, end_pos] ->
+        segment_intervals = filter_intervals_by_range(intervals, start_pos, end_pos)
+        %{start_time: start_pos, end_time: end_pos, intervals: segment_intervals}
+      end)
+      |> Enum.reject(fn segment -> Enum.empty?(segment.intervals) end)
+
+    segments
+  end
+
+  defp filter_intervals_by_range(intervals, start_pos, end_pos) do
+    Enum.filter(intervals, fn interval ->
+      start_ok = start_pos == nil or DateTime.compare(interval.start_time, start_pos) != :lt
+      end_ok = end_pos == nil or DateTime.compare(interval.end_time, end_pos) != :gt
+      start_ok and end_ok
+    end)
   end
 
   defp apply_solved_times_to_intervals(timeline, solved_times) do

@@ -1,6 +1,6 @@
 defmodule AriaEngine.Timeline.IntervalISO8601Test do
   use ExUnit.Case, async: true
-  alias AriaEngine.Timeline.Interval
+  alias Timeline.Interval
 
   describe("new_fixed_schedule/2") do
     test "creates interval from ISO 8601 datetime strings" do
@@ -109,46 +109,27 @@ defmodule AriaEngine.Timeline.IntervalISO8601Test do
   end
 
   describe("backward compatibility with DateTime constructors") do
-    test "new/2 with DateTime structs shows deprecation warning" do
-      start_dt = "2025-06-22T10:00:00Z"
-      end_dt = "2025-06-22T11:00:00Z"
-      import ExUnit.CaptureIO
+    test "new_fixed_schedule/2 with ISO 8601 strings works correctly" do
+      start_iso = "2025-06-22T10:00:00Z"
+      end_iso = "2025-06-22T11:00:00Z"
 
-      output =
-        capture_io(:stderr, fn ->
-          interval =
-            Interval.new_fixed_schedule(
-              start_dt,
-              end_dt
-            )
+      interval = Interval.new_fixed_schedule(start_iso, end_iso)
 
-          assert interval.start_time == start_dt
-          assert interval.end_time == end_dt
-        end)
-
-      assert output =~ "deprecated"
-      assert output =~ "new_fixed_schedule/2"
+      assert interval.start_time == ~U[2025-06-22 10:00:00Z]
+      assert interval.end_time == ~U[2025-06-22 11:00:00Z]
+      assert interval.metadata.iso8601_start == start_iso
+      assert interval.metadata.iso8601_end == end_iso
     end
 
-    test "new/3 with DateTime structs shows deprecation warning" do
-      start_dt = "2025-06-22T10:00:00Z"
-      end_dt = "2025-06-22T11:00:00Z"
-      import ExUnit.CaptureIO
+    test "new_fixed_schedule/3 with ISO 8601 strings and options works correctly" do
+      start_iso = "2025-06-22T10:00:00Z"
+      end_iso = "2025-06-22T11:00:00Z"
 
-      output =
-        capture_io(:stderr, fn ->
-          interval =
-            Interval.new_fixed_schedule(
-              start_dt,
-              end_dt,
-              metadata: %{type: :action}
-            )
+      interval = Interval.new_fixed_schedule(start_iso, end_iso, metadata: %{type: :action})
 
-          assert interval.metadata.type == :action
-        end)
-
-      assert output =~ "deprecated"
-      assert output =~ "new_fixed_schedule/3"
+      assert interval.start_time == ~U[2025-06-22 10:00:00Z]
+      assert interval.end_time == ~U[2025-06-22 11:00:00Z]
+      assert interval.metadata.type == :action
     end
   end
 

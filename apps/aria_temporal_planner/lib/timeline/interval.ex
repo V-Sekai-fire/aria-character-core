@@ -74,6 +74,142 @@ defmodule Timeline.Interval do
     duration_ms(interval)
   end
 
+  @doc "Creates a new interval from ISO 8601 datetime strings.\n\nSupports both string arguments and map-based unified constructor patterns.\n\n## Examples\n\n    iex> interval = Timeline.Interval.new_fixed_schedule(\"2025-06-22T10:00:00Z\", \"2025-06-22T11:00:00Z\")\n    iex> interval.start_time\n    ~U[2025-06-22 10:00:00Z]\n\n"
+  @spec new_fixed_schedule(String.t(), String.t()) :: t()
+  def new_fixed_schedule(start_iso8601, end_iso8601) when is_binary(start_iso8601) and is_binary(end_iso8601) do
+    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+    {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
+    new(start_dt, end_dt, metadata: %{
+      fixed_schedule: true,
+      iso8601_start: start_iso8601,
+      iso8601_end: end_iso8601
+    })
+  end
+
+  @doc "Creates a new interval from ISO 8601 datetime strings with options.\n"
+  @spec new_fixed_schedule(String.t(), String.t(), keyword()) :: t()
+  def new_fixed_schedule(start_iso8601, end_iso8601, opts) when is_binary(start_iso8601) and is_binary(end_iso8601) and is_list(opts) do
+    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+    {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
+
+    # Merge fixed_schedule metadata with user-provided metadata
+    base_metadata = %{
+      fixed_schedule: true,
+      iso8601_start: start_iso8601,
+      iso8601_end: end_iso8601
+    }
+    user_metadata = Keyword.get(opts, :metadata, %{})
+    merged_metadata = Map.merge(base_metadata, user_metadata)
+
+    updated_opts = Keyword.put(opts, :metadata, merged_metadata)
+    new(start_dt, end_dt, updated_opts)
+  end
+
+  @doc "Creates a new interval using unified constructor pattern.\n\nSupports map-based patterns for different temporal specifications:\n- `%{start: iso8601, end: iso8601}` - Fixed schedule\n- `%{duration: iso8601_duration}` - Floating duration\n- `%{start: iso8601}` - Open-ended start\n- `%{end: iso8601}` - Open-ended end\n\n## Examples\n\n    iex> interval = Timeline.Interval.new_fixed_schedule(%{start: \"2025-06-22T10:00:00Z\", end: \"2025-06-22T11:00:00Z\"})\n    iex> interval.metadata.fixed_schedule\n    true\n\n"
+  @spec new_fixed_schedule(map()) :: t()
+  def new_fixed_schedule(%{start: start_iso8601, end: end_iso8601}) do
+    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+    {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
+    new(start_dt, end_dt, metadata: %{
+      fixed_schedule: true,
+      iso8601_start: start_iso8601,
+      iso8601_end: end_iso8601
+    })
+  end
+
+  def new_fixed_schedule(%{duration: duration_iso8601}) do
+    %__MODULE__{
+      id: generate_id(),
+      start_time: nil,
+      end_time: nil,
+      metadata: %{floating_duration: true, duration: duration_iso8601, iso8601_duration: duration_iso8601}
+    }
+  end
+
+  def new_fixed_schedule(%{start: start_iso8601}) do
+    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+    %__MODULE__{
+      id: generate_id(),
+      start_time: start_dt,
+      end_time: nil,
+      metadata: %{open_ended_start: true, iso8601_start: start_iso8601}
+    }
+  end
+
+  def new_fixed_schedule(%{end: end_iso8601}) do
+    {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
+    %__MODULE__{
+      id: generate_id(),
+      start_time: nil,
+      end_time: end_dt,
+      metadata: %{open_ended_end: true, iso8601_end: end_iso8601}
+    }
+  end
+
+  def new_fixed_schedule(%{start: start_iso8601}, opts) when is_list(opts) do
+    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+    %__MODULE__{
+      id: generate_id(),
+      start_time: start_dt,
+      end_time: nil,
+      agent: Keyword.get(opts, :agent),
+      entity: Keyword.get(opts, :entity),
+      metadata: Map.merge(%{open_ended_start: true}, Keyword.get(opts, :metadata, %{}))
+    }
+  end
+
+  def new_fixed_schedule(invalid_spec) do
+    raise ArgumentError, "Invalid temporal specification: #{inspect(invalid_spec)}"
+  end
+
+  @doc "Creates a floating duration interval from ISO 8601 duration string.\n\n## Examples\n\n    iex> interval = Timeline.Interval.new_floating_duration(\"PT2H\")\n    iex> interval.metadata.floating_duration\n    true\n\n"
+  @spec new_floating_duration(String.t()) :: t()
+  def new_floating_duration(duration_iso8601) when is_binary(duration_iso8601) do
+    %__MODULE__{
+      id: generate_id(),
+      start_time: nil,
+      end_time: nil,
+      metadata: %{floating_duration: true, duration: duration_iso8601, iso8601_duration: duration_iso8601}
+    }
+  end
+
+  @doc "Creates a floating duration interval with options.\n"
+  @spec new_floating_duration(String.t(), keyword()) :: t()
+  def new_floating_duration(duration_iso8601, opts) when is_binary(duration_iso8601) and is_list(opts) do
+    %__MODULE__{
+      id: generate_id(),
+      start_time: nil,
+      end_time: nil,
+      agent: Keyword.get(opts, :agent),
+      entity: Keyword.get(opts, :entity),
+      metadata: Map.merge(%{floating_duration: true, duration: duration_iso8601, iso8601_duration: duration_iso8601}, Keyword.get(opts, :metadata, %{}))
+    }
+  end
+
+  @doc "Creates an open-ended interval with start time only.\n\n## Examples\n\n    iex> interval = Timeline.Interval.new_open_ended_start(\"2025-06-22T10:00:00Z\")\n    iex> interval.start_time\n    ~U[2025-06-22 10:00:00Z]\n\n"
+  @spec new_open_ended_start(String.t()) :: t()
+  def new_open_ended_start(start_iso8601) when is_binary(start_iso8601) do
+    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+    %__MODULE__{
+      id: generate_id(),
+      start_time: start_dt,
+      end_time: nil,
+      metadata: %{open_ended_start: true, iso8601_start: start_iso8601}
+    }
+  end
+
+  @doc "Creates an open-ended interval with end time only.\n\n## Examples\n\n    iex> interval = Timeline.Interval.new_open_ended_end(\"2025-06-22T17:00:00Z\")\n    iex> interval.end_time\n    ~U[2025-06-22 17:00:00Z]\n\n"
+  @spec new_open_ended_end(String.t()) :: t()
+  def new_open_ended_end(end_iso8601) when is_binary(end_iso8601) do
+    {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
+    %__MODULE__{
+      id: generate_id(),
+      start_time: nil,
+      end_time: end_dt,
+      metadata: %{open_ended_end: true, iso8601_end: end_iso8601}
+    }
+  end
+
   @doc "Gets the duration of the interval in a specific time unit.\n\n## Examples\n\n    iex> start_dt = DateTime.from_naive!(~N[2023-01-01 00:00:00], \"Etc/UTC\")\n    iex> end_dt = DateTime.from_naive!(~N[2023-01-01 01:00:00], \"Etc/UTC\")\n    iex> interval = Timeline.Interval.new(start_dt, end_dt)\n    iex> Timeline.Interval.duration_in_unit(interval, :minute)\n    60\n\n"
   @spec duration_in_unit(t(), :microsecond | :millisecond | :second | :minute | :hour | :day) ::
           integer()

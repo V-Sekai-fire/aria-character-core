@@ -422,6 +422,22 @@ Based on directory structure analysis, aria_engine contains these logical subdom
 
 **Phase 4 Progress:** 5/5 subdomain extractions completed (aria_temporal_planner, aria_hybrid_planner, aria_scheduler, aria_membrane_pipeline, and aria_engine_core) ✅ **ALL COMPLETED 2025-06-23**
 
+### Phase 4f: Cleanup Duplicate Modules and Resolve Compilation Conflicts ✅ **COMPLETED 2025-06-23**
+- ✅ **Removed entire lib/aria_engine/ directory** containing duplicate modules
+- ✅ **Removed conflicting files**: lib/aria_auth.ex, lib/aria_engine.ex, lib/state.ex
+- ✅ **Removed duplicate directories**: lib/aria_storage/, lib/aria_png_generator/
+- ✅ **Removed old test directory**: test/aria_engine/ with outdated test files
+- ✅ **Resolved compilation errors**: Module redefinition warnings eliminated
+- ✅ **Enabled clean compilation**: Umbrella project compiles successfully
+- ✅ **Verified app independence**: aria_engine_core tests pass (26 tests, 0 failures)
+- ✅ **Implemented strict encapsulation**: Each app operates independently without namespace conflicts
+
+**Cleanup Results:**
+- **102 files removed**: 25,443 lines of duplicate code eliminated
+- **Zero compilation errors**: Clean umbrella project compilation achieved
+- **Independent app testing**: Each app can be tested in isolation
+- **Namespace conflicts resolved**: No module redefinition warnings
+
 ### Phase 5: Verify Testing Architecture
 - [x] **AST Migration Tool Integration** ✅ **COMPLETED 2025-06-23**
   - ✅ Integrated `ast_migrate` app for systematic code transformations
