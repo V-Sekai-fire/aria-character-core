@@ -22,6 +22,8 @@ defmodule Mix.Tasks.Migrate.Statev2Api do
 
   use Mix.Task
 
+  require Logger
+
   @shortdoc "Migrate StateV2 API calls to State API"
 
   @switches [
@@ -40,19 +42,19 @@ defmodule Mix.Tasks.Migrate.Statev2Api do
     dry_run = opts[:dry_run] || false
     backup_dir = opts[:backup_dir] || ".migration_backup"
 
-    IO.puts("🔧 StateV2 API Migration")
-    IO.puts("=======================")
+    Logger.info("🔧 StateV2 API Migration")
+    Logger.info("=======================")
 
     if dry_run do
-      IO.puts("🔍 DRY RUN MODE - No files will be modified")
+      Logger.info("🔍 DRY RUN MODE - No files will be modified")
     else
-      IO.puts("📁 Backup directory: #{backup_dir}")
+      Logger.info("📁 Backup directory: #{backup_dir}")
       create_backup_dir(backup_dir)
     end
 
     migrate_statev2_api(dry_run, backup_dir)
 
-    IO.puts("✅ StateV2 API migration completed!")
+    Logger.info("✅ StateV2 API migration completed!")
   end
 
   defp should_skip_file?(file) do
@@ -67,12 +69,12 @@ defmodule Mix.Tasks.Migrate.Statev2Api do
   defp create_backup_dir(backup_dir) do
     if not File.exists?(backup_dir) do
       File.mkdir_p!(backup_dir)
-      IO.puts("📁 Created backup directory: #{backup_dir}")
+      Logger.info("📁 Created backup directory: #{backup_dir}")
     end
   end
 
   defp migrate_statev2_api(dry_run, backup_dir) do
-    IO.puts("Migrating StateV2 API calls...")
+    Logger.info("Migrating StateV2 API calls...")
 
     files_to_check = Path.wildcard("**/*.{ex,exs}", match_dot: true)
 
@@ -82,7 +84,7 @@ defmodule Mix.Tasks.Migrate.Statev2Api do
 
         if String.contains?(content, "StateV2.") do
           if dry_run do
-            IO.puts("   📄 Would migrate: #{file}")
+            Logger.debug("   📄 Would migrate: #{file}")
           else
             backup_file(file, backup_dir)
 
@@ -104,7 +106,7 @@ defmodule Mix.Tasks.Migrate.Statev2Api do
             )
 
             File.write!(file, updated_content)
-            IO.puts("   ✅ Migrated: #{file}")
+            Logger.debug("   ✅ Migrated: #{file}")
           end
         end
       end

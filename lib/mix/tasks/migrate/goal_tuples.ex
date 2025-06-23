@@ -22,6 +22,8 @@ defmodule Mix.Tasks.Migrate.GoalTuples do
 
   use Mix.Task
 
+  require Logger
+
   @shortdoc "Fix goal tuple ordering for State API compatibility"
 
   @switches [
@@ -40,19 +42,19 @@ defmodule Mix.Tasks.Migrate.GoalTuples do
     dry_run = opts[:dry_run] || false
     backup_dir = opts[:backup_dir] || ".migration_backup"
 
-    IO.puts("🔧 Goal Tuple Ordering Migration")
-    IO.puts("===============================")
+    Logger.info("🔧 Goal Tuple Ordering Migration")
+    Logger.info("===============================")
 
     if dry_run do
-      IO.puts("🔍 DRY RUN MODE - No files will be modified")
+      Logger.info("🔍 DRY RUN MODE - No files will be modified")
     else
-      IO.puts("📁 Backup directory: #{backup_dir}")
+      Logger.info("📁 Backup directory: #{backup_dir}")
       create_backup_dir(backup_dir)
     end
 
     fix_goal_tuple_ordering(dry_run, backup_dir)
 
-    IO.puts("✅ Goal tuple ordering migration completed!")
+    Logger.info("✅ Goal tuple ordering migration completed!")
   end
 
   defp should_skip_file?(file) do
@@ -72,12 +74,12 @@ defmodule Mix.Tasks.Migrate.GoalTuples do
   defp create_backup_dir(backup_dir) do
     if not File.exists?(backup_dir) do
       File.mkdir_p!(backup_dir)
-      IO.puts("📁 Created backup directory: #{backup_dir}")
+      Logger.info("📁 Created backup directory: #{backup_dir}")
     end
   end
 
   defp fix_goal_tuple_ordering(dry_run, backup_dir) do
-    IO.puts("Fixing goal tuple ordering...")
+    Logger.info("Fixing goal tuple ordering...")
 
     files_to_check = Path.wildcard("**/*.{ex,exs}", match_dot: true)
 
@@ -94,7 +96,7 @@ defmodule Mix.Tasks.Migrate.GoalTuples do
 
         if needs_fixing do
           if dry_run do
-            IO.puts("   📄 Would fix goal tuples in: #{file}")
+            Logger.debug("   📄 Would fix goal tuples in: #{file}")
           else
             backup_file(file, backup_dir)
 
@@ -115,7 +117,7 @@ defmodule Mix.Tasks.Migrate.GoalTuples do
 
             if updated_content != content do
               File.write!(file, updated_content)
-              IO.puts("   ✅ Fixed goal tuples in: #{file}")
+              Logger.debug("   ✅ Fixed goal tuples in: #{file}")
             end
           end
         end

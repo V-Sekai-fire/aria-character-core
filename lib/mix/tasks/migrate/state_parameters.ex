@@ -22,6 +22,8 @@ defmodule Mix.Tasks.Migrate.StateParameters do
 
   use Mix.Task
 
+  require Logger
+
   @shortdoc "Fix State API parameter ordering"
 
   @switches [
@@ -40,30 +42,30 @@ defmodule Mix.Tasks.Migrate.StateParameters do
     dry_run = opts[:dry_run] || false
     backup_dir = opts[:backup_dir] || ".migration_backup"
 
-    IO.puts("🔧 State Parameter Ordering Migration")
-    IO.puts("====================================")
+    Logger.info("🔧 State Parameter Ordering Migration")
+    Logger.info("====================================")
 
     if dry_run do
-      IO.puts("🔍 DRY RUN MODE - No files will be modified")
+      Logger.info("🔍 DRY RUN MODE - No files will be modified")
     else
-      IO.puts("📁 Backup directory: #{backup_dir}")
+      Logger.info("📁 Backup directory: #{backup_dir}")
       create_backup_dir(backup_dir)
     end
 
     fix_state_api_parameter_ordering(dry_run, backup_dir)
 
-    IO.puts("✅ State parameter ordering migration completed!")
+    Logger.info("✅ State parameter ordering migration completed!")
   end
 
   defp create_backup_dir(backup_dir) do
     if not File.exists?(backup_dir) do
       File.mkdir_p!(backup_dir)
-      IO.puts("📁 Created backup directory: #{backup_dir}")
+      Logger.info("📁 Created backup directory: #{backup_dir}")
     end
   end
 
   defp fix_state_api_parameter_ordering(dry_run, backup_dir) do
-    IO.puts("Fixing State API parameter ordering...")
+    Logger.info("Fixing State API parameter ordering...")
 
     files_to_fix = [
       "test/aria_engine/multigoal_optimization_test.exs",
@@ -76,7 +78,7 @@ defmodule Mix.Tasks.Migrate.StateParameters do
 
         if String.contains?(content, "State.set_fact") do
           if dry_run do
-            IO.puts("   📄 Would fix parameter ordering in: #{file}")
+            Logger.debug("   📄 Would fix parameter ordering in: #{file}")
           else
             backup_file(file, backup_dir)
 
@@ -98,7 +100,7 @@ defmodule Mix.Tasks.Migrate.StateParameters do
             |> String.replace(~r/State\.set_fact\(([^,]+),\s*"([^"]+)",\s*"available",\s*([^)]+)\)/, "State.set_fact(\\1, \"available\", \"\\2\", \\3)")
 
             File.write!(file, updated_content)
-            IO.puts("   ✅ Fixed parameter ordering in: #{file}")
+            Logger.debug("   ✅ Fixed parameter ordering in: #{file}")
           end
         end
       end

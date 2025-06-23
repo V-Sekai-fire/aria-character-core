@@ -33,6 +33,8 @@ defmodule Mix.Tasks.Migrate.StateV2 do
 
   use Mix.Task
 
+  require Logger
+
   @shortdoc "Migrate StateV2 to State API comprehensively"
 
   @switches [
@@ -59,17 +61,17 @@ defmodule Mix.Tasks.Migrate.StateV2 do
       backup_dir = opts[:backup_dir] || ".migration_backup"
       run_tests = opts[:test] || false
 
-      IO.puts("🔧 StateV2 to State Migration Tool")
-      IO.puts("================================")
+      Logger.info("🔧 StateV2 to State Migration Tool")
+      Logger.info("================================")
 
       if dry_run do
-        IO.puts("🔍 DRY RUN MODE - No files will be modified")
+        Logger.info("🔍 DRY RUN MODE - No files will be modified")
       else
-        IO.puts("📁 Backup directory: #{backup_dir}")
+        Logger.info("📁 Backup directory: #{backup_dir}")
         create_backup_dir(backup_dir)
       end
 
-      IO.puts("")
+      Logger.info("")
 
       # Step 1: StateV2 API Migration
       migrate_statev2_api(dry_run, backup_dir)
@@ -92,19 +94,19 @@ defmodule Mix.Tasks.Migrate.StateV2 do
       # Step 7: Fix goal tuple ordering
       fix_goal_tuple_ordering(dry_run, backup_dir)
 
-      IO.puts("")
-      IO.puts("✅ Migration completed!")
+      Logger.info("")
+      Logger.info("✅ Migration completed!")
 
       if run_tests and not dry_run do
-        IO.puts("")
-        IO.puts("🧪 Running tests to verify migration...")
+        Logger.info("")
+        Logger.info("🧪 Running tests to verify migration...")
         run_test_validation()
       end
 
       if not dry_run do
-        IO.puts("")
-        IO.puts("💡 Tip: Run 'mix test' to verify all tests pass")
-        IO.puts("💡 Backup files are in: #{backup_dir}")
+        Logger.info("")
+        Logger.info("💡 Tip: Run 'mix test' to verify all tests pass")
+        Logger.info("💡 Backup files are in: #{backup_dir}")
       end
     end
   end
@@ -131,12 +133,12 @@ defmodule Mix.Tasks.Migrate.StateV2 do
   defp create_backup_dir(backup_dir) do
     if not File.exists?(backup_dir) do
       File.mkdir_p!(backup_dir)
-      IO.puts("📁 Created backup directory: #{backup_dir}")
+      Logger.info("📁 Created backup directory: #{backup_dir}")
     end
   end
 
   defp migrate_statev2_api(dry_run, backup_dir) do
-    IO.puts("1️⃣ Migrating StateV2 API calls...")
+    Logger.info("1️⃣ Migrating StateV2 API calls...")
 
     files_to_check = Path.wildcard("**/*.{ex,exs}", match_dot: true)
 
@@ -146,7 +148,7 @@ defmodule Mix.Tasks.Migrate.StateV2 do
 
         if String.contains?(content, "StateV2.") do
           if dry_run do
-            IO.puts("   📄 Would migrate: #{file}")
+            Logger.debug("   📄 Would migrate: #{file}")
           else
             backup_file(file, backup_dir)
 
@@ -168,7 +170,7 @@ defmodule Mix.Tasks.Migrate.StateV2 do
             )
 
             File.write!(file, updated_content)
-            IO.puts("   ✅ Migrated: #{file}")
+            Logger.debug("   ✅ Migrated: #{file}")
           end
         end
       end
@@ -176,7 +178,7 @@ defmodule Mix.Tasks.Migrate.StateV2 do
   end
 
   defp fix_aria_engine_state_references(dry_run, backup_dir) do
-    IO.puts("2️⃣ Fixing AriaEngine.State references...")
+    Logger.info("2️⃣ Fixing AriaEngine.State references...")
 
     files_to_check = Path.wildcard("**/*.{ex,exs}", match_dot: true)
 
@@ -186,7 +188,7 @@ defmodule Mix.Tasks.Migrate.StateV2 do
 
         if String.contains?(content, "AriaEngine.State") do
           if dry_run do
-            IO.puts("   📄 Would fix: #{file}")
+            Logger.debug("   📄 Would fix: #{file}")
           else
             backup_file(file, backup_dir)
 
@@ -195,7 +197,7 @@ defmodule Mix.Tasks.Migrate.StateV2 do
             |> String.replace("AriaEngine.State", "State")
 
             File.write!(file, updated_content)
-            IO.puts("   ✅ Fixed: #{file}")
+            Logger.debug("   ✅ Fixed: #{file}")
           end
         end
       end
@@ -203,13 +205,13 @@ defmodule Mix.Tasks.Migrate.StateV2 do
   end
 
   defp create_missing_domain_modules(dry_run, _backup_dir) do
-    IO.puts("3️⃣ Creating missing domain modules...")
+    Logger.info("3️⃣ Creating missing domain modules...")
 
     # BlocksWorld Domain
     blocks_world_path = "lib/aria_engine/blocks_world/domain.ex"
     if not File.exists?(blocks_world_path) do
       if dry_run do
-        IO.puts("   📄 Would create: #{blocks_world_path}")
+        Logger.debug("   📄 Would create: #{blocks_world_path}")
       else
         File.mkdir_p!(Path.dirname(blocks_world_path))
 
@@ -231,7 +233,7 @@ end
 """
 
         File.write!(blocks_world_path, blocks_world_content)
-        IO.puts("   ✅ Created: #{blocks_world_path}")
+        Logger.debug("   ✅ Created: #{blocks_world_path}")
       end
     end
 
@@ -239,7 +241,7 @@ end
     state_utils_path = "lib/aria_engine/blocks_world/state_utils.ex"
     if not File.exists?(state_utils_path) do
       if dry_run do
-        IO.puts("   📄 Would create: #{state_utils_path}")
+        Logger.debug("   📄 Would create: #{state_utils_path}")
       else
         state_utils_content = """
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
@@ -264,7 +266,7 @@ end
 """
 
         File.write!(state_utils_path, state_utils_content)
-        IO.puts("   ✅ Created: #{state_utils_path}")
+        Logger.debug("   ✅ Created: #{state_utils_path}")
       end
     end
 
@@ -272,7 +274,7 @@ end
     actions_path = "lib/aria_engine/blocks_world/actions.ex"
     if not File.exists?(actions_path) do
       if dry_run do
-        IO.puts("   📄 Would create: #{actions_path}")
+        Logger.debug("   📄 Would create: #{actions_path}")
       else
         actions_content = """
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
@@ -287,7 +289,7 @@ end
 """
 
         File.write!(actions_path, actions_content)
-        IO.puts("   ✅ Created: #{actions_path}")
+        Logger.debug("   ✅ Created: #{actions_path}")
       end
     end
 
@@ -295,7 +297,7 @@ end
     software_domain_path = "lib/aria_engine/software_development/domain.ex"
     if not File.exists?(software_domain_path) do
       if dry_run do
-        IO.puts("   📄 Would create: #{software_domain_path}")
+        Logger.debug("   📄 Would create: #{software_domain_path}")
       else
         File.mkdir_p!(Path.dirname(software_domain_path))
 
@@ -316,13 +318,13 @@ end
 """
 
         File.write!(software_domain_path, software_content)
-        IO.puts("   ✅ Created: #{software_domain_path}")
+        Logger.debug("   ✅ Created: #{software_domain_path}")
       end
     end
   end
 
   defp fix_state_api_parameter_ordering(dry_run, backup_dir) do
-    IO.puts("4️⃣ Fixing State API parameter ordering...")
+    Logger.info("4️⃣ Fixing State API parameter ordering...")
 
     files_to_fix = [
       "test/aria_engine/multigoal_optimization_test.exs",
@@ -335,7 +337,7 @@ end
 
         if String.contains?(content, "State.set_fact") do
           if dry_run do
-            IO.puts("   📄 Would fix parameter ordering in: #{file}")
+            Logger.debug("   📄 Would fix parameter ordering in: #{file}")
           else
             backup_file(file, backup_dir)
 
@@ -357,7 +359,7 @@ end
             |> String.replace(~r/State\.set_fact\(([^,]+),\s*"([^"]+)",\s*"available",\s*([^)]+)\)/, "State.set_fact(\\1, \"available\", \"\\2\", \\3)")
 
             File.write!(file, updated_content)
-            IO.puts("   ✅ Fixed parameter ordering in: #{file}")
+            Logger.debug("   ✅ Fixed parameter ordering in: #{file}")
           end
         end
       end
@@ -365,7 +367,7 @@ end
   end
 
   defp enhance_state_module(dry_run, backup_dir) do
-    IO.puts("5️⃣ Enhancing State module with missing functions...")
+    Logger.info("5️⃣ Enhancing State module with missing functions...")
 
     state_file = "lib/state.ex"
     if File.exists?(state_file) do
@@ -377,19 +379,19 @@ end
 
       if not has_predicate_exists or not get_all_facts_exists do
         if dry_run do
-          IO.puts("   📄 Would enhance State module with missing functions")
+          Logger.debug("   📄 Would enhance State module with missing functions")
         else
           backup_file(state_file, backup_dir)
-          IO.puts("   ✅ State module already enhanced or will be enhanced separately")
+          Logger.debug("   ✅ State module already enhanced or will be enhanced separately")
         end
       else
-        IO.puts("   ✅ State module already has required functions")
+        Logger.debug("   ✅ State module already has required functions")
       end
     end
   end
 
   defp fix_domain_action_registration(dry_run, backup_dir) do
-    IO.puts("6️⃣ Fixing domain action registration...")
+    Logger.info("6️⃣ Fixing domain action registration...")
 
     domain_files = [
       "lib/aria_engine/software_development/domain.ex",
@@ -402,7 +404,7 @@ end
 
         if String.contains?(content, "add_action(\"") do
           if dry_run do
-            IO.puts("   📄 Would fix action registration in: #{file}")
+            Logger.debug("   📄 Would fix action registration in: #{file}")
           else
             backup_file(file, backup_dir)
 
@@ -411,7 +413,7 @@ end
             |> String.replace(~r/add_action\("([^"]+)"/, "add_action(:\\1")
 
             File.write!(file, updated_content)
-            IO.puts("   ✅ Fixed action registration in: #{file}")
+            Logger.debug("   ✅ Fixed action registration in: #{file}")
           end
         end
       end
@@ -419,7 +421,7 @@ end
   end
 
   defp fix_goal_tuple_ordering(dry_run, backup_dir) do
-    IO.puts("7️⃣ Fixing goal tuple ordering...")
+    Logger.info("7️⃣ Fixing goal tuple ordering...")
 
     files_to_check = Path.wildcard("**/*.{ex,exs}", match_dot: true)
 
@@ -436,7 +438,7 @@ end
 
         if needs_fixing do
           if dry_run do
-            IO.puts("   📄 Would fix goal tuples in: #{file}")
+            Logger.debug("   📄 Would fix goal tuples in: #{file}")
           else
             backup_file(file, backup_dir)
 
@@ -457,7 +459,7 @@ end
 
             if updated_content != content do
               File.write!(file, updated_content)
-              IO.puts("   ✅ Fixed goal tuples in: #{file}")
+              Logger.debug("   ✅ Fixed goal tuples in: #{file}")
             end
           end
         end
@@ -476,14 +478,14 @@ end
   defp run_test_validation do
     case System.cmd("mix", ["test", "--exclude", "slow", "--exclude", "integration", "--max-failures", "5"]) do
       {output, 0} ->
-        IO.puts("✅ Tests passed!")
-        IO.puts(output)
+        Logger.info("✅ Tests passed!")
+        Logger.info(output)
 
       {output, _exit_code} ->
-        IO.puts("❌ Some tests failed:")
-        IO.puts(output)
-        IO.puts("")
-        IO.puts("💡 You may need to run additional fixes or check the migration results")
+        Logger.info("❌ Some tests failed:")
+        Logger.info(output)
+        Logger.info("")
+        Logger.info("💡 You may need to run additional fixes or check the migration results")
     end
   end
 end
