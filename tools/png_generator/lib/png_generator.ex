@@ -1,6 +1,11 @@
 defmodule PngGenerator do
-  @moduledoc "Pure Elixir PNG generation for schedule timeline visualization.\nGenerates Gantt chart images without external dependencies.\n"
-  @png_signature <<137, 80, 78, 71, 13, 10, 26, 10>>
+  @moduledoc """
+  Pure Elixir PNG generation for schedule timeline visualization.
+
+  Generates Gantt chart images using the ElixirPng library for PNG binary format handling.
+  Focuses on timeline visualization logic while delegating low-level PNG operations.
+  """
+
   @colors %{
     background: {255, 255, 255},
     grid: {200, 200, 200},
@@ -156,15 +161,7 @@ defmodule PngGenerator do
 
   defp create_png_binary(width, height, pixel_data) do
     palette = create_palette()
-
-    indexed_data =
-      Enum.map(pixel_data, fn {r, g, b} -> find_palette_index({r, g, b}, palette) end)
-
-    ihdr = create_ihdr_chunk(width, height)
-    plte = create_plte_chunk(palette)
-    idat = create_idat_chunk(indexed_data, width)
-    iend = create_iend_chunk()
-    @png_signature <> ihdr <> plte <> idat <> iend
+    ElixirPng.create_png(width, height, pixel_data, palette: palette)
   end
 
   defp create_palette do
@@ -180,45 +177,6 @@ defmodule PngGenerator do
       @colors.critical,
       @colors.default
     ]
-  end
-
-  defp find_palette_index(color, palette) do
-    case Enum.find_index(palette, fn pal_color -> pal_color == color end) do
-      nil -> 0
-      index -> index
-    end
-  end
-
-  defp create_ihdr_chunk(width, height) do
-    data = <<width::32, height::32, 8::8, 3::8, 0::8, 0::8, 0::8>>
-    create_chunk("IHDR", data)
-  end
-
-  defp create_plte_chunk(palette) do
-    data = Enum.map_join(palette, "", fn {r, g, b} -> <<r::8, g::8, b::8>> end)
-    create_chunk("PLTE", data)
-  end
-
-  defp create_idat_chunk(indexed_data, width) do
-    rows =
-      indexed_data
-      |> Enum.chunk_every(width)
-      |> Enum.map(fn row -> [0 | row] end)
-      |> List.flatten()
-      |> Enum.map_join("", &<<&1::8>>)
-
-    compressed = :zlib.compress(rows)
-    create_chunk("IDAT", compressed)
-  end
-
-  defp create_iend_chunk do
-    create_chunk("IEND", "")
-  end
-
-  defp create_chunk(type, data) do
-    length = byte_size(data)
-    crc = :erlang.crc32(type <> data)
-    <<length::32, type::binary, data::binary, crc::32>>
   end
 
   defp generate_filename(schedule) do
