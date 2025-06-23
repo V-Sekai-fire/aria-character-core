@@ -3,9 +3,9 @@
 
 defmodule Mix.Tasks.Migrate.StateV2 do
   @moduledoc """
-  Comprehensive migration tool for StateV2 to State API migration.
+  Orchestrates StateV2 to State API migration using focused migration tasks.
 
-  This task combines all StateV2 migration functionality into a single, reusable tool.
+  This task coordinates multiple specialized migration tasks, each with a single responsibility.
 
   ## Usage
 
@@ -15,12 +15,12 @@ defmodule Mix.Tasks.Migrate.StateV2 do
       mix migrate.state_v2 --test            # Run tests after migration
       mix migrate.state_v2 --help            # Show this help
 
-  ## What it does
+  ## Migration Tasks Orchestrated
 
-  1. **StateV2 API Migration**: Converts StateV2 function calls to State equivalents
-  2. **Reference Updates**: Fixes all State references to State
-  3. **Domain Creation**: Creates missing domain modules (BlocksWorld, SoftwareDevelopment)
-  4. **API Enhancements**: Adds missing State functions and fixes parameter ordering
+  1. **StateV2 API Migration**: `mix migrate.statev2_api` - Converts StateV2 function calls
+  2. **State Parameter Ordering**: `mix migrate.state_parameters` - Fixes parameter order
+  3. **Goal Tuple Ordering**: `mix migrate.goal_tuples` - Fixes tuple structure
+  4. **Domain Creation**: Creates missing domain modules
   5. **Test Validation**: Optionally runs tests to verify migration success
 
   ## Options
