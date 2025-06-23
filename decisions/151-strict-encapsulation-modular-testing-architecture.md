@@ -156,13 +156,64 @@ Each library extraction follows this complete process:
    - Validate all functionality preserved
 
 ### Phase 1: Analyze Current Dependencies
-- [ ] Map dependency graph for all lib/ modules
-- [ ] Identify leaf modules (minimal dependencies)
-- [ ] Document circular dependencies requiring resolution
-- [ ] Prioritize extraction order by dependency depth
+- [x] Map dependency graph for all lib/ modules
+- [x] Identify leaf modules (minimal dependencies)
+- [x] Document circular dependencies requiring resolution
+- [x] Prioritize extraction order by dependency depth
+
+**Dependency Analysis Results:**
+
+**Already Extracted Apps:**
+- `ast_migrate/` - Git-style AST migration tool (independent)
+- `elixir_png/` - PNG processing utilities (independent)
+- `png_generator/` - Schedule visualization (independent)
+
+**Remaining lib/ Modules to Extract:**
+
+**Leaf Modules (Minimal Dependencies):**
+1. **aria_security** - Self-contained security utilities
+   - Dependencies: External only (Vaultex, HTTPoison)
+   - No internal aria_* dependencies
+   - Clear API boundaries
+   - Independent test suite possible
+
+2. **aria_storage** - File operations and chunk storage
+   - Dependencies: External only (Waffle, Ecto, compression libs)
+   - No internal aria_* dependencies
+   - Clear API boundaries
+   - Independent test suite possible
+
+**Intermediate Dependencies:**
+3. **aria_auth** - Authentication with macaroons
+   - Dependencies: aria_security (minimal), external (Ecto, Macfly)
+   - Clear API boundaries
+   - Independent test suite possible
+
+**Complex Dependencies:**
+4. **aria_town** - NPC management system
+   - Dependencies: aria_engine (heavy), external (GenServer)
+   - Currently stub implementation
+   - Depends on AriaEngine's hybrid planner
+
+5. **aria_engine** - Core planning and temporal systems
+   - Dependencies: Complex internal structure, external (Membrane, MiniZinc)
+   - Largest module requiring subdomain extraction
+   - Multiple internal circular dependencies
+
+**Circular Dependencies Identified:**
+- AriaEngine.Timeline ↔ AriaEngine.TemporalPlanner
+- AriaEngine.HybridPlanner ↔ AriaEngine.Planning
+- AriaEngine.Scheduler ↔ AriaEngine.Domain
+
+**Extraction Priority Order:**
+1. aria_security (leaf, zero internal deps)
+2. aria_storage (leaf, zero internal deps)  
+3. aria_auth (depends only on aria_security)
+4. aria_town (depends on aria_engine, but minimal coupling)
+5. aria_engine (complex, requires subdomain splitting)
 
 ### Phase 2: Extract Leaf Modules First
-- [ ] Extract `aria_security` (self-contained utilities)
+- [x] Extract `aria_security` (self-contained utilities)
 - [ ] Extract `aria_storage` (file operations)
 - [ ] Extract remaining `aria_png_generator` functionality
 - [ ] Verify independent test suites for each
