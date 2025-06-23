@@ -38,7 +38,8 @@ defmodule AstMigrate do
   - Comprehensive error handling and recovery
   """
 
-  alias AstMigrate.{Git, Rules, Validator}
+  require Logger
+  alias AstMigrate.{Git, Rules}
 
   @type transformation_result :: {:ok, String.t()} | {:error, String.t()}
   @type file_result :: {:ok, String.t()} | {:error, String.t()}
@@ -66,11 +67,34 @@ defmodule AstMigrate do
   """
   @spec apply_rule(rule_name(), keyword()) :: {:ok, map()} | {:error, String.t()}
   def apply_rule(rule_name, opts \\ []) do
+    start_time = System.monotonic_time(:millisecond)
+
+    Logger.info("Starting AST transformation",
+      module: :ast_migrate,
+      operation: :apply_rule,
+      rule: rule_name,
+      dry_run: Keyword.get(opts, :dry_run, false),
+      commit_requested: Keyword.has_key?(opts, :commit)
+    )
+
     with {:ok, rule_module} <- get_rule_module(rule_name),
          {:ok, files} <- get_target_files(opts),
          :ok <- validate_preconditions(rule_module, files),
          {:ok, results} <- apply_transformations(rule_module, files, opts),
          :ok <- maybe_commit_changes(results, opts) do
+
+      duration_ms = System.monotonic_time(:millisecond) - start_time
+
+      Logger.info("AST transformation completed successfully",
+        module: :ast_migrate,
+        operation: :apply_rule,
+        rule: rule_name,
+        files_processed: length(results.transformed_files),
+        files_changed: length(results.changed_files),
+        commit_hash: results.commit_hash,
+        duration_ms: duration_ms
+      )
+
       {:ok, %{
         rule: rule_name,
         files_processed: length(results.transformed_files),
@@ -78,7 +102,18 @@ defmodule AstMigrate do
         commit_hash: results.commit_hash
       }}
     else
-      error -> error
+      error ->
+        duration_ms = System.monotonic_time(:millisecond) - start_time
+
+        Logger.error("AST transformation failed",
+          module: :ast_migrate,
+          operation: :apply_rule,
+          rule: rule_name,
+          error: inspect(error),
+          duration_ms: duration_ms
+        )
+
+        error
     end
   end
 
@@ -117,6 +152,14 @@ defmodule AstMigrate do
   defp get_target_files(opts) do
     patterns = Keyword.get(opts, :files, ["lib/**/*.ex", "test/**/*.exs"])
     files = Enum.flat_map(patterns, &Path.wildcard/1)
+
+    Logger.debug("Target files identified",
+      module: :ast_migrate,
+      operation: :get_target_files,
+      patterns: patterns,
+      files_count: length(files)
+    )
+
     {:ok, files}
   end
 
@@ -136,21 +179,50 @@ defmodule AstMigrate do
   end
 
   defp preview_transformations(rule_module, files) do
+    Logger.debug("Starting preview transformations",
+      module: :ast_migrate,
+      operation: :preview_transformations,
+      rule_module: rule_module,
+      files_count: length(files)
+    )
+
     results = Enum.map(files, fn file ->
       case rule_module.transform_file(file) do
         {:ok, transformed_content} ->
           original_content = File.read!(file)
           if original_content != transformed_content do
+            Logger.debug("File would be changed in preview",
+              module: :ast_migrate,
+              operation: :preview_transformations,
+              file: file,
+              original_size: byte_size(original_content),
+              transformed_size: byte_size(transformed_content)
+            )
             {:changed, file, original_content, transformed_content}
           else
             {:unchanged, file}
           end
         {:error, reason} ->
+          Logger.warning("File transformation failed in preview",
+            module: :ast_migrate,
+            operation: :preview_transformations,
+            file: file,
+            error: inspect(reason)
+          )
           {:error, file, reason}
       end
     end)
 
     changed_files = Enum.filter(results, &match?({:changed, _, _, _}, &1))
+    error_files = Enum.filter(results, &match?({:error, _, _}, &1))
+
+    Logger.info("Preview transformations completed",
+      module: :ast_migrate,
+      operation: :preview_transformations,
+      files_processed: length(files),
+      files_changed: length(changed_files),
+      files_errors: length(error_files)
+    )
 
     {:ok, %{
       transformed_files: files,
@@ -161,23 +233,53 @@ defmodule AstMigrate do
   end
 
   defp execute_transformations(rule_module, files) do
+    Logger.debug("Starting file transformations",
+      module: :ast_migrate,
+      operation: :execute_transformations,
+      rule_module: rule_module,
+      files_count: length(files)
+    )
+
     results = Enum.map(files, fn file ->
       case rule_module.transform_file(file) do
         {:ok, transformed_content} ->
           original_content = File.read!(file)
           if original_content != transformed_content do
             File.write!(file, transformed_content)
+            Logger.debug("File transformed and written",
+              module: :ast_migrate,
+              operation: :execute_transformations,
+              file: file,
+              original_size: byte_size(original_content),
+              transformed_size: byte_size(transformed_content)
+            )
             {:changed, file}
           else
             {:unchanged, file}
           end
         {:error, reason} ->
+          Logger.error("File transformation failed",
+            module: :ast_migrate,
+            operation: :execute_transformations,
+            file: file,
+            error: inspect(reason)
+          )
           {:error, file, reason}
       end
     end)
 
     changed_files = Enum.filter(results, &match?({:changed, _}, &1))
                    |> Enum.map(fn {:changed, file} -> file end)
+
+    error_files = Enum.filter(results, &match?({:error, _, _}, &1))
+
+    Logger.info("File transformations completed",
+      module: :ast_migrate,
+      operation: :execute_transformations,
+      files_processed: length(files),
+      files_changed: length(changed_files),
+      files_errors: length(error_files)
+    )
 
     {:ok, %{
       transformed_files: files,
@@ -192,8 +294,7 @@ defmodule AstMigrate do
       commit_message when is_binary(commit_message) ->
         if length(results.changed_files) > 0 do
           case Git.commit_transformations(results.changed_files, commit_message) do
-            {:ok, commit_hash} ->
-              results = Map.put(results, :commit_hash, commit_hash)
+            {:ok, _commit_hash} ->
               :ok
             error -> error
           end

@@ -40,6 +40,8 @@ defmodule AstMigrate.Rules.StateV2ToState do
 
   @behaviour AstMigrate.Rules.Behaviour
 
+  require Logger
+
   @impl true
   def description do
     "Transforms StateV2 usage to State using AST pattern matching"
@@ -61,20 +63,45 @@ defmodule AstMigrate.Rules.StateV2ToState do
   end
 
   @impl true
-  def validate_preconditions(files) do
+  def validate_preconditions(_files) do
     # For now, always allow transformation
     :ok
   end
 
   @impl true
   def transform_file(file_path) do
+    Logger.debug("Starting AST transformation for file",
+      module: :ast_migrate_rules_state_v2_to_state,
+      operation: :transform_file,
+      file: file_path
+    )
+
     with {:ok, content} <- File.read(file_path),
          {:ok, ast} <- Code.string_to_quoted(content),
          transformed_ast <- transform_ast(ast),
          transformed_code <- Macro.to_string(transformed_ast) do
+
+      transformations_applied = count_transformations(content, transformed_code)
+
+      Logger.debug("AST transformation completed for file",
+        module: :ast_migrate_rules_state_v2_to_state,
+        operation: :transform_file,
+        file: file_path,
+        transformations_applied: transformations_applied,
+        original_size: byte_size(content),
+        transformed_size: byte_size(transformed_code)
+      )
+
       {:ok, transformed_code}
     else
-      {:error, reason} -> {:error, "Failed to transform #{file_path}: #{inspect(reason)}"}
+      {:error, reason} ->
+        Logger.error("AST transformation failed for file",
+          module: :ast_migrate_rules_state_v2_to_state,
+          operation: :transform_file,
+          file: file_path,
+          error: inspect(reason)
+        )
+        {:error, "Failed to transform #{file_path}: #{inspect(reason)}"}
     end
   end
 
@@ -113,6 +140,23 @@ defmodule AstMigrate.Rules.StateV2ToState do
   end
 
   defp transform_ast(ast), do: ast
+
+  # Helper functions
+
+  defp count_transformations(original_content, transformed_content) do
+    original_state_v2_count = count_state_v2_occurrences(original_content)
+    transformed_state_v2_count = count_state_v2_occurrences(transformed_content)
+    original_state_v2_count - transformed_state_v2_count
+  end
+
+  defp count_state_v2_occurrences(content) do
+    # Count various StateV2 patterns
+    alias_count = Regex.scan(~r/alias\s+AriaEngine\.StateV2/, content) |> length()
+    struct_count = Regex.scan(~r/%StateV2\{/, content) |> length()
+    call_count = Regex.scan(~r/StateV2\./, content) |> length()
+
+    alias_count + struct_count + call_count
+  end
 
   # Validation functions
 

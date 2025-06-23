@@ -287,9 +287,9 @@ fi
 ## Implementation Plan
 
 ### **Phase 0: Immediate Relief (1 week)**
-- [ ] Create AST-based StateV2→State transformation using Code.string_to_quoted/2
-- [ ] Add EGit integration for automatic commits
-- [ ] Implement basic pattern matching on AST nodes
+- [x] Create AST-based StateV2→State transformation using Code.string_to_quoted/2
+- [x] Add EGit integration for automatic commits
+- [x] Implement basic pattern matching on AST nodes
 - [ ] Test on subset of current codebase with real AST transformations
 - [ ] **Deliverable**: `mix ast.simple --rule state_v2_to_state --commit "Convert StateV2"`
 

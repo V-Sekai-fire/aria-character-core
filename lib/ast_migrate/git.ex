@@ -76,15 +76,45 @@ defmodule AstMigrate.Git do
   """
   @spec commit_transformations([file_path()], String.t()) :: {:ok, commit_hash()} | {:error, String.t()}
   def commit_transformations(files, message) do
+    Logger.debug("Starting Git commit for transformations",
+      module: :ast_migrate_git,
+      operation: :commit_transformations,
+      files_count: length(files),
+      commit_message: message
+    )
+
     with {:ok, repo} <- open_repository(),
          %{mode: :added} <- :git.add(repo, files),
          {:ok, commit_hash} <- :git.commit(repo, "[AST] #{message}") do
-      Logger.info("AST Migration: Committed #{length(files)} files with hash #{commit_hash}")
+
+      Logger.info("AST transformation committed successfully",
+        module: :ast_migrate_git,
+        operation: :commit_transformations,
+        files_count: length(files),
+        commit_hash: commit_hash,
+        commit_message: "[AST] #{message}",
+        files: files
+      )
+
       {:ok, commit_hash}
     else
       {:error, reason} ->
+        Logger.error("Git commit failed",
+          module: :ast_migrate_git,
+          operation: :commit_transformations,
+          files_count: length(files),
+          error: inspect(reason),
+          commit_message: message
+        )
         {:error, "Git commit failed: #{inspect(reason)}"}
       error ->
+        Logger.error("Git commit error",
+          module: :ast_migrate_git,
+          operation: :commit_transformations,
+          files_count: length(files),
+          error: inspect(error),
+          commit_message: message
+        )
         {:error, "Git commit error: #{inspect(error)}"}
     end
   end
