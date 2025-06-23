@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 ExUnit.start()
-Code.require_file("test/aria_engine/test/support/state_v2_mock.ex")
 
 defmodule TestOutput do
   @moduledoc "Conditional test output helpers that respect trace mode.\n\nAccording to INST-006: Passing tests should be silent and produce no log output.\nOnly --trace mode should provide normal logging output.\n"
