@@ -1,29 +1,17 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
-  @moduledoc """
-  Utility functions for ARCANA format processing.
-
-  Provides helper functions for format detection, hex comparison,
-  roundtrip testing, and debugging binary data.
-  """
-
+  @moduledoc "Utility functions for ARCANA format processing.\n\nProvides helper functions for format detection, hex comparison,\nroundtrip testing, and debugging binary data.\n"
   require Logger
   require AriaStorage.Parsers.CasyncFormat.Constants
   import AriaStorage.Parsers.CasyncFormat.Constants
   alias AriaStorage.Parsers.CasyncFormat.Constants
 
   @type comparison_result :: %{
-    match: boolean(),
-    size_original: non_neg_integer(),
-    size_encoded: non_neg_integer(),
-    differences: [tuple()]
-  }
-
-  @doc """
-  Detect the format of binary data based on desync FormatIndex structure.
-  """
+          match: boolean(),
+          size_original: non_neg_integer(),
+          size_encoded: non_neg_integer(),
+          differences: [tuple()]
+        }
+  @doc "Detect the format of binary data based on desync FormatIndex structure.\n"
   @spec detect_format(binary()) :: {:ok, Constants.format_type()} | {:error, :unknown_format}
   def detect_format(
         <<format_header_size::little-64, format_type::little-64, feature_flags::little-64,
@@ -31,7 +19,11 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
       ) do
     case {format_header_size, format_type} do
       {48, ca_format_index()} ->
-        if feature_flags == 0, do: {:ok, :caidx}, else: {:ok, :caibx}
+        if feature_flags == 0 do
+          {:ok, :caidx}
+        else
+          {:ok, :caibx}
+        end
 
       {64, ca_format_entry()} ->
         {:ok, :catar}
@@ -41,28 +33,28 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
     end
   end
 
-  # CACNK has different magic
-  def detect_format(<<0xCA, 0xC4, 0x4E, _::binary>>), do: {:ok, :cacnk}
-  # CATAR magic
-  def detect_format(<<0xCA, 0x1A, 0x52, _::binary>>), do: {:ok, :catar}
+  def detect_format(<<202, 196, 78, _::binary>>) do
+    {:ok, :cacnk}
+  end
+
+  def detect_format(<<202, 26, 82, _::binary>>) do
+    {:ok, :catar}
+  end
 
   def detect_format(binary) when byte_size(binary) >= 32 do
     {:error, :unknown_format}
   end
 
-  def detect_format(_), do: {:error, :unknown_format}
+  def detect_format(_) do
+    {:error, :unknown_format}
+  end
 
-  @doc """
-  Convert parser result to JSON-safe format by encoding binary data as base64.
-  """
+  @doc "Convert parser result to JSON-safe format by encoding binary data as base64.\n"
   @spec to_json_safe(map() | any()) :: map() | any()
   def to_json_safe(result) when is_map(result) do
     result
     |> Map.update(:chunks, [], fn chunks ->
-      Enum.map(chunks, fn chunk ->
-        chunk
-        |> Map.update(:chunk_id, nil, &Base.encode64/1)
-      end)
+      Enum.map(chunks, fn chunk -> chunk |> Map.update(:chunk_id, nil, &Base.encode64/1) end)
     end)
     |> Map.update(:_original_table_data, nil, fn
       nil -> nil
@@ -71,17 +63,15 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
     end)
   end
 
-  def to_json_safe(result), do: result
+  def to_json_safe(result) do
+    result
+  end
 
-  @doc """
-  Compare two binary data chunks byte-by-byte and return hex diff information.
-  Useful for verifying bit-exact encoding roundtrips.
-  """
+  @doc "Compare two binary data chunks byte-by-byte and return hex diff information.\nUseful for verifying bit-exact encoding roundtrips.\n"
   @spec hex_compare(binary(), binary()) :: comparison_result()
   def hex_compare(original, encoded) when is_binary(original) and is_binary(encoded) do
     original_size = byte_size(original)
     encoded_size = byte_size(encoded)
-
     size_match = original_size == encoded_size
 
     if size_match do
@@ -112,13 +102,10 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
     end
   end
 
-  @doc """
-  Print hex dump comparison of two binary data chunks.
-  """
+  @doc "Print hex dump comparison of two binary data chunks.\n"
   @spec print_hex_diff(binary(), binary()) :: comparison_result()
   def print_hex_diff(original, encoded) do
     comparison = hex_compare(original, encoded)
-
     Logger.debug("=== HEX COMPARISON ===")
     Logger.debug("Original size: #{comparison.size_original} bytes")
     Logger.debug("Encoded size:  #{comparison.size_encoded} bytes")
@@ -139,16 +126,12 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
           )
       end)
 
-      # Print hex dumps around first difference
       if length(comparison.differences) > 0 do
         first_diff = hd(comparison.differences)
 
         case first_diff do
-          {:byte_diff, offset, _, _} ->
-            print_hex_context(original, encoded, offset)
-
-          _ ->
-            :ok
+          {:byte_diff, offset, _, _} -> print_hex_context(original, encoded, offset)
+          _ -> :ok
         end
       end
     else
@@ -158,11 +141,9 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
     comparison
   end
 
-  @doc """
-  Test roundtrip encoding for a given binary data and format.
-  Returns detailed comparison results.
-  """
-  @spec test_roundtrip_encoding(binary(), Constants.format_type()) :: {:ok, comparison_result() | :perfect_match} | {:error, String.t()}
+  @doc "Test roundtrip encoding for a given binary data and format.\nReturns detailed comparison results.\n"
+  @spec test_roundtrip_encoding(binary(), Constants.format_type()) ::
+          {:ok, comparison_result() | :perfect_match} | {:error, String.t()}
   def test_roundtrip_encoding(binary_data, format_type) do
     Logger.debug("=== TESTING ROUNDTRIP FOR #{String.upcase(to_string(format_type))} ===")
     Logger.debug("Original size: #{byte_size(binary_data)} bytes")
@@ -176,11 +157,9 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
     end
   end
 
-  @doc """
-  Test roundtrip encoding for a given file path and parsed data.
-  Returns detailed comparison results.
-  """
-  @spec test_file_roundtrip_encoding(String.t(), map()) :: {:ok, :perfect_match | {:differences, comparison_result()}} | {:error, String.t()}
+  @doc "Test roundtrip encoding for a given file path and parsed data.\nReturns detailed comparison results.\n"
+  @spec test_file_roundtrip_encoding(String.t(), map()) ::
+          {:ok, :perfect_match | {:differences, comparison_result()}} | {:error, String.t()}
   def test_file_roundtrip_encoding(file_path, parsed) do
     filename = Path.basename(file_path)
     Logger.debug("=== TESTING ROUNDTRIP FOR #{filename} ===")
@@ -214,11 +193,18 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
     end
   end
 
-  # Private helper functions for hex comparison
   @spec compare_bytes(binary(), binary(), non_neg_integer(), [tuple()]) :: [tuple()]
-  defp compare_bytes(<<>>, <<>>, _offset, acc), do: Enum.reverse(acc)
-  defp compare_bytes(<<>>, _encoded, _offset, acc), do: Enum.reverse(acc)
-  defp compare_bytes(_original, <<>>, _offset, acc), do: Enum.reverse(acc)
+  defp compare_bytes(<<>>, <<>>, _offset, acc) do
+    Enum.reverse(acc)
+  end
+
+  defp compare_bytes(<<>>, _encoded, _offset, acc) do
+    Enum.reverse(acc)
+  end
+
+  defp compare_bytes(_original, <<>>, _offset, acc) do
+    Enum.reverse(acc)
+  end
 
   defp compare_bytes(
          <<orig_byte, orig_rest::binary>>,
@@ -236,14 +222,10 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
 
   @spec print_hex_context(binary(), binary(), non_neg_integer()) :: :ok
   defp print_hex_context(original, encoded, offset) do
-    # Print 32 bytes before and after the difference
     start_offset = max(0, offset - 16)
     length = min(32, byte_size(original) - start_offset)
-
-    Logger.debug(
-      "\n=== HEX CONTEXT AROUND OFFSET 0x#{Integer.to_string(offset, 16) |> String.upcase()} ==="
-    )
-
+    Logger.debug("
+=== HEX CONTEXT AROUND OFFSET 0x#{Integer.to_string(offset, 16) |> String.upcase()} ===")
     orig_chunk = binary_part(original, start_offset, length)
 
     enc_chunk =
@@ -255,7 +237,6 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
 
     Logger.debug("Original:")
     print_hex_dump(orig_chunk, start_offset)
-
     Logger.debug("\nEncoded:")
     print_hex_dump(enc_chunk, start_offset)
   end
@@ -275,7 +256,13 @@ defmodule AriaStorage.Parsers.CasyncFormat.Utilities do
         |> String.pad_trailing(47)
 
       ascii_part =
-        Enum.map_join(bytes, "", fn b -> if b >= 32 and b <= 126, do: <<b>>, else: "." end)
+        Enum.map_join(bytes, "", fn b ->
+          if b >= 32 and b <= 126 do
+            <<b>>
+          else
+            "."
+          end
+        end)
 
       Logger.debug(
         "#{Integer.to_string(offset, 16) |> String.pad_leading(8, "0") |> String.upcase()}: #{hex_part} |#{ascii_part}|"

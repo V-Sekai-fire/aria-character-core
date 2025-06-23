@@ -1,27 +1,13 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule BlocksGTNTest do
-  @moduledoc """
-  Test suite for Blocks World Goal-Task-Network (GTN) planning.
-
-  This implements the blocks_gtn example from GTPyhop, which uses both
-  goals and tasks for blocks world planning using the near-optimal
-  algorithm from Gupta & Nau (1992).
-  """
-
+  @moduledoc "Test suite for Blocks World Goal-Task-Network (GTN) planning.\n\nThis implements the blocks_gtn example from GTPyhop, which uses both\ngoals and tasks for blocks world planning using the near-optimal\nalgorithm from Gupta & Nau (1992).\n"
   use ExUnit.Case
-
   import AriaEngine
   alias {State, Multigoal, TestDomains}
-
   @moduletag timeout: 120_000
-
-  describe "Blocks GTN domain" do
+  describe("Blocks GTN domain") do
     test "domain creation and basic functionality" do
       domain = TestDomains.build_blocks_gtn_domain()
       summary = domain_summary(domain)
-
       assert summary.name == "blocks_gtn"
       assert :pickup in summary.actions
       assert :putdown in summary.actions
@@ -44,13 +30,8 @@ defmodule BlocksGTNTest do
         |> set_fact("clear", "a", true)
         |> set_fact("holding", "hand", false)
 
-      # Should fail - can't pickup 'a' because it's on 'b'
       assert {:error, _} = plan(domain, state1, [{"pickup", "a"}])
-
-      # Should fail - can't pickup 'b' because 'a' is on it
       assert {:error, _} = plan(domain, state1, [{"pickup", "b"}])
-
-      # Should fail - no 'take' method for 'b' when it's not clear
       assert {:error, _} = plan(domain, state1, [{"take", "b"}])
     end
 
@@ -67,19 +48,12 @@ defmodule BlocksGTNTest do
         |> set_fact("clear", "a", true)
         |> set_fact("holding", "hand", false)
 
-      # Should succeed - can pickup 'c'
       {:ok, plan} = plan(domain, state1, [{"pickup", "c"}])
       assert plan == [{"pickup", "c"}]
-
-      # Should succeed - can take 'a' (should unstack it)
       {:ok, plan} = plan(domain, state1, [{"take", "a"}])
       assert plan == [{"unstack", "a", "b"}]
-
-      # Should succeed - can take 'c' (should pickup from table)
       {:ok, plan} = plan(domain, state1, [{"take", "c"}])
       assert plan == [{"pickup", "c"}]
-
-      # Should succeed - take 'a' then put on table
       {:ok, plan} = plan(domain, state1, [{"take", "a"}, {"put", "a", "table"}])
       assert plan == [{"unstack", "a", "b"}, {"putdown", "a"}]
     end
@@ -97,12 +71,9 @@ defmodule BlocksGTNTest do
         |> set_fact("clear", "a", true)
         |> set_fact("holding", "hand", false)
 
-      # Goal: c on b, b on a, a on table
       goal1a = %Multigoal{
         name: "goal1a",
-        goals: %{
-          "pos" => %{"c" => "b", "b" => "a", "a" => "table"}
-        }
+        goals: %{"pos" => %{"c" => "b", "b" => "a", "a" => "table"}}
       }
 
       expected = [
@@ -116,16 +87,7 @@ defmodule BlocksGTNTest do
 
       {:ok, plan} = plan(domain, state1, [goal1a])
       assert plan == expected
-
-      # Goal: c on b, b on a (omitting "a on table")
-      goal1b = %Multigoal{
-        name: "goal1b",
-        goals: %{
-          "pos" => %{"c" => "b", "b" => "a"}
-        }
-      }
-
-      # Should produce same plan
+      goal1b = %Multigoal{name: "goal1b", goals: %{"pos" => %{"c" => "b", "b" => "a"}}}
       {:ok, plan} = plan(domain, state1, [goal1b])
       assert plan == expected
     end
@@ -143,12 +105,7 @@ defmodule BlocksGTNTest do
         |> set_fact("clear", "b", true)
         |> set_fact("holding", "hand", false)
 
-      sus_sg = %Multigoal{
-        name: "sussman_goal",
-        goals: %{
-          "pos" => %{"a" => "b", "b" => "c"}
-        }
-      }
+      sus_sg = %Multigoal{name: "sussman_goal", goals: %{"pos" => %{"a" => "b", "b" => "c"}}}
 
       expected = [
         {"unstack", "c", "a"},
@@ -187,12 +144,7 @@ defmodule BlocksGTNTest do
         }
       }
 
-      goal2b = %Multigoal{
-        name: "goal2b",
-        goals: %{
-          "pos" => %{"b" => "c", "a" => "d"}
-        }
-      }
+      goal2b = %Multigoal{name: "goal2b", goals: %{"pos" => %{"b" => "c", "a" => "d"}}}
 
       expected = [
         {"unstack", "a", "c"},
@@ -203,10 +155,8 @@ defmodule BlocksGTNTest do
         {"stack", "a", "d"}
       ]
 
-      # Both should produce same plan
       {:ok, plan1} = plan(domain, state2, [goal2a])
       {:ok, plan2} = plan(domain, state2, [goal2b])
-
       assert plan1 == expected
       assert plan2 == expected
     end

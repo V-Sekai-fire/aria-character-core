@@ -1,107 +1,60 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule State do
-  @moduledoc """
-  Represents the state of a planning problem using predicate-subject-fact triples.
-
-  This module provides functionality to manage world state using RDF-like triples,
-  where each fact is represented as {predicate, subject} -> fact_value.
-
-  Example:
-  ```elixir
-  state = AriaEngine.StateV2.new()
-  |> AriaEngine.StateV2.set_fact("location", "player", "room1")
-  |> AriaEngine.StateV2.set_fact("has", "player", "sword")
-
-  AriaEngine.StateV2.get_fact(state, "location", "player")
-  # => "room1"
-  ```
-  """
-
+  @moduledoc "Represents the state of a planning problem using predicate-subject-fact triples.\n\nThis module provides functionality to manage world state using RDF-like triples,\nwhere each fact is represented as {predicate, subject} -> fact_value.\n\nExample:\n```elixir\nstate = AriaEngine.StateV2.new()\n|> AriaEngine.StateV2.set_fact(\"location\", \"player\", \"room1\")\n|> AriaEngine.StateV2.set_fact(\"has\", \"player\", \"sword\")\n\nAriaEngine.StateV2.get_fact(state, \"location\", \"player\")\n# => \"room1\"\n```\n"
   @type predicate :: String.t()
   @type subject :: String.t()
   @type fact_value :: any()
   @type triple_key :: {predicate(), subject()}
-  @type t :: %__MODULE__{
-          data: %{triple_key() => fact_value()}
-        }
-
+  @type t :: %__MODULE__{data: %{triple_key() => fact_value()}}
   defstruct data: %{}
-
-  @doc """
-  Creates a new empty planning state.
-  """
+  @doc "Creates a new empty planning state.\n"
   @spec new() :: t()
   def new do
     %__MODULE__{}
   end
 
-  @doc """
-  Creates a new planning state from a map of predicate-subject-object data.
-  """
+  @doc "Creates a new planning state from a map of predicate-subject-object data.\n"
   @spec new(map()) :: t()
   def new(data) when is_map(data) do
     %__MODULE__{data: data}
   end
 
-  @doc """
-  Gets the fact_value for a given predicate and subject.
-  Returns nil if the triple doesn't exist.
-  """
+  @doc "Gets the fact_value for a given predicate and subject.\nReturns nil if the triple doesn't exist.\n"
   @spec get_fact(t(), predicate(), subject()) :: fact_value() | nil
   def get_fact(%__MODULE__{data: data}, predicate, subject) do
     Map.get(data, {predicate, subject})
   end
 
-  @doc """
-  Sets the fact_value for a given predicate and subject.
-  """
+  @doc "Sets the fact_value for a given predicate and subject.\n"
   @spec set_fact(t(), predicate(), subject(), fact_value()) :: t()
   def set_fact(%__MODULE__{data: data} = state, predicate, subject, fact_value) do
     %{state | data: Map.put(data, {predicate, subject}, fact_value)}
   end
 
-  @doc """
-  Removes a triple from the state.
-  """
+  @doc "Removes a triple from the state.\n"
   @spec remove_fact(t(), predicate(), subject()) :: t()
   def remove_fact(%__MODULE__{data: data} = state, predicate, subject) do
     %{state | data: Map.delete(data, {predicate, subject})}
   end
 
-  @doc """
-  Checks if a subject has a given predicate with any object.
-  """
+  @doc "Checks if a subject has a given predicate with any object.\n"
   @spec has_subject?(t(), predicate(), subject()) :: boolean()
   def has_subject?(%__MODULE__{data: data}, predicate, subject) do
     Map.has_key?(data, {predicate, subject})
   end
 
-  @doc """
-  Checks if a subject variable exists in any predicate.
-  """
+  @doc "Checks if a subject variable exists in any predicate.\n"
   @spec has_subject_variable?(t(), subject()) :: boolean()
   def has_subject_variable?(%__MODULE__{data: data}, subject) do
-    data
-    |> Map.keys()
-    |> Enum.any?(fn {_predicate, subj} -> subj == subject end)
+    data |> Map.keys() |> Enum.any?(fn {_predicate, subj} -> subj == subject end)
   end
 
-  @doc """
-  Gets a list of all subjects that have properties.
-  """
+  @doc "Gets a list of all subjects that have properties.\n"
   @spec get_subjects(t()) :: [subject()]
   def get_subjects(%__MODULE__{data: data}) do
-    data
-    |> Map.keys()
-    |> Enum.map(fn {_predicate, subject} -> subject end)
-    |> Enum.uniq()
+    data |> Map.keys() |> Enum.map(fn {_predicate, subject} -> subject end) |> Enum.uniq()
   end
 
-  @doc """
-  Gets all predicates for a given subject.
-  """
+  @doc "Gets all predicates for a given subject.\n"
   @spec get_subject_properties(t(), subject()) :: [predicate()]
   def get_subject_properties(%__MODULE__{data: data}, subject) do
     data
@@ -110,53 +63,36 @@ defmodule State do
     |> Enum.map(fn {predicate, _subj} -> predicate end)
   end
 
-  @doc """
-  Gets all triples as a list of {predicate, subject, fact_value} tuples.
-  """
+  @doc "Gets all triples as a list of {predicate, subject, fact_value} tuples.\n"
   @spec to_triples(t()) :: [{predicate(), subject(), fact_value()}]
   def to_triples(%__MODULE__{data: data}) do
-    Enum.map(data, fn {{predicate, subject}, fact_value} ->
-      {predicate, subject, fact_value}
-    end)
+    Enum.map(data, fn {{predicate, subject}, fact_value} -> {predicate, subject, fact_value} end)
   end
 
-  @doc """
-  Creates a state from a list of triples.
-  """
+  @doc "Creates a state from a list of triples.\n"
   @spec from_triples([{predicate(), subject(), fact_value()}]) :: t()
   def from_triples(triples) do
     data =
       triples
-      |> Enum.map(fn {predicate, subject, fact_value} ->
-        {{predicate, subject}, fact_value}
-      end)
+      |> Enum.map(fn {predicate, subject, fact_value} -> {{predicate, subject}, fact_value} end)
       |> Map.new()
 
     %__MODULE__{data: data}
   end
 
-  @doc """
-  Merges two states, with the second state taking precedence for conflicts.
-  """
+  @doc "Merges two states, with the second state taking precedence for conflicts.\n"
   @spec merge(t(), t()) :: t()
   def merge(%__MODULE__{data: data1}, %__MODULE__{data: data2}) do
     %__MODULE__{data: Map.merge(data1, data2)}
   end
 
-  @doc """
-  Returns a copy of the state with modified data.
-  """
+  @doc "Returns a copy of the state with modified data.\n"
   @spec copy(t()) :: t()
   def copy(%__MODULE__{data: data}) do
     %__MODULE__{data: Map.new(data)}
   end
 
-  @doc """
-  Checks if the state matches a specific predicate, subject, and fact_value pattern.
-
-  This function is used by the planner to check if a goal condition is satisfied
-  in the current state. It returns true if the state contains the specified triple.
-  """
+  @doc "Checks if the state matches a specific predicate, subject, and fact_value pattern.\n\nThis function is used by the planner to check if a goal condition is satisfied\nin the current state. It returns true if the state contains the specified triple.\n"
   @spec matches?(t(), predicate(), subject(), fact_value()) :: boolean()
   def matches?(%__MODULE__{data: data}, predicate, subject, fact_value) do
     case Map.get(data, {predicate, subject}) do
@@ -165,16 +101,7 @@ defmodule State do
     end
   end
 
-  @doc """
-  Evaluates existential quantifier: checks if there exists at least one subject 
-  that matches the given predicate and fact_value pattern.
-
-  Example:
-  ```elixir
-  # Check if there exists any chair that is available
-  AriaEngine.StateV2.exists?(state, "status", "available", &String.contains?(&1, "chair"))
-  ```
-  """
+  @doc "Evaluates existential quantifier: checks if there exists at least one subject \nthat matches the given predicate and fact_value pattern.\n\nExample:\n```elixir\n# Check if there exists any chair that is available\nAriaEngine.StateV2.exists?(state, \"status\", \"available\", &String.contains?(&1, \"chair\"))\n```\n"
   @spec exists?(t(), predicate(), fact_value(), (subject() -> boolean()) | nil) :: boolean()
   def exists?(%__MODULE__{data: data}, predicate, fact_value, subject_filter \\ nil) do
     data
@@ -191,20 +118,10 @@ defmodule State do
     end)
   end
 
-  @doc """
-  Evaluates universal quantifier: checks if all subjects matching the pattern
-  have the specified predicate and fact_value.
-
-  Example:
-  ```elixir
-  # Check if all doors are locked
-  AriaEngine.StateV2.forall?(state, "status", "locked", &String.contains?(&1, "door"))
-  ```
-  """
+  @doc "Evaluates universal quantifier: checks if all subjects matching the pattern\nhave the specified predicate and fact_value.\n\nExample:\n```elixir\n# Check if all doors are locked\nAriaEngine.StateV2.forall?(state, \"status\", \"locked\", &String.contains?(&1, \"door\"))\n```\n"
   @spec forall?(t(), predicate(), fact_value(), (subject() -> boolean())) :: boolean()
   def forall?(%__MODULE__{data: data}, predicate, fact_value, subject_filter)
       when is_function(subject_filter, 1) do
-    # Find all subjects that match the filter
     matching_subjects =
       data
       |> Map.keys()
@@ -212,46 +129,24 @@ defmodule State do
       |> Enum.uniq()
       |> Enum.filter(subject_filter)
 
-    # If no subjects match the filter, vacuous truth applies (return true)
     if Enum.empty?(matching_subjects) do
       true
     else
-      # Check that ALL matching subjects have the required predicate-value
       Enum.all?(matching_subjects, fn subject ->
         matches?(%__MODULE__{data: data}, predicate, subject, fact_value)
       end)
     end
   end
 
-  @doc """
-  Gets all subjects that have a specific predicate with a specific fact_value.
-
-  Example:
-  ```elixir
-  # Get all subjects with status "available"
-  AriaEngine.StateV2.get_subjects_with_fact(state, "status", "available")
-  # => ["chair1", "chair3", "table2"]
-  ```
-  """
+  @doc "Gets all subjects that have a specific predicate with a specific fact_value.\n\nExample:\n```elixir\n# Get all subjects with status \"available\"\nAriaEngine.StateV2.get_subjects_with_fact(state, \"status\", \"available\")\n# => [\"chair1\", \"chair3\", \"table2\"]\n```\n"
   @spec get_subjects_with_fact(t(), predicate(), fact_value()) :: [subject()]
   def get_subjects_with_fact(%__MODULE__{data: data}, predicate, fact_value) do
     data
-    |> Enum.filter(fn {{pred, _subj}, val} ->
-      pred == predicate and val == fact_value
-    end)
+    |> Enum.filter(fn {{pred, _subj}, val} -> pred == predicate and val == fact_value end)
     |> Enum.map(fn {{_pred, subj}, _val} -> subj end)
   end
 
-  @doc """
-  Gets all subjects that match a predicate pattern, regardless of fact_value.
-
-  Example:
-  ```elixir
-  # Get all subjects that have a "location" predicate
-  AriaEngine.StateV2.get_subjects_with_predicate(state, "location")
-  # => ["player", "npc1", "chest"]
-  ```
-  """
+  @doc "Gets all subjects that match a predicate pattern, regardless of fact_value.\n\nExample:\n```elixir\n# Get all subjects that have a \"location\" predicate\nAriaEngine.StateV2.get_subjects_with_predicate(state, \"location\")\n# => [\"player\", \"npc1\", \"chest\"]\n```\n"
   @spec get_subjects_with_predicate(t(), predicate()) :: [subject()]
   def get_subjects_with_predicate(%__MODULE__{data: data}, predicate) do
     data
@@ -261,38 +156,7 @@ defmodule State do
     |> Enum.uniq()
   end
 
-  @doc """
-  Evaluates a quantified condition structure.
-
-  Supports both existential and universal quantifiers with flexible condition patterns.
-
-  ## Condition Format
-  ```elixir
-  # Existential quantifier
-  {:exists, predicate, fact_value, subject_filter}
-
-  # Universal quantifier  
-  {:forall, predicate, fact_value, subject_filter}
-
-  # Regular condition (backward compatibility)
-  {predicate, subject, fact_value}
-  ```
-
-  ## Examples
-  ```elixir
-  # Check if any chair is available
-  condition = {:exists, "status", "available", &String.contains?(&1, "chair")}
-  AriaEngine.StateV2.evaluate_condition(state, condition)
-
-  # Check if all doors are locked
-  condition = {:forall, "status", "locked", &String.contains?(&1, "door")}
-  AriaEngine.StateV2.evaluate_condition(state, condition)
-
-  # Regular condition check
-  condition = {"location", "player", "room1"}
-  AriaEngine.StateV2.evaluate_condition(state, condition)
-  ```
-  """
+  @doc "Evaluates a quantified condition structure.\n\nSupports both existential and universal quantifiers with flexible condition patterns.\n\n## Condition Format\n```elixir\n# Existential quantifier\n{:exists, predicate, fact_value, subject_filter}\n\n# Universal quantifier  \n{:forall, predicate, fact_value, subject_filter}\n\n# Regular condition (backward compatibility)\n{predicate, subject, fact_value}\n```\n\n## Examples\n```elixir\n# Check if any chair is available\ncondition = {:exists, \"status\", \"available\", &String.contains?(&1, \"chair\")}\nAriaEngine.StateV2.evaluate_condition(state, condition)\n\n# Check if all doors are locked\ncondition = {:forall, \"status\", \"locked\", &String.contains?(&1, \"door\")}\nAriaEngine.StateV2.evaluate_condition(state, condition)\n\n# Regular condition check\ncondition = {\"location\", \"player\", \"room1\"}\nAriaEngine.StateV2.evaluate_condition(state, condition)\n```\n"
   @spec evaluate_condition(t(), tuple()) :: boolean()
   def evaluate_condition(state, condition)
 
@@ -309,7 +173,6 @@ defmodule State do
   end
 
   def evaluate_condition(_state, condition) do
-    # Only log in development or when ExUnit trace mode is enabled
     if Mix.env() == :dev or (Mix.env() == :test and ExUnit.configuration()[:trace]) do
       require Logger
       Logger.warning("Unknown condition format: #{inspect(condition)}")

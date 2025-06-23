@@ -1,58 +1,35 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 Code.require_file("support/casync_fixtures.ex", __DIR__)
 
 defmodule AriaStorage.CasyncIntegrationTest do
   use ExUnit.Case
   @moduletag :integration
-
   alias AriaStorage.Parsers.CasyncFormat
   alias AriaStorage.ChunkUploader
   alias AriaStorage.TestFixtures.CasyncFixtures
 
-  @moduledoc """
-  Integration tests for casync format parser with the chunk uploader system.
-
-  These tests verify that parsed chunk data integrates correctly with
-  the storage and upload infrastructure.
-  """
-
-  describe "parser and uploader integration" do
+  @moduledoc "Integration tests for casync format parser with the chunk uploader system.\n\nThese tests verify that parsed chunk data integrates correctly with\nthe storage and upload infrastructure.\n"
+  describe("parser and uploader integration") do
     test "parsed chunk IDs match expected format for uploader" do
-      # Use synthetic data instead of potentially invalid test files
       synthetic_data = CasyncFixtures.create_multi_chunk_caibx(5)
 
       case CasyncFormat.parse_index(synthetic_data) do
         {:ok, result} ->
-          # Extract chunk IDs and verify they work with uploader
           Enum.each(result.chunks, fn chunk ->
             chunk_id = chunk.chunk_id
-
-            # Test filename generation
             filename = ChunkUploader.filename(:original, {nil, %{chunk_id: chunk_id}})
-
-            # Should generate valid filename
             assert String.ends_with?(filename, ".cacnk")
-            # 64 hex chars + .cacnk
             assert String.length(filename) == 64 + 6
-
-            # Test storage directory organization
             storage_dir = ChunkUploader.storage_dir(:original, {nil, %{chunk_id: chunk_id}})
-
-            # Should organize into subdirectories
             assert String.starts_with?(storage_dir, "chunks/")
             assert String.match?(storage_dir, ~r/^chunks\/[0-9a-f]{2}\/[0-9a-f]{2}$/)
           end)
 
         {:error, _reason} ->
-          # Skip if parsing fails for any reason
           :ok
       end
     end
 
     test "parsed chunks can be processed by storage system" do
-      # Create synthetic chunks and test the full pipeline
       chunks_data = [
         {"chunk1", "Hello, World!"},
         {"chunk2", "This is chunk 2"},
@@ -61,19 +38,8 @@ defmodule AriaStorage.CasyncIntegrationTest do
 
       processed_chunks =
         Enum.map(chunks_data, fn {name, data} ->
-          # Calculate chunk ID as parser would
-          # Pad to 32 bytes
           chunk_id = :crypto.hash(:sha256, data) <> :crypto.strong_rand_bytes(0)
-
-          # Create chunk metadata as parser would produce
-          chunk_metadata = %{
-            chunk_id: chunk_id,
-            offset: 0,
-            size: byte_size(data),
-            flags: 0
-          }
-
-          # Test uploader integration
+          chunk_metadata = %{chunk_id: chunk_id, offset: 0, size: byte_size(data), flags: 0}
           filename = ChunkUploader.filename(:original, {nil, chunk_metadata})
           storage_dir = ChunkUploader.storage_dir(:original, {nil, chunk_metadata})
 
@@ -86,15 +52,11 @@ defmodule AriaStorage.CasyncIntegrationTest do
           }
         end)
 
-      # Verify all chunks have unique storage paths
       storage_paths =
-        Enum.map(processed_chunks, fn chunk ->
-          Path.join(chunk.storage_dir, chunk.filename)
-        end)
+        Enum.map(processed_chunks, fn chunk -> Path.join(chunk.storage_dir, chunk.filename) end)
 
       assert length(Enum.uniq(storage_paths)) == length(storage_paths)
 
-      # Verify consistent organization
       Enum.each(processed_chunks, fn chunk ->
         hex_id = Base.encode16(chunk.metadata.chunk_id, case: :lower)
         expected_dir = "chunks/#{String.slice(hex_id, 0, 2)}/#{String.slice(hex_id, 2, 2)}"
@@ -104,31 +66,18 @@ defmodule AriaStorage.CasyncIntegrationTest do
     end
 
     test "round-trip: parse index, extract chunks, recreate index" do
-      # Use synthetic data instead of test files with invalid magic
       synthetic_data = CasyncFixtures.create_multi_chunk_caibx(5)
 
       case CasyncFormat.parse_index(synthetic_data) do
         {:ok, parsed} ->
-          # Extract chunk information
           chunk_infos =
             Enum.map(parsed.chunks, fn chunk ->
-              %{
-                id: chunk.chunk_id,
-                offset: chunk.offset,
-                size: chunk.size,
-                flags: chunk.flags
-              }
+              %{id: chunk.chunk_id, offset: chunk.offset, size: chunk.size, flags: chunk.flags}
             end)
 
-          # Recreate a simplified index (just structure validation)
           recreated_chunks =
             Enum.map(chunk_infos, fn info ->
-              %{
-                chunk_id: info.id,
-                offset: info.offset,
-                size: info.size,
-                flags: info.flags
-              }
+              %{chunk_id: info.id, offset: info.offset, size: info.size, flags: info.flags}
             end)
 
           recreated_result = %{
@@ -137,12 +86,10 @@ defmodule AriaStorage.CasyncIntegrationTest do
             chunks: recreated_chunks
           }
 
-          # Verify structure matches
           assert recreated_result.format == parsed.format
           assert recreated_result.header == parsed.header
           assert length(recreated_result.chunks) == length(parsed.chunks)
 
-          # Verify each chunk matches
           Enum.zip(recreated_result.chunks, parsed.chunks)
           |> Enum.each(fn {recreated, original} ->
             assert recreated.chunk_id == original.chunk_id
@@ -152,18 +99,14 @@ defmodule AriaStorage.CasyncIntegrationTest do
           end)
 
         {:error, _} ->
-          # Skip if parsing fails
           :ok
       end
     end
 
     test "parser output is compatible with JSON serialization" do
-      # Test that parsed data can be serialized for API responses
       synthetic_data = CasyncFixtures.create_multi_chunk_caibx(10)
-
       assert {:ok, result} = CasyncFormat.parse_index(synthetic_data)
 
-      # Convert binary chunk IDs to base64 for JSON compatibility
       json_compatible = %{
         format: result.format,
         header: result.header,
@@ -178,59 +121,43 @@ defmodule AriaStorage.CasyncIntegrationTest do
           end)
       }
 
-      # Should serialize to JSON without errors
       assert {:ok, json_string} = Jason.encode(json_compatible)
       assert is_binary(json_string)
-
-      # Should deserialize back correctly
       assert {:ok, decoded} = Jason.decode(json_string)
       assert decoded["format"] == "caibx"
       assert is_map(decoded["header"])
       assert is_list(decoded["chunks"])
 
-      # Verify chunk structure in JSON
       Enum.each(decoded["chunks"], fn chunk ->
         assert is_binary(chunk["chunk_id"])
         assert is_integer(chunk["offset"])
         assert is_integer(chunk["size"])
         assert is_integer(chunk["flags"])
-
-        # Chunk ID should be valid base64
         assert {:ok, _} = Base.decode64(chunk["chunk_id"])
       end)
     end
 
     test "error handling integration between parser and uploader" do
-      # Test what happens when parser encounters errors and how uploader handles them
       invalid_data = CasyncFixtures.create_invalid_data(:wrong_magic)
-
-      # Parser should fail gracefully
       assert {:error, _reason} = CasyncFormat.parse_index(invalid_data)
 
-      # Uploader should handle missing chunk_id gracefully
       try do
         mock_chunk = %AriaStorage.Chunks{id: nil}
         ChunkUploader.filename(:original, {mock_chunk, %{}})
         flunk("Should have raised an error for missing chunk_id")
       rescue
-        # Expected to fail
         _ -> :ok
       end
 
-      # Test with invalid chunk_id format
       try do
         ChunkUploader.filename(:original, {nil, %{chunk_id: "invalid"}})
-        # This might work depending on implementation, so we don't assert failure
       catch
-        # It's okay if it fails
         _, _ -> :ok
       end
     end
 
     test "performance integration test" do
-      # Test that parser and uploader together perform reasonably
       synthetic_data = CasyncFixtures.create_multi_chunk_caibx(50)
-
       {parse_time, {:ok, parsed}} = :timer.tc(CasyncFormat, :parse_index, [synthetic_data])
 
       {process_time, processed_chunks} =
@@ -249,7 +176,6 @@ defmodule AriaStorage.CasyncIntegrationTest do
         end)
 
       total_time = parse_time + process_time
-
       TestOutput.trace_puts("\nIntegration Performance:")
       TestOutput.trace_puts("  Parse time: #{parse_time} μs")
       TestOutput.trace_puts("  Process time: #{process_time} μs")
@@ -260,12 +186,9 @@ defmodule AriaStorage.CasyncIntegrationTest do
         "  Time per chunk: #{Float.round(total_time / length(processed_chunks), 2)} μs"
       )
 
-      # Should be reasonably fast
-      # Less than 100ms total
       assert total_time < 100_000
       assert length(processed_chunks) == 50
 
-      # Verify all chunks have valid paths
       Enum.each(processed_chunks, fn chunk ->
         assert String.ends_with?(chunk.filename, ".cacnk")
         assert String.starts_with?(chunk.storage_dir, "chunks/")
@@ -274,14 +197,12 @@ defmodule AriaStorage.CasyncIntegrationTest do
     end
   end
 
-  describe "archive integration" do
+  describe("archive integration") do
     test "parsed catar entries provide useful metadata" do
-      # Use synthetic data instead of potentially invalid test files
       synthetic_catar = CasyncFixtures.create_complex_catar()
 
       case CasyncFormat.parse_archive(synthetic_catar) do
         {:ok, result} ->
-          # Verify entries have useful metadata for storage decisions
           Enum.each(result.elements, fn entry ->
             assert entry.type in [
                      :file,
@@ -294,13 +215,10 @@ defmodule AriaStorage.CasyncIntegrationTest do
                      :entry
                    ]
 
-            # Check for standard Unix metadata
             if Map.has_key?(entry, :mode) do
               assert is_integer(entry.mode)
-              # Mode should be reasonable (not negative, not huge)
               assert entry.mode >= 0
-              # Reasonable upper bound
-              assert entry.mode < 0o777777
+              assert entry.mode < 262_143
             end
 
             if Map.has_key?(entry, :uid) do
@@ -315,29 +233,22 @@ defmodule AriaStorage.CasyncIntegrationTest do
 
             if Map.has_key?(entry, :mtime) do
               assert is_integer(entry.mtime)
-              # Should be a reasonable timestamp (after 1970, before far future)
               assert entry.mtime >= 0
-              # Year 2096
               assert entry.mtime < 4_000_000_000
             end
           end)
 
         {:error, _} ->
-          # Skip if parsing fails - the synthetic CATAR is minimal
           :ok
       end
     end
 
     test "catar parsing supports storage planning" do
-      # Test that CATAR format parsing is now implemented
       synthetic_catar = CasyncFixtures.create_complex_catar()
-
       assert {:ok, result} = CasyncFormat.parse_archive(synthetic_catar)
       assert result.format == :catar
       assert is_list(result.elements)
       assert length(result.elements) > 0
-
-      # Verify basic structure for storage planning
       assert is_list(result.files)
       assert is_list(result.directories)
     end

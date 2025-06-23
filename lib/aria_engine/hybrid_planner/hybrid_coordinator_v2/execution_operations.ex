@@ -1,46 +1,31 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule HybridPlanner.HybridCoordinatorV2.ExecutionOperations do
-  @moduledoc """
-  Execution operations for HybridCoordinatorV2.
-
-  Handles plan execution using injected execution strategy dependencies.
-  """
-
+  @moduledoc "Execution operations for HybridCoordinatorV2.\n\nHandles plan execution using injected execution strategy dependencies.\n"
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()
-  @type execution_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
-
-  @doc """
-  Execute a plan using injected execution strategy.
-  """
-  @spec execute(coordinator(), Domain.Core.t(), AriaEngine.StateV2.t(), map(), keyword()) ::
+  @type execution_result :: {:ok, AriaEngine.State.t()} | {:error, String.t()}
+  @doc "Execute a plan using injected execution strategy.\n"
+  @spec execute(coordinator(), Domain.Core.t(), AriaEngine.State.t(), map(), keyword()) ::
           execution_result()
   def execute(
         %coordinator_module{} = coordinator,
         domain,
-        %AriaEngine.StateV2{} = initial_state,
+        %AriaEngine.State{} = initial_state,
         plan,
         opts \\ []
       )
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
     coordinator.logging_strategy.log_progress(
       "execution",
-      %{
-        status: "started"
-      },
+      %{status: "started"},
       opts
     )
 
     try do
-      # Extract solution tree from composite plan
       solution_tree = Map.get(plan, :solution_tree)
       _temporal_constraints = Map.get(plan, :temporal_constraints)
 
       if is_nil(solution_tree) do
         {:error, "Invalid plan format - missing solution tree"}
       else
-        # Use injected execution strategy with all strategies available
         strategies = extract_strategies_map(coordinator)
         enhanced_opts = Keyword.put(opts, :domain, domain)
 
@@ -53,9 +38,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.ExecutionOperations do
           {:ok, final_state} ->
             coordinator.logging_strategy.log_progress(
               "execution",
-              %{
-                status: "completed_successfully"
-              },
+              %{status: "completed_successfully"},
               opts
             )
 
@@ -74,9 +57,6 @@ defmodule HybridPlanner.HybridCoordinatorV2.ExecutionOperations do
     end
   end
 
-  # ==================== PRIVATE HELPER FUNCTIONS ====================
-
-  # Extract strategies as a map for passing to execution strategy
   defp extract_strategies_map(coordinator) do
     %{
       planning_strategy: coordinator.planning_strategy,

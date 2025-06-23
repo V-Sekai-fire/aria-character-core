@@ -1,25 +1,20 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
-  @moduledoc """
-  Replanning operations for HybridCoordinatorV2.
-
-  Handles replanning from failure points using injected planning and temporal strategies.
-  """
-
+  @moduledoc "Replanning operations for HybridCoordinatorV2.\n\nHandles replanning from failure points using injected planning and temporal strategies.\n"
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()
   @type replan_result :: {:ok, map()} | {:error, String.t()} | :failure
-
-  @doc """
-  Replan from a failure point using injected planning and temporal strategies.
-  """
-  @spec replan(coordinator(), Domain.Core.t(), AriaEngine.StateV2.t(), map(), String.t(), keyword()) ::
-          replan_result()
+  @doc "Replan from a failure point using injected planning and temporal strategies.\n"
+  @spec replan(
+          coordinator(),
+          Domain.Core.t(),
+          AriaEngine.State.t(),
+          map(),
+          String.t(),
+          keyword()
+        ) :: replan_result()
   def replan(
         %coordinator_module{} = coordinator,
         domain,
-        %AriaEngine.StateV2{} = state,
+        %AriaEngine.State{} = state,
         plan,
         fail_node_id,
         opts \\ []
@@ -27,21 +22,16 @@ defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
     coordinator.logging_strategy.log_progress(
       "replanning",
-      %{
-        status: "started",
-        fail_node_id: fail_node_id
-      },
+      %{status: "started", fail_node_id: fail_node_id},
       opts
     )
 
     try do
-      # Extract solution tree from composite plan
       solution_tree = Map.get(plan, :solution_tree)
 
       if is_nil(solution_tree) do
         {:error, "Invalid plan format for replanning - missing solution tree"}
       else
-        # Use injected planning strategy for replanning
         case coordinator.planning_strategy.replan(
                domain,
                state,
@@ -52,13 +42,10 @@ defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
           {:ok, new_solution_tree} ->
             coordinator.logging_strategy.log_progress(
               "replanning",
-              %{
-                status: "htn_replanning_completed"
-              },
+              %{status: "htn_replanning_completed"},
               opts
             )
 
-            # Re-validate temporal constraints for new plan
             case add_temporal_constraints_to_plan(coordinator, new_solution_tree, domain, opts) do
               {:ok, new_temporal_constraints} ->
                 case coordinator.temporal_strategy.validate_temporal_consistency(
@@ -68,13 +55,10 @@ defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
                   {:ok, true} ->
                     coordinator.logging_strategy.log_progress(
                       "replanning",
-                      %{
-                        status: "completed_successfully"
-                      },
+                      %{status: "completed_successfully"},
                       opts
                     )
 
-                    # Return new composite plan
                     original_metadata = Map.get(plan, :metadata, %{})
 
                     replan_metadata =
@@ -129,9 +113,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
           :failure ->
             coordinator.logging_strategy.log_progress(
               "replanning",
-              %{
-                status: "no_alternatives_found"
-              },
+              %{status: "no_alternatives_found"},
               opts
             )
 
@@ -152,9 +134,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
     end
   end
 
-  @doc """
-  Simple replan interface for backward compatibility.
-  """
+  @doc "Simple replan interface for backward compatibility.\n"
   @spec replan(coordinator(), map()) :: replan_result()
   def replan(
         %coordinator_module{} = coordinator,
@@ -165,15 +145,10 @@ defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
     replan(coordinator, domain, state, plan, fail_node_id, opts)
   end
 
-  # ==================== PRIVATE HELPER FUNCTIONS ====================
-
-  # Add temporal constraints to a plan using the temporal strategy
   defp add_temporal_constraints_to_plan(coordinator, solution_tree, _domain, opts) do
-    # Extract primitive actions from solution tree
     primitive_actions = extract_primitive_actions(solution_tree)
     current_time = Keyword.get(opts, :current_time, 0)
 
-    # Use temporal strategy to add constraints
     coordinator.temporal_strategy.add_temporal_constraints(
       %{},
       primitive_actions,
@@ -181,10 +156,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
     )
   end
 
-  # Extract primitive actions from solution tree
   defp extract_primitive_actions(solution_tree) do
-    # This is a simplified extraction - in reality this would traverse the tree
-    # For now, assume the solution tree has a predictable structure
     case solution_tree do
       %{children: children} when is_list(children) ->
         Enum.flat_map(children, &extract_primitive_actions/1)

@@ -1,23 +1,8 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Scheduler.Core do
-  @moduledoc """
-  Private implementation core for AriaEngine.Scheduler.
-
-  Orchestrates the scheduling process by coordinating between specialized modules
-  for domain conversion, state management, plan conversion, and analysis.
-
-  This module should not be used directly - use AriaEngine.Scheduler instead.
-  """
-
+  @moduledoc "Private implementation core for AriaEngine.Scheduler.\n\nOrchestrates the scheduling process by coordinating between specialized modules\nfor domain conversion, state management, plan conversion, and analysis.\n\nThis module should not be used directly - use AriaEngine.Scheduler instead.\n"
   require Logger
-
   alias AriaEngine.Scheduler.{DomainConverter, StateManager, PlanConverter, ResourceManager}
-
-  @doc """
-  Main scheduling function with enhanced features.
-  """
+  @doc "Main scheduling function with enhanced features.\n"
   def schedule_with_enhanced_features(
         schedule_name,
         activities,
@@ -29,16 +14,16 @@ defmodule AriaEngine.Scheduler.Core do
         verbose,
         base_datetime
       ) do
-    # Validate that base_datetime is explicitly provided
     case validate_base_datetime(base_datetime) do
       {:error, reason} ->
-        {:error, "Missing or invalid base_datetime parameter: #{reason}. base_datetime must be explicitly provided as a DateTime struct."}
-      
+        {:error,
+         "Missing or invalid base_datetime parameter: #{reason}. base_datetime must be explicitly provided as a DateTime struct."}
+
       {:ok, _validated_datetime} ->
         if verbose > 1 do
           Logger.debug("AriaEngine.Scheduler: Initializing enhanced scheduling system")
         end
-        
+
         do_schedule_with_enhanced_features(
           schedule_name,
           activities,
@@ -53,23 +38,29 @@ defmodule AriaEngine.Scheduler.Core do
     end
   end
 
-  defp validate_base_datetime(nil), do: {:error, "base_datetime cannot be nil"}
-  defp validate_base_datetime(%DateTime{} = dt), do: {:ok, dt}
-  defp validate_base_datetime(_), do: {:error, "base_datetime must be a DateTime struct"}
+  defp validate_base_datetime(nil) do
+    {:error, "base_datetime cannot be nil"}
+  end
+
+  defp validate_base_datetime(%DateTime{} = dt) do
+    {:ok, dt}
+  end
+
+  defp validate_base_datetime(_) do
+    {:error, "base_datetime must be a DateTime struct"}
+  end
 
   defp do_schedule_with_enhanced_features(
-        schedule_name,
-        activities,
-        entities,
-        resources,
-        constraints,
-        simulation_mode,
-        activity_log,
-        verbose,
-        base_datetime
-      ) do
-
-    # Handle empty activities case
+         schedule_name,
+         activities,
+         entities,
+         resources,
+         constraints,
+         simulation_mode,
+         activity_log,
+         verbose,
+         base_datetime
+       ) do
     if Enum.empty?(activities) do
       return_empty_schedule_result(
         schedule_name,
@@ -79,7 +70,6 @@ defmodule AriaEngine.Scheduler.Core do
         activity_log
       )
     else
-      # Attempt enhanced scheduling
       scheduling_params = %{
         schedule_name: schedule_name,
         activities: activities,
@@ -113,10 +103,11 @@ defmodule AriaEngine.Scheduler.Core do
           result = %AriaEngine.Scheduler.SimulationResult{
             status: "success",
             reason:
-              if(simulation_mode,
-                do: "Simulation completed successfully",
-                else: "Schedule successfully generated"
-              ),
+              if simulation_mode do
+                "Simulation completed successfully"
+              else
+                "Schedule successfully generated"
+              end,
             schedule: schedule,
             analysis: default_analysis,
             resource_utilization: %{},
@@ -136,9 +127,7 @@ defmodule AriaEngine.Scheduler.Core do
     end
   end
 
-  @doc """
-  Handle empty activities case.
-  """
+  @doc "Handle empty activities case.\n"
   def return_empty_schedule_result(
         schedule_name,
         entities,
@@ -178,9 +167,7 @@ defmodule AriaEngine.Scheduler.Core do
     {:ok, result}
   end
 
-  @doc """
-  Enhanced scheduling with entity/resource management.
-  """
+  @doc "Enhanced scheduling with entity/resource management.\n"
   def attempt_enhanced_scheduling(scheduling_params) do
     %{
       schedule_name: _schedule_name,
@@ -194,6 +181,7 @@ defmodule AriaEngine.Scheduler.Core do
       base_datetime: base_datetime,
       opts: _opts
     } = scheduling_params
+
     Logger.info(
       "🔧 Scheduler.Core.attempt_enhanced_scheduling() called with #{length(activities)} activities"
     )
@@ -207,20 +195,15 @@ defmodule AriaEngine.Scheduler.Core do
       )
     end
 
-    # Convert to domain format for hybrid planner
     Logger.info("🔧 Calling convert_activities_to_enhanced_domain()...")
 
     case convert_activities_to_enhanced_domain(activities, entities, resources, constraints) do
       {:ok, domain} ->
         Logger.info("🔧 Domain conversion successful!")
-        # Create enhanced initial state with entities and resources
         Logger.info("🔧 Creating enhanced initial state...")
-        # Convert resources from map format to list of structs format
         resources_list = convert_resources_map_to_list(resources)
         entities_list = convert_entities_to_list(entities)
         initial_state = create_enhanced_initial_state(entities_list, resources_list)
-
-        # Generate tasks and goals from activities
         Logger.info("🔧 Converting activities to tasks and goals...")
         {tasks, goals} = StateManager.convert_activities_to_tasks_and_goals(activities)
         Logger.info("🔧 Generated #{length(tasks)} tasks and #{length(goals)} goals")
@@ -235,13 +218,11 @@ defmodule AriaEngine.Scheduler.Core do
           )
         end
 
-        # Use AriaEngine.PlannerAdapter for HTN task decomposition with temporal validation
         Logger.info("🔧 About to call AriaEngine.PlannerAdapter.plan_tasks()...")
         planner_opts = [verbose: verbose]
 
         case AriaEngine.PlannerAdapter.plan_tasks(domain, initial_state, tasks, planner_opts) do
           {:ok, solution_tree} ->
-            # Wrap raw solution tree in EncapsulatedPlan for PlanConverter compatibility
             encapsulated_plan =
               HybridPlanner.DataStructures.EncapsulatedPlan.new(solution_tree, %{
                 source: "AriaEngine.PlannerAdapter.plan_tasks",
@@ -249,7 +230,6 @@ defmodule AriaEngine.Scheduler.Core do
               })
 
             if simulation_mode do
-              # Run simulation using run_lazy_refineahead
               simulate_plan_execution(
                 domain,
                 initial_state,
@@ -261,7 +241,6 @@ defmodule AriaEngine.Scheduler.Core do
                 verbose
               )
             else
-              # Convert plan to schedule format using passed base_datetime
               schedule =
                 convert_plan_to_enhanced_schedule(
                   encapsulated_plan,
@@ -284,9 +263,7 @@ defmodule AriaEngine.Scheduler.Core do
     end
   end
 
-  @doc """
-  Simulate plan execution using run_lazy_refineahead.
-  """
+  @doc "Simulate plan execution using run_lazy_refineahead.\n"
   def simulate_plan_execution(
         domain,
         initial_state,
@@ -301,14 +278,11 @@ defmodule AriaEngine.Scheduler.Core do
       Logger.debug("AriaEngine.Scheduler: Running simulation with run_lazy_refineahead")
     end
 
-    # Extract internal plan from encapsulated plan
     internal_plan =
       HybridPlanner.DataStructures.EncapsulatedPlan.get_internal_plan(encapsulated_plan)
 
-    # Execute plan using run_lazy_refineahead
     case Plan.run_lazy_refineahead(domain, initial_state, internal_plan, verbose: verbose) do
       {:ok, final_state} ->
-        # Convert simulation results to schedule format
         schedule =
           convert_simulation_to_schedule(
             encapsulated_plan,
@@ -325,34 +299,30 @@ defmodule AriaEngine.Scheduler.Core do
     end
   end
 
-  @doc """
-  Convert activities to KHR domain with two-phase planning.
-  """
+  @doc "Convert activities to KHR domain with two-phase planning.\n"
   def convert_activities_to_enhanced_domain(activities, entities, resources, constraints) do
-    # Convert resources from map format to list of structs format
     resources_list = convert_resources_map_to_list(resources)
     entities_list = convert_entities_to_list(entities)
-    
-    DomainConverter.convert_activities_to_khr_domain(activities, entities_list, resources_list, constraints)
+
+    DomainConverter.convert_activities_to_khr_domain(
+      activities,
+      entities_list,
+      resources_list,
+      constraints
+    )
   end
 
-  @doc """
-  Create enhanced initial state with entities and resources.
-  """
+  @doc "Create enhanced initial state with entities and resources.\n"
   def create_enhanced_initial_state(entities, resources) do
     StateManager.create_enhanced_initial_state(entities, resources)
   end
 
-  @doc """
-  Convert activities to goals format.
-  """
+  @doc "Convert activities to goals format.\n"
   def convert_activities_to_goals(activities) do
     StateManager.convert_activities_to_goals(activities)
   end
 
-  @doc """
-  Create enhanced activity action with resource management.
-  """
+  @doc "Create enhanced activity action with resource management.\n"
   def create_enhanced_activity_action(activity, entities, resources) do
     fn _args, state ->
       activity_id = activity.id
@@ -384,7 +354,6 @@ defmodule AriaEngine.Scheduler.Core do
       required_capabilities = Map.get(activity, :required_capabilities, [])
       required_resources = Map.get(activity, :required_resources, [])
 
-      # Check if required capabilities and resources are available
       case allocate_resources_for_activity(
              state,
              activity_id,
@@ -394,22 +363,18 @@ defmodule AriaEngine.Scheduler.Core do
              resources
            ) do
         {:ok, updated_state} ->
-          # Mark activity as completed and update resource usage
           updated_state
-          |> AriaEngine.StateV2.set_fact(activity_id, "completed", true)
-          |> AriaEngine.StateV2.set_fact(activity_id, "duration", duration)
-          |> AriaEngine.StateV2.set_fact(activity_id, "execution_time", DateTime.utc_now())
+          |> AriaEngine.State.set_fact(activity_id, "completed", true)
+          |> AriaEngine.State.set_fact(activity_id, "duration", duration)
+          |> AriaEngine.State.set_fact(activity_id, "execution_time", DateTime.utc_now())
 
         {:error, _reason} ->
-          # Resource allocation failed
           false
       end
     end
   end
 
-  @doc """
-  Create enhanced activity method with resource constraints.
-  """
+  @doc "Create enhanced activity method with resource constraints.\n"
   def create_enhanced_activity_method(activity, entities, resources) do
     fn _args, state ->
       activity_id = activity.id
@@ -417,13 +382,11 @@ defmodule AriaEngine.Scheduler.Core do
       required_capabilities = Map.get(activity, :required_capabilities, [])
       required_resources = Map.get(activity, :required_resources, [])
 
-      # Check if dependencies are satisfied
       deps_satisfied =
         Enum.all?(dependencies, fn dep_id ->
-          AriaEngine.StateV2.matches_exactly?(state, dep_id, "completed", true)
+          AriaEngine.State.matches_exactly?(state, dep_id, "completed", true)
         end)
 
-      # Check if required capabilities and resources are available
       resources_available =
         check_resource_availability(
           state,
@@ -434,32 +397,22 @@ defmodule AriaEngine.Scheduler.Core do
         )
 
       if deps_satisfied and resources_available do
-        # Return action to complete this activity
         [{String.to_atom(activity_id), []}]
       else
-        # Dependencies not satisfied or resources unavailable
         incomplete_deps =
           Enum.filter(dependencies, fn dep_id ->
-            not AriaEngine.StateV2.matches_exactly?(state, dep_id, "completed", true)
+            not AriaEngine.State.matches_exactly?(state, dep_id, "completed", true)
           end)
 
         if not Enum.empty?(incomplete_deps) do
-          # Return tasks to complete dependencies first
-          dep_tasks =
-            Enum.map(incomplete_deps, fn dep_id ->
-              "complete_#{dep_id}"
-            end)
-
+          dep_tasks = Enum.map(incomplete_deps, fn dep_id -> "complete_#{dep_id}" end)
           dep_tasks ++ [{String.to_atom(activity_id), []}]
         else
-          # Resources unavailable - return false to try later
           false
         end
       end
     end
   end
-
-  # Resource management helper functions (delegated to ResourceManager)
 
   defp allocate_resources_for_activity(
          state,
@@ -495,9 +448,7 @@ defmodule AriaEngine.Scheduler.Core do
     )
   end
 
-  @doc """
-  Create resource management actions.
-  """
+  @doc "Create resource management actions.\n"
   def create_resource_management_actions(resources) do
     resources
     |> Enum.flat_map(fn resource ->
@@ -511,10 +462,10 @@ defmodule AriaEngine.Scheduler.Core do
 
   defp create_allocate_resource_action(resource) do
     fn _args, state ->
-      current_usage = AriaEngine.StateV2.get_fact(state, resource.id, "current_usage") || 0
+      current_usage = AriaEngine.State.get_fact(state, resource.id, "current_usage") || 0
 
       if current_usage < resource.capacity do
-        AriaEngine.StateV2.set_fact(state, resource.id, "current_usage", current_usage + 1)
+        AriaEngine.State.set_fact(state, resource.id, "current_usage", current_usage + 1)
       else
         false
       end
@@ -523,39 +474,29 @@ defmodule AriaEngine.Scheduler.Core do
 
   defp create_release_resource_action(resource) do
     fn _args, state ->
-      current_usage = AriaEngine.StateV2.get_fact(state, resource.id, "current_usage") || 0
+      current_usage = AriaEngine.State.get_fact(state, resource.id, "current_usage") || 0
 
       if current_usage > 0 do
-        AriaEngine.StateV2.set_fact(state, resource.id, "current_usage", current_usage - 1)
+        AriaEngine.State.set_fact(state, resource.id, "current_usage", current_usage - 1)
       else
         state
       end
     end
   end
 
-  @doc """
-  Create enhanced scheduling methods.
-  """
+  @doc "Create enhanced scheduling methods.\n"
   def create_enhanced_scheduling_methods(activities, _entities, _resources) do
     %{
       "schedule_all" => [
-        {
-          "resource_aware_sequential",
-          fn _args, _state ->
-            # Return all activities as sequential tasks with resource considerations
-            activities
-            |> Enum.map(fn activity ->
-              "complete_#{activity.id}"
-            end)
-          end
-        }
+        {"resource_aware_sequential",
+         fn _args, _state ->
+           activities |> Enum.map(fn activity -> "complete_#{activity.id}" end)
+         end}
       ]
     }
   end
 
-  @doc """
-  Create action metadata for durative actions.
-  """
+  @doc "Create action metadata for durative actions.\n"
   def create_action_metadata(activities, _entities, _resources) do
     activities
     |> Enum.map(fn activity ->
@@ -597,9 +538,7 @@ defmodule AriaEngine.Scheduler.Core do
     |> Enum.into(%{})
   end
 
-  @doc """
-  Convert plan to enhanced schedule format.
-  """
+  @doc "Convert plan to enhanced schedule format.\n"
   def convert_plan_to_enhanced_schedule(
         encapsulated_plan,
         activities,
@@ -616,9 +555,7 @@ defmodule AriaEngine.Scheduler.Core do
     )
   end
 
-  @doc """
-  Convert simulation results to schedule format.
-  """
+  @doc "Convert simulation results to schedule format.\n"
   def convert_simulation_to_schedule(
         encapsulated_plan,
         final_state,
@@ -638,11 +575,6 @@ defmodule AriaEngine.Scheduler.Core do
     )
   end
 
-  # Entity and resource assignment helpers (delegated to specialized modules)
-
-  # Resource utilization calculation functions
-
-  # Convert resources map to list of structs with :id field.
   defp convert_resources_map_to_list(resources) when is_map(resources) do
     Enum.map(resources, fn {resource_id, resource_data} ->
       %{
@@ -657,11 +589,11 @@ defmodule AriaEngine.Scheduler.Core do
     end)
   end
 
-  defp convert_resources_map_to_list(resources) when is_list(resources), do: resources
+  defp convert_resources_map_to_list(resources) when is_list(resources) do
+    resources
+  end
 
-  # Convert entities to list format if needed.
   defp convert_entities_to_list(entities) when is_list(entities) do
-    # Convert maps to structs with atom keys if needed
     Enum.map(entities, fn entity ->
       if is_map(entity) and Map.has_key?(entity, "id") do
         %{

@@ -1,42 +1,17 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Membrane.FormatTransformerFilter do
-  @moduledoc """
-  Generic format transformer filter for Membrane pipelines.
-
-  This filter can transform between different formats and provides
-  mock scenarios for testing purposes.
-  """
-
+  @moduledoc "Generic format transformer filter for Membrane pipelines.\n\nThis filter can transform between different formats and provides\nmock scenarios for testing purposes.\n"
   use Membrane.Filter
-
   require Logger
-
-  def_input_pad(:input,
-    accepted_format: _any,
-    flow_control: :auto
-  )
-
-  def_output_pad(:output,
-    accepted_format: _any,
-    flow_control: :auto
-  )
+  def_input_pad(:input, accepted_format: _any, flow_control: :auto)
+  def_output_pad(:output, accepted_format: _any, flow_control: :auto)
 
   def_options(
-    mock_scenario: [
-      spec: atom(),
-      default: :passthrough,
-      description: "Mock scenario for testing"
-    ]
+    mock_scenario: [spec: atom(), default: :passthrough, description: "Mock scenario for testing"]
   )
 
   @impl true
   def handle_init(_ctx, opts) do
-    state = %{
-      mock_scenario: opts.mock_scenario
-    }
-
+    state = %{mock_scenario: opts.mock_scenario}
     Logger.info("FormatTransformerFilter initialized with scenario: #{opts.mock_scenario}")
     {[], state}
   end
@@ -86,11 +61,7 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
     %{
       "jsonrpc" => "2.0",
       "id" => "mock_response_#{System.unique_integer()}",
-      "result" => %{
-        "status" => "success",
-        "message" => "Mock MCP response",
-        "data" => payload
-      }
+      "result" => %{"status" => "success", "message" => "Mock MCP response", "data" => payload}
     }
   end
 
@@ -166,8 +137,8 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
       is_map(payload) and Map.has_key?(payload, "activities") ->
         payload["activities"]
 
-      is_map(payload) and Map.has_key?(payload, :parameters) and
-        is_map(payload.parameters) and Map.has_key?(payload.parameters, "activities") ->
+      is_map(payload) and Map.has_key?(payload, :parameters) and is_map(payload.parameters) and
+          Map.has_key?(payload.parameters, "activities") ->
         payload.parameters["activities"]
 
       true ->
@@ -192,7 +163,6 @@ defmodule AriaEngine.Membrane.FormatTransformerFilter do
         end_time
 
       %{"start" => start_time} ->
-        # Add 1 hour as default duration
         {:ok, start_dt, _} = DateTime.from_iso8601(start_time)
         DateTime.add(start_dt, 3600, :second) |> DateTime.to_iso8601()
 

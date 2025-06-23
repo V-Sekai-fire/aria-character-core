@@ -1,40 +1,27 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
-  @moduledoc """
-  Core planning operations for HybridCoordinatorV2.
-
-  Handles HTN planning, temporal constraint validation, and plan creation
-  using injected strategy dependencies.
-  """
-
+  @moduledoc "Core planning operations for HybridCoordinatorV2.\n\nHandles HTN planning, temporal constraint validation, and plan creation\nusing injected strategy dependencies.\n"
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()
   @type plan_result :: {:ok, map()} | {:error, String.t()}
-
-  @doc """
-  Plan goals using injected planning and temporal strategies.
-
-  Pure Function as Object implementation - all dependencies are injected strategies.
-  """
-  @spec plan(coordinator(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) :: plan_result()
-  def plan(%coordinator_module{} = coordinator, domain, %AriaEngine.StateV2{} = state, goals, opts \\ [])
+  @doc "Plan goals using injected planning and temporal strategies.\n\nPure Function as Object implementation - all dependencies are injected strategies.\n"
+  @spec plan(coordinator(), Domain.Core.t(), AriaEngine.State.t(), [term()], keyword()) ::
+          plan_result()
+  def plan(
+        %coordinator_module{} = coordinator,
+        domain,
+        %AriaEngine.State{} = state,
+        goals,
+        opts \\ []
+      )
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
     _verbose = Keyword.get(opts, :verbose, 0)
 
-    # Log start using injected logging strategy
     coordinator.logging_strategy.log_progress(
       "planning",
-      %{
-        status: "started",
-        goals: length(goals),
-        domain: domain.name
-      },
+      %{status: "started", goals: length(goals), domain: domain.name},
       opts
     )
 
     try do
-      # Phase 1: HTN Planning using injected planning strategy
       case coordinator.planning_strategy.plan(domain, state, goals, opts) do
         {:ok, solution_tree} ->
           coordinator.logging_strategy.log_progress(
@@ -46,10 +33,8 @@ defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
             opts
           )
 
-          # Phase 2: Temporal Validation using injected temporal strategy
           case add_temporal_constraints_to_plan(coordinator, solution_tree, domain, opts) do
             {:ok, temporal_constraints} ->
-              # Phase 3: Validate temporal consistency
               case coordinator.temporal_strategy.validate_temporal_consistency(
                      temporal_constraints,
                      opts
@@ -57,13 +42,10 @@ defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
                 {:ok, true} ->
                   coordinator.logging_strategy.log_progress(
                     "planning",
-                    %{
-                      status: "completed_successfully"
-                    },
+                    %{status: "completed_successfully"},
                     opts
                   )
 
-                  # Return composite plan with both HTN and temporal information
                   {:ok,
                    %{
                      solution_tree: solution_tree,
@@ -119,15 +101,13 @@ defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
     end
   end
 
-  @doc """
-  Validate a plan using injected planning strategy.
-  """
-  @spec validate_plan(coordinator(), Domain.Core.t(), AriaEngine.StateV2.t(), map()) ::
-          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @doc "Validate a plan using injected planning strategy.\n"
+  @spec validate_plan(coordinator(), Domain.Core.t(), AriaEngine.State.t(), map()) ::
+          {:ok, AriaEngine.State.t()} | {:error, String.t()}
   def validate_plan(
         %coordinator_module{} = coordinator,
         domain,
-        %AriaEngine.StateV2{} = initial_state,
+        %AriaEngine.State{} = initial_state,
         plan
       )
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
@@ -137,34 +117,28 @@ defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
       if is_nil(solution_tree) do
         {:error, "Invalid plan format for validation - missing solution tree"}
       else
-        # Use injected planning strategy for validation
         coordinator.planning_strategy.validate_plan(domain, initial_state, solution_tree)
       end
     rescue
-      e ->
-        {:error, "Plan validation error: #{Exception.message(e)}"}
+      e -> {:error, "Plan validation error: #{Exception.message(e)}"}
     end
   end
 
-  @doc """
-  Simple plan interface for backward compatibility.
-  """
+  @doc "Simple plan interface for backward compatibility.\n"
   @spec plan(coordinator(), map()) :: plan_result()
-  def plan(%coordinator_module{} = coordinator, %{domain: domain, state: state, goals: goals} = request)
+  def plan(
+        %coordinator_module{} = coordinator,
+        %{domain: domain, state: state, goals: goals} = request
+      )
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
     opts = Map.get(request, :opts, [])
     plan(coordinator, domain, state, goals, opts)
   end
 
-  # ==================== PRIVATE HELPER FUNCTIONS ====================
-
-  # Add temporal constraints to a plan using the temporal strategy
   defp add_temporal_constraints_to_plan(coordinator, solution_tree, _domain, opts) do
-    # Extract primitive actions from solution tree
     primitive_actions = extract_primitive_actions(solution_tree)
     current_time = Keyword.get(opts, :current_time, 0)
 
-    # Use temporal strategy to add constraints
     coordinator.temporal_strategy.add_temporal_constraints(
       %{},
       primitive_actions,
@@ -172,10 +146,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
     )
   end
 
-  # Extract primitive actions from solution tree
   defp extract_primitive_actions(solution_tree) do
-    # This is a simplified extraction - in reality this would traverse the tree
-    # For now, assume the solution tree has a predictable structure
     case solution_tree do
       %{children: children} when is_list(children) ->
         Enum.flat_map(children, &extract_primitive_actions/1)
@@ -191,7 +162,6 @@ defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
     end
   end
 
-  # Count nodes in solution tree for metrics
   defp count_solution_tree_nodes(solution_tree) do
     case solution_tree do
       %{children: children} when is_list(children) ->

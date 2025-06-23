@@ -1,22 +1,10 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
-  @moduledoc """
-  Default logging strategy implementation using Elixir's Logger.
-
-  This strategy encapsulates logging operations while providing the clean
-  strategy interface defined in ADR-091.
-  """
-
+  @moduledoc "Default logging strategy implementation using Elixir's Logger.\n\nThis strategy encapsulates logging operations while providing the clean\nstrategy interface defined in ADR-091.\n"
   @behaviour HybridPlanner.Strategies.LoggingStrategy
-
   require Logger
-
   @impl true
   def log(level, message, metadata \\ %{}, opts \\ []) do
     try do
-      # Convert our log levels to Logger levels
       logger_level =
         case level do
           :debug -> :debug
@@ -26,13 +14,11 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
           _ -> :info
         end
 
-      # Add timestamp and strategy info to metadata
       enhanced_metadata =
         metadata
         |> Map.put(:timestamp, System.system_time(:millisecond))
         |> Map.put(:strategy_source, "HybridPlanner")
 
-      # Format message with metadata if verbose logging is enabled
       verbose = Keyword.get(opts, :verbose, 0)
 
       formatted_message =
@@ -42,12 +28,10 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
           message
         end
 
-      # Log using Elixir's Logger
       Logger.log(logger_level, formatted_message)
       :ok
     rescue
       _ ->
-        # Fallback to basic IO if Logger fails
         Logger.debug("LoggerStrategy: #{level} - #{message}")
         :ok
     end
@@ -90,29 +74,21 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
   def log_error(error, context \\ %{}, opts \\ []) do
     error_message =
       case error do
-        %{__exception__: true} = exception ->
-          "Exception: #{Exception.message(exception)}"
-
-        error_string when is_binary(error_string) ->
-          error_string
-
-        other ->
-          "Error: #{inspect(other)}"
+        %{__exception__: true} = exception -> "Exception: #{Exception.message(exception)}"
+        error_string when is_binary(error_string) -> error_string
+        other -> "Error: #{inspect(other)}"
       end
 
     error_metadata =
-      Map.merge(context, %{
-        type: :error,
-        timestamp: System.system_time(:millisecond)
-      })
+      Map.merge(context, %{type: :error, timestamp: System.system_time(:millisecond)})
 
-    # Include stack trace if it's an exception and verbose logging is enabled
     verbose = Keyword.get(opts, :verbose, 0)
 
     enhanced_message =
       if verbose > 1 and is_exception_value(error) do
         stacktrace = Process.info(self(), :current_stacktrace) |> elem(1)
-        "#{error_message}\nStacktrace: #{Exception.format_stacktrace(stacktrace)}"
+        "#{error_message}
+Stacktrace: #{Exception.format_stacktrace(stacktrace)}"
       else
         error_message
       end
@@ -123,11 +99,8 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
   @impl true
   def configure(config, opts \\ []) do
     try do
-      # Basic configuration support
       case config do
         %{level: level} when level in [:debug, :info, :warning, :error] ->
-          # Note: In a real implementation, this might set the Logger level
-          # For now, we just acknowledge the configuration
           log(:info, "LoggerStrategy configured with level: #{level}", %{config: config}, opts)
 
         %{format: format} when is_binary(format) ->
@@ -151,9 +124,6 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
     end
   end
 
-  # ==================== HELPER FUNCTIONS ====================
-
-  # Check if a value is an exception
   defp is_exception_value(value) do
     case value do
       %{__exception__: true} -> true
@@ -161,11 +131,7 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
     end
   end
 
-  # ==================== STRATEGY METADATA ====================
-
-  @doc """
-  Get strategy metadata and capabilities.
-  """
+  @doc "Get strategy metadata and capabilities.\n"
   def strategy_info do
     %{
       name: "Logger Strategy",
@@ -177,32 +143,18 @@ defmodule HybridPlanner.Strategies.Default.LoggerStrategy do
     }
   end
 
-  @doc """
-  Check if this strategy can handle specific logging features.
-  """
+  @doc "Check if this strategy can handle specific logging features.\n"
   def supports?(feature) when is_atom(feature) do
     capabilities = strategy_info()[:capabilities]
     feature in capabilities
   end
 
-  @doc """
-  Get performance characteristics of this strategy.
-  """
+  @doc "Get performance characteristics of this strategy.\n"
   def performance_profile do
-    %{
-      logging_overhead: :low,
-      memory_usage: :low,
-      scalability: :excellent,
-      async_support: :yes
-    }
+    %{logging_overhead: :low, memory_usage: :low, scalability: :excellent, async_support: :yes}
   end
 
-  @doc """
-  Create a scoped logger for a specific component.
-
-  This allows different parts of the hybrid planner to have
-  contextualized logging while using the same strategy.
-  """
+  @doc "Create a scoped logger for a specific component.\n\nThis allows different parts of the hybrid planner to have\ncontextualized logging while using the same strategy.\n"
   def create_scoped_logger(scope, base_metadata \\ %{}) do
     fn level, message, metadata, opts ->
       scoped_metadata = Map.merge(base_metadata, Map.put(metadata, :scope, scope))

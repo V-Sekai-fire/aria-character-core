@@ -1,36 +1,21 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine do
-  @moduledoc """
-  Main AriaEngine module providing utility functions.
-
-  This module contains utility functions that are used across the AriaEngine system.
-  """
-
-  # Simple aliases for core modules
-  alias AriaEngine.StateV2
+  @moduledoc "Main AriaEngine module providing utility functions.\n\nThis module contains utility functions that are used across the AriaEngine system.\n"
+  alias AriaEngine.State
   alias TimelineGraph
-
   @type domain :: map()
-  @type state :: StateV2.t()
+  @type state :: State.t()
   @type todos :: list()
   @type plan :: term()
   @type opts :: keyword()
-
-  @doc """
-  Creates a new empty multigoal structure.
-  """
+  @doc "Creates a new empty multigoal structure.\n"
   @spec create_multigoal() :: Multigoal.t()
   def create_multigoal do
     Multigoal.new()
   end
 
-  @doc """
-  Creates a new empty state using StateV2.
-  """
-  @spec create_state() :: StateV2.t()
+  @doc "Creates a new empty state using StateV2.\n"
+  @spec create_state() :: State.t()
   def create_state do
-    StateV2.new()
+    State.new()
   end
 end

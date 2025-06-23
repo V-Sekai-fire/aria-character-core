@@ -1,15 +1,7 @@
 defmodule AriaEngine.Membrane.MiniZincSolverFilter do
-  @moduledoc """
-  Membrane filter element that calls MiniZinc solver for constraint satisfaction problems.
-
-  This element receives scheduling requests and uses MiniZinc to solve them,
-  providing ground truth solutions for comparison with other solvers.
-  """
-
+  @moduledoc "Membrane filter element that calls MiniZinc solver for constraint satisfaction problems.\n\nThis element receives scheduling requests and uses MiniZinc to solve them,\nproviding ground truth solutions for comparison with other solvers.\n"
   use Membrane.Filter
-
   require Logger
-
   def_input_pad(:input, accepted_format: %Membrane.RemoteStream{})
   def_output_pad(:output, accepted_format: %Membrane.RemoteStream{})
 
@@ -24,11 +16,7 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
       default: "org.minizinc.mip.coin-bc",
       description: "MiniZinc solver to use"
     ],
-    timeout: [
-      spec: pos_integer(),
-      default: 30_000,
-      description: "Solver timeout in milliseconds"
-    ]
+    timeout: [spec: pos_integer(), default: 30000, description: "Solver timeout in milliseconds"]
   )
 
   @impl true
@@ -52,36 +40,24 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
     Logger.info("🔧 MiniZinc Solver received buffer")
 
     try do
-      # Parse the incoming request
       request_data = Jason.decode!(buffer.payload)
       Logger.info("🔧 Processing request: #{inspect(request_data, pretty: true)}")
-
-      # Check if this is a widget assembly request
       schedule_name = request_data["schedule_name"] || ""
 
       if String.contains?(schedule_name, "widget") do
-        # Solve using MiniZinc
         result = solve_with_minizinc(request_data, state)
-
-        # Create response buffer
         response = create_minizinc_response(request_data, result, state)
         response_payload = Jason.encode!(response)
 
         response_buffer = %Membrane.Buffer{
           payload: response_payload,
-          metadata: %{
-            solver: "minizinc",
-            model: state.model_file,
-            timestamp: DateTime.utc_now()
-          }
+          metadata: %{solver: "minizinc", model: state.model_file, timestamp: DateTime.utc_now()}
         }
 
         Logger.info("✅ MiniZinc solution generated successfully")
-
         new_state = %{state | request_count: state.request_count + 1}
         {[buffer: {:output, response_buffer}], new_state}
       else
-        # Pass through non-widget requests
         Logger.info("🔄 Passing through non-widget request")
         {[buffer: {:output, buffer}], state}
       end
@@ -105,14 +81,10 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
     end
   end
 
-  # Private functions
-
   defp solve_with_minizinc(_request_data, state) do
     Logger.info("🔧 Calling MiniZinc solver")
-
     start_time = System.monotonic_time(:millisecond)
 
-    # Execute MiniZinc command
     cmd_args = [
       "--solver",
       state.solver,
@@ -128,19 +100,10 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
       {output, 0} ->
         end_time = System.monotonic_time(:millisecond)
         solve_time = end_time - start_time
-
         Logger.info("✅ MiniZinc completed in #{solve_time}ms")
         Logger.info("🔧 Raw output: #{output}")
-
-        # Parse MiniZinc output
         solution = parse_minizinc_output(output)
-
-        %{
-          status: :success,
-          solution: solution,
-          solve_time_ms: solve_time,
-          raw_output: output
-        }
+        %{status: :success, solution: solution, solve_time_ms: solve_time, raw_output: output}
 
       {output, exit_code} ->
         Logger.error("❌ MiniZinc failed with exit code #{exit_code}")
@@ -155,20 +118,15 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
   end
 
   defp parse_minizinc_output(output) do
-    # Parse the MiniZinc output to extract solution
     lines = String.split(output, "\n")
 
-    # Look for solution lines
     solution_lines =
       Enum.filter(lines, fn line ->
-        String.contains?(line, "start_times") or
-          String.contains?(line, "makespan") or
+        String.contains?(line, "start_times") or String.contains?(line, "makespan") or
           String.contains?(line, "=")
       end)
 
     Logger.info("🔧 Solution lines: #{inspect(solution_lines)}")
-
-    # Extract start times and makespan
     start_times = extract_start_times(solution_lines)
     makespan = extract_makespan(solution_lines)
 
@@ -193,14 +151,9 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
   end
 
   defp extract_start_times(lines) do
-    # Look for start_times array
-    start_times_line =
-      Enum.find(lines, fn line ->
-        String.contains?(line, "start_times")
-      end)
+    start_times_line = Enum.find(lines, fn line -> String.contains?(line, "start_times") end)
 
     if start_times_line do
-      # Extract array values: start_times = [0, 30];
       case Regex.run(~r/start_times\s*=\s*\[([^\]]+)\]/, start_times_line) do
         [_, values_str] ->
           values_str
@@ -209,33 +162,22 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
           |> Enum.map(&String.to_integer/1)
 
         _ ->
-          # Default fallback
           [0, 30]
       end
     else
-      # Default fallback
       [0, 30]
     end
   end
 
   defp extract_makespan(lines) do
-    # Look for makespan value
-    makespan_line =
-      Enum.find(lines, fn line ->
-        String.contains?(line, "makespan")
-      end)
+    makespan_line = Enum.find(lines, fn line -> String.contains?(line, "makespan") end)
 
     if makespan_line do
       case Regex.run(~r/makespan\s*=\s*(\d+)/, makespan_line) do
-        [_, value_str] ->
-          String.to_integer(value_str)
-
-        _ ->
-          # Default fallback
-          75
+        [_, value_str] -> String.to_integer(value_str)
+        _ -> 75
       end
     else
-      # Default fallback
       75
     end
   end
@@ -282,10 +224,7 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
           "status" => "error",
           "error" => result.error,
           "solver" => "minizinc",
-          "details" => %{
-            "output" => result.output,
-            "model_file" => state.model_file
-          }
+          "details" => %{"output" => result.output, "model_file" => state.model_file}
         }
     end
   end
@@ -306,13 +245,29 @@ defmodule AriaEngine.Membrane.MiniZincSolverFilter do
     end)
   end
 
-  defp format_activity_name("prepare_materials"), do: "Prepare Assembly Materials"
-  defp format_activity_name("assemble_widget"), do: "Assemble Widget"
-  defp format_activity_name(id), do: String.replace(id, "_", " ") |> String.capitalize()
+  defp format_activity_name("prepare_materials") do
+    "Prepare Assembly Materials"
+  end
 
-  defp get_activity_dependencies("prepare_materials"), do: []
-  defp get_activity_dependencies("assemble_widget"), do: ["prepare_materials"]
-  defp get_activity_dependencies(_), do: []
+  defp format_activity_name("assemble_widget") do
+    "Assemble Widget"
+  end
+
+  defp format_activity_name(id) do
+    String.replace(id, "_", " ") |> String.capitalize()
+  end
+
+  defp get_activity_dependencies("prepare_materials") do
+    []
+  end
+
+  defp get_activity_dependencies("assemble_widget") do
+    ["prepare_materials"]
+  end
+
+  defp get_activity_dependencies(_) do
+    []
+  end
 
   defp format_timeline(solution) do
     Enum.flat_map(solution.activities, fn activity ->

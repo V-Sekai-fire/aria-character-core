@@ -1,55 +1,10 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule HybridPlanner.StrategyCoordinator do
-  @moduledoc """
-  Coordinates planning using pluggable function strategies.
-
-  Embodies Martin Fowler's Function as Object pattern completely by treating
-  planning strategies as composable functions that can be stored, passed around,
-  and combined at runtime without requiring object hierarchies.
-
-  ## Function as Object Benefits
-
-  - **Pure Composition**: Strategies are just functions, no inheritance needed
-  - **Runtime Flexibility**: Change strategies dynamically based on problem characteristics
-  - **Easy Testing**: Mock strategies are just simple functions
-  - **No Coupling**: Strategies don't know about each other, only input/output contracts
-
-  ## Usage Examples
-
-      # Basic composition
-      coordinator = StrategyCoordinator.hybrid_htn_stn()
-      result = StrategyCoordinator.coordinate(coordinator, domain, state, goals)
-      
-      # Custom composition
-      custom_coordinator = StrategyCoordinator.new(
-        &MyPlanner.plan/4,
-        &MyTemporal.validate/3,
-        &MyExecutor.run/4
-      )
-      
-      # Runtime strategy selection
-      coordinator = case problem_complexity do
-        :simple -> StrategyCoordinator.pure_strips()
-        :temporal -> StrategyCoordinator.hybrid_htn_stn()
-        :custom -> StrategyCoordinator.from_config(config)
-      end
-  """
-
+  @moduledoc "Coordinates planning using pluggable function strategies.\n\nEmbodies Martin Fowler's Function as Object pattern completely by treating\nplanning strategies as composable functions that can be stored, passed around,\nand combined at runtime without requiring object hierarchies.\n\n## Function as Object Benefits\n\n- **Pure Composition**: Strategies are just functions, no inheritance needed\n- **Runtime Flexibility**: Change strategies dynamically based on problem characteristics\n- **Easy Testing**: Mock strategies are just simple functions\n- **No Coupling**: Strategies don't know about each other, only input/output contracts\n\n## Usage Examples\n\n    # Basic composition\n    coordinator = StrategyCoordinator.hybrid_htn_stn()\n    result = StrategyCoordinator.coordinate(coordinator, domain, state, goals)\n    \n    # Custom composition\n    custom_coordinator = StrategyCoordinator.new(\n      &MyPlanner.plan/4,\n      &MyTemporal.validate/3,\n      &MyExecutor.run/4\n    )\n    \n    # Runtime strategy selection\n    coordinator = case problem_complexity do\n      :simple -> StrategyCoordinator.pure_strips()\n      :temporal -> StrategyCoordinator.hybrid_htn_stn()\n      :custom -> StrategyCoordinator.from_config(config)\n    end\n"
   require Logger
   alias HybridPlanner.StrategyRegistry
-
   @type strategy_function :: function()
-  @type coordination_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
-
-  defstruct [
-    :planning_fn,
-    :temporal_fn,
-    :execution_fn,
-    :metadata,
-    :middleware
-  ]
+  @type coordination_result :: {:ok, AriaEngine.State.t()} | {:error, String.t()}
+  defstruct [:planning_fn, :temporal_fn, :execution_fn, :metadata, :middleware]
 
   @type t :: %__MODULE__{
           planning_fn: StrategyRegistry.planning_strategy(),
@@ -58,14 +13,7 @@ defmodule HybridPlanner.StrategyCoordinator do
           metadata: map(),
           middleware: [function()]
         }
-
-  # ==================== FACTORY FUNCTIONS ====================
-
-  @doc """
-  Create a strategy coordinator with custom function strategies.
-
-  This is the core Function as Object constructor - just pass in functions.
-  """
+  @doc "Create a strategy coordinator with custom function strategies.\n\nThis is the core Function as Object constructor - just pass in functions.\n"
   @spec new(
           StrategyRegistry.planning_strategy(),
           StrategyRegistry.temporal_strategy(),
@@ -83,9 +31,7 @@ defmodule HybridPlanner.StrategyCoordinator do
     }
   end
 
-  @doc """
-  Create a coordinator from named strategies in the registry.
-  """
+  @doc "Create a coordinator from named strategies in the registry.\n"
   @spec from_strategies(atom(), atom(), atom(), map()) :: {:ok, t()} | {:error, String.t()}
   def from_strategies(planning_strategy, temporal_strategy, execution_strategy, metadata \\ %{}) do
     strategies = StrategyRegistry.default_strategies()
@@ -101,9 +47,7 @@ defmodule HybridPlanner.StrategyCoordinator do
     end
   end
 
-  @doc """
-  Create hybrid HTN+STN coordinator (most common configuration).
-  """
+  @doc "Create hybrid HTN+STN coordinator (most common configuration).\n"
   @spec hybrid_htn_stn(map()) :: t()
   def hybrid_htn_stn(metadata \\ %{}) do
     strategies = StrategyRegistry.default_strategies()
@@ -123,9 +67,7 @@ defmodule HybridPlanner.StrategyCoordinator do
     )
   end
 
-  @doc """
-  Create pure STRIPS coordinator (no temporal reasoning).
-  """
+  @doc "Create pure STRIPS coordinator (no temporal reasoning).\n"
   @spec pure_strips(map()) :: t()
   def pure_strips(metadata \\ %{}) do
     strategies = StrategyRegistry.default_strategies()
@@ -145,9 +87,7 @@ defmodule HybridPlanner.StrategyCoordinator do
     )
   end
 
-  @doc """
-  Create reactive planning coordinator (fast replanning).
-  """
+  @doc "Create reactive planning coordinator (fast replanning).\n"
   @spec reactive_planner(map()) :: t()
   def reactive_planner(metadata \\ %{}) do
     strategies = StrategyRegistry.default_strategies()
@@ -167,9 +107,7 @@ defmodule HybridPlanner.StrategyCoordinator do
     )
   end
 
-  @doc """
-  Create coordinator from configuration map.
-  """
+  @doc "Create coordinator from configuration map.\n"
   @spec from_config(map()) :: {:ok, t()} | {:error, String.t()}
   def from_config(%{planning: planning, temporal: temporal, execution: execution} = config) do
     metadata = Map.get(config, :metadata, %{})
@@ -181,17 +119,10 @@ defmodule HybridPlanner.StrategyCoordinator do
     end
   end
 
-  # ==================== COORDINATION FUNCTIONS ====================
-
-  @doc """
-  Coordinate planning using the composed function strategies.
-
-  This is where Function as Object shines - just call the functions in sequence.
-  """
-  @spec coordinate(t(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) ::
+  @doc "Coordinate planning using the composed function strategies.\n\nThis is where Function as Object shines - just call the functions in sequence.\n"
+  @spec coordinate(t(), Domain.Core.t(), AriaEngine.State.t(), [term()], keyword()) ::
           coordination_result()
   def coordinate(%__MODULE__{} = coordinator, domain, state, goals, opts \\ []) do
-    # Apply middleware if present
     with {:ok, plan} <-
            call_with_middleware(
              coordinator.planning_fn,
@@ -212,10 +143,8 @@ defmodule HybridPlanner.StrategyCoordinator do
     end
   end
 
-  @doc """
-  Plan only (without execution) using the coordinator's strategies.
-  """
-  @spec plan_only(t(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) ::
+  @doc "Plan only (without execution) using the coordinator's strategies.\n"
+  @spec plan_only(t(), Domain.Core.t(), AriaEngine.State.t(), [term()], keyword()) ::
           {:ok, term()} | {:error, String.t()}
   def plan_only(%__MODULE__{} = coordinator, domain, state, goals, opts \\ []) do
     with {:ok, plan} <-
@@ -232,11 +161,9 @@ defmodule HybridPlanner.StrategyCoordinator do
     end
   end
 
-  @doc """
-  Execute a pre-planned solution using the coordinator's execution strategy.
-  """
-  @spec execute_only(t(), Domain.Core.t(), AriaEngine.StateV2.t(), term(), keyword()) ::
-          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @doc "Execute a pre-planned solution using the coordinator's execution strategy.\n"
+  @spec execute_only(t(), Domain.Core.t(), AriaEngine.State.t(), term(), keyword()) ::
+          {:ok, AriaEngine.State.t()} | {:error, String.t()}
   def execute_only(%__MODULE__{} = coordinator, domain, state, plan, opts \\ []) do
     call_with_middleware(
       coordinator.execution_fn,
@@ -245,49 +172,33 @@ defmodule HybridPlanner.StrategyCoordinator do
     )
   end
 
-  # ==================== FUNCTION COMPOSITION UTILITIES ====================
-
-  @doc """
-  Wrap a strategy function with middleware (logging, caching, timing, etc.).
-
-  Pure Function as Object - middleware are just functions that wrap other functions.
-  """
+  @doc "Wrap a strategy function with middleware (logging, caching, timing, etc.).\n\nPure Function as Object - middleware are just functions that wrap other functions.\n"
   @spec with_middleware(strategy_function(), [function()]) :: strategy_function()
   def with_middleware(strategy_fn, middleware) when is_list(middleware) do
-    # Compose middleware as a pipeline around the strategy function
     Enum.reduce(middleware, strategy_fn, fn middleware_fn, acc_fn ->
       fn args -> middleware_fn.(acc_fn, args) end
     end)
   end
 
-  @doc """
-  Create logging middleware function.
-  """
+  @doc "Create logging middleware function.\n"
   @spec logging_middleware(String.t()) :: function()
   def logging_middleware(label) do
     fn strategy_fn, args ->
       start_time = System.monotonic_time(:millisecond)
-
       result = apply(strategy_fn, args)
-
       end_time = System.monotonic_time(:millisecond)
       duration = end_time - start_time
 
       case result do
-        {:ok, _} ->
-          Logger.debug("#{label} succeeded in #{duration}ms")
-
-        {:error, reason} ->
-          Logger.error("#{label} failed in #{duration}ms: #{reason}")
+        {:ok, _} -> Logger.debug("#{label} succeeded in #{duration}ms")
+        {:error, reason} -> Logger.error("#{label} failed in #{duration}ms: #{reason}")
       end
 
       result
     end
   end
 
-  @doc """
-  Create caching middleware function.
-  """
+  @doc "Create caching middleware function.\n"
   @spec caching_middleware(atom()) :: function()
   def caching_middleware(cache_name) do
     fn strategy_fn, args ->
@@ -305,9 +216,7 @@ defmodule HybridPlanner.StrategyCoordinator do
     end
   end
 
-  @doc """
-  Create timeout middleware function.
-  """
+  @doc "Create timeout middleware function.\n"
   @spec timeout_middleware(integer()) :: function()
   def timeout_middleware(timeout_ms) do
     fn strategy_fn, args ->
@@ -324,11 +233,7 @@ defmodule HybridPlanner.StrategyCoordinator do
     end
   end
 
-  # ==================== FUNCTION INSPECTION UTILITIES ====================
-
-  @doc """
-  Get metadata about the coordinator's strategy functions.
-  """
+  @doc "Get metadata about the coordinator's strategy functions.\n"
   @spec get_strategy_info(t()) :: map()
   def get_strategy_info(%__MODULE__{} = coordinator) do
     %{
@@ -340,23 +245,16 @@ defmodule HybridPlanner.StrategyCoordinator do
     }
   end
 
-  @doc """
-  Test if a coordinator is compatible with a domain (checks function signatures).
-  """
+  @doc "Test if a coordinator is compatible with a domain (checks function signatures).\n"
   @spec compatible_with_domain?(t(), Domain.Core.t()) :: boolean()
   def compatible_with_domain?(%__MODULE__{} = coordinator, %Domain.Core{}) do
-    # Test function signatures by checking if they accept the right number of arguments
     try do
-      # This is a basic compatibility check - in a full implementation you'd check more thoroughly
-      is_function(coordinator.planning_fn, 4) and
-        is_function(coordinator.temporal_fn, 3) and
+      is_function(coordinator.planning_fn, 4) and is_function(coordinator.temporal_fn, 3) and
         is_function(coordinator.execution_fn, 4)
     rescue
       _ -> false
     end
   end
-
-  # ==================== PRIVATE HELPER FUNCTIONS ====================
 
   defp call_with_middleware(strategy_fn, args, []) do
     apply(strategy_fn, args)
@@ -369,12 +267,6 @@ defmodule HybridPlanner.StrategyCoordinator do
 
   defp inspect_function(fun) when is_function(fun) do
     info = Function.info(fun)
-
-    %{
-      arity: info[:arity],
-      module: info[:module],
-      name: info[:name],
-      type: info[:type]
-    }
+    %{arity: info[:arity], module: info[:module], name: info[:name], type: info[:type]}
   end
 end

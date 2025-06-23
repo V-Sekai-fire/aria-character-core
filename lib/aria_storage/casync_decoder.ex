@@ -1,42 +1,9 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.CasyncDecoder do
-  @moduledoc """
-  Advanced casync file decoder and analyzer.
-
-  This module provides comprehensive decoding and analysis capabilities for all casync file formats:
-  - .caibx (Content Archive Index for Blobs)
-  - .caidx (Content Archive Index for Directory Trees)
-  - .catar (Archive Container format)
-  - .cacnk (Compressed Chunk files)
-
-  The decoder supports both local and remote file processing, with full chunk reconstruction
-  and integrity verification capabilities.
-
-  ## Examples
-
-      # Decode a local CAIDX file with store
-      {:ok, result} = AriaStorage.CasyncDecoder.decode_file("/path/to/file.caidx",
-        store_path: "/path/to/file.store")
-
-      # Decode a remote CAIDX file with remote store
-      {:ok, result} = AriaStorage.CasyncDecoder.decode_uri("https://example.com/file.caidx",
-        store_uri: "https://example.com/store/")
-
-      # Assemble and verify complete file from chunks
-      {:ok, assembled_file} = AriaStorage.CasyncDecoder.assemble_file(parsed_data,
-        store_path: "/path/to/store", output_path: "/path/to/output.bin")
-
-  """
-
+  @moduledoc "Advanced casync file decoder and analyzer.\n\nThis module provides comprehensive decoding and analysis capabilities for all casync file formats:\n- .caibx (Content Archive Index for Blobs)\n- .caidx (Content Archive Index for Directory Trees)\n- .catar (Archive Container format)\n- .cacnk (Compressed Chunk files)\n\nThe decoder supports both local and remote file processing, with full chunk reconstruction\nand integrity verification capabilities.\n\n## Examples\n\n    # Decode a local CAIDX file with store\n    {:ok, result} = AriaStorage.CasyncDecoder.decode_file(\"/path/to/file.caidx\",\n      store_path: \"/path/to/file.store\")\n\n    # Decode a remote CAIDX file with remote store\n    {:ok, result} = AriaStorage.CasyncDecoder.decode_uri(\"https://example.com/file.caidx\",\n      store_uri: \"https://example.com/store/\")\n\n    # Assemble and verify complete file from chunks\n    {:ok, assembled_file} = AriaStorage.CasyncDecoder.assemble_file(parsed_data,\n      store_path: \"/path/to/store\", output_path: \"/path/to/output.bin\")\n\n"
   require Logger
   import Bitwise
   alias AriaStorage.Parsers.CasyncFormat
-
-  # Feature flag constants from desync (const.go)
-  @ca_format_sha512_256 0x2000000000000000
-
+  @ca_format_sha512_256 2_305_843_009_213_693_952
   @type decode_options :: [
           store_path: String.t() | nil,
           store_uri: String.t() | nil,
@@ -44,7 +11,6 @@ defmodule AriaStorage.CasyncDecoder do
           verify_integrity: boolean(),
           progress_callback: (integer(), integer() -> :ok) | nil
         ]
-
   @type decode_result :: %{
           format: atom(),
           parsed_data: map(),
@@ -53,7 +19,6 @@ defmodule AriaStorage.CasyncDecoder do
           integrity_verified: boolean(),
           assembly_result: map() | nil
         }
-
   @type assembly_result :: %{
           success: boolean(),
           assembled_file: String.t(),
@@ -62,10 +27,7 @@ defmodule AriaStorage.CasyncDecoder do
           verification_passed: boolean(),
           size_verified: boolean()
         }
-
-  @doc """
-  Decode a casync file from a local file path.
-  """
+  @doc "Decode a casync file from a local file path.\n"
   @spec decode_file(String.t(), decode_options()) :: {:ok, decode_result()} | {:error, any()}
   def decode_file(file_path, opts \\ []) do
     with {:ok, binary_data} <- File.read(file_path),
@@ -79,7 +41,6 @@ defmodule AriaStorage.CasyncDecoder do
         assembly_result: nil
       }
 
-      # Perform assembly if store is available and requested
       result =
         if should_assemble?(parsed_data, opts) do
           case assemble_file(parsed_data, opts) do
@@ -101,9 +62,7 @@ defmodule AriaStorage.CasyncDecoder do
     end
   end
 
-  @doc """
-  Decode a casync file from a remote URI.
-  """
+  @doc "Decode a casync file from a remote URI.\n"
   @spec decode_uri(String.t(), decode_options()) :: {:ok, decode_result()} | {:error, any()}
   def decode_uri(file_uri, opts \\ []) do
     with {:ok, binary_data} <- download_file(file_uri),
@@ -117,7 +76,6 @@ defmodule AriaStorage.CasyncDecoder do
         assembly_result: nil
       }
 
-      # Perform assembly if store is available and requested
       result =
         if should_assemble?(parsed_data, opts) do
           case assemble_file(parsed_data, opts) do
@@ -139,9 +97,7 @@ defmodule AriaStorage.CasyncDecoder do
     end
   end
 
-  @doc """
-  Assemble a complete file from parsed casync data and verify integrity.
-  """
+  @doc "Assemble a complete file from parsed casync data and verify integrity.\n"
   @spec assemble_file(map(), decode_options()) :: {:ok, assembly_result()} | {:error, any()}
   def assemble_file(parsed_data, opts \\ []) do
     output_dir = opts[:output_dir] || System.tmp_dir!()
@@ -159,34 +115,23 @@ defmodule AriaStorage.CasyncDecoder do
     end
   end
 
-  @doc """
-  Download and verify a single chunk from a store.
-  """
+  @doc "Download and verify a single chunk from a store.\n"
   @spec download_chunk(String.t(), String.t()) :: {:ok, binary()} | {:error, any()}
   def download_chunk(store_uri, chunk_id_hex) do
     chunk_dir = String.slice(chunk_id_hex, 0, 4)
     chunk_file = "#{chunk_id_hex}.cacnk"
-
     base_store_uri = String.trim_trailing(store_uri, "/")
     chunk_url = "#{base_store_uri}/#{chunk_dir}/#{chunk_file}"
-
     download_file(chunk_url)
   end
 
-  @doc """
-  Verify the integrity of chunk data against expected hash.
-  Uses appropriate hash algorithm based on feature flags:
-  - When feature_flags & CA_FORMAT_SHA512_256 != 0: use SHA512/256
-  - Otherwise: use SHA256
-  """
+  @doc "Verify the integrity of chunk data against expected hash.\nUses appropriate hash algorithm based on feature flags:\n- When feature_flags & CA_FORMAT_SHA512_256 != 0: use SHA512/256\n- Otherwise: use SHA256\n"
   @spec verify_chunk(binary(), binary(), integer()) :: {:ok, binary()} | {:error, any()}
   def verify_chunk(chunk_data, expected_hash, feature_flags) do
     calculated_hash =
       if (feature_flags &&& @ca_format_sha512_256) != 0 do
-        # Use SHA512/256 for CAIBX format
         :crypto.hash(:sha512, chunk_data) |> binary_part(0, 32)
       else
-        # Default to SHA256 for CAIDX format
         :crypto.hash(:sha256, chunk_data)
       end
 
@@ -197,29 +142,20 @@ defmodule AriaStorage.CasyncDecoder do
     end
   end
 
-  @doc """
-  Format byte size into human-readable string.
-  """
+  @doc "Format byte size into human-readable string.\n"
   @spec format_bytes(integer()) :: String.t()
   def format_bytes(bytes) when is_integer(bytes) do
     cond do
-      bytes >= 1024 * 1024 * 1024 ->
-        "#{Float.round(bytes / (1024 * 1024 * 1024), 2)} GB"
-
-      bytes >= 1024 * 1024 ->
-        "#{Float.round(bytes / (1024 * 1024), 2)} MB"
-
-      bytes >= 1024 ->
-        "#{Float.round(bytes / 1024, 2)} KB"
-
-      true ->
-        "#{bytes} bytes"
+      bytes >= 1024 * 1024 * 1024 -> "#{Float.round(bytes / (1024 * 1024 * 1024), 2)} GB"
+      bytes >= 1024 * 1024 -> "#{Float.round(bytes / (1024 * 1024), 2)} MB"
+      bytes >= 1024 -> "#{Float.round(bytes / 1024, 2)} KB"
+      true -> "#{bytes} bytes"
     end
   end
 
-  def format_bytes(_), do: "unknown size"
-
-  # Private functions
+  def format_bytes(_) do
+    "unknown size"
+  end
 
   defp parse_casync_data(binary_data, file_path) do
     file_ext = Path.extname(file_path) |> String.downcase()
@@ -232,7 +168,6 @@ defmodule AriaStorage.CasyncDecoder do
         CasyncFormat.parse_index(binary_data)
 
       _ ->
-        # Try index parser first, then archive parser
         case CasyncFormat.parse_index(binary_data) do
           {:ok, _} = result -> result
           {:error, _} -> CasyncFormat.parse_archive(binary_data)
@@ -242,14 +177,9 @@ defmodule AriaStorage.CasyncDecoder do
 
   defp get_chunk_count(parsed_data) do
     case parsed_data.format do
-      format when format in [:caidx, :caibx] ->
-        length(parsed_data.chunks)
-
-      :catar ->
-        length(parsed_data.files) + length(parsed_data.directories)
-
-      _ ->
-        0
+      format when format in [:caidx, :caibx] -> length(parsed_data.chunks)
+      :catar -> length(parsed_data.files) + length(parsed_data.directories)
+      _ -> 0
     end
   end
 
@@ -270,9 +200,7 @@ defmodule AriaStorage.CasyncDecoder do
     if length(parsed_data.chunks) == 0 do
       {:error, :no_chunks_to_assemble}
     else
-      # Sort chunks by offset to ensure correct order
       sorted_chunks = Enum.sort_by(parsed_data.chunks, & &1.offset)
-
       assembled_file = Path.join(output_dir, "assembled_file.bin")
 
       case File.open(assembled_file, [:write, :binary]) do
@@ -292,11 +220,8 @@ defmodule AriaStorage.CasyncDecoder do
               )
 
             File.close(file)
-
-            # Verify file size
             {:ok, file_stat} = File.stat(assembled_file)
             actual_size = file_stat.size
-
             verification_passed = actual_size == parsed_data.header.total_size
 
             {:ok,
@@ -324,33 +249,26 @@ defmodule AriaStorage.CasyncDecoder do
     extract_dir = Path.join(output_dir, "extracted")
     File.mkdir_p!(extract_dir)
 
-    # Extract directories
     Enum.each(parsed_data.directories, fn dir ->
       path = Map.get(dir, :path) || Map.get(dir, :name, "unnamed")
       dir_path = Path.join(extract_dir, path)
       File.mkdir_p!(dir_path)
     end)
 
-    # Extract files
     files_extracted =
       Enum.reduce(parsed_data.files, 0, fn file, acc ->
         path = Map.get(file, :path) || Map.get(file, :name, "unnamed")
         file_path = Path.join(extract_dir, path)
-
-        # Ensure parent directory exists
         parent_dir = Path.dirname(file_path)
         File.mkdir_p!(parent_dir)
-
         content = Map.get(file, :content)
 
         if content do
           File.write!(file_path, content)
-
-          # Set file permissions if available
           mode = Map.get(file, :mode)
 
           if mode do
-            perm = mode &&& 0o777
+            perm = mode &&& 511
 
             if perm > 0 do
               File.chmod!(file_path, perm)
@@ -367,7 +285,6 @@ defmodule AriaStorage.CasyncDecoder do
      %{
        success: true,
        assembled_file: extract_dir,
-       # Not applicable for CATAR
        bytes_written: 0,
        chunks_processed: files_extracted,
        verification_passed: true,
@@ -399,7 +316,6 @@ defmodule AriaStorage.CasyncDecoder do
         {success_count, total_bytes}
 
       [chunk | remaining_chunks] ->
-        # Progress callback
         if progress_callback && rem(success_count, 10) == 0 do
           progress_callback.(success_count, total_chunks)
         end
@@ -489,10 +405,8 @@ defmodule AriaStorage.CasyncDecoder do
   end
 
   defp decompress_and_verify_chunk(chunk_data, chunk_info, chunk_id_hex, feature_flags) do
-    # First try to parse as CACNK format
     case CasyncFormat.parse_chunk(chunk_data) do
       {:ok, %{header: header, data: compressed_data}} ->
-        # Standard CACNK format with wrapper header
         case decompress_chunk_data(compressed_data, header.compression) do
           {:ok, decompressed_data} ->
             verify_chunk_hash_and_size(decompressed_data, chunk_info, chunk_id_hex, feature_flags)
@@ -502,13 +416,11 @@ defmodule AriaStorage.CasyncDecoder do
         end
 
       {:error, "Invalid chunk file magic"} ->
-        # Try direct ZSTD decompression (raw compressed data without CACNK wrapper)
         case decompress_chunk_data(chunk_data, :zstd) do
           {:ok, decompressed_data} ->
             verify_chunk_hash_and_size(decompressed_data, chunk_info, chunk_id_hex, feature_flags)
 
           {:error, _reason} ->
-            # Try as uncompressed data
             verify_chunk_hash_and_size(chunk_data, chunk_info, chunk_id_hex, feature_flags)
         end
 
@@ -518,18 +430,6 @@ defmodule AriaStorage.CasyncDecoder do
   end
 
   defp verify_chunk_hash_and_size(data, chunk_info, _chunk_id_hex, _feature_flags) do
-    # IMPORTANT: Chunk IDs in casync are NOT content hashes!
-    #
-    # Through investigation of real casync data, we discovered that chunk IDs are
-    # actually boundary identifiers generated by the content-defined chunking algorithm.
-    # They are likely rolling hash fingerprints or other boundary detection artifacts,
-    # not SHA256/SHA512 hashes of the content.
-    #
-    # The correct verification approach is:
-    # 1. Verify chunk size matches expected size (critical for integrity)
-    # 2. Verify overall file assembly produces correct total size
-    # 3. Trust that desync's chunking algorithm correctly identified chunk boundaries
-
     if byte_size(data) == chunk_info.size do
       {:ok, data}
     else
@@ -544,32 +444,27 @@ defmodule AriaStorage.CasyncDecoder do
     end
   end
 
-  defp decompress_chunk_data(data, :none), do: {:ok, data}
+  defp decompress_chunk_data(data, :none) do
+    {:ok, data}
+  end
 
-  defp decompress_chunk_data(_data, compression),
-    do: {:error, {:unsupported_compression, compression}}
+  defp decompress_chunk_data(_data, compression) do
+    {:error, {:unsupported_compression, compression}}
+  end
 
   defp download_file(url) do
-    # Start HTTPoison application
     Application.ensure_all_started(:hackney)
     Application.ensure_all_started(:ssl)
 
     case HTTPoison.get(url, [],
-           # 5 minutes
            timeout: 300_000,
-           # 5 minutes
            recv_timeout: 300_000,
            follow_redirect: true,
            max_redirect: 5
          ) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, body}
-
-      {:ok, %HTTPoison.Response{status_code: status_code}} ->
-        {:error, "HTTP #{status_code}"}
-
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        {:error, reason}
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} -> {:ok, body}
+      {:ok, %HTTPoison.Response{status_code: status_code}} -> {:error, "HTTP #{status_code}"}
+      {:error, %HTTPoison.Error{reason: reason}} -> {:error, reason}
     end
   end
 end

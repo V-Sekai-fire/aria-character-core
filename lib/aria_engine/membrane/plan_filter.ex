@@ -1,29 +1,11 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Membrane.PlanFilter do
-  @moduledoc """
-  Membrane Filter element that converts MCP requests to planning parameters.
-
-  This element validates MCP input and transforms it into the format expected
-  by the HybridCoordinator planning system using the existing PlanTransformer.
-  """
-
+  @moduledoc "Membrane Filter element that converts MCP requests to planning parameters.\n\nThis element validates MCP input and transforms it into the format expected\nby the HybridCoordinator planning system using the existing PlanTransformer.\n"
   use Membrane.Filter
-
   alias AriaEngine.Membrane.Format.{MCPRequest, PlanningParams}
   alias AriaEngine.HybridPlanner.PlanTransformer
   alias Membrane.Buffer
-
-  def_input_pad(:input,
-    accepted_format: MCPRequest,
-    flow_control: :auto
-  )
-
-  def_output_pad(:output,
-    accepted_format: PlanningParams,
-    flow_control: :auto
-  )
+  def_input_pad(:input, accepted_format: MCPRequest, flow_control: :auto)
+  def_output_pad(:output, accepted_format: PlanningParams, flow_control: :auto)
 
   def_options(
     telemetry_prefix: [
@@ -52,7 +34,6 @@ defmodule AriaEngine.Membrane.PlanFilter do
 
     case transform_mcp_request(mcp_request) do
       {:ok, planning_params} ->
-        # Extract activities count for telemetry
         activities_count = length(mcp_request.parameters["activities"] || [])
 
         emit_telemetry(state.telemetry_prefix, :transformation_success, %{
@@ -92,7 +73,6 @@ defmodule AriaEngine.Membrane.PlanFilter do
   end
 
   defp transform_mcp_request(%MCPRequest{} = request) do
-    # Extract parameters directly from the MCP request
     mcp_params = request.parameters
 
     case PlanTransformer.convert_to_planning_params(mcp_params) do
@@ -119,7 +99,6 @@ defmodule AriaEngine.Membrane.PlanFilter do
   end
 
   defp create_error_planning_params(%MCPRequest{} = request, reason) do
-    # Try to extract activities count for error metadata, handle malformed data
     activities_count =
       case request.parameters["activities"] do
         activities when is_list(activities) -> length(activities)
@@ -145,11 +124,7 @@ defmodule AriaEngine.Membrane.PlanFilter do
     :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
   end
 
-  # Public API for testing and monitoring
-
-  @doc """
-  Gets the current processing statistics of the PlanFilter element.
-  """
+  @doc "Gets the current processing statistics of the PlanFilter element.\n"
   @spec get_stats(pid()) :: map()
   def get_stats(filter_pid) do
     send(filter_pid, {:get_stats, self()})
@@ -181,7 +156,9 @@ defmodule AriaEngine.Membrane.PlanFilter do
     {[], state}
   end
 
-  def calculate_success_rate(0, 0), do: 0.0
+  def calculate_success_rate(0, 0) do
+    0.0
+  end
 
   def calculate_success_rate(success_count, total_count) do
     Float.round(success_count / total_count * 100, 2)

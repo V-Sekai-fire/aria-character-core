@@ -1,14 +1,7 @@
 defmodule AriaEngine.Membrane.PipelineManager do
-  @moduledoc """
-  Manager for Membrane pipeline lifecycle and dynamic topology configuration.
-
-  Handles pipeline creation, element linking, supervision, and runtime
-  reconfiguration of the planning pipeline.
-  """
-
+  @moduledoc "Manager for Membrane pipeline lifecycle and dynamic topology configuration.\n\nHandles pipeline creation, element linking, supervision, and runtime\nreconfiguration of the planning pipeline.\n"
   use GenServer
   require Logger
-
   alias AriaEngine.Membrane.{MCPSource, FormatTransformerFilter, MCPSink}
 
   @type pipeline_config :: %{
@@ -17,16 +10,12 @@ defmodule AriaEngine.Membrane.PipelineManager do
           connections: [map()],
           supervision_strategy: atom()
         }
-
   @type pipeline_state :: %{
           active_pipelines: map(),
           default_config: pipeline_config(),
           telemetry_prefix: [atom()],
           pipeline_counter: non_neg_integer()
         }
-
-  # Public API
-
   @spec start_link(keyword()) :: GenServer.on_start()
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
@@ -68,8 +57,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     GenServer.call(__MODULE__, {:send_request, pipeline_pid, mcp_params})
   end
 
-  # GenServer callbacks
-
   @impl true
   def init(opts) do
     default_config = %{
@@ -100,9 +87,8 @@ defmodule AriaEngine.Membrane.PipelineManager do
   @impl true
   def handle_call({:create_pipeline, config}, _from, state) do
     pipeline_id = "pipeline_#{state.pipeline_counter}"
-
     {:ok, pipeline_info} = build_pipeline(config, pipeline_id)
-    
+
     new_pipelines =
       Map.put(state.active_pipelines, pipeline_info.pid, %{
         config: config,
@@ -135,16 +121,12 @@ defmodule AriaEngine.Membrane.PipelineManager do
 
       pipeline_info ->
         :ok = reconfigure_pipeline(pipeline_pid, config)
-        
+
         updated_info =
-          Map.merge(pipeline_info, %{
-            config: config,
-            reconfigured_at: DateTime.utc_now()
-          })
+          Map.merge(pipeline_info, %{config: config, reconfigured_at: DateTime.utc_now()})
 
         new_pipelines = Map.put(state.active_pipelines, pipeline_pid, updated_info)
         new_state = %{state | active_pipelines: new_pipelines}
-
         {:reply, :ok, new_state}
     end
   end
@@ -179,7 +161,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
         {:reply, {:error, :pipeline_not_found}, state}
 
       pipeline_info ->
-        # Stop the pipeline process
         try do
           Process.exit(pipeline_pid, :normal)
 
@@ -211,14 +192,10 @@ defmodule AriaEngine.Membrane.PipelineManager do
 
           source_pid ->
             try do
-              # Send message to source process (simplified for testing)
               send(source_pid, {:mcp_request, mcp_params})
-
-              # Update request count
               updated_info = Map.update(pipeline_info, :request_count, 1, &(&1 + 1))
               new_pipelines = Map.put(state.active_pipelines, pipeline_pid, updated_info)
               new_state = %{state | active_pipelines: new_pipelines}
-
               {:reply, :ok, new_state}
             rescue
               error ->
@@ -240,13 +217,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
     {:reply, stats, state}
   end
 
-  # Private functions
-
   defp build_pipeline(_config, pipeline_id) do
-    # Create a simple pipeline structure for testing
-    # In a full implementation, this would use Membrane.Pipeline
-
-    # For now, create a mock pipeline with element processes
     source_pid =
       spawn(fn ->
         receive do
@@ -278,8 +249,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
   end
 
   defp reconfigure_pipeline(_pipeline_pid, _config) do
-    # Implementation would reconfigure existing pipeline
-    # For now, just return success
     :ok
   end
 
@@ -302,7 +271,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     end
   end
 
-  # Pipeline 1: Simplest - Direct MCPSource -> FormatTransformer -> MCPSink
   defp get_predefined_config(:direct_pipeline) do
     %{
       topology: :direct_passthrough,
@@ -323,7 +291,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
-  # Pipeline 2: Simple echo - MCPSource -> FormatTransformerFilter -> MCPSink
   defp get_predefined_config(:echo_pipeline) do
     %{
       topology: :echo_testing,
@@ -340,7 +307,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
-  # Pipeline 3: MCP filtering - MCPSource -> MCPScheduleFilter -> FormatTransformer -> MCPSink
   defp get_predefined_config(:mcp_filter_pipeline) do
     %{
       topology: :mcp_filtering,
@@ -367,7 +333,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
-  # Pipeline 4: Schedule processing - MCPSource -> MCPScheduleFilter -> SchedulePlannerFilter -> FormatTransformer -> MCPSink
   defp get_predefined_config(:schedule_transform_pipeline) do
     %{
       topology: :schedule_transformation,
@@ -396,7 +361,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
-  # Pipeline 5: Mock planning - MCPSource -> MCPScheduleFilter -> SchedulePlannerFilter -> FormatTransformerFilter -> PlannerMCPFilter -> MCPSink
   defp get_predefined_config(:mock_planning_pipeline) do
     %{
       topology: :mock_planning,
@@ -427,7 +391,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
-  # Pipeline 6: Full schedule pipeline - MCPSource -> MCPScheduleFilter -> SchedulePlannerFilter -> PlannerFilter -> PlannerMCPFilter -> MCPSink
   defp get_predefined_config(:schedule_pipeline) do
     %{
       topology: :schedule_processing,
@@ -442,7 +405,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
         %{
           type: AriaEngine.Membrane.PlannerFilter,
           id: :planner_filter,
-          config: %{timeout_ms: 30_000}
+          config: %{timeout_ms: 30000}
         },
         %{type: AriaEngine.Membrane.PlannerMCPFilter, id: :planner_mcp_filter, config: %{}},
         %{type: MCPSink, id: :mcp_sink, config: %{}}
@@ -458,7 +421,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
-  # Pipeline 7: Plan transformation - MCPSource -> PlanFilter -> FormatTransformerFilter -> MCPSink
   defp get_predefined_config(:plan_transform_pipeline) do
     %{
       topology: :plan_transformation,
@@ -481,7 +443,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
-  # Pipeline 8: Full pipeline - MCPSource -> SchedulePlannerFilter -> PlannerFilter -> MCPSink
   defp get_predefined_config(:full_pipeline) do
     %{
       topology: :full_processing,
@@ -495,7 +456,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
         %{
           type: AriaEngine.Membrane.PlannerFilter,
           id: :planner_filter,
-          config: %{timeout_ms: 30_000}
+          config: %{timeout_ms: 30000}
         },
         %{type: MCPSink, id: :sink, config: %{}}
       ],
@@ -508,7 +469,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
-  # Pipeline 9: Validation pipeline - MCPSource -> ValidationPipelineFilter -> MCPSink
   defp get_predefined_config(:validation_pipeline) do
     %{
       topology: :validation_processing,
@@ -517,7 +477,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
         %{
           type: AriaEngine.Membrane.ValidationPipelineFilter,
           id: :validation_filter,
-          config: %{timeout_ms: 60_000}
+          config: %{timeout_ms: 60000}
         },
         %{type: MCPSink, id: :sink, config: %{}}
       ],
@@ -538,14 +498,9 @@ defmodule AriaEngine.Membrane.PipelineManager do
     :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
   end
 
-  # Public API for testing
-
-  @doc """
-  Gets statistics for all active pipelines.
-  """
+  @doc "Gets statistics for all active pipelines.\n"
   @spec get_manager_stats() :: map()
   def get_manager_stats() do
     GenServer.call(__MODULE__, :get_stats)
   end
-
 end

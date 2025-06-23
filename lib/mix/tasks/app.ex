@@ -1,11 +1,6 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Mix.Tasks.App do
   use Mix.Task
-
   @shortdoc "Starts and stops the Elixir application"
-
   def run(args) do
     case args do
       ["start"] ->
@@ -29,27 +24,19 @@ defmodule Mix.Tasks.App do
 
   defp start_app() do
     Mix.shell().info("🚀 Starting Elixir application...")
-    # Check if Phoenix server is already running
+
     if System.cmd("pgrep", ["-f", "phoenix.server"]) |> elem(0) |> String.trim() != "" do
       Mix.shell().info("✅ Elixir application is already running.")
       exit(0)
     end
 
-    # Start Phoenix server in the background
-    # Using nohup to detach from the terminal, and redirecting output to a log file
     log_file = "aria_app.log"
     pid_file = "aria_app.pid"
-
     Mix.shell().info("Starting Phoenix server...")
     System.cmd("nohup", ["mix", "phx.server", ">", log_file, "2>&1", "&"])
-    # Get the PID of the last background process
     pid = System.cmd("pgrep", ["-f", "phoenix.server"]) |> elem(0) |> String.trim()
     File.write!(pid_file, pid)
-
     Mix.shell().info("⏳ Waiting for Elixir application to be ready...")
-
-    # You might need a more sophisticated health check here, e.g., checking a specific port or API endpoint
-    # Give it a few seconds to start
     :timer.sleep(5000)
 
     if File.exists?(pid_file) and

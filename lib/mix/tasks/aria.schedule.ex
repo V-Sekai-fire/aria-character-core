@@ -1,72 +1,28 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Mix.Tasks.Aria.Schedule do
-  @moduledoc """
-  Schedule activities using AriaEngine scheduler.
-
-  ## Usage
-
-      mix aria.schedule --name "my_schedule" --activities activities.json
-      mix aria.schedule --name "trains05" --train-mode
-      mix aria.schedule --help
-
-  ## Options
-
-    * `--name` - Schedule name (required)
-    * `--activities` - Path to JSON file containing activities
-    * `--entities` - Path to JSON file containing entities
-    * `--resources` - Path to JSON file containing resources
-    * `--constraints` - Path to JSON file containing constraints
-    * `--train-mode` - Use train scheduling mode with trains05 data
-    * `--simulation` - Run in simulation mode
-    * `--verbose` - Verbosity level (0-3, default: 1)
-    * `--log-activities` - Log activity execution events
-    * `--help` - Show this help
-
-  ## Examples
-
-      # Schedule custom activities
-      mix aria.schedule --name "project_tasks" --activities tasks.json --entities workers.json
-
-      # Train scheduling
-      mix aria.schedule --name "trains05" --train-mode --verbose 2
-
-      # Simulation mode
-      mix aria.schedule --name "test_schedule" --activities test.json --simulation
-  """
-
+  @moduledoc "Schedule activities using AriaEngine scheduler.\n\n## Usage\n\n    mix aria.schedule --name \"my_schedule\" --activities activities.json\n    mix aria.schedule --name \"trains05\" --train-mode\n    mix aria.schedule --help\n\n## Options\n\n  * `--name` - Schedule name (required)\n  * `--activities` - Path to JSON file containing activities\n  * `--entities` - Path to JSON file containing entities\n  * `--resources` - Path to JSON file containing resources\n  * `--constraints` - Path to JSON file containing constraints\n  * `--train-mode` - Use train scheduling mode with trains05 data\n  * `--simulation` - Run in simulation mode\n  * `--verbose` - Verbosity level (0-3, default: 1)\n  * `--log-activities` - Log activity execution events\n  * `--help` - Show this help\n\n## Examples\n\n    # Schedule custom activities\n    mix aria.schedule --name \"project_tasks\" --activities tasks.json --entities workers.json\n\n    # Train scheduling\n    mix aria.schedule --name \"trains05\" --train-mode --verbose 2\n\n    # Simulation mode\n    mix aria.schedule --name \"test_schedule\" --activities test.json --simulation\n"
   use Mix.Task
   require Logger
-
   @shortdoc "Schedule activities using AriaEngine scheduler"
-
-  @switches [
-    name: :string,
-    activities: :string,
-    entities: :string,
-    resources: :string,
-    constraints: :string,
-    train_mode: :boolean,
-    simulation: :boolean,
-    verbose: :integer,
-    log_activities: :boolean,
-    help: :boolean
-  ]
-
-  @aliases [
-    n: :name,
-    a: :activities,
-    e: :entities,
-    r: :resources,
-    c: :constraints,
-    t: :train_mode,
-    s: :simulation,
-    v: :verbose,
-    l: :log_activities,
-    h: :help
-  ]
-
+  @switches name: :string,
+            activities: :string,
+            entities: :string,
+            resources: :string,
+            constraints: :string,
+            train_mode: :boolean,
+            simulation: :boolean,
+            verbose: :integer,
+            log_activities: :boolean,
+            help: :boolean
+  @aliases n: :name,
+           a: :activities,
+           e: :entities,
+           r: :resources,
+           c: :constraints,
+           t: :train_mode,
+           s: :simulation,
+           v: :verbose,
+           l: :log_activities,
+           h: :help
   def run(args) do
     {opts, _argv, _errors} = OptionParser.parse(args, switches: @switches, aliases: @aliases)
 
@@ -80,18 +36,16 @@ defmodule Mix.Tasks.Aria.Schedule do
       System.halt(1)
     end
 
-    # Start the application
     Mix.Task.run("app.start")
-
     schedule_name = opts[:name]
-    
+
     cond do
       opts[:train_mode] ->
         handle_train_scheduling(schedule_name, opts)
-      
+
       opts[:activities] ->
         handle_custom_scheduling(schedule_name, opts)
-      
+
       true ->
         Mix.shell().error("Error: Either --activities or --train-mode must be specified")
         System.halt(1)
@@ -100,11 +54,8 @@ defmodule Mix.Tasks.Aria.Schedule do
 
   defp handle_train_scheduling(schedule_name, opts) do
     Mix.shell().info("🚂 Processing train scheduling request: #{schedule_name}")
-
-    # Convert trains05.dzn to schedule_activities format
     train_data = AriaEngine.TrainSchedulingConverter.convert_trains05_to_schedule_activities()
 
-    # Call scheduler with train data
     case call_scheduler(train_data, opts) do
       {:ok, result} ->
         Mix.shell().info("✅ Train schedule generated successfully")
@@ -118,8 +69,6 @@ defmodule Mix.Tasks.Aria.Schedule do
 
   defp handle_custom_scheduling(schedule_name, opts) do
     Mix.shell().info("📋 Processing custom scheduling request: #{schedule_name}")
-
-    # Load data from files
     activities = load_json_file(opts[:activities], "activities")
     entities = load_json_file(opts[:entities], "entities") || []
     resources = load_json_file(opts[:resources], "resources") || %{}
@@ -150,23 +99,28 @@ defmodule Mix.Tasks.Aria.Schedule do
     entities = params["entities"] || []
     resources = params["resources"] || %{}
     constraints = params["constraints"] || %{}
-
     simulation_mode = opts[:simulation] || false
     verbose = opts[:verbose] || 1
     activity_log = opts[:log_activities] || false
-
     Mix.shell().info("🔧 Calling AriaEngine.Scheduler.Core.schedule_with_enhanced_features")
     Mix.shell().info("🔧 Activities: #{length(activities)}, Entities: #{length(entities)}")
 
-    # Ensure activities and entities are lists
-    activities_list = if is_list(activities), do: activities, else: []
-    entities_list = if is_list(entities), do: entities, else: []
+    activities_list =
+      if is_list(activities) do
+        activities
+      else
+        []
+      end
 
-    # Call the scheduler
-    # Use a deterministic base datetime for CLI tasks
-    # This ensures reproducible results for testing and debugging
+    entities_list =
+      if is_list(entities) do
+        entities
+      else
+        []
+      end
+
     base_datetime = ~U[2025-01-01 00:00:00Z]
-    
+
     AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
       schedule_name,
       activities_list,
@@ -180,7 +134,9 @@ defmodule Mix.Tasks.Aria.Schedule do
     )
   end
 
-  defp load_json_file(nil, _type), do: nil
+  defp load_json_file(nil, _type) do
+    nil
+  end
 
   defp load_json_file(path, type) do
     case File.read(path) do
@@ -205,20 +161,18 @@ defmodule Mix.Tasks.Aria.Schedule do
     schedule = format_schedule_result(result)
     analysis = format_analysis_result(result)
     resource_utilization = format_resource_utilization(result)
-
     Mix.shell().info("\n📊 Scheduling Results:")
     Mix.shell().info("Problem Type: #{problem_type}")
     Mix.shell().info("Schedule Items: #{length(schedule)}")
 
     if analysis != %{} do
       Mix.shell().info("\n📈 Analysis:")
-      Enum.each(analysis, fn {key, value} ->
-        Mix.shell().info("  #{key}: #{inspect(value)}")
-      end)
+      Enum.each(analysis, fn {key, value} -> Mix.shell().info("  #{key}: #{inspect(value)}") end)
     end
 
     if resource_utilization != %{} do
       Mix.shell().info("\n🔧 Resource Utilization:")
+
       Enum.each(resource_utilization, fn {key, value} ->
         Mix.shell().info("  #{key}: #{inspect(value)}")
       end)
@@ -226,9 +180,7 @@ defmodule Mix.Tasks.Aria.Schedule do
 
     if length(schedule) > 0 do
       Mix.shell().info("\n📅 Schedule:")
-      Enum.each(schedule, fn item ->
-        Mix.shell().info("  #{inspect(item)}")
-      end)
+      Enum.each(schedule, fn item -> Mix.shell().info("  #{inspect(item)}") end)
     end
   end
 

@@ -1,23 +1,7 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Membrane.Format.MCPRequest do
-  @moduledoc """
-  Membrane format for MCP (Model Context Protocol) requests.
-
-  This format represents a standardized MCP request that can flow through
-  the Membrane pipeline for processing by various filters and elements.
-  """
-
+  @moduledoc "Membrane format for MCP (Model Context Protocol) requests.\n\nThis format represents a standardized MCP request that can flow through\nthe Membrane pipeline for processing by various filters and elements.\n"
   @derive Jason.Encoder
-  defstruct [
-    :request_id,
-    :tool_name,
-    :parameters,
-    :metadata,
-    :timestamp,
-    :version
-  ]
+  defstruct [:request_id, :tool_name, :parameters, :metadata, :timestamp, :version]
 
   @type t :: %__MODULE__{
           request_id: String.t(),
@@ -27,10 +11,7 @@ defmodule AriaEngine.Membrane.Format.MCPRequest do
           timestamp: DateTime.t(),
           version: String.t()
         }
-
-  @doc """
-  Creates an MCPRequest from a tool call.
-  """
+  @doc "Creates an MCPRequest from a tool call.\n"
   @spec from_tool_call(String.t(), map(), String.t(), map()) :: {:ok, t()} | {:error, String.t()}
   def from_tool_call(tool_name, parameters, request_id, metadata \\ %{}) do
     if is_binary(tool_name) and is_map(parameters) and is_binary(request_id) do
@@ -49,12 +30,9 @@ defmodule AriaEngine.Membrane.Format.MCPRequest do
     end
   end
 
-  @doc """
-  Creates an MCPRequest from legacy MCP parameters.
-  """
+  @doc "Creates an MCPRequest from legacy MCP parameters.\n"
   @spec from_mcp_params(map(), String.t()) :: {:ok, t()} | {:error, String.t()}
   def from_mcp_params(mcp_params, request_id) do
-    # Try to detect tool name from parameters
     tool_name = detect_tool_name(mcp_params)
 
     request = %__MODULE__{

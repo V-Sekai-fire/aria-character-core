@@ -1,21 +1,7 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule HybridPlanner.HybridCoordinatorV2.StrategyManagement do
-  @moduledoc """
-  Strategy management operations for HybridCoordinatorV2.
-
-  Handles strategy replacement, information retrieval, and performance metrics
-  for the injected strategy dependencies.
-  """
-
+  @moduledoc "Strategy management operations for HybridCoordinatorV2.\n\nHandles strategy replacement, information retrieval, and performance metrics\nfor the injected strategy dependencies.\n"
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()
-
-  @doc """
-  Replace a strategy in the coordinator.
-
-  This enables runtime strategy swapping for adaptive planning.
-  """
+  @doc "Replace a strategy in the coordinator.\n\nThis enables runtime strategy swapping for adaptive planning.\n"
   @spec replace_strategy(coordinator(), atom(), module()) :: coordinator()
   def replace_strategy(%coordinator_module{} = coordinator, strategy_type, new_strategy)
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
@@ -30,9 +16,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.StrategyManagement do
     end
   end
 
-  @doc """
-  Get strategy information from the coordinator.
-  """
+  @doc "Get strategy information from the coordinator.\n"
   @spec get_strategy_info(coordinator()) :: map()
   def get_strategy_info(%coordinator_module{} = coordinator)
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
@@ -47,9 +31,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.StrategyManagement do
     }
   end
 
-  @doc """
-  Get specific strategy information by strategy type.
-  """
+  @doc "Get specific strategy information by strategy type.\n"
   @spec get_strategy_info(coordinator(), atom()) :: map()
   def get_strategy_info(%coordinator_module{} = coordinator, strategy_type)
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
@@ -64,9 +46,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.StrategyManagement do
     end
   end
 
-  @doc """
-  Get performance metrics from strategies.
-  """
+  @doc "Get performance metrics from strategies.\n"
   @spec get_performance_metrics(coordinator()) :: map()
   def get_performance_metrics(%coordinator_module{} = coordinator)
       when coordinator_module == HybridPlanner.HybridCoordinatorV2 do
@@ -81,9 +61,6 @@ defmodule HybridPlanner.HybridCoordinatorV2.StrategyManagement do
     }
   end
 
-  # ==================== PRIVATE HELPER FUNCTIONS ====================
-
-  # Safely get strategy info, handling missing functions gracefully
   defp safe_strategy_info(strategy_module) do
     if function_exported?(strategy_module, :strategy_info, 0) do
       try do
@@ -96,7 +73,6 @@ defmodule HybridPlanner.HybridCoordinatorV2.StrategyManagement do
     end
   end
 
-  # Get performance metrics from a strategy if available
   defp get_strategy_metrics(strategy_module) do
     if function_exported?(strategy_module, :get_performance_metrics, 0) do
       strategy_module.get_performance_metrics()

@@ -1,50 +1,29 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.WaffleChunkStore do
-  @moduledoc """
-  Waffle-based chunk store for desync compatibility.
-
-  This module integrates Waffle's file storage capabilities with our
-  desync chunking system, providing a flexible storage backend that
-  can work with local filesystem, S3, or other Waffle-supported backends.
-  """
-
+  @moduledoc "Waffle-based chunk store for desync compatibility.\n\nThis module integrates Waffle's file storage capabilities with our\ndesync chunking system, providing a flexible storage backend that\ncan work with local filesystem, S3, or other Waffle-supported backends.\n"
   use Waffle.Definition
   use Waffle.Ecto.Definition
-
   alias AriaStorage.Chunks
-
   @versions [:original]
-
-  # Override the bucket/0 function to return a value at compile time
   def bucket do
     Application.get_env(:aria_storage, :waffle_bucket, "aria-chunks")
   end
 
-  # Validate chunk files
   def validate({file, _}) do
-    # Basic validation - ensure it's a binary chunk file
     case File.read(file.path) do
       {:ok, _data} -> true
       {:error, _} -> false
     end
   end
 
-  # Transform chunk filename to use chunk ID
   def filename(version, {_file, %{chunk_id: chunk_id}}) when version == :original do
-    # Store chunks with .cacnk extension (desync format)
     chunk_id <> ".cacnk"
   end
 
   def filename(version, {file, _scope}) when version == :original do
-    # Fallback to original filename if no chunk_id in scope
     Path.basename(file.file_name, Path.extname(file.file_name)) <> ".cacnk"
   end
 
-  # Storage directory structure based on chunk ID prefix for distribution
   def storage_dir(version, {_file, %{chunk_id: chunk_id}}) when version == :original do
-    # Split chunk ID for directory distribution (first 2 chars as subdirectory)
     <<prefix::binary-size(2), _rest::binary>> = chunk_id
     "chunks/#{prefix}"
   end
@@ -53,20 +32,15 @@ defmodule AriaStorage.WaffleChunkStore do
     "chunks/misc"
   end
 
-  # Default URL configuration
   def default_url(version) when version == :original do
     "/chunks/missing.cacnk"
   end
 
-  # Transform for different storage backends
   def transform(:original, _) do
-    # No transformation for original chunks
     :noaction
   end
 
-  @doc """
-  Stores a chunk using Waffle with proper metadata.
-  """
+  @doc "Stores a chunk using Waffle with proper metadata.\n"
   def store_chunk(%Chunks{} = chunk, _opts \\ []) do
     scope = %{
       chunk_id: Base.encode16(chunk.id, case: :lower),
@@ -74,7 +48,6 @@ defmodule AriaStorage.WaffleChunkStore do
       compressed: chunk.compressed != nil
     }
 
-    # Create temporary file with chunk data
     temp_file = create_temp_chunk_file(chunk)
 
     try do
@@ -92,21 +65,17 @@ defmodule AriaStorage.WaffleChunkStore do
           {:error, {:waffle_store_failed, reason}}
       end
     after
-      # Clean up temporary file
       File.rm(temp_file)
     end
   end
 
-  @doc """
-  Retrieves a chunk from Waffle storage.
-  """
+  @doc "Retrieves a chunk from Waffle storage.\n"
   def retrieve_chunk(chunk_id, _opts \\ []) when is_binary(chunk_id) do
     scope = %{chunk_id: chunk_id}
     file_path = url({nil, scope}, signed: true)
 
     case download_chunk_file(file_path) do
       {:ok, compressed_data} ->
-        # Decompress the chunk data
         case Chunks.decompress_chunk(compressed_data, :zstd) do
           {:ok, data} ->
             chunk_id_binary = Base.decode16!(chunk_id, case: :lower)
@@ -129,13 +98,8 @@ defmodule AriaStorage.WaffleChunkStore do
     end
   end
 
-  @doc """
-  Lists all chunks in the storage backend.
-  """
+  @doc "Lists all chunks in the storage backend.\n"
   def list_chunks(opts \\ []) do
-    # Implementation depends on the storage backend
-    # For S3, we'd use ExAws.S3.list_objects
-    # For local filesystem, we'd use File.ls recursively
     case get_storage_backend() do
       :s3 -> list_chunks_s3(opts)
       :local -> list_chunks_local(opts)
@@ -143,9 +107,7 @@ defmodule AriaStorage.WaffleChunkStore do
     end
   end
 
-  @doc """
-  Deletes a chunk from storage.
-  """
+  @doc "Deletes a chunk from storage.\n"
   def delete_chunk(chunk_id) when is_binary(chunk_id) do
     scope = %{chunk_id: chunk_id}
 
@@ -154,9 +116,7 @@ defmodule AriaStorage.WaffleChunkStore do
     end
   end
 
-  @doc """
-  Checks if a chunk exists in storage.
-  """
+  @doc "Checks if a chunk exists in storage.\n"
   def chunk_exists?(chunk_id) when is_binary(chunk_id) do
     scope = %{chunk_id: chunk_id}
     file_path = url({nil, scope})
@@ -168,16 +128,9 @@ defmodule AriaStorage.WaffleChunkStore do
     end
   end
 
-  # Private functions
-
   defp create_temp_chunk_file(%Chunks{} = chunk) do
-    # Create temporary file with chunk data (compressed if available)
     data = chunk.compressed || chunk.data
-
-    temp_path =
-      System.tmp_dir!()
-      |> Path.join("chunk_#{System.unique_integer([:positive])}.tmp")
-
+    temp_path = System.tmp_dir!() |> Path.join("chunk_#{System.unique_integer([:positive])}.tmp")
     File.write!(temp_path, data)
     temp_path
   end
@@ -199,7 +152,6 @@ defmodule AriaStorage.WaffleChunkStore do
     end
   end
 
-  # S3-specific implementations
   defp list_chunks_s3(opts) do
     bucket = bucket()
     prefix = Keyword.get(opts, :prefix, "chunks/")
@@ -241,12 +193,9 @@ defmodule AriaStorage.WaffleChunkStore do
   end
 
   defp extract_s3_key(file_path) do
-    # Extract S3 key from the file path
-    URI.parse(file_path).path
-    |> String.trim_leading("/")
+    URI.parse(file_path).path |> String.trim_leading("/")
   end
 
-  # Local filesystem implementations
   defp list_chunks_local(opts) do
     storage_path = get_local_storage_path()
     prefix = Keyword.get(opts, :prefix, "chunks")
@@ -287,7 +236,6 @@ defmodule AriaStorage.WaffleChunkStore do
     file_path
     |> Path.basename(".cacnk")
     |> case do
-      # No .cacnk extension
       ^file_path -> nil
       chunk_id -> chunk_id
     end

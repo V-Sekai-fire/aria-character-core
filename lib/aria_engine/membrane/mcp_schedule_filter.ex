@@ -1,62 +1,11 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Membrane.MCPScheduleFilter do
-  @moduledoc """
-  Membrane Filter element that processes MCP requests and prepares them for schedule processing.
-
-  This filter sits at the beginning of the schedule processing pipeline and handles:
-  1. Initial MCP request validation
-  2. Request routing and filtering
-  3. Format normalization for downstream processing
-  4. Request metadata enrichment
-
-  ## Pipeline Position
-
-  ```
-  MCPSource → MCPScheduleFilter → SchedulePlannerFilter → PlannerFilter → PlannerMCPFilter → MCPSink
-  ```
-
-  The MCPScheduleFilter acts as the entry point for MCP requests into the scheduling pipeline,
-  ensuring only valid schedule-related requests proceed to downstream processing.
-
-  ## Features
-
-  - Validates incoming MCP request format
-  - Filters for schedule-related tool calls
-  - Enriches requests with processing metadata
-  - Provides request routing and rejection capabilities
-  - Comprehensive telemetry for request processing
-
-  ## Usage
-
-      # In a pipeline spec
-      children = [
-        child(:mcp_source, MCPSource)
-        |> child(:mcp_schedule_filter, MCPScheduleFilter)
-        |> child(:schedule_planner_filter, SchedulePlannerFilter)
-        |> child(:planner_filter, PlannerFilter)
-        |> child(:planner_mcp_filter, PlannerMCPFilter)
-        |> child(:mcp_sink, MCPSink)
-      ]
-  """
-
+  @moduledoc "Membrane Filter element that processes MCP requests and prepares them for schedule processing.\n\nThis filter sits at the beginning of the schedule processing pipeline and handles:\n1. Initial MCP request validation\n2. Request routing and filtering\n3. Format normalization for downstream processing\n4. Request metadata enrichment\n\n## Pipeline Position\n\n```\nMCPSource → MCPScheduleFilter → SchedulePlannerFilter → PlannerFilter → PlannerMCPFilter → MCPSink\n```\n\nThe MCPScheduleFilter acts as the entry point for MCP requests into the scheduling pipeline,\nensuring only valid schedule-related requests proceed to downstream processing.\n\n## Features\n\n- Validates incoming MCP request format\n- Filters for schedule-related tool calls\n- Enriches requests with processing metadata\n- Provides request routing and rejection capabilities\n- Comprehensive telemetry for request processing\n\n## Usage\n\n    # In a pipeline spec\n    children = [\n      child(:mcp_source, MCPSource)\n      |> child(:mcp_schedule_filter, MCPScheduleFilter)\n      |> child(:schedule_planner_filter, SchedulePlannerFilter)\n      |> child(:planner_filter, PlannerFilter)\n      |> child(:planner_mcp_filter, PlannerMCPFilter)\n      |> child(:mcp_sink, MCPSink)\n    ]\n"
   use Membrane.Filter
-
   require Logger
-
   alias AriaEngine.Membrane.Format.MCPRequest
   alias Membrane.Buffer
-
-  def_input_pad(:input,
-    accepted_format: MCPRequest,
-    flow_control: :auto
-  )
-
-  def_output_pad(:output,
-    accepted_format: MCPRequest,
-    flow_control: :auto
-  )
+  def_input_pad(:input, accepted_format: MCPRequest, flow_control: :auto)
+  def_output_pad(:output, accepted_format: MCPRequest, flow_control: :auto)
 
   def_options(
     telemetry_prefix: [
@@ -92,9 +41,6 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
           rejected_count: non_neg_integer(),
           error_count: non_neg_integer()
         }
-
-  # ==================== Membrane Callbacks ====================
-
   @impl true
   def handle_init(_ctx, opts) do
     state = %{
@@ -153,7 +99,6 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
           processing_time: System.monotonic_time(:microsecond) - start_time
         })
 
-        # Create rejection response and pass it through
         rejection_request = create_rejection_request(mcp_request, reason)
         output_buffer = %Buffer{payload: rejection_request}
 
@@ -175,7 +120,6 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
           processing_time: System.monotonic_time(:microsecond) - start_time
         })
 
-        # Create error response and pass it through
         error_request = create_error_request(mcp_request, reason)
         output_buffer = %Buffer{payload: error_request}
 
@@ -210,8 +154,6 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
     Logger.debug("MCPScheduleFilter received unknown message: #{inspect(msg)}")
     {[], state}
   end
-
-  # ==================== PRIVATE FUNCTIONS ====================
 
   defp process_mcp_request(%MCPRequest{} = request, state) do
     with :ok <- validate_request_format(request),
@@ -248,7 +190,6 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
       if strict_filtering do
         {:reject, "Tool '#{tool_name}' not allowed in schedule processing pipeline"}
       else
-        # Allow through for downstream processing
         :ok
       end
     end
@@ -306,27 +247,19 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
     }
   end
 
-  defp calculate_acceptance_rate(_accepted, 0), do: 0.0
-  defp calculate_acceptance_rate(accepted, total), do: accepted / total * 100.0
+  defp calculate_acceptance_rate(_accepted, 0) do
+    0.0
+  end
+
+  defp calculate_acceptance_rate(accepted, total) do
+    accepted / total * 100.0
+  end
 
   defp emit_telemetry(prefix, event, metadata) do
     :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
   end
 
-  # ==================== PUBLIC API FOR TESTING AND MONITORING ====================
-
-  @doc """
-  Gets the current processing statistics of the MCPScheduleFilter element.
-
-  ## Parameters
-
-  - `filter_pid` - PID of the MCPScheduleFilter element
-  - `timeout` - Timeout in milliseconds (default: 5000)
-
-  ## Returns
-
-  Map containing current statistics or error.
-  """
+  @doc "Gets the current processing statistics of the MCPScheduleFilter element.\n\n## Parameters\n\n- `filter_pid` - PID of the MCPScheduleFilter element\n- `timeout` - Timeout in milliseconds (default: 5000)\n\n## Returns\n\nMap containing current statistics or error.\n"
   @spec get_stats(pid(), timeout()) :: map()
   def get_stats(filter_pid, timeout \\ 5000) do
     send(filter_pid, {:get_stats, self()})
@@ -338,16 +271,14 @@ defmodule AriaEngine.Membrane.MCPScheduleFilter do
     end
   end
 
-  @doc """
-  Validates that a tool name is allowed for schedule processing.
-
-  This is useful for testing tool filtering logic independently.
-  """
+  @doc "Validates that a tool name is allowed for schedule processing.\n\nThis is useful for testing tool filtering logic independently.\n"
   @spec tool_allowed?(String.t(), [String.t()]) :: boolean()
   def tool_allowed?(tool_name, allowed_tools)
       when is_binary(tool_name) and is_list(allowed_tools) do
     tool_name in allowed_tools
   end
 
-  def tool_allowed?(_, _), do: false
+  def tool_allowed?(_, _) do
+    false
+  end
 end

@@ -1,40 +1,7 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaTown.NPCManager do
-  @moduledoc """
-  NPC management system for Aria Town.
-
-  This is currently a stub implementation that provides the basic GenServer
-  structure needed for the supervision tree. Future development will add:
-
-  - NPC lifecycle management (spawn, despawn, persistence)
-  - Behavior coordination and AI planning integration
-  - NPC state synchronization and updates
-  - Social interaction and relationship management
-
-  ## Architecture Notes
-
-  The NPCManager should eventually coordinate with:
-  - TimeManager for scheduled behaviors and time-based actions
-  - Planner for NPC goal-directed behavior
-  - KnowledgeBase for NPC knowledge and memory
-  - PersistenceManager for NPC state storage
-
-  ## Planned Integration
-
-  Future NPCs will use AriaEngine's hybrid planner for:
-  - Goal-oriented behavior planning
-  - Temporal scheduling of activities
-  - Social interaction planning
-  - Resource and spatial reasoning
-  """
-
+  @moduledoc "NPC management system for Aria Town.\n\nThis is currently a stub implementation that provides the basic GenServer\nstructure needed for the supervision tree. Future development will add:\n\n- NPC lifecycle management (spawn, despawn, persistence)\n- Behavior coordination and AI planning integration\n- NPC state synchronization and updates\n- Social interaction and relationship management\n\n## Architecture Notes\n\nThe NPCManager should eventually coordinate with:\n- TimeManager for scheduled behaviors and time-based actions\n- Planner for NPC goal-directed behavior\n- KnowledgeBase for NPC knowledge and memory\n- PersistenceManager for NPC state storage\n\n## Planned Integration\n\nFuture NPCs will use AriaEngine's hybrid planner for:\n- Goal-oriented behavior planning\n- Temporal scheduling of activities\n- Social interaction planning\n- Resource and spatial reasoning\n"
   use GenServer
   require Logger
-
-  # Client API
-
   @doc "Start the NPCManager GenServer"
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
@@ -65,18 +32,10 @@ defmodule AriaTown.NPCManager do
     GenServer.call(__MODULE__, {:despawn_npc, npc_id})
   end
 
-  # GenServer Callbacks
-
   @impl GenServer
   def init(_opts) do
     Logger.info("NPCManager started (stub implementation)")
-
-    # Initialize with empty NPC registry
-    initial_state = %{
-      npcs: %{},
-      next_id: 1
-    }
-
+    initial_state = %{npcs: %{}, next_id: 1}
     {:ok, initial_state}
   end
 
@@ -106,7 +65,6 @@ defmodule AriaTown.NPCManager do
 
     new_npcs = Map.put(state.npcs, npc_id, npc)
     new_state = %{state | npcs: new_npcs, next_id: state.next_id + 1}
-
     Logger.info("Spawned NPC: #{npc_id}")
     {:reply, {:ok, npc}, new_state}
   end
@@ -121,7 +79,6 @@ defmodule AriaTown.NPCManager do
         updated_npc = Map.merge(npc, updates)
         new_npcs = Map.put(state.npcs, npc_id, updated_npc)
         new_state = %{state | npcs: new_npcs}
-
         Logger.debug("Updated NPC #{npc_id}: #{inspect(updates)}")
         {:reply, {:ok, updated_npc}, new_state}
     end
@@ -136,7 +93,6 @@ defmodule AriaTown.NPCManager do
       _npc ->
         new_npcs = Map.delete(state.npcs, npc_id)
         new_state = %{state | npcs: new_npcs}
-
         Logger.info("Despawned NPC: #{npc_id}")
         {:reply, :ok, new_state}
     end
@@ -144,7 +100,6 @@ defmodule AriaTown.NPCManager do
 
   @impl GenServer
   def handle_info(:tick, state) do
-    # Future: Handle periodic NPC updates, AI processing, etc.
     {:noreply, state}
   end
 

@@ -1,26 +1,10 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
-  @moduledoc """
-  Parser for CATAR archive files in the ARCANA format.
-
-  CATAR format is a structured archive format similar to tar but with casync-specific
-  enhancements. It contains a directory tree with filenames, permissions, and file data.
-  """
-
+  @moduledoc "Parser for CATAR archive files in the ARCANA format.\n\nCATAR format is a structured archive format similar to tar but with casync-specific\nenhancements. It contains a directory tree with filenames, permissions, and file data.\n"
   require AriaStorage.Parsers.CasyncFormat.Constants
   import AriaStorage.Parsers.CasyncFormat.Constants
   alias AriaStorage.Parsers.CasyncFormat.Constants
-
   @type parse_result :: {:ok, map()} | {:error, String.t()}
-
-  @doc """
-  Parse a catar archive file from binary data.
-
-  CATAR format contains a sequence of elements representing files, directories,
-  and metadata in a structured format compatible with casync/desync tools.
-  """
+  @doc "Parse a catar archive file from binary data.\n\nCATAR format contains a sequence of elements representing files, directories,\nand metadata in a structured format compatible with casync/desync tools.\n"
   @spec parse_archive(binary()) :: parse_result()
   def parse_archive(binary_data) when is_binary(binary_data) do
     try do
@@ -46,79 +30,62 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  # Parse CATAR elements recursively
-  @spec parse_catar_elements(binary(), [Constants.catar_element()]) :: {:ok, [Constants.catar_element()]} | {:error, String.t()}
-  defp parse_catar_elements(<<>>, acc), do: {:ok, Enum.reverse(acc)}
+  @spec parse_catar_elements(binary(), [Constants.catar_element()]) ::
+          {:ok, [Constants.catar_element()]} | {:error, String.t()}
+  defp parse_catar_elements(<<>>, acc) do
+    {:ok, Enum.reverse(acc)}
+  end
 
   defp parse_catar_elements(binary_data, acc) do
     case parse_next_catar_element(binary_data) do
-      {:ok, element, remaining} ->
-        parse_catar_elements(remaining, [element | acc])
-
-      {:error, :end_of_data} ->
-        {:ok, Enum.reverse(acc)}
-
-      {:error, reason} ->
-        {:error, reason}
+      {:ok, element, remaining} -> parse_catar_elements(remaining, [element | acc])
+      {:error, :end_of_data} -> {:ok, Enum.reverse(acc)}
+      {:error, reason} -> {:error, reason}
     end
   end
 
-  # Parse individual CATAR format elements
-  @spec parse_next_catar_element(binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, atom() | String.t()}
-  defp parse_next_catar_element(<<>>), do: {:error, :end_of_data}
+  @spec parse_next_catar_element(binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, atom() | String.t()}
+  defp parse_next_catar_element(<<>>) do
+    {:error, :end_of_data}
+  end
 
   defp parse_next_catar_element(binary_data) do
     case binary_data do
-      # CaFormatEntry - determine UID format based on element size
       <<size::little-64, type::little-64, feature_flags::little-64, mode::little-64,
         _field5::little-64, rest::binary>>
       when type == ca_format_entry() ->
         parse_entry_element(size, feature_flags, mode, rest)
 
-      # CaFormatFilename (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == ca_format_filename() ->
         parse_filename_element(size, remaining)
 
-      # CaFormatPayload (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == ca_format_payload() ->
         parse_payload_element(size, remaining)
 
-      # CaFormatSymlink (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == ca_format_symlink() ->
         parse_symlink_element(size, remaining)
 
-      # CaFormatDevice (32 bytes)
       <<size::little-64, type::little-64, major::little-64, minor::little-64, remaining::binary>>
       when type == ca_format_device() and size == 32 ->
-        element = %{
-          type: :device,
-          major: major,
-          minor: minor
-        }
-
+        element = %{type: :device, major: major, minor: minor}
         {:ok, element, remaining}
 
-      # CaFormatGoodbye (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == ca_format_goodbye() ->
         parse_goodbye_element(size, remaining)
 
-      # CaFormatUser (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == ca_format_user() ->
         parse_user_element(size, remaining)
 
-      # CaFormatGroup (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == ca_format_group() ->
         parse_group_element(size, remaining)
 
-      # CaFormatSELinux (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == ca_format_selinux() ->
         parse_selinux_element(size, remaining)
 
-      # CaFormatXAttr (variable length)
       <<size::little-64, type::little-64, remaining::binary>> when type == ca_format_xattr() ->
         parse_xattr_element(size, remaining)
 
-      # Skip other ACL and capability formats - just consume them
       <<size::little-64, type::little-64, remaining::binary>>
       when type in [
              ca_format_acl_user(),
@@ -131,7 +98,6 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
            ] ->
         parse_metadata_element(size, type, remaining)
 
-      # Unknown or malformed element
       <<size::little-64, type::little-64, _remaining::binary>> ->
         {:error,
          "Unknown CATAR element type: 0x#{Integer.to_string(type, 16) |> String.upcase()}, size: #{size}"}
@@ -141,12 +107,12 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  @spec parse_entry_element(non_neg_integer(), non_neg_integer(), non_neg_integer(), binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
+  @spec parse_entry_element(non_neg_integer(), non_neg_integer(), non_neg_integer(), binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
   defp parse_entry_element(size, feature_flags, mode, rest) do
     uid_gid_data_size = size - 16 - 8 - 8 - 8 - 8
 
     case uid_gid_data_size do
-      # 16-bit UIDs (2 + 2 bytes)
       4 ->
         <<gid::little-16, uid::little-16, mtime::little-64, remaining::binary>> = rest
 
@@ -162,7 +128,6 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
 
         {:ok, element, remaining}
 
-      # 32-bit UIDs (4 + 4 bytes)
       8 ->
         <<gid::little-32, uid::little-32, mtime::little-64, remaining::binary>> = rest
 
@@ -178,7 +143,6 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
 
         {:ok, element, remaining}
 
-      # 64-bit UIDs (8 + 8 bytes) - default/most common
       16 ->
         <<gid::little-64, uid::little-64, mtime::little-64, remaining::binary>> = rest
 
@@ -199,19 +163,15 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  @spec parse_filename_element(non_neg_integer(), binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
+  @spec parse_filename_element(non_neg_integer(), binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
   defp parse_filename_element(size, remaining) do
     name_size = size - 16
 
     case remaining do
       <<name_data::binary-size(name_size), rest::binary>> ->
         name = String.trim_trailing(name_data, <<0>>)
-
-        element = %{
-          type: :filename,
-          name: name
-        }
-
+        element = %{type: :filename, name: name}
         {:ok, element, rest}
 
       _ ->
@@ -219,18 +179,14 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  @spec parse_payload_element(non_neg_integer(), binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
+  @spec parse_payload_element(non_neg_integer(), binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
   defp parse_payload_element(size, remaining) do
     payload_size = size - 16
 
     case remaining do
       <<payload_data::binary-size(payload_size), rest::binary>> ->
-        element = %{
-          type: :payload,
-          size: payload_size,
-          data: payload_data
-        }
-
+        element = %{type: :payload, size: payload_size, data: payload_data}
         {:ok, element, rest}
 
       _ ->
@@ -238,19 +194,15 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  @spec parse_symlink_element(non_neg_integer(), binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
+  @spec parse_symlink_element(non_neg_integer(), binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
   defp parse_symlink_element(size, remaining) do
     target_size = size - 16
 
     case remaining do
       <<target_data::binary-size(target_size), rest::binary>> ->
         target = String.trim_trailing(target_data, <<0>>)
-
-        element = %{
-          type: :symlink,
-          target: target
-        }
-
+        element = %{type: :symlink, target: target}
         {:ok, element, rest}
 
       _ ->
@@ -258,17 +210,14 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  @spec parse_goodbye_element(non_neg_integer(), binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
+  @spec parse_goodbye_element(non_neg_integer(), binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
   defp parse_goodbye_element(size, remaining) do
     items_size = size - 16
 
     case parse_goodbye_items(remaining, items_size) do
       {:ok, items, rest} ->
-        element = %{
-          type: :goodbye,
-          items: items
-        }
-
+        element = %{type: :goodbye, items: items}
         {:ok, element, rest}
 
       {:error, reason} ->
@@ -276,19 +225,15 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  @spec parse_user_element(non_neg_integer(), binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
+  @spec parse_user_element(non_neg_integer(), binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
   defp parse_user_element(size, remaining) do
     name_size = size - 16
 
     case remaining do
       <<name_data::binary-size(name_size), rest::binary>> ->
         name = String.trim_trailing(name_data, <<0>>)
-
-        element = %{
-          type: :user,
-          name: name
-        }
-
+        element = %{type: :user, name: name}
         {:ok, element, rest}
 
       _ ->
@@ -296,19 +241,15 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  @spec parse_group_element(non_neg_integer(), binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
+  @spec parse_group_element(non_neg_integer(), binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
   defp parse_group_element(size, remaining) do
     name_size = size - 16
 
     case remaining do
       <<name_data::binary-size(name_size), rest::binary>> ->
         name = String.trim_trailing(name_data, <<0>>)
-
-        element = %{
-          type: :group,
-          name: name
-        }
-
+        element = %{type: :group, name: name}
         {:ok, element, rest}
 
       _ ->
@@ -316,19 +257,15 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  @spec parse_selinux_element(non_neg_integer(), binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
+  @spec parse_selinux_element(non_neg_integer(), binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
   defp parse_selinux_element(size, remaining) do
     context_size = size - 16
 
     case remaining do
       <<context_data::binary-size(context_size), rest::binary>> ->
         context = String.trim_trailing(context_data, <<0>>)
-
-        element = %{
-          type: :selinux,
-          context: context
-        }
-
+        element = %{type: :selinux, context: context}
         {:ok, element, rest}
 
       _ ->
@@ -336,17 +273,14 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  @spec parse_xattr_element(non_neg_integer(), binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
+  @spec parse_xattr_element(non_neg_integer(), binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
   defp parse_xattr_element(size, remaining) do
     attr_size = size - 16
 
     case remaining do
       <<attr_data::binary-size(attr_size), rest::binary>> ->
-        element = %{
-          type: :xattr,
-          data: attr_data
-        }
-
+        element = %{type: :xattr, data: attr_data}
         {:ok, element, rest}
 
       _ ->
@@ -354,19 +288,14 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  @spec parse_metadata_element(non_neg_integer(), non_neg_integer(), binary()) :: {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
+  @spec parse_metadata_element(non_neg_integer(), non_neg_integer(), binary()) ::
+          {:ok, Constants.catar_element(), binary()} | {:error, String.t()}
   defp parse_metadata_element(size, format_type, remaining) do
     data_size = size - 16
 
     case remaining do
       <<data::binary-size(data_size), rest::binary>> ->
-        element = %{
-          type: :metadata,
-          format: format_type,
-          size: data_size,
-          data: data
-        }
-
+        element = %{type: :metadata, format: format_type, size: data_size, data: data}
         {:ok, element, rest}
 
       _ ->
@@ -374,8 +303,8 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  # Parse goodbye items (directory entries)
-  @spec parse_goodbye_items(binary(), non_neg_integer()) :: {:ok, [map()], binary()} | {:error, String.t()}
+  @spec parse_goodbye_items(binary(), non_neg_integer()) ::
+          {:ok, [map()], binary()} | {:error, String.t()}
   defp parse_goodbye_items(binary_data, items_size) do
     case binary_data do
       <<items_data::binary-size(items_size), rest::binary>> ->
@@ -388,19 +317,15 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
   end
 
   @spec parse_goodbye_items_data(binary(), [map()]) :: [map()]
-  defp parse_goodbye_items_data(<<>>, acc), do: Enum.reverse(acc)
+  defp parse_goodbye_items_data(<<>>, acc) do
+    Enum.reverse(acc)
+  end
 
   defp parse_goodbye_items_data(binary_data, acc) do
     case binary_data do
-      # Each goodbye item is 24 bytes
       <<offset::little-64, size::little-64, hash::little-64, remaining::binary>> ->
-        item = %{
-          offset: offset,
-          size: size,
-          hash: hash
-        }
+        item = %{offset: offset, size: size, hash: hash}
 
-        # Check for tail marker
         if hash == ca_format_goodbye_tail_marker() do
           Enum.reverse([item | acc])
         else
@@ -412,7 +337,6 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     end
   end
 
-  # Process CATAR elements to extract file and directory structure
   @spec process_catar_elements([Constants.catar_element()]) :: {[map()], [map()]}
   defp process_catar_elements(elements) do
     grouped_files = group_catar_elements(elements)
@@ -420,25 +344,25 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
     {files, directories} =
       Enum.reduce(grouped_files, {[], []}, fn item, {files_acc, dirs_acc} ->
         case item.type do
-          :directory ->
-            {files_acc, [item | dirs_acc]}
-
-          _ ->
-            {[item | files_acc], dirs_acc}
+          :directory -> {files_acc, [item | dirs_acc]}
+          _ -> {[item | files_acc], dirs_acc}
         end
       end)
 
     {Enum.reverse(files), Enum.reverse(directories)}
   end
 
-  # Group CATAR elements into logical file/directory structures
   @spec group_catar_elements([Constants.catar_element()]) :: [map()]
   defp group_catar_elements(elements) do
     group_catar_elements_sequential(elements, [], nil, nil)
   end
 
-  # Sequential grouping that follows desync's actual format
-  @spec group_catar_elements_sequential([Constants.catar_element()], [map()], map() | nil, String.t() | nil) :: [map()]
+  @spec group_catar_elements_sequential(
+          [Constants.catar_element()],
+          [map()],
+          map() | nil,
+          String.t() | nil
+        ) :: [map()]
   defp group_catar_elements_sequential([], acc, _current_entry, _pending_name) do
     Enum.reverse(acc)
   end
@@ -504,7 +428,6 @@ defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
         group_catar_elements_sequential(rest, [file | acc], nil, nil)
 
       _ ->
-        # Skip metadata elements (user, group, selinux, xattr, etc.)
         group_catar_elements_sequential(rest, acc, current_entry, pending_name)
     end
   end

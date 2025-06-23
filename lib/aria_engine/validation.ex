@@ -1,27 +1,22 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Validation do
-  @moduledoc """
-  Provides validation functions for the Aria Engine definition.
-  """
+  @moduledoc "Provides validation functions for the Aria Engine definition.\n"
   alias Core
-
   @type t :: Core.t()
   @type todo_item :: Core.todo_item()
   @type action_fn :: Core.action_fn()
   @type task_method_fn :: Core.task_method_fn()
   @type goal_method_fn :: Core.goal_method_fn()
-
-  @doc """
-  Validates the AriaEngine definition.
-  """
+  @doc "Validates the AriaEngine definition.\n"
   @spec validate(t()) :: :ok | {:error, [String.t()]}
   def validate(%Core{} = engine) do
     errors = []
 
     errors =
-      if String.trim(engine.id) == "", do: ["Engine ID cannot be empty" | errors], else: errors
+      if String.trim(engine.id) == "" do
+        ["Engine ID cannot be empty" | errors]
+      else
+        errors
+      end
 
     errors = validate_goals(engine.goals, errors)
     errors = validate_actions(engine.actions, errors)
@@ -34,25 +29,13 @@ defmodule Validation do
     end
   end
 
-  # Private validation helpers
-
   defp validate_goals(goals, errors) do
     Enum.reduce(goals, errors, fn goal, acc ->
       case goal do
-        {pred, subj, _fact_value} when is_binary(pred) and is_binary(subj) ->
-          # Valid goal
-          acc
-
-        {task_name, args} when is_binary(task_name) and is_list(args) ->
-          # Valid task
-          acc
-
-        {action_name, args} when is_atom(action_name) and is_list(args) ->
-          # Valid action
-          acc
-
-        _ ->
-          ["Invalid goal format: #{inspect(goal)}" | acc]
+        {pred, subj, _fact_value} when is_binary(pred) and is_binary(subj) -> acc
+        {task_name, args} when is_binary(task_name) and is_list(args) -> acc
+        {action_name, args} when is_atom(action_name) and is_list(args) -> acc
+        _ -> ["Invalid goal format: #{inspect(goal)}" | acc]
       end
     end)
   end

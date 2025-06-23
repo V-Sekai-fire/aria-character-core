@@ -1,68 +1,7 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Scheduler do
-  @moduledoc """
-  Advanced scheduler with entity/resource/capability management and simulation.
-
-  Provides comprehensive scheduling capabilities including:
-  - Entity and resource modeling with capabilities
-  - run_lazy simulation for predictive scheduling
-  - Resource conflict detection and resolution
-  - Critical path analysis with resource constraints
-
-  ## Features
-
-  - Entity management with capabilities and availability
-  - Resource modeling with capacity and constraints
-  - Simulation modes for schedule validation
-  - Timeline optimization
-
-  ## Usage
-
-      # Define entities with capabilities
-      entities = [
-        %AriaEngine.Scheduler.Entity{
-          id: "developer_1",
-          type: :agent,
-          capabilities: [:coding, :testing],
-          availability: %Timeline.Interval{start: 0, end: 480}
-        }
-      ]
-      
-      # Define resources with capacity
-      resources = [
-        %AriaEngine.Scheduler.Resource{
-          id: "dev_server",
-          type: :computational,
-          capacity: 4,
-          current_usage: 0
-        }
-      ]
-      
-      # Schedule activities with resource requirements
-      activities = [
-        %{
-          id: "implement_feature",
-          duration: 120,
-          dependencies: [],
-          required_capabilities: [:coding],
-          required_resources: ["dev_server"]
-        }
-      ]
-      
-      {:ok, result} = AriaEngine.Scheduler.schedule_activities(
-        "Feature Development",
-        activities,
-        entities: entities,
-        resources: resources,
-        simulation_mode: true
-      )
-  """
-
+  @moduledoc "Advanced scheduler with entity/resource/capability management and simulation.\n\nProvides comprehensive scheduling capabilities including:\n- Entity and resource modeling with capabilities\n- run_lazy simulation for predictive scheduling\n- Resource conflict detection and resolution\n- Critical path analysis with resource constraints\n\n## Features\n\n- Entity management with capabilities and availability\n- Resource modeling with capacity and constraints\n- Simulation modes for schedule validation\n- Timeline optimization\n\n## Usage\n\n    # Define entities with capabilities\n    entities = [\n      %AriaEngine.Scheduler.Entity{\n        id: \"developer_1\",\n        type: :agent,\n        capabilities: [:coding, :testing],\n        availability: %Timeline.Interval{start: 0, end: 480}\n      }\n    ]\n    \n    # Define resources with capacity\n    resources = [\n      %AriaEngine.Scheduler.Resource{\n        id: \"dev_server\",\n        type: :computational,\n        capacity: 4,\n        current_usage: 0\n      }\n    ]\n    \n    # Schedule activities with resource requirements\n    activities = [\n      %{\n        id: \"implement_feature\",\n        duration: 120,\n        dependencies: [],\n        required_capabilities: [:coding],\n        required_resources: [\"dev_server\"]\n      }\n    ]\n    \n    {:ok, result} = AriaEngine.Scheduler.schedule_activities(\n      \"Feature Development\",\n      activities,\n      entities: entities,\n      resources: resources,\n      simulation_mode: true\n    )\n"
   require Logger
 
-  # Type definitions for the scheduler system
   @type activity :: %{
           id: String.t(),
           duration: non_neg_integer(),
@@ -70,20 +9,14 @@ defmodule AriaEngine.Scheduler do
           required_capabilities: [atom()],
           required_resources: [String.t()]
         }
-
-  @type state :: AriaEngine.StateV2.t()
+  @type state :: AriaEngine.State.t()
   @type entity_list :: [Entity.t()]
   @type resource_list :: [Resource.t()]
   @type activity_list :: [activity()]
   @type schedule_options :: keyword()
   @type schedule_result :: {:ok, SimulationResult.t()} | {:error, String.t()}
-
-  # Data structures for enhanced scheduling
   defmodule Entity do
-    @moduledoc """
-    Represents an entity (agent, NPC, object) with capabilities and availability.
-    """
-
+    @moduledoc "Represents an entity (agent, NPC, object) with capabilities and availability.\n"
     @derive Jason.Encoder
     defstruct [
       :id,
@@ -107,10 +40,7 @@ defmodule AriaEngine.Scheduler do
   end
 
   defmodule Resource do
-    @moduledoc """
-    Represents a resource with capacity and constraints.
-    """
-
+    @moduledoc "Represents a resource with capacity and constraints.\n"
     @derive Jason.Encoder
     defstruct [
       :id,
@@ -134,13 +64,7 @@ defmodule AriaEngine.Scheduler do
   end
 
   defmodule ActivityLogEntry do
-    @moduledoc """
-    Represents a logged activity event.
-
-    Supports both absolute timestamps (when mission start time is known)
-    and duration-based formatting (when only relative timing is available).
-    """
-
+    @moduledoc "Represents a logged activity event.\n\nSupports both absolute timestamps (when mission start time is known)\nand duration-based formatting (when only relative timing is available).\n"
     @derive Jason.Encoder
     defstruct [
       :timestamp,
@@ -168,10 +92,7 @@ defmodule AriaEngine.Scheduler do
   end
 
   defmodule SimulationResult do
-    @moduledoc """
-    Results from a scheduling simulation.
-    """
-
+    @moduledoc "Results from a scheduling simulation.\n"
     @derive Jason.Encoder
     defstruct [
       :status,
@@ -196,34 +117,14 @@ defmodule AriaEngine.Scheduler do
           }
   end
 
-  @doc """
-  Schedule activities with advanced entity/resource management and simulation.
-
-  ## Parameters
-
-  - `schedule_name` - Name for this scheduling request
-  - `activities` - List of activities to schedule (can be empty)
-  - `opts` - Required and optional parameters:
-    - `:base_datetime` - Base datetime for scheduling (REQUIRED)
-    - `:entities` - List of Entity structs with capabilities
-    - `:resources` - List of Resource structs with capacity
-    - `:constraints` - Scheduling constraints and limits
-    - `:simulation_mode` - Run in simulation mode (default: false)
-    - `:verbose` - Logging verbosity level (0-3, default: 0)
-
-  ## Returns
-
-  - `{:ok, SimulationResult.t()}` - Successful scheduling with results
-  - `{:error, reason}` - Scheduling failed with error details
-  """
+  @doc "Schedule activities with advanced entity/resource management and simulation.\n\n## Parameters\n\n- `schedule_name` - Name for this scheduling request\n- `activities` - List of activities to schedule (can be empty)\n- `opts` - Required and optional parameters:\n  - `:base_datetime` - Base datetime for scheduling (REQUIRED)\n  - `:entities` - List of Entity structs with capabilities\n  - `:resources` - List of Resource structs with capacity\n  - `:constraints` - Scheduling constraints and limits\n  - `:simulation_mode` - Run in simulation mode (default: false)\n  - `:verbose` - Logging verbosity level (0-3, default: 0)\n\n## Returns\n\n- `{:ok, SimulationResult.t()}` - Successful scheduling with results\n- `{:error, reason}` - Scheduling failed with error details\n"
   @spec schedule_activities(String.t(), list(), keyword()) ::
           {:ok, SimulationResult.t()} | {:error, String.t()}
   def schedule_activities(schedule_name, activities, opts \\ []) do
-    # Validate required base_datetime parameter
     case Keyword.get(opts, :base_datetime) do
       nil ->
         {:error, "base_datetime is required but not provided"}
-      
+
       %DateTime{} = base_datetime ->
         entities = Keyword.get(opts, :entities, [])
         raw_resources = Keyword.get(opts, :resources, [])
@@ -231,7 +132,7 @@ defmodule AriaEngine.Scheduler do
         simulation_mode = Keyword.get(opts, :simulation_mode, false)
         verbose = Keyword.get(opts, :verbose, 0)
         log_activities = Keyword.get(opts, :log_activities, true)
-        
+
         schedule_activities_with_base_datetime(
           schedule_name,
           activities,
@@ -243,7 +144,7 @@ defmodule AriaEngine.Scheduler do
           verbose,
           log_activities
         )
-      
+
       _ ->
         {:error, "base_datetime must be a DateTime struct"}
     end
@@ -260,13 +161,15 @@ defmodule AriaEngine.Scheduler do
          verbose,
          log_activities
        ) do
-
-    # Convert resources from map format to struct format if needed
     resources = convert_resources_to_structs(raw_resources)
 
     if verbose > 0 do
       Logger.info(
-        "AriaEngine.Scheduler: Starting #{if simulation_mode, do: "simulation", else: "scheduling"} for '#{schedule_name}'"
+        "AriaEngine.Scheduler: Starting #{if simulation_mode do
+          "simulation"
+        else
+          "scheduling"
+        end} for '#{schedule_name}'"
       )
 
       Logger.info(
@@ -275,10 +178,13 @@ defmodule AriaEngine.Scheduler do
     end
 
     try do
-      # Initialize activity log
-      activity_log = if log_activities, do: [], else: nil
+      activity_log =
+        if log_activities do
+          []
+        else
+          nil
+        end
 
-      # Delegate to core implementation with base_datetime
       AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
         schedule_name,
         activities,
@@ -298,11 +204,7 @@ defmodule AriaEngine.Scheduler do
     end
   end
 
-  @doc """
-  Run a simulation to predict scheduling outcomes without execution.
-
-  This is a convenience function that sets simulation_mode to true.
-  """
+  @doc "Run a simulation to predict scheduling outcomes without execution.\n\nThis is a convenience function that sets simulation_mode to true.\n"
   @spec simulate_schedule(String.t(), list(), keyword()) ::
           {:ok, SimulationResult.t()} | {:error, String.t()}
   def simulate_schedule(schedule_name, activities, opts \\ []) do
@@ -310,24 +212,18 @@ defmodule AriaEngine.Scheduler do
     schedule_activities(schedule_name, activities, opts)
   end
 
-  @doc """
-  Analyze resource utilization is no longer supported (analytics removed).
-  """
+  @doc "Analyze resource utilization is no longer supported (analytics removed).\n"
   @spec analyze_resource_utilization([map()], [Resource.t()]) :: no_return()
   def analyze_resource_utilization(_schedule, _resources) do
     raise "Resource utilization analytics have been removed from AriaEngine."
   end
 
-  # Private helper functions
-
   @doc false
   defp convert_resources_to_structs(resources) when is_list(resources) do
-    # Already a list, assume it's in the correct format
     resources
   end
 
   defp convert_resources_to_structs(resources) when is_map(resources) do
-    # Convert map format to list of Resource structs
     Enum.map(resources, fn {resource_id, resource_config} ->
       %Resource{
         id: to_string(resource_id),
@@ -341,5 +237,7 @@ defmodule AriaEngine.Scheduler do
     end)
   end
 
-  defp convert_resources_to_structs(_), do: []
+  defp convert_resources_to_structs(_) do
+    []
+  end
 end

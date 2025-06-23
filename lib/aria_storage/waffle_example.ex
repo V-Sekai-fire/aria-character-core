@@ -1,30 +1,12 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.WaffleExample do
-  @moduledoc """
-  Example usage of AriaStorage with Waffle integration.
-
-  This module provides practical examples of how to use the Waffle-based
-  storage system for various use cases.
-  """
-
+  @moduledoc "Example usage of AriaStorage with Waffle integration.\n\nThis module provides practical examples of how to use the Waffle-based\nstorage system for various use cases.\n"
   require Logger
   alias AriaStorage.Storage
-
-  @doc """
-  Example: Store a file using local Waffle storage.
-  """
+  @doc "Example: Store a file using local Waffle storage.\n"
   def store_file_locally(file_path, opts \\ []) do
     storage_opts =
       Keyword.merge(
-        [
-          backend: :local,
-          directory: "/tmp/aria-chunks",
-          # 64KB chunks
-          chunk_size: 64 * 1024,
-          compress: true
-        ],
+        [backend: :local, directory: "/tmp/aria-chunks", chunk_size: 64 * 1024, compress: true],
         opts
       )
 
@@ -42,47 +24,35 @@ defmodule AriaStorage.WaffleExample do
     end
   end
 
-  @doc """
-  Example: Store a file using S3 Waffle storage.
-  """
+  @doc "Example: Store a file using S3 Waffle storage.\n"
   def store_file_s3(file_path, bucket, opts \\ []) do
-    # Configure AWS credentials (should be set via environment variables)
     storage_opts =
       Keyword.merge(
         [
           backend: :s3,
           bucket: bucket,
           region: "us-east-1",
-          # 1MB chunks for S3
           chunk_size: 1024 * 1024,
           compress: true
         ],
         opts
       )
 
-    # First configure Waffle for S3
     case Storage.configure_waffle_storage(%{
            storage: :s3,
            bucket: bucket,
            region: storage_opts[:region]
          }) do
-      {:ok, _config} ->
-        Storage.store_file_with_waffle(file_path, storage_opts)
-
-      error ->
-        error
+      {:ok, _config} -> Storage.store_file_with_waffle(file_path, storage_opts)
+      error -> error
     end
   end
 
-  @doc """
-  Example: Retrieve and save a file from Waffle storage.
-  """
+  @doc "Example: Retrieve and save a file from Waffle storage.\n"
   def retrieve_and_save(index_ref, output_path, opts \\ []) do
     storage_opts =
       Keyword.merge(
-        [
-          backend: :local
-        ],
+        [backend: :local],
         opts
       )
 
@@ -105,34 +75,23 @@ defmodule AriaStorage.WaffleExample do
     end
   end
 
-  @doc """
-  Example: Batch upload multiple files.
-  """
+  @doc "Example: Batch upload multiple files.\n"
   def batch_upload(file_paths, opts \\ []) do
     storage_opts =
       Keyword.merge(
-        [
-          backend: :local,
-          # 128KB chunks
-          chunk_size: 128 * 1024,
-          compress: true
-        ],
+        [backend: :local, chunk_size: 128 * 1024, compress: true],
         opts
       )
 
     results =
       Enum.map(file_paths, fn file_path ->
         case Storage.store_file_with_waffle(file_path, storage_opts) do
-          {:ok, result} ->
-            {:ok, %{file: file_path, result: result}}
-
-          {:error, reason} ->
-            {:error, %{file: file_path, reason: reason}}
+          {:ok, result} -> {:ok, %{file: file_path, result: result}}
+          {:error, reason} -> {:error, %{file: file_path, reason: reason}}
         end
       end)
 
     {successful, failed} = Enum.split_with(results, &match?({:ok, _}, &1))
-
     Logger.info(" Batch upload completed:")
     Logger.debug("   Successful: #{length(successful)}")
     Logger.error("   Failed: #{length(failed)}")
@@ -144,47 +103,34 @@ defmodule AriaStorage.WaffleExample do
      }}
   end
 
-  @doc """
-  Example: Migrate existing storage to Waffle.
-  """
+  @doc "Example: Migrate existing storage to Waffle.\n"
   def migrate_to_waffle(target_backend, opts \\ []) do
     migration_opts =
       Keyword.merge(
-        [
-          batch_size: 10,
-          bucket: "aria-chunks-migrated"
-        ],
+        [batch_size: 10, bucket: "aria-chunks-migrated"],
         opts
       )
 
     Logger.info(" Starting migration to #{target_backend}...")
-
     {:ok, result} = Storage.migrate_to_waffle(target_backend, migration_opts)
-    
     Logger.info(" Migration completed successfully")
     Logger.debug("   Migration started")
     {:ok, result}
   end
 
-  @doc """
-  Example: Storage health check and diagnostics.
-  """
+  @doc "Example: Storage health check and diagnostics.\n"
   def health_check(backend \\ :local, opts \\ []) do
     Logger.info(" Running storage health check for #{backend}...")
 
-    # Test connectivity
     case Storage.test_waffle_storage(backend, opts) do
       {:ok, _result} ->
         Logger.info(" Connectivity: test_passed")
-
-        # Get configuration
         config = Storage.get_waffle_config()
         Logger.info(" Configuration:")
         Logger.debug("   Storage: #{config.storage}")
         Logger.debug("   Bucket: #{config.bucket}")
         Logger.debug("   Directory: #{config.storage_dir}")
 
-        # List recent files
         case Storage.list_waffle_files(backend: backend, limit: 5) do
           {:ok, files} ->
             Logger.info(" Recent files (#{length(files)}):")
@@ -206,9 +152,7 @@ defmodule AriaStorage.WaffleExample do
     end
   end
 
-  @doc """
-  Example: Clean up test files and temporary data.
-  """
+  @doc "Example: Clean up test files and temporary data.\n"
   def cleanup_test_data(pattern \\ "aria_waffle_test_*") do
     temp_dir = System.tmp_dir!()
 
@@ -233,19 +177,14 @@ defmodule AriaStorage.WaffleExample do
 
   defp format_bytes(bytes) when is_integer(bytes) do
     cond do
-      bytes >= 1024 * 1024 * 1024 ->
-        "#{Float.round(bytes / (1024 * 1024 * 1024), 2)} GB"
-
-      bytes >= 1024 * 1024 ->
-        "#{Float.round(bytes / (1024 * 1024), 2)} MB"
-
-      bytes >= 1024 ->
-        "#{Float.round(bytes / 1024, 2)} KB"
-
-      true ->
-        "#{bytes} bytes"
+      bytes >= 1024 * 1024 * 1024 -> "#{Float.round(bytes / (1024 * 1024 * 1024), 2)} GB"
+      bytes >= 1024 * 1024 -> "#{Float.round(bytes / (1024 * 1024), 2)} MB"
+      bytes >= 1024 -> "#{Float.round(bytes / 1024, 2)} KB"
+      true -> "#{bytes} bytes"
     end
   end
 
-  defp format_bytes(_), do: "unknown size"
+  defp format_bytes(_) do
+    "unknown size"
+  end
 end

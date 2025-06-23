@@ -1,38 +1,10 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Membrane.PlannerMCPFilter do
-  @moduledoc """
-  Membrane Filter element that converts PlanningResult to MCPResponse format.
-
-  This element bridges the gap between the planning execution (PlannerSink) 
-  and MCP response delivery (MCPSink) by transforming planning results into
-  the MCP-compatible response format.
-
-  ## Pipeline Position
-
-  ```
-  MCPSource → PlanFilter → PlannerSink → ResponseFilter → MCPSink
-  ```
-
-  This filter enables the MCPSink to remain generic while providing the
-  necessary format transformation for the complete pipeline.
-  """
-
+  @moduledoc "Membrane Filter element that converts PlanningResult to MCPResponse format.\n\nThis element bridges the gap between the planning execution (PlannerSink) \nand MCP response delivery (MCPSink) by transforming planning results into\nthe MCP-compatible response format.\n\n## Pipeline Position\n\n```\nMCPSource → PlanFilter → PlannerSink → ResponseFilter → MCPSink\n```\n\nThis filter enables the MCPSink to remain generic while providing the\nnecessary format transformation for the complete pipeline.\n"
   use Membrane.Filter
-
   alias AriaEngine.Membrane.Format.{PlanningResult, MCPResponse}
   alias Membrane.Buffer
-
-  def_input_pad(:input,
-    accepted_format: PlanningResult,
-    flow_control: :auto
-  )
-
-  def_output_pad(:output,
-    accepted_format: MCPResponse,
-    flow_control: :auto
-  )
+  def_input_pad(:input, accepted_format: PlanningResult, flow_control: :auto)
+  def_output_pad(:output, accepted_format: MCPResponse, flow_control: :auto)
 
   def_options(
     telemetry_prefix: [
@@ -57,10 +29,8 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
   @impl true
   def handle_buffer(:input, %Buffer{payload: %PlanningResult{} = planning_result}, _ctx, state) do
     start_time = System.monotonic_time(:microsecond)
-
     mcp_response = transform_planning_result_to_mcp_response(planning_result)
 
-    # Emit telemetry based on result status
     telemetry_event =
       case planning_result.status do
         :success -> :success_transform
@@ -75,7 +45,6 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
 
     output_buffer = %Buffer{payload: mcp_response}
 
-    # Update state counters
     new_state =
       case planning_result.status do
         :success ->
@@ -96,15 +65,11 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
     {[buffer: {:output, output_buffer}], new_state}
   end
 
-  # Catch-all clause for unsupported payload types
   @impl true
   def handle_buffer(:input, %Buffer{payload: _payload} = buffer, _ctx, state) do
-    # Pass through unsupported payloads unchanged (shouldn't happen in normal pipeline)
     new_state = %{state | processed_count: state.processed_count + 1}
     {[buffer: {:output, buffer}], new_state}
   end
-
-  # Private transformation functions
 
   defp transform_planning_result_to_mcp_response(%PlanningResult{status: :success} = result) do
     %MCPResponse{
@@ -139,7 +104,6 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
   end
 
   defp transform_planning_result_to_mcp_response(%PlanningResult{} = result) do
-    # Handle any other status (fallback to error)
     %MCPResponse{
       status: "error",
       schedule: nil,
@@ -164,7 +128,6 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
   end
 
   defp format_schedule_from_planning_result(_plan_result) do
-    # Fallback for unexpected plan result format
     %{
       "activities" => [],
       "timeline" => %{},
@@ -172,8 +135,6 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
       "metadata" => %{"error" => "Unable to format plan result"}
     }
   end
-
-  # Plan extraction functions (these would integrate with existing MCPTools logic)
 
   defp extract_activities_from_plan(plan) do
     case plan do
@@ -216,9 +177,14 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
   defp extract_plan_metadata(plan) do
     case plan do
       %{metadata: metadata} when is_map(metadata) ->
-        # Convert atom keys to string keys for JSON compatibility
         Enum.reduce(metadata, %{}, fn {key, value}, acc ->
-          string_key = if is_atom(key), do: Atom.to_string(key), else: key
+          string_key =
+            if is_atom(key) do
+              Atom.to_string(key)
+            else
+              key
+            end
+
           Map.put(acc, string_key, value)
         end)
 
@@ -227,28 +193,27 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
     end
   end
 
-  # Helper functions to handle both atom and string keys
   defp get_action_field(action, keys) when is_map(action) do
     Enum.find_value(keys, fn key -> Map.get(action, key) end)
   end
 
-  defp get_action_field(_action, _keys), do: nil
+  defp get_action_field(_action, _keys) do
+    nil
+  end
 
   defp get_field(map, keys) when is_map(map) do
     Enum.find_value(keys, fn key -> Map.get(map, key) end)
   end
 
-  defp get_field(_map, _keys), do: nil
+  defp get_field(_map, _keys) do
+    nil
+  end
 
   defp emit_telemetry(prefix, event, metadata) do
     :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
   end
 
-  # Public API for testing and monitoring
-
-  @doc """
-  Gets the current processing statistics of the ResponseFilter element.
-  """
+  @doc "Gets the current processing statistics of the ResponseFilter element.\n"
   @spec get_stats(pid()) :: map()
   def get_stats(filter_pid) do
     send(filter_pid, {:get_stats, self()})
@@ -280,6 +245,11 @@ defmodule AriaEngine.Membrane.PlannerMCPFilter do
     {[], state}
   end
 
-  defp calculate_success_rate(_success, 0), do: 0.0
-  defp calculate_success_rate(success, total), do: success / total * 100.0
+  defp calculate_success_rate(_success, 0) do
+    0.0
+  end
+
+  defp calculate_success_rate(success, total) do
+    success / total * 100.0
+  end
 end

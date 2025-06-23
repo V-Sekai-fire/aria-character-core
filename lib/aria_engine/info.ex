@@ -1,39 +1,26 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Info do
-  @moduledoc """
-  Provides functions for retrieving information and status from the Aria Engine.
-  """
+  @moduledoc "Provides functions for retrieving information and status from the Aria Engine.\n"
   alias Core
   alias PlannerAdapter
-
   @type t :: Core.t()
   @type status :: Core.status()
   @type solution_tree :: Core.solution_tree()
   @type plan_step :: Core.plan_step()
   @type todo_item :: Core.todo_item()
-
-  @doc """
-  Gets the current status of the engine.
-  """
+  @doc "Gets the current status of the engine.\n"
   @spec get_status(t()) :: status()
   def get_status(%Core{status: status}) do
     status
   end
 
-  @doc """
-  Gets the current state.
-  """
-  @spec get_current_state(t()) :: AriaEngine.StateV2.t()
+  @doc "Gets the current state.\n"
+  @spec get_current_state(t()) :: AriaEngine.State.t()
   def get_current_state(%Core{current_state: state}) do
     state
   end
 
-  @doc """
-  Gets the final state (if completed).
-  """
-  @spec get_final_state(t()) :: AriaEngine.StateV2.t() | nil
+  @doc "Gets the final state (if completed).\n"
+  @spec get_final_state(t()) :: AriaEngine.State.t() | nil
   def get_final_state(%Core{status: :completed, current_state: state}) do
     state
   end
@@ -42,33 +29,25 @@ defmodule Info do
     nil
   end
 
-  @doc """
-  Gets the solution tree (if available).
-  """
+  @doc "Gets the solution tree (if available).\n"
   @spec get_solution_tree(t()) :: solution_tree() | nil
   def get_solution_tree(%Core{solution_tree: solution_tree}) do
     solution_tree
   end
 
-  @doc """
-  Gets the current goals.
-  """
+  @doc "Gets the current goals.\n"
   @spec get_goals(t()) :: [todo_item()]
   def get_goals(%Core{goals: goals}) do
     goals
   end
 
-  @doc """
-  Checks if execution is completed.
-  """
+  @doc "Checks if execution is completed.\n"
   @spec completed?(t()) :: boolean()
   def completed?(%Core{status: status}) do
     status == :completed
   end
 
-  @doc """
-  Gets execution progress as a percentage.
-  """
+  @doc "Gets execution progress as a percentage.\n"
   @spec progress(t()) :: float()
   def progress(%Core{progress: %{total_steps: 0}}) do
     0.0
@@ -78,9 +57,7 @@ defmodule Info do
     min(100.0, completed / total * 100.0)
   end
 
-  @doc """
-  Gets detailed plan statistics from the solution tree.
-  """
+  @doc "Gets detailed plan statistics from the solution tree.\n"
   @spec get_plan_stats(t()) :: map()
   def get_plan_stats(%Core{solution_tree: solution_tree}) when not is_nil(solution_tree) do
     AriaEngine.PlannerAdapter.tree_stats(solution_tree)
@@ -90,9 +67,7 @@ defmodule Info do
     %{error: "No solution tree available"}
   end
 
-  @doc """
-  Gets the planned actions from the solution tree.
-  """
+  @doc "Gets the planned actions from the solution tree.\n"
   @spec get_planned_actions(t()) :: [plan_step()]
   def get_planned_actions(%Core{solution_tree: nil}) do
     []
@@ -102,9 +77,7 @@ defmodule Info do
     AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
   end
 
-  @doc """
-  Gets execution summary with Plan module integration.
-  """
+  @doc "Gets execution summary with Plan module integration.\n"
   @spec get_summary(t()) :: map()
   def get_summary(%Core{} = engine) do
     total_duration =
@@ -138,9 +111,7 @@ defmodule Info do
     }
   end
 
-  @doc """
-  Gets execution trace from the Plan module's solution tree.
-  """
+  @doc "Gets execution trace from the Plan module's solution tree.\n"
   @spec get_trace_log(t()) :: String.t()
   def get_trace_log(%Core{solution_tree: nil}) do
     "No solution tree available - not planned yet"
@@ -156,10 +127,8 @@ defmodule Info do
     end)
   end
 
-  @doc """
-  Updates the current state.
-  """
-  @spec update_state(t(), AriaEngine.StateV2.t()) :: t()
+  @doc "Updates the current state.\n"
+  @spec update_state(t(), AriaEngine.State.t()) :: t()
   def update_state(%Core{} = engine, new_state) do
     %{engine | current_state: new_state}
   end

@@ -1,25 +1,7 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaCharacterCore do
-  @moduledoc """
-  AriaCharacterCore is a comprehensive character AI system that provides:
-
-  - Hybrid planning capabilities through AriaEngine
-  - RDF knowledge base management through AriaTown  
-  - Workflow execution and management through AriaWorkflow
-  - Web coordination interface through AriaCoordinate
-  - Authentication and security services
-  - Storage and file management
-  - Monitoring and telemetry
-  - AI/ML interpretation services
-
-  This module consolidates all the functionality that was previously distributed
-  across multiple umbrella applications into a single, cohesive application.
-  """
-
-  @doc """
-  Returns the version of AriaCharacterCore.
-  """
-  def version, do: "0.2.0"
+  @moduledoc "AriaCharacterCore is a comprehensive character AI system that provides:\n\n- Hybrid planning capabilities through AriaEngine\n- RDF knowledge base management through AriaTown  \n- Workflow execution and management through AriaWorkflow\n- Web coordination interface through AriaCoordinate\n- Authentication and security services\n- Storage and file management\n- Monitoring and telemetry\n- AI/ML interpretation services\n\nThis module consolidates all the functionality that was previously distributed\nacross multiple umbrella applications into a single, cohesive application.\n"
+  @doc "Returns the version of AriaCharacterCore.\n"
+  def version do
+    "0.2.0"
+  end
 end

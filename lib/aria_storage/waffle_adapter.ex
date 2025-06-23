@@ -1,29 +1,8 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.WaffleAdapter do
-  @moduledoc """
-  Waffle adapter for integrating desync chunk storage with existing chunk stores.
-
-  This adapter allows seamless integration between Waffle's file upload system
-  and our desync-compatible chunk storage backends (local, S3, SFTP, HTTP).
-  """
-
+  @moduledoc "Waffle adapter for integrating desync chunk storage with existing chunk stores.\n\nThis adapter allows seamless integration between Waffle's file upload system\nand our desync-compatible chunk storage backends (local, S3, SFTP, HTTP).\n"
   alias AriaStorage.{ChunkStore, ChunkUploader, Chunks}
   alias AriaStorage.Parsers.CasyncFormat
-
-  # @behaviour AriaStorage.ChunkStore.Behaviour
-
-  defstruct [
-    # The Waffle storage backend (:local, :s3, etc.)
-    :backend,
-    # Backend-specific configuration
-    :config,
-    # Waffle uploader module
-    :uploader,
-    # Fallback chunk store for reads
-    :fallback
-  ]
+  defstruct [:backend, :config, :uploader, :fallback]
 
   @type t :: %__MODULE__{
           backend: atom(),
@@ -31,16 +10,7 @@ defmodule AriaStorage.WaffleAdapter do
           uploader: module(),
           fallback: ChunkStore.t() | nil
         }
-
-  @doc """
-  Creates a new Waffle adapter.
-
-  Options:
-  - `:backend` - Waffle backend (:local, :s3, etc.)
-  - `:config` - Backend configuration
-  - `:uploader` - Waffle uploader module (defaults to ChunkUploader)
-  - `:fallback` - Fallback chunk store for reads
-  """
+  @doc "Creates a new Waffle adapter.\n\nOptions:\n- `:backend` - Waffle backend (:local, :s3, etc.)\n- `:config` - Backend configuration\n- `:uploader` - Waffle uploader module (defaults to ChunkUploader)\n- `:fallback` - Fallback chunk store for reads\n"
   def new(opts \\ []) do
     %__MODULE__{
       backend: Keyword.get(opts, :backend, :local),
@@ -50,31 +20,19 @@ defmodule AriaStorage.WaffleAdapter do
     }
   end
 
-  @doc """
-  Configures Waffle for the specified backend.
-  """
+  @doc "Configures Waffle for the specified backend.\n"
   def configure_waffle(backend, config) do
     case backend do
-      :local ->
-        configure_local_storage(config)
-
-      :s3 ->
-        configure_s3_storage(config)
-
-      :gcs ->
-        configure_gcs_storage(config)
-
-      _ ->
-        {:error, {:unsupported_backend, backend}}
+      :local -> configure_local_storage(config)
+      :s3 -> configure_s3_storage(config)
+      :gcs -> configure_gcs_storage(config)
+      _ -> {:error, {:unsupported_backend, backend}}
     end
   end
-
-  # ChunkStore.Behaviour implementation
 
   def store_chunk(%__MODULE__{} = adapter, %Chunks{} = chunk) do
     case upload_chunk_with_waffle(adapter, chunk) do
       {:ok, urls} ->
-        # Store metadata about the uploaded chunk
         metadata = %{
           chunk_id: chunk.id,
           size: chunk.size,
@@ -86,7 +44,6 @@ defmodule AriaStorage.WaffleAdapter do
         {:ok, metadata}
 
       {:error, reason} ->
-        # Try fallback store if available
         case adapter.fallback do
           nil -> {:error, reason}
           fallback -> ChunkStore.store_chunk(fallback, chunk)
@@ -97,10 +54,8 @@ defmodule AriaStorage.WaffleAdapter do
   def get_chunk(%__MODULE__{} = adapter, chunk_id) do
     case download_chunk_with_waffle(adapter, chunk_id) do
       {:ok, binary_data} ->
-        # Parse the chunk data using our casync parser
         case CasyncFormat.parse_chunk(binary_data) do
           {:ok, %{header: header, data: data}} ->
-            # Decompress if needed
             case header.compression do
               :zstd ->
                 case Chunks.decompress_chunk(data, :zstd) do
@@ -122,12 +77,10 @@ defmodule AriaStorage.WaffleAdapter do
             end
 
           {:error, _} ->
-            # Fallback: treat as raw chunk data
             create_chunk_from_data(chunk_id, binary_data, binary_data)
         end
 
       {:error, reason} ->
-        # Try fallback store if available
         case adapter.fallback do
           nil -> {:error, reason}
           fallback -> ChunkStore.get_chunk(fallback, chunk_id)
@@ -146,7 +99,6 @@ defmodule AriaStorage.WaffleAdapter do
         check_s3_object_exists(adapter, chunk_id)
 
       _ ->
-        # For other backends, try to get the chunk
         case get_chunk(adapter, chunk_id) do
           {:ok, _} -> true
           {:error, _} -> false
@@ -162,23 +114,14 @@ defmodule AriaStorage.WaffleAdapter do
   end
 
   def list_chunks(%__MODULE__{} = _adapter, _opts \\ []) do
-    # This would depend on the backend implementation
-    # For now, return empty list with a warning
     require Logger
     Logger.warning("list_chunks not fully implemented for Waffle adapter")
     {:ok, []}
   end
 
   def get_stats(%__MODULE__{} = adapter) do
-    # Basic stats - could be enhanced with backend-specific implementations
-    %{
-      backend: adapter.backend,
-      type: :waffle_adapter,
-      configured: true
-    }
+    %{backend: adapter.backend, type: :waffle_adapter, configured: true}
   end
-
-  # Private functions
 
   defp upload_chunk_with_waffle(adapter, chunk) do
     scope = %{chunk_id: chunk.id}
@@ -198,24 +141,16 @@ defmodule AriaStorage.WaffleAdapter do
     scope = %{chunk_id: chunk_id}
 
     case adapter.uploader.url({chunk_filename, scope}, :original) do
-      url when is_binary(url) ->
-        download_from_url(url)
-
-      _ ->
-        {:error, :chunk_not_found}
+      url when is_binary(url) -> download_from_url(url)
+      _ -> {:error, :chunk_not_found}
     end
   end
 
   defp download_from_url(url) do
     case HTTPoison.get(url) do
-      {:ok, %{status_code: 200, body: body}} ->
-        {:ok, body}
-
-      {:ok, %{status_code: status}} ->
-        {:error, {:http_error, status}}
-
-      {:error, reason} ->
-        {:error, {:http_request_failed, reason}}
+      {:ok, %{status_code: 200, body: body}} -> {:ok, body}
+      {:ok, %{status_code: status}} -> {:error, {:http_error, status}}
+      {:error, reason} -> {:error, {:http_request_failed, reason}}
     end
   end
 
@@ -226,9 +161,7 @@ defmodule AriaStorage.WaffleAdapter do
   end
 
   defp build_chunk_filename(chunk_id) do
-    chunk_id
-    |> Base.encode16(case: :lower)
-    |> Kernel.<>(".cacnk")
+    chunk_id |> Base.encode16(case: :lower) |> Kernel.<>(".cacnk")
   end
 
   defp create_chunk_from_data(chunk_id, data, compressed_data) do
@@ -245,8 +178,6 @@ defmodule AriaStorage.WaffleAdapter do
   end
 
   defp check_s3_object_exists(adapter, chunk_id) do
-    # This would use ExAws to check if S3 object exists
-    # Implementation depends on S3 configuration
     bucket = adapter.config[:bucket]
     key = build_s3_key(chunk_id)
 
@@ -264,11 +195,8 @@ defmodule AriaStorage.WaffleAdapter do
 
   defp configure_local_storage(config) do
     storage_path = Map.get(config, :storage_path, "priv/static/chunks")
-
     Application.put_env(:waffle, :storage, Waffle.Storage.Local)
     Application.put_env(:waffle, :storage_dir_prefix, storage_path)
-
-    # Ensure directory exists
     File.mkdir_p!(storage_path)
     {:ok, :configured}
   end
@@ -280,8 +208,6 @@ defmodule AriaStorage.WaffleAdapter do
       :ok ->
         Application.put_env(:waffle, :storage, Waffle.Storage.S3)
         Application.put_env(:waffle, :bucket, config.bucket)
-
-        # Configure ExAws
         Application.put_env(:ex_aws, :region, config.region)
 
         if config[:access_key_id] do
@@ -300,7 +226,6 @@ defmodule AriaStorage.WaffleAdapter do
   end
 
   defp configure_gcs_storage(config) do
-    # Google Cloud Storage configuration
     required_keys = [:bucket]
 
     case validate_config(config, required_keys) do
@@ -315,10 +240,7 @@ defmodule AriaStorage.WaffleAdapter do
   end
 
   defp validate_s3_config(config, required_keys) do
-    missing_keys =
-      Enum.filter(required_keys, fn key ->
-        not Map.has_key?(config, key)
-      end)
+    missing_keys = Enum.filter(required_keys, fn key -> not Map.has_key?(config, key) end)
 
     if Enum.empty?(missing_keys) do
       :ok
@@ -328,10 +250,7 @@ defmodule AriaStorage.WaffleAdapter do
   end
 
   defp validate_config(config, required_keys) do
-    missing_keys =
-      Enum.filter(required_keys, fn key ->
-        not Map.has_key?(config, key)
-      end)
+    missing_keys = Enum.filter(required_keys, fn key -> not Map.has_key?(config, key) end)
 
     if Enum.empty?(missing_keys) do
       :ok

@@ -1,34 +1,23 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Timeline.ResourceSchedulingTest do
   use ExUnit.Case, async: true
-
   alias Timeline
   alias Timeline.Interval
   alias Timeline.AgentEntity
 
-  describe "capability-dependent activity assignment" do
+  describe("capability-dependent activity assignment") do
     test "assigns surgery to qualified surgeon" do
       timeline = Timeline.new()
 
       surgeon =
-        AgentEntity.create_agent(
-          "surgeon1",
-          "Dr. Smith",
-          %{specialty: "cardiac"},
+        AgentEntity.create_agent("surgeon1", "Dr. Smith", %{specialty: "cardiac"},
           capabilities: [:surgery, :decision_making, :medical_expertise]
         )
 
       nurse =
-        AgentEntity.create_agent(
-          "nurse1",
-          "Nurse Johnson",
-          %{certification: "RN"},
+        AgentEntity.create_agent("nurse1", "Nurse Johnson", %{certification: "RN"},
           capabilities: [:patient_care, :communication]
         )
 
-      # Surgery requires surgical capability
       surgery_interval =
         Interval.new(
           DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
@@ -38,7 +27,6 @@ defmodule Timeline.ResourceSchedulingTest do
           metadata: %{required_capabilities: [:surgery, :medical_expertise]}
         )
 
-      # Post-op care can be done by nurse
       care_interval =
         Interval.new(
           DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
@@ -54,8 +42,6 @@ defmodule Timeline.ResourceSchedulingTest do
         |> Timeline.add_interval(care_interval)
 
       assert Timeline.consistent?(updated_timeline)
-
-      # Verify capability matching
       assert AgentEntity.has_capability?(surgeon, :surgery)
       assert AgentEntity.has_capability?(nurse, :patient_care)
       refute AgentEntity.has_capability?(nurse, :surgery)
@@ -65,29 +51,20 @@ defmodule Timeline.ResourceSchedulingTest do
       timeline = Timeline.new()
 
       welder =
-        AgentEntity.create_agent(
-          "welder1",
-          "Certified Welder",
-          %{certification: "AWS D1.1"},
+        AgentEntity.create_agent("welder1", "Certified Welder", %{certification: "AWS D1.1"},
           capabilities: [:welding, :safety_protocols]
         )
 
       assembler =
-        AgentEntity.create_agent(
-          "assembler1",
-          "Assembly Tech",
-          %{experience: "5 years"},
+        AgentEntity.create_agent("assembler1", "Assembly Tech", %{experience: "5 years"},
           capabilities: [:assembly, :blueprint_reading]
         )
 
       welding_station =
-        AgentEntity.create_entity(
-          "weld_station_1",
-          "Welding Station #1",
-          %{equipment: ["MIG_welder", "safety_booth"]}
-        )
+        AgentEntity.create_entity("weld_station_1", "Welding Station #1", %{
+          equipment: ["MIG_welder", "safety_booth"]
+        })
 
-      # Welding requires welding capability
       welding_task =
         Interval.new(
           DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
@@ -98,7 +75,6 @@ defmodule Timeline.ResourceSchedulingTest do
           metadata: %{required_capabilities: [:welding, :safety_protocols]}
         )
 
-      # Assembly requires assembly capability
       assembly_task =
         Interval.new(
           DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC"),
@@ -109,9 +85,7 @@ defmodule Timeline.ResourceSchedulingTest do
         )
 
       updated_timeline =
-        timeline
-        |> Timeline.add_interval(welding_task)
-        |> Timeline.add_interval(assembly_task)
+        timeline |> Timeline.add_interval(welding_task) |> Timeline.add_interval(assembly_task)
 
       assert Timeline.consistent?(updated_timeline)
       assert AgentEntity.has_capability?(welder, :welding)
@@ -119,19 +93,15 @@ defmodule Timeline.ResourceSchedulingTest do
     end
   end
 
-  describe "resource conflicts with capability requirements" do
+  describe("resource conflicts with capability requirements") do
     test "detects pilot scheduling conflict" do
       timeline = Timeline.new()
 
       pilot =
-        AgentEntity.create_agent(
-          "pilot1",
-          "Captain Smith",
-          %{license: "commercial"},
+        AgentEntity.create_agent("pilot1", "Captain Smith", %{license: "commercial"},
           capabilities: [:flying, :navigation, :decision_making]
         )
 
-      # Two overlapping flights requiring same pilot
       flight1 =
         Interval.new(
           DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
@@ -151,14 +121,10 @@ defmodule Timeline.ResourceSchedulingTest do
         )
 
       updated_timeline =
-        timeline
-        |> Timeline.add_interval(flight1)
-        |> Timeline.add_interval(flight2)
+        timeline |> Timeline.add_interval(flight1) |> Timeline.add_interval(flight2)
 
-      # Timeline allows overlapping intervals (conflict detection is external)
       assert Timeline.consistent?(updated_timeline)
 
-      # Add constraint to resolve conflict
       sequential_timeline =
         Timeline.add_constraint(
           updated_timeline,
@@ -174,27 +140,16 @@ defmodule Timeline.ResourceSchedulingTest do
       timeline = Timeline.new()
 
       operator1 =
-        AgentEntity.create_agent(
-          "op1",
-          "Morning Operator",
-          %{shift: "morning"},
+        AgentEntity.create_agent("op1", "Morning Operator", %{shift: "morning"},
           capabilities: [:machine_operation, :safety_protocols]
         )
 
       operator2 =
-        AgentEntity.create_agent(
-          "op2",
-          "Afternoon Operator",
-          %{shift: "afternoon"},
+        AgentEntity.create_agent("op2", "Afternoon Operator", %{shift: "afternoon"},
           capabilities: [:machine_operation, :maintenance]
         )
 
-      cnc_machine =
-        AgentEntity.create_entity(
-          "cnc1",
-          "CNC Machine #1",
-          %{model: "Haas VF-2"}
-        )
+      cnc_machine = AgentEntity.create_entity("cnc1", "CNC Machine #1", %{model: "Haas VF-2"})
 
       morning_shift =
         Interval.new(
@@ -216,7 +171,6 @@ defmodule Timeline.ResourceSchedulingTest do
           metadata: %{required_capabilities: [:machine_operation]}
         )
 
-      # Add 1-hour break between shifts
       updated_timeline =
         timeline
         |> Timeline.add_interval(morning_shift)
@@ -234,35 +188,25 @@ defmodule Timeline.ResourceSchedulingTest do
     end
   end
 
-  describe "multi-agent coordination" do
+  describe("multi-agent coordination") do
     test "coordinates project team with complementary capabilities" do
       timeline = Timeline.new()
 
       project_manager =
-        AgentEntity.create_agent(
-          "pm1",
-          "Alice Manager",
-          %{experience: "10 years"},
+        AgentEntity.create_agent("pm1", "Alice Manager", %{experience: "10 years"},
           capabilities: [:planning, :coordination, :decision_making]
         )
 
       developer =
-        AgentEntity.create_agent(
-          "dev1",
-          "Bob Developer",
-          %{language: "Elixir"},
+        AgentEntity.create_agent("dev1", "Bob Developer", %{language: "Elixir"},
           capabilities: [:coding, :problem_solving]
         )
 
       tester =
-        AgentEntity.create_agent(
-          "qa1",
-          "Carol Tester",
-          %{specialty: "automation"},
+        AgentEntity.create_agent("qa1", "Carol Tester", %{specialty: "automation"},
           capabilities: [:testing, :quality_assurance]
         )
 
-      # Sequential project phases
       planning_phase =
         Interval.new(
           DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
@@ -290,7 +234,6 @@ defmodule Timeline.ResourceSchedulingTest do
           metadata: %{required_capabilities: [:testing]}
         )
 
-      # Add sequential constraints
       updated_timeline =
         timeline
         |> Timeline.add_interval(planning_phase)
@@ -308,8 +251,6 @@ defmodule Timeline.ResourceSchedulingTest do
         )
 
       assert Timeline.consistent?(updated_timeline)
-
-      # Verify each agent has required capabilities
       assert AgentEntity.has_capability?(project_manager, :planning)
       assert AgentEntity.has_capability?(developer, :coding)
       assert AgentEntity.has_capability?(tester, :testing)
@@ -319,30 +260,20 @@ defmodule Timeline.ResourceSchedulingTest do
       timeline = Timeline.new()
 
       fire_chief =
-        AgentEntity.create_agent(
-          "chief1",
-          "Fire Chief",
-          %{rank: "chief"},
+        AgentEntity.create_agent("chief1", "Fire Chief", %{rank: "chief"},
           capabilities: [:incident_command, :decision_making, :coordination]
         )
 
       paramedic =
-        AgentEntity.create_agent(
-          "medic1",
-          "Paramedic",
-          %{certification: "EMT-P"},
+        AgentEntity.create_agent("medic1", "Paramedic", %{certification: "EMT-P"},
           capabilities: [:emergency_medical, :patient_transport]
         )
 
       firefighter =
-        AgentEntity.create_agent(
-          "ff1",
-          "Firefighter",
-          %{specialty: "rescue"},
+        AgentEntity.create_agent("ff1", "Firefighter", %{specialty: "rescue"},
           capabilities: [:fire_suppression, :rescue_operations]
         )
 
-      # Coordinated emergency response
       command_setup =
         Interval.new(
           DateTime.from_naive!(~N[2025-01-01 14:30:00], "Etc/UTC"),
@@ -387,8 +318,6 @@ defmodule Timeline.ResourceSchedulingTest do
         )
 
       assert Timeline.consistent?(updated_timeline)
-
-      # Verify specialized capabilities
       assert AgentEntity.has_capability?(fire_chief, :incident_command)
       assert AgentEntity.has_capability?(firefighter, :rescue_operations)
       assert AgentEntity.has_capability?(paramedic, :emergency_medical)

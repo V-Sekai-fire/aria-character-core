@@ -1,16 +1,6 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule HybridPlanner.HybridCoordinatorV2.Constructor do
-  @moduledoc """
-  Constructor and validation logic for HybridCoordinatorV2.
-
-  Handles strategy dependency injection, validation, and coordinator creation
-  following the Function as Object pattern.
-  """
-
+  @moduledoc "Constructor and validation logic for HybridCoordinatorV2.\n\nHandles strategy dependency injection, validation, and coordinator creation\nfollowing the Function as Object pattern.\n"
   alias HybridPlanner.Strategies
-
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()
   @type strategies_map :: %{
           planning_strategy: module(),
@@ -20,16 +10,9 @@ defmodule HybridPlanner.HybridCoordinatorV2.Constructor do
           logging_strategy: module(),
           execution_strategy: module()
         }
-
-  @doc """
-  Create a new hybrid coordinator with injected strategy dependencies.
-
-  This implements the Function as Object pattern - the coordinator becomes
-  a composable object containing strategy functions as data.
-  """
+  @doc "Create a new hybrid coordinator with injected strategy dependencies.\n\nThis implements the Function as Object pattern - the coordinator becomes\na composable object containing strategy functions as data.\n"
   @spec new(strategies_map(), keyword()) :: coordinator()
   def new(strategies, opts \\ []) do
-    # Validate that all required strategies are provided
     required_strategies = [
       :planning_strategy,
       :temporal_strategy,
@@ -47,7 +30,6 @@ defmodule HybridPlanner.HybridCoordinatorV2.Constructor do
       raise ArgumentError, "Missing required strategies: #{inspect(missing_strategies)}"
     end
 
-    # Validate strategy implementations
     case validate_strategy_compatibility(strategies) do
       :ok -> :ok
       {:error, reason} -> raise ArgumentError, "Strategy validation failed: #{reason}"
@@ -68,9 +50,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.Constructor do
     }
   end
 
-  @doc """
-  Create a coordinator with default strategy implementations.
-  """
+  @doc "Create a coordinator with default strategy implementations.\n"
   @spec new_default(keyword()) :: coordinator()
   def new_default(opts \\ []) do
     default_strategies = %{
@@ -85,17 +65,13 @@ defmodule HybridPlanner.HybridCoordinatorV2.Constructor do
     new(default_strategies, opts)
   end
 
-  @doc """
-  Validate strategy compatibility.
-  """
+  @doc "Validate strategy compatibility.\n"
   @spec validate_strategy_compatibility(strategies_map()) :: :ok | {:error, String.t()}
   def validate_strategy_compatibility(strategies) when is_map(strategies) do
     Strategies.validate_strategy_compatibility(strategies)
   end
 
-  @doc """
-  Get composition information for metadata.
-  """
+  @doc "Get composition information for metadata.\n"
   @spec get_strategy_composition_info(strategies_map()) :: map()
   def get_strategy_composition_info(strategies) do
     strategies
@@ -111,11 +87,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.Constructor do
           %{module: strategy_module, info_available: false}
         end
 
-      {strategy_type,
-       %{
-         module: strategy_module,
-         info: strategy_info
-       }}
+      {strategy_type, %{module: strategy_module, info: strategy_info}}
     end)
     |> Enum.into(%{})
   end

@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.Utils do
   @spec calculate_index_checksum([%{id: binary()}]) :: binary()
   def calculate_index_checksum(chunks) do

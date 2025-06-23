@@ -1,11 +1,8 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaAuth.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
-  schema "users" do
+  schema("users") do
     field(:email, :string)
     field(:password_hash, :string)
     field(:email_verified_at, :utc_datetime)
@@ -21,13 +18,10 @@ defmodule AriaAuth.Accounts.User do
     field(:current_sign_in_at, :utc_datetime)
     field(:last_sign_in_at, :utc_datetime)
     field(:roles, {:array, :string}, default: [])
-
     timestamps()
   end
 
-  @doc """
-  A user changeset for registration.
-  """
+  @doc "A user changeset for registration.\n"
   def registration_changeset(user, attrs) do
     user
     |> cast(attrs, [:email, :password_hash, :provider, :provider_uid, :roles])
@@ -35,9 +29,7 @@ defmodule AriaAuth.Accounts.User do
     |> unique_constraint(:email)
   end
 
-  @doc """
-  A user changeset for updating user information.
-  """
+  @doc "A user changeset for updating user information.\n"
   def changeset(user, attrs) do
     user
     |> cast(attrs, [
@@ -60,12 +52,8 @@ defmodule AriaAuth.Accounts.User do
     |> unique_constraint(:email)
   end
 
-  @doc """
-  A user changeset for updating password.
-  """
+  @doc "A user changeset for updating password.\n"
   def password_changeset(user, attrs) do
-    user
-    |> cast(attrs, [:password_hash])
-    |> validate_required([:password_hash])
+    user |> cast(attrs, [:password_hash]) |> validate_required([:password_hash])
   end
 end

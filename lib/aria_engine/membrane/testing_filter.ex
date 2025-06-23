@@ -1,30 +1,10 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Membrane.Testing.Filter do
-  @moduledoc """
-  Mock testing filter for Membrane pipeline tests.
-
-  This module provides a simple pass-through filter that can be used
-  in tests to verify pipeline structure and data flow without complex
-  processing logic.
-  """
-
+  @moduledoc "Mock testing filter for Membrane pipeline tests.\n\nThis module provides a simple pass-through filter that can be used\nin tests to verify pipeline structure and data flow without complex\nprocessing logic.\n"
   use Membrane.Filter
-
   require Logger
-
   alias Membrane.Buffer
-
-  def_input_pad(:input,
-    accepted_format: _any,
-    flow_control: :auto
-  )
-
-  def_output_pad(:output,
-    accepted_format: _any,
-    flow_control: :auto
-  )
+  def_input_pad(:input, accepted_format: _any, flow_control: :auto)
+  def_output_pad(:output, accepted_format: _any, flow_control: :auto)
 
   def_options(
     telemetry_prefix: [
@@ -51,9 +31,6 @@ defmodule Membrane.Testing.Filter do
           delay_ms: non_neg_integer(),
           processed_count: non_neg_integer()
         }
-
-  # ==================== Membrane Callbacks ====================
-
   @impl true
   def handle_init(_ctx, opts) do
     state = %{
@@ -77,12 +54,10 @@ defmodule Membrane.Testing.Filter do
   def handle_buffer(:input, %Buffer{payload: payload} = buffer, _ctx, state) do
     start_time = System.monotonic_time(:microsecond)
 
-    # Add artificial delay if configured
     if state.delay_ms > 0 do
       Process.sleep(state.delay_ms)
     end
 
-    # Apply transformation if provided
     transformed_payload =
       if state.transform_fn do
         state.transform_fn.(payload)
@@ -99,7 +74,6 @@ defmodule Membrane.Testing.Filter do
 
     output_buffer = %Buffer{buffer | payload: transformed_payload}
     new_state = %{state | processed_count: state.processed_count + 1}
-
     {[buffer: {:output, output_buffer}], new_state}
   end
 
@@ -121,23 +95,13 @@ defmodule Membrane.Testing.Filter do
     {[], state}
   end
 
-  # ==================== PRIVATE FUNCTIONS ====================
-
   defp emit_telemetry(prefix, event, metadata) do
     :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
   end
 
-  # ==================== PUBLIC API FOR TESTING ====================
-
-  @doc """
-  Starts a testing filter with the given options.
-
-  This function provides compatibility with the expected `start_link/2` interface
-  that tests are looking for.
-  """
+  @doc "Starts a testing filter with the given options.\n\nThis function provides compatibility with the expected `start_link/2` interface\nthat tests are looking for.\n"
   @spec start_link(keyword(), keyword()) :: {:ok, pid()} | {:error, term()}
   def start_link(filter_opts \\ [], process_opts \\ []) do
-    # Create a simple pipeline with just this filter for testing
     import Membrane.ChildrenSpec
 
     spec = [
@@ -152,9 +116,7 @@ defmodule Membrane.Testing.Filter do
     Membrane.Testing.Pipeline.start_link([spec: spec] ++ process_opts)
   end
 
-  @doc """
-  Gets the current processing statistics of the Testing Filter element.
-  """
+  @doc "Gets the current processing statistics of the Testing Filter element.\n"
   @spec get_stats(pid(), timeout()) :: map()
   def get_stats(filter_pid, timeout \\ 5000) do
     send(filter_pid, {:get_stats, self()})
@@ -166,15 +128,13 @@ defmodule Membrane.Testing.Filter do
     end
   end
 
-  @doc """
-  Creates a simple identity transformation function for testing.
-  """
+  @doc "Creates a simple identity transformation function for testing.\n"
   @spec identity_transform() :: (term() -> term())
-  def identity_transform(), do: fn x -> x end
+  def identity_transform() do
+    fn x -> x end
+  end
 
-  @doc """
-  Creates a transformation function that adds metadata to payloads.
-  """
+  @doc "Creates a transformation function that adds metadata to payloads.\n"
   @spec add_metadata_transform(map()) :: (term() -> term())
   def add_metadata_transform(metadata) when is_map(metadata) do
     fn payload ->

@@ -1,50 +1,13 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AstMigrate.RuleSystem do
-  @moduledoc """
-  Advanced transformation rule system with parallel processing and Git integration.
-
-  This module provides the Phase 1 implementation with:
-  - Task.async_stream for parallel file processing
-  - Advanced rule composition and dependency management
-  - Git integration for transformation tracking
-  - Comprehensive error handling and recovery
-  """
-
+  @moduledoc "Advanced transformation rule system with parallel processing and Git integration.\n\nThis module provides the Phase 1 implementation with:\n- Task.async_stream for parallel file processing\n- Advanced rule composition and dependency management\n- Git integration for transformation tracking\n- Comprehensive error handling and recovery\n"
   require Logger
-
   alias AstMigrate.Parser
   alias AstMigrate.Git
-
   @type rule_module :: module()
   @type file_path :: String.t()
   @type transformation_result :: {:ok, String.t()} | {:error, String.t()}
   @type batch_result :: {:ok, [file_path()], [file_path()]} | {:error, String.t()}
-
-  @doc """
-  Apply transformation rules to multiple files in parallel using Task.async_stream.
-
-  ## Options
-
-  - `:max_concurrency` - Maximum concurrent transformations (default: System.schedulers_online())
-  - `:timeout` - Timeout per file transformation in milliseconds (default: 30_000)
-  - `:ordered` - Whether to maintain file order in results (default: false)
-  - `:on_timeout` - Action on timeout: `:exit` or `:kill_task` (default: :exit)
-  - `:git_commit` - Whether to create Git commit after transformations (default: false)
-  - `:commit_message` - Custom commit message (default: auto-generated)
-
-  ## Examples
-
-      # Transform files in parallel
-      AstMigrate.RuleSystem.transform_files(
-        ["lib/module1.ex", "lib/module2.ex"],
-        [AstMigrate.Rules.StateV2ToState],
-        max_concurrency: 4,
-        git_commit: true,
-        commit_message: "Convert StateV2 to State"
-      )
-  """
+  @doc "Apply transformation rules to multiple files in parallel using Task.async_stream.\n\n## Options\n\n- `:max_concurrency` - Maximum concurrent transformations (default: System.schedulers_online())\n- `:timeout` - Timeout per file transformation in milliseconds (default: 30_000)\n- `:ordered` - Whether to maintain file order in results (default: false)\n- `:on_timeout` - Action on timeout: `:exit` or `:kill_task` (default: :exit)\n- `:git_commit` - Whether to create Git commit after transformations (default: false)\n- `:commit_message` - Custom commit message (default: auto-generated)\n\n## Examples\n\n    # Transform files in parallel\n    AstMigrate.RuleSystem.transform_files(\n      [\"lib/module1.ex\", \"lib/module2.ex\"],\n      [AstMigrate.Rules.StateV2ToState],\n      max_concurrency: 4,\n      git_commit: true,\n      commit_message: \"Convert StateV2 to State\"\n    )\n"
   @spec transform_files([file_path()], [rule_module()], keyword()) :: batch_result()
   def transform_files(file_paths, rule_modules, opts \\ []) do
     options = Keyword.merge(default_transform_options(), opts)
@@ -59,11 +22,8 @@ defmodule AstMigrate.RuleSystem do
 
     start_time = System.monotonic_time(:millisecond)
 
-    # Validate rules before processing
     with :ok <- validate_rules(rule_modules),
          :ok <- validate_files(file_paths) do
-
-      # Process files in parallel using Task.async_stream
       stream_options = [
         max_concurrency: options[:max_concurrency],
         timeout: options[:timeout],
@@ -71,13 +31,12 @@ defmodule AstMigrate.RuleSystem do
         on_timeout: options[:on_timeout]
       ]
 
-      results = file_paths
-      |> Task.async_stream(&transform_single_file(&1, rule_modules, options), stream_options)
-      |> Enum.to_list()
+      results =
+        file_paths
+        |> Task.async_stream(&transform_single_file(&1, rule_modules, options), stream_options)
+        |> Enum.to_list()
 
-      # Process results and handle errors
       {successful_files, failed_files} = categorize_results(results, file_paths)
-
       end_time = System.monotonic_time(:millisecond)
       duration = end_time - start_time
 
@@ -90,7 +49,6 @@ defmodule AstMigrate.RuleSystem do
         total_files: length(file_paths)
       )
 
-      # Create Git commit if requested and transformations were successful
       if options[:git_commit] and length(successful_files) > 0 do
         commit_transformations(successful_files, rule_modules, options)
       end
@@ -103,13 +61,12 @@ defmodule AstMigrate.RuleSystem do
           operation: :transform_files,
           error: reason
         )
+
         {:error, reason}
     end
   end
 
-  @doc """
-  Apply transformation rules to a single file with comprehensive error handling.
-  """
+  @doc "Apply transformation rules to a single file with comprehensive error handling.\n"
   @spec transform_single_file(file_path(), [rule_module()], keyword()) :: transformation_result()
   def transform_single_file(file_path, rule_modules, opts \\ []) do
     Logger.debug("Starting single file transformation",
@@ -126,7 +83,6 @@ defmodule AstMigrate.RuleSystem do
            {:ok, transformed_zipper} <- apply_rules_to_zipper(zipper, rule_modules),
            {:ok, transformed_code} <- Parser.to_string(transformed_zipper),
            :ok <- write_transformed_file(file_path, transformed_code, opts) do
-
         end_time = System.monotonic_time(:microsecond)
         duration = end_time - start_time
 
@@ -148,6 +104,7 @@ defmodule AstMigrate.RuleSystem do
             file: file_path,
             error: reason
           )
+
           {:error, reason}
       end
     rescue
@@ -159,17 +116,14 @@ defmodule AstMigrate.RuleSystem do
           exception: inspect(exception),
           stacktrace: Exception.format_stacktrace(__STACKTRACE__)
         )
+
         {:error, "Exception: #{inspect(exception)}"}
     end
   end
 
-  @doc """
-  Compose multiple transformation rules into a single transformation pipeline.
-
-  Rules are applied in the order specified, with each rule receiving the output
-  of the previous rule.
-  """
-  @spec compose_rules([rule_module()]) :: (Sourceror.Zipper.t() -> {:ok, Sourceror.Zipper.t()} | {:error, String.t()})
+  @doc "Compose multiple transformation rules into a single transformation pipeline.\n\nRules are applied in the order specified, with each rule receiving the output\nof the previous rule.\n"
+  @spec compose_rules([rule_module()]) :: (Sourceror.Zipper.t() ->
+                                             {:ok, Sourceror.Zipper.t()} | {:error, String.t()})
   def compose_rules(rule_modules) do
     fn zipper ->
       Logger.debug("Composing transformation rules",
@@ -182,6 +136,7 @@ defmodule AstMigrate.RuleSystem do
         case apply_single_rule(current_zipper, rule_module) do
           {:ok, transformed_zipper} ->
             {:cont, {:ok, transformed_zipper}}
+
           {:error, reason} ->
             Logger.warning("Rule composition failed",
               module: :ast_migrate_rule_system,
@@ -189,15 +144,14 @@ defmodule AstMigrate.RuleSystem do
               failed_rule: rule_module,
               error: reason
             )
+
             {:halt, {:error, "Rule #{rule_module} failed: #{reason}"}}
         end
       end)
     end
   end
 
-  @doc """
-  Validate that all specified rule modules are available and properly implemented.
-  """
+  @doc "Validate that all specified rule modules are available and properly implemented.\n"
   @spec validate_rules([rule_module()]) :: :ok | {:error, String.t()}
   def validate_rules(rule_modules) do
     Logger.debug("Validating transformation rules",
@@ -206,10 +160,11 @@ defmodule AstMigrate.RuleSystem do
       rules: rule_modules
     )
 
-    invalid_rules = Enum.filter(rule_modules, fn rule_module ->
-      not Code.ensure_loaded?(rule_module) or
-      not function_exported?(rule_module, :transform_file, 1)
-    end)
+    invalid_rules =
+      Enum.filter(rule_modules, fn rule_module ->
+        not Code.ensure_loaded?(rule_module) or
+          not function_exported?(rule_module, :transform_file, 1)
+      end)
 
     case invalid_rules do
       [] ->
@@ -217,22 +172,23 @@ defmodule AstMigrate.RuleSystem do
           module: :ast_migrate_rule_system,
           operation: :validate_rules
         )
+
         :ok
 
       invalid ->
         error_msg = "Invalid rules: #{inspect(invalid)}"
+
         Logger.error("Rule validation failed",
           module: :ast_migrate_rule_system,
           operation: :validate_rules,
           invalid_rules: invalid
         )
+
         {:error, error_msg}
     end
   end
 
-  @doc """
-  Validate that all specified files exist and are readable.
-  """
+  @doc "Validate that all specified files exist and are readable.\n"
   @spec validate_files([file_path()]) :: :ok | {:error, String.t()}
   def validate_files(file_paths) do
     Logger.debug("Validating input files",
@@ -241,9 +197,10 @@ defmodule AstMigrate.RuleSystem do
       file_count: length(file_paths)
     )
 
-    invalid_files = Enum.filter(file_paths, fn file_path ->
-      not File.exists?(file_path) or not File.regular?(file_path)
-    end)
+    invalid_files =
+      Enum.filter(file_paths, fn file_path ->
+        not File.exists?(file_path) or not File.regular?(file_path)
+      end)
 
     case invalid_files do
       [] ->
@@ -251,25 +208,26 @@ defmodule AstMigrate.RuleSystem do
           module: :ast_migrate_rule_system,
           operation: :validate_files
         )
+
         :ok
 
       invalid ->
         error_msg = "Invalid files: #{inspect(invalid)}"
+
         Logger.error("File validation failed",
           module: :ast_migrate_rule_system,
           operation: :validate_files,
           invalid_files: invalid
         )
+
         {:error, error_msg}
     end
   end
 
-  # Private functions
-
   defp default_transform_options do
     [
       max_concurrency: System.schedulers_online(),
-      timeout: 30_000,
+      timeout: 30000,
       ordered: false,
       on_timeout: :exit,
       git_commit: false,
@@ -291,7 +249,6 @@ defmodule AstMigrate.RuleSystem do
     )
 
     try do
-      # Convert zipper to string, apply rule, then parse back to zipper
       with {:ok, code} <- Parser.to_string(zipper),
            {:ok, transformed_code} <- rule_module.transform_file_content(code),
            {:ok, transformed_zipper} <- Parser.parse_string(transformed_code) do
@@ -307,6 +264,7 @@ defmodule AstMigrate.RuleSystem do
           rule: rule_module,
           exception: inspect(exception)
         )
+
         {:error, "Rule exception: #{inspect(exception)}"}
     end
   end
@@ -318,6 +276,7 @@ defmodule AstMigrate.RuleSystem do
         operation: :write_transformed_file,
         file: file_path
       )
+
       :ok
     else
       case File.write(file_path, transformed_code) do
@@ -328,6 +287,7 @@ defmodule AstMigrate.RuleSystem do
             file: file_path,
             size: byte_size(transformed_code)
           )
+
           :ok
 
         {:error, reason} ->
@@ -337,29 +297,32 @@ defmodule AstMigrate.RuleSystem do
             file: file_path,
             error: reason
           )
+
           {:error, "Write failed: #{inspect(reason)}"}
       end
     end
   end
 
   defp categorize_results(results, file_paths) do
-    {successful, failed} = results
-    |> Enum.with_index()
-    |> Enum.reduce({[], []}, fn {result, index}, {success_acc, fail_acc} ->
-      file_path = Enum.at(file_paths, index)
+    {successful, failed} =
+      results
+      |> Enum.with_index()
+      |> Enum.reduce({[], []}, fn {result, index}, {success_acc, fail_acc} ->
+        file_path = Enum.at(file_paths, index)
 
-      case result do
-        {:ok, _} -> {[file_path | success_acc], fail_acc}
-        {:exit, :timeout} -> {success_acc, [file_path | fail_acc]}
-        {:error, _} -> {success_acc, [file_path | fail_acc]}
-      end
-    end)
+        case result do
+          {:ok, _} -> {[file_path | success_acc], fail_acc}
+          {:exit, :timeout} -> {success_acc, [file_path | fail_acc]}
+          {:error, _} -> {success_acc, [file_path | fail_acc]}
+        end
+      end)
 
     {Enum.reverse(successful), Enum.reverse(failed)}
   end
 
   defp commit_transformations(successful_files, rule_modules, opts) do
-    commit_message = opts[:commit_message] || generate_commit_message(rule_modules, successful_files)
+    commit_message =
+      opts[:commit_message] || generate_commit_message(rule_modules, successful_files)
 
     Logger.info("Creating Git commit for transformations",
       module: :ast_migrate_rule_system,
@@ -375,6 +338,7 @@ defmodule AstMigrate.RuleSystem do
           operation: :commit_transformations,
           commit_hash: commit
         )
+
         {:ok, commit}
 
       {:error, reason} ->
@@ -383,6 +347,7 @@ defmodule AstMigrate.RuleSystem do
           operation: :commit_transformations,
           error: reason
         )
+
         {:error, reason}
     end
   end
@@ -390,14 +355,10 @@ defmodule AstMigrate.RuleSystem do
   defp generate_commit_message(rule_modules, successful_files) do
     rule_names = Enum.map(rule_modules, &extract_rule_name/1)
     file_count = length(successful_files)
-
     "[AST] Apply #{Enum.join(rule_names, ", ")} to #{file_count} files"
   end
 
   defp extract_rule_name(rule_module) do
-    rule_module
-    |> Module.split()
-    |> List.last()
-    |> Macro.underscore()
+    rule_module |> Module.split() |> List.last() |> Macro.underscore()
   end
 end

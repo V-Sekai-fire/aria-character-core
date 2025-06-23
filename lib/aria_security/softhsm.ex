@@ -1,30 +1,10 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaSecurity.SoftHSM do
-  @moduledoc """
-  SoftHSM integration module for managing PKCS#11 operations.
-
-  This module provides a high-level interface for working with SoftHSM
-  tokens, keys, and cryptographic operations through the PKCS#11 standard.
-  """
-
+  @moduledoc "SoftHSM integration module for managing PKCS#11 operations.\n\nThis module provides a high-level interface for working with SoftHSM\ntokens, keys, and cryptographic operations through the PKCS#11 standard.\n"
   require Logger
-
-  # Default SoftHSM configuration
   @default_library_path "/usr/lib64/pkcs11/libsofthsm2.so"
   @default_config_path "/etc/softhsm2.conf"
   @default_token_dir "/var/lib/softhsm/tokens"
-
-  defstruct [
-    :library_path,
-    :config_path,
-    :token_dir,
-    :slot,
-    :pin,
-    :so_pin,
-    :label
-  ]
+  defstruct [:library_path, :config_path, :token_dir, :slot, :pin, :so_pin, :label]
 
   @type t :: %__MODULE__{
           library_path: String.t(),
@@ -35,28 +15,26 @@ defmodule AriaSecurity.SoftHSM do
           so_pin: String.t(),
           label: String.t()
         }
+  @doc "Creates a new SoftHSM configuration struct.
 
-  @doc """
-  Creates a new SoftHSM configuration struct.
+## Options
 
-  ## Options
+* `:library_path` - Path to the SoftHSM PKCS#11 library (default: #{@default_library_path})
+* `:config_path` - Path to the SoftHSM configuration file (default: #{@default_config_path})
+* `:token_dir` - Directory where SoftHSM tokens are stored (default: #{@default_token_dir})
+* `:slot` - PKCS#11 slot number (default: 0)
+* `:pin` - User PIN for token access (default: \"1234\")
+* `:so_pin` - Security Officer PIN (default: \"1234\")
+* `:label` - Token label (default: \"OpenBao Token\")
 
-  * `:library_path` - Path to the SoftHSM PKCS#11 library (default: #{@default_library_path})
-  * `:config_path` - Path to the SoftHSM configuration file (default: #{@default_config_path})
-  * `:token_dir` - Directory where SoftHSM tokens are stored (default: #{@default_token_dir})
-  * `:slot` - PKCS#11 slot number (default: 0)
-  * `:pin` - User PIN for token access (default: "1234")
-  * `:so_pin` - Security Officer PIN (default: "1234")
-  * `:label` - Token label (default: "OpenBao Token")
+## Examples
 
-  ## Examples
+    iex> AriaSecurity.SoftHSM.new()
+    %AriaSecurity.SoftHSM{slot: 0, pin: \"1234\", ...}
 
-      iex> AriaSecurity.SoftHSM.new()
-      %AriaSecurity.SoftHSM{slot: 0, pin: "1234", ...}
-
-      iex> AriaSecurity.SoftHSM.new(slot: 1, pin: "secret")
-      %AriaSecurity.SoftHSM{slot: 1, pin: "secret", ...}
-  """
+    iex> AriaSecurity.SoftHSM.new(slot: 1, pin: \"secret\")
+    %AriaSecurity.SoftHSM{slot: 1, pin: \"secret\", ...}
+"
   def new(opts \\ []) do
     %__MODULE__{
       library_path: Keyword.get(opts, :library_path, @default_library_path),
@@ -69,24 +47,11 @@ defmodule AriaSecurity.SoftHSM do
     }
   end
 
-  @doc """
-  Initializes a new SoftHSM token.
-
-  This will create a new token in the specified slot with the given label and PINs.
-
-  ## Examples
-
-      iex> hsm = AriaSecurity.SoftHSM.new()
-      iex> AriaSecurity.SoftHSM.initialize_token(hsm)
-      {:ok, %{slot: 0, label: "OpenBao Token"}}
-  """
+  @doc "Initializes a new SoftHSM token.\n\nThis will create a new token in the specified slot with the given label and PINs.\n\n## Examples\n\n    iex> hsm = AriaSecurity.SoftHSM.new()\n    iex> AriaSecurity.SoftHSM.initialize_token(hsm)\n    {:ok, %{slot: 0, label: \"OpenBao Token\"}}\n"
   def initialize_token(%__MODULE__{} = hsm) do
     Logger.info("Initializing SoftHSM token: #{hsm.label} in slot #{hsm.slot}")
-
-    # Set environment variable for SoftHSM config
     System.put_env("SOFTHSM2_CONF", hsm.config_path)
 
-    # Use --free flag to let SoftHSM assign the slot automatically
     cmd_args = [
       "--init-token",
       "--free",
@@ -101,16 +66,8 @@ defmodule AriaSecurity.SoftHSM do
     case System.cmd("softhsm2-util", cmd_args, stderr_to_stdout: true) do
       {output, 0} ->
         Logger.info("SoftHSM token initialized successfully: #{output}")
-
-        # Extract the assigned slot from output
         assigned_slot = extract_slot_from_output(output)
-
-        {:ok,
-         %{
-           slot: assigned_slot || hsm.slot,
-           label: hsm.label,
-           output: output
-         }}
+        {:ok, %{slot: assigned_slot || hsm.slot, label: hsm.label, output: output}}
 
       {error, exit_code} ->
         Logger.error("Failed to initialize SoftHSM token: #{error}")
@@ -118,15 +75,7 @@ defmodule AriaSecurity.SoftHSM do
     end
   end
 
-  @doc """
-  Lists all available PKCS#11 slots and tokens.
-
-  ## Examples
-
-      iex> hsm = AriaSecurity.SoftHSM.new()
-      iex> AriaSecurity.SoftHSM.list_slots(hsm)
-      {:ok, [%{slot: 0, label: "OpenBao Token", ...}]}
-  """
+  @doc "Lists all available PKCS#11 slots and tokens.\n\n## Examples\n\n    iex> hsm = AriaSecurity.SoftHSM.new()\n    iex> AriaSecurity.SoftHSM.list_slots(hsm)\n    {:ok, [%{slot: 0, label: \"OpenBao Token\", ...}]}\n"
   def list_slots(%__MODULE__{} = hsm) do
     System.put_env("SOFTHSM2_CONF", hsm.config_path)
 
@@ -141,26 +90,11 @@ defmodule AriaSecurity.SoftHSM do
     end
   end
 
-  @doc """
-  Generates an RSA key pair in the specified token slot.
-
-  ## Options
-
-  * `:key_size` - RSA key size in bits (default: 2048)
-  * `:key_label` - Label for the generated key (default: "openbao-seal-key")
-  * `:extractable` - Whether the key should be extractable (default: false)
-
-  ## Examples
-
-      iex> hsm = AriaSecurity.SoftHSM.new()
-      iex> AriaSecurity.SoftHSM.generate_rsa_keypair(hsm)
-      {:ok, %{key_label: "openbao-seal-key", key_size: 2048}}
-  """
+  @doc "Generates an RSA key pair in the specified token slot.\n\n## Options\n\n* `:key_size` - RSA key size in bits (default: 2048)\n* `:key_label` - Label for the generated key (default: \"openbao-seal-key\")\n* `:extractable` - Whether the key should be extractable (default: false)\n\n## Examples\n\n    iex> hsm = AriaSecurity.SoftHSM.new()\n    iex> AriaSecurity.SoftHSM.generate_rsa_keypair(hsm)\n    {:ok, %{key_label: \"openbao-seal-key\", key_size: 2048}}\n"
   def generate_rsa_keypair(%__MODULE__{} = hsm, opts \\ []) do
     key_size = Keyword.get(opts, :key_size, 2048)
     key_label = Keyword.get(opts, :key_label, "openbao-seal-key")
     extractable = Keyword.get(opts, :extractable, false)
-
     Logger.info("Generating RSA-#{key_size} key pair: #{key_label} in slot #{hsm.slot}")
 
     cmd_args = [
@@ -204,15 +138,7 @@ defmodule AriaSecurity.SoftHSM do
     end
   end
 
-  @doc """
-  Lists objects (keys, certificates) in the specified token slot.
-
-  ## Examples
-
-      iex> hsm = AriaSecurity.SoftHSM.new()
-      iex> AriaSecurity.SoftHSM.list_objects(hsm)
-      {:ok, [%{type: "Private Key", label: "openbao-seal-key", ...}]}
-  """
+  @doc "Lists objects (keys, certificates) in the specified token slot.\n\n## Examples\n\n    iex> hsm = AriaSecurity.SoftHSM.new()\n    iex> AriaSecurity.SoftHSM.list_objects(hsm)\n    {:ok, [%{type: \"Private Key\", label: \"openbao-seal-key\", ...}]}\n"
   def list_objects(%__MODULE__{} = hsm) do
     cmd_args = [
       "--module",
@@ -236,26 +162,14 @@ defmodule AriaSecurity.SoftHSM do
     end
   end
 
-  @doc """
-  Deletes all tokens and reinitializes SoftHSM.
-
-  **WARNING: This is a destructive operation that will delete all existing tokens and keys.**
-
-  ## Examples
-
-      iex> hsm = AriaSecurity.SoftHSM.new()
-      iex> AriaSecurity.SoftHSM.reset_hsm(hsm)
-      {:ok, %{message: "SoftHSM reset successfully"}}
-  """
+  @doc "Deletes all tokens and reinitializes SoftHSM.\n\n**WARNING: This is a destructive operation that will delete all existing tokens and keys.**\n\n## Examples\n\n    iex> hsm = AriaSecurity.SoftHSM.new()\n    iex> AriaSecurity.SoftHSM.reset_hsm(hsm)\n    {:ok, %{message: \"SoftHSM reset successfully\"}}\n"
   def reset_hsm(%__MODULE__{} = hsm) do
     Logger.warning("Resetting SoftHSM - this will destroy all existing tokens and keys!")
 
-    # Remove all tokens
     case File.rm_rf(hsm.token_dir) do
       {:ok, _files} ->
         Logger.info("Removed all SoftHSM tokens from #{hsm.token_dir}")
 
-        # Recreate token directory
         case File.mkdir_p(hsm.token_dir) do
           :ok ->
             Logger.info("Recreated SoftHSM token directory")
@@ -272,15 +186,7 @@ defmodule AriaSecurity.SoftHSM do
     end
   end
 
-  @doc """
-  Gets the current SoftHSM configuration.
-
-  ## Examples
-
-      iex> hsm = AriaSecurity.SoftHSM.new()
-      iex> AriaSecurity.SoftHSM.get_config(hsm)
-      {:ok, %{library_path: "/usr/lib64/pkcs11/libsofthsm2.so", ...}}
-  """
+  @doc "Gets the current SoftHSM configuration.\n\n## Examples\n\n    iex> hsm = AriaSecurity.SoftHSM.new()\n    iex> AriaSecurity.SoftHSM.get_config(hsm)\n    {:ok, %{library_path: \"/usr/lib64/pkcs11/libsofthsm2.so\", ...}}\n"
   def get_config(%__MODULE__{} = hsm) do
     config = %{
       library_path: hsm.library_path,
@@ -288,18 +194,13 @@ defmodule AriaSecurity.SoftHSM do
       token_dir: hsm.token_dir,
       slot: hsm.slot,
       label: hsm.label,
-      environment: %{
-        softhsm2_conf: System.get_env("SOFTHSM2_CONF")
-      }
+      environment: %{softhsm2_conf: System.get_env("SOFTHSM2_CONF")}
     }
 
     {:ok, config}
   end
 
-  # Private helper functions
-
   defp extract_slot_from_output(output) do
-    # Look for patterns like "reassigned to slot 0" or "slot 0"
     case Regex.run(~r/(?:reassigned to slot|slot)\s+(\d+)/i, output) do
       [_match, slot_str] -> String.to_integer(slot_str)
       nil -> nil
@@ -307,38 +208,22 @@ defmodule AriaSecurity.SoftHSM do
   end
 
   defp parse_slots_output(output) do
-    # Parse the output of `softhsm2-util --show-slots`
-    # This is a simplified parser - in practice, you might want more robust parsing
     output
     |> String.split("\n")
     |> Enum.filter(&String.contains?(&1, "Slot"))
     |> Enum.map(fn line ->
-      # Extract slot number and other info
       case Regex.run(~r/Slot\s+(\d+)/i, line) do
-        [_match, slot_str] ->
-          %{
-            slot: String.to_integer(slot_str),
-            description: String.trim(line)
-          }
-
-        nil ->
-          %{description: String.trim(line)}
+        [_match, slot_str] -> %{slot: String.to_integer(slot_str), description: String.trim(line)}
+        nil -> %{description: String.trim(line)}
       end
     end)
   end
 
   defp parse_objects_output(output) do
-    # Parse the output of `pkcs11-tool --list-objects`
-    # This is a simplified parser
     output
     |> String.split("\n")
     |> Enum.filter(&(String.length(&1) > 0))
-    |> Enum.map(fn line ->
-      %{
-        description: String.trim(line),
-        type: extract_object_type(line)
-      }
-    end)
+    |> Enum.map(fn line -> %{description: String.trim(line), type: extract_object_type(line)} end)
   end
 
   defp extract_object_type(line) do

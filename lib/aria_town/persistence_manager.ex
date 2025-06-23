@@ -1,12 +1,5 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaTown.PersistenceManager do
-  @moduledoc """
-  Stub implementation for NPC persistence management.
-  RDF/JSON-LD functionality has been removed.
-  """
-
+  @moduledoc "Stub implementation for NPC persistence management.\nRDF/JSON-LD functionality has been removed.\n"
   use GenServer
   require Logger
 

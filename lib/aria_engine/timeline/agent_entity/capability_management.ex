@@ -1,34 +1,8 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Timeline.AgentEntity.CapabilityManagement do
-  @moduledoc """
-  Capability management operations for Timeline.AgentEntity.
-
-  Handles capability checking, addition, removal, and action-based
-  classification for agents and entities.
-  """
-
+  @moduledoc "Capability management operations for Timeline.AgentEntity.\n\nHandles capability checking, addition, removal, and action-based\nclassification for agents and entities.\n"
   @type participant :: Timeline.AgentEntity.participant()
   @type agent :: Timeline.AgentEntity.agent()
-
-  @doc """
-  Checks if an agent has a specific capability.
-
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent(
-      ...>   "aria", 
-      ...>   "Aria VTuber",
-      ...>   %{},
-      ...>   capabilities: [:decision_making, :communication]
-      ...> )
-      iex> Timeline.AgentEntity.CapabilityManagement.has_capability?(agent, :decision_making)
-      true
-      iex> Timeline.AgentEntity.CapabilityManagement.has_capability?(agent, :flight)
-      false
-
-  """
+  @doc "Checks if an agent has a specific capability.\n\n## Examples\n\n    iex> agent = Timeline.AgentEntity.create_agent(\n    ...>   \"aria\", \n    ...>   \"Aria VTuber\",\n    ...>   %{},\n    ...>   capabilities: [:decision_making, :communication]\n    ...> )\n    iex> Timeline.AgentEntity.CapabilityManagement.has_capability?(agent, :decision_making)\n    true\n    iex> Timeline.AgentEntity.CapabilityManagement.has_capability?(agent, :flight)\n    false\n\n"
   @spec has_capability?(participant(), atom()) :: boolean()
   def has_capability?(%{capabilities: capabilities}, capability) when is_list(capabilities) do
     capability in capabilities
@@ -40,26 +14,17 @@ defmodule Timeline.AgentEntity.CapabilityManagement do
   end
 
   def has_capability?(%{properties: properties}, capability) when is_list(properties) do
-    # Handle case where properties is a keyword list with capabilities
     case Keyword.get(properties, :capabilities) do
       capabilities when is_list(capabilities) -> capability in capabilities
       _ -> false
     end
   end
 
-  def has_capability?(_, _), do: false
+  def has_capability?(_, _) do
+    false
+  end
 
-  @doc """
-  Adds a capability to an agent.
-
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent("aria", "Aria VTuber")
-      iex> updated_agent = Timeline.AgentEntity.CapabilityManagement.add_capability(agent, :new_skill)
-      iex> Timeline.AgentEntity.CapabilityManagement.has_capability?(updated_agent, :new_skill)
-      true
-
-  """
+  @doc "Adds a capability to an agent.\n\n## Examples\n\n    iex> agent = Timeline.AgentEntity.create_agent(\"aria\", \"Aria VTuber\")\n    iex> updated_agent = Timeline.AgentEntity.CapabilityManagement.add_capability(agent, :new_skill)\n    iex> Timeline.AgentEntity.CapabilityManagement.has_capability?(updated_agent, :new_skill)\n    true\n\n"
   @spec add_capability(agent(), atom()) :: agent()
   def add_capability(%{type: :agent, capabilities: capabilities} = agent, capability) do
     if capability in capabilities do
@@ -69,77 +34,26 @@ defmodule Timeline.AgentEntity.CapabilityManagement do
     end
   end
 
-  @doc """
-  Removes action capabilities from a participant, potentially transitioning it to entity status.
-
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent(
-      ...>   "aria", 
-      ...>   "Aria VTuber",
-      ...>   %{},
-      ...>   capabilities: [:decision_making, :communication]
-      ...> )
-      iex> updated_agent = Timeline.AgentEntity.CapabilityManagement.remove_capabilities(agent, [:decision_making])
-      iex> Timeline.AgentEntity.CapabilityManagement.has_capability?(updated_agent, :decision_making)
-      false
-
-  """
+  @doc "Removes action capabilities from a participant, potentially transitioning it to entity status.\n\n## Examples\n\n    iex> agent = Timeline.AgentEntity.create_agent(\n    ...>   \"aria\", \n    ...>   \"Aria VTuber\",\n    ...>   %{},\n    ...>   capabilities: [:decision_making, :communication]\n    ...> )\n    iex> updated_agent = Timeline.AgentEntity.CapabilityManagement.remove_capabilities(agent, [:decision_making])\n    iex> Timeline.AgentEntity.CapabilityManagement.has_capability?(updated_agent, :decision_making)\n    false\n\n"
   @spec remove_capabilities(participant(), [atom()]) :: participant()
   def remove_capabilities(participant, capabilities_to_remove)
       when is_list(capabilities_to_remove) do
     current_capabilities = Map.get(participant, :capabilities, [])
     updated_capabilities = current_capabilities -- capabilities_to_remove
-
     Map.put(participant, :capabilities, updated_capabilities)
   end
 
-  @doc """
-  Adds action capabilities to a participant, potentially transitioning it to agent status.
-
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.create_entity("car", "Tesla")
-      iex> Timeline.AgentEntity.CapabilityManagement.is_currently_agent?(entity)
-      false
-      
-      iex> agent = Timeline.AgentEntity.CapabilityManagement.add_capabilities(entity, [:autonomous_driving])
-      iex> Timeline.AgentEntity.CapabilityManagement.is_currently_agent?(agent)
-      true
-
-  """
+  @doc "Adds action capabilities to a participant, potentially transitioning it to agent status.\n\n## Examples\n\n    iex> entity = Timeline.AgentEntity.create_entity(\"car\", \"Tesla\")\n    iex> Timeline.AgentEntity.CapabilityManagement.is_currently_agent?(entity)\n    false\n    \n    iex> agent = Timeline.AgentEntity.CapabilityManagement.add_capabilities(entity, [:autonomous_driving])\n    iex> Timeline.AgentEntity.CapabilityManagement.is_currently_agent?(agent)\n    true\n\n"
   @spec add_capabilities(participant(), [atom()]) :: participant()
   def add_capabilities(participant, new_capabilities) when is_list(new_capabilities) do
     current_capabilities = Map.get(participant, :capabilities, [])
     updated_capabilities = Enum.uniq(current_capabilities ++ new_capabilities)
-
     Map.put(participant, :capabilities, updated_capabilities)
   end
 
-  @doc """
-  Checks if a participant can perform an action.
-
-  This is the core capability-based classification: if you can perform actions,
-  you're an agent; otherwise, you're an entity.
-
-  ## Examples
-
-      iex> agent = Timeline.AgentEntity.create_agent(
-      ...>   "aria", 
-      ...>   "Aria VTuber",
-      ...>   %{},
-      ...>   capabilities: [:decision_making]
-      ...> )
-      iex> Timeline.AgentEntity.CapabilityManagement.can_perform_action?(agent, :make_decision)
-      true
-      iex> entity = Timeline.AgentEntity.create_entity("room", "Conference Room")
-      iex> Timeline.AgentEntity.CapabilityManagement.can_perform_action?(entity, :make_decision)
-      false
-
-  """
+  @doc "Checks if a participant can perform an action.\n\nThis is the core capability-based classification: if you can perform actions,\nyou're an agent; otherwise, you're an entity.\n\n## Examples\n\n    iex> agent = Timeline.AgentEntity.create_agent(\n    ...>   \"aria\", \n    ...>   \"Aria VTuber\",\n    ...>   %{},\n    ...>   capabilities: [:decision_making]\n    ...> )\n    iex> Timeline.AgentEntity.CapabilityManagement.can_perform_action?(agent, :make_decision)\n    true\n    iex> entity = Timeline.AgentEntity.create_entity(\"room\", \"Conference Room\")\n    iex> Timeline.AgentEntity.CapabilityManagement.can_perform_action?(entity, :make_decision)\n    false\n\n"
   @spec can_perform_action?(participant(), atom()) :: boolean()
   def can_perform_action?(participant, action) do
-    # Capability-based determination: if you have action capabilities, you're an agent
     case participant do
       %{capabilities: capabilities} when is_list(capabilities) ->
         required_capability = action_to_capability(action)
@@ -149,38 +63,16 @@ defmodule Timeline.AgentEntity.CapabilityManagement do
         required_capability = action_to_capability(action)
         required_capability in capabilities
 
-      # No action capabilities = entity behavior
       _ ->
         false
     end
   end
 
-  @doc """
-  Dynamically determines if a participant is currently acting as an agent.
-
-  Based on capability-based classification: agents have action capabilities,
-  entities do not. This allows for dynamic state transitions.
-
-  ## Examples
-
-      iex> car = Timeline.AgentEntity.create_entity(
-      ...>   "car1", 
-      ...>   "Tesla Model 3",
-      ...>   %{autonomous_mode: false}
-      ...> )
-      iex> Timeline.AgentEntity.CapabilityManagement.is_currently_agent?(car)
-      false
-      
-      iex> autonomous_car = Timeline.AgentEntity.CapabilityManagement.add_capabilities(car, [:autonomous_driving, :decision_making])
-      iex> Timeline.AgentEntity.CapabilityManagement.is_currently_agent?(autonomous_car)
-      true
-
-  """
+  @doc "Dynamically determines if a participant is currently acting as an agent.\n\nBased on capability-based classification: agents have action capabilities,\nentities do not. This allows for dynamic state transitions.\n\n## Examples\n\n    iex> car = Timeline.AgentEntity.create_entity(\n    ...>   \"car1\", \n    ...>   \"Tesla Model 3\",\n    ...>   %{autonomous_mode: false}\n    ...> )\n    iex> Timeline.AgentEntity.CapabilityManagement.is_currently_agent?(car)\n    false\n    \n    iex> autonomous_car = Timeline.AgentEntity.CapabilityManagement.add_capabilities(car, [:autonomous_driving, :decision_making])\n    iex> Timeline.AgentEntity.CapabilityManagement.is_currently_agent?(autonomous_car)\n    true\n\n"
   @spec is_currently_agent?(participant()) :: boolean()
   def is_currently_agent?(participant) do
     case participant do
       %{capabilities: capabilities} when is_list(capabilities) and capabilities != [] ->
-        # Has action capabilities = currently acting as agent
         Enum.any?(capabilities, &is_action_capability?/1)
 
       _ ->
@@ -188,9 +80,6 @@ defmodule Timeline.AgentEntity.CapabilityManagement do
     end
   end
 
-  # ==================== PRIVATE HELPER FUNCTIONS ====================
-
-  # Maps action types to required capabilities
   defp action_to_capability(action) do
     case action do
       :make_decision -> :decision_making
@@ -210,7 +99,6 @@ defmodule Timeline.AgentEntity.CapabilityManagement do
     end
   end
 
-  # Determines if a capability represents the ability to take actions
   defp is_action_capability?(capability) do
     capability in [
       :decision_making,

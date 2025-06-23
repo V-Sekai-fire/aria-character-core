@@ -1,44 +1,8 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Timeline.AgentEntity.EntityManagement do
-  @moduledoc """
-  Entity creation and management operations for Timeline.AgentEntity.
-
-  Handles the creation, validation, and basic operations for entities in the
-  timeline system.
-  """
-
+  @moduledoc "Entity creation and management operations for Timeline.AgentEntity.\n\nHandles the creation, validation, and basic operations for entities in the\ntimeline system.\n"
   @type entity :: Timeline.AgentEntity.entity()
   @type participant :: Timeline.AgentEntity.participant()
-
-  @doc """
-  Creates a new entity.
-
-  ## Parameters
-
-  - `id`: Unique identifier for the entity
-  - `name`: Human-readable name
-  - `properties`: Entity-specific properties (e.g., location, state)
-  - `opts`: Optional parameters including:
-    - `:owner_agent_id` - ID of the agent that owns this entity
-    - `:metadata` - Additional metadata
-
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.EntityManagement.create_entity(
-      ...>   "conference_room",
-      ...>   "Conference Room A",
-      ...>   %{capacity: 10, location: "Building 1, Floor 2"},
-      ...>   owner_agent_id: "facility_manager",
-      ...>   metadata: %{building_id: "bldg_1"}
-      ...> )
-      iex> entity.type
-      :entity
-      iex> entity.name
-      "Conference Room A"
-
-  """
+  @doc "Creates a new entity.\n\n## Parameters\n\n- `id`: Unique identifier for the entity\n- `name`: Human-readable name\n- `properties`: Entity-specific properties (e.g., location, state)\n- `opts`: Optional parameters including:\n  - `:owner_agent_id` - ID of the agent that owns this entity\n  - `:metadata` - Additional metadata\n\n## Examples\n\n    iex> entity = Timeline.AgentEntity.EntityManagement.create_entity(\n    ...>   \"conference_room\",\n    ...>   \"Conference Room A\",\n    ...>   %{capacity: 10, location: \"Building 1, Floor 2\"},\n    ...>   owner_agent_id: \"facility_manager\",\n    ...>   metadata: %{building_id: \"bldg_1\"}\n    ...> )\n    iex> entity.type\n    :entity\n    iex> entity.name\n    \"Conference Room A\"\n\n"
   @spec create_entity(String.t(), String.t(), map(), keyword()) :: entity()
   def create_entity(id, name, properties \\ %{}, opts \\ []) do
     %{
@@ -51,35 +15,24 @@ defmodule Timeline.AgentEntity.EntityManagement do
     }
   end
 
-  @doc """
-  Checks if a participant is an entity.
-
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.EntityManagement.create_entity("room", "Conference Room")
-      iex> Timeline.AgentEntity.EntityManagement.entity?(entity)
-      true
-
-  """
+  @doc "Checks if a participant is an entity.\n\n## Examples\n\n    iex> entity = Timeline.AgentEntity.EntityManagement.create_entity(\"room\", \"Conference Room\")\n    iex> Timeline.AgentEntity.EntityManagement.entity?(entity)\n    true\n\n"
   @spec entity?(participant()) :: boolean()
-  def entity?(%{type: :entity}), do: true
-  def entity?(_), do: false
+  def entity?(%{type: :entity}) do
+    true
+  end
 
-  @doc """
-  Validates that an entity is properly formed.
+  def entity?(_) do
+    false
+  end
 
-  ## Examples
-
-      iex> entity = Timeline.AgentEntity.EntityManagement.create_entity("room", "Conference Room")
-      iex> Timeline.AgentEntity.EntityManagement.valid_entity?(entity)
-      true
-
-  """
+  @doc "Validates that an entity is properly formed.\n\n## Examples\n\n    iex> entity = Timeline.AgentEntity.EntityManagement.create_entity(\"room\", \"Conference Room\")\n    iex> Timeline.AgentEntity.EntityManagement.valid_entity?(entity)\n    true\n\n"
   @spec valid_entity?(participant()) :: boolean()
   def valid_entity?(%{type: :entity, id: id, name: name})
       when is_binary(id) and is_binary(name) do
     String.length(id) > 0 and String.length(name) > 0
   end
 
-  def valid_entity?(_), do: false
+  def valid_entity?(_) do
+    false
+  end
 end

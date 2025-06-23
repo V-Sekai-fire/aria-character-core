@@ -1,31 +1,11 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Domain.Actions do
-  @moduledoc """
-  Core action execution functions for domains.
-  """
-  alias AriaEngine.StateV2
-
+  @moduledoc "Core action execution functions for domains.\n"
+  alias AriaEngine.State
   require Logger
-
   @type t :: Domain.Core.t()
   @type action_name :: atom()
-  @type action_fn :: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
-
-  @doc """
-  Adds an action to the domain using the unified API.
-
-  Actions can be:
-  - Functions (for instantaneous actions)
-  - DurativeAction structs with duration = 0 (instantaneous actions)
-  - DurativeAction structs with duration > 0 (durative actions)
-
-  When an action is added, it also creates a corresponding task method
-  so the action can be used directly in task decompositions.
-
-  Optional `metadata` can be provided for the action, e.g., `duration: {min, max}`.
-  """
+  @type action_fn :: (AriaEngine.State.t(), list() -> AriaEngine.State.t() | false)
+  @doc "Adds an action to the domain using the unified API.\n\nActions can be:\n- Functions (for instantaneous actions)\n- DurativeAction structs with duration = 0 (instantaneous actions)\n- DurativeAction structs with duration > 0 (durative actions)\n\nWhen an action is added, it also creates a corresponding task method\nso the action can be used directly in task decompositions.\n\nOptional `metadata` can be provided for the action, e.g., `duration: {min, max}`.\n"
   @spec add_action(t(), action_name(), action_fn() | Domain.DurativeAction.t(), map()) :: t()
   def add_action(
         domain,
@@ -34,39 +14,31 @@ defmodule Domain.Actions do
         metadata \\ %{}
       )
       when is_atom(name) and is_map(metadata) do
-    
     cond do
-      # Case 1: Regular function (instantaneous action)
       is_function(action_or_durative, 2) ->
         add_instantaneous_action(domain, name, action_or_durative, metadata)
-      
-      # Case 2: DurativeAction struct
+
       match?(%Domain.DurativeAction{}, action_or_durative) ->
         case action_or_durative.duration do
-          # Duration = 0: treat as instantaneous action
           {:fixed, 0} ->
             add_instantaneous_action(domain, name, action_or_durative.action_fn, metadata)
-          
-          # Duration > 0: treat as durative action
+
           _ ->
             add_durative_action_to_domain(domain, name, action_or_durative, metadata)
         end
-      
-      # Case 3: Unknown type
+
       true ->
         Logger.warning("Invalid action type for #{name}: #{inspect(action_or_durative)}")
         domain
     end
   end
 
-  # Helper function to add instantaneous actions
   defp add_instantaneous_action(
          %{actions: actions, action_metadata: action_metadata, task_methods: methods} = domain,
          name,
          action_fn,
          metadata
        ) do
-    # Normalize duration in metadata if present
     normalized_metadata =
       if Map.has_key?(metadata, :duration) do
         duration = metadata[:duration]
@@ -75,24 +47,13 @@ defmodule Domain.Actions do
         metadata
       end
 
-    # Add the action to the actions map
     updated_actions = Map.put(actions, name, action_fn)
-
-    # Store action metadata
     updated_action_metadata = Map.put(action_metadata, name, normalized_metadata)
-
-    # Create a task method that just returns the action as a primitive task
-    # This allows the action to be used directly in HTN task decompositions
     task_name = Atom.to_string(name)
     primitive_method_fn = fn _state, args -> [{name, args}] end
     method_name = "primitive_#{task_name}"
-
-    # Create a {name, function} tuple for the primitive method
     primitive_method = {method_name, primitive_method_fn}
-
-    # Add the primitive method to task methods
     current_methods = Map.get(methods, task_name, [])
-    # Put primitive method first
     updated_methods = [primitive_method | current_methods]
     updated_task_methods = Map.put(methods, task_name, updated_methods)
 
@@ -104,43 +65,24 @@ defmodule Domain.Actions do
     }
   end
 
-  # Helper function to add durative actions
   defp add_durative_action_to_domain(
          %{durative_actions: durative_actions, task_methods: methods} = domain,
          name,
          durative_action,
          _metadata
        ) do
-    # Store the durative action
     updated_durative_actions = Map.put(durative_actions, name, durative_action)
-
-    # Create a task method for the durative action
     task_name = Atom.to_string(name)
     primitive_method_fn = fn _state, args -> [{name, args}] end
     method_name = "primitive_#{task_name}"
-
-    # Create a {name, function} tuple for the primitive method
     primitive_method = {method_name, primitive_method_fn}
-
-    # Add the primitive method to task methods
     current_methods = Map.get(methods, task_name, [])
-    # Put primitive method first
     updated_methods = [primitive_method | current_methods]
     updated_task_methods = Map.put(methods, task_name, updated_methods)
-
-    %{
-      domain
-      | durative_actions: updated_durative_actions,
-        task_methods: updated_task_methods
-    }
+    %{domain | durative_actions: updated_durative_actions, task_methods: updated_task_methods}
   end
 
-  @doc """
-  Adds multiple actions to the domain.
-
-  Each action will be properly registered with its corresponding task method.
-  `new_actions` can be a map of `%{action_name => action_fn}` or `%{action_name => {action_fn, metadata}}`.
-  """
+  @doc "Adds multiple actions to the domain.\n\nEach action will be properly registered with its corresponding task method.\n`new_actions` can be a map of `%{action_name => action_fn}` or `%{action_name => {action_fn, metadata}}`.\n"
   @spec add_actions(t(), %{action_name() => action_fn() | {action_fn(), map()}}) :: t()
   def add_actions(%{} = domain, new_actions) do
     Enum.reduce(new_actions, domain, fn {name, action_def}, acc_domain ->
@@ -158,57 +100,41 @@ defmodule Domain.Actions do
     end)
   end
 
-  @doc """
-  Gets an action function by name.
-  """
+  @doc "Gets an action function by name.\n"
   @spec get_action(t(), action_name()) :: action_fn() | nil
   def get_action(%{actions: actions}, name) do
     Map.get(actions, name)
   end
 
-  @doc """
-  Gets metadata for a given action.
-  """
+  @doc "Gets metadata for a given action.\n"
   @spec get_action_metadata(t(), action_name()) :: map() | nil
   def get_action_metadata(%{action_metadata: action_metadata}, name) do
     Map.get(action_metadata, name)
   end
 
-  @doc """
-  Checks if an action exists in the domain.
-  """
+  @doc "Checks if an action exists in the domain.\n"
   @spec has_action?(t(), action_name()) :: boolean()
   def has_action?(%{actions: actions}, name) do
     Map.has_key?(actions, name)
   end
 
-  @doc """
-  Executes an action with the given state and arguments.
-  """
-  @spec execute_action(t(), AriaEngine.StateV2.t(), action_name(), list()) ::
-          {:ok, AriaEngine.StateV2.t()} | false
-  def execute_action(%{} = domain, %AriaEngine.StateV2{} = state, action_name, args) do
-    # First check if it's a regular action
+  @doc "Executes an action with the given state and arguments.\n"
+  @spec execute_action(t(), AriaEngine.State.t(), action_name(), list()) ::
+          {:ok, AriaEngine.State.t()} | false
+  def execute_action(%{} = domain, %AriaEngine.State{} = state, action_name, args) do
     case get_action(domain, action_name) do
       nil ->
-        # Check if it's a durative action
         case Domain.Core.get_durative_action(domain, action_name) do
           nil ->
             false
 
           durative_action ->
-            # Validate durative action preconditions
             if validate_durative_preconditions(durative_action, state) do
-              # Execute the durative action
               case durative_action.action_fn.(state, args) do
-                false ->
-                  false
-
-                %AriaEngine.StateV2{} = new_state ->
-                  {:ok, new_state}
+                false -> false
+                %AriaEngine.State{} = new_state -> {:ok, new_state}
               end
             else
-              # Preconditions failed
               false
             end
         end
@@ -217,22 +143,15 @@ defmodule Domain.Actions do
         cond do
           is_function(action_fn, 2) ->
             case action_fn.(state, args) do
-              false ->
-                false
-
-              %AriaEngine.StateV2{} = new_state ->
-                {:ok, new_state}
+              false -> false
+              %AriaEngine.State{} = new_state -> {:ok, new_state}
             end
 
           match?(%Domain.DurativeAction{}, action_fn) ->
-            # If the action is a DurativeAction struct, validate preconditions first
             if validate_durative_preconditions(action_fn, state) do
               case action_fn.action_fn.(state, args) do
-                false ->
-                  false
-
-                %AriaEngine.StateV2{} = new_state ->
-                  {:ok, new_state}
+                false -> false
+                %AriaEngine.State{} = new_state -> {:ok, new_state}
               end
             else
               false
@@ -244,23 +163,19 @@ defmodule Domain.Actions do
     end
   end
 
-  # Validate durative action preconditions with quantifier support
-  @spec validate_durative_preconditions(Domain.DurativeAction.t(), AriaEngine.StateV2.t()) ::
+  @spec validate_durative_preconditions(Domain.DurativeAction.t(), AriaEngine.State.t()) ::
           boolean()
   defp validate_durative_preconditions(durative_action, state) do
-    # Check at_start conditions
     at_start_valid =
       Enum.all?(durative_action.conditions.at_start, fn condition ->
         validate_temporal_condition(condition, state)
       end)
 
-    # Check over_all conditions
     over_all_valid =
       Enum.all?(durative_action.conditions.over_all, fn condition ->
         validate_temporal_condition(condition, state)
       end)
 
-    # Check at_end conditions
     at_end_valid =
       Enum.all?(durative_action.conditions.at_end, fn condition ->
         validate_temporal_condition(condition, state)
@@ -269,25 +184,20 @@ defmodule Domain.Actions do
     at_start_valid and over_all_valid and at_end_valid
   end
 
-  # Validate a single temporal condition, supporting both regular and quantified conditions
-  @spec validate_temporal_condition(tuple(), AriaEngine.StateV2.t()) :: boolean()
+  @spec validate_temporal_condition(tuple(), AriaEngine.State.t()) :: boolean()
   defp validate_temporal_condition(condition, state) do
     case condition do
-      # Quantified conditions (delegate to StateV2.evaluate_condition)
-      # New StateV2 format: {:exists, subject_filter, predicate, fact_value}
       {:exists, _subject_filter, _predicate, _fact_value} ->
-        StateV2.evaluate_condition(state, condition)
+        State.evaluate_condition(state, condition)
 
       {:forall, _subject_filter, _predicate, _fact_value} ->
-        StateV2.evaluate_condition(state, condition)
+        State.evaluate_condition(state, condition)
 
-      # Regular conditions (entity-first format)
       {entity, predicate, required_value} ->
-        AriaEngine.StateV2.get_fact(state, entity, predicate) == required_value
+        AriaEngine.State.get_fact(state, entity, predicate) == required_value
 
-      # Use the general condition evaluator for other formats
       _ ->
-        StateV2.evaluate_condition(state, condition)
+        State.evaluate_condition(state, condition)
     end
   end
 end

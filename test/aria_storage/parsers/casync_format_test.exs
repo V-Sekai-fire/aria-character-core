@@ -1,29 +1,10 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.Parsers.CasyncFormatTest do
   use ExUnit.Case
   alias AriaStorage.Parsers.CasyncFormat
-
   @testdata_path Path.join([__DIR__, "..", "support", "testdata"])
-
-  @moduledoc """
-  Comprehensive tests for the ABNF casync/desync parser using real testdata
-  from the desync repository.
-
-  These tests validate parsing of actual casync format files including:
-  - .caibx (chunk index for blobs)
-  - .caidx (chunk index for catar archives)
-  - .catar (archive format)
-  - .cacnk (compressed chunk files)
-  """
-
-  # Generate synthetic test data for testing
+  @moduledoc "Comprehensive tests for the ABNF casync/desync parser using real testdata\nfrom the desync repository.\n\nThese tests validate parsing of actual casync format files including:\n- .caibx (chunk index for blobs)\n- .caidx (chunk index for catar archives)\n- .catar (archive format)\n- .cacnk (compressed chunk files)\n"
   def create_caibx_test_data() do
-    # CAIBX magic header: 0xCA 0x1B 0x5C
-    magic = <<0xCA, 0x1B, 0x5C>>
-
-    # Header: version(4) + total_size(8) + chunk_count(4) + reserved(4) = 20 bytes
+    magic = <<202, 27, 92>>
     version = 1
     total_size = 1024
     chunk_count = 2
@@ -32,14 +13,10 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
     header =
       <<version::little-32, total_size::little-64, chunk_count::little-32, reserved::little-32>>
 
-    # Create two test chunks (each 48 bytes: 32 + 8 + 4 + 4)
-    # SHA256 hash
     chunk1_id = :crypto.strong_rand_bytes(32)
     chunk1_offset = 0
     chunk1_size = 512
     chunk1_flags = 0
-
-    # SHA256 hash
     chunk2_id = :crypto.strong_rand_bytes(32)
     chunk2_offset = 512
     chunk2_size = 512
@@ -55,68 +32,31 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
   end
 
   def create_caidx_test_data() do
-    # CAIDX uses desync FormatIndex structure with feature_flags = 0 (no SHA512-256)
-    format_index = <<
-      # Size of FormatIndex
-      48::little-64,
-      # CA_FORMAT_INDEX constant
-      0x96824D9C7B129FF9::little-64,
-      # Feature flags (0 = CAIDX, not CAIBX)
-      0::little-64,
-      # chunk_size_min
-      1024::little-64,
-      # chunk_size_avg  
-      1024::little-64,
-      # chunk_size_max
-      1024::little-64
-    >>
+    format_index =
+      <<48::little-64, 10_845_316_187_136_630_777::little-64, 0::little-64, 1024::little-64,
+        1024::little-64, 1024::little-64>>
 
-    # FormatTable header
-    table_header = <<
-      # Table marker
-      0xFFFFFFFFFFFFFFFF::little-64,
-      # CA_FORMAT_TABLE constant
-      0xE75B9E112F17417D::little-64
-    >>
+    table_header =
+      <<18_446_744_073_709_551_615::little-64, 16_671_092_242_283_708_797::little-64>>
 
-    # Single chunk table item
     chunk_id = :crypto.strong_rand_bytes(32)
-    # offset=2048, chunk_id=32 bytes
     table_item = <<2048::little-64>> <> chunk_id
 
-    # Table tail marker
-    table_tail = <<
-      # Zero offset
-      0::little-64,
-      # Zero pad
-      0::little-64,
-      # Size field
-      48::little-64,
-      # Table size (header + item + tail)
-      88::little-64,
-      # CA_FORMAT_TABLE_TAIL_MARKER
-      0x4B4F050E5549ECD1::little-64
-    >>
+    table_tail =
+      <<0::little-64, 0::little-64, 48::little-64, 88::little-64,
+        5_426_561_635_123_326_161::little-64>>
 
     format_index <> table_header <> table_item <> table_tail
   end
 
   def create_catar_test_data() do
-    # CATAR files start directly with entry data, no magic bytes
-    # Simple single-file entry
-    # Total entry size including header
     entry_size = 64
-    # File type
     entry_type = 1
     entry_flags = 0
     entry_padding = 0
-
-    # Metadata
-    # Regular file permissions
-    mode = 0o100644
+    mode = 33188
     uid = 1000
     gid = 1000
-    # Unix timestamp
     mtime = 1_640_995_200
 
     entry_header =
@@ -124,18 +64,13 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
         entry_padding::little-64>>
 
     entry_metadata = <<mode::little-64, uid::little-64, gid::little-64, mtime::little-64>>
-
     entry_header <> entry_metadata
   end
 
   def create_cacnk_test_data() do
-    # CACNK magic header: 0xCA 0xC4 0x4E
-    magic = <<0xCA, 0xC4, 0x4E>>
-
-    # Chunk header
+    magic = <<202, 196, 78>>
     compressed_size = 100
     uncompressed_size = 200
-    # zstd
     compression_type = 1
     flags = 0
 
@@ -143,23 +78,17 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       <<compressed_size::little-32, uncompressed_size::little-32, compression_type::little-32,
         flags::little-32>>
 
-    # Dummy compressed data
     data = :crypto.strong_rand_bytes(100)
-
     magic <> header <> data
   end
 
-  describe "format detection" do
+  describe("format detection") do
     test "detects .caibx files correctly" do
       file_path = Path.join(@testdata_path, "blob1.caibx")
 
       case File.read(file_path) do
-        {:ok, data} ->
-          assert {:ok, :caibx} = CasyncFormat.detect_format(data)
-
-        {:error, _} ->
-          # Skip test if file doesn't exist
-          :ok
+        {:ok, data} -> assert {:ok, :caibx} = CasyncFormat.detect_format(data)
+        {:error, _} -> :ok
       end
     end
 
@@ -167,21 +96,15 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       file_path = Path.join(@testdata_path, "flat.catar")
 
       case File.read(file_path) do
-        {:ok, data} ->
-          assert {:ok, :catar} = CasyncFormat.detect_format(data)
-
-        {:error, _} ->
-          # Skip test if file doesn't exist
-          :ok
+        {:ok, data} -> assert {:ok, :catar} = CasyncFormat.detect_format(data)
+        {:error, _} -> :ok
       end
     end
 
     test "detects and parses CAIDX format successfully" do
-      # Create CAIDX test data
       caidx_data = create_caidx_test_data()
       assert {:ok, result} = CasyncFormat.parse_index(caidx_data)
       assert result.format == :caidx
-      # CAIDX has feature_flags == 0
       assert result.feature_flags == 0
     end
 
@@ -191,36 +114,28 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
     end
   end
 
-  describe "index file parsing (.caibx)" do
+  describe("index file parsing (.caibx)") do
     test "parses blob1.caibx successfully" do
       file_path = Path.join(@testdata_path, "blob1.caibx")
 
       case File.read(file_path) do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_index(data)
-
-          # Verify structure
           assert %{format: format, header: header, chunks: chunks} = result
           assert format == :caibx
-
-          # Verify header structure
           assert %{version: version, total_size: total_size, chunk_count: chunk_count} = header
           assert is_integer(version)
           assert is_integer(total_size)
           assert is_integer(chunk_count)
           assert total_size > 0
           assert chunk_count > 0
-
-          # Verify chunks structure
           assert is_list(chunks)
           assert length(chunks) == chunk_count
 
-          # Verify first chunk structure
           if length(chunks) > 0 do
             first_chunk = hd(chunks)
             assert %{chunk_id: chunk_id, offset: offset, size: size, flags: flags} = first_chunk
             assert is_binary(chunk_id)
-            # SHA512/256 is 32 bytes
             assert byte_size(chunk_id) == 32
             assert is_integer(offset)
             assert is_integer(size)
@@ -240,13 +155,11 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       case File.read(file_path) do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_index(data)
-
           assert %{format: :caibx, header: header, chunks: chunks} = result
           assert %{chunk_count: chunk_count} = header
           assert length(chunks) == chunk_count
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
@@ -256,97 +169,53 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
 
       case File.read(file_path) do
         {:ok, data} ->
-          # This should either parse successfully or return a specific error
           case CasyncFormat.parse_index(data) do
-            {:ok, _result} ->
-              # If it parses, that's fine - corruption might be elsewhere
-              :ok
-
-            {:error, _reason} ->
-              # Expected for corrupted file
-              :ok
+            {:ok, _result} -> :ok
+            {:error, _reason} -> :ok
           end
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
   end
 
-  describe "directory index file parsing (.caidx)" do
+  describe("directory index file parsing (.caidx)") do
     test "parses synthetic .caidx data successfully" do
-      # Create CAIDX test data
       caidx_data = create_caidx_test_data()
       assert {:ok, result} = CasyncFormat.parse_index(caidx_data)
-
-      # Verify format detection
       assert result.format == :caidx
-      # CAIDX has feature_flags == 0
       assert result.feature_flags == 0
-
-      # Verify structure
       assert %{header: header, chunks: chunks} = result
       assert is_map(header)
       assert is_list(chunks)
-
-      # Verify chunk sizes
       assert result.chunk_size_min == 1024
       assert result.chunk_size_avg == 1024
       assert result.chunk_size_max == 1024
     end
 
     test "differentiates CAIDX from CAIBX by feature_flags" do
-      # Create both CAIDX (feature_flags=0) and synthetic CAIBX (feature_flags!=0)
       caidx_data = create_caidx_test_data()
 
-      # Create CAIBX data with non-zero feature_flags
-      caibx_format_index = <<
-        # Size of FormatIndex
-        48::little-64,
-        # CA_FORMAT_INDEX constant
-        0x96824D9C7B129FF9::little-64,
-        # Feature flags (SHA512_256 flag)
-        0x2000000000000000::little-64,
-        # chunk_size_min
-        1024::little-64,
-        # chunk_size_avg  
-        1024::little-64,
-        # chunk_size_max
-        1024::little-64
-      >>
+      caibx_format_index =
+        <<48::little-64, 10_845_316_187_136_630_777::little-64,
+          2_305_843_009_213_693_952::little-64, 1024::little-64, 1024::little-64,
+          1024::little-64>>
 
-      # Same table structure for both
       table_data = binary_part(caidx_data, 48, byte_size(caidx_data) - 48)
       caibx_data = caibx_format_index <> table_data
-
-      # Test CAIDX
       assert {:ok, caidx_result} = CasyncFormat.parse_index(caidx_data)
       assert caidx_result.format == :caidx
       assert caidx_result.feature_flags == 0
-
-      # Test CAIBX
       assert {:ok, caibx_result} = CasyncFormat.parse_index(caibx_data)
       assert caibx_result.format == :caibx
-      assert caibx_result.feature_flags == 0x2000000000000000
+      assert caibx_result.feature_flags == 2_305_843_009_213_693_952
     end
 
     test "handles empty CAIDX files" do
-      # Create minimal CAIDX with no table data
-      empty_caidx = <<
-        # Size of FormatIndex
-        48::little-64,
-        # CA_FORMAT_INDEX constant
-        0x96824D9C7B129FF9::little-64,
-        # Feature flags (0 = CAIDX)
-        0::little-64,
-        # chunk_size_min
-        16384::little-64,
-        # chunk_size_avg  
-        65536::little-64,
-        # chunk_size_max
-        262_144::little-64
-      >>
+      empty_caidx =
+        <<48::little-64, 10_845_316_187_136_630_777::little-64, 0::little-64, 16384::little-64,
+          65536::little-64, 262_144::little-64>>
 
       assert {:ok, result} = CasyncFormat.parse_index(empty_caidx)
       assert result.format == :caidx
@@ -355,7 +224,7 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
     end
   end
 
-  describe "archive file parsing (.catar)" do
+  describe("archive file parsing (.catar)") do
     test "parses flat.catar successfully" do
       file_path = Path.join(@testdata_path, "flat.catar")
 
@@ -363,19 +232,15 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_archive(data)
 
-          # Verify structure
           assert %{format: :catar, files: files, directories: directories, elements: elements} =
                    result
 
           assert is_list(files)
           assert is_list(directories)
           assert is_list(elements)
-
-          # flat.catar should contain files but no directories
           assert length(files) > 0
           assert length(directories) == 0
 
-          # Verify file structure
           Enum.each(files, fn file ->
             assert %{name: name, type: type} = file
             assert is_binary(name)
@@ -383,7 +248,6 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
           end)
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
@@ -394,18 +258,13 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       case File.read(file_path) do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_archive(data)
-
-          # Verify structure
           assert %{format: :catar, files: files, directories: directories} = result
           assert is_list(files)
           assert is_list(directories)
-
-          # nested.catar should contain both files and directories
           assert length(files) > 0
           assert length(directories) > 0
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
@@ -416,17 +275,12 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       case File.read(file_path) do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_archive(data)
-
-          # Verify structure
           assert %{format: :catar, files: files, directories: directories} = result
           assert is_list(files)
           assert is_list(directories)
-
-          # complex.catar should contain various file types
           assert length(files) > 0
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
@@ -437,18 +291,13 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       case File.read(file_path) do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_archive(data)
-
-          # Verify structure
           assert %{format: :catar, files: files, directories: directories} = result
           assert is_list(files)
           assert is_list(directories)
-
-          # flatdir.catar should contain only directories
           assert length(files) == 0
           assert length(directories) > 0
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
@@ -460,20 +309,17 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_archive(data)
 
-          # Check for files with content
           files_with_content =
             Enum.filter(result.files, fn file ->
               Map.has_key?(file, :content) && file.type == :file
             end)
 
-          # Verify content structure
           Enum.each(files_with_content, fn file ->
             assert is_binary(file.content)
             assert byte_size(file.content) > 0
           end)
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
@@ -484,21 +330,14 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       case File.read(file_path) do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_archive(data)
+          symlinks = Enum.filter(result.files, fn file -> file.type == :symlink end)
 
-          # Check for symlinks
-          symlinks =
-            Enum.filter(result.files, fn file ->
-              file.type == :symlink
-            end)
-
-          # Verify symlink structure
           Enum.each(symlinks, fn symlink ->
             assert Map.has_key?(symlink, :target)
             assert is_binary(symlink.target)
           end)
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
@@ -509,14 +348,8 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       case File.read(file_path) do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_archive(data)
+          devices = Enum.filter(result.files, fn file -> file.type == :device end)
 
-          # Check for device files
-          devices =
-            Enum.filter(result.files, fn file ->
-              file.type == :device
-            end)
-
-          # Verify device structure
           Enum.each(devices, fn device ->
             assert Map.has_key?(device, :major)
             assert Map.has_key?(device, :minor)
@@ -525,23 +358,19 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
           end)
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
 
     test "roundtrips CATAR with 16-bit UIDs/GIDs" do
-      # CaFormatWith16BitUIDs
-      feature_flags = 0x1
-      mode = 0o755
+      feature_flags = 1
+      mode = 493
       uid = 1000
       gid = 1000
       mtime = 1_678_886_400
 
-      # Create a CATAR element structure to encode
       element = %{
         type: :entry,
-        # Size for 16-bit UIDs/GIDs
         size: 52,
         feature_flags: feature_flags,
         mode: mode,
@@ -550,13 +379,9 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
         mtime: mtime
       }
 
-      # Create archive structure
       archive = %{format: :catar, elements: [element], files: [], directories: []}
-
-      # Test encoding and parsing roundtrip
       {:ok, encoded_data} = CasyncFormat.encode_archive(archive)
       {:ok, parsed} = CasyncFormat.parse_archive(encoded_data)
-
       assert parsed.format == :catar
       assert length(parsed.elements) == 1
       assert parsed.elements |> hd |> Map.get(:uid) == uid
@@ -565,17 +390,14 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
     end
 
     test "roundtrips CATAR with 32-bit UIDs/GIDs" do
-      # CaFormatWith32BitUIDs
-      feature_flags = 0x2
-      mode = 0o755
+      feature_flags = 2
+      mode = 493
       uid = 1000
       gid = 1000
       mtime = 1_678_886_400
 
-      # Create a CATAR element structure to encode
       element = %{
         type: :entry,
-        # Size for 32-bit UIDs/GIDs
         size: 56,
         feature_flags: feature_flags,
         mode: mode,
@@ -584,13 +406,9 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
         mtime: mtime
       }
 
-      # Create archive structure
       archive = %{format: :catar, elements: [element], files: [], directories: []}
-
-      # Test encoding and parsing roundtrip
       {:ok, encoded_data} = CasyncFormat.encode_archive(archive)
       {:ok, parsed} = CasyncFormat.parse_archive(encoded_data)
-
       assert parsed.format == :catar
       assert length(parsed.elements) == 1
       assert parsed.elements |> hd |> Map.get(:uid) == uid
@@ -599,56 +417,43 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
     end
   end
 
-  describe "round-trip consistency" do
+  describe("round-trip consistency") do
     test "parsed data maintains consistency across multiple parses" do
       file_path = Path.join(@testdata_path, "blob1.caibx")
 
       case File.read(file_path) do
         {:ok, data} ->
-          # Parse the same data multiple times
           assert {:ok, result1} = CasyncFormat.parse_index(data)
           assert {:ok, result2} = CasyncFormat.parse_index(data)
           assert {:ok, result3} = CasyncFormat.parse_index(data)
-
-          # Results should be identical
           assert result1 == result2
           assert result2 == result3
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
   end
 
-  describe "chunk validation" do
+  describe("chunk validation") do
     test "validates chunk ID structure" do
       file_path = Path.join(@testdata_path, "blob1.caibx")
 
       case File.read(file_path) do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_index(data)
-
           %{chunks: chunks} = result
 
-          # Validate each chunk ID
           Enum.each(chunks, fn chunk ->
             %{chunk_id: chunk_id} = chunk
-
-            # SHA512/256 should be exactly 32 bytes
             assert byte_size(chunk_id) == 32
-
-            # Should be valid binary data
             assert is_binary(chunk_id)
-
-            # Convert to hex and verify format
             hex_id = Base.encode16(chunk_id, case: :lower)
             assert String.length(hex_id) == 64
             assert String.match?(hex_id, ~r/^[0-9a-f]+$/)
           end)
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
@@ -659,29 +464,24 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       case File.read(file_path) do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_index(data)
-
           %{chunks: chunks} = result
 
           if length(chunks) > 1 do
-            # Extract offsets and verify they're in ascending order
             offsets = Enum.map(chunks, & &1.offset)
             sorted_offsets = Enum.sort(offsets)
-
-            # Offsets should be in order (allowing for equal offsets)
             assert offsets == sorted_offsets
           end
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
   end
 
-  describe "edge cases and error handling" do
+  describe("edge cases and error handling") do
     test "handles empty input gracefully" do
       assert {:error, _} = CasyncFormat.parse_index("")
-      # CATAR parsing now returns success for empty input (empty archive is valid)
+
       assert {:ok, %{format: :catar, files: [], directories: [], elements: []}} =
                CasyncFormat.parse_archive("")
 
@@ -693,32 +493,25 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
 
       case File.read(file_path) do
         {:ok, data} when byte_size(data) > 10 ->
-          # Try parsing truncated versions
           truncated_data = binary_part(data, 0, 10)
           assert {:error, _} = CasyncFormat.parse_index(truncated_data)
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
 
     test "handles invalid magic headers" do
-      # Create data with wrong magic
-      invalid_data = <<0xFF, 0xFF, 0xFF>> <> String.duplicate(<<0>>, 100)
+      invalid_data = <<255, 255, 255>> <> String.duplicate(<<0>>, 100)
       assert {:error, _} = CasyncFormat.parse_index(invalid_data)
       assert {:error, _} = CasyncFormat.parse_archive(invalid_data)
     end
   end
 
-  describe "chunk file parsing (.cacnk)" do
+  describe("chunk file parsing (.cacnk)") do
     test "parses synthetic .cacnk data successfully" do
-      # Create test data using our helper function
       cacnk_data = create_cacnk_test_data()
-
       assert {:ok, result} = CasyncFormat.parse_chunk(cacnk_data)
-
-      # Verify structure
       assert %{magic: :cacnk, header: header, data: data} = result
 
       assert %{
@@ -728,7 +521,6 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
                flags: flags
              } = header
 
-      # Verify values
       assert compressed_size == 100
       assert uncompressed_size == 200
       assert compression == :zstd
@@ -738,27 +530,22 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
     end
 
     test "handles .cacnk files from chunk stores" do
-      # Look for .cacnk files in blob1.store directory
       store_path = Path.join(@testdata_path, "blob1.store")
 
       if File.exists?(store_path) do
         cacnk_files = Path.wildcard(Path.join(store_path, "**/*.cacnk"))
 
         if length(cacnk_files) > 0 do
-          # Test the first .cacnk file found
           file_path = hd(cacnk_files)
 
           case File.read(file_path) do
             {:ok, data} ->
-              # Check if this is a CACNK wrapped chunk or raw compressed data
               case CasyncFormat.parse_chunk(data) do
                 {:ok, result} ->
-                  # Standard CACNK format with wrapper header
                   assert %{magic: :cacnk, header: header, data: chunk_data} = result
                   assert is_map(header)
                   assert is_binary(chunk_data)
 
-                  # Verify header fields
                   assert %{
                            compressed_size: compressed_size,
                            uncompressed_size: uncompressed_size,
@@ -770,23 +557,17 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
                   assert compression in [:none, :zstd, :unknown]
 
                 {:error, "Invalid chunk file magic"} ->
-                  # Files in desync chunk stores are often raw compressed data without CACNK wrapper
-                  # This is normal for chunk stores where chunks are stored as raw ZSTD data
-                  # Try to decompress as raw ZSTD to verify it's valid compressed data
                   case :ezstd.decompress(data) do
                     decompressed when is_binary(decompressed) ->
-                      # Successfully decompressed raw ZSTD data
                       assert byte_size(decompressed) > 0
 
                     _ ->
-                      # Not valid ZSTD data, might be uncompressed chunk
                       assert is_binary(data)
                       assert byte_size(data) > 0
                   end
               end
 
             {:error, _} ->
-              # Skip if file can't be read
               :ok
           end
         end
@@ -794,83 +575,56 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
     end
 
     test "validates chunk compression detection" do
-      # Test different compression types
-      test_cases = [
-        {0, :none},
-        {1, :zstd},
-        {999, :unknown}
-      ]
+      test_cases = [{0, :none}, {1, :zstd}, {999, :unknown}]
 
       Enum.each(test_cases, fn {compression_type, expected_compression} ->
-        # Create chunk data with specific compression type
-        magic = <<0xCA, 0xC4, 0x4E>>
+        magic = <<202, 196, 78>>
         header = <<50::little-32, 100::little-32, compression_type::little-32, 0::little-32>>
         data = :crypto.strong_rand_bytes(50)
-
         chunk_data = magic <> header <> data
-
         assert {:ok, result} = CasyncFormat.parse_chunk(chunk_data)
         assert result.header.compression == expected_compression
       end)
     end
 
     test "rejects invalid .cacnk magic headers" do
-      # Test with wrong magic bytes
-      invalid_magic = <<0xFF, 0xFF, 0xFF>>
+      invalid_magic = <<255, 255, 255>>
       header = <<100::little-32, 200::little-32, 1::little-32, 0::little-32>>
       data = :crypto.strong_rand_bytes(100)
-
       invalid_chunk = invalid_magic <> header <> data
-
       assert {:error, "Invalid chunk file magic"} = CasyncFormat.parse_chunk(invalid_chunk)
     end
 
     test "handles truncated .cacnk files gracefully" do
-      # Create valid start but truncate it
-      magic = <<0xCA, 0xC4, 0x4E>>
-      # Missing compression and flags
+      magic = <<202, 196, 78>>
       partial_header = <<100::little-32, 200::little-32>>
-
       truncated_chunk = magic <> partial_header
-
       assert {:error, "Invalid chunk file magic"} = CasyncFormat.parse_chunk(truncated_chunk)
     end
   end
 
-  describe "performance benchmarking" do
+  describe("performance benchmarking") do
     test "parses large index files efficiently" do
       file_path = Path.join(@testdata_path, "blob1.caibx")
 
       case File.read(file_path) do
         {:ok, data} ->
-          # Measure parsing time
-          {time_micro, {:ok, _result}} =
-            :timer.tc(fn ->
-              CasyncFormat.parse_index(data)
-            end)
-
-          # Should parse reasonably quickly (less than 100ms for test files)
+          {time_micro, {:ok, _result}} = :timer.tc(fn -> CasyncFormat.parse_index(data) end)
           assert time_micro < 100_000
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
   end
 
-  describe "specific format validation" do
+  describe("specific format validation") do
     test "validates caibx format detection" do
       file_path = Path.join(@testdata_path, "blob1.caibx")
 
       case File.read(file_path) do
-        {:ok, data} ->
-          # Should detect as caibx format regardless of whether it uses FormatIndex or legacy magic bytes
-          assert {:ok, :caibx} = CasyncFormat.detect_format(data)
-
-        {:error, _} ->
-          # Skip if file doesn't exist
-          :ok
+        {:ok, data} -> assert {:ok, :caibx} = CasyncFormat.detect_format(data)
+        {:error, _} -> :ok
       end
     end
 
@@ -878,19 +632,14 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       file_path = Path.join(@testdata_path, "flat.catar")
 
       case File.read(file_path) do
-        {:ok, data} ->
-          assert {:ok, :catar} = CasyncFormat.detect_format(data)
-
-        {:error, _} ->
-          # Skip if file doesn't exist
-          :ok
+        {:ok, data} -> assert {:ok, :catar} = CasyncFormat.detect_format(data)
+        {:error, _} -> :ok
       end
     end
   end
 
-  describe "integration with testdata" do
+  describe("integration with testdata") do
     setup do
-      # Verify testdata directory exists
       if File.exists?(@testdata_path) do
         {:ok, testdata_available: true}
       else
@@ -898,7 +647,7 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
       end
     end
 
-    test "processes all available caibx files", %{testdata_available: available} do
+    test("processes all available caibx files", %{testdata_available: available}) do
       if available do
         caibx_files = Path.wildcard(Path.join(@testdata_path, "*.caibx"))
 
@@ -910,15 +659,12 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
 
               case result do
                 {:ok, parsed} ->
-                  # Validate basic structure
                   assert %{format: :caibx, header: header, chunks: chunks} = parsed
                   assert is_map(header)
                   assert is_list(chunks)
 
                 {:error, reason} ->
-                  # Only allow errors for explicitly corrupted files
                   if String.contains?(filename, "corrupted") do
-                    # Expected to fail
                     :ok
                   else
                     flunk("Failed to parse #{filename}: #{inspect(reason)}")
@@ -930,25 +676,22 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
           end
         end)
       else
-        # Skip test if testdata not available
         :ok
       end
     end
 
-    test "processes all available catar files", %{testdata_available: available} do
+    test("processes all available catar files", %{testdata_available: available}) do
       if available do
         catar_files = Path.wildcard(Path.join(@testdata_path, "*.catar"))
 
         Enum.each(catar_files, fn file_path ->
           case File.read(file_path) do
             {:ok, data} ->
-              # CATAR parsing is now implemented
               result = CasyncFormat.parse_archive(data)
               filename = Path.basename(file_path)
 
               case result do
                 {:ok, parsed} ->
-                  # Validate basic structure
                   assert %{format: :catar, files: files, directories: directories} = parsed
                   assert is_list(files)
                   assert is_list(directories)
@@ -962,31 +705,25 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
           end
         end)
       else
-        # Skip test if testdata not available
         :ok
       end
     end
   end
 
-  describe "parser output validation" do
+  describe("parser output validation") do
     test "produces valid output structure for index files" do
       file_path = Path.join(@testdata_path, "blob1.caibx")
 
       case File.read(file_path) do
         {:ok, data} ->
           assert {:ok, result} = CasyncFormat.parse_index(data)
-
-          # Test JSON serialization (ensures all data types are serializable)
           json_safe_result = CasyncFormat.to_json_safe(result)
           json_result = Jason.encode!(json_safe_result)
           assert is_binary(json_result)
-
-          # Test round-trip
           decoded = Jason.decode!(json_result)
           assert is_map(decoded)
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end
@@ -996,20 +733,14 @@ defmodule AriaStorage.Parsers.CasyncFormatTest do
 
       case File.read(file_path) do
         {:ok, data} ->
-          # CATAR parsing is now implemented
           result1 = CasyncFormat.parse_archive(data)
           result2 = CasyncFormat.parse_archive(data)
           result3 = CasyncFormat.parse_archive(data)
-
-          # Results should be consistent across multiple calls
           assert result1 == result2
           assert result2 == result3
-
-          # Verify they're all successful
           assert {:ok, _} = result1
 
         {:error, _} ->
-          # Skip if file doesn't exist
           :ok
       end
     end

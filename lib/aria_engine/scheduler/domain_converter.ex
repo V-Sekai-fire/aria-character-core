@@ -1,25 +1,9 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Scheduler.DomainConverter do
-  @moduledoc """
-  Converts activities and resources into domain format for the hybrid planner.
-
-  Uses two-phase approach:
-  1. HTN decomposition with KHR primitives for feasibility
-  2. Goal-based optimization for optimality
-
-  This module has been split into focused sub-modules for better maintainability:
-  - ActivityActions: Basic activity action creation
-  - DurativeActions: Durative action structs and temporal constraints
-  - HTNMethods: HTN task methods and dependency handling
-  - GoalMethods: Resource constraints and optimization goals
-  - KHRPrimitives: KHR primitive sequences for activities
-  """
-
+  @moduledoc "Converts activities and resources into domain format for the hybrid planner.\n\nUses two-phase approach:\n1. HTN decomposition with KHR primitives for feasibility\n2. Goal-based optimization for optimality\n\nThis module has been split into focused sub-modules for better maintainability:\n- ActivityActions: Basic activity action creation\n- DurativeActions: Durative action structs and temporal constraints\n- HTNMethods: HTN task methods and dependency handling\n- GoalMethods: Resource constraints and optimization goals\n- KHRPrimitives: KHR primitive sequences for activities\n"
   require Logger
   alias Domain
   alias AriaEngine.Scheduler.{Entity, Resource}
+
   alias AriaEngine.Scheduler.DomainConverter.{
     ActivityActions,
     DurativeActions,
@@ -33,27 +17,18 @@ defmodule AriaEngine.Scheduler.DomainConverter do
   @type goal_methods :: %{String.t() => [{String.t(), function()}]}
   @type optimization_goal :: {String.t(), function()}
   @type khr_primitive :: {String.t(), list()}
-
-  @doc """
-  Convert activities to KHR-primitive-based domain with two-phase planning.
-  """
+  @doc "Convert activities to KHR-primitive-based domain with two-phase planning.\n"
   @spec convert_activities_to_khr_domain([activity()], [Entity.t()], [Resource.t()], map()) ::
           {:ok, Domain.t()} | {:error, String.t()}
   def convert_activities_to_khr_domain(activities, entities, resources, _constraints) do
     try do
-      # Create basic actions for activity execution
-      basic_actions = ActivityActions.create_basic_activity_actions(activities, entities, resources)
+      basic_actions =
+        ActivityActions.create_basic_activity_actions(activities, entities, resources)
 
-      # Create durative actions for temporal scheduling
       durative_actions = DurativeActions.create_durative_actions(activities, entities, resources)
-
-      # Phase 1: HTN task methods for feasible decomposition
       task_methods = HTNMethods.create_htn_scheduling_methods(activities, entities, resources)
-
-      # Phase 2: Goal methods for resource constraints and optimization
       goal_methods = GoalMethods.create_goal_methods(activities, entities, resources)
 
-      # Create domain using basic actions, task methods, and goal methods
       domain =
         Domain.new("scheduler_domain")
         |> Domain.add_actions(basic_actions)
@@ -67,10 +42,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     end
   end
 
-  @doc """
-  Create basic activity actions for the domain.
-  Delegates to ActivityActions module.
-  """
+  @doc "Create basic activity actions for the domain.\nDelegates to ActivityActions module.\n"
   @spec create_basic_activity_actions([activity()], [Entity.t()], [Resource.t()]) :: %{
           atom() => function()
         }
@@ -78,10 +50,7 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     ActivityActions.create_basic_activity_actions(activities, entities, resources)
   end
 
-  @doc """
-  Create durative actions for activities.
-  Delegates to DurativeActions module.
-  """
+  @doc "Create durative actions for activities.\nDelegates to DurativeActions module.\n"
   @spec create_durative_actions([activity()], [Entity.t()], [Resource.t()]) :: %{
           atom() => Domain.DurativeAction.t()
         }
@@ -89,75 +58,65 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     DurativeActions.create_durative_actions(activities, entities, resources)
   end
 
-  @doc """
-  Create HTN scheduling methods for Phase 1 (feasibility).
-  Delegates to HTNMethods module.
-  """
+  @doc "Create HTN scheduling methods for Phase 1 (feasibility).\nDelegates to HTNMethods module.\n"
   @spec create_htn_scheduling_methods([activity()], [Entity.t()], [Resource.t()]) ::
           task_methods()
   def create_htn_scheduling_methods(activities, entities, resources) do
     HTNMethods.create_htn_scheduling_methods(activities, entities, resources)
   end
 
-  @doc """
-  Create goal methods for resource constraints and optimization.
-  Delegates to GoalMethods module.
-  """
+  @doc "Create goal methods for resource constraints and optimization.\nDelegates to GoalMethods module.\n"
   @spec create_goal_methods([activity()], [Entity.t()], [Resource.t()]) :: goal_methods()
   def create_goal_methods(activities, entities, resources) do
     GoalMethods.create_goal_methods(activities, entities, resources)
   end
 
-  @doc """
-  Create sequence of KHR primitive actions to complete an activity.
-  Delegates to KHRPrimitives module.
-  """
+  @doc "Create sequence of KHR primitive actions to complete an activity.\nDelegates to KHRPrimitives module.\n"
   @spec create_khr_primitive_sequence(activity(), [Entity.t()], [Resource.t()]) :: [
           khr_primitive()
         ]
   def create_khr_primitive_sequence(activity, entities, resources) do
-    primitive_sequence = KHRPrimitives.create_activity_primitive_sequence(activity, entities, resources)
-    
-    # Convert KHR primitives to the expected format
+    primitive_sequence =
+      KHRPrimitives.create_activity_primitive_sequence(activity, entities, resources)
+
     Enum.map(primitive_sequence, fn primitive ->
       action = Map.get(primitive, :action, "unknown")
       parameters = Map.get(primitive, :parameters, %{})
-      
-      # Extract relevant parameters for the tuple format
+
       case Map.get(primitive, :type) do
         "resource_operation" ->
           resource_id = Map.get(parameters, :resource_id)
           operation = Map.get(parameters, :operation)
-          
+
           case operation do
             "increment_usage" -> {"math/add", [0, resource_id, "current_usage", 1]}
             "decrement_usage" -> {"math/sub", [0, resource_id, "current_usage", 1]}
             _ -> {action, []}
           end
-          
+
         "state_update" ->
           activity_id = Map.get(parameters, :activity_id)
           {"variable/set", [0, activity_id, "status", "completed"]}
-          
+
         "durative_action" ->
           _activity_id = Map.get(parameters, :activity_id)
           {"flow/setDelay", [0, 1]}
-          
+
         _ ->
           {action, []}
       end
     end)
   end
 
-  # Helper functions for domain construction
-
   @spec add_task_methods_to_domain(Domain.t(), task_methods()) :: Domain.t()
   defp add_task_methods_to_domain(domain, task_methods) do
     Enum.reduce(task_methods, domain, fn {task_name, methods}, acc_domain ->
-      # Ensure task_name is a string (convert atom to string if needed)
       task_name_str = to_string(task_name)
-      # Debug logging to see what's being passed
-      Logger.debug("Adding task methods for task: #{inspect(task_name_str)}, methods: #{inspect(methods)}")
+
+      Logger.debug(
+        "Adding task methods for task: #{inspect(task_name_str)}, methods: #{inspect(methods)}"
+      )
+
       Domain.add_task_methods(acc_domain, task_name_str, methods)
     end)
   end
@@ -169,102 +128,70 @@ defmodule AriaEngine.Scheduler.DomainConverter do
     end)
   end
 
-  @spec add_durative_actions_to_domain(Domain.t(), %{atom() => Domain.DurativeAction.t()}) :: Domain.t()
+  @spec add_durative_actions_to_domain(Domain.t(), %{atom() => Domain.DurativeAction.t()}) ::
+          Domain.t()
   defp add_durative_actions_to_domain(domain, durative_actions) do
     Enum.reduce(durative_actions, domain, fn {name, durative_action}, acc_domain ->
-      # Use the unified API - pass the DurativeAction struct directly
       Domain.add_action(acc_domain, name, durative_action)
     end)
   end
 
-  # Legacy function delegates for backward compatibility
-
-  @doc """
-  Create durative action function for a specific activity.
-  Delegates to ActivityActions module.
-  """
+  @doc "Create durative action function for a specific activity.\nDelegates to ActivityActions module.\n"
   @spec create_durative_activity_action(activity(), [Entity.t()], [Resource.t()]) :: function()
   def create_durative_activity_action(activity, entities, resources) do
     ActivityActions.create_durative_activity_action(activity, entities, resources)
   end
 
-  @doc """
-  Create durative action struct for a specific activity.
-  Delegates to DurativeActions module.
-  """
+  @doc "Create durative action struct for a specific activity.\nDelegates to DurativeActions module.\n"
   @spec create_durative_action_struct(activity(), [Entity.t()], [Resource.t()]) ::
           Domain.DurativeAction.t()
   def create_durative_action_struct(activity, entities, resources) do
     DurativeActions.create_durative_action_struct(activity, entities, resources)
   end
 
-  @doc """
-  Create individual activity task methods using KHR primitives.
-  Delegates to HTNMethods module.
-  """
+  @doc "Create individual activity task methods using KHR primitives.\nDelegates to HTNMethods module.\n"
   @spec create_activity_task_methods([activity()], [Entity.t()], [Resource.t()]) :: task_methods()
   def create_activity_task_methods(activities, entities, resources) do
     HTNMethods.create_activity_task_methods(activities, entities, resources)
   end
 
-  @doc """
-  Create activity scheduling method that returns proper todo list for hybrid planner.
-  Delegates to HTNMethods module.
-  """
+  @doc "Create activity scheduling method that returns proper todo list for hybrid planner.\nDelegates to HTNMethods module.\n"
   @spec create_activity_scheduling_method(activity(), [Entity.t()], [Resource.t()]) :: function()
   def create_activity_scheduling_method(activity, entities, resources) do
     HTNMethods.create_activity_scheduling_method(activity, entities, resources)
   end
 
-  @doc """
-  Create unigoal methods for resource constraints.
-  Delegates to GoalMethods module.
-  """
+  @doc "Create unigoal methods for resource constraints.\nDelegates to GoalMethods module.\n"
   @spec create_resource_constraint_goals([Resource.t()]) :: goal_methods()
   def create_resource_constraint_goals(resources) do
     GoalMethods.create_resource_constraint_goals(resources)
   end
 
-  @doc """
-  Create unigoal methods for dependency constraints.
-  Delegates to GoalMethods module.
-  """
+  @doc "Create unigoal methods for dependency constraints.\nDelegates to GoalMethods module.\n"
   @spec create_dependency_constraint_goals([activity()]) :: goal_methods()
   def create_dependency_constraint_goals(activities) do
     GoalMethods.create_dependency_constraint_goals(activities)
   end
 
-  @doc """
-  Create optimization goal methods.
-  Delegates to GoalMethods module.
-  """
+  @doc "Create optimization goal methods.\nDelegates to GoalMethods module.\n"
   @spec create_optimization_goals([activity()], [Entity.t()], [Resource.t()]) :: goal_methods()
   def create_optimization_goals(activities, entities, resources) do
     GoalMethods.create_optimization_goals(activities, entities, resources)
   end
 
-  @doc """
-  Create timing constraint fixing durative action.
-  Delegates to DurativeActions module.
-  """
+  @doc "Create timing constraint fixing durative action.\nDelegates to DurativeActions module.\n"
   @spec create_timing_constraint_durative_action([activity()]) :: Domain.DurativeAction.t()
   def create_timing_constraint_durative_action(activities) do
     DurativeActions.create_timing_constraint_durative_action(activities)
   end
 
-  @doc """
-  Create action function for timing constraint fixing using durative actions.
-  Delegates to DurativeActions module.
-  """
+  @doc "Create action function for timing constraint fixing using durative actions.\nDelegates to DurativeActions module.\n"
   @spec create_timing_constraint_action_function([activity()]) :: function()
   def create_timing_constraint_action_function(activities) do
     DurativeActions.create_timing_constraint_action_function(activities)
   end
 
-  @doc """
-  Detects circular dependencies in activities using depth-first search.
-  Delegates to HTNMethods module.
-  """
+  @doc "Detects circular dependencies in activities using depth-first search.\nDelegates to HTNMethods module.\n"
   @spec detect_circular_dependencies([activity()]) :: :ok | {:error, [String.t()]}
   def detect_circular_dependencies(activities) do
     HTNMethods.detect_circular_dependencies(activities)

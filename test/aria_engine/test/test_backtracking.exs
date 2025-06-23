@@ -1,20 +1,13 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule BacktrackingTest do
   use ExUnit.Case
   require Logger
-
   import AriaEngine
   alias {TestDomains}
-
   @moduletag timeout: 120_000
-
-  describe "Backtracking HTN domain" do
+  describe("Backtracking HTN domain") do
     test "domain creation" do
       domain = TestDomains.build_backtracking_domain()
       summary = domain_summary(domain)
-
       assert summary.name == "backtracking"
       assert :putv in summary.actions
       assert :getv in summary.actions
@@ -28,21 +21,12 @@ defmodule BacktrackingTest do
     test "putv and getv actions work correctly" do
       domain = TestDomains.build_backtracking_domain()
       initial_state = TestDomains.create_backtracking_state()
-
-      # Initial flag should be -1
       assert get_fact(initial_state, "flag", "system") == -1
-
-      # Set flag to 0
       {:ok, state1} = Domain.execute_action(domain, initial_state, :putv, [0])
       assert get_fact(state1, "flag", "system") == 0
-
-      # getv should succeed if flag matches
       {:ok, state2} = Domain.execute_action(domain, state1, :getv, [0])
-      # Or check for {:ok, _} pattern if preferred
       assert state2 != false
       assert get_fact(state2, "flag", "system") == 0
-
-      # getv should fail if flag doesn't match
       state3 = Domain.execute_action(domain, state1, :getv, [1])
       assert state3 == false
     end
@@ -54,7 +38,6 @@ defmodule BacktrackingTest do
 
       case plan(domain, state, goals, verbose: 3) do
         {:ok, plan} ->
-          # Should use m0 method: putv(0), getv(0), then getv(0) for need0
           expected = [{"putv", [0]}, {"getv", [0]}, {"getv", [0]}]
           assert plan == expected
 
@@ -70,7 +53,6 @@ defmodule BacktrackingTest do
 
       case plan(domain, state, goals, verbose: 3) do
         {:ok, plan} ->
-          # Should use m1 method: putv(1), getv(1), then getv(1) for need1
           expected = [{"putv", [1]}, {"getv", [1]}, {"getv", [1]}]
           assert plan == expected
 
@@ -86,7 +68,6 @@ defmodule BacktrackingTest do
 
       case plan(domain, state, goals, verbose: 0) do
         {:ok, plan} ->
-          # Should backtrack to find compatible solution
           expected = [{"putv", [0]}, {"getv", [0]}, {"getv", [0]}]
           Logger.info("Got plan: #{inspect(plan)}")
           Logger.info("Expected: #{inspect(expected)}")
@@ -104,7 +85,6 @@ defmodule BacktrackingTest do
 
       case plan(domain, state, goals, verbose: 3) do
         {:ok, plan} ->
-          # Should try need1 first, backtrack when it fails, then try need0
           expected = [{"putv", [0]}, {"getv", [0]}, {"getv", [0]}]
           assert plan == expected
 

@@ -1,22 +1,8 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Membrane.MCPSink do
-  @moduledoc """
-  Membrane Sink element for MCP responses.
-
-  This sink receives processed MCP responses and can store them,
-  log them, or forward them to external systems.
-  """
-
+  @moduledoc "Membrane Sink element for MCP responses.\n\nThis sink receives processed MCP responses and can store them,\nlog them, or forward them to external systems.\n"
   use Membrane.Sink
-
   require Logger
-
-  def_input_pad(:input,
-    accepted_format: _any,
-    flow_control: :auto
-  )
+  def_input_pad(:input, accepted_format: _any, flow_control: :auto)
 
   def_options(
     storage_mode: [
@@ -71,9 +57,7 @@ defmodule AriaEngine.Membrane.MCPSink do
   end
 
   defp handle_memory_storage(response, state) do
-    new_responses =
-      [response | state.stored_responses]
-      |> Enum.take(state.max_stored_responses)
+    new_responses = [response | state.stored_responses] |> Enum.take(state.max_stored_responses)
 
     new_state = %{
       state
@@ -90,7 +74,6 @@ defmodule AriaEngine.Membrane.MCPSink do
 
   defp handle_log_storage(response, state) do
     Logger.info("MCPSink received response: #{inspect(response, limit: :infinity)}")
-
     new_state = %{state | response_count: state.response_count + 1}
     {[], new_state}
   end
@@ -107,9 +90,7 @@ defmodule AriaEngine.Membrane.MCPSink do
     {[], new_state}
   end
 
-  @doc """
-  Gets stored responses from the sink (only works with memory storage mode).
-  """
+  @doc "Gets stored responses from the sink (only works with memory storage mode).\n"
   @spec get_stored_responses(pid()) :: [map()]
   def get_stored_responses(sink_pid) do
     send(sink_pid, {:get_responses, self()})

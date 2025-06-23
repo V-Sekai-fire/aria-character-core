@@ -1,20 +1,13 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Timeline.BasicCapabilitiesTest do
   use ExUnit.Case, async: true
-
   alias Timeline
   alias Timeline.Interval
   alias Timeline.AgentEntity
 
-  describe "basic agent and entity creation" do
+  describe("basic agent and entity creation") do
     test "creates agent with capabilities" do
       agent =
-        AgentEntity.create_agent(
-          "aria1",
-          "Aria VTuber",
-          %{personality: "helpful"},
+        AgentEntity.create_agent("aria1", "Aria VTuber", %{personality: "helpful"},
           capabilities: [:decision_making, :communication]
         )
 
@@ -27,13 +20,7 @@ defmodule Timeline.BasicCapabilitiesTest do
     end
 
     test "creates entity without action capabilities" do
-      entity =
-        AgentEntity.create_entity(
-          "room1",
-          "Conference Room",
-          %{capacity: 10}
-        )
-
+      entity = AgentEntity.create_entity("room1", "Conference Room", %{capacity: 10})
       assert entity.type == :entity
       assert entity.id == "room1"
       assert entity.name == "Conference Room"
@@ -44,7 +31,6 @@ defmodule Timeline.BasicCapabilitiesTest do
     test "validates agent and entity properly" do
       agent = AgentEntity.create_agent("test_agent", "Test Agent")
       entity = AgentEntity.create_entity("test_entity", "Test Entity")
-
       assert AgentEntity.valid?(agent)
       assert AgentEntity.valid?(entity)
       assert AgentEntity.agent?(agent)
@@ -54,18 +40,12 @@ defmodule Timeline.BasicCapabilitiesTest do
     end
   end
 
-  describe "capability management" do
+  describe("capability management") do
     test "adds capabilities to agent" do
       agent =
-        AgentEntity.create_agent(
-          "robot1",
-          "Service Robot",
-          %{},
-          capabilities: [:navigation]
-        )
+        AgentEntity.create_agent("robot1", "Service Robot", %{}, capabilities: [:navigation])
 
       updated_agent = AgentEntity.add_capability(agent, :object_manipulation)
-
       assert AgentEntity.has_capability?(updated_agent, :navigation)
       assert AgentEntity.has_capability?(updated_agent, :object_manipulation)
       assert length(updated_agent.capabilities) == 2
@@ -73,15 +53,11 @@ defmodule Timeline.BasicCapabilitiesTest do
 
     test "removes capabilities from agent" do
       agent =
-        AgentEntity.create_agent(
-          "worker1",
-          "Factory Worker",
-          %{},
+        AgentEntity.create_agent("worker1", "Factory Worker", %{},
           capabilities: [:welding, :assembly, :quality_check]
         )
 
       updated_agent = AgentEntity.remove_capabilities(agent, [:welding, :assembly])
-
       refute AgentEntity.has_capability?(updated_agent, :welding)
       refute AgentEntity.has_capability?(updated_agent, :assembly)
       assert AgentEntity.has_capability?(updated_agent, :quality_check)
@@ -89,10 +65,7 @@ defmodule Timeline.BasicCapabilitiesTest do
 
     test "checks action performance capability" do
       pilot =
-        AgentEntity.create_agent(
-          "pilot1",
-          "Airline Pilot",
-          %{},
+        AgentEntity.create_agent("pilot1", "Airline Pilot", %{},
           capabilities: [:flying, :navigation, :decision_making]
         )
 
@@ -102,15 +75,12 @@ defmodule Timeline.BasicCapabilitiesTest do
     end
   end
 
-  describe "timeline integration with capabilities" do
+  describe("timeline integration with capabilities") do
     test "adds agent interval to timeline" do
       timeline = Timeline.new()
 
       agent =
-        AgentEntity.create_agent(
-          "chef1",
-          "Head Chef",
-          %{specialty: "italian"},
+        AgentEntity.create_agent("chef1", "Head Chef", %{specialty: "italian"},
           capabilities: [:cooking, :menu_planning, :team_leadership]
         )
 
@@ -123,7 +93,6 @@ defmodule Timeline.BasicCapabilitiesTest do
         )
 
       updated_timeline = Timeline.add_interval(timeline, cooking_interval)
-
       assert Timeline.consistent?(updated_timeline)
       assert length(Map.keys(updated_timeline.intervals)) == 1
     end
@@ -132,11 +101,10 @@ defmodule Timeline.BasicCapabilitiesTest do
       timeline = Timeline.new()
 
       oven =
-        AgentEntity.create_entity(
-          "oven1",
-          "Commercial Oven",
-          %{temperature_max: 500, fuel_type: "gas"}
-        )
+        AgentEntity.create_entity("oven1", "Commercial Oven", %{
+          temperature_max: 500,
+          fuel_type: "gas"
+        })
 
       baking_interval =
         Interval.new(
@@ -147,7 +115,6 @@ defmodule Timeline.BasicCapabilitiesTest do
         )
 
       updated_timeline = Timeline.add_interval(timeline, baking_interval)
-
       assert Timeline.consistent?(updated_timeline)
       assert length(Map.keys(updated_timeline.intervals)) == 1
     end
@@ -156,9 +123,7 @@ defmodule Timeline.BasicCapabilitiesTest do
       timeline = Timeline.new()
 
       baker =
-        AgentEntity.create_agent(
-          "baker1",
-          "Master Baker",
+        AgentEntity.create_agent("baker1", "Master Baker",
           capabilities: [:baking, :recipe_creation]
         )
 
@@ -181,9 +146,7 @@ defmodule Timeline.BasicCapabilitiesTest do
         )
 
       updated_timeline =
-        timeline
-        |> Timeline.add_interval(prep_interval)
-        |> Timeline.add_interval(bake_interval)
+        timeline |> Timeline.add_interval(prep_interval) |> Timeline.add_interval(bake_interval)
 
       assert Timeline.consistent?(updated_timeline)
       assert length(Map.keys(updated_timeline.intervals)) == 2

@@ -1,19 +1,7 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.Storage do
-  @moduledoc """
-  Main storage interface for Aria Storage system.
-
-  This module provides high-level functions for file storage operations
-  using various backends including Waffle integration.
-  """
-
+  @moduledoc "Main storage interface for Aria Storage system.\n\nThis module provides high-level functions for file storage operations\nusing various backends including Waffle integration.\n"
   alias AriaStorage.{WaffleAdapter, WaffleChunkStore}
-
-  @doc """
-  Store a file using Waffle backend.
-  """
+  @doc "Store a file using Waffle backend.\n"
   def store_file_with_waffle(file_path, opts \\ []) do
     backend = Keyword.get(opts, :backend, :local)
     config = Keyword.get(opts, :config, %{})
@@ -26,61 +14,49 @@ defmodule AriaStorage.Storage do
     end
   end
 
-  @doc """
-  Retrieve a file using Waffle backend.
-  """
+  @doc "Retrieve a file using Waffle backend.\n"
   def get_file_with_waffle(file_ref, opts \\ []) do
-    # Implementation for retrieving files
     case WaffleChunkStore.retrieve_chunk(file_ref, opts) do
       {:ok, chunk} -> {:ok, chunk}
       {:error, reason} -> {:error, reason}
     end
   end
 
-  @doc """
-  Configure Waffle storage backend.
-  """
+  @doc "Configure Waffle storage backend.\n"
   def configure_waffle_storage(config) do
     backend = Map.get(config, :backend, :local)
     WaffleAdapter.configure_waffle(backend, config)
   end
 
-  @doc """
-  Migrate existing storage to Waffle backend.
-  """
+  @doc "Migrate existing storage to Waffle backend.\n"
   def migrate_to_waffle(target_backend, opts \\ []) do
-    # Placeholder implementation for migration
     require Logger
     Logger.info("Migration to #{target_backend} requested with options: #{inspect(opts)}")
     {:ok, :migration_started}
   end
 
-  @doc """
-  Test Waffle storage configuration.
-  """
+  @doc "Test Waffle storage configuration.\n"
   def test_waffle_storage(backend, _opts \\ []) do
     case configure_waffle_storage(%{backend: backend}) do
       {:ok, :configured} ->
-        # Test basic operations
         test_file = create_test_file()
-        
+
         case store_file_with_waffle(test_file, backend: backend) do
           {:ok, _result} ->
             File.rm(test_file)
             {:ok, :test_passed}
+
           {:error, reason} ->
             File.rm(test_file)
             {:error, {:test_failed, reason}}
         end
-      
+
       {:error, reason} ->
         {:error, {:config_failed, reason}}
     end
   end
 
-  @doc """
-  Get current Waffle configuration.
-  """
+  @doc "Get current Waffle configuration.\n"
   def get_waffle_config do
     %{
       storage: Application.get_env(:waffle, :storage),
@@ -89,9 +65,7 @@ defmodule AriaStorage.Storage do
     }
   end
 
-  @doc """
-  List files stored via Waffle.
-  """
+  @doc "List files stored via Waffle.\n"
   def list_waffle_files(opts \\ []) do
     _backend = Keyword.get(opts, :backend, :local)
     limit = Keyword.get(opts, :limit, 100)
@@ -102,15 +76,11 @@ defmodule AriaStorage.Storage do
     end
   end
 
-  # Private functions
-
   defp do_store_file_with_waffle(file_path, opts) do
-    # Basic file storage implementation
     case File.read(file_path) do
       {:ok, data} ->
-        # Create a chunk from the file data
         chunk_id = :crypto.hash(:sha256, data) |> Base.encode16(case: :lower)
-        
+
         chunk = %AriaStorage.Chunks{
           id: chunk_id,
           data: data,
@@ -130,7 +100,10 @@ defmodule AriaStorage.Storage do
 
   defp create_test_file do
     test_data = "Test file for Waffle storage verification"
-    temp_path = System.tmp_dir!() |> Path.join("waffle_test_#{System.unique_integer([:positive])}.txt")
+
+    temp_path =
+      System.tmp_dir!() |> Path.join("waffle_test_#{System.unique_integer([:positive])}.txt")
+
     File.write!(temp_path, test_data)
     temp_path
   end

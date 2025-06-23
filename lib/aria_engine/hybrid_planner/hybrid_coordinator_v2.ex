@@ -1,65 +1,11 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule HybridPlanner.HybridCoordinatorV2 do
-  @moduledoc """
-  Strategy-based hybrid goal task reentrant temporal planner using dependency injection.
-
-  This version implements the Function as Object pattern with injected strategy
-  dependencies as defined in ADR-091. All dependencies are provided through
-  strategy objects, enabling maximum modularity, testability, and flexibility.
-
-  ## Strategy Architecture
-
-  The coordinator accepts six strategy objects:
-  - PlanningStrategy: HTN planning logic
-  - TemporalStrategy: Temporal constraint management
-  - StateStrategy: State management and action application
-  - DomainStrategy: Domain queries and metadata
-  - LoggingStrategy: Logging and progress tracking
-  - ExecutionStrategy: Plan execution and failure recovery
-
-  ## Specialized Modules
-
-  This module delegates to specialized sub-modules for different aspects of functionality:
-
-  - `HybridPlanner.HybridCoordinatorV2.Constructor` - Strategy injection and coordinator creation
-  - `HybridPlanner.HybridCoordinatorV2.PlanningOperations` - HTN planning and temporal validation
-  - `HybridPlanner.HybridCoordinatorV2.ExecutionOperations` - Plan execution
-  - `HybridPlanner.HybridCoordinatorV2.ReplanningOperations` - Replanning from failure points
-  - `HybridPlanner.HybridCoordinatorV2.StrategyManagement` - Strategy replacement and metrics
-
-  ## Usage
-
-      # Create strategies
-      strategies = %{
-        planning_strategy: HybridPlanner.Strategies.Default.HTNPlanningStrategy,
-        temporal_strategy: HybridPlanner.Strategies.Default.STNTemporalStrategy,
-        state_strategy: HybridPlanner.Strategies.Default.StateV2Strategy,
-        domain_strategy: HybridPlanner.Strategies.Default.DomainStrategy,
-        logging_strategy: HybridPlanner.Strategies.Default.LoggerStrategy,
-        execution_strategy: HybridPlanner.Strategies.Default.LazyExecutionStrategy
-      }
-      
-      # Create coordinator with injected strategies
-      coordinator = HybridPlanner.HybridCoordinatorV2.new(strategies)
-      
-      # Use coordinator for planning
-      case HybridPlanner.HybridCoordinatorV2.plan(coordinator, domain, state, goals) do
-        {:ok, plan} ->
-          HybridPlanner.HybridCoordinatorV2.execute(coordinator, domain, state, plan)
-        {:error, error_reason} ->
-          Logger.error("Planning failed: \#{error_reason}")
-      end
-  """
-
+  @moduledoc "Strategy-based hybrid goal task reentrant temporal planner using dependency injection.\n\nThis version implements the Function as Object pattern with injected strategy\ndependencies as defined in ADR-091. All dependencies are provided through\nstrategy objects, enabling maximum modularity, testability, and flexibility.\n\n## Strategy Architecture\n\nThe coordinator accepts six strategy objects:\n- PlanningStrategy: HTN planning logic\n- TemporalStrategy: Temporal constraint management\n- StateStrategy: State management and action application\n- DomainStrategy: Domain queries and metadata\n- LoggingStrategy: Logging and progress tracking\n- ExecutionStrategy: Plan execution and failure recovery\n\n## Specialized Modules\n\nThis module delegates to specialized sub-modules for different aspects of functionality:\n\n- `HybridPlanner.HybridCoordinatorV2.Constructor` - Strategy injection and coordinator creation\n- `HybridPlanner.HybridCoordinatorV2.PlanningOperations` - HTN planning and temporal validation\n- `HybridPlanner.HybridCoordinatorV2.ExecutionOperations` - Plan execution\n- `HybridPlanner.HybridCoordinatorV2.ReplanningOperations` - Replanning from failure points\n- `HybridPlanner.HybridCoordinatorV2.StrategyManagement` - Strategy replacement and metrics\n\n## Usage\n\n    # Create strategies\n    strategies = %{\n      planning_strategy: HybridPlanner.Strategies.Default.HTNPlanningStrategy,\n      temporal_strategy: HybridPlanner.Strategies.Default.STNTemporalStrategy,\n      state_strategy: HybridPlanner.Strategies.Default.StateV2Strategy,\n      domain_strategy: HybridPlanner.Strategies.Default.DomainStrategy,\n      logging_strategy: HybridPlanner.Strategies.Default.LoggerStrategy,\n      execution_strategy: HybridPlanner.Strategies.Default.LazyExecutionStrategy\n    }\n    \n    # Create coordinator with injected strategies\n    coordinator = HybridPlanner.HybridCoordinatorV2.new(strategies)\n    \n    # Use coordinator for planning\n    case HybridPlanner.HybridCoordinatorV2.plan(coordinator, domain, state, goals) do\n      {:ok, plan} ->\n        HybridPlanner.HybridCoordinatorV2.execute(coordinator, domain, state, plan)\n      {:error, error_reason} ->\n        Logger.error(\"Planning failed: \#{error_reason}\")\n    end\n"
   alias HybridPlanner.HybridCoordinatorV2.Constructor
   alias HybridPlanner.HybridCoordinatorV2.PlanningOperations
   alias HybridPlanner.HybridCoordinatorV2.ExecutionOperations
   alias HybridPlanner.HybridCoordinatorV2.ReplanningOperations
   alias HybridPlanner.HybridCoordinatorV2.StrategyManagement
 
-  # Strategy-based coordinator structure
   defstruct [
     :planning_strategy,
     :temporal_strategy,
@@ -79,102 +25,44 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
           execution_strategy: module(),
           metadata: map()
         }
-
   @type plan_result :: {:ok, map()} | {:error, String.t()}
-  @type execution_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @type execution_result :: {:ok, AriaEngine.State.t()} | {:error, String.t()}
   @type replan_result :: {:ok, map()} | {:error, String.t()} | :failure
-
-  # ==================== CONSTRUCTOR FUNCTIONS ====================
-
-  @doc """
-  Create a new hybrid coordinator with injected strategy dependencies.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.Constructor.new/2`.
-  """
+  @doc "Create a new hybrid coordinator with injected strategy dependencies.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.Constructor.new/2`.\n"
   defdelegate new(strategies, opts \\ []), to: Constructor
 
-  @doc """
-  Create a coordinator with default strategy implementations.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.Constructor.new_default/1`.
-  """
+  @doc "Create a coordinator with default strategy implementations.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.Constructor.new_default/1`.\n"
   defdelegate new_default(opts \\ []), to: Constructor
 
-  # ==================== PLANNING OPERATIONS ====================
-
-  @doc """
-  Plan goals using injected planning and temporal strategies.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.PlanningOperations.plan/5`.
-  """
+  @doc "Plan goals using injected planning and temporal strategies.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.PlanningOperations.plan/5`.\n"
   defdelegate plan(coordinator, domain, state, goals, opts \\ []), to: PlanningOperations
 
-  @doc """
-  Validate a plan using injected planning strategy.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.PlanningOperations.validate_plan/4`.
-  """
+  @doc "Validate a plan using injected planning strategy.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.PlanningOperations.validate_plan/4`.\n"
   defdelegate validate_plan(coordinator, domain, initial_state, plan), to: PlanningOperations
 
-  @doc """
-  Simple plan interface for backward compatibility.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.PlanningOperations.plan/2`.
-  """
+  @doc "Simple plan interface for backward compatibility.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.PlanningOperations.plan/2`.\n"
   defdelegate plan(coordinator, request), to: PlanningOperations
 
-  # ==================== EXECUTION OPERATIONS ====================
+  @doc "Execute a plan using injected execution strategy.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.ExecutionOperations.execute/5`.\n"
+  defdelegate execute(coordinator, domain, initial_state, plan, opts \\ []),
+    to: ExecutionOperations
 
-  @doc """
-  Execute a plan using injected execution strategy.
+  @doc "Replan from a failure point using injected planning and temporal strategies.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.ReplanningOperations.replan/6`.\n"
+  defdelegate replan(coordinator, domain, state, plan, fail_node_id, opts \\ []),
+    to: ReplanningOperations
 
-  Delegates to `HybridPlanner.HybridCoordinatorV2.ExecutionOperations.execute/5`.
-  """
-  defdelegate execute(coordinator, domain, initial_state, plan, opts \\ []), to: ExecutionOperations
-
-  # ==================== REPLANNING OPERATIONS ====================
-
-  @doc """
-  Replan from a failure point using injected planning and temporal strategies.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.ReplanningOperations.replan/6`.
-  """
-  defdelegate replan(coordinator, domain, state, plan, fail_node_id, opts \\ []), to: ReplanningOperations
-
-  @doc """
-  Simple replan interface for backward compatibility.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.ReplanningOperations.replan/2`.
-  """
+  @doc "Simple replan interface for backward compatibility.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.ReplanningOperations.replan/2`.\n"
   defdelegate replan(coordinator, request), to: ReplanningOperations
 
-  # ==================== STRATEGY MANAGEMENT ====================
-
-  @doc """
-  Replace a strategy in the coordinator.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.StrategyManagement.replace_strategy/3`.
-  """
+  @doc "Replace a strategy in the coordinator.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.StrategyManagement.replace_strategy/3`.\n"
   defdelegate replace_strategy(coordinator, strategy_type, new_strategy), to: StrategyManagement
 
-  @doc """
-  Get strategy information from the coordinator.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.StrategyManagement.get_strategy_info/1`.
-  """
+  @doc "Get strategy information from the coordinator.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.StrategyManagement.get_strategy_info/1`.\n"
   defdelegate get_strategy_info(coordinator), to: StrategyManagement
 
-  @doc """
-  Get specific strategy information by strategy type.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.StrategyManagement.get_strategy_info/2`.
-  """
+  @doc "Get specific strategy information by strategy type.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.StrategyManagement.get_strategy_info/2`.\n"
   defdelegate get_strategy_info(coordinator, strategy_type), to: StrategyManagement
 
-  @doc """
-  Get performance metrics from strategies.
-
-  Delegates to `HybridPlanner.HybridCoordinatorV2.StrategyManagement.get_performance_metrics/1`.
-  """
+  @doc "Get performance metrics from strategies.\n\nDelegates to `HybridPlanner.HybridCoordinatorV2.StrategyManagement.get_performance_metrics/1`.\n"
   defdelegate get_performance_metrics(coordinator), to: StrategyManagement
 end

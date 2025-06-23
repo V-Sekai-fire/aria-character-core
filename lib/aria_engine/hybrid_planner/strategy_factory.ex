@@ -1,48 +1,7 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule HybridPlanner.StrategyFactory do
-  @moduledoc """
-  Factory and registry for creating and managing hybrid planner strategies.
-
-  This module provides centralized strategy management including:
-  - Strategy registration and lookup
-  - Dynamic strategy composition
-  - Configuration-based strategy selection
-  - Runtime strategy validation and swapping
-
-  ## Usage
-
-      # Register strategies
-      factory = StrategyFactory.new()
-      |> StrategyFactory.register_strategy(:planning, :default, 
-           HybridPlanner.Strategies.Default.HTNPlanningStrategy)
-      |> StrategyFactory.register_strategy(:planning, :optimized,
-           HybridPlanner.Strategies.Optimized.HTNPlanningStrategy)
-      
-      # Create coordinator from configuration
-      config = %{
-        planning_strategy: :default,
-        temporal_strategy: :stn,
-        state_strategy: :statev2,
-        domain_strategy: :default,
-        logging_strategy: :verbose,
-        execution_strategy: :lazy
-      }
-      
-      coordinator = StrategyFactory.create_coordinator(factory, config)
-      
-      # Runtime strategy swapping
-      new_coordinator = StrategyFactory.swap_strategy(coordinator, :planning, :optimized)
-  """
-
+  @moduledoc "Factory and registry for creating and managing hybrid planner strategies.\n\nThis module provides centralized strategy management including:\n- Strategy registration and lookup\n- Dynamic strategy composition\n- Configuration-based strategy selection\n- Runtime strategy validation and swapping\n\n## Usage\n\n    # Register strategies\n    factory = StrategyFactory.new()\n    |> StrategyFactory.register_strategy(:planning, :default, \n         HybridPlanner.Strategies.Default.HTNPlanningStrategy)\n    |> StrategyFactory.register_strategy(:planning, :optimized,\n         HybridPlanner.Strategies.Optimized.HTNPlanningStrategy)\n    \n    # Create coordinator from configuration\n    config = %{\n      planning_strategy: :default,\n      temporal_strategy: :stn,\n      state_strategy: :statev2,\n      domain_strategy: :default,\n      logging_strategy: :verbose,\n      execution_strategy: :lazy\n    }\n    \n    coordinator = StrategyFactory.create_coordinator(factory, config)\n    \n    # Runtime strategy swapping\n    new_coordinator = StrategyFactory.swap_strategy(coordinator, :planning, :optimized)\n"
   alias HybridPlanner.{HybridCoordinatorV2, Strategies}
-
-  defstruct [
-    :strategies,
-    :configurations,
-    :metadata
-  ]
+  defstruct [:strategies, :configurations, :metadata]
 
   @type strategy_type ::
           :planning_strategy
@@ -51,22 +10,15 @@ defmodule HybridPlanner.StrategyFactory do
           | :domain_strategy
           | :logging_strategy
           | :execution_strategy
-
   @type strategy_key :: atom()
   @type strategy_module :: module()
   @type strategy_config :: %{strategy_type() => strategy_key()}
-
   @type t :: %__MODULE__{
           strategies: %{strategy_type() => %{strategy_key() => strategy_module()}},
           configurations: %{atom() => strategy_config()},
           metadata: map()
         }
-
-  # ==================== CONSTRUCTOR ====================
-
-  @doc """
-  Create a new strategy factory with default strategies registered.
-  """
+  @doc "Create a new strategy factory with default strategies registered.\n"
   @spec new(keyword()) :: t()
   def new(opts \\ []) do
     factory = %__MODULE__{
@@ -79,50 +31,22 @@ defmodule HybridPlanner.StrategyFactory do
         execution_strategy: %{}
       },
       configurations: %{},
-      metadata: %{
-        created_at: System.system_time(:millisecond),
-        options: opts
-      }
+      metadata: %{created_at: System.system_time(:millisecond), options: opts}
     }
 
-    # Register default strategies
-    factory
-    |> register_default_strategies()
-    |> register_default_configurations()
+    factory |> register_default_strategies() |> register_default_configurations()
   end
 
-  # ==================== STRATEGY REGISTRATION ====================
-
-  @doc """
-  Register a strategy implementation for a given type and key.
-  """
+  @doc "Register a strategy implementation for a given type and key.\n"
   @spec register_strategy(t(), strategy_type(), strategy_key(), strategy_module()) :: t()
   def register_strategy(%__MODULE__{} = factory, strategy_type, strategy_key, strategy_module) do
-    # Validate strategy type
-    # Temporarily disabled for debugging
-    # unless Map.has_key?(factory.strategies, strategy_type) do
-    #   raise ArgumentError, "Unknown strategy type: #{strategy_type}"
-    # end
-
-    # Validate strategy module implements required behavior
-    # Temporarily disabled due to compilation order issues
-    # TODO: Re-enable validation after addressing module loading order
-    # case validate_strategy_module(strategy_type, strategy_module) do
-    #   :ok -> :ok
-    #   {:error, reason} -> raise ArgumentError, "Strategy validation failed: #{reason}"
-    # end
-
-    # Register the strategy
     current_strategies = Map.get(factory.strategies, strategy_type, %{})
     updated_strategy_map = Map.put(current_strategies, strategy_key, strategy_module)
     updated_strategies = Map.put(factory.strategies, strategy_type, updated_strategy_map)
-
     %{factory | strategies: updated_strategies}
   end
 
-  @doc """
-  Register multiple strategies at once.
-  """
+  @doc "Register multiple strategies at once.\n"
   @spec register_strategies(t(), [{strategy_type(), strategy_key(), strategy_module()}]) :: t()
   def register_strategies(%__MODULE__{} = factory, strategy_list) do
     Enum.reduce(strategy_list, factory, fn {type, key, module}, acc ->
@@ -130,9 +54,7 @@ defmodule HybridPlanner.StrategyFactory do
     end)
   end
 
-  @doc """
-  Get a registered strategy by type and key.
-  """
+  @doc "Get a registered strategy by type and key.\n"
   @spec get_strategy(t(), strategy_type(), strategy_key()) ::
           {:ok, strategy_module()} | {:error, String.t()}
   def get_strategy(%__MODULE__{} = factory, strategy_type, strategy_key) do
@@ -142,24 +64,15 @@ defmodule HybridPlanner.StrategyFactory do
     end
   end
 
-  @doc """
-  List all registered strategies for a given type.
-  """
+  @doc "List all registered strategies for a given type.\n"
   @spec list_strategies(t(), strategy_type()) :: [strategy_key()]
   def list_strategies(%__MODULE__{} = factory, strategy_type) do
-    factory.strategies
-    |> Map.get(strategy_type, %{})
-    |> Map.keys()
+    factory.strategies |> Map.get(strategy_type, %{}) |> Map.keys()
   end
 
-  # ==================== CONFIGURATION MANAGEMENT ====================
-
-  @doc """
-  Register a named strategy configuration.
-  """
+  @doc "Register a named strategy configuration.\n"
   @spec register_configuration(t(), atom(), strategy_config()) :: t()
   def register_configuration(%__MODULE__{} = factory, config_name, strategy_config) do
-    # Validate configuration
     case validate_strategy_configuration(factory, strategy_config) do
       :ok -> :ok
       {:error, reason} -> raise ArgumentError, "Configuration validation failed: #{reason}"
@@ -169,9 +82,7 @@ defmodule HybridPlanner.StrategyFactory do
     %{factory | configurations: updated_configurations}
   end
 
-  @doc """
-  Get a registered configuration by name.
-  """
+  @doc "Get a registered configuration by name.\n"
   @spec get_configuration(t(), atom()) :: {:ok, strategy_config()} | {:error, String.t()}
   def get_configuration(%__MODULE__{} = factory, config_name) do
     case Map.get(factory.configurations, config_name) do
@@ -180,19 +91,13 @@ defmodule HybridPlanner.StrategyFactory do
     end
   end
 
-  @doc """
-  List all registered configurations.
-  """
+  @doc "List all registered configurations.\n"
   @spec list_configurations(t()) :: [atom()]
   def list_configurations(%__MODULE__{} = factory) do
     Map.keys(factory.configurations)
   end
 
-  # ==================== COORDINATOR CREATION ====================
-
-  @doc """
-  Create a hybrid coordinator from a strategy configuration.
-  """
+  @doc "Create a hybrid coordinator from a strategy configuration.\n"
   @spec create_coordinator(t(), strategy_config() | atom(), keyword()) ::
           {:ok, HybridCoordinatorV2.t()} | {:error, String.t()}
   def create_coordinator(factory, config, opts \\ [])
@@ -207,7 +112,6 @@ defmodule HybridPlanner.StrategyFactory do
   def create_coordinator(%__MODULE__{} = factory, strategy_config, opts)
       when is_map(strategy_config) do
     try do
-      # Resolve strategy modules from configuration
       case resolve_strategy_modules(factory, strategy_config) do
         {:ok, strategy_modules} ->
           coordinator = HybridCoordinatorV2.new(strategy_modules, opts)
@@ -217,14 +121,11 @@ defmodule HybridPlanner.StrategyFactory do
           {:error, reason}
       end
     rescue
-      e ->
-        {:error, "Coordinator creation failed: #{Exception.message(e)}"}
+      e -> {:error, "Coordinator creation failed: #{Exception.message(e)}"}
     end
   end
 
-  @doc """
-  Create a coordinator with default configuration.
-  """
+  @doc "Create a coordinator with default configuration.\n"
   @spec create_default_coordinator(t(), keyword()) :: HybridCoordinatorV2.t()
   def create_default_coordinator(%__MODULE__{} = factory, opts \\ []) do
     case create_coordinator(factory, :default, opts) do
@@ -233,11 +134,7 @@ defmodule HybridPlanner.StrategyFactory do
     end
   end
 
-  # ==================== RUNTIME STRATEGY SWAPPING ====================
-
-  @doc """
-  Swap a strategy in an existing coordinator.
-  """
+  @doc "Swap a strategy in an existing coordinator.\n"
   @spec swap_strategy(HybridCoordinatorV2.t(), strategy_type(), strategy_key(), t()) ::
           {:ok, HybridCoordinatorV2.t()} | {:error, String.t()}
   def swap_strategy(
@@ -258,9 +155,7 @@ defmodule HybridPlanner.StrategyFactory do
     end
   end
 
-  @doc """
-  Create a new coordinator by modifying an existing configuration.
-  """
+  @doc "Create a new coordinator by modifying an existing configuration.\n"
   @spec modify_configuration(t(), atom(), strategy_config(), keyword()) ::
           {:ok, HybridCoordinatorV2.t()} | {:error, String.t()}
   def modify_configuration(%__MODULE__{} = factory, base_config_name, modifications, opts \\ []) do
@@ -274,15 +169,10 @@ defmodule HybridPlanner.StrategyFactory do
     end
   end
 
-  # ==================== STRATEGY COMPOSITION ====================
-
-  @doc """
-  Compose multiple strategy configurations into a new configuration.
-  """
+  @doc "Compose multiple strategy configurations into a new configuration.\n"
   @spec compose_configurations(t(), [atom()], atom()) :: {:ok, t()} | {:error, String.t()}
   def compose_configurations(%__MODULE__{} = factory, config_names, new_config_name) do
     try do
-      # Collect all configurations
       configs =
         Enum.map(config_names, fn name ->
           case get_configuration(factory, name) do
@@ -291,10 +181,8 @@ defmodule HybridPlanner.StrategyFactory do
           end
         end)
 
-      # Merge configurations (later configs override earlier ones)
       composed_config = Enum.reduce(configs, %{}, &Map.merge/2)
 
-      # Validate composed configuration
       case validate_strategy_configuration(factory, composed_config) do
         :ok ->
           updated_factory = register_configuration(factory, new_config_name, composed_config)
@@ -308,11 +196,7 @@ defmodule HybridPlanner.StrategyFactory do
     end
   end
 
-  # ==================== VALIDATION ====================
-
-  @doc """
-  Validate that a strategy configuration is complete and valid.
-  """
+  @doc "Validate that a strategy configuration is complete and valid.\n"
   @spec validate_strategy_configuration(t(), strategy_config()) :: :ok | {:error, String.t()}
   def validate_strategy_configuration(%__MODULE__{} = factory, strategy_config) do
     required_strategies = [
@@ -324,7 +208,6 @@ defmodule HybridPlanner.StrategyFactory do
       :execution_strategy
     ]
 
-    # Check all required strategies are present
     missing_strategies =
       required_strategies
       |> Enum.filter(fn strategy_type -> not Map.has_key?(strategy_config, strategy_type) end)
@@ -332,7 +215,6 @@ defmodule HybridPlanner.StrategyFactory do
     if length(missing_strategies) > 0 do
       {:error, "Missing required strategies: #{inspect(missing_strategies)}"}
     else
-      # Validate each strategy exists in registry
       validation_results =
         Enum.map(required_strategies, fn strategy_type ->
           strategy_key = Map.get(strategy_config, strategy_type)
@@ -346,9 +228,6 @@ defmodule HybridPlanner.StrategyFactory do
     end
   end
 
-  # ==================== PRIVATE HELPER FUNCTIONS ====================
-
-  # Register default strategy implementations
   defp register_default_strategies(factory) do
     default_strategies = [
       {:planning_strategy, :default, Strategies.Default.HTNPlanningStrategy},
@@ -364,7 +243,6 @@ defmodule HybridPlanner.StrategyFactory do
     register_strategies(factory, default_strategies)
   end
 
-  # Register default configurations
   defp register_default_configurations(factory) do
     default_config = %{
       planning_strategy: :default,
@@ -399,7 +277,6 @@ defmodule HybridPlanner.StrategyFactory do
     |> register_configuration(:quiet, quiet_config)
   end
 
-  # Resolve strategy configuration to actual strategy modules
   defp resolve_strategy_modules(factory, strategy_config) do
     try do
       resolved_modules =

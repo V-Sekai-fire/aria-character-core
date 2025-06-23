@@ -1,28 +1,12 @@
 defmodule AriaEngine.Membrane.PlannerFilter do
-  @moduledoc """
-  Membrane Filter element that executes actual planning using HybridCoordinatorV2.
-
-  This element receives PlanningParams and executes real planning to produce PlanningResult.
-  It's the core planning engine in the pipeline that bridges the gap between
-  data transformation and response formatting.
-  """
-
+  @moduledoc "Membrane Filter element that executes actual planning using HybridCoordinatorV2.\n\nThis element receives PlanningParams and executes real planning to produce PlanningResult.\nIt's the core planning engine in the pipeline that bridges the gap between\ndata transformation and response formatting.\n"
   use Membrane.Filter
   require Logger
-
   alias AriaEngine.Membrane.Format.{PlanningParams, PlanningResult}
   alias HybridPlanner.HybridCoordinatorV2
   alias Membrane.Buffer
-
-  def_input_pad(:input,
-    accepted_format: PlanningParams,
-    flow_control: :auto
-  )
-
-  def_output_pad(:output,
-    accepted_format: PlanningResult,
-    flow_control: :auto
-  )
+  def_input_pad(:input, accepted_format: PlanningParams, flow_control: :auto)
+  def_output_pad(:output, accepted_format: PlanningResult, flow_control: :auto)
 
   def_options(
     telemetry_prefix: [
@@ -32,7 +16,7 @@ defmodule AriaEngine.Membrane.PlannerFilter do
     ],
     timeout_ms: [
       spec: pos_integer(),
-      default: 30_000,
+      default: 30000,
       description: "Planning execution timeout in milliseconds"
     ],
     strategy_config: [
@@ -61,7 +45,6 @@ defmodule AriaEngine.Membrane.PlannerFilter do
   @impl true
   def handle_buffer(:input, %Buffer{payload: planning_params}, _ctx, state) do
     start_time = System.monotonic_time(:microsecond)
-
     Logger.info("PlannerFilter executing planning for request: #{planning_params.request_id}")
 
     case execute_planning_with_timeout(planning_params, state.timeout_ms) do
@@ -79,10 +62,7 @@ defmodule AriaEngine.Membrane.PlannerFilter do
             goals_count: length(planning_params.goals || [])
           },
           request_id: planning_params.request_id,
-          performance_metrics: %{
-            execution_time_ms: execution_time_ms,
-            planning_successful: true
-          }
+          performance_metrics: %{execution_time_ms: execution_time_ms, planning_successful: true}
         }
 
         emit_telemetry(state.telemetry_prefix, :planning_success, %{
@@ -117,10 +97,7 @@ defmodule AriaEngine.Membrane.PlannerFilter do
             goals_count: length(planning_params.goals || [])
           },
           request_id: planning_params.request_id,
-          performance_metrics: %{
-            execution_time_ms: execution_time_ms,
-            planning_successful: false
-          }
+          performance_metrics: %{execution_time_ms: execution_time_ms, planning_successful: false}
         }
 
         emit_telemetry(state.telemetry_prefix, :planning_error, %{
@@ -143,8 +120,6 @@ defmodule AriaEngine.Membrane.PlannerFilter do
     end
   end
 
-  # Private functions
-
   defp execute_planning_with_timeout(
          %PlanningParams{options: [error: true]} = params,
          _timeout_ms
@@ -156,10 +131,7 @@ defmodule AriaEngine.Membrane.PlannerFilter do
   end
 
   defp execute_planning_with_timeout(%PlanningParams{} = params, timeout_ms) do
-    task =
-      Task.async(fn ->
-        execute_planning(params)
-      end)
+    task = Task.async(fn -> execute_planning(params) end)
 
     case Task.yield(task, timeout_ms) || Task.shutdown(task) do
       {:ok, result} -> result
@@ -169,21 +141,12 @@ defmodule AriaEngine.Membrane.PlannerFilter do
 
   defp execute_planning(%PlanningParams{} = params) do
     try do
-      # Create a default coordinator and use it for planning
       coordinator = HybridCoordinatorV2.new_default()
-      
-      # Create a simple domain if none provided
       domain = params.domain || create_default_domain()
-      
-      # Create a simple state if none provided
-      state = params.state || AriaEngine.StateV2.new()
-      
-      # Ensure goals is a list
+      state = params.state || AriaEngine.State.new()
       goals = params.goals || []
-      
-      # Ensure options is a list
       options = params.options || []
-      
+
       case HybridCoordinatorV2.plan(coordinator, domain, state, goals, options) do
         {:ok, plan} ->
           {:ok,
@@ -205,7 +168,6 @@ defmodule AriaEngine.Membrane.PlannerFilter do
     end
   end
 
-  # Create a minimal domain for testing
   defp create_default_domain do
     Domain.new("test_domain")
   end
@@ -214,17 +176,25 @@ defmodule AriaEngine.Membrane.PlannerFilter do
     Map.get(plan_result, :strategy_used, "unknown")
   end
 
-  defp extract_strategy_info(_), do: "unknown"
+  defp extract_strategy_info(_) do
+    "unknown"
+  end
 
-  defp get_domain_size(nil), do: 0
+  defp get_domain_size(nil) do
+    0
+  end
 
   defp get_domain_size(domain) when is_map(domain) do
     Map.get(domain, :size, 0)
   end
 
-  defp get_domain_size(_), do: 0
+  defp get_domain_size(_) do
+    0
+  end
 
-  defp extract_domain_info(nil), do: %{type: "unknown", size: 0}
+  defp extract_domain_info(nil) do
+    %{type: "unknown", size: 0}
+  end
 
   defp extract_domain_info(domain) when is_map(domain) do
     %{
@@ -234,28 +204,27 @@ defmodule AriaEngine.Membrane.PlannerFilter do
     }
   end
 
-  defp extract_domain_info(_), do: %{type: "unknown", size: 0}
-
-  defp extract_state_info(nil), do: %{type: "unknown", facts_count: 0}
-
-  defp extract_state_info(state) when is_map(state) do
-    %{
-      type: "StateV2",
-      facts_count: Map.get(state, :facts, %{}) |> map_size()
-    }
+  defp extract_domain_info(_) do
+    %{type: "unknown", size: 0}
   end
 
-  defp extract_state_info(_), do: %{type: "unknown", facts_count: 0}
+  defp extract_state_info(nil) do
+    %{type: "unknown", facts_count: 0}
+  end
+
+  defp extract_state_info(state) when is_map(state) do
+    %{type: "StateV2", facts_count: Map.get(state, :facts, %{}) |> map_size()}
+  end
+
+  defp extract_state_info(_) do
+    %{type: "unknown", facts_count: 0}
+  end
 
   defp emit_telemetry(prefix, event, metadata) do
     :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
   end
 
-  # Public API for monitoring
-
-  @doc """
-  Gets the current planning statistics of the PlannerFilter element.
-  """
+  @doc "Gets the current planning statistics of the PlannerFilter element.\n"
   @spec get_stats(pid()) :: map()
   def get_stats(filter_pid) do
     send(filter_pid, {:get_stats, self()})

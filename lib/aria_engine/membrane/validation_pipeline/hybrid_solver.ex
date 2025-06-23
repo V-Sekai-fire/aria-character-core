@@ -1,47 +1,32 @@
 defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
-  @moduledoc """
-  Handles solving scheduling problems using the AriaEngine Hybrid solver.
-  """
-
+  @moduledoc "Handles solving scheduling problems using the AriaEngine Hybrid solver.\n"
   require Logger
-
-  @doc """
-  Solves a scheduling problem using the AriaEngine Hybrid solver.
-  """
+  @doc "Solves a scheduling problem using the AriaEngine Hybrid solver.\n"
   def solve(params, _state) do
     Logger.info("🔧 Calling Hybrid solver")
-
     start_time = System.monotonic_time(:millisecond)
 
     try do
-      # Ensure proper data types for scheduler
       activities = ensure_list(params["activities"])
       entities = ensure_list(params["entities"])
       resources = ensure_list(params["resources"])
       constraints = params["constraints"] || %{}
-
-      # Call the real AriaEngine scheduler with deterministic base datetime
       base_datetime = ~U[2025-01-01 00:00:00Z]
-      
+
       case AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
              params["schedule_name"] || "validation_test",
              activities,
              entities,
              resources,
              constraints,
-             # simulation_mode
              true,
-             # activity_log
              true,
-             # verbose
              1,
-             # base_datetime
              base_datetime
            ) do
         {:ok, result} ->
           end_time = System.monotonic_time(:millisecond)
           solve_time = end_time - start_time
-
           Logger.info("✅ Hybrid solver completed in #{solve_time}ms")
 
           %{
@@ -54,29 +39,17 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
         {:error, reason} ->
           end_time = System.monotonic_time(:millisecond)
           solve_time = end_time - start_time
-
           Logger.error("❌ Hybrid solver failed: #{reason}")
-
-          %{
-            status: :error,
-            error: reason,
-            solve_time_ms: solve_time
-          }
+          %{status: :error, error: reason, solve_time_ms: solve_time}
       end
     rescue
       error ->
         Logger.error("❌ Hybrid solver exception: #{inspect(error)}")
-
-        %{
-          status: :error,
-          error: "Hybrid solver exception: #{Exception.message(error)}"
-        }
+        %{status: :error, error: "Hybrid solver exception: #{Exception.message(error)}"}
     end
   end
 
-  @doc """
-  Extracts solution data from AriaEngine scheduler result.
-  """
+  @doc "Extracts solution data from AriaEngine scheduler result.\n"
   def extract_solution(result) do
     case result do
       %AriaEngine.Scheduler.SimulationResult{schedule: schedule} ->
@@ -94,15 +67,9 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
         }
 
       _ ->
-        %{
-          activities: [],
-          makespan: 0,
-          resource_utilization: %{}
-        }
+        %{activities: [], makespan: 0, resource_utilization: %{}}
     end
   end
-
-  # Private functions
 
   defp extract_activities_from_schedule(schedule) when is_list(schedule) do
     Enum.map(schedule, fn activity ->
@@ -115,7 +82,9 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
     end)
   end
 
-  defp extract_activities_from_schedule(_), do: []
+  defp extract_activities_from_schedule(_) do
+    []
+  end
 
   defp parse_time_value(value) when is_binary(value) do
     case Integer.parse(value) do
@@ -124,18 +93,23 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
     end
   end
 
-  defp parse_time_value(value) when is_integer(value), do: value
-  defp parse_time_value(_), do: 0
+  defp parse_time_value(value) when is_integer(value) do
+    value
+  end
+
+  defp parse_time_value(_) do
+    0
+  end
 
   defp calculate_makespan(schedule) when is_list(schedule) do
     schedule
-    |> Enum.map(fn activity ->
-      parse_time_value(activity["end_time"] || activity[:end_time])
-    end)
+    |> Enum.map(fn activity -> parse_time_value(activity["end_time"] || activity[:end_time]) end)
     |> Enum.max(fn -> 0 end)
   end
 
-  defp calculate_makespan(_), do: 0
+  defp calculate_makespan(_) do
+    0
+  end
 
   defp extract_resource_utilization(result) do
     case result do
@@ -145,12 +119,19 @@ defmodule AriaEngine.Membrane.ValidationPipeline.HybridSolver do
     end
   end
 
-  # Helper function to ensure data is a list
-  defp ensure_list(nil), do: []
-  defp ensure_list(data) when is_list(data), do: data
+  defp ensure_list(nil) do
+    []
+  end
+
+  defp ensure_list(data) when is_list(data) do
+    data
+  end
+
   defp ensure_list(data) when is_map(data) do
-    # Convert map to list of values if it's a map
     Map.values(data)
   end
-  defp ensure_list(_), do: []
+
+  defp ensure_list(_) do
+    []
+  end
 end

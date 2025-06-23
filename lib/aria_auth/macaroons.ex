@@ -1,17 +1,5 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaAuth.Macaroons do
-  @moduledoc """
-  Macaroon-based authentication tokens using Fly.io's macfly library.
-
-  Macaroons provide better security than JWT tokens because they support:
-  - Attenuation: Restricting tokens without server communication
-  - Delegation: Safely passing tokens with reduced permissions
-  - Third-party caveats: External authorization integration
-  - Contextual constraints: Time, location, action restrictions
-  """
-
+  @moduledoc "Macaroon-based authentication tokens using Fly.io's macfly library.\n\nMacaroons provide better security than JWT tokens because they support:\n- Attenuation: Restricting tokens without server communication\n- Delegation: Safely passing tokens with reduced permissions\n- Third-party caveats: External authorization integration\n- Contextual constraints: Time, location, action restrictions\n"
   alias AriaAuth.Accounts.User
   alias Macfly.Caveat.ValidityWindow
   alias __MODULE__.{PermissionsCaveat, ConfineUserString}
@@ -21,121 +9,95 @@ defmodule AriaAuth.Macaroons do
                 :macaroon_secret,
                 "development_macaroon_secret_key"
               )
-  # 1 hour
   @default_expiry 3600
   @issuer "aria-auth"
-
-  # Custom caveat for permissions/roles
   defmodule PermissionsCaveat do
-    @moduledoc """
-    Custom caveat for encoding user permissions/roles in macaroons.
-    """
-
+    @moduledoc "Custom caveat for encoding user permissions/roles in macaroons.\n"
     alias __MODULE__
-
     @derive Jason.Encoder
     defstruct [:permissions]
-
-    @type t :: %__MODULE__{
-            permissions: [String.t()]
-          }
-
+    @type t :: %__MODULE__{permissions: [String.t()]}
     def build(permissions) when is_list(permissions) do
       %__MODULE__{permissions: permissions}
     end
   end
 
-  # Custom caveat for string user IDs (UUIDs)
   defmodule ConfineUserString do
-    @moduledoc """
-    Custom caveat for confining macaroons to specific string user IDs (UUIDs).
-    Similar to Macfly.Caveat.ConfineUser but accepts string IDs instead of integers.
-    """
-
+    @moduledoc "Custom caveat for confining macaroons to specific string user IDs (UUIDs).\nSimilar to Macfly.Caveat.ConfineUser but accepts string IDs instead of integers.\n"
     @derive Jason.Encoder
     defstruct [:id]
-
-    @type t :: %__MODULE__{
-            id: String.t()
-          }
-
+    @type t :: %__MODULE__{id: String.t()}
     def build(user_id) when is_binary(user_id) do
       %__MODULE__{id: user_id}
     end
   end
 
-  # Implement the Macfly.Caveat protocol for PermissionsCaveat
-  defimpl Macfly.Caveat, for: PermissionsCaveat do
-    def name(_), do: "PermissionsCaveat"
+  defimpl(Macfly.Caveat, for: PermissionsCaveat) do
+    def name(_) do
+      "PermissionsCaveat"
+    end
 
-    # Use a unique type ID that doesn't conflict with existing caveats
-    # Existing types in macfly: 0, 4, 6, 8, 9, etc.
-    def type(_), do: 100
+    def type(_) do
+      100
+    end
 
-    def body(%PermissionsCaveat{permissions: permissions}), do: [permissions]
+    def body(%PermissionsCaveat{permissions: permissions}) do
+      [permissions]
+    end
 
     def from_body(_, [permissions], _) when is_list(permissions) do
       {:ok, %PermissionsCaveat{permissions: permissions}}
     end
 
-    def from_body(_, _, _), do: {:error, "bad PermissionsCaveat format"}
+    def from_body(_, _, _) do
+      {:error, "bad PermissionsCaveat format"}
+    end
   end
 
-  # Implement the Macfly.Caveat protocol for ConfineUserString
-  defimpl Macfly.Caveat, for: ConfineUserString do
-    def name(_), do: "ConfineUserString"
+  defimpl(Macfly.Caveat, for: ConfineUserString) do
+    def name(_) do
+      "ConfineUserString"
+    end
 
-    # Use a unique type ID for string user confinement
-    def type(_), do: 101
+    def type(_) do
+      101
+    end
 
-    def body(%ConfineUserString{id: id}), do: [id]
+    def body(%ConfineUserString{id: id}) do
+      [id]
+    end
 
     def from_body(_, [id], _) when is_binary(id) do
       {:ok, %ConfineUserString{id: id}}
     end
 
-    def from_body(_, _, _), do: {:error, "bad ConfineUserString format"}
+    def from_body(_, _, _) do
+      {:error, "bad ConfineUserString format"}
+    end
   end
 
-  # JSON encoders are automatically generated via @derive Jason.Encoder
-
-  @doc """
-  Generates a macaroon token for a user.
-
-  ## Options
-  - `:expiry` - Token expiration time in seconds (default: 3600)
-  - `:permissions` - List of permissions to encode in caveats
-  - `:location` - Location restriction for the token
-
-  ## Example
-      {:ok, token} = AriaAuth.Macaroons.generate_token(user, expiry: 900, permissions: ["read", "write"])
-  """
+  @doc "Generates a macaroon token for a user.\n\n## Options\n- `:expiry` - Token expiration time in seconds (default: 3600)\n- `:permissions` - List of permissions to encode in caveats\n- `:location` - Location restriction for the token\n\n## Example\n    {:ok, token} = AriaAuth.Macaroons.generate_token(user, expiry: 900, permissions: [\"read\", \"write\"])\n"
   def generate_token(%User{} = user, opts \\ []) do
     expiry = Keyword.get(opts, :expiry, @default_expiry)
     permissions = Keyword.get(opts, :permissions, user.roles)
     location = Keyword.get(opts, :location, nil)
 
     try do
-      # Create base macaroon with user information
       macaroon =
         Macfly.Macaroon.new(
           @secret_key,
-          # identifier
           "user:#{user.id}",
           location || @issuer
         )
 
-      # Add built-in caveats using Macfly's structured types
       caveats = [
         ValidityWindow.build(for: expiry),
         ConfineUserString.build(user.id),
         PermissionsCaveat.build(permissions)
       ]
 
-      # Create attenuated macaroon with caveats
       attenuated_macaroon = Macfly.Macaroon.attenuate(macaroon, caveats)
 
-      # Serialize the macaroon
       case Macfly.encode([attenuated_macaroon]) do
         token when is_binary(token) -> {:ok, token}
         error -> {:error, error}
@@ -145,12 +107,9 @@ defmodule AriaAuth.Macaroons do
     end
   end
 
-  @doc """
-  Verifies a macaroon token and returns the parsed caveats.
-  """
+  @doc "Verifies a macaroon token and returns the parsed caveats.\n"
   def verify_token(token) when is_binary(token) do
     try do
-      # Create options with our custom caveat types registered
       options =
         Macfly.Options.with_caveats(
           %Macfly.Options{},
@@ -165,7 +124,6 @@ defmodule AriaAuth.Macaroons do
           end
 
         {:ok, macaroons} when is_list(macaroons) ->
-          # Handle multiple macaroons (discharge macaroons)
           case verify_macaroon_chain(macaroons) do
             {:ok, {user_id, permissions}} -> {:ok, %{user_id: user_id, permissions: permissions}}
             {:error, reason} -> {:error, reason}
@@ -179,9 +137,7 @@ defmodule AriaAuth.Macaroons do
     end
   end
 
-  @doc """
-  Verifies a macaroon token and returns the associated user.
-  """
+  @doc "Verifies a macaroon token and returns the associated user.\n"
   def verify_token_and_get_user(token) when is_binary(token) do
     case verify_token(token) do
       {:ok, %{user_id: user_id, permissions: permissions}} ->
@@ -195,20 +151,9 @@ defmodule AriaAuth.Macaroons do
     end
   end
 
-  @doc """
-  Attenuates (restricts) a macaroon by adding additional caveats.
-
-  This allows creating derived tokens with reduced permissions without
-  communicating with the server.
-
-  ## Example
-      {:ok, restricted_token} = AriaAuth.Macaroons.attenuate_token(token, [
-        %Macfly.Caveat.ValidityWindow{not_before: now, not_after: now + 300}
-      ])
-  """
+  @doc "Attenuates (restricts) a macaroon by adding additional caveats.\n\nThis allows creating derived tokens with reduced permissions without\ncommunicating with the server.\n\n## Example\n    {:ok, restricted_token} = AriaAuth.Macaroons.attenuate_token(token, [\n      %Macfly.Caveat.ValidityWindow{not_before: now, not_after: now + 300}\n    ])\n"
   def attenuate_token(token, additional_caveats)
       when is_binary(token) and is_list(additional_caveats) do
-    # Create options with our custom caveat types registered
     options =
       Macfly.Options.with_caveats(
         %Macfly.Options{},
@@ -218,7 +163,6 @@ defmodule AriaAuth.Macaroons do
     case Macfly.decode(token, options) do
       {:ok, [macaroon]} ->
         try do
-          # Add additional caveats to restrict the token
           attenuated_macaroon = Macfly.Macaroon.attenuate(macaroon, additional_caveats)
 
           case Macfly.encode([attenuated_macaroon]) do
@@ -234,13 +178,9 @@ defmodule AriaAuth.Macaroons do
     end
   end
 
-  @doc """
-  Generates an access token and refresh token pair using macaroons.
-  """
+  @doc "Generates an access token and refresh token pair using macaroons.\n"
   def generate_token_pair(%User{} = user) do
-    # 15 minutes
     with {:ok, access_token} <- generate_token(user, expiry: 900, permissions: ["access"]),
-         # 7 days
          {:ok, refresh_token} <- generate_token(user, expiry: 604_800, permissions: ["refresh"]) do
       {:ok, %{access_token: access_token, refresh_token: refresh_token}}
     else
@@ -248,17 +188,11 @@ defmodule AriaAuth.Macaroons do
     end
   end
 
-  # Private helper functions
-
   defp verify_macaroon_caveats(%Macfly.Macaroon{caveats: caveats}) do
     try do
-      # Extract user ID from ConfineUserString caveat
       user_id = extract_user_id_from_caveats(caveats)
-
-      # Extract permissions from PermissionsCaveat
       permissions = extract_permissions_from_caveats(caveats)
 
-      # Verify validity window
       case verify_validity_window(caveats) do
         :ok -> {:ok, {user_id, permissions}}
         {:error, reason} -> {:error, reason}
@@ -269,14 +203,9 @@ defmodule AriaAuth.Macaroons do
   end
 
   defp verify_macaroon_chain(macaroons) do
-    # For now, just verify the root macaroon
-    # In a full implementation, this would verify discharge macaroons
     case macaroons do
-      [root_macaroon | _discharge_macaroons] ->
-        verify_macaroon_caveats(root_macaroon)
-
-      [] ->
-        {:error, :empty_macaroon_chain}
+      [root_macaroon | _discharge_macaroons] -> verify_macaroon_caveats(root_macaroon)
+      [] -> {:error, :empty_macaroon_chain}
     end
   end
 
@@ -290,7 +219,6 @@ defmodule AriaAuth.Macaroons do
   defp extract_permissions_from_caveats(caveats) do
     case Enum.find(caveats, fn caveat -> match?(%PermissionsCaveat{}, caveat) end) do
       %PermissionsCaveat{permissions: permissions} -> permissions
-      # Default to empty permissions if not found
       nil -> []
     end
   end

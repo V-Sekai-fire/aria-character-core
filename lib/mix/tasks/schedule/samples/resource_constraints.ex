@@ -1,20 +1,16 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Mix.Tasks.Schedule.Samples.ResourceConstraints do
-  @moduledoc """
-  Sample 2: Resource-Constrained Scheduling
-  Demonstrates resource allocation and capacity management with concrete tasks under 6 minutes.
-  """
-
+  @moduledoc "Sample 2: Resource-Constrained Scheduling\nDemonstrates resource allocation and capacity management with concrete tasks under 6 minutes.\n"
   alias AriaEngine.Scheduler
   alias AriaEngine.Scheduler.Resource
   alias Mix.Tasks.Schedule.Samples.Helpers
 
   def run do
-    IO.puts("\n" <> IO.ANSI.yellow() <> "🔧 Sample 2: Resource-Constrained Scheduling" <> IO.ANSI.reset())
+    IO.puts(
+      "\n" <> IO.ANSI.yellow() <> "🔧 Sample 2: Resource-Constrained Scheduling" <> IO.ANSI.reset()
+    )
+
     IO.puts("Demonstrates resource allocation and capacity management")
-    
+
     activities = [
       %{
         "id" => "install_frontend_tools",
@@ -208,8 +204,6 @@ defmodule Mix.Tasks.Schedule.Samples.ResourceConstraints do
         "dependencies" => ["create_database_models"],
         "required_resources" => ["developer"]
       },
-      
-      # Independent maintenance activities (time fillers)
       %{
         "id" => "update_project_documentation",
         "duration" => "PT4M",
@@ -247,26 +241,19 @@ defmodule Mix.Tasks.Schedule.Samples.ResourceConstraints do
         "required_resources" => ["developer"]
       }
     ]
-    
-    resources = [
-      %Resource{
-        id: "developer",
-        type: :human,
-        capacity: 1,  # Only one developer available
-        current_usage: 0
-      }
-    ]
-    
+
+    resources = [%Resource{id: "developer", type: :human, capacity: 1, current_usage: 0}]
     base_datetime = DateTime.utc_now()
-    
+
     case Scheduler.schedule_activities(
-      "Resource Constrained Project",
-      activities,
-      base_datetime: base_datetime,
-      resources: resources
-    ) do
+           "Resource Constrained Project",
+           activities,
+           base_datetime: base_datetime,
+           resources: resources
+         ) do
       {:ok, result} ->
         Helpers.print_schedule_result(result, "Tasks competing for limited developer resource")
+
       {:error, reason} ->
         IO.puts(IO.ANSI.red() <> "❌ Scheduling failed: #{reason}" <> IO.ANSI.reset())
     end

@@ -1,17 +1,6 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Scheduler.EntityManager do
-  @moduledoc """
-  Entity assignment and management for the scheduler.
-
-  Handles entity capability matching, assignment, and availability tracking
-  for activities with specific capability requirements.
-  """
-
+  @moduledoc "Entity assignment and management for the scheduler.\n\nHandles entity capability matching, assignment, and availability tracking\nfor activities with specific capability requirements.\n"
   require Logger
-
-  # Type definitions
   @type entity :: AriaEngine.Scheduler.Entity.t()
   @type activity :: AriaEngine.Scheduler.activity()
   @type state :: AriaEngine.Scheduler.state()
@@ -39,10 +28,7 @@ defmodule AriaEngine.Scheduler.EntityManager do
           min_workload: non_neg_integer(),
           workload_variance: float()
         }
-
-  @doc """
-  Assign an entity to an activity based on capability requirements.
-  """
+  @doc "Assign an entity to an activity based on capability requirements.\n"
   @spec assign_entity_for_activity(activity(), entity_list()) :: entity() | nil
   def assign_entity_for_activity(activity, entities) do
     required_capabilities = Map.get(activity, :required_capabilities, [])
@@ -58,27 +44,20 @@ defmodule AriaEngine.Scheduler.EntityManager do
     end
   end
 
-  @doc """
-  Find the best available entity for an activity.
-
-  Considers both capability matching and current availability.
-  """
+  @doc "Find the best available entity for an activity.\n\nConsiders both capability matching and current availability.\n"
   @spec find_best_available_entity(state(), activity(), entity_list()) :: entity() | nil
   def find_best_available_entity(state, activity, entities) do
-    # Return nil if no entities available
     if Enum.empty?(entities) do
       nil
     else
       required_capabilities = Map.get(activity, :required_capabilities, [])
 
       if Enum.empty?(required_capabilities) do
-        # If no specific capabilities required, find any available entity
         find_any_available_entity(state, entities)
       else
-        # Find entity with required capabilities that is available
         entities
         |> Enum.filter(fn entity ->
-          is_available = AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
+          is_available = AriaEngine.State.matches_exactly?(state, entity.id, "available", true)
 
           has_capabilities =
             Enum.all?(required_capabilities, fn cap ->
@@ -92,15 +71,13 @@ defmodule AriaEngine.Scheduler.EntityManager do
     end
   end
 
-  @doc """
-  Get entity utilization metrics.
-  """
+  @doc "Get entity utilization metrics.\n"
   @spec get_entity_utilization(state(), entity_list()) :: %{entity_id() => utilization_metrics()}
   def get_entity_utilization(state, entities) do
     entities
     |> Enum.map(fn entity ->
-      is_available = AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
-      current_activity = AriaEngine.StateV2.get_fact(state, entity.id, "current_activity")
+      is_available = AriaEngine.State.matches_exactly?(state, entity.id, "available", true)
+      current_activity = AriaEngine.State.get_fact(state, entity.id, "current_activity")
 
       utilization_status =
         cond do
@@ -120,64 +97,46 @@ defmodule AriaEngine.Scheduler.EntityManager do
     |> Enum.into(%{})
   end
 
-  @doc """
-  Initialize entity states in the planning state.
-  """
+  @doc "Initialize entity states in the planning state.\n"
   def initialize_entity_states(state, entities) do
     Enum.reduce(entities, state, fn entity, acc_state ->
       acc_state
-      |> AriaEngine.StateV2.set_fact(entity.id, "available", true)
-      |> AriaEngine.StateV2.set_fact(entity.id, "current_activity", nil)
-      |> AriaEngine.StateV2.set_fact(entity.id, "capabilities", entity.capabilities || [])
-      |> AriaEngine.StateV2.set_fact(entity.id, "entity_type", Map.get(entity, :type, "generic"))
+      |> AriaEngine.State.set_fact(entity.id, "available", true)
+      |> AriaEngine.State.set_fact(entity.id, "current_activity", nil)
+      |> AriaEngine.State.set_fact(entity.id, "capabilities", entity.capabilities || [])
+      |> AriaEngine.State.set_fact(entity.id, "entity_type", Map.get(entity, :type, "generic"))
     end)
   end
 
-  @doc """
-  Reserve an entity for an activity.
-  """
+  @doc "Reserve an entity for an activity.\n"
   def reserve_entity(state, entity_id, activity_id) do
     state
-    |> AriaEngine.StateV2.set_fact(entity_id, "available", false)
-    |> AriaEngine.StateV2.set_fact(entity_id, "current_activity", activity_id)
-    |> AriaEngine.StateV2.set_fact(entity_id, "reserved_at", DateTime.utc_now())
+    |> AriaEngine.State.set_fact(entity_id, "available", false)
+    |> AriaEngine.State.set_fact(entity_id, "current_activity", activity_id)
+    |> AriaEngine.State.set_fact(entity_id, "reserved_at", DateTime.utc_now())
   end
 
-  @doc """
-  Release an entity from an activity.
-  """
+  @doc "Release an entity from an activity.\n"
   def release_entity(state, entity_id) do
     state
-    |> AriaEngine.StateV2.set_fact(entity_id, "available", true)
-    |> AriaEngine.StateV2.set_fact(entity_id, "current_activity", nil)
-    |> AriaEngine.StateV2.set_fact(entity_id, "released_at", DateTime.utc_now())
+    |> AriaEngine.State.set_fact(entity_id, "available", true)
+    |> AriaEngine.State.set_fact(entity_id, "current_activity", nil)
+    |> AriaEngine.State.set_fact(entity_id, "released_at", DateTime.utc_now())
   end
 
-  @doc """
-  Check if an entity has the required capabilities.
-  """
+  @doc "Check if an entity has the required capabilities.\n"
   def entity_has_capabilities?(entity, required_capabilities) do
     entity_capabilities = entity.capabilities || []
-
-    Enum.all?(required_capabilities, fn cap ->
-      Enum.member?(entity_capabilities, cap)
-    end)
+    Enum.all?(required_capabilities, fn cap -> Enum.member?(entity_capabilities, cap) end)
   end
 
-  @doc """
-  Get entities by capability.
-  """
+  @doc "Get entities by capability.\n"
   def get_entities_by_capability(entities, capability) do
-    Enum.filter(entities, fn entity ->
-      Enum.member?(entity.capabilities || [], capability)
-    end)
+    Enum.filter(entities, fn entity -> Enum.member?(entity.capabilities || [], capability) end)
   end
 
-  @doc """
-  Calculate entity workload distribution.
-  """
+  @doc "Calculate entity workload distribution.\n"
   def calculate_workload_distribution(activities, entities) do
-    # Count activities assigned to each entity
     entity_workloads =
       entities
       |> Enum.map(fn entity ->
@@ -198,29 +157,27 @@ defmodule AriaEngine.Scheduler.EntityManager do
       end)
       |> Enum.into(%{})
 
-    # Calculate distribution metrics
     workload_values =
-      entity_workloads
-      |> Enum.map(fn {_id, metrics} -> metrics.assigned_activities end)
+      entity_workloads |> Enum.map(fn {_id, metrics} -> metrics.assigned_activities end)
 
     %{
       entity_workloads: entity_workloads,
       total_activities: length(activities),
       average_workload:
-        if(length(entities) > 0, do: length(activities) / length(entities), else: 0),
+        if length(entities) > 0 do
+          length(activities) / length(entities)
+        else
+          0
+        end,
       max_workload: Enum.max(workload_values ++ [0]),
       min_workload: Enum.min(workload_values ++ [0]),
       workload_variance: calculate_variance(workload_values)
     }
   end
 
-  @doc """
-  Suggest entity optimizations.
-  """
+  @doc "Suggest entity optimizations.\n"
   def suggest_entity_optimizations(workload_distribution) do
     recommendations = []
-
-    # Check for workload imbalance
     variance = workload_distribution.workload_variance
 
     recommendations =
@@ -233,7 +190,6 @@ defmodule AriaEngine.Scheduler.EntityManager do
         recommendations
       end
 
-    # Check for overloaded entities
     overloaded =
       workload_distribution.entity_workloads
       |> Enum.filter(fn {_id, metrics} ->
@@ -252,12 +208,9 @@ defmodule AriaEngine.Scheduler.EntityManager do
         recommendations
       end
 
-    # Check for underutilized entities
     underutilized =
       workload_distribution.entity_workloads
-      |> Enum.filter(fn {_id, metrics} ->
-        metrics.assigned_activities == 0
-      end)
+      |> Enum.filter(fn {_id, metrics} -> metrics.assigned_activities == 0 end)
 
     recommendations =
       if not Enum.empty?(underutilized) do
@@ -274,27 +227,16 @@ defmodule AriaEngine.Scheduler.EntityManager do
     recommendations
   end
 
-  @doc """
-  Validate entity capability coverage.
-  """
+  @doc "Validate entity capability coverage.\n"
   def validate_capability_coverage(activities, entities) do
-    # Get all required capabilities from activities
     required_capabilities =
       activities
-      |> Enum.flat_map(fn activity ->
-        Map.get(activity, :required_capabilities, [])
-      end)
+      |> Enum.flat_map(fn activity -> Map.get(activity, :required_capabilities, []) end)
       |> Enum.uniq()
 
-    # Get all available capabilities from entities
     available_capabilities =
-      entities
-      |> Enum.flat_map(fn entity ->
-        entity.capabilities || []
-      end)
-      |> Enum.uniq()
+      entities |> Enum.flat_map(fn entity -> entity.capabilities || [] end) |> Enum.uniq()
 
-    # Find missing capabilities
     missing_capabilities = required_capabilities -- available_capabilities
 
     if Enum.empty?(missing_capabilities) do
@@ -304,18 +246,17 @@ defmodule AriaEngine.Scheduler.EntityManager do
     end
   end
 
-  # Private helper functions
-
   defp find_any_available_entity(state, entities) do
     Enum.find(entities, fn entity ->
-      AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
+      AriaEngine.State.matches_exactly?(state, entity.id, "available", true)
     end)
   end
 
-  defp select_optimal_entity([], _required_capabilities), do: nil
+  defp select_optimal_entity([], _required_capabilities) do
+    nil
+  end
 
   defp select_optimal_entity(available_entities, required_capabilities) do
-    # Select entity with best capability match (fewest extra capabilities)
     available_entities
     |> Enum.min_by(fn entity ->
       extra_capabilities = (entity.capabilities || []) -- required_capabilities
@@ -324,18 +265,21 @@ defmodule AriaEngine.Scheduler.EntityManager do
   end
 
   defp calculate_availability_score(entity, state) do
-    is_available = AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
+    is_available = AriaEngine.State.matches_exactly?(state, entity.id, "available", true)
     capability_count = length(entity.capabilities || [])
 
-    base_score = if is_available, do: 100, else: 0
-    # Max 50 bonus points
-    capability_bonus = min(capability_count * 5, 50)
+    base_score =
+      if is_available do
+        100
+      else
+        0
+      end
 
+    capability_bonus = min(capability_count * 5, 50)
     base_score + capability_bonus
   end
 
   defp calculate_workload_score(activities) do
-    # Simple workload score based on activity count and estimated duration
     total_duration =
       activities
       |> Enum.map(fn activity ->
@@ -344,7 +288,6 @@ defmodule AriaEngine.Scheduler.EntityManager do
         cond do
           is_map(duration_val) and Map.has_key?(duration_val, :start) and
               Map.has_key?(duration_val, :end) ->
-            # Fixed interval: use difference in seconds
             {:ok, start_dt, _} = DateTime.from_iso8601(duration_val[:start])
             {:ok, end_dt, _} = DateTime.from_iso8601(duration_val[:end])
             DateTime.diff(end_dt, start_dt)
@@ -369,21 +312,16 @@ defmodule AriaEngine.Scheduler.EntityManager do
       |> Enum.sum()
 
     activity_count = length(activities)
-
-    # Weighted score: duration matters more than count
     total_duration * 2 + activity_count
   end
 
-  defp calculate_variance(values) when length(values) <= 1, do: 0.0
+  defp calculate_variance(values) when length(values) <= 1 do
+    0.0
+  end
 
   defp calculate_variance(values) do
     mean = Enum.sum(values) / length(values)
-
-    variance_sum =
-      values
-      |> Enum.map(fn value -> :math.pow(value - mean, 2) end)
-      |> Enum.sum()
-
+    variance_sum = values |> Enum.map(fn value -> :math.pow(value - mean, 2) end) |> Enum.sum()
     variance_sum / length(values)
   end
 end

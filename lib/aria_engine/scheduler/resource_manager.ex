@@ -1,21 +1,8 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Scheduler.ResourceManager do
-  @moduledoc """
-  Resource allocation and management for the scheduler.
-
-  Handles resource availability checking, allocation, and release operations
-  for activities with resource requirements.
-  """
-
+  @moduledoc "Resource allocation and management for the scheduler.\n\nHandles resource availability checking, allocation, and release operations\nfor activities with resource requirements.\n"
   require Logger
 
-  @doc """
-  Allocate resources for an activity.
-
-  Checks if required capabilities and resources are available, then allocates them.
-  """
+  @doc "Allocate resources for an activity.\n\nChecks if required capabilities and resources are available, then allocates them.\n"
   def allocate_resources_for_activity(
         state,
         activity_id,
@@ -24,30 +11,24 @@ defmodule AriaEngine.Scheduler.ResourceManager do
         entities,
         resources
       ) do
-    # Find available entity with required capabilities
     available_entity =
       find_available_entity_with_capabilities(state, required_capabilities, entities)
 
-    # Check resource availability
     resources_available =
       Enum.all?(required_resources, fn resource_id ->
         check_single_resource_availability(state, resource_id, resources)
       end)
 
     if available_entity and resources_available do
-      # Allocate entity and resources
       updated_state =
         state
-        |> AriaEngine.StateV2.set_fact(available_entity.id, "current_activity", activity_id)
-        |> AriaEngine.StateV2.set_fact(available_entity.id, "available", false)
+        |> AriaEngine.State.set_fact(available_entity.id, "current_activity", activity_id)
+        |> AriaEngine.State.set_fact(available_entity.id, "available", false)
 
-      # Update resource usage
       final_state =
         Enum.reduce(required_resources, updated_state, fn resource_id, acc_state ->
-          current_usage =
-            AriaEngine.StateV2.get_fact(acc_state, resource_id, "current_usage") || 0
-
-          AriaEngine.StateV2.set_fact(acc_state, resource_id, "current_usage", current_usage + 1)
+          current_usage = AriaEngine.State.get_fact(acc_state, resource_id, "current_usage") || 0
+          AriaEngine.State.set_fact(acc_state, resource_id, "current_usage", current_usage + 1)
         end)
 
       {:ok, final_state}
@@ -56,40 +37,33 @@ defmodule AriaEngine.Scheduler.ResourceManager do
     end
   end
 
-  @doc """
-  Release resources for an activity.
-
-  Frees up entity and decrements resource usage counters.
-  """
+  @doc "Release resources for an activity.\n\nFrees up entity and decrements resource usage counters.\n"
   def release_resources_for_activity(state, activity_id, required_resources, entities) do
-    # Find entity currently assigned to this activity
     assigned_entity =
       if Enum.empty?(entities) do
         nil
       else
         Enum.find(entities, fn entity ->
-          current_activity = AriaEngine.StateV2.get_fact(state, entity.id, "current_activity")
+          current_activity = AriaEngine.State.get_fact(state, entity.id, "current_activity")
           current_activity == activity_id
         end)
       end
 
-    # Release entity
     updated_state =
       if assigned_entity do
         state
-        |> AriaEngine.StateV2.set_fact(assigned_entity.id, "current_activity", nil)
-        |> AriaEngine.StateV2.set_fact(assigned_entity.id, "available", true)
+        |> AriaEngine.State.set_fact(assigned_entity.id, "current_activity", nil)
+        |> AriaEngine.State.set_fact(assigned_entity.id, "available", true)
       else
         state
       end
 
-    # Release resources
     final_state =
       Enum.reduce(required_resources, updated_state, fn resource_id, acc_state ->
-        current_usage = AriaEngine.StateV2.get_fact(acc_state, resource_id, "current_usage") || 0
+        current_usage = AriaEngine.State.get_fact(acc_state, resource_id, "current_usage") || 0
 
         if current_usage > 0 do
-          AriaEngine.StateV2.set_fact(acc_state, resource_id, "current_usage", current_usage - 1)
+          AriaEngine.State.set_fact(acc_state, resource_id, "current_usage", current_usage - 1)
         else
           acc_state
         end
@@ -98,9 +72,7 @@ defmodule AriaEngine.Scheduler.ResourceManager do
     {:ok, final_state}
   end
 
-  @doc """
-  Check if resources are available for an activity.
-  """
+  @doc "Check if resources are available for an activity.\n"
   def check_resource_availability(
         state,
         required_capabilities,
@@ -108,7 +80,6 @@ defmodule AriaEngine.Scheduler.ResourceManager do
         entities,
         resources
       ) do
-    # Check if there's an available entity with required capabilities
     entity_available =
       if Enum.empty?(required_capabilities) do
         true
@@ -116,7 +87,6 @@ defmodule AriaEngine.Scheduler.ResourceManager do
         find_available_entity_with_capabilities(state, required_capabilities, entities) != nil
       end
 
-    # Check if all required resources have capacity
     resources_available =
       Enum.all?(required_resources, fn resource_id ->
         check_single_resource_availability(state, resource_id, resources)
@@ -125,16 +95,13 @@ defmodule AriaEngine.Scheduler.ResourceManager do
     entity_available and resources_available
   end
 
-  @doc """
-  Find an available entity with the required capabilities.
-  """
+  @doc "Find an available entity with the required capabilities.\n"
   def find_available_entity_with_capabilities(state, required_capabilities, entities) do
-    # Return nil if no entities available
     if Enum.empty?(entities) do
       nil
     else
       Enum.find(entities, fn entity ->
-        is_available = AriaEngine.StateV2.matches_exactly?(state, entity.id, "available", true)
+        is_available = AriaEngine.State.matches_exactly?(state, entity.id, "available", true)
 
         has_capabilities =
           Enum.all?(required_capabilities, fn cap ->
@@ -146,23 +113,19 @@ defmodule AriaEngine.Scheduler.ResourceManager do
     end
   end
 
-  @doc """
-  Check if a single resource has available capacity.
-  """
+  @doc "Check if a single resource has available capacity.\n"
   def check_single_resource_availability(state, resource_id, resources) do
     resource = Enum.find(resources, fn r -> r.id == resource_id end)
 
     if resource do
-      current_usage = AriaEngine.StateV2.get_fact(state, resource_id, "current_usage") || 0
+      current_usage = AriaEngine.State.get_fact(state, resource_id, "current_usage") || 0
       current_usage < resource.capacity
     else
       false
     end
   end
 
-  @doc """
-  Create resource management actions for the domain.
-  """
+  @doc "Create resource management actions for the domain.\n"
   def create_resource_management_actions(resources) do
     resources
     |> Enum.flat_map(fn resource ->
@@ -174,13 +137,11 @@ defmodule AriaEngine.Scheduler.ResourceManager do
     |> Enum.into(%{})
   end
 
-  @doc """
-  Get current resource utilization snapshot.
-  """
+  @doc "Get current resource utilization snapshot.\n"
   def get_resource_utilization_snapshot(state, resources) do
     resources
     |> Enum.map(fn resource ->
-      current_usage = AriaEngine.StateV2.get_fact(state, resource.id, "current_usage") || 0
+      current_usage = AriaEngine.State.get_fact(state, resource.id, "current_usage") || 0
 
       utilization_percentage =
         if resource.capacity > 0 do
@@ -200,11 +161,8 @@ defmodule AriaEngine.Scheduler.ResourceManager do
     |> Enum.into(%{})
   end
 
-  @doc """
-  Validate resource constraints for a set of activities.
-  """
+  @doc "Validate resource constraints for a set of activities.\n"
   def validate_resource_constraints(activities, resources) do
-    # Check if any activity requires more resources than available capacity
     violations =
       activities
       |> Enum.flat_map(fn activity ->
@@ -230,14 +188,12 @@ defmodule AriaEngine.Scheduler.ResourceManager do
     end
   end
 
-  # Private helper functions
-
   defp create_allocate_resource_action(resource) do
     fn _args, state ->
-      current_usage = AriaEngine.StateV2.get_fact(state, resource.id, "current_usage") || 0
+      current_usage = AriaEngine.State.get_fact(state, resource.id, "current_usage") || 0
 
       if current_usage < resource.capacity do
-        AriaEngine.StateV2.set_fact(state, resource.id, "current_usage", current_usage + 1)
+        AriaEngine.State.set_fact(state, resource.id, "current_usage", current_usage + 1)
       else
         false
       end
@@ -246,10 +202,10 @@ defmodule AriaEngine.Scheduler.ResourceManager do
 
   defp create_release_resource_action(resource) do
     fn _args, state ->
-      current_usage = AriaEngine.StateV2.get_fact(state, resource.id, "current_usage") || 0
+      current_usage = AriaEngine.State.get_fact(state, resource.id, "current_usage") || 0
 
       if current_usage > 0 do
-        AriaEngine.StateV2.set_fact(state, resource.id, "current_usage", current_usage - 1)
+        AriaEngine.State.set_fact(state, resource.id, "current_usage", current_usage - 1)
       else
         state
       end

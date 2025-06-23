@@ -1,24 +1,17 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Membrane.ValidationPipelineFilterTest do
   use ExUnit.Case, async: true
-
   alias AriaEngine.Membrane.ValidationPipelineFilter
   alias Timeline.Internal.STN
 
-  describe "ValidationPipelineFilter with failing STN cases" do
+  describe("ValidationPipelineFilter with failing STN cases") do
     test "detects inconsistent STN through validation pipeline" do
-      # Create an STN that should be inconsistent
-      _stn = STN.new()
-      |> STN.add_time_point("task_a")
-      |> STN.add_time_point("task_b")
-      # Task A must finish at least 20 time units before Task B starts
-      |> STN.add_constraint("task_a", "task_b", {20, 30})
-      # But Task B must finish at least 20 time units before Task A starts (impossible!)
-      |> STN.add_constraint("task_b", "task_a", {20, 30})
+      _stn =
+        STN.new()
+        |> STN.add_time_point("task_a")
+        |> STN.add_time_point("task_b")
+        |> STN.add_constraint("task_a", "task_b", {20, 30})
+        |> STN.add_constraint("task_b", "task_a", {20, 30})
 
-      # Convert STN to MCP schedule_activities format
       mcp_request = %{
         "id" => "test_inconsistent_stn",
         "jsonrpc" => "2.0",
@@ -37,7 +30,7 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilterTest do
                 }
               },
               %{
-                "id" => "task_b", 
+                "id" => "task_b",
                 "name" => "Task B",
                 "duration" => %{
                   "start" => "2025-06-20T10:00:00Z",
@@ -67,23 +60,11 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilterTest do
         }
       }
 
-      # Create buffer with the MCP request
-      buffer = %Membrane.Buffer{
-        payload: Jason.encode!(mcp_request),
-        metadata: %{}
-      }
-
-      # Initialize filter
-      {[], state} = ValidationPipelineFilter.handle_init(nil, %{timeout: 30_000})
-
-      # Process the buffer
+      buffer = %Membrane.Buffer{payload: Jason.encode!(mcp_request), metadata: %{}}
+      {[], state} = ValidationPipelineFilter.handle_init(nil, %{timeout: 30000})
       {actions, _new_state} = ValidationPipelineFilter.handle_buffer(:input, buffer, nil, state)
-
-      # Extract the response
-      assert [{:buffer, {:output, response_buffer}}] = actions
+      assert [buffer: {:output, response_buffer}] = actions
       response = Jason.decode!(response_buffer.payload)
-
-      # The validation should detect inconsistency
       assert response["result"]["status"] in ["inconsistent", "infeasible"]
     end
 
@@ -107,7 +88,7 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilterTest do
               },
               %{
                 "id" => "middle",
-                "name" => "Middle Task", 
+                "name" => "Middle Task",
                 "duration" => %{
                   "start" => "2025-06-20T09:05:00Z",
                   "end" => "2025-06-20T09:05:00Z"
@@ -124,27 +105,9 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilterTest do
             ],
             "constraints" => %{
               "temporal_constraints" => [
-                # Start to middle: exactly 5 minutes
-                %{
-                  "from" => "start",
-                  "to" => "middle",
-                  "min_distance" => 5,
-                  "max_distance" => 5
-                },
-                # Middle to end: exactly 5 minutes
-                %{
-                  "from" => "middle", 
-                  "to" => "end",
-                  "min_distance" => 5,
-                  "max_distance" => 5
-                },
-                # But start to end: must be exactly 15 minutes (impossible with 5+5=10)
-                %{
-                  "from" => "start",
-                  "to" => "end", 
-                  "min_distance" => 15,
-                  "max_distance" => 15
-                }
+                %{"from" => "start", "to" => "middle", "min_distance" => 5, "max_distance" => 5},
+                %{"from" => "middle", "to" => "end", "min_distance" => 5, "max_distance" => 5},
+                %{"from" => "start", "to" => "end", "min_distance" => 15, "max_distance" => 15}
               ]
             },
             "entities" => [],
@@ -153,25 +116,18 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilterTest do
         }
       }
 
-      buffer = %Membrane.Buffer{
-        payload: Jason.encode!(mcp_request),
-        metadata: %{}
-      }
-
-      {[], state} = ValidationPipelineFilter.handle_init(nil, %{timeout: 30_000})
+      buffer = %Membrane.Buffer{payload: Jason.encode!(mcp_request), metadata: %{}}
+      {[], state} = ValidationPipelineFilter.handle_init(nil, %{timeout: 30000})
       {actions, _new_state} = ValidationPipelineFilter.handle_buffer(:input, buffer, nil, state)
-
-      assert [{:buffer, {:output, response_buffer}}] = actions
+      assert [buffer: {:output, response_buffer}] = actions
       response = Jason.decode!(response_buffer.payload)
-
-      # Should detect the over-constrained nature
       assert response["result"]["status"] in ["inconsistent", "infeasible"]
     end
 
     test "handles boundary conditions gracefully" do
       mcp_request = %{
         "id" => "test_boundary",
-        "jsonrpc" => "2.0", 
+        "jsonrpc" => "2.0",
         "method" => "tools/call",
         "params" => %{
           "name" => "schedule_activities",
@@ -190,7 +146,7 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilterTest do
                 "id" => "b",
                 "name" => "Task B",
                 "duration" => %{
-                  "start" => "2025-06-20T10:00:00Z", 
+                  "start" => "2025-06-20T10:00:00Z",
                   "end" => "2025-06-20T10:00:00Z"
                 }
               }
@@ -211,28 +167,20 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilterTest do
         }
       }
 
-      buffer = %Membrane.Buffer{
-        payload: Jason.encode!(mcp_request),
-        metadata: %{}
-      }
-
-      {[], state} = ValidationPipelineFilter.handle_init(nil, %{timeout: 30_000})
+      buffer = %Membrane.Buffer{payload: Jason.encode!(mcp_request), metadata: %{}}
+      {[], state} = ValidationPipelineFilter.handle_init(nil, %{timeout: 30000})
       {actions, _new_state} = ValidationPipelineFilter.handle_buffer(:input, buffer, nil, state)
-
-      assert [{:buffer, {:output, response_buffer}}] = actions
+      assert [buffer: {:output, response_buffer}] = actions
       response = Jason.decode!(response_buffer.payload)
-
-      # Should handle gracefully without crashing
       assert Map.has_key?(response, "result")
       assert is_binary(response["result"]["status"])
     end
 
     test "compares hybrid vs minizinc solver results" do
-      # Create a simple, solvable case to test comparison logic
       mcp_request = %{
         "id" => "test_comparison",
         "jsonrpc" => "2.0",
-        "method" => "tools/call", 
+        "method" => "tools/call",
         "params" => %{
           "name" => "schedule_activities",
           "arguments" => %{
@@ -254,22 +202,14 @@ defmodule AriaEngine.Membrane.ValidationPipelineFilterTest do
         }
       }
 
-      buffer = %Membrane.Buffer{
-        payload: Jason.encode!(mcp_request),
-        metadata: %{}
-      }
-
-      {[], state} = ValidationPipelineFilter.handle_init(nil, %{timeout: 30_000})
+      buffer = %Membrane.Buffer{payload: Jason.encode!(mcp_request), metadata: %{}}
+      {[], state} = ValidationPipelineFilter.handle_init(nil, %{timeout: 30000})
       {actions, _new_state} = ValidationPipelineFilter.handle_buffer(:input, buffer, nil, state)
-
-      assert [{:buffer, {:output, response_buffer}}] = actions
+      assert [buffer: {:output, response_buffer}] = actions
       response = Jason.decode!(response_buffer.payload)
-
-      # Should have validation results comparing both solvers
       assert Map.has_key?(response["result"], "validation_type")
       assert Map.has_key?(response["result"], "hybrid_result")
-      
-      # MiniZinc result depends on availability
+
       if state.minizinc_available do
         assert Map.has_key?(response["result"], "minizinc_result")
       end

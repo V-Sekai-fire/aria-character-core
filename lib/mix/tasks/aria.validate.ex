@@ -1,63 +1,22 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Mix.Tasks.Aria.Validate do
-  @moduledoc """
-  Validate scheduling solutions by comparing different solvers.
-
-  ## Usage
-
-      mix aria.validate --problem "test_problem"
-      mix aria.validate --problem "scaling_test" --activities 5
-      mix aria.validate --help
-
-  ## Options
-
-    * `--problem` - Problem name (required)
-    * `--activities` - Number of activities to generate (1-6, default: random)
-    * `--timeout` - Timeout in seconds for each solver (default: 30)
-    * `--compare` - Compare solution quality between solvers
-    * `--detailed` - Include detailed solver analysis
-    * `--output` - Output file for results (JSON format)
-    * `--help` - Show this help
-
-  ## Examples
-
-      # Validate with generated problem
-      mix aria.validate --problem "test_scaling" --activities 3
-
-      # Compare solvers with detailed analysis
-      mix aria.validate --problem "comparison_test" --compare --detailed
-
-      # Save results to file
-      mix aria.validate --problem "benchmark" --output results.json
-  """
-
+  @moduledoc "Validate scheduling solutions by comparing different solvers.\n\n## Usage\n\n    mix aria.validate --problem \"test_problem\"\n    mix aria.validate --problem \"scaling_test\" --activities 5\n    mix aria.validate --help\n\n## Options\n\n  * `--problem` - Problem name (required)\n  * `--activities` - Number of activities to generate (1-6, default: random)\n  * `--timeout` - Timeout in seconds for each solver (default: 30)\n  * `--compare` - Compare solution quality between solvers\n  * `--detailed` - Include detailed solver analysis\n  * `--output` - Output file for results (JSON format)\n  * `--help` - Show this help\n\n## Examples\n\n    # Validate with generated problem\n    mix aria.validate --problem \"test_scaling\" --activities 3\n\n    # Compare solvers with detailed analysis\n    mix aria.validate --problem \"comparison_test\" --compare --detailed\n\n    # Save results to file\n    mix aria.validate --problem \"benchmark\" --output results.json\n"
   use Mix.Task
   require Logger
-
   @shortdoc "Validate scheduling solutions by comparing different solvers"
-
-  @switches [
-    problem: :string,
-    activities: :integer,
-    timeout: :integer,
-    compare: :boolean,
-    detailed: :boolean,
-    output: :string,
-    help: :boolean
-  ]
-
-  @aliases [
-    p: :problem,
-    a: :activities,
-    t: :timeout,
-    c: :compare,
-    d: :detailed,
-    o: :output,
-    h: :help
-  ]
-
+  @switches problem: :string,
+            activities: :integer,
+            timeout: :integer,
+            compare: :boolean,
+            detailed: :boolean,
+            output: :string,
+            help: :boolean
+  @aliases p: :problem,
+           a: :activities,
+           t: :timeout,
+           c: :compare,
+           d: :detailed,
+           o: :output,
+           h: :help
   def run(args) do
     {opts, _argv, _errors} = OptionParser.parse(args, switches: @switches, aliases: @aliases)
 
@@ -71,47 +30,40 @@ defmodule Mix.Tasks.Aria.Validate do
       System.halt(1)
     end
 
-    # Start the application
     Mix.Task.run("app.start")
-
     problem_name = opts[:problem]
     activity_count = opts[:activities]
-    
     Mix.shell().info("🔍 Starting validation for problem: #{problem_name}")
-
-    # Generate validation problem
     generated_problem = generate_validation_problem(problem_name, activity_count)
-    
-    Mix.shell().info("🎲 Generated problem with #{length(generated_problem.activities)} activities")
+
+    Mix.shell().info(
+      "🎲 Generated problem with #{length(generated_problem.activities)} activities"
+    )
+
     Mix.shell().info("📊 Complexity: #{generated_problem.metadata.complexity}")
 
-    # Run validation
     case run_validation(generated_problem, opts) do
       {:ok, results} ->
         Mix.shell().info("✅ Validation completed successfully")
         display_validation_results(results)
-        
+
         if opts[:output] do
           save_results_to_file(results, opts[:output])
         end
-
     end
   end
 
   defp generate_validation_problem(base_name, activity_count) do
-    # Generate deterministic problem ID based on timestamp
     timestamp = System.system_time(:microsecond)
     problem_id = rem(timestamp, 100_000)
-
-    # Use cryptographic randomization if activity_count not specified
     final_activity_count = activity_count || generate_random_activity_count()
-
     generate_scaling_task_problem(base_name, problem_id, final_activity_count)
   end
 
   defp generate_random_activity_count do
-    # Use cryptographic hash for truly random distribution
-    entropy_data = "#{System.system_time(:microsecond)}_#{:erlang.unique_integer([:positive])}_#{:erlang.system_time(:nanosecond)}"
+    entropy_data =
+      "#{System.system_time(:microsecond)}_#{:erlang.unique_integer([:positive])}_#{:erlang.system_time(:nanosecond)}"
+
     crypto_hash = :crypto.hash(:sha256, entropy_data)
     <<hash_int::256>> = crypto_hash
     rem(hash_int, 6) + 1
@@ -166,7 +118,12 @@ defmodule Mix.Tasks.Aria.Validate do
         "duration" => "PT#{duration}M",
         "required_capabilities" => ["basic", "processing"],
         "required_resources" => ["workstation_#{rem(i - 1, 2) + 1}"],
-        "dependencies" => if(i > 1, do: ["task_#{i - 1}"], else: [])
+        "dependencies" =>
+          if i > 1 do
+            ["task_#{i - 1}"]
+          else
+            []
+          end
       }
     end
   end
@@ -197,19 +154,28 @@ defmodule Mix.Tasks.Aria.Validate do
     Map.put(base_resources, "shared_storage", %{"type" => "storage", "capacity" => count})
   end
 
-  defp determine_complexity(1), do: "trivial"
-  defp determine_complexity(2), do: "simple"
-  defp determine_complexity(n) when n in [3, 4], do: "medium"
-  defp determine_complexity(_), do: "high"
+  defp determine_complexity(1) do
+    "trivial"
+  end
+
+  defp determine_complexity(2) do
+    "simple"
+  end
+
+  defp determine_complexity(n) when n in [3, 4] do
+    "medium"
+  end
+
+  defp determine_complexity(_) do
+    "high"
+  end
 
   defp run_validation(problem, opts) do
     timeout = opts[:timeout] || 30
     compare_solutions = opts[:compare] || false
     detailed_analysis = opts[:detailed] || false
-
     Mix.shell().info("🔧 Running validation with timeout: #{timeout}s")
 
-    # Convert problem to scheduler format
     params = %{
       "schedule_name" => problem.name,
       "activities" => problem.activities,
@@ -218,19 +184,19 @@ defmodule Mix.Tasks.Aria.Validate do
       "constraints" => problem.constraints
     }
 
-    # Run primary scheduler
     Mix.shell().info("🚀 Running primary scheduler...")
     primary_start = System.monotonic_time(:millisecond)
-    
-    primary_result = case call_scheduler(params, %{simulation: true, verbose: 1}) do
-      {:ok, result} -> 
-        primary_end = System.monotonic_time(:millisecond)
-        {:ok, result, primary_end - primary_start}
-      {:error, reason} -> 
-        {:error, reason}
-    end
 
-    # Prepare validation results
+    primary_result =
+      case call_scheduler(params, %{simulation: true, verbose: 1}) do
+        {:ok, result} ->
+          primary_end = System.monotonic_time(:millisecond)
+          {:ok, result, primary_end - primary_start}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
+
     validation_results = %{
       problem: problem,
       primary_solver: format_solver_result("AriaEngine.Scheduler", primary_result),
@@ -242,13 +208,13 @@ defmodule Mix.Tasks.Aria.Validate do
       timestamp: DateTime.utc_now()
     }
 
-    # Add comparison if requested
-    final_results = if compare_solutions do
-      Mix.shell().info("🔄 Running comparison analysis...")
-      add_comparison_analysis(validation_results, params)
-    else
-      validation_results
-    end
+    final_results =
+      if compare_solutions do
+        Mix.shell().info("🔄 Running comparison analysis...")
+        add_comparison_analysis(validation_results, params)
+      else
+        validation_results
+      end
 
     {:ok, final_results}
   end
@@ -259,18 +225,26 @@ defmodule Mix.Tasks.Aria.Validate do
     entities = params["entities"] || []
     resources = params["resources"] || %{}
     constraints = params["constraints"] || %{}
-
     simulation_mode = opts[:simulation] || false
     verbose = opts[:verbose] || 1
     activity_log = opts[:log_activities] || false
 
-    # Ensure activities and entities are lists
-    activities_list = if is_list(activities), do: activities, else: []
-    entities_list = if is_list(entities), do: entities, else: []
+    activities_list =
+      if is_list(activities) do
+        activities
+      else
+        []
+      end
 
-    # Call the scheduler with deterministic base datetime
+    entities_list =
+      if is_list(entities) do
+        entities
+      else
+        []
+      end
+
     base_datetime = ~U[2025-01-01 00:00:00Z]
-    
+
     AriaEngine.Scheduler.Core.schedule_with_enhanced_features(
       schedule_name,
       activities_list,
@@ -297,18 +271,11 @@ defmodule Mix.Tasks.Aria.Validate do
         }
 
       {:error, reason} ->
-        %{
-          solver: solver_name,
-          status: "error",
-          error: reason,
-          execution_time_ms: nil
-        }
+        %{solver: solver_name, status: "error", error: reason, execution_time_ms: nil}
     end
   end
 
   defp add_comparison_analysis(results, _params) do
-    # For now, just add placeholder comparison analysis
-    # In a full implementation, this would run additional solvers
     comparison = %{
       solvers_compared: ["AriaEngine.Scheduler"],
       comparison_metrics: %{
@@ -327,15 +294,15 @@ defmodule Mix.Tasks.Aria.Validate do
     Mix.shell().info("Problem: #{results.problem.name}")
     Mix.shell().info("Activities: #{length(results.problem.activities)}")
     Mix.shell().info("Complexity: #{results.problem.metadata.complexity}")
-
     primary = results.primary_solver
-    Mix.shell().info("\n🚀 Primary Solver (#{primary.solver}):")
+    Mix.shell().info("
+🚀 Primary Solver (#{primary.solver}):")
     Mix.shell().info("  Status: #{primary.status}")
-    
+
     if primary.status == "success" do
       Mix.shell().info("  Execution Time: #{primary.execution_time_ms}ms")
       Mix.shell().info("  Schedule Items: #{length(primary.schedule)}")
-      
+
       if primary.analysis != %{} do
         Mix.shell().info("  Analysis: #{inspect(primary.analysis)}")
       end
@@ -357,6 +324,7 @@ defmodule Mix.Tasks.Aria.Validate do
         case File.write(output_path, json) do
           :ok ->
             Mix.shell().info("💾 Results saved to #{output_path}")
+
           {:error, reason} ->
             Mix.shell().error("❌ Failed to write to #{output_path}: #{inspect(reason)}")
         end

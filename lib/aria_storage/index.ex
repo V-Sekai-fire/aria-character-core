@@ -1,36 +1,7 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.Index do
-  @moduledoc """
-  Index file handling for desync-compatible format.
-
-  Supports:
-  - .caibx files (chunk index for blobs)
-  - .caidx files (chunk index for catar archives)
-  - Efficient index serialization/deserialization
-  - Index metadata and validation
-  """
-
+  @moduledoc "Index file handling for desync-compatible format.\n\nSupports:\n- .caibx files (chunk index for blobs)\n- .caidx files (chunk index for catar archives)\n- Efficient index serialization/deserialization\n- Index metadata and validation\n"
   alias AriaStorage.Chunks
-
-  defstruct [
-    # :caibx or :caidx
-    :format,
-    # List of chunk references
-    :chunks,
-    # Total size of original file
-    :total_size,
-    # Number of chunks
-    :chunk_count,
-    # Creation timestamp
-    :created_at,
-    # Index verification checksum
-    :checksum,
-    # Additional metadata
-    :metadata
-  ]
-
+  defstruct [:format, :chunks, :total_size, :chunk_count, :created_at, :checksum, :metadata]
   @type format :: :caibx | :caidx
   @type t :: %__MODULE__{
           format: format(),
@@ -41,22 +12,10 @@ defmodule AriaStorage.Index do
           checksum: binary(),
           metadata: map()
         }
-
-  @caibx_magic_header <<0xCA, 0x1B, 0x5C>>
-  @caidx_magic_header <<0xCA, 0x1D, 0x5C>>
+  @caibx_magic_header <<202, 27, 92>>
+  @caidx_magic_header <<202, 29, 92>>
   @index_version 1
-
-  @doc """
-  Creates a new index from chunks and options.
-
-  ## Parameters
-  - chunks: List of chunks to include in the index
-  - opts: Options including format, metadata, etc.
-
-  ## Returns
-  - {:ok, index} on success
-  - {:error, reason} on failure
-  """
+  @doc "Creates a new index from chunks and options.\n\n## Parameters\n- chunks: List of chunks to include in the index\n- opts: Options including format, metadata, etc.\n\n## Returns\n- {:ok, index} on success\n- {:error, reason} on failure\n"
   def create_index(chunks, opts \\ []) do
     format = Keyword.get(opts, :format, :caibx)
     metadata = Keyword.get(opts, :metadata, %{})
@@ -74,9 +33,7 @@ defmodule AriaStorage.Index do
     {:ok, index}
   end
 
-  @doc """
-  Serializes an index to binary format compatible with desync.
-  """
+  @doc "Serializes an index to binary format compatible with desync.\n"
   def serialize(%__MODULE__{format: format} = index) do
     magic =
       case format do
@@ -86,43 +43,28 @@ defmodule AriaStorage.Index do
 
     header = create_header(index)
     chunk_table = create_chunk_table(index.chunks)
-
     binary_data = magic <> header <> chunk_table
     {:ok, binary_data}
   end
 
-  @doc """
-  Deserializes an index from binary format.
-  """
+  @doc "Deserializes an index from binary format.\n"
   def deserialize(binary_data) do
     case binary_data do
-      <<@caibx_magic_header, rest::binary>> ->
-        parse_index(rest, :caibx)
-
-      <<@caidx_magic_header, rest::binary>> ->
-        parse_index(rest, :caidx)
-
-      _ ->
-        {:error, :invalid_magic_header}
+      <<@caibx_magic_header, rest::binary>> -> parse_index(rest, :caibx)
+      <<@caidx_magic_header, rest::binary>> -> parse_index(rest, :caidx)
+      _ -> {:error, :invalid_magic_header}
     end
   end
 
-  @doc """
-  Loads an index from a file.
-  """
+  @doc "Loads an index from a file.\n"
   def load_from_file(file_path) do
     case File.read(file_path) do
-      {:ok, binary_data} ->
-        deserialize(binary_data)
-
-      {:error, reason} ->
-        {:error, {:file_read, reason}}
+      {:ok, binary_data} -> deserialize(binary_data)
+      {:error, reason} -> {:error, {:file_read, reason}}
     end
   end
 
-  @doc """
-  Saves an index to a file.
-  """
+  @doc "Saves an index to a file.\n"
   def save_to_file(index, file_path) do
     with {:ok, binary} <- serialize(index),
          :ok <- File.write(file_path, binary) do
@@ -132,9 +74,7 @@ defmodule AriaStorage.Index do
     end
   end
 
-  @doc """
-  Validates an index structure.
-  """
+  @doc "Validates an index structure.\n"
   def validate(%__MODULE__{} = index) do
     with :ok <- validate_chunks(index.chunks),
          :ok <- validate_sizes(index) do
@@ -142,9 +82,7 @@ defmodule AriaStorage.Index do
     end
   end
 
-  @doc """
-  Creates an index filename based on the original file and format.
-  """
+  @doc "Creates an index filename based on the original file and format.\n"
   def create_filename(original_file, format) do
     extension =
       case format do
@@ -155,16 +93,12 @@ defmodule AriaStorage.Index do
     original_file <> extension
   end
 
-  @doc """
-  Gets chunk by ID from the index.
-  """
+  @doc "Gets chunk by ID from the index.\n"
   def get_chunk_by_id(%__MODULE__{chunks: chunks}, chunk_id) do
     Enum.find(chunks, &(&1.id == chunk_id))
   end
 
-  @doc """
-  Gets chunks in the range [start_offset, end_offset).
-  """
+  @doc "Gets chunks in the range [start_offset, end_offset).\n"
   def get_chunks_in_range(%__MODULE__{chunks: chunks}, start_offset, end_offset) do
     chunks
     |> Enum.filter(fn chunk ->
@@ -174,18 +108,12 @@ defmodule AriaStorage.Index do
     |> Enum.sort_by(& &1.offset)
   end
 
-  @doc """
-  Calculates the total compressed size of all chunks.
-  """
+  @doc "Calculates the total compressed size of all chunks.\n"
   def total_compressed_size(%__MODULE__{chunks: chunks}) do
-    chunks
-    |> Enum.map(&byte_size(&1.compressed))
-    |> Enum.sum()
+    chunks |> Enum.map(&byte_size(&1.compressed)) |> Enum.sum()
   end
 
-  @doc """
-  Gets compression ratio (compressed / uncompressed).
-  """
+  @doc "Gets compression ratio (compressed / uncompressed).\n"
   def compression_ratio(%__MODULE__{} = index) do
     compressed = total_compressed_size(index)
     uncompressed = index.total_size
@@ -197,25 +125,11 @@ defmodule AriaStorage.Index do
     end
   end
 
-  # Private functions
-
   defp create_header(index) do
     timestamp = DateTime.to_unix(index.created_at)
 
-    <<
-      # Version
-      @index_version::32-big,
-      # Number of chunks
-      index.chunk_count::32-big,
-      # Total file size
-      index.total_size::64-big,
-      # Creation timestamp
-      timestamp::64-big,
-      # Checksum length
-      byte_size(index.checksum)::16-big,
-      # Index checksum
-      index.checksum::binary
-    >>
+    <<@index_version::32-big, index.chunk_count::32-big, index.total_size::64-big,
+      timestamp::64-big, byte_size(index.checksum)::16-big, index.checksum::binary>>
   end
 
   defp create_chunk_table(chunks) do
@@ -225,24 +139,9 @@ defmodule AriaStorage.Index do
   defp serialize_chunk(chunk) do
     compressed_size = byte_size(chunk.compressed)
 
-    <<
-      # Uncompressed size
-      chunk.size::32-big,
-      # Compressed size
-      compressed_size::32-big,
-      # Offset in original file
-      chunk.offset::64-big,
-      # Chunk ID length
-      byte_size(chunk.id)::16-big,
-      # SHA512/256 chunk ID
-      chunk.id::binary,
-      # Checksum length
-      byte_size(chunk.checksum)::16-big,
-      # SHA256 checksum
-      chunk.checksum::binary,
-      # Compressed chunk data
-      chunk.compressed::binary
-    >>
+    <<chunk.size::32-big, compressed_size::32-big, chunk.offset::64-big,
+      byte_size(chunk.id)::16-big, chunk.id::binary, byte_size(chunk.checksum)::16-big,
+      chunk.checksum::binary, chunk.compressed::binary>>
   end
 
   defp parse_index(binary_data, format) do
@@ -273,15 +172,8 @@ defmodule AriaStorage.Index do
 
   defp parse_header(binary_data) do
     case binary_data do
-      <<
-        @index_version::32-big,
-        chunk_count::32-big,
-        total_size::64-big,
-        timestamp::64-big,
-        checksum_len::16-big,
-        checksum::binary-size(checksum_len),
-        rest::binary
-      >> ->
+      <<@index_version::32-big, chunk_count::32-big, total_size::64-big, timestamp::64-big,
+        checksum_len::16-big, checksum::binary-size(checksum_len), rest::binary>> ->
         header = %{
           chunk_count: chunk_count,
           total_size: total_size,
@@ -306,28 +198,16 @@ defmodule AriaStorage.Index do
 
   defp parse_chunks(binary_data, remaining, acc) when remaining > 0 do
     case parse_single_chunk(binary_data) do
-      {:ok, chunk, rest} ->
-        parse_chunks(rest, remaining - 1, [chunk | acc])
-
-      {:error, reason} ->
-        {:error, reason}
+      {:ok, chunk, rest} -> parse_chunks(rest, remaining - 1, [chunk | acc])
+      {:error, reason} -> {:error, reason}
     end
   end
 
   defp parse_single_chunk(binary_data) do
     case binary_data do
-      <<
-        size::32-big,
-        compressed_size::32-big,
-        offset::64-big,
-        id_len::16-big,
-        id::binary-size(id_len),
-        checksum_len::16-big,
-        checksum::binary-size(checksum_len),
-        compressed::binary-size(compressed_size),
-        rest::binary
-      >> ->
-        # Decompress to get original data for validation
+      <<size::32-big, compressed_size::32-big, offset::64-big, id_len::16-big,
+        id::binary-size(id_len), checksum_len::16-big, checksum::binary-size(checksum_len),
+        compressed::binary-size(compressed_size), rest::binary>> ->
         case Chunks.decompress_chunk(compressed) do
           {:ok, data} ->
             chunk = %Chunks{
@@ -359,7 +239,6 @@ defmodule AriaStorage.Index do
   end
 
   defp valid_chunk?(chunk) do
-    # Verify chunk ID matches content
     expected_id = Chunks.calculate_chunk_id(chunk.data)
     chunk.id == expected_id
   end
@@ -375,8 +254,6 @@ defmodule AriaStorage.Index do
   end
 
   defp validate_checksum(index) do
-    # In a real implementation, you'd recalculate and verify the checksum
-    # For now, we'll assume it's valid if present
     if index.checksum do
       :ok
     else

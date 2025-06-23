@@ -1,13 +1,7 @@
 defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
-  @moduledoc """
-  Handles formatting validation pipeline responses for MCP protocol.
-  """
-
+  @moduledoc "Handles formatting validation pipeline responses for MCP protocol.\n"
   require Logger
-
-  @doc """
-  Creates a comprehensive validation response in MCP format.
-  """
+  @doc "Creates a comprehensive validation response in MCP format.\n"
   def create_validation_response(
         validation_result,
         hybrid_result,
@@ -41,9 +35,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
     }
   end
 
-  @doc """
-  Formats solver result for inclusion in response.
-  """
+  @doc "Formats solver result for inclusion in response.\n"
   def format_solver_result(result, solver_name) do
     %{
       "solver" => solver_name,
@@ -55,9 +47,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
     }
   end
 
-  @doc """
-  Creates a solution tree representation for visualization.
-  """
+  @doc "Creates a solution tree representation for visualization.\n"
   def create_solution_tree(result) do
     case result.status do
       :success ->
@@ -80,10 +70,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
         }
 
       :unavailable ->
-        %{
-          "type" => "unavailable",
-          "reason" => Map.get(result, :reason, "Solver not available")
-        }
+        %{"type" => "unavailable", "reason" => Map.get(result, :reason, "Solver not available")}
 
       :unsupported ->
         %{
@@ -92,14 +79,9 @@ defmodule AriaEngine.Membrane.ValidationPipeline.ResponseFormatter do
         }
 
       _ ->
-        %{
-          "type" => "unknown",
-          "status" => Atom.to_string(result.status)
-        }
+        %{"type" => "unknown", "status" => Atom.to_string(result.status)}
     end
   end
-
-  # Private functions
 
   defp format_activity_node(activity) do
     %{

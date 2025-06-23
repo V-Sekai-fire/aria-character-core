@@ -1,18 +1,12 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Timeline.TransitionsTest do
   use ExUnit.Case, async: true
-
   alias Timeline
   alias Timeline.Interval
   alias Timeline.AgentEntity
 
-  describe "entity to agent transitions" do
+  describe("entity to agent transitions") do
     test "car becomes autonomous agent when gaining capabilities" do
       timeline = Timeline.new()
-
-      # Start as entity (parked car)
       car = AgentEntity.create_entity("car1", "Tesla Model 3", %{battery: 85})
       refute AgentEntity.is_currently_agent?(car)
 
@@ -24,7 +18,6 @@ defmodule Timeline.TransitionsTest do
           label: "Parked"
         )
 
-      # Gain autonomous capabilities
       autonomous_car = AgentEntity.add_capabilities(car, [:autonomous_driving, :decision_making])
       assert AgentEntity.is_currently_agent?(autonomous_car)
 
@@ -47,8 +40,6 @@ defmodule Timeline.TransitionsTest do
 
     test "device gains communication capability progressively" do
       timeline = Timeline.new()
-
-      # Phase 1: Basic device (entity)
       device = AgentEntity.create_entity("sensor1", "Smart Sensor", %{firmware: "1.0"})
 
       basic_interval =
@@ -59,7 +50,6 @@ defmodule Timeline.TransitionsTest do
           label: "Basic Sensing"
         )
 
-      # Phase 2: Gains communication (becomes agent)
       comm_device = AgentEntity.add_capabilities(device, [:communication])
       assert AgentEntity.is_currently_agent?(comm_device)
 
@@ -72,25 +62,19 @@ defmodule Timeline.TransitionsTest do
         )
 
       updated_timeline =
-        timeline
-        |> Timeline.add_interval(basic_interval)
-        |> Timeline.add_interval(comm_interval)
+        timeline |> Timeline.add_interval(basic_interval) |> Timeline.add_interval(comm_interval)
 
       assert Timeline.consistent?(updated_timeline)
       assert AgentEntity.has_capability?(comm_device, :communication)
     end
   end
 
-  describe "agent to entity transitions" do
+  describe("agent to entity transitions") do
     test "robot loses capabilities and becomes entity" do
       timeline = Timeline.new()
 
-      # Start as agent
       robot =
-        AgentEntity.create_agent(
-          "robot1",
-          "Industrial Robot",
-          %{model: "ABB IRB 6700"},
+        AgentEntity.create_agent("robot1", "Industrial Robot", %{model: "ABB IRB 6700"},
           capabilities: [:welding, :decision_making, :movement]
         )
 
@@ -104,7 +88,6 @@ defmodule Timeline.TransitionsTest do
           label: "Active Welding"
         )
 
-      # Lose capabilities (maintenance mode)
       inactive_robot =
         AgentEntity.remove_capabilities(robot, [:welding, :decision_making, :movement])
 
@@ -127,37 +110,27 @@ defmodule Timeline.TransitionsTest do
     end
 
     test "agent transitions to entity when all action capabilities removed" do
-      # Create agent with multiple capabilities
       worker =
-        AgentEntity.create_agent(
-          "worker1",
-          "Factory Worker",
-          %{shift: "day"},
+        AgentEntity.create_agent("worker1", "Factory Worker", %{shift: "day"},
           capabilities: [:assembly, :quality_check, :decision_making]
         )
 
       assert AgentEntity.is_currently_agent?(worker)
 
-      # Remove all action capabilities
       inactive_worker =
         AgentEntity.remove_capabilities(worker, [:assembly, :quality_check, :decision_making])
 
       refute AgentEntity.is_currently_agent?(inactive_worker)
-
-      # Verify no action capabilities remain
       refute AgentEntity.can_perform_action?(inactive_worker, :make_decision)
       refute AgentEntity.can_perform_action?(inactive_worker, :execute_action)
     end
   end
 
-  describe "dynamic capability changes during timeline" do
+  describe("dynamic capability changes during timeline") do
     test "handles multiple transitions in single timeline" do
       timeline = Timeline.new()
-
-      # Start as entity
       machine = AgentEntity.create_entity("machine1", "CNC Machine", %{status: "offline"})
 
-      # Phase 1: Offline (entity)
       offline_interval =
         Interval.new(
           DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
@@ -166,7 +139,6 @@ defmodule Timeline.TransitionsTest do
           label: "Offline"
         )
 
-      # Phase 2: Manual operation (gains basic capabilities)
       manual_machine = AgentEntity.add_capabilities(machine, [:manual_operation])
 
       manual_interval =
@@ -177,7 +149,6 @@ defmodule Timeline.TransitionsTest do
           label: "Manual Operation"
         )
 
-      # Phase 3: Autonomous operation (gains more capabilities)
       auto_machine =
         AgentEntity.add_capabilities(manual_machine, [:autonomous_operation, :decision_making])
 
@@ -189,7 +160,6 @@ defmodule Timeline.TransitionsTest do
           label: "Autonomous Operation"
         )
 
-      # Phase 4: Back to maintenance (loses capabilities)
       maintenance_machine =
         AgentEntity.remove_capabilities(auto_machine, [
           :manual_operation,
@@ -214,8 +184,6 @@ defmodule Timeline.TransitionsTest do
 
       assert Timeline.consistent?(updated_timeline)
       assert length(Map.keys(updated_timeline.intervals)) == 4
-
-      # Verify capability progression
       refute AgentEntity.is_currently_agent?(machine)
       assert AgentEntity.is_currently_agent?(manual_machine)
       assert AgentEntity.is_currently_agent?(auto_machine)
@@ -223,28 +191,18 @@ defmodule Timeline.TransitionsTest do
     end
 
     test "validates transition consistency" do
-      # Create agent
       drone =
-        AgentEntity.create_agent(
-          "drone1",
-          "Delivery Drone",
-          %{battery: 100},
+        AgentEntity.create_agent("drone1", "Delivery Drone", %{battery: 100},
           capabilities: [:flying, :navigation, :package_delivery]
         )
 
-      # Verify initial state
       assert AgentEntity.is_currently_agent?(drone)
       assert AgentEntity.has_capability?(drone, :flying)
-
-      # Remove flying capability
       grounded_drone = AgentEntity.remove_capabilities(drone, [:flying])
       refute AgentEntity.has_capability?(grounded_drone, :flying)
       assert AgentEntity.has_capability?(grounded_drone, :navigation)
-
-      # Still an agent (has other action capabilities)
       assert AgentEntity.is_currently_agent?(grounded_drone)
 
-      # Remove all action capabilities
       inactive_drone =
         AgentEntity.remove_capabilities(grounded_drone, [:navigation, :package_delivery])
 

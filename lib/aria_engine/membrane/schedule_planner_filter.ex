@@ -1,60 +1,12 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Membrane.SchedulePlannerFilter do
-  @moduledoc """
-  Membrane Filter element that processes schedule_activities MCP requests.
-
-  This filter specifically handles schedule_activities tool calls by:
-  1. Validating that the request is for schedule_activities
-  2. Extracting and validating schedule parameters
-  3. Converting to PlanningParams format for the planning pipeline
-
-  ## Pipeline Position
-
-  ```
-  MCPSource → ScheduleFilter → PlannerSink → MCPSink
-  ```
-
-  The ScheduleFilter sits between the generic MCPSource and the planning
-  execution, providing schedule-specific validation and transformation.
-
-  ## Features
-
-  - Validates schedule_activities requests
-  - Rejects non-schedule requests with clear error messages
-  - Converts schedule parameters to planning format
-  - Provides detailed telemetry for schedule processing
-  - Handles legacy format compatibility
-
-  ## Usage
-
-      # In a pipeline spec
-      children = [
-        child(:mcp_source, MCPSource)
-        |> child(:schedule_filter, ScheduleFilter)
-        |> child(:planner_sink, PlannerSink)
-        |> child(:mcp_sink, MCPSink)
-      ]
-  """
-
+  @moduledoc "Membrane Filter element that processes schedule_activities MCP requests.\n\nThis filter specifically handles schedule_activities tool calls by:\n1. Validating that the request is for schedule_activities\n2. Extracting and validating schedule parameters\n3. Converting to PlanningParams format for the planning pipeline\n\n## Pipeline Position\n\n```\nMCPSource → ScheduleFilter → PlannerSink → MCPSink\n```\n\nThe ScheduleFilter sits between the generic MCPSource and the planning\nexecution, providing schedule-specific validation and transformation.\n\n## Features\n\n- Validates schedule_activities requests\n- Rejects non-schedule requests with clear error messages\n- Converts schedule parameters to planning format\n- Provides detailed telemetry for schedule processing\n- Handles legacy format compatibility\n\n## Usage\n\n    # In a pipeline spec\n    children = [\n      child(:mcp_source, MCPSource)\n      |> child(:schedule_filter, ScheduleFilter)\n      |> child(:planner_sink, PlannerSink)\n      |> child(:mcp_sink, MCPSink)\n    ]\n"
   use Membrane.Filter
-
   require Logger
-
   alias AriaEngine.Membrane.Format.{MCPRequest, PlanningParams}
   alias AriaEngine.HybridPlanner.PlanTransformer, as: CoreTransformer
   alias Membrane.Buffer
-
-  def_input_pad(:input,
-    accepted_format: MCPRequest,
-    flow_control: :auto
-  )
-
-  def_output_pad(:output,
-    accepted_format: PlanningParams,
-    flow_control: :auto
-  )
+  def_input_pad(:input, accepted_format: MCPRequest, flow_control: :auto)
+  def_output_pad(:output, accepted_format: PlanningParams, flow_control: :auto)
 
   def_options(
     telemetry_prefix: [
@@ -84,9 +36,6 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
           error_count: non_neg_integer(),
           rejected_count: non_neg_integer()
         }
-
-  # ==================== Membrane Callbacks ====================
-
   @impl true
   def handle_init(_ctx, opts) do
     state = %{
@@ -143,7 +92,6 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
           processing_time: System.monotonic_time(:microsecond) - start_time
         })
 
-        # Create error planning params to pass the error downstream
         error_params = create_error_planning_params(mcp_request, reason, error_type)
         output_buffer = %Buffer{payload: error_params}
 
@@ -189,8 +137,6 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
     {[], state}
   end
 
-  # ==================== PRIVATE FUNCTIONS ====================
-
   defp process_mcp_request(%MCPRequest{} = request, state) do
     cond do
       request.tool_name == "schedule_activities" ->
@@ -205,20 +151,15 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
   end
 
   defp process_schedule_request(%MCPRequest{} = request, state) do
-    # Extract parameters directly from the request
     schedule_params = request.parameters
     convert_schedule_to_planning_params(request, schedule_params, state)
   end
 
   defp convert_schedule_to_planning_params(%MCPRequest{} = request, schedule_params, state) do
-    # Validate schedule parameters if strict validation is enabled
     if state.strict_validation do
       case validate_schedule_params(schedule_params) do
-        :ok ->
-          perform_conversion(request, schedule_params)
-
-        {:error, reason} ->
-          {:error, "Schedule validation failed: #{reason}", :validation_error}
+        :ok -> perform_conversion(request, schedule_params)
+        {:error, reason} -> {:error, "Schedule validation failed: #{reason}", :validation_error}
       end
     else
       perform_conversion(request, schedule_params)
@@ -288,7 +229,9 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
     end
   end
 
-  defp validate_schedule_params(_), do: {:error, "parameters must be a map"}
+  defp validate_schedule_params(_) do
+    {:error, "parameters must be a map"}
+  end
 
   defp validate_activities(activities) when is_list(activities) do
     case Enum.find(activities, &(not valid_activity?(&1))) do
@@ -319,20 +262,7 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
     :telemetry.execute(prefix ++ [event], %{count: 1}, metadata)
   end
 
-  # ==================== PUBLIC API FOR TESTING AND MONITORING ====================
-
-  @doc """
-  Gets the current processing statistics of the ScheduleFilter element.
-
-  ## Parameters
-
-  - `filter_pid` - PID of the ScheduleFilter element
-  - `timeout` - Timeout in milliseconds (default: 5000)
-
-  ## Returns
-
-  Map containing current statistics or error.
-  """
+  @doc "Gets the current processing statistics of the ScheduleFilter element.\n\n## Parameters\n\n- `filter_pid` - PID of the ScheduleFilter element\n- `timeout` - Timeout in milliseconds (default: 5000)\n\n## Returns\n\nMap containing current statistics or error.\n"
   @spec get_stats(pid(), timeout()) :: map()
   def get_stats(filter_pid, timeout \\ 5000) do
     send(filter_pid, {:get_stats, self()})
@@ -344,19 +274,15 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
     end
   end
 
-  @doc """
-  Validates schedule parameters without processing them.
-
-  This is useful for testing parameter validation logic independently.
-  """
+  @doc "Validates schedule parameters without processing them.\n\nThis is useful for testing parameter validation logic independently.\n"
   @spec validate_params(map()) :: :ok | {:error, String.t()}
   def validate_params(params) when is_map(params) do
     validate_schedule_params(params)
   end
 
-  def validate_params(_), do: {:error, "Parameters must be a map"}
-
-  # ==================== ENHANCED VALIDATION FUNCTIONS ====================
+  def validate_params(_) do
+    {:error, "Parameters must be a map"}
+  end
 
   defp validate_entities(entities) when is_list(entities) do
     case Enum.find(entities, &(not valid_entity?(&1))) do
@@ -367,9 +293,7 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
 
   defp valid_entity?(entity) when is_map(entity) do
     has_required_fields =
-      Map.has_key?(entity, "id") and
-        Map.has_key?(entity, "type") and
-        is_binary(entity["id"]) and
+      Map.has_key?(entity, "id") and Map.has_key?(entity, "type") and is_binary(entity["id"]) and
         is_binary(entity["type"])
 
     has_valid_optional_fields =
@@ -381,38 +305,62 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
     has_required_fields and has_valid_optional_fields
   end
 
-  defp valid_entity?(_), do: false
+  defp valid_entity?(_) do
+    false
+  end
 
-  defp valid_entity_capabilities?(nil), do: true
+  defp valid_entity_capabilities?(nil) do
+    true
+  end
 
   defp valid_entity_capabilities?(capabilities) when is_list(capabilities) do
     Enum.all?(capabilities, &is_binary/1)
   end
 
-  defp valid_entity_capabilities?(_), do: false
+  defp valid_entity_capabilities?(_) do
+    false
+  end
 
-  defp valid_entity_availability?(nil), do: true
-  defp valid_entity_availability?(availability) when is_binary(availability), do: true
+  defp valid_entity_availability?(nil) do
+    true
+  end
+
+  defp valid_entity_availability?(availability) when is_binary(availability) do
+    true
+  end
 
   defp valid_entity_availability?(availability) when is_map(availability) do
-    # Validate availability as time interval
     (is_binary(availability["start"]) or is_nil(availability["start"])) and
       (is_binary(availability["end"]) or is_nil(availability["end"]))
   end
 
-  defp valid_entity_availability?(_), do: false
+  defp valid_entity_availability?(_) do
+    false
+  end
 
-  defp valid_entity_resources?(nil), do: true
+  defp valid_entity_resources?(nil) do
+    true
+  end
 
   defp valid_entity_resources?(resources) when is_list(resources) do
     Enum.all?(resources, &is_binary/1)
   end
 
-  defp valid_entity_resources?(_), do: false
+  defp valid_entity_resources?(_) do
+    false
+  end
 
-  defp valid_entity_metadata?(nil), do: true
-  defp valid_entity_metadata?(metadata) when is_map(metadata), do: true
-  defp valid_entity_metadata?(_), do: false
+  defp valid_entity_metadata?(nil) do
+    true
+  end
+
+  defp valid_entity_metadata?(metadata) when is_map(metadata) do
+    true
+  end
+
+  defp valid_entity_metadata?(_) do
+    false
+  end
 
   defp validate_resources(resources) when is_map(resources) do
     case Enum.find(resources, fn {_key, resource} -> not valid_resource?(resource) end) do
@@ -432,23 +380,28 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
     has_valid_schedule = valid_resource_schedule?(resource["availability_schedule"])
     has_valid_metadata = is_map(resource["metadata"]) or is_nil(resource["metadata"])
 
-    has_valid_type and has_valid_capacity and has_valid_usage and
-      has_valid_constraints and has_valid_schedule and has_valid_metadata
+    has_valid_type and has_valid_capacity and has_valid_usage and has_valid_constraints and
+      has_valid_schedule and has_valid_metadata
   end
 
-  defp valid_resource?(_), do: false
+  defp valid_resource?(_) do
+    false
+  end
 
-  defp valid_resource_schedule?(nil), do: true
+  defp valid_resource_schedule?(nil) do
+    true
+  end
 
   defp valid_resource_schedule?(schedule) when is_list(schedule) do
     Enum.all?(schedule, fn slot ->
-      is_map(slot) and
-        (is_binary(slot["start"]) or is_nil(slot["start"])) and
+      is_map(slot) and (is_binary(slot["start"]) or is_nil(slot["start"])) and
         (is_binary(slot["end"]) or is_nil(slot["end"]))
     end)
   end
 
-  defp valid_resource_schedule?(_), do: false
+  defp valid_resource_schedule?(_) do
+    false
+  end
 
   defp validate_optional_fields(params) do
     with :ok <- validate_simulation_options(params["simulation_options"]),
@@ -460,7 +413,9 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
     end
   end
 
-  defp validate_simulation_options(nil), do: :ok
+  defp validate_simulation_options(nil) do
+    :ok
+  end
 
   defp validate_simulation_options(options) when is_map(options) do
     valid_simulation_mode =
@@ -478,9 +433,13 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
     end
   end
 
-  defp validate_simulation_options(_), do: {:error, "simulation_options must be a map"}
+  defp validate_simulation_options(_) do
+    {:error, "simulation_options must be a map"}
+  end
 
-  defp validate_resource_management(nil), do: :ok
+  defp validate_resource_management(nil) do
+    :ok
+  end
 
   defp validate_resource_management(management) when is_map(management) do
     valid_check_capacity =
@@ -499,18 +458,24 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
     end
   end
 
-  defp validate_resource_management(_), do: {:error, "resource_management must be a map"}
+  defp validate_resource_management(_) do
+    {:error, "resource_management must be a map"}
+  end
 
-  defp validate_pipeline_topology(nil), do: :ok
-  defp validate_pipeline_topology(topology) when is_binary(topology), do: :ok
-  defp validate_pipeline_topology(_), do: {:error, "pipeline_topology must be a string"}
+  defp validate_pipeline_topology(nil) do
+    :ok
+  end
 
-  # Enhanced activity validation
+  defp validate_pipeline_topology(topology) when is_binary(topology) do
+    :ok
+  end
+
+  defp validate_pipeline_topology(_) do
+    {:error, "pipeline_topology must be a string"}
+  end
+
   defp valid_activity?(activity) when is_map(activity) do
-    has_required_fields =
-      Map.has_key?(activity, "id") and
-        is_binary(activity["id"])
-
+    has_required_fields = Map.has_key?(activity, "id") and is_binary(activity["id"])
     has_valid_duration = valid_activity_duration?(activity["duration"])
     has_valid_dependencies = valid_activity_dependencies?(activity["dependencies"])
     has_valid_capabilities = valid_activity_capabilities?(activity["required_capabilities"])
@@ -522,53 +487,69 @@ defmodule AriaEngine.Membrane.SchedulePlannerFilter do
       has_valid_capabilities and has_valid_resources and has_valid_participants and has_valid_type
   end
 
-  # Duration is required
-  defp valid_activity_duration?(nil), do: false
+  defp valid_activity_duration?(nil) do
+    false
+  end
 
   defp valid_activity_duration?(duration) when is_binary(duration) do
-    # ISO 8601 duration string
     String.starts_with?(duration, "PT") or String.starts_with?(duration, "P")
   end
 
   defp valid_activity_duration?(duration) when is_map(duration) do
-    # Time interval with start/end
-    # At least one must be present
     (is_binary(duration["start"]) or is_nil(duration["start"])) and
       (is_binary(duration["end"]) or is_nil(duration["end"])) and
       (not is_nil(duration["start"]) or not is_nil(duration["end"]))
   end
 
-  defp valid_activity_duration?(_), do: false
+  defp valid_activity_duration?(_) do
+    false
+  end
 
-  defp valid_activity_dependencies?(nil), do: true
+  defp valid_activity_dependencies?(nil) do
+    true
+  end
 
   defp valid_activity_dependencies?(deps) when is_list(deps) do
     Enum.all?(deps, &is_binary/1)
   end
 
-  defp valid_activity_dependencies?(_), do: false
+  defp valid_activity_dependencies?(_) do
+    false
+  end
 
-  defp valid_activity_capabilities?(nil), do: true
+  defp valid_activity_capabilities?(nil) do
+    true
+  end
 
   defp valid_activity_capabilities?(caps) when is_list(caps) do
     Enum.all?(caps, &is_binary/1)
   end
 
-  defp valid_activity_capabilities?(_), do: false
+  defp valid_activity_capabilities?(_) do
+    false
+  end
 
-  defp valid_activity_resources?(nil), do: true
+  defp valid_activity_resources?(nil) do
+    true
+  end
 
   defp valid_activity_resources?(resources) when is_list(resources) do
     Enum.all?(resources, &is_binary/1)
   end
 
-  defp valid_activity_resources?(_), do: false
+  defp valid_activity_resources?(_) do
+    false
+  end
 
-  defp valid_activity_participants?(nil), do: true
+  defp valid_activity_participants?(nil) do
+    true
+  end
 
   defp valid_activity_participants?(participants) when is_list(participants) do
     Enum.all?(participants, &is_binary/1)
   end
 
-  defp valid_activity_participants?(_), do: false
+  defp valid_activity_participants?(_) do
+    false
+  end
 end

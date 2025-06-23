@@ -1,17 +1,10 @@
 defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
-  @moduledoc """
-  Handles comparing solutions from different solvers and determining validation status.
-  """
-
+  @moduledoc "Handles comparing solutions from different solvers and determining validation status.\n"
   require Logger
 
-  @doc """
-  Validates and compares results from Hybrid and MiniZinc solvers.
-  Returns validation status: success, inconsistent, infeasible, or unknown.
-  """
+  @doc "Validates and compares results from Hybrid and MiniZinc solvers.\nReturns validation status: success, inconsistent, infeasible, or unknown.\n"
   def validate_and_compare(hybrid_result, minizinc_result, _params, _state) do
     cond do
-      # MiniZinc not available
       minizinc_result.status == :unavailable ->
         %{
           overall_status: :unknown,
@@ -21,7 +14,6 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
           solutions_match: false
         }
 
-      # MiniZinc unsupported for this problem type
       minizinc_result.status == :unsupported ->
         %{
           overall_status: :unknown,
@@ -31,7 +23,6 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
           solutions_match: false
         }
 
-      # Both solvers failed
       hybrid_result.status != :success and minizinc_result.status != :success ->
         cond do
           hybrid_result.status == :error and minizinc_result.status == :error ->
@@ -42,7 +33,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
               minizinc_solved: false,
               solutions_match: false
             }
-          
+
           hybrid_result.status == :error ->
             %{
               overall_status: :inconsistent,
@@ -51,7 +42,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
               minizinc_solved: false,
               solutions_match: false
             }
-          
+
           minizinc_result.status == :error ->
             %{
               overall_status: :inconsistent,
@@ -60,7 +51,7 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
               minizinc_solved: false,
               solutions_match: false
             }
-          
+
           true ->
             %{
               overall_status: :infeasible,
@@ -71,7 +62,6 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
             }
         end
 
-      # Only one solver succeeded
       hybrid_result.status == :success and minizinc_result.status != :success ->
         %{
           overall_status: :inconsistent,
@@ -81,7 +71,6 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
           solutions_match: false
         }
 
-      # Only MiniZinc succeeded
       hybrid_result.status != :success and minizinc_result.status == :success ->
         %{
           overall_status: :inconsistent,
@@ -91,7 +80,6 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
           solutions_match: false
         }
 
-      # Both succeeded - compare solutions
       hybrid_result.status == :success and minizinc_result.status == :success ->
         solutions_match = compare_solutions(hybrid_result.solution, minizinc_result.solution)
 
@@ -113,7 +101,6 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
           }
         end
 
-      # Default case
       true ->
         %{
           overall_status: :unknown,
@@ -125,25 +112,15 @@ defmodule AriaEngine.Membrane.ValidationPipeline.SolutionComparator do
     end
   end
 
-  @doc """
-  Compares two solutions to determine if they match within acceptable tolerances.
-  """
+  @doc "Compares two solutions to determine if they match within acceptable tolerances.\n"
   def compare_solutions(hybrid_solution, minizinc_solution) do
-    # Compare makespans (allowing small tolerance)
     hybrid_makespan = hybrid_solution.makespan || 0
     minizinc_makespan = minizinc_solution.makespan || 0
-
-    # Allow 5 minute tolerance
     makespan_tolerance = 5
     makespans_match = abs(hybrid_makespan - minizinc_makespan) <= makespan_tolerance
-
-    # Compare activity count
     hybrid_activities = length(hybrid_solution.activities || [])
     minizinc_activities = length(minizinc_solution.activities || [])
-
     activities_count_match = hybrid_activities == minizinc_activities
-
-    # For now, consider solutions matching if makespans are close and activity counts match
     makespans_match and activities_count_match
   end
 end

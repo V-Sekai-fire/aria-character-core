@@ -1,24 +1,13 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 Code.require_file("../support/casync_fixtures.ex", __DIR__)
 
 defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
   use ExUnit.Case
-
   alias AriaStorage.Parsers.CasyncFormat
   alias AriaStorage.TestFixtures.CasyncFixtures
 
-  @moduledoc """
-  Benchmark tests for the casync format parser.
-
-  These tests measure parsing performance across different file sizes
-  and complexity levels to ensure the parser scales appropriately.
-  """
-
+  @moduledoc "Benchmark tests for the casync format parser.\n\nThese tests measure parsing performance across different file sizes\nand complexity levels to ensure the parser scales appropriately.\n"
   @testdata_path Path.join([__DIR__, "..", "support", "testdata"])
-
-  describe "performance benchmarks" do
+  describe("performance benchmarks") do
     test "benchmark parsing speed on real testdata" do
       if File.exists?(@testdata_path) do
         testdata_files = [
@@ -35,19 +24,14 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
             case File.read(file_path) do
               {:ok, data} ->
                 file_size = byte_size(data)
-
-                # Warm up
                 parser_func.(data)
-
-                # Benchmark
                 {time_micro, result} = :timer.tc(parser_func, [data])
 
                 case result do
                   {:ok, parsed} ->
-                    # bytes per second
                     throughput = file_size / (time_micro / 1_000_000)
-
-                    TestOutput.trace_puts("\n#{filename}:")
+                    TestOutput.trace_puts("
+#{filename}:")
                     TestOutput.trace_puts("  File size: #{file_size} bytes")
 
                     TestOutput.trace_puts(
@@ -58,12 +42,8 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
                       "  Throughput: #{Float.round(throughput / 1024 / 1024, 2)} MB/s"
                     )
 
-                    # Basic performance assertions
-                    # Should parse in less than 100ms
                     assert time_micro < 100_000
-                    # Should achieve at least 1KB/s throughput
                     assert throughput > 1024
-
                     {filename, file_size, time_micro, throughput, parsed}
 
                   {:error, reason} ->
@@ -77,14 +57,12 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
             end
           end)
 
-        # Summary
         successful_results = Enum.filter(results, fn {_, _, time, _, _} -> is_integer(time) end)
 
         if length(successful_results) > 0 do
           total_time = Enum.sum(Enum.map(successful_results, fn {_, _, time, _, _} -> time end))
           total_size = Enum.sum(Enum.map(successful_results, fn {_, size, _, _, _} -> size end))
           avg_throughput = total_size / (total_time / 1_000_000)
-
           TestOutput.trace_puts("\nSummary:")
           TestOutput.trace_puts("  Files processed: #{length(successful_results)}")
           TestOutput.trace_puts("  Total size: #{total_size} bytes")
@@ -101,18 +79,14 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
 
     test "benchmark synthetic data scaling" do
       chunk_counts = [1, 10, 50, 100, 500, 1000]
-
       TestOutput.trace_puts("\nSynthetic Data Scaling Benchmark:")
 
       results =
         Enum.map(chunk_counts, fn chunk_count ->
           data = CasyncFixtures.create_multi_chunk_caibx(chunk_count)
           file_size = byte_size(data)
-
-          # Warm up
           CasyncFormat.parse_index(data)
 
-          # Benchmark multiple runs
           times =
             for _i <- 1..5 do
               {time_micro, _result} = :timer.tc(CasyncFormat, :parse_index, [data])
@@ -122,9 +96,7 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
           avg_time = Enum.sum(times) / length(times)
           min_time = Enum.min(times)
           max_time = Enum.max(times)
-
           throughput = file_size / (avg_time / 1_000_000)
-
           TestOutput.trace_puts("  #{chunk_count} chunks (#{file_size} bytes):")
 
           TestOutput.trace_puts(
@@ -138,11 +110,7 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
           {chunk_count, file_size, avg_time, throughput}
         end)
 
-      # Check for reasonable scaling
       Enum.each(results, fn {chunk_count, _size, time, _throughput} ->
-        # Time should scale roughly linearly with chunk count
-        # Allow some overhead, but shouldn't be exponential
-        # 100 μs per chunk max
         expected_max_time = chunk_count * 100
 
         assert time < expected_max_time,
@@ -152,36 +120,25 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
 
     test "benchmark memory usage" do
       if System.get_env("BENCHMARK_MEMORY") == "true" do
-        # Only run memory benchmarks when explicitly requested
         chunk_counts = [100, 500, 1000]
-
         TestOutput.trace_puts("\nMemory Usage Benchmark:")
 
         Enum.each(chunk_counts, fn chunk_count ->
           data = CasyncFixtures.create_multi_chunk_caibx(chunk_count)
-
-          # Measure memory before
           :erlang.garbage_collect()
           {memory_before, _} = :erlang.process_info(self(), :memory)
-
-          # Parse
           {:ok, result} = CasyncFormat.parse_index(data)
-
-          # Measure memory after
           :erlang.garbage_collect()
           {memory_after, _} = :erlang.process_info(self(), :memory)
-
           memory_used = memory_after - memory_before
           file_size = byte_size(data)
           result_size = :erts_debug.size(result) * :erlang.system_info(:wordsize)
-
           TestOutput.trace_puts("  #{chunk_count} chunks:")
           TestOutput.trace_puts("    Input size: #{file_size} bytes")
           TestOutput.trace_puts("    Result size: #{result_size} bytes")
           TestOutput.trace_puts("    Memory used: #{memory_used} bytes")
           TestOutput.trace_puts("    Memory ratio: #{Float.round(memory_used / file_size, 2)}x")
 
-          # Memory usage should be reasonable (not more than 10x input size)
           assert memory_used < file_size * 10,
                  "Memory usage #{memory_used} exceeds 10x input size #{file_size}"
         end)
@@ -191,21 +148,13 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
     end
 
     test "benchmark parser comparison" do
-      # Compare different parsing strategies if we had multiple implementations
       data = CasyncFixtures.create_multi_chunk_caibx(100)
-
-      parsers = [
-        {"current_parser", &CasyncFormat.parse_index/1}
-        # Could add alternative implementations for comparison
-      ]
-
+      parsers = [{"current_parser", &CasyncFormat.parse_index/1}]
       TestOutput.trace_puts("\nParser Comparison:")
 
       Enum.each(parsers, fn {name, parser_func} ->
-        # Warm up
         parser_func.(data)
 
-        # Benchmark
         times =
           for _i <- 1..10 do
             {time_micro, _result} = :timer.tc(parser_func, [data])
@@ -229,11 +178,9 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
     test "benchmark concurrent parsing" do
       data = CasyncFixtures.create_multi_chunk_caibx(50)
       concurrency_levels = [1, 2, 4, 8, 16]
-
       TestOutput.trace_puts("\nConcurrent Parsing Benchmark:")
 
       Enum.each(concurrency_levels, fn concurrency ->
-        # Create tasks
         tasks =
           for _i <- 1..concurrency do
             Task.async(fn ->
@@ -242,14 +189,8 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
             end)
           end
 
-        # Measure total time
-        {total_time, results} =
-          :timer.tc(fn ->
-            Task.await_many(tasks, 10_000)
-          end)
-
+        {total_time, results} = :timer.tc(fn -> Task.await_many(tasks, 10000) end)
         avg_parse_time = Enum.sum(results) / length(results)
-
         TestOutput.trace_puts("  #{concurrency} concurrent parses:")
         TestOutput.trace_puts("    Total time: #{total_time} μs")
         TestOutput.trace_puts("    Avg parse time: #{Float.round(avg_parse_time)} μs")
@@ -258,26 +199,21 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
           "    Efficiency: #{Float.round(100 * avg_parse_time / total_time)}%"
         )
 
-        # Should handle concurrency reasonably well
-        # Relaxed assertion - concurrent parsing may have overhead
         assert total_time < avg_parse_time * concurrency * 10,
                "Concurrent parsing is excessively slow (#{total_time} μs vs expected max #{avg_parse_time * concurrency * 10} μs)"
       end)
     end
   end
 
-  describe "stress testing" do
+  describe("stress testing") do
     test "stress test with many small files" do
-      # Test parsing many small files quickly
       small_files =
         for _i <- 1..100 do
           CasyncFixtures.create_minimal_caibx()
         end
 
       {total_time, results} =
-        :timer.tc(fn ->
-          Enum.map(small_files, &CasyncFormat.parse_index/1)
-        end)
+        :timer.tc(fn -> Enum.map(small_files, &CasyncFormat.parse_index/1) end)
 
       successful_parses =
         Enum.count(results, fn
@@ -290,16 +226,12 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
       TestOutput.trace_puts("  Successful: #{successful_parses}")
       TestOutput.trace_puts("  Total time: #{total_time} μs")
       TestOutput.trace_puts("  Avg per file: #{Float.round(total_time / length(small_files))} μs")
-
       assert successful_parses == length(small_files)
-      # Should complete in under 1 second
       assert total_time < 1_000_000
     end
 
     test "stress test with large files" do
-      # Test with very large chunk counts
       large_data = CasyncFixtures.create_multi_chunk_caibx(2000)
-
       {time_micro, result} = :timer.tc(CasyncFormat, :parse_index, [large_data])
 
       case result do
@@ -313,8 +245,6 @@ defmodule AriaStorage.Parsers.CasyncFormatBenchmarkTest do
             "  Time per chunk: #{Float.round(time_micro / length(parsed.chunks), 2)} μs"
           )
 
-          # Should handle large files reasonably
-          # Less than 1 second
           assert time_micro < 1_000_000
           assert length(parsed.chunks) == 2000
 

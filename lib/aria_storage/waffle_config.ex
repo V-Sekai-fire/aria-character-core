@@ -1,22 +1,6 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaStorage.WaffleConfig do
-  @moduledoc """
-  Configuration module for Waffle integration with desync chunk storage.
-
-  This module provides helpers for configuring Waffle with different storage
-  backends and integrating with the aria-character-core configuration system.
-  """
-
-  @doc """
-  Configures Waffle for use with different storage backends.
-
-  Supports:
-  - `:local` - Local filesystem storage
-  - `:s3` - Amazon S3 storage
-  - `:gcs` - Google Cloud Storage
-  """
+  @moduledoc "Configuration module for Waffle integration with desync chunk storage.\n\nThis module provides helpers for configuring Waffle with different storage\nbackends and integrating with the aria-character-core configuration system.\n"
+  @doc "Configures Waffle for use with different storage backends.\n\nSupports:\n- `:local` - Local filesystem storage\n- `:s3` - Amazon S3 storage\n- `:gcs` - Google Cloud Storage\n"
   def configure_storage(backend, opts \\ []) do
     case backend do
       :local -> configure_local(opts)
@@ -26,9 +10,7 @@ defmodule AriaStorage.WaffleConfig do
     end
   end
 
-  @doc """
-  Gets the current Waffle configuration for chunk storage.
-  """
+  @doc "Gets the current Waffle configuration for chunk storage.\n"
   def get_config do
     %{
       storage: Application.get_env(:waffle, :storage),
@@ -38,9 +20,7 @@ defmodule AriaStorage.WaffleConfig do
     }
   end
 
-  @doc """
-  Creates a Waffle adapter with the given configuration.
-  """
+  @doc "Creates a Waffle adapter with the given configuration.\n"
   def create_adapter(backend, config \\ %{}) do
     case configure_storage(backend, config) do
       {:ok, _} ->
@@ -55,12 +35,9 @@ defmodule AriaStorage.WaffleConfig do
     end
   end
 
-  # Private configuration functions
-
   defp configure_local(opts) do
     storage_dir = Keyword.get(opts, :storage_dir, "priv/static/chunks")
     asset_host = Keyword.get(opts, :asset_host)
-
     Application.put_env(:waffle, :storage, Waffle.Storage.Local)
     Application.put_env(:waffle, :storage_dir_prefix, storage_dir)
 
@@ -68,7 +45,6 @@ defmodule AriaStorage.WaffleConfig do
       Application.put_env(:waffle, :asset_host, asset_host)
     end
 
-    # Ensure directory exists
     case File.mkdir_p(storage_dir) do
       :ok -> {:ok, :local_configured}
       {:error, reason} -> {:error, {:mkdir_failed, reason}}
@@ -81,8 +57,6 @@ defmodule AriaStorage.WaffleConfig do
     access_key_id = Keyword.get(opts, :access_key_id)
     secret_access_key = Keyword.get(opts, :secret_access_key)
     asset_host = Keyword.get(opts, :asset_host)
-
-    # Configure Waffle
     Application.put_env(:waffle, :storage, Waffle.Storage.S3)
     Application.put_env(:waffle, :bucket, bucket)
 
@@ -90,7 +64,6 @@ defmodule AriaStorage.WaffleConfig do
       Application.put_env(:waffle, :asset_host, asset_host)
     end
 
-    # Configure ExAws
     Application.put_env(:ex_aws, :region, region)
 
     if access_key_id do
@@ -108,8 +81,6 @@ defmodule AriaStorage.WaffleConfig do
     bucket = Keyword.fetch!(opts, :bucket)
     keyfile = Keyword.get(opts, :keyfile)
     asset_host = Keyword.get(opts, :asset_host)
-
-    # Configure Waffle for GCS
     Application.put_env(:waffle, :storage, Waffle.Storage.GoogleCloudStorage)
     Application.put_env(:waffle, :bucket, bucket)
 
