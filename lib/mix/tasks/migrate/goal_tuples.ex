@@ -63,7 +63,10 @@ defmodule Mix.Tasks.Migrate.GoalTuples do
     String.ends_with?(file, "_fixer.exs") or
     String.ends_with?(file, "_migration.exs") or
     String.contains?(file, "_build/") or
-    String.contains?(file, "deps/")
+    String.contains?(file, "deps/") or
+    String.contains?(file, ".elixir_ls/") or
+    String.contains?(file, "priv/templates/") or
+    String.contains?(file, "thirdparty/")
   end
 
   defp create_backup_dir(backup_dir) do

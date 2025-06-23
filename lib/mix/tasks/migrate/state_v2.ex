@@ -120,7 +120,12 @@ defmodule Mix.Tasks.Migrate.StateV2 do
     String.contains?(file, ".migration_backup") or
     String.contains?(file, "statev2_fixer") or
     String.ends_with?(file, "_fixer.exs") or
-    String.ends_with?(file, "_migration.exs")
+    String.ends_with?(file, "_migration.exs") or
+    String.contains?(file, "_build/") or
+    String.starts_with?(file, "deps/") or
+    String.contains?(file, ".elixir_ls/") or
+    String.contains?(file, "priv/templates/") or
+    String.contains?(file, "thirdparty/")
   end
 
   defp create_backup_dir(backup_dir) do
