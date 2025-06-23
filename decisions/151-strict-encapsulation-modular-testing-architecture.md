@@ -119,7 +119,7 @@ Layer N-2: Unit Tests (test Layer N-2 logic)
 
 ### Encapsulation Metrics
 - **Library Count**: Each logical domain has dedicated app
-- **Dependency Depth**: Maximum 3 levels of internal dependencies
+- **Clear Dependency Direction**: Higher layers depend on lower layers only
 - **API Surface**: Clear, documented interfaces between libraries
 - **Test Isolation**: Zero external dependencies in unit tests
 
