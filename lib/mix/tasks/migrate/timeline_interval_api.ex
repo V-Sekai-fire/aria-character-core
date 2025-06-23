@@ -58,7 +58,7 @@ defmodule Mix.Tasks.Migrate.TimelineIntervalApi do
       Logger.info("📊 Found #{length(files)} files with Timeline.Interval.new calls or doctests")
 
       transformation_fn = fn content ->
-        AstTransformer.transform_code_and_doctests(
+        AstTransformer.transform_code(
           content,
           AstTransformer.timeline_interval_rules()
         )

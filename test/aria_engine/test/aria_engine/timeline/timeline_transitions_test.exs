@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Timeline.TransitionsTest do
   use ExUnit.Case, async: true
   alias AriaEngine.Timeline
@@ -14,8 +11,7 @@ defmodule Timeline.TransitionsTest do
       refute AgentEntity.is_currently_agent?(car)
 
       parked_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T10:00:00Z", "2025-01-01T12:00:00Z",
           entity: car,
           label: "Parked"
         )
@@ -24,8 +20,7 @@ defmodule Timeline.TransitionsTest do
       assert AgentEntity.is_currently_agent?(autonomous_car)
 
       driving_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T12:00:00Z", "2025-01-01T14:00:00Z",
           agent: autonomous_car,
           label: "Autonomous Driving"
         )
@@ -44,8 +39,7 @@ defmodule Timeline.TransitionsTest do
       device = AgentEntity.create_entity("sensor1", "Smart Sensor", %{firmware: "1.0"})
 
       basic_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T08:00:00Z", "2025-01-01T10:00:00Z",
           entity: device,
           label: "Basic Sensing"
         )
@@ -54,8 +48,7 @@ defmodule Timeline.TransitionsTest do
       assert AgentEntity.is_currently_agent?(comm_device)
 
       comm_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T10:00:00Z", "2025-01-01T12:00:00Z",
           agent: comm_device,
           label: "Smart Communication"
         )
@@ -80,8 +73,7 @@ defmodule Timeline.TransitionsTest do
       assert AgentEntity.is_currently_agent?(robot)
 
       work_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T10:00:00Z", "2025-01-01T12:00:00Z",
           agent: robot,
           label: "Active Welding"
         )
@@ -92,8 +84,7 @@ defmodule Timeline.TransitionsTest do
       refute AgentEntity.is_currently_agent?(inactive_robot)
 
       maintenance_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T12:00:00Z", "2025-01-01T14:00:00Z",
           entity: inactive_robot,
           label: "Maintenance Mode"
         )
@@ -129,8 +120,7 @@ defmodule Timeline.TransitionsTest do
       machine = AgentEntity.create_entity("machine1", "CNC Machine", %{status: "offline"})
 
       offline_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T08:00:00Z", "2025-01-01T09:00:00Z",
           entity: machine,
           label: "Offline"
         )
@@ -138,8 +128,7 @@ defmodule Timeline.TransitionsTest do
       manual_machine = AgentEntity.add_capabilities(machine, [:manual_operation])
 
       manual_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T09:00:00Z", "2025-01-01T12:00:00Z",
           agent: manual_machine,
           label: "Manual Operation"
         )
@@ -148,8 +137,7 @@ defmodule Timeline.TransitionsTest do
         AgentEntity.add_capabilities(manual_machine, [:autonomous_operation, :decision_making])
 
       auto_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T12:00:00Z", "2025-01-01T16:00:00Z",
           agent: auto_machine,
           label: "Autonomous Operation"
         )
@@ -162,8 +150,7 @@ defmodule Timeline.TransitionsTest do
         ])
 
       maintenance_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 18:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T16:00:00Z", "2025-01-01T18:00:00Z",
           entity: maintenance_machine,
           label: "Maintenance"
         )

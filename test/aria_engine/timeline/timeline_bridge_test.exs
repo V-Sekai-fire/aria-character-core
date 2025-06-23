@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Timeline.TimelineBridgeTest do
   use ExUnit.Case, async: true
   doctest AriaEngine.Timeline
@@ -11,7 +8,7 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
   describe("bridge management") do
     test "add_bridge/2 adds a bridge to timeline" do
       timeline = Timeline.new()
-      position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      position = "2025-01-01T12:00:00Z"
       bridge = Bridge.new("decision_1", position, :decision)
       updated_timeline = Timeline.add_bridge(timeline, bridge)
       assert Map.has_key?(updated_timeline.bridges, "decision_1")
@@ -20,7 +17,7 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "add_bridge/2 validates bridge placement" do
       timeline = Timeline.new()
-      position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      position = "2025-01-01T12:00:00Z"
       bridge = Bridge.new("decision_1", position, :decision)
       timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
 
@@ -31,7 +28,7 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "remove_bridge/2 removes a bridge from timeline" do
       timeline = Timeline.new()
-      position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      position = "2025-01-01T12:00:00Z"
       bridge = Bridge.new("decision_1", position, :decision)
       timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
       updated_timeline = Timeline.remove_bridge(timeline_with_bridge, "decision_1")
@@ -40,7 +37,7 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "get_bridge/2 retrieves a bridge by ID" do
       timeline = Timeline.new()
-      position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      position = "2025-01-01T12:00:00Z"
       bridge = Bridge.new("decision_1", position, :decision)
       timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
       retrieved_bridge = Timeline.get_bridge(timeline_with_bridge, "decision_1")
@@ -54,9 +51,9 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "get_bridges/1 returns all bridges sorted by position" do
       timeline = Timeline.new()
-      pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
-      pos2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      pos3 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      pos1 = "2025-01-01T11:00:00Z"
+      pos2 = "2025-01-01T12:00:00Z"
+      pos3 = "2025-01-01T10:00:00Z"
       bridge1 = Bridge.new("b1", pos1, :decision)
       bridge2 = Bridge.new("b2", pos2, :condition)
       bridge3 = Bridge.new("b3", pos3, :synchronization)
@@ -74,7 +71,7 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "update_bridge/2 updates an existing bridge" do
       timeline = Timeline.new()
-      position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      position = "2025-01-01T12:00:00Z"
       bridge = Bridge.new("decision_1", position, :decision)
       timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
       updated_bridge = Bridge.update_metadata(bridge, %{priority: :high})
@@ -87,14 +84,14 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
   describe("bridge validation") do
     test "validate_bridge_placement/2 succeeds for valid placement" do
       timeline = Timeline.new()
-      position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      position = "2025-01-01T12:00:00Z"
       bridge = Bridge.new("decision_1", position, :decision)
       assert Timeline.validate_bridge_placement(timeline, bridge) == :ok
     end
 
     test "validate_bridge_placement/2 fails for duplicate bridge ID" do
       timeline = Timeline.new()
-      position = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      position = "2025-01-01T12:00:00Z"
       bridge = Bridge.new("decision_1", position, :decision)
       timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
 
@@ -104,8 +101,8 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "validate_bridge_placement/2 fails for bridge at interval boundary" do
       timeline = Timeline.new()
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -129,8 +126,8 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
   describe("bridge segmentation") do
     test "segment_by_bridges/1 returns single segment when no bridges" do
       timeline = Timeline.new()
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -146,20 +143,20 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "segment_by_bridges/1 creates multiple segments with bridges" do
       timeline = Timeline.new()
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
-      start2 = DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 12:30:00], "Etc/UTC")
+      start2 = "2025-01-01T11:30:00Z"
+      end2 = "2025-01-01T12:30:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
 
       timeline = timeline |> Timeline.add_interval(interval1) |> Timeline.add_interval(interval2)
-      bridge_pos = DateTime.from_naive!(~N[2025-01-01 11:15:00], "Etc/UTC")
+      bridge_pos = "2025-01-01T11:15:00Z"
       bridge = Bridge.new("decision_1", bridge_pos, :decision)
       timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
       segments = Timeline.segment_by_bridges(timeline_with_bridge)
@@ -173,20 +170,20 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "segment_by_bridges/1 filters intervals by segment time ranges" do
       timeline = Timeline.new()
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T10:30:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
-      start2 = DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start2 = "2025-01-01T11:30:00Z"
+      end2 = "2025-01-01T12:00:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
 
       timeline = timeline |> Timeline.add_interval(interval1) |> Timeline.add_interval(interval2)
-      bridge_pos = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      bridge_pos = "2025-01-01T11:00:00Z"
       bridge = Bridge.new("decision_1", bridge_pos, :decision)
       timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
       segments = Timeline.segment_by_bridges(timeline_with_bridge)
@@ -202,14 +199,14 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "segment_by_bridges/1 handles overlapping intervals correctly" do
       timeline = Timeline.new()
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T12:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
       timeline_with_interval = Timeline.add_interval(timeline, interval1)
-      bridge_pos = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      bridge_pos = "2025-01-01T11:00:00Z"
       bridge = Bridge.new("decision_1", bridge_pos, :decision)
       timeline_with_bridge = Timeline.add_bridge(timeline_with_interval, bridge)
       segments = Timeline.segment_by_bridges(timeline_with_bridge)
@@ -225,14 +222,14 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "segment_by_bridges/1 excludes empty segments" do
       timeline = Timeline.new()
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T10:30:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
       timeline_with_interval = Timeline.add_interval(timeline, interval1)
-      bridge_pos = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      bridge_pos = "2025-01-01T11:00:00Z"
       bridge = Bridge.new("decision_1", bridge_pos, :decision)
       timeline_with_bridge = Timeline.add_bridge(timeline_with_interval, bridge)
       segments = Timeline.segment_by_bridges(timeline_with_bridge)
@@ -244,9 +241,9 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
   describe("bridge utility functions") do
     test "bridge_positions/1 returns sorted bridge positions" do
       timeline = Timeline.new()
-      pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
-      pos2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      pos3 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      pos1 = "2025-01-01T11:00:00Z"
+      pos2 = "2025-01-01T12:00:00Z"
+      pos3 = "2025-01-01T10:00:00Z"
       bridge1 = Bridge.new("b1", pos1, :decision)
       bridge2 = Bridge.new("b2", pos2, :condition)
       bridge3 = Bridge.new("b3", pos3, :synchronization)
@@ -263,11 +260,11 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
 
     test "bridges_in_range/3 finds bridges within time range" do
       timeline = Timeline.new()
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC")
-      pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
-      pos2 = DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC")
-      pos3 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T14:00:00Z"
+      pos1 = "2025-01-01T11:00:00Z"
+      pos2 = "2025-01-01T15:00:00Z"
+      pos3 = "2025-01-01T12:00:00Z"
       bridge1 = Bridge.new("b1", pos1, :decision)
       bridge2 = Bridge.new("b2", pos2, :decision)
       bridge3 = Bridge.new("b3", pos3, :decision)
@@ -287,11 +284,11 @@ defmodule AriaEngine.Timeline.TimelineBridgeTest do
   describe("bridge-aware composition") do
     test "chain/1 preserves bridges from all timelines" do
       timeline1 = Timeline.new()
-      pos1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      pos1 = "2025-01-01T11:00:00Z"
       bridge1 = Bridge.new("b1", pos1, :decision)
       timeline1 = Timeline.add_bridge(timeline1, bridge1)
       timeline2 = Timeline.new()
-      pos2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      pos2 = "2025-01-01T12:00:00Z"
       bridge2 = Bridge.new("b2", pos2, :condition)
       timeline2 = Timeline.add_bridge(timeline2, bridge2)
       chained = Timeline.chain([timeline1, timeline2])

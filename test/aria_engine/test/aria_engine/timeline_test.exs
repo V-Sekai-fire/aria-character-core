@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule TimelineTest do
   use ExUnit.Case, async: true
   doctest AriaEngine.Timeline
@@ -20,13 +17,13 @@ defmodule TimelineTest do
 
     test "creates intervals within timeline" do
       timeline = AriaEngine.Timeline.new()
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         AriaEngine.Timeline.Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_time),
-          DateTime.to_iso8601(end_time),
+          start_time,
+          end_time,
           label: "Test Interval"
         )
 
@@ -37,21 +34,21 @@ defmodule TimelineTest do
 
     test "maintains temporal consistency when adding intervals" do
       timeline = AriaEngine.Timeline.new()
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      start2 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T12:00:00Z"
+      start2 = "2025-01-01T11:00:00Z"
+      end2 = "2025-01-01T13:00:00Z"
 
       interval1 =
         AriaEngine.Timeline.Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start1),
-          DateTime.to_iso8601(end1)
+          start1,
+          end1
         )
 
       interval2 =
         AriaEngine.Timeline.Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start2),
-          DateTime.to_iso8601(end2)
+          start2,
+          end2
         )
 
       updated_timeline =
@@ -65,21 +62,21 @@ defmodule TimelineTest do
 
     test "handles overlapping intervals" do
       timeline = AriaEngine.Timeline.new()
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC")
-      start2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T13:00:00Z"
+      start2 = "2025-01-01T12:00:00Z"
+      end2 = "2025-01-01T14:00:00Z"
 
       interval1 =
         AriaEngine.Timeline.Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start1),
-          DateTime.to_iso8601(end1)
+          start1,
+          end1
         )
 
       interval2 =
         AriaEngine.Timeline.Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start2),
-          DateTime.to_iso8601(end2)
+          start2,
+          end2
         )
 
       updated_timeline =
@@ -96,26 +93,30 @@ defmodule TimelineTest do
       timeline = AriaEngine.Timeline.new()
 
       before_interval =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T10:00:00Z",
+          "2025-01-01T12:00:00Z",
           label: "Before"
         )
 
       after_interval =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T13:00:00Z",
+          "2025-01-01T14:00:00Z",
           label: "After"
         )
 
       meets_interval =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T12:00:00Z",
+          "2025-01-01T13:00:00Z",
           label: "Meets"
         )
 
       overlaps_interval =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T11:00:00Z",
+          "2025-01-01T13:00:00Z",
           label: "Overlaps"
         )
 
@@ -178,13 +179,15 @@ defmodule TimelineTest do
 
     test("detects equals relationship", %{timeline: timeline}) do
       equal_interval1 =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T10:00:00Z",
+          "2025-01-01T12:00:00Z"
         )
 
       equal_interval2 =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T10:00:00Z",
+          "2025-01-01T12:00:00Z"
         )
 
       updated_timeline =
@@ -197,8 +200,9 @@ defmodule TimelineTest do
 
     test("detects during relationship", %{timeline: timeline}) do
       during_interval =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC")
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T10:30:00Z",
+          "2025-01-01T11:30:00Z"
         )
 
       updated_timeline = AriaEngine.Timeline.add_interval(timeline, during_interval)
@@ -207,8 +211,9 @@ defmodule TimelineTest do
 
     test("detects starts relationship", %{timeline: timeline}) do
       starts_interval =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T10:00:00Z",
+          "2025-01-01T11:00:00Z"
         )
 
       updated_timeline = AriaEngine.Timeline.add_interval(timeline, starts_interval)
@@ -217,8 +222,9 @@ defmodule TimelineTest do
 
     test("detects finishes relationship", %{timeline: timeline}) do
       finishes_interval =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T11:00:00Z",
+          "2025-01-01T12:00:00Z"
         )
 
       updated_timeline = AriaEngine.Timeline.add_interval(timeline, finishes_interval)
@@ -246,8 +252,9 @@ defmodule TimelineTest do
       }
 
       interval =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T10:00:00Z",
+          "2025-01-01T12:00:00Z",
           agent: agent,
           label: "Agent Interval"
         )
@@ -269,8 +276,9 @@ defmodule TimelineTest do
       }
 
       interval =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T10:00:00Z",
+          "2025-01-01T12:00:00Z",
           entity: entity,
           label: "Entity Interval"
         )
@@ -307,14 +315,16 @@ defmodule TimelineTest do
       }
 
       interval1 =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T10:00:00Z",
+          "2025-01-01T12:00:00Z",
           agent: agent
         )
 
       interval2 =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T10:00:00Z",
+          "2025-01-01T12:00:00Z",
           entity: entity
         )
 
@@ -332,20 +342,23 @@ defmodule TimelineTest do
       timeline = AriaEngine.Timeline.new()
 
       interval1 =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T10:00:00Z",
+          "2025-01-01T12:00:00Z",
           label: "Task 1"
         )
 
       interval2 =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T13:00:00Z",
+          "2025-01-01T14:00:00Z",
           label: "Task 2"
         )
 
       interval3 =
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC"),
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T15:00:00Z",
+          "2025-01-01T16:00:00Z",
           label: "Task 3"
         )
 
@@ -361,21 +374,21 @@ defmodule TimelineTest do
 
     test "handles DateTime time points" do
       timeline = AriaEngine.Timeline.new()
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      start2 = DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T12:00:00Z"
+      start2 = "2025-01-01T13:00:00Z"
+      end2 = "2025-01-01T14:00:00Z"
 
       interval1 =
         AriaEngine.Timeline.Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start1),
-          DateTime.to_iso8601(end1)
+          start1,
+          end1
         )
 
       interval2 =
         AriaEngine.Timeline.Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start2),
-          DateTime.to_iso8601(end2)
+          start2,
+          end2
         )
 
       updated_timeline =
@@ -390,8 +403,9 @@ defmodule TimelineTest do
   describe("error handling") do
     test "raises error for invalid time order" do
       assert_raise ArgumentError, ~r/start_time must be before or equal to end_time/, fn ->
-        AriaEngine.Timeline.Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+        AriaEngine.Timeline.Interval.new_fixed_schedule(
+          "2025-01-01T15:00:00Z",
+          "2025-01-01T10:00:00Z"
         )
       end
     end

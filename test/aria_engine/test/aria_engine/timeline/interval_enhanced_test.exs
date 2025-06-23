@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Timeline.IntervalEnhancedTest do
   use ExUnit.Case
   doctest AriaEngine.Timeline.Interval
@@ -8,8 +5,8 @@ defmodule Timeline.IntervalEnhancedTest do
 
   describe("Enhanced Duration Functions") do
     test "duration_in_unit works for all supported units" do
-      start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_dt = DateTime.from_naive!(~N[2025-01-01 12:30:15], "Etc/UTC")
+      start_dt = "2025-01-01T10:00:00Z"
+      end_dt = "2025-01-01T12:30:15Z"
 
       interval =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
@@ -21,14 +18,14 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "from_duration creates intervals correctly" do
-      start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      start_dt = "2025-01-01T10:00:00Z"
       interval = Interval.from_duration(start_dt, 30, :minute)
       assert Interval.duration_in_unit(interval, :minute) == 30
       assert Interval.duration_in_unit(interval, :second) == 1800
     end
 
     test "from_duration works with different units" do
-      start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      start_dt = "2025-01-01T10:00:00Z"
       hour_interval = Interval.from_duration(start_dt, 2, :hour)
       assert Interval.duration_in_unit(hour_interval, :hour) == 2
       day_interval = Interval.from_duration(start_dt, 1, :day)
@@ -39,8 +36,8 @@ defmodule Timeline.IntervalEnhancedTest do
 
   describe("STN Integration") do
     test "to_stn_points provides correct format" do
-      start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_dt = DateTime.from_naive!(~N[2025-01-01 10:05:00], "Etc/UTC")
+      start_dt = "2025-01-01T10:00:00Z"
+      end_dt = "2025-01-01T10:05:00Z"
 
       interval =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
@@ -52,8 +49,8 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "to_stn_points works with different units" do
-      start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_dt = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start_dt = "2025-01-01T10:00:00Z"
+      end_dt = "2025-01-01T11:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
@@ -67,14 +64,14 @@ defmodule Timeline.IntervalEnhancedTest do
 
   describe("Temporal Relationships") do
     test "overlaps? detects overlapping intervals" do
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
-      start2 = DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC")
+      start2 = "2025-01-01T10:30:00Z"
+      end2 = "2025-01-01T11:30:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
@@ -84,14 +81,14 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "overlaps? detects non-overlapping intervals" do
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
-      start2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC")
+      start2 = "2025-01-01T12:00:00Z"
+      end2 = "2025-01-01T13:00:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
@@ -101,14 +98,14 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "overlaps? handles adjacent intervals correctly" do
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
-      start2 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start2 = "2025-01-01T11:00:00Z"
+      end2 = "2025-01-01T12:00:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
@@ -120,14 +117,14 @@ defmodule Timeline.IntervalEnhancedTest do
 
   describe("Allen's Interval Algebra") do
     test "detects 'before' relationship" do
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
-      start2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC")
+      start2 = "2025-01-01T12:00:00Z"
+      end2 = "2025-01-01T13:00:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
@@ -137,14 +134,14 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "detects 'meets' relationship" do
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
-      start2 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start2 = "2025-01-01T11:00:00Z"
+      end2 = "2025-01-01T12:00:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
@@ -154,8 +151,8 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "detects 'equals' relationship" do
-      start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_dt = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start_dt = "2025-01-01T10:00:00Z"
+      end_dt = "2025-01-01T11:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
@@ -167,14 +164,14 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "detects 'overlaps' relationship" do
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
-      start2 = DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC")
+      start2 = "2025-01-01T10:30:00Z"
+      end2 = "2025-01-01T11:30:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
@@ -184,14 +181,14 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "detects 'contains' relationship" do
-      start1 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start1 = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T12:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
 
-      start2 = DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC")
-      end2 = DateTime.from_naive!(~N[2025-01-01 11:30:00], "Etc/UTC")
+      start2 = "2025-01-01T10:30:00Z"
+      end2 = "2025-01-01T11:30:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
@@ -201,13 +198,13 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "detects 'starts' relationship" do
-      start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start_dt = "2025-01-01T10:00:00Z"
+      end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end1))
 
-      end2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      end2 = "2025-01-01T12:00:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end2))
@@ -217,13 +214,13 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "detects 'finishes' relationship" do
-      end_dt = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      start1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      end_dt = "2025-01-01T12:00:00Z"
+      start1 = "2025-01-01T11:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end_dt))
 
-      start2 = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      start2 = "2025-01-01T10:00:00Z"
 
       interval2 =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end_dt))
@@ -235,8 +232,8 @@ defmodule Timeline.IntervalEnhancedTest do
 
   describe("Edge Cases and Validation") do
     test "handles microsecond precision correctly" do
-      start_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00.000], "Etc/UTC")
-      end_dt = DateTime.from_naive!(~N[2025-01-01 10:00:00.001], "Etc/UTC")
+      start_dt = "2025-01-01T10:00:00.000Z"
+      end_dt = "2025-01-01T10:00:00.001Z"
 
       interval =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
@@ -246,14 +243,14 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "handles timezone differences correctly" do
-      start_utc = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_utc = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start_utc = "2025-01-01T10:00:00Z"
+      end_utc = "2025-01-01T11:00:00Z"
 
       interval_utc =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start_utc), DateTime.to_iso8601(end_utc))
 
-      start_est_equiv = DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC")
-      end_est_equiv = DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC")
+      start_est_equiv = "2025-01-01T15:00:00Z"
+      end_est_equiv = "2025-01-01T16:00:00Z"
 
       interval_est_equiv =
         Interval.new_fixed_schedule(
@@ -269,8 +266,8 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "large duration calculations" do
-      start_dt = DateTime.from_naive!(~N[2025-01-01 00:00:00], "Etc/UTC")
-      end_dt = DateTime.from_naive!(~N[2025-12-31 23:59:59], "Etc/UTC")
+      start_dt = "2025-01-01T00:00:00Z"
+      end_dt = "2025-12-31T23:59:59Z"
 
       interval =
         Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))

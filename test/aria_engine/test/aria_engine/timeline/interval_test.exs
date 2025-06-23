@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule Timeline.IntervalTest do
   use ExUnit.Case, async: true
   doctest AriaEngine.Timeline.Interval
@@ -9,8 +6,8 @@ defmodule Timeline.IntervalTest do
   describe("interval creation") do
     @describetag :timeline_stn
     test "creates interval with DateTime" do
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -23,8 +20,8 @@ defmodule Timeline.IntervalTest do
     end
 
     test "creates interval with DateTime timestamps" do
-      start_time = DateTime.from_naive!(~N[1970-01-01 00:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[1970-01-01 01:00:00], "Etc/UTC")
+      start_time = "1970-01-01T00:00:00Z"
+      end_time = "1970-01-01T01:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -37,8 +34,8 @@ defmodule Timeline.IntervalTest do
 
     test "creates interval with agent" do
       agent = AgentEntity.create_agent("aria", "Aria VTuber")
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -54,8 +51,8 @@ defmodule Timeline.IntervalTest do
 
     test "creates interval with entity" do
       entity = AgentEntity.create_entity("room", "Conference Room")
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -71,8 +68,8 @@ defmodule Timeline.IntervalTest do
 
     test "creates interval with metadata" do
       metadata = %{priority: "high", category: "meeting"}
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -85,8 +82,8 @@ defmodule Timeline.IntervalTest do
     end
 
     test "generates unique IDs for intervals" do
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval1 =
         Interval.new_fixed_schedule(
@@ -106,8 +103,8 @@ defmodule Timeline.IntervalTest do
 
   describe("interval validation") do
     test "raises error when start_time is after end_time" do
-      start_time = DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      start_time = "2025-01-01T15:00:00Z"
+      end_time = "2025-01-01T10:00:00Z"
 
       assert_raise ArgumentError, ~r/start_time must be before or equal to end_time/, fn ->
         Interval.new_fixed_schedule(
@@ -118,8 +115,8 @@ defmodule Timeline.IntervalTest do
     end
 
     test "allows valid time ordering" do
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -131,8 +128,8 @@ defmodule Timeline.IntervalTest do
     end
 
     test "allows instantaneous intervals (start_time equals end_time)" do
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T10:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -146,8 +143,8 @@ defmodule Timeline.IntervalTest do
 
   describe("duration calculation") do
     test "calculates duration for DateTime intervals" do
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:30:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:30:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -159,8 +156,8 @@ defmodule Timeline.IntervalTest do
     end
 
     test "calculates duration for shorter DateTime intervals" do
-      start_time = DateTime.from_naive!(~N[1970-01-01 00:01:40], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[1970-01-01 00:08:20], "Etc/UTC")
+      start_time = "1970-01-01T00:01:40Z"
+      end_time = "1970-01-01T00:08:20Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -174,9 +171,9 @@ defmodule Timeline.IntervalTest do
 
   describe("time point containment") do
     test "detects contained time points in DateTime interval" do
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
-      test_time = DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
+      test_time = "2025-01-01T11:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -188,8 +185,8 @@ defmodule Timeline.IntervalTest do
     end
 
     test "detects contained time points with boundary checks" do
-      start_time = DateTime.from_naive!(~N[1970-01-01 00:01:40], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[1970-01-01 00:08:20], "Etc/UTC")
+      start_time = "1970-01-01T00:01:40Z"
+      end_time = "1970-01-01T00:08:20Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -197,13 +194,13 @@ defmodule Timeline.IntervalTest do
           DateTime.to_iso8601(end_time)
         )
 
-      test_time = DateTime.from_naive!(~N[1970-01-01 00:03:20], "Etc/UTC")
+      test_time = "1970-01-01T00:03:20Z"
       assert Interval.contains?(interval, test_time)
       assert Interval.contains?(interval, start_time)
       refute Interval.contains?(interval, end_time)
-      before_time = DateTime.from_naive!(~N[1970-01-01 00:00:50], "Etc/UTC")
+      before_time = "1970-01-01T00:00:50Z"
       refute Interval.contains?(interval, before_time)
-      after_time = DateTime.from_naive!(~N[1970-01-01 00:10:00], "Etc/UTC")
+      after_time = "1970-01-01T00:10:00Z"
       refute Interval.contains?(interval, after_time)
     end
   end
@@ -211,8 +208,8 @@ defmodule Timeline.IntervalTest do
   describe("agent and entity detection") do
     test "detects agent intervals" do
       agent = AgentEntity.create_agent("aria", "Aria VTuber")
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -227,8 +224,8 @@ defmodule Timeline.IntervalTest do
 
     test "detects entity intervals" do
       entity = AgentEntity.create_entity("room", "Conference Room")
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(
@@ -242,8 +239,8 @@ defmodule Timeline.IntervalTest do
     end
 
     test "detects intervals with neither agent nor entity" do
-      start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
-      end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      start_time = "2025-01-01T10:00:00Z"
+      end_time = "2025-01-01T12:00:00Z"
 
       interval =
         Interval.new_fixed_schedule(

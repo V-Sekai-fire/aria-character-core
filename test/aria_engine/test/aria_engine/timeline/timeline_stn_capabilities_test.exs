@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Timeline.STNCapabilitiesTest do
   use ExUnit.Case, async: true
   alias AriaEngine.Timeline
@@ -27,24 +24,21 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
         )
 
       design_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T09:00:00Z", "2025-01-01T12:00:00Z",
           agent: architect,
           label: "Architectural Design",
           metadata: %{required_capabilities: [:design, :planning]}
         )
 
       engineering_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T13:00:00Z", "2025-01-01T16:00:00Z",
           agent: engineer,
           label: "Structural Analysis",
           metadata: %{required_capabilities: [:engineering_analysis]}
         )
 
       construction_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-02 08:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-05 17:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-02T08:00:00Z", "2025-01-05T17:00:00Z",
           agent: contractor,
           label: "Construction",
           metadata: %{required_capabilities: [:construction]}
@@ -80,8 +74,7 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
         AgentEntity.create_entity("iot1", "Smart Sensor", %{firmware: "1.0", battery: 100})
 
       sensing_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T08:00:00Z", "2025-01-01T10:00:00Z",
           entity: iot_device,
           label: "Basic Sensing"
         )
@@ -90,8 +83,7 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
         AgentEntity.add_capabilities(iot_device, [:communication, :data_transmission])
 
       communication_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T10:00:00Z", "2025-01-01T14:00:00Z",
           agent: updated_device,
           label: "Smart Communication",
           metadata: %{required_capabilities: [:communication]}
@@ -101,8 +93,7 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
         AgentEntity.add_capabilities(updated_device, [:decision_making, :autonomous_operation])
 
       autonomous_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 18:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T14:00:00Z", "2025-01-01T18:00:00Z",
           agent: ai_device,
           label: "Autonomous Operation",
           metadata: %{required_capabilities: [:decision_making, :autonomous_operation]}
@@ -156,8 +147,7 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
         })
 
       prep_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 07:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T07:00:00Z", "2025-01-01T08:00:00Z",
           entity: operating_room,
           agent: anesthesiologist,
           label: "Pre-operative Setup",
@@ -165,8 +155,7 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
         )
 
       surgery_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T08:00:00Z", "2025-01-01T12:00:00Z",
           entity: operating_room,
           agent: surgeon,
           label: "Cardiac Surgery",
@@ -174,8 +163,7 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
         )
 
       recovery_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T12:00:00Z", "2025-01-01T13:00:00Z",
           entity: operating_room,
           agent: anesthesiologist,
           label: "Recovery Monitoring",
@@ -206,8 +194,7 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
       robot = AgentEntity.create_entity("robot1", "Industrial Robot", %{mode: "offline"})
 
       offline_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T08:00:00Z", "2025-01-01T09:00:00Z",
           entity: robot,
           label: "Offline Mode"
         )
@@ -215,8 +202,7 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
       manual_robot = AgentEntity.add_capabilities(robot, [:manual_operation, :safety_monitoring])
 
       manual_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T09:00:00Z", "2025-01-01T12:00:00Z",
           agent: manual_robot,
           label: "Manual Operation",
           metadata: %{required_capabilities: [:manual_operation]}
@@ -226,8 +212,7 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
         AgentEntity.add_capabilities(manual_robot, [:autonomous_operation, :decision_making])
 
       auto_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T12:00:00Z", "2025-01-01T16:00:00Z",
           agent: auto_robot,
           label: "Autonomous Operation",
           metadata: %{required_capabilities: [:autonomous_operation, :decision_making]}
@@ -270,24 +255,21 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
         )
 
       planning =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T09:00:00Z", "2025-01-01T11:00:00Z",
           agent: project_manager,
           label: "Project Planning",
           metadata: %{required_capabilities: [:planning, :resource_allocation]}
         )
 
       architecture =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T11:00:00Z", "2025-01-01T15:00:00Z",
           agent: lead_developer,
           label: "Architecture Design",
           metadata: %{required_capabilities: [:architecture_design]}
         )
 
       test_planning =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T13:00:00Z", "2025-01-01T16:00:00Z",
           agent: qa_engineer,
           label: "Test Planning",
           metadata: %{required_capabilities: [:test_planning]}
@@ -321,16 +303,14 @@ defmodule AriaEngine.Timeline.STNCapabilitiesTest do
         )
 
       task1 =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T10:00:00Z", "2025-01-01T14:00:00Z",
           agent: specialist,
           label: "Critical Task 1",
           metadata: %{required_capabilities: [:specialized_task]}
         )
 
       task2 =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T12:00:00Z", "2025-01-01T16:00:00Z",
           agent: specialist,
           label: "Critical Task 2",
           metadata: %{required_capabilities: [:specialized_task]}

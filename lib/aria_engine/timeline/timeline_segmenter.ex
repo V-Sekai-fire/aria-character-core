@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Timeline.TimelineSegmenter do
   @moduledoc "Timeline segmentation functionality for breaking timelines into manageable chunks.\n\nThis module handles:\n- Timeline segmentation by bridge positions\n- Segment creation and validation\n- Time range analysis and bounds calculation\n- Segment metadata management\n\nSegmentation is useful for parallel processing, analysis, and execution\nof large timelines by breaking them into smaller, independent segments.\n"
   alias AriaEngine.Timeline.Bridge
@@ -27,8 +24,8 @@ defmodule AriaEngine.Timeline.TimelineSegmenter do
   @doc "Gets the temporal bounds of a timeline (earliest start, latest end).\n\n## Examples\n\n    iex> timeline = AriaEngine.Timeline.new()\n    iex> start1 = DateTime.from_naive!(2025-01-01T10:00:00Z, \"Etc/UTC\")\n    iex> end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], \"Etc/UTC\")\n    iex> interval1 =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start1),\n    DateTime.to_iso8601(end1)\n  )\n    iex> timeline = AriaEngine.Timeline.add_interval(timeline, interval1)\n    iex> {start_time, end_time} = AriaEngine.Timeline.Segmentation.get_timeline_bounds(timeline)\n    iex> DateTime.compare(start_time, start1)\n    :eq\n\n"
   @spec get_timeline_bounds(timeline()) :: {DateTime.t(), DateTime.t()}
   def get_timeline_bounds(timeline) when map_size(timeline.intervals) == 0 do
-    start_time = DateTime.from_naive!(~N[2025-01-01 00:00:00], "Etc/UTC")
-    end_time = DateTime.from_naive!(~N[2025-01-01 23:59:59], "Etc/UTC")
+    start_time = "2025-01-01T00:00:00Z"
+    end_time = "2025-01-01T23:59:59Z"
     {start_time, end_time}
   end
 

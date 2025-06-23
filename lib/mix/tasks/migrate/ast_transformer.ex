@@ -168,9 +168,13 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
   1. Replace Interval.new/2 with Interval.new_fixed_schedule/2
   2. Replace Interval.new/3 with Interval.new_fixed_schedule/3
   3. Wrap DateTime arguments with DateTime.to_iso8601/1
+  4. Convert DateTime.from_naive! patterns to ISO 8601 strings
   """
   def timeline_interval_rules do
     [
+      # Transform DateTime.from_naive! calls to ISO 8601 strings
+      datetime_from_naive_to_iso8601_rule(),
+
       # Transform AriaEngine.Timeline.Interval.new calls
       function_call_rule(
         [:AriaEngine, :Timeline, :Interval],
@@ -190,200 +194,26 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
   end
 
   @doc """
-  Check if source code contains patterns that need timeline interval transformation.
+  Create a transformation rule for converting DateTime.from_naive! calls to ISO 8601 strings.
+
+  This specifically handles the pattern:
+  DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+
+  And converts it to:
+  "2025-01-01T10:00:00Z"
   """
-  def needs_timeline_interval_transformation?(source_code) do
-    String.contains?(source_code, "Interval.new(")
-  end
-
-  @doc """
-  Transform doctests within documentation strings.
-
-  Extracts doctest examples from @doc and @moduledoc strings, applies
-  transformation rules to the code examples, and reconstructs the
-  documentation with updated examples.
-
-  Returns `{:changed, new_content}`, `:unchanged`, or `{:error, reason}`.
-  """
-  def transform_doctests(source_code, transformation_rules) do
-    try do
-      # Parse the source code to find @doc and @moduledoc attributes
-      {:ok, ast} = parse_code(source_code)
-
-      # Transform doctests in the AST
-      transformed_ast = transform_doctests_in_ast(ast, transformation_rules)
-
-      # Convert back to source code
-      {:ok, new_code} = ast_to_code(transformed_ast)
-
-      if new_code == source_code do
-        :unchanged
-      else
-        {:changed, new_code}
-      end
-    rescue
-      e ->
-        {:error, "Doctest transformation error: #{Exception.message(e)}"}
-    end
-  end
-
-  @doc """
-  Transform doctests within AST nodes.
-  """
-  def transform_doctests_in_ast(ast, transformation_rules) do
-    Macro.prewalk(ast, fn node ->
-      case node do
-        # Match @doc "..." or @moduledoc "..."
-        {:@, meta, [{doc_type, doc_meta, [doc_string]}]}
-        when doc_type in [:doc, :moduledoc] and is_binary(doc_string) ->
-          case transform_doctest_string(doc_string, transformation_rules) do
-            {:changed, new_doc_string} ->
-              {:@, meta, [{doc_type, doc_meta, [new_doc_string]}]}
-
-            :unchanged ->
-              node
-          end
-
-        _ ->
-          node
-      end
-    end)
-  end
-
-  @doc """
-  Transform doctest examples within a documentation string.
-  """
-  def transform_doctest_string(doc_string, transformation_rules) do
-    # Find all doctest blocks (lines starting with "    iex>")
-    lines = String.split(doc_string, "\n")
-
-    {transformed_lines, changed?} =
-      lines
-      |> Enum.with_index()
-      |> Enum.map_reduce(false, fn {line, _index}, acc_changed ->
-        case extract_doctest_code(line) do
-          {:ok, code} ->
-            case transform_code(code, transformation_rules) do
-              {:changed, new_code} ->
-                new_line = rebuild_doctest_line(line, new_code)
-                {new_line, true}
-
-              :unchanged ->
-                {line, acc_changed}
-
-              {:error, _reason} ->
-                # Keep original line on error
-                {line, acc_changed}
-            end
-
-          :no_doctest ->
-            {line, acc_changed}
-        end
-      end)
-
-    if changed? do
-      new_doc_string = Enum.join(transformed_lines, "\n")
-      {:changed, new_doc_string}
-    else
-      :unchanged
-    end
-  end
-
-  @doc """
-  Extract Elixir code from a doctest line.
-
-  Returns `{:ok, code}` if the line contains doctest code,
-  or `:no_doctest` if it's not a doctest line.
-  """
-  def extract_doctest_code(line) do
-    # Match lines like "    iex> AriaEngine.Timeline.Interval.new(start_dt, end_dt)"
-    case Regex.run(~r/^(\s*iex>\s*)(.+)$/, line) do
-      [_full, _prefix, code] ->
-        {:ok, String.trim(code)}
-
-      nil ->
-        :no_doctest
-    end
-  end
-
-  @doc """
-  Rebuild a doctest line with transformed code.
-  """
-  def rebuild_doctest_line(original_line, new_code) do
-    case Regex.run(~r/^(\s*iex>\s*)(.+)$/, original_line) do
-      [_full, prefix, _old_code] ->
-        prefix <> new_code
-
-      nil ->
-        # Shouldn't happen, but return original as fallback
-        original_line
-    end
-  end
-
-  @doc """
-  Transform source code with both regular code and doctest transformations.
-
-  This is the enhanced entry point that handles both:
-  1. Regular AST transformations
-  2. Doctest transformations within documentation strings
-  """
-  def transform_code_and_doctests(source_code, transformation_rules) do
-    # First transform regular code
-    case transform_code(source_code, transformation_rules) do
-      {:changed, intermediate_code} ->
-        # Then transform doctests in the updated code
-        case transform_doctests(intermediate_code, transformation_rules) do
-          {:changed, final_code} -> {:changed, final_code}
-          :unchanged -> {:changed, intermediate_code}
-          {:error, reason} -> {:error, reason}
-        end
-
-      :unchanged ->
-        # Still try doctest transformation
-        transform_doctests(source_code, transformation_rules)
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  @doc """
-  Create transformation rules specifically for doctest timeline interval fixes.
-
-  These rules are more conservative than regular code transformations since
-  doctests often use simplified examples.
-  """
-  def doctest_timeline_interval_rules do
-    [
-      # Transform simple DateTime.new calls to ISO 8601 strings
-      doctest_datetime_to_iso8601_rule(),
-
-      # Transform Interval.new calls
-      function_call_rule(
-        [:AriaEngine, :Timeline, :Interval],
-        :new,
-        :new_fixed_schedule,
-        &doctest_datetime_args_transformer/1
-      )
-    ]
-  end
-
-  @doc """
-  Create a transformation rule for converting DateTime creation to ISO 8601 strings in doctests.
-  """
-  def doctest_datetime_to_iso8601_rule do
+  def datetime_from_naive_to_iso8601_rule do
     fn ast_node ->
       case ast_node do
-        # Match: DateTime.from_naive!(~N[2023-01-01 00:00:00], "Etc/UTC")
+        # Match: DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
         {{:., _, [{:__aliases__, _, [:DateTime]}, :from_naive!]}, _,
          [
            {:sigil_N, _, [{_, _, [date_string]}, []]},
-           timezone
-         ]}
-        when is_binary(timezone) ->
+           timezone_string
+         ]} ->
           # Convert to ISO 8601 string literal
-          iso_string = convert_naive_to_iso8601(date_string, timezone)
-          {:__block__, [], [iso_string]}
+          iso_string = convert_naive_to_iso8601(date_string, timezone_string)
+          iso_string
 
         _ ->
           ast_node
@@ -392,29 +222,13 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
   end
 
   @doc """
-  Transform arguments in doctest context, converting DateTime patterns to ISO 8601 strings.
+  Check if source code contains patterns that need timeline interval transformation.
   """
-  def doctest_datetime_args_transformer(args) do
-    Enum.map(args, fn arg ->
-      case arg do
-        # Match variable assignments like start_dt, end_dt
-        {var_name, meta, context} when is_atom(var_name) and is_atom(context) ->
-          var_name_str = Atom.to_string(var_name)
-
-          if String.ends_with?(var_name_str, "_dt") do
-            # Convert DateTime variable to ISO 8601 string
-            # This is a simplified approach for doctests
-            iso_var_name = String.replace(var_name_str, "_dt", "_iso")
-            {String.to_atom(iso_var_name), meta, context}
-          else
-            arg
-          end
-
-        _ ->
-          arg
-      end
-    end)
+  def needs_timeline_interval_transformation?(source_code) do
+    String.contains?(source_code, "Interval.new(") or
+      String.contains?(source_code, "DateTime.from_naive!")
   end
+
 
   @doc """
   Convert naive datetime string and timezone to ISO 8601 format.
@@ -423,17 +237,23 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
     # Simple conversion for UTC timezone
     # Input: "2023-01-01 00:00:00"
     # Output: "2023-01-01T00:00:00Z"
-    date_string
+    iso_string = date_string
     |> String.replace(" ", "T")
     |> Kernel.<>("Z")
+
+    # Return as string literal AST node
+    iso_string
   end
 
   def convert_naive_to_iso8601(date_string, _other_timezone) do
     # For non-UTC timezones, we'll use a simplified approach
     # This could be enhanced to handle more timezone formats
-    date_string
+    iso_string = date_string
     |> String.replace(" ", "T")
     |> Kernel.<>("Z")
+
+    # Return as string literal AST node
+    iso_string
   end
 
   @doc """

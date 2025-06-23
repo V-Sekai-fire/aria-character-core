@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Timeline.ResourceSchedulingTest do
   use ExUnit.Case, async: true
   alias AriaEngine.Timeline
@@ -22,16 +19,14 @@ defmodule AriaEngine.Timeline.ResourceSchedulingTest do
         )
 
       surgery_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T10:00:00Z", "2025-01-01T12:00:00Z",
           agent: surgeon,
           label: "Heart Surgery",
           metadata: %{required_capabilities: [:surgery, :medical_expertise]}
         )
 
       care_interval =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T12:00:00Z", "2025-01-01T14:00:00Z",
           agent: nurse,
           label: "Post-op Care",
           metadata: %{required_capabilities: [:patient_care]}
@@ -67,8 +62,7 @@ defmodule AriaEngine.Timeline.ResourceSchedulingTest do
         })
 
       welding_task =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T08:00:00Z", "2025-01-01T10:00:00Z",
           entity: welding_station,
           agent: welder,
           label: "Component Welding",
@@ -76,8 +70,7 @@ defmodule AriaEngine.Timeline.ResourceSchedulingTest do
         )
 
       assembly_task =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:30:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:30:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T10:30:00Z", "2025-01-01T12:30:00Z",
           agent: assembler,
           label: "Final Assembly",
           metadata: %{required_capabilities: [:assembly, :blueprint_reading]}
@@ -102,16 +95,14 @@ defmodule AriaEngine.Timeline.ResourceSchedulingTest do
         )
 
       flight1 =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T10:00:00Z", "2025-01-01T12:00:00Z",
           agent: pilot,
           label: "Flight NYC-LAX",
           metadata: %{required_capabilities: [:flying, :navigation]}
         )
 
       flight2 =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 11:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T11:00:00Z", "2025-01-01T13:00:00Z",
           agent: pilot,
           label: "Flight LAX-SFO",
           metadata: %{required_capabilities: [:flying, :navigation]}
@@ -149,8 +140,7 @@ defmodule AriaEngine.Timeline.ResourceSchedulingTest do
       cnc_machine = AgentEntity.create_entity("cnc1", "CNC Machine #1", %{model: "Haas VF-2"})
 
       morning_shift =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 08:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T08:00:00Z", "2025-01-01T12:00:00Z",
           entity: cnc_machine,
           agent: operator1,
           label: "Morning Production",
@@ -158,8 +148,7 @@ defmodule AriaEngine.Timeline.ResourceSchedulingTest do
         )
 
       afternoon_shift =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 13:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 17:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T13:00:00Z", "2025-01-01T17:00:00Z",
           entity: cnc_machine,
           agent: operator2,
           label: "Afternoon Production",
@@ -203,24 +192,21 @@ defmodule AriaEngine.Timeline.ResourceSchedulingTest do
         )
 
       planning_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 09:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T09:00:00Z", "2025-01-01T10:00:00Z",
           agent: project_manager,
           label: "Project Planning",
           metadata: %{required_capabilities: [:planning, :coordination]}
         )
 
       development_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T10:00:00Z", "2025-01-01T14:00:00Z",
           agent: developer,
           label: "Development",
           metadata: %{required_capabilities: [:coding]}
         )
 
       testing_phase =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 14:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 16:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T14:00:00Z", "2025-01-01T16:00:00Z",
           agent: tester,
           label: "Testing",
           metadata: %{required_capabilities: [:testing]}
@@ -267,24 +253,21 @@ defmodule AriaEngine.Timeline.ResourceSchedulingTest do
         )
 
       command_setup =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 14:30:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 14:35:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T14:30:00Z", "2025-01-01T14:35:00Z",
           agent: fire_chief,
           label: "Incident Command Setup",
           metadata: %{required_capabilities: [:incident_command]}
         )
 
       rescue_operation =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 14:35:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T14:35:00Z", "2025-01-01T15:00:00Z",
           agent: firefighter,
           label: "Victim Rescue",
           metadata: %{required_capabilities: [:rescue_operations]}
         )
 
       medical_treatment =
-        Interval.new_fixed_schedule(DateTime.from_naive!(~N[2025-01-01 15:00:00], "Etc/UTC"),
-          DateTime.from_naive!(~N[2025-01-01 15:30:00], "Etc/UTC"),
+        Interval.new_fixed_schedule("2025-01-01T15:00:00Z", "2025-01-01T15:30:00Z",
           agent: paramedic,
           label: "Medical Treatment",
           metadata: %{required_capabilities: [:emergency_medical]}

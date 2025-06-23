@@ -1,6 +1,3 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Timeline.IntervalISO8601Test do
   use ExUnit.Case, async: true
   alias AriaEngine.Timeline.Interval
@@ -105,12 +102,7 @@ defmodule AriaEngine.Timeline.IntervalISO8601Test do
 
     test "works with options" do
       agent = %{type: :agent, id: "agent1", name: "Alice"}
-
-      interval =
-        Interval.new_fixed_schedule(%{start: "2025-06-22T10:00:00Z"},
-          agent: agent
-        )
-
+      interval = Interval.new_fixed_schedule(%{start: "2025-06-22T10:00:00Z"}, agent: agent)
       assert interval.agent == agent
       assert interval.metadata.open_ended_start == true
     end
@@ -118,8 +110,8 @@ defmodule AriaEngine.Timeline.IntervalISO8601Test do
 
   describe("backward compatibility with DateTime constructors") do
     test "new/2 with DateTime structs shows deprecation warning" do
-      start_dt = DateTime.from_naive!(~N[2025-06-22 10:00:00], "Etc/UTC")
-      end_dt = DateTime.from_naive!(~N[2025-06-22 11:00:00], "Etc/UTC")
+      start_dt = "2025-06-22T10:00:00Z"
+      end_dt = "2025-06-22T11:00:00Z"
       import ExUnit.CaptureIO
 
       output =
@@ -139,8 +131,8 @@ defmodule AriaEngine.Timeline.IntervalISO8601Test do
     end
 
     test "new/3 with DateTime structs shows deprecation warning" do
-      start_dt = DateTime.from_naive!(~N[2025-06-22 10:00:00], "Etc/UTC")
-      end_dt = DateTime.from_naive!(~N[2025-06-22 11:00:00], "Etc/UTC")
+      start_dt = "2025-06-22T10:00:00Z"
+      end_dt = "2025-06-22T11:00:00Z"
       import ExUnit.CaptureIO
 
       output =
