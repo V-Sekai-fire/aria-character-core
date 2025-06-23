@@ -282,7 +282,7 @@ defmodule Mix.Tasks.Migrate.AddSerialNumbers do
 
   defp decode_factory("A"), do: "Aria Character Core"
   defp decode_factory("V"), do: "V-Sekai"
-  defp decode_factory("E"), do: "Ernest's Personal Projects"
+  defp decode_factory("F"), do: "Fire"
   defp decode_factory("G"), do: "Godot Projects"
   defp decode_factory("C"), do: "Community Projects"
   defp decode_factory(f), do: "Unknown Factory (#{f})"
