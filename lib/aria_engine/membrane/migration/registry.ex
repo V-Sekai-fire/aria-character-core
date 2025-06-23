@@ -114,6 +114,23 @@ defmodule AriaEngine.Membrane.Migration.Registry do
   end
 
   @doc """
+  Get the rule module for direct transformation (not Membrane bin).
+  """
+  @spec get_rule_module(atom()) :: module() | nil
+  def get_rule_module(rule_name) do
+    # Map rule names to simple transformation modules
+    case rule_name do
+      :datetime_string_fix -> AriaEngine.Membrane.Migration.Rules.DatetimeStringFix
+      :interval_constructor_fix -> AriaEngine.Membrane.Migration.Rules.IntervalConstructorFix
+      :domain_from_module -> AriaEngine.Membrane.Migration.Rules.DomainFromModule
+      :logger_conversion -> AriaEngine.Membrane.Migration.Rules.LoggerConversion
+      :goal_tuples -> AriaEngine.Membrane.Migration.Rules.GoalTuples
+      :debug_datetime -> AriaEngine.Membrane.Migration.Rules.DebugDatetime
+      _ -> nil
+    end
+  end
+
+  @doc """
   Get rules by category.
   """
   @spec get_rules_by_category(atom()) :: [rule_metadata()]

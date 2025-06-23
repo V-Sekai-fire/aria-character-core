@@ -12,12 +12,13 @@ defmodule AriaEngine.Membrane.Migration.Pipeline do
   use Membrane.Pipeline
 
   alias AriaEngine.Membrane.Migration.{
+    FileSource,
+    FileSink,
     RuleDetector,
     RuleRouter,
     ResultCollector,
     Registry
   }
-  alias Membrane.File
 
   @type pipeline_options :: %{
     files: [String.t()],
@@ -37,8 +38,8 @@ defmodule AriaEngine.Membrane.Migration.Pipeline do
 
     # Build pipeline spec
     spec = [
-      # Source: Read files using standard Membrane File.Source
-      child(:file_source, %File.Source{
+      # Source: Read files using our custom FileSource
+      child(:file_source, %FileSource{
         location: get_first_file(options.files)
       }),
 
@@ -47,7 +48,7 @@ defmodule AriaEngine.Membrane.Migration.Pipeline do
         available_rules: rules
       }),
 
-      # Router: Route files to appropriate rule bins
+      # Router: Apply transformation rules directly
       child(:rule_router, %RuleRouter{
         rules: rules
       }),
@@ -57,9 +58,10 @@ defmodule AriaEngine.Membrane.Migration.Pipeline do
         dry_run: options.dry_run
       }),
 
-      # Sink: Write files using standard Membrane File.Sink
-      child(:file_sink, %File.Sink{
-        location: get_output_location(options)
+      # Sink: Write files using our custom FileSink
+      child(:file_sink, %FileSink{
+        dry_run: options.dry_run,
+        backup_dir: options.backup_dir
       }),
 
       # Connect the main pipeline flow
@@ -74,10 +76,7 @@ defmodule AriaEngine.Membrane.Migration.Pipeline do
       |> get_child(:file_sink)
     ]
 
-    # Add rule bins dynamically
-    rule_specs = create_rule_bin_specs(rules)
-
-    {[spec: spec ++ rule_specs], %{rules: rules, options: options}}
+    {[spec: spec], %{rules: rules, options: options}}
   end
 
   @impl true
@@ -110,24 +109,6 @@ defmodule AriaEngine.Membrane.Migration.Pipeline do
       [] -> "."
       _ -> "."
     end
-  end
-
-  defp get_output_location(options) do
-    if options.dry_run do
-      "/dev/null"  # Discard output in dry run mode
-    else
-      # For now, use a temporary location - in a full implementation
-      # this would be handled differently for multiple files
-      Path.join(options.backup_dir, "migration_output.tmp")
-    end
-  end
-
-  defp create_rule_bin_specs(rules) do
-    Enum.map(rules, fn rule_name ->
-      bin_module = Registry.get_rule_bin_module(rule_name)
-
-      child(rule_name, bin_module)
-    end)
   end
 
   defp display_summary(summary, options) do
