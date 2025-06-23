@@ -90,10 +90,4 @@ node_modules/.cache/prettier/.prettier-caches
 /priv/plts/
 apps/.DS_Store
 /priv/
-
-tmp
-.migration_backup/deps/phoenix_live_view/lib/phoenix_live_view/channel.ex
-.migration_backup/test/aria_engine/test/support/simple_travel_methods.ex
-
-
 /.migration_backup/

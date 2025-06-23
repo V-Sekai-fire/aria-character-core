@@ -22,13 +22,6 @@ jobs:
           elixir-version: '1.18'
           otp-version: '26.2'
 
-      - name: Install MiniZinc
-        run: |
-          wget https://github.com/MiniZinc/MiniZincIDE/releases/download/2.8.5/MiniZincIDE-2.8.5-bundle-linux-x86_64.tgz
-          tar -xzf MiniZincIDE-2.8.5-bundle-linux-x86_64.tgz
-          sudo mv MiniZincIDE-2.8.5-bundle-linux-x86_64 /opt/minizinc
-          echo "/opt/minizinc/bin" >> $GITHUB_PATH
-
       - name: Restore dependencies cache
         uses: actions/cache@v4
         with:

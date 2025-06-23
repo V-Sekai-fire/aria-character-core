@@ -2,20 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
-  @moduledoc """
-  Default State strategy implementation wrapping existing state management logic.
-
-  This strategy encapsulates State operations while providing the clean
-  strategy interface defined in ADR-091.
-  """
-
+  @moduledoc "Default StateV2 strategy implementation wrapping existing state management logic.\n\nThis strategy encapsulates StateV2 operations while providing the clean\nstrategy interface defined in ADR-091.\n"
   @behaviour HybridPlanner.Strategies.StateStrategy
-
-  alias State
+  alias AriaEngine.State
   require Logger
-
   @impl true
-  def apply_action(%State{} = state, {action_name, args}, domain, opts \\ []) do
+  def apply_action(%AriaEngine.State{} = state, {action_name, args}, domain, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do
@@ -23,11 +15,10 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
     end
 
     try do
-      # Get action function from domain
       case Map.get(domain.actions, action_name) do
         action_fn when is_function(action_fn) ->
           case apply(action_fn, [state | args]) do
-            %State{} = new_state ->
+            %AriaEngine.State{} = new_state ->
               if verbose > 1 do
                 Logger.debug("StateV2Strategy: Action applied successfully")
               end
@@ -53,11 +44,11 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
   end
 
   @impl true
-  def query_state(%State{} = state, query, _opts \\ []) do
+  def query_state(%AriaEngine.State{} = state, query, _opts \\ []) do
     try do
       case query do
         {:fact, subject, predicate} ->
-          result = State.get_fact(state, subject, predicate)
+          result = AriaEngine.State.get_fact(state, subject, predicate)
           {:ok, result}
 
         {:facts, predicate} ->
@@ -71,30 +62,27 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
           {:error, "Unknown query type: #{inspect(query)}"}
       end
     rescue
-      e ->
-        {:error, "StateV2Strategy query error: #{Exception.message(e)}"}
+      e -> {:error, "StateV2Strategy query error: #{Exception.message(e)}"}
     end
   end
 
   @impl true
-  def create_checkpoint(%State{} = state, checkpoint_id, _opts \\ []) do
+  def create_checkpoint(%AriaEngine.State{} = state, checkpoint_id, _opts \\ []) do
     try do
-      # Simple checkpoint by storing state data with special checkpoint key
       checkpoint_key = {"__checkpoint__", checkpoint_id}
 
-      checkpointed_state = %State{
+      checkpointed_state = %AriaEngine.State{
         data: Map.put(state.data, checkpoint_key, state.data)
       }
 
       {:ok, checkpointed_state}
     rescue
-      e ->
-        {:error, "StateV2Strategy checkpoint error: #{Exception.message(e)}"}
+      e -> {:error, "StateV2Strategy checkpoint error: #{Exception.message(e)}"}
     end
   end
 
   @impl true
-  def rollback_to_checkpoint(%State{} = state, checkpoint_id, _opts \\ []) do
+  def rollback_to_checkpoint(%AriaEngine.State{} = state, checkpoint_id, _opts \\ []) do
     try do
       checkpoint_key = {"__checkpoint__", checkpoint_id}
 
@@ -103,12 +91,11 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
           {:error, "Checkpoint #{checkpoint_id} not found"}
 
         saved_data ->
-          restored_state = %State{data: saved_data}
+          restored_state = %AriaEngine.State{data: saved_data}
           {:ok, restored_state}
       end
     rescue
-      e ->
-        {:error, "StateV2Strategy rollback error: #{Exception.message(e)}"}
+      e -> {:error, "StateV2Strategy rollback error: #{Exception.message(e)}"}
     end
   end
 

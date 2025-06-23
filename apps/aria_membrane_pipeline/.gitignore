@@ -1,0 +1,26 @@
+# The directory Mix will write compiled artifacts to.
+/_build/
+
+# If you run "mix test --cover", coverage assets end up here.
+/cover/
+
+# The directory Mix downloads your dependencies sources to.
+/deps/
+
+# Where third-party dependencies go
+/deps/
+
+# Where build artifacts go
+/_build/
+
+# If NPM crashes, it generates a log, let's ignore it too.
+npm-debug.log
+
+# The directory where Mix tasks and generators will place generated files.
+/priv/static/
+
+# Ignore package tarball (built via "mix hex.build").
+aria_membrane_pipeline-*.tar
+
+# Temporary files, for example, from tests.
+/tmp/

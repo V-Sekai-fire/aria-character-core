@@ -7,7 +7,7 @@ defmodule AriaCharacterCore.MixProject do
   def project do
     [
       app: :aria_character_core,
-      version: "0.3.0",
+      version: "0.2.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -115,6 +115,12 @@ defmodule AriaCharacterCore.MixProject do
       # External Process Execution
       {:porcelain, "~> 2.0"},
 
+      # Git operations
+      {:egit, "~> 0.1.9"},
+
+      # AST parsing and manipulation
+      {:sourceror, "~> 1.0"},
+
       # UUID Generation
       {:elixir_uuid, "~> 1.2"},
       {:uuid, "~> 1.1", app: false},
@@ -123,7 +129,15 @@ defmodule AriaCharacterCore.MixProject do
 
       # Test dependencies
       {:stream_data, "~> 1.2", only: :test},
-      {:ex_unit_notifier, "~> 1.3", only: :test}
+      {:ex_unit_notifier, "~> 1.3", only: :test},
+
+      # Internal applications
+      {:aria_engine_core, path: "apps/aria_engine_core"},
+      {:aria_town, path: "apps/aria_town"},
+      {:aria_temporal_planner, path: "apps/aria_temporal_planner"},
+      {:aria_hybrid_planner, path: "apps/aria_hybrid_planner"},
+      {:aria_scheduler, path: "apps/aria_scheduler"},
+      {:aria_membrane_pipeline, path: "apps/aria_membrane_pipeline"}
     ]
   end
 

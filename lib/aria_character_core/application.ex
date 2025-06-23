@@ -3,35 +3,13 @@
 
 defmodule AriaCharacterCore.Application do
   @moduledoc false
-
   use Application
-
   @impl true
   def start(_type, _args) do
     children = [
-      # TOMBSTONE: AriaEngine.Membrane.PipelineManager was removed during temporal planning segment closure
-      # The membrane pipeline infrastructure was removed in favor of direct hybrid planner integration
-
-      # AriaTown components (NPC management)
-      AriaTown.PersistenceManager,
-      AriaTown.TimeManager,
-      AriaTown.NPCManager
-
-      # AriaAuth components
-      # Authentication supervisors can be added here as needed
-
-      # AriaSecurity components
-      # Security supervisors can be added here as needed
-
-      # AriaStorage components
-      # Storage supervisors can be added here as needed
-
-      # AriaMonitor components
-      # Monitoring supervisors can be added here as needed
+      AriaEngine.Membrane.PipelineManager
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: AriaCharacterCore.Supervisor]
     Supervisor.start_link(children, opts)
   end
@@ -41,11 +19,8 @@ defmodule AriaCharacterCore.Application do
     :ok
   end
 
-  # Tell Phoenix to update the endpoint configuration
-  # whenever the application is updated.
   @impl true
   def config_change(_changed, _new, _removed) do
-    # AriaCoordinateWeb.Endpoint.config_change(changed, removed)
     :ok
   end
 end
