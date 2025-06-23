@@ -240,7 +240,7 @@ defmodule AriaEngine.Membrane.PlannerFilter do
 
   defp extract_state_info(state) when is_map(state) do
     %{
-      type: "State",
+      type: "StateV2",
       facts_count: Map.get(state, :facts, %{}) |> map_size()
     }
   end

@@ -495,7 +495,7 @@ defmodule HybridPlanner.Strategies do
       %{
         planning_strategy: HybridPlanner.Strategies.Default.HTNPlanningStrategy,
         temporal_strategy: HybridPlanner.Strategies.Default.STNTemporalStrategy,
-        state_strategy: HybridPlanner.Strategies.Default.StateStrategy,
+        state_strategy: HybridPlanner.Strategies.Default.StateV2Strategy,
         domain_strategy: HybridPlanner.Strategies.Default.DomainStrategy,
         logging_strategy: HybridPlanner.Strategies.Default.LoggerStrategy,
         execution_strategy: HybridPlanner.Strategies.Default.LazyExecutionStrategy

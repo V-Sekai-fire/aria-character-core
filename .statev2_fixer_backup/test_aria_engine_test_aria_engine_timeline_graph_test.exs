@@ -10,7 +10,7 @@ defmodule AriaEngine.TimelineGraphTest do
   alias State
 
   describe "new/0" do
-    test "creates empty timeline graph with State" do
+    test "creates empty timeline graph with StateV2" do
       timeline_graph = TimelineGraph.new()
 
       assert timeline_graph.entities == %{}
@@ -41,7 +41,7 @@ defmodule AriaEngine.TimelineGraphTest do
       assert entity_id == "chair1"
       assert "chair1" in TimelineGraph.get_entity_ids(updated_graph)
 
-      # Properties should be set using entity-first State
+      # Properties should be set using entity-first StateV2
       entity_props = TimelineGraph.get_entity_properties(updated_graph, "chair1")
       assert entity_props["type"] == "furniture"
       assert entity_props["material"] == "wood"
@@ -213,7 +213,7 @@ defmodule AriaEngine.TimelineGraphTest do
       assert entity_timeline.last_growth != nil
     end
 
-    test "get_entity_properties/2 uses entity-first State API", %{
+    test "get_entity_properties/2 uses entity-first StateV2 API", %{
       timeline_graph: timeline_graph
     } do
       props = TimelineGraph.get_entity_properties(timeline_graph, "player")

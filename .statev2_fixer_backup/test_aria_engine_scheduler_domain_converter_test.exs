@@ -8,7 +8,7 @@ defmodule AriaEngine.Scheduler.DomainConverterTest do
   alias State
 
   describe "domain action creation for activities" do
-    test "creates action function that works with State" do
+    test "creates action function that works with StateV2" do
       domain = Domain.new("test_domain")
 
       action_fn = fn state, _args ->

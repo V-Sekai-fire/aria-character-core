@@ -226,7 +226,7 @@ defmodule CoreTest do
       assert is_nil(engine.completed_at)
     end
 
-    test "initial_state and current_state use StateV2" do
+    test "initial_state and current_state use State" do
       initial_state = State.new()
       definition = %{initial_state: initial_state}
       engine = Core.new("state_test", definition)

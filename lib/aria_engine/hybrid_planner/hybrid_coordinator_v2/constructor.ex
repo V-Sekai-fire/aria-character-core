@@ -76,7 +76,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.Constructor do
     default_strategies = %{
       planning_strategy: Strategies.Default.HTNPlanningStrategy,
       temporal_strategy: Strategies.Default.STNTemporalStrategy,
-      state_strategy: Strategies.Default.StateV2Strategy,
+      state_strategy: Strategies.Default.StateStrategy,
       domain_strategy: Strategies.Default.DomainStrategy,
       logging_strategy: Strategies.Default.LoggerStrategy,
       execution_strategy: Strategies.Default.LazyExecutionStrategy

@@ -322,7 +322,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
 
   defp extract_resources(_state, goals) do
     # Extract all resources mentioned in goals
-    # Note: State doesn't have get_all_facts/1, so we focus on goal resources
+    # Note: StateV2 doesn't have get_all_facts/1, so we focus on goal resources
     goal_resources = goals
     |> Enum.filter(fn {subject, predicate, value} ->
       predicate == "has" or

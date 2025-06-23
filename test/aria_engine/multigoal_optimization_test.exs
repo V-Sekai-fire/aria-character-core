@@ -24,7 +24,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
   use ExUnit.Case
   require Logger
 
-  alias AriaEngine.{StateV2, Multigoal}
+  alias AriaEngine.{State, Multigoal}
 
   # ==================== MOCK OPTIMIZER IMPLEMENTATION ====================
 

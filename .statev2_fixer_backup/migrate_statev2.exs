@@ -2,7 +2,7 @@
 
 defmodule StateV2Migrator do
   @moduledoc """
-  Migrates State references to State throughout the codebase.
+  Migrates StateV2 references to State throughout the codebase.
 
   Usage:
     elixir migrate_statev2.exs --dry-run
@@ -25,12 +25,12 @@ defmodule StateV2Migrator do
   def main(args \\ []) do
     case parse_args(args) do
       {:dry_run} ->
-        IO.puts("🔍 State → State Migration Dry Run")
+        IO.puts("🔍 StateV2 → State Migration Dry Run")
         IO.puts("=" |> String.duplicate(50))
         migrate_all(dry_run: true)
 
       {:apply_all} ->
-        IO.puts("🚀 Applying State → State Migration")
+        IO.puts("🚀 Applying StateV2 → State Migration")
         IO.puts("=" |> String.duplicate(50))
         migrate_all(dry_run: false)
 
@@ -57,7 +57,7 @@ defmodule StateV2Migrator do
 
   defp print_help do
     IO.puts("""
-    State Migration Tool
+    StateV2 Migration Tool
 
     Usage:
       elixir migrate_statev2.exs [options]
@@ -76,7 +76,7 @@ defmodule StateV2Migrator do
     files = find_files_with_statev2()
 
     if dry_run do
-      IO.puts("📁 Found #{length(files)} files with State references:")
+      IO.puts("📁 Found #{length(files)} files with StateV2 references:")
       Enum.each(files, &IO.puts("  • #{&1}"))
       IO.puts("")
     end
@@ -136,7 +136,7 @@ defmodule StateV2Migrator do
 
   defp has_statev2_references?(file_path) do
     case File.read(file_path) do
-      {:ok, content} -> String.contains?(content, "State")
+      {:ok, content} -> String.contains?(content, "StateV2")
       {:error, _} -> false
     end
   end
@@ -178,10 +178,10 @@ defmodule StateV2Migrator do
     {final_content, final_changes}
   end
 
-  # Transform State.set_fact(state, predicate, subject, value) → State.set_fact(state, predicate, subject, value)
+  # Transform StateV2.update_fact(state, subject, predicate, value) → State.set_fact(state, predicate, subject, value)
   defp transform_update_fact(content) do
     # Use a more sophisticated pattern that handles nested parentheses and complex expressions
-    pattern = ~r/State\.update_fact\(([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/
+    pattern = ~r/StateV2\.update_fact\(([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/
 
     new_content = Regex.replace(pattern, content, fn _full_match, state, subject, predicate, value ->
       "State.set_fact(#{state}, #{predicate}, #{subject}, #{value})"
@@ -192,9 +192,9 @@ defmodule StateV2Migrator do
     {new_content, change_count}
   end
 
-  # Transform State.matches?(state, predicate, subject, value) → State.matches?(state, predicate, subject, value)
+  # Transform StateV2.matches_exactly?(state, subject, predicate, value) → State.matches?(state, predicate, subject, value)
   defp transform_matches_exactly(content) do
-    pattern = ~r/State\.matches_exactly\?\(([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/
+    pattern = ~r/StateV2\.matches_exactly\?\(([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/
     replacement = "State.matches?(\\1, \\3, \\2, \\4)"
 
     new_content = Regex.replace(pattern, content, replacement)
@@ -203,9 +203,9 @@ defmodule StateV2Migrator do
     {new_content, change_count}
   end
 
-  # Transform State.get_fact(state, subject, predicate) → State.get_fact(state, predicate, subject)
+  # Transform StateV2.get_fact(state, subject, predicate) → State.get_fact(state, predicate, subject)
   defp transform_get_fact(content) do
-    pattern = ~r/State\.get_fact\(([^,]+),\s*([^,]+),\s*([^)]+)\)/
+    pattern = ~r/StateV2\.get_fact\(([^,]+),\s*([^,]+),\s*([^)]+)\)/
     replacement = "State.get_fact(\\1, \\3, \\2)"
 
     new_content = Regex.replace(pattern, content, replacement)
@@ -214,9 +214,9 @@ defmodule StateV2Migrator do
     {new_content, change_count}
   end
 
-  # Transform State.exists?(state, filter, predicate, value) → State.exists?(state, predicate, value, filter)
+  # Transform StateV2.exists?(state, filter, predicate, value) → State.exists?(state, predicate, value, filter)
   defp transform_exists(content) do
-    pattern = ~r/State\.exists\?\(([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/
+    pattern = ~r/StateV2\.exists\?\(([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/
     replacement = "State.exists?(\\1, \\3, \\4, \\2)"
 
     new_content = Regex.replace(pattern, content, replacement)
@@ -225,9 +225,9 @@ defmodule StateV2Migrator do
     {new_content, change_count}
   end
 
-  # Transform State.forall?(state, filter, predicate, value) → State.forall?(state, predicate, value, filter)
+  # Transform StateV2.forall?(state, filter, predicate, value) → State.forall?(state, predicate, value, filter)
   defp transform_forall(content) do
-    pattern = ~r/State\.forall\?\(([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/
+    pattern = ~r/StateV2\.forall\?\(([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/
     replacement = "State.forall?(\\1, \\3, \\4, \\2)"
 
     new_content = Regex.replace(pattern, content, replacement)
@@ -236,9 +236,9 @@ defmodule StateV2Migrator do
     {new_content, change_count}
   end
 
-  # Transform State.evaluate_condition(state, condition) → State.evaluate_condition(state, condition)
+  # Transform StateV2.evaluate_condition(state, condition) → State.evaluate_condition(state, condition)
   defp transform_evaluate_condition(content) do
-    pattern = ~r/State\.evaluate_condition\(/
+    pattern = ~r/StateV2\.evaluate_condition\(/
     replacement = "State.evaluate_condition("
 
     new_content = Regex.replace(pattern, content, replacement)
@@ -247,9 +247,9 @@ defmodule StateV2Migrator do
     {new_content, change_count}
   end
 
-  # Transform State.get_subjects_with_fact(state, predicate, value) → State.get_subjects_with_fact(state, predicate, value)
+  # Transform StateV2.get_subjects_with_fact(state, predicate, value) → State.get_subjects_with_fact(state, predicate, value)
   defp transform_get_subjects_with_fact(content) do
-    pattern = ~r/State\.get_subjects_with_fact\(/
+    pattern = ~r/StateV2\.get_subjects_with_fact\(/
     replacement = "State.get_subjects_with_fact("
 
     new_content = Regex.replace(pattern, content, replacement)
@@ -258,9 +258,9 @@ defmodule StateV2Migrator do
     {new_content, change_count}
   end
 
-  # Transform State.get_subjects_with_predicate(state, predicate) → State.get_subjects_with_predicate(state, predicate)
+  # Transform StateV2.get_subjects_with_predicate(state, predicate) → State.get_subjects_with_predicate(state, predicate)
   defp transform_get_subjects_with_predicate(content) do
-    pattern = ~r/State\.get_subjects_with_predicate\(/
+    pattern = ~r/StateV2\.get_subjects_with_predicate\(/
     replacement = "State.get_subjects_with_predicate("
 
     new_content = Regex.replace(pattern, content, replacement)
@@ -269,14 +269,14 @@ defmodule StateV2Migrator do
     {new_content, change_count}
   end
 
-  # Transform type annotations: AriaEngine.State.t() → State.t(), State.subject() → State.subject(), etc.
+  # Transform type annotations: AriaEngine.StateV2.t() → State.t(), StateV2.subject() → State.subject(), etc.
   defp transform_type_annotations(content) do
     patterns_and_replacements = [
-      {~r/AriaEngine\.State\.t\(\)/, "State.t()"},
-      {~r/State\.t\(\)/, "State.t()"},
-      {~r/State\.subject\(\)/, "State.subject()"},
-      {~r/State\.predicate\(\)/, "State.predicate()"},
-      {~r/State\.fact_value\(\)/, "State.fact_value()"}
+      {~r/AriaEngine\.StateV2\.t\(\)/, "State.t()"},
+      {~r/StateV2\.t\(\)/, "State.t()"},
+      {~r/StateV2\.subject\(\)/, "State.subject()"},
+      {~r/StateV2\.predicate\(\)/, "State.predicate()"},
+      {~r/StateV2\.fact_value\(\)/, "State.fact_value()"}
     ]
 
     {new_content, total_changes} =
@@ -289,9 +289,9 @@ defmodule StateV2Migrator do
     {new_content, total_changes}
   end
 
-  # Transform module references: AriaEngine.State → State (but not in type annotations)
+  # Transform module references: AriaEngine.StateV2 → State (but not in type annotations)
   defp transform_module_references(content) do
-    pattern = ~r/AriaEngine\.State(?!\.t\(\))/
+    pattern = ~r/AriaEngine\.StateV2(?!\.t\(\))/
     replacement = "State"
 
     new_content = Regex.replace(pattern, content, replacement)
@@ -300,9 +300,9 @@ defmodule StateV2Migrator do
     {new_content, change_count}
   end
 
-  # Transform State.new() → State.new()
+  # Transform StateV2.new() → State.new()
   defp transform_new_calls(content) do
-    pattern = ~r/State\.new\(/
+    pattern = ~r/StateV2\.new\(/
     replacement = "State.new("
 
     new_content = Regex.replace(pattern, content, replacement)

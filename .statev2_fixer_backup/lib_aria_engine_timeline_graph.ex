@@ -115,7 +115,7 @@ defmodule AriaEngine.TimelineGraph do
   defdelegate is_currently_agent?(timeline_graph, entity_id), to: EntityManager
 
   @doc """
-  Gets entity properties using entity-first State API.
+  Gets entity properties using entity-first StateV2 API.
 
   Delegates to `TimelineGraph.EntityManager.get_entity_properties/2`.
   """

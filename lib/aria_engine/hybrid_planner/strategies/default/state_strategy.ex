@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
+defmodule HybridPlanner.Strategies.Default.StateStrategy do
   @moduledoc """
-  Default StateV2 strategy implementation wrapping existing state management logic.
+  Default State strategy implementation wrapping existing state management logic.
 
-  This strategy encapsulates StateV2 operations while providing the clean
+  This strategy encapsulates State operations while providing the clean
   strategy interface defined in ADR-091.
   """
 
@@ -19,7 +19,7 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do
-      Logger.debug("StateV2Strategy: Applying action #{action_name} with args #{inspect(args)}")
+      Logger.debug("StateStrategy: Applying action #{action_name} with args #{inspect(args)}")
     end
 
     try do
@@ -29,7 +29,7 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
           case apply(action_fn, [state | args]) do
             %State{} = new_state ->
               if verbose > 1 do
-                Logger.debug("StateV2Strategy: Action applied successfully")
+                Logger.debug("StateStrategy: Action applied successfully")
               end
 
               {:ok, new_state}
@@ -46,7 +46,7 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
       end
     rescue
       e ->
-        error_msg = "StateV2Strategy action application error: #{Exception.message(e)}"
+        error_msg = "StateStrategy action application error: #{Exception.message(e)}"
         Logger.error(error_msg)
         {:error, error_msg}
     end
@@ -72,7 +72,7 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
       end
     rescue
       e ->
-        {:error, "StateV2Strategy query error: #{Exception.message(e)}"}
+        {:error, "StateStrategy query error: #{Exception.message(e)}"}
     end
   end
 
@@ -89,7 +89,7 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
       {:ok, checkpointed_state}
     rescue
       e ->
-        {:error, "StateV2Strategy checkpoint error: #{Exception.message(e)}"}
+        {:error, "StateStrategy checkpoint error: #{Exception.message(e)}"}
     end
   end
 
@@ -108,17 +108,17 @@ defmodule HybridPlanner.Strategies.Default.StateV2Strategy do
       end
     rescue
       e ->
-        {:error, "StateV2Strategy rollback error: #{Exception.message(e)}"}
+        {:error, "StateStrategy rollback error: #{Exception.message(e)}"}
     end
   end
 
   def strategy_info do
     %{
-      name: "StateV2 Strategy",
+      name: "State Strategy",
       version: "1.0.0",
-      description: "Default StateV2 state management strategy",
+      description: "Default State state management strategy",
       capabilities: [:fact_storage, :action_application, :state_querying, :checkpointing],
-      underlying_implementation: "StateV2"
+      underlying_implementation: "State"
     }
   end
 end

@@ -15,11 +15,11 @@ defmodule HybridPlanner.StrategyFactory do
 
       # Register strategies
       factory = StrategyFactory.new()
-      |> StrategyFactory.register_strategy(:planning, :default, 
+      |> StrategyFactory.register_strategy(:planning, :default,
            HybridPlanner.Strategies.Default.HTNPlanningStrategy)
       |> StrategyFactory.register_strategy(:planning, :optimized,
            HybridPlanner.Strategies.Optimized.HTNPlanningStrategy)
-      
+
       # Create coordinator from configuration
       config = %{
         planning_strategy: :default,
@@ -29,9 +29,9 @@ defmodule HybridPlanner.StrategyFactory do
         logging_strategy: :verbose,
         execution_strategy: :lazy
       }
-      
+
       coordinator = StrategyFactory.create_coordinator(factory, config)
-      
+
       # Runtime strategy swapping
       new_coordinator = StrategyFactory.swap_strategy(coordinator, :planning, :optimized)
   """
@@ -220,7 +220,7 @@ defmodule HybridPlanner.StrategyFactory do
                 # since we're only creating a coordinator here
                 coordinator = HybridCoordinatorV2.new(strategy_modules, opts)
                 {:ok, coordinator}
-                
+
               {:error, reason} ->
                 {:error, "Strategy validation failed: #{reason}"}
             end
@@ -362,10 +362,10 @@ defmodule HybridPlanner.StrategyFactory do
 
   @doc """
   Validate that a strategy module implements the required behavior for its type.
-  
+
   Uses deferred validation with caching to avoid compilation order issues.
   """
-  @spec validate_strategy_module(t(), strategy_type(), strategy_module()) :: 
+  @spec validate_strategy_module(t(), strategy_type(), strategy_module()) ::
           {:ok, t()} | {:error, String.t()}
   def validate_strategy_module(%__MODULE__{} = factory, strategy_type, strategy_module) do
     # Check cache first
@@ -375,12 +375,12 @@ defmodule HybridPlanner.StrategyFactory do
         result = perform_strategy_validation(strategy_type, strategy_module)
         updated_cache = Map.put(factory.validation_cache, strategy_module, result)
         updated_factory = %{factory | validation_cache: updated_cache}
-        
+
         case result do
           :ok -> {:ok, updated_factory}
           {:error, reason} -> {:error, reason}
         end
-        
+
       cached_result ->
         # Return cached result
         case cached_result do
@@ -392,7 +392,7 @@ defmodule HybridPlanner.StrategyFactory do
 
   @doc """
   Validate all strategy modules in a strategy configuration.
-  
+
   This is used during coordinator creation to ensure all strategies are valid.
   """
   @spec validate_all_strategy_modules(t(), %{strategy_type() => strategy_module()}) ::
@@ -400,7 +400,7 @@ defmodule HybridPlanner.StrategyFactory do
   def validate_all_strategy_modules(%__MODULE__{} = factory, strategy_modules) do
     try do
       # Validate each strategy module
-      {final_factory, final_status} = 
+      {final_factory, final_status} =
         Enum.reduce(strategy_modules, {factory, :ok}, fn {strategy_type, strategy_module}, {acc_factory, status} ->
           case status do
             :ok ->
@@ -412,7 +412,7 @@ defmodule HybridPlanner.StrategyFactory do
               {acc_factory, error}
           end
         end)
-      
+
       case final_status do
         :ok -> {:ok, final_factory}
         {:error, reason} -> {:error, reason}
@@ -432,7 +432,7 @@ defmodule HybridPlanner.StrategyFactory do
       {:temporal_strategy, :stn, Strategies.Default.STNBridgeTemporalStrategy},
       {:temporal_strategy, :stn_legacy, Strategies.Default.STNTemporalStrategy},
       {:temporal_strategy, :stn_bridge, Strategies.Default.STNBridgeTemporalStrategy},
-      {:state_strategy, :statev2, Strategies.Default.StateV2Strategy},
+      {:state_strategy, :statev2, Strategies.Default.StateStrategy},
       {:domain_strategy, :default, Strategies.Default.DomainStrategy},
       {:logging_strategy, :default, Strategies.Default.LoggerStrategy},
       {:logging_strategy, :verbose, Strategies.Default.LoggerStrategy},
@@ -525,7 +525,7 @@ defmodule HybridPlanner.StrategyFactory do
       else
         # Get expected behavior module for strategy type
         behavior_module = get_behavior_module_for_strategy_type(strategy_type)
-        
+
         # Check if strategy implements the required behavior
         case validate_behavior_implementation(strategy_module, behavior_module) do
           :ok -> :ok
@@ -558,9 +558,9 @@ defmodule HybridPlanner.StrategyFactory do
     else
       # Get required callbacks from behavior module
       required_callbacks = get_behavior_callbacks(behavior_module)
-      
+
       # Check if all required callbacks are implemented
-      missing_callbacks = 
+      missing_callbacks =
         Enum.filter(required_callbacks, fn {function, arity} ->
           not function_exported?(strategy_module, function, arity)
         end)
@@ -580,11 +580,11 @@ defmodule HybridPlanner.StrategyFactory do
       Strategies.PlanningStrategy ->
         [
           {:plan, 4},
-          {:replan, 5}, 
+          {:replan, 5},
           {:validate_plan, 3},
           {:strategy_info, 0}
         ]
-      
+
       Strategies.TemporalStrategy ->
         [
           {:add_temporal_constraints, 3},
@@ -592,7 +592,7 @@ defmodule HybridPlanner.StrategyFactory do
           {:update_constraints, 3},
           {:get_temporal_schedule, 2}
         ]
-      
+
       Strategies.StateStrategy ->
         [
           {:apply_action, 4},
@@ -600,7 +600,7 @@ defmodule HybridPlanner.StrategyFactory do
           {:create_checkpoint, 3},
           {:rollback_to_checkpoint, 3}
         ]
-      
+
       Strategies.DomainStrategy ->
         [
           {:get_action_metadata, 3},
@@ -608,7 +608,7 @@ defmodule HybridPlanner.StrategyFactory do
           {:get_goal_methods, 3},
           {:validate_domain, 2}
         ]
-      
+
       Strategies.LoggingStrategy ->
         [
           {:log, 4},
@@ -616,14 +616,14 @@ defmodule HybridPlanner.StrategyFactory do
           {:log_error, 3},
           {:configure, 2}
         ]
-      
+
       Strategies.ExecutionStrategy ->
         [
           {:execute_plan, 4},
           {:execute_step, 4},
           {:handle_execution_failure, 4}
         ]
-      
+
       _ ->
         []
     end

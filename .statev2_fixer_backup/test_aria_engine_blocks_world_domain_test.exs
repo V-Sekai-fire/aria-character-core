@@ -11,7 +11,7 @@ defmodule AriaEngine.BlocksWorldDomainTest do
 
   use ExUnit.Case
 
-  alias State
+  alias AriaEngine.{Domain, State}
   alias AriaEngine.BlocksWorld.{Domain, StateUtils, Actions}
 
   @moduletag timeout: 120_000
@@ -62,8 +62,8 @@ defmodule AriaEngine.BlocksWorldDomainTest do
   end
 
   describe "State Utilities" do
-    test "State API compatibility issues" do
-      # Test current State API to understand what's available
+    test "StateV2 API compatibility issues" do
+      # Test current StateV2 API to understand what's available
       state = State.new()
 
       # Test basic fact operations
@@ -93,11 +93,11 @@ defmodule AriaEngine.BlocksWorldDomainTest do
         holding: %{"hand" => false}
       }
 
-      # This doesn't crash but produces warnings due to State API mismatches
+      # This doesn't crash but produces warnings due to StateV2 API mismatches
       # The function exists but uses wrong API calls internally
       result = StateUtils.from_gtpyhop_format(config)
 
-      # Should return a State struct despite the API warnings
+      # Should return a StateV2 struct despite the API warnings
       assert %State{} = result
     end
   end
@@ -141,8 +141,8 @@ defmodule AriaEngine.BlocksWorldDomainTest do
       end)
     end
 
-    test "identifies State API gaps" do
-      # Document State functions that need to be implemented
+    test "identifies StateV2 API gaps" do
+      # Document StateV2 functions that need to be implemented
       state = State.new()
 
       # These functions are needed by StateUtils but don't exist
