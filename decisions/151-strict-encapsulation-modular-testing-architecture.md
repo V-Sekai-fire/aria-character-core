@@ -9,10 +9,15 @@
 Breakthrough insight identified: real coding style problem requires strict encapsulation and modularity. Every logical "library" must be actual library in mono-repo, each separately tested with unit tests that never become integration tests.
 
 Current state shows mixed encapsulation:
-- Some apps extracted: `ast_migrate`, `elixir_png`, `png_generator`
-- Major lib/ modules remain: `aria_auth`, `aria_engine`, `aria_security`, `aria_storage`, `aria_town`
+- Some apps extracted: `ast_migrate`, `elixir_png`, `png_generator`, `aria_security`
+- Major lib/ modules remain: `aria_auth`, `aria_engine`, `aria_storage`, `aria_town`
 - Testing boundaries unclear between modules
 - Integration tests masquerading as unit tests
+
+**Recent Progress:**
+- ✅ `aria_security` successfully extracted (2025-06-23)
+- ✅ `aria_storage` successfully extracted (2025-06-23)
+- 🔄 Next target: `aria_auth` (depends only on aria_security)
 
 ## The Strict Encapsulation Principle
 
@@ -167,17 +172,12 @@ Each library extraction follows this complete process:
 - `ast_migrate/` - Git-style AST migration tool (independent)
 - `elixir_png/` - PNG processing utilities (independent)
 - `png_generator/` - Schedule visualization (independent)
+- `aria_security/` - Self-contained security utilities ✅ **COMPLETED 2025-06-23**
 
 **Remaining lib/ Modules to Extract:**
 
 **Leaf Modules (Minimal Dependencies):**
-1. **aria_security** - Self-contained security utilities
-   - Dependencies: External only (Vaultex, HTTPoison)
-   - No internal aria_* dependencies
-   - Clear API boundaries
-   - Independent test suite possible
-
-2. **aria_storage** - File operations and chunk storage
+1. **aria_storage** - File operations and chunk storage
    - Dependencies: External only (Waffle, Ecto, compression libs)
    - No internal aria_* dependencies
    - Clear API boundaries
@@ -206,33 +206,56 @@ Each library extraction follows this complete process:
 - AriaEngine.Scheduler ↔ AriaEngine.Domain
 
 **Extraction Priority Order:**
-1. aria_security (leaf, zero internal deps)
+1. ✅ aria_security (leaf, zero internal deps) - **COMPLETED 2025-06-23**
 2. aria_storage (leaf, zero internal deps)  
 3. aria_auth (depends only on aria_security)
 4. aria_town (depends on aria_engine, but minimal coupling)
 5. aria_engine (complex, requires subdomain splitting)
 
+**Current Focus:** aria_storage extraction (next leaf module)
+
 ### Phase 2: Extract Leaf Modules First
-- [x] Extract `aria_security` (self-contained utilities)
-- [ ] Extract `aria_storage` (file operations)
+- [x] Extract `aria_security` (self-contained utilities) ✅ **COMPLETED 2025-06-23**
+  - ✅ Created `apps/aria_security/` with proper structure
+  - ✅ Moved all source files preserving namespaces
+  - ✅ Configured dependencies (vaultex, httpoison, jason)
+  - ✅ Independent test suite (2 tests, 0 failures)
+  - ✅ Zero internal aria_* dependencies confirmed
+  - ✅ Migration tombstone created
+- [x] Extract `aria_storage` (file operations) ✅ **COMPLETED 2025-06-23**
+  - ✅ Created `apps/aria_storage/` with proper structure
+  - ✅ Moved all source files preserving namespaces
+  - ✅ Configured dependencies (waffle, ecto, compression libs)
+  - ✅ Independent test suite (112 tests, 0 failures)
+  - ✅ Zero internal aria_* dependencies confirmed
+  - ✅ Migration tombstone created
+  - ✅ TestOutput helper module created for test compatibility
 - [ ] Extract remaining `aria_png_generator` functionality
 - [ ] Verify independent test suites for each
+
+**Phase 2 Progress:** 2/4 tasks completed (aria_security and aria_storage extractions successful)
 
 ### Phase 3: Extract Intermediate Dependencies
 - [ ] Extract `aria_auth` (depends on aria_security)
 - [ ] Extract `aria_town` (depends on aria_engine)
 - [ ] Resolve any circular dependencies discovered
 
+**Phase 3 Progress:** 0/3 tasks completed
+
 ### Phase 4: Extract Core Dependencies
 - [ ] Extract `aria_engine` components by subdomain
 - [ ] Split large modules using existing patterns
 - [ ] Maintain API compatibility during transition
+
+**Phase 4 Progress:** 0/3 tasks completed
 
 ### Phase 5: Verify Testing Architecture
 - [ ] Audit all test suites for proper isolation
 - [ ] Implement contract tests between library boundaries
 - [ ] Verify layered testing pattern implementation
 - [ ] Document testing guidelines per library
+
+**Phase 5 Progress:** 0/4 tasks completed
 
 ## Success Criteria
 
