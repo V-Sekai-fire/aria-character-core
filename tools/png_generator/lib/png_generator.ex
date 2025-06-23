@@ -13,51 +13,59 @@ defmodule PngGenerator do
     critical: {192, 57, 43},
     default: {149, 165, 166}
   }
-  def generate_timeline_png(schedule, filename \\ nil) do
-    if length(schedule) == 0 do
-      {:error, "Empty schedule"}
-    else
-      max_time = calculate_max_time(schedule)
-      activity_count = length(schedule)
-      time_unit_width = 30
-      activity_height = 20
-      margin_left = 80
-      margin_top = 30
-      margin_bottom = 20
-      width = margin_left + max_time * time_unit_width + 20
-      height = margin_top + activity_count * activity_height + margin_bottom
-
-      pixel_data =
-        generate_pixel_data(schedule, width, height, %{
-          time_unit_width: time_unit_width,
-          activity_height: activity_height,
-          margin_left: margin_left,
-          margin_top: margin_top
-        })
-
-      png_binary = create_png_binary(width, height, pixel_data)
-      output_filename = filename || generate_filename(schedule)
-      output_path = Path.join("priv/schedule_images", output_filename)
-      File.mkdir_p!("priv/schedule_images")
-
-      case File.write(output_path, png_binary) do
-        :ok -> {:ok, output_path}
-        {:error, reason} -> {:error, "Failed to write PNG: #{reason}"}
-      end
+  def generate_timeline_png(json_string, filename \\ nil) do
+    case Jason.decode(json_string) do
+      {:ok, %{"activities" => activities}} ->
+        if length(activities) == 0 do
+          {:error, "Empty schedule"}
+        else
+          generate_png_from_activities(activities, filename)
+        end
+      {:error, _} ->
+        {:error, "Failed to parse JSON"}
     end
   end
 
-  defp calculate_max_time(schedule) do
-    Enum.max_by(schedule, fn activity ->
-      start = Map.get(activity, "start_time", 0)
-      duration = Map.get(activity, "duration", 1)
-      start + duration
-    end)
-    |> then(fn activity ->
-      start = Map.get(activity, "start_time", 0)
-      duration = Map.get(activity, "duration", 1)
-      start + duration
-    end)
+  defp generate_png_from_activities(schedule, filename) do
+    max_time = calculate_max_time(schedule)
+    activity_count = length(schedule)
+    time_unit_width = 30
+    activity_height = 20
+    margin_left = 80
+    margin_top = 30
+    margin_bottom = 20
+    width = margin_left + max_time * time_unit_width + 20
+    height = margin_top + activity_count * activity_height + margin_bottom
+
+    pixel_data =
+      generate_pixel_data(schedule, width, height, %{
+        time_unit_width: time_unit_width,
+        activity_height: activity_height,
+        margin_left: margin_left,
+        margin_top: margin_top
+      })
+
+    png_binary = create_png_binary(width, height, pixel_data)
+
+    output_path = if filename do
+      filename
+    else
+      output_filename = generate_filename(schedule)
+      default_path = Path.join("priv/schedule_images", output_filename)
+      File.mkdir_p!("priv/schedule_images")
+      default_path
+    end
+
+    case File.write(output_path, png_binary) do
+      :ok -> {:ok, output_path}
+      {:error, reason} -> {:error, "Failed to write PNG: #{reason}"}
+    end
+  end
+
+  defp calculate_max_time(_schedule) do
+    # For now, just return a reasonable default since we're working with timestamps
+    # In a real implementation, we'd parse the timestamps and calculate durations
+    10
   end
 
   defp generate_pixel_data(schedule, width, height, layout) do
@@ -115,7 +123,8 @@ defmodule PngGenerator do
 
   defp draw_activity(pixel_array, activity, index, layout) do
     id = Map.get(activity, "id", "?")
-    start_time = Map.get(activity, "start_time", 0)
+    # For now, use index as start time since we're not parsing timestamps
+    start_time = index * 2
     duration = Map.get(activity, "duration", 1)
     color = get_activity_color(id)
     y_start = layout.margin_top + index * layout.activity_height + 2

@@ -26,11 +26,14 @@ defmodule ElixirPng do
   """
   @spec write_png_file(binary(), String.t()) :: {:ok, String.t()} | {:error, String.t()}
   def write_png_file(png_binary, filepath) do
-    filepath |> Path.dirname() |> File.mkdir_p!()
-
-    case File.write(filepath, png_binary) do
-      :ok -> {:ok, filepath}
-      {:error, reason} -> {:error, "Failed to write PNG: #{reason}"}
+    case filepath |> Path.dirname() |> File.mkdir_p() do
+      :ok ->
+        case File.write(filepath, png_binary) do
+          :ok -> {:ok, filepath}
+          {:error, reason} -> {:error, "Failed to write PNG: #{reason}"}
+        end
+      {:error, reason} ->
+        {:error, "Failed to create directory: #{reason}"}
     end
   end
 
