@@ -230,17 +230,25 @@ Each library extraction follows this complete process:
   - ✅ Zero internal aria_* dependencies confirmed
   - ✅ Migration tombstone created
   - ✅ TestOutput helper module created for test compatibility
+- [x] Extract `aria_auth` (authentication) ✅ **COMPLETED 2025-06-23**
+  - ✅ Created `apps/aria_auth/` with proper structure
+  - ✅ Moved all source files preserving namespaces
+  - ✅ Configured dependencies (ecto, postgrex, bcrypt, macfly)
+  - ✅ Independent test suite (35 tests, 0 failures)
+  - ✅ Zero internal aria_* dependencies confirmed
+  - ✅ Migration tombstone created
+  - ✅ Main delegation module created for API compatibility
 - [ ] Extract remaining `aria_png_generator` functionality
 - [ ] Verify independent test suites for each
 
-**Phase 2 Progress:** 2/4 tasks completed (aria_security and aria_storage extractions successful)
+**Phase 2 Progress:** 3/4 tasks completed (aria_security, aria_storage, and aria_auth extractions successful)
 
 ### Phase 3: Extract Intermediate Dependencies
-- [ ] Extract `aria_auth` (depends on aria_security)
+- [x] Extract `aria_auth` (depends on aria_security) ✅ **COMPLETED 2025-06-23**
 - [ ] Extract `aria_town` (depends on aria_engine)
 - [ ] Resolve any circular dependencies discovered
 
-**Phase 3 Progress:** 0/3 tasks completed
+**Phase 3 Progress:** 1/3 tasks completed (aria_auth extraction successful)
 
 ### Phase 4: Extract Core Dependencies
 - [ ] Extract `aria_engine` components by subdomain
