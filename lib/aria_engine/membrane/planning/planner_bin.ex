@@ -29,13 +29,11 @@ defmodule AriaEngine.Membrane.Planning.PlannerBin do
   alias AriaEngine.Membrane.Format.PlanningParams
 
   def_input_pad(:input,
-    accepted_format: %Membrane.RemoteStream{content_format: PlanningRequest},
-    flow_control: :auto
+    accepted_format: %Membrane.RemoteStream{content_format: PlanningRequest}
   )
 
   def_output_pad(:output,
-    accepted_format: %Membrane.RemoteStream{content_format: PlanningResponse},
-    flow_control: :auto
+    accepted_format: %Membrane.RemoteStream{content_format: PlanningResponse}
   )
 
   def_options(
@@ -83,11 +81,17 @@ defmodule AriaEngine.Membrane.Planning.PlannerBin do
       |> child(:hybrid_coordinator_filter, %AriaEngine.Membrane.Planning.HybridCoordinatorFilter{
         config: Map.get(opts.strategy_config, :hybrid_coordinator, %{})
       })
-      |> child(:minizinc_solver_filter, %AriaEngine.Membrane.MiniZincSolverFilter{
-        config: Map.get(opts.strategy_config, :minizinc, %{})
+      |> child(:minizinc_solver_filter, %AriaEngine.Membrane.Planning.MiniZincSolverFilter{
+        solver_timeout_ms: Map.get(opts.strategy_config, :minizinc, %{}) |> Map.get(:solver_timeout_ms, 30_000),
+        max_solutions: Map.get(opts.strategy_config, :minizinc, %{}) |> Map.get(:max_solutions, 1),
+        optimization_level: Map.get(opts.strategy_config, :minizinc, %{}) |> Map.get(:optimization_level, :basic),
+        enable_fallback: Map.get(opts.strategy_config, :minizinc, %{}) |> Map.get(:enable_fallback, true)
       })
       |> child(:lazy_execution_filter, %AriaEngine.Membrane.Planning.LazyExecutionFilter{
-        config: Map.get(opts.strategy_config, :lazy_execution, %{})
+        execution_timeout_ms: Map.get(opts.strategy_config, :lazy_execution, %{}) |> Map.get(:execution_timeout_ms, 10_000),
+        max_depth: Map.get(opts.strategy_config, :lazy_execution, %{}) |> Map.get(:max_depth, 100),
+        enable_refinement: Map.get(opts.strategy_config, :lazy_execution, %{}) |> Map.get(:enable_refinement, true),
+        enable_backtracking: Map.get(opts.strategy_config, :lazy_execution, %{}) |> Map.get(:enable_backtracking, true)
       })
       |> child(:mock_strategy_filter, %AriaEngine.Membrane.Planning.MockStrategyFilter{
         config: Map.get(opts.strategy_config, :mock, %{})
@@ -95,7 +99,9 @@ defmodule AriaEngine.Membrane.Planning.PlannerBin do
 
       # Response processing and aggregation
       |> child(:response_aggregator, %AriaEngine.Membrane.Planning.ResponseAggregatorFilter{
-        performance_monitoring: opts.performance_monitoring
+        aggregation_timeout_ms: Map.get(opts.strategy_config, :aggregator, %{}) |> Map.get(:aggregation_timeout_ms, 60_000),
+        selection_strategy: Map.get(opts.strategy_config, :aggregator, %{}) |> Map.get(:selection_strategy, :best_quality),
+        enable_multi_strategy: Map.get(opts.strategy_config, :aggregator, %{}) |> Map.get(:enable_multi_strategy, false)
       })
       |> child(:response_formatter, %AriaEngine.Membrane.Planning.ResponseFormatterFilter{})
     ]
