@@ -3,7 +3,6 @@
 
 defmodule Mix.Tasks.Migrate.StateParameters do
   @compile {:no_warn_unused, [:serial_number]}
-  @moduledoc "Migration tool with serial number: A25W005STAT\n\nDecode: mix migrate.decode_serial A25W005STAT\n"
   @serial_number "R25W005STAT"
   @doc "Returns the module's serial number for tracking and identification."
   @spec serial_number() :: String.t()

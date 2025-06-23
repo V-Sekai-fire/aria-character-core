@@ -25,7 +25,7 @@ defmodule Mix.Tasks.Migrate.PlanFormat do
   """
 
   use Mix.Task
-  alias Mix.Tasks.Migrate.{Base, AstTransformer}
+  alias Mix.Tasks.Migrate.{AstTransformer}
 
   @shortdoc "Migrate test files from list-based plan format to solution tree format"
 
