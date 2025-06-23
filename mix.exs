@@ -115,6 +115,8 @@ defmodule AriaCharacterCore.MixProject do
       # External Process Execution
       {:porcelain, "~> 2.0"},
 
+      # Git operations
+      {:egit, "~> 0.1.9"},
 
       # UUID Generation
       {:elixir_uuid, "~> 1.2"},

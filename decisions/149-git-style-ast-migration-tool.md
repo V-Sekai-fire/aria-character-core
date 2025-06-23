@@ -1,6 +1,6 @@
 # ADR-149: Git-Native Elixir AST Migration Tool
 
-**Status:** Proposed  
+**Status:** Completed (June 23, 2025)  
 **Date:** 2025-06-23  
 **Priority:** HIGH  
 **Complexity:** Medium
