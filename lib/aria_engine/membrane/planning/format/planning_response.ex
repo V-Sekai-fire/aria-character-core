@@ -218,6 +218,45 @@ defmodule AriaEngine.Membrane.Planning.Format.PlanningResponse do
   end
 
   @doc """
+  Creates an error planning response with additional context.
+
+  ## Examples
+
+      iex> response = AriaEngine.Membrane.Planning.Format.PlanningResponse.create_error(
+      ...>   "Planning failed: insufficient resources",
+      ...>   "req_123",
+      ...>   %{execution_time_ms: 500}
+      ...> )
+      iex> response.status
+      :error
+
+  """
+  @spec create_error(String.t(), String.t(), map(), keyword()) :: t()
+  def create_error(error_reason, request_id, performance_metrics, opts \\ []) do
+    error(error_reason, request_id, performance_metrics, opts)
+  end
+
+  @doc """
+  Creates a successful planning response with additional context.
+
+  ## Examples
+
+      iex> response = AriaEngine.Membrane.Planning.Format.PlanningResponse.create_success(
+      ...>   %{actions: [], timeline: [], resource_allocation: %{}, validation_status: :valid},
+      ...>   :hybrid_coordinator,
+      ...>   "req_123",
+      ...>   %{execution_time_ms: 1500}
+      ...> )
+      iex> response.status
+      :success
+
+  """
+  @spec create_success(plan_result(), atom(), String.t(), map(), keyword()) :: t()
+  def create_success(result, strategy_used, request_id, performance_metrics, opts \\ []) do
+    success(result, strategy_used, request_id, performance_metrics, opts)
+  end
+
+  @doc """
   Validates a planning response structure.
 
   ## Examples

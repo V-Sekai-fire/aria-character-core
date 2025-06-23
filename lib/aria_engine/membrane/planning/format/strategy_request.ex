@@ -262,6 +262,56 @@ defmodule AriaEngine.Membrane.Planning.Format.StrategyRequest do
   end
 
   @doc """
+  Checks if the strategy request represents an error state.
+
+  ## Examples
+
+      iex> params = %AriaEngine.Membrane.Format.PlanningParams{
+      ...>   domain: nil,
+      ...>   state: nil,
+      ...>   goals: [],
+      ...>   options: [error: true],
+      ...>   request_id: "req_123",
+      ...>   conversion_metadata: %{error: true, error_reason: "Invalid input"}
+      ...> }
+      iex> request = AriaEngine.Membrane.Planning.Format.StrategyRequest.new(
+      ...>   params, :hybrid_coordinator, []
+      ...> )
+      iex> AriaEngine.Membrane.Planning.Format.StrategyRequest.error?(request)
+      true
+
+  """
+  @spec error?(t()) :: boolean()
+  def error?(%__MODULE__{planning_params: params}) do
+    PlanningParams.error?(params)
+  end
+
+  @doc """
+  Gets the error reason from an error strategy request.
+
+  ## Examples
+
+      iex> params = %AriaEngine.Membrane.Format.PlanningParams{
+      ...>   domain: nil,
+      ...>   state: nil,
+      ...>   goals: [],
+      ...>   options: [error: true],
+      ...>   request_id: "req_123",
+      ...>   conversion_metadata: %{error: true, error_reason: "Invalid input"}
+      ...> }
+      iex> request = AriaEngine.Membrane.Planning.Format.StrategyRequest.new(
+      ...>   params, :hybrid_coordinator, []
+      ...> )
+      iex> AriaEngine.Membrane.Planning.Format.StrategyRequest.error_reason(request)
+      "Invalid input"
+
+  """
+  @spec error_reason(t()) :: String.t() | nil
+  def error_reason(%__MODULE__{planning_params: params}) do
+    PlanningParams.error_reason(params)
+  end
+
+  @doc """
   Converts strategy request to a map for serialization.
   """
   @spec to_map(t()) :: map()
