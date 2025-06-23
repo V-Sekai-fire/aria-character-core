@@ -487,6 +487,257 @@ end
 5. **Type Check**: `mix dialyzer` validates type safety and reduces warnings
 6. **Formatting**: `mix format --check-formatted` maintains code consistency
 
+## Unit Testing Strategy
+
+### **Core AST Transformation Tests**
+
+**StateV2 Struct Transformation**
+```elixir
+test "transforms StateV2 struct to State struct" do
+  input_ast = quote do: %StateV2{entities: data, status: :active}
+  expected_ast = quote do: %State{entities: data, status: :active}
+  
+  result = AstMigrate.Rules.StateV2ToState.transform_ast(input_ast)
+  assert result == expected_ast
+end
+```
+
+**Module Call Transformation**
+```elixir
+test "transforms StateV2 module calls to State calls" do
+  input_ast = quote do: StateV2.update(state, :field, value)
+  expected_ast = quote do: State.update(state, :field, value)
+  
+  result = AstMigrate.Rules.StateV2ToState.transform_ast(input_ast)
+  assert result == expected_ast
+end
+```
+
+**Alias Statement Transformation**
+```elixir
+test "transforms simple alias statements" do
+  input_ast = quote do: alias AriaEngine.StateV2
+  expected_ast = quote do: alias AriaEngine.State
+  
+  result = AstMigrate.Rules.StateV2ToState.transform_ast(input_ast)
+  assert result == expected_ast
+end
+
+test "transforms alias with :as option" do
+  input_ast = quote do: alias AriaEngine.StateV2, as: S
+  expected_ast = quote do: alias AriaEngine.State, as: S
+  
+  result = AstMigrate.Rules.StateV2ToState.transform_ast(input_ast)
+  assert result == expected_ast
+end
+```
+
+### **File Processing Tests**
+
+**Complete File Transformation**
+```elixir
+test "transforms complete Elixir file" do
+  input_code = """
+  defmodule TestModule do
+    alias AriaEngine.StateV2
+    
+    def create_state(data) do
+      %StateV2{entities: data}
+    end
+    
+    def update_state(state, field, value) do
+      StateV2.put(state, field, value)
+    end
+  end
+  """
+  
+  {:ok, result} = AstMigrate.Rules.StateV2ToState.transform_file_content(input_code)
+  
+  assert result =~ "alias AriaEngine.State"
+  assert result =~ "%State{entities: data}"
+  assert result =~ "State.put(state, field, value)"
+  refute result =~ "StateV2"
+end
+```
+
+**Syntax Preservation**
+```elixir
+test "maintains valid Elixir syntax after transformation" do
+  input_code = """
+  defmodule Complex do
+    alias AriaEngine.StateV2, as: S
+    
+    def complex_function do
+      with {:ok, state} <- S.create(),
+           {:ok, updated} <- S.update(state, :field, "value") do
+        %S{entities: updated.entities}
+      end
+    end
+  end
+  """
+  
+  {:ok, result} = AstMigrate.Rules.StateV2ToState.transform_file_content(input_code)
+  
+  # Verify the result is valid Elixir syntax
+  assert {:ok, _ast} = Code.string_to_quoted(result)
+  
+  # Verify transformations occurred
+  assert result =~ "alias AriaEngine.State, as: S"
+  refute result =~ "StateV2"
+end
+```
+
+### **Edge Cases and Error Handling**
+
+**Malformed AST Handling**
+```elixir
+test "handles malformed AST gracefully" do
+  # Test with invalid/incomplete AST structures
+  malformed_ast = {:invalid_node, []}
+  
+  result = AstMigrate.Rules.StateV2ToState.transform_ast(malformed_ast)
+  # Should return the input unchanged rather than crashing
+  assert result == malformed_ast
+end
+```
+
+**Deeply Nested Structures**
+```elixir
+test "handles deeply nested structures" do
+  input_ast = quote do
+    case some_condition do
+      true -> %StateV2{nested: %{deep: %StateV2{value: 1}}}
+      false -> StateV2.create()
+    end
+  end
+  
+  result = AstMigrate.Rules.StateV2ToState.transform_ast(input_ast)
+  result_string = Macro.to_string(result)
+  
+  # Should transform all StateV2 references, even deeply nested ones
+  refute result_string =~ "StateV2"
+  assert result_string =~ "%State{"
+  assert result_string =~ "State.create"
+end
+```
+
+**Nested AST Preservation**
+```elixir
+test "preserves unrelated AST nodes" do
+  input_ast = quote do
+    def process(data) do
+      result = SomeOtherModule.function(data)
+      %StateV2{entities: result}
+    end
+  end
+  
+  result = AstMigrate.Rules.StateV2ToState.transform_ast(input_ast)
+  
+  # Should only transform the StateV2 struct, leaving other code intact
+  assert match?({:def, _, _}, result)
+  # Verify SomeOtherModule.function call is preserved
+  assert Macro.to_string(result) =~ "SomeOtherModule.function"
+  # Verify StateV2 was transformed to State
+  assert Macro.to_string(result) =~ "%State{"
+  refute Macro.to_string(result) =~ "%StateV2{"
+end
+```
+
+### **Property-Based Tests**
+
+**AST Validity Property**
+```elixir
+@tag :property
+property "transformed AST always produces valid Elixir code" do
+  check all ast <- valid_elixir_ast_generator() do
+    transformed = AstMigrate.Rules.StateV2ToState.transform_ast(ast)
+    code_string = Macro.to_string(transformed)
+    
+    # Should always produce parseable Elixir code
+    assert {:ok, _} = Code.string_to_quoted(code_string)
+  end
+end
+```
+
+**Transformation Idempotency**
+```elixir
+@tag :property
+property "transformations are idempotent" do
+  check all code <- valid_elixir_code_generator() do
+    {:ok, first_pass} = AstMigrate.Rules.StateV2ToState.transform_file_content(code)
+    {:ok, second_pass} = AstMigrate.Rules.StateV2ToState.transform_file_content(first_pass)
+    
+    # Second transformation should not change anything
+    assert first_pass == second_pass
+  end
+end
+```
+
+### **Git Integration Tests**
+
+**Commit Creation**
+```elixir
+test "creates proper Git commits for transformations" do
+  repo = setup_test_repo()
+  files = ["lib/test_module.ex"]
+  message = "Convert StateV2 to State in test module"
+  
+  {:ok, commit} = AstMigrate.Git.commit_transformations(repo, message, files)
+  
+  assert commit.message == "[AST] #{message}"
+  assert commit.author.name == "AST Migration Tool"
+end
+```
+
+**Branch Management**
+```elixir
+test "creates and manages transformation branches" do
+  repo = setup_test_repo()
+  rule_name = "state_v2_to_state"
+  
+  {:ok, branch_name} = AstMigrate.Git.create_transformation_branch(repo, rule_name)
+  
+  assert branch_name =~ "ast-migration/#{rule_name}"
+  assert {:ok, current_branch} = EGit.current_branch(repo)
+  assert current_branch == branch_name
+end
+```
+
+**Rollback Functionality**
+```elixir
+test "successfully rolls back transformations" do
+  repo = setup_test_repo()
+  original_content = File.read!("lib/test_module.ex")
+  
+  # Apply transformation and commit
+  {:ok, commit} = apply_transformation_and_commit(repo, "state_v2_to_state")
+  
+  # Rollback
+  {:ok, _revert_commit} = AstMigrate.Git.rollback_transformation(repo, commit.hash)
+  
+  # Verify content is restored
+  rolled_back_content = File.read!("lib/test_module.ex")
+  assert rolled_back_content == original_content
+end
+```
+
+### **Test Coverage Requirements**
+
+**Minimum Coverage Targets**:
+- **AST Transformation Logic**: 95% line coverage
+- **File Processing**: 90% line coverage  
+- **Git Integration**: 85% line coverage
+- **Error Handling**: 90% line coverage
+- **Edge Cases**: 80% line coverage
+
+**Test Categories**:
+- **Unit Tests**: Individual function testing (60% of test suite)
+- **Integration Tests**: Component interaction testing (25% of test suite)
+- **Property Tests**: Invariant verification (10% of test suite)
+- **End-to-End Tests**: Complete workflow testing (5% of test suite)
+
+This comprehensive unit testing strategy ensures the AST migration tool is robust, reliable, and maintains code quality throughout all transformations.
+
 ## Monitoring and Success Metrics
 
 ### **Transformation Quality**
