@@ -428,24 +428,32 @@ Based on directory structure analysis, aria_engine contains these logical subdom
   - ✅ Available for fixing test warnings, namespace issues, and code improvements
   - ✅ Git-integrated migrations with automatic commit creation
   - ✅ Rule-based transformation system for consistent code changes
-- [ ] **Audit all test suites for proper isolation**
-  - [ ] Use `ast_migrate` to systematically fix namespace references
-  - [ ] Apply unit test improvement rules across all apps
+- [ ] **Phase 5a: Systematic Test Fixes** (Primary) + ast_migrate Rule Discovery (Maintenance)
+  - [ ] Use `ast_migrate` to systematically fix namespace references across all apps
+  - [ ] Apply unit test improvement rules across all extracted apps
   - [ ] Identify and resolve cross-app dependencies in tests
-- [ ] **Implement contract tests between library boundaries**
+  - [ ] *Maintenance: Replace hard-coded rule mappings with dynamic module discovery*
+  - [ ] *Maintenance: Enable seamless addition of new transformation rules*
+- [ ] **Phase 5b: Contract Test Generation** (Primary) + Git Integration Cleanup (Maintenance)
   - [ ] Define API contract specifications for each app
   - [ ] Create contract test suites using `ast_migrate` templates
   - [ ] Verify interface compatibility between apps
-- [ ] **Verify layered testing pattern implementation**
+  - [ ] *Maintenance: Replace shell Git commands with native Erlang `:git` module*
+  - [ ] *Maintenance: Improve reliability of automated Git operations*
+- [ ] **Phase 5c: Test Isolation Validation** (Primary) + Rule Interface Simplification (Maintenance)
   - [ ] Validate test isolation at each layer
   - [ ] Ensure unit tests don't become integration tests
   - [ ] Document testing boundaries and responsibilities
-- [ ] **Document testing guidelines per library**
+  - [ ] *Maintenance: Streamline Rules.Behaviour interface to essential callbacks only*
+  - [ ] *Maintenance: Simplify creation of new test isolation transformation rules*
+- [ ] **Phase 5d: Testing Guidelines Documentation** (Primary) + Logging Reduction (Maintenance)
   - [ ] Create testing standards documentation
   - [ ] Define AST migration rules for common test patterns
   - [ ] Establish code quality automation workflows
+  - [ ] *Maintenance: Remove verbose logging cruft from `ast_migrate` core operations*
+  - [ ] *Maintenance: Provide cleaner output for systematic transformations*
 
-**Phase 5 Progress:** 1/5 tasks completed (AST migration tool integration)
+**Phase 5 Progress:** 1/4 phases completed (AST migration tool integration)
 
 ## Success Criteria
 
