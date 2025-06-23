@@ -38,7 +38,7 @@ defmodule RunLazyRefineaheadTest do
         case AriaEngine.Plan.Execution.run_lazy_refineahead(domain, initial_state, solution_tree, verbose: 3) do
           {:ok, final_state} ->
             # Verify we reached the goal despite initial failures
-            robot_location = AriaEngine.State.get_fact(final_state, "robot", "location")
+            robot_location = State.get_fact(final_state, "robot", "location")
             assert robot_location == "goal"
 
             TestOutput.trace_puts("Run-Lazy-Refineahead succeeded with replanning!")
@@ -78,8 +78,8 @@ defmodule RunLazyRefineaheadTest do
 
   # Action that fails if robot hasn't "prepared" (simulates environmental failure)
   defp move_unreliable_action(state, [from, to]) do
-    robot_location = AriaEngine.State.get_fact(state, "robot", "location")
-    prepared = AriaEngine.State.get_fact(state, "robot", "prepared")
+    robot_location = State.get_fact(state, "robot", "location")
+    prepared = State.get_fact(state, "robot", "prepared")
 
     TestOutput.trace_puts(
       "move_unreliable_action: robot_location=#{inspect(robot_location)}, from=#{inspect(from)}, prepared=#{inspect(prepared)}"
@@ -88,7 +88,7 @@ defmodule RunLazyRefineaheadTest do
     if robot_location == from and prepared == true do
       TestOutput.trace_puts("move_unreliable_action: SUCCESS")
       # Success - update location
-      AriaEngine.State.set_fact(state, "robot", "location", to)
+      State.set_fact(state, "robot", "location", to)
     else
       TestOutput.trace_puts("move_unreliable_action: FAILURE")
       # Failure - robot not prepared or not at start location
@@ -98,7 +98,7 @@ defmodule RunLazyRefineaheadTest do
 
   # Action that always works (prepares robot and moves)
   defp move_reliable_action(state, [from, to]) do
-    robot_location = AriaEngine.State.get_fact(state, "robot", "location")
+    robot_location = State.get_fact(state, "robot", "location")
 
     TestOutput.trace_puts(
       "move_reliable_action: robot_location=#{inspect(robot_location)}, from=#{inspect(from)}"
@@ -108,8 +108,8 @@ defmodule RunLazyRefineaheadTest do
       TestOutput.trace_puts("move_reliable_action: SUCCESS")
       # Always succeeds - prepare and move
       state
-      |> AriaEngine.State.set_fact("robot", "prepared", true)
-      |> AriaEngine.State.set_fact("robot", "location", to)
+      |> State.set_fact("robot", "prepared", true)
+      |> State.set_fact("robot", "location", to)
     else
       TestOutput.trace_puts("move_reliable_action: FAILURE")
       false
@@ -118,7 +118,7 @@ defmodule RunLazyRefineaheadTest do
 
   # Method using unreliable action (will fail initially)
   defp method_unreliable_move(state, [from, to]) do
-    robot_location = AriaEngine.State.get_fact(state, "robot", "location")
+    robot_location = State.get_fact(state, "robot", "location")
 
     if robot_location == from do
       [{:move_unreliable, [from, to]}]
@@ -129,7 +129,7 @@ defmodule RunLazyRefineaheadTest do
 
   # Method using reliable action (backup method)
   defp method_reliable_move(state, [from, to]) do
-    robot_location = AriaEngine.State.get_fact(state, "robot", "location")
+    robot_location = State.get_fact(state, "robot", "location")
 
     if robot_location == from do
       [{:move_reliable, [from, to]}]
@@ -141,8 +141,8 @@ defmodule RunLazyRefineaheadTest do
   # Create test state
   defp create_test_state do
     State.new()
-    |> AriaEngine.State.set_fact("robot", "location", "start")
+    |> State.set_fact("robot", "location", "start")
     # Robot not prepared initially
-    |> AriaEngine.State.set_fact("robot", "prepared", false)
+    |> State.set_fact("robot", "prepared", false)
   end
 end

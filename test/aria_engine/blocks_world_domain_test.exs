@@ -12,7 +12,7 @@ defmodule AriaEngine.BlocksWorldDomainTest do
   use ExUnit.Case
 
   alias State
-  alias AriaEngine.BlocksWorld.{Domain, StateUtils, Actions}
+  alias AriaEngine.BlocksWorld.{StateUtils, Actions}
 
   @moduletag timeout: 120_000
 

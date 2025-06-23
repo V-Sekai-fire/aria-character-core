@@ -262,6 +262,38 @@ defmodule State do
   end
 
   @doc """
+  Checks if a predicate exists in the state (has any subjects with this predicate).
+
+  Example:
+  ```elixir
+  State.has_predicate?(state, "location")
+  # => true if any subject has a location predicate
+  ```
+  """
+  @spec has_predicate?(t(), predicate()) :: boolean()
+  def has_predicate?(%__MODULE__{data: data}, predicate) do
+    data
+    |> Map.keys()
+    |> Enum.any?(fn {pred, _subj} -> pred == predicate end)
+  end
+
+  @doc """
+  Gets all facts (subject-value pairs) for a given predicate.
+
+  Example:
+  ```elixir
+  State.get_all_facts(state, "location")
+  # => [{"player", "room1"}, {"npc1", "room2"}]
+  ```
+  """
+  @spec get_all_facts(t(), predicate()) :: [{subject(), fact_value()}]
+  def get_all_facts(%__MODULE__{data: data}, predicate) do
+    data
+    |> Enum.filter(fn {{pred, _subj}, _val} -> pred == predicate end)
+    |> Enum.map(fn {{_pred, subj}, val} -> {subj, val} end)
+  end
+
+  @doc """
   Evaluates a quantified condition structure.
 
   Supports both existential and universal quantifiers with flexible condition patterns.
