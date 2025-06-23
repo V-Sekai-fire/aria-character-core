@@ -1,31 +1,14 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
 defmodule AriaEngine.Membrane.Format.PlanningParams do
-  @moduledoc """
-  Migration tool with serial number: R25W017PRMS
-
-  Decode: mix migrate.decode_serial R25W017PRMS
-  """
-
+  @moduledoc "Membrane format for converted planning parameters.\n\nThis format represents the converted planning parameters that are ready\nfor execution by the HybridCoordinator. It contains the domain, state,\ngoals, and options needed for planning execution.\n"
+  @compile {:no_warn_unused, [:serial_number]}
   @serial_number "R25W017PRMS"
+  @doc "Returns the module's serial number for tracking and identification."
+  @spec serial_number() :: String.t()
+  def serial_number() do
+    @serial_number
+  end
 
-  @moduledoc """
-  Membrane format for converted planning parameters.
-
-  This format represents the converted planning parameters that are ready
-  for execution by the HybridCoordinator. It contains the domain, state,
-  goals, and options needed for planning execution.
-  """
-
-  defstruct [
-    :domain,
-    :state,
-    :goals,
-    :options,
-    :request_id,
-    :conversion_metadata
-  ]
+  defstruct [:domain, :state, :goals, :options, :request_id, :conversion_metadata]
 
   @type t :: %__MODULE__{
           domain: AriaEngine.Domain.Core.t() | nil,
@@ -35,45 +18,18 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
           request_id: String.t(),
           conversion_metadata: map()
         }
-
-  @doc """
-  Validates a planning params format structure.
-
-  ## Examples
-
-      iex> params = %AriaEngine.Membrane.Format.PlanningParams{
-      ...>   domain: nil,
-      ...>   state: nil,
-      ...>   goals: [],
-      ...>   options: [],
-      ...>   request_id: "req_123",
-      ...>   conversion_metadata: %{}
-      ...> }
-      iex> AriaEngine.Membrane.Format.PlanningParams.valid?(params)
-      true
-  """
+  @doc "Validates a planning params format structure.\n\n## Examples\n\n    iex> params = %AriaEngine.Membrane.Format.PlanningParams{\n    ...>   domain: nil,\n    ...>   state: nil,\n    ...>   goals: [],\n    ...>   options: [],\n    ...>   request_id: \"req_123\",\n    ...>   conversion_metadata: %{}\n    ...> }\n    iex> AriaEngine.Membrane.Format.PlanningParams.valid?(params)\n    true\n"
   @spec valid?(t()) :: boolean()
   def valid?(%__MODULE__{} = params) do
-    is_list(params.goals) and
-      is_list(params.options) and
-      is_binary(params.request_id) and
+    is_list(params.goals) and is_list(params.options) and is_binary(params.request_id) and
       is_map(params.conversion_metadata)
   end
 
-  def valid?(_), do: false
+  def valid?(_) do
+    false
+  end
 
-  @doc """
-  Creates planning params from converted domain, state, and goals.
-
-  ## Examples
-
-      iex> metadata = %{converted_at: DateTime.utc_now()}
-      iex> params = AriaEngine.Membrane.Format.PlanningParams.create(
-      ...>   nil, nil, [], [], "req_123", metadata
-      ...> )
-      iex> params.request_id
-      "req_123"
-  """
+  @doc "Creates planning params from converted domain, state, and goals.\n\n## Examples\n\n    iex> metadata = %{converted_at: DateTime.utc_now()}\n    iex> params = AriaEngine.Membrane.Format.PlanningParams.create(\n    ...>   nil, nil, [], [], \"req_123\", metadata\n    ...> )\n    iex> params.request_id\n    \"req_123\"\n"
   @spec create(
           AriaEngine.Domain.Core.t() | nil,
           State.t() | nil,
@@ -93,17 +49,7 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
     }
   end
 
-  @doc """
-  Creates error planning params when conversion fails.
-
-  ## Examples
-
-      iex> params = AriaEngine.Membrane.Format.PlanningParams.create_error(
-      ...>   "req_123", "Invalid input format"
-      ...> )
-      iex> params.options[:error]
-      true
-  """
+  @doc "Creates error planning params when conversion fails.\n\n## Examples\n\n    iex> params = AriaEngine.Membrane.Format.PlanningParams.create_error(\n    ...>   \"req_123\", \"Invalid input format\"\n    ...> )\n    iex> params.options[:error]\n    true\n"
   @spec create_error(String.t(), String.t()) :: t()
   def create_error(request_id, error_reason) do
     %__MODULE__{
@@ -120,46 +66,34 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
     }
   end
 
-  @doc """
-  Checks if the planning params represents an error state.
-
-  ## Examples
-
-      iex> params = AriaEngine.Membrane.Format.PlanningParams.create_error(
-      ...>   "req_123", "test error"
-      ...> )
-      iex> AriaEngine.Membrane.Format.PlanningParams.error?(params)
-      true
-  """
+  @doc "Checks if the planning params represents an error state.\n\n## Examples\n\n    iex> params = AriaEngine.Membrane.Format.PlanningParams.create_error(\n    ...>   \"req_123\", \"test error\"\n    ...> )\n    iex> AriaEngine.Membrane.Format.PlanningParams.error?(params)\n    true\n"
   @spec error?(t()) :: boolean()
   def error?(%__MODULE__{options: options}) do
     Keyword.get(options, :error, false)
   end
 
-  @doc """
-  Gets the error reason from error planning params.
-
-  ## Examples
-
-      iex> params = AriaEngine.Membrane.Format.PlanningParams.create_error(
-      ...>   "req_123", "test error"
-      ...> )
-      iex> AriaEngine.Membrane.Format.PlanningParams.error_reason(params)
-      "test error"
-  """
+  @doc "Gets the error reason from error planning params.\n\n## Examples\n\n    iex> params = AriaEngine.Membrane.Format.PlanningParams.create_error(\n    ...>   \"req_123\", \"test error\"\n    ...> )\n    iex> AriaEngine.Membrane.Format.PlanningParams.error_reason(params)\n    \"test error\"\n"
   @spec error_reason(t()) :: String.t() | nil
   def error_reason(%__MODULE__{conversion_metadata: metadata}) do
     Map.get(metadata, :error_reason)
   end
 
-  @doc """
-  Converts planning params to a map for serialization.
-  """
+  @doc "Converts planning params to a map for serialization.\n"
   @spec to_map(t()) :: map()
   def to_map(%__MODULE__{} = params) do
     %{
-      "domain" => if(params.domain, do: inspect(params.domain), else: nil),
-      "state" => if(params.state, do: inspect(params.state), else: nil),
+      "domain" =>
+        if params.domain do
+          inspect(params.domain)
+        else
+          nil
+        end,
+      "state" =>
+        if params.state do
+          inspect(params.state)
+        else
+          nil
+        end,
       "goals" => params.goals,
       "options" => params.options,
       "request_id" => params.request_id,
