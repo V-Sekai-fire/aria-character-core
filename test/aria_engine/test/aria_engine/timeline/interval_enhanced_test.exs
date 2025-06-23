@@ -9,7 +9,7 @@ defmodule Timeline.IntervalEnhancedTest do
       end_dt = "2025-01-01T12:30:15Z"
 
       interval =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
+        Interval.new_fixed_schedule(start_dt, end_dt)
 
       assert Interval.duration_in_unit(interval, :second) == 9015
       assert Interval.duration_in_unit(interval, :minute) == 150
@@ -18,14 +18,14 @@ defmodule Timeline.IntervalEnhancedTest do
     end
 
     test "from_duration creates intervals correctly" do
-      start_dt = "2025-01-01T10:00:00Z"
+      {:ok, start_dt, 0} = DateTime.from_iso8601("2025-01-01T10:00:00Z")
       interval = Interval.from_duration(start_dt, 30, :minute)
       assert Interval.duration_in_unit(interval, :minute) == 30
       assert Interval.duration_in_unit(interval, :second) == 1800
     end
 
     test "from_duration works with different units" do
-      start_dt = "2025-01-01T10:00:00Z"
+      {:ok, start_dt, 0} = DateTime.from_iso8601("2025-01-01T10:00:00Z")
       hour_interval = Interval.from_duration(start_dt, 2, :hour)
       assert Interval.duration_in_unit(hour_interval, :hour) == 2
       day_interval = Interval.from_duration(start_dt, 1, :day)
@@ -40,7 +40,7 @@ defmodule Timeline.IntervalEnhancedTest do
       end_dt = "2025-01-01T10:05:00Z"
 
       interval =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
+        Interval.new_fixed_schedule(start_dt, end_dt)
 
       {start_point, end_point, duration} = Interval.to_stn_points(interval, :second)
       assert start_point == "#{interval.id}_start"
@@ -53,7 +53,7 @@ defmodule Timeline.IntervalEnhancedTest do
       end_dt = "2025-01-01T11:00:00Z"
 
       interval =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
+        Interval.new_fixed_schedule(start_dt, end_dt)
 
       {_start, _end, duration_minutes} = Interval.to_stn_points(interval, :minute)
       assert duration_minutes == 60
@@ -68,13 +68,13 @@ defmodule Timeline.IntervalEnhancedTest do
       end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       start2 = "2025-01-01T10:30:00Z"
       end2 = "2025-01-01T11:30:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
+        Interval.new_fixed_schedule(start2, end2)
 
       assert Interval.overlaps?(interval1, interval2)
       assert Interval.overlaps?(interval2, interval1)
@@ -85,13 +85,13 @@ defmodule Timeline.IntervalEnhancedTest do
       end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       start2 = "2025-01-01T12:00:00Z"
       end2 = "2025-01-01T13:00:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
+        Interval.new_fixed_schedule(start2, end2)
 
       refute Interval.overlaps?(interval1, interval2)
       refute Interval.overlaps?(interval2, interval1)
@@ -102,13 +102,13 @@ defmodule Timeline.IntervalEnhancedTest do
       end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       start2 = "2025-01-01T11:00:00Z"
       end2 = "2025-01-01T12:00:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
+        Interval.new_fixed_schedule(start2, end2)
 
       refute Interval.overlaps?(interval1, interval2)
       refute Interval.overlaps?(interval2, interval1)
@@ -121,13 +121,13 @@ defmodule Timeline.IntervalEnhancedTest do
       end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       start2 = "2025-01-01T12:00:00Z"
       end2 = "2025-01-01T13:00:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
+        Interval.new_fixed_schedule(start2, end2)
 
       assert Interval.allen_relation(interval1, interval2) == :before
       assert Interval.allen_relation(interval2, interval1) == :after
@@ -138,13 +138,13 @@ defmodule Timeline.IntervalEnhancedTest do
       end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       start2 = "2025-01-01T11:00:00Z"
       end2 = "2025-01-01T12:00:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
+        Interval.new_fixed_schedule(start2, end2)
 
       assert Interval.allen_relation(interval1, interval2) == :meets
       assert Interval.allen_relation(interval2, interval1) == :met_by
@@ -155,10 +155,10 @@ defmodule Timeline.IntervalEnhancedTest do
       end_dt = "2025-01-01T11:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
+        Interval.new_fixed_schedule(start_dt, end_dt)
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
+        Interval.new_fixed_schedule(start_dt, end_dt)
 
       assert Interval.allen_relation(interval1, interval2) == :equals
     end
@@ -168,13 +168,13 @@ defmodule Timeline.IntervalEnhancedTest do
       end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       start2 = "2025-01-01T10:30:00Z"
       end2 = "2025-01-01T11:30:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
+        Interval.new_fixed_schedule(start2, end2)
 
       assert Interval.allen_relation(interval1, interval2) == :overlaps
       assert Interval.allen_relation(interval2, interval1) == :overlapped_by
@@ -185,13 +185,13 @@ defmodule Timeline.IntervalEnhancedTest do
       end1 = "2025-01-01T12:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       start2 = "2025-01-01T10:30:00Z"
       end2 = "2025-01-01T11:30:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
+        Interval.new_fixed_schedule(start2, end2)
 
       assert Interval.allen_relation(interval1, interval2) == :contains
       assert Interval.allen_relation(interval2, interval1) == :during
@@ -202,12 +202,12 @@ defmodule Timeline.IntervalEnhancedTest do
       end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start_dt, end1)
 
       end2 = "2025-01-01T12:00:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end2))
+        Interval.new_fixed_schedule(start_dt, end2)
 
       assert Interval.allen_relation(interval1, interval2) == :starts
       assert Interval.allen_relation(interval2, interval1) == :started_by
@@ -218,12 +218,12 @@ defmodule Timeline.IntervalEnhancedTest do
       start1 = "2025-01-01T11:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end_dt))
+        Interval.new_fixed_schedule(start1, end_dt)
 
       start2 = "2025-01-01T10:00:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end_dt))
+        Interval.new_fixed_schedule(start2, end_dt)
 
       assert Interval.allen_relation(interval1, interval2) == :finishes
       assert Interval.allen_relation(interval2, interval1) == :finished_by
@@ -236,7 +236,7 @@ defmodule Timeline.IntervalEnhancedTest do
       end_dt = "2025-01-01T10:00:00.001Z"
 
       interval =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
+        Interval.new_fixed_schedule(start_dt, end_dt)
 
       assert Interval.duration_in_unit(interval, :microsecond) == 1000
       assert Interval.duration_in_unit(interval, :millisecond) == 1
@@ -247,16 +247,13 @@ defmodule Timeline.IntervalEnhancedTest do
       end_utc = "2025-01-01T11:00:00Z"
 
       interval_utc =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start_utc), DateTime.to_iso8601(end_utc))
+        Interval.new_fixed_schedule(start_utc, end_utc)
 
       start_est_equiv = "2025-01-01T15:00:00Z"
       end_est_equiv = "2025-01-01T16:00:00Z"
 
       interval_est_equiv =
-        Interval.new_fixed_schedule(
-          DateTime.to_iso8601(start_est_equiv),
-          DateTime.to_iso8601(end_est_equiv)
-        )
+        Interval.new_fixed_schedule(start_est_equiv, end_est_equiv)
 
       assert Interval.duration_in_unit(interval_utc, :second) ==
                Interval.duration_in_unit(interval_est_equiv, :second)
@@ -270,7 +267,7 @@ defmodule Timeline.IntervalEnhancedTest do
       end_dt = "2025-12-31T23:59:59Z"
 
       interval =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start_dt), DateTime.to_iso8601(end_dt))
+        Interval.new_fixed_schedule(start_dt, end_dt)
 
       days = Interval.duration_in_unit(interval, :day)
       assert days == 364
