@@ -3,6 +3,14 @@
 
 defmodule AriaEngine.Membrane.FormatTransformerFilter do
   @moduledoc """
+  Migration tool with serial number: A25W012FMTR
+
+  Decode: mix migrate.decode_serial A25W012FMTR
+  """
+
+  @serial_number "A25W012FMTR"
+
+  @moduledoc """
   Generic format transformer filter for Membrane pipelines.
 
   This filter can transform between different formats and provides

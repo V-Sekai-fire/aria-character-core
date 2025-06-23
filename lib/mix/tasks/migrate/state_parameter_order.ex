@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Migrate.StateParameterOrder do
   Decode: mix migrate.decode_serial A25W001STAT
   """
 
-  @serial_number "A25W001STAT"
+  @serial_number "R25W001STAT"
 
   @moduledoc """
   Fixes State.set_fact parameter order from StateV2 migration.

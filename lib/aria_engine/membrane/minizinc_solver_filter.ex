@@ -1,5 +1,13 @@
 defmodule AriaEngine.Membrane.MiniZincSolverFilter do
   @moduledoc """
+  Migration tool with serial number: A25W015SLVR
+
+  Decode: mix migrate.decode_serial A25W015SLVR
+  """
+
+  @serial_number "A25W015SLVR"
+
+  @moduledoc """
   Membrane filter element that calls MiniZinc solver for constraint satisfaction problems.
 
   This element receives scheduling requests and uses MiniZinc to solve them,

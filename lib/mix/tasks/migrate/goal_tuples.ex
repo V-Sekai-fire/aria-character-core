@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Migrate.GoalTuples do
   Decode: mix migrate.decode_serial A25W002GXAL
   """
 
-  @serial_number "A25W002GXAL"
+  @serial_number "R25W002GXAL"
 
   @moduledoc """
   Fix goal tuple ordering from {subject, predicate, object} to {predicate, subject, object}.

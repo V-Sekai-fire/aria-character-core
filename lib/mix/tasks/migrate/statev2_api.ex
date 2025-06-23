@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Migrate.Statev2Api do
   Decode: mix migrate.decode_serial A25W004STAT
   """
 
-  @serial_number "A25W004STAT"
+  @serial_number "R25W004STAT"
 
   @moduledoc """
   Migrate StateV2 API calls to State API.

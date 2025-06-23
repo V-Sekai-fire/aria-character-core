@@ -3,6 +3,14 @@
 
 defmodule Membrane.Testing.Filter do
   @moduledoc """
+  Migration tool with serial number: A25W014TEST
+
+  Decode: mix migrate.decode_serial A25W014TEST
+  """
+
+  @serial_number "A25W014TEST"
+
+  @moduledoc """
   Mock testing filter for Membrane pipeline tests.
 
   This module provides a simple pass-through filter that can be used

@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Migrate.StateParameters do
   Decode: mix migrate.decode_serial A25W005STAT
   """
 
-  @serial_number "A25W005STAT"
+  @serial_number "R25W005STAT"
 
   @moduledoc """
   Fix State API parameter ordering to match State.set_fact(state, predicate, subject, value).

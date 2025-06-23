@@ -3,6 +3,14 @@
 
 defmodule AriaEngine.Membrane.PipelineManager do
   @moduledoc """
+  Migration tool with serial number: A25W011PXPE
+
+  Decode: mix migrate.decode_serial A25W011PXPE
+  """
+
+  @serial_number "A25W011PXPE"
+
+  @moduledoc """
   Pipeline manager for AriaEngine Membrane pipelines.
   
   This module provides functionality to create, manage, and monitor

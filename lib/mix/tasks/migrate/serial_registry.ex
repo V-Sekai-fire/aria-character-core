@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
   """
 
   @registry %{
-    "A25W001STAT" => %{
+    "R25W001STAT" => %{
       format: :v1,
       file: "state_parameter_order.ex",
       purpose: "Fix parameter order in State function calls",
@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
       week: 26,
       sequence: 1
     },
-    "A25W002GXAL" => %{
+    "R25W002GXAL" => %{
       format: :v1,
       file: "goal_tuples.ex",
       purpose: "Fix goal tuple parameter order",
@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
       week: 26,
       sequence: 2
     },
-    "A25W003LXGG" => %{
+    "R25W003LXGG" => %{
       format: :v1,
       file: "logger_conversion.ex",
       purpose: "Convert IO.puts to Logger calls",
@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
       week: 26,
       sequence: 3
     },
-    "A25W004STAT" => %{
+    "R25W004STAT" => %{
       format: :v1,
       file: "statev2_api.ex",
       purpose: "Update StateV2 API calls",
@@ -56,7 +56,7 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
       week: 26,
       sequence: 4
     },
-    "A25W005STAT" => %{
+    "R25W005STAT" => %{
       format: :v1,
       file: "state_parameters.ex",
       purpose: "Update State function parameters",
@@ -64,13 +64,85 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
       week: 26,
       sequence: 5
     },
-    "A25W006STAT" => %{
+    "R25W006STAT" => %{
       format: :v1,
       file: "state_v2.ex",
       purpose: "Migrate StateV2 to State",
       created: ~D[2025-06-22],
       week: 26,
       sequence: 6
+    },
+    "R25W007RESP" => %{
+      format: :v1,
+      file: "planning_response.ex",
+      purpose: "Membrane planning response data structure",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 7
+    },
+    "R25W008PRMS" => %{
+      format: :v1,
+      file: "planning_params.ex",
+      purpose: "Membrane planning parameters data structure",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 8
+    },
+    "R25W009RQST" => %{
+      format: :v1,
+      file: "planning_request.ex",
+      purpose: "Membrane planning request data structure",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 9
+    },
+    "R25W010TMPL" => %{
+      format: :v1,
+      file: "minizinc_template_filter.ex",
+      purpose: "Membrane MiniZinc template processing filter",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 10
+    },
+    "R25W011PIPE" => %{
+      format: :v1,
+      file: "pipeline_manager.ex",
+      purpose: "Membrane pipeline coordination and management",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 11
+    },
+    "R25W012FMTR" => %{
+      format: :v1,
+      file: "format_transformer_filter.ex",
+      purpose: "Membrane data format transformation filter",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 12
+    },
+    "R25W013PLNR" => %{
+      format: :v1,
+      file: "planner_filter.ex",
+      purpose: "Membrane planning logic processing filter",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 13
+    },
+    "R25W014TEST" => %{
+      format: :v1,
+      file: "testing_filter.ex",
+      purpose: "Membrane testing utilities and validation filter",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 14
+    },
+    "R25W015SLVR" => %{
+      format: :v1,
+      file: "minizinc_solver_filter.ex",
+      purpose: "Membrane MiniZinc solver integration filter",
+      created: ~D[2025-06-22],
+      week: 26,
+      sequence: 15
     }
   }
 
@@ -142,13 +214,29 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
 
   @doc "Generate tool code from filename"
   def generate_tool_code(filename) do
-    filename
-    |> String.replace(".ex", "")
-    |> String.replace("_", "")
-    |> String.upcase()
-    |> String.slice(0, 4)
-    |> String.pad_trailing(4, "X")
-    |> ensure_valid_chars()
+    base_name = String.replace(filename, ".ex", "")
+
+    # Handle specific membrane component patterns
+    code = case base_name do
+      "pipeline_manager" -> "PIPE"
+      "format_transformer_filter" -> "FMTR"
+      "minizinc_solver_filter" -> "SLVR"
+      "minizinc_template_filter" -> "TMPL"
+      "planner_filter" -> "PLNR"
+      "testing_filter" -> "TEST"
+      "planning_params" -> "PRMS"
+      "planning_request" -> "RQST"
+      "planning_response" -> "RESP"
+      _ ->
+        # Fallback to original algorithm for other files
+        base_name
+        |> String.replace("_", "")
+        |> String.upcase()
+        |> String.slice(0, 4)
+        |> String.pad_trailing(4, "X")
+    end
+
+    ensure_valid_chars(code)
   end
 
   defp ensure_valid_chars(code) do
@@ -211,11 +299,13 @@ defmodule Mix.Tasks.Migrate.SerialRegistry do
     end
   end
 
-  defp decode_factory("A"), do: "Aria Character Core"
+  defp decode_factory("R"), do: "aRia Character Core"
+  defp decode_factory("E"), do: "Elixir Projects"
+  defp decode_factory("M"), do: "Membrane Components"
+  defp decode_factory("T"), do: "Timeline Systems"
+  defp decode_factory("P"), do: "Planning Tools"
   defp decode_factory("V"), do: "V-Sekai"
-  defp decode_factory("F"), do: "Fire"
   defp decode_factory("G"), do: "Godot Projects"
-  defp decode_factory("C"), do: "Community Projects"
   defp decode_factory(f), do: "Unknown Factory (#{f})"
 
   defp calculate_week_range(year, week) do

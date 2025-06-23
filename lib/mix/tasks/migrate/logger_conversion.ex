@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Migrate.LoggerConversion do
   Decode: mix migrate.decode_serial A25W003LXGG
   """
 
-  @serial_number "A25W003LXGG"
+  @serial_number "R25W003LXGG"
 
   @moduledoc """
   Convert IO.puts calls to Logger calls in migration tasks.

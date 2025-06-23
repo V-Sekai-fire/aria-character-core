@@ -1,5 +1,13 @@
 defmodule AriaEngine.Membrane.PlannerFilter do
   @moduledoc """
+  Migration tool with serial number: A25W013PLNR
+
+  Decode: mix migrate.decode_serial A25W013PLNR
+  """
+
+  @serial_number "A25W013PLNR"
+
+  @moduledoc """
   Membrane Filter element that executes actual planning using HybridCoordinatorV2.
 
   This element receives PlanningParams and executes real planning to produce PlanningResult.
