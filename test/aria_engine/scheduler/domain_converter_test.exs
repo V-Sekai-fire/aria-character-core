@@ -5,7 +5,7 @@ defmodule AriaEngine.Scheduler.DomainConverterTest do
   use ExUnit.Case, async: true
 
   alias AriaEngine.Domain
-  alias AriaEngine.StateV2
+  alias State
 
   describe "domain action creation for activities" do
     test "creates action function that works with StateV2" do
@@ -21,7 +21,7 @@ defmodule AriaEngine.Scheduler.DomainConverterTest do
 
       assert is_function(retrieved_action, 2)
 
-      initial_state = StateV2.new()
+      initial_state = State.new()
       result_state = retrieved_action.(initial_state, [])
 
       assert %StateV2{} = result_state

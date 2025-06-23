@@ -56,7 +56,7 @@ defmodule HybridPlanner.Strategies do
     - `{:ok, solution_tree}`: Successful plan
     - `{:error, reason}`: Planning failure with reason
     """
-    @callback plan(Domain.Core.t(), AriaEngine.StateV2.t(), [Plan.todo_item()], keyword()) ::
+    @callback plan(Domain.Core.t(), State.t(), [Plan.todo_item()], keyword()) ::
                 plan_result()
 
     @doc """
@@ -76,7 +76,7 @@ defmodule HybridPlanner.Strategies do
     """
     @callback replan(
                 Domain.Core.t(),
-                AriaEngine.StateV2.t(),
+                State.t(),
                 Plan.solution_tree(),
                 String.t(),
                 keyword()
@@ -94,8 +94,8 @@ defmodule HybridPlanner.Strategies do
     - `{:ok, final_state}`: Valid plan with resulting state
     - `{:error, reason}`: Validation failure
     """
-    @callback validate_plan(Domain.Core.t(), AriaEngine.StateV2.t(), Plan.solution_tree()) ::
-                {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+    @callback validate_plan(Domain.Core.t(), State.t(), Plan.solution_tree()) ::
+                {:ok, State.t()} | {:error, String.t()}
 
     @doc """
     Get strategy metadata and capabilities.
@@ -185,7 +185,7 @@ defmodule HybridPlanner.Strategies do
     operations while remaining independent of planning logic.
     """
 
-    @type state_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+    @type state_result :: {:ok, State.t()} | {:error, String.t()}
     @type query_result :: {:ok, term()} | {:error, String.t()}
 
     @doc """
@@ -201,7 +201,7 @@ defmodule HybridPlanner.Strategies do
     - `{:ok, new_state}`: Action applied successfully
     - `{:error, reason}`: Action application failed
     """
-    @callback apply_action(AriaEngine.StateV2.t(), {atom(), [term()]}, Domain.Core.t(), keyword()) ::
+    @callback apply_action(State.t(), {atom(), [term()]}, Domain.Core.t(), keyword()) ::
                 state_result()
 
     @doc """
@@ -216,7 +216,7 @@ defmodule HybridPlanner.Strategies do
     - `{:ok, result}`: Query successful
     - `{:error, reason}`: Query failed
     """
-    @callback query_state(AriaEngine.StateV2.t(), term(), keyword()) :: query_result()
+    @callback query_state(State.t(), term(), keyword()) :: query_result()
 
     @doc """
     Create a checkpoint of the current state.
@@ -230,7 +230,7 @@ defmodule HybridPlanner.Strategies do
     - `{:ok, checkpoint_state}`: Checkpoint created
     - `{:error, reason}`: Checkpoint creation failed
     """
-    @callback create_checkpoint(AriaEngine.StateV2.t(), String.t(), keyword()) :: state_result()
+    @callback create_checkpoint(State.t(), String.t(), keyword()) :: state_result()
 
     @doc """
     Rollback to a previous checkpoint.
@@ -244,7 +244,7 @@ defmodule HybridPlanner.Strategies do
     - `{:ok, rollback_state}`: Rollback successful
     - `{:error, reason}`: Rollback failed
     """
-    @callback rollback_to_checkpoint(AriaEngine.StateV2.t(), String.t(), keyword()) ::
+    @callback rollback_to_checkpoint(State.t(), String.t(), keyword()) ::
                 state_result()
   end
 
@@ -393,10 +393,10 @@ defmodule HybridPlanner.Strategies do
     execution, step-by-step) while coordinating with other strategies.
     """
 
-    @type execution_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+    @type execution_result :: {:ok, State.t()} | {:error, String.t()}
     @type step_result ::
-            {:ok, AriaEngine.StateV2.t()}
-            | {:retry, AriaEngine.StateV2.t()}
+            {:ok, State.t()}
+            | {:retry, State.t()}
             | {:error, String.t()}
 
     @doc """
@@ -412,7 +412,7 @@ defmodule HybridPlanner.Strategies do
     - `{:ok, final_state}`: Execution completed successfully
     - `{:error, reason}`: Execution failed
     """
-    @callback execute_plan(Plan.solution_tree(), AriaEngine.StateV2.t(), map(), keyword()) ::
+    @callback execute_plan(Plan.solution_tree(), State.t(), map(), keyword()) ::
                 execution_result()
 
     @doc """
@@ -429,7 +429,7 @@ defmodule HybridPlanner.Strategies do
     - `{:retry, state}`: Step should be retried
     - `{:error, reason}`: Step execution failed
     """
-    @callback execute_step(term(), AriaEngine.StateV2.t(), map(), keyword()) :: step_result()
+    @callback execute_step(term(), State.t(), map(), keyword()) :: step_result()
 
     @doc """
     Handle execution failure with recovery strategies.
@@ -444,7 +444,7 @@ defmodule HybridPlanner.Strategies do
     - `{:ok, recovery_state}`: Recovery successful
     - `{:error, reason}`: Recovery failed
     """
-    @callback handle_execution_failure(term(), AriaEngine.StateV2.t(), map(), keyword()) ::
+    @callback handle_execution_failure(term(), State.t(), map(), keyword()) ::
                 execution_result()
   end
 

@@ -72,7 +72,7 @@ Started implementation on June 15, 2025. Current status: **Phase 1 - Foundation 
 **aria_timestrike (BaselineTest)**: 4 failures
 
 - `test aria_timestrike basic actions are callable` - Invalid position format error
-- `test baseline performance benchmarks` - AriaEngine.State.add_fact/4 undefined
+- `test baseline performance benchmarks` - AriaEngine.State.add_fact/4 undefined (migrated to State.set_fact/4)
 - `test current AriaEngine basic planning works` - Planner not functional
 - `test aria_engine temporal module structure` - AriaEngine.Temporal module missing
 

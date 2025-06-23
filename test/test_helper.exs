@@ -4,7 +4,7 @@
 ExUnit.start()
 
 # Load test support modules
-Code.require_file("test/aria_engine/test/support/state_v2_mock.ex")
+# Note: state_v2_mock.ex removed - migrated to State module
 # Note: gltf_scene_mock.ex is disabled - not loading to prevent test failures
 # Code.require_file("test/aria_engine/test/support/gltf_scene_mock.ex")
 

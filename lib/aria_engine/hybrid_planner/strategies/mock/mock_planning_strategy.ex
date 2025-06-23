@@ -17,7 +17,7 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   # Set custom results for testing
   Application.put_env(:aria_engine, :mock_plan_result, {:ok, [%{action: :test_action, args: ["result"]}]})
   Application.put_env(:aria_engine, :mock_replan_result, {:error, "replan failed"})
-  Application.put_env(:aria_engine, :mock_validate_result, {:ok, %AriaEngine.StateV2{}})
+  Application.put_env(:aria_engine, :mock_validate_result, {:ok, %State{}})
   ```
 
   ## Usage
@@ -287,19 +287,9 @@ defmodule HybridPlanner.Strategies.Mock.MockPlanningStrategy do
   @spec create_mock_state() :: State.t()
   def create_mock_state do
     # Create a basic State with some test facts
-    state = %State{}
-
-    # Add facts using the correct State API if available, or return basic state
-    case function_exported?(State, :add_fact, 4) do
-      true ->
-        state
-        |> State.add_fact("mock_predicate", "mock_subject", "mock_value")
-        |> State.add_fact("test_ready", "system", true)
-
-      false ->
-        # Return basic state if add_fact/4 is not available
-        state
-    end
+    %State{}
+    |> State.set_fact("mock_predicate", "mock_subject", "mock_value")
+    |> State.set_fact("test_ready", "system", true)
   end
 
   # ==================== PRIVATE HELPERS ====================

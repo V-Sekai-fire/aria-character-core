@@ -75,10 +75,10 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
       bridges: %{}
     }
 
-    # Update state with entity properties (using entity-first StateV2)
+    # Update state with entity properties (using predicate-first State API)
     updated_state =
       Enum.reduce(properties, timeline_graph.state, fn {predicate, value}, state ->
-        State.set_fact(state, entity_id, predicate, value)
+        State.set_fact(state, predicate, entity_id, value)
       end)
 
     # Add entity to timeline graph
@@ -187,11 +187,11 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
   end
 
   @doc """
-  Gets entity properties using entity-first StateV2 API.
+  Gets entity properties using predicate-first State API.
   """
   @spec get_entity_properties(map(), entity_id()) :: %{String.t() => any()}
   def get_entity_properties(timeline_graph, entity_id) do
-    State.get_properties(timeline_graph.state, entity_id)
+    State.get_subject_properties(timeline_graph.state, entity_id)
   end
 
   @doc """
@@ -205,8 +205,8 @@ defmodule AriaEngine.TimelineGraph.EntityManager do
         {:error, :entity_not_found}
 
       entity_timeline ->
-        # Update state using entity-first API
-        updated_state = State.set_fact(timeline_graph.state, entity_id, predicate, value)
+        # Update state using predicate-first API
+        updated_state = State.set_fact(timeline_graph.state, predicate, entity_id, value)
 
         # Trigger timeline growth for property change
         updated_timeline =

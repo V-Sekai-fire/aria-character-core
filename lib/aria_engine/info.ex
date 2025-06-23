@@ -25,7 +25,7 @@ defmodule Info do
   @doc """
   Gets the current state.
   """
-  @spec get_current_state(t()) :: AriaEngine.StateV2.t()
+  @spec get_current_state(t()) :: State.t()
   def get_current_state(%Core{current_state: state}) do
     state
   end
@@ -33,7 +33,7 @@ defmodule Info do
   @doc """
   Gets the final state (if completed).
   """
-  @spec get_final_state(t()) :: AriaEngine.StateV2.t() | nil
+  @spec get_final_state(t()) :: State.t() | nil
   def get_final_state(%Core{status: :completed, current_state: state}) do
     state
   end
@@ -159,7 +159,7 @@ defmodule Info do
   @doc """
   Updates the current state.
   """
-  @spec update_state(t(), AriaEngine.StateV2.t()) :: t()
+  @spec update_state(t(), State.t()) :: t()
   def update_state(%Core{} = engine, new_state) do
     %{engine | current_state: new_state}
   end

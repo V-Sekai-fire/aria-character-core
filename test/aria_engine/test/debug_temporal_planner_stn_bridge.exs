@@ -30,7 +30,7 @@ defmodule TemporalPlannerSTNBridgeDebug do
 
     # 2. Define initial state with time
     initial_state =
-      StateV2.new()
+      State.new()
       |> State.set_fact("location", "player", "start_location")
       |> State.set_fact("has", "player", "nothing")
       # Current time in milliseconds

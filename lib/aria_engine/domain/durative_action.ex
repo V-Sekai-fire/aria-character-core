@@ -29,7 +29,7 @@ defmodule AriaEngine.Domain.DurativeAction do
           conditions: durative_action_conditions(),
           effects: durative_action_effects(),
           # The actual function that performs the action
-          action_fn: (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
+          action_fn: (State.t(), list() -> State.t() | false)
         }
 
   defstruct name: nil,
@@ -46,7 +46,7 @@ defmodule AriaEngine.Domain.DurativeAction do
           durative_action_duration(),
           durative_action_conditions(),
           durative_action_effects(),
-          (AriaEngine.StateV2.t(), list() -> AriaEngine.StateV2.t() | false)
+          (State.t(), list() -> State.t() | false)
         ) :: t()
   def new(name, duration, conditions, effects, action_fn) do
     %__MODULE__{

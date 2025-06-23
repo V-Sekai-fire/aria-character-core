@@ -10,7 +10,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   alias AriaEngine.Multigoal
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
+  @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
   @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -20,7 +20,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
           task: todo_item(),
           parent_id: node_id() | nil,
           children_ids: [node_id()],
-          state: AriaEngine.StateV2.t() | nil,
+          state: State.t() | nil,
           visited: boolean(),
           expanded: boolean(),
           method_tried: String.t() | nil,
@@ -37,7 +37,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
         }
 
   # Expand root node with initial todos
-  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], AriaEngine.StateV2.t()) ::
+  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], State.t()) ::
           {:ok, solution_tree()}
   def expand_root_node(solution_tree, root_id, todos, state) do
     # Create child nodes for each todo
@@ -80,7 +80,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   # Expand task node using methods
   @spec expand_task_node(
           AriaEngine.Domain.Core.t(),
-          AriaEngine.StateV2.t(),
+          State.t(),
           solution_tree(),
           node_id(),
           String.t(),
@@ -186,12 +186,12 @@ defmodule AriaEngine.Plan.NodeExpansion do
   # Expand goal node
   @spec expand_goal_node(
           AriaEngine.Domain.Core.t(),
-          AriaEngine.StateV2.t(),
+          State.t(),
           solution_tree(),
           node_id(),
           String.t(),
           String.t(),
-          AriaEngine.StateV2.fact_value(),
+          AriaEngine.State.fact_value(),
           integer()
         ) ::
           {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
@@ -229,7 +229,7 @@ defmodule AriaEngine.Plan.NodeExpansion do
   # Expand multigoal node
   @spec expand_multigoal_node(
           AriaEngine.Domain.Core.t(),
-          AriaEngine.StateV2.t(),
+          State.t(),
           solution_tree(),
           node_id(),
           Multigoal.t(),

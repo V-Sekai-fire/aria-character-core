@@ -9,8 +9,8 @@ defmodule AriaEngine.Domain.Methods do
   @type t :: AriaEngine.Domain.Core.t()
   @type task_name :: String.t()
   @type method_name :: String.t()
-  @type task_method_fn :: (AriaEngine.StateV2.t(), list() -> list() | false)
-  @type goal_method_fn :: (AriaEngine.StateV2.t(), list() -> list() | false)
+  @type task_method_fn :: (State.t(), list() -> list() | false)
+  @type goal_method_fn :: (State.t(), list() -> list() | false)
   @type named_method :: {method_name(), task_method_fn() | goal_method_fn()}
 
   @doc """

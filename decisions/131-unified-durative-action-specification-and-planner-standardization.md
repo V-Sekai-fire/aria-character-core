@@ -42,13 +42,13 @@ interval = Interval.new(start, end, agent: agent)
 ```
 
 **3. Inconsistent Goal Formats:**
-- **DEPRECATED**: `{predicate, subject, value}` ❌ TOMBSTONE THIS
-- **CORRECT**: `{subject, predicate, value}` ✅ ONLY USE THIS
+- **DEPRECATED**: `{subject, predicate, value}` ❌ TOMBSTONE THIS
+- **CORRECT**: `{predicate, subject, value}` ✅ ONLY USE THIS
 
 **4. Multiple State Validation Approaches:**
 - `validate_temporal_condition/2` ❌ REMOVE
-- `StateV2.evaluate_condition/2` ❌ REMOVE  
-- **ONLY USE**: `StateV2.get_fact/3` ✅ DIRECT FACT CHECKING (supports temporal queries)
+- `State.evaluate_condition/2` ❌ REMOVE  
+- **ONLY USE**: `State.get_fact/3` ✅ DIRECT FACT CHECKING (supports temporal queries)
 
 **5. Multiple Planning APIs:**
 - `Plan.plan/4` (legacy)
@@ -135,7 +135,7 @@ Domain.add_action(:meeting, &meeting/2, %{
 
 **Capabilities as Simple Traits Only (Properties Belong in State)**
 
-Capabilities are simple atoms that represent what an entity can do or what category it belongs to. All dynamic properties, constraints, and state information belong in StateV2, not in action metadata.
+Capabilities are simple atoms that represent what an entity can do or what category it belongs to. All dynamic properties, constraints, and state information belong in State, not in action metadata.
 
 ```elixir
 @type capability :: atom()  # Simple trait only: :agent, :heating, :cutting, :consumable
@@ -158,9 +158,9 @@ Capabilities are simple atoms that represent what an entity can do or what categ
 ]}
 
 # Properties stored in state, not action metadata
-# StateV2.set_fact(state, "oven_1", "max_temp", 450)
-# StateV2.set_fact(state, "oven_1", "min_temp", 150)
-# StateV2.set_fact(state, "oven_1", "precision", "±5°F")
+# State.set_fact(state, "max_temp", "oven_1", 450)
+# State.set_fact(state, "min_temp", "oven_1", 150)
+# State.set_fact(state, "precision", "oven_1", "±5°F")
 
 # Agent with simple capability traits
 %{type: "chef", capabilities: [
@@ -171,9 +171,9 @@ Capabilities are simple atoms that represent what an entity can do or what categ
 ]}
 
 # Agent properties stored in state
-# StateV2.set_fact(state, "chef_1", "experience_level", "expert")
-# StateV2.set_fact(state, "chef_1", "specialties", ["french", "italian"])
-# StateV2.set_fact(state, "chef_1", "certifications", ["food_safety"])
+# State.set_fact(state, "experience_level", "chef_1", "expert")
+# State.set_fact(state, "specialties", "chef_1", ["french", "italian"])
+# State.set_fact(state, "certifications", "chef_1", ["food_safety"])
 
 # Simple consumable with basic traits
 %{type: "flour", capabilities: [
@@ -184,8 +184,8 @@ Capabilities are simple atoms that represent what an entity can do or what categ
 ]}
 
 # Consumable quantities in state
-# StateV2.set_fact(state, "flour", "quantity", 5)
-# StateV2.set_fact(state, "flour", "unit", "cups")
+# State.set_fact(state, "quantity", "flour", 5)
+# State.set_fact(state, "unit", "flour", "cups")
 
 # Tool with simple capability traits
 %{type: "knife", capabilities: [
@@ -197,9 +197,9 @@ Capabilities are simple atoms that represent what an entity can do or what categ
 ]}
 
 # Tool state tracked separately
-# StateV2.set_fact(state, "knife_1", "sharpness", 85)
-# StateV2.set_fact(state, "knife_1", "blade_material", "carbon_steel")
-# StateV2.set_fact(state, "knife_1", "maintenance_due", "2025-07-01")
+# State.set_fact(state, "sharpness", "knife_1", 85)
+# State.set_fact(state, "blade_material", "knife_1", "carbon_steel")
+# State.set_fact(state, "maintenance_due", "knife_1", "2025-07-01")
 ```
 
 **Query flexibility with simple capabilities:**
@@ -219,7 +219,7 @@ entities_with_capabilities([:tool, :cutting, :reusable])
 # Property constraints handled through state queries
 entities_with_capability(:heating)
 |> Enum.filter(fn entity_id ->
-  StateV2.get_fact(state, entity_id, "max_temp") >= 400
+  State.get_fact(state, "max_temp", entity_id) >= 400
 end)
 
 # Complex entity matching with state-based property filtering
@@ -229,8 +229,8 @@ find_entities_matching([
   :cutting                                  # Must have cutting capability
 ])
 |> Enum.filter(fn entity_id ->
-  sharpness = StateV2.get_fact(state, entity_id, "sharpness")
-  maintenance_due = StateV2.get_fact(state, entity_id, "maintenance_due")
+  sharpness = State.get_fact(state, "sharpness", entity_id)
+  maintenance_due = State.get_fact(state, "maintenance_due", entity_id)
   
   sharpness >= 75 and 
   Date.compare(maintenance_due, Date.utc_today()) == :gt
@@ -254,14 +254,14 @@ entities_with_capability(:consumable)      # All consumable entities
 ```elixir
 # Action implementation handles quantities through state
 def cook_meal(state, [meal_type]) do
-  flour_available = StateV2.get_fact(state, "flour", "quantity")
-  eggs_available = StateV2.get_fact(state, "eggs", "quantity")
+  flour_available = State.get_fact(state, "quantity", "flour")
+  eggs_available = State.get_fact(state, "quantity", "eggs")
   
   if flour_available >= 2 and eggs_available >= 6 do
     state
-    |> StateV2.set_fact("flour", "quantity", flour_available - 2)
-    |> StateV2.set_fact("eggs", "quantity", eggs_available - 6)
-    |> StateV2.set_fact("meal", "status", "cooked")
+    |> State.set_fact("quantity", "flour", flour_available - 2)
+    |> State.set_fact("quantity", "eggs", eggs_available - 6)
+    |> State.set_fact("status", "meal", "cooked")
   else
     {:error, :insufficient_ingredients}
   end
@@ -370,8 +370,8 @@ end
 - **Error reporting**: More descriptive error messages for invalid formats
 
 **Standardized formats:**
-- **Goals**: ONLY `{subject, predicate, value}` format
-- **State validation**: ONLY `StateV2.get_fact/3` direct fact checking (supports temporal queries)
+- **Goals**: ONLY `{predicate, subject, value}` format
+- **State validation**: ONLY `State.get_fact/3` direct fact checking (supports temporal queries)
 - **Entity management**: ONLY through Domain actions API
 - **Planning API**: Clear guidance on which API to use when
 - **Temporal parsing**: ONLY Timex for all datetime and duration operations
@@ -424,7 +424,7 @@ Following Martin Fowler's TDD methodology, we implement the unified durative act
 - [ ] Entity requirement integration with state queries
 
 **State Integration Tests**
-- [ ] Property queries through StateV2.get_fact/3
+- [ ] Property queries through State.get_fact/3
 - [ ] Temporal state queries (past/future checking)
 - [ ] Capability-based entity filtering
 - [ ] State-based property constraints
@@ -518,9 +518,9 @@ end
 **Iteration 5: State Integration**
 ```elixir
 # RED: Write failing test
-test "integrates with StateV2 for property queries" do
-  state = StateV2.new()
-  |> StateV2.set_fact("oven_1", "max_temp", 450)
+test "integrates with State for property queries" do
+  state = State.new()
+  |> State.set_fact("max_temp", "oven_1", 450)
   
   entities = find_entities_with_capability(state, :heating)
   |> filter_by_property(state, "max_temp", {:>=, 400})
@@ -582,8 +582,8 @@ end
 
 - [ ] Both floating durations and fixed intervals supported via ISO 8601 strings
 - [ ] Unified action specification with entities, capabilities, and resources
-- [ ] All goals use `{subject, predicate, value}` format consistently
-- [ ] All state validation uses direct `StateV2.get_fact/3` calls (with temporal query support)
+- [ ] All goals use `{predicate, subject, value}` format consistently
+- [ ] All state validation uses direct `State.get_fact/3` calls (with temporal query support)
 - [ ] Clear documentation on which planning API to use when
 - [ ] Single standardized way to define actions
 - [ ] All existing functionality preserved during migration
@@ -656,14 +656,14 @@ end
 **Solution**: Clear Hierarchical Decomposition Pattern
 ```elixir
 # Unigoal methods: Decompose single goal into todo list
-# Input: {"subject", "predicate", "object"} 
+# Input: {"predicate", "subject", "object"} 
 # Output: [{task_name, args}, {task_name, args}, ...]
 Domain.add_method(domain, "achieve_location", &achieve_location/2, %{
   type: :unigoal,
-  goal_pattern: {"player", "location", :any}
+  goal_pattern: {"location", "player", :any}
 })
 
-def achieve_location(state, {"player", "location", target_room}) do
+def achieve_location(state, {"location", "player", target_room}) do
   [
     {"task_move", [target_room]},
     {"task_verify_location", [target_room]}
@@ -671,11 +671,11 @@ def achieve_location(state, {"player", "location", target_room}) do
 end
 
 # Multigoal methods: Decompose goal list into unigoal methods (not todos)
-# Input: [{"subject", "predicate", "object"}, {"subject", "predicate", "object"}]
+# Input: [{"predicate", "subject", "object"}, {"predicate", "subject", "object"}]
 # Output: [unigoal_method_name, unigoal_method_name, ...]
 Domain.add_method(domain, "optimize_multiple_locations", &optimize_locations/2, %{
   type: :multigoal,
-  goal_patterns: [{"player", "location", :any}, {"npc", "location", :any}]
+  goal_patterns: [{"location", "player", :any}, {"location", "npc", :any}]
 })
 
 def optimize_locations(state, goals) do
@@ -722,18 +722,18 @@ defmodule MyApp.Domains.CookingDomain do
   @action duration: "PT2H", requires_agent: %{capabilities: [:cooking]}
   def cook_meal(state, [meal_type, ingredients]) do
     # Action implementation
-    StateV2.set_fact(state, "meal", "status", "cooking")
+    State.set_fact(state, "status", "meal", "cooking")
   end
   
   @action start: "2025-06-22T10:00:00Z", end: "2025-06-22T11:00:00Z"
   def scheduled_meeting(state, [participants]) do
     # Fixed time action implementation
-    StateV2.set_fact(state, "meeting", "status", "in_progress")
+    State.set_fact(state, "status", "meeting", "in_progress")
   end
   
   # Methods defined as module functions
-  @unigoal_method goal_pattern: {"chef", "task", :any}
-  def achieve_cooking_task(state, {"chef", "task", task_name}) do
+  @unigoal_method goal_pattern: {"task", "chef", :any}
+  def achieve_cooking_task(state, {"task", "chef", task_name}) do
     [
       {"task_prepare_ingredients", [task_name]},
       {"task_cook", [task_name]},
@@ -751,615 +751,4 @@ defmodule MyApp.Domains.CookingDomain do
 end
 
 # Usage: Automatic domain creation from module
-domain = MyApp.Domains.CookingDomain.create_domain()
-
-# Alternative: Explicit creation with options
-domain = MyApp.Domains.CookingDomain.create_domain(%{
-  validation: :strict,
-  optimization: :enabled
-})
-```
-
-**Benefits of Module-First Pattern**:
-- **Follows Elixir conventions**: Uses modules, attributes, and pattern matching
-- **Compile-time validation**: Metadata and function signatures checked at compile time
-- **Clear organization**: All domain logic in one module
-- **Documentation integration**: Works with ExDoc and `@doc` attributes
-- **Hot code reloading**: Supports development workflow
-- **Testable**: Easy to test individual actions and methods
-
-**Fallback for Dynamic Domains**:
-```elixir
-# For runtime-generated domains (rare cases)
-domain = Domain.new("dynamic_domain")
-|> Domain.add_action(:runtime_action, &runtime_action/2, %{duration: "PT1H"})
-|> Domain.add_method("runtime_method", &runtime_method/2, %{type: :task})
-```
-
-**Migration Strategy**:
-- **New domains**: Always use module-based approach
-- **Existing domains**: Migrate to modules during refactoring
-- **Dynamic domains**: Keep programmatic approach for runtime generation only
-
-**Impact**: Provides clear, Elixir-idiomatic domain creation that leverages compile-time checks and follows established patterns
-
-### 4. Error Handling Standardization (MEDIUM PRIORITY) ✅ SOLUTION IDENTIFIED
-**Problem**: Inconsistent error return formats across the planner
-- Some functions return `false`, others `{:error, reason}`, others raise exceptions
-- No consistent error handling pattern across the planner
-- Missing error recovery strategies
-
-**Solution**: Standard Elixir Tagged Tuples with Descriptive Backtracking
-```elixir
-# Backtracker logic: Simple binary success/failure
-case method_result do
-  {:ok, todos} -> continue_with(todos)    # ✅ Success - continue
-  _anything_else -> backtrack()           # ❌ Failure - try next method
-end
-
-# Method implementation: Descriptive errors for debugging
-def task_method(state, args) do
-  cond do
-    not valid_preconditions?(state, args) ->
-      {:error, :preconditions_failed}
-    
-    not enough_resources?(state, args) ->
-      {:error, :insufficient_resources}
-    
-    true ->
-      {:ok, [{:action, args}]}
-  end
-end
-
-# Action implementation: Clear success/failure
-def move_action(state, [target]) do
-  cond do
-    not reachable?(state, target) ->
-      {:error, :unreachable_location}
-    
-    blocked_path?(state, target) ->
-      {:error, :path_blocked}
-    
-    true ->
-      new_state = StateV2.set_fact(state, "player", "location", target)
-      {:ok, new_state}
-  end
-end
-```
-
-**Benefits**:
-- **Standard Elixir patterns**: Follows `{:ok, result}` / `{:error, reason}` ecosystem conventions
-- **Simple backtracker logic**: Just check for `{:ok, result}` - anything else triggers backtracking
-- **Rich error information**: Descriptive error atoms help with debugging
-- **Composable**: Works with standard `with` statements and error handling
-- **Clear semantics**: Success and failure reasons are explicit
-
-**Migration Strategy**:
-```elixir
-# Replace all `false` returns with `{:error, reason}`
-# Replace all bare results with `{:ok, result}`
-
-# Before
-def old_method(state, args) do
-  if condition do
-    result
-  else
-    false
-  end
-end
-
-# After  
-def new_method(state, args) do
-  if condition do
-    {:ok, result}
-  else
-    {:error, :condition_failed}
-  end
-end
-```
-
-**Impact**: Eliminates weird `false` returns while providing both clean backtracking logic AND descriptive error information for debugging
-
-### 5. Metadata Validation Issues (HIGH PRIORITY) ✅ SOLUTION IDENTIFIED
-**Problem**: No validation for the new unified metadata format
-- No clear validation rules for unified metadata format
-- Missing type specifications for metadata structure
-- No runtime validation of action requirements (agents, entities, resources)
-
-**Solution**: Comprehensive Metadata Validation with Type Specifications
-```elixir
-# Type specifications for metadata structure
-@type action_metadata :: %{
-  # Temporal specifications (mutually exclusive)
-  optional(:duration) => String.t(),  # ISO 8601 duration: "PT2H"
-  optional(:start) => String.t(),     # ISO 8601 datetime: "2025-06-22T10:00:00Z"
-  optional(:end) => String.t(),       # ISO 8601 datetime: "2025-06-22T11:00:00Z"
-  
-  # Unified entity requirements (everything is an entity with capabilities)
-  optional(:requires_entities) => [%{
-    required(:type) => String.t(),
-    optional(:capabilities) => [atom()]  # What this entity can do
-  }],
-  
-  # Additional metadata
-  optional(:description) => String.t()
-}
-
-# Validation function with clear error messages
-def validate_action_metadata(metadata) when is_map(metadata) do
-  with {:ok, _} <- validate_temporal_specification(metadata),
-       {:ok, _} <- validate_agent_requirements(metadata),
-       {:ok, _} <- validate_entity_requirements(metadata),
-       {:ok, _} <- validate_resource_requirements(metadata) do
-    {:ok, metadata}
-  else
-    {:error, reason} -> {:error, "Invalid action metadata: #{reason}"}
-  end
-end
-
-# Temporal validation (supports open-ended intervals)
-defp validate_temporal_specification(metadata) do
-  temporal_keys = [:duration, :start, :end]
-  present_keys = Enum.filter(temporal_keys, &Map.has_key?(metadata, &1))
-  
-  cond do
-    # No temporal specification (invalid - must have at least one)
-    Enum.empty?(present_keys) ->
-      {:error, "must have at least one temporal specification: :duration OR :start OR :end"}
-    
-    # Duration only (floating effort)
-    present_keys == [:duration] ->
-      validate_iso8601_duration(metadata[:duration])
-    
-    # Start only (open-ended interval - starts at time, no end constraint)
-    present_keys == [:start] ->
-      validate_iso8601_datetime(metadata[:start])
-    
-    # End only (open-ended interval - must finish by time, no start constraint)
-    present_keys == [:end] ->
-      validate_iso8601_datetime(metadata[:end])
-    
-    # Start and end (fixed closed interval)
-    Enum.sort(present_keys) == [:end, :start] ->
-      with {:ok, start_dt} <- validate_iso8601_datetime(metadata[:start]),
-           {:ok, end_dt} <- validate_iso8601_datetime(metadata[:end]) do
-        if DateTime.compare(start_dt, end_dt) == :lt do
-          {:ok, :fixed_closed_interval}
-        else
-          {:error, "start time must be before end time"}
-        end
-      end
-    
-    # Invalid combinations (duration cannot mix with start/end)
-    true ->
-      {:error, "invalid temporal specification - cannot mix :duration with :start/:end"}
-  end
-end
-
-# Agent requirements validation
-defp validate_agent_requirements(%{requires_agent: agent_req}) when is_map(agent_req) do
-  with {:ok, _} <- validate_capabilities(agent_req[:capabilities]),
-       {:ok, _} <- validate_properties(agent_req[:properties]) do
-    {:ok, :valid_agent_requirements}
-  end
-end
-defp validate_agent_requirements(_), do: {:ok, :no_agent_requirements}
-
-# Entity requirements validation
-defp validate_entity_requirements(%{requires_entities: entities}) when is_list(entities) do
-  Enum.reduce_while(entities, {:ok, []}, fn entity, {:ok, acc} ->
-    case validate_single_entity_requirement(entity) do
-      {:ok, validated} -> {:cont, {:ok, [validated | acc]}}
-      {:error, reason} -> {:halt, {:error, "entity requirement error: #{reason}"}}
-    end
-  end)
-end
-defp validate_entity_requirements(_), do: {:ok, :no_entity_requirements}
-
-defp validate_single_entity_requirement(%{type: type} = entity) when is_binary(type) do
-  if Map.has_key?(entity, :properties) and not is_map(entity[:properties]) do
-    {:error, "entity properties must be a map"}
-  else
-    {:ok, entity}
-  end
-end
-defp validate_single_entity_requirement(_) do
-  {:error, "entity requirement must have :type field as string"}
-end
-
-# Resource requirements validation
-defp validate_resource_requirements(%{resources: resources}) when is_map(resources) do
-  valid_resource_types = [:consumables, :tools, :locations]
-  
-  Enum.reduce_while(resources, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
-    cond do
-      key not in valid_resource_types ->
-        {:halt, {:error, "invalid resource type: #{key}"}}
-      
-      not is_list(value) or not Enum.all?(value, &is_binary/1) ->
-        {:halt, {:error, "resource #{key} must be list of strings"}}
-      
-      true ->
-        {:cont, {:ok, Map.put(acc, key, value)}}
-    end
-  end)
-end
-defp validate_resource_requirements(_), do: {:ok, :no_resource_requirements}
-
-# ISO 8601 validation helpers
-defp validate_iso8601_duration(duration) when is_binary(duration) do
-  case Regex.match?(~r/^P(?:\d+Y)?(?:\d+M)?(?:\d+D)?(?:T(?:\d+H)?(?:\d+M)?(?:\d+S)?)?$/, duration) do
-    true -> {:ok, duration}
-    false -> {:error, "invalid ISO 8601 duration format: #{duration}"}
-  end
-end
-defp validate_iso8601_duration(_), do: {:error, "duration must be string"}
-
-defp validate_iso8601_datetime(datetime) when is_binary(datetime) do
-  case DateTime.from_iso8601(datetime) do
-    {:ok, dt, _offset} -> {:ok, dt}
-    {:error, reason} -> {:error, "invalid ISO 8601 datetime: #{reason}"}
-  end
-end
-defp validate_iso8601_datetime(_), do: {:error, "datetime must be string"}
-
-# Integration with Domain.add_action/3
-def add_action(domain, name, function, metadata \\ %{}) do
-  case validate_action_metadata(metadata) do
-    {:ok, validated_metadata} ->
-      # Proceed with action registration
-      do_add_action(domain, name, function, validated_metadata)
-    
-    {:error, reason} ->
-      raise ArgumentError, "Cannot add action #{name}: #{reason}"
-  end
-end
-```
-
-**Benefits**:
-- **Compile-time safety**: Type specifications catch errors early
-- **Runtime validation**: Clear error messages for invalid metadata
-- **Comprehensive coverage**: Validates all metadata fields with specific rules
-- **Clear error messages**: Developers know exactly what's wrong
-- **Fail-fast approach**: Invalid actions are rejected immediately
-
-**Validation Rules**:
-- **Temporal**: Either `:duration` OR (`:start` AND `:end`), not mixed
-- **Agent capabilities**: Must be list of atoms if present
-- **Entity requirements**: Must have `:type` string, optional `:properties` map
-- **Resources**: Must be map with string lists for consumables/tools/locations
-- **ISO 8601 formats**: Strict validation for duration and datetime strings
-
-**Impact**: Eliminates runtime metadata errors and provides clear feedback for invalid action definitions
-
-### 6. Migration Path Gaps (MEDIUM PRIORITY)
-**Problem**: Incomplete migration guidance for existing code
-- ADR mentions migration but lacks concrete steps for existing code
-- No deprecation timeline or compatibility guarantees
-- Missing automated migration tools or scripts
-
-**Impact**: Difficult transition from legacy patterns to new unified approach
-
-### 7. Todo/Goal Conversion Complexity (LOW PRIORITY) ✅ SOLUTION IDENTIFIED
-**Problem**: Multiple data formats with unclear conversion rules
-- Tasks: `{task_name, args}` vs Goals: `{subject, predicate, value}` vs Multigoals: `%Multigoal{}`
-- Automatic conversion in PlannerAdapter creates confusion
-- No clear guidelines on when to use which format
-
-**Solution**: Unified Todo List Format with Full Interchangeability
-```elixir
-# Complete type specification for todo list elements (all interchangeable)
-@type todo_element :: 
-  {action_atom :: atom(), args :: list()} |              # Direct actions: {:move, ["room1"]}
-  {task_name :: String.t(), args :: list()} |            # Task methods: {"task_move", ["room1"]}
-  {subject :: String.t(), predicate :: String.t(), value :: any()} | # Goals: {"player", "location", "room1"}
-  %AriaEngine.Multigoal{}                                # Multigoals: %AriaEngine.Multigoal{...}
-
-# Todo lists can contain any mix of these elements in any order
-@type todo_list :: [todo_element()]
-
-# Example valid todo list with all element types mixed
-todo_list = [
-  {:move, ["room1"]},                      # Direct action atom
-  {"task_verify", []},                     # Task method
-  {"player", "location", "room1"},         # Goal
-  %AriaEngine.Multigoal{goals: [...], ...}, # Multigoal
-  {:cook, ["pasta"]},                      # Another direct action
-  {"door", "state", "open"}                # Another goal
-]
-
-# Method examples returning different element types
-def unigoal_method(state, goal) do
-  {:ok, [
-    {"task_move", ["room1"]},              # Task decomposition
-    {"player", "location", "room1"}        # Goal verification
-  ]}
-end
-
-def task_method(state, args) do
-  {:ok, [
-    {:move, ["room1"]},                    # Direct action
-    {:verify_location, ["room1"]}          # Another direct action
-  ]}
-end
-
-def multigoal_method(state, goals) do
-  {:ok, [
-    %AriaEngine.Multigoal{goals: goals, constraints: [...]} # Multigoal optimization
-  ]}
-end
-```
-
-**Benefits**:
-- **Maximum flexibility**: Methods can return any combination of actions, tasks, goals, and multigoals
-- **Natural decomposition**: Each method type outputs what makes sense for its level
-- **Action Atom Priority preserved**: Planner resolves `:move` vs `"task_move"` based on availability
-- **Unified processing**: Planner handles all element types uniformly
-- **Clear documentation**: Type specs make the complete interchangeability explicit
-- **No conversion confusion**: All formats are valid in any context
-
-**Processing Logic**:
-```elixir
-# Planner processes each element based on its type
-def process_todo_element(domain, state, element) do
-  case element do
-    {action_atom, args} when is_atom(action_atom) ->
-      # Direct action execution
-      execute_action(domain, state, action_atom, args)
-    
-    {task_name, args} when is_binary(task_name) ->
-      # Task method decomposition
-      decompose_task(domain, state, task_name, args)
-    
-    {subject, predicate, value} when is_binary(subject) and is_binary(predicate) ->
-      # Goal achievement
-      achieve_goal(domain, state, {subject, predicate, value})
-    
-    %AriaEngine.Multigoal{} = multigoal ->
-      # Multigoal optimization
-      optimize_multigoal(domain, state, multigoal)
-  end
-end
-```
-
-**Impact**: Eliminates data format confusion by making all todo element types explicitly interchangeable with clear type specifications and processing logic
-
-### 8. Action Atom Aliasing (SOLVED ✅)
-**Problem**: Automatic primitive method creation conflicted with action atoms
-**Solution**: Implemented `task_` prefix approach for zero aliasing
-- Action atoms: `:move`, `:cook`, `:build` (direct execution)
-- Task methods: `"task_move"`, `"task_cook"`, `"task_build"` (decomposition)
-
-## Related ADRs
-
-- **ADR-086**: Implement Durative Actions (foundational work)
-- **ADR-091**: Hybrid Planner Dependency Encapsulation (planning system)
-- **ADR-129**: Aria Engine Plans glTF KHR Interactivity Implementation (related planning work)
-
-## Extracted ADRs
-
-- **ADR-132**: Fix Duration Handling Precision Loss (extracted from Phase 5)
-- **ADR-133**: Planner Standardization Open Problems (extracted open problems catalog)
-- **ADR-134**: Unified Action Specification Examples (extracted examples and patterns)
-- **ADR-135**: TDD glTF Scene Foundation Implementation (tombstoned - extracted into ADR-136 through ADR-139)
-
-## ADR-135 Extraction Completed
-
-**Date:** 2025-06-22  
-**Action:** Successfully extracted ADR-135 phases into focused ADRs
-
-**Extracted Phase-Specific ADRs:**
-- **ADR-136**: TDD glTF Core Data Structures (Phase 1)
-- **ADR-137**: TDD glTF Data Loading & Parsing (Phase 2)
-- **ADR-138**: TDD glTF Scene Graph Logic (Phase 3)
-- **ADR-139**: TDD glTF Mesh Processing (Phase 4)
-
-**Benefits Achieved:**
-- ✅ Focused implementation scope per ADR
-- ✅ Clear dependency chain: 136 → 137 → 138 → 139
-- ✅ Better TDD discipline through smaller cycles
-- ✅ Independent tracking and completion of each phase
-- ✅ Maintained historical record through tombstone
-
-## Progress Tracking
-
-**Phase 1**: ✅ COMPLETED - Core Duration Support (ISO 8601 datetime strings implemented)
-**Phase 2**: ✅ COMPLETED - Unified Metadata Validation (agent/entity/resource requirements)  
-**Phase 3**: ✅ COMPLETED - Goal Format Standardization (already using correct format)
-**Phase 4**: ✅ COMPLETED - State Validation Simplification (StateV2.get_fact/3 standard)
-**Phase 5**: ✅ **COMPLETED** → **ADR-132**: Fix Duration Handling Precision Loss
-**Phase 6**: ✅ COMPLETED - Action Atom Priority Rule Implementation (task_ prefix)
-**Phase 7**: ✅ COMPLETED - Enhanced Metadata Support (capability/resource integration)
-**Phase 8**: ✅ **COMPLETED** - Interval Module ISO 8601 Refactor (implemented with comprehensive test coverage)
-**Phase 9**: ✅ **COMPLETED** - Default Duration Implementation (missing temporal specs default to PT0S)
-
-### Phase 8: Interval Module ISO 8601 Refactor
-
-**Problem Identified**: The `AriaEngine.Timeline.Interval` module currently accepts `DateTime` structs but should only accept ISO 8601 strings to align with the unified durative action specification.
-
-**Current Issues**:
-- `new/2` and `new/3` accept `DateTime` structs instead of ISO 8601 strings
-- `from_duration/3` accepts duration + time unit combinations
-- Mixed temporal specification support when it should be ISO 8601 string-only
-
-**Required Changes**:
-```elixir
-# Replace DateTime constructors with ISO 8601 string constructors
-Interval.new_fixed_schedule("2025-06-22T10:00:00Z", "2025-06-22T11:00:00Z", opts \\ [])
-Interval.new_floating_duration("PT1H", opts \\ [])
-
-# Unified constructor with auto-detection
-Interval.new(%{start: "2025-06-22T10:00:00Z", end: "2025-06-22T11:00:00Z"})
-Interval.new(%{duration: "PT1H"})
-```
-
-**Implementation Plan**:
-1. Add new ISO 8601 string-based constructors
-2. Update internal structure to preserve original ISO 8601 strings in metadata
-3. Maintain internal DateTime conversion for calculations
-4. Update duration methods to be pattern-aware
-5. Add migration utilities for existing DateTime-based intervals
-6. Deprecate old constructors with clear migration path
-7. Update test suite with comprehensive coverage
-
-**Impact**: Ensures Timeline.Interval aligns with unified durative action specification requiring ISO 8601 strings for all temporal data.
-
-## Implementation Status
-
-### ✅ COMPLETED: Fixed Schedule Support (Phase 1)
-- [x] ISO 8601 datetime validation for start/end times
-- [x] Timezone requirement enforcement  
-- [x] Start-before-end validation logic
-- [x] Integration with existing metadata validation
-- [x] Timex-based datetime parsing and validation
-- [x] Error handling with descriptive messages for invalid formats
-
-### ✅ COMPLETED: Metadata Validation Framework (Phase 2)
-- [x] Unified entity requirements validation
-- [x] Temporal specification conflict detection
-- [x] Comprehensive error messaging system
-- [x] Structured validation pipeline
-- [x] Clear separation between temporal and entity validation
-
-### ✅ COMPLETED: Test Coverage
-- [x] All 8 unified durative action tests passing
-- [x] Fixed schedule support validation
-- [x] Metadata validation framework tests
-- [x] End-to-end integration tests
-- [x] Error handling validation tests
-
-## Examples
-
-### Before (Confusing Multiple Patterns)
-
-```elixir
-# Multiple entity creation patterns
-timeline_graph = TimelineGraph.new()
-{:ok, timeline_graph, _} = TimelineGraph.create_entity(timeline_graph, "chef", "Head Chef", %{})
-{:ok, timeline_graph} = TimelineGraph.add_capabilities(timeline_graph, "chef", [:cooking])
-
-# Inconsistent goal formats
-{predicate, subject, value}  # Wrong format
-{"location", "player", "room1"}  # Predicate-first (deprecated)
-
-# Complex state validation
-validate_temporal_condition(condition, state)
-StateV2.evaluate_condition(state, condition)
-
-# Multiple action definition patterns
-Domain.add_action(:cook, &cook/2)  # No metadata
-Domain.add_action(:bake, %DurativeAction{...})  # Complex struct
-```
-
-### After (Unified Clear Patterns)
-
-```elixir
-# Unified action specification with clean entity+capabilities model
-Domain.add_action(:cook_meal, &cook_meal/2, %{
-  duration: "PT2H",  # Floating effort
-  requires_entities: [
-    %{type: "agent", capabilities: [:cooking, :menu_planning]},
-    %{type: "oven", capabilities: [:heating, :baking]},
-    %{type: "flour", capabilities: [:consumable]},
-    %{type: "eggs", capabilities: [:consumable]},
-    %{type: "mixing_bowl", capabilities: [:container, :reusable]}
-  ],
-  description: "Prepare a meal using specified ingredients and cooking equipment"
-})
-
-Domain.add_action(:meeting, &meeting/2, %{
-  start: "2025-06-22T10:00:00Z",  # Fixed scheduling
-  end: "2025-06-22T11:00:00Z",
-  requires_entities: [
-    %{type: "agent", capabilities: [:communication]},
-    %{type: "conference_room_1", capabilities: [:meeting_space]}
-  ],
-  description: "Scheduled team meeting in conference room"
-})
-
-# Standardized goal format (subject-first)
-{subject, predicate, value}
-{"player", "location", "room1"}  # Subject-first (correct)
-
-# Simple state validation (supports temporal queries)
-StateV2.get_fact(state, subject, predicate) == required_value
-
-# Temporal state validation (past/future checking)
-StateV2.get_fact(state, subject, predicate, time) == required_value
-
-# Quantities handled in action implementation through state
-def cook_meal(state, [meal_type]) do
-  flour_available = StateV2.get_fact(state, "flour", "quantity")
-  eggs_available = StateV2.get_fact(state, "eggs", "quantity")
-  
-  if flour_available >= 2 and eggs_available >= 6 do
-    state
-    |> StateV2.set_fact("flour", "quantity", flour_available - 2)
-    |> StateV2.set_fact("eggs", "quantity", eggs_available - 6)
-    |> StateV2.set_fact("meal", "status", "cooked")
-  else
-    {:error, :insufficient_ingredients}
-  end
-end
-```
-
-This unified approach eliminates confusion by providing exactly ONE way to accomplish each task, with clear examples and migration guidance.
-
-## Next Steps
-
-To complete ADR-131, the following phases need implementation:
-
-### ✅ VERIFIED: All Phases Complete
-
-**Phase 6: Action Atom Priority Rule Implementation**
-**Status:** ✅ COMPLETED  
-**Implementation:** `Domain.resolve/2` function in `lib/aria_engine/domain.ex` (lines 158-175)
-
-**Verified Implementation:**
-- ✅ Action atoms (`:move`) resolve before task methods (`"task_move"`)
-- ✅ Priority order: Action atoms → Task methods → Primitive task methods
-- ✅ Zero aliasing conflicts through clear resolution hierarchy
-- ✅ All existing functionality preserved
-
-**Phase 7: Enhanced Metadata Support**
-**Status:** ✅ COMPLETED  
-**Implementation:** Comprehensive validation in `lib/aria_engine/domain/actions.ex` (lines 11-140)
-
-**Verified Implementation:**
-- ✅ Full temporal specification validation (duration, start/end, open intervals)
-- ✅ Entity requirements validation with capabilities
-- ✅ ISO 8601 datetime and duration string validation
-- ✅ Comprehensive error handling with descriptive messages
-- ✅ Integration with StateV2 for property queries
-
-**Phase 5 Dependency: ADR-132**
-**Status:** ⚠️ IDENTIFIED BUT NOT BLOCKING  
-**Scope:** Duration precision loss in AriaEngine.Utils
-
-**Current Assessment:**
-- ⚠️ Precision loss exists but doesn't affect core functionality
-- ✅ All unified durative action tests passing (8/8)
-- ✅ Core temporal specification working correctly
-- 📋 ADR-132 remains for precision enhancement (non-blocking)
-
-### ✅ COMPLETION VERIFIED
-
-**All 9 phases of unified durative action specification are implemented and tested:**
-
-1. ✅ **Phase 1**: Core Duration Support (ISO 8601 datetime strings)
-2. ✅ **Phase 2**: Unified Metadata Validation (comprehensive validation framework)
-3. ✅ **Phase 3**: Goal Format Standardization (subject-first format)
-4. ✅ **Phase 4**: State Validation Simplification (StateV2.get_fact/3)
-5. ✅ **Phase 5**: Duration Handling (working, precision enhancement in ADR-132)
-6. ✅ **Phase 6**: Action Atom Priority Rule (implemented in Domain.resolve/2)
-7. ✅ **Phase 7**: Enhanced Metadata Support (comprehensive validation)
-8. ✅ **Phase 8**: Interval Module ISO 8601 Refactor (completed)
-9. ✅ **Phase 9**: Default Duration Implementation (PT0S default)
-
-**Success Criteria Met:**
-- ✅ All 8 unified durative action tests passing
-- ✅ Comprehensive test coverage for unified specification features
-- ✅ All existing functionality preserved with enhanced capabilities
-- ✅ Clear migration path documented for legacy patterns
-- ✅ Action atom priority rule working correctly
-- ✅ Enhanced metadata validation fully implemented
+domain = MyApp.

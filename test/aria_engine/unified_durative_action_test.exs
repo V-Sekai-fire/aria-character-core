@@ -2,7 +2,7 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
   use ExUnit.Case, async: true
 
   alias AriaEngine.Domain
-  alias AriaEngine.StateV2
+  alias State
 
   describe "Iteration 1: Fixed Schedule Support" do
     test "validates ISO 8601 datetime strings for fixed scheduling" do
@@ -169,7 +169,7 @@ defmodule AriaEngine.UnifiedDurativeActionTest do
       assert length(metadata.requires_entities) == 2
 
       # Verify action can be executed
-      state = StateV2.new()
+      state = State.new()
       |> State.set_fact("chef", "capabilities", [:cooking])
       |> State.set_fact("oven", "capabilities", [:heating])
 

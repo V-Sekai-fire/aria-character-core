@@ -21,7 +21,7 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
 
   @type t :: %__MODULE__{
           domain: AriaEngine.Domain.Core.t() | nil,
-          state: AriaEngine.StateV2.t() | nil,
+          state: State.t() | nil,
           goals: [term()],
           options: keyword(),
           request_id: String.t(),
@@ -68,7 +68,7 @@ defmodule AriaEngine.Membrane.Format.PlanningParams do
   """
   @spec create(
           AriaEngine.Domain.Core.t() | nil,
-          AriaEngine.StateV2.t() | nil,
+          State.t() | nil,
           [term()],
           keyword(),
           String.t(),

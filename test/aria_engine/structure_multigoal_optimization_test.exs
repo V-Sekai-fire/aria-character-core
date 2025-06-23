@@ -25,7 +25,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
   use ExUnit.Case
   require Logger
 
-  alias AriaEngine.StateV2
+  alias State
 
   # ==================== STRUCTURE-RANDOM STRING GENERATOR ====================
 
@@ -230,7 +230,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       location_2 = StructureStringGenerator.generate_random_string("#{seed}_loc_2")
       status_ready = StructureStringGenerator.generate_random_string("#{seed}_ready")
 
-      state = StateV2.new()
+      state = State.new()
       |> State.set_fact(entity_a, location_pred, location_1)
       |> State.set_fact(entity_b, location_pred, location_1)
       |> State.set_fact(entity_c, location_pred, location_2)
@@ -259,7 +259,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       action_pred = StructureStringGenerator.generate_random_string("#{seed}_action")
       has_pred = StructureStringGenerator.generate_random_string("#{seed}_has")
 
-      state = StateV2.new()
+      state = State.new()
       |> State.set_fact(entity_a, has_pred, "false")
       |> State.set_fact(entity_b, has_pred, "false")
       |> State.set_fact(entity_c, has_pred, "false")
@@ -292,7 +292,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       task_c = StructureStringGenerator.generate_random_string("#{seed}_task_c")
       location_x = StructureStringGenerator.generate_random_string("#{seed}_loc_x")
 
-      state = StateV2.new()
+      state = State.new()
       |> State.set_fact(agent_1, location_pred, location_x)
       |> State.set_fact(agent_2, location_pred, location_x)
       |> State.set_fact(agent_3, location_pred, location_x)
@@ -325,7 +325,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
       tool_y = StructureStringGenerator.generate_random_string("#{seed}_tool_y")
       station_z = StructureStringGenerator.generate_random_string("#{seed}_station_z")
 
-      state = StateV2.new()
+      state = State.new()
       |> State.set_fact(worker_1, location_pred, station_z)
       |> State.set_fact(worker_2, location_pred, station_z)
       |> State.set_fact(worker_3, location_pred, station_z)
@@ -365,7 +365,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     @doc """
     Optimize goals based purely on structural pattern discovery.
     """
-    @spec optimize_structural(StateV2.t(), [goal()]) :: {:ok, optimization_result()} | {:error, term()}
+    @spec optimize_structural(State.t(), [goal()]) :: {:ok, optimization_result()} | {:error, term()}
     def optimize_structural(_state, goals) do
       try do
         # Discover structural patterns
@@ -541,7 +541,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     @doc """
     Naive splitting that processes goals in original order without optimization.
     """
-    @spec optimize_naive(StateV2.t(), [goal()]) :: {:ok, optimization_result()}
+    @spec optimize_naive(State.t(), [goal()]) :: {:ok, optimization_result()}
     def optimize_naive(_state, goals) do
       # Naive approach: no pattern discovery, no optimization
       result = %{
@@ -578,7 +578,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     @doc """
     Random shuffling that reorders goals randomly without structural analysis.
     """
-    @spec optimize_random(StateV2.t(), [goal()]) :: {:ok, optimization_result()}
+    @spec optimize_random(State.t(), [goal()]) :: {:ok, optimization_result()}
     def optimize_random(_state, goals) do
       # Random approach: shuffle goals without pattern analysis
       shuffled_goals = Enum.shuffle(goals)
@@ -617,7 +617,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     @doc """
     Simple heuristic that groups by subject but lacks sophisticated constraint solving.
     """
-    @spec optimize_heuristic(StateV2.t(), [goal()]) :: {:ok, optimization_result()}
+    @spec optimize_heuristic(State.t(), [goal()]) :: {:ok, optimization_result()}
     def optimize_heuristic(_state, goals) do
       # Simple heuristic: group by subject only
       grouped_goals = goals
@@ -672,7 +672,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
     @doc """
     MiniZinc-based optimization with advanced constraint solving and pattern discovery.
     """
-    @spec optimize_minizinc(StateV2.t(), [goal()]) :: {:ok, optimization_result()}
+    @spec optimize_minizinc(State.t(), [goal()]) :: {:ok, optimization_result()}
     def optimize_minizinc(_state, goals) do
       start_time = System.monotonic_time(:millisecond)
 
@@ -1077,7 +1077,7 @@ defmodule AriaEngine.StructureMultigoalOptimizationTest do
         {"m1n2o3p4q5r6s7t8", "l8k7j6i5h4g3f2e1", "a1b2c3d4e5f6g7h8"}
       ]
 
-      state = StateV2.new()
+      state = State.new()
 
       # Test that structural discovery works on pure random data
       patterns = StructuralPatternDiscovery.discover_patterns(random_goals)

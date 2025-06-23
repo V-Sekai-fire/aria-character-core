@@ -64,7 +64,7 @@ defmodule AriaEngine.BlocksWorldDomainTest do
   describe "State Utilities" do
     test "StateV2 API compatibility issues" do
       # Test current StateV2 API to understand what's available
-      state = StateV2.new()
+      state = State.new()
 
       # Test basic fact operations
       state = State.set_fact(state, "pos", "a", "table")
@@ -98,7 +98,7 @@ defmodule AriaEngine.BlocksWorldDomainTest do
       result = StateUtils.from_gtpyhop_format(config)
 
       # Should return a StateV2 struct despite the API warnings
-      assert %AriaEngine.StateV2{} = result
+      assert %State{} = result
     end
   end
 
@@ -143,7 +143,7 @@ defmodule AriaEngine.BlocksWorldDomainTest do
 
     test "identifies StateV2 API gaps" do
       # Document StateV2 functions that need to be implemented
-      state = StateV2.new()
+      state = State.new()
 
       # These functions are needed by StateUtils but don't exist
       assert_raise UndefinedFunctionError, fn ->

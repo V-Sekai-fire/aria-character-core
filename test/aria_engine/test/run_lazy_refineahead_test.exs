@@ -140,7 +140,7 @@ defmodule RunLazyRefineaheadTest do
 
   # Create test state
   defp create_test_state do
-    AriaEngine.StateV2.new()
+    State.new()
     |> AriaEngine.State.set_fact("robot", "location", "start")
     # Robot not prepared initially
     |> AriaEngine.State.set_fact("robot", "prepared", false)

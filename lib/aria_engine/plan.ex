@@ -11,7 +11,7 @@ defmodule Plan do
   alias AriaEngine.Plan.{Core, Backtracking}
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), AriaEngine.StateV2.fact_value()}
+  @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
 
@@ -25,11 +25,11 @@ defmodule Plan do
   @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure
 
   # Delegate to Core
-  @spec plan(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), [todo_item()], keyword()) :: plan_result()
+  @spec plan(AriaEngine.Domain.Core.t(), State.t(), [todo_item()], keyword()) :: plan_result()
   def plan(domain, state, todos, opts \\ []), do: Core.plan(domain, state, todos, opts)
 
   # Delegate to Backtracking
-  @spec replan(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), solution_tree(), node_id(), keyword()) ::
+  @spec replan(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), node_id(), keyword()) ::
           replan_result()
   def replan(domain, state, solution_tree, fail_node_id, opts \\ []),
     do: Backtracking.replan(domain, state, solution_tree, fail_node_id, opts)
@@ -45,8 +45,8 @@ defmodule Plan do
   Validates a plan by executing it step by step.
   For compatibility with existing AriaEngine usage.
   """
-  @spec validate_plan(AriaEngine.Domain.Core.t(), AriaEngine.StateV2.t(), [plan_step()] | solution_tree()) ::
-          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @spec validate_plan(AriaEngine.Domain.Core.t(), State.t(), [plan_step()] | solution_tree()) ::
+          {:ok, State.t()} | {:error, String.t()}
   def validate_plan(domain, initial_state, plan),
     do: AriaEngine.Plan.Utils.validate_plan(domain, initial_state, plan)
 

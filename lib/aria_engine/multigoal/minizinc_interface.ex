@@ -16,7 +16,7 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
 
   ## Usage
 
-      iex> state = StateV2.new()
+      iex> state = State.new()
       iex> goals = [{"robot", "location", "station_1"}]
       iex> AriaEngine.Multigoal.MiniZincInterface.solve_spatial(state, goals)
       {:ok, %{goals: [...], total_actions: 12, ...}}
@@ -25,9 +25,9 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
   """
 
   require Logger
-  alias AriaEngine.StateV2
+  alias State
 
-  @type goal :: {StateV2.subject(), StateV2.predicate(), StateV2.fact_value()}
+  @type goal :: {State.subject(), State.predicate(), State.fact_value()}
   @type solution :: %{
     goals: [goal()],
     total_actions: non_neg_integer(),
@@ -47,7 +47,7 @@ defmodule AriaEngine.Multigoal.MiniZincInterface do
   goal achievement sequences. Uses multi-objective optimization to balance
   completion time, resource conflicts, and parallel opportunities.
   """
-  @spec solve_general(StateV2.t(), [goal()], keyword()) ::
+  @spec solve_general(State.t(), [goal()], keyword()) ::
     {:ok, solution()} | {:error, term()}
   def solve_general(state, goals, opts \\ []) do
     try do

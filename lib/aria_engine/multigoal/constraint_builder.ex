@@ -18,7 +18,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
 
   ## Usage
 
-      iex> state = StateV2.new()
+      iex> state = State.new()
       iex> goals = [{"robot", "location", "station_1"}]
       iex> AriaEngine.Multigoal.ConstraintBuilder.build_spatial_model(state, goals)
       {:ok, "% MiniZinc spatial optimization model..."}
@@ -27,9 +27,9 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
   """
 
   require Logger
-  alias AriaEngine.StateV2
+  alias State
 
-  @type goal :: {StateV2.subject(), StateV2.predicate(), StateV2.fact_value()}
+  @type goal :: {State.subject(), State.predicate(), State.fact_value()}
 
   @doc """
   Build general optimization constraint model.
@@ -37,7 +37,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
   Generates a MiniZinc model for general multigoal optimization that
   balances completion time, resource conflicts, and parallel opportunities.
   """
-  @spec build_general_model(StateV2.t(), [goal()]) :: {:ok, String.t()} | {:error, term()}
+  @spec build_general_model(State.t(), [goal()]) :: {:ok, String.t()} | {:error, term()}
   def build_general_model(_state, goals) do
     try do
       # Extract general optimization information
@@ -66,7 +66,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
   Generates a MiniZinc model for respecting goal dependencies and
   minimizing total completion time.
   """
-  @spec build_dependency_model(StateV2.t(), [goal()]) :: {:ok, String.t()} | {:error, term()}
+  @spec build_dependency_model(State.t(), [goal()]) :: {:ok, String.t()} | {:error, term()}
   def build_dependency_model(state, goals) do
     try do
       # Analyze goal dependencies
@@ -99,7 +99,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
   Generates a MiniZinc model for maximizing concurrent goal achievement
   and minimizing total completion time.
   """
-  @spec build_parallel_model(StateV2.t(), [goal()]) :: {:ok, String.t()} | {:error, term()}
+  @spec build_parallel_model(State.t(), [goal()]) :: {:ok, String.t()} | {:error, term()}
   def build_parallel_model(state, goals) do
     try do
       # Identify parallelization opportunities
@@ -133,7 +133,7 @@ defmodule AriaEngine.Multigoal.ConstraintBuilder do
   Generates a MiniZinc model for minimizing resource conflicts and
   maximizing utilization efficiency.
   """
-  @spec build_resource_model(StateV2.t(), [goal()]) :: {:ok, String.t()} | {:error, term()}
+  @spec build_resource_model(State.t(), [goal()]) :: {:ok, String.t()} | {:error, term()}
   def build_resource_model(state, goals) do
     try do
       # Analyze resource requirements

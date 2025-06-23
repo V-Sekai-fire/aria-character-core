@@ -36,7 +36,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
     installation. Uses heuristic algorithms to demonstrate optimization benefits.
     """
 
-    @type goal :: {StateV2.subject(), StateV2.predicate(), StateV2.fact_value()}
+    @type goal :: {State.subject(), State.predicate(), State.fact_value()}
     @type location :: String.t()
     @type optimization_result :: %{
       goals: [goal()],
@@ -53,7 +53,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
     Applies spatial optimization, dependency analysis, and parallel execution
     detection to find improved goal achievement sequences.
     """
-    @spec optimize_multigoal(StateV2.t(), [goal()], keyword()) ::
+    @spec optimize_multigoal(State.t(), [goal()], keyword()) ::
       {:ok, optimization_result()} | {:error, term()}
     def optimize_multigoal(state, goals, opts \\ []) do
       try do
@@ -492,7 +492,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
     @doc """
     Run comparative benchmark between naive and optimized approaches.
     """
-    @spec run_benchmark(atom(), StateV2.t(), [MockMiniZincOptimizer.goal()]) :: benchmark_result()
+    @spec run_benchmark(atom(), State.t(), [MockMiniZincOptimizer.goal()]) :: benchmark_result()
     def run_benchmark(scenario, state, goals) do
       # Run naive splitting approach
       naive_result = run_naive_approach(state, goals)
@@ -731,7 +731,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
     end
 
     test "empty goals - graceful handling" do
-      state = StateV2.new()
+      state = State.new()
       goals = []
 
       # Both approaches should handle empty goals gracefully
@@ -751,7 +751,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
   defp setup_warehouse_scenario do
     # Create warehouse state
-    state = StateV2.new()
+    state = State.new()
     |> State.set_fact("robot", "location", "dock")
     |> State.set_fact("robot", "battery", 100)
     |> State.set_fact("robot", "carrying", nil)
@@ -777,7 +777,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
   defp setup_multi_agent_scenario do
     # Create multi-agent state
-    state = StateV2.new()
+    state = State.new()
     |> State.set_fact("robot_1", "location", "base")
     |> State.set_fact("robot_2", "location", "base")
     |> State.set_fact("task_a", "assigned_to", nil)
@@ -798,7 +798,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
   defp setup_dependency_chain_scenario do
     # Create dependency chain state
-    state = StateV2.new()
+    state = State.new()
     |> State.set_fact("player", "location", "start")
     |> State.set_fact("player", "has_key", false)
     |> State.set_fact("door", "state", "locked")
@@ -818,7 +818,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
   defp setup_resource_contention_scenario do
     # Create resource contention state
-    state = StateV2.new()
+    state = State.new()
     |> State.set_fact("worker_1", "location", "base")
     |> State.set_fact("worker_2", "location", "base")
     |> State.set_fact("tool_drill", "location", "tool_room")
@@ -841,7 +841,7 @@ defmodule AriaEngine.MultigoalOptimizationTest do
 
   defp setup_unsatisfiable_scenario do
     # Create scenario with impossible constraints
-    state = StateV2.new()
+    state = State.new()
     |> State.set_fact("robot", "location", "room_a")
     |> State.set_fact("robot", "battery", 0)  # No battery
     |> State.set_fact("door", "state", "locked")

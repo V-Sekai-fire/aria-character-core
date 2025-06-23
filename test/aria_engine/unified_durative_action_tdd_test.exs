@@ -2,7 +2,7 @@ defmodule AriaEngine.UnifiedDurativeActionTDDTest do
   use ExUnit.Case, async: true
 
   alias AriaEngine.Domain
-  alias AriaEngine.StateV2
+  alias State
 
   describe "Iteration 1: Infrastructure Foundation (Action Atom Priority Rule)" do
     test "action atoms resolve with higher priority than task methods" do

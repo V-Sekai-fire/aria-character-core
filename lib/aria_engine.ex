@@ -10,11 +10,11 @@ defmodule AriaEngine do
 
   # Simple aliases for core modules
   alias AriaEngine.Multigoal
-  alias AriaEngine.StateV2
+  alias State
   alias TimelineGraph
 
   @type domain :: map()
-  @type state :: StateV2.t()
+  @type state :: State.t()
   @type todos :: list()
   @type plan :: term()
   @type opts :: keyword()

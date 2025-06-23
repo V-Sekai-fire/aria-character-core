@@ -81,7 +81,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
         }
 
   @type plan_result :: {:ok, map()} | {:error, String.t()}
-  @type execution_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @type execution_result :: {:ok, State.t()} | {:error, String.t()}
   @type replan_result :: {:ok, map()} | {:error, String.t()} | :failure
 
   # ==================== CONSTRUCTOR FUNCTIONS ====================

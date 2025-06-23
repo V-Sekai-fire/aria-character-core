@@ -6,18 +6,18 @@ defmodule PlanningTest do
 
   alias AriaEngine.Planning
   alias AriaEngine.Domain
-  alias AriaEngine.StateV2
+  alias State
 
   # Helper function to build a simple test domain
   defp build_simple_test_domain do
     Domain.new("simple_test")
     |> Domain.add_action(:move, fn state, [from, to] ->
       state
-      |> StateV2.update_fact("player", "location", to)
-      |> StateV2.update_fact("player", "previous_location", from)
+      |> State.set_fact("location", "player", to)
+      |> State.set_fact("previous_location", "player", from)
     end, %{duration: "PT1M"})
     |> Domain.add_action(:pickup, fn state, [item] ->
-      StateV2.update_fact(state, "player", "has", item)
+      State.set_fact(state, "has", "player", item)
     end, %{duration: "PT30S"})
     |> Domain.add_task_method("get_item", "basic_get", fn _state, [item] ->
       [{"move", ["room2"]}, {"pickup", [item]}]
@@ -31,9 +31,9 @@ defmodule PlanningTest do
 
       # Set up initial state
       initial_state =
-        StateV2.new()
-        |> StateV2.update_fact("player", "location", "room1")
-        |> StateV2.update_fact("sword", "location", "room2")
+        State.new()
+        |> State.set_fact("location", "player", "room1")
+        |> State.set_fact("location", "sword", "room2")
 
       # Simple task: get the sword
       tasks = [{"get_item", ["sword"]}]
@@ -56,15 +56,15 @@ defmodule PlanningTest do
       domain = build_simple_test_domain()
 
       initial_state =
-        StateV2.new()
-        |> StateV2.update_fact("player", "location", "room1")
+        State.new()
+        |> State.set_fact("location", "player", "room1")
 
       # Manual plan
       plan = [{:move, ["room1", "room2"]}, {:move, ["room2", "room3"]}]
 
       case Planning.execute_plan(domain, initial_state, plan) do
         {:ok, final_state} ->
-          assert State.get_fact(final_state, "player", "location") == "room3"
+          assert State.get_fact(final_state, "location", "player") == "room3"
 
         {:error, reason} ->
           # Plan execution may fail, which is acceptable for this test
@@ -79,9 +79,9 @@ defmodule PlanningTest do
       domain = build_simple_test_domain()
 
       initial_state =
-        StateV2.new()
-        |> StateV2.update_fact("player", "location", "room1")
-        |> StateV2.update_fact("sword", "location", "room2")
+        State.new()
+        |> State.set_fact("location", "player", "room1")
+        |> State.set_fact("location", "sword", "room2")
 
       # Task: get the sword
       tasks = [{"get_item", ["sword"]}]

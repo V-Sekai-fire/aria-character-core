@@ -1,12 +1,12 @@
 defmodule AriaEngine.SoftwareDevelopment.DomainTest do
   use ExUnit.Case, async: true
 
-  alias AriaEngine.StateV2
+  alias State
   alias AriaEngine.Planning
 
   test "plan the development of a single module" do
     initial_state =
-      StateV2.new()
+      State.new()
       # |> State.set_fact("gltf_buffer", "type", "module")  # GLTF work paused
 
     todos = [

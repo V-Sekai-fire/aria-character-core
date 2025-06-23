@@ -13,9 +13,9 @@ defmodule HybridPlanner.StrategyRegistry do
 
   All strategy functions follow consistent signatures for composability:
 
-  - Planning strategies: `(Domain.t(), AriaEngine.StateV2.t(), [term()], keyword()) -> {:ok, term()} | {:error, String.t()}`
+  - Planning strategies: `(Domain.t(), State.t(), [term()], keyword()) -> {:ok, term()} | {:error, String.t()}`
   - Temporal strategies: `(term(), Domain.t(), keyword()) -> {:ok, term()} | {:error, String.t()}`
-  - Execution strategies: `(Domain.t(), AriaEngine.StateV2.t(), term(), keyword()) -> {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}`
+  - Execution strategies: `(Domain.t(), State.t(), term(), keyword()) -> {:ok, State.t()} | {:error, String.t()}`
 
   ## Usage
 
@@ -30,12 +30,12 @@ defmodule HybridPlanner.StrategyRegistry do
 
 
   # Strategy function type definitions
-  @type planning_strategy :: (Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword() ->
+  @type planning_strategy :: (Domain.Core.t(), State.t(), [term()], keyword() ->
                                 {:ok, term()} | {:error, String.t()})
   @type temporal_strategy :: (term(), Domain.Core.t(), keyword() ->
                                 {:ok, term()} | {:error, String.t()})
-  @type execution_strategy :: (Domain.Core.t(), AriaEngine.StateV2.t(), term(), keyword() ->
-                                 {:ok, AriaEngine.StateV2.t()} | {:error, String.t()})
+  @type execution_strategy :: (Domain.Core.t(), State.t(), term(), keyword() ->
+                                 {:ok, State.t()} | {:error, String.t()})
 
   @type strategy_map :: %{
           planning: %{atom() => planning_strategy()},

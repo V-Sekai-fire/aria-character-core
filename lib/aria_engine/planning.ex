@@ -14,7 +14,7 @@ defmodule AriaEngine.Planning do
   @type plan_step :: Core.plan_step()
   @type todo_item :: Core.todo_item()
   @type domain :: AriaEngine.Domain.Core.t()
-  @type state :: AriaEngine.StateV2.t()
+  @type state :: State.t()
 
   # CoreInterface functions
   @spec plan(domain(), state(), [todo_item()], keyword()) :: {:ok, solution_tree()} | {:error, String.t()}

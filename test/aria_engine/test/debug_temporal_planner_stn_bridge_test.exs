@@ -9,7 +9,7 @@ defmodule TemporalPlannerSTNBridgeTest do
   use ExUnit.Case
 
   require Logger
-  alias AriaEngine.StateV2
+  alias State
 
   @moduledoc """
   ExUnit test for unifying temporal planner via STN bridge.
@@ -21,7 +21,7 @@ defmodule TemporalPlannerSTNBridgeTest do
 
     # 2. Define initial state with time
     initial_state =
-      StateV2.new()
+      State.new()
       |> State.set_fact("player", "location", "start_location")
       |> State.set_fact("player", "has", "nothing")
       |> State.set_fact("item", "location", "middle_location")

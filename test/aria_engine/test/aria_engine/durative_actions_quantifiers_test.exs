@@ -10,7 +10,7 @@ defmodule DurativeActionsQuantifiersTest do
   """
 
   use ExUnit.Case, async: true
-  alias AriaEngine.StateV2
+  alias State
   alias AriaEngine.Domain.{Core, Actions}
 
   # FIXME: Suspect this is a bug in the test suite because of integer durations that aren't ISO String
@@ -42,7 +42,7 @@ defmodule DurativeActionsQuantifiersTest do
         action_fn: fn state, _args ->
           # Find the first available chair
           available_chairs =
-            StateV2.get_subjects_with_fact(state, "status", "available")
+            State.get_subjects_with_fact(state, "status", "available")
             |> Enum.filter(&String.contains?(&1, "chair"))
 
           case available_chairs do
@@ -63,7 +63,7 @@ defmodule DurativeActionsQuantifiersTest do
 
       # Test scenario 1: Chairs available
       state_with_chairs =
-        StateV2.new()
+        State.new()
         |> State.set_fact("chair1", "type", "furniture")
         |> State.set_fact("chair2", "type", "furniture")
         |> State.set_fact("table1", "type", "furniture")
@@ -80,7 +80,7 @@ defmodule DurativeActionsQuantifiersTest do
 
       # Test scenario 2: No chairs available
       state_no_chairs =
-        StateV2.new()
+        State.new()
         |> State.set_fact("table1", "type", "furniture")
         |> State.set_fact("table2", "type", "furniture")
         |> State.set_fact("table1", "status", "available")
@@ -119,7 +119,7 @@ defmodule DurativeActionsQuantifiersTest do
       domain = AriaEngine.Domain.add_action(domain, :craft_simple, craft_simple_action)
 
       state_simple =
-        StateV2.new()
+        State.new()
         |> State.set_fact("wood1", "status", "available")
         |> State.set_fact("iron1", "status", "unavailable")
 
@@ -164,7 +164,7 @@ defmodule DurativeActionsQuantifiersTest do
 
       # Test scenario 1: All doors locked (should succeed)
       secure_state =
-        StateV2.new()
+        State.new()
         |> State.set_fact("door1", "type", "entrance")
         |> State.set_fact("door2", "type", "entrance")
         |> State.set_fact("door3", "type", "entrance")
@@ -180,7 +180,7 @@ defmodule DurativeActionsQuantifiersTest do
 
       # Test scenario 2: One door unlocked (should fail)
       insecure_state =
-        StateV2.new()
+        State.new()
         |> State.set_fact("door1", "type", "entrance")
         |> State.set_fact("door2", "type", "entrance")
         |> State.set_fact("door1", "status", "locked")
@@ -192,7 +192,7 @@ defmodule DurativeActionsQuantifiersTest do
 
       # Test scenario 3: No doors exist (vacuous truth, should succeed)
       no_doors_state =
-        StateV2.new()
+        State.new()
         |> State.set_fact("window1", "type", "opening")
         |> State.set_fact("window1", "status", "closed")
 
@@ -235,7 +235,7 @@ defmodule DurativeActionsQuantifiersTest do
 
       # All equipment operational
       operational_state =
-        StateV2.new()
+        State.new()
         |> State.set_fact("equipment1", "type", "machinery")
         |> State.set_fact("equipment2", "type", "machinery")
         |> State.set_fact("equipment1", "status", "operational")
@@ -247,7 +247,7 @@ defmodule DurativeActionsQuantifiersTest do
 
       # One equipment broken
       broken_state =
-        StateV2.new()
+        State.new()
         |> State.set_fact("equipment1", "type", "machinery")
         |> State.set_fact("equipment2", "type", "machinery")
         |> State.set_fact("equipment1", "status", "operational")
@@ -287,7 +287,7 @@ defmodule DurativeActionsQuantifiersTest do
         action_fn: fn state, _args ->
           # Find available table and use it
           available_tables =
-            StateV2.get_subjects_with_fact(state, "status", "available")
+            State.get_subjects_with_fact(state, "status", "available")
             |> Enum.filter(&String.contains?(&1, "table"))
 
           case available_tables do
@@ -307,7 +307,7 @@ defmodule DurativeActionsQuantifiersTest do
 
       # Test: Table available and all ingredients ready (should succeed)
       ready_state =
-        StateV2.new()
+        State.new()
         |> State.set_fact("table1", "type", "furniture")
         |> State.set_fact("table2", "type", "furniture")
         |> State.set_fact("table1", "status", "available")
@@ -323,7 +323,7 @@ defmodule DurativeActionsQuantifiersTest do
 
       # Test: Table available but one ingredient not ready (should fail)
       not_ready_state =
-        StateV2.new()
+        State.new()
         |> State.set_fact("table1", "type", "furniture")
         |> State.set_fact("table1", "status", "available")
         |> State.set_fact("ingredient1", "type", "food")
@@ -337,7 +337,7 @@ defmodule DurativeActionsQuantifiersTest do
 
       # Test: All ingredients ready but no table available (should fail)
       no_table_state =
-        StateV2.new()
+        State.new()
         |> State.set_fact("table1", "type", "furniture")
         |> State.set_fact("table2", "type", "furniture")
         |> State.set_fact("table1", "status", "occupied")

@@ -41,7 +41,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   alias HybridPlanner.StrategyRegistry
 
   @type strategy_function :: function()
-  @type coordination_result :: {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @type coordination_result :: {:ok, State.t()} | {:error, String.t()}
 
   defstruct [
     :planning_fn,
@@ -144,7 +144,7 @@ defmodule HybridPlanner.StrategyCoordinator do
 
   This is where Function as Object shines - just call the functions in sequence.
   """
-  @spec coordinate(t(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) ::
+  @spec coordinate(t(), Domain.Core.t(), State.t(), [term()], keyword()) ::
           coordination_result()
   def coordinate(%__MODULE__{} = coordinator, domain, state, goals, opts \\ []) do
     # Apply middleware if present
@@ -171,7 +171,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   @doc """
   Plan only (without execution) using the coordinator's strategies.
   """
-  @spec plan_only(t(), Domain.Core.t(), AriaEngine.StateV2.t(), [term()], keyword()) ::
+  @spec plan_only(t(), Domain.Core.t(), State.t(), [term()], keyword()) ::
           {:ok, term()} | {:error, String.t()}
   def plan_only(%__MODULE__{} = coordinator, domain, state, goals, opts \\ []) do
     with {:ok, plan} <-
@@ -191,8 +191,8 @@ defmodule HybridPlanner.StrategyCoordinator do
   @doc """
   Execute a pre-planned solution using the coordinator's execution strategy.
   """
-  @spec execute_only(t(), Domain.Core.t(), AriaEngine.StateV2.t(), term(), keyword()) ::
-          {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}
+  @spec execute_only(t(), Domain.Core.t(), State.t(), term(), keyword()) ::
+          {:ok, State.t()} | {:error, String.t()}
   def execute_only(%__MODULE__{} = coordinator, domain, state, plan, opts \\ []) do
     call_with_middleware(
       coordinator.execution_fn,

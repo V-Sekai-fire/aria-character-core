@@ -43,7 +43,7 @@ defmodule CoreTest do
     end
 
     test "creates AriaEngine with initial state" do
-      initial_state = AriaEngine.StateV2.new()
+      initial_state = State.new()
       definition = %{initial_state: initial_state}
       engine = Core.new("test_engine", definition)
 
@@ -52,7 +52,7 @@ defmodule CoreTest do
     end
 
     test "creates AriaEngine with actions" do
-      test_action = fn _state, _args -> AriaEngine.StateV2.new() end
+      test_action = fn _state, _args -> State.new() end
       actions = %{test_action: test_action}
       definition = %{actions: actions}
       engine = Core.new("test_engine", definition)
@@ -112,8 +112,8 @@ defmodule CoreTest do
     end
 
     test "creates AriaEngine with complete definition" do
-      initial_state = AriaEngine.StateV2.new()
-      test_action = fn _state, _args -> AriaEngine.StateV2.new() end
+      initial_state = State.new()
+      test_action = fn _state, _args -> State.new() end
       test_task_method = fn _state, _args -> [] end
       test_goal_method = fn _state, _args -> [] end
 
@@ -227,12 +227,12 @@ defmodule CoreTest do
     end
 
     test "initial_state and current_state use StateV2" do
-      initial_state = AriaEngine.StateV2.new()
+      initial_state = State.new()
       definition = %{initial_state: initial_state}
       engine = Core.new("state_test", definition)
 
-      assert %AriaEngine.StateV2{} = engine.initial_state
-      assert %AriaEngine.StateV2{} = engine.current_state
+      assert %State{} = engine.initial_state
+      assert %State{} = engine.current_state
       assert engine.initial_state == engine.current_state
     end
   end
@@ -261,7 +261,7 @@ defmodule CoreTest do
     end
 
     test "preserves state reference equality" do
-      state = AriaEngine.StateV2.new()
+      state = State.new()
       definition = %{initial_state: state}
       engine = Core.new("ref_test", definition)
 

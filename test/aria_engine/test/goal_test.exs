@@ -6,11 +6,11 @@ defmodule GoalTest do
   doctest AriaEngine.Multigoal
 
   alias AriaEngine.Multigoal
-  alias AriaEngine.StateV2
+  alias State
 
   # Helper functions
   defp create_multigoal(), do: Multigoal.new()
-  defp create_state(), do: StateV2.new()
+  defp create_state(), do: State.new()
 
   describe "Goal management" do
     test "creates and manages multigoals" do
@@ -30,7 +30,7 @@ defmodule GoalTest do
     test "checks goal satisfaction" do
       # Create a state where player is in treasure_room and has treasure
       state =
-        StateV2.new()
+        State.new()
         |> State.set_fact("player", "location", "treasure_room")
         |> State.set_fact("player", "has", "treasure")
 
