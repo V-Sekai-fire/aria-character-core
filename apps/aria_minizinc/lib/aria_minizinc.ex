@@ -26,7 +26,7 @@ defmodule AriaMiniZinc do
         template_vars: %{num_activities: 3, durations: [10, 20, 15]})
   """
 
-  alias AriaMiniZinc.{Executor, Solver, ProblemGenerator}
+  alias AriaMiniZinc.{Executor, Solver, ProblemGenerator, ValidationSolver}
 
   @doc """
   Solve a constraint satisfaction problem.
@@ -94,6 +94,21 @@ defmodule AriaMiniZinc do
   """
   def available_solvers do
     Solver.available_solvers()
+  end
+
+  @doc """
+  Solve a validation problem using MiniZinc for pipeline validation.
+
+  ## Parameters
+  - `params` - Problem parameters including activities and constraints
+  - `state` - Solver state including timeout configuration
+
+  ## Returns
+  - `%{status: :success, solution: solution, solve_time_ms: time, raw_output: output}`
+  - `%{status: :error, error: reason, solve_time_ms: time}`
+  """
+  def solve_validation(params, state \\ %{timeout: 30_000}) do
+    ValidationSolver.solve(params, state)
   end
 
   @doc """

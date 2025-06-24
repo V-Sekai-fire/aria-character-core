@@ -11,6 +11,10 @@ defmodule AriaMiniZinc.ProblemGenerator do
 
   require Logger
 
+  @template_dir "priv/templates/minizinc"
+  @goal_solving_template "goal_solving.mzn.eex"
+  @simple_temporal_network_template "simple_temporal_network.mzn.eex"
+
   @doc """
   Generate a MiniZinc problem from planning parameters.
 
@@ -135,36 +139,32 @@ defmodule AriaMiniZinc.ProblemGenerator do
     end
   end
 
-  # Build complete MiniZinc model string
+  # Build complete MiniZinc model using template
   defp build_minizinc_model(variables, constraints, objective) do
-    variable_declarations = Enum.map(variables, fn var ->
-      if var.domain do
-        "#{var.type}: #{var.domain} = #{var.name};"
-      else
-        "#{var.type} = #{var.name};"
-      end
-    end)
+    template_vars = %{
+      variables: variables,
+      constraints: constraints,
+      objective: objective,
+      num_entities: div(length(variables), 3),
+      variable_count: length(variables),
+      constraint_count: length(constraints),
+      generation_time: System.monotonic_time(:millisecond)
+    }
 
-    """
-    % Generated MiniZinc Model
-    % Variables: #{length(variables)}
-    % Constraints: #{length(constraints)}
+    render_template(@goal_solving_template, template_vars)
+  end
 
-    % Parameters
-    int: num_entities = #{div(length(variables), 3)};
+  # Load and render a MiniZinc template
+  defp render_template(template_name, vars) do
+    template_path = Path.join([@template_dir, template_name])
 
-    % Decision Variables
-    #{Enum.join(variable_declarations, "\n")}
-
-    % Constraints
-    #{Enum.join(constraints, "\n")}
-
-    % Objective
-    #{objective}
-
-    % Output
-    output ["Solution found\\n"];
-    """
+    case File.read(template_path) do
+      {:ok, template_content} ->
+        EEx.eval_string(template_content, assigns: vars)
+      {:error, reason} ->
+        Logger.error("Failed to load template #{template_name}: #{inspect(reason)}")
+        raise "Template loading failed: #{template_name}"
+    end
   end
 
   # Helper functions for encoding values

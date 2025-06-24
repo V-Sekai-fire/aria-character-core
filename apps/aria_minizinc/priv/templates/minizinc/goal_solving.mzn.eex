@@ -1,0 +1,23 @@
+% Generated MiniZinc Model - Goal Solving
+% Variables: <%= @variable_count %>
+% Constraints: <%= @constraint_count %>
+% Generated at: <%= @generation_time %>
+
+% Parameters
+int: num_entities = <%= @num_entities %>;
+
+% Decision Variables
+<%= for var <- @variables do %>
+<%= var.type %><%= if var.domain do %>: <%= var.domain %><% end %> = <%= var.name %>;
+<% end %>
+
+% Constraints
+<%= for constraint <- @constraints do %>
+<%= constraint %>
+<% end %>
+
+% Objective
+<%= @objective %>
+
+% Output
+output ["Solution found\\n"];

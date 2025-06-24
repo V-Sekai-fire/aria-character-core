@@ -7,7 +7,7 @@ defmodule AriaMiniZincTest do
   describe "AriaMiniZinc main API" do
     test "check_availability returns status" do
       result = AriaMiniZinc.check_availability()
-      assert match?({:ok, _} | {:error, _}, result)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
     end
 
     test "available_solvers returns list" do

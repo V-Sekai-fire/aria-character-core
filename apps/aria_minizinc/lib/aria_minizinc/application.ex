@@ -1,20 +1,20 @@
-defmodule AriaMinizinc.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
+defmodule AriaMiniZinc.Application do
+  @moduledoc """
+  Application supervisor for AriaMiniZinc.
+
+  Starts the supervision tree for the MiniZinc constraint solver integration.
+  """
 
   use Application
 
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: AriaMinizinc.Worker.start_link(arg)
-      # {AriaMinizinc.Worker, arg}
+      # Add supervised processes here if needed
+      # For now, this is a simple application without persistent processes
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: AriaMinizinc.Supervisor]
+    opts = [strategy: :one_for_one, name: AriaMiniZinc.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end
