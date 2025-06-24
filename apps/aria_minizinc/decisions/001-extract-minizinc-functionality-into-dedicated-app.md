@@ -67,26 +67,26 @@ Implement a **two-tier fallback system** to ensure reliable constraint solving e
 - [x] Create directory structure for organized functionality
 - [x] Set up initial project files
 
-### Phase 2: Extract Core MiniZinc Components
+### Phase 2: Extract Core MiniZinc Components ✅ COMPLETED
 **From `apps/aria_engine_core/lib/minizinc/`:**
-- [ ] `executor.ex` → `apps/aria_minizinc/lib/aria_minizinc/executor.ex`
-- [ ] `problem_generator.ex` → `apps/aria_minizinc/lib/aria_minizinc/problem_generator.ex`
-- [ ] `solver.ex` → `apps/aria_minizinc/lib/aria_minizinc/solver.ex`
+- [x] `executor.ex` → `apps/aria_minizinc/lib/aria_minizinc/executor.ex`
+- [x] `problem_generator.ex` → `apps/aria_minizinc/lib/aria_minizinc/problem_generator.ex`
+- [x] `solver.ex` → `apps/aria_minizinc/lib/aria_minizinc/solver.ex`
 
 **From `apps/aria_temporal_planner/lib/timeline/internal/stn/`:**
-- [ ] `minizinc_solver.ex` → `apps/aria_minizinc/lib/aria_minizinc/stn_solver.ex`
+- [x] `minizinc_solver.ex` → `apps/aria_minizinc/lib/aria_minizinc/stn_solver.ex`
 
 **From `apps/aria_membrane_pipeline/lib/membrane/validation_pipeline/`:**
 - [ ] `minizinc_solver.ex` → `apps/aria_minizinc/lib/aria_minizinc/validation_solver.ex`
 
-### Phase 3: Extract Templates and Resources
+### Phase 3: Extract Templates and Resources 🔄 IN PROGRESS
 **Template files:**
-- [ ] Extract EEx templates from `priv/templates/minizinc/` across apps
-- [ ] Consolidate into `apps/aria_minizinc/priv/templates/`
+- [x] Extract EEx templates from `priv/templates/minizinc/` across apps
+- [x] Consolidate into `apps/aria_minizinc/priv/templates/`
 - [ ] Update template paths in code
 
 **Template Types to Support:**
-- [ ] STN Temporal templates (`stn_temporal.mzn.eex`)
+- [x] STN Temporal templates (`stn_temporal.mzn.eex`)
 - [ ] Multigoal Optimization templates (`multigoal_optimization.mzn.eex`)
 - [ ] ~~Widget Assembly templates (`widget_assembly.mzn.eex`)~~ **TOMBSTONED** - No longer needed
 - [ ] Validation templates (`validation.mzn.eex`)

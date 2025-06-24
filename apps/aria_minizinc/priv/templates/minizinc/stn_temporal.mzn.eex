@@ -1,0 +1,53 @@
+% STN Temporal Scheduling Problem
+% Generated from EEx template
+
+% Problem parameters
+int: num_activities = <%= @num_activities %>;
+int: num_constraints = <%= @num_constraints %>;
+set of int: ACTIVITIES = 1..num_activities;
+
+% Activity durations
+array[ACTIVITIES] of int: durations = [<%= Enum.join(@durations, ", ") %>];
+
+% Temporal constraints (Simple Temporal Network)
+% Each constraint: [from_activity, to_activity, min_distance, max_distance]
+array[1..num_constraints, 1..4] of int: constraints = [|<%= for {constraint, index} <- Enum.with_index(@constraints) do %>
+  <%= constraint.from_activity %>, <%= constraint.to_activity %>, <%= constraint.min_distance %>, <%= constraint.max_distance %><%= if index < length(@constraints) - 1, do: " |", else: "" %><% end %>
+|];
+
+% Decision variables
+array[ACTIVITIES] of var 0..1000: start_times;
+array[ACTIVITIES] of var 0..1000: end_times;
+var 0..1000: makespan;
+
+% Constraints
+% Activity duration constraints
+constraint forall(i in ACTIVITIES) (
+  end_times[i] = start_times[i] + durations[i]
+);
+
+% STN temporal constraints
+constraint forall(c in 1..num_constraints) (
+  let {
+    int: from = constraints[c, 1],
+    int: to = constraints[c, 2],
+    int: min_dist = constraints[c, 3],
+    int: max_dist = constraints[c, 4]
+  } in (
+    start_times[to] - start_times[from] >= min_dist /\
+    start_times[to] - start_times[from] <= max_dist
+  )
+);
+
+% Makespan constraint
+constraint makespan = max(end_times);
+
+% Objective: minimize makespan
+solve minimize makespan;
+
+% Output format
+output [
+  "start_times = [" ++ join(", ", [show(start_times[i]) | i in ACTIVITIES]) ++ "];\n",
+  "end_times = [" ++ join(", ", [show(end_times[i]) | i in ACTIVITIES]) ++ "];\n",
+  "makespan = " ++ show(makespan) ++ ";\n"
+];
