@@ -85,197 +85,221 @@ Following Rich Sutton's "Bitter Lesson," we prioritize:
 3. **Scale over optimization** - More data and search over algorithmic efficiency
 4. **General methods** - Learning and search that can discover domain structure
 
-## Implementation Plan: "Bicycle to Car" Progression
+## Implementation Plan: "Bicycle to Car" Progression (Bitter Lesson Aligned)
 
-Following the CockroachDB development philosophy, we build complete, working systems at each stage rather than assembling separate components. Each stage represents a fully functional ARC solver with incrementally increasing capabilities.
+Following the Bitter Lesson, we prioritize computation and learning from Stage 1, building complete working systems that emphasize search and learning over hand-crafted engineering.
 
-### Stage 1: "Skateboard" - Minimal Working ARC Solver (Size: S, 1-2 days)
+### Stage 1: "Skateboard" - Massive Search Foundation (Size: M, 1-2 weeks)
 
 #### What We're Building (Simple)
 
-The absolute minimum system that can load ARC puzzles and submit answers - like a skateboard that gets you moving but isn't fancy.
+Start with the most computational approach - massive program synthesis search - like building a skateboard with a rocket engine.
 
-#### Core Implementation (Technical)
+#### Computational Search Core (Technical)
 
-Create minimal umbrella structure with basic functionality:
+Create computation-heavy foundation:
 
-- [ ] Create `aria_grid` app with basic grid struct and hardcoded transformations
-- [ ] Create `aria_arc_coordinator` app with minimal task loading and submission
-- [ ] Implement basic transformations: rotate 90°, mirror horizontal/vertical
-- [ ] Add random guessing fallback for unmatched patterns
-- [ ] Create competition submission format compliance
+- [ ] Create `aria_grid` app with basic grid representation
+- [ ] Create `aria_program_synthesis` app as PRIMARY strategy (not auxiliary)
+- [ ] Implement discrete program search with huge search spaces (10,000+ candidates)
+- [ ] Generate transformation programs through brute force search
+- [ ] Create `aria_arc_coordinator` for basic task loading and search coordination
+- [ ] Use computational validation against training examples (no hand-crafted rules)
+
+#### Bitter Lesson Implementation (Technical)
+
+Prioritize computation over cleverness:
+
+- [ ] Massive search space generation (prioritize breadth over efficiency)
+- [ ] Brute force program validation (test everything, keep what works)
+- [ ] Minimal human knowledge injection (basic grid operations only)
+- [ ] Scale through computation, not heuristics
+- [ ] Random baseline as fallback only
 
 #### Success Criteria (Measurable)
 
-- [ ] Can load ARC JSON task files
-- [ ] Applies basic transformations to test inputs
-- [ ] Generates submission-format outputs
-- [ ] Produces valid outputs (accuracy 0% ± 1% - random chance with measurement error)
-- [ ] Runs end-to-end without errors
+- [ ] Can generate and test 1000+ transformation programs per task
+- [ ] Achieves 1-5% ± 2% accuracy through pure computational search
+- [ ] Search space demonstrably larger than hand-crafted approaches
+- [ ] Shows that computation can discover patterns humans would hand-code
+- [ ] Establishes computational foundation for all future stages
 
 #### Why This Matters (Expert)
 
-Establishes the complete pipeline from task loading to submission. Validates that we can work with ARC data formats and submission requirements. Provides immediate feedback on basic transformation effectiveness.
+Validates the Bitter Lesson principle immediately. Proves that massive search can discover transformations without human engineering. Establishes computational scale as the foundation rather than an afterthought.
 
-### Stage 2: "Bicycle" - Enhanced Pattern Recognition (Size: S, 1 week)
+### Stage 2: "Bicycle" - Learning-Driven Pattern Discovery (Size: M, 2-3 weeks)
 
 #### What We're Adding (Simple)
 
-Better pattern recognition so the computer can spot more types of puzzle rules - like upgrading from a skateboard to a bicycle.
+Add massive pattern learning to guide the search - like adding smart navigation to our rocket-powered skateboard.
 
-#### Enhanced Grid Operations (Technical)
+#### Pattern Learning Core (Technical)
 
-Expand `aria_grid` with intelligent pattern matching:
+Create learning-driven pattern discovery:
 
-- [ ] Add color counting and distribution analysis
-- [ ] Implement basic shape detection (rectangles, lines, isolated objects)
-- [ ] Create grid comparison algorithms for before/after analysis
-- [ ] Add pattern extraction for repeated elements
-- [ ] Implement rule-based transformation selection
+- [ ] Create `aria_pattern_library` app as CORE component (not auxiliary)
+- [ ] Implement massive pattern extraction from successful searches
+- [ ] Learn transformation patterns from computational discoveries
+- [ ] Generate synthetic training data at scale (thousands of examples)
+- [ ] Use pattern learning to guide program synthesis search
+- [ ] Implement pattern-based search space pruning through learning
 
-#### Coordinator Intelligence (Technical)
+#### Computational Learning Integration (Technical)
 
-Enhance `aria_arc_coordinator` with better decision making:
+Scale learning through computation:
 
-- [ ] Add transformation confidence scoring
-- [ ] Implement pattern-based strategy selection
-- [ ] Create basic ensemble voting between transformations
-- [ ] Add validation against training examples
+- [ ] Generate 10,000+ synthetic ARC tasks for pattern learning
+- [ ] Learn pattern-to-transformation mappings from search results
+- [ ] Use learning to bias search toward successful pattern types
+- [ ] Implement pattern similarity clustering through computation
+- [ ] Scale pattern discovery through brute force analysis
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 0-2% ± 1% accuracy on public ARC dataset (still mostly random)
-- [ ] Correctly identifies some basic patterns (color changes, rotations, mirroring)
-- [ ] Shows marginal improvement over pure random guessing
-- [ ] Handles at least 50% of task types without runtime errors
+- [ ] May achieve 5-10% ± 3% accuracy through learned pattern guidance
+- [ ] Pattern library contains 1000+ discovered transformation patterns
+- [ ] Learning demonstrably improves search efficiency and success rate
+- [ ] Shows computational pattern discovery outperforming hand-crafted patterns
+- [ ] Synthetic data generation produces valid ARC-like tasks
 
-### Stage 3: "Scooter" - Compositional Reasoning (Size: M, 1-2 weeks)
+### Stage 3: "Scooter" - Computational Domain Learning (Size: M, 2-3 weeks)
 
 #### What We're Building (Simple)
 
-Teaching the computer to combine simple transformations into complex ones - like upgrading to a scooter that can handle more terrain.
+Let computation discover the planning domain structure - like adding an AI brain that learns how to coordinate the rocket engine.
 
-#### ARC Domain Introduction (Technical)
+#### Learned Domain Architecture (Technical)
 
-Create `aria_arc_domain` app with planning capabilities:
+Create computationally discovered domain:
 
-- [ ] Implement ARC-specific planning actions (rotate, mirror, color_map, extract, etc.)
-- [ ] Create transformation composition rules
-- [ ] Add state representation for grid transformations
-- [ ] Integrate with existing `aria_hybrid_planner`
-- [ ] Implement multi-step transformation sequences
+- [ ] Create `aria_arc_domain` app with LEARNED content (not hand-crafted)
+- [ ] Implement action synthesis engine to discover grid transformations
+- [ ] Learn planning methods from successful search traces
+- [ ] Generate domain rules through computational feedback
+- [ ] Integrate learned domain with `aria_hybrid_planner`
+- [ ] Use AST execution for runtime domain modification
 
-#### Enhanced Reasoning (Technical)
+#### Computational Domain Discovery (Technical)
 
-Upgrade coordinator with compositional capabilities:
+Discover domain structure through search and learning:
 
-- [ ] Add sequence planning for multi-step transformations
-- [ ] Implement transformation chaining and validation
-- [ ] Create confidence propagation through transformation chains
-- [ ] Add backtracking for failed transformation sequences
+- [ ] Generate thousands of candidate actions through program synthesis
+- [ ] Learn unigoal methods from successful solution decompositions
+- [ ] Discover task methods through pattern analysis of search traces
+- [ ] Evolve domain rules through computational feedback loops
+- [ ] Use learning to discover optimal action compositions
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 1-5% ± 2% accuracy on public ARC dataset
-- [ ] Successfully composes 2-3 step transformation sequences
-- [ ] Handles some tasks requiring multiple operations
-- [ ] Shows systematic improvement over single-step approaches
+- [ ] May achieve 8-15% ± 3% accuracy through learned domain coordination
+- [ ] Domain contains 100+ learned actions discovered through search
+- [ ] Planning methods learned from computational traces, not engineered
+- [ ] Shows learned domain outperforming hand-crafted domain rules
+- [ ] Demonstrates computational discovery of planning structure
 
-### Stage 4: "Motorcycle" - First AI Strategy (Size: M, 2-3 weeks)
+### Stage 4: "Motorcycle" - LLM Ensemble Scaling (Size: M, 2-3 weeks)
 
 #### What We're Adding (Simple)
 
-Adding the first "smart AI brain" that can look at examples and learn patterns - like upgrading to a motorcycle with real power.
+Scale up neural computation with massive LLM ensembles - like adding multiple rocket engines working together.
 
-#### LLM Integration (Technical)
+#### Massive LLM Ensemble (Technical)
 
-Create `aria_llm_client` app with neural reasoning:
+Scale neural approaches through computation:
 
-- [ ] Implement OpenRouter client for accessing diverse LLM models
-- [ ] Add ARC-specific prompt engineering templates
-- [ ] Create response parsing and validation system
-- [ ] Implement confidence scoring for LLM outputs
-- [ ] Add fallback mechanisms for failed LLM calls
+- [ ] Create `aria_llm_client` app with MULTIPLE model coordination
+- [ ] Implement ensemble of 5-10 different LLM models simultaneously
+- [ ] Generate diverse solution approaches through model variety
+- [ ] Use computational voting and consensus across models
+- [ ] Scale prompt diversity through automated generation
+- [ ] Implement cross-model validation and agreement scoring
 
-#### Hybrid Strategy Coordination (Technical)
+#### Computational Neural Integration (Technical)
 
-Integrate neural and symbolic approaches:
+Integrate neural scaling with existing computational approaches:
 
-- [ ] Create LLM strategy adapter for hybrid coordinator
-- [ ] Implement ensemble voting between symbolic and neural strategies
-- [ ] Add strategy selection based on task characteristics
-- [ ] Create cross-validation between LLM and planning approaches
+- [ ] Coordinate LLM ensemble with program synthesis and pattern learning
+- [ ] Use computational methods to select optimal LLM strategies per task
+- [ ] Generate thousands of prompt variations through computation
+- [ ] Scale neural reasoning through brute force model diversity
+- [ ] Learn optimal ensemble weights through computational feedback
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 3-8% ± 2% accuracy on public ARC dataset (approaching LLM baseline)
-- [ ] LLM strategy contributes meaningfully to ensemble performance
-- [ ] Successfully handles some novel patterns not covered by symbolic rules
-- [ ] Shows complementary strengths between neural and symbolic approaches
+- [ ] May achieve 12-20% ± 4% accuracy through scaled neural computation
+- [ ] LLM ensemble uses 5+ different models with diverse reasoning approaches
+- [ ] Shows computational neural scaling outperforming single model approaches
+- [ ] Demonstrates learned coordination between neural and symbolic computation
+- [ ] Ensemble coordination learned through computation, not hand-tuned
 
-### Stage 5: "Small Car" - Dual Strategy System (Size: M, 2-3 weeks)
+### Stage 5: "Small Car" - Hybrid Computational Coordination (Size: L, 3-4 weeks)
 
 #### What We're Combining (Simple)
 
-Adding a second AI approach and making them work together - like upgrading to a small car with multiple systems working in harmony.
+Use computation to coordinate all our computational approaches - like building a smart car that optimally coordinates multiple engines.
 
-#### Program Synthesis Integration (Technical)
+#### Computational Strategy Coordination (Technical)
 
-Create `aria_program_synthesis` app with search capabilities:
+Learn optimal strategy coordination through computation:
 
-- [ ] Implement discrete program search algorithms
-- [ ] Add constraint-based synthesis for grid transformations
-- [ ] Create search space optimization strategies
-- [ ] Implement program validation and scoring
-- [ ] Integrate with aria_grid for execution
+- [ ] Implement computational meta-learning for strategy selection
+- [ ] Learn optimal ensemble weights through massive validation
+- [ ] Generate strategy coordination rules through computational feedback
+- [ ] Scale coordination through brute force strategy combination testing
+- [ ] Use computation to discover optimal task-to-strategy mappings
 
-#### Advanced Ensemble Architecture (Technical)
+#### Advanced Computational Integration (Technical)
 
-Sophisticated coordination between multiple strategies:
+Scale coordination through computational methods:
 
-- [ ] Create three-way ensemble (symbolic, neural, synthesis)
-- [ ] Implement weighted voting based on confidence scores
-- [ ] Add strategy specialization based on task characteristics
-- [ ] Create cross-strategy validation and agreement scoring
+- [ ] Test thousands of strategy combinations computationally
+- [ ] Learn coordination patterns from successful ensemble results
+- [ ] Generate meta-strategies through computational search
+- [ ] Scale ensemble optimization through brute force validation
+- [ ] Discover coordination rules through computational pattern analysis
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 5-15% ± 3% accuracy on public ARC dataset
-- [ ] Each strategy contributes unique value to ensemble
-- [ ] Ensemble outperforms individual strategies consistently
-- [ ] Successfully handles diverse task types with appropriate strategy selection
+- [ ] May achieve 15-25% ± 4% accuracy through learned coordination
+- [ ] Strategy coordination learned through computation, not engineered
+- [ ] Shows computational coordination outperforming hand-tuned ensembles
+- [ ] Demonstrates meta-learning of optimal strategy combinations
+- [ ] Coordination rules discovered through massive computational validation
 
-### Stage 6: "Sedan" - Multi-Strategy with Pattern Learning (Size: L, 3-4 weeks)
+### Stage 6: "Sedan" - Self-Improving Computational System (Size: L, 4+ weeks)
 
 #### What We're Building (Simple)
 
-Adding a smart memory system that learns from all the puzzles we've seen - like upgrading to a full sedan with advanced features.
+A system that uses computation to improve its own computational methods - like a car that rebuilds its own engine while driving.
 
-#### Pattern Library Implementation (Technical)
+#### Computational Self-Improvement (Technical)
 
-Create `aria_pattern_library` app with analytics:
+Implement computational self-modification:
 
-- [ ] Implement pattern storage and retrieval system
-- [ ] Add pattern similarity and clustering algorithms
-- [ ] Create success rate tracking for pattern-strategy combinations
-- [ ] Implement pattern-guided strategy selection
-- [ ] Add pattern composition and relationship analysis
+- [ ] Add computational analysis of own performance patterns
+- [ ] Generate improvements to search algorithms through computation
+- [ ] Learn better learning algorithms through computational feedback
+- [ ] Scale self-improvement through massive computational validation
+- [ ] Implement computational discovery of better computational methods
 
-#### Data-Driven Optimization (Technical)
+#### Meta-Computational Learning (Technical)
 
-Use pattern learning to improve all strategies:
+Use computation to improve computation:
 
-- [ ] Implement pattern-guided search space pruning
-- [ ] Add pattern-based prompt engineering for LLMs
-- [ ] Create pattern-informed ensemble weighting
-- [ ] Implement adaptive strategy selection based on pattern history
+- [ ] Learn better search strategies through computational analysis
+- [ ] Generate improved pattern learning algorithms computationally
+- [ ] Discover better ensemble methods through computational search
+- [ ] Scale meta-learning through brute force method comparison
+- [ ] Implement computational evolution of computational approaches
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 10-20% ± 4% accuracy on public ARC dataset
-- [ ] Pattern library demonstrably improves strategy performance
-- [ ] System learns and adapts from previous task solutions
-- [ ] Shows consistent improvement over time with more data
+- [ ] May achieve 20-30% ± 5% accuracy through computational self-improvement
+- [ ] System demonstrably improves its own computational methods
+- [ ] Shows computational discovery of better computational approaches
+- [ ] Meta-learning produces genuinely improved reasoning methods
+- [ ] Self-improvement validated through massive computational testing
 
 ### Stage 7: "SUV" - Production-Ready Competition System (Size: M, 2-3 weeks)
 
