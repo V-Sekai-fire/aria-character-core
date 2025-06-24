@@ -1,6 +1,6 @@
 # ADR-001: Extract MiniZinc Functionality into Dedicated App
 
-**Status:** Completed  
+**Status:** In Progress  
 **Date:** 2025-06-23  
 **Priority:** HIGH
 
@@ -295,58 +295,91 @@ The template system is particularly important as it provides the foundation for 
 
 Success depends on careful extraction of existing functionality while maintaining backward compatibility and improving the overall architecture.
 
-## Completion Summary
-
-**Completed on:** June 23, 2025
+## Current Status - June 23, 2025
 
 ### What Was Accomplished
 
-**✅ Core Extraction Complete:**
-- Successfully extracted all MiniZinc functionality into dedicated `aria_minizinc` app
-- Created unified app structure with proper supervision tree
+**✅ Basic Extraction Complete:**
+- Successfully extracted MiniZinc modules into dedicated `aria_minizinc` app
+- Created app structure with proper supervision tree
 - Extracted 5 core modules: Executor, ProblemGenerator, Solver, STNSolver, ValidationSolver
 - Consolidated MiniZinc templates into centralized location
-- Established comprehensive test suite with 40 tests across 6 test files
+- Established test suite with 40 tests across 6 test files
+- Tests compile successfully with proper syntax
 
-**✅ App Structure:**
+**✅ App Infrastructure:**
 - Generated umbrella app with proper supervision
 - Created organized directory structure for modules, templates, and tests
-- Set up proper mix.exs with all required dependencies
+- Set up mix.exs with all required dependencies including fixpoint fallback
 - Established decisions directory for architectural documentation
 
-**✅ Module Extraction:**
-- `AriaMiniZinc.Executor`: Porcelain-based MiniZinc execution with timeout handling
-- `AriaMiniZinc.ProblemGenerator`: CSP generation from planning data
-- `AriaMiniZinc.Solver`: High-level solver interface with fallback support
-- `AriaMiniZinc.STNSolver`: STN-specific temporal constraint solving
-- `AriaMiniZinc.ValidationSolver`: Solver comparison and validation pipeline
+## Known Issues - Critical Problems
 
-**✅ Template System:**
-- Extracted and consolidated EEx templates for MiniZinc model generation
-- STN temporal templates for timeline planning
-- Goal solving templates for multi-objective optimization
-- Centralized template location in `priv/templates/minizinc/`
+**❌ Template System Broken:**
+- Template path resolution failing: `stn_temporal.mzn.eex` not found
+- Code references old template names after renaming
+- Template rendering not working in test environment
+- STN solving functionality broken due to template issues
 
-**✅ Test Coverage:**
-- Comprehensive test suite with 40 tests covering all major functionality
-- Fixed all syntax errors and compilation issues
-- Tests compile and run successfully (some expected failures due to MiniZinc availability)
-- Each module has dedicated test coverage with focused responsibilities
+**❌ Data Structure Mismatches:**
+- **Variables**: Tests expect map format, implementation returns list
+- **Constraints**: Tests expect maps with `:type` field, implementation returns strings
+- **Metadata**: Tests expect `:optimization` field that doesn't exist
+- API contracts inconsistent between modules
 
-**✅ Fallback Strategy:**
-- Implemented fixpoint library integration as fallback solver
-- Graceful degradation when MiniZinc unavailable
-- Consistent API regardless of underlying solver
-- Error handling and timeout management
+**❌ API Inconsistencies:**
+- `check_availability/0` functions not returning expected `{:ok, _}` or `{:error, _}` tuples
+- Solver metadata expectations don't match implementation
+- Missing required fields in problem data structures
 
-### Current Status
+**❌ Test Failures (10 out of 40 tests failing):**
+1. Template path resolution errors
+2. Data structure format mismatches
+3. Missing metadata fields
+4. API contract violations
+5. Constraint format inconsistencies
 
-The `aria_minizinc` app is now **fully functional** and ready for integration with consuming apps. The extraction successfully consolidates all MiniZinc functionality into a single, well-organized app with comprehensive test coverage.
+### Technical Debt
 
-**Next Steps for Integration:**
-1. Update consuming apps to depend on `aria_minizinc`
-2. Update module references from `AriaEngine.MiniZinc.*` to `AriaMiniZinc.*`
-3. Remove duplicated MiniZinc code from source apps
-4. Update related ADRs to reference the new app
+**High Priority Fixes Needed:**
+1. **Fix template path resolution** - Update code to use correct template names
+2. **Standardize data structures** - Align variables/constraints format across modules
+3. **Fix API contracts** - Make check_availability functions consistent
+4. **Update metadata structure** - Add missing fields like `:optimization`
+5. **Align test expectations** - Match tests with actual implementation
 
-The foundation is solid and the app provides a clean, unified interface for all constraint solving needs across the project.
+**Medium Priority:**
+- Improve error handling consistency
+- Complete template system implementation
+- Add missing template types
+- Enhance fallback strategy
+
+### Current Functional Status
+
+**✅ What Works:**
+- Basic app compilation and structure
+- Module organization and supervision
+- Fallback to fixpoint solver when MiniZinc unavailable
+- Test framework setup and execution
+
+**❌ What's Broken:**
+- Template system (critical for STN solving)
+- Data structure contracts between modules
+- API consistency across solvers
+- 25% of test suite failing
+
+### Next Steps Required
+
+**Immediate (Critical Path):**
+1. Fix template path resolution issues
+2. Standardize data structure formats
+3. Align API contracts across modules
+4. Fix failing tests
+
+**Before Integration:**
+1. Complete template system fixes
+2. Ensure all tests pass
+3. Validate end-to-end functionality
+4. Update consuming app dependencies
+
+**Assessment:** The extraction is **partially complete** but requires significant fixes before it can be considered ready for production use.
