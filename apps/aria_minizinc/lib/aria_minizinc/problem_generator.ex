@@ -60,25 +60,34 @@ defmodule AriaMiniZinc.ProblemGenerator do
   @type domain :: map()
   @type options :: map()
 
-  # STN-specific type definitions
-  @type stn_activity :: %{
+  # True STN type definitions (mathematically sound)
+  @type stn_time_point :: non_neg_integer()  # Time point index
+
+  @type stn_distance_constraint :: %{
+    from_point: non_neg_integer(),
+    to_point: non_neg_integer(),
+    distance: integer()  # Maximum distance: to_point - from_point ≤ distance
+  }
+
+  @type stn_problem_data :: %{
+    num_time_points: non_neg_integer(),
+    time_point_names: [String.t()],  # Human-readable names for time points
+    distance_matrix: [[integer()]],  # Full distance constraint matrix
+    horizon: non_neg_integer()       # Maximum time value
+  }
+
+  # Legacy STN types (for backward compatibility during transition)
+  @type legacy_stn_activity :: %{
     id: non_neg_integer(),
     name: String.t(),
     duration: non_neg_integer()
   }
 
-  @type stn_constraint :: %{
+  @type legacy_stn_constraint :: %{
     from_activity: non_neg_integer(),
     to_activity: non_neg_integer(),
     min_distance: integer(),
     max_distance: integer()
-  }
-
-  @type stn_problem_data :: %{
-    num_activities: non_neg_integer(),
-    activities: [stn_activity()],
-    durations: [non_neg_integer()],
-    constraints: [stn_constraint()]
   }
 
   @template_dir "priv/templates/minizinc"
@@ -348,15 +357,15 @@ defmodule AriaMiniZinc.ProblemGenerator do
     render_template(@goal_solving_template, template_vars)
   end
 
-  # Build STN model with activity-based data transformation
+  # Build STN model with True STN time point data transformation
   defp build_stn_model(variables, constraints, objective, generation_start, options) do
     stn_data = transform_to_stn_format(variables, constraints, objective, options)
 
     template_vars = %{
-      num_activities: stn_data.num_activities,
-      num_constraints: length(stn_data.constraints),
-      durations: stn_data.durations,
-      constraints: stn_data.constraints,
+      num_time_points: stn_data.num_time_points,
+      time_point_names: stn_data.time_point_names,
+      distance_matrix: stn_data.distance_matrix,
+      horizon: stn_data.horizon,
       generation_start: generation_start
     }
 
@@ -377,24 +386,173 @@ defmodule AriaMiniZinc.ProblemGenerator do
     Map.get(options, :problem_type) == :stn
   end
 
-  # Transform goal-solving data to STN format
+  # Transform goal-solving data to True STN format
   @spec transform_to_stn_format(structured_variables(), [constraint()], String.t(), options()) :: stn_problem_data()
   defp transform_to_stn_format(variables, constraints, _objective, options) do
-    # Extract activities from variables
-    activities = extract_stn_activities(variables, options)
+    # Extract time points from variables (activities become time point pairs)
+    time_points = extract_stn_time_points(variables, options)
 
-    # Generate durations for activities
-    durations = Enum.map(activities, fn activity -> activity.duration end)
+    # Generate distance matrix for all time point relationships
+    distance_matrix = generate_stn_distance_matrix(time_points, constraints, options)
 
-    # Generate STN constraints from existing constraints
-    stn_constraints = generate_stn_constraints(constraints, activities, options)
+    # Calculate horizon (maximum time value)
+    horizon = Map.get(options, :horizon, 1000)
 
     %{
-      num_activities: length(activities),
-      activities: activities,
-      durations: durations,
-      constraints: stn_constraints
+      num_time_points: length(time_points),
+      time_point_names: time_points,
+      distance_matrix: distance_matrix,
+      horizon: horizon
     }
+  end
+
+  # Extract STN time points from structured variables
+  @spec extract_stn_time_points(structured_variables(), options()) :: [String.t()]
+  defp extract_stn_time_points(variables, options) do
+    # Get default duration from options or use 30 as default
+    default_duration = Map.get(options, :default_duration, 30)
+
+    # Convert each entity to time point pairs (start_point, end_point)
+    variables.time_vars
+    |> Enum.flat_map(fn var ->
+      # Extract entity name from variable name (remove "_time" suffix)
+      entity_name = String.replace(var.name, "_time", "")
+
+      # Create start and end time points for each entity/activity
+      ["#{entity_name}_start", "#{entity_name}_end"]
+    end)
+  end
+
+  # Generate STN distance constraint matrix
+  @spec generate_stn_distance_matrix([String.t()], [constraint()], options()) :: [[integer()]]
+  defp generate_stn_distance_matrix(time_points, constraints, options) do
+    num_points = length(time_points)
+    default_duration = Map.get(options, :default_duration, 30)
+
+    # Initialize distance matrix with infinity (represented as large number)
+    infinity = 999999
+    base_matrix = for _i <- 1..num_points, do: (for _j <- 1..num_points, do: infinity)
+
+    # Set diagonal to 0 (distance from point to itself)
+    diagonal_matrix = base_matrix
+    |> Enum.with_index()
+    |> Enum.map(fn {row, i} ->
+      row
+      |> Enum.with_index()
+      |> Enum.map(fn {val, j} ->
+        if i == j, do: 0, else: val
+      end)
+    end)
+
+    # Add duration constraints (end_point - start_point ≤ duration)
+    duration_matrix = add_duration_constraints(diagonal_matrix, time_points, default_duration)
+
+    # Add precedence constraints from temporal ordering
+    precedence_matrix = add_precedence_constraints(duration_matrix, time_points, constraints)
+
+    precedence_matrix
+  end
+
+  # Add duration constraints to distance matrix
+  defp add_duration_constraints(matrix, time_points, default_duration) do
+    # Find start/end point pairs and add duration constraints
+    time_points
+    |> Enum.with_index()
+    |> Enum.reduce(matrix, fn {point_name, point_index}, acc_matrix ->
+      if String.ends_with?(point_name, "_start") do
+        # Find corresponding end point
+        entity_name = String.replace(point_name, "_start", "")
+        end_point_name = "#{entity_name}_end"
+
+        case Enum.find_index(time_points, &(&1 == end_point_name)) do
+          nil -> acc_matrix  # No corresponding end point found
+          end_index ->
+            # Add constraint: end_point - start_point ≤ duration
+            # Also add: start_point - end_point ≤ -duration (for consistency)
+            acc_matrix
+            |> update_matrix_cell(point_index, end_index, default_duration)
+            |> update_matrix_cell(end_index, point_index, -default_duration)
+        end
+      else
+        acc_matrix
+      end
+    end)
+  end
+
+  # Add precedence constraints to distance matrix
+  defp add_precedence_constraints(matrix, time_points, constraints) do
+    # Check for temporal ordering constraints
+    temporal_constraints = Enum.filter(constraints, fn constraint ->
+      Map.get(constraint, :type) == :temporal_ordering
+    end)
+
+    if length(temporal_constraints) > 0 do
+      # Add sequential precedence constraints between activities
+      add_sequential_precedence(matrix, time_points)
+    else
+      matrix
+    end
+  end
+
+  # Add sequential precedence constraints (activity A must finish before activity B starts)
+  defp add_sequential_precedence(matrix, time_points) do
+    # Group time points by entity
+    entities = time_points
+    |> Enum.map(fn point ->
+      cond do
+        String.ends_with?(point, "_start") -> String.replace(point, "_start", "")
+        String.ends_with?(point, "_end") -> String.replace(point, "_end", "")
+        true -> point
+      end
+    end)
+    |> Enum.uniq()
+
+    # Add precedence constraints between consecutive entities
+    entities
+    |> Enum.with_index()
+    |> Enum.reduce(matrix, fn {_entity, entity_index}, acc_matrix ->
+      if entity_index < length(entities) - 1 do
+        # Current entity end point
+        current_entity = Enum.at(entities, entity_index)
+        next_entity = Enum.at(entities, entity_index + 1)
+
+        current_end_name = "#{current_entity}_end"
+        next_start_name = "#{next_entity}_start"
+
+        current_end_index = Enum.find_index(time_points, &(&1 == current_end_name))
+        next_start_index = Enum.find_index(time_points, &(&1 == next_start_name))
+
+        if current_end_index && next_start_index do
+          # Add constraint: next_start - current_end ≤ 0 (next can start immediately after current ends)
+          update_matrix_cell(acc_matrix, current_end_index, next_start_index, 0)
+        else
+          acc_matrix
+        end
+      else
+        acc_matrix
+      end
+    end)
+  end
+
+  # Helper function to update a cell in the distance matrix
+  defp update_matrix_cell(matrix, from_index, to_index, distance) do
+    matrix
+    |> Enum.with_index()
+    |> Enum.map(fn {row, row_index} ->
+      if row_index == from_index do
+        row
+        |> Enum.with_index()
+        |> Enum.map(fn {cell, col_index} ->
+          if col_index == to_index do
+            min(cell, distance)  # Take minimum of existing and new constraint
+          else
+            cell
+          end
+        end)
+      else
+        row
+      end
+    end)
   end
 
   # Extract STN activities from structured variables

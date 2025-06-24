@@ -13,10 +13,11 @@ defmodule AriaMiniZinc.STNTemplateTest do
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Verify STN template was used by checking model structure
-      assert String.contains?(problem_data.model, "STN Temporal Scheduling Problem")
-      assert String.contains?(problem_data.model, "num_activities")
-      assert String.contains?(problem_data.model, "start_times")
+      # Verify True STN template was used by checking model structure
+      assert String.contains?(problem_data.model, "True STN (Simple Temporal Network) Problem")
+      assert String.contains?(problem_data.model, "num_time_points")
+      assert String.contains?(problem_data.model, "time_points")
+      assert String.contains?(problem_data.model, "distance_matrix")
       assert String.contains?(problem_data.model, "makespan")
     end
 
@@ -43,9 +44,9 @@ defmodule AriaMiniZinc.STNTemplateTest do
       options = %{problem_type: :stn}
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Should still use STN template but with no activities
-      assert String.contains?(problem_data.model, "STN Temporal Scheduling Problem")
-      assert String.contains?(problem_data.model, "num_activities = 0")
+      # Should still use True STN template but with no time points
+      assert String.contains?(problem_data.model, "True STN (Simple Temporal Network) Problem")
+      assert String.contains?(problem_data.model, "num_time_points = 0")
     end
 
     test "selects STN template for temporal constraint problems" do
@@ -60,14 +61,14 @@ defmodule AriaMiniZinc.STNTemplateTest do
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Verify STN template with temporal constraints
-      assert String.contains?(problem_data.model, "STN Temporal Scheduling Problem")
-      assert String.contains?(problem_data.model, "constraints = [|")
+      # Verify True STN template with temporal constraints
+      assert String.contains?(problem_data.model, "True STN (Simple Temporal Network) Problem")
+      assert String.contains?(problem_data.model, "distance_matrix")
     end
   end
 
   describe "STN Data Transformation Tests" do
-    test "converts goals to STN activities with durations" do
+    test "converts goals to STN time points with durations" do
       domain = %{name: "test_domain"}
       state = %{entities: ["robot", "box", "truck"]}
       goals = [
@@ -79,9 +80,10 @@ defmodule AriaMiniZinc.STNTemplateTest do
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Verify activities were created
-      assert String.contains?(problem_data.model, "num_activities = 3")
-      assert String.contains?(problem_data.model, "durations = [45, 45, 45]")
+      # Verify time points were created (2 per entity: start and end)
+      assert String.contains?(problem_data.model, "num_time_points = 6")
+      assert String.contains?(problem_data.model, "robot_start")
+      assert String.contains?(problem_data.model, "robot_end")
     end
 
     test "generates STN constraints from temporal relationships" do

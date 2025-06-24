@@ -1,53 +1,41 @@
-% STN Temporal Scheduling Problem
-% Generated from EEx template
+% True STN (Simple Temporal Network) Problem
+% Generated from EEx template - Time Point Based Implementation
 
 % Problem parameters
-int: num_activities = <%= @num_activities %>;
-int: num_constraints = <%= @num_constraints %>;
-set of int: ACTIVITIES = 1..num_activities;
+int: num_time_points = <%= @num_time_points %>;
+int: horizon = <%= @horizon %>;
+set of int: TIME_POINTS = 1..num_time_points;
 
-% Activity durations
-array[ACTIVITIES] of int: durations = [<%= Enum.join(@durations, ", ") %>];
+% Time point names for debugging
+array[TIME_POINTS] of string: time_point_names = [<%= Enum.map_join(@time_point_names, ", ", &"\"#{&1}\"") %>];
 
-% Temporal constraints (Simple Temporal Network)
-% Each constraint: [from_activity, to_activity, min_distance, max_distance]
-array[1..num_constraints, 1..4] of int: constraints = [|<%= for {constraint, index} <- Enum.with_index(@constraints) do %>
-  <%= constraint.from_activity %>, <%= constraint.to_activity %>, <%= constraint.min_distance %>, <%= constraint.max_distance %><%= if index < length(@constraints) - 1, do: " |", else: "" %><% end %>
+% Distance constraint matrix
+% distance_matrix[i,j] = maximum distance from time point i to time point j
+% Constraint: time_points[j] - time_points[i] <= distance_matrix[i,j]
+array[TIME_POINTS, TIME_POINTS] of int: distance_matrix = [|<%= for {row, row_index} <- Enum.with_index(@distance_matrix) do %>
+  <%= Enum.join(row, ", ") %><%= if row_index < length(@distance_matrix) - 1, do: " |", else: "" %><% end %>
 |];
 
-% Decision variables
-array[ACTIVITIES] of var 0..1000: start_times;
-array[ACTIVITIES] of var 0..1000: end_times;
-var 0..1000: makespan;
+% Decision variables - time point assignments
+array[TIME_POINTS] of var 0..horizon: time_points;
 
-% Constraints
-% Activity duration constraints
-constraint forall(i in ACTIVITIES) (
-  end_times[i] = start_times[i] + durations[i]
+% STN Constraints
+% Core STN constraint: time_points[j] - time_points[i] <= distance_matrix[i,j]
+constraint forall(i, j in TIME_POINTS) (
+  time_points[j] - time_points[i] <= distance_matrix[i,j]
 );
 
-% STN temporal constraints
-constraint forall(c in 1..num_constraints) (
-  let {
-    int: from = constraints[c, 1],
-    int: to = constraints[c, 2],
-    int: min_dist = constraints[c, 3],
-    int: max_dist = constraints[c, 4]
-  } in (
-    start_times[to] - start_times[from] >= min_dist /\
-    start_times[to] - start_times[from] <= max_dist
-  )
-);
+% Objective: minimize makespan (latest time point)
+var 0..horizon: makespan;
+constraint makespan = max(time_points);
 
-% Makespan constraint
-constraint makespan = max(end_times);
-
-% Objective: minimize makespan
 solve minimize makespan;
 
 % Output format
 output [
-  "start_times = [" ++ join(", ", [show(start_times[i]) | i in ACTIVITIES]) ++ "];\n",
-  "end_times = [" ++ join(", ", [show(end_times[i]) | i in ACTIVITIES]) ++ "];\n",
-  "makespan = " ++ show(makespan) ++ ";\n"
+  "time_points = [" ++ join(", ", [show(time_points[i]) | i in TIME_POINTS]) ++ "];\n",
+  "makespan = " ++ show(makespan) ++ ";\n",
+  "% Time point assignments:\n"
+] ++ [
+  "% " ++ time_point_names[i] ++ " = " ++ show(time_points[i]) ++ "\n" | i in TIME_POINTS
 ];
