@@ -102,7 +102,7 @@ Create minimal umbrella structure with basic functionality:
 - [ ] Can load ARC JSON task files
 - [ ] Applies basic transformations to test inputs
 - [ ] Generates submission-format outputs
-- [ ] Achieves >0% accuracy on public ARC dataset
+- [ ] Produces valid outputs (accuracy likely 0% - random chance)
 - [ ] Runs end-to-end without errors
 
 #### Why This Matters (Expert)
@@ -136,10 +136,10 @@ Enhance `aria_arc_coordinator` with better decision making:
 
 #### Success Criteria (Measurable)
 
-- [ ] Achieves 5-10% accuracy on public ARC dataset
-- [ ] Correctly identifies basic patterns (color changes, rotations, mirroring)
-- [ ] Shows improvement over random guessing on pattern-based tasks
-- [ ] Handles at least 50% of task types without errors
+- [ ] May achieve 1-3% accuracy on public ARC dataset (still mostly random)
+- [ ] Correctly identifies some basic patterns (color changes, rotations, mirroring)
+- [ ] Shows marginal improvement over pure random guessing
+- [ ] Handles at least 50% of task types without runtime errors
 
 ### Stage 3: "Scooter" - Compositional Reasoning (Size: M, 1-2 weeks)
 
@@ -168,9 +168,9 @@ Upgrade coordinator with compositional capabilities:
 
 #### Success Criteria (Measurable)
 
-- [ ] Achieves 10-15% accuracy on public ARC dataset
+- [ ] May achieve 3-8% accuracy on public ARC dataset
 - [ ] Successfully composes 2-3 step transformation sequences
-- [ ] Handles tasks requiring multiple operations
+- [ ] Handles some tasks requiring multiple operations
 - [ ] Shows systematic improvement over single-step approaches
 
 ### Stage 4: "Motorcycle" - First AI Strategy (Size: M, 2-3 weeks)
@@ -200,9 +200,9 @@ Integrate neural and symbolic approaches:
 
 #### Success Criteria (Measurable)
 
-- [ ] Achieves 15-20% accuracy on public ARC dataset
+- [ ] May achieve 8-15% accuracy on public ARC dataset
 - [ ] LLM strategy contributes meaningfully to ensemble performance
-- [ ] Successfully handles novel patterns not covered by symbolic rules
+- [ ] Successfully handles some novel patterns not covered by symbolic rules
 - [ ] Shows complementary strengths between neural and symbolic approaches
 
 ### Stage 5: "Small Car" - Dual Strategy System (Size: M, 2-3 weeks)
@@ -232,7 +232,7 @@ Sophisticated coordination between multiple strategies:
 
 #### Success Criteria (Measurable)
 
-- [ ] Achieves 20-25% accuracy on public ARC dataset
+- [ ] May achieve 12-20% accuracy on public ARC dataset
 - [ ] Each strategy contributes unique value to ensemble
 - [ ] Ensemble outperforms individual strategies consistently
 - [ ] Successfully handles diverse task types with appropriate strategy selection
@@ -264,7 +264,7 @@ Use pattern learning to improve all strategies:
 
 #### Success Criteria (Measurable)
 
-- [ ] Achieves 25-30% accuracy on public ARC dataset
+- [ ] May achieve 18-25% accuracy on public ARC dataset
 - [ ] Pattern library demonstrably improves strategy performance
 - [ ] System learns and adapts from previous task solutions
 - [ ] Shows consistent improvement over time with more data
@@ -297,7 +297,7 @@ Optimize for competition constraints:
 
 #### Success Criteria (Measurable)
 
-- [ ] Achieves 30%+ accuracy on public ARC dataset
+- [ ] May achieve 20-30% accuracy on public ARC dataset
 - [ ] Runs reliably in offline competition environment
 - [ ] Meets all competition timing and resource constraints
 - [ ] Passes comprehensive validation and stress testing
@@ -329,7 +329,7 @@ Contribute to the broader ARC research community:
 
 #### Success Criteria (Measurable)
 
-- [ ] Achieves 35%+ accuracy on public ARC dataset
+- [ ] May achieve 25-35% accuracy on public ARC dataset (optimistic)
 - [ ] Contributes novel insights to ARC research community
 - [ ] Demonstrates advanced reasoning capabilities
 - [ ] Provides comprehensive analysis of approach effectiveness
@@ -621,16 +621,16 @@ apps/
 
 ### Overall Competition Goals
 
-- **Minimum Viable (Stage 4):** 15-20% accuracy - Competitive submission
-- **Target Performance (Stage 6):** 25-30% accuracy - Strong competitive showing
-- **Stretch Goal (Stage 8):** 35%+ accuracy - SOTA performance, potential prize contention
+- **Minimum Viable (Stage 4):** 8-15% accuracy - Competitive submission
+- **Target Performance (Stage 6):** 18-25% accuracy - Strong competitive showing  
+- **Stretch Goal (Stage 8):** 25-35% accuracy - SOTA performance, potential prize contention
 - **Grand Prize Territory:** 50%+ accuracy - Breakthrough performance (highly unlikely but possible)
 
 ### Risk-Adjusted Expectations
 
-- **Most Likely Outcome:** Reach Stage 4-5 (15-25% accuracy)
-- **Optimistic Scenario:** Reach Stage 6-7 (25-30% accuracy)
-- **Pessimistic Scenario:** Reach Stage 2-3 (5-15% accuracy)
+- **Most Likely Outcome:** Reach Stage 4-5 (8-20% accuracy)
+- **Optimistic Scenario:** Reach Stage 6-7 (18-30% accuracy)
+- **Pessimistic Scenario:** Reach Stage 2-3 (1-8% accuracy)
 - **Failure Scenario:** Cannot achieve >5% accuracy due to fundamental approach limitations
 
 ## Critical Gaps and Failure Risks
