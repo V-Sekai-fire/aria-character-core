@@ -67,15 +67,23 @@ Aria's hybrid symbolic-neural architecture directly addresses ARC's core require
 
 ### Simple Version
 
-We're going to build a super-smart puzzle solver using Aria's existing tools, combining multiple different approaches to be as good as possible.
+We're going to build a super-smart puzzle solver using Aria's existing tools, but following the "Bitter Lesson" principle: start with massive computation and learning, then add coordination and fallbacks.
 
 ### Technical Version
 
-Develop a comprehensive ARC solver leveraging Aria's existing architecture through a multi-strategy approach combining DSL program synthesis, active inference, and ensemble methods.
+Develop a comprehensive ARC solver leveraging Aria's existing architecture through a computation-first approach: massive program synthesis and pattern learning drive domain discovery, with hybrid planning coordinating learned strategies rather than hand-crafted rules.
 
 ### Implementation Strategy
 
-Create an integrated system that uses Aria's hybrid planner to coordinate multiple solving strategies: a custom grid transformation language, AI models that learn from examples, and a voting system that combines different approaches to pick the best answer.
+Create a learning-driven system where computational search discovers grid transformations, pattern analysis learns planning methods, and the hybrid planner coordinates learned strategies. The domain itself becomes the product of computation rather than human engineering.
+
+### Bitter Lesson Integration
+
+Following Rich Sutton's "Bitter Lesson," we prioritize:
+1. **Computation over cleverness** - Massive search spaces over hand-crafted heuristics
+2. **Learning over engineering** - Discovered patterns over pre-defined transformations  
+3. **Scale over optimization** - More data and search over algorithmic efficiency
+4. **General methods** - Learning and search that can discover domain structure
 
 ## Implementation Plan: "Bicycle to Car" Progression
 
@@ -498,18 +506,20 @@ apps/
 1. aria_grid/                       # Foundation Layer (no internal deps)
 │   ├── lib/aria_grid/
 │   │   ├── grid.ex                 # Core grid representation
-│   │   ├── transformations.ex      # Rotation, mirroring, scaling
+│   │   ├── transformations.ex      # Basic transformations (minimal set)
 │   │   ├── pattern_matching.ex     # Shape detection and extraction
 │   │   ├── color_mapping.ex        # Color transformations
 │   │   └── spatial_analysis.ex     # Discrete 2D grid relationship analysis
 │   └── mix.exs
-2. aria_arc_domain/                 # ARC Planning Domain Layer (depends on aria_grid)
+2. aria_arc_domain/                 # ARC Planning Domain Layer (LEARNED CONTENT)
 │   ├── lib/aria_arc_domain/
-│   │   ├── actions.ex              # ARC-specific planning actions
-│   │   ├── methods.ex              # Grid transformation methods
-│   │   ├── rules.ex                # Composition and sequencing rules
-│   │   ├── state.ex                # ARC task state representation
-│   │   └── validation.ex           # Domain-specific validation
+│   │   ├── domain.ex               # Module-based domain definition (ADR-133)
+│   │   ├── action_synthesis.ex     # Generate actions through program synthesis
+│   │   ├── method_learning.ex      # Learn planning methods from traces
+│   │   ├── rule_discovery.ex       # Discover domain rules from feedback
+│   │   ├── ast_executor.ex         # Execute learned code as data
+│   │   ├── domain_evolution.ex     # Evolve domain through computational feedback
+│   │   └── planner_interface.ex    # Standard interface to aria_hybrid_planner
 │   └── mix.exs
 3. aria_pattern_library/            # Pattern Analytics Layer (depends on aria_grid)
 │   ├── lib/aria_pattern_library/
@@ -550,7 +560,154 @@ apps/
     └── mix.exs
 ```
 
-**ARC Planning Domain:** The `aria_arc_domain` app contains ARC-specific planning actions, methods, and rules that integrate with `aria_hybrid_planner`. This follows Aria's domain-driven planning architecture where domain logic is separated from the general planning engine.
+**ARC Planning Domain:** The `aria_arc_domain` app contains ARC-specific planning actions, methods, and rules that integrate with `aria_hybrid_planner`. Following the Bitter Lesson, the domain content is **learned through computation** rather than hand-crafted, using program synthesis to discover actions, pattern analysis to learn methods, and feedback to evolve rules.
+
+### Computational Learning Domain Architecture
+
+**Module-Based Domain (Following ADR-133 Solution):**
+
+```elixir
+defmodule AriaArcDomain do
+  use AriaEngine.Domain
+  
+  @domain_name "arc_reasoning"
+  @description "Abstract Reasoning Corpus domain with learned transformations"
+  
+  # LEARNED ACTIONS (generated through program synthesis)
+  @action duration: "PT0.1S"  # Instant grid transformations
+  def rotate_90(state, [grid_id]) do
+    # Implementation discovered through search
+    new_state = StateV2.set_fact(state, grid_id, "orientation", "rotated_90")
+    {:ok, new_state}
+  end
+  
+  @action duration: "PT0.1S"
+  def discovered_pattern_transform_1(state, [grid_id, pattern_params]) do
+    # Action discovered through program synthesis
+    # Implementation learned from successful ARC solutions
+    case apply_learned_transformation(state, grid_id, pattern_params) do
+      {:ok, new_state} -> {:ok, new_state}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+  
+  # LEARNED UNIGOAL METHODS (pattern-driven decomposition)
+  @unigoal_method goal_pattern: {"grid", "solved", :any}
+  def achieve_grid_solution(state, {"grid", "solved", target_pattern}) do
+    # Method learned from successful solution traces
+    {:ok, [
+      {"task_identify_pattern", [target_pattern]},
+      {"task_apply_transformation", [target_pattern]},
+      {"task_validate_solution", [target_pattern]}
+    ]}
+  end
+  
+  # LEARNED TASK METHODS (discovered through search)
+  @task_method
+  def task_identify_pattern(state, [pattern]) do
+    # Method learned from pattern analysis
+    if pattern_recognizable?(state, pattern) do
+      {:ok, [
+        {:analyze_colors, [pattern]},
+        {:detect_shapes, [pattern]},
+        {:find_symmetries, [pattern]}
+      ]}
+    else
+      {:error, :pattern_not_recognizable}
+    end
+  end
+  
+  # MULTIGOAL METHODS (constraint-based optimization)
+  @multigoal_method goal_patterns: [{"grid", "pattern", :any}, {"grid", "transformation", :any}]
+  def optimize_pattern_and_transform(state, goals) do
+    # Use MiniZinc to optimize multiple grid constraints simultaneously
+    {:ok, [
+      "achieve_pattern_recognition",  # Unigoal method
+      "achieve_transformation_sequence"  # Unigoal method  
+    ]}
+  end
+end
+```
+
+**Action Discovery Engine:**
+```elixir
+# In aria_arc_domain/action_synthesis.ex
+defmodule AriaArcDomain.ActionSynthesis do
+  def discover_new_actions(successful_traces, current_domain) do
+    # Program synthesis to find new grid transformations
+    # Generate thousands of candidate actions
+    # Test against ARC training data
+    # Add successful actions to domain as AST
+    
+    new_actions = 
+      successful_traces
+      |> extract_transformation_patterns()
+      |> synthesize_action_candidates()
+      |> validate_against_training_data()
+      |> convert_to_domain_actions()
+    
+    # Dynamically add to domain using correct syntax
+    Enum.reduce(new_actions, current_domain, fn {name, impl, metadata}, domain ->
+      Domain.add_method(domain, name, impl, %{type: :action, duration: metadata.duration})
+    end)
+  end
+end
+```
+
+**Method Learning from Traces:**
+```elixir
+# In aria_arc_domain/method_learning.ex
+defmodule AriaArcDomain.MethodLearning do
+  def learn_methods_from_solutions(solution_traces) do
+    # Analyze successful planning episodes
+    # Extract common decomposition patterns
+    # Generate new unigoal and task methods
+    
+    learned_methods =
+      solution_traces
+      |> identify_successful_decompositions()
+      |> extract_method_patterns()
+      |> generate_method_implementations()
+      |> validate_method_effectiveness()
+    
+    # Return methods in correct domain format
+    Enum.map(learned_methods, fn {name, impl, type} ->
+      case type do
+        :unigoal -> {name, impl, %{type: :unigoal, goal_pattern: extract_goal_pattern(impl)}}
+        :task -> {name, impl, %{type: :task}}
+        :multigoal -> {name, impl, %{type: :multigoal, goal_patterns: extract_goal_patterns(impl)}}
+      end
+    end)
+  end
+end
+```
+
+### Bitter Lesson Integration: Computational Domain Evolution
+
+**Stage 1: Computational Domain Bootstrap**
+- Massive program synthesis to discover action space (10,000+ candidates)
+- Generate transformation actions through search, not hand-coding
+- Learn which combinations work through computational validation
+
+**Stage 2: Pattern-Driven Method Learning**
+- Analyze successful solution traces to learn planning methods
+- Generate unigoal methods that capture successful reasoning patterns
+- Use learning to discover domain structure, not engineer it
+
+**Stage 3: Rule Evolution Through Feedback**
+- Learn domain rules from planning success/failure
+- Evolve preconditions and effects through experience
+- Use computational feedback to refine domain knowledge
+
+**Key Insight: Domain as Learned Interface**
+
+The domain becomes the **computational learning interface** between:
+- **Raw search/synthesis** (discovers transformations)
+- **Pattern learning** (discovers methods) 
+- **Constraint optimization** (discovers rules)
+- **Structured planning** (coordinates learned strategies)
+
+This preserves our proven planner architecture while making the domain content itself the product of massive computation and learning, exactly as the Bitter Lesson suggests.
 
 ### App Dependencies
 
