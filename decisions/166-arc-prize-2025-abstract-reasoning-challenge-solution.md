@@ -24,12 +24,15 @@ Aria already has the key components needed for ARC:
 ## Our Approach
 
 ### Simple Version
+
 Build a super-smart puzzle solver that learns patterns from examples, then uses multiple reasoning strategies working together to solve new puzzles.
 
 ### Technical Version
+
 Create a computation-first system where massive search discovers grid transformations, pattern learning guides strategy selection, and hybrid planning coordinates learned approaches for interpretable execution.
 
 ### Key Innovation
+
 Follow the "Bitter Lesson" - prioritize computation and learning over hand-crafted rules, then channel discoveries through interpretable planning execution.
 
 ## Implementation Strategy
@@ -37,6 +40,7 @@ Follow the "Bitter Lesson" - prioritize computation and learning over hand-craft
 **"Bicycle to Car" Progression:** Build working systems at each stage, starting simple and adding sophistication incrementally.
 
 **Stage Overview:**
+
 - **Stages 1-3:** Computational discovery (search, patterns, domain learning)
 - **Stage 4:** Neural reasoning integration (GRPO-fine-tuned models)
 - **Stages 5-7:** Coordination and production readiness
@@ -73,16 +77,19 @@ For complete technical details, see:
 ## Consequences
 
 ### Positive
+
 - Demonstrates Aria's capabilities on world-class AI challenge
 - Validates hybrid symbolic-neural reasoning approach
 - Potential breakthrough in abstract reasoning research
 
 ### Negative
+
 - High-risk, resource-intensive project
 - No guarantee of competitive performance
 - Adds complexity to Aria ecosystem
 
 ### Neutral
+
 - Valuable learning experience regardless of outcome
 - Technology transfer to other reasoning applications
 - Positions Aria in AI research community

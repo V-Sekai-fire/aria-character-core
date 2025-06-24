@@ -239,16 +239,19 @@ end
 ### Bitter Lesson Integration: Computational Domain Evolution
 
 **Stage 1: Computational Domain Bootstrap**
+
 - Massive program synthesis to discover action space (10,000+ candidates)
 - Generate transformation actions through search, not hand-coding
 - Learn which combinations work through computational validation
 
 **Stage 2: Pattern-Driven Method Learning**
+
 - Analyze successful solution traces to learn planning methods
 - Generate unigoal methods that capture successful reasoning patterns
 - Use learning to discover domain structure, not engineer it
 
 **Stage 3: Rule Evolution Through Feedback**
+
 - Learn domain rules from planning success/failure
 - Evolve preconditions and effects through experience
 - Use computational feedback to refine domain knowledge
@@ -256,8 +259,9 @@ end
 **Key Insight: Domain as Learned Interface**
 
 The domain becomes the **computational learning interface** between:
+
 - **Raw search/synthesis** (discovers transformations)
-- **Pattern learning** (discovers methods) 
+- **Pattern learning** (discovers methods)
 - **Constraint optimization** (discovers rules)
 - **Structured planning** (coordinates learned strategies)
 
@@ -330,12 +334,14 @@ This preserves our proven planner architecture while making the domain content i
 ### OpenRouter Integration
 
 **Model Diversity Strategy:**
+
 - Primary: GRPO-fine-tuned Qwen3 for ARC-specific reasoning
 - Secondary: GPT-4, Claude, Gemini for ensemble diversity
 - Specialized prompting strategies per model type
 - Cross-model validation and quality assurance
 
 **GRPO Fine-Tuning Pipeline:**
+
 ```elixir
 # In aria_llm_client/qwen3_fine_tuning.ex
 defmodule AriaLLMClient.Qwen3FineTuning do
@@ -367,6 +373,7 @@ end
 ```
 
 **Competition Compliance:**
+
 - All LLM usage during development and training phases only
 - Final submission runs completely offline
 - No internet access during competition evaluation
@@ -411,6 +418,7 @@ end
 ### Multi-Model Generation
 
 **Generation Pipeline:**
+
 - Different LLMs generate diverse task variations
 - Cross-model validation ensures quality
 - Adversarial generation finds challenging cases
@@ -419,6 +427,7 @@ end
 ### Quality Assurance
 
 **Validation Framework:**
+
 - Automated validation against ARC principles
 - Cross-model consistency checking
 - Difficulty calibration and progression
@@ -461,6 +470,7 @@ end
 ### Automatic Compression Benefits
 
 **Natural Selection for Information Density:**
+
 - GRPO compares groups of planning sequences for the same ARC task
 - Shorter sequences that achieve correct results score higher than longer sequences
 - GRPO learning naturally biases toward information-dense, minimal action sequences
