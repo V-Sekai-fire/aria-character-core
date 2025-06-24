@@ -9,6 +9,14 @@
 
 This ADR provides comprehensive risk analysis for the ARC Prize 2025 solution defined in ADR-166, including technical gaps, resource constraints, competition-specific risks, and honest probability assessments for success scenarios.
 
+## Success Targets
+
+- **Minimum Viable:** 5-10% accuracy (basic competitive submission)
+- **Target Performance:** 15-20% accuracy (respectable showing)
+- **Stretch Goal:** 25%+ accuracy (approaching state-of-the-art)
+
+These targets are based on the current best performance of 34% accuracy and represent realistic expectations for a hybrid reasoning approach entering the competition.
+
 ## Critical Gaps and Failure Risks
 
 ### Fundamental Technical Gaps

@@ -11,56 +11,27 @@ The ARC Prize 2025 offers $1,000,000 for creating an AI system that can solve gr
 **Current Best Performance:** 34% accuracy  
 **Our Goal:** Build a competitive ARC solver using Aria's hybrid reasoning architecture
 
-## Why Aria is Perfect for This
-
-Aria already has the key components needed for ARC:
-
-- **Hybrid Planning** - Coordinates multiple solving approaches
-- **Grid Reasoning** - Handles spatial transformations naturally  
-- **Pattern Learning** - Discovers rules from examples
-- **Strategy Coordination** - Combines different reasoning methods
-- **Constraint Solving** - Handles complex spatial relationships
-
 ## Our Approach
-
-### Simple Version
-
-Build a super-smart puzzle solver that learns patterns from examples, then uses multiple reasoning strategies working together to solve new puzzles.
-
-### Technical Version
-
-Create a computation-first system where massive search discovers grid transformations, pattern learning guides strategy selection, and hybrid planning coordinates learned approaches for interpretable execution.
 
 ### Key Innovation
 
 Follow the "Bitter Lesson" - prioritize computation and learning over hand-crafted rules, then channel discoveries through interpretable planning execution.
 
-## Implementation Strategy
+**Simple Version:** Build a super-smart puzzle solver that learns patterns from examples, then uses multiple reasoning strategies working together to solve new puzzles.
 
-**"Bicycle to Car" Progression:** Build working systems at each stage, starting simple and adding sophistication incrementally.
+**Technical Version:** Create a computation-first system where massive search discovers grid transformations, pattern learning guides strategy selection, and hybrid planning coordinates learned approaches for interpretable execution.
 
-**Stage Overview:**
+### Implementation Philosophy
 
-- **Stages 1-3:** Computational discovery (search, patterns, domain learning)
-- **Stage 4:** Neural reasoning integration (GRPO-fine-tuned models)
-- **Stages 5-7:** Coordination and production readiness
-- **Stages 8+:** Advanced research features (if time permits)
-
-**Risk Management:** Each stage produces a working ARC solver, so we can submit whatever we achieve by the competition deadline.
-
-## Success Targets
-
-- **Minimum Viable:** 5-10% accuracy (basic competitive submission)
-- **Target Performance:** 15-20% accuracy (respectable showing)
-- **Stretch Goal:** 25%+ accuracy (approaching state-of-the-art)
+**"Bicycle to Car" Progression:** Build working systems at each stage, starting simple and adding sophistication incrementally. Each stage produces a working ARC solver, so we can submit whatever we achieve by the competition deadline.
 
 ## Detailed Implementation
 
 For complete technical details, see:
 
 - **ADR-168**: ARC Prize Implementation Plan (12-stage development roadmap)
-- **ADR-169**: ARC Prize Technical Architecture (umbrella apps and integration)
-- **ADR-170**: ARC Prize Risk Analysis (comprehensive risk assessment)
+- **ADR-169**: ARC Prize Technical Architecture (umbrella apps, Aria integration, and computational learning domain)
+- **ADR-170**: ARC Prize Risk Analysis (success targets, failure risks, and mitigation strategies)
 
 ## Decision
 

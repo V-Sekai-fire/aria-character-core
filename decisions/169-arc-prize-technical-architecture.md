@@ -9,6 +9,18 @@
 
 This ADR defines the technical architecture for the ARC Prize 2025 solution, including umbrella app structure, integration with existing Aria components, and the computational learning domain architecture that implements the Bitter Lesson principles defined in ADR-166.
 
+## Why Aria is Perfect for ARC
+
+Aria already has the key components needed for ARC:
+
+- **Hybrid Planning** - Coordinates multiple solving approaches
+- **Grid Reasoning** - Handles spatial transformations naturally  
+- **Pattern Learning** - Discovers rules from examples
+- **Strategy Coordination** - Combines different reasoning methods
+- **Constraint Solving** - Handles complex spatial relationships
+
+These existing capabilities provide a strong foundation for building an ARC solver that can leverage both symbolic reasoning (through the planning system) and neural approaches (through LLM integration) in a coordinated hybrid architecture.
+
 ## Technical Architecture
 
 ### Umbrella App Structure
