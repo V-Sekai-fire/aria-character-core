@@ -168,7 +168,57 @@ Build a system that learns from the specific test examples:
 
 This phase implements the neural reasoning component essential for handling novel patterns. The multi-LLM ensemble provides diverse reasoning perspectives, while active inference enables adaptation to specific task characteristics - crucial for generalizing beyond training data.
 
-### Phase 3: Synthetic Data Generation (Size: L)
+### Phase 3: Pattern Library and Analytics (Size: M)
+
+#### What We're Building (Simple)
+
+We create a smart library that remembers all the puzzle patterns we've seen and can quickly find similar ones, like having a really good filing system for puzzle solutions.
+
+#### Pattern Library App (`aria_pattern_library`) (Technical)
+
+Create dedicated app for pattern storage and analytics:
+
+- [ ] Implement DuckDB integration for development-time analytics
+- [ ] Add SQLite integration for competition runtime lookups
+- [ ] Create pattern template storage and retrieval system
+- [ ] Implement Parquet export for research sharing
+- [ ] Develop pattern matching and similarity algorithms
+
+#### Dual Database Architecture (Detailed)
+
+Build flexible data storage supporting both development and competition:
+
+- [ ] **DuckDB Development Store:**
+  - [ ] Rich analytical queries for pattern discovery
+  - [ ] Complex aggregations for success rate analysis
+  - [ ] Pattern composition and relationship analysis
+  - [ ] Export capabilities to Parquet format
+- [ ] **SQLite Competition Store:**
+  - [ ] Fast pattern lookups during competition
+  - [ ] Embedded database for offline execution
+  - [ ] Optimized indexes for real-time queries
+  - [ ] Minimal memory footprint
+- [ ] **Data Pipeline:**
+  - [ ] Export patterns from DuckDB to Parquet
+  - [ ] Import curated patterns into SQLite
+  - [ ] Validation and quality assurance between stores
+  - [ ] Automated synchronization workflows
+
+#### Pattern Analytics System (Detailed)
+
+Build intelligence around pattern usage and effectiveness:
+
+- [ ] Pattern success rate tracking and analysis
+- [ ] Transformation composition effectiveness metrics
+- [ ] Pattern similarity and clustering algorithms
+- [ ] Difficulty progression and complexity analysis
+- [ ] Research artifact generation for community sharing
+
+#### Integration Strategy (Expert)
+
+The pattern library serves as the knowledge base for the entire ARC system, providing pattern-guided search for program synthesis, confidence scoring for ensemble voting, and research artifacts for community contribution. The dual database approach enables rich development-time analytics while maintaining competition performance requirements.
+
+### Phase 4: Synthetic Data Generation (Size: L)
 
 #### What We're Creating (Simple)
 
@@ -198,7 +248,7 @@ Build tools to understand and replicate ARC puzzle patterns:
 
 Synthetic data generation is essential for overcoming ARC's few-shot learning constraint. The system must generate diverse, valid tasks that capture the compositional nature of ARC transformations without overfitting to public datasets. Quality validation ensures generated tasks maintain ARC's core cognitive requirements.
 
-### Phase 4: Ensemble Architecture (Size: M)
+### Phase 5: Ensemble Architecture (Size: M)
 
 #### What We're Combining (Simple)
 
@@ -298,6 +348,15 @@ apps/
 │   │   ├── response_parser.ex      # Response validation
 │   │   └── ensemble.ex             # Multi-model coordination
 │   └── mix.exs
+├── aria_pattern_library/           # Pattern Analytics Layer
+│   ├── lib/aria_pattern_library/
+│   │   ├── duckdb_store.ex         # DuckDB analytics and discovery
+│   │   ├── sqlite_store.ex         # SQLite competition runtime
+│   │   ├── pattern_matcher.ex      # Template-based recognition
+│   │   ├── analytics.ex            # Success rates and composition
+│   │   ├── export.ex               # Parquet export for research
+│   │   └── pipeline.ex             # DuckDB ↔ SQLite data flow
+│   └── mix.exs
 ├── aria_program_synthesis/         # Reasoning Layer
 │   ├── lib/aria_program_synthesis/
 │   │   ├── search.ex               # Discrete program search
@@ -323,6 +382,7 @@ aria_arc_coordinator
 ├── aria_grid
 ├── aria_dsl
 ├── aria_llm_client
+├── aria_pattern_library
 ├── aria_program_synthesis
 ├── aria_hybrid_planner (existing)
 ├── aria_temporal_planner (existing)
@@ -331,6 +391,11 @@ aria_arc_coordinator
 └── aria_engine_core (existing)
 
 aria_program_synthesis
+├── aria_grid
+├── aria_dsl
+└── aria_pattern_library
+
+aria_pattern_library
 ├── aria_grid
 └── aria_dsl
 
