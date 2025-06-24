@@ -39,9 +39,9 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       assert String.length(problem_data.model) > 100
 
       # Check STN-specific elements
-      assert String.contains?(problem_data.model, "STN Temporal Scheduling Problem")
-      assert String.contains?(problem_data.model, "num_activities = 3")
-      assert String.contains?(problem_data.model, "durations = [60, 60, 60]")
+      assert String.contains?(problem_data.model, "Simple Temporal Network Problem")
+      assert String.contains?(problem_data.model, "num_time_points = 6")
+      assert String.contains?(problem_data.model, "distance_matrix")
       assert String.contains?(problem_data.model, "solve minimize makespan")
 
       # Verify metadata
@@ -79,8 +79,8 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       end
 
       # Verify STN constraint structure
-      assert String.contains?(problem_data.model, "constraints = [|")
-      assert String.contains?(problem_data.model, "num_constraints = 2")  # 3 activities = 2 precedence constraints
+      assert String.contains?(problem_data.model, "distance_matrix")
+      assert String.contains?(problem_data.model, "time_points[j] - time_points[i] <= distance_matrix[i,j]")
     end
 
     test "optimizes makespan for scheduling problem" do
@@ -102,13 +102,13 @@ defmodule AriaMiniZinc.STNIntegrationTest do
 
       # Verify makespan optimization objective
       assert String.contains?(problem_data.model, "solve minimize makespan")
-      assert String.contains?(problem_data.model, "makespan = max(end_times)")
+      assert String.contains?(problem_data.model, "makespan = max(time_points)")
 
-      # Check that all jobs have proper durations
-      assert String.contains?(problem_data.model, "durations = [25, 25, 25, 25]")
+      # Check that all jobs have proper time points
+      assert String.contains?(problem_data.model, "num_time_points = 8")
 
       # Verify temporal constraints for sequential execution
-      assert String.contains?(problem_data.model, "num_constraints = 3")  # 4 jobs = 3 precedence constraints
+      assert String.contains?(problem_data.model, "distance_matrix")
     end
 
     test "handles complex STN with multiple constraints" do
@@ -139,18 +139,12 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
       # Verify complex STN structure
-      assert String.contains?(problem_data.model, "num_activities = 4")
-      assert String.contains?(problem_data.model, "num_constraints = 3")
+      assert String.contains?(problem_data.model, "num_time_points = 8")
+      assert String.contains?(problem_data.model, "distance_matrix")
 
       # Check constraint format for complex scheduling
-      model_lines = String.split(problem_data.model, "\n")
-      constraint_lines = Enum.filter(model_lines, fn line ->
-        String.contains?(line, "1, 2, 0, 100") or
-        String.contains?(line, "2, 3, 0, 100") or
-        String.contains?(line, "3, 4, 0, 100")
-      end)
-
-      assert length(constraint_lines) > 0
+      assert String.contains?(problem_data.model, "time_points[j] - time_points[i] <= distance_matrix[i,j]")
+      assert String.contains?(problem_data.model, "makespan = max(time_points)")
     end
   end
 
@@ -196,9 +190,9 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       model = problem_data.model
 
       # Basic MiniZinc syntax validation
-      assert String.contains?(model, "int: num_activities")
-      assert String.contains?(model, "set of int: ACTIVITIES")
-      assert String.contains?(model, "array[ACTIVITIES] of int: durations")
+      assert String.contains?(model, "int: num_time_points")
+      assert String.contains?(model, "set of int: TIME_POINTS")
+      assert String.contains?(model, "array[TIME_POINTS, TIME_POINTS] of int: distance_matrix")
       assert String.contains?(model, "constraint forall")
       assert String.contains?(model, "solve minimize")
       assert String.contains?(model, "output [")
@@ -208,7 +202,7 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       refute String.contains?(model, "undefined")
 
       # Check proper array syntax
-      assert String.contains?(model, "[|") or String.contains?(model, "durations = [")
+      assert String.contains?(model, "distance_matrix = [|") or String.contains?(model, "time_point_names = [")
     end
 
     test "goal_solving template maintains existing functionality" do
@@ -249,7 +243,7 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       case result do
         {:ok, problem_data} ->
           # If it succeeds, should produce valid STN structure
-          assert String.contains?(problem_data.model, "STN Temporal Scheduling Problem")
+          assert String.contains?(problem_data.model, "Simple Temporal Network Problem")
         {:error, reason} ->
           # If it fails, should provide meaningful error
           assert is_binary(reason)
@@ -269,18 +263,16 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       model = problem_data.model
 
       # Required declarations
-      assert String.contains?(model, "int: num_activities")
-      assert String.contains?(model, "int: num_constraints")
-      assert String.contains?(model, "set of int: ACTIVITIES")
+      assert String.contains?(model, "int: num_time_points")
+      assert String.contains?(model, "set of int: TIME_POINTS")
 
       # Required arrays
-      assert String.contains?(model, "array[ACTIVITIES] of int: durations")
-      assert String.contains?(model, "array[ACTIVITIES] of var 0..1000: start_times")
-      assert String.contains?(model, "array[ACTIVITIES] of var 0..1000: end_times")
+      assert String.contains?(model, "array[TIME_POINTS, TIME_POINTS] of int: distance_matrix")
+      assert String.contains?(model, "array[TIME_POINTS] of var 0..horizon: time_points")
 
       # Required constraints
-      assert String.contains?(model, "constraint forall(i in ACTIVITIES)")
-      assert String.contains?(model, "end_times[i] = start_times[i] + durations[i]")
+      assert String.contains?(model, "constraint forall(i, j in TIME_POINTS)")
+      assert String.contains?(model, "time_points[j] - time_points[i] <= distance_matrix[i,j]")
 
       # Required objective and output
       assert String.contains?(model, "solve minimize makespan")
@@ -296,12 +288,12 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
       # Should generate valid empty STN model
-      assert String.contains?(problem_data.model, "num_activities = 0")
-      assert String.contains?(problem_data.model, "num_constraints = 0")
+      assert String.contains?(problem_data.model, "num_time_points = 0")
+      assert String.contains?(problem_data.model, "Empty STN problem")
 
       # Should still have proper STN structure
-      assert String.contains?(problem_data.model, "STN Temporal Scheduling Problem")
-      assert String.contains?(problem_data.model, "solve minimize makespan")
+      assert String.contains?(problem_data.model, "Simple Temporal Network Problem")
+      assert String.contains?(problem_data.model, "solve satisfy")
 
       # Metadata should reflect empty problem
       assert problem_data.metadata.goal_count == 0
