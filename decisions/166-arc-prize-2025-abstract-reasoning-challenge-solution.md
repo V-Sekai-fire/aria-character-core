@@ -1,4 +1,4 @@
-# ADR-166: ARC Prize 2025 Abstract Reasoning Challenge Solution
+# ADR-166: ARC Prize 2025 Core Strategy
 
 **Status:** Proposed  
 **Date:** June 24, 2025  
@@ -6,62 +6,26 @@
 
 ## Context
 
-### The Challenge (5-Year-Old Level)
+### The Challenge
 
-Imagine teaching a computer to solve puzzles like a smart kid would. The ARC Prize gives $1,000,000 to whoever can build a computer that looks at a few examples of a puzzle and figures out the pattern to solve new ones - just like how you might see a few examples and say "Oh, I get it!"
+The ARC Prize 2025 offers $1,000,000 for creating an AI system capable of novel reasoning on abstract visual puzzles. The Abstraction and Reasoning Corpus (ARC) tests few-shot learning: given 2-3 examples of a grid transformation puzzle, the AI must understand the underlying rule and apply it to solve new puzzles it's never seen before.
 
-### The Problem (High School Level)
+**Current State-of-the-Art:** 34% accuracy using active inference with language models
 
-The ARC Prize 2025 challenges us to create AI that can learn new tasks from just a few examples, like humans do. Instead of needing millions of training examples, the AI should look at 2-3 examples of a grid transformation puzzle and understand the underlying rule well enough to solve similar puzzles it's never seen before.
-
-### The Technical Challenge (Undergraduate Level)
-
-The Abstraction and Reasoning Corpus (ARC) tests an AI system's ability to acquire new skills through few-shot learning on visual reasoning tasks. Each task consists of input-output grid pairs that demonstrate a transformation rule. The system must infer the rule from training examples and apply it to novel test inputs. This requires genuine abstraction and generalization rather than pattern memorization.
-
-### The Research Context (Graduate Level)
-
-ARC represents a fundamental challenge in artificial general intelligence, testing core cognitive abilities including abstraction, analogy-making, and compositional reasoning. Current deep learning approaches fail because they rely on statistical pattern matching rather than symbolic reasoning. The challenge requires systems that can form explicit representations of transformation rules and compose them flexibly.
-
-### The Implementation Reality (Expert Level)
-
-The ARC Prize 2025 offers $1,000,000 for creating an AI system capable of novel reasoning, representing one of the most significant challenges in artificial intelligence. The Abstraction and Reasoning Corpus (ARC) tests an AI's ability to acquire new skills and solve novel problems through few-shot learning, requiring genuine abstract reasoning rather than pattern memorization. Success requires hybrid symbolic-neural architectures that can perform program synthesis, constraint solving, and meta-learning within computational constraints suitable for competition submission.
-
-### Current State-of-the-Art Approaches
-
-#### Simple Explanation
-
-Think of it like having different ways to solve puzzles: some computers try every possible solution until they find the right one, others learn from lots of examples, and the smartest ones try to understand the "language" of the puzzle.
-
-#### Technical Approaches
-
-Based on competition guidance, five primary solution approaches have emerged (ordered by implementation priority):
-
-1. **Discrete Program Search** - Systematically try different transformation programs until finding one that works
-2. **DSL Program Synthesis** - Create a special "language" for describing grid transformations
-3. **Direct LLM Prompting** - Ask language models to solve puzzles directly (performs poorly, <5%)
-4. **Ensemble Solutions** - Combine multiple different approaches (current high score method)
-5. **Active Inference** - Train language models on the specific test examples with synthetic data augmentation (34% current best)
+**The Core Challenge:** ARC requires genuine abstract reasoning rather than pattern memorization - exactly the kind of hybrid symbolic-neural reasoning that Aria's architecture is designed for.
 
 ### Why Aria is Perfect for This Challenge
 
-#### Simple Version
+Aria's existing architecture provides an exceptional foundation for ARC:
 
-Aria is like a Swiss Army knife for smart computer programs - it already has all the tools we need to build a puzzle-solving AI.
+- **Hybrid Planning System** - Coordinates multiple solving approaches simultaneously
+- **Temporal Reasoning** - Handles sequences of grid transformations naturally
+- **Constraint Solving** - MiniZinc integration for complex spatial relationships
+- **Strategy Factory** - Pluggable reasoning approaches with ensemble coordination
+- **Pipeline Processing** - Efficient data processing and validation
+- **State Management** - Grid representation and transformation tracking
 
-#### Technical Version
-
-Aria's existing architecture provides an exceptional foundation for ARC challenges:
-
-- **Hybrid Planning System** - Can coordinate multiple different solving approaches at once
-- **Temporal Reasoning** - Perfect for understanding sequences of transformations
-- **Pipeline Processing** - Can handle streaming data and validation efficiently
-- **Constraint Solving** - Already integrates with powerful mathematical solvers
-- **State Management** - Has the right structures for representing grid states
-- **Strategy Factory** - Can easily plug in new reasoning approaches
-
-#### Expert Insight
-
-Aria's hybrid symbolic-neural architecture directly addresses ARC's core requirements: the planning system provides symbolic reasoning capabilities, temporal reasoning handles transformation sequences, and the strategy factory enables ensemble approaches. The existing MiniZinc integration offers constraint solving for complex spatial relationships, while the membrane pipeline architecture supports the data processing requirements for active inference and synthetic data generation.
+**Key Insight:** Aria's hybrid symbolic-neural architecture directly addresses ARC's core requirements while providing interpretable execution traces.
 
 ## Decision
 
@@ -84,6 +48,48 @@ Following Rich Sutton's "Bitter Lesson," we prioritize:
 2. **Learning over engineering** - Discovered patterns over pre-defined transformations  
 3. **Scale over optimization** - More data and search over algorithmic efficiency
 4. **General methods** - Learning and search that can discover domain structure
+
+### Computational Discovery + Interpretable Execution
+
+**The Key Architectural Insight:** We achieve the best of both worlds by using massive computation to discover what works, then channeling that knowledge through interpretable temporal planning execution.
+
+**How It Works:**
+- **Stages 1-3:** Computational discovery finds transformation patterns, learns domain actions, and discovers planning methods through massive search and GRPO learning
+- **Stage 4:** GRPO-fine-tuned Qwen3 generates temporal planning sequences using computationally discovered vocabulary
+- **Execution:** Temporal planner executes sequences with full interpretability, automatic MiniZinc optimization, and validation
+
+**Competitive Advantages:**
+- **Neural Power:** GRPO fine-tuning leverages critic-less reinforcement learning for ARC-specific reasoning
+- **Computational Scale:** Massive search discovers patterns humans would hand-code
+- **Interpretable Output:** All solutions become human-readable temporal planning sequences
+- **Automatic Optimization:** Existing temporal planner provides MiniZinc constraint optimization for free
+- **Error Detection:** Planning engine validates neural reasoning and catches errors through execution failure
+
+**Example Flow:**
+```
+ARC Task → GRPO-Fine-Tuned Qwen3 → Temporal Planning Sequence → MiniZinc Optimization → Interpretable Execution Trace
+```
+
+This creates solutions that are both computationally discovered (following the Bitter Lesson) and fully interpretable (through temporal planning), giving judges clear reasoning chains while maintaining computational advantages.
+
+### Information-Theoretic Compression Through GRPO
+
+**Natural Shannon Information Reduction:** By scoring shorter successful planning sequences higher in GRPO group comparisons, we achieve automatic information-theoretic compression without explicit entropy calculations.
+
+**How It Works:**
+- GRPO compares groups of planning sequences for the same ARC task
+- Shorter sequences that achieve correct results score higher than longer sequences
+- GRPO learning naturally biases toward information-dense, minimal action sequences
+- MiniZinc optimization provides additional automatic compression
+- Interpretability emerges through forced compression to essential reasoning steps
+
+**Information-Theoretic Benefits:**
+- **Natural Quality Metric:** Shorter successful sequences indicate better pattern understanding
+- **Automatic Compression:** GRPO drives toward minimal, information-dense solutions
+- **Enhanced Interpretability:** Compressed sequences contain only essential reasoning steps
+- **Computational Efficiency:** Shorter sequences require less execution time and resources
+
+This approach achieves Shannon information theory principles through simple GRPO scoring preferences, creating natural selection for high-information-content solutions without complex validation systems.
 
 ## Implementation Plan: "Bicycle to Car" Progression (Bitter Lesson Aligned)
 
@@ -198,40 +204,42 @@ Discover domain structure through search and learning:
 - [ ] Shows learned domain outperforming hand-crafted domain rules
 - [ ] Demonstrates computational discovery of planning structure
 
-### Stage 4: "Motorcycle" - LLM Ensemble Scaling (Size: M, 2-3 weeks)
+### Stage 4: "Motorcycle" - GRPO-Fine-Tuned Neural Reasoning (Size: M, 2-3 weeks)
 
 #### What We're Adding (Simple)
 
-Scale up neural computation with massive LLM ensembles - like adding multiple rocket engines working together.
+Scale up neural computation with GRPO-fine-tuned Qwen3 as primary reasoner, generating interpretable planning sequences - like adding a smart rocket engine that explains its decisions.
 
-#### Massive LLM Ensemble (Technical)
+#### GRPO-Fine-Tuned Qwen3 Primary Strategy (Technical)
 
-Scale neural approaches through computation:
+Leverage DeepSeek's critic-less reinforcement learning architecture:
 
-- [ ] Create `aria_llm_client` app with MULTIPLE model coordination
-- [ ] Implement ensemble of 5-10 different LLM models simultaneously
-- [ ] Generate diverse solution approaches through model variety
-- [ ] Use computational voting and consensus across models
-- [ ] Scale prompt diversity through automated generation
-- [ ] Implement cross-model validation and agreement scoring
+- [ ] Create `aria_llm_client` app with Qwen3 as primary neural reasoner
+- [ ] Fine-tune Qwen3 on ARC tasks using GRPO methodology and computational discovery data
+- [ ] Constrain Qwen3 output to valid temporal planning sequences for interpretability
+- [ ] Use critic-less learning to avoid reward engineering problems
+- [ ] Generate ARC-specific training data from computational discovery phases (Stages 1-3)
+- [ ] Implement ensemble with other models (GPT-4, Claude) as secondary strategies
 
-#### Computational Neural Integration (Technical)
+#### Interpretable Neural-Symbolic Bridge (Technical)
 
-Integrate neural scaling with existing computational approaches:
+Force neural reasoning through interpretable execution:
 
-- [ ] Coordinate LLM ensemble with program synthesis and pattern learning
-- [ ] Use computational methods to select optimal LLM strategies per task
-- [ ] Generate thousands of prompt variations through computation
-- [ ] Scale neural reasoning through brute force model diversity
-- [ ] Learn optimal ensemble weights through computational feedback
+- [ ] Train Qwen3 to output valid temporal planning sequences using learned domain vocabulary
+- [ ] Constrain neural output to planning actions discovered through computational search
+- [ ] Leverage existing temporal planner's MiniZinc optimization for automatic plan compression
+- [ ] Generate interpretable execution traces from neural reasoning decisions
+- [ ] Validate neural reasoning through planning engine execution
+- [ ] Use planning validation to catch and correct neural reasoning errors
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 12-20% ± 4% accuracy through scaled neural computation
-- [ ] LLM ensemble uses 5+ different models with diverse reasoning approaches
-- [ ] Shows computational neural scaling outperforming single model approaches
-- [ ] Demonstrates learned coordination between neural and symbolic computation
-- [ ] Ensemble coordination learned through computation, not hand-tuned
+- [ ] May achieve 12-20% ± 4% accuracy through GRPO-fine-tuned neural reasoning
+- [ ] Qwen3 generates valid temporal planning sequences with >95% success rate
+- [ ] Neural reasoning produces interpretable execution traces for all solutions
+- [ ] Shows GRPO fine-tuning outperforming general-purpose LLM approaches
+- [ ] Demonstrates seamless neural-symbolic integration through constrained output
+- [ ] Planning engine validation catches neural reasoning errors effectively
 
 ### Stage 5: "Small Car" - Hybrid Computational Coordination (Size: L, 3-4 weeks)
 
@@ -1146,8 +1154,17 @@ System reaches basic functionality but performs poorly due to fundamental gaps i
 
 ## Related ADRs
 
+### Detailed Implementation ADRs
+
+- **ADR-168**: ARC Prize Implementation Plan (detailed stage-by-stage implementation)
+- **ADR-169**: ARC Prize Technical Architecture (umbrella app structure and integration)
+- **ADR-170**: ARC Prize Risk Analysis (comprehensive risk assessment and mitigation)
+
+### Supporting Aria ADRs
+
 - **ADR-036**: Evolving AriaEngine Planner Blueprint
 - **ADR-112**: Hybrid Coordinator V3 Implementation
+- **ADR-133**: Planner Standardization Open Problems
 - **ADR-148**: Membrane Planning System Implementation
 - **ADR-151**: Strict Encapsulation and Modular Testing Architecture
 
