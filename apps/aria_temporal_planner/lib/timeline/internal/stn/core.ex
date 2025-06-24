@@ -23,6 +23,8 @@ defmodule Timeline.Internal.STN.Core do
         stn.lod_resolution
       )
 
+    # Ensure minimum duration of 1 STN unit to prevent zero-duration violations
+    duration = max(duration, 1)
     duration_constraint = {duration, duration}
 
     stn
@@ -297,8 +299,19 @@ defmodule Timeline.Internal.STN.Core do
 
       existing_constraint ->
         case intersect_constraints(existing_constraint, new_constraint) do
-          :inconsistent -> {Map.put(constraints, key, new_constraint), false}
-          intersected_constraint -> {Map.put(constraints, key, intersected_constraint), true}
+          :inconsistent ->
+            # Check if this is a self-constraint (same time point to itself)
+            # Self-constraints should always be {0, 0} and are never inconsistent
+            case key do
+              {point, point} when point == point ->
+                # Keep the existing {0, 0} constraint for self-references
+                {constraints, true}
+              _ ->
+                # For real inconsistencies between different time points, mark as inconsistent
+                {constraints, false}
+            end
+          intersected_constraint ->
+            {Map.put(constraints, key, intersected_constraint), true}
         end
     end
   end

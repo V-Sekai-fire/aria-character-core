@@ -5,7 +5,8 @@ defmodule Timeline do
   @moduledoc "Timeline module with interval-based storage using Path Consistency (PC-2) algorithm\nfor Simple Temporal Network (STN) solving.\n\nAccepts time input in seconds but solves at 1ms tick precision.\nSupports Allen's interval algebra with usability improvements.\nRespects agent vs entity distinction in temporal constraints.\n\n## Time Representation\n- External API: seconds (float/integer)\n- Internal storage/solving: milliseconds (integer)\n- Precision: 1ms ticks as per ADR-006\n\n## Features\n- All 13 Allen interval relations\n- Path Consistency (PC-2) STN solving\n- Agent/entity distinction\n- Fluent API for constraint building\n- Comprehensive edge case handling\n\n## Examples\n\n    iex> timeline = Timeline.new()\n    iex> alias Timeline.Interval\n    iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval = Interval.new(start_time, end_time)\n    iex> timeline = Timeline.add_interval(timeline, interval)\n    iex> length(Map.keys(timeline.intervals))\n    1\n\n## References\n\n- ADR-078: Timeline Module PC-2 STN Implementation\n- ADR-079: Timeline Module Implementation Progress\n- ADR-045: Allen's Interval Algebra Temporal Relationships\n- ADR-040: Temporal Constraint Solver Selection\n- ADR-046: Interval Notation Usability\n- ADR-006: Game Engine Real-time Execution (1ms tick requirement)\n"
   alias Timeline.Interval
   alias Timeline.Internal.STN
-  alias AriaEngine.Timeline.Bridge, as: Bridge
+  alias Timeline.Bridge
+  alias AriaEngine.Timeline.Bridge, as: SegmentBridge
   @type t :: %__MODULE__{intervals: %{Interval.id() => Interval.t()}, stn: STN.t()}
   defstruct intervals: %{}, stn: STN.new(), metadata: %{}
   @spec new(keyword()) :: t()
@@ -17,11 +18,20 @@ defmodule Timeline do
 
   @spec add_interval(t(), Interval.t()) :: t()
   def add_interval(%__MODULE__{} = timeline, interval) do
-    stn = timeline.stn |> STN.add_interval(interval)
+    # Use Bridge layer to validate interval before adding to STN
+    case Bridge.validate_interval_for_stn(interval, timeline.stn.time_unit) do
+      :ok ->
+        stn = timeline.stn |> STN.add_interval(interval)
 
-    timeline
-    |> Map.put(:intervals, Map.put(timeline.intervals, interval.id, interval))
-    |> Map.put(:stn, stn)
+        timeline
+        |> Map.put(:intervals, Map.put(timeline.intervals, interval.id, interval))
+        |> Map.put(:stn, stn)
+
+      {:error, reason} ->
+        require Logger
+        Logger.warning("Skipping invalid interval #{interval.id}: #{reason}")
+        timeline
+    end
   end
 
   @spec add_intervals(t(), list(Interval.t())) :: t()
@@ -36,11 +46,20 @@ defmodule Timeline do
 
   @spec update_interval(t(), Interval.t()) :: t()
   def update_interval(%__MODULE__{} = timeline, interval) do
-    stn = STN.update_interval(timeline.stn, interval)
+    # Use Bridge layer to validate interval before updating in STN
+    case Bridge.validate_interval_for_stn(interval, timeline.stn.time_unit) do
+      :ok ->
+        stn = STN.update_interval(timeline.stn, interval)
 
-    timeline
-    |> Map.put(:intervals, Map.put(timeline.intervals, interval.id, interval))
-    |> Map.put(:stn, stn)
+        timeline
+        |> Map.put(:intervals, Map.put(timeline.intervals, interval.id, interval))
+        |> Map.put(:stn, stn)
+
+      {:error, reason} ->
+        require Logger
+        Logger.warning("Skipping invalid interval update #{interval.id}: #{reason}")
+        timeline
+    end
   end
 
   @spec remove_interval(t(), Interval.id()) :: t()

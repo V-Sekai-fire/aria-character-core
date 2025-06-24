@@ -43,10 +43,10 @@ Implement a complete temporal relations system with language-neutral naming, com
 - Separation: `PRECEDES` (<), `FOLLOWS` (>)
 
 **File:** `apps/aria_temporal_planner/lib/timeline/bridge.ex`
-- [ ] Implement temporal relation classification system
-- [ ] Add STN constraint generation for each relation type
-- [ ] Fix zero-duration contract violations with proper filtering
-- [ ] Add defensive validation at all STN entry points
+- [x] Implement temporal relation classification system
+- [x] Add STN constraint generation for each relation type
+- [x] Fix zero-duration contract violations with proper filtering
+- [x] Add defensive validation at all STN entry points
 
 ### Phase 2: Extended Temporal Relations (Week 2)
 
@@ -187,6 +187,7 @@ end
 
 ## Related ADRs
 
+- **ADR-153**: STN Fixed-Point Constraint Prohibition (extracted from this ADR)
 - **ADR-151**: Strict Encapsulation Modular Testing Architecture (interleaved implementation)
 - **ADR-045**: Allen's Interval Algebra Temporal Relationships
 - **ADR-046**: Interval Notation Usability
@@ -234,10 +235,12 @@ end
 
 ### Test Failure Analysis (June 23, 2025)
 
-**aria_temporal_planner:** 28 failures out of 181 tests
-- **Root Cause:** STN consistency failures (`consistent: false` throughout)
-- **Pattern:** All failures show `stn.consistent: false` in Timeline structures
-- **Impact:** Core temporal reasoning system is broken
+**aria_temporal_planner:** 5 failures out of 181 tests (MAJOR IMPROVEMENT: 28→5)
+- **Root Cause:** Specialized STN operations and method composition issues
+- **Pattern:** Remaining failures in parallel solving and method execution
+- **Impact:** Core temporal reasoning system is now functional, edge cases remain
+
+**STN Fixed-Point Contract Issue:** ~~Extracted to ADR-153~~ **→ Moved to ADR-153**
 
 **Detailed Analysis of STN Failures:**
 The 28 STN consistency failures indicate a fundamental contract violation in the temporal constraint system. The failures occur because:
