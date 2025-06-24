@@ -1,8 +1,29 @@
 # ADR-152: Complete Temporal Relations System Implementation
 
-**Status:** Active  
+**Status:** Superseded → Decomposed (June 23, 2025)  
 **Date:** June 23, 2025  
 **Priority:** CRITICAL
+
+## Tombstone: ADR Decomposition
+
+This omnibus ADR has been decomposed into focused, actionable ADRs for better tracking and implementation:
+
+**Critical Timeline Testing Issues:**
+- **ADR-154**: Timeline Module Namespace Aliasing Fixes
+- **ADR-155**: Hybrid Planner Test Suite Restoration  
+- **ADR-156**: Cross-App Scheduler Dependency Resolution
+- **ADR-157**: STN Consistency Test Recovery
+
+**System Integration:**
+- **ADR-158**: Comprehensive Timeline Test Suite Validation
+
+**Future Temporal Relations Features:**
+- **ADR-159**: Language-Neutral Temporal Relations Implementation
+- **ADR-160**: Extended Temporal Relations System
+
+**Rationale:** The original ADR mixed critical testing fixes with future feature development, making it difficult to track progress and prioritize work. The decomposed ADRs provide clear, focused objectives for timeline testing recovery.
+
+**Implementation Priority:** Start with ADR-154 (namespace fixes) for immediate testing improvements, followed by ADR-157 (STN consistency) for core functionality validation.
 
 ## Context
 
