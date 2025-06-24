@@ -9,42 +9,48 @@
 
 This ADR defines the complete technical architecture for the ARC Prize 2025 solution, structured as minimal viable architecture for the two-week sprint followed by full architecture for conditional implementation. The immediate focus is on rapid validation architecture that implements the Bitter Lesson principles defined in ADR-166.
 
-## Phase 1: Two-Week Sprint Architecture (Immediate Implementation)
+## Phase 1: Evidence-Based Sprint Architecture (Maximum Scope)
 
-**Evidence-Based Scope:** Based on git history showing 30 commits of planning in one day with no actual ARC apps created yet, the sprint architecture focuses on minimal viable components for rapid validation.
+**Critical Evidence:** Based on git history showing 40+ commits of architectural planning with zero implementation on June 24, 2025, the sprint architecture enforces strict scope limits to prevent analysis paralysis.
 
-### Sprint Architecture Components
+### Sprint Architecture Constraints
 
-**Minimal App Structure (2 apps maximum):**
+**Mandatory Scope Limits:**
+- **2 apps maximum:** `aria_grid` + `aria_arc_coordinator` only
+- **No architectural expansion:** Without proven implementation necessity
+- **Implementation gates:** Working code required before any design changes
+- **Complexity budget:** Each additional feature requires 2x timeline extension
+
+**Evidence-Based App Structure:**
 
 ```
 apps/
-1. aria_grid/                       # Foundation Layer
+1. aria_grid/                       # Foundation Layer (MINIMAL)
 │   ├── lib/aria_grid/
-│   │   ├── grid.ex                 # Core grid representation
-│   │   ├── transformations.ex      # Basic transformations only
-│   │   └── arc_loader.ex           # ARC JSON task loading
+│   │   ├── grid.ex                 # Basic grid representation only
+│   │   ├── transformations.ex      # 3 transformations: rotate, mirror, translate
+│   │   └── arc_loader.ex           # ARC JSON task loading only
 │   └── mix.exs
-2. aria_arc_coordinator/            # Sprint Orchestration
+2. aria_arc_coordinator/            # Coordination Layer (MINIMAL)
     ├── lib/aria_arc_coordinator/
-    │   ├── coordinator.ex          # Main sprint orchestration
-    │   ├── search_engine.ex        # Computational search (primary strategy)
+    │   ├── coordinator.ex          # Basic task orchestration
+    │   ├── search_engine.ex        # Simple brute force search (10-50 sequences)
     │   ├── task_runner.ex          # ARC task processing
-    │   └── validation.ex           # Accuracy measurement
+    │   └── validation.ex           # Basic accuracy measurement
     └── mix.exs
 ```
 
-**Integration with Existing Aria (Minimal Changes):**
+**Integration with Existing Aria (NO CHANGES):**
 
-- **`aria_hybrid_planner`:** Add basic ARC task coordination only
-- **`aria_temporal_planner`:** Accept grid transformation sequences only
-- **Other apps:** No changes during sprint
+- **All existing apps:** No modifications during sprint
+- **No integration:** Until basic functionality proven
+- **No dependencies:** Sprint apps must be self-contained
 
-### Sprint Success Criteria
+### Evidence-Based Success Criteria
 
-- **5%+ accuracy:** Proceed to Phase 2 full architecture
-- **<3% accuracy:** Stop, valuable learning achieved
-- **Working system:** Can load ARC tasks, apply transformations, measure accuracy
+- **1%+ accuracy with working system:** Proceed to extended development
+- **<0.5% accuracy or no working system:** Stop, valuable learning achieved
+- **Working system priority:** Functionality over performance optimization
 
 ---
 

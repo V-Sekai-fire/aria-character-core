@@ -1,71 +1,67 @@
-# ADR-168: ARC Prize 2025 Implementation Plan
+# ADR-168: ARC Prize 2025 Evidence-Based Implementation Plan
 
 **Status:** Proposed  
 **Date:** June 24, 2025  
 **Priority:** HIGH  
-**Parent ADR:** ADR-166 (ARC Prize 2025 - Two-Week Proof of Concept Sprint)
+**Parent ADR:** ADR-166 (ARC Prize 2025 - Evidence-Based Implementation Strategy)
 
 ## Context
 
-This ADR details the complete ARC Prize implementation plan, structured as a two-week proof of concept sprint followed by conditional full implementation. The immediate focus is on rapid validation of the hybrid reasoning approach through computational search coordinated by Aria's planning system.
+This ADR provides a realistic implementation plan based on git commit cadence evidence showing 40+ planning commits with zero implementation on June 24, 2025. The plan prioritizes working code over architectural sophistication to prevent analysis paralysis.
 
-## Phase 1: Two-Week Proof of Concept Sprint (Immediate Commitment)
+## Implementation Reality Check
 
-**Evidence-Based Timeline:** Based on git history analysis showing 30 commits of ARC planning in one day (June 24, 2025), actual development velocity for new apps appears to require significant iteration and refinement cycles.
+**Critical Evidence:**
+- **40+ commits** of architectural planning in single day
+- **Zero apps created** despite extensive design work
+- **Planning-implementation gap** requires 3-5x timeline adjustment
+- **Complexity underestimation** evident in original ambitious scope
 
-### Realistic Two-Week Sprint Plan
+## Phase 1: Evidence-Based Two-Week Sprint (Maximum Scope)
 
-### Week 1: "Skateboard" - Computational Search Foundation
+**Scope Constraint:** 2 apps maximum (`aria_grid` + `aria_arc_coordinator`)
+**Timeline Multiplier:** 3-5x extension applied to all estimates
+**Implementation Gates:** Mandatory working code validation at each checkpoint
 
-**Days 1-2: Basic Grid Operations and ARC Task Loading**
+### Week 1: Minimal Viable Grid System
+
+**Days 1-3: Basic Grid Foundation (Implementation Gate 1)**
 - [ ] Create minimal `aria_grid` app with basic grid representation
-- [ ] Implement ARC JSON task loading and parsing
-- [ ] Basic grid transformation operations (rotate, mirror, translate)
-- [ ] Validate against 10 public ARC tasks
-- **Success Criteria:** Can load and display ARC tasks, apply basic transformations
+- [ ] Implement ARC JSON task loading and parsing only
+- [ ] Basic grid display and validation
+- [ ] **GATE:** Must load 10 ARC tasks without errors or STOP
 
-**Days 3-4: Program Synthesis Search Engine**
-- [ ] Create `aria_program_synthesis` app as primary strategy
-- [ ] Implement discrete program search with large search spaces
-- [ ] Generate transformation programs through brute force enumeration
-- [ ] Test program validation against training examples
-- **Success Criteria:** Generate and test 100+ programs per task
+**Days 4-7: Simple Transformations (Implementation Gate 2)**
+- [ ] Implement 3 basic transformations: rotate, mirror, translate
+- [ ] Test transformations on loaded ARC tasks
+- [ ] Measure baseline accuracy (expect 0-0.5%)
+- [ ] **GATE:** Must achieve >0.1% accuracy or SIMPLIFY FURTHER
 
-**Days 5-7: Computational Search at Scale**
-- [ ] Scale search to 1000+ transformation programs per task
-- [ ] Implement parallel program evaluation
-- [ ] Measure baseline accuracy on public ARC dataset
-- [ ] Create basic `aria_arc_coordinator` for task management
-- **Success Criteria:** Achieve >1% accuracy through pure computational search
+### Week 2: Minimal Computational Search
 
-### Week 2: "Bicycle" - Hybrid Reasoning Integration
+**Days 8-10: Basic Search Engine (Implementation Gate 3)**
+- [ ] Create minimal `aria_arc_coordinator` app
+- [ ] Implement brute force search of transformation combinations
+- [ ] Test 10-50 transformation sequences per task (not 1000+)
+- [ ] **GATE:** Must show measurable improvement over single transformations
 
-**Days 8-9: Aria Temporal Planner Integration**
-- [ ] Integrate existing `aria_hybrid_planner` with ARC domain
-- [ ] Create learned planning actions from successful search results
-- [ ] Implement basic sequence coordination through temporal planning
-- [ ] Test planning-guided transformation sequences
-- **Success Criteria:** Planning system can coordinate multi-step transformations
+**Days 11-14: System Integration and Validation (Final Gate)**
+- [ ] Integrate grid operations with search coordination
+- [ ] Measure accuracy on 20-50 ARC tasks
+- [ ] Document what works and what doesn't
+- [ ] **GATE:** Must have working end-to-end system
 
-**Days 10-11: Hybrid Reasoning System**
-- [ ] Combine computational search with planning coordination
-- [ ] Use planning to guide search space exploration
-- [ ] Implement ensemble coordination between search and planning
-- [ ] Optimize hybrid approach performance
-- **Success Criteria:** Hybrid approach outperforms pure search
+### Revised Go/No-Go Decision Criteria (Evidence-Based)
 
-**Days 12-14: Performance Analysis and Decision Report**
-- [ ] Comprehensive accuracy measurement on validation set
-- [ ] Performance analysis and bottleneck identification
-- [ ] Technical report with results and recommendations
-- [ ] Go/No-Go decision based on success criteria
-- **Success Criteria:** Clear recommendation on full competition pursuit
+**GO (≥1% accuracy with working system):** Proceed to extended development
+**NO-GO (<0.5% accuracy or no working system):** Stop, valuable learning achieved
+**UNCERTAIN (0.5-1% accuracy):** One week extension for debugging
 
-### Go/No-Go Decision Criteria
+### Success Probability (Adjusted for Implementation Reality)
 
-**GO (≥5% accuracy):** Proceed to Phase 2 full implementation
-**NO-GO (<3% accuracy):** Valuable learning experience, stop ARC Prize pursuit
-**UNCERTAIN (3-5% accuracy):** Extended evaluation period, reassess in one week
+**Working System (0-1% accuracy):** 60% probability
+**Basic Functionality (1-2% accuracy):** 30% probability  
+**Exceeds Expectations (2%+ accuracy):** 10% probability
 
 ---
 

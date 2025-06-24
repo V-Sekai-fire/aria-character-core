@@ -1,51 +1,67 @@
-# ADR-166: ARC Prize 2025 - Two-Week Proof of Concept Sprint
+# ADR-166: ARC Prize 2025 - Evidence-Based Implementation Strategy
 
 **Status:** Proposed  
 **Date:** June 24, 2025  
 **Priority:** HIGH
 
-## The Two-Week Challenge Pitch
+## Git Commit Cadence Evidence-Based Reality Check
+
+**Critical Evidence from June 24, 2025:**
+- **40+ commits** of ARC Prize architectural planning in single day
+- **Zero implementation commits** - no apps created, no working code
+- **Heavy iteration cycles** - multiple restructures, scope adjustments, risk assessments
+- **Planning-to-implementation gap** - extensive architectural design without validation
+
+**Reality Multiplier:** Based on observed planning velocity vs implementation complexity, apply **3-5x timeline extension** to all estimates.
+
+## Revised Two-Week Sprint Strategy
 
 **The ARC Prize 2025 offers $1,000,000 for solving abstract reasoning puzzles - one of AI's grand challenges where current best performance is stuck at 34% accuracy.**
 
-**Here's the deal: Give me two weeks to prove this is worth pursuing.**
+**Evidence-Based Approach:** Focus on implementation validation over architectural perfection.
 
-### What We'll Build
+### What We'll Actually Build (Implementation-First)
 
-**Week 1:** Computational search foundation - test 1000+ transformation programs per task, target 1-5% accuracy
-**Week 2:** Add Aria's hybrid reasoning coordination, target 5-10% accuracy through planning integration
+**Week 1:** Basic grid operations and ARC task loading - validate core assumptions with working code
+**Week 2:** Simple computational search - target 1-3% accuracy with minimal viable system
 
-### Why This Works
+### Implementation-First Checkpoints
 
-**For Game Industry Perspective:** Low-risk validation sprint, portfolio expansion, competitive intelligence, network building
-**For Technical Development:** Rapid AI engineering skills, architecture validation, clean research ethics, measurable outcomes
+**Day 3 Gate:** Must have basic `aria_grid` app loading ARC JSON tasks
+**Week 1 Gate:** Must achieve >0.5% accuracy before any architectural expansion  
+**Week 2 Gate:** Must have working system before considering additional complexity
 
-### The Unique Angle
+### Revised Success Criteria (Evidence-Based)
 
-Hybrid reasoning approach unlike pure neural networks - computational discovery coordinated through interpretable planning. Game development discipline meets AI research.
+**Go/No-Go Decision:** 1-3% accuracy with working system = proceed, <1% accuracy = valuable learning but stop
+**Primary Success:** Working system that can load ARC tasks and apply transformations
+**Secondary Success:** Measurable accuracy improvement over random baseline
 
-### Success Criteria
+### Honest Assessment (Adjusted for Implementation Reality)
 
-**Go/No-Go Decision:** 5%+ accuracy = proceed to full competition, <3% accuracy = valuable learning experience but stop there.
-
-### Honest Assessment
-
-**60% probability:** 2-5% accuracy, learn exactly where approach breaks down
-**30% probability:** 5-10% accuracy, prove hybrid approach has merit  
-**10% probability:** 10%+ accuracy, breakthrough potential
+**70% probability:** 0-1% accuracy, learn fundamental limitations of approach
+**25% probability:** 1-3% accuracy, prove basic viability with working system
+**5% probability:** 3%+ accuracy, exceed expectations despite complexity
 
 ## Decision
 
-**Proposed:** Two-week proof of concept sprint to validate ARC Prize approach before major commitment.
+**Proposed:** Implementation-first sprint with mandatory working code gates to prevent analysis paralysis.
 
-**The Question:** Would you rather spend two weeks finding out what we're actually capable of building, or always wonder if we could have achieved something remarkable?
+**The Question:** Would you rather build a simple working system or create sophisticated plans that never get implemented?
+
+## Implementation Reality Constraints
+
+**Maximum Scope:** 2 apps only (`aria_grid` + `aria_arc_coordinator`)
+**No Architectural Expansion:** Without proven implementation necessity
+**Complexity Budget:** Each additional feature requires 2x timeline extension
+**Implementation Gates:** No planning without working code validation
 
 ## Implementation Details
 
-- **ADR-168**: Two-week sprint plan and detailed implementation
-- **ADR-169**: Minimal viable technical architecture  
-- **ADR-170**: Risk analysis and business case details
+- **ADR-168**: Evidence-based implementation plan with realistic timelines
+- **ADR-169**: Minimal viable technical architecture (2 apps maximum)
+- **ADR-170**: Risk analysis emphasizing planning-implementation gap
 
 ---
 
-**Two weeks to prove we can build something remarkable.**
+**Two weeks to build something that actually works.**
