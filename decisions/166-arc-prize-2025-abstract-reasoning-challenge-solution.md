@@ -34,12 +34,12 @@ Think of it like having different ways to solve puzzles: some computers try ever
 
 #### Technical Approaches
 
-Based on competition guidance, five primary solution approaches have emerged:
+Based on competition guidance, five primary solution approaches have emerged (ordered by implementation priority):
 
 1. **Discrete Program Search** - Systematically try different transformation programs until finding one that works
-2. **Ensemble Solutions** - Combine multiple different approaches (current high score method)
+2. **DSL Program Synthesis** - Create a special "language" for describing grid transformations
 3. **Direct LLM Prompting** - Ask language models to solve puzzles directly (performs poorly, <5%)
-4. **Domain-Specific Language (DSL) Program Synthesis** - Create a special "language" for describing grid transformations
+4. **Ensemble Solutions** - Combine multiple different approaches (current high score method)
 5. **Active Inference** - Train language models on the specific test examples with synthetic data augmentation (34% current best)
 
 ### Why Aria is Perfect for This Challenge
@@ -79,7 +79,7 @@ Create an integrated system that uses Aria's hybrid planner to coordinate multip
 
 ## Implementation Plan
 
-### Phase 1: Foundation Architecture (Size: L)
+### 1. Foundation Architecture (Size: L)
 
 #### What We're Building (Simple)
 
@@ -99,13 +99,13 @@ First, we create the basic structure - like building the frame of a house before
 Build the core grid representation and operations:
 
 - [ ] Implement core grid data structure and representation
-- [ ] Add transformation primitives:
-  - [ ] Rotation operations (90°, 180°, 270°) - spin the grid around
-  - [ ] Mirroring (horizontal, vertical, diagonal) - flip like a mirror
-  - [ ] Pattern matching and extraction - find repeating shapes
-  - [ ] Color transformations and mappings - change colors systematically
-  - [ ] Shape detection and manipulation - identify and modify objects
-  - [ ] Spatial relationship analysis - understand how things relate in space
+- [ ] Add transformation primitives (implementation priority order):
+  1. [ ] Rotation operations (90°, 180°, 270°) - spin the grid around
+  2. [ ] Mirroring (horizontal, vertical, diagonal) - flip like a mirror
+  3. [ ] Color transformations and mappings - change colors systematically
+  4. [ ] Pattern matching and extraction - find repeating shapes
+  5. [ ] Shape detection and manipulation - identify and modify objects
+  6. [ ] Spatial relationship analysis - understand how things relate in space
 
 #### ARC Domain Development (`aria_arc_domain`) (Detailed)
 
@@ -139,7 +139,7 @@ Create the main orchestration system:
 
 This phase establishes the symbolic reasoning foundation essential for ARC tasks. The extended hybrid planner provides compositional primitives that can be combined to express complex transformations, while integration with Aria's strategy factory enables seamless coordination with neural approaches in later phases.
 
-### Phase 2: Multi-LLM Integration (Size: M)
+### 2. Multi-LLM Integration (Size: M)
 
 #### What We're Adding (Simple)
 
@@ -178,7 +178,7 @@ Build a system that learns from the specific test examples:
 
 This phase implements the neural reasoning component essential for handling novel patterns. The multi-LLM ensemble provides diverse reasoning perspectives, while active inference enables adaptation to specific task characteristics - crucial for generalizing beyond training data.
 
-### Phase 3: Pattern Library and Analytics (Size: M)
+### 3. Pattern Library and Analytics (Size: M)
 
 #### What We're Building (Simple)
 
@@ -228,7 +228,7 @@ Build intelligence around pattern usage and effectiveness:
 
 The pattern library serves as the knowledge base for the entire ARC system, providing pattern-guided search for program synthesis, confidence scoring for ensemble voting, and research artifacts for community contribution. The dual database approach enables rich development-time analytics while maintaining competition performance requirements.
 
-### Phase 4: Synthetic Data Generation (Size: L)
+### 4. Synthetic Data Generation (Size: L)
 
 #### What We're Creating (Simple)
 
@@ -258,7 +258,7 @@ Build tools to understand and replicate ARC puzzle patterns:
 
 Synthetic data generation is essential for overcoming ARC's few-shot learning constraint. The system must generate diverse, valid tasks that capture the compositional nature of ARC transformations without overfitting to public datasets. Quality validation ensures generated tasks maintain ARC's core cognitive requirements.
 
-### Phase 5: Ensemble Architecture (Size: M)
+### 5. Ensemble Architecture (Size: M)
 
 #### What We're Combining (Simple)
 
@@ -286,19 +286,19 @@ Combine multiple solving approaches effectively:
 
 #### Performance Engineering (Detailed)
 
-Make everything run fast and efficiently:
+Make everything run fast and efficiently (logical implementation sequence):
 
-- [ ] Optimize grid operations for performance
-- [ ] Implement parallel strategy execution
-- [ ] Create caching system for repeated patterns
-- [ ] Develop early termination criteria
-- [ ] Implement resource management and timeouts
+1. [ ] Optimize grid operations for performance
+2. [ ] Implement caching system for repeated patterns
+3. [ ] Implement parallel strategy execution
+4. [ ] Develop early termination criteria
+5. [ ] Implement resource management and timeouts
 
 #### Ensemble Theory (Expert)
 
 The ensemble architecture leverages the complementary strengths of symbolic and neural approaches. Discrete program search excels at systematic exploration, DSL synthesis provides compositional reasoning, and LLM strategies handle novel patterns. Confidence weighting and strategy selection enable dynamic adaptation to task characteristics.
 
-### Phase 5: Competition Preparation (Size: S)
+### 6. Competition Preparation (Size: S)
 
 #### Final Preparation (Simple)
 
@@ -332,11 +332,11 @@ Competition success requires robust offline execution with all dependencies self
 
 ### Umbrella App Structure
 
-Following Aria's established modular architecture, the ARC solver is decomposed into focused, single-responsibility apps:
+Following Aria's established modular architecture, the ARC solver is decomposed into focused, single-responsibility apps (topological order):
 
 ```
 apps/
-├── aria_grid/                      # Foundation Layer
+1. aria_grid/                       # Foundation Layer (no internal deps)
 │   ├── lib/aria_grid/
 │   │   ├── grid.ex                 # Core grid representation
 │   │   ├── transformations.ex      # Rotation, mirroring, scaling
@@ -344,7 +344,7 @@ apps/
 │   │   ├── color_mapping.ex        # Color transformations
 │   │   └── spatial_analysis.ex     # Discrete 2D grid relationship analysis
 │   └── mix.exs
-├── aria_arc_domain/                # ARC Planning Domain Layer
+2. aria_arc_domain/                 # ARC Planning Domain Layer (depends on aria_grid)
 │   ├── lib/aria_arc_domain/
 │   │   ├── actions.ex              # ARC-specific planning actions
 │   │   ├── methods.ex              # Grid transformation methods
@@ -352,15 +352,7 @@ apps/
 │   │   ├── state.ex                # ARC task state representation
 │   │   └── validation.ex           # Domain-specific validation
 │   └── mix.exs
-├── aria_llm_client/                # External Integration Layer
-│   ├── lib/aria_llm_client/
-│   │   ├── openrouter.ex           # OpenRouter client
-│   │   ├── prompting.ex            # Model-specific prompts
-│   │   ├── response_parser.ex      # Response validation
-│   │   ├── ensemble.ex             # Multi-model coordination
-│   │   └── api_management.ex       # API rate limiting and health monitoring
-│   └── mix.exs
-├── aria_pattern_library/           # Pattern Analytics and Data Generation Layer
+3. aria_pattern_library/            # Pattern Analytics Layer (depends on aria_grid)
 │   ├── lib/aria_pattern_library/
 │   │   ├── duckdb_store.ex         # DuckDB analytics and discovery
 │   │   ├── sqlite_store.ex         # SQLite competition runtime
@@ -371,7 +363,15 @@ apps/
 │   │   ├── synthetic_data.ex       # Synthetic task generation
 │   │   └── data_validation.ex      # Generated data quality assurance
 │   └── mix.exs
-├── aria_program_synthesis/         # Reasoning and Search Layer
+4. aria_llm_client/                 # External Integration Layer (external deps only)
+│   ├── lib/aria_llm_client/
+│   │   ├── openrouter.ex           # OpenRouter client
+│   │   ├── prompting.ex            # Model-specific prompts
+│   │   ├── response_parser.ex      # Response validation
+│   │   ├── ensemble.ex             # Multi-model coordination
+│   │   └── api_management.ex       # API rate limiting and health monitoring
+│   └── mix.exs
+5. aria_program_synthesis/          # Reasoning Layer (depends on grid, domain, patterns)
 │   ├── lib/aria_program_synthesis/
 │   │   ├── search.ex               # Discrete program search
 │   │   ├── constraints.ex          # Constraint-based synthesis
@@ -379,7 +379,7 @@ apps/
 │   │   ├── validation.ex           # Program scoring
 │   │   └── training.ex             # Active inference and model adaptation
 │   └── mix.exs
-└── aria_arc_coordinator/           # Orchestration and Operations Layer
+6. aria_arc_coordinator/            # Orchestration Layer (depends on all others + existing Aria apps)
     ├── lib/aria_arc_coordinator/
     │   ├── coordinator.ex          # Main orchestration
     │   ├── strategy_factory.ex     # Strategy management
@@ -395,39 +395,39 @@ apps/
 
 ### App Dependencies
 
-**Dependency Graph:**
+**Dependency Hierarchy (ordered by dependency depth):**
 ```
-aria_arc_coordinator
-├── aria_grid
-├── aria_arc_domain
-├── aria_llm_client
-├── aria_pattern_library
-├── aria_program_synthesis
-├── aria_hybrid_planner (existing)
-├── aria_temporal_planner (existing)
-├── aria_membrane_pipeline (existing)
-├── aria_minizinc (existing)
-└── aria_engine_core (existing)
+1. aria_grid
+   └── (foundation layer - no internal deps)
 
-aria_program_synthesis
-├── aria_grid
-├── aria_arc_domain
-└── aria_pattern_library
+2. aria_arc_domain
+   └── aria_grid
 
-aria_pattern_library
-└── aria_grid
+3. aria_pattern_library
+   └── aria_grid
 
-aria_arc_domain
-└── aria_grid
+4. aria_llm_client
+   └── (external dependencies only)
 
-aria_hybrid_planner (existing)
-└── aria_arc_domain (for ARC planning domain integration)
+5. aria_hybrid_planner (existing)
+   └── aria_arc_domain (for ARC planning domain integration)
 
-aria_llm_client
-└── (external dependencies only)
+6. aria_program_synthesis
+   ├── aria_grid
+   ├── aria_arc_domain
+   └── aria_pattern_library
 
-aria_grid
-└── (foundation layer - no internal deps)
+7. aria_arc_coordinator
+   ├── aria_grid
+   ├── aria_arc_domain
+   ├── aria_llm_client
+   ├── aria_pattern_library
+   ├── aria_program_synthesis
+   ├── aria_hybrid_planner (existing)
+   ├── aria_temporal_planner (existing)
+   ├── aria_membrane_pipeline (existing)
+   ├── aria_minizinc (existing)
+   └── aria_engine_core (existing)
 ```
 
 ### Integration with Existing Aria Apps
@@ -529,31 +529,37 @@ aria_grid
 
 ## Success Criteria
 
-### Phase 1 Success
+### 1. Foundation Architecture Success
 
 - [ ] Grid DSL successfully represents all ARC transformation types
 - [ ] Integration with existing Aria components functional
 - [ ] Basic task loading and validation operational
 
-### Phase 2 Success
+### 2. Multi-LLM Integration Success
 
 - [ ] Multi-LLM integration operational via OpenRouter
 - [ ] Active inference pipeline functional
 - [ ] Test-time adaptation showing improvement
 
-### Phase 3 Success
+### 3. Pattern Library and Analytics Success
+
+- [ ] Pattern storage and analytics system operational
+- [ ] Dual database architecture (DuckDB + SQLite) functional
+- [ ] Pattern matching and similarity algorithms working
+
+### 4. Synthetic Data Generation Success
 
 - [ ] Synthetic data generation producing valid ARC-like tasks
 - [ ] Quality metrics showing generated tasks match ARC principles
 - [ ] Pattern extraction identifying key transformation types
 
-### Phase 4 Success
+### 5. Ensemble Architecture Success
 
 - [ ] Ensemble system combining multiple strategies effectively
 - [ ] Performance on public ARC datasets exceeding 15%
 - [ ] Strategy selection adapting to task characteristics
 
-### Phase 5 Success
+### 6. Competition Preparation Success
 
 - [ ] Complete offline deployment package ready
 - [ ] Competition rule compliance verified
@@ -652,26 +658,26 @@ System reaches basic functionality but performs poorly due to fundamental gaps i
 
 ## Risk Mitigation
 
-### Technical Risks
+### Technical Risks (priority order)
 
-- **Grid representation limitations:** Fallback to multiple representation formats
-- **LLM integration complexity:** Modular design allows individual strategy testing
-- **Performance constraints:** Parallel execution and optimization strategies
-- **Overfitting to public data:** Diverse synthetic generation and validation
+1. **Grid representation limitations:** Fallback to multiple representation formats
+2. **Performance constraints:** Parallel execution and optimization strategies
+3. **LLM integration complexity:** Modular design allows individual strategy testing
+4. **Overfitting to public data:** Diverse synthetic generation and validation
 
-### Competition Risks
+### Competition Risks (priority order)
 
-- **Rule compliance:** Early validation and testing of submission requirements
-- **Offline execution:** Comprehensive dependency packaging and testing
-- **Time constraints:** Phased development with working prototypes at each stage
-- **Novel test cases:** Emphasis on generalization through diverse training
+1. **Rule compliance:** Early validation and testing of submission requirements
+2. **Offline execution:** Comprehensive dependency packaging and testing
+3. **Time constraints:** Phased development with working prototypes at each stage
+4. **Novel test cases:** Emphasis on generalization through diverse training
 
-### Development Risks
+### Development Risks (priority order)
 
-- **Scope creep:** Clear phase boundaries and success criteria
-- **Integration complexity:** Leverage existing Aria patterns and architecture
-- **Resource constraints:** Prioritize high-impact strategies first
-- **Team coordination:** Clear ownership and interface definitions
+1. **Scope creep:** Clear phase boundaries and success criteria
+2. **Resource constraints:** Prioritize high-impact strategies first
+3. **Integration complexity:** Leverage existing Aria patterns and architecture
+4. **Team coordination:** Clear ownership and interface definitions
 
 ## Tombstoned Approaches
 
