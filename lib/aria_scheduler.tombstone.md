@@ -7,6 +7,7 @@
 ## What was moved
 
 **Scheduler modules:**
+
 - `lib/aria_engine/scheduler.ex` → `apps/aria_scheduler/lib/scheduler.ex`
 - `lib/aria_engine/scheduler/` → `apps/aria_scheduler/lib/scheduler/`
   - `core.ex` - Central scheduling coordination
@@ -18,6 +19,7 @@
   - `domain_converter/` subdirectory with specialized converters
 
 **Test files:**
+
 - `test/aria_engine/scheduler_test.exs` → `apps/aria_scheduler/test/scheduler_test.exs`
 - `test/aria_engine/scheduler/` → `apps/aria_scheduler/test/scheduler/`
 
@@ -41,6 +43,7 @@ apps/aria_scheduler/
 ## Dependencies
 
 AriaScheduler depends on:
+
 - `aria_engine_core` - Core state management and domain utilities
 - `aria_hybrid_planner` - Planning coordination and strategy management  
 - `aria_temporal_planner` - Temporal reasoning and constraint solving

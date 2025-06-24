@@ -7,6 +7,7 @@
 ## What was moved
 
 **Membrane pipeline modules:**
+
 - `lib/aria_engine/membrane/` → `apps/aria_membrane_pipeline/lib/membrane/`
   - `format_transformer_filter.ex` - Data format transformation
   - `mcp_schedule_filter.ex` - MCP scheduling integration
@@ -25,6 +26,7 @@
   - `validation_pipeline/` subdirectory with validation components
 
 **Test files:**
+
 - `test/aria_engine/membrane/` → `apps/aria_membrane_pipeline/test/membrane/`
 
 ## New app structure
@@ -45,6 +47,7 @@ apps/aria_membrane_pipeline/
 ## Dependencies
 
 AriaMembranePipeline depends on:
+
 - `aria_engine_core` - Core state management and utilities
 - `aria_hybrid_planner` - Planning strategy coordination
 - `aria_temporal_planner` - Temporal reasoning capabilities

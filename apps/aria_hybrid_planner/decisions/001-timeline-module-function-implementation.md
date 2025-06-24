@@ -14,6 +14,7 @@ The `aria_hybrid_planner` app currently fails to compile properly due to namespa
 Investigation reveals that **most functions already exist** in `apps/aria_temporal_planner/lib/timeline.ex`:
 
 **Functions that EXIST:**
+
 - ✅ `Timeline.new/0` - Implemented
 - ✅ `Timeline.add_interval/2` - Implemented  
 - ✅ `Timeline.get_bridges/1` - Implemented (line 278)
@@ -23,11 +24,13 @@ Investigation reveals that **most functions already exist** in `apps/aria_tempor
 - ✅ `Timeline.bridge_positions/1` - Implemented (line 309)
 
 **Functions that are ACTUALLY MISSING:**
+
 - ✅ `Timeline.auto_insert_bridges/2` - **IMPLEMENTED** (comprehensive bridge insertion with rules)
 - ✅ `Timeline.with_bridge_segmentation/1` - **IMPLEMENTED** (bridge-based timeline segmentation)
 - ✅ `Timeline.validate_all_bridge_placements/1` - **IMPLEMENTED** (comprehensive bridge validation)
 
 **Verification Completed:**
+
 - ✅ Full code review of `apps/aria_temporal_planner/lib/timeline.ex` completed
 - ✅ Confirmed existing bridge infrastructure is comprehensive
 - ✅ Identified exact functions needed for implementation
@@ -49,16 +52,18 @@ Fix the namespace issues and implement only the 3 actually missing Timeline func
 
 ## Implementation Plan
 
-### Phase 1: Namespace Resolution (CRITICAL PRIORITY) 
+### Phase 1: Namespace Resolution (CRITICAL PRIORITY)
 
 **File**: `apps/aria_hybrid_planner/lib/hybrid_planner/strategies/default/stn_bridge_temporal_strategy.ex`
 
 **Required Changes**:
+
 - [ ] Add proper alias: `alias Timeline, as: AriaEngineTimeline`
 - [ ] Update all function calls from `Timeline.*` to `AriaEngineTimeline.*`
 - [ ] Test compilation to verify namespace resolution
 
 **Existing Functions to Alias (7 functions)**:
+
 - [ ] `Timeline.new/0` → `AriaEngineTimeline.new/0`
 - [ ] `Timeline.add_interval/2` → `AriaEngineTimeline.add_interval/2`
 - [ ] `Timeline.get_bridges/1` → `AriaEngineTimeline.get_bridges/1`
@@ -72,11 +77,13 @@ Fix the namespace issues and implement only the 3 actually missing Timeline func
 **File**: `apps/aria_temporal_planner/lib/timeline.ex`
 
 **Missing Functions (3 functions)**:
+
 - [x] `auto_insert_bridges/2` - **COMPLETED** - Automatic bridge insertion with mathematical rules
 - [x] `with_bridge_segmentation/1` - **COMPLETED** - Apply bridge segmentation using existing infrastructure
 - [x] `validate_all_bridge_placements/1` - **COMPLETED** - Comprehensive bridge validation
 
 **Mathematical Implementation Requirements**:
+
 - [ ] Temporal consistency validation using STN constraints
 - [ ] Proper interval algebra handling for bridge placement
 - [ ] Bridge positioning algorithms that respect Allen's interval relations
@@ -85,16 +92,19 @@ Fix the namespace issues and implement only the 3 actually missing Timeline func
 ## Implementation Strategy
 
 ### Step 1: Fix Namespace Issues (IMMEDIATE)
+
 1. Update hybrid planner imports to reference correct Timeline module
 2. Add proper module aliases in `STNBridgeTemporalStrategy`
 3. Test compilation to verify namespace resolution
 
 ### Step 2: Implement Missing Functions (QUICK WINS)
+
 1. Implement `auto_insert_bridges/2` using existing bridge logic
 2. Implement `with_bridge_segmentation/1` using existing segmentation
 3. Implement `validate_all_bridge_placements/1` using existing validation
 
 ### Step 3: Integration Testing
+
 1. Test hybrid planner compilation with namespace fixes
 2. Verify function signatures match usage patterns
 3. Test bridge insertion and segmentation workflows
@@ -108,12 +118,14 @@ Fix the namespace issues and implement only the 3 actually missing Timeline func
 ## Success Criteria
 
 **Phase 1 Success:**
+
 - [ ] Namespace alias added to STNBridgeTemporalStrategy
 - [ ] All Timeline function calls updated to use alias
 - [ ] Compilation warnings reduced from 10 to 3
 - [ ] AriaCharacterCore.Application can start successfully
 
 **Phase 2 Success:**
+
 - [ ] `auto_insert_bridges/2` implemented with mathematical correctness
 - [ ] `with_bridge_segmentation/1` implemented using existing bridge infrastructure
 - [ ] `validate_all_bridge_placements/1` implemented with comprehensive validation
@@ -122,6 +134,7 @@ Fix the namespace issues and implement only the 3 actually missing Timeline func
 - [ ] Functions pass basic integration tests
 
 **Overall Success:**
+
 - [ ] `aria_hybrid_planner` compiles without Timeline-related warnings
 - [ ] AriaCharacterCore.Application starts and runs properly
 - [ ] Bridge-based temporal planning workflows operational
@@ -129,17 +142,20 @@ Fix the namespace issues and implement only the 3 actually missing Timeline func
 ## Consequences
 
 **Positive:**
+
 - Hybrid planner becomes functional again
 - Timeline module provides complete API for temporal planning
 - Bridge-based planning workflows restored
 - Foundation for advanced temporal planning features
 
 **Negative:**
+
 - Need to update module references in hybrid planner
 - 3 functions still need implementation
 - Risk of introducing bugs in new functions
 
 **Risks:**
+
 - Function signatures may not match hybrid planner expectations exactly
 - Bridge insertion rules may be complex to implement correctly
 - Namespace changes may affect other modules using Timeline
@@ -147,10 +163,12 @@ Fix the namespace issues and implement only the 3 actually missing Timeline func
 ## Related ADRs
 
 ### Prerequisites
+
 - **ADR-154**: Timeline Module Namespace Aliasing Fixes (foundation)
 - **ADR-157**: STN Consistency Test Recovery (foundation)
 
 ### Integration Dependencies
+
 - **ADR-158**: Comprehensive Timeline Test Suite Validation (testing framework)
 - **ADR-159**: Bridge Position Type Consistency (data structure alignment)
 - **ADR-160**: Timeline Bridge Storage Architecture (storage design)

@@ -9,15 +9,18 @@
 This module was extracted to maintain strict encapsulation boundaries and enable independent testing of hybrid planning functionality.
 
 **Moved directories:**
+
 - `lib/aria_engine/hybrid_planner/` → `apps/aria_hybrid_planner/lib/hybrid_planner/`
 - `lib/aria_engine/plan/` → `apps/aria_hybrid_planner/lib/plan/`
 - `lib/aria_engine/planning/` → `apps/aria_hybrid_planner/lib/planning/`
 
 **Moved files:**
+
 - `lib/aria_engine/planning.ex` → `apps/aria_hybrid_planner/lib/planning.ex`
 - `lib/aria_engine/planner_adapter.ex` → `apps/aria_hybrid_planner/lib/planner_adapter.ex`
 
 **Moved tests:**
+
 - `test/aria_engine/hybrid_planner/` → `apps/aria_hybrid_planner/test/hybrid_planner/`
 - `test/aria_engine/membrane/planner_filter_test.exs` → `apps/aria_hybrid_planner/test/planner_filter_test.exs`
 

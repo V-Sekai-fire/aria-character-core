@@ -11,6 +11,7 @@ Multiple test failures are caused by inconsistent DateTime type handling through
 ### Failing Tests
 
 1. **Timeline.TimelineBridgeTest** - "bridges_in_range/3 finds bridges within time range"
+
    ```
    ** (FunctionClauseError) no function clause matching in DateTime.compare/2
    The following arguments were given to DateTime.compare/2:
@@ -19,6 +20,7 @@ Multiple test failures are caused by inconsistent DateTime type handling through
    ```
 
 2. **Timeline.TimelineBridgeTest** - "segment_by_bridges/1 handles overlapping intervals correctly"
+
    ```
    ** (FunctionClauseError) no function clause matching in DateTime.to_iso8601/3
    The following arguments were given to DateTime.to_iso8601/3:
@@ -28,12 +30,14 @@ Multiple test failures are caused by inconsistent DateTime type handling through
 ### Root Cause Analysis
 
 **Type Mixing Issues:**
+
 - Functions receive DateTime structs but expect ISO8601 strings
 - Functions receive ISO8601 strings but expect DateTime structs  
 - Inconsistent type conversion between different parts of the system
 - Test setup creates mixed types without proper conversion
 
 **Specific Problem Areas:**
+
 - `bridges_in_range/3` compares DateTime with string
 - `DateTime.to_iso8601/3` called on string instead of DateTime
 - Interval creation functions receive inconsistent time formats
@@ -56,24 +60,28 @@ We'll standardize on DateTime structs for all internal temporal operations while
 ## Implementation Plan
 
 ### Phase 1: Input Normalization
+
 - [ ] Add datetime normalization functions for consistent input handling
 - [ ] Update all bridge functions to normalize inputs to DateTime
 - [ ] Update all timeline functions to normalize time inputs
 - [ ] Ensure all temporal comparison functions work with DateTime only
 
 ### Phase 2: Internal Type Consistency
+
 - [ ] Audit all temporal operations to ensure DateTime usage
 - [ ] Fix `bridges_in_range/3` to handle mixed input types properly
 - [ ] Fix interval creation to normalize time inputs
 - [ ] Update segment creation to use consistent DateTime handling
 
 ### Phase 3: Test Data Consistency
+
 - [ ] Update test setup to use consistent DateTime creation
 - [ ] Fix test cases that mix DateTime and string types
 - [ ] Add helper functions for test DateTime creation
 - [ ] Ensure all test assertions expect correct types
 
 ### Phase 4: API Documentation and Validation
+
 - [ ] Document input type expectations for all functions
 - [ ] Add runtime type validation where appropriate
 - [ ] Update function specs to reflect DateTime requirements
@@ -91,12 +99,14 @@ We'll standardize on DateTime structs for all internal temporal operations while
 ## Consequences
 
 ### Positive
+
 - **Type Safety**: Eliminates runtime type mismatch errors
 - **Performance**: Reduces repeated string parsing overhead
 - **Reliability**: Temporal operations work consistently
 - **Maintainability**: Clear type expectations throughout codebase
 
 ### Negative
+
 - **Input Validation**: Additional overhead for type normalization
 - **Breaking Changes**: Functions may reject previously accepted input types
 - **Complexity**: More type conversion logic at API boundaries
@@ -109,6 +119,7 @@ We'll standardize on DateTime structs for all internal temporal operations while
 ## Implementation Notes
 
 ### DateTime Normalization Pattern
+
 ```elixir
 defp normalize_datetime(%DateTime{} = dt), do: dt
 defp normalize_datetime(iso8601_string) when is_binary(iso8601_string) do
@@ -118,6 +129,7 @@ end
 ```
 
 ### Function Update Pattern
+
 ```elixir
 # Before: Mixed types cause errors
 def bridges_in_range(timeline, start_time, end_time) do
@@ -133,6 +145,7 @@ end
 ```
 
 ### Test Helper Functions
+
 ```elixir
 # Add to test support
 def datetime(iso8601_string) do
@@ -142,6 +155,7 @@ end
 ```
 
 ### Type Specification Updates
+
 ```elixir
 @spec bridges_in_range(t(), DateTime.t() | String.t(), DateTime.t() | String.t()) :: [Bridge.t()]
 ```

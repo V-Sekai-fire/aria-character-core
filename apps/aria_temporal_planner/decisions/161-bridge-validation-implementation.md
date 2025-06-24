@@ -11,6 +11,7 @@ The Timeline bridge management functions lack proper validation logic, causing t
 ### Failing Tests
 
 1. **Timeline.TimelineBridgeTest** - "add_bridge/2 validates bridge placement"
+
    ```
    Expected exception ArgumentError but nothing was raised
    code: assert_raise ArgumentError, ~r/Bridge with ID 'decision_1' already exists/, fn ->
@@ -19,12 +20,14 @@ The Timeline bridge management functions lack proper validation logic, causing t
 ### Root Cause Analysis
 
 **Current Implementation Issues:**
+
 - `add_bridge/2` doesn't check for existing bridge IDs before adding
 - `validate_bridge_placement/2` exists but isn't called by `add_bridge/2`
 - Validation logic is present but not integrated into the main workflow
 - Error handling is inconsistent across bridge operations
 
 **Expected Behavior:**
+
 - `add_bridge/2` should raise `ArgumentError` for duplicate bridge IDs
 - Bridge placement validation should be enforced automatically
 - Consistent error handling across all bridge operations
@@ -46,24 +49,28 @@ We'll integrate existing validation logic into bridge management functions and a
 ## Implementation Plan
 
 ### Phase 1: Core Validation Integration
+
 - [ ] Update `add_bridge/2` to call `validate_bridge_placement/2` before adding
 - [ ] Ensure `validate_bridge_placement/2` raises `ArgumentError` for failures
 - [ ] Add validation to `update_bridge/2` for consistency
 - [ ] Implement proper error messages matching test expectations
 
 ### Phase 2: Validation Logic Enhancement
+
 - [ ] Enhance duplicate ID validation with specific error messages
 - [ ] Implement interval boundary validation (bridges can't be at interval start/end)
 - [ ] Add bridge type validation during placement
 - [ ] Validate bridge position format and timezone requirements
 
 ### Phase 3: Validation Integration Points
+
 - [ ] Integrate validation into all bridge modification operations
 - [ ] Add validation to bridge import/export functions
 - [ ] Ensure timeline composition functions validate merged bridges
 - [ ] Add validation to bridge metadata updates
 
 ### Phase 4: Error Handling Standardization
+
 - [ ] Standardize error message formats across all bridge operations
 - [ ] Implement consistent exception types for different validation failures
 - [ ] Add detailed error context for debugging
@@ -81,12 +88,14 @@ We'll integrate existing validation logic into bridge management functions and a
 ## Consequences
 
 ### Positive
+
 - **Data Integrity**: Invalid bridge states are prevented
 - **Better Error Messages**: Clear feedback when validation fails
 - **Consistent API**: All bridge operations have uniform validation
 - **Easier Debugging**: Validation failures provide specific error context
 
 ### Negative
+
 - **Performance Impact**: Additional validation checks on every operation
 - **Breaking Changes**: Previously accepted invalid states now raise errors
 - **Complexity**: More code paths to test and maintain
@@ -101,6 +110,7 @@ We'll integrate existing validation logic into bridge management functions and a
 ### Validation Rules to Implement
 
 1. **Duplicate ID Prevention**
+
    ```elixir
    def add_bridge(timeline, bridge) do
      case validate_bridge_placement(timeline, bridge) do
@@ -117,6 +127,7 @@ We'll integrate existing validation logic into bridge management functions and a
    - Bridge position must be a valid DateTime
 
 3. **Error Message Standards**
+
    ```elixir
    "Bridge with ID '#{bridge.id}' already exists"
    "Bridge cannot be placed at interval boundary"
@@ -124,6 +135,7 @@ We'll integrate existing validation logic into bridge management functions and a
    ```
 
 ### Integration Strategy
+
 - Modify existing functions to call validation before state changes
 - Use pattern matching on validation results to handle errors
 - Maintain backward compatibility where possible

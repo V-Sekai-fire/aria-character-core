@@ -11,12 +11,14 @@ The Timeline module has an architectural inconsistency in how bridges are stored
 ### Failing Tests
 
 1. **Timeline.TimelineBridgeTest** - "add_bridge/2 adds a bridge to timeline"
+
    ```
    ** (KeyError) key :bridges not found in: %Timeline{...}
    code: assert Map.has_key?(updated_timeline.bridges, "decision_1")
    ```
 
 2. **Timeline.TimelineBridgeTest** - "chain/1 preserves bridges from all timelines"
+
    ```
    code: assert map_size(chained.bridges) == 0
    ```
@@ -24,10 +26,12 @@ The Timeline module has an architectural inconsistency in how bridges are stored
 ### Root Cause Analysis
 
 **Current Implementation:**
+
 - Bridges stored in `timeline.metadata.bridges` (nested map)
 - Access via `Map.get(timeline.metadata, :bridges, %{})`
 
 **Test Expectations:**
+
 - Bridges stored in `timeline.bridges` (direct field)
 - Access via `timeline.bridges["bridge_id"]`
 
@@ -50,11 +54,13 @@ We'll modify the Timeline struct to include a `bridges` field alongside the exis
 ## Implementation Plan
 
 ### Phase 1: Timeline Struct Update
+
 - [ ] Add `bridges: %{String.t() => Bridge.t()}` field to Timeline struct
 - [ ] Update Timeline.new/1 to initialize empty bridges map
 - [ ] Maintain metadata.bridges for backward compatibility during transition
 
 ### Phase 2: Bridge Management Functions Update
+
 - [ ] Update `add_bridge/2` to store in both locations (bridges field + metadata)
 - [ ] Update `remove_bridge/2` to remove from both locations
 - [ ] Update `get_bridge/2` to read from bridges field
@@ -62,12 +68,14 @@ We'll modify the Timeline struct to include a `bridges` field alongside the exis
 - [ ] Update `update_bridge/2` to update both locations
 
 ### Phase 3: Timeline Composition Functions
+
 - [ ] Update `chain/1` to merge bridges from all timelines
 - [ ] Update `parallel_join/1` to merge bridges appropriately
 - [ ] Update `intersection/2` and `union/2` to handle bridge merging
 - [ ] Update `compose/2` to handle bridge composition
 
 ### Phase 4: Migration and Cleanup
+
 - [ ] Add migration logic to move bridges from metadata to field
 - [ ] Update all bridge access patterns throughout codebase
 - [ ] Remove metadata.bridges storage after transition period
@@ -85,12 +93,14 @@ We'll modify the Timeline struct to include a `bridges` field alongside the exis
 ## Consequences
 
 ### Positive
+
 - **Clearer API**: Direct field access is more intuitive
 - **Better Performance**: Eliminates nested map lookups
 - **Type Safety**: Dedicated field enables better type checking
 - **Test Alignment**: Implementation matches test expectations
 
 ### Negative
+
 - **Struct Changes**: Timeline struct modification affects serialization
 - **Migration Complexity**: Need to handle existing metadata.bridges data
 - **Temporary Duplication**: During transition, bridges stored in two places
@@ -103,6 +113,7 @@ We'll modify the Timeline struct to include a `bridges` field alongside the exis
 ## Implementation Notes
 
 ### Timeline Struct Definition
+
 ```elixir
 defstruct intervals: %{}, 
           stn: STN.new(), 
@@ -111,7 +122,9 @@ defstruct intervals: %{},
 ```
 
 ### Migration Strategy
+
 During the transition period, maintain both storage locations:
+
 1. Write to both `bridges` field and `metadata.bridges`
 2. Read from `bridges` field primarily
 3. Fall back to `metadata.bridges` if `bridges` field is empty

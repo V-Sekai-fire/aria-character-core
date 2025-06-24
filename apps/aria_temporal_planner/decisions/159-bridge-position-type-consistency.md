@@ -11,6 +11,7 @@ The `AriaEngine.Timeline.Bridge.new/4` function has a type inconsistency issue t
 ### Failing Tests
 
 1. **AriaEngine.Timeline.BridgeTest** - "new/4 creates a bridge with required parameters"
+
    ```
    Assertion with == failed
    code:  assert bridge.position == position
@@ -21,6 +22,7 @@ The `AriaEngine.Timeline.Bridge.new/4` function has a type inconsistency issue t
 ### Root Cause Analysis
 
 The Bridge module's `new/4` function has two clauses:
+
 - `new(id, %DateTime{} = position, type, opts)` - stores DateTime directly
 - `new(id, position, type, opts) when is_binary(position)` - converts string to DateTime
 
@@ -42,16 +44,19 @@ The Bridge struct will always store `position` as a `DateTime` struct, but we'll
 ## Implementation Plan
 
 ### Phase 1: Test Updates
+
 - [ ] Update `AriaEngine.Timeline.BridgeTest` to expect DateTime in position field
 - [ ] Update all bridge creation in tests to use consistent expectations
 - [ ] Verify all temporal comparison tests work with DateTime positions
 
 ### Phase 2: Documentation Updates  
+
 - [ ] Update Bridge module documentation to clarify position storage format
 - [ ] Add examples showing both string input and DateTime storage
 - [ ] Update doctest examples to reflect DateTime storage
 
 ### Phase 3: Validation
+
 - [ ] Run bridge-specific tests to ensure all pass
 - [ ] Verify no regressions in temporal comparison functions
 - [ ] Confirm API flexibility (string input) still works
@@ -67,11 +72,13 @@ The Bridge struct will always store `position` as a `DateTime` struct, but we'll
 ## Consequences
 
 ### Positive
+
 - **Type consistency**: All bridge positions are DateTime structs internally
 - **Better temporal operations**: DateTime comparisons are more reliable
 - **Clearer API contract**: Tests and docs reflect actual storage format
 
 ### Negative
+
 - **Test updates required**: Existing tests need position expectation changes
 - **Potential breaking change**: External code expecting string positions may break
 

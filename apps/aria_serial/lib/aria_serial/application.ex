@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaSerial.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications

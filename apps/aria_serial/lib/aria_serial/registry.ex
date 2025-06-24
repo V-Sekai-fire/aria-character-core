@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaSerial.Registry do
   @moduledoc """
   Embedded serial number registry for Aria migration tools.

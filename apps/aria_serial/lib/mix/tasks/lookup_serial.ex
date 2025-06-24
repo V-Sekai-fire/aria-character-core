@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule Mix.Tasks.Serial.Lookup do
   @moduledoc """
   Look up serial numbers in the registry.

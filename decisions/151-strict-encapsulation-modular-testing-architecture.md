@@ -9,12 +9,14 @@
 Breakthrough insight identified: real coding style problem requires strict encapsulation and modularity. Every logical "library" must be actual library in mono-repo, each separately tested with unit tests that never become integration tests.
 
 Current state shows mixed encapsulation:
+
 - Some apps extracted: `ast_migrate`, `elixir_png`, `png_generator`, `aria_security`
 - Major lib/ modules remain: `aria_auth`, `aria_engine`, `aria_storage`, `aria_town`
 - Testing boundaries unclear between modules
 - Integration tests masquerading as unit tests
 
 **Recent Progress:**
+
 - ✅ `aria_security` successfully extracted (2025-06-23)
 - ✅ `aria_storage` successfully extracted (2025-06-23)
 - ✅ `aria_auth` successfully extracted (2025-06-23)
@@ -24,14 +26,18 @@ Current state shows mixed encapsulation:
 ## The Strict Encapsulation Principle
 
 ### Core Rule
+
 Every logical library = actual Elixir app in umbrella project with:
+
 - Independent test suite
 - Clear API boundaries  
 - Isolated dependencies
 - Single responsibility
 
 ### Library Boundary Criteria
+
 Extract when module has:
+
 - **Distinct domain responsibility**
 - **Independent testing requirements**
 - **Reusable functionality**
@@ -39,6 +45,7 @@ Extract when module has:
 - **Minimal coupling to other domains**
 
 ### Testing Isolation Requirements
+
 - **Unit tests**: Test only internal library logic
 - **No external dependencies**: Mock all external calls
 - **Fast execution**: Sub-second test suites
@@ -47,6 +54,7 @@ Extract when module has:
 ## Layered Testing Architecture
 
 ### Beautiful Testing Pattern
+
 Each layer's unit tests naturally become integration tests for layer below:
 
 ```
@@ -58,6 +66,7 @@ Layer N-2: Unit Tests (test Layer N-2 logic)
 ```
 
 ### Testing Hierarchy
+
 - **Library Unit Tests**: Internal logic only
 - **Library Integration Tests**: API contracts between libraries
 - **System Integration Tests**: End-to-end workflows
@@ -68,11 +77,13 @@ Layer N-2: Unit Tests (test Layer N-2 logic)
 ### Software Engineering Principles
 
 **SOLID Principles:**
+
 - **Single Responsibility**: Each library has one clear domain
 - **Dependency Inversion**: Libraries depend on abstractions, not implementations
 - **Interface Segregation**: Clean, focused APIs between boundaries
 
 **Architectural Patterns:**
+
 - **Clean Architecture**: Strict dependency rules, layers depend only inward
 - **Hexagonal Architecture**: Each library as hexagon with ports/adapters
 - **Domain-Driven Design**: Libraries represent bounded contexts
@@ -103,12 +114,14 @@ The `ast_migrate` app provides powerful AST-based transformations to systematica
 #### Available AST Migration Commands
 
 **Basic Migration:**
+
 ```bash
 # From the ast_migrate directory
 mix ast.simple --rule unit_test_improvements --target /path/to/app
 ```
 
 **Git-Integrated Migration:**
+
 ```bash
 mix ast.commit --rule unit_test_improvements --target /path/to/app
 ```
@@ -116,16 +129,19 @@ mix ast.commit --rule unit_test_improvements --target /path/to/app
 #### Key Transformation Rules
 
 **1. Unit Test Improvements Rule**
+
 - Extracts intermediate variables in assertions for better readability
 - Adds missing assertions to bare function calls
 - Improves test structure and debugging capabilities
 
 **2. Namespace Reference Fixes (Custom Rule)**
+
 - Systematically updates module references after app extraction
 - Fixes `AriaEngine.Timeline` → `Timeline` namespace issues
 - Resolves import statement conflicts
 
 **3. Test Isolation Improvements (Custom Rule)**
+
 - Identifies and removes cross-app dependencies in tests
 - Converts integration tests to proper unit tests
 - Adds mocking for external dependencies
@@ -133,6 +149,7 @@ mix ast.commit --rule unit_test_improvements --target /path/to/app
 #### Integration with Testing Workflow
 
 **Phase 5a: Systematic Test Fixes**
+
 ```bash
 # Fix namespace issues across all apps
 for app in apps/*/; do
@@ -148,12 +165,14 @@ done
 ```
 
 **Phase 5b: Contract Test Generation**
+
 ```bash
 # Generate contract test templates
 mix ast.simple --rule contract_test_generator --target ../../apps/aria_temporal_planner
 ```
 
 **Phase 5c: Test Isolation Validation**
+
 ```bash
 # Identify and fix cross-app test dependencies
 mix ast.simple --rule test_isolation_checker --target ../../apps/aria_hybrid_planner
@@ -191,6 +210,7 @@ Each library extraction follows this complete process:
 4. **Configure Dependencies**
    - Update umbrella `mix.exs` to include new app in applications list
    - Configure new app dependencies using umbrella path pattern:
+
      ```elixir
      defp deps do
        [
@@ -200,6 +220,7 @@ Each library extraction follows this complete process:
        ]
      end
      ```
+
    - Resolve any circular dependency issues
 
 5. **Verify Independent Operation**
@@ -221,6 +242,7 @@ Each library extraction follows this complete process:
    - Create `lib/[library].tombstone.md` file documenting extraction
    - Include extraction date, new location, and ADR reference
    - Example format:
+
      ```markdown
      # [Library] Migration Tombstone
      
@@ -238,6 +260,7 @@ Each library extraction follows this complete process:
    - Validate all functionality preserved
 
 ### Phase 1: Analyze Current Dependencies
+
 - [x] Map dependency graph for all lib/ modules
 - [x] Identify leaf modules (minimal dependencies)
 - [x] Document circular dependencies requiring resolution
@@ -246,6 +269,7 @@ Each library extraction follows this complete process:
 **Dependency Analysis Results:**
 
 **Already Extracted Apps:**
+
 - `ast_migrate/` - Git-style AST migration tool (independent)
 - `elixir_png/` - PNG processing utilities (independent)
 - `png_generator/` - Schedule visualization (independent)
@@ -254,6 +278,7 @@ Each library extraction follows this complete process:
 **Remaining lib/ Modules to Extract:**
 
 **Leaf Modules (Minimal Dependencies):**
+
 1. **aria_storage** - File operations and chunk storage
    - Dependencies: External only (Waffle, Ecto, compression libs)
    - No internal aria_* dependencies
@@ -262,15 +287,17 @@ Each library extraction follows this complete process:
 
 **Intermediate Dependencies:**
 3. **aria_auth** - Authentication with macaroons
-   - Dependencies: aria_security (minimal), external (Ecto, Macfly)
-   - Clear API boundaries
-   - Independent test suite possible
+
+- Dependencies: aria_security (minimal), external (Ecto, Macfly)
+- Clear API boundaries
+- Independent test suite possible
 
 **Complex Dependencies:**
 4. **aria_town** - NPC management system
-   - Dependencies: aria_engine (heavy), external (GenServer)
-   - Currently stub implementation
-   - Depends on AriaEngine's hybrid planner
+
+- Dependencies: aria_engine (heavy), external (GenServer)
+- Currently stub implementation
+- Depends on AriaEngine's hybrid planner
 
 5. **aria_engine** - Core planning and temporal systems
    - Dependencies: Complex internal structure, external (Membrane, MiniZinc)
@@ -278,11 +305,13 @@ Each library extraction follows this complete process:
    - Multiple internal circular dependencies
 
 **Circular Dependencies Identified:**
+
 - AriaEngine.Timeline ↔ AriaEngine.TemporalPlanner
 - AriaEngine.HybridPlanner ↔ AriaEngine.Planning
 - AriaEngine.Scheduler ↔ AriaEngine.Domain
 
 **Extraction Priority Order:**
+
 1. ✅ aria_security (leaf, zero internal deps) - **COMPLETED 2025-06-23**
 2. aria_storage (leaf, zero internal deps)  
 3. aria_auth (depends only on aria_security)
@@ -292,6 +321,7 @@ Each library extraction follows this complete process:
 **Current Focus:** aria_storage extraction (next leaf module)
 
 ### Phase 2: Extract Leaf Modules First
+
 - [x] Extract `aria_security` (self-contained utilities) ✅ **COMPLETED 2025-06-23**
   - ✅ Created `apps/aria_security/` with proper structure
   - ✅ Moved all source files preserving namespaces
@@ -324,7 +354,7 @@ Each library extraction follows this complete process:
   - ✅ Migration tombstone created
   - ✅ Updated main application to remove direct GenServer starts
 - [x] Extract remaining `aria_png_generator` functionality ✅ **COMPLETED (pre-existing)**
-  - ✅ Already extracted to `apps/png_generator/` 
+  - ✅ Already extracted to `apps/png_generator/`
   - ✅ Tombstone file created documenting migration
   - ✅ Module renamed from AriaEngine.PngGenerator to PngGenerator
 - [x] Verify independent test suites for each ✅ **COMPLETED 2025-06-23**
@@ -334,6 +364,7 @@ Each library extraction follows this complete process:
 **Phase 2 Progress:** 5/5 tasks completed (all leaf modules successfully extracted)
 
 ### Phase 3: Extract Intermediate Dependencies
+
 - [x] Extract `aria_auth` (depends on aria_security) ✅ **COMPLETED 2025-06-23**
 - [x] Extract `aria_town` (depends on aria_engine) ✅ **COMPLETED 2025-06-23**
 - [ ] Resolve any circular dependencies discovered
@@ -425,6 +456,7 @@ Based on directory structure analysis, aria_engine contains these logical subdom
 **Phase 4 Progress:** 5/5 subdomain extractions completed (aria_temporal_planner, aria_hybrid_planner, aria_scheduler, aria_membrane_pipeline, and aria_engine_core) ✅ **ALL COMPLETED 2025-06-23**
 
 ### Phase 4f: Cleanup Duplicate Modules and Resolve Compilation Conflicts ✅ **COMPLETED 2025-06-23**
+
 - ✅ **Removed entire lib/aria_engine/ directory** containing duplicate modules
 - ✅ **Removed conflicting files**: lib/aria_auth.ex, lib/aria_engine.ex, lib/state.ex
 - ✅ **Removed duplicate directories**: lib/aria_storage/, lib/aria_png_generator/
@@ -435,12 +467,14 @@ Based on directory structure analysis, aria_engine contains these logical subdom
 - ✅ **Implemented strict encapsulation**: Each app operates independently without namespace conflicts
 
 **Cleanup Results:**
+
 - **102 files removed**: 25,443 lines of duplicate code eliminated
 - **Zero compilation errors**: Clean umbrella project compilation achieved
 - **Independent app testing**: Each app can be tested in isolation
 - **Namespace conflicts resolved**: No module redefinition warnings
 
 ### Phase 5: Verify Testing Architecture
+
 - [x] **AST Migration Tool Integration** ✅ **COMPLETED 2025-06-23**
   - ✅ Integrated `ast_migrate` app for systematic code transformations
   - ✅ Available for fixing test warnings, namespace issues, and code improvements
@@ -476,18 +510,21 @@ Based on directory structure analysis, aria_engine contains these logical subdom
 ## Success Criteria
 
 ### Encapsulation Metrics
+
 - **Library Count**: Each logical domain has dedicated app
 - **Clear Dependency Direction**: Higher layers depend on lower layers only
 - **API Surface**: Clear, documented interfaces between libraries
 - **Test Isolation**: Zero external dependencies in unit tests
 
 ### Testing Quality Indicators
+
 - **Test Speed**: Library unit tests complete under 1 second
 - **Test Independence**: Any library test suite runs in isolation
 - **Coverage Clarity**: Unit vs integration test boundaries clear
 - **Contract Verification**: API boundaries tested between libraries
 
 ### Architectural Validation
+
 - **Circular Dependencies**: Zero circular dependencies between libraries
 - **Single Responsibility**: Each library has one clear domain purpose
 - **Reusability**: Libraries usable independently in other projects
@@ -503,6 +540,7 @@ Based on directory structure analysis, aria_engine contains these logical subdom
 ## Consequences
 
 ### Benefits
+
 - **Clear Boundaries**: Explicit separation between domains
 - **Better Testing**: True unit tests with clear integration boundaries
 - **Improved Maintainability**: Changes isolated to specific libraries
@@ -510,12 +548,14 @@ Based on directory structure analysis, aria_engine contains these logical subdom
 - **Faster Development**: Parallel work on independent libraries
 
 ### Risks
+
 - **Initial Overhead**: Extraction work requires significant effort
 - **Dependency Management**: Complex dependency resolution during transition
 - **API Design**: Requires careful interface design between libraries
 - **Testing Migration**: Existing tests need classification and migration
 
 ### Mitigation Strategies
+
 - **Incremental Extraction**: Start with leaf modules, work toward core
 - **Maintain Compatibility**: Preserve existing APIs during transition
 - **Comprehensive Testing**: Verify functionality at each extraction step

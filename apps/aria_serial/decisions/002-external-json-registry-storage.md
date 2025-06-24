@@ -9,6 +9,7 @@ Proposed - Implementation Paused (June 23, 2025)
 The current AriaSerial system uses hardcoded registry entries in `registry.ex`, which creates maintainability issues as the number of serial numbers grows:
 
 **Current Problems:**
+
 - Hardcoded serial entries require recompilation for each new tool
 - Registry map becomes large and unwieldy over time
 - No separation between code logic and data storage
@@ -16,6 +17,7 @@ The current AriaSerial system uses hardcoded registry entries in `registry.ex`, 
 - Adding new serials requires code changes
 
 **Scale Considerations:**
+
 - Currently ~6 serials, but could grow to 50+ over time
 - Need organized storage to prevent folder spam
 - Want git-trackable changes to registry data
@@ -28,6 +30,7 @@ Move from hardcoded registry to external JSON storage with organized file struct
 ## Architecture
 
 ### JSON Storage Structure
+
 ```
 apps/aria_serial/priv/serial_data/
 ├── 2025/
@@ -44,6 +47,7 @@ apps/aria_serial/priv/serial_data/
 ```
 
 ### JSON File Format
+
 ```json
 {
   "week": 25,
@@ -67,16 +71,19 @@ apps/aria_serial/priv/serial_data/
 ### Implementation Components
 
 **1. Registry Loader Module:**
+
 - Load JSON files and merge into registry map
 - Maintain same interface as current hardcoded registry
 - Simple file I/O, no complex caching initially
 
 **2. Updated Mix Tasks:**
+
 - `mix serial.create` writes to appropriate week JSON file
 - `mix serial.lookup` loads from JSON files
 - `mix serial.decode` uses loaded registry data
 
 **3. Migration Strategy:**
+
 - Extract current hardcoded entries to JSON files
 - Update registry.ex to load from JSON
 - Preserve backward compatibility
@@ -84,24 +91,28 @@ apps/aria_serial/priv/serial_data/
 ## Implementation Plan
 
 ### Phase 1: JSON Storage Setup
+
 - [ ] Create priv/serial_data directory structure
 - [ ] Extract current registry entries to week_25 JSON file
 - [ ] Create global metadata file
 - [ ] Add JSON schema validation
 
 ### Phase 2: Registry Loader
+
 - [ ] Create AriaSerial.RegistryLoader module
 - [ ] Implement load_all_data/0 function
 - [ ] Implement load_week_data/2 function
 - [ ] Add error handling for missing files
 
 ### Phase 3: Update Core Registry
+
 - [ ] Modify registry.ex to use RegistryLoader
 - [ ] Maintain existing public API
 - [ ] Add fallback to hardcoded data if JSON missing
 - [ ] Test backward compatibility
 
 ### Phase 4: Update Mix Tasks
+
 - [ ] Update create_serial to write JSON files
 - [ ] Ensure lookup and decode use new loader
 - [ ] Add validation for JSON file integrity
@@ -110,18 +121,21 @@ apps/aria_serial/priv/serial_data/
 ## Benefits
 
 **Maintainability:**
+
 - No recompilation needed for new serials
 - Clear separation between code and data
 - Git-trackable registry changes
 - Organized storage prevents clutter
 
 **Scalability:**
+
 - Ready for growth without code changes
 - Weekly organization prevents large files
 - Project-specific configurations supported
 - Simple to add new factory codes later
 
 **Development Workflow:**
+
 - Easier to review registry changes in PRs
 - Simple JSON editing for manual corrections
 - Clear audit trail of serial additions
@@ -130,17 +144,20 @@ apps/aria_serial/priv/serial_data/
 ## Consequences
 
 ### Positive
+
 - Eliminates need for recompilation when adding serials
 - Better organization and git tracking of registry data
 - Maintains all existing functionality
 - Foundation for future scaling
 
 ### Negative
+
 - Slight performance overhead from file I/O
 - Additional complexity in deployment (JSON files)
 - Need to handle missing file scenarios
 
 ### Risk Mitigation
+
 - Keep fallback to hardcoded registry if JSON missing
 - Add comprehensive error handling
 - Validate JSON schema on load

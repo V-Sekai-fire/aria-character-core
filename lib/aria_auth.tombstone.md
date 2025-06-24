@@ -8,7 +8,8 @@
 
 The AriaAuth module and all its submodules have been extracted from the main codebase into an independent umbrella application.
 
-### Modules moved:
+### Modules moved
+
 - `AriaAuth` - Main delegation module
 - `AriaAuth.Application` - Application supervisor
 - `AriaAuth.Accounts` - User account management
@@ -18,7 +19,8 @@ The AriaAuth module and all its submodules have been extracted from the main cod
 - `AriaAuth.Macaroons` - Token-based authentication
 - `AriaAuth.Repo` - Database repository
 
-### Test files moved:
+### Test files moved
+
 - `test/aria_auth_test.exs`
 - `test/aria_auth/macaroons_test.exs`
 - `test/test_helper.exs`
@@ -49,6 +51,7 @@ apps/aria_auth/
 ## Dependencies
 
 The extracted app includes these dependencies:
+
 - ecto (~> 3.12)
 - ecto_sql (~> 3.12)
 - postgrex (~> 0.19)

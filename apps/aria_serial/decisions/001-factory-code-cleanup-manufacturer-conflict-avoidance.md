@@ -9,6 +9,7 @@ Active (June 23, 2025)
 The AriaSerial system uses single-letter factory codes in serial numbers to identify the organization or project that created a migration tool. However, the current factory codes create conflicts with major technology manufacturers:
 
 **Current problematic codes:**
+
 - `A`: Aria Character Core (conflicts with Apple)
 - `F`: Already taken (conflicts with Foxconn)
 - `V`: V-Sekai (conflicts with various manufacturers)
@@ -18,6 +19,7 @@ The AriaSerial system uses single-letter factory codes in serial numbers to iden
 - `S`: Would conflict with Samsung
 
 **Additional requirements:**
+
 - Need to add support for Fire's Personal Projects
 - Maintain existing R-series for Aria Character Core
 - Avoid confusion with real-world manufacturer serial numbers
@@ -25,14 +27,17 @@ The AriaSerial system uses single-letter factory codes in serial numbers to iden
 ## Decision
 
 **Remove conflicting factory codes:**
+
 - Remove `A`, `V`, `G`, `C`, `E` from all decode_factory functions
 - These codes create potential confusion with major manufacturers
 
 **Standardize on conflict-free codes:**
+
 - Keep `R`: Aria Character Core (R-series) - minimal manufacturer conflict
 - Add `Q`: Fire's Personal Projects - rarely used by major manufacturers
 
 **Rationale for Q selection:**
+
 - Q is rarely used by major technology manufacturers
 - Distinctive and memorable
 - Fits within existing allowed character set
@@ -54,6 +59,7 @@ The AriaSerial system uses single-letter factory codes in serial numbers to iden
 ## Consequences
 
 **Positive:**
+
 - Eliminates confusion with major manufacturer serial numbers
 - Cleaner, more focused factory code system
 - Better professional appearance
@@ -61,10 +67,12 @@ The AriaSerial system uses single-letter factory codes in serial numbers to iden
 - Clear documentation of decision rationale
 
 **Negative:**
+
 - Breaking change for any external systems expecting old codes
 - Need to update documentation and examples
 
 **Risk Mitigation:**
+
 - Existing registered serial numbers (R25W001GLTL series) remain valid
 - Only affects decode_factory display names, not actual serial format
 - Changes are backward compatible for R-series codes

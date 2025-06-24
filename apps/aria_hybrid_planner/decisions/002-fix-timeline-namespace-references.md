@@ -12,8 +12,9 @@ AriaCharacterCore.Application cannot start because aria_hybrid_planner has names
 ### Current Error State
 
 **Compilation Warnings (7 out of 10 are namespace issues):**
+
 - `AriaEngine.Timeline.auto_insert_bridges/2 is undefined`
-- `AriaEngine.Timeline.with_bridge_segmentation/1 is undefined` 
+- `AriaEngine.Timeline.with_bridge_segmentation/1 is undefined`
 - `AriaEngine.Timeline.get_bridges/1 is undefined`
 - `AriaEngine.Timeline.new/0 is undefined`
 - `AriaEngine.Timeline.add_interval/2 is undefined`
@@ -42,12 +43,14 @@ Fix namespace references by adding proper module alias in STNBridgeTemporalStrat
 **File:** `apps/aria_hybrid_planner/lib/hybrid_planner/strategies/default/stn_bridge_temporal_strategy.ex`
 
 **Required Changes:**
+
 - [x] Add alias at top of module: `alias Timeline, as: AriaEngineTimeline` - **COMPLETED**
 - [x] Update all `Timeline.*` calls to use `AriaEngineTimeline.*` - **COMPLETED**
 
 ### Phase 2: Function Call Updates (IMMEDIATE)
 
 **Function Calls to Update (All Timeline.* → AriaEngineTimeline.*):**
+
 - [x] `Timeline.auto_insert_bridges/2` calls (2 occurrences) - **COMPLETED**
 - [x] `Timeline.with_bridge_segmentation/1` calls (1 occurrence) - **COMPLETED**
 - [x] `Timeline.get_bridges/1` calls (2 occurrences) - **COMPLETED**
@@ -60,6 +63,7 @@ Fix namespace references by adding proper module alias in STNBridgeTemporalStrat
 - [x] `Timeline.validate_all_bridge_placements/1` calls (1 occurrence) - **COMPLETED**
 
 **Implementation Method:**
+
 - [ ] Use find-and-replace: `Timeline.` → `AriaEngineTimeline.`
 - [ ] Verify all function calls are updated correctly
 - [ ] Test compilation after changes
@@ -67,6 +71,7 @@ Fix namespace references by adding proper module alias in STNBridgeTemporalStrat
 ### Phase 3: Verification (IMMEDIATE)
 
 **Testing Steps:**
+
 - [ ] Run `mix compile` to verify namespace resolution
 - [ ] Check that compilation warnings are reduced from 10 to 3
 - [ ] Verify AriaCharacterCore.Application can start
@@ -74,17 +79,20 @@ Fix namespace references by adding proper module alias in STNBridgeTemporalStrat
 ## Implementation Strategy
 
 ### Step 1: Module Alias Addition
+
 1. Open `apps/aria_hybrid_planner/lib/hybrid_planner/strategies/default/stn_bridge_temporal_strategy.ex`
 2. Add `alias Timeline, as: AriaEngineTimeline` after existing aliases
 3. Save file
 
 ### Step 2: Function Call Updates  
+
 1. Add alias: `alias Timeline, as: AriaEngineTimeline` after existing aliases
 2. Find and replace all `Timeline.` with `AriaEngineTimeline.` in the file
 3. Verify all function calls are updated correctly
 4. Save file
 
 ### Step 3: Compilation Test
+
 1. Run `mix compile` from project root
 2. Verify warnings reduced from 10 to 3 (only missing functions remain)
 3. Test AriaCharacterCore.Application startup
@@ -98,6 +106,7 @@ This namespace fix is the **critical path** to unblock AriaCharacterCore.Applica
 ## Success Criteria
 
 **Immediate Success (Phase 1):**
+
 - [ ] Module alias `alias Timeline, as: AriaEngineTimeline` added to STNBridgeTemporalStrategy
 - [ ] All Timeline function calls updated to use AriaEngineTimeline alias
 - [ ] Compilation warnings reduced from 10 to 3
@@ -105,6 +114,7 @@ This namespace fix is the **critical path** to unblock AriaCharacterCore.Applica
 - [ ] Only 3 actually missing functions remain as warnings
 
 **Verification Steps:**
+
 - [ ] `mix compile` runs without namespace-related warnings
 - [ ] Application startup test passes
 - [ ] Remaining warnings are only for missing functions (not namespace issues)
@@ -112,25 +122,30 @@ This namespace fix is the **critical path** to unblock AriaCharacterCore.Applica
 ## Consequences
 
 **Positive:**
+
 - AriaCharacterCore.Application can start
 - Hybrid planner namespace issues resolved
 - Clear path to implementing remaining 3 missing functions
 - Foundation for full hybrid planner functionality
 
 **Negative:**
+
 - Still need to implement 3 missing functions (separate ADR)
 - Temporary solution until proper module structure established
 
 **Risks:**
+
 - Function signatures may not match exactly (low risk)
 - May need minor adjustments after alias implementation
 
 ## Related ADRs
 
 **Parent ADR:**
+
 - **ADR-001**: Timeline Module Namespace and Function Resolution (comprehensive solution)
 
 **Next Steps:**
+
 - **ADR-003**: Implement Missing Timeline Functions (auto_insert_bridges, with_bridge_segmentation, validate_all_bridge_placements)
 
 ## Notes

@@ -15,16 +15,19 @@ AriaEngineCore provides the foundation layer for the AriaEngine system including
 ## Key Components
 
 ### State Management
+
 - Core state structures (State, StateV2)
 - State operations and transformations
 - Validation and consistency checking
 
 ### Domain System
+
 - Domain definitions and management
 - Domain-specific operations
 - Validation and verification
 
 ### MiniZinc Integration
+
 - External process execution for MiniZinc solver
 - Constraint problem solving
 - Result parsing and validation

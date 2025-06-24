@@ -27,18 +27,21 @@ AriaTown is built as a supervision tree with three main components:
 This is currently a stub implementation providing the basic GenServer structure needed for the supervision tree. Future development will add:
 
 ### NPCManager
+
 - NPC lifecycle management (spawn, despawn, persistence)
 - Behavior coordination and AI planning integration
 - NPC state synchronization and updates
 - Social interaction and relationship management
 
 ### TimeManager
+
 - Game time progression and scheduling
 - Day/night cycles and temporal events
 - NPC scheduling coordination
 - Time-based triggers and automation
 
 ### PersistenceManager
+
 - Virtual world state persistence
 - NPC data storage and retrieval
 - Configuration management
@@ -47,6 +50,7 @@ This is currently a stub implementation providing the basic GenServer structure 
 ## Planned Integration
 
 Future NPCs will integrate with AriaEngine's hybrid planner for:
+
 - Goal-oriented behavior planning
 - Temporal scheduling of activities
 - Social interaction planning

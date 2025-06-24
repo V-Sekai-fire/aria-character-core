@@ -9,6 +9,7 @@ AriaScheduler implements a comprehensive scheduling system that coordinates acti
 ## Core Components
 
 ### Scheduler Core
+
 - **Core**: Central scheduling coordination and activity management
 - **Domain Converter**: Transforms between different domain representations
 - **Entity Manager**: Manages entities and their relationships
@@ -17,6 +18,7 @@ AriaScheduler implements a comprehensive scheduling system that coordinates acti
 - **State Manager**: Manages scheduling state and transitions
 
 ### Domain Conversion
+
 - **Activity Actions**: Converts activities to executable actions
 - **Durative Actions**: Handles time-based action specifications
 - **Goal Methods**: Transforms goals into method hierarchies

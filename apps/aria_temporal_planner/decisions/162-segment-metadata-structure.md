@@ -11,6 +11,7 @@ The `segment_by_bridges/1` function returns segment maps that lack the expected 
 ### Failing Tests
 
 1. **Timeline.TimelineBridgeTest** - "segment_by_bridges/1 returns single segment when no bridges"
+
    ```
    ** (KeyError) key :metadata not found in: %{
      start_time: nil,
@@ -23,12 +24,14 @@ The `segment_by_bridges/1` function returns segment maps that lack the expected 
 ### Root Cause Analysis
 
 **Current Implementation:**
+
 ```elixir
 # Returns flat maps
 %{start_time: nil, end_time: nil, intervals: intervals}
 ```
 
 **Test Expectations:**
+
 ```elixir
 # Expects nested metadata structure
 %{
@@ -62,24 +65,28 @@ We'll update the `segment_by_bridges/1` function to return segments with a dedic
 ## Implementation Plan
 
 ### Phase 1: Segment Structure Update
+
 - [ ] Update `segment_by_bridges/1` to include metadata field in returned segments
 - [ ] Add segment numbering (1, 2, 3, etc.) to metadata
 - [ ] Include bridge_before and bridge_after references in metadata
 - [ ] Maintain existing start_time, end_time, and intervals fields
 
 ### Phase 2: Metadata Content Enhancement
+
 - [ ] Add segment index/number for ordering
 - [ ] Include references to adjacent bridges
 - [ ] Add segment type classification (start, middle, end)
 - [ ] Include segment duration and interval count statistics
 
 ### Phase 3: Segment Creation Logic
+
 - [ ] Update `create_segments_from_bridges/2` helper function
 - [ ] Implement proper segment numbering logic
 - [ ] Add bridge reference tracking during segment creation
 - [ ] Handle edge cases (no bridges, single bridge, multiple bridges)
 
 ### Phase 4: Integration and Testing
+
 - [ ] Ensure all segment-related tests pass
 - [ ] Verify segment metadata is correctly populated
 - [ ] Test segment creation with various bridge configurations
@@ -97,12 +104,14 @@ We'll update the `segment_by_bridges/1` function to return segments with a dedic
 ## Consequences
 
 ### Positive
+
 - **Test Alignment**: Implementation matches test expectations
 - **Better Organization**: Metadata provides clear structure for segment information
 - **Enhanced Debugging**: Segment metadata aids in timeline analysis
 - **Future Extensibility**: Metadata structure supports additional segment features
 
 ### Negative
+
 - **Increased Complexity**: More complex segment structure to maintain
 - **Memory Usage**: Additional metadata increases memory footprint
 - **Breaking Changes**: Existing code using flat segment structure may break
@@ -115,6 +124,7 @@ We'll update the `segment_by_bridges/1` function to return segments with a dedic
 ## Implementation Notes
 
 ### Expected Segment Structure
+
 ```elixir
 %{
   start_time: DateTime.t() | nil,
@@ -131,12 +141,14 @@ We'll update the `segment_by_bridges/1` function to return segments with a dedic
 ```
 
 ### Segment Numbering Logic
+
 - Segments are numbered starting from 1
 - Numbering follows temporal order (earliest to latest)
 - Empty segments (no intervals) are excluded from results
 - Single timeline with no bridges returns segment number 1
 
 ### Bridge Reference Logic
+
 - `bridge_before`: ID of the bridge that ends before this segment starts
 - `bridge_after`: ID of the bridge that starts after this segment ends
 - First segment has `bridge_before: nil`

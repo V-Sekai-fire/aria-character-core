@@ -15,10 +15,13 @@ AriaHybridPlanner implements a flexible hybrid planning architecture that coordi
 ## Core Components
 
 ### HybridCoordinatorV2
+
 Central coordination system that orchestrates planning strategies and manages the planning lifecycle.
 
 ### Strategy System
+
 Pluggable strategy architecture supporting:
+
 - Planning strategies (HTN, goal-based)
 - Temporal reasoning strategies (STN integration)
 - State management strategies (StateV2)
@@ -26,7 +29,9 @@ Pluggable strategy architecture supporting:
 - Logging strategies (structured output)
 
 ### Plan Management
+
 Core planning logic including:
+
 - Backtracking and search algorithms
 - Plan execution and validation
 - Node expansion and goal achievement

@@ -5,8 +5,8 @@
 **ADR Reference:** ADR-151 Strict Encapsulation
 
 This module was extracted to maintain strict encapsulation boundaries.
-All core functionality (state management, domain utilities, validation, 
-multigoal processing, and MiniZinc execution) now available in the 
+All core functionality (state management, domain utilities, validation,
+multigoal processing, and MiniZinc execution) now available in the
 dedicated umbrella app.
 
 ## Extracted Components
@@ -21,5 +21,6 @@ dedicated umbrella app.
 ## Dependencies
 
 The aria_engine_core app is now a dependency of:
+
 - aria_temporal_planner (for core state and domain functionality)
 - Main aria_character_core project (for engine integration)

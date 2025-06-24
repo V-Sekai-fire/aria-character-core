@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Timeline.BridgeOperations do
   @moduledoc "Bridge management functionality for Timeline segmentation and decision points.\n\nThis module handles:\n- Bridge CRUD operations\n- Bridge validation and placement\n- Bridge querying and filtering\n- Bridge positioning and sorting\n\nBridges represent decision points, synchronization points, or other temporal\nmarkers that can be used to segment timelines for analysis or execution.\n"
   alias AriaEngine.Timeline.Bridge
