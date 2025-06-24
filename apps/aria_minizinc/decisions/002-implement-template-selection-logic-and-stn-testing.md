@@ -6,12 +6,12 @@
 
 ## Context
 
-The `aria_minizinc` app currently has two MiniZinc templates but only uses one:
+The `aria_minizinc` app currently has two MiniZinc templates but lacks proper template selection logic:
 
 ### Current Template Situation
-- **`goal_solving.mzn.eex`**: Currently used for all problem generation
-- **`stn_temporal.mzn.eex`**: Exists but unused, causing compiler warning
-- **`@simple_temporal_network_template`**: Module attribute defined but never referenced
+- **`goal_solving.mzn.eex`**: Used for general constraint satisfaction problems
+- **`stn_temporal.mzn.eex`**: Used by `aria_temporal_planner` for true STN problems
+- **`@simple_temporal_network_template`**: Module attribute defined but never referenced in `aria_minizinc`
 
 ### Template Structure Analysis
 
@@ -22,35 +22,47 @@ The `aria_minizinc` app currently has two MiniZinc templates but only uses one:
 - Template variables: `@variables`, `@constraints`, `@objective`, `@num_entities`
 
 **STN Temporal Template:**
-- Specialized for Simple Temporal Network problems
-- Uses activity-based modeling with durations and temporal constraints
-- Optimizes for makespan minimization
-- Template variables: `@num_activities`, `@durations`, `@constraints` (from/to/min/max format)
+- Specialized for Simple Temporal Network problems (time points + distance constraints)
+- Uses time point modeling with temporal distance constraints
+- Optimizes for temporal consistency and makespan minimization
+- Template variables: `@num_activities` (time points), `@durations`, `@constraints` (from/to/min/max format)
+- Currently used by `Timeline.Internal.STN.MiniZincSolver` in `aria_temporal_planner`
 
 ### Problem
 
-1. **Unused Template Warning**: `@simple_temporal_network_template` generates compiler warning
+1. **Unused Template Reference**: `@simple_temporal_network_template` generates compiler warning in `aria_minizinc`
 2. **Missing Template Selection**: No logic to choose appropriate template based on problem type
-3. **Incomplete STN Support**: STN template exists but no data transformation or testing
-4. **Limited Problem Coverage**: Only goal-solving problems supported, missing STN-specific optimizations
+3. **Incomplete STN Support**: `aria_minizinc` cannot generate STN problems despite having access to STN template
+4. **Limited Problem Coverage**: Only goal-solving problems supported, missing STN temporal constraint problems
 
 ## Decision
 
-Implement comprehensive template selection logic that automatically chooses the appropriate MiniZinc template based on problem characteristics, with full STN support and testing coverage.
+Implement explicit template selection logic with a mathematically sound Simple Temporal Network (STN) implementation alongside the existing goal-solving template.
 
 ### Template Selection Strategy
 
-**Selection Criteria:**
-1. **Explicit Problem Type**: `options[:problem_type] == :stn` → Use STN template
-2. **Temporal Constraint Detection**: Multiple activities with temporal constraints → Use STN template
-3. **Activity-Based Problems**: Problems with durations and scheduling → Use STN template
-4. **Default Fallback**: All other problems → Use goal_solving template
+**Explicit Selection Criteria (No Defaults):**
+1. **STN Problems**: `options[:problem_type] == :stn` → Use `stn_temporal.mzn.eex`
+2. **Goal-Solving Problems**: `options[:problem_type] == :goal_solving` → Use `goal_solving.mzn.eex`
+3. **Missing Problem Type**: Return error requiring explicit problem type specification
+
+**True STN Implementation:**
+- **Time Point Variables**: Activities represented as time points, not start/end intervals
+- **Distance Constraint Matrix**: All temporal relationships expressed as distance constraints between time points
+- **STN Consistency**: Proper STN constraint satisfaction using `time_point[j] - time_point[i] ≤ distance[i,j]` format
+- **No Legacy Scheduling Concepts**: Remove temporal_ordering and other legacy flags from previous scheduling implementations
 
 **Data Transformation Requirements:**
-- Convert between goal-solving and STN data formats
-- Transform structured variables to activity-based variables
-- Generate STN-compatible constraints with from/to/min/max distances
-- Create appropriate objective functions for each template type
+- **STN Format**: Transform activities into time point pairs with distance constraints for durations and precedence
+- **Goal-Solving Format**: Use existing structured variables (time_vars, location_vars, boolean_vars)
+- Generate template-specific constraint formats and objective functions
+- Validate data completeness for each template type
+
+**External Integration API:**
+- Explicit template selection: `%{problem_type: :stn}` or `%{problem_type: :goal_solving}`
+- Clear documentation for STN vs goal-solving problem characteristics
+- Consistent error handling across both template types
+- No fallback between template types - explicit choice required
 
 ## Implementation Plan
 
@@ -62,67 +74,66 @@ Implement comprehensive template selection logic that automatically chooses the 
 
 - [ ] **Create STN detection logic** (`is_stn_problem?/3`)
   - Check for explicit `:stn` problem type in options
-  - Detect temporal constraints with activity relationships
-  - Identify duration-based scheduling problems
+  - Return boolean for template selection
+  - Simple, deterministic logic based on problem type
 
 - [ ] **Update `build_minizinc_model/4`** to use template selection
   - Call template selection logic before data transformation
   - Branch to appropriate data transformation based on selected template
   - Maintain backward compatibility with existing functionality
 
-### Phase 2: STN Data Transformation ✅ PLANNED
-- [ ] **Add STN-specific type definitions**
+### Phase 2: True STN Data Transformation ✅ PLANNED
+- [ ] **Add True STN type definitions**
   ```elixir
-  @type stn_activity :: %{
-    id: non_neg_integer(),
-    name: String.t(),
-    duration: non_neg_integer()
-  }
+  @type stn_time_point :: non_neg_integer()  # Time point index
   
-  @type stn_constraint :: %{
-    from_activity: non_neg_integer(),
-    to_activity: non_neg_integer(),
-    min_distance: integer(),
-    max_distance: integer()
+  @type stn_distance_constraint :: %{
+    from_point: non_neg_integer(),
+    to_point: non_neg_integer(),
+    distance: integer()  # Maximum distance: to_point - from_point ≤ distance
   }
   
   @type stn_problem_data :: %{
-    num_activities: non_neg_integer(),
-    activities: [stn_activity()],
-    durations: [non_neg_integer()],
-    constraints: [stn_constraint()]
+    num_time_points: non_neg_integer(),
+    time_point_names: [String.t()],  # Human-readable names for time points
+    distance_matrix: [[integer()]],  # Full distance constraint matrix
+    horizon: non_neg_integer()       # Maximum time value
   }
   ```
 
-- [ ] **Create STN variable extraction** (`extract_stn_variables/2`)
-  - Convert goals to activities with durations
-  - Generate activity IDs and names
-  - Extract duration information from goals or defaults
+- [ ] **Create STN time point mapping** (`extract_stn_time_points/2`)
+  - Convert activities to time point pairs (start_point, end_point)
+  - Generate time point indices and name mappings
+  - Create time point relationships for temporal reasoning
 
-- [ ] **Implement STN constraint generation** (`generate_stn_constraints/3`)
-  - Transform temporal constraints to from/to/min/max format
-  - Generate precedence constraints between activities
-  - Add duration constraints and resource constraints
+- [ ] **Implement STN distance matrix generation** (`generate_stn_distance_matrix/3`)
+  - Create full distance constraint matrix between all time points
+  - Add duration constraints: `end_point - start_point ≤ duration` and `start_point - end_point ≤ -duration`
+  - Add precedence constraints: `start_B - end_A ≤ 0` for sequential activities
+  - Remove legacy min_distance/max_distance concepts
 
-- [ ] **Add STN objective generation** (`generate_stn_objective/2`)
-  - Minimize makespan (default for STN problems)
-  - Support alternative objectives (minimize cost, maximize efficiency)
+- [ ] **Add STN consistency objective** (`generate_stn_objective/2`)
+  - Focus on temporal consistency satisfaction
+  - Optional makespan minimization using latest time point
+  - Remove legacy scheduling optimization concepts
 
-### Phase 3: STN Template Integration ✅ PLANNED
-- [ ] **Create STN data transformation pipeline** (`transform_to_stn_format/4`)
-  - Convert structured goal-solving data to STN format
-  - Generate STN-compatible template variables
-  - Validate STN data structure completeness
+### Phase 3: True STN Template Integration ✅ PLANNED
+- [ ] **Create True STN template** (`stn_temporal.mzn.eex`)
+  - Replace current hybrid template with pure STN implementation
+  - Use time point variables: `array[1..num_time_points] of var 0..horizon: time_points`
+  - Use distance constraint matrix: `array[1..num_time_points, 1..num_time_points] of int: distance_matrix`
+  - Add STN consistency constraint: `constraint forall(i,j in 1..num_time_points)(time_points[j] - time_points[i] <= distance_matrix[i,j])`
 
-- [ ] **Update template rendering logic**
-  - Support both template formats in `render_template/2`
-  - Handle different template variable structures
-  - Maintain error handling for both template types
+- [ ] **Remove legacy STN elements**
+  - Remove start_times/end_times arrays (use time_points instead)
+  - Remove durations array (encode as distance constraints)
+  - Remove temporal_ordering logic and min/max distance concepts
+  - Remove makespan optimization (focus on consistency)
 
-- [ ] **Add STN template validation**
-  - Verify STN template variables are complete
-  - Validate constraint format compatibility
-  - Check activity and duration consistency
+- [ ] **Update STN data transformation pipeline** (`transform_to_stn_format/4`)
+  - Convert activities to time point pairs with distance matrix
+  - Generate proper STN template variables (num_time_points, distance_matrix, horizon)
+  - Remove legacy constraint generation logic
 
 ### Phase 4: Comprehensive STN Testing ✅ PLANNED
 
@@ -137,9 +148,9 @@ Implement comprehensive template selection logic that automatically chooses the 
 
 - [ ] **STN Data Transformation Tests**
   ```elixir
-  test "converts goals to STN activities with durations"
-  test "generates STN constraints from temporal relationships"
-  test "transforms structured variables to activity format"
+  test "converts goals to STN time points"
+  test "generates STN distance constraints from temporal relationships"
+  test "transforms structured variables to time point format"
   test "handles malformed STN data gracefully"
   ```
 
@@ -147,9 +158,9 @@ Implement comprehensive template selection logic that automatically chooses the 
 - [ ] **End-to-End STN Problem Generation**
   ```elixir
   test "generates complete STN problem from temporal goals"
-  test "solves simple temporal network with 3 activities"
-  test "optimizes makespan for scheduling problem"
-  test "handles complex STN with multiple constraints"
+  test "solves simple temporal network with time point constraints"
+  test "optimizes temporal consistency for STN problem"
+  test "handles complex STN with multiple distance constraints"
   ```
 
 - [ ] **Template Comparison Tests**
@@ -165,7 +176,15 @@ Implement comprehensive template selection logic that automatically chooses the 
   test "template selection completes within acceptable time"
   test "STN data transformation scales with problem size"
   test "template rendering performance comparison"
+  test "benchmark STN vs goal-solving generation time"
+  test "measure memory usage for both template types"
   ```
+
+- [ ] **Performance Benchmarking Requirements**
+  - Measure template selection time (target: <1ms)
+  - Compare STN vs goal-solving data transformation time
+  - Track memory usage for both template types
+  - Generate performance reports for optimization decisions
 
 ### Phase 5: Documentation and Integration ✅ PLANNED
 - [ ] **Update module documentation**
@@ -236,8 +255,8 @@ Implement comprehensive template selection logic that automatically chooses the 
 **Positive:**
 - **Template Utilization**: Both templates actively used, eliminating compiler warnings
 - **Problem Coverage**: Support for both general CSP and specialized STN problems
-- **Automatic Selection**: Intelligent template selection based on problem characteristics
-- **Performance Optimization**: STN-specific optimizations for temporal scheduling problems
+- **Explicit Selection**: Clear, intentional template selection based on explicit problem type
+- **Performance Optimization**: STN-specific optimizations for temporal constraint problems
 - **Comprehensive Testing**: Full test coverage for both template types
 
 **Negative:**
@@ -270,26 +289,34 @@ The comprehensive testing approach ensures both templates work correctly and mai
 
 Success depends on careful implementation of data transformation logic and thorough testing of both template types to ensure reliability and performance.
 
-## Current Status - June 23, 2025
+## Current Status - June 24, 2025
 
 ### Implementation Progress
 
-**✅ Planning Complete:**
-- Comprehensive analysis of template structure and requirements
-- Detailed implementation plan with clear phases and success criteria
-- Template selection criteria and STN data transformation strategy defined
+**✅ Partial Implementation Discovered:**
+- Template selection logic already implemented in ProblemGenerator
+- STN template integration partially working with hybrid approach
+- Tests passing but using legacy temporal_ordering concepts
+- Compiler warning resolved (template is being used)
 
-**🔄 Ready for Implementation:**
-- Phase 1: Template Selection Infrastructure (next immediate step)
-- Phase 2: STN Data Transformation (high priority)
-- Phase 3: STN Template Integration (critical path)
-- Phase 4: Comprehensive STN Testing (quality assurance)
+**⚠️ Architecture Issue Identified:**
+- Current STN implementation is hybrid (start/end times + distance constraints)
+- Uses legacy temporal_ordering flags from removed scheduling system
+- Not mathematically sound STN (mixes interval and time point approaches)
+- Tests expect legacy constraint formats (min/max distance values)
+
+**🔄 Refactoring Required:**
+- Phase 1: Remove legacy temporal_ordering logic ✅ IMMEDIATE
+- Phase 2: Implement true STN with time points and distance matrix ✅ HIGH PRIORITY  
+- Phase 3: Update STN template to pure time point approach ✅ CRITICAL PATH
+- Phase 4: Refactor tests to match true STN expectations ✅ QUALITY ASSURANCE
 
 **📋 Next Actions:**
-1. Implement `select_template/3` function with selection criteria
-2. Add STN detection logic (`is_stn_problem?/3`)
-3. Update `build_minizinc_model/4` to use template selection
-4. Create STN type definitions and data structures
-5. Begin STN test suite development
+1. Remove temporal_ordering references from ProblemGenerator
+2. Simplify STN constraint generation (remove min/max distance complexity)
+3. Redesign STN template for pure time point variables
+4. Update tests to expect true STN constraint formats
+5. Implement distance matrix approach for STN problems
 
-This ADR provides the roadmap for eliminating the unused template warning while significantly expanding MiniZinc problem-solving capabilities.
+**🎯 Immediate Goal:**
+Clean up legacy scheduling concepts and implement mathematically sound Simple Temporal Network support that aligns with STN theory and supports Allen's Interval Algebra through time point constraints.

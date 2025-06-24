@@ -38,7 +38,7 @@ defmodule AriaMiniZinc.Solver do
           solve_with_fixpoint(problem_data, options)
 
         {:error, reason} ->
-          Logger.warn("MiniZinc solver failed: #{inspect(reason)}, trying Fixpoint fallback")
+          Logger.warning("MiniZinc solver failed: #{inspect(reason)}, trying Fixpoint fallback")
           solve_with_fixpoint(problem_data, options)
       end
     rescue

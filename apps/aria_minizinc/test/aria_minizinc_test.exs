@@ -2,8 +2,6 @@ defmodule AriaMiniZincTest do
   use ExUnit.Case
   doctest AriaMiniZinc
 
-  alias AriaMiniZinc.{Solver}
-
   describe "AriaMiniZinc main API" do
     test "check_availability returns status" do
       result = AriaMiniZinc.check_availability()

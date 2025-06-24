@@ -10,8 +10,6 @@ defmodule AriaMiniZinc.ProblemGenerator do
   """
 
   require Logger
-  alias AriaEngine.State
-  import Timex
 
   # Type definitions
   @type goal :: {subject :: String.t(), predicate :: String.t(), object :: term()}
@@ -62,9 +60,30 @@ defmodule AriaMiniZinc.ProblemGenerator do
   @type domain :: map()
   @type options :: map()
 
+  # STN-specific type definitions
+  @type stn_activity :: %{
+    id: non_neg_integer(),
+    name: String.t(),
+    duration: non_neg_integer()
+  }
+
+  @type stn_constraint :: %{
+    from_activity: non_neg_integer(),
+    to_activity: non_neg_integer(),
+    min_distance: integer(),
+    max_distance: integer()
+  }
+
+  @type stn_problem_data :: %{
+    num_activities: non_neg_integer(),
+    activities: [stn_activity()],
+    durations: [non_neg_integer()],
+    constraints: [stn_constraint()]
+  }
+
   @template_dir "priv/templates/minizinc"
   @goal_solving_template "goal_solving.mzn.eex"
-  @simple_temporal_network_template "simple_temporal_network.mzn.eex"
+  @simple_temporal_network_template "stn_temporal.mzn.eex"
 
   @doc """
   Generate a MiniZinc problem from planning parameters.
@@ -98,7 +117,7 @@ defmodule AriaMiniZinc.ProblemGenerator do
       objective = generate_objective(goals, options)
 
       # Build complete MiniZinc model
-      model = build_minizinc_model(variables, constraints, objective, generation_start)
+      model = build_minizinc_model(variables, constraints, objective, generation_start, options)
 
       # Calculate total variable count from structured variables
       variable_count = count_total_variables(variables)
@@ -286,8 +305,23 @@ defmodule AriaMiniZinc.ProblemGenerator do
     end
   end
 
-  # Build complete MiniZinc model using template
-  defp build_minizinc_model(variables, constraints, objective, generation_start) do
+  # Build complete MiniZinc model using template selection
+  defp build_minizinc_model(variables, constraints, objective, generation_start, options) do
+    # Select appropriate template based on problem characteristics
+    selected_template = select_template(variables, constraints, options)
+
+    Logger.debug("Selected template: #{selected_template}")
+
+    case selected_template do
+      @simple_temporal_network_template ->
+        build_stn_model(variables, constraints, objective, generation_start, options)
+      @goal_solving_template ->
+        build_goal_solving_model(variables, constraints, objective, generation_start)
+    end
+  end
+
+  # Build goal-solving model (existing logic)
+  defp build_goal_solving_model(variables, constraints, objective, generation_start) do
     # Convert structured data to template format
     variable_count = count_total_variables(variables)
 
@@ -312,6 +346,117 @@ defmodule AriaMiniZinc.ProblemGenerator do
     }
 
     render_template(@goal_solving_template, template_vars)
+  end
+
+  # Build STN model with activity-based data transformation
+  defp build_stn_model(variables, constraints, objective, generation_start, options) do
+    stn_data = transform_to_stn_format(variables, constraints, objective, options)
+
+    template_vars = %{
+      num_activities: stn_data.num_activities,
+      num_constraints: length(stn_data.constraints),
+      durations: stn_data.durations,
+      constraints: stn_data.constraints,
+      generation_start: generation_start
+    }
+
+    render_template(@simple_temporal_network_template, template_vars)
+  end
+
+  # Template selection logic
+  defp select_template(_variables, _constraints, options) do
+    if is_stn_problem?(options) do
+      @simple_temporal_network_template
+    else
+      @goal_solving_template
+    end
+  end
+
+  # STN problem detection logic
+  defp is_stn_problem?(options) do
+    Map.get(options, :problem_type) == :stn
+  end
+
+  # Transform goal-solving data to STN format
+  @spec transform_to_stn_format(structured_variables(), [constraint()], String.t(), options()) :: stn_problem_data()
+  defp transform_to_stn_format(variables, constraints, _objective, options) do
+    # Extract activities from variables
+    activities = extract_stn_activities(variables, options)
+
+    # Generate durations for activities
+    durations = Enum.map(activities, fn activity -> activity.duration end)
+
+    # Generate STN constraints from existing constraints
+    stn_constraints = generate_stn_constraints(constraints, activities, options)
+
+    %{
+      num_activities: length(activities),
+      activities: activities,
+      durations: durations,
+      constraints: stn_constraints
+    }
+  end
+
+  # Extract STN activities from structured variables
+  defp extract_stn_activities(variables, options) do
+    # Get default duration from options or use 30 as default
+    default_duration = Map.get(options, :default_duration, 30)
+
+    # Convert time variables to activities
+    variables.time_vars
+    |> Enum.with_index(1)
+    |> Enum.map(fn {var, index} ->
+      # Extract entity name from variable name (remove "_time" suffix)
+      entity_name = String.replace(var.name, "_time", "")
+
+      %{
+        id: index,
+        name: entity_name,
+        duration: default_duration
+      }
+    end)
+  end
+
+  # Generate STN constraints from existing constraints
+  defp generate_stn_constraints(constraints, activities, _options) do
+    # Convert temporal ordering constraints to STN format
+    temporal_constraints = Enum.filter(constraints, fn constraint ->
+      Map.get(constraint, :type) == :temporal_ordering
+    end)
+
+    if length(temporal_constraints) > 0 and length(activities) > 1 do
+      # Generate sequential ordering constraints
+      1..(length(activities) - 1)
+      |> Enum.map(fn i ->
+        %{
+          from_activity: i,
+          to_activity: i + 1,
+          min_distance: 0,
+          max_distance: 100
+        }
+      end)
+    else
+      # Generate default constraints if no temporal ordering specified
+      generate_default_stn_constraints(activities)
+    end
+  end
+
+  # Generate default STN constraints for activities
+  defp generate_default_stn_constraints(activities) when length(activities) <= 1 do
+    []
+  end
+
+  defp generate_default_stn_constraints(activities) do
+    # Create simple precedence constraints between consecutive activities
+    1..(length(activities) - 1)
+    |> Enum.map(fn i ->
+      %{
+        from_activity: i,
+        to_activity: i + 1,
+        min_distance: 0,
+        max_distance: 200
+      }
+    end)
   end
 
   # Process variable with formatted domain
