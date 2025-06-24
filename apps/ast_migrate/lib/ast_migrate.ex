@@ -74,7 +74,7 @@ defmodule AstMigrate do
   @doc "List available transformation rules."
   @spec list_rules() :: [atom()]
   def list_rules do
-    [:unit_test_improvements]
+    [:unit_test_improvements, :timeline_namespace_fixes]
   end
 
   @doc "Get information about a specific transformation rule."
@@ -96,6 +96,10 @@ defmodule AstMigrate do
 
   defp get_rule_module(:unit_test_improvements) do
     {:ok, Rules.UnitTestImprovements}
+  end
+
+  defp get_rule_module(:timeline_namespace_fixes) do
+    {:ok, Rules.TimelineNamespaceFixes}
   end
 
   defp get_rule_module(rule_name) do
