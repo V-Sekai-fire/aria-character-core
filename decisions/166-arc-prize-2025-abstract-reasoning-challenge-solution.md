@@ -744,13 +744,41 @@ apps/
 - [ ] Passes comprehensive validation and stress testing
 - [ ] Competition submission package complete and validated
 
-### Stage 8: "Sports Car" Success (4+ weeks, Optional)
+### Stage 8: "Sports Car" Success (4+ weeks)
 
-- [ ] Achieves 35%+ accuracy on public ARC dataset
+- [ ] May achieve 20-35% ± 6% accuracy on public ARC dataset (approaching SOTA)
 - [ ] Contributes novel insights to ARC research community
-- [ ] Demonstrates advanced reasoning capabilities beyond current SOTA
+- [ ] Demonstrates advanced reasoning capabilities
 - [ ] Provides comprehensive analysis of approach effectiveness
-- [ ] Research artifacts ready for publication
+
+### Stage 9: "Formula 1 Car" Success (6+ weeks)
+
+- [ ] May achieve 35-50% ± 8% accuracy on public ARC dataset (exceeding SOTA)
+- [ ] Demonstrates genuine meta-learning and adaptation
+- [ ] Shows emergent reasoning capabilities not explicitly programmed
+- [ ] Generalizes to completely novel pattern types
+
+### Stage 10: "Rocket Ship" Success (8+ weeks)
+
+- [ ] May achieve 50-70% ± 10% accuracy on public ARC dataset (human-competitive)
+- [ ] Demonstrates reasoning indistinguishable from human cognition
+- [ ] Shows creative problem-solving on completely novel tasks
+- [ ] Exhibits genuine understanding and insight generation
+
+### Stage 11: "Starship" Success (10+ weeks)
+
+- [ ] Achieve 70-85% ± 12% accuracy on public ARC dataset (prize-competitive)
+- [ ] Consistently outperforms all existing SOTA approaches
+- [ ] Demonstrates breakthrough AGI-level reasoning capabilities
+- [ ] Ready for $1M Grand Prize competition submission
+
+### Stage 12: "Warp Drive" Success (12+ weeks)
+
+- [ ] Achieve 85%+ ± 15% accuracy on public ARC dataset (AGI-level performance)
+- [ ] Demonstrates capabilities beyond current human reasoning
+- [ ] Shows creative problem-solving exceeding human insight
+- [ ] Represents breakthrough in artificial general intelligence
+- [ ] **WINS THE ARC PRIZE 2025 $1,000,000 GRAND PRIZE**
 
 ### Overall Competition Goals
 
