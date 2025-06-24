@@ -357,31 +357,37 @@ apps/
 │   │   ├── openrouter.ex           # OpenRouter client
 │   │   ├── prompting.ex            # Model-specific prompts
 │   │   ├── response_parser.ex      # Response validation
-│   │   └── ensemble.ex             # Multi-model coordination
+│   │   ├── ensemble.ex             # Multi-model coordination
+│   │   └── api_management.ex       # API rate limiting and health monitoring
 │   └── mix.exs
-├── aria_pattern_library/           # Pattern Analytics Layer
+├── aria_pattern_library/           # Pattern Analytics and Data Generation Layer
 │   ├── lib/aria_pattern_library/
 │   │   ├── duckdb_store.ex         # DuckDB analytics and discovery
 │   │   ├── sqlite_store.ex         # SQLite competition runtime
 │   │   ├── pattern_matcher.ex      # Template-based recognition
 │   │   ├── analytics.ex            # Success rates and composition
 │   │   ├── export.ex               # Parquet export for research
-│   │   └── pipeline.ex             # DuckDB ↔ SQLite data flow
+│   │   ├── pipeline.ex             # DuckDB ↔ SQLite data flow
+│   │   ├── synthetic_data.ex       # Synthetic task generation
+│   │   └── data_validation.ex      # Generated data quality assurance
 │   └── mix.exs
-├── aria_program_synthesis/         # Reasoning Layer
+├── aria_program_synthesis/         # Reasoning and Search Layer
 │   ├── lib/aria_program_synthesis/
 │   │   ├── search.ex               # Discrete program search
 │   │   ├── constraints.ex          # Constraint-based synthesis
 │   │   ├── optimization.ex         # Search space optimization
-│   │   └── validation.ex           # Program scoring
+│   │   ├── validation.ex           # Program scoring
+│   │   └── training.ex             # Active inference and model adaptation
 │   └── mix.exs
-└── aria_arc_coordinator/           # Orchestration Layer
+└── aria_arc_coordinator/           # Orchestration and Operations Layer
     ├── lib/aria_arc_coordinator/
     │   ├── coordinator.ex          # Main orchestration
     │   ├── strategy_factory.ex     # Strategy management
     │   ├── ensemble_voting.ex      # Result aggregation
     │   ├── task_loader.ex          # ARC task processing
-    │   └── synthetic_data.ex       # Data generation
+    │   ├── testing.ex              # Testing and validation
+    │   ├── competition.ex          # Competition packaging and compliance
+    │   └── visualization.ex        # Debug visualization and analysis
     └── mix.exs
 ```
 
@@ -681,6 +687,29 @@ System reaches basic functionality but performs poorly due to fundamental gaps i
 - **Mismatched requirements:** ARC needs discrete symbolic reasoning (adjacency, containment, pattern matching), not physics simulation
 
 **Correct Approach:** Lightweight algorithmic spatial analysis with MiniZinc for complex constraint satisfaction when needed.
+
+### Infinite App Decomposition (Rejected)
+
+**Considered:** Continuously decomposing functionality into additional specialized apps (aria_arc_testing, aria_arc_competition, aria_arc_viz, aria_arc_datagen, aria_arc_training, aria_arc_config, etc.)
+
+**Rejection Rationale:**
+- **Analysis paralysis:** Infinite decomposition prevents actual implementation progress
+- **Time constraints:** Competition deadline requires execution focus, not architectural perfection
+- **Integration complexity:** Each additional app adds exponential integration testing burden
+- **Diminishing returns:** Beyond 6 apps, additional decomposition adds overhead without benefit
+- **Resource allocation:** Development time better spent on implementation than architecture refinement
+
+**Final Architecture Decision:** **6 apps maximum** with expanded responsibilities per app to handle secondary concerns. No further decomposition permitted.
+
+**Locked Architecture:**
+1. `aria_grid` - Foundation grid operations
+2. `aria_arc_domain` - ARC planning domain
+3. `aria_llm_client` - External integration + API management
+4. `aria_pattern_library` - Pattern analytics + synthetic data generation
+5. `aria_program_synthesis` - Reasoning + search + training
+6. `aria_arc_coordinator` - Orchestration + testing + competition + visualization
+
+**Implementation Focus:** Build these 6 apps with expanded scope rather than creating additional specialized apps.
 
 ## Related ADRs
 
