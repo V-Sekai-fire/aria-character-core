@@ -1,8 +1,9 @@
-% True STN (Simple Temporal Network) Problem
-% Generated from EEx template - Time Point Based Implementation
+% Generated MiniZinc Model - Simple Temporal Network Problem
+% Variables: <%= @num_time_points %>
+% Generated at: <%= @generation_start %>
 
-% Problem parameters
 int: num_time_points = <%= @num_time_points %>;
+
 int: horizon = <%= @horizon %>;
 set of int: TIME_POINTS = 1..num_time_points;
 
