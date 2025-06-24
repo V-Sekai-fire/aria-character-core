@@ -88,8 +88,9 @@ First, we create the basic structure - like building the frame of a house before
 #### Core Infrastructure (Technical)
 
 - [ ] Create `aria_grid` app - Foundation layer for grid operations
+- [ ] Create `aria_arc_domain` app - ARC planning domain with actions and methods
 - [ ] Create `aria_arc_coordinator` app - Main orchestration layer
-- [ ] Extend `aria_hybrid_planner` with ARC transformation actions and methods
+- [ ] Integrate `aria_arc_domain` with existing `aria_hybrid_planner`
 - [ ] Establish proper umbrella app dependencies following Aria patterns
 - [ ] Implement basic ARC task loading and validation in coordinator
 
@@ -106,15 +107,24 @@ Build the core grid representation and operations:
   - [ ] Shape detection and manipulation - identify and modify objects
   - [ ] Spatial relationship analysis - understand how things relate in space
 
-#### Hybrid Planner Extension (`aria_hybrid_planner`) (Detailed)
+#### ARC Domain Development (`aria_arc_domain`) (Detailed)
 
-Extend existing planner with ARC transformation capabilities:
+Create dedicated ARC planning domain following Aria's domain-driven architecture:
 
-- [ ] Add ARC-specific action types to existing action system
-- [ ] Implement grid transformation methods using aria_grid operations
-- [ ] Create composition and sequencing rules for transformations
-- [ ] Add pattern expression capabilities within planning framework
-- [ ] Integrate transformation validation with existing planning validation
+- [ ] Implement ARC-specific planning actions (rotate, mirror, color_map, etc.)
+- [ ] Create grid transformation methods using aria_grid operations
+- [ ] Define composition and sequencing rules for transformations
+- [ ] Add ARC task state representation and validation
+- [ ] Integrate with aria_hybrid_planner through domain registration
+
+#### Hybrid Planner Integration (`aria_hybrid_planner`) (Detailed)
+
+Integrate ARC domain with existing planning infrastructure:
+
+- [ ] Register aria_arc_domain with existing strategy factory
+- [ ] Add ARC strategy types to coordinator ensemble
+- [ ] Integrate domain validation with existing planning validation
+- [ ] Enable ARC domain methods in planning workflows
 
 #### Coordinator Setup (`aria_arc_coordinator`) (Detailed)
 
@@ -334,6 +344,14 @@ apps/
 │   │   ├── color_mapping.ex        # Color transformations
 │   │   └── spatial_analysis.ex     # Discrete 2D grid relationship analysis
 │   └── mix.exs
+├── aria_arc_domain/                # ARC Planning Domain Layer
+│   ├── lib/aria_arc_domain/
+│   │   ├── actions.ex              # ARC-specific planning actions
+│   │   ├── methods.ex              # Grid transformation methods
+│   │   ├── rules.ex                # Composition and sequencing rules
+│   │   ├── state.ex                # ARC task state representation
+│   │   └── validation.ex           # Domain-specific validation
+│   └── mix.exs
 ├── aria_llm_client/                # External Integration Layer
 │   ├── lib/aria_llm_client/
 │   │   ├── openrouter.ex           # OpenRouter client
@@ -367,7 +385,7 @@ apps/
     └── mix.exs
 ```
 
-**Grid Transformation Language:** Instead of a separate DSL app, grid transformation primitives are implemented as ARC-specific actions and methods within the existing `aria_hybrid_planner`, reusing Aria's proven planning representation for composition, sequencing, and rule validation.
+**ARC Planning Domain:** The `aria_arc_domain` app contains ARC-specific planning actions, methods, and rules that integrate with `aria_hybrid_planner`. This follows Aria's domain-driven planning architecture where domain logic is separated from the general planning engine.
 
 ### App Dependencies
 
@@ -375,10 +393,11 @@ apps/
 ```
 aria_arc_coordinator
 ├── aria_grid
+├── aria_arc_domain
 ├── aria_llm_client
 ├── aria_pattern_library
 ├── aria_program_synthesis
-├── aria_hybrid_planner (existing, extended with ARC actions)
+├── aria_hybrid_planner (existing)
 ├── aria_temporal_planner (existing)
 ├── aria_membrane_pipeline (existing)
 ├── aria_minizinc (existing)
@@ -386,13 +405,17 @@ aria_arc_coordinator
 
 aria_program_synthesis
 ├── aria_grid
+├── aria_arc_domain
 └── aria_pattern_library
 
 aria_pattern_library
 └── aria_grid
 
-aria_hybrid_planner (existing, extended)
-└── aria_grid (for ARC transformation actions)
+aria_arc_domain
+└── aria_grid
+
+aria_hybrid_planner (existing)
+└── aria_arc_domain (for ARC planning domain integration)
 
 aria_llm_client
 └── (external dependencies only)
