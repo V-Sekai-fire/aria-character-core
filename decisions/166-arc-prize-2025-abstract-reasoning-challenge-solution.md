@@ -282,7 +282,7 @@ apps/
 │   │   ├── transformations.ex      # Rotation, mirroring, scaling
 │   │   ├── pattern_matching.ex     # Shape detection and extraction
 │   │   ├── color_mapping.ex        # Color transformations
-│   │   └── spatial_analysis.ex     # Relationship analysis
+│   │   └── spatial_analysis.ex     # Discrete 2D grid relationship analysis
 │   └── mix.exs
 ├── aria_dsl/                       # Language Layer
 │   ├── lib/aria_dsl/
@@ -555,6 +555,21 @@ System reaches basic functionality but performs poorly due to fundamental gaps i
 - **Integration complexity:** Leverage existing Aria patterns and architecture
 - **Resource constraints:** Prioritize high-impact strategies first
 - **Team coordination:** Clear ownership and interface definitions
+
+## Tombstoned Approaches
+
+### Physics Engine Integration (Rejected)
+
+**Considered:** Integrating physics engines like MuJoCo for spatial analysis in `aria_grid`
+
+**Rejection Rationale:**
+- **Wrong abstraction level:** ARC problems are discrete 2D grid reasoning, not continuous physics simulation
+- **Massive over-engineering:** Physics engines designed for 3D rigid body dynamics, collision detection, and force calculations
+- **Computational overhead:** Unnecessary complexity for simple grid adjacency and pattern matching
+- **Integration complexity:** Would add significant dependencies and maintenance burden
+- **Mismatched requirements:** ARC needs discrete symbolic reasoning (adjacency, containment, pattern matching), not physics simulation
+
+**Correct Approach:** Lightweight algorithmic spatial analysis with MiniZinc for complex constraint satisfaction when needed.
 
 ## Related ADRs
 
