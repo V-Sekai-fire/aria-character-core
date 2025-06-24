@@ -525,11 +525,13 @@ aria_grid
 System reaches basic functionality but performs poorly due to fundamental gaps in ARC-specific reasoning. Complex architecture becomes liability rather than asset.
 
 **Recommended Risk Mitigation:**
-1. **Start with simple baseline:** Single-app prototype before umbrella architecture
+1. **Start with minimal umbrella scope:** Begin with aria_grid + aria_arc_coordinator only, add other apps incrementally
 2. **Validate core assumptions early:** Test basic grid reasoning on public ARC data within 2 weeks
 3. **Plan for failure:** Have backup plan for simpler submission if complex approach fails
 4. **Budget reality:** Assume 3-5x longer development time than estimated
 5. **Expert consultation:** Engage ARC research community early for guidance
+
+**Note:** Monolithic apps are not viable based on Aria's previous experience - they collapse under complexity. The umbrella architecture is necessary to prevent code collapse, but we can start with minimal scope and expand incrementally.
 
 ## Risk Mitigation
 
