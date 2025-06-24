@@ -621,10 +621,11 @@ apps/
 
 ### Overall Competition Goals
 
-- **Minimum Viable (Stage 4):** 3-8% accuracy - Basic competitive submission
-- **Target Performance (Stage 6):** 10-20% accuracy - Respectable showing
-- **Stretch Goal (Stage 8):** 20-35% accuracy - Approaching SOTA performance
-- **Grand Prize Territory:** 50%+ accuracy - Breakthrough performance (highly unlikely)
+- **Minimum Viable (Stage 4):** 3-8% ± 2% accuracy - Basic competitive submission
+- **Target Performance (Stage 6):** 10-20% ± 4% accuracy - Respectable showing
+- **Stretch Goal (Stage 8):** 20-35% ± 6% accuracy - Approaching SOTA performance
+- **Prize Contention:** 40-60% ± 10% accuracy - Competitive for $1M Grand Prize
+- **Grand Prize Victory:** 85%+ accuracy - Breakthrough AGI-level performance (extremely unlikely)
 
 ### Risk-Adjusted Expectations
 
