@@ -12,7 +12,21 @@ defmodule AriaMiniZinc.STNTemplateTest do
       domain = %{name: "test_domain"}
       state = %{entities: ["robot", "box"]}
       goals = [{"robot", "location", "room1"}, {"box", "location", "room2"}]
-      options = %{problem_type: :stn}
+
+      # Provide timepoints and distance matrix for STN
+      timepoints = ["robot_start", "robot_end", "box_start", "box_end"]
+      distance_matrix = [
+        [0, 30, 999999, 999999],      # robot_start
+        [999999, 0, 0, 999999],       # robot_end -> box_start (precedence)
+        [999999, 999999, 0, 25],      # box_start
+        [999999, 999999, 999999, 0]   # box_end
+      ]
+
+      options = %{
+        problem_type: :stn,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
@@ -43,13 +57,13 @@ defmodule AriaMiniZinc.STNTemplateTest do
       state = %{entities: []}
       goals = []
 
-      # Test with empty goals and STN problem type
+      # Test with empty goals and STN problem type - no timepoints provided
       options = %{problem_type: :stn}
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Should still use STN template with proper empty handling
-      assert String.contains?(problem_data.model, "Simple Temporal Network Problem")
-      assert String.contains?(problem_data.model, "num_time_points = 0")
+      # Should return minimal STN for empty case
+      assert problem_data.model == "% Empty STN - no timepoints"
+      assert problem_data.num_time_points == 0
     end
 
     test "selects STN template for temporal constraint problems" do
@@ -60,7 +74,24 @@ defmodule AriaMiniZinc.STNTemplateTest do
         {"task2", "location", "middle"},
         {"task3", "location", "end"}
       ]
-      options = %{problem_type: :stn, temporal_constraints: true}
+
+      # Provide timepoints and distance matrix
+      timepoints = ["task1_start", "task1_end", "task2_start", "task2_end", "task3_start", "task3_end"]
+      distance_matrix = [
+        [0, 20, 999999, 999999, 999999, 999999],     # task1_start
+        [999999, 0, 0, 999999, 999999, 999999],      # task1_end -> task2_start
+        [999999, 999999, 0, 15, 999999, 999999],     # task2_start
+        [999999, 999999, 999999, 0, 0, 999999],      # task2_end -> task3_start
+        [999999, 999999, 999999, 999999, 0, 10],     # task3_start
+        [999999, 999999, 999999, 999999, 999999, 0]  # task3_end
+      ]
+
+      options = %{
+        problem_type: :stn,
+        temporal_constraints: true,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
@@ -71,7 +102,7 @@ defmodule AriaMiniZinc.STNTemplateTest do
   end
 
   describe "STN Data Transformation Tests" do
-    test "converts goals to STN time points with durations" do
+    test "converts timepoints to STN format with durations" do
       domain = %{name: "test_domain"}
       state = %{entities: ["robot", "box", "truck"]}
       goals = [
@@ -79,7 +110,24 @@ defmodule AriaMiniZinc.STNTemplateTest do
         {"box", "location", "truck"},
         {"truck", "location", "destination"}
       ]
-      options = %{problem_type: :stn, default_duration: 45}
+
+      # Provide explicit timepoints (2 per entity: start and end)
+      timepoints = ["robot_start", "robot_end", "box_start", "box_end", "truck_start", "truck_end"]
+      distance_matrix = [
+        [0, 45, 999999, 999999, 999999, 999999],     # robot_start
+        [999999, 0, 0, 999999, 999999, 999999],      # robot_end -> box_start
+        [999999, 999999, 0, 45, 999999, 999999],     # box_start
+        [999999, 999999, 999999, 0, 0, 999999],      # box_end -> truck_start
+        [999999, 999999, 999999, 999999, 0, 45],     # truck_start
+        [999999, 999999, 999999, 999999, 999999, 0]  # truck_end
+      ]
+
+      options = %{
+        problem_type: :stn,
+        default_duration: 45,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
@@ -96,7 +144,21 @@ defmodule AriaMiniZinc.STNTemplateTest do
         {"task_a", "state", "completed"},
         {"task_b", "state", "completed"}
       ]
-      options = %{problem_type: :stn, temporal_ordering: true}
+
+      timepoints = ["task_a_start", "task_a_end", "task_b_start", "task_b_end"]
+      distance_matrix = [
+        [0, 30, 999999, 999999],      # task_a_start
+        [999999, 0, 0, 999999],       # task_a_end -> task_b_start (ordering)
+        [999999, 999999, 0, 25],      # task_b_start
+        [999999, 999999, 999999, 0]   # task_b_end
+      ]
+
+      options = %{
+        problem_type: :stn,
+        temporal_ordering: true,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
@@ -105,15 +167,29 @@ defmodule AriaMiniZinc.STNTemplateTest do
       assert String.contains?(problem_data.model, "time_points[j] - time_points[i] <= distance_matrix[i,j]")
     end
 
-    test "transforms structured variables to time point format" do
+    test "transforms timepoints to proper STN format" do
       domain = %{name: "test_domain"}
       state = %{entities: ["entity1", "entity2"]}
       goals = [{"entity1", "location", "room1"}, {"entity2", "location", "room2"}]
-      options = %{problem_type: :stn, default_duration: 20}
+
+      timepoints = ["entity1_start", "entity1_end", "entity2_start", "entity2_end"]
+      distance_matrix = [
+        [0, 20, 999999, 999999],      # entity1_start
+        [999999, 0, 0, 999999],       # entity1_end -> entity2_start
+        [999999, 999999, 0, 20],      # entity2_start
+        [999999, 999999, 999999, 0]   # entity2_end
+      ]
+
+      options = %{
+        problem_type: :stn,
+        default_duration: 20,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Check that variables were transformed to time point format
+      # Check that timepoints were used correctly
       assert String.contains?(problem_data.model, "num_time_points")
       assert String.contains?(problem_data.model, "time_points")
       assert String.contains?(problem_data.model, "distance_matrix")
@@ -123,17 +199,29 @@ defmodule AriaMiniZinc.STNTemplateTest do
       domain = %{name: "test_domain"}
       state = %{entities: ["valid_entity"]}
 
-      # Mix of valid and invalid goals
+      # Mix of valid and invalid goals (goals are ignored for STN anyway)
       goals = [
         {"valid_entity", "location", "room1"},
         "invalid_goal_format",
         {:invalid, "tuple", "format"}
       ]
-      options = %{problem_type: :stn}
+
+      # Provide valid timepoints and matrix
+      timepoints = ["valid_start", "valid_end"]
+      distance_matrix = [
+        [0, 30],
+        [999999, 0]
+      ]
+
+      options = %{
+        problem_type: :stn,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Should handle gracefully and only process valid goals
+      # Should handle gracefully with provided timepoints
       assert String.contains?(problem_data.model, "num_time_points")
       assert is_binary(problem_data.model)
     end
@@ -142,24 +230,47 @@ defmodule AriaMiniZinc.STNTemplateTest do
       domain = %{name: "test_domain"}
       state = %{entities: ["single_task"]}
       goals = [{"single_task", "location", "target"}]
-      options = %{problem_type: :stn}
+
+      # Single timepoint
+      timepoints = ["single_task_point"]
+      distance_matrix = [[0]]  # 1x1 matrix
+
+      options = %{
+        problem_type: :stn,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Single time point should work without constraints
+      # Single time point should work
       assert String.contains?(problem_data.model, "num_time_points")
       assert String.contains?(problem_data.model, "distance_matrix")
     end
 
-    test "uses default time point configuration when not specified" do
+    test "uses default configuration when minimal timepoints provided" do
       domain = %{name: "test_domain"}
       state = %{entities: ["task1", "task2"]}
       goals = [{"task1", "location", "a"}, {"task2", "location", "b"}]
-      options = %{problem_type: :stn}  # No default_duration specified
+
+      # Minimal timepoints
+      timepoints = ["task1_start", "task1_end", "task2_start", "task2_end"]
+      distance_matrix = [
+        [0, 30, 999999, 999999],      # task1_start
+        [999999, 0, 0, 999999],       # task1_end -> task2_start
+        [999999, 999999, 0, 30],      # task2_start
+        [999999, 999999, 999999, 0]   # task2_end
+      ]
+
+      options = %{
+        problem_type: :stn,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }  # No default_duration specified
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Should use default time point configuration
+      # Should use provided timepoints
       assert String.contains?(problem_data.model, "num_time_points")
       assert String.contains?(problem_data.model, "distance_matrix")
     end
@@ -170,7 +281,23 @@ defmodule AriaMiniZinc.STNTemplateTest do
       domain = %{name: "test_domain"}
       state = %{entities: ["a", "b", "c"]}
       goals = [{"a", "location", "1"}, {"b", "location", "2"}, {"c", "location", "3"}]
-      options = %{problem_type: :stn, temporal_ordering: true}
+
+      timepoints = ["a_start", "a_end", "b_start", "b_end", "c_start", "c_end"]
+      distance_matrix = [
+        [0, 20, 999999, 999999, 999999, 999999],     # a_start
+        [999999, 0, 0, 999999, 999999, 999999],      # a_end -> b_start
+        [999999, 999999, 0, 20, 999999, 999999],     # b_start
+        [999999, 999999, 999999, 0, 0, 999999],      # b_end -> c_start
+        [999999, 999999, 999999, 999999, 0, 20],     # c_start
+        [999999, 999999, 999999, 999999, 999999, 0]  # c_end
+      ]
+
+      options = %{
+        problem_type: :stn,
+        temporal_ordering: true,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
@@ -189,7 +316,21 @@ defmodule AriaMiniZinc.STNTemplateTest do
       domain = %{name: "test_domain"}
       state = %{entities: ["x", "y"]}
       goals = [{"x", "state", "done"}, {"y", "state", "done"}]
-      options = %{problem_type: :stn, temporal_constraints: true}
+
+      timepoints = ["x_start", "x_end", "y_start", "y_end"]
+      distance_matrix = [
+        [0, 15, 999999, 999999],      # x_start
+        [999999, 0, 0, 999999],       # x_end -> y_start
+        [999999, 999999, 0, 15],      # y_start
+        [999999, 999999, 999999, 0]   # y_end
+      ]
+
+      options = %{
+        problem_type: :stn,
+        temporal_constraints: true,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
@@ -202,12 +343,13 @@ defmodule AriaMiniZinc.STNTemplateTest do
       domain = %{name: "empty_domain"}
       state = %{entities: []}
       goals = []
-      options = %{problem_type: :stn}
+      options = %{problem_type: :stn}  # No timepoints provided
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Should generate valid empty STN model with new template format
-      assert String.contains?(problem_data.model, "num_time_points = 0")
+      # Should generate valid empty STN model
+      assert problem_data.model == "% Empty STN - no timepoints"
+      assert problem_data.num_time_points == 0
       assert is_binary(problem_data.model)
       assert String.length(problem_data.model) > 0
     end

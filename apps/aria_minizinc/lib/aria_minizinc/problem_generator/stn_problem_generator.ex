@@ -3,10 +3,10 @@
 
 defmodule AriaMiniZinc.ProblemGenerator.STNProblemGenerator do
   @moduledoc """
-  Generates MiniZinc Simple Temporal Network (STN) problems from planning requests.
+  Generates MiniZinc Simple Temporal Network (STN) problems from timepoints and distance constraints.
 
   This module handles the generation of STN constraint satisfaction problems
-  for temporal planning scenarios.
+  for temporal planning scenarios using direct timepoint and distance matrix input.
   """
 
   require Logger
@@ -15,13 +15,7 @@ defmodule AriaMiniZinc.ProblemGenerator.STNProblemGenerator do
   @simple_temporal_network_template "stn_temporal.mzn.eex"
 
   # STN-specific type definitions
-  @type stn_time_point :: non_neg_integer()  # Time point index
-
-  @type stn_distance_constraint :: %{
-    from_point: non_neg_integer(),
-    to_point: non_neg_integer(),
-    distance: integer()  # Maximum distance: to_point - from_point ≤ distance
-  }
+  @type stn_time_point :: String.t()  # Time point name
 
   @type stn_problem_data :: %{
     num_time_points: non_neg_integer(),
@@ -31,12 +25,11 @@ defmodule AriaMiniZinc.ProblemGenerator.STNProblemGenerator do
   }
 
   @doc """
-  Generate an STN MiniZinc problem.
+  Generate an STN MiniZinc problem from timepoints and distance matrix.
 
   ## Parameters
-  - `domain` - The planning domain
-  - `state` - Current state
-  - `goals` - List of goals in {subject, predicate, value} format
+  - `timepoints` - List of timepoint names (e.g., ["task_A_start", "task_A_end"])
+  - `distance_matrix` - 2D matrix of distance constraints between timepoints
   - `options` - Planning options and constraints
   - `generation_start` - ISO8601 timestamp when generation started
 
@@ -44,63 +37,23 @@ defmodule AriaMiniZinc.ProblemGenerator.STNProblemGenerator do
   - `{:ok, problem_data}` - Successfully generated problem
   - `{:error, reason}` - Failed to generate problem
   """
-  @spec generate(Common.domain(), Common.state(), [Common.goal()], Common.options(), Common.iso8601_datetime()) ::
+  @spec generate([String.t()], [[integer()]], Common.options(), Common.iso8601_datetime()) ::
           {:ok, map()} | {:error, String.t()}
-  def generate(domain, state, goals, options, generation_start) do
+  def generate(timepoints, distance_matrix, options, generation_start) do
     try do
-      Logger.debug("Generating STN MiniZinc problem for #{length(goals)} goals")
+      Logger.debug("Generating STN MiniZinc problem for #{length(timepoints)} timepoints")
 
-      # Extract variables and transform to STN format
-      variables = Common.extract_variables(goals, state)
-      constraints = Common.generate_constraints(domain, state, goals, options)
-
-      # Transform to STN time points and distance matrix
-      time_points = extract_stn_time_points(variables, options)
-      distance_matrix = generate_stn_distance_matrix(time_points, constraints, options)
-      horizon = Map.get(options, :horizon, 1000)
-
-      # Prepare template variables
-      template_vars = %{
-        num_time_points: length(time_points),
-        time_point_names: time_points,
-        distance_matrix: distance_matrix,
-        horizon: horizon,
-        generation_start: generation_start
-      }
-
-      # Render the MiniZinc model using template
-      model = Common.render_template(@simple_temporal_network_template, template_vars)
-
-      # Calculate generation end time and duration
-      generation_end = Timex.now() |> Timex.format!("{ISO:Extended}")
-      generation_duration = Common.calculate_duration(generation_start, generation_end)
-
-      # Calculate variable count to match goal-solving format (3 variables per entity)
-      original_variable_count = Common.count_total_variables(variables)
-
-      # Create metadata
-      metadata = %{
-        goal_count: length(goals),
-        variable_count: original_variable_count,  # Use original count for consistency
-        constraint_count: length(constraints),
-        optimization: Common.determine_optimization_type(options),
-        generation_start: generation_start,
-        generation_end: generation_end,
-        generation_duration: generation_duration,
-        domain: "stn"
-      }
-
-      # Return data structure with both :model and :type for compatibility
-      {:ok, %{
-        model: model,
-        type: :stn,
-        num_time_points: length(time_points),
-        time_point_names: time_points,
-        distance_matrix: distance_matrix,
-        horizon: horizon,
-        generation_start: generation_start,
-        metadata: metadata
-      }}
+      # Handle empty timepoints case - return minimal valid STN without MiniZinc call
+      if length(timepoints) == 0 do
+        return_minimal_stn(options, generation_start)
+      else
+        # Validate inputs
+        with :ok <- validate_inputs(timepoints, distance_matrix) do
+          generate_stn_problem(timepoints, distance_matrix, options, generation_start)
+        else
+          {:error, reason} -> {:error, reason}
+        end
+      end
     rescue
       error ->
         Logger.error("Failed to generate STN MiniZinc problem: #{inspect(error)}")
@@ -108,154 +61,112 @@ defmodule AriaMiniZinc.ProblemGenerator.STNProblemGenerator do
     end
   end
 
-  # Extract STN time points from structured variables
-  @spec extract_stn_time_points(Common.structured_variables(), Common.options()) :: [String.t()]
-  defp extract_stn_time_points(variables, _options) do
-    # Convert each entity to time point pairs (start_point, end_point)
-    variables.time_vars
-    |> Enum.flat_map(fn var ->
-      # Extract entity name from variable name (remove "_time" suffix)
-      entity_name = String.replace(var.name, "_time", "")
+  # Return minimal valid STN for empty timepoints case
+  defp return_minimal_stn(options, generation_start) do
+    generation_end = Timex.now() |> Timex.format!("{ISO:Extended}")
+    generation_duration = Common.calculate_duration(generation_start, generation_end)
 
-      # Create start and end time points for each entity/activity
-      ["#{entity_name}_start", "#{entity_name}_end"]
-    end)
+    metadata = %{
+      goal_count: 0,
+      variable_count: 0,
+      constraint_count: 0,
+      optimization: :none,
+      generation_start: generation_start,
+      generation_end: generation_end,
+      generation_duration: generation_duration,
+      domain: "stn"
+    }
+
+    {:ok, %{
+      model: "% Empty STN - no timepoints",
+      type: :stn,
+      num_time_points: 0,
+      time_point_names: [],
+      distance_matrix: [],
+      horizon: Map.get(options, :horizon, 1000),
+      generation_start: generation_start,
+      metadata: metadata
+    }}
   end
 
-  # Generate STN distance constraint matrix
-  @spec generate_stn_distance_matrix([String.t()], [Common.constraint()], Common.options()) :: [[integer()]]
-  defp generate_stn_distance_matrix(time_points, constraints, options) do
-    num_points = length(time_points)
-    default_duration = Map.get(options, :default_duration, 30)
+  # Validate timepoints and distance matrix inputs
+  defp validate_inputs(timepoints, distance_matrix) do
+    cond do
+      length(timepoints) == 0 ->
+        {:error, "Empty timepoints list"}
 
-    # Handle empty case - return empty matrix
-    if num_points == 0 do
-      []
-    else
-      # Initialize distance matrix with infinity (represented as large number)
-      infinity = 999999
-      base_matrix = for _i <- 1..num_points, do: (for _j <- 1..num_points, do: infinity)
+      length(distance_matrix) != length(timepoints) ->
+        {:error, "Distance matrix row count (#{length(distance_matrix)}) doesn't match timepoint count (#{length(timepoints)})"}
 
-      # Set diagonal to 0 (distance from point to itself)
-      diagonal_matrix = base_matrix
+      not Enum.all?(distance_matrix, fn row -> length(row) == length(timepoints) end) ->
+        {:error, "Distance matrix is not square - all rows must have #{length(timepoints)} columns"}
+
+      true ->
+        :ok
+    end
+  end
+
+  # Generate the actual STN problem
+  defp generate_stn_problem(timepoints, distance_matrix, options, generation_start) do
+    horizon = Map.get(options, :horizon, 1000)
+
+    # Prepare template variables
+    template_vars = %{
+      num_time_points: length(timepoints),
+      time_point_names: timepoints,
+      distance_matrix: distance_matrix,
+      horizon: horizon,
+      generation_start: generation_start
+    }
+
+    # Render the MiniZinc model using template
+    model = Common.render_template(@simple_temporal_network_template, template_vars)
+
+    # Calculate generation end time and duration
+    generation_end = Timex.now() |> Timex.format!("{ISO:Extended}")
+    generation_duration = Common.calculate_duration(generation_start, generation_end)
+
+    # Create metadata
+    metadata = %{
+      goal_count: 0,  # STNs don't have goals
+      variable_count: length(timepoints),  # One variable per timepoint
+      constraint_count: count_active_constraints(distance_matrix),
+      optimization: Common.determine_optimization_type(options),
+      generation_start: generation_start,
+      generation_end: generation_end,
+      generation_duration: generation_duration,
+      domain: "stn"
+    }
+
+    # Return data structure with both :model and :type for compatibility
+    {:ok, %{
+      model: model,
+      type: :stn,
+      num_time_points: length(timepoints),
+      time_point_names: timepoints,
+      distance_matrix: distance_matrix,
+      horizon: horizon,
+      generation_start: generation_start,
+      metadata: metadata
+    }}
+  end
+
+  # Count active constraints in distance matrix (non-infinity values)
+  defp count_active_constraints(distance_matrix) do
+    infinity = 999999
+
+    distance_matrix
+    |> Enum.with_index()
+    |> Enum.reduce(0, fn {row, i}, acc ->
+      row
       |> Enum.with_index()
-      |> Enum.map(fn {row, i} ->
-        row
-        |> Enum.with_index()
-        |> Enum.map(fn {val, j} ->
-          if i == j, do: 0, else: val
-        end)
+      |> Enum.reduce(acc, fn {val, j}, row_acc ->
+        cond do
+          i == j -> row_acc  # Diagonal elements don't count as constraints
+          val == infinity -> row_acc  # Infinity values are not active constraints
+          true -> row_acc + 1  # Active constraint
+        end
       end)
-
-      # Add duration constraints (end_point - start_point ≤ duration)
-      duration_matrix = add_duration_constraints(diagonal_matrix, time_points, default_duration)
-
-      # Add precedence constraints from temporal ordering
-      precedence_matrix = add_precedence_constraints(duration_matrix, time_points, constraints)
-
-      precedence_matrix
-    end
-  end
-
-  # Add duration constraints to distance matrix
-  defp add_duration_constraints(matrix, time_points, default_duration) do
-    # Find start/end point pairs and add duration constraints
-    time_points
-    |> Enum.with_index()
-    |> Enum.reduce(matrix, fn {point_name, point_index}, acc_matrix ->
-      if String.ends_with?(point_name, "_start") do
-        # Find corresponding end point
-        entity_name = String.replace(point_name, "_start", "")
-        end_point_name = "#{entity_name}_end"
-
-        case Enum.find_index(time_points, &(&1 == end_point_name)) do
-          nil -> acc_matrix  # No corresponding end point found
-          end_index ->
-            # Add constraint: end_point - start_point ≤ duration
-            # Also add: start_point - end_point ≤ -duration (for consistency)
-            acc_matrix
-            |> update_matrix_cell(point_index, end_index, default_duration)
-            |> update_matrix_cell(end_index, point_index, -default_duration)
-        end
-      else
-        acc_matrix
-      end
-    end)
-  end
-
-  # Add precedence constraints to distance matrix
-  defp add_precedence_constraints(matrix, time_points, constraints) do
-    # Check for temporal ordering constraints
-    temporal_constraints = Enum.filter(constraints, fn constraint ->
-      Map.get(constraint, :type) == :temporal_ordering
-    end)
-
-    if length(temporal_constraints) > 0 do
-      # Add sequential precedence constraints between activities
-      add_sequential_precedence(matrix, time_points)
-    else
-      matrix
-    end
-  end
-
-  # Add sequential precedence constraints (activity A must finish before activity B starts)
-  defp add_sequential_precedence(matrix, time_points) do
-    # Group time points by entity
-    entities = time_points
-    |> Enum.map(fn point ->
-      cond do
-        String.ends_with?(point, "_start") -> String.replace(point, "_start", "")
-        String.ends_with?(point, "_end") -> String.replace(point, "_end", "")
-        true -> point
-      end
-    end)
-    |> Enum.uniq()
-
-    # Add precedence constraints between consecutive entities
-    entities
-    |> Enum.with_index()
-    |> Enum.reduce(matrix, fn {_entity, entity_index}, acc_matrix ->
-      if entity_index < length(entities) - 1 do
-        # Current entity end point
-        current_entity = Enum.at(entities, entity_index)
-        next_entity = Enum.at(entities, entity_index + 1)
-
-        current_end_name = "#{current_entity}_end"
-        next_start_name = "#{next_entity}_start"
-
-        current_end_index = Enum.find_index(time_points, &(&1 == current_end_name))
-        next_start_index = Enum.find_index(time_points, &(&1 == next_start_name))
-
-        if current_end_index && next_start_index do
-          # Add constraint: next_start - current_end ≤ 0 (next can start immediately after current ends)
-          update_matrix_cell(acc_matrix, current_end_index, next_start_index, 0)
-        else
-          acc_matrix
-        end
-      else
-        acc_matrix
-      end
-    end)
-  end
-
-  # Helper function to update a cell in the distance matrix
-  defp update_matrix_cell(matrix, from_index, to_index, distance) do
-    matrix
-    |> Enum.with_index()
-    |> Enum.map(fn {row, row_index} ->
-      if row_index == from_index do
-        row
-        |> Enum.with_index()
-        |> Enum.map(fn {cell, col_index} ->
-          if col_index == to_index do
-            min(cell, distance)  # Take minimum of existing and new constraint
-          else
-            cell
-          end
-        end)
-      else
-        row
-      end
     end)
   end
 end

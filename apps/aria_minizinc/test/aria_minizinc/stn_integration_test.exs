@@ -26,10 +26,23 @@ defmodule AriaMiniZinc.STNIntegrationTest do
         {"task_3", "state", "completed"}
       ]
 
+      # Provide explicit timepoints and distance matrix for STN
+      timepoints = ["task_1_start", "task_1_end", "task_2_start", "task_2_end", "task_3_start", "task_3_end"]
+      distance_matrix = [
+        [0, 60, 999999, 999999, 999999, 999999],     # task_1_start
+        [999999, 0, 0, 999999, 999999, 999999],      # task_1_end -> task_2_start
+        [999999, 999999, 0, 60, 999999, 999999],     # task_2_start
+        [999999, 999999, 999999, 0, 0, 999999],      # task_2_end -> task_3_start
+        [999999, 999999, 999999, 999999, 0, 60],     # task_3_start
+        [999999, 999999, 999999, 999999, 999999, 0]  # task_3_end
+      ]
+
       options = %{
         problem_type: :stn,
         temporal_ordering: true,
-        default_duration: 60
+        default_duration: 60,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
       }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
@@ -45,8 +58,8 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       assert String.contains?(problem_data.model, "solve minimize makespan")
 
       # Verify metadata
-      assert problem_data.metadata.goal_count == 3
-      assert problem_data.metadata.variable_count == 9  # 3 entities * 3 variable types
+      assert problem_data.metadata.goal_count == 0  # STNs don't have goals
+      assert problem_data.metadata.variable_count == 6  # 6 timepoints
       assert is_binary(problem_data.metadata.generation_start)
       assert is_binary(problem_data.metadata.generation_end)
     end
@@ -59,10 +72,24 @@ defmodule AriaMiniZinc.STNIntegrationTest do
         {"activity_b", "location", "middle"},
         {"activity_c", "location", "end"}
       ]
+
+      # Provide timepoints and distance matrix
+      timepoints = ["activity_a_start", "activity_a_end", "activity_b_start", "activity_b_end", "activity_c_start", "activity_c_end"]
+      distance_matrix = [
+        [0, 30, 999999, 999999, 999999, 999999],     # activity_a_start
+        [999999, 0, 0, 999999, 999999, 999999],      # activity_a_end -> activity_b_start
+        [999999, 999999, 0, 30, 999999, 999999],     # activity_b_start
+        [999999, 999999, 999999, 0, 0, 999999],      # activity_b_end -> activity_c_start
+        [999999, 999999, 999999, 999999, 0, 30],     # activity_c_start
+        [999999, 999999, 999999, 999999, 999999, 0]  # activity_c_end
+      ]
+
       options = %{
         problem_type: :stn,
         temporal_constraints: true,
-        default_duration: 30
+        default_duration: 30,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
       }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
@@ -92,10 +119,26 @@ defmodule AriaMiniZinc.STNIntegrationTest do
         {"job3", "state", "done"},
         {"job4", "state", "done"}
       ]
+
+      # Provide timepoints and distance matrix for 4 jobs
+      timepoints = ["job1_start", "job1_end", "job2_start", "job2_end", "job3_start", "job3_end", "job4_start", "job4_end"]
+      distance_matrix = [
+        [0, 25, 999999, 999999, 999999, 999999, 999999, 999999],     # job1_start
+        [999999, 0, 0, 999999, 999999, 999999, 999999, 999999],      # job1_end -> job2_start
+        [999999, 999999, 0, 25, 999999, 999999, 999999, 999999],     # job2_start
+        [999999, 999999, 999999, 0, 0, 999999, 999999, 999999],      # job2_end -> job3_start
+        [999999, 999999, 999999, 999999, 0, 25, 999999, 999999],     # job3_start
+        [999999, 999999, 999999, 999999, 999999, 0, 0, 999999],      # job3_end -> job4_start
+        [999999, 999999, 999999, 999999, 999999, 999999, 0, 25],     # job4_start
+        [999999, 999999, 999999, 999999, 999999, 999999, 999999, 0]  # job4_end
+      ]
+
       options = %{
         problem_type: :stn,
         temporal_ordering: true,
-        default_duration: 25
+        default_duration: 25,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
       }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
@@ -129,11 +172,26 @@ defmodule AriaMiniZinc.STNIntegrationTest do
         {"clean", "state", "completed"}
       ]
 
+      # Provide timepoints and distance matrix for complex scheduling
+      timepoints = ["prep_start", "prep_end", "cook_start", "cook_end", "serve_start", "serve_end", "clean_start", "clean_end"]
+      distance_matrix = [
+        [0, 15, 999999, 999999, 999999, 999999, 999999, 999999],     # prep_start
+        [999999, 0, 0, 999999, 999999, 999999, 999999, 999999],      # prep_end -> cook_start
+        [999999, 999999, 0, 15, 999999, 999999, 999999, 999999],     # cook_start
+        [999999, 999999, 999999, 0, 0, 999999, 999999, 999999],      # cook_end -> serve_start
+        [999999, 999999, 999999, 999999, 0, 15, 999999, 999999],     # serve_start
+        [999999, 999999, 999999, 999999, 999999, 0, 0, 999999],      # serve_end -> clean_start
+        [999999, 999999, 999999, 999999, 999999, 999999, 0, 15],     # clean_start
+        [999999, 999999, 999999, 999999, 999999, 999999, 999999, 0]  # clean_end
+      ]
+
       options = %{
         problem_type: :stn,
         temporal_ordering: true,
         default_duration: 15,
-        max_makespan: 120
+        max_makespan: 120,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
       }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
@@ -160,12 +218,26 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       # Generate with goal_solving template
       {:ok, goal_solving_data} = ProblemGenerator.generate_problem(domain, state, goals, %{})
 
-      # Generate with STN template
-      {:ok, stn_data} = ProblemGenerator.generate_problem(domain, state, goals, %{problem_type: :stn})
+      # Generate with STN template - provide timepoints and distance matrix
+      timepoints = ["entity1_start", "entity1_end", "entity2_start", "entity2_end"]
+      distance_matrix = [
+        [0, 30, 999999, 999999],      # entity1_start
+        [999999, 0, 0, 999999],       # entity1_end -> entity2_start
+        [999999, 999999, 0, 30],      # entity2_start
+        [999999, 999999, 999999, 0]   # entity2_end
+      ]
 
-      # Both should succeed and have consistent metadata
-      assert goal_solving_data.metadata.goal_count == stn_data.metadata.goal_count
-      assert goal_solving_data.metadata.variable_count == stn_data.metadata.variable_count
+      {:ok, stn_data} = ProblemGenerator.generate_problem(domain, state, goals, %{
+        problem_type: :stn,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      })
+
+      # Both should succeed but have different metadata (STN doesn't count goals)
+      assert goal_solving_data.metadata.goal_count == 2
+      assert stn_data.metadata.goal_count == 0  # STNs don't have goals
+      assert goal_solving_data.metadata.variable_count == 6  # 2 entities * 3 variable types
+      assert stn_data.metadata.variable_count == 4  # 4 timepoints
 
       # Models should be different but both valid
       refute goal_solving_data.model == stn_data.model
@@ -183,7 +255,24 @@ defmodule AriaMiniZinc.STNIntegrationTest do
         {"task_y", "state", "active"},
         {"task_z", "state", "active"}
       ]
-      options = %{problem_type: :stn, temporal_constraints: true}
+
+      # Provide timepoints and distance matrix
+      timepoints = ["task_x_start", "task_x_end", "task_y_start", "task_y_end", "task_z_start", "task_z_end"]
+      distance_matrix = [
+        [0, 20, 999999, 999999, 999999, 999999],     # task_x_start
+        [999999, 0, 0, 999999, 999999, 999999],      # task_x_end -> task_y_start
+        [999999, 999999, 0, 20, 999999, 999999],     # task_y_start
+        [999999, 999999, 999999, 0, 0, 999999],      # task_y_end -> task_z_start
+        [999999, 999999, 999999, 999999, 0, 20],     # task_z_start
+        [999999, 999999, 999999, 999999, 999999, 0]  # task_z_end
+      ]
+
+      options = %{
+        problem_type: :stn,
+        temporal_constraints: true,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
@@ -235,7 +324,19 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       domain = %{name: "error_test"}
       state = %{entities: ["problematic_entity"]}
       goals = [{"problematic_entity", "invalid_predicate", "invalid_value"}]
-      options = %{problem_type: :stn}
+
+      # Provide valid timepoints and distance matrix even with problematic goals
+      timepoints = ["problematic_start", "problematic_end"]
+      distance_matrix = [
+        [0, 30],
+        [999999, 0]
+      ]
+
+      options = %{
+        problem_type: :stn,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       # Should not crash, even with unusual goals
       result = ProblemGenerator.generate_problem(domain, state, goals, options)
@@ -255,7 +356,22 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       domain = %{name: "validation_test"}
       state = %{entities: ["task1", "task2"]}
       goals = [{"task1", "location", "a"}, {"task2", "location", "b"}]
-      options = %{problem_type: :stn, default_duration: 40}
+
+      # Provide timepoints and distance matrix
+      timepoints = ["task1_start", "task1_end", "task2_start", "task2_end"]
+      distance_matrix = [
+        [0, 40, 999999, 999999],      # task1_start
+        [999999, 0, 0, 999999],       # task1_end -> task2_start
+        [999999, 999999, 0, 40],      # task2_start
+        [999999, 999999, 999999, 0]   # task2_end
+      ]
+
+      options = %{
+        problem_type: :stn,
+        default_duration: 40,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
@@ -283,17 +399,13 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       domain = %{name: "empty_test"}
       state = %{entities: []}
       goals = []
-      options = %{problem_type: :stn}
+      options = %{problem_type: :stn}  # No timepoints provided
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
       # Should generate valid empty STN model
-      assert String.contains?(problem_data.model, "num_time_points = 0")
-      assert String.contains?(problem_data.model, "Empty STN problem")
-
-      # Should still have proper STN structure
-      assert String.contains?(problem_data.model, "Simple Temporal Network Problem")
-      assert String.contains?(problem_data.model, "solve satisfy")
+      assert problem_data.model == "% Empty STN - no timepoints"
+      assert problem_data.num_time_points == 0
 
       # Metadata should reflect empty problem
       assert problem_data.metadata.goal_count == 0

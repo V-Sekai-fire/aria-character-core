@@ -69,7 +69,10 @@ defmodule AriaMiniZinc.ProblemGenerator do
 
       case problem_type do
         :stn ->
-          STNProblemGenerator.generate(domain, state, goals, options, generation_start)
+          # Extract timepoints and distance matrix from options for STN problems
+          timepoints = Map.get(options, :timepoints, [])
+          distance_matrix = Map.get(options, :distance_matrix, [])
+          STNProblemGenerator.generate(timepoints, distance_matrix, options, generation_start)
         _ ->
           GoalProblemGenerator.generate(domain, state, goals, options, generation_start)
       end
