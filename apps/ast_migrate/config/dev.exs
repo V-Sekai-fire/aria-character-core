@@ -2,7 +2,3 @@
 # SPDX-License-Identifier: MIT
 
 import Config
-
-# Configure logger for development
-config :logger,
-  level: :debug

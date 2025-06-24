@@ -4,7 +4,7 @@
 import Config
 
 # Development environment configuration
-config :logger, level: :info
+config :logger, level: :debug
 
 # Configure Membrane Job Processor for development (replaces Oban)
 # config :aria_queue, AriaQueue.MembraneJobProcessor,

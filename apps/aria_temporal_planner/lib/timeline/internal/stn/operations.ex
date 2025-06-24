@@ -202,8 +202,9 @@ defmodule Timeline.Internal.STN.Operations do
   @spec solve(STN.t()) :: STN.t()
   def solve(stn) do
     if Core.simple_stn?(stn) do
-      # Simple STN - bypass MiniZinc and return as-is
-      stn
+      # Simple STN - validate consistency mathematically and bypass MiniZinc
+      validated_stn = %{stn | consistent: Core.mathematically_consistent?(stn)}
+      validated_stn
     else
       # Complex STN - use MiniZinc solver
       MiniZincSolver.solve_stn(stn)

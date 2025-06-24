@@ -2,7 +2,3 @@
 # SPDX-License-Identifier: MIT
 
 import Config
-
-# Configure logger for testing
-config :logger,
-  level: :warn

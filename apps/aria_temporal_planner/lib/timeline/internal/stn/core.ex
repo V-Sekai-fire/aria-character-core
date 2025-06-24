@@ -81,6 +81,15 @@ defmodule Timeline.Internal.STN.Core do
       update_single_constraint(updated_constraints_1, {to_point, from_point}, reverse_constraint)
 
     final_consistent = is_consistent and consistent_1 and consistent_2
+
+    # Debug logging
+    if not final_consistent do
+      require Logger
+      Logger.debug("Constraint inconsistency detected: #{from_point} -> #{to_point} #{inspect(constraint)}")
+      Logger.debug("Initial consistent: #{is_consistent}, step1: #{consistent_1}, step2: #{consistent_2}")
+      Logger.debug("Reverse constraint: #{inspect(reverse_constraint)}")
+    end
+
     updated_stn = %{stn | constraints: updated_constraints_2, consistent: final_consistent}
     updated_stn
   end
@@ -115,6 +124,20 @@ defmodule Timeline.Internal.STN.Core do
   @spec consistent?(STN.t()) :: boolean()
   def consistent?(stn) do
     stn.consistent
+  end
+
+  @doc "Validates mathematical consistency of STN constraints.
+
+  An STN is mathematically consistent if:
+  1. No constraint contradictions exist (min ≤ max)
+  2. Bilateral constraints are mathematical inverses
+  3. All bounds are mathematically sound
+  "
+  @spec mathematically_consistent?(STN.t()) :: boolean()
+  def mathematically_consistent?(stn) do
+    no_contradictions?(stn.constraints) and
+    bilateral_consistency?(stn.constraints) and
+    all_bounds_valid?(stn.constraints)
   end
 
   @doc "Gets all time points in the STN.\n"
@@ -462,6 +485,57 @@ defmodule Timeline.Internal.STN.Core do
       :hour -> div(time_value_ms, 3_600_000)
       :day -> div(time_value_ms, 86_400_000)
       _ -> time_value_ms
+    end
+  end
+
+  # Mathematical consistency validation helpers
+
+  defp no_contradictions?(constraints) do
+    Enum.all?(constraints, fn {_key, {min, max}} ->
+      # Basic mathematical constraint: min ≤ max
+      valid_constraint_bounds?(min, max)
+    end)
+  end
+
+  defp bilateral_consistency?(constraints) do
+    Enum.all?(constraints, fn {{from, to}, {min, max}} ->
+      case Map.get(constraints, {to, from}) do
+        {rev_min, rev_max} ->
+          # Reverse constraint must be mathematical inverse
+          mathematically_inverse?(min, max, rev_min, rev_max)
+        nil ->
+          # Missing reverse constraint is acceptable for simple STNs
+          true
+      end
+    end)
+  end
+
+  defp all_bounds_valid?(constraints) do
+    Enum.all?(constraints, fn {_key, {min, max}} ->
+      valid_numeric_bounds?(min, max)
+    end)
+  end
+
+  defp mathematically_inverse?(min, max, rev_min, rev_max) do
+    # For constraint A→B: {min, max}, reverse B→A should be {-max, -min}
+    expected_rev_min = negate_constraint_value(max)
+    expected_rev_max = negate_constraint_value(min)
+
+    constraint_equal?(rev_min, expected_rev_min) and
+    constraint_equal?(rev_max, expected_rev_max)
+  end
+
+  defp constraint_equal?(:infinity, :infinity), do: true
+  defp constraint_equal?(:neg_infinity, :neg_infinity), do: true
+  defp constraint_equal?(a, b) when is_number(a) and is_number(b), do: a == b
+  defp constraint_equal?(_, _), do: false
+
+  defp valid_numeric_bounds?(min, max) do
+    case {min, max} do
+      {a, b} when is_number(a) and is_number(b) -> a <= b
+      {:neg_infinity, _} -> true
+      {_, :infinity} -> true
+      _ -> false
     end
   end
 end
