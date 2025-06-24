@@ -28,7 +28,8 @@ defmodule AriaMiniZinc.MixProject do
       {:porcelain, "~> 2.0"},
       {:jason, "~> 1.4"},
       {:fixpoint, "~> 0.11.6"},
-      {:timex, "~> 3.7"}
+      {:timex, "~> 3.7"},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 end

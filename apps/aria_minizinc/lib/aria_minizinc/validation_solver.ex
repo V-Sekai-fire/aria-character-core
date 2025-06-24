@@ -171,23 +171,38 @@ defmodule AriaMiniZinc.ValidationSolver do
   defp convert_to_minizinc_format(params) do
     activities = params["activities"] || []
 
-    durations =
-      activities
-      |> Enum.map(fn activity ->
-        case activity["duration"] do
-          duration when is_integer(duration) -> duration
-          duration_str when is_binary(duration_str) -> parse_duration_string(duration_str)
-          _ -> 30
-        end
-      end)
+    # Convert activities to STN time points (start and end for each activity)
+    time_point_names = activities
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {activity, index} ->
+      activity_name = activity["id"] || "activity_#{index + 1}"
+      ["#{activity_name}_start", "#{activity_name}_end"]
+    end)
 
-    constraints = create_sequential_constraints(length(activities))
+    num_time_points = length(time_point_names)
+
+    # Create distance matrix for STN constraints
+    distance_matrix = create_stn_distance_matrix(activities, num_time_points)
+
+    # Set horizon based on total estimated duration
+    total_duration = activities
+    |> Enum.map(fn activity ->
+      case activity["duration"] do
+        duration when is_integer(duration) -> duration
+        duration_str when is_binary(duration_str) -> parse_duration_string(duration_str)
+        _ -> 30
+      end
+    end)
+    |> Enum.sum()
+
+    horizon = max(total_duration * 2, 1000)  # Give some buffer
 
     %{
-      num_activities: length(activities),
-      num_constraints: length(constraints),
-      durations: durations,
-      constraints: constraints
+      num_time_points: num_time_points,
+      time_point_names: time_point_names,
+      distance_matrix: distance_matrix,
+      horizon: horizon,
+      generation_start: DateTime.utc_now() |> DateTime.to_iso8601()
     }
   end
 
@@ -205,6 +220,90 @@ defmodule AriaMiniZinc.ValidationSolver do
       true ->
         30
     end
+  end
+
+  defp create_stn_distance_matrix(activities, num_time_points) do
+    # Initialize distance matrix with infinity (large number)
+    infinity = 999999
+
+    # Ensure minimum 1x1 matrix to avoid MiniZinc index set errors
+    actual_size = max(num_time_points, 1)
+
+    # Create base matrix filled with infinity
+    base_matrix = for _i <- 1..actual_size, do: (for _j <- 1..actual_size, do: infinity)
+
+    # Set diagonal to 0 (distance from point to itself)
+    diagonal_matrix = base_matrix
+    |> Enum.with_index()
+    |> Enum.map(fn {row, i} ->
+      row
+      |> Enum.with_index()
+      |> Enum.map(fn {val, j} ->
+        if i == j, do: 0, else: val
+      end)
+    end)
+
+    # Add duration constraints for each activity (end - start <= duration)
+    duration_matrix = activities
+    |> Enum.with_index()
+    |> Enum.reduce(diagonal_matrix, fn {activity, activity_index}, acc_matrix ->
+      start_index = activity_index * 2
+      end_index = activity_index * 2 + 1
+
+      duration = case activity["duration"] do
+        duration when is_integer(duration) -> duration
+        duration_str when is_binary(duration_str) -> parse_duration_string(duration_str)
+        _ -> 30
+      end
+
+      # Add constraint: end_time - start_time <= duration
+      if start_index < num_time_points and end_index < num_time_points do
+        update_matrix_cell(acc_matrix, start_index, end_index, duration)
+      else
+        acc_matrix
+      end
+    end)
+
+    # Add sequential constraints (activity i must finish before activity i+1 starts)
+    sequential_matrix = activities
+    |> Enum.with_index()
+    |> Enum.reduce(duration_matrix, fn {_activity, activity_index}, acc_matrix ->
+      if activity_index < length(activities) - 1 do
+        current_end_index = activity_index * 2 + 1
+        next_start_index = (activity_index + 1) * 2
+
+        # Add constraint: next_start - current_end <= 0 (next can start immediately after current ends)
+        if current_end_index < num_time_points and next_start_index < num_time_points do
+          update_matrix_cell(acc_matrix, current_end_index, next_start_index, 0)
+        else
+          acc_matrix
+        end
+      else
+        acc_matrix
+      end
+    end)
+
+    sequential_matrix
+  end
+
+  defp update_matrix_cell(matrix, from_index, to_index, distance) do
+    matrix
+    |> Enum.with_index()
+    |> Enum.map(fn {row, row_index} ->
+      if row_index == from_index do
+        row
+        |> Enum.with_index()
+        |> Enum.map(fn {cell, col_index} ->
+          if col_index == to_index do
+            min(cell, distance)  # Take minimum of existing and new constraint
+          else
+            cell
+          end
+        end)
+      else
+        row
+      end
+    end)
   end
 
   defp create_sequential_constraints(num_activities) when num_activities <= 1 do

@@ -95,6 +95,30 @@ defmodule AriaMiniZinc.ProblemGenerator do
   @simple_temporal_network_template "stn_temporal.mzn.eex"
 
   @doc """
+  Generate and solve a MiniZinc problem from planning parameters.
+
+  ## Parameters
+  - `domain` - The planning domain
+  - `state` - Current state
+  - `goals` - List of goals in {subject, predicate, value} format
+  - `options` - Planning options and constraints
+
+  ## Returns
+  - `{:ok, result}` - Successfully solved problem with solution
+  - `{:error, reason}` - Failed to generate or solve problem
+  """
+  @spec solve_problem(domain(), state(), [goal()], options()) ::
+          {:ok, map()} | {:error, String.t()}
+  def solve_problem(domain, state, goals, options \\ %{}) do
+    with {:ok, problem_data} <- generate_problem(domain, state, goals, options),
+         {:ok, result} <- AriaMiniZinc.Solver.solve(problem_data, prepare_solver_options(options, problem_data)) do
+      {:ok, result}
+    else
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
   Generate a MiniZinc problem from planning parameters.
 
   ## Parameters
@@ -398,9 +422,13 @@ defmodule AriaMiniZinc.ProblemGenerator do
     # Calculate horizon (maximum time value)
     horizon = Map.get(options, :horizon, 1000)
 
+    # Use actual matrix size (which may be larger than time_points for empty cases)
+    actual_num_points = if length(time_points) == 0, do: 1, else: length(time_points)
+    actual_time_point_names = if length(time_points) == 0, do: ["dummy_point"], else: time_points
+
     %{
-      num_time_points: length(time_points),
-      time_point_names: time_points,
+      num_time_points: actual_num_points,
+      time_point_names: actual_time_point_names,
       distance_matrix: distance_matrix,
       horizon: horizon
     }
@@ -408,10 +436,7 @@ defmodule AriaMiniZinc.ProblemGenerator do
 
   # Extract STN time points from structured variables
   @spec extract_stn_time_points(structured_variables(), options()) :: [String.t()]
-  defp extract_stn_time_points(variables, options) do
-    # Get default duration from options or use 30 as default
-    default_duration = Map.get(options, :default_duration, 30)
-
+  defp extract_stn_time_points(variables, _options) do
     # Convert each entity to time point pairs (start_point, end_point)
     variables.time_vars
     |> Enum.flat_map(fn var ->
@@ -429,9 +454,12 @@ defmodule AriaMiniZinc.ProblemGenerator do
     num_points = length(time_points)
     default_duration = Map.get(options, :default_duration, 30)
 
+    # Ensure minimum 1x1 matrix to avoid MiniZinc index set errors
+    actual_size = max(num_points, 1)
+
     # Initialize distance matrix with infinity (represented as large number)
     infinity = 999999
-    base_matrix = for _i <- 1..num_points, do: (for _j <- 1..num_points, do: infinity)
+    base_matrix = for _i <- 1..actual_size, do: (for _j <- 1..actual_size, do: infinity)
 
     # Set diagonal to 0 (distance from point to itself)
     diagonal_matrix = base_matrix
@@ -555,67 +583,6 @@ defmodule AriaMiniZinc.ProblemGenerator do
     end)
   end
 
-  # Extract STN activities from structured variables
-  defp extract_stn_activities(variables, options) do
-    # Get default duration from options or use 30 as default
-    default_duration = Map.get(options, :default_duration, 30)
-
-    # Convert time variables to activities
-    variables.time_vars
-    |> Enum.with_index(1)
-    |> Enum.map(fn {var, index} ->
-      # Extract entity name from variable name (remove "_time" suffix)
-      entity_name = String.replace(var.name, "_time", "")
-
-      %{
-        id: index,
-        name: entity_name,
-        duration: default_duration
-      }
-    end)
-  end
-
-  # Generate STN constraints from existing constraints
-  defp generate_stn_constraints(constraints, activities, _options) do
-    # Convert temporal ordering constraints to STN format
-    temporal_constraints = Enum.filter(constraints, fn constraint ->
-      Map.get(constraint, :type) == :temporal_ordering
-    end)
-
-    if length(temporal_constraints) > 0 and length(activities) > 1 do
-      # Generate sequential ordering constraints
-      1..(length(activities) - 1)
-      |> Enum.map(fn i ->
-        %{
-          from_activity: i,
-          to_activity: i + 1,
-          min_distance: 0,
-          max_distance: 100
-        }
-      end)
-    else
-      # Generate default constraints if no temporal ordering specified
-      generate_default_stn_constraints(activities)
-    end
-  end
-
-  # Generate default STN constraints for activities
-  defp generate_default_stn_constraints(activities) when length(activities) <= 1 do
-    []
-  end
-
-  defp generate_default_stn_constraints(activities) do
-    # Create simple precedence constraints between consecutive activities
-    1..(length(activities) - 1)
-    |> Enum.map(fn i ->
-      %{
-        from_activity: i,
-        to_activity: i + 1,
-        min_distance: 0,
-        max_distance: 200
-      }
-    end)
-  end
 
   # Process variable with formatted domain
   defp process_variable(var) do
@@ -668,6 +635,17 @@ defmodule AriaMiniZinc.ProblemGenerator do
 
   defp render_constraint(constraint) do
     "constraint true; % Unknown constraint: #{inspect(constraint)}"
+  end
+
+  # Prepare solver options from planning options and problem data
+  defp prepare_solver_options(options, problem_data) do
+    %{
+      solver_type: Map.get(options, :solver_type, :production),
+      timeout: Map.get(options, :timeout, 30_000),
+      solver: Map.get(options, :solver, "org.minizinc.mip.coin-bc"),
+      variable_count: problem_data.metadata.variable_count,
+      horizon: Map.get(options, :horizon, 1000)
+    }
   end
 
   # Helper functions for encoding values

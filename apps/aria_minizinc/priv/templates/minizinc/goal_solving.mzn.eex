@@ -8,17 +8,17 @@ int: num_entities = <%= @num_entities %>;
 
 % Time Variables
 <%= for var <- @variables.time_vars do %>
-<%= var.type %>: <%= var.domain %> = <%= var.name %>;
+var <%= var.domain %>: <%= var.name %>;
 <% end %>
 
 % Location Variables
 <%= for var <- @variables.location_vars do %>
-<%= var.type %>: <%= var.domain %> = <%= var.name %>;
+var <%= var.domain %>: <%= var.name %>;
 <% end %>
 
 % Boolean Variables
 <%= for var <- @variables.boolean_vars do %>
-<%= var.type %> = <%= var.name %>;
+var bool: <%= var.name %>;
 <% end %>
 
 % Constraints

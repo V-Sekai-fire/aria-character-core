@@ -3,6 +3,8 @@
 
 defmodule AriaMiniZinc.Executor do
   @moduledoc "Porcelain-based MiniZinc executor with EEx templating support.\n\nProvides clean API for executing MiniZinc models with automatic\ntemporary file management and template rendering.\n"
+
+  @behaviour AriaMiniZinc.ExecutorBehaviour
   require Logger
 
   @doc "Execute a MiniZinc model synchronously using Porcelain.\n\n## Options\n\n- `:solver` - MiniZinc solver to use (default: \"org.minizinc.mip.coin-bc\")\n- `:timeout` - Execution timeout in milliseconds (default: 30_000)\n- `:temp_dir` - Temporary directory for files (default: system temp)\n- `:output_mode` - Output mode (default: \"json\")\n- `:template_vars` - Variables for EEx template rendering\n\n## Examples\n\n    # Execute with template variables\n    {:ok, result} = Executor.exec(\"stn_temporal\", \n      template_vars: %{\n        num_activities: 3,\n        durations: [10, 20, 15],\n        constraints: [...]\n      }\n    )\n    \n    # Execute existing .mzn file\n    {:ok, result} = Executor.exec(\"widget_assembly.mzn\")\n"

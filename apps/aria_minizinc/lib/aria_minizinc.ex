@@ -125,6 +125,9 @@ defmodule AriaMiniZinc do
   - `{:error, reason}` - Model has syntax errors
   """
   def validate_model(model) do
-    Solver.validate_model(model)
+    case AriaMiniZinc.Solver.validate_model(model) do
+      :ok -> :ok
+      {:error, reason} -> {:error, reason}
+    end
   end
 end
