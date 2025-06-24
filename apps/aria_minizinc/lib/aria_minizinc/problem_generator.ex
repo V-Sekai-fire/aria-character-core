@@ -422,13 +422,10 @@ defmodule AriaMiniZinc.ProblemGenerator do
     # Calculate horizon (maximum time value)
     horizon = Map.get(options, :horizon, 1000)
 
-    # Use actual matrix size (which may be larger than time_points for empty cases)
-    actual_num_points = if length(time_points) == 0, do: 1, else: length(time_points)
-    actual_time_point_names = if length(time_points) == 0, do: ["dummy_point"], else: time_points
-
+    # Handle empty STN cases properly without dummy points
     %{
-      num_time_points: actual_num_points,
-      time_point_names: actual_time_point_names,
+      num_time_points: length(time_points),
+      time_point_names: time_points,
       distance_matrix: distance_matrix,
       horizon: horizon
     }
@@ -454,31 +451,33 @@ defmodule AriaMiniZinc.ProblemGenerator do
     num_points = length(time_points)
     default_duration = Map.get(options, :default_duration, 30)
 
-    # Ensure minimum 1x1 matrix to avoid MiniZinc index set errors
-    actual_size = max(num_points, 1)
+    # Handle empty case - return empty matrix
+    if num_points == 0 do
+      []
+    else
+      # Initialize distance matrix with infinity (represented as large number)
+      infinity = 999999
+      base_matrix = for _i <- 1..num_points, do: (for _j <- 1..num_points, do: infinity)
 
-    # Initialize distance matrix with infinity (represented as large number)
-    infinity = 999999
-    base_matrix = for _i <- 1..actual_size, do: (for _j <- 1..actual_size, do: infinity)
-
-    # Set diagonal to 0 (distance from point to itself)
-    diagonal_matrix = base_matrix
-    |> Enum.with_index()
-    |> Enum.map(fn {row, i} ->
-      row
+      # Set diagonal to 0 (distance from point to itself)
+      diagonal_matrix = base_matrix
       |> Enum.with_index()
-      |> Enum.map(fn {val, j} ->
-        if i == j, do: 0, else: val
+      |> Enum.map(fn {row, i} ->
+        row
+        |> Enum.with_index()
+        |> Enum.map(fn {val, j} ->
+          if i == j, do: 0, else: val
+        end)
       end)
-    end)
 
-    # Add duration constraints (end_point - start_point ≤ duration)
-    duration_matrix = add_duration_constraints(diagonal_matrix, time_points, default_duration)
+      # Add duration constraints (end_point - start_point ≤ duration)
+      duration_matrix = add_duration_constraints(diagonal_matrix, time_points, default_duration)
 
-    # Add precedence constraints from temporal ordering
-    precedence_matrix = add_precedence_constraints(duration_matrix, time_points, constraints)
+      # Add precedence constraints from temporal ordering
+      precedence_matrix = add_precedence_constraints(duration_matrix, time_points, constraints)
 
-    precedence_matrix
+      precedence_matrix
+    end
   end
 
   # Add duration constraints to distance matrix

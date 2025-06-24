@@ -4,6 +4,7 @@
 
 int: num_time_points = <%= @num_time_points %>;
 
+<%= if @num_time_points > 0 do %>
 int: horizon = <%= @horizon %>;
 set of int: TIME_POINTS = 1..num_time_points;
 
@@ -40,3 +41,16 @@ output [
 ] ++ [
   "% " ++ time_point_names[i] ++ " = " ++ show(time_points[i]) ++ "\n" | i in TIME_POINTS
 ];
+<% else %>
+% Empty STN problem - no time points to schedule
+var 0..0: makespan = 0;
+
+solve satisfy;
+
+% Output format for empty problem
+output [
+  "time_points = [];\n",
+  "makespan = 0;\n",
+  "% Empty STN problem - no time points\n"
+];
+<% end %>

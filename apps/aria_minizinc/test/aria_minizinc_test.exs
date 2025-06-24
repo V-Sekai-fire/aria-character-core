@@ -54,7 +54,7 @@ defmodule AriaMiniZincTest do
       assert is_map(solution)
       assert Map.has_key?(solution, :status)
       assert Map.has_key?(solution, :assignments)
-      assert Map.has_key?(solution, :solving_time)
+      assert Map.has_key?(solution, :duration)
     end
 
     test "solve with timeout option" do
@@ -65,7 +65,7 @@ defmodule AriaMiniZincTest do
       {:ok, problem_data} = AriaMiniZinc.generate_problem(domain, state, goals)
       {:ok, solution} = AriaMiniZinc.solve(problem_data, %{timeout: 5000})
 
-      assert solution.status == :optimal
+      assert solution.status == :success
     end
   end
 

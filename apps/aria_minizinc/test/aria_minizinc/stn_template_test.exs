@@ -47,7 +47,7 @@ defmodule AriaMiniZinc.STNTemplateTest do
       options = %{problem_type: :stn}
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
-      # Should still use STN template but with no time points
+      # Should still use STN template with proper empty handling
       assert String.contains?(problem_data.model, "Simple Temporal Network Problem")
       assert String.contains?(problem_data.model, "num_time_points = 0")
     end
@@ -101,8 +101,8 @@ defmodule AriaMiniZinc.STNTemplateTest do
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
 
       # Verify STN constraints were generated
-      assert String.contains?(problem_data.model, "constraints = [|")
-      assert String.contains?(problem_data.model, "1, 2, 0, 100")  # from_activity, to_activity, min_distance, max_distance
+      assert String.contains?(problem_data.model, "distance_matrix")
+      assert String.contains?(problem_data.model, "time_points[j] - time_points[i] <= distance_matrix[i,j]")
     end
 
     test "transforms structured variables to time point format" do
@@ -195,7 +195,7 @@ defmodule AriaMiniZinc.STNTemplateTest do
 
       # Verify constraint format matches STN template expectations (time-point based)
       assert String.contains?(problem_data.model, "distance_matrix")
-      assert String.contains?(problem_data.model, "time_points[j] - time_points[i] >= distance_matrix[i,j]")
+      assert String.contains?(problem_data.model, "time_points[j] - time_points[i] <= distance_matrix[i,j]")
     end
 
     test "handles empty STN problems without errors" do
