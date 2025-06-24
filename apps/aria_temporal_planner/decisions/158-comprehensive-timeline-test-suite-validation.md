@@ -208,11 +208,21 @@ apps/aria_temporal_planner/test/
 
 ## Related ADRs
 
+### Prerequisites
 - **ADR-154**: Timeline Module Namespace Aliasing Fixes (prerequisite)
-- **ADR-155**: Hybrid Planner Test Suite Restoration (integration dependency)
-- **ADR-156**: Cross-App Scheduler Dependencies (integration dependency)
 - **ADR-157**: STN Consistency Test Recovery (prerequisite)
 - **ADR-153**: STN Fixed-Point Constraint Prohibition (foundation)
+
+### Integration Dependencies
+- **ADR-155**: Hybrid Planner Test Suite Restoration (integration dependency)
+- **ADR-156**: Cross-App Scheduler Dependencies (integration dependency)
+
+### Extracted Specific Issues
+- **ADR-159**: Bridge Position Type Consistency (extracted from this ADR)
+- **ADR-160**: Timeline Bridge Storage Architecture (extracted from this ADR)
+- **ADR-161**: Bridge Validation Implementation (extracted from this ADR)
+- **ADR-162**: Segment Metadata Structure (extracted from this ADR)
+- **ADR-163**: DateTime Type Consistency (extracted from this ADR)
 
 ## Notes
 
