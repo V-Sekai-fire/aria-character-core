@@ -91,3 +91,5 @@ node_modules/.cache/prettier/.prettier-caches
 apps/.DS_Store
 /priv/
 /.migration_backup/
+
+/.statev2_fixer_backup/
