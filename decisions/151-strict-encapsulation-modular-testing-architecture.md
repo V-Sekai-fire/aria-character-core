@@ -494,6 +494,7 @@ Based on directory structure analysis, aria_engine contains these logical subdom
 ## Related ADRs
 
 - **ADR-150**: Extract lib/ modules to apps (implementation foundation)
+- **ADR-152**: Critical Zero Duration Contract Violation (interleaved implementation)
 - **ADR-056**: TODO encapsulation (API abstraction principles)
 - **ADR-022**: Test-driven development (testing methodology)
 
