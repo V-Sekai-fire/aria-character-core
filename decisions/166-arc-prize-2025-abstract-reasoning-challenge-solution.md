@@ -79,7 +79,7 @@ Create an integrated system that uses Aria's hybrid planner to coordinate multip
 
 ## Implementation Plan
 
-### Phase 1: Foundation Architecture (Weeks 1-2)
+### Phase 1: Foundation Architecture (Size: L)
 
 #### What We're Building (Simple)
 
@@ -110,7 +110,7 @@ Build a special "language" for describing how to change grids:
 
 This phase establishes the symbolic reasoning foundation essential for ARC tasks. The DSL provides compositional primitives that can be combined to express complex transformations, while integration with Aria's strategy factory enables seamless coordination with neural approaches in later phases.
 
-### Phase 2: Multi-LLM Integration (Weeks 2-3)
+### Phase 2: Multi-LLM Integration (Size: M)
 
 #### What We're Adding (Simple)
 
@@ -140,7 +140,7 @@ Build a system that learns from the specific test examples:
 
 This phase implements the neural reasoning component essential for handling novel patterns. The multi-LLM ensemble provides diverse reasoning perspectives, while active inference enables adaptation to specific task characteristics - crucial for generalizing beyond training data.
 
-### Phase 3: Synthetic Data Generation (Weeks 3-4)
+### Phase 3: Synthetic Data Generation (Size: L)
 
 #### What We're Creating (Simple)
 
@@ -170,7 +170,7 @@ Build tools to understand and replicate ARC puzzle patterns:
 
 Synthetic data generation is essential for overcoming ARC's few-shot learning constraint. The system must generate diverse, valid tasks that capture the compositional nature of ARC transformations without overfitting to public datasets. Quality validation ensures generated tasks maintain ARC's core cognitive requirements.
 
-### Phase 4: Ensemble Architecture (Weeks 4-5)
+### Phase 4: Ensemble Architecture (Size: M)
 
 #### What We're Combining (Simple)
 
@@ -200,7 +200,7 @@ Make everything run fast and efficiently:
 
 The ensemble architecture leverages the complementary strengths of symbolic and neural approaches. Discrete program search excels at systematic exploration, DSL synthesis provides compositional reasoning, and LLM strategies handle novel patterns. Confidence weighting and strategy selection enable dynamic adaptation to task characteristics.
 
-### Phase 5: Competition Preparation (Weeks 5-6)
+### Phase 5: Competition Preparation (Size: S)
 
 #### Final Preparation (Simple)
 
