@@ -36,12 +36,13 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 ### Phase 1: Mock Infrastructure and Core Restoration (Week 1: June 24-30)
 
 **Day 1-2: Mock Infrastructure Setup**
+- [ ] Add `Mox` library to `mix.exs` dependencies and run `mix deps.get`
 - [ ] Create `test/support/mocks/` directory structure
+- [ ] Set up `Mox` library for behavior-based mocking
 - [ ] Mock `AriaEngine.Core` interface with test doubles
 - [ ] Mock `AriaTemporalPlanner` STN solver with predictable responses
 - [ ] Mock `AriaScheduler` interface for timeline operations
 - [ ] Create `MockDomain` module for testing domain operations
-- [ ] Set up `Mox` library for behavior-based mocking
 - [ ] Document mock interfaces and expected behaviors
 
 **Day 3-4: Compilation Stability with Mocked Dependencies**
