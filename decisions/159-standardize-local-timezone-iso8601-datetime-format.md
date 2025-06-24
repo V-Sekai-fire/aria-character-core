@@ -64,11 +64,13 @@ end
 ### Exception Policy
 
 **Only use UTC/Zulu time when:**
+
 - The local timezone IS UTC (server running in UTC timezone)
 - Explicit cross-timezone coordination is required
 - Database internal storage (but display in local timezone)
 
 **Never use:**
+
 - `System.monotonic_time/1` for user-facing timestamps
 - `DateTime.utc_now()` unless local timezone is UTC
 - Timezone-naive datetime strings
@@ -76,11 +78,13 @@ end
 ## Implementation Plan
 
 ### Phase 1: New Code Standard (Immediate)
+
 - [ ] All new datetime fields use local timezone ISO 8601 format
 - [ ] Update coding standards documentation
 - [ ] Add Timex import to all modules handling datetime
 
 ### Phase 2: Critical Fixes (Week 1)
+
 - [x] Fix MiniZinc ProblemGenerator metadata timestamps (completed)
   - [x] Core datetime tracking implemented with ISO 8601 format
   - [x] Add missing Timex dependency to aria_minizinc mix.exs
@@ -95,6 +99,7 @@ end
 - [x] Fix any negative timestamp issues (resolved with ISO 8601 implementation)
 
 ### Phase 3: Application Audit (Week 2-3)
+
 - [ ] Audit all applications for datetime usage:
   - [ ] aria_minizinc
   - [ ] aria_hybrid_planner
@@ -104,6 +109,7 @@ end
   - [ ] Other applications
 
 ### Phase 4: Migration (Week 4)
+
 - [ ] Migrate existing UTC-only timestamps to local timezone format
 - [ ] Update API documentation
 - [ ] Update database schema if needed
@@ -111,7 +117,8 @@ end
 
 ## Application Areas
 
-### All datetime and duration fields in:
+### All datetime and duration fields in
+
 - **Logging**: All log timestamps
 - **Database records**: created_at, updated_at, processed_at
 - **API responses**: All datetime fields
@@ -126,17 +133,20 @@ end
 ## Benefits
 
 ### User Experience
+
 - **Local context**: Times make sense to local users and developers
 - **Debugging clarity**: Easy correlation with local system events
 - **Intuitive timestamps**: No mental timezone conversion required
 
 ### Technical Benefits
+
 - **Global compatibility**: ISO 8601 with timezone is universally parseable
 - **Audit compliance**: Clear temporal tracking with timezone context
 - **Consistent format**: Single standard across entire project
 - **Proper duration calculation**: Accurate timing with timezone handling
 
 ### Development Benefits
+
 - **Easier debugging**: Log timestamps match local system time
 - **Better testing**: Test execution times in local context
 - **Clear documentation**: Timestamps in documentation match local time
@@ -144,6 +154,7 @@ end
 ## Consequences
 
 ### Positive
+
 - **Consistent datetime handling** across all applications
 - **Improved debugging experience** with local timezone context
 - **Better user experience** with intuitive timestamps
@@ -151,12 +162,14 @@ end
 - **Future-proof** timezone handling
 
 ### Migration Requirements
+
 - **Code updates** needed across multiple applications
 - **Documentation updates** for API and coding standards
 - **Testing** required for timezone edge cases
 - **Training** for team on new datetime standards
 
 ### Potential Challenges
+
 - **Migration effort** for existing codebase
 - **Cross-timezone testing** complexity
 - **Database migration** if schema changes needed
@@ -183,6 +196,7 @@ end
 ## Implementation Notes
 
 ### Timex Usage
+
 ```elixir
 # Standard datetime capture
 start_time = Timex.now() |> Timex.format!("{ISO:Extended}")
@@ -197,12 +211,14 @@ parsed_dt = Timex.parse!(timestamp, "{ISO:Extended}")
 ```
 
 ### Type Specifications
+
 ```elixir
 @type iso8601_datetime :: String.t()  # "2025-06-23T23:15:24.123456-07:00"
 @type iso8601_duration :: String.t()  # "PT1.234S"
 ```
 
 ### API Parameter Standardization
+
 ```elixir
 # Before (inconsistent)
 options = %{time_horizon: 20, max_steps: 100}
@@ -220,6 +236,7 @@ end
 ```
 
 ### No Backward Compatibility Policy
+
 **Breaking Change**: All duration parameters must use ISO 8601 format. Integer values for time/duration parameters are no longer supported to ensure API consistency and eliminate ambiguity.
 
 This ADR establishes the foundation for consistent, local-timezone-aware datetime handling across the entire project.

@@ -71,6 +71,7 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
 ### Phase 1: Multigoal Data Structures ✅ PLANNED
 
 1. **Define Multigoal Types**:
+
    ```elixir
    @type objective :: %{
      name: String.t(),
@@ -101,6 +102,7 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
    - Implement template with support for multiple objectives
 
 2. **Template Structure**:
+
    ```
    % Generated MiniZinc Model - Multigoal Optimization
    % Objectives: <%= length(@objectives) %>
@@ -147,6 +149,7 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
 ### Phase 3: Generation Functions ✅ PLANNED
 
 1. **Implement Multigoal Generation**:
+
    ```elixir
    @spec generate_multigoal_problem(domain(), state(), [goal()], options()) ::
            {:ok, multigoal_problem_data()} | {:error, String.t()}
@@ -202,6 +205,7 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
    ```
 
 2. **Extract Objectives Function**:
+
    ```elixir
    @spec extract_objectives([goal()], options()) :: [objective()]
    defp extract_objectives(goals, options) do
@@ -235,6 +239,7 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
    ```
 
 3. **Optimization Method Selection**:
+
    ```elixir
    defp determine_optimization_method(options) do
      case Map.get(options, :optimization_method, :weighted_sum) do
@@ -249,6 +254,7 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
 ### Phase 4: Update Public API ✅ PLANNED
 
 1. **Add Multigoal Convenience Function**:
+
    ```elixir
    @doc """
    Solve a multigoal optimization problem.
@@ -273,6 +279,7 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
    ```
 
 2. **Update Main Generation Function**:
+
    ```elixir
    def generate_problem(domain, state, goals, options \\ %{}) do
      case Map.get(options, :problem_type) do
@@ -288,6 +295,7 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
 ### Phase 5: Comprehensive Testing ✅ PLANNED
 
 1. **Multigoal Unit Tests**:
+
    ```elixir
    describe "generate_multigoal_problem/4" do
      test "generates valid multigoal problem"
@@ -299,6 +307,7 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
    ```
 
 2. **Integration Tests**:
+
    ```elixir
    describe "multigoal optimization" do
      test "solves weighted sum optimization problem"
@@ -309,6 +318,7 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
    ```
 
 3. **Performance Tests**:
+
    ```elixir
    describe "multigoal performance" do
      test "scales with number of objectives"
@@ -320,18 +330,21 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
 ## Success Criteria
 
 **Functionality:**
+
 - [ ] Support for multiple competing objectives
 - [ ] Multiple optimization methods (weighted sum, lexicographic, Pareto)
 - [ ] Objective normalization and weighting
 - [ ] Solution comparison and analysis
 
 **Integration:**
+
 - [ ] Consistent API with other problem domains
 - [ ] Clear documentation and examples
 - [ ] Comprehensive test coverage
 - [ ] Fallback to fixpoint for multigoal problems
 
 **Performance:**
+
 - [ ] Acceptable performance with up to 10 competing objectives
 - [ ] Efficient solution comparison
 - [ ] Reasonable memory usage for large problems
@@ -339,18 +352,21 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
 ## Consequences
 
 **Positive:**
+
 - **Enhanced Capability**: Support for complex multi-objective optimization problems
 - **Flexible Optimization**: Multiple methods for different use cases
 - **Solution Analysis**: Tools for comparing and analyzing tradeoffs
 - **Consistent Architecture**: Follows the domain separation principle from ADR-003
 
 **Negative:**
+
 - **Increased Complexity**: More complex API and implementation
 - **Performance Challenges**: Multi-objective optimization is computationally intensive
 - **Usability Concerns**: Users need to understand tradeoffs between optimization methods
 - **Testing Burden**: More complex test scenarios required
 
 **Risks:**
+
 - **Solver Limitations**: MiniZinc may have limitations for certain multi-objective problems
 - **Fallback Complexity**: Implementing multi-objective optimization in fixpoint may be challenging
 - **Solution Quality**: Different optimization methods may produce significantly different results
@@ -359,10 +375,12 @@ Implement a dedicated Multigoal Optimization problem domain with its own data st
 ## Related ADRs
 
 **Parent ADRs:**
+
 - **ADR-001**: Extract MiniZinc Functionality into Dedicated App
 - **ADR-003**: Separate Goal Solving and STN Problem Domains
 
 **Related Project ADRs:**
+
 - **ADR-126**: MiniZinc Multigoal Optimization with Fallback
 - **ADR-127**: Runtime-Informed Multigoal Optimization During Lazy Execution
 

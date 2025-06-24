@@ -9,6 +9,7 @@
 Following ADR-160's libgodot integration, we need a dedicated MCP (Model Context Protocol) server to expose Godot functionality to AI assistants and development tools. This server must be separate from the existing scheduling MCP server to maintain clean separation of concerns.
 
 Key requirements:
+
 - Standalone MCP server dedicated to Godot operations
 - Comprehensive tool set based on ee0pdt/Godot-MCP API
 - Integration with aria_godot app via Unifex NIFs
@@ -34,12 +35,14 @@ Create a dedicated Godot MCP server using Elixir Hermes framework, implementing 
 **File**: `apps/aria_godot_mcp/mix.exs`
 
 **Missing/Required**:
+
 - [ ] Create aria_godot_mcp umbrella application
 - [ ] Add Elixir Hermes MCP dependency
 - [ ] Configure aria_godot app dependency
 - [ ] Set up Mix tasks for server startup
 
 **Implementation Patterns Needed**:
+
 - [ ] Hermes MCP server configuration
 - [ ] Transport protocol setup (stdio/SSE)
 - [ ] Tool registration framework
@@ -49,6 +52,7 @@ Create a dedicated Godot MCP server using Elixir Hermes framework, implementing 
 **File**: `apps/aria_godot_mcp/lib/aria_godot_mcp/tools/node_tools.ex`
 
 **Missing/Required**:
+
 - [ ] `get-scene-tree` - Returns scene tree structure
 - [ ] `get-node-properties` - Gets properties of specific node
 - [ ] `create-node` - Creates new node in scene
@@ -56,6 +60,7 @@ Create a dedicated Godot MCP server using Elixir Hermes framework, implementing 
 - [ ] `modify-node` - Updates node properties
 
 **Implementation Patterns Needed**:
+
 - [ ] MCP tool callback structure
 - [ ] Node path resolution and validation
 - [ ] Property serialization/deserialization
@@ -66,6 +71,7 @@ Create a dedicated Godot MCP server using Elixir Hermes framework, implementing 
 **File**: `apps/aria_godot_mcp/lib/aria_godot_mcp/tools/script_tools.ex`
 
 **Missing/Required**:
+
 - [ ] `list-project-scripts` - Lists all scripts in project
 - [ ] `read-script` - Reads specific script content
 - [ ] `modify-script` - Updates script content
@@ -73,6 +79,7 @@ Create a dedicated Godot MCP server using Elixir Hermes framework, implementing 
 - [ ] `analyze-script` - Provides script analysis
 
 **Implementation Patterns Needed**:
+
 - [ ] Script file path handling
 - [ ] GDScript content parsing
 - [ ] File system operations via libgodot
@@ -83,12 +90,14 @@ Create a dedicated Godot MCP server using Elixir Hermes framework, implementing 
 **File**: `apps/aria_godot_mcp/lib/aria_godot_mcp/tools/scene_tools.ex`
 
 **Missing/Required**:
+
 - [ ] `list-project-scenes` - Lists all scenes in project
 - [ ] `read-scene` - Reads scene structure
 - [ ] `create-scene` - Creates new scene file
 - [ ] `save-scene` - Saves current scene state
 
 **Implementation Patterns Needed**:
+
 - [ ] Scene file format handling
 - [ ] Resource path management
 - [ ] Scene tree serialization
@@ -99,6 +108,7 @@ Create a dedicated Godot MCP server using Elixir Hermes framework, implementing 
 **File**: `apps/aria_godot_mcp/lib/aria_godot_mcp/tools/project_tools.ex`
 
 **Missing/Required**:
+
 - [ ] `get-project-info` - Gets project metadata and settings
 - [ ] `get-project-settings` - Gets project configuration
 - [ ] `list-project-resources` - Lists project resources
@@ -107,6 +117,7 @@ Create a dedicated Godot MCP server using Elixir Hermes framework, implementing 
 - [ ] `stop-project` - Stops running project
 
 **Implementation Patterns Needed**:
+
 - [ ] Project file parsing
 - [ ] Resource enumeration
 - [ ] Process management for project execution
@@ -117,12 +128,14 @@ Create a dedicated Godot MCP server using Elixir Hermes framework, implementing 
 **File**: `apps/aria_godot_mcp/lib/aria_godot_mcp/resources.ex`
 
 **Missing/Required**:
+
 - [ ] `godot://script/current` - Current script resource
 - [ ] `godot://scene/current` - Current scene resource
 - [ ] `godot://project/info` - Project info resource
 - [ ] Resource URI handling and resolution
 
 **Implementation Patterns Needed**:
+
 - [ ] MCP resource protocol implementation
 - [ ] URI scheme handling
 - [ ] Resource caching and invalidation
@@ -131,30 +144,35 @@ Create a dedicated Godot MCP server using Elixir Hermes framework, implementing 
 ## Implementation Strategy
 
 ### Step 1: Server Foundation
+
 1. Create aria_godot_mcp app with Hermes dependency
 2. Set up basic MCP server with stdio transport
 3. Implement tool registration framework
 4. Create bridge to aria_godot app
 
 ### Step 2: Core Tool Implementation
+
 1. Implement node management tools (highest priority)
 2. Add script management capabilities
 3. Create scene manipulation tools
 4. Add project information tools
 
 ### Step 3: Advanced Features
+
 1. Implement MCP resources
 2. Add SSE transport support
 3. Create comprehensive error handling
 4. Add logging and monitoring
 
 ### Step 4: Integration and Testing
+
 1. Integration tests with aria_godot app
 2. End-to-end MCP protocol testing
 3. Performance optimization
 4. Documentation and examples
 
 ### Current Focus: MCP Server Foundation
+
 Starting with basic server setup and tool registration framework, as this provides the foundation for all Godot-specific functionality.
 
 ## Success Criteria
@@ -169,6 +187,7 @@ Starting with basic server setup and tool registration framework, as this provid
 ## Consequences
 
 **Positive:**
+
 - Dedicated server for Godot operations
 - Clean separation from scheduling MCP server
 - Complete ee0pdt/Godot-MCP API compatibility
@@ -176,6 +195,7 @@ Starting with basic server setup and tool registration framework, as this provid
 - Reusable for multiple client applications
 
 **Negative:**
+
 - Additional server process to manage
 - Complexity of MCP protocol implementation
 - Dependency on aria_godot app stability

@@ -17,12 +17,14 @@ Implement a command-line based batch processing approach using standard Unix too
 ### Phase 1: Discovery and Identification ✅
 
 **Completed Tasks:**
+
 - [x] Identify all ADR files across project structure using `find`
 - [x] Filter out tombstone files to avoid processing archived ADRs
 - [x] Use `grep` with `xargs` to find files containing "Status.*Active"
 - [x] Create temporary file list for batch processing
 
 **Commands Used:**
+
 ```bash
 find . -name "*.md" -path "*/decisions/*" | grep -v tombstone | xargs grep -l "Status.*Active" > /tmp/active_adrs.txt
 ```
@@ -30,12 +32,14 @@ find . -name "*.md" -path "*/decisions/*" | grep -v tombstone | xargs grep -l "S
 ### Phase 2: Status Format Analysis ✅
 
 **Completed Tasks:**
+
 - [x] Analyze different status line formats across ADRs
 - [x] Identify standard format: `**Status:** Active`
 - [x] Identify bullet format: `Status: Active`
 - [x] Account for existing paused ADRs: `**Status:** Active (Paused)`
 
 **Discovery Results:**
+
 - 30 total active ADRs found
 - 2 already paused ADRs identified
 - Multiple format variations requiring different sed patterns
@@ -43,12 +47,14 @@ find . -name "*.md" -path "*/decisions/*" | grep -v tombstone | xargs grep -l "S
 ### Phase 3: Batch Update Implementation ✅
 
 **Completed Tasks:**
+
 - [x] Apply sed pattern for standard format ADRs
 - [x] Handle special case for bullet format ADR
 - [x] Verify updates were applied correctly
 - [x] Ensure no double-updating of already paused ADRs
 
 **Commands Used:**
+
 ```bash
 # Standard format update
 sed -i 's/\*\*Status:\*\* Active$/\*\*Status:\*\* Active (Paused)/' $(cat /tmp/active_adrs.txt)
@@ -60,6 +66,7 @@ sed -i 's/Status: Active/Status: Active (Paused)/' ./decisions/117-temporal-plan
 ### Phase 4: Verification and Cleanup ✅
 
 **Completed Tasks:**
+
 - [x] Verify all 30 ADRs now show "Active (Paused)" status
 - [x] Confirm no remaining unpaused active ADRs
 - [x] Clean up temporary files
@@ -68,11 +75,13 @@ sed -i 's/Status: Active/Status: Active (Paused)/' ./decisions/117-temporal-plan
 ## Results
 
 **Successfully Updated ADRs:**
+
 - **11 ADRs** in `apps/aria_temporal_planner/decisions/`
 - **1 ADR** in `apps/aria_minizinc/decisions/`
 - **18 ADRs** in root `decisions/` directory
 
 **Status Transformations:**
+
 - `**Status:** Active` → `**Status:** Active (Paused)`
 - `Status: Active` → `Status: Active (Paused)`
 - Preserved existing dates and additional status information
@@ -118,6 +127,7 @@ sed -i 's/\*\*Status:\*\* Active$/\*\*Status:\*\* Active (Paused)/'
 ## Consequences
 
 **Positive:**
+
 - All active ADRs now clearly marked as paused
 - Efficient batch processing approach established
 - Reusable methodology for future ADR management
@@ -125,6 +135,7 @@ sed -i 's/\*\*Status:\*\* Active$/\*\*Status:\*\* Active (Paused)/'
 - Demonstrated effective use of command-line tools over manual processes
 
 **Negative:**
+
 - Requires understanding of Unix command-line tools
 - Sed regex patterns need careful testing for different formats
 - Temporary files needed for complex batch operations

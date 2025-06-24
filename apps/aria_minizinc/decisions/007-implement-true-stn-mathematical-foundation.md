@@ -27,6 +27,7 @@ A mathematically sound Simple Temporal Network requires:
 ### Current Template Problems
 
 The `stn_temporal.mzn.eex` template currently:
+
 - Uses start_times/end_times arrays (interval approach)
 - Includes duration arrays (legacy scheduling concept)
 - Uses temporal_ordering logic (removed from other parts of system)
@@ -39,12 +40,14 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
 ### STN Mathematical Foundation
 
 **True STN Implementation:**
+
 - **Time Point Variables**: Activities represented as time point pairs, not start/end intervals
 - **Distance Constraint Matrix**: All temporal relationships expressed as distance constraints between time points
 - **STN Consistency**: Proper STN constraint satisfaction using standard distance constraint format
 - **No Legacy Scheduling Concepts**: Remove temporal_ordering and other legacy flags
 
 **Data Transformation Requirements:**
+
 - **STN Format**: Transform activities into time point pairs with distance constraints for durations and precedence
 - Generate template-specific constraint formats and objective functions
 - Validate data completeness for STN template requirements
@@ -53,7 +56,9 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
 ## Implementation Plan
 
 ### Phase 1: True STN Type Definitions ✅ PLANNED
+
 - [ ] **Add True STN type definitions**
+
   ```elixir
   @type stn_time_point :: non_neg_integer()  # Time point index
   
@@ -77,6 +82,7 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
   - Create time point relationships for temporal reasoning
 
 ### Phase 2: STN Distance Matrix Generation ✅ PLANNED
+
 - [ ] **Implement STN distance matrix generation** (`generate_stn_distance_matrix/3`)
   - Create full distance constraint matrix between all time points
   - Add duration constraints: `end_point - start_point ≤ duration` and `start_point - end_point ≤ -duration`
@@ -89,6 +95,7 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
   - Remove legacy scheduling optimization concepts
 
 ### Phase 3: True STN Template Implementation ✅ PLANNED
+
 - [ ] **Create True STN template** (`stn_temporal.mzn.eex`)
   - Replace current hybrid template with pure STN implementation
   - Use time point variables: `array[1..num_time_points] of var 0..horizon: time_points`
@@ -107,7 +114,9 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
   - Remove legacy constraint generation logic
 
 ### Phase 4: STN Algorithm Implementation ✅ PLANNED
+
 - [ ] **Implement Floyd-Warshall Algorithm** for STN consistency
+
   ```elixir
   @spec check_stn_consistency(distance_matrix :: [[integer()]]) ::
           {:consistent, [[integer()]]} | {:inconsistent, [non_neg_integer()]}
@@ -130,7 +139,9 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
 ### Phase 5: Comprehensive STN Testing ✅ PLANNED
 
 #### STN Mathematical Tests (`test/aria_minizinc/stn_mathematical_test.exs`)
+
 - [ ] **STN Theory Compliance Tests**
+
   ```elixir
   test "converts activities to proper time point pairs"
   test "generates correct distance constraints for durations"
@@ -141,6 +152,7 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
   ```
 
 - [ ] **STN Data Transformation Tests**
+
   ```elixir
   test "transforms goals to STN time points correctly"
   test "generates STN distance constraints from temporal relationships"
@@ -149,7 +161,9 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
   ```
 
 #### STN Template Tests (`test/aria_minizinc/stn_template_test.exs`)
+
 - [ ] **Template Generation Tests**
+
   ```elixir
   test "generates valid MiniZinc STN model"
   test "STN template uses time point variables"
@@ -159,7 +173,9 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
   ```
 
 #### STN Integration Tests (`test/aria_minizinc/stn_integration_test.exs`)
+
 - [ ] **End-to-End STN Tests**
+
   ```elixir
   test "solves simple STN problem correctly"
   test "detects inconsistent STN problems"
@@ -170,21 +186,25 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
 ## Implementation Strategy
 
 ### Step 1: STN Type Definitions (IMMEDIATE)
+
 1. Define proper STN types and data structures
 2. Create time point mapping functions
 3. Add STN validation functions
 
 ### Step 2: Distance Matrix Implementation (HIGH PRIORITY)
+
 1. Implement distance matrix generation
 2. Add Floyd-Warshall algorithm for consistency checking
 3. Create STN solution extraction functions
 
 ### Step 3: Template Replacement (CRITICAL PATH)
+
 1. Replace current hybrid template with pure STN implementation
 2. Update data transformation pipeline
 3. Remove all legacy scheduling concepts
 
 ### Step 4: Comprehensive Testing (QUALITY ASSURANCE)
+
 1. Create mathematical correctness tests
 2. Add template generation tests
 3. Implement end-to-end integration tests
@@ -192,18 +212,21 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
 ## Success Criteria
 
 **Mathematical Correctness:**
+
 - [ ] STN implementation follows standard STN theory
 - [ ] Distance constraints properly represent temporal relationships
 - [ ] Floyd-Warshall algorithm correctly detects consistency
 - [ ] Solutions satisfy all STN constraints
 
 **Template Quality:**
+
 - [ ] STN template uses pure time point approach
 - [ ] Template generates valid MiniZinc syntax
 - [ ] All legacy scheduling concepts removed
 - [ ] Template supports Allen's Interval Algebra relationships
 
 **Integration Success:**
+
 - [ ] STN problems solve correctly end-to-end
 - [ ] Solutions are compatible with existing systems
 - [ ] Performance is acceptable for typical STN sizes
@@ -212,17 +235,20 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
 ## Consequences
 
 **Positive:**
+
 - **Mathematical Soundness**: STN implementation aligns with established theory
 - **Consistency**: Proper STN consistency checking and solution finding
 - **Extensibility**: Foundation for Allen's Interval Algebra support
 - **Performance**: Efficient algorithms for STN solving
 
 **Negative:**
+
 - **Breaking Changes**: Existing STN code will need updates
 - **Complexity**: More complex mathematical implementation
 - **Learning Curve**: Developers need to understand STN theory
 
 **Risks:**
+
 - **Algorithm Correctness**: Floyd-Warshall implementation must be correct
 - **Performance Issues**: Distance matrix approach may be slower for large problems
 - **Compatibility**: Solutions must remain compatible with existing systems
@@ -230,10 +256,12 @@ Implement a mathematically sound Simple Temporal Network foundation that aligns 
 ## Related ADRs
 
 **Parent ADRs:**
+
 - **ADR-002**: Implement Template Selection Logic (provides template selection foundation)
 - **ADR-003**: Separate Goal Solving and STN Problem Domains (supports domain separation)
 
 **Related Project ADRs:**
+
 - **ADR-005**: Implement Fixpoint Fallback for STN Constraint Solving (will use this foundation)
 - **ADR-078**: Timeline Module PC-2 STN Implementation (integrates with this work)
 - **ADR-153**: STN Fixed Point Constraint Prohibition (aligns with this approach)
@@ -253,18 +281,21 @@ Success depends on careful implementation of the mathematical algorithms and tho
 ### Architecture Issue Identified
 
 **⚠️ Current Implementation Problems:**
+
 - STN template uses hybrid interval/time-point approach
 - Legacy temporal_ordering flags from removed scheduling system
 - Non-standard distance constraint format (min/max values)
 - Tests expect legacy constraint formats
 
 **🔄 Refactoring Required:**
+
 - Phase 1: Remove legacy temporal_ordering logic ✅ IMMEDIATE
 - Phase 2: Implement true STN with time points and distance matrix ✅ HIGH PRIORITY  
 - Phase 3: Replace STN template with pure time point approach ✅ CRITICAL PATH
 - Phase 4: Update tests to expect true STN constraint formats ✅ QUALITY ASSURANCE
 
 **📋 Next Actions:**
+
 1. Remove temporal_ordering references from ProblemGenerator
 2. Simplify STN constraint generation (remove min/max distance complexity)
 3. Redesign STN template for pure time point variables

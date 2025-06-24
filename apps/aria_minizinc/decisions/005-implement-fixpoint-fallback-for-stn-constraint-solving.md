@@ -67,6 +67,7 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
 ### Phase 1: Implement Fixpoint STN Solver ✅ PLANNED
 
 1. **Create Fixpoint STN Module**:
+
    ```elixir
    defmodule AriaMiniZinc.Fixpoint.STNSolver do
      @moduledoc """
@@ -96,6 +97,7 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
    ```
 
 2. **Implement Floyd-Warshall Algorithm**:
+
    ```elixir
    defp solve_stn(time_points, distance_matrix, horizon) do
      # Initialize distance matrix with constraints
@@ -134,6 +136,7 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
    ```
 
 3. **Add Result Conversion**:
+
    ```elixir
    defp convert_to_standard_solution(time_point_assignments, time_points, makespan) do
      # Convert internal solution to standard format compatible with MiniZinc results
@@ -149,6 +152,7 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
 ### Phase 2: Update Fallback Mechanism ✅ PLANNED
 
 1. **Update Solver Module**:
+
    ```elixir
    defp solve_with_fixpoint(problem_data, options) do
      Logger.debug("Using Fixpoint constraint solver fallback")
@@ -166,6 +170,7 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
    ```
 
 2. **Update Problem Generator Integration**:
+
    ```elixir
    def generate_problem(domain, state, goals, options \\ %{}) do
      case Map.get(options, :problem_type) do
@@ -182,6 +187,7 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
 ### Phase 3: Validation Integration ✅ PLANNED
 
 1. **Update ValidationSolver**:
+
    ```elixir
    def validate_solver_consistency(params, state) do
      # Solve with MiniZinc
@@ -218,7 +224,9 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
 ### Phase 4: Comprehensive Testing ✅ PLANNED
 
 #### Fixpoint STN Tests (`test/aria_minizinc/fixpoint_stn_test.exs`)
+
 - [ ] **Floyd-Warshall Algorithm Tests**
+
   ```elixir
   test "Floyd-Warshall correctly computes shortest paths"
   test "Floyd-Warshall detects negative cycles"
@@ -227,6 +235,7 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
   ```
 
 - [ ] **STN Solving Tests**
+
   ```elixir
   test "solves simple STN problem correctly"
   test "detects inconsistent STN problems"
@@ -235,7 +244,9 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
   ```
 
 #### Fallback Integration Tests (`test/aria_minizinc/fallback_integration_test.exs`)
+
 - [ ] **Fallback Mechanism Tests**
+
   ```elixir
   test "falls back to Fixpoint when MiniZinc unavailable"
   test "uses MiniZinc when available"
@@ -244,7 +255,9 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
   ```
 
 #### Validation Tests (`test/aria_minizinc/solver_validation_test.exs`)
+
 - [ ] **Cross-Solver Validation Tests**
+
   ```elixir
   test "MiniZinc and Fixpoint produce consistent results for simple STN"
   test "MiniZinc and Fixpoint produce consistent results for complex STN"
@@ -255,21 +268,25 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
 ## Implementation Strategy
 
 ### Step 1: Floyd-Warshall Implementation (IMMEDIATE)
+
 1. Implement Floyd-Warshall algorithm for STN consistency checking
 2. Add negative cycle detection
 3. Create minimum makespan solution finding
 
 ### Step 2: Fallback Integration (HIGH PRIORITY)
+
 1. Update fallback mechanism to use real Fixpoint solver
 2. Ensure data format compatibility between MiniZinc and Fixpoint
 3. Add proper error handling and logging
 
 ### Step 3: Validation Updates (CRITICAL PATH)
+
 1. Update validation process to compare real solver results
 2. Add tolerance for numerical differences
 3. Ensure validation works with both solvers
 
 ### Step 4: Comprehensive Testing (QUALITY ASSURANCE)
+
 1. Create comprehensive test suite for Floyd-Warshall algorithm
 2. Add integration tests for fallback mechanism
 3. Implement cross-solver validation tests
@@ -277,18 +294,21 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
 ## Success Criteria
 
 **Functionality:**
+
 - [ ] Fixpoint STN solver correctly implements the Floyd-Warshall algorithm
 - [ ] Fixpoint solver produces valid solutions for all STN problems
 - [ ] Fallback mechanism seamlessly switches between MiniZinc and Fixpoint
 - [ ] System remains functional when MiniZinc is unavailable
 
 **Consistency:**
+
 - [ ] Fixpoint and MiniZinc solutions are comparable (within tolerance)
 - [ ] Validation process correctly identifies inconsistencies
 - [ ] Solution format is consistent between solvers
 - [ ] Both solvers agree on problem solvability
 
 **Performance:**
+
 - [ ] Fixpoint solver performs adequately for small to medium STN problems
 - [ ] Performance degradation compared to MiniZinc is acceptable
 - [ ] Memory usage is reasonable
@@ -297,17 +317,20 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
 ## Consequences
 
 **Positive:**
+
 - **Reliability**: System works even when MiniZinc is unavailable
 - **Consistency**: Solutions are consistent between solvers
 - **Mathematical Correctness**: Floyd-Warshall algorithm is proven correct for STN problems
 - **Validation**: Proper validation between solvers ensures correctness
 
 **Negative:**
+
 - **Performance**: Fixpoint implementation may be slower than MiniZinc for large problems
 - **Complexity**: Additional code to maintain
 - **Limited Scope**: Fixpoint implementation only supports STN problems initially
 
 **Risks:**
+
 - **Algorithm Correctness**: Ensuring the Floyd-Warshall implementation correctly solves all STN problems
 - **Performance Issues**: Fixpoint may be too slow for large problems (O(n³) complexity)
 - **Inconsistent Results**: Differences between MiniZinc and Fixpoint solutions due to different algorithms
@@ -315,10 +338,12 @@ Implement a proper Fixpoint fallback for STN constraint solving using the Floyd-
 ## Related ADRs
 
 **Parent ADRs:**
+
 - **ADR-007**: Implement True STN Mathematical Foundation (provides STN foundation)
 - **ADR-003**: Separate Goal Solving and STN Problem Domains (supports domain focus)
 
 **Related Project ADRs:**
+
 - **ADR-128**: STN Solver MiniZinc Fallback Implementation
 - **ADR-078**: Timeline Module PC-2 STN Implementation
 - **ADR-153**: STN Fixed Point Constraint Prohibition
@@ -336,11 +361,13 @@ The implementation focuses on STN problems specifically, following the domain se
 ### Implementation Requirements
 
 **🔄 Dependencies:**
+
 - Requires ADR-007 (True STN Mathematical Foundation) to be implemented first
 - STN data structures and distance matrix format must be established
 - Template selection logic from ADR-002 must be in place
 
 **📋 Next Actions:**
+
 1. Wait for ADR-007 implementation to establish STN foundation
 2. Implement Floyd-Warshall algorithm using established STN data structures
 3. Update fallback mechanism to use real Fixpoint solver

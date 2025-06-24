@@ -24,6 +24,7 @@ The `aria_minizinc` app contains widget assembly functionality that is no longer
 ### Domain Alignment
 
 Following ADR-003 (Separate Goal Solving and STN Problem Domains), the current problem domains are:
+
 - **Goal Solving**: General constraint satisfaction problems
 - **STN (Simple Temporal Networks)**: Temporal constraint problems
 
@@ -50,6 +51,7 @@ Remove widget assembly functionality from the `aria_minizinc` app to simplify th
 ## Implementation Plan
 
 ### Phase 1: Code Identification ✅ PLANNED
+
 - [ ] **Audit widget assembly code**
   - Search for widget-related functions and types
   - Identify dependencies and usage patterns
@@ -61,6 +63,7 @@ Remove widget assembly functionality from the `aria_minizinc` app to simplify th
   - Verify no external dependencies
 
 ### Phase 2: Widget Assembly Removal ✅ PLANNED
+
 - [ ] **Remove widget assembly functions**
   - Remove widget assembly logic from ValidationSolver
   - Remove widget-related types and specifications
@@ -77,6 +80,7 @@ Remove widget assembly functionality from the `aria_minizinc` app to simplify th
   - Remove any widget-specific dependencies from mix.exs
 
 ### Phase 3: Test Updates ✅ PLANNED
+
 - [ ] **Update test suite**
   - Remove tests that depend on widget assembly
   - Update integration tests to focus on current domains
@@ -88,6 +92,7 @@ Remove widget assembly functionality from the `aria_minizinc` app to simplify th
   - Add comments explaining what was removed
 
 ### Phase 4: Documentation Cleanup ✅ PLANNED
+
 - [ ] **Update module documentation**
   - Remove widget assembly references from module docs
   - Update function documentation to reflect current scope
@@ -101,21 +106,25 @@ Remove widget assembly functionality from the `aria_minizinc` app to simplify th
 ## Implementation Strategy
 
 ### Step 1: Code Audit (IMMEDIATE)
+
 1. Search codebase for widget-related code
 2. Identify all functions, types, and dependencies
 3. Document current usage (if any)
 
 ### Step 2: Safe Removal (HIGH PRIORITY)
+
 1. Remove widget assembly code in small, focused commits
 2. Update tests after each removal
 3. Ensure compilation succeeds after each step
 
 ### Step 3: Cleanup (MEDIUM PRIORITY)
+
 1. Clean up imports and dependencies
 2. Update documentation
 3. Verify no references remain
 
 ### Step 4: Validation (QUALITY ASSURANCE)
+
 1. Run full test suite
 2. Verify all functionality still works
 3. Check for any missed references
@@ -123,18 +132,21 @@ Remove widget assembly functionality from the `aria_minizinc` app to simplify th
 ## Success Criteria
 
 **Code Simplification:**
+
 - [ ] All widget assembly code removed from ValidationSolver
 - [ ] No widget-related types or functions remain
 - [ ] Module complexity reduced
 - [ ] Codebase focuses on current domains (Goal Solving, STN)
 
 **Functionality Preservation:**
+
 - [ ] All current functionality continues to work
 - [ ] Goal Solving validation works correctly
 - [ ] STN validation works correctly
 - [ ] No regressions introduced
 
 **Documentation Quality:**
+
 - [ ] Module documentation updated to reflect current scope
 - [ ] No references to widget assembly remain
 - [ ] Examples focus on current domains
@@ -143,17 +155,20 @@ Remove widget assembly functionality from the `aria_minizinc` app to simplify th
 ## Consequences
 
 **Positive:**
+
 - **Simplified Codebase**: Removing unused code reduces complexity
 - **Focused Functionality**: Code focuses on current problem domains
 - **Reduced Maintenance**: Less code to maintain and test
 - **Clearer Purpose**: Module purpose is clearer without legacy functionality
 
 **Negative:**
+
 - **Lost Functionality**: Widget assembly capability is removed
 - **Potential Future Need**: May need to restore functionality if requirements change
 - **Migration Effort**: If widget assembly is needed later, it will require restoration effort
 
 **Risks:**
+
 - **Hidden Dependencies**: Widget assembly code might be used in unexpected places
 - **Test Coverage**: Removing tests might reduce overall test coverage
 - **Breaking Changes**: Removal might break external code that depends on widget assembly
@@ -161,10 +176,12 @@ Remove widget assembly functionality from the `aria_minizinc` app to simplify th
 ## Related ADRs
 
 **Parent ADRs:**
+
 - **ADR-003**: Separate Goal Solving and STN Problem Domains (supports domain focus)
 - **ADR-001**: Extract MiniZinc Functionality into Dedicated App (provides context)
 
 **Related ADRs:**
+
 - **ADR-002**: Implement Template Selection Logic (benefits from simplified codebase)
 - **ADR-007**: Implement True STN Mathematical Foundation (benefits from focused codebase)
 
@@ -175,6 +192,7 @@ This ADR focuses on code cleanup and simplification by removing unused widget as
 Widget assembly appears to be legacy functionality that doesn't align with current MiniZinc problem domains. By removing this code, we reduce maintenance burden and make the codebase easier to understand and work with.
 
 The removal is safe because:
+
 1. Widget assembly doesn't appear to be used by current functionality
 2. All code is preserved in git history for future restoration if needed
 3. The removal is done incrementally with testing at each step
@@ -184,12 +202,14 @@ The removal is safe because:
 ### Cleanup Requirements
 
 **🔍 Investigation Needed:**
+
 - Audit ValidationSolver module for widget assembly code
 - Search codebase for widget-related functions and types
 - Identify any external dependencies on widget assembly
 - Check test suite for widget assembly tests
 
 **📋 Next Actions:**
+
 1. Search codebase for "widget" references
 2. Identify specific functions and types to remove
 3. Check if any current tests depend on widget assembly

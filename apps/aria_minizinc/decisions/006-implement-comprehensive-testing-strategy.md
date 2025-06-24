@@ -63,6 +63,7 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
 ### Phase 1: Unit and Integration Tests ✅ PLANNED
 
 1. **STN Solver Unit Tests**:
+
    ```elixir
    describe "AriaMiniZinc.Fixpoint.STNSolver" do
      test "solves simple STN problem correctly" do
@@ -111,6 +112,7 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
    ```
 
 2. **Integration Tests**:
+
    ```elixir
    describe "AriaMiniZinc.Solver with STN problems" do
      test "solves STN problem with MiniZinc when available" do
@@ -154,6 +156,7 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
 ### Phase 2: Known-Solution Test Cases ✅ PLANNED
 
 1. **Simple STN Test Cases**:
+
    ```elixir
    describe "STN solver with known solutions" do
      test "simple chain problem" do
@@ -197,6 +200,7 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
    ```
 
 2. **Edge Case Test Cases**:
+
    ```elixir
    describe "STN solver with edge cases" do
      test "zero-duration activities" do
@@ -236,6 +240,7 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
 ### Phase 3: Property-Based Testing ✅ PLANNED
 
 1. **Generator Functions**:
+
    ```elixir
    defp generate_stn_problem do
      gen all
@@ -273,6 +278,7 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
    ```
 
 2. **Property Tests**:
+
    ```elixir
    property "consistent solvers for consistent STNs" do
      check all
@@ -313,6 +319,7 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
 ### Phase 4: Benchmark Suite ✅ PLANNED
 
 1. **Benchmark Infrastructure**:
+
    ```elixir
    defmodule AriaMiniZinc.Benchmarks do
      use Benchfella
@@ -364,6 +371,7 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
    ```
 
 2. **Scalability Tests**:
+
    ```elixir
    describe "solver scalability" do
      @tag timeout: 60_000
@@ -421,6 +429,7 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
 ## Success Criteria
 
 **Test Coverage:**
+
 - [ ] Unit tests for all solver components
 - [ ] Integration tests for solver pipelines
 - [ ] Known-solution tests for verification
@@ -428,12 +437,14 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
 - [ ] Property-based tests for systematic exploration
 
 **Solver Validation:**
+
 - [ ] Cross-solver consistency verification
 - [ ] Correctness verification against known solutions
 - [ ] Performance benchmarking and comparison
 - [ ] Scalability testing with increasing problem sizes
 
 **CI Integration:**
+
 - [ ] Tests integrated into CI pipeline
 - [ ] Benchmark results tracked over time
 - [ ] Regression detection for performance and correctness
@@ -441,17 +452,20 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
 ## Consequences
 
 **Positive:**
+
 - **Quality Assurance**: Comprehensive testing ensures solver correctness
 - **Confidence**: Higher confidence in solver implementations
 - **Performance Insights**: Benchmarks provide insights into solver performance
 - **Regression Prevention**: Early detection of regressions
 
 **Negative:**
+
 - **Development Overhead**: Significant effort required to implement and maintain tests
 - **CI Resources**: Comprehensive testing requires more CI resources
 - **Maintenance Burden**: Tests need to be updated as solvers evolve
 
 **Risks:**
+
 - **False Positives**: Tests may incorrectly flag issues
 - **Performance Variability**: Benchmark results may vary based on environment
 - **Test Complexity**: Complex tests may be difficult to maintain
@@ -459,10 +473,12 @@ Implement a comprehensive testing strategy for the MiniZinc and Fixpoint solvers
 ## Related ADRs
 
 **Parent ADRs:**
+
 - **ADR-003**: Separate Goal Solving and STN Problem Domains
 - **ADR-005**: Implement Fixpoint Fallback for STN Constraint Solving
 
 **Related Project ADRs:**
+
 - **ADR-004**: Mandatory Stability Verification
 - **ADR-022**: Test-Driven Development
 - **ADR-157**: STN Consistency Test Recovery

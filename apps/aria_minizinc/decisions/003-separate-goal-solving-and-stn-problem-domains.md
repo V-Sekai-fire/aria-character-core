@@ -37,6 +37,7 @@ The root issue is that the current architecture treats STN as a variant of goal 
 - **STN**: Specialized temporal reasoning with time points and distance constraints
 
 This architectural misalignment leads to:
+
 - Brittle code that tries to bridge incompatible domains
 - Increased complexity in the transformation logic
 - Potential bugs when one domain evolves independently of the other
@@ -76,6 +77,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
 ### Phase 1: Refactor Problem Generator ✅ PLANNED
 
 1. **Create Domain-Specific Generation Functions**:
+
    ```elixir
    @spec generate_goal_solving_problem(domain(), state(), [goal()], options()) ::
            {:ok, goal_solving_problem_data()} | {:error, String.t()}
@@ -93,6 +95,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
    ```
 
 2. **Update Main Generation Function**:
+
    ```elixir
    def generate_problem(domain, state, goals, options \\ %{}) do
      case Map.get(options, :problem_type) do
@@ -112,6 +115,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
 ### Phase 2: Create Domain-Specific Data Structures ✅ PLANNED
 
 1. **Goal Solving Data Structures**:
+
    ```elixir
    @type goal_solving_problem_data :: %{
      model: String.t(),
@@ -123,6 +127,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
    ```
 
 2. **STN Data Structures**:
+
    ```elixir
    @type stn_problem_data :: %{
      model: String.t(),
@@ -146,6 +151,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
 ### Phase 3: Update Template Rendering ✅ PLANNED
 
 1. **Goal Solving Template Rendering**:
+
    ```elixir
    defp build_goal_solving_model(variables, constraints, objective, generation_start) do
      # Goal solving specific template rendering
@@ -154,6 +160,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
    ```
 
 2. **STN Template Rendering**:
+
    ```elixir
    defp build_stn_model(time_points, distance_matrix, objective, generation_start) do
      # STN specific template rendering
@@ -168,6 +175,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
 ### Phase 4: Update Public API ✅ PLANNED
 
 1. **Add Domain-Specific Convenience Functions**:
+
    ```elixir
    def solve_goal_problem(domain, state, goals, options \\ %{}) do
      options = Map.put(options, :problem_type, :goal_solving)
@@ -194,6 +202,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
 ### Phase 5: Comprehensive Testing ✅ PLANNED
 
 1. **Goal Solving Tests**:
+
    ```elixir
    describe "generate_goal_solving_problem/4" do
      test "generates valid goal solving problem"
@@ -204,6 +213,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
    ```
 
 2. **STN Tests**:
+
    ```elixir
    describe "generate_stn_problem/4" do
      test "generates valid STN problem"
@@ -214,6 +224,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
    ```
 
 3. **Integration Tests**:
+
    ```elixir
    describe "domain separation" do
      test "goal solving pipeline works end-to-end"
@@ -225,18 +236,21 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
 ## Success Criteria
 
 **Domain Separation:**
+
 - [ ] No transformation between goal solving and STN domains
 - [ ] Separate, complete pipelines for each domain
 - [ ] Domain-specific data structures and functions
 - [ ] Clear, explicit problem type specification
 
 **Code Quality:**
+
 - [ ] Reduced complexity in problem generation
 - [ ] Improved maintainability with clear separation of concerns
 - [ ] Better type specifications for each domain
 - [ ] Comprehensive test coverage for each domain
 
 **User Experience:**
+
 - [ ] Clear documentation on when to use each problem type
 - [ ] Explicit error messages when problem type is not specified
 - [ ] Domain-specific convenience functions for common use cases
@@ -245,6 +259,7 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
 ## Consequences
 
 **Positive:**
+
 - **Conceptual Clarity**: Clear separation between fundamentally different problem domains
 - **Reduced Complexity**: Simpler, more focused code for each domain
 - **Improved Maintainability**: Changes to one domain won't affect the other
@@ -252,12 +267,14 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
 - **Stronger Type Safety**: Domain-specific types for better static analysis
 
 **Negative:**
+
 - **Breaking Changes**: Existing code that relies on automatic transformation will need updates
 - **Increased API Surface**: More functions and types to document and maintain
 - **Migration Effort**: Existing code will need to be updated to specify problem type
 - **Potential Duplication**: Some utility functions may need to be duplicated for each domain
 
 **Risks:**
+
 - **Backward Compatibility**: Existing code may break if it doesn't specify problem type
 - **Learning Curve**: Users need to understand which problem type to use
 - **Documentation Burden**: Need to clearly explain the differences between domains
@@ -266,10 +283,12 @@ Completely separate the Goal Solving and STN problem domains with distinct data 
 ## Related ADRs
 
 **Parent ADRs:**
+
 - **ADR-001**: Extract MiniZinc Functionality into Dedicated App
 - **ADR-002**: Implement Template Selection Logic and STN Testing
 
 **Related Project ADRs:**
+
 - **ADR-126**: MiniZinc Multigoal Optimization with Fallback
 - **ADR-128**: STN Solver MiniZinc Fallback Implementation
 - **ADR-078**: Timeline Module PC-2 STN Implementation
