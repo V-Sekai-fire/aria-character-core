@@ -88,8 +88,8 @@ First, we create the basic structure - like building the frame of a house before
 #### Core Infrastructure (Technical)
 
 - [ ] Create `aria_grid` app - Foundation layer for grid operations
-- [ ] Create `aria_dsl` app - Domain-specific language for transformations
 - [ ] Create `aria_arc_coordinator` app - Main orchestration layer
+- [ ] Extend `aria_hybrid_planner` with ARC transformation actions and methods
 - [ ] Establish proper umbrella app dependencies following Aria patterns
 - [ ] Implement basic ARC task loading and validation in coordinator
 
@@ -106,15 +106,15 @@ Build the core grid representation and operations:
   - [ ] Shape detection and manipulation - identify and modify objects
   - [ ] Spatial relationship analysis - understand how things relate in space
 
-#### DSL Layer (`aria_dsl`) (Detailed)
+#### Hybrid Planner Extension (`aria_hybrid_planner`) (Detailed)
 
-Build the transformation language on top of grid operations:
+Extend existing planner with ARC transformation capabilities:
 
-- [ ] Design transformation language primitives
-- [ ] Implement composition and sequencing of transformations
-- [ ] Add rule parsing and validation
-- [ ] Create pattern expression language
-- [ ] Integrate with aria_grid for execution
+- [ ] Add ARC-specific action types to existing action system
+- [ ] Implement grid transformation methods using aria_grid operations
+- [ ] Create composition and sequencing rules for transformations
+- [ ] Add pattern expression capabilities within planning framework
+- [ ] Integrate transformation validation with existing planning validation
 
 #### Coordinator Setup (`aria_arc_coordinator`) (Detailed)
 
@@ -127,7 +127,7 @@ Create the main orchestration system:
 
 #### Why This Matters (Expert)
 
-This phase establishes the symbolic reasoning foundation essential for ARC tasks. The DSL provides compositional primitives that can be combined to express complex transformations, while integration with Aria's strategy factory enables seamless coordination with neural approaches in later phases.
+This phase establishes the symbolic reasoning foundation essential for ARC tasks. The extended hybrid planner provides compositional primitives that can be combined to express complex transformations, while integration with Aria's strategy factory enables seamless coordination with neural approaches in later phases.
 
 ### Phase 2: Multi-LLM Integration (Size: M)
 
@@ -262,7 +262,7 @@ Create dedicated app for program synthesis and search:
 - [ ] Add constraint-based synthesis capabilities
 - [ ] Create search space optimization strategies
 - [ ] Implement program validation and scoring
-- [ ] Integrate with aria_grid and aria_dsl for execution
+- [ ] Integrate with aria_grid and aria_hybrid_planner for execution
 
 #### Strategy Coordination (Technical)
 
@@ -334,13 +334,6 @@ apps/
 │   │   ├── color_mapping.ex        # Color transformations
 │   │   └── spatial_analysis.ex     # Discrete 2D grid relationship analysis
 │   └── mix.exs
-├── aria_dsl/                       # Language Layer
-│   ├── lib/aria_dsl/
-│   │   ├── primitives.ex           # Transformation language primitives
-│   │   ├── composition.ex          # Operation sequencing
-│   │   ├── parser.ex               # Rule parsing and validation
-│   │   └── expression.ex           # Pattern expression language
-│   └── mix.exs
 ├── aria_llm_client/                # External Integration Layer
 │   ├── lib/aria_llm_client/
 │   │   ├── openrouter.ex           # OpenRouter client
@@ -374,17 +367,18 @@ apps/
     └── mix.exs
 ```
 
+**Grid Transformation Language:** Instead of a separate DSL app, grid transformation primitives are implemented as ARC-specific actions and methods within the existing `aria_hybrid_planner`, reusing Aria's proven planning representation for composition, sequencing, and rule validation.
+
 ### App Dependencies
 
 **Dependency Graph:**
 ```
 aria_arc_coordinator
 ├── aria_grid
-├── aria_dsl
 ├── aria_llm_client
 ├── aria_pattern_library
 ├── aria_program_synthesis
-├── aria_hybrid_planner (existing)
+├── aria_hybrid_planner (existing, extended with ARC actions)
 ├── aria_temporal_planner (existing)
 ├── aria_membrane_pipeline (existing)
 ├── aria_minizinc (existing)
@@ -392,15 +386,13 @@ aria_arc_coordinator
 
 aria_program_synthesis
 ├── aria_grid
-├── aria_dsl
 └── aria_pattern_library
 
 aria_pattern_library
-├── aria_grid
-└── aria_dsl
-
-aria_dsl
 └── aria_grid
+
+aria_hybrid_planner (existing, extended)
+└── aria_grid (for ARC transformation actions)
 
 aria_llm_client
 └── (external dependencies only)
