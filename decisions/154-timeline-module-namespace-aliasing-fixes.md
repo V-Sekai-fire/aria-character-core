@@ -25,58 +25,73 @@ Systematically update all timeline test files to use the correct `Timeline` name
 
 ## Implementation Plan
 
-### Phase 1: Identify Namespace Issues (Day 1)
+### Phase 1: Create AST Migration Rule (Day 1)
 
-**File Analysis Required:**
-- `apps/aria_temporal_planner/test/timeline/interval_iso8601_test.exs`
-- `apps/aria_temporal_planner/test/timeline/internal/stn/operations_test.exs`
-- `apps/aria_temporal_planner/test/temporal_planner/stn_method_test.exs`
-- `apps/aria_temporal_planner/test/timeline/timeline_stn_capabilities_test.exs`
-- All other test files in `apps/aria_temporal_planner/test/`
+**File:** `apps/ast_migrate/lib/rules/timeline_namespace_fixes.ex`
+- [ ] Create new AST transformation rule for timeline namespace updates
+- [ ] Target pattern: `AriaEngine.Timeline` → `Timeline`
+- [ ] Handle alias statements, import statements, and qualified calls
+- [ ] Ensure comprehensive coverage of all namespace patterns
 
-**Detection Patterns:**
-- [ ] Find all `AriaEngine.Timeline` references
-- [ ] Identify `alias AriaEngine.Timeline` statements
-- [ ] Locate `import AriaEngine.Timeline` statements
-- [ ] Check for mixed namespace usage within files
+**AST Rule Implementation:**
+```elixir
+defmodule AstMigrate.Rules.TimelineNamespaceFixes do
+  @moduledoc """
+  Fixes timeline namespace references from AriaEngine.Timeline to Timeline
+  """
+  
+  def transform_alias({:alias, meta, [{:__aliases__, _, [:AriaEngine, :Timeline]} | rest]}) do
+    {:alias, meta, [{:__aliases__, meta, [:Timeline]} | rest]}
+  end
+  
+  def transform_import({:import, meta, [{:__aliases__, _, [:AriaEngine, :Timeline]} | rest]}) do
+    {:import, meta, [{:__aliases__, meta, [:Timeline]} | rest]}
+  end
+  
+  def transform_qualified_call({{:., meta1, [{:__aliases__, meta2, [:AriaEngine, :Timeline]}, func]}, meta3, args}) do
+    {{:., meta1, [{:__aliases__, meta2, [:Timeline]}, func]}, meta3, args}
+  end
+end
+```
 
-### Phase 2: Update Import Statements (Day 1)
+### Phase 2: Execute AST Migration (Day 1)
 
-**Namespace Corrections:**
-- [ ] Replace `AriaEngine.Timeline` → `Timeline`
-- [ ] Replace `AriaEngine.Timeline.Interval` → `Timeline.Interval`
-- [ ] Replace `AriaEngine.Timeline.AgentEntity` → `Timeline.AgentEntity`
-- [ ] Update any remaining `AriaEngine.*` temporal references
+**AST Migration Execution:**
+- [ ] Run `cd apps/ast_migrate && mix ast.simple --rule timeline_namespace_fixes --target ../../apps/aria_temporal_planner/test/`
+- [ ] Review transformation results for completeness
+- [ ] Validate that all namespace patterns were handled correctly
+- [ ] Check for any edge cases requiring manual adjustment
 
-**Test Helper Updates:**
-- [ ] Update `apps/aria_temporal_planner/test/test_helper.exs`
-- [ ] Fix any shared test utilities with namespace conflicts
-- [ ] Ensure consistent aliasing across all test files
+**Git-Integrated Migration (Alternative):**
+- [ ] Run `cd apps/ast_migrate && mix ast.commit --rule timeline_namespace_fixes --target ../../apps/aria_temporal_planner/test/`
+- [ ] Review commit diff for transformation accuracy
+- [ ] Ensure git history preserves transformation details
 
-### Phase 3: Verify Test Compilation (Day 1-2)
+### Phase 3: Validation and Testing (Day 1)
 
 **Compilation Validation:**
 - [ ] Run `cd apps/aria_temporal_planner && mix compile` to check for errors
-- [ ] Fix any remaining compilation issues
+- [ ] Fix any remaining compilation issues not handled by AST migration
 - [ ] Ensure all test files compile without warnings
 
 **Test Execution Validation:**
 - [ ] Run `cd apps/aria_temporal_planner && mix test` to verify test execution
-- [ ] Identify any runtime namespace errors
+- [ ] Identify any runtime namespace errors missed by AST transformation
 - [ ] Fix module resolution issues during test execution
 
-### Phase 4: Clean Up Inconsistencies (Day 2)
+### Phase 4: Quality Assurance (Day 1-2)
 
-**Consistency Improvements:**
-- [ ] Standardize alias patterns across all test files
-- [ ] Remove unused import statements
-- [ ] Ensure consistent module reference style
-- [ ] Update any documentation references in test comments
+**AST Migration Review:**
+- [ ] Review all transformed files for correctness
+- [ ] Validate that transformation preserved code semantics
+- [ ] Check for any missed namespace patterns requiring additional rules
+- [ ] Ensure consistent transformation across all test files
 
-**Quality Assurance:**
+**Integration Testing:**
 - [ ] Run full test suite to verify no regressions
 - [ ] Check for any remaining namespace-related warnings
 - [ ] Validate test isolation and independence
+- [ ] Confirm AST migration completeness
 
 ## Success Criteria
 
@@ -94,20 +109,23 @@ Systematically update all timeline test files to use the correct `Timeline` name
 
 ## Implementation Strategy
 
-### Step 1: Automated Detection
-1. Use `grep -r "AriaEngine.Timeline" apps/aria_temporal_planner/test/` to find all references
-2. Create comprehensive list of files requiring updates
-3. Identify patterns for systematic replacement
+### Step 1: AST Rule Development
+1. Create comprehensive AST transformation rule for timeline namespace fixes
+2. Handle all namespace patterns: aliases, imports, qualified calls
+3. Test AST rule on sample files to ensure correctness
+4. Validate transformation preserves code semantics
 
-### Step 2: Systematic Replacement
-1. Update import and alias statements first
-2. Replace module references in test code
-3. Fix any qualified function calls using old namespace
+### Step 2: Systematic AST Migration
+1. Execute AST migration on all timeline test files
+2. Review transformation results for completeness
+3. Handle any edge cases requiring manual adjustment
+4. Validate git integration and commit history
 
 ### Step 3: Validation and Testing
-1. Compile after each file update to catch issues early
+1. Compile after AST migration to verify syntax correctness
 2. Run individual test files to verify functionality
 3. Execute full test suite to ensure no regressions
+4. Confirm namespace consistency across all files
 
 ## Files Requiring Updates
 
