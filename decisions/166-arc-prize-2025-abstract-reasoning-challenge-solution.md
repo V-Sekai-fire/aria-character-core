@@ -555,6 +555,7 @@ apps/
 ### App Dependencies
 
 **Dependency Hierarchy (ordered by dependency depth):**
+
 ```
 1. aria_grid
    └── (foundation layer - no internal deps)
@@ -596,6 +597,7 @@ apps/
 **Core Responsibility:** Coordinate multiple strategies (unchanged)
 
 **Minimal ARC Integration:**
+
 - Add ARC strategy types to existing strategy factory
 - Coordinate between aria_program_synthesis, aria_llm_client, and aria_dsl strategies
 - Use existing ensemble coordination for ARC result voting
@@ -607,6 +609,7 @@ apps/
 **Core Responsibility:** Plan sequences over time (unchanged)
 
 **Minimal ARC Integration:**
+
 - Accept grid transformation sequences as temporal planning input
 - Optimize transformation order using existing temporal algorithms
 - Output optimized sequence plans to aria_arc_coordinator
@@ -618,6 +621,7 @@ apps/
 **Core Responsibility:** Process data through pipelines (unchanged)
 
 **Minimal ARC Integration:**
+
 - Add ARC task format as pipeline input type
 - Process grid data through existing pipeline stages
 - Output processed results to aria_arc_coordinator
@@ -629,6 +633,7 @@ apps/
 **Core Responsibility:** Solve constraint satisfaction problems (unchanged)
 
 **Minimal ARC Integration:**
+
 - Accept grid constraint problems from aria_program_synthesis
 - Solve using existing MiniZinc constraint engine
 - Return solutions to requesting ARC apps
@@ -640,6 +645,7 @@ apps/
 **Core Responsibility:** Provide shared infrastructure (unchanged)
 
 **Minimal ARC Integration:**
+
 - Add grid data structures to existing state management
 - Provide shared utilities for ARC apps
 - Maintain existing interface patterns
@@ -800,16 +806,19 @@ apps/
 ### Fundamental Technical Gaps
 
 **⚠️ HIGH RISK: No Proven ARC-Specific Reasoning**
+
 - **Gap:** Aria's existing planning is for temporal/spatial domains, not abstract visual reasoning
 - **Reality Check:** ARC requires understanding visual patterns humans find intuitive but are computationally hard
 - **Failure Risk:** 90% - Core reasoning capabilities may be fundamentally insufficient
 
 **⚠️ HIGH RISK: Symbolic-Neural Integration Unproven**
+
 - **Gap:** No existing examples of successful symbolic-neural hybrid for ARC-like tasks
 - **Reality Check:** Current SOTA (34%) uses pure neural approaches, not hybrid systems
 - **Failure Risk:** 80% - Integration complexity may reduce rather than improve performance
 
 **⚠️ CRITICAL: No Domain Expert Knowledge**
+
 - **Gap:** Team lacks deep ARC research experience and cognitive science background
 - **Reality Check:** Winning teams likely have years of ARC-specific research
 - **Failure Risk:** 95% - Missing fundamental insights about what makes ARC hard
@@ -817,16 +826,19 @@ apps/
 ### Resource and Timeline Gaps
 
 **⚠️ HIGH RISK: Computational Requirements Unknown**
+
 - **Gap:** No analysis of computational costs for program synthesis at ARC scale
 - **Reality Check:** Discrete program search may be computationally intractable
 - **Failure Risk:** 70% - May hit computational limits before reaching competitive performance
 
 **⚠️ CRITICAL: Unrealistic Development Timeline**
+
 - **Gap:** T-shirt sizes don't account for research uncertainty and dead ends
 - **Reality Check:** Each phase could take 3-10x longer due to fundamental research needs
 - **Failure Risk:** 85% - Won't have working system by competition deadline
 
 **⚠️ HIGH RISK: LLM Dependency Vulnerability**
+
 - **Gap:** Heavy reliance on external LLM services during development
 - **Reality Check:** OpenRouter costs could exceed budget, rate limits could block development
 - **Failure Risk:** 60% - Development blocked by external service limitations
@@ -834,16 +846,19 @@ apps/
 ### Competition-Specific Gaps
 
 **⚠️ CRITICAL: No Validation Against Real ARC Performance**
+
 - **Gap:** Success criteria based on assumptions, not validated benchmarks
 - **Reality Check:** 15% target may be optimistic given current SOTA struggles
 - **Failure Risk:** 90% - May build complex system that performs worse than simple baselines
 
 **⚠️ HIGH RISK: Offline Execution Complexity**
+
 - **Gap:** No experience packaging complex AI systems for offline competition
 - **Reality Check:** Dependency hell, model size limits, execution environment constraints
 - **Failure Risk:** 70% - System works in development but fails in competition environment
 
 **⚠️ MEDIUM RISK: Competition Rule Changes**
+
 - **Gap:** Rules may change, evaluation criteria may shift
 - **Reality Check:** Competition organizers often adjust rules based on submissions
 - **Failure Risk:** 40% - System optimized for wrong evaluation criteria
@@ -851,11 +866,13 @@ apps/
 ### Architectural Reality Checks
 
 **⚠️ HIGH RISK: Over-Engineering for Unproven Benefit**
+
 - **Gap:** Complex umbrella app structure may add overhead without benefit
 - **Reality Check:** Simple, focused solutions often outperform complex architectures
 - **Failure Risk:** 60% - Complexity reduces development velocity and introduces bugs
 
 **⚠️ MEDIUM RISK: Integration Testing Nightmare**
+
 - **Gap:** 5 new apps + 5 existing apps = 25 integration points to test
 - **Reality Check:** Integration bugs could consume majority of development time
 - **Failure Risk:** 50% - System never reaches stable, testable state
@@ -863,6 +880,7 @@ apps/
 ### Honest Success Probability Assessment
 
 **Realistic Outcome Probabilities:**
+
 - **Complete Failure (0-5% accuracy):** 60% probability
 - **Baseline Performance (5-15% accuracy):** 30% probability  
 - **Competitive Performance (15-25% accuracy):** 8% probability
@@ -872,6 +890,7 @@ apps/
 System reaches basic functionality but performs poorly due to fundamental gaps in ARC-specific reasoning. Complex architecture becomes liability rather than asset.
 
 **Recommended Risk Mitigation:**
+
 1. **Start with minimal umbrella scope:** Begin with aria_grid + aria_arc_coordinator only, add other apps incrementally
 2. **Validate core assumptions early:** Test basic grid reasoning on public ARC data within 2 weeks
 3. **Plan for failure:** Have backup plan for simpler submission if complex approach fails
@@ -910,6 +929,7 @@ System reaches basic functionality but performs poorly due to fundamental gaps i
 **Considered:** Integrating physics engines like MuJoCo for spatial analysis in `aria_grid`
 
 **Rejection Rationale:**
+
 - **Wrong abstraction level:** ARC problems are discrete 2D grid reasoning, not continuous physics simulation
 - **Massive over-engineering:** Physics engines designed for 3D rigid body dynamics, collision detection, and force calculations
 - **Computational overhead:** Unnecessary complexity for simple grid adjacency and pattern matching
@@ -923,6 +943,7 @@ System reaches basic functionality but performs poorly due to fundamental gaps i
 **Considered:** Continuously decomposing functionality into additional specialized apps (aria_arc_testing, aria_arc_competition, aria_arc_viz, aria_arc_datagen, aria_arc_training, aria_arc_config, etc.)
 
 **Rejection Rationale:**
+
 - **Analysis paralysis:** Infinite decomposition prevents actual implementation progress
 - **Time constraints:** Competition deadline requires execution focus, not architectural perfection
 - **Integration complexity:** Each additional app adds exponential integration testing burden
@@ -932,6 +953,7 @@ System reaches basic functionality but performs poorly due to fundamental gaps i
 **Final Architecture Decision:** **6 apps maximum** with expanded responsibilities per app to handle secondary concerns. No further decomposition permitted.
 
 **Locked Architecture:**
+
 1. `aria_grid` - Foundation grid operations
 2. `aria_arc_domain` - ARC planning domain
 3. `aria_llm_client` - External integration + API management
