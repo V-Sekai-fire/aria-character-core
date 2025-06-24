@@ -162,6 +162,7 @@ end
 - **ADR-152**: Complete Temporal Relations System Implementation (superseded parent)
 - **ADR-153**: STN Fixed-Point Constraint Prohibition (parallel timeline work)
 - **ADR-155**: Hybrid Planner Test Suite Restoration (related testing issue)
+- **AST Migration Tool**: `apps/ast_migrate/decisions/001-git-style-ast-migration-tool.md` (implementation tool)
 
 ## Monitoring
 

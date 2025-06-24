@@ -98,6 +98,8 @@ Layer N-2: Unit Tests (test Layer N-2 logic)
 
 The `ast_migrate` app provides powerful AST-based transformations to systematically improve code quality and fix testing issues across all extracted apps.
 
+**For detailed information about the AST migration tool, see:** `apps/ast_migrate/decisions/001-git-style-ast-migration-tool.md`
+
 #### Available AST Migration Commands
 
 **Basic Migration:**
