@@ -22,7 +22,10 @@ defmodule AriaMiniZinc.MockIntegrationTest do
         assert Map.has_key?(template_vars, :num_time_points)
         assert Map.has_key?(template_vars, :distance_matrix)
 
-        # Return mock solution
+        # Return mock solution with correct timing format
+        solving_start = "2025-06-24T21:39:14.638527+00:00"
+        solving_end = "2025-06-24T21:39:14.653527+00:00"
+
         {:ok, %{
           status: :success,
           solution: %{
@@ -32,7 +35,9 @@ defmodule AriaMiniZinc.MockIntegrationTest do
             objective: 85,
             status: "SATISFIED"
           },
-          solve_time_ms: 15,
+          solving_start: solving_start,
+          solving_end: solving_end,
+          duration: "PT0.015S",
           raw_output: """
           {
             "start_times": [0, 30, 60],
@@ -69,7 +74,9 @@ defmodule AriaMiniZinc.MockIntegrationTest do
       assert solution.solution.start_times == [0, 30, 60]
       assert solution.solution.end_times == [25, 55, 85]
       assert solution.solution.makespan == 85
-      assert solution.solve_time_ms == 15
+      assert solution.solving_start == "2025-06-24T21:39:14.638527+00:00"
+      assert solution.solving_end == "2025-06-24T21:39:14.653527+00:00"
+      assert solution.duration == "PT0.015S"
     end
 
     test "mock executor handles check_availability" do
@@ -171,7 +178,9 @@ defmodule AriaMiniZinc.MockIntegrationTest do
         {:ok, %{
           status: :success,
           solution: %{makespan: 42},
-          solve_time_ms: 5,
+          solving_start: "2025-06-24T21:39:14.638527+00:00",
+          solving_end: "2025-06-24T21:39:14.643527+00:00",
+          duration: "PT0.005S",
           raw_output: "mock"
         }}
       end)
