@@ -122,11 +122,11 @@ defmodule AriaMiniZinc.Solver do
 
   # Route to real MiniZinc solver
   defp solve_with_real_solver(problem_data, options, executor) do
-    # Extract template name from model content or use default
-    template_name = determine_template_name(problem_data)
+    # Extract template name from problem type
+    template_name = determine_template_name_from_type(problem_data)
 
-    # Convert problem data to template variables
-    template_vars = convert_to_template_vars(problem_data, options)
+    # Use problem data directly as template variables (already in correct format)
+    template_vars = problem_data
 
     # Execute via injected executor
     case executor.exec(template_name, template_vars: template_vars) do
@@ -173,7 +173,16 @@ defmodule AriaMiniZinc.Solver do
     """
   end
 
-  # Determine template name from problem data
+  # Determine template name from problem type
+  defp determine_template_name_from_type(problem_data) do
+    case Map.get(problem_data, :type) do
+      :stn -> "stn_temporal"
+      :goal_solving -> "goal_solving"
+      _ -> "goal_solving"  # Default fallback
+    end
+  end
+
+  # Determine template name from problem data (legacy)
   defp determine_template_name(problem_data) do
     cond do
       String.contains?(problem_data.model, "Simple Temporal Network") -> "stn_temporal"
@@ -358,11 +367,15 @@ defmodule AriaMiniZinc.Solver do
       Map.has_key?(options, :problem_type) ->
         Map.get(options, :problem_type)
 
-      # Detect from model content
-      String.contains?(problem_data.model, "Simple Temporal Network") ->
+      # Use type field from problem data (new format)
+      Map.has_key?(problem_data, :type) ->
+        Map.get(problem_data, :type)
+
+      # Legacy: detect from model content (old format)
+      Map.has_key?(problem_data, :model) and String.contains?(problem_data.model, "Simple Temporal Network") ->
         :stn_temporal
 
-      String.contains?(problem_data.model, "Goal Solving") ->
+      Map.has_key?(problem_data, :model) and String.contains?(problem_data.model, "Goal Solving") ->
         :goal_solving
 
       # Default fallback
