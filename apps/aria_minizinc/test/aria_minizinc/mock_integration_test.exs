@@ -113,7 +113,9 @@ defmodule AriaMiniZinc.MockIntegrationTest do
       assert is_list(solution.solution.start_times)
       assert is_list(solution.solution.end_times)
       assert is_integer(solution.solution.makespan)
-      assert solution.solve_time_ms == 10  # Mock solve time
+      assert is_binary(solution.duration)  # ISO8601 duration
+      assert is_binary(solution.solving_start)  # ISO8601 timestamp
+      assert is_binary(solution.solving_end)  # ISO8601 timestamp
     end
 
     test "handles error cases in mock executor" do

@@ -67,24 +67,57 @@ defmodule AriaMiniZinc.Solver do
   end
 
   # Route to mock solver for tests
-  defp solve_with_mock(_problem_data, options) do
-    # Generate predictable mock response based on problem data
-    variable_count = Map.get(options, :variable_count, 0)
+  defp solve_with_mock(problem_data, options) do
+    # Determine and validate problem type
+    problem_type = determine_problem_type(problem_data, options)
 
-    mock_solution = %{
-      start_times: generate_mock_start_times(variable_count),
-      end_times: generate_mock_end_times(variable_count),
-      makespan: variable_count * 30,
-      objective: variable_count * 30,
-      status: "SATISFIED"
-    }
+    case problem_type do
+      nil ->
+        {:error, "Problem type cannot be nil"}
 
-    {:ok, %{
-      status: :success,
-      solution: mock_solution,
-      solve_time_ms: 10,
-      raw_output: generate_mock_output(mock_solution)
-    }}
+      "" ->
+        {:error, "Problem type cannot be empty"}
+
+      type when is_atom(type) ->
+        # Generate predictable mock response based on problem data
+        variable_count = Map.get(options, :variable_count, 0)
+
+        mock_solution = %{
+          start_times: generate_mock_start_times(variable_count),
+          end_times: generate_mock_end_times(variable_count),
+          makespan: variable_count * 30,
+          objective: variable_count * 30,
+          status: "SATISFIED"
+        }
+
+        # Generate assignments map for compatibility with tests
+        assignments = generate_mock_assignments(variable_count)
+
+        # Generate timing metadata with dynamic local timezone
+        local_timezone = get_local_timezone()
+        {:ok, solving_start} = DateTime.now(local_timezone)
+        solving_end = DateTime.add(solving_start, 10_000, :microsecond)  # Mock 10ms duration
+
+        solving_start_iso = DateTime.to_iso8601(solving_start)
+        solving_end_iso = DateTime.to_iso8601(solving_end)
+
+        duration_microseconds = DateTime.diff(solving_end, solving_start, :microsecond)
+        iso8601_duration = "PT#{duration_microseconds / 1_000_000}S"
+
+        {:ok, %{
+          type: type,
+          status: :success,
+          solution: mock_solution,
+          assignments: assignments,
+          solving_start: solving_start_iso,
+          solving_end: solving_end_iso,
+          duration: iso8601_duration,
+          raw_output: generate_mock_output(mock_solution)
+        }}
+
+      _ ->
+        {:error, "Invalid problem type: #{inspect(problem_type)}"}
+    end
   end
 
   # Route to real MiniZinc solver
@@ -114,6 +147,15 @@ defmodule AriaMiniZinc.Solver do
   defp generate_mock_end_times(variable_count) do
     0..(variable_count - 1)
     |> Enum.map(fn i -> (i * 30) + 25 end)
+  end
+
+  # Generate mock assignments for testing
+  defp generate_mock_assignments(variable_count) when variable_count <= 0, do: %{}
+  defp generate_mock_assignments(variable_count) do
+    0..(variable_count - 1)
+    |> Enum.reduce(%{}, fn i, acc ->
+      Map.put(acc, "var_#{i}", i * 10)
+    end)
   end
 
   # Generate mock MiniZinc output format
@@ -306,6 +348,34 @@ defmodule AriaMiniZinc.Solver do
       "solve minimize sum(time_1, time_2);"
     else
       "solve satisfy;"
+    end
+  end
+
+  # Determine problem type from options or problem data
+  defp determine_problem_type(problem_data, options) do
+    cond do
+      # Explicit type in options takes precedence
+      Map.has_key?(options, :problem_type) ->
+        Map.get(options, :problem_type)
+
+      # Detect from model content
+      String.contains?(problem_data.model, "Simple Temporal Network") ->
+        :stn_temporal
+
+      String.contains?(problem_data.model, "Goal Solving") ->
+        :goal_solving
+
+      # Default fallback
+      true ->
+        :goal_solving
+    end
+  end
+
+  # Get the local timezone dynamically
+  defp get_local_timezone do
+    case System.get_env("TZ") do
+      nil -> "Etc/UTC"  # Default to UTC if no timezone set
+      tz -> tz
     end
   end
 end
