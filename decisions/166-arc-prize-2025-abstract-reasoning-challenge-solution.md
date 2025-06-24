@@ -77,256 +77,282 @@ Develop a comprehensive ARC solver leveraging Aria's existing architecture throu
 
 Create an integrated system that uses Aria's hybrid planner to coordinate multiple solving strategies: a custom grid transformation language, AI models that learn from examples, and a voting system that combines different approaches to pick the best answer.
 
-## Implementation Plan
+## Implementation Plan: "Bicycle to Car" Progression
 
-### 1. Foundation Architecture (Size: L)
+Following the CockroachDB development philosophy, we build complete, working systems at each stage rather than assembling separate components. Each stage represents a fully functional ARC solver with incrementally increasing capabilities.
+
+### Stage 1: "Skateboard" - Minimal Working ARC Solver (Size: S, 1-2 days)
 
 #### What We're Building (Simple)
 
-First, we create the basic structure - like building the frame of a house before adding the rooms.
+The absolute minimum system that can load ARC puzzles and submit answers - like a skateboard that gets you moving but isn't fancy.
 
-#### Core Infrastructure (Technical)
+#### Core Implementation (Technical)
 
-- [ ] Create `aria_grid` app - Foundation layer for grid operations
-- [ ] Create `aria_arc_domain` app - ARC planning domain with actions and methods
-- [ ] Create `aria_arc_coordinator` app - Main orchestration layer
-- [ ] Integrate `aria_arc_domain` with existing `aria_hybrid_planner`
-- [ ] Establish proper umbrella app dependencies following Aria patterns
-- [ ] Implement basic ARC task loading and validation in coordinator
+Create minimal umbrella structure with basic functionality:
 
-#### Grid Foundation (`aria_grid`) (Detailed)
+- [ ] Create `aria_grid` app with basic grid struct and hardcoded transformations
+- [ ] Create `aria_arc_coordinator` app with minimal task loading and submission
+- [ ] Implement basic transformations: rotate 90°, mirror horizontal/vertical
+- [ ] Add random guessing fallback for unmatched patterns
+- [ ] Create competition submission format compliance
 
-Build the core grid representation and operations:
+#### Success Criteria (Measurable)
 
-- [ ] Implement core grid data structure and representation
-- [ ] Add transformation primitives (implementation priority order):
-  1. [ ] Rotation operations (90°, 180°, 270°) - spin the grid around
-  2. [ ] Mirroring (horizontal, vertical, diagonal) - flip like a mirror
-  3. [ ] Color transformations and mappings - change colors systematically
-  4. [ ] Pattern matching and extraction - find repeating shapes
-  5. [ ] Shape detection and manipulation - identify and modify objects
-  6. [ ] Spatial relationship analysis - understand how things relate in space
-
-#### ARC Domain Development (`aria_arc_domain`) (Detailed)
-
-Create dedicated ARC planning domain following Aria's domain-driven architecture:
-
-- [ ] Implement ARC-specific planning actions (rotate, mirror, color_map, etc.)
-- [ ] Create grid transformation methods using aria_grid operations
-- [ ] Define composition and sequencing rules for transformations
-- [ ] Add ARC task state representation and validation
-- [ ] Integrate with aria_hybrid_planner through domain registration
-
-#### Hybrid Planner Integration (`aria_hybrid_planner`) (Detailed)
-
-Integrate ARC domain with existing planning infrastructure:
-
-- [ ] Register aria_arc_domain with existing strategy factory
-- [ ] Add ARC strategy types to coordinator ensemble
-- [ ] Integrate domain validation with existing planning validation
-- [ ] Enable ARC domain methods in planning workflows
-
-#### Coordinator Setup (`aria_arc_coordinator`) (Detailed)
-
-Create the main orchestration system:
-
-- [ ] Integrate with existing Aria apps (hybrid_planner, temporal_planner, membrane_pipeline)
-- [ ] Implement strategy factory integration
-- [ ] Add basic task loading and validation
-- [ ] Create foundation for ensemble coordination
+- [ ] Can load ARC JSON task files
+- [ ] Applies basic transformations to test inputs
+- [ ] Generates submission-format outputs
+- [ ] Achieves >0% accuracy on public ARC dataset
+- [ ] Runs end-to-end without errors
 
 #### Why This Matters (Expert)
 
-This phase establishes the symbolic reasoning foundation essential for ARC tasks. The extended hybrid planner provides compositional primitives that can be combined to express complex transformations, while integration with Aria's strategy factory enables seamless coordination with neural approaches in later phases.
+Establishes the complete pipeline from task loading to submission. Validates that we can work with ARC data formats and submission requirements. Provides immediate feedback on basic transformation effectiveness.
 
-### 2. Multi-LLM Integration (Size: M)
+### Stage 2: "Bicycle" - Enhanced Pattern Recognition (Size: S, 1 week)
 
 #### What We're Adding (Simple)
 
-Now we add the "smart AI brains" that can look at examples and learn patterns, like having multiple experts working together.
+Better pattern recognition so the computer can spot more types of puzzle rules - like upgrading from a skateboard to a bicycle.
 
-#### LLM Client App (`aria_llm_client`) (Technical)
+#### Enhanced Grid Operations (Technical)
 
-Create dedicated app for multi-LLM integration:
+Expand `aria_grid` with intelligent pattern matching:
 
-- [ ] Implement OpenRouter client for accessing diverse LLM models
-- [ ] Add model-specific prompt engineering for ARC tasks
-- [ ] Create response parsing and validation system
-- [ ] Implement multi-model ensemble coordination
-- [ ] Establish Qwen3 as primary reasoning engine
+- [ ] Add color counting and distribution analysis
+- [ ] Implement basic shape detection (rectangles, lines, isolated objects)
+- [ ] Create grid comparison algorithms for before/after analysis
+- [ ] Add pattern extraction for repeated elements
+- [ ] Implement rule-based transformation selection
 
-#### Coordinator Integration (Technical)
+#### Coordinator Intelligence (Technical)
 
-Connect LLM capabilities to main orchestration:
+Enhance `aria_arc_coordinator` with better decision making:
 
-- [ ] Create LLM strategy adapter for hybrid coordinator
-- [ ] Integrate aria_llm_client with aria_arc_coordinator
-- [ ] Implement strategy selection based on task characteristics
-- [ ] Add confidence scoring and result validation
+- [ ] Add transformation confidence scoring
+- [ ] Implement pattern-based strategy selection
+- [ ] Create basic ensemble voting between transformations
+- [ ] Add validation against training examples
 
-#### Active Learning System (Detailed)
+#### Success Criteria (Measurable)
 
-Build a system that learns from the specific test examples:
+- [ ] Achieves 5-10% accuracy on public ARC dataset
+- [ ] Correctly identifies basic patterns (color changes, rotations, mirroring)
+- [ ] Shows improvement over random guessing on pattern-based tasks
+- [ ] Handles at least 50% of task types without errors
 
-- [ ] Implement test-time fine-tuning using Membrane pipelines
-- [ ] Create synthetic data augmentation for few-shot examples
-- [ ] Develop example expansion algorithms
-- [ ] Integrate with temporal planner for sequence learning
-- [ ] Implement model adaptation strategies
-
-#### Strategic Importance (Expert)
-
-This phase implements the neural reasoning component essential for handling novel patterns. The multi-LLM ensemble provides diverse reasoning perspectives, while active inference enables adaptation to specific task characteristics - crucial for generalizing beyond training data.
-
-### 3. Pattern Library and Analytics (Size: M)
+### Stage 3: "Scooter" - Compositional Reasoning (Size: M, 1-2 weeks)
 
 #### What We're Building (Simple)
 
-We create a smart library that remembers all the puzzle patterns we've seen and can quickly find similar ones, like having a really good filing system for puzzle solutions.
+Teaching the computer to combine simple transformations into complex ones - like upgrading to a scooter that can handle more terrain.
 
-#### Pattern Library App (`aria_pattern_library`) (Technical)
+#### ARC Domain Introduction (Technical)
 
-Create dedicated app for pattern storage and analytics:
+Create `aria_arc_domain` app with planning capabilities:
 
-- [ ] Implement DuckDB integration for development-time analytics
-- [ ] Add SQLite integration for competition runtime lookups
-- [ ] Create pattern template storage and retrieval system
-- [ ] Implement Parquet export for research sharing
-- [ ] Develop pattern matching and similarity algorithms
+- [ ] Implement ARC-specific planning actions (rotate, mirror, color_map, extract, etc.)
+- [ ] Create transformation composition rules
+- [ ] Add state representation for grid transformations
+- [ ] Integrate with existing `aria_hybrid_planner`
+- [ ] Implement multi-step transformation sequences
 
-#### Dual Database Architecture (Detailed)
+#### Enhanced Reasoning (Technical)
 
-Build flexible data storage supporting both development and competition:
+Upgrade coordinator with compositional capabilities:
 
-- [ ] **DuckDB Development Store:**
-  - [ ] Rich analytical queries for pattern discovery
-  - [ ] Complex aggregations for success rate analysis
-  - [ ] Pattern composition and relationship analysis
-  - [ ] Export capabilities to Parquet format
-- [ ] **SQLite Competition Store:**
-  - [ ] Fast pattern lookups during competition
-  - [ ] Embedded database for offline execution
-  - [ ] Optimized indexes for real-time queries
-  - [ ] Minimal memory footprint
-- [ ] **Data Pipeline:**
-  - [ ] Export patterns from DuckDB to Parquet
-  - [ ] Import curated patterns into SQLite
-  - [ ] Validation and quality assurance between stores
-  - [ ] Automated synchronization workflows
+- [ ] Add sequence planning for multi-step transformations
+- [ ] Implement transformation chaining and validation
+- [ ] Create confidence propagation through transformation chains
+- [ ] Add backtracking for failed transformation sequences
 
-#### Pattern Analytics System (Detailed)
+#### Success Criteria (Measurable)
 
-Build intelligence around pattern usage and effectiveness:
+- [ ] Achieves 10-15% accuracy on public ARC dataset
+- [ ] Successfully composes 2-3 step transformation sequences
+- [ ] Handles tasks requiring multiple operations
+- [ ] Shows systematic improvement over single-step approaches
 
-- [ ] Pattern success rate tracking and analysis
-- [ ] Transformation composition effectiveness metrics
-- [ ] Pattern similarity and clustering algorithms
-- [ ] Difficulty progression and complexity analysis
-- [ ] Research artifact generation for community sharing
+### Stage 4: "Motorcycle" - First AI Strategy (Size: M, 2-3 weeks)
 
-#### Integration Strategy (Expert)
+#### What We're Adding (Simple)
 
-The pattern library serves as the knowledge base for the entire ARC system, providing pattern-guided search for program synthesis, confidence scoring for ensemble voting, and research artifacts for community contribution. The dual database approach enables rich development-time analytics while maintaining competition performance requirements.
+Adding the first "smart AI brain" that can look at examples and learn patterns - like upgrading to a motorcycle with real power.
 
-### 4. Synthetic Data Generation (Size: L)
+#### LLM Integration (Technical)
 
-#### What We're Creating (Simple)
+Create `aria_llm_client` app with neural reasoning:
 
-We teach the computer to make up new practice puzzles that follow the same rules as the real ones, like a teacher creating homework problems.
+- [ ] Implement OpenRouter client for accessing diverse LLM models
+- [ ] Add ARC-specific prompt engineering templates
+- [ ] Create response parsing and validation system
+- [ ] Implement confidence scoring for LLM outputs
+- [ ] Add fallback mechanisms for failed LLM calls
 
-#### Data Generation Strategy (Technical)
+#### Hybrid Strategy Coordination (Technical)
 
-Create new training data while following competition rules:
+Integrate neural and symbolic approaches:
 
-- [ ] Analyze public ARC datasets to extract transformation patterns
-- [ ] Implement procedural task generation based on discovered patterns
-- [ ] Create multi-LLM validation pipeline for generated tasks
-- [ ] Develop cross-model quality assurance system
-- [ ] Establish data augmentation strategies for training
+- [ ] Create LLM strategy adapter for hybrid coordinator
+- [ ] Implement ensemble voting between symbolic and neural strategies
+- [ ] Add strategy selection based on task characteristics
+- [ ] Create cross-validation between LLM and planning approaches
 
-#### Pattern Discovery System (Detailed)
+#### Success Criteria (Measurable)
 
-Build tools to understand and replicate ARC puzzle patterns:
+- [ ] Achieves 15-20% accuracy on public ARC dataset
+- [ ] LLM strategy contributes meaningfully to ensemble performance
+- [ ] Successfully handles novel patterns not covered by symbolic rules
+- [ ] Shows complementary strengths between neural and symbolic approaches
 
-- [ ] Implement automated pattern extraction from existing ARC tasks
-- [ ] Create transformation taxonomy and classification system
-- [ ] Develop difficulty progression algorithms
-- [ ] Implement adversarial generation for edge cases
-- [ ] Create validation metrics for synthetic task quality
-
-#### Critical Success Factor (Expert)
-
-Synthetic data generation is essential for overcoming ARC's few-shot learning constraint. The system must generate diverse, valid tasks that capture the compositional nature of ARC transformations without overfitting to public datasets. Quality validation ensures generated tasks maintain ARC's core cognitive requirements.
-
-### 5. Ensemble Architecture (Size: M)
+### Stage 5: "Small Car" - Dual Strategy System (Size: M, 2-3 weeks)
 
 #### What We're Combining (Simple)
 
-Now we make all our different puzzle-solving methods work together, like having a team where each member is good at different things.
+Adding a second AI approach and making them work together - like upgrading to a small car with multiple systems working in harmony.
 
-#### Program Synthesis App (`aria_program_synthesis`) (Technical)
+#### Program Synthesis Integration (Technical)
 
-Create dedicated app for program synthesis and search:
+Create `aria_program_synthesis` app with search capabilities:
 
 - [ ] Implement discrete program search algorithms
-- [ ] Add constraint-based synthesis capabilities
+- [ ] Add constraint-based synthesis for grid transformations
 - [ ] Create search space optimization strategies
 - [ ] Implement program validation and scoring
-- [ ] Integrate with aria_grid and aria_hybrid_planner for execution
+- [ ] Integrate with aria_grid for execution
 
-#### Strategy Coordination (Technical)
+#### Advanced Ensemble Architecture (Technical)
 
-Combine multiple solving approaches effectively:
+Sophisticated coordination between multiple strategies:
 
-- [ ] Integrate aria_program_synthesis with aria_arc_coordinator
-- [ ] Create ensemble voting and confidence weighting
-- [ ] Develop strategy selection based on task characteristics
-- [ ] Implement fallback mechanisms for failed strategies
-- [ ] Add cross-strategy result validation
+- [ ] Create three-way ensemble (symbolic, neural, synthesis)
+- [ ] Implement weighted voting based on confidence scores
+- [ ] Add strategy specialization based on task characteristics
+- [ ] Create cross-strategy validation and agreement scoring
 
-#### Performance Engineering (Detailed)
+#### Success Criteria (Measurable)
 
-Make everything run fast and efficiently (logical implementation sequence):
+- [ ] Achieves 20-25% accuracy on public ARC dataset
+- [ ] Each strategy contributes unique value to ensemble
+- [ ] Ensemble outperforms individual strategies consistently
+- [ ] Successfully handles diverse task types with appropriate strategy selection
 
-1. [ ] Optimize grid operations for performance
-2. [ ] Implement caching system for repeated patterns
-3. [ ] Implement parallel strategy execution
-4. [ ] Develop early termination criteria
-5. [ ] Implement resource management and timeouts
+### Stage 6: "Sedan" - Multi-Strategy with Pattern Learning (Size: L, 3-4 weeks)
 
-#### Ensemble Theory (Expert)
+#### What We're Building (Simple)
 
-The ensemble architecture leverages the complementary strengths of symbolic and neural approaches. Discrete program search excels at systematic exploration, DSL synthesis provides compositional reasoning, and LLM strategies handle novel patterns. Confidence weighting and strategy selection enable dynamic adaptation to task characteristics.
+Adding a smart memory system that learns from all the puzzles we've seen - like upgrading to a full sedan with advanced features.
 
-### 6. Competition Preparation (Size: S)
+#### Pattern Library Implementation (Technical)
 
-#### Final Preparation (Simple)
+Create `aria_pattern_library` app with analytics:
 
-Package everything up so it can run on the competition computers without needing the internet, like preparing a complete toolkit.
+- [ ] Implement pattern storage and retrieval system
+- [ ] Add pattern similarity and clustering algorithms
+- [ ] Create success rate tracking for pattern-strategy combinations
+- [ ] Implement pattern-guided strategy selection
+- [ ] Add pattern composition and relationship analysis
 
-#### Local Deployment (Technical)
+#### Data-Driven Optimization (Technical)
+
+Use pattern learning to improve all strategies:
+
+- [ ] Implement pattern-guided search space pruning
+- [ ] Add pattern-based prompt engineering for LLMs
+- [ ] Create pattern-informed ensemble weighting
+- [ ] Implement adaptive strategy selection based on pattern history
+
+#### Success Criteria (Measurable)
+
+- [ ] Achieves 25-30% accuracy on public ARC dataset
+- [ ] Pattern library demonstrably improves strategy performance
+- [ ] System learns and adapts from previous task solutions
+- [ ] Shows consistent improvement over time with more data
+
+### Stage 7: "SUV" - Production-Ready Competition System (Size: M, 2-3 weeks)
+
+#### What We're Finalizing (Simple)
+
+Making everything robust and ready for the actual competition - like upgrading to a reliable SUV that can handle any conditions.
+
+#### Competition Preparation (Technical)
 
 Prepare for offline competition execution:
 
 - [ ] Package all models and dependencies for offline execution
-- [ ] Implement submission format compliance
-- [ ] Create comprehensive testing suite
-- [ ] Develop performance benchmarking system
-- [ ] Implement logging and debugging capabilities
+- [ ] Implement comprehensive error handling and recovery
+- [ ] Create resource management and timeout systems
+- [ ] Add extensive logging and debugging capabilities
+- [ ] Implement submission format validation
 
-#### Competition Validation (Detailed)
+#### Performance Optimization (Technical)
 
-Ensure everything works perfectly for submission:
+Optimize for competition constraints:
 
-- [ ] Test against public ARC datasets
-- [ ] Validate competition rule compliance
-- [ ] Perform stress testing and edge case validation
-- [ ] Create submission packaging and verification
-- [ ] Implement final performance optimization
+1. [ ] Optimize grid operations for performance
+2. [ ] Implement caching system for repeated patterns
+3. [ ] Add parallel strategy execution where possible
+4. [ ] Implement early termination criteria for time limits
+5. [ ] Create memory management for large task sets
 
-#### Deployment Strategy (Expert)
+#### Success Criteria (Measurable)
 
-Competition success requires robust offline execution with all dependencies self-contained. The system must handle resource constraints, time limits, and novel test cases while maintaining performance. Comprehensive validation ensures submission compliance and identifies potential failure modes.
+- [ ] Achieves 30%+ accuracy on public ARC dataset
+- [ ] Runs reliably in offline competition environment
+- [ ] Meets all competition timing and resource constraints
+- [ ] Passes comprehensive validation and stress testing
+
+### Stage 8: "Sports Car" - Advanced Research Features (Size: L, 4+ weeks, Optional)
+
+#### What We're Adding (Simple)
+
+Advanced features for research and maximum performance - like upgrading to a sports car with cutting-edge technology.
+
+#### Advanced Capabilities (Technical)
+
+Only implement if time permits:
+
+- [ ] Add synthetic data generation for training augmentation
+- [ ] Implement active learning and test-time adaptation
+- [ ] Create advanced pattern discovery and taxonomy
+- [ ] Add research-grade analytics and visualization
+- [ ] Implement novel reasoning architectures
+
+#### Research Contributions (Technical)
+
+Contribute to the broader ARC research community:
+
+- [ ] Create comprehensive pattern analysis and sharing
+- [ ] Implement novel hybrid reasoning approaches
+- [ ] Add detailed performance analysis and insights
+- [ ] Create reproducible research artifacts
+
+#### Success Criteria (Measurable)
+
+- [ ] Achieves 35%+ accuracy on public ARC dataset
+- [ ] Contributes novel insights to ARC research community
+- [ ] Demonstrates advanced reasoning capabilities
+- [ ] Provides comprehensive analysis of approach effectiveness
+
+## Progressive App Introduction
+
+**Apps Created by Stage:**
+
+- **Stage 1-2:** `aria_grid`, `aria_arc_coordinator`
+- **Stage 3:** Add `aria_arc_domain` (integrate with `aria_hybrid_planner`)
+- **Stage 4:** Add `aria_llm_client`
+- **Stage 5:** Add `aria_program_synthesis`
+- **Stage 6:** Add `aria_pattern_library`
+- **Stage 7:** Complete all apps with production features
+- **Stage 8:** Advanced features across all apps
+
+**Key Benefits:**
+
+- **Always functional:** Each stage produces a working ARC solver
+- **Risk mitigation:** Can submit whatever stage we reach by competition deadline
+- **Rapid feedback:** Immediate accuracy measurements guide development priorities
+- **Incremental complexity:** Add umbrella apps only when complexity demands them
+- **Measurable progress:** Clear accuracy targets validate each stage's effectiveness
 
 ## Technical Architecture
 
@@ -527,49 +553,85 @@ apps/
 - Difficulty calibration and progression
 - Overfitting prevention through diversity metrics
 
-## Success Criteria
+## Success Criteria by Stage
 
-### 1. Foundation Architecture Success
+### Stage 1: "Skateboard" Success (1-2 days)
 
-- [ ] Grid DSL successfully represents all ARC transformation types
-- [ ] Integration with existing Aria components functional
-- [ ] Basic task loading and validation operational
+- [ ] Can load ARC JSON task files without errors
+- [ ] Applies basic transformations (rotate, mirror) to test inputs
+- [ ] Generates valid competition submission format
+- [ ] Achieves >0% accuracy on public ARC dataset
+- [ ] Complete end-to-end pipeline functional
 
-### 2. Multi-LLM Integration Success
+### Stage 2: "Bicycle" Success (1 week)
 
-- [ ] Multi-LLM integration operational via OpenRouter
-- [ ] Active inference pipeline functional
-- [ ] Test-time adaptation showing improvement
+- [ ] Achieves 5-10% accuracy on public ARC dataset
+- [ ] Correctly identifies basic patterns (color changes, rotations, mirroring)
+- [ ] Shows measurable improvement over random guessing
+- [ ] Handles at least 50% of task types without runtime errors
+- [ ] Pattern recognition demonstrably working
 
-### 3. Pattern Library and Analytics Success
+### Stage 3: "Scooter" Success (1-2 weeks)
 
-- [ ] Pattern storage and analytics system operational
-- [ ] Dual database architecture (DuckDB + SQLite) functional
-- [ ] Pattern matching and similarity algorithms working
+- [ ] Achieves 10-15% accuracy on public ARC dataset
+- [ ] Successfully composes 2-3 step transformation sequences
+- [ ] Handles tasks requiring multiple operations
+- [ ] Shows systematic improvement over single-step approaches
+- [ ] Planning integration with aria_hybrid_planner functional
 
-### 4. Synthetic Data Generation Success
+### Stage 4: "Motorcycle" Success (2-3 weeks)
 
-- [ ] Synthetic data generation producing valid ARC-like tasks
-- [ ] Quality metrics showing generated tasks match ARC principles
-- [ ] Pattern extraction identifying key transformation types
+- [ ] Achieves 15-20% accuracy on public ARC dataset
+- [ ] LLM strategy contributes meaningfully to ensemble performance
+- [ ] Successfully handles novel patterns not covered by symbolic rules
+- [ ] Shows complementary strengths between neural and symbolic approaches
+- [ ] OpenRouter integration stable and reliable
 
-### 5. Ensemble Architecture Success
+### Stage 5: "Small Car" Success (2-3 weeks)
 
-- [ ] Ensemble system combining multiple strategies effectively
-- [ ] Performance on public ARC datasets exceeding 15%
-- [ ] Strategy selection adapting to task characteristics
+- [ ] Achieves 20-25% accuracy on public ARC dataset
+- [ ] Each strategy (symbolic, neural, synthesis) contributes unique value
+- [ ] Ensemble consistently outperforms individual strategies
+- [ ] Successfully handles diverse task types with appropriate strategy selection
+- [ ] Three-way ensemble coordination working effectively
 
-### 6. Competition Preparation Success
+### Stage 6: "Sedan" Success (3-4 weeks)
 
-- [ ] Complete offline deployment package ready
-- [ ] Competition rule compliance verified
-- [ ] Performance target of 25%+ on validation sets
+- [ ] Achieves 25-30% accuracy on public ARC dataset
+- [ ] Pattern library demonstrably improves strategy performance
+- [ ] System learns and adapts from previous task solutions
+- [ ] Shows consistent improvement over time with more data
+- [ ] Pattern-guided optimization working across all strategies
 
-### Competition Goals
+### Stage 7: "SUV" Success (2-3 weeks)
 
-- **Minimum Viable:** 20% accuracy on ARC evaluation set
-- **Competitive Target:** 35% accuracy (exceeding current SOTA)
-- **Stretch Goal:** 50% accuracy (Grand Prize territory)
+- [ ] Achieves 30%+ accuracy on public ARC dataset
+- [ ] Runs reliably in offline competition environment
+- [ ] Meets all competition timing and resource constraints
+- [ ] Passes comprehensive validation and stress testing
+- [ ] Competition submission package complete and validated
+
+### Stage 8: "Sports Car" Success (4+ weeks, Optional)
+
+- [ ] Achieves 35%+ accuracy on public ARC dataset
+- [ ] Contributes novel insights to ARC research community
+- [ ] Demonstrates advanced reasoning capabilities beyond current SOTA
+- [ ] Provides comprehensive analysis of approach effectiveness
+- [ ] Research artifacts ready for publication
+
+### Overall Competition Goals
+
+- **Minimum Viable (Stage 4):** 15-20% accuracy - Competitive submission
+- **Target Performance (Stage 6):** 25-30% accuracy - Strong competitive showing
+- **Stretch Goal (Stage 8):** 35%+ accuracy - SOTA performance, potential prize contention
+- **Grand Prize Territory:** 50%+ accuracy - Breakthrough performance (highly unlikely but possible)
+
+### Risk-Adjusted Expectations
+
+- **Most Likely Outcome:** Reach Stage 4-5 (15-25% accuracy)
+- **Optimistic Scenario:** Reach Stage 6-7 (25-30% accuracy)
+- **Pessimistic Scenario:** Reach Stage 2-3 (5-15% accuracy)
+- **Failure Scenario:** Cannot achieve >5% accuracy due to fundamental approach limitations
 
 ## Critical Gaps and Failure Risks
 
