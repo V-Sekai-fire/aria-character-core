@@ -137,8 +137,7 @@ defmodule AriaMiniZinc.ProblemGeneratorTest do
 
       # Should generate ordering constraints
       temporal_constraints = Enum.filter(problem_data.constraints, fn constraint ->
-        Map.get(constraint, :type) == :temporal or
-        Map.get(constraint, :type) == :ordering
+        Map.get(constraint, :type) == :temporal_ordering
       end)
 
       assert length(temporal_constraints) > 0

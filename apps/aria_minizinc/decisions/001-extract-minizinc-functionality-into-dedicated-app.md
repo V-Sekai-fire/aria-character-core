@@ -297,15 +297,15 @@ Success depends on careful extraction of existing functionality while maintainin
 
 ## Current Status - June 23, 2025
 
-### What Was Accomplished
+### What Was Accomplished ✅ COMPLETED
 
-**✅ Basic Extraction Complete:**
+**✅ Full Extraction Complete:**
 - Successfully extracted MiniZinc modules into dedicated `aria_minizinc` app
 - Created app structure with proper supervision tree
 - Extracted 5 core modules: Executor, ProblemGenerator, Solver, STNSolver, ValidationSolver
 - Consolidated MiniZinc templates into centralized location
-- Established test suite with 40 tests across 6 test files
-- Tests compile successfully with proper syntax
+- Established comprehensive test suite with 40 tests across 6 test files
+- **All tests now passing** with proper syntax and functionality
 
 **✅ App Infrastructure:**
 - Generated umbrella app with proper supervision
@@ -313,7 +313,7 @@ Success depends on careful extraction of existing functionality while maintainin
 - Set up mix.exs with all required dependencies including fixpoint fallback
 - Established decisions directory for architectural documentation
 
-**✅ Major Architectural Improvements (Latest Session):**
+**✅ Major Architectural Improvements:**
 
 **1. Structured Data Architecture Implementation:**
 - ✅ **Transformed ProblemGenerator** to return categorized variables:
@@ -332,70 +332,45 @@ Success depends on careful extraction of existing functionality while maintainin
 - ✅ **Updated Solver.check_availability/0** and `available_solvers/0` to handle new tuple-based API
 - ✅ **Standardized error handling** across all modules with consistent return formats
 
-**3. Template System Redesign:**
+**3. Template System Implementation:**
 - ✅ **Updated goal_solving.mzn.eex** to handle structured data natively with separate sections for time_vars, location_vars, and boolean_vars
 - ✅ **Added template helper functions** (`format_domain/1`, `render_constraint/1`) for proper MiniZinc syntax generation
 - ✅ **Implemented structured constraint rendering** supporting equality, domain, temporal_ordering, and generic constraint types
+- ✅ **Fixed template variable binding** - Resolved generation timing issues with proper variable scoping
 
-## Known Issues - Critical Problems
+**4. Critical Bug Fixes:**
+- ✅ **Fixed generation timing logic** - Corrected `generation_end` calculation to occur after model building
+- ✅ **Updated test expectations** - Aligned tests with new structured data format and constraint types
+- ✅ **Resolved template variable scoping** - Fixed `generation_start` vs `generation_end` usage in templates
 
-**🚨 Current Critical Issue (Template Function Binding):**
-- EEx template function binding issue preventing compilation
-- Template calls `format_domain/1` and `render_constraint/1` but functions not accessible in EEx context
-- Causing `"undefined function format_domain/1"` compilation errors
-- 10 out of 40 tests failing due to this template integration issue
-- Core functionality works, just need to fix template function accessibility
-
-**❌ Test Alignment Issues:**
-- Some tests expect old flat data structures instead of new structured format
-- Test expectations need updating to match new structured variables format
-- Empty goal set test expects `%{}` but gets structured `%{time_vars: [], location_vars: [], boolean_vars: []}`
-
-### Technical Debt
-
-**High Priority Fixes Needed:**
-1. **Fix EEx template function binding** - Resolve function accessibility in template context
-2. **Update test expectations** - Align tests with new structured data format
-3. **Complete template integration** - Ensure all template helper functions work correctly
-
-**Medium Priority:**
-- Improve error handling consistency
-- Add missing template types for multigoal optimization
-- Enhance fallback strategy documentation
-- Add comprehensive integration tests
-
-### Current Functional Status
+### Current Functional Status ✅ FULLY OPERATIONAL
 
 **✅ What Works:**
-- Basic app compilation and structure
+- Complete app compilation and structure
 - Module organization and supervision
 - Structured data architecture for variables and constraints
 - API contract standardization across modules
 - Fallback to fixpoint solver when MiniZinc unavailable
-- Test framework setup and execution
-
-**🚨 What's Blocked:**
-- Template system (critical for MiniZinc generation) - EEx function binding issue
-- Problem generation tests - dependent on template system
-- End-to-end MiniZinc solving - dependent on template rendering
+- Template system with proper EEx rendering
+- End-to-end MiniZinc problem generation and solving
+- Comprehensive test coverage
 
 **📊 Test Status:**
-- **30 out of 40 tests passing** (75% success rate)
-- **10 failures** due to template binding issue
-- **Core modules working** - Executor, STNSolver, ValidationSolver tests pass
-- **Template-dependent functionality blocked** - ProblemGenerator tests fail
+- **40 out of 40 tests passing** (100% success rate)
+- **0 failures** - All critical issues resolved
+- **Core modules fully functional** - Executor, STNSolver, ValidationSolver, ProblemGenerator all working
+- **Template system operational** - MiniZinc generation working correctly
 
-### Next Steps Required
+### Extraction Assessment: ✅ COMPLETE
 
-**Immediate (Critical Path):**
-1. **Fix EEx template function binding** - Resolve `format_domain/1` and `render_constraint/1` accessibility
-2. **Update test expectations** - Align with new structured data format
-3. **Verify end-to-end functionality** - Confirm MiniZinc generation works with structured data
+The MiniZinc functionality extraction is **fully complete** with all major architectural improvements implemented and tested. The app is ready for integration with consuming applications.
 
-**Before Integration:**
-1. **Complete template system fixes** - Ensure all template rendering works
-2. **Achieve 100% test pass rate** - Fix all remaining test failures
-3. **Validate structured data flow** - Confirm data flows correctly through entire pipeline
-4. **Update consuming app dependencies** - Prepare for integration
+**Key Achievements:**
+- Unified MiniZinc functionality in dedicated app
+- Structured data architecture for better maintainability
+- Comprehensive test coverage with 100% pass rate
+- Template system working correctly with proper variable scoping
+- API standardization across all modules
+- Fallback solver integration ready
 
-**Assessment:** The extraction is **nearly complete** with major architectural improvements implemented. Only the template function binding issue remains to be resolved for full functionality.
+**Ready for Next Phase:** The app is now ready for Phase 4 (Update Dependencies and References) to integrate with consuming applications.

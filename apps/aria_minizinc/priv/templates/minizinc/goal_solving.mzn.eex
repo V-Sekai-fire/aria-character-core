@@ -1,7 +1,7 @@
 % Generated MiniZinc Model - Goal Solving
 % Variables: <%= @variable_count %>
 % Constraints: <%= @constraint_count %>
-% Generated at: <%= @generation_time %>
+% Generated at: <%= @generation_start %>
 
 % Parameters
 int: num_entities = <%= @num_entities %>;

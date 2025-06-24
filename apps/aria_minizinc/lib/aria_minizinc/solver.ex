@@ -195,7 +195,7 @@ defmodule AriaMiniZinc.Solver do
       },
       metadata: %{
         solver: :minizinc,
-        generation_time: problem_data.metadata.generation_time,
+        generation_end: problem_data.metadata.generation_end,
         solving_time: minizinc_result.solve_time_ms
       }
     }
@@ -242,7 +242,7 @@ defmodule AriaMiniZinc.Solver do
       },
       metadata: %{
         solver: :fixpoint,
-        generation_time: problem_data.metadata.generation_time,
+        generation_end: problem_data.metadata.generation_end,
         solving_time: System.monotonic_time(:millisecond)
       }
     }

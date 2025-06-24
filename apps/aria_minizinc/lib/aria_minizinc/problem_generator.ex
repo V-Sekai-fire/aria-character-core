@@ -98,7 +98,7 @@ defmodule AriaMiniZinc.ProblemGenerator do
       objective = generate_objective(goals, options)
 
       # Build complete MiniZinc model
-      model = build_minizinc_model(variables, constraints, objective)
+      model = build_minizinc_model(variables, constraints, objective, generation_start)
 
       # Calculate total variable count from structured variables
       variable_count = count_total_variables(variables)
@@ -117,6 +117,7 @@ defmodule AriaMiniZinc.ProblemGenerator do
           variable_count: variable_count,
           constraint_count: length(constraints),
           optimization: determine_optimization_type(options),
+          domain: domain,
           generation_start: generation_start,
           generation_end: generation_end,
           generation_duration: generation_duration
@@ -146,8 +147,14 @@ defmodule AriaMiniZinc.ProblemGenerator do
   # Extract decision variables from goals and state - returns structured format
   @spec extract_variables([goal()], state()) :: structured_variables()
   defp extract_variables(goals, _state) do
+    # Handle malformed goals gracefully
+    valid_goals = Enum.filter(goals, fn
+      {subject, _predicate, _value} when is_binary(subject) -> true
+      _ -> false
+    end)
+
     # Extract entities and their possible values
-    entities = goals
+    entities = valid_goals
     |> Enum.map(fn {subject, _predicate, _value} -> subject end)
     |> Enum.uniq()
 
@@ -197,7 +204,13 @@ defmodule AriaMiniZinc.ProblemGenerator do
 
   # Generate constraints to satisfy goals - returns structured constraint maps
   defp generate_goal_constraints(goals) do
-    Enum.map(goals, fn {subject, predicate, value} ->
+    # Filter out malformed goals
+    valid_goals = Enum.filter(goals, fn
+      {subject, predicate, _value} when is_binary(subject) and is_binary(predicate) -> true
+      _ -> false
+    end)
+
+    Enum.map(valid_goals, fn {subject, predicate, value} ->
       case predicate do
         "location" ->
           %{
@@ -245,8 +258,8 @@ defmodule AriaMiniZinc.ProblemGenerator do
   end
 
   # Generate temporal ordering constraints - returns structured constraint maps
-  defp generate_temporal_constraints(_goals, options) do
-    if Map.get(options, :temporal_ordering, false) or Map.get(options, :temporal_constraints, false) do
+  defp generate_temporal_constraints(goals, options) do
+    if (Map.get(options, :temporal_ordering, false) or Map.get(options, :temporal_constraints, false)) and length(goals) > 1 do
       [
         %{
           type: :temporal_ordering,
@@ -274,7 +287,7 @@ defmodule AriaMiniZinc.ProblemGenerator do
   end
 
   # Build complete MiniZinc model using template
-  defp build_minizinc_model(variables, constraints, objective) do
+  defp build_minizinc_model(variables, constraints, objective, generation_start) do
     # Convert structured data to template format
     variable_count = count_total_variables(variables)
 
@@ -295,7 +308,7 @@ defmodule AriaMiniZinc.ProblemGenerator do
       num_entities: div(variable_count, 3),
       variable_count: variable_count,
       constraint_count: length(constraints),
-      generation_time: Timex.now() |> Timex.format!("{ISO:Extended}")
+      generation_start: generation_start
     }
 
     render_template(@goal_solving_template, template_vars)
