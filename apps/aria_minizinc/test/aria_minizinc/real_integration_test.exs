@@ -39,10 +39,21 @@ defmodule AriaMiniZinc.RealIntegrationTest do
         {"task_b", "state", "completed"}
       ]
 
+      # STN requires timepoints and distance matrix
+      timepoints = ["task_a_start", "task_a_end", "task_b_start", "task_b_end"]
+      distance_matrix = [
+        [0, 30, 999999, 999999],      # task_a_start
+        [999999, 0, 0, 999999],       # task_a_end -> task_b_start (precedence)
+        [999999, 999999, 0, 30],      # task_b_start
+        [999999, 999999, 999999, 0]   # task_b_end
+      ]
+
       options = %{
         problem_type: :stn,
         temporal_ordering: true,
-        default_duration: 30
+        default_duration: 30,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
       }
 
       # Generate the problem
@@ -128,11 +139,24 @@ defmodule AriaMiniZinc.RealIntegrationTest do
         {"serve", "state", "completed"}
       ]
 
+      # Complex STN with prep -> cook -> serve workflow
+      timepoints = ["prep_start", "prep_end", "cook_start", "cook_end", "serve_start", "serve_end"]
+      distance_matrix = [
+        [0, 20, 999999, 999999, 999999, 999999],      # prep_start
+        [999999, 0, 0, 999999, 999999, 999999],       # prep_end -> cook_start
+        [999999, 999999, 0, 20, 999999, 999999],      # cook_start
+        [999999, 999999, 999999, 0, 0, 999999],       # cook_end -> serve_start
+        [999999, 999999, 999999, 999999, 0, 20],      # serve_start
+        [999999, 999999, 999999, 999999, 999999, 0]   # serve_end
+      ]
+
       options = %{
         problem_type: :stn,
         temporal_ordering: true,
         default_duration: 20,
-        max_makespan: 100
+        max_makespan: 100,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
       }
 
       {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
@@ -177,7 +201,27 @@ defmodule AriaMiniZinc.RealIntegrationTest do
         {"task5", "state", "done"}
       ]
 
-      {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, %{problem_type: :stn})
+      # Complex STN with many timepoints for timeout testing
+      timepoints = ["t1_start", "t1_end", "t2_start", "t2_end", "t3_start", "t3_end", "t4_start", "t4_end", "t5_start", "t5_end"]
+      # Create a complex distance matrix with sequential dependencies
+      distance_matrix = [
+        [0, 10, 999999, 999999, 999999, 999999, 999999, 999999, 999999, 999999],  # t1_start
+        [999999, 0, 0, 999999, 999999, 999999, 999999, 999999, 999999, 999999],   # t1_end -> t2_start
+        [999999, 999999, 0, 10, 999999, 999999, 999999, 999999, 999999, 999999],  # t2_start
+        [999999, 999999, 999999, 0, 0, 999999, 999999, 999999, 999999, 999999],   # t2_end -> t3_start
+        [999999, 999999, 999999, 999999, 0, 10, 999999, 999999, 999999, 999999],  # t3_start
+        [999999, 999999, 999999, 999999, 999999, 0, 0, 999999, 999999, 999999],   # t3_end -> t4_start
+        [999999, 999999, 999999, 999999, 999999, 999999, 0, 10, 999999, 999999],  # t4_start
+        [999999, 999999, 999999, 999999, 999999, 999999, 999999, 0, 0, 999999],   # t4_end -> t5_start
+        [999999, 999999, 999999, 999999, 999999, 999999, 999999, 999999, 0, 10],  # t5_start
+        [999999, 999999, 999999, 999999, 999999, 999999, 999999, 999999, 999999, 0] # t5_end
+      ]
+
+      {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, %{
+        problem_type: :stn,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      })
 
       # Use very short timeout to test timeout handling
       result = Solver.solve(problem_data, %{
@@ -208,7 +252,20 @@ defmodule AriaMiniZinc.RealIntegrationTest do
         {"entity2", "location", "target2"}
       ]
 
-      {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, %{problem_type: :stn})
+      # STN for JSON parsing test
+      timepoints = ["entity1_start", "entity1_end", "entity2_start", "entity2_end"]
+      distance_matrix = [
+        [0, 15, 999999, 999999],      # entity1_start
+        [999999, 0, 0, 999999],       # entity1_end -> entity2_start
+        [999999, 999999, 0, 15],      # entity2_start
+        [999999, 999999, 999999, 0]   # entity2_end
+      ]
+
+      {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, %{
+        problem_type: :stn,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      })
 
       result = Solver.solve(problem_data, %{
         solver_type: :production,
@@ -284,7 +341,18 @@ defmodule AriaMiniZinc.RealIntegrationTest do
       state = %{entities: []}  # Empty entities might cause issues
       goals = []  # Empty goals might cause issues
 
-      {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, %{problem_type: :stn})
+      # Even with empty data, STN still needs timepoints and distance matrix
+      timepoints = ["dummy_start", "dummy_end"]
+      distance_matrix = [
+        [0, 10],
+        [999999, 0]
+      ]
+
+      {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, %{
+        problem_type: :stn,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      })
 
       result = Solver.solve(problem_data, %{
         solver_type: :production,
@@ -333,7 +401,19 @@ defmodule AriaMiniZinc.RealIntegrationTest do
       {:ok, goal_data} = ProblemGenerator.generate_problem(domain, state, goals, %{})
 
       # Generate with STN template
-      {:ok, stn_data} = ProblemGenerator.generate_problem(domain, state, goals, %{problem_type: :stn})
+      timepoints = ["task1_start", "task1_end", "task2_start", "task2_end"]
+      distance_matrix = [
+        [0, 10, 999999, 999999],      # task1_start
+        [999999, 0, 0, 999999],       # task1_end -> task2_start
+        [999999, 999999, 0, 10],      # task2_start
+        [999999, 999999, 999999, 0]   # task2_end
+      ]
+
+      {:ok, stn_data} = ProblemGenerator.generate_problem(domain, state, goals, %{
+        problem_type: :stn,
+        timepoints: timepoints,
+        distance_matrix: distance_matrix
+      })
 
       # Solve both with real MiniZinc
       goal_result = Solver.solve(goal_data, %{solver_type: :production, timeout: 10_000})
