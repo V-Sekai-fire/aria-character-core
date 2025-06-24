@@ -18,7 +18,10 @@ defmodule AriaMiniZinc.Executor do
     end
   end
 
-  @doc "Spawn MiniZinc execution asynchronously using Porcelain.\n\nReturns a Porcelain process that can be monitored for completion.\n"
+  @doc """
+  Spawn MiniZinc execution asynchronously using Porcelain.
+  Returns a Porcelain process that can be monitored for completion.
+  """
   def spawn(model_name, opts \\ []) do
     opts = Keyword.merge(default_options(), opts)
 
@@ -37,14 +40,31 @@ defmodule AriaMiniZinc.Executor do
     end
   end
 
-  @doc "Check if MiniZinc is available on the system.\n"
+  @doc """
+  Check if MiniZinc is available on the system.
+  Returns {:ok, version} if available, {:error, reason} if not.
+  """
   def check_availability do
     case Porcelain.exec("minizinc", ["--version"]) do
-      %{status: 0} -> true
-      _ -> false
+      %{status: 0, out: output} ->
+        version = extract_version(output)
+        {:ok, version}
+      %{status: status, err: error} ->
+        {:error, "MiniZinc not available (exit code: #{status}): #{error}"}
+      _ ->
+        {:error, "MiniZinc not available"}
     end
   rescue
-    _ -> false
+    error ->
+      {:error, "MiniZinc check failed: #{Exception.message(error)}"}
+  end
+
+  # Extract version from MiniZinc --version output
+  defp extract_version(output) do
+    case Regex.run(~r/MiniZinc\s+(\d+\.\d+\.\d+)/, output) do
+      [_, version] -> version
+      _ -> "unknown version"
+    end
   end
 
   defp default_options do

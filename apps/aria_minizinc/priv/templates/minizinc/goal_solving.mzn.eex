@@ -6,9 +6,19 @@
 % Parameters
 int: num_entities = <%= @num_entities %>;
 
-% Decision Variables
-<%= for var <- @variables do %>
-<%= var.type %><%= if var.domain do %>: <%= var.domain %><% end %> = <%= var.name %>;
+% Time Variables
+<%= for var <- @variables.time_vars do %>
+<%= var.type %>: <%= var.domain %> = <%= var.name %>;
+<% end %>
+
+% Location Variables
+<%= for var <- @variables.location_vars do %>
+<%= var.type %>: <%= var.domain %> = <%= var.name %>;
+<% end %>
+
+% Boolean Variables
+<%= for var <- @variables.boolean_vars do %>
+<%= var.type %> = <%= var.name %>;
 <% end %>
 
 % Constraints

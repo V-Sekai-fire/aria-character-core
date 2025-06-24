@@ -56,10 +56,9 @@ defmodule AriaMiniZinc.Solver do
   - `{:error, reason}` - Solver not available
   """
   def check_availability do
-    if Executor.check_availability() do
-      {:ok, "MiniZinc available"}
-    else
-      {:error, "MiniZinc not available, Fixpoint fallback ready"}
+    case Executor.check_availability() do
+      {:ok, version} -> {:ok, "MiniZinc #{version}"}
+      {:error, _reason} -> {:error, "MiniZinc not available, Fixpoint fallback ready"}
     end
   end
 
@@ -72,10 +71,9 @@ defmodule AriaMiniZinc.Solver do
   def available_solvers do
     base_solvers = [:fixpoint]
 
-    if Executor.check_availability() do
-      [:chuffed, :gecode, :or_tools, :coin_bc] ++ base_solvers
-    else
-      base_solvers
+    case Executor.check_availability() do
+      {:ok, _version} -> [:chuffed, :gecode, :or_tools, :coin_bc] ++ base_solvers
+      {:error, _reason} -> base_solvers
     end
   end
 
@@ -109,27 +107,29 @@ defmodule AriaMiniZinc.Solver do
 
   # Try solving with MiniZinc
   defp solve_with_minizinc(problem_data, options) do
-    if not Executor.check_availability() do
-      {:error, :minizinc_unavailable}
-    else
-      timeout = Map.get(options, :timeout, 30_000)
-      solver_type = Map.get(options, :solver, "org.minizinc.mip.coin-bc")
+    case Executor.check_availability() do
+      {:error, _reason} ->
+        {:error, :minizinc_unavailable}
 
-      # Convert problem data to template variables for MiniZinc
-      template_vars = convert_problem_to_template_vars(problem_data)
+      {:ok, _version} ->
+        timeout = Map.get(options, :timeout, 30_000)
+        solver_type = Map.get(options, :solver, "org.minizinc.mip.coin-bc")
 
-      case Executor.exec("stn_temporal",
-        template_vars: template_vars,
-        timeout: timeout,
-        solver: solver_type
-      ) do
-        {:ok, result} ->
-          solution = convert_minizinc_result(result, problem_data)
-          {:ok, solution}
+        # Convert problem data to template variables for MiniZinc
+        template_vars = convert_problem_to_template_vars(problem_data)
 
-        {:error, reason} ->
-          {:error, reason}
-      end
+        case Executor.exec("stn_temporal",
+          template_vars: template_vars,
+          timeout: timeout,
+          solver: solver_type
+        ) do
+          {:ok, result} ->
+            solution = convert_minizinc_result(result, problem_data)
+            {:ok, solution}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
     end
   end
 
