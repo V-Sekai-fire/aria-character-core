@@ -23,112 +23,152 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 
 ## Decision
 
-Implement complete hybrid planner restoration in two phases with strict scope limits before any ARC Prize work begins.
+Implement complete hybrid planner restoration using comprehensive mocking strategy to isolate external dependencies and interfaces, enabling focused testing and development in two phases with strict scope limits before any ARC Prize work begins.
+
+**Core Strategy: Mock-First Development**
+- Mock all external interfaces (aria_engine_core, aria_temporal_planner, aria_scheduler)
+- Create test doubles for complex dependencies (STN solver, MiniZinc integration)
+- Isolate hybrid planner logic from external system complexity
+- Enable independent testing and verification of core functionality
 
 ## Implementation Plan
 
-### Phase 1: Core Functionality Restoration (Week 1: June 24-30)
+### Phase 1: Mock Infrastructure and Core Restoration (Week 1: June 24-30)
 
-**Day 1-2: Compilation Stability**
-- [ ] Fix type violation in `lazy_execution.ex:66` (unreachable error clause)
+**Day 1-2: Mock Infrastructure Setup**
+- [ ] Create `test/support/mocks/` directory structure
+- [ ] Mock `AriaEngine.Core` interface with test doubles
+- [ ] Mock `AriaTemporalPlanner` STN solver with predictable responses
+- [ ] Mock `AriaScheduler` interface for timeline operations
+- [ ] Create `MockDomain` module for testing domain operations
+- [ ] Set up `Mox` library for behavior-based mocking
+- [ ] Document mock interfaces and expected behaviors
+
+**Day 3-4: Compilation Stability with Mocked Dependencies**
+- [ ] Fix type violation in `lazy_execution.ex:66` using mocked interfaces
+- [ ] Replace direct dependency calls with mockable interfaces
 - [ ] Fix unused variable warnings across all modules
-- [ ] Achieve clean `mix compile --warnings-as-errors`
-- [ ] Document all compilation fixes with rationale
+- [ ] Achieve clean `mix compile --warnings-as-errors` with mocks
+- [ ] Create dependency injection pattern for external interfaces
+- [ ] Document all compilation fixes and mock integration rationale
 
-**Day 3-4: Test Suite Restoration**
-- [ ] Re-enable `test/planner_filter_test.exs.disabled`
-- [ ] Re-enable `test/hybrid_planner/strategies/default/stn_temporal_strategy_test.exs.disabled`
-- [ ] Fix all test failures and compilation issues
-- [ ] Add missing test dependencies and setup
-- [ ] Achieve passing `mix test` with meaningful assertions
-
-**Day 5-7: Core Planning Verification**
-- [ ] Create integration test: Domain creation → Goal setting → Plan generation
-- [ ] Test strategy pattern functionality (domain, state, planning strategies)
-- [ ] Verify HTN decomposition workflow
-- [ ] Test backtracking and error handling
-- [ ] Validate state management and goal processing
-- [ ] Document core planning workflow with examples
+**Day 5-7: Test Suite Restoration with Mocks**
+- [ ] Re-enable `test/planner_filter_test.exs.disabled` with mocked dependencies
+- [ ] Re-enable `test/hybrid_planner/strategies/default/stn_temporal_strategy_test.exs.disabled` with STN mocks
+- [ ] Create comprehensive mock scenarios for different planning states
+- [ ] Add missing test dependencies and mock setup helpers
+- [ ] Achieve passing `mix test` with meaningful assertions using mocks
+- [ ] Create integration test: Domain creation → Goal setting → Plan generation (fully mocked)
+- [ ] Test strategy pattern functionality with mocked external systems
+- [ ] Verify HTN decomposition workflow in isolation
+- [ ] Test backtracking and error handling with controlled mock responses
+- [ ] Validate state management and goal processing independently
+- [ ] Document core planning workflow with mock examples
 
 **Phase 1 Success Criteria:**
-- ✅ Clean compilation with `mix compile --warnings-as-errors`
-- ✅ Full test suite passing with `mix test`
-- ✅ Basic planning workflow functional end-to-end
-- ✅ Integration with aria_engine_core and aria_temporal_planner verified
+- ✅ Comprehensive mock infrastructure for all external dependencies
+- ✅ Clean compilation with `mix compile --warnings-as-errors` using mocked interfaces
+- ✅ Full test suite passing with `mix test` using controlled mock scenarios
+- ✅ Basic planning workflow functional end-to-end in isolated test environment
+- ✅ Mock-based integration testing covering all external interface contracts
+- ✅ Dependency injection pattern established for future real integration
 
-### Phase 2: ADR-133 Standardization (Week 2: July 1-8)
+### Phase 2: ADR-133 Standardization with Mock Validation (Week 2: July 1-8)
 
-**Day 8-10: Method Registration Unification**
+**Day 8-10: Method Registration Unification with Mock Testing**
 - [ ] Implement `Domain.add_method/4` with options map pattern
 - [ ] Add deprecation warnings for `add_task_method/3-4`, `add_unigoal_method/3-4`
 - [ ] Update existing domain registrations to new pattern
-- [ ] Create comprehensive tests for unified registration system
-- [ ] Document migration guide for existing domains
+- [ ] Create comprehensive tests for unified registration system using mocks
+- [ ] Test method registration with mocked engine core interactions
+- [ ] Validate registration patterns work with mock domain scenarios
+- [ ] Document migration guide for existing domains with mock examples
 
-**Day 11-12: Module-Based Domain Pattern**
-- [ ] Implement `use AriaEngine.Domain` macro system
+**Day 11-12: Module-Based Domain Pattern with Mock Integration**
+- [ ] Implement `use AriaEngine.Domain` macro system with mockable interfaces
 - [ ] Add `@action`, `@unigoal_method`, `@task_method` attribute support
-- [ ] Generate `create_domain/0` function automatically
-- [ ] Test with sample cooking/movement domains
-- [ ] Create domain creation examples and documentation
+- [ ] Generate `create_domain/0` function automatically with dependency injection
+- [ ] Test with sample cooking/movement domains using comprehensive mocks
+- [ ] Create domain creation examples and documentation with mock patterns
+- [ ] Validate macro-generated code works with mocked external systems
 
-**Day 13-14: Error Handling Standardization**
+**Day 13-14: Error Handling Standardization and Mock Response Patterns**
 - [ ] Replace all `false` returns with `{:error, reason}` tuples
 - [ ] Update backtracker logic to handle `{:ok, result}` pattern only
-- [ ] Add descriptive error atoms for debugging
+- [ ] Add descriptive error atoms for debugging with mock error scenarios
 - [ ] Update all strategy implementations for new error pattern
-- [ ] Create comprehensive error handling tests
+- [ ] Create comprehensive error handling tests with controlled mock failures
+- [ ] Test error propagation through mocked dependency chains
+- [ ] Validate error handling works correctly with external system failures (mocked)
 
 **Phase 2 Success Criteria:**
-- ✅ ADR-133 solutions fully implemented
-- ✅ Module-based domain creation functional
-- ✅ Unified method registration working
-- ✅ Standardized error handling throughout
-- ✅ Migration path documented and tested
+- ✅ ADR-133 solutions fully implemented with comprehensive mock validation
+- ✅ Module-based domain creation functional in isolated test environment
+- ✅ Unified method registration working with mocked external interfaces
+- ✅ Standardized error handling throughout with mock error scenario coverage
+- ✅ Migration path documented and tested using mock-based examples
+- ✅ All functionality verified independently of external system complexity
 
 ## ARC Prize Integration Readiness
 
 **Pre-ARC Checklist (Must be 100% complete):**
-- [ ] `mix compile --warnings-as-errors` passes
-- [ ] `mix test` passes with comprehensive coverage
-- [ ] Core planning workflow: Domain → Goals → Plan → Execution
-- [ ] ADR-133 standardization implemented and tested
-- [ ] Integration tests with dependencies passing
-- [ ] Documentation updated with new patterns
-- [ ] Sample domains working with new patterns
+- [ ] `mix compile --warnings-as-errors` passes with mocked interfaces
+- [ ] `mix test` passes with comprehensive mock-based coverage
+- [ ] Core planning workflow: Domain → Goals → Plan → Execution (fully tested with mocks)
+- [ ] ADR-133 standardization implemented and validated with mock scenarios
+- [ ] Mock-based integration tests covering all external interface contracts
+- [ ] Documentation updated with new patterns and mock integration examples
+- [ ] Sample domains working with new patterns in isolated test environment
+- [ ] Dependency injection pattern ready for real system integration
+- [ ] Mock-to-real integration strategy documented for ARC Prize phase
+
+**Real Integration Strategy for ARC Phase:**
+- [ ] Gradual replacement of mocks with real dependencies
+- [ ] Integration testing with actual aria_engine_core and aria_temporal_planner
+- [ ] Validation that mock contracts match real system interfaces
+- [ ] Fallback to mock-based testing for complex integration scenarios
 
 ## Risk Mitigation
 
 **High-Risk Areas:**
 1. **Test restoration complexity**: Disabled tests may have deep integration issues
 2. **Type system violations**: Current warnings indicate structural problems
-3. **Dependency integration**: Changes may break aria_engine_core integration
-4. **Timeline pressure**: 2 weeks is aggressive for complete restoration
+3. **External dependency complexity**: Real system integration introduces unpredictable failures
+4. **Mock-reality mismatch**: Mocks may not accurately represent real system behavior
+5. **Timeline pressure**: 2 weeks is aggressive for complete restoration
 
 **Mitigation Strategies:**
-- **Daily compilation checks**: Ensure no regressions during development
-- **Incremental test restoration**: Fix one test file at a time
-- **Integration testing**: Test with dependencies after each major change
-- **Rollback plan**: Keep working branches for each phase
+- **Mock-first development**: Eliminate external dependency complexity during restoration
+- **Comprehensive mock coverage**: Create mocks for all external interfaces and edge cases
+- **Daily compilation checks**: Ensure no regressions during development with mocked systems
+- **Incremental test restoration**: Fix one test file at a time using controlled mock scenarios
+- **Mock contract validation**: Document expected behaviors and validate against real systems later
+- **Rollback plan**: Keep working branches for each phase with mock infrastructure preserved
 - **Scope enforcement**: No feature additions beyond restoration requirements
+- **Real integration deferral**: Postpone complex real system integration until ARC phase
+- **Mock scenario library**: Build comprehensive test scenarios for all planning edge cases
 
 ## Success Criteria
 
 **Phase 1 Complete:**
-- Hybrid planner compiles cleanly and tests pass
-- Basic planning functionality verified end-to-end
-- Integration with other apps confirmed
+- Hybrid planner compiles cleanly and tests pass with comprehensive mocks
+- Basic planning functionality verified end-to-end in isolated environment
+- Mock-based integration contracts established and validated
+- External dependency complexity eliminated from core development
 
 **Phase 2 Complete:**
-- ADR-133 standardization fully implemented
-- Module-based domain pattern functional
-- Error handling standardized throughout
-- Ready for ARC Prize domain integration
+- ADR-133 standardization fully implemented with mock validation
+- Module-based domain pattern functional in test environment
+- Error handling standardized throughout with mock error scenarios
+- Dependency injection pattern ready for real system integration
+- Ready for ARC Prize domain integration with controlled complexity
 
 **Overall Success:**
-- Hybrid planner is 100% functional and tested
-- ARC Prize development can begin with confidence
+- Hybrid planner is 100% functional and tested independently of external systems
+- Mock infrastructure provides reliable foundation for ARC Prize development
 - Technical debt eliminated, not accumulated
+- Complex external dependencies isolated and manageable
+- Real integration strategy documented and ready for implementation
 
 ## Timeline Impact on ARC Prize
 
@@ -147,13 +187,17 @@ The restoration work is **prerequisite** to ARC success, not optional. Attemptin
 ## Consequences
 
 **If Successful:**
-- Hybrid planner becomes reliable foundation for ARC Prize work
-- ADR-133 standardization enables clean domain integration
+- Hybrid planner becomes reliable, testable foundation for ARC Prize work
+- Mock infrastructure enables rapid development and testing cycles
+- ADR-133 standardization enables clean domain integration in controlled environment
 - Technical debt eliminated rather than accumulated
+- External dependency complexity managed and isolated
+- Real integration path clearly defined and documented
 
 **If Failed:**
-- ARC Prize work cannot proceed
-- Technical debt continues to accumulate
-- Planning system remains unreliable
+- ARC Prize work cannot proceed due to untestable, complex system
+- Technical debt continues to accumulate with external dependency entanglement
+- Planning system remains unreliable and difficult to debug
+- Mock-based development approach not established for future work
 
 This restoration is the critical path to ARC Prize success.
