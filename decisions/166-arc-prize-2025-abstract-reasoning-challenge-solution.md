@@ -411,29 +411,81 @@ aria_grid
 
 ### Integration with Existing Aria Apps
 
-**Hybrid Coordinator Extension:**
-- Grid transformation strategy (via aria_grid)
-- LLM reasoning strategy (via aria_llm_client)
-- Program synthesis strategy (via aria_program_synthesis)
-- Ensemble coordination strategy (in aria_arc_coordinator)
-- Active inference strategy (coordinated through aria_arc_coordinator)
+#### **`aria_hybrid_planner` (Enhanced Strategy Coordination)**
 
-**Membrane Pipeline Integration:**
-- Data ingestion and validation (aria_arc_coordinator)
-- Synthetic data generation (aria_arc_coordinator + aria_llm_client)
-- Model training pipelines (aria_membrane_pipeline integration)
-- Result aggregation and voting (aria_arc_coordinator)
-- Performance monitoring (existing aria infrastructure)
+**New ARC Responsibilities:**
+- **Multi-Strategy Orchestration:** Coordinate grid transformation, LLM reasoning, and program synthesis strategies
+- **Dynamic Strategy Selection:** Choose optimal solving approach based on task characteristics
+- **Ensemble Voting Coordination:** Manage confidence weighting and result aggregation across strategies
+- **Active Inference Management:** Coordinate test-time adaptation and few-shot learning workflows
+- **Fallback Strategy Handling:** Manage graceful degradation when primary strategies fail
+- **Performance Optimization:** Balance computational resources across concurrent solving approaches
 
-**Temporal Planner Integration:**
-- Sequence learning for transformation chains
-- Timeline-based reasoning for multi-step solutions
-- Constraint propagation for spatial-temporal relationships
+**Integration Points:**
+- Strategy factory extended with ARC-specific solving strategies
+- Coordinator enhanced with grid transformation and pattern matching capabilities
+- Ensemble voting system integrated with confidence scoring from pattern library
 
-**MiniZinc Integration:**
-- Constraint solving for complex spatial relationships
-- Optimization for ensemble weight selection
-- Fallback solving for difficult synthesis problems
+#### **`aria_temporal_planner` (Sequence Reasoning)**
+
+**New ARC Responsibilities:**
+- **Transformation Sequence Learning:** Understand multi-step transformation patterns from examples
+- **Timeline-Based Grid Reasoning:** Apply temporal logic to spatial transformation sequences
+- **Constraint Propagation:** Handle spatial-temporal relationships in complex transformations
+- **Pattern Sequence Analysis:** Identify recurring transformation chains across tasks
+- **Sequence Optimization:** Find optimal transformation paths for complex grid manipulations
+- **Temporal Pattern Matching:** Match transformation sequences against known patterns
+
+**Integration Points:**
+- Extended with grid state representations and transformation primitives
+- Timeline constraints adapted for spatial grid relationships
+- Sequence learning algorithms enhanced for visual pattern recognition
+
+#### **`aria_membrane_pipeline` (Data Processing Infrastructure)**
+
+**New ARC Responsibilities:**
+- **ARC Task Ingestion:** Load, validate, and preprocess ARC dataset formats
+- **Synthetic Data Generation Pipelines:** Orchestrate multi-LLM task generation workflows
+- **Model Training Orchestration:** Manage fine-tuning and adaptation pipelines
+- **Result Aggregation Workflows:** Process and combine outputs from multiple solving strategies
+- **Performance Monitoring:** Track accuracy, timing, and resource usage across strategies
+- **Quality Assurance Pipelines:** Validate synthetic data and model outputs
+- **Competition Packaging:** Prepare offline execution environments and dependencies
+
+**Integration Points:**
+- Pipeline stages adapted for grid data processing and validation
+- Streaming integration with LLM clients for synthetic data generation
+- Result aggregation enhanced with ensemble voting and confidence scoring
+
+#### **`aria_minizinc` (Constraint Solving Engine)**
+
+**New ARC Responsibilities:**
+- **Spatial Constraint Solving:** Handle complex grid relationship constraints
+- **Ensemble Weight Optimization:** Optimize voting weights across multiple strategies
+- **Pattern Composition Constraints:** Solve complex pattern matching and composition problems
+- **Grid Layout Optimization:** Find optimal arrangements for transformation synthesis
+- **Fallback Constraint Solving:** Handle difficult synthesis problems when other approaches fail
+- **Resource Allocation Optimization:** Optimize computational resource distribution
+
+**Integration Points:**
+- Constraint models extended with grid and spatial relationship primitives
+- Optimization objectives adapted for ARC-specific scoring and validation
+- Integration with pattern library for constraint-guided pattern matching
+
+#### **`aria_engine_core` (Foundation Infrastructure)**
+
+**New ARC Responsibilities:**
+- **Grid State Management:** Core data structures for representing and manipulating grid states
+- **ARC Task Representation:** Standardized formats for task loading, validation, and processing
+- **Strategy Interface Definitions:** Common protocols for strategy coordination and communication
+- **Shared Grid Utilities:** Common operations for grid manipulation, validation, and comparison
+- **Performance Instrumentation:** Shared metrics and monitoring infrastructure
+- **Configuration Management:** Centralized configuration for ARC-specific parameters and settings
+
+**Integration Points:**
+- State management extended with grid-specific data structures and operations
+- Core interfaces enhanced with ARC task formats and validation protocols
+- Shared utilities provide common foundation for all ARC-specific apps
 
 ### Multi-LLM Architecture
 
