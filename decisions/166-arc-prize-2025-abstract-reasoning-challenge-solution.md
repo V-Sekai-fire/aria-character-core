@@ -87,24 +87,43 @@ First, we create the basic structure - like building the frame of a house before
 
 #### Core Infrastructure (Technical)
 
-- [ ] Create `aria_arc_solver` umbrella application
-- [ ] Integrate with existing Aria apps (engine_core, hybrid_planner, temporal_planner, membrane_pipeline)
-- [ ] Establish grid representation using Aria's state management system
-- [ ] Implement basic ARC task loading and validation
+- [ ] Create `aria_grid` app - Foundation layer for grid operations
+- [ ] Create `aria_dsl` app - Domain-specific language for transformations
+- [ ] Create `aria_arc_coordinator` app - Main orchestration layer
+- [ ] Establish proper umbrella app dependencies following Aria patterns
+- [ ] Implement basic ARC task loading and validation in coordinator
 
-#### Grid Transformation Language (Detailed)
+#### Grid Foundation (`aria_grid`) (Detailed)
 
-Build a special "language" for describing how to change grids:
+Build the core grid representation and operations:
 
-- [ ] Extend hybrid planner with grid transformation primitives:
+- [ ] Implement core grid data structure and representation
+- [ ] Add transformation primitives:
   - [ ] Rotation operations (90°, 180°, 270°) - spin the grid around
   - [ ] Mirroring (horizontal, vertical, diagonal) - flip like a mirror
   - [ ] Pattern matching and extraction - find repeating shapes
   - [ ] Color transformations and mappings - change colors systematically
   - [ ] Shape detection and manipulation - identify and modify objects
   - [ ] Spatial relationship analysis - understand how things relate in space
-- [ ] Integrate DSL primitives with existing strategy factory
+
+#### DSL Layer (`aria_dsl`) (Detailed)
+
+Build the transformation language on top of grid operations:
+
+- [ ] Design transformation language primitives
 - [ ] Implement composition and sequencing of transformations
+- [ ] Add rule parsing and validation
+- [ ] Create pattern expression language
+- [ ] Integrate with aria_grid for execution
+
+#### Coordinator Setup (`aria_arc_coordinator`) (Detailed)
+
+Create the main orchestration system:
+
+- [ ] Integrate with existing Aria apps (hybrid_planner, temporal_planner, membrane_pipeline)
+- [ ] Implement strategy factory integration
+- [ ] Add basic task loading and validation
+- [ ] Create foundation for ensemble coordination
 
 #### Why This Matters (Expert)
 
@@ -116,15 +135,24 @@ This phase establishes the symbolic reasoning foundation essential for ARC tasks
 
 Now we add the "smart AI brains" that can look at examples and learn patterns, like having multiple experts working together.
 
-#### OpenRouter Integration (Technical)
+#### LLM Client App (`aria_llm_client`) (Technical)
 
-Connect to multiple AI models through OpenRouter:
+Create dedicated app for multi-LLM integration:
 
 - [ ] Implement OpenRouter client for accessing diverse LLM models
-- [ ] Create LLM strategy adapter for hybrid coordinator
-- [ ] Establish Qwen3 as primary reasoning engine
-- [ ] Implement multi-model ensemble voting system
 - [ ] Add model-specific prompt engineering for ARC tasks
+- [ ] Create response parsing and validation system
+- [ ] Implement multi-model ensemble coordination
+- [ ] Establish Qwen3 as primary reasoning engine
+
+#### Coordinator Integration (Technical)
+
+Connect LLM capabilities to main orchestration:
+
+- [ ] Create LLM strategy adapter for hybrid coordinator
+- [ ] Integrate aria_llm_client with aria_arc_coordinator
+- [ ] Implement strategy selection based on task characteristics
+- [ ] Add confidence scoring and result validation
 
 #### Active Learning System (Detailed)
 
@@ -176,15 +204,25 @@ Synthetic data generation is essential for overcoming ARC's few-shot learning co
 
 Now we make all our different puzzle-solving methods work together, like having a team where each member is good at different things.
 
+#### Program Synthesis App (`aria_program_synthesis`) (Technical)
+
+Create dedicated app for program synthesis and search:
+
+- [ ] Implement discrete program search algorithms
+- [ ] Add constraint-based synthesis capabilities
+- [ ] Create search space optimization strategies
+- [ ] Implement program validation and scoring
+- [ ] Integrate with aria_grid and aria_dsl for execution
+
 #### Strategy Coordination (Technical)
 
 Combine multiple solving approaches effectively:
 
-- [ ] Implement discrete program search strategy
-- [ ] Integrate DSL synthesis with program search
+- [ ] Integrate aria_program_synthesis with aria_arc_coordinator
 - [ ] Create ensemble voting and confidence weighting
 - [ ] Develop strategy selection based on task characteristics
 - [ ] Implement fallback mechanisms for failed strategies
+- [ ] Add cross-strategy result validation
 
 #### Performance Engineering (Detailed)
 
@@ -232,42 +270,105 @@ Competition success requires robust offline execution with all dependencies self
 
 ## Technical Architecture
 
-### Core Components
+### Umbrella App Structure
+
+Following Aria's established modular architecture, the ARC solver is decomposed into focused, single-responsibility apps:
 
 ```
-aria_arc_solver/
-├── lib/
-│   ├── arc_solver/
-│   │   ├── coordinator.ex          # Main orchestration
-│   │   ├── grid/                   # Grid representation and operations
-│   │   ├── dsl/                    # Domain-specific language primitives
-│   │   ├── strategies/             # Pluggable solving strategies
-│   │   ├── llm/                    # Multi-LLM integration
-│   │   ├── synthesis/              # Program synthesis engine
-│   │   ├── ensemble/               # Multi-strategy coordination
-│   │   └── validation/             # Task validation and testing
-│   └── arc_solver.ex
-├── test/
-└── mix.exs
+apps/
+├── aria_grid/                      # Foundation Layer
+│   ├── lib/aria_grid/
+│   │   ├── grid.ex                 # Core grid representation
+│   │   ├── transformations.ex      # Rotation, mirroring, scaling
+│   │   ├── pattern_matching.ex     # Shape detection and extraction
+│   │   ├── color_mapping.ex        # Color transformations
+│   │   └── spatial_analysis.ex     # Relationship analysis
+│   └── mix.exs
+├── aria_dsl/                       # Language Layer
+│   ├── lib/aria_dsl/
+│   │   ├── primitives.ex           # Transformation language primitives
+│   │   ├── composition.ex          # Operation sequencing
+│   │   ├── parser.ex               # Rule parsing and validation
+│   │   └── expression.ex           # Pattern expression language
+│   └── mix.exs
+├── aria_llm_client/                # External Integration Layer
+│   ├── lib/aria_llm_client/
+│   │   ├── openrouter.ex           # OpenRouter client
+│   │   ├── prompting.ex            # Model-specific prompts
+│   │   ├── response_parser.ex      # Response validation
+│   │   └── ensemble.ex             # Multi-model coordination
+│   └── mix.exs
+├── aria_program_synthesis/         # Reasoning Layer
+│   ├── lib/aria_program_synthesis/
+│   │   ├── search.ex               # Discrete program search
+│   │   ├── constraints.ex          # Constraint-based synthesis
+│   │   ├── optimization.ex         # Search space optimization
+│   │   └── validation.ex           # Program scoring
+│   └── mix.exs
+└── aria_arc_coordinator/           # Orchestration Layer
+    ├── lib/aria_arc_coordinator/
+    │   ├── coordinator.ex          # Main orchestration
+    │   ├── strategy_factory.ex     # Strategy management
+    │   ├── ensemble_voting.ex      # Result aggregation
+    │   ├── task_loader.ex          # ARC task processing
+    │   └── synthetic_data.ex       # Data generation
+    └── mix.exs
 ```
 
-### Strategy Integration
+### App Dependencies
+
+**Dependency Graph:**
+```
+aria_arc_coordinator
+├── aria_grid
+├── aria_dsl
+├── aria_llm_client
+├── aria_program_synthesis
+├── aria_hybrid_planner (existing)
+├── aria_temporal_planner (existing)
+├── aria_membrane_pipeline (existing)
+├── aria_minizinc (existing)
+└── aria_engine_core (existing)
+
+aria_program_synthesis
+├── aria_grid
+└── aria_dsl
+
+aria_dsl
+└── aria_grid
+
+aria_llm_client
+└── (external dependencies only)
+
+aria_grid
+└── (foundation layer - no internal deps)
+```
+
+### Integration with Existing Aria Apps
 
 **Hybrid Coordinator Extension:**
-
-- Grid transformation strategy
-- LLM reasoning strategy
-- Program synthesis strategy
-- Ensemble coordination strategy
-- Active inference strategy
+- Grid transformation strategy (via aria_grid)
+- LLM reasoning strategy (via aria_llm_client)
+- Program synthesis strategy (via aria_program_synthesis)
+- Ensemble coordination strategy (in aria_arc_coordinator)
+- Active inference strategy (coordinated through aria_arc_coordinator)
 
 **Membrane Pipeline Integration:**
+- Data ingestion and validation (aria_arc_coordinator)
+- Synthetic data generation (aria_arc_coordinator + aria_llm_client)
+- Model training pipelines (aria_membrane_pipeline integration)
+- Result aggregation and voting (aria_arc_coordinator)
+- Performance monitoring (existing aria infrastructure)
 
-- Data ingestion and validation
-- Synthetic data generation
-- Model training pipelines
-- Result aggregation and voting
-- Performance monitoring
+**Temporal Planner Integration:**
+- Sequence learning for transformation chains
+- Timeline-based reasoning for multi-step solutions
+- Constraint propagation for spatial-temporal relationships
+
+**MiniZinc Integration:**
+- Constraint solving for complex spatial relationships
+- Optimization for ensemble weight selection
+- Fallback solving for difficult synthesis problems
 
 ### Multi-LLM Architecture
 
