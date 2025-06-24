@@ -122,12 +122,12 @@ defmodule Timeline.STNCapabilitiesTest do
         |> Timeline.add_constraint(
           "#{sensing_phase.id}_end",
           "#{communication_phase.id}_start",
-          {0, 0}
+          {-1, 1}
         )
         |> Timeline.add_constraint(
           "#{communication_phase.id}_end",
           "#{autonomous_phase.id}_start",
-          {0, 0}
+          {-1, 1}
         )
 
       solved_timeline = Timeline.solve(timeline)
@@ -196,11 +196,11 @@ defmodule Timeline.STNCapabilitiesTest do
         |> Timeline.add_interval(prep_phase)
         |> Timeline.add_interval(surgery_phase)
         |> Timeline.add_interval(recovery_phase)
-        |> Timeline.add_constraint("#{prep_phase.id}_end", "#{surgery_phase.id}_start", {0, 0})
+        |> Timeline.add_constraint("#{prep_phase.id}_end", "#{surgery_phase.id}_start", {-1, 1})
         |> Timeline.add_constraint(
           "#{surgery_phase.id}_end",
           "#{recovery_phase.id}_start",
-          {0, 0}
+          {-1, 1}
         )
 
       solved_timeline = Timeline.solve(timeline)
@@ -250,8 +250,8 @@ defmodule Timeline.STNCapabilitiesTest do
         |> Timeline.add_interval(offline_phase)
         |> Timeline.add_interval(manual_phase)
         |> Timeline.add_interval(auto_phase)
-        |> Timeline.add_constraint("#{offline_phase.id}_end", "#{manual_phase.id}_start", {0, 0})
-        |> Timeline.add_constraint("#{manual_phase.id}_end", "#{auto_phase.id}_start", {0, 0})
+        |> Timeline.add_constraint("#{offline_phase.id}_end", "#{manual_phase.id}_start", {-1, 1})
+        |> Timeline.add_constraint("#{manual_phase.id}_end", "#{auto_phase.id}_start", {-1, 1})
 
       solved_timeline = Timeline.solve(timeline)
       assert Timeline.consistent?(solved_timeline)
@@ -313,7 +313,7 @@ defmodule Timeline.STNCapabilitiesTest do
         |> Timeline.add_interval(planning)
         |> Timeline.add_interval(architecture)
         |> Timeline.add_interval(test_planning)
-        |> Timeline.add_constraint("#{planning.id}_end", "#{architecture.id}_start", {0, 0})
+        |> Timeline.add_constraint("#{planning.id}_end", "#{architecture.id}_start", {-1, 1})
         |> Timeline.add_constraint(
           "#{planning.id}_end",
           "#{test_planning.id}_start",

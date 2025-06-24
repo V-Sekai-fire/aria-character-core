@@ -94,7 +94,7 @@ defmodule Timeline.Bridge do
       iex> interval2 = Timeline.Interval.new(start2, end2)
       iex> {:ok, constraint} = Timeline.Bridge.generate_stn_constraint(interval1, interval2, :second)
       iex> constraint
-      {0, 0}
+      {-1, 1}
 
   """
   @spec generate_stn_constraint(Interval.t(), Interval.t(), STN.time_unit()) :: constraint_result()

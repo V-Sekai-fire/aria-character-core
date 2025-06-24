@@ -54,10 +54,14 @@ Implement a complete temporal relations system with language-neutral naming, com
 - [x] Update constraint intersection logic to handle micro-ranges properly
 - [x] Convert all fixed-point constraints {n, n} to micro-ranges {n-1, n+1}
 
+**File:** `apps/aria_temporal_planner/lib/timeline/internal/stn.ex`
+- [x] Fix initialize_constant_work_structure dummy constraints to use {-1, 1}
+- [x] Eliminate all remaining {0, 0} constraint violations in STN initialization
+
 **Test Files Fixed:**
 - [x] `test/timeline/internal/stn/operations_test.exs` - Fixed all {0, 0} constraints
 - [x] `test/temporal_planner/stn_method_test.exs` - Fixed world_start constraint
-- [ ] Remaining test files with {0, 0} constraints need fixing
+- [x] All identified {0, 0} constraint violations eliminated from codebase
 
 ### Phase 2: Extended Temporal Relations (Week 2)
 

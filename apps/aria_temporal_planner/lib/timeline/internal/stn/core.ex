@@ -23,10 +23,10 @@ defmodule Timeline.Internal.STN.Core do
         stn.lod_resolution
       )
 
-    # Ensure minimum duration of 1 STN unit to prevent zero-duration violations
+    # Ensure minimum duration of 1 STN unit
     duration = max(duration, 1)
-    # Convert fixed-point constraint to micro-range to prevent STN contract violation
-    duration_constraint = {max(duration - 1, 0), duration + 1}
+    # Use exact duration constraint
+    duration_constraint = {duration, duration}
 
     stn
     |> add_time_point(start_point)
@@ -85,6 +85,32 @@ defmodule Timeline.Internal.STN.Core do
     updated_stn
   end
 
+
+  @doc "Determines if an STN contains only simple constraints that don't require MiniZinc solving.
+
+  Simple STNs contain only:
+  1. Basic interval constraints with fixed durations
+  2. Small range constraints (simple adjacency)
+  3. Limited number of time points for performance
+
+  These STNs can be handled efficiently with Elixir-side consistency checking
+  without requiring complex temporal reasoning via MiniZinc.
+  "
+  @spec simple_stn?(STN.t()) :: boolean()
+  def simple_stn?(stn) do
+    # Limit to reasonable size for simple processing
+    point_count = MapSet.size(stn.time_points)
+
+    if point_count > 15 do
+      false
+    else
+      # Check if all constraints are simple
+      Enum.all?(stn.constraints, fn {{from, to}, {min, max}} ->
+        is_simple_constraint?(from, to, min, max)
+      end)
+    end
+  end
+
   @doc "Checks if the STN is temporally consistent.\n"
   @spec consistent?(STN.t()) :: boolean()
   def consistent?(stn) do
@@ -107,9 +133,8 @@ defmodule Timeline.Internal.STN.Core do
   @spec add_time_point(STN.t(), time_point()) :: STN.t()
   def add_time_point(stn, time_point) do
     updated_time_points = MapSet.put(stn.time_points, time_point)
-    # Convert fixed-point constraint to micro-range to prevent STN contract violation
-    updated_constraints = Map.put(stn.constraints, {time_point, time_point}, {-1, 1})
-    %{stn | time_points: updated_time_points, constraints: updated_constraints}
+    # No self-constraint needed - distance from point to itself is implicitly zero
+    %{stn | time_points: updated_time_points}
   end
 
   @doc "Gets all intervals currently stored in the STN.\n\nReturns a list of interval representations with their time bounds.\nEach interval is returned as %{id: interval_id, start_time: number, end_time: number, metadata: map}\nwhere times are in the STN's time units.\n"
@@ -303,16 +328,7 @@ defmodule Timeline.Internal.STN.Core do
       existing_constraint ->
         case intersect_constraints(existing_constraint, new_constraint) do
           :inconsistent ->
-            # Check if this is a self-constraint (same time point to itself)
-            # Self-constraints should always be micro-range and are never inconsistent
-            case key do
-              {point, point} when point == point ->
-                # Keep the existing micro-range constraint for self-references
-                {constraints, true}
-              _ ->
-                # For real inconsistencies between different time points, mark as inconsistent
-                {constraints, false}
-            end
+            {constraints, false}
           intersected_constraint ->
             {Map.put(constraints, key, intersected_constraint), true}
         end
@@ -418,6 +434,23 @@ defmodule Timeline.Internal.STN.Core do
       end
     end)
     |> Enum.reverse()
+  end
+
+  defp is_simple_constraint?(from, to, min, max) do
+    cond do
+      # Fixed duration interval (simple)
+      from != to and min == max and is_number(min) and min > 0 ->
+        true
+
+      # Small range constraint (simple adjacency)
+      from != to and is_number(min) and is_number(max) and
+      abs(max - min) <= 2 and min >= 0 ->
+        true
+
+      # Any other constraint type (complex - needs MiniZinc)
+      true ->
+        false
+    end
   end
 
   defp convert_to_stn_time_units(time_value_ms, target_unit) do

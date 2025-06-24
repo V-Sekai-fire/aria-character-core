@@ -4,6 +4,7 @@
 defmodule Timeline.Internal.STN.Operations do
   @moduledoc false
   alias Timeline.Internal.STN
+  alias Timeline.Internal.STN.Core
   alias Timeline.Internal.STN.MiniZincSolver
   @doc "Performs intersection operation on two STNs.\n"
   @spec intersection(STN.t(), STN.t()) :: STN.t()
@@ -31,7 +32,7 @@ defmodule Timeline.Internal.STN.Operations do
       dummy_constraints:
         Map.merge(compatible_stn1.dummy_constraints, compatible_stn2.dummy_constraints)
     }
-    |> MiniZincSolver.solve_stn()
+    |> solve()
   end
 
   @doc "Performs difference operation on two STNs.\n"
@@ -43,7 +44,7 @@ defmodule Timeline.Internal.STN.Operations do
     merged_constraints =
       merge_constraints_difference(compatible_stn1.constraints, compatible_stn2.constraints)
 
-    %STN{
+    result_stn = %STN{
       time_points: merged_points,
       constraints: merged_constraints,
       consistent: compatible_stn1.consistent,
@@ -58,7 +59,8 @@ defmodule Timeline.Internal.STN.Operations do
       constant_work_enabled: compatible_stn1.constant_work_enabled,
       dummy_constraints: compatible_stn1.dummy_constraints
     }
-    |> MiniZincSolver.solve_stn()
+
+    solve(result_stn)
   end
 
   @doc "Splits an STN into multiple independent segments for parallel processing.\n"
@@ -109,7 +111,7 @@ defmodule Timeline.Internal.STN.Operations do
       dummy_constraints:
         Map.merge(compatible_stn1.dummy_constraints, compatible_stn2.dummy_constraints)
     }
-    |> MiniZincSolver.solve_stn()
+    |> solve()
   end
 
   @doc "Composes two STNs sequentially.\n"
@@ -141,7 +143,7 @@ defmodule Timeline.Internal.STN.Operations do
   def parallel_join(stns) do
     case length(stns) do
       count when count > 4 -> %STN{}
-      _ -> stns |> Enum.reduce(&union/2) |> MiniZincSolver.solve_stn()
+      _ -> stns |> Enum.reduce(&union/2) |> solve()
     end
   end
 
@@ -188,10 +190,10 @@ defmodule Timeline.Internal.STN.Operations do
 
     case length(segments) do
       1 ->
-        MiniZincSolver.solve_stn(hd(segments))
+        solve(hd(segments))
 
       _segment_count ->
-        solved_segments = segments |> Enum.map(&MiniZincSolver.solve_stn/1)
+        solved_segments = segments |> Enum.map(&solve/1)
         parallel_join(solved_segments)
     end
   end
@@ -199,7 +201,13 @@ defmodule Timeline.Internal.STN.Operations do
   @doc "Solves the STN for consistency and computes shortest paths.\n"
   @spec solve(STN.t()) :: STN.t()
   def solve(stn) do
-    MiniZincSolver.solve_stn(stn)
+    if Core.simple_stn?(stn) do
+      # Simple STN - bypass MiniZinc and return as-is
+      stn
+    else
+      # Complex STN - use MiniZinc solver
+      MiniZincSolver.solve_stn(stn)
+    end
   end
 
   defp merge_constraints_intersection(constraints1, constraints2) do

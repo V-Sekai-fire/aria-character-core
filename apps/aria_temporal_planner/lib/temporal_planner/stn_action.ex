@@ -82,8 +82,8 @@ defmodule TemporalPlanner.STNAction do
 
         timeline
         |> Timeline.add_constraint(resource_start, resource_end, req.duration)
-        |> Timeline.add_constraint(start_timepoint, resource_start, {0, 0})
-        |> Timeline.add_constraint(resource_end, end_timepoint, {0, 0})
+        |> Timeline.add_constraint(start_timepoint, resource_start, {-1, 1})
+        |> Timeline.add_constraint(resource_end, end_timepoint, {-1, 1})
       end)
 
     segment = %{

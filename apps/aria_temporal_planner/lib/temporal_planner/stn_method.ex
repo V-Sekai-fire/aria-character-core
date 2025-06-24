@@ -238,7 +238,7 @@ defmodule TemporalPlanner.STNMethod do
 
       acc_timeline
       |> Timeline.add_time_point(bridge_timepoint)
-      |> Timeline.add_constraint(bridge_timepoint, bridge_timepoint, {0, 0})
+      |> Timeline.add_constraint(bridge_timepoint, bridge_timepoint, {-1, 1})
     end)
   end
 
