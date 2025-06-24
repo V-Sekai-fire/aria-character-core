@@ -448,6 +448,89 @@ aria_grid
 - **Competitive Target:** 35% accuracy (exceeding current SOTA)
 - **Stretch Goal:** 50% accuracy (Grand Prize territory)
 
+## Critical Gaps and Failure Risks
+
+### Fundamental Technical Gaps
+
+**⚠️ HIGH RISK: No Proven ARC-Specific Reasoning**
+- **Gap:** Aria's existing planning is for temporal/spatial domains, not abstract visual reasoning
+- **Reality Check:** ARC requires understanding visual patterns humans find intuitive but are computationally hard
+- **Failure Risk:** 90% - Core reasoning capabilities may be fundamentally insufficient
+
+**⚠️ HIGH RISK: Symbolic-Neural Integration Unproven**
+- **Gap:** No existing examples of successful symbolic-neural hybrid for ARC-like tasks
+- **Reality Check:** Current SOTA (34%) uses pure neural approaches, not hybrid systems
+- **Failure Risk:** 80% - Integration complexity may reduce rather than improve performance
+
+**⚠️ CRITICAL: No Domain Expert Knowledge**
+- **Gap:** Team lacks deep ARC research experience and cognitive science background
+- **Reality Check:** Winning teams likely have years of ARC-specific research
+- **Failure Risk:** 95% - Missing fundamental insights about what makes ARC hard
+
+### Resource and Timeline Gaps
+
+**⚠️ HIGH RISK: Computational Requirements Unknown**
+- **Gap:** No analysis of computational costs for program synthesis at ARC scale
+- **Reality Check:** Discrete program search may be computationally intractable
+- **Failure Risk:** 70% - May hit computational limits before reaching competitive performance
+
+**⚠️ CRITICAL: Unrealistic Development Timeline**
+- **Gap:** T-shirt sizes don't account for research uncertainty and dead ends
+- **Reality Check:** Each phase could take 3-10x longer due to fundamental research needs
+- **Failure Risk:** 85% - Won't have working system by competition deadline
+
+**⚠️ HIGH RISK: LLM Dependency Vulnerability**
+- **Gap:** Heavy reliance on external LLM services during development
+- **Reality Check:** OpenRouter costs could exceed budget, rate limits could block development
+- **Failure Risk:** 60% - Development blocked by external service limitations
+
+### Competition-Specific Gaps
+
+**⚠️ CRITICAL: No Validation Against Real ARC Performance**
+- **Gap:** Success criteria based on assumptions, not validated benchmarks
+- **Reality Check:** 15% target may be optimistic given current SOTA struggles
+- **Failure Risk:** 90% - May build complex system that performs worse than simple baselines
+
+**⚠️ HIGH RISK: Offline Execution Complexity**
+- **Gap:** No experience packaging complex AI systems for offline competition
+- **Reality Check:** Dependency hell, model size limits, execution environment constraints
+- **Failure Risk:** 70% - System works in development but fails in competition environment
+
+**⚠️ MEDIUM RISK: Competition Rule Changes**
+- **Gap:** Rules may change, evaluation criteria may shift
+- **Reality Check:** Competition organizers often adjust rules based on submissions
+- **Failure Risk:** 40% - System optimized for wrong evaluation criteria
+
+### Architectural Reality Checks
+
+**⚠️ HIGH RISK: Over-Engineering for Unproven Benefit**
+- **Gap:** Complex umbrella app structure may add overhead without benefit
+- **Reality Check:** Simple, focused solutions often outperform complex architectures
+- **Failure Risk:** 60% - Complexity reduces development velocity and introduces bugs
+
+**⚠️ MEDIUM RISK: Integration Testing Nightmare**
+- **Gap:** 5 new apps + 5 existing apps = 25 integration points to test
+- **Reality Check:** Integration bugs could consume majority of development time
+- **Failure Risk:** 50% - System never reaches stable, testable state
+
+### Honest Success Probability Assessment
+
+**Realistic Outcome Probabilities:**
+- **Complete Failure (0-5% accuracy):** 60% probability
+- **Baseline Performance (5-15% accuracy):** 30% probability  
+- **Competitive Performance (15-25% accuracy):** 8% probability
+- **SOTA Performance (25%+ accuracy):** 2% probability
+
+**Most Likely Scenario:**
+System reaches basic functionality but performs poorly due to fundamental gaps in ARC-specific reasoning. Complex architecture becomes liability rather than asset.
+
+**Recommended Risk Mitigation:**
+1. **Start with simple baseline:** Single-app prototype before umbrella architecture
+2. **Validate core assumptions early:** Test basic grid reasoning on public ARC data within 2 weeks
+3. **Plan for failure:** Have backup plan for simpler submission if complex approach fails
+4. **Budget reality:** Assume 3-5x longer development time than estimated
+5. **Expert consultation:** Engage ARC research community early for guidance
+
 ## Risk Mitigation
 
 ### Technical Risks
