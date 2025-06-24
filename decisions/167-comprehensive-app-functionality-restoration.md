@@ -7,11 +7,11 @@
 ## Context
 
 The aria-character-core umbrella project has five leaf apps that need to achieve 100% functionality:
-- aria_hybrid_planner (existing)
-- aria_temporal_planner (existing) 
-- aria_membrane_pipeline (existing)
-- aria_minizinc (existing)
-- aria_engine_core (existing)
+1. aria_hybrid_planner (existing)
+2. aria_temporal_planner (existing) 
+3. aria_membrane_pipeline (existing)
+4. aria_minizinc (existing)
+5. aria_engine_core (existing)
 
 Current issues preventing 100% functionality:
 1. **State format inconsistency**: Mixed usage of AriaEngine.State `{predicate, subject, object}` vs StateV2 `{subject, predicate, object}`
@@ -47,9 +47,9 @@ Implement a phased approach to restore 100% functionality across all leaf apps, 
 - [ ] **Verify method lookup chain**: Ensure `{subject, predicate, object}` → extract predicate → method_registry[predicate] → domain_methods[[subject, object]]
 
 **Method System (Unchanged):**
-- Unigoal method registration: `method_registry[predicate] = function`
-- Domain method registration: `domain_methods[[subject, value]] = method`
-- Function signatures: `def achieve_at(subject, fact)` (unchanged)
+1. Unigoal method registration: `method_registry[predicate] = function`
+2. Domain method registration: `domain_methods[[subject, value]] = method`
+3. Function signatures: `def achieve_at(subject, fact)` (unchanged)
 
 ### Phase 1: Fix MiniZinc Template System (CRITICAL - 2-3 days)
 **Target:** aria_minizinc (19 test failures)
@@ -101,18 +101,18 @@ Implement a phased approach to restore 100% functionality across all leaf apps, 
 ## Success Criteria
 
 **Phase 0 Success:**
-- All apps use StateV2 `{subject, predicate, object}` format consistently
-- Method lookup chain works: StateV2 → extract predicate → method registry → domain methods
-- "No methods found for goal" errors eliminated
-- All state-related tests pass
+1. All apps use StateV2 `{subject, predicate, object}` format consistently
+2. Method lookup chain works: StateV2 → extract predicate → method registry → domain methods
+3. "No methods found for goal" errors eliminated
+4. All state-related tests pass
 
 **Overall Success:**
-- All 5 leaf apps achieve 100% test pass rate
-- No compilation warnings
-- Clean integration between all apps
-- Hybrid planner fully functional with temporal reasoning
-- MiniZinc solver working correctly
-- Pipeline integration operational
+1. All 5 leaf apps achieve 100% test pass rate
+2. No compilation warnings
+3. Clean integration between all apps
+4. Hybrid planner fully functional with temporal reasoning
+5. MiniZinc solver working correctly
+6. Pipeline integration operational
 
 ## Timeline
 
@@ -145,9 +145,9 @@ Implement a phased approach to restore 100% functionality across all leaf apps, 
 ## Monitoring
 
 Track progress through:
-- Test pass rates for each app
-- Compilation warning counts
-- Integration test results
-- Method lookup success rates
+1. Test pass rates for each app
+2. Compilation warning counts
+3. Integration test results
+4. Method lookup success rates
 
 **Current Focus:** Phase 0 - StateV2 migration to resolve core state format inconsistencies blocking all other functionality.
