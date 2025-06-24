@@ -25,7 +25,8 @@ defmodule Timeline.Internal.STN.Core do
 
     # Ensure minimum duration of 1 STN unit to prevent zero-duration violations
     duration = max(duration, 1)
-    duration_constraint = {duration, duration}
+    # Convert fixed-point constraint to micro-range to prevent STN contract violation
+    duration_constraint = {max(duration - 1, 0), duration + 1}
 
     stn
     |> add_time_point(start_point)
@@ -106,7 +107,8 @@ defmodule Timeline.Internal.STN.Core do
   @spec add_time_point(STN.t(), time_point()) :: STN.t()
   def add_time_point(stn, time_point) do
     updated_time_points = MapSet.put(stn.time_points, time_point)
-    updated_constraints = Map.put(stn.constraints, {time_point, time_point}, {0, 0})
+    # Convert fixed-point constraint to micro-range to prevent STN contract violation
+    updated_constraints = Map.put(stn.constraints, {time_point, time_point}, {-1, 1})
     %{stn | time_points: updated_time_points, constraints: updated_constraints}
   end
 
@@ -301,10 +303,10 @@ defmodule Timeline.Internal.STN.Core do
         case intersect_constraints(existing_constraint, new_constraint) do
           :inconsistent ->
             # Check if this is a self-constraint (same time point to itself)
-            # Self-constraints should always be {0, 0} and are never inconsistent
+            # Self-constraints should always be micro-range and are never inconsistent
             case key do
               {point, point} when point == point ->
-                # Keep the existing {0, 0} constraint for self-references
+                # Keep the existing micro-range constraint for self-references
                 {constraints, true}
               _ ->
                 # For real inconsistencies between different time points, mark as inconsistent

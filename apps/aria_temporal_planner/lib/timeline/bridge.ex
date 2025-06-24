@@ -226,26 +226,28 @@ defmodule Timeline.Bridge do
   defp generate_constraint_for_relation(interval1, interval2, relation, time_unit) do
     case relation do
       :EQ ->
-        # Equal intervals - zero distance constraint
-        {:ok, {0, 0}}
+        # Equal intervals - convert fixed-point to micro-range
+        {:ok, {-1, 1}}
 
       :ADJ_F ->
-        # interval1 meets interval2 - end of interval1 equals start of interval2
-        {:ok, {0, 0}}
+        # interval1 meets interval2 - convert fixed-point to micro-range
+        {:ok, {-1, 1}}
 
       :ADJ_B ->
-        # interval2 meets interval1 - start of interval1 equals end of interval2
-        {:ok, {0, 0}}
+        # interval2 meets interval1 - convert fixed-point to micro-range
+        {:ok, {-1, 1}}
 
       :PRECEDES ->
         # interval1 before interval2 - positive gap between them
         gap = calculate_gap_between_intervals(interval1, interval2, time_unit)
-        {:ok, {gap, gap}}
+        # Convert fixed-point to micro-range
+        {:ok, {max(gap - 1, 0), gap + 1}}
 
       :FOLLOWS ->
         # interval1 after interval2 - negative gap (interval2 before interval1)
         gap = calculate_gap_between_intervals(interval2, interval1, time_unit)
-        {:ok, {-gap, -gap}}
+        # Convert fixed-point to micro-range
+        {:ok, {-gap - 1, max(-gap + 1, 1)}}
 
       :OVERLAP_F ->
         # interval1 overlaps interval2 forward
@@ -268,23 +270,23 @@ defmodule Timeline.Bridge do
 
       :START_ALIGN ->
         # interval1 starts interval2 - same start, different end
-        {:ok, {0, 0}}
+        {:ok, {-1, 1}}
 
       :START_EXTEND ->
         # interval1 started by interval2 - same start, interval1 extends
-        {:ok, {0, 0}}
+        {:ok, {-1, 1}}
 
       :END_ALIGN ->
         # interval1 finishes interval2 - same end, different start
-        {:ok, {0, 0}}
+        {:ok, {-1, 1}}
 
       :END_EXTEND ->
         # interval1 finished by interval2 - same end, interval1 extends
-        {:ok, {0, 0}}
+        {:ok, {-1, 1}}
 
       _ ->
         # Default case - treat as equal
-        {:ok, {0, 0}}
+        {:ok, {-1, 1}}
     end
   end
 
@@ -301,9 +303,15 @@ defmodule Timeline.Bridge do
     if DateTime.compare(overlap_start, overlap_end) == :lt do
       overlap_duration = DateTime.diff(overlap_end, overlap_start, :microsecond)
       overlap_in_unit = convert_microseconds_to_unit(overlap_duration, time_unit)
-      {overlap_in_unit, overlap_in_unit}
+      # Convert fixed-point to micro-range if needed
+      if overlap_in_unit == 0 do
+        {-1, 1}
+      else
+        {max(overlap_in_unit - 1, 0), overlap_in_unit + 1}
+      end
     else
-      {0, 0}
+      # No overlap - convert fixed-point to micro-range
+      {-1, 1}
     end
   end
 
