@@ -3,11 +3,68 @@
 **Status:** Proposed  
 **Date:** June 24, 2025  
 **Priority:** HIGH  
-**Parent ADR:** ADR-166 (ARC Prize Core Strategy)
+**Parent ADR:** ADR-166 (ARC Prize 2025 - Two-Week Proof of Concept Sprint)
 
 ## Context
 
-This ADR provides comprehensive risk analysis for the ARC Prize 2025 solution defined in ADR-166, including technical gaps, resource constraints, competition-specific risks, and honest probability assessments for success scenarios.
+This ADR provides comprehensive risk analysis for the ARC Prize 2025 solution defined in ADR-166, structured as immediate two-week sprint risks followed by conditional full implementation risks. The focus is on honest probability assessments for the sprint Go/No-Go decision.
+
+## Phase 1: Two-Week Sprint Risk Analysis (Immediate Focus)
+
+**Evidence-Based Risk Assessment:** Based on git history showing 30 commits of ARC planning in one day with no actual ARC apps created yet, sprint risks focus on rapid validation challenges and realistic timeline constraints.
+
+### Sprint-Specific Risks
+
+**⚠️ CRITICAL: Two-Week Timeline Unrealistic**
+
+- **Evidence:** 30 commits of planning iteration in single day, no actual apps created
+- **Gap:** Complex app creation typically requires multiple iteration cycles
+- **Reality Check:** Git history shows heavy refinement patterns for new features
+- **Failure Risk:** 85% - Sprint timeline insufficient for working system
+
+**⚠️ HIGH RISK: Basic Grid Operations Complexity**
+
+- **Gap:** No existing ARC-specific grid handling in Aria codebase
+- **Reality Check:** Grid transformations may be more complex than anticipated
+- **Failure Risk:** 70% - Basic operations take longer than allocated time
+
+**⚠️ HIGH RISK: Integration with Existing Aria Apps**
+
+- **Gap:** No precedent for rapid integration of new domain with existing planners
+- **Reality Check:** Integration typically requires debugging and refinement cycles
+- **Failure Risk:** 60% - Integration complexity blocks sprint completion
+
+### Sprint Success Probability Assessment
+
+**Complete Sprint Failure (0% accuracy):** 60% probability
+- **Causes:** Cannot create working grid operations within timeline
+- **Indicators:** Basic ARC task loading fails, no transformations working
+- **Mitigation:** Immediate pivot to simplest possible approach
+
+**Basic Functionality (1-3% accuracy):** 30% probability  
+- **Causes:** Basic grid operations work but no sophisticated reasoning
+- **Indicators:** Can load tasks and apply simple transformations
+- **Mitigation:** Focus on computational search over complex integration
+
+**Sprint Success (≥5% accuracy):** 10% probability
+- **Causes:** Rapid development success and effective computational search
+- **Indicators:** Working system with measurable ARC performance
+- **Mitigation:** Aggressive scope reduction and parallel development
+
+---
+
+## Phase 2: Full Implementation Risk Analysis (Conditional)
+
+**Activation Trigger:** Sprint achieves ≥5% accuracy
+**Timeline:** 3-6 months of focused development
+**Scope:** Complete competition system with full architecture
+
+### Evidence-Based Timeline Risks
+
+**Git History Analysis Implications:**
+- Heavy iteration cycles suggest 3-5x longer development than initial estimates
+- No actual umbrella apps created yet indicates significant implementation complexity
+- Planning-to-implementation gap requires substantial debugging and refinement
 
 ## The Decision Framework: Why This Risk Is Worth Taking
 

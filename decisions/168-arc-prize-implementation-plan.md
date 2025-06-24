@@ -1,15 +1,19 @@
-# ADR-168: ARC Prize 2025 Two-Week Sprint Implementation Plan
+# ADR-168: ARC Prize 2025 Implementation Plan
 
 **Status:** Proposed  
 **Date:** June 24, 2025  
 **Priority:** HIGH  
-**Parent ADR:** ADR-166 (ARC Prize Two-Week Sprint)
+**Parent ADR:** ADR-166 (ARC Prize 2025 - Two-Week Proof of Concept Sprint)
 
 ## Context
 
-This ADR details the two-week proof of concept sprint implementation plan defined in ADR-166. The focus is on rapid validation of the hybrid reasoning approach through computational search coordinated by Aria's planning system.
+This ADR details the complete ARC Prize implementation plan, structured as a two-week proof of concept sprint followed by conditional full implementation. The immediate focus is on rapid validation of the hybrid reasoning approach through computational search coordinated by Aria's planning system.
 
-## Two-Week Sprint Detailed Plan
+## Phase 1: Two-Week Proof of Concept Sprint (Immediate Commitment)
+
+**Evidence-Based Timeline:** Based on git history analysis showing 30 commits of ARC planning in one day (June 24, 2025), actual development velocity for new apps appears to require significant iteration and refinement cycles.
+
+### Realistic Two-Week Sprint Plan
 
 ### Week 1: "Skateboard" - Computational Search Foundation
 
@@ -56,6 +60,33 @@ This ADR details the two-week proof of concept sprint implementation plan define
 - [ ] Technical report with results and recommendations
 - [ ] Go/No-Go decision based on success criteria
 - **Success Criteria:** Clear recommendation on full competition pursuit
+
+### Go/No-Go Decision Criteria
+
+**GO (≥5% accuracy):** Proceed to Phase 2 full implementation
+**NO-GO (<3% accuracy):** Valuable learning experience, stop ARC Prize pursuit
+**UNCERTAIN (3-5% accuracy):** Extended evaluation period, reassess in one week
+
+---
+
+## Phase 2: Full Implementation Plan (Conditional on Sprint Success)
+
+**Activation Trigger:** Two-week sprint achieves ≥5% accuracy
+**Timeline:** 3-6 months of focused development
+**Commitment Level:** Full competition pursuit with resource allocation
+
+### Evidence-Based Development Velocity
+
+**Git History Analysis (June 24, 2025):**
+- 30 commits of ARC planning in single day shows high iteration rate
+- No actual ARC apps created yet - all planning phase
+- Heavy refinement cycles suggest 3-5x longer implementation than initial estimates
+- Complex integration work requires significant debugging and testing cycles
+
+**Realistic Timeline Adjustments:**
+- Original T-shirt sizes multiplied by 3x based on observed planning iteration
+- Buffer time added for integration testing and debugging
+- Parallel development streams to mitigate timeline risks
 
 ## Business Case for Game Industry Collaboration
 

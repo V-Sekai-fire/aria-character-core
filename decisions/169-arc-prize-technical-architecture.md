@@ -3,11 +3,64 @@
 **Status:** Proposed  
 **Date:** June 24, 2025  
 **Priority:** HIGH  
-**Parent ADR:** ADR-166 (ARC Prize Core Strategy)
+**Parent ADR:** ADR-166 (ARC Prize 2025 - Two-Week Proof of Concept Sprint)
 
 ## Context
 
-This ADR defines the technical architecture for the ARC Prize 2025 solution, including umbrella app structure, integration with existing Aria components, and the computational learning domain architecture that implements the Bitter Lesson principles defined in ADR-166.
+This ADR defines the complete technical architecture for the ARC Prize 2025 solution, structured as minimal viable architecture for the two-week sprint followed by full architecture for conditional implementation. The immediate focus is on rapid validation architecture that implements the Bitter Lesson principles defined in ADR-166.
+
+## Phase 1: Two-Week Sprint Architecture (Immediate Implementation)
+
+**Evidence-Based Scope:** Based on git history showing 30 commits of planning in one day with no actual ARC apps created yet, the sprint architecture focuses on minimal viable components for rapid validation.
+
+### Sprint Architecture Components
+
+**Minimal App Structure (2 apps maximum):**
+
+```
+apps/
+1. aria_grid/                       # Foundation Layer
+│   ├── lib/aria_grid/
+│   │   ├── grid.ex                 # Core grid representation
+│   │   ├── transformations.ex      # Basic transformations only
+│   │   └── arc_loader.ex           # ARC JSON task loading
+│   └── mix.exs
+2. aria_arc_coordinator/            # Sprint Orchestration
+    ├── lib/aria_arc_coordinator/
+    │   ├── coordinator.ex          # Main sprint orchestration
+    │   ├── search_engine.ex        # Computational search (primary strategy)
+    │   ├── task_runner.ex          # ARC task processing
+    │   └── validation.ex           # Accuracy measurement
+    └── mix.exs
+```
+
+**Integration with Existing Aria (Minimal Changes):**
+
+- **`aria_hybrid_planner`:** Add basic ARC task coordination only
+- **`aria_temporal_planner`:** Accept grid transformation sequences only
+- **Other apps:** No changes during sprint
+
+### Sprint Success Criteria
+
+- **5%+ accuracy:** Proceed to Phase 2 full architecture
+- **<3% accuracy:** Stop, valuable learning achieved
+- **Working system:** Can load ARC tasks, apply transformations, measure accuracy
+
+---
+
+## Phase 2: Full Competition Architecture (Conditional Implementation)
+
+**Activation Trigger:** Sprint achieves ≥5% accuracy
+**Timeline:** 3-6 months of focused development
+**Scope:** Complete 6-app umbrella architecture with full integration
+
+### Evidence-Based Architecture Planning
+
+**Development Velocity Analysis:**
+- Git history shows heavy iteration cycles for complex features
+- No actual umbrella apps created yet - all planning phase
+- Integration complexity requires 3-5x longer than initial estimates
+- Parallel development needed to meet competition timeline
 
 ## Why Aria is Perfect for ARC
 
