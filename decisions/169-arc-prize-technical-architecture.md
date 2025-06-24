@@ -123,7 +123,7 @@ defmodule AriaArcDomain do
   use AriaEngine.Domain
   
   @domain_name "arc_reasoning"
-  @description "Abstract Reasoning Corpus domain with learned transformations"
+  @description "ARC domain with learned transformations"
   
   # LEARNED ACTIONS (generated through program synthesis)
   @action duration: "PT0.1S"  # Instant grid transformations

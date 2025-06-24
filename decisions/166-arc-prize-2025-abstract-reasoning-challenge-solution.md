@@ -8,11 +8,11 @@
 
 ### The Challenge
 
-The ARC Prize 2025 offers $1,000,000 for creating an AI system capable of novel reasoning on abstract visual puzzles. The Abstraction and Reasoning Corpus (ARC) tests few-shot learning: given 2-3 examples of a grid transformation puzzle, the AI must understand the underlying rule and apply it to solve new puzzles it's never seen before.
+The ARC Prize 2025 offers $1,000,000 for creating an AI system capable of solving grid transformation puzzles with few-shot learning: given 2-3 examples of a grid transformation puzzle, the AI must understand the underlying rule and apply it to solve new puzzles it's never seen before.
 
 **Current State-of-the-Art:** 34% accuracy using active inference with language models
 
-**The Core Challenge:** ARC requires genuine abstract reasoning rather than pattern memorization - exactly the kind of hybrid symbolic-neural reasoning that Aria's architecture is designed for.
+**The Core Challenge:** Grid transformation puzzles with few-shot learning - exactly the kind of hybrid symbolic-neural reasoning that Aria's architecture is designed for.
 
 ### Why Aria is Perfect for This Challenge
 
@@ -603,7 +603,7 @@ defmodule AriaArcDomain do
   use AriaEngine.Domain
   
   @domain_name "arc_reasoning"
-  @description "Abstract Reasoning Corpus domain with learned transformations"
+  @description "ARC domain with learned transformations"
   
   # LEARNED ACTIONS (generated through program synthesis)
   @action duration: "PT0.1S"  # Instant grid transformations
