@@ -102,7 +102,7 @@ Create minimal umbrella structure with basic functionality:
 - [ ] Can load ARC JSON task files
 - [ ] Applies basic transformations to test inputs
 - [ ] Generates submission-format outputs
-- [ ] Produces valid outputs (accuracy likely 0% - random chance)
+- [ ] Produces valid outputs (accuracy 0% ± 1% - random chance with measurement error)
 - [ ] Runs end-to-end without errors
 
 #### Why This Matters (Expert)
@@ -136,7 +136,7 @@ Enhance `aria_arc_coordinator` with better decision making:
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 0-2% accuracy on public ARC dataset (still mostly random)
+- [ ] May achieve 0-2% ± 1% accuracy on public ARC dataset (still mostly random)
 - [ ] Correctly identifies some basic patterns (color changes, rotations, mirroring)
 - [ ] Shows marginal improvement over pure random guessing
 - [ ] Handles at least 50% of task types without runtime errors
@@ -168,7 +168,7 @@ Upgrade coordinator with compositional capabilities:
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 1-5% accuracy on public ARC dataset
+- [ ] May achieve 1-5% ± 2% accuracy on public ARC dataset
 - [ ] Successfully composes 2-3 step transformation sequences
 - [ ] Handles some tasks requiring multiple operations
 - [ ] Shows systematic improvement over single-step approaches
@@ -200,7 +200,7 @@ Integrate neural and symbolic approaches:
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 3-8% accuracy on public ARC dataset (approaching LLM baseline)
+- [ ] May achieve 3-8% ± 2% accuracy on public ARC dataset (approaching LLM baseline)
 - [ ] LLM strategy contributes meaningfully to ensemble performance
 - [ ] Successfully handles some novel patterns not covered by symbolic rules
 - [ ] Shows complementary strengths between neural and symbolic approaches
@@ -232,7 +232,7 @@ Sophisticated coordination between multiple strategies:
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 5-15% accuracy on public ARC dataset
+- [ ] May achieve 5-15% ± 3% accuracy on public ARC dataset
 - [ ] Each strategy contributes unique value to ensemble
 - [ ] Ensemble outperforms individual strategies consistently
 - [ ] Successfully handles diverse task types with appropriate strategy selection
@@ -264,7 +264,7 @@ Use pattern learning to improve all strategies:
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 10-20% accuracy on public ARC dataset
+- [ ] May achieve 10-20% ± 4% accuracy on public ARC dataset
 - [ ] Pattern library demonstrably improves strategy performance
 - [ ] System learns and adapts from previous task solutions
 - [ ] Shows consistent improvement over time with more data
@@ -297,7 +297,7 @@ Optimize for competition constraints:
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 15-25% accuracy on public ARC dataset
+- [ ] May achieve 15-25% ± 5% accuracy on public ARC dataset
 - [ ] Runs reliably in offline competition environment
 - [ ] Meets all competition timing and resource constraints
 - [ ] Passes comprehensive validation and stress testing
@@ -329,7 +329,7 @@ Contribute to the broader ARC research community:
 
 #### Success Criteria (Measurable)
 
-- [ ] May achieve 20-35% accuracy on public ARC dataset (approaching SOTA)
+- [ ] May achieve 20-35% ± 6% accuracy on public ARC dataset (approaching SOTA)
 - [ ] Contributes novel insights to ARC research community
 - [ ] Demonstrates advanced reasoning capabilities
 - [ ] Provides comprehensive analysis of approach effectiveness
