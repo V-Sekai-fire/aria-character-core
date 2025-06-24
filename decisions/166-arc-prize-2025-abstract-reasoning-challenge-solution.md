@@ -277,7 +277,7 @@ aria_arc_solver/
 - Ensemble voting across multiple model outputs
 - Specialized prompting strategies per model type
 - Cross-model validation and quality assurance
-- Development acceleration through Cline integration
+- Development acceleration through Cline (VS Code extension) integration
 
 **Competition Compliance:**
 
