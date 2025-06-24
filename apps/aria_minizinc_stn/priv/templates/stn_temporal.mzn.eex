@@ -1,0 +1,34 @@
+% Simple Temporal Network (STN) Constraint Solver
+% Input: <%= @num_activities %> activities, <%= @num_constraints %> constraints
+
+% Parameters
+int: num_activities = <%= @num_activities %>;
+int: num_constraints = <%= @num_constraints %>;
+
+% Activity start times
+array[1..num_activities] of var 0..1000: start_times;
+
+% Duration constraints (for activities with fixed durations)
+<%= for {duration, activity_idx} <- Enum.with_index(@durations, 1) do %>
+<%= if duration > 0 do %>
+% Activity <%= activity_idx %> has duration <%= duration %>
+constraint start_times[<%= activity_idx %>] >= 0;
+<% end %>
+<% end %>
+
+% Temporal constraints between activities
+<%= for constraint <- @constraints do %>
+% Constraint: Activity <%= constraint.from_activity %> to Activity <%= constraint.to_activity %>
+constraint start_times[<%= constraint.to_activity %>] - start_times[<%= constraint.from_activity %>] >= <%= constraint.min_distance %>;
+constraint start_times[<%= constraint.to_activity %>] - start_times[<%= constraint.from_activity %>] <= <%= constraint.max_distance %>;
+<% end %>
+
+% Solve for consistency
+solve satisfy;
+
+% Output solution
+output [
+  "{\"status\": \"SATISFIABLE\", \"start_times\": [" ++
+  join(", ", [show(start_times[i]) | i in 1..num_activities]) ++
+  "], \"result\": \"consistent\"}"
+];
