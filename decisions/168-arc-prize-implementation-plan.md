@@ -1,13 +1,176 @@
-# ADR-168: ARC Prize 2025 Implementation Plan
+# ADR-168: ARC Prize 2025 Two-Week Sprint Implementation Plan
 
 **Status:** Proposed  
 **Date:** June 24, 2025  
 **Priority:** HIGH  
-**Parent ADR:** ADR-166 (ARC Prize Core Strategy)
+**Parent ADR:** ADR-166 (ARC Prize Two-Week Sprint)
 
 ## Context
 
-This ADR details the stage-by-stage implementation plan for the ARC Prize 2025 solution defined in ADR-166. The plan follows the "Bicycle to Car" progression philosophy, building complete working systems at each stage while prioritizing computation and learning from the start (Bitter Lesson alignment).
+This ADR details the two-week proof of concept sprint implementation plan defined in ADR-166. The focus is on rapid validation of the hybrid reasoning approach through computational search coordinated by Aria's planning system.
+
+## Two-Week Sprint Detailed Plan
+
+### Week 1: "Skateboard" - Computational Search Foundation
+
+**Days 1-2: Basic Grid Operations and ARC Task Loading**
+- [ ] Create minimal `aria_grid` app with basic grid representation
+- [ ] Implement ARC JSON task loading and parsing
+- [ ] Basic grid transformation operations (rotate, mirror, translate)
+- [ ] Validate against 10 public ARC tasks
+- **Success Criteria:** Can load and display ARC tasks, apply basic transformations
+
+**Days 3-4: Program Synthesis Search Engine**
+- [ ] Create `aria_program_synthesis` app as primary strategy
+- [ ] Implement discrete program search with large search spaces
+- [ ] Generate transformation programs through brute force enumeration
+- [ ] Test program validation against training examples
+- **Success Criteria:** Generate and test 100+ programs per task
+
+**Days 5-7: Computational Search at Scale**
+- [ ] Scale search to 1000+ transformation programs per task
+- [ ] Implement parallel program evaluation
+- [ ] Measure baseline accuracy on public ARC dataset
+- [ ] Create basic `aria_arc_coordinator` for task management
+- **Success Criteria:** Achieve >1% accuracy through pure computational search
+
+### Week 2: "Bicycle" - Hybrid Reasoning Integration
+
+**Days 8-9: Aria Temporal Planner Integration**
+- [ ] Integrate existing `aria_hybrid_planner` with ARC domain
+- [ ] Create learned planning actions from successful search results
+- [ ] Implement basic sequence coordination through temporal planning
+- [ ] Test planning-guided transformation sequences
+- **Success Criteria:** Planning system can coordinate multi-step transformations
+
+**Days 10-11: Hybrid Reasoning System**
+- [ ] Combine computational search with planning coordination
+- [ ] Use planning to guide search space exploration
+- [ ] Implement ensemble coordination between search and planning
+- [ ] Optimize hybrid approach performance
+- **Success Criteria:** Hybrid approach outperforms pure search
+
+**Days 12-14: Performance Analysis and Decision Report**
+- [ ] Comprehensive accuracy measurement on validation set
+- [ ] Performance analysis and bottleneck identification
+- [ ] Technical report with results and recommendations
+- [ ] Go/No-Go decision based on success criteria
+- **Success Criteria:** Clear recommendation on full competition pursuit
+
+## Business Case for Game Industry Collaboration
+
+### Game Industry Perspective Benefits
+
+**Low-Risk Validation Approach:**
+- Two-week sprint vs months of uncertainty
+- Clear success/failure criteria with measurable outcomes
+- Minimal resource commitment before major decision
+- Game development sprint methodology applied to AI research
+
+**Portfolio and Network Expansion:**
+- Add AI research credibility to game development expertise
+- Connect with AI research community through legitimate contribution
+- Understand cutting-edge AI before it impacts gaming industry
+- Build technical leadership reputation in emerging field
+
+**Competitive Intelligence Value:**
+- Understand current state of abstract reasoning AI
+- Learn about computational approaches vs pure neural networks
+- Gain insights into AI capabilities and limitations
+- Position for future AI integration in game development
+
+**Marketing and Business Opportunities:**
+- AI consulting opportunities with research credibility
+- Technical partnerships with AI research organizations
+- Speaking opportunities at conferences and industry events
+- Unique positioning at intersection of games and AI research
+
+### Technical Development Benefits
+
+**Rapid Skill Acquisition:**
+- Advanced AI engineering techniques in focused sprint
+- Program synthesis and computational search methods
+- Hybrid reasoning system design and implementation
+- Research-quality performance measurement and analysis
+
+**Architecture Validation:**
+- Test Aria's capabilities on genuinely difficult problems
+- Understand boundaries of current hybrid reasoning approach
+- Validate temporal planning integration with novel domains
+- Learn about scaling computational approaches
+
+**Clean Research Ethics:**
+- Work on synthetic puzzles designed for AI research
+- No copyright infringement or stolen training data concerns
+- Contribute to human knowledge rather than exploit others' work
+- Positive-sum research that benefits entire field
+
+**Measurable Learning Outcomes:**
+- Clear technical deliverables and success criteria
+- Quantifiable accuracy improvements week over week
+- Concrete understanding of approach strengths and limitations
+- Foundation for future AI research projects
+
+## Why This Is The Perfect Learning Project
+
+### Technical Skills We'll Master (Regardless of Competition Results)
+
+**Advanced AI Engineering:**
+- **Program synthesis at scale** - Generate and test thousands of transformation programs
+- **Multi-LLM coordination** - GRPO fine-tuning, ensemble management, API orchestration
+- **Computational domain learning** - Discover planning actions through search rather than hand-coding
+- **Large-scale pattern analytics** - DuckDB analytics, synthetic data generation, pattern libraries
+- **Neural-symbolic integration** - Bridge LLM reasoning with interpretable planning execution
+
+**Systems Engineering Excellence:**
+- **Complex umbrella architecture** - 6 new apps with clean dependency management
+- **Competition-grade robustness** - Offline execution, resource constraints, error handling
+- **Research-quality analytics** - Performance measurement, pattern analysis, reproducible results
+- **Production ML pipelines** - Training, validation, deployment, monitoring
+
+**Research Experience:**
+- **Working on unsolved AI problems** - Abstract reasoning is a genuine frontier
+- **Contributing to scientific knowledge** - Even "failure" produces valuable research insights
+- **Understanding AI limitations** - Learn exactly where current approaches break down
+
+### The Learning ROI Analysis
+
+**Time Investment:** 3-6 months of focused development
+
+**Alternative Uses of This Time:**
+- Build 2-3 smaller Aria applications with known requirements
+- Incremental improvements to existing temporal planning
+- Standard web development or API integration work
+
+**What We Get Instead:**
+- **Expertise in computational reasoning** - Skills that apply to every future AI project
+- **Advanced ML engineering capabilities** - GRPO fine-tuning, synthetic data, ensemble coordination
+- **Research credibility** - Contributing to one of AI's grand challenges
+- **Technical infrastructure** - 6 new apps that advance Aria's capabilities regardless
+- **Clear understanding of our limits** - Know exactly what Aria can and cannot do
+
+**The Verdict:** There's no faster way to advance our AI engineering capabilities than tackling the hardest reasoning challenge available.
+
+### The Ethical Advantage: Clean AI Research
+
+Unlike most current AI development, ARC Prize work is ethically unambiguous:
+
+**No Stolen Training Data:**
+- ARC tasks are synthetic puzzles designed specifically for AI research
+- No copyright infringement, no scraped content, no exploitation of human creativity
+- Clean, openly available datasets with clear provenance
+
+**Pure Problem-Solving Focus:**
+- Building systems that reason rather than regurgitate
+- Advancing genuine intelligence rather than pattern matching from stolen content
+- Contributing to human knowledge rather than extracting value from others' work
+
+**Positive-Sum Research:**
+- Better reasoning systems benefit everyone
+- Research insights advance the entire field
+- No zero-sum competition with human creators
+
+**The Contrast:** While the AI industry debates ethics around training data theft and creative displacement, we're working on fundamental reasoning problems that help everyone.
 
 ## Implementation Plan: "Bicycle to Car" Progression (Bitter Lesson Aligned)
 

@@ -1,68 +1,51 @@
-# ADR-166: ARC Prize 2025 Core Strategy
+# ADR-166: ARC Prize 2025 - Two-Week Proof of Concept Sprint
 
 **Status:** Proposed  
 **Date:** June 24, 2025  
 **Priority:** HIGH
 
-## The Challenge
+## The Two-Week Challenge Pitch
 
-The ARC Prize 2025 offers $1,000,000 for creating an AI system that can solve grid transformation puzzles with few-shot learning. Given 2-3 examples of a puzzle, the AI must understand the pattern and solve new puzzles it's never seen before.
+**The ARC Prize 2025 offers $1,000,000 for solving abstract reasoning puzzles - one of AI's grand challenges where current best performance is stuck at 34% accuracy.**
 
-**Current Best Performance:** 34% accuracy  
-**Our Goal:** Build a competitive ARC solver using Aria's hybrid reasoning architecture
+**Here's the deal: Give me two weeks to prove this is worth pursuing.**
 
-## Our Approach
+### What We'll Build
 
-### Key Innovation
+**Week 1:** Computational search foundation - test 1000+ transformation programs per task, target 1-5% accuracy
+**Week 2:** Add Aria's hybrid reasoning coordination, target 5-10% accuracy through planning integration
 
-Follow the "Bitter Lesson" - prioritize computation and learning over hand-crafted rules, then channel discoveries through interpretable planning execution.
+### Why This Works
 
-**Simple Version:** Build a super-smart puzzle solver that learns patterns from examples, then uses multiple reasoning strategies working together to solve new puzzles.
+**For Game Industry Perspective:** Low-risk validation sprint, portfolio expansion, competitive intelligence, network building
+**For Technical Development:** Rapid AI engineering skills, architecture validation, clean research ethics, measurable outcomes
 
-**Technical Version:** Create a computation-first system where massive search discovers grid transformations, pattern learning guides strategy selection, and hybrid planning coordinates learned approaches for interpretable execution.
+### The Unique Angle
 
-### Implementation Philosophy
+Hybrid reasoning approach unlike pure neural networks - computational discovery coordinated through interpretable planning. Game development discipline meets AI research.
 
-**"Bicycle to Car" Progression:** Build working systems at each stage, starting simple and adding sophistication incrementally. Each stage produces a working ARC solver, so we can submit whatever we achieve by the competition deadline.
+### Success Criteria
 
-## Detailed Implementation
+**Go/No-Go Decision:** 5%+ accuracy = proceed to full competition, <3% accuracy = valuable learning experience but stop there.
 
-For complete technical details, see:
+### Honest Assessment
 
-- **ADR-168**: ARC Prize Implementation Plan (12-stage development roadmap)
-- **ADR-169**: ARC Prize Technical Architecture (umbrella apps, Aria integration, and computational learning domain)
-- **ADR-170**: ARC Prize Risk Analysis (success targets, failure risks, and mitigation strategies)
+**60% probability:** 2-5% accuracy, learn exactly where approach breaks down
+**30% probability:** 5-10% accuracy, prove hybrid approach has merit  
+**10% probability:** 10%+ accuracy, breakthrough potential
 
 ## Decision
 
-**Approved:** Develop ARC Prize 2025 solution using Aria's hybrid architecture with computation-first approach and interpretable execution.
+**Proposed:** Two-week proof of concept sprint to validate ARC Prize approach before major commitment.
 
-**Next Steps:** Begin Stage 1 implementation with basic grid operations and computational search foundation.
+**The Question:** Would you rather spend two weeks finding out what we're actually capable of building, or always wonder if we could have achieved something remarkable?
 
-## Related ADRs
+## Implementation Details
 
-- **ADR-168**: ARC Prize Implementation Plan
-- **ADR-169**: ARC Prize Technical Architecture  
-- **ADR-170**: ARC Prize Risk Analysis
+- **ADR-168**: Two-week sprint plan and detailed implementation
+- **ADR-169**: Minimal viable technical architecture  
+- **ADR-170**: Risk analysis and business case details
 
-## Consequences
+---
 
-### Positive
-
-- Demonstrates Aria's capabilities on world-class AI challenge
-- Validates hybrid symbolic-neural reasoning approach
-- Potential breakthrough in abstract reasoning research
-
-### Negative
-
-- High-risk, resource-intensive project
-- No guarantee of competitive performance
-- Adds complexity to Aria ecosystem
-
-### Neutral
-
-- Valuable learning experience regardless of outcome
-- Technology transfer to other reasoning applications
-- Positions Aria in AI research community
-
-This represents Aria's most ambitious application to date, targeting one of AI's grand challenges while demonstrating the power of hybrid reasoning architectures.
+**Two weeks to prove we can build something remarkable.**
