@@ -21,22 +21,22 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
 
       # Configure strategy factory with bridge-enabled strategy
       factory = StrategyFactory.new()
-      |> StrategyFactory.register_strategy(:temporal_strategy, :stn_bridge, 
+      |> StrategyFactory.register_strategy(:temporal_strategy, :stn_bridge,
            STNBridgeTemporalStrategy)
-      
+
       # Create coordinator with always-bridge configuration
       config = %{
         temporal_strategy: :stn_bridge,
         # ... other strategies
       }
-      
+
       coordinator = StrategyFactory.create_coordinator(factory, config)
   """
 
   @behaviour HybridPlanner.Strategies.TemporalStrategy
 
   alias HybridPlanner.Strategies.Default.STNTemporalStrategy
-  alias AriaEngine.Timeline
+  alias Timeline, as: AriaEngineTimeline
 
   require Logger
 
@@ -228,14 +228,14 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
           # Apply bridge insertion based on mode
           bridge_enhanced_timeline =
             case bridge_mode do
-              :auto -> Timeline.auto_insert_bridges(timeline, get_bridge_insertion_rules(opts))
+              :auto -> AriaEngineTimeline.auto_insert_bridges(timeline, get_bridge_insertion_rules(opts))
               :manual -> timeline
-              :always -> Timeline.with_bridge_segmentation(timeline)
+              :always -> AriaEngineTimeline.with_bridge_segmentation(timeline)
               _ -> timeline
             end
 
           # Extract bridge information and add to temporal problem
-          bridges = Timeline.get_bridges(bridge_enhanced_timeline)
+          bridges = AriaEngineTimeline.get_bridges(bridge_enhanced_timeline)
           bridge_constraints = convert_bridges_to_constraints(bridges, actions)
 
           updated_problem = %{
@@ -258,9 +258,9 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
           timeline = create_timeline_from_actions(actions)
 
           bridge_enhanced_timeline =
-            Timeline.auto_insert_bridges(timeline, get_bridge_insertion_rules(opts))
+            AriaEngineTimeline.auto_insert_bridges(timeline, get_bridge_insertion_rules(opts))
 
-          bridges = Timeline.get_bridges(bridge_enhanced_timeline)
+          bridges = AriaEngineTimeline.get_bridges(bridge_enhanced_timeline)
           bridge_constraints = convert_bridges_to_constraints(bridges, actions)
 
           new_problem = %{
@@ -289,7 +289,7 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
       case constraints do
         %{temporal_problem: %{bridges: bridges, timeline: timeline}} when not is_nil(bridges) ->
           # Validate bridge placement consistency
-          case Timeline.validate_all_bridge_placements(timeline) do
+          case AriaEngineTimeline.validate_all_bridge_placements(timeline) do
             :ok ->
               if verbose > 1 do
                 Logger.debug("STNBridgeTemporalStrategy: Bridge placement validation passed")
@@ -393,7 +393,7 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
 
   # Create timeline from actions for bridge analysis
   defp create_timeline_from_actions(actions) do
-    timeline = Timeline.new()
+    timeline = AriaEngineTimeline.new()
 
     Enum.reduce(actions, timeline, fn {action_name, action_data}, acc_timeline ->
       # Convert action to interval
@@ -408,7 +408,7 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
         metadata: Map.get(action_data, :metadata, %{})
       }
 
-      Timeline.add_interval(acc_timeline, interval)
+      AriaEngineTimeline.add_interval(acc_timeline, interval)
     end)
   end
 
@@ -539,16 +539,16 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
     case modification do
       {:add_bridge, bridge} ->
         bridges = Map.get(problem, :bridges, [])
-        timeline = Map.get(problem, :timeline, Timeline.new())
-        updated_timeline = Timeline.add_bridge(timeline, bridge)
+        timeline = Map.get(problem, :timeline, AriaEngineTimeline.new())
+        updated_timeline = AriaEngineTimeline.add_bridge(timeline, bridge)
 
         %{problem | bridges: [bridge | bridges], timeline: updated_timeline}
 
       {:remove_bridge, bridge_id} ->
         bridges = Map.get(problem, :bridges, [])
-        timeline = Map.get(problem, :timeline, Timeline.new())
+        timeline = Map.get(problem, :timeline, AriaEngineTimeline.new())
         updated_bridges = Enum.reject(bridges, fn bridge -> bridge.id == bridge_id end)
-        updated_timeline = Timeline.remove_bridge(timeline, bridge_id)
+        updated_timeline = AriaEngineTimeline.remove_bridge(timeline, bridge_id)
 
         %{problem | bridges: updated_bridges, timeline: updated_timeline}
 
@@ -564,19 +564,19 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
 
   # Create bridge schedule information
   defp create_bridge_schedule(bridges, timeline) do
-    segments = Timeline.segment_by_bridges(timeline)
+    segments = AriaEngineTimeline.segment_by_bridges(timeline)
 
     %{
       bridges: bridges,
       segments: segments,
       segment_count: length(segments),
-      bridge_positions: Timeline.bridge_positions(timeline)
+      bridge_positions: AriaEngineTimeline.bridge_positions(timeline)
     }
   end
 
   # Create segmentation information
   defp create_segmentation_info(timeline) do
-    segments = Timeline.segment_by_bridges(timeline)
+    segments = AriaEngineTimeline.segment_by_bridges(timeline)
 
     %{
       total_segments: length(segments),

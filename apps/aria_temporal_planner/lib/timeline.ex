@@ -6,7 +6,6 @@ defmodule Timeline do
   alias Timeline.Interval
   alias Timeline.Internal.STN
   alias Timeline.Bridge
-  alias AriaEngine.Timeline.Bridge, as: SegmentBridge
   @type t :: %__MODULE__{intervals: %{Interval.id() => Interval.t()}, stn: STN.t()}
   defstruct intervals: %{}, stn: STN.new(), metadata: %{}
   @spec new(keyword()) :: t()
@@ -390,5 +389,345 @@ defmodule Timeline do
         start_time = first_interval.start_time
         %{start_time | second: 0, microsecond: {0, 0}}
     end
+  end
+
+  # ==================== MISSING FUNCTIONS IMPLEMENTATION ====================
+
+  @doc """
+  Automatically insert bridges into the timeline based on rules.
+
+  This function analyzes the timeline and automatically inserts bridges at
+  strategic points based on the provided rules. Bridge insertion follows
+  mathematical principles of temporal segmentation and decision point detection.
+
+  ## Parameters
+  - `timeline`: The timeline to analyze and enhance with bridges
+  - `rules`: List of bridge insertion rules to apply
+
+  ## Rules
+  - `:action_type_transitions` - Insert bridges between different action types
+  - `:resource_changes` - Insert bridges when resource usage changes
+  - `:phase_boundaries` - Insert bridges at logical phase transitions
+  - `:decision_points` - Insert bridges at decision/branching points
+
+  ## Returns
+  Timeline with automatically inserted bridges based on the rules.
+  """
+  @spec auto_insert_bridges(t(), [atom()]) :: t()
+  def auto_insert_bridges(%__MODULE__{} = timeline, rules) when is_list(rules) do
+    intervals = Map.values(timeline.intervals)
+
+    # Sort intervals by start time for temporal analysis
+    sorted_intervals = Enum.sort_by(intervals, & &1.start_time, DateTime)
+
+    # Generate bridge candidates based on rules
+    bridge_candidates =
+      rules
+      |> Enum.flat_map(fn rule -> generate_bridges_for_rule(sorted_intervals, rule) end)
+      |> Enum.uniq_by(& &1.id)
+      |> Enum.sort_by(& &1.position, DateTime)
+
+    # Insert valid bridges into timeline
+    Enum.reduce(bridge_candidates, timeline, fn bridge, acc_timeline ->
+      case validate_bridge_placement(acc_timeline, bridge) do
+        :ok -> add_bridge(acc_timeline, bridge)
+        {:error, _reason} -> acc_timeline  # Skip invalid bridges
+      end
+    end)
+  end
+
+  @doc """
+  Apply bridge segmentation to the timeline.
+
+  This function takes a timeline and applies bridge-based segmentation,
+  creating logical segments separated by bridges. This is mathematically
+  equivalent to partitioning the timeline into disjoint temporal segments.
+
+  ## Parameters
+  - `timeline`: The timeline to segment
+
+  ## Returns
+  Timeline with bridge segmentation applied and segment metadata updated.
+  """
+  @spec with_bridge_segmentation(t()) :: t()
+  def with_bridge_segmentation(%__MODULE__{} = timeline) do
+    # Get existing bridges or create default segmentation bridges
+    bridges = get_bridges(timeline)
+
+    enhanced_timeline = case bridges do
+      [] ->
+        # No bridges exist, create default segmentation based on interval analysis
+        create_default_segmentation_bridges(timeline)
+      _ ->
+        # Bridges exist, ensure proper segmentation
+        timeline
+    end
+
+    # Apply segmentation metadata
+    segments = segment_by_bridges(enhanced_timeline)
+    segmentation_metadata = %{
+      segmentation_applied: true,
+      segment_count: length(segments),
+      segmentation_timestamp: DateTime.utc_now(),
+      segmentation_method: :bridge_based
+    }
+
+    # Update timeline metadata with segmentation info
+    updated_metadata = Map.merge(enhanced_timeline.metadata, segmentation_metadata)
+    %{enhanced_timeline | metadata: updated_metadata}
+  end
+
+  @doc """
+  Validate all bridge placements in the timeline.
+
+  This function performs comprehensive validation of all bridges in the timeline,
+  ensuring they satisfy temporal consistency, placement rules, and mathematical
+  constraints for proper timeline segmentation.
+
+  ## Parameters
+  - `timeline`: The timeline containing bridges to validate
+
+  ## Returns
+  - `:ok` if all bridges are valid
+  - `{:error, reason}` if any bridge placement is invalid
+  """
+  @spec validate_all_bridge_placements(t()) :: :ok | {:error, String.t()}
+  def validate_all_bridge_placements(%__MODULE__{} = timeline) do
+    bridges = get_bridges(timeline)
+
+    case bridges do
+      [] ->
+        :ok  # No bridges means trivially valid
+
+      _ ->
+        # Validate each bridge and check for conflicts
+        validation_results = Enum.map(bridges, &validate_bridge_placement(timeline, &1))
+
+        case Enum.find(validation_results, &match?({:error, _}, &1)) do
+          nil ->
+            # All individual bridges are valid, check for bridge conflicts
+            validate_bridge_conflicts(bridges)
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+    end
+  end
+
+  # ==================== PRIVATE HELPER FUNCTIONS FOR MISSING FUNCTIONS ====================
+
+  # Generate bridges based on specific rules
+  defp generate_bridges_for_rule(intervals, rule) do
+    case rule do
+      :action_type_transitions ->
+        generate_action_type_transition_bridges(intervals)
+
+      :resource_changes ->
+        generate_resource_change_bridges(intervals)
+
+      :phase_boundaries ->
+        generate_phase_boundary_bridges(intervals)
+
+      :decision_points ->
+        generate_decision_point_bridges(intervals)
+
+      _ ->
+        []
+    end
+  end
+
+  # Generate bridges at action type transitions
+  defp generate_action_type_transition_bridges(intervals) do
+    intervals
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.with_index()
+    |> Enum.filter(fn {[current, next], _index} ->
+      get_action_type(current) != get_action_type(next)
+    end)
+    |> Enum.map(fn {[current, _next], index} ->
+      %AriaEngine.Timeline.Bridge{
+        id: "action_transition_#{index}",
+        position: current.end_time,
+        type: :decision,
+        metadata: %{
+          rule: :action_type_transitions,
+          from_action: current.id,
+          from_type: get_action_type(current)
+        }
+      }
+    end)
+  end
+
+  # Generate bridges at resource changes
+  defp generate_resource_change_bridges(intervals) do
+    intervals
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.with_index()
+    |> Enum.filter(fn {[current, next], _index} ->
+      get_resource_usage(current) != get_resource_usage(next)
+    end)
+    |> Enum.map(fn {[current, _next], index} ->
+      %AriaEngine.Timeline.Bridge{
+        id: "resource_change_#{index}",
+        position: current.end_time,
+        type: :resource_check,
+        metadata: %{
+          rule: :resource_changes,
+          from_resources: get_resource_usage(current),
+          transition_point: true
+        }
+      }
+    end)
+  end
+
+  # Generate bridges at phase boundaries
+  defp generate_phase_boundary_bridges(intervals) do
+    # Detect phase boundaries based on temporal clustering
+    phase_boundaries = detect_phase_boundaries(intervals)
+
+    phase_boundaries
+    |> Enum.with_index()
+    |> Enum.map(fn {boundary_time, index} ->
+      %AriaEngine.Timeline.Bridge{
+        id: "phase_boundary_#{index}",
+        position: boundary_time,
+        type: :synchronization,
+        metadata: %{
+          rule: :phase_boundaries,
+          boundary_type: :temporal_cluster
+        }
+      }
+    end)
+  end
+
+  # Generate bridges at decision points
+  defp generate_decision_point_bridges(intervals) do
+    # Identify decision points where multiple intervals could start
+    decision_points = identify_decision_points(intervals)
+
+    decision_points
+    |> Enum.with_index()
+    |> Enum.map(fn {decision_time, index} ->
+      %AriaEngine.Timeline.Bridge{
+        id: "decision_point_#{index}",
+        position: decision_time,
+        type: :decision,
+        metadata: %{
+          rule: :decision_points,
+          decision_type: :branching_point
+        }
+      }
+    end)
+  end
+
+  # Create default segmentation bridges when none exist
+  defp create_default_segmentation_bridges(timeline) do
+    intervals = Map.values(timeline.intervals)
+
+    case intervals do
+      [] ->
+        timeline  # No intervals, no segmentation needed
+
+      _ ->
+        # Create bridges at natural segmentation points
+        sorted_intervals = Enum.sort_by(intervals, & &1.start_time, DateTime)
+        midpoint_bridges = create_midpoint_bridges(sorted_intervals)
+
+        Enum.reduce(midpoint_bridges, timeline, &add_bridge(&2, &1))
+    end
+  end
+
+  # Create bridges at interval midpoints for default segmentation
+  defp create_midpoint_bridges(intervals) do
+    case length(intervals) do
+      n when n <= 2 ->
+        []  # Too few intervals for meaningful segmentation
+
+      n ->
+        # Create bridges at quartile points for balanced segmentation
+        quartile_indices = [div(n, 4), div(n, 2), div(3 * n, 4)]
+
+        quartile_indices
+        |> Enum.with_index()
+        |> Enum.map(fn {interval_index, bridge_index} ->
+          interval = Enum.at(intervals, interval_index)
+          midpoint_time = calculate_interval_midpoint(interval)
+
+          %AriaEngine.Timeline.Bridge{
+            id: "default_segment_#{bridge_index}",
+            position: midpoint_time,
+            type: :synchronization,
+            metadata: %{
+              segmentation_method: :default_quartiles,
+              interval_index: interval_index
+            }
+          }
+        end)
+    end
+  end
+
+  # Validate bridge conflicts (overlapping or contradictory bridges)
+  defp validate_bridge_conflicts(bridges) do
+    # Sort bridges by position for conflict detection
+    sorted_bridges = Enum.sort_by(bridges, & &1.position, DateTime)
+
+    # Check for bridges that are too close together
+    conflicts =
+      sorted_bridges
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.find(fn [bridge1, bridge2] ->
+        time_diff = DateTime.diff(bridge2.position, bridge1.position, :millisecond)
+        time_diff < 1000  # Bridges must be at least 1 second apart
+      end)
+
+    case conflicts do
+      nil ->
+        :ok
+
+      [bridge1, bridge2] ->
+        {:error, "Bridge conflict: '#{bridge1.id}' and '#{bridge2.id}' are too close together"}
+    end
+  end
+
+  # Helper functions for bridge generation
+  defp get_action_type(interval) do
+    interval.metadata
+    |> Map.get(:action_type, :default)
+  end
+
+  defp get_resource_usage(interval) do
+    interval.metadata
+    |> Map.get(:resources, [])
+    |> Enum.sort()
+  end
+
+  defp detect_phase_boundaries(intervals) do
+    # Simple phase boundary detection based on temporal gaps
+    intervals
+    |> Enum.sort_by(& &1.start_time, DateTime)
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.filter(fn [current, next] ->
+      gap = DateTime.diff(next.start_time, current.end_time, :millisecond)
+      gap > 5000  # Gaps larger than 5 seconds indicate phase boundaries
+    end)
+    |> Enum.map(fn [current, _next] -> current.end_time end)
+  end
+
+  defp identify_decision_points(intervals) do
+    # Identify points where multiple intervals could potentially start
+    start_times = Enum.map(intervals, & &1.start_time)
+
+    start_times
+    |> Enum.frequencies()
+    |> Enum.filter(fn {_time, count} -> count > 1 end)
+    |> Enum.map(fn {time, _count} -> time end)
+  end
+
+  defp calculate_interval_midpoint(interval) do
+    start_ms = DateTime.to_unix(interval.start_time, :millisecond)
+    end_ms = DateTime.to_unix(interval.end_time, :millisecond)
+    midpoint_ms = div(start_ms + end_ms, 2)
+
+    DateTime.from_unix!(midpoint_ms, :millisecond)
   end
 end
