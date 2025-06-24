@@ -1,0 +1,38 @@
+# ADR-002: Implement Template Selection Logic and STN Testing [TOMBSTONED]
+
+**Status:** Superseded  
+**Date:** 2025-06-23  
+**Priority:** HIGH  
+**Tombstoned:** 2025-06-24  
+
+## Tombstone Notice
+
+This ADR has been **TOMBSTONED** and split into focused, single-responsibility ADRs:
+
+- **ADR-002**: Implement Template Selection Logic (focused on template selection infrastructure)
+- **ADR-007**: Implement True STN Mathematical Foundation (focused on STN domain implementation)
+
+## Reason for Tombstoning
+
+This ADR violated the single responsibility principle by combining two distinct concerns:
+
+1. **Template Selection Infrastructure**: General mechanism for choosing appropriate templates
+2. **STN Implementation Details**: Domain-specific mathematical foundation for STN problems
+
+Following the "Targeted solutions over generalized systems" principle (INST-017), these concerns have been separated into dedicated ADRs with clear, focused responsibilities.
+
+## Migration Path
+
+**For Template Selection Work**: See ADR-002 (Implement Template Selection Logic)
+**For STN Implementation Work**: See ADR-007 (Implement True STN Mathematical Foundation)
+
+## Original Content
+
+The original content of this ADR has been preserved in the git history. The key insights and implementation details have been distributed to the appropriate focused ADRs.
+
+## Related ADRs
+
+- **ADR-002**: Implement Template Selection Logic (successor)
+- **ADR-007**: Implement True STN Mathematical Foundation (successor)
+- **ADR-001**: Extract MiniZinc Functionality into Dedicated App (parent)
+- **ADR-003**: Separate Goal Solving and STN Problem Domains (related)
