@@ -15,6 +15,7 @@ The project currently has inconsistent datetime handling across different applic
 - **Debugging difficulties**: Hard to correlate log events with local system events
 - **User confusion**: Times displayed in UTC when users expect local time
 - **System errors**: Negative timestamps from `System.monotonic_time/1` usage
+- **API inconsistency**: Duration parameters use raw integers instead of ISO 8601 format
 
 ### Examples of Current Issues
 
@@ -27,11 +28,14 @@ generation_time: -576460751187
 
 # Problem: No timezone information
 "2025-06-23T23:15:24.123456"  # Ambiguous timezone
+
+# Problem: API parameter inconsistency
+options = %{time_horizon: 20}  # Should be "PT20S"
 ```
 
 ## Decision
 
-**Standardize on local timezone ISO 8601 format with timezone offset for all datetime handling across the project.**
+**Standardize on local timezone ISO 8601 format with timezone offset for all datetime and duration handling across the project.**
 
 ### Primary Standard
 
@@ -82,6 +86,11 @@ end
   - [x] Add missing Timex dependency to aria_minizinc mix.exs
   - [x] Fix duration calculation to use microseconds precision
   - [x] Replace remaining System.monotonic_time usage in template generation
+- [ ] Standardize API duration parameters (in progress)
+  - [ ] Add duration validation to ProblemGenerator options
+  - [ ] Update test cases to use ISO 8601 duration format
+  - [ ] Create duration parsing helper functions
+  - [ ] Update type specifications for duration parameters
 - [ ] Update logging configuration for local timezone
 - [x] Fix any negative timestamp issues (resolved with ISO 8601 implementation)
 
@@ -102,10 +111,11 @@ end
 
 ## Application Areas
 
-### All datetime fields in:
+### All datetime and duration fields in:
 - **Logging**: All log timestamps
 - **Database records**: created_at, updated_at, processed_at
 - **API responses**: All datetime fields
+- **API parameters**: time_horizon, max_duration, timeout values
 - **Metadata**: generation_time, processing_time, execution_time
 - **Audit trails**: User actions, system events
 - **Scheduling**: Task execution times, deadlines
@@ -154,13 +164,16 @@ end
 ## Success Criteria
 
 - [ ] All new datetime fields use local timezone ISO 8601 format
+- [ ] All duration parameters use ISO 8601 duration format
 - [ ] No more negative or system-relative timestamps
 - [ ] Consistent datetime format across all applications
+- [ ] API parameter validation for duration strings
 - [ ] Improved debugging experience with local timezone context
 - [ ] Documentation updated with new standards
 - [ ] All applications have Timex dependency where datetime handling is used
 - [ ] Duration calculations use microseconds precision for accuracy
 - [ ] Template generation uses ISO 8601 local timezone format
+- [ ] No backward compatibility for integer duration parameters
 
 ## Related ADRs
 
@@ -188,5 +201,25 @@ parsed_dt = Timex.parse!(timestamp, "{ISO:Extended}")
 @type iso8601_datetime :: String.t()  # "2025-06-23T23:15:24.123456-07:00"
 @type iso8601_duration :: String.t()  # "PT1.234S"
 ```
+
+### API Parameter Standardization
+```elixir
+# Before (inconsistent)
+options = %{time_horizon: 20, max_steps: 100}
+
+# After (ISO 8601 compliant)
+options = %{time_horizon: "PT20S", max_duration: "PT100S"}
+
+# Duration validation function
+defp validate_duration(duration_string) do
+  case Timex.Duration.parse(duration_string) do
+    {:ok, _duration} -> :ok
+    {:error, reason} -> {:error, "Invalid duration format: #{reason}"}
+  end
+end
+```
+
+### No Backward Compatibility Policy
+**Breaking Change**: All duration parameters must use ISO 8601 format. Integer values for time/duration parameters are no longer supported to ensure API consistency and eliminate ambiguity.
 
 This ADR establishes the foundation for consistent, local-timezone-aware datetime handling across the entire project.
