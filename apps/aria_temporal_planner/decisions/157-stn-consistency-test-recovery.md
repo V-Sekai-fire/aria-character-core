@@ -1,6 +1,6 @@
 # ADR-157: STN Consistency Test Recovery
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** June 23, 2025  
 **Priority:** HIGH
 

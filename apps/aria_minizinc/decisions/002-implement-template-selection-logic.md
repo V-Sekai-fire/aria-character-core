@@ -1,6 +1,6 @@
 # ADR-002: Implement Template Selection Logic
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** 2025-06-24  
 **Priority:** HIGH
 

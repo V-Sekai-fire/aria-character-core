@@ -1,6 +1,6 @@
 # ADR-114: Fix Membrane Pipeline Implementation and Testing
 
-**Status:** Active
+**Status:** Active (Paused)
 **Date:** June 20, 2025  
 **Priority:** HIGH
 

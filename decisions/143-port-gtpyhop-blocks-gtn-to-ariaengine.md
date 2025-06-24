@@ -1,6 +1,6 @@
 # ADR-143: Port GTPyhop Blocks GTN to AriaEngine
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** 2025-06-22  
 **Priority:** HIGH  
 

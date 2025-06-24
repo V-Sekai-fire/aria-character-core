@@ -1,6 +1,6 @@
 # ADR-144: Remove Automatic Action-to-Task Conversion
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** 2025-06-22  
 **Priority:** HIGH
 

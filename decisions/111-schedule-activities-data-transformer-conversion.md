@@ -1,6 +1,6 @@
 # ADR-111: Extract Plan Transformer from schedule_activities
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** June 20, 2025  
 **Priority:** HIGH  
 

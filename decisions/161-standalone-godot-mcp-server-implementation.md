@@ -1,6 +1,6 @@
 # ADR-161: Standalone Godot MCP Server Implementation
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** June 24, 2025  
 **Priority:** HIGH
 

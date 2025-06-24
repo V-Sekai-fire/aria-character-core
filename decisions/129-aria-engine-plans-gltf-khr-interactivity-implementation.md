@@ -1,6 +1,6 @@
 # ADR-129: AriaEngine Plans glTF KHR Interactivity Implementation
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** June 22, 2025  
 **Priority:** HIGH
 

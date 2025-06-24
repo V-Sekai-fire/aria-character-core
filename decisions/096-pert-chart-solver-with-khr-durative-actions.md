@@ -136,7 +136,7 @@ Implement a PERT chart execution simulator using the existing hybrid planner API
 
 ## Current Status
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Progress:** Part 1 completed, Part 2 pending fixes  
 **Next Steps:** Fix STN temporal strategy and task method recognition issues
 

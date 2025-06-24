@@ -87,7 +87,7 @@ This ADR documents the closure of the temporal planning development segment and 
 ### Active ADRs (Continuing) 🔄
 
 - **ADR-079**: Timeline Module Implementation Progress
-  - Status: Active - Significant implementation progress, core functionality complete
+  - Status: Active (Paused) - Significant implementation progress, core functionality complete
   - Rationale: Timeline system is functional and provides foundation for future work
 
 ### Deferred ADRs ⏳

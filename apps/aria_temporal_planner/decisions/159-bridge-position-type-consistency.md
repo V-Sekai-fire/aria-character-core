@@ -1,6 +1,6 @@
 # ADR-159: Bridge Position Type Consistency
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** 2025-06-23  
 **Priority:** HIGH
 

@@ -1,6 +1,6 @@
 # ADR-162: Godot-Aria Integration and Workflow Orchestration
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** June 24, 2025  
 **Priority:** MEDIUM
 

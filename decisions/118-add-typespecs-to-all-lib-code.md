@@ -1,6 +1,6 @@
 # ADR-118: Add Typespecs to All Lib Code
 
-**Status:** Active (June 22, 2025)
+**Status:** Active (Paused) (June 22, 2025)
 **Date:** June 21, 2025  
 **Priority:** HIGH
 

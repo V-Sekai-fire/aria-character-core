@@ -1,6 +1,6 @@
 # ADR-079: Timeline Module Implementation Progress
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** June 15, 2025  
 **Extracted from:** ADR-075 Task 10, detailed in ADR-078
 

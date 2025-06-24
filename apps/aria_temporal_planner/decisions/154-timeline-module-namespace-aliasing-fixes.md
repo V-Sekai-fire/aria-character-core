@@ -1,6 +1,6 @@
 # ADR-154: Timeline Module Namespace Aliasing Fixes
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** June 23, 2025  
 **Priority:** HIGH
 

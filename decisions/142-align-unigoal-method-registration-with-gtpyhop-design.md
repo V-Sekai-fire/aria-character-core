@@ -1,6 +1,6 @@
 # ADR-142: Align Unigoal Method Registration with Original GTPyhop Design
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** June 22, 2025  
 **Priority:** HIGH
 

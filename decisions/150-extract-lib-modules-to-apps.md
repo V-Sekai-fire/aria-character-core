@@ -1,6 +1,6 @@
 # ADR-150: Extract lib/ modules into independent Elixir apps
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** 2025-06-23  
 **Priority:** HIGH
 

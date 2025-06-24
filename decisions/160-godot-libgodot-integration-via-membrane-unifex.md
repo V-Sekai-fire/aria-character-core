@@ -1,6 +1,6 @@
 # ADR-160: Godot LibGodot Integration via Membrane Unifex
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** June 24, 2025  
 **Priority:** HIGH
 

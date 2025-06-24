@@ -1,6 +1,6 @@
 # ADR-130: glTF Scene Foundation Implementation Plan
 
-**Status:** Active
+**Status:** Active (Paused)
 **Date:** June 22, 2025
 **Priority:** HIGH
 

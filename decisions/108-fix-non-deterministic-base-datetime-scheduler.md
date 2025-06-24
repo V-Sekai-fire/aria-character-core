@@ -1,6 +1,6 @@
 # ADR-108: Fix Non-Deterministic Base DateTime in Scheduler Timing Calculations
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** June 20, 2025  
 **Priority:** HIGH - Critical Bug
 

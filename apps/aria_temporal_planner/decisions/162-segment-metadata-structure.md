@@ -1,6 +1,6 @@
 # ADR-162: Segment Metadata Structure
 
-**Status:** Active  
+**Status:** Active (Paused)  
 **Date:** 2025-06-23  
 **Priority:** HIGH
 
