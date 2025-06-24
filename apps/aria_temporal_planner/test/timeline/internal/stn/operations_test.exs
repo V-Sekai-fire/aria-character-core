@@ -87,7 +87,7 @@ defmodule Timeline.Internal.STN.OperationsTest do
     constraints =
       time_points
       |> MapSet.to_list()
-      |> Enum.map(fn point -> {{point, point}, {0, 0}} end)
+      |> Enum.map(fn point -> {{point, point}, {-1, 1}} end)
       |> Map.new()
 
     %STN{time_points: time_points, constraints: constraints, consistent: true}
@@ -101,7 +101,7 @@ defmodule Timeline.Internal.STN.OperationsTest do
       |> MapSet.to_list()
       |> Enum.with_index()
       |> Enum.reduce(%{}, fn {point, index}, acc ->
-        acc = Map.put(acc, {point, point}, {0, 0})
+        acc = Map.put(acc, {point, point}, {-1, 1})
 
         if index < count - 1 do
           next_point = "point_#{index + 2}"
@@ -117,7 +117,7 @@ defmodule Timeline.Internal.STN.OperationsTest do
   defp create_stn_with_properties do
     %STN{
       time_points: MapSet.new(["p1", "p2", "p3"]),
-      constraints: %{{"p1", "p1"} => {0, 0}, {"p2", "p2"} => {0, 0}, {"p3", "p3"} => {0, 0}},
+      constraints: %{{"p1", "p1"} => {-1, 1}, {"p2", "p2"} => {-1, 1}, {"p3", "p3"} => {-1, 1}},
       consistent: true,
       time_unit: :millisecond,
       lod_level: 1,
@@ -131,7 +131,7 @@ defmodule Timeline.Internal.STN.OperationsTest do
     constraints =
       time_points
       |> MapSet.to_list()
-      |> Enum.map(fn point -> {{point, point}, {0, 0}} end)
+      |> Enum.map(fn point -> {{point, point}, {-1, 1}} end)
       |> Map.new()
 
     %STN{time_points: time_points, constraints: constraints, consistent: true}

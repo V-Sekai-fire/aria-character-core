@@ -161,7 +161,7 @@ defmodule TemporalPlanner.STNMethodTest do
       world_stn =
         Timeline.new()
         |> Timeline.add_time_point("world_start")
-        |> Timeline.add_constraint("world_start", "world_start", {0, 0})
+        |> Timeline.add_constraint("world_start", "world_start", {-1, 1})
 
       assert STNMethod.can_execute?(method, world_stn)
     end

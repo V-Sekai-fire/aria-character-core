@@ -215,6 +215,7 @@ defmodule Timeline.Internal.STN.Core do
     new_min = constraint_max(min1, min2)
     new_max = constraint_min(max1, max2)
 
+    # Check for inconsistency: new_min > new_max means no valid intersection
     if constraint_greater_than?(new_min, new_max) do
       :inconsistent
     else

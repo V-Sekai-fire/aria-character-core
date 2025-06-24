@@ -127,7 +127,7 @@ defmodule Timeline.Internal.STN do
       |> MapSet.new()
 
     dummy_constraints =
-      Enum.reduce(dummy_points, %{}, fn point, acc -> Map.put(acc, {point, point}, {0, 0}) end)
+      Enum.reduce(dummy_points, %{}, fn point, acc -> Map.put(acc, {point, point}, {-1, 1}) end)
 
     %{
       stn
