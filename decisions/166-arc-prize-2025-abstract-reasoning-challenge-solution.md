@@ -1,51 +1,29 @@
-# ADR-166: ARC Prize 2025 - Two-Week Proof of Concept Sprint
+# ADR-166: ARC Prize 2025 - Abstract Reasoning Challenge Solution (TOMBSTONED)
 
-**Status:** Proposed  
-**Date:** June 24, 2025  
-**Priority:** HIGH
+**Status:** Tombstoned  
+**Date:** 2025-06-24  
+**Superseded by:** ADR-172 series
 
-## The Two-Week Challenge Pitch
+This ADR has been tombstoned and replaced by the new ARC Prize ADR series (ADR-172-175) which follows the hybrid planner restoration work in ADR-171.
 
-**The ARC Prize 2025 offers $1,000,000 for solving abstract reasoning puzzles - one of AI's grand challenges where current best performance is stuck at 34% accuracy.**
+**Original content preserved in git history.**
 
-**Here's the deal: Give me two weeks to prove this is worth pursuing.**
+## Replacement ADRs
 
-### What We'll Build
+- **ADR-171**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
+- **ADR-172**: ARC Prize 2025 - Two-Week Proof of Concept Sprint
+- **ADR-173**: ARC Prize Implementation Plan  
+- **ADR-174**: ARC Prize Technical Architecture
+- **ADR-175**: ARC Prize Risk Analysis
 
-**Week 1:** Computational search foundation - test 1000+ transformation programs per task, target 1-5% accuracy
-**Week 2:** Add Aria's hybrid reasoning coordination, target 5-10% accuracy through planning integration
+## Context
 
-### Why This Works
+The original ARC Prize planning was premature due to hybrid planner being non-functional. The new ADR series addresses this dependency chain properly:
 
-**For Game Industry Perspective:** Low-risk validation sprint, portfolio expansion, competitive intelligence, network building
-**For Technical Development:** Rapid AI engineering skills, architecture validation, clean research ethics, measurable outcomes
+1. **ADR-171**: Restore hybrid planner to 100% functionality
+2. **ADR-172-175**: Execute ARC Prize work with reliable foundation
 
-### The Unique Angle
-
-Hybrid reasoning approach unlike pure neural networks - computational discovery coordinated through interpretable planning. Game development discipline meets AI research.
-
-### Success Criteria
-
-**Go/No-Go Decision:** 5%+ accuracy = proceed to full competition, <3% accuracy = valuable learning experience but stop there.
-
-### Honest Assessment
-
-**60% probability:** 2-5% accuracy, learn exactly where approach breaks down
-**30% probability:** 5-10% accuracy, prove hybrid approach has merit  
-**10% probability:** 10%+ accuracy, breakthrough potential
-
-## Decision
-
-**Proposed:** Two-week proof of concept sprint to validate ARC Prize approach before major commitment.
-
-**The Question:** Would you rather spend two weeks finding out what we're actually capable of building, or always wonder if we could have achieved something remarkable?
-
-## Implementation Details
-
-- **ADR-168**: Two-week sprint plan and detailed implementation
-- **ADR-169**: Minimal viable technical architecture  
-- **ADR-170**: Risk analysis and business case details
-
----
-
-**Two weeks to prove we can build something remarkable.**
+**Timeline Impact:**
+- Original: 2 weeks ARC work
+- Revised: 2 weeks restoration + 2 weeks ARC work
+- Total: 4 weeks with proper prerequisites
