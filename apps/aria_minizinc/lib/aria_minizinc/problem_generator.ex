@@ -10,6 +10,57 @@ defmodule AriaMiniZinc.ProblemGenerator do
   """
 
   require Logger
+  alias AriaEngine.State
+  import Timex
+
+  # Type definitions
+  @type goal :: {subject :: String.t(), predicate :: String.t(), object :: term()}
+  @type state :: AriaEngine.State.t()
+  @type iso8601_datetime :: String.t()  # "2025-06-23T23:16:07.123456-07:00"
+  @type iso8601_duration :: String.t()  # "PT1.234S"
+
+  @type variable :: %{
+    name: String.t(),
+    type: String.t(),
+    domain: Range.t() | nil | String.t()
+  }
+
+  @type structured_variables :: %{
+    time_vars: [variable()],
+    location_vars: [variable()],
+    boolean_vars: [variable()]
+  }
+
+  @type constraint :: %{
+    type: :equality | :domain | :temporal_ordering | :generic,
+    variable: String.t(),
+    value: term(),
+    description: String.t(),
+    constraint: String.t(),
+    min: integer(),
+    max: integer()
+  }
+
+  @type problem_metadata :: %{
+    goal_count: non_neg_integer(),
+    variable_count: non_neg_integer(),
+    constraint_count: non_neg_integer(),
+    optimization: atom(),
+    generation_start: iso8601_datetime(),
+    generation_end: iso8601_datetime(),
+    generation_duration: iso8601_duration()
+  }
+
+  @type problem_data :: %{
+    model: String.t(),
+    variables: structured_variables(),
+    constraints: [constraint()],
+    objective: String.t(),
+    metadata: problem_metadata()
+  }
+
+  @type domain :: map()
+  @type options :: map()
 
   @template_dir "priv/templates/minizinc"
   @goal_solving_template "goal_solving.mzn.eex"
@@ -28,7 +79,12 @@ defmodule AriaMiniZinc.ProblemGenerator do
   - `{:ok, problem_data}` - Successfully generated problem
   - `{:error, reason}` - Failed to generate problem
   """
+  @spec generate_problem(domain(), state(), [goal()], options()) ::
+          {:ok, problem_data()} | {:error, String.t()}
   def generate_problem(domain, state, goals, options \\ %{}) do
+    # Capture generation start time in local timezone ISO 8601 format
+    generation_start = Timex.now() |> Timex.format!("{ISO:Extended}")
+
     try do
       Logger.debug("Generating MiniZinc problem for #{length(goals)} goals")
 
@@ -44,6 +100,13 @@ defmodule AriaMiniZinc.ProblemGenerator do
       # Build complete MiniZinc model
       model = build_minizinc_model(variables, constraints, objective)
 
+      # Calculate total variable count from structured variables
+      variable_count = count_total_variables(variables)
+
+      # Capture generation end time and calculate duration
+      generation_end = Timex.now() |> Timex.format!("{ISO:Extended}")
+      generation_duration = calculate_duration(generation_start, generation_end)
+
       problem_data = %{
         model: model,
         variables: variables,
@@ -51,9 +114,12 @@ defmodule AriaMiniZinc.ProblemGenerator do
         objective: objective,
         metadata: %{
           goal_count: length(goals),
-          variable_count: length(variables),
+          variable_count: variable_count,
           constraint_count: length(constraints),
-          generation_time: System.monotonic_time(:millisecond)
+          optimization: determine_optimization_type(options),
+          generation_start: generation_start,
+          generation_end: generation_end,
+          generation_duration: generation_duration
         }
       }
 
@@ -65,24 +131,62 @@ defmodule AriaMiniZinc.ProblemGenerator do
     end
   end
 
-  # Extract decision variables from goals and state
+  # Calculate duration between two ISO 8601 timestamps
+  @spec calculate_duration(iso8601_datetime(), iso8601_datetime()) :: iso8601_duration()
+  defp calculate_duration(start_iso, end_iso) do
+    start_dt = Timex.parse!(start_iso, "{ISO:Extended}")
+    end_dt = Timex.parse!(end_iso, "{ISO:Extended}")
+
+    # Use microseconds as Timex's most precise integer duration element
+    duration_microseconds = Timex.diff(end_dt, start_dt, :microseconds)
+    duration_seconds = duration_microseconds / 1_000_000
+    "PT#{duration_seconds}S"
+  end
+
+  # Extract decision variables from goals and state - returns structured format
+  @spec extract_variables([goal()], state()) :: structured_variables()
   defp extract_variables(goals, _state) do
     # Extract entities and their possible values
     entities = goals
     |> Enum.map(fn {subject, _predicate, _value} -> subject end)
     |> Enum.uniq()
 
-    # Create variables for each entity's possible states
-    Enum.flat_map(entities, fn entity ->
-      [
-        %{name: "#{entity}_location", type: "var int", domain: "1..10"},
-        %{name: "#{entity}_time", type: "var int", domain: "0..100"},
-        %{name: "#{entity}_active", type: "var bool", domain: nil}
-      ]
+    # Create categorized variables for each entity
+    time_vars = Enum.map(entities, fn entity ->
+      %{name: "#{entity}_time", type: "var int", domain: 0..100}
     end)
+
+    location_vars = Enum.map(entities, fn entity ->
+      %{name: "#{entity}_location", type: "var int", domain: 1..10}
+    end)
+
+    boolean_vars = Enum.map(entities, fn entity ->
+      %{name: "#{entity}_active", type: "var bool", domain: nil}
+    end)
+
+    %{
+      time_vars: time_vars,
+      location_vars: location_vars,
+      boolean_vars: boolean_vars
+    }
   end
 
-  # Generate constraints from domain rules and goals
+  # Count total variables from structured format
+  defp count_total_variables(variables) do
+    length(variables.time_vars) + length(variables.location_vars) + length(variables.boolean_vars)
+  end
+
+  # Determine optimization type from options
+  defp determine_optimization_type(options) do
+    case Map.get(options, :optimization_type, :minimize_time) do
+      :minimize_time -> :minimize_steps
+      :minimize_distance -> :minimize_distance
+      :maximize_efficiency -> :maximize_efficiency
+      _ -> :minimize_steps
+    end
+  end
+
+  # Generate constraints from domain rules and goals - returns structured format
   defp generate_constraints(domain, state, goals, options) do
     goal_constraints = generate_goal_constraints(goals)
     domain_constraints = generate_domain_constraints(domain, state)
@@ -91,34 +195,64 @@ defmodule AriaMiniZinc.ProblemGenerator do
     goal_constraints ++ domain_constraints ++ temporal_constraints
   end
 
-  # Generate constraints to satisfy goals
+  # Generate constraints to satisfy goals - returns structured constraint maps
   defp generate_goal_constraints(goals) do
     Enum.map(goals, fn {subject, predicate, value} ->
       case predicate do
         "location" ->
-          "constraint #{subject}_location = #{encode_location(value)};"
+          %{
+            type: :equality,
+            variable: "#{subject}_location",
+            value: encode_location(value),
+            description: "Goal: #{subject} at #{value}"
+          }
         "state" ->
-          "constraint #{subject}_active = #{encode_boolean(value)};"
+          %{
+            type: :equality,
+            variable: "#{subject}_active",
+            value: encode_boolean(value),
+            description: "Goal: #{subject} state #{value}"
+          }
         _ ->
-          "constraint true; % Generic goal: #{subject} #{predicate} #{value}"
+          %{
+            type: :generic,
+            description: "Generic goal: #{subject} #{predicate} #{value}",
+            constraint: "true"
+          }
       end
     end)
   end
 
-  # Generate domain-specific constraints
+  # Generate domain-specific constraints - returns structured constraint maps
   defp generate_domain_constraints(_domain, _state) do
     [
-      "constraint forall(i in 1..num_entities) (entity_time[i] >= 0);",
-      "constraint forall(i in 1..num_entities) (entity_location[i] >= 1);",
-      "constraint forall(i in 1..num_entities) (entity_location[i] <= 10);"
+      %{
+        type: :domain,
+        variable: "entity_time",
+        constraint: "forall",
+        min: 0,
+        description: "Time variables must be non-negative"
+      },
+      %{
+        type: :domain,
+        variable: "entity_location",
+        constraint: "forall",
+        min: 1,
+        max: 10,
+        description: "Location variables must be in valid range"
+      }
     ]
   end
 
-  # Generate temporal ordering constraints
-  defp generate_temporal_constraints(goals, options) do
-    if Map.get(options, :temporal_ordering, false) do
+  # Generate temporal ordering constraints - returns structured constraint maps
+  defp generate_temporal_constraints(_goals, options) do
+    if Map.get(options, :temporal_ordering, false) or Map.get(options, :temporal_constraints, false) do
       [
-        "constraint forall(i in 1..num_entities-1) (entity_time[i] <= entity_time[i+1]);"
+        %{
+          type: :temporal_ordering,
+          constraint: "forall",
+          description: "Sequential temporal ordering"
+        }
       ]
     else
       []
@@ -126,7 +260,7 @@ defmodule AriaMiniZinc.ProblemGenerator do
   end
 
   # Generate optimization objective
-  defp generate_objective(goals, options) do
+  defp generate_objective(_goals, options) do
     case Map.get(options, :optimization_type, :minimize_time) do
       :minimize_time ->
         "minimize max(entity_time);"
@@ -135,23 +269,41 @@ defmodule AriaMiniZinc.ProblemGenerator do
       :maximize_efficiency ->
         "maximize sum(i in 1..num_entities) (if entity_active[i] then 1 else 0 endif);"
       _ ->
-        "satisfy;"
+        "minimize max(entity_time);"
     end
   end
 
   # Build complete MiniZinc model using template
   defp build_minizinc_model(variables, constraints, objective) do
+    # Convert structured data to template format
+    variable_count = count_total_variables(variables)
+
+    # Pre-process variables with formatted domains
+    processed_variables = %{
+      time_vars: Enum.map(variables.time_vars, &process_variable/1),
+      location_vars: Enum.map(variables.location_vars, &process_variable/1),
+      boolean_vars: Enum.map(variables.boolean_vars, &process_variable/1)
+    }
+
+    # Pre-process constraints with rendered strings
+    processed_constraints = Enum.map(constraints, &render_constraint/1)
+
     template_vars = %{
-      variables: variables,
-      constraints: constraints,
+      variables: processed_variables,
+      constraints: processed_constraints,
       objective: objective,
-      num_entities: div(length(variables), 3),
-      variable_count: length(variables),
+      num_entities: div(variable_count, 3),
+      variable_count: variable_count,
       constraint_count: length(constraints),
-      generation_time: System.monotonic_time(:millisecond)
+      generation_time: Timex.now() |> Timex.format!("{ISO:Extended}")
     }
 
     render_template(@goal_solving_template, template_vars)
+  end
+
+  # Process variable with formatted domain
+  defp process_variable(var) do
+    %{var | domain: format_domain(var.domain)}
   end
 
   # Load and render a MiniZinc template
@@ -165,6 +317,41 @@ defmodule AriaMiniZinc.ProblemGenerator do
         Logger.error("Failed to load template #{template_name}: #{inspect(reason)}")
         raise "Template loading failed: #{template_name}"
     end
+  end
+
+  # Format domain for MiniZinc syntax
+  defp format_domain(min..max//1), do: "#{min}..#{max}"
+  defp format_domain(nil), do: ""
+  defp format_domain(domain) when is_integer(domain), do: "#{domain}"
+  defp format_domain(domain), do: "#{inspect(domain)}"
+
+  # Render structured constraint to MiniZinc string
+  defp render_constraint(%{type: :equality, variable: var, value: val, description: desc}) do
+    "constraint #{var} = #{val}; % #{desc}"
+  end
+
+  defp render_constraint(%{type: :domain, variable: var, min: min, max: max, description: desc}) do
+    "constraint forall(i in 1..num_entities) (#{var}[i] >= #{min} /\\ #{var}[i] <= #{max}); % #{desc}"
+  end
+
+  defp render_constraint(%{type: :domain, variable: var, min: min, description: desc}) do
+    "constraint forall(i in 1..num_entities) (#{var}[i] >= #{min}); % #{desc}"
+  end
+
+  defp render_constraint(%{type: :temporal_ordering, description: desc}) do
+    "constraint forall(i in 1..num_entities-1) (entity_time[i] <= entity_time[i+1]); % #{desc}"
+  end
+
+  defp render_constraint(%{type: :generic, constraint: constraint, description: desc}) do
+    "constraint #{constraint}; % #{desc}"
+  end
+
+  defp render_constraint(%{type: :generic, description: desc}) do
+    "constraint true; % #{desc}"
+  end
+
+  defp render_constraint(constraint) do
+    "constraint true; % Unknown constraint: #{inspect(constraint)}"
   end
 
   # Helper functions for encoding values
