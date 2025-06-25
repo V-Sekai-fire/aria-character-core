@@ -7,7 +7,7 @@
 
 ## The Two-Week Challenge Pitch
 
-**The ARC Prize 2025 offers $1,000,000 for solving abstract reasoning puzzles - one of AI's grand challenges where current best performance is stuck at 34% accuracy.**
+**The ARC Prize 2025 offers $1,000,000 for solving abstract reasoning puzzles - one of AI's grand challenges where current best non-human performance is stuck at 34% accuracy while human performance is at 100%.**
 
 **Here's the deal: Give me two weeks to prove this is worth pursuing.**
 
