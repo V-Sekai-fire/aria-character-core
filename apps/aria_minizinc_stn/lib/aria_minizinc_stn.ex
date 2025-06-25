@@ -30,6 +30,19 @@ defmodule AriaMinizincStn do
 
   require Logger
 
+  @type time_point :: String.t()
+  @type constraint_bounds :: {number(), number()}
+  @type stn_constraints :: %{optional({time_point(), time_point()}) => constraint_bounds()}
+  @type stn :: %{
+          time_points: MapSet.t(time_point()),
+          constraints: stn_constraints(),
+          consistent: boolean() | nil,
+          metadata: map()
+        }
+  @type solver_options :: keyword()
+  @type solution :: %{status: :satisfiable | :unsatisfiable, start_times: [number()]}
+  @type error_reason :: String.t()
+
   @doc """
   Solve an STN using MiniZinc constraint solving.
 
@@ -50,6 +63,7 @@ defmodule AriaMinizincStn do
       {:ok, result} = AriaMinizincStn.solve_stn(stn)
       result.consistent  # => true/false
   """
+  @spec solve_stn(stn(), solver_options()) :: {:ok, stn()} | {:error, error_reason()}
   def solve_stn(stn, options \\ []) do
     with :ok <- validate_stn(stn) do
       solve_with_minizinc(stn, options)
