@@ -160,6 +160,14 @@ The following concepts were explicitly rejected during design:
 6. **❌ TOMBSTONE: `constraints` field in entity requirements** - Quantities, availability, and dynamic properties are state fluents, not action metadata
 7. **❌ TOMBSTONE: Requirement validation in action functions** - Actions assume planner has already validated requirements
 
+### Additional Unstated Known Knowns (Explicitly Tombstoned)
+
+8. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity`, `size` belong in state, not action metadata
+9. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{predicate, subject, value}` format allowed, all other formats rejected
+10. **❌ TOMBSTONE: Complex state evaluation functions** - Use direct `State.get_fact/3` queries instead of `State.evaluate_condition/2` or `validate_temporal_condition/2`
+11. **❌ TOMBSTONE: Any validation in action functions** - ALL validation happens at planning time, actions are pure state transformations
+12. **❌ TOMBSTONE: Command registration in domains** - Commands are execution-time functions, not domain registration artifacts
+
 ### Action-Level Requirement Validation (TOMBSTONED)
 
 **CRITICAL ARCHITECTURAL PRINCIPLE:** Actions must NOT validate their own requirements. This violates separation of concerns between planning and execution.

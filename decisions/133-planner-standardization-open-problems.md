@@ -475,6 +475,17 @@ end
 - No automatic MinizinC optimization without explicit domain choice
 - Domain authors must explicitly handle all multigoal scenarios
 
+### Additional Unstated Known Knowns (Explicitly Tombstoned)
+
+**Status:** Tombstoned - Architectural violations that must be prevented
+
+1. **❌ TOMBSTONE: Solution tree node type expansion** - FIXED at 6 types: `:task | :action | :goal | :multigoal | :verify_goal | :verify_multigoal`
+2. **❌ TOMBSTONE: Separate planning/execution phases** - IPyHOP uses interleaved planning and execution only
+3. **❌ TOMBSTONE: Command nodes in solution tree** - Commands are execution-time functions, not tree nodes
+4. **❌ TOMBSTONE: Automatic multigoal resolution** - Domain authors must explicitly define ALL multigoal handling
+5. **❌ TOMBSTONE: Planning-time validation in actions** - Actions are pure state transformations, validation is planner responsibility
+6. **❌ TOMBSTONE: Alternative planning APIs** - Enhance existing `Plan.Core.plan()`, don't create parallel systems
+
 ## Resolved Architectural Problems
 
 ### 1. Method Registration Inconsistencies ✅ RESOLVED

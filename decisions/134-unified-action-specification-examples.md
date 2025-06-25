@@ -386,6 +386,17 @@ end
 - No automatic MinizinC optimization without explicit domain choice
 - Domain authors must explicitly handle all multigoal scenarios
 
+### Additional Unstated Known Knowns (Explicitly Tombstoned)
+
+**Status:** Tombstoned - Architectural violations that must be prevented
+
+1. **❌ TOMBSTONE: `@command` attributes in domain registration** - Commands are execution-time functions, not domain metadata
+2. **❌ TOMBSTONE: Command node types in solution tree** - Only 6 node types allowed: `:task | :action | :goal | :multigoal | :verify_goal | :verify_multigoal`
+3. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{predicate, subject, value}` format allowed
+4. **❌ TOMBSTONE: Complex state evaluation in actions** - Use direct `State.get_fact/3` queries only
+5. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity` belong in state
+6. **❌ TOMBSTONE: Validation within action functions** - ALL validation is planner responsibility, actions are pure transformations
+
 **Action-level requirement validation (TOMBSTONED):**
 
 **❌ WRONG - Action validating its own requirements:**
