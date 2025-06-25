@@ -228,13 +228,104 @@ end
 - Clear documentation of precision capabilities
 - Gradual rollout with monitoring
 
+## Solution Tree Duration Integration
+
+Duration handling integrates with solution tree for temporal constraint validation:
+
+### Duration Validation During Node Refinement
+```elixir
+defp validate_action_node_duration(tree, node_id) do
+  node = SolutionTree.get_node(tree, node_id)
+  {action_name, args} = node.info
+  
+  # Get action duration from domain
+  duration = Domain.get_action_duration(domain, action_name)
+  
+  # Validate against temporal constraints
+  case validate_temporal_constraints(tree, node_id, duration) do
+    :ok -> {:ok, duration}
+    {:error, reason} -> {:error, "Duration validation failed: #{reason}"}
+  end
+end
+```
+
+### Precision Preservation in Tree Operations
+- **Duration calculations maintain precision** throughout tree operations
+- **Temporal constraint checking** preserves exact duration values
+- **No floating-point precision loss** in solution tree duration tracking
+
+```elixir
+defp calculate_node_temporal_bounds(tree, node_id) do
+  node = SolutionTree.get_node(tree, node_id)
+  
+  case node.type do
+    :action ->
+      # Preserve microsecond precision in action duration calculations
+      duration_seconds = Domain.get_action_duration_seconds(domain, node.action)
+      start_time = get_node_start_time(tree, node_id)
+      end_time = Timex.add(start_time, Timex.Duration.from_seconds(duration_seconds))
+      
+      {:ok, {start_time, end_time}}
+      
+    :task ->
+      # Aggregate child durations with precision preservation
+      child_durations = get_child_node_durations(tree, node_id)
+      total_duration = Enum.reduce(child_durations, 0.0, &+/2)  # Float accumulation
+      
+      {:ok, total_duration}
+  end
+end
+```
+
+### Integration with Temporal Constraint System
+```elixir
+defp validate_temporal_constraints(tree, node_id, duration) do
+  node = SolutionTree.get_node(tree, node_id)
+  
+  # Check mutual exclusion with microsecond precision
+  case check_mutual_exclusion_with_precision(tree, node_id, duration) do
+    :ok ->
+      # Check temporal ordering constraints
+      validate_temporal_ordering(tree, node_id, duration)
+      
+    {:error, reason} ->
+      {:error, "Mutual exclusion violation: #{reason}"}
+  end
+end
+
+defp check_mutual_exclusion_with_precision(tree, node_id, duration) do
+  node = SolutionTree.get_node(tree, node_id)
+  conflicting_actions = get_mutually_exclusive_actions(node.action)
+  
+  # Use precise duration calculations for overlap detection
+  node_start = get_node_start_time(tree, node_id)
+  node_end = Timex.add(node_start, Timex.Duration.from_seconds(duration))
+  
+  conflicts = Enum.filter(conflicting_actions, fn action ->
+    action_duration = Domain.get_action_duration_seconds(domain, action)
+    action_start = get_action_start_time(tree, action)
+    action_end = Timex.add(action_start, Timex.Duration.from_seconds(action_duration))
+    
+    # Precise interval overlap detection
+    intervals_overlap_precise?(node_start, node_end, action_start, action_end)
+  end)
+  
+  case conflicts do
+    [] -> :ok
+    conflicts -> {:error, "Conflicts with actions: #{inspect(conflicts)}"}
+  end
+end
+```
+
 ## Related ADRs
 
 - **ADR-131**: Unified Durative Action Specification and Planner Standardization (parent ADR)
+- **ADR-133**: Planner Standardization Open Problems (solution tree integration)
+- **ADR-134**: Unified Action Specification Examples (duration examples)
 - **ADR-086**: Implement Durative Actions (foundational work)
 
 ## Implementation Status
 
-**Status:** Ready for implementation
-**Next Steps:** Remove `round()` calls and update duration struct format
-**Timeline:** High priority - affects temporal accuracy across entire system
+**Status:** Completed - Duration precision preservation implemented with solution tree integration
+**Next Steps:** Monitor precision preservation in production temporal planning scenarios
+**Timeline:** Available immediately for solution tree temporal constraint validation

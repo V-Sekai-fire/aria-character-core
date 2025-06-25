@@ -1,394 +1,453 @@
-# ADR-133: Planner Standardization Open Problems
+# ADR 133: Planner Standardization Open Problems
 
-**Status:** Completed  
-**Date:** 2025-06-22  
-**Completion Date:** 2025-06-22  
-**Priority:** MEDIUM  
-**Extracted from:** ADR-131
+## Status
+**Completed** (June 25, 2025) - All IPyHOP standardization problems resolved
 
 ## Context
 
-During the unified durative action specification work, several additional standardization issues were identified that affect planner usability and consistency. These problems are documented here as a reference catalog for future improvement work.
+During the unified durative action specification work, several additional standardization issues were identified that affect planner usability and consistency. This ADR documents the resolution of these problems and establishes the final IPyHOP-compatible planner architecture.
 
-## Open Problems Catalog
+## Completed IPyHOP Features
 
-### 1. Method Registration Inconsistencies ✅ SOLUTION IDENTIFIED
+### ✅ Solution Tree Structure
+**Status:** Implemented - IPyHOP-compatible node types and operations
 
-**Priority:** MEDIUM  
-**Status:** Solution designed, implementation pending
-
-**Problem**: Multiple function arities with unclear usage patterns
-
-- `add_task_method/3` vs `add_task_method/4` - when to use which arity?
-- `add_unigoal_method/3` vs `add_unigoal_method/4` - same inconsistency
-- Manual vs automatic primitive method registration confusion
-
-**Solution**: Single Unified Method with Options Map
+**Implementation:**
+- IPyHOP-compatible node types: `:task`, `:action`, `:goal`, `:multigoal`, `:verify_goal`, `:verify_multigoal`
+- Proper node status tracking: `:open`, `:closed`, `:failed`
+- **Action priority in node selection** - actions execute before task decomposition
+- State preservation at each node for backtracking
+- Integration with blacklist system
 
 ```elixir
-# Replace all variants with single unified method
-Domain.add_method(domain, name, function, opts \\ %{})
-
-# Usage examples:
-Domain.add_method(domain, "move", &move/2)  # Simple case (defaults to :task)
-Domain.add_method(domain, "move", &move/2, %{type: :task})  # Explicit task method
-Domain.add_method(domain, "move", &move/2, %{type: :unigoal, priority: 1})  # Unigoal with priority
-Domain.add_method(domain, "move", &move/2, %{type: :multigoal, constraints: [...]})  # Multigoal
-
-# Deprecation with helpful migration messages
-def add_task_method(domain, name, function, opts \\ %{}) do
-  IO.warn("add_task_method/3-4 is deprecated, use add_method/4 with type: :task")
-  add_method(domain, name, function, Map.put(opts, :type, :task))
+defmodule AriaEngine.SolutionTree do
+  defstruct [
+    :nodes,           # %{node_id => node_data}
+    :edges,           # %{parent_id => [child_ids]}
+    :root_id,         # Root node ID
+    :next_id,         # Next available ID
+    :blacklist        # MapSet of blacklisted actions
+  ]
+  
+  @type node_type :: :task | :action | :goal | :multigoal | :verify_goal | :verify_multigoal
+  @type node_status :: :open | :closed | :failed
 end
 ```
 
-**Benefits**:
+### ✅ Corrected `run_lazy_refineahead`
+**Status:** Implemented - True interleaved planning and execution
 
-- Single function to learn (no arity confusion)
-- Self-documenting options make intent clear
-- Extensible without breaking changes
-- Consistent pattern everywhere
-
-**Impact**: Eliminates developer confusion about which method registration approach to use
-
-### 2. Multigoal vs Unigoal Confusion ✅ SOLUTION IDENTIFIED
-
-**Priority:** MEDIUM  
-**Status:** Solution designed, implementation pending
-
-**Problem**: Unclear distinction and integration patterns
-
-- When to use multigoal methods vs unigoal methods
-- How multigoal optimization integrates with unified action specification
-- Unclear relationship between `AriaEngine.Multigoal` and domain methods
-
-**Solution**: Clear Hierarchical Decomposition Pattern
+**Key Corrections:**
+- **True interleaved planning and execution** - no separate planning phase
+- **Action nodes execute immediately** when selected (highest priority)
+- **Proper backtracking on failure** with state restoration
+- **Method alternative exploration** when primary methods fail
 
 ```elixir
-# Unigoal methods: Decompose single goal into todo list
-# Input: {"subject", "predicate", "object"} 
-# Output: [{task_name, args}, {task_name, args}, ...]
-Domain.add_method(domain, "achieve_location", &achieve_location/2, %{
-  type: :unigoal,
-  goal_pattern: {"player", "location", :any}
-})
-
-def achieve_location(state, {"player", "location", target_room}) do
-  [
-    {"task_move", [target_room]},
-    {"task_verify_location", [target_room]}
-  ]
-end
-
-# Multigoal methods: Decompose goal list into unigoal methods (not todos)
-# Input: [{"subject", "predicate", "object"}, {"subject", "predicate", "object"}]
-# Output: [unigoal_method_name, unigoal_method_name, ...]
-Domain.add_method(domain, "optimize_multiple_locations", &optimize_locations/2, %{
-  type: :multigoal,
-  goal_patterns: [{"player", "location", :any}, {"npc", "location", :any}]
-})
-
-def optimize_locations(state, goals) do
-  [
-    "achieve_location",  # Unigoal method for player
-    "achieve_location"   # Unigoal method for NPC
-  ]
+defmodule AriaEngine.LazyRefineahead do
+  def run_lazy_refineahead(domain, initial_state, todo_list, opts \\ []) do
+    # Initialize solution tree
+    solution_tree = SolutionTree.new(todo_list)
+    
+    # Main refinement loop with action priority
+    refinement_loop(domain, initial_state, solution_tree, 0, opts)
+  end
+  
+  defp find_next_open_node_with_action_priority(tree, parent_node_id) do
+    open_nodes = get_open_successor_nodes(tree, parent_node_id)
+    
+    case open_nodes do
+      [] -> backtrack_to_parent(tree, parent_node_id)
+      nodes ->
+        # PRIORITY: Actions first, then tasks/goals
+        prioritized_node = Enum.find(nodes, fn node_id ->
+          SolutionTree.get_node(tree, node_id).type == :action
+        end) || List.first(nodes)
+        
+        {:ok, prioritized_node}
+    end
+  end
 end
 ```
 
-**Clear Hierarchy**:
+### ✅ Replan/Backtracking System
+**Status:** Implemented - IPyHOP-style failure recovery
 
-1. **Multigoal methods** → constraint-based strategic optimizers for `%AriaEngine.Multigoal{}` (special case)
-2. **Unigoal methods** → decompose single goal into task todos (can backtrack)
-3. **Task methods** → decompose tasks into more todos (can backtrack)
-4. **Actions** → change state directly (can backtrack)
-
-**Benefits**:
-
-- Clear separation of concerns at each level
-- Multigoal methods use constraint satisfaction (MiniZinc) to optimize goal achievement
-- Unigoal methods focus on single goal decomposition strategies
-- Task methods handle task decomposition into subtasks
-- Actions are the only components that directly modify state
-- All levels support backtracking by returning `false`
-
-**Impact**: Eliminates confusion about decomposition levels and enables proper goal optimization
-
-### 3. Domain Module Creation Patterns ✅ SOLUTION IDENTIFIED
-
-**Priority:** LOW  
-**Status:** Solution designed, implementation pending
-
-**Problem**: Multiple domain creation approaches without clear guidance
-
-- `Domain.new()` vs `Domain.from_module()` - different creation patterns
-- Module-based domain definition vs programmatic building
-- Inconsistent patterns for domain initialization
-
-**Solution**: Module-First Pattern with Elixir Conventions
+**Implementation:**
+- IPyHOP-style failure recovery with method alternatives
+- State restoration at backtrack points
+- Pruning of failed subtrees
+- Alternative method exploration
 
 ```elixir
-# RECOMMENDED: Module-based domain definition (follows Elixir conventions)
+defmodule AriaEngine.Replanner do
+  def replan(domain, current_state, solution_tree, failed_node_id, opts \\ []) do
+    # Find backtrack point with alternative methods
+    case find_backtrack_point_with_alternatives(solution_tree, failed_node_id) do
+      {:ok, backtrack_node_id} ->
+        # Restore state and prune failed subtree
+        restored_state = restore_state_at_node(solution_tree, backtrack_node_id, current_state)
+        pruned_tree = prune_failed_subtree(solution_tree, backtrack_node_id)
+        
+        # Continue planning with alternative methods
+        continue_planning_with_alternatives(domain, restored_state, pruned_tree, backtrack_node_id, opts)
+        
+      {:error, :no_alternatives} ->
+        {:error, "No alternative methods available for replanning"}
+    end
+  end
+end
+```
+
+### ✅ Blacklist System
+**Status:** Implemented - Failed action prevention
+
+**Implementation:**
+- **Failed action prevention** - actions that fail get blacklisted
+- **Integration with solution tree** - blacklist checked during node selection
+- **Automatic blacklisting on execution failure**
+- **Persistent across planning sessions**
+
+```elixir
+defmodule AriaEngine.SolutionTree do
+  def blacklist_action(tree, action) do
+    %{tree | blacklist: MapSet.put(tree.blacklist, action)}
+  end
+  
+  def is_blacklisted?(tree, action) do
+    MapSet.member?(tree.blacklist, action)
+  end
+end
+
+# Usage in action execution
+defp execute_action_node(domain, state, tree, node_id, opts) do
+  node = SolutionTree.get_node(tree, node_id)
+  {action_name, args} = node.info
+  
+  # Check blacklist first
+  if SolutionTree.is_blacklisted?(tree, node.info) do
+    Logger.debug("Action #{action_name} is blacklisted, backtracking")
+    {:backtrack, find_backtrack_point(tree, node_id), tree}
+  else
+    # Execute action
+    case Domain.execute_action(domain, state, action_name, args) do
+      {:ok, new_state} ->
+        updated_tree = SolutionTree.mark_completed(tree, node_id)
+        {:ok, new_state, updated_tree}
+        
+      {:error, reason} ->
+        # Blacklist failed action and backtrack
+        updated_tree = tree
+        |> SolutionTree.blacklist_action(node.info)
+        |> SolutionTree.mark_failed(node_id)
+        
+        {:backtrack, find_backtrack_point(tree, node_id), updated_tree}
+    end
+  end
+end
+```
+
+### ✅ Goal Verification Tasks
+**Status:** Implemented - Automatic verification after goal methods
+
+**Implementation:**
+- **Automatic verification after goal methods** - ensures goals are actually achieved
+- **`:verify_goal` and `:verify_multigoal` node types**
+- **Integration with solution tree structure**
+
+```elixir
+# Automatic verification task creation
+defp refine_goal_node(domain, state, tree, node_id, opts) do
+  node = SolutionTree.get_node(tree, node_id)
+  goal = node.info
+  
+  # Try goal methods
+  case Domain.get_unigoal_methods(domain, goal) do
+    [] ->
+      {:error, "No methods available for goal: #{inspect(goal)}"}
+      
+    methods ->
+      case try_goal_methods(methods, state, goal) do
+        {:ok, subtasks} ->
+          # Add verification task automatically
+          verification_task = {:verify_goal, [goal]}
+          updated_subtasks = subtasks ++ [verification_task]
+          
+          # Create child nodes including verification
+          updated_tree = SolutionTree.add_child_nodes(tree, node_id, updated_subtasks)
+          {:ok, state, updated_tree}
+          
+        {:error, reason} ->
+          {:error, reason}
+      end
+  end
+end
+```
+
+### ✅ Pure GTPyhop Multigoal Resolution
+**Status:** Implemented - No automatic fallbacks
+
+**Key Implementation:**
+- **NO automatic fallbacks** for multigoals
+- **Domain authors must explicitly define** `@multigoal_method` if multigoals are used
+- **Planning fails** if multigoals are encountered without domain methods
+- **`split_multigoal` and MinizinC** available as explicit tools for domain authors
+
+```elixir
+defmodule AriaEngine.MultigoalResolver do
+  def resolve_multigoal(domain, state, multigoal) do
+    # ONLY try domain-defined multigoal methods
+    case Domain.get_multigoal_methods(domain, multigoal) do
+      [] ->
+        # Pure GTPyhop: FAIL if no domain methods exist
+        {:error, "No multigoal methods defined for multigoal pattern: #{inspect(multigoal)}"}
+        
+      methods ->
+        # Try domain methods only - no automatic fallbacks
+        try_domain_methods_only(methods, state, multigoal)
+    end
+  end
+end
+
+# Example domain with explicit multigoal methods
+defmodule MyApp.Domains.CookingDomain do
+  # EXPLICIT multigoal methods (Pure GTPyhop Style)
+  @multigoal_method goal_pattern: :cooking_workflow
+  def handle_cooking_workflow(state, multigoal) do
+    # Domain author explicitly chooses strategy
+    case custom_cooking_optimization(state, multigoal.goals) do
+      {:ok, plan} -> {:ok, plan}
+      {:error, _} ->
+        # Domain author EXPLICITLY chooses fallback
+        AriaEngine.Multigoal.split_multigoal(state, multigoal.goals)
+    end
+  end
+end
+```
+
+## 🪦 Tombstoned Features
+
+### Rigid Relations (Redundant)
+**Status:** Tombstoned - Redundant with AriaEngine's existing capability system
+
+The rigid relations pattern from GTPyhop is **redundant** with AriaEngine's existing capability system:
+
+**Rigid Relations (Don't Use):**
+```elixir
+@rigid_relations %{
+  types: %{"person" => ["alice", "bob"]},
+  predicates: %{"can_cook" => [["alice"], ["bob"]]}
+}
+def is_a(variable, type), do: variable in @rigid_relations.types[type]
+def can_cook(person), do: [person] in @rigid_relations.predicates["can_cook"]
+```
+
+**Capability System (Use This Instead):**
+```elixir
+@action requires_entities: [
+  %{type: "agent", capabilities: [:cooking], constraints: %{name: "alice"}}
+]
+def cook_meal(state, [meal_type]) do
+  # AriaEngine automatically validates capabilities
+  case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
+    {:ok, entities} -> proceed_with_cooking(state, meal_type, entities)
+    {:error, reason} -> {:error, reason}
+  end
+end
+```
+
+**Why Capability System is Superior:**
+- **Dynamic validation** - checks current state, not static declarations
+- **Constraint support** - quantity, location, status constraints
+- **Temporal awareness** - entities can gain/lose capabilities over time
+- **Integration** - works seamlessly with existing AriaEngine infrastructure
+- **Flexibility** - supports complex entity relationships and dependencies
+
+### Automatic Multigoal Fallbacks (Violates GTPyhop Philosophy)
+**Status:** Tombstoned - Violates pure GTPyhop design philosophy
+
+**Removed automatic fallbacks** that violated pure GTPyhop design:
+- No automatic `split_multigoal` when domain methods fail
+- No automatic MinizinC optimization without explicit domain choice
+- Domain authors must explicitly handle all multigoal scenarios
+
+**Before (Incorrect - Automatic Fallbacks):**
+```elixir
+def resolve_multigoal(domain, state, multigoal) do
+  case try_domain_methods(domain, state, multigoal) do
+    {:error, _} -> 
+      # WRONG: Always falls back to automatic methods
+      AriaEngine.Multigoal.split_multigoal(state, multigoal.goals)
+  end
+end
+```
+
+**After (Correct - Pure GTPyhop Style):**
+```elixir
+def resolve_multigoal(domain, state, multigoal) do
+  case Domain.get_multigoal_methods(domain, multigoal) do
+    [] -> 
+      # CORRECT: Fail if no domain methods exist
+      {:error, "No multigoal methods defined"}
+    methods -> 
+      # CORRECT: Use domain methods exclusively
+      try_domain_methods_only(methods, state, multigoal)
+  end
+end
+```
+
+## Resolved Open Problems Catalog
+
+### 1. Method Registration Inconsistencies ✅ RESOLVED
+
+**Solution:** Module-based domain pattern with `@action`, `@command`, `@task_method`, `@unigoal_method`, `@multigoal_method` attributes
+
+**Implementation:**
+```elixir
 defmodule MyApp.Domains.CookingDomain do
   use AriaEngine.Domain
   
-  # Domain metadata
-  @domain_name "cooking"
-  @description "Cooking and meal preparation domain"
-  
-  # Actions defined as module functions with metadata
-  @action duration: "PT2H", requires_agent: %{capabilities: [:cooking]}
-  def cook_meal(state, [meal_type, ingredients]) do
-    # Action implementation
-    StateV2.set_fact(state, "meal", "status", "cooking")
+  @action duration: "PT2H", requires_entities: [...]
+  def cook_meal(state, [meal_type]) do
+    # Planning-time action
   end
   
-  @action start: "2025-06-22T10:00:00Z", end: "2025-06-22T11:00:00Z"
-  def scheduled_meeting(state, [participants]) do
-    # Fixed time action implementation
-    StateV2.set_fact(state, "meeting", "status", "in_progress")
-  end
-  
-  # Methods defined as module functions
-  @unigoal_method goal_pattern: {"chef", "task", :any}
-  def achieve_cooking_task(state, {"chef", "task", task_name}) do
-    [
-      {"task_prepare_ingredients", [task_name]},
-      {"task_cook", [task_name]},
-      {"task_serve", [task_name]}
-    ]
+  @command
+  def cook_meal_command(state, [meal_type]) do
+    # Execution-time command with failure handling
   end
   
   @task_method
   def task_prepare_ingredients(state, [task_name]) do
-    [
-      {:gather_ingredients, [task_name]},
-      {:wash_ingredients, [task_name]}
-    ]
+    {:ok, [{:gather_ingredients, [task_name]}]}
+  end
+  
+  @unigoal_method goal_pattern: {"chef", "location", :any}
+  def travel_to_location(state, goal) do
+    {:ok, [{:walk_to_location, [target]}]}
   end
 end
-
-# Usage: Automatic domain creation from module
-domain = MyApp.Domains.CookingDomain.create_domain()
-
-# Alternative: Explicit creation with options
-domain = MyApp.Domains.CookingDomain.create_domain(%{
-  validation: :strict,
-  optimization: :enabled
-})
 ```
 
-**Benefits of Module-First Pattern**:
+### 2. Multigoal vs Unigoal Confusion ✅ RESOLVED
 
-- **Follows Elixir conventions**: Uses modules, attributes, and pattern matching
-- **Compile-time validation**: Metadata and function signatures checked at compile time
-- **Clear organization**: All domain logic in one module
-- **Documentation integration**: Works with ExDoc and `@doc` attributes
-- **Hot code reloading**: Supports development workflow
-- **Testable**: Easy to test individual actions and methods
+**Solution:** Clear hierarchical decomposition with pure GTPyhop multigoal philosophy
 
-**Fallback for Dynamic Domains**:
+**Clear Hierarchy:**
+1. **Multigoal methods** → Domain-specific optimization for multiple goals (explicit only)
+2. **Unigoal methods** → Decompose single goal into task todos
+3. **Task methods** → Decompose tasks into subtasks/actions
+4. **Actions** → Change state directly (highest execution priority)
 
+### 3. Domain Module Creation Patterns ✅ RESOLVED
+
+**Solution:** Module-first pattern following Elixir conventions
+
+**Benefits:**
+- Follows Elixir conventions with modules and attributes
+- Compile-time validation of metadata and function signatures
+- Clear organization with all domain logic in one module
+- Integration with ExDoc and hot code reloading
+
+### 4. Error Handling Standardization ✅ RESOLVED
+
+**Solution:** Standard Elixir tagged tuples with descriptive errors
+
+**Pattern:**
 ```elixir
-# For runtime-generated domains (rare cases)
-domain = Domain.new("dynamic_domain")
-|> Domain.add_action(:runtime_action, &runtime_action/2, %{duration: "PT1H"})
-|> Domain.add_method("runtime_method", &runtime_method/2, %{type: :task})
-```
+# Success
+{:ok, result}
 
-**Migration Strategy**:
+# Failure (triggers backtracking)
+{:error, :descriptive_reason}
 
-- **New domains**: Always use module-based approach
-- **Existing domains**: Migrate to modules during refactoring
-- **Dynamic domains**: Keep programmatic approach for runtime generation only
-
-**Impact**: Provides clear, Elixir-idiomatic domain creation that leverages compile-time checks and follows established patterns
-
-### 4. Error Handling Standardization ✅ SOLUTION IDENTIFIED
-
-**Priority:** MEDIUM  
-**Status:** Solution designed, implementation pending
-
-**Problem**: Inconsistent error return formats across the planner
-
-- Some functions return `false`, others `{:error, reason}`, others raise exceptions
-- No consistent error handling pattern across the planner
-- Missing error recovery strategies
-
-**Solution**: Standard Elixir Tagged Tuples with Descriptive Backtracking
-
-```elixir
-# Backtracker logic: Simple binary success/failure
+# Backtracker logic
 case method_result do
-  {:ok, todos} -> continue_with(todos)    # ✅ Success - continue
-  _anything_else -> backtrack()           # ❌ Failure - try next method
-end
-
-# Method implementation: Descriptive errors for debugging
-def task_method(state, args) do
-  cond do
-    not valid_preconditions?(state, args) ->
-      {:error, :preconditions_failed}
-    
-    not enough_resources?(state, args) ->
-      {:error, :insufficient_resources}
-    
-    true ->
-      {:ok, [{:action, args}]}
-  end
-end
-
-# Action implementation: Clear success/failure
-def move_action(state, [target]) do
-  cond do
-    not reachable?(state, target) ->
-      {:error, :unreachable_location}
-    
-    blocked_path?(state, target) ->
-      {:error, :path_blocked}
-    
-    true ->
-      new_state = StateV2.set_fact(state, "player", "location", target)
-      {:ok, new_state}
-  end
+  {:ok, todos} -> continue_with(todos)
+  _anything_else -> backtrack()
 end
 ```
 
-**Benefits**:
+### 5. Todo/Goal Conversion Complexity ✅ RESOLVED
 
-- **Standard Elixir patterns**: Follows `{:ok, result}` / `{:error, reason}` ecosystem conventions
-- **Simple backtracker logic**: Just check for `{:ok, result}` - anything else triggers backtracking
-- **Rich error information**: Descriptive error atoms help with debugging
-- **Composable**: Works with standard `with` statements and error handling
-- **Clear semantics**: Success and failure reasons are explicit
+**Solution:** Unified todo list format with full interchangeability
 
-**Migration Strategy**:
-
+**Complete Type Specification:**
 ```elixir
-# Replace all `false` returns with `{:error, reason}`
-# Replace all bare results with `{:ok, result}`
-
-# Before
-def old_method(state, args) do
-  if condition do
-    result
-  else
-    false
-  end
-end
-
-# After  
-def new_method(state, args) do
-  if condition do
-    {:ok, result}
-  else
-    {:error, :condition_failed}
-  end
-end
-```
-
-**Impact**: Eliminates weird `false` returns while providing both clean backtracking logic AND descriptive error information for debugging
-
-### 5. Todo/Goal Conversion Complexity ✅ SOLUTION IDENTIFIED
-
-**Priority:** LOW  
-**Status:** Solution designed, implementation pending
-
-**Problem**: Multiple data formats with unclear conversion rules
-
-- Tasks: `{task_name, args}` vs Goals: `{subject, predicate, value}` vs Multigoals: `%Multigoal{}`
-- Automatic conversion in PlannerAdapter creates confusion
-- No clear guidelines on when to use which format
-
-**Solution**: Unified Todo List Format with Full Interchangeability
-
-```elixir
-# Complete type specification for todo list elements (all interchangeable)
 @type todo_element :: 
-  {action_atom :: atom(), args :: list()} |              # Direct actions: {:move, ["room1"]}
-  {task_name :: String.t(), args :: list()} |            # Task methods: {"task_move", ["room1"]}
-  {subject :: String.t(), predicate :: String.t(), value :: any()} | # Goals: {"player", "location", "room1"}
-  %AriaEngine.Multigoal{}                                # Multigoals: %AriaEngine.Multigoal{...}
+  {action_atom :: atom(), args :: list()} |              # Direct actions
+  {task_name :: String.t(), args :: list()} |            # Task methods
+  {subject :: String.t(), predicate :: String.t(), value :: any()} | # Goals
+  %AriaEngine.Multigoal{}                                # Multigoals
 
-# Todo lists can contain any mix of these elements in any order
 @type todo_list :: [todo_element()]
-
-# Example valid todo list with all element types mixed
-todo_list = [
-  {:move, ["room1"]},                      # Direct action atom
-  {"task_verify", []},                     # Task method
-  {"player", "location", "room1"},         # Goal
-  %AriaEngine.Multigoal{goals: [...], ...}, # Multigoal
-  {:cook, ["pasta"]},                      # Another direct action
-  {"door", "state", "open"}                # Another goal
-]
 ```
 
-**Benefits**:
+### 6. Migration Path Gaps ✅ RESOLVED
 
-- **Maximum flexibility**: Methods can return any combination of actions, tasks, goals, and multigoals
-- **Natural decomposition**: Each method type outputs what makes sense for its level
-- **Action Atom Priority preserved**: Planner resolves `:move` vs `"task_move"` based on availability
-- **Unified processing**: Planner handles all element types uniformly
-- **Clear documentation**: Type specs make the complete interchangeability explicit
-- **No conversion confusion**: All formats are valid in any context
+**Solution:** Clear migration guidance in ADR-134 with concrete examples
 
-**Impact**: Eliminates data format confusion by making all todo element types explicitly interchangeable with clear type specifications and processing logic
+**Migration Strategy:**
+- Module-based domains for all new development
+- Clear before/after examples for each pattern
+- Deprecation of legacy patterns with helpful error messages
 
-### 6. Migration Path Gaps
+## Commands System Integration
 
-**Priority:** MEDIUM  
-**Status:** Needs analysis
+### Planning-Time Actions vs Execution-Time Commands
 
-**Problem**: Incomplete migration guidance for existing code
+**Planning-Time Actions** (assume success for planning purposes):
+```elixir
+@action duration: "PT2H", requires_entities: [...]
+def cook_meal(state, [meal_type]) do
+  # Planning-time logic - assumes success
+  {:ok, updated_state}
+end
+```
 
-- ADR mentions migration but lacks concrete steps for existing code
-- No deprecation timeline or compatibility guarantees
-- Missing automated migration tools or scripts
+**Execution-Time Commands** (handle real-world failures):
+```elixir
+@command
+def cook_meal_command(state, [meal_type]) do
+  # Execution-time logic - handles real failures
+  case attempt_cooking_with_failure_chance(state, meal_type) do
+    {:ok, new_state} -> {:ok, new_state}
+    {:error, reason} -> {:error, reason}  # Triggers blacklisting and replanning
+  end
+end
+```
 
-**Potential Solutions**:
-
-- Create migration scripts for common patterns
-- Establish deprecation timeline with clear milestones
-- Provide automated code transformation tools
-- Document step-by-step migration procedures
-
-**Impact**: Difficult transition from legacy patterns to new unified approach
-
-## Implementation Priority
-
-**High Priority (Blocking Issues)**:
-
-- None currently - all high-priority issues have solutions
-
-**Medium Priority (Quality of Life)**:
-
-1. Method Registration Inconsistencies
-2. Multigoal vs Unigoal Confusion  
-3. Error Handling Standardization
-4. Migration Path Gaps
-
-**Low Priority (Nice to Have)**:
-
-1. Domain Module Creation Patterns
-2. Todo/Goal Conversion Complexity
+### Integration with Blacklist System
+When commands fail during execution:
+1. **Action gets blacklisted** - prevents repeated attempts
+2. **Backtracking triggered** - finds alternative methods
+3. **Replanning occurs** - explores different approaches
+4. **State restored** - returns to last known good state
 
 ## Success Criteria
 
-- [ ] All identified problems have documented solutions
-- [ ] Implementation plans exist for medium/high priority issues
-- [ ] Clear migration paths defined for breaking changes
-- [ ] Consistent patterns established across the planner
-- [ ] Developer confusion eliminated through standardization
+- [x] All identified problems have documented solutions
+- [x] Implementation plans exist for all issues
+- [x] Clear migration paths defined for breaking changes
+- [x] Consistent patterns established across the planner
+- [x] Developer confusion eliminated through standardization
+- [x] IPyHOP compatibility achieved with proper node types and priorities
+- [x] Pure GTPyhop multigoal philosophy implemented
+- [x] Solution tree structure with blacklist system
+- [x] Corrected `run_lazy_refineahead` with interleaved planning/execution
+- [x] Goal verification tasks for automatic verification
+- [x] Commands system for execution-time behavior
 
 ## Related ADRs
 
 - **ADR-131**: Unified Durative Action Specification and Planner Standardization (parent ADR)
-- **ADR-132**: Fix Duration Handling Precision Loss (extracted issue)
+- **ADR-132**: Fix Duration Handling Precision Loss (technical integration)
+- **ADR-134**: Unified Action Specification Examples (final canonical pattern)
 - **ADR-086**: Implement Durative Actions (foundational work)
 
 ## Implementation Status
 
-**Status:** Catalog complete, solutions designed for most issues
-**Next Steps:** Prioritize implementation based on impact and effort
-**Timeline:** Medium priority - quality of life improvements for developers
+**Status:** Completed - All IPyHOP standardization problems resolved
+**Architecture:** IPyHOP-compatible with pure GTPyhop multigoal philosophy
+**Timeline:** Available immediately for domain development
+**Compatibility:** Full backward compatibility with existing capability system

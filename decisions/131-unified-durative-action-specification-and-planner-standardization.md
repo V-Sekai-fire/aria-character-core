@@ -612,16 +612,134 @@ end
 
 **Rationale**: Following TDD principles, we start with the test that drives the most fundamental design decision - how actions and task methods are resolved. This infrastructure must work correctly before we can build the metadata validation and temporal specification features on top of it.
 
+## Commands System (New Feature)
+
+Commands provide execution-time behavior with failure handling, distinct from planning-time actions.
+
+### Planning-Time Actions vs Execution-Time Commands
+
+**Planning-Time Actions** (assume success for planning purposes):
+```elixir
+@action duration: "PT2H", 
+        requires_entities: [
+          %{type: "agent", capabilities: [:cooking]},
+          %{type: "oven", capabilities: [:heating]}
+        ]
+def cook_meal(state, [meal_type]) do
+  # Planning-time logic - assumes success for planning
+  case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
+    {:ok, entities} -> {:ok, updated_state}
+    {:error, reason} -> {:error, reason}
+  end
+end
+```
+
+**Execution-Time Commands** (handle real-world failures):
+```elixir
+@command
+def cook_meal_command(state, [meal_type]) do
+  # Execution-time logic - handles real failures
+  case attempt_cooking_with_failure_chance(state, meal_type) do
+    {:ok, new_state} -> 
+      Logger.info("Command> cook_meal_command succeeded for #{meal_type}")
+      {:ok, new_state}
+    {:error, reason} -> 
+      Logger.warn("Command> cook_meal_command failed: #{reason}")
+      {:error, reason}
+  end
+end
+```
+
+### Integration with Blacklist System
+When commands fail during execution:
+1. **Action gets blacklisted** - prevents repeated attempts
+2. **Backtracking triggered** - finds alternative methods
+3. **Replanning occurs** - explores different approaches
+4. **State restored** - returns to last known good state
+
+### Command Registration
+```elixir
+# Domain creation with command registration
+def create_domain(opts \\ %{}) do
+  domain = __MODULE__.create_base_domain()
+  
+  # Register commands for execution-time behavior
+  domain = AriaEngine.Domain.declare_commands(domain, [
+    &cook_meal_command/2,
+    &gather_ingredients_command/2
+  ])
+  
+  # Initialize blacklist system
+  domain = %{domain | blacklist: MapSet.new()}
+  
+  domain
+end
+```
+
+## Solution Tree Integration
+
+Durative actions integrate with IPyHOP solution tree as `:action` type nodes with highest execution priority.
+
+### Node Priority in Solution Tree
+```elixir
+defp find_next_open_node_with_action_priority(tree, parent_node_id) do
+  open_nodes = get_open_successor_nodes(tree, parent_node_id)
+  
+  case open_nodes do
+    [] -> backtrack_to_parent(tree, parent_node_id)
+    nodes ->
+      # PRIORITY: Actions first, then tasks/goals
+      prioritized_node = Enum.find(nodes, fn node_id ->
+        SolutionTree.get_node(tree, node_id).type == :action
+      end) || List.first(nodes)
+      
+      {:ok, prioritized_node}
+  end
+end
+```
+
+### Duration Validation in Solution Tree
+- **Temporal constraints validated** during node refinement
+- **Duration conflicts detected** before action execution
+- **Mutual exclusion enforced** at solution tree level
+
+```elixir
+defp validate_action_node_duration(tree, node_id) do
+  node = SolutionTree.get_node(tree, node_id)
+  {action_name, args} = node.info
+  
+  # Get action duration from domain
+  duration = Domain.get_action_duration(domain, action_name)
+  
+  # Validate against temporal constraints
+  case validate_temporal_constraints(tree, node_id, duration) do
+    :ok -> {:ok, duration}
+    {:error, reason} -> {:error, "Duration validation failed: #{reason}"}
+  end
+end
+```
+
+### Solution Tree Node Types
+- `:task` - Decompose into subtasks/actions
+- `:action` - Execute immediately (highest priority)
+- `:goal` - Decompose into subgoals
+- `:multigoal` - Decompose into individual goals
+- `:verify_goal` - Verify goal achievement
+- `:verify_multigoal` - Verify multigoal achievement
+
 ## Success Criteria
 
-- [ ] Both floating durations and fixed intervals supported via ISO 8601 strings
-- [ ] Unified action specification with entities, capabilities, and resources
-- [ ] All goals use `{predicate, subject, value}` format consistently
-- [ ] All state validation uses direct `State.get_fact/3` calls (with temporal query support)
-- [ ] Clear documentation on which planning API to use when
-- [ ] Single standardized way to define actions
-- [ ] All existing functionality preserved during migration
-- [ ] Comprehensive test coverage for new unified API
+- [x] Both floating durations and fixed intervals supported via ISO 8601 strings
+- [x] Unified action specification with entities, capabilities, and resources
+- [x] All goals use `{predicate, subject, value}` format consistently
+- [x] All state validation uses direct `State.get_fact/3` calls (with temporal query support)
+- [x] Clear documentation on which planning API to use when
+- [x] Single standardized way to define actions
+- [x] All existing functionality preserved during migration
+- [x] Comprehensive test coverage for new unified API
+- [x] Commands system for execution-time behavior with failure handling
+- [x] Solution tree integration with action priority and duration validation
+- [x] IPyHOP compatibility with proper node types and priorities
 
 ## Consequences
 
