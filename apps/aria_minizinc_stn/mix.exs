@@ -28,7 +28,6 @@ defmodule AriaMinizincStn.MixProject do
     [
       {:aria_minizinc_executor, in_umbrella: true},
       {:jason, "~> 1.4"},
-      {:fixpoint, "~> 0.4"},
       {:mox, "~> 1.0", only: :test}
     ]
   end

@@ -5,7 +5,7 @@ defmodule AriaMinizincStnTest do
   use ExUnit.Case
 
   describe "solve_stn/2" do
-    test "solves simple STN with fixpoint fallback" do
+    test "solves simple STN with MiniZinc" do
       stn = %{
         time_points: MapSet.new(["A", "B", "C"]),
         constraints: %{
@@ -17,10 +17,10 @@ defmodule AriaMinizincStnTest do
         metadata: %{}
       }
 
-      {:ok, result} = AriaMinizincStn.solve_stn(stn, solver: :fixpoint)
+      {:ok, result} = AriaMinizincStn.solve_stn(stn)
 
       assert result.consistent == true
-      assert result.metadata.solver == :fixpoint
+      assert result.metadata.solver == :minizinc
       assert is_map(result.metadata.solved_times)
     end
 
@@ -34,10 +34,10 @@ defmodule AriaMinizincStnTest do
         metadata: %{}
       }
 
-      {:ok, result} = AriaMinizincStn.solve_stn(stn, solver: :fixpoint)
+      {:ok, result} = AriaMinizincStn.solve_stn(stn)
 
       assert result.consistent == true
-      assert result.metadata.solver == :fixpoint
+      assert result.metadata.solver == :minizinc
     end
 
     test "handles empty STN" do
@@ -48,10 +48,9 @@ defmodule AriaMinizincStnTest do
         metadata: %{}
       }
 
-      {:ok, result} = AriaMinizincStn.solve_stn(stn, solver: :fixpoint)
+      {:error, reason} = AriaMinizincStn.solve_stn(stn)
 
-      assert result.consistent == true
-      assert result.metadata.solved_times == %{}
+      assert reason =~ "Empty STN - no time points to solve"
     end
 
     test "validates STN structure" do
@@ -62,20 +61,7 @@ defmodule AriaMinizincStnTest do
       assert reason =~ "STN must have :time_points field"
     end
 
-    test "handles invalid solver option" do
-      stn = %{
-        time_points: MapSet.new(["A"]),
-        constraints: %{},
-        consistent: nil,
-        metadata: %{}
-      }
-
-      {:error, reason} = AriaMinizincStn.solve_stn(stn, solver: :invalid)
-
-      assert reason =~ "Invalid solver option"
-    end
-
-    test "auto solver selection uses fixpoint when specified" do
+    test "handles timeout option" do
       stn = %{
         time_points: MapSet.new(["A", "B"]),
         constraints: %{
@@ -85,10 +71,10 @@ defmodule AriaMinizincStnTest do
         metadata: %{}
       }
 
-      {:ok, result} = AriaMinizincStn.solve_stn(stn, solver: :fixpoint)
+      {:ok, result} = AriaMinizincStn.solve_stn(stn, timeout: 5000)
 
       assert result.consistent == true
-      assert result.metadata.solver == :fixpoint
+      assert result.metadata.solver == :minizinc
     end
   end
 
@@ -105,7 +91,7 @@ defmodule AriaMinizincStnTest do
         metadata: %{}
       }
 
-      {:ok, result} = AriaMinizincStn.solve_stn(stn, solver: :fixpoint)
+      {:ok, result} = AriaMinizincStn.solve_stn(stn)
 
       assert result.consistent == true
       assert is_map(result.metadata.solved_times)
@@ -125,7 +111,7 @@ defmodule AriaMinizincStnTest do
         metadata: %{}
       }
 
-      {:ok, result} = AriaMinizincStn.solve_stn(stn, solver: :fixpoint)
+      {:ok, result} = AriaMinizincStn.solve_stn(stn)
 
       assert result.consistent == true
     end
@@ -141,7 +127,7 @@ defmodule AriaMinizincStnTest do
         metadata: %{}
       }
 
-      {:ok, result} = AriaMinizincStn.solve_stn(stn, solver: :fixpoint)
+      {:ok, result} = AriaMinizincStn.solve_stn(stn)
 
       assert result.consistent == true
     end

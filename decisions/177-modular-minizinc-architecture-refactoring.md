@@ -51,6 +51,8 @@ Refactor the MiniZinc constraint solving system into a modular architecture with
 - [x] Update APIs to MiniZinc-only strategy
 - [x] Clean up dependencies (remove `:fixpoint` from mix.exs files)
 - [x] Update documentation to reflect architectural decision
+- [x] Fix MiniZinc output parsing to handle structured executor responses
+- [x] Verify all domain app tests pass with MiniZinc-only strategy
 
 ### Phase 3: Integration and Cleanup
 - [ ] Update all consumers to use specific domain apps

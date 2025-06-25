@@ -3,46 +3,40 @@
 
 defmodule AriaMinizincGoal do
   @moduledoc """
-  MiniZinc-based goal-oriented constraint solving with Fixpoint fallback.
+  MiniZinc-based goal-oriented constraint solving.
 
   This application provides goal-oriented planning constraint solving using MiniZinc
-  with automatic fallback to pure Elixir computation when MiniZinc is not available.
+  with fail-fast behavior when MiniZinc is not available.
 
-  ## Dual Solver Strategy
+  ## MiniZinc-Only Strategy
 
-  - **MiniZinc**: Primary solver using constraint satisfaction for goal planning
-  - **Fixpoint**: Fallback using iterative constraint propagation
-  - **Auto**: Automatically selects the best available solver
+  - **MiniZinc**: Pure MiniZinc constraint satisfaction for goal planning
+  - **Fail-fast**: Clear error reporting when MiniZinc is unavailable
 
   ## Usage
 
-      # Basic goal solving with auto solver selection
+      # Basic goal solving
       domain = %{actions: [...], predicates: [...]}
       state = %{facts: [...]}
       goals = [{:robot, :at, :location_a}, {:box, :at, :location_b}]
       options = %{optimization_type: :minimize_time}
 
       {:ok, result} = AriaMinizincGoal.solve_goals(domain, state, goals, options)
-
-      # Force specific solver
-      {:ok, result} = AriaMinizincGoal.solve_goals(domain, state, goals, options, solver: :minizinc)
-      {:ok, result} = AriaMinizincGoal.solve_goals(domain, state, goals, options, solver: :fixpoint)
   """
 
   require Logger
 
   @doc """
-  Solve goal-oriented planning problems using the specified solver strategy.
+  Solve goal-oriented planning problems using MiniZinc constraint solving.
 
   ## Parameters
   - `domain` - Planning domain with actions and predicates
   - `state` - Current state with facts
   - `goals` - List of goals in {subject, predicate, value} format
   - `options` - Planning options including optimization type
-  - `solver_options` - Solver options including :solver, :timeout
+  - `solver_options` - Solver options including :timeout
 
-  ## Solver Options
-  - `:solver` - `:auto` (default), `:minizinc`, or `:fixpoint`
+  ## Options
   - `:timeout` - Timeout in milliseconds (default: 30_000)
 
   ## Returns
@@ -54,35 +48,12 @@ defmodule AriaMinizincGoal do
       # Basic goal solving
       {:ok, result} = AriaMinizincGoal.solve_goals(domain, state, goals, options)
       result.variables  # => %{time_vars: [...], location_vars: [...], boolean_vars: [...]}
-
-      # Force specific solver
-      {:ok, result} = AriaMinizincGoal.solve_goals(domain, state, goals, options, solver: :fixpoint)
   """
   def solve_goals(domain, state, goals, options, solver_options \\ []) do
     with :ok <- validate_inputs(domain, state, goals, options) do
-      solver = Keyword.get(solver_options, :solver, :auto)
-
-      case solver do
-        :minizinc -> solve_with_minizinc(domain, state, goals, options, solver_options)
-        :fixpoint -> solve_with_fixpoint(domain, state, goals, options, solver_options)
-        :auto -> auto_select_solver(domain, state, goals, options, solver_options)
-        _ -> {:error, "Invalid solver option: #{inspect(solver)}"}
-      end
+      solve_with_minizinc(domain, state, goals, options, solver_options)
     else
       {:error, reason} -> {:error, reason}
-    end
-  end
-
-  # Auto-select the best available solver
-  defp auto_select_solver(domain, state, goals, options, solver_options) do
-    case AriaMinizincExecutor.check_availability() do
-      {:ok, _version} ->
-        case solve_with_minizinc(domain, state, goals, options, solver_options) do
-          {:ok, result} -> {:ok, result}
-          {:error, _reason} -> solve_with_fixpoint(domain, state, goals, options, solver_options)
-        end
-      {:error, _reason} ->
-        solve_with_fixpoint(domain, state, goals, options, solver_options)
     end
   end
 
@@ -118,33 +89,6 @@ defmodule AriaMinizincGoal do
     end
   end
 
-  # Solve using Fixpoint CP solver (fallback)
-  defp solve_with_fixpoint(domain, state, goals, options, solver_options) do
-    case convert_goals_to_cp_model(domain, state, goals, options) do
-      {:ok, model} ->
-        timeout = Keyword.get(solver_options, :timeout, 30_000)
-
-        # CPSolver.solve always returns {:ok, results}, never {:error, reason}
-        {:ok, results} = CPSolver.solve(model, timeout: timeout)
-        {success, solution} = extract_cp_solution(results, goals)
-
-        if success do
-          result = %{
-            status: :success,
-            solver: :fixpoint,
-            variables: solution.variables,
-            objective_value: solution.objective_value,
-            solve_time_ms: 0  # CPSolver doesn't provide timing
-          }
-          {:ok, result}
-        else
-          {:error, "No solution found with Fixpoint CP solver"}
-        end
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
 
   # Validate input parameters
   defp validate_inputs(domain, state, goals, options) do
@@ -205,21 +149,6 @@ defmodule AriaMinizincGoal do
     end
   end
 
-  # Convert goal planning problem to CP solver model
-  defp convert_goals_to_cp_model(domain, state, goals, options) do
-    try do
-      # Extract variables for CP model
-      variables = extract_variables_for_cp(goals, state)
-      constraints = generate_cp_constraints(domain, state, goals, options, variables)
-
-      # Create the CP model
-      model = CPSolver.Model.new(variables, constraints)
-      {:ok, model}
-    rescue
-      error ->
-        {:error, "Failed to convert goals to CP model: #{Exception.message(error)}"}
-    end
-  end
 
   # Extract variables from goals and state (simplified version)
   defp extract_variables(goals, _state) do
@@ -249,18 +178,6 @@ defmodule AriaMinizincGoal do
     }
   end
 
-  # Extract variables for CP solver
-  defp extract_variables_for_cp(goals, _state) do
-    goals
-    |> Enum.with_index()
-    |> Enum.flat_map(fn {{subject, predicate, _value}, index} ->
-      [
-        CPSolver.IntVariable.new(0..100, name: "time_#{subject}_#{index}"),
-        CPSolver.IntVariable.new(1..10, name: "loc_#{subject}_#{index}"),
-        CPSolver.BoolVariable.new(name: "achieved_#{subject}_#{predicate}_#{index}")
-      ]
-    end)
-  end
 
   # Generate constraints (simplified)
   defp generate_constraints(_domain, _state, goals, _options) do
@@ -272,17 +189,6 @@ defmodule AriaMinizincGoal do
     end)
   end
 
-  # Generate CP constraints
-  defp generate_cp_constraints(_domain, _state, _goals, _options, variables) do
-    # Simple constraint: boolean variables must be true
-    boolean_vars = Enum.filter(variables, fn var ->
-      String.contains?(var.name, "achieved_")
-    end)
-
-    Enum.map(boolean_vars, fn var ->
-      CPSolver.Constraint.Equal.new(var, true)
-    end)
-  end
 
   # Generate objective function
   defp generate_objective_for_variables(_goals, variables, options) do
@@ -361,37 +267,6 @@ defmodule AriaMinizincGoal do
     }
   end
 
-  # Extract solution from CP solver results
-  defp extract_cp_solution(results, goals) do
-    case results.status do
-      :all_solutions ->
-        if length(results.solutions) > 0 do
-          solution = List.first(results.solutions)
-          variables = extract_variables_from_cp_solution(solution, goals)
-
-          {true, %{
-            variables: variables,
-            objective_value: 0
-          }}
-        else
-          {false, %{}}
-        end
-
-      _ ->
-        {false, %{}}
-    end
-  end
-
-  defp extract_variables_from_cp_solution(solution, goals) do
-    # Map CP solution back to variable structure
-    num_goals = length(goals)
-
-    %{
-      time_vars: Enum.take(solution, num_goals),
-      location_vars: Enum.slice(solution, num_goals, num_goals),
-      boolean_vars: Enum.slice(solution, num_goals * 2, num_goals)
-    }
-  end
 
   # Get template path
   defp template_path do

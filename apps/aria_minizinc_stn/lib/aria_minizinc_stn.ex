@@ -3,21 +3,19 @@
 
 defmodule AriaMinizincStn do
   @moduledoc """
-  MiniZinc-based Simple Temporal Network (STN) solver with Fixpoint fallback.
+  MiniZinc-based Simple Temporal Network (STN) solver.
 
   This application provides STN constraint solving using MiniZinc constraint
-  solving with automatic fallback to pure Elixir computation when MiniZinc
-  is not available or fails.
+  solving with fail-fast behavior when MiniZinc is not available.
 
-  ## Dual Solver Strategy
+  ## MiniZinc-Only Strategy
 
-  - **MiniZinc**: Primary solver using constraint satisfaction
-  - **Fixpoint**: Fallback using iterative constraint propagation
-  - **Auto**: Automatically selects the best available solver
+  - **MiniZinc**: Pure MiniZinc constraint satisfaction solving
+  - **Fail-fast**: Clear error reporting when MiniZinc is unavailable
 
   ## Usage
 
-      # Basic STN solving with auto solver selection
+      # Basic STN solving
       stn = %{
         time_points: MapSet.new(["A", "B", "C"]),
         constraints: %{
@@ -28,23 +26,18 @@ defmodule AriaMinizincStn do
         metadata: %{}
       }
       {:ok, result} = AriaMinizincStn.solve_stn(stn)
-
-      # Force specific solver
-      {:ok, result} = AriaMinizincStn.solve_stn(stn, solver: :minizinc)
-      {:ok, result} = AriaMinizincStn.solve_stn(stn, solver: :fixpoint)
   """
 
   require Logger
 
   @doc """
-  Solve an STN using the specified solver strategy.
+  Solve an STN using MiniZinc constraint solving.
 
   ## Parameters
   - `stn` - STN data structure with time_points, constraints, etc.
-  - `options` - Solver options including :solver, :timeout
+  - `options` - Solver options including :timeout
 
-  ## Solver Options
-  - `:solver` - `:auto` (default), `:minizinc`, or `:fixpoint`
+  ## Options
   - `:timeout` - Timeout in milliseconds (default: 30_000)
 
   ## Returns
@@ -56,35 +49,12 @@ defmodule AriaMinizincStn do
       # Basic STN solving
       {:ok, result} = AriaMinizincStn.solve_stn(stn)
       result.consistent  # => true/false
-
-      # Force specific solver
-      {:ok, result} = AriaMinizincStn.solve_stn(stn, solver: :fixpoint)
   """
   def solve_stn(stn, options \\ []) do
     with :ok <- validate_stn(stn) do
-      solver = Keyword.get(options, :solver, :auto)
-
-      case solver do
-        :minizinc -> solve_with_minizinc(stn, options)
-        :fixpoint -> solve_with_fixpoint(stn, options)
-        :auto -> auto_select_solver(stn, options)
-        _ -> {:error, "Invalid solver option: #{inspect(solver)}"}
-      end
+      solve_with_minizinc(stn, options)
     else
       {:error, reason} -> {:error, reason}
-    end
-  end
-
-  # Auto-select the best available solver
-  defp auto_select_solver(stn, options) do
-    case AriaMinizincExecutor.check_availability() do
-      {:ok, _version} ->
-        case solve_with_minizinc(stn, options) do
-          {:ok, result} -> {:ok, result}
-          {:error, _reason} -> solve_with_fixpoint(stn, options)
-        end
-      {:error, _reason} ->
-        solve_with_fixpoint(stn, options)
     end
   end
 
@@ -114,23 +84,6 @@ defmodule AriaMinizincStn do
     end
   end
 
-  # Solve using Fixpoint CP solver (Fixpoint fallback)
-  defp solve_with_fixpoint(stn, options) do
-    case convert_stn_to_cp_model(stn) do
-      {:ok, model} ->
-        timeout = Keyword.get(options, :timeout, 30_000)
-
-        # CPSolver.solve always returns {:ok, results}, never {:error, reason}
-        {:ok, results} = CPSolver.solve(model, timeout: timeout)
-        {consistent, solved_times} = extract_cp_solution(results, stn)
-        updated_stn = %{stn | consistent: consistent}
-        metadata = Map.merge(updated_stn.metadata, %{solver: :fixpoint, solved_times: solved_times})
-        {:ok, %{updated_stn | metadata: metadata}}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
 
   # Validate STN structure
   defp validate_stn(stn) do
@@ -238,7 +191,7 @@ defmodule AriaMinizincStn do
     end
   end
 
-  # Parse MiniZinc JSON output
+  # Parse MiniZinc output (handles both string and structured responses)
   defp parse_minizinc_output(output) when is_binary(output) do
     case Jason.decode(output) do
       {:ok, %{"status" => "SATISFIABLE", "start_times" => start_times}} ->
@@ -252,8 +205,33 @@ defmodule AriaMinizincStn do
     end
   end
 
+  defp parse_minizinc_output(%{solution: %{start_times: start_times}} = output) when is_map(output) do
+    {:ok, %{status: :satisfiable, start_times: start_times}}
+  end
+
+  defp parse_minizinc_output(%{solution: %{status: "UNSATISFIED"}} = _output) do
+    {:ok, %{status: :unsatisfiable}}
+  end
+
+  defp parse_minizinc_output(output) when is_map(output) do
+    # Handle structured response from executor
+    case output do
+      %{raw_output: raw_output} when is_binary(raw_output) ->
+        parse_minizinc_output(raw_output)
+      %{solution: solution} when is_map(solution) ->
+        case Map.get(solution, :start_times) do
+          start_times when is_list(start_times) ->
+            {:ok, %{status: :satisfiable, start_times: start_times}}
+          _ ->
+            {:ok, %{status: :unsatisfiable}}
+        end
+      _ ->
+        {:error, "Invalid structured output format: #{inspect(output)}"}
+    end
+  end
+
   defp parse_minizinc_output(output) do
-    {:error, "Expected string output, got: #{inspect(output)}"}
+    {:error, "Expected string or map output, got: #{inspect(output)}"}
   end
 
   defp update_stn_with_solution(stn, solution) do
@@ -290,95 +268,6 @@ defmodule AriaMinizincStn do
     |> Map.new()
   end
 
-  # Convert STN to CP solver model
-  defp convert_stn_to_cp_model(stn) do
-    time_points = MapSet.to_list(stn.time_points)
-
-    if Enum.empty?(time_points) do
-      # Handle empty STN case - create a trivial model
-      dummy_var = CPSolver.IntVariable.new(0..1, name: "dummy")
-      model = CPSolver.Model.new([dummy_var], [])
-      {:ok, model}
-    else
-      # Create variables for each time point with reasonable domains
-      variables = Enum.map(time_points, fn point ->
-        CPSolver.IntVariable.new(0..1000, name: point)
-      end)
-
-      # Create constraints from STN constraints
-      constraints = create_cp_constraints(stn.constraints, variables, time_points)
-
-      # Create the model
-      model = CPSolver.Model.new(variables, constraints)
-      {:ok, model}
-    end
-  end
-
-  # Create CP constraints from STN constraints
-  defp create_cp_constraints(stn_constraints, variables, time_points) do
-    # Create a map from point names to variables
-    var_map = Enum.zip(time_points, variables) |> Map.new()
-
-    stn_constraints
-    |> Enum.filter(fn {{from, to}, {min, max}} ->
-      from != to and is_finite_constraint({min, max})
-    end)
-    |> Enum.flat_map(fn {{from, to}, {min, max}} ->
-      from_var = Map.get(var_map, from)
-      to_var = Map.get(var_map, to)
-
-      if from_var && to_var do
-        # For STN constraint: from + min <= to <= from + max
-        # We need to create: to >= from + min AND to <= from + max
-        # Using sum constraints: from + min <= to and to <= from + max
-        min_val = round(min)
-        max_val = round(max)
-
-        [
-          # to >= from + min  =>  from + min <= to
-          CPSolver.Constraint.Sum.new([from_var, min_val], :less_or_equal, to_var),
-          # to <= from + max  =>  to <= from + max
-          CPSolver.Constraint.Sum.new([to_var], :less_or_equal, [from_var, max_val])
-        ]
-      else
-        []
-      end
-    end)
-  end
-
-  # Extract solution from CP solver results
-  defp extract_cp_solution(results, stn) do
-    time_points = MapSet.to_list(stn.time_points)
-
-    # Handle empty STN case
-    if Enum.empty?(time_points) do
-      {true, %{}}
-    else
-      case results.status do
-        :all_solutions ->
-          if length(results.solutions) > 0 do
-            # Take the first solution
-            solution = List.first(results.solutions)
-
-            solved_times =
-              time_points
-              |> Enum.with_index()
-              |> Enum.map(fn {point, index} ->
-                time_value = Enum.at(solution, index, 0)
-                {point, time_value}
-              end)
-              |> Map.new()
-
-            {true, solved_times}
-          else
-            {false, %{}}
-          end
-
-        _ ->
-          {false, %{}}
-      end
-    end
-  end
 
   # Get template path
   defp template_path do

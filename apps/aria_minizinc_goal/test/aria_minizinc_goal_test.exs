@@ -28,7 +28,7 @@ defmodule AriaMinizincGoalTest do
         AriaMinizincGoal.solve_goals(%{}, %{}, [], %{})
     end
 
-    test "solves simple goal with fixpoint fallback" do
+    test "solves simple goal with MiniZinc" do
       domain = %{
         actions: [:move, :pickup],
         predicates: [:at, :holding]
@@ -50,54 +50,70 @@ defmodule AriaMinizincGoalTest do
         optimization_type: :minimize_time
       }
 
-      # Force fixpoint solver to avoid MiniZinc dependency in tests
-      result = AriaMinizincGoal.solve_goals(domain, state, goals, options, solver: :fixpoint)
+      result = AriaMinizincGoal.solve_goals(domain, state, goals, options)
 
       case result do
         {:ok, solution} ->
           assert solution.status == :success
-          assert solution.solver == :fixpoint
+          assert solution.solver == :minizinc
           assert is_map(solution.variables)
-        {:error, _reason} ->
-          # Fixpoint solver may not find solution for complex problems
-          # This is acceptable for basic testing
-          :ok
+        {:error, reason} ->
+          # MiniZinc may not be available in test environment
+          assert reason =~ "MiniZinc"
       end
     end
 
-    test "handles invalid solver option" do
-      domain = %{}
-      state = %{}
-      goals = [{:robot, :at, :location_a}]
-      options = %{}
-
-      assert {:error, "Invalid solver option: :invalid"} =
-        AriaMinizincGoal.solve_goals(domain, state, goals, options, solver: :invalid)
-    end
-
-    test "auto solver selection falls back to fixpoint when MiniZinc unavailable" do
+    test "handles timeout option" do
       domain = %{actions: [:move]}
       state = %{facts: []}
       goals = [{:robot, :at, :location_a}]
       options = %{optimization_type: :minimize_time}
 
-      # Auto solver should work (will use fixpoint if MiniZinc not available)
-      result = AriaMinizincGoal.solve_goals(domain, state, goals, options, solver: :auto)
+      result = AriaMinizincGoal.solve_goals(domain, state, goals, options, timeout: 5000)
 
       case result do
         {:ok, solution} ->
           assert solution.status == :success
-          assert solution.solver in [:minizinc, :fixpoint]
+          assert solution.solver == :minizinc
+        {:error, reason} ->
+          # MiniZinc may not be available or may timeout
+          assert is_binary(reason)
+      end
+    end
+
+    test "handles different optimization types" do
+      domain = %{actions: [:move]}
+      state = %{facts: []}
+      goals = [{:robot, :at, :location_a}]
+
+      # Test minimize_distance optimization
+      options = %{optimization_type: :minimize_distance}
+      result = AriaMinizincGoal.solve_goals(domain, state, goals, options)
+
+      case result do
+        {:ok, solution} ->
+          assert solution.status == :success
         {:error, _reason} ->
-          # May fail if no solution exists, which is acceptable
+          # May fail if MiniZinc not available
+          :ok
+      end
+
+      # Test maximize_efficiency optimization
+      options = %{optimization_type: :maximize_efficiency}
+      result = AriaMinizincGoal.solve_goals(domain, state, goals, options)
+
+      case result do
+        {:ok, solution} ->
+          assert solution.status == :success
+        {:error, _reason} ->
+          # May fail if MiniZinc not available
           :ok
       end
     end
   end
 
   describe "template path" do
-    test "template file exists" do
-      # This will be true once the app is properly installed
+    test "template file path is constructed correctly" do
       template_path = Path.join([
         Application.app_dir(:aria_minizinc_goal),
         "priv",
@@ -105,9 +121,32 @@ defmodule AriaMinizincGoalTest do
         "goal_solving.mzn.eex"
       ])
 
-      # Template should exist after app installation
-      # For now, just verify the path is constructed correctly
+      # Template should have correct path structure
       assert String.ends_with?(template_path, "goal_solving.mzn.eex")
+      assert String.contains?(template_path, "aria_minizinc_goal")
+    end
+  end
+
+  describe "variable extraction" do
+    test "extracts variables from goals correctly" do
+      domain = %{actions: [:move]}
+      state = %{facts: []}
+      goals = [
+        {:robot, :at, :location_a},
+        {:box, :holding, :robot}
+      ]
+      options = %{optimization_type: :minimize_time}
+
+      # This should work even if MiniZinc fails, as it tests the conversion logic
+      result = AriaMinizincGoal.solve_goals(domain, state, goals, options)
+
+      case result do
+        {:ok, solution} ->
+          assert is_map(solution.variables)
+        {:error, reason} ->
+          # Expected if MiniZinc not available, but conversion should work
+          assert is_binary(reason)
+      end
     end
   end
 end

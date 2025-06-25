@@ -27,7 +27,6 @@ defmodule AriaMinizincGoal.MixProject do
   defp deps do
     [
       {:aria_minizinc_executor, in_umbrella: true},
-      {:fixpoint, "~> 0.4"},
       {:jason, "~> 1.4"},
       {:timex, "~> 3.7"}
     ]
