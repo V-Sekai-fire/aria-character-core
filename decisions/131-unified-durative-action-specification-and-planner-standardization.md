@@ -158,6 +158,43 @@ The following concepts were explicitly rejected during design:
 4. **❌ TOMBSTONE: Separate `requires_agent` field** - Agents are entities with capabilities
 5. **❌ TOMBSTONE: `location` field in action metadata** - Locations are entities in `requires_entities`
 6. **❌ TOMBSTONE: `constraints` field in entity requirements** - Quantities, availability, and dynamic properties are state fluents, not action metadata
+7. **❌ TOMBSTONE: Requirement validation in action functions** - Actions assume planner has already validated requirements
+
+### Action-Level Requirement Validation (TOMBSTONED)
+
+**CRITICAL ARCHITECTURAL PRINCIPLE:** Actions must NOT validate their own requirements. This violates separation of concerns between planning and execution.
+
+**❌ WRONG - Action validating requirements:**
+
+```elixir
+@action requires_entities: [%{type: "agent", capabilities: [:cooking]}]
+def cook_meal(state, [meal_type]) do
+  # TOMBSTONED: Actions should not validate requirements
+  case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
+    {:ok, entities} -> proceed_with_cooking(state, meal_type, entities)
+    {:error, reason} -> {:error, reason}
+  end
+end
+```
+
+**✅ CORRECT - Action assumes requirements met:**
+
+```elixir
+@action requires_entities: [%{type: "agent", capabilities: [:cooking]}]
+def cook_meal(state, [meal_type]) do
+  # CORRECT: Pure state transformation, planner already validated requirements
+  state
+  |> State.set_fact("meal_status", meal_type, "cooking")
+  |> State.set_fact("chef_status", "chef_1", "busy")
+end
+```
+
+**Why this separation matters:**
+
+- **Planning Time**: Planner validates `requires_entities` against state before selecting actions
+- **Execution Time**: Actions focus purely on state transformation
+- **Performance**: No redundant validation during execution
+- **Architecture**: Clean separation between planning logic and execution logic
 
 ## Success Criteria
 

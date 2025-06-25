@@ -166,61 +166,57 @@ def validate_temporal_specification(metadata) do
 end
 ```
 
-## Entity Requirements Validation
+## Entity Requirements Validation (Planner-Level Only)
 
-### Entity Validation Framework
+### Planner-Level Entity Validation Framework
+
+**CRITICAL:** Entity validation occurs at planning time, NOT in action functions.
 
 ```elixir
-def validate_entity_requirements(metadata) do
-  case Map.get(metadata, :requires_entities, []) do
-    entities when is_list(entities) ->
-      validate_entity_list(entities)
-    invalid ->
-      {:error, [%{
-        field: "requires_entities",
-        message: "Entity requirements must be a list",
-        value: invalid,
-        expected: "List of entity requirement maps"
-      }]}
+# Planner validates requirements before action selection
+defmodule AriaEngine.Planner.EntityValidator do
+  def validate_action_requirements(state, action_metadata) do
+    case Map.get(action_metadata, :requires_entities, []) do
+      entities when is_list(entities) ->
+        validate_entity_availability(state, entities)
+      invalid ->
+        {:error, [%{
+          field: "requires_entities",
+          message: "Entity requirements must be a list",
+          value: invalid,
+          expected: "List of entity requirement maps"
+        }]}
+    end
   end
-end
 
-defp validate_single_entity(entity, index) do
-  with {:ok, type} <- validate_entity_type(entity, index),
-       {:ok, capabilities} <- validate_entity_capabilities(entity, index),
-       {:ok, constraints} <- validate_entity_constraints(entity, index) do
-    {:ok, %{type: type, capabilities: capabilities, constraints: constraints}}
+  defp validate_entity_availability(state, entity_requirements) do
+    Enum.reduce_while(entity_requirements, {:ok, []}, fn entity_req, {:ok, acc} ->
+      case find_available_entity(state, entity_req) do
+        {:ok, entity_id} -> {:cont, {:ok, [entity_id | acc]}}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
   end
-end
 
-defp validate_entity_type(entity, index) do
-  case Map.get(entity, :type) do
-    type when is_binary(type) and type != "" ->
-      {:ok, type}
-    invalid ->
-      {:error, [%{
-        field: "requires_entities[#{index}].type",
-        message: "Entity type must be a non-empty string",
-        value: invalid,
-        expected: "Non-empty string (e.g., 'agent', 'oven', 'kitchen')"
-      }]}
-  end
-end
+  defp find_available_entity(state, %{type: type, capabilities: capabilities}) do
+    # Find entities with required type and capabilities that are available
+    entities = find_entities_with_capabilities(state, capabilities)
+    |> Enum.filter(fn entity_id ->
+      State.get_fact(state, "type", entity_id) == type and
+      State.get_fact(state, "available", entity_id) == true
+    end)
 
-defp validate_entity_capabilities(entity, index) do
-  case Map.get(entity, :capabilities, []) do
-    capabilities when is_list(capabilities) ->
-      validate_capability_list(capabilities, index)
-    invalid ->
-      {:error, [%{
-        field: "requires_entities[#{index}].capabilities",
-        message: "Entity capabilities must be a list of atoms",
-        value: invalid,
-        expected: "List of capability atoms (e.g., [:cooking, :heating])"
-      }]}
+    case entities do
+      [entity_id | _] -> {:ok, entity_id}
+      [] -> {:error, "No available entity with type #{type} and capabilities #{inspect(capabilities)}"}
+    end
   end
 end
 ```
+
+**❌ TOMBSTONED: Entity validation in action functions**
+
+Actions must NOT validate their own requirements. This is the planner's responsibility.
 
 ## Temporal Conditions/Effects System
 

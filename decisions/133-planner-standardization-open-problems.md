@@ -350,7 +350,9 @@ end
 
 ## Validation Framework Architecture
 
-### Comprehensive Domain Validation
+### Comprehensive Domain Validation (Planning-Time Only)
+
+**CRITICAL:** All validation occurs at planning time. Actions assume preconditions are met.
 
 ```elixir
 defmodule AriaEngine.Domain.Validator do
@@ -362,7 +364,7 @@ defmodule AriaEngine.Domain.Validator do
     expected: String.t()
   }
   
-  # Main validation entry point
+  # Main validation entry point (planning-time)
   def validate_domain(domain) do
     with {:ok, _} <- validate_actions(domain),
          {:ok, _} <- validate_methods(domain),
@@ -373,7 +375,7 @@ defmodule AriaEngine.Domain.Validator do
     end
   end
   
-  # Action metadata validation
+  # Action metadata validation (planning-time)
   def validate_action_metadata(metadata) do
     validators = [
       &validate_temporal_specification/1,
@@ -384,8 +386,22 @@ defmodule AriaEngine.Domain.Validator do
     
     run_validators(metadata, validators)
   end
+  
+  # Planner validates requirements before action selection
+  def validate_action_preconditions(state, action_metadata) do
+    case Map.get(action_metadata, :requires_entities, []) do
+      entities when is_list(entities) ->
+        AriaEngine.Planner.EntityValidator.validate_action_requirements(state, action_metadata)
+      invalid ->
+        {:error, "Invalid entity requirements format"}
+    end
+  end
 end
 ```
+
+**❌ TOMBSTONED: Validation within action functions**
+
+Actions must focus purely on state transformation and assume the planner has validated all preconditions.
 
 ### Cross-Domain Consistency Validation
 

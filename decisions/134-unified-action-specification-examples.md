@@ -38,32 +38,11 @@ defmodule MyApp.Domains.CookingDomain do
             {:during, "kitchen_available"}
           ]
   def cook_meal(state, [meal_type]) do
-    # Validate entity requirements (capabilities only)
-    case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
-      {:ok, entities} ->
-        # Validate quantities using state queries
-        case validate_ingredient_quantities(state, meal_type) do
-          {:ok, _} -> execute_cooking_with_constraints(state, meal_type, entities)
-          {:error, reason} -> {:error, reason}
-        end
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-  
-  # State-based quantity validation (CORRECT approach)
-  defp validate_ingredient_quantities(state, meal_type) do
-    required_ingredients = get_recipe_requirements(meal_type)
-    
-    Enum.reduce_while(required_ingredients, {:ok, []}, fn {ingredient, min_qty}, {:ok, acc} ->
-      available_qty = State.get_fact(state, "quantity", ingredient) || 0
-      
-      if available_qty >= min_qty do
-        {:cont, {:ok, [ingredient | acc]}}
-      else
-        {:halt, {:error, "Insufficient #{ingredient}: need #{min_qty}, have #{available_qty}"}}
-      end
-    end)
+    # CORRECT: Pure state transformation, planner already validated requirements
+    state
+    |> State.set_fact("meal_status", meal_type, "cooking")
+    |> State.set_fact("chef_status", "chef_1", "busy")
+    |> State.set_fact("oven_status", "oven_1", "in_use")
   end
   
   @action duration: "PT30M"
@@ -406,6 +385,41 @@ end
 - No automatic `split_multigoal` when domain methods fail
 - No automatic MinizinC optimization without explicit domain choice
 - Domain authors must explicitly handle all multigoal scenarios
+
+**Action-level requirement validation (TOMBSTONED):**
+
+**❌ WRONG - Action validating its own requirements:**
+
+```elixir
+@action requires_entities: [%{type: "agent", capabilities: [:cooking]}]
+def cook_meal(state, [meal_type]) do
+  # TOMBSTONED: Actions should not validate requirements
+  case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
+    {:ok, entities} -> proceed_with_cooking(state, meal_type, entities)
+    {:error, reason} -> {:error, reason}
+  end
+end
+```
+
+**✅ CORRECT - Action assumes requirements met:**
+
+```elixir
+@action requires_entities: [%{type: "agent", capabilities: [:cooking]}]
+def cook_meal(state, [meal_type]) do
+  # CORRECT: Pure state transformation, planner already validated requirements
+  state
+  |> State.set_fact("meal_status", meal_type, "cooking")
+  |> State.set_fact("chef_status", "chef_1", "busy")
+end
+```
+
+**Why action-level validation is tombstoned:**
+
+- **Planning Time**: Planner validates `requires_entities` against state before selecting actions
+- **Execution Time**: Actions focus purely on state transformation
+- **Performance**: No redundant validation during execution
+- **Architecture**: Clean separation between planning logic and execution logic
+- **Commands Handle Failures**: Real-world execution failures are handled by commands, not actions
 
 ## Usage Examples
 
