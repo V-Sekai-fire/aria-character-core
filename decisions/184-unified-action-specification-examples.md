@@ -1425,24 +1425,39 @@ defmodule MyApp.Domains.AdvancedTemporalDomain do
 end
 ```
 
-### Temporal Condition Semantics Examples
+### Temporal Condition Semantics Examples with Type Specifications
 
-**Critical Distinction Demonstrated:**
+**Critical Distinction with Elixir Types:**
 
 ```elixir
+@type goal :: {predicate :: String.t(), subject :: String.t(), value :: any()}
+@type task :: {task_name :: atom(), args :: list()}
+@type action :: {action_name :: atom(), args :: list()}
+@type multigoal :: [goal()]  # List of goals that must ALL be true simultaneously
+@type todo_item :: goal() | task() | action() | multigoal()
+@type temporal_condition_list :: [todo_item()]
+
 # MULTIGOAL in temporal conditions - ALL goals must be true SIMULTANEOUSLY
 at_start: [
-  [{"clean", "workspace", true}, {"organized", "ingredients", true}, {"ready", "equipment", true}]
-  # ↑ This is ONE multigoal - all three conditions must be satisfied at the same moment
+  [{"clean", "workspace", true}, {"organized", "ingredients", true}, {"ready", "equipment", true}] :: multigoal()
+  # ↑ This is ONE multigoal todo item - all three conditions must be satisfied at the same moment
 ]
 
 # SEQUENTIAL GOAL LIST in temporal conditions - goals processed one after another
 at_start: [
-  {"clean", "workspace", true},      # Goal 1: Check if workspace is clean
-  {"organized", "ingredients", true}, # Goal 2: Check if ingredients are organized  
-  {"ready", "equipment", true}       # Goal 3: Check if equipment is ready
-  # ↑ These are THREE separate goals - checked/achieved sequentially
+  {"clean", "workspace", true} :: goal(),      # Goal 1: Check if workspace is clean
+  {"organized", "ingredients", true} :: goal(), # Goal 2: Check if ingredients are organized  
+  {"ready", "equipment", true} :: goal()       # Goal 3: Check if equipment is ready
+  # ↑ These are THREE separate goal todo items - checked/achieved sequentially
 ]
+
+# MIXED TODO TYPES in temporal conditions
+at_start: [
+  {"available", "chef_1", true} :: goal(),           # State condition check
+  {:preheat_workspace, []} :: task(),                # Task decomposition and execution
+  {:lock_kitchen_door, []} :: action(),              # Direct action execution
+  [{"clean", "workspace", true}, {"organized", "ingredients", true}] :: multigoal()  # Simultaneous goals
+] :: temporal_condition_list()
 ```
 
 ### Mixed Todo Type Processing Examples

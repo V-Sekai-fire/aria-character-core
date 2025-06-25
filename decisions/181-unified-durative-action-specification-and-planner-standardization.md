@@ -239,12 +239,58 @@ Temporal conditions (`at_start`, `over_all`, `at_end`) accept **any todo list it
 }
 ```
 
-### Temporal Condition Semantics
+### Temporal Condition Semantics with Type Specifications
 
-**Critical Distinction:**
+**Critical Distinction with Elixir Types:**
 
-- **Multigoal**: `MultiGoal%{goal1, goal2, goal3}` - ALL goals must be true **simultaneously**
-- **Sequential Goal List**: `[goal1, goal2, goal3]` as separate todo items - goals achieved **sequentially**
+```elixir
+@type goal :: {predicate :: String.t(), subject :: String.t(), value :: any()}
+@type task :: {task_name :: atom(), args :: list()}
+@type action :: {action_name :: atom(), args :: list()}
+@type multigoal :: [goal()]  # List of goals that must ALL be true simultaneously
+@type todo_item :: goal() | task() | action() | multigoal()
+@type temporal_condition_list :: [todo_item()]
+
+# MULTIGOAL (simultaneous requirement)
+multigoal :: [goal()] = [
+  {"clean", "workspace", true},
+  {"organized", "ingredients", true}, 
+  {"ready", "equipment", true}
+]
+# ↑ This is ONE multigoal todo item - all three goals must be satisfied at the same moment
+
+# SEQUENTIAL GOAL LIST (processed one after another)
+sequential_goals :: [goal()] = [
+  {"clean", "workspace", true},      # Goal 1: Check/achieve workspace cleanliness
+  {"organized", "ingredients", true}, # Goal 2: Check/achieve ingredient organization
+  {"ready", "equipment", true}       # Goal 3: Check/achieve equipment readiness
+]
+# ↑ These are THREE separate goal todo items - processed sequentially
+```
+
+**In Temporal Conditions:**
+
+```elixir
+# Example temporal conditions with type annotations
+conditions: %{
+  at_start: [
+    # Individual goals (processed sequentially)
+    {"available", "chef_1", true} :: goal(),
+    {"temperature", "oven", {:>=, 350}} :: goal(),
+    
+    # Tasks (decomposed and executed)
+    {:preheat_workspace, []} :: task(),
+    {:gather_team, ["cooking_crew"]} :: task(),
+    
+    # Actions (executed directly)
+    {:lock_kitchen_door, []} :: action(),
+    {:start_timer, ["session"]} :: action(),
+    
+    # Multigoal (ALL goals must be true simultaneously)
+    [{"clean", "workspace", true}, {"organized", "ingredients", true}] :: multigoal()
+  ]
+}
+```
 
 **Temporal Condition Types:**
 
