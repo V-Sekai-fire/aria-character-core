@@ -288,15 +288,21 @@ defmodule AriaMinizincStnComprehensiveTest do
         metadata: %{}
       }
 
-      {:ok, result} = AriaMinizincStn.solve_stn(stn)
+      result = AriaMinizincStn.solve_stn(stn)
 
-      if result.consistent == true do
-        solved_times = result.metadata.solved_times
-        assert solved_times["B"] >= solved_times["A"] + 1000000
-      else
-        # Handle unsatisfiable case gracefully - very large bounds exceed solver domain
-        assert result.consistent == false
-        assert result.metadata.solved_times == %{}
+      case result do
+        {:ok, solved_stn} ->
+          if solved_stn.consistent == true do
+            solved_times = solved_stn.metadata.solved_times
+            assert solved_times["B"] >= solved_times["A"] + 1000000
+          else
+            # Handle unsatisfiable case gracefully - very large bounds exceed solver domain
+            assert solved_stn.consistent == false
+            assert solved_stn.metadata.solved_times == %{}
+          end
+        {:error, reason} ->
+          # Very large bounds exceed solver domain, expect error
+          assert is_binary(reason)
       end
     end
   end

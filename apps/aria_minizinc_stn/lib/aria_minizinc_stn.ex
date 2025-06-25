@@ -89,9 +89,9 @@ defmodule AriaMinizincStn do
             # Try to parse the raw output first, then fall back to parsed solution
             raw_output = Map.get(executor_result, :raw_output, "")
 
-            case parse_minizinc_output(raw_output) do
+            case parse_minizinc_output(raw_output, template_vars) do
               {:ok, %{status: :unsatisfiable}} ->
-                {:error, :unsatisfiable}
+                {:error, "STN is unsatisfiable - constraints are inconsistent"}
               {:ok, solution} ->
                 updated_stn = update_stn_with_solution(stn, solution)
                 {:ok, %{updated_stn | metadata: Map.put(updated_stn.metadata, :solver, :minizinc)}}
@@ -143,12 +143,21 @@ defmodule AriaMinizincStn do
       time_point_map =
         time_points |> Enum.with_index(1) |> Map.new(fn {point, index} -> {point, index} end)
 
-      distance_matrix = build_distance_matrix(stn.constraints, time_point_map)
+      %{lower_bounds: lower_bounds, upper_bounds: upper_bounds} = build_distance_matrix(stn.constraints, time_point_map)
+
+      # Pre-generate the output format string to avoid mixing EEx and MiniZinc scoping
+      output_pairs = time_points
+        |> Enum.with_index(1)
+        |> Enum.map(fn {name, index} -> "\"\\\"#{name}\\\": \" ++ show(timepoints[#{index}])" end)
+
+      output_format = "join(\", \", [#{Enum.join(output_pairs, ", ")}])"
 
       template_vars = %{
         num_timepoints: length(time_points),
-        distance_matrix: distance_matrix,
+        lower_bounds: lower_bounds,
+        upper_bounds: upper_bounds,
         timepoint_names: time_points,
+        output_format: output_format,
         time_point_map: time_point_map
       }
 
@@ -160,21 +169,38 @@ defmodule AriaMinizincStn do
   defp build_distance_matrix(constraint_map, time_point_map) do
     num_points = map_size(time_point_map)
 
-    # Initialize matrix with default bounds
-    for i <- 1..num_points, j <- 1..num_points, into: %{} do
+    # Build flattened matrices as lists for template rendering
+    lower_bounds = for i <- 1..num_points, j <- 1..num_points do
       if i == j do
-        {{i, j}, {0, 0}}  # Self-constraints are always 0
+        0  # Self-constraints are always 0
       else
         # Find constraint between timepoints
         point_i = get_point_by_index(time_point_map, i)
         point_j = get_point_by_index(time_point_map, j)
 
         case Map.get(constraint_map, {point_i, point_j}) do
-          {min_bound, max_bound} -> {{i, j}, {round(min_bound), round(max_bound)}}
-          nil -> {{i, j}, {-1000, 1000}}  # Default unconstrained bounds
+          {min_bound, _max_bound} when is_number(min_bound) -> round(min_bound)
+          _ -> -1000  # Default unconstrained lower bound
         end
       end
     end
+
+    upper_bounds = for i <- 1..num_points, j <- 1..num_points do
+      if i == j do
+        0  # Self-constraints are always 0
+      else
+        # Find constraint between timepoints
+        point_i = get_point_by_index(time_point_map, i)
+        point_j = get_point_by_index(time_point_map, j)
+
+        case Map.get(constraint_map, {point_i, point_j}) do
+          {_min_bound, max_bound} when is_number(max_bound) -> round(max_bound)
+          _ -> 1000  # Default unconstrained upper bound
+        end
+      end
+    end
+
+    %{lower_bounds: lower_bounds, upper_bounds: upper_bounds}
   end
 
   defp get_point_by_index(time_point_map, index) do
@@ -188,12 +214,17 @@ defmodule AriaMinizincStn do
 
 
   # Parse MiniZinc output (handles both string and structured responses)
-  defp parse_minizinc_output(output) when is_binary(output) do
+  defp parse_minizinc_output(output, template_vars) when is_binary(output) do
+    Logger.debug("Parsing MiniZinc output: #{inspect(output)}")
     cond do
       String.contains?(output, "=====UNSATISFIABLE=====") ->
         {:ok, %{status: :unsatisfiable}}
       true ->
-        case Jason.decode(output) do
+        # Clean the output by removing the MiniZinc separator
+        clean_output = output |> String.split("----------") |> List.first() |> String.trim()
+        Logger.debug("Cleaned output for JSON parsing: #{inspect(clean_output)}")
+
+        case Jason.decode(clean_output) do
           {:ok, %{"status" => "SATISFIABLE", "timepoints" => timepoints}} ->
             {:ok, %{status: :satisfiable, timepoints: timepoints}}
           {:ok, %{"status" => "SATISFIABLE", "start_times" => start_times}} ->
@@ -201,7 +232,13 @@ defmodule AriaMinizincStn do
             {:ok, %{status: :satisfiable, start_times: start_times}}
           {:ok, %{"status" => "UNSATISFIABLE"}} ->
             {:ok, %{status: :unsatisfiable}}
+          {:ok, %{"timepoints" => timepoints}} when is_list(timepoints) ->
+            # Handle raw timepoints array from MiniZinc JSON output
+            Logger.debug("Found raw timepoints array: #{inspect(timepoints)}")
+            timepoint_map = convert_timepoints_to_map(timepoints, template_vars)
+            {:ok, %{status: :satisfiable, timepoints: timepoint_map}}
           {:ok, parsed} ->
+            Logger.debug("Unmatched JSON parse result: #{inspect(parsed)}")
             {:error, "Invalid result format: #{inspect(parsed)}"}
           {:error, reason} ->
             {:error, "JSON decode failed: #{inspect(reason)}"}
@@ -209,19 +246,11 @@ defmodule AriaMinizincStn do
     end
   end
 
-  defp parse_minizinc_output(%{solution: %{start_times: start_times}} = output) when is_map(output) do
-    {:ok, %{status: :satisfiable, start_times: start_times}}
-  end
-
-  defp parse_minizinc_output(%{solution: %{status: "UNSATISFIED"}} = _output) do
-    {:ok, %{status: :unsatisfiable}}
-  end
-
-  defp parse_minizinc_output(output) when is_map(output) do
+  defp parse_minizinc_output(output, template_vars) when is_map(output) do
     # Handle structured response from executor
     case output do
       %{raw_output: raw_output} when is_binary(raw_output) ->
-        parse_minizinc_output(raw_output)
+        parse_minizinc_output(raw_output, template_vars)
       %{solution: solution} when is_map(solution) ->
         case Map.get(solution, :start_times) do
           start_times when is_list(start_times) ->
@@ -234,8 +263,27 @@ defmodule AriaMinizincStn do
     end
   end
 
-  defp parse_minizinc_output(output) do
+  defp parse_minizinc_output(output, _template_vars) do
     {:error, "Expected string or map output, got: #{inspect(output)}"}
+  end
+
+  # Convert raw timepoints array to named timepoint map
+  defp convert_timepoints_to_map(timepoints, template_vars) do
+    timepoint_names = Map.get(template_vars, :timepoint_names, [])
+
+    Logger.debug("Converting timepoints: #{inspect(timepoints)} with names: #{inspect(timepoint_names)}")
+
+    result = timepoint_names
+    |> Enum.with_index()
+    |> Enum.map(fn {name, index} ->
+      value = Enum.at(timepoints, index, 0)
+      Logger.debug("Mapping #{name} (index #{index}) to value #{value}")
+      {name, value}
+    end)
+    |> Map.new()
+
+    Logger.debug("Final timepoint map: #{inspect(result)}")
+    result
   end
 
   defp update_stn_with_solution(stn, solution) do

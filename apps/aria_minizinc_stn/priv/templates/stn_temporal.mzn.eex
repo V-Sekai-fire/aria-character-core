@@ -11,20 +11,12 @@ array[1..num_timepoints] of var -1000..1000: timepoints;
 % matrix[i,j] represents bounds on (timepoints[j] - timepoints[i])
 % Lower bounds matrix
 array[1..num_timepoints, 1..num_timepoints] of int: lower_bounds = array2d(1..num_timepoints, 1..num_timepoints, [
-<%= for i <- 1..@num_timepoints do %>
-  <%= for j <- 1..@num_timepoints do %>
-    <%= if i == j do %>0<% else %><%= Map.get(@distance_matrix, {i, j}, {-1000, 1000}) |> elem(0) %><% end %><%= if i < @num_timepoints or j < @num_timepoints do %>,<% end %>
-  <% end %>
-<% end %>
+<%= Enum.join(@lower_bounds, ", ") %>
 ]);
 
 % Upper bounds matrix
 array[1..num_timepoints, 1..num_timepoints] of int: upper_bounds = array2d(1..num_timepoints, 1..num_timepoints, [
-<%= for i <- 1..@num_timepoints do %>
-  <%= for j <- 1..@num_timepoints do %>
-    <%= if i == j do %>0<% else %><%= Map.get(@distance_matrix, {i, j}, {-1000, 1000}) |> elem(1) %><% end %><%= if i < @num_timepoints or j < @num_timepoints do %>,<% end %>
-  <% end %>
-<% end %>
+<%= Enum.join(@upper_bounds, ", ") %>
 ]);
 
 % STN Constraints: For all pairs (i,j), enforce bounds on timepoint differences
@@ -42,6 +34,6 @@ solve satisfy;
 % Output solution with timepoint names
 output [
   "{\"status\": \"SATISFIABLE\", \"timepoints\": {" ++
-  join(", ", ["\"" ++ "<%= Enum.at(@timepoint_names, i-1) %>" ++ "\": " ++ show(timepoints[i]) | i in 1..num_timepoints]) ++
+  <%= @output_format %> ++
   "}, \"result\": \"consistent\"}"
 ];
