@@ -373,7 +373,7 @@ defp build_constrained_search_prompt(budget, focus, blacklist, repetition_strate
   - Expected accuracy improvement for each approach category
   - Risk assessment for each planned approach
   
-  Focus on strategies most likely to beat 34% human baseline performance.
+  Focus on strategies most likely to beat 34% llm baseline performance.
   """
 end
 ```
@@ -472,7 +472,7 @@ config :aria_arc,
 - LLM becomes intelligent reasoning partner in ARC puzzle solving
 - Search efficiency dramatically improved through blacklist and working element management
 - Hybrid approach combines best of computational search and LLM reasoning
-- Significant contribution to beating 34% human success rate
+- Significant contribution to beating 34% llm success rate
 - Establishes pattern for LLM integration in complex problem-solving domains
 
 **If Failed:**
