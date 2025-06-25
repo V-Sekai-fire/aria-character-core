@@ -26,6 +26,21 @@ defmodule AriaMinizincGoal do
 
   require Logger
 
+  @type domain :: map()
+  @type state :: map()
+  @type goal :: {atom(), atom(), atom()}
+  @type goals :: [goal()]
+  @type options :: map()
+  @type solver_options :: keyword()
+  @type solution :: %{
+          status: atom(),
+          solver: atom(),
+          variables: map(),
+          objective_value: number(),
+          solve_time_ms: non_neg_integer()
+        }
+  @type error_reason :: String.t()
+
   @doc """
   Solve goal-oriented planning problems using MiniZinc constraint solving.
 
@@ -49,6 +64,7 @@ defmodule AriaMinizincGoal do
       {:ok, result} = AriaMinizincGoal.solve_goals(domain, state, goals, options)
       result.variables  # => %{time_vars: [...], location_vars: [...], boolean_vars: [...]}
   """
+  @spec solve_goals(domain(), state(), goals(), options(), solver_options()) :: {:ok, solution()} | {:error, error_reason()}
   def solve_goals(domain, state, goals, options, solver_options \\ []) do
     with :ok <- validate_inputs(domain, state, goals, options) do
       solve_with_minizinc(domain, state, goals, options, solver_options)
