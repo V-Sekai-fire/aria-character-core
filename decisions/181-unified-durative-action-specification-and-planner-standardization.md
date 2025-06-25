@@ -198,7 +198,7 @@ This feels weird because:
 2. **The planner decides when to use them** - it searches through combinations
 3. **You describe capabilities, not procedures** - "I can cook IF I have ingredients" vs "get ingredients, then cook"
 
-### Why This "Inversion" Exists
+### Why is this backwards?
 
 The planning approach handles complexity that would be nightmare to code imperatively:
 
