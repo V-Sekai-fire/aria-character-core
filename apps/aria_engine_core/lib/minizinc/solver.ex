@@ -27,8 +27,8 @@ defmodule AriaEngine.MiniZinc.Solver do
       Logger.debug("Solving MiniZinc problem with #{problem_data.metadata.variable_count} variables")
 
       # Extract solving parameters
-      timeout = Map.get(options, :timeout, 30_000)
-      solver_type = Map.get(options, :solver, :chuffed)
+      _timeout = Map.get(options, :timeout, 30_000)
+      _solver_type = Map.get(options, :solver, :chuffed)
 
       # For now, provide a mock solution since we don't have MiniZinc installed
       # In a real implementation, this would call the MiniZinc solver

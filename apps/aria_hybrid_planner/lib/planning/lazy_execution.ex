@@ -60,13 +60,8 @@ defmodule AriaEngine.Planning.LazyExecution do
   # Plan goals one by one in sequence
   defp plan_goals_sequentially(domain, initial_state, goals, options) do
     {actions, final_state} = Enum.reduce(goals, {[], initial_state}, fn goal, {acc_actions, current_state} ->
-      case plan_single_goal(domain, current_state, goal, options) do
-        {:ok, goal_actions, new_state} ->
-          {acc_actions ++ goal_actions, new_state}
-        {:error, _reason} ->
-          # If we can't achieve a goal, continue with others
-          {acc_actions, current_state}
-      end
+      {:ok, goal_actions, new_state} = plan_single_goal(domain, current_state, goal, options)
+      {acc_actions ++ goal_actions, new_state}
     end)
 
     {actions, final_state}
@@ -97,7 +92,7 @@ defmodule AriaEngine.Planning.LazyExecution do
   end
 
   # Generate actions to achieve a specific goal
-  defp generate_actions_for_goal(domain, state, {subject, predicate, value}, options) do
+  defp generate_actions_for_goal(_domain, state, {subject, predicate, value}, options) do
     base_time = Map.get(options, :start_time, 0)
 
     case predicate do

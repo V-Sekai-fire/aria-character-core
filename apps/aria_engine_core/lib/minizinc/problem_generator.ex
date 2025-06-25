@@ -62,7 +62,7 @@ defmodule AriaEngine.MiniZinc.ProblemGenerator do
   end
 
   # Extract decision variables from goals and state
-  defp extract_variables(goals, state) do
+  defp extract_variables(goals, _state) do
     # Extract entities and their possible values
     entities = goals
     |> Enum.map(fn {subject, _predicate, _value} -> subject end)
@@ -111,7 +111,7 @@ defmodule AriaEngine.MiniZinc.ProblemGenerator do
   end
 
   # Generate temporal ordering constraints
-  defp generate_temporal_constraints(goals, options) do
+  defp generate_temporal_constraints(_goals, options) do
     if Map.get(options, :temporal_ordering, false) do
       [
         "constraint forall(i in 1..num_entities-1) (entity_time[i] <= entity_time[i+1]);"
@@ -122,7 +122,7 @@ defmodule AriaEngine.MiniZinc.ProblemGenerator do
   end
 
   # Generate optimization objective
-  defp generate_objective(goals, options) do
+  defp generate_objective(_goals, options) do
     case Map.get(options, :optimization_type, :minimize_time) do
       :minimize_time ->
         "minimize max(entity_time);"
