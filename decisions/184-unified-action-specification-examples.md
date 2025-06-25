@@ -178,9 +178,9 @@ defmodule MyApp.Domains.CookingDomain do
 def cook_meal(state, [meal_type]) do
   # CORRECT: Pure state transformation, planner already validated requirements
   state
-  |> AriaState.ObjectState.set_fact("meal_status", meal_type, "cooking")
-  |> AriaState.ObjectState.set_fact("chef_status", "chef_1", "busy")
-  |> AriaState.ObjectState.set_fact("oven_status", "oven_1", "in_use")
+  |> AriaState.RelationalState.set_fact("meal_status", meal_type, "cooking")
+  |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
+  |> AriaState.RelationalState.set_fact("oven_status", "oven_1", "in_use")
 end
   
   @action duration: "PT30M",

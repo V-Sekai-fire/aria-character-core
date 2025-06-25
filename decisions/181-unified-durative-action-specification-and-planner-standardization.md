@@ -131,8 +131,8 @@ defmodule MyApp.Domains.CookingDomain do
   def cook_meal(state, [meal_type]) do
     # Pure state transformation, planner already validated requirements
     state
-    |> AriaState.ObjectState.set_fact("meal_status", meal_type, "cooking")
-    |> AriaState.ObjectState.set_fact("chef_status", "chef_1", "busy")
+    |> AriaState.RelationalState.set_fact("meal_status", meal_type, "cooking")
+    |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
   end
 
   # Fixed scheduling example with @action attributes
@@ -146,8 +146,8 @@ defmodule MyApp.Domains.CookingDomain do
   def meeting(state, [participants]) do
     # Implementation
     state
-    |> AriaState.ObjectState.set_fact("meeting_status", "team_meeting", "in_progress")
-    |> AriaState.ObjectState.set_fact("room_status", "conference_room_1", "occupied")
+    |> AriaState.RelationalState.set_fact("meeting_status", "team_meeting", "in_progress")
+    |> AriaState.RelationalState.set_fact("room_status", "conference_room_1", "occupied")
   end
 end
 ```
@@ -206,7 +206,7 @@ end
 **ONLY use direct fact checking:**
 
 ```elixir
-AriaState.ObjectState.get_fact(state, subject, predicate)  # ✅ DIRECT FACT CHECKING (supports temporal queries)
+AriaState.RelationalState.get_fact(state, predicate, subject)  # ✅ DIRECT FACT CHECKING (supports temporal queries)
 ```
 
 **DEPRECATED approaches:**
@@ -288,8 +288,8 @@ end
 def cook_meal(state, [meal_type]) do
   # CORRECT: Pure state transformation, planner already validated requirements
   state
-  |> AriaState.ObjectState.set_fact("meal_status", meal_type, "cooking")
-  |> AriaState.ObjectState.set_fact("chef_status", "chef_1", "busy")
+  |> AriaState.RelationalState.set_fact("meal_status", meal_type, "cooking")
+  |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
 end
 ```
 
