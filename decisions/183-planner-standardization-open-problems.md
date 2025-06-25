@@ -353,12 +353,16 @@ Clear separation between planning-time actions and execution-time commands:
 
 ```elixir
 @action duration: "PT2H", requires_entities: [...]
+@action duration: "PT2H",
+        requires_entities: [
+          %{type: "chef", capabilities: [:cooking]},
+          %{type: "oven", capabilities: [:heating]}
+        ]
 def cook_meal(state, [meal_type]) do
-  # Planning-time logic - assumes success for planning
-  case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
-    {:ok, entities} -> {:ok, updated_state}
-    {:error, reason} -> {:error, reason}
-  end
+  # CORRECT: Pure state transformation, planner already validated requirements
+  state
+  |> AriaState.ObjectState.set_fact("meal_status", meal_type, "cooking")
+  |> AriaState.ObjectState.set_fact("chef_status", "chef_1", "busy")
 end
 ```
 
@@ -521,6 +525,77 @@ end
 **❌ TOMBSTONED: Validation within action functions**
 
 Actions must focus purely on state transformation and assume the planner has validated all preconditions.
+
+## CRITICAL ENFORCEMENT: Function Attribute Requirements
+
+**Every function that integrates with the planner system MUST have the corresponding attribute:**
+
+### Required Attribute Patterns
+
+**Planner Actions:**
+```elixir
+@action duration: "PT2H", requires_entities: [...]
+def action_name(state, args) do
+  # Can reference @action metadata
+end
+```
+
+**Execution Commands:**
+```elixir
+@command
+def command_name(state, args) do
+  # Execution-time logic only
+end
+```
+
+**Task Methods:**
+```elixir
+@task_method
+def task_name(state, args) do
+  # Task decomposition logic
+end
+```
+
+**Unigoal Methods:**
+```elixir
+@unigoal_method predicate: "location"
+def method_name(state, [subject, value]) do
+  # Goal decomposition logic
+end
+```
+
+**Multigoal Methods:**
+```elixir
+@multigoal_method goal_pattern: :pattern_name
+def method_name(state, multigoal) do
+  # Multigoal handling logic
+end
+```
+
+### Violation Examples (FORBIDDEN)
+
+❌ **WRONG - No attribute but references planner metadata:**
+```elixir
+def cook_meal(state, [meal_type]) do  # No @action attribute
+  case validate(@action[:requires_entities]) do  # ❌ References non-existent metadata
+end
+```
+
+❌ **WRONG - No attribute but presented as planner function:**
+```elixir
+def travel_to_location(state, [subject, target]) do  # No @unigoal_method attribute
+  # Presented as unigoal method but not registered with planner
+end
+```
+
+✅ **CORRECT - Helper function (no planner integration):**
+```elixir
+defp calculate_cooking_time(meal_type) do  # Private helper
+  # No planner metadata references, no attribute needed
+end
+```
+
+**ENFORCEMENT:** Functions without attributes are helper functions only - no planner integration allowed.
 
 ### Cross-Domain Consistency Validation
 

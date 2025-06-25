@@ -158,22 +158,29 @@ defmodule MyApp.Domains.CookingDomain do
           requires_entities: [
             %{type: "agent", capabilities: [:cooking, :menu_planning]},
             %{type: "oven", capabilities: [:heating, :baking]},
-            %{type: "ingredient", capabilities: [:consumable]}
+            %{type: "kitchen", capabilities: [:workspace]},
+            %{type: "flour", capabilities: [:consumable]},
+            %{type: "eggs", capabilities: [:consumable]},
+            %{type: "mixing_bowl", capabilities: [:container, :reusable]}
           ],
           mutual_exclusion: ["kitchen_cleanup"],
           temporal_constraints: [
             {:before, "gather_ingredients"},
             {:during, "kitchen_available"}
           ]
-  def cook_meal(state, [meal_type]) do
-    # CORRECT: Pure state transformation, planner already validated requirements
-    state
-    |> State.set_fact("meal_status", meal_type, "cooking")
-    |> State.set_fact("chef_status", "chef_1", "busy")
-    |> State.set_fact("oven_status", "oven_1", "in_use")
-  end
+def cook_meal(state, [meal_type]) do
+  # CORRECT: Pure state transformation, planner already validated requirements
+  state
+  |> AriaState.ObjectState.set_fact("meal_status", meal_type, "cooking")
+  |> AriaState.ObjectState.set_fact("chef_status", "chef_1", "busy")
+  |> AriaState.ObjectState.set_fact("oven_status", "oven_1", "in_use")
+end
   
-  @action duration: "PT30M"
+  @action duration: "PT30M",
+          requires_entities: [
+            %{type: "agent", capabilities: [:shopping]},
+            %{type: "market", capabilities: [:ingredient_source]}
+          ]
   def gather_ingredients(state, [task_name]) do
     # Planning-time logic for ingredient gathering
     case find_available_ingredients(state, task_name) do
@@ -585,6 +592,77 @@ end
 - **Performance**: No redundant validation during execution
 - **Architecture**: Clean separation between planning logic and execution logic
 - **Commands Handle Failures**: Real-world execution failures are handled by commands, not actions
+
+## CRITICAL ENFORCEMENT: Function Attribute Requirements
+
+**Every function that integrates with the planner system MUST have the corresponding attribute:**
+
+### Required Attribute Patterns
+
+**Planner Actions:**
+```elixir
+@action duration: "PT2H", requires_entities: [...]
+def action_name(state, args) do
+  # Can reference @action metadata
+end
+```
+
+**Execution Commands:**
+```elixir
+@command
+def command_name(state, args) do
+  # Execution-time logic only
+end
+```
+
+**Task Methods:**
+```elixir
+@task_method
+def task_name(state, args) do
+  # Task decomposition logic
+end
+```
+
+**Unigoal Methods:**
+```elixir
+@unigoal_method predicate: "location"
+def method_name(state, [subject, value]) do
+  # Goal decomposition logic
+end
+```
+
+**Multigoal Methods:**
+```elixir
+@multigoal_method goal_pattern: :pattern_name
+def method_name(state, multigoal) do
+  # Multigoal handling logic
+end
+```
+
+### Violation Examples (FORBIDDEN)
+
+❌ **WRONG - No attribute but references planner metadata:**
+```elixir
+def cook_meal(state, [meal_type]) do  # No @action attribute
+  case validate(@action[:requires_entities]) do  # ❌ References non-existent metadata
+end
+```
+
+❌ **WRONG - No attribute but presented as planner function:**
+```elixir
+def travel_to_location(state, [subject, target]) do  # No @unigoal_method attribute
+  # Presented as unigoal method but not registered with planner
+end
+```
+
+✅ **CORRECT - Helper function (no planner integration):**
+```elixir
+defp calculate_cooking_time(meal_type) do  # Private helper
+  # No planner metadata references, no attribute needed
+end
+```
+
+**ENFORCEMENT:** Functions without attributes are helper functions only - no planner integration allowed.
 
 ## Usage Examples
 
