@@ -33,7 +33,8 @@ defmodule AriaHybridPlanner.MixProject do
       # External dependencies
       {:libgraph, "~> 0.16"},
       {:jason, "~> 1.4"},
-      {:telemetry, "~> 1.0"}
+      {:telemetry, "~> 1.0"},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 end

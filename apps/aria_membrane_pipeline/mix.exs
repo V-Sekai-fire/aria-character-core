@@ -39,7 +39,8 @@ defmodule AriaMembranePipeline.MixProject do
       # External dependencies
       {:jason, "~> 1.4"},
       {:telemetry, "~> 1.2"},
-      {:porcelain, "~> 2.0"}
+      {:porcelain, "~> 2.0"},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 end
