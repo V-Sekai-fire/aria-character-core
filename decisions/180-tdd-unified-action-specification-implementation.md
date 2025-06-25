@@ -44,36 +44,74 @@
 10. **❌ TOMBSTONE: Solution tree node type expansion** - FIXED at 6 types: `:task | :action | :goal | :multigoal | :verify_goal | :verify_multigoal`
 11. **❌ TOMBSTONE: Automatic multigoal resolution** - Domain authors must explicitly define ALL multigoal handling
 
+## Testing Philosophy
+
+This implementation follows Martin Fowler's testing styles to ensure appropriate test isolation and integration coverage:
+
+### Classic Style (Sociable Tests) - Domain Integration Testing
+**Use for:** Testing how domain components work together in realistic scenarios
+- **Real dependencies:** StateV2, Domain.Core, EntityValidator working together
+- **Integration boundaries:** Full action workflow from planning to execution
+- **Realistic scenarios:** Complete cooking domain with actual state management
+- **Trade-offs:** Slower execution but higher confidence in component interactions
+
+### Mockist Style (Solitary Tests) - Isolated Component Testing  
+**Use for:** Testing individual components in isolation with clear boundaries
+- **Mocked dependencies:** Isolated testing of EntityValidator, macro parsing, etc.
+- **Unit boundaries:** Single component behavior without external dependencies
+- **Focused scenarios:** Specific validation logic, attribute parsing, error handling
+- **Trade-offs:** Faster feedback but requires careful mock management
+
+### Decision Criteria
+- **Domain integration (Phases 1-2):** Classic style - test real component interactions
+- **Component validation (Phases 3-5):** Mockist style - test isolated component logic
+- **Performance testing:** Classic style - measure real system behavior
+- **Error handling:** Mockist style - test specific failure scenarios
+
 ## TDD Implementation Sequence
 
 ### Phase 1: Module-Based Domain Pattern (Foundation)
 
-**Priority**: CRITICAL - Everything else depends on this
+**Priority**: CRITICAL - Everything else depends on this  
+**Testing Style**: Classic (Sociable) - Domain integration with real components
 
 **Test-Driven Implementation:**
 
 ```elixir
-# RED: Test the desired API that doesn't exist yet
-defmodule AriaEngine.Domain.ModulePatternTest do
+# RED: Test domain integration with real StateV2 and Domain.Core
+defmodule AriaEngine.Domain.IntegrationTest do
   use ExUnit.Case
   
-  test "module-based domain creation with @action attributes" do
+  test "complete domain workflow with real state management" do
+    # Classic style: Real StateV2, real Domain.Core, real action execution
+    state = StateV2.new()
+            |> StateV2.set_fact("chef_1", "type", "agent")
+            |> StateV2.set_fact("chef_1", "capabilities", [:cooking])
+            |> StateV2.set_fact("oven_1", "type", "oven")
+            |> StateV2.set_fact("oven_1", "capabilities", [:heating])
+    
     domain = TestCookingDomain.create_domain()
     
-    # Should extract metadata from @action attributes
-    assert Domain.has_action?(domain, :cook_meal)
-    metadata = Domain.get_action_metadata(domain, :cook_meal)
-    assert metadata.duration == "PT2H"
-    assert metadata.requires_entities != nil
+    # Test full integration: domain creation → action execution → state changes
+    {:ok, new_state} = Domain.apply_action(domain, state, :cook_meal, ["pasta"])
+    
+    # Verify real state changes through actual StateV2 queries
+    assert StateV2.get_fact(new_state, "pasta", "meal_status") == "cooking"
+    assert StateV2.get_fact(new_state, "chef_1", "chef_status") == "busy"
   end
   
-  test "@task_method attributes register task decomposition" do
+  test "domain registration integrates with existing Domain.Core" do
+    # Classic style: Test real integration with existing Domain.Core
     domain = TestCookingDomain.create_domain()
     
-    # Should register task methods for decomposition
+    # Should work with existing Domain.Core functions
+    assert Domain.has_action?(domain, :cook_meal)
     assert Domain.has_task_method?(domain, :prepare_meal_method)
-    methods = Domain.get_task_methods(domain, :prepare_meal)
-    assert length(methods) > 0
+    
+    # Metadata should be accessible through existing APIs
+    metadata = Domain.get_action_metadata(domain, :cook_meal)
+    assert metadata.duration == "PT2H"
+    assert length(metadata.requires_entities) == 2
   end
 end
 
@@ -125,49 +163,69 @@ end
 
 ### Phase 2: Entity Validation Framework (Depends on Phase 1)
 
-**Priority**: HIGH - Required for action requirement validation
+**Priority**: HIGH - Required for action requirement validation  
+**Testing Style**: Classic (Sociable) - Domain integration with real state management
 
 **Test-Driven Implementation:**
 
 ```elixir
-# RED: Test entity validation that doesn't exist
-defmodule AriaEngine.EntityValidatorTest do
+# RED: Test entity validation integration with real StateV2 and Domain
+defmodule AriaEngine.EntityValidation.IntegrationTest do
   use ExUnit.Case
   
-  test "validates action requirements against available entities" do
-    state = create_state_with_chef_and_oven()
-    action_metadata = %{requires_entities: [
-      %{type: "agent", capabilities: [:cooking]},
-      %{type: "oven", capabilities: [:heating]}
-    ]}
+  test "validates action requirements in complete domain workflow" do
+    # Classic style: Real StateV2 with actual entity data
+    state = StateV2.new()
+            |> StateV2.set_fact("chef_1", "type", "agent")
+            |> StateV2.set_fact("chef_1", "capabilities", [:cooking, :cleaning])
+            |> StateV2.set_fact("chef_1", "status", "available")
+            |> StateV2.set_fact("oven_1", "type", "oven")
+            |> StateV2.set_fact("oven_1", "capabilities", [:heating])
+            |> StateV2.set_fact("oven_1", "status", "ready")
     
-    {:ok, entities} = EntityValidator.validate_requirements(state, action_metadata)
-    assert length(entities) == 2
-    assert Enum.any?(entities, fn e -> StateV2.get_fact(state, e, "type") == "agent" end)
+    domain = TestCookingDomain.create_domain()
+    
+    # Test full integration: domain → validation → action execution
+    {:ok, new_state} = Domain.apply_action_with_validation(domain, state, :cook_meal, ["pasta"])
+    
+    # Verify validation worked and action executed with real state changes
+    assert StateV2.get_fact(new_state, "pasta", "meal_status") == "cooking"
+    assert StateV2.get_fact(new_state, "chef_1", "status") == "busy"
+    assert StateV2.get_fact(new_state, "oven_1", "status") == "in_use"
   end
   
-  test "fails validation when required entities unavailable" do
-    state = create_empty_state()
-    action_metadata = %{requires_entities: [
-      %{type: "agent", capabilities: [:cooking]}
-    ]}
+  test "validation failure prevents action execution in real workflow" do
+    # Classic style: Real StateV2 without required entities
+    state = StateV2.new()
+            |> StateV2.set_fact("dishwasher_1", "type", "appliance")
+            |> StateV2.set_fact("dishwasher_1", "capabilities", [:cleaning])
     
-    {:error, reason} = EntityValidator.validate_requirements(state, action_metadata)
-    assert reason =~ "No available entity"
+    domain = TestCookingDomain.create_domain()
+    
+    # Should fail validation and prevent action execution
+    {:error, reason} = Domain.apply_action_with_validation(domain, state, :cook_meal, ["pasta"])
+    
+    # Verify real error handling through actual StateV2 queries
+    assert reason =~ "No available entity of type 'agent' with capabilities [:cooking]"
+    assert StateV2.get_fact(state, "pasta", "meal_status") == nil  # No state change
   end
   
-  test "validates entity capabilities match requirements" do
-    state = create_state_with_entities()
+  test "entity capability matching with real state queries" do
+    # Classic style: Real StateV2 with complex capability scenarios
+    state = StateV2.new()
+            |> StateV2.set_fact("chef_1", "type", "agent")
+            |> StateV2.set_fact("chef_1", "capabilities", [:cooking])
+            |> StateV2.set_fact("intern_1", "type", "agent") 
+            |> StateV2.set_fact("intern_1", "capabilities", [:cleaning])
     
-    # Chef has cooking capability
-    {:ok, _} = EntityValidator.validate_requirements(state, %{
-      requires_entities: [%{type: "agent", capabilities: [:cooking]}]
-    })
+    domain = TestCookingDomain.create_domain()
     
-    # Chef doesn't have flying capability
-    {:error, _} = EntityValidator.validate_requirements(state, %{
-      requires_entities: [%{type: "agent", capabilities: [:flying]}]
-    })
+    # Should find chef_1 for cooking, not intern_1
+    {:ok, new_state} = Domain.apply_action_with_validation(domain, state, :cook_meal, ["pasta"])
+    
+    # Verify correct entity selection through real state management
+    assert StateV2.get_fact(new_state, "chef_1", "status") == "busy"
+    assert StateV2.get_fact(new_state, "intern_1", "status") != "busy"
   end
 end
 ```
@@ -181,34 +239,59 @@ end
 
 ### Phase 3: Enhanced Planning with Action Priority (Depends on Phases 1-2)
 
-**Priority**: MEDIUM - Enhances existing planning system
+**Priority**: MEDIUM - Enhances existing planning system  
+**Testing Style**: Mockist (Solitary) - Isolated component testing with mocked dependencies
 
 **Test-Driven Implementation:**
 
 ```elixir
-# RED: Test action priority that doesn't exist in current planning
-defmodule Plan.ActionPriorityTest do
+# RED: Test isolated action priority logic with mocked dependencies
+defmodule Plan.ActionPriority.UnitTest do
   use ExUnit.Case
+  import Mox
   
-  test "action nodes have priority over task nodes in planning" do
-    tree = create_solution_tree_with_mixed_nodes()
+  test "action nodes selected before task nodes in isolation" do
+    # Mockist style: Mock solution tree structure
+    mock_tree = %SolutionTree{
+      nodes: %{
+        1 => %{type: :task, status: :pending},
+        2 => %{type: :action, status: :pending},
+        3 => %{type: :task, status: :pending}
+      }
+    }
     
-    # Should select action nodes before task nodes
-    next_node = Plan.Core.find_next_node_with_priority(tree)
-    node = tree.nodes[next_node]
-    assert node.type == :action  # This field doesn't exist yet
+    # Test only the priority selection logic in isolation
+    next_node = Plan.Core.find_next_node_with_priority(mock_tree)
+    assert next_node == 2  # Should select action node first
   end
   
-  test "planning validates entity requirements before action selection" do
-    domain = TestDomain.create_domain()
-    state = create_state_without_chef()
+  test "entity validation logic isolated from state management" do
+    # Mockist style: Mock EntityValidator and state dependencies
+    MockEntityValidator
+    |> expect(:validate_requirements, fn _state, _metadata ->
+      {:error, "No available entity of type 'agent'"}
+    end)
     
-    # ❌ TOMBSTONED: plan_with_validation() - enhance existing plan(), don't create new APIs
-    # Should integrate validation into existing planning, not create parallel APIs
-    {:error, reason} = Plan.Core.plan(domain, state, [
-      {:cook_meal, ["pasta"]}
-    ])
-    assert reason =~ "entity requirements not met"
+    MockDomain
+    |> expect(:get_action_metadata, fn _domain, :cook_meal ->
+      %{requires_entities: [%{type: "agent", capabilities: [:cooking]}]}
+    end)
+    
+    # Test only the validation integration logic
+    result = Plan.Core.validate_action_requirements(mock_domain, mock_state, :cook_meal)
+    assert {:error, _reason} = result
+  end
+  
+  test "priority calculation algorithm in isolation" do
+    # Mockist style: Test pure priority calculation logic
+    action_node = %{type: :action, complexity: 5}
+    task_node = %{type: :task, complexity: 3}
+    
+    # Test only the priority calculation without external dependencies
+    action_priority = Plan.Core.calculate_node_priority(action_node)
+    task_priority = Plan.Core.calculate_node_priority(task_node)
+    
+    assert action_priority > task_priority
   end
 end
 ```
@@ -222,35 +305,57 @@ end
 
 ### Phase 4: Automatic Goal Verification (Depends on Phase 3)
 
-**Priority**: MEDIUM - Enhances existing goal verification
+**Priority**: MEDIUM - Enhances existing goal verification  
+**Testing Style**: Mockist (Solitary) - Isolated verification logic testing
 
 **Test-Driven Implementation:**
 
 ```elixir
-# RED: Test automatic verification that doesn't exist
-defmodule Plan.AutoVerificationTest do
+# RED: Test isolated verification logic with mocked dependencies
+defmodule Plan.AutoVerification.UnitTest do
   use ExUnit.Case
+  import Mox
   
-  test "goal methods automatically add verification tasks" do
-    domain = TestDomain.create_domain()
-    state = create_test_state()
+  test "verification task generation logic in isolation" do
+    # Mockist style: Mock domain and goal method responses
+    mock_goal = {"meal_ready", "pasta", true}
+    mock_subtasks = [
+      {:cook_meal, ["pasta"]},
+      {:serve_meal, ["pasta"]}
+    ]
     
-    # When goal method succeeds, verification task should be added
-    {:ok, subtasks} = Domain.apply_unigoal_method(domain, state, {"meal_ready", "pasta", true})
+    # Test only the verification task injection logic
+    enhanced_subtasks = Plan.Core.add_verification_tasks(mock_subtasks, [mock_goal])
     
-    # Should include verification task
-    assert Enum.any?(subtasks, fn task ->
-      match?({:verify_goal, [{"meal_ready", "pasta", true}]}, task)
-    end)
+    # Should add verification task without external dependencies
+    verification_task = {:verify_goal, [mock_goal]}
+    assert verification_task in enhanced_subtasks
+    assert length(enhanced_subtasks) == length(mock_subtasks) + 1
   end
   
-  test "verification tasks validate goal achievement" do
-    state = create_state_with_ready_meal()
+  test "verification failure handling in isolation" do
+    # Mockist style: Mock verification utilities
+    MockDomainUtils
+    |> expect(:verify_goal, fn _domain, _state, _goal, _args ->
+      {:error, "Goal not achieved: meal_ready"}
+    end)
     
-    # ❌ TOMBSTONED: execute_verification_task() - verification uses standard node execution
-    # Verification nodes execute like any other node type, no special functions needed
-    {:ok, new_state} = Plan.Core.execute_node(domain, state, tree, verification_node_id)
-    assert new_state == state  # No change when verification passes
+    # Test only the verification failure logic
+    result = Plan.Core.execute_verification_node(mock_domain, mock_state, mock_goal)
+    assert {:error, reason} = result
+    assert reason =~ "Goal not achieved"
+  end
+  
+  test "verification success logic without state dependencies" do
+    # Mockist style: Mock successful verification
+    MockDomainUtils
+    |> expect(:verify_goal, fn _domain, _state, _goal, _args ->
+      {:ok, :verified}
+    end)
+    
+    # Test only the success path logic
+    result = Plan.Core.execute_verification_node(mock_domain, mock_state, mock_goal)
+    assert {:ok, :verified} = result
   end
 end
 ```
@@ -264,60 +369,60 @@ end
 
 ### Phase 5: Commands vs Actions Separation (Depends on All Previous)
 
-**Priority**: LOW - Architectural enhancement
+**Priority**: LOW - Architectural enhancement  
+**Testing Style**: Mockist (Solitary) - Isolated command/action logic testing
 
 **Test-Driven Implementation:**
 
 ```elixir
-# RED: Test planning/execution separation that doesn't exist
-defmodule AriaEngine.PlanningExecutionTest do
+# RED: Test isolated command calling logic with mocked dependencies
+defmodule AriaEngine.CommandExecution.UnitTest do
   use ExUnit.Case
+  import Mox
   
-  test "planning uses actions, execution uses commands" do
-    domain = TestDomain.create_domain()
-    state = create_test_state()
+  test "action node execution calls command functions in isolation" do
+    # Mockist style: Mock command function and blacklist system
+    MockActions
+    |> expect(:cook_meal_command, fn _state, _args ->
+      {:ok, %{meal_status: "ready"}}
+    end)
     
-    # Planning phase uses actions (assume success)
-    {:ok, plan} = Plan.Core.plan(domain, state, [
-      {:cook_meal, ["pasta"]}
-    ])
-    
-    # ❌ TOMBSTONED: Plan.Execution module - execution happens during action node processing
-    # IPyHOP uses interleaved planning/execution, not separate phases
-    {:ok, final_state} = Plan.Core.plan(domain, state, [
-      {:cook_meal, ["pasta"]}
-    ])
-    assert StateV2.get_fact(final_state, "pasta", "meal_status") == "ready"
+    # Test only the command calling logic
+    result = Plan.Core.execute_action_node_command(:cook_meal, mock_state, ["pasta"])
+    assert {:ok, new_state} = result
+    assert new_state.meal_status == "ready"
   end
   
-  test "command failures trigger replanning" do
-    domain = TestDomain.create_domain()
-    state = create_test_state()
+  test "command failure triggers blacklisting in isolation" do
+    # Mockist style: Mock failing command and blacklist system
+    MockActions
+    |> expect(:cook_meal_command, fn _state, _args ->
+      {:error, "Oven malfunction"}
+    end)
     
-    # ❌ TOMBSTONED: execute_command() - commands called during action execution
-    # Commands are called when action nodes execute, triggering blacklisting automatically
-    {:error, reason} = Plan.Core.plan(domain, state, [
-      {:cook_meal, ["pasta"]}  # This will call command and handle failures
-    ])
+    MockBlacklist
+    |> expect(:add_to_blacklist, fn _tree, _node_id, _reason ->
+      {:ok, updated_tree}
+    end)
     
-    # Should trigger blacklisting and replanning
-    assert reason =~ "cooking failed"
+    # Test only the failure handling logic
+    result = Plan.Core.handle_command_failure(mock_tree, mock_node_id, "Oven malfunction")
+    assert {:ok, _updated_tree} = result
+  end
+  
+  test "command vs action selection logic in isolation" do
+    # Mockist style: Test pure selection logic
+    action_node = %{type: :action, name: :cook_meal}
+    
+    # Test only the command function name generation
+    command_name = Plan.Core.get_command_function_name(action_node)
+    assert command_name == :cook_meal_command
+    
+    # Test action vs command distinction
+    assert Plan.Core.is_planning_phase?(action_node) == false
+    assert Plan.Core.is_execution_phase?(action_node) == true
   end
 end
-```
-
-**Implementation Tasks:**
-- [ ] ❌ TOMBSTONED: `Plan.Execution` module (execution integrated into planning loop)
-- [ ] Integrate command calling with existing blacklist system
-- [ ] Add failure handling during action node execution
-- [ ] ❌ TOMBSTONED: Separate phases (IPyHOP uses interleaved planning/execution)
-- [ ] Document command calling patterns during action execution
-
-## Integration Strategy
-
-### Backward Compatibility Requirements
-
-**Must preserve:**
 - All existing `Domain.Core` functionality
 - Current action registration patterns
 - Existing planning algorithms
