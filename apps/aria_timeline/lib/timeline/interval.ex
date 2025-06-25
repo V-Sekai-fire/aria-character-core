@@ -146,6 +146,27 @@ defmodule Timeline.Interval do
     }
   end
 
+  def new_fixed_schedule(invalid_spec) when is_map(invalid_spec) do
+    raise ArgumentError, "Invalid temporal specification: #{inspect(invalid_spec)}"
+  end
+
+  @doc "Creates a new interval using unified constructor pattern with options.\n\nSupports map-based patterns with additional options.\n"
+  @spec new_fixed_schedule(map(), keyword()) :: t()
+  def new_fixed_schedule(%{start: start_iso8601}, opts) when is_list(opts) do
+    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+    %__MODULE__{
+      id: generate_id(),
+      start_time: start_dt,
+      end_time: nil,
+      agent: Keyword.get(opts, :agent),
+      entity: Keyword.get(opts, :entity),
+      metadata: Map.merge(%{open_ended_start: true, iso8601_start: start_iso8601}, Keyword.get(opts, :metadata, %{}))
+    }
+  end
+
+  def new_fixed_schedule(invalid_spec, _opts) when is_map(invalid_spec) do
+    raise ArgumentError, "Invalid temporal specification: #{inspect(invalid_spec)}"
+  end
 
   @doc "Creates a floating duration interval from ISO 8601 duration string.\n\n## Examples\n\n    iex> interval = Timeline.Interval.new_floating_duration(\"PT2H\")\n    iex> interval.metadata.floating_duration\n    true\n\n"
   @spec new_floating_duration(String.t()) :: t()

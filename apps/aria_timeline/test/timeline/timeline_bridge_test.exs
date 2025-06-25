@@ -296,7 +296,10 @@ defmodule Timeline.TimelineBridgeTest do
       timeline2 = Timeline.add_bridge(timeline2, bridge2)
       chained = Timeline.chain([timeline1, timeline2])
       bridges = Map.get(chained.metadata, :bridges, %{})
-      assert map_size(bridges) == 0
+      assert map_size(bridges) == 2
+      # Verify bridges are converted to semantic bridges
+      assert bridges["b1"].semantic_relation != nil
+      assert bridges["b2"].semantic_relation != nil
     end
   end
 end

@@ -87,19 +87,25 @@ defmodule Timeline do
     %{timeline | stn: stn}
   end
 
-  @spec solve(t()) :: t()
+  @spec solve(t()) :: t() | {:error, :unsatisfiable}
   def solve(timeline) do
     require Logger
-    stn = STN.solve(timeline.stn)
-    updated_timeline = %{timeline | stn: stn}
 
-    case Map.get(stn.metadata, :solved_times) do
-      nil ->
-        updated_timeline
+    case STN.solve(timeline.stn) do
+      {:error, :unsatisfiable} = error ->
+        error
 
-      solved_times ->
-        result = apply_solved_times_to_intervals(updated_timeline, solved_times)
-        result
+      stn ->
+        updated_timeline = %{timeline | stn: stn}
+
+        case Map.get(stn.metadata, :solved_times) do
+          nil ->
+            updated_timeline
+
+          solved_times ->
+            result = apply_solved_times_to_intervals(updated_timeline, solved_times)
+            result
+        end
     end
   end
 
@@ -118,7 +124,8 @@ defmodule Timeline do
   end
 
   @doc "Checks if the Timeline's temporal constraints are consistent.\n"
-  @spec consistent?(t()) :: boolean()
+  @spec consistent?(t() | {:error, :unsatisfiable}) :: boolean()
+  def consistent?({:error, :unsatisfiable}), do: false
   def consistent?(timeline) do
     STN.consistent?(timeline.stn)
   end
@@ -375,6 +382,11 @@ defmodule Timeline do
   ## Examples
 
       iex> timeline = Timeline.new()
+      iex> alias Timeline.Interval
+      iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
+      iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], "Etc/UTC")
+      iex> interval = %Interval{id: "interval_1", start_time: start_time, end_time: end_time}
+      iex> timeline = Timeline.add_interval(timeline, interval)
       iex> timeline = Timeline.add_interval_bridge(timeline, :starts, "interval_1", "task_start", :synchronization)
       iex> bridge = Timeline.get_bridge(timeline, "task_start")
       iex> bridge.reference_target
@@ -465,7 +477,9 @@ defmodule Timeline do
       Map.has_key?(bridges, bridge.id) ->
         {:error, "Bridge with ID '#{bridge.id}' already exists"}
 
-      bridge_at_interval_boundary?(timeline, bridge) ->
+      # Only check boundary conflicts for absolute position bridges
+      # Semantic bridges are allowed at boundaries by design
+      bridge.semantic_relation == nil and bridge_at_interval_boundary?(timeline, bridge) ->
         {:error, "Bridge cannot be placed at interval boundary"}
 
       true ->

@@ -121,7 +121,8 @@ defmodule Timeline.Internal.STN.Core do
   end
 
   @doc "Checks if the STN is temporally consistent.\n"
-  @spec consistent?(STN.t()) :: boolean()
+  @spec consistent?(STN.t() | {:error, :unsatisfiable}) :: boolean()
+  def consistent?({:error, :unsatisfiable}), do: false
   def consistent?(stn) do
     stn.consistent
   end

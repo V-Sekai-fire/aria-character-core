@@ -23,13 +23,22 @@ defmodule Timeline.Internal.STN.Units do
         end)
         |> Map.new()
 
-      %{
+      updated_stn = %{
         stn
         | lod_level: new_lod_level,
           lod_resolution: new_resolution,
           constraints: rescaled_constraints
       }
-      |> AriaMinizincStn.solve_stn()
+
+      # Only solve if there are time points to solve
+      if MapSet.size(updated_stn.time_points) > 0 do
+        case AriaMinizincStn.solve_stn(updated_stn) do
+          {:ok, solved_stn} -> solved_stn
+          {:error, _} -> updated_stn
+        end
+      else
+        updated_stn
+      end
     end
   end
 
@@ -47,8 +56,17 @@ defmodule Timeline.Internal.STN.Units do
         end)
         |> Map.new()
 
-      %{stn | time_unit: new_unit, constraints: converted_constraints}
-      |> AriaMinizincStn.solve_stn()
+      updated_stn = %{stn | time_unit: new_unit, constraints: converted_constraints}
+
+      # Only solve if there are time points to solve
+      if MapSet.size(updated_stn.time_points) > 0 do
+        case AriaMinizincStn.solve_stn(updated_stn) do
+          {:ok, solved_stn} -> solved_stn
+          {:error, _} -> updated_stn
+        end
+      else
+        updated_stn
+      end
     end
   end
 

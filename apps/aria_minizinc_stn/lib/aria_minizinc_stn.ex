@@ -85,6 +85,8 @@ defmodule AriaMinizincStn do
             raw_output = Map.get(executor_result, :raw_output, "")
 
             case parse_minizinc_output(raw_output) do
+              {:ok, %{status: :unsatisfiable}} ->
+                {:error, :unsatisfiable}
               {:ok, solution} ->
                 updated_stn = update_stn_with_solution(stn, solution)
                 {:ok, %{updated_stn | metadata: Map.put(updated_stn.metadata, :solver, :minizinc)}}

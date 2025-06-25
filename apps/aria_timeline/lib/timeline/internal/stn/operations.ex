@@ -60,7 +60,10 @@ defmodule Timeline.Internal.STN.Operations do
       dummy_constraints: compatible_stn1.dummy_constraints
     }
 
-    solve(result_stn)
+    case solve(result_stn) do
+      {:error, :unsatisfiable} = error -> error
+      stn -> stn
+    end
   end
 
   @doc "Splits an STN into multiple independent segments for parallel processing.\n"
@@ -154,7 +157,11 @@ defmodule Timeline.Internal.STN.Operations do
   def parallel_join(stns) do
     case length(stns) do
       count when count > 4 -> %STN{}
-      _ -> stns |> Enum.reduce(&union/2) |> solve()
+      _ ->
+        case stns |> Enum.reduce(&union/2) do
+          {:error, :unsatisfiable} = error -> error
+          stn -> solve(stn)
+        end
     end
   end
 
@@ -195,7 +202,7 @@ defmodule Timeline.Internal.STN.Operations do
   end
 
   @doc "Solves STN segments in parallel and merges results.\n"
-  @spec parallel_solve(STN.t(), integer()) :: STN.t()
+  @spec parallel_solve(STN.t(), integer()) :: STN.t() | {:error, :unsatisfiable}
   def parallel_solve(stn, max_segments \\ System.schedulers_online()) do
     segments = segment(stn, max_segments)
 
@@ -205,12 +212,20 @@ defmodule Timeline.Internal.STN.Operations do
 
       _segment_count ->
         solved_segments = segments |> Enum.map(&solve/1)
-        parallel_join(solved_segments)
+
+        # Check if any segment is unsatisfiable
+        case Enum.find(solved_segments, fn
+          {:error, :unsatisfiable} -> true
+          _ -> false
+        end) do
+          {:error, :unsatisfiable} = error -> error
+          nil -> parallel_join(solved_segments)
+        end
     end
   end
 
   @doc "Solves the STN for consistency and computes shortest paths.\n"
-  @spec solve(STN.t()) :: STN.t()
+  @spec solve(STN.t()) :: STN.t() | {:error, :unsatisfiable}
   def solve(stn) do
     if Core.simple_stn?(stn) do
       # Simple STN - validate consistency mathematically and bypass MiniZinc
@@ -220,6 +235,7 @@ defmodule Timeline.Internal.STN.Operations do
       # Complex STN - use MiniZinc solver
       case AriaMinizincStn.solve_stn(stn) do
         {:ok, solved_stn} -> solved_stn
+        {:error, :unsatisfiable} -> {:error, :unsatisfiable}
         solved_stn -> solved_stn
       end
     end
