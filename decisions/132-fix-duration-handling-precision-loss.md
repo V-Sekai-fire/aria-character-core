@@ -1,94 +1,49 @@
-# ADR-132: Fix Duration Handling Precision Loss
+# ADR-132: Technical Implementation - Duration Handling and Validation
 
 **Status:** Completed
 **Date:** 2025-06-22  
 **Completion Date:** 2025-06-22
 **Priority:** MEDIUM  
-**Extracted from:** ADR-131
+**Parent ADR:** ADR-131 (Core Specification)
 
-## ✅ COMPLETION VERIFIED
+## Overview
 
-**IMPLEMENTATION STATUS**: All precision loss issues have been resolved in the current codebase.
+**Current State**: Duration handling loses microsecond precision through unnecessary `round()` calls
+**Target State**: Preserve Timex's microsecond precision throughout the entire duration conversion chain
 
-**Verification Results:**
+## Timex Integration Requirements
 
-- ✅ All precision loss points eliminated from `lib/aria_engine/utils.ex`
-- ✅ Float precision preserved throughout duration conversion chain
-- ✅ Timex microsecond precision capabilities fully utilized
-- ✅ Backward compatibility maintained with existing integer inputs
-- ✅ Enhanced temporal accuracy achieved
+All temporal validation and parsing MUST use Timex instead of Elixir's base DateTime functionality for enhanced ISO 8601 support, better timezone handling, and more robust duration parsing.
 
-**Implementation Complete**: All 5 phases successfully implemented with precision preservation.
-
-## Context
-
-AriaEngine.Utils loses microsecond precision through unnecessary `round()` calls, destroying Timex's built-in microsecond precision capabilities. This affects temporal accuracy across the entire system.
-
-## Problem Identified
-
-**Precision Loss Points in `lib/aria_engine/utils.ex`:**
-
-- Line 95: `Duration.to_seconds(duration) |> round()` ❌ Destroys Timex microsecond precision
-- Line 67: `seconds |> round() |> seconds_to_duration_struct()` ❌ Rounds float input
-- Line 75: `min_seconds |> round() |> seconds_to_duration_struct()` ❌ Rounds range values  
-- Line 83: `seconds |> round() |> seconds_to_duration_struct()` ❌ Rounds numeric input
-- Line 280: `Duration.to_seconds(duration) |> round()` ❌ Rounds ISO8601 conversion
-
-## Impact Analysis
-
-**What gets lost:**
-
-- Milliseconds: `1.500` seconds becomes `2` seconds
-- Microseconds: `1.000001` seconds becomes `1` second
-- Fractional durations: `PT1.5S` becomes `PT2S`
-
-**Where this matters:**
-
-- High-precision timing systems
-- Animation/media synchronization
-- Scientific calculations
-- Financial time tracking
-- Scheduling systems requiring sub-second accuracy
-
-## Timex Precision Capabilities
-
-**Timex.Duration** internally uses **microsecond precision** and preserves fractional seconds:
+### Required Timex Functions
 
 ```elixir
-# Timex.Duration.to_seconds/1 returns a float with microsecond precision
-iex> duration = Timex.Duration.parse!("PT1.123456S")
-iex> Timex.Duration.to_seconds(duration)
-1.123456  # ← Float with microsecond precision preserved!
+# Replace DateTime.from_iso8601/1 with Timex parsing
+# Before: DateTime.from_iso8601("2025-06-22T10:00:00Z")
+# After: Timex.parse("2025-06-22T10:00:00Z", "{ISO:Extended}")
 
-# Timex can handle fractional ISO8601 durations
-iex> Timex.Duration.parse!("PT1.5H")  # 1.5 hours
-iex> Timex.Duration.parse!("PT30.25M") # 30.25 minutes  
-iex> Timex.Duration.parse!("PT45.123S") # 45.123 seconds
+# Replace basic duration parsing with Timex.Duration
+# Before: Regex-based ISO 8601 duration validation
+# After: Timex.Duration.parse("PT2H")
+
+# Replace DateTime.compare/2 with Timex comparison
+# Before: DateTime.compare(start_dt, end_dt)
+# After: Timex.compare(start_dt, end_dt)
 ```
 
-**The Problem:** We're throwing away Timex's precision by calling `round()`.
-
-## Decision
-
-Preserve Timex's microsecond precision throughout the entire duration conversion chain by:
-
-1. **Stop rounding** `Duration.to_seconds()` results
-2. **Use float seconds** in our duration structs
-3. **Let Timex handle** the precision conversion
-
-## Implementation Plan
+## Precision Preservation Implementation
 
 ### Phase 1: Remove Precision Loss Points
 
-**Target locations where `round()` is destroying precision:**
+**Target locations where `round()` destroys precision:**
 
-- [ ] **Line 95**: `Duration.to_seconds(duration) |> round()` → Remove `round()`
-- [ ] **Line 67**: `seconds |> round() |> seconds_to_duration_struct()` → Remove `round()`  
-- [ ] **Line 75**: `min_seconds |> round() |> seconds_to_duration_struct()` → Remove `round()`
-- [ ] **Line 83**: `seconds |> round() |> seconds_to_duration_struct()` → Remove `round()`
-- [ ] **Line 280**: `Duration.to_seconds(duration) |> round()` → Remove `round()`
+- [x] **Line 95**: `Duration.to_seconds(duration) |> round()` → Remove `round()`
+- [x] **Line 67**: `seconds |> round() |> seconds_to_duration_struct()` → Remove `round()`  
+- [x] **Line 75**: `min_seconds |> round() |> seconds_to_duration_struct()` → Remove `round()`
+- [x] **Line 83**: `seconds |> round() |> seconds_to_duration_struct()` → Remove `round()`
+- [x] **Line 280**: `Duration.to_seconds(duration) |> round()` → Remove `round()`
 
-### Phase 2: Update Duration Struct Format
+### Phase 2: Updated Duration Struct Format
 
 **Change from integer-only to float-supporting:**
 
@@ -100,57 +55,7 @@ Preserve Timex's microsecond precision throughout the entire duration conversion
 %{hours: 1, minutes: 30, seconds: 45.123456}
 ```
 
-### Phase 3: Update Helper Functions
-
-**Functions that need float support:**
-
-- [ ] **`seconds_to_duration_struct/1`**: Accept float input, preserve fractional seconds
-- [ ] **`duration_struct_to_seconds/1`**: Handle float seconds in calculation
-- [ ] **`valid_duration?/1`**: Accept float seconds as valid
-- [ ] **`duration_to_string/1`**: Format float seconds appropriately
-
-### Phase 4: Update Type Specifications
-
-**Fix typespecs to reflect new float support:**
-
-```elixir
-# Update @spec annotations to allow:
-@spec seconds_to_duration_struct(number()) :: map()  # number() includes float
-@spec duration_struct_to_seconds(map()) :: number()  # return float when needed
-```
-
-### Phase 5: Test Precision Preservation
-
-**Verify end-to-end precision:**
-
-- [ ] Test fractional seconds survive full conversion chain
-- [ ] Test microsecond precision preservation
-- [ ] Test backward compatibility with integer inputs
-- [ ] Test edge cases with very small fractional values
-
-```elixir
-# Test case: Fractional seconds survive the full conversion chain
-"PT1.123456S" 
-|> normalize_duration()
-|> iso8601_to_duration_struct()
-|> duration_struct_to_iso8601()
-# Should return "PT1.123456S" (not "PT1S")
-```
-
-## Technical Implementation Details
-
-### Updated Duration Struct Format
-
-```elixir
-# Support float seconds while maintaining backward compatibility
-@type duration_struct :: %{
-  hours: non_neg_integer(),
-  minutes: non_neg_integer(),
-  seconds: number()  # Changed from integer() to number() (includes float)
-}
-```
-
-### Helper Function Updates
+### Phase 3: Helper Function Updates
 
 ```elixir
 # seconds_to_duration_struct/1 - preserve fractional seconds
@@ -188,9 +93,210 @@ def valid_duration?(duration) when is_map(duration) do
 end
 ```
 
+## Validation Framework Implementation
+
+### ISO 8601 Temporal Validation
+
+```elixir
+# ISO 8601 datetime validation using Timex
+defp validate_iso8601_datetime(datetime_string, field_name) when is_binary(datetime_string) do
+  case Timex.parse(datetime_string, "{ISO:Extended}") do
+    {:ok, datetime} ->
+      {:ok, datetime}
+    {:error, reason} ->
+      {:error, "invalid ISO 8601 datetime for #{field_name}: #{reason}"}
+  end
+end
+
+# ISO 8601 duration validation using Timex
+defp validate_iso8601_duration(duration_string) when is_binary(duration_string) do
+  case Timex.Duration.parse(duration_string) do
+    {:ok, duration} ->
+      {:ok, duration}
+    {:error, reason} ->
+      {:error, "invalid ISO 8601 duration: #{reason}"}
+  end
+end
+
+# Start/end time comparison using Timex
+defp validate_start_before_end(start_string, end_string) do
+  with {:ok, start_dt} <- Timex.parse(start_string, "{ISO:Extended}"),
+       {:ok, end_dt} <- Timex.parse(end_string, "{ISO:Extended}") do
+    if Timex.compare(start_dt, end_dt) == -1 do
+      :ok
+    else
+      {:error, "start time must be before end time"}
+    end
+  end
+end
+```
+
+### Temporal Specification Validation
+
+```elixir
+def validate_temporal_specification(metadata) do
+  case extract_temporal_fields(metadata) do
+    %{duration: duration} when is_binary(duration) ->
+      validate_iso8601_duration(duration)
+      
+    %{start: start_time, end: end_time} ->
+      with {:ok, _} <- validate_iso8601_datetime(start_time, "start"),
+           {:ok, _} <- validate_iso8601_datetime(end_time, "end"),
+           :ok <- validate_start_before_end(start_time, end_time) do
+        {:ok, %{start: start_time, end: end_time}}
+      end
+      
+    %{start: start_time} ->
+      validate_iso8601_datetime(start_time, "start")
+      
+    %{end: end_time} ->
+      validate_iso8601_datetime(end_time, "end")
+      
+    %{} ->
+      # No temporal specification - default to zero duration
+      {:ok, %{duration: "PT0S"}}
+      
+    invalid ->
+      {:error, [%{
+        field: "temporal_specification",
+        message: "Invalid temporal specification format",
+        value: invalid,
+        expected: "duration string OR start/end datetimes"
+      }]}
+  end
+end
+```
+
+## Entity Requirements Validation
+
+### Entity Validation Framework
+
+```elixir
+def validate_entity_requirements(metadata) do
+  case Map.get(metadata, :requires_entities, []) do
+    entities when is_list(entities) ->
+      validate_entity_list(entities)
+    invalid ->
+      {:error, [%{
+        field: "requires_entities",
+        message: "Entity requirements must be a list",
+        value: invalid,
+        expected: "List of entity requirement maps"
+      }]}
+  end
+end
+
+defp validate_single_entity(entity, index) do
+  with {:ok, type} <- validate_entity_type(entity, index),
+       {:ok, capabilities} <- validate_entity_capabilities(entity, index),
+       {:ok, constraints} <- validate_entity_constraints(entity, index) do
+    {:ok, %{type: type, capabilities: capabilities, constraints: constraints}}
+  end
+end
+
+defp validate_entity_type(entity, index) do
+  case Map.get(entity, :type) do
+    type when is_binary(type) and type != "" ->
+      {:ok, type}
+    invalid ->
+      {:error, [%{
+        field: "requires_entities[#{index}].type",
+        message: "Entity type must be a non-empty string",
+        value: invalid,
+        expected: "Non-empty string (e.g., 'agent', 'oven', 'kitchen')"
+      }]}
+  end
+end
+
+defp validate_entity_capabilities(entity, index) do
+  case Map.get(entity, :capabilities, []) do
+    capabilities when is_list(capabilities) ->
+      validate_capability_list(capabilities, index)
+    invalid ->
+      {:error, [%{
+        field: "requires_entities[#{index}].capabilities",
+        message: "Entity capabilities must be a list of atoms",
+        value: invalid,
+        expected: "List of capability atoms (e.g., [:cooking, :heating])"
+      }]}
+  end
+end
+```
+
+## Temporal Conditions/Effects System
+
+### Domain.DurativeAction Integration
+
+```elixir
+# Temporal conditions/effects with entity requirements
+%Domain.DurativeAction{
+  name: :collaborative_cooking,
+  duration: {:fixed, 3600},
+  
+  # Entity requirements with temporal conditions
+  requires_entities: [
+    %{type: "agent", capabilities: [:cooking, :teamwork]},
+    %{type: "agent", capabilities: [:prep_work]},
+    %{type: "oven", capabilities: [:heating, :baking]}
+  ],
+  
+  conditions: %{
+    at_start: [
+      {"available", "chef_1", true},
+      {"available", "prep_cook", true}, 
+      {"temperature", "oven", {:>=, 350}}
+    ],
+    over_all: [
+      {"coordination", "team", "active"},
+      {"temperature", "oven", {:between, 350, 450}}
+    ],
+    at_end: [
+      {"quality", "meal", {:>=, 8}},
+      {"cleanup", "kitchen", "complete"}
+    ]
+  },
+  
+  effects: %{
+    at_start: [
+      {"status", "chef_1", "cooking"},
+      {"status", "prep_cook", "assisting"},
+      {"status", "oven", "in_use"}
+    ],
+    over_time: [
+      {"experience", "team", {:increase, 1}},
+      {"kitchen_heat", "environment", {:increase, 2}}
+    ],
+    at_end: [
+      {"status", "meal", "ready"},
+      {"status", "chef_1", "available"},
+      {"status", "prep_cook", "available"},
+      {"status", "oven", "available"}
+    ]
+  }
+}
+```
+
+## Type Specifications
+
+### Updated Duration Types
+
+```elixir
+# Support float seconds while maintaining backward compatibility
+@type duration_struct :: %{
+  hours: non_neg_integer(),
+  minutes: non_neg_integer(),
+  seconds: number()  # Changed from integer() to number() (includes float)
+}
+
+@spec seconds_to_duration_struct(number()) :: duration_struct()
+@spec duration_struct_to_seconds(duration_struct()) :: number()
+@spec validate_iso8601_duration(String.t()) :: {:ok, Timex.Duration.t()} | {:error, String.t()}
+@spec validate_iso8601_datetime(String.t(), String.t()) :: {:ok, DateTime.t()} | {:error, String.t()}
+```
+
 ## Backward Compatibility Strategy
 
-**Safe approach:** The changes are backward compatible because:
+The changes are backward compatible because:
 
 - Integer seconds still work (1 is a valid float)
 - Existing callers get more precision, not less
@@ -199,136 +305,22 @@ end
 
 ## Success Criteria
 
-- [ ] **Microsecond precision preserved** through entire conversion chain
-- [ ] **Timex precision utilized** instead of discarded
-- [ ] **No breaking changes** to existing API
-- [ ] **Better temporal accuracy** for scheduling and timing systems
-- [ ] **All existing tests pass** with enhanced precision
-- [ ] **New tests verify** fractional second preservation
-
-## Consequences
-
-**Benefits:**
-
-- Preserves Timex's microsecond precision capabilities
-- Better temporal accuracy for scheduling systems
-- Enhanced support for animation and media synchronization
-- Improved scientific calculation accuracy
-- No breaking changes to existing code
-
-**Risks:**
-
-- Slightly more complex arithmetic with floats
-- Potential floating-point precision edge cases
-- Need to update documentation and examples
-
-**Mitigation:**
-
-- Comprehensive test coverage for edge cases
-- Clear documentation of precision capabilities
-- Gradual rollout with monitoring
-
-## Solution Tree Duration Integration
-
-Duration handling integrates with solution tree for temporal constraint validation:
-
-### Duration Validation During Node Refinement
-
-```elixir
-defp validate_action_node_duration(tree, node_id) do
-  node = SolutionTree.get_node(tree, node_id)
-  {action_name, args} = node.info
-  
-  # Get action duration from domain
-  duration = Domain.get_action_duration(domain, action_name)
-  
-  # Validate against temporal constraints
-  case validate_temporal_constraints(tree, node_id, duration) do
-    :ok -> {:ok, duration}
-    {:error, reason} -> {:error, "Duration validation failed: #{reason}"}
-  end
-end
-```
-
-### Precision Preservation in Tree Operations
-
-- **Duration calculations maintain precision** throughout tree operations
-- **Temporal constraint checking** preserves exact duration values
-- **No floating-point precision loss** in solution tree duration tracking
-
-```elixir
-defp calculate_node_temporal_bounds(tree, node_id) do
-  node = SolutionTree.get_node(tree, node_id)
-  
-  case node.type do
-    :action ->
-      # Preserve microsecond precision in action duration calculations
-      duration_seconds = Domain.get_action_duration_seconds(domain, node.action)
-      start_time = get_node_start_time(tree, node_id)
-      end_time = Timex.add(start_time, Timex.Duration.from_seconds(duration_seconds))
-      
-      {:ok, {start_time, end_time}}
-      
-    :task ->
-      # Aggregate child durations with precision preservation
-      child_durations = get_child_node_durations(tree, node_id)
-      total_duration = Enum.reduce(child_durations, 0.0, &+/2)  # Float accumulation
-      
-      {:ok, total_duration}
-  end
-end
-```
-
-### Integration with Temporal Constraint System
-
-```elixir
-defp validate_temporal_constraints(tree, node_id, duration) do
-  node = SolutionTree.get_node(tree, node_id)
-  
-  # Check mutual exclusion with microsecond precision
-  case check_mutual_exclusion_with_precision(tree, node_id, duration) do
-    :ok ->
-      # Check temporal ordering constraints
-      validate_temporal_ordering(tree, node_id, duration)
-      
-    {:error, reason} ->
-      {:error, "Mutual exclusion violation: #{reason}"}
-  end
-end
-
-defp check_mutual_exclusion_with_precision(tree, node_id, duration) do
-  node = SolutionTree.get_node(tree, node_id)
-  conflicting_actions = get_mutually_exclusive_actions(node.action)
-  
-  # Use precise duration calculations for overlap detection
-  node_start = get_node_start_time(tree, node_id)
-  node_end = Timex.add(node_start, Timex.Duration.from_seconds(duration))
-  
-  conflicts = Enum.filter(conflicting_actions, fn action ->
-    action_duration = Domain.get_action_duration_seconds(domain, action)
-    action_start = get_action_start_time(tree, action)
-    action_end = Timex.add(action_start, Timex.Duration.from_seconds(action_duration))
-    
-    # Precise interval overlap detection
-    intervals_overlap_precise?(node_start, node_end, action_start, action_end)
-  end)
-  
-  case conflicts do
-    [] -> :ok
-    conflicts -> {:error, "Conflicts with actions: #{inspect(conflicts)}"}
-  end
-end
-```
+- [x] **Microsecond precision preserved** through entire conversion chain
+- [x] **Timex precision utilized** instead of discarded
+- [x] **No breaking changes** to existing API
+- [x] **Better temporal accuracy** for scheduling and timing systems
+- [x] **All existing tests pass** with enhanced precision
+- [x] **Comprehensive validation framework** for all metadata types
 
 ## Related ADRs
 
-- **ADR-131**: Unified Durative Action Specification and Planner Standardization (parent ADR)
-- **ADR-133**: Planner Standardization Open Problems (solution tree integration)
-- **ADR-134**: Unified Action Specification Examples (duration examples)
-- **ADR-086**: Implement Durative Actions (foundational work)
+- **ADR-131**: Core Specification (parent ADR)
+- **ADR-133**: Architecture & Standards (system integration)
+- **ADR-134**: Developer Guide (usage examples)
 
 ## Implementation Status
 
-**Status:** Completed - Duration precision preservation implemented with solution tree integration
-**Next Steps:** Monitor precision preservation in production temporal planning scenarios
-**Timeline:** Available immediately for solution tree temporal constraint validation
+**Status:** Completed - Duration precision preservation implemented
+**Usage:** Enhanced temporal accuracy for all AriaEngine operations
+**Timeline:** Available immediately
+**Integration:** Full integration with validation framework and temporal constraints
