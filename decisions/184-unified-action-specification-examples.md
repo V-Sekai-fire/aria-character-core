@@ -175,10 +175,10 @@ defmodule MyApp.Domains.CookingDomain do
             {:before, "gather_ingredients"},
             {:during, "kitchen_available"}
           ]
-def cook_meal(state, [meal_type]) do
+def cook_meal(state, [meal_id]) do
   # CORRECT: Pure state transformation, planner already validated requirements
   state
-  |> AriaState.RelationalState.set_fact("meal_status", meal_type, "cooking")
+  |> AriaState.RelationalState.set_fact("meal_status", meal_id, "cooking")
   |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
   |> AriaState.RelationalState.set_fact("oven_status", "oven_1", "in_use")
 end
@@ -202,10 +202,10 @@ end
   
   # Commands (execution-time) with failure handling
   @command
-  def cook_meal_command(state, [meal_type]) do
-    case attempt_cooking_with_failure_chance(state, meal_type) do
+  def cook_meal_command(state, [meal_id]) do
+    case attempt_cooking_with_failure_chance(state, meal_id) do
       {:ok, new_state} -> 
-        Logger.info("cook_meal_command succeeded for #{meal_type}")
+        Logger.info("cook_meal_command succeeded for #{meal_id}")
         {:ok, new_state}
       {:error, reason} ->
         Logger.warn("cook_meal_command failed: #{reason}")
@@ -236,11 +236,11 @@ end
   end
   
   @task_method
-  def task_complete_meal(state, [meal_type]) do
+  def task_complete_meal(state, [meal_id]) do
     {:ok, [
-      {:task_prepare_ingredients, [meal_type]},
-      {:cook_meal, [meal_type]},
-      {:serve_meal, [meal_type]}
+      {:task_prepare_ingredients, [meal_id]},
+      {:cook_meal, [meal_id]},
+      {:serve_meal, [meal_id]}
     ]}
   end
   

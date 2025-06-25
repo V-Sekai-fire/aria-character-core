@@ -40,14 +40,14 @@ make_dinner()
           %{type: "chef", capabilities: [:cooking]},
           %{type: "ingredients", capabilities: [:consumable]}
         ]
-def cook_meal(state, [meal_type]) do
+def cook_meal(state, [meal_id]) do
   # Just describes the state change, not when/how to execute
-  state |> AriaState.RelationalState.set_fact("meal_status", meal_type, "ready")
+  state |> AriaState.RelationalState.set_fact("meal_status", meal_id, "ready")
 end
 
 # You give the planner a goal and it figures out the steps
-AriaEngine.plan(domain, state, [{"meal_status", "pasta", "ready"}])
-# Planner thinks: "To have pasta ready, I need to cook_meal. To cook_meal, I need chef + ingredients..."
+AriaEngine.plan(domain, state, [{"meal_status", "dinner", "ready"}])
+# Planner thinks: "To have dinner ready, I need to cook_meal. To cook_meal, I need chef + ingredients..."
 ```
 
 ### The Mental Model Shift
@@ -128,10 +128,10 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "mixing_bowl", capabilities: [:container, :reusable]}
           ],
           description: "Prepare a meal using specified ingredients and cooking equipment"
-  def cook_meal(state, [meal_type]) do
+  def cook_meal(state, [meal_id]) do
     # Pure state transformation, planner already validated requirements
     state
-    |> AriaState.RelationalState.set_fact("meal_status", meal_type, "cooking")
+    |> AriaState.RelationalState.set_fact("meal_status", meal_id, "cooking")
     |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
   end
 
