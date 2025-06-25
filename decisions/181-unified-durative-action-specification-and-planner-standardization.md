@@ -364,9 +364,9 @@ end)
 - Include numbers for multiple similar entities: `"mixing_bowl_1"`, `"mixing_bowl_2"`
 - Avoid generic names that don't distinguish between entities
 
-## Unified Action Specification
+## Domain Definition of Actions Specification
 
-### Module-Based Domain Pattern (Authoritative)
+### Module-Based Domain Pattern
 
 ```elixir
 # CORRECT: Module-based domain pattern with @action attributes
