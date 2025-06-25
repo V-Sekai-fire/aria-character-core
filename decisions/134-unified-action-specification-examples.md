@@ -63,10 +63,10 @@ defmodule MyApp.Domains.CookingDomain do
   def cook_meal_command(state, [meal_type]) do
     case attempt_cooking_with_failure_chance(state, meal_type) do
       {:ok, new_state} -> 
-        Logger.info("Command> cook_meal_command succeeded for #{meal_type}")
+        Logger.info("cook_meal_command succeeded for #{meal_type}")
         {:ok, new_state}
-      {:error, reason} -> 
-        Logger.warn("Command> cook_meal_command failed: #{reason}")
+      {:error, reason} ->
+        Logger.warn("cook_meal_command failed: #{reason}")
         {:error, reason}
     end
   end
@@ -75,10 +75,10 @@ defmodule MyApp.Domains.CookingDomain do
   def gather_ingredients_command(state, [task_name]) do
     case attempt_gathering_with_failure_chance(state, task_name) do
       {:ok, new_state} -> 
-        Logger.info("Command> gather_ingredients_command succeeded")
+        Logger.info("gather_ingredients_command succeeded")
         {:ok, new_state}
       {:error, reason} -> 
-        Logger.warn("Command> gather_ingredients_command failed: #{reason}")
+        Logger.warn("gather_ingredients_command failed: #{reason}")
         {:error, reason}
     end
   end

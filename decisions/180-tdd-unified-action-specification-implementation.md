@@ -146,10 +146,10 @@ defmodule TestCookingDomain do
     # Real-world execution with potential failures
     case attempt_cooking_with_failure_chance(state, meal_type) do
       {:ok, new_state} -> 
-        Logger.info("Command> cook_meal_command succeeded for #{meal_type}")
+        Logger.info("cook_meal_command succeeded for #{meal_type}")
         {:ok, new_state}
-      {:error, reason} -> 
-        Logger.warn("Command> cook_meal_command failed: #{reason}")
+      {:error, reason} ->
+        Logger.warn("cook_meal_command failed: #{reason}")
         {:error, reason}  # Triggers blacklisting and replanning
     end
   end
