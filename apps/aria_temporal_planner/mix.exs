@@ -31,9 +31,12 @@ defmodule AriaTemporalPlanner.MixProject do
       {:libgraph, "~> 0.16"},
       {:porcelain, "~> 2.0"},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
+      {:mox, "~> 1.0", only: :test},
 
       # Core engine dependency for AriaEngine.State
       {:aria_engine_core, path: "../aria_engine_core"},
+      # Timeline functionality
+      {:aria_timeline, path: "../aria_timeline"},
       # Dedicated STN solving functionality
       {:aria_minizinc_stn, path: "../aria_minizinc_stn"}
     ]
