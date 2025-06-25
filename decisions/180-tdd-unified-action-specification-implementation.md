@@ -103,6 +103,77 @@
 18. **❌ TOMBSTONE: Requirement validation in action functions** - Actions assume planner has already validated requirements
 19. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
 
+## CRITICAL ENFORCEMENT: Function Attribute Requirements
+
+**Every function that integrates with the planner system MUST have the corresponding attribute:**
+
+### Required Attribute Patterns
+
+**Planner Actions:**
+```elixir
+@action duration: "PT2H", requires_entities: [...]
+def action_name(state, args) do
+  # Can reference @action metadata
+end
+```
+
+**Execution Commands:**
+```elixir
+@command
+def command_name(state, args) do
+  # Execution-time logic only
+end
+```
+
+**Task Methods:**
+```elixir
+@task_method
+def task_name(state, args) do
+  # Task decomposition logic
+end
+```
+
+**Unigoal Methods:**
+```elixir
+@unigoal_method predicate: "location"
+def method_name(state, [subject, value]) do
+  # Goal decomposition logic
+end
+```
+
+**Multigoal Methods:**
+```elixir
+@multigoal_method goal_pattern: :pattern_name
+def method_name(state, multigoal) do
+  # Multigoal handling logic
+end
+```
+
+### Violation Examples (FORBIDDEN)
+
+❌ **WRONG - No attribute but references planner metadata:**
+```elixir
+def cook_meal(state, [meal_type]) do  # No @action attribute
+  case validate(@action[:requires_entities]) do  # ❌ References non-existent metadata
+end
+```
+
+❌ **WRONG - No attribute but presented as planner function:**
+```elixir
+def travel_to_location(state, [subject, target]) do  # No @unigoal_method attribute
+  # Presented as unigoal method but not registered with planner
+end
+```
+
+✅ **CORRECT - Helper function (no planner integration):**
+```elixir
+defp calculate_cooking_time(meal_type) do  # Private helper
+  # No planner metadata references, no attribute needed
+end
+```
+
+**ENFORCEMENT:** Functions without attributes are helper functions only - no planner integration allowed.
+
 ## Testing Philosophy
 
 This implementation follows Martin Fowler's testing styles to ensure appropriate test isolation and integration coverage:
@@ -189,10 +260,8 @@ defmodule TestCookingDomain do
     |> State.set_fact("chef_status", "chef_1", "busy")
   end
   
-  # ❌ TOMBSTONED: Commands are execution-time functions, not domain attributes
-  # Commands are called during action node execution, not registered as domain metadata
-  
   # Execution-time function (separate from domain registration)
+  @command
   def cook_meal_command(state, [meal_type]) do
     # Real-world execution with potential failures
     case attempt_cooking_with_failure_chance(state, meal_type) do
