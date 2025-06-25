@@ -26,7 +26,7 @@ var bool: <%= var.name %>;
 <%= constraint %>
 <% end %>
 
-% Objective
+% Solve with Objective
 <%= @objective %>
 
 % Output

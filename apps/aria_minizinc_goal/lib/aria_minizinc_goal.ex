@@ -196,27 +196,27 @@ defmodule AriaMinizincGoal do
       :minimize_time ->
         time_var_names = Enum.map(variables.time_vars, & &1.name)
         if length(time_var_names) > 0 do
-          "minimize max([#{Enum.join(time_var_names, ", ")}]);"
+          "solve minimize max([#{Enum.join(time_var_names, ", ")}]);"
         else
-          "minimize 0;"
+          "solve minimize 0;"
         end
       :minimize_distance ->
         location_var_names = Enum.map(variables.location_vars, & &1.name)
         if length(location_var_names) > 0 do
-          "minimize sum([#{Enum.join(location_var_names, ", ")}]);"
+          "solve minimize sum([#{Enum.join(location_var_names, ", ")}]);"
         else
-          "minimize 0;"
+          "solve minimize 0;"
         end
       :maximize_efficiency ->
         boolean_var_names = Enum.map(variables.boolean_vars, & &1.name)
         if length(boolean_var_names) > 0 do
           bool_conditions = Enum.map(boolean_var_names, fn name -> "if #{name} then 1 else 0 endif" end)
-          "maximize sum([#{Enum.join(bool_conditions, ", ")}]);"
+          "solve maximize sum([#{Enum.join(bool_conditions, ", ")}]);"
         else
-          "maximize 0;"
+          "solve maximize 0;"
         end
       _ ->
-        "minimize 0;"
+        "solve minimize 0;"
     end
   end
 

@@ -12,8 +12,6 @@ defmodule AriaMinizincExecutor.Executor do
   @behaviour AriaMinizincExecutor.ExecutorBehaviour
   require Logger
 
-  # Cache MiniZinc version to avoid repeated checks
-  @version_cache_key :minizinc_version
 
   @doc """
   Execute raw MiniZinc content synchronously using Porcelain.
@@ -83,6 +81,9 @@ defmodule AriaMinizincExecutor.Executor do
   defp write_temp_file(content, opts) do
     try do
       temp_file = Path.join(opts[:temp_dir], "minizinc_#{:rand.uniform(10000)}.mzn")
+
+      Logger.debug("MiniZinc script content:\n#{content}")
+
       File.write!(temp_file, content)
       {:ok, temp_file}
     rescue
@@ -95,6 +96,8 @@ defmodule AriaMinizincExecutor.Executor do
     start_time = System.monotonic_time(:millisecond)
     solving_start = DateTime.utc_now() |> DateTime.to_iso8601()
 
+    Logger.debug("MiniZinc command line: minizinc #{Enum.join(args, " ")}")
+
     result = Porcelain.exec("minizinc", args, out: :string, err: :string)
 
     end_time = System.monotonic_time(:millisecond)
@@ -104,6 +107,7 @@ defmodule AriaMinizincExecutor.Executor do
 
     case result do
       %{status: 0, out: output} ->
+        Logger.debug("MiniZinc stdout:\n#{output}")
         parsed_solution = parse_minizinc_output(output)
 
         {:ok,
@@ -118,6 +122,10 @@ defmodule AriaMinizincExecutor.Executor do
          }}
 
       %{status: exit_code, out: output, err: error} ->
+        Logger.debug("MiniZinc failed with exit code #{exit_code}")
+        Logger.debug("MiniZinc stdout:\n#{output}")
+        Logger.debug("MiniZinc stderr:\n#{error}")
+
         {:error,
          %{
            status: :error,
@@ -131,6 +139,8 @@ defmodule AriaMinizincExecutor.Executor do
          }}
 
       %{status: :timeout} ->
+        Logger.debug("MiniZinc execution timed out after #{opts[:timeout]}ms")
+
         {:error, %{
           status: :timeout,
           timeout_ms: opts[:timeout],
