@@ -80,13 +80,24 @@ defmodule AriaMinizincStn do
         exec_options = [timeout: Keyword.get(options, :timeout, 30_000)]
 
         case AriaMinizincExecutor.exec(template_path, template_vars, exec_options) do
-          {:ok, raw_output} ->
+          {:ok, executor_result} ->
+            # Try to parse the raw output first, then fall back to parsed solution
+            raw_output = Map.get(executor_result, :raw_output, "")
+
             case parse_minizinc_output(raw_output) do
               {:ok, solution} ->
                 updated_stn = update_stn_with_solution(stn, solution)
                 {:ok, %{updated_stn | metadata: Map.put(updated_stn.metadata, :solver, :minizinc)}}
-              {:error, reason} ->
-                {:error, "Failed to parse MiniZinc output: #{reason}"}
+              {:error, _reason} ->
+                # Fallback: try parsing the structured solution from executor
+                case Map.get(executor_result, :solution) do
+                  %{start_times: start_times} when is_list(start_times) ->
+                    solution = %{status: :satisfiable, start_times: start_times}
+                    updated_stn = update_stn_with_solution(stn, solution)
+                    {:ok, %{updated_stn | metadata: Map.put(updated_stn.metadata, :solver, :minizinc)}}
+                  _ ->
+                    {:error, "Failed to parse MiniZinc output from both raw and structured formats"}
+                end
             end
 
           {:error, reason} ->
@@ -207,15 +218,20 @@ defmodule AriaMinizincStn do
 
   # Parse MiniZinc output (handles both string and structured responses)
   defp parse_minizinc_output(output) when is_binary(output) do
-    case Jason.decode(output) do
-      {:ok, %{"status" => "SATISFIABLE", "start_times" => start_times}} ->
-        {:ok, %{status: :satisfiable, start_times: start_times}}
-      {:ok, %{"status" => "UNSATISFIABLE"}} ->
+    cond do
+      String.contains?(output, "=====UNSATISFIABLE=====") ->
         {:ok, %{status: :unsatisfiable}}
-      {:ok, parsed} ->
-        {:error, "Invalid result format: #{inspect(parsed)}"}
-      {:error, reason} ->
-        {:error, "JSON decode failed: #{inspect(reason)}"}
+      true ->
+        case Jason.decode(output) do
+          {:ok, %{"status" => "SATISFIABLE", "start_times" => start_times}} ->
+            {:ok, %{status: :satisfiable, start_times: start_times}}
+          {:ok, %{"status" => "UNSATISFIABLE"}} ->
+            {:ok, %{status: :unsatisfiable}}
+          {:ok, parsed} ->
+            {:error, "Invalid result format: #{inspect(parsed)}"}
+          {:error, reason} ->
+            {:error, "JSON decode failed: #{inspect(reason)}"}
+        end
     end
   end
 
@@ -256,7 +272,8 @@ defmodule AriaMinizincStn do
       solved_times = extract_solved_times(stn, solution)
       %{updated_stn | metadata: Map.put(updated_stn.metadata, :solved_times, solved_times)}
     else
-      updated_stn
+      # For unsatisfiable cases, provide empty solved_times to prevent nil access
+      %{updated_stn | metadata: Map.put(updated_stn.metadata, :solved_times, %{})}
     end
   end
 
