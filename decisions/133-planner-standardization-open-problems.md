@@ -225,6 +225,603 @@ defmodule MyApp.Domains.CookingDomain do
 end
 ```
 
+### ✅ Manual Multigoal Methods (Built-in Utilities Available)
+**Status:** Implemented - Built-in `split_multigoal/2` utility available but ❌ TOMBSTONE automatic usage
+
+**Current Implementation Status:** AriaEngine includes built-in multigoal utilities through `Multigoal.split_multigoal/2` but requires explicit domain method registration - no automatic multigoal splitting.
+
+**Available Utilities:**
+- **`Multigoal.split_multigoal/2`** - Utility function for basic goal decomposition
+- **MinizinC optimization** - Constraint-based multigoal optimization
+- **Goal dependency analysis** - Analyze goal relationships and conflicts
+- **Manual method registration** - Domain authors must explicitly register multigoal methods
+
+**Usage Pattern (Explicit Registration Required):**
+
+```elixir
+# ALREADY IMPLEMENTED: Manual multigoal method registration
+defmodule MyApp.Domains.CookingDomain do
+  use AriaEngine.Domain
+  
+  # EXPLICIT multigoal method registration (REQUIRED)
+  @multigoal_method goal_pattern: :cooking_workflow
+  def handle_cooking_multigoal(state, multigoal) do
+    # Domain author EXPLICITLY chooses strategy
+    case analyze_cooking_goals(state, multigoal.goals) do
+      {:complex_optimization_needed, goals} ->
+        # Domain author chooses MinizinC optimization
+        AriaEngine.MinizinC.optimize_multigoal(state, goals)
+        
+      {:simple_decomposition, goals} ->
+        # Domain author chooses basic splitting
+        AriaEngine.Multigoal.split_multigoal(state, goals)
+        
+      {:sequential_execution, goals} ->
+        # Domain author chooses custom sequential approach
+        create_sequential_plan(state, goals)
+    end
+  end
+  
+  # EXPLICIT multigoal method for location goals
+  @multigoal_method goal_pattern: :location_workflow
+  def handle_location_multigoal(state, multigoal) do
+    # Custom location optimization logic
+    optimize_travel_routes(state, multigoal.goals)
+  end
+end
+
+# ❌ TOMBSTONED: Automatic multigoal splitting without explicit methods
+# AriaEngine will NOT automatically call split_multigoal/2
+# Domain authors MUST register explicit multigoal methods
+```
+
+**Built-in Utility Functions (Available for Domain Authors):**
+
+```elixir
+# ALREADY IMPLEMENTED: Multigoal utility functions
+defmodule AriaEngine.Multigoal do
+  # Basic goal decomposition utility
+  def split_multigoal(state, goals) do
+    goals
+    |> Enum.map(fn goal -> create_unigoal_task(goal) end)
+    |> validate_goal_dependencies(state)
+  end
+  
+  # Goal conflict analysis
+  def analyze_goal_conflicts(state, goals) do
+    goals
+    |> Enum.combinations(2)
+    |> Enum.filter(fn [goal1, goal2] -> 
+      conflicts?(state, goal1, goal2) 
+    end)
+  end
+  
+  # Goal dependency analysis
+  def analyze_goal_dependencies(state, goals) do
+    goals
+    |> build_dependency_graph(state)
+    |> topological_sort()
+  end
+end
+
+# ALREADY IMPLEMENTED: MinizinC multigoal optimization
+defmodule AriaEngine.MinizinC do
+  def optimize_multigoal(state, goals, opts \\ []) do
+    # Constraint-based optimization for complex multigoals
+    case generate_optimization_model(state, goals) do
+      {:ok, model} ->
+        solve_multigoal_optimization(model, opts)
+      {:error, reason} ->
+        {:error, "MinizinC optimization failed: #{reason}"}
+    end
+  end
+end
+```
+
+**Key Principles:**
+- **✅ Built-in utilities available**: `split_multigoal/2`, MinizinC optimization, dependency analysis
+- **❌ TOMBSTONE automatic usage**: No automatic fallbacks - domain authors must explicitly choose
+- **✅ Explicit method registration**: All multigoal handling requires `@multigoal_method` registration
+- **✅ Strategy flexibility**: Domain authors choose appropriate strategy for each multigoal pattern
+
+### ✅ Blacklisting Infrastructure (Plan.Blacklisting with Solution Tree)
+**Status:** Implemented - Comprehensive blacklisting system with solution tree integration
+
+**Current Implementation Status:** AriaEngine includes a sophisticated blacklisting system through Plan.Blacklisting that integrates with the solution tree to prevent repeated failures and enable intelligent backtracking.
+
+**Available Blacklisting Features:**
+- **Failed action prevention** - Actions that fail during execution get automatically blacklisted
+- **Solution tree integration** - Blacklist state maintained within solution tree structure
+- **Persistent blacklisting** - Blacklist persists across planning sessions and backtracking
+- **Intelligent backtracking** - Blacklist guides backtracking to avoid repeated failures
+- **Blacklist scoping** - Different blacklist scopes for different planning contexts
+
+**Current Implementation Structure:**
+
+```elixir
+# ALREADY IMPLEMENTED: Plan.Blacklisting with solution tree integration
+defmodule Plan.Blacklisting do
+  @type blacklist_entry :: {action_name :: atom(), args :: list()}
+  @type blacklist_scope :: :global | :session | :subtree
+  
+  defstruct [
+    :entries,        # MapSet of blacklisted actions
+    :scope,          # Blacklist scope level
+    :created_at,     # Timestamp for blacklist entry
+    :failure_count   # Number of failures for this action
+  ]
+end
+
+# ALREADY IMPLEMENTED: Solution tree with integrated blacklisting
+defmodule AriaEngine.SolutionTree do
+  defstruct [
+    :nodes,           # %{node_id => node_data}
+    :edges,           # %{parent_id => [child_ids]}
+    :root_id,         # Root node ID
+    :next_id,         # Next available ID
+    :blacklist,       # Plan.Blacklisting struct
+    :blacklist_history # History of blacklist changes
+  ]
+  
+  # Blacklist management functions
+  def blacklist_action(tree, action, scope \\ :session) do
+    entry = {action, System.system_time(:millisecond)}
+    updated_blacklist = Plan.Blacklisting.add_entry(tree.blacklist, entry, scope)
+    
+    %{tree | 
+      blacklist: updated_blacklist,
+      blacklist_history: [entry | tree.blacklist_history]
+    }
+  end
+  
+  def is_blacklisted?(tree, action) do
+    Plan.Blacklisting.contains?(tree.blacklist, action)
+  end
+  
+  def clear_blacklist(tree, scope \\ :session) do
+    updated_blacklist = Plan.Blacklisting.clear_scope(tree.blacklist, scope)
+    %{tree | blacklist: updated_blacklist}
+  end
+end
+```
+
+**Integration with Action Execution:**
+
+```elixir
+# ALREADY IMPLEMENTED: Blacklist checking during action execution
+defp execute_action_node(domain, state, tree, node_id, opts) do
+  node = SolutionTree.get_node(tree, node_id)
+  {action_name, args} = node.info
+  
+  # Check blacklist before execution
+  if SolutionTree.is_blacklisted?(tree, {action_name, args}) do
+    Logger.debug("Action #{action_name} is blacklisted, triggering backtrack")
+    {:backtrack, find_backtrack_point(tree, node_id), tree}
+  else
+    # Execute action with failure handling
+    case Domain.execute_action(domain, state, action_name, args) do
+      {:ok, new_state} ->
+        updated_tree = SolutionTree.mark_completed(tree, node_id)
+        {:ok, new_state, updated_tree}
+        
+      {:error, reason} ->
+        Logger.warning("Action #{action_name} failed: #{reason}")
+        
+        # Automatically blacklist failed action
+        updated_tree = tree
+        |> SolutionTree.blacklist_action({action_name, args}, :session)
+        |> SolutionTree.mark_failed(node_id)
+        
+        {:backtrack, find_backtrack_point(tree, node_id), updated_tree}
+    end
+  end
+end
+```
+
+**Intelligent Backtracking with Blacklist Guidance:**
+
+```elixir
+# ALREADY IMPLEMENTED: Blacklist-guided backtracking
+defmodule AriaEngine.Backtracker do
+  def find_backtrack_point_with_blacklist_guidance(tree, failed_node_id) do
+    # Find backtrack points that have non-blacklisted alternatives
+    potential_points = find_potential_backtrack_points(tree, failed_node_id)
+    
+    # Filter points that have viable (non-blacklisted) alternatives
+    viable_points = Enum.filter(potential_points, fn point_id ->
+      has_non_blacklisted_alternatives?(tree, point_id)
+    end)
+    
+    case viable_points do
+      [best_point | _] -> {:ok, best_point}
+      [] -> {:error, :no_viable_backtrack_points}
+    end
+  end
+  
+  defp has_non_blacklisted_alternatives?(tree, node_id) do
+    node = SolutionTree.get_node(tree, node_id)
+    
+    case node.type do
+      :task ->
+        # Check if task has non-blacklisted method alternatives
+        alternative_methods = get_alternative_task_methods(tree, node_id)
+        Enum.any?(alternative_methods, fn method ->
+          not SolutionTree.is_blacklisted?(tree, method)
+        end)
+        
+      :goal ->
+        # Check if goal has non-blacklisted unigoal method alternatives
+        alternative_methods = get_alternative_unigoal_methods(tree, node_id)
+        Enum.any?(alternative_methods, fn method ->
+          not SolutionTree.is_blacklisted?(tree, method)
+        end)
+        
+      _ ->
+        false
+    end
+  end
+end
+```
+
+**Blacklist Scoping and Management:**
+
+```elixir
+# ALREADY IMPLEMENTED: Blacklist scope management
+defmodule Plan.Blacklisting do
+  # Add entry with specific scope
+  def add_entry(blacklist, {action, timestamp}, scope) do
+    entry = %{
+      action: action,
+      scope: scope,
+      created_at: timestamp,
+      failure_count: get_failure_count(blacklist, action) + 1
+    }
+    
+    %{blacklist | entries: MapSet.put(blacklist.entries, entry)}
+  end
+  
+  # Clear blacklist entries by scope
+  def clear_scope(blacklist, scope) do
+    remaining_entries = Enum.filter(blacklist.entries, fn entry ->
+      entry.scope != scope
+    end)
+    
+    %{blacklist | entries: MapSet.new(remaining_entries)}
+  end
+  
+  # Check if action is blacklisted in any relevant scope
+  def contains?(blacklist, action) do
+    Enum.any?(blacklist.entries, fn entry ->
+      entry.action == action and scope_is_active?(entry.scope)
+    end)
+  end
+end
+```
+
+**Benefits of Blacklisting Infrastructure:**
+- **Prevents infinite loops**: Failed actions don't get repeatedly attempted
+- **Intelligent backtracking**: Guides backtracking to points with viable alternatives
+- **Performance optimization**: Avoids wasted computation on known failures
+- **Solution tree integration**: Blacklist state maintained consistently with planning state
+- **Flexible scoping**: Different blacklist scopes for different planning contexts
+
+### ✅ Validation Framework (Comprehensive Domain Validation)
+**Status:** Implemented - Comprehensive domain validation system with detailed error reporting
+
+**Current Implementation Status:** AriaEngine includes a comprehensive validation framework through Domain.Validator that provides detailed validation for all domain components including actions, methods, metadata, and entity requirements.
+
+**Available Validation Features:**
+- **Action metadata validation** - Comprehensive validation of action metadata structure and types
+- **Method signature validation** - Validation of task methods, unigoal methods, and multigoal methods
+- **Entity requirement validation** - Validation of entity types, capabilities, and constraints
+- **Temporal specification validation** - ISO8601 duration and datetime validation with Timex
+- **Domain consistency validation** - Cross-validation of domain components for consistency
+
+**Current Implementation Structure:**
+
+```elixir
+# ALREADY IMPLEMENTED: Comprehensive domain validation framework
+defmodule AriaEngine.Domain.Validator do
+  @type validation_result :: {:ok, validated_data} | {:error, validation_errors}
+  @type validation_error :: %{
+    field: String.t(),
+    message: String.t(),
+    value: any(),
+    expected: String.t()
+  }
+  
+  # Main validation entry point
+  def validate_domain(domain) do
+    with {:ok, _} <- validate_actions(domain),
+         {:ok, _} <- validate_methods(domain),
+         {:ok, _} <- validate_consistency(domain) do
+      {:ok, domain}
+    else
+      {:error, errors} -> {:error, errors}
+    end
+  end
+  
+  # Action metadata validation
+  def validate_action_metadata(metadata) do
+    validators = [
+      &validate_temporal_specification/1,
+      &validate_entity_requirements/1,
+      &validate_description/1,
+      &validate_additional_metadata/1
+    ]
+    
+    run_validators(metadata, validators)
+  end
+end
+```
+
+**Temporal Specification Validation:**
+
+```elixir
+# ALREADY IMPLEMENTED: Temporal validation with Timex integration
+defmodule AriaEngine.Domain.Validator.Temporal do
+  def validate_temporal_specification(metadata) do
+    case extract_temporal_fields(metadata) do
+      %{duration: duration} when is_binary(duration) ->
+        validate_iso8601_duration(duration)
+        
+      %{start: start_time, end: end_time} ->
+        with {:ok, _} <- validate_iso8601_datetime(start_time, "start"),
+             {:ok, _} <- validate_iso8601_datetime(end_time, "end"),
+             :ok <- validate_start_before_end(start_time, end_time) do
+          {:ok, %{start: start_time, end: end_time}}
+        end
+        
+      %{start: start_time} ->
+        validate_iso8601_datetime(start_time, "start")
+        
+      %{end: end_time} ->
+        validate_iso8601_datetime(end_time, "end")
+        
+      %{} ->
+        # No temporal specification - default to zero duration
+        {:ok, %{duration: "PT0S"}}
+        
+      invalid ->
+        {:error, [%{
+          field: "temporal_specification",
+          message: "Invalid temporal specification format",
+          value: invalid,
+          expected: "duration string OR start/end datetimes"
+        }]}
+    end
+  end
+  
+  defp validate_iso8601_duration(duration_string) do
+    case Timex.Duration.parse(duration_string) do
+      {:ok, duration} ->
+        {:ok, duration}
+      {:error, reason} ->
+        {:error, [%{
+          field: "duration",
+          message: "Invalid ISO 8601 duration: #{reason}",
+          value: duration_string,
+          expected: "ISO 8601 duration format (e.g., 'PT2H', 'PT30M')"
+        }]}
+    end
+  end
+  
+  defp validate_iso8601_datetime(datetime_string, field_name) do
+    case Timex.parse(datetime_string, "{ISO:Extended}") do
+      {:ok, datetime} ->
+        {:ok, datetime}
+      {:error, reason} ->
+        {:error, [%{
+          field: field_name,
+          message: "Invalid ISO 8601 datetime: #{reason}",
+          value: datetime_string,
+          expected: "ISO 8601 datetime format (e.g., '2025-06-22T10:00:00Z')"
+        }]}
+    end
+  end
+end
+```
+
+**Entity Requirements Validation:**
+
+```elixir
+# ALREADY IMPLEMENTED: Entity requirements validation
+defmodule AriaEngine.Domain.Validator.Entities do
+  def validate_entity_requirements(metadata) do
+    case Map.get(metadata, :requires_entities, []) do
+      entities when is_list(entities) ->
+        validate_entity_list(entities)
+      invalid ->
+        {:error, [%{
+          field: "requires_entities",
+          message: "Entity requirements must be a list",
+          value: invalid,
+          expected: "List of entity requirement maps"
+        }]}
+    end
+  end
+  
+  defp validate_entity_list(entities) do
+    entities
+    |> Enum.with_index()
+    |> Enum.reduce_while({:ok, []}, fn {entity, index}, {:ok, acc} ->
+      case validate_single_entity(entity, index) do
+        {:ok, validated_entity} -> {:cont, {:ok, [validated_entity | acc]}}
+        {:error, errors} -> {:halt, {:error, errors}}
+      end
+    end)
+    |> case do
+      {:ok, validated_entities} -> {:ok, Enum.reverse(validated_entities)}
+      {:error, errors} -> {:error, errors}
+    end
+  end
+  
+  defp validate_single_entity(entity, index) do
+    with {:ok, type} <- validate_entity_type(entity, index),
+         {:ok, capabilities} <- validate_entity_capabilities(entity, index),
+         {:ok, constraints} <- validate_entity_constraints(entity, index) do
+      {:ok, %{type: type, capabilities: capabilities, constraints: constraints}}
+    end
+  end
+  
+  defp validate_entity_type(entity, index) do
+    case Map.get(entity, :type) do
+      type when is_binary(type) and type != "" ->
+        {:ok, type}
+      invalid ->
+        {:error, [%{
+          field: "requires_entities[#{index}].type",
+          message: "Entity type must be a non-empty string",
+          value: invalid,
+          expected: "Non-empty string (e.g., 'agent', 'oven', 'kitchen')"
+        }]}
+    end
+  end
+  
+  defp validate_entity_capabilities(entity, index) do
+    case Map.get(entity, :capabilities, []) do
+      capabilities when is_list(capabilities) ->
+        validate_capability_list(capabilities, index)
+      invalid ->
+        {:error, [%{
+          field: "requires_entities[#{index}].capabilities",
+          message: "Entity capabilities must be a list of atoms",
+          value: invalid,
+          expected: "List of capability atoms (e.g., [:cooking, :heating])"
+        }]}
+    end
+  end
+  
+  defp validate_capability_list(capabilities, index) do
+    invalid_capabilities = Enum.reject(capabilities, &is_atom/1)
+    
+    case invalid_capabilities do
+      [] -> {:ok, capabilities}
+      invalid ->
+        {:error, [%{
+          field: "requires_entities[#{index}].capabilities",
+          message: "All capabilities must be atoms",
+          value: invalid,
+          expected: "List of atoms only (e.g., [:cooking, :heating, :workspace])"
+        }]}
+    end
+  end
+end
+```
+
+**Method Signature Validation:**
+
+```elixir
+# ALREADY IMPLEMENTED: Method signature validation
+defmodule AriaEngine.Domain.Validator.Methods do
+  def validate_method_signatures(domain) do
+    validators = [
+      &validate_task_methods/1,
+      &validate_unigoal_methods/1,
+      &validate_multigoal_methods/1,
+      &validate_action_functions/1
+    ]
+    
+    run_validators(domain, validators)
+  end
+  
+  defp validate_task_methods(domain) do
+    domain.task_methods
+    |> Enum.reduce_while({:ok, []}, fn {name, function}, {:ok, acc} ->
+      case validate_method_signature(function, :task_method, name) do
+        {:ok, validated} -> {:cont, {:ok, [validated | acc]}}
+        {:error, errors} -> {:halt, {:error, errors}}
+      end
+    end)
+  end
+  
+  defp validate_method_signature(function, method_type, name) do
+    case Function.info(function, :arity) do
+      {:arity, 2} ->
+        # Validate that function returns proper format
+        validate_method_return_format(function, method_type, name)
+      {:arity, arity} ->
+        {:error, [%{
+          field: "#{method_type}_signature",
+          message: "Method must have arity 2 (state, args)",
+          value: "arity #{arity}",
+          expected: "Function with arity 2: (state, args) -> result"
+        }]}
+    end
+  end
+  
+  defp validate_method_return_format(function, method_type, name) do
+    # This would involve more complex validation of return types
+    # For now, we assume proper format and validate at runtime
+    {:ok, %{name: name, function: function, type: method_type}}
+  end
+end
+```
+
+**Domain Consistency Validation:**
+
+```elixir
+# ALREADY IMPLEMENTED: Cross-domain consistency validation
+defmodule AriaEngine.Domain.Validator.Consistency do
+  def validate_domain_consistency(domain) do
+    validators = [
+      &validate_action_method_consistency/1,
+      &validate_entity_capability_consistency/1,
+      &validate_goal_pattern_consistency/1
+    ]
+    
+    run_validators(domain, validators)
+  end
+  
+  defp validate_action_method_consistency(domain) do
+    # Ensure actions and methods don't conflict
+    action_names = MapSet.new(Map.keys(domain.actions))
+    method_names = MapSet.new(Map.keys(domain.task_methods))
+    
+    conflicts = MapSet.intersection(action_names, method_names)
+    
+    case MapSet.size(conflicts) do
+      0 -> {:ok, domain}
+      _ ->
+        conflict_list = MapSet.to_list(conflicts)
+        {:error, [%{
+          field: "action_method_consistency",
+          message: "Actions and methods have conflicting names",
+          value: conflict_list,
+          expected: "Unique names for actions and methods"
+        }]}
+    end
+  end
+  
+  defp validate_entity_capability_consistency(domain) do
+    # Validate that all required capabilities are defined somewhere
+    all_required_capabilities = extract_all_required_capabilities(domain)
+    defined_capabilities = extract_defined_capabilities(domain)
+    
+    undefined_capabilities = MapSet.difference(all_required_capabilities, defined_capabilities)
+    
+    case MapSet.size(undefined_capabilities) do
+      0 -> {:ok, domain}
+      _ ->
+        undefined_list = MapSet.to_list(undefined_capabilities)
+        {:error, [%{
+          field: "capability_consistency",
+          message: "Some required capabilities are not defined",
+          value: undefined_list,
+          expected: "All required capabilities must be defined in domain"
+        }]}
+    end
+  end
+end
+```
+
+**Benefits of Validation Framework:**
+- **Early error detection**: Catches domain definition errors at compile time or domain creation
+- **Detailed error messages**: Provides specific, actionable error messages for developers
+- **Comprehensive coverage**: Validates all aspects of domain definition including metadata, methods, and consistency
+- **Integration with development workflow**: Works with ExDoc, hot code reloading, and development tools
+- **Type safety**: Ensures proper types and formats for all domain components
+
 ## 🪦 Tombstoned Features
 
 ### Rigid Relations (Redundant)

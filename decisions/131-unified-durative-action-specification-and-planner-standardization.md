@@ -325,6 +325,335 @@ Domain.add_action(:meeting, &meeting/2, %{
 **TIMEX INTEGRATION REQUIREMENT:**
 All temporal validation and parsing MUST use Timex instead of Elixir's base DateTime functionality for enhanced ISO 8601 support, better timezone handling, and more robust duration parsing.
 
+## ✅ IMPLEMENTED: ISO8601 Duration Support (AriaEngine.Utils)
+
+**Current Implementation Status:** AriaEngine already includes comprehensive ISO8601 duration support through AriaEngine.Utils with Timex integration.
+
+**Available Features:**
+- **ISO8601 duration parsing and formatting** with Timex integration
+- **Human-readable duration formatting** using ISO8601 strings  
+- **Datetime interval calculations** from start/end timestamps (compatible with ADR 131-134 approach)
+- **Duration validation** with proper error handling
+- **Timezone-aware datetime processing** through Timex
+
+**Usage Examples:**
+
+```elixir
+# ISO 8601 duration validation using Timex (ALREADY IMPLEMENTED)
+case AriaEngine.Utils.validate_iso8601_duration("PT2H") do
+  {:ok, duration} -> duration
+  {:error, reason} -> {:error, "invalid ISO 8601 duration: #{reason}"}
+end
+
+# ISO 8601 datetime validation using Timex (ALREADY IMPLEMENTED)
+case AriaEngine.Utils.validate_iso8601_datetime("2025-06-22T10:00:00Z") do
+  {:ok, datetime} -> datetime
+  {:error, reason} -> {:error, "invalid ISO 8601 datetime: #{reason}"}
+end
+
+# Duration arithmetic and formatting (ALREADY IMPLEMENTED)
+AriaEngine.Utils.format_duration_human_readable("PT2H30M")
+# => "2 hours 30 minutes"
+```
+
+**Integration with Action Metadata:**
+
+```elixir
+# Floating duration (effort-based) - ALREADY SUPPORTED
+Domain.add_action(:cook_meal, &cook_meal/2, %{
+  duration: "PT2H",  # Parsed and validated by AriaEngine.Utils
+  requires_entities: [%{type: "agent", capabilities: [:cooking]}]
+})
+
+# Fixed schedule (time-based) - ALREADY SUPPORTED  
+Domain.add_action(:meeting, &meeting/2, %{
+  start: "2025-06-22T10:00:00Z",  # Parsed and validated by AriaEngine.Utils
+  end: "2025-06-22T11:00:00Z",    # Parsed and validated by AriaEngine.Utils
+  requires_entities: [%{type: "agent", capabilities: [:communication]}]
+})
+```
+
+## ✅ IMPLEMENTED: Temporal Conditions/Effects System (Domain.DurativeAction)
+
+**Current Implementation Status:** AriaEngine includes a sophisticated temporal conditions and effects system through Domain.DurativeAction that provides fine-grained temporal control.
+
+**Available Temporal Points:**
+- **`at_start`** - Conditions/effects that apply at the beginning of action execution
+- **`over_all`** - Conditions that must remain true throughout the entire action duration  
+- **`at_end`** - Conditions/effects that apply when the action completes
+- **`over_time`** - Effects that occur continuously during action execution
+
+**Current Implementation Structure:**
+
+```elixir
+# ALREADY IMPLEMENTED: Domain.DurativeAction with temporal conditions/effects
+%Domain.DurativeAction{
+  name: :cook_meal,
+  duration: {:fixed, 7200},  # 2 hours in seconds
+  
+  # Temporal conditions - when things must be true
+  conditions: %{
+    at_start: [{"available", "chef", true}, {"available", "oven", true}],
+    over_all: [{"temperature", "oven", {:>=, 350}}],
+    at_end: [{"recipe_complete", "meal", true}]
+  },
+  
+  # Temporal effects - when things change  
+  effects: %{
+    at_start: [{"status", "chef", "cooking"}, {"status", "oven", "in_use"}],
+    at_end: [{"status", "meal", "ready"}, {"status", "chef", "available"}],
+    over_time: [{"temperature", "kitchen", {:increase, 5}}]
+  },
+  
+  action_fn: &cook_meal_implementation/2
+}
+```
+
+**Integration with Unified Entity Model:**
+
+```elixir
+# ALREADY IMPLEMENTED: Temporal conditions with entity requirements
+%Domain.DurativeAction{
+  name: :collaborative_cooking,
+  duration: {:fixed, 3600},
+  
+  # Entity requirements with temporal conditions
+  requires_entities: [
+    %{type: "agent", capabilities: [:cooking, :teamwork]},
+    %{type: "agent", capabilities: [:prep_work]},
+    %{type: "oven", capabilities: [:heating, :baking]}
+  ],
+  
+  conditions: %{
+    at_start: [
+      {"available", "chef_1", true},
+      {"available", "prep_cook", true}, 
+      {"temperature", "oven", {:>=, 350}}
+    ],
+    over_all: [
+      {"coordination", "team", "active"},
+      {"temperature", "oven", {:between, 350, 450}}
+    ],
+    at_end: [
+      {"quality", "meal", {:>=, 8}},
+      {"cleanup", "kitchen", "complete"}
+    ]
+  },
+  
+  effects: %{
+    at_start: [
+      {"status", "chef_1", "cooking"},
+      {"status", "prep_cook", "assisting"},
+      {"status", "oven", "in_use"}
+    ],
+    over_time: [
+      {"experience", "team", {:increase, 1}},
+      {"kitchen_heat", "environment", {:increase, 2}}
+    ],
+    at_end: [
+      {"status", "meal", "ready"},
+      {"status", "chef_1", "available"},
+      {"status", "prep_cook", "available"},
+      {"status", "oven", "available"}
+    ]
+  }
+}
+```
+
+**Benefits of Temporal Conditions/Effects:**
+- **Realistic action modeling**: Model ongoing requirements and state changes over time
+- **Resource conflict detection**: Detect conflicts during planning phase
+- **Fine-grained temporal reasoning**: Support complex scheduling scenarios
+- **State consistency**: Ensure proper state transitions throughout action execution
+
+## ✅ IMPLEMENTED: Execution Strategy Framework (LazyExecutionStrategy)
+
+**Current Implementation Status:** AriaEngine includes a comprehensive execution strategy framework through HybridPlanner.Strategies.Default.LazyExecutionStrategy that provides step-by-step execution with failure handling and performance monitoring.
+
+**Available Execution Capabilities:**
+- **Step-by-step execution** with `execute_step/4` (needs alignment with ADR 131-134 iPyHop-style system)
+- **Execution failure handling** with `handle_execution_failure/4`
+- **Execution context tracking** with performance metrics
+- **Strategy capability system** with `supports?/1` and `strategy_info/0`
+- **Performance profiling** with execution statistics
+
+**Current Implementation Structure:**
+
+```elixir
+# ALREADY IMPLEMENTED: LazyExecutionStrategy with iPyHop integration
+defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
+  @behaviour HybridPlanner.Strategies.ExecutionStrategy
+  
+  # Execute complete plan with lazy refinement
+  def execute_plan(solution_tree, initial_state, strategies, opts \\ []) do
+    domain = Map.get(opts, :domain)
+    
+    case Plan.Core.plan(domain, initial_state, opts) do
+      {:ok, final_state} -> {:ok, final_state}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+  
+  # Execute individual step with state validation
+  def execute_step(step, current_state, strategies, opts \\ []) do
+    state_strategy = Map.get(strategies, :state_strategy)
+    domain = Map.get(opts, :domain)
+    
+    case step do
+      {action_name, args} when is_atom(action_name) ->
+        state_strategy.apply_action(current_state, {action_name, args}, domain, opts)
+      _ ->
+        {:error, "Unknown step format: #{inspect(step)}"}
+    end
+  end
+  
+  # Handle execution failures with recovery
+  def handle_execution_failure(failure, current_state, strategies, opts \\ []) do
+    case failure do
+      {:action_failed, action_name, reason} ->
+        Logger.warning("Action #{action_name} failed - #{reason}")
+        {:ok, current_state}  # Continue with current state
+      {:temporal_violation, constraint, reason} ->
+        Logger.warning("Temporal violation - #{reason}")
+        {:ok, current_state}  # Continue with current state
+      _ ->
+        {:error, "Cannot recover from failure: #{inspect(failure)}"}
+    end
+  end
+end
+```
+
+**Integration with Unified Entity Model:**
+
+```elixir
+# ALREADY IMPLEMENTED: Execution with entity requirement validation
+def execute_action_with_entities(action_name, args, state, domain, opts) do
+  # Get action metadata including entity requirements
+  action_metadata = Domain.get_action_metadata(domain, action_name)
+  
+  # Validate entity requirements before execution
+  case validate_entity_requirements(state, action_metadata.requires_entities) do
+    {:ok, validated_entities} ->
+      # Execute action with validated entities
+      execute_step({action_name, args}, state, strategies, opts)
+    {:error, reason} ->
+      {:error, "Entity validation failed: #{reason}"}
+  end
+end
+
+# Entity requirement validation during execution
+defp validate_entity_requirements(state, entity_requirements) do
+  Enum.reduce_while(entity_requirements, {:ok, []}, fn entity_req, {:ok, acc} ->
+    case find_available_entity(state, entity_req) do
+      {:ok, entity_id} -> {:cont, {:ok, [entity_id | acc]}}
+      {:error, reason} -> {:halt, {:error, reason}}
+    end
+  end)
+end
+
+defp find_available_entity(state, %{type: type, capabilities: capabilities}) do
+  # Find entities with required type and capabilities
+  entities = find_entities_with_capabilities(state, capabilities)
+  |> Enum.filter(fn entity_id ->
+    State.get_fact(state, "type", entity_id) == type and
+    State.get_fact(state, "available", entity_id) == true
+  end)
+  
+  case entities do
+    [entity_id | _] -> {:ok, entity_id}
+    [] -> {:error, "No available entity with type #{type} and capabilities #{inspect(capabilities)}"}
+  end
+end
+```
+
+**Execution Context and Performance Monitoring:**
+
+```elixir
+# ALREADY IMPLEMENTED: Execution context tracking
+def create_execution_context(initial_state, opts \\ []) do
+  %{
+    initial_state: initial_state,
+    current_state: initial_state,
+    executed_steps: [],
+    step_count: 0,
+    start_time: System.system_time(:millisecond),
+    last_step_time: System.system_time(:millisecond),
+    opts: opts
+  }
+end
+
+def update_execution_context(context, step, new_state) do
+  %{
+    context
+    | current_state: new_state,
+      executed_steps: [step | context.executed_steps],
+      step_count: context.step_count + 1,
+      last_step_time: System.system_time(:millisecond)
+  }
+end
+
+def get_execution_stats(context) do
+  current_time = System.system_time(:millisecond)
+  total_time = current_time - context.start_time
+  
+  %{
+    total_steps: context.step_count,
+    total_time_ms: total_time,
+    average_step_time_ms: if context.step_count > 0, do: total_time / context.step_count, else: 0,
+    execution_rate: if total_time > 0, do: context.step_count / (total_time / 1000), else: 0
+  }
+end
+```
+
+**Strategy Capability System:**
+
+```elixir
+# ALREADY IMPLEMENTED: Strategy introspection and capabilities
+def strategy_info do
+  %{
+    name: "Lazy Execution Strategy",
+    version: "1.0.0",
+    description: "Default lazy refinement execution strategy",
+    capabilities: [
+      :lazy_refinement,
+      :step_by_step_execution,
+      :basic_failure_recovery,
+      :action_validation
+    ],
+    limitations: [:no_parallel_execution, :simple_recovery_model, :no_rollback_support],
+    underlying_implementation: "Plan.Core.run_lazy_refineahead"
+  }
+end
+
+def supports?(feature) when is_atom(feature) do
+  capabilities = strategy_info()[:capabilities]
+  feature in capabilities
+end
+
+def performance_profile do
+  %{
+    execution_model: :lazy_refinement,
+    memory_usage: :low,
+    scalability: :good,
+    fault_tolerance: :basic,
+    parallelization: :none
+  }
+end
+```
+
+**iPyHop Alignment Requirements:**
+- **Solution tree integration**: Execute actions as `:action` type nodes with highest priority
+- **Backtracking support**: Handle execution failures by triggering replanning
+- **State consistency**: Maintain proper state transitions during lazy refinement
+- **Method resolution**: Support task methods, unigoal methods, and actions in proper hierarchy
+
+**Benefits of Execution Strategy Framework:**
+- **Modular execution**: Clean separation between planning and execution strategies
+- **Failure recovery**: Graceful handling of execution failures with backtracking
+- **Performance monitoring**: Detailed execution statistics and profiling
+- **Strategy flexibility**: Support for different execution models and capabilities
+- **iPyHop compatibility**: Proper integration with solution tree and lazy refinement
+
 ### Timex Implementation Details
 
 **Required Timex Functions:**

@@ -409,6 +409,490 @@ def cook_meal(state, [meal_type]) do
 end
 ```
 
+### Temporal Conditions/Effects Examples
+```elixir
+# ALREADY IMPLEMENTED: Temporal conditions/effects using Domain.DurativeAction
+defmodule MyApp.Domains.AdvancedCookingDomain do
+  use AriaEngine.Domain
+  
+  # Complex durative action with temporal conditions and effects
+  @action duration: "PT2H",
+          requires_entities: [
+            %{type: "agent", capabilities: [:cooking, :teamwork]},
+            %{type: "agent", capabilities: [:prep_work]},
+            %{type: "oven", capabilities: [:heating, :baking]}
+          ]
+  def collaborative_cooking(state, [meal_type]) do
+    # Create durative action with temporal conditions/effects
+    durative_action = %Domain.DurativeAction{
+      name: :collaborative_cooking,
+      duration: {:fixed, 7200},  # 2 hours in seconds
+      
+      # Temporal conditions - when things must be true
+      conditions: %{
+        at_start: [
+          {"available", "chef_1", true},
+          {"available", "prep_cook", true}, 
+          {"temperature", "oven", {:>=, 350}}
+        ],
+        over_all: [
+          {"coordination", "team", "active"},
+          {"temperature", "oven", {:between, 350, 450}},
+          {"workspace", "kitchen", "clean"}
+        ],
+        at_end: [
+          {"quality", "meal", {:>=, 8}},
+          {"cleanup", "kitchen", "complete"}
+        ]
+      },
+      
+      # Temporal effects - when things change  
+      effects: %{
+        at_start: [
+          {"status", "chef_1", "cooking"},
+          {"status", "prep_cook", "assisting"},
+          {"status", "oven", "in_use"},
+          {"workspace", "kitchen", "busy"}
+        ],
+        over_time: [
+          {"experience", "team", {:increase, 1}},
+          {"kitchen_heat", "environment", {:increase, 2}},
+          {"aroma", "kitchen", {:intensify, 0.1}}
+        ],
+        at_end: [
+          {"status", "meal", "ready"},
+          {"status", "chef_1", "available"},
+          {"status", "prep_cook", "available"},
+          {"status", "oven", "available"},
+          {"workspace", "kitchen", "clean"}
+        ]
+      },
+      
+      action_fn: &collaborative_cooking_implementation/2
+    }
+    
+    # Execute durative action with temporal validation
+    case Domain.execute_durative_action(state, durative_action) do
+      {:ok, final_state} -> {:ok, final_state}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+  
+  # Meeting example with fixed schedule and temporal constraints
+  @action start: "2025-06-22T10:00:00Z", 
+          end: "2025-06-22T11:00:00Z",
+          requires_entities: [
+            %{type: "agent", capabilities: [:communication]},
+            %{type: "conference_room", capabilities: [:meeting_space]}
+          ]
+  def scheduled_meeting(state, [participants]) do
+    durative_action = %Domain.DurativeAction{
+      name: :scheduled_meeting,
+      duration: {:fixed_interval, "2025-06-22T10:00:00Z", "2025-06-22T11:00:00Z"},
+      
+      conditions: %{
+        at_start: [
+          {"available", "conference_room_1", true},
+          {"participants_ready", "meeting", true}
+        ],
+        over_all: [
+          {"room_reserved", "conference_room_1", true},
+          {"focus_level", "participants", {:>=, 7}}
+        ],
+        at_end: [
+          {"agenda_complete", "meeting", true},
+          {"notes_recorded", "meeting", true}
+        ]
+      },
+      
+      effects: %{
+        at_start: [
+          {"status", "conference_room_1", "in_use"},
+          {"status", "meeting", "in_progress"}
+        ],
+        over_time: [
+          {"progress", "agenda", {:increase, 0.02}}  # 2% per minute
+        ],
+        at_end: [
+          {"status", "conference_room_1", "available"},
+          {"status", "meeting", "completed"},
+          {"knowledge_shared", "team", true}
+        ]
+      },
+      
+      action_fn: &scheduled_meeting_implementation/2
+    }
+    
+    Domain.execute_durative_action(state, durative_action)
+  end
+  
+  # Open-ended interval example (start time only)
+  @action start: "2025-06-22T14:00:00Z",
+          requires_entities: [
+            %{type: "agent", capabilities: [:research]},
+            %{type: "library", capabilities: [:information_access]}
+          ]
+  def research_session(state, [topic]) do
+    durative_action = %Domain.DurativeAction{
+      name: :research_session,
+      duration: {:open_ended_start, "2025-06-22T14:00:00Z"},
+      
+      conditions: %{
+        at_start: [
+          {"available", "researcher", true},
+          {"access", "library", true}
+        ],
+        over_all: [
+          {"focus", "researcher", {:>=, 6}},
+          {"resources", "library", "accessible"}
+        ]
+        # No at_end conditions - open-ended
+      },
+      
+      effects: %{
+        at_start: [
+          {"status", "researcher", "researching"},
+          {"session", "research", "active"}
+        ],
+        over_time: [
+          {"knowledge", topic, {:increase, 0.1}},
+          {"fatigue", "researcher", {:increase, 0.05}}
+        ]
+        # Effects continue until manually stopped
+      },
+      
+      action_fn: &research_session_implementation/2
+    }
+    
+    Domain.execute_durative_action(state, durative_action)
+  end
+end
+```
+
+### Execution Context Examples with Performance Monitoring
+```elixir
+# ALREADY IMPLEMENTED: Execution context tracking with LazyExecutionStrategy
+defmodule MyApp.ExecutionExamples do
+  
+  # Create execution context with performance monitoring
+  def execute_with_monitoring(domain, initial_state, todo_list, opts \\ []) do
+    # Create execution context with monitoring
+    context = HybridPlanner.Strategies.Default.LazyExecutionStrategy.create_execution_context(
+      initial_state, 
+      Map.merge(opts, %{monitoring: true, profiling: true})
+    )
+    
+    # Execute with step-by-step monitoring
+    case execute_with_context(domain, context, todo_list) do
+      {:ok, final_state, final_context} ->
+        # Get execution statistics
+        stats = HybridPlanner.Strategies.Default.LazyExecutionStrategy.get_execution_stats(final_context)
+        
+        Logger.info("Execution completed successfully")
+        Logger.info("Total steps: #{stats.total_steps}")
+        Logger.info("Total time: #{stats.total_time_ms}ms")
+        Logger.info("Average step time: #{stats.average_step_time_ms}ms")
+        Logger.info("Execution rate: #{stats.execution_rate} steps/second")
+        
+        {:ok, final_state, stats}
+        
+      {:error, reason, context} ->
+        # Get partial execution statistics
+        stats = HybridPlanner.Strategies.Default.LazyExecutionStrategy.get_execution_stats(context)
+        
+        Logger.error("Execution failed: #{reason}")
+        Logger.info("Partial execution - #{stats.total_steps} steps completed")
+        
+        {:error, reason, stats}
+    end
+  end
+  
+  # Step-by-step execution with context updates
+  defp execute_with_context(domain, context, todo_list) do
+    Enum.reduce_while(todo_list, {:ok, context.current_state, context}, fn step, {:ok, state, ctx} ->
+      # Execute individual step with monitoring
+      case HybridPlanner.Strategies.Default.LazyExecutionStrategy.execute_step(
+        step, state, %{state_strategy: AriaEngine.State}, %{domain: domain}
+      ) do
+        {:ok, new_state} ->
+          # Update execution context with step results
+          updated_context = HybridPlanner.Strategies.Default.LazyExecutionStrategy.update_execution_context(
+            ctx, step, new_state
+          )
+          
+          # Log step completion
+          Logger.debug("Step completed: #{inspect(step)}")
+          Logger.debug("Context: #{updated_context.step_count} steps, #{updated_context.last_step_time - updated_context.start_time}ms elapsed")
+          
+          {:cont, {:ok, new_state, updated_context}}
+          
+        {:error, reason} ->
+          # Handle execution failure with context preservation
+          Logger.warning("Step failed: #{inspect(step)} - #{reason}")
+          
+          case HybridPlanner.Strategies.Default.LazyExecutionStrategy.handle_execution_failure(
+            {:action_failed, step, reason}, state, %{state_strategy: AriaEngine.State}, %{domain: domain}
+          ) do
+            {:ok, recovered_state} ->
+              Logger.info("Execution failure recovered, continuing")
+              {:cont, {:ok, recovered_state, ctx}}
+              
+            {:error, recovery_reason} ->
+              Logger.error("Execution failure recovery failed: #{recovery_reason}")
+              {:halt, {:error, recovery_reason, ctx}}
+          end
+      end
+    end)
+  end
+  
+  # Entity requirement validation during execution
+  def execute_with_entity_validation(domain, state, action_name, args) do
+    # Get action metadata including entity requirements
+    action_metadata = Domain.get_action_metadata(domain, action_name)
+    
+    # Validate entity requirements before execution
+    case validate_entity_requirements_with_monitoring(state, action_metadata.requires_entities) do
+      {:ok, validated_entities, validation_time} ->
+        Logger.debug("Entity validation completed in #{validation_time}ms")
+        Logger.debug("Validated entities: #{inspect(validated_entities)}")
+        
+        # Execute action with validated entities
+        start_time = System.system_time(:millisecond)
+        
+        case HybridPlanner.Strategies.Default.LazyExecutionStrategy.execute_step(
+          {action_name, args}, state, %{state_strategy: AriaEngine.State}, %{domain: domain}
+        ) do
+          {:ok, new_state} ->
+            execution_time = System.system_time(:millisecond) - start_time
+            Logger.info("Action #{action_name} executed successfully in #{execution_time}ms")
+            {:ok, new_state}
+            
+          {:error, reason} ->
+            execution_time = System.system_time(:millisecond) - start_time
+            Logger.error("Action #{action_name} failed after #{execution_time}ms: #{reason}")
+            {:error, reason}
+        end
+        
+      {:error, reason, validation_time} ->
+        Logger.error("Entity validation failed in #{validation_time}ms: #{reason}")
+        {:error, "Entity validation failed: #{reason}"}
+    end
+  end
+  
+  # Entity requirement validation with timing
+  defp validate_entity_requirements_with_monitoring(state, entity_requirements) do
+    start_time = System.system_time(:millisecond)
+    
+    result = Enum.reduce_while(entity_requirements, {:ok, []}, fn entity_req, {:ok, acc} ->
+      case find_available_entity_with_monitoring(state, entity_req) do
+        {:ok, entity_id, search_time} -> 
+          Logger.debug("Found entity #{entity_id} in #{search_time}ms")
+          {:cont, {:ok, [entity_id | acc]}}
+        {:error, reason, search_time} -> 
+          Logger.debug("Entity search failed in #{search_time}ms: #{reason}")
+          {:halt, {:error, reason}}
+      end
+    end)
+    
+    validation_time = System.system_time(:millisecond) - start_time
+    
+    case result do
+      {:ok, entities} -> {:ok, Enum.reverse(entities), validation_time}
+      {:error, reason} -> {:error, reason, validation_time}
+    end
+  end
+  
+  defp find_available_entity_with_monitoring(state, %{type: type, capabilities: capabilities}) do
+    start_time = System.system_time(:millisecond)
+    
+    # Find entities with required type and capabilities
+    entities = find_entities_with_capabilities(state, capabilities)
+    |> Enum.filter(fn entity_id ->
+      State.get_fact(state, "type", entity_id) == type and
+      State.get_fact(state, "available", entity_id) == true
+    end)
+    
+    search_time = System.system_time(:millisecond) - start_time
+    
+    case entities do
+      [entity_id | _] -> {:ok, entity_id, search_time}
+      [] -> {:error, "No available entity with type #{type} and capabilities #{inspect(capabilities)}", search_time}
+    end
+  end
+end
+```
+
+### Goal Verification Examples using Domain.Utils
+```elixir
+# ALREADY IMPLEMENTED: Goal verification using Domain.Utils
+defmodule MyApp.GoalVerificationExamples do
+  
+  # Automatic goal verification after unigoal methods
+  @unigoal_method goal_pattern: {"chef", "location", :any}
+  def travel_to_location(state, {"chef", "location", target}) do
+    current = State.get_fact(state, "location", "chef")
+    
+    if current == target do
+      # Goal already achieved - verify immediately
+      case Domain.Utils.verify_goal(state, {"chef", "location", target}) do
+        {:ok, true} -> 
+          Logger.debug("Goal already achieved and verified: chef at #{target}")
+          {:ok, []}
+        {:ok, false} -> 
+          Logger.warning("Goal verification failed despite state check")
+          {:error, "Goal verification inconsistency"}
+        {:error, reason} -> 
+          {:error, "Goal verification error: #{reason}"}
+      end
+    else
+      # Need to achieve goal - add verification task
+      {:ok, [
+        {:walk_to_location, ["chef", target]},
+        {:verify_goal, [{"chef", "location", target}]}  # Automatic verification
+      ]}
+    end
+  end
+  
+  # Complex goal verification with constraints
+  @unigoal_method goal_pattern: {"chef", "has_ingredients", :any}
+  def acquire_ingredients(state, {"chef", "has_ingredients", ingredient_list}) do
+    case Domain.Utils.verify_complex_goal(state, {"chef", "has_ingredients", ingredient_list}) do
+      {:ok, true} ->
+        Logger.debug("Chef already has all required ingredients")
+        {:ok, []}
+        
+      {:ok, false} ->
+        # Determine missing ingredients
+        current_ingredients = State.get_fact(state, "inventory", "chef") || []
+        missing_ingredients = ingredient_list -- current_ingredients
+        
+        Logger.debug("Missing ingredients: #{inspect(missing_ingredients)}")
+        
+        # Create acquisition plan with verification
+        acquisition_tasks = Enum.map(missing_ingredients, fn ingredient ->
+          {:acquire_ingredient, [ingredient]}
+        end)
+        
+        verification_task = {:verify_goal, [{"chef", "has_ingredients", ingredient_list}]}
+        
+        {:ok, acquisition_tasks ++ [verification_task]}
+        
+      {:error, reason} ->
+        {:error, "Goal verification failed: #{reason}"}
+    end
+  end
+  
+  # Multigoal verification example
+  @multigoal_method goal_pattern: :cooking_preparation
+  def handle_cooking_preparation(state, multigoal) do
+    # Verify each goal in multigoal before planning
+    verification_results = Enum.map(multigoal.goals, fn goal ->
+      case Domain.Utils.verify_goal(state, goal) do
+        {:ok, true} -> {:achieved, goal}
+        {:ok, false} -> {:needs_work, goal}
+        {:error, reason} -> {:error, goal, reason}
+      end
+    end)
+    
+    # Separate achieved goals from goals needing work
+    {achieved_goals, remaining_goals} = Enum.split_with(verification_results, fn
+      {:achieved, _} -> true
+      _ -> false
+    end)
+    
+    # Check for verification errors
+    error_goals = Enum.filter(verification_results, fn
+      {:error, _, _} -> true
+      _ -> false
+    end)
+    
+    case error_goals do
+      [] ->
+        Logger.info("#{length(achieved_goals)} goals already achieved")
+        Logger.info("#{length(remaining_goals)} goals need work")
+        
+        # Plan only for remaining goals
+        remaining_goal_list = Enum.map(remaining_goals, fn {:needs_work, goal} -> goal end)
+        
+        case AriaEngine.Multigoal.split_multigoal(state, remaining_goal_list) do
+          {:ok, plan} ->
+            # Add verification for the entire multigoal at the end
+            verification_task = {:verify_multigoal, [multigoal]}
+            {:ok, plan ++ [verification_task]}
+            
+          {:error, reason} ->
+            {:error, "Multigoal planning failed: #{reason}"}
+        end
+        
+      errors ->
+        error_details = Enum.map(errors, fn {:error, goal, reason} ->
+          "#{inspect(goal)}: #{reason}"
+        end)
+        {:error, "Goal verification errors: #{Enum.join(error_details, ", ")}"}
+    end
+  end
+  
+  # Goal verification with state queries
+  def verify_goal_with_state_queries(state, goal) do
+    case goal do
+      {"chef", "location", target_location} ->
+        # Simple fact verification
+        current_location = State.get_fact(state, "location", "chef")
+        
+        case current_location do
+          ^target_location -> 
+            Logger.debug("Goal verified: chef is at #{target_location}")
+            {:ok, true}
+          other_location -> 
+            Logger.debug("Goal not achieved: chef is at #{other_location}, not #{target_location}")
+            {:ok, false}
+          nil -> 
+            Logger.warning("Goal verification failed: chef location unknown")
+            {:error, "Chef location not found in state"}
+        end
+        
+      {"chef", "has_ingredients", ingredient_list} when is_list(ingredient_list) ->
+        # Complex verification with list checking
+        current_inventory = State.get_fact(state, "inventory", "chef") || []
+        
+        missing_ingredients = ingredient_list -- current_inventory
+        
+        case missing_ingredients do
+          [] -> 
+            Logger.debug("Goal verified: chef has all ingredients #{inspect(ingredient_list)}")
+            {:ok, true}
+          missing -> 
+            Logger.debug("Goal not achieved: missing ingredients #{inspect(missing)}")
+            {:ok, false}
+        end
+        
+      {"meal", "quality", min_quality} when is_number(min_quality) ->
+        # Numerical constraint verification
+        current_quality = State.get_fact(state, "quality", "meal")
+        
+        case current_quality do
+          quality when is_number(quality) and quality >= min_quality ->
+            Logger.debug("Goal verified: meal quality #{quality} >= #{min_quality}")
+            {:ok, true}
+          quality when is_number(quality) ->
+            Logger.debug("Goal not achieved: meal quality #{quality} < #{min_quality}")
+            {:ok, false}
+          nil ->
+            Logger.debug("Goal not achieved: meal quality not set")
+            {:ok, false}
+          invalid ->
+            Logger.warning("Goal verification failed: invalid quality value #{inspect(invalid)}")
+            {:error, "Invalid quality value"}
+        end
+        
+      unknown_goal ->
+        Logger.error("Unknown goal pattern: #{inspect(unknown_goal)}")
+        {:error, "Unknown goal pattern"}
+    end
+  end
+end
+```
+
 ## Implementation Architecture
 
 ### Core System Integration
