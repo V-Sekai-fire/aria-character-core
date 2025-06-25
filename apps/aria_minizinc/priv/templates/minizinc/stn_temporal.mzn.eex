@@ -1,7 +1,9 @@
 % Generated MiniZinc Model - Simple Temporal Network Problem
-% Variables: <%= @num_time_points %>
+% Variables: <%= @variable_count %>
+% Constraints: <%= @constraint_count %>
 % Generated at: <%= @generation_start %>
 
+% Parameters
 int: num_time_points = <%= @num_time_points %>;
 
 <%= if @num_time_points > 0 do %>
@@ -11,29 +13,25 @@ set of int: TIME_POINTS = 1..num_time_points;
 % Time point names for debugging
 array[TIME_POINTS] of string: time_point_names = [<%= Enum.map_join(@time_point_names, ", ", &"\"#{&1}\"") %>];
 
-% Distance constraint matrix
-% distance_matrix[i,j] = maximum distance from time point i to time point j
-% Constraint: time_points[j] - time_points[i] <= distance_matrix[i,j]
-array[TIME_POINTS, TIME_POINTS] of int: distance_matrix = [|<%= for {row, row_index} <- Enum.with_index(@distance_matrix) do %>
-  <%= Enum.join(row, ", ") %><%= if row_index < length(@distance_matrix) - 1, do: " |", else: "" %><% end %>
-|];
+% Time Point Variables
+<%= for var <- @variables.time_vars do %>
+var <%= var.domain %>: <%= var.name %>;
+<% end %>
 
-% Decision variables - time point assignments
-array[TIME_POINTS] of var 0..horizon: time_points;
+% Distance Matrix Variables
+<%= for var <- @variables.distance_vars do %>
+<%= var.definition %>
+<% end %>
 
-% STN Constraints
-% Core STN constraint: time_points[j] - time_points[i] <= distance_matrix[i,j]
-constraint forall(i, j in TIME_POINTS) (
-  time_points[j] - time_points[i] <= distance_matrix[i,j]
-);
+% Constraints
+<%= for constraint <- @constraints do %>
+<%= constraint %>
+<% end %>
 
-% Objective: minimize makespan (latest time point)
-var 0..horizon: makespan;
-constraint makespan = max(time_points);
+% Objective
+<%= @objective %>
 
-solve minimize makespan;
-
-% Output format
+% Output
 output [
   "time_points = [" ++ join(", ", [show(time_points[i]) | i in TIME_POINTS]) ++ "];\n",
   "makespan = " ++ show(makespan) ++ ";\n",

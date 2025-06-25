@@ -306,17 +306,6 @@ defmodule AriaMiniZinc.ValidationSolver do
     end)
   end
 
-  defp create_sequential_constraints(num_activities) when num_activities <= 1 do
-    []
-  end
-
-  defp create_sequential_constraints(num_activities) do
-    1..(num_activities - 1)
-    |> Enum.map(fn i ->
-      %{from_activity: i, to_activity: i + 1, min_distance: 0, max_distance: 1000}
-    end)
-  end
-
   defp convert_minizinc_solution(minizinc_solution, params) do
     activities = params["activities"] || []
     start_times = minizinc_solution[:start_times] || []

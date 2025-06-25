@@ -29,22 +29,7 @@ defmodule AriaMiniZinc do
         template_vars: %{num_activities: 3, durations: [10, 20, 15]})
   """
 
-  alias AriaMiniZinc.{Executor, Solver, ProblemGenerator, ValidationSolver}
-
-  @doc """
-  Solve a constraint satisfaction problem.
-
-  ## Parameters
-  - `problem_data` - Problem data from ProblemGenerator or custom format
-  - `options` - Solver options (timeout, solver type, etc.)
-
-  ## Returns
-  - `{:ok, solution}` - Successfully solved problem
-  - `{:error, reason}` - Failed to solve problem
-  """
-  def solve(problem_data, options \\ %{}) do
-    Solver.solve(problem_data, options)
-  end
+  alias AriaMiniZinc.{Executor, ProblemGenerator, ValidationSolver}
 
   @doc """
   Generate a MiniZinc problem from planning parameters.
@@ -79,27 +64,6 @@ defmodule AriaMiniZinc do
   end
 
   @doc """
-  Check if MiniZinc solver is available on the system.
-
-  ## Returns
-  - `{:ok, version}` - Solver is available
-  - `{:error, reason}` - Solver not available
-  """
-  def check_availability do
-    Solver.check_availability()
-  end
-
-  @doc """
-  Get list of available solvers.
-
-  ## Returns
-  List of available solver names
-  """
-  def available_solvers do
-    Solver.available_solvers()
-  end
-
-  @doc """
   Solve a validation problem using MiniZinc for pipeline validation.
 
   ## Parameters
@@ -115,19 +79,119 @@ defmodule AriaMiniZinc do
   end
 
   @doc """
-  Validate a MiniZinc model for syntax errors.
+  Multiply an integer by a multiplier using MiniZinc constraint solving.
 
   ## Parameters
-  - `model` - MiniZinc model string
+  - `input_value` - Integer to multiply (must be non-zero)
+  - `multiplier` - Integer multiplier (must be non-zero, defaults to 3)
+  - `options` - Optional execution options including executor override
 
   ## Returns
-  - `:ok` - Model is valid
-  - `{:error, reason}` - Model has syntax errors
+  - `{:ok, result}` - Successfully computed multiplication with timing
+  - `{:error, reason}` - Failed to compute multiplication
+
+  ## Examples
+
+      # Basic multiplication
+      {:ok, result} = AriaMiniZinc.multiply(5, 3)
+      result.result  # => 15
+
+      # With default multiplier
+      {:ok, result} = AriaMiniZinc.multiply(7)
+      result.result  # => 21
+
+      # With mock executor for testing
+      {:ok, result} = AriaMiniZinc.multiply(4, 2, executor: MockExecutor)
   """
-  def validate_model(model) do
-    case AriaMiniZinc.Solver.validate_model(model) do
-      :ok -> :ok
+  def multiply(input_value, multiplier_or_options \\ 3, options \\ [])
+
+  def multiply(input_value, multiplier_or_options, options) when is_integer(multiplier_or_options) do
+    # Called with explicit multiplier
+    multiplier = multiplier_or_options
+    with :ok <- validate_multiply_inputs(input_value, multiplier),
+         {:ok, result} <- execute_multiply(input_value, multiplier, options) do
+      {:ok, result}
+    else
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  def multiply(input_value, multiplier_or_options, _options) when is_list(multiplier_or_options) do
+    # Called with options as second parameter, use default multiplier
+    multiplier = 3
+    options = multiplier_or_options
+    with :ok <- validate_multiply_inputs(input_value, multiplier),
+         {:ok, result} <- execute_multiply(input_value, multiplier, options) do
+      {:ok, result}
+    else
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def multiply(input_value, multiplier_or_options, _options) do
+    # Catch-all for invalid types - validate inputs to get proper error message
+    case validate_multiply_inputs(input_value, multiplier_or_options) do
+      :ok -> {:error, "Unexpected input type"}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  # Validate multiplication inputs
+  defp validate_multiply_inputs(input_value, multiplier) do
+    cond do
+      not is_integer(input_value) ->
+        {:error, "input_value must be an integer"}
+      input_value == 0 ->
+        {:error, "input_value must be non-zero"}
+      not is_integer(multiplier) ->
+        {:error, "multiplier must be an integer"}
+      multiplier == 0 ->
+        {:error, "multiplier must be non-zero"}
+      true ->
+        :ok
+    end
+  end
+
+  # Execute multiplication via MiniZinc
+  defp execute_multiply(input_value, multiplier, options) do
+    executor = Keyword.get(options, :executor, Executor)
+
+    template_vars = %{
+      input_value: input_value,
+      multiplier: multiplier
+    }
+
+    exec_options = [
+      template_vars: template_vars,
+      timeout: Keyword.get(options, :timeout, 30_000)
+    ]
+
+    case executor.exec("multiply", exec_options) do
+      {:ok, %{status: :success, solution: solution} = result} ->
+        {:ok, %{
+          result: extract_result_value(solution),
+          solving_start: result[:solving_start] || generate_timestamp(),
+          solving_end: result[:solving_end] || generate_timestamp(),
+          duration: result[:duration] || "PT0.001S"
+        }}
+      {:ok, %{status: :error} = result} ->
+        {:error, "MiniZinc execution failed: #{inspect(result)}"}
+      {:error, reason} ->
+        {:error, "Executor failed: #{inspect(reason)}"}
+    end
+  end
+
+  # Extract result value from MiniZinc solution
+  defp extract_result_value(solution) when is_map(solution) do
+    Map.get(solution, :result) || Map.get(solution, "result")
+  end
+  defp extract_result_value(solution) when is_integer(solution) do
+    solution
+  end
+  defp extract_result_value(_), do: nil
+
+  # Generate ISO8601 timestamp
+  defp generate_timestamp do
+    DateTime.utc_now() |> DateTime.to_iso8601()
   end
 end

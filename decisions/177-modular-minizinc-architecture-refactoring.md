@@ -14,6 +14,9 @@ Refactor the MiniZinc constraint solving system into a modular architecture with
 
 1. **Foundation Layer**: `aria_minizinc_executor` - Pure MiniZinc execution via Porcelain
 2. **Domain-Specific Apps**: Individual apps for each problem domain with common prefix
+3. **MiniZinc-Only Strategy**: All domain apps use pure MiniZinc constraint solving without fallback mechanisms
+
+**TOMBSTONED**: The original dual solver strategy with Fixpoint fallback has been removed in favor of a simplified, MiniZinc-only approach.
 
 ## Implementation Plan
 
@@ -29,18 +32,25 @@ Refactor the MiniZinc constraint solving system into a modular architecture with
 ### Phase 2: Domain-Specific Apps
 - [x] Create `aria_minizinc_multiply` app
   - [x] Extract multiply functionality and templates
-  - [x] Implement dual solver strategy (MiniZinc + Fixpoint fallback)
+  - [x] ~~Implement dual solver strategy (MiniZinc + Fixpoint fallback)~~ **TOMBSTONED**
   - [x] Migrate multiply tests and mocks
 - [x] Create `aria_minizinc_stn` app
   - [x] Extract STN functionality and templates
-  - [x] Implement dual solver strategy (MiniZinc + Fixpoint CP solver)
+  - [x] ~~Implement dual solver strategy (MiniZinc + Fixpoint CP solver)~~ **TOMBSTONED**
   - [x] Migrate STN tests
-- [ ] Create `aria_minizinc_goal` app
-  - [ ] Extract goal solving functionality
-  - [ ] Migrate goal templates and tests
-- [ ] Create `aria_minizinc_validation` app
-  - [ ] Extract validation solver functionality
-  - [ ] Migrate validation tests
+- [x] Create `aria_minizinc_goal` app
+  - [x] Extract goal solving functionality and templates
+  - [x] ~~Implement dual solver strategy~~ **TOMBSTONED**
+  - [x] Migrate goal tests
+- [x] Validation functionality (integrated into STN app)
+  - [x] ValidationSolver is wrapper around STN temporal solving
+  - [x] No separate app needed - handled by aria_minizinc_stn
+
+### Phase 2.5: Fixpoint Fallback Tombstoning ✅ COMPLETE
+- [x] Remove all Fixpoint fallback code from domain apps
+- [x] Update APIs to MiniZinc-only strategy
+- [x] Clean up dependencies (remove `:fixpoint` from mix.exs files)
+- [x] Update documentation to reflect architectural decision
 
 ### Phase 3: Integration and Cleanup
 - [ ] Update all consumers to use specific domain apps
@@ -68,21 +78,22 @@ aria_minizinc_goal ─────┤
 aria_minizinc_validation ┘
 ```
 
-## Dual Solver Strategy
+## MiniZinc-Only Strategy
 
-Each domain app implements both MiniZinc and Fixpoint fallback:
+Each domain app implements pure MiniZinc constraint solving:
 
 ```elixir
 defmodule AriaMinizincMultiply do
   def solve(params, options \\ []) do
-    case Keyword.get(options, :solver, :auto) do
-      :minizinc -> solve_with_minizinc(params, options)
-      :fixpoint -> solve_with_fixpoint(params, options)
-      :auto -> auto_select_solver(params, options)
-    end
+    solve_with_minizinc(params, options)
   end
 end
 ```
+
+**Architectural Decision**: All fallback mechanisms have been tombstoned in favor of:
+- **Simplified APIs**: Direct MiniZinc execution without solver selection complexity
+- **Fail-fast behavior**: Clear error reporting when MiniZinc is unavailable
+- **Consistent architecture**: All domain apps follow the same MiniZinc-only pattern
 
 ## Benefits
 
@@ -90,7 +101,8 @@ end
 - **Independent Testing**: Each domain tested in isolation
 - **Dependency Management**: Apps only include required dependencies
 - **Deployment Flexibility**: Independent scaling and deployment
-- **Solver Flexibility**: MiniZinc with Fixpoint fallback per domain
+- **Simplified Architecture**: Pure MiniZinc approach eliminates fallback complexity
+- **Consistent Behavior**: All domain apps follow the same execution pattern
 
 ## Success Criteria
 
@@ -98,13 +110,22 @@ end
 - [ ] Clean encapsulation boundaries established
 - [ ] No cross-app module dependencies
 - [ ] All tests passing
-- [ ] Dual solver strategy working in each domain app
+- [ ] MiniZinc-only strategy implemented in each domain app
+- [ ] All fallback code removed and dependencies cleaned up
 
 ## Related ADRs
 
 - **ADR-126**: MiniZinc multigoal optimization with fallback
 - **ADR-128**: STN solver MiniZinc fallback implementation
 
+## Change Log
+
+### June 24, 2025
+- **TOMBSTONED**: Fixpoint fallback strategy removed from all domain apps
+- **Architectural Decision**: Converted to MiniZinc-only strategy for simplified, consistent behavior
+- **Rationale**: Fixpoint CP solver implementations were incomplete/broken, causing compilation issues
+- **Impact**: All domain apps now use pure MiniZinc constraint solving without fallback complexity
+
 ## Current Focus
 
-Starting with Phase 1: Create the foundation `aria_minizinc_executor` app to establish the infrastructure layer.
+Phase 2.5 Complete: Fixpoint fallback tombstoning documented. Next: Continue with Phase 3 integration and cleanup.

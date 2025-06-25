@@ -109,14 +109,29 @@ defmodule AriaMiniZinc.ProblemGenerator.STNProblemGenerator do
   # Generate the actual STN problem
   defp generate_stn_problem(timepoints, distance_matrix, options, generation_start) do
     horizon = Map.get(options, :horizon, 1000)
+    variable_count = length(timepoints)
+    constraint_count = count_active_constraints(distance_matrix)
+
+    # Generate structured variables following goal-solving conventions
+    variables = generate_structured_variables(timepoints, distance_matrix, horizon)
+
+    # Generate constraint strings
+    constraints = generate_constraint_strings(distance_matrix)
+
+    # Generate objective
+    objective = generate_objective_string()
 
     # Prepare template variables
     template_vars = %{
+      variable_count: variable_count,
+      constraint_count: constraint_count,
+      generation_start: generation_start,
       num_time_points: length(timepoints),
       time_point_names: timepoints,
-      distance_matrix: distance_matrix,
       horizon: horizon,
-      generation_start: generation_start
+      variables: variables,
+      constraints: constraints,
+      objective: objective
     }
 
     # Render the MiniZinc model using template
@@ -129,8 +144,8 @@ defmodule AriaMiniZinc.ProblemGenerator.STNProblemGenerator do
     # Create metadata
     metadata = %{
       goal_count: 0,  # STNs don't have goals
-      variable_count: length(timepoints),  # One variable per timepoint
-      constraint_count: count_active_constraints(distance_matrix),
+      variable_count: variable_count,
+      constraint_count: constraint_count,
       optimization: Common.determine_optimization_type(options),
       generation_start: generation_start,
       generation_end: generation_end,
@@ -149,6 +164,69 @@ defmodule AriaMiniZinc.ProblemGenerator.STNProblemGenerator do
       generation_start: generation_start,
       metadata: metadata
     }}
+  end
+
+  # Generate structured variables following goal-solving conventions
+  defp generate_structured_variables(timepoints, distance_matrix, horizon) do
+    time_vars = generate_time_point_variables(timepoints, horizon)
+    distance_vars = generate_distance_matrix_variables(distance_matrix)
+
+    %{
+      time_vars: time_vars,
+      distance_vars: distance_vars
+    }
+  end
+
+  # Generate time point variable definitions
+  defp generate_time_point_variables(timepoints, horizon) do
+    timepoints
+    |> Enum.with_index(1)
+    |> Enum.map(fn {_name, index} ->
+      %{
+        name: "time_points[#{index}]",
+        domain: "0..#{horizon}"
+      }
+    end)
+  end
+
+  # Generate distance matrix variable definitions
+  defp generate_distance_matrix_variables(distance_matrix) do
+    matrix_def = format_distance_matrix(distance_matrix)
+
+    [%{
+      definition: "array[TIME_POINTS, TIME_POINTS] of int: distance_matrix = #{matrix_def};"
+    }]
+  end
+
+  # Format distance matrix for MiniZinc
+  defp format_distance_matrix(distance_matrix) do
+    rows = distance_matrix
+    |> Enum.map(fn row ->
+      "  " <> Enum.join(row, ", ")
+    end)
+    |> Enum.join(" |\n")
+
+    "[|\n#{rows}\n|]"
+  end
+
+  # Generate constraint strings
+  defp generate_constraint_strings(_distance_matrix) do
+    [
+      "% STN Constraints",
+      "% Core STN constraint: time_points[j] - time_points[i] <= distance_matrix[i,j]",
+      "constraint forall(i, j in TIME_POINTS) (",
+      "  time_points[j] - time_points[i] <= distance_matrix[i,j]",
+      ");",
+      "",
+      "% Makespan constraint",
+      "var 0..horizon: makespan;",
+      "constraint makespan = max(time_points);"
+    ]
+  end
+
+  # Generate objective string
+  defp generate_objective_string do
+    "solve minimize makespan;"
   end
 
   # Count active constraints in distance matrix (non-infinity values)

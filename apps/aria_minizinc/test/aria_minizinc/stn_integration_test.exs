@@ -6,7 +6,6 @@ defmodule AriaMiniZinc.STNIntegrationTest do
   doctest AriaMiniZinc.ProblemGenerator
 
   alias AriaMiniZinc.ProblemGenerator
-  alias AriaMiniZinc.Solver
 
   describe "End-to-End STN Problem Generation" do
     test "generates complete STN problem from temporal goals" do
@@ -62,52 +61,6 @@ defmodule AriaMiniZinc.STNIntegrationTest do
       assert problem_data.metadata.variable_count == 6  # 6 timepoints
       assert is_binary(problem_data.metadata.generation_start)
       assert is_binary(problem_data.metadata.generation_end)
-    end
-
-    test "solves simple temporal network with 3 activities" do
-      domain = %{name: "simple_scheduling"}
-      state = %{entities: ["activity_a", "activity_b", "activity_c"]}
-      goals = [
-        {"activity_a", "location", "start"},
-        {"activity_b", "location", "middle"},
-        {"activity_c", "location", "end"}
-      ]
-
-      # Provide timepoints and distance matrix
-      timepoints = ["activity_a_start", "activity_a_end", "activity_b_start", "activity_b_end", "activity_c_start", "activity_c_end"]
-      distance_matrix = [
-        [0, 30, 999999, 999999, 999999, 999999],     # activity_a_start
-        [999999, 0, 0, 999999, 999999, 999999],      # activity_a_end -> activity_b_start
-        [999999, 999999, 0, 30, 999999, 999999],     # activity_b_start
-        [999999, 999999, 999999, 0, 0, 999999],      # activity_b_end -> activity_c_start
-        [999999, 999999, 999999, 999999, 0, 30],     # activity_c_start
-        [999999, 999999, 999999, 999999, 999999, 0]  # activity_c_end
-      ]
-
-      options = %{
-        problem_type: :stn,
-        temporal_constraints: true,
-        default_duration: 30,
-        timepoints: timepoints,
-        distance_matrix: distance_matrix
-      }
-
-      {:ok, problem_data} = ProblemGenerator.generate_problem(domain, state, goals, options)
-
-      # Test that the problem can be processed by the solver
-      # Note: This tests the data format compatibility, not actual solving
-      case Solver.validate_model(problem_data.model) do
-        :ok ->
-          # Model is syntactically valid
-          assert true
-        {:error, reason} ->
-          # If validation fails, it should be for semantic reasons, not syntax
-          refute String.contains?(reason, "syntax error")
-      end
-
-      # Verify STN constraint structure
-      assert String.contains?(problem_data.model, "distance_matrix")
-      assert String.contains?(problem_data.model, "time_points[j] - time_points[i] <= distance_matrix[i,j]")
     end
 
     test "optimizes makespan for scheduling problem" do

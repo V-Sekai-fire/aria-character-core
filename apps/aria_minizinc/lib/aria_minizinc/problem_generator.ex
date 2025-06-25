@@ -19,30 +19,6 @@ defmodule AriaMiniZinc.ProblemGenerator do
   @type options :: Common.options()
 
   @doc """
-  Generate and solve a MiniZinc problem from planning parameters.
-
-  ## Parameters
-  - `domain` - The planning domain
-  - `state` - Current state
-  - `goals` - List of goals in {subject, predicate, value} format
-  - `options` - Planning options and constraints
-
-  ## Returns
-  - `{:ok, result}` - Successfully solved problem with solution
-  - `{:error, reason}` - Failed to generate or solve problem
-  """
-  @spec solve_problem(domain(), state(), [goal()], options()) ::
-          {:ok, map()} | {:error, String.t()}
-  def solve_problem(domain, state, goals, options \\ %{}) do
-    with {:ok, problem_data} <- generate_problem(domain, state, goals, options),
-         {:ok, result} <- AriaMiniZinc.Solver.solve(problem_data, prepare_solver_options(options, problem_data)) do
-      {:ok, result}
-    else
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
-  @doc """
   Generate a MiniZinc problem from planning parameters.
 
   ## Parameters
@@ -81,23 +57,5 @@ defmodule AriaMiniZinc.ProblemGenerator do
         Logger.error("Failed to generate MiniZinc problem: #{inspect(error)}")
         {:error, "Problem generation failed: #{Exception.message(error)}"}
     end
-  end
-
-  # Prepare solver options from planning options and problem data
-  defp prepare_solver_options(options, problem_data) do
-    # Extract variable count based on problem type
-    variable_count = case Map.get(problem_data, :type) do
-      :goal_solving -> Map.get(problem_data, :variable_count, 0)
-      :stn -> Map.get(problem_data, :num_time_points, 0)
-      _ -> 0
-    end
-
-    %{
-      solver_type: Map.get(options, :solver_type, :production),
-      timeout: Map.get(options, :timeout, 30_000),
-      solver: Map.get(options, :solver, "org.minizinc.mip.coin-bc"),
-      variable_count: variable_count,
-      horizon: Map.get(options, :horizon, 1000)
-    }
   end
 end

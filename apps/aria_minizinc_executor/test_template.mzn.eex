@@ -1,0 +1,1 @@
+int: result = <%= @x %> + <%= @y %>; solve satisfy; output [result];

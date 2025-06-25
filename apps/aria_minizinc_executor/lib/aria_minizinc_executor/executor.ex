@@ -1,42 +1,43 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaMiniZinc.Executor do
-  @moduledoc "Porcelain-based MiniZinc executor with EEx templating support.\n\nProvides clean API for executing MiniZinc models with automatic\ntemporary file management and template rendering.\n"
+defmodule AriaMinizincExecutor.Executor do
+  @moduledoc """
+  Porcelain-based MiniZinc executor for pure execution infrastructure.
 
-  @behaviour AriaMiniZinc.ExecutorBehaviour
+  Provides clean API for executing raw MiniZinc content with automatic
+  temporary file management and result parsing.
+  """
+
+  @behaviour AriaMinizincExecutor.ExecutorBehaviour
   require Logger
 
-  @doc "Execute a MiniZinc model synchronously using Porcelain.\n\n## Options\n\n- `:solver` - MiniZinc solver to use (default: \"org.minizinc.mip.coin-bc\")\n- `:timeout` - Execution timeout in milliseconds (default: 30_000)\n- `:temp_dir` - Temporary directory for files (default: system temp)\n- `:output_mode` - Output mode (default: \"json\")\n- `:template_vars` - Variables for EEx template rendering\n\n## Examples\n\n    # Execute with template variables\n    {:ok, result} = Executor.exec(\"stn_temporal\", \n      template_vars: %{\n        num_activities: 3,\n        durations: [10, 20, 15],\n        constraints: [...]\n      }\n    )\n    \n    # Execute existing .mzn file\n    {:ok, result} = Executor.exec(\"widget_assembly.mzn\")\n"
-  def exec(model_name, opts \\ []) do
+  # Cache MiniZinc version to avoid repeated checks
+  @version_cache_key :minizinc_version
+
+  @doc """
+  Execute raw MiniZinc content synchronously using Porcelain.
+
+  ## Options
+
+  - `:solver` - MiniZinc solver to use (default: "org.minizinc.mip.coin-bc")
+  - `:timeout` - Execution timeout in milliseconds (default: 30_000)
+  - `:temp_dir` - Temporary directory for files (default: system temp)
+  - `:output_mode` - Output mode (default: "json")
+
+  ## Examples
+
+      # Execute raw MiniZinc content
+      content = "int: x = 5; solve satisfy; output [result];"
+      {:ok, result} = Executor.exec_raw(content)
+  """
+  def exec_raw(minizinc_content, opts \\ []) do
     opts = Keyword.merge(default_options(), opts)
 
-    with {:ok, model_file} <- prepare_model_file(model_name, opts),
+    with {:ok, model_file} <- write_temp_file(minizinc_content, opts),
          {:ok, result} <- execute_minizinc(model_file, opts),
          :ok <- cleanup_temp_file(model_file, opts) do
       {:ok, result}
-    else
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
-  @doc """
-  Spawn MiniZinc execution asynchronously using Porcelain.
-  Returns a Porcelain process that can be monitored for completion.
-  """
-  def spawn(model_name, opts \\ []) do
-    opts = Keyword.merge(default_options(), opts)
-
-    with {:ok, model_file} <- prepare_model_file(model_name, opts) do
-      args = build_minizinc_args(model_file, opts)
-      proc = Porcelain.spawn("minizinc", args, opts[:porcelain_opts] || [])
-
-      Task.start(fn ->
-        Porcelain.Process.await(proc)
-        cleanup_temp_file(model_file, opts)
-      end)
-
-      {:ok, proc}
     else
       {:error, reason} -> {:error, reason}
     end
@@ -75,71 +76,31 @@ defmodule AriaMiniZinc.Executor do
       timeout: 30000,
       temp_dir: System.tmp_dir!(),
       output_mode: "json",
-      template_vars: %{},
       cleanup: true
     ]
   end
 
-  defp prepare_model_file(model_name, opts) do
-    cond do
-      String.ends_with?(model_name, ".mzn") ->
-        if File.exists?(model_name) do
-          {:ok, model_name}
-        else
-          {:error, "MiniZinc file not found: #{model_name}"}
-        end
-
-      opts[:template_vars] != %{} ->
-        render_template(model_name, opts[:template_vars], opts)
-
-      true ->
-        {:error, "No template variables provided for template: #{model_name}"}
+  defp write_temp_file(content, opts) do
+    try do
+      temp_file = Path.join(opts[:temp_dir], "minizinc_#{:rand.uniform(10000)}.mzn")
+      File.write!(temp_file, content)
+      {:ok, temp_file}
+    rescue
+      error -> {:error, "Failed to write temp file: #{Exception.message(error)}"}
     end
-  end
-
-  defp render_template(template_name, vars, opts) do
-    template_path = Path.join([:code.priv_dir(:aria_minizinc), "templates", "minizinc", "#{template_name}.mzn.eex"])
-
-    if File.exists?(template_path) do
-      try do
-        template_content = File.read!(template_path)
-        template_vars = prepare_eex_vars(vars)
-        rendered_content = EEx.eval_string(template_content, assigns: template_vars)
-        temp_file = Path.join(opts[:temp_dir], "#{template_name}_#{:rand.uniform(10000)}.mzn")
-        File.write!(temp_file, rendered_content)
-        {:ok, temp_file}
-      rescue
-        error -> {:error, "Template rendering failed: #{Exception.message(error)}"}
-      end
-    else
-      {:error, "Template not found: #{template_path}"}
-    end
-  end
-
-  defp prepare_eex_vars(vars) do
-    vars |> convert_keys_to_atoms()
-  end
-
-  defp convert_keys_to_atoms(data) when is_map(data) do
-    data
-    |> Enum.map(fn {k, v} -> {String.to_atom(to_string(k)), convert_keys_to_atoms(v)} end)
-    |> Map.new()
-  end
-
-  defp convert_keys_to_atoms(data) when is_list(data) do
-    Enum.map(data, &convert_keys_to_atoms/1)
-  end
-
-  defp convert_keys_to_atoms(data) do
-    data
   end
 
   defp execute_minizinc(model_file, opts) do
     args = build_minizinc_args(model_file, opts)
     start_time = System.monotonic_time(:millisecond)
+    solving_start = DateTime.utc_now() |> DateTime.to_iso8601()
+
     result = Porcelain.exec("minizinc", args, out: :string, err: :string)
+
     end_time = System.monotonic_time(:millisecond)
+    solving_end = DateTime.utc_now() |> DateTime.to_iso8601()
     solve_time = end_time - start_time
+    duration = format_duration(solve_time)
 
     case result do
       %{status: 0, out: output} ->
@@ -149,6 +110,9 @@ defmodule AriaMiniZinc.Executor do
          %{
            status: :success,
            solution: parsed_solution,
+           solving_start: solving_start,
+           solving_end: solving_end,
+           duration: duration,
            solve_time_ms: solve_time,
            raw_output: output
          }}
@@ -160,11 +124,21 @@ defmodule AriaMiniZinc.Executor do
            exit_code: exit_code,
            output: output,
            error: error,
+           solving_start: solving_start,
+           solving_end: solving_end,
+           duration: duration,
            solve_time_ms: solve_time
          }}
 
       %{status: :timeout} ->
-        {:error, %{status: :timeout, timeout_ms: opts[:timeout], solve_time_ms: solve_time}}
+        {:error, %{
+          status: :timeout,
+          timeout_ms: opts[:timeout],
+          solving_start: solving_start,
+          solving_end: solving_end,
+          duration: duration,
+          solve_time_ms: solve_time
+        }}
     end
   end
 
@@ -187,8 +161,7 @@ defmodule AriaMiniZinc.Executor do
 
       case Jason.decode(json_part) do
         {:ok, json_data} ->
-          result = parse_json_solution(json_data)
-          result
+          parse_json_solution(json_data)
 
         {:error, _error} ->
           parse_text_solution(output)
@@ -214,7 +187,14 @@ defmodule AriaMiniZinc.Executor do
     start_times = extract_array_values(lines, "start_times")
     end_times = extract_array_values(lines, "end_times")
     makespan = extract_single_value(lines, "makespan")
-    %{start_times: start_times, end_times: end_times, makespan: makespan}
+    result = extract_single_value(lines, "result")
+
+    %{
+      start_times: start_times,
+      end_times: end_times,
+      makespan: makespan,
+      result: result
+    }
   end
 
   defp extract_array_values(lines, variable_name) do
@@ -243,6 +223,11 @@ defmodule AriaMiniZinc.Executor do
         _ -> nil
       end
     end)
+  end
+
+  defp format_duration(milliseconds) do
+    seconds = milliseconds / 1000
+    "PT#{:erlang.float_to_binary(seconds, decimals: 3)}S"
   end
 
   defp cleanup_temp_file(file_path, opts) do
