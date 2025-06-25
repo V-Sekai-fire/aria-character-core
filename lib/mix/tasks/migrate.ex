@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Migrate do
   """
 
   use Mix.Task
-  alias AriaEngine.Membrane.Migration.{Pipeline, Registry}
+  alias AstMigrate
 
   @shortdoc "Unified migration system for code transformations"
 
@@ -84,42 +84,58 @@ defmodule Mix.Tasks.Migrate do
     Mix.shell().info("Available Migration Rules:")
     Mix.shell().info("=" <> String.duplicate("=", 25))
 
-    Registry.list_rules()
-    |> Enum.group_by(& &1.category)
-    |> Enum.each(fn {category, rules} ->
-      Mix.shell().info("\n#{String.upcase(to_string(category))}:")
-
-      Enum.each(rules, fn rule ->
-        Mix.shell().info("  #{rule.name} - #{rule.description}")
-      end)
+    AstMigrate.list_rules()
+    |> Enum.each(fn rule_name ->
+      case AstMigrate.rule_info(rule_name) do
+        {:ok, info} ->
+          Mix.shell().info("  #{rule_name} - #{info.description}")
+        {:error, _} ->
+          Mix.shell().info("  #{rule_name} - No description available")
+      end
     end)
   end
 
   defp execute_migration(opts, files) do
-    config = %{
-      rules: parse_rules(opts[:rules]),
-      dry_run: opts[:dry_run] || false,
-      backup_dir: opts[:backup_dir] || ".migration_backup",
-      verbose: opts[:verbose] || false,
-      files: if(Enum.empty?(files), do: ["."], else: files)
-    }
+    rules = parse_rules(opts[:rules])
+    dry_run = opts[:dry_run] || false
+    verbose = opts[:verbose] || false
 
-    # Start the Membrane pipeline
-    {:ok, _supervisor_pid, pipeline_pid} = Membrane.Pipeline.start_link(Pipeline, config)
+    target_files = if Enum.empty?(files), do: ["lib/**/*.ex", "test/**/*.exs"], else: files
 
-    # Wait for pipeline completion
-    ref = Process.monitor(pipeline_pid)
+    migration_opts = [
+      dry_run: dry_run,
+      files: target_files
+    ]
 
-    receive do
-      {:DOWN, ^ref, :process, ^pipeline_pid, reason} ->
-        case reason do
-          :normal -> :ok
-          :shutdown -> :ok
-          {:shutdown, _} -> :ok
-          other ->
-            Mix.shell().error("Pipeline failed: #{inspect(other)}")
-            System.halt(1)
+    case rules do
+      :all ->
+        # Apply all available rules
+        AstMigrate.list_rules()
+        |> Enum.each(fn rule ->
+          apply_single_rule(rule, migration_opts, verbose)
+        end)
+
+      rule_list when is_list(rule_list) ->
+        # Apply specific rules
+        Enum.each(rule_list, fn rule ->
+          apply_single_rule(rule, migration_opts, verbose)
+        end)
+    end
+  end
+
+  defp apply_single_rule(rule, opts, verbose) do
+    if verbose do
+      Mix.shell().info("Applying rule: #{rule}")
+    end
+
+    case AstMigrate.apply_rule(rule, opts) do
+      {:ok, result} ->
+        if verbose do
+          Mix.shell().info("✓ #{rule}: #{result.files_changed} files changed")
         end
+
+      {:error, reason} ->
+        Mix.shell().error("✗ #{rule}: #{reason}")
     end
   end
 

@@ -122,8 +122,10 @@ apps/aria_timeline/
 
 ### Phase 5: Move Test Suite ✅ COMPLETED
 - [x] Move all timeline-related tests to `apps/aria_timeline/test/`
-- [x] Update test paths and module references
-- [x] Ensure all tests pass in new location
+- [x] Remove duplicate timeline tests from `apps/aria_temporal_planner/test/`
+- [x] Remove timeline_test.exs and timeline_graph_test.exs from temporal planner
+- [x] Remove entire timeline/ test directory from temporal planner
+- [x] Eliminate test duplication between apps
 - [x] Verify test coverage is maintained
 
 ### Phase 6: Update Dependencies ✅ COMPLETED
