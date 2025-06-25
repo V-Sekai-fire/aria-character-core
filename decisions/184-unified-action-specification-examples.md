@@ -446,9 +446,9 @@ end
 - Mutual exclusion enforcement
 - Duration validation
 
-**StateV2 compatibility throughout:**
+**RelationalState compatibility throughout:**
 
-- All state operations use StateV2
+- All state operations use AriaState.RelationalState
 - Subject-predicate-value fact structure
 - Temporal state queries supported
 
@@ -498,7 +498,7 @@ defp validate_ingredient_quantities(state, meal_type) do
   required_ingredients = get_recipe_requirements(meal_type)
   
   Enum.reduce_while(required_ingredients, {:ok, []}, fn {ingredient, min_qty}, {:ok, acc} ->
-    available_qty = StateV2.get_fact(state, ingredient, "quantity") || 0
+    available_qty = AriaState.RelationalState.get_fact(state, ingredient, "quantity") || 0
     
     if available_qty >= min_qty do
       {:cont, {:ok, [ingredient | acc]}}
@@ -774,7 +774,7 @@ defp validate_ingredient_quantities(state, meal_type) do
   required_ingredients = get_recipe_requirements(meal_type)
   
   Enum.reduce_while(required_ingredients, {:ok, []}, fn {ingredient, min_qty}, {:ok, acc} ->
-    available_qty = StateV2.get_fact(state, ingredient, "quantity") || 0
+    available_qty = AriaState.RelationalState.get_fact(state, ingredient, "quantity") || 0
     
     if available_qty >= min_qty do
       {:cont, {:ok, [ingredient | acc]}}
@@ -1086,8 +1086,8 @@ defmodule MyApp.ExecutionExamples do
     # Find entities with required type and capabilities
     entities = find_entities_with_capabilities(state, capabilities)
     |> Enum.filter(fn entity_id ->
-      StateV2.get_fact(state, entity_id, "type") == type and
-      StateV2.get_fact(state, entity_id, "available") == true
+      AriaState.RelationalState.get_fact(state, entity_id, "type") == type and
+      AriaState.RelationalState.get_fact(state, entity_id, "available") == true
     end)
     
     search_time = System.system_time(:millisecond) - start_time
