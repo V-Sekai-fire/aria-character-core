@@ -342,6 +342,152 @@ Following ADR-183 architecture:
 
 ## KHR_interactivity Integration
 
+### CP-SAT Solver Node with Fallback
+
+The extension defines a custom `planning/cpsat` node that implementations may replace with MinZinc or other constraint solvers, while providing a fallback implementation using only standard KHR_interactivity nodes.
+
+**CP-SAT Solver Node Declaration:**
+
+```json
+{
+  "declarations": [
+    {
+      "op": "planning/cpsat",
+      "extension": "VSEKAI_interactivity_planning",
+      "inputValueSockets": {
+        "entities": {"type": 0},
+        "actions": {"type": 0}, 
+        "goals": {"type": 0},
+        "constraints": {"type": 0},
+        "timeout": {"type": 1}
+      },
+      "outputValueSockets": {
+        "solution": {"type": 0},
+        "isValid": {"type": 2},
+        "cost": {"type": 1}
+      }
+    }
+  ]
+}
+```
+
+**CP-SAT Node Operation:**
+
+The `planning/cpsat` node performs constraint satisfaction and optimization:
+
+- **Input**: Entity capabilities, action requirements, temporal constraints, goals
+- **Output**: Optimal action sequence with entity assignments and timing
+- **Fallback**: Pure KHR_interactivity implementation for basic constraint satisfaction
+
+### Fallback Implementation Using Standard KHR_interactivity Nodes
+
+When the CP-SAT solver is not available, the extension provides a fallback implementation using only standard KHR_interactivity nodes:
+
+**Simple Constraint Satisfaction with Flow Control:**
+
+```json
+{
+  "declarations": [
+    {"op": "flow/for"},
+    {"op": "flow/branch"},
+    {"op": "math/eq"},
+    {"op": "math/lt"},
+    {"op": "variable/get"},
+    {"op": "variable/set"},
+    {"op": "pointer/get"},
+    {"op": "pointer/set"}
+  ],
+  "nodes": [
+    {
+      "declaration": 0,
+      "configuration": {
+        "initialIndex": {"value": [0]}
+      },
+      "values": {
+        "startIndex": {"value": [0], "type": 0},
+        "endIndex": {"node": 8}
+      },
+      "flows": {
+        "loopBody": {"node": 1},
+        "completed": {"node": 9}
+      }
+    },
+    {
+      "declaration": 1,
+      "values": {
+        "condition": {"node": 2}
+      },
+      "flows": {
+        "true": {"node": 3},
+        "false": {"node": 0}
+      }
+    },
+    {
+      "declaration": 2,
+      "values": {
+        "a": {"node": 4},
+        "b": {"value": [true], "type": 2}
+      }
+    },
+    {
+      "declaration": 4,
+      "configuration": {
+        "pointer": {"value": ["/extensions/VSEKAI_interactivity_planning/entities/{entityId}/state/available"]},
+        "type": {"value": [2]}
+      },
+      "values": {
+        "entityId": {"node": 0, "socket": "index"}
+      }
+    },
+    {
+      "declaration": 7,
+      "configuration": {
+        "pointer": {"value": ["/extensions/VSEKAI_interactivity_planning/solution/assignments/{index}"]},
+        "type": {"value": [0]}
+      },
+      "values": {
+        "index": {"node": 0, "socket": "index"},
+        "value": {"node": 0, "socket": "index"}
+      }
+    }
+  ]
+}
+```
+
+### Planning Operation Mapping to KHR_interactivity Nodes
+
+All planning operations are mapped to standard KHR_interactivity nodes:
+
+**Entity State Management:**
+- `pointer/get` - Access entity capabilities and state
+- `pointer/set` - Update entity assignments and status
+- `variable/get` - Retrieve planning variables
+- `variable/set` - Store planning state
+
+**Temporal Reasoning:**
+- `math/add`, `math/sub` - Duration calculations
+- `math/lt`, `math/gt`, `math/eq` - Temporal constraint checking
+- `flow/setDelay` - Schedule future actions
+- `flow/sequence` - Enforce temporal ordering
+
+**Goal Processing:**
+- `event/receive` - Accept new goals
+- `event/send` - Signal goal completion
+- `math/eq` - Goal state validation
+- `flow/branch` - Goal achievement checking
+
+**Action Execution:**
+- `flow/sequence` - Action ordering and dependencies
+- `pointer/set` - Apply action effects to entity state
+- `event/send` - Action completion notifications
+- `flow/branch` - Success/failure handling
+
+**Resource Allocation (Fallback Algorithm):**
+- `flow/for` - Iterate through entities
+- `math/eq` - Check capability matching
+- `flow/branch` - Availability decisions
+- `variable/set` - Store assignments
+
 ### Using Pointer Nodes for State Access
 
 The extension uses KHR_interactivity's `pointer/get` and `pointer/set` nodes for accessing glTF Object Model properties:
