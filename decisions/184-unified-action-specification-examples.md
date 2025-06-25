@@ -15,6 +15,134 @@ Provides the definitive, corrected module-based domain specification pattern tha
 
 This ADR supersedes all previous action specification patterns and establishes the canonical approach for AriaEngine domain development.
 
+## From Confusion to Clarity
+
+### Common "Wait, What?" Moments
+
+When developers first encounter the planner patterns in ADRs 181-184, several things feel confusing. Here's the journey from confusion to understanding:
+
+**Confusion 1: "Why don't I just call the function?"**
+```elixir
+# Normal programming expectation:
+cook_meal("pasta")  # Just call it when I want it
+
+# Planning reality:
+@action duration: "PT2H", requires_entities: [...]
+def cook_meal(state, [meal_type]) do
+  # This gets called BY THE PLANNER, not by you
+end
+```
+
+**The "Aha!" Moment:** You're not writing a program - you're describing a toolbox. The planner is the craftsperson who decides which tools to use and when.
+
+**Confusion 2: "This feels backwards and inefficient"**
+```elixir
+# What it feels like you're doing:
+"Hey computer, I have these tools available, and I want pasta. Figure it out."
+
+# What you think you should be doing:
+"Step 1: Get ingredients. Step 2: Cook pasta. Step 3: Serve."
+```
+
+**The "Aha!" Moment:** The "inefficient" approach handles complexity that would break your step-by-step code:
+- What if no ingredients are available?
+- What if the chef is in a meeting?
+- What if the oven is broken?
+- What if you need to coordinate 3 chefs simultaneously?
+
+**Confusion 3: "Why all this entity and capability stuff?"**
+```elixir
+# Feels overly complex:
+@action requires_entities: [
+  %{type: "chef", capabilities: [:cooking]},
+  %{type: "oven", capabilities: [:heating]}
+]
+
+# Seems like it should be:
+def cook_meal() do
+  # Just cook!
+end
+```
+
+**The "Aha!" Moment:** The metadata enables the planner's "magic":
+- **Resource conflict detection**: "Chef can't cook two things at once"
+- **Capability matching**: "Only entities with :cooking can do this"
+- **Failure recovery**: "Oven broke? Find alternative heating source"
+- **Temporal scheduling**: "Chef free from 3-5pm, cooking takes 2 hours"
+
+### The Mental Model Shift
+
+**From Procedural to Declarative:**
+
+```elixir
+# Procedural mindset (what you're used to):
+def make_dinner() do
+  if ingredients_available?() do
+    if chef_available?() do
+      if oven_working?() do
+        cook_meal()
+      else
+        use_stovetop()  # But wait, what if stovetop is broken too?
+      end
+    else
+      wait_for_chef()  # But how long? What if they never come back?
+    end
+  else
+    buy_ingredients()  # But what if store is closed?
+  end
+end
+
+# Declarative mindset (planning approach):
+@action requires_entities: [
+  %{type: "chef", capabilities: [:cooking]},
+  %{type: "heating_source", capabilities: [:heating]}  # Could be oven OR stovetop
+]
+def cook_meal(state, [meal_type]) do
+  # Just describe the state change - planner handles all the "what ifs"
+  state |> State.set_fact("meal_status", meal_type, "ready")
+end
+```
+
+### Why This Architecture Scales
+
+**Single Agent (feels overkill):**
+```elixir
+# For one chef making one meal, planning seems like overkill
+@action requires_entities: [%{type: "chef", capabilities: [:cooking]}]
+def cook_meal(state, [meal_type]) do
+  # "Why not just call cook_meal()?"
+end
+```
+
+**Multiple Agents (planning shines):**
+```elixir
+# For restaurant with 5 chefs, 3 ovens, 20 orders - planning is essential
+@action requires_entities: [
+  %{type: "chef", capabilities: [:cooking]},
+  %{type: "oven", capabilities: [:heating]}
+]
+def cook_meal(state, [meal_type]) do
+  # Planner automatically:
+  # - Assigns available chef
+  # - Reserves available oven
+  # - Schedules around other orders
+  # - Handles equipment failures
+  # - Optimizes for efficiency
+end
+```
+
+### The Power Becomes Obvious
+
+Once you see planning handle scenarios that would be nightmarish to code imperatively, the "weird" architecture makes perfect sense:
+
+- **Dynamic replanning**: Order changes mid-cooking? Planner adapts automatically
+- **Resource optimization**: Minimize chef idle time across all orders
+- **Failure recovery**: Equipment breaks? Find alternatives and replan
+- **Temporal constraints**: "Appetizer ready before main course" handled automatically
+- **Multi-agent coordination**: 5 chefs working together without conflicts
+
+The planning approach trades initial conceptual complexity for massive scalability and robustness.
+
 ## Complete Module-Based Domain Pattern
 
 ```elixir

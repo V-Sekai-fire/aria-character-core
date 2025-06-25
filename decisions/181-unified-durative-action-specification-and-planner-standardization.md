@@ -10,6 +10,66 @@
 
 **Target State**: Single unified specification for durative actions with entities, capabilities, and temporal constraints
 
+## Planning vs Imperative Programming
+
+### Why Planning Feels "Inverted"
+
+If you're coming from normal programming, the planner architecture feels backwards because you're used to telling the computer exactly what to do, step by step. Planning systems flip this around - you describe what's *possible* and what you *want*, then let the planner figure out the steps.
+
+**Normal Programming (Imperative):**
+```elixir
+# You control the execution flow directly
+def make_dinner() do
+  go_to_kitchen()           # Step 1: Do this now
+  get_ingredients()         # Step 2: Then do this  
+  cook_meal()              # Step 3: Then do this
+  serve_meal()             # Step 4: Finally this
+end
+
+# You call it when you want it to happen
+make_dinner()
+```
+
+**Planning (Declarative):**
+```elixir
+# You describe what actions CAN happen and their requirements
+@action duration: "PT2H", 
+        requires_entities: [
+          %{type: "chef", capabilities: [:cooking]},
+          %{type: "ingredients", capabilities: [:consumable]}
+        ]
+def cook_meal(state, [meal_type]) do
+  # Just describes the state change, not when/how to execute
+  state |> State.set_fact("meal_status", meal_type, "ready")
+end
+
+# You give the planner a goal and it figures out the steps
+AriaEngine.plan(domain, state, [{"chef", "has_meal", "pasta"}])
+# Planner thinks: "To have pasta, I need to cook_meal. To cook_meal, I need chef + ingredients..."
+```
+
+### The Mental Model Shift
+
+**Instead of:** "Do step 1, then step 2, then step 3"
+**Think:** "Here are the tools available, here's what I want, figure it out"
+
+This feels weird because:
+1. **You don't call functions directly** - you register them as "possible actions"
+2. **The planner decides when to use them** - it searches through combinations
+3. **You describe capabilities, not procedures** - "I can cook IF I have ingredients" vs "get ingredients, then cook"
+
+### Why This "Inversion" Exists
+
+The planning approach handles complexity that would be nightmare to code imperatively:
+
+- **Dynamic prerequisites**: "Cook pasta, but if no pasta, make bread instead"
+- **Resource conflicts**: "Chef can't cook and attend meeting simultaneously" 
+- **Temporal constraints**: "2-hour cooking must finish before 6pm dinner"
+- **Multi-agent coordination**: "3 chefs preparing different courses for same meal"
+- **Failure recovery**: "Oven broke, find alternative cooking method and replan"
+
+Try coding those scenarios with normal if/else statements - you'll quickly see why planning exists!
+
 ## Core Entity Model
 
 Everything is an entity with capabilities that define behavior:

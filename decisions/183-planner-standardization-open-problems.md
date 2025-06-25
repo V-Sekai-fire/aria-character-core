@@ -10,6 +10,104 @@
 **Current State**: Multiple architectural inconsistencies affecting planner usability
 **Target State**: IPyHOP-compatible planner architecture with pure GTPyhop multigoal philosophy
 
+## Why This Architecture Exists
+
+### Problems That Planning Solves
+
+The planning architecture in AriaEngine exists to solve problems that would be nightmarish to code with normal imperative programming. Here's why we need this "weird" approach:
+
+**Problem 1: Multi-Agent Coordination**
+```elixir
+# Imperative nightmare: 3 chefs preparing different courses
+def coordinate_dinner_prep() do
+  if chef1_available?() and chef2_available?() and chef3_available?() do
+    if appetizer_ingredients_ready?() and main_ingredients_ready?() and dessert_ingredients_ready?() do
+      # But wait - what if chef1 needs the oven that chef2 is using?
+      # And chef3 needs prep space that chef1 is occupying?
+      # And the appetizer must finish before main course starts?
+      # This quickly becomes impossible to manage...
+    end
+  end
+end
+
+# Planning solution: Describe capabilities and constraints
+@action duration: "PT45M", requires_entities: [
+  %{type: "chef", capabilities: [:appetizer_prep]},
+  %{type: "prep_station", capabilities: [:workspace]}
+]
+def prepare_appetizer(state, [dish_type]) do
+  # Just describe the state change - planner handles coordination
+end
+```
+
+**Problem 2: Temporal Constraint Satisfaction**
+```elixir
+# Imperative nightmare: "Dinner ready by 7pm, but prep takes 3 hours, 
+# chef has meeting 2-4pm, oven shared with bread baking 5-6pm"
+# Try coding all those constraints with if/else statements!
+
+# Planning solution: Declare constraints, let solver figure it out
+@action duration: "PT3H", 
+        requires_entities: [%{type: "chef", capabilities: [:cooking]}]
+def prepare_dinner(state, [meal_type]) do
+  # Planner automatically schedules around meetings and oven conflicts
+end
+```
+
+**Problem 3: Dynamic Replanning**
+```elixir
+# Imperative nightmare: "Oven broke, find alternative cooking method,
+# reschedule everything, notify affected parties, update timelines"
+
+# Planning solution: Automatic failure recovery
+# When oven action fails, planner:
+# 1. Blacklists oven-based actions
+# 2. Finds alternative cooking methods (stovetop, grill)
+# 3. Replans entire schedule automatically
+# 4. Continues execution with new plan
+```
+
+### Why Entity Requirements Enable This Magic
+
+The `requires_entities` metadata isn't just documentation - it's the key to intelligent search:
+
+```elixir
+@action requires_entities: [
+  %{type: "chef", capabilities: [:cooking]},
+  %{type: "oven", capabilities: [:heating]}
+]
+```
+
+This tells the planner:
+- **Resource conflicts**: "Chef can't cook two things simultaneously"
+- **Capability matching**: "Only entities with :cooking capability can do this"
+- **Availability checking**: "Don't plan this if chef is in meeting"
+- **Failure recovery**: "If oven breaks, find alternative heating source"
+
+### The Power of Declarative Constraints
+
+Instead of writing complex scheduling logic, you declare what you need:
+
+```elixir
+# Multi-agent cooking scenario
+@action duration: "PT2H", requires_entities: [
+  %{type: "head_chef", capabilities: [:cooking, :supervision]},
+  %{type: "sous_chef", capabilities: [:prep_work]},
+  %{type: "oven", capabilities: [:heating, :baking]},
+  %{type: "prep_station", capabilities: [:workspace]}
+]
+def collaborative_cooking(state, [meal_type]) do
+  # Planner automatically:
+  # - Finds available chef and sous chef
+  # - Reserves oven for 2-hour window
+  # - Allocates prep station workspace
+  # - Ensures no resource conflicts
+  # - Handles temporal dependencies
+end
+```
+
+The planner handles all the complexity you'd otherwise need to code manually: resource allocation, conflict detection, temporal scheduling, and failure recovery.
+
 ## IPyHOP Architecture Integration
 
 ### Solution Tree Structure

@@ -10,6 +10,81 @@
 **Current State**: Duration handling loses microsecond precision through unnecessary `round()` calls
 **Target State**: Preserve Timex's microsecond precision throughout the entire duration conversion chain
 
+## How the Planner Search Actually Works
+
+### Demystifying the "Brute Force"
+
+When people say planners do "brute force" search, it sounds scary - like the computer is randomly trying everything. But it's actually intelligent search with smart pruning. Here's what really happens when you ask for pasta:
+
+**Step 1: Goal Analysis**
+```elixir
+# You want: {"chef", "has_meal", "pasta"}
+# Planner asks: "What actions could make this true?"
+# Searches action metadata for effects that set "has_meal" to "pasta"
+# Finds: cook_meal action
+```
+
+**Step 2: Requirement Checking**
+```elixir
+# cook_meal requires: chef + ingredients + oven
+# Planner asks: "Do we have these entities with the right capabilities?"
+# Checks current state for available entities
+# Missing: ingredients
+```
+
+**Step 3: Recursive Planning**
+```elixir
+# Planner asks: "What actions could get ingredients?"
+# Finds: gather_ingredients action
+# Checks requirements: chef + market access
+# Available: chef is free, market is open
+```
+
+**Step 4: Plan Construction**
+```elixir
+# Builds plan: [gather_ingredients, cook_meal]
+# Validates temporal constraints: gathering takes 30min, cooking takes 2h
+# Checks resource conflicts: chef can't do both simultaneously
+# Result: Sequential plan with proper timing
+```
+
+### Why Entity Requirements Matter for Search
+
+The `requires_entities` metadata isn't just documentation - it's how the planner prunes the search space:
+
+```elixir
+@action requires_entities: [
+  %{type: "chef", capabilities: [:cooking]},
+  %{type: "oven", capabilities: [:heating]}
+]
+def cook_meal(state, [meal_type]) do
+  # Implementation
+end
+```
+
+**Without entity requirements:** Planner would try cook_meal even when no chef is available, fail during execution, and waste time backtracking.
+
+**With entity requirements:** Planner checks availability BEFORE adding action to plan, avoiding impossible paths entirely.
+
+### Search Pruning in Action
+
+```elixir
+# Scenario: Chef is in meeting until 3pm, cooking takes 2 hours
+# Goal: Have dinner ready by 5pm
+
+# Naive search would try:
+# 1. Start cooking at 1pm (FAIL - chef unavailable)
+# 2. Start cooking at 2pm (FAIL - chef unavailable) 
+# 3. Start cooking at 3pm (SUCCESS - chef free, finishes by 5pm)
+
+# Smart search with entity validation:
+# 1. Check chef availability for 2-hour window before 5pm
+# 2. Find chef free from 3pm-5pm
+# 3. Schedule cooking for 3pm (SUCCESS on first try)
+```
+
+This is why the planner feels "magical" - it's not trying random combinations, it's using the metadata to intelligently navigate the solution space.
+
 ## Timex Integration Requirements
 
 All temporal validation and parsing MUST use Timex instead of Elixir's base DateTime functionality for enhanced ISO 8601 support, better timezone handling, and more robust duration parsing.
