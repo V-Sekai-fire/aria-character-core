@@ -71,7 +71,7 @@ Implement a comprehensive fix addressing all three issues:
 - [x] Add Logger.debug for full command line before execution
 - [x] Add Logger.debug for command output (stdout and stderr)
 - [x] Remove or properly use @version_cache_key attribute
-- [ ] Add Logger.debug for structured input data (template variables)
+- [x] Add Logger.debug for structured input data (template variables)
 - [ ] Replace manual temporary file handling with `briefly` package
 - [ ] Add `briefly` dependency to mix.exs for robust temp file management
 
@@ -80,7 +80,16 @@ Implement a comprehensive fix addressing all three issues:
 - [ ] Proper log formatting for readability
 - [ ] Conditional logging to avoid spam in production
 
-### Phase 4: Test Validation (PRIORITY: MEDIUM)
+### Phase 4: Test Logger Configuration (PRIORITY: MEDIUM)
+**File**: `config/test.exs`
+
+**Missing/Required**:
+- [x] Add logger level configuration to enable debug logs in test environment
+- [x] Ensure compatibility with existing TestOutput module for trace mode
+- [x] Maintain silent-by-default behavior per INST-006 guidelines
+- [x] Match default Elixir logger level (:debug) for consistency
+
+### Phase 5: Test Validation (PRIORITY: MEDIUM)
 **File**: `apps/aria_minizinc_goal/test/aria_minizinc_goal_test.exs`
 
 **Missing/Required**:
@@ -133,6 +142,14 @@ Starting with the template structure fix because the syntax errors are blocking 
 - Test all MiniZinc apps after template changes
 - Use Logger.debug (not info/warn) to avoid production noise
 - Validate syntax against standard MiniZinc specification
+
+## Change Log
+
+### June 24, 2025
+- Added logger level configuration to `config/test.exs` to enable debug logs in test environment
+- Configuration matches default Elixir logger level (:debug) for consistency
+- Maintains compatibility with existing TestOutput module for trace mode functionality
+- Preserves silent-by-default test behavior per INST-006 guidelines
 
 ## Related ADRs
 
