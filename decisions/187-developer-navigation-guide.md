@@ -24,20 +24,25 @@ This ADR depends on completion of the core specification ADRs:
 ## Planned Navigation Structure
 
 ### Documentation Hierarchy
+
 **Learning Path**:
+
 1. ADR-185: Quick Start Guide (30 minutes)
 2. ADR-186: Common Use Cases (45 minutes)
 3. ADR-187: Navigation Guide (15 minutes)
 4. ADR-188: Practical How-To (reference)
 
 **Technical Reference**:
+
 1. ADR-181: Core Specification (authoritative)
 2. ADR-182: Technical Implementation
 3. ADR-183: Architecture Standards
 4. ADR-184: Developer Examples
 
 ### Codebase Organization
+
 **App Structure**:
+
 - `apps/aria_engine_core/` - Core planning engine
 - `apps/aria_state/` - State management
 - `apps/aria_hybrid_planner/` - Hybrid planning strategies
@@ -45,6 +50,7 @@ This ADR depends on completion of the core specification ADRs:
 - `apps/aria_scheduler/` - Execution scheduling
 
 **Key Files by Purpose**:
+
 - Domain Definition: How to structure domains
 - Action Implementation: Action function patterns
 - Goal Methods: Goal resolution strategies
@@ -54,7 +60,9 @@ This ADR depends on completion of the core specification ADRs:
 ### Discovery Workflows
 
 #### "I want to implement a new action"
+
 **Navigation Path**:
+
 1. Start with ADR-184 examples
 2. Check action attribute patterns in ADR-181
 3. Review duration handling in ADR-182
@@ -62,21 +70,27 @@ This ADR depends on completion of the core specification ADRs:
 5. Follow testing patterns
 
 #### "I need to debug planning failures"
+
 **Navigation Path**:
+
 1. Check troubleshooting in ADR-185
 2. Review error patterns in ADR-186
 3. Examine test failures in relevant apps
 4. Use debugging techniques from ADR-188
 
 #### "I want to understand the architecture"
+
 **Navigation Path**:
+
 1. Read ADR-183 for high-level architecture
 2. Review ADR-181 for core concepts
 3. Examine app dependencies and interfaces
 4. Study integration patterns
 
 #### "I need to add temporal constraints"
+
 **Navigation Path**:
+
 1. Review temporal examples in ADR-184
 2. Check duration handling in ADR-182
 3. Examine `aria_temporal_planner` app
@@ -85,6 +99,7 @@ This ADR depends on completion of the core specification ADRs:
 ## Planned Search Strategies
 
 ### By Functionality
+
 - **Actions**: Search for `@action` attributes
 - **Goals**: Search for `@unigoal_method` attributes
 - **Tasks**: Search for `@task_method` attributes
@@ -92,12 +107,14 @@ This ADR depends on completion of the core specification ADRs:
 - **Tests**: Search for `test/` directories and `_test.exs` files
 
 ### By Problem Domain
+
 - **Restaurant/Kitchen**: Search for cooking, ordering examples
 - **Scheduling**: Search for meeting, calendar examples
 - **Resource Management**: Search for allocation, transport examples
 - **Temporal**: Search for duration, timeline examples
 
 ### By Error Type
+
 - **Planning Failures**: Search for error handling patterns
 - **State Issues**: Search for state validation examples
 - **Resource Conflicts**: Search for entity requirement patterns
@@ -106,6 +123,7 @@ This ADR depends on completion of the core specification ADRs:
 ## Planned Quick Reference
 
 ### Essential Patterns
+
 - Action definition template
 - Goal method template
 - Task method template
@@ -113,12 +131,14 @@ This ADR depends on completion of the core specification ADRs:
 - Error handling patterns
 
 ### Common Locations
+
 - Domain modules: `lib/*/domains/`
 - Core functions: `lib/*/core/`
 - Test examples: `test/*/`
 - Documentation: `decisions/`
 
 ### Debugging Tools
+
 - Test runner commands
 - State inspection utilities
 - Planning trace tools
@@ -144,6 +164,7 @@ After reading this ADR, developers should be able to:
 **Awaiting**: Completion of ADRs 181-184 to ensure navigation paths reference stable, authoritative content.
 
 **Key Requirements**:
+
 - Navigation paths must reference completed ADRs
 - Code locations must reflect current app structure
 - Search strategies must work with actual codebase

@@ -22,6 +22,7 @@ This ADR supersedes all previous action specification patterns and establishes t
 When developers first encounter the planner patterns in ADRs 181-184, several things feel confusing. Here's the journey from confusion to understanding:
 
 **Confusion 1: "Why don't I just call the function?"**
+
 ```elixir
 # Normal programming expectation:
 cook_meal("pasta")  # Just call it when I want it
@@ -36,6 +37,7 @@ end
 **The "Aha!" Moment:** You're not writing a program - you're describing a toolbox. The planner is the craftsperson who decides which tools to use and when.
 
 **Confusion 2: "This feels backwards and inefficient"**
+
 ```elixir
 # What it feels like you're doing:
 "Hey computer, I have these tools available, and I want pasta. Figure it out."
@@ -45,12 +47,14 @@ end
 ```
 
 **The "Aha!" Moment:** The "inefficient" approach handles complexity that would break your step-by-step code:
+
 - What if no ingredients are available?
 - What if the chef is in a meeting?
 - What if the oven is broken?
 - What if you need to coordinate 3 chefs simultaneously?
 
 **Confusion 3: "Why all this entity and capability stuff?"**
+
 ```elixir
 # Feels overly complex:
 @action requires_entities: [
@@ -65,6 +69,7 @@ end
 ```
 
 **The "Aha!" Moment:** The metadata enables the planner's "magic":
+
 - **Resource conflict detection**: "Chef can't cook two things at once"
 - **Capability matching**: "Only entities with :cooking can do this"
 - **Failure recovery**: "Oven broke? Find alternative heating source"
@@ -106,6 +111,7 @@ end
 ### Why This Architecture Scales
 
 **Single Agent (feels overkill):**
+
 ```elixir
 # For one chef making one meal, planning seems like overkill
 @action requires_entities: [%{type: "chef", capabilities: [:cooking]}]
@@ -115,6 +121,7 @@ end
 ```
 
 **Multiple Agents (planning shines):**
+
 ```elixir
 # For restaurant with 5 chefs, 3 ovens, 20 orders - planning is essential
 @action requires_entities: [
@@ -343,7 +350,7 @@ end
 - `:verify_goal` - Verify goal achievement
 - `:verify_multigoal` - Verify multigoal achievement
 
-** `run_lazy_refineahead` with interleaved planning/execution:**
+**`run_lazy_refineahead` with interleaved planning/execution:**
 
 - True interleaved planning and execution (no separate planning phase)
 - Action nodes execute immediately when selected
@@ -600,6 +607,7 @@ end
 ### Required Attribute Patterns
 
 **Planner Actions:**
+
 ```elixir
 @action duration: "PT2H", requires_entities: [...]
 def action_name(state, args) do
@@ -608,6 +616,7 @@ end
 ```
 
 **Execution Commands:**
+
 ```elixir
 @command
 def command_name(state, args) do
@@ -616,6 +625,7 @@ end
 ```
 
 **Task Methods:**
+
 ```elixir
 @task_method
 def task_name(state, args) do
@@ -624,6 +634,7 @@ end
 ```
 
 **Unigoal Methods:**
+
 ```elixir
 @unigoal_method predicate: "location"
 def method_name(state, [subject, value]) do
@@ -632,6 +643,7 @@ end
 ```
 
 **Multigoal Methods:**
+
 ```elixir
 @multigoal_method goal_pattern: :pattern_name
 def method_name(state, multigoal) do
@@ -642,6 +654,7 @@ end
 ### Violation Examples (FORBIDDEN)
 
 ❌ **WRONG - No attribute but references planner metadata:**
+
 ```elixir
 def cook_meal(state, [meal_type]) do  # No @action attribute
   case validate(@action[:requires_entities]) do  # ❌ References non-existent metadata
@@ -649,6 +662,7 @@ end
 ```
 
 ❌ **WRONG - No attribute but presented as planner function:**
+
 ```elixir
 def travel_to_location(state, [subject, target]) do  # No @unigoal_method attribute
   # Presented as unigoal method but not registered with planner
@@ -656,6 +670,7 @@ end
 ```
 
 ✅ **CORRECT - Helper function (no planner integration):**
+
 ```elixir
 defp calculate_cooking_time(meal_type) do  # Private helper
   # No planner metadata references, no attribute needed

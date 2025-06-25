@@ -17,6 +17,7 @@
 The planning architecture in AriaEngine exists to solve problems that would be nightmarish to code with normal imperative programming. Here's why we need this "weird" approach:
 
 **Problem 1: Multi-Agent Coordination**
+
 ```elixir
 # Imperative nightmare: 3 chefs preparing different courses
 def coordinate_dinner_prep() do
@@ -41,6 +42,7 @@ end
 ```
 
 **Problem 2: Temporal Constraint Satisfaction**
+
 ```elixir
 # Imperative nightmare: "Dinner ready by 7pm, but prep takes 3 hours, 
 # chef has meeting 2-4pm, oven shared with bread baking 5-6pm"
@@ -55,6 +57,7 @@ end
 ```
 
 **Problem 3: Dynamic Replanning**
+
 ```elixir
 # Imperative nightmare: "Oven broke, find alternative cooking method,
 # reschedule everything, notify affected parties, update timelines"
@@ -79,6 +82,7 @@ The `requires_entities` metadata isn't just documentation - it's the key to inte
 ```
 
 This tells the planner:
+
 - **Resource conflicts**: "Chef can't cook two things simultaneously"
 - **Capability matching**: "Only entities with :cooking capability can do this"
 - **Availability checking**: "Don't plan this if chef is in meeting"
@@ -533,6 +537,7 @@ Actions must focus purely on state transformation and assume the planner has val
 ### Required Attribute Patterns
 
 **Planner Actions:**
+
 ```elixir
 @action duration: "PT2H", requires_entities: [...]
 def action_name(state, args) do
@@ -541,6 +546,7 @@ end
 ```
 
 **Execution Commands:**
+
 ```elixir
 @command
 def command_name(state, args) do
@@ -549,6 +555,7 @@ end
 ```
 
 **Task Methods:**
+
 ```elixir
 @task_method
 def task_name(state, args) do
@@ -557,6 +564,7 @@ end
 ```
 
 **Unigoal Methods:**
+
 ```elixir
 @unigoal_method predicate: "location"
 def method_name(state, [subject, value]) do
@@ -565,6 +573,7 @@ end
 ```
 
 **Multigoal Methods:**
+
 ```elixir
 @multigoal_method goal_pattern: :pattern_name
 def method_name(state, multigoal) do
@@ -575,6 +584,7 @@ end
 ### Violation Examples (FORBIDDEN)
 
 ❌ **WRONG - No attribute but references planner metadata:**
+
 ```elixir
 def cook_meal(state, [meal_type]) do  # No @action attribute
   case validate(@action[:requires_entities]) do  # ❌ References non-existent metadata
@@ -582,6 +592,7 @@ end
 ```
 
 ❌ **WRONG - No attribute but presented as planner function:**
+
 ```elixir
 def travel_to_location(state, [subject, target]) do  # No @unigoal_method attribute
   # Presented as unigoal method but not registered with planner
@@ -589,6 +600,7 @@ end
 ```
 
 ✅ **CORRECT - Helper function (no planner integration):**
+
 ```elixir
 defp calculate_cooking_time(meal_type) do  # Private helper
   # No planner metadata references, no attribute needed

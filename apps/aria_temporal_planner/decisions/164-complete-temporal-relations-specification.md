@@ -22,6 +22,7 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
 **Language-neutral codes with mathematical symbols:**
 
 #### Point Relations
+
 - **`EQ`** (=): Intervals are identical
   - `A = B` → `A.start = B.start AND A.end = B.end`
   - STN: `{0, 0}` constraints between corresponding timepoints
@@ -35,6 +36,7 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   - STN: `{0, 0}` constraint between B.end and A.start
 
 #### Containment Relations
+
 - **`WITHIN`** (⊂): A contained within B
   - `A ⊂ B` → `B.start ≤ A.start AND A.end ≤ B.end`
   - STN: Non-positive constraints from B.start to A.start, A.end to B.end
@@ -60,6 +62,7 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   - STN: Negative constraint A.start to B.start, `{0, 0}` for ends
 
 #### Overlap Relations
+
 - **`OVERLAP_F`** (⟩⟨): A overlaps B, A starts first
   - `A ⟩⟨ B` → `A.start < B.start < A.end < B.end`
   - STN: Negative constraints in sequence order
@@ -69,6 +72,7 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   - STN: Negative constraints in sequence order
 
 #### Separation Relations
+
 - **`PRECEDES`** (<): A completely before B
   - `A < B` → `A.end < B.start`
   - STN: Negative constraint from A.end to B.start
@@ -80,7 +84,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
 ### Extended Relations
 
 #### Flexible Relations
+
 - **`FLEXIBLE`**: STN constraint ranges `[min, max]`
+
   ```elixir
   %FlexibleRelation{
     type: :flexible_before,
@@ -91,7 +97,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 #### Conditional Relations  
+
 - **`CONDITIONAL`**: Multiple STN branches with condition-based selection
+
   ```elixir
   %ConditionalRelation{
     type: :conditional_sequence,
@@ -102,7 +110,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 #### Fuzzy Relations
+
 - **`FUZZY`**: Uncertainty modeling with confidence intervals
+
   ```elixir
   %FuzzyRelation{
     type: :fuzzy_before,
@@ -118,8 +128,10 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 #### Resource Relations
+
 - **`RESOURCE_BOUND`**: Resource availability constraints
 - **`MUTEX`**: Mutual exclusion constraints
+
   ```elixir
   %ResourceRelation{
     type: :mutex,
@@ -132,7 +144,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
 ### Event-Based Relations (Oban-Powered)
 
 #### Causal Relations
+
 - **`TRIGGERS`**: Event A causes Event B
+
   ```elixir
   %TriggerRelation{
     trigger_event: "alarm_activated",
@@ -143,6 +157,7 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 - **`PREVENTS`**: Event A blocks Event B
+
   ```elixir
   %PreventRelation{
     preventing_event: "system_maintenance",
@@ -152,6 +167,7 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 - **`ENABLES`**: Event A allows Event B
+
   ```elixir
   %EnableRelation{
     enabling_event: "authentication_success",
@@ -161,7 +177,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 #### Priority Relations
+
 - **`PREEMPTS`**: Event A interrupts Event B
+
   ```elixir
   %PreemptRelation{
     preempting_event: "emergency_alert",
@@ -171,6 +189,7 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 - **`YIELDS`**: Event A defers to Event B
+
   ```elixir
   %YieldRelation{
     yielding_event: "background_sync",
@@ -180,7 +199,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 #### Propagation Relations
+
 - **`CASCADES`**: Event A propagates through sequence
+
   ```elixir
   %CascadeRelation{
     initial_event: "server_failure",
@@ -196,7 +217,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
 ### Multi-Timeline Relations
 
 #### Synchronization Relations
+
 - **`SYNCHRONIZED`**: Identical events across timelines
+
   ```elixir
   %SynchronizedRelation{
     event_type: "daily_standup",
@@ -207,6 +230,7 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 - **`COORDINATED`**: Cross-timeline dependencies
+
   ```elixir
   %CoordinatedRelation{
     source_timeline: "development_team",
@@ -218,6 +242,7 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 - **`REPLICATED`**: Event replication across active timelines
+
   ```elixir
   %ReplicatedRelation{
     master_timeline: "primary_schedule",
@@ -228,7 +253,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 #### Coordination Framework
+
 - **`MULTI_TIMELINE`**: General coordination framework
+
   ```elixir
   %MultiTimelineRelation{
     coordination_type: :resource_sharing,
@@ -241,6 +268,7 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
 ### Periodic Relations
 
 - **`PERIODIC`**: Recurring patterns with cron/interval support
+
   ```elixir
   %PeriodicRelation{
     event_template: "weekly_team_meeting",
@@ -257,7 +285,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
 ### Probabilistic Relations
 
 #### Likelihood Relations
+
 - **`LIKELY_BEFORE`**: P(X occurs before Y) = p
+
   ```elixir
   %LikelihoodRelation{
     type: :likely_before,
@@ -269,7 +299,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 #### Stochastic Relations
+
 - **`STOCHASTIC`**: Random timing distributions
+
   ```elixir
   %StochasticRelation{
     event: "customer_arrival",
@@ -282,7 +314,9 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   ```
 
 #### Conditional Probability
+
 - **`DEPENDENT_PROBABILITY`**: Conditional probability chains
+
   ```elixir
   %DependentProbabilityRelation{
     condition_event: "rain_detected",
@@ -301,18 +335,23 @@ To ensure immediate compatibility with ADRs 131-134 action specifications, all t
 ### Reserved Temporal Relation Keywords
 
 **Allen's Core Relations (13 keywords):**
+
 - `EQ`, `ADJ_F`, `ADJ_B`, `WITHIN`, `CONTAINS`, `START_ALIGN`, `START_EXTEND`, `END_ALIGN`, `END_EXTEND`, `OVERLAP_F`, `OVERLAP_B`, `PRECEDES`, `FOLLOWS`
 
 **Extended Relations (4 keywords):**
+
 - `FLEXIBLE`, `CONDITIONAL`, `FUZZY`, `MUTEX`, `RESOURCE_BOUND`
 
 **Event-Based Relations (6 keywords):**
+
 - `TRIGGERS`, `PREVENTS`, `ENABLES`, `PREEMPTS`, `YIELDS`, `CASCADES`
 
 **Multi-Timeline Relations (4 keywords):**
+
 - `SYNCHRONIZED`, `COORDINATED`, `REPLICATED`, `MULTI_TIMELINE`
 
 **Advanced Relations (3 keywords):**
+
 - `PERIODIC`, `STOCHASTIC`, `LIKELY_BEFORE`, `DEPENDENT_PROBABILITY`
 
 ### Stub Implementation Module
@@ -637,24 +676,28 @@ end
 ## Success Criteria
 
 ### Core Relations (Phase 1)
+
 - [ ] All 13 Allen relations implemented with language-neutral codes
 - [ ] STN constraint generation for each Allen relation
 - [ ] Integration with existing Timeline and Bridge systems
 - [ ] Comprehensive test coverage for core relations
 
 ### Extended Relations (Phase 2)  
+
 - [ ] Flexible, conditional, and fuzzy relations functional
 - [ ] Resource and mutex relations working with STN constraints
 - [ ] Bridge layer properly handles extended relation types
 - [ ] Performance optimization for complex relation processing
 
 ### Event-Based Relations (Phase 3)
+
 - [ ] Oban integration for triggers, prevents, enables relations
 - [ ] Priority relations (preempts, yields) working with Oban queues
 - [ ] Cascade relations with proper event propagation
 - [ ] Multi-timeline coordination via shared Oban database
 
 ### Advanced Relations (Phase 4)
+
 - [ ] Periodic relations with cron scheduling
 - [ ] Probabilistic relations using Statistics library
 - [ ] Complete integration with action specification system

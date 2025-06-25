@@ -22,26 +22,31 @@ This ADR depends on completion of the core specification ADRs:
 ## Planned Content Structure
 
 ### Your First AriaEngine Domain (5 minutes)
+
 - Step 1: Create a Simple Domain Module
 - Step 2: Use Your Domain
 - Expected Output
 
 ### Essential Concepts (10 minutes)
+
 - Actions vs Goals vs Tasks
 - State Management
 - Planning Flow
 
 ### Common Patterns (10 minutes)
+
 - Pattern 1: Resource Requirements
 - Pattern 2: Conditional Logic
 - Pattern 3: Multiple Goals
 
 ### Troubleshooting (5 minutes)
+
 - Problem: "No methods available for goal"
 - Problem: "Action failed during execution"
 - Problem: Planning takes too long
 
 ### Next Steps
+
 - References to ADRs 186-188 for advanced topics
 - References to ADRs 181-184 for technical details
 
@@ -65,6 +70,7 @@ After reading this ADR, developers should be able to:
 **Awaiting**: Completion of ADRs 181-184 to ensure all examples use authoritative patterns and correct function signatures.
 
 **Key Requirements**:
+
 - All code examples must use patterns from ADR-181
 - State management must follow ADR-182 precision handling
 - Architecture must align with ADR-183 standards

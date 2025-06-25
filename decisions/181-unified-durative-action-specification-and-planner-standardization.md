@@ -17,6 +17,7 @@
 If you're coming from normal programming, the planner architecture feels backwards because you're used to telling the computer exactly what to do, step by step. Planning systems flip this around - you describe what's *possible* and what you *want*, then let the planner figure out the steps.
 
 **Normal Programming (Imperative):**
+
 ```elixir
 # You control the execution flow directly
 def make_dinner() do
@@ -31,6 +32,7 @@ make_dinner()
 ```
 
 **Planning (Declarative):**
+
 ```elixir
 # You describe what actions CAN happen and their requirements
 @action duration: "PT2H", 
@@ -54,6 +56,7 @@ AriaEngine.plan(domain, state, [{"chef", "has_meal", "pasta"}])
 **Think:** "Here are the tools available, here's what I want, figure it out"
 
 This feels weird because:
+
 1. **You don't call functions directly** - you register them as "possible actions"
 2. **The planner decides when to use them** - it searches through combinations
 3. **You describe capabilities, not procedures** - "I can cook IF I have ingredients" vs "get ingredients, then cook"
@@ -63,7 +66,7 @@ This feels weird because:
 The planning approach handles complexity that would be nightmare to code imperatively:
 
 - **Dynamic prerequisites**: "Cook pasta, but if no pasta, make bread instead"
-- **Resource conflicts**: "Chef can't cook and attend meeting simultaneously" 
+- **Resource conflicts**: "Chef can't cook and attend meeting simultaneously"
 - **Temporal constraints**: "2-hour cooking must finish before 6pm dinner"
 - **Multi-agent coordination**: "3 chefs preparing different courses for same meal"
 - **Failure recovery**: "Oven broke, find alternative cooking method and replan"
@@ -304,6 +307,7 @@ end
 ### Required Attribute Patterns
 
 **Planner Actions:**
+
 ```elixir
 @action duration: "PT2H", requires_entities: [...]
 def action_name(state, args) do
@@ -312,6 +316,7 @@ end
 ```
 
 **Execution Commands:**
+
 ```elixir
 @command
 def command_name(state, args) do
@@ -320,6 +325,7 @@ end
 ```
 
 **Task Methods:**
+
 ```elixir
 @task_method
 def task_name(state, args) do
@@ -328,6 +334,7 @@ end
 ```
 
 **Unigoal Methods:**
+
 ```elixir
 @unigoal_method predicate: "location"
 def method_name(state, [subject, value]) do
@@ -336,6 +343,7 @@ end
 ```
 
 **Multigoal Methods:**
+
 ```elixir
 @multigoal_method goal_pattern: :pattern_name
 def method_name(state, multigoal) do
@@ -346,6 +354,7 @@ end
 ### Violation Examples (FORBIDDEN)
 
 ❌ **WRONG - No attribute but references planner metadata:**
+
 ```elixir
 def cook_meal(state, [meal_type]) do  # No @action attribute
   case validate(@action[:requires_entities]) do  # ❌ References non-existent metadata
@@ -353,6 +362,7 @@ end
 ```
 
 ❌ **WRONG - No attribute but presented as planner function:**
+
 ```elixir
 def travel_to_location(state, [subject, target]) do  # No @unigoal_method attribute
   # Presented as unigoal method but not registered with planner
@@ -360,6 +370,7 @@ end
 ```
 
 ✅ **CORRECT - Helper function (no planner integration):**
+
 ```elixir
 defp calculate_cooking_time(meal_type) do  # Private helper
   # No planner metadata references, no attribute needed

@@ -22,10 +22,12 @@ This ADR depends on completion of the core specification ADRs:
 ## Planned Implementation Strategy
 
 ### Migration Strategy Analysis
+
 **Current State**: ADRs 181-184 specify unified action system, but key components are missing from codebase  
 **Target State**: Complete TDD implementation of module-based domain pattern with entity validation and enhanced planning
 
 **Migration Approach**:
+
 - Clean break with AST migration (following project's aggressive deprecation pattern)
 - Minimal impact - only `aria_scheduler` app requires migration
 - Build upon existing solid foundations (Domain infrastructure, StateV2, Hybrid planner)
@@ -33,10 +35,12 @@ This ADR depends on completion of the core specification ADRs:
 ### Planned TDD Implementation Sequence
 
 #### Phase 1: Module-Based Domain Pattern (Foundation)
+
 **Priority**: CRITICAL - Everything else depends on this  
 **Testing Style**: Classic (Sociable) - Domain integration with real components
 
 **Planned Components**:
+
 - `AriaEngine.Domain` macro module
 - Attribute parsing (`@action`, `@task_method`, `@unigoal_method`, `@multigoal_method`)
 - Integration with existing `Domain.Core` structure
@@ -44,10 +48,12 @@ This ADR depends on completion of the core specification ADRs:
 - Backward compatibility with current domain API
 
 #### Phase 2: Entity Validation Framework
+
 **Priority**: HIGH - Required for action requirement validation  
 **Testing Style**: Classic (Sociable) - Domain integration with real state management
 
 **Planned Components**:
+
 - `AriaEngine.EntityValidator` module
 - Capability matching algorithms
 - Entity availability checking
@@ -55,10 +61,12 @@ This ADR depends on completion of the core specification ADRs:
 - Comprehensive error reporting
 
 #### Phase 3: Enhanced Planning with Action Priority
+
 **Priority**: MEDIUM - Enhances existing planning system  
 **Testing Style**: Mockist (Solitary) - Isolated component testing
 
 **Planned Components**:
+
 - Node type tracking in solution trees
 - Action priority in node selection
 - Entity validation integration into planning
@@ -66,10 +74,12 @@ This ADR depends on completion of the core specification ADRs:
 - Backward compatibility maintenance
 
 #### Phase 4: Automatic Goal Verification
+
 **Priority**: MEDIUM - Enhances existing goal verification  
 **Testing Style**: Mockist (Solitary) - Isolated verification logic testing
 
 **Planned Components**:
+
 - Extension of existing `Domain.Utils.verify_goal/7` for automation
 - Automatic verification task creation
 - Integration with solution tree node types
@@ -77,10 +87,12 @@ This ADR depends on completion of the core specification ADRs:
 - Compatibility with manual verification
 
 #### Phase 5: Commands vs Actions Separation
+
 **Priority**: LOW - Architectural enhancement  
 **Testing Style**: Mockist (Solitary) - Isolated command/action logic testing
 
 **Planned Components**:
+
 - `AriaEngine.CommandExecution` module
 - Command function name generation
 - Blacklist integration for command failures
@@ -90,18 +102,23 @@ This ADR depends on completion of the core specification ADRs:
 ## Planned Testing Philosophy
 
 ### Classic Style (Sociable Tests) - Domain Integration Testing
+
 **Use for**: Testing how domain components work together in realistic scenarios
+
 - Real dependencies: StateV2, Domain.Core, EntityValidator working together
 - Integration boundaries: Full action workflow from planning to execution
 - Realistic scenarios: Complete cooking domain with actual state management
 
 ### Mockist Style (Solitary Tests) - Isolated Component Testing
+
 **Use for**: Testing individual components in isolation with clear boundaries
+
 - Mocked dependencies: Isolated testing of EntityValidator, macro parsing, etc.
 - Unit boundaries: Single component behavior without external dependencies
 - Focused scenarios: Specific validation logic, attribute parsing, error handling
 
 ### Decision Criteria
+
 - Domain integration (Phases 1-2): Classic style - test real component interactions
 - Component validation (Phases 3-5): Mockist style - test isolated component logic
 - Performance testing: Classic style - measure real system behavior
@@ -110,6 +127,7 @@ This ADR depends on completion of the core specification ADRs:
 ## Planned Backward Compatibility Strategy
 
 **Preserve existing functionality**:
+
 - All existing `Domain.Core` functionality
 - Current action registration patterns
 - Existing planning algorithms
@@ -118,6 +136,7 @@ This ADR depends on completion of the core specification ADRs:
 - Blacklist system behavior
 
 **Integration approach**:
+
 - New module pattern extends existing `Domain.add_action/3`
 - Entity validation integrates with current state queries
 - Action priority enhances existing node selection
@@ -146,6 +165,7 @@ After implementation, the system should provide:
 **Awaiting**: Completion of ADRs 181-184 to ensure implementation follows stable, authoritative patterns.
 
 **Key Requirements**:
+
 - All implementation must follow patterns from ADR-181
 - Technical details must align with ADR-182
 - Architecture must follow ADR-183 standards

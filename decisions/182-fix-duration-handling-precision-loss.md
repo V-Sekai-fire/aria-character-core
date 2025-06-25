@@ -17,6 +17,7 @@
 When people say planners do "brute force" search, it sounds scary - like the computer is randomly trying everything. But it's actually intelligent search with smart pruning. Here's what really happens when you ask for pasta:
 
 **Step 1: Goal Analysis**
+
 ```elixir
 # You want: {"chef", "has_meal", "pasta"}
 # Planner asks: "What actions could make this true?"
@@ -25,6 +26,7 @@ When people say planners do "brute force" search, it sounds scary - like the com
 ```
 
 **Step 2: Requirement Checking**
+
 ```elixir
 # cook_meal requires: chef + ingredients + oven
 # Planner asks: "Do we have these entities with the right capabilities?"
@@ -33,6 +35,7 @@ When people say planners do "brute force" search, it sounds scary - like the com
 ```
 
 **Step 3: Recursive Planning**
+
 ```elixir
 # Planner asks: "What actions could get ingredients?"
 # Finds: gather_ingredients action
@@ -41,6 +44,7 @@ When people say planners do "brute force" search, it sounds scary - like the com
 ```
 
 **Step 4: Plan Construction**
+
 ```elixir
 # Builds plan: [gather_ingredients, cook_meal]
 # Validates temporal constraints: gathering takes 30min, cooking takes 2h
@@ -301,6 +305,7 @@ Actions must NOT validate their own requirements. This is the planner's responsi
 ### Required Attribute Patterns
 
 **Planner Actions:**
+
 ```elixir
 @action duration: "PT2H", requires_entities: [...]
 def action_name(state, args) do
@@ -309,6 +314,7 @@ end
 ```
 
 **Execution Commands:**
+
 ```elixir
 @command
 def command_name(state, args) do
@@ -317,6 +323,7 @@ end
 ```
 
 **Task Methods:**
+
 ```elixir
 @task_method
 def task_name(state, args) do
@@ -325,6 +332,7 @@ end
 ```
 
 **Unigoal Methods:**
+
 ```elixir
 @unigoal_method predicate: "location"
 def method_name(state, [subject, value]) do
@@ -333,6 +341,7 @@ end
 ```
 
 **Multigoal Methods:**
+
 ```elixir
 @multigoal_method goal_pattern: :pattern_name
 def method_name(state, multigoal) do
@@ -343,6 +352,7 @@ end
 ### Violation Examples (FORBIDDEN)
 
 ❌ **WRONG - No attribute but references planner metadata:**
+
 ```elixir
 def cook_meal(state, [meal_type]) do  # No @action attribute
   case validate(@action[:requires_entities]) do  # ❌ References non-existent metadata
@@ -350,6 +360,7 @@ end
 ```
 
 ❌ **WRONG - No attribute but presented as planner function:**
+
 ```elixir
 def travel_to_location(state, [subject, target]) do  # No @unigoal_method attribute
   # Presented as unigoal method but not registered with planner
@@ -357,6 +368,7 @@ end
 ```
 
 ✅ **CORRECT - Helper function (no planner integration):**
+
 ```elixir
 defp calculate_cooking_time(meal_type) do  # Private helper
   # No planner metadata references, no attribute needed

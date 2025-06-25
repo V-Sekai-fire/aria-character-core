@@ -8,8 +8,6 @@
 
 Draft (NOT FINISHED. PRE-ALPHA SPECIFICATION.)
 
-
-
 ## Dependencies
 
 Written against the glTF 2.0 spec.
@@ -35,6 +33,7 @@ This extension builds upon KHR_interactivity by adding:
 When developers first encounter planning patterns, several things feel confusing. Here's the journey from confusion to understanding:
 
 **Confusion 1: "Why don't I just call the function?"**
+
 ```javascript
 // Normal programming expectation:
 cookMeal("pasta");  // Just call it when I want it
@@ -45,6 +44,7 @@ cookMeal("pasta");  // Just call it when I want it
 **The "Aha!" Moment:** You're not writing a program - you're describing a toolbox. The planner is the craftsperson who decides which tools to use and when.
 
 **Confusion 2: "This feels backwards and inefficient"**
+
 ```javascript
 // What it feels like you're doing:
 "Hey computer, I have these tools available, and I want pasta. Figure it out."
@@ -54,6 +54,7 @@ cookMeal("pasta");  // Just call it when I want it
 ```
 
 **The "Aha!" Moment:** The "inefficient" approach handles complexity that would break your step-by-step code:
+
 - What if no ingredients are available?
 - What if the chef is in a meeting?
 - What if the oven is broken?
@@ -64,6 +65,7 @@ cookMeal("pasta");  // Just call it when I want it
 The planning architecture exists to solve problems that would be nightmarish to code with normal imperative programming:
 
 **Problem 1: Multi-Agent Coordination**
+
 ```javascript
 // Imperative nightmare: 3 chefs preparing different courses
 function coordinateDinnerPrep() {
@@ -82,6 +84,7 @@ function coordinateDinnerPrep() {
 ```
 
 **Problem 2: Temporal Constraint Satisfaction**
+
 ```javascript
 // Imperative nightmare: "Dinner ready by 7pm, but prep takes 3 hours, 
 // chef has meeting 2-4pm, oven shared with bread baking 5-6pm"
@@ -91,6 +94,7 @@ function coordinateDinnerPrep() {
 ```
 
 **Problem 3: Dynamic Replanning**
+
 ```javascript
 // Imperative nightmare: "Oven broke, find alternative cooking method,
 // reschedule everything, notify affected parties, update timelines"
@@ -117,6 +121,7 @@ The `requires_entities` metadata isn't just documentation - it's the key to inte
 ```
 
 This tells the planner:
+
 - **Resource conflicts**: "Chef can't cook two things simultaneously"
 - **Capability matching**: "Only entities with :cooking capability can do this"
 - **Availability checking**: "Don't plan this if chef is in meeting"
@@ -165,6 +170,7 @@ All interactive elements are modeled as entities with capabilities that define t
 ```
 
 **Key Principles:**
+
 - **Capabilities define what entities can do** (static traits)
 - **State tracks current conditions** (dynamic properties)
 - **No constraints in action metadata** - quantities and availability are state fluents
@@ -211,6 +217,7 @@ Actions are defined with temporal duration and entity requirements following the
 The extension supports multiple temporal specification patterns with precision preservation:
 
 **Floating Duration (effort-based scheduling):**
+
 ```json
 {
   "duration": "PT2H"
@@ -218,6 +225,7 @@ The extension supports multiple temporal specification patterns with precision p
 ```
 
 **Fixed Schedule (time-based scheduling):**
+
 ```json
 {
   "start": "2025-06-22T10:00:00Z",
@@ -226,6 +234,7 @@ The extension supports multiple temporal specification patterns with precision p
 ```
 
 **Open-ended Intervals:**
+
 ```json
 {
   "start": "2025-06-22T14:00:00Z"
@@ -233,6 +242,7 @@ The extension supports multiple temporal specification patterns with precision p
 ```
 
 **Duration vs Start/End Validation Rules:**
+
 - **Mutually exclusive**: Cannot specify both `duration` and `start`/`end`
 - **Precision preservation**: Use Timex for temporal calculations
 - **Validation constraints**: Enforce logical temporal relationships
@@ -242,6 +252,7 @@ The extension supports multiple temporal specification patterns with precision p
 Following ADR-183, the extension integrates IPyHOP-compatible features:
 
 **Solution Tree Structure with 6 Node Types:**
+
 - `:task` - Decompose into subtasks/actions
 - `:action` - Execute immediately (highest priority)
 - `:goal` - Decompose into subgoals with automatic verification
@@ -250,11 +261,13 @@ Following ADR-183, the extension integrates IPyHOP-compatible features:
 - `:verify_multigoal` - Verify multigoal achievement
 
 **Corrected `run_lazy_refineahead` with Interleaved Planning/Execution:**
+
 - True interleaved planning and execution (no separate planning phase)
 - Action nodes execute immediately when selected
 - Proper backtracking on failure with state restoration
 
 **Blacklist System:**
+
 ```json
 {
   "blacklist": {
@@ -269,6 +282,7 @@ Following ADR-183, the extension integrates IPyHOP-compatible features:
 ```
 
 **Pure GTPyhop Multigoal Philosophy:**
+
 - **NO automatic fallbacks** for multigoals
 - **Domain authors must explicitly define multigoal methods**
 - **Planning fails if multigoals encountered without domain methods**
@@ -279,6 +293,7 @@ Following ADR-183, the extension integrates IPyHOP-compatible features:
 Following ADR-183 architecture:
 
 **Planning-Time Actions** (assume success for planning):
+
 ```json
 {
   "planning_actions": {
@@ -295,6 +310,7 @@ Following ADR-183 architecture:
 ```
 
 **Execution-Time Commands** (handle real-world failures):
+
 ```json
 {
   "execution_commands": {
@@ -331,6 +347,7 @@ Following ADR-183 architecture:
 The extension uses KHR_interactivity's `pointer/get` and `pointer/set` nodes for accessing glTF Object Model properties:
 
 **Getting Entity State:**
+
 ```json
 {
   "declarations": [
@@ -354,6 +371,7 @@ The extension uses KHR_interactivity's `pointer/get` and `pointer/set` nodes for
 ```
 
 **Setting Entity State:**
+
 ```json
 {
   "declarations": [
@@ -557,12 +575,14 @@ Scenes can define planning domains and execution contexts:
 9. **❌ TOMBSTONE: Alternative planning APIs** - Enhance existing `Plan.Core.plan()`, don't create parallel systems
 
 **Why constraints are tombstoned:**
+
 - **Action metadata** should define what capabilities are needed (static requirements)
 - **State validation** should check current quantities, availability, and dynamic properties
 - **Separation of concerns** - keeps action metadata clean and state queries explicit
 - **Temporal awareness** - quantities can change over time, constraints cannot
 
 **Example of WRONG approach:**
+
 ```json
 {
   "requires_entities": [
@@ -576,6 +596,7 @@ Scenes can define planning domains and execution contexts:
 ```
 
 **Example of CORRECT approach:**
+
 ```json
 {
   "requires_entities": [
