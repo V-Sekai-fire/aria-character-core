@@ -1,7 +1,8 @@
 # ADR-178: Extract MiniZinc STN Solver from Temporal Planner
 
-**Status:** Active  
+**Status:** Completed  
 **Date:** 2025-06-24  
+**Completion Date:** 2025-06-24  
 **Priority:** HIGH
 
 ## Context
@@ -46,19 +47,19 @@ Extract the MiniZinc STN solving functionality from `aria_temporal_planner` and 
 
 ### Phase 3: Clean Up and Test
 - [x] Remove duplicate constraint conversion logic
-- [ ] Update tests to verify delegation works correctly
-- [ ] Ensure all existing functionality is preserved
+- [x] Update tests to verify delegation works correctly
+- [x] Ensure all existing functionality is preserved
 
 ### Phase 4: Documentation
-- [ ] Update module documentation to reflect delegation
-- [ ] Document the architectural change in relevant ADRs
+- [x] Update module documentation to reflect delegation
+- [x] Document the architectural change in relevant ADRs
 
 ## Success Criteria
 
-- [ ] `aria_temporal_planner` successfully delegates STN solving to `aria_minizinc_stn`
-- [ ] All existing tests pass without modification
-- [ ] No duplicate STN solving logic remains in temporal planner
-- [ ] Clean separation of concerns between temporal planning and STN solving
+- [x] `aria_temporal_planner` successfully delegates STN solving to `aria_minizinc_stn`
+- [x] All existing tests pass without modification
+- [x] No duplicate STN solving logic remains in temporal planner
+- [x] Clean separation of concerns between temporal planning and STN solving
 
 ## Benefits
 
