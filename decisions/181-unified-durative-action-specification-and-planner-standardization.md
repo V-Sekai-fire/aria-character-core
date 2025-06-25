@@ -277,8 +277,8 @@ defmodule MyApp.Domains.CookingDomain do
   end
 
   # Fixed scheduling example with @action attributes
-  @action start: "2025-06-22T10:00:00Z",
-          end: "2025-06-22T11:00:00Z",
+  @action start: "2025-06-22T10:00:00-07:00",
+          end: "2025-06-22T11:00:00-07:00",
           requires_entities: [
             %{type: "agent", capabilities: [:communication]},
             %{type: "conference_room_1", capabilities: [:meeting_space]}
@@ -308,8 +308,8 @@ end
 
 ```elixir
 %{
-  start: "2025-06-22T11:00:00Z",  # Instant action at exact time point
-  end: "2025-06-22T11:00:00Z"     # Same time = zero duration, specific moment
+  start: "2025-06-22T11:00:00-07:00",  # Instant action at exact time point
+  end: "2025-06-22T11:00:00-07:00"     # Same time = zero duration, specific moment
 }
 ```
 
@@ -323,16 +323,16 @@ end
 
 ```elixir
 %{
-  start: "2025-06-22T10:00:00Z",  # ISO 8601 datetime string
-  end: "2025-06-22T11:00:00Z"     # ISO 8601 datetime string
+  start: "2025-06-22T10:00:00-07:00",  # ISO 8601 datetime string
+  end: "2025-06-22T11:00:00-07:00"     # ISO 8601 datetime string
 }
 ```
 
 **Pattern 5: Open-ended Intervals**
 
 ```elixir
-%{start: "2025-06-22T10:00:00Z"}  # Start time only
-%{end: "2025-06-22T11:00:00Z"}    # End time only
+%{start: "2025-06-22T10:00:00-07:00"}  # Start time only
+%{end: "2025-06-22T11:00:00-07:00"}    # End time only
 ```
 
 ### Validation Rules
@@ -480,8 +480,8 @@ defmodule MyApp.Domains.CookingDomain do
   end
   
   # Instant actions at specific time points (zero duration at exact moment)
-  @action start: "2025-06-22T12:00:00Z",
-          end: "2025-06-22T12:00:00Z",
+  @action start: "2025-06-22T12:00:00-07:00",
+          end: "2025-06-22T12:00:00-07:00",
           requires_entities: [
             %{type: "agent", capabilities: [:communication]},
             %{type: "bell", capabilities: [:sound]}
@@ -494,8 +494,8 @@ defmodule MyApp.Domains.CookingDomain do
     |> AriaState.RelationalState.set_fact("lunch_announced", "kitchen", true)
   end
   
-  @action start: "2025-06-22T18:00:00Z",
-          end: "2025-06-22T18:00:00Z",
+  @action start: "2025-06-22T18:00:00-07:00",
+          end: "2025-06-22T18:00:00-07:00",
           requires_entities: [
             %{type: "agent", capabilities: [:management]},
             %{type: "restaurant", capabilities: [:service]}
@@ -940,6 +940,7 @@ The following concepts were explicitly rejected during design:
 24. **❌ TOMBSTONE: Functions presented as planner functions without attributes** - All planner integration requires explicit attribute declaration
 25. **❌ TOMBSTONE: `mutual_exclusion` field in action metadata** - Resource conflicts handled by planner entity allocation, not action metadata
 26. **❌ TOMBSTONE: `temporal_constraints` field in action metadata** - Temporal relationships handled by method decomposition, not embedded action constraints
+27. **❌ TOMBSTONE: UTC timezone format when local timezone isn't UTC** - Use local timezone strings (e.g., "-07:00") instead of "Z" suffix when working in non-UTC timezones
 
 ## Success Criteria
 
