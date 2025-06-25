@@ -143,7 +143,7 @@ defmodule AriaEngine.EntityValidatorTest do
     
     {:ok, entities} = EntityValidator.validate_requirements(state, action_metadata)
     assert length(entities) == 2
-    assert Enum.any?(entities, fn e -> State.get_fact(state, "type", e) == "agent" end)
+    assert Enum.any?(entities, fn e -> StateV2.get_fact(state, e, "type") == "agent" end)
   end
   
   test "fails validation when required entities unavailable" do
@@ -287,7 +287,7 @@ defmodule AriaEngine.PlanningExecutionTest do
     {:ok, final_state} = Plan.Core.plan(domain, state, [
       {:cook_meal, ["pasta"]}
     ])
-    assert State.get_fact(final_state, "meal_status", "pasta") == "ready"
+    assert StateV2.get_fact(final_state, "pasta", "meal_status") == "ready"
   end
   
   test "command failures trigger replanning" do

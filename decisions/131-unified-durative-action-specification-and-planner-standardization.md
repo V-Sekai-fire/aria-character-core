@@ -138,7 +138,7 @@ Domain.add_action(:meeting, &meeting/2, %{
 **ONLY use direct fact checking:**
 
 ```elixir
-State.get_fact(state, predicate, subject)  # ✅ DIRECT FACT CHECKING (supports temporal queries)
+StateV2.get_fact(state, subject, predicate)  # ✅ DIRECT FACT CHECKING (supports temporal queries)
 ```
 
 **DEPRECATED approaches:**
@@ -168,6 +168,31 @@ The following concepts were explicitly rejected during design:
 11. **❌ TOMBSTONE: Any validation in action functions** - ALL validation happens at planning time, actions are pure state transformations
 12. **❌ TOMBSTONE: Command registration in domains** - Commands are execution-time functions, not domain registration artifacts
 13. **❌ TOMBSTONE: Goal format inconsistency in ADR-131** - Fixed documentation error where tombstone claimed `{predicate, subject, value}` was correct format, but all examples used `{subject, predicate, value}`. Corrected specification to match actual usage patterns throughout codebase.
+14. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
+
+**Old unigoal API patterns (TOMBSTONED):**
+
+```elixir
+# DON'T USE: Full tuple goal pattern (TOMBSTONED)
+@unigoal_method goal_pattern: {"chef", "location", :any}
+def travel_to_location(state, {"chef", "location", target}) do
+  # ❌ WRONG - tuple destructuring signature
+end
+
+# USE INSTEAD: Advanced predicate-based registration
+@unigoal_method predicate: "location"
+def travel_to_location(state, [subject, target]) do
+  # ✅ CORRECT - predicate-based with [subject, value] signature
+end
+```
+
+**Why old unigoal patterns are tombstoned:**
+
+- **Predicate-based registration** is more flexible and reusable
+- **[subject, value] signature** works for any entity with that predicate
+- **Less repetitive** - one method handles all subjects for a predicate
+- **Better API design** - register by predicate, not full goal pattern
+- **Cleaner domain code** - fewer method definitions needed
 
 ### Action-Level Requirement Validation (TOMBSTONED)
 

@@ -102,23 +102,23 @@ defmodule MyApp.Domains.CookingDomain do
     ]}
   end
   
-  # Unigoal methods with automatic verification
-  @unigoal_method goal_pattern: {"chef", "location", :any}
-  def travel_to_location(state, {"chef", "location", target}) do
-    current = StateV2.get_fact(state, "chef", "location")
+  # Unigoal methods with automatic verification (ADVANCED: Predicate-based registration)
+  @unigoal_method predicate: "location"
+  def travel_to_location(state, [subject, target]) do
+    current = StateV2.get_fact(state, subject, "location")
     if current == target do
       {:ok, []}  # Already achieved
     else
       {:ok, [
-        {:walk_to_location, ["chef", target]},
-        {:verify_location, ["chef", target]}  # Auto-verification
+        {:walk_to_location, [subject, target]},
+        {:verify_location, [subject, target]}  # Auto-verification
       ]}
     end
   end
   
-  @unigoal_method goal_pattern: {"chef", "has", :any}
-  def acquire_item(state, {"chef", "has", item}) do
-    current_items = StateV2.get_fact(state, "chef", "inventory") || []
+  @unigoal_method predicate: "has"
+  def acquire_item(state, [subject, item]) do
+    current_items = StateV2.get_fact(state, subject, "inventory") || []
     if item in current_items do
       {:ok, []}  # Already has item
     else
@@ -362,7 +362,7 @@ defp validate_ingredient_quantities(state, meal_type) do
   required_ingredients = get_recipe_requirements(meal_type)
   
   Enum.reduce_while(required_ingredients, {:ok, []}, fn {ingredient, min_qty}, {:ok, acc} ->
-    available_qty = State.get_fact(state, "quantity", ingredient) || 0
+    available_qty = StateV2.get_fact(state, ingredient, "quantity") || 0
     
     if available_qty >= min_qty do
       {:cont, {:ok, [ingredient | acc]}}
@@ -396,6 +396,31 @@ end
 4. **❌ TOMBSTONE: Complex state evaluation in actions** - Use direct `State.get_fact/3` queries only
 5. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity` belong in state
 6. **❌ TOMBSTONE: Validation within action functions** - ALL validation is planner responsibility, actions are pure transformations
+7. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
+
+**Old unigoal API patterns (TOMBSTONED):**
+
+```elixir
+# DON'T USE: Full tuple goal pattern (TOMBSTONED)
+@unigoal_method goal_pattern: {"chef", "location", :any}
+def travel_to_location(state, {"chef", "location", target}) do
+  # ❌ WRONG - tuple destructuring signature
+end
+
+# USE INSTEAD: Advanced predicate-based registration
+@unigoal_method predicate: "location"
+def travel_to_location(state, [subject, target]) do
+  # ✅ CORRECT - predicate-based with [subject, value] signature
+end
+```
+
+**Why old unigoal patterns are tombstoned:**
+
+- **Predicate-based registration** is more flexible and reusable
+- **[subject, value] signature** works for any entity with that predicate
+- **Less repetitive** - one method handles all subjects for a predicate
+- **Better API design** - register by predicate, not full goal pattern
+- **Cleaner domain code** - fewer method definitions needed
 
 **Action-level requirement validation (TOMBSTONED):**
 
@@ -527,7 +552,7 @@ defp validate_ingredient_quantities(state, meal_type) do
   required_ingredients = get_recipe_requirements(meal_type)
   
   Enum.reduce_while(required_ingredients, {:ok, []}, fn {ingredient, min_qty}, {:ok, acc} ->
-    available_qty = State.get_fact(state, "quantity", ingredient) || 0
+    available_qty = StateV2.get_fact(state, ingredient, "quantity") || 0
     
     if available_qty >= min_qty do
       {:cont, {:ok, [ingredient | acc]}}
@@ -839,8 +864,8 @@ defmodule MyApp.ExecutionExamples do
     # Find entities with required type and capabilities
     entities = find_entities_with_capabilities(state, capabilities)
     |> Enum.filter(fn entity_id ->
-      State.get_fact(state, "type", entity_id) == type and
-      State.get_fact(state, "available", entity_id) == true
+      StateV2.get_fact(state, entity_id, "type") == type and
+      StateV2.get_fact(state, entity_id, "available") == true
     end)
     
     search_time = System.system_time(:millisecond) - start_time

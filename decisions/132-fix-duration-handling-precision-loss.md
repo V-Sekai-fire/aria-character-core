@@ -202,8 +202,8 @@ defmodule AriaEngine.Planner.EntityValidator do
     # Find entities with required type and capabilities that are available
     entities = find_entities_with_capabilities(state, capabilities)
     |> Enum.filter(fn entity_id ->
-      State.get_fact(state, "type", entity_id) == type and
-      State.get_fact(state, "available", entity_id) == true
+      StateV2.get_fact(state, entity_id, "type") == type and
+      StateV2.get_fact(state, entity_id, "available") == true
     end)
 
     case entities do
