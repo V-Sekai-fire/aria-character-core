@@ -3,12 +3,12 @@
 **Status:** Active  
 **Date:** 2025-06-25  
 **Priority:** HIGH  
-**Parent ADRs:** ADR-131, ADR-132, ADR-133, ADR-134
+**Parent ADRs:** ADR-181, ADR-182, ADR-183, ADR-184
 
 ## Overview
 
-**Current State**: ADRs 131-134 specify unified action system, but key components are missing from codebase  
-**Target State**: Complete TDD implementation of module-based domain pattern with entity validation and enhanced planning
+**Current State**: ADRs 181-184 specify unified action system, but key components are missing from codebase  
+**Target State**: Complete TDD implementation of module-based domain pattern with entity validation and enhanced planning following ADR-181 Core Specification
 
 ## Migration Strategy Analysis
 
@@ -612,10 +612,12 @@ end
 
 ## Related ADRs
 
-- **ADR-131**: Core Specification (parent ADR)
-- **ADR-132**: Technical Implementation (duration handling)
-- **ADR-133**: Architecture & Standards (IPyHOP integration)
-- **ADR-134**: Developer Guide (usage examples)
+- **ADR-181**: Unified Durative Action Specification and Planner Standardization (authoritative core specification)
+- **ADR-182**: Fix Duration Handling Precision Loss (technical implementation)
+- **ADR-183**: Planner Standardization Open Problems (architecture & standards)
+- **ADR-184**: Unified Action Specification Examples (developer guide)
+- **ADR-185**: AriaEngine Quick Start Guide (references this implementation)
+- **ADR-188**: Practical How-To Documentation (references this implementation)
 
 ## Implementation Status
 

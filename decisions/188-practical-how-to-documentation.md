@@ -918,3 +918,14 @@ After reading this ADR, you should be able to:
 - [x] Debug planning failures using state inspection and logging
 - [x] Integrate AriaEngine with external APIs and databases
 - [x] Optimize domain performance with caching
+
+## Related ADRs
+
+- **ADR-181**: Unified Durative Action Specification and Planner Standardization (authoritative core specification)
+- **ADR-182**: Fix Duration Handling Precision Loss (technical implementation)
+- **ADR-183**: Planner Standardization Open Problems (architecture & standards)
+- **ADR-184**: Unified Action Specification Examples (developer guide)
+- **ADR-185**: AriaEngine Quick Start Guide (prerequisite reading)
+- **ADR-186**: Common Use Cases and Patterns (prerequisite reading)
+- **ADR-187**: Developer Navigation Guide (prerequisite reading)
+- **ADR-180**: TDD Implementation (implementation reference)
