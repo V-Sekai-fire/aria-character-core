@@ -517,11 +517,6 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "flour", capabilities: [:consumable]},
             %{type: "eggs", capabilities: [:consumable]},
             %{type: "mixing_bowl", capabilities: [:container, :reusable]}
-          ],
-          mutual_exclusion: ["kitchen_cleanup"],
-          temporal_constraints: [
-            {:before, "gather_ingredients"},
-            {:during, "kitchen_available"}
           ]
   @spec cook_meal(AriaState.t(), [meal_id()]) :: AriaState.t()
   def cook_meal(state, [meal_id]) do
@@ -943,6 +938,8 @@ The following concepts were explicitly rejected during design:
 22. **❌ TOMBSTONE: Temporal condition semantics with type specifications** - Overly complex typing for fundamentally flawed approach
 23. **❌ TOMBSTONE: Functions without attributes referencing planner metadata** - Functions must have corresponding attributes (@action, @command, etc.) to integrate with planner system
 24. **❌ TOMBSTONE: Functions presented as planner functions without attributes** - All planner integration requires explicit attribute declaration
+25. **❌ TOMBSTONE: `mutual_exclusion` field in action metadata** - Resource conflicts handled by planner entity allocation, not action metadata
+26. **❌ TOMBSTONE: `temporal_constraints` field in action metadata** - Temporal relationships handled by method decomposition, not embedded action constraints
 
 ## Success Criteria
 
