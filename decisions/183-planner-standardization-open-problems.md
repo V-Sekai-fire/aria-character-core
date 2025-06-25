@@ -20,6 +20,7 @@ The planning architecture in AriaEngine exists to solve problems that would be n
 
 ```elixir
 # Imperative nightmare: 3 chefs preparing different courses
+@spec coordinate_dinner_prep() :: term()
 def coordinate_dinner_prep() do
   if chef1_available?() and chef2_available?() and chef3_available?() do
     if appetizer_ingredients_ready?() and main_ingredients_ready?() and dessert_ingredients_ready?() do
@@ -36,6 +37,7 @@ end
   %{type: "chef", capabilities: [:appetizer_prep]},
   %{type: "prep_station", capabilities: [:workspace]}
 ]
+@spec prepare_appetizer(AriaState.t(), [String.t()]) :: AriaState.t()
 def prepare_appetizer(state, [dish_type]) do
   # Just describe the state change - planner handles coordination
 end
@@ -51,6 +53,7 @@ end
 # Planning solution: Declare constraints, let solver figure it out
 @action duration: "PT3H", 
         requires_entities: [%{type: "chef", capabilities: [:cooking]}]
+@spec prepare_dinner(AriaState.t(), [String.t()]) :: AriaState.t()
 def prepare_dinner(state, [meal_type]) do
   # Planner automatically schedules around meetings and oven conflicts
 end
@@ -100,6 +103,7 @@ Instead of writing complex scheduling logic, you declare what you need:
   %{type: "oven", capabilities: [:heating, :baking]},
   %{type: "prep_station", capabilities: [:workspace]}
 ]
+@spec collaborative_cooking(AriaState.t(), [String.t()]) :: AriaState.t()
 def collaborative_cooking(state, [meal_type]) do
   # Planner automatically:
   # - Finds available chef and sous chef
@@ -146,6 +150,7 @@ Solution tree supports temporal conditions with mixed todo types:
 
 ```elixir
 defmodule AriaEngine.TemporalSolutionTree do
+  @spec process_temporal_conditions(AriaEngine.SolutionTree.t(), map(), String.t()) :: {:ok, AriaEngine.SolutionTree.t()} | {:error, String.t()}
   def process_temporal_conditions(tree, durative_action, condition_type) do
     conditions = get_conditions_for_type(durative_action, condition_type)
     
@@ -158,6 +163,7 @@ defmodule AriaEngine.TemporalSolutionTree do
     end)
   end
   
+  @spec process_temporal_todo_item(term(), AriaEngine.SolutionTree.t(), String.t()) :: {:ok, AriaEngine.SolutionTree.t()} | {:error, String.t()}
   defp process_temporal_todo_item(todo_item, tree, condition_type) do
     case todo_item do
       # Goals: Direct state validation
@@ -178,6 +184,7 @@ defmodule AriaEngine.TemporalSolutionTree do
     end
   end
   
+  @spec add_temporal_task_node(AriaEngine.SolutionTree.t(), {atom(), list()}, String.t()) :: {:ok, AriaEngine.SolutionTree.t()}
   defp add_temporal_task_node(tree, {task_name, args}, condition_type) do
     node_id = SolutionTree.next_node_id(tree)
     
@@ -193,6 +200,7 @@ defmodule AriaEngine.TemporalSolutionTree do
     {:ok, updated_tree}
   end
   
+  @spec add_temporal_multigoal_node(AriaEngine.SolutionTree.t(), [term()], String.t()) :: {:ok, AriaEngine.SolutionTree.t()}
   defp add_temporal_multigoal_node(tree, multigoal, condition_type) do
     node_id = SolutionTree.next_node_id(tree)
     
@@ -217,6 +225,7 @@ True interleaved planning and execution with action priority:
 
 ```elixir
 defmodule AriaEngine.LazyRefineahead do
+  @spec run_lazy_refineahead(AriaEngine.Domain.t(), AriaState.t(), [term()], keyword()) :: {:ok, AriaState.t()} | {:error, String.t()}
   def run_lazy_refineahead(domain, initial_state, todo_list, opts \\ []) do
     # Initialize solution tree
     solution_tree = SolutionTree.new(todo_list)
@@ -225,6 +234,7 @@ defmodule AriaEngine.LazyRefineahead do
     refinement_loop(domain, initial_state, solution_tree, 0, opts)
   end
   
+  @spec find_next_open_node_with_action_priority(AriaEngine.SolutionTree.t(), non_neg_integer()) :: {:ok, non_neg_integer()} | nil
   defp find_next_open_node_with_action_priority(tree, parent_node_id) do
     open_nodes = get_open_successor_nodes(tree, parent_node_id)
     
@@ -269,6 +279,7 @@ defmodule Plan.Blacklisting do
 end
 
 # Integration with solution tree
+@spec execute_action_node(AriaEngine.Domain.t(), AriaState.t(), AriaEngine.SolutionTree.t(), non_neg_integer(), keyword()) :: {:ok, AriaState.t(), AriaEngine.SolutionTree.t()} | {:backtrack, non_neg_integer(), AriaEngine.SolutionTree.t()}
 defp execute_action_node(domain, state, tree, node_id, opts) do
   node = SolutionTree.get_node(tree, node_id)
   {action_name, args} = node.info
@@ -302,6 +313,7 @@ Blacklist-guided backtracking to avoid repeated failures:
 
 ```elixir
 defmodule AriaEngine.Backtracker do
+  @spec find_backtrack_point_with_blacklist_guidance(AriaEngine.SolutionTree.t(), non_neg_integer()) :: {:ok, non_neg_integer()} | {:error, :no_viable_backtrack_points}
   def find_backtrack_point_with_blacklist_guidance(tree, failed_node_id) do
     # Find backtrack points that have non-blacklisted alternatives
     potential_points = find_potential_backtrack_points(tree, failed_node_id)
@@ -327,6 +339,7 @@ Domain authors must explicitly define multigoal methods - no automatic splitting
 
 ```elixir
 defmodule AriaEngine.MultigoalResolver do
+  @spec resolve_multigoal(AriaEngine.Domain.t(), AriaState.t(), [term()]) :: {:ok, [term()]} | {:error, String.t()}
   def resolve_multigoal(domain, state, multigoal) do
     # ONLY try domain-defined multigoal methods
     case Domain.get_multigoal_methods(domain, multigoal) do
@@ -348,6 +361,7 @@ end
 # Available utilities for domain authors (explicit registration required)
 defmodule AriaEngine.Multigoal do
   # Basic goal decomposition utility
+  @spec split_multigoal(AriaState.t(), [term()]) :: {:ok, [term()]} | {:error, String.t()}
   def split_multigoal(state, goals) do
     goals
     |> Enum.map(fn goal -> create_unigoal_task(goal) end)
@@ -355,6 +369,7 @@ defmodule AriaEngine.Multigoal do
   end
   
   # Goal conflict analysis
+  @spec analyze_goal_conflicts(AriaState.t(), [term()]) :: [term()]
   def analyze_goal_conflicts(state, goals) do
     goals
     |> Enum.combinations(2)
@@ -366,6 +381,7 @@ end
 
 # MinizinC multigoal optimization
 defmodule AriaEngine.MinizinC do
+  @spec optimize_multigoal(AriaState.t(), [term()], keyword()) :: {:ok, term()} | {:error, String.t()}
   def optimize_multigoal(state, goals, opts \\ []) do
     case generate_optimization_model(state, goals) do
       {:ok, model} ->
@@ -385,6 +401,7 @@ Goal verification tasks are automatically added after goal methods:
 
 ```elixir
 # Automatic verification task creation
+@spec refine_goal_node(AriaEngine.Domain.t(), AriaState.t(), AriaEngine.SolutionTree.t(), non_neg_integer(), keyword()) :: {:ok, AriaState.t(), AriaEngine.SolutionTree.t()} | {:error, String.t()}
 defp refine_goal_node(domain, state, tree, node_id, opts) do
   node = SolutionTree.get_node(tree, node_id)
   goal = node.info
@@ -427,12 +444,12 @@ Clear separation between planning-time actions and execution-time commands:
 **Planning-Time Actions** (assume success for planning):
 
 ```elixir
-@action duration: "PT2H", requires_entities: [...]
 @action duration: "PT2H",
         requires_entities: [
           %{type: "chef", capabilities: [:cooking]},
           %{type: "oven", capabilities: [:heating]}
         ]
+@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
 def cook_meal(state, [meal_type]) do
   # CORRECT: Pure state transformation, planner already validated requirements
   state
@@ -445,6 +462,7 @@ end
 
 ```elixir
 @command
+@spec cook_meal_command(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, String.t()}
 def cook_meal_command(state, [meal_type]) do
   # Execution-time logic - handles real failures
   case attempt_cooking_with_failure_chance(state, meal_type) do
@@ -463,6 +481,7 @@ end
 ```elixir
 # Commands use @command attributes (unified pattern)
 @command
+@spec cook_meal_command(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, String.t()}
 def cook_meal_command(state, [meal_type]) do
   # Execution-time logic - handles real failures
   case attempt_cooking_with_failure_chance(state, meal_type) do
@@ -476,6 +495,7 @@ def cook_meal_command(state, [meal_type]) do
 end
 
 @command
+@spec gather_ingredients_command(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, String.t()}
 def gather_ingredients_command(state, [task_name]) do
   # Execution-time logic with failure handling
   case attempt_gathering_with_failure_chance(state, task_name) do
@@ -489,6 +509,7 @@ def gather_ingredients_command(state, [task_name]) do
 end
 
 # Domain creation follows module-based pattern
+@spec create_domain(map()) :: AriaEngine.Domain.t()
 def create_domain(opts \\ %{}) do
   domain = __MODULE__.create_base_domain()
   
@@ -508,6 +529,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   @behaviour HybridPlanner.Strategies.ExecutionStrategy
   
   # Execute complete plan with lazy refinement
+  @spec execute_plan(AriaEngine.SolutionTree.t(), AriaState.t(), map(), keyword()) :: {:ok, AriaState.t()} | {:error, String.t()}
   def execute_plan(solution_tree, initial_state, strategies, opts \\ []) do
     domain = Map.get(opts, :domain)
     
@@ -518,6 +540,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   end
   
   # Execute individual step with state validation
+  @spec execute_step(term(), AriaState.t(), map(), keyword()) :: {:ok, AriaState.t()} | {:error, String.t()}
   def execute_step(step, current_state, strategies, opts \\ []) do
     state_strategy = Map.get(strategies, :state_strategy)
     domain = Map.get(opts, :domain)
@@ -531,6 +554,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
   end
   
   # Handle execution failures with recovery
+  @spec handle_execution_failure(term(), AriaState.t(), map(), keyword()) :: {:ok, AriaState.t()} | {:error, String.t()}
   def handle_execution_failure(failure, current_state, strategies, opts \\ []) do
     case failure do
       {:action_failed, action_name, reason} ->
@@ -563,6 +587,7 @@ defmodule AriaEngine.Domain.Validator do
   }
   
   # Main validation entry point (planning-time)
+  @spec validate_domain(AriaEngine.Domain.t()) :: {:ok, AriaEngine.Domain.t()} | {:error, [validation_error()]}
   def validate_domain(domain) do
     with {:ok, _} <- validate_actions(domain),
          {:ok, _} <- validate_methods(domain),
@@ -574,6 +599,7 @@ defmodule AriaEngine.Domain.Validator do
   end
   
   # Action metadata validation (planning-time)
+  @spec validate_action_metadata(map()) :: validation_result()
   def validate_action_metadata(metadata) do
     validators = [
       &validate_temporal_specification/1,
@@ -586,6 +612,7 @@ defmodule AriaEngine.Domain.Validator do
   end
   
   # Planner validates requirements before action selection
+  @spec validate_action_preconditions(AriaState.t(), map()) :: {:ok, [String.t()]} | {:error, String.t()}
   def validate_action_preconditions(state, action_metadata) do
     case Map.get(action_metadata, :requires_entities, []) do
       entities when is_list(entities) ->
@@ -611,6 +638,7 @@ Actions must focus purely on state transformation and assume the planner has val
 
 ```elixir
 @action duration: "PT2H", requires_entities: [...]
+@spec action_name(AriaState.t(), [term()]) :: AriaState.t()
 def action_name(state, args) do
   # Can reference @action metadata
 end
@@ -620,6 +648,7 @@ end
 
 ```elixir
 @command
+@spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, String.t()}
 def command_name(state, args) do
   # Execution-time logic only
 end
@@ -629,6 +658,7 @@ end
 
 ```elixir
 @task_method
+@spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]}
 def task_name(state, args) do
   # Task decomposition logic
 end
@@ -638,6 +668,7 @@ end
 
 ```elixir
 @unigoal_method predicate: "location"
+@spec method_name(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
 def method_name(state, [subject, value]) do
   # Goal decomposition logic
 end
@@ -647,6 +678,7 @@ end
 
 ```elixir
 @multigoal_method goal_pattern: :pattern_name
+@spec method_name(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
 def method_name(state, multigoal) do
   # Multigoal handling logic
 end
@@ -657,6 +689,7 @@ end
 ❌ **WRONG - No attribute but references planner metadata:**
 
 ```elixir
+@spec cook_meal(AriaState.t(), [String.t()]) :: term()
 def cook_meal(state, [meal_type]) do  # No @action attribute
   case validate(@action[:requires_entities]) do  # ❌ References non-existent metadata
 end
@@ -665,6 +698,7 @@ end
 ❌ **WRONG - No attribute but presented as planner function:**
 
 ```elixir
+@spec travel_to_location(AriaState.t(), [String.t()]) :: term()
 def travel_to_location(state, [subject, target]) do  # No @unigoal_method attribute
   # Presented as unigoal method but not registered with planner
 end
@@ -673,6 +707,7 @@ end
 ✅ **CORRECT - Helper function (no planner integration):**
 
 ```elixir
+@spec calculate_cooking_time(String.t()) :: non_neg_integer()
 defp calculate_cooking_time(meal_type) do  # Private helper
   # No planner metadata references, no attribute needed
 end
@@ -684,6 +719,7 @@ end
 
 ```elixir
 defmodule AriaEngine.Domain.Validator.Consistency do
+  @spec validate_domain_consistency(AriaEngine.Domain.t()) :: {:ok, AriaEngine.Domain.t()} | {:error, [map()]}
   def validate_domain_consistency(domain) do
     validators = [
       &validate_action_method_consistency/1,
@@ -694,6 +730,7 @@ defmodule AriaEngine.Domain.Validator.Consistency do
     run_validators(domain, validators)
   end
   
+  @spec validate_action_method_consistency(AriaEngine.Domain.t()) :: {:ok, AriaEngine.Domain.t()} | {:error, [map()]}
   defp validate_action_method_consistency(domain) do
     # Ensure actions and methods don't conflict
     action_names = MapSet.new(Map.keys(domain.actions))
@@ -754,71 +791,4 @@ end
 
 ### Additional Unstated Known Knowns (Explicitly Tombstoned)
 
-**Status:** Tombstoned - Architectural violations that must be prevented
-
-1. **❌ TOMBSTONE: Solution tree node type expansion** - FIXED at 6 types: `:task | :action | :goal | :multigoal | :verify_goal | :verify_multigoal`
-2. **❌ TOMBSTONE: Separate planning/execution phases** - IPyHOP uses interleaved planning and execution only
-3. **❌ TOMBSTONE: Command nodes in solution tree** - Commands are execution-time functions, not tree nodes
-4. **❌ TOMBSTONE: Automatic multigoal resolution** - Domain authors must explicitly define ALL multigoal handling
-5. **❌ TOMBSTONE: Planning-time validation in actions** - Actions are pure state transformations, validation is planner responsibility
-6. **❌ TOMBSTONE: Alternative planning APIs** - Enhance existing `Plan.Core.plan()`, don't create parallel systems
-
-## Resolved Architectural Problems
-
-### 1. Method Registration Inconsistencies ✅ RESOLVED
-
-**Solution:** Module-based domain pattern with `@action`, `@command`, `@task_method`, `@unigoal_method`, `@multigoal_method` attributes
-
-### 2. Multigoal vs Unigoal Confusion ✅ RESOLVED
-
-**Solution:** Clear hierarchical decomposition with pure GTPyhop multigoal philosophy
-
-**Clear Hierarchy:**
-
-1. **Multigoal methods** → Domain-specific optimization for multiple goals (explicit only)
-2. **Unigoal methods** → Decompose single goal into task todos
-3. **Task methods** → Decompose tasks into subtasks/actions
-4. **Actions** → Change state directly (highest execution priority)
-
-### 3. Domain Module Creation Patterns ✅ RESOLVED
-
-**Solution:** Module-first pattern following Elixir conventions
-
-### 4. Error Handling Standardization ✅ RESOLVED
-
-**Solution:** Standard Elixir tagged tuples with descriptive errors
-
-### 5. Todo/Goal Conversion Complexity ✅ RESOLVED
-
-**Solution:** Unified todo list format with full interchangeability
-
-### 6. Migration Path Gaps ✅ RESOLVED
-
-**Solution:** Clear migration guidance with concrete examples
-
-## Success Criteria
-
-- [x] IPyHOP-compatible solution tree structure implemented
-- [x] Corrected `run_lazy_refineahead` with interleaved planning/execution
-- [x] Pure GTPyhop multigoal philosophy (no automatic fallbacks)
-- [x] Comprehensive blacklist system with intelligent backtracking
-- [x] Goal verification tasks with automatic verification
-- [x] Commands system for execution-time behavior
-- [x] Validation framework for comprehensive domain validation
-- [x] All architectural inconsistencies resolved
-
-## Related ADRs
-
-- **ADR-181**: Core Specification (parent ADR)
-- **ADR-182**: Technical Implementation (implementation details)
-- **ADR-184**: Developer Guide (usage examples)
-
-## Implementation Status
-
-**Status:** Active - IPyHOP standardization under ongoing refinement
-
-**Architecture:** IPyHOP-compatible with pure GTPyhop multigoal philosophy
-
-**Timeline:** Available immediately for domain development
-
-**Compatibility:** Full backward compatibility with existing capability system
+**Status:** Tomb

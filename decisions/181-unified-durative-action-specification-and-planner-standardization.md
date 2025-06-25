@@ -20,6 +20,7 @@ If you're coming from normal programming, the planner architecture feels backwar
 
 ```elixir
 # You control the execution flow directly
+@spec make_dinner() :: :ok
 def make_dinner() do
   go_to_kitchen()           # Step 1: Do this now
   get_ingredients()         # Step 2: Then do this  
@@ -40,6 +41,7 @@ make_dinner()
           %{type: "chef", capabilities: [:cooking]},
           %{type: "ingredients", capabilities: [:consumable]}
         ]
+@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
 def cook_meal(state, [meal_id]) do
   # Just describes the state change, not when/how to execute
   state |> AriaState.RelationalState.set_fact("meal_status", meal_id, "ready")
@@ -117,6 +119,9 @@ Capabilities serve as simple traits providing flexible composition without inher
 defmodule MyApp.Domains.CookingDomain do
   use AriaEngine.Domain
   
+  @type meal_id :: String.t()
+  @type participants :: [String.t()]
+  
   # Unified entity-based metadata structure with @action attributes
   @action duration: "PT2H",
           requires_entities: [
@@ -128,6 +133,7 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "mixing_bowl", capabilities: [:container, :reusable]}
           ],
           description: "Prepare a meal using specified ingredients and cooking equipment"
+  @spec cook_meal(AriaState.t(), [meal_id()]) :: AriaState.t()
   def cook_meal(state, [meal_id]) do
     # Pure state transformation, planner already validated requirements
     state
@@ -143,6 +149,7 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "conference_room_1", capabilities: [:meeting_space]}
           ],
           description: "Scheduled team meeting in conference room"
+  @spec meeting(AriaState.t(), [participants()]) :: AriaState.t()
   def meeting(state, [participants]) do
     # Implementation
     state
@@ -215,6 +222,7 @@ Durative actions use **only** duration and entity requirements - no complex temp
           %{type: "oven", capabilities: [:heating]},
           %{type: "kitchen", capabilities: [:workspace]}
         ]
+@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
 def cook_meal(state, [meal_id]) do
   # Pure state transformation - planner already validated requirements
   state
@@ -229,6 +237,7 @@ Use natural hierarchical decomposition for complex workflows:
 
 ```elixir
 @task_method
+@spec prepare_and_cook_meal(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
 def prepare_and_cook_meal(state, [meal_id]) do
   {:ok, [
     # Prerequisites as goals
@@ -249,6 +258,7 @@ def prepare_and_cook_meal(state, [meal_id]) do
 end
 
 @action duration: "PT2H", requires_entities: [...]
+@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
 def cook_meal(state, [meal_id]) do
   # Simple, clean action
   state |> AriaState.RelationalState.set_fact("meal_status", meal_id, "ready")
@@ -326,12 +336,14 @@ The following concepts were explicitly rejected during design:
 ```elixir
 # DON'T USE: Full tuple goal pattern (TOMBSTONED)
 @unigoal_method goal_pattern: {"chef", "location", :any}
+@spec travel_to_location(AriaState.t(), {String.t(), String.t(), String.t()}) :: {:ok, [AriaEngine.todo_item()]}
 def travel_to_location(state, {"chef", "location", target}) do
   # ❌ WRONG - tuple destructuring signature
 end
 
 # USE INSTEAD: Advanced predicate-based registration
 @unigoal_method predicate: "location"
+@spec travel_to_location(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
 def travel_to_location(state, [subject, target]) do
   # ✅ CORRECT - predicate-based with [subject, value] signature
 end
@@ -353,6 +365,7 @@ end
 
 ```elixir
 @action requires_entities: [%{type: "agent", capabilities: [:cooking]}]
+@spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, String.t()}
 def cook_meal(state, [meal_type]) do
   # TOMBSTONED: Actions should not validate requirements
   case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
@@ -366,6 +379,7 @@ end
 
 ```elixir
 @action requires_entities: [%{type: "agent", capabilities: [:cooking]}]
+@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
 def cook_meal(state, [meal_type]) do
   # CORRECT: Pure state transformation, planner already validated requirements
   state
@@ -391,6 +405,7 @@ end
 
 ```elixir
 @action duration: "PT2H", requires_entities: [...]
+@spec action_name(AriaState.t(), [term()]) :: AriaState.t()
 def action_name(state, args) do
   # Can reference @action metadata
 end
@@ -400,6 +415,7 @@ end
 
 ```elixir
 @command
+@spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, String.t()}
 def command_name(state, args) do
   # Execution-time logic only
 end
@@ -409,6 +425,7 @@ end
 
 ```elixir
 @task_method
+@spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]}
 def task_name(state, args) do
   # Task decomposition logic
 end
@@ -418,6 +435,7 @@ end
 
 ```elixir
 @unigoal_method predicate: "location"
+@spec method_name(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
 def method_name(state, [subject, value]) do
   # Goal decomposition logic
 end
@@ -427,6 +445,7 @@ end
 
 ```elixir
 @multigoal_method goal_pattern: :pattern_name
+@spec method_name(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
 def method_name(state, multigoal) do
   # Multigoal handling logic
 end
@@ -437,6 +456,7 @@ end
 ❌ **WRONG - No attribute but references planner metadata:**
 
 ```elixir
+@spec cook_meal(AriaState.t(), [String.t()]) :: term()
 def cook_meal(state, [meal_type]) do  # No @action attribute
   case validate(@action[:requires_entities]) do  # ❌ References non-existent metadata
 end
@@ -445,6 +465,7 @@ end
 ❌ **WRONG - No attribute but presented as planner function:**
 
 ```elixir
+@spec travel_to_location(AriaState.t(), [String.t()]) :: term()
 def travel_to_location(state, [subject, target]) do  # No @unigoal_method attribute
   # Presented as unigoal method but not registered with planner
 end
@@ -453,6 +474,7 @@ end
 ✅ **CORRECT - Helper function (no planner integration):**
 
 ```elixir
+@spec calculate_cooking_time(String.t()) :: non_neg_integer()
 defp calculate_cooking_time(meal_type) do  # Private helper
   # No planner metadata references, no attribute needed
 end

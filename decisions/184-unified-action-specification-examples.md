@@ -160,12 +160,16 @@ defmodule MyApp.Domains.CookingDomain do
   @domain_name "cooking"
   @description "Cooking and meal preparation domain"
   
+  @type meal_id :: String.t()
+  @type ingredient_list :: [String.t()]
+  
   # Instant actions (zero duration) - can be done anytime
   @action duration: "PT0S",
           requires_entities: [
             %{type: "agent", capabilities: [:communication]},
             %{type: "kitchen", capabilities: [:workspace]}
           ]
+  @spec announce_meal_ready(AriaState.t(), [meal_id()]) :: AriaState.t()
   def announce_meal_ready(state, [meal_id]) do
     # Instant action - no time required, can be done anytime
     state
@@ -177,6 +181,7 @@ defmodule MyApp.Domains.CookingDomain do
           requires_entities: [
             %{type: "agent", capabilities: [:observation]}
           ]
+  @spec check_ingredient_availability(AriaState.t(), [ingredient_list()]) :: AriaState.t()
   def check_ingredient_availability(state, [ingredient_list]) do
     # Instant check - immediate state query and update, can be done anytime
     available_count = Enum.count(ingredient_list, fn ingredient ->
@@ -195,6 +200,7 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "agent", capabilities: [:communication]},
             %{type: "bell", capabilities: [:sound]}
           ]
+  @spec ring_lunch_bell(AriaState.t(), []) :: AriaState.t()
   def ring_lunch_bell(state, []) do
     # Instant action that must happen at exactly 12:00 PM
     state
@@ -208,6 +214,7 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "agent", capabilities: [:management]},
             %{type: "restaurant", capabilities: [:service]}
           ]
+  @spec close_kitchen(AriaState.t(), []) :: AriaState.t()
   def close_kitchen(state, []) do
     # Instant action that must happen at exactly 6:00 PM
     state
@@ -230,19 +237,21 @@ defmodule MyApp.Domains.CookingDomain do
             {:before, "gather_ingredients"},
             {:during, "kitchen_available"}
           ]
-def cook_meal(state, [meal_id]) do
-  # CORRECT: Pure state transformation, planner already validated requirements
-  state
-  |> AriaState.RelationalState.set_fact("meal_status", meal_id, "cooking")
-  |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
-  |> AriaState.RelationalState.set_fact("oven_status", "oven_1", "in_use")
-end
+  @spec cook_meal(AriaState.t(), [meal_id()]) :: AriaState.t()
+  def cook_meal(state, [meal_id]) do
+    # CORRECT: Pure state transformation, planner already validated requirements
+    state
+    |> AriaState.RelationalState.set_fact("meal_status", meal_id, "cooking")
+    |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
+    |> AriaState.RelationalState.set_fact("oven_status", "oven_1", "in_use")
+  end
   
   @action duration: "PT30M",
           requires_entities: [
             %{type: "agent", capabilities: [:shopping]},
             %{type: "market", capabilities: [:ingredient_source]}
           ]
+  @spec gather_ingredients(AriaState.t(), [String.t()]) :: AriaState.t() | {:error, String.t()}
   def gather_ingredients(state, [task_name]) do
     # Planning-time logic for ingredient gathering
     case find_available_ingredients(state, task_name) do
@@ -257,6 +266,7 @@ end
   
   # Commands (execution-time) with failure handling
   @command
+  @spec cook_meal_command(AriaState.t(), [meal_id()]) :: {:ok, AriaState.t()} | {:error, String.t()}
   def cook_meal_command(state, [meal_id]) do
     case attempt_cooking_with_failure_chance(state, meal_id) do
       {:ok, new_state} -> 
@@ -269,6 +279,7 @@ end
   end
   
   @command
+  @spec gather_ingredients_command(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, String.t()}
   def gather_ingredients_command(state, [task_name]) do
     case attempt_gathering_with_failure_chance(state, task_name) do
       {:ok, new_state} -> 
@@ -282,6 +293,7 @@ end
   
   # Task methods
   @task_method
+  @spec task_prepare_ingredients(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
   def task_prepare_ingredients(state, [task_name]) do
     {:ok, [
       {:gather_ingredients, [task_name]},
@@ -291,6 +303,7 @@ end
   end
   
   @task_method
+  @spec task_complete_meal(AriaState.t(), [meal_id()]) :: {:ok, [AriaEngine.todo_item()]}
   def task_complete_meal(state, [meal_id]) do
     {:ok, [
       {:task_prepare_ingredients, [meal_id]},
@@ -301,6 +314,7 @@ end
   
   # Unigoal methods with automatic verification (ADVANCED: Predicate-based registration)
   @unigoal_method predicate: "location"
+  @spec travel_to_location(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
   def travel_to_location(state, [subject, target]) do
     current = AriaState.RelationalState.get_fact(state, subject, "location")
     if current == target do
@@ -314,6 +328,7 @@ end
   end
   
   @unigoal_method predicate: "has"
+  @spec acquire_item(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
   def acquire_item(state, [subject, item]) do
     current_items = AriaState.RelationalState.get_fact(state, subject, "inventory") || []
     if item in current_items do
@@ -329,6 +344,7 @@ end
   # EXPLICIT multigoal methods (Pure GTPyhop Style)
   # Domain author MUST define if multigoals are used
   @multigoal_method goal_pattern: :cooking_workflow
+  @spec handle_cooking_workflow(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
   def handle_cooking_workflow(state, multigoal) do
     # Domain author explicitly chooses strategy
     case custom_cooking_optimization(state, multigoal.goals) do
@@ -341,6 +357,7 @@ end
   end
   
   @multigoal_method goal_pattern: :general_goals
+  @spec handle_general_multigoal(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
   def handle_general_multigoal(state, multigoal) do
     # Explicit fallback chain implemented by domain author
     case AriaMinizincGoal.optimize_multigoal(state, multigoal) do
@@ -355,6 +372,7 @@ end
   end
   
   # Domain creation follows module-based pattern
+  @spec create_domain(map()) :: AriaEngine.Domain.t()
   def create_domain(opts \\ %{}) do
     domain = __MODULE__.create_base_domain()
     
@@ -371,6 +389,7 @@ end
   end
   
   # Helper functions for domain logic
+  @spec custom_cooking_optimization(AriaState.t(), [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, String.t()}
   defp custom_cooking_optimization(state, goals) do
     # Domain-specific optimization logic
     cooking_goals = Enum.filter(goals, &is_cooking_goal?/1)
@@ -384,9 +403,11 @@ end
     end
   end
   
+  @spec is_cooking_goal?(AriaEngine.goal()) :: boolean()
   defp is_cooking_goal?({_subject, predicate, _value}) when predicate in ["meal_status", "cooking_task"], do: true
   defp is_cooking_goal?(_), do: false
   
+  @spec is_location_goal?(AriaEngine.goal()) :: boolean()
   defp is_location_goal?({_subject, "location", _value}), do: true
   defp is_location_goal?(_), do: false
 end

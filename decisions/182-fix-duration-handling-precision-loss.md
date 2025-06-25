@@ -138,6 +138,7 @@ All temporal validation and parsing MUST use Timex instead of Elixir's base Date
 
 ```elixir
 # seconds_to_duration_struct/1 - preserve fractional seconds
+@spec seconds_to_duration_struct(number()) :: %{hours: non_neg_integer(), minutes: non_neg_integer(), seconds: number()}
 def seconds_to_duration_struct(total_seconds) when is_number(total_seconds) do
   hours = trunc(total_seconds / 3600)
   remaining_seconds = total_seconds - (hours * 3600)
@@ -152,6 +153,7 @@ def seconds_to_duration_struct(total_seconds) when is_number(total_seconds) do
 end
 
 # duration_struct_to_seconds/1 - handle float seconds
+@spec duration_struct_to_seconds(map()) :: number()
 def duration_struct_to_seconds(duration) when is_map(duration) do
   hours = Map.get(duration, :hours, 0)
   minutes = Map.get(duration, :minutes, 0)
@@ -161,6 +163,7 @@ def duration_struct_to_seconds(duration) when is_map(duration) do
 end
 
 # valid_duration?/1 - accept float seconds
+@spec valid_duration?(map()) :: boolean()
 def valid_duration?(duration) when is_map(duration) do
   hours = Map.get(duration, :hours, 0)
   minutes = Map.get(duration, :minutes, 0)
@@ -178,6 +181,7 @@ end
 
 ```elixir
 # ISO 8601 datetime validation using Timex
+@spec validate_iso8601_datetime(String.t(), String.t()) :: {:ok, DateTime.t()} | {:error, String.t()}
 defp validate_iso8601_datetime(datetime_string, field_name) when is_binary(datetime_string) do
   case Timex.parse(datetime_string, "{ISO:Extended}") do
     {:ok, datetime} ->
@@ -188,6 +192,7 @@ defp validate_iso8601_datetime(datetime_string, field_name) when is_binary(datet
 end
 
 # ISO 8601 duration validation using Timex
+@spec validate_iso8601_duration(String.t()) :: {:ok, Timex.Duration.t()} | {:error, String.t()}
 defp validate_iso8601_duration(duration_string) when is_binary(duration_string) do
   case Timex.Duration.parse(duration_string) do
     {:ok, duration} ->
@@ -198,6 +203,7 @@ defp validate_iso8601_duration(duration_string) when is_binary(duration_string) 
 end
 
 # Start/end time comparison using Timex
+@spec validate_start_before_end(String.t(), String.t()) :: :ok | {:error, String.t()}
 defp validate_start_before_end(start_string, end_string) do
   with {:ok, start_dt} <- Timex.parse(start_string, "{ISO:Extended}"),
        {:ok, end_dt} <- Timex.parse(end_string, "{ISO:Extended}") do
@@ -213,6 +219,7 @@ end
 ### Temporal Specification Validation
 
 ```elixir
+@spec validate_temporal_specification(map()) :: {:ok, map()} | {:error, list()}
 def validate_temporal_specification(metadata) do
   case extract_temporal_fields(metadata) do
     %{duration: duration} when is_binary(duration) ->
@@ -255,6 +262,7 @@ end
 ```elixir
 # Planner validates requirements before action selection
 defmodule AriaEngine.Planner.EntityValidator do
+  @spec validate_action_requirements(AriaState.t(), map()) :: {:ok, [String.t()]} | {:error, list()}
   def validate_action_requirements(state, action_metadata) do
     case Map.get(action_metadata, :requires_entities, []) do
       entities when is_list(entities) ->
@@ -269,6 +277,7 @@ defmodule AriaEngine.Planner.EntityValidator do
     end
   end
 
+  @spec validate_entity_availability(AriaState.t(), [map()]) :: {:ok, [String.t()]} | {:error, String.t()}
   defp validate_entity_availability(state, entity_requirements) do
     Enum.reduce_while(entity_requirements, {:ok, []}, fn entity_req, {:ok, acc} ->
       case find_available_entity(state, entity_req) do
@@ -278,6 +287,7 @@ defmodule AriaEngine.Planner.EntityValidator do
     end)
   end
 
+  @spec find_available_entity(AriaState.t(), map()) :: {:ok, String.t()} | {:error, String.t()}
   defp find_available_entity(state, %{type: type, capabilities: capabilities}) do
     # Find entities with required type and capabilities that are available
     entities = find_entities_with_capabilities(state, capabilities)
@@ -466,6 +476,7 @@ defmodule AriaEngine.TemporalConditionValidator do
   @type action :: {atom(), list()}
   @type multigoal :: [goal()]
   
+  @spec validate_temporal_conditions(map()) :: {:ok, term()} | {:error, String.t()}
   def validate_temporal_conditions(conditions) when is_map(conditions) do
     validators = [
       &validate_at_start_conditions/1,
@@ -476,21 +487,25 @@ defmodule AriaEngine.TemporalConditionValidator do
     run_validators(conditions, validators)
   end
   
+  @spec validate_at_start_conditions(map()) :: {:ok, term()} | {:error, String.t()}
   defp validate_at_start_conditions(%{at_start: conditions}) when is_list(conditions) do
     validate_todo_list(conditions, "at_start")
   end
   defp validate_at_start_conditions(_), do: {:ok, :no_at_start_conditions}
   
+  @spec validate_over_all_conditions(map()) :: {:ok, term()} | {:error, String.t()}
   defp validate_over_all_conditions(%{over_all: conditions}) when is_list(conditions) do
     validate_todo_list(conditions, "over_all")
   end
   defp validate_over_all_conditions(_), do: {:ok, :no_over_all_conditions}
   
+  @spec validate_at_end_conditions(map()) :: {:ok, term()} | {:error, String.t()}
   defp validate_at_end_conditions(%{at_end: conditions}) when is_list(conditions) do
     validate_todo_list(conditions, "at_end")
   end
   defp validate_at_end_conditions(_), do: {:ok, :no_at_end_conditions}
   
+  @spec validate_todo_list([todo_item()], String.t()) :: {:ok, [term()]} | {:error, String.t()}
   defp validate_todo_list(todo_items, condition_type) do
     Enum.reduce_while(todo_items, {:ok, []}, fn item, {:ok, acc} ->
       case validate_todo_item(item, condition_type) do
@@ -500,6 +515,7 @@ defmodule AriaEngine.TemporalConditionValidator do
     end)
   end
   
+  @spec validate_todo_item(todo_item(), String.t()) :: {:ok, term()} | {:error, String.t()}
   defp validate_todo_item({predicate, subject, value}, _condition_type) 
        when is_binary(predicate) and is_binary(subject) do
     # Goal validation
@@ -524,6 +540,7 @@ defmodule AriaEngine.TemporalConditionValidator do
     {:error, "Invalid todo item in #{condition_type}: #{inspect(invalid)}"}
   end
   
+  @spec is_goal?(term()) :: boolean()
   defp is_goal?({predicate, subject, _value}) 
        when is_binary(predicate) and is_binary(subject), do: true
   defp is_goal?(_), do: false
@@ -534,6 +551,7 @@ end
 
 ```elixir
 defmodule AriaEngine.TemporalProcessor do
+  @spec process_temporal_condition(term(), AriaState.t(), AriaEngine.Domain.t(), String.t()) :: {:ok, term()} | {:error, String.t()}
   def process_temporal_condition(todo_item, state, domain, condition_type) do
     case todo_item do
       {:goal, {predicate, subject, value}} ->
@@ -558,6 +576,7 @@ defmodule AriaEngine.TemporalProcessor do
     end
   end
   
+  @spec validate_goal_condition(term(), term(), String.t()) :: {:ok, term()} | {:error, String.t()}
   defp validate_goal_condition(current_value, expected_value, condition_type) do
     case condition_type do
       "at_start" -> check_immediate_satisfaction(current_value, expected_value)
@@ -566,6 +585,7 @@ defmodule AriaEngine.TemporalProcessor do
     end
   end
   
+  @spec validate_multigoal_condition([{String.t(), String.t(), term()}], AriaState.t(), String.t()) :: {:ok, :multigoal_satisfied} | {:error, String.t()}
   defp validate_multigoal_condition(goals, state, condition_type) do
     # All goals must be satisfied simultaneously
     results = Enum.map(goals, fn {predicate, subject, value} ->
