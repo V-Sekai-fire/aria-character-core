@@ -22,12 +22,18 @@
 - **Priority systems**: Timeline scheduling includes priority handling
 
 ### ❌ Confirmed Missing (Must Implement)
-1. **Module-based domain pattern**: No `@action`, `@command`, `@task_method` attributes
+1. **Module-based domain pattern**: No `@action`, `@task_method`, `@unigoal_method`, `@multigoal_method` attributes
 2. **`use AriaEngine.Domain` macro**: Does not exist
-3. **EntityValidator**: No entity validation framework
+3. **EntityValidator**: No entity validation framework for planning-time validation
 4. **Action priority in planning**: No action node prioritization in planning
 5. **Automatic goal verification**: Current verification is manual only
-6. **Planning/execution separation**: No clear commands vs actions distinction
+
+### ❌ TOMBSTONED: Architectural Violations
+1. **`@command` attributes**: Commands are execution-time functions, NOT domain attributes
+2. **Command node types**: Solution tree only supports 6 node types from ADR-133
+3. **Separate planning/execution phases**: IPyHOP uses interleaved planning/execution
+4. **New planning APIs**: Enhance existing `Plan.Core.plan()`, don't create parallel APIs
+5. **Validation in actions**: Actions assume preconditions met, validation is planning-time only
 
 ## TDD Implementation Sequence
 
@@ -52,12 +58,13 @@ defmodule AriaEngine.Domain.ModulePatternTest do
     assert metadata.requires_entities != nil
   end
   
-  test "@command attributes register execution-time behavior" do
+  test "@task_method attributes register task decomposition" do
     domain = TestCookingDomain.create_domain()
     
-    # Should register both planning and execution versions
-    assert Domain.has_action?(domain, :cook_meal)
-    assert Domain.has_command?(domain, :cook_meal_command)
+    # Should register task methods for decomposition
+    assert Domain.has_task_method?(domain, :prepare_meal_method)
+    methods = Domain.get_task_methods(domain, :prepare_meal)
+    assert length(methods) > 0
   end
 end
 
@@ -76,7 +83,10 @@ defmodule TestCookingDomain do
     |> State.set_fact("chef_status", "chef_1", "busy")
   end
   
-  @command  # Execution-time version with failure handling
+  # ❌ TOMBSTONED: Commands are execution-time functions, not domain attributes
+  # Commands are called during action node execution, not registered as domain metadata
+  
+  # Execution-time function (separate from domain registration)
   def cook_meal_command(state, [meal_type]) do
     # Real-world execution with potential failures
     case attempt_cooking_with_failure_chance(state, meal_type) do
@@ -98,7 +108,8 @@ end
 
 **Implementation Tasks:**
 - [ ] Create `AriaEngine.Domain` macro module
-- [ ] Implement attribute parsing (`@action`, `@command`, `@task_method`, etc.)
+- [ ] Implement attribute parsing (`@action`, `@task_method`, `@unigoal_method`, `@multigoal_method`)
+- [ ] ❌ TOMBSTONED: `@command` attribute parsing (commands are functions, not attributes)
 - [ ] Integrate with existing `Domain.Core` structure
 - [ ] Add metadata extraction and storage
 - [ ] Ensure backward compatibility with current domain API
@@ -183,8 +194,9 @@ defmodule Plan.ActionPriorityTest do
     domain = TestDomain.create_domain()
     state = create_state_without_chef()
     
-    # Should fail to select cook_meal action due to missing chef
-    {:error, reason} = Plan.Core.plan_with_validation(domain, state, [
+    # ❌ TOMBSTONED: plan_with_validation() - enhance existing plan(), don't create new APIs
+    # Should integrate validation into existing planning, not create parallel APIs
+    {:error, reason} = Plan.Core.plan(domain, state, [
       {:cook_meal, ["pasta"]}
     ])
     assert reason =~ "entity requirements not met"
@@ -226,10 +238,9 @@ defmodule Plan.AutoVerificationTest do
   test "verification tasks validate goal achievement" do
     state = create_state_with_ready_meal()
     
-    # Verification should succeed when goal is met
-    {:ok, new_state} = Plan.Core.execute_verification_task(state, {
-      :verify_goal, [{"meal_ready", "pasta", true}]
-    })
+    # ❌ TOMBSTONED: execute_verification_task() - verification uses standard node execution
+    # Verification nodes execute like any other node type, no special functions needed
+    {:ok, new_state} = Plan.Core.execute_node(domain, state, tree, verification_node_id)
     assert new_state == state  # No change when verification passes
   end
 end
@@ -262,8 +273,11 @@ defmodule AriaEngine.PlanningExecutionTest do
       {:cook_meal, ["pasta"]}
     ])
     
-    # Execution phase uses commands (handle failures)
-    {:ok, final_state} = Plan.Execution.execute_with_commands(domain, state, plan)
+    # ❌ TOMBSTONED: Plan.Execution module - execution happens during action node processing
+    # IPyHOP uses interleaved planning/execution, not separate phases
+    {:ok, final_state} = Plan.Core.plan(domain, state, [
+      {:cook_meal, ["pasta"]}
+    ])
     assert State.get_fact(final_state, "meal_status", "pasta") == "ready"
   end
   
@@ -271,10 +285,11 @@ defmodule AriaEngine.PlanningExecutionTest do
     domain = TestDomain.create_domain()
     state = create_test_state()
     
-    # Simulate command failure
-    {:error, reason} = Plan.Execution.execute_command(domain, state, {
-      :cook_meal_command, ["pasta"]
-    })
+    # ❌ TOMBSTONED: execute_command() - commands called during action execution
+    # Commands are called when action nodes execute, triggering blacklisting automatically
+    {:error, reason} = Plan.Core.plan(domain, state, [
+      {:cook_meal, ["pasta"]}  # This will call command and handle failures
+    ])
     
     # Should trigger blacklisting and replanning
     assert reason =~ "cooking failed"
@@ -283,11 +298,11 @@ end
 ```
 
 **Implementation Tasks:**
-- [ ] Create `Plan.Execution` module for command execution
-- [ ] Integrate with existing blacklist system
-- [ ] Add failure handling and replanning triggers
-- [ ] Separate planning-time and execution-time behavior
-- [ ] Document planning vs execution patterns
+- [ ] ❌ TOMBSTONED: `Plan.Execution` module (execution integrated into planning loop)
+- [ ] Integrate command calling with existing blacklist system
+- [ ] Add failure handling during action node execution
+- [ ] ❌ TOMBSTONED: Separate phases (IPyHOP uses interleaved planning/execution)
+- [ ] Document command calling patterns during action execution
 
 ## Integration Strategy
 
