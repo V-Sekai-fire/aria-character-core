@@ -6,9 +6,6 @@ import Config
 # Set a higher stacktrace limit for more detailed errors
 config :phoenix, :stacktrace_depth, 20
 
-# Reduce log noise during tests
-config :logger, level: :warn
-
 # Exclude integration tests by default
 # Run integration tests with: mix test --include integration
 config :ex_unit, exclude: [:integration]
