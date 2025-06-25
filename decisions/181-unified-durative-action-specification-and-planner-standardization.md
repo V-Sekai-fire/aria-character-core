@@ -139,7 +139,7 @@ Domain.add_action(:meeting, &meeting/2, %{
 **ONLY use direct fact checking:**
 
 ```elixir
-StateV2.get_fact(state, subject, predicate)  # ✅ DIRECT FACT CHECKING (supports temporal queries)
+AriaState.ObjectState.get_fact(state, subject, predicate)  # ✅ DIRECT FACT CHECKING (supports temporal queries)
 ```
 
 **DEPRECATED approaches:**
@@ -219,8 +219,8 @@ end
 def cook_meal(state, [meal_type]) do
   # CORRECT: Pure state transformation, planner already validated requirements
   state
-  |> State.set_fact("meal_status", meal_type, "cooking")
-  |> State.set_fact("chef_status", "chef_1", "busy")
+  |> AriaState.ObjectState.set_fact("meal_status", meal_type, "cooking")
+  |> AriaState.ObjectState.set_fact("chef_status", "chef_1", "busy")
 end
 ```
 
