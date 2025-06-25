@@ -147,7 +147,7 @@ The planning approach trades initial conceptual complexity for massive scalabili
 
 ## Planning vs Imperative Programming
 
-### Why Planning Feels "Inverted"
+### Why Planning Feels "Backwards"
 
 If you're coming from normal programming, the planner architecture feels backwards because you're used to telling the computer exactly what to do, step by step. Planning systems flip this around - you describe what's *possible* and what you *want*, then let the planner figure out the steps.
 
