@@ -5,6 +5,42 @@ defmodule AriaEngine.Scheduler.Core do
   @moduledoc "Private implementation core for AriaEngine.Scheduler.\n\nOrchestrates the scheduling process by coordinating between specialized modules\nfor domain conversion, state management, plan conversion, and analysis.\n\nThis module should not be used directly - use AriaEngine.Scheduler instead.\n"
   require Logger
   alias AriaEngine.Scheduler.{DomainConverter, StateManager, PlanConverter, ResourceManager, DurationParser}
+
+  # Type definitions
+  @type activity :: map()
+  @type entity :: map()
+  @type resource :: map()
+  @type constraint :: map()
+  @type scheduling_params :: %{
+          schedule_name: String.t(),
+          activities: [activity()],
+          entities: [entity()],
+          resources: [resource()],
+          constraints: [constraint()],
+          simulation_mode: boolean(),
+          activity_log: list(),
+          verbose: non_neg_integer(),
+          base_datetime: DateTime.t(),
+          opts: keyword()
+        }
+  @type schedule_result :: {:ok, AriaEngine.Scheduler.SimulationResult.t()} | {:error, String.t()}
+  @type domain :: map()
+  @type state :: AriaEngine.State.t()
+  @type plan :: term()
+  @type action_function :: (list(), state() -> state() | false)
+  @type method_function :: (list(), state() -> list() | false)
+
+  @spec schedule_with_enhanced_features(
+          String.t(),
+          [activity()],
+          [entity()],
+          [resource()],
+          [constraint()],
+          boolean(),
+          list(),
+          non_neg_integer(),
+          DateTime.t()
+        ) :: schedule_result()
   @doc "Main scheduling function with enhanced features.\n"
   def schedule_with_enhanced_features(
         schedule_name,
@@ -95,6 +131,8 @@ defmodule AriaEngine.Scheduler.Core do
     end
   end
 
+  @spec return_empty_schedule_result(String.t(), [entity()], [resource()], boolean(), list()) ::
+          schedule_result()
   @doc "Handle empty activities case.\n"
   def return_empty_schedule_result(
         schedule_name,
@@ -135,6 +173,7 @@ defmodule AriaEngine.Scheduler.Core do
     {:ok, result}
   end
 
+  @spec attempt_enhanced_scheduling(scheduling_params()) :: {:error, String.t()}
   @doc "Enhanced scheduling with entity/resource management.\n"
   def attempt_enhanced_scheduling(scheduling_params) do
     %{
@@ -202,6 +241,16 @@ defmodule AriaEngine.Scheduler.Core do
     end
   end
 
+  @spec simulate_plan_execution(
+          domain(),
+          state(),
+          term(),
+          [activity()],
+          [entity()],
+          [resource()],
+          list(),
+          non_neg_integer()
+        ) :: {:ok, term()} | {:error, String.t()}
   @doc "Simulate plan execution using run_lazy_refineahead.\n"
   def simulate_plan_execution(
         domain,
@@ -238,6 +287,8 @@ defmodule AriaEngine.Scheduler.Core do
     end
   end
 
+  @spec convert_activities_to_enhanced_domain([activity()], [entity()], [resource()], [constraint()]) ::
+          {:ok, domain()} | {:error, String.t()}
   @doc "Convert activities to KHR domain with two-phase planning.\n"
   def convert_activities_to_enhanced_domain(activities, entities, resources, constraints) do
     resources_list = convert_resources_map_to_list(resources)
@@ -251,6 +302,7 @@ defmodule AriaEngine.Scheduler.Core do
     )
   end
 
+  @spec create_enhanced_initial_state([entity()], [resource()]) :: state()
   @doc "Create enhanced initial state with entities and resources.\n"
   def create_enhanced_initial_state(entities, resources) do
     StateManager.create_enhanced_initial_state(entities, resources)
