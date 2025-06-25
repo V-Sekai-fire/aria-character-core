@@ -10,16 +10,67 @@
 **Current State**: ADRs 131-134 specify unified action system, but key components are missing from codebase  
 **Target State**: Complete TDD implementation of module-based domain pattern with entity validation and enhanced planning
 
-## Codebase Analysis Results
+## Migration Strategy Analysis
+
+### Git History Research Findings
+
+**Migration Timeline Pattern (from git log analysis):**
+- **Aggressive deprecation**: Project consistently removes deprecated code quickly (e.g., "Evaporate deprecated AriaEngine.Planner module")
+- **Clean breaks preferred**: No compatibility layers found in recent migrations
+- **Fast iteration cycle**: Rapid architectural changes with immediate tombstoning
+- **AST migration tools**: Uses `ast_migrate` for systematic code transformations
+
+**Backward Compatibility Approach:**
+- **Direct removal pattern**: Git history shows immediate removal after deprecation warnings
+- **No compatibility layers**: Clean architectural transitions without legacy support
+- **Tombstoning workflow**: Clear pattern of marking → warning → removal
+
+### Codebase Migration Scope Analysis
+
+**Legacy Domain Usage (Current State):**
+- **Limited scope**: Only 4 instances of `Domain.add_action` found across codebase
+- **Primary user**: `aria_scheduler` app in `domain_converter.ex` (manageable migration)
+- **Example usage**: Mostly in documentation and core examples
+- **No new pattern**: 0 instances of `@action`, `@task_method` attributes (system doesn't exist)
+
+**Domain Infrastructure (Existing Foundation):**
+- **16 domain modules**: Comprehensive existing domain system
+- **Mature APIs**: `Domain.Core`, `Domain.Actions`, `Domain.Methods` fully implemented
+- **StateV2 integration**: Complete entity-first architecture with fact-based queries
+- **Planning system**: Sophisticated hybrid planner with blacklisting and strategies
+
+### Migration Strategy: Clean Break with AST Migration
+
+**Based on git history analysis showing aggressive deprecation pattern:**
+
+**Phase 1: New System Implementation (2-3 weeks)**
+- Implement `use AriaEngine.Domain` macro system alongside legacy
+- Create attribute-based domain pattern (`@action`, `@task_method`, etc.)
+- Build on existing `Domain.Core` infrastructure
+- No compatibility layer - clean architectural separation
+
+**Phase 2: Legacy Deprecation (1 week)**
+- Add deprecation warnings to `Domain.add_action/4`, `Domain.add_task_method/4`
+- Use `ast_migrate` tool for automated migration of `aria_scheduler`
+- Provide clear migration documentation and examples
+- Mark legacy functions as tombstoned
+
+**Phase 3: Legacy Removal (1 week)**
+- Remove all legacy domain registration functions
+- Complete migration of `aria_scheduler` to new pattern
+- Clean up documentation and examples
+- Verify all tests pass with new system
+
+**Total Timeline: 4-5 weeks** (consistent with project's fast iteration cycle)
+
+**Migration Scope:** Minimal impact - only `aria_scheduler` app requires migration
 
 ### ✅ Confirmed Existing (Build Upon)
-- **Timex integration**: Comprehensive duration/datetime handling with microsecond precision
-- **Blacklist system**: Fully implemented in `Plan.Blacklisting` with solution tree integration
+- **Domain infrastructure**: Comprehensive 16-module domain system
 - **StateV2**: Complete entity-first architecture with fact-based queries
-- **Domain.Core**: Solid foundation for action/method registration
-- **Goal verification**: `Domain.Utils.verify_goal/7` exists for manual verification
-- **Commands**: Extensive `Actions` module with external command execution
-- **Priority systems**: Timeline scheduling includes priority handling
+- **Hybrid planner**: Sophisticated planning with blacklisting and strategies
+- **AST migration tools**: Proven migration tooling for systematic transformations
+- **Timex integration**: Comprehensive duration/datetime handling
 
 ### ❌ Confirmed Missing (Must Implement)
 1. **Module-based domain pattern**: No `@action`, `@task_method`, `@unigoal_method`, `@multigoal_method` attributes
