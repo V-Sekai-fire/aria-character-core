@@ -218,7 +218,10 @@ defmodule Timeline.Internal.STN.Operations do
       validated_stn
     else
       # Complex STN - use MiniZinc solver
-      AriaMinizincStn.solve_stn(stn)
+      case AriaMinizincStn.solve_stn(stn) do
+        {:ok, solved_stn} -> solved_stn
+        solved_stn -> solved_stn
+      end
     end
   end
 

@@ -145,7 +145,10 @@ defmodule Timeline do
   @doc "Applies Path Consistency (PC-2) algorithm to the Timeline using MiniZinc solver.\n"
   @spec apply_pc2(t()) :: t()
   def apply_pc2(timeline) do
-    solved_stn = AriaMinizincStn.solve_stn(timeline.stn)
+    solved_stn = case AriaMinizincStn.solve_stn(timeline.stn) do
+      {:ok, stn} -> stn
+      stn -> stn
+    end
     %{timeline | stn: solved_stn}
   end
 
@@ -1072,44 +1075,7 @@ defmodule Timeline do
     DateTime.from_unix!(midpoint_ms, :millisecond)
   end
 
-  @doc """
-  Converts absolute position bridges to semantic bridges using Allen relations.
-
-  This function is the core of the bridge conversion system. It analyzes the
-  absolute position of a bridge and converts it to an appropriate semantic
-  relation based on Allen's Interval Algebra.
-
-  ## Conversion Process
-
-  1. **Extract timeline bounds** from intervals to establish reference frame
-  2. **Analyze bridge position** relative to timeline start and end
-  3. **Apply boundary detection** with precision-aware tolerance
-  4. **Compute semantic relation** using Allen interval relations
-  5. **Set reference target** to "timeline" for converted bridges
-  6. **Preserve original position** as computed_position field
-
-  ## Parameters
-
-  - `timeline`: The timeline containing intervals for boundary analysis
-  - `bridge`: The bridge to convert (must have semantic_relation: nil)
-
-  ## Returns
-
-  Bridge with semantic_relation, reference_target, and computed_position set.
-
-  ## Examples
-
-      # Bridge at timeline start
-      bridge = %Bridge{id: "start", position: timeline_start, semantic_relation: nil}
-      converted = convert_to_semantic_bridge(timeline, bridge)
-      converted.semantic_relation  # => :starts
-
-      # Bridge during timeline
-      bridge = %Bridge{id: "mid", position: mid_time, semantic_relation: nil}
-      converted = convert_to_semantic_bridge(timeline, bridge)
-      converted.semantic_relation  # => :during
-
-  """
+  # Converts absolute position bridges to semantic bridges using Allen relations
   defp convert_to_semantic_bridge(timeline, %Bridge{semantic_relation: nil} = bridge) do
     # Bridge has absolute position but no semantic relation - convert it
     {timeline_start, timeline_end} = get_timeline_bounds(timeline)
@@ -1130,59 +1096,7 @@ defmodule Timeline do
     bridge
   end
 
-  @doc """
-  Determines the appropriate Allen interval relation for a bridge position.
-
-  This function implements the core algorithm for converting absolute positions
-  to semantic relations. It analyzes the bridge position relative to timeline
-  bounds and intervals to determine the most appropriate Allen relation.
-
-  ## Algorithm Steps
-
-  1. **Calculate position relative to timeline bounds**
-  2. **Apply boundary detection with precision-aware tolerance**
-  3. **Check for timeline-relative positions** (:starts, :finishes, :before, :after)
-  4. **Analyze interval relationships** for positions within timeline
-  5. **Apply fallback strategy** (:during) for edge cases
-
-  ## Boundary Detection
-
-  Uses precision-aware tolerance for robust boundary detection:
-  - Timeline start (±tolerance) → `:starts`
-  - Timeline end (±tolerance) → `:finishes`
-  - Before timeline → `:before`
-  - After timeline → `:after`
-
-  ## Interval Analysis
-
-  For positions within timeline bounds:
-  - Within any interval → `:during`
-  - Adjacent to interval boundary (±tolerance) → `:meets`
-  - Between intervals → `:during` (default)
-
-  ## Parameters
-
-  - `position`: DateTime position of the bridge
-  - `timeline_start`: Start time of the timeline
-  - `timeline_end`: End time of the timeline
-  - `timeline`: Timeline struct for interval analysis
-
-  ## Returns
-
-  Allen interval relation atom (:starts, :finishes, :during, :meets, :before, :after)
-
-  ## Examples
-
-      # Bridge at timeline start
-      determine_semantic_relation(timeline_start, timeline_start, timeline_end, timeline)
-      # => :starts
-
-      # Bridge within timeline
-      mid_time = DateTime.add(timeline_start, 1800, :second)  # 30 minutes in
-      determine_semantic_relation(mid_time, timeline_start, timeline_end, timeline)
-      # => :during
-
-  """
+  # Determines the appropriate Allen interval relation for a bridge position
   defp determine_semantic_relation(position, timeline_start, timeline_end, timeline) do
     # Get precision-aware tolerance based on STN configuration
     tolerance_microseconds = get_boundary_tolerance_microseconds(timeline)
@@ -1242,32 +1156,7 @@ defmodule Timeline do
   defp is_semantic_bridge?(%Bridge{semantic_relation: nil}), do: false
   defp is_semantic_bridge?(%Bridge{semantic_relation: _relation}), do: true
 
-  @doc """
-  Calculates appropriate tolerance for boundary detection based on STN precision.
-
-  This function computes tolerance in microseconds based on the Timeline's STN
-  time unit and LOD resolution, ensuring boundary detection respects the
-  configured precision level.
-
-  ## Parameters
-
-  - `timeline`: Timeline containing STN with time_unit and lod_resolution
-
-  ## Returns
-
-  Tolerance value in microseconds for boundary detection.
-
-  ## Examples
-
-      # Ultra-high precision: 1 microsecond tolerance
-      timeline = Timeline.new_with_stn_opts([time_unit: :microsecond, lod_level: :ultra_high])
-      get_boundary_tolerance_microseconds(timeline)  # => 1
-
-      # Medium precision: 100 second tolerance (100,000,000 microseconds)
-      timeline = Timeline.new_with_stn_opts([time_unit: :second, lod_level: :medium])
-      get_boundary_tolerance_microseconds(timeline)  # => 100_000_000
-
-  """
+  # Calculates appropriate tolerance for boundary detection based on STN precision
   defp get_boundary_tolerance_microseconds(timeline) do
     stn = timeline.stn
     base_unit_microseconds = case stn.time_unit do
