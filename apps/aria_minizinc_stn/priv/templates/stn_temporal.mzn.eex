@@ -1,34 +1,47 @@
-% Simple Temporal Network (STN) Constraint Solver
-% Input: <%= @num_activities %> activities, <%= @num_constraints %> constraints
+% Simple Temporal Network (STN) Matrix-based Constraint Solver
+% Input: <%= @num_timepoints %> timepoints
 
 % Parameters
-int: num_activities = <%= @num_activities %>;
-int: num_constraints = <%= @num_constraints %>;
+int: num_timepoints = <%= @num_timepoints %>;
 
-% Activity start times
-array[1..num_activities] of var 0..1000: start_times;
+% Timepoint variables (can be negative for relative timing)
+array[1..num_timepoints] of var -1000..1000: timepoints;
 
-% Duration constraints (for activities with fixed durations)
-<%= for {duration, activity_idx} <- Enum.with_index(@durations, 1) do %>
-<%= if duration > 0 do %>
-% Activity <%= activity_idx %> has duration <%= duration %>
-constraint start_times[<%= activity_idx %>] >= 0;
+% STN Distance Matrix - bounds on differences between timepoints
+% matrix[i,j] represents bounds on (timepoints[j] - timepoints[i])
+% Lower bounds matrix
+array[1..num_timepoints, 1..num_timepoints] of int: lower_bounds = array2d(1..num_timepoints, 1..num_timepoints, [
+<%= for i <- 1..@num_timepoints do %>
+  <%= for j <- 1..@num_timepoints do %>
+    <%= if i == j do %>0<% else %><%= Map.get(@distance_matrix, {i, j}, {-1000, 1000}) |> elem(0) %><% end %><%= if i < @num_timepoints or j < @num_timepoints do %>,<% end %>
+  <% end %>
 <% end %>
-<% end %>
+]);
 
-% Temporal constraints between activities
-<%= for constraint <- @constraints do %>
-% Constraint: Activity <%= constraint.from_activity %> to Activity <%= constraint.to_activity %>
-constraint start_times[<%= constraint.to_activity %>] - start_times[<%= constraint.from_activity %>] >= <%= constraint.min_distance %>;
-constraint start_times[<%= constraint.to_activity %>] - start_times[<%= constraint.from_activity %>] <= <%= constraint.max_distance %>;
+% Upper bounds matrix
+array[1..num_timepoints, 1..num_timepoints] of int: upper_bounds = array2d(1..num_timepoints, 1..num_timepoints, [
+<%= for i <- 1..@num_timepoints do %>
+  <%= for j <- 1..@num_timepoints do %>
+    <%= if i == j do %>0<% else %><%= Map.get(@distance_matrix, {i, j}, {-1000, 1000}) |> elem(1) %><% end %><%= if i < @num_timepoints or j < @num_timepoints do %>,<% end %>
+  <% end %>
 <% end %>
+]);
+
+% STN Constraints: For all pairs (i,j), enforce bounds on timepoint differences
+constraint forall(i, j in 1..num_timepoints where i != j) (
+  timepoints[j] - timepoints[i] >= lower_bounds[i,j] /\
+  timepoints[j] - timepoints[i] <= upper_bounds[i,j]
+);
+
+% Fix first timepoint to 0 for canonical solution (removes translation freedom)
+constraint timepoints[1] = 0;
 
 % Solve for consistency
 solve satisfy;
 
-% Output solution
+% Output solution with timepoint names
 output [
-  "{\"status\": \"SATISFIABLE\", \"start_times\": [" ++
-  join(", ", [show(start_times[i]) | i in 1..num_activities]) ++
-  "], \"result\": \"consistent\"}"
+  "{\"status\": \"SATISFIABLE\", \"timepoints\": {" ++
+  join(", ", ["\"" ++ "<%= Enum.at(@timepoint_names, i-1) %>" ++ "\": " ++ show(timepoints[i]) | i in 1..num_timepoints]) ++
+  "}, \"result\": \"consistent\"}"
 ];

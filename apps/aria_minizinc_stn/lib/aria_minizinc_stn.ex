@@ -3,29 +3,34 @@
 
 defmodule AriaMinizincStn do
   @moduledoc """
-  MiniZinc-based Simple Temporal Network (STN) solver.
+  Matrix-based Simple Temporal Network (STN) solver using MiniZinc.
 
-  This application provides STN constraint solving using MiniZinc constraint
-  solving with fail-fast behavior when MiniZinc is not available.
+  This application provides mathematically correct STN constraint solving using
+  a distance matrix representation with MiniZinc constraint satisfaction.
 
-  ## MiniZinc-Only Strategy
+  ## STN Matrix Approach
 
-  - **MiniZinc**: Pure MiniZinc constraint satisfaction solving
-  - **Fail-fast**: Clear error reporting when MiniZinc is unavailable
+  - **Distance Matrix**: Represents bounds on timepoint differences
+  - **Proper STN Semantics**: Handles negative bounds and relative timing
+  - **MiniZinc Backend**: Uses constraint satisfaction for consistency checking
 
   ## Usage
 
-      # Basic STN solving
+      # Basic STN solving with timepoint constraints
       stn = %{
         time_points: MapSet.new(["A", "B", "C"]),
         constraints: %{
-          {"A", "B"} => {1, 5},
-          {"B", "C"} => {2, 8}
+          {"A", "B"} => {1, 5},    # B must be 1-5 units after A
+          {"B", "C"} => {-2, 3}    # C can be 2 units before to 3 units after B
         },
         consistent: nil,
         metadata: %{}
       }
       {:ok, result} = AriaMinizincStn.solve_stn(stn)
+
+      # Access solved timepoint values
+      solved_times = result.metadata.solved_times
+      # => %{"A" => 0, "B" => 3, "C" => 1}
   """
 
   require Logger
@@ -138,14 +143,12 @@ defmodule AriaMinizincStn do
       time_point_map =
         time_points |> Enum.with_index(1) |> Map.new(fn {point, index} -> {point, index} end)
 
-      constraints = convert_constraints(stn.constraints, time_point_map)
-      durations = extract_durations(stn.constraints, time_point_map)
+      distance_matrix = build_distance_matrix(stn.constraints, time_point_map)
 
       template_vars = %{
-        num_activities: length(time_points),
-        num_constraints: length(constraints),
-        durations: durations,
-        constraints: constraints,
+        num_timepoints: length(time_points),
+        distance_matrix: distance_matrix,
+        timepoint_names: time_points,
         time_point_map: time_point_map
       }
 
@@ -153,70 +156,36 @@ defmodule AriaMinizincStn do
     end
   end
 
-  defp convert_constraints(constraint_map, time_point_map) do
-    constraint_map
-    |> Enum.filter(fn {{from, to}, {min, max}} ->
-      from != to and is_finite_constraint({min, max})
-    end)
-    |> Enum.map(fn {{from, to}, {min, max}} ->
-      from_idx = Map.get(time_point_map, from)
-      to_idx = Map.get(time_point_map, to)
+  # Build STN distance matrix from constraints
+  defp build_distance_matrix(constraint_map, time_point_map) do
+    num_points = map_size(time_point_map)
 
-      %{
-        from_activity: from_idx,
-        to_activity: to_idx,
-        min_distance: round(min),
-        max_distance: round(max)
-      }
-    end)
-    |> Enum.filter(fn constraint ->
-      constraint.from_activity != nil and constraint.to_activity != nil
-    end)
-  end
+    # Initialize matrix with default bounds
+    for i <- 1..num_points, j <- 1..num_points, into: %{} do
+      if i == j do
+        {{i, j}, {0, 0}}  # Self-constraints are always 0
+      else
+        # Find constraint between timepoints
+        point_i = get_point_by_index(time_point_map, i)
+        point_j = get_point_by_index(time_point_map, j)
 
-  defp is_finite_constraint({min, max}) do
-    is_finite_number(min) and is_finite_number(max) and min <= max
-  end
-
-  defp is_finite_number(n) when is_number(n) do
-    abs(n) < 1_000_000_000_000_000.0
-  end
-
-  defp is_finite_number(_) do
-    false
-  end
-
-  defp extract_durations(constraint_map, time_point_map) do
-    time_points = Map.keys(time_point_map)
-    num_points = length(time_points)
-    durations = List.duplicate(0, num_points)
-
-    time_points
-    |> Enum.reduce(durations, fn point, acc_durations ->
-      case extract_duration_for_point(point, constraint_map, time_point_map) do
-        nil ->
-          acc_durations
-
-        duration ->
-          point_index = Map.get(time_point_map, point) - 1
-          List.replace_at(acc_durations, point_index, duration)
+        case Map.get(constraint_map, {point_i, point_j}) do
+          {min_bound, max_bound} -> {{i, j}, {round(min_bound), round(max_bound)}}
+          nil -> {{i, j}, {-1000, 1000}}  # Default unconstrained bounds
+        end
       end
-    end)
-  end
-
-  defp extract_duration_for_point(point, constraint_map, _time_point_map) do
-    if String.ends_with?(point, "_start") do
-      base_name = String.replace_suffix(point, "_start", "")
-      end_point = base_name <> "_end"
-
-      case Map.get(constraint_map, {point, end_point}) do
-        {min_duration, max_duration} when min_duration == max_duration -> round(min_duration)
-        _ -> nil
-      end
-    else
-      nil
     end
   end
+
+  defp get_point_by_index(time_point_map, index) do
+    time_point_map
+    |> Enum.find(fn {_point, idx} -> idx == index end)
+    |> case do
+      {point, _idx} -> point
+      nil -> nil
+    end
+  end
+
 
   # Parse MiniZinc output (handles both string and structured responses)
   defp parse_minizinc_output(output) when is_binary(output) do
@@ -225,7 +194,10 @@ defmodule AriaMinizincStn do
         {:ok, %{status: :unsatisfiable}}
       true ->
         case Jason.decode(output) do
+          {:ok, %{"status" => "SATISFIABLE", "timepoints" => timepoints}} ->
+            {:ok, %{status: :satisfiable, timepoints: timepoints}}
           {:ok, %{"status" => "SATISFIABLE", "start_times" => start_times}} ->
+            # Backward compatibility with old format
             {:ok, %{status: :satisfiable, start_times: start_times}}
           {:ok, %{"status" => "UNSATISFIABLE"}} ->
             {:ok, %{status: :unsatisfiable}}
@@ -270,8 +242,12 @@ defmodule AriaMinizincStn do
     consistent = solution.status == :satisfiable
     updated_stn = %{stn | consistent: consistent}
 
-    if consistent and solution[:start_times] do
-      solved_times = extract_solved_times(stn, solution)
+    if consistent do
+      solved_times = cond do
+        solution[:timepoints] -> solution[:timepoints]  # New timepoint format
+        solution[:start_times] -> extract_solved_times(stn, solution)  # Legacy format
+        true -> %{}
+      end
       %{updated_stn | metadata: Map.put(updated_stn.metadata, :solved_times, solved_times)}
     else
       # For unsatisfiable cases, provide empty solved_times to prevent nil access
