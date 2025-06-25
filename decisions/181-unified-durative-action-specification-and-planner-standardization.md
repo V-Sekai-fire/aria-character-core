@@ -245,6 +245,125 @@ Capabilities serve as simple traits providing flexible composition without inher
 # State.set_fact(state, "min_temp", "oven_1", 150)
 ```
 
+## Entity Registration and State Setup
+
+Before the planner can match entities to action requirements, entities must be registered in the state with their types and capabilities.
+
+### Basic Entity Registration Pattern
+
+```elixir
+@spec register_entity(AriaState.t(), String.t(), String.t(), [capability()]) :: AriaState.t()
+def register_entity(state, entity_id, type, capabilities) do
+  state
+  |> AriaState.RelationalState.set_fact("type", entity_id, type)
+  |> AriaState.RelationalState.set_fact("capabilities", entity_id, capabilities)
+  |> AriaState.RelationalState.set_fact("status", entity_id, "available")
+end
+```
+
+### Complete Scenario Setup
+
+```elixir
+@spec setup_kitchen_scenario() :: AriaState.t()
+def setup_kitchen_scenario() do
+  AriaState.RelationalState.new()
+  |> register_entity("chef_1", "agent", [:cooking, :menu_planning])
+  |> register_entity("sous_chef_1", "agent", [:cooking, :prep_work])
+  |> register_entity("oven_1", "oven", [:heating, :baking])
+  |> register_entity("stovetop_1", "stovetop", [:heating, :sauteing])
+  |> register_entity("main_kitchen", "kitchen", [:workspace])
+  |> register_entity("prep_station", "kitchen", [:workspace, :prep_area])
+  |> register_entity("flour_bag", "flour", [:consumable])
+  |> register_entity("eggs_dozen", "eggs", [:consumable])
+  |> register_entity("mixing_bowl_1", "mixing_bowl", [:container, :reusable])
+end
+```
+
+### Entity Properties and Status
+
+Additional entity properties are stored as separate facts:
+
+```elixir
+@spec setup_detailed_kitchen() :: AriaState.t()
+def setup_detailed_kitchen() do
+  setup_kitchen_scenario()
+  # Entity locations
+  |> AriaState.RelationalState.set_fact("location", "chef_1", "main_kitchen")
+  |> AriaState.RelationalState.set_fact("location", "oven_1", "main_kitchen")
+  
+  # Equipment properties
+  |> AriaState.RelationalState.set_fact("max_temp", "oven_1", 450)
+  |> AriaState.RelationalState.set_fact("min_temp", "oven_1", 150)
+  |> AriaState.RelationalState.set_fact("current_temp", "oven_1", 75)
+  
+  # Consumable quantities
+  |> AriaState.RelationalState.set_fact("quantity", "flour_bag", 5.0)
+  |> AriaState.RelationalState.set_fact("unit", "flour_bag", "pounds")
+  |> AriaState.RelationalState.set_fact("quantity", "eggs_dozen", 12)
+  |> AriaState.RelationalState.set_fact("unit", "eggs_dozen", "count")
+end
+```
+
+### Complete End-to-End Example
+
+```elixir
+# 1. Set up entities in state
+initial_state = setup_kitchen_scenario()
+
+# 2. Create domain with action specifications
+domain = MyApp.Domains.CookingDomain.create_domain()
+
+# 3. Plan with goals - planner finds entities that match action requirements
+{:ok, plan} = AriaEngine.plan(domain, initial_state, [
+  {:cook_meal, ["pasta"]},
+  {"location", "chef_1", "main_kitchen"}  # Goal format
+])
+
+# 4. Execute plan - entities are automatically assigned based on capabilities
+{:ok, final_state} = AriaEngine.execute_plan(domain, initial_state, plan)
+```
+
+### How Capability Matching Works
+
+When the planner encounters an action like `cook_meal`, it:
+
+1. **Reads action requirements**: `requires_entities: [%{type: "agent", capabilities: [:cooking]}]`
+2. **Queries state for matching entities**: Finds entities where `type == "agent"` AND `:cooking` in `capabilities`
+3. **Checks availability**: Ensures entity `status == "available"` (not already assigned)
+4. **Makes assignment**: Reserves the entity for this action's duration
+5. **Updates state**: Marks entity as busy during action execution
+
+```elixir
+# Planner internally performs queries like:
+available_cooks = AriaState.RelationalState.query(state, fn entity_id ->
+  type = AriaState.RelationalState.get_fact(state, "type", entity_id)
+  capabilities = AriaState.RelationalState.get_fact(state, "capabilities", entity_id)
+  status = AriaState.RelationalState.get_fact(state, "status", entity_id)
+  
+  type == "agent" && 
+  :cooking in capabilities && 
+  status == "available"
+end)
+# Returns: ["chef_1", "sous_chef_1"] (entities that can cook and are available)
+```
+
+### Entity Registration Best Practices
+
+**Required facts for all entities:**
+- `"type"` - Entity category (agent, oven, kitchen, etc.)
+- `"capabilities"` - List of capability atoms
+- `"status"` - Availability state ("available", "busy", "broken", etc.)
+
+**Optional but recommended facts:**
+- `"location"` - Where the entity is located
+- `"quantity"` - For consumable entities
+- Equipment-specific properties (temperature ranges, capacity, etc.)
+
+**Entity naming conventions:**
+- Use descriptive IDs: `"chef_1"`, `"main_oven"`, `"prep_station_a"`
+- Include numbers for multiple similar entities: `"mixing_bowl_1"`, `"mixing_bowl_2"`
+- Avoid generic names that don't distinguish between entities
+
 ## Unified Action Specification
 
 ### Module-Based Domain Pattern (Authoritative)
