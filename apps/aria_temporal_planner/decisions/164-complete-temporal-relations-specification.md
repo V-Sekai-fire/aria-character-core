@@ -294,6 +294,223 @@ Implement a comprehensive temporal relations system supporting Allen's core rela
   }
   ```
 
+## Reserved Keywords and Stub Placeholders
+
+To ensure immediate compatibility with ADRs 131-134 action specifications, all temporal relation keywords are reserved with stub implementations. This allows actions to reference temporal relations in their metadata without runtime errors while the full system is developed.
+
+### Reserved Temporal Relation Keywords
+
+**Allen's Core Relations (13 keywords):**
+- `EQ`, `ADJ_F`, `ADJ_B`, `WITHIN`, `CONTAINS`, `START_ALIGN`, `START_EXTEND`, `END_ALIGN`, `END_EXTEND`, `OVERLAP_F`, `OVERLAP_B`, `PRECEDES`, `FOLLOWS`
+
+**Extended Relations (4 keywords):**
+- `FLEXIBLE`, `CONDITIONAL`, `FUZZY`, `MUTEX`, `RESOURCE_BOUND`
+
+**Event-Based Relations (6 keywords):**
+- `TRIGGERS`, `PREVENTS`, `ENABLES`, `PREEMPTS`, `YIELDS`, `CASCADES`
+
+**Multi-Timeline Relations (4 keywords):**
+- `SYNCHRONIZED`, `COORDINATED`, `REPLICATED`, `MULTI_TIMELINE`
+
+**Advanced Relations (3 keywords):**
+- `PERIODIC`, `STOCHASTIC`, `LIKELY_BEFORE`, `DEPENDENT_PROBABILITY`
+
+### Stub Implementation Module
+
+```elixir
+# apps/aria_temporal_planner/lib/timeline/temporal_relations_stubs.ex
+defmodule Timeline.TemporalRelationsStubs do
+  @moduledoc """
+  Stub implementations for temporal relations to ensure compatibility
+  with action specifications while full system is under development.
+  
+  All functions return {:ok, :stub} to indicate placeholder status.
+  """
+  
+  # Allen's Core Relations Stubs
+  def allen_relation(:EQ, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:ADJ_F, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:ADJ_B, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:WITHIN, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:CONTAINS, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:START_ALIGN, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:START_EXTEND, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:END_ALIGN, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:END_EXTEND, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:OVERLAP_F, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:OVERLAP_B, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:PRECEDES, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  def allen_relation(:FOLLOWS, _interval_a, _interval_b, _opts \\ []), do: {:ok, :stub}
+  
+  # Extended Relations Stubs
+  def flexible_relation(_interval_a, _interval_b, _constraint_range), do: {:ok, :stub}
+  def conditional_relation(_condition, _if_true, _if_false), do: {:ok, :stub}
+  def fuzzy_relation(_interval_a, _interval_b, _uncertainty_spec), do: {:ok, :stub}
+  def mutex_relation(_intervals, _resource), do: {:ok, :stub}
+  def resource_bound_relation(_intervals, _resource, _constraints), do: {:ok, :stub}
+  
+  # Event-Based Relations Stubs
+  def trigger_relation(_trigger_event, _triggered_event, _opts), do: {:ok, :stub}
+  def prevent_relation(_preventing_event, _prevented_event, _opts), do: {:ok, :stub}
+  def enable_relation(_enabling_event, _enabled_event, _opts), do: {:ok, :stub}
+  def preempt_relation(_preempting_event, _preempted_event, _opts), do: {:ok, :stub}
+  def yield_relation(_yielding_event, _priority_event, _opts), do: {:ok, :stub}
+  def cascade_relation(_initial_event, _cascade_sequence, _opts), do: {:ok, :stub}
+  
+  # Multi-Timeline Relations Stubs
+  def synchronized_relation(_event_type, _timelines, _opts), do: {:ok, :stub}
+  def coordinated_relation(_source, _target, _dependency_type), do: {:ok, :stub}
+  def replicated_relation(_master, _replicas, _policy), do: {:ok, :stub}
+  def multi_timeline_relation(_coordination_type, _timelines, _opts), do: {:ok, :stub}
+  
+  # Advanced Relations Stubs
+  def periodic_relation(_event_template, _schedule, _opts), do: {:ok, :stub}
+  def stochastic_relation(_event, _distribution), do: {:ok, :stub}
+  def likely_before_relation(_interval_a, _interval_b, _probability), do: {:ok, :stub}
+  def dependent_probability_relation(_condition, _dependent, _probability_table), do: {:ok, :stub}
+  
+  # Stub validation for action metadata
+  def validate_temporal_relations(temporal_relations) when is_list(temporal_relations) do
+    results = Enum.map(temporal_relations, &validate_single_relation/1)
+    
+    case Enum.find(results, fn {status, _} -> status == :error end) do
+      nil -> {:ok, :all_stubs}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+  
+  defp validate_single_relation({:allen, relation_type, _target}) when relation_type in [
+    :EQ, :ADJ_F, :ADJ_B, :WITHIN, :CONTAINS, :START_ALIGN, :START_EXTEND, 
+    :END_ALIGN, :END_EXTEND, :OVERLAP_F, :OVERLAP_B, :PRECEDES, :FOLLOWS
+  ], do: {:ok, :stub}
+  
+  defp validate_single_relation({:flexible, _type, _target, _constraint}) do
+    {:ok, :stub}
+  end
+  
+  defp validate_single_relation({:mutex, _target, _resource}) do
+    {:ok, :stub}
+  end
+  
+  defp validate_single_relation(unknown_relation) do
+    {:error, "Unknown temporal relation: #{inspect(unknown_relation)}"}
+  end
+end
+```
+
+### Action Metadata Integration Stubs
+
+**Compatible with ADR-131/134 action specifications:**
+
+```elixir
+# Example action using reserved temporal relation keywords
+@action duration: "PT2H",
+        requires_entities: [
+          %{type: "agent", capabilities: [:cooking]},
+          %{type: "oven", capabilities: [:heating]}
+        ],
+        temporal_relations: [
+          {:allen, :PRECEDES, "gather_ingredients"},
+          {:flexible, :before, "serve_meal", {-1800, -900}},
+          {:mutex, "kitchen_cleanup", :exclusive_access},
+          {:triggers, "cooking_complete", "cleanup_start"}
+        ]
+def cook_meal(state, [meal_type]) do
+  # Pure state transformation - temporal relations handled by planner
+  state
+  |> State.set_fact("meal_status", meal_type, "cooking")
+  |> State.set_fact("chef_status", "chef_1", "busy")
+end
+```
+
+### Stub Bridge Integration
+
+**Bridge layer stub for STN constraint generation:**
+
+```elixir
+# apps/aria_temporal_planner/lib/timeline/bridge_stubs.ex
+defmodule Timeline.BridgeStubs do
+  @moduledoc """
+  Stub bridge layer for temporal relations to STN constraints.
+  Returns placeholder constraints until full implementation.
+  """
+  
+  def temporal_relation_to_stn_constraints({:allen, relation_type, _target}) do
+    # Return placeholder STN constraint
+    case relation_type do
+      :PRECEDES -> [{:placeholder_end, :placeholder_start, {-999999, -1}}]
+      :FOLLOWS -> [{:placeholder_start, :placeholder_end, {-999999, -1}}]
+      :EQ -> [{:placeholder_start, :placeholder_start, {0, 0}}, {:placeholder_end, :placeholder_end, {0, 0}}]
+      _ -> [{:placeholder_constraint, :placeholder_constraint, {-1, 1}}]
+    end
+  end
+  
+  def temporal_relation_to_stn_constraints({:flexible, _type, _target, {min, max}}) do
+    [{:placeholder_end, :placeholder_start, {min, max}}]
+  end
+  
+  def temporal_relation_to_stn_constraints({:mutex, _target, _resource}) do
+    # Mutex constraints handled separately from STN
+    [{:mutex_placeholder, :mutex_placeholder, :exclusive}]
+  end
+  
+  def temporal_relation_to_stn_constraints(unknown_relation) do
+    # Unknown relations get safe placeholder
+    [{:unknown_placeholder, :unknown_placeholder, {-1, 1}}]
+  end
+end
+```
+
+### Compatibility Validation
+
+**Validation function for action metadata:**
+
+```elixir
+# apps/aria_temporal_planner/lib/timeline/compatibility_validator.ex
+defmodule Timeline.CompatibilityValidator do
+  @moduledoc """
+  Validates that action metadata temporal relations use only reserved keywords.
+  Ensures compatibility between ADR-131/134 specifications and ADR-164 relations.
+  """
+  
+  alias Timeline.TemporalRelationsStubs
+  
+  def validate_action_temporal_relations(action_metadata) do
+    case Map.get(action_metadata, :temporal_relations) do
+      nil -> 
+        {:ok, :no_temporal_relations}
+      
+      temporal_relations when is_list(temporal_relations) ->
+        TemporalRelationsStubs.validate_temporal_relations(temporal_relations)
+      
+      invalid ->
+        {:error, "temporal_relations must be a list, got: #{inspect(invalid)}"}
+    end
+  end
+  
+  def validate_domain_compatibility(domain) do
+    actions = Domain.get_all_actions(domain)
+    
+    validation_results = Enum.map(actions, fn {action_name, action_metadata} ->
+      case validate_action_temporal_relations(action_metadata) do
+        {:ok, _} -> {:ok, action_name}
+        {:error, reason} -> {:error, action_name, reason}
+      end
+    end)
+    
+    errors = Enum.filter(validation_results, fn
+      {:error, _, _} -> true
+      _ -> false
+    end)
+    
+    case errors do
+      [] -> {:ok, :domain_compatible}
+      errors -> {:error, "Domain compatibility errors: #{inspect(errors)}"}
+    end
+  end
+end
+```
+
 ## Implementation Architecture
 
 ### Core Module Structure
