@@ -379,10 +379,12 @@ end
 
 ## Temporal Conditions/Effects System
 
-### Domain.DurativeAction Integration
+### Universal Todo List Support in Temporal Conditions
+
+Temporal conditions now support **any todo list item type**, not just goals:
 
 ```elixir
-# Temporal conditions/effects with entity requirements
+# Enhanced temporal conditions with mixed todo types
 %Domain.DurativeAction{
   name: :collaborative_cooking,
   duration: {:fixed, 3600},
@@ -396,17 +398,41 @@ end
   
   conditions: %{
     at_start: [
+      # Goals (state conditions) - SIMULTANEOUS achievement required
       {"available", "chef_1", true},
       {"available", "prep_cook", true}, 
-      {"temperature", "oven", {:>=, 350}}
+      {"temperature", "oven", {:>=, 350}},
+      
+      # Tasks (complex operations)
+      {:preheat_workspace, []},
+      {:gather_team, ["cooking_crew"]},
+      
+      # Actions (direct state changes)
+      {:lock_kitchen_door, []},
+      {:start_timer, ["cooking_session"]},
+      
+      # Multigoals (simultaneous goal sets)
+      [{"clean", "workspace", true}, {"organized", "ingredients", true}]
     ],
+    
     over_all: [
+      # Ongoing state conditions
       {"coordination", "team", "active"},
-      {"temperature", "oven", {:between, 350, 450}}
+      {"temperature", "oven", {:between, 350, 450}},
+      
+      # Continuous tasks
+      {:monitor_cooking_progress, ["meal_id"]},
+      {:maintain_workspace_cleanliness, []}
     ],
+    
     at_end: [
+      # Final state requirements
       {"quality", "meal", {:>=, 8}},
-      {"cleanup", "kitchen", "complete"}
+      {"cleanup", "kitchen", "complete"},
+      
+      # Completion tasks
+      {:final_quality_check, ["meal_id"]},
+      {:document_cooking_session, ["session_log"]}
     ]
   },
   
@@ -428,6 +454,131 @@ end
     ]
   }
 }
+```
+
+### Temporal Condition Validation Framework
+
+```elixir
+defmodule AriaEngine.TemporalConditionValidator do
+  @type todo_item :: goal() | task() | action() | multigoal()
+  @type goal :: {String.t(), String.t(), any()}
+  @type task :: {atom(), list()}
+  @type action :: {atom(), list()}
+  @type multigoal :: [goal()]
+  
+  def validate_temporal_conditions(conditions) when is_map(conditions) do
+    validators = [
+      &validate_at_start_conditions/1,
+      &validate_over_all_conditions/1,
+      &validate_at_end_conditions/1
+    ]
+    
+    run_validators(conditions, validators)
+  end
+  
+  defp validate_at_start_conditions(%{at_start: conditions}) when is_list(conditions) do
+    validate_todo_list(conditions, "at_start")
+  end
+  defp validate_at_start_conditions(_), do: {:ok, :no_at_start_conditions}
+  
+  defp validate_over_all_conditions(%{over_all: conditions}) when is_list(conditions) do
+    validate_todo_list(conditions, "over_all")
+  end
+  defp validate_over_all_conditions(_), do: {:ok, :no_over_all_conditions}
+  
+  defp validate_at_end_conditions(%{at_end: conditions}) when is_list(conditions) do
+    validate_todo_list(conditions, "at_end")
+  end
+  defp validate_at_end_conditions(_), do: {:ok, :no_at_end_conditions}
+  
+  defp validate_todo_list(todo_items, condition_type) do
+    Enum.reduce_while(todo_items, {:ok, []}, fn item, {:ok, acc} ->
+      case validate_todo_item(item, condition_type) do
+        {:ok, validated_item} -> {:cont, {:ok, [validated_item | acc]}}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+  end
+  
+  defp validate_todo_item({predicate, subject, value}, _condition_type) 
+       when is_binary(predicate) and is_binary(subject) do
+    # Goal validation
+    {:ok, {:goal, {predicate, subject, value}}}
+  end
+  
+  defp validate_todo_item({task_name, args}, _condition_type) 
+       when is_atom(task_name) and is_list(args) do
+    # Task validation
+    {:ok, {:task, {task_name, args}}}
+  end
+  
+  defp validate_todo_item(multigoal, condition_type) when is_list(multigoal) do
+    # Multigoal validation - all items must be goals
+    case Enum.all?(multigoal, &is_goal?/1) do
+      true -> {:ok, {:multigoal, multigoal}}
+      false -> {:error, "Invalid multigoal in #{condition_type}: all items must be goals"}
+    end
+  end
+  
+  defp validate_todo_item(invalid, condition_type) do
+    {:error, "Invalid todo item in #{condition_type}: #{inspect(invalid)}"}
+  end
+  
+  defp is_goal?({predicate, subject, _value}) 
+       when is_binary(predicate) and is_binary(subject), do: true
+  defp is_goal?(_), do: false
+end
+```
+
+### Todo Type Processing Integration
+
+```elixir
+defmodule AriaEngine.TemporalProcessor do
+  def process_temporal_condition(todo_item, state, domain, condition_type) do
+    case todo_item do
+      {:goal, {predicate, subject, value}} ->
+        # Direct state checking
+        current_value = AriaState.RelationalState.get_fact(state, predicate, subject)
+        validate_goal_condition(current_value, value, condition_type)
+        
+      {:task, {task_name, args}} ->
+        # Task decomposition and execution
+        case Domain.get_task_methods(domain, task_name) do
+          [] -> {:error, "No methods available for task #{task_name}"}
+          methods -> execute_task_for_condition(methods, state, args, condition_type)
+        end
+        
+      {:action, {action_name, args}} ->
+        # Direct action execution
+        Domain.execute_action(domain, state, action_name, args)
+        
+      {:multigoal, goals} ->
+        # Simultaneous goal satisfaction
+        validate_multigoal_condition(goals, state, condition_type)
+    end
+  end
+  
+  defp validate_goal_condition(current_value, expected_value, condition_type) do
+    case condition_type do
+      "at_start" -> check_immediate_satisfaction(current_value, expected_value)
+      "over_all" -> check_continuous_satisfaction(current_value, expected_value)
+      "at_end" -> check_final_satisfaction(current_value, expected_value)
+    end
+  end
+  
+  defp validate_multigoal_condition(goals, state, condition_type) do
+    # All goals must be satisfied simultaneously
+    results = Enum.map(goals, fn {predicate, subject, value} ->
+      current_value = AriaState.RelationalState.get_fact(state, predicate, subject)
+      validate_goal_condition(current_value, value, condition_type)
+    end)
+    
+    case Enum.all?(results, fn result -> match?({:ok, _}, result) end) do
+      true -> {:ok, :multigoal_satisfied}
+      false -> {:error, "Multigoal not satisfied in #{condition_type}"}
+    end
+  end
+end
 ```
 
 ## Type Specifications

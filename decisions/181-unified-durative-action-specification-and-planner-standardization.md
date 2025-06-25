@@ -187,6 +187,90 @@ end
 - ❌ Cannot mix `duration` with `start`/`end`
 - ✅ Missing temporal specification defaults to `duration: "PT0S"` (zero duration floating)
 
+## Temporal Conditions System
+
+### Universal Todo List Support
+
+Temporal conditions (`at_start`, `over_all`, `at_end`) accept **any todo list item type**, not just goals:
+
+```elixir
+%Domain.DurativeAction{
+  name: :collaborative_cooking,
+  duration: {:fixed, 3600},
+  
+  conditions: %{
+    at_start: [
+      # Goals (state conditions) - SIMULTANEOUS achievement required
+      {"available", "chef_1", true},
+      {"temperature", "oven", {:>=, 350}},
+      
+      # Tasks (complex operations)
+      {:preheat_workspace, []},
+      {:gather_team, ["cooking_crew"]},
+      
+      # Actions (direct state changes)
+      {:lock_kitchen_door, []},
+      {:start_timer, ["cooking_session"]},
+      
+      # Multigoals (simultaneous goal sets)
+      [{"clean", "workspace", true}, {"organized", "ingredients", true}]
+    ],
+    
+    over_all: [
+      # Ongoing conditions throughout duration
+      {"coordination", "team", "active"},
+      {"temperature", "oven", {:between, 350, 450}},
+      
+      # Continuous tasks
+      {:monitor_cooking_progress, ["meal_id"]},
+      {:maintain_workspace_cleanliness, []}
+    ],
+    
+    at_end: [
+      # Final state requirements
+      {"quality", "meal", {:>=, 8}},
+      {"cleanup", "kitchen", "complete"},
+      
+      # Completion tasks
+      {:final_quality_check, ["meal_id"]},
+      {:document_cooking_session, ["session_log"]}
+    ]
+  }
+}
+```
+
+### Temporal Condition Semantics
+
+**Critical Distinction:**
+
+- **Multigoal**: `MultiGoal%{goal1, goal2, goal3}` - ALL goals must be true **simultaneously**
+- **Sequential Goal List**: `[goal1, goal2, goal3]` as separate todo items - goals achieved **sequentially**
+
+**Temporal Condition Types:**
+
+- **`at_start`**: All conditions must be satisfied **simultaneously** when action begins
+- **`over_all`**: All conditions must remain true **throughout** the action duration  
+- **`at_end`**: All conditions must be satisfied **simultaneously** when action completes
+
+### Mixed Todo Type Processing
+
+The temporal planner processes different todo types appropriately:
+
+```elixir
+# Goals: Direct state checking
+{"available", "chef_1", true} → AriaState.RelationalState.get_fact(state, "available", "chef_1")
+
+# Tasks: Recursive decomposition and execution
+{:preheat_workspace, []} → Domain.get_task_methods(domain, :preheat_workspace)
+
+# Actions: Direct execution
+{:lock_kitchen_door, []} → Domain.execute_action(domain, state, :lock_kitchen_door, [])
+
+# Multigoals: Simultaneous goal satisfaction
+[{"clean", "workspace", true}, {"organized", "ingredients", true}] → 
+  Domain.resolve_multigoal(domain, state, multigoal)
+```
+
 ## Goal Format Standardization
 
 **ONLY use this format:**

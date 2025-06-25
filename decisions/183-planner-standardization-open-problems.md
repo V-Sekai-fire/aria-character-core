@@ -140,6 +140,77 @@ end
 - `:goal` nodes decompose into subgoals with automatic verification
 - `:multigoal` nodes require explicit domain methods (no automatic fallbacks)
 
+### Temporal Condition Integration
+
+Solution tree supports temporal conditions with mixed todo types:
+
+```elixir
+defmodule AriaEngine.TemporalSolutionTree do
+  def process_temporal_conditions(tree, durative_action, condition_type) do
+    conditions = get_conditions_for_type(durative_action, condition_type)
+    
+    # Process mixed todo types in temporal conditions
+    Enum.reduce_while(conditions, {:ok, tree}, fn condition, {:ok, current_tree} ->
+      case process_temporal_todo_item(condition, current_tree, condition_type) do
+        {:ok, updated_tree} -> {:cont, {:ok, updated_tree}}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+  end
+  
+  defp process_temporal_todo_item(todo_item, tree, condition_type) do
+    case todo_item do
+      # Goals: Direct state validation
+      {predicate, subject, value} when is_binary(predicate) ->
+        validate_goal_in_tree(tree, {predicate, subject, value}, condition_type)
+        
+      # Tasks: Add task nodes to solution tree
+      {task_name, args} when is_atom(task_name) ->
+        add_temporal_task_node(tree, {task_name, args}, condition_type)
+        
+      # Actions: Add action nodes to solution tree
+      {action_name, args} when is_atom(action_name) ->
+        add_temporal_action_node(tree, {action_name, args}, condition_type)
+        
+      # Multigoals: Add multigoal nodes to solution tree
+      multigoal when is_list(multigoal) ->
+        add_temporal_multigoal_node(tree, multigoal, condition_type)
+    end
+  end
+  
+  defp add_temporal_task_node(tree, {task_name, args}, condition_type) do
+    node_id = SolutionTree.next_node_id(tree)
+    
+    node_data = %{
+      type: :task,
+      info: {task_name, args},
+      status: :open,
+      temporal_context: condition_type,
+      created_at: System.system_time(:millisecond)
+    }
+    
+    updated_tree = SolutionTree.add_node(tree, node_id, node_data)
+    {:ok, updated_tree}
+  end
+  
+  defp add_temporal_multigoal_node(tree, multigoal, condition_type) do
+    node_id = SolutionTree.next_node_id(tree)
+    
+    node_data = %{
+      type: :multigoal,
+      info: multigoal,
+      status: :open,
+      temporal_context: condition_type,
+      simultaneous_requirement: true,  # All goals must be true simultaneously
+      created_at: System.system_time(:millisecond)
+    }
+    
+    updated_tree = SolutionTree.add_node(tree, node_id, node_data)
+    {:ok, updated_tree}
+  end
+end
+```
+
 ### Corrected `run_lazy_refineahead`
 
 True interleaved planning and execution with action priority:

@@ -1272,6 +1272,452 @@ defmodule MyApp.GoalVerificationExamples do
 end
 ```
 
+## Enhanced Temporal Conditions Examples
+
+### Universal Todo List Support in Temporal Conditions
+
+Temporal conditions now support **any todo list item type**, not just goals:
+
+```elixir
+defmodule MyApp.Domains.AdvancedTemporalDomain do
+  use AriaEngine.Domain
+  
+  # Enhanced durative action with mixed todo types in temporal conditions
+  @action duration: "PT3H",
+          requires_entities: [
+            %{type: "agent", capabilities: [:cooking, :teamwork]},
+            %{type: "agent", capabilities: [:prep_work]},
+            %{type: "oven", capabilities: [:heating, :baking]},
+            %{type: "kitchen", capabilities: [:workspace]}
+          ]
+  def collaborative_cooking_enhanced(state, [meal_id]) do
+    durative_action = %Domain.DurativeAction{
+      name: :collaborative_cooking_enhanced,
+      duration: {:fixed, 10800},  # 3 hours
+      
+      conditions: %{
+        at_start: [
+          # Goals (state conditions) - ALL must be true SIMULTANEOUSLY
+          {"available", "chef_1", true},
+          {"available", "prep_cook", true}, 
+          {"temperature", "oven", {:>=, 350}},
+          
+          # Tasks (complex operations) - executed before action starts
+          {:preheat_workspace, []},
+          {:gather_team, ["cooking_crew"]},
+          {:setup_ingredients, [meal_id]},
+          
+          # Actions (direct state changes) - executed at start
+          {:lock_kitchen_door, []},
+          {:start_timer, ["cooking_session"]},
+          {:activate_ventilation, []},
+          
+          # Multigoals (simultaneous goal sets) - ALL goals must be true together
+          [{"clean", "workspace", true}, {"organized", "ingredients", true}, {"ready", "equipment", true}]
+        ],
+        
+        over_all: [
+          # Ongoing state conditions throughout duration
+          {"coordination", "team", "active"},
+          {"temperature", "oven", {:between, 350, 450}},
+          {"safety", "kitchen", "secure"},
+          
+          # Continuous tasks throughout duration
+          {:monitor_cooking_progress, [meal_id]},
+          {:maintain_workspace_cleanliness, []},
+          {:coordinate_team_activities, ["cooking_crew"]},
+          
+          # Ongoing multigoals
+          [{"focused", "chef_1", true}, {"focused", "prep_cook", true}]
+        ],
+        
+        at_end: [
+          # Final state requirements
+          {"quality", "meal", {:>=, 8}},
+          {"cleanup", "kitchen", "complete"},
+          {"documentation", "session", "recorded"},
+          
+          # Completion tasks
+          {:final_quality_check, [meal_id]},
+          {:document_cooking_session, ["session_log"]},
+          {:cleanup_workspace, []},
+          
+          # Final multigoals
+          [{"satisfied", "chef_1", true}, {"satisfied", "prep_cook", true}, {"ready", "kitchen", "next_session"}]
+        ]
+      },
+      
+      effects: %{
+        at_start: [
+          {"status", "chef_1", "cooking"},
+          {"status", "prep_cook", "assisting"},
+          {"status", "oven", "in_use"},
+          {"session", "cooking", "active"}
+        ],
+        over_time: [
+          {"experience", "team", {:increase, 1}},
+          {"kitchen_heat", "environment", {:increase, 2}},
+          {"progress", meal_id, {:increase, 0.33}}  # 33% per hour
+        ],
+        at_end: [
+          {"status", "meal", "ready"},
+          {"status", "chef_1", "available"},
+          {"status", "prep_cook", "available"},
+          {"status", "oven", "available"},
+          {"session", "cooking", "completed"}
+        ]
+      },
+      
+      action_fn: &collaborative_cooking_enhanced_implementation/2
+    }
+    
+    Domain.execute_durative_action(state, durative_action)
+  end
+  
+  # Task methods for temporal conditions
+  @task_method
+  def preheat_workspace(state, []) do
+    {:ok, [
+      {:set_temperature, ["workspace", 22]},
+      {:activate_lighting, ["workspace"]},
+      {:verify_workspace_ready, []}
+    ]}
+  end
+  
+  @task_method
+  def setup_ingredients(state, [meal_id]) do
+    {:ok, [
+      {:gather_ingredients, [meal_id]},
+      {:organize_ingredients, [meal_id]},
+      {:verify_ingredient_quality, [meal_id]}
+    ]}
+  end
+  
+  @task_method
+  def monitor_cooking_progress(state, [meal_id]) do
+    {:ok, [
+      {:check_temperature, [meal_id]},
+      {:adjust_settings, [meal_id]},
+      {:log_progress, [meal_id]}
+    ]}
+  end
+  
+  # Actions for temporal conditions
+  @action duration: "PT5M",
+          requires_entities: [%{type: "kitchen", capabilities: [:security]}]
+  def lock_kitchen_door(state, []) do
+    state |> AriaState.RelationalState.set_fact("security", "kitchen_door", "locked")
+  end
+  
+  @action duration: "PT2M",
+          requires_entities: [%{type: "timer", capabilities: [:timing]}]
+  def start_timer(state, [session_name]) do
+    state 
+    |> AriaState.RelationalState.set_fact("timer", session_name, "active")
+    |> AriaState.RelationalState.set_fact("start_time", session_name, DateTime.utc_now())
+  end
+  
+  @action duration: "PT3M",
+          requires_entities: [%{type: "ventilation", capabilities: [:air_circulation]}]
+  def activate_ventilation(state, []) do
+    state |> AriaState.RelationalState.set_fact("ventilation", "kitchen", "active")
+  end
+end
+```
+
+### Temporal Condition Semantics Examples
+
+**Critical Distinction Demonstrated:**
+
+```elixir
+# MULTIGOAL in temporal conditions - ALL goals must be true SIMULTANEOUSLY
+at_start: [
+  [{"clean", "workspace", true}, {"organized", "ingredients", true}, {"ready", "equipment", true}]
+  # ↑ This is ONE multigoal - all three conditions must be satisfied at the same moment
+]
+
+# SEQUENTIAL GOAL LIST in temporal conditions - goals processed one after another
+at_start: [
+  {"clean", "workspace", true},      # Goal 1: Check if workspace is clean
+  {"organized", "ingredients", true}, # Goal 2: Check if ingredients are organized  
+  {"ready", "equipment", true}       # Goal 3: Check if equipment is ready
+  # ↑ These are THREE separate goals - checked/achieved sequentially
+]
+```
+
+### Mixed Todo Type Processing Examples
+
+```elixir
+defmodule MyApp.TemporalProcessingExamples do
+  
+  # Example of how temporal planner processes different todo types
+  def demonstrate_temporal_processing(state, domain) do
+    # Sample temporal conditions with mixed types
+    temporal_conditions = [
+      # Goal: Direct state checking
+      {"available", "chef_1", true},
+      
+      # Task: Recursive decomposition and execution
+      {:preheat_workspace, []},
+      
+      # Action: Direct execution
+      {:lock_kitchen_door, []},
+      
+      # Multigoal: Simultaneous goal satisfaction
+      [{"clean", "workspace", true}, {"organized", "ingredients", true}]
+    ]
+    
+    # Process each condition type appropriately
+    Enum.reduce_while(temporal_conditions, {:ok, state}, fn condition, {:ok, current_state} ->
+      case process_temporal_condition(condition, current_state, domain, "at_start") do
+        {:ok, new_state} -> {:cont, {:ok, new_state}}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+  end
+  
+  defp process_temporal_condition(condition, state, domain, condition_type) do
+    case condition do
+      # Goal processing: Direct state validation
+      {predicate, subject, value} when is_binary(predicate) and is_binary(subject) ->
+        current_value = AriaState.RelationalState.get_fact(state, predicate, subject)
+        
+        case validate_goal_condition(current_value, value, condition_type) do
+          {:ok, :satisfied} -> 
+            Logger.debug("Goal satisfied: #{predicate}(#{subject}) = #{value}")
+            {:ok, state}
+          {:ok, :not_satisfied} -> 
+            {:error, "Goal not satisfied: #{predicate}(#{subject}) ≠ #{value}"}
+          {:error, reason} -> 
+            {:error, "Goal validation failed: #{reason}"}
+        end
+        
+      # Task processing: Decomposition and execution
+      {task_name, args} when is_atom(task_name) and is_list(args) ->
+        case Domain.get_task_methods(domain, task_name) do
+          [] -> {:error, "No methods available for task #{task_name}"}
+          methods -> 
+            case execute_task_for_temporal_condition(methods, state, args, condition_type) do
+              {:ok, new_state} -> 
+                Logger.debug("Task completed: #{task_name}")
+                {:ok, new_state}
+              {:error, reason} -> 
+                {:error, "Task failed: #{task_name} - #{reason}"}
+            end
+        end
+        
+      # Action processing: Direct execution
+      {action_name, args} when is_atom(action_name) and is_list(args) ->
+        case Domain.execute_action(domain, state, action_name, args) do
+          {:ok, new_state} -> 
+            Logger.debug("Action executed: #{action_name}")
+            {:ok, new_state}
+          {:error, reason} -> 
+            {:error, "Action failed: #{action_name} - #{reason}"}
+        end
+        
+      # Multigoal processing: Simultaneous goal satisfaction
+      multigoal when is_list(multigoal) ->
+        case validate_multigoal_condition(multigoal, state, condition_type) do
+          {:ok, :all_satisfied} -> 
+            Logger.debug("Multigoal satisfied: #{length(multigoal)} goals")
+            {:ok, state}
+          {:ok, :not_all_satisfied} -> 
+            {:error, "Multigoal not satisfied: some goals unmet"}
+          {:error, reason} -> 
+            {:error, "Multigoal validation failed: #{reason}"}
+        end
+        
+      invalid ->
+        {:error, "Invalid temporal condition: #{inspect(invalid)}"}
+    end
+  end
+  
+  defp validate_goal_condition(current_value, expected_value, condition_type) do
+    case condition_type do
+      "at_start" -> check_immediate_satisfaction(current_value, expected_value)
+      "over_all" -> check_continuous_satisfaction(current_value, expected_value)
+      "at_end" -> check_final_satisfaction(current_value, expected_value)
+    end
+  end
+  
+  defp validate_multigoal_condition(goals, state, condition_type) do
+    # All goals must be satisfied simultaneously
+    results = Enum.map(goals, fn {predicate, subject, value} ->
+      current_value = AriaState.RelationalState.get_fact(state, predicate, subject)
+      validate_goal_condition(current_value, value, condition_type)
+    end)
+    
+    satisfied_count = Enum.count(results, fn result -> 
+      match?({:ok, :satisfied}, result) 
+    end)
+    
+    case satisfied_count do
+      count when count == length(goals) -> {:ok, :all_satisfied}
+      _ -> {:ok, :not_all_satisfied}
+    end
+  end
+  
+  defp check_immediate_satisfaction(current, expected) do
+    if current == expected do
+      {:ok, :satisfied}
+    else
+      {:ok, :not_satisfied}
+    end
+  end
+  
+  defp check_continuous_satisfaction(current, expected) do
+    # For over_all conditions, may need more complex validation
+    case expected do
+      {:>=, min_value} when is_number(current) and current >= min_value -> {:ok, :satisfied}
+      {:between, min_val, max_val} when is_number(current) and current >= min_val and current <= max_val -> {:ok, :satisfied}
+      ^current -> {:ok, :satisfied}
+      _ -> {:ok, :not_satisfied}
+    end
+  end
+  
+  defp check_final_satisfaction(current, expected) do
+    # Similar to immediate satisfaction but may have different semantics
+    check_immediate_satisfaction(current, expected)
+  end
+end
+```
+
+### Real-World Temporal Workflow Example
+
+```elixir
+defmodule MyApp.Domains.RestaurantDomain do
+  use AriaEngine.Domain
+  
+  # Complex restaurant service with temporal conditions
+  @action duration: "PT4H",
+          requires_entities: [
+            %{type: "head_chef", capabilities: [:cooking, :supervision]},
+            %{type: "sous_chef", capabilities: [:prep_work, :cooking]},
+            %{type: "server", capabilities: [:service, :communication]},
+            %{type: "kitchen", capabilities: [:workspace, :equipment]},
+            %{type: "dining_room", capabilities: [:service_area]}
+          ]
+  def dinner_service(state, [service_date]) do
+    durative_action = %Domain.DurativeAction{
+      name: :dinner_service,
+      duration: {:fixed, 14400},  # 4 hours
+      
+      conditions: %{
+        at_start: [
+          # Staff readiness goals
+          {"available", "head_chef", true},
+          {"available", "sous_chef", true},
+          {"available", "server", true},
+          
+          # Preparation tasks
+          {:setup_kitchen, [service_date]},
+          {:prepare_dining_room, [service_date]},
+          {:brief_staff, [service_date]},
+          
+          # System actions
+          {:activate_pos_system, [service_date]},
+          {:start_service_timer, [service_date]},
+          
+          # Readiness multigoal - ALL must be true simultaneously
+          [{"clean", "kitchen", true}, {"stocked", "bar", true}, {"ready", "dining_room", true}]
+        ],
+        
+        over_all: [
+          # Continuous service conditions
+          {"service_quality", "restaurant", {:>=, 8}},
+          {"coordination", "staff", "excellent"},
+          
+          # Ongoing monitoring tasks
+          {:monitor_service_quality, [service_date]},
+          {:coordinate_kitchen_dining, []},
+          {:manage_reservations, [service_date]},
+          
+          # Staff performance multigoal
+          [{"performance", "head_chef", {:>=, 8}}, {"performance", "sous_chef", {:>=, 7}}, {"performance", "server", {:>=, 8}}]
+        ],
+        
+        at_end: [
+          # Service completion goals
+          {"all_orders", "completed", true},
+          {"customer_satisfaction", "average", {:>=, 9}},
+          {"revenue_target", service_date, "met"},
+          
+          # Closing tasks
+          {:close_kitchen, [service_date]},
+          {:clean_dining_room, [service_date]},
+          {:reconcile_pos, [service_date]},
+          {:staff_debrief, [service_date]},
+          
+          # Final readiness multigoal
+          [{"clean", "kitchen", true}, {"secured", "restaurant", true}, {"documented", "service", true}]
+        ]
+      },
+      
+      effects: %{
+        at_start: [
+          {"status", "restaurant", "service_active"},
+          {"shift", "head_chef", "dinner_service"},
+          {"shift", "sous_chef", "dinner_service"},
+          {"shift", "server", "dinner_service"}
+        ],
+        over_time: [
+          {"revenue", service_date, {:increase, 125}},  # $125 per hour average
+          {"experience", "staff", {:increase, 0.25}},   # Experience gain
+          {"customer_count", service_date, {:increase, 8}}  # 8 customers per hour
+        ],
+        at_end: [
+          {"status", "restaurant", "closed"},
+          {"shift", "head_chef", "completed"},
+          {"shift", "sous_chef", "completed"},
+          {"shift", "server", "completed"},
+          {"daily_revenue", service_date, "recorded"}
+        ]
+      },
+      
+      action_fn: &dinner_service_implementation/2
+    }
+    
+    Domain.execute_durative_action(state, durative_action)
+  end
+  
+  # Supporting task methods for temporal conditions
+  @task_method
+  def setup_kitchen(state, [service_date]) do
+    {:ok, [
+      {:preheat_ovens, []},
+      {:prep_stations, [service_date]},
+      {:stock_ingredients, [service_date]},
+      {:sanitize_equipment, []},
+      {:verify_kitchen_ready, []}
+    ]}
+  end
+  
+  @task_method
+  def monitor_service_quality(state, [service_date]) do
+    {:ok, [
+      {:check_order_times, []},
+      {:assess_customer_feedback, []},
+      {:monitor_staff_performance, []},
+      {:adjust_service_pace, []}
+    ]}
+  end
+  
+  @task_method
+  def close_kitchen(state, [service_date]) do
+    {:ok, [
+      {:turn_off_equipment, []},
+      {:clean_stations, []},
+      {:store_ingredients, []},
+      {:document_inventory, [service_date]},
+      {:secure_kitchen, []}
+    ]}
+  end
+end
+```
+
+This enhanced temporal conditions system demonstrates the full power of supporting any todo list item type in temporal constraints, making the planning system significantly more expressive and capable of handling complex real-world scenarios.
+
 ## Implementation Architecture
 
 ### Core System Integration
