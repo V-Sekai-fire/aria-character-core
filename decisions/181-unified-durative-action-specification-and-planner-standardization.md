@@ -1,4 +1,4 @@
-# ADR-181: Core Specification - Unified Durative Action Specification
+# ADR-181: Planner Specification - Unified Durative Action Specification
 
 **Status:** Active  
 **Date:** 2025-06-22  
