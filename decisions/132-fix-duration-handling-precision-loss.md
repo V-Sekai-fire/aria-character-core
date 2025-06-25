@@ -233,6 +233,7 @@ end
 Duration handling integrates with solution tree for temporal constraint validation:
 
 ### Duration Validation During Node Refinement
+
 ```elixir
 defp validate_action_node_duration(tree, node_id) do
   node = SolutionTree.get_node(tree, node_id)
@@ -250,6 +251,7 @@ end
 ```
 
 ### Precision Preservation in Tree Operations
+
 - **Duration calculations maintain precision** throughout tree operations
 - **Temporal constraint checking** preserves exact duration values
 - **No floating-point precision loss** in solution tree duration tracking
@@ -278,6 +280,7 @@ end
 ```
 
 ### Integration with Temporal Constraint System
+
 ```elixir
 defp validate_temporal_constraints(tree, node_id, duration) do
   node = SolutionTree.get_node(tree, node_id)

@@ -24,6 +24,7 @@ The original ARC Prize planning was premature due to hybrid planner being non-fu
 2. **ADR-172-175**: Execute ARC Prize work with reliable foundation
 
 **Timeline Impact:**
+
 - Original: 2 weeks ARC work
 - Revised: 2 weeks restoration + 2 weeks ARC work
 - Total: 4 weeks with proper prerequisites

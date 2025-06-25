@@ -12,12 +12,14 @@ The `aria_temporal_planner` app currently contains MiniZinc-based STN solving fu
 ### Current State
 
 **In aria_temporal_planner:**
+
 - `Timeline.Internal.STN.MiniZincSolver` module
 - Calls `Executor.exec("stn_temporal", template_vars: template_vars)`
 - Integrated into the main STN module via delegation
 - Uses `AriaEngine.MiniZinc.Executor` from aria_engine_core
 
 **In aria_minizinc_stn:**
+
 - `AriaMinizincStn` module with clean public API
 - Same MiniZinc template (`stn_temporal.mzn.eex`)
 - Uses `AriaMinizincExecutor.exec()` directly
@@ -37,20 +39,24 @@ Extract the MiniZinc STN solving functionality from `aria_temporal_planner` and 
 ## Implementation Plan
 
 ### Phase 1: Update Dependencies
+
 - [x] Add `aria_minizinc_stn` dependency to `aria_temporal_planner/mix.exs`
 - [x] Remove direct `AriaEngine.MiniZinc.Executor` usage from temporal planner
 
 ### Phase 2: Replace MiniZincSolver Module
+
 - [x] Update `Timeline.Internal.STN.MiniZincSolver` to delegate to `AriaMinizincStn`
 - [x] Maintain existing interface for backward compatibility
 - [x] Update error handling to match new delegation pattern
 
 ### Phase 3: Clean Up and Test
+
 - [x] Remove duplicate constraint conversion logic
 - [x] Update tests to verify delegation works correctly
 - [x] Ensure all existing functionality is preserved
 
 ### Phase 4: Documentation
+
 - [x] Update module documentation to reflect delegation
 - [x] Document the architectural change in relevant ADRs
 

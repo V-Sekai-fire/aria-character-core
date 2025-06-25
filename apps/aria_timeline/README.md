@@ -16,24 +16,28 @@ AriaTimeline provides comprehensive timeline functionality including:
 ## Features
 
 ### Core Timeline Operations
+
 - Interval creation and management with DateTime support
 - Timeline composition, intersection, and union operations
 - Temporal constraint solving using STN algorithms
 - Bridge-based timeline segmentation
 
 ### Agent/Entity Management
+
 - Clear semantic distinction between agents and entities
 - Capability management and state transitions
 - Property management and ownership tracking
 - Dynamic agent/entity role transitions
 
 ### Temporal Relations
+
 - Complete Allen's interval algebra implementation
 - Language-neutral relation codes for internationalization
 - Automatic temporal constraint generation
 - Contract violation prevention for STN solving
 
 ### Performance Features
+
 - Level of Detail (LOD) management for scalability
 - Parallel processing support for large timelines
 - Automatic rescaling and unit conversion

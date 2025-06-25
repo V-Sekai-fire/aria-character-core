@@ -22,6 +22,7 @@ Refactor the MiniZinc constraint solving system into a modular architecture with
 ## Implementation Plan
 
 ### Phase 1: Foundation Infrastructure ✅ COMPLETE
+
 - [x] Create `aria_minizinc_executor` app
 - [x] Extract Executor, ExecutorBehaviour, Application modules
 - [x] Move template rendering logic and EEx processing
@@ -31,6 +32,7 @@ Refactor the MiniZinc constraint solving system into a modular architecture with
 - [x] Create comprehensive test suite
 
 ### Phase 2: Domain-Specific Apps
+
 - [x] Create `aria_minizinc_multiply` app
   - [x] Extract multiply functionality and templates
   - [x] ~~Implement dual solver strategy (MiniZinc + Fixpoint fallback)~~ **TOMBSTONED**
@@ -48,6 +50,7 @@ Refactor the MiniZinc constraint solving system into a modular architecture with
   - [x] No separate app needed - handled by aria_minizinc_stn
 
 ### Phase 2.5: Fixpoint Fallback Tombstoning ✅ COMPLETE
+
 - [x] Remove all Fixpoint fallback code from domain apps
 - [x] Update APIs to MiniZinc-only strategy
 - [x] Clean up dependencies (remove `:fixpoint` from mix.exs files)
@@ -56,6 +59,7 @@ Refactor the MiniZinc constraint solving system into a modular architecture with
 - [x] Verify all domain app tests pass with MiniZinc-only strategy
 
 ### Phase 3: Integration and Cleanup ✅ COMPLETE
+
 - [x] Update all consumers to use specific domain apps (no external consumers found)
 - [x] Remove original `aria_minizinc` app
 - [x] Update umbrella dependencies (domain apps are standalone)
@@ -94,6 +98,7 @@ end
 ```
 
 **Architectural Decision**: All fallback mechanisms have been tombstoned in favor of:
+
 - **Simplified APIs**: Direct MiniZinc execution without solver selection complexity
 - **Fail-fast behavior**: Clear error reporting when MiniZinc is unavailable
 - **Consistent architecture**: All domain apps follow the same MiniZinc-only pattern
@@ -124,6 +129,7 @@ end
 ## Change Log
 
 ### June 24, 2025
+
 - **TOMBSTONED**: Fixpoint fallback strategy removed from all domain apps
 - **Architectural Decision**: Converted to MiniZinc-only strategy for simplified, consistent behavior
 - **Rationale**: Fixpoint CP solver implementations were incomplete/broken, causing compilation issues

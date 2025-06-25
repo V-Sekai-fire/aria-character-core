@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Test script for bridge conversion functionality
 # Run with: mix run test_bridge_conversion.exs
 

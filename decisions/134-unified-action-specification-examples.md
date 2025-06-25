@@ -1,11 +1,13 @@
 # ADR 134: Unified Action Specification Examples
 
 ## Status
+
 **Completed** (June 25, 2025) - Final module-based domain pattern with IPyHOP compatibility
 
 ## Context
 
 Provides the definitive, corrected module-based domain specification pattern that integrates:
+
 - IPyHOP-compatible features (Solution Tree, Commands, Blacklist)
 - Pure GTPyhop multigoal philosophy (no automatic fallbacks)
 - AriaEngine conventions (proper naming, capability system)
@@ -206,6 +208,7 @@ end
 ### ✅ Complete IPyHOP Compatibility
 
 **Solution Tree with proper node types:**
+
 - `:task` - Decompose into subtasks/actions
 - `:action` - Execute immediately (highest priority)
 - `:goal` - Decompose into subgoals
@@ -214,11 +217,13 @@ end
 - `:verify_multigoal` - Verify multigoal achievement
 
 **Corrected `run_lazy_refineahead` with interleaved planning/execution:**
+
 - True interleaved planning and execution (no separate planning phase)
 - Action nodes execute immediately when selected
 - Proper backtracking on failure with state restoration
 
 **Action priority over task decomposition in node selection:**
+
 ```elixir
 defp find_next_open_node_with_action_priority(tree, parent_node_id) do
   open_nodes = get_open_successor_nodes(tree, parent_node_id)
@@ -237,27 +242,32 @@ end
 ```
 
 **Replan/Backtracking system with method alternatives:**
+
 - IPyHOP-style failure recovery
 - State restoration at backtrack points
 - Alternative method exploration
 
 **Blacklist system for failed actions:**
+
 - Failed actions get blacklisted automatically
 - Integration with solution tree
 - Prevents repeated failures
 
 **Goal verification tasks:**
+
 - Automatic verification after goal methods
 - `:verify_goal` and `:verify_multigoal` node types
 
 ### ✅ Pure GTPyhop Multigoal Philosophy
 
 **NO automatic fallbacks for multigoals:**
+
 - Domain authors must explicitly define `@multigoal_method` if multigoals are used
 - Planning fails if multigoals are encountered without domain methods
 - `split_multigoal` and MinizinC available as explicit tools for domain authors
 
 **Example of explicit multigoal handling:**
+
 ```elixir
 # This will FAIL if no @multigoal_method defined:
 multigoal = [
@@ -277,6 +287,7 @@ end
 ### ✅ AriaEngine Integration
 
 **Uses existing capability system (no rigid relations needed):**
+
 ```elixir
 # CORRECT: Use capability system
 @action requires_entities: [
@@ -290,16 +301,19 @@ end
 ```
 
 **Proper Elixir naming conventions:**
+
 - `cook_meal_command/2` instead of `c_cook_meal/2`
 - `_command` suffix for execution-time behavior
 - Standard Elixir function naming throughout
 
 **Temporal constraints and mutual exclusion:**
+
 - Integration with existing temporal constraint system
 - Mutual exclusion enforcement
 - Duration validation
 
 **StateV2 compatibility throughout:**
+
 - All state operations use StateV2
 - Subject-predicate-value fact structure
 - Temporal state queries supported
@@ -307,6 +321,7 @@ end
 ### 🪦 Tombstoned Features
 
 **Rigid Relations (redundant with capability system):**
+
 ```elixir
 # DON'T USE: Rigid relations (redundant)
 @rigid_relations %{
@@ -321,6 +336,7 @@ end
 ```
 
 **Automatic multigoal fallbacks (violates GTPyhop philosophy):**
+
 - No automatic `split_multigoal` when domain methods fail
 - No automatic MinizinC optimization without explicit domain choice
 - Domain authors must explicitly handle all multigoal scenarios
@@ -328,6 +344,7 @@ end
 ## Usage Examples
 
 ### Planning with Solution Tree
+
 ```elixir
 domain = MyApp.Domains.CookingDomain.create_domain()
 
@@ -347,6 +364,7 @@ end
 ```
 
 ### Commands vs Actions
+
 ```elixir
 # Planning-time: Actions assume success for planning purposes
 {:ok, plan} = AriaEngine.plan(domain, state, [{:cook_meal, ["pasta"]}])
@@ -361,6 +379,7 @@ end
 ```
 
 ### Multigoal Handling (Pure GTPyhop Style)
+
 ```elixir
 # Domain WITHOUT multigoal methods - planning FAILS
 simple_domain = MyApp.Domains.SimpleCookingDomain.create_domain()
@@ -387,6 +406,7 @@ end
 ```
 
 ### Capability-Based Entity Validation
+
 ```elixir
 # Entities are validated automatically based on capabilities
 @action requires_entities: [
@@ -410,6 +430,7 @@ end
 ```
 
 ### Temporal Conditions/Effects Examples
+
 ```elixir
 # ALREADY IMPLEMENTED: Temporal conditions/effects using Domain.DurativeAction
 defmodule MyApp.Domains.AdvancedCookingDomain do
@@ -570,6 +591,7 @@ end
 ```
 
 ### Execution Context Examples with Performance Monitoring
+
 ```elixir
 # ALREADY IMPLEMENTED: Execution context tracking with LazyExecutionStrategy
 defmodule MyApp.ExecutionExamples do
@@ -723,6 +745,7 @@ end
 ```
 
 ### Goal Verification Examples using Domain.Utils
+
 ```elixir
 # ALREADY IMPLEMENTED: Goal verification using Domain.Utils
 defmodule MyApp.GoalVerificationExamples do
@@ -898,6 +921,7 @@ end
 ### Core System Integration
 
 **Solution Tree Structure:**
+
 ```elixir
 defmodule AriaEngine.SolutionTree do
   defstruct [
@@ -914,6 +938,7 @@ end
 ```
 
 **Corrected `run_lazy_refineahead` Implementation:**
+
 ```elixir
 defmodule AriaEngine.LazyRefineahead do
   def run_lazy_refineahead(domain, initial_state, todo_list, opts \\ []) do
@@ -946,6 +971,7 @@ end
 ```
 
 **Multigoal Resolution (Pure GTPyhop Style):**
+
 ```elixir
 defmodule AriaEngine.MultigoalResolver do
   def resolve_multigoal(domain, state, multigoal) do
@@ -966,6 +992,7 @@ end
 ## Migration from Previous Patterns
 
 ### From Legacy TimelineGraph Pattern
+
 ```elixir
 # BEFORE: Complex timeline graph setup
 timeline_graph = TimelineGraph.new()
@@ -982,6 +1009,7 @@ end
 ```
 
 ### From Multiple Action Definition Patterns
+
 ```elixir
 # BEFORE: Inconsistent patterns
 Domain.add_action(:cook, &cook/2)  # No metadata
@@ -995,6 +1023,7 @@ end
 ```
 
 ### From Automatic Multigoal Fallbacks
+
 ```elixir
 # BEFORE: Automatic fallbacks (violates GTPyhop)
 def resolve_multigoal(domain, state, multigoal) do

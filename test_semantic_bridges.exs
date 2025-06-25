@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Test script for semantic bridges functionality
 # Run with: elixir test_semantic_bridges.exs
 

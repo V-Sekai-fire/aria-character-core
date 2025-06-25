@@ -10,6 +10,7 @@
 The hybrid planner is currently in a non-functional state that blocks ARC Prize development:
 
 **Critical Issues Identified:**
+
 - **Zero test coverage**: All tests disabled (`.disabled` extensions)
 - **Compilation warnings**: Type violations and unused variables in `lazy_execution.ex`
 - **Missing ADR-133 standardization**: Legacy method registration patterns still in use
@@ -26,6 +27,7 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 Implement complete hybrid planner restoration using comprehensive mocking strategy to isolate external dependencies and interfaces, enabling focused testing and development in two phases with strict scope limits before any ARC Prize work begins.
 
 **Core Strategy: Mock-First Development**
+
 - Mock all external interfaces (aria_engine_core, aria_temporal_planner, aria_scheduler)
 - Create test doubles for complex dependencies (STN solver, MiniZinc integration)
 - Isolate hybrid planner logic from external system complexity
@@ -36,6 +38,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 ### Phase 1: Mock Infrastructure and Core Restoration (Week 1: June 24-30)
 
 **Day 1-2: Mock Infrastructure Setup**
+
 - [x] Add `Mox` library to `mix.exs` dependencies and run `mix deps.get`
   - ✅ Completed in commit 872632d: "Add mox mocking dependency for test environments in multiple mix.exs files"
 - [ ] Create `test/support/mocks/` directory structure
@@ -47,6 +50,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 - [ ] Document mock interfaces and expected behaviors
 
 **Day 3-4: Compilation Stability with Mocked Dependencies**
+
 - [ ] Fix type violation in `lazy_execution.ex:66` using mocked interfaces
 - [ ] Replace direct dependency calls with mockable interfaces
 - [ ] Fix unused variable warnings across all modules
@@ -57,6 +61,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 - [ ] Document all compilation fixes and mock integration rationale
 
 **Day 5-7: Test Suite Restoration with Mocks**
+
 - [ ] Re-enable `test/planner_filter_test.exs.disabled` with mocked dependencies
   - 🔄 Current status: Test file still disabled, ready for mock integration
 - [ ] Re-enable `test/hybrid_planner/strategies/default/stn_temporal_strategy_test.exs.disabled` with STN mocks
@@ -73,6 +78,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 - [ ] Document core planning workflow with mock examples
 
 **Phase 1 Success Criteria:**
+
 - ✅ Comprehensive mock infrastructure for all external dependencies
 - ✅ Clean compilation with `mix compile --warnings-as-errors` using mocked interfaces
 - ✅ Full test suite passing with `mix test` using controlled mock scenarios
@@ -83,6 +89,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 ### Phase 2: ADR-133 Standardization with Mock Validation (Week 2: July 1-8)
 
 **Day 8-10: Method Registration Unification with Mock Testing**
+
 - [ ] Implement `Domain.add_method/4` with options map pattern
 - [ ] Add deprecation warnings for `add_task_method/3-4`, `add_unigoal_method/3-4`
 - [ ] Update existing domain registrations to new pattern
@@ -92,6 +99,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 - [ ] Document migration guide for existing domains with mock examples
 
 **Day 11-12: Module-Based Domain Pattern with Mock Integration**
+
 - [ ] Implement `use AriaEngine.Domain` macro system with mockable interfaces
 - [ ] Add `@action`, `@unigoal_method`, `@task_method` attribute support
 - [ ] Generate `create_domain/0` function automatically with dependency injection
@@ -100,6 +108,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 - [ ] Validate macro-generated code works with mocked external systems
 
 **Day 13-14: Error Handling Standardization and Mock Response Patterns**
+
 - [ ] Replace all `false` returns with `{:error, reason}` tuples
 - [ ] Update backtracker logic to handle `{:ok, result}` pattern only
 - [ ] Add descriptive error atoms for debugging with mock error scenarios
@@ -109,6 +118,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 - [ ] Validate error handling works correctly with external system failures (mocked)
 
 **Phase 2 Success Criteria:**
+
 - ✅ ADR-133 solutions fully implemented with comprehensive mock validation
 - ✅ Module-based domain creation functional in isolated test environment
 - ✅ Unified method registration working with mocked external interfaces
@@ -119,6 +129,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 ## ARC Prize Integration Readiness
 
 **Pre-ARC Checklist (Must be 100% complete):**
+
 - [ ] `mix compile --warnings-as-errors` passes with mocked interfaces
 - [ ] `mix test` passes with comprehensive mock-based coverage
 - [ ] Core planning workflow: Domain → Goals → Plan → Execution (fully tested with mocks)
@@ -130,6 +141,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 - [ ] Mock-to-real integration strategy documented for ARC Prize phase
 
 **Real Integration Strategy for ARC Phase:**
+
 - [ ] Gradual replacement of mocks with real dependencies
 - [ ] Integration testing with actual aria_engine_core and aria_temporal_planner
 - [ ] Validation that mock contracts match real system interfaces
@@ -138,6 +150,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 ## Risk Mitigation
 
 **High-Risk Areas:**
+
 1. **Test restoration complexity**: Disabled tests may have deep integration issues
 2. **Type system violations**: Current warnings indicate structural problems
 3. **External dependency complexity**: Real system integration introduces unpredictable failures
@@ -145,6 +158,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 5. **Timeline pressure**: 2 weeks is aggressive for complete restoration
 
 **Mitigation Strategies:**
+
 - **Mock-first development**: Eliminate external dependency complexity during restoration
 - **Comprehensive mock coverage**: Create mocks for all external interfaces and edge cases
 - **Daily compilation checks**: Ensure no regressions during development with mocked systems
@@ -158,12 +172,14 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 ## Success Criteria
 
 **Phase 1 Complete:**
+
 - Hybrid planner compiles cleanly and tests pass with comprehensive mocks
 - Basic planning functionality verified end-to-end in isolated environment
 - Mock-based integration contracts established and validated
 - External dependency complexity eliminated from core development
 
 **Phase 2 Complete:**
+
 - ADR-133 standardization fully implemented with mock validation
 - Module-based domain pattern functional in test environment
 - Error handling standardized throughout with mock error scenarios
@@ -171,6 +187,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 - Ready for ARC Prize domain integration with controlled complexity
 
 **Overall Success:**
+
 - Hybrid planner is 100% functional and tested independently of external systems
 - Mock infrastructure provides reliable foundation for ARC Prize development
 - Technical debt eliminated, not accumulated
@@ -194,6 +211,7 @@ The restoration work is **prerequisite** to ARC success, not optional. Attemptin
 ## Consequences
 
 **If Successful:**
+
 - Hybrid planner becomes reliable, testable foundation for ARC Prize work
 - Mock infrastructure enables rapid development and testing cycles
 - ADR-133 standardization enables clean domain integration in controlled environment
@@ -202,6 +220,7 @@ The restoration work is **prerequisite** to ARC success, not optional. Attemptin
 - Real integration path clearly defined and documented
 
 **If Failed:**
+
 - ARC Prize work cannot proceed due to untestable, complex system
 - Technical debt continues to accumulate with external dependency entanglement
 - Planning system remains unreliable and difficult to debug
@@ -212,12 +231,14 @@ This restoration is the critical path to ARC Prize success.
 ## Change Log
 
 ### June 25, 2025
+
 - **Progress Update**: Updated ADR to reflect substantial completion of Phase 1 infrastructure
 - **Completed Tasks**: Marked Mox dependency addition and typespecs as completed based on git commits
 - **Current Status**: AriaHybridPlanner compiles cleanly, ready for test restoration phase
 - **Next Focus**: Mock infrastructure setup and test file re-enabling
 
 ### June 24, 2025 (Historical - from git commits)
+
 - **Commit 872632d**: Added Mox mocking dependency for test environments in multiple mix.exs files
 - **Commit 7605ed7**: Added comprehensive typespecs to AriaHybridPlanner main modules
 - **Foundation**: Established clean compilation and type safety for hybrid planner

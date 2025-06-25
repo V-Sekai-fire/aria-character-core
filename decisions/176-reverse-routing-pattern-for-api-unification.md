@@ -42,6 +42,7 @@ end
 ### Phase 1: Identify Unification Candidates
 
 Look for APIs that:
+
 - Have inconsistent interfaces across similar functionality
 - Would benefit from a unified entry point
 - Have proven, stable existing implementations
@@ -64,6 +65,7 @@ Look for APIs that:
 ## Example: Domain Method Registration
 
 **Before (inconsistent APIs):**
+
 ```elixir
 Domain.add_task_method(domain, "move", &move/2)
 Domain.add_unigoal_method(domain, "location", &achieve_location/2)  
@@ -71,6 +73,7 @@ Domain.add_multigoal_method(domain, &optimize/2)
 ```
 
 **After (unified interface with reverse routing):**
+
 ```elixir
 # New unified interface
 Domain.add_method(domain, "move", &move/2)  # defaults to :task
@@ -82,6 +85,7 @@ Domain.add_task_method(domain, "move", &move/2)  # Still valid
 ```
 
 **Implementation routes through existing APIs:**
+
 ```elixir
 def add_method(domain, name, method_fn, opts \\ %{}) do
   case Map.get(opts, :type, :task) do

@@ -1,6 +1,7 @@
 # ADR 133: Planner Standardization Open Problems
 
 ## Status
+
 **Completed** (June 25, 2025) - All IPyHOP standardization problems resolved
 
 ## Context
@@ -10,9 +11,11 @@ During the unified durative action specification work, several additional standa
 ## Completed IPyHOP Features
 
 ### ✅ Solution Tree Structure
+
 **Status:** Implemented - IPyHOP-compatible node types and operations
 
 **Implementation:**
+
 - IPyHOP-compatible node types: `:task`, `:action`, `:goal`, `:multigoal`, `:verify_goal`, `:verify_multigoal`
 - Proper node status tracking: `:open`, `:closed`, `:failed`
 - **Action priority in node selection** - actions execute before task decomposition
@@ -35,9 +38,11 @@ end
 ```
 
 ### ✅ Corrected `run_lazy_refineahead`
+
 **Status:** Implemented - True interleaved planning and execution
 
 **Key Corrections:**
+
 - **True interleaved planning and execution** - no separate planning phase
 - **Action nodes execute immediately** when selected (highest priority)
 - **Proper backtracking on failure** with state restoration
@@ -71,9 +76,11 @@ end
 ```
 
 ### ✅ Replan/Backtracking System
+
 **Status:** Implemented - IPyHOP-style failure recovery
 
 **Implementation:**
+
 - IPyHOP-style failure recovery with method alternatives
 - State restoration at backtrack points
 - Pruning of failed subtrees
@@ -100,9 +107,11 @@ end
 ```
 
 ### ✅ Blacklist System
+
 **Status:** Implemented - Failed action prevention
 
 **Implementation:**
+
 - **Failed action prevention** - actions that fail get blacklisted
 - **Integration with solution tree** - blacklist checked during node selection
 - **Automatic blacklisting on execution failure**
@@ -148,9 +157,11 @@ end
 ```
 
 ### ✅ Goal Verification Tasks
+
 **Status:** Implemented - Automatic verification after goal methods
 
 **Implementation:**
+
 - **Automatic verification after goal methods** - ensures goals are actually achieved
 - **`:verify_goal` and `:verify_multigoal` node types**
 - **Integration with solution tree structure**
@@ -185,9 +196,11 @@ end
 ```
 
 ### ✅ Pure GTPyhop Multigoal Resolution
+
 **Status:** Implemented - No automatic fallbacks
 
 **Key Implementation:**
+
 - **NO automatic fallbacks** for multigoals
 - **Domain authors must explicitly define** `@multigoal_method` if multigoals are used
 - **Planning fails** if multigoals are encountered without domain methods
@@ -226,11 +239,13 @@ end
 ```
 
 ### ✅ Manual Multigoal Methods (Built-in Utilities Available)
+
 **Status:** Implemented - Built-in `split_multigoal/2` utility available but ❌ TOMBSTONE automatic usage
 
 **Current Implementation Status:** AriaEngine includes built-in multigoal utilities through `Multigoal.split_multigoal/2` but requires explicit domain method registration - no automatic multigoal splitting.
 
 **Available Utilities:**
+
 - **`Multigoal.split_multigoal/2`** - Utility function for basic goal decomposition
 - **MinizinC optimization** - Constraint-based multigoal optimization
 - **Goal dependency analysis** - Analyze goal relationships and conflicts
@@ -319,17 +334,20 @@ end
 ```
 
 **Key Principles:**
+
 - **✅ Built-in utilities available**: `split_multigoal/2`, MinizinC optimization, dependency analysis
 - **❌ TOMBSTONE automatic usage**: No automatic fallbacks - domain authors must explicitly choose
 - **✅ Explicit method registration**: All multigoal handling requires `@multigoal_method` registration
 - **✅ Strategy flexibility**: Domain authors choose appropriate strategy for each multigoal pattern
 
 ### ✅ Blacklisting Infrastructure (Plan.Blacklisting with Solution Tree)
+
 **Status:** Implemented - Comprehensive blacklisting system with solution tree integration
 
 **Current Implementation Status:** AriaEngine includes a sophisticated blacklisting system through Plan.Blacklisting that integrates with the solution tree to prevent repeated failures and enable intelligent backtracking.
 
 **Available Blacklisting Features:**
+
 - **Failed action prevention** - Actions that fail during execution get automatically blacklisted
 - **Solution tree integration** - Blacklist state maintained within solution tree structure
 - **Persistent blacklisting** - Blacklist persists across planning sessions and backtracking
@@ -499,6 +517,7 @@ end
 ```
 
 **Benefits of Blacklisting Infrastructure:**
+
 - **Prevents infinite loops**: Failed actions don't get repeatedly attempted
 - **Intelligent backtracking**: Guides backtracking to points with viable alternatives
 - **Performance optimization**: Avoids wasted computation on known failures
@@ -506,11 +525,13 @@ end
 - **Flexible scoping**: Different blacklist scopes for different planning contexts
 
 ### ✅ Validation Framework (Comprehensive Domain Validation)
+
 **Status:** Implemented - Comprehensive domain validation system with detailed error reporting
 
 **Current Implementation Status:** AriaEngine includes a comprehensive validation framework through Domain.Validator that provides detailed validation for all domain components including actions, methods, metadata, and entity requirements.
 
 **Available Validation Features:**
+
 - **Action metadata validation** - Comprehensive validation of action metadata structure and types
 - **Method signature validation** - Validation of task methods, unigoal methods, and multigoal methods
 - **Entity requirement validation** - Validation of entity types, capabilities, and constraints
@@ -816,6 +837,7 @@ end
 ```
 
 **Benefits of Validation Framework:**
+
 - **Early error detection**: Catches domain definition errors at compile time or domain creation
 - **Detailed error messages**: Provides specific, actionable error messages for developers
 - **Comprehensive coverage**: Validates all aspects of domain definition including metadata, methods, and consistency
@@ -825,11 +847,13 @@ end
 ## 🪦 Tombstoned Features
 
 ### Rigid Relations (Redundant)
+
 **Status:** Tombstoned - Redundant with AriaEngine's existing capability system
 
 The rigid relations pattern from GTPyhop is **redundant** with AriaEngine's existing capability system:
 
 **Rigid Relations (Don't Use):**
+
 ```elixir
 @rigid_relations %{
   types: %{"person" => ["alice", "bob"]},
@@ -840,6 +864,7 @@ def can_cook(person), do: [person] in @rigid_relations.predicates["can_cook"]
 ```
 
 **Capability System (Use This Instead):**
+
 ```elixir
 @action requires_entities: [
   %{type: "agent", capabilities: [:cooking], constraints: %{name: "alice"}}
@@ -854,6 +879,7 @@ end
 ```
 
 **Why Capability System is Superior:**
+
 - **Dynamic validation** - checks current state, not static declarations
 - **Constraint support** - quantity, location, status constraints
 - **Temporal awareness** - entities can gain/lose capabilities over time
@@ -861,14 +887,17 @@ end
 - **Flexibility** - supports complex entity relationships and dependencies
 
 ### Automatic Multigoal Fallbacks (Violates GTPyhop Philosophy)
+
 **Status:** Tombstoned - Violates pure GTPyhop design philosophy
 
 **Removed automatic fallbacks** that violated pure GTPyhop design:
+
 - No automatic `split_multigoal` when domain methods fail
 - No automatic MinizinC optimization without explicit domain choice
 - Domain authors must explicitly handle all multigoal scenarios
 
 **Before (Incorrect - Automatic Fallbacks):**
+
 ```elixir
 def resolve_multigoal(domain, state, multigoal) do
   case try_domain_methods(domain, state, multigoal) do
@@ -880,6 +909,7 @@ end
 ```
 
 **After (Correct - Pure GTPyhop Style):**
+
 ```elixir
 def resolve_multigoal(domain, state, multigoal) do
   case Domain.get_multigoal_methods(domain, multigoal) do
@@ -900,6 +930,7 @@ end
 **Solution:** Module-based domain pattern with `@action`, `@command`, `@task_method`, `@unigoal_method`, `@multigoal_method` attributes
 
 **Implementation:**
+
 ```elixir
 defmodule MyApp.Domains.CookingDomain do
   use AriaEngine.Domain
@@ -931,6 +962,7 @@ end
 **Solution:** Clear hierarchical decomposition with pure GTPyhop multigoal philosophy
 
 **Clear Hierarchy:**
+
 1. **Multigoal methods** → Domain-specific optimization for multiple goals (explicit only)
 2. **Unigoal methods** → Decompose single goal into task todos
 3. **Task methods** → Decompose tasks into subtasks/actions
@@ -941,6 +973,7 @@ end
 **Solution:** Module-first pattern following Elixir conventions
 
 **Benefits:**
+
 - Follows Elixir conventions with modules and attributes
 - Compile-time validation of metadata and function signatures
 - Clear organization with all domain logic in one module
@@ -951,6 +984,7 @@ end
 **Solution:** Standard Elixir tagged tuples with descriptive errors
 
 **Pattern:**
+
 ```elixir
 # Success
 {:ok, result}
@@ -970,6 +1004,7 @@ end
 **Solution:** Unified todo list format with full interchangeability
 
 **Complete Type Specification:**
+
 ```elixir
 @type todo_element :: 
   {action_atom :: atom(), args :: list()} |              # Direct actions
@@ -985,6 +1020,7 @@ end
 **Solution:** Clear migration guidance in ADR-134 with concrete examples
 
 **Migration Strategy:**
+
 - Module-based domains for all new development
 - Clear before/after examples for each pattern
 - Deprecation of legacy patterns with helpful error messages
@@ -994,6 +1030,7 @@ end
 ### Planning-Time Actions vs Execution-Time Commands
 
 **Planning-Time Actions** (assume success for planning purposes):
+
 ```elixir
 @action duration: "PT2H", requires_entities: [...]
 def cook_meal(state, [meal_type]) do
@@ -1003,6 +1040,7 @@ end
 ```
 
 **Execution-Time Commands** (handle real-world failures):
+
 ```elixir
 @command
 def cook_meal_command(state, [meal_type]) do
@@ -1015,7 +1053,9 @@ end
 ```
 
 ### Integration with Blacklist System
+
 When commands fail during execution:
+
 1. **Action gets blacklisted** - prevents repeated attempts
 2. **Backtracking triggered** - finds alternative methods
 3. **Replanning occurs** - explores different approaches

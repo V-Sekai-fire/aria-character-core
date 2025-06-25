@@ -15,16 +15,20 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 ## Implementation Timeline
 
 **Prerequisites (Weeks 1-2: June 24 - July 8):**
+
 - ADR-171: Hybrid Planner Complete Restoration and Standardization
 
 **ARC Sprint (Weeks 3-4: July 8 - July 22):**
+
 - Phase 1: Computational search foundation
 - Phase 2: Hybrid reasoning integration
 
 ## Phase 1: Computational Search Foundation (Week 3: July 8-15)
 
 ### Day 1-2: ARC Data Integration
+
 **Scope:** Minimal viable ARC task loading
+
 - [ ] Create `apps/aria_arc` application
 - [ ] Load ARC training tasks from JSON format
 - [ ] Implement basic grid representation
@@ -32,7 +36,9 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 - [ ] **Implementation Gate:** Must have working task loader before proceeding
 
 ### Day 3-4: Transformation Program Generator
+
 **Scope:** Basic transformation search
+
 - [ ] Implement grid transformation primitives (rotate, flip, translate)
 - [ ] Create transformation program generator
 - [ ] Add basic pattern matching operations
@@ -40,7 +46,9 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 - [ ] **Implementation Gate:** Must generate and apply transformations before proceeding
 
 ### Day 5-7: Search and Evaluation
+
 **Scope:** Brute force search with evaluation
+
 - [ ] Implement transformation program search (1000+ programs per task)
 - [ ] Add grid comparison and scoring
 - [ ] Create evaluation metrics for transformation quality
@@ -48,6 +56,7 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 - [ ] **Phase 1 Success Gate:** Must achieve >1% accuracy on training tasks
 
 **Phase 1 Constraints:**
+
 - **Maximum 2 apps:** `aria_arc` + `aria_hybrid_planner` only
 - **No architectural expansion** without proven necessity
 - **Implementation gates** requiring working code before design changes
@@ -55,7 +64,9 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 ## Phase 2: Hybrid Reasoning Integration (Week 4: July 15-22)
 
 ### Day 8-10: Domain Integration
+
 **Scope:** ARC domain for hybrid planner
+
 - [ ] Create ARC reasoning domain using ADR-133 standardized patterns
 - [ ] Implement ARC-specific actions and methods
 - [ ] Add transformation planning capabilities
@@ -63,7 +74,9 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 - [ ] **Implementation Gate:** Must have working ARC domain before proceeding
 
 ### Day 11-12: Planning Coordination
+
 **Scope:** Hybrid reasoning for ARC tasks
+
 - [ ] Integrate computational search with planning system
 - [ ] Add meta-reasoning for transformation selection
 - [ ] Implement planning-guided search strategies
@@ -71,7 +84,9 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 - [ ] **Implementation Gate:** Must show planning coordination working
 
 ### Day 13-14: Evaluation and Analysis
+
 **Scope:** Final evaluation and decision
+
 - [ ] Run comprehensive evaluation on training set
 - [ ] Measure accuracy improvement from hybrid approach
 - [ ] Document approach strengths and limitations
@@ -81,12 +96,14 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 ## Evidence-Based Scope Constraints
 
 **Strict Limits (Based on Git Commit Analysis):**
+
 - **2 apps maximum:** No expansion beyond `aria_arc` + `aria_hybrid_planner`
 - **Implementation gates:** Working code required before any architectural changes
 - **No feature creep:** Stick to minimal viable implementation
 - **Daily commits:** Prevent analysis paralysis through regular implementation progress
 
 **Timeline Multipliers Applied:**
+
 - **3-5x multiplier** applied to initial estimates based on observed planning-implementation gap
 - **Mandatory implementation gates** to prevent endless architectural discussions
 - **Scope enforcement** to avoid the pattern of 40+ planning commits with minimal code
@@ -94,18 +111,21 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 ## Success Criteria
 
 ### Phase 1 Success (Week 3)
+
 - [ ] ARC task loading functional
 - [ ] Transformation program generation working
 - [ ] Search evaluation achieving >1% accuracy on training tasks
 - [ ] Clean compilation and basic test coverage
 
 ### Phase 2 Success (Week 4)
+
 - [ ] ARC domain integrated with hybrid planner
 - [ ] Planning coordination functional
 - [ ] Hybrid approach showing measurable improvement
 - [ ] Final accuracy measurement for go/no-go decision
 
 ### Overall Success Criteria
+
 - **Technical:** 5%+ accuracy = proceed to full competition
 - **Learning:** <3% accuracy = valuable learning experience, stop there
 - **Process:** Avoid analysis paralysis through implementation gates
@@ -113,11 +133,13 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 ## Risk Mitigation
 
 **High-Risk Areas:**
+
 1. **Analysis paralysis:** Previous pattern of extensive planning with minimal implementation
 2. **Scope creep:** Tendency to expand architecture without proven necessity
 3. **Integration complexity:** Hybrid planner integration may be more complex than expected
 
 **Mitigation Strategies:**
+
 - **Implementation gates:** No architectural work without working code
 - **Scope enforcement:** Strict 2-app limit with no exceptions
 - **Daily commits:** Regular implementation progress tracking
@@ -126,6 +148,7 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 ## Dependencies
 
 **Critical Path:**
+
 1. **ADR-171 completion:** Hybrid planner must be 100% functional
 2. **Phase 1 gates:** Each implementation gate must pass before proceeding
 3. **Phase 2 integration:** Depends on successful Phase 1 completion
@@ -140,12 +163,14 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 ## Monitoring and Tracking
 
 **Daily Tracking:**
+
 - Implementation progress (lines of code, working features)
 - Test coverage and compilation status
 - Accuracy measurements on training tasks
 - Scope adherence (app count, feature creep indicators)
 
 **Weekly Gates:**
+
 - Phase 1: >1% accuracy on training tasks
 - Phase 2: Hybrid approach functional with measurable improvement
 - Final: Go/no-go decision based on accuracy threshold

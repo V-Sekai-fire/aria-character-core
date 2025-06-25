@@ -46,6 +46,7 @@ Hybrid reasoning approach unlike pure neural networks - computational discovery 
 **Critical Dependency:** ADR-171 (Hybrid Planner Complete Restoration and Standardization) must be 100% complete before ARC work begins.
 
 **Timeline:**
+
 - **Weeks 1-2 (June 24 - July 8):** Hybrid planner restoration
 - **Weeks 3-4 (July 8 - July 22):** ARC Prize proof of concept sprint
 

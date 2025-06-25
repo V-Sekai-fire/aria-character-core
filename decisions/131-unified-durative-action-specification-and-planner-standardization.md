@@ -330,6 +330,7 @@ All temporal validation and parsing MUST use Timex instead of Elixir's base Date
 **Current Implementation Status:** AriaEngine already includes comprehensive ISO8601 duration support through AriaEngine.Utils with Timex integration.
 
 **Available Features:**
+
 - **ISO8601 duration parsing and formatting** with Timex integration
 - **Human-readable duration formatting** using ISO8601 strings  
 - **Datetime interval calculations** from start/end timestamps (compatible with ADR 131-134 approach)
@@ -378,6 +379,7 @@ Domain.add_action(:meeting, &meeting/2, %{
 **Current Implementation Status:** AriaEngine includes a sophisticated temporal conditions and effects system through Domain.DurativeAction that provides fine-grained temporal control.
 
 **Available Temporal Points:**
+
 - **`at_start`** - Conditions/effects that apply at the beginning of action execution
 - **`over_all`** - Conditions that must remain true throughout the entire action duration  
 - **`at_end`** - Conditions/effects that apply when the action completes
@@ -461,6 +463,7 @@ Domain.add_action(:meeting, &meeting/2, %{
 ```
 
 **Benefits of Temporal Conditions/Effects:**
+
 - **Realistic action modeling**: Model ongoing requirements and state changes over time
 - **Resource conflict detection**: Detect conflicts during planning phase
 - **Fine-grained temporal reasoning**: Support complex scheduling scenarios
@@ -471,6 +474,7 @@ Domain.add_action(:meeting, &meeting/2, %{
 **Current Implementation Status:** AriaEngine includes a comprehensive execution strategy framework through HybridPlanner.Strategies.Default.LazyExecutionStrategy that provides step-by-step execution with failure handling and performance monitoring.
 
 **Available Execution Capabilities:**
+
 - **Step-by-step execution** with `execute_step/4` (needs alignment with ADR 131-134 iPyHop-style system)
 - **Execution failure handling** with `handle_execution_failure/4`
 - **Execution context tracking** with performance metrics
@@ -642,12 +646,14 @@ end
 ```
 
 **iPyHop Alignment Requirements:**
+
 - **Solution tree integration**: Execute actions as `:action` type nodes with highest priority
 - **Backtracking support**: Handle execution failures by triggering replanning
 - **State consistency**: Maintain proper state transitions during lazy refinement
 - **Method resolution**: Support task methods, unigoal methods, and actions in proper hierarchy
 
 **Benefits of Execution Strategy Framework:**
+
 - **Modular execution**: Clean separation between planning and execution strategies
 - **Failure recovery**: Graceful handling of execution failures with backtracking
 - **Performance monitoring**: Detailed execution statistics and profiling
@@ -948,6 +954,7 @@ Commands provide execution-time behavior with failure handling, distinct from pl
 ### Planning-Time Actions vs Execution-Time Commands
 
 **Planning-Time Actions** (assume success for planning purposes):
+
 ```elixir
 @action duration: "PT2H", 
         requires_entities: [
@@ -964,6 +971,7 @@ end
 ```
 
 **Execution-Time Commands** (handle real-world failures):
+
 ```elixir
 @command
 def cook_meal_command(state, [meal_type]) do
@@ -980,13 +988,16 @@ end
 ```
 
 ### Integration with Blacklist System
+
 When commands fail during execution:
+
 1. **Action gets blacklisted** - prevents repeated attempts
 2. **Backtracking triggered** - finds alternative methods
 3. **Replanning occurs** - explores different approaches
 4. **State restored** - returns to last known good state
 
 ### Command Registration
+
 ```elixir
 # Domain creation with command registration
 def create_domain(opts \\ %{}) do
@@ -1010,6 +1021,7 @@ end
 Durative actions integrate with IPyHOP solution tree as `:action` type nodes with highest execution priority.
 
 ### Node Priority in Solution Tree
+
 ```elixir
 defp find_next_open_node_with_action_priority(tree, parent_node_id) do
   open_nodes = get_open_successor_nodes(tree, parent_node_id)
@@ -1028,6 +1040,7 @@ end
 ```
 
 ### Duration Validation in Solution Tree
+
 - **Temporal constraints validated** during node refinement
 - **Duration conflicts detected** before action execution
 - **Mutual exclusion enforced** at solution tree level
@@ -1049,6 +1062,7 @@ end
 ```
 
 ### Solution Tree Node Types
+
 - `:task` - Decompose into subtasks/actions
 - `:action` - Execute immediately (highest priority)
 - `:goal` - Decompose into subgoals
