@@ -46,7 +46,7 @@ Capabilities serve as simple traits providing flexible composition without inher
 
 ## Unified Action Specification
 
-### Final Clean Model
+### Clean Model
 
 ```elixir
 # Unified entity-based metadata structure
