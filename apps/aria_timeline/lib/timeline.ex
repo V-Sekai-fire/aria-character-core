@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Timeline do
-  @moduledoc "Timeline module with interval-based storage using Path Consistency (PC-2) algorithm\nfor Simple Temporal Network (STN) solving.\n\nAccepts time input in seconds but solves at 1ms tick precision.\nSupports Allen's interval algebra with usability improvements.\nRespects agent vs entity distinction in temporal constraints.\n\n## Time Representation\n- External API: seconds (float/integer)\n- Internal storage/solving: milliseconds (integer)\n- Precision: 1ms ticks as per ADR-006\n\n## Features\n- All 13 Allen interval relations\n- Path Consistency (PC-2) STN solving\n- Agent/entity distinction\n- Fluent API for constraint building\n- Comprehensive edge case handling\n\n## Bridge Conversion in Timeline Operations\n\nWhen chaining timelines using `Timeline.chain/1`, all bridges are automatically\npreserved through a sophisticated conversion process that ensures no temporal\ncoordination points are lost.\n\n### Universal Bridge Conversion\n\n**Every absolute position bridge can be converted to a semantic bridge.** The\nconversion process handles all possible scenarios:\n\n1. **Timeline-relative positioning**: Bridges positioned relative to timeline bounds\n2. **Interval-relative positioning**: Bridges positioned within or adjacent to intervals\n3. **Boundary detection**: 1-second tolerance for precise boundary identification\n4. **Fallback strategy**: `:during` relation as universal fallback for edge cases\n\n### Conversion Algorithm\n\nThe conversion follows this systematic approach:\n\n```\n1. Analyze bridge position relative to timeline bounds\n2. Determine if bridge is:\n   - At timeline start (±1s) → :starts\n   - At timeline end (±1s) → :finishes\n   - Before timeline → :before\n   - After timeline → :after\n   - Within timeline → analyze interval relationships\n3. For bridges within timeline:\n   - Check if within any interval → :during\n   - Check if adjacent to interval boundary → :meets\n   - Default to :during for inter-interval positions\n```\n\n### Semantic Relation Mapping\n\n| Bridge Position | Semantic Relation | Description |\n|----------------|-------------------|-------------|\n| Timeline start (±1s) | `:starts` | Bridge at timeline beginning |\n| Timeline end (±1s) | `:finishes` | Bridge at timeline conclusion |\n| Before timeline | `:before` | Bridge precedes timeline |\n| After timeline | `:after` | Bridge follows timeline |\n| Within interval | `:during` | Bridge during interval execution |\n| At interval boundary | `:meets` | Bridge at interval transition |\n| Between intervals | `:during` | Bridge in inter-interval space |\n\n### Edge Case Handling\n\nThe conversion process handles all edge cases:\n\n- **Empty timelines**: Uses default bounds (current time + 1 hour)\n- **Single intervals**: Positions relative to interval bounds\n- **Overlapping intervals**: Uses earliest start and latest end\n- **Invalid positions**: Graceful fallback to `:during` relation\n- **Boundary precision**: 1-second tolerance for boundary detection\n\n### Preservation Guarantee\n\n**No bridges are ever lost during timeline operations.** The `chain/1` function:\n\n1. Converts all absolute position bridges to semantic bridges\n2. Preserves all existing semantic bridges unchanged\n3. Filters out only unconvertible bridges (none exist in practice)\n4. Maintains bridge metadata and positioning information\n\n### Mathematical Foundation\n\nThe conversion is based on Allen's Interval Algebra, ensuring that temporal\nrelationships maintain their semantic meaning across timeline operations.\nEach converted bridge represents a valid Allen relation that preserves the\noriginal temporal coordination intent.\n\n## Examples\n\n    iex> timeline = Timeline.new()\n    iex> alias Timeline.Interval\n    iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval = Interval.new(start_time, end_time)\n    iex> timeline = Timeline.add_interval(timeline, interval)\n    iex> length(Map.keys(timeline.intervals))\n    1\n\n## References\n\n- ADR-078: Timeline Module PC-2 STN Implementation\n- ADR-079: Timeline Module Implementation Progress\n- ADR-045: Allen's Interval Algebra Temporal Relationships\n- ADR-040: Temporal Constraint Solver Selection\n- ADR-046: Interval Notation Usability\n- ADR-006: Game Engine Real-time Execution (1ms tick requirement)\n"
+  @moduledoc "Timeline module with interval-based storage using Path Consistency (PC-2) algorithm\nfor Simple Temporal Network (STN) solving.\n\nAccepts time input in seconds but solves at 1ms tick precision.\nSupports Allen's interval algebra with usability improvements.\nRespects agent vs entity distinction in temporal constraints.\n\n## Time Representation\n- External API: seconds (float/integer)\n- Internal storage/solving: milliseconds (integer)\n- Precision: 1ms ticks as per ADR-006\n\n## Features\n- All 13 Allen interval relations\n- Path Consistency (PC-2) STN solving\n- Agent/entity distinction\n- Fluent API for constraint building\n- Comprehensive edge case handling\n\n## Bridge Conversion in Timeline Operations\n\nWhen chaining timelines using `Timeline.chain/1`, all bridges are automatically\npreserved through a sophisticated conversion process that ensures no temporal\ncoordination points are lost.\n\n### Universal Bridge Conversion\n\n**Every absolute position bridge can be converted to a semantic bridge.** The\nconversion process handles all possible scenarios:\n\n1. **Timeline-relative positioning**: Bridges positioned relative to timeline bounds\n2. **Interval-relative positioning**: Bridges positioned within or adjacent to intervals\n3. **Boundary detection**: Precision-aware tolerance based on STN configuration\n4. **Fallback strategy**: `:during` relation as universal fallback for edge cases\n\n### Conversion Algorithm\n\nThe conversion follows this systematic approach:\n\n```\n1. Analyze bridge position relative to timeline bounds\n2. Determine if bridge is:\n   - At timeline start (±tolerance) → :starts\n   - At timeline end (±tolerance) → :finishes\n   - Before timeline → :before\n   - After timeline → :after\n   - Within timeline → analyze interval relationships\n3. For bridges within timeline:\n   - Check if within any interval → :during\n   - Check if adjacent to interval boundary → :meets\n   - Default to :during for inter-interval positions\n```\n\n### Precision-Aware Tolerance System\n\nThe boundary detection tolerance is dynamically calculated based on the Timeline's\nSTN configuration, ensuring appropriate precision for different use cases:\n\n**Tolerance Calculation:**\n```\ntolerance_microseconds = base_unit_microseconds * lod_resolution\n```\n\n**Precision Examples:**\n- Ultra-high precision (microsecond, LOD 1): 1 microsecond tolerance\n- High precision (millisecond, LOD 10): 10 millisecond tolerance\n- Medium precision (second, LOD 100): 100 second tolerance\n- Low precision (minute, LOD 1000): 1000 minute tolerance\n- Very-low precision (day, LOD 10000): 10000 day tolerance\n\n### Semantic Relation Mapping\n\n| Bridge Position | Semantic Relation | Description |\n|----------------|-------------------|-------------|\n| Timeline start (±tolerance) | `:starts` | Bridge at timeline beginning |\n| Timeline end (±tolerance) | `:finishes` | Bridge at timeline conclusion |\n| Before timeline | `:before` | Bridge precedes timeline |\n| After timeline | `:after` | Bridge follows timeline |\n| Within interval | `:during` | Bridge during interval execution |\n| At interval boundary | `:meets` | Bridge at interval transition |\n| Between intervals | `:during` | Bridge in inter-interval space |\n\n### Edge Case Handling\n\nThe conversion process handles all edge cases:\n\n- **Empty timelines**: Uses default bounds (current time + 1 hour)\n- **Single intervals**: Positions relative to interval bounds\n- **Overlapping intervals**: Uses earliest start and latest end\n- **Invalid positions**: Graceful fallback to `:during` relation\n- **Boundary precision**: Precision-aware tolerance based on STN configuration\n\n### Preservation Guarantee\n\n**No bridges are ever lost during timeline operations.** The `chain/1` function:\n\n1. Converts all absolute position bridges to semantic bridges\n2. Preserves all existing semantic bridges unchanged\n3. Filters out only unconvertible bridges (none exist in practice)\n4. Maintains bridge metadata and positioning information\n\n### Mathematical Foundation\n\nThe conversion is based on Allen's Interval Algebra, ensuring that temporal\nrelationships maintain their semantic meaning across timeline operations.\nEach converted bridge represents a valid Allen relation that preserves the\noriginal temporal coordination intent.\n\n## Examples\n\n    iex> timeline = Timeline.new()\n    iex> alias Timeline.Interval\n    iex> start_time = DateTime.from_naive!(~N[2025-01-01 10:00:00], \"Etc/UTC\")\n    iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval = Interval.new(start_time, end_time)\n    iex> timeline = Timeline.add_interval(timeline, interval)\n    iex> length(Map.keys(timeline.intervals))\n    1\n\n## References\n\n- ADR-078: Timeline Module PC-2 STN Implementation\n- ADR-079: Timeline Module Implementation Progress\n- ADR-045: Allen's Interval Algebra Temporal Relationships\n- ADR-040: Temporal Constraint Solver Selection\n- ADR-046: Interval Notation Usability\n- ADR-006: Game Engine Real-time Execution (1ms tick requirement)\n"
   alias Timeline.Interval
   alias Timeline.Internal.STN
   alias Timeline.Bridge
@@ -188,10 +188,10 @@ defmodule Timeline do
   For each absolute position bridge (semantic_relation: nil):
 
   1. **Analyze timeline bounds** to determine relative positioning
-  2. **Apply boundary detection** with 1-second tolerance for precision
+  2. **Apply boundary detection** with precision-aware tolerance
   3. **Compute semantic relation** based on position analysis:
-     - Timeline start (±1s) → `:starts`
-     - Timeline end (±1s) → `:finishes`
+     - Timeline start (±tolerance) → `:starts`
+     - Timeline end (±tolerance) → `:finishes`
      - Before timeline → `:before`
      - After timeline → `:after`
      - Within timeline → analyze interval relationships
@@ -203,7 +203,7 @@ defmodule Timeline do
   For bridges positioned within timeline bounds:
 
   - **Within any interval** → `:during` relation
-  - **Adjacent to interval boundary** (±1s) → `:meets` relation
+  - **Adjacent to interval boundary** (±tolerance) → `:meets` relation
   - **Between intervals** → `:during` relation (default)
 
   ## Conversion Guarantee
@@ -213,7 +213,7 @@ defmodule Timeline do
 
   - Empty timelines use default bounds (current time + 1 hour)
   - Invalid positions gracefully fall back to `:during` relation
-  - Boundary detection uses 1-second tolerance for robust positioning
+  - Boundary detection uses precision-aware tolerance based on STN configuration
   - All converted bridges maintain their original temporal intent
 
   ## Examples
@@ -1068,6 +1068,7 @@ defmodule Timeline do
     start_ms = DateTime.to_unix(start_time, :millisecond)
     end_ms = DateTime.to_unix(end_time, :millisecond)
     midpoint_ms = div(start_ms + end_ms, 2)
+
     DateTime.from_unix!(midpoint_ms, :millisecond)
   end
 
@@ -1082,7 +1083,7 @@ defmodule Timeline do
 
   1. **Extract timeline bounds** from intervals to establish reference frame
   2. **Analyze bridge position** relative to timeline start and end
-  3. **Apply boundary detection** with 1-second tolerance for precision
+  3. **Apply boundary detection** with precision-aware tolerance
   4. **Compute semantic relation** using Allen interval relations
   5. **Set reference target** to "timeline" for converted bridges
   6. **Preserve original position** as computed_position field
@@ -1139,16 +1140,16 @@ defmodule Timeline do
   ## Algorithm Steps
 
   1. **Calculate position relative to timeline bounds**
-  2. **Apply boundary detection with 1-second tolerance**
+  2. **Apply boundary detection with precision-aware tolerance**
   3. **Check for timeline-relative positions** (:starts, :finishes, :before, :after)
   4. **Analyze interval relationships** for positions within timeline
   5. **Apply fallback strategy** (:during) for edge cases
 
   ## Boundary Detection
 
-  Uses 1-second tolerance for robust boundary detection:
-  - Timeline start (±1s) → `:starts`
-  - Timeline end (±1s) → `:finishes`
+  Uses precision-aware tolerance for robust boundary detection:
+  - Timeline start (±tolerance) → `:starts`
+  - Timeline end (±tolerance) → `:finishes`
   - Before timeline → `:before`
   - After timeline → `:after`
 
@@ -1156,7 +1157,7 @@ defmodule Timeline do
 
   For positions within timeline bounds:
   - Within any interval → `:during`
-  - Adjacent to interval boundary (±1s) → `:meets`
+  - Adjacent to interval boundary (±tolerance) → `:meets`
   - Between intervals → `:during` (default)
 
   ## Parameters
