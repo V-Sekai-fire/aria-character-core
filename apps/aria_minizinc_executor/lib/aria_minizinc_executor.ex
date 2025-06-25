@@ -33,6 +33,11 @@ defmodule AriaMinizincExecutor do
 
   alias AriaMinizincExecutor.{Executor, TemplateRenderer}
 
+  @type template_vars :: map()
+  @type execution_options :: keyword()
+  @type execution_result :: map()
+  @type error_reason :: atom() | String.t()
+
   @doc """
   Execute a MiniZinc template with the given variables.
 
@@ -45,6 +50,8 @@ defmodule AriaMinizincExecutor do
   - `{:ok, result}` - Successfully executed with solution
   - `{:error, reason}` - Failed to execute or solve
   """
+  @spec exec(String.t(), template_vars(), execution_options()) ::
+          {:ok, execution_result()} | {:error, error_reason()}
   def exec(template_path, template_vars, options \\ []) do
     with {:ok, content} <- TemplateRenderer.render(template_path, template_vars),
          {:ok, result} <- Executor.exec_raw(content, options) do
@@ -65,6 +72,8 @@ defmodule AriaMinizincExecutor do
   - `{:ok, result}` - Successfully executed with solution
   - `{:error, reason}` - Failed to execute or solve
   """
+  @spec exec_raw(String.t(), execution_options()) ::
+          {:ok, execution_result()} | {:error, error_reason()}
   def exec_raw(minizinc_content, options \\ []) do
     Executor.exec_raw(minizinc_content, options)
   end
@@ -76,6 +85,7 @@ defmodule AriaMinizincExecutor do
   - `{:ok, version}` - MiniZinc is available with version info
   - `{:error, reason}` - MiniZinc is not available or accessible
   """
+  @spec check_availability() :: {:ok, String.t()} | {:error, error_reason()}
   def check_availability do
     Executor.check_availability()
   end
@@ -91,6 +101,7 @@ defmodule AriaMinizincExecutor do
   - `{:ok, content}` - Successfully rendered template content
   - `{:error, reason}` - Failed to render template
   """
+  @spec render_template(String.t(), template_vars()) :: {:ok, String.t()} | {:error, error_reason()}
   def render_template(template_path, template_vars) do
     TemplateRenderer.render(template_path, template_vars)
   end

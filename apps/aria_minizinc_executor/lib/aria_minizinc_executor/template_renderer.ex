@@ -9,6 +9,9 @@ defmodule AriaMinizincExecutor.TemplateRenderer do
   providing clean separation between template processing and execution.
   """
 
+  @type template_vars :: map()
+  @type error_reason :: String.t()
+
   @doc """
   Render a MiniZinc template with the given variables.
 
@@ -25,6 +28,7 @@ defmodule AriaMinizincExecutor.TemplateRenderer do
       vars = %{num_activities: 3, durations: [10, 20, 15]}
       {:ok, content} = TemplateRenderer.render("stn_temporal.mzn.eex", vars)
   """
+  @spec render(String.t(), template_vars()) :: {:ok, String.t()} | {:error, error_reason()}
   def render(template_path, template_vars) do
     if File.exists?(template_path) do
       render_existing_file(template_path, template_vars)
@@ -44,6 +48,7 @@ defmodule AriaMinizincExecutor.TemplateRenderer do
   - `{:ok, content}` - Successfully rendered template content
   - `{:error, reason}` - Failed to render template
   """
+  @spec render_string(String.t(), template_vars()) :: {:ok, String.t()} | {:error, error_reason()}
   def render_string(template_content, template_vars) do
     try do
       template_vars = prepare_eex_vars(template_vars)

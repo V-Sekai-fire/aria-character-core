@@ -6,6 +6,7 @@ defmodule AriaMinizincExecutor.Application do
   use Application
 
   @impl true
+  @spec start(Application.start_type(), term()) :: {:ok, pid()} | {:ok, pid(), term()} | {:error, term()}
   def start(_type, _args) do
     children = [
       # Starts a worker by calling: AriaMinizincExecutor.Worker.start_link(arg)

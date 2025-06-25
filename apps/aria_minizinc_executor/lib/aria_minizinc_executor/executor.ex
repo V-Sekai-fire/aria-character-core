@@ -12,6 +12,10 @@ defmodule AriaMinizincExecutor.Executor do
   @behaviour AriaMinizincExecutor.ExecutorBehaviour
   require Logger
 
+  @type execution_options :: keyword()
+  @type execution_result :: map()
+  @type error_reason :: atom() | String.t() | map()
+
 
   @doc """
   Execute raw MiniZinc content synchronously using Porcelain.
@@ -29,6 +33,7 @@ defmodule AriaMinizincExecutor.Executor do
       content = "int: x = 5; solve satisfy; output [result];"
       {:ok, result} = Executor.exec_raw(content)
   """
+  @spec exec_raw(String.t(), execution_options()) :: {:ok, execution_result()} | {:error, error_reason()}
   def exec_raw(minizinc_content, opts \\ []) do
     opts = Keyword.merge(default_options(), opts)
 
@@ -45,6 +50,7 @@ defmodule AriaMinizincExecutor.Executor do
   Check if MiniZinc is available on the system.
   Returns {:ok, version} if available, {:error, reason} if not.
   """
+  @spec check_availability() :: {:ok, String.t()} | {:error, String.t()}
   def check_availability do
     case Porcelain.exec("minizinc", ["--version"]) do
       %{status: 0, out: output} ->
