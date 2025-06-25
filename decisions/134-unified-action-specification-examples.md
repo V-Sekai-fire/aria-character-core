@@ -397,6 +397,13 @@ end
 5. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity` belong in state
 6. **❌ TOMBSTONE: Validation within action functions** - ALL validation is planner responsibility, actions are pure transformations
 7. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
+8. **❌ TOMBSTONE: `quantity` field in action metadata** - Quantities are state fluents, not action metadata
+9. **❌ TOMBSTONE: Separate `resources` map with `consumables`, `tools`, `locations`** - Everything is entities with capabilities
+10. **❌ TOMBSTONE: `properties` field in entity requirements** - Use capabilities instead
+11. **❌ TOMBSTONE: Separate `requires_agent` field** - Agents are entities with capabilities
+12. **❌ TOMBSTONE: `location` field in action metadata** - Locations are entities in `requires_entities`
+13. **❌ TOMBSTONE: `constraints` field in entity requirements** - Quantities, availability, and dynamic properties are state fluents, not action metadata
+14. **❌ TOMBSTONE: Requirement validation in action functions** - Actions assume planner has already validated requirements
 
 **Old unigoal API patterns (TOMBSTONED):**
 
