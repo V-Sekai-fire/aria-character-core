@@ -30,8 +30,7 @@ defmodule MyApp.Domains.CookingDomain do
           requires_entities: [
             %{type: "agent", capabilities: [:cooking, :menu_planning]},
             %{type: "oven", capabilities: [:heating, :baking]},
-            %{type: "ingredient", capabilities: [:consumable], 
-              constraints: %{quantity: {:min, 2}}}
+            %{type: "ingredient", capabilities: [:consumable]}
           ],
           mutual_exclusion: ["kitchen_cleanup"],
           temporal_constraints: [
@@ -39,12 +38,32 @@ defmodule MyApp.Domains.CookingDomain do
             {:during, "kitchen_available"}
           ]
   def cook_meal(state, [meal_type]) do
+    # Validate entity requirements (capabilities only)
     case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
       {:ok, entities} ->
-        execute_cooking_with_constraints(state, meal_type, entities)
+        # Validate quantities using state queries
+        case validate_ingredient_quantities(state, meal_type) do
+          {:ok, _} -> execute_cooking_with_constraints(state, meal_type, entities)
+          {:error, reason} -> {:error, reason}
+        end
       {:error, reason} ->
         {:error, reason}
     end
+  end
+  
+  # State-based quantity validation (CORRECT approach)
+  defp validate_ingredient_quantities(state, meal_type) do
+    required_ingredients = get_recipe_requirements(meal_type)
+    
+    Enum.reduce_while(required_ingredients, {:ok, []}, fn {ingredient, min_qty}, {:ok, acc} ->
+      available_qty = State.get_fact(state, "quantity", ingredient) || 0
+      
+      if available_qty >= min_qty do
+        {:cont, {:ok, [ingredient | acc]}}
+      else
+        {:halt, {:error, "Insufficient #{ingredient}: need #{min_qty}, have #{available_qty}"}}
+      end
+    end)
   end
   
   @action duration: "PT30M"
@@ -335,6 +354,52 @@ end
 ]
 ```
 
+**Constraints field in entity requirements (violates state-based validation principle):**
+
+```elixir
+# DON'T USE: Constraints in action metadata (TOMBSTONED)
+@action requires_entities: [
+  %{type: "ingredient", capabilities: [:consumable], 
+    constraints: %{quantity: {:min, 2}}}  # ❌ WRONG - quantities are state fluents
+]
+
+# USE INSTEAD: State-based validation
+@action requires_entities: [
+  %{type: "ingredient", capabilities: [:consumable]}  # ✅ CORRECT - capabilities only
+]
+def cook_meal(state, [meal_type]) do
+  case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
+    {:ok, entities} ->
+      # Validate quantities using state queries (CORRECT approach)
+      case validate_ingredient_quantities(state, meal_type) do
+        {:ok, _} -> execute_cooking_with_constraints(state, meal_type, entities)
+        {:error, reason} -> {:error, reason}
+      end
+    {:error, reason} -> {:error, reason}
+  end
+end
+
+defp validate_ingredient_quantities(state, meal_type) do
+  required_ingredients = get_recipe_requirements(meal_type)
+  
+  Enum.reduce_while(required_ingredients, {:ok, []}, fn {ingredient, min_qty}, {:ok, acc} ->
+    available_qty = State.get_fact(state, "quantity", ingredient) || 0
+    
+    if available_qty >= min_qty do
+      {:cont, {:ok, [ingredient | acc]}}
+    else
+      {:halt, {:error, "Insufficient #{ingredient}: need #{min_qty}, have #{available_qty}"}}
+    end
+  end)
+end
+```
+
+**Why constraints are tombstoned:**
+- **Action metadata** should define what capabilities are needed (static requirements)
+- **State validation** should check current quantities, availability, and dynamic properties
+- **Separation of concerns** - keeps action metadata clean and state queries explicit
+- **Temporal awareness** - quantities can change over time, constraints cannot
+
 **Automatic multigoal fallbacks (violates GTPyhop philosophy):**
 
 - No automatic `split_multigoal` when domain methods fail
@@ -412,20 +477,38 @@ end
 @action requires_entities: [
   %{type: "agent", capabilities: [:cooking, :menu_planning]},
   %{type: "oven", capabilities: [:heating, :baking]},
-  %{type: "ingredient", capabilities: [:consumable], 
-    constraints: %{quantity: {:min, 2}}}
+  %{type: "ingredient", capabilities: [:consumable]}
 ]
 def cook_meal(state, [meal_type]) do
   # AriaEngine automatically validates:
   # - Agent with cooking AND menu_planning capabilities
   # - Oven with heating AND baking capabilities  
-  # - At least 2 consumable ingredients
+  # - Ingredients with consumable capability
   
   case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
-    {:ok, entities} -> proceed_with_cooking(state, meal_type, entities)
+    {:ok, entities} ->
+      # Validate quantities using state queries (CORRECT approach)
+      case validate_ingredient_quantities(state, meal_type) do
+        {:ok, _} -> proceed_with_cooking(state, meal_type, entities)
+        {:error, reason} -> {:error, reason}
+      end
     {:error, :missing_capabilities} -> {:error, "Required capabilities not available"}
-    {:error, :insufficient_quantity} -> {:error, "Not enough ingredients"}
   end
+end
+
+# State-based quantity validation helper
+defp validate_ingredient_quantities(state, meal_type) do
+  required_ingredients = get_recipe_requirements(meal_type)
+  
+  Enum.reduce_while(required_ingredients, {:ok, []}, fn {ingredient, min_qty}, {:ok, acc} ->
+    available_qty = State.get_fact(state, "quantity", ingredient) || 0
+    
+    if available_qty >= min_qty do
+      {:cont, {:ok, [ingredient | acc]}}
+    else
+      {:halt, {:error, "Insufficient #{ingredient}: need #{min_qty}, have #{available_qty}"}}
+    end
+  end)
 end
 ```
 

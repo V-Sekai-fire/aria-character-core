@@ -150,6 +150,7 @@ The following concepts were explicitly rejected during design:
 3. **❌ TOMBSTONE: `properties` field in entity requirements** - Use capabilities instead
 4. **❌ TOMBSTONE: Separate `requires_agent` field** - Agents are entities with capabilities
 5. **❌ TOMBSTONE: `location` field in action metadata** - Locations are entities in `requires_entities`
+6. **❌ TOMBSTONE: `constraints` field in entity requirements** - Quantities, availability, and dynamic properties are state fluents, not action metadata
 
 ## Success Criteria
 
