@@ -43,6 +43,14 @@
 9. **❌ TOMBSTONE: Command registration in domains** - Commands are execution-time functions, not domain registration artifacts
 10. **❌ TOMBSTONE: Solution tree node type expansion** - FIXED at 6 types: `:task | :action | :goal | :multigoal | :verify_goal | :verify_multigoal`
 11. **❌ TOMBSTONE: Automatic multigoal resolution** - Domain authors must explicitly define ALL multigoal handling
+12. **❌ TOMBSTONE: `quantity` field in action metadata** - Quantities are state fluents, not action metadata
+13. **❌ TOMBSTONE: Separate `resources` map with `consumables`, `tools`, `locations`** - Everything is entities with capabilities
+14. **❌ TOMBSTONE: `properties` field in entity requirements** - Use capabilities instead
+15. **❌ TOMBSTONE: Separate `requires_agent` field** - Agents are entities with capabilities
+16. **❌ TOMBSTONE: `location` field in action metadata** - Locations are entities in `requires_entities`
+17. **❌ TOMBSTONE: `constraints` field in entity requirements** - Quantities, availability, and dynamic properties are state fluents, not action metadata
+18. **❌ TOMBSTONE: Requirement validation in action functions** - Actions assume planner has already validated requirements
+19. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
 
 ## Testing Philosophy
 
@@ -137,18 +145,62 @@ defmodule TestCookingDomain do
   def cook_meal_command(state, [meal_type]) do
     # Real-world execution with potential failures
     case attempt_cooking_with_failure_chance(state, meal_type) do
-      {:ok, new_state} -> {:ok, new_state}
-      {:error, reason} -> {:error, reason}  # Triggers replanning
+      {:ok, new_state} -> 
+        Logger.info("Command> cook_meal_command succeeded for #{meal_type}")
+        {:ok, new_state}
+      {:error, reason} -> 
+        Logger.warn("Command> cook_meal_command failed: #{reason}")
+        {:error, reason}  # Triggers blacklisting and replanning
     end
   end
   
   @task_method
   def prepare_meal_method(state, [meal_type]) do
-    [
+    {:ok, [
       {:cook_meal, [meal_type]},
       {:set_table, []},
       {:serve_meal, [meal_type]}
-    ]
+    ]}
+  end
+  
+  @unigoal_method predicate: "location"
+  def travel_to_location(state, [subject, target]) do
+    current = StateV2.get_fact(state, subject, "location")
+    if current == target do
+      {:ok, []}  # Already achieved
+    else
+      {:ok, [
+        {:walk_to_location, [subject, target]},
+        {:verify_goal, [{subject, "location", target}]}  # Auto-verification
+      ]}
+    end
+  end
+  
+  @multigoal_method goal_pattern: :cooking_workflow
+  def handle_cooking_workflow(state, multigoal) do
+    # Domain author explicitly chooses strategy
+    case custom_cooking_optimization(state, multigoal.goals) do
+      {:ok, plan} -> {:ok, plan}
+      {:error, _} ->
+        # Domain author EXPLICITLY chooses fallback
+        Logger.debug("Custom optimization failed, using split_multigoal")
+        AriaEngine.Multigoal.split_multigoal(state, multigoal.goals)
+    end
+  end
+  
+  # Domain creation with command registration
+  def create_domain(opts \\ %{}) do
+    domain = __MODULE__.create_base_domain()
+    
+    # Register commands for execution-time behavior
+    domain = AriaEngine.Domain.declare_commands(domain, [
+      &cook_meal_command/2
+    ])
+    
+    # Initialize blacklist system
+    domain = %{domain | blacklist: MapSet.new()}
+    
+    domain
   end
 end
 ```
@@ -156,7 +208,6 @@ end
 **Implementation Tasks:**
 - [ ] Create `AriaEngine.Domain` macro module
 - [ ] Implement attribute parsing (`@action`, `@task_method`, `@unigoal_method`, `@multigoal_method`)
-- [ ] ❌ TOMBSTONED: `@command` attribute parsing (commands are functions, not attributes)
 - [ ] Integrate with existing `Domain.Core` structure
 - [ ] Add metadata extraction and storage
 - [ ] Ensure backward compatibility with current domain API
@@ -423,6 +474,18 @@ defmodule AriaEngine.CommandExecution.UnitTest do
     assert Plan.Core.is_execution_phase?(action_node) == true
   end
 end
+```
+
+**Implementation Tasks:**
+- [ ] Create `AriaEngine.CommandExecution` module
+- [ ] Implement command function name generation
+- [ ] Add blacklist integration for command failures
+- [ ] Create planning vs execution phase detection
+- [ ] Maintain separation between actions and commands
+
+## Backward Compatibility Strategy
+
+**Preserve existing functionality:**
 - All existing `Domain.Core` functionality
 - Current action registration patterns
 - Existing planning algorithms
