@@ -284,15 +284,36 @@ end
 ### Command Registration
 
 ```elixir
-# Domain creation with command registration
+# Commands use @command attributes (unified pattern)
+@command
+def cook_meal_command(state, [meal_type]) do
+  # Execution-time logic - handles real failures
+  case attempt_cooking_with_failure_chance(state, meal_type) do
+    {:ok, new_state} -> 
+      Logger.info("cook_meal_command succeeded for #{meal_type}")
+      {:ok, new_state}
+    {:error, reason} ->
+      Logger.warn("cook_meal_command failed: #{reason}")
+      {:error, reason}  # Triggers blacklisting and replanning
+  end
+end
+
+@command
+def gather_ingredients_command(state, [task_name]) do
+  # Execution-time logic with failure handling
+  case attempt_gathering_with_failure_chance(state, task_name) do
+    {:ok, new_state} -> 
+      Logger.info("gather_ingredients_command succeeded")
+      {:ok, new_state}
+    {:error, reason} -> 
+      Logger.warn("gather_ingredients_command failed: #{reason}")
+      {:error, reason}
+  end
+end
+
+# Domain creation follows module-based pattern
 def create_domain(opts \\ %{}) do
   domain = __MODULE__.create_base_domain()
-  
-  # Register commands for execution-time behavior
-  domain = AriaEngine.Domain.declare_commands(domain, [
-    &cook_meal_command/2,
-    &gather_ingredients_command/2
-  ])
   
   # Initialize blacklist system
   domain = %{domain | blacklist: MapSet.new()}

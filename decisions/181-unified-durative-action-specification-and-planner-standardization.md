@@ -47,42 +47,46 @@ Capabilities serve as simple traits providing flexible composition without inher
 
 ## Unified Action Specification
 
-### Clean Model
+### Module-Based Domain Pattern (Authoritative)
 
 ```elixir
-# Unified entity-based metadata structure
-Domain.add_action(:cook_meal, &cook_meal/2, %{
-  # Temporal specification (floating duration)
-  duration: "PT2H",
+# CORRECT: Module-based domain pattern with @action attributes
+defmodule MyApp.Domains.CookingDomain do
+  use AriaEngine.Domain
   
-  # Unified entity requirements (everything is an entity with capabilities)
-  requires_entities: [
-    %{type: "agent", capabilities: [:cooking, :menu_planning]},
-    %{type: "oven", capabilities: [:heating, :baking]},
-    %{type: "kitchen", capabilities: [:workspace]},
-    %{type: "flour", capabilities: [:consumable]},
-    %{type: "eggs", capabilities: [:consumable]},
-    %{type: "mixing_bowl", capabilities: [:container, :reusable]}
-  ],
-  
-  # Static documentation
-  description: "Prepare a meal using specified ingredients and cooking equipment"
-})
+  # Unified entity-based metadata structure with @action attributes
+  @action duration: "PT2H",
+          requires_entities: [
+            %{type: "agent", capabilities: [:cooking, :menu_planning]},
+            %{type: "oven", capabilities: [:heating, :baking]},
+            %{type: "kitchen", capabilities: [:workspace]},
+            %{type: "flour", capabilities: [:consumable]},
+            %{type: "eggs", capabilities: [:consumable]},
+            %{type: "mixing_bowl", capabilities: [:container, :reusable]}
+          ],
+          description: "Prepare a meal using specified ingredients and cooking equipment"
+  def cook_meal(state, [meal_type]) do
+    # Pure state transformation, planner already validated requirements
+    state
+    |> State.set_fact("meal_status", meal_type, "cooking")
+    |> State.set_fact("chef_status", "chef_1", "busy")
+  end
 
-# Fixed scheduling example
-Domain.add_action(:meeting, &meeting/2, %{
-  # Temporal specification (fixed interval)
-  start: "2025-06-22T10:00:00Z",
-  end: "2025-06-22T11:00:00Z",
-  
-  # Unified entity requirements
-  requires_entities: [
-    %{type: "agent", capabilities: [:communication]},
-    %{type: "conference_room_1", capabilities: [:meeting_space]}
-  ],
-  
-  description: "Scheduled team meeting in conference room"
-})
+  # Fixed scheduling example with @action attributes
+  @action start: "2025-06-22T10:00:00Z",
+          end: "2025-06-22T11:00:00Z",
+          requires_entities: [
+            %{type: "agent", capabilities: [:communication]},
+            %{type: "conference_room_1", capabilities: [:meeting_space]}
+          ],
+          description: "Scheduled team meeting in conference room"
+  def meeting(state, [participants]) do
+    # Implementation
+    state
+    |> State.set_fact("meeting_status", "team_meeting", "in_progress")
+    |> State.set_fact("room_status", "conference_room_1", "occupied")
+  end
+end
 ```
 
 ## Temporal Specification Patterns
@@ -170,6 +174,8 @@ The following concepts were explicitly rejected during design:
 12. **❌ TOMBSTONE: Command registration in domains** - Commands are execution-time functions, not domain registration artifacts
 13. **❌ TOMBSTONE: Goal format inconsistency in ADR-131** - Fixed documentation error where tombstone claimed `{predicate, subject, value}` was correct format, but all examples used `{subject, predicate, value}`. Corrected specification to match actual usage patterns throughout codebase.
 14. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
+15. **❌ TOMBSTONE: `Domain.add_action` registration pattern** - Use `@action` attributes in module-based domains instead
+16. **❌ TOMBSTONE: `Domain.declare_commands` registration pattern** - Use `@command` attributes in module-based domains instead
 
 **Old unigoal API patterns (TOMBSTONED):**
 

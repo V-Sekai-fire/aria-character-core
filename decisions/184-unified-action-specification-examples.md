@@ -157,18 +157,12 @@ defmodule MyApp.Domains.CookingDomain do
     end
   end
   
-  # Domain creation with all IPyHOP features
+  # Domain creation follows module-based pattern
   def create_domain(opts \\ %{}) do
     domain = __MODULE__.create_base_domain()
     
     # Configure goal verification (IPyHOP feature)
     domain = AriaEngine.Domain.set_verify_goals(domain, Map.get(opts, :verify_goals, true))
-    
-    # Register commands for execution-time behavior
-    domain = AriaEngine.Domain.declare_commands(domain, [
-      &cook_meal_command/2,
-      &gather_ingredients_command/2
-    ])
     
     # Initialize blacklist system
     domain = %{domain | blacklist: MapSet.new()}
@@ -1152,13 +1146,14 @@ end
 ### From Multiple Action Definition Patterns
 
 ```elixir
-# BEFORE: Inconsistent patterns
-Domain.add_action(:cook, &cook/2)  # No metadata
-Domain.add_action(:bake, %DurativeAction{...})  # Complex struct
-
-# AFTER: Unified module-based pattern
+# UNIFIED: Consistent attribute pattern for all domain elements
 @action duration: "PT2H", requires_entities: [...]
-def cook_meal(state, [meal_type]) do
+def cook(state, [meal_type]) do
+  # Implementation
+end
+
+@action duration: "PT1H", requires_entities: [...]
+def bake(state, [item_type]) do
   # Implementation
 end
 ```
