@@ -31,21 +31,31 @@ defmodule AriaMembranePipeline do
 
   alias AriaMembranePipeline.PipelineManager
 
+  # Type definitions
+  @type pipeline :: term()
+  @type config :: map()
+  @type data :: term()
+  @type result :: {:ok, term()} | {:error, String.t()}
+
+  @spec create_validation_pipeline(config()) :: pipeline()
   @doc "Creates a new validation pipeline with the given configuration."
   def create_validation_pipeline(config \\ %{}) do
     PipelineManager.create_validation_pipeline(config)
   end
 
+  @spec start_pipeline(pipeline()) :: result()
   @doc "Starts a pipeline for processing."
   def start_pipeline(pipeline) do
     PipelineManager.start_pipeline(pipeline)
   end
 
+  @spec process_data(pipeline(), data()) :: result()
   @doc "Processes data through the specified pipeline."
   def process_data(pipeline, data) do
     PipelineManager.process_data(pipeline, data)
   end
 
+  @spec stop_pipeline(pipeline()) :: result()
   @doc "Stops a running pipeline."
   def stop_pipeline(pipeline) do
     PipelineManager.stop_pipeline(pipeline)
