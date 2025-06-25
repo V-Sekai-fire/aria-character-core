@@ -124,13 +124,13 @@ Domain.add_action(:meeting, &meeting/2, %{
 **ONLY use this format:**
 
 ```elixir
-{predicate, subject, value}  # ✅ CORRECT
+{subject, predicate, value}  # ✅ CORRECT
 ```
 
 **DEPRECATED formats:**
 
 ```elixir
-{subject, predicate, value}  # ❌ TOMBSTONE THIS
+{predicate, subject, value}  # ❌ TOMBSTONE THIS
 ```
 
 ## State Validation Approach
@@ -163,10 +163,11 @@ The following concepts were explicitly rejected during design:
 ### Additional Unstated Known Knowns (Explicitly Tombstoned)
 
 8. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity`, `size` belong in state, not action metadata
-9. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{predicate, subject, value}` format allowed, all other formats rejected
+9. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{subject, predicate, value}` format allowed, all other formats rejected
 10. **❌ TOMBSTONE: Complex state evaluation functions** - Use direct `State.get_fact/3` queries instead of `State.evaluate_condition/2` or `validate_temporal_condition/2`
 11. **❌ TOMBSTONE: Any validation in action functions** - ALL validation happens at planning time, actions are pure state transformations
 12. **❌ TOMBSTONE: Command registration in domains** - Commands are execution-time functions, not domain registration artifacts
+13. **❌ TOMBSTONE: Goal format inconsistency in ADR-131** - Fixed documentation error where tombstone claimed `{predicate, subject, value}` was correct format, but all examples used `{subject, predicate, value}`. Corrected specification to match actual usage patterns throughout codebase.
 
 ### Action-Level Requirement Validation (TOMBSTONED)
 
@@ -208,7 +209,7 @@ end
 
 - [x] Both floating durations and fixed intervals supported via ISO 8601 strings
 - [x] Unified action specification with entities, capabilities, and resources
-- [x] All goals use `{predicate, subject, value}` format consistently
+- [x] All goals use `{subject, predicate, value}` format consistently
 - [x] All state validation uses direct `State.get_fact/3` calls (with temporal query support)
 - [x] Single standardized way to define actions
 - [x] Clear documentation on which planning API to use when
