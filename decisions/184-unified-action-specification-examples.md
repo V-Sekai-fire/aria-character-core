@@ -193,8 +193,8 @@ end
     case find_available_ingredients(state, task_name) do
       {:ok, ingredients} ->
         state
-        |> StateV2.set_fact("task", "status", "ingredients_gathered")
-        |> StateV2.set_fact("task", "ingredients", ingredients)
+        |> AriaState.RelationalState.set_fact("task", "status", "ingredients_gathered")
+        |> AriaState.RelationalState.set_fact("task", "ingredients", ingredients)
       {:error, reason} ->
         {:error, reason}
     end
@@ -247,7 +247,7 @@ end
   # Unigoal methods with automatic verification (ADVANCED: Predicate-based registration)
   @unigoal_method predicate: "location"
   def travel_to_location(state, [subject, target]) do
-    current = StateV2.get_fact(state, subject, "location")
+    current = AriaState.RelationalState.get_fact(state, subject, "location")
     if current == target do
       {:ok, []}  # Already achieved
     else
@@ -260,7 +260,7 @@ end
   
   @unigoal_method predicate: "has"
   def acquire_item(state, [subject, item]) do
-    current_items = StateV2.get_fact(state, subject, "inventory") || []
+    current_items = AriaState.RelationalState.get_fact(state, subject, "inventory") || []
     if item in current_items do
       {:ok, []}  # Already has item
     else

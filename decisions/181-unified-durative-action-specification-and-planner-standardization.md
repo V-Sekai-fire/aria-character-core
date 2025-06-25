@@ -232,7 +232,7 @@ The following concepts were explicitly rejected during design:
 
 8. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity`, `size` belong in state, not action metadata
 9. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{subject, predicate, value}` format allowed, all other formats rejected
-10. **❌ TOMBSTONE: Complex state evaluation functions** - Use direct `State.get_fact/3` queries instead of `State.evaluate_condition/2` or `validate_temporal_condition/2`
+10. **❌ TOMBSTONE: Complex state evaluation functions** - Use direct `AriaState.RelationalState.get_fact/3` queries instead of `State.evaluate_condition/2` or `validate_temporal_condition/2`
 11. **❌ TOMBSTONE: Any validation in action functions** - ALL validation happens at planning time, actions are pure state transformations
 12. **❌ TOMBSTONE: Command registration in domains** - Commands are execution-time functions, not domain registration artifacts
 13. **❌ TOMBSTONE: Goal format inconsistency in ADR-131** - Fixed documentation error where tombstone claimed `{predicate, subject, value}` was correct format, but all examples used `{subject, predicate, value}`. Corrected specification to match actual usage patterns throughout codebase.
