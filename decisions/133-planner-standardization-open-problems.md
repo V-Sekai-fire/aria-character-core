@@ -1,8 +1,7 @@
 # ADR-133: Architecture & Standards - IPyHOP Integration and System Design
 
-**Status:** Completed
+**Status:** Active
 **Date:** 2025-06-25
-**Completion Date:** 2025-06-25
 **Priority:** HIGH
 **Parent ADR:** ADR-131 (Core Specification)
 
@@ -505,7 +504,7 @@ end
 
 ## Implementation Status
 
-**Status:** Completed - All IPyHOP standardization problems resolved
+**Status:** Active - IPyHOP standardization under ongoing refinement
 **Architecture:** IPyHOP-compatible with pure GTPyhop multigoal philosophy
 **Timeline:** Available immediately for domain development
 **Compatibility:** Full backward compatibility with existing capability system

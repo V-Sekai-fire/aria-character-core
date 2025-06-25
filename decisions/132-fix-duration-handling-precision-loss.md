@@ -1,9 +1,8 @@
 # ADR-132: Technical Implementation - Duration Handling and Validation
 
-**Status:** Completed
+**Status:** Active
 **Date:** 2025-06-22  
-**Completion Date:** 2025-06-22
-**Priority:** MEDIUM  
+**Priority:** MEDIUM
 **Parent ADR:** ADR-131 (Core Specification)
 
 ## Overview
@@ -320,7 +319,7 @@ The changes are backward compatible because:
 
 ## Implementation Status
 
-**Status:** Completed - Duration precision preservation implemented
+**Status:** Active - Duration precision preservation under ongoing refinement
 **Usage:** Enhanced temporal accuracy for all AriaEngine operations
 **Timeline:** Available immediately
 **Integration:** Full integration with validation framework and temporal constraints

@@ -1,8 +1,7 @@
 # ADR-131: Core Specification - Unified Durative Action Specification
 
-**Status:** Completed  
+**Status:** Active  
 **Date:** 2025-06-22  
-**Completion Date:** 2025-06-22  
 **Priority:** HIGH
 
 ## Overview
@@ -169,7 +168,7 @@ The following concepts were explicitly rejected during design:
 
 ## Implementation Status
 
-**Status:** Completed - Core specification established
+**Status:** Active - Core specification under ongoing refinement
 **Usage:** Foundation for all AriaEngine domain development
 **Timeline:** Available immediately
 **Compatibility:** Full backward compatibility maintained
