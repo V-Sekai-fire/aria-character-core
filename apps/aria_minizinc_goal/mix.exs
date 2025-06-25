@@ -28,7 +28,8 @@ defmodule AriaMinizincGoal.MixProject do
     [
       {:aria_minizinc_executor, in_umbrella: true},
       {:jason, "~> 1.4"},
-      {:timex, "~> 3.7"}
+      {:timex, "~> 3.7"},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 end
