@@ -32,6 +32,7 @@ end
 ```
 
 **Node Priority System:**
+
 - `:action` nodes execute with highest priority (immediate execution)
 - `:task` nodes decompose into subtasks/actions
 - `:goal` nodes decompose into subgoals with automatic verification
@@ -69,6 +70,7 @@ end
 ```
 
 **Key Architectural Principles:**
+
 - **True interleaved planning and execution** - no separate planning phase
 - **Action nodes execute immediately** when selected
 - **Proper backtracking on failure** with state restoration
@@ -250,6 +252,7 @@ end
 Clear separation between planning-time actions and execution-time commands:
 
 **Planning-Time Actions** (assume success for planning):
+
 ```elixir
 @action duration: "PT2H", requires_entities: [...]
 def cook_meal(state, [meal_type]) do
@@ -262,6 +265,7 @@ end
 ```
 
 **Execution-Time Commands** (handle real-world failures):
+
 ```elixir
 @command
 def cook_meal_command(state, [meal_type]) do
@@ -439,6 +443,7 @@ end
 ```
 
 **Why Capability System is Superior:**
+
 - **Dynamic validation** - checks current state, not static declarations
 - **Constraint support** - quantity, location, status constraints
 - **Temporal awareness** - entities can gain/lose capabilities over time
@@ -449,6 +454,7 @@ end
 **Status:** Tombstoned - Violates pure GTPyhop design philosophy
 
 **Removed automatic fallbacks** that violated pure GTPyhop design:
+
 - No automatic `split_multigoal` when domain methods fail
 - No automatic MinizinC optimization without explicit domain choice
 - Domain authors must explicitly handle all multigoal scenarios
@@ -464,6 +470,7 @@ end
 **Solution:** Clear hierarchical decomposition with pure GTPyhop multigoal philosophy
 
 **Clear Hierarchy:**
+
 1. **Multigoal methods** → Domain-specific optimization for multiple goals (explicit only)
 2. **Unigoal methods** → Decompose single goal into task todos
 3. **Task methods** → Decompose tasks into subtasks/actions
@@ -505,6 +512,9 @@ end
 ## Implementation Status
 
 **Status:** Active - IPyHOP standardization under ongoing refinement
+
 **Architecture:** IPyHOP-compatible with pure GTPyhop multigoal philosophy
+
 **Timeline:** Available immediately for domain development
+
 **Compatibility:** Full backward compatibility with existing capability system

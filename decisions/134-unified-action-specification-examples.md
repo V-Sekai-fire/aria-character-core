@@ -395,6 +395,7 @@ end
 ```
 
 **Why constraints are tombstoned:**
+
 - **Action metadata** should define what capabilities are needed (static requirements)
 - **State validation** should check current quantities, availability, and dynamic properties
 - **Separation of concerns** - keeps action metadata clean and state queries explicit
@@ -1134,6 +1135,9 @@ end
 ## Implementation Status
 
 **Status:** Active - Final canonical pattern under ongoing refinement
+
 **Usage:** Reference implementation for all new AriaEngine domains
+
 **Timeline:** Available immediately for domain development
+
 **Compatibility:** IPyHOP-compatible with pure GTPyhop multigoal philosophy

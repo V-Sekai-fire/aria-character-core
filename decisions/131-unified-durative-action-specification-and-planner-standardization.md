@@ -27,6 +27,7 @@ Capabilities serve as simple traits providing flexible composition without inher
 ```
 
 **Capability categories:**
+
 - **Categorical traits**: `:agent`, `:consumable`, `:tool`, `:appliance`
 - **Behavioral capabilities**: `:heating`, `:cutting`, `:cooking`, `:baking`
 - **Functional traits**: `:reusable`, `:portable`, `:stackable`, `:container`
@@ -88,11 +89,13 @@ Domain.add_action(:meeting, &meeting/2, %{
 ### Supported Patterns
 
 **Pattern 1: Floating Duration (effort-based scheduling)**
+
 ```elixir
 %{duration: "PT2H"}  # ISO 8601 duration string
 ```
 
 **Pattern 2: Fixed Schedule (time-based scheduling)**
+
 ```elixir
 %{
   start: "2025-06-22T10:00:00Z",  # ISO 8601 datetime string
@@ -101,6 +104,7 @@ Domain.add_action(:meeting, &meeting/2, %{
 ```
 
 **Pattern 3: Open-ended Intervals**
+
 ```elixir
 %{start: "2025-06-22T10:00:00Z"}  # Start time only
 %{end: "2025-06-22T11:00:00Z"}    # End time only
@@ -118,11 +122,13 @@ Domain.add_action(:meeting, &meeting/2, %{
 ## Goal Format Standardization
 
 **ONLY use this format:**
+
 ```elixir
 {predicate, subject, value}  # ✅ CORRECT
 ```
 
 **DEPRECATED formats:**
+
 ```elixir
 {subject, predicate, value}  # ❌ TOMBSTONE THIS
 ```
@@ -130,11 +136,13 @@ Domain.add_action(:meeting, &meeting/2, %{
 ## State Validation Approach
 
 **ONLY use direct fact checking:**
+
 ```elixir
 State.get_fact(state, predicate, subject)  # ✅ DIRECT FACT CHECKING (supports temporal queries)
 ```
 
 **DEPRECATED approaches:**
+
 ```elixir
 validate_temporal_condition/2  # ❌ REMOVE
 State.evaluate_condition/2     # ❌ REMOVE
@@ -169,6 +177,9 @@ The following concepts were explicitly rejected during design:
 ## Implementation Status
 
 **Status:** Active - Core specification under ongoing refinement
+
 **Usage:** Foundation for all AriaEngine domain development
+
 **Timeline:** Available immediately
+
 **Compatibility:** Full backward compatibility maintained
