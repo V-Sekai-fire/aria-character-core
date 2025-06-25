@@ -6,7 +6,9 @@
 
 ## Status
 
-Draft
+Draft (NOT FINISHED. PRE-ALPHA SPECIFICATION.)
+
+
 
 ## Dependencies
 
@@ -168,9 +170,9 @@ All interactive elements are modeled as entities with capabilities that define t
 - **No constraints in action metadata** - quantities and availability are state fluents
 - **Dynamic validation** - checks current state, not static declarations
 
-### Durative Action Specification
+### Unified Durative Action Specification (ADR-181)
 
-Actions are defined with temporal duration and entity requirements following the unified specification from ADR-181:
+Actions are defined with temporal duration and entity requirements following the canonical specification:
 
 ```json
 {
@@ -196,45 +198,17 @@ Actions are defined with temporal duration and entity requirements following the
         {"type": "before", "action": "gather_ingredients"},
         {"type": "during", "condition": "kitchen_available"}
       ],
-      "description": "Prepare a meal using specified ingredients and cooking equipment",
-      "conditions": {
-        "at_start": [
-          {"subject": "chef_001", "predicate": "available", "value": true},
-          {"subject": "oven_001", "predicate": "temperature", "constraint": {">=": 350}}
-        ],
-        "over_all": [
-          {"subject": "kitchen_001", "predicate": "workspace", "value": "clean"},
-          {"subject": "oven_001", "predicate": "temperature", "constraint": {"between": [350, 450]}}
-        ],
-        "at_end": [
-          {"subject": "meal", "predicate": "quality", "constraint": {">=": 8}}
-        ]
-      },
-      "effects": {
-        "at_start": [
-          {"subject": "chef_001", "predicate": "status", "value": "cooking"},
-          {"subject": "oven_001", "predicate": "status", "value": "in_use"},
-          {"subject": "kitchen_001", "predicate": "workspace", "value": "busy"}
-        ],
-        "over_time": [
-          {"subject": "meal", "predicate": "progress", "change": {"increase": 0.02}},
-          {"subject": "kitchen_001", "predicate": "heat", "change": {"increase": 2}}
-        ],
-        "at_end": [
-          {"subject": "meal", "predicate": "status", "value": "ready"},
-          {"subject": "chef_001", "predicate": "status", "value": "available"},
-          {"subject": "oven_001", "predicate": "status", "value": "available"},
-          {"subject": "kitchen_001", "predicate": "workspace", "value": "clean"}
-        ]
-      }
+      "description": "Prepare a meal using specified ingredients and cooking equipment"
     }
   }
 }
 ```
 
-### Temporal Patterns
+**CRITICAL: No constraints in entity requirements** - Following ADR-181, all dynamic properties like quantities and availability are handled through state validation, not action metadata.
 
-The extension supports multiple temporal specification patterns with precision preservation (ADR-182):
+### Temporal Patterns with Precision Preservation (ADR-182)
+
+The extension supports multiple temporal specification patterns with precision preservation:
 
 **Floating Duration (effort-based scheduling):**
 ```json
@@ -263,17 +237,22 @@ The extension supports multiple temporal specification patterns with precision p
 - **Precision preservation**: Use Timex for temporal calculations
 - **Validation constraints**: Enforce logical temporal relationships
 
-### IPyHOP Architecture Integration
+### IPyHOP Architecture Integration (ADR-183)
 
 Following ADR-183, the extension integrates IPyHOP-compatible features:
 
-**Solution Tree Structure:**
+**Solution Tree Structure with 6 Node Types:**
 - `:task` - Decompose into subtasks/actions
 - `:action` - Execute immediately (highest priority)
 - `:goal` - Decompose into subgoals with automatic verification
 - `:multigoal` - Require explicit domain methods (no automatic fallbacks)
 - `:verify_goal` - Verify goal achievement
 - `:verify_multigoal` - Verify multigoal achievement
+
+**Corrected `run_lazy_refineahead` with Interleaved Planning/Execution:**
+- True interleaved planning and execution (no separate planning phase)
+- Action nodes execute immediately when selected
+- Proper backtracking on failure with state restoration
 
 **Blacklist System:**
 ```json
@@ -295,7 +274,7 @@ Following ADR-183, the extension integrates IPyHOP-compatible features:
 - **Planning fails if multigoals encountered without domain methods**
 - **split_multigoal and MinizinC available as explicit tools only**
 
-### Commands vs Actions Separation
+### Commands vs Actions Separation (ADR-183)
 
 Following ADR-183 architecture:
 
@@ -305,7 +284,10 @@ Following ADR-183 architecture:
   "planning_actions": {
     "cook_meal": {
       "duration": "PT2H",
-      "requires_entities": [...],
+      "requires_entities": [
+        {"type": "agent", "capabilities": ["cooking"]},
+        {"type": "oven", "capabilities": ["heating"]}
+      ],
       "description": "Pure state transformation for planning"
     }
   }
@@ -328,6 +310,20 @@ Following ADR-183 architecture:
 }
 ```
 
+### Goal Format Standardization (ADR-181)
+
+**ONLY `{subject, predicate, value}` format allowed:**
+
+```json
+{
+  "goals": [
+    {"subject": "chef_001", "predicate": "location", "value": "kitchen_001"},
+    {"subject": "meal", "predicate": "status", "value": "ready"},
+    {"subject": "oven_001", "predicate": "available", "value": true}
+  ]
+}
+```
+
 ## KHR_interactivity Integration
 
 ### Using Pointer Nodes for State Access
@@ -339,14 +335,7 @@ The extension uses KHR_interactivity's `pointer/get` and `pointer/set` nodes for
 {
   "declarations": [
     {
-      "op": "pointer/get",
-      "inputValueSockets": {
-        "entityIndex": {"type": 0}
-      },
-      "outputValueSockets": {
-        "value": {"type": 1},
-        "isValid": {"type": 2}
-      }
+      "op": "pointer/get"
     }
   ],
   "nodes": [
@@ -369,12 +358,7 @@ The extension uses KHR_interactivity's `pointer/get` and `pointer/set` nodes for
 {
   "declarations": [
     {
-      "op": "pointer/set",
-      "inputValueSockets": {
-        "entityIndex": {"type": 0},
-        "value": {"type": 2}
-      },
-      "outputValueSockets": {}
+      "op": "pointer/set"
     }
   ],
   "nodes": [
@@ -490,13 +474,13 @@ The extension is added to the glTF root object:
 {
   "extensions": {
     "VSEKAI_interactivity_planning": {
-      "entities": { ... },
-      "actions": { ... },
-      "goals": { ... },
-      "temporal_constraints": { ... },
-      "planning_domain": { ... },
-      "execution_context": { ... },
-      "blacklist": { ... }
+      "entities": { },
+      "actions": { },
+      "goals": { },
+      "temporal_constraints": { },
+      "planning_domain": { },
+      "execution_context": { },
+      "blacklist": { }
     }
   }
 }
@@ -556,7 +540,7 @@ Scenes can define planning domains and execution contexts:
 }
 ```
 
-## Tombstoned Features
+## Tombstoned Features (ADR-181, ADR-183)
 
 ### Explicitly Rejected Patterns
 
@@ -568,6 +552,9 @@ Scenes can define planning domains and execution contexts:
 4. **❌ TOMBSTONE: Separate planning/execution phases** - IPyHOP uses interleaved planning and execution only
 5. **❌ TOMBSTONE: Properties field in entity requirements** - Use capabilities instead
 6. **❌ TOMBSTONE: Validation within action functions** - Actions are pure state transformations
+7. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{subject, predicate, value}` format allowed
+8. **❌ TOMBSTONE: Command nodes in solution tree** - Only 6 node types allowed
+9. **❌ TOMBSTONE: Alternative planning APIs** - Enhance existing `Plan.Core.plan()`, don't create parallel systems
 
 **Why constraints are tombstoned:**
 - **Action metadata** should define what capabilities are needed (static requirements)
@@ -649,7 +636,7 @@ defmodule VSekai.Domains.GltfCookingDomain do
     end
   end
   
-  # Unigoal methods with automatic verification
+  # Unigoal methods with automatic verification (ADR-183)
   @unigoal_method predicate: "location"
   def travel_to_location(state, [subject, target]) do
     current = StateV2.get_fact(state, subject, "location")
@@ -822,7 +809,8 @@ class VsekaiInteractivityPlanning {
               "items": {"type": "string"}
             }
           },
-          "required": ["type", "capabilities"]
+          "required": ["type", "capabilities"],
+          "additionalProperties": false
         }
       },
       "mutual_exclusion": {
@@ -839,22 +827,6 @@ class VsekaiInteractivityPlanning {
             "action": {"type": "string"},
             "condition": {"type": "string"}
           }
-        }
-      },
-      "conditions": {
-        "type": "object",
-        "properties": {
-          "at_start": {"type": "array"},
-          "over_all": {"type": "array"},
-          "at_end": {"type": "array"}
-        }
-      },
-      "effects": {
-        "type": "object",
-        "properties": {
-          "at_start": {"type": "array"},
-          "over_time": {"type": "array"},
-          "at_end": {"type": "array"}
         }
       }
     },
@@ -877,13 +849,10 @@ class VsekaiInteractivityPlanning {
     "properties": {
       "subject": {"type": "string"},
       "predicate": {"type": "string"},
-      "value": {},
-      "constraint": {
-        "type": "object",
-        "description": "Constraint specification for goal satisfaction"
-      }
+      "value": {}
     },
-    "required": ["subject", "predicate", "value"]
+    "required": ["subject", "predicate", "value"],
+    "additionalProperties": false
   }
 }
 ```
@@ -902,7 +871,7 @@ class VsekaiInteractivityPlanning {
       "goal_verification": {"type": "boolean"},
       "blacklist_failed_actions": {"type": "boolean"},
       "multigoal_handling": {
-        "enum": ["explicit_only", "split_allowed", "minizinc_allowed"]
+        "enum": ["explicit_only"]
       },
       "solution_tree_enabled": {"type": "boolean"},
       "ipyhop_compatible": {"type": "boolean"}
@@ -961,4 +930,267 @@ class VsekaiInteractivityPlanning {
               "id": "cooking_complete",
               "values": {
                 "meal_type": {"type": 3},
-                "chef_id": {"type": 3
+                "chef_id": {"type": 3}
+              }
+            }
+          ],
+          "declarations": [
+            {"op": "event/onStart"},
+            {"op": "pointer/get"},
+            {"op": "pointer/set"},
+            {"op": "flow/sequence"},
+            {"op": "event/send"}
+          ],
+          "nodes": [
+            {
+              "declaration": 0,
+              "flows": {
+                "out": {"node": 3}
+              }
+            },
+            {
+              "declaration": 1,
+              "configuration": {
+                "pointer": {"value": ["/extensions/VSEKAI_interactivity_planning/entities/chef_001/state/available"]},
+                "type": {"value": [2]}
+              }
+            },
+            {
+              "declaration": 2,
+              "configuration": {
+                "pointer": {"value": ["/extensions/VSEKAI_interactivity_planning/entities/chef_001/state/status"]},
+                "type": {"value": [3]}
+              },
+              "values": {
+                "value": {"value": ["cooking"], "type": 3}
+              }
+            },
+            {
+              "declaration": 3,
+              "flows": {
+                "0": {"node": 1},
+                "1": {"node": 2},
+                "2": {"node": 4}
+              }
+            },
+            {
+              "declaration": 4,
+              "configuration": {
+                "event": {"value": [0]}
+              },
+              "values": {
+                "goal": {"value": ["meal_ready"], "type": 3},
+                "entity": {"value": ["chef_001"], "type": 3}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "VSEKAI_interactivity_planning": {
+      "entities": {
+        "chef_001": {
+          "type": "agent",
+          "capabilities": ["cooking", "menu_planning", "communication"],
+          "state": {
+            "available": true,
+            "status": "idle",
+            "location": "kitchen_001",
+            "experience_level": 8,
+            "specialization": "italian_cuisine"
+          }
+        },
+        "oven_001": {
+          "type": "appliance",
+          "capabilities": ["heating", "baking", "temperature_control"],
+          "state": {
+            "available": true,
+            "current_temperature": 0,
+            "max_temperature": 500,
+            "min_temperature": 150
+          }
+        },
+        "kitchen_001": {
+          "type": "location",
+          "capabilities": ["workspace", "food_preparation"],
+          "state": {
+            "capacity": 4,
+            "current_occupancy": 0,
+            "equipment_available": true
+          }
+        }
+      },
+      "actions": {
+        "cook_meal": {
+          "duration": "PT2H",
+          "requires_entities": [
+            {
+              "type": "agent",
+              "capabilities": ["cooking", "menu_planning"]
+            },
+            {
+              "type": "appliance",
+              "capabilities": ["heating", "baking"]
+            },
+            {
+              "type": "location",
+              "capabilities": ["workspace"]
+            }
+          ],
+          "mutual_exclusion": ["kitchen_cleanup"],
+          "temporal_constraints": [
+            {"type": "before", "action": "gather_ingredients"},
+            {"type": "during", "condition": "kitchen_available"}
+          ],
+          "description": "Prepare a meal using specified ingredients and cooking equipment"
+        },
+        "gather_ingredients": {
+          "duration": "PT30M",
+          "requires_entities": [
+            {
+              "type": "agent",
+              "capabilities": ["cooking"]
+            },
+            {
+              "type": "location",
+              "capabilities": ["workspace"]
+            }
+          ],
+          "description": "Collect and prepare ingredients for cooking"
+        }
+      },
+      "goals": [
+        {"subject": "chef_001", "predicate": "location", "value": "kitchen_001"},
+        {"subject": "meal", "predicate": "status", "value": "ready"},
+        {"subject": "oven_001", "predicate": "available", "value": true}
+      ],
+      "planning_domain": {
+        "name": "restaurant_kitchen",
+        "execution_strategy": "lazy_refinement",
+        "goal_verification": true,
+        "blacklist_failed_actions": true,
+        "multigoal_handling": "explicit_only",
+        "solution_tree_enabled": true,
+        "ipyhop_compatible": true
+      },
+      "blacklist": {
+        "failed_actions": [],
+        "scope": "session",
+        "created_at": "2025-06-25T12:00:00Z"
+      }
+    }
+  },
+  "nodes": [
+    {
+      "name": "Chef",
+      "extensions": {
+        "VSEKAI_interactivity_planning": {
+          "entity_id": "chef_001",
+          "available_actions": ["cook_meal", "gather_ingredients"],
+          "current_goals": [
+            {"subject": "chef_001", "predicate": "location", "value": "kitchen_001"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Oven",
+      "extensions": {
+        "VSEKAI_interactivity_planning": {
+          "entity_id": "oven_001",
+          "available_actions": [],
+          "current_goals": []
+        }
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Restaurant Kitchen",
+      "nodes": [0, 1],
+      "extensions": {
+        "VSEKAI_interactivity_planning": {
+          "domain_name": "restaurant_kitchen",
+          "execution_strategy": "lazy_refinement",
+          "goal_verification": true,
+          "blacklist_failed_actions": true,
+          "multigoal_handling": "explicit_only",
+          "solution_tree_enabled": true,
+          "ipyhop_compatible": true
+        }
+      }
+    }
+  ]
+}
+```
+
+This example demonstrates:
+
+1. **KHR_interactivity Integration**: Using pointer nodes for state access and behavior graphs for planning logic
+2. **Entity-Capability System**: Chef and oven entities with defined capabilities and dynamic state
+3. **Unified Action Specification**: Actions following ADR-181 with duration and entity requirements (no constraints)
+4. **Goal Format Standardization**: All goals use `{subject, predicate, value}` format per ADR-181
+5. **IPyHOP Compatibility**: Planning domain configured for solution trees and blacklisting per ADR-183
+6. **Temporal Precision**: Duration specifications using ISO 8601 format per ADR-182
+
+### Multi-Agent Coordination Example
+
+```json
+{
+  "extensions": {
+    "VSEKAI_interactivity_planning": {
+      "actions": {
+        "coordinate_dinner_service": {
+          "duration": "PT3H",
+          "requires_entities": [
+            {
+              "type": "head_chef",
+              "capabilities": ["cooking", "coordination", "menu_planning"]
+            },
+            {
+              "type": "sous_chef", 
+              "capabilities": ["cooking", "preparation"]
+            },
+            {
+              "type": "pastry_chef",
+              "capabilities": ["baking", "dessert_preparation"]
+            },
+            {
+              "type": "kitchen",
+              "capabilities": ["workspace", "equipment_access"]
+            }
+          ],
+          "temporal_constraints": [
+            {"type": "before", "action": "prep_ingredients"},
+            {"type": "overlaps", "action": "appetizer_preparation", "offset": "PT30M"},
+            {"type": "before", "action": "main_course_preparation", "offset": "PT1H"},
+            {"type": "during", "condition": "dinner_service_hours"}
+          ],
+          "mutual_exclusion": ["kitchen_deep_clean", "equipment_maintenance"],
+          "description": "Coordinate multiple chefs for dinner service with temporal constraints"
+        }
+      },
+      "goals": [
+        {"subject": "appetizers", "predicate": "status", "value": "ready"},
+        {"subject": "main_courses", "predicate": "status", "value": "ready"}, 
+        {"subject": "desserts", "predicate": "status", "value": "ready"},
+        {"subject": "service_quality", "predicate": "rating", "value": "excellent"}
+      ]
+    }
+  }
+}
+```
+
+This demonstrates the power of the planning approach for complex multi-agent coordination that would be extremely difficult to implement with imperative programming.
+
+## Conclusion
+
+The `VSEKAI_interactivity_planning` extension successfully bridges AriaEngine's sophisticated temporal planning capabilities with glTF's interactive 3D environments. By building upon KHR_interactivity and following the authoritative ADR specifications (181-184), it provides:
+
+- **Unified Action Specification**: Consistent patterns across planning and execution
+- **Entity-Capability System**: Flexible, trait-based modeling without rigid constraints
+- **IPyHOP Integration**: Solution trees, blacklisting, and pure GTPyhop multigoal philosophy
+- **Temporal Precision**: Robust duration handling and constraint satisfaction
+- **Multi-Agent Coordination**: Intelligent resource allocation and conflict resolution
+
+The extension enables developers to create intelligent, adaptive 3D experiences where agents can plan, coordinate, and respond to dynamic conditions - transforming static scenes into living, breathing environments.

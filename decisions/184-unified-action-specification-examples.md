@@ -343,7 +343,7 @@ end
 - `:verify_goal` - Verify goal achievement
 - `:verify_multigoal` - Verify multigoal achievement
 
-**Corrected `run_lazy_refineahead` with interleaved planning/execution:**
+** `run_lazy_refineahead` with interleaved planning/execution:**
 
 - True interleaved planning and execution (no separate planning phase)
 - Action nodes execute immediately when selected
