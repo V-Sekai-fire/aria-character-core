@@ -7,6 +7,7 @@
 ## Overview
 
 **Current State**: Multiple confusing and inconsistent patterns across AriaEngine planner
+
 **Target State**: Single unified specification for durative actions with entities, capabilities, and temporal constraints
 
 ## Core Entity Model
