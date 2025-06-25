@@ -8,7 +8,3 @@
 This ADR has been moved to **ADR-182**.
 
 Please see: [decisions/182-fix-duration-handling-precision-loss.md](./182-fix-duration-handling-precision-loss.md)
-
-## Reason for Move
-
-Moved to end of ADR sequence to make room for improved usability-focused documentation in the 131-134 range.
