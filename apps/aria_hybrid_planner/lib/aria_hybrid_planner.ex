@@ -6,6 +6,7 @@ defmodule AriaHybridPlanner do
   Hybrid planning coordination system providing strategy-based planning with temporal reasoning integration.
   """
 
+  @spec version() :: String.t()
   @doc """
   Returns the version of the AriaHybridPlanner application.
   """
