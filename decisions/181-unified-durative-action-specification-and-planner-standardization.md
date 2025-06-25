@@ -42,7 +42,7 @@ make_dinner()
         ]
 def cook_meal(state, [meal_type]) do
   # Just describes the state change, not when/how to execute
-  state |> State.set_fact("meal_status", meal_type, "ready")
+  state |> AriaState.RelationalState.set_fact("meal_status", meal_type, "ready")
 end
 
 # You give the planner a goal and it figures out the steps

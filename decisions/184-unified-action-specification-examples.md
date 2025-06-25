@@ -104,7 +104,7 @@ end
 ]
 def cook_meal(state, [meal_type]) do
   # Just describe the state change - planner handles all the "what ifs"
-  state |> State.set_fact("meal_status", meal_type, "ready")
+  state |> AriaState.RelationalState.set_fact("meal_status", meal_type, "ready")
 end
 ```
 
@@ -529,7 +529,7 @@ end
 1. **❌ TOMBSTONE: `@command` attributes in domain registration** - Commands are execution-time functions, not domain metadata
 2. **❌ TOMBSTONE: Command node types in solution tree** - Only 6 node types allowed: `:task | :action | :goal | :multigoal | :verify_goal | :verify_multigoal`
 3. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{subject, predicate, value}` format allowed
-4. **❌ TOMBSTONE: Complex state evaluation in actions** - Use direct `State.get_fact/3` queries only
+4. **❌ TOMBSTONE: Complex state evaluation in actions** - Use direct `AriaState.RelationalState.get_fact/3` queries only
 5. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity` belong in state
 6. **❌ TOMBSTONE: Validation within action functions** - ALL validation is planner responsibility, actions are pure transformations
 7. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
@@ -587,8 +587,8 @@ end
 def cook_meal(state, [meal_type]) do
   # CORRECT: Pure state transformation, planner already validated requirements
   state
-  |> State.set_fact("meal_status", meal_type, "cooking")
-  |> State.set_fact("chef_status", "chef_1", "busy")
+  |> AriaState.RelationalState.set_fact("meal_status", meal_type, "cooking")
+  |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
 end
 ```
 
@@ -1109,7 +1109,7 @@ defmodule MyApp.GoalVerificationExamples do
   # Automatic goal verification after unigoal methods
   @unigoal_method goal_pattern: {"chef", "location", :any}
   def travel_to_location(state, {"chef", "location", target}) do
-    current = State.get_fact(state, "location", "chef")
+    current = AriaState.RelationalState.get_fact(state, "location", "chef")
     
     if current == target do
       # Goal already achieved - verify immediately
@@ -1142,7 +1142,7 @@ defmodule MyApp.GoalVerificationExamples do
         
       {:ok, false} ->
         # Determine missing ingredients
-        current_ingredients = State.get_fact(state, "inventory", "chef") || []
+        current_ingredients = AriaState.RelationalState.get_fact(state, "inventory", "chef") || []
         missing_ingredients = ingredient_list -- current_ingredients
         
         Logger.debug("Missing ingredients: #{inspect(missing_ingredients)}")
@@ -1216,7 +1216,7 @@ defmodule MyApp.GoalVerificationExamples do
     case goal do
       {"chef", "location", target_location} ->
         # Simple fact verification
-        current_location = State.get_fact(state, "location", "chef")
+        current_location = AriaState.RelationalState.get_fact(state, "location", "chef")
         
         case current_location do
           ^target_location -> 
@@ -1232,7 +1232,7 @@ defmodule MyApp.GoalVerificationExamples do
         
       {"chef", "has_ingredients", ingredient_list} when is_list(ingredient_list) ->
         # Complex verification with list checking
-        current_inventory = State.get_fact(state, "inventory", "chef") || []
+        current_inventory = AriaState.RelationalState.get_fact(state, "inventory", "chef") || []
         
         missing_ingredients = ingredient_list -- current_inventory
         
@@ -1247,7 +1247,7 @@ defmodule MyApp.GoalVerificationExamples do
         
       {"meal", "quality", min_quality} when is_number(min_quality) ->
         # Numerical constraint verification
-        current_quality = State.get_fact(state, "quality", "meal")
+        current_quality = AriaState.RelationalState.get_fact(state, "quality", "meal")
         
         case current_quality do
           quality when is_number(quality) and quality >= min_quality ->
