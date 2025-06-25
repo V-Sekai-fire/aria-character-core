@@ -30,6 +30,18 @@ defmodule AriaMinizincMultiply do
       result.result  # => 12
   """
 
+  @type solver_type :: :auto | :minizinc | :fixpoint
+  @type multiply_params :: %{input_value: integer(), multiplier: integer()}
+  @type multiply_options :: keyword()
+  @type multiply_result :: %{
+          result: integer(),
+          solving_start: String.t(),
+          solving_end: String.t(),
+          duration: String.t(),
+          solver: solver_type()
+        }
+  @type error_reason :: String.t()
+
   @doc """
   Multiply an integer by a multiplier using the specified solver strategy.
 
@@ -59,6 +71,7 @@ defmodule AriaMinizincMultiply do
       # Force specific solver
       {:ok, result} = AriaMinizincMultiply.multiply(4, 2, solver: :fixpoint)
   """
+  @spec multiply(integer(), integer() | multiply_options(), multiply_options()) :: {:ok, multiply_result()} | {:error, error_reason()}
   def multiply(input_value, multiplier_or_options \\ 3, options \\ [])
 
   def multiply(input_value, multiplier_or_options, options) when is_integer(multiplier_or_options) do
@@ -93,6 +106,7 @@ defmodule AriaMinizincMultiply do
   - `{:ok, result}` - Successfully computed multiplication
   - `{:error, reason}` - Failed to compute multiplication
   """
+  @spec solve(multiply_params(), multiply_options()) :: {:ok, multiply_result()} | {:error, error_reason()}
   def solve(params, options \\ []) do
     %{input_value: input_value, multiplier: multiplier} = params
 
