@@ -46,7 +46,7 @@ def cook_meal(state, [meal_type]) do
 end
 
 # You give the planner a goal and it figures out the steps
-AriaEngine.plan(domain, state, [{"chef", "has_meal", "pasta"}])
+AriaEngine.plan(domain, state, [{"has_meal", "chef", "pasta"}])
 # Planner thinks: "To have pasta, I need to cook_meal. To cook_meal, I need chef + ingredients..."
 ```
 
@@ -192,13 +192,13 @@ end
 **ONLY use this format:**
 
 ```elixir
-{subject, predicate, value}  # ✅ CORRECT
+{predicate, subject, value}  # ✅ CORRECT
 ```
 
 **DEPRECATED formats:**
 
 ```elixir
-{predicate, subject, value}  # ❌ TOMBSTONE THIS
+{subject, predicate, value}  # ❌ TOMBSTONE THIS
 ```
 
 ## State Validation Approach
@@ -231,7 +231,7 @@ The following concepts were explicitly rejected during design:
 ### Additional Unstated Known Knowns (Explicitly Tombstoned)
 
 8. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity`, `size` belong in state, not action metadata
-9. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{subject, predicate, value}` format allowed, all other formats rejected
+9. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{predicate, subject, value}` format allowed, all other formats rejected
 10. **❌ TOMBSTONE: Complex state evaluation functions** - Use direct `AriaState.RelationalState.get_fact/3` queries instead of `State.evaluate_condition/2` or `validate_temporal_condition/2`
 11. **❌ TOMBSTONE: Any validation in action functions** - ALL validation happens at planning time, actions are pure state transformations
 12. **❌ TOMBSTONE: Command registration in domains** - Commands are execution-time functions, not domain registration artifacts
@@ -383,7 +383,7 @@ end
 
 - [x] Both floating durations and fixed intervals supported via ISO 8601 strings
 - [x] Unified action specification with entities, capabilities, and resources
-- [x] All goals use `{subject, predicate, value}` format consistently
+- [x] All goals use `{predicate, subject, value}` format consistently
 - [x] All state validation uses direct `State.get_fact/3` calls (with temporal query support)
 - [x] Single standardized way to define actions
 - [x] Clear documentation on which planning API to use when

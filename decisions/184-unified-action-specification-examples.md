@@ -405,8 +405,8 @@ end
 ```elixir
 # This will FAIL if no @multigoal_method defined:
 multigoal = [
-  {"chef", "location", "kitchen"},
-  {"chef", "has", "ingredients"}
+  {"location", "chef", "kitchen"},
+  {"has", "chef", "ingredients"}
 ]
 
 # Only succeeds if domain has explicit @multigoal_method
@@ -689,7 +689,7 @@ domain = MyApp.Domains.CookingDomain.create_domain()
 # Planning creates solution tree with proper node types
 {:ok, solution_tree, plan} = AriaEngine.plan_with_tree(domain, initial_state, [
   {:cook_meal, ["pasta"]},
-  {"chef", "location", "kitchen"}  # Goal
+  {"location", "chef", "kitchen"}  # Goal
 ])
 
 # Execution with replanning on failure
@@ -723,8 +723,8 @@ end
 simple_domain = MyApp.Domains.SimpleCookingDomain.create_domain()
 
 multigoal = [
-  {"chef", "location", "kitchen"},
-  {"chef", "has", "ingredients"}
+  {"location", "chef", "kitchen"},
+  {"has", "chef", "ingredients"}
 ]
 
 case AriaEngine.plan(simple_domain, state, [multigoal]) do
