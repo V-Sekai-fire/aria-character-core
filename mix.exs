@@ -128,6 +128,7 @@ defmodule AriaCharacterCore.MixProject do
       {:timex, "~> 3.7"},
 
       # Test dependencies
+      {:mox, "~> 1.0", only: :test},
       {:stream_data, "~> 1.2", only: :test},
       {:ex_unit_notifier, "~> 1.3", only: :test},
 
