@@ -448,14 +448,12 @@ The following concepts were explicitly rejected during design:
 6. **❌ TOMBSTONE: `constraints` field in entity requirements** - Quantities, availability, and dynamic properties are state fluents, not action metadata
 7. **❌ TOMBSTONE: Requirement validation in action functions** - Actions assume planner has already validated requirements
 
-### Additional Unstated Known Knowns (Explicitly Tombstoned)
-
 8. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity`, `size` belong in state, not action metadata
 9. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{predicate, subject, value}` format allowed, all other formats rejected
 10. **❌ TOMBSTONE: Complex state evaluation functions** - Use direct `AriaState.RelationalState.get_fact/3` queries instead of `State.evaluate_condition/2` or `validate_temporal_condition/2`
 11. **❌ TOMBSTONE: Any validation in action functions** - ALL validation happens at planning time, actions are pure state transformations
 12. **❌ TOMBSTONE: Command registration in domains** - Commands are execution-time functions, not domain registration artifacts
-13. **❌ TOMBSTONE: Goal format inconsistency in ADR-131** - Fixed documentation error where tombstone claimed `{predicate, subject, value}` was correct format, but all examples used `{subject, predicate, value}`. Corrected specification to match actual usage patterns throughout codebase.
+13. **❌ TOMBSTONE: Goal format inconsistency in ADR-131** - Fixed documentation error where tombstone claimed `{predicate, subject, value}` was correct format, but all examples used `{subject, predicate, value}`
 14. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
 15. **❌ TOMBSTONE: `Domain.add_action` registration pattern** - Use `@action` attributes in module-based domains instead
 16. **❌ TOMBSTONE: `Domain.declare_commands` registration pattern** - Use `@command` attributes in module-based domains instead
@@ -465,70 +463,6 @@ The following concepts were explicitly rejected during design:
 20. **❌ TOMBSTONE: Temporal condition processing logic** - Use regular method decomposition instead
 21. **❌ TOMBSTONE: `at_start`, `over_all`, `at_end` condition types** - Natural prerequisites/verification handled by methods
 22. **❌ TOMBSTONE: Temporal condition semantics with type specifications** - Overly complex typing for fundamentally flawed approach
-
-**Old unigoal API patterns (TOMBSTONED):**
-
-```elixir
-# DON'T USE: Full tuple goal pattern (TOMBSTONED)
-@unigoal_method goal_pattern: {"chef", "location", :any}
-@spec travel_to_location(AriaState.t(), {String.t(), String.t(), String.t()}) :: {:ok, [AriaEngine.todo_item()]}
-def travel_to_location(state, {"chef", "location", target}) do
-  # ❌ WRONG - tuple destructuring signature
-end
-
-# USE INSTEAD: Advanced predicate-based registration
-@unigoal_method predicate: "location"
-@spec travel_to_location(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
-def travel_to_location(state, [subject, target]) do
-  # ✅ CORRECT - predicate-based with [subject, value] signature
-end
-```
-
-**Why old unigoal patterns are tombstoned:**
-
-- **Predicate-based registration** is more flexible and reusable
-- **[subject, value] signature** works for any entity with that predicate
-- **Less repetitive** - one method handles all subjects for a predicate
-- **Better API design** - register by predicate, not full goal pattern
-- **Cleaner domain code** - fewer method definitions needed
-
-### Action-Level Requirement Validation (TOMBSTONED)
-
-**CRITICAL ARCHITECTURAL PRINCIPLE:** Actions must NOT validate their own requirements. This violates separation of concerns between planning and execution.
-
-**❌ WRONG - Action validating requirements:**
-
-```elixir
-@action requires_entities: [%{type: "agent", capabilities: [:cooking]}]
-@spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, String.t()}
-def cook_meal(state, [meal_type]) do
-  # TOMBSTONED: Actions should not validate requirements
-  case AriaEngine.EntityValidator.validate_requirements(state, @action[:requires_entities]) do
-    {:ok, entities} -> proceed_with_cooking(state, meal_type, entities)
-    {:error, reason} -> {:error, reason}
-  end
-end
-```
-
-**✅ CORRECT - Action assumes requirements met:**
-
-```elixir
-@action requires_entities: [%{type: "agent", capabilities: [:cooking]}]
-@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
-def cook_meal(state, [meal_type]) do
-  # CORRECT: Pure state transformation, planner already validated requirements
-  state
-  |> AriaState.RelationalState.set_fact("meal_status", meal_type, "cooking")
-  |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
-end
-```
-
-**Why this separation matters:**
-
-- **Planning Time**: Planner validates `requires_entities` against state before selecting actions
-- **Execution Time**: Actions focus purely on state transformation
-- **Performance**: No redundant validation during execution
-- **Architecture**: Clean separation between planning logic and execution logic
 
 ## Complete Module-Based Domain Pattern
 
@@ -1009,36 +943,8 @@ def multitodo_method(state, todo_list) do
 end
 ```
 
-### Violation Examples (FORBIDDEN)
-
-❌ **WRONG - No attribute but references planner metadata:**
-
-```elixir
-@spec cook_meal(AriaState.t(), [String.t()]) :: term()
-def cook_meal(state, [meal_type]) do  # No @action attribute
-  case validate(@action[:requires_entities]) do  # ❌ References non-existent metadata
-end
-```
-
-❌ **WRONG - No attribute but presented as planner function:**
-
-```elixir
-@spec travel_to_location(AriaState.t(), [String.t()]) :: term()
-def travel_to_location(state, [subject, target]) do  # No @unigoal_method attribute
-  # Presented as unigoal method but not registered with planner
-end
-```
-
-✅ **CORRECT - Helper function (no planner integration):**
-
-```elixir
-@spec calculate_cooking_time(String.t()) :: non_neg_integer()
-defp calculate_cooking_time(meal_type) do  # Private helper
-  # No planner metadata references, no attribute needed
-end
-```
-
-**ENFORCEMENT:** Functions without attributes are helper functions only - no planner integration allowed.
+23. **❌ TOMBSTONE: Functions without attributes referencing planner metadata** - Functions must have corresponding attributes (@action, @command, etc.) to integrate with planner system
+24. **❌ TOMBSTONE: Functions presented as planner functions without attributes** - All planner integration requires explicit attribute declaration
 
 ## Success Criteria
 
