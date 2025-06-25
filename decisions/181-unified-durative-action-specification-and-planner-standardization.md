@@ -46,8 +46,8 @@ def cook_meal(state, [meal_type]) do
 end
 
 # You give the planner a goal and it figures out the steps
-AriaEngine.plan(domain, state, [{"has_meal", "chef", "pasta"}])
-# Planner thinks: "To have pasta, I need to cook_meal. To cook_meal, I need chef + ingredients..."
+AriaEngine.plan(domain, state, [{"meal_status", "pasta", "ready"}])
+# Planner thinks: "To have pasta ready, I need to cook_meal. To cook_meal, I need chef + ingredients..."
 ```
 
 ### The Mental Model Shift
