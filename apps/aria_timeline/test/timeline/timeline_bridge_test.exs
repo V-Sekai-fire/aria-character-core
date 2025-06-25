@@ -14,8 +14,8 @@ defmodule Timeline.TimelineBridgeTest do
       position = "2025-01-01T12:00:00Z"
       bridge = Bridge.new("decision_1", position, :decision)
       updated_timeline = Timeline.add_bridge(timeline, bridge)
-      assert Map.has_key?(updated_timeline.bridges, "decision_1")
-      assert updated_timeline.bridges["decision_1"] == bridge
+      assert Map.has_key?(updated_timeline.metadata.bridges, "decision_1")
+      assert updated_timeline.metadata.bridges["decision_1"] == bridge
     end
 
     test "add_bridge/2 validates bridge placement" do
@@ -35,7 +35,7 @@ defmodule Timeline.TimelineBridgeTest do
       bridge = Bridge.new("decision_1", position, :decision)
       timeline_with_bridge = Timeline.add_bridge(timeline, bridge)
       updated_timeline = Timeline.remove_bridge(timeline_with_bridge, "decision_1")
-      refute Map.has_key?(updated_timeline.bridges, "decision_1")
+      refute Map.has_key?(updated_timeline.metadata.bridges, "decision_1")
     end
 
     test "get_bridge/2 retrieves a bridge by ID" do
@@ -150,13 +150,13 @@ defmodule Timeline.TimelineBridgeTest do
       end1 = "2025-01-01T11:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       start2 = "2025-01-01T11:30:00Z"
       end2 = "2025-01-01T12:30:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
+        Interval.new_fixed_schedule(start2, end2)
 
       timeline = timeline |> Timeline.add_interval(interval1) |> Timeline.add_interval(interval2)
       bridge_pos = "2025-01-01T11:15:00Z"
@@ -177,13 +177,13 @@ defmodule Timeline.TimelineBridgeTest do
       end1 = "2025-01-01T10:30:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       start2 = "2025-01-01T11:30:00Z"
       end2 = "2025-01-01T12:00:00Z"
 
       interval2 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start2), DateTime.to_iso8601(end2))
+        Interval.new_fixed_schedule(start2, end2)
 
       timeline = timeline |> Timeline.add_interval(interval1) |> Timeline.add_interval(interval2)
       bridge_pos = "2025-01-01T11:00:00Z"
@@ -206,7 +206,7 @@ defmodule Timeline.TimelineBridgeTest do
       end1 = "2025-01-01T12:00:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       timeline_with_interval = Timeline.add_interval(timeline, interval1)
       bridge_pos = "2025-01-01T11:00:00Z"
@@ -229,7 +229,7 @@ defmodule Timeline.TimelineBridgeTest do
       end1 = "2025-01-01T10:30:00Z"
 
       interval1 =
-        Interval.new_fixed_schedule(DateTime.to_iso8601(start1), DateTime.to_iso8601(end1))
+        Interval.new_fixed_schedule(start1, end1)
 
       timeline_with_interval = Timeline.add_interval(timeline, interval1)
       bridge_pos = "2025-01-01T11:00:00Z"
@@ -295,7 +295,8 @@ defmodule Timeline.TimelineBridgeTest do
       bridge2 = Bridge.new("b2", pos2, :condition)
       timeline2 = Timeline.add_bridge(timeline2, bridge2)
       chained = Timeline.chain([timeline1, timeline2])
-      assert map_size(chained.bridges) == 0
+      bridges = Map.get(chained.metadata, :bridges, %{})
+      assert map_size(bridges) == 0
     end
   end
 end

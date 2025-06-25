@@ -11,7 +11,9 @@ defmodule Timeline.BridgeTest do
       position = "2025-01-01T12:00:00Z"
       bridge = Bridge.new("test_bridge", position, :decision)
       assert bridge.id == "test_bridge"
-      assert bridge.position == position
+      # Position should be converted to DateTime struct
+      assert %DateTime{} = bridge.position
+      assert DateTime.to_iso8601(bridge.position) == position
       assert bridge.type == :decision
       assert bridge.metadata == %{}
     end

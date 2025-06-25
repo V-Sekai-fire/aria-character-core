@@ -2,15 +2,25 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Timeline.Bridge do
+  @type semantic_position ::
+    :starts | :finishes | :meets | :met_by | :during | :contains |
+    :overlaps | :overlapped_by | :before | :after | :equals
+
+  @type position :: DateTime.t() | String.t() | semantic_position()
+
   @type t :: %__MODULE__{
           id: String.t(),
-          position: DateTime.t() | String.t(),
+          position: position(),
           type: :decision | :condition | :synchronization | :resource_check | :auto_generated,
-          metadata: map()
+          metadata: map(),
+          # New fields for semantic bridges:
+          semantic_relation: semantic_position() | nil,
+          reference_target: String.t() | nil,  # Timeline ID or interval ID
+          computed_position: DateTime.t() | nil  # Calculated absolute position
         }
   @type id :: String.t()
 
-  defstruct [:id, :position, :type, :metadata]
+  defstruct [:id, :position, :type, :metadata, :semantic_relation, :reference_target, :computed_position]
 
   @moduledoc """
   Bridge layer for temporal relations classification and STN constraint generation.
@@ -75,7 +85,7 @@ defmodule Timeline.Bridge do
   ## Parameters
 
   - `id` - Unique identifier for the bridge
-  - `position` - DateTime when the bridge occurs (must have timezone) or ISO 8601 string
+  - `position` - DateTime when the bridge occurs (must have timezone), ISO 8601 string, or semantic position
   - `type` - Type of bridge operation
   - `opts` - Additional options including metadata
 
@@ -90,8 +100,12 @@ defmodule Timeline.Bridge do
       iex> bridge.id
       "decision_1"
 
+      iex> bridge = Timeline.Bridge.new("semantic_1", :starts, :decision)
+      iex> bridge.semantic_relation
+      :starts
+
   """
-  @spec new(id(), DateTime.t() | String.t(), bridge_type(), keyword()) :: t()
+  @spec new(id(), DateTime.t() | String.t() | semantic_position(), bridge_type(), keyword()) :: t()
   def new(id, position, type, opts \\ [])
 
   def new(id, %DateTime{} = position, type, opts) do
@@ -103,6 +117,60 @@ defmodule Timeline.Bridge do
   def new(id, position, type, opts) when is_binary(position) do
     {:ok, datetime, _} = DateTime.from_iso8601(position)
     new(id, datetime, type, opts)
+  end
+
+  def new(id, position, type, opts) when is_atom(position) do
+    validate_bridge_type!(type)
+    validate_semantic_position!(position)
+    metadata = Keyword.get(opts, :metadata, %{})
+    reference_target = Keyword.get(opts, :reference_target, "timeline")
+
+    %__MODULE__{
+      id: id,
+      position: position,
+      type: type,
+      metadata: metadata,
+      semantic_relation: position,
+      reference_target: reference_target
+    }
+  end
+
+  @doc """
+  Creates a new semantic bridge with explicit reference target.
+
+  ## Parameters
+
+  - `id` - Unique identifier for the bridge
+  - `semantic_relation` - Allen-style semantic position
+  - `reference_target` - What the bridge is positioned relative to ("timeline" or interval ID)
+  - `type` - Type of bridge operation
+  - `opts` - Additional options including metadata
+
+  ## Examples
+
+      iex> bridge = Timeline.Bridge.new_semantic("start_check", :starts, "timeline", :decision)
+      iex> bridge.semantic_relation
+      :starts
+
+      iex> bridge = Timeline.Bridge.new_semantic("task_end", :finishes, "task_interval_1", :synchronization)
+      iex> bridge.reference_target
+      "task_interval_1"
+
+  """
+  @spec new_semantic(id(), semantic_position(), String.t(), bridge_type(), keyword()) :: t()
+  def new_semantic(id, semantic_relation, reference_target, type, opts \\ []) do
+    validate_bridge_type!(type)
+    validate_semantic_position!(semantic_relation)
+    metadata = Keyword.get(opts, :metadata, %{})
+
+    %__MODULE__{
+      id: id,
+      position: semantic_relation,
+      type: type,
+      metadata: metadata,
+      semantic_relation: semantic_relation,
+      reference_target: reference_target
+    }
   end
 
   @doc """
@@ -406,6 +474,14 @@ defmodule Timeline.Bridge do
   defp validate_bridge_type!(type) do
     unless valid_type?(type) do
       raise ArgumentError, "Invalid bridge type: #{inspect(type)}. Valid types: #{inspect(@valid_types)}"
+    end
+  end
+
+  defp validate_semantic_position!(position) do
+    valid_positions = [:starts, :finishes, :meets, :met_by, :during, :contains,
+                      :overlaps, :overlapped_by, :before, :after, :equals]
+    unless position in valid_positions do
+      raise ArgumentError, "Invalid semantic position: #{inspect(position)}. Valid positions: #{inspect(valid_positions)}"
     end
   end
 

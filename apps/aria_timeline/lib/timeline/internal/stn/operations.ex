@@ -86,7 +86,18 @@ defmodule Timeline.Internal.STN.Operations do
   @doc "Combines two STNs using union operation.\n"
   @spec union(STN.t(), STN.t()) :: STN.t()
   def union(stn1, stn2) do
-    {compatible_stn1, compatible_stn2} = ensure_compatible_stns(stn1, stn2)
+    # Handle case where STNs might be wrapped in {:ok, stn} tuples
+    unwrapped_stn1 = case stn1 do
+      {:ok, stn} -> stn
+      stn -> stn
+    end
+
+    unwrapped_stn2 = case stn2 do
+      {:ok, stn} -> stn
+      stn -> stn
+    end
+
+    {compatible_stn1, compatible_stn2} = ensure_compatible_stns(unwrapped_stn1, unwrapped_stn2)
     merged_points = MapSet.union(compatible_stn1.time_points, compatible_stn2.time_points)
 
     merged_constraints =

@@ -181,8 +181,30 @@ defmodule Timeline do
     stns = Enum.map(timelines, & &1.stn)
     chained_stn = STN.chain(stns)
     merged_intervals = timelines |> Enum.map(& &1.intervals) |> Enum.reduce(%{}, &Map.merge/2)
-    merged_metadata = timelines |> Enum.map(& &1.metadata) |> Enum.reduce(%{}, &Map.merge/2)
-    %__MODULE__{intervals: merged_intervals, stn: chained_stn, metadata: merged_metadata}
+
+    # Convert absolute position bridges to semantic bridges, then preserve all semantic bridges
+    preserved_bridges = timelines
+    |> Enum.flat_map(fn timeline ->
+      timeline.metadata
+      |> Map.get(:bridges, %{})
+      |> Map.values()
+      |> Enum.map(&convert_to_semantic_bridge(timeline, &1))
+      |> Enum.filter(&is_semantic_bridge?/1)
+    end)
+    |> Enum.map(&{&1.id, &1})
+    |> Map.new()
+
+    # Don't merge absolute position bridge metadata when chaining - only preserve semantic bridges
+    base_metadata = timelines
+    |> Enum.map(& &1.metadata)
+    |> Enum.reduce(%{}, fn metadata, acc ->
+      metadata
+      |> Map.delete(:bridges)
+      |> then(&Map.merge(acc, &1))
+    end)
+    |> Map.put(:bridges, preserved_bridges)
+
+    %__MODULE__{intervals: merged_intervals, stn: chained_stn, metadata: base_metadata}
   end
 
   @doc "Joins multiple Timelines in parallel.\n\nReturns a Timeline where the Timelines can be executed concurrently.\n"
@@ -242,9 +264,94 @@ defmodule Timeline do
   @doc "Adds a bridge to the timeline.\n"
   @spec add_bridge(t(), Bridge.t()) :: t()
   def add_bridge(%__MODULE__{} = timeline, bridge) do
-    bridges = Map.get(timeline.metadata, :bridges, %{})
-    updated_bridges = Map.put(bridges, bridge.id, bridge)
-    put_in(timeline.metadata[:bridges], updated_bridges)
+    # Compute semantic position if needed
+    bridge_with_position = case bridge.semantic_relation do
+      nil -> bridge
+      _semantic -> compute_semantic_position(timeline, bridge)
+    end
+
+    case validate_bridge_placement(timeline, bridge_with_position) do
+      :ok ->
+        bridges = Map.get(timeline.metadata, :bridges, %{})
+        updated_bridges = Map.put(bridges, bridge_with_position.id, bridge_with_position)
+        put_in(timeline.metadata[:bridges], updated_bridges)
+
+      {:error, reason} ->
+        raise ArgumentError, reason
+    end
+  end
+
+  @doc """
+  Add a bridge with semantic positioning relative to timeline.
+
+  ## Examples
+
+      iex> timeline = Timeline.new()
+      iex> timeline = Timeline.add_semantic_bridge(timeline, :starts, "start_check", :decision)
+      iex> bridge = Timeline.get_bridge(timeline, "start_check")
+      iex> bridge.semantic_relation
+      :starts
+
+  """
+  @spec add_semantic_bridge(t(), Bridge.semantic_position(), String.t(), Bridge.bridge_type(), keyword()) :: t()
+  def add_semantic_bridge(timeline, relation, bridge_id, bridge_type, opts \\ []) do
+    bridge = Bridge.new_semantic(bridge_id, relation, "timeline", bridge_type, opts)
+    add_bridge(timeline, bridge)
+  end
+
+  @doc """
+  Add a bridge with semantic positioning relative to specific interval.
+
+  ## Examples
+
+      iex> timeline = Timeline.new()
+      iex> timeline = Timeline.add_interval_bridge(timeline, :starts, "interval_1", "task_start", :synchronization)
+      iex> bridge = Timeline.get_bridge(timeline, "task_start")
+      iex> bridge.reference_target
+      "interval_1"
+
+  """
+  @spec add_interval_bridge(t(), Bridge.semantic_position(), String.t(), String.t(), Bridge.bridge_type()) :: t()
+  def add_interval_bridge(timeline, relation, interval_id, bridge_id, bridge_type) do
+    bridge = Bridge.new_semantic(bridge_id, relation, interval_id, bridge_type)
+    add_bridge(timeline, bridge)
+  end
+
+  # Fluent API for common semantic bridges
+  @doc "Add a bridge at timeline start."
+  @spec add_bridge_at_start(t(), String.t(), Bridge.bridge_type()) :: t()
+  def add_bridge_at_start(timeline, bridge_id, type \\ :synchronization) do
+    add_semantic_bridge(timeline, :starts, bridge_id, type)
+  end
+
+  @doc "Add a bridge at timeline end."
+  @spec add_bridge_at_end(t(), String.t(), Bridge.bridge_type()) :: t()
+  def add_bridge_at_end(timeline, bridge_id, type \\ :synchronization) do
+    add_semantic_bridge(timeline, :finishes, bridge_id, type)
+  end
+
+  @doc "Add a bridge for chaining (at timeline end)."
+  @spec add_bridge_for_chaining(t(), String.t()) :: t()
+  def add_bridge_for_chaining(timeline, bridge_id) do
+    add_semantic_bridge(timeline, :meets, bridge_id, :synchronization)
+  end
+
+  @doc "Add a bridge during timeline execution."
+  @spec add_bridge_during(t(), String.t(), Bridge.bridge_type()) :: t()
+  def add_bridge_during(timeline, bridge_id, type \\ :decision) do
+    add_semantic_bridge(timeline, :during, bridge_id, type)
+  end
+
+  @doc "Add a bridge at interval start."
+  @spec add_interval_start_bridge(t(), String.t(), String.t()) :: t()
+  def add_interval_start_bridge(timeline, interval_id, bridge_id) do
+    add_interval_bridge(timeline, :starts, interval_id, bridge_id, :synchronization)
+  end
+
+  @doc "Add a bridge at interval end."
+  @spec add_interval_end_bridge(t(), String.t(), String.t()) :: t()
+  def add_interval_end_bridge(timeline, interval_id, bridge_id) do
+    add_interval_bridge(timeline, :finishes, interval_id, bridge_id, :synchronization)
   end
 
   @doc "Removes a bridge from the timeline.\n"
@@ -304,7 +411,14 @@ defmodule Timeline do
 
     case bridges do
       [] ->
-        [%{start_time: nil, end_time: nil, intervals: intervals}]
+        # Single segment with proper metadata structure
+        intervals_map = intervals |> Enum.map(&{&1.id, &1}) |> Map.new()
+        [%{
+          start_time: nil,
+          end_time: nil,
+          intervals: intervals_map,
+          metadata: %{segment: 1, bridge_before: nil}
+        }]
 
       _ ->
         create_segments_from_bridges(bridges, intervals)
@@ -312,22 +426,25 @@ defmodule Timeline do
   end
 
   @doc "Gets all bridge positions from the timeline, sorted.\n"
-  @spec bridge_positions(t()) :: [DateTime.t()]
+  @spec bridge_positions(t()) :: [String.t()]
   def bridge_positions(%__MODULE__{} = timeline) do
     timeline
     |> get_bridges()
-    |> Enum.map(& &1.position)
-    |> Enum.sort(DateTime)
+    |> Enum.map(&DateTime.to_iso8601(&1.position))
+    |> Enum.sort()
   end
 
   @doc "Gets bridges within a time range.\n"
-  @spec bridges_in_range(t(), DateTime.t(), DateTime.t()) :: [Bridge.t()]
+  @spec bridges_in_range(t(), DateTime.t() | String.t(), DateTime.t() | String.t()) :: [Bridge.t()]
   def bridges_in_range(%__MODULE__{} = timeline, start_time, end_time) do
+    start_dt = parse_datetime_param(start_time)
+    end_dt = parse_datetime_param(end_time)
+
     timeline
     |> get_bridges()
     |> Enum.filter(fn bridge ->
-      DateTime.compare(bridge.position, start_time) != :lt and
-      DateTime.compare(bridge.position, end_time) != :gt
+      DateTime.compare(bridge.position, start_dt) != :lt and
+      DateTime.compare(bridge.position, end_dt) != :gt
     end)
   end
 
@@ -348,20 +465,50 @@ defmodule Timeline do
     segments =
       [nil | bridge_positions] ++ [nil]
       |> Enum.chunk_every(2, 1, :discard)
-      |> Enum.map(fn [start_pos, end_pos] ->
+      |> Enum.with_index(1)
+      |> Enum.map(fn {[start_pos, end_pos], segment_num} ->
         segment_intervals = filter_intervals_by_range(intervals, start_pos, end_pos)
-        %{start_time: start_pos, end_time: end_pos, intervals: segment_intervals}
+        intervals_map = segment_intervals |> Enum.map(&{&1.id, &1}) |> Map.new()
+
+        bridge_before = case start_pos do
+          nil -> nil
+          pos -> DateTime.to_iso8601(pos)
+        end
+
+        %{
+          start_time: start_pos,
+          end_time: end_pos,
+          intervals: intervals_map,
+          metadata: %{
+            segment: segment_num,
+            bridge_before: bridge_before
+          }
+        }
       end)
-      |> Enum.reject(fn segment -> Enum.empty?(segment.intervals) end)
+      |> Enum.reject(fn segment -> map_size(segment.intervals) == 0 end)
 
     segments
   end
 
   defp filter_intervals_by_range(intervals, start_pos, end_pos) do
     Enum.filter(intervals, fn interval ->
-      start_ok = start_pos == nil or DateTime.compare(interval.start_time, start_pos) != :lt
-      end_ok = end_pos == nil or DateTime.compare(interval.end_time, end_pos) != :gt
-      start_ok and end_ok
+      # Include interval if it overlaps with the segment range
+      case {start_pos, end_pos} do
+        {nil, nil} ->
+          # No boundaries, include all intervals
+          true
+        {nil, end_pos} ->
+          # Only end boundary, include if interval starts before end
+          DateTime.compare(interval.start_time, end_pos) == :lt
+        {start_pos, nil} ->
+          # Only start boundary, include if interval ends after start
+          DateTime.compare(interval.end_time, start_pos) == :gt
+        {start_pos, end_pos} ->
+          # Both boundaries, include if interval overlaps with range
+          interval_starts_before_end = DateTime.compare(interval.start_time, end_pos) == :lt
+          interval_ends_after_start = DateTime.compare(interval.end_time, start_pos) == :gt
+          interval_starts_before_end and interval_ends_after_start
+      end
     end)
   end
 
@@ -743,4 +890,194 @@ defmodule Timeline do
 
     DateTime.from_unix!(midpoint_ms, :millisecond)
   end
+
+  # Helper function to parse DateTime parameters
+  defp parse_datetime_param(%DateTime{} = datetime), do: datetime
+  defp parse_datetime_param(iso8601_string) when is_binary(iso8601_string) do
+    {:ok, datetime, _} = DateTime.from_iso8601(iso8601_string)
+    datetime
+  end
+
+  # Semantic position computation
+  defp compute_semantic_position(timeline, %Bridge{semantic_relation: relation, reference_target: target} = bridge) do
+    case target do
+      "timeline" ->
+        compute_timeline_semantic_position(timeline, bridge, relation)
+      interval_id when is_binary(interval_id) ->
+        compute_interval_semantic_position(timeline, bridge, relation, interval_id)
+    end
+  end
+
+  defp compute_timeline_semantic_position(timeline, bridge, relation) do
+    {start_time, end_time} = get_timeline_bounds(timeline)
+
+    computed_position = case relation do
+      :starts -> start_time
+      :finishes -> end_time
+      :meets -> end_time  # For chaining - at boundary
+      :met_by -> start_time  # For chaining - at boundary
+      :during -> compute_during_position(start_time, end_time)
+      :contains -> compute_contains_position(start_time, end_time)
+      :overlaps -> compute_near_end_position(start_time, end_time)
+      :overlapped_by -> compute_near_start_position(start_time, end_time)
+      :before -> DateTime.add(start_time, -300, :second)  # 5 min before
+      :after -> DateTime.add(end_time, 300, :second)  # 5 min after
+      :equals -> compute_midpoint(start_time, end_time)
+    end
+
+    %{bridge | computed_position: computed_position, position: computed_position}
+  end
+
+  defp compute_interval_semantic_position(timeline, bridge, relation, interval_id) do
+    case get_interval(timeline, interval_id) do
+      nil ->
+        raise ArgumentError, "Interval #{interval_id} not found"
+      interval ->
+        computed_position = case relation do
+          :starts -> interval.start_time
+          :finishes -> interval.end_time
+          :meets -> interval.end_time
+          :met_by -> interval.start_time
+          :during -> compute_during_position(interval.start_time, interval.end_time)
+          :contains -> compute_contains_position(interval.start_time, interval.end_time)
+          :overlaps -> compute_near_end_position(interval.start_time, interval.end_time)
+          :overlapped_by -> compute_near_start_position(interval.start_time, interval.end_time)
+          :before -> DateTime.add(interval.start_time, -300, :second)
+          :after -> DateTime.add(interval.end_time, 300, :second)
+          :equals -> compute_midpoint(interval.start_time, interval.end_time)
+        end
+
+        %{bridge | computed_position: computed_position, position: computed_position}
+    end
+  end
+
+  defp get_timeline_bounds(timeline) do
+    intervals = Map.values(timeline.intervals)
+    case intervals do
+      [] ->
+        # Default timeline bounds if no intervals
+        now = DateTime.utc_now()
+        {now, DateTime.add(now, 3600, :second)}  # 1 hour default
+      _ ->
+        start_times = Enum.map(intervals, & &1.start_time)
+        end_times = Enum.map(intervals, & &1.end_time)
+        {Enum.min(start_times, DateTime), Enum.max(end_times, DateTime)}
+    end
+  end
+
+  defp compute_during_position(start_time, end_time) do
+    # Random position within the interval (30-70% range)
+    start_ms = DateTime.to_unix(start_time, :millisecond)
+    end_ms = DateTime.to_unix(end_time, :millisecond)
+    duration_ms = end_ms - start_ms
+    offset_ms = start_ms + div(duration_ms * (30 + :rand.uniform(40)), 100)
+    DateTime.from_unix!(offset_ms, :millisecond)
+  end
+
+  defp compute_contains_position(start_time, end_time) do
+    # Midpoint for contains relation
+    compute_midpoint(start_time, end_time)
+  end
+
+  defp compute_near_end_position(start_time, end_time) do
+    # 80-90% through the interval
+    start_ms = DateTime.to_unix(start_time, :millisecond)
+    end_ms = DateTime.to_unix(end_time, :millisecond)
+    duration_ms = end_ms - start_ms
+    offset_ms = start_ms + div(duration_ms * (80 + :rand.uniform(10)), 100)
+    DateTime.from_unix!(offset_ms, :millisecond)
+  end
+
+  defp compute_near_start_position(start_time, end_time) do
+    # 10-20% through the interval
+    start_ms = DateTime.to_unix(start_time, :millisecond)
+    end_ms = DateTime.to_unix(end_time, :millisecond)
+    duration_ms = end_ms - start_ms
+    offset_ms = start_ms + div(duration_ms * (10 + :rand.uniform(10)), 100)
+    DateTime.from_unix!(offset_ms, :millisecond)
+  end
+
+  defp compute_midpoint(start_time, end_time) do
+    start_ms = DateTime.to_unix(start_time, :millisecond)
+    end_ms = DateTime.to_unix(end_time, :millisecond)
+    midpoint_ms = div(start_ms + end_ms, 2)
+    DateTime.from_unix!(midpoint_ms, :millisecond)
+  end
+
+  # Helper function to convert absolute position bridges to semantic bridges
+  defp convert_to_semantic_bridge(timeline, %Bridge{semantic_relation: nil} = bridge) do
+    # Bridge has absolute position but no semantic relation - convert it
+    {timeline_start, timeline_end} = get_timeline_bounds(timeline)
+
+    # Determine semantic relation based on bridge position relative to timeline
+    semantic_relation = determine_semantic_relation(bridge.position, timeline_start, timeline_end, timeline)
+
+    # Create semantic bridge with computed relation
+    %{bridge |
+      semantic_relation: semantic_relation,
+      reference_target: "timeline",
+      computed_position: bridge.position
+    }
+  end
+
+  defp convert_to_semantic_bridge(_timeline, %Bridge{semantic_relation: _relation} = bridge) do
+    # Bridge already has semantic relation - return as-is
+    bridge
+  end
+
+  # Determine appropriate semantic relation based on position
+  defp determine_semantic_relation(position, timeline_start, timeline_end, timeline) do
+    # Calculate position relative to timeline bounds
+    start_diff = DateTime.diff(position, timeline_start, :millisecond)
+    end_diff = DateTime.diff(timeline_end, position, :millisecond)
+
+    cond do
+      # At or very close to start (within 1 second)
+      abs(start_diff) <= 1000 -> :starts
+
+      # At or very close to end (within 1 second)
+      abs(end_diff) <= 1000 -> :finishes
+
+      # Before timeline start
+      start_diff < 0 -> :before
+
+      # After timeline end
+      end_diff < 0 -> :after
+
+      # Check if positioned relative to specific intervals
+      true -> determine_interval_relation(position, timeline)
+    end
+  end
+
+  # Determine relation based on interval positions
+  defp determine_interval_relation(position, timeline) do
+    intervals = Map.values(timeline.intervals)
+
+    # Find intervals that contain or are adjacent to this position
+    containing_intervals = Enum.filter(intervals, fn interval ->
+      DateTime.compare(position, interval.start_time) != :lt and
+      DateTime.compare(position, interval.end_time) != :gt
+    end)
+
+    adjacent_intervals = Enum.filter(intervals, fn interval ->
+      start_diff = abs(DateTime.diff(position, interval.start_time, :millisecond))
+      end_diff = abs(DateTime.diff(position, interval.end_time, :millisecond))
+      start_diff <= 1000 or end_diff <= 1000
+    end)
+
+    cond do
+      # Position is within an interval
+      length(containing_intervals) > 0 -> :during
+
+      # Position is adjacent to interval boundaries
+      length(adjacent_intervals) > 0 -> :meets
+
+      # Default to during for positions between intervals
+      true -> :during
+    end
+  end
+
+  # Helper function to identify semantic bridges
+  defp is_semantic_bridge?(%Bridge{semantic_relation: nil}), do: false
+  defp is_semantic_bridge?(%Bridge{semantic_relation: _relation}), do: true
 end
