@@ -4,7 +4,7 @@
 defmodule AriaEngine.Membrane.ValidationPipeline.MiniZincSolver do
   @moduledoc "Handles solving scheduling problems using MiniZinc constraint solver.\n"
   require Logger
-  alias AriaEngine.MiniZinc.Executor
+  alias AriaMinizincGoal.Executor
   @doc "Checks if MiniZinc is available on the system.\n"
   def check_availability do
     Executor.check_availability()

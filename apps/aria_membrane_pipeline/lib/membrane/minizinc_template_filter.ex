@@ -5,7 +5,7 @@ defmodule AriaEngine.Membrane.MiniZincTemplateFilter do
   @moduledoc "Membrane filter that processes MiniZinc problems using EEx templates and Porcelain execution.\n\nThis filter:\n1. Takes structured problem data as input\n2. Renders appropriate MiniZinc template with problem variables\n3. Executes MiniZinc using Porcelain for robust process management\n4. Parses and formats the solution output\n5. Handles errors and timeouts gracefully\n"
   use Membrane.Filter
   require Logger
-  alias AriaEngine.MiniZinc.Executor
+  alias AriaMinizincGoal.Executor
   def_input_pad(:input, accepted_format: %Membrane.RemoteStream{})
   def_output_pad(:output, accepted_format: %Membrane.RemoteStream{})
 

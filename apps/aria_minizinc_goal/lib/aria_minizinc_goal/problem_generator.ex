@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.MiniZinc.ProblemGenerator do
+defmodule AriaMinizincGoal.ProblemGenerator do
   @moduledoc """
   Generates MiniZinc constraint satisfaction problems from planning requests.
 

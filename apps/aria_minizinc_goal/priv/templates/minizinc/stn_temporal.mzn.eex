@@ -1,0 +1,40 @@
+% Simple Temporal Network (STN) Scheduling Problem
+% Generated from template variables
+
+% Parameters
+int: num_activities = <%= @num_activities %>;
+int: num_constraints = <%= @num_constraints %>;
+
+% Activity durations
+array[1..num_activities] of int: durations = [<%= Enum.join(@durations, ", ") %>];
+
+% Decision variables - start times for each activity
+array[1..num_activities] of var 0..1000: start_times;
+
+% End times (derived from start times and durations)
+array[1..num_activities] of var 0..1000: end_times;
+
+% Link start times and end times
+constraint forall(i in 1..num_activities) (
+  end_times[i] = start_times[i] + durations[i]
+);
+
+% Temporal constraints between activities
+<%= for constraint <- @constraints do %>
+constraint start_times[<%= constraint.to_activity %>] >= end_times[<%= constraint.from_activity %>] + <%= constraint.min_distance %>;
+<% end %>
+
+% Objective: minimize makespan (latest end time)
+var 0..1000: makespan;
+constraint makespan = max(end_times);
+
+solve minimize makespan;
+
+% Output in JSON format
+output [
+  "{\"start_times\": [" ++
+  join(", ", [show(start_times[i]) | i in 1..num_activities]) ++
+  "], \"end_times\": [" ++
+  join(", ", [show(end_times[i]) | i in 1..num_activities]) ++
+  "], \"makespan\": " ++ show(makespan) ++ "}"
+];

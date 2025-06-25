@@ -31,6 +31,7 @@ defmodule AriaMembranePipeline.MixProject do
       {:aria_hybrid_planner, path: "../aria_hybrid_planner"},
       {:aria_temporal_planner, path: "../aria_temporal_planner"},
       {:aria_scheduler, path: "../aria_scheduler"},
+      {:aria_minizinc_goal, path: "../aria_minizinc_goal"},
 
       # Membrane Framework
       {:membrane_core, "~> 1.0"},

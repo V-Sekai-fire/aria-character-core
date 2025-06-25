@@ -26,6 +26,8 @@ defmodule AriaEngineCore.MixProject do
 
   defp deps do
     [
+      # Internal dependencies
+      {:aria_minizinc_goal, in_umbrella: true},
       # External dependencies
       {:jason, "~> 1.4"},
       {:libgraph, "~> 0.16"},
