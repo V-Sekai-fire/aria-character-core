@@ -570,6 +570,156 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
 end
 ```
 
+### Todo List Optimization Framework
+
+Multiple todo execution strategies with MinZinC optimization selection:
+
+```elixir
+defmodule AriaEngine.TodoOptimization do
+  @spec optimize_todo_execution(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()], keyword()) :: {:ok, [AriaEngine.todo_item()]} | {:error, String.t()}
+  def optimize_todo_execution(domain, state, todo_list, opts \\ []) do
+    # Get all available multitodo methods for this todo list
+    available_methods = Domain.get_multitodo_methods(domain, todo_list)
+    
+    case available_methods do
+      [] ->
+        # No optimization methods available - use default sequential execution
+        {:ok, todo_list}
+        
+      methods ->
+        # Let MinZinC choose optimal strategy based on optimization criteria
+        case MinizinC.optimize_todo_strategy(state, todo_list, methods, opts) do
+          {:ok, optimized_todo_list} -> {:ok, optimized_todo_list}
+          {:error, reason} -> 
+            Logger.warning("Todo optimization failed: #{reason}, using default")
+            {:ok, todo_list}
+        end
+    end
+  end
+end
+
+# Built-in utilities available for explicit use by domain authors
+defmodule AriaEngine.TodoExecution do
+  # Basic todo execution utility (analog to split_multigoal)
+  @spec sequential_todo_execution(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  def sequential_todo_execution(_state, todo_list) do
+    # Default strategy - no reordering, just return as-is
+    # Analog to split_multigoal for todo lists
+    todo_list
+  end
+end
+
+# Example multitodo methods in domain
+defmodule ExampleDomain do
+  use AriaEngine.Domain
+  
+  # Strategy 1: Sequential execution (default/basic - analog to split_multigoal)
+  @multitodo_method
+  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  def execute_todo_list(state, todo_list) do
+    # Default sequential order - no optimization (like split_multigoal)
+    AriaEngine.TodoExecution.sequential_todo_execution(state, todo_list)
+  end
+  
+  # Strategy 2: Resource-optimized reordering
+  @multitodo_method
+  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  def execute_todo_list(state, todo_list) do
+    # Group todos by required resources to minimize context switching
+    todo_list
+    |> group_by_resource_requirements(state)
+    |> flatten_optimized_groups()
+  end
+  
+  # Strategy 3: Makespan-optimized reordering
+  @multitodo_method
+  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  def execute_todo_list(state, todo_list) do
+    # Reorder to minimize total execution time
+    todo_list
+    |> calculate_execution_times(state)
+    |> sort_by_critical_path()
+  end
+  
+  # Strategy 4: Parallelism-optimized reordering
+  @multitodo_method
+  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  def execute_todo_list(state, todo_list) do
+    # Reorder to maximize parallel execution opportunities
+    todo_list
+    |> analyze_dependencies(state)
+    |> reorder_for_parallelism()
+  end
+  
+  # Helper functions for optimization strategies
+  @spec group_by_resource_requirements([AriaEngine.todo_item()], AriaState.t()) :: [[AriaEngine.todo_item()]]
+  defp group_by_resource_requirements(todo_list, state) do
+    # Implementation: Group todos by required entity types/capabilities
+  end
+  
+  @spec calculate_execution_times([AriaEngine.todo_item()], AriaState.t()) :: [{AriaEngine.todo_item(), non_neg_integer()}]
+  defp calculate_execution_times(todo_list, state) do
+    # Implementation: Calculate estimated execution time for each todo
+  end
+  
+  @spec analyze_dependencies([AriaEngine.todo_item()], AriaState.t()) :: %{AriaEngine.todo_item() => [AriaEngine.todo_item()]}
+  defp analyze_dependencies(todo_list, state) do
+    # Implementation: Analyze dependencies between todos
+  end
+end
+```
+
+**Todo Optimization Integration with MinZinC:**
+
+```elixir
+defmodule AriaEngine.MinizinC.TodoOptimizer do
+  @spec optimize_todo_strategy(AriaState.t(), [AriaEngine.todo_item()], [function()], keyword()) :: {:ok, [AriaEngine.todo_item()]} | {:error, String.t()}
+  def optimize_todo_strategy(state, todo_list, available_methods, opts \\ []) do
+    # Generate optimization model for todo execution strategies
+    case generate_todo_optimization_model(state, todo_list, available_methods) do
+      {:ok, model} ->
+        solve_todo_optimization(model, opts)
+      {:error, reason} ->
+        {:error, "Todo optimization model generation failed: #{reason}"}
+    end
+  end
+  
+  @spec generate_todo_optimization_model(AriaState.t(), [AriaEngine.todo_item()], [function()]) :: {:ok, String.t()} | {:error, String.t()}
+  defp generate_todo_optimization_model(state, todo_list, methods) do
+    # Generate MinZinC model that evaluates different todo execution strategies
+    # Based on resource utilization, makespan, parallelism potential, etc.
+    model = """
+    % Todo List Optimization Model
+    include "globals.mzn";
+    
+    % Strategy selection variables
+    var 1..#{length(methods)}: selected_strategy;
+    
+    % Optimization objectives
+    var int: makespan;
+    var float: resource_efficiency;
+    var int: parallelism_score;
+    
+    % Constraints based on current state and todo requirements
+    #{generate_todo_constraints(state, todo_list)}
+    
+    % Objective: Minimize makespan while maximizing resource efficiency
+    solve minimize makespan + (1.0 - resource_efficiency) * 100;
+    """
+    
+    {:ok, model}
+  end
+end
+```
+
+**Benefits of Todo List Optimization:**
+
+- **Resource efficiency** - Group todos by required resources to minimize context switching
+- **Makespan minimization** - Reorder todos to minimize total execution time  
+- **Parallelism maximization** - Identify todos that can be executed in parallel
+- **Automatic strategy selection** - MinZinC chooses optimal strategy based on current state
+- **Consistent with goal optimization** - Follows same pattern as existing goal optimization methods
+
 ## Validation Framework Architecture
 
 ### Comprehensive Domain Validation (Planning-Time Only)

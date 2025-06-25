@@ -359,16 +359,49 @@ defmodule MyApp.Domains.CookingDomain do
   @multigoal_method goal_pattern: :general_goals
   @spec handle_general_multigoal(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
   def handle_general_multigoal(state, multigoal) do
-    # Explicit fallback chain implemented by domain author
+    # Strategy 1: Default/basic decomposition (analog to sequential_todo_execution)
+    AriaEngine.Multigoal.split_multigoal(state, multigoal.goals)
+  end
+  
+  @multigoal_method goal_pattern: :optimization_goals
+  @spec handle_optimization_multigoal(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
+  def handle_optimization_multigoal(state, multigoal) do
+    # Strategy 2: MinizinC-optimized multigoal
     case AriaMinizincGoal.optimize_multigoal(state, multigoal) do
       {:ok, plan} -> 
         Logger.debug("MinizinC multigoal optimization succeeded")
         {:ok, plan}
       {:error, _} ->
-        # Domain author explicitly chooses split_multigoal
+        # Domain author explicitly chooses split_multigoal as fallback
         Logger.debug("MinizinC failed, using split_multigoal")
         AriaEngine.Multigoal.split_multigoal(state, multigoal.goals)
     end
+  end
+  
+  # Multitodo methods (symmetric to multigoal methods)
+  @multitodo_method
+  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  def execute_todo_list(state, todo_list) do
+    # Strategy 1: Default/basic sequential execution (analog to split_multigoal)
+    AriaEngine.TodoExecution.sequential_todo_execution(state, todo_list)
+  end
+  
+  @multitodo_method
+  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  def execute_todo_list(state, todo_list) do
+    # Strategy 2: Resource-optimized reordering
+    todo_list
+    |> group_by_resource_requirements(state)
+    |> flatten_optimized_groups()
+  end
+  
+  @multitodo_method
+  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  def execute_todo_list(state, todo_list) do
+    # Strategy 3: Makespan-optimized reordering
+    todo_list
+    |> calculate_execution_times(state)
+    |> sort_by_critical_path()
   end
   
   # Domain creation follows module-based pattern
@@ -736,6 +769,16 @@ end
 @multigoal_method goal_pattern: :pattern_name
 def method_name(state, multigoal) do
   # Multigoal handling logic
+end
+```
+
+**Multitodo Methods:**
+
+```elixir
+@multitodo_method
+def execute_todo_list(state, todo_list) do
+  # Todo list optimization logic - multiple methods with same name
+  # MinZinC chooses optimal strategy based on optimization criteria
 end
 ```
 

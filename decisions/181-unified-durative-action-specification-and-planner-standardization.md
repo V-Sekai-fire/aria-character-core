@@ -445,9 +445,20 @@ end
 
 ```elixir
 @multigoal_method goal_pattern: :pattern_name
-@spec method_name(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
-def method_name(state, multigoal) do
+@spec multigoal_method(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
+def multigoal_method(state, multigoal) do
   # Multigoal handling logic
+end
+```
+
+**Multitodo Methods:**
+
+```elixir
+@multitodo_method
+@spec multitodo_method(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+def multitodo_method(state, todo_list) do
+  # Todo list optimization logic - multiple methods with same name
+  # MinZinC chooses optimal strategy based on optimization criteria
 end
 ```
 
