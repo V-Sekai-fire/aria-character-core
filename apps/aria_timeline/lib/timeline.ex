@@ -6,7 +6,21 @@ defmodule Timeline do
   alias Timeline.Interval
   alias Timeline.Internal.STN
   alias Timeline.Bridge
-  @type t :: %__MODULE__{intervals: %{Interval.id() => Interval.t()}, stn: STN.t()}
+
+  # Type definitions
+  @type t :: %__MODULE__{
+          intervals: %{Interval.id() => Interval.t()},
+          stn: STN.t(),
+          metadata: map()
+        }
+
+  @type bridge_rule :: :action_type_transitions | :resource_changes | :phase_boundaries | :decision_points
+  @type segment_info :: %{
+          start_time: DateTime.t() | nil,
+          end_time: DateTime.t() | nil,
+          intervals: [Interval.t()]
+        }
+
   defstruct intervals: %{}, stn: STN.new(), metadata: %{}
   @spec new(keyword()) :: t()
   def new(opts \\ []) do
@@ -412,7 +426,7 @@ defmodule Timeline do
   ## Returns
   Timeline with automatically inserted bridges based on the rules.
   """
-  @spec auto_insert_bridges(t(), [atom()]) :: t()
+  @spec auto_insert_bridges(t(), [bridge_rule()]) :: t()
   def auto_insert_bridges(%__MODULE__{} = timeline, rules) when is_list(rules) do
     intervals = Map.values(timeline.intervals)
 
