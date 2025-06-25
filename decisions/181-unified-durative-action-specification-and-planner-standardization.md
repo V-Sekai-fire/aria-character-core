@@ -156,13 +156,28 @@ end
 
 ### Supported Patterns
 
-**Pattern 1: Floating Duration (effort-based scheduling)**
+**Pattern 1: Instant Actions - Anytime (zero duration)**
+
+```elixir
+%{duration: "PT0S"}  # Zero duration - can be done anytime
+```
+
+**Pattern 2: Instant Actions - Time Point (zero duration at specific time)**
+
+```elixir
+%{
+  start: "2025-06-22T11:00:00Z",  # Instant action at exact time point
+  end: "2025-06-22T11:00:00Z"     # Same time = zero duration, specific moment
+}
+```
+
+**Pattern 3: Floating Duration (effort-based scheduling)**
 
 ```elixir
 %{duration: "PT2H"}  # ISO 8601 duration string
 ```
 
-**Pattern 2: Fixed Schedule (time-based scheduling)**
+**Pattern 4: Fixed Schedule (time-based scheduling)**
 
 ```elixir
 %{
@@ -171,7 +186,7 @@ end
 }
 ```
 
-**Pattern 3: Open-ended Intervals**
+**Pattern 5: Open-ended Intervals**
 
 ```elixir
 %{start: "2025-06-22T10:00:00Z"}  # Start time only
@@ -180,142 +195,72 @@ end
 
 ### Validation Rules
 
+- ✅ `duration: "PT0S"` (instant actions - can be done anytime)
+- ✅ `start` AND `end` with same time (instant actions - must be done at specific time point)
 - ✅ `duration` only (floating effort)
-- ✅ `start` AND `end` (fixed closed interval)
+- ✅ `start` AND `end` with different times (fixed closed interval)
 - ✅ `start` only (open-ended interval - starts at time, no end constraint)
 - ✅ `end` only (open-ended interval - must finish by time, no start constraint)
 - ❌ Cannot mix `duration` with `start`/`end`
 - ✅ Missing temporal specification defaults to `duration: "PT0S"` (zero duration floating)
 
-## Temporal Conditions System
+## Simple Durative Actions
 
-### Universal Todo List Support
-
-Temporal conditions (`at_start`, `over_all`, `at_end`) accept **any todo list item type**, not just goals:
+Durative actions use **only** duration and entity requirements - no complex temporal conditions:
 
 ```elixir
-%Domain.DurativeAction{
-  name: :collaborative_cooking,
-  duration: {:fixed, 3600},
-  
-  conditions: %{
-    at_start: [
-      # Goals (state conditions) - SIMULTANEOUS achievement required
-      {"available", "chef_1", true},
-      {"temperature", "oven", {:>=, 350}},
-      
-      # Tasks (complex operations)
-      {:preheat_workspace, []},
-      {:gather_team, ["cooking_crew"]},
-      
-      # Actions (direct state changes)
-      {:lock_kitchen_door, []},
-      {:start_timer, ["cooking_session"]},
-      
-      # Multigoals (simultaneous goal sets)
-      [{"clean", "workspace", true}, {"organized", "ingredients", true}]
-    ],
-    
-    over_all: [
-      # Ongoing conditions throughout duration
-      {"coordination", "team", "active"},
-      {"temperature", "oven", {:between, 350, 450}},
-      
-      # Continuous tasks
-      {:monitor_cooking_progress, ["meal_id"]},
-      {:maintain_workspace_cleanliness, []}
-    ],
-    
-    at_end: [
-      # Final state requirements
-      {"quality", "meal", {:>=, 8}},
-      {"cleanup", "kitchen", "complete"},
-      
-      # Completion tasks
-      {:final_quality_check, ["meal_id"]},
-      {:document_cooking_session, ["session_log"]}
-    ]
-  }
-}
+@action duration: "PT2H",
+        requires_entities: [
+          %{type: "agent", capabilities: [:cooking]},
+          %{type: "oven", capabilities: [:heating]},
+          %{type: "kitchen", capabilities: [:workspace]}
+        ]
+def cook_meal(state, [meal_id]) do
+  # Pure state transformation - planner already validated requirements
+  state
+  |> AriaState.RelationalState.set_fact("meal_status", meal_id, "cooking")
+  |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
+end
 ```
 
-### Temporal Condition Semantics with Type Specifications
+### Prerequisites and Verification via Method Decomposition
 
-**Critical Distinction with Elixir Types:**
+Use natural hierarchical decomposition for complex workflows:
 
 ```elixir
-@type goal :: {predicate :: String.t(), subject :: String.t(), value :: any()}
-@type task :: {task_name :: atom(), args :: list()}
-@type action :: {action_name :: atom(), args :: list()}
-@type multigoal :: [goal()]  # List of goals that must ALL be true simultaneously
-@type todo_item :: goal() | task() | action() | multigoal()
-@type temporal_condition_list :: [todo_item()]
+@task_method
+def prepare_and_cook_meal(state, [meal_id]) do
+  {:ok, [
+    # Prerequisites as goals
+    {"available", "chef_1", true},
+    {"temperature", "oven", {:>=, 350}},
+    
+    # Preparation as tasks
+    {:setup_workspace, []},
+    {:gather_ingredients, [meal_id]},
+    
+    # Main action (simple durative action)
+    {:cook_meal, [meal_id]},
+    
+    # Verification as goals
+    {"quality", "meal", {:>=, 8}},
+    {"cleanup", "kitchen", "complete"}
+  ]}
+end
 
-# MULTIGOAL (simultaneous requirement)
-multigoal :: [goal()] = [
-  {"clean", "workspace", true},
-  {"organized", "ingredients", true}, 
-  {"ready", "equipment", true}
-]
-# ↑ This is ONE multigoal todo item - all three goals must be satisfied at the same moment
-
-# SEQUENTIAL GOAL LIST (processed one after another)
-sequential_goals :: [goal()] = [
-  {"clean", "workspace", true},      # Goal 1: Check/achieve workspace cleanliness
-  {"organized", "ingredients", true}, # Goal 2: Check/achieve ingredient organization
-  {"ready", "equipment", true}       # Goal 3: Check/achieve equipment readiness
-]
-# ↑ These are THREE separate goal todo items - processed sequentially
+@action duration: "PT2H", requires_entities: [...]
+def cook_meal(state, [meal_id]) do
+  # Simple, clean action
+  state |> AriaState.RelationalState.set_fact("meal_status", meal_id, "ready")
+end
 ```
 
-**In Temporal Conditions:**
+**Why this approach works better:**
 
-```elixir
-# Example temporal conditions with type annotations
-conditions: %{
-  at_start: [
-    # Individual goals (processed sequentially)
-    {"available", "chef_1", true} :: goal(),
-    {"temperature", "oven", {:>=, 350}} :: goal(),
-    
-    # Tasks (decomposed and executed)
-    {:preheat_workspace, []} :: task(),
-    {:gather_team, ["cooking_crew"]} :: task(),
-    
-    # Actions (executed directly)
-    {:lock_kitchen_door, []} :: action(),
-    {:start_timer, ["session"]} :: action(),
-    
-    # Multigoal (ALL goals must be true simultaneously)
-    [{"clean", "workspace", true}, {"organized", "ingredients", true}] :: multigoal()
-  ]
-}
-```
-
-**Temporal Condition Types:**
-
-- **`at_start`**: All conditions must be satisfied **simultaneously** when action begins
-- **`over_all`**: All conditions must remain true **throughout** the action duration  
-- **`at_end`**: All conditions must be satisfied **simultaneously** when action completes
-
-### Mixed Todo Type Processing
-
-The temporal planner processes different todo types appropriately:
-
-```elixir
-# Goals: Direct state checking
-{"available", "chef_1", true} → AriaState.RelationalState.get_fact(state, "available", "chef_1")
-
-# Tasks: Recursive decomposition and execution
-{:preheat_workspace, []} → Domain.get_task_methods(domain, :preheat_workspace)
-
-# Actions: Direct execution
-{:lock_kitchen_door, []} → Domain.execute_action(domain, state, :lock_kitchen_door, [])
-
-# Multigoals: Simultaneous goal satisfaction
-[{"clean", "workspace", true}, {"organized", "ingredients", true}] → 
-  Domain.resolve_multigoal(domain, state, multigoal)
-```
+- **Natural decomposition** - methods handle complexity, actions stay simple
+- **Reusable components** - prerequisites and verification become separate todo items
+- **Clear hierarchy** - follows established hierarchical planning principles
+- **No embedded complexity** - actions focus purely on state transformation
 
 ## Goal Format Standardization
 
@@ -369,6 +314,12 @@ The following concepts were explicitly rejected during design:
 14. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
 15. **❌ TOMBSTONE: `Domain.add_action` registration pattern** - Use `@action` attributes in module-based domains instead
 16. **❌ TOMBSTONE: `Domain.declare_commands` registration pattern** - Use `@command` attributes in module-based domains instead
+17. **❌ TOMBSTONE: Temporal conditions in durative actions** - `conditions: %{at_start: [...], over_all: [...], at_end: [...]}` violates hierarchical decomposition principles
+18. **❌ TOMBSTONE: Mixed todo types in temporal conditions** - Goals, tasks, actions, multigoals embedded in action metadata creates unwieldy complexity
+19. **❌ TOMBSTONE: Domain.DurativeAction with temporal conditions/effects** - Overly complex structure that inverts natural method decomposition
+20. **❌ TOMBSTONE: Temporal condition processing logic** - Use regular method decomposition instead
+21. **❌ TOMBSTONE: `at_start`, `over_all`, `at_end` condition types** - Natural prerequisites/verification handled by methods
+22. **❌ TOMBSTONE: Temporal condition semantics with type specifications** - Overly complex typing for fundamentally flawed approach
 
 **Old unigoal API patterns (TOMBSTONED):**
 
