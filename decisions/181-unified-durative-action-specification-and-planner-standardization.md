@@ -436,34 +436,6 @@ validate_temporal_condition/2  # ❌ REMOVE
 State.evaluate_condition/2     # ❌ REMOVE
 ```
 
-## Tombstoned Concepts
-
-The following concepts were explicitly rejected during design:
-
-1. **❌ TOMBSTONE: `quantity` field in action metadata** - Quantities are state fluents, not action metadata
-2. **❌ TOMBSTONE: Separate `resources` map with `consumables`, `tools`, `locations`** - Everything is entities with capabilities
-3. **❌ TOMBSTONE: `properties` field in entity requirements** - Use capabilities instead
-4. **❌ TOMBSTONE: Separate `requires_agent` field** - Agents are entities with capabilities
-5. **❌ TOMBSTONE: `location` field in action metadata** - Locations are entities in `requires_entities`
-6. **❌ TOMBSTONE: `constraints` field in entity requirements** - Quantities, availability, and dynamic properties are state fluents, not action metadata
-7. **❌ TOMBSTONE: Requirement validation in action functions** - Actions assume planner has already validated requirements
-
-8. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity`, `size` belong in state, not action metadata
-9. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{predicate, subject, value}` format allowed, all other formats rejected
-10. **❌ TOMBSTONE: Complex state evaluation functions** - Use direct `AriaState.RelationalState.get_fact/3` queries instead of `State.evaluate_condition/2` or `validate_temporal_condition/2`
-11. **❌ TOMBSTONE: Any validation in action functions** - ALL validation happens at planning time, actions are pure state transformations
-12. **❌ TOMBSTONE: Command registration in domains** - Commands are execution-time functions, not domain registration artifacts
-13. **❌ TOMBSTONE: Goal format inconsistency in ADR-131** - Fixed documentation error where tombstone claimed `{predicate, subject, value}` was correct format, but all examples used `{subject, predicate, value}`
-14. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
-15. **❌ TOMBSTONE: `Domain.add_action` registration pattern** - Use `@action` attributes in module-based domains instead
-16. **❌ TOMBSTONE: `Domain.declare_commands` registration pattern** - Use `@command` attributes in module-based domains instead
-17. **❌ TOMBSTONE: Temporal conditions in durative actions** - `conditions: %{at_start: [...], over_all: [...], at_end: [...]}` violates hierarchical decomposition principles
-18. **❌ TOMBSTONE: Mixed todo types in temporal conditions** - Goals, tasks, actions, multigoals embedded in action metadata creates unwieldy complexity
-19. **❌ TOMBSTONE: Domain.DurativeAction with temporal conditions/effects** - Overly complex structure that inverts natural method decomposition
-20. **❌ TOMBSTONE: Temporal condition processing logic** - Use regular method decomposition instead
-21. **❌ TOMBSTONE: `at_start`, `over_all`, `at_end` condition types** - Natural prerequisites/verification handled by methods
-22. **❌ TOMBSTONE: Temporal condition semantics with type specifications** - Overly complex typing for fundamentally flawed approach
-
 ## Complete Module-Based Domain Pattern
 
 ```elixir
@@ -943,6 +915,32 @@ def multitodo_method(state, todo_list) do
 end
 ```
 
+## Tombstoned Concepts
+
+The following concepts were explicitly rejected during design:
+
+1. **❌ TOMBSTONE: `quantity` field in action metadata** - Quantities are state fluents, not action metadata
+2. **❌ TOMBSTONE: Separate `resources` map with `consumables`, `tools`, `locations`** - Everything is entities with capabilities
+3. **❌ TOMBSTONE: `properties` field in entity requirements** - Use capabilities instead
+4. **❌ TOMBSTONE: Separate `requires_agent` field** - Agents are entities with capabilities
+5. **❌ TOMBSTONE: `location` field in action metadata** - Locations are entities in `requires_entities`
+6. **❌ TOMBSTONE: `constraints` field in entity requirements** - Quantities, availability, and dynamic properties are state fluents, not action metadata
+7. **❌ TOMBSTONE: Requirement validation in action functions** - Actions assume planner has already validated requirements
+8. **❌ TOMBSTONE: Entity properties in action metadata** - Properties like `max_temp`, `quantity`, `size` belong in state, not action metadata
+9. **❌ TOMBSTONE: Mixed goal formats** - ONLY `{predicate, subject, value}` format allowed, all other formats rejected
+10. **❌ TOMBSTONE: Complex state evaluation functions** - Use direct `AriaState.RelationalState.get_fact/3` queries instead of `State.evaluate_condition/2` or `validate_temporal_condition/2`
+11. **❌ TOMBSTONE: Any validation in action functions** - ALL validation happens at planning time, actions are pure state transformations
+12. **❌ TOMBSTONE: Command registration in domains** - Commands are execution-time functions, not domain registration artifacts
+13. **❌ TOMBSTONE: Goal format inconsistency in ADR-131** - Fixed documentation error where tombstone claimed `{predicate, subject, value}` was correct format, but all examples used `{subject, predicate, value}`
+14. **❌ TOMBSTONE: Old unigoal API patterns** - ONLY predicate-based registration allowed
+15. **❌ TOMBSTONE: `Domain.add_action` registration pattern** - Use `@action` attributes in module-based domains instead
+16. **❌ TOMBSTONE: `Domain.declare_commands` registration pattern** - Use `@command` attributes in module-based domains instead
+17. **❌ TOMBSTONE: Temporal conditions in durative actions** - `conditions: %{at_start: [...], over_all: [...], at_end: [...]}` violates hierarchical decomposition principles
+18. **❌ TOMBSTONE: Mixed todo types in temporal conditions** - Goals, tasks, actions, multigoals embedded in action metadata creates unwieldy complexity
+19. **❌ TOMBSTONE: Domain.DurativeAction with temporal conditions/effects** - Overly complex structure that inverts natural method decomposition
+20. **❌ TOMBSTONE: Temporal condition processing logic** - Use regular method decomposition instead
+21. **❌ TOMBSTONE: `at_start`, `over_all`, `at_end` condition types** - Natural prerequisites/verification handled by methods
+22. **❌ TOMBSTONE: Temporal condition semantics with type specifications** - Overly complex typing for fundamentally flawed approach
 23. **❌ TOMBSTONE: Functions without attributes referencing planner metadata** - Functions must have corresponding attributes (@action, @command, etc.) to integrate with planner system
 24. **❌ TOMBSTONE: Functions presented as planner functions without attributes** - All planner integration requires explicit attribute declaration
 
