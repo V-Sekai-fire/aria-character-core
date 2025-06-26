@@ -223,7 +223,7 @@ end
 
 # Unigoal Methods
 @unigoal_method predicate: "location"
-@spec method_name(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@spec method_name(AriaState.t(), [term(), term()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 # Multigoal Methods
 @multigoal_method goal_pattern: :pattern_name
