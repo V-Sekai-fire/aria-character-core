@@ -469,11 +469,13 @@ end
 
 All temporal specifications follow the 9-pattern system defined in the Complete Temporal Specification Permutations table. Each pattern represents a valid combination of `start`, `end`, and `duration` fields:
 
-**Patterns 1-2: No Temporal Specification (Default)**
-- Both patterns represent instant actions that can be scheduled anytime
-- Pattern 1: Alternative interpretation (❌ status)
-- Pattern 2: Standard interpretation (✅ status)
-- Both have identical semantics: instant action, anytime
+**Pattern 1: No Temporal Specification**
+- No duration, start, or end specified (❌ ❌ ❌ ❌)
+- Defaults to instant action that can be scheduled anytime
+
+**Pattern 2: Zero Duration Specified**
+- Explicit zero duration (❌ ❌ ❌ ✅) with `duration: "PT0S"`
+- Instant action that can be scheduled anytime
 
 **Pattern 3: Floating Duration**
 ```elixir
@@ -544,13 +546,20 @@ All temporal specifications follow the 9-pattern system defined in the Complete 
 
 ### Semantic Definitions
 
-**Pattern 1 & 2: Default Instant (No temporal specification)**
+**Pattern 1: No Temporal Specification**
 ```elixir
-%{}  # Both interpretations default to instant action, anytime
+%{}  # No duration, start, or end specified
 ```
 *Semantics*: Instant action that can be scheduled at any time.
 *Use case*: "Check inventory" - can be done anytime, takes no time.
-*Note*: Both patterns represent the same semantic meaning, demonstrating that empty specification is explicitly valid.
+
+**Pattern 2: Zero Duration Specified**
+```elixir
+%{duration: "PT0S"}  # Explicit zero duration
+```
+*Semantics*: Instant action that can be scheduled at any time.
+*Use case*: "Quick status check" - explicitly zero duration, can be done anytime.
+*Note*: Both Pattern 1 and 2 have identical semantics but different specifications.
 
 **Pattern 3: Floating Duration**
 ```elixir
