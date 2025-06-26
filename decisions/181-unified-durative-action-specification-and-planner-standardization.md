@@ -67,7 +67,7 @@ end
 @spec cook_meal() :: {:ok, term()} | {:error, atom()}
 def cook_meal() do
   # Just cook!
-  {:ok, true}
+  {:ok, :cooked}
 end
 ```
 
