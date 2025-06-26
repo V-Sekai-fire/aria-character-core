@@ -1306,7 +1306,7 @@ end
 **Planner Actions:**
 
 ```elixir
-@action duration: "PT2H", requires_entities: [...]
+@action duration: "PT2H", requires_entities: []
 @spec action_name(AriaState.t(), [term()]) :: AriaState.t()
 def action_name(state, args) do
   # Can reference @action metadata

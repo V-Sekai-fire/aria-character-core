@@ -51,6 +51,7 @@ defmodule AriaCore.Examples.RestaurantDomain do
   """
 
   use AriaCore.Domain
+  use AriaCore.ActionAttributes
 
   # ============================================================================
   # SIMPLE DURATIVE ACTIONS (ADR-181 COMPLIANT)
@@ -364,7 +365,7 @@ defmodule AriaCore.Examples.RestaurantDomain do
   # ============================================================================
 
   # Task method for complex meal preparation (true task decomposition)
-  @task_method
+  @task_method true
   def prepare_complete_meal_method(_state, [meal_id]) do
     # Decompose complex meal preparation into steps
     {:ok, [
@@ -386,7 +387,7 @@ defmodule AriaCore.Examples.RestaurantDomain do
   end
 
   # Task method for handling rush orders (task decomposition)
-  @task_method
+  @task_method true
   def rush_order_method(_state, [order_id]) do
     # Optimized decomposition for rush orders
     {:ok, [
@@ -404,7 +405,7 @@ defmodule AriaCore.Examples.RestaurantDomain do
   end
 
   # Task method for handling dietary restrictions (task decomposition)
-  @task_method
+  @task_method true
   def special_diet_method(state, [meal_id]) do
     # Check dietary requirements and adapt preparation
     dietary_requirements = get_dietary_requirements(state, meal_id)
