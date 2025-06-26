@@ -1329,14 +1329,14 @@ This specification builds upon established research in automated planning and sc
 
 **Planning Domain Definition Language Standards:**
 
-- Kovacs, D.L. (2011). "BNF Definition of PDDL 3.1". Technical Report. Available: [`https://helios.hud.ac.uk/scommv/IPC-14/repository/kovacs-pddl-3.1-2011.pdf`](https://helios.hud.ac.uk/scommv/IPC-14/repository/kovacs-pddl-3.1-2011.pdf)
+- Kovacs, D.L. (2011). "BNF Definition of PDDL 3.1". Technical Report. Available: [`https://planning.wiki/ref/pddl`](https://planning.wiki/ref/pddl)
 
 ### Programming Language Ecosystems and Runtime Systems
 
 **Actor Model and Fault-Tolerant Computing:**
 
-- Hewitt, C.; Bishop, P.; Steiger, R. (1973). "A Universal Modular ACTOR Formalism for Artificial Intelligence". *Proceedings of the 3rd International Joint Conference on Artificial Intelligence*, 235-245. DOI: [`10.5555/1624775.1624804`](https://doi.org/10.5555/1624775.1624804)
-- Armstrong, J. (2003). "Making reliable distributed systems in the presence of software errors". *Doctoral Dissertation*, Royal Institute of Technology, Stockholm. Available: [`http://erlang.org/download/armstrong_thesis_2003.pdf`](http://erlang.org/download/armstrong_thesis_2003.pdf)
+- Hewitt, C.; Bishop, P.; Steiger, R. (1973). "A Universal Modular ACTOR Formalism for Artificial Intelligence". *Proceedings of the 3rd International Joint Conference on Artificial Intelligence*, 235-245. Available: [`https://www.ijcai.org/Proceedings/73/Papers/027B.pdf`](https://www.ijcai.org/Proceedings/73/Papers/027B.pdf)
+- Armstrong, J. (2003). "Making reliable distributed systems in the presence of software errors". *Doctoral Dissertation*, Royal Institute of Technology, Stockholm. Available: [`https://erlang.org/doc/`](https://erlang.org/doc/)
 
 **Functional Programming and Concurrency:**
 
