@@ -403,12 +403,13 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "mixing_bowl", capabilities: [:container, :reusable]}
           ],
           description: "Prepare a meal using specified ingredients and cooking equipment"
-  @spec cook_meal(AriaState.t(), [meal_id()]) :: AriaState.t()
+  @spec cook_meal(AriaState.t(), [meal_id()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def cook_meal(state, [meal_id]) do
     # Pure state transformation, planner already validated requirements
-    state
+    new_state = state
     |> AriaState.RelationalState.set_fact("meal_status", meal_id, "cooking")
     |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
+    {:ok, new_state}
   end
 
   # Fixed scheduling example with @action attributes
@@ -419,12 +420,13 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "conference_room_1", capabilities: [:meeting_space]}
           ],
           description: "Scheduled team meeting in conference room"
-  @spec meeting(AriaState.t(), [participants()]) :: AriaState.t()
+  @spec meeting(AriaState.t(), [participants()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def meeting(state, [participants]) do
     # Implementation
-    state
+    new_state = state
     |> AriaState.RelationalState.set_fact("meeting_status", "team_meeting", "in_progress")
     |> AriaState.RelationalState.set_fact("room_status", "conference_room_1", "occupied")
+    {:ok, new_state}
   end
 
   # Start time with duration example (calculated end time)
@@ -435,12 +437,13 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "oven", capabilities: [:heating]}
           ],
           description: "Afternoon baking session starting at 2 PM, lasting 1.5 hours"
-  @spec afternoon_baking(AriaState.t(), [String.t()]) :: AriaState.t()
+  @spec afternoon_baking(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def afternoon_baking(state, [recipe]) do
     # Automatically scheduled from 14:00 to 15:30 (start + duration)
-    state
+    new_state = state
     |> AriaState.RelationalState.set_fact("baking_status", recipe, "in_progress")
     |> AriaState.RelationalState.set_fact("oven_reserved", "main_oven", true)
+    {:ok, new_state}
   end
 
   # End time with duration example (calculated start time)
@@ -452,12 +455,13 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "kitchen", capabilities: [:workspace]}
           ],
           description: "Dinner preparation must finish by 6 PM, takes 2 hours"
-  @spec prepare_dinner(AriaState.t(), [String.t()]) :: AriaState.t()
+  @spec prepare_dinner(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def prepare_dinner(state, [menu]) do
     # Automatically scheduled from 16:00 to 18:00 (end - duration = start)
-    state
+    new_state = state
     |> AriaState.RelationalState.set_fact("dinner_status", menu, "preparing")
     |> AriaState.RelationalState.set_fact("kitchen_reserved", "main_kitchen", true)
+    {:ok, new_state}
   end
 
   # Fully constrained example (validation)
@@ -469,12 +473,13 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "conference_room", capabilities: [:meeting_space]}
           ],
           description: "Morning workshop with explicit time validation"
-  @spec morning_workshop(AriaState.t(), [String.t()]) :: AriaState.t()
+  @spec morning_workshop(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def morning_workshop(state, [topic]) do
     # System validates: 09:00 + 2 hours = 11:00 (consistent)
-    state
+    new_state = state
     |> AriaState.RelationalState.set_fact("workshop_status", topic, "in_session")
     |> AriaState.RelationalState.set_fact("room_status", "conference_room", "occupied")
+    {:ok, new_state}
   end
 end
 ```
