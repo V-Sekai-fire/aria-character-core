@@ -65,7 +65,7 @@ Everything is an entity with capabilities:
 @command true
 @task_method true
 @unigoal_method predicate: "location"
-@multigoal_method goal_pattern: :pattern_name
+@multigoal_method true
 @multitodo_method true
 ```
 
@@ -132,13 +132,13 @@ Everything is an entity with capabilities:
 
 ```elixir
 # Multiple goal optimization
-@multigoal_method goal_pattern: :cooking_batch
+@multigoal_method true
 @spec optimize_cooking_batch(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()}
 
-@multigoal_method goal_pattern: :resource_allocation
+@multigoal_method true
 @spec allocate_kitchen_resources(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()}
 
-@multigoal_method goal_pattern: :meal_preparation
+@multigoal_method true
 @spec coordinate_meal_prep(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()}
 ```
 
@@ -327,7 +327,7 @@ end
 @spec method_name(AriaState.t(), [subject(), object()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 # Multigoal Methods
-@multigoal_method goal_pattern: :pattern_name
+@multigoal_method true
 @spec multigoal_method(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()}
 
 # Multitodo Methods
