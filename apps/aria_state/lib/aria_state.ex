@@ -54,6 +54,64 @@ defmodule AriaState do
   defdelegate copy(state), to: AriaState.ObjectState
 
   @doc """
+  Creates a new persistent state with storage integration.
+
+  This function initializes a new AriaState with persistent storage capabilities,
+  allowing automatic saving and loading of state data.
+
+  ## Parameters
+  - `storage_opts` - Storage configuration options
+
+  ## Returns
+  - `{:ok, state}` - Successfully created persistent state
+  - `{:error, reason}` - Failed to create persistent state
+
+  ## Examples
+
+      # Create with local storage
+      {:ok, state} = AriaState.new_persistent(backend: :local)
+
+      # Create with custom configuration
+      {:ok, state} = AriaState.new_persistent(
+        backend: :local,
+        config: %{storage_dir: "/path/to/storage"}
+      )
+  """
+  @spec new_persistent(keyword()) :: {:ok, AriaState.ObjectState.t()} | {:error, String.t()}
+  def new_persistent(storage_opts \\ []) do
+    case AriaState.Storage.initialize(storage_opts) do
+      {:ok, storage_config} ->
+        state = AriaState.ObjectState.new()
+        |> put_storage_config(storage_config)
+        {:ok, state}
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  # Private function to attach storage configuration to state
+  defp put_storage_config(state, storage_config) do
+    # For now, we'll store the config in the state metadata
+    # This is a simplified approach - in a full implementation,
+    # we might use a more sophisticated storage attachment mechanism
+    Map.put(state, :__storage_config__, storage_config)
+  end
+
+  @doc """
+  Gets the storage configuration from a state.
+
+  ## Parameters
+  - `state` - AriaState with potential storage configuration
+
+  ## Returns
+  - `map() | nil` - Storage configuration or nil if not persistent
+  """
+  @spec get_storage_config(AriaState.ObjectState.t()) :: map() | nil
+  def get_storage_config(state) do
+    Map.get(state, :__storage_config__)
+  end
+
+  @doc """
   Converts between ObjectState and RelationalState formats.
 
   This is primarily used internally when AriaEngine needs to switch
