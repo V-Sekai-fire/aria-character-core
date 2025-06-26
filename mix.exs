@@ -31,8 +31,7 @@ defmodule AriaCharacterCore.MixProject do
 
   def application do
     [
-      extra_applications: [:logger],
-      mod: {AriaCharacterCore.Application, []}
+      extra_applications: [:logger]
     ]
   end
 
