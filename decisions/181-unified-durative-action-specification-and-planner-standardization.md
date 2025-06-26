@@ -270,16 +270,22 @@ end
 
 ### Temporal Specification Patterns
 
+**Pattern 1: Instant action, anytime**
+
+```elixir
+@action true # Instant action, planner chooses when
+```
+
 **Pattern 2: Floating Duration**
 
 ```elixir
-@action duration: "PT2H"  # Takes 2 hours, planner chooses when
+@action duration: "PT2H" # Takes 2 hours, planner chooses when
 ```
 
 **Pattern 4: Calculated Start (Deadline)**
 
 ```elixir
-@action end: "2025-06-22T14:00:00-07:00", duration: "PT2H"  # Must start by 12 PM
+@action end: "2025-06-22T14:00:00-07:00", duration: "PT2H" # Must start by 12 PM
 ```
 
 **Pattern 6: Calculated End**
