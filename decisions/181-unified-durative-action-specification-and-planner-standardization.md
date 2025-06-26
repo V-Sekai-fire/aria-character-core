@@ -51,10 +51,10 @@ Everything is an entity with capabilities:
 
 | Method Type | Purpose | When to Use |
 |-------------|---------|-------------|
-| @unigoal_method | Handle single predicate goals | `{"location", agent, target}` → method |
-| @task_method | Break down complex workflows | Multi-step procedures |
-| @action | Direct state transformations | Atomic operations |
-| @command | Execution-time logic | Runtime failure handling |
+| @unigoal_method | Handle single predicate goals | `{predicate, [subject, object]}` → `{:ok, [AriaEngine.todo_item()]} | {:error, :failure_reason}` |
+| @task_method | Break down complex workflows | `{task, [argument_1]}` → `{:ok, [AriaEngine.todo_item()]} | {:error, :failure_reason}` |
+| @action | Direct state transformations | `{:action, [argument_1]}` → `{:ok, state} | {:error, :failure_reason}` |
+| @command | Execution-time logic | Runtime failure handling | `{:action_command, [argument_1]}` → `{:ok, state} | {:error, :failure_reason}` |
 | @multigoal_method | Optimize multiple goal solving | Better than sequential goal splitting (has defaults) |
 | @multitodo_method | Optimize todo list processing | Better than sequential todo solving (has defaults) |
 
