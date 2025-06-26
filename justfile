@@ -26,22 +26,24 @@ bench-minizinc:
         --export-markdown minizinc_benchmark.md \
         'minizinc --solver org.minizinc.mip.coin-bc widget_assembly.mzn'
 
-# Run MCP solver (when implemented)
-mcp:
-    @echo "🚀 Running MCP Widget Assembly Solver"
-    @echo "=" | tr '\n' '=' | head -c 50 && echo
-    @echo "📊 Solution Output:"
-    @elixir scripts/test_widget_assembly_mcp.exs
-    @echo "✅ MCP execution completed"
+# MCP commands - DISCONNECTED/PAUSED (ADR-188)
+# Uncomment and implement when MCP functionality is re-enabled
+# See ADR-188 for disconnection details and re-enablement process
 
-# Benchmark MCP solver with hyperfine (when implemented)
-bench-mcp:
-    @echo "⚡ Benchmarking MCP Widget Assembly Solver"
+# Run MCP solver (PAUSED - ADR-188)
+mcp:
+    @echo "🚀 MCP Widget Assembly Solver - CURRENTLY PAUSED"
     @echo "=" | tr '\n' '=' | head -c 50 && echo
-    hyperfine --warmup 3 --runs 10 \
-        --export-json mcp_benchmark.json \
-        --export-markdown mcp_benchmark.md \
-        'elixir scripts/test_widget_assembly_mcp.exs'
+    @echo "❌ MCP functionality is disconnected per ADR-188"
+    @echo "📋 To re-enable: See ADR-188 re-enablement process"
+    @echo "🔧 Current status: Infrastructure preserved but disconnected"
+
+# Benchmark MCP solver (PAUSED - ADR-188)
+bench-mcp:
+    @echo "⚡ MCP Benchmarking - CURRENTLY PAUSED"
+    @echo "=" | tr '\n' '=' | head -c 50 && echo
+    @echo "❌ MCP benchmarking is disconnected per ADR-188"
+    @echo "📋 To re-enable: See ADR-188 re-enablement process"
 
 # Compare both solvers with hyperfine
 bench-compare:
@@ -82,17 +84,24 @@ results:
         echo "No benchmark results found. Run 'just bench-minizinc' or 'just bench-compare' first."; \
     fi
 
-# Test MCP validation pipeline
-test-validation:
-    @echo "🔍 Testing MCP Validation Pipeline"
-    @echo "=" | tr '\n' '=' | head -c 50 && echo
-    @mix run -e "tools = AriaEngine.MCPToolsV2.get_tools(); validation_tool = Enum.find(tools, fn t -> t[\"name\"] == \"validate_scheduling_solutions\" end); IO.puts(\"✅ Validation tool found: #{!!validation_tool}\"); if validation_tool, do: IO.puts(\"📝 Description: #{validation_tool[\"description\"]}\"); result = AriaEngine.MCPToolsV2.handle_tool_call(:validate_scheduling_solutions, %{\"problem_name\" => \"test\"}); IO.puts(\"🔧 Tool call status: #{result[\"status\"]}\"); IO.puts(\"✅ Validation pipeline integration successful!\")"
+# MCP validation commands - DISCONNECTED/PAUSED (ADR-188)
+# These commands reference MCPToolsV2 which is part of the paused MCP infrastructure
 
-# Test MCP validation pipeline with custom problem
-test-validation-problem PROBLEM_NAME:
-    @echo "🔍 Testing MCP Validation Pipeline with {{PROBLEM_NAME}}"
+# Test MCP validation pipeline (PAUSED - ADR-188)
+test-validation:
+    @echo "🔍 MCP Validation Pipeline - CURRENTLY PAUSED"
     @echo "=" | tr '\n' '=' | head -c 50 && echo
-    @mix run -e "tools = AriaEngine.MCPToolsV2.get_tools(); validation_tool = Enum.find(tools, fn t -> t[\"name\"] == \"validate_scheduling_solutions\" end); IO.puts(\"✅ Validation tool found: #{!!validation_tool}\"); if validation_tool, do: IO.puts(\"📝 Description: #{validation_tool[\"description\"]}\"); result = AriaEngine.MCPToolsV2.handle_tool_call(:validate_scheduling_solutions, %{\"problem_name\" => \"{{PROBLEM_NAME}}\", \"activities\" => [%{\"id\" => \"task1\", \"duration\" => 30}, %{\"id\" => \"task2\", \"duration\" => 45}]}); IO.puts(\"🔧 Tool call status: #{result[\"status\"]}\"); IO.puts(\"✅ Validation completed for {{PROBLEM_NAME}}!\")"
+    @echo "❌ MCP validation functionality is disconnected per ADR-188"
+    @echo "📋 MCPToolsV2 module is part of paused MCP infrastructure"
+    @echo "🔧 To re-enable: See ADR-188 re-enablement process"
+
+# Test MCP validation pipeline with custom problem (PAUSED - ADR-188)
+test-validation-problem PROBLEM_NAME:
+    @echo "🔍 MCP Validation Pipeline for {{PROBLEM_NAME}} - CURRENTLY PAUSED"
+    @echo "=" | tr '\n' '=' | head -c 50 && echo
+    @echo "❌ MCP validation functionality is disconnected per ADR-188"
+    @echo "📋 MCPToolsV2 module is part of paused MCP infrastructure"
+    @echo "🔧 To re-enable: See ADR-188 re-enablement process"
 
 # Show verified ground truth solution
 solution:

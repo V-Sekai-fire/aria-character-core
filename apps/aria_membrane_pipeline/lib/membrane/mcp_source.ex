@@ -2,7 +2,71 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngine.Membrane.MCPSource do
-  @moduledoc "Generic Membrane Source element that receives any MCP tool requests.\n\nThis element acts as the universal entry point for all MCP tool calls,\nconverting them to a standardized MCPRequest format for downstream processing.\nIt supports any MCP tool, not just schedule_activities.\n\n## Features\n\n- Receives any MCP tool requests from existing MCP tools\n- Converts raw MCP parameters to generic MCPRequest format\n- Generates unique request IDs for tracking\n- Supports both new tool_call format and legacy parameter format\n- Provides backpressure handling through demand-based flow control\n- Emits comprehensive telemetry for monitoring\n- Tool-agnostic design for maximum flexibility\n\n## Supported Input Formats\n\n**New Format (Recommended):**\n```elixir\n{:mcp_tool_call, \"schedule_activities\", %{\"schedule_name\" => \"test\"}, %{}}\n```\n\n**Legacy Format (Backward Compatibility):**\n```elixir\n{:mcp_request, %{\"schedule_name\" => \"test\", \"activities\" => []}}\n```\n\n## Usage\n\n    # In a pipeline spec\n    children = [\n      child(:mcp_source, MCPSource)\n      |> child(:schedule_filter, ScheduleFilter)  # For schedule_activities\n      |> child(:planner_sink, PlannerSink)\n      |> child(:mcp_sink, MCPSink)\n    ]\n    \n    # Send new format MCP tool call\n    Membrane.Testing.Pipeline.notify_child(pipeline, :mcp_source, \n      {:mcp_tool_call, \"schedule_activities\", params, metadata})\n    \n    # Send legacy format (auto-detected)\n    Membrane.Testing.Pipeline.notify_child(pipeline, :mcp_source, \n      {:mcp_request, legacy_params})\n"
+  @moduledoc """
+  Generic Membrane Source element that receives any MCP tool requests.
+  
+  ⚠️  **CURRENTLY DISCONNECTED - ADR-188** ⚠️
+  
+  This component is part of the paused MCP infrastructure. The implementation
+  remains intact but is not actively used in the current system configuration.
+  
+  See ADR-188 for disconnection details and re-enablement process.
+  
+  ## Original Functionality
+  
+  This element acts as the universal entry point for all MCP tool calls,
+  converting them to a standardized MCPRequest format for downstream processing.
+  It supports any MCP tool, not just schedule_activities.
+
+  ## Features (When Active)
+
+  - Receives any MCP tool requests from existing MCP tools
+  - Converts raw MCP parameters to generic MCPRequest format
+  - Generates unique request IDs for tracking
+  - Supports both new tool_call format and legacy parameter format
+  - Provides backpressure handling through demand-based flow control
+  - Emits comprehensive telemetry for monitoring
+  - Tool-agnostic design for maximum flexibility
+
+  ## Supported Input Formats (When Active)
+
+  **New Format (Recommended):**
+  ```elixir
+  {:mcp_tool_call, "schedule_activities", %{"schedule_name" => "test"}, %{}}
+  ```
+
+  **Legacy Format (Backward Compatibility):**
+  ```elixir
+  {:mcp_request, %{"schedule_name" => "test", "activities" => []}}
+  ```
+
+  ## Usage (When Re-enabled)
+
+      # In a pipeline spec
+      children = [
+        child(:mcp_source, MCPSource)
+        |> child(:schedule_filter, ScheduleFilter)  # For schedule_activities
+        |> child(:planner_sink, PlannerSink)
+        |> child(:mcp_sink, MCPSink)
+      ]
+      
+      # Send new format MCP tool call
+      Membrane.Testing.Pipeline.notify_child(pipeline, :mcp_source, 
+        {:mcp_tool_call, "schedule_activities", params, metadata})
+      
+      # Send legacy format (auto-detected)
+      Membrane.Testing.Pipeline.notify_child(pipeline, :mcp_source, 
+        {:mcp_request, legacy_params})
+  
+  ## Re-enablement Process
+  
+  To re-enable this component:
+  1. Review ADR-188 for current disconnection status
+  2. Update application configuration to enable MCP
+  3. Verify all MCP dependencies are current
+  4. Test MCP pipeline integration
+  5. Update documentation to reflect active state
+  """
   use Membrane.Source
   require Logger
   alias AriaEngine.Membrane.Format.MCPRequest
