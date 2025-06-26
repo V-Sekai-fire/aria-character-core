@@ -100,10 +100,12 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
 
       {simple_action, method} = TemporalConverter.convert_durative_action(durative_action)
 
-      # Verify simple action
+      # Verify simple action (ADR-181: should only have duration + entity requirements)
       assert simple_action.name == :cook_meal
       assert simple_action.duration == {:fixed, 3600}
-      assert simple_action.effects != nil
+      assert is_list(simple_action.entity_requirements)
+      # Simple actions should NOT have effects - they're moved to method decomposition
+      refute Map.has_key?(simple_action, :effects)
 
       # Verify method decomposition preserves temporal logic
       assert is_list(method)
@@ -154,10 +156,12 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
       # Should have actions from @action attributes
       actions = AriaCore.Domain.list_actions(domain)
       assert :cook_soup in actions
-      assert :bake_bread in actions
+      assert :bake_bread_expert in actions
+      assert :bake_bread_intermediate in actions
+      assert :bake_bread_novice in actions
       assert :prep_vegetables in actions
       assert :quality_check in actions
-      assert :maintain_equipment in actions
+      assert :maintain_equipment_professional in actions
 
       # Should have methods from @task_method attributes
       methods = AriaCore.Domain.list_methods(domain)
