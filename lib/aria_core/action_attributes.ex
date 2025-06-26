@@ -30,26 +30,41 @@ defmodule AriaCore.ActionAttributes do
   When a module uses AriaCore.Domain, it gains access to:
   - @action attribute for defining action metadata
   - @task_method attribute for defining method decomposition
+  - @unigoal_method attribute for defining unigoal methods
   - Automatic domain creation from attributes
   """
   defmacro __using__(_opts) do
     quote do
-      import AriaCore.ActionAttributes
+      # Register all attributes as accumulating
+      Module.register_attribute(__MODULE__, :action, accumulate: true)
+      Module.register_attribute(__MODULE__, :task_method, accumulate: true)
+      Module.register_attribute(__MODULE__, :unigoal_method, accumulate: true)
+
+      # Internal tracking attributes
       Module.register_attribute(__MODULE__, :action_metadata, accumulate: true)
       Module.register_attribute(__MODULE__, :method_metadata, accumulate: true)
+      Module.register_attribute(__MODULE__, :unigoal_metadata, accumulate: true)
+
+      # Pending attributes (non-persistent)
+      Module.register_attribute(__MODULE__, :pending_action_metadata, persist: false)
+      Module.register_attribute(__MODULE__, :pending_task_metadata, persist: false)
+      Module.register_attribute(__MODULE__, :pending_unigoal_metadata, persist: false)
+
+      # Hook into compilation process
+      @on_definition {AriaCore.ActionAttributes, :__on_definition__}
       @before_compile AriaCore.ActionAttributes
     end
   end
 
   @doc """
-  Defines action metadata using @action attribute.
+  Documentation for @action attribute.
 
   ## Supported Attributes
 
-  - `duration`: ISO 8601 duration string or seconds (required)
+  - `duration`: ISO 8601 duration string or seconds (optional)
+  - `start`: ISO 8601 datetime string for fixed start time (optional)
+  - `end`: ISO 8601 datetime string for fixed end time (optional)
   - `requires_entities`: List of entity requirements (optional)
-  - `preconditions`: List of state conditions that must be true (optional)
-  - `effects`: List of state changes the action produces (optional)
 
   ## Examples
 
@@ -57,35 +72,22 @@ defmodule AriaCore.ActionAttributes do
               requires_entities: [
                 %{type: "agent", capabilities: [:cooking]},
                 %{type: "kitchen", capabilities: [:food_prep]}
-              ],
-              preconditions: [
-                {"ingredient_available", "tomato", true}
-              ],
-              effects: [
-                {"meal_status", "soup", "cooking"}
               ]
       def make_soup(state, [soup_id]) do
         # Implementation
       end
   """
-  defmacro action(metadata) do
-    quote do
-      function_name = case __CALLER__.function do
-        {name, _arity} -> name
-        nil -> :unknown_action
-      end
-      @action_metadata {function_name, unquote(metadata)}
-    end
-  end
 
   @doc """
-  Defines task method metadata using @task_method attribute.
+  Documentation for @task_method attribute.
 
-  Task methods provide decomposition strategies for complex goals.
+  Task methods provide decomposition strategies for complex workflows.
+  According to ADR-181, task methods are for workflow decomposition only
+  and do not support priority or goal_pattern fields.
 
   ## Examples
 
-      @task_method goal_pattern: {"meal_ready", :meal_id, true}
+      @task_method
       def prepare_meal_method(state, [meal_id]) do
         {:ok, [
           {"ingredients_available", meal_id, true},
@@ -94,15 +96,80 @@ defmodule AriaCore.ActionAttributes do
         ]}
       end
   """
-  defmacro task_method(metadata) do
-    quote do
-      function_name = case __CALLER__.function do
-        {name, _arity} -> name
-        nil -> :unknown_method
+
+  @doc """
+  Documentation for @unigoal_method attribute.
+
+  Unigoal methods provide single goal achievement strategies according to ADR-181.
+  They handle prerequisite checking, action selection, and verification for one specific goal predicate.
+
+  ## Required Attributes
+
+  - `predicate`: The goal predicate this method handles (required)
+
+  ## Examples
+
+      @unigoal_method predicate: "meal_status"
+      def meal_status_goal(state, [subject, value]) when value == "ready" do
+        {:ok, [
+          # Prerequisites (former preconditions)
+          {"ingredient_available", "tomato", true},
+          {"equipment_status", "stove_1", "operational"},
+
+          # Main action
+          {:cook_meal, [subject]},
+
+          # Verification (former effects)
+          {"meal_status", subject, "ready"}
+        ]}
       end
-      @method_metadata {function_name, unquote(metadata)}
+  """
+
+  @doc """
+  Callback invoked when a function is defined.
+
+  This associates any pending attributes with the newly defined function.
+  """
+  def __on_definition__(env, kind, name, _args, _guards, _body) when kind in [:def, :defp] do
+    # Check for @action attribute
+    action_attrs = Module.get_attribute(env.module, :action) || []
+
+    # Get the most recent @action attribute (if any)
+    if action_metadata = List.first(action_attrs) do
+      Module.put_attribute(env.module, :action_metadata, {name, action_metadata})
+      # Remove the processed attribute
+      Module.delete_attribute(env.module, :action)
     end
+
+    # Check for @task_method attribute
+    task_attrs = Module.get_attribute(env.module, :task_method) || []
+
+    if task_metadata = List.first(task_attrs) do
+      Module.put_attribute(env.module, :method_metadata, {name, task_metadata})
+      # Remove the processed attribute
+      Module.delete_attribute(env.module, :task_method)
+    end
+
+    # Check for @unigoal_method attribute
+    unigoal_attrs = Module.get_attribute(env.module, :unigoal_method) || []
+
+    if unigoal_metadata = List.first(unigoal_attrs) do
+      # Validate required predicate attribute
+      predicate = unigoal_metadata[:predicate]
+      if is_nil(predicate) do
+        raise ArgumentError, "unigoal_method requires predicate: attribute, got: #{inspect(unigoal_metadata)}"
+      end
+
+      Module.put_attribute(env.module, :unigoal_metadata, {name, unigoal_metadata})
+      # Remove the processed attribute
+      Module.delete_attribute(env.module, :unigoal_method)
+    end
+
+    # Continue with normal compilation
+    :ok
   end
+
+  def __on_definition__(_env, _kind, _name, _args, _guards, _body), do: :ok
 
   @doc """
   Compile-time hook that processes accumulated @action and @task_method attributes.
@@ -112,13 +179,15 @@ defmodule AriaCore.ActionAttributes do
   defmacro __before_compile__(env) do
     actions = Module.get_attribute(env.module, :action_metadata) || []
     methods = Module.get_attribute(env.module, :method_metadata) || []
+    unigoals = Module.get_attribute(env.module, :unigoal_metadata) || []
 
     quote do
-      def __action_metadata__, do: unquote(actions)
-      def __method_metadata__, do: unquote(methods)
+      def __action_metadata__, do: unquote(Macro.escape(actions))
+      def __method_metadata__, do: unquote(Macro.escape(methods))
+      def __unigoal_metadata__, do: unquote(Macro.escape(unigoals))
 
       @doc """
-      Creates a domain from the module's @action and @task_method attributes.
+      Creates a domain from the module's @action, @task_method, and @unigoal_method attributes.
 
       This function implements the sociable testing approach by leveraging
       existing AriaCore systems rather than reimplementing them.
@@ -141,9 +210,16 @@ defmodule AriaCore.ActionAttributes do
             AriaCore.Domain.add_method(acc, name, method_spec)
           end)
 
+        # Process unigoal methods using existing systems (SOCIABLE approach)
+        domain_with_unigoals =
+          Enum.reduce(__unigoal_metadata__(), domain_with_methods, fn {name, metadata}, acc ->
+            unigoal_spec = AriaCore.ActionAttributes.convert_unigoal_metadata(metadata, name, __MODULE__)
+            AriaCore.Domain.add_unigoal_method(acc, name, unigoal_spec)
+          end)
+
         # Set up entity registry (LEVERAGE existing entity system)
         entity_registry = AriaCore.ActionAttributes.create_entity_registry(__action_metadata__())
-        domain_with_entities = AriaCore.Domain.set_entity_registry(domain_with_methods, entity_registry)
+        domain_with_entities = AriaCore.Domain.set_entity_registry(domain_with_unigoals, entity_registry)
 
         # Set up temporal specifications (LEVERAGE existing temporal system)
         temporal_specs = AriaCore.ActionAttributes.create_temporal_specifications(__action_metadata__())
@@ -169,12 +245,26 @@ defmodule AriaCore.ActionAttributes do
 
   @doc """
   Converts @task_method metadata to Domain method specification.
+
+  According to ADR-181, @task_method attributes do not support priority or goal_pattern fields.
+  Task methods are for workflow decomposition only.
   """
-  def convert_method_metadata(metadata, method_name, module) do
+  def convert_method_metadata(_metadata, method_name, module) do
     %{
-      goal_pattern: metadata[:goal_pattern],
-      decomposition_fn: Function.capture(module, method_name, 2),
-      priority: metadata[:priority] || 1
+      decomposition_fn: Function.capture(module, method_name, 2)
+    }
+  end
+
+  @doc """
+  Converts @unigoal_method metadata to Domain unigoal method specification.
+
+  According to ADR-181, @unigoal_method attributes only support the predicate field.
+  Priority handling belongs in the planner's method selection logic, not in attribute metadata.
+  """
+  def convert_unigoal_metadata(metadata, method_name, module) do
+    %{
+      predicate: metadata[:predicate],
+      goal_fn: Function.capture(module, method_name, 2)
     }
   end
 

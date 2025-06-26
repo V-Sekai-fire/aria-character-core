@@ -1201,6 +1201,7 @@ end
 @spec action_name(AriaState.t(), [term()]) :: AriaState.t()
 def action_name(state, args) do
   # Can reference @action metadata
+  state
 end
 ```
 
@@ -1211,6 +1212,7 @@ end
 @spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, String.t()}
 def command_name(state, args) do
   # Execution-time logic only
+  state
 end
 ```
 
@@ -1221,6 +1223,7 @@ end
 @spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]}
 def task_name(state, args) do
   # Task decomposition logic
+  [...]
 end
 ```
 
@@ -1231,6 +1234,7 @@ end
 @spec method_name(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
 def method_name(state, [subject, value]) do
   # Goal decomposition logic
+  [...]
 end
 ```
 
@@ -1286,6 +1290,8 @@ The following concepts were explicitly rejected during design:
 25. **❌ TOMBSTONE: `mutual_exclusion` field in action metadata** - Resource conflicts handled by planner entity allocation, not action metadata
 26. **❌ TOMBSTONE: `temporal_constraints` field in action metadata** - Temporal relationships handled by method decomposition, not embedded action constraints
 27. **❌ TOMBSTONE: UTC timezone format when local timezone isn't UTC** - Use local timezone strings (e.g., "-07:00") instead of "Z" suffix when working in non-UTC timezones
+28. **❌ TOMBSTONE: `priority` field in @unigoal_method attributes** - Priority handling belongs in planner method selection logic, not in attribute metadata
+29. **❌ TOMBSTONE: `goal_pattern` field in @task_method attributes** - Task methods are for workflow decomposition only, not goal pattern matching
 
 ## Success Criteria
 

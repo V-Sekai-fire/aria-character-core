@@ -85,9 +85,21 @@ defmodule Timeline.Interval do
       iso8601_end: end_iso8601
     })
   end
+  def new_fixed_schedule(invalid_spec, _opts) when is_map(invalid_spec) do
+    raise ArgumentError, "Invalid temporal specification: #{inspect(invalid_spec)}"
+  end
+  def new_fixed_schedule(%{start: start_iso8601}, opts) when is_list(opts) do
+    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+    %__MODULE__{
+      id: generate_id(),
+      start_time: start_dt,
+      end_time: nil,
+      agent: Keyword.get(opts, :agent),
+      entity: Keyword.get(opts, :entity),
+      metadata: Map.merge(%{open_ended_start: true, iso8601_start: start_iso8601}, Keyword.get(opts, :metadata, %{}))
+    }
+  end
 
-  @doc "Creates a new interval from ISO 8601 datetime strings with options.\n"
-  @spec new_fixed_schedule(String.t(), String.t(), keyword()) :: t()
   def new_fixed_schedule(start_iso8601, end_iso8601, opts) when is_binary(start_iso8601) and is_binary(end_iso8601) and is_list(opts) do
     {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
     {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
@@ -105,8 +117,6 @@ defmodule Timeline.Interval do
     new(start_dt, end_dt, updated_opts)
   end
 
-  @doc "Creates a new interval using unified constructor pattern.\n\nSupports map-based patterns for different temporal specifications:\n- `%{start: iso8601, end: iso8601}` - Fixed schedule\n- `%{duration: iso8601_duration}` - Floating duration\n- `%{start: iso8601}` - Open-ended start\n- `%{end: iso8601}` - Open-ended end\n\n## Examples\n\n    iex> interval = Timeline.Interval.new_fixed_schedule(%{start: \"2025-06-22T10:00:00Z\", end: \"2025-06-22T11:00:00Z\"})\n    iex> interval.metadata.fixed_schedule\n    true\n\n"
-  @spec new_fixed_schedule(map()) :: t()
   def new_fixed_schedule(%{start: start_iso8601, end: end_iso8601}) do
     {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
     {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
@@ -147,24 +157,6 @@ defmodule Timeline.Interval do
   end
 
   def new_fixed_schedule(invalid_spec) when is_map(invalid_spec) do
-    raise ArgumentError, "Invalid temporal specification: #{inspect(invalid_spec)}"
-  end
-
-  @doc "Creates a new interval using unified constructor pattern with options.\n\nSupports map-based patterns with additional options.\n"
-  @spec new_fixed_schedule(map(), keyword()) :: t()
-  def new_fixed_schedule(%{start: start_iso8601}, opts) when is_list(opts) do
-    {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
-    %__MODULE__{
-      id: generate_id(),
-      start_time: start_dt,
-      end_time: nil,
-      agent: Keyword.get(opts, :agent),
-      entity: Keyword.get(opts, :entity),
-      metadata: Map.merge(%{open_ended_start: true, iso8601_start: start_iso8601}, Keyword.get(opts, :metadata, %{}))
-    }
-  end
-
-  def new_fixed_schedule(invalid_spec, _opts) when is_map(invalid_spec) do
     raise ArgumentError, "Invalid temporal specification: #{inspect(invalid_spec)}"
   end
 
