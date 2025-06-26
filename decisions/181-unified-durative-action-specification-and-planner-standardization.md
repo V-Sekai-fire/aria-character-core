@@ -64,7 +64,7 @@ Everything is an entity with capabilities:
 @action true
 @command true
 @task_method true
-@unigoal_method predicate: "location"
+@unigoal_method predicate: "is_predicate"
 @multigoal_method true
 @multitodo_method true
 ```
