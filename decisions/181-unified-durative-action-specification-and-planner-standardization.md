@@ -69,6 +69,48 @@ Everything is an entity with capabilities:
 @multitodo_method true
 ```
 
+### Action Method Examples
+
+```elixir
+# Direct state transformations
+@action duration: "PT2H", requires_entities: [%{type: "agent", capabilities: [:cooking]}]
+@spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
+
+@action duration: "PT0S"
+@spec check_ingredients(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
+
+@action start: "2025-06-22T10:00:00-07:00", duration: "PT1H"
+@spec scheduled_prep(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
+```
+
+### Command Method Examples
+
+```elixir
+# Execution-time logic with failure handling
+@command true
+@spec cook_meal_command(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
+
+@command true
+@spec validate_equipment(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
+
+@command true
+@spec emergency_shutdown(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
+```
+
+### Task Method Examples
+
+```elixir
+# Complex workflow decomposition
+@task_method true
+@spec prepare_complete_meal(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+
+@task_method true
+@spec setup_kitchen_workspace(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+
+@task_method true
+@spec cleanup_after_cooking(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+```
+
 ### Unigoal Method Examples
 
 ```elixir
@@ -84,6 +126,34 @@ Everything is an entity with capabilities:
 
 @unigoal_method predicate: "status"
 @spec change_status(AriaState.t(), [String.t(), String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+```
+
+### Multigoal Method Examples
+
+```elixir
+# Multiple goal optimization
+@multigoal_method goal_pattern: :cooking_batch
+@spec optimize_cooking_batch(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()}
+
+@multigoal_method goal_pattern: :resource_allocation
+@spec allocate_kitchen_resources(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()}
+
+@multigoal_method goal_pattern: :meal_preparation
+@spec coordinate_meal_prep(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()}
+```
+
+### Multitodo Method Examples
+
+```elixir
+# Todo list optimization
+@multitodo_method true
+@spec optimize_cooking_sequence(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+
+@multitodo_method true
+@spec parallelize_prep_tasks(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+
+@multitodo_method true
+@spec reorder_by_dependencies(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 ```
 
 ### Goal Format Standard
