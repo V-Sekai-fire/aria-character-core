@@ -47,6 +47,17 @@ Everything is an entity with capabilities:
 | 7 | ✅ | ✅ | ❌ | Fixed interval |
 | 8 | ✅ | ✅ | ✅ | **Constraint validation** (`start + duration = end`) |
 
+### Method Selection Guide
+
+| Method Type | Purpose | When to Use |
+|-------------|---------|-------------|
+| @unigoal_method | Handle single predicate goals | `{"location", agent, target}` → method |
+| @task_method | Break down complex workflows | Multi-step procedures |
+| @action | Direct state transformations | Atomic operations |
+| @command | Execution-time logic | Runtime failure handling |
+| @multigoal_method | Optimize multiple goal solving | Better than sequential goal splitting (has defaults) |
+| @multitodo_method | Optimize todo list processing | Better than sequential todo solving (has defaults) |
+
 ### Required Function Attributes
 
 ```elixir
@@ -56,6 +67,23 @@ Everything is an entity with capabilities:
 @unigoal_method predicate: "location"
 @multigoal_method goal_pattern: :pattern_name
 @multitodo_method true
+```
+
+### Unigoal Method Examples
+
+```elixir
+# Primary goal handling patterns
+@unigoal_method predicate: "location"
+@spec move_to_location(AriaState.t(), [String.t(), String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+
+@unigoal_method predicate: "has_item"  
+@spec acquire_item(AriaState.t(), [String.t(), String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+
+@unigoal_method predicate: "temperature"
+@spec set_temperature(AriaState.t(), [String.t(), number()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+
+@unigoal_method predicate: "status"
+@spec change_status(AriaState.t(), [String.t(), String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 ```
 
 ### Goal Format Standard
