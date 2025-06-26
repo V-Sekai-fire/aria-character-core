@@ -221,9 +221,12 @@ end
 @task_method true
 @spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
+@type subject :: term()
+@type object :: term()
+
 # Unigoal Methods
-@unigoal_method predicate: "location"
-@spec method_name(AriaState.t(), [term(), term()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@unigoal_method predicate: "predicate"
+@spec method_name(AriaState.t(), [subject(), object()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 # Multigoal Methods
 @multigoal_method goal_pattern: :pattern_name
