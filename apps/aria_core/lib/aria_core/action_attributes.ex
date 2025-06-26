@@ -24,6 +24,12 @@ defmodule AriaCore.ActionAttributes do
       end
   """
 
+  @type action_metadata :: keyword()
+  @type method_metadata :: map()
+  @type unigoal_metadata :: keyword()
+  @type entity_requirement :: map()
+  @type duration_spec :: AriaCore.Temporal.Interval.duration()
+
   @doc """
   Enables @action attribute processing in a module.
 
@@ -33,6 +39,7 @@ defmodule AriaCore.ActionAttributes do
   - @unigoal_method attribute for defining unigoal methods
   - Automatic domain creation from attributes
   """
+  @spec __using__(keyword()) :: Macro.t()
   defmacro __using__(_opts) do
     quote do
       # Register all attributes as accumulating
@@ -82,6 +89,7 @@ defmodule AriaCore.ActionAttributes do
         # Implementation
       end
   """
+  @spec action_attribute_docs() :: :ok
   def action_attribute_docs, do: :ok
 
   @doc """
@@ -102,6 +110,7 @@ defmodule AriaCore.ActionAttributes do
         ]}
       end
   """
+  @spec task_method_attribute_docs() :: :ok
   def task_method_attribute_docs, do: :ok
 
   @doc """
@@ -131,6 +140,7 @@ defmodule AriaCore.ActionAttributes do
         ]}
       end
   """
+  @spec unigoal_method_attribute_docs() :: :ok
   def unigoal_method_attribute_docs, do: :ok
 
   @doc """
@@ -142,6 +152,7 @@ defmodule AriaCore.ActionAttributes do
   Task methods provide decomposition strategies for complex workflows
   according to ADR-181. They are for workflow decomposition only.
   """
+  @spec task_method() :: Macro.t()
   defmacro task_method() do
     quote do
       # Consume the @task_method attribute by assigning it
@@ -156,6 +167,7 @@ defmodule AriaCore.ActionAttributes do
 
   This associates any pending attributes with the newly defined function.
   """
+  @spec __on_definition__(Macro.Env.t(), atom(), atom(), list(), list(), term()) :: :ok
   def __on_definition__(env, kind, name, _args, _guards, _body) when kind in [:def, :defp] do
     # Functional approach: consume attributes by reading and transforming them
 
@@ -272,6 +284,7 @@ defmodule AriaCore.ActionAttributes do
 
   This function bridges the new attribute syntax to existing Domain.add_action format.
   """
+  @spec convert_action_metadata(action_metadata(), atom(), module()) :: map()
   def convert_action_metadata(metadata, action_name, module) do
     %{
       duration: convert_duration(metadata[:duration]),
