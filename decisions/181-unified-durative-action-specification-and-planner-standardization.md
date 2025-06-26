@@ -64,6 +64,7 @@ end
 ]
 
 # Seems like it should be:
+@spec cook_meal() :: :ok
 def cook_meal() do
   # Just cook!
 end
@@ -118,6 +119,7 @@ end
 ```elixir
 # For one chef making one meal, planning seems like overkill
 @action requires_entities: [%{type: "chef", capabilities: [:cooking]}]
+@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
 def cook_meal(state, [meal_type]) do
   # "Why not just call cook_meal()?"
   state
@@ -132,6 +134,7 @@ end
   %{type: "chef", capabilities: [:cooking]},
   %{type: "oven", capabilities: [:heating]}
 ]
+@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
 def cook_meal(state, [meal_type]) do
   # Planner automatically:
   # - Assigns available chef
