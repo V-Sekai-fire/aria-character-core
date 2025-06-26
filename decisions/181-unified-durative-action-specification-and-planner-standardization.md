@@ -1147,6 +1147,7 @@ defmodule MyApp.Domains.CleanCookingDomain do
             %{type: "oven", capabilities: [:heating]},
             %{type: "kitchen", capabilities: [:workspace]}
           ]
+  @spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
   def cook_meal(state, [meal_id]) do
     # Pure state transformation
     state
@@ -1156,6 +1157,7 @@ defmodule MyApp.Domains.CleanCookingDomain do
   
   # Complex workflow handled by method decomposition
   @task_method
+  @spec full_cooking_workflow(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
   def full_cooking_workflow(state, [meal_id]) do
     {:ok, [
       # Prerequisites (instead of at_start conditions)
