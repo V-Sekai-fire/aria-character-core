@@ -51,12 +51,12 @@ Everything is an entity with capabilities:
 
 | Method Type | Purpose | When to Use |
 |-------------|---------|-------------|
-| @unigoal_method | Handle single predicate goals | `@type subject :: term() @type object :: term() @spec method_name(AriaState.t(), [subject(), object()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}` |
-| @task_method | Break down complex workflows | `@spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}` |
-| @action | Direct state transformations | `@spec action_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, atom()}` |
-| @command | Execution-time logic | Runtime failure handling | `@spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, atom()}` |
-| @multigoal_method | Optimize multiple goal solving | Better than sequential goal splitting (has defaults) | @spec multigoal_method(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()} |
-| @multitodo_method | Optimize todo list processing | Better than sequential todo solving (has defaults) | @spec multitodo_method(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()} |
+| @action | Direct state transformations | @spec action_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, atom()} |
+| @command | Execution-time logic | @spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, atom()} |
+| @task_method | Break down complex workflows | @spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()} |
+| @unigoal_method | Handle single predicate goals | @type subject :: term() @type object :: term() @spec method_name(AriaState.t(), [subject(), object()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}` |
+| @multigoal_method | Optimize multiple goal solving | @spec multigoal_method(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()} |
+| @multitodo_method | Optimize todo list processing | @spec multitodo_method(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()} |
 
 ### Required Function Attributes
 
