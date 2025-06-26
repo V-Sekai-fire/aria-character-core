@@ -1289,7 +1289,7 @@ defmodule MyApp.Domains.CleanCookingDomain do
     {:ok, [
       # Prerequisites (instead of at_start conditions)
       {"available", "chef_1", true},
-      {"temperature", "oven", {:>=, 350}},
+      {"temperature", "oven_1", {:>=, 350}},
       {"clean", "workspace", true},
       
       # Preparation tasks
