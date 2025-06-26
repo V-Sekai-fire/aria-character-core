@@ -116,16 +116,16 @@ Everything is an entity with capabilities:
 ```elixir
 # Primary goal handling patterns
 @unigoal_method predicate: "location"
-@spec move_to_location(AriaState.t(), [String.t(), String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@spec move_to_location(AriaState.t(), [subject(), value()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 @unigoal_method predicate: "has_item"  
-@spec acquire_item(AriaState.t(), [String.t(), String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@spec acquire_item(AriaState.t(), [subject(), value()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 @unigoal_method predicate: "temperature"
-@spec set_temperature(AriaState.t(), [String.t(), number()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@spec set_temperature(AriaState.t(), [subject(), value()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 @unigoal_method predicate: "status"
-@spec change_status(AriaState.t(), [String.t(), String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@spec change_status(AriaState.t(), [subject(), value()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 ```
 
 ### Multigoal Method Examples
