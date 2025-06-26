@@ -329,7 +329,7 @@ end
 @type object :: term()
 
 # Unigoal Methods
-@unigoal_method predicate: "predicate"
+@unigoal_method predicate: "is_predicate"
 @spec method_name(AriaState.t(), [subject(), object()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 # Multigoal Methods
