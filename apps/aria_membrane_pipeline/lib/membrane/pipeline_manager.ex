@@ -472,25 +472,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
     }
   end
 
-  defp get_predefined_config(:validation_pipeline) do
-    %{
-      topology: :validation_processing,
-      elements: [
-        %{type: MCPSource, id: :source, config: %{}},
-        %{
-          type: AriaEngine.Membrane.ValidationPipelineFilter,
-          id: :validation_filter,
-          config: %{timeout_ms: 60000}
-        },
-        %{type: MCPSink, id: :sink, config: %{}}
-      ],
-      connections: [
-        %{from: {:source, :output}, to: {:validation_filter, :input}},
-        %{from: {:validation_filter, :output}, to: {:sink, :input}}
-      ],
-      supervision_strategy: :one_for_one
-    }
-  end
 
   defp get_predefined_config(topology) do
     Logger.warning("Unknown predefined topology: #{topology}, using default")

@@ -7,17 +7,10 @@ defmodule Mix.Tasks.Aria do
 
   ## Available Commands
 
-    * `mix aria.schedule` - Schedule activities using AriaEngine scheduler
     * `mix aria.validate` - Validate scheduling solutions by comparing solvers
     * `mix aria.pipeline` - Manage AriaEngine processing pipelines
 
   ## Quick Examples
-
-      # Schedule activities from JSON files
-      mix aria.schedule --name "project_tasks" --activities tasks.json --entities workers.json
-
-      # Train scheduling
-      mix aria.schedule --name "trains05" --train-mode --verbose 2
 
       # Validate scheduling with generated problem
       mix aria.validate --problem "test_scaling" --activities 3 --compare
@@ -32,7 +25,6 @@ defmodule Mix.Tasks.Aria do
 
   Use `--help` with any command for detailed usage information:
 
-      mix aria.schedule --help
       mix aria.validate --help
       mix aria.pipeline --help
 

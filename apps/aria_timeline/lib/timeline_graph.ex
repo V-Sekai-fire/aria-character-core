@@ -2,13 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 defmodule TimelineGraph do
-  @moduledoc "Manages timeline integration with the Entity Timeline Graph Architecture (ADR-087).\n\nThis module connects the existing Timeline.AgentEntity system with \nauto-growing timelines, implementing the core concept that every entity owns\na timeline that grows automatically based on their capabilities and interactions.\n\n## Core Concepts\n\n- **Every Entity has a Timeline**: Created automatically when entities are instantiated\n- **Timeline Growth**: Automatic based on entity capabilities and interactions\n- **LOD Management**: Level of Detail scaling based on relevance and proximity\n- **Bridge Management**: Inter-timeline connections for coordination\n\n## Specialized Modules\n\nThis module delegates to specialized sub-modules for different aspects of functionality:\n\n- `TimelineGraph.EntityManager` - Entity creation, capabilities, and basic timeline operations\n- `TimelineGraph.LODManager` - Level of Detail management and promotion\n- `TimelineGraph.Scheduler` - Scheduling and routine management\n- `TimelineGraph.EnvironmentalProcesses` - Multi-entity environmental effects\n- `TimelineGraph.TimeConverter` - Time format conversion utilities\n\n## Usage\n\n```elixir\n# Create entity with automatic timeline attachment\n{:ok, entity_id} = TimelineGraph.create_entity(\"chair1\", \"Wooden Chair\", %{type: \"furniture\"})\n\n# Promote to agent with timeline growth triggers\n{:ok, updated_entity} = TimelineGraph.add_capabilities(entity_id, [:autonomous_operation])\n\n# Timeline automatically grows when entity becomes agent\nTimelineGraph.is_agent_timeline?(entity_id) # => true\n```\n"
+  @moduledoc "Manages timeline integration with the Entity Timeline Graph Architecture (ADR-087).\n\nThis module connects the existing Timeline.AgentEntity system with \nauto-growing timelines, implementing the core concept that every entity owns\na timeline that grows automatically based on their capabilities and interactions.\n\n## Core Concepts\n\n- **Every Entity has a Timeline**: Created automatically when entities are instantiated\n- **Timeline Growth**: Automatic based on entity capabilities and interactions\n- **LOD Management**: Level of Detail scaling based on relevance and proximity\n- **Bridge Management**: Inter-timeline connections for coordination\n\n## Specialized Modules\n\nThis module delegates to specialized sub-modules for different aspects of functionality:\n\n- `TimelineGraph.EntityManager` - Entity creation, capabilities, and basic timeline operations\n- `TimelineGraph.LODManager` - Level of Detail management and promotion\n- `TimelineGraph.EnvironmentalProcesses` - Multi-entity environmental effects\n- `TimelineGraph.TimeConverter` - Time format conversion utilities\n\n## Usage\n\n```elixir\n# Create entity with automatic timeline attachment\n{:ok, entity_id} = TimelineGraph.create_entity(\"chair1\", \"Wooden Chair\", %{type: \"furniture\"})\n\n# Promote to agent with timeline growth triggers\n{:ok, updated_entity} = TimelineGraph.add_capabilities(entity_id, [:autonomous_operation])\n\n# Timeline automatically grows when entity becomes agent\nTimelineGraph.is_agent_timeline?(entity_id) # => true\n```\n"
   alias Timeline.AgentEntity
   alias Timeline
   alias AriaEngine.State
   alias TimelineGraph.EntityManager
   alias TimelineGraph.LODManager
-  alias TimelineGraph.Scheduler
   alias TimelineGraph.EnvironmentalProcesses
   @type entity_id :: String.t()
   @type timeline_id :: String.t()
@@ -83,27 +82,6 @@ defmodule TimelineGraph do
 
   @doc "Automatically adjusts LOD levels based on entity activity and system performance.\n\nDelegates to `TimelineGraph.LODManager.auto_adjust_lod/2`.\n"
   defdelegate auto_adjust_lod(timeline_graph, opts \\ []), to: LODManager
-
-  @doc "Schedules a routine activity for an agent with priority and deadline handling.\n\nDelegates to `TimelineGraph.Scheduler.schedule_routine/4`.\n"
-  defdelegate schedule_routine(timeline_graph, entity_id, routine_type, opts), to: Scheduler
-
-  @doc "Resolves schedule conflicts for an entity based on priority and deadline handling.\n\nDelegates to `TimelineGraph.Scheduler.resolve_schedule_conflicts/4`.\n"
-  defdelegate resolve_schedule_conflicts(timeline_graph, entity_id, new_routine, conflicts),
-    to: Scheduler
-
-  @doc "Gets the current scheduled routines for an entity within a time window.\n\nDelegates to `TimelineGraph.Scheduler.get_scheduled_routines/4`.\n"
-  defdelegate get_scheduled_routines(timeline_graph, entity_id, start_time, end_time),
-    to: Scheduler
-
-  @doc "Cancels a scheduled routine by routine type and optional time range.\n\nDelegates to `TimelineGraph.Scheduler.cancel_routine/4`.\n"
-  defdelegate cancel_routine(timeline_graph, entity_id, routine_type, opts \\ []), to: Scheduler
-
-  @doc "Gets all active routines for an entity at the current time.\n\nDelegates to `TimelineGraph.Scheduler.get_active_routines/2`.\n"
-  defdelegate get_active_routines(timeline_graph, entity_id), to: Scheduler
-
-  @doc "Checks if an entity has any schedule conflicts in a given time range.\n\nDelegates to `TimelineGraph.Scheduler.has_schedule_conflicts?/4`.\n"
-  defdelegate has_schedule_conflicts?(timeline_graph, entity_id, start_time, end_time),
-    to: Scheduler
 
   @doc "Adds a process or event that affects multiple entities over time.\n\nDelegates to `TimelineGraph.EnvironmentalProcesses.add_environmental_process/3`.\n"
   defdelegate add_environmental_process(timeline_graph, process_type, opts),

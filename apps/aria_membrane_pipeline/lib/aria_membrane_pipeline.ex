@@ -13,7 +13,6 @@ defmodule AriaMembranePipeline do
 
   - `AriaMembranePipeline.PipelineManager` - Orchestrates complex data processing workflows
   - `AriaMembranePipeline.FormatTransformerFilter` - Converts between different data formats
-  - `AriaMembranePipeline.ValidationPipelineFilter` - Ensures data integrity and constraint satisfaction
   - `AriaMembranePipeline.MCPSource` - Model Context Protocol data source
   - `AriaMembranePipeline.MCPSink` - Model Context Protocol data sink
   - `AriaMembranePipeline.PlannerFilter` - Planning system integration
@@ -21,8 +20,8 @@ defmodule AriaMembranePipeline do
 
   ## Usage
 
-      # Create and start a validation pipeline
-      pipeline = AriaMembranePipeline.create_validation_pipeline(config)
+      # Create and start a pipeline
+      pipeline = AriaMembranePipeline.create_pipeline(config)
       AriaMembranePipeline.start_pipeline(pipeline)
 
       # Process data through pipeline
@@ -37,10 +36,10 @@ defmodule AriaMembranePipeline do
   @type data :: term()
   @type result :: {:ok, term()} | {:error, String.t()}
 
-  @spec create_validation_pipeline(config()) :: pipeline()
-  @doc "Creates a new validation pipeline with the given configuration."
-  def create_validation_pipeline(config \\ %{}) do
-    PipelineManager.create_validation_pipeline(config)
+  @spec create_pipeline(config()) :: pipeline()
+  @doc "Creates a new pipeline with the given configuration."
+  def create_pipeline(config \\ %{}) do
+    PipelineManager.create_pipeline(config)
   end
 
   @spec start_pipeline(pipeline()) :: result()
