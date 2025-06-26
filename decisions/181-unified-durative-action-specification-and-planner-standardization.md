@@ -742,7 +742,7 @@ Use natural hierarchical decomposition for complex workflows:
 
 ```elixir
 @task_method
-@spec prepare_and_cook_meal(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
+@spec prepare_and_cook_meal(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 def prepare_and_cook_meal(state, [meal_id]) do
   {:ok, [
     # Prerequisites as goals
@@ -945,7 +945,7 @@ defmodule MyApp.Domains.CookingDomain do
   
   # Task methods
   @task_method true
-  @spec task_prepare_ingredients(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
+  @spec task_prepare_ingredients(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def task_prepare_ingredients(state, [task_name]) do
     {:ok, [
       {:gather_ingredients, [task_name]},
@@ -955,7 +955,7 @@ defmodule MyApp.Domains.CookingDomain do
   end
   
   @task_method true
-  @spec task_complete_meal(AriaState.t(), [meal_id()]) :: {:ok, [AriaEngine.todo_item()]}
+  @spec task_complete_meal(AriaState.t(), [meal_id()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def task_complete_meal(state, [meal_id]) do
     {:ok, [
       {:task_prepare_ingredients, [meal_id]},
@@ -966,7 +966,7 @@ defmodule MyApp.Domains.CookingDomain do
   
   # Unigoal methods with automatic verification (ADVANCED: Predicate-based registration)
   @unigoal_method predicate: "location"
-  @spec travel_to_location(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
+  @spec travel_to_location(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def travel_to_location(state, [subject, target]) do
     current = AriaState.RelationalState.get_fact(state, subject, "location")
     if current == target do
@@ -980,7 +980,7 @@ defmodule MyApp.Domains.CookingDomain do
   end
   
   @unigoal_method predicate: "has"
-  @spec acquire_item(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
+  @spec acquire_item(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def acquire_item(state, [subject, item]) do
     current_items = AriaState.RelationalState.get_fact(state, subject, "inventory") || []
     if item in current_items do
@@ -996,7 +996,7 @@ defmodule MyApp.Domains.CookingDomain do
   # EXPLICIT multigoal methods (Pure GTPyhop Style)
   # Domain author MUST define if multigoals are used
   @multigoal_method goal_pattern: :cooking_workflow
-  @spec handle_cooking_workflow(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
+  @spec handle_cooking_workflow(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def handle_cooking_workflow(state, multigoal) do
     # Domain author explicitly chooses strategy
     case custom_cooking_optimization(state, multigoal.goals) do
