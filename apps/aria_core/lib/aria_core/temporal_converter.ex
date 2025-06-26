@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaCore.TemporalConverter do
   @moduledoc """
   Converts legacy durative actions with temporal conditions into ADR-181 compliant

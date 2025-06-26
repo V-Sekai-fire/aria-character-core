@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaCore.UnifiedActionSpecificationTest do
   @moduledoc """
   Comprehensive test suite for the unified action specification system.

@@ -23,6 +23,7 @@ end
 ```
 
 **Features:**
+
 - Automatic metadata extraction from module attributes
 - Entity registry creation from action requirements
 - Temporal specifications generation from duration metadata
@@ -47,6 +48,7 @@ durative_action = %{
 ```
 
 **Features:**
+
 - Preserves temporal semantics during conversion
 - Generates method decompositions that enforce temporal constraints
 - Validates conversion maintains action equivalence
@@ -65,6 +67,7 @@ domain = AriaCore.UnifiedDomain.create_from_module(RestaurantDomain)
 ```
 
 **Features:**
+
 - Leverages existing `AriaCore.Domain.new()` (no rewrite needed)
 - Automatic entity registry setup from action requirements
 - Temporal specifications integration

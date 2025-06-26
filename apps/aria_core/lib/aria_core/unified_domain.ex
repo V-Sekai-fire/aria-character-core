@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaCore.UnifiedDomain do
   @moduledoc """
   Unified domain creation system for AriaCore.

@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Demo script for AriaCore unified action specification system
 # This demonstrates the complete implementation from ADR-181
 

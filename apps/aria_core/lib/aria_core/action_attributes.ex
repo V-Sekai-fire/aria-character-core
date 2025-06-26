@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaCore.ActionAttributes do
   @moduledoc """
   Action attribute processing system for AriaCore.

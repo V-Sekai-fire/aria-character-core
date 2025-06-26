@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaCore.Entity.Management do
   @moduledoc """
   Entity and capability management system for AriaCore.

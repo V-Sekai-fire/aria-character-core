@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Minimal test to isolate the @action attribute issue
 IO.puts("Starting minimal test...")
 

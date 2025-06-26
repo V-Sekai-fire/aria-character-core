@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaCore.Examples.RestaurantDomain do
   @moduledoc """
   Example restaurant domain demonstrating ADR-181 compliant unified action specification.

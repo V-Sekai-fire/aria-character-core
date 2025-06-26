@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaCore.Temporal.Interval do
   @moduledoc """
   Temporal specification and interval management system for AriaCore.
