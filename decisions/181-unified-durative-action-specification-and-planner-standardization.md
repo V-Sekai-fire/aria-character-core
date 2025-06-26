@@ -271,8 +271,9 @@ Before the planner can match entities to action requirements, entities must be r
 ### Basic Entity Registration Pattern
 
 ```elixir
-@spec register_entity(AriaState.t(), String.t(), String.t(), [capability()]) :: {:ok, AriaState.t()} | {:error, atom()}
-def register_entity(state, entity_id, type, capabilities) do
+@action true
+@spec register_entity(AriaState.t(), [String.t(), String.t(), [capability()]]) :: {:ok, AriaState.t()} | {:error, atom()}
+def register_entity(state, [entity_id, type, capabilities]) do
   state
   |> AriaState.RelationalState.set_fact("type", entity_id, type)
   |> AriaState.RelationalState.set_fact("capabilities", entity_id, capabilities)
