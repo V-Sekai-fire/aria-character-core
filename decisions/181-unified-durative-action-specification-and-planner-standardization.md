@@ -299,8 +299,8 @@ defmodule MyApp.Domains.CookingDomain do
     state
     |> register_entity(["chef_1", "agent", [:cooking, :menu_planning]])
     |> register_entity(["oven_1", "oven", [:heating, :baking]])
-    |> register_entity(["main_kitchen", "kitchen", [:workspace]])
-    |> register_entity(["flour_bag", "flour", [:consumable]])
+    |> register_entity(["main_kitchen_1", "kitchen", [:workspace]])
+    |> register_entity(["flour_bag_1", "flour", [:consumable]])
     {:ok, state}
   end
   
