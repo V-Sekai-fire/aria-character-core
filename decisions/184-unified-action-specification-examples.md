@@ -15,16 +15,19 @@
 ### Basic Patterns
 
 #### Simple Actions
+
 - Zero duration actions
 - Fixed duration actions
 - Scheduled actions
 
 #### Entity Requirements
+
 - Single entity patterns
 - Multiple entity patterns
 - Capability-based matching
 
 #### State Management
+
 - Fact setting patterns
 - State query patterns
 - Temporal state handling
@@ -32,16 +35,19 @@
 ### Intermediate Patterns
 
 #### Method Decomposition
+
 - Task method patterns
 - Unigoal method patterns
 - Hierarchical planning structures
 
 #### Resource Management
+
 - Entity allocation patterns
 - Capability matching strategies
 - Resource conflict resolution
 
 #### Temporal Coordination
+
 - Sequential task patterns
 - Parallel execution patterns
 - Temporal constraint handling
@@ -49,16 +55,19 @@
 ### Advanced Patterns
 
 #### Multigoal Optimization
+
 - Custom optimization strategies
 - MinizinC integration patterns
 - Fallback handling approaches
 
 #### Execution Context
+
 - Performance monitoring patterns
 - Error handling strategies
 - State recovery mechanisms
 
 #### Domain Architecture
+
 - Module organization patterns
 - Cross-domain communication
 - Scalability considerations
@@ -66,18 +75,21 @@
 ## Implementation Guidelines
 
 ### Pattern Selection Criteria
+
 - Problem complexity assessment
 - Performance requirements
 - Maintainability considerations
 - Team expertise levels
 
 ### Best Practices
+
 - Start with simple patterns
 - Evolve complexity gradually
 - Document pattern decisions
 - Test pattern effectiveness
 
 ### Common Pitfalls
+
 - Over-engineering simple problems
 - Mixing pattern paradigms
 - Ignoring performance implications

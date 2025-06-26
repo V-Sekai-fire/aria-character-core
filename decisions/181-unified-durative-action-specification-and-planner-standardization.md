@@ -350,16 +350,19 @@ end)
 ### Entity Registration Best Practices
 
 **Required facts for all entities:**
+
 - `"type"` - Entity category (agent, oven, kitchen, etc.)
 - `"capabilities"` - List of capability atoms
 - `"status"` - Availability state ("available", "busy", "broken", etc.)
 
 **Optional but recommended facts:**
+
 - `"location"` - Where the entity is located
 - `"quantity"` - For consumable entities
 - Equipment-specific properties (temperature ranges, capacity, etc.)
 
 **Entity naming conventions:**
+
 - Use descriptive IDs: `"chef_1"`, `"main_oven"`, `"prep_station_a"`
 - Include numbers for multiple similar entities: `"mixing_bowl_1"`, `"mixing_bowl_2"`
 - Avoid generic names that don't distinguish between entities
@@ -470,44 +473,53 @@ end
 All temporal specifications follow the 9-pattern system defined in the Complete Temporal Specification Permutations table. Each pattern represents a valid combination of `start`, `end`, and `duration` fields:
 
 **Pattern 1: No Temporal Specification**
+
 - No duration, start, or end specified (❌ ❌ ❌ ❌)
 - Defaults to instant action that can be scheduled anytime
 
 **Pattern 2: Zero Duration Specified**
+
 - Explicit zero duration (❌ ❌ ❌ ✅) with `duration: "PT0S"`
 - Instant action that can be scheduled anytime
 
 **Pattern 3: Floating Duration**
+
 ```elixir
 %{duration: "PT2H"}  # Takes 2 hours, planner chooses when
 ```
 
 **Pattern 4: Deadline Constraint**
+
 ```elixir
 %{end: "2025-06-22T14:00:00-07:00"}  # Must finish by 2 PM
 ```
 
 **Pattern 5: Duration with Deadline (Calculated Start)**
+
 ```elixir
 %{end: "2025-06-22T14:00:00-07:00", duration: "PT2H"}  # start = end - duration
 ```
 
 **Pattern 6: Scheduled Start**
+
 ```elixir
 %{start: "2025-06-22T10:00:00-07:00"}  # Starts at 10 AM
 ```
 
 **Pattern 7: Start with Duration (Calculated End)**
+
 ```elixir
 %{start: "2025-06-22T10:00:00-07:00", duration: "PT2H"}  # end = start + duration
 ```
 
 **Pattern 8: Fixed Interval**
+
 ```elixir
 %{start: "2025-06-22T10:00:00-07:00", end: "2025-06-22T12:00:00-07:00"}  # Explicit times
 ```
 
 **Pattern 9: Fully Constrained (Validation)**
+
 ```elixir
 %{start: "2025-06-22T10:00:00-07:00", end: "2025-06-22T12:00:00-07:00", duration: "PT2H"}  # Validates consistency
 ```
@@ -547,72 +559,91 @@ All temporal specifications follow the 9-pattern system defined in the Complete 
 ### Semantic Definitions
 
 **Pattern 1: No Temporal Specification**
+
 ```elixir
 %{}  # No duration, start, or end specified
 ```
+
 *Semantics*: Instant action that can be scheduled at any time.
 *Use case*: "Check inventory" - can be done anytime, takes no time.
 
 **Pattern 2: Zero Duration Specified**
+
 ```elixir
 %{duration: "PT0S"}  # Explicit zero duration
 ```
+
 *Semantics*: Instant action that can be scheduled at any time.
 *Use case*: "Quick status check" - explicitly zero duration, can be done anytime.
 *Note*: Both Pattern 1 and 2 have identical semantics but different specifications.
 
 **Pattern 3: Floating Duration**
+
 ```elixir
 %{duration: "PT2H"}
 ```
+
 *Semantics*: Action takes 2 hours, planner chooses when to schedule it.
 *Use case*: "Cook meal" - takes 2 hours, schedule when convenient.
 
 **Pattern 4: Deadline Constraint**
+
 ```elixir
 %{end: "2025-06-22T14:00:00-07:00"}
 ```
+
 *Semantics*: Action must complete by 2 PM, planner chooses start time.
 *Use case*: "Prepare lunch" - must be ready by 2 PM, start whenever needed.
 
 **Pattern 5: Duration with Deadline (Calculated Start)**
+
 ```elixir
 %{end: "2025-06-22T14:00:00-07:00", duration: "PT2H"}
 ```
+
 *Semantics*: Must finish by 2 PM, takes 2 hours, so must start by 12 PM.
 *Use case*: "Baking for dinner" - must finish by dinner time, takes 2 hours.
 
 **Pattern 6: Scheduled Start**
+
 ```elixir
 %{start: "2025-06-22T10:00:00-07:00"}
 ```
+
 *Semantics*: Action starts at 10 AM, planner chooses end time (or instant if no duration).
 *Use case*: "Morning meeting" - starts at 10 AM, duration flexible.
 
 **Pattern 7: Start with Duration (Calculated End)**
+
 ```elixir
 %{start: "2025-06-22T10:00:00-07:00", duration: "PT2H"}
 ```
+
 *Semantics*: Starts at 10 AM, takes 2 hours, automatically ends at 12 PM.
 *Use case*: "Workshop session" - starts at 10 AM, runs for 2 hours.
 
 **Pattern 8: Fixed Interval**
+
 ```elixir
 %{start: "2025-06-22T10:00:00-07:00", end: "2025-06-22T12:00:00-07:00"}
 ```
+
 *Semantics*: Explicitly scheduled from 10 AM to 12 PM.
 *Use case*: "Conference call" - fixed time slot from 10 AM to 12 PM.
 
 **Pattern 9: Fully Constrained (Validation)**
+
 ```elixir
 %{start: "2025-06-22T10:00:00-07:00", end: "2025-06-22T12:00:00-07:00", duration: "PT2H"}
 ```
+
 *Semantics*: All three specified, system validates `start + duration = end` (10 AM + 2 hours = 12 PM).
 *Use case*: "Explicit schedule verification" - ensure all temporal constraints are consistent.
 
 ### Implementation Logic
 
 **Pattern 4 Calculation (Backward Time)**
+
 ```elixir
 # Given: end time and duration
 # Calculate: start time
@@ -620,6 +651,7 @@ start_time = DateTime.add(end_time, -duration_seconds, :second)
 ```
 
 **Pattern 6 Calculation (Forward Time)**
+
 ```elixir
 # Given: start time and duration  
 # Calculate: end time
@@ -627,6 +659,7 @@ end_time = DateTime.add(start_time, duration_seconds, :second)
 ```
 
 **Pattern 8 Validation (Consistency Check)**
+
 ```elixir
 # Given: start, end, and duration
 # Validate: start + duration = end
@@ -639,14 +672,17 @@ end
 ### Error Handling
 
 **Pattern 4 Errors:**
+
 - Negative start time (duration longer than time until end)
 - Invalid duration format
 
 **Pattern 8 Errors:**
+
 - Inconsistent constraint: `start + duration ≠ end`
 - Example: start=10:00, end=13:00, duration=PT2H (10+2≠13)
 
 **General Errors:**
+
 - Invalid ISO 8601 datetime format
 - Invalid ISO 8601 duration format
 - Start time after end time (Pattern 7)
@@ -1271,3 +1307,71 @@ The following concepts were explicitly rejected during design:
 **Timeline:** Available immediately
 
 **Compatibility:** Full backward compatibility maintained
+
+## Related Work and Standards
+
+### Academic Foundation
+
+This specification builds upon established research in automated planning and scheduling, particularly temporal planning with durative actions. The core concepts align with and extend several foundational works in the field:
+
+**Temporal Planning and Durative Actions:**
+
+- Fox, M.; Long, D. (2003). "PDDL2.1: An Extension to PDDL for Expressing Temporal Planning Domains". *Journal of Artificial Intelligence Research*, 20:61-124. DOI: [`10.1613/jair.1129`](https://doi.org/10.1613/jair.1129)
+- Fox, M.; Long, D. (2006). "Modelling Mixed Discrete-Continuous Domains for Planning". *Journal of Artificial Intelligence Research*, 27:235-297. DOI: [`10.1613/jair.2044`](https://doi.org/10.1613/jair.2044)
+
+**Automated Planning Theory:**
+
+- Ghallab, M.; Nau, D.; Traverso, P. (2004). *Automated Planning: Theory and Practice*. Morgan Kaufmann. ISBN: 1-55860-856-7. Available: [`http://www.laas.fr/planning/`](http://www.laas.fr/planning/)
+
+**Planning Domain Definition Language Standards:**
+
+- Kovacs, D.L. (2011). "BNF Definition of PDDL 3.1". Technical Report. Available: [`https://helios.hud.ac.uk/scommv/IPC-14/repository/kovacs-pddl-3.1-2011.pdf`](https://helios.hud.ac.uk/scommv/IPC-14/repository/kovacs-pddl-3.1-2011.pdf)
+
+### Comparison with Established Standards
+
+| Feature | PDDL 2.1 | PDDL+ | ADR-181 Specification |
+|---------|----------|-------|----------------------|
+| **Durative Actions** | ✅ Basic support | ✅ Enhanced | ✅ Unified entity-based |
+| **Temporal Constraints** | ✅ at_start/at_end | ✅ Continuous | ✅ 9-pattern system |
+| **Resource Management** | ❌ Limited | ❌ Numeric only | ✅ Entity capabilities |
+| **Hierarchical Decomposition** | ❌ No | ❌ No | ✅ Method-based |
+| **Multi-agent Support** | ❌ No | ❌ No | ✅ Entity allocation |
+| **Goal Format** | Mixed | Mixed | ✅ Standardized {predicate, subject, value} |
+
+### Research Context
+
+This specification addresses several open problems in automated planning and scheduling:
+
+**Temporal Planning:** Extends classical STRIPS planning with temporal reasoning capabilities, supporting both fixed intervals and floating durations as described in temporal constraint satisfaction literature.
+
+**Resource Allocation:** Implements entity-based resource management through capability matching, addressing the resource allocation problem in multi-agent planning systems.
+
+**Hierarchical Task Networks:** Integrates HTN-style method decomposition with durative action planning, bridging the gap between hierarchical planning and temporal scheduling.
+
+**Constraint Satisfaction:** The 9-pattern temporal specification system provides a complete framework for temporal constraint satisfaction in planning domains.
+
+### Implementation Standards
+
+**International Planning Competition:** The specification draws from standards established through the International Planning Competition series. Competition resources: [`http://www.icaps-conference.org/`](http://www.icaps-conference.org/)
+
+**Planning Domain Modeling:** Follows established conventions for domain-independent planning while extending expressiveness for modern applications requiring temporal reasoning and resource management.
+
+### Keywords and Research Areas
+
+This specification contributes to research in: automated planning and scheduling, temporal planning, durative actions, hierarchical task networks, resource allocation, constraint satisfaction, multi-agent planning, planning domain definition languages, temporal constraint networks, scheduling optimization, and intelligent agent coordination.
+
+### Future Research Directions
+
+The unified specification enables research into:
+
+- **Temporal Optimization:** Advanced scheduling algorithms for durative action sequences
+- **Resource Contention:** Sophisticated entity allocation strategies for multi-agent environments  
+- **Hybrid Planning:** Integration of symbolic planning with continuous control systems
+- **Distributed Planning:** Coordination protocols for multi-agent temporal planning
+- **Learning-Enhanced Planning:** Machine learning integration for capability discovery and optimization
+
+### Standards Compliance
+
+This specification maintains compatibility with established planning frameworks while extending capabilities for modern applications. Implementation follows best practices from the automated planning community and provides clear migration paths from existing PDDL-based systems.
+
+For researchers and practitioners working with temporal planning, durative actions, resource scheduling, or multi-agent coordination, this specification provides a comprehensive foundation that builds upon decades of research in automated planning and scheduling.

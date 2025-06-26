@@ -10,6 +10,7 @@
 Implement sophisticated reinforcement learning for Qwen3 using OpenPipe's ART (Automated Reasoning and Tool-use) framework to create a continuously improving ARC puzzle solver. ART specializes in training models on multi-step reasoning tasks with tool integration, making it ideal for ARC puzzle solving where the model must reason through patterns and use computational search tools effectively.
 
 **Why ART for ARC Prize:**
+
 - **Tool-Aware Training**: Optimizes models that use external tools (search functions, pattern analyzers)
 - **Reasoning Chain Optimization**: Specifically designed for multi-step reasoning improvement
 - **Production-Ready Framework**: Battle-tested system from OpenPipe with monitoring and deployment
@@ -23,6 +24,7 @@ Implement sophisticated reinforcement learning for Qwen3 using OpenPipe's ART (A
 Implement ART-based reinforcement learning system using OpenPipe's framework, integrated as Phase 3 enhancement (post-sprint continuous improvement) to create domain-specialized Qwen3 models for ARC puzzle solving.
 
 **Architecture Strategy:**
+
 1. **Trajectory Collection** - Capture reasoning chains with tool usage from ARC attempts
 2. **ART Dataset Formatting** - Convert trajectories to ART's tool-aware training format
 3. **Reward Function Design** - Multi-factor reward system for accuracy, reasoning quality, and efficiency

@@ -10,6 +10,7 @@
 Enhance the ARC Prize solving capability by integrating LLM-based reasoning directly into the puzzle-solving workflow. This extends beyond simple multitodo optimization to make LLM a first-class participant in pattern recognition, search guidance, and solution validation.
 
 **Integration Points:**
+
 - **LLM Actions**: Direct puzzle-solving reasoning within the planning workflow
 - **LLM-Guided Search**: Intelligent exploration of transformation space
 - **Blacklist Management**: Eliminate impossible transformations to improve efficiency
@@ -23,6 +24,7 @@ Enhance the ARC Prize solving capability by integrating LLM-based reasoning dire
 Implement comprehensive LLM integration using OpenRouter API (primary) with local Qwen3 fallback, integrated during Phase 2 of ARC Prize sprint (Week 4: July 15-22).
 
 **Architecture Strategy:**
+
 1. **LLM as reasoning partner** - participates in actual puzzle solving
 2. **Search intelligence** - guides computational exploration efficiently  
 3. **Constraint management** - learns from failures to avoid repeated mistakes
