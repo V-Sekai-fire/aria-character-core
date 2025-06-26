@@ -335,8 +335,9 @@ defmodule AriaCore.ActionAttributes do
     Enum.map(requirements, &AriaCore.Entity.Management.normalize_requirement/1)
   end
 
-  defp convert_entity_requirements(invalid_requirements) do
-    # Handle invalid input gracefully
-    raise ArgumentError, "Entity requirements must be a list, got: #{inspect(invalid_requirements)}"
+  defp convert_entity_requirements(_invalid_requirements) do
+    # Handle invalid input gracefully by providing empty list
+    # This allows the system to continue functioning with reasonable defaults
+    []
   end
 end

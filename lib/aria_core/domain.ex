@@ -13,6 +13,7 @@ defmodule AriaCore.Domain do
     :name,
     :actions,
     :methods,
+    :unigoal_methods,
     :entity_registry,
     :temporal_specifications,
     :state_predicates
@@ -22,6 +23,7 @@ defmodule AriaCore.Domain do
     name: atom(),
     actions: map(),
     methods: map(),
+    unigoal_methods: map(),
     entity_registry: AriaCore.Entity.Management.registry(),
     temporal_specifications: AriaCore.Temporal.Interval.specifications(),
     state_predicates: map()
@@ -41,6 +43,7 @@ defmodule AriaCore.Domain do
       name: name,
       actions: %{},
       methods: %{},
+      unigoal_methods: %{},
       entity_registry: AriaCore.Entity.Management.new_registry(),
       temporal_specifications: AriaCore.Temporal.Interval.new_specifications(),
       state_predicates: %{}
@@ -75,6 +78,16 @@ defmodule AriaCore.Domain do
   """
   def add_method(%__MODULE__{} = domain, method_name, method_spec) when is_atom(method_name) do
     %{domain | methods: Map.put(domain.methods, method_name, method_spec)}
+  end
+
+  @doc """
+  Adds a unigoal method to the domain.
+
+  Unigoal methods provide single goal achievement strategies according to ADR-181.
+  They handle prerequisite checking, action selection, and verification for one specific goal predicate.
+  """
+  def add_unigoal_method(%__MODULE__{} = domain, method_name, unigoal_spec) when is_atom(method_name) do
+    %{domain | unigoal_methods: Map.put(domain.unigoal_methods, method_name, unigoal_spec)}
   end
 
   @doc """
@@ -114,6 +127,29 @@ defmodule AriaCore.Domain do
   """
   def list_methods(%__MODULE__{} = domain) do
     Map.keys(domain.methods)
+  end
+
+  @doc """
+  Gets a unigoal method specification by name.
+  """
+  def get_unigoal_method(%__MODULE__{} = domain, method_name) do
+    Map.get(domain.unigoal_methods, method_name)
+  end
+
+  @doc """
+  Lists all unigoal method names in the domain.
+  """
+  def list_unigoal_methods(%__MODULE__{} = domain) do
+    Map.keys(domain.unigoal_methods)
+  end
+
+  @doc """
+  Gets unigoal methods for a specific predicate.
+  """
+  def get_unigoal_methods_for_predicate(%__MODULE__{} = domain, predicate) do
+    domain.unigoal_methods
+    |> Enum.filter(fn {_name, spec} -> spec.predicate == predicate end)
+    |> Enum.into(%{})
   end
 
   @doc """
@@ -180,28 +216,12 @@ defmodule AriaCore.Domain do
   @doc """
   Macro for using AriaCore.Domain in modules.
 
-  This enables the @action and @task_method attributes for domain definition.
+  This enables the @action, @task_method, and @unigoal_method attributes for domain definition.
   """
   defmacro __using__(_opts) do
     quote do
+      use AriaCore.ActionAttributes
       import AriaCore.Domain
-      Module.register_attribute(__MODULE__, :action, accumulate: true)
-      Module.register_attribute(__MODULE__, :task_method, accumulate: true)
-
-      @before_compile AriaCore.Domain
-    end
-  end
-
-  @doc """
-  Compile-time hook to process @action and @task_method attributes.
-  """
-  defmacro __before_compile__(env) do
-    actions = Module.get_attribute(env.module, :action) || []
-    methods = Module.get_attribute(env.module, :task_method) || []
-
-    quote do
-      def __domain_actions__, do: unquote(Macro.escape(actions))
-      def __domain_methods__, do: unquote(Macro.escape(methods))
     end
   end
 end
