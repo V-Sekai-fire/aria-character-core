@@ -28,6 +28,7 @@ cook_meal("pasta")  # Just call it when I want it
 
 # Planning reality:
 @action duration: "PT2H", requires_entities: []
+@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
 def cook_meal(state, [meal_type]) do
   # This gets called BY THE PLANNER, not by you
   state
@@ -81,6 +82,7 @@ end
 
 ```elixir
 # Procedural mindset (what you're used to):
+@spec make_dinner() :: :ok
 def make_dinner() do
   if ingredients_available?() do
     if chef_available?() do
@@ -102,6 +104,7 @@ end
   %{type: "chef", capabilities: [:cooking]},
   %{type: "heating_source", capabilities: [:heating]}  # Could be oven OR stovetop
 ]
+@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
 def cook_meal(state, [meal_type]) do
   # Just describe the state change - planner handles all the "what ifs"
   state |> AriaState.RelationalState.set_fact("meal_status", meal_type, "ready")
@@ -1058,6 +1061,99 @@ defmodule MyApp.Domains.CookingDomain do
       {[], locations} -> optimize_travel_sequence(state, locations)
       {cooking, locations} -> optimize_combined_workflow(state, cooking, locations)
     end
+  end
+  
+  @spec attempt_cooking_with_failure_chance(AriaState.t(), String.t()) :: {:ok, AriaState.t()} | {:error, String.t()}
+  defp attempt_cooking_with_failure_chance(state, meal_id) do
+    # Simulate cooking with potential failure
+    if :rand.uniform() > 0.1 do  # 90% success rate
+      new_state = state
+      |> AriaState.RelationalState.set_fact("meal_status", meal_id, "ready")
+      |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "available")
+      {:ok, new_state}
+    else
+      {:error, "cooking_failed"}
+    end
+  end
+  
+  @spec attempt_gathering_with_failure_chance(AriaState.t(), String.t()) :: {:ok, AriaState.t()} | {:error, String.t()}
+  defp attempt_gathering_with_failure_chance(state, task_name) do
+    # Simulate ingredient gathering with potential failure
+    if :rand.uniform() > 0.05 do  # 95% success rate
+      new_state = state
+      |> AriaState.RelationalState.set_fact("ingredients_status", task_name, "gathered")
+      |> AriaState.RelationalState.set_fact("task_status", task_name, "complete")
+      {:ok, new_state}
+    else
+      {:error, "ingredients_unavailable"}
+    end
+  end
+  
+  @spec optimize_cooking_sequence(AriaState.t(), [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, String.t()}
+  defp optimize_cooking_sequence(state, cooking_goals) do
+    # Optimize cooking tasks based on dependencies and timing
+    todo_items = Enum.map(cooking_goals, fn {predicate, subject, value} ->
+      {:cook_meal, [subject]}
+    end)
+    {:ok, todo_items}
+  end
+  
+  @spec optimize_travel_sequence(AriaState.t(), [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, String.t()}
+  defp optimize_travel_sequence(state, location_goals) do
+    # Optimize travel sequence to minimize total distance
+    todo_items = Enum.map(location_goals, fn {predicate, subject, value} ->
+      {:travel_to_location, [subject, value]}
+    end)
+    {:ok, todo_items}
+  end
+  
+  @spec optimize_combined_workflow(AriaState.t(), [AriaEngine.goal()], [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, String.t()}
+  defp optimize_combined_workflow(state, cooking_goals, location_goals) do
+    # Combine and optimize both cooking and travel tasks
+    {:ok, cooking_todos} = optimize_cooking_sequence(state, cooking_goals)
+    {:ok, travel_todos} = optimize_travel_sequence(state, location_goals)
+    {:ok, travel_todos ++ cooking_todos}
+  end
+  
+  @spec group_by_resource_requirements(AriaState.t(), [AriaEngine.todo_item()]) :: [[AriaEngine.todo_item()]]
+  defp group_by_resource_requirements(state, todo_list) do
+    # Group todo items by their resource requirements for optimization
+    Enum.group_by(todo_list, fn todo_item ->
+      # Simple grouping by action type for demonstration
+      case todo_item do
+        {:cook_meal, _} -> :cooking
+        {:travel_to_location, _} -> :travel
+        _ -> :other
+      end
+    end)
+    |> Map.values()
+  end
+  
+  @spec flatten_optimized_groups([[AriaEngine.todo_item()]]) :: [AriaEngine.todo_item()]
+  defp flatten_optimized_groups(grouped_todos) do
+    # Flatten grouped todos back into a single optimized list
+    List.flatten(grouped_todos)
+  end
+  
+  @spec calculate_execution_times([AriaEngine.todo_item()], AriaState.t()) :: [{AriaEngine.todo_item(), integer()}]
+  defp calculate_execution_times(todo_list, state) do
+    # Calculate estimated execution times for each todo item
+    Enum.map(todo_list, fn todo_item ->
+      estimated_time = case todo_item do
+        {:cook_meal, _} -> 120  # 2 hours in minutes
+        {:travel_to_location, _} -> 15  # 15 minutes
+        _ -> 30  # Default 30 minutes
+      end
+      {todo_item, estimated_time}
+    end)
+  end
+  
+  @spec sort_by_critical_path([{AriaEngine.todo_item(), integer()}]) :: [AriaEngine.todo_item()]
+  defp sort_by_critical_path(timed_todos) do
+    # Sort by execution time (longest first for critical path)
+    timed_todos
+    |> Enum.sort_by(fn {_todo, time} -> -time end)
+    |> Enum.map(fn {todo, _time} -> todo end)
   end
   
   @spec is_cooking_goal?(AriaEngine.goal()) :: boolean()
