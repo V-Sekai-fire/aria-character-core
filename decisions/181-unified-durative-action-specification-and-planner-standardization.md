@@ -172,13 +172,13 @@ If you're coming from normal programming, the planner architecture feels backwar
 
 ```elixir
 # You control the execution flow directly
-@spec make_dinner() :: :ok
+@spec make_dinner() :: {:ok, atom()} | {:error, atom()}
 def make_dinner() do
   go_to_kitchen()           # Step 1: Do this now
   get_ingredients()         # Step 2: Then do this  
   cook_meal()              # Step 3: Then do this
   serve_meal()             # Step 4: Finally this
-  :ok
+  {:ok, :dinner_made}
 end
 
 # You call it when you want it to happen
