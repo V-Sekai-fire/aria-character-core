@@ -467,52 +467,50 @@ end
 
 ### Supported Patterns
 
-**Pattern 1: Instant Actions - Anytime (zero duration)**
+All temporal specifications follow the 9-pattern system defined in the Complete Temporal Specification Permutations table. Each pattern represents a valid combination of `start`, `end`, and `duration` fields:
 
+**Patterns 1-2: No Temporal Specification (Default)**
+- Both patterns represent instant actions that can be scheduled anytime
+- Pattern 1: Alternative interpretation (❌ status)
+- Pattern 2: Standard interpretation (✅ status)
+- Both have identical semantics: instant action, anytime
+
+**Pattern 3: Floating Duration**
 ```elixir
-%{duration: "PT0S"}  # Zero duration - can be done anytime
+%{duration: "PT2H"}  # Takes 2 hours, planner chooses when
 ```
 
-**Pattern 2: Instant Actions - Time Point (zero duration at specific time)**
-
+**Pattern 4: Deadline Constraint**
 ```elixir
-%{
-  start: "2025-06-22T11:00:00-07:00",  # Instant action at exact time point
-  end: "2025-06-22T11:00:00-07:00"     # Same time = zero duration, specific moment
-}
+%{end: "2025-06-22T14:00:00-07:00"}  # Must finish by 2 PM
 ```
 
-**Pattern 3: Floating Duration (effort-based scheduling)**
-
+**Pattern 5: Duration with Deadline (Calculated Start)**
 ```elixir
-%{duration: "PT2H"}  # ISO 8601 duration string
+%{end: "2025-06-22T14:00:00-07:00", duration: "PT2H"}  # start = end - duration
 ```
 
-**Pattern 4: Fixed Schedule (time-based scheduling)**
-
+**Pattern 6: Scheduled Start**
 ```elixir
-%{
-  start: "2025-06-22T10:00:00-07:00",  # ISO 8601 datetime string
-  end: "2025-06-22T11:00:00-07:00"     # ISO 8601 datetime string
-}
+%{start: "2025-06-22T10:00:00-07:00"}  # Starts at 10 AM
 ```
 
-**Pattern 5: Start Time with Duration (calculated end time)**
-
+**Pattern 7: Start with Duration (Calculated End)**
 ```elixir
-%{
-  start: "2025-06-22T10:00:00-07:00",  # ISO 8601 datetime string
-  duration: "PT2H"                     # ISO 8601 duration string
-}
-# Semantics: start + duration = end (10:00 AM + 2 hours = 12:00 PM)
+%{start: "2025-06-22T10:00:00-07:00", duration: "PT2H"}  # end = start + duration
 ```
 
-**Pattern 6: Open-ended Intervals**
-
+**Pattern 8: Fixed Interval**
 ```elixir
-%{start: "2025-06-22T10:00:00-07:00"}  # Start time only
-%{end: "2025-06-22T11:00:00-07:00"}    # End time only
+%{start: "2025-06-22T10:00:00-07:00", end: "2025-06-22T12:00:00-07:00"}  # Explicit times
 ```
+
+**Pattern 9: Fully Constrained (Validation)**
+```elixir
+%{start: "2025-06-22T10:00:00-07:00", end: "2025-06-22T12:00:00-07:00", duration: "PT2H"}  # Validates consistency
+```
+
+**Reference:** See "Complete Temporal Specification Permutations" section for detailed semantics, validation rules, and implementation logic for each pattern.
 
 ### Complete Temporal Specification Permutations
 
