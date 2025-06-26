@@ -28,10 +28,10 @@ cook_meal("pasta")  # Just call it when I want it
 
 # Planning reality:
 @action duration: "PT2H", requires_entities: []
-@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
+@spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def cook_meal(state, [meal_type]) do
   # This gets called BY THE PLANNER, not by you
-  state
+  {:error, :missing_cooks}
 end
 ```
 
@@ -64,9 +64,10 @@ end
 ]
 
 # Seems like it should be:
-@spec cook_meal() :: :ok
+@spec cook_meal() :: {:ok, term()} | {:error, atom()}
 def cook_meal() do
   # Just cook!
+  {:ok, true}
 end
 ```
 
@@ -83,7 +84,7 @@ end
 
 ```elixir
 # Procedural mindset (what you're used to):
-@spec make_dinner() :: :ok
+@spec make_dinner() :: {:ok, term()} | {:error, atom()}
 def make_dinner() do
   if ingredients_available?() do
     if chef_available?() do
@@ -98,6 +99,7 @@ def make_dinner() do
   else
     buy_ingredients()  # But what if store is closed?
   end
+  {:ok, :dinner_made}
 end
 
 # Declarative mindset (planning approach):
@@ -105,10 +107,11 @@ end
   %{type: "chef", capabilities: [:cooking]},
   %{type: "heating_source", capabilities: [:heating]}  # Could be oven OR stovetop
 ]
-@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
+@spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def cook_meal(state, [meal_type]) do
   # Just describe the state change - planner handles all the "what ifs"
   state |> AriaState.RelationalState.set_fact("meal_status", meal_type, "ready")
+  {:ok, state}
 end
 ```
 
@@ -119,10 +122,10 @@ end
 ```elixir
 # For one chef making one meal, planning seems like overkill
 @action requires_entities: [%{type: "chef", capabilities: [:cooking]}]
-@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
+@spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def cook_meal(state, [meal_type]) do
   # "Why not just call cook_meal()?"
-  state
+  {:ok, state}
 end
 ```
 
@@ -134,7 +137,7 @@ end
   %{type: "chef", capabilities: [:cooking]},
   %{type: "oven", capabilities: [:heating]}
 ]
-@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
+@spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def cook_meal(state, [meal_type]) do
   # Planner automatically:
   # - Assigns available chef
@@ -143,6 +146,7 @@ def cook_meal(state, [meal_type]) do
   # - Handles equipment failures
   # - Optimizes for efficiency
   state
+  {:ok, state}
 end
 ```
 
@@ -174,6 +178,7 @@ def make_dinner() do
   get_ingredients()         # Step 2: Then do this  
   cook_meal()              # Step 3: Then do this
   serve_meal()             # Step 4: Finally this
+  :ok
 end
 
 # You call it when you want it to happen
@@ -189,10 +194,11 @@ make_dinner()
           %{type: "chef", capabilities: [:cooking]},
           %{type: "ingredients", capabilities: [:consumable]}
         ]
-@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
+@spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def cook_meal(state, [meal_id]) do
   # Just describes the state change, not when/how to execute
   state |> AriaState.RelationalState.set_fact("meal_status", meal_id, "ready")
+  {:ok, state}
 end
 
 # You give the planner a goal and it figures out the steps
@@ -265,20 +271,22 @@ Before the planner can match entities to action requirements, entities must be r
 ### Basic Entity Registration Pattern
 
 ```elixir
-@spec register_entity(AriaState.t(), String.t(), String.t(), [capability()]) :: AriaState.t()
+@spec register_entity(AriaState.t(), String.t(), String.t(), [capability()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def register_entity(state, entity_id, type, capabilities) do
   state
   |> AriaState.RelationalState.set_fact("type", entity_id, type)
   |> AriaState.RelationalState.set_fact("capabilities", entity_id, capabilities)
   |> AriaState.RelationalState.set_fact("status", entity_id, "available")
+  {:ok, state}
 end
 ```
 
 ### Complete Scenario Setup
 
 ```elixir
-@spec setup_kitchen_scenario() :: AriaState.t()
-def setup_kitchen_scenario() do
+@action true
+@spec setup_kitchen_scenario(AriaState.t()) :: {:ok, AriaState.t()} | {:error, atom()}
+def setup_kitchen_scenario(state, []) do
   AriaState.RelationalState.new()
   |> register_entity("chef_1", "agent", [:cooking, :menu_planning])
   |> register_entity("sous_chef_1", "agent", [:cooking, :prep_work])
@@ -289,6 +297,7 @@ def setup_kitchen_scenario() do
   |> register_entity("flour_bag", "flour", [:consumable])
   |> register_entity("eggs_dozen", "eggs", [:consumable])
   |> register_entity("mixing_bowl_1", "mixing_bowl", [:container, :reusable])
+  {:ok, state}
 end
 ```
 
@@ -297,9 +306,10 @@ end
 Additional entity properties are stored as separate facts:
 
 ```elixir
-@spec setup_detailed_kitchen() :: AriaState.t()
-def setup_detailed_kitchen() do
-  setup_kitchen_scenario()
+@action true
+@spec setup_detailed_kitchen(AriaState.t()) :: {:ok, AriaState.t()} | {:error, atom()}
+def setup_detailed_kitchen(state) do
+  state = setup_kitchen_scenario()
   # Entity locations
   |> AriaState.RelationalState.set_fact("location", "chef_1", "main_kitchen")
   |> AriaState.RelationalState.set_fact("location", "oven_1", "main_kitchen")
@@ -314,6 +324,7 @@ def setup_detailed_kitchen() do
   |> AriaState.RelationalState.set_fact("unit", "flour_bag", "pounds")
   |> AriaState.RelationalState.set_fact("quantity", "eggs_dozen", 12)
   |> AriaState.RelationalState.set_fact("unit", "eggs_dozen", "count")
+  {:ok, state}
 end
 ```
 
@@ -357,7 +368,7 @@ available_cooks = AriaState.RelationalState.query(state, fn entity_id ->
   :cooking in capabilities && 
   status == "available"
 end)
-# Returns: ["chef_1", "sous_chef_1"] (entities that can cook and are available)
+# Returns: {:ok, ["chef_1", "sous_chef_1"]} (entities that can cook and are available)
 ```
 
 ### Entity Registration Best Practices
@@ -665,7 +676,7 @@ All temporal specifications follow the 9-pattern system defined in the Complete 
 ```elixir
 # Given: end time and duration
 # Calculate: start time
-start_time = DateTime.add(end_time, -duration_seconds, :second)
+start_time = DateTime.add(end_time, -duration_microseconds, :microsecond)
 ```
 
 **Pattern 6 Calculation (Forward Time)**
@@ -673,7 +684,7 @@ start_time = DateTime.add(end_time, -duration_seconds, :second)
 ```elixir
 # Given: start time and duration  
 # Calculate: end time
-end_time = DateTime.add(start_time, duration_seconds, :second)
+end_time = DateTime.add(start_time, duration_microseconds, :microsecond)
 ```
 
 **Pattern 8 Validation (Consistency Check)**
@@ -681,7 +692,7 @@ end_time = DateTime.add(start_time, duration_seconds, :second)
 ```elixir
 # Given: start, end, and duration
 # Validate: start + duration = end
-calculated_end = DateTime.add(start_time, duration_seconds, :second)
+calculated_end = DateTime.add(start_time, duration_microseconds, :microsecond)
 if calculated_end != end_time do
   {:error, "Inconsistent temporal specification: start + duration ≠ end"}
 end
@@ -716,7 +727,7 @@ Durative actions use **only** duration and entity requirements - no complex temp
           %{type: "oven", capabilities: [:heating]},
           %{type: "kitchen", capabilities: [:workspace]}
         ]
-@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
+@spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def cook_meal(state, [meal_id]) do
   # Pure state transformation - planner already validated requirements
   state
@@ -752,7 +763,7 @@ def prepare_and_cook_meal(state, [meal_id]) do
 end
 
 @action duration: "PT2H", requires_entities: [...]
-@spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
+@spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def cook_meal(state, [meal_id]) do
   # Simple, clean action
   state |> AriaState.RelationalState.set_fact("meal_status", meal_id, "ready")
@@ -814,19 +825,20 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "agent", capabilities: [:communication]},
             %{type: "kitchen", capabilities: [:workspace]}
           ]
-  @spec announce_meal_ready(AriaState.t(), [meal_id()]) :: AriaState.t()
+  @spec announce_meal_ready(AriaState.t(), [meal_id()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def announce_meal_ready(state, [meal_id]) do
     # Instant action - no time required, can be done anytime
     state
     |> AriaState.RelationalState.set_fact("announcement", meal_id, "ready")
     |> AriaState.RelationalState.set_fact("notification_sent", meal_id, true)
+    {:ok, state}
   end
   
   @action duration: "PT0S",
           requires_entities: [
             %{type: "agent", capabilities: [:observation]}
           ]
-  @spec check_ingredient_availability(AriaState.t(), [ingredient_list()]) :: AriaState.t()
+  @spec check_ingredient_availability(AriaState.t(), [ingredient_list()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def check_ingredient_availability(state, [ingredient_list]) do
     # Instant check - immediate state query and update, can be done anytime
     available_count = Enum.count(ingredient_list, fn ingredient ->
@@ -836,6 +848,7 @@ defmodule MyApp.Domains.CookingDomain do
     state
     |> AriaState.RelationalState.set_fact("ingredients_checked", "kitchen", true)
     |> AriaState.RelationalState.set_fact("available_ingredient_count", "kitchen", available_count)
+    {:ok, state}
   end
   
   # Instant actions at specific time points (zero duration at exact moment)
@@ -845,12 +858,13 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "agent", capabilities: [:communication]},
             %{type: "bell", capabilities: [:sound]}
           ]
-  @spec ring_lunch_bell(AriaState.t(), []) :: AriaState.t()
+  @spec ring_lunch_bell(AriaState.t(), []) :: {:ok, AriaState.t()} | {:error, atom()}
   def ring_lunch_bell(state, []) do
     # Instant action that must happen at exactly 12:00 PM
     state
     |> AriaState.RelationalState.set_fact("bell_status", "lunch_bell", "rung")
     |> AriaState.RelationalState.set_fact("lunch_announced", "kitchen", true)
+    {:ok, state}
   end
   
   @action start: "2025-06-22T18:00:00-07:00",
@@ -859,12 +873,13 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "agent", capabilities: [:management]},
             %{type: "restaurant", capabilities: [:service]}
           ]
-  @spec close_kitchen(AriaState.t(), []) :: AriaState.t()
+  @spec close_kitchen(AriaState.t(), []) :: {:ok, AriaState.t()} | {:error, atom()}
   def close_kitchen(state, []) do
     # Instant action that must happen at exactly 6:00 PM
     state
     |> AriaState.RelationalState.set_fact("kitchen_status", "main_kitchen", "closed")
     |> AriaState.RelationalState.set_fact("service_ended", "restaurant", true)
+    {:ok, state}
   end
   
   # Actions (planning-time) with capability system
@@ -877,13 +892,14 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "eggs", capabilities: [:consumable]},
             %{type: "mixing_bowl", capabilities: [:container, :reusable]}
           ]
-  @spec cook_meal(AriaState.t(), [meal_id()]) :: AriaState.t()
+  @spec cook_meal(AriaState.t(), [meal_id()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def cook_meal(state, [meal_id]) do
     # CORRECT: Pure state transformation, planner already validated requirements
     state
     |> AriaState.RelationalState.set_fact("meal_status", meal_id, "cooking")
     |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
     |> AriaState.RelationalState.set_fact("oven_status", "oven_1", "in_use")
+    {:ok, state}
   end
   
   @action duration: "PT30M",
@@ -891,17 +907,18 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "agent", capabilities: [:shopping]},
             %{type: "market", capabilities: [:ingredient_source]}
           ]
-  @spec gather_ingredients(AriaState.t(), [String.t()]) :: AriaState.t()
+  @spec gather_ingredients(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def gather_ingredients(state, [task_name]) do
     # Planning-time logic for ingredient gathering
     state
     |> AriaState.RelationalState.set_fact("task", "status", "ingredients_gathered")
     |> AriaState.RelationalState.set_fact("task", "ingredients", task_name)
+    {:ok, state}
   end
   
   # Commands (execution-time) with failure handling
   @command true
-  @spec cook_meal_command(AriaState.t(), [meal_id()]) :: {:ok, AriaState.t()} | {:error, String.t()}
+  @spec cook_meal_command(AriaState.t(), [meal_id()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def cook_meal_command(state, [meal_id]) do
     case attempt_cooking_with_failure_chance(state, meal_id) do
       {:ok, new_state} -> 
@@ -914,7 +931,7 @@ defmodule MyApp.Domains.CookingDomain do
   end
   
   @command true
-  @spec gather_ingredients_command(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, String.t()}
+  @spec gather_ingredients_command(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def gather_ingredients_command(state, [task_name]) do
     case attempt_gathering_with_failure_chance(state, task_name) do
       {:ok, new_state} -> 
@@ -992,14 +1009,14 @@ defmodule MyApp.Domains.CookingDomain do
   end
   
   @multigoal_method goal_pattern: :general_goals
-  @spec handle_general_multigoal(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
+  @spec handle_general_multigoal(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def handle_general_multigoal(state, multigoal) do
     # Strategy 1: Default/basic decomposition (analog to sequential_todo_execution)
     AriaEngine.Multigoal.split_multigoal(state, multigoal.goals)
   end
   
   @multigoal_method goal_pattern: :optimization_goals
-  @spec handle_optimization_multigoal(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
+  @spec handle_optimization_multigoal(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def handle_optimization_multigoal(state, multigoal) do
     # Strategy 2: MinizinC-optimized multigoal
     case AriaMinizincGoal.optimize_multigoal(state, multigoal) do
@@ -1015,28 +1032,31 @@ defmodule MyApp.Domains.CookingDomain do
   
   # Multitodo methods (symmetric to multigoal methods)
   @multitodo_method true
-  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def execute_todo_list(state, todo_list) do
     # Strategy 1: Default/basic sequential execution (analog to split_multigoal)
-    AriaEngine.TodoExecution.sequential_todo_execution(state, todo_list)
+    todo_list = AriaEngine.TodoExecution.sequential_todo_execution(state, todo_list)
+    {:ok, todo_list}
   end
   
   @multitodo_method true
-  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def execute_todo_list(state, todo_list) do
     # Strategy 2: Resource-optimized reordering
     todo_list
     |> group_by_resource_requirements(state)
     |> flatten_optimized_groups()
+    {:ok, todo_list}
   end
   
   @multitodo_method true
-  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+  @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def execute_todo_list(state, todo_list) do
     # Strategy 3: Makespan-optimized reordering
     todo_list
     |> calculate_execution_times(state)
     |> sort_by_critical_path()
+    {:ok, todo_list}
   end
   
   # Domain creation follows module-based pattern
@@ -1057,7 +1077,7 @@ defmodule MyApp.Domains.CookingDomain do
   end
   
   # Helper functions for domain logic
-  @spec custom_cooking_optimization(AriaState.t(), [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, String.t()}
+  @spec custom_cooking_optimization(AriaState.t(), [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   defp custom_cooking_optimization(state, goals) do
     # Domain-specific optimization logic
     cooking_goals = Enum.filter(goals, &is_cooking_goal?/1)
@@ -1071,7 +1091,7 @@ defmodule MyApp.Domains.CookingDomain do
     end
   end
   
-  @spec attempt_cooking_with_failure_chance(AriaState.t(), String.t()) :: {:ok, AriaState.t()} | {:error, String.t()}
+  @spec attempt_cooking_with_failure_chance(AriaState.t(), String.t()) :: {:ok, AriaState.t()} | {:error, atom()}
   defp attempt_cooking_with_failure_chance(state, meal_id) do
     # Simulate cooking with potential failure
     if :rand.uniform() > 0.1 do  # 90% success rate
@@ -1084,7 +1104,7 @@ defmodule MyApp.Domains.CookingDomain do
     end
   end
   
-  @spec attempt_gathering_with_failure_chance(AriaState.t(), String.t()) :: {:ok, AriaState.t()} | {:error, String.t()}
+  @spec attempt_gathering_with_failure_chance(AriaState.t(), String.t()) :: {:ok, AriaState.t()} | {:error, atom()}
   defp attempt_gathering_with_failure_chance(state, task_name) do
     # Simulate ingredient gathering with potential failure
     if :rand.uniform() > 0.05 do  # 95% success rate
@@ -1097,7 +1117,7 @@ defmodule MyApp.Domains.CookingDomain do
     end
   end
   
-  @spec optimize_cooking_sequence(AriaState.t(), [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, String.t()}
+  @spec optimize_cooking_sequence(AriaState.t(), [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   defp optimize_cooking_sequence(state, cooking_goals) do
     # Optimize cooking tasks based on dependencies and timing
     todo_items = Enum.map(cooking_goals, fn {predicate, subject, value} ->
@@ -1106,7 +1126,7 @@ defmodule MyApp.Domains.CookingDomain do
     {:ok, todo_items}
   end
   
-  @spec optimize_travel_sequence(AriaState.t(), [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, String.t()}
+  @spec optimize_travel_sequence(AriaState.t(), [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   defp optimize_travel_sequence(state, location_goals) do
     # Optimize travel sequence to minimize total distance
     todo_items = Enum.map(location_goals, fn {predicate, subject, value} ->
@@ -1115,7 +1135,7 @@ defmodule MyApp.Domains.CookingDomain do
     {:ok, todo_items}
   end
   
-  @spec optimize_combined_workflow(AriaState.t(), [AriaEngine.goal()], [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, String.t()}
+  @spec optimize_combined_workflow(AriaState.t(), [AriaEngine.goal()], [AriaEngine.goal()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   defp optimize_combined_workflow(state, cooking_goals, location_goals) do
     # Combine and optimize both cooking and travel tasks
     {:ok, cooking_todos} = optimize_cooking_sequence(state, cooking_goals)
@@ -1254,7 +1274,7 @@ defmodule MyApp.Domains.CleanCookingDomain do
             %{type: "oven", capabilities: [:heating]},
             %{type: "kitchen", capabilities: [:workspace]}
           ]
-  @spec cook_meal(AriaState.t(), [String.t()]) :: AriaState.t()
+  @spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def cook_meal(state, [meal_id]) do
     # Pure state transformation
     state
@@ -1264,7 +1284,7 @@ defmodule MyApp.Domains.CleanCookingDomain do
   
   # Complex workflow handled by method decomposition
   @task_method
-  @spec full_cooking_workflow(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
+  @spec full_cooking_workflow(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def full_cooking_workflow(state, [meal_id]) do
     {:ok, [
       # Prerequisites (instead of at_start conditions)
@@ -1306,11 +1326,18 @@ end
 **Planner Actions:**
 
 ```elixir
+@action true  # Minimal action declaration (instant, no entity requirements)
+@spec simple_action(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, atom()}
+def simple_action(state, args) do
+  # Simple action with default behavior
+  {:ok, state}
+end
+
 @action duration: "PT2H", requires_entities: []
-@spec action_name(AriaState.t(), [term()]) :: AriaState.t()
+@spec action_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def action_name(state, args) do
   # Can reference @action metadata
-  state
+  {:ok, state}
 end
 ```
 
@@ -1318,10 +1345,10 @@ end
 
 ```elixir
 @command
-@spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, String.t()}
+@spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def command_name(state, args) do
   # Execution-time logic only
-  state
+  {:ok, state}
 end
 ```
 
@@ -1329,10 +1356,10 @@ end
 
 ```elixir
 @task_method
-@spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]}
+@spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 def task_name(state, args) do
   # Task decomposition logic
-  [...]
+  {:ok, []}
 end
 ```
 
@@ -1340,10 +1367,10 @@ end
 
 ```elixir
 @unigoal_method predicate: "location"
-@spec method_name(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
+@spec method_name(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 def method_name(state, [subject, value]) do
   # Goal decomposition logic
-  [...]
+  {:ok, []}
 end
 ```
 
@@ -1351,9 +1378,10 @@ end
 
 ```elixir
 @multigoal_method goal_pattern: :pattern_name
-@spec multigoal_method(AriaState.t(), AriaEngine.multigoal()) :: {:ok, [AriaEngine.todo_item()]}
+@spec multigoal_method(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()}
 def multigoal_method(state, multigoal) do
   # Multigoal handling logic
+  {:ok, multigoal}
 end
 ```
 
@@ -1361,10 +1389,10 @@ end
 
 ```elixir
 @multitodo_method
-@spec multitodo_method(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
+@spec multitodo_method(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 def multitodo_method(state, todo_list) do
   # Todo list optimization logic - multiple methods with same name
-  # MinZinC chooses optimal strategy based on optimization criteria
+  {:ok, todo_list}
 end
 ```
 
