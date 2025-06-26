@@ -1083,7 +1083,6 @@ defmodule MyApp.Domains.CookingDomain do
   @spec execute_todo_list(AriaState.t(), todo_list()) :: {:ok, todo_list()} | {:error, atom()}
   def execute_todo_list(state, todo_list) do
     # Strategy 1: Default/basic sequential execution (analog to split_multigoal)
-    todo_list = AriaEngine.TodoExecution.sequential_todo_execution(state, todo_list)
     {:ok, todo_list}
   end
   
