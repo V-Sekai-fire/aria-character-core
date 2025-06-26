@@ -53,11 +53,16 @@ defmodule AriaCore.ActionAttributes do
       # Hook into compilation process
       @on_definition {AriaCore.ActionAttributes, :__on_definition__}
       @before_compile AriaCore.ActionAttributes
+
+      # Import the attribute consumption macro
+      import AriaCore.ActionAttributes, only: [task_method: 0]
     end
   end
 
+  # Documentation for supported attributes
+
   @doc """
-  Documentation for @action attribute.
+  @action attribute documentation.
 
   ## Supported Attributes
 
@@ -77,9 +82,10 @@ defmodule AriaCore.ActionAttributes do
         # Implementation
       end
   """
+  def action_attribute_docs, do: :ok
 
   @doc """
-  Documentation for @task_method attribute.
+  @task_method attribute documentation.
 
   Task methods provide decomposition strategies for complex workflows.
   According to ADR-181, task methods are for workflow decomposition only
@@ -96,9 +102,10 @@ defmodule AriaCore.ActionAttributes do
         ]}
       end
   """
+  def task_method_attribute_docs, do: :ok
 
   @doc """
-  Documentation for @unigoal_method attribute.
+  @unigoal_method attribute documentation.
 
   Unigoal methods provide single goal achievement strategies according to ADR-181.
   They handle prerequisite checking, action selection, and verification for one specific goal predicate.
@@ -124,6 +131,25 @@ defmodule AriaCore.ActionAttributes do
         ]}
       end
   """
+  def unigoal_method_attribute_docs, do: :ok
+
+  @doc """
+  Macro to properly consume @task_method attribute.
+
+  This macro ensures the @task_method attribute is properly consumed
+  to avoid Elixir warnings about unused attributes.
+
+  Task methods provide decomposition strategies for complex workflows
+  according to ADR-181. They are for workflow decomposition only.
+  """
+  defmacro task_method() do
+    quote do
+      # Consume the @task_method attribute by assigning it
+      _ = @task_method
+      # Return the consumed value to satisfy Elixir's requirements
+      true
+    end
+  end
 
   @doc """
   Callback invoked when a function is defined.
@@ -131,38 +157,51 @@ defmodule AriaCore.ActionAttributes do
   This associates any pending attributes with the newly defined function.
   """
   def __on_definition__(env, kind, name, _args, _guards, _body) when kind in [:def, :defp] do
-    # Check for @action attribute
-    action_attrs = Module.get_attribute(env.module, :action) || []
+    # Functional approach: consume attributes by reading and transforming them
 
-    # Get the most recent @action attribute (if any)
-    if action_metadata = List.first(action_attrs) do
-      Module.put_attribute(env.module, :action_metadata, {name, action_metadata})
-      # Remove the processed attribute
-      Module.delete_attribute(env.module, :action)
+    # Process @action attribute - consume by reading and transforming
+    case Module.get_attribute(env.module, :action) do
+      [] -> :ok
+      [action_metadata | _rest] = attrs ->
+        # Consume the attribute by assigning it (satisfies Elixir's "return" requirement)
+        _consumed_action_attrs = attrs
+        Module.put_attribute(env.module, :action_metadata, {name, action_metadata})
     end
 
-    # Check for @task_method attribute
-    task_attrs = Module.get_attribute(env.module, :task_method) || []
-
-    if task_metadata = List.first(task_attrs) do
-      Module.put_attribute(env.module, :method_metadata, {name, task_metadata})
-      # Remove the processed attribute
-      Module.delete_attribute(env.module, :task_method)
+    # Process @task_method attribute - consume by reading and transforming
+    # Handle both @task_method and @task_method <value> patterns
+    task_attrs = Module.get_attribute(env.module, :task_method)
+    case task_attrs do
+      [] -> :ok
+      nil -> :ok
+      attrs when is_list(attrs) and length(attrs) > 0 ->
+        # Consume the attribute by assigning it (satisfies Elixir's "return" requirement)
+        _consumed_task_attrs = attrs
+        Module.put_attribute(env.module, :method_metadata, {name, %{}})
+        # Clear the attribute to prevent accumulation
+        Module.delete_attribute(env.module, :task_method)
+      other when other != [] ->
+        # Handle any other attribute value (including bare @task_method)
+        _consumed_task_attr = other
+        Module.put_attribute(env.module, :method_metadata, {name, %{}})
+        # Clear the attribute to prevent accumulation
+        Module.delete_attribute(env.module, :task_method)
     end
 
-    # Check for @unigoal_method attribute
-    unigoal_attrs = Module.get_attribute(env.module, :unigoal_method) || []
+    # Process @unigoal_method attribute - consume by reading and transforming
+    case Module.get_attribute(env.module, :unigoal_method) do
+      [] -> :ok
+      [unigoal_metadata | _rest] = attrs ->
+        # Consume the attribute by assigning it (satisfies Elixir's "return" requirement)
+        _consumed_unigoal_attrs = attrs
 
-    if unigoal_metadata = List.first(unigoal_attrs) do
-      # Validate required predicate attribute
-      predicate = unigoal_metadata[:predicate]
-      if is_nil(predicate) do
-        raise ArgumentError, "unigoal_method requires predicate: attribute, got: #{inspect(unigoal_metadata)}"
-      end
+        # Validate required predicate attribute
+        predicate = unigoal_metadata[:predicate]
+        if is_nil(predicate) do
+          raise ArgumentError, "unigoal_method requires predicate: attribute, got: #{inspect(unigoal_metadata)}"
+        end
 
-      Module.put_attribute(env.module, :unigoal_metadata, {name, unigoal_metadata})
-      # Remove the processed attribute
-      Module.delete_attribute(env.module, :unigoal_method)
+        Module.put_attribute(env.module, :unigoal_metadata, {name, unigoal_metadata})
     end
 
     # Continue with normal compilation
