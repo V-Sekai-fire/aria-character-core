@@ -76,7 +76,7 @@ Everything is an entity with capabilities:
 @action duration: "PT2H", requires_entities: [%{type: "agent", capabilities: [:cooking]}]
 @spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 
-@action duration: "PT0S"
+@action true
 @spec check_ingredients(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 
 @action start: "2025-06-22T10:00:00-07:00", duration: "PT1H"
