@@ -255,7 +255,7 @@ Everything is an entity with capabilities that define behavior:
 
 # Todo list cardinality examples:
 # - 0 todo_items: {:ok, []} - no further decomposition needed
-# - 1 todo_item: {:ok, [{:cook_meal, ["pasta"]}]} - simple decomposition
+# - 1 todo_item: {:ok, [{:cook_meal, ["pasta_1"]}]} - simple decomposition
 # - M todo_items: {:ok, [goal1, task1, action1, goal2]} - complex workflow
 
 # Best Practice: Use specific types in function specs, not generic arguments()
@@ -334,16 +334,16 @@ end
 @action true
 @spec setup_kitchen_scenario(AriaState.t(), []) :: {:ok, AriaState.t()} | {:error, atom()}
 def setup_kitchen_scenario(state, []) do
-  AriaState.RelationalState.new()
-  |> register_entity("chef_1", "agent", [:cooking, :menu_planning])
-  |> register_entity("sous_chef_1", "agent", [:cooking, :prep_work])
-  |> register_entity("oven_1", "oven", [:heating, :baking])
-  |> register_entity("stovetop_1", "stovetop", [:heating, :sauteing])
-  |> register_entity("main_kitchen", "kitchen", [:workspace])
-  |> register_entity("prep_station", "kitchen", [:workspace, :prep_area])
-  |> register_entity("flour_bag", "flour", [:consumable])
-  |> register_entity("eggs_dozen", "eggs", [:consumable])
-  |> register_entity("mixing_bowl_1", "mixing_bowl", [:container, :reusable])
+  state
+  |> register_entity(["chef_1", "agent", [:cooking, :menu_planning]])
+  |> register_entity(["sous_chef_1", "agent", [:cooking, :prep_work]])
+  |> register_entity(["oven_1", "oven", [:heating, :baking]])
+  |> register_entity(["stovetop_1", "stovetop", [:heating, :sauteing]])
+  |> register_entity(["main_kitchen", "kitchen", [:workspace]])
+  |> register_entity(["prep_station", "kitchen", [:workspace, :prep_area]])
+  |> register_entity(["flour_bag", "flour", [:consumable]])
+  |> register_entity(["eggs_dozen", "eggs", [:consumable]])
+  |> register_entity(["mixing_bowl_1", "mixing_bowl", [:container, :reusable]])
   {:ok, state}
 end
 ```
@@ -461,7 +461,7 @@ defmodule MyApp.Domains.CookingDomain do
             %{type: "mixing_bowl", capabilities: [:container, :reusable]}
           ],
           description: "Prepare a meal using specified ingredients and cooking equipment"
-  @spec cook_meal(AriaState.t(), arguments()) :: {:ok, AriaState.t()} | {:error, atom()}
+  @spec cook_meal(AriaState.t(), [meal_id()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def cook_meal(state, [meal_id]) do
     # Pure state transformation, planner already validated requirements
     new_state = state
@@ -550,12 +550,12 @@ All temporal specifications follow the 9-pattern system defined in the Complete 
 
 **Pattern 1: No Temporal Specification**
 
-- No duration, start, or end specified (❌ ❌ ❌ ❌)
+- No duration, start, or end specified (❌ ❌ ❌)
 - Defaults to instant action that can be scheduled anytime
 
 **Pattern 2: Zero Duration Specified**
 
-- Explicit zero duration (❌ ❌ ❌ ✅) with `duration: "PT0S"`
+- Explicit zero duration (❌ ❌ ✅) with `duration: "PT0S"`
 - Instant action that can be scheduled anytime
 
 **Pattern 3: Floating Duration**
@@ -608,8 +608,8 @@ All temporal specifications follow the 9-pattern system defined in the Complete 
 
 | Pattern | start | end | duration | Status | Semantics |
 |---------|-------|-----|----------|--------|-----------|
-| 1 | ❌ | ❌ | ❌ | ❌ | Valid default case (instant action, anytime) |
-| 2 | ❌ | ❌ | ❌ | ✅ | Valid default case (instant action, anytime) |
+| 1 | ❌ | ❌ | ❌ | ✅ | Valid default case (instant action, anytime) |
+| 2 | ❌ | ❌ | ✅ | ✅ | Explicit zero duration (instant action, anytime) |
 | 3 | ❌ | ❌ | ✅ | ✅ | Floating duration (schedule anytime) |
 | 4 | ❌ | ✅ | ❌ | ✅ | Deadline constraint (finish by end time) |
 | 5 | ❌ | ✅ | ✅ | ✅ | **Calculated start** (`start = end - duration`) |
@@ -780,6 +780,7 @@ def cook_meal(state, [meal_id]) do
   state
   |> AriaState.RelationalState.set_fact("meal_status", meal_id, "cooking")
   |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
+  {:ok, state}
 end
 ```
 
@@ -788,7 +789,7 @@ end
 Use natural hierarchical decomposition for complex workflows:
 
 ```elixir
-  @task_method
+  @task_method true
   @spec prepare_and_cook_meal(AriaState.t(), arguments()) :: {:ok, todo_list()} | {:error, atom()}
   def prepare_and_cook_meal(state, [meal_id]) do
     {:ok, [
@@ -1250,8 +1251,8 @@ domain = MyApp.Domains.CookingDomain.create_domain()
 
 # Planning creates solution tree with proper node types
 {:ok, solution_tree, plan} = AriaEngine.plan_with_tree(domain, initial_state, [
-  {:cook_meal, ["pasta"]},
-  {"location", "chef", "kitchen"}  # Goal
+  {:cook_meal, ["pasta_1"]},
+  {"location", "chef_1", "kitchen"}  # Goal
 ])
 
 # Execution with replanning on failure
@@ -1285,8 +1286,8 @@ end
 simple_domain = MyApp.Domains.SimpleCookingDomain.create_domain()
 
 multigoal = [
-  {"location", "chef", "kitchen"},
-  {"has", "chef", "ingredients"}
+  {"location", "chef_1", "kitchen"},
+  {"has", "chef_1", "ingredients"}
 ]
 
 case AriaEngine.plan(simple_domain, state, [multigoal]) do
@@ -1330,7 +1331,7 @@ defmodule MyApp.Domains.CleanCookingDomain do
   end
   
   # Complex workflow handled by method decomposition
-  @task_method
+  @task_method true
   @spec full_cooking_workflow(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def full_cooking_workflow(state, [meal_id]) do
     {:ok, [
@@ -1391,7 +1392,7 @@ end
 **Execution Commands:**
 
 ```elixir
-@command
+@command true
 @spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} | {:error, atom()}
 def command_name(state, args) do
   # Execution-time logic only
@@ -1402,7 +1403,7 @@ end
 **Task Methods:**
 
 ```elixir
-@task_method
+@task_method true
 @spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 def task_name(state, args) do
   # Task decomposition logic
@@ -1435,7 +1436,7 @@ end
 **Multitodo Methods:**
 
 ```elixir
-@multitodo_method
+@multitodo_method true
 @spec multitodo_method(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 def multitodo_method(state, todo_list) do
   # Todo list optimization logic - multiple methods with same name
