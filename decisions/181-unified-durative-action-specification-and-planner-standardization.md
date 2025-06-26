@@ -61,7 +61,7 @@ Everything is an entity with capabilities:
 ### Required Function Attributes
 
 ```elixir
-@action duration: "PT2H", requires_entities: [...]
+@action true
 @command true
 @task_method true
 @unigoal_method predicate: "location"
