@@ -410,6 +410,56 @@ defmodule MyApp.Domains.CookingDomain do
     |> AriaState.RelationalState.set_fact("meeting_status", "team_meeting", "in_progress")
     |> AriaState.RelationalState.set_fact("room_status", "conference_room_1", "occupied")
   end
+
+  # Start time with duration example (calculated end time)
+  @action start: "2025-06-22T14:00:00-07:00",
+          duration: "PT1H30M",
+          requires_entities: [
+            %{type: "agent", capabilities: [:cooking]},
+            %{type: "oven", capabilities: [:heating]}
+          ],
+          description: "Afternoon baking session starting at 2 PM, lasting 1.5 hours"
+  @spec afternoon_baking(AriaState.t(), [String.t()]) :: AriaState.t()
+  def afternoon_baking(state, [recipe]) do
+    # Automatically scheduled from 14:00 to 15:30 (start + duration)
+    state
+    |> AriaState.RelationalState.set_fact("baking_status", recipe, "in_progress")
+    |> AriaState.RelationalState.set_fact("oven_reserved", "main_oven", true)
+  end
+
+  # End time with duration example (calculated start time)
+  @action end: "2025-06-22T18:00:00-07:00",
+          duration: "PT2H",
+          requires_entities: [
+            %{type: "agent", capabilities: [:cooking]},
+            %{type: "oven", capabilities: [:heating]},
+            %{type: "kitchen", capabilities: [:workspace]}
+          ],
+          description: "Dinner preparation must finish by 6 PM, takes 2 hours"
+  @spec prepare_dinner(AriaState.t(), [String.t()]) :: AriaState.t()
+  def prepare_dinner(state, [menu]) do
+    # Automatically scheduled from 16:00 to 18:00 (end - duration = start)
+    state
+    |> AriaState.RelationalState.set_fact("dinner_status", menu, "preparing")
+    |> AriaState.RelationalState.set_fact("kitchen_reserved", "main_kitchen", true)
+  end
+
+  # Fully constrained example (validation)
+  @action start: "2025-06-22T09:00:00-07:00",
+          end: "2025-06-22T11:00:00-07:00",
+          duration: "PT2H",
+          requires_entities: [
+            %{type: "agent", capabilities: [:communication]},
+            %{type: "conference_room", capabilities: [:meeting_space]}
+          ],
+          description: "Morning workshop with explicit time validation"
+  @spec morning_workshop(AriaState.t(), [String.t()]) :: AriaState.t()
+  def morning_workshop(state, [topic]) do
+    # System validates: 09:00 + 2 hours = 11:00 (consistent)
+    state
+    |> AriaState.RelationalState.set_fact("workshop_status", topic, "in_session")
+    |> AriaState.RelationalState.set_fact("room_status", "conference_room", "occupied")
+  end
 end
 ```
 
@@ -447,23 +497,152 @@ end
 }
 ```
 
-**Pattern 5: Open-ended Intervals**
+**Pattern 5: Start Time with Duration (calculated end time)**
+
+```elixir
+%{
+  start: "2025-06-22T10:00:00-07:00",  # ISO 8601 datetime string
+  duration: "PT2H"                     # ISO 8601 duration string
+}
+# Semantics: start + duration = end (10:00 AM + 2 hours = 12:00 PM)
+```
+
+**Pattern 6: Open-ended Intervals**
 
 ```elixir
 %{start: "2025-06-22T10:00:00-07:00"}  # Start time only
 %{end: "2025-06-22T11:00:00-07:00"}    # End time only
 ```
 
+### Complete Temporal Specification Permutations
+
+**All 9 possible combinations of `start`, `end`, and `duration` are legal:**
+
+| Pattern | start | end | duration | Status | Semantics |
+|---------|-------|-----|----------|--------|-----------|
+| 1 | ❌ | ❌ | ❌ | ❌ | Valid default case (instant action, anytime) |
+| 2 | ❌ | ❌ | ❌ | ✅ | Valid default case (instant action, anytime) |
+| 3 | ❌ | ❌ | ✅ | ✅ | Floating duration (schedule anytime) |
+| 4 | ❌ | ✅ | ❌ | ✅ | Deadline constraint (finish by end time) |
+| 5 | ❌ | ✅ | ✅ | ✅ | **Calculated start** (`start = end - duration`) |
+| 6 | ✅ | ❌ | ❌ | ✅ | Open start (begins at time, no end constraint) |
+| 7 | ✅ | ❌ | ✅ | ✅ | **Calculated end** (`end = start + duration`) |
+| 8 | ✅ | ✅ | ❌ | ✅ | Fixed interval (explicit start and end) |
+| 9 | ✅ | ✅ | ✅ | ✅ | **Constraint validation** (`start + duration = end`) |
+
 ### Validation Rules
 
-- ✅ `duration: "PT0S"` (instant actions - can be done anytime)
-- ✅ `start` AND `end` with same time (instant actions - must be done at specific time point)
-- ✅ `duration` only (floating effort)
-- ✅ `start` AND `end` with different times (fixed closed interval)
-- ✅ `start` only (open-ended interval - starts at time, no end constraint)
-- ✅ `end` only (open-ended interval - must finish by time, no start constraint)
-- ❌ Cannot mix `duration` with `start`/`end`
-- ✅ Missing temporal specification defaults to `duration: "PT0S"` (zero duration floating)
+- ✅ **Pattern 1**: Missing temporal specification (alternative interpretation) - valid default case
+- ✅ **Pattern 2**: Missing temporal specification (standard interpretation) - valid default case  
+- ✅ **Pattern 3**: `duration` only (floating effort - schedule anytime)
+- ✅ **Pattern 4**: `end` only (deadline constraint - must finish by time)
+- ✅ **Pattern 5**: `end` AND `duration` (calculated start - `start = end - duration`)
+- ✅ **Pattern 6**: `start` only (open start - begins at time, no end constraint)
+- ✅ **Pattern 7**: `start` AND `duration` (calculated end - `end = start + duration`)
+- ✅ **Pattern 8**: `start` AND `end` (fixed interval - explicit times)
+  - ✅ Same time = instant action at specific moment
+  - ✅ Different times = fixed closed interval
+- ✅ **Pattern 9**: `start` AND `end` AND `duration` (constraint validation - must satisfy `start + duration = end`)
+
+### Semantic Definitions
+
+**Pattern 1 & 2: Default Instant (No temporal specification)**
+```elixir
+%{}  # Both interpretations default to instant action, anytime
+```
+*Semantics*: Instant action that can be scheduled at any time.
+*Use case*: "Check inventory" - can be done anytime, takes no time.
+*Note*: Both patterns represent the same semantic meaning, demonstrating that empty specification is explicitly valid.
+
+**Pattern 3: Floating Duration**
+```elixir
+%{duration: "PT2H"}
+```
+*Semantics*: Action takes 2 hours, planner chooses when to schedule it.
+*Use case*: "Cook meal" - takes 2 hours, schedule when convenient.
+
+**Pattern 4: Deadline Constraint**
+```elixir
+%{end: "2025-06-22T14:00:00-07:00"}
+```
+*Semantics*: Action must complete by 2 PM, planner chooses start time.
+*Use case*: "Prepare lunch" - must be ready by 2 PM, start whenever needed.
+
+**Pattern 5: Duration with Deadline (Calculated Start)**
+```elixir
+%{end: "2025-06-22T14:00:00-07:00", duration: "PT2H"}
+```
+*Semantics*: Must finish by 2 PM, takes 2 hours, so must start by 12 PM.
+*Use case*: "Baking for dinner" - must finish by dinner time, takes 2 hours.
+
+**Pattern 6: Scheduled Start**
+```elixir
+%{start: "2025-06-22T10:00:00-07:00"}
+```
+*Semantics*: Action starts at 10 AM, planner chooses end time (or instant if no duration).
+*Use case*: "Morning meeting" - starts at 10 AM, duration flexible.
+
+**Pattern 7: Start with Duration (Calculated End)**
+```elixir
+%{start: "2025-06-22T10:00:00-07:00", duration: "PT2H"}
+```
+*Semantics*: Starts at 10 AM, takes 2 hours, automatically ends at 12 PM.
+*Use case*: "Workshop session" - starts at 10 AM, runs for 2 hours.
+
+**Pattern 8: Fixed Interval**
+```elixir
+%{start: "2025-06-22T10:00:00-07:00", end: "2025-06-22T12:00:00-07:00"}
+```
+*Semantics*: Explicitly scheduled from 10 AM to 12 PM.
+*Use case*: "Conference call" - fixed time slot from 10 AM to 12 PM.
+
+**Pattern 9: Fully Constrained (Validation)**
+```elixir
+%{start: "2025-06-22T10:00:00-07:00", end: "2025-06-22T12:00:00-07:00", duration: "PT2H"}
+```
+*Semantics*: All three specified, system validates `start + duration = end` (10 AM + 2 hours = 12 PM).
+*Use case*: "Explicit schedule verification" - ensure all temporal constraints are consistent.
+
+### Implementation Logic
+
+**Pattern 4 Calculation (Backward Time)**
+```elixir
+# Given: end time and duration
+# Calculate: start time
+start_time = DateTime.add(end_time, -duration_seconds, :second)
+```
+
+**Pattern 6 Calculation (Forward Time)**
+```elixir
+# Given: start time and duration  
+# Calculate: end time
+end_time = DateTime.add(start_time, duration_seconds, :second)
+```
+
+**Pattern 8 Validation (Consistency Check)**
+```elixir
+# Given: start, end, and duration
+# Validate: start + duration = end
+calculated_end = DateTime.add(start_time, duration_seconds, :second)
+if calculated_end != end_time do
+  {:error, "Inconsistent temporal specification: start + duration ≠ end"}
+end
+```
+
+### Error Handling
+
+**Pattern 4 Errors:**
+- Negative start time (duration longer than time until end)
+- Invalid duration format
+
+**Pattern 8 Errors:**
+- Inconsistent constraint: `start + duration ≠ end`
+- Example: start=10:00, end=13:00, duration=PT2H (10+2≠13)
+
+**General Errors:**
+- Invalid ISO 8601 datetime format
+- Invalid ISO 8601 duration format
+- Start time after end time (Pattern 7)
 
 ## Simple Durative Actions
 
