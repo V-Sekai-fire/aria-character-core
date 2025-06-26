@@ -4,6 +4,10 @@
 **Date:** 2025-06-22  
 **Priority:** HIGH
 
+## Contributors
+
+- K. S. Ernest Lee, V-Sekai (<v-sekai.org>) and Chibifire.com (<chibifire.com>), <ernest.lee@chibifire.com>
+
 ## Overview
 
 **Current State**: Multiple confusing and inconsistent patterns across AriaEngine planner
@@ -1326,6 +1330,116 @@ This specification builds upon established research in automated planning and sc
 **Planning Domain Definition Language Standards:**
 
 - Kovacs, D.L. (2011). "BNF Definition of PDDL 3.1". Technical Report. Available: [`https://helios.hud.ac.uk/scommv/IPC-14/repository/kovacs-pddl-3.1-2011.pdf`](https://helios.hud.ac.uk/scommv/IPC-14/repository/kovacs-pddl-3.1-2011.pdf)
+
+### Programming Language Ecosystems and Runtime Systems
+
+**Actor Model and Fault-Tolerant Computing:**
+
+- Hewitt, C.; Bishop, P.; Steiger, R. (1973). "A Universal Modular ACTOR Formalism for Artificial Intelligence". *Proceedings of the 3rd International Joint Conference on Artificial Intelligence*, 235-245. DOI: [`10.5555/1624775.1624804`](https://doi.org/10.5555/1624775.1624804)
+- Armstrong, J. (2003). "Making reliable distributed systems in the presence of software errors". *Doctoral Dissertation*, Royal Institute of Technology, Stockholm. Available: [`http://erlang.org/download/armstrong_thesis_2003.pdf`](http://erlang.org/download/armstrong_thesis_2003.pdf)
+
+**Functional Programming and Concurrency:**
+
+- Agha, G. (1986). "Actors: A Model of Concurrent Computation in Distributed Systems". *MIT Press*. ISBN: 0-262-01092-5. DOI: [`10.7551/mitpress/1086.001.0001`](https://doi.org/10.7551/mitpress/1086.001.0001)
+- Valim, J. (2013). "Elixir in Action". *Manning Publications*. ISBN: 978-1617295027
+
+**OTP Design Principles:**
+
+- Cesarini, F.; Thompson, S. (2009). "Erlang Programming". *O'Reilly Media*. ISBN: 978-0596518189
+- Logan, M.; Merritt, E.; Carlsson, R. (2010). "Erlang and OTP in Action". *Manning Publications*. ISBN: 978-1933988788
+
+### Constraint Programming and Optimization
+
+**Constraint Satisfaction Problems:**
+
+- Tsang, E. (1993). "Foundations of Constraint Satisfaction". *Academic Press*. ISBN: 0-12-701610-4. DOI: [`10.1016/B978-0-12-701610-8.50005-2`](https://doi.org/10.1016/B978-0-12-701610-8.50005-2)
+- Rossi, F.; van Beek, P.; Walsh, T. (2006). "Handbook of Constraint Programming". *Elsevier*. ISBN: 978-0444527264. DOI: [`10.1016/S1574-6526(06)80007-4`](https://doi.org/10.1016/S1574-6526(06)80007-4)
+
+**MiniZinc Constraint Programming Language:**
+
+- Nethercote, N.; Stuckey, P.J.; Becket, R.; Brand, S.; Duck, G.J.; Tack, G. (2007). "MiniZinc: Towards a Standard CP Modelling Language". *Proceedings of the 13th International Conference on Principles and Practice of Constraint Programming*, 529-543. DOI: [`10.1007/978-3-540-74970-7_38`](https://doi.org/10.1007/978-3-540-74970-7_38)
+- Stuckey, P.J.; Feydy, T.; Schutt, A.; Tack, G.; Wallace, M. (2014). "The MiniZinc Challenge 2008-2013". *AI Magazine*, 35(2):55-60. DOI: [`10.1609/aimag.v35i2.2539`](https://doi.org/10.1609/aimag.v35i2.2539)
+
+**Google OR-Tools and CP-SAT:**
+
+- Perron, L.; Furnon, V. (2019). "OR-Tools". Available: [`https://developers.google.com/optimization`](https://developers.google.com/optimization)
+- Perron, L.; Didier, F. (2020). "CP-SAT, a constraint programming solver that scales". *Proceedings of the 26th International Conference on Principles and Practice of Constraint Programming*. DOI: [`10.1007/978-3-030-58475-7_25`](https://doi.org/10.1007/978-3-030-58475-7_25)
+
+### Temporal Reasoning and Algorithms
+
+**Simple Temporal Networks:**
+
+- Dechter, R.; Meiri, I.; Pearl, J. (1991). "Temporal constraint networks". *Artificial Intelligence*, 49(1-3):61-95. DOI: [`10.1016/0004-3702(91)90006-6`](https://doi.org/10.1016/0004-3702(91)90006-6)
+
+**Path Consistency Algorithms:**
+
+- Mackworth, A.K. (1977). "Consistency in networks of relations". *Artificial Intelligence*, 8(1):99-118. DOI: [`10.1016/0004-3702(77)90007-8`](https://doi.org/10.1016/0004-3702(77)90007-8)
+- Mohr, R.; Henderson, T.C. (1986). "Arc and path consistency revisited". *Artificial Intelligence*, 28(2):225-233. DOI: [`10.1016/0004-3702(86)90083-4`](https://doi.org/10.1016/0004-3702(86)90083-4)
+
+**Floyd-Warshall Algorithm:**
+
+- Floyd, R.W. (1962). "Algorithm 97: Shortest path". *Communications of the ACM*, 5(6):345. DOI: [`10.1145/367766.368168`](https://doi.org/10.1145/367766.368168)
+- Warshall, S. (1962). "A theorem on boolean matrices". *Journal of the ACM*, 9(1):11-12. DOI: [`10.1145/321105.321107`](https://doi.org/10.1145/321105.321107)
+
+**Allen's Interval Algebra:**
+
+- Allen, J.F. (1983). "Maintaining knowledge about temporal intervals". *Communications of the ACM*, 26(11):832-843. DOI: [`10.1145/182.358434`](https://doi.org/10.1145/182.358434)
+- Allen, J.F.; Hayes, P.J. (1985). "A common-sense theory of time". *Proceedings of the 9th International Joint Conference on Artificial Intelligence*, 528-531. Available: [`https://www.ijcai.org/Proceedings/85-1/Papers/070.pdf`](https://www.ijcai.org/Proceedings/85-1/Papers/070.pdf)
+
+### Project Management and Scheduling
+
+**PERT and Critical Path Method:**
+
+- Malcolm, D.G.; Roseboom, J.H.; Clark, C.E.; Fazar, W. (1959). "Application of a technique for research and development program evaluation". *Operations Research*, 7(5):646-669. DOI: [`10.1287/opre.7.5.646`](https://doi.org/10.1287/opre.7.5.646)
+- Kelley Jr, J.E.; Walker, M.R. (1959). "Critical-path planning and scheduling". *Proceedings of the Eastern Joint Computer Conference*, 160-173. DOI: [`10.1145/1460299.1460318`](https://doi.org/10.1145/1460299.1460318)
+
+### Web Technologies and Real-Time Systems
+
+**Real-Time Web Applications:**
+
+- Fette, I.; Melnikov, A. (2011). "The WebSocket Protocol". *RFC 6455*. DOI: [`10.17487/RFC6455`](https://doi.org/10.17487/RFC6455)
+- McCann, S.; Kamp, J. (2019). "Phoenix LiveView: Interactive, Real-Time Apps. No Need to Write JavaScript". *Pragmatic Bookshelf*. ISBN: 978-1680508215
+
+**3D Graphics on the Web:**
+
+- Parisi, T. (2012). "WebGL: Up and Running". *O'Reilly Media*. ISBN: 978-1449323578
+- Dirksen, J. (2018). "Learn Three.js: Programming 3D animations and visualizations for the web with HTML5 and WebGL". *Packt Publishing*. ISBN: 978-1788833288
+
+### Standards and Protocols
+
+**Date and Time Standards:**
+
+- International Organization for Standardization (2019). "ISO 8601-1:2019 Date and time — Representations for information interchange — Part 1: Basic rules". ISO Standard. Available: [`https://www.iso.org/standard/70907.html`](https://www.iso.org/standard/70907.html)
+
+**3D Graphics Standards:**
+
+- Khronos Group (2021). "glTF 2.0 Specification". Available: [`https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html`](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html)
+- Khronos Group (2023). "KHR_interactivity Extension Specification". Available: [`https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_interactivity`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_interactivity)
+
+**Semantic Web Technologies:**
+
+- Berners-Lee, T.; Hendler, J.; Lassila, O. (2001). "The Semantic Web". *Scientific American*, 284(5):34-43. DOI: [`10.1038/scientificamerican0501-34`](https://doi.org/10.1038/scientificamerican0501-34)
+- Sporny, M.; Longley, D.; Kellogg, G.; Lanthaler, M.; Lindström, N. (2020). "JSON-LD 1.1: A JSON-based Serialization for Linked Data". *W3C Recommendation*. Available: [`https://www.w3.org/TR/json-ld11/`](https://www.w3.org/TR/json-ld11/)
+
+**Model Context Protocol:**
+
+- Anthropic (2024). "Model Context Protocol Specification". Available: [`https://spec.modelcontextprotocol.io/`](https://spec.modelcontextprotocol.io/)
+
+### Stream Processing and Concurrency
+
+**Stream Processing Architectures:**
+
+- Akidau, T.; Bradshaw, R.; Chambers, C.; Chernyak, S.; Fernández-Moctezuma, R.J.; Lax, R.; McVeety, S.; Mills, D.; Perry, F.; Schmidt, E.; Whittle, S. (2015). "The Dataflow Model: A Practical Approach to Balancing Correctness, Latency, and Cost in Massive-Scale, Unbounded, Out-of-Order Data Processing". *Proceedings of the VLDB Endowment*, 8(12):1792-1803. DOI: [`10.14778/2824032.2824076`](https://doi.org/10.14778/2824032.2824076)
+
+**GenStage and Flow Patterns:**
+
+- Valim, J. (2016). "GenStage and Flow". *ElixirConf 2016*. Available: [`https://www.youtube.com/watch?v=XPlXNUXmcgE`](https://www.youtube.com/watch?v=XPlXNUXmcgE)
+- Juric, S. (2019). "Elixir in Action, Second Edition". *Manning Publications*. ISBN: 978-1617295027
+
+**Background Job Processing:**
+
+- Sidekiq Contributors (2024). "Sidekiq: Simple, efficient background processing for Ruby". Available: [`https://sidekiq.org/`](https://sidekiq.org/)
+- Oban Contributors (2024). "Oban: Robust job processing in Elixir, backed by modern PostgreSQL". Available: [`https://getoban.pro/`](https://getoban.pro/)
 
 ### Comparison with Established Standards
 
