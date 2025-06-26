@@ -886,7 +886,7 @@ defmodule MyApp.Domains.CookingDomain do
   end
   
   # Commands (execution-time) with failure handling
-  @command
+  @command true
   @spec cook_meal_command(AriaState.t(), [meal_id()]) :: {:ok, AriaState.t()} | {:error, String.t()}
   def cook_meal_command(state, [meal_id]) do
     case attempt_cooking_with_failure_chance(state, meal_id) do
@@ -899,7 +899,7 @@ defmodule MyApp.Domains.CookingDomain do
     end
   end
   
-  @command
+  @command true
   @spec gather_ingredients_command(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, String.t()}
   def gather_ingredients_command(state, [task_name]) do
     case attempt_gathering_with_failure_chance(state, task_name) do
@@ -913,7 +913,7 @@ defmodule MyApp.Domains.CookingDomain do
   end
   
   # Task methods
-  @task_method
+  @task_method true
   @spec task_prepare_ingredients(AriaState.t(), [String.t()]) :: {:ok, [AriaEngine.todo_item()]}
   def task_prepare_ingredients(state, [task_name]) do
     {:ok, [
@@ -923,7 +923,7 @@ defmodule MyApp.Domains.CookingDomain do
     ]}
   end
   
-  @task_method
+  @task_method true
   @spec task_complete_meal(AriaState.t(), [meal_id()]) :: {:ok, [AriaEngine.todo_item()]}
   def task_complete_meal(state, [meal_id]) do
     {:ok, [
@@ -1000,14 +1000,14 @@ defmodule MyApp.Domains.CookingDomain do
   end
   
   # Multitodo methods (symmetric to multigoal methods)
-  @multitodo_method
+  @multitodo_method true
   @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
   def execute_todo_list(state, todo_list) do
     # Strategy 1: Default/basic sequential execution (analog to split_multigoal)
     AriaEngine.TodoExecution.sequential_todo_execution(state, todo_list)
   end
   
-  @multitodo_method
+  @multitodo_method true
   @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
   def execute_todo_list(state, todo_list) do
     # Strategy 2: Resource-optimized reordering
@@ -1292,6 +1292,7 @@ The following concepts were explicitly rejected during design:
 27. **❌ TOMBSTONE: UTC timezone format when local timezone isn't UTC** - Use local timezone strings (e.g., "-07:00") instead of "Z" suffix when working in non-UTC timezones
 28. **❌ TOMBSTONE: `priority` field in @unigoal_method attributes** - Priority handling belongs in planner method selection logic, not in attribute metadata
 29. **❌ TOMBSTONE: `goal_pattern` field in @task_method attributes** - Task methods are for workflow decomposition only, not goal pattern matching
+30. **❌ TOMBSTONE: Bare module attributes without values (@task_method, @command, @multitodo_method)** - Use explicit true value (@task_method true) to follow standard Elixir conventions and avoid compiler warnings
 
 ## Success Criteria
 
