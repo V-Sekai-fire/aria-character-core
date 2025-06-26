@@ -1301,8 +1301,8 @@ defmodule MyApp.Domains.CleanCookingDomain do
       {:cook_meal, [meal_id]},
       
       # Verification (instead of at_end conditions)
-      {"quality", "meal", {:>=, 8}},
-      {"cleanup", "kitchen", "complete"}
+      {"quality", "meal_1", {:>=, 8}},
+      {"cleanup", "kitchen_1", "complete"}
     ]}
   end
 end
