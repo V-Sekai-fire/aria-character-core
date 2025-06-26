@@ -4,13 +4,13 @@
 # This demonstrates the complete implementation from ADR-181
 
 # Load the AriaCore library
-Code.require_file("lib/aria_core/state/relational.ex")
-Code.require_file("lib/aria_core/temporal/interval.ex")
-Code.require_file("lib/aria_core/entity/management.ex")
-Code.require_file("lib/aria_core/domain.ex")
-Code.require_file("lib/aria_core/action_attributes.ex")
-Code.require_file("lib/aria_core/unified_domain.ex")
-Code.require_file("lib/aria_core/examples/restaurant_domain.ex")
+Code.require_file("apps/aria_core/lib/aria_core/state/relational.ex")
+Code.require_file("apps/aria_core/lib/aria_core/temporal/interval.ex")
+Code.require_file("apps/aria_core/lib/aria_core/entity/management.ex")
+Code.require_file("apps/aria_core/lib/aria_core/domain.ex")
+Code.require_file("apps/aria_core/lib/aria_core/action_attributes.ex")
+Code.require_file("apps/aria_core/lib/aria_core/unified_domain.ex")
+Code.require_file("apps/aria_core/lib/aria_core/examples/restaurant_domain.ex")
 
 IO.puts("🔧 AriaCore Demo - Unified Action Specification System")
 IO.puts("=" |> String.duplicate(60))

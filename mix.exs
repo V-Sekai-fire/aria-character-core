@@ -133,6 +133,7 @@ defmodule AriaCharacterCore.MixProject do
       {:ex_unit_notifier, "~> 1.3", only: :test},
 
       # Internal applications
+      {:aria_core, path: "apps/aria_core"},
       {:aria_engine_core, path: "apps/aria_engine_core"},
       {:aria_town, path: "apps/aria_town"},
       {:aria_temporal_planner, path: "apps/aria_temporal_planner"},
