@@ -6,7 +6,7 @@
 
 ## Contributors
 
-- K. S. Ernest Lee, V-Sekai (<v-sekai.org>) and Chibifire.com (<chibifire.com>), <ernest.lee@chibifire.com>
+- K. S. Ernest Lee, V-Sekai (<https://v-sekai.org>) and Chibifire.com (<https://chibifire.com>), <ernest.lee@chibifire.com>
 
 ## Overview
 
