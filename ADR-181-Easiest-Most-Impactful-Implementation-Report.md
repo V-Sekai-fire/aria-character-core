@@ -19,84 +19,16 @@ Based on analysis of the ADR-181 Implementation Report and Martin Fowler's unit 
 
 **Strategic Insight**: Instead of replacing existing systems, we can **convert and integrate** them into ADR-181's unified specification.
 
-## Martin Fowler's Testing Insights Applied
+## Testing Strategy Foundation
 
-### Sociable vs Solitary Testing for External Interfaces
+The implementation approach for ADR-181 follows **sociable testing principles** as defined in **ADR-191: Sociable vs Solitary Testing Strategy for System Integration**. This strategic decision enables leveraging existing systems rather than requiring complete rewrites.
 
-Martin Fowler's distinction between **sociable** and **solitary** testing provides crucial guidance for implementing the attribute system:
+**Key Testing Approach**:
+- **Sociable Integration**: Test attribute system with real entity, temporal, and state systems
+- **Preserved Investment**: Build on existing proven infrastructure
+- **Risk Mitigation**: Maintain system stability while adding new functionality
 
-**Sociable Testing Approach (Primary Strategy)**:
-- **External User Interfaces**: Keep existing domain APIs working while adding new attribute system
-- **Internal Dependencies**: Leverage existing entity, temporal, and state systems
-- **Integration Strategy**: Build on top of working systems rather than replacing them
-
-**Solitary Testing Approach (Selective Use)**:
-- **New Components**: Use mocks for brand-new attribute processing logic to isolate behavior
-- **Edge Case Testing**: Mock specific failure scenarios in existing systems
-- **Performance Testing**: Mock expensive operations to test attribute processing speed
-
-**Hybrid Approach (Recommended)**:
-- **Sociable for Integration**: Test attribute system with real entity/temporal/state systems
-- **Solitary for Isolation**: Test individual attribute processing functions in isolation
-- **Strategic Mix**: Use sociable tests to validate the approach works, solitary tests to ensure individual components are correct
-
-### External User Interface Strategy
-
-**Provide External Interface Compatibility**:
-```elixir
-# NEW: Attribute-based interface (ADR-181)
-defmodule MyApp.Domains.CookingDomain do
-  use AriaEngine.Domain
-  
-  @action duration: "PT2H",
-          requires_entities: [
-            %{type: "agent", capabilities: [:cooking]}
-          ]
-  def cook_meal(state, [meal_id]) do
-    # New clean interface
-  end
-end
-
-# EXISTING: Function-based interface (backward compatibility)
-domain = Domain.new()
-|> Domain.add_action(:cook_meal, cook_meal_action())
-|> Domain.add_method(:prepare_meal, prepare_meal_method())
-```
-
-**Bridge Pattern**: Both interfaces work, new code uses attributes, existing code continues working.
-
-### Internal Dependency Integration
-
-**Leverage Existing Systems** (Sociable approach):
-```elixir
-defmodule AriaEngine.ActionAttributes do
-  # SOCIABLE: Use existing entity system
-  def extract_entity_requirements(action_metadata) do
-    # Leverage Timeline.AgentEntity.CapabilityManagement (already working)
-    Timeline.AgentEntity.CapabilityManagement.match_entities(
-      action_metadata.requires_entities
-    )
-  end
-  
-  # SOCIABLE: Use existing temporal system  
-  def extract_temporal_specification(action_metadata) do
-    # Leverage Timeline.Interval (already working)
-    Timeline.Interval.create_from_metadata(action_metadata)
-  end
-end
-```
-
-**Avoid Solitary Approach**:
-```elixir
-# DON'T DO THIS - Solitary approach requiring mocks
-defmodule AriaEngine.ActionAttributes do
-  def extract_entity_requirements(action_metadata) do
-    # Would require reimplementing entity matching logic
-    # Would need mocks for Timeline.AgentEntity.CapabilityManagement
-    # Higher risk, more work, loses existing investment
-  end
-end
-```
+For detailed testing methodology and decision framework, see **ADR-191**.
 
 ## Easiest and Most Impactful Implementation Plan
 
