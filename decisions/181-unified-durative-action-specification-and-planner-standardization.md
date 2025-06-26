@@ -27,9 +27,10 @@ When developers first encounter the planner patterns, several things feel confus
 cook_meal("pasta")  # Just call it when I want it
 
 # Planning reality:
-@action duration: "PT2H", requires_entities: [...]
+@action duration: "PT2H", requires_entities: []
 def cook_meal(state, [meal_type]) do
   # This gets called BY THE PLANNER, not by you
+  state
 end
 ```
 
@@ -116,6 +117,7 @@ end
 @action requires_entities: [%{type: "chef", capabilities: [:cooking]}]
 def cook_meal(state, [meal_type]) do
   # "Why not just call cook_meal()?"
+  state
 end
 ```
 
@@ -134,6 +136,7 @@ def cook_meal(state, [meal_type]) do
   # - Schedules around other orders
   # - Handles equipment failures
   # - Optimizes for efficiency
+  state
 end
 ```
 
@@ -245,8 +248,8 @@ Capabilities serve as simple traits providing flexible composition without inher
 %{type: "oven", capabilities: [:appliance, :kitchen_equipment, :heating, :baking]}
 
 # Properties stored in state
-# State.set_fact(state, "max_temp", "oven_1", 450)
-# State.set_fact(state, "min_temp", "oven_1", 150)
+# AriaState.RelationalState.set_fact(state, "max_temp", "oven_1", 450)
+# AriaState.RelationalState.set_fact(state, "min_temp", "oven_1", 150)
 ```
 
 ## Entity Registration and State Setup
@@ -1016,7 +1019,7 @@ defmodule MyApp.Domains.CookingDomain do
     |> flatten_optimized_groups()
   end
   
-  @multitodo_method
+  @multitodo_method true
   @spec execute_todo_list(AriaState.t(), [AriaEngine.todo_item()]) :: [AriaEngine.todo_item()]
   def execute_todo_list(state, todo_list) do
     # Strategy 3: Makespan-optimized reordering
@@ -1295,15 +1298,32 @@ The following concepts were explicitly rejected during design:
 28. **❌ TOMBSTONE: `priority` field in @unigoal_method attributes** - Priority handling belongs in planner method selection logic, not in attribute metadata
 29. **❌ TOMBSTONE: `goal_pattern` field in @task_method attributes** - Task methods are for workflow decomposition only, not goal pattern matching
 30. **❌ TOMBSTONE: Bare module attributes without values (@task_method, @command, @multitodo_method)** - Use explicit true value (@task_method true) to follow standard Elixir conventions and avoid compiler warnings
+31. **❌ TOMBSTONE: Functions without type specifications** - All functions in ADR-181 compliant modules must have explicit `@spec` declarations. Bare functions without type specifications are prohibited to ensure type safety, documentation completeness, and integration reliability with the planner system
 
 ## Success Criteria
+
+**Planning Paradigm Alignment:**
+
+- [x] Clear distinction between "programming expectation" vs "planning reality" documented
+- [x] All examples consistently show planner-controlled execution (not direct function calls)
+- [x] Action functions designed as pure state transformations called BY the planner
+- [x] Domain registration patterns support planner discovery and validation
+
+**Technical Implementation:**
 
 - [x] Both floating durations and fixed intervals supported via ISO 8601 strings
 - [x] Unified action specification with entities, capabilities, and resources
 - [x] All goals use `{predicate, subject, value}` format consistently
 - [x] All state validation uses direct `State.get_fact/3` calls (with temporal query support)
-- [x] Single standardized way to define actions
-- [x] Clear documentation on which planning API to use when
+- [x] Single standardized way to define actions via `@action` attributes
+- [x] Clear documentation on planner APIs vs direct execution patterns
+
+**Paradigm Consistency:**
+
+- [x] No examples showing direct action function calls (e.g., `cook_meal("pasta")`)
+- [x] All usage examples show planner-mediated execution via `AriaEngine.plan/3`
+- [x] Action metadata designed for planner consumption, not direct invocation
+- [x] Entity requirements support planner resource allocation, not manual management
 
 ## Related ADRs
 
