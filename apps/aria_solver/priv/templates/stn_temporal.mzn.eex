@@ -1,0 +1,39 @@
+% Simple Temporal Network (STN) Matrix-based Constraint Solver
+% Input: <%= @num_timepoints %> timepoints
+
+% Parameters
+int: num_timepoints = <%= @num_timepoints %>;
+
+% Timepoint variables (can be negative for relative timing)
+array[1..num_timepoints] of var -1000..1000: timepoints;
+
+% STN Distance Matrix - bounds on differences between timepoints
+% matrix[i,j] represents bounds on (timepoints[j] - timepoints[i])
+% Lower bounds matrix
+array[1..num_timepoints, 1..num_timepoints] of int: lower_bounds = array2d(1..num_timepoints, 1..num_timepoints, [
+<%= Enum.join(@lower_bounds, ", ") %>
+]);
+
+% Upper bounds matrix
+array[1..num_timepoints, 1..num_timepoints] of int: upper_bounds = array2d(1..num_timepoints, 1..num_timepoints, [
+<%= Enum.join(@upper_bounds, ", ") %>
+]);
+
+% STN Constraints: For all pairs (i,j), enforce bounds on timepoint differences
+constraint forall(i, j in 1..num_timepoints where i != j) (
+  timepoints[j] - timepoints[i] >= lower_bounds[i,j] /\
+  timepoints[j] - timepoints[i] <= upper_bounds[i,j]
+);
+
+% Fix first timepoint to 0 for canonical solution (removes translation freedom)
+constraint timepoints[1] = 0;
+
+% Solve for consistency
+solve satisfy;
+
+% Output solution with timepoint names
+output [
+  "{\"status\": \"SATISFIABLE\", \"timepoints\": {" ++
+  <%= @output_format %> ++
+  "}, \"result\": \"consistent\"}"
+];
