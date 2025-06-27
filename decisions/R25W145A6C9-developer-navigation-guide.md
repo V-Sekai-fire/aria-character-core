@@ -1,4 +1,4 @@
-# ADR-187: Developer Navigation Guide
+# R25W145A6C9: Developer Navigation Guide
 
 <!-- @adr_serial R25W145A6C9 -->
 
@@ -16,12 +16,12 @@
 
 This ADR depends on completion of the core specification ADRs:
 
-- **ADR-181**: Unified Durative Action Specification and Planner Standardization (core concepts)
-- **ADR-182**: Fix Duration Handling Precision Loss (technical details)
-- **ADR-183**: Planner Standardization Open Problems (architecture overview)
-- **ADR-184**: Unified Action Specification Examples (reference implementations)
-- **ADR-185**: AriaEngine Quick Start Guide (entry point)
-- **ADR-186**: Common Use Cases and Patterns (practical examples)
+- **R25W1398085**: Unified Durative Action Specification and Planner Standardization (core concepts)
+- **R25W1405B8B**: Fix Duration Handling Precision Loss (technical details)
+- **R25W141BE8A**: Planner Standardization Open Problems (architecture overview)
+- **R25W1421349**: Unified Action Specification Examples (reference implementations)
+- **R25W143C7C4**: AriaEngine Quick Start Guide (entry point)
+- **R25W14477B9**: Common Use Cases and Patterns (practical examples)
 
 ## Planned Navigation Structure
 
@@ -29,17 +29,17 @@ This ADR depends on completion of the core specification ADRs:
 
 **Learning Path**:
 
-1. ADR-185: Quick Start Guide (30 minutes)
-2. ADR-186: Common Use Cases (45 minutes)
-3. ADR-187: Navigation Guide (15 minutes)
-4. ADR-188: Practical How-To (reference)
+1. R25W143C7C4: Quick Start Guide (30 minutes)
+2. R25W14477B9: Common Use Cases (45 minutes)
+3. R25W145A6C9: Navigation Guide (15 minutes)
+4. R25W14702E9: Practical How-To (reference)
 
 **Technical Reference**:
 
-1. ADR-181: Core Specification (authoritative)
-2. ADR-182: Technical Implementation
-3. ADR-183: Architecture Standards
-4. ADR-184: Developer Examples
+1. R25W1398085: Core Specification (authoritative)
+2. R25W1405B8B: Technical Implementation
+3. R25W141BE8A: Architecture Standards
+4. R25W1421349: Developer Examples
 
 ### Codebase Organization
 
@@ -65,9 +65,9 @@ This ADR depends on completion of the core specification ADRs:
 
 **Navigation Path**:
 
-1. Start with ADR-184 examples
-2. Check action attribute patterns in ADR-181
-3. Review duration handling in ADR-182
+1. Start with R25W1421349 examples
+2. Check action attribute patterns in R25W1398085
+3. Review duration handling in R25W1405B8B
 4. Find similar actions in codebase
 5. Follow testing patterns
 
@@ -75,17 +75,17 @@ This ADR depends on completion of the core specification ADRs:
 
 **Navigation Path**:
 
-1. Check troubleshooting in ADR-185
-2. Review error patterns in ADR-186
+1. Check troubleshooting in R25W143C7C4
+2. Review error patterns in R25W14477B9
 3. Examine test failures in relevant apps
-4. Use debugging techniques from ADR-188
+4. Use debugging techniques from R25W14702E9
 
 #### "I want to understand the architecture"
 
 **Navigation Path**:
 
-1. Read ADR-183 for high-level architecture
-2. Review ADR-181 for core concepts
+1. Read R25W141BE8A for high-level architecture
+2. Review R25W1398085 for core concepts
 3. Examine app dependencies and interfaces
 4. Study integration patterns
 
@@ -93,8 +93,8 @@ This ADR depends on completion of the core specification ADRs:
 
 **Navigation Path**:
 
-1. Review temporal examples in ADR-184
-2. Check duration handling in ADR-182
+1. Review temporal examples in R25W1421349
+2. Check duration handling in R25W1405B8B
 3. Examine `aria_temporal_planner` app
 4. Study STN constraint patterns
 
@@ -158,7 +158,7 @@ After reading this ADR, developers should be able to:
 - [ ] Understand the relationship between different components
 
 **Complexity Level**: Beginner to Intermediate  
-**Prerequisites**: ADR-185 (Quick Start Guide)  
+**Prerequisites**: R25W143C7C4 (Quick Start Guide)  
 **Time Investment**: 15 minutes for navigation mastery
 
 ## Implementation Notes

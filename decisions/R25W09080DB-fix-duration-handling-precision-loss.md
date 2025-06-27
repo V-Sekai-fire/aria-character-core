@@ -1,4 +1,4 @@
-# ADR-132: Fix Duration Handling Precision Loss
+# R25W09080DB: Fix Duration Handling Precision Loss
 
 <!-- @adr_serial R25W09080DB -->
 
@@ -7,6 +7,6 @@
 
 ## Notice
 
-This ADR has been moved to **ADR-182**.
+This ADR has been moved to **R25W1405B8B**.
 
 Please see: [decisions/182-fix-duration-handling-precision-loss.md](./182-fix-duration-handling-precision-loss.md)

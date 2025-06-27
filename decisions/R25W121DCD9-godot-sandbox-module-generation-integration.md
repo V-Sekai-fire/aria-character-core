@@ -1,4 +1,4 @@
-# ADR-163: Godot Sandbox Module Generation Integration
+# R25W121DCD9: Godot Sandbox Module Generation Integration
 
 <!-- @adr_serial R25W121DCD9 -->
 
@@ -22,7 +22,7 @@ Integration requirements:
 
 - Generate new sandbox modules programmatically from Aria ecosystem
 - Leverage existing sandbox program templates and patterns
-- Integrate with libgodot (ADR-160) for embedded Godot control
+- Integrate with libgodot (R25W118994A) for embedded Godot control
 - Support both C++ and Rust sandbox module generation
 - Enable AI-driven sandbox program creation via MCP server
 
@@ -47,7 +47,7 @@ Integrate Godot Sandbox capabilities with the Aria ecosystem to enable programma
 **Missing/Required**:
 
 - [ ] Create aria_godot_sandbox umbrella application
-- [ ] Add dependency on aria_godot app (ADR-160)
+- [ ] Add dependency on aria_godot app (R25W118994A)
 - [ ] Configure RISC-V cross-compilation toolchain
 - [ ] Set up sandbox program build infrastructure
 
@@ -129,7 +129,7 @@ Integrate Godot Sandbox capabilities with the Aria ecosystem to enable programma
 
 **Implementation Patterns Needed**:
 
-- [ ] MCP tool integration with aria_godot_mcp (ADR-161)
+- [ ] MCP tool integration with aria_godot_mcp (R25W119A759)
 - [ ] Template selection and customization
 - [ ] Build process orchestration
 - [ ] Error handling and validation
@@ -172,7 +172,7 @@ Integrate Godot Sandbox capabilities with the Aria ecosystem to enable programma
 ### Step 3: MCP Integration
 
 1. Add MCP tools for sandbox module generation
-2. Integrate with aria_godot_mcp server (ADR-161)
+2. Integrate with aria_godot_mcp server (R25W119A759)
 3. Create AI-friendly template selection system
 4. Add comprehensive error handling
 
@@ -216,9 +216,9 @@ Starting with basic app structure and toolchain setup, as this provides the foun
 
 ## Related ADRs
 
-- **ADR-160**: Godot LibGodot Integration via Membrane Unifex (prerequisite)
-- **ADR-161**: Standalone Godot MCP Server Implementation (MCP integration)
-- **ADR-162**: Godot-Aria Integration and Workflow Orchestration (ecosystem integration)
+- **R25W118994A**: Godot LibGodot Integration via Membrane Unifex (prerequisite)
+- **R25W119A759**: Standalone Godot MCP Server Implementation (MCP integration)
+- **R25W120FE90**: Godot-Aria Integration and Workflow Orchestration (ecosystem integration)
 
 ## Use Cases
 

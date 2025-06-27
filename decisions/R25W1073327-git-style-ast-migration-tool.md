@@ -1,4 +1,4 @@
-# ADR-149: Git-Style AST Migration Tool [TOMBSTONED]
+# R25W1073327: Git-Style AST Migration Tool [TOMBSTONED]
 
 <!-- @adr_serial R25W1073327 -->
 
@@ -20,7 +20,7 @@ This ADR originally documented the design and implementation of a Git-native Eli
 
 ## Migration Information
 
-- **Original ADR:** ADR-149 (2025-06-23)
+- **Original ADR:** R25W1073327 (2025-06-23)
 - **New Location:** apps/ast_migrate/decisions/001-git-style-ast-migration-tool.md
 - **Content Status:** Fully migrated with complete implementation details
 - **Cross-references:** Updated in related ADRs

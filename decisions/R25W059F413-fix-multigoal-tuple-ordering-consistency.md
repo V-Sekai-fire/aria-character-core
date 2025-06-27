@@ -1,4 +1,4 @@
-# ADR-102: Fix Multigoal Tuple Ordering Consistency
+# R25W059F413: Fix Multigoal Tuple Ordering Consistency
 
 <!-- @adr_serial R25W059F413 -->
 
@@ -13,7 +13,7 @@ Investigation of the Multigoal.ex module revealed a critical tuple ordering inco
 **StateV2 uses:** `{subject, predicate, fact_value}` (entity-first)
 **Multigoal uses:** `{predicate, subject, fact_value}` (predicate-first) **[HISTORICAL - NOW FIXED]**
 
-This inconsistency was noted in ADR-101 and creates several issues:
+This inconsistency was noted in R25W058D6B9 and creates several issues:
 
 1. **Type Definition Mismatch**: Multigoal declares goals as `{predicate, subject, fact_value}` (predicate-first) **[HISTORICAL - NOW FIXED]** but StateV2 expects `{subject, predicate, fact_value}`
 2. **Function Parameter Confusion**: Multigoal functions use `(predicate, subject, fact_value)` order while StateV2 uses `(subject, predicate, fact_value)`
@@ -110,8 +110,8 @@ Fix Multigoal.ex to use consistent StateV2 tuple ordering: `{subject, predicate,
 
 ## Related ADRs
 
-- **ADR-101**: Reconnect scheduler with hybrid planner (identified this issue)
-- **ADR-089**: Migrate planner to StateV2 subject predicate fact
+- **R25W058D6B9**: Reconnect scheduler with hybrid planner (identified this issue)
+- **R25W046434A**: Migrate planner to StateV2 subject predicate fact
 
 ## Completion Summary
 

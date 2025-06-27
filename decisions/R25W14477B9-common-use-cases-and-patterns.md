@@ -1,4 +1,4 @@
-# ADR-186: Common Use Cases and Patterns
+# R25W14477B9: Common Use Cases and Patterns
 
 <!-- @adr_serial R25W14477B9 -->
 
@@ -9,18 +9,18 @@
 ## Overview
 
 **Purpose**: Real-world examples and proven patterns for common AriaEngine scenarios  
-**Target Audience**: Developers who completed the Quick Start Guide (ADR-185)  
+**Target Audience**: Developers who completed the Quick Start Guide (R25W143C7C4)  
 **Scope**: Practical examples with complete working code
 
 ## Dependencies
 
 This ADR depends on completion of the core specification ADRs:
 
-- **ADR-181**: Unified Durative Action Specification and Planner Standardization (authoritative patterns)
-- **ADR-182**: Fix Duration Handling Precision Loss (technical implementation)
-- **ADR-183**: Planner Standardization Open Problems (architecture standards)
-- **ADR-184**: Unified Action Specification Examples (developer reference)
-- **ADR-185**: AriaEngine Quick Start Guide (prerequisite knowledge)
+- **R25W1398085**: Unified Durative Action Specification and Planner Standardization (authoritative patterns)
+- **R25W1405B8B**: Fix Duration Handling Precision Loss (technical implementation)
+- **R25W141BE8A**: Planner Standardization Open Problems (architecture standards)
+- **R25W1421349**: Unified Action Specification Examples (developer reference)
+- **R25W143C7C4**: AriaEngine Quick Start Guide (prerequisite knowledge)
 
 ## Planned Use Cases
 
@@ -118,7 +118,7 @@ After reading this ADR, developers should be able to:
 - [ ] Handle temporal coordination and resource conflicts
 
 **Complexity Level**: Intermediate  
-**Prerequisites**: ADR-185 (Quick Start Guide)  
+**Prerequisites**: R25W143C7C4 (Quick Start Guide)  
 **Time Investment**: 45-60 minutes for complete understanding
 
 ## Implementation Notes
@@ -127,9 +127,9 @@ After reading this ADR, developers should be able to:
 
 **Key Requirements**:
 
-- All action definitions must use ADR-181 attribute patterns
-- State management must follow ADR-182 precision handling
-- Architecture must align with ADR-183 standards
-- Examples must be consistent with ADR-184 reference implementations
+- All action definitions must use R25W1398085 attribute patterns
+- State management must follow R25W1405B8B precision handling
+- Architecture must align with R25W141BE8A standards
+- Examples must be consistent with R25W1421349 reference implementations
 - Error handling must follow established patterns
 - Resource management must use validated entity requirements

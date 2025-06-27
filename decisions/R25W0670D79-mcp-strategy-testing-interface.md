@@ -1,4 +1,4 @@
-# ADR-110: MCP Strategy Testing Interface using Membrane Framework Pipeline
+# R25W0670D79: MCP Strategy Testing Interface using Membrane Framework Pipeline
 
 <!-- @adr_serial R25W0670D79 -->
 
@@ -784,12 +784,12 @@ end
 
 **Implementation Tasks**:
 
-- ~~[ ] Implement PlanFilter with Membrane.Filter behavior~~ **→ Moved to ADR-114**
-- ~~[ ] Add input/output pads with proper format specifications and bins~~ **→ Moved to ADR-114**
-- ~~[ ] Integrate with existing CoreTransformer logic~~ **→ Moved to ADR-114**
-- ~~[ ] Add telemetry events for monitoring~~ **→ Moved to ADR-114**
-- ~~[ ] Handle transformation errors gracefully~~ **→ Moved to ADR-114**
-- ~~[ ] Test filter element with various input scenarios~~ **→ Moved to ADR-114**
+- ~~[ ] Implement PlanFilter with Membrane.Filter behavior~~ **→ Moved to R25W071D281**
+- ~~[ ] Add input/output pads with proper format specifications and bins~~ **→ Moved to R25W071D281**
+- ~~[ ] Integrate with existing CoreTransformer logic~~ **→ Moved to R25W071D281**
+- ~~[ ] Add telemetry events for monitoring~~ **→ Moved to R25W071D281**
+- ~~[ ] Handle transformation errors gracefully~~ **→ Moved to R25W071D281**
+- ~~[ ] Test filter element with various input scenarios~~ **→ Moved to R25W071D281**
 
 ### Boot Level 4: Membrane Sink Element (Planner Sink)
 
@@ -922,12 +922,12 @@ end
 
 **Implementation Tasks**:
 
-- ~~[ ] Implement PlannerSink with Membrane.Sink behavior~~ **→ Moved to ADR-114**
-- ~~[ ] Add input pad with PlanningParams format and output pad with PlanningResult format~~ **→ Moved to ADR-114**
-- ~~[ ] Integrate with HybridCoordinatorV2 for pure planning execution~~ **→ Moved to ADR-114**
-- ~~[ ] Add telemetry events for performance monitoring~~ **→ Moved to ADR-114**
-- ~~[ ] Handle planning errors and conversion errors gracefully~~ **→ Moved to ADR-114**
-- ~~[ ] Test sink element with various planning scenarios~~ **→ Moved to ADR-114**
+- ~~[ ] Implement PlannerSink with Membrane.Sink behavior~~ **→ Moved to R25W071D281**
+- ~~[ ] Add input pad with PlanningParams format and output pad with PlanningResult format~~ **→ Moved to R25W071D281**
+- ~~[ ] Integrate with HybridCoordinatorV2 for pure planning execution~~ **→ Moved to R25W071D281**
+- ~~[ ] Add telemetry events for performance monitoring~~ **→ Moved to R25W071D281**
+- ~~[ ] Handle planning errors and conversion errors gracefully~~ **→ Moved to R25W071D281**
+- ~~[ ] Test sink element with various planning scenarios~~ **→ Moved to R25W071D281**
 
 ### Boot Level 5: Membrane Sink Element (MCP Response Formatter)
 
@@ -1041,12 +1041,12 @@ end
 
 **Implementation Tasks**:
 
-- ~~[ ] Implement MCPSink with Membrane.Sink behavior~~ **→ Moved to ADR-114**
-- ~~[ ] Add input pad with PlanningResult format~~ **→ Moved to ADR-114**
-- ~~[ ] Implement MCP response formatting logic~~ **→ Moved to ADR-114**
-- ~~[ ] Add result handler for sending responses back to MCP tools~~ **→ Moved to ADR-114**
-- ~~[ ] Add telemetry for response formatting metrics~~ **→ Moved to ADR-114**
-- ~~[ ] Test sink element with various planning results~~ **→ Moved to ADR-114**
+- ~~[ ] Implement MCPSink with Membrane.Sink behavior~~ **→ Moved to R25W071D281**
+- ~~[ ] Add input pad with PlanningResult format~~ **→ Moved to R25W071D281**
+- ~~[ ] Implement MCP response formatting logic~~ **→ Moved to R25W071D281**
+- ~~[ ] Add result handler for sending responses back to MCP tools~~ **→ Moved to R25W071D281**
+- ~~[ ] Add telemetry for response formatting metrics~~ **→ Moved to R25W071D281**
+- ~~[ ] Test sink element with various planning results~~ **→ Moved to R25W071D281**
 
 ### Boot Level 6: Pipeline Management and Topology Control
 
@@ -1420,11 +1420,11 @@ end
 
 ## Related ADRs
 
-- **ADR-101**: Reconnect Scheduler with Hybrid Planner (foundation for PlannerSink)
-- **ADR-089**: Migrate planner to StateV2 subject predicate fact
+- **R25W058D6B9**: Reconnect Scheduler with Hybrid Planner (foundation for PlannerSink)
+- **R25W046434A**: Migrate planner to StateV2 subject predicate fact
 - **ADR-086**: Implement durative actions
-- **ADR-105**: Reconnect scheduler to MCP (superseded by this pipeline approach)
-- **ADR-114**: Fix Membrane Pipeline Implementation and Testing (continuation of implementation work)
+- **R25W0621594**: Reconnect scheduler to MCP (superseded by this pipeline approach)
+- **R25W071D281**: Fix Membrane Pipeline Implementation and Testing (continuation of implementation work)
 
 ## Consequences
 
@@ -1496,6 +1496,6 @@ This Membrane Framework pipeline architecture provides a robust, scalable founda
 
 ### Implementation Status
 
-This ADR successfully established the **architecture and foundation** for the Membrane pipeline system. The detailed implementation work, debugging, and test fixes are continued in **ADR-114: Fix Membrane Pipeline Implementation and Testing**.
+This ADR successfully established the **architecture and foundation** for the Membrane pipeline system. The detailed implementation work, debugging, and test fixes are continued in **R25W071D281: Fix Membrane Pipeline Implementation and Testing**.
 
-**Next Steps**: See ADR-114 for completing the implementation and achieving full functionality.
+**Next Steps**: See R25W071D281 for completing the implementation and achieving full functionality.

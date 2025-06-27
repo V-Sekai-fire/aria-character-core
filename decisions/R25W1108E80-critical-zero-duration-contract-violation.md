@@ -1,4 +1,4 @@
-# ADR-152: Critical Zero Duration Contract Violation (MOVED)
+# R25W1108E80: Critical Zero Duration Contract Violation (MOVED)
 
 <!-- @adr_serial R25W1108E80 -->
 

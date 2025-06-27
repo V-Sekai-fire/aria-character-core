@@ -1,4 +1,4 @@
-# ADR-092: AST-to-glTF KHR_interactivity Node Translation System
+# R25W0498AC9: AST-to-glTF KHR_interactivity Node Translation System
 
 <!-- @adr_serial R25W0498AC9 -->
 
@@ -166,9 +166,9 @@ Implement a comprehensive AST-to-KHR translation system that:
 
 ## Related ADRs
 
-- **ADR-064**: Aria Flow Core API Implementation (existing flow infrastructure)
+- **R25W031D2CC**: Aria Flow Core API Implementation (existing flow infrastructure)
 - **ADR-066**: Consolidate Flow and Queue into Engine (execution context)
-- **ADR-087**: Entity Agent Timeline Graph Architecture (temporal planning integration)
+- **R25W044B3F2**: Entity Agent Timeline Graph Architecture (temporal planning integration)
 
 ## Monitoring and Review
 

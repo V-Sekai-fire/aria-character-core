@@ -1,4 +1,4 @@
-# ADR-123: Fix Remaining Timeline Doctests and Planning Test Failures
+# R25W081EBFA: Fix Remaining Timeline Doctests and Planning Test Failures
 
 <!-- @adr_serial R25W081EBFA -->
 
@@ -13,7 +13,7 @@ Test suite evaluation reveals two critical categories of failures that need imme
 
 ### Timeline Doctest Issues (7 failures)
 
-Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contains doctests using the old `Timeline.Interval.*` module references instead of `AriaEngine.Timeline.Interval.*`. These cause UndefinedFunctionError failures.
+Despite R25W0807F11 completion, `lib/aria_engine/timeline/interval.ex` still contains doctests using the old `Timeline.Interval.*` module references instead of `AriaEngine.Timeline.Interval.*`. These cause UndefinedFunctionError failures.
 
 **Affected Doctests:**
 
@@ -40,11 +40,11 @@ Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contain
 
 ## Decision
 
-**Implement sequential fixes prioritizing Timeline doctests first, then re-evaluate planning strategy failures** to restore test suite health using the established fully qualified module naming strategy from ADR-122.
+**Implement sequential fixes prioritizing Timeline doctests first, then re-evaluate planning strategy failures** to restore test suite health using the established fully qualified module naming strategy from R25W0807F11.
 
 ### Sequential Implementation Strategy
 
-**Phase 1 (IMMEDIATE):** Fix all Timeline doctest issues using ADR-122's "no aliases" approach  
+**Phase 1 (IMMEDIATE):** Fix all Timeline doctest issues using R25W0807F11's "no aliases" approach  
 **Phase 2 (CONDITIONAL):** Re-evaluate planning failures only after Phase 1 completion to determine if issues persist independently
 
 ## Implementation Plan
@@ -116,7 +116,7 @@ Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contain
 - [ ] Change `defmodule Domain` → `defmodule AriaEngine.Domain`
 - [ ] Update all `Domain.Core` references to `AriaEngine.Domain.Core`
 - [ ] Update all `Domain.*` function calls to use fully qualified names
-- [ ] Remove aliases, use direct module calls following ADR-122 pattern
+- [ ] Remove aliases, use direct module calls following R25W0807F11 pattern
 
 ### Phase 2B: Fix Plan Module Structure
 
@@ -275,10 +275,10 @@ Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contain
 
 ## Related ADRs
 
-- **ADR-122**: Fix Timeline module aliasing issues (✅ COMPLETED - Timeline doctests now passing)
-- **ADR-121**: Lazy execution strategy implementation (may be related to remaining planning failures)
-- **ADR-118**: Add typespecs to all lib code (code quality improvements)
-- **ADR-124**: Fix planning logic in lazy execution tests (→ **EXTRACTED** - remaining 4 test failures)
+- **R25W0807F11**: Fix Timeline module aliasing issues (✅ COMPLETED - Timeline doctests now passing)
+- **R25W0791DA1**: Lazy execution strategy implementation (may be related to remaining planning failures)
+- **R25W0765579**: Add typespecs to all lib code (code quality improvements)
+- **R25W08256C7**: Fix planning logic in lazy execution tests (→ **EXTRACTED** - remaining 4 test failures)
 
 ## Progress Tracking
 
@@ -403,7 +403,7 @@ Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contain
 
 ## Completion Summary
 
-**ADR-123 COMPLETED** - Major objectives achieved with significant progress:
+**R25W081EBFA COMPLETED** - Major objectives achieved with significant progress:
 
 ### ✅ Completed Achievements
 
@@ -414,11 +414,11 @@ Despite ADR-122 completion, `lib/aria_engine/timeline/interval.ex` still contain
 - **Test failures dramatically reduced**: From 10+ failures down to 4 failures (60% improvement)
 - **Compilation warnings reduced**: From 30+ warnings down to 7 warnings (77% improvement)
 
-### 📋 Extracted to ADR-124
+### 📋 Extracted to R25W08256C7
 
-The remaining 4 test failures in `lazy_execution_test.exs` have been extracted to **ADR-124: Fix Planning Logic in Lazy Execution Tests** for focused resolution. These failures relate to planning logic issues rather than namespace problems and require dedicated investigation.
+The remaining 4 test failures in `lazy_execution_test.exs` have been extracted to **R25W08256C7: Fix Planning Logic in Lazy Execution Tests** for focused resolution. These failures relate to planning logic issues rather than namespace problems and require dedicated investigation.
 
-**Cross-Reference**: → **ADR-124** for remaining planning logic fixes
+**Cross-Reference**: → **R25W08256C7** for remaining planning logic fixes
 
 ### 🎯 Success Criteria Met
 
@@ -428,4 +428,4 @@ The remaining 4 test failures in `lazy_execution_test.exs` have been extracted t
 - [x] Compilation warnings significantly reduced
 - [x] Project test suite health substantially improved
 
-**Final Status**: ADR-123 successfully completed its primary objectives of fixing Timeline doctests and achieving major progress on test suite health. Remaining work extracted to dedicated ADR-124.
+**Final Status**: R25W081EBFA successfully completed its primary objectives of fixing Timeline doctests and achieving major progress on test suite health. Remaining work extracted to dedicated R25W08256C7.

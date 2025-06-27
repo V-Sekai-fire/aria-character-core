@@ -1,4 +1,4 @@
-# ADR-108: Fix Non-Deterministic Base DateTime in Scheduler Timing Calculations
+# R25W065D930: Fix Non-Deterministic Base DateTime in Scheduler Timing Calculations
 
 <!-- @adr_serial R25W065D930 -->
 
@@ -133,9 +133,9 @@ Ensure base datetime flows through:
 
 ## Related ADRs
 
-- **ADR-106**: Canonical Time Unit Seconds and STN Units
-- **ADR-098**: STN Timeline Encapsulation
-- **ADR-078**: Timeline Module PC-2 STN Implementation
+- **R25W063FA55**: Canonical Time Unit Seconds and STN Units
+- **R25W0556B01**: STN Timeline Encapsulation
+- **R25W0389D35**: Timeline Module PC-2 STN Implementation
 
 ## Current Focus
 

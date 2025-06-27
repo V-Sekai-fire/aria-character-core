@@ -1,11 +1,11 @@
-# ADR-183: Architecture & Standards - IPyHOP Integration and System Design
+# R25W141BE8A: Architecture & Standards - IPyHOP Integration and System Design
 
 <!-- @adr_serial R25W141BE8A -->
 
 **Status:** Active
 **Date:** 2025-06-25
 **Priority:** HIGH
-**Parent ADR:** ADR-181 (Core Specification)
+**Parent ADR:** R25W1398085 (Core Specification)
 
 ## Overview
 

@@ -1,4 +1,4 @@
-# ADR-155: Hybrid Planner Test Suite Restoration (MOVED)
+# R25W113CC67: Hybrid Planner Test Suite Restoration (MOVED)
 
 <!-- @adr_serial R25W113CC67 -->
 

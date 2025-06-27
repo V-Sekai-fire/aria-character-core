@@ -1,4 +1,4 @@
-# ADR-002: Oban Queue Design
+# R25W002DF48: Oban Queue Design
 
 <!-- @adr_serial R25W002DF48 -->
 
@@ -81,7 +81,7 @@ config :aria_queue, Oban,
 
 ## Related Decisions
 
-- **Builds on**: ADR-001 (State Architecture Migration) - requires temporal state for time-ordered actions
+- **Builds on**: R25W0013716 (State Architecture Migration) - requires temporal state for time-ordered actions
 - **Links to**: ADR-006 (Game Engine Integration) - queues execute actions at precise game ticks
-- **Supports**: ADR-011 (Idempotency & Intent Rejection) - queue design enables graceful action cancellation
-- **Enables**: ADR-025 (Research Strategy) - provides testable job scheduling for precision validation
+- **Supports**: R25W006E842 (Idempotency & Intent Rejection) - queue design enables graceful action cancellation
+- **Enables**: R25W0135BA2 (Research Strategy) - provides testable job scheduling for precision validation

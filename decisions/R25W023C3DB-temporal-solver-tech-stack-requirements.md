@@ -1,4 +1,4 @@
-# ADR-041: Temporal Solver Tech Stack Requirements (MOVED)
+# R25W023C3DB: Temporal Solver Tech Stack Requirements (MOVED)
 
 <!-- @adr_serial R25W023C3DB -->
 

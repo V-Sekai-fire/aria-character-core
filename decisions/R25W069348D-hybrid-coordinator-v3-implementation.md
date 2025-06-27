@@ -1,4 +1,4 @@
-# ADR-112: Plan Transformer with HybridCoordinatorV2 Direct Integration
+# R25W069348D: Plan Transformer with HybridCoordinatorV2 Direct Integration
 
 <!-- @adr_serial R25W069348D -->
 
@@ -147,9 +147,9 @@ end
 
 ## Related ADRs
 
-- **ADR-111**: Convert schedule_activities to Plan Transformer (implements this approach)
-- **ADR-110**: MCP Strategy Testing Interface (uses V2 directly)
-- **ADR-109**: Integrate Exhort OR-Tools Strategy (~~provides OptimizerStrategy for V2~~ - Proposed, not implemented)
+- **R25W06881B3**: Convert schedule_activities to Plan Transformer (implements this approach)
+- **R25W0670D79**: MCP Strategy Testing Interface (uses V2 directly)
+- **R25W0667494**: Integrate Exhort OR-Tools Strategy (~~provides OptimizerStrategy for V2~~ - Proposed, not implemented)
 
 ## Examples
 

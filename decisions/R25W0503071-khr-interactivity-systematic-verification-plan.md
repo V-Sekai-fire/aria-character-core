@@ -1,4 +1,4 @@
-# ADR-093: KHR Interactivity Systematic Verification Plan
+# R25W0503071: KHR Interactivity Systematic Verification Plan
 
 <!-- @adr_serial R25W0503071 -->
 
@@ -159,7 +159,7 @@ We have achieved ~95% implementation coverage of the KHR_interactivity specifica
 
 ## Related ADRs
 
-- **ADR-092**: AST to glTF KHR Interactivity Translation (parent implementation)
+- **R25W0498AC9**: AST to glTF KHR Interactivity Translation (parent implementation)
 
 ## Timeline
 

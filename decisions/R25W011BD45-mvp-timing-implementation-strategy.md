@@ -1,4 +1,4 @@
-# ADR-023: MVP Timing Implementation Strategy
+# R25W011BD45: MVP Timing Implementation Strategy
 
 <!-- @adr_serial R25W011BD45 -->
 
@@ -98,5 +98,5 @@ end
 ## Related Decisions
 
 - Implements ADR-009 (Action Duration Calculations) with specific formulas
-- Links to ADR-022 (Test-Driven Development) with testable timing
-- Supports ADR-018 (MVP Definition) with deterministic demonstrations
+- Links to R25W0101F54 (Test-Driven Development) with testable timing
+- Supports R25W009BCB5 (MVP Definition) with deterministic demonstrations

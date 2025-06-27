@@ -1,4 +1,4 @@
-# ADR-091: Hybrid Planner Dependency Encapsulation
+# R25W0489307: Hybrid Planner Dependency Encapsulation
 
 <!-- @adr_serial R25W0489307 -->
 
@@ -171,7 +171,7 @@ AriaEngine.HybridPlanner/
 
 ## Related ADRs
 
-- **ADR-034**: Definitive Temporal Planner Architecture (establishes hybrid planning foundation)
-- **ADR-084**: Domain Method Naming Refactor (relates to domain strategy interface design)
+- **R25W017DEAF**: Definitive Temporal Planner Architecture (establishes hybrid planning foundation)
+- **R25W041FBCD**: Domain Method Naming Refactor (relates to domain strategy interface design)
 
 This encapsulation will transform the hybrid planner into a true Function as Object system where all dependencies are injectable strategy objects, enabling maximum modularity, testability, and flexibility.

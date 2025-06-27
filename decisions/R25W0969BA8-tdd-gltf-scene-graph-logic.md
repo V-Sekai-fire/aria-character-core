@@ -1,4 +1,4 @@
-# ADR-138: TDD glTF Scene Graph Logic
+# R25W0969BA8: TDD glTF Scene Graph Logic
 
 <!-- @adr_serial R25W0969BA8 -->
 
@@ -7,13 +7,13 @@
 **Paused:** 2025-06-22  
 **Pause Reason:** GLTF work temporarily paused to focus on other priorities  
 **Priority:** MEDIUM  
-**Extracted from:** ADR-135 Phase 3
+**Extracted from:** R25W093B1C8 Phase 3
 
 ## Context
 
 This ADR implements Phase 3 of the glTF Scene foundation using Test-Driven Development: Scene Graph Logic. We need to implement logic for interpreting and manipulating the scene hierarchy, including node transformations, global transformations, and scene traversal.
 
-This phase depends on core data structures (ADR-136) and data loading (ADR-137), following strict TDD methodology.
+This phase depends on core data structures (R25W094A7AF) and data loading (R25W095BA8C), following strict TDD methodology.
 
 ## Decision
 
@@ -59,21 +59,21 @@ Implement glTF scene graph logic using strict Test-Driven Development, writing f
 
 ## Dependencies
 
-- **ADR-136**: TDD glTF Core Data Structures (provides Node and Scene structs)
-- **ADR-137**: TDD glTF Data Loading & Parsing (provides loaded scene data)
+- **R25W094A7AF**: TDD glTF Core Data Structures (provides Node and Scene structs)
+- **R25W095BA8C**: TDD glTF Data Loading & Parsing (provides loaded scene data)
 
 ## Blocks
 
-- **ADR-139**: TDD Mesh Processing (depends on scene graph traversal)
+- **R25W09751CC**: TDD Mesh Processing (depends on scene graph traversal)
 
 ## Related ADRs
 
-- **ADR-135**: TDD glTF Scene Foundation Implementation (parent ADR - tombstoned)
-- **ADR-130**: glTF Scene Foundation Implementation Plan (provides scope)
-- **ADR-129**: AriaEngine Plans glTF KHR Interactivity Implementation (overall planning)
+- **R25W093B1C8**: TDD glTF Scene Foundation Implementation (parent ADR - tombstoned)
+- **R25W08877E1**: glTF Scene Foundation Implementation Plan (provides scope)
+- **R25W087E1AE**: AriaEngine Plans glTF KHR Interactivity Implementation (overall planning)
 
 ## Implementation Status
 
-**Status:** Waiting for ADR-136 and ADR-137 completion
+**Status:** Waiting for R25W094A7AF and R25W095BA8C completion
 **Next Step:** Begin 3.1 Node Transformations RED cycle after dependencies ready
 **Timeline:** TDD approach with immediate feedback and incremental progress

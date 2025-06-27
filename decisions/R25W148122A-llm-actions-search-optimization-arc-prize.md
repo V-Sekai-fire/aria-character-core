@@ -1,11 +1,11 @@
-# ADR-189: LLM Actions, Search Optimization, and Multitodo Enhancement for ARC Prize
+# R25W148122A: LLM Actions, Search Optimization, and Multitodo Enhancement for ARC Prize
 
 <!-- @adr_serial R25W148122A -->
 
 **Status:** Paused  
 **Date:** 2025-06-25  
 **Priority:** MEDIUM  
-**Prerequisites:** ADR-171 (Hybrid Planner Restoration) + ADR-173 Phase 1 completion
+**Prerequisites:** R25W1298CE1 (Hybrid Planner Restoration) + R25W131C16E Phase 1 completion
 
 ## Context
 
@@ -429,7 +429,7 @@ config :aria_arc,
 
 - [ ] **LLM Actions Functional**: All three core actions (analyze, generate, validate) working
 - [ ] **Search Intelligence**: Blacklist and working element management operational
-- [ ] **Constraint Compliance**: Implementation fits within ADR-174's 2-app limit
+- [ ] **Constraint Compliance**: Implementation fits within R25W1327B64's 2-app limit
 - [ ] **Integration Success**: LLM actions coordinate with Phase 1 search results
 - [ ] **Accuracy Contribution**: Measurable improvement toward 5%+ target
 
@@ -456,18 +456,18 @@ config :aria_arc,
 1. **Timeline Pressure**: Phase 2 is only 4 days
    - **Mitigation**: Prioritize core LLM actions, defer advanced features
 2. **Scope Creep**: Feature expansion beyond 2-app limit
-   - **Mitigation**: Strict adherence to ADR-174 constraints
+   - **Mitigation**: Strict adherence to R25W1327B64 constraints
 3. **Performance**: LLM calls may slow down search
    - **Mitigation**: Async LLM calls, timeout management
 
 ## Related ADRs
 
-- **ADR-171**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
-- **ADR-172**: ARC Prize 2025 - Two-Week Proof of Concept Sprint (masthead)
-- **ADR-173**: ARC Prize Implementation Plan (timeline integration)
-- **ADR-174**: ARC Prize Technical Architecture (scope constraints)
-- **ADR-175**: ARC Prize Risk Analysis (risk context)
-- **ADR-181-184**: Unified Action Specification and Multitodo Methods (foundation)
+- **R25W1298CE1**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
+- **R25W130E6A7**: ARC Prize 2025 - Two-Week Proof of Concept Sprint (masthead)
+- **R25W131C16E**: ARC Prize Implementation Plan (timeline integration)
+- **R25W1327B64**: ARC Prize Technical Architecture (scope constraints)
+- **R25W133C875**: ARC Prize Risk Analysis (risk context)
+- **R25W1398085-184**: Unified Action Specification and Multitodo Methods (foundation)
 
 ## Consequences
 
@@ -489,4 +489,4 @@ This implementation transforms the LLM from a simple optimization tool into an i
 
 ---
 
-**ADR-189 Status: PAUSED** - Awaiting completion of ADR-171 and Phase 1 of ARC Prize sprint before implementation.
+**R25W148122A Status: PAUSED** - Awaiting completion of R25W1298CE1 and Phase 1 of ARC Prize sprint before implementation.

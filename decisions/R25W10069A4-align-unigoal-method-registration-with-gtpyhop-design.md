@@ -1,4 +1,4 @@
-# ADR-142: Align Unigoal Method Registration with Original GTPyhop Design
+# R25W10069A4: Align Unigoal Method Registration with Original GTPyhop Design
 
 <!-- @adr_serial R25W10069A4 -->
 
@@ -165,9 +165,9 @@ end
 
 ## Related ADRs
 
-- **ADR-131**: Unified Durative Action Specification and Planner Standardization
-- **ADR-133**: Planner Standardization Open Problems
-- **ADR-134**: Unified Action Specification Examples
+- **R25W089FC2D**: Unified Durative Action Specification and Planner Standardization
+- **R25W091EA37**: Planner Standardization Open Problems
+- **R25W0923F7E**: Unified Action Specification Examples
 
 ## Implementation Notes
 

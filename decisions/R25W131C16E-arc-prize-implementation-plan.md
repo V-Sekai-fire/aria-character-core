@@ -1,11 +1,11 @@
-# ADR-173: ARC Prize Implementation Plan
+# R25W131C16E: ARC Prize Implementation Plan
 
 <!-- @adr_serial R25W131C16E -->
 
 **Status:** Proposed  
 **Date:** 2025-06-24  
 **Priority:** HIGH  
-**Prerequisites:** ADR-171 (Hybrid Planner Restoration) must be completed first
+**Prerequisites:** R25W1298CE1 (Hybrid Planner Restoration) must be completed first
 
 ## Context
 
@@ -18,7 +18,7 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 
 **Prerequisites (Weeks 1-2: June 24 - July 8):**
 
-- ADR-171: Hybrid Planner Complete Restoration and Standardization
+- R25W1298CE1: Hybrid Planner Complete Restoration and Standardization
 
 **ARC Sprint (Weeks 3-4: July 8 - July 22):**
 
@@ -69,7 +69,7 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 
 **Scope:** ARC domain for hybrid planner
 
-- [ ] Create ARC reasoning domain using ADR-133 standardized patterns
+- [ ] Create ARC reasoning domain using R25W091EA37 standardized patterns
 - [ ] Implement ARC-specific actions and methods
 - [ ] Add transformation planning capabilities
 - [ ] Test domain integration with hybrid planner
@@ -151,16 +151,16 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 
 **Critical Path:**
 
-1. **ADR-171 completion:** Hybrid planner must be 100% functional
+1. **R25W1298CE1 completion:** Hybrid planner must be 100% functional
 2. **Phase 1 gates:** Each implementation gate must pass before proceeding
 3. **Phase 2 integration:** Depends on successful Phase 1 completion
 
 ## Related ADRs
 
-- **ADR-171**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
-- **ADR-172**: ARC Prize 2025 - Two-Week Proof of Concept Sprint (masthead)
-- **ADR-174**: ARC Prize Technical Architecture
-- **ADR-175**: ARC Prize Risk Analysis
+- **R25W1298CE1**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
+- **R25W130E6A7**: ARC Prize 2025 - Two-Week Proof of Concept Sprint (masthead)
+- **R25W1327B64**: ARC Prize Technical Architecture
+- **R25W133C875**: ARC Prize Risk Analysis
 
 ## Monitoring and Tracking
 

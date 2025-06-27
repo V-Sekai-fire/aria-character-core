@@ -54,25 +54,25 @@ This roadmap focuses on systematic enhancement of AriaEngine's NPC planning capa
 
 ### Phase 2: Environmental Dynamics (FUTURE IMPLEMENTATION)
 
-* [ ] **Enhanced Timed Effects/Goals**: **Effort: M, Significance: High** → **See ADR-087: Entity-Agent Timeline Graph Architecture**
+* [ ] **Enhanced Timed Effects/Goals**: **Effort: M, Significance: High** → **See R25W044B3F2: Entity-Agent Timeline Graph Architecture**
   * Extend current temporal support for absolute time scheduling
   * Implement deadline-based goal achievement with failure handling
   * Add time-triggered effects independent of action execution
-  * **Note**: ADR-087's living timelines naturally handle time-based effects through automatic timeline growth
+  * **Note**: R25W044B3F2's living timelines naturally handle time-based effects through automatic timeline growth
 
-* [ ] **Processes & Events**: **Effort: L, Significance: High** → **See ADR-087: Entity-Agent Timeline Graph Architecture**
+* [ ] **Processes & Events**: **Effort: L, Significance: High** → **See R25W044B3F2: Entity-Agent Timeline Graph Architecture**
   * Integrate continuous environmental processes (weather, resource depletion)
   * Implement discrete event system for environmental changes
   * Add event-driven NPC behavior triggers and responses
-  * **Note**: ADR-087's environmental timeline integration automatically propagates events through entity networks
+  * **Note**: R25W044B3F2's environmental timeline integration automatically propagates events through entity networks
 
 ### Phase 3: Advanced Coordination (RESEARCH PROJECTS)
 
-* [ ] **Multi-Agent Planning**: **Effort: XL, Significance: High** → **See ADR-087: Entity-Agent Timeline Graph Architecture**
+* [ ] **Multi-Agent Planning**: **Effort: XL, Significance: High** → **See R25W044B3F2: Entity-Agent Timeline Graph Architecture**
   * Design distributed planning architecture for multiple independent NPCs
   * Implement inter-agent communication, negotiation, and conflict resolution
   * Add coordination mechanisms for group activities and shared resources
-  * **Note**: ADR-087's timeline bridging architecture enables automatic multi-agent coordination through connected timelines rather than requiring explicit central planning
+  * **Note**: R25W044B3F2's timeline bridging architecture enables automatic multi-agent coordination through connected timelines rather than requiring explicit central planning
 
 * [ ] **Trajectory Constraints & State Invariants**: **Effort: XL, Significance: High**
   * Enhance pathfinding with complex spatial and logical constraints
@@ -119,8 +119,8 @@ This roadmap focuses on systematic enhancement of AriaEngine's NPC planning capa
 
 ## Related ADRs
 
-* **ADR-087**: Entity-Agent Timeline Graph Architecture (proposed solution for Enhanced Scheduling, Multi-Agent Planning, Processes & Events, and Enhanced Timed Effects/Goals)
+* **R25W044B3F2**: Entity-Agent Timeline Graph Architecture (proposed solution for Enhanced Scheduling, Multi-Agent Planning, Processes & Events, and Enhanced Timed Effects/Goals)
 * **ADR-086**: Implement Durative Actions (completed foundation work)
-* **ADR-084**: Domain Method Naming Refactor (prerequisite for Phase 1 implementation)
-* **ADR-075**: Complete Temporal Planning Solver
-* **ADR-078**: Timeline Module PC-2 STN Implementation
+* **R25W041FBCD**: Domain Method Naming Refactor (prerequisite for Phase 1 implementation)
+* **R25W0365EF2**: Complete Temporal Planning Solver
+* **R25W0389D35**: Timeline Module PC-2 STN Implementation

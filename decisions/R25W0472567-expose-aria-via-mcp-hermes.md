@@ -1,11 +1,11 @@
-# ADR-090: Expose Aria Temporal Planner via MCP with KHR_interactivity
+# R25W0472567: Expose Aria Temporal Planner via MCP with KHR_interactivity
 
 <!-- @adr_serial R25W0472567 -->
 
 ## Status
 
 **Paused** (June 20, 2025)  
-**Reason:** Superseded by current MCP implementation (ADR-097, ADR-105, ADR-111)  
+**Reason:** Superseded by current MCP implementation (R25W05462DD, R25W0621594, R25W06881B3)  
 **Originally Proposed:** June 17, 2025
 
 ## Context
@@ -113,9 +113,9 @@ The server includes a bidirectional translation layer:
 
 **Current MCP Implementation:**
 
-- **ADR-097**: Designed MCP scheduler interface with proper tool schema
-- **ADR-105**: Implemented MCP server with `schedule_activities` tool
-- **ADR-111**: Enhanced architecture with plan converter for clean separation
+- **R25W05462DD**: Designed MCP scheduler interface with proper tool schema
+- **R25W0621594**: Implemented MCP server with `schedule_activities` tool
+- **R25W06881B3**: Enhanced architecture with plan converter for clean separation
 
 **Key Differences from This ADR:**
 
@@ -126,7 +126,7 @@ The server includes a bidirectional translation layer:
 
 **Status of Original Goals:**
 
-- ✅ **MCP Integration**: Successfully achieved through ADR-105
+- ✅ **MCP Integration**: Successfully achieved through R25W0621594
 - ✅ **External Tool Access**: Working with VSCode and other MCP clients
 - ❌ **KHR_interactivity Output**: Not implemented (different output format chosen)
 - ✅ **Temporal Planning Exposure**: Available through `schedule_activities` tool
@@ -136,8 +136,8 @@ This ADR could be revisited if KHR_interactivity behavior graph output becomes a
 
 ## Related ADRs
 
-- **ADR-097**: MCP Scheduler Interface Design (implemented approach)
-- **ADR-105**: Reconnect Scheduler to MCP (working implementation)
-- **ADR-111**: Schedule Activities Data Transformer Conversion (architectural enhancement)
-- **ADR-091**: Hybrid Planner Dependency Encapsulation (planning engine)
-- **ADR-034**: Definitive Temporal Planner Architecture (core planning)
+- **R25W05462DD**: MCP Scheduler Interface Design (implemented approach)
+- **R25W0621594**: Reconnect Scheduler to MCP (working implementation)
+- **R25W06881B3**: Schedule Activities Data Transformer Conversion (architectural enhancement)
+- **R25W0489307**: Hybrid Planner Dependency Encapsulation (planning engine)
+- **R25W017DEAF**: Definitive Temporal Planner Architecture (core planning)

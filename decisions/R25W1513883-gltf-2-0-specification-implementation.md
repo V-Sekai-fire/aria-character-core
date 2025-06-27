@@ -1,4 +1,4 @@
-# ADR-192: Comprehensive glTF 2.0 Implementation with SimpleSkin/SimpleMorph Animation Support
+# R25W1513883: Comprehensive glTF 2.0 Implementation with SimpleSkin/SimpleMorph Animation Support
 
 <!-- @adr_serial R25W1513883 -->
 
@@ -6,7 +6,7 @@
 **Date:** 2025-06-26 (Updated: 2025-06-27)  
 **Priority:** HIGH
 
-**Note:** This ADR incorporates and supersedes ADR-193 (SimpleSkin Animation Import/Export) to provide unified glTF domain implementation.
+**Note:** This ADR incorporates and supersedes R25W1524A37 (SimpleSkin Animation Import/Export) to provide unified glTF domain implementation.
 
 ## Context
 
@@ -100,13 +100,13 @@ Based on the specification analysis, our domain needs to implement:
 
 **`aria_gltf_geometry`:**
 
-- **MUST use ADR-181** for unified durative action specification and temporal coordination
+- **MUST use R25W1398085** for unified durative action specification and temporal coordination
 - **MUST use Nx** (https://hex.pm/packages/nx) with `{:torchx, "~> 0.9"}` for efficient tensor operations in mesh transformations
 - **MUST depend on** `aria_gltf_core` for data structures
 
 **`aria_gltf_animation`:**
 
-- **MUST use ADR-181** for unified durative action specification and temporal coordination
+- **MUST use R25W1398085** for unified durative action specification and temporal coordination
 - **MUST integrate with** aria_timeline for temporal planning
 - **MUST depend on** `aria_gltf_core` for data structures
 
@@ -178,7 +178,7 @@ We will implement a comprehensive glTF 2.0 system using a **single responsibilit
 **3. `aria_gltf_animation` - Animation System**
 
 - **Responsibility**: Keyframe interpolation, animation channels/samplers, temporal coordination
-- **Dependencies**: `aria_gltf_core`, ADR-181 for temporal planning integration
+- **Dependencies**: `aria_gltf_core`, R25W1398085 for temporal planning integration
 - **Why separate**: Temporal concerns, integration with aria_timeline, distinct from static geometry
 
 **4. `aria_gltf_materials` - Material & Texture System**
@@ -308,7 +308,7 @@ aria_gltf_io → aria_gltf_core ← aria_gltf_geometry
 ### App 4: `aria_gltf_animation` - Animation System (MEDIUM PRIORITY)
 
 **Location**: `apps/aria_gltf_animation/`
-**Dependencies**: `aria_gltf_core`, ADR-181, `aria_timeline`
+**Dependencies**: `aria_gltf_core`, R25W1398085, `aria_timeline`
 
 **Required Implementation**:
 
@@ -316,7 +316,7 @@ aria_gltf_io → aria_gltf_core ← aria_gltf_geometry
 - [ ] Animation channel and sampler structures
 - [ ] Keyframe interpolation (LINEAR, STEP, CUBICSPLINE)
 - [ ] Animation target validation (translation, rotation, scale, weights)
-- [ ] Integration API with aria_timeline and ADR-181
+- [ ] Integration API with aria_timeline and R25W1398085
 - [ ] Temporal coordination for frame-accurate playback
 
 **SimpleSkin.gltf Animation Requirements**:
@@ -324,7 +324,7 @@ aria_gltf_io → aria_gltf_core ← aria_gltf_geometry
 - [ ] Parse joint rotation/translation/scale animation channels
 - [ ] Implement quaternion SLERP for smooth joint rotations
 - [ ] Handle keyframe timing and interpolation for joint animations
-- [ ] Coordinate with ADR-181 for temporal planning integration
+- [ ] Coordinate with R25W1398085 for temporal planning integration
 - [ ] Test sub-frame accuracy for joint animation sampling
 
 **SimpleMorph.gltf Animation Requirements**:
@@ -449,7 +449,7 @@ Starting with creating the independent application structure and foundation data
 
 **Integration Requirements:**
 
-- [ ] Provide integration API for temporal planning systems (ADR-181)
+- [ ] Provide integration API for temporal planning systems (R25W1398085)
 - [ ] Frame-accurate mesh state calculation pipeline
 - [ ] Nx/TorchX integration for efficient tensor operations
 - [ ] Export functionality for frame extraction and texture processing
@@ -494,7 +494,7 @@ Starting with creating the independent application structure and foundation data
 
 **Integration Benefits:**
 
-- **Temporal Coordination**: Clean integration with ADR-181 for frame-accurate processing
+- **Temporal Coordination**: Clean integration with R25W1398085 for frame-accurate processing
 - **Modular Reuse**: Apps can be reused across different projects and contexts
 - **API Clarity**: Each app provides focused, well-documented APIs
 - **Dependency Management**: Clear dependency chains prevent circular dependencies
@@ -547,15 +547,15 @@ Starting with creating the independent application structure and foundation data
 
 ## Related ADRs
 
-- **ADR-193**: SimpleSkin Animation Import/Export (MERGED INTO this ADR - animation requirements incorporated)
-- **ADR-181**: Unified Durative Action Specification (MANDATORY - temporal planning foundation)
-- **ADR-129**: Aria Engine Plans glTF KHR Interactivity Implementation
-- **ADR-130**: glTF Scene Foundation Implementation Plan
-- **ADR-135**: TDD glTF Scene Foundation Implementation
-- **ADR-136**: TDD glTF Core Data Structures
-- **ADR-137**: TDD glTF Data Loading Parsing
-- **ADR-138**: TDD glTF Scene Graph Logic
-- **ADR-139**: TDD glTF Mesh Processing
+- **R25W1524A37**: SimpleSkin Animation Import/Export (MERGED INTO this ADR - animation requirements incorporated)
+- **R25W1398085**: Unified Durative Action Specification (MANDATORY - temporal planning foundation)
+- **R25W087E1AE**: Aria Engine Plans glTF KHR Interactivity Implementation
+- **R25W08877E1**: glTF Scene Foundation Implementation Plan
+- **R25W093B1C8**: TDD glTF Scene Foundation Implementation
+- **R25W094A7AF**: TDD glTF Core Data Structures
+- **R25W095BA8C**: TDD glTF Data Loading Parsing
+- **R25W0969BA8**: TDD glTF Scene Graph Logic
+- **R25W09751CC**: TDD glTF Mesh Processing
 
 ## References
 

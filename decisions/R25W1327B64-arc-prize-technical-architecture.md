@@ -1,11 +1,11 @@
-# ADR-174: ARC Prize Technical Architecture
+# R25W1327B64: ARC Prize Technical Architecture
 
 <!-- @adr_serial R25W1327B64 -->
 
 **Status:** Proposed  
 **Date:** 2025-06-24  
 **Priority:** HIGH  
-**Prerequisites:** ADR-171 (Hybrid Planner Restoration) must be completed first
+**Prerequisites:** R25W1298CE1 (Hybrid Planner Restoration) must be completed first
 
 ## Context
 
@@ -36,7 +36,7 @@ This ADR defines the minimal viable technical architecture for the ARC Prize 202
 │ └─────────────┘ │    │ └──────────────────┘ │
 │                 │    │                      │
 │ ┌─────────────┐ │    │ ┌──────────────────┐ │
-│ │Transform    │ │    │ │ ADR-133 Patterns │ │
+│ │Transform    │ │    │ │ R25W091EA37 Patterns │ │
 │ │ - Primitives│ │    │ │ - add_method/4   │ │
 │ │ - Generator │ │    │ │ - Module domains │ │
 │ │ - Search    │ │    │ │ - Error handling │ │
@@ -88,11 +88,11 @@ This ADR defines the minimal viable technical architecture for the ARC Prize 202
 
 **Scope:** Use restored hybrid planner for Phase 2 only
 
-**Requirements from ADR-171:**
+**Requirements from R25W1298CE1:**
 
 - Clean compilation with `mix compile --warnings-as-errors`
 - Full test suite passing with `mix test`
-- ADR-133 standardization implemented
+- R25W091EA37 standardization implemented
 - Module-based domain creation functional
 
 ### Phase 2 Integration Architecture (Week 4)
@@ -175,7 +175,7 @@ ARC Task → ARC Domain → Hybrid Planner → Meta-Search → Guided Transform 
 
 ### Dependencies
 
-- **aria_hybrid_planner:** Planning and reasoning (after ADR-171 restoration)
+- **aria_hybrid_planner:** Planning and reasoning (after R25W1298CE1 restoration)
 - **Jason:** JSON parsing
 - **Standard library only:** No additional external dependencies
 
@@ -238,7 +238,7 @@ ARC Task → ARC Domain → Hybrid Planner → Meta-Search → Guided Transform 
 
 ### Technical Risks
 
-1. **Hybrid planner dependency:** ADR-171 must be completed first
+1. **Hybrid planner dependency:** R25W1298CE1 must be completed first
 2. **Performance bottlenecks:** Simple computational approach may be slow
 3. **Accuracy limitations:** Brute force search may not achieve targets
 
@@ -259,9 +259,9 @@ ARC Task → ARC Domain → Hybrid Planner → Meta-Search → Guided Transform 
 
 ## Related ADRs
 
-- **ADR-171**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
-- **ADR-172**: ARC Prize 2025 - Two-Week Proof of Concept Sprint (masthead)
-- **ADR-173**: ARC Prize Implementation Plan
-- **ADR-175**: ARC Prize Risk Analysis
+- **R25W1298CE1**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
+- **R25W130E6A7**: ARC Prize 2025 - Two-Week Proof of Concept Sprint (masthead)
+- **R25W131C16E**: ARC Prize Implementation Plan
+- **R25W133C875**: ARC Prize Risk Analysis
 
 This architecture is designed for rapid implementation with strict scope constraints to prevent the analysis paralysis observed in previous git commit patterns.

@@ -1,18 +1,18 @@
-# ADR-167: Comprehensive App Functionality Restoration (TOMBSTONED)
+# R25W1257C0E: Comprehensive App Functionality Restoration (TOMBSTONED)
 
 <!-- @adr_serial R25W1257C0E -->
 
 **Status:** Tombstoned  
 **Date:** 2025-06-24  
-**Superseded by:** ADR-171
+**Superseded by:** R25W1298CE1
 
-This ADR has been tombstoned and replaced by ADR-171 (Hybrid Planner Complete Restoration and Standardization) which provides a more focused approach to the critical path dependency.
+This ADR has been tombstoned and replaced by R25W1298CE1 (Hybrid Planner Complete Restoration and Standardization) which provides a more focused approach to the critical path dependency.
 
 **Original content preserved in git history.**
 
 ## Replacement ADR
 
-- **ADR-171**: Hybrid Planner Complete Restoration and Standardization
+- **R25W1298CE1**: Hybrid Planner Complete Restoration and Standardization
 
 ## Context
 

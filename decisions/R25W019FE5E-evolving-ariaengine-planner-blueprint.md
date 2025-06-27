@@ -1,10 +1,10 @@
-# ADR-036: Evolving AriaEngine Planner Blueprint
+# R25W019FE5E: Evolving AriaEngine Planner Blueprint
 
 <!-- @adr_serial R25W019FE5E -->
 
 ## Status
 
-**Deprecated** - Superseded by ADR-038: Timeline-Based Temporal Planner Implementation Plan
+**Deprecated** - Superseded by R25W0210AA3: Timeline-Based Temporal Planner Implementation Plan
 
 ## Date
 
@@ -12,7 +12,7 @@
 
 ## Deprecation Note
 
-This ADR is deprecated in favor of [ADR-038: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md) which provides a superior timeline-based implementation plan.
+This ADR is deprecated in favor of [R25W0210AA3: Timeline-Based Temporal Planner Implementation](038-timeline-based-temporal-planner-implementation.md) which provides a superior timeline-based implementation plan.
 
 The durative action approach outlined in this ADR has been superseded by timeline-based temporal planning which offers:
 
@@ -21,7 +21,7 @@ The durative action approach outlined in this ADR has been superseded by timelin
 - Superior scalability and parallel processing capabilities
 - Enhanced expressiveness for complex temporal scenarios
 
-**This ADR is retained for historical reference only. All future development should follow ADR-038.**
+**This ADR is retained for historical reference only. All future development should follow R25W0210AA3.**
 
 ---
 
@@ -216,11 +216,11 @@ Assemble all the pieces into the final, cohesive module.
 
 ## Related ADRs
 
-- [ADR-034: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md)
-- [ADR-035: Canonical Temporal Backtracking Problem](035-canonical-temporal-backtracking-problem.md)
+- [R25W017DEAF: Definitive Temporal Planner Architecture](034-definitive-temporal-planner-architecture.md)
+- [R25W0183367: Canonical Temporal Backtracking Problem](035-canonical-temporal-backtracking-problem.md)
 
 ## Implementation Notes
 
-This blueprint should be implemented in conjunction with the canonical temporal backtracking problem defined in ADR-035, ensuring that the integer time tick system is consistently applied throughout the implementation.
+This blueprint should be implemented in conjunction with the canonical temporal backtracking problem defined in R25W0183367, ensuring that the integer time tick system is consistently applied throughout the implementation.
 
 The TopologicalSorter implementation provided serves as a reference for the critical path scheduling component, emphasizing the importance of proper dependency ordering in temporal planning.

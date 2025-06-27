@@ -1,29 +1,29 @@
-# ADR-170: ARC Prize Risk Analysis (TOMBSTONED)
+# R25W1281B74: ARC Prize Risk Analysis (TOMBSTONED)
 
 <!-- @adr_serial R25W1281B74 -->
 
 **Status:** Tombstoned  
 **Date:** 2025-06-24  
-**Superseded by:** ADR-175
+**Superseded by:** R25W133C875
 
-This ADR has been tombstoned and replaced by the new ARC Prize ADR series (ADR-172-175) which follows the hybrid planner restoration work in ADR-171.
+This ADR has been tombstoned and replaced by the new ARC Prize ADR series (R25W130E6A7-175) which follows the hybrid planner restoration work in R25W1298CE1.
 
 **Original content preserved in git history.**
 
 ## Replacement ADRs
 
-- **ADR-171**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
-- **ADR-172**: ARC Prize 2025 - Two-Week Proof of Concept Sprint
-- **ADR-173**: ARC Prize Implementation Plan  
-- **ADR-174**: ARC Prize Technical Architecture
-- **ADR-175**: ARC Prize Risk Analysis
+- **R25W1298CE1**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
+- **R25W130E6A7**: ARC Prize 2025 - Two-Week Proof of Concept Sprint
+- **R25W131C16E**: ARC Prize Implementation Plan  
+- **R25W1327B64**: ARC Prize Technical Architecture
+- **R25W133C875**: ARC Prize Risk Analysis
 
 ## Context
 
 The original ARC Prize risk analysis was premature due to hybrid planner being non-functional. The new ADR series addresses this dependency chain properly:
 
-1. **ADR-171**: Restore hybrid planner to 100% functionality
-2. **ADR-172-175**: Execute ARC Prize work with reliable foundation
+1. **R25W1298CE1**: Restore hybrid planner to 100% functionality
+2. **R25W130E6A7-175**: Execute ARC Prize work with reliable foundation
 
 **Timeline Impact:**
 

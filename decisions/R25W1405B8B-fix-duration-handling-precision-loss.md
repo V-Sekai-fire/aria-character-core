@@ -1,11 +1,11 @@
-# ADR-182: Technical Implementation - Duration Handling and Validation
+# R25W1405B8B: Technical Implementation - Duration Handling and Validation
 
 <!-- @adr_serial R25W1405B8B -->
 
 **Status:** Active
 **Date:** 2025-06-22  
 **Priority:** MEDIUM
-**Parent ADR:** ADR-181 (Core Specification)
+**Parent ADR:** R25W1398085 (Core Specification)
 
 ## Overview
 
@@ -641,9 +641,9 @@ The changes are backward compatible because:
 
 ## Related ADRs
 
-- **ADR-181**: Core Specification (parent ADR)
-- **ADR-183**: Architecture & Standards (system integration)
-- **ADR-184**: Developer Guide (usage examples)
+- **R25W1398085**: Core Specification (parent ADR)
+- **R25W141BE8A**: Architecture & Standards (system integration)
+- **R25W1421349**: Developer Guide (usage examples)
 
 ## Implementation Status
 

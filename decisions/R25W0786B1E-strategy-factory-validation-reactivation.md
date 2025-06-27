@@ -1,4 +1,4 @@
-# ADR-120: Strategy Factory Validation Reactivation
+# R25W0786B1E: Strategy Factory Validation Reactivation
 
 <!-- @adr_serial R25W0786B1E -->
 
@@ -134,8 +134,8 @@ Use a deferred validation system where:
 
 ## Related ADRs
 
-- **ADR-091**: Hybrid planner dependency encapsulation
-- **ADR-112**: Hybrid coordinator v3 implementation
+- **R25W0489307**: Hybrid planner dependency encapsulation
+- **R25W069348D**: Hybrid coordinator v3 implementation
 
 ## References
 

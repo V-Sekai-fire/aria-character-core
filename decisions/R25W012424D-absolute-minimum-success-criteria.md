@@ -1,4 +1,4 @@
-# ADR-024: Absolute Minimum Success Criteria
+# R25W012424D: Absolute Minimum Success Criteria
 
 <!-- @adr_serial R25W012424D -->
 
@@ -121,9 +121,9 @@ mix aria_engine.conviction_crisis
 
 ## Related Decisions
 
-- Links to ADR-016 (Weekend Implementation Scope) for timeline management
-- Supports ADR-018 (MVP Definition) with concrete success criteria
+- Links to R25W00787B6 (Weekend Implementation Scope) for timeline management
+- Supports R25W009BCB5 (MVP Definition) with concrete success criteria
 - Implements ADR-005 (TimeStrike Test Domain) as validation scenario
-- Builds on ADR-022 (Test-Driven Development) for implementation approach
-- Enables ADR-026 (Risk Mitigation) with fallback strategies
-- Supports ADR-023 (MVP Timing Implementation Strategy) with clear success metrics
+- Builds on R25W0101F54 (Test-Driven Development) for implementation approach
+- Enables R25W0143F62 (Risk Mitigation) with fallback strategies
+- Supports R25W011BD45 (MVP Timing Implementation Strategy) with clear success metrics

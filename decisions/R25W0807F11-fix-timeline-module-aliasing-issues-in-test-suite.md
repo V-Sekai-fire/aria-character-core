@@ -1,4 +1,4 @@
-# ADR-122: Eliminate All Module Aliases to Prevent Timeline Aliasing Issues
+# R25W0807F11: Eliminate All Module Aliases to Prevent Timeline Aliasing Issues
 
 <!-- @adr_serial R25W0807F11 -->
 
@@ -134,8 +134,8 @@ Starting with Phase 1 - cataloging all affected files and beginning systematic f
 
 ## Related ADRs
 
-- **ADR-118**: Add typespecs to all lib code (compilation quality)
-- **ADR-120**: Strategy factory validation reactivation (test infrastructure)
+- **R25W0765579**: Add typespecs to all lib code (compilation quality)
+- **R25W0786B1E**: Strategy factory validation reactivation (test infrastructure)
 
 ## Progress Tracking
 

@@ -1,4 +1,4 @@
-# ADR-011: Oban Queue Idempotency & Intent Rejection
+# R25W006E842: Oban Queue Idempotency & Intent Rejection
 
 <!-- @adr_serial R25W006E842 -->
 
@@ -78,6 +78,6 @@ TemporalPlanner.cancel_action(action_id)
 
 ## Related Decisions
 
-- Links to ADR-002 (Oban Queue Design) for job execution framework
+- Links to R25W002DF48 (Oban Queue Design) for job execution framework
 - Supports ADR-007 (Conviction Choice Mechanics) with re-planning capability
 - Enables ADR-012 (Real-Time Input System) with action cancellation

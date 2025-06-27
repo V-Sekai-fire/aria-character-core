@@ -1,4 +1,4 @@
-# ADR-088: Aria Town - RDF-Powered NPC Demonstration System
+# R25W045E2B3: Aria Town - RDF-Powered NPC Demonstration System
 
 <!-- @adr_serial R25W045E2B3 -->
 
@@ -220,7 +220,7 @@ end
 ## Related ADRs
 
 - **ADR-085**: Enhanced Scheduling System (foundation for conflict resolution)
-- **ADR-087**: Entity-Agent Timeline Graph Architecture (NPC state management)
+- **R25W044B3F2**: Entity-Agent Timeline Graph Architecture (NPC state management)
 
 ## Segment Closure Note
 

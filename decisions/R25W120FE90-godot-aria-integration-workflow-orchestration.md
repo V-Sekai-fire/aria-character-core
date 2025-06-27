@@ -1,4 +1,4 @@
-# ADR-162: Godot-Aria Integration and Workflow Orchestration
+# R25W120FE90: Godot-Aria Integration and Workflow Orchestration
 
 <!-- @adr_serial R25W120FE90 -->
 
@@ -8,7 +8,7 @@
 
 ## Context
 
-With ADR-160 providing libgodot integration and ADR-161 providing MCP server capabilities, we need to integrate Godot Engine with the broader Aria ecosystem. This includes connecting Godot with AriaEngine temporal planner, Aria scheduler, and the existing membrane pipeline infrastructure.
+With R25W118994A providing libgodot integration and R25W119A759 providing MCP server capabilities, we need to integrate Godot Engine with the broader Aria ecosystem. This includes connecting Godot with AriaEngine temporal planner, Aria scheduler, and the existing membrane pipeline infrastructure.
 
 Key requirements:
 
@@ -203,11 +203,11 @@ Starting with basic app structure and system communication, as this provides the
 
 ## Related ADRs
 
-- **ADR-160**: Godot LibGodot Integration via Membrane Unifex (prerequisite)
-- **ADR-161**: Standalone Godot MCP Server Implementation (prerequisite)
-- **ADR-112**: Hybrid Coordinator v3 Implementation (temporal planning)
-- **ADR-113**: Membrane Planning Pipeline Integration (pipeline patterns)
-- **ADR-111**: Schedule Activities Data Transformer Conversion (scheduler integration)
+- **R25W118994A**: Godot LibGodot Integration via Membrane Unifex (prerequisite)
+- **R25W119A759**: Standalone Godot MCP Server Implementation (prerequisite)
+- **R25W069348D**: Hybrid Coordinator v3 Implementation (temporal planning)
+- **R25W070D1AF**: Membrane Planning Pipeline Integration (pipeline patterns)
+- **R25W06881B3**: Schedule Activities Data Transformer Conversion (scheduler integration)
 
 ## Use Cases
 
@@ -234,8 +234,8 @@ Starting with basic app structure and system communication, as this provides the
 
 ## References
 
-- **ADR-160**: Godot LibGodot Integration via Membrane Unifex
-- **ADR-161**: Standalone Godot MCP Server Implementation
+- **R25W118994A**: Godot LibGodot Integration via Membrane Unifex
+- **R25W119A759**: Standalone Godot MCP Server Implementation
 - [AriaEngine Temporal Planner Documentation](../apps/aria_engine_core/)
 - [Aria Scheduler Integration Patterns](../apps/aria_scheduler/)
 - [Membrane Pipeline Architecture](../apps/aria_membrane_pipeline/)

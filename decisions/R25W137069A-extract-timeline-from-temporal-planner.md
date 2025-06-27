@@ -1,4 +1,4 @@
-# ADR-179: Extract Timeline from Temporal Planner
+# R25W137069A: Extract Timeline from Temporal Planner
 
 <!-- @adr_serial R25W137069A -->
 
@@ -261,11 +261,11 @@ Update all files in `aria_temporal_planner` that import timeline modules to use 
 
 ## Related ADRs
 
-- **ADR-178**: Extract MiniZinc STN Solver from Temporal Planner
-- **ADR-177**: Modular MiniZinc Architecture Refactoring
-- **ADR-078**: Timeline Module PC-2 STN Implementation
+- **R25W136157D**: Extract MiniZinc STN Solver from Temporal Planner
+- **R25W135339D**: Modular MiniZinc Architecture Refactoring
+- **R25W0389D35**: Timeline Module PC-2 STN Implementation
 - **ADR-046**: Interval Notation Usability (agent vs entity)
-- **ADR-152**: Critical Zero Duration Contract Violation
+- **R25W1108E80**: Critical Zero Duration Contract Violation
 
 ## Notes
 

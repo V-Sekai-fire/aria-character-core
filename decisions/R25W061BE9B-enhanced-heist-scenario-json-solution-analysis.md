@@ -1,4 +1,4 @@
-# ADR-104: Enhanced Heist Scenario for JSON Solution Analysis
+# R25W061BE9B: Enhanced Heist Scenario for JSON Solution Analysis
 
 <!-- @adr_serial R25W061BE9B -->
 
@@ -73,8 +73,8 @@ Implement a 4-person heist team scenario with specialized roles, sequential depe
 ## Related ADRs
 
 - ADR-103: NPC Communication Temporal Event System
-- ADR-101: Reconnect Scheduler with Hybrid Planner
-- ADR-100: Extract Scheduler Remove MCP
+- R25W058D6B9: Reconnect Scheduler with Hybrid Planner
+- R25W057B149: Extract Scheduler Remove MCP
 
 ## Results
 

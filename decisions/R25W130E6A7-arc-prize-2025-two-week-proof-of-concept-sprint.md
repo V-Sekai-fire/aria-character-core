@@ -1,11 +1,11 @@
-# ADR-172: ARC Prize 2025 - Two-Week Proof of Concept Sprint
+# R25W130E6A7: ARC Prize 2025 - Two-Week Proof of Concept Sprint
 
 <!-- @adr_serial R25W130E6A7 -->
 
 **Status:** Proposed  
 **Date:** June 24, 2025  
 **Priority:** HIGH  
-**Prerequisites:** ADR-171 (Hybrid Planner Restoration) must be completed first
+**Prerequisites:** R25W1298CE1 (Hybrid Planner Restoration) must be completed first
 
 ## The Two-Week Challenge Pitch
 
@@ -45,7 +45,7 @@ Hybrid reasoning approach unlike pure neural networks - computational discovery 
 
 ## Prerequisites
 
-**Critical Dependency:** ADR-171 (Hybrid Planner Complete Restoration and Standardization) must be 100% complete before ARC work begins.
+**Critical Dependency:** R25W1298CE1 (Hybrid Planner Complete Restoration and Standardization) must be 100% complete before ARC work begins.
 
 **Timeline:**
 
@@ -54,16 +54,16 @@ Hybrid reasoning approach unlike pure neural networks - computational discovery 
 
 ## Implementation Details
 
-- **ADR-173**: Two-week sprint plan and detailed implementation
-- **ADR-174**: Minimal viable technical architecture  
-- **ADR-175**: Risk analysis and business case details
+- **R25W131C16E**: Two-week sprint plan and detailed implementation
+- **R25W1327B64**: Minimal viable technical architecture  
+- **R25W133C875**: Risk analysis and business case details
 
 ## Related ADRs
 
-- **ADR-171**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
-- **ADR-173**: ARC Prize Implementation Plan
-- **ADR-174**: ARC Prize Technical Architecture
-- **ADR-175**: ARC Prize Risk Analysis
+- **R25W1298CE1**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
+- **R25W131C16E**: ARC Prize Implementation Plan
+- **R25W1327B64**: ARC Prize Technical Architecture
+- **R25W133C875**: ARC Prize Risk Analysis
 
 ---
 

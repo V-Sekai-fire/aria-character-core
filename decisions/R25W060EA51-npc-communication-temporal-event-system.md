@@ -373,10 +373,10 @@ NPCTemporalEffects.schedule_daily_routine("tavern_keeper",
 ## Related ADRs
 
 - **ADR-085**: Unsolved Planner Problems for NPCs (parent problem definition)
-- **ADR-087**: Entity-Agent Timeline Graph Architecture (alternative approach)
+- **R25W044B3F2**: Entity-Agent Timeline Graph Architecture (alternative approach)
 - **ADR-086**: Implement Durative Actions (foundation for temporal capabilities)
-- **ADR-100**: Extract Scheduler Remove MCP (scheduler architecture decisions)
-- **ADR-101**: Reconnect Scheduler with Hybrid Planner (scheduler integration)
+- **R25W057B149**: Extract Scheduler Remove MCP (scheduler architecture decisions)
+- **R25W058D6B9**: Reconnect Scheduler with Hybrid Planner (scheduler integration)
 
 ## Implementation Notes
 

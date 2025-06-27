@@ -1,4 +1,4 @@
-# ADR-035: Canonical Temporal Backtracking Problem Definition
+# R25W0183367: Canonical Temporal Backtracking Problem Definition
 
 <!-- @adr_serial R25W0183367 -->
 
@@ -14,7 +14,7 @@ Accepted
 
 The AriaEngine/TimeStrike temporal planner requires a clearly defined canonical problem that demonstrates true temporal reasoning and backtracking capabilities. This problem serves as the definitive test case for validating that the temporal planner implements mathematical backtracking rather than simple sequential action planning.
 
-ADR-034 established the temporal planner architecture requirements, and this ADR defines the specific problem that must be solved to verify the implementation meets those requirements.
+R25W017DEAF established the temporal planner architecture requirements, and this ADR defines the specific problem that must be solved to verify the implementation meets those requirements.
 
 ## Decision
 
@@ -225,7 +225,7 @@ assert plan.temporal_conflicts_resolved == true
 - **Clear specification**: Unambiguous problem definition for temporal planner validation
 - **Mathematical rigor**: Requires true temporal reasoning, not just sequential planning
 - **Verifiable outcomes**: Concrete success criteria that can be automatically tested
-- **Architectural validation**: Proves the temporal planner meets ADR-034 requirements
+- **Architectural validation**: Proves the temporal planner meets R25W017DEAF requirements
 
 ### Negative
 
@@ -259,13 +259,13 @@ Any temporal planner implementation must demonstrate:
 
 ## Cross-References
 
-- **ADR-034**: Definitive temporal planner architecture (establishes requirements this problem validates)
+- **R25W017DEAF**: Definitive temporal planner architecture (establishes requirements this problem validates)
 - **ADR-042**: Cold boot implementation order (uses this canonical problem as the definitive test case)
 - **ADR-044**: Auto battler analogy (Maya's scenario as "auto chess round" example)
-- **ADR-037**: Timeline-based planning approach (validated by this canonical problem)
-- **ADR-040**: STN solver selection (PC-2 algorithm must solve this problem efficiently)
-- **ADR-041**: Tech stack requirements (performance targets based on this problem)
-- **ADR-043**: Total order optimization (demonstrated through this problem's constraint solving)
-- **ADR-075**: Complete Temporal Planning Solver Implementation (Tasks 075-079 specifically implement this canonical problem)
+- **R25W0206D9D**: Timeline-based planning approach (validated by this canonical problem)
+- **R25W02297A7**: STN solver selection (PC-2 algorithm must solve this problem efficiently)
+- **R25W023C3DB**: Tech stack requirements (performance targets based on this problem)
+- **R25W024014E**: Total order optimization (demonstrated through this problem's constraint solving)
+- **R25W0365EF2**: Complete Temporal Planning Solver Implementation (Tasks 075-079 specifically implement this canonical problem)
 
 This enhanced canonical problem serves as the definitive architectural requirement for temporal planner implementation and testing. Success in solving this problem validates that the temporal planner implements comprehensive temporal reasoning capabilities including Goal-Task-Network planning, multi-phase backtracking, historical state reconstruction, imperfect information management, and dynamic opportunity exploitation.

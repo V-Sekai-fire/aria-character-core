@@ -1,4 +1,4 @@
-# ADR-022: First Implementation Step - Test-Driven Development
+# R25W0101F54: First Implementation Step - Test-Driven Development
 
 <!-- @adr_serial R25W0101F54 -->
 
@@ -27,7 +27,7 @@ Start with writing tests - specifically the MVP acceptance test that drives out 
 
 - **Test File**: `test/aria_engine/conviction_crisis_integration_test.exs`
 - **Test Scenario**: "Alex moves from {2,3} to {8,3} with real-time terminal display and SPACEBAR interruption"
-- **Acceptance Criteria**: Matches exact 10-minute demo requirements from ADR-018
+- **Acceptance Criteria**: Matches exact 10-minute demo requirements from R25W009BCB5
 - **Complete Integration**: Test forces all components to work together
 
 ### TDD Sequence
@@ -116,9 +116,9 @@ end
 
 ## Related Decisions
 
-- Links to ADR-018 (MVP Definition) for test scenario requirements
-- Supports ADR-016 (Weekend Implementation Scope) with focused development
-- Builds on ADR-004 (Mandatory Stability Verification) for validation approach
+- Links to R25W009BCB5 (MVP Definition) for test scenario requirements
+- Supports R25W00787B6 (Weekend Implementation Scope) with focused development
+- Builds on R25W004DF1D (Mandatory Stability Verification) for validation approach
 - Implements ADR-005 (TimeStrike Test Domain) as primary test scenario
-- Enables ADR-025 (Research Strategy) through implementation discovery
+- Enables R25W0135BA2 (Research Strategy) through implementation discovery
 - Supports ADR-020 (Design Consistency Verification) with validated foundation

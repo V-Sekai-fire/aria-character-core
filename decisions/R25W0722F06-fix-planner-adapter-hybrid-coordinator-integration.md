@@ -1,4 +1,4 @@
-# ADR-115: Fix PlannerAdapter HybridCoordinatorV2 Integration and Activity Logger
+# R25W0722F06: Fix PlannerAdapter HybridCoordinatorV2 Integration and Activity Logger
 
 <!-- @adr_serial R25W0722F06 -->
 
@@ -116,9 +116,9 @@ The membrane pipeline now receives sophisticated planning results from HybridCoo
 
 ## Related ADRs
 
-- **ADR-091**: Hybrid planner dependency encapsulation
-- **ADR-113**: Membrane planning pipeline integration  
-- **ADR-114**: Fix membrane pipeline implementation
+- **R25W0489307**: Hybrid planner dependency encapsulation
+- **R25W070D1AF**: Membrane planning pipeline integration  
+- **R25W071D281**: Fix membrane pipeline implementation
 
 ## Investigation Notes
 

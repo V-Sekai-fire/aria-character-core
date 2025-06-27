@@ -1,4 +1,4 @@
-# ADR-033: MCP Integration TDD Completion Criteria
+# R25W01659BE: MCP Integration TDD Completion Criteria
 
 <!-- @adr_serial R25W01659BE -->
 
@@ -6,7 +6,7 @@
 
 **Cancelled** - MCP integration is not being implemented
 
-*This ADR has been cancelled along with ADR-029 as the project has decided not to implement MCP (Model Context Protocol) integration. The focus is on core TimeStrike game functionality through a web interface.*
+*This ADR has been cancelled along with R25W015D600 as the project has decided not to implement MCP (Model Context Protocol) integration. The focus is on core TimeStrike game functionality through a web interface.*
 
 ## Date
 
@@ -16,7 +16,7 @@
 
 This ADR is cancelled because:
 
-1. **Parent ADR Cancelled**: ADR-029 (MCP Integration) has been cancelled, making TDD criteria unnecessary
+1. **Parent ADR Cancelled**: R25W015D600 (MCP Integration) has been cancelled, making TDD criteria unnecessary
 2. **Strategic Refocus**: Project is focusing on core game functionality rather than development tooling
 3. **Reduced Scope**: Eliminating MCP integration simplifies the project and reduces technical debt
 4. **Interface Strategy**: Web interface (Phoenix LiveView) provides sufficient user interaction
@@ -29,7 +29,7 @@ This ADR is cancelled because:
 
 ## Original Context (Cancelled)
 
-The MCP (Model Context Protocol) integration for GitHub Copilot access (ADR-029) requires concrete, testable completion criteria to ensure the implementation meets its objectives. Without clear success metrics, the integration could be considered "complete" without actually providing the intended natural language interaction capabilities.
+The MCP (Model Context Protocol) integration for GitHub Copilot access (R25W015D600) requires concrete, testable completion criteria to ensure the implementation meets its objectives. Without clear success metrics, the integration could be considered "complete" without actually providing the intended natural language interaction capabilities.
 
 ## Original Decision (Cancelled)
 
@@ -37,7 +37,7 @@ Define comprehensive Test-Driven Development (TDD) objectives and completion cri
 
 ## Original Context
 
-The MCP (Model Context Protocol) integration for GitHub Copilot access (ADR-029) requires concrete, testable completion criteria to ensure the implementation meets its objectives. Without clear success metrics, the integration could be considered "complete" without actually providing the intended natural language interaction capabilities.
+The MCP (Model Context Protocol) integration for GitHub Copilot access (R25W015D600) requires concrete, testable completion criteria to ensure the implementation meets its objectives. Without clear success metrics, the integration could be considered "complete" without actually providing the intended natural language interaction capabilities.
 
 ## Decision
 
@@ -124,7 +124,7 @@ test "GitHub Copilot can play TimeStrike through MCP server with real planner AP
 
   {:ok, move_result} = TimeStrikeMcpServer.execute_tool(move_call)
 
-  # 7. Verify movement plan matches distance/speed calculation from ADR-023
+  # 7. Verify movement plan matches distance/speed calculation from R25W011BD45
   assert move_result["success"] == true
   assert move_result["timed_action"]["action"] == "move_to"
   assert move_result["timed_action"]["duration"] == 1.0  # 4 units / 4.0 u/s = 1.0s
@@ -311,7 +311,7 @@ interface InterruptActionResponse {
 #### State Representation Alignment
 
 - **Agent Positions**: Always use `{x, y, z}` coordinates matching Godot conventions (ADR-019)
-- **Timing**: Use floating-point seconds with sub-second precision (ADR-023)  
+- **Timing**: Use floating-point seconds with sub-second precision (R25W011BD45)  
 - **Actions**: Match AriaTimestrike module actions: `:move_to`, `:attack`, `:skill_cast`, `:interact`
 - **Solution Trees**: Use AriaEngine.Plan.solution_tree() structure exactly
 - **Goals**: Match temporal_planner_data_structures.md goal types and conditions
@@ -348,7 +348,7 @@ interface InterruptActionResponse {
 - Performance tests meet sub-2-second response criteria for solution tree generation
 - Error handling tests validate graceful failure modes for invalid goal conditions
 - Solution tree structure validation ensures exact match with AriaEngine.Plan.solution_tree() format
-- Temporal action timing validation confirms duration calculations match ADR-023 formulas
+- Temporal action timing validation confirms duration calculations match R25W011BD45 formulas
 
 ### Manual Test Requirements
 
@@ -392,7 +392,7 @@ interface InterruptActionResponse {
 
 ## Related Decisions
 
-- **Implements**: ADR-029 (MCP Integration for GitHub Copilot Access) - provides completion criteria
-- **Links to**: ADR-025 (Research Strategy) - follows implementation-driven discovery approach
-- **Supports**: ADR-026 (Implementation Risk Mitigation) - validates integration reliability
-- **Builds on**: ADR-022 (Test-Driven Development) - applies TDD methodology to MCP integration
+- **Implements**: R25W015D600 (MCP Integration for GitHub Copilot Access) - provides completion criteria
+- **Links to**: R25W0135BA2 (Research Strategy) - follows implementation-driven discovery approach
+- **Supports**: R25W0143F62 (Implementation Risk Mitigation) - validates integration reliability
+- **Builds on**: R25W0101F54 (Test-Driven Development) - applies TDD methodology to MCP integration

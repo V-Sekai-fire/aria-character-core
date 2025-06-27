@@ -1,11 +1,11 @@
-# ADR-175: ARC Prize Risk Analysis
+# R25W133C875: ARC Prize Risk Analysis
 
 <!-- @adr_serial R25W133C875 -->
 
 **Status:** Proposed  
 **Date:** 2025-06-24  
 **Priority:** HIGH  
-**Prerequisites:** ADR-171 (Hybrid Planner Restoration) must be completed first
+**Prerequisites:** R25W1298CE1 (Hybrid Planner Restoration) must be completed first
 
 ## Context
 
@@ -56,17 +56,17 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 #### MEDIUM RISK: Hybrid Planner Dependency
 
 **Probability:** 40%  
-**Impact:** Complete project blockage if ADR-171 fails
+**Impact:** Complete project blockage if R25W1298CE1 fails
 
 **Dependencies:**
 
-- ADR-171 must achieve 100% completion before ARC work begins
+- R25W1298CE1 must achieve 100% completion before ARC work begins
 - Hybrid planner must pass all success criteria
 - Integration testing must confirm functionality
 
 **Mitigation:**
 
-- **ADR-171 completion gate:** Non-negotiable prerequisite
+- **R25W1298CE1 completion gate:** Non-negotiable prerequisite
 - **Fallback plan:** Pure computational approach if hybrid integration fails
 - **Phase separation:** Phase 1 can succeed without hybrid planner
 
@@ -113,7 +113,7 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 
 **Technical Factors:**
 
-- ADR-133 standardization should simplify integration
+- R25W091EA37 standardization should simplify integration
 - Hybrid planner restoration includes integration testing
 - Phase 2 is conditional on Phase 1 success
 
@@ -267,13 +267,13 @@ Previous work shows 40+ planning commits with minimal implementation, indicating
 
 ## Related ADRs
 
-- **ADR-171**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
-- **ADR-172**: ARC Prize 2025 - Two-Week Proof of Concept Sprint (masthead)
-- **ADR-173**: ARC Prize Implementation Plan
-- **ADR-174**: ARC Prize Technical Architecture
+- **R25W1298CE1**: Hybrid Planner Complete Restoration and Standardization (prerequisite)
+- **R25W130E6A7**: ARC Prize 2025 - Two-Week Proof of Concept Sprint (masthead)
+- **R25W131C16E**: ARC Prize Implementation Plan
+- **R25W1327B64**: ARC Prize Technical Architecture
 
 ## Conclusion
 
 The ARC Prize proof of concept sprint carries significant implementation and technical risks, but with appropriate controls and realistic expectations, it offers valuable learning opportunities regardless of competitive outcome. The primary risk mitigation focus is preventing analysis paralysis through strict implementation gates and scope controls.
 
-**Risk-Adjusted Recommendation:** Proceed with sprint after ADR-171 completion, with clear understanding that success is measured by learning and implementation progress, not just accuracy targets.
+**Risk-Adjusted Recommendation:** Proceed with sprint after R25W1298CE1 completion, with clear understanding that success is measured by learning and implementation progress, not just accuracy targets.

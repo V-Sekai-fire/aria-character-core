@@ -1,4 +1,4 @@
-# ADR-100: Extract Scheduler and Remove MCP Infrastructure
+# R25W057B149: Extract Scheduler and Remove MCP Infrastructure
 
 <!-- @adr_serial R25W057B149 -->
 

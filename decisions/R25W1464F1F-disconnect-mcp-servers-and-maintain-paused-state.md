@@ -1,4 +1,4 @@
-# ADR-188: Disconnect MCP Servers and Maintain Paused State
+# R25W14702E9: Disconnect MCP Servers and Maintain Paused State
 
 <!-- @adr_serial R25W1464F1F -->
 
@@ -32,10 +32,10 @@ The Aria project has MCP (Model Context Protocol) infrastructure that was previo
 
 ### Historical Context
 
-- **ADR-029**: MCP integration was cancelled for strategic focus
-- **ADR-090**: Paused due to superseding implementations
-- **ADR-105**: Superseded by ADR-111 for architectural improvements
-- **ADR-111**: Active but paused for plan transformer conversion
+- **R25W015D600**: MCP integration was cancelled for strategic focus
+- **R25W0472567**: Paused due to superseding implementations
+- **R25W0621594**: Superseded by R25W06881B3 for architectural improvements
+- **R25W06881B3**: Active but paused for plan transformer conversion
 
 ## Decision
 
@@ -110,7 +110,7 @@ Comment out MCP-related commands and add clear documentation:
 
 # mcp:
 #     @echo "🚀 MCP functionality is currently PAUSED"
-#     @echo "See ADR-188 for disconnection details"
+#     @echo "See R25W14702E9 for disconnection details"
 
 # bench-mcp:
 #     @echo "⚡ MCP benchmarking is currently PAUSED"
@@ -126,7 +126,7 @@ defmodule AriaEngine.Membrane.MCPSource do
   MCP Source component - CURRENTLY DISCONNECTED
   
   This component is part of the paused MCP infrastructure.
-  See ADR-188 for disconnection details and re-enablement process.
+  See R25W14702E9 for disconnection details and re-enablement process.
   """
   
   # Implementation remains but is not actively used
@@ -182,10 +182,10 @@ config :aria_character_core,
 
 ## Related ADRs
 
-- **ADR-029**: MCP Integration for GitHub Copilot Access (cancelled)
-- **ADR-090**: Expose Aria via MCP Hermes (paused)
-- **ADR-105**: Reconnect Scheduler to MCP (superseded)
-- **ADR-111**: Schedule Activities Data Transformer Conversion (paused)
+- **R25W015D600**: MCP Integration for GitHub Copilot Access (cancelled)
+- **R25W0472567**: Expose Aria via MCP Hermes (paused)
+- **R25W0621594**: Reconnect Scheduler to MCP (superseded)
+- **R25W06881B3**: Schedule Activities Data Transformer Conversion (paused)
 
 ## Future Considerations
 

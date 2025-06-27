@@ -1,4 +1,4 @@
-# ADR-071: Project Status Summary - Comprehensive Review
+# R25W034AB64: Project Status Summary - Comprehensive Review
 
 <!-- @adr_serial R25W034AB64 -->
 
@@ -34,7 +34,7 @@ Rejected
 
 ## Context
 
-This ADR provides a comprehensive status summary of the Aria Character Core project as of ADR-071, cross-referencing all existing ADRs against the current codebase to identify completed implementations, ongoing work, and abandoned decisions. This summary serves as a definitive checkpoint for future development planning.
+This ADR provides a comprehensive status summary of the Aria Character Core project as of R25W034AB64, cross-referencing all existing ADRs against the current codebase to identify completed implementations, ongoing work, and abandoned decisions. This summary serves as a definitive checkpoint for future development planning.
 
 The project has evolved significantly from its initial conception, with multiple architectural decisions, implementation attempts, and strategic pivots documented across 70+ ADRs. A comprehensive status review is necessary to establish the current state and guide future development priorities.
 
@@ -61,7 +61,7 @@ The project has evolved significantly from its initial conception, with multiple
 
 - `aria_tui` - Terminal user interface application (completely removed)
 
-### Test-Driven Development Status (ADR-022)
+### Test-Driven Development Status (R25W0101F54)
 
 **Status**: ✅ **IMPLEMENTED AND ACTIVE**
 
@@ -72,12 +72,12 @@ The project has evolved significantly from its initial conception, with multiple
 
 ### Temporal Planner Architecture Evolution
 
-**ADR-034** (Definitive Temporal Planner Architecture): ✅ **FOUNDATIONAL - ACCEPTED**
+**R25W017DEAF** (Definitive Temporal Planner Architecture): ✅ **FOUNDATIONAL - ACCEPTED**
 
 - Established core temporal planning requirements
 - Defines mathematical backtracking and constraint solving needs
 
-**ADR-035** (Canonical Temporal Backtracking Problem): ✅ **ACCEPTED - COMPREHENSIVE SPECIFICATION**
+**R25W0183367** (Canonical Temporal Backtracking Problem): ✅ **ACCEPTED - COMPREHENSIVE SPECIFICATION**
 
 - Defines "Maya's Adaptive Scorch Coordination" as the canonical test problem
 - Specifies multi-phase backtracking requirements
@@ -101,13 +101,13 @@ The project has evolved significantly from its initial conception, with multiple
 
 ### Core System Implementations
 
-**Oban Queue System** (ADR-002, ADR-011):
+**Oban Queue System** (R25W002DF48, R25W006E842):
 
 - ✅ Basic Oban integration completed
 - ✅ Idempotency and intent rejection mechanisms implemented
 - ⚠️ Not currently visible in active application structure
 
-**Game Engine Separation** (ADR-003):
+**Game Engine Separation** (R25W0031F1C):
 
 - ✅ AriaEngine separated from game-specific logic
 - ✅ AriaTimestrike serves as primary game implementation
@@ -125,7 +125,7 @@ The project has evolved significantly from its initial conception, with multiple
 
 ### Web Interface and Visualization
 
-**Web Interface Evolution** (ADR-008, ADR-027):
+**Web Interface Evolution** (R25W005553D, ADR-027):
 
 - ⚠️ Multiple web interface approaches documented
 - ⚠️ Implementation status unclear from current codebase
@@ -145,7 +145,7 @@ The project has evolved significantly from its initial conception, with multiple
 
 ### MCP Integration and Tool Development
 
-**MCP Integration** (ADR-029, ADR-033):
+**MCP Integration** (R25W015D600, R25W01659BE):
 
 - ✅ MCP integration with GitHub Copilot documented and partially implemented
 - ✅ TDD completion criteria established
@@ -158,7 +158,7 @@ The project has evolved significantly from its initial conception, with multiple
 
 ### Workflow System Evolution
 
-**Membrane to Flow Migration** (ADR-032, ADR-052):
+**Membrane to Flow Migration** (ADR-032, R25W025F371):
 
 - ✅ Decision made to replace Membrane with Flow
 - ✅ AriaWorkflow and AriaWorkflowSystem applications present
@@ -188,7 +188,7 @@ The project has evolved significantly from its initial conception, with multiple
 - ✅ Strategic focus decision made favoring TimeStrike game development
 - ✅ Tool integration positioned as supporting capability
 
-**MVP Definition and Scope** (ADR-018, ADR-024):
+**MVP Definition and Scope** (R25W009BCB5, R25W012424D):
 
 - ✅ Concrete MVP definition established
 - ✅ Absolute minimum success criteria documented
@@ -233,7 +233,7 @@ The project has evolved significantly from its initial conception, with multiple
 
 ### Risk Areas
 
-1. **Temporal Planner Complexity** - ADR-035 specification is comprehensive but demanding
+1. **Temporal Planner Complexity** - R25W0183367 specification is comprehensive but demanding
 2. **Performance Requirements** - Real-time constraints across multiple systems
 3. **Integration Complexity** - Multiple external systems (Discord, MCP, OpenBao)
 
@@ -242,15 +242,15 @@ The project has evolved significantly from its initial conception, with multiple
 ### Immediate Priorities (Based on ADR Analysis)
 
 1. **Complete Temporal Planner Implementation** - Focus on ADR-049 enhanced approach
-2. **Validate ADR-035 Canonical Problem** - Ensure Maya's scenario passes completely  
+2. **Validate R25W0183367 Canonical Problem** - Ensure Maya's scenario passes completely  
 3. **Consolidate Web Interface Strategy** - Choose single approach and implement
 4. **Complete Workflow Migration** - Finish Flow/Queue consolidation per ADR-066
 
 ### Strategic Alignment
 
-- Continue Test-Driven Development approach (ADR-022)
+- Continue Test-Driven Development approach (R25W0101F54)
 - Maintain TimeStrike game focus (ADR-031)
-- Prioritize MVP criteria achievement (ADR-024)
+- Prioritize MVP criteria achievement (R25W012424D)
 - Ensure architectural consistency with established decisions
 
 ## Success Criteria

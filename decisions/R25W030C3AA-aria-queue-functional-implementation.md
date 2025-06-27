@@ -1,4 +1,4 @@
-# ADR-063: Aria Queue Functional Implementation
+# R25W030C3AA: Aria Queue Functional Implementation
 
 <!-- @adr_serial R25W030C3AA -->
 
@@ -6,7 +6,7 @@
 
 Paused (Started: June 15, 2025, Paused: June 15, 2025)  
 **Priority**: High - prerequisite for aria_engine and aria_timestrike  
-**Paused Reason**: Prerequisite aria_flow functionality needs to be implemented first (ADR-064)
+**Paused Reason**: Prerequisite aria_flow functionality needs to be implemented first (R25W031D2CC)
 
 ## Context
 
@@ -112,9 +112,9 @@ Implement aria_queue as a fully functional background job processing system that
 
 ## Related ADRs
 
-- **ADR-062**: Aria Engine Functional Implementation (paused - depends on this ADR)
+- **R25W0298C62**: Aria Engine Functional Implementation (paused - depends on this ADR)
 - **ADR-058**: Aria Timestrike Baseline Test Failures (paused - depends on this ADR)
-- **ADR-002**: Oban Queue Design
+- **R25W002DF48**: Oban Queue Design
 
 ## Notes
 

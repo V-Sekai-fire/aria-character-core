@@ -1,4 +1,4 @@
-# ADR-147: Fix Warnings and Failures
+# R25W105F105: Fix Warnings and Failures
 
 <!-- @adr_serial R25W105F105 -->
 
@@ -8,7 +8,7 @@ Active (Started: June 22, 2025)
 
 ## Context
 
-After completing the migration from `StateV2` to `State` in ADR-146, there are still a number of warnings and test failures. This ADR will address these issues.
+After completing the migration from `StateV2` to `State` in R25W10468CD, there are still a number of warnings and test failures. This ADR will address these issues.
 
 ## Decision
 

@@ -1,4 +1,4 @@
-# ADR-113: Membrane Planning Pipeline Integration
+# R25W070D1AF: Membrane Planning Pipeline Integration
 
 <!-- @adr_serial R25W070D1AF -->
 
@@ -8,7 +8,7 @@
 
 ## Context
 
-ADR-110 successfully implemented the MCP strategy testing interface using Membrane Framework, providing:
+R25W0670D79 successfully implemented the MCP strategy testing interface using Membrane Framework, providing:
 
 - Complete pipeline architecture with 5 core elements
 - MCPSource, EchoFilter, ScheduleFilter, ResponseFilter, MCPSink
@@ -20,7 +20,7 @@ However, the actual planning integration components (PlanFilter and PlannerSink)
 
 ### Current State
 
-**Implemented (ADR-110)**:
+**Implemented (R25W0670D79)**:
 
 ```
 MCPSource → ScheduleFilter → EchoFilter → ResponseFilter → MCPSink
@@ -43,7 +43,7 @@ The testing interface is complete, but we need:
 
 ## Decision
 
-Implement the production planning pipeline components to enable actual planning execution through the Membrane Framework architecture established in ADR-110.
+Implement the production planning pipeline components to enable actual planning execution through the Membrane Framework architecture established in R25W0670D79.
 
 ## Implementation Plan
 
@@ -253,12 +253,12 @@ end
 
 ## Related ADRs
 
-- **ADR-110**: MCP Strategy Testing Interface (foundation - COMPLETED)
+- **R25W0670D79**: MCP Strategy Testing Interface (foundation - COMPLETED)
   - Provides complete testing pipeline: MCPSource → ScheduleFilter → EchoFilter → ResponseFilter → MCPSink
   - Establishes Membrane Framework architecture and format definitions
   - All 59/59 tests passing for pipeline elements and management
-- **ADR-101**: Reconnect Scheduler with Hybrid Planner (planning integration)
-- **ADR-112**: Hybrid Coordinator V3 Implementation (future coordinator version)
+- **R25W058D6B9**: Reconnect Scheduler with Hybrid Planner (planning integration)
+- **R25W069348D**: Hybrid Coordinator V3 Implementation (future coordinator version)
 
 ## Consequences
 
@@ -291,4 +291,4 @@ end
 **Week 3**: Production pipeline integration and configuration
 **Week 4**: End-to-end testing and performance optimization
 
-This implementation will complete the production-ready Membrane Framework pipeline for MCP planning, building on the solid testing foundation established in ADR-110.
+This implementation will complete the production-ready Membrane Framework pipeline for MCP planning, building on the solid testing foundation established in R25W0670D79.

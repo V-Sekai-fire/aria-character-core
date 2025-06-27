@@ -1,4 +1,4 @@
-# ADR-124: Fix Planning Logic in Lazy Execution Tests
+# R25W08256C7: Fix Planning Logic in Lazy Execution Tests
 
 <!-- @adr_serial R25W08256C7 -->
 
@@ -11,7 +11,7 @@
 
 ## Context
 
-**Extracted from ADR-123** - Following successful completion of Timeline doctests and major test suite improvements, 4 remaining test failures in `lazy_execution_test.exs` require focused investigation and resolution.
+**Extracted from R25W081EBFA** - Following successful completion of Timeline doctests and major test suite improvements, 4 remaining test failures in `lazy_execution_test.exs` require focused investigation and resolution.
 
 ### Current Test Failures
 
@@ -44,7 +44,7 @@ All 4 failures occur in `test/aria_engine/plan/lazy_execution_test.exs` and rela
 
 ## Decision
 
-**Implement systematic investigation and fixes for planning logic issues in lazy execution tests** to achieve 0 test failures and complete the test suite health restoration started in ADR-123.
+**Implement systematic investigation and fixes for planning logic issues in lazy execution tests** to achieve 0 test failures and complete the test suite health restoration started in R25W081EBFA.
 
 ## Implementation Plan
 
@@ -170,9 +170,9 @@ All 4 failures occur in `test/aria_engine/plan/lazy_execution_test.exs` and rela
 
 ## Related ADRs
 
-- **ADR-123**: Fix Timeline doctests and planning test failures (✅ COMPLETED - extracted from this ADR)
-- **ADR-121**: Lazy execution strategy implementation (may contain relevant planning logic)
-- **ADR-115**: Fix planner adapter hybrid coordinator integration (related planning infrastructure)
+- **R25W081EBFA**: Fix Timeline doctests and planning test failures (✅ COMPLETED - extracted from this ADR)
+- **R25W0791DA1**: Lazy execution strategy implementation (may contain relevant planning logic)
+- **R25W0722F06**: Fix planner adapter hybrid coordinator integration (related planning infrastructure)
 
 ## Progress Tracking
 
@@ -185,7 +185,7 @@ All 4 failures occur in `test/aria_engine/plan/lazy_execution_test.exs` and rela
 
 **Current Focus:** Phase 1A - Analyze test domain setup to understand why `Core.plan/4` returns "No complete solution found" errors.
 
-## Context from ADR-123
+## Context from R25W081EBFA
 
 **Inherited Status:**
 
@@ -236,4 +236,4 @@ The planning logic issues described in this ADR were resolved through previous w
 - ✅ No regressions in other test files
 - ✅ Overall test suite achieves 0 failures
 
-This completes the test suite health restoration initiative started in ADR-123.
+This completes the test suite health restoration initiative started in R25W081EBFA.

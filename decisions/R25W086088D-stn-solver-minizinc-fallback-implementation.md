@@ -1,4 +1,4 @@
-# ADR-128: STN Solver MiniZinc Fallback Implementation (MOVED)
+# R25W086088D: STN Solver MiniZinc Fallback Implementation (MOVED)
 
 <!-- @adr_serial R25W086088D -->
 

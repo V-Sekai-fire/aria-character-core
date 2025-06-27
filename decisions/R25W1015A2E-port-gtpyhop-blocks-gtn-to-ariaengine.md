@@ -1,4 +1,4 @@
-# ADR-143: Port GTPyhop Blocks GTN to AriaEngine
+# R25W1015A2E: Port GTPyhop Blocks GTN to AriaEngine
 
 <!-- @adr_serial R25W1015A2E -->
 
@@ -203,9 +203,9 @@ test/aria_engine/blocks_world/
 
 ## Related ADRs
 
-- **ADR-131**: Unified Durative Action Specification (provides action framework)
-- **ADR-142**: Align Unigoal Method Registration with GTPyhop Design (method integration)
-- **ADR-089**: Migrate Planner to StateV2 Subject-Predicate-Fact (state representation)
+- **R25W089FC2D**: Unified Durative Action Specification (provides action framework)
+- **R25W10069A4**: Align Unigoal Method Registration with GTPyhop Design (method integration)
+- **R25W046434A**: Migrate Planner to StateV2 Subject-Predicate-Fact (state representation)
 
 ## Implementation Status
 

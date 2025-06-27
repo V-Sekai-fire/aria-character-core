@@ -1,4 +1,4 @@
-# ADR-161: Standalone Godot MCP Server Implementation
+# R25W119A759: Standalone Godot MCP Server Implementation
 
 <!-- @adr_serial R25W119A759 -->
 
@@ -8,7 +8,7 @@
 
 ## Context
 
-Following ADR-160's libgodot integration, we need a dedicated MCP (Model Context Protocol) server to expose Godot functionality to AI assistants and development tools. This server must be separate from the existing scheduling MCP server to maintain clean separation of concerns.
+Following R25W118994A's libgodot integration, we need a dedicated MCP (Model Context Protocol) server to expose Godot functionality to AI assistants and development tools. This server must be separate from the existing scheduling MCP server to maintain clean separation of concerns.
 
 Key requirements:
 
@@ -206,10 +206,10 @@ Starting with basic server setup and tool registration framework, as this provid
 
 ## Related ADRs
 
-- **ADR-160**: Godot LibGodot Integration via Membrane Unifex (prerequisite)
-- **ADR-162**: Godot-Aria Integration and Workflow Orchestration (builds on this)
-- **ADR-105**: Reconnect Scheduler to MCP (separate MCP server)
-- **ADR-111**: Schedule Activities Data Transformer Conversion (MCP patterns)
+- **R25W118994A**: Godot LibGodot Integration via Membrane Unifex (prerequisite)
+- **R25W120FE90**: Godot-Aria Integration and Workflow Orchestration (builds on this)
+- **R25W0621594**: Reconnect Scheduler to MCP (separate MCP server)
+- **R25W06881B3**: Schedule Activities Data Transformer Conversion (MCP patterns)
 
 ## References
 

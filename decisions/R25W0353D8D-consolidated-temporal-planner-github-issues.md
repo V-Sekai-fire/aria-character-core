@@ -1,4 +1,4 @@
-# ADR-072: Consolidated Temporal Planner GitHub Issues Task List
+# R25W0353D8D: Consolidated Temporal Planner GitHub Issues Task List
 
 <!-- @adr_serial R25W0353D8D -->
 
@@ -16,7 +16,7 @@ The temporal planner implementation roadmap has been spread across multiple ADRs
 
 This consolidation merges tasks from:
 
-- ADR-034: Definitive Temporal Planner Architecture (foundational architecture)
+- R25W017DEAF: Definitive Temporal Planner Architecture (foundational architecture)
 - ADR-042: Temporal Planner Cold Boot Implementation Order (superseded but contains detailed tasks)
 - ADR-046: User-Friendly Temporal Constraint Specification (API design)
 - ADR-047: TimeStrike Temporal Planner Test Scenario (test scenarios)
@@ -273,7 +273,7 @@ Create a single, ordered GitHub issues task list that represents the complete te
 #### Canonical Problem Validation
 
 - [ ] **Issue #27: Implement Maya's Adaptive Scorch Coordination canonical test**
-  - Complete ADR-035 canonical problem implementation
+  - Complete R25W0183367 canonical problem implementation
   - Multi-phase backtracking validation
   - Information gathering phase testing
   - Temporal coordination phase validation
@@ -480,14 +480,14 @@ The temporal planner implementation is complete when:
 
 ## Related ADRs
 
-- **ADR-034**: Definitive Temporal Planner Architecture (foundational requirements)
+- **R25W017DEAF**: Definitive Temporal Planner Architecture (foundational requirements)
 - **ADR-042**: Temporal Planner Cold Boot Implementation Order (superseded methodology)
 - **ADR-046**: User-Friendly Temporal Constraint Specification (API design patterns)
 - **ADR-047**: TimeStrike Temporal Planner Test Scenario (validation scenarios)
 - **ADR-048**: Developer-Friendly APIs for Temporal Planner Implementation (tooling)
 - **ADR-049**: Enhanced Temporal Planner Implementation with Unified APIs (current direction)
 - **ADR-050**: Temporal Planner Cold Boot from Current Codebase (realistic implementation)
-- **ADR-071**: Project Status Summary (comprehensive review)
+- **R25W034AB64**: Project Status Summary (comprehensive review)
 
 ---
 

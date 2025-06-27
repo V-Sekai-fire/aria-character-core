@@ -1,4 +1,4 @@
-# ADR-084: Domain Method Naming and STN Bridge Integration
+# R25W041FBCD: Domain Method Naming and STN Bridge Integration
 
 <!-- @adr_serial R25W041FBCD -->
 
@@ -168,10 +168,10 @@ Refactor the Domain and planner modules to align with GTPyhop conventions and im
 
 ## Related ADRs
 
-- **ADR-036**: Evolving AriaEngine Planner Blueprint
-- **ADR-038**: Timeline-based Temporal Planner Implementation  
-- **ADR-075**: Complete Temporal Planning Solver
-- **ADR-083**: STN Timeline Segmentation (Superseded)
+- **R25W019FE5E**: Evolving AriaEngine Planner Blueprint
+- **R25W0210AA3**: Timeline-based Temporal Planner Implementation  
+- **R25W0365EF2**: Complete Temporal Planning Solver
+- **R25W040602B**: STN Timeline Segmentation (Superseded)
 
 ## Segment Closure Note
 

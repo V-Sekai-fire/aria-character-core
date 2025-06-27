@@ -1,4 +1,4 @@
-# ADR-118: Add Typespecs to All Lib Code
+# R25W0765579: Add Typespecs to All Lib Code
 
 <!-- @adr_serial R25W0765579 -->
 
@@ -385,5 +385,5 @@ Phase 6 hybrid planner modules are complete. Moving to hybrid planner v2 modules
 
 ## Related ADRs
 
-- **ADR-057**: Test cleanup and code maintenance
-- **ADR-071**: Project status summary comprehensive review
+- **R25W02708D3**: Test cleanup and code maintenance
+- **R25W034AB64**: Project status summary comprehensive review

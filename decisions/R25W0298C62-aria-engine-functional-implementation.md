@@ -1,4 +1,4 @@
-# ADR-062: Aria Engine Functional Implementation
+# R25W0298C62: Aria Engine Functional Implementation
 
 <!-- @adr_serial R25W0298C62 -->
 
@@ -106,7 +106,7 @@ Implement the aria_engine as a focused, minimal but functional system that provi
 ## Related ADRs
 
 - **ADR-058**: Aria Timestrike Baseline Test Failures (paused - extracted from this ADR)
-- **ADR-003**: Game Engine Separation
+- **R25W0031F1C**: Game Engine Separation
 - **ADR-006**: Game Engine Real-Time Execution
 
 ## Notes

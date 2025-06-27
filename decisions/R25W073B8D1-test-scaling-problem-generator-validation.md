@@ -1,4 +1,4 @@
-# ADR-116: Test Scaling Problem Generator Validation
+# R25W073B8D1: Test Scaling Problem Generator Validation
 
 <!-- @adr_serial R25W073B8D1 -->
 
@@ -110,6 +110,6 @@ The scaling problem generator is now production-ready with comprehensive test co
 
 ## Related ADRs
 
-- **ADR-110**: MCP Strategy Testing Interface
-- **ADR-097**: MCP Scheduler Interface Design
-- **ADR-090**: Expose Aria via MCP Hermes
+- **R25W0670D79**: MCP Strategy Testing Interface
+- **R25W05462DD**: MCP Scheduler Interface Design
+- **R25W0472567**: Expose Aria via MCP Hermes

@@ -55,7 +55,7 @@ Remove both modules to reduce codebase cruft and eliminate maintenance overhead 
 
 **Files**: Update related documentation
 
-- [x] Update ADR-118 typespecs list to remove these modules from Phase 4
+- [x] Update R25W0765579 typespecs list to remove these modules from Phase 4
 - [x] Remove references from any other ADRs or documentation
 - [x] Update module lists in relevant documentation
 
@@ -141,8 +141,8 @@ end
 ## Related ADRs
 
 - **ADR-066**: Consolidate flow and queue into engine (completed via different approach)
-- **ADR-118**: Add typespecs to all lib code (will be updated to remove these modules)
-- **ADR-057**: Test cleanup and code maintenance
+- **R25W0765579**: Add typespecs to all lib code (will be updated to remove these modules)
+- **R25W02708D3**: Test cleanup and code maintenance
 
 ## Change Log
 

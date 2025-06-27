@@ -1,4 +1,4 @@
-# ADR-194: HybridCoordinatorV2 Monolithic Refactoring
+# R25W153B3FE: HybridCoordinatorV2 Monolithic Refactoring
 
 <!-- @adr_serial R25W153B3FE -->
 
@@ -133,8 +133,8 @@ end
 
 ## Related ADRs
 
-- **ADR-091**: Original hybrid planner dependency encapsulation (superseded)
-- **ADR-112**: HybridCoordinatorV3 implementation (different approach)
+- **R25W0489307**: Original hybrid planner dependency encapsulation (superseded)
+- **R25W069348D**: HybridCoordinatorV3 implementation (different approach)
 
 ## Notes
 

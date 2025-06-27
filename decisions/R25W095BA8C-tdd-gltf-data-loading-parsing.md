@@ -1,4 +1,4 @@
-# ADR-137: TDD glTF Data Loading & Parsing
+# R25W095BA8C: TDD glTF Data Loading & Parsing
 
 <!-- @adr_serial R25W095BA8C -->
 
@@ -7,13 +7,13 @@
 **Paused:** 2025-06-22  
 **Pause Reason:** GLTF work temporarily paused to focus on other priorities  
 **Priority:** MEDIUM  
-**Extracted from:** ADR-135 Phase 2
+**Extracted from:** R25W093B1C8 Phase 2
 
 ## Context
 
 This ADR implements Phase 2 of the glTF Scene foundation using Test-Driven Development: Data Loading & Parsing. We need to create modules to load and parse .gltf (JSON) and .glb (binary) files, handle binary data, and provide typed access to buffer data.
 
-This phase depends on the core data structures from ADR-136 and follows strict TDD methodology.
+This phase depends on the core data structures from R25W094A7AF and follows strict TDD methodology.
 
 ## Decision
 
@@ -60,20 +60,20 @@ Implement glTF data loading and parsing capabilities using strict Test-Driven De
 
 ## Dependencies
 
-- **ADR-136**: TDD glTF Core Data Structures (provides struct definitions)
+- **R25W094A7AF**: TDD glTF Core Data Structures (provides struct definitions)
 
 ## Blocks
 
-- **ADR-138**: TDD Scene Graph Logic (depends on data loading capabilities)
+- **R25W0969BA8**: TDD Scene Graph Logic (depends on data loading capabilities)
 
 ## Related ADRs
 
-- **ADR-135**: TDD glTF Scene Foundation Implementation (parent ADR - tombstoned)
-- **ADR-130**: glTF Scene Foundation Implementation Plan (provides scope)
-- **ADR-129**: AriaEngine Plans glTF KHR Interactivity Implementation (overall planning)
+- **R25W093B1C8**: TDD glTF Scene Foundation Implementation (parent ADR - tombstoned)
+- **R25W08877E1**: glTF Scene Foundation Implementation Plan (provides scope)
+- **R25W087E1AE**: AriaEngine Plans glTF KHR Interactivity Implementation (overall planning)
 
 ## Implementation Status
 
-**Status:** Waiting for ADR-136 completion
+**Status:** Waiting for R25W094A7AF completion
 **Next Step:** Begin 2.1 Gltf.Loader RED cycle after core structures are ready
 **Timeline:** TDD approach with immediate feedback and incremental progress

@@ -1,4 +1,4 @@
-# ADR-176: Reverse Routing Pattern for API Unification
+# R25W1342424: Reverse Routing Pattern for API Unification
 
 <!-- @adr_serial R25W1342424 -->
 
@@ -164,8 +164,8 @@ end
 
 ## Related ADRs
 
-- **ADR-133**: Planner Standardization Open Problems (context for API inconsistency)
-- **ADR-151**: Strict Encapsulation Modular Testing Architecture (testing approach)
+- **R25W091EA37**: Planner Standardization Open Problems (context for API inconsistency)
+- **R25W1096996**: Strict Encapsulation Modular Testing Architecture (testing approach)
 
 ## Implementation Notes
 

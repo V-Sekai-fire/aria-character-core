@@ -1,4 +1,4 @@
-# ADR-146: Replace AriaEngine.StateV2 with State
+# R25W10468CD: Replace AriaEngine.StateV2 with State
 
 <!-- @adr_serial R25W10468CD -->
 
@@ -8,7 +8,7 @@ Completed (Started: June 22, 2025, Completed: June 22, 2025)
 
 ## Context
 
-Following ADR-145's decision to delete StateV2 and migrate to State v1, the codebase still contains 300+ references to `AriaEngine.StateV2` throughout the system. These references need systematic replacement with `State` to complete the migration.
+Following R25W103F87B's decision to delete StateV2 and migrate to State v1, the codebase still contains 300+ references to `AriaEngine.StateV2` throughout the system. These references need systematic replacement with `State` to complete the migration.
 
 The `State` module is already implemented in `lib/state.ex` but contains outdated documentation examples that still reference `AriaEngine.StateV2`. Additionally, the entire codebase has extensive usage of the old StateV2 API that needs migration.
 
@@ -165,4 +165,4 @@ Test entire system after each phase to ensure no regressions.
 
 ## Related ADRs
 
-- **ADR-145**: Parent ADR for StateV2 deletion and migration strategy
+- **R25W103F87B**: Parent ADR for StateV2 deletion and migration strategy

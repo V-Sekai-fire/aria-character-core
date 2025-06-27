@@ -1,4 +1,4 @@
-# ADR-004: Mandatory Stability Verification
+# R25W004DF1D: Mandatory Stability Verification
 
 <!-- @adr_serial R25W004DF1D -->
 
@@ -49,6 +49,6 @@ Always verify stability (not optional).
 ## Related Decisions
 
 - **Verified by**: ADR-005 (TimeStrike as Test Domain) - provides concrete scenarios for testing stability
-- **Links to**: ADR-018 (MVP Definition) - includes basic Lyapunov function for simple stability validation
+- **Links to**: R25W009BCB5 (MVP Definition) - includes basic Lyapunov function for simple stability validation
 - **Supports**: ADR-020 (Design Consistency Verification) - stability checks ensure plan reliability
-- **Integrated with**: ADR-026 (Risk Mitigation) - mandatory verification reduces system failure risks
+- **Integrated with**: R25W0143F62 (Risk Mitigation) - mandatory verification reduces system failure risks

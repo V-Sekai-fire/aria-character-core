@@ -1,18 +1,18 @@
-# ADR-193: aria_gltf SimpleSkin and SimpleMorph Animation Import/Export Implementation
+# R25W1524A37: aria_gltf SimpleSkin and SimpleMorph Animation Import/Export Implementation
 
 <!-- @adr_serial R25W1524A37 -->
 
-**Status:** Merged into ADR-192  
+**Status:** Merged into R25W1513883  
 **Date:** 2025-06-27  
 **Priority:** HIGH
 
-**→ MERGED INTO ADR-192**: This ADR has been incorporated into ADR-192 (Comprehensive glTF 2.0 Implementation) to resolve sequencing construction violations and provide unified glTF domain implementation.
+**→ MERGED INTO R25W1513883**: This ADR has been incorporated into R25W1513883 (Comprehensive glTF 2.0 Implementation) to resolve sequencing construction violations and provide unified glTF domain implementation.
 
 ## Domain Architecture Requirements
 
 **MANDATORY DEPENDENCIES:**
 
-- **MUST use ADR-181** (Unified Durative Action Specification) for all glTF domain planning and temporal coordination
+- **MUST use R25W1398085** (Unified Durative Action Specification) for all glTF domain planning and temporal coordination
 - **MUST use aria_gltf for execution** with KHR_interactivity extensions to achieve frame-accurate mesh state calculation
 - **MUST use Nx** (https://hex.pm/packages/nx) with `{:torchx, "~> 0.9"}` for efficient tensor operations in mesh transformations
 - **MUST support combined animation workflows** including simultaneous skinning and morphing operations
@@ -77,9 +77,9 @@ ufbx achieves 95% branch coverage through:
 
 ## Decision
 
-**MERGED INTO ADR-192**: This decision has been incorporated into ADR-192's comprehensive glTF implementation plan to avoid sequencing construction violations where both ADRs attempted to modify the same existing `aria_gltf` app simultaneously.
+**MERGED INTO R25W1513883**: This decision has been incorporated into R25W1513883's comprehensive glTF implementation plan to avoid sequencing construction violations where both ADRs attempted to modify the same existing `aria_gltf` app simultaneously.
 
-The animation requirements, SimpleSkin/SimpleMorph validation, and ufbx-level testing standards from this ADR are now part of ADR-192's unified implementation strategy.
+The animation requirements, SimpleSkin/SimpleMorph validation, and ufbx-level testing standards from this ADR are now part of R25W1513883's unified implementation strategy.
 
 ## Implementation Plan
 
@@ -361,10 +361,10 @@ Starting with implementing the missing animation and skinning modules that are r
 
 ## Related ADRs
 
-- **ADR-192**: Comprehensive glTF 2.0 Implementation (MERGED INTO - contains all requirements from this ADR)
-- **ADR-181**: Unified Durative Action Specification (MANDATORY - temporal planning foundation)
-- **ADR-129**: Aria Engine Plans glTF KHR Interactivity Implementation
-- **ADR-130**: glTF Scene Foundation Implementation Plan
+- **R25W1513883**: Comprehensive glTF 2.0 Implementation (MERGED INTO - contains all requirements from this ADR)
+- **R25W1398085**: Unified Durative Action Specification (MANDATORY - temporal planning foundation)
+- **R25W087E1AE**: Aria Engine Plans glTF KHR Interactivity Implementation
+- **R25W08877E1**: glTF Scene Foundation Implementation Plan
 
 ## References
 

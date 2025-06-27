@@ -1,4 +1,4 @@
-# ADR-083: STN Timeline Segmentation (MOVED)
+# R25W040602B: STN Timeline Segmentation (MOVED)
 
 <!-- @adr_serial R25W040602B -->
 

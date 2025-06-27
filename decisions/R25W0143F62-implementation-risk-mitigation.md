@@ -1,4 +1,4 @@
-# ADR-026: Implementation Risk Mitigation
+# R25W0143F62: Implementation Risk Mitigation
 
 <!-- @adr_serial R25W0143F62 -->
 
@@ -126,10 +126,10 @@ Success or failure of the temporal planner determines the viability of the entir
 
 ## Related Decisions
 
-- Links to ADR-024 (Minimum Success Criteria) for fallback planning
-- Supports ADR-025 (Research Strategy) for early risk discovery
-- Critical for ADR-018 (MVP Definition) success validation
-- Implements ADR-017 (LLM Development Uncertainty) adaptive approaches
-- Builds on ADR-016 (Weekend Implementation Scope) for timeline management
-- Enables ADR-022 (Test-Driven Development) for integration validation
+- Links to R25W012424D (Minimum Success Criteria) for fallback planning
+- Supports R25W0135BA2 (Research Strategy) for early risk discovery
+- Critical for R25W009BCB5 (MVP Definition) success validation
+- Implements R25W00881AA (LLM Development Uncertainty) adaptive approaches
+- Builds on R25W00787B6 (Weekend Implementation Scope) for timeline management
+- Enables R25W0101F54 (Test-Driven Development) for integration validation
 - Supports web interface development (ADR-068, ADR-069) for user interaction

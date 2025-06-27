@@ -1,4 +1,4 @@
-# ADR-136: TDD glTF Core Data Structures
+# R25W094A7AF: TDD glTF Core Data Structures
 
 <!-- @adr_serial R25W094A7AF -->
 
@@ -7,7 +7,7 @@
 **Paused:** 2025-06-22  
 **Pause Reason:** GLTF work temporarily paused to focus on other priorities  
 **Priority:** HIGH  
-**Extracted from:** ADR-135 Phase 1
+**Extracted from:** R25W093B1C8 Phase 1
 
 ## Context
 
@@ -79,17 +79,17 @@ Implement all core glTF data structures using strict Test-Driven Development, wr
 
 ## Dependencies
 
-- **ADR-131**: Unified Durative Action Specification (provides planning foundation)
+- **R25W089FC2D**: Unified Durative Action Specification (provides planning foundation)
 
 ## Blocks
 
-- **ADR-137**: TDD Data Loading & Parsing (depends on these core structures)
+- **R25W095BA8C**: TDD Data Loading & Parsing (depends on these core structures)
 
 ## Related ADRs
 
-- **ADR-135**: TDD glTF Scene Foundation Implementation (parent ADR - tombstoned)
-- **ADR-130**: glTF Scene Foundation Implementation Plan (provides scope)
-- **ADR-129**: AriaEngine Plans glTF KHR Interactivity Implementation (overall planning)
+- **R25W093B1C8**: TDD glTF Scene Foundation Implementation (parent ADR - tombstoned)
+- **R25W08877E1**: glTF Scene Foundation Implementation Plan (provides scope)
+- **R25W087E1AE**: AriaEngine Plans glTF KHR Interactivity Implementation (overall planning)
 
 ## Implementation Status
 

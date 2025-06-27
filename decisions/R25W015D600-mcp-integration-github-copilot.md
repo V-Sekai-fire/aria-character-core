@@ -1,4 +1,4 @@
-# ADR-029: MCP Integration for GitHub Copilot Access
+# R25W015D600: MCP Integration for GitHub Copilot Access
 
 <!-- @adr_serial R25W015D600 -->
 
@@ -47,7 +47,7 @@ Implement an MCP server that exposes key Aria functionality as tools that can be
 
 ## Impact on Related ADRs
 
-- **ADR-033**: Also cancelled (MCP TDD criteria no longer needed)
-- **ADR-034**: Updated to remove MCP integration references
+- **R25W01659BE**: Also cancelled (MCP TDD criteria no longer needed)
+- **R25W017DEAF**: Updated to remove MCP integration references
 - **ADR-076**: Cancelled (MCP server for commentary automation not needed)
-- **ADR-087**: Updated to remove MCP integration from uncertainty analysis
+- **R25W044B3F2**: Updated to remove MCP integration from uncertainty analysis

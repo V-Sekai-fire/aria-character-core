@@ -1,4 +1,4 @@
-# ADR-151: Strict Encapsulation and Modular Testing Architecture
+# R25W1096996: Strict Encapsulation and Modular Testing Architecture
 
 <!-- @adr_serial R25W1096996 -->
 
@@ -250,7 +250,7 @@ Each library extraction follows this complete process:
      
      **Extracted:** 2025-06-23  
      **New Location:** `apps/[library]/`  
-     **ADR Reference:** ADR-151 Strict Encapsulation
+     **ADR Reference:** R25W1096996 Strict Encapsulation
      
      This module was extracted to maintain strict encapsulation boundaries.
      All functionality now available in the dedicated umbrella app.
@@ -534,10 +534,10 @@ Based on directory structure analysis, aria_engine contains these logical subdom
 
 ## Related ADRs
 
-- **ADR-150**: Extract lib/ modules to apps (implementation foundation)
-- **ADR-152**: Critical Zero Duration Contract Violation (interleaved implementation)
+- **R25W1089F0F**: Extract lib/ modules to apps (implementation foundation)
+- **R25W1108E80**: Critical Zero Duration Contract Violation (interleaved implementation)
 - **ADR-056**: TODO encapsulation (API abstraction principles)
-- **ADR-022**: Test-driven development (testing methodology)
+- **R25W0101F54**: Test-driven development (testing methodology)
 
 ## Consequences
 

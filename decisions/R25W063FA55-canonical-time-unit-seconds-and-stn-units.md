@@ -1,4 +1,4 @@
-# ADR-106: Canonical Time Unit Seconds and STN Units (MOVED)
+# R25W063FA55: Canonical Time Unit Seconds and STN Units (MOVED)
 
 <!-- @adr_serial R25W063FA55 -->
 

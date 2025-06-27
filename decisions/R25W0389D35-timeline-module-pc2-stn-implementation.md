@@ -1,19 +1,19 @@
-# ADR-078: Timeline Module with ~~PC-2~~ (Replaced with MiniZinc v0.2.0) STN Implementation
+# R25W0389D35: Timeline Module with ~~PC-2~~ (Replaced with MiniZinc v0.2.0) STN Implementation
 
 <!-- @adr_serial R25W0389D35 -->
 
 **Status:** Deferred  
 **Date:** June 15, 2025  
 **Closure Date:** June 21, 2025  
-**Extracted from:** ADR-075 Task 10
+**Extracted from:** R25W0365EF2 Task 10
 
 ## Context
 
-Task 10 from ADR-075 requires implementing `AriaEngine.Timeline` module with interval-based storage that uses the ~~Path Consistency (PC-2) algorithm~~ (Replaced with MiniZinc v0.2.0) for optimal Simple Temporal Network (STN) solving. This implementation must integrate findings from multiple ADRs regarding Allen's interval algebra, usability improvements, and the agent vs entity distinction.
+Task 10 from R25W0365EF2 requires implementing `AriaEngine.Timeline` module with interval-based storage that uses the ~~Path Consistency (PC-2) algorithm~~ (Replaced with MiniZinc v0.2.0) for optimal Simple Temporal Network (STN) solving. This implementation must integrate findings from multiple ADRs regarding Allen's interval algebra, usability improvements, and the agent vs entity distinction.
 
 ### Key Requirements from ADR Review
 
-**From ADR-040 (Temporal Constraint Solver Selection):**
+**From R25W02297A7 (Temporal Constraint Solver Selection):**
 
 - ~~PC-2 algorithm~~ (Replaced with MiniZinc v0.2.0) is mandatory for STN solving
 - Must handle temporal constraint networks efficiently
@@ -27,7 +27,7 @@ Task 10 from ADR-075 requires implementing `AriaEngine.Timeline` module with int
 - Enable pipeline-based constraint building
 - Add semantic sugar for agents/entities
 
-**From ADR-037 (Timeline-based vs Durative Actions):**
+**From R25W0206D9D (Timeline-based vs Durative Actions):**
 
 - Timeline planning context for action scheduling
 - Integration with existing workflow systems
@@ -145,11 +145,11 @@ Implement `AriaEngine.Timeline` module with the following architecture:
 
 ## Related ADRs
 
-- **ADR-075**: Complete Temporal Planner Architecture (parent ADR, Task 10)
-- **ADR-040**: Temporal Constraint Solver Selection (PC-2 requirement)
+- **R25W0365EF2**: Complete Temporal Planner Architecture (parent ADR, Task 10)
+- **R25W02297A7**: Temporal Constraint Solver Selection (PC-2 requirement)
 - **ADR-045**: Allen's Interval Algebra Temporal Relationships (usability improvements)
-- **ADR-037**: Timeline-based vs Durative Actions (planning context)
-- **ADR-034**: Definitive Temporal Planner Architecture (overall architecture)
+- **R25W0206D9D**: Timeline-based vs Durative Actions (planning context)
+- **R25W017DEAF**: Definitive Temporal Planner Architecture (overall architecture)
 
 ## Timeline
 

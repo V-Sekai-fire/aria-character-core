@@ -1,4 +1,4 @@
-# ADR-117: Project Segment Closure - Temporal Planning Infrastructure
+# R25W07431E8: Project Segment Closure - Temporal Planning Infrastructure
 
 <!-- @adr_serial R25W07431E8 -->
 
@@ -35,7 +35,7 @@ Close out the temporal planning infrastructure segment by documenting completed 
 
 ### ✅ Testing and Validation Framework
 
-**Scaling Problem Generator (ADR-116):**
+**Scaling Problem Generator (R25W073B8D1):**
 
 - Cryptographic randomization for true random scaling (1-6 activities)
 - Perfect distribution across all activity counts
@@ -53,7 +53,7 @@ Close out the temporal planning infrastructure segment by documenting completed 
 
 ### ✅ Critical Integration Fixes
 
-**PlannerAdapter Integration (ADR-115):**
+**PlannerAdapter Integration (R25W0722F06):**
 
 - Fixed critical routing issue where plan_tasks() was using old Plan.plan() instead of HybridCoordinatorV2
 - Restored sophisticated planning capabilities to the system
@@ -86,13 +86,13 @@ Application → AriaEngine.Scheduler → HybridCoordinatorV2 → Temporal Plan
 
 **Completed ADRs (Production Ready):**
 
-- ADR-115: PlannerAdapter HybridCoordinatorV2 Integration ✅
-- ADR-116: Test Scaling Problem Generator Validation ✅
+- R25W0722F06: PlannerAdapter HybridCoordinatorV2 Integration ✅
+- R25W073B8D1: Test Scaling Problem Generator Validation ✅
 
 **Experimental/Future Work:**
 
-- ADR-114: Fix Membrane Pipeline Implementation (experimental)
-- ADR-113: Membrane Planning Pipeline Integration (experimental)
+- R25W071D281: Fix Membrane Pipeline Implementation (experimental)
+- R25W070D1AF: Membrane Planning Pipeline Integration (experimental)
 
 **Total ADRs:** 117 documented decisions with clear completion status
 
@@ -122,18 +122,18 @@ Application → AriaEngine.Scheduler → HybridCoordinatorV2 → Temporal Plan
 
 **Foundation ADRs:**
 
-- ADR-034: Definitive Temporal Planner Architecture
-- ADR-091: Hybrid Planner Dependency Encapsulation
+- R25W017DEAF: Definitive Temporal Planner Architecture
+- R25W0489307: Hybrid Planner Dependency Encapsulation
 
 **Integration ADRs:**
 
-- ADR-115: Fix PlannerAdapter HybridCoordinatorV2 Integration
-- ADR-116: Test Scaling Problem Generator Validation
+- R25W0722F06: Fix PlannerAdapter HybridCoordinatorV2 Integration
+- R25W073B8D1: Test Scaling Problem Generator Validation
 
 **Experimental ADRs:**
 
-- ADR-114: Fix Membrane Pipeline Implementation (Experimental)
-- ADR-113: Membrane Planning Pipeline Integration (Experimental)
+- R25W071D281: Fix Membrane Pipeline Implementation (Experimental)
+- R25W070D1AF: Membrane Planning Pipeline Integration (Experimental)
 
 ## Conclusion
 

@@ -1,4 +1,4 @@
-# ADR-139: TDD glTF Mesh Processing
+# R25W09751CC: TDD glTF Mesh Processing
 
 <!-- @adr_serial R25W09751CC -->
 
@@ -7,7 +7,7 @@
 **Paused:** 2025-06-22  
 **Pause Reason:** GLTF work temporarily paused to focus on other priorities  
 **Priority:** LOW  
-**Extracted from:** ADR-135 Phase 4
+**Extracted from:** R25W093B1C8 Phase 4
 
 ## Context
 
@@ -67,9 +67,9 @@ Implement glTF mesh and primitive processing using strict Test-Driven Developmen
 
 ## Dependencies
 
-- **ADR-136**: TDD glTF Core Data Structures (provides Mesh and Primitive structs)
-- **ADR-137**: TDD glTF Data Loading & Parsing (provides AccessorView)
-- **ADR-138**: TDD glTF Scene Graph Logic (provides transformation context)
+- **R25W094A7AF**: TDD glTF Core Data Structures (provides Mesh and Primitive structs)
+- **R25W095BA8C**: TDD glTF Data Loading & Parsing (provides AccessorView)
+- **R25W0969BA8**: TDD glTF Scene Graph Logic (provides transformation context)
 
 ## Blocks
 
@@ -77,12 +77,12 @@ Implement glTF mesh and primitive processing using strict Test-Driven Developmen
 
 ## Related ADRs
 
-- **ADR-135**: TDD glTF Scene Foundation Implementation (parent ADR - tombstoned)
-- **ADR-130**: glTF Scene Foundation Implementation Plan (provides scope)
-- **ADR-129**: AriaEngine Plans glTF KHR Interactivity Implementation (overall planning)
+- **R25W093B1C8**: TDD glTF Scene Foundation Implementation (parent ADR - tombstoned)
+- **R25W08877E1**: glTF Scene Foundation Implementation Plan (provides scope)
+- **R25W087E1AE**: AriaEngine Plans glTF KHR Interactivity Implementation (overall planning)
 
 ## Implementation Status
 
-**Status:** Waiting for ADR-136, ADR-137, and ADR-138 completion
+**Status:** Waiting for R25W094A7AF, R25W095BA8C, and R25W0969BA8 completion
 **Next Step:** Begin 4.1 Vertex Data Retrieval RED cycle after dependencies ready
 **Timeline:** TDD approach with immediate feedback and incremental progress

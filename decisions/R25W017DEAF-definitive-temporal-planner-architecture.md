@@ -1,4 +1,4 @@
-# ADR-034: Definitive Temporal Planner Architecture (MOVED)
+# R25W017DEAF: Definitive Temporal Planner Architecture (MOVED)
 
 <!-- @adr_serial R25W017DEAF -->
 
@@ -24,21 +24,21 @@ This ADR defines the core temporal planner architecture and is directly implemen
 
 The following related temporal planning ADRs have also been moved to `apps/aria_temporal_planner/decisions/`:
 
-- ADR-037: Timeline-based vs Durative Actions
-- ADR-038: Timeline-based Temporal Planner Implementation  
-- ADR-040: Temporal Constraint Solver Selection
-- ADR-041: Temporal Solver Tech Stack Requirements
-- ADR-075: Complete Temporal Planning Solver
-- ADR-078: Timeline Module PC-2 STN Implementation
-- ADR-083: STN Timeline Segmentation
-- ADR-098: STN Timeline Encapsulation
-- ADR-106: Canonical Time Unit Seconds and STN Units
-- ADR-119: STN Method Bridge Segmentation
-- ADR-128: STN Solver MiniZinc Fallback Implementation
-- ADR-152: Critical Zero Duration Contract Violation
-- ADR-153: STN Fixed-Point Constraint Prohibition
-- ADR-154: Timeline Module Namespace Aliasing Fixes
-- ADR-155: Hybrid Planner Test Suite Restoration
-- ADR-156: Cross-App Scheduler Dependencies
-- ADR-157: STN Consistency Test Recovery
-- ADR-158: Comprehensive Timeline Test Suite Validation
+- R25W0206D9D: Timeline-based vs Durative Actions
+- R25W0210AA3: Timeline-based Temporal Planner Implementation  
+- R25W02297A7: Temporal Constraint Solver Selection
+- R25W023C3DB: Temporal Solver Tech Stack Requirements
+- R25W0365EF2: Complete Temporal Planning Solver
+- R25W0389D35: Timeline Module PC-2 STN Implementation
+- R25W040602B: STN Timeline Segmentation
+- R25W0556B01: STN Timeline Encapsulation
+- R25W063FA55: Canonical Time Unit Seconds and STN Units
+- R25W0773270: STN Method Bridge Segmentation
+- R25W086088D: STN Solver MiniZinc Fallback Implementation
+- R25W1108E80: Critical Zero Duration Contract Violation
+- R25W1110FC5: STN Fixed-Point Constraint Prohibition
+- R25W1123610: Timeline Module Namespace Aliasing Fixes
+- R25W113CC67: Hybrid Planner Test Suite Restoration
+- R25W114A09B: Cross-App Scheduler Dependencies
+- R25W11580B8: STN Consistency Test Recovery
+- R25W11617B8: Comprehensive Timeline Test Suite Validation

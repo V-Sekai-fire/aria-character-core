@@ -1,4 +1,4 @@
-# ADR-101: Reconnect Scheduler with Hybrid Planner
+# R25W058D6B9: Reconnect Scheduler with Hybrid Planner
 
 <!-- @adr_serial R25W058D6B9 -->
 
@@ -89,14 +89,14 @@ Rewrite the scheduler domain converter to create a proper hybrid planner domain 
 
 ## Related ADRs
 
-- **ADR-100**: Extract scheduler remove MCP
-- **ADR-089**: Migrate planner to StateV2 subject predicate fact
+- **R25W057B149**: Extract scheduler remove MCP
+- **R25W046434A**: Migrate planner to StateV2 subject predicate fact
 - **ADR-086**: Implement durative actions
-- **ADR-110**: MCP Strategy Testing Interface using Membrane Framework Pipeline (supersedes direct MCP integration)
+- **R25W0670D79**: MCP Strategy Testing Interface using Membrane Framework Pipeline (supersedes direct MCP integration)
 
 ## Future Integration with Membrane Framework
 
-**Note**: This ADR establishes the core scheduler-planner integration. Future work in ADR-110 will migrate the MCP interface to use a Membrane Framework pipeline architecture:
+**Note**: This ADR establishes the core scheduler-planner integration. Future work in R25W0670D79 will migrate the MCP interface to use a Membrane Framework pipeline architecture:
 
 ```
 MCPSource → PlanFilter → PlannerSink → MCPSink

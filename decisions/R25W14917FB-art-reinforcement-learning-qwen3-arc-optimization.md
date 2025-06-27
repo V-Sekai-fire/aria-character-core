@@ -1,11 +1,11 @@
-# ADR-190: ART Reinforcement Learning for Qwen3 ARC Prize Optimization
+# R25W14917FB: ART Reinforcement Learning for Qwen3 ARC Prize Optimization
 
 <!-- @adr_serial R25W14917FB -->
 
 **Status:** Paused  
 **Date:** 2025-06-25  
 **Priority:** MEDIUM  
-**Prerequisites:** ADR-189 (LLM Actions Implementation) + Phase 1-2 ARC Prize completion
+**Prerequisites:** R25W148122A (LLM Actions Implementation) + Phase 1-2 ARC Prize completion
 
 ## Context
 

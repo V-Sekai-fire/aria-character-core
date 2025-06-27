@@ -1,4 +1,4 @@
-# ADR-129: AriaEngine Plans glTF KHR Interactivity Implementation
+# R25W087E1AE: AriaEngine Plans glTF KHR Interactivity Implementation
 
 <!-- @adr_serial R25W087E1AE -->
 
@@ -26,7 +26,7 @@ Use AriaEngine's hybrid planning system to model the complete glTF KHR Interacti
   - `test_implementation(module_name, test_effort)`
   - `document_module(module_name, doc_effort)`
 
-### Phase 2: glTF Scene Foundation Modeling (from ADR-130)
+### Phase 2: glTF Scene Foundation Modeling (from R25W08877E1)
 
 - [ ] **Core Data Structures:** Implement Elixir structs for `Scene`, `Node`, `Mesh`, `Accessor`, `Buffer`, `BufferView`, `Material`, `Texture`, `Image`, `Sampler`, `Animation`, `Camera`, and `Skin`.
 - [ ] **Data Loading & Parsing:** Create `Gltf.Loader` for `.gltf`/`.glb` files and a `Gltf.AccessorView` for typed buffer access.
@@ -167,11 +167,11 @@ Use AriaEngine's hybrid planning system to model the complete glTF KHR Interacti
 
 ## Related ADRs
 
-- **ADR-092**: AST to glTF KHR Interactivity Translation (foundation work)
-- **ADR-093**: KHR Interactivity Systematic Verification Plan (testing approach)
-- **ADR-126**: MinZinc Multigoal Optimization with Fallback (optimization strategy)
-- **ADR-127**: Runtime Informed Multigoal Optimization (execution feedback)
-- **ADR-130**: glTF Scene Foundation Implementation Plan (detailed scene graph plan)
+- **R25W0498AC9**: AST to glTF KHR Interactivity Translation (foundation work)
+- **R25W0503071**: KHR Interactivity Systematic Verification Plan (testing approach)
+- **R25W0849E89**: MinZinc Multigoal Optimization with Fallback (optimization strategy)
+- **R25W0852AD9**: Runtime Informed Multigoal Optimization (execution feedback)
+- **R25W08877E1**: glTF Scene Foundation Implementation Plan (detailed scene graph plan)
 
 ## Notes
 

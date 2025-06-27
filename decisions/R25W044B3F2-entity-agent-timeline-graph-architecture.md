@@ -1,4 +1,4 @@
-# ADR-087: Entity-Agent Timeline Graph Architecture
+# R25W044B3F2: Entity-Agent Timeline Graph Architecture
 
 <!-- @adr_serial R25W044B3F2 -->
 
@@ -366,6 +366,6 @@ AriaEngine.TimelineGraph.ExternalBridge      # VRChat, Discord, web interface co
 ## Related ADRs
 
 - **ADR-085**: Unsolved Planner Problems for NPCs (problems solved by this architecture)
-- **ADR-078**: Timeline Module PC-2 STN Implementation (underlying constraint solving)
-- **ADR-034**: Definitive Temporal Planner Architecture (integration point)
-- **ADR-083**: STN Timeline Segmentation Strategy (superseded by dynamic LOD approach)
+- **R25W0389D35**: Timeline Module PC-2 STN Implementation (underlying constraint solving)
+- **R25W017DEAF**: Definitive Temporal Planner Architecture (integration point)
+- **R25W040602B**: STN Timeline Segmentation Strategy (superseded by dynamic LOD approach)

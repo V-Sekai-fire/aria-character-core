@@ -1,12 +1,12 @@
-# ADR-001: State Architecture Migration
+# R25W0013716: State Architecture Migration
 
 <!-- @adr_serial R25W0013716 -->
 
 ## Status
 
-**Superseded by ADR-034: Definitive Temporal Planner Architecture**
+**Superseded by R25W017DEAF: Definitive Temporal Planner Architecture**
 
-*This ADR has been consolidated into ADR-034 along with all other temporal planner architectural decisions. See ADR-034 for current implementation guidance.*
+*This ADR has been consolidated into R25W017DEAF along with all other temporal planner architectural decisions. See R25W017DEAF for current implementation guidance.*
 
 ## Date
 
@@ -52,7 +52,7 @@ Do NOT keep existing state. Migrate all code to use the new temporal state archi
 
 ## Related Decisions
 
-- **Enables**: ADR-002 (Oban Queue Design) - temporal state supports time-ordered action queues
+- **Enables**: R25W002DF48 (Oban Queue Design) - temporal state supports time-ordered action queues
 - **Links to**: ADR-006 (Game Engine Integration) - temporal state integrates with real-time execution
-- **Supports**: ADR-018 (MVP Definition) - extends existing AriaEngine.State for temporal capabilities
-- **Links to**: ADR-022 (Test-Driven Development) - temporal state extensions drive test scenarios
+- **Supports**: R25W009BCB5 (MVP Definition) - extends existing AriaEngine.State for temporal capabilities
+- **Links to**: R25W0101F54 (Test-Driven Development) - temporal state extensions drive test scenarios

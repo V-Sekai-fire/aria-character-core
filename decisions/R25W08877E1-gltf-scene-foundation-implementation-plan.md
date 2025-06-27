@@ -1,4 +1,4 @@
-# ADR-130: glTF Scene Foundation Implementation Plan
+# R25W08877E1: glTF Scene Foundation Implementation Plan
 
 <!-- @adr_serial R25W08877E1 -->
 
@@ -8,7 +8,7 @@
 
 ## Context
 
-This ADR formalizes the detailed implementation plan for the core glTF Scene foundation, as outlined in ADR-129. A robust and accurate glTF scene graph is the foundational layer upon which all KHR_interactivity nodes will be built. This plan breaks down the required components into actionable, well-defined tasks that can be fed into the AriaEngine planner.
+This ADR formalizes the detailed implementation plan for the core glTF Scene foundation, as outlined in R25W087E1AE. A robust and accurate glTF scene graph is the foundational layer upon which all KHR_interactivity nodes will be built. This plan breaks down the required components into actionable, well-defined tasks that can be fed into the AriaEngine planner.
 
 ## Decision
 
@@ -68,4 +68,4 @@ Implement the glTF Scene foundation by creating the necessary Elixir data struct
 
 ## Related ADRs
 
-- **ADR-129**: AriaEngine Plans glTF KHR Interactivity Implementation (Parent ADR)
+- **R25W087E1AE**: AriaEngine Plans glTF KHR Interactivity Implementation (Parent ADR)

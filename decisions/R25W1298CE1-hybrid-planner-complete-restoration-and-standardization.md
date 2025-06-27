@@ -1,4 +1,4 @@
-# ADR-171: Hybrid Planner Complete Restoration and Standardization
+# R25W1298CE1: Hybrid Planner Complete Restoration and Standardization
 
 <!-- @adr_serial R25W1298CE1 -->
 
@@ -15,7 +15,7 @@ The hybrid planner is currently in a non-functional state that blocks ARC Prize 
 
 - **Zero test coverage**: All tests disabled (`.disabled` extensions)
 - **Compilation warnings**: Type violations and unused variables in `lazy_execution.ex`
-- **Missing ADR-133 standardization**: Legacy method registration patterns still in use
+- **Missing R25W091EA37 standardization**: Legacy method registration patterns still in use
 - **No functional verification**: Cannot confirm basic planning workflow works
 
 **Dependency Chain:**
@@ -88,7 +88,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 - ✅ Mock-based integration testing covering all external interface contracts
 - ✅ Dependency injection pattern established for future real integration
 
-### Phase 2: ADR-133 Standardization with Mock Validation (Week 2: July 1-8)
+### Phase 2: R25W091EA37 Standardization with Mock Validation (Week 2: July 1-8)
 
 **Day 8-10: Method Registration Unification with Mock Testing**
 
@@ -121,7 +121,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 
 **Phase 2 Success Criteria:**
 
-- ✅ ADR-133 solutions fully implemented with comprehensive mock validation
+- ✅ R25W091EA37 solutions fully implemented with comprehensive mock validation
 - ✅ Module-based domain creation functional in isolated test environment
 - ✅ Unified method registration working with mocked external interfaces
 - ✅ Standardized error handling throughout with mock error scenario coverage
@@ -135,7 +135,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 - [ ] `mix compile --warnings-as-errors` passes with mocked interfaces
 - [ ] `mix test` passes with comprehensive mock-based coverage
 - [ ] Core planning workflow: Domain → Goals → Plan → Execution (fully tested with mocks)
-- [ ] ADR-133 standardization implemented and validated with mock scenarios
+- [ ] R25W091EA37 standardization implemented and validated with mock scenarios
 - [ ] Mock-based integration tests covering all external interface contracts
 - [ ] Documentation updated with new patterns and mock integration examples
 - [ ] Sample domains working with new patterns in isolated test environment
@@ -182,7 +182,7 @@ Implement complete hybrid planner restoration using comprehensive mocking strate
 
 **Phase 2 Complete:**
 
-- ADR-133 standardization fully implemented with mock validation
+- R25W091EA37 standardization fully implemented with mock validation
 - Module-based domain pattern functional in test environment
 - Error handling standardized throughout with mock error scenarios
 - Dependency injection pattern ready for real system integration
@@ -206,9 +206,9 @@ The restoration work is **prerequisite** to ARC success, not optional. Attemptin
 
 ## Related ADRs
 
-- **ADR-133**: Planner Standardization Open Problems (solutions to implement)
-- **ADR-155**: Hybrid Planner Test Suite Restoration (previous attempt)
-- **ADR-172-175**: ARC Prize ADR series (dependent on this restoration)
+- **R25W091EA37**: Planner Standardization Open Problems (solutions to implement)
+- **R25W113CC67**: Hybrid Planner Test Suite Restoration (previous attempt)
+- **R25W130E6A7-175**: ARC Prize ADR series (dependent on this restoration)
 
 ## Consequences
 
@@ -216,7 +216,7 @@ The restoration work is **prerequisite** to ARC success, not optional. Attemptin
 
 - Hybrid planner becomes reliable, testable foundation for ARC Prize work
 - Mock infrastructure enables rapid development and testing cycles
-- ADR-133 standardization enables clean domain integration in controlled environment
+- R25W091EA37 standardization enables clean domain integration in controlled environment
 - Technical debt eliminated rather than accumulated
 - External dependency complexity managed and isolated
 - Real integration path clearly defined and documented

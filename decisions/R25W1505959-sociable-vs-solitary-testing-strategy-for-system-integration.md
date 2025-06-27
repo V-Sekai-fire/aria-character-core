@@ -1,4 +1,4 @@
-# ADR-191: Sociable vs Solitary Testing Strategy for System Integration
+# R25W1505959: Sociable vs Solitary Testing Strategy for System Integration
 
 <!-- @adr_serial R25W1505959 -->
 

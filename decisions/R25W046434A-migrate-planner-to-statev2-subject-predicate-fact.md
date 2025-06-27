@@ -1,4 +1,4 @@
-# ADR-089: Migrate Planner from State to StateV2 Subject-Predicate-Fact Format
+# R25W046434A: Migrate Planner from State to StateV2 Subject-Predicate-Fact Format
 
 <!-- @adr_serial R25W046434A -->
 
@@ -20,7 +20,7 @@ This inconsistency creates several problems:
 - **Data integrity risks**: Conversion between formats can introduce bugs
 - **Performance overhead**: Multiple conversions between formats
 - **Developer confusion**: Unclear which format to use in new code
-- **Entity-first architecture misalignment**: StateV2 supports Entity Timeline Graph Architecture (ADR-087) but planner doesn't use it
+- **Entity-first architecture misalignment**: StateV2 supports Entity Timeline Graph Architecture (R25W044B3F2) but planner doesn't use it
 
 TimelineGraph has been correctly updated to use StateV2, but the core planning engine (`Plan.Core`, `NodeExpansion`, domain actions, etc.) still uses the legacy State format.
 
@@ -119,7 +119,7 @@ StateV2.set_fact(state, "player", "location", "room1")
 ### Benefits
 
 - **Architectural consistency**: Single state format throughout the system
-- **Entity-first alignment**: Supports Entity Timeline Graph Architecture (ADR-087)
+- **Entity-first alignment**: Supports Entity Timeline Graph Architecture (R25W044B3F2)
 - **Improved API clarity**: Consistent subject-predicate-fact parameter order
 - **Better performance**: Eliminates format conversion overhead
 - **Enhanced maintainability**: Single state management paradigm
@@ -140,7 +140,7 @@ StateV2.set_fact(state, "player", "location", "room1")
 
 ## Related ADRs
 
-- **ADR-087**: Entity-Agent Timeline Graph Architecture (the motivation for entity-first state)
+- **R25W044B3F2**: Entity-Agent Timeline Graph Architecture (the motivation for entity-first state)
 - **ADR-085**: Enhanced Scheduling System (already uses StateV2 via TimelineGraph)
 
 ## Implementation Summary

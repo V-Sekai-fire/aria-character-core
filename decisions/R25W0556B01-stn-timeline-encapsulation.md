@@ -1,4 +1,4 @@
-# ADR-098: STN Timeline Encapsulation (MOVED)
+# R25W0556B01: STN Timeline Encapsulation (MOVED)
 
 <!-- @adr_serial R25W0556B01 -->
 

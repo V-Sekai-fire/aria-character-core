@@ -1,4 +1,4 @@
-# ADR-165: Recursive ADR Pause Implementation
+# R25W123C5BF: Recursive ADR Pause Implementation
 
 <!-- @adr_serial R25W123C5BF -->
 

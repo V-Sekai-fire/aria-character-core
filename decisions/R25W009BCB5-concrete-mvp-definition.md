@@ -1,4 +1,4 @@
-# ADR-018: Concrete MVP Definition
+# R25W009BCB5: Concrete MVP Definition
 
 <!-- @adr_serial R25W009BCB5 -->
 
@@ -103,8 +103,8 @@ end
 
 ## Related Decisions
 
-- Links to ADR-016 (Weekend Implementation Scope) for realistic feature set
+- Links to R25W00787B6 (Weekend Implementation Scope) for realistic feature set
 - Interface approach evolved from ADR-030 (Console TUI, superseded) to ADR-069 (Web Interface)
 - Implements ADR-019 (3D Coordinates) through coordinate display
-- Supports ADR-024 (Minimum Success Criteria) with concrete validation
-- Enables ADR-025 (Research Strategy) with practical demonstration
+- Supports R25W012424D (Minimum Success Criteria) with concrete validation
+- Enables R25W0135BA2 (Research Strategy) with practical demonstration

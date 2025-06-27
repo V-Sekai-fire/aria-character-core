@@ -1,14 +1,14 @@
-# ADR-079: Timeline Module Implementation Progress
+# R25W03922C4: Timeline Module Implementation Progress
 
 <!-- @adr_serial R25W03922C4 -->
 
 **Status:** Active (Paused)  
 **Date:** June 15, 2025  
-**Extracted from:** ADR-075 Task 10, detailed in ADR-078
+**Extracted from:** R25W0365EF2 Task 10, detailed in R25W0389D35
 
 ## Context
 
-This ADR tracks the actual implementation progress of the `AriaEngine.Timeline` module with PC-2 algorithm integration. The implementation plan was documented in ADR-078, and this ADR provides detailed progress tracking and completion verification.
+This ADR tracks the actual implementation progress of the `AriaEngine.Timeline` module with PC-2 algorithm integration. The implementation plan was documented in R25W0389D35, and this ADR provides detailed progress tracking and completion verification.
 
 ## Implementation Tasks
 
@@ -81,12 +81,12 @@ This ADR tracks the actual implementation progress of the `AriaEngine.Timeline` 
 
 ## Related ADRs
 
-- **ADR-075**: Complete Temporal Planner Architecture (parent task)
-- **ADR-078**: Timeline Module PC-2 STN Implementation (implementation plan)
+- **R25W0365EF2**: Complete Temporal Planner Architecture (parent task)
+- **R25W0389D35**: Timeline Module PC-2 STN Implementation (implementation plan)
 - **ADR-045**: Allen's Interval Algebra Temporal Relationships
-- **ADR-040**: Temporal Constraint Solver Selection (PC-2 requirement)
+- **R25W02297A7**: Temporal Constraint Solver Selection (PC-2 requirement)
 - **ADR-046**: Interval Notation Usability
-- **ADR-037**: Timeline-based vs Durative Actions
+- **R25W0206D9D**: Timeline-based vs Durative Actions
 
 ## Progress Notes
 

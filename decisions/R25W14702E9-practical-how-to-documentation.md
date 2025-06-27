@@ -1,4 +1,4 @@
-# ADR-188: Practical How-To Documentation
+# R25W14702E9: Practical How-To Documentation
 
 <!-- @adr_serial R25W14702E9 -->
 
@@ -16,13 +16,13 @@
 
 This ADR depends on completion of the core specification ADRs:
 
-- **ADR-181**: Unified Durative Action Specification and Planner Standardization (core patterns)
-- **ADR-182**: Fix Duration Handling Precision Loss (technical implementation)
-- **ADR-183**: Planner Standardization Open Problems (architecture standards)
-- **ADR-184**: Unified Action Specification Examples (reference implementations)
-- **ADR-185**: AriaEngine Quick Start Guide (basic concepts)
-- **ADR-186**: Common Use Cases and Patterns (intermediate examples)
-- **ADR-187**: Developer Navigation Guide (navigation skills)
+- **R25W1398085**: Unified Durative Action Specification and Planner Standardization (core patterns)
+- **R25W1405B8B**: Fix Duration Handling Precision Loss (technical implementation)
+- **R25W141BE8A**: Planner Standardization Open Problems (architecture standards)
+- **R25W1421349**: Unified Action Specification Examples (reference implementations)
+- **R25W143C7C4**: AriaEngine Quick Start Guide (basic concepts)
+- **R25W14477B9**: Common Use Cases and Patterns (intermediate examples)
+- **R25W145A6C9**: Developer Navigation Guide (navigation skills)
 
 ## Planned How-To Categories
 
@@ -241,10 +241,10 @@ After reading this ADR, developers should be able to:
 
 **Key Requirements**:
 
-- All examples must use patterns from ADR-181
-- Technical details must align with ADR-182
-- Architecture must follow ADR-183 standards
-- Examples must be consistent with ADR-184
+- All examples must use patterns from R25W1398085
+- Technical details must align with R25W1405B8B
+- Architecture must follow R25W141BE8A standards
+- Examples must be consistent with R25W1421349
 - Debugging techniques must work with actual codebase
 - Performance recommendations must be validated
 - Integration patterns must be tested and proven

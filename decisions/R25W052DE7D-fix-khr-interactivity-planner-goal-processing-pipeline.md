@@ -1,4 +1,4 @@
-# ADR-095: Fix KHR Interactivity Planner Goal Processing Pipeline
+# R25W052DE7D: Fix KHR Interactivity Planner Goal Processing Pipeline
 
 <!-- @adr_serial R25W052DE7D -->
 
@@ -13,7 +13,7 @@ This ADR is now obsolete as the entire KHR_interactivity system has been deleted
 
 ## Context
 
-Following the successful architectural improvements in ADR-094, the KHR Interactivity planner tests now have proper 4-layer architecture but are failing due to planner goal processing pipeline issues.
+Following the successful architectural improvements in R25W051BA69, the KHR Interactivity planner tests now have proper 4-layer architecture but are failing due to planner goal processing pipeline issues.
 
 ### Current State
 
@@ -131,14 +131,14 @@ Investigate and fix the planner goal processing pipeline to enable proper HTN pl
 
 ## Related ADRs
 
-- **ADR-094**: Fix KHR Interactivity Planner Test Architecture (architectural foundation)
-- **ADR-092**: AST to GLTF KHR_interactivity Translation (domain implementation)
-- **ADR-093**: KHR_interactivity Systematic Verification Plan (testing strategy)
-- **ADR-091**: Hybrid Planner Dependency Encapsulation (planner system)
+- **R25W051BA69**: Fix KHR Interactivity Planner Test Architecture (architectural foundation)
+- **R25W0498AC9**: AST to GLTF KHR_interactivity Translation (domain implementation)
+- **R25W0503071**: KHR_interactivity Systematic Verification Plan (testing strategy)
+- **R25W0489307**: Hybrid Planner Dependency Encapsulation (planner system)
 
 ## Notes
 
-This ADR focuses specifically on the planner integration issues identified after the architectural improvements in ADR-094. The architectural foundation is solid - the issue is in the goal processing pipeline that connects test goals to domain task methods.
+This ADR focuses specifically on the planner integration issues identified after the architectural improvements in R25W051BA69. The architectural foundation is solid - the issue is in the goal processing pipeline that connects test goals to domain task methods.
 
 **Key insight**: Direct action execution works perfectly, proving the domain and actions are correctly implemented. The failure is specifically in the planner's ability to resolve goals to methods, not in the underlying KHR functionality.
 

@@ -1,4 +1,4 @@
-# ADR-177: Modular MiniZinc Architecture Refactoring
+# R25W135339D: Modular MiniZinc Architecture Refactoring
 
 <!-- @adr_serial R25W135339D -->
 
@@ -125,8 +125,8 @@ end
 
 ## Related ADRs
 
-- **ADR-126**: MiniZinc multigoal optimization with fallback
-- **ADR-128**: STN solver MiniZinc fallback implementation
+- **R25W0849E89**: MiniZinc multigoal optimization with fallback
+- **R25W086088D**: STN solver MiniZinc fallback implementation
 
 ## Change Log
 

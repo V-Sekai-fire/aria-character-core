@@ -1,4 +1,4 @@
-# ADR-003: Game Engine Separation
+# R25W0031F1C: Game Engine Separation
 
 <!-- @adr_serial R25W0031F1C -->
 
@@ -48,7 +48,7 @@ Separate GameEngine from the planner.
 
 ## Related Decisions
 
-- **Integrates with**: ADR-001 (State Architecture Migration) - separated components share temporal state
-- **Links to**: ADR-002 (Oban Queue Design) - game engine uses queues for action execution
+- **Integrates with**: R25W0013716 (State Architecture Migration) - separated components share temporal state
+- **Links to**: R25W002DF48 (Oban Queue Design) - game engine uses queues for action execution
 - **Supports**: ADR-006 (Game Engine Integration) - defines boundaries for real-time execution
-- **Enables**: ADR-018 (MVP Definition) - separation allows focused temporal planner development
+- **Enables**: R25W009BCB5 (MVP Definition) - separation allows focused temporal planner development

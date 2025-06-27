@@ -1,4 +1,4 @@
-# ADR-017: LLM-Assisted Development Time Uncertainty
+# R25W00881AA: LLM-Assisted Development Time Uncertainty
 
 <!-- @adr_serial R25W00881AA -->
 
@@ -79,6 +79,6 @@ Acknowledge that LLM assistance makes time estimation extremely unreliable and b
 
 ## Related Decisions
 
-- Links to ADR-016 (Weekend Implementation Scope) for realistic timeline management
-- Supports ADR-018 (MVP Definition) with success criteria flexibility
-- Enables ADR-025 (Research Strategy) through implementation discovery
+- Links to R25W00787B6 (Weekend Implementation Scope) for realistic timeline management
+- Supports R25W009BCB5 (MVP Definition) with success criteria flexibility
+- Enables R25W0135BA2 (Research Strategy) through implementation discovery

@@ -1,4 +1,4 @@
-# ADR-077: Fix markdownlint pre-commit hook
+# R25W03794DF: Fix markdownlint pre-commit hook
 
 <!-- @adr_serial R25W03794DF -->
 

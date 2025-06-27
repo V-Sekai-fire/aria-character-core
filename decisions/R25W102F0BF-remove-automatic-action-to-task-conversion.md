@@ -1,4 +1,4 @@
-# ADR-144: Remove Automatic Action-to-Task Conversion
+# R25W102F0BF: Remove Automatic Action-to-Task Conversion
 
 <!-- @adr_serial R25W102F0BF -->
 
@@ -154,9 +154,9 @@ end)
 
 ## Related ADRs
 
-- **ADR-131**: Unified Durative Action Specification and Planner Standardization
-- **ADR-142**: Align Unigoal Method Registration with GTpyHOP Design
-- **ADR-143**: Port GTpyHOP Blocks GTN to AriaEngine
+- **R25W089FC2D**: Unified Durative Action Specification and Planner Standardization
+- **R25W10069A4**: Align Unigoal Method Registration with GTpyHOP Design
+- **R25W1015A2E**: Port GTpyHOP Blocks GTN to AriaEngine
 
 ## Implementation Notes
 

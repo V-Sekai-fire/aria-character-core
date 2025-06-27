@@ -1,4 +1,4 @@
-# ADR-117: Temporal Planning Segment Closure Summary
+# R25W07431E8: Temporal Planning Segment Closure Summary
 
 <!-- @adr_serial R25W075A3C2 -->
 
@@ -17,7 +17,7 @@ This ADR documents the closure of the temporal planning development segment and 
 **HybridCoordinatorV2 System:**
 
 - ✅ Fully functional temporal planning coordinator
-- ✅ Multiple strategy support (STN, ~~Optimizer~~ (Proposed in ADR-109, not implemented), Default)
+- ✅ Multiple strategy support (STN, ~~Optimizer~~ (Proposed in R25W0667494, not implemented), Default)
 - ✅ Clean architecture with strategy pattern
 - ✅ Comprehensive test coverage (382 tests, 0 failures)
 - ✅ Production-ready stability
@@ -79,32 +79,32 @@ This ADR documents the closure of the temporal planning development segment and 
 
 ### Completed ADRs ✅
 
-- **ADR-112**: Plan Transformer with HybridCoordinatorV2 Direct Integration
+- **R25W069348D**: Plan Transformer with HybridCoordinatorV2 Direct Integration
   - Status: Completed - Clean architecture achieved through current system
 
-- **ADR-119**: STN Method Bridge Segmentation
+- **R25W0773270**: STN Method Bridge Segmentation
   - Status: Completed - Bridge segmentation functionality implemented and verified
   - Achievement: STNBridgeTemporalStrategy now default `:stn` strategy with working position extraction
 
 ### Active ADRs (Continuing) 🔄
 
-- **ADR-079**: Timeline Module Implementation Progress
+- **R25W03922C4**: Timeline Module Implementation Progress
   - Status: Active (Paused) - Significant implementation progress, core functionality complete
   - Rationale: Timeline system is functional and provides foundation for future work
 
 ### Deferred ADRs ⏳
 
-- **ADR-078**: Timeline Module with PC-2 STN Implementation
+- **R25W0389D35**: Timeline Module with PC-2 STN Implementation
   - Status: Deferred - Core functionality achieved through HybridCoordinatorV2
   - Rationale: Current system meets temporal planning needs
 
-- **ADR-084**: Domain Method Naming and STN Bridge Integration
+- **R25W041FBCD**: Domain Method Naming and STN Bridge Integration
   - Status: Deferred - Enhancement work for future phases
   - Rationale: Current system is stable and functional
 
 ### Future Work ADRs 🔮
 
-- **ADR-088**: Aria Town - RDF-Powered NPC Demonstration System
+- **R25W045E2B3**: Aria Town - RDF-Powered NPC Demonstration System
   - Status: Future Work - Application-layer demonstration system
   - Rationale: Excellent showcase but not essential for core functionality
 
@@ -278,15 +278,15 @@ The transition to novel writing and MCP access restoration is well-positioned to
 - **Bridge Segmentation Completion**: STNBridgeTemporalStrategy implemented as default `:stn` strategy
 - **Architecture Consolidation**: Removed temporal_planner directory, centralized functionality in Timeline module
 - **Test Coverage Update**: Updated to 402 tests passing (59 doctests, 12 properties, 331 tests)
-- **ADR-119 Completion**: Bridge segmentation functionality verified and documented
+- **R25W0773270 Completion**: Bridge segmentation functionality verified and documented
 - **Production Readiness**: All temporal planning infrastructure now stable and tested
 
 ## Related ADRs
 
-- **ADR-071**: Project Status Summary Comprehensive Review (previous status review)
-- **ADR-079**: Timeline Module Implementation Progress (continuing active work)
-- **ADR-112**: Plan Transformer with HybridCoordinatorV2 Direct Integration (completed)
-- **ADR-119**: STN Method Bridge Segmentation (completed)
-- **ADR-078**: Timeline Module with PC-2 STN Implementation (deferred)
-- **ADR-084**: Domain Method Naming and STN Bridge Integration (deferred)
-- **ADR-088**: Aria Town - RDF-Powered NPC Demonstration System (future work)
+- **R25W034AB64**: Project Status Summary Comprehensive Review (previous status review)
+- **R25W03922C4**: Timeline Module Implementation Progress (continuing active work)
+- **R25W069348D**: Plan Transformer with HybridCoordinatorV2 Direct Integration (completed)
+- **R25W0773270**: STN Method Bridge Segmentation (completed)
+- **R25W0389D35**: Timeline Module with PC-2 STN Implementation (deferred)
+- **R25W041FBCD**: Domain Method Naming and STN Bridge Integration (deferred)
+- **R25W045E2B3**: Aria Town - RDF-Powered NPC Demonstration System (future work)

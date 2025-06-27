@@ -1,4 +1,4 @@
-# ADR-180: TDD Unified Action Specification Implementation
+# R25W138C26A: TDD Unified Action Specification Implementation
 
 <!-- @adr_serial R25W138C26A -->
 
@@ -16,10 +16,10 @@
 
 This ADR depends on completion of the core specification ADRs:
 
-- **ADR-181**: Unified Durative Action Specification and Planner Standardization (authoritative patterns)
-- **ADR-182**: Fix Duration Handling Precision Loss (technical implementation)
-- **ADR-183**: Planner Standardization Open Problems (architecture standards)
-- **ADR-184**: Unified Action Specification Examples (reference implementations)
+- **R25W1398085**: Unified Durative Action Specification and Planner Standardization (authoritative patterns)
+- **R25W1405B8B**: Fix Duration Handling Precision Loss (technical implementation)
+- **R25W141BE8A**: Planner Standardization Open Problems (architecture standards)
+- **R25W1421349**: Unified Action Specification Examples (reference implementations)
 
 ## Planned Implementation Strategy
 
@@ -168,10 +168,10 @@ After implementation, the system should provide:
 
 **Key Requirements**:
 
-- All implementation must follow patterns from ADR-181
-- Technical details must align with ADR-182
-- Architecture must follow ADR-183 standards
-- Examples must be consistent with ADR-184
+- All implementation must follow patterns from R25W1398085
+- Technical details must align with R25W1405B8B
+- Architecture must follow R25W141BE8A standards
+- Examples must be consistent with R25W1421349
 - TDD methodology must be rigorously followed
 - Backward compatibility must be maintained
 - Performance must be validated at each phase

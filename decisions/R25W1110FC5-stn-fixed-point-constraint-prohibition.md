@@ -1,4 +1,4 @@
-# ADR-153: STN Fixed-Point Constraint Prohibition (MOVED)
+# R25W1110FC5: STN Fixed-Point Constraint Prohibition (MOVED)
 
 <!-- @adr_serial R25W1110FC5 -->
 

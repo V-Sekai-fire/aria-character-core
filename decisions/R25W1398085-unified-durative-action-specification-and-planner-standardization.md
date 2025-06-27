@@ -1,4 +1,4 @@
-# ADR-181: Unified Durative Action Specification
+# R25W1398085: Unified Durative Action Specification
 
 <!-- @adr_serial R25W1398085 -->
 
@@ -611,9 +611,9 @@ The following concepts were explicitly rejected:
 
 ### Related ADRs
 
-- **ADR-182**: Technical Implementation Guide
-- **ADR-183**: Architecture & Standards  
-- **ADR-184**: Common Use Cases and Patterns
+- **R25W1405B8B**: Technical Implementation Guide
+- **R25W141BE8A**: Architecture & Standards  
+- **R25W1421349**: Common Use Cases and Patterns
 
 ### Academic Foundation
 

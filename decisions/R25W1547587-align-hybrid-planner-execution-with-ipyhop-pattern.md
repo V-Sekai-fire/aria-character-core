@@ -1,4 +1,4 @@
-# ADR-195: Align Hybrid Planner Execution with IPyHOP Pattern
+# R25W1547587: Align Hybrid Planner Execution with IPyHOP Pattern
 
 <!-- @adr_serial R25W1547587 -->
 
@@ -15,14 +15,14 @@
 
 ## Context
 
-The current hybrid planner execution in `apps/aria_hybrid_planner` uses complex backtracking logic that doesn't conform to ADR-181's unified durative action specification or follow the established IPyHOP pattern from `thirdparty/IPyHOP`.
+The current hybrid planner execution in `apps/aria_hybrid_planner` uses complex backtracking logic that doesn't conform to R25W1398085's unified durative action specification or follow the established IPyHOP pattern from `thirdparty/IPyHOP`.
 
 ### Current Problems
 
 1. **Complex Backtracking During Execution**: The current system implements sophisticated tree-based backtracking during plan execution, which is not the IPyHOP approach
 2. **Non-Standard Execution Pattern**: Execution tries to handle failures internally rather than returning control to the planner
 3. **Mixed Blacklisting Approaches**: Blacklisting happens at both planning and execution levels inconsistently
-4. **ADR-181 Non-Compliance**: Current execution doesn't follow the action vs command distinction from the unified specification
+4. **R25W1398085 Non-Compliance**: Current execution doesn't follow the action vs command distinction from the unified specification
 
 ### IPyHOP Reference Pattern
 
@@ -36,7 +36,7 @@ From `thirdparty/IPyHOP/ipyhop/mc_executor.py`:
 
 ## Decision
 
-Align the hybrid planner execution with the IPyHOP pattern while ensuring compliance with ADR-181's unified durative action specification.
+Align the hybrid planner execution with the IPyHOP pattern while ensuring compliance with R25W1398085's unified durative action specification.
 
 ## Implementation Plan
 
@@ -69,7 +69,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
   - [x] Remove execution-time blacklisting complexity
   - [x] Focus on planning-time method selection
 
-### Phase 3: Ensure ADR-181 Compliance ✅
+### Phase 3: Ensure R25W1398085 Compliance ✅
 
 **Priority:** MEDIUM
 
@@ -89,7 +89,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 - Enhanced Plan.SimpleExecutor with entity validation logic
 - Implemented action vs command distinction in execution
 - Added comprehensive entity and capability checking
-- Maintained ADR-181 compliance throughout execution pipeline
+- Maintained R25W1398085 compliance throughout execution pipeline
 
 ### Phase 4: Simplify Backtracking Module ✅
 
@@ -125,7 +125,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 - [x] Update test suite
   - [x] Test simple execution pattern
   - [x] Verify blacklisting behavior
-  - [x] Ensure ADR-181 compliance
+  - [x] Ensure R25W1398085 compliance
 
 **Implementation Details:**
 
@@ -150,7 +150,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 - [x] Blacklists maintained at domain/planner level
 - [x] Clear separation of concerns
 
-### ADR-181 Compliance ✅
+### R25W1398085 Compliance ✅
 
 - [x] Action vs command distinction implemented
 - [x] Entity and capability validation during execution
@@ -170,7 +170,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 
 - **Simplified Execution**: Much simpler and more predictable execution logic
 - **IPyHOP Compliance**: Follows established academic planning patterns
-- **ADR-181 Alignment**: Proper action vs command distinction
+- **R25W1398085 Alignment**: Proper action vs command distinction
 - **Better Debugging**: Clear execution traces for failure analysis
 - **Maintainability**: Easier to understand and modify execution logic
 
@@ -188,9 +188,9 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 
 ## Related ADRs
 
-- **ADR-181**: Unified Durative Action Specification (compliance target)
-- **ADR-125**: Restore run_lazy_refineahead from IPyHOP (related pattern)
-- **ADR-194**: Hybrid Coordinator V2 Monolithic Refactoring (execution context)
+- **R25W1398085**: Unified Durative Action Specification (compliance target)
+- **R25W0839F8C**: Restore run_lazy_refineahead from IPyHOP (related pattern)
+- **R25W153B3FE**: Hybrid Coordinator V2 Monolithic Refactoring (execution context)
 
 ## Academic Foundation
 
@@ -212,7 +212,7 @@ This implementation aligns with:
 
 **Status:** Active - Ready for implementation  
 **Timeline:** 2-3 weeks for complete implementation  
-**Dependencies:** ADR-181 unified action specification  
+**Dependencies:** R25W1398085 unified action specification  
 **Blocking:** None identified
 
 ## Current Focus

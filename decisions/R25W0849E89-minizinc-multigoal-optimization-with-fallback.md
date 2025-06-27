@@ -1,4 +1,4 @@
-# ADR-126: MiniZinc Multigoal Optimization with Fallback
+# R25W0849E89: MiniZinc Multigoal Optimization with Fallback
 
 <!-- @adr_serial R25W0849E89 -->
 
@@ -451,7 +451,7 @@ AriaEngine.Multigoal.Telemetry.track_optimization/2
 
 ### What This ADR Does NOT Cover (Runtime-Informed Optimization)
 
-**Runtime Optimization During Lazy Execution (→ ADR-127):**
+**Runtime Optimization During Lazy Execution (→ R25W0852AD9):**
 
 - ❌ **Runtime-informed re-optimization** during `run_lazy` execution cycles
 - ❌ **Dynamic constraint adjustment** based on previous plan execution results
@@ -464,14 +464,14 @@ AriaEngine.Multigoal.Telemetry.track_optimization/2
 - **Lazy Execution Opportunity**: During `run_lazy` solve cycles, we have access to information from the last plan execution that can inform optimization of the next plan
 - **Runtime Data Sources**: Previous plan performance, execution timing, resource utilization, backtracking patterns, method success/failure rates
 
-**Execution Engine Integration (→ ADR-125):**
+**Execution Engine Integration (→ R25W0839F8C):**
 
 - ❌ **Lazy execution implementation** and backtracking logic
 - ❌ **Plan execution strategies** and execution context management
 - ❌ **Runtime state management** during plan execution
 
 **Rationale for Boundaries:**
-Static optimization provides excellent baseline performance improvements (18.8-50% efficiency gains) while maintaining simplicity and reliability. Runtime-informed optimization (ADR-127) builds on this foundation to provide adaptive intelligence during lazy execution cycles, using performance data from previous plans to optimize subsequent plans. This requires the static optimization system to be stable and proven first, then enhanced with runtime learning capabilities.
+Static optimization provides excellent baseline performance improvements (18.8-50% efficiency gains) while maintaining simplicity and reliability. Runtime-informed optimization (R25W0852AD9) builds on this foundation to provide adaptive intelligence during lazy execution cycles, using performance data from previous plans to optimize subsequent plans. This requires the static optimization system to be stable and proven first, then enhanced with runtime learning capabilities.
 
 ## Runtime-Informed Optimization Opportunity
 
@@ -499,7 +499,7 @@ Static optimization provides excellent baseline performance improvements (18.8-5
 - **Temporal Constraint Tuning**: Update time estimates based on actual execution performance
 - **Spatial Optimization Learning**: Refine movement and routing based on actual travel times
 
-**Implementation Strategy for ADR-127:**
+**Implementation Strategy for R25W0852AD9:**
 
 1. **Execution Context Capture**: Collect performance data during plan execution
 2. **Performance Analysis**: Analyze gaps between predicted and actual performance
@@ -507,24 +507,24 @@ Static optimization provides excellent baseline performance improvements (18.8-5
 4. **Optimization Strategy Selection**: Choose optimization approach based on previous plan patterns
 5. **Continuous Learning**: Build performance models that improve over multiple execution cycles
 
-**Integration with Current ADR-126:**
+**Integration with Current R25W0849E89:**
 
 - Static optimization (this ADR) provides the baseline optimization capability
-- Runtime-informed optimization (ADR-127) enhances the static system with adaptive learning
+- Runtime-informed optimization (R25W0852AD9) enhances the static system with adaptive learning
 - Both systems use the same MiniZinc infrastructure and fallback mechanisms
 - Runtime optimization builds on the proven static optimization foundation
 
 This creates a two-tier optimization system:
 
-1. **Tier 1 (ADR-126)**: Static pre-execution optimization using initial state and goal analysis
-2. **Tier 2 (ADR-127)**: Runtime-informed re-optimization using performance data from previous plans
+1. **Tier 1 (R25W0849E89)**: Static pre-execution optimization using initial state and goal analysis
+2. **Tier 2 (R25W0852AD9)**: Runtime-informed re-optimization using performance data from previous plans
 
 ## Related ADRs
 
-- **ADR-127**: Runtime-Informed Multigoal Optimization During Lazy Execution (builds on this ADR's static optimization foundation)
-- **ADR-125**: Restore run_lazy_refineahead from IPyHOP (execution engine improvements)
-- **ADR-091**: Hybrid Planner Dependency Encapsulation (strategy architecture)
-- **ADR-078**: Timeline Module PC-2 STN Implementation (temporal constraint foundation)
+- **R25W0852AD9**: Runtime-Informed Multigoal Optimization During Lazy Execution (builds on this ADR's static optimization foundation)
+- **R25W0839F8C**: Restore run_lazy_refineahead from IPyHOP (execution engine improvements)
+- **R25W0489307**: Hybrid Planner Dependency Encapsulation (strategy architecture)
+- **R25W0389D35**: Timeline Module PC-2 STN Implementation (temporal constraint foundation)
 
 ## Implementation Strategy
 

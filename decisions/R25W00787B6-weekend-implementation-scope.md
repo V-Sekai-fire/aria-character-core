@@ -1,4 +1,4 @@
-# ADR-016: Friday-Sunday Implementation Scope
+# R25W00787B6: Friday-Sunday Implementation Scope
 
 <!-- @adr_serial R25W00787B6 -->
 
@@ -81,6 +81,6 @@ Prioritize core temporal planner functionality over polish features for weekend 
 
 ## Related Decisions
 
-- Links to ADR-017 (LLM Development Uncertainty) for adaptive planning
-- Supports ADR-018 (MVP Definition) with concrete success criteria
-- Enables ADR-022 (Test-Driven Development) with focused implementation
+- Links to R25W00881AA (LLM Development Uncertainty) for adaptive planning
+- Supports R25W009BCB5 (MVP Definition) with concrete success criteria
+- Enables R25W0101F54 (Test-Driven Development) with focused implementation

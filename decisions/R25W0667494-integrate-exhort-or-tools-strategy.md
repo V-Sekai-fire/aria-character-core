@@ -1,4 +1,4 @@
-# ADR-109: Integrate CP-SAT Solver Strategy via Exhort OR-Tools
+# R25W0667494: Integrate CP-SAT Solver Strategy via Exhort OR-Tools
 
 <!-- @adr_serial R25W0667494 -->
 
@@ -451,8 +451,8 @@ Starting with Phase 1 to establish the basic integration framework using Exhort.
 
 ## Related ADRs
 
-- **ADR-091**: Hybrid Planner Dependency Encapsulation
-- **ADR-101**: Reconnect Scheduler with Hybrid Planner
+- **R25W0489307**: Hybrid Planner Dependency Encapsulation
+- **R25W058D6B9**: Reconnect Scheduler with Hybrid Planner
 - **ADR-085**: Unsolved Planner Problems for NPCs
 
 ## MiniZinc 2024 Problems Solvable by CP-SAT Solver

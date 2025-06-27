@@ -1,4 +1,4 @@
-# ADR-064: Aria Flow Core API Implementation
+# R25W031D2CC: Aria Flow Core API Implementation
 
 <!-- @adr_serial R25W031D2CC -->
 
@@ -109,9 +109,9 @@ Implement the missing AriaFlow API functions to provide the complete stream proc
 
 ## Related ADRs
 
-- **ADR-062**: Aria Engine Functional Implementation (paused - depends on this ADR)
+- **R25W0298C62**: Aria Engine Functional Implementation (paused - depends on this ADR)
 - **ADR-032**: Membrane Workflow Migration
-- **ADR-063**: Aria Queue Functional Implementation
+- **R25W030C3AA**: Aria Queue Functional Implementation
 
 ## Notes
 

@@ -1,4 +1,4 @@
-# ADR-157: STN Consistency Test Recovery (MOVED)
+# R25W11580B8: STN Consistency Test Recovery (MOVED)
 
 <!-- @adr_serial R25W11580B8 -->
 

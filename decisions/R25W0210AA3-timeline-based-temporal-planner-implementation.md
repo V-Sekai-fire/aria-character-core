@@ -1,4 +1,4 @@
-# ADR-038: Timeline-based Temporal Planner Implementation (MOVED)
+# R25W0210AA3: Timeline-based Temporal Planner Implementation (MOVED)
 
 <!-- @adr_serial R25W0210AA3 -->
 

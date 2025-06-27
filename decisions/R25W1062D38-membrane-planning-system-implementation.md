@@ -1,4 +1,4 @@
-# ADR-148: Membrane Planning System Implementation
+# R25W1062D38: Membrane Planning System Implementation
 
 <!-- @adr_serial R25W1062D38 -->
 
@@ -20,7 +20,7 @@ Implement a unified membrane planning system with the following components:
 1. **PlannerBin** - Main orchestration bin that coordinates all planning strategies
 2. **StrategyRouterFilter** - Intelligent routing based on problem characteristics and user preferences
 3. **Strategy Filters** - Individual filters for each planning strategy (HybridCoordinator, MiniZinc, etc.)
-4. **Unified Formats** - Standardized request/response formats following ADR-134
+4. **Unified Formats** - Standardized request/response formats following R25W0923F7E
 
 ### Key Features
 
@@ -28,7 +28,7 @@ Implement a unified membrane planning system with the following components:
 - **Strategy Fallback** - Automatic fallback to alternative strategies when primary fails
 - **Performance Monitoring** - Comprehensive metrics collection and reporting
 - **Unified Goal Format** - Standardized {subject, predicate, value} goal specification
-- **Entity+Capability Model** - Consistent entity requirements following ADR-134
+- **Entity+Capability Model** - Consistent entity requirements following R25W0923F7E
 
 ## Implementation Plan
 
@@ -64,7 +64,7 @@ Implement a unified membrane planning system with the following components:
 
 ## Technical Specifications
 
-### Unified Goal Format (ADR-134 Compliance)
+### Unified Goal Format (R25W0923F7E Compliance)
 
 ```elixir
 # Goals follow subject-first format
@@ -138,7 +138,7 @@ Domain.add_action(:cook_meal, &cook_meal/2, %{
 - **Improved Reliability** - Fallback handling and timeout protection
 - **Better Performance Monitoring** - Comprehensive metrics and statistics
 - **Extensible Architecture** - Easy to add new strategies and features
-- **ADR-134 Compliance** - Follows unified action specification standards
+- **R25W0923F7E Compliance** - Follows unified action specification standards
 
 ### Negative
 
@@ -170,9 +170,9 @@ Domain.add_action(:cook_meal, &cook_meal/2, %{
 
 ## Related ADRs
 
-- **ADR-134**: Unified Durative Action Specification and Planner Standardization
-- **ADR-113**: Membrane Planning Pipeline Integration (predecessor)
-- **ADR-112**: Hybrid Coordinator V3 Implementation (related)
+- **R25W0923F7E**: Unified Durative Action Specification and Planner Standardization
+- **R25W070D1AF**: Membrane Planning Pipeline Integration (predecessor)
+- **R25W069348D**: Hybrid Coordinator V3 Implementation (related)
 
 ## Implementation Status
 

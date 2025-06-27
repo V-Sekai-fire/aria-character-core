@@ -1,4 +1,4 @@
-# ADR-096: PERT Chart Execution with Hybrid Planner and KHR Durative Actions
+# R25W053937B: PERT Chart Execution with Hybrid Planner and KHR Durative Actions
 
 <!-- @adr_serial R25W053937B -->
 
@@ -13,7 +13,7 @@ This ADR is now obsolete as the entire KHR_interactivity system has been deleted
 
 ## Context
 
-Following the successful resolution of KHR goal processing in ADR-095 and the hybrid planner dependency encapsulation in ADR-091, we now have a complete planning infrastructure. This creates an opportunity to implement practical project management tools using the existing hybrid planner API with KHR durative actions.
+Following the successful resolution of KHR goal processing in R25W052DE7D and the hybrid planner dependency encapsulation in R25W0489307, we now have a complete planning infrastructure. This creates an opportunity to implement practical project management tools using the existing hybrid planner API with KHR durative actions.
 
 ### Problem Statement
 
@@ -36,8 +36,8 @@ The existing hybrid planner infrastructure provides everything needed for PERT c
 
 ### Technical Foundation
 
-- ✅ **Hybrid Planner**: Complete strategy-based planning system (ADR-091)
-- ✅ **KHR Integration**: Goal processing pipeline working (ADR-095)
+- ✅ **Hybrid Planner**: Complete strategy-based planning system (R25W0489307)
+- ✅ **KHR Integration**: Goal processing pipeline working (R25W052DE7D)
 - ✅ **Execution Engine**: Plan.run_lazy_refineahead for step-by-step execution
 - ✅ **Temporal Constraints**: STN temporal strategy for scheduling
 - ✅ **MCP Framework**: Ready for tool integration

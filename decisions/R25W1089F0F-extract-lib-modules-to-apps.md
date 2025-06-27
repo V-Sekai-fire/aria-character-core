@@ -1,4 +1,4 @@
-# ADR-150: Extract lib/ modules into independent Elixir apps
+# R25W1089F0F: Extract lib/ modules into independent Elixir apps
 
 <!-- @adr_serial R25W1089F0F -->
 

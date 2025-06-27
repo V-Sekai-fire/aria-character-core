@@ -1,4 +1,4 @@
-# ADR-184: Common Use Cases and Patterns
+# R25W1421349: Common Use Cases and Patterns
 
 <!-- @adr_serial R25W1421349 -->
 
@@ -99,9 +99,9 @@
 
 ## Related ADRs
 
-- **ADR-181**: Core Specification - Unified Durative Action Specification (complete examples and patterns)
-- **ADR-182**: Technical Implementation
-- **ADR-183**: Architecture & Standards
+- **R25W1398085**: Core Specification - Unified Durative Action Specification (complete examples and patterns)
+- **R25W1405B8B**: Technical Implementation
+- **R25W141BE8A**: Architecture & Standards
 
 ## Implementation Status
 
@@ -111,4 +111,4 @@
 
 **Timeline**: Available for pattern development as needed
 
-**Note**: Complete examples and detailed patterns are available in ADR-181
+**Note**: Complete examples and detailed patterns are available in R25W1398085

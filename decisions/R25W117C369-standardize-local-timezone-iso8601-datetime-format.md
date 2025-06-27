@@ -1,4 +1,4 @@
-# ADR-159: Standardize Local Timezone ISO 8601 DateTime Format
+# R25W117C369: Standardize Local Timezone ISO 8601 DateTime Format
 
 <!-- @adr_serial R25W117C369 -->
 
@@ -192,8 +192,8 @@ end
 
 ## Related ADRs
 
-- **ADR-106**: Canonical Time Unit Seconds and STN Units
-- **ADR-132**: Fix Duration Handling Precision Loss
+- **R25W063FA55**: Canonical Time Unit Seconds and STN Units
+- **R25W09080DB**: Fix Duration Handling Precision Loss
 
 ## Implementation Notes
 

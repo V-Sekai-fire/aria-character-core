@@ -1,4 +1,4 @@
-# ADR-059: Fix Timeline STN Test Failures
+# R25W02884C1: Fix Timeline STN Test Failures
 
 <!-- @adr_serial R25W02884C1 -->
 
@@ -130,5 +130,5 @@ Starting with Phase 1 because it addresses 6 of the 28 test failures and has cle
 
 ## Related ADRs
 
-- **ADR-040**: Call Site → Leaf Node Testing Pattern (testing methodology)
+- **R25W02297A7**: Call Site → Leaf Node Testing Pattern (testing methodology)
 - **ADR-045**: Allen's Interval Algebra (bridge validation context)

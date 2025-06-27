@@ -1,4 +1,4 @@
-# ADR-052: Replace Membrane Workflows with Flow Pipelines for Parallel Processing
+# R25W025F371: Replace Membrane Workflows with Flow Pipelines for Parallel Processing
 
 <!-- @adr_serial R25W025F371 -->
 
@@ -19,7 +19,7 @@ The current Membrane-based workflow system shows severe coordination overhead is
 - **Actual Speedup**: 1.0x on 12 cores (expected: ~10x)
 - **Coordination Scaling**: Poor scaling beyond 2 cores
 
-This directly contradicts ADR-041's architecture requirements for "Multi-core STN solving using Flow pipelines" and "Parallel Solving" capabilities.
+This directly contradicts R25W023C3DB's architecture requirements for "Multi-core STN solving using Flow pipelines" and "Parallel Solving" capabilities.
 
 ### Current Problem
 
@@ -34,9 +34,9 @@ def test_backflow_gpu_convergence_with_work_stealing(action_count, core_count) d
 end
 ```
 
-### ADR-041 Specification
+### R25W023C3DB Specification
 
-ADR-041 explicitly specified Flow for parallel processing:
+R25W023C3DB explicitly specified Flow for parallel processing:
 
 ```elixir
 # Performance optimization
@@ -139,12 +139,12 @@ end
 - ✅ Media format conversion
 - ❌ ~~General computational parallelism~~ (poor performance)
 
-### ADR-041 Compliance
+### R25W023C3DB Compliance
 
-This change brings the implementation into compliance with ADR-041's specification:
+This change brings the implementation into compliance with R25W023C3DB's specification:
 
 ```elixir
-# ADR-041 specification (now being implemented correctly)
+# R25W023C3DB specification (now being implemented correctly)
 {:flow, "~> 1.2"},                 # Parallel processing pipelines
 
 # Concurrency Requirements
@@ -229,7 +229,7 @@ end
 - **Dramatic Performance Improvement**: From 8% to >90% CPU utilization efficiency
 - **True Multi-Core Scaling**: Linear scaling across available cores
 - **Reduced Coordination Overhead**: From 91.9% to <5%
-- **ADR-041 Compliance**: Proper implementation of specified architecture
+- **R25W023C3DB Compliance**: Proper implementation of specified architecture
 - **Lower Memory Usage**: Reduced coordination state and messaging overhead
 - **Better Resource Utilization**: Effective use of available hardware
 
@@ -241,7 +241,7 @@ end
 
 ### Neutral
 
-- **Dependency Addition**: Flow library addition (already specified in ADR-041)
+- **Dependency Addition**: Flow library addition (already specified in R25W023C3DB)
 - **Test Updates**: Need to update performance tests to reflect new technology
 
 ## Success Criteria
@@ -252,4 +252,4 @@ end
 4. **Code Quality**: Clean separation between Flow and Membrane use cases
 5. **Documentation Updated**: Clear guidelines on when to use each technology
 
-This ADR corrects the architectural deviation from ADR-041 and resolves the critical performance bottleneck identified in the failing tests.
+This ADR corrects the architectural deviation from R25W023C3DB and resolves the critical performance bottleneck identified in the failing tests.

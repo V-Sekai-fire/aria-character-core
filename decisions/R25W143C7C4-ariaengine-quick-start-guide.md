@@ -1,4 +1,4 @@
-# ADR-185: AriaEngine Quick Start Guide
+# R25W143C7C4: AriaEngine Quick Start Guide
 
 <!-- @adr_serial R25W143C7C4 -->
 
@@ -16,10 +16,10 @@
 
 This ADR depends on completion of the core specification ADRs:
 
-- **ADR-181**: Unified Durative Action Specification and Planner Standardization (authoritative patterns)
-- **ADR-182**: Fix Duration Handling Precision Loss (technical implementation)
-- **ADR-183**: Planner Standardization Open Problems (architecture standards)
-- **ADR-184**: Unified Action Specification Examples (developer reference)
+- **R25W1398085**: Unified Durative Action Specification and Planner Standardization (authoritative patterns)
+- **R25W1405B8B**: Fix Duration Handling Precision Loss (technical implementation)
+- **R25W141BE8A**: Planner Standardization Open Problems (architecture standards)
+- **R25W1421349**: Unified Action Specification Examples (developer reference)
 
 ## Planned Content Structure
 
@@ -73,7 +73,7 @@ After reading this ADR, developers should be able to:
 
 **Key Requirements**:
 
-- All code examples must use patterns from ADR-181
-- State management must follow ADR-182 precision handling
-- Architecture must align with ADR-183 standards
-- Examples must be consistent with ADR-184 reference implementations
+- All code examples must use patterns from R25W1398085
+- State management must follow R25W1405B8B precision handling
+- Architecture must align with R25W141BE8A standards
+- Examples must be consistent with R25W1421349 reference implementations

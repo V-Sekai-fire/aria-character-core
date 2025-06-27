@@ -1,4 +1,4 @@
-# ADR-164: Aria Direct Sandbox Integration
+# R25W1229B98: Aria Direct Sandbox Integration
 
 <!-- @adr_serial R25W1229B98 -->
 
@@ -8,7 +8,7 @@
 
 ## Context
 
-Building on the RISC-V sandboxing techniques from ADR-163 (Godot Sandbox Module Generation), we need a native sandbox system for the Aria ecosystem itself. This would enable secure execution of AI-generated code, experimental features, and user-provided extensions within Aria's own execution environment.
+Building on the RISC-V sandboxing techniques from R25W121DCD9 (Godot Sandbox Module Generation), we need a native sandbox system for the Aria ecosystem itself. This would enable secure execution of AI-generated code, experimental features, and user-provided extensions within Aria's own execution environment.
 
 Key requirements:
 
@@ -210,10 +210,10 @@ Starting with RISC-V VM integration and basic sandbox execution, as this provide
 
 ## Related ADRs
 
-- **ADR-163**: Godot Sandbox Module Generation Integration (technique source)
-- **ADR-112**: Hybrid Coordinator v3 Implementation (planning integration)
-- **ADR-161**: Standalone Godot MCP Server Implementation (MCP patterns)
-- **ADR-113**: Membrane Planning Pipeline Integration (workflow integration)
+- **R25W121DCD9**: Godot Sandbox Module Generation Integration (technique source)
+- **R25W069348D**: Hybrid Coordinator v3 Implementation (planning integration)
+- **R25W119A759**: Standalone Godot MCP Server Implementation (MCP patterns)
+- **R25W070D1AF**: Membrane Planning Pipeline Integration (workflow integration)
 
 ## Use Cases
 

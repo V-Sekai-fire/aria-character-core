@@ -1,4 +1,4 @@
-# ADR-156: Cross-App Scheduler Dependencies (MOVED)
+# R25W114A09B: Cross-App Scheduler Dependencies (MOVED)
 
 <!-- @adr_serial R25W114A09B -->
 

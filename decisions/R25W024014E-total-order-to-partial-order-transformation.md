@@ -1,4 +1,4 @@
-# ADR-043: Total Order to Partial Order Transformation in Temporal Planning
+# R25W024014E: Total Order to Partial Order Transformation in Temporal Planning
 
 <!-- @adr_serial R25W024014E -->
 
@@ -12,7 +12,7 @@ Accepted
 
 ## Context
 
-The Simple Temporal Network (STN) solver using Path Consistency (PC-2) algorithm has a powerful capability: it automatically transforms over-constrained total order plans into optimally parallelized partial order plans. This transformation is fundamental to achieving efficient temporal planning in multi-agent scenarios like Maya's Adaptive Scorch Coordination problem from ADR-035.
+The Simple Temporal Network (STN) solver using Path Consistency (PC-2) algorithm has a powerful capability: it automatically transforms over-constrained total order plans into optimally parallelized partial order plans. This transformation is fundamental to achieving efficient temporal planning in multi-agent scenarios like Maya's Adaptive Scorch Coordination problem from R25W0183367.
 
 Understanding this transformation is crucial for developers implementing and debugging the temporal planner, as it explains why PC-2 is superior to naive sequential planning approaches and how parallelization opportunities are discovered automatically.
 
@@ -221,10 +221,10 @@ end
 
 ## Cross-References
 
-- **ADR-034**: Definitive temporal planner architecture (architecture foundation)
-- **ADR-035**: Canonical temporal backtracking problem (Maya's scenario requiring optimization)
-- **ADR-037**: Timeline-based planning approach (timeline constraints requiring parallelization)
-- **ADR-040**: Temporal constraint solver selection (PC-2 algorithm choice)
-- **ADR-041**: Tech stack requirements (performance targets and Elixir parallelization)
+- **R25W017DEAF**: Definitive temporal planner architecture (architecture foundation)
+- **R25W0183367**: Canonical temporal backtracking problem (Maya's scenario requiring optimization)
+- **R25W0206D9D**: Timeline-based planning approach (timeline constraints requiring parallelization)
+- **R25W02297A7**: Temporal constraint solver selection (PC-2 algorithm choice)
+- **R25W023C3DB**: Tech stack requirements (performance targets and Elixir parallelization)
 - **ADR-042**: Cold boot implementation order (STN solver implementation sequence)
 - **ADR-044**: Auto battler analogy (optimizing "ability rotations" for performance)

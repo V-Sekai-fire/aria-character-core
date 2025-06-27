@@ -1,4 +1,4 @@
-# ADR-105: Reconnect Scheduler to MCP
+# R25W0621594: Reconnect Scheduler to MCP
 
 <!-- @adr_serial R25W0621594 -->
 
@@ -6,7 +6,7 @@
 **Date:** June 19, 2025
 **Completion Date:** June 19, 2025
 **Superseded Date:** June 20, 2025
-**Superseded By:** ADR-111 (Schedule Activities Data Transformer Conversion)
+**Superseded By:** R25W06881B3 (Schedule Activities Data Transformer Conversion)
 **Priority:** HIGH
 
 ## Context
@@ -15,8 +15,8 @@ The AriaEngine has a fully functional standalone scheduler (`AriaEngine.Schedule
 
 Historical context:
 
-- ADR-097 designed and implemented a complete MCP scheduler interface
-- ADR-100 extracted the scheduler as standalone and "removed" MCP, but actually only removed the tools while leaving the server infrastructure
+- R25W05462DD designed and implemented a complete MCP scheduler interface
+- R25W057B149 extracted the scheduler as standalone and "removed" MCP, but actually only removed the tools while leaving the server infrastructure
 
 Current state:
 
@@ -49,7 +49,7 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 - Update documentation to reflect restored MCP capabilities
 - Verify end-to-end MCP protocol communication
 
-### Tool Interface (from ADR-097)
+### Tool Interface (from R25W05462DD)
 
 **Tool Name:** `schedule_activities`
 
@@ -100,7 +100,7 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 
 ### Phase 4: Documentation and Cleanup
 
-- [ ] Update ADR-097 to reflect reconnection status
+- [ ] Update R25W05462DD to reflect reconnection status
 - [ ] Document MCP usage instructions and examples
 - [ ] Update README with MCP tool capabilities
 - [x] Mark this ADR as completed
@@ -198,9 +198,9 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 
 ## Superseded Notice
 
-**This ADR has been superseded by ADR-111** due to architectural improvements that separate data transformation from planning execution.
+**This ADR has been superseded by R25W06881B3** due to architectural improvements that separate data transformation from planning execution.
 
-**Key Changes in ADR-111:**
+**Key Changes in R25W06881B3:**
 
 - Convert `schedule_activities` from full execution pipeline to pure data transformer
 - Separate MCP layer (data conversion) from domain layer (planning execution)
@@ -210,14 +210,14 @@ Reconnect the scheduler to MCP by registering the `schedule_activities` tool in 
 **Migration Path:**
 
 - The MCP tool functionality implemented in this ADR remains functional
-- ADR-111 provides a cleaner architectural approach for the same capabilities
+- R25W06881B3 provides a cleaner architectural approach for the same capabilities
 - Existing MCP clients will need updates for the new response format
 
 ## Related ADRs
 
-- **ADR-097**: MCP Scheduler Interface Design (original implementation)
-- **ADR-100**: Extract Scheduler and Remove MCP Infrastructure (separation)
-- **ADR-090**: Expose Aria via MCP Hermes (parent MCP architecture)
-- **ADR-111**: Schedule Activities Data Transformer Conversion (supersedes this ADR)
+- **R25W05462DD**: MCP Scheduler Interface Design (original implementation)
+- **R25W057B149**: Extract Scheduler and Remove MCP Infrastructure (separation)
+- **R25W0472567**: Expose Aria via MCP Hermes (parent MCP architecture)
+- **R25W06881B3**: Schedule Activities Data Transformer Conversion (supersedes this ADR)
 
-This ADR successfully restored MCP scheduling functionality, but ADR-111 provides a superior architectural approach that separates concerns more cleanly.
+This ADR successfully restored MCP scheduling functionality, but R25W06881B3 provides a superior architectural approach that separates concerns more cleanly.

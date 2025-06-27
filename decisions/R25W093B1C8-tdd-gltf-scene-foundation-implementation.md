@@ -1,4 +1,4 @@
-# ADR-135: TDD glTF Scene Foundation Implementation [TOMBSTONED]
+# R25W093B1C8: TDD glTF Scene Foundation Implementation [TOMBSTONED]
 
 <!-- @adr_serial R25W093B1C8 -->
 
@@ -13,11 +13,11 @@ This ADR has been **tombstoned** and its content extracted into four focused, ph
 
 ## Extracted ADRs
 
-The original ADR-135 phases have been extracted into the following ADRs:
+The original R25W093B1C8 phases have been extracted into the following ADRs:
 
 ### Phase 1: Core Data Structures
 
-**→ ADR-136: TDD glTF Core Data Structures**
+**→ R25W094A7AF: TDD glTF Core Data Structures**
 
 - Scene, Node, Mesh, Buffer, Material, and Texture structs
 - Test-driven API design for all core glTF components
@@ -25,7 +25,7 @@ The original ADR-135 phases have been extracted into the following ADRs:
 
 ### Phase 2: Data Loading & Parsing  
 
-**→ ADR-137: TDD glTF Data Loading & Parsing**
+**→ R25W095BA8C: TDD glTF Data Loading & Parsing**
 
 - Gltf.Loader for .gltf/.glb files
 - Binary data handling and AccessorView
@@ -33,7 +33,7 @@ The original ADR-135 phases have been extracted into the following ADRs:
 
 ### Phase 3: Scene Graph Logic
 
-**→ ADR-138: TDD glTF Scene Graph Logic**
+**→ R25W0969BA8: TDD glTF Scene Graph Logic**
 
 - Node transformations and global transformation chains
 - Scene traversal mechanisms (depth-first, breadth-first)
@@ -41,7 +41,7 @@ The original ADR-135 phases have been extracted into the following ADRs:
 
 ### Phase 4: Mesh Processing
 
-**→ ADR-139: TDD glTF Mesh Processing**
+**→ R25W09751CC: TDD glTF Mesh Processing**
 
 - Vertex data retrieval and indexed geometry
 - Morph targets and skinning support
@@ -57,7 +57,7 @@ The original ADR-135 phases have been extracted into the following ADRs:
 
 **Clear Dependencies:**
 
-- ADR-136 → ADR-137 → ADR-138 → ADR-139
+- R25W094A7AF → R25W095BA8C → R25W0969BA8 → R25W09751CC
 - Sequential implementation with well-defined prerequisites
 - Prevents scope creep and maintains focus
 
@@ -69,15 +69,15 @@ The original ADR-135 phases have been extracted into the following ADRs:
 
 ## Implementation Status
 
-**Original ADR-135:** Tombstoned (2025-06-22)
+**Original R25W093B1C8:** Tombstoned (2025-06-22)
 **Current Status:** Implementation continues in extracted ADRs
-**Next Step:** Begin ADR-136 (Core Data Structures) TDD implementation
+**Next Step:** Begin R25W094A7AF (Core Data Structures) TDD implementation
 
 ## Related ADRs
 
-- **ADR-130**: glTF Scene Foundation Implementation Plan (provides overall scope)
-- **ADR-129**: AriaEngine Plans glTF KHR Interactivity Implementation (parent planning ADR)
-- **ADR-131**: Unified Durative Action Specification (provides planning foundation)
+- **R25W08877E1**: glTF Scene Foundation Implementation Plan (provides overall scope)
+- **R25W087E1AE**: AriaEngine Plans glTF KHR Interactivity Implementation (parent planning ADR)
+- **R25W089FC2D**: Unified Durative Action Specification (provides planning foundation)
 
 ---
 

@@ -1,4 +1,4 @@
-# ADR-160: Godot LibGodot Integration via Membrane Unifex
+# R25W118994A: Godot LibGodot Integration via Membrane Unifex
 
 <!-- @adr_serial R25W118994A -->
 
@@ -152,9 +152,9 @@ Starting with aria_godot app creation and libgodot integration, as this provides
 
 ## Related ADRs
 
-- **ADR-161**: Standalone Godot MCP Server Implementation (depends on this ADR)
-- **ADR-162**: Godot-Aria Integration and Workflow Orchestration (depends on this ADR)
-- **ADR-113**: Membrane Planning Pipeline Integration (related membrane usage)
+- **R25W119A759**: Standalone Godot MCP Server Implementation (depends on this ADR)
+- **R25W120FE90**: Godot-Aria Integration and Workflow Orchestration (depends on this ADR)
+- **R25W070D1AF**: Membrane Planning Pipeline Integration (related membrane usage)
 
 ## References
 

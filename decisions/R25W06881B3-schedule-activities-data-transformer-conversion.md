@@ -1,4 +1,4 @@
-# ADR-111: Extract Plan Transformer from schedule_activities
+# R25W06881B3: Extract Plan Transformer from schedule_activities
 
 <!-- @adr_serial R25W06881B3 -->
 
@@ -214,11 +214,11 @@ end
 
 ## Related ADRs
 
-- **ADR-112**: Plan Transformer with HybridCoordinatorV2 Direct Integration (defines implementation approach)
-- **ADR-110**: MCP Strategy Testing Interface (uses V2 directly)
-- **ADR-109**: Integrate Exhort OR-Tools Strategy (~~provides OptimizerStrategy for V2~~ - Proposed, not implemented)
-- **ADR-105**: Reconnect Scheduler to MCP (current implementation to be updated)
-- **ADR-097**: MCP Scheduler Interface Design (tool interface to be updated)
+- **R25W069348D**: Plan Transformer with HybridCoordinatorV2 Direct Integration (defines implementation approach)
+- **R25W0670D79**: MCP Strategy Testing Interface (uses V2 directly)
+- **R25W0667494**: Integrate Exhort OR-Tools Strategy (~~provides OptimizerStrategy for V2~~ - Proposed, not implemented)
+- **R25W0621594**: Reconnect Scheduler to MCP (current implementation to be updated)
+- **R25W05462DD**: MCP Scheduler Interface Design (tool interface to be updated)
 
 ## Examples
 

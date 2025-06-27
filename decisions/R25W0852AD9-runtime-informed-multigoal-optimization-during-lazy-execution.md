@@ -1,19 +1,19 @@
-# ADR-127: Runtime-Informed Multigoal Optimization During Lazy Execution
+# R25W0852AD9: Runtime-Informed Multigoal Optimization During Lazy Execution
 
 <!-- @adr_serial R25W0852AD9 -->
 
 **Status:** Paused  
 **Date:** 2025-06-22  
 **Priority:** HIGH  
-**Dependencies:** ADR-126 (MiniZinc Multigoal Optimization), ADR-125 (run_lazy_refineahead)
+**Dependencies:** R25W0849E89 (MiniZinc Multigoal Optimization), R25W0839F8C (run_lazy_refineahead)
 
 ## Context
 
-ADR-126 provides excellent static multigoal optimization before execution begins, achieving 18.8-50% efficiency improvements through constraint-based optimization. However, during `run_lazy_refineahead` execution, we have access to rich runtime information that is unavailable during static planning, creating an opportunity for even more sophisticated optimization.
+R25W0849E89 provides excellent static multigoal optimization before execution begins, achieving 18.8-50% efficiency improvements through constraint-based optimization. However, during `run_lazy_refineahead` execution, we have access to rich runtime information that is unavailable during static planning, creating an opportunity for even more sophisticated optimization.
 
 ### The Gap Between Static and Runtime Optimization
 
-**Current Static Optimization (ADR-126):**
+**Current Static Optimization (R25W0849E89):**
 
 - Optimizes multigoals based on initial state and predicted execution patterns
 - Uses estimated action costs, movement distances, and resource availability
@@ -57,14 +57,14 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 
 **Hierarchical Optimization Strategy:**
 
-1. **Static Optimization** (ADR-126): Initial multigoal optimization before execution
+1. **Static Optimization** (R25W0849E89): Initial multigoal optimization before execution
 2. **Runtime Re-optimization** (This ADR): Dynamic optimization during lazy execution
 3. **Fallback Chain**: Runtime → Static → Naive splitting
 
 **Integration Strategy:**
 
 - Extend existing multigoal processing in `plan/execution.ex`
-- Enhance ADR-126's optimizer interface to accept runtime context
+- Enhance R25W0849E89's optimizer interface to accept runtime context
 - Maintain backward compatibility with current lazy execution behavior
 - Provide graceful fallback to static optimization when runtime optimization fails
 
@@ -163,7 +163,7 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 
 **Performance Validation:**
 
-- [ ] Measure additional efficiency gains beyond ADR-126's static optimization
+- [ ] Measure additional efficiency gains beyond R25W0849E89's static optimization
 - [ ] Validate re-optimization timing and performance impact
 - [ ] Test scalability with different multigoal complexity levels
 - [ ] Verify graceful degradation and fallback behavior
@@ -172,7 +172,7 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 
 ### Quantifiable Improvements Over Static Optimization
 
-**Additional Performance Gains Beyond ADR-126:**
+**Additional Performance Gains Beyond R25W0849E89:**
 
 - **Action Efficiency**: 15-25% additional reduction in total actions beyond static optimization
 - **Resource Utilization**: 20-30% better resource scheduling through runtime-informed decisions
@@ -191,7 +191,7 @@ Implement **Runtime-Informed Multigoal Optimization** that enhances lazy executi
 
 - **Zero Breaking Changes**: No impact on existing lazy execution behavior
 - **Graceful Fallback**: 100% success rate falling back to static optimization when runtime optimization fails
-- **Fallback Chain**: Maintain ADR-126's fallback sequence (runtime → static → naive splitting)
+- **Fallback Chain**: Maintain R25W0849E89's fallback sequence (runtime → static → naive splitting)
 
 **Robustness:**
 
@@ -238,7 +238,7 @@ defmodule AriaEngine.Multigoal.Optimizer do
   def optimize_multigoal(state, goals, opts \\ []) do
     case Keyword.get(opts, :runtime_context) do
       nil -> 
-        # Static optimization (ADR-126 behavior)
+        # Static optimization (R25W0849E89 behavior)
         static_optimize_multigoal(state, goals, opts)
       
       %RuntimeContext{} = context -> 
@@ -397,15 +397,15 @@ solve minimize sum(i in 1..num_goals)(
 
 ### What This ADR Does NOT Cover (Tombstoned Responsibilities)
 
-**Static Optimization (→ ADR-126):**
+**Static Optimization (→ R25W0849E89):**
 
 - ❌ **Pre-execution multigoal optimization** using initial state and predicted patterns
 - ❌ **Static constraint modeling** with fixed parameters and template-based optimization
 - ❌ **Basic MiniZinc integration** and template system foundation
 - ❌ **Domain registration and method blacklisting** for static optimization
-- ❌ **Fallback mechanisms** from optimization to naive splitting (handled by ADR-126)
+- ❌ **Fallback mechanisms** from optimization to naive splitting (handled by R25W0849E89)
 
-**Lazy Execution Engine (→ ADR-125):**
+**Lazy Execution Engine (→ R25W0839F8C):**
 
 - ❌ **Core lazy execution implementation** and backtracking logic
 - ❌ **Plan execution strategies** and basic execution context management
@@ -413,14 +413,14 @@ solve minimize sum(i in 1..num_goals)(
 - ❌ **Method and action execution** during plan execution
 
 **Rationale for Boundaries:**
-This ADR builds on ADR-126's proven static optimization foundation (18.8-50% efficiency gains) to add adaptive intelligence during execution. It requires ADR-126's static optimization to be stable and ADR-125's lazy execution to be mature before adding runtime optimization complexity. The goal is 15-25% additional efficiency gains beyond static optimization through execution-informed decisions.
+This ADR builds on R25W0849E89's proven static optimization foundation (18.8-50% efficiency gains) to add adaptive intelligence during execution. It requires R25W0849E89's static optimization to be stable and R25W0839F8C's lazy execution to be mature before adding runtime optimization complexity. The goal is 15-25% additional efficiency gains beyond static optimization through execution-informed decisions.
 
 ## Related ADRs
 
-- **ADR-126**: MiniZinc Multigoal Optimization with Fallback (provides static optimization foundation that this ADR enhances with runtime intelligence)
-- **ADR-125**: Restore run_lazy_refineahead from IPyHOP (provides lazy execution foundation where runtime optimization occurs)
-- **ADR-091**: Hybrid Planner Dependency Encapsulation (strategy architecture framework)
-- **ADR-078**: Timeline Module PC-2 STN Implementation (temporal constraint foundation)
+- **R25W0849E89**: MiniZinc Multigoal Optimization with Fallback (provides static optimization foundation that this ADR enhances with runtime intelligence)
+- **R25W0839F8C**: Restore run_lazy_refineahead from IPyHOP (provides lazy execution foundation where runtime optimization occurs)
+- **R25W0489307**: Hybrid Planner Dependency Encapsulation (strategy architecture framework)
+- **R25W0389D35**: Timeline Module PC-2 STN Implementation (temporal constraint foundation)
 
 ## Implementation Strategy
 
@@ -428,7 +428,7 @@ This ADR builds on ADR-126's proven static optimization foundation (18.8-50% eff
 
 This ADR is currently **paused** to allow for:
 
-1. **ADR-126 Stabilization**: Ensure static multigoal optimization is fully stable and performant
+1. **R25W0849E89 Stabilization**: Ensure static multigoal optimization is fully stable and performant
 2. **Lazy Execution Maturity**: Allow `run_lazy_refineahead` implementation to mature and stabilize
 3. **Performance Baseline**: Establish clear performance baselines with static optimization
 4. **Architecture Refinement**: Refine runtime optimization architecture based on static optimization experience
@@ -446,7 +446,7 @@ When resumed, implementation will follow a careful, incremental approach:
 
 **Prerequisites for resuming this ADR:**
 
-- ADR-126 static optimization demonstrates consistent 15%+ improvements in production
+- R25W0849E89 static optimization demonstrates consistent 15%+ improvements in production
 - `run_lazy_refineahead` execution is stable and performant across diverse scenarios
 - Clear performance baselines established for comparison with runtime optimization
 - Development team capacity available for complex optimization system enhancement
@@ -456,6 +456,6 @@ When resumed, implementation will follow a careful, incremental approach:
 - Production deployment reveals optimization opportunities that require runtime context
 - User scenarios demonstrate clear need for adaptive optimization during execution
 - System performance analysis shows significant potential for runtime-informed improvements
-- Technical foundation (ADR-126, ADR-125) proves stable and ready for enhancement
+- Technical foundation (R25W0849E89, R25W0839F8C) proves stable and ready for enhancement
 
 This approach ensures that runtime-informed optimization builds on a solid foundation of proven static optimization and stable lazy execution, maximizing the likelihood of successful implementation when the work resumes.

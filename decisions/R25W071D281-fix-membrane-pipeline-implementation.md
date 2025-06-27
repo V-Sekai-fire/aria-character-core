@@ -1,4 +1,4 @@
-# ADR-114: Fix Membrane Pipeline Implementation and Testing
+# R25W071D281: Fix Membrane Pipeline Implementation and Testing
 
 <!-- @adr_serial R25W071D281 -->
 
@@ -8,11 +8,11 @@
 
 ## Context
 
-ADR-110 successfully established the Membrane Framework pipeline architecture and basic structure for MCP strategy testing. However, the implementation has critical issues that prevent the pipeline from functioning correctly.
+R25W0670D79 successfully established the Membrane Framework pipeline architecture and basic structure for MCP strategy testing. However, the implementation has critical issues that prevent the pipeline from functioning correctly.
 
 ### Current State
 
-**Architecture Completed (ADR-110):**
+**Architecture Completed (R25W0670D79):**
 
 - ✅ Membrane dependencies and format definitions
 - ✅ Basic pipeline element structure (MCPSource, filters, sinks)
@@ -208,9 +208,9 @@ Fix the Membrane pipeline implementation to achieve full functionality and pass 
 
 ## Related ADRs
 
-- **ADR-110**: MCP Strategy Testing Interface using Membrane Framework Pipeline (foundation)
-- **ADR-101**: Reconnect Scheduler with Hybrid Planner (PlannerSink integration)
-- **ADR-113**: Membrane Planning Pipeline Integration (related pipeline work)
+- **R25W0670D79**: MCP Strategy Testing Interface using Membrane Framework Pipeline (foundation)
+- **R25W058D6B9**: Reconnect Scheduler with Hybrid Planner (PlannerSink integration)
+- **R25W070D1AF**: Membrane Planning Pipeline Integration (related pipeline work)
 
 ## Consequences
 
@@ -244,4 +244,4 @@ Fix the Membrane pipeline implementation to achieve full functionality and pass 
 **Week 4**: Phase 4 (Missing implementations)
 **Week 5**: Phase 5 (Performance and reliability)
 
-This ADR focuses on completing the implementation work started in ADR-110 and achieving a fully functional Membrane pipeline for MCP strategy testing.
+This ADR focuses on completing the implementation work started in R25W0670D79 and achieving a fully functional Membrane pipeline for MCP strategy testing.

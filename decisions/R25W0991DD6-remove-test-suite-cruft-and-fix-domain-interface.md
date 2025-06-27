@@ -1,4 +1,4 @@
-# ADR-141: Remove Test Suite Cruft and Fix Domain Interface
+# R25W0991DD6: Remove Test Suite Cruft and Fix Domain Interface
 
 <!-- @adr_serial R25W0991DD6 -->
 
@@ -150,9 +150,9 @@ Starting with the domain interface fix as it immediately resolves all 3 test fai
 
 ## Related ADRs
 
-- **ADR-057**: Test cleanup and code maintenance
-- **ADR-118**: Add typespecs to all lib code
-- **ADR-132**: Fix duration handling precision loss
+- **R25W02708D3**: Test cleanup and code maintenance
+- **R25W0765579**: Add typespecs to all lib code
+- **R25W09080DB**: Fix duration handling precision loss
 
 ## Monitoring
 

@@ -1,4 +1,4 @@
-# ADR-121: Lazy Execution Strategy Implementation
+# R25W0791DA1: Lazy Execution Strategy Implementation
 
 <!-- @adr_serial R25W0791DA1 -->
 
@@ -114,9 +114,9 @@ def run_lazy_refineahead(domain, initial_state, plan, opts \\ [])
 
 ## Related ADRs
 
-- **ADR-091**: Hybrid planner dependency encapsulation
-- **ADR-112**: Hybrid coordinator v3 implementation
-- **ADR-064**: Aria flow core API implementation
+- **R25W0489307**: Hybrid planner dependency encapsulation
+- **R25W069348D**: Hybrid coordinator v3 implementation
+- **R25W031D2CC**: Aria flow core API implementation
 
 ## References
 

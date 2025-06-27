@@ -1,4 +1,4 @@
-# ADR-094: Fix KHR Interactivity Node Library Planner Test Architecture
+# R25W051BA69: Fix KHR Interactivity Node Library Planner Test Architecture
 
 <!-- @adr_serial R25W051BA69 -->
 
@@ -113,13 +113,13 @@ Implemented proper 4-layer test architecture with per-test GLTF scene isolation:
 
 ## Related ADRs
 
-- **ADR-092**: AST to GLTF KHR_interactivity Translation (architectural foundation)
-- **ADR-093**: KHR_interactivity Systematic Verification Plan (testing strategy)
-- **ADR-091**: Hybrid Planner Dependency Encapsulation (execution layer)
-- **ADR-095**: Fix KHR Interactivity Planner Goal Processing Pipeline (ongoing planner integration work)
+- **R25W0498AC9**: AST to GLTF KHR_interactivity Translation (architectural foundation)
+- **R25W0503071**: KHR_interactivity Systematic Verification Plan (testing strategy)
+- **R25W0489307**: Hybrid Planner Dependency Encapsulation (execution layer)
+- **R25W052DE7D**: Fix KHR Interactivity Planner Goal Processing Pipeline (ongoing planner integration work)
 
 ## Notes
 
 This ADR successfully resolved the fundamental architectural mismatch where the planner worked with StateV2 facts but `run_lazy_refineahead` needed to send actions to the GLTF scene graph execution target. The implementation established proper 4-layer architecture with clear boundaries between planning and execution.
 
-**Architectural scope completed.** Remaining planner integration issues (goal → method resolution) are addressed in ADR-095.
+**Architectural scope completed.** Remaining planner integration issues (goal → method resolution) are addressed in R25W052DE7D.

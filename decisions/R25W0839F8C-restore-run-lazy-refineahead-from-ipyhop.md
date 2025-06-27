@@ -1,4 +1,4 @@
-# ADR-125: Restore run_lazy_refineahead from IPyHOP
+# R25W0839F8C: Restore run_lazy_refineahead from IPyHOP
 
 <!-- @adr_serial R25W0839F8C -->
 
@@ -9,7 +9,7 @@
 
 ## Context
 
-During recent cleanup efforts (ADR-124), we removed the `run_lazy_refineahead` function from `AriaEngine.Plan.Execution`, replacing it with simple `Plan.validate_plan` calls. However, this was a mistake - `run_lazy_refineahead` implements a core algorithm from IPyHOP that provides true lazy refinement capabilities essential for hierarchical task network (HTN) planning.
+During recent cleanup efforts (R25W08256C7), we removed the `run_lazy_refineahead` function from `AriaEngine.Plan.Execution`, replacing it with simple `Plan.validate_plan` calls. However, this was a mistake - `run_lazy_refineahead` implements a core algorithm from IPyHOP that provides true lazy refinement capabilities essential for hierarchical task network (HTN) planning.
 
 ### Current Problem
 
@@ -136,9 +136,9 @@ From IPyHOP analysis:
 
 ## Related ADRs
 
-- **ADR-121**: Lazy Execution Strategy Implementation (original implementation)
-- **ADR-124**: Fix Planning Logic in Lazy Execution Tests (where removal occurred)
-- **ADR-091**: Hybrid Planner Dependency Encapsulation (strategy architecture)
+- **R25W0791DA1**: Lazy Execution Strategy Implementation (original implementation)
+- **R25W08256C7**: Fix Planning Logic in Lazy Execution Tests (where removal occurred)
+- **R25W0489307**: Hybrid Planner Dependency Encapsulation (strategy architecture)
 
 ## Implementation Strategy
 

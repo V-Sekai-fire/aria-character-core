@@ -1,4 +1,4 @@
-# ADR-178: Extract MiniZinc STN Solver from Temporal Planner
+# R25W136157D: Extract MiniZinc STN Solver from Temporal Planner
 
 <!-- @adr_serial R25W136157D -->
 
@@ -84,5 +84,5 @@ Extract the MiniZinc STN solving functionality from `aria_temporal_planner` and 
 
 ## Related ADRs
 
-- **ADR-177**: Modular MiniZinc Architecture Refactoring
-- **ADR-128**: STN Solver MiniZinc Fallback Implementation
+- **R25W135339D**: Modular MiniZinc Architecture Refactoring
+- **R25W086088D**: STN Solver MiniZinc Fallback Implementation

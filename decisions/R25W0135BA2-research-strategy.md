@@ -1,4 +1,4 @@
-# ADR-025: Research Question Resolution Strategy
+# R25W0135BA2: Research Question Resolution Strategy
 
 <!-- @adr_serial R25W0135BA2 -->
 
@@ -131,9 +131,9 @@ end
 
 ## Related Decisions
 
-- Links to ADR-017 (LLM Development Uncertainty) for adaptive strategy
-- Supports ADR-024 (Minimum Success Criteria) with fallback planning
-- Implements ADR-022 (Test-Driven Development) for iterative discovery
+- Links to R25W00881AA (LLM Development Uncertainty) for adaptive strategy
+- Supports R25W012424D (Minimum Success Criteria) with fallback planning
+- Implements R25W0101F54 (Test-Driven Development) for iterative discovery
 - Builds on ADR-020 (Design Consistency Verification) for validated foundation
-- Enables ADR-026 (Risk Mitigation) through early discovery
+- Enables R25W0143F62 (Risk Mitigation) through early discovery
 - Supports web interface development (ADR-068, ADR-069) for enhanced user interaction
