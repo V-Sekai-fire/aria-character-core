@@ -1,5 +1,8 @@
 # ADR-001: Git-Native Elixir AST Migration Tool
 
+<!-- @adr_serial R25W0017E7D -->
+
+
 **Status:** Phase 0 Completed ✅  
 **Date:** 2025-06-23  
 **Priority:** HIGH  

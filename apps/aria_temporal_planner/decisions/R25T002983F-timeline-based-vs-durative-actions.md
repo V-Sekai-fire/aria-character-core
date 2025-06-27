@@ -1,5 +1,8 @@
 # ADR-037: Timeline-Based Temporal Planning vs Durative Actions
 
+<!-- @adr_serial R25T002983F -->
+
+
 ## Status
 
 Proposed

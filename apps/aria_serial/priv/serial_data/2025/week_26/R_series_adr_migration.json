@@ -1,0 +1,29 @@
+{
+  "year": 2025,
+  "week": 26,
+  "factory": "R",
+  "generated_at": "2025-06-27T13:44:05.586318Z",
+  "next_sequence": 3,
+  "serials": {
+    "R25W0014110": {
+      "file": "001-factory-code-cleanup-manufacturer-conflict-avoidance.md",
+      "format": "v1",
+      "week": 26,
+      "old_filename": "001-factory-code-cleanup-manufacturer-conflict-avoidance.md",
+      "new_filename": "R25W0014110-factory-code-cleanup-manufacturer-conflict-avoidance.md",
+      "created": "2025-06-23",
+      "purpose": "ADR Migration: ADR-001: Serial Number Factory Code Cleanup and Manufacturer Conflict Avoidance",
+      "sequence": 1
+    },
+    "R25W0025C07": {
+      "file": "002-external-json-registry-storage.md",
+      "format": "v1",
+      "week": 26,
+      "old_filename": "002-external-json-registry-storage.md",
+      "new_filename": "R25W0025C07-external-json-registry-storage.md",
+      "created": "2025-06-23",
+      "purpose": "ADR Migration: ADR-002: External JSON Registry Storage",
+      "sequence": 2
+    }
+  }
+}

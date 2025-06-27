@@ -1,5 +1,8 @@
 # ADR-162: Segment Metadata Structure
 
+<!-- @adr_serial R25W0112996 -->
+
+
 **Status:** Active (Paused)  
 **Date:** 2025-06-23  
 **Priority:** HIGH

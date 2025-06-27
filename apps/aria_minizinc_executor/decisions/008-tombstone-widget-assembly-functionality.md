@@ -1,5 +1,8 @@
 # ADR-008: Tombstone Widget Assembly Functionality
 
+<!-- @adr_serial R25W008F4FE -->
+
+
 **Status:** Proposed  
 **Date:** 2025-06-24  
 **Priority:** MEDIUM

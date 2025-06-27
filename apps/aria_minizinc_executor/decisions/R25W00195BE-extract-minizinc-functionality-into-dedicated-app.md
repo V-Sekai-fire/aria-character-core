@@ -1,5 +1,8 @@
 # ADR-001: Extract MiniZinc Functionality into Dedicated App
 
+<!-- @adr_serial R25W00195BE -->
+
+
 **Status:** In Progress  
 **Date:** 2025-06-23  
 **Priority:** HIGH

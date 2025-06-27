@@ -1,5 +1,8 @@
 # ADR-156: Cross-App Scheduler Dependencies
 
+<!-- @adr_serial R25W00542DE -->
+
+
 **Status:** Active (Paused)  
 **Date:** June 23, 2025  
 **Priority:** MEDIUM

@@ -1,5 +1,8 @@
 # ADR-038: Timeline-Based Temporal Planner Implementation Plan
 
+<!-- @adr_serial R25T0031B6A -->
+
+
 ## Status
 
 **Deprecated** - Superseded by ADR-042: Temporal Planner Cold Boot Implementation Order

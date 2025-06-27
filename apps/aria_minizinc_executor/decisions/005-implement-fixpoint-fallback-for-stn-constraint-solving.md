@@ -1,5 +1,8 @@
 # ADR-005: Implement Fixpoint Fallback for STN Constraint Solving
 
+<!-- @adr_serial R25W0055FF3 -->
+
+
 **Status:** Proposed  
 **Date:** 2025-06-24  
 **Priority:** HIGH

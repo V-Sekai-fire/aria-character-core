@@ -1,5 +1,8 @@
 # ADR-161: Bridge Validation Implementation
 
+<!-- @adr_serial R25W010BFF3 -->
+
+
 **Status:** Active (Paused)  
 **Date:** 2025-06-23  
 **Priority:** HIGH

@@ -1,5 +1,8 @@
 # ADR-154: Timeline Module Namespace Aliasing Fixes
 
+<!-- @adr_serial R25W0033FAE -->
+
+
 **Status:** Active (Paused)  
 **Date:** June 23, 2025  
 **Priority:** HIGH

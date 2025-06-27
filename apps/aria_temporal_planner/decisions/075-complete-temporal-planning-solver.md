@@ -1,5 +1,8 @@
 # ADR-075: Complete Temporal Planning Solver Implementation
 
+<!-- @adr_serial R25T006C0DE -->
+
+
 ## Status
 
 Active

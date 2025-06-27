@@ -1,5 +1,8 @@
 # ADR-119: STN Method Bridge Segmentation Implementation
 
+<!-- @adr_serial R25V0048B6C -->
+
+
 **Status:** Completed
 **Date:** June 21, 2025  
 **Completion Date:** June 21, 2025

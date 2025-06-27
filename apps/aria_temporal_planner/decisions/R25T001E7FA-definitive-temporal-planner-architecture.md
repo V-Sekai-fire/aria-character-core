@@ -1,5 +1,8 @@
 # ADR-034: Definitive Temporal Planner Architecture
 
+<!-- @adr_serial R25T001E7FA -->
+
+
 ## Status
 
 Accepted (Supersedes ADR-001 through ADR-033 for temporal planner concerns)

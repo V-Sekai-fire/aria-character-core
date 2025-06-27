@@ -1,5 +1,8 @@
 # ADR-006: Implement Comprehensive Testing Strategy for MiniZinc and Fixpoint Solvers
 
+<!-- @adr_serial R25W0066624 -->
+
+
 **Status:** Proposed  
 **Date:** 2025-06-24  
 **Priority:** MEDIUM

@@ -1,5 +1,8 @@
 # ADR-128: STN Solver MiniZinc Fallback Implementation
 
+<!-- @adr_serial R25V005A13A -->
+
+
 **Status:** Paused  
 **Date:** 2025-06-22  
 **Implementation Start:** 2025-06-22  

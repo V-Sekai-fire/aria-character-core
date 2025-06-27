@@ -1,5 +1,8 @@
 # ADR-001: Serial Number Factory Code Cleanup and Manufacturer Conflict Avoidance
 
+<!-- @adr_serial R25W0014110 -->
+
+
 ## Status
 
 Completed (June 27, 2025)

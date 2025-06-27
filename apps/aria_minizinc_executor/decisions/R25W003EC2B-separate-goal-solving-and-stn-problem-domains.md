@@ -1,5 +1,8 @@
 # ADR-003: Separate Goal Solving and STN Problem Domains
 
+<!-- @adr_serial R25W003EC2B -->
+
+
 **Status:** Proposed  
 **Date:** 2025-06-24  
 **Priority:** HIGH

@@ -1,5 +1,8 @@
 # ADR 106: Canonical Time Unit for Scheduling and Temporal Reasoning
 
+<!-- @adr_serial R25V0032371 -->
+
+
 ## Status
 
 Completed (June 19, 2025)

@@ -1,5 +1,8 @@
 # ADR-002: Implement Template Selection Logic
 
+<!-- @adr_serial R25W002953C -->
+
+
 **Status:** Active (Paused)  
 **Date:** 2025-06-24  
 **Priority:** HIGH

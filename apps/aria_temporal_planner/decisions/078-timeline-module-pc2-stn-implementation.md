@@ -1,5 +1,8 @@
 # ADR-078: Timeline Module with ~~PC-2~~ (Replaced with MiniZinc v0.2.0) STN Implementation
 
+<!-- @adr_serial R25T0079D35 -->
+
+
 **Status:** Deferred  
 **Date:** June 15, 2025  
 **Closure Date:** June 21, 2025  

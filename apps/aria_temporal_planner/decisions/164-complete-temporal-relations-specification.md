@@ -1,5 +1,8 @@
 # ADR-164: Complete Temporal Relations Specification
 
+<!-- @adr_serial R25W0138B78 -->
+
+
 **Status:** Active  
 **Date:** 2025-06-25  
 **Priority:** HIGH

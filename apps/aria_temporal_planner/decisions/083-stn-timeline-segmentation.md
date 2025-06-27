@@ -1,5 +1,8 @@
 # ADR-083: STN Timeline Segmentation Strategy
 
+<!-- @adr_serial R25V0016FD2 -->
+
+
 **Status:** Superseded (June 16, 2025)
 
 **Superseded by:** [ADR-099: STN Bridge Reentrant Planner Architecture](099-stn-bridge-reentrant-planner-architecture.md)

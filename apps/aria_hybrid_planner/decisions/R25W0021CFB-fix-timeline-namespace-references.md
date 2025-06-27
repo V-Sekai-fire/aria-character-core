@@ -1,5 +1,8 @@
 # ADR-002: Fix Timeline Namespace References in STNBridgeTemporalStrategy
 
+<!-- @adr_serial R25W0021CFB -->
+
+
 **Status:** Completed  
 **Date:** 2025-06-23  
 **Completion Date:** 2025-06-23  

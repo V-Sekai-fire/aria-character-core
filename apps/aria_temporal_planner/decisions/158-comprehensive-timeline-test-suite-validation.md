@@ -1,5 +1,8 @@
 # ADR-158: Comprehensive Timeline Test Suite Validation
 
+<!-- @adr_serial R25W007B127 -->
+
+
 **Status:** Active (Paused)  
 **Date:** June 23, 2025  
 **Priority:** MEDIUM

@@ -1,5 +1,8 @@
 # ADR-041: Temporal Solver Tech Stack Requirements
 
+<!-- @adr_serial R25T005FA8D -->
+
+
 ## Status
 
 Accepted

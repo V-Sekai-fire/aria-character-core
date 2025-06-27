@@ -1,5 +1,8 @@
 # ADR-098: STN Timeline Encapsulation
 
+<!-- @adr_serial R25V0020925 -->
+
+
 **Status:** Completed  
 **Date:** June 18, 2025  
 **Completion Date:** June 18, 2025  

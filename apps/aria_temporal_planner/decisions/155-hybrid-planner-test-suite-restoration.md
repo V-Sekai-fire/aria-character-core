@@ -1,5 +1,8 @@
 # ADR-155: Hybrid Planner Test Suite Restoration
 
+<!-- @adr_serial R25W00443D0 -->
+
+
 **Status:** Active (Paused)  
 **Date:** June 23, 2025  
 **Priority:** MEDIUM
