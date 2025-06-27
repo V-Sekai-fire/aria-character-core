@@ -317,7 +317,7 @@ defmodule AriaCore.TemporalConverter do
 
   defp add_prerequisite_goals(method_steps, at_start_conditions) do
     prerequisites = Enum.map(at_start_conditions, fn {subj, pred, val} ->
-      {subj, pred, val}
+      {pred, subj, val}
     end)
 
     method_steps ++ prerequisites

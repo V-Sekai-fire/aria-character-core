@@ -192,13 +192,13 @@ defmodule AriaCore.ActionAttributes do
       attrs when is_list(attrs) and length(attrs) > 0 ->
         # Consume the attribute by assigning it (satisfies Elixir's "return" requirement)
         _consumed_task_attrs = attrs
-        Module.put_attribute(env.module, :method_metadata, {name, %{}})
+        Module.put_attribute(env.module, :method_metadata, {name, %{type: :task_method}})
         # Clear the attribute to prevent accumulation
         Module.delete_attribute(env.module, :task_method)
       other when other != [] ->
         # Handle any other attribute value (including bare @task_method)
         _consumed_task_attr = other
-        Module.put_attribute(env.module, :method_metadata, {name, %{}})
+        Module.put_attribute(env.module, :method_metadata, {name, %{type: :task_method}})
         # Clear the attribute to prevent accumulation
         Module.delete_attribute(env.module, :task_method)
     end

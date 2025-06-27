@@ -63,28 +63,15 @@ defmodule AriaCore.UnifiedDomain do
       [:simple_action]
   """
   def create_from_module(domain_module) do
-    # LEVERAGE existing Domain.new() (no rewrite needed)
-    base_domain = AriaCore.Domain.new(domain_module)
-
-    # Extract @action attributes using Phase 1 work
-    actions = get_action_metadata(domain_module)
-
-    # Extract @task_method attributes using Phase 1 work
-    methods = get_method_metadata(domain_module)
-
-    # Process actions using existing systems (SOCIABLE approach)
-    domain_with_actions = process_module_actions(base_domain, actions, domain_module)
-
-    # Process methods using existing systems (SOCIABLE approach)
-    domain_with_methods = process_module_methods(domain_with_actions, methods, domain_module)
-
-    # Set up entity registry (LEVERAGE existing entity system)
-    entity_registry = create_entity_registry_from_actions(actions)
-    domain_with_entities = AriaCore.Domain.set_entity_registry(domain_with_methods, entity_registry)
-
-    # Set up temporal specifications (LEVERAGE existing temporal system)
-    temporal_specs = create_temporal_specifications_from_actions(actions)
-    AriaCore.Domain.set_temporal_specifications(domain_with_entities, temporal_specs)
+    # Directly call the module's create_domain function
+    # This leverages the sociable approach built into ActionAttributes
+    try do
+      domain_module.create_domain()
+    rescue
+      UndefinedFunctionError ->
+        # If create_domain doesn't exist, try manual processing
+        create_domain_manually(domain_module)
+    end
   end
 
   @doc """
@@ -116,6 +103,16 @@ defmodule AriaCore.UnifiedDomain do
 
   ## Examples
 
+      iex> defmodule CookingDomain do
+      ...>   use AriaCore.Domain
+      ...>   @action duration: "PT1H", requires_entities: []
+      ...>   def cook_meal(state, []), do: state
+      ...> end
+      iex> defmodule CleaningDomain do
+      ...>   use AriaCore.Domain
+      ...>   @action duration: "PT30M", requires_entities: []
+      ...>   def clean_kitchen(state, []), do: state
+      ...> end
       iex> cooking_domain = AriaCore.UnifiedDomain.create_from_module(CookingDomain)
       iex> cleaning_domain = AriaCore.UnifiedDomain.create_from_module(CleaningDomain)
       iex> unified = AriaCore.UnifiedDomain.merge_domains([cooking_domain, cleaning_domain])
@@ -137,9 +134,18 @@ defmodule AriaCore.UnifiedDomain do
 
   ## Examples
 
+      iex> defmodule ValidDomain do
+      ...>   use AriaCore.Domain
+      ...>   @action duration: "PT1H", requires_entities: []
+      ...>   def test_action(state, []), do: state
+      ...> end
       iex> AriaCore.UnifiedDomain.validate_domain_module(ValidDomain)
       :ok
 
+      iex> defmodule InvalidModule do
+      ...>   # Missing use AriaCore.Domain
+      ...>   def some_function(), do: :ok
+      ...> end
       iex> AriaCore.UnifiedDomain.validate_domain_module(InvalidModule)
       {:error, "Module does not use AriaCore.Domain"}
   """
@@ -194,6 +200,31 @@ defmodule AriaCore.UnifiedDomain do
   end
 
   # Private implementation functions
+
+  defp create_domain_manually(domain_module) do
+    # LEVERAGE existing Domain.new() (no rewrite needed)
+    base_domain = AriaCore.Domain.new(domain_module)
+
+    # Extract @action attributes using Phase 1 work
+    actions = get_action_metadata(domain_module)
+
+    # Extract @task_method attributes using Phase 1 work
+    methods = get_method_metadata(domain_module)
+
+    # Process actions using existing systems (SOCIABLE approach)
+    domain_with_actions = process_module_actions(base_domain, actions, domain_module)
+
+    # Process methods using existing systems (SOCIABLE approach)
+    domain_with_methods = process_module_methods(domain_with_actions, methods, domain_module)
+
+    # Set up entity registry (LEVERAGE existing entity system)
+    entity_registry = create_entity_registry_from_actions(actions)
+    domain_with_entities = AriaCore.Domain.set_entity_registry(domain_with_methods, entity_registry)
+
+    # Set up temporal specifications (LEVERAGE existing temporal system)
+    temporal_specs = create_temporal_specifications_from_actions(actions)
+    AriaCore.Domain.set_temporal_specifications(domain_with_entities, temporal_specs)
+  end
 
   defp get_action_metadata(domain_module) do
     if function_exported?(domain_module, :__action_metadata__, 0) do
@@ -277,11 +308,12 @@ defmodule AriaCore.UnifiedDomain do
 
   defp check_module_uses_domain(domain_module) do
     # Check if module has the required functions from using AriaCore.Domain
-    # Check for either action metadata function or if it's a valid domain module
+    # Must have at least one of the action attribute functions
     cond do
       function_exported?(domain_module, :__action_metadata__, 0) -> :ok
+      function_exported?(domain_module, :__method_metadata__, 0) -> :ok
+      function_exported?(domain_module, :__unigoal_metadata__, 0) -> :ok
       function_exported?(domain_module, :create_domain, 0) -> :ok
-      Code.ensure_loaded?(domain_module) -> :ok
       true -> {:error, "Module does not use AriaCore.Domain"}
     end
   end
@@ -304,7 +336,7 @@ defmodule AriaCore.UnifiedDomain do
     methods = get_method_metadata(domain_module)
 
     invalid_methods = Enum.filter(methods, fn
-      {name, metadata} when is_atom(name) and is_list(metadata) -> false
+      {name, metadata} when is_atom(name) and (is_list(metadata) or is_map(metadata)) -> false
       _ -> true
     end)
 
