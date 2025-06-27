@@ -138,6 +138,7 @@ defmodule AriaCharacterCore.MixProject do
       {:aria_temporal_planner, path: "apps/aria_temporal_planner"},
       {:aria_hybrid_planner, path: "apps/aria_hybrid_planner"},
       {:aria_membrane_pipeline, path: "apps/aria_membrane_pipeline"},
+      {:aria_gltf, path: "apps/aria_gltf"},
       {:ast_migrate, path: "apps/ast_migrate"}
     ]
   end
