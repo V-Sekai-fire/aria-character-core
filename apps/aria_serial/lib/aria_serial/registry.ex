@@ -2,10 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSerial.Registry do
-  @serial_number "R25W006REGX"
-
   @moduledoc """
-  Embedded serial number registry for Aria migration tools.
+  Serial number registry for Aria migration tools.
 
   ## Serial Number Format
 
@@ -29,58 +27,12 @@ defmodule AriaSerial.Registry do
   """
 
   @doc "Returns the serial number for this module"
-  def serial_number, do: @serial_number
-
-  @registry %{
-    "R25W001GLTL" => %{
-      format: :v1,
-      file: "goal_tuples.ex",
-      purpose: "Fix goal tuple parameter order",
-      created: ~D[2025-06-22],
-      week: 25,
-      sequence: 1
-    },
-    "R25W002LGGR" => %{
-      format: :v1,
-      file: "logger_conversion.ex",
-      purpose: "Convert IO.puts to Logger calls",
-      created: ~D[2025-06-22],
-      week: 25,
-      sequence: 2
-    },
-    "R25W003PRDR" => %{
-      format: :v1,
-      file: "state_parameter_order.ex",
-      purpose: "Fix parameter order in State function calls",
-      created: ~D[2025-06-22],
-      week: 25,
-      sequence: 3
-    },
-    "R25W004PRMS" => %{
-      format: :v1,
-      file: "state_parameters.ex",
-      purpose: "Update State function parameters",
-      created: ~D[2025-06-22],
-      week: 25,
-      sequence: 4
-    },
-    "R25W005STV2" => %{
-      format: :v1,
-      file: "state_v2.ex",
-      purpose: "Migrate StateV2 to State",
-      created: ~D[2025-06-22],
-      week: 25,
-      sequence: 5
-    },
-    "R25W006SAPX" => %{
-      format: :v1,
-      file: "statev2_api.ex",
-      purpose: "Update StateV2 API calls",
-      created: ~D[2025-06-22],
-      week: 25,
-      sequence: 6
-    }
-  }
+  def serial_number do
+    case AriaSerial.JsonStorage.lookup_serial("R25W006REGX") do
+      {:ok, _info} -> "R25W006REGX"
+      {:error, _} -> "R25W006REGX"  # fallback
+    end
+  end
 
   @allowed_chars "0123456789ABCDEFGHJKLMNPQRSTVWXY"
   @week_encoding %{
@@ -97,37 +49,25 @@ defmodule AriaSerial.Registry do
 
   @doc "Look up serial number information"
   def lookup(serial) do
-    # First check embedded registry
-    case Map.get(@registry, serial) do
-      nil ->
-        # Fall back to JsonStorage for dynamic serials (including ADRs)
-        case AriaSerial.JsonStorage.lookup_serial(serial) do
-          {:ok, info} -> convert_json_info_to_registry_format(info)
-          {:error, _} -> nil
-        end
-      info -> info
+    # Use JsonStorage for all serial lookups
+    case AriaSerial.JsonStorage.lookup_serial(serial) do
+      {:ok, info} -> convert_json_info_to_registry_format(info)
+      {:error, _} -> nil
     end
   end
 
   @doc "Get all registered serial numbers"
   def all_serials do
-    embedded_serials = Map.keys(@registry)
-    json_serials = AriaSerial.JsonStorage.all_serials()
-
-    (embedded_serials ++ json_serials)
-    |> Enum.uniq()
-    |> Enum.sort()
+    AriaSerial.JsonStorage.all_serials()
   end
 
   @doc "Get next sequence number for a given week"
   def next_sequence(week) do
-    @registry
-    |> Enum.filter(fn {_serial, info} -> info.week == week end)
-    |> Enum.map(fn {_serial, info} -> info.sequence end)
-    |> case do
-      [] -> 1
-      sequences -> Enum.max(sequences) + 1
-    end
+    # Get current year
+    current_year = Date.utc_today().year
+
+    # Use JsonStorage to get next sequence
+    AriaSerial.JsonStorage.get_next_sequence(current_year, week, "R")
   end
 
   @doc "Detect serial number format version"

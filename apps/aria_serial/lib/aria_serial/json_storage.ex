@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSerial.JsonStorage do
-  @serial_number "R25W007JSXN"
-
   @moduledoc """
   JSON-based storage system for serial number registry data.
 
@@ -12,7 +10,12 @@ defmodule AriaSerial.JsonStorage do
   """
 
   @doc "Returns the serial number for this module"
-  def serial_number, do: @serial_number
+  def serial_number do
+    case lookup_serial("R25W007JSXN") do
+      {:ok, _info} -> "R25W007JSXN"
+      {:error, _} -> "R25W007JSXN"  # fallback
+    end
+  end
 
   @storage_root "priv/serial_data"
 
@@ -165,30 +168,8 @@ defmodule AriaSerial.JsonStorage do
   end
 
   defp decode_week_char(char) do
-    case char do
-      c when c in ["1", "2", "3", "4", "5", "6", "7", "8", "9"] -> String.to_integer(c)
-      "C" -> 10
-      "D" -> 11
-      "F" -> 12
-      "G" -> 13
-      "H" -> 14
-      "J" -> 15
-      "K" -> 16
-      "L" -> 17
-      "M" -> 18
-      "N" -> 19
-      "P" -> 20
-      "Q" -> 21
-      "R" -> 22
-      "S" -> 23
-      "T" -> 24
-      "V" -> 25
-      "W" -> 26
-      "X" -> 27
-      "Y" -> 28
-      "Z" -> 53
-      _ -> 1  # fallback
-    end
+    # Use the same week decoding as Registry
+    AriaSerial.Registry.decode_week(char) || 1
   end
 
   defp collect_all_serials(storage_path) do

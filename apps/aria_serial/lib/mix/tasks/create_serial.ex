@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Mix.Tasks.Serial.Create do
-  @serial_number "R25W004CREA"
-
   @moduledoc """
   Create new serial numbers for migration tools.
 
@@ -27,7 +25,12 @@ defmodule Mix.Tasks.Serial.Create do
   @shortdoc "Create new serial numbers"
 
   @doc "Returns the serial number for this module"
-  def serial_number, do: @serial_number
+  def serial_number do
+    case AriaSerial.JsonStorage.lookup_serial("R25W004CREA") do
+      {:ok, _info} -> "R25W004CREA"
+      {:error, _} -> "R25W004CREA"  # fallback
+    end
+  end
 
   def run(args) do
     {opts, args, _} = OptionParser.parse(args, switches: [factory: :string, week: :integer])

@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Mix.Tasks.Serial.Lookup do
-  @serial_number "R25W003LXXK"
-
   @moduledoc """
   Look up serial numbers in the registry.
 
@@ -27,7 +25,12 @@ defmodule Mix.Tasks.Serial.Lookup do
   @shortdoc "Look up serial numbers in registry"
 
   @doc "Returns the serial number for this module"
-  def serial_number, do: @serial_number
+  def serial_number do
+    case AriaSerial.JsonStorage.lookup_serial("R25W003LXXK") do
+      {:ok, _info} -> "R25W003LXXK"
+      {:error, _} -> "R25W003LXXK"  # fallback
+    end
+  end
 
   def run(args) do
     {opts, args, _} = OptionParser.parse(args, switches: [all: :boolean])
