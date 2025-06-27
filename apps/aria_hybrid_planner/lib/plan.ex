@@ -24,11 +24,11 @@ defmodule AriaHybridPlanner.PlanCore do
   def ipyhop(domain, state, solution_tree, opts),
     do: Plan.Core.ipyhop(domain, state, solution_tree, opts)
 
-  # Delegate execution functions to Plan.Execution
+  # Delegate execution functions to Plan.SimpleExecutor (IPyHOP pattern)
   @spec run_lazy_refineahead(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), term(), keyword()) ::
           {:ok, AriaEngine.State.t()} | {:error, String.t()}
   def run_lazy_refineahead(domain, state, plan, opts \\ []),
-    do: Plan.Execution.run_lazy_refineahead(domain, state, plan, opts)
+    do: Plan.SimpleExecutor.execute(domain, state, plan, opts)
 
   # Delegate replanning functions to Plan.Backtracking
   @spec replan(

@@ -395,7 +395,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
     end
 
     try do
-      case Plan.replan(domain, state, solution_tree, fail_node_id, opts) do
+      case AriaHybridPlanner.PlanCore.replan(domain, state, solution_tree, fail_node_id, opts) do
         {:ok, new_solution_tree} ->
           if verbose > 1 do
             action_count = AriaEngine.Plan.Utils.plan_cost(new_solution_tree)
