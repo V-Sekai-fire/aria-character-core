@@ -78,7 +78,10 @@ defmodule AstMigrate do
       :unit_test_improvements,
       :timeline_namespace_fixes,
       :aria_engine_namespace_cleanup,
-      :membrane_namespace_cleanup
+      :membrane_namespace_cleanup,
+      :state_module_conflict_resolution,
+      :timeline_module_references,
+      :state_struct_imports
     ]
   end
 
@@ -113,6 +116,18 @@ defmodule AstMigrate do
 
   defp get_rule_module(:membrane_namespace_cleanup) do
     {:ok, Rules.MembraneNamespaceCleanup}
+  end
+
+  defp get_rule_module(:state_module_conflict_resolution) do
+    {:ok, Rules.StateModuleConflictResolution}
+  end
+
+  defp get_rule_module(:timeline_module_references) do
+    {:ok, Rules.TimelineModuleReferences}
+  end
+
+  defp get_rule_module(:state_struct_imports) do
+    {:ok, Rules.StateStructImports}
   end
 
   defp get_rule_module(rule_name) do

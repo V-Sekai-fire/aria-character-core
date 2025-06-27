@@ -5,6 +5,7 @@ defmodule Plan.Backtracking do
   @moduledoc "Functions for handling backtracking and replanning in the solution tree.\n"
   require Logger
   alias Plan.Core
+  alias AriaEngine.State
   @type node_id :: String.t()
   @type solution_node :: %{
           id: node_id(),
@@ -26,7 +27,13 @@ defmodule Plan.Backtracking do
         }
   @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure
   @doc "Replan from a specific failure node in the solution tree.\n"
-  @spec replan(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), solution_tree(), node_id(), keyword()) ::
+  @spec replan(
+          AriaEngine.Domain.Core.t(),
+          AriaEngine.State.t(),
+          solution_tree(),
+          node_id(),
+          keyword()
+        ) ::
           replan_result()
   def replan(
         %AriaEngine.Domain.Core{} = domain,
@@ -104,7 +111,12 @@ defmodule Plan.Backtracking do
     end
   end
 
-  @spec try_alternative_method_for_task(AriaEngine.Domain.Core.t(), solution_tree(), node_id(), integer()) ::
+  @spec try_alternative_method_for_task(
+          AriaEngine.Domain.Core.t(),
+          solution_tree(),
+          node_id(),
+          integer()
+        ) ::
           {:ok, solution_tree()} | :no_alternatives | {:error, String.t()}
   def try_alternative_method_for_task(domain, solution_tree, task_node_id, verbose) do
     case solution_tree.nodes[task_node_id] do

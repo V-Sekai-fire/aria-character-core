@@ -8,6 +8,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   alias HybridPlanner.HybridCoordinatorV2.ExecutionOperations
   alias HybridPlanner.HybridCoordinatorV2.ReplanningOperations
   alias HybridPlanner.HybridCoordinatorV2.StrategyManagement
+  alias AriaEngine.State
 
   defstruct [
     :planning_strategy,

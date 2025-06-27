@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule HybridPlanner.HybridCoordinatorV2.PlanningOperations do
+  alias AriaEngine.State
+
   @moduledoc "Core planning operations for HybridCoordinatorV2.\n\nHandles HTN planning, temporal constraint validation, and plan creation\nusing injected strategy dependencies.\n"
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()
   @type plan_result :: {:ok, map()} | {:error, String.t()}

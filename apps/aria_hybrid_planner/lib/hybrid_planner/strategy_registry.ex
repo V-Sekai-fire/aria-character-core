@@ -4,6 +4,7 @@
 defmodule HybridPlanner.StrategyRegistry do
   @moduledoc "Registry of planning strategy functions that can be composed at runtime.\n\nPure Function as Object implementation following Martin Fowler's pattern.\nAll strategies are functions that can be stored, passed around, and composed\nwithout requiring complex object hierarchies.\n\n## Function Signatures\n\nAll strategy functions follow consistent signatures for composability:\n\n- Planning strategies: `(Domain.t(), AriaEngine.StateV2.t(), [term()], keyword()) -> {:ok, term()} | {:error, String.t()}`\n- Temporal strategies: `(term(), Domain.t(), keyword()) -> {:ok, term()} | {:error, String.t()}`\n- Execution strategies: `(Domain.t(), AriaEngine.StateV2.t(), term(), keyword()) -> {:ok, AriaEngine.StateV2.t()} | {:error, String.t()}`\n\n## Usage\n\n    strategies = StrategyRegistry.default_strategies()\n    planning_fn = strategies.planning.htn\n    temporal_fn = strategies.temporal.stn\n    execution_fn = strategies.execution.lazy\n    \n    # Compose them in a coordinator\n    coordinator = StrategyCoordinator.new(planning_fn, temporal_fn, execution_fn)\n"
   alias TemporalPlanner.{STNPlanner, STNMethod, STNAction}
+  alias AriaEngine.State
 
   @type planning_strategy :: (Domain.Core.t(), AriaEngine.State.t(), [term()], keyword() ->
                                 {:ok, term()} | {:error, String.t()})

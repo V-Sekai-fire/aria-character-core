@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Plan.Blacklisting do
+  alias AriaEngine.State
   @moduledoc "Functions for handling blacklisting of commands and methods.\n"
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}

@@ -5,6 +5,7 @@ defmodule Planning.CoreInterface do
   @moduledoc "Replan from a failure point using HybridPlanner.HybridCoordinatorV2.\n"
   alias Planning.Internal
   alias AriaEngine.Core
+  alias AriaEngine.State
   @type t :: Planning.HighLevel.t()
   @type solution_tree :: Core.solution_tree()
   @type plan_step :: Core.plan_step()
@@ -19,7 +20,12 @@ defmodule Planning.CoreInterface do
   end
 
   @doc "Advanced planning interface - returns the full solution tree.\n"
-  @spec plan_with_tree(AriaEngine.DomainBehaviour.t(), AriaEngine.Core.state(), [todo_item()], keyword()) ::
+  @spec plan_with_tree(
+          AriaEngine.DomainBehaviour.t(),
+          AriaEngine.Core.state(),
+          [todo_item()],
+          keyword()
+        ) ::
           {:ok, solution_tree()} | {:error, String.t()}
   def plan_with_tree(domain, %AriaEngine.State{} = state, todos, opts \\ []) do
     AriaEngine.PlannerAdapter.plan(domain, state, todos, opts)
@@ -33,7 +39,8 @@ defmodule Planning.CoreInterface do
   end
 
   @doc "Replan from a failure point using HybridPlanner.HybridCoordinator.\n"
-  @spec replan(AriaEngine.Core.t(), String.t(), keyword()) :: {:ok, AriaEngine.Core.t()} | {:error, String.t()}
+  @spec replan(AriaEngine.Core.t(), String.t(), keyword()) ::
+          {:ok, AriaEngine.Core.t()} | {:error, String.t()}
   def replan(engine, fail_node_id, opts \\ [])
 
   def replan(%AriaEngine.Core{solution_tree: solution_tree} = engine, fail_node_id, opts)

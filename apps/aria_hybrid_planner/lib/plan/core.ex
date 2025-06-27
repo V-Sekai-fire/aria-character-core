@@ -6,6 +6,7 @@ defmodule Plan.Core do
   require Logger
   alias Plan.{NodeExpansion, Backtracking}
   alias AriaEngine.Plan.Utils
+  alias AriaEngine.State
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
   @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
@@ -51,14 +52,16 @@ defmodule Plan.Core do
   end
 
   @doc "Main IPyHOP planning function that creates a solution tree to achieve the given todos.\n"
-  @spec plan(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), [todo_item()], keyword()) :: plan_result()
+  @spec plan(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), [todo_item()], keyword()) ::
+          plan_result()
   def plan(domain, %AriaEngine.State{} = state, todos, opts \\ []) do
     opts = Keyword.put_new(opts, :replan_depth, @default_replan_depth)
     solution_tree = Utils.create_initial_solution_tree(todos, state)
     ipyhop(domain, state, solution_tree, opts)
   end
 
-  @spec ipyhop(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) :: plan_result()
+  @spec ipyhop(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) ::
+          plan_result()
   def ipyhop(domain, %AriaEngine.State{} = current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
     max_depth = Keyword.get(opts, :max_depth, @default_max_depth)

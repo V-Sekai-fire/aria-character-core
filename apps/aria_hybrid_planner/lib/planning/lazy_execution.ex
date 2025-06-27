@@ -59,10 +59,11 @@ defmodule AriaEngine.Planning.LazyExecution do
 
   # Plan goals one by one in sequence
   defp plan_goals_sequentially(domain, initial_state, goals, options) do
-    {actions, final_state} = Enum.reduce(goals, {[], initial_state}, fn goal, {acc_actions, current_state} ->
-      {:ok, goal_actions, new_state} = plan_single_goal(domain, current_state, goal, options)
-      {acc_actions ++ goal_actions, new_state}
-    end)
+    {actions, final_state} =
+      Enum.reduce(goals, {[], initial_state}, fn goal, {acc_actions, current_state} ->
+        {:ok, goal_actions, new_state} = plan_single_goal(domain, current_state, goal, options)
+        {acc_actions ++ goal_actions, new_state}
+      end)
 
     {actions, final_state}
   end
@@ -85,7 +86,9 @@ defmodule AriaEngine.Planning.LazyExecution do
   # Check if a goal is satisfied in the current state
   defp goal_satisfied?(state, {subject, predicate, value}) do
     case Map.get(state, subject) do
-      nil -> false
+      nil ->
+        false
+
       entity_state ->
         Map.get(entity_state, predicate) == value
     end
@@ -99,53 +102,62 @@ defmodule AriaEngine.Planning.LazyExecution do
       "location" ->
         # Generate move action
         current_location = get_current_location(state, subject)
+
         if current_location != value do
-          [%{
-            action: "move",
-            entity: subject,
-            from: current_location,
-            to: value,
-            start_time: base_time,
-            duration: calculate_move_duration(current_location, value),
-            cost: calculate_move_cost(current_location, value)
-          }]
+          [
+            %{
+              action: "move",
+              entity: subject,
+              from: current_location,
+              to: value,
+              start_time: base_time,
+              duration: calculate_move_duration(current_location, value),
+              cost: calculate_move_cost(current_location, value)
+            }
+          ]
         else
           []
         end
 
       "has" ->
         # Generate pickup action
-        [%{
-          action: "pickup",
-          entity: subject,
-          object: value,
-          start_time: base_time,
-          duration: 2,
-          cost: 1
-        }]
+        [
+          %{
+            action: "pickup",
+            entity: subject,
+            object: value,
+            start_time: base_time,
+            duration: 2,
+            cost: 1
+          }
+        ]
 
       "state" ->
         # Generate state change action
-        [%{
-          action: "change_state",
-          entity: subject,
-          new_state: value,
-          start_time: base_time,
-          duration: 1,
-          cost: 1
-        }]
+        [
+          %{
+            action: "change_state",
+            entity: subject,
+            new_state: value,
+            start_time: base_time,
+            duration: 1,
+            cost: 1
+          }
+        ]
 
       _ ->
         # Generic action for unknown predicates
-        [%{
-          action: "achieve",
-          entity: subject,
-          predicate: predicate,
-          value: value,
-          start_time: base_time,
-          duration: 3,
-          cost: 2
-        }]
+        [
+          %{
+            action: "achieve",
+            entity: subject,
+            predicate: predicate,
+            value: value,
+            start_time: base_time,
+            duration: 3,
+            cost: 2
+          }
+        ]
     end
   end
 
@@ -238,5 +250,6 @@ defmodule AriaEngine.Planning.LazyExecution do
       :ok
     end
   end
+
   def validate_goals(_), do: {:error, "Goals must be a list"}
 end

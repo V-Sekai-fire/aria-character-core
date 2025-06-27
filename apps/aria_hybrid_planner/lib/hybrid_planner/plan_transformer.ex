@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngine.HybridPlanner.PlanTransformer do
+  alias AriaEngine.State
+
   @moduledoc "Transforms MCP scheduling requests into planning parameters for the hybrid planner.\n\nThis module serves as the bridge between the MCP pipeline and the hybrid planner,\nconverting activities, entities, and resources from MCP format into the domain\nand state structures that the planner expects.\n\n## Usage\n\n    mcp_request = %{\n      activities: [...],\n      entities: [...],\n      resources: [...],\n      constraints: %{...}\n    }\n    \n    {:ok, planning_params} = AriaEngine.HybridPlanner.PlanTransformer.convert_to_planning_params(mcp_request)\n"
   require Logger
 

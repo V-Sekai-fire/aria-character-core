@@ -90,15 +90,17 @@ defmodule Timeline.Internal.STN.Operations do
   @spec union(STN.t(), STN.t()) :: STN.t()
   def union(stn1, stn2) do
     # Handle case where STNs might be wrapped in {:ok, stn} tuples
-    unwrapped_stn1 = case stn1 do
-      {:ok, stn} -> stn
-      stn -> stn
-    end
+    unwrapped_stn1 =
+      case stn1 do
+        {:ok, stn} -> stn
+        stn -> stn
+      end
 
-    unwrapped_stn2 = case stn2 do
-      {:ok, stn} -> stn
-      stn -> stn
-    end
+    unwrapped_stn2 =
+      case stn2 do
+        {:ok, stn} -> stn
+        stn -> stn
+      end
 
     {compatible_stn1, compatible_stn2} = ensure_compatible_stns(unwrapped_stn1, unwrapped_stn2)
     merged_points = MapSet.union(compatible_stn1.time_points, compatible_stn2.time_points)
@@ -156,7 +158,9 @@ defmodule Timeline.Internal.STN.Operations do
 
   def parallel_join(stns) do
     case length(stns) do
-      count when count > 4 -> %STN{}
+      count when count > 4 ->
+        %STN{}
+
       _ ->
         case stns |> Enum.reduce(&union/2) do
           {:error, :unsatisfiable} = error -> error
@@ -215,9 +219,9 @@ defmodule Timeline.Internal.STN.Operations do
 
         # Check if any segment is unsatisfiable
         case Enum.find(solved_segments, fn
-          {:error, :unsatisfiable} -> true
-          _ -> false
-        end) do
+               {:error, :unsatisfiable} -> true
+               _ -> false
+             end) do
           {:error, :unsatisfiable} = error -> error
           nil -> parallel_join(solved_segments)
         end

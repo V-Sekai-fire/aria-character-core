@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule HybridPlanner.HybridCoordinatorV2.ExecutionOperations do
+  alias AriaEngine.State
+
   @moduledoc "Execution operations for HybridCoordinatorV2.\n\nHandles plan execution using injected execution strategy dependencies.\n"
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()
   @type execution_result :: {:ok, AriaEngine.State.t()} | {:error, String.t()}

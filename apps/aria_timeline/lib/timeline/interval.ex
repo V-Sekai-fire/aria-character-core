@@ -76,31 +76,43 @@ defmodule Timeline.Interval do
 
   @doc "Creates a new interval from ISO 8601 datetime strings.\n\nSupports both string arguments and map-based unified constructor patterns.\n\n## Examples\n\n    iex> interval = Timeline.Interval.new_fixed_schedule(\"2025-06-22T10:00:00Z\", \"2025-06-22T11:00:00Z\")\n    iex> interval.start_time\n    ~U[2025-06-22 10:00:00Z]\n\n"
   @spec new_fixed_schedule(String.t(), String.t()) :: t()
-  def new_fixed_schedule(start_iso8601, end_iso8601) when is_binary(start_iso8601) and is_binary(end_iso8601) do
+  def new_fixed_schedule(start_iso8601, end_iso8601)
+      when is_binary(start_iso8601) and is_binary(end_iso8601) do
     {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
     {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
-    new(start_dt, end_dt, metadata: %{
-      fixed_schedule: true,
-      iso8601_start: start_iso8601,
-      iso8601_end: end_iso8601
-    })
+
+    new(start_dt, end_dt,
+      metadata: %{
+        fixed_schedule: true,
+        iso8601_start: start_iso8601,
+        iso8601_end: end_iso8601
+      }
+    )
   end
+
   def new_fixed_schedule(invalid_spec, _opts) when is_map(invalid_spec) do
     raise ArgumentError, "Invalid temporal specification: #{inspect(invalid_spec)}"
   end
+
   def new_fixed_schedule(%{start: start_iso8601}, opts) when is_list(opts) do
     {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+
     %__MODULE__{
       id: generate_id(),
       start_time: start_dt,
       end_time: nil,
       agent: Keyword.get(opts, :agent),
       entity: Keyword.get(opts, :entity),
-      metadata: Map.merge(%{open_ended_start: true, iso8601_start: start_iso8601}, Keyword.get(opts, :metadata, %{}))
+      metadata:
+        Map.merge(
+          %{open_ended_start: true, iso8601_start: start_iso8601},
+          Keyword.get(opts, :metadata, %{})
+        )
     }
   end
 
-  def new_fixed_schedule(start_iso8601, end_iso8601, opts) when is_binary(start_iso8601) and is_binary(end_iso8601) and is_list(opts) do
+  def new_fixed_schedule(start_iso8601, end_iso8601, opts)
+      when is_binary(start_iso8601) and is_binary(end_iso8601) and is_list(opts) do
     {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
     {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
 
@@ -110,6 +122,7 @@ defmodule Timeline.Interval do
       iso8601_start: start_iso8601,
       iso8601_end: end_iso8601
     }
+
     user_metadata = Keyword.get(opts, :metadata, %{})
     merged_metadata = Map.merge(base_metadata, user_metadata)
 
@@ -120,11 +133,14 @@ defmodule Timeline.Interval do
   def new_fixed_schedule(%{start: start_iso8601, end: end_iso8601}) do
     {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
     {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
-    new(start_dt, end_dt, metadata: %{
-      fixed_schedule: true,
-      iso8601_start: start_iso8601,
-      iso8601_end: end_iso8601
-    })
+
+    new(start_dt, end_dt,
+      metadata: %{
+        fixed_schedule: true,
+        iso8601_start: start_iso8601,
+        iso8601_end: end_iso8601
+      }
+    )
   end
 
   def new_fixed_schedule(%{duration: duration_iso8601}) do
@@ -132,12 +148,17 @@ defmodule Timeline.Interval do
       id: generate_id(),
       start_time: nil,
       end_time: nil,
-      metadata: %{floating_duration: true, duration: duration_iso8601, iso8601_duration: duration_iso8601}
+      metadata: %{
+        floating_duration: true,
+        duration: duration_iso8601,
+        iso8601_duration: duration_iso8601
+      }
     }
   end
 
   def new_fixed_schedule(%{start: start_iso8601}) do
     {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+
     %__MODULE__{
       id: generate_id(),
       start_time: start_dt,
@@ -148,6 +169,7 @@ defmodule Timeline.Interval do
 
   def new_fixed_schedule(%{end: end_iso8601}) do
     {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
+
     %__MODULE__{
       id: generate_id(),
       start_time: nil,
@@ -167,20 +189,33 @@ defmodule Timeline.Interval do
       id: generate_id(),
       start_time: nil,
       end_time: nil,
-      metadata: %{floating_duration: true, duration: duration_iso8601, iso8601_duration: duration_iso8601}
+      metadata: %{
+        floating_duration: true,
+        duration: duration_iso8601,
+        iso8601_duration: duration_iso8601
+      }
     }
   end
 
   @doc "Creates a floating duration interval with options.\n"
   @spec new_floating_duration(String.t(), keyword()) :: t()
-  def new_floating_duration(duration_iso8601, opts) when is_binary(duration_iso8601) and is_list(opts) do
+  def new_floating_duration(duration_iso8601, opts)
+      when is_binary(duration_iso8601) and is_list(opts) do
     %__MODULE__{
       id: generate_id(),
       start_time: nil,
       end_time: nil,
       agent: Keyword.get(opts, :agent),
       entity: Keyword.get(opts, :entity),
-      metadata: Map.merge(%{floating_duration: true, duration: duration_iso8601, iso8601_duration: duration_iso8601}, Keyword.get(opts, :metadata, %{}))
+      metadata:
+        Map.merge(
+          %{
+            floating_duration: true,
+            duration: duration_iso8601,
+            iso8601_duration: duration_iso8601
+          },
+          Keyword.get(opts, :metadata, %{})
+        )
     }
   end
 
@@ -188,6 +223,7 @@ defmodule Timeline.Interval do
   @spec new_open_ended_start(String.t()) :: t()
   def new_open_ended_start(start_iso8601) when is_binary(start_iso8601) do
     {:ok, start_dt, _} = DateTime.from_iso8601(start_iso8601)
+
     %__MODULE__{
       id: generate_id(),
       start_time: start_dt,
@@ -200,6 +236,7 @@ defmodule Timeline.Interval do
   @spec new_open_ended_end(String.t()) :: t()
   def new_open_ended_end(end_iso8601) when is_binary(end_iso8601) do
     {:ok, end_dt, _} = DateTime.from_iso8601(end_iso8601)
+
     %__MODULE__{
       id: generate_id(),
       start_time: nil,

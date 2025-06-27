@@ -3,8 +3,17 @@
 
 defmodule Timeline.Bridge do
   @type semantic_position ::
-    :starts | :finishes | :meets | :met_by | :during | :contains |
-    :overlaps | :overlapped_by | :before | :after | :equals
+          :starts
+          | :finishes
+          | :meets
+          | :met_by
+          | :during
+          | :contains
+          | :overlaps
+          | :overlapped_by
+          | :before
+          | :after
+          | :equals
 
   @type position :: DateTime.t() | String.t() | semantic_position()
 
@@ -15,12 +24,24 @@ defmodule Timeline.Bridge do
           metadata: map(),
           # New fields for semantic bridges:
           semantic_relation: semantic_position() | nil,
-          reference_target: String.t() | nil,  # Timeline ID or interval ID
-          computed_position: DateTime.t() | nil  # Calculated absolute position
+
+          # Timeline ID or interval ID
+          reference_target: String.t() | nil,
+
+          # Calculated absolute position
+          computed_position: DateTime.t() | nil
         }
   @type id :: String.t()
 
-  defstruct [:id, :position, :type, :metadata, :semantic_relation, :reference_target, :computed_position]
+  defstruct [
+    :id,
+    :position,
+    :type,
+    :metadata,
+    :semantic_relation,
+    :reference_target,
+    :computed_position
+  ]
 
   @moduledoc """
   Bridge layer for temporal relations classification and STN constraint generation.
@@ -65,13 +86,24 @@ defmodule Timeline.Bridge do
   alias Timeline.Internal.STN
 
   @type relation_code ::
-    :EQ | :ADJ_F | :ADJ_B | :WITHIN | :CONTAINS |
-    :START_ALIGN | :START_EXTEND | :END_ALIGN | :END_EXTEND |
-    :OVERLAP_F | :OVERLAP_B | :PRECEDES | :FOLLOWS
+          :EQ
+          | :ADJ_F
+          | :ADJ_B
+          | :WITHIN
+          | :CONTAINS
+          | :START_ALIGN
+          | :START_EXTEND
+          | :END_ALIGN
+          | :END_EXTEND
+          | :OVERLAP_F
+          | :OVERLAP_B
+          | :PRECEDES
+          | :FOLLOWS
 
   @type temporal_constraint :: {number(), number()}
   @type constraint_result :: {:ok, temporal_constraint()} | {:error, atom()}
-  @type bridge_type :: :decision | :condition | :synchronization | :resource_check | :auto_generated
+  @type bridge_type ::
+          :decision | :condition | :synchronization | :resource_check | :auto_generated
 
   # Minimum duration threshold to prevent zero-duration contract violations
   @min_duration_threshold 1
@@ -105,7 +137,8 @@ defmodule Timeline.Bridge do
       :starts
 
   """
-  @spec new(id(), DateTime.t() | String.t() | semantic_position(), bridge_type(), keyword()) :: t()
+  @spec new(id(), DateTime.t() | String.t() | semantic_position(), bridge_type(), keyword()) ::
+          t()
   def new(id, position, type, opts \\ [])
 
   def new(id, %DateTime{} = position, type, opts) do
@@ -320,7 +353,7 @@ defmodule Timeline.Bridge do
 
     Enum.filter(bridges, fn bridge ->
       DateTime.compare(bridge.position, start_dt) != :lt and
-      DateTime.compare(bridge.position, end_dt) != :gt
+        DateTime.compare(bridge.position, end_dt) != :gt
     end)
   end
 
@@ -369,7 +402,8 @@ defmodule Timeline.Bridge do
       {-1, 1}
 
   """
-  @spec generate_stn_constraint(Interval.t(), Interval.t(), STN.time_unit()) :: constraint_result()
+  @spec generate_stn_constraint(Interval.t(), Interval.t(), STN.time_unit()) ::
+          constraint_result()
   def generate_stn_constraint(%Interval{} = interval1, %Interval{} = interval2, time_unit) do
     relation = classify_relation(interval1, interval2)
 
@@ -446,7 +480,10 @@ defmodule Timeline.Bridge do
   def allen_to_language_neutral(:overlapped_by), do: :OVERLAP_B
   def allen_to_language_neutral(:before), do: :PRECEDES
   def allen_to_language_neutral(:after), do: :FOLLOWS
-  def allen_to_language_neutral(_), do: :EQ  # Default fallback
+
+  # Default fallback
+
+  def allen_to_language_neutral(_), do: :EQ
 
   @doc """
   Gets the human-readable description for a relation code.
@@ -473,32 +510,52 @@ defmodule Timeline.Bridge do
 
   defp validate_bridge_type!(type) do
     unless valid_type?(type) do
-      raise ArgumentError, "Invalid bridge type: #{inspect(type)}. Valid types: #{inspect(@valid_types)}"
+      raise ArgumentError,
+            "Invalid bridge type: #{inspect(type)}. Valid types: #{inspect(@valid_types)}"
     end
   end
 
   defp validate_semantic_position!(position) do
-    valid_positions = [:starts, :finishes, :meets, :met_by, :during, :contains,
-                      :overlaps, :overlapped_by, :before, :after, :equals]
+    valid_positions = [
+      :starts,
+      :finishes,
+      :meets,
+      :met_by,
+      :during,
+      :contains,
+      :overlaps,
+      :overlapped_by,
+      :before,
+      :after,
+      :equals
+    ]
+
     unless position in valid_positions do
-      raise ArgumentError, "Invalid semantic position: #{inspect(position)}. Valid positions: #{inspect(valid_positions)}"
+      raise ArgumentError,
+            "Invalid semantic position: #{inspect(position)}. Valid positions: #{inspect(valid_positions)}"
     end
   end
 
   defp parse_datetime(%DateTime{} = datetime), do: datetime
+
   defp parse_datetime(iso8601_string) when is_binary(iso8601_string) do
     {:ok, datetime, _} = DateTime.from_iso8601(iso8601_string)
     datetime
   end
 
-  defp validate_interval_duration(%Interval{start_time: start_time, end_time: end_time}, time_unit) do
+  defp validate_interval_duration(
+         %Interval{start_time: start_time, end_time: end_time},
+         time_unit
+       ) do
     duration_in_unit = calculate_duration_in_unit(start_time, end_time, time_unit)
 
     cond do
       duration_in_unit < @min_duration_threshold ->
         {:error, :zero_duration_violation}
+
       duration_in_unit < 0 ->
         {:error, :negative_duration}
+
       true ->
         :ok
     end
@@ -609,7 +666,9 @@ defmodule Timeline.Bridge do
 
   defp generate_containment_constraint(inner_interval, outer_interval, time_unit) do
     # Calculate the temporal distance from outer start to inner start
-    start_offset = DateTime.diff(inner_interval.start_time, outer_interval.start_time, :microsecond)
+    start_offset =
+      DateTime.diff(inner_interval.start_time, outer_interval.start_time, :microsecond)
+
     start_offset_in_unit = convert_microseconds_to_unit(start_offset, time_unit)
 
     # Calculate the temporal distance from inner end to outer end

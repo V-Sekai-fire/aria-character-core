@@ -14,7 +14,8 @@ defmodule AriaTimeline.TimelineCore do
           metadata: map()
         }
 
-  @type bridge_rule :: :action_type_transitions | :resource_changes | :phase_boundaries | :decision_points
+  @type bridge_rule ::
+          :action_type_transitions | :resource_changes | :phase_boundaries | :decision_points
   @type segment_info :: %{
           start_time: DateTime.t() | nil,
           end_time: DateTime.t() | nil,
@@ -126,6 +127,7 @@ defmodule AriaTimeline.TimelineCore do
   @doc "Checks if the Timeline's temporal constraints are consistent.\n"
   @spec consistent?(t() | {:error, :unsatisfiable}) :: boolean()
   def consistent?({:error, :unsatisfiable}), do: false
+
   def consistent?(timeline) do
     STN.consistent?(timeline.stn)
   end
@@ -152,10 +154,12 @@ defmodule AriaTimeline.TimelineCore do
   @doc "Applies Path Consistency (PC-2) algorithm to the Timeline using MiniZinc solver.\n"
   @spec apply_pc2(t()) :: t()
   def apply_pc2(timeline) do
-    solved_stn = case AriaMinizincStn.solve_stn(timeline.stn) do
-      {:ok, stn} -> stn
-      stn -> stn
-    end
+    solved_stn =
+      case AriaMinizincStn.solve_stn(timeline.stn) do
+        {:ok, stn} -> stn
+        stn -> stn
+      end
+
     %{timeline | stn: solved_stn}
   end
 
@@ -260,26 +264,28 @@ defmodule AriaTimeline.TimelineCore do
     merged_intervals = timelines |> Enum.map(& &1.intervals) |> Enum.reduce(%{}, &Map.merge/2)
 
     # Convert absolute position bridges to semantic bridges, then preserve all semantic bridges
-    preserved_bridges = timelines
-    |> Enum.flat_map(fn timeline ->
-      timeline.metadata
-      |> Map.get(:bridges, %{})
-      |> Map.values()
-      |> Enum.map(&convert_to_semantic_bridge(timeline, &1))
-      |> Enum.filter(&is_semantic_bridge?/1)
-    end)
-    |> Enum.map(&{&1.id, &1})
-    |> Map.new()
+    preserved_bridges =
+      timelines
+      |> Enum.flat_map(fn timeline ->
+        timeline.metadata
+        |> Map.get(:bridges, %{})
+        |> Map.values()
+        |> Enum.map(&convert_to_semantic_bridge(timeline, &1))
+        |> Enum.filter(&is_semantic_bridge?/1)
+      end)
+      |> Enum.map(&{&1.id, &1})
+      |> Map.new()
 
     # Don't merge absolute position bridge metadata when chaining - only preserve semantic bridges
-    base_metadata = timelines
-    |> Enum.map(& &1.metadata)
-    |> Enum.reduce(%{}, fn metadata, acc ->
-      metadata
-      |> Map.delete(:bridges)
-      |> then(&Map.merge(acc, &1))
-    end)
-    |> Map.put(:bridges, preserved_bridges)
+    base_metadata =
+      timelines
+      |> Enum.map(& &1.metadata)
+      |> Enum.reduce(%{}, fn metadata, acc ->
+        metadata
+        |> Map.delete(:bridges)
+        |> then(&Map.merge(acc, &1))
+      end)
+      |> Map.put(:bridges, preserved_bridges)
 
     %__MODULE__{intervals: merged_intervals, stn: chained_stn, metadata: base_metadata}
   end
@@ -342,10 +348,11 @@ defmodule AriaTimeline.TimelineCore do
   @spec add_bridge(t(), Bridge.t()) :: t()
   def add_bridge(%__MODULE__{} = timeline, bridge) do
     # Compute semantic position if needed
-    bridge_with_position = case bridge.semantic_relation do
-      nil -> bridge
-      _semantic -> compute_semantic_position(timeline, bridge)
-    end
+    bridge_with_position =
+      case bridge.semantic_relation do
+        nil -> bridge
+        _semantic -> compute_semantic_position(timeline, bridge)
+      end
 
     case validate_bridge_placement(timeline, bridge_with_position) do
       :ok ->
@@ -370,7 +377,13 @@ defmodule AriaTimeline.TimelineCore do
       :starts
 
   """
-  @spec add_semantic_bridge(t(), Bridge.semantic_position(), String.t(), Bridge.bridge_type(), keyword()) :: t()
+  @spec add_semantic_bridge(
+          t(),
+          Bridge.semantic_position(),
+          String.t(),
+          Bridge.bridge_type(),
+          keyword()
+        ) :: t()
   def add_semantic_bridge(timeline, relation, bridge_id, bridge_type, opts \\ []) do
     bridge = Bridge.new_semantic(bridge_id, relation, "timeline", bridge_type, opts)
     add_bridge(timeline, bridge)
@@ -393,7 +406,13 @@ defmodule AriaTimeline.TimelineCore do
       "interval_1"
 
   """
-  @spec add_interval_bridge(t(), Bridge.semantic_position(), String.t(), String.t(), Bridge.bridge_type()) :: t()
+  @spec add_interval_bridge(
+          t(),
+          Bridge.semantic_position(),
+          String.t(),
+          String.t(),
+          Bridge.bridge_type()
+        ) :: t()
   def add_interval_bridge(timeline, relation, interval_id, bridge_id, bridge_type) do
     bridge = Bridge.new_semantic(bridge_id, relation, interval_id, bridge_type)
     add_bridge(timeline, bridge)
@@ -455,6 +474,7 @@ defmodule AriaTimeline.TimelineCore do
   @spec get_bridges(t()) :: [Bridge.t()]
   def get_bridges(%__MODULE__{} = timeline) do
     bridges = Map.get(timeline.metadata, :bridges, %{})
+
     bridges
     |> Map.values()
     |> Enum.sort_by(& &1.position, DateTime)
@@ -497,12 +517,15 @@ defmodule AriaTimeline.TimelineCore do
       [] ->
         # Single segment with proper metadata structure
         intervals_map = intervals |> Enum.map(&{&1.id, &1}) |> Map.new()
-        [%{
-          start_time: nil,
-          end_time: nil,
-          intervals: intervals_map,
-          metadata: %{segment: 1, bridge_before: nil}
-        }]
+
+        [
+          %{
+            start_time: nil,
+            end_time: nil,
+            intervals: intervals_map,
+            metadata: %{segment: 1, bridge_before: nil}
+          }
+        ]
 
       _ ->
         create_segments_from_bridges(bridges, intervals)
@@ -519,7 +542,9 @@ defmodule AriaTimeline.TimelineCore do
   end
 
   @doc "Gets bridges within a time range.\n"
-  @spec bridges_in_range(t(), DateTime.t() | String.t(), DateTime.t() | String.t()) :: [Bridge.t()]
+  @spec bridges_in_range(t(), DateTime.t() | String.t(), DateTime.t() | String.t()) :: [
+          Bridge.t()
+        ]
   def bridges_in_range(%__MODULE__{} = timeline, start_time, end_time) do
     start_dt = parse_datetime_param(start_time)
     end_dt = parse_datetime_param(end_time)
@@ -528,7 +553,7 @@ defmodule AriaTimeline.TimelineCore do
     |> get_bridges()
     |> Enum.filter(fn bridge ->
       DateTime.compare(bridge.position, start_dt) != :lt and
-      DateTime.compare(bridge.position, end_dt) != :gt
+        DateTime.compare(bridge.position, end_dt) != :gt
     end)
   end
 
@@ -538,7 +563,7 @@ defmodule AriaTimeline.TimelineCore do
     |> Map.values()
     |> Enum.any?(fn interval ->
       DateTime.compare(bridge.position, interval.start_time) == :eq or
-      DateTime.compare(bridge.position, interval.end_time) == :eq
+        DateTime.compare(bridge.position, interval.end_time) == :eq
     end)
   end
 
@@ -547,17 +572,18 @@ defmodule AriaTimeline.TimelineCore do
 
     # Create segments between bridges
     segments =
-      [nil | bridge_positions] ++ [nil]
+      ([nil | bridge_positions] ++ [nil])
       |> Enum.chunk_every(2, 1, :discard)
       |> Enum.with_index(1)
       |> Enum.map(fn {[start_pos, end_pos], segment_num} ->
         segment_intervals = filter_intervals_by_range(intervals, start_pos, end_pos)
         intervals_map = segment_intervals |> Enum.map(&{&1.id, &1}) |> Map.new()
 
-        bridge_before = case start_pos do
-          nil -> nil
-          pos -> DateTime.to_iso8601(pos)
-        end
+        bridge_before =
+          case start_pos do
+            nil -> nil
+            pos -> DateTime.to_iso8601(pos)
+          end
 
         %{
           start_time: start_pos,
@@ -581,12 +607,15 @@ defmodule AriaTimeline.TimelineCore do
         {nil, nil} ->
           # No boundaries, include all intervals
           true
+
         {nil, end_pos} ->
           # Only end boundary, include if interval starts before end
           DateTime.compare(interval.start_time, end_pos) == :lt
+
         {start_pos, nil} ->
           # Only start boundary, include if interval ends after start
           DateTime.compare(interval.end_time, start_pos) == :gt
+
         {start_pos, end_pos} ->
           # Both boundaries, include if interval overlaps with range
           interval_starts_before_end = DateTime.compare(interval.start_time, end_pos) == :lt
@@ -675,7 +704,8 @@ defmodule AriaTimeline.TimelineCore do
     Enum.reduce(bridge_candidates, timeline, fn bridge, acc_timeline ->
       case validate_bridge_placement(acc_timeline, bridge) do
         :ok -> add_bridge(acc_timeline, bridge)
-        {:error, _reason} -> acc_timeline  # Skip invalid bridges
+        # Skip invalid bridges
+        {:error, _reason} -> acc_timeline
       end
     end)
   end
@@ -698,17 +728,20 @@ defmodule AriaTimeline.TimelineCore do
     # Get existing bridges or create default segmentation bridges
     bridges = get_bridges(timeline)
 
-    enhanced_timeline = case bridges do
-      [] ->
-        # No bridges exist, create default segmentation based on interval analysis
-        create_default_segmentation_bridges(timeline)
-      _ ->
-        # Bridges exist, ensure proper segmentation
-        timeline
-    end
+    enhanced_timeline =
+      case bridges do
+        [] ->
+          # No bridges exist, create default segmentation based on interval analysis
+          create_default_segmentation_bridges(timeline)
+
+        _ ->
+          # Bridges exist, ensure proper segmentation
+          timeline
+      end
 
     # Apply segmentation metadata
     segments = segment_by_bridges(enhanced_timeline)
+
     segmentation_metadata = %{
       segmentation_applied: true,
       segment_count: length(segments),
@@ -741,7 +774,9 @@ defmodule AriaTimeline.TimelineCore do
 
     case bridges do
       [] ->
-        :ok  # No bridges means trivially valid
+        # No bridges means trivially valid
+
+        :ok
 
       _ ->
         # Validate each bridge and check for conflicts
@@ -870,7 +905,9 @@ defmodule AriaTimeline.TimelineCore do
 
     case intervals do
       [] ->
-        timeline  # No intervals, no segmentation needed
+        # No intervals, no segmentation needed
+
+        timeline
 
       _ ->
         # Create bridges at natural segmentation points
@@ -885,7 +922,9 @@ defmodule AriaTimeline.TimelineCore do
   defp create_midpoint_bridges(intervals) do
     case length(intervals) do
       n when n <= 2 ->
-        []  # Too few intervals for meaningful segmentation
+        # Too few intervals for meaningful segmentation
+
+        []
 
       n ->
         # Create bridges at quartile points for balanced segmentation
@@ -921,7 +960,9 @@ defmodule AriaTimeline.TimelineCore do
       |> Enum.chunk_every(2, 1, :discard)
       |> Enum.find(fn [bridge1, bridge2] ->
         time_diff = DateTime.diff(bridge2.position, bridge1.position, :millisecond)
-        time_diff < 1000  # Bridges must be at least 1 second apart
+
+        # Bridges must be at least 1 second apart
+        time_diff < 1000
       end)
 
     case conflicts do
@@ -952,7 +993,9 @@ defmodule AriaTimeline.TimelineCore do
     |> Enum.chunk_every(2, 1, :discard)
     |> Enum.filter(fn [current, next] ->
       gap = DateTime.diff(next.start_time, current.end_time, :millisecond)
-      gap > 5000  # Gaps larger than 5 seconds indicate phase boundaries
+
+      # Gaps larger than 5 seconds indicate phase boundaries
+      gap > 5000
     end)
     |> Enum.map(fn [current, _next] -> current.end_time end)
   end
@@ -977,16 +1020,21 @@ defmodule AriaTimeline.TimelineCore do
 
   # Helper function to parse DateTime parameters
   defp parse_datetime_param(%DateTime{} = datetime), do: datetime
+
   defp parse_datetime_param(iso8601_string) when is_binary(iso8601_string) do
     {:ok, datetime, _} = DateTime.from_iso8601(iso8601_string)
     datetime
   end
 
   # Semantic position computation
-  defp compute_semantic_position(timeline, %Bridge{semantic_relation: relation, reference_target: target} = bridge) do
+  defp compute_semantic_position(
+         timeline,
+         %Bridge{semantic_relation: relation, reference_target: target} = bridge
+       ) do
     case target do
       "timeline" ->
         compute_timeline_semantic_position(timeline, bridge, relation)
+
       interval_id when is_binary(interval_id) ->
         compute_interval_semantic_position(timeline, bridge, relation, interval_id)
     end
@@ -995,19 +1043,24 @@ defmodule AriaTimeline.TimelineCore do
   defp compute_timeline_semantic_position(timeline, bridge, relation) do
     {start_time, end_time} = get_timeline_bounds(timeline)
 
-    computed_position = case relation do
-      :starts -> start_time
-      :finishes -> end_time
-      :meets -> end_time  # For chaining - at boundary
-      :met_by -> start_time  # For chaining - at boundary
-      :during -> compute_during_position(start_time, end_time)
-      :contains -> compute_contains_position(start_time, end_time)
-      :overlaps -> compute_near_end_position(start_time, end_time)
-      :overlapped_by -> compute_near_start_position(start_time, end_time)
-      :before -> DateTime.add(start_time, -300, :second)  # 5 min before
-      :after -> DateTime.add(end_time, 300, :second)  # 5 min after
-      :equals -> compute_midpoint(start_time, end_time)
-    end
+    computed_position =
+      case relation do
+        :starts -> start_time
+        :finishes -> end_time
+        # For chaining - at boundary
+        :meets -> end_time
+        # For chaining - at boundary
+        :met_by -> start_time
+        :during -> compute_during_position(start_time, end_time)
+        :contains -> compute_contains_position(start_time, end_time)
+        :overlaps -> compute_near_end_position(start_time, end_time)
+        :overlapped_by -> compute_near_start_position(start_time, end_time)
+        # 5 min before
+        :before -> DateTime.add(start_time, -300, :second)
+        # 5 min after
+        :after -> DateTime.add(end_time, 300, :second)
+        :equals -> compute_midpoint(start_time, end_time)
+      end
 
     %{bridge | computed_position: computed_position, position: computed_position}
   end
@@ -1016,20 +1069,22 @@ defmodule AriaTimeline.TimelineCore do
     case get_interval(timeline, interval_id) do
       nil ->
         raise ArgumentError, "Interval #{interval_id} not found"
+
       interval ->
-        computed_position = case relation do
-          :starts -> interval.start_time
-          :finishes -> interval.end_time
-          :meets -> interval.end_time
-          :met_by -> interval.start_time
-          :during -> compute_during_position(interval.start_time, interval.end_time)
-          :contains -> compute_contains_position(interval.start_time, interval.end_time)
-          :overlaps -> compute_near_end_position(interval.start_time, interval.end_time)
-          :overlapped_by -> compute_near_start_position(interval.start_time, interval.end_time)
-          :before -> DateTime.add(interval.start_time, -300, :second)
-          :after -> DateTime.add(interval.end_time, 300, :second)
-          :equals -> compute_midpoint(interval.start_time, interval.end_time)
-        end
+        computed_position =
+          case relation do
+            :starts -> interval.start_time
+            :finishes -> interval.end_time
+            :meets -> interval.end_time
+            :met_by -> interval.start_time
+            :during -> compute_during_position(interval.start_time, interval.end_time)
+            :contains -> compute_contains_position(interval.start_time, interval.end_time)
+            :overlaps -> compute_near_end_position(interval.start_time, interval.end_time)
+            :overlapped_by -> compute_near_start_position(interval.start_time, interval.end_time)
+            :before -> DateTime.add(interval.start_time, -300, :second)
+            :after -> DateTime.add(interval.end_time, 300, :second)
+            :equals -> compute_midpoint(interval.start_time, interval.end_time)
+          end
 
         %{bridge | computed_position: computed_position, position: computed_position}
     end
@@ -1037,11 +1092,15 @@ defmodule AriaTimeline.TimelineCore do
 
   defp get_timeline_bounds(timeline) do
     intervals = Map.values(timeline.intervals)
+
     case intervals do
       [] ->
         # Default timeline bounds if no intervals
         now = DateTime.utc_now()
-        {now, DateTime.add(now, 3600, :second)}  # 1 hour default
+
+        # 1 hour default
+        {now, DateTime.add(now, 3600, :second)}
+
       _ ->
         start_times = Enum.map(intervals, & &1.start_time)
         end_times = Enum.map(intervals, & &1.end_time)
@@ -1095,13 +1154,15 @@ defmodule AriaTimeline.TimelineCore do
     {timeline_start, timeline_end} = get_timeline_bounds(timeline)
 
     # Determine semantic relation based on bridge position relative to timeline
-    semantic_relation = determine_semantic_relation(bridge.position, timeline_start, timeline_end, timeline)
+    semantic_relation =
+      determine_semantic_relation(bridge.position, timeline_start, timeline_end, timeline)
 
     # Create semantic bridge with computed relation
-    %{bridge |
-      semantic_relation: semantic_relation,
-      reference_target: "timeline",
-      computed_position: bridge.position
+    %{
+      bridge
+      | semantic_relation: semantic_relation,
+        reference_target: "timeline",
+        computed_position: bridge.position
     }
   end
 
@@ -1122,16 +1183,12 @@ defmodule AriaTimeline.TimelineCore do
     cond do
       # At or very close to start (within configured tolerance)
       abs(start_diff) <= tolerance_microseconds -> :starts
-
       # At or very close to end (within configured tolerance)
       abs(end_diff) <= tolerance_microseconds -> :finishes
-
       # Before timeline start
       start_diff < 0 -> :before
-
       # After timeline end
       end_diff < 0 -> :after
-
       # Check if positioned relative to specific intervals
       true -> determine_interval_relation(position, timeline)
     end
@@ -1143,24 +1200,24 @@ defmodule AriaTimeline.TimelineCore do
     tolerance_microseconds = get_boundary_tolerance_microseconds(timeline)
 
     # Find intervals that contain or are adjacent to this position
-    containing_intervals = Enum.filter(intervals, fn interval ->
-      DateTime.compare(position, interval.start_time) != :lt and
-      DateTime.compare(position, interval.end_time) != :gt
-    end)
+    containing_intervals =
+      Enum.filter(intervals, fn interval ->
+        DateTime.compare(position, interval.start_time) != :lt and
+          DateTime.compare(position, interval.end_time) != :gt
+      end)
 
-    adjacent_intervals = Enum.filter(intervals, fn interval ->
-      start_diff = abs(DateTime.diff(position, interval.start_time, :microsecond))
-      end_diff = abs(DateTime.diff(position, interval.end_time, :microsecond))
-      start_diff <= tolerance_microseconds or end_diff <= tolerance_microseconds
-    end)
+    adjacent_intervals =
+      Enum.filter(intervals, fn interval ->
+        start_diff = abs(DateTime.diff(position, interval.start_time, :microsecond))
+        end_diff = abs(DateTime.diff(position, interval.end_time, :microsecond))
+        start_diff <= tolerance_microseconds or end_diff <= tolerance_microseconds
+      end)
 
     cond do
       # Position is within an interval
       length(containing_intervals) > 0 -> :during
-
       # Position is adjacent to interval boundaries
       length(adjacent_intervals) > 0 -> :meets
-
       # Default to during for positions between intervals
       true -> :during
     end
@@ -1173,14 +1230,16 @@ defmodule AriaTimeline.TimelineCore do
   # Calculates appropriate tolerance for boundary detection based on STN precision
   defp get_boundary_tolerance_microseconds(timeline) do
     stn = timeline.stn
-    base_unit_microseconds = case stn.time_unit do
-      :microsecond -> 1
-      :millisecond -> 1_000
-      :second -> 1_000_000
-      :minute -> 60_000_000
-      :hour -> 3_600_000_000
-      :day -> 86_400_000_000
-    end
+
+    base_unit_microseconds =
+      case stn.time_unit do
+        :microsecond -> 1
+        :millisecond -> 1_000
+        :second -> 1_000_000
+        :minute -> 60_000_000
+        :hour -> 3_600_000_000
+        :day -> 86_400_000_000
+      end
 
     # Scale by LOD resolution for appropriate precision
     base_unit_microseconds * stn.lod_resolution

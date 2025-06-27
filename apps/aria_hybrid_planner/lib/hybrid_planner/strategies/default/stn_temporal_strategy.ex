@@ -16,7 +16,7 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
   # The MiniZinc validation pipeline was removed in favor of direct STN solving
   # Removed: January 2025
   # NOTE: Timeline.Internal.STN.MiniZincSolver exists but is not used by this strategy implementation
-  
+
   require Logger
 
   @impl true
@@ -220,7 +220,7 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
     try do
       actions = problem.actions
       constraints = Map.get(problem, :constraints, [])
-      
+
       if Enum.empty?(actions) do
         {:ok, build_empty_model()}
       else
@@ -264,14 +264,15 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
 
   # Build action variables for MiniZinc
   defp build_action_variables(actions) do
-    action_lines = 
+    action_lines =
       Enum.map_join(actions, "\n", fn {action_name, action_data} ->
         duration = Map.get(action_data, :duration, 1)
+
         "var 0..1000: #{action_name}_start;\n" <>
-        "var 0..1000: #{action_name}_end;\n" <>
-        "constraint #{action_name}_end = #{action_name}_start + #{duration};"
+          "var 0..1000: #{action_name}_end;\n" <>
+          "constraint #{action_name}_end = #{action_name}_start + #{duration};"
       end)
-    
+
     "% Action variables\n#{action_lines}"
   end
 
@@ -286,22 +287,26 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
 
   # Build temporal precedence constraints
   defp build_temporal_constraints(constraints) do
-    constraint_lines = 
+    constraint_lines =
       Enum.map_join(constraints, "\n", fn constraint ->
         case constraint do
           {:before, action1, action2} ->
             "constraint #{action1}_end <= #{action2}_start;"
+
           {:after, action1, action2} ->
             "constraint #{action2}_end <= #{action1}_start;"
+
           {:meets, action1, action2} ->
             "constraint #{action1}_end = #{action2}_start;"
+
           {:overlaps, action1, action2} ->
             "constraint #{action1}_start < #{action2}_start /\\ #{action1}_end > #{action2}_start /\\ #{action1}_end < #{action2}_end;"
+
           _ ->
             "% Unknown constraint: #{inspect(constraint)}"
         end
       end)
-    
+
     if constraint_lines == "" do
       "% No temporal constraints"
     else
@@ -324,10 +329,12 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
     if Enum.empty?(actions) do
       ""
     else
-      action_outputs = 
+      action_outputs =
         Enum.map_join(actions, ", ", fn {_action_name, _action_data} ->
-          "\\"#{action_name}_start\\": \", show(#{action_name}_start), \", \\"#{action_name}_end\\": \", show(#{action_name}_end)"
+          # {action_name}_start\\": \", show(#{action_name}_start), \", \\"#{action_name}_end\\": \", show(#{action_name}_end)"
+          "\\"
         end)
+
       action_outputs <> ", "
     end
   end
@@ -346,20 +353,23 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
   defp solve_temporal_model(mzn_content, _opts) do
     # Write model to temporary file
     temp_file = "/tmp/temporal_model_#{:erlang.unique_integer([:positive])}.mzn"
-    
+
     try do
       File.write!(temp_file, mzn_content)
-      
+
       # Execute MiniZinc
       cmd_args = [
-        "--solver", "org.minizinc.mip.coin-bc",
-        "--output-mode", "json",
+        "--solver",
+        "org.minizinc.mip.coin-bc",
+        "--output-mode",
+        "json",
         temp_file
       ]
-      
+
       case System.cmd("minizinc", cmd_args, stderr_to_stdout: true) do
         {output, 0} ->
           parse_minizinc_output(output)
+
         {output, exit_code} ->
           {:error, "MiniZinc failed with exit code #{exit_code}: #{output}"}
       end
@@ -377,7 +387,7 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
       # Look for JSON output in the response
       lines = String.split(output, "\n")
       json_line = Enum.find(lines, fn line -> String.contains?(line, "\"status\"") end)
-      
+
       if json_line do
         case Jason.decode(json_line) do
           {:ok, result} -> {:ok, result}
@@ -402,10 +412,10 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
     Enum.reduce(actions, %{}, fn {action_name, action_data}, acc ->
       start_key = "#{action_name}_start"
       end_key = "#{action_name}_end"
-      
+
       start_time = Map.get(variables, start_key, 0)
       end_time = Map.get(variables, end_key, start_time + Map.get(action_data, :duration, 1))
-      
+
       Map.put(acc, action_name, %{
         start_time: start_time,
         end_time: end_time,
@@ -420,19 +430,19 @@ defmodule HybridPlanner.Strategies.Default.STNTemporalStrategy do
       {:add_constraint, constraint} ->
         constraints = Map.get(problem, :constraints, [])
         %{problem | constraints: [constraint | constraints]}
-      
+
       {:remove_constraint, constraint} ->
         constraints = Map.get(problem, :constraints, [])
         %{problem | constraints: List.delete(constraints, constraint)}
-      
+
       {:add_action, action} ->
         actions = problem.actions
         %{problem | actions: [action | actions]}
-      
+
       {:remove_action, action_name} ->
         actions = Enum.reject(problem.actions, fn {name, _} -> name == action_name end)
         %{problem | actions: actions}
-      
+
       _ ->
         Logger.warning("Unknown temporal modification: #{inspect(modification)}")
         problem

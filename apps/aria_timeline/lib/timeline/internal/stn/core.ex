@@ -85,15 +85,21 @@ defmodule Timeline.Internal.STN.Core do
     # Debug logging
     if not final_consistent do
       require Logger
-      Logger.debug("Constraint inconsistency detected: #{from_point} -> #{to_point} #{inspect(constraint)}")
-      Logger.debug("Initial consistent: #{is_consistent}, step1: #{consistent_1}, step2: #{consistent_2}")
+
+      Logger.debug(
+        "Constraint inconsistency detected: #{from_point} -> #{to_point} #{inspect(constraint)}"
+      )
+
+      Logger.debug(
+        "Initial consistent: #{is_consistent}, step1: #{consistent_1}, step2: #{consistent_2}"
+      )
+
       Logger.debug("Reverse constraint: #{inspect(reverse_constraint)}")
     end
 
     updated_stn = %{stn | constraints: updated_constraints_2, consistent: final_consistent}
     updated_stn
   end
-
 
   @doc "Determines if an STN contains only simple constraints that don't require MiniZinc solving.
 
@@ -123,6 +129,7 @@ defmodule Timeline.Internal.STN.Core do
   @doc "Checks if the STN is temporally consistent.\n"
   @spec consistent?(STN.t() | {:error, :unsatisfiable}) :: boolean()
   def consistent?({:error, :unsatisfiable}), do: false
+
   def consistent?(stn) do
     stn.consistent
   end
@@ -137,8 +144,8 @@ defmodule Timeline.Internal.STN.Core do
   @spec mathematically_consistent?(STN.t()) :: boolean()
   def mathematically_consistent?(stn) do
     no_contradictions?(stn.constraints) and
-    bilateral_consistency?(stn.constraints) and
-    all_bounds_valid?(stn.constraints)
+      bilateral_consistency?(stn.constraints) and
+      all_bounds_valid?(stn.constraints)
   end
 
   @doc "Gets all time points in the STN.\n"
@@ -353,6 +360,7 @@ defmodule Timeline.Internal.STN.Core do
         case intersect_constraints(existing_constraint, new_constraint) do
           :inconsistent ->
             {constraints, false}
+
           intersected_constraint ->
             {Map.put(constraints, key, intersected_constraint), true}
         end
@@ -468,7 +476,7 @@ defmodule Timeline.Internal.STN.Core do
 
       # Small range constraint (simple adjacency)
       from != to and is_number(min) and is_number(max) and
-      abs(max - min) <= 2 and min >= 0 ->
+        abs(max - min) <= 2 and min >= 0 ->
         true
 
       # Any other constraint type (complex - needs MiniZinc)
@@ -504,6 +512,7 @@ defmodule Timeline.Internal.STN.Core do
         {rev_min, rev_max} ->
           # Reverse constraint must be mathematical inverse
           mathematically_inverse?(min, max, rev_min, rev_max)
+
         nil ->
           # Missing reverse constraint is acceptable for simple STNs
           true
@@ -523,7 +532,7 @@ defmodule Timeline.Internal.STN.Core do
     expected_rev_max = negate_constraint_value(min)
 
     constraint_equal?(rev_min, expected_rev_min) and
-    constraint_equal?(rev_max, expected_rev_max)
+      constraint_equal?(rev_max, expected_rev_max)
   end
 
   defp constraint_equal?(:infinity, :infinity), do: true

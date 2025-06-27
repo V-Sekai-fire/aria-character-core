@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule HybridPlanner.HybridCoordinatorV2.ReplanningOperations do
+  alias AriaEngine.State
+
   @moduledoc "Replanning operations for HybridCoordinatorV2.\n\nHandles replanning from failure points using injected planning and temporal strategies.\n"
   @type coordinator :: HybridPlanner.HybridCoordinatorV2.t()
   @type replan_result :: {:ok, map()} | {:error, String.t()} | :failure

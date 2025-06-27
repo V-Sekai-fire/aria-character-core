@@ -228,10 +228,17 @@ defmodule HybridPlanner.Strategies.Default.STNBridgeTemporalStrategy do
           # Apply bridge insertion based on mode
           bridge_enhanced_timeline =
             case bridge_mode do
-              :auto -> AriaEngineTimeline.auto_insert_bridges(timeline, get_bridge_insertion_rules(opts))
-              :manual -> timeline
-              :always -> AriaEngineTimeline.with_bridge_segmentation(timeline)
-              _ -> timeline
+              :auto ->
+                AriaEngineTimeline.auto_insert_bridges(timeline, get_bridge_insertion_rules(opts))
+
+              :manual ->
+                timeline
+
+              :always ->
+                AriaEngineTimeline.with_bridge_segmentation(timeline)
+
+              _ ->
+                timeline
             end
 
           # Extract bridge information and add to temporal problem

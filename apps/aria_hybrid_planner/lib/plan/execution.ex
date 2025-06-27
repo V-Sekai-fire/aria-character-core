@@ -6,6 +6,7 @@ defmodule Plan.Execution do
   require Logger
   alias Plan.{Backtracking, Blacklisting, Core}
   alias AriaEngine.Plan.Utils
+  alias AriaEngine.State
   @type node_id :: String.t()
   @type solution_node :: %{
           id: node_id(),
@@ -37,7 +38,12 @@ defmodule Plan.Execution do
   end
 
   @doc "Run-Lazy-Refineahead: Execute plan with replanning on failure.\n"
-  @spec run_lazy_refineahead(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) ::
+  @spec run_lazy_refineahead(
+          AriaEngine.Domain.Core.t(),
+          AriaEngine.State.t(),
+          solution_tree(),
+          keyword()
+        ) ::
           {:ok, AriaEngine.State.t()} | {:error, String.t()}
   def run_lazy_refineahead(
         %AriaEngine.Domain.Core{} = domain,
@@ -56,7 +62,12 @@ defmodule Plan.Execution do
     run_execution_loop(domain, current_state, current_tree, opts)
   end
 
-  @spec run_execution_loop(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) ::
+  @spec run_execution_loop(
+          AriaEngine.Domain.Core.t(),
+          AriaEngine.State.t(),
+          solution_tree(),
+          keyword()
+        ) ::
           {:ok, AriaEngine.State.t()} | {:error, String.t()}
   defp run_execution_loop(domain, current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, Core.get_default_verbose())
