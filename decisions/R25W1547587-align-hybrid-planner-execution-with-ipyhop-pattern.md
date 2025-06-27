@@ -12,7 +12,7 @@
 - K. S. Ernest Lee, V-Sekai (<https://v-sekai.org>) and Chibifire.com (<https://chibifire.com>), <ernest.lee@chibifire.com>
 
 ---
- 
+
 ## Context
 
 The current hybrid planner execution in `apps/aria_hybrid_planner` uses complex backtracking logic that doesn't conform to R25W1398085's unified durative action specification or follow the established IPyHOP pattern from `thirdparty/IPyHOP`.
