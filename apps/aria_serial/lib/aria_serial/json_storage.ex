@@ -132,7 +132,8 @@ defmodule AriaSerial.JsonStorage do
   defp get_file_path(year, week, factory) do
     week_str = String.pad_leading(to_string(week), 2, "0")
     filename = "#{factory}_series.json"
-    Path.join([File.cwd!(), @storage_root, to_string(year), "week_#{week_str}", filename])
+    app_dir = Application.app_dir(:aria_serial, "priv")
+    Path.join([app_dir, "serial_data", to_string(year), "week_#{week_str}", filename])
   end
 
   defp create_empty_week_data(year, week, factory) do

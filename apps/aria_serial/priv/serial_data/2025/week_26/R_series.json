@@ -1,7 +1,7 @@
 {
   "factory": "R",
   "generated_at": "2025-06-27T20:45:31.000000Z",
-  "next_sequence": 158,
+  "next_sequence": 159,
   "serials": {
     "R25W0014110": {
       "created": "2025-06-23",
@@ -1251,12 +1251,12 @@
       "sequence": 50,
       "week": 26
     },
-    "R25W157TXDX": {
+    "R25W158APPS": {
       "created": "2025-06-27",
-      "file": "todo.md",
+      "file": "apps/aria_gltf/todo.md",
       "format": "v1",
       "purpose": "AriaGltf TODO tracking document",
-      "sequence": 157,
+      "sequence": 158,
       "week": 26
     }
   },

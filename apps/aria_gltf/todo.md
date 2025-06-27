@@ -1,6 +1,6 @@
 # AriaGltf TODO
 
-**@aria_serial:** R25W157TXDX
+**@aria_serial:** R25W158APPS
 **ADR Reference:** R25W1513883 - Comprehensive glTF 2.0 Implementation with SimpleSkin/SimpleMorph Animation Support
 
 ## Completed ✅
