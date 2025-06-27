@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Membrane.PipelineManager do
+defmodule Membrane.PipelineManager do
   @moduledoc "Manager for Membrane pipeline lifecycle and dynamic topology configuration.\n\nHandles pipeline creation, element linking, supervision, and runtime\nreconfiguration of the planning pipeline.\n"
   use GenServer
   require Logger
-  alias AriaEngine.Membrane.{MCPSource, FormatTransformerFilter, MCPSink}
+  alias Membrane.{MCPSource, FormatTransformerFilter, MCPSink}
 
   @type pipeline_config :: %{
           topology: :linear | :parallel | :multi_strategy | :custom,
@@ -316,7 +316,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
         %{
-          type: AriaEngine.Membrane.MCPScheduleFilter,
+          type: Membrane.MCPScheduleFilter,
           id: :mcp_filter,
           config: %{strict_filtering: false}
         },
@@ -341,9 +341,9 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :schedule_transformation,
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
-        %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_filter, config: %{}},
+        %{type: Membrane.MCPScheduleFilter, id: :mcp_filter, config: %{}},
         %{
-          type: AriaEngine.Membrane.SchedulePlannerFilter,
+          type: Membrane.SchedulePlannerFilter,
           id: :schedule_filter,
           config: %{strict_validation: false}
         },
@@ -369,9 +369,9 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :mock_planning,
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
-        %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_filter, config: %{}},
+        %{type: Membrane.MCPScheduleFilter, id: :mcp_filter, config: %{}},
         %{
-          type: AriaEngine.Membrane.SchedulePlannerFilter,
+          type: Membrane.SchedulePlannerFilter,
           id: :schedule_filter,
           config: %{strict_validation: false}
         },
@@ -380,7 +380,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
           id: :mock_planner,
           config: %{mock_scenario: :planning_success}
         },
-        %{type: AriaEngine.Membrane.PlannerMCPFilter, id: :response_filter, config: %{}},
+        %{type: Membrane.PlannerMCPFilter, id: :response_filter, config: %{}},
         %{type: MCPSink, id: :sink, config: %{}}
       ],
       connections: [
@@ -399,18 +399,18 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :schedule_processing,
       elements: [
         %{type: MCPSource, id: :mcp_source, config: %{}},
-        %{type: AriaEngine.Membrane.MCPScheduleFilter, id: :mcp_schedule_filter, config: %{}},
+        %{type: Membrane.MCPScheduleFilter, id: :mcp_schedule_filter, config: %{}},
         %{
-          type: AriaEngine.Membrane.SchedulePlannerFilter,
+          type: Membrane.SchedulePlannerFilter,
           id: :schedule_planner_filter,
           config: %{strict_validation: true}
         },
         %{
-          type: AriaEngine.Membrane.PlannerFilter,
+          type: Membrane.PlannerFilter,
           id: :planner_filter,
           config: %{timeout_ms: 30000}
         },
-        %{type: AriaEngine.Membrane.PlannerMCPFilter, id: :planner_mcp_filter, config: %{}},
+        %{type: Membrane.PlannerMCPFilter, id: :planner_mcp_filter, config: %{}},
         %{type: MCPSink, id: :mcp_sink, config: %{}}
       ],
       connections: [
@@ -429,7 +429,7 @@ defmodule AriaEngine.Membrane.PipelineManager do
       topology: :plan_transformation,
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
-        %{type: AriaEngine.Membrane.PlanFilter, id: :plan_filter, config: %{}},
+        %{type: Membrane.PlanFilter, id: :plan_filter, config: %{}},
         %{
           type: FormatTransformerFilter,
           id: :format_transformer,
@@ -452,12 +452,12 @@ defmodule AriaEngine.Membrane.PipelineManager do
       elements: [
         %{type: MCPSource, id: :source, config: %{}},
         %{
-          type: AriaEngine.Membrane.SchedulePlannerFilter,
+          type: Membrane.SchedulePlannerFilter,
           id: :schedule_filter,
           config: %{strict_validation: false}
         },
         %{
-          type: AriaEngine.Membrane.PlannerFilter,
+          type: Membrane.PlannerFilter,
           id: :planner_filter,
           config: %{timeout_ms: 30000}
         },
@@ -471,7 +471,6 @@ defmodule AriaEngine.Membrane.PipelineManager do
       supervision_strategy: :one_for_one
     }
   end
-
 
   defp get_predefined_config(topology) do
     Logger.warning("Unknown predefined topology: #{topology}, using default")

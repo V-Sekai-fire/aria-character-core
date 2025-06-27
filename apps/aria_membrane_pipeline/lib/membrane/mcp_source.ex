@@ -1,19 +1,19 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Membrane.MCPSource do
+defmodule Membrane.MCPSource do
   @moduledoc """
   Generic Membrane Source element that receives any MCP tool requests.
-  
+
   ⚠️  **CURRENTLY DISCONNECTED - ADR-188** ⚠️
-  
+
   This component is part of the paused MCP infrastructure. The implementation
   remains intact but is not actively used in the current system configuration.
-  
+
   See ADR-188 for disconnection details and re-enablement process.
-  
+
   ## Original Functionality
-  
+
   This element acts as the universal entry point for all MCP tool calls,
   converting them to a standardized MCPRequest format for downstream processing.
   It supports any MCP tool, not just schedule_activities.
@@ -57,9 +57,9 @@ defmodule AriaEngine.Membrane.MCPSource do
       # Send legacy format (auto-detected)
       Membrane.Testing.Pipeline.notify_child(pipeline, :mcp_source, 
         {:mcp_request, legacy_params})
-  
+
   ## Re-enablement Process
-  
+
   To re-enable this component:
   1. Review ADR-188 for current disconnection status
   2. Update application configuration to enable MCP
@@ -69,7 +69,7 @@ defmodule AriaEngine.Membrane.MCPSource do
   """
   use Membrane.Source
   require Logger
-  alias AriaEngine.Membrane.Format.MCPRequest
+  alias Membrane.Format.MCPRequest
   alias Membrane.Buffer
   def_output_pad(:output, accepted_format: MCPRequest, flow_control: :manual)
 

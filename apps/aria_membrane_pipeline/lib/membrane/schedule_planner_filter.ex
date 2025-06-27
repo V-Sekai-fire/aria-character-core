@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Membrane.SchedulePlannerFilter do
+defmodule Membrane.SchedulePlannerFilter do
   @moduledoc "Membrane Filter element that processes schedule_activities MCP requests.\n\nThis filter specifically handles schedule_activities tool calls by:\n1. Validating that the request is for schedule_activities\n2. Extracting and validating schedule parameters\n3. Converting to PlanningParams format for the planning pipeline\n\n## Pipeline Position\n\n```\nMCPSource → ScheduleFilter → PlannerSink → MCPSink\n```\n\nThe ScheduleFilter sits between the generic MCPSource and the planning\nexecution, providing schedule-specific validation and transformation.\n\n## Features\n\n- Validates schedule_activities requests\n- Rejects non-schedule requests with clear error messages\n- Converts schedule parameters to planning format\n- Provides detailed telemetry for schedule processing\n- Handles legacy format compatibility\n\n## Usage\n\n    # In a pipeline spec\n    children = [\n      child(:mcp_source, MCPSource)\n      |> child(:schedule_filter, ScheduleFilter)\n      |> child(:planner_sink, PlannerSink)\n      |> child(:mcp_sink, MCPSink)\n    ]\n"
   use Membrane.Filter
   require Logger
-  alias AriaEngine.Membrane.Format.{MCPRequest, PlanningParams}
+  alias Membrane.Format.{MCPRequest, PlanningParams}
   alias AriaEngine.HybridPlanner.PlanTransformer, as: CoreTransformer
   alias Membrane.Buffer
   def_input_pad(:input, accepted_format: MCPRequest, flow_control: :auto)

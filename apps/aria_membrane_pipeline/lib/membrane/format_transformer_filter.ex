@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Membrane.FormatTransformerFilter do
+defmodule Membrane.FormatTransformerFilter do
   @moduledoc "Generic format transformer filter for Membrane pipelines.\n\nThis filter can transform between different formats and provides\nmock scenarios for testing purposes.\n"
   use Membrane.Filter
   require Logger

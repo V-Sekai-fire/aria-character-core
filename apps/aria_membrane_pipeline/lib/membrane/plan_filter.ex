@@ -1,10 +1,10 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Membrane.PlanFilter do
+defmodule Membrane.PlanFilter do
   @moduledoc "Membrane Filter element that converts MCP requests to planning parameters.\n\nThis element validates MCP input and transforms it into the format expected\nby the HybridCoordinator planning system using the existing PlanTransformer.\n"
   use Membrane.Filter
-  alias AriaEngine.Membrane.Format.{MCPRequest, PlanningParams}
+  alias Membrane.Format.{MCPRequest, PlanningParams}
   alias AriaEngine.HybridPlanner.PlanTransformer
   alias Membrane.Buffer
   def_input_pad(:input, accepted_format: MCPRequest, flow_control: :auto)

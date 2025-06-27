@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Membrane.Format.MCPResponse do
+defmodule Membrane.Format.MCPResponse do
   @moduledoc "Membrane format for MCP-formatted responses.\n\nThis format represents the final MCP-compatible response that will be\nsent back to the MCP client. It includes the status, schedule data,\nerror details, and response metadata.\n"
   defstruct [:status, :schedule, :error_details, :request_id, :response_metadata]
 
@@ -12,7 +12,7 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
           request_id: String.t(),
           response_metadata: map()
         }
-  @doc "Validates an MCP response format structure.\n\n## Examples\n\n    iex> response = %AriaEngine.Membrane.Format.MCPResponse{\n    ...>   status: \"success\",\n    ...>   schedule: %{},\n    ...>   error_details: nil,\n    ...>   request_id: \"req_123\",\n    ...>   response_metadata: %{}\n    ...> }\n    iex> AriaEngine.Membrane.Format.MCPResponse.valid?(response)\n    true\n"
+  @doc "Validates an MCP response format structure.\n\n## Examples\n\n    iex> response = %Membrane.Format.MCPResponse{\n    ...>   status: \"success\",\n    ...>   schedule: %{},\n    ...>   error_details: nil,\n    ...>   request_id: \"req_123\",\n    ...>   response_metadata: %{}\n    ...> }\n    iex> Membrane.Format.MCPResponse.valid?(response)\n    true\n"
   @spec valid?(t()) :: boolean()
   def valid?(%__MODULE__{} = response) do
     is_binary(response.status) and (is_map(response.schedule) or is_nil(response.schedule)) and
@@ -24,7 +24,7 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
     false
   end
 
-  @doc "Creates a successful MCP response.\n\n## Examples\n\n    iex> schedule = %{\"activities\" => [], \"timeline\" => %{}}\n    iex> metadata = %{formatted_at: DateTime.utc_now()}\n    iex> response = AriaEngine.Membrane.Format.MCPResponse.success(\n    ...>   schedule, \"req_123\", metadata\n    ...> )\n    iex> response.status\n    \"success\"\n"
+  @doc "Creates a successful MCP response.\n\n## Examples\n\n    iex> schedule = %{\"activities\" => [], \"timeline\" => %{}}\n    iex> metadata = %{formatted_at: DateTime.utc_now()}\n    iex> response = Membrane.Format.MCPResponse.success(\n    ...>   schedule, \"req_123\", metadata\n    ...> )\n    iex> response.status\n    \"success\"\n"
   @spec success(map(), String.t(), map()) :: t()
   def success(schedule, request_id, response_metadata) do
     %__MODULE__{
@@ -36,7 +36,7 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
     }
   end
 
-  @doc "Creates an error MCP response.\n\n## Examples\n\n    iex> metadata = %{formatted_at: DateTime.utc_now()}\n    iex> response = AriaEngine.Membrane.Format.MCPResponse.error(\n    ...>   \"Planning failed\", \"req_123\", metadata\n    ...> )\n    iex> response.status\n    \"error\"\n"
+  @doc "Creates an error MCP response.\n\n## Examples\n\n    iex> metadata = %{formatted_at: DateTime.utc_now()}\n    iex> response = Membrane.Format.MCPResponse.error(\n    ...>   \"Planning failed\", \"req_123\", metadata\n    ...> )\n    iex> response.status\n    \"error\"\n"
   @spec error(String.t(), String.t(), map()) :: t()
   def error(error_details, request_id, response_metadata) do
     %__MODULE__{
@@ -48,9 +48,9 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
     }
   end
 
-  @doc "Creates an MCP response from a planning result.\n\n## Examples\n\n    iex> planning_result = %AriaEngine.Membrane.Format.PlanningResult{\n    ...>   status: :success,\n    ...>   result: %{plan: []},\n    ...>   execution_metadata: %{},\n    ...>   request_id: \"req_123\",\n    ...>   performance_metrics: %{execution_time_ms: 100}\n    ...> }\n    iex> response = AriaEngine.Membrane.Format.MCPResponse.from_planning_result(planning_result)\n    iex> response.status\n    \"success\"\n"
-  @spec from_planning_result(AriaEngine.Membrane.Format.PlanningResult.t()) :: t()
-  def from_planning_result(%AriaEngine.Membrane.Format.PlanningResult{status: :success} = result) do
+  @doc "Creates an MCP response from a planning result.\n\n## Examples\n\n    iex> planning_result = %Membrane.Format.PlanningResult{\n    ...>   status: :success,\n    ...>   result: %{plan: []},\n    ...>   execution_metadata: %{},\n    ...>   request_id: \"req_123\",\n    ...>   performance_metrics: %{execution_time_ms: 100}\n    ...> }\n    iex> response = Membrane.Format.MCPResponse.from_planning_result(planning_result)\n    iex> response.status\n    \"success\"\n"
+  @spec from_planning_result(Membrane.Format.PlanningResult.t()) :: t()
+  def from_planning_result(%Membrane.Format.PlanningResult{status: :success} = result) do
     schedule = format_schedule(result.result)
 
     response_metadata = %{
@@ -62,7 +62,7 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
     success(schedule, result.request_id, response_metadata)
   end
 
-  def from_planning_result(%AriaEngine.Membrane.Format.PlanningResult{status: status} = result)
+  def from_planning_result(%Membrane.Format.PlanningResult{status: status} = result)
       when status in [:error, :failure] do
     error_details = get_error_details(result)
 
@@ -74,7 +74,7 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
     error(error_details, result.request_id, response_metadata)
   end
 
-  @doc "Checks if the MCP response represents a successful result.\n\n## Examples\n\n    iex> response = AriaEngine.Membrane.Format.MCPResponse.success(\n    ...>   %{}, \"req_123\", %{}\n    ...> )\n    iex> AriaEngine.Membrane.Format.MCPResponse.success?(response)\n    true\n"
+  @doc "Checks if the MCP response represents a successful result.\n\n## Examples\n\n    iex> response = Membrane.Format.MCPResponse.success(\n    ...>   %{}, \"req_123\", %{}\n    ...> )\n    iex> Membrane.Format.MCPResponse.success?(response)\n    true\n"
   @spec success?(t()) :: boolean()
   def success?(%__MODULE__{status: "success"}) do
     true
@@ -84,7 +84,7 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
     false
   end
 
-  @doc "Gets the execution time from response metadata.\n\n## Examples\n\n    iex> metadata = %{execution_time_ms: 150}\n    iex> response = AriaEngine.Membrane.Format.MCPResponse.success(\n    ...>   %{}, \"req_123\", metadata\n    ...> )\n    iex> AriaEngine.Membrane.Format.MCPResponse.execution_time_ms(response)\n    150\n"
+  @doc "Gets the execution time from response metadata.\n\n## Examples\n\n    iex> metadata = %{execution_time_ms: 150}\n    iex> response = Membrane.Format.MCPResponse.success(\n    ...>   %{}, \"req_123\", metadata\n    ...> )\n    iex> Membrane.Format.MCPResponse.execution_time_ms(response)\n    150\n"
   @spec execution_time_ms(t()) :: integer() | nil
   def execution_time_ms(%__MODULE__{response_metadata: metadata}) do
     Map.get(metadata, :execution_time_ms)
@@ -157,7 +157,7 @@ defmodule AriaEngine.Membrane.Format.MCPResponse do
     end
   end
 
-  defp get_error_details(%AriaEngine.Membrane.Format.PlanningResult{execution_metadata: metadata}) do
+  defp get_error_details(%Membrane.Format.PlanningResult{execution_metadata: metadata}) do
     Map.get(metadata, :error_reason) || Map.get(metadata, :failure_reason) ||
       "Unknown planning error"
   end

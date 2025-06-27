@@ -3,22 +3,22 @@
 
 defmodule AriaMembranePipeline.PipelineManager do
   @moduledoc """
-  Public API wrapper for AriaEngine.Membrane.PipelineManager.
+  Public API wrapper for Membrane.PipelineManager.
 
   This module provides a clean public interface while delegating to the internal
-  AriaEngine.Membrane.PipelineManager implementation.
+  Membrane.PipelineManager implementation.
   """
 
-  # Delegate all functions to AriaEngine.Membrane.PipelineManager
-  defdelegate start_link(opts \\ []), to: AriaEngine.Membrane.PipelineManager
-  defdelegate create_pipeline(config), to: AriaEngine.Membrane.PipelineManager
-  defdelegate create_testing_pipeline(topology \\ :echo_pipeline), to: AriaEngine.Membrane.PipelineManager
-  defdelegate configure_pipeline_topology(pipeline_pid, config), to: AriaEngine.Membrane.PipelineManager
-  defdelegate get_pipeline_status(pipeline_pid), to: AriaEngine.Membrane.PipelineManager
-  defdelegate list_active_pipelines(), to: AriaEngine.Membrane.PipelineManager
-  defdelegate stop_pipeline(pipeline_pid), to: AriaEngine.Membrane.PipelineManager
-  defdelegate send_request_to_pipeline(pipeline_pid, mcp_params), to: AriaEngine.Membrane.PipelineManager
-  defdelegate get_manager_stats(), to: AriaEngine.Membrane.PipelineManager
+  # Delegate all functions to Membrane.PipelineManager
+  defdelegate start_link(opts \\ []), to: Membrane.PipelineManager
+  defdelegate create_pipeline(config), to: Membrane.PipelineManager
+  defdelegate create_testing_pipeline(topology \\ :echo_pipeline), to: Membrane.PipelineManager
+  defdelegate configure_pipeline_topology(pipeline_pid, config), to: Membrane.PipelineManager
+  defdelegate get_pipeline_status(pipeline_pid), to: Membrane.PipelineManager
+  defdelegate list_active_pipelines(), to: Membrane.PipelineManager
+  defdelegate stop_pipeline(pipeline_pid), to: Membrane.PipelineManager
+  defdelegate send_request_to_pipeline(pipeline_pid, mcp_params), to: Membrane.PipelineManager
+  defdelegate get_manager_stats(), to: Membrane.PipelineManager
 
   # Convenience functions for the main AriaMembranePipeline module
   def create_validation_pipeline(config) do
