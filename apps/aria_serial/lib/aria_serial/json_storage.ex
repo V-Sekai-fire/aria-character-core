@@ -104,6 +104,21 @@ defmodule AriaSerial.JsonStorage do
     end
   end
 
+  @doc """
+  Store registry data at a specific path.
+  """
+  def store_registry(storage_path, registry_data) do
+    dir_path = Path.dirname(storage_path)
+
+    with :ok <- File.mkdir_p(dir_path),
+         {:ok, json} <- Jason.encode(registry_data, pretty: true),
+         :ok <- File.write(storage_path, json) do
+      :ok
+    else
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
   # Private functions
 
   defp get_file_path(year, week, factory) do
