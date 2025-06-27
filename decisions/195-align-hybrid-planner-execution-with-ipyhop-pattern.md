@@ -53,15 +53,15 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 ### Phase 2: Align Blacklisting with IPyHOP Pattern
 **Priority:** HIGH
 
-- [ ] Separate planning-level and execution-level blacklisting
-  - [ ] Keep method blacklisting for planning failures
-  - [ ] Add command blacklisting for execution failures
-  - [ ] Ensure blacklists are maintained at domain/planner level
+- [x] Separate planning-level and execution-level blacklisting
+  - [x] Keep method blacklisting for planning failures
+  - [x] Add command blacklisting for execution failures
+  - [x] Ensure blacklists are maintained at domain/planner level
 
-- [ ] Update `Plan.Blacklisting` module
-  - [ ] Align with IPyHOP blacklisting approach
-  - [ ] Remove execution-time blacklisting complexity
-  - [ ] Focus on planning-time method selection
+- [x] Update `Plan.Blacklisting` module
+  - [x] Align with IPyHOP blacklisting approach
+  - [x] Remove execution-time blacklisting complexity
+  - [x] Focus on planning-time method selection
 
 ### Phase 3: Ensure ADR-181 Compliance
 **Priority:** MEDIUM

@@ -179,7 +179,10 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   # ==================== EXECUTION FUNCTIONS ====================
 
   @doc """
-  Execute a plan using lazy execution strategy.
+  Execute a plan using IPyHOP-style simple execution.
+
+  This function now integrates with the new blacklisting system following
+  the IPyHOP pattern where blacklisted commands are checked during execution.
   """
   @spec execute(t(), Domain.Core.t(), AriaEngine.State.t(), map(), keyword()) :: execution_result()
   def execute(coordinator, domain, %AriaEngine.State{} = initial_state, plan, opts \\ []) do
@@ -191,7 +194,12 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
       if is_nil(solution_tree) do
         {:error, "Invalid plan format - missing solution tree"}
       else
-        enhanced_opts = Keyword.put(opts, :domain, domain)
+        # Extract or create blacklist state from plan metadata
+        blacklist_state = get_or_create_blacklist_state(plan, opts)
+
+        enhanced_opts = opts
+        |> Keyword.put(:domain, domain)
+        |> Keyword.put(:blacklist_state, blacklist_state)
 
         case execute_plan_lazy(solution_tree, initial_state, enhanced_opts) do
           {:ok, final_state} ->
@@ -648,6 +656,26 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   end
 
   # ==================== PRIVATE UTILITY FUNCTIONS ====================
+
+  # Extract or create blacklist state for execution
+  defp get_or_create_blacklist_state(plan, opts) do
+    # Check if blacklist state is provided in options first
+    case Keyword.get(opts, :blacklist_state) do
+      nil ->
+        # Try to extract from plan metadata
+        case get_in(plan, [:metadata, :blacklist_state]) do
+          nil ->
+            # Create new blacklist state following IPyHOP pattern
+            Plan.Blacklisting.new()
+
+          existing_blacklist_state ->
+            existing_blacklist_state
+        end
+
+      provided_blacklist_state ->
+        provided_blacklist_state
+    end
+  end
 
   defp extract_primitive_actions(solution_tree) do
     case solution_tree do

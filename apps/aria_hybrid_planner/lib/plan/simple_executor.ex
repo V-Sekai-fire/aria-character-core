@@ -28,16 +28,22 @@ defmodule Plan.SimpleExecutor do
   This follows the IPyHOP MonteCarloExecutor pattern:
   1. Start with initial state in execution trace
   2. Execute each action in sequence
-  3. If action succeeds, add result to trace and continue
-  4. If action fails, add failure to trace and return immediately
-  5. Return final state and complete execution trace
+  3. Check for blacklisted commands (IPyHOP pattern)
+  4. If action succeeds, add result to trace and continue
+  5. If action fails, add failure to trace and return immediately
+  6. Return final state and complete execution trace
 
   ## Parameters
 
   - `domain`: The domain containing action definitions
   - `initial_state`: Starting state for execution
   - `plan`: List of plan steps to execute
-  - `opts`: Execution options (verbose, etc.)
+  - `opts`: Execution options (verbose, blacklist_state, etc.)
+
+  ## Options
+
+  - `:verbose` - Verbosity level (0-3)
+  - `:blacklist_state` - Current blacklist state for command checking
 
   ## Returns
 
@@ -60,6 +66,12 @@ defmodule Plan.SimpleExecutor do
         {{:move, ["agent1", "kitchen"]}, intermediate_state},
         {{:cook, ["pasta"]}, nil}  # nil indicates failure
       ]}
+
+      # With blacklisted command:
+      {:error, "command_blacklisted", [
+        {nil, initial_state},
+        {{:move, ["agent1", "kitchen"]}, nil}  # nil indicates blacklist failure
+      ]}
   """
   @spec execute(AriaEngine.Domain.Core.t(), State.t(), [plan_step()], keyword()) :: execution_result()
   def execute(domain, %State{} = initial_state, plan, opts \\ []) do
@@ -72,7 +84,7 @@ defmodule Plan.SimpleExecutor do
     # Initialize execution trace with initial state (following IPyHOP pattern)
     initial_trace = [{nil, initial_state}]
 
-    # Execute plan steps linearly
+    # Execute plan steps linearly with blacklist checking
     execute_steps(domain, initial_state, plan, initial_trace, opts)
   end
 
@@ -111,6 +123,29 @@ defmodule Plan.SimpleExecutor do
       Logger.debug("SimpleExecutor: Executing action #{action_name}(#{inspect(args)})")
     end
 
+    # Check if command is blacklisted (IPyHOP pattern)
+    case check_command_blacklist(action, opts) do
+      :ok ->
+        # Command not blacklisted, proceed with execution
+        execute_non_blacklisted_command(domain, current_state, action, action_atom, args, remaining_actions, execution_trace, opts)
+
+      {:blacklisted, reason} ->
+        # Command is blacklisted - fail immediately (IPyHOP pattern)
+        if verbose > 1 do
+          Logger.debug("SimpleExecutor: Command #{action_name} is blacklisted: #{reason}")
+        end
+
+        failure_trace = [{action, nil} | execution_trace]
+        error_message = "Command blacklisted: #{action_name} - #{reason}"
+        {:error, error_message, Enum.reverse(failure_trace)}
+    end
+  end
+
+  # Execute a command that is not blacklisted
+  defp execute_non_blacklisted_command(domain, current_state, action, action_atom, args, remaining_actions, execution_trace, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+    {action_name, _args} = action
+
     # Execute the action using domain's command execution
     case execute_action_command(domain, current_state, action_atom, args, opts) do
       {:ok, new_state} ->
@@ -137,6 +172,23 @@ defmodule Plan.SimpleExecutor do
         failure_trace = [{action, nil} | execution_trace]
         error_message = "Action execution failed: #{action_name} - returned false"
         {:error, error_message, Enum.reverse(failure_trace)}
+    end
+  end
+
+  # Check if a command is blacklisted following IPyHOP pattern
+  defp check_command_blacklist(command, opts) do
+    case Keyword.get(opts, :blacklist_state) do
+      nil ->
+        # No blacklist state provided, allow execution
+        :ok
+
+      blacklist_state ->
+        # Check if command is blacklisted
+        if Plan.Blacklisting.command_blacklisted?(blacklist_state, command) do
+          {:blacklisted, "command previously failed during execution"}
+        else
+          :ok
+        end
     end
   end
 
