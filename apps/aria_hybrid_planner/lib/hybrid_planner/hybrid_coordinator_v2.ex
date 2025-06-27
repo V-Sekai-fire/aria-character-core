@@ -511,13 +511,13 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   # ==================== PRIVATE EXECUTION FUNCTIONS ====================
 
-  # Simplified from LazyExecutionStrategy
+  # IPyHOP-style simple execution using Plan.SimpleExecutor
   defp execute_plan_lazy(solution_tree, %AriaEngine.State{} = initial_state, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do
       action_count = AriaEngine.Plan.Utils.plan_cost(solution_tree)
-      Logger.debug("Lazy execution: Starting execution of plan with #{action_count} actions")
+      Logger.debug("IPyHOP execution: Starting execution of plan with #{action_count} actions")
     end
 
     try do
@@ -528,21 +528,40 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
           {:error, "Domain required for execution but not provided in options"}
 
         %AriaEngine.Domain.Core{} = domain ->
-          # Simplified execution - just return the initial state for now
-          # TODO: Implement actual lazy refinement execution
-          Logger.warning("Lazy execution: Plan.Core.run_lazy_refineahead/4 not yet implemented")
+          # Extract primitive actions from solution tree
+          primitive_actions = Plan.SimpleExecutor.extract_primitive_actions(solution_tree)
 
           if verbose > 1 do
-            Logger.debug("Lazy execution: Execution completed successfully")
+            Logger.debug("IPyHOP execution: Executing #{length(primitive_actions)} primitive actions")
           end
-          {:ok, initial_state}
+
+          # Execute using simple IPyHOP-style executor
+          case Plan.SimpleExecutor.execute(domain, initial_state, primitive_actions, opts) do
+            {:ok, final_state, execution_trace} ->
+              if verbose > 1 do
+                Logger.debug("IPyHOP execution: Execution completed successfully")
+                if verbose > 2 do
+                  Logger.debug("IPyHOP execution: Execution trace length: #{length(execution_trace)}")
+                end
+              end
+              {:ok, final_state}
+
+            {:error, reason, execution_trace} ->
+              if verbose > 0 do
+                Logger.warning("IPyHOP execution: Execution failed - #{reason}")
+                if verbose > 2 do
+                  Logger.debug("IPyHOP execution: Failure trace length: #{length(execution_trace)}")
+                end
+              end
+              {:error, reason}
+          end
 
         _ ->
           {:error, "Invalid domain type provided for execution"}
       end
     rescue
       e ->
-        error_msg = "Lazy execution error: #{Exception.message(e)}"
+        error_msg = "IPyHOP execution error: #{Exception.message(e)}"
         Logger.error(error_msg)
         {:error, error_msg}
     end
