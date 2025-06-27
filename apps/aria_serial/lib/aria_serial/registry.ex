@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSerial.Registry do
+  @serial_number "R25W006REGX"
+
   @moduledoc """
   Embedded serial number registry for Aria migration tools.
 
@@ -25,6 +27,9 @@ defmodule AriaSerial.Registry do
   - 001: First tool that week
   - GLTL: Goal tuples tool
   """
+
+  @doc "Returns the serial number for this module"
+  def serial_number, do: @serial_number
 
   @registry %{
     "R25W001GLTL" => %{

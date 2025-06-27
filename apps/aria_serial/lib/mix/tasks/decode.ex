@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Mix.Tasks.Serial.Decode do
+  @serial_number "R25W002DECX"
+
   @moduledoc """
   Decode Aria project serial numbers.
 
@@ -49,6 +51,9 @@ defmodule Mix.Tasks.Serial.Decode do
   alias AriaSerial.Registry
 
   @shortdoc "Decode Aria project serial numbers"
+
+  @doc "Returns the serial number for this module"
+  def serial_number, do: @serial_number
 
   @switches [
     all: :boolean,

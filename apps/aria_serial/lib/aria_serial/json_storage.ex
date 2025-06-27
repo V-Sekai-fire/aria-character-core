@@ -2,12 +2,17 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSerial.JsonStorage do
+  @serial_number "R25W007JSXN"
+
   @moduledoc """
   JSON-based storage system for serial number registry data.
 
   Provides persistent storage for serial numbers organized by year, week, and factory.
   Supports atomic operations, backup creation, and data validation.
   """
+
+  @doc "Returns the serial number for this module"
+  def serial_number, do: @serial_number
 
   @storage_root "priv/serial_data"
 

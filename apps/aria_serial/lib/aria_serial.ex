@@ -2,9 +2,14 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSerial do
+  @serial_number "R25W001ARXA"
+
   @moduledoc """
   Documentation for `AriaSerial`.
   """
+
+  @doc "Returns the serial number for this module"
+  def serial_number, do: @serial_number
 
   @doc """
   Hello world.
