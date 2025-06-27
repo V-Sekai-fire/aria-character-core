@@ -1,8 +1,24 @@
 {
   "factory": "R",
   "generated_at": "2025-06-27T14:21:55.583126Z",
-  "next_sequence": 155,
+  "next_sequence": 157,
   "serials": {
+    "R25W0014110": {
+      "created": "2025-06-23",
+      "file": "001-factory-code-cleanup-manufacturer-conflict-avoidance.md",
+      "format": "v1",
+      "purpose": "ADR: factory code cleanup manufacturer conflict avoidance",
+      "sequence": 155,
+      "week": 26
+    },
+    "R25W0025C07": {
+      "created": "2025-06-23",
+      "file": "002-external-json-registry-storage.md",
+      "format": "v1",
+      "purpose": "ADR: external json registry storage",
+      "sequence": 156,
+      "week": 26
+    },
     "R25W1073327": {
       "created": "2025-06-23",
       "file": "R25W1073327-git-style-ast-migration-tool.md",
