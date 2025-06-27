@@ -91,10 +91,28 @@ defmodule AriaSerial.Registry do
   @week_decoding Map.new(@week_encoding, fn {k, v} -> {v, k} end)
 
   @doc "Look up serial number information"
-  def lookup(serial), do: Map.get(@registry, serial)
+  def lookup(serial) do
+    # First check embedded registry
+    case Map.get(@registry, serial) do
+      nil ->
+        # Fall back to JsonStorage for dynamic serials (including ADRs)
+        case AriaSerial.JsonStorage.lookup_serial(serial) do
+          {:ok, info} -> convert_json_info_to_registry_format(info)
+          {:error, _} -> nil
+        end
+      info -> info
+    end
+  end
 
   @doc "Get all registered serial numbers"
-  def all_serials, do: Map.keys(@registry)
+  def all_serials do
+    embedded_serials = Map.keys(@registry)
+    json_serials = AriaSerial.JsonStorage.all_serials()
+
+    (embedded_serials ++ json_serials)
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
 
   @doc "Get next sequence number for a given week"
   def next_sequence(week) do
@@ -266,5 +284,26 @@ defmodule AriaSerial.Registry do
     start_date = Date.new!(year, 1, 1) |> Date.add(start_day - 1)
     end_date = Date.add(start_date, 6)
     {Date.to_string(start_date), Date.to_string(end_date)}
+  end
+
+  defp convert_json_info_to_registry_format(json_info) do
+    # Convert JsonStorage format to Registry format
+    created_date = case json_info["created"] do
+      date_string when is_binary(date_string) ->
+        case Date.from_iso8601(date_string) do
+          {:ok, date} -> date
+          {:error, _} -> Date.utc_today()
+        end
+      _ -> Date.utc_today()
+    end
+
+    %{
+      format: String.to_atom(json_info["format"] || "v1"),
+      file: json_info["file"],
+      purpose: json_info["purpose"],
+      created: created_date,
+      week: json_info["week"],
+      sequence: json_info["sequence"]
+    }
   end
 end

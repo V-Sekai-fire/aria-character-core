@@ -1,0 +1,1241 @@
+{
+  "factory": "R",
+  "generated_at": "2025-06-27T14:21:55.583126Z",
+  "next_sequence": 155,
+  "serials": {
+    "R25W1073327": {
+      "created": "2025-06-23",
+      "file": "R25W1073327-git-style-ast-migration-tool.md",
+      "format": "v1",
+      "purpose": "ADR: git style ast migration tool",
+      "sequence": 53,
+      "week": 26
+    },
+    "R25W0765579": {
+      "created": "2025-06-21",
+      "file": "R25W0765579-add-typespecs-to-all-lib-code.md",
+      "format": "v1",
+      "purpose": "ADR: add typespecs to all lib code",
+      "sequence": 117,
+      "week": 26
+    },
+    "R25W143C7C4": {
+      "created": "2025-06-25",
+      "file": "R25W143C7C4-ariaengine-quick-start-guide.md",
+      "format": "v1",
+      "purpose": "ADR: ariaengine quick start guide",
+      "sequence": 4,
+      "week": 26
+    },
+    "R25W0991DD6": {
+      "created": "2025-06-22",
+      "file": "R25W0991DD6-remove-test-suite-cruft-and-fix-domain-interface.md",
+      "format": "v1",
+      "purpose": "ADR: remove test suite cruft and fix domain interface",
+      "sequence": 14,
+      "week": 26
+    },
+    "R25W06881B3": {
+      "created": "2025-06-20",
+      "file": "R25W06881B3-schedule-activities-data-transformer-conversion.md",
+      "format": "v1",
+      "purpose": "ADR: schedule activities data transformer conversion",
+      "sequence": 30,
+      "week": 26
+    },
+    "R25W114A09B": {
+      "created": "2025-06-23",
+      "file": "R25W114A09B-cross-app-scheduler-dependencies.md",
+      "format": "v1",
+      "purpose": "ADR: cross app scheduler dependencies",
+      "sequence": 70,
+      "week": 26
+    },
+    "R25W105F105": {
+      "created": "2025-06-22",
+      "file": "R25W105F105-fix-warnings-and-failures.md",
+      "format": "v1",
+      "purpose": "ADR: fix warnings and failures",
+      "sequence": 145,
+      "week": 26
+    },
+    "R25W011BD45": {
+      "created": "2025-06-14",
+      "file": "R25W011BD45-mvp-timing-implementation-strategy.md",
+      "format": "v1",
+      "purpose": "ADR: mvp timing implementation strategy",
+      "sequence": 122,
+      "week": 26
+    },
+    "R25W034AB64": {
+      "created": "2025-06-15",
+      "file": "R25W034AB64-project-status-summary-comprehensive-review.md",
+      "format": "v1",
+      "purpose": "ADR: project status summary comprehensive review",
+      "sequence": 103,
+      "week": 26
+    },
+    "R25W102F0BF": {
+      "created": "2025-06-22",
+      "file": "R25W102F0BF-remove-automatic-action-to-task-conversion.md",
+      "format": "v1",
+      "purpose": "ADR: remove automatic action to task conversion",
+      "sequence": 113,
+      "week": 26
+    },
+    "R25W081EBFA": {
+      "created": "2025-06-21",
+      "file": "R25W081EBFA-fix-remaining-timeline-doctests-and-planning-test-failures.md",
+      "format": "v1",
+      "purpose": "ADR: fix remaining timeline doctests and planning test failures",
+      "sequence": 79,
+      "week": 26
+    },
+    "R25W0143F62": {
+      "created": "2025-06-14",
+      "file": "R25W0143F62-implementation-risk-mitigation.md",
+      "format": "v1",
+      "purpose": "ADR: implementation risk mitigation",
+      "sequence": 98,
+      "week": 26
+    },
+    "R25W075A3C2": {
+      "created": "2025-06-21",
+      "file": "R25W075A3C2-temporal-planning-segment-closure.md",
+      "format": "v1",
+      "purpose": "ADR: temporal planning segment closure",
+      "sequence": 9,
+      "week": 26
+    },
+    "R25W141BE8A": {
+      "created": "2025-06-22",
+      "file": "R25W141BE8A-planner-standardization-open-problems.md",
+      "format": "v1",
+      "purpose": "ADR: planner standardization open problems",
+      "sequence": 25,
+      "week": 26
+    },
+    "R25W023C3DB": {
+      "created": "2025-06-14",
+      "file": "R25W023C3DB-temporal-solver-tech-stack-requirements.md",
+      "format": "v1",
+      "purpose": "ADR: temporal solver tech stack requirements",
+      "sequence": 124,
+      "week": 26
+    },
+    "R25W0298C62": {
+      "created": "2025-06-15",
+      "file": "R25W0298C62-aria-engine-functional-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: aria engine functional implementation",
+      "sequence": 151,
+      "week": 26
+    },
+    "R25W040602B": {
+      "created": "2025-06-16",
+      "file": "R25W040602B-stn-timeline-segmentation.md",
+      "format": "v1",
+      "purpose": "ADR: stn timeline segmentation",
+      "sequence": 41,
+      "week": 26
+    },
+    "R25W11580B8": {
+      "created": "2025-06-23",
+      "file": "R25W11580B8-stn-consistency-test-recovery.md",
+      "format": "v1",
+      "purpose": "ADR: stn consistency test recovery",
+      "sequence": 31,
+      "week": 26
+    },
+    "R25W14477B9": {
+      "created": "2025-06-25",
+      "file": "R25W14477B9-common-use-cases-and-patterns.md",
+      "format": "v1",
+      "purpose": "ADR: common use cases and patterns",
+      "sequence": 129,
+      "week": 26
+    },
+    "R25W098A910": {
+      "created": "2025-06-22",
+      "file": "R25W098A910-remove-unused-batch-processor-and-convergence-modules.md",
+      "format": "v1",
+      "purpose": "ADR: remove unused batch processor and convergence modules",
+      "sequence": 73,
+      "week": 26
+    },
+    "R25W0621594": {
+      "created": "2025-06-19",
+      "file": "R25W0621594-reconnect-scheduler-to-mcp.md",
+      "format": "v1",
+      "purpose": "ADR: reconnect scheduler to mcp",
+      "sequence": 57,
+      "week": 26
+    },
+    "R25W138C26A": {
+      "created": "2025-06-25",
+      "file": "R25W138C26A-tdd-unified-action-specification-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: tdd unified action specification implementation",
+      "sequence": 107,
+      "week": 26
+    },
+    "R25W060EA51": {
+      "created": "2025-06-18",
+      "file": "R25W060EA51-npc-communication-temporal-event-system.md",
+      "format": "v1",
+      "purpose": "ADR: npc communication temporal event system",
+      "sequence": 108,
+      "week": 26
+    },
+    "R25W153B3FE": {
+      "created": "2025-06-27",
+      "file": "R25W153B3FE-hybrid-coordinator-v2-monolithic-refactoring.md",
+      "format": "v1",
+      "purpose": "ADR: hybrid coordinator v2 monolithic refactoring",
+      "sequence": 24,
+      "week": 26
+    },
+    "R25W059F413": {
+      "created": "2025-06-18",
+      "file": "R25W059F413-fix-multigoal-tuple-ordering-consistency.md",
+      "format": "v1",
+      "purpose": "ADR: fix multigoal tuple ordering consistency",
+      "sequence": 65,
+      "week": 26
+    },
+    "R25W1398085": {
+      "created": "2025-06-22",
+      "file": "R25W1398085-unified-durative-action-specification-and-planner-standardization.md",
+      "format": "v1",
+      "purpose": "ADR: unified durative action specification and planner standardization",
+      "sequence": 55,
+      "week": 26
+    },
+    "R25W0183367": {
+      "created": "2025-06-14",
+      "file": "R25W0183367-canonical-temporal-backtracking-problem.md",
+      "format": "v1",
+      "purpose": "ADR: canonical temporal backtracking problem",
+      "sequence": 29,
+      "week": 26
+    },
+    "R25W1327B64": {
+      "created": "2025-06-24",
+      "file": "R25W1327B64-arc-prize-technical-architecture.md",
+      "format": "v1",
+      "purpose": "ADR: arc prize technical architecture",
+      "sequence": 72,
+      "week": 26
+    },
+    "R25W0503071": {
+      "created": "2025-06-18",
+      "file": "R25W0503071-khr-interactivity-systematic-verification-plan.md",
+      "format": "v1",
+      "purpose": "ADR: khr interactivity systematic verification plan",
+      "sequence": 109,
+      "week": 26
+    },
+    "R25W0135BA2": {
+      "created": "2025-06-14",
+      "file": "R25W0135BA2-research-strategy.md",
+      "format": "v1",
+      "purpose": "ADR: research strategy",
+      "sequence": 28,
+      "week": 26
+    },
+    "R25W1015A2E": {
+      "created": "2025-06-22",
+      "file": "R25W1015A2E-port-gtpyhop-blocks-gtn-to-ariaengine.md",
+      "format": "v1",
+      "purpose": "ADR: port gtpyhop blocks gtn to ariaengine",
+      "sequence": 89,
+      "week": 26
+    },
+    "R25W044B3F2": {
+      "created": "2025-06-17",
+      "file": "R25W044B3F2-entity-agent-timeline-graph-architecture.md",
+      "format": "v1",
+      "purpose": "ADR: entity agent timeline graph architecture",
+      "sequence": 148,
+      "week": 26
+    },
+    "R25W02297A7": {
+      "created": "2025-06-14",
+      "file": "R25W02297A7-temporal-constraint-solver-selection.md",
+      "format": "v1",
+      "purpose": "ADR: temporal constraint solver selection",
+      "sequence": 62,
+      "week": 26
+    },
+    "R25W0472567": {
+      "created": "2025-06-17",
+      "file": "R25W0472567-expose-aria-via-mcp-hermes.md",
+      "format": "v1",
+      "purpose": "ADR: expose aria via mcp hermes",
+      "sequence": 34,
+      "week": 26
+    },
+    "R25W1342424": {
+      "created": "2025-06-24",
+      "file": "R25W1342424-reverse-routing-pattern-for-api-unification.md",
+      "format": "v1",
+      "purpose": "ADR: reverse routing pattern for api unification",
+      "sequence": 1,
+      "week": 26
+    },
+    "R25W103F87B": {
+      "created": "2025-06-22",
+      "file": "R25W103F87B-delete-statev2-migrate-to-state-v1.md",
+      "format": "v1",
+      "purpose": "ADR: delete statev2 migrate to state v1",
+      "sequence": 143,
+      "week": 26
+    },
+    "R25W005553D": {
+      "created": "2025-06-14",
+      "file": "R25W005553D-web-interface-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: web interface implementation",
+      "sequence": 131,
+      "week": 26
+    },
+    "R25W019FE5E": {
+      "created": "2025-06-14",
+      "file": "R25W019FE5E-evolving-ariaengine-planner-blueprint.md",
+      "format": "v1",
+      "purpose": "ADR: evolving ariaengine planner blueprint",
+      "sequence": 88,
+      "week": 26
+    },
+    "R25W0667494": {
+      "created": "2025-06-20",
+      "file": "R25W0667494-integrate-exhort-or-tools-strategy.md",
+      "format": "v1",
+      "purpose": "ADR: integrate exhort or tools strategy",
+      "sequence": 125,
+      "week": 26
+    },
+    "R25W026F0B7": {
+      "created": "2025-06-15",
+      "file": "R25W026F0B7-todo-encapsulation.md",
+      "format": "v1",
+      "purpose": "ADR: todo encapsulation",
+      "sequence": 26,
+      "week": 26
+    },
+    "R25W1108E80": {
+      "created": "2025-06-23",
+      "file": "R25W1108E80-critical-zero-duration-contract-violation.md",
+      "format": "v1",
+      "purpose": "ADR: critical zero duration contract violation",
+      "sequence": 84,
+      "week": 26
+    },
+    "R25W064B8E2": {
+      "created": "2025-06-19",
+      "file": "R25W064B8E2-khr-interactivity-node-library-standardized-interface.md",
+      "format": "v1",
+      "purpose": "ADR: khr interactivity node library standardized interface",
+      "sequence": 140,
+      "week": 26
+    },
+    "R25W03345D0": {
+      "created": "2025-06-15",
+      "file": "R25W03345D0-remove-aria-tui-application.md",
+      "format": "v1",
+      "purpose": "ADR: remove aria tui application",
+      "sequence": 13,
+      "week": 26
+    },
+    "R25W063FA55": {
+      "created": "2025-06-19",
+      "file": "R25W063FA55-canonical-time-unit-seconds-and-stn-units.md",
+      "format": "v1",
+      "purpose": "ADR: canonical time unit seconds and stn units",
+      "sequence": 33,
+      "week": 26
+    },
+    "R25W119A759": {
+      "created": "2025-06-24",
+      "file": "R25W119A759-standalone-godot-mcp-server-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: standalone godot mcp server implementation",
+      "sequence": 54,
+      "week": 26
+    },
+    "R25W0852AD9": {
+      "created": "2025-06-22",
+      "file": "R25W0852AD9-runtime-informed-multigoal-optimization-during-lazy-execution.md",
+      "format": "v1",
+      "purpose": "ADR: runtime informed multigoal optimization during lazy execution",
+      "sequence": 123,
+      "week": 26
+    },
+    "R25W1110FC5": {
+      "created": "2025-06-23",
+      "file": "R25W1110FC5-stn-fixed-point-constraint-prohibition.md",
+      "format": "v1",
+      "purpose": "ADR: stn fixed point constraint prohibition",
+      "sequence": 39,
+      "week": 26
+    },
+    "R25W117C369": {
+      "created": "2025-06-23",
+      "file": "R25W117C369-standardize-local-timezone-iso8601-datetime-format.md",
+      "format": "v1",
+      "purpose": "ADR: standardize local timezone iso8601 datetime format",
+      "sequence": 83,
+      "week": 26
+    },
+    "R25W009BCB5": {
+      "created": "2025-06-14",
+      "file": "R25W009BCB5-concrete-mvp-definition.md",
+      "format": "v1",
+      "purpose": "ADR: concrete mvp definition",
+      "sequence": 80,
+      "week": 26
+    },
+    "R25W130E6A7": {
+      "created": "2025-06-24",
+      "file": "R25W130E6A7-arc-prize-2025-two-week-proof-of-concept-sprint.md",
+      "format": "v1",
+      "purpose": "ADR: arc prize 2025 two week proof of concept sprint",
+      "sequence": 100,
+      "week": 26
+    },
+    "R25W0807F11": {
+      "created": "2025-06-21",
+      "file": "R25W0807F11-fix-timeline-module-aliasing-issues-in-test-suite.md",
+      "format": "v1",
+      "purpose": "ADR: fix timeline module aliasing issues in test suite",
+      "sequence": 23,
+      "week": 26
+    },
+    "R25W1123610": {
+      "created": "2025-06-23",
+      "file": "R25W1123610-timeline-module-namespace-aliasing-fixes.md",
+      "format": "v1",
+      "purpose": "ADR: timeline module namespace aliasing fixes",
+      "sequence": 12,
+      "week": 26
+    },
+    "R25W095BA8C": {
+      "created": "2025-06-22",
+      "file": "R25W095BA8C-tdd-gltf-data-loading-parsing.md",
+      "format": "v1",
+      "purpose": "ADR: tdd gltf data loading parsing",
+      "sequence": 90,
+      "week": 26
+    },
+    "R25W0389D35": {
+      "created": "2025-06-15",
+      "file": "R25W0389D35-timeline-module-pc2-stn-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: timeline module pc2 stn implementation",
+      "sequence": 133,
+      "week": 26
+    },
+    "R25W053937B": {
+      "created": "2025-06-18",
+      "file": "R25W053937B-pert-chart-solver-with-khr-durative-actions.md",
+      "format": "v1",
+      "purpose": "ADR: pert chart solver with khr durative actions",
+      "sequence": 118,
+      "week": 26
+    },
+    "R25W131C16E": {
+      "created": "2025-06-24",
+      "file": "R25W131C16E-arc-prize-implementation-plan.md",
+      "format": "v1",
+      "purpose": "ADR: arc prize implementation plan",
+      "sequence": 101,
+      "week": 26
+    },
+    "R25W061BE9B": {
+      "created": "2025-06-18",
+      "file": "R25W061BE9B-enhanced-heist-scenario-json-solution-analysis.md",
+      "format": "v1",
+      "purpose": "ADR: enhanced heist scenario json solution analysis",
+      "sequence": 141,
+      "week": 26
+    },
+    "R25W1524A37": {
+      "created": "2025-06-27",
+      "file": "R25W1524A37-aria-gltf-simpleskin-animation-import-export.md",
+      "format": "v1",
+      "purpose": "ADR: aria gltf simpleskin animation import export",
+      "sequence": 139,
+      "week": 26
+    },
+    "R25W0013716": {
+      "created": "2025-06-14",
+      "file": "R25W0013716-state-architecture-migration.md",
+      "format": "v1",
+      "purpose": "ADR: state architecture migration",
+      "sequence": 95,
+      "week": 26
+    },
+    "R25W0206D9D": {
+      "created": "2025-06-14",
+      "file": "R25W0206D9D-timeline-based-vs-durative-actions.md",
+      "format": "v1",
+      "purpose": "ADR: timeline based vs durative actions",
+      "sequence": 135,
+      "week": 26
+    },
+    "R25W123C5BF": {
+      "created": "2025-06-24",
+      "file": "R25W123C5BF-recursive-adr-pause-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: recursive adr pause implementation",
+      "sequence": 99,
+      "week": 26
+    },
+    "R25W089FC2D": {
+      "created": "2025-06-22",
+      "file": "R25W089FC2D-unified-durative-action-specification-and-planner-standardization.md",
+      "format": "v1",
+      "purpose": "ADR: unified durative action specification and planner standardization",
+      "sequence": 144,
+      "week": 26
+    },
+    "R25W0670D79": {
+      "created": "2025-06-20",
+      "file": "R25W0670D79-mcp-strategy-testing-interface.md",
+      "format": "v1",
+      "purpose": "ADR: mcp strategy testing interface",
+      "sequence": 142,
+      "week": 26
+    },
+    "R25W1281B74": {
+      "created": "2025-06-24",
+      "file": "R25W1281B74-arc-prize-risk-analysis.md",
+      "format": "v1",
+      "purpose": "ADR: arc prize risk analysis",
+      "sequence": 138,
+      "week": 26
+    },
+    "R25W069348D": {
+      "created": "2025-06-20",
+      "file": "R25W069348D-hybrid-coordinator-v3-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: hybrid coordinator v3 implementation",
+      "sequence": 6,
+      "week": 26
+    },
+    "R25W08256C7": {
+      "created": "2025-06-21",
+      "file": "R25W08256C7-fix-planning-logic-in-lazy-execution-tests.md",
+      "format": "v1",
+      "purpose": "ADR: fix planning logic in lazy execution tests",
+      "sequence": 21,
+      "week": 26
+    },
+    "R25W0969BA8": {
+      "created": "2025-06-22",
+      "file": "R25W0969BA8-tdd-gltf-scene-graph-logic.md",
+      "format": "v1",
+      "purpose": "ADR: tdd gltf scene graph logic",
+      "sequence": 104,
+      "week": 26
+    },
+    "R25W0923F7E": {
+      "created": "2025-06-22",
+      "file": "R25W0923F7E-unified-action-specification-examples.md",
+      "format": "v1",
+      "purpose": "ADR: unified action specification examples",
+      "sequence": 150,
+      "week": 26
+    },
+    "R25W11617B8": {
+      "created": "2025-06-23",
+      "file": "R25W11617B8-comprehensive-timeline-test-suite-validation.md",
+      "format": "v1",
+      "purpose": "ADR: comprehensive timeline test suite validation",
+      "sequence": 2,
+      "week": 26
+    },
+    "R25W0786B1E": {
+      "created": "2025-06-21",
+      "file": "R25W0786B1E-strategy-factory-validation-reactivation.md",
+      "format": "v1",
+      "purpose": "ADR: strategy factory validation reactivation",
+      "sequence": 64,
+      "week": 26
+    },
+    "R25W006E842": {
+      "created": "2025-06-14",
+      "file": "R25W006E842-oban-queue-idempotency-intent-rejection.md",
+      "format": "v1",
+      "purpose": "ADR: oban queue idempotency intent rejection",
+      "sequence": 102,
+      "week": 26
+    },
+    "R25W03794DF": {
+      "created": "2025-06-15",
+      "file": "R25W03794DF-fix-markdownlint-pre-commit-hook.md",
+      "format": "v1",
+      "purpose": "ADR: fix markdownlint pre commit hook",
+      "sequence": 8,
+      "week": 26
+    },
+    "R25W1229B98": {
+      "created": "2025-06-24",
+      "file": "R25W1229B98-aria-direct-sandbox-integration.md",
+      "format": "v1",
+      "purpose": "ADR: aria direct sandbox integration",
+      "sequence": 93,
+      "week": 26
+    },
+    "R25W012424D": {
+      "created": "2025-06-14",
+      "file": "R25W012424D-absolute-minimum-success-criteria.md",
+      "format": "v1",
+      "purpose": "ADR: absolute minimum success criteria",
+      "sequence": 10,
+      "week": 26
+    },
+    "R25W113CC67": {
+      "created": "2025-06-23",
+      "file": "R25W113CC67-hybrid-planner-test-suite-restoration.md",
+      "format": "v1",
+      "purpose": "ADR: hybrid planner test suite restoration",
+      "sequence": 18,
+      "week": 26
+    },
+    "R25W121DCD9": {
+      "created": "2025-06-24",
+      "file": "R25W121DCD9-godot-sandbox-module-generation-integration.md",
+      "format": "v1",
+      "purpose": "ADR: godot sandbox module generation integration",
+      "sequence": 86,
+      "week": 26
+    },
+    "R25W02884C1": {
+      "created": "2025-06-24",
+      "file": "R25W02884C1-fix-timeline-stn-test-failures.md",
+      "format": "v1",
+      "purpose": "ADR: fix timeline stn test failures",
+      "sequence": 153,
+      "week": 26
+    },
+    "R25W1257C0E": {
+      "created": "2025-06-24",
+      "file": "R25W1257C0E-comprehensive-app-functionality-restoration.md",
+      "format": "v1",
+      "purpose": "ADR: comprehensive app functionality restoration",
+      "sequence": 78,
+      "week": 26
+    },
+    "R25W0498AC9": {
+      "created": "2025-06-18",
+      "file": "R25W0498AC9-ast-to-gltf-khr-interactivity-translation.md",
+      "format": "v1",
+      "purpose": "ADR: ast to gltf khr interactivity translation",
+      "sequence": 82,
+      "week": 26
+    },
+    "R25W08877E1": {
+      "created": "2025-06-22",
+      "file": "R25W08877E1-gltf-scene-foundation-implementation-plan.md",
+      "format": "v1",
+      "purpose": "ADR: gltf scene foundation implementation plan",
+      "sequence": 11,
+      "week": 26
+    },
+    "R25W071D281": {
+      "created": "2025-06-20",
+      "file": "R25W071D281-fix-membrane-pipeline-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: fix membrane pipeline implementation",
+      "sequence": 37,
+      "week": 26
+    },
+    "R25W1421349": {
+      "created": "2025-06-22",
+      "file": "R25W1421349-unified-action-specification-examples.md",
+      "format": "v1",
+      "purpose": "ADR: unified action specification examples",
+      "sequence": 146,
+      "week": 26
+    },
+    "R25W1096996": {
+      "created": "2025-06-23",
+      "file": "R25W1096996-strict-encapsulation-modular-testing-architecture.md",
+      "format": "v1",
+      "purpose": "ADR: strict encapsulation modular testing architecture",
+      "sequence": 66,
+      "week": 26
+    },
+    "R25W094A7AF": {
+      "created": "2025-06-22",
+      "file": "R25W094A7AF-tdd-gltf-core-data-structures.md",
+      "format": "v1",
+      "purpose": "ADR: tdd gltf core data structures",
+      "sequence": 5,
+      "week": 26
+    },
+    "R25W07431E8": {
+      "created": "2025-06-21",
+      "file": "R25W07431E8-project-segment-closure-temporal-planning.md",
+      "format": "v1",
+      "purpose": "ADR: project segment closure temporal planning",
+      "sequence": 147,
+      "week": 26
+    },
+    "R25W137069A": {
+      "created": "2025-06-24",
+      "file": "R25W137069A-extract-timeline-from-temporal-planner.md",
+      "format": "v1",
+      "purpose": "ADR: extract timeline from temporal planner",
+      "sequence": 59,
+      "week": 26
+    },
+    "R25W135339D": {
+      "created": "2025-06-24",
+      "file": "R25W135339D-modular-minizinc-architecture-refactoring.md",
+      "format": "v1",
+      "purpose": "ADR: modular minizinc architecture refactoring",
+      "sequence": 85,
+      "week": 26
+    },
+    "R25W1298CE1": {
+      "created": "2025-06-24",
+      "file": "R25W1298CE1-hybrid-planner-complete-restoration-and-standardization.md",
+      "format": "v1",
+      "purpose": "ADR: hybrid planner complete restoration and standardization",
+      "sequence": 106,
+      "week": 26
+    },
+    "R25W057B149": {
+      "created": "2025-06-18",
+      "file": "R25W057B149-extract-scheduler-remove-mcp.md",
+      "format": "v1",
+      "purpose": "ADR: extract scheduler remove mcp",
+      "sequence": 114,
+      "week": 26
+    },
+    "R25W00881AA": {
+      "created": "2025-06-14",
+      "file": "R25W00881AA-llm-development-uncertainty.md",
+      "format": "v1",
+      "purpose": "ADR: llm development uncertainty",
+      "sequence": 110,
+      "week": 26
+    },
+    "R25W0839F8C": {
+      "created": "2025-06-21",
+      "file": "R25W0839F8C-restore-run-lazy-refineahead-from-ipyhop.md",
+      "format": "v1",
+      "purpose": "ADR: restore run lazy refineahead from ipyhop",
+      "sequence": 48,
+      "week": 26
+    },
+    "R25W004DF1D": {
+      "created": "2025-06-14",
+      "file": "R25W004DF1D-mandatory-stability-verification.md",
+      "format": "v1",
+      "purpose": "ADR: mandatory stability verification",
+      "sequence": 40,
+      "week": 26
+    },
+    "R25W1513883": {
+      "created": "2025-06-26",
+      "file": "R25W1513883-gltf-2-0-specification-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: gltf 2 0 specification implementation",
+      "sequence": 17,
+      "week": 26
+    },
+    "R25W073B8D1": {
+      "created": "2025-06-20",
+      "file": "R25W073B8D1-test-scaling-problem-generator-validation.md",
+      "format": "v1",
+      "purpose": "ADR: test scaling problem generator validation",
+      "sequence": 68,
+      "week": 26
+    },
+    "R25W0849E89": {
+      "created": "2025-06-22",
+      "file": "R25W0849E89-minizinc-multigoal-optimization-with-fallback.md",
+      "format": "v1",
+      "purpose": "ADR: minizinc multigoal optimization with fallback",
+      "sequence": 7,
+      "week": 26
+    },
+    "R25W10468CD": {
+      "created": "2025-06-22",
+      "file": "R25W10468CD-replace-ariaengine-statev2-with-state.md",
+      "format": "v1",
+      "purpose": "ADR: replace ariaengine statev2 with state",
+      "sequence": 32,
+      "week": 26
+    },
+    "R25W1464F1F": {
+      "created": "2025-06-26",
+      "file": "R25W1464F1F-disconnect-mcp-servers-and-maintain-paused-state.md",
+      "format": "v1",
+      "purpose": "ADR: disconnect mcp servers and maintain paused state",
+      "sequence": 35,
+      "week": 26
+    },
+    "R25W12421BC": {
+      "created": "2025-06-24",
+      "file": "R25W12421BC-arc-prize-2025-abstract-reasoning-challenge-solution.md",
+      "format": "v1",
+      "purpose": "ADR: arc prize 2025 abstract reasoning challenge solution",
+      "sequence": 132,
+      "week": 26
+    },
+    "R25W02708D3": {
+      "created": "2025-06-15",
+      "file": "R25W02708D3-test-cleanup-and-code-maintenance.md",
+      "format": "v1",
+      "purpose": "ADR: test cleanup and code maintenance",
+      "sequence": 20,
+      "week": 26
+    },
+    "R25W14917FB": {
+      "created": "2025-06-25",
+      "file": "R25W14917FB-art-reinforcement-learning-qwen3-arc-optimization.md",
+      "format": "v1",
+      "purpose": "ADR: art reinforcement learning qwen3 arc optimization",
+      "sequence": 74,
+      "week": 26
+    },
+    "R25W091EA37": {
+      "created": "2025-06-22",
+      "file": "R25W091EA37-planner-standardization-open-problems.md",
+      "format": "v1",
+      "purpose": "ADR: planner standardization open problems",
+      "sequence": 130,
+      "week": 26
+    },
+    "R25W0556B01": {
+      "created": "2025-06-18",
+      "file": "R25W0556B01-stn-timeline-encapsulation.md",
+      "format": "v1",
+      "purpose": "ADR: stn timeline encapsulation",
+      "sequence": 149,
+      "week": 26
+    },
+    "R25W01659BE": {
+      "created": "2025-06-14",
+      "file": "R25W01659BE-mcp-integration-tdd-completion-criteria.md",
+      "format": "v1",
+      "purpose": "ADR: mcp integration tdd completion criteria",
+      "sequence": 63,
+      "week": 26
+    },
+    "R25W030C3AA": {
+      "created": "2025-06-15",
+      "file": "R25W030C3AA-aria-queue-functional-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: aria queue functional implementation",
+      "sequence": 46,
+      "week": 26
+    },
+    "R25W05462DD": {
+      "created": "2025-06-18",
+      "file": "R25W05462DD-mcp-scheduler-interface-design.md",
+      "format": "v1",
+      "purpose": "ADR: mcp scheduler interface design",
+      "sequence": 22,
+      "week": 26
+    },
+    "R25W0489307": {
+      "created": "2025-06-17",
+      "file": "R25W0489307-hybrid-planner-dependency-encapsulation.md",
+      "format": "v1",
+      "purpose": "ADR: hybrid planner dependency encapsulation",
+      "sequence": 126,
+      "week": 26
+    },
+    "R25W015D600": {
+      "created": "2025-06-14",
+      "file": "R25W015D600-mcp-integration-github-copilot.md",
+      "format": "v1",
+      "purpose": "ADR: mcp integration github copilot",
+      "sequence": 47,
+      "week": 26
+    },
+    "R25W093B1C8": {
+      "created": "2025-06-22",
+      "file": "R25W093B1C8-tdd-gltf-scene-foundation-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: tdd gltf scene foundation implementation",
+      "sequence": 96,
+      "week": 26
+    },
+    "R25W002DF48": {
+      "created": "2025-06-14",
+      "file": "R25W002DF48-oban-queue-design.md",
+      "format": "v1",
+      "purpose": "ADR: oban queue design",
+      "sequence": 111,
+      "week": 26
+    },
+    "R25W1405B8B": {
+      "created": "2025-06-22",
+      "file": "R25W1405B8B-fix-duration-handling-precision-loss.md",
+      "format": "v1",
+      "purpose": "ADR: fix duration handling precision loss",
+      "sequence": 19,
+      "week": 26
+    },
+    "R25W017DEAF": {
+      "created": "2025-06-14",
+      "file": "R25W017DEAF-definitive-temporal-planner-architecture.md",
+      "format": "v1",
+      "purpose": "ADR: definitive temporal planner architecture",
+      "sequence": 60,
+      "week": 26
+    },
+    "R25W0210AA3": {
+      "created": "2025-06-14",
+      "file": "R25W0210AA3-timeline-based-temporal-planner-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: timeline based temporal planner implementation",
+      "sequence": 61,
+      "week": 26
+    },
+    "R25W031D2CC": {
+      "created": "2025-06-15",
+      "file": "R25W031D2CC-aria-flow-core-api-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: aria flow core api implementation",
+      "sequence": 49,
+      "week": 26
+    },
+    "R25W00787B6": {
+      "created": "2025-06-14",
+      "file": "R25W00787B6-weekend-implementation-scope.md",
+      "format": "v1",
+      "purpose": "ADR: weekend implementation scope",
+      "sequence": 121,
+      "week": 26
+    },
+    "R25W046434A": {
+      "created": "2025-06-17",
+      "file": "R25W046434A-migrate-planner-to-statev2-subject-predicate-fact.md",
+      "format": "v1",
+      "purpose": "ADR: migrate planner to statev2 subject predicate fact",
+      "sequence": 134,
+      "week": 26
+    },
+    "R25W086088D": {
+      "created": "2025-06-22",
+      "file": "R25W086088D-stn-solver-minizinc-fallback-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: stn solver minizinc fallback implementation",
+      "sequence": 52,
+      "week": 26
+    },
+    "R25W136157D": {
+      "created": "2025-06-24",
+      "file": "R25W136157D-extract-minizinc-stn-solver-from-temporal-planner.md",
+      "format": "v1",
+      "purpose": "ADR: extract minizinc stn solver from temporal planner",
+      "sequence": 51,
+      "week": 26
+    },
+    "R25W10069A4": {
+      "created": "2025-06-22",
+      "file": "R25W10069A4-align-unigoal-method-registration-with-gtpyhop-design.md",
+      "format": "v1",
+      "purpose": "ADR: align unigoal method registration with gtpyhop design",
+      "sequence": 91,
+      "week": 26
+    },
+    "R25W0329AE5": {
+      "created": "2025-06-15",
+      "file": "R25W0329AE5-consolidate-flow-and-queue-into-engine.md",
+      "format": "v1",
+      "purpose": "ADR: consolidate flow and queue into engine",
+      "sequence": 71,
+      "week": 26
+    },
+    "R25W0031F1C": {
+      "created": "2025-06-14",
+      "file": "R25W0031F1C-game-engine-separation.md",
+      "format": "v1",
+      "purpose": "ADR: game engine separation",
+      "sequence": 15,
+      "week": 26
+    },
+    "R25W133C875": {
+      "created": "2025-06-24",
+      "file": "R25W133C875-arc-prize-risk-analysis.md",
+      "format": "v1",
+      "purpose": "ADR: arc prize risk analysis",
+      "sequence": 77,
+      "week": 26
+    },
+    "R25W145A6C9": {
+      "created": "2025-06-25",
+      "file": "R25W145A6C9-developer-navigation-guide.md",
+      "format": "v1",
+      "purpose": "ADR: developer navigation guide",
+      "sequence": 94,
+      "week": 26
+    },
+    "R25W1547587": {
+      "created": "2025-06-27",
+      "file": "R25W1547587-align-hybrid-planner-execution-with-ipyhop-pattern.md",
+      "format": "v1",
+      "purpose": "ADR: align hybrid planner execution with ipyhop pattern",
+      "sequence": 87,
+      "week": 26
+    },
+    "R25W0568D4F": {
+      "created": "2025-06-18",
+      "file": "R25W0568D4F-remove-unused-pddl-infrastructure-and-disabled-tests.md",
+      "format": "v1",
+      "purpose": "ADR: remove unused pddl infrastructure and disabled tests",
+      "sequence": 127,
+      "week": 26
+    },
+    "R25W043F2E3": {
+      "created": "2025-06-17",
+      "file": "R25W043F2E3-implement-durative-actions.md",
+      "format": "v1",
+      "purpose": "ADR: implement durative actions",
+      "sequence": 92,
+      "week": 26
+    },
+    "R25W070D1AF": {
+      "created": "2025-06-20",
+      "file": "R25W070D1AF-membrane-planning-pipeline-integration.md",
+      "format": "v1",
+      "purpose": "ADR: membrane planning pipeline integration",
+      "sequence": 56,
+      "week": 26
+    },
+    "R25W1089F0F": {
+      "created": "2025-06-23",
+      "file": "R25W1089F0F-extract-lib-modules-to-apps.md",
+      "format": "v1",
+      "purpose": "ADR: extract lib modules to apps",
+      "sequence": 3,
+      "week": 26
+    },
+    "R25W025F371": {
+      "created": "2025-06-15",
+      "file": "R25W025F371-replace-membrane-with-flow-for-parallel-processing.md",
+      "format": "v1",
+      "purpose": "ADR: replace membrane with flow for parallel processing",
+      "sequence": 105,
+      "week": 26
+    },
+    "R25W045E2B3": {
+      "created": "2025-06-17",
+      "file": "R25W045E2B3-aria-town-rdf-npc-demonstration.md",
+      "format": "v1",
+      "purpose": "ADR: aria town rdf npc demonstration",
+      "sequence": 120,
+      "week": 26
+    },
+    "R25W0365EF2": {
+      "created": "2025-06-15",
+      "file": "R25W0365EF2-complete-temporal-planning-solver.md",
+      "format": "v1",
+      "purpose": "ADR: complete temporal planning solver",
+      "sequence": 116,
+      "week": 26
+    },
+    "R25W118994A": {
+      "created": "2025-06-24",
+      "file": "R25W118994A-godot-libgodot-integration-via-membrane-unifex.md",
+      "format": "v1",
+      "purpose": "ADR: godot libgodot integration via membrane unifex",
+      "sequence": 115,
+      "week": 26
+    },
+    "R25W0791DA1": {
+      "created": "2025-06-21",
+      "file": "R25W0791DA1-lazy-execution-strategy-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: lazy execution strategy implementation",
+      "sequence": 119,
+      "week": 26
+    },
+    "R25W148122A": {
+      "created": "2025-06-25",
+      "file": "R25W148122A-llm-actions-search-optimization-arc-prize.md",
+      "format": "v1",
+      "purpose": "ADR: llm actions search optimization arc prize",
+      "sequence": 16,
+      "week": 26
+    },
+    "R25W1505959": {
+      "created": "2025-06-26",
+      "file": "R25W1505959-sociable-vs-solitary-testing-strategy-for-system-integration.md",
+      "format": "v1",
+      "purpose": "ADR: sociable vs solitary testing strategy for system integration",
+      "sequence": 38,
+      "week": 26
+    },
+    "R25W1268C71": {
+      "created": "2025-06-24",
+      "file": "R25W1268C71-arc-prize-implementation-plan.md",
+      "format": "v1",
+      "purpose": "ADR: arc prize implementation plan",
+      "sequence": 27,
+      "week": 26
+    },
+    "R25W051BA69": {
+      "created": "2025-06-18",
+      "file": "R25W051BA69-fix-khr-interactivity-planner-test-architecture.md",
+      "format": "v1",
+      "purpose": "ADR: fix khr interactivity planner test architecture",
+      "sequence": 75,
+      "week": 26
+    },
+    "R25W0101F54": {
+      "created": "2025-06-14",
+      "file": "R25W0101F54-test-driven-development.md",
+      "format": "v1",
+      "purpose": "ADR: test driven development",
+      "sequence": 136,
+      "week": 26
+    },
+    "R25W065D930": {
+      "created": "2025-06-20",
+      "file": "R25W065D930-fix-non-deterministic-base-datetime-scheduler.md",
+      "format": "v1",
+      "purpose": "ADR: fix non deterministic base datetime scheduler",
+      "sequence": 45,
+      "week": 26
+    },
+    "R25W058D6B9": {
+      "created": "2025-06-18",
+      "file": "R25W058D6B9-reconnect-scheduler-with-hybrid-planner.md",
+      "format": "v1",
+      "purpose": "ADR: reconnect scheduler with hybrid planner",
+      "sequence": 44,
+      "week": 26
+    },
+    "R25W1062D38": {
+      "created": "2025-06-22",
+      "file": "R25W1062D38-membrane-planning-system-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: membrane planning system implementation",
+      "sequence": 137,
+      "week": 26
+    },
+    "R25W0353D8D": {
+      "created": "2025-06-15",
+      "file": "R25W0353D8D-consolidated-temporal-planner-github-issues.md",
+      "format": "v1",
+      "purpose": "ADR: consolidated temporal planner github issues",
+      "sequence": 128,
+      "week": 26
+    },
+    "R25W052DE7D": {
+      "created": "2025-06-18",
+      "file": "R25W052DE7D-fix-khr-interactivity-planner-goal-processing-pipeline.md",
+      "format": "v1",
+      "purpose": "ADR: fix khr interactivity planner goal processing pipeline",
+      "sequence": 58,
+      "week": 26
+    },
+    "R25W03922C4": {
+      "created": "2025-06-15",
+      "file": "R25W03922C4-timeline-module-implementation-progress.md",
+      "format": "v1",
+      "purpose": "ADR: timeline module implementation progress",
+      "sequence": 112,
+      "week": 26
+    },
+    "R25W14702E9": {
+      "created": "2025-06-25",
+      "file": "R25W14702E9-practical-how-to-documentation.md",
+      "format": "v1",
+      "purpose": "ADR: practical how to documentation",
+      "sequence": 152,
+      "week": 26
+    },
+    "R25W0773270": {
+      "created": "2025-06-21",
+      "file": "R25W0773270-stn-method-bridge-segmentation.md",
+      "format": "v1",
+      "purpose": "ADR: stn method bridge segmentation",
+      "sequence": 43,
+      "week": 26
+    },
+    "R25W087E1AE": {
+      "created": "2025-06-22",
+      "file": "R25W087E1AE-aria-engine-plans-gltf-khr-interactivity-implementation.md",
+      "format": "v1",
+      "purpose": "ADR: aria engine plans gltf khr interactivity implementation",
+      "sequence": 154,
+      "week": 26
+    },
+    "R25W127B6BF": {
+      "created": "2025-06-24",
+      "file": "R25W127B6BF-arc-prize-technical-architecture.md",
+      "format": "v1",
+      "purpose": "ADR: arc prize technical architecture",
+      "sequence": 76,
+      "week": 26
+    },
+    "R25W041FBCD": {
+      "created": "2025-06-16",
+      "file": "R25W041FBCD-domain-method-naming-refactor.md",
+      "format": "v1",
+      "purpose": "ADR: domain method naming refactor",
+      "sequence": 42,
+      "week": 26
+    },
+    "R25W09751CC": {
+      "created": "2025-06-22",
+      "file": "R25W09751CC-tdd-gltf-mesh-processing.md",
+      "format": "v1",
+      "purpose": "ADR: tdd gltf mesh processing",
+      "sequence": 36,
+      "week": 26
+    },
+    "R25W0722F06": {
+      "created": "2025-06-20",
+      "file": "R25W0722F06-fix-planner-adapter-hybrid-coordinator-integration.md",
+      "format": "v1",
+      "purpose": "ADR: fix planner adapter hybrid coordinator integration",
+      "sequence": 69,
+      "week": 26
+    },
+    "R25W120FE90": {
+      "created": "2025-06-24",
+      "file": "R25W120FE90-godot-aria-integration-workflow-orchestration.md",
+      "format": "v1",
+      "purpose": "ADR: godot aria integration workflow orchestration",
+      "sequence": 67,
+      "week": 26
+    },
+    "R25W0427C2A": {
+      "created": "2025-06-17",
+      "file": "R25W0427C2A-unsolved-planner-problems-for-npcs.md",
+      "format": "v1",
+      "purpose": "ADR: unsolved planner problems for npcs",
+      "sequence": 97,
+      "week": 26
+    },
+    "R25W09080DB": {
+      "created": "2025-06-22",
+      "file": "R25W09080DB-fix-duration-handling-precision-loss.md",
+      "format": "v1",
+      "purpose": "ADR: fix duration handling precision loss",
+      "sequence": 81,
+      "week": 26
+    },
+    "R25W024014E": {
+      "created": "2025-06-14",
+      "file": "R25W024014E-total-order-to-partial-order-transformation.md",
+      "format": "v1",
+      "purpose": "ADR: total order to partial order transformation",
+      "sequence": 50,
+      "week": 26
+    }
+  },
+  "week": 26,
+  "year": 2025
+}
