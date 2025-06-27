@@ -57,3 +57,41 @@
 ✅ Ready for next phase of glTF implementation
 
 The aria_gltf app now has both complete animation infrastructure and basic file export functionality, providing a solid foundation for creating and exporting glTF documents.
+
+## Next Steps / Future Work
+
+### Import Functionality
+- [ ] Create AriaGltf.IO.import_from_file/1 function
+- [ ] Add JSON parsing and validation for imported files
+- [ ] Handle malformed glTF file recovery
+- [ ] Add support for external file references (images, buffers)
+
+### Enhanced Export Features
+- [ ] Add support for binary glTF (.glb) export
+- [ ] Implement buffer data embedding
+- [ ] Add image embedding for self-contained files
+- [ ] Create export options (pretty print, minified, etc.)
+
+### Validation and Quality Assurance
+- [ ] Add comprehensive glTF specification validation
+- [ ] Implement schema validation against glTF 2.0 spec
+- [ ] Add warnings for non-standard but valid constructs
+- [ ] Create validation reports with detailed feedback
+
+### Performance and Optimization
+- [ ] Add streaming support for large files
+- [ ] Implement memory-efficient buffer handling
+- [ ] Add progress callbacks for long operations
+- [ ] Optimize JSON serialization for large documents
+
+### Developer Experience
+- [ ] Add detailed documentation with examples
+- [ ] Create helper functions for common glTF patterns
+- [ ] Add debugging utilities and inspection tools
+- [ ] Implement pretty-printing for glTF structure analysis
+
+### Integration Features
+- [ ] Add support for external asset references
+- [ ] Implement asset dependency tracking
+- [ ] Create batch processing utilities
+- [ ] Add conversion utilities from other 3D formats
