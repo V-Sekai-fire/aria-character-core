@@ -3,46 +3,28 @@
 
 defmodule AstMigrate.Rules.Behaviour do
   @moduledoc """
-  Behaviour for AST transformation rules.
+  Behaviour for AST migration rules.
 
-  This behaviour defines the interface that all transformation rules must implement
-  to be compatible with the AST migration tool.
+  This behaviour defines the interface that all AST migration rules must implement.
+  Rules are responsible for transforming Elixir source code to fix specific issues
+  or apply specific migrations.
   """
-
-  @type file_path :: String.t()
-  @type validation_function :: (file_path() -> boolean())
 
   @doc "Returns a human-readable description of what this rule does."
   @callback description() :: String.t()
 
-  @doc """
-  Returns a list of file patterns that this rule applies to.
-
-  Uses glob patterns like ["lib/**/*.ex", "test/**/*.exs"]
-  """
+  @doc "Returns a list of file patterns that this rule should be applied to."
   @callback file_patterns() :: [String.t()]
 
-  @doc """
-  Returns a list of precondition validation functions.
+  @doc "Returns a list of precondition functions for file eligibility."
+  @callback preconditions() :: [(String.t() -> boolean())]
 
-  These functions check if a file is eligible for transformation.
-  """
-  @callback preconditions() :: [validation_function()]
+  @doc "Returns a list of postcondition functions for transformation verification."
+  @callback postconditions() :: [(String.t() -> boolean())]
 
-  @doc """
-  Returns a list of postcondition validation functions.
+  @doc "Validates that the given files meet the preconditions for this rule."
+  @callback validate_preconditions([String.t()]) :: :ok | {:error, String.t()}
 
-  These functions verify that the transformation was successful.
-  """
-  @callback postconditions() :: [validation_function()]
-
-  @doc "Validates that all preconditions are met for the given files."
-  @callback validate_preconditions([file_path()]) :: :ok | {:error, String.t()}
-
-  @doc """
-  Transforms a single file according to this rule.
-
-  Returns the transformed content or an error.
-  """
-  @callback transform_file(file_path()) :: {:ok, String.t()} | {:error, String.t()}
+  @doc "Transforms a single file according to this rule."
+  @callback transform_file(String.t()) :: {:ok, String.t()} | {:error, String.t()}
 end

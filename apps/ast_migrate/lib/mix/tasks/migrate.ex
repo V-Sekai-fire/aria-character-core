@@ -84,16 +84,19 @@ defmodule Mix.Tasks.Migrate do
     Mix.shell().info("Available Migration Rules:")
     Mix.shell().info("=" <> String.duplicate("=", 25))
 
-    AstMigrate.list_rules()
-    |> Enum.each(fn rule_name ->
-      case AstMigrate.rule_info(rule_name) do
-        {:ok, info} ->
-          Mix.shell().info("  #{rule_name} - #{info.description}")
+    rules = AstMigrate.list_rules()
 
-        {:error, _} ->
-          Mix.shell().info("  #{rule_name} - No description available")
-      end
-    end)
+    if Enum.empty?(rules) do
+      Mix.shell().info("  No rules currently implemented.")
+      Mix.shell().info("  This is a clean foundation ready for future transformation rules.")
+    else
+      Enum.each(rules, fn rule_name ->
+        case AstMigrate.rule_info(rule_name) do
+          {:error, _} ->
+            Mix.shell().info("  #{rule_name} - No description available")
+        end
+      end)
+    end
   end
 
   defp execute_migration(opts, args) do

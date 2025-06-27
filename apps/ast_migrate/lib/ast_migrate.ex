@@ -7,10 +7,31 @@ defmodule AstMigrate do
 
   This module provides systematic code transformations with Git integration
   for large-scale Elixir codebases.
+
+  ## Usage
+
+  The ast_migrate tool is designed to apply AST-based transformations to Elixir
+  code with Git integration for safe, reversible changes.
+
+  Currently, this is a clean foundation ready for future transformation rules.
+  Rules should implement the `AstMigrate.Rules.Behaviour` interface.
+
+  ## Example Future Usage
+
+      # Apply a transformation rule
+      AstMigrate.apply_rule(:example_rule, files: ["lib/**/*.ex"])
+
+      # Preview changes without applying them
+      AstMigrate.apply_rule(:example_rule, files: ["lib/**/*.ex"], dry_run: true)
+
+      # Apply and commit changes
+      AstMigrate.apply_rule(:example_rule,
+        files: ["lib/**/*.ex"],
+        commit: "Apply example transformation")
   """
 
   require Logger
-  alias AstMigrate.{Git, Rules}
+  alias AstMigrate.Git
 
   @type transformation_result :: {:ok, String.t()} | {:error, String.t()}
   @type file_result :: {:ok, String.t()} | {:error, String.t()}
@@ -18,6 +39,23 @@ defmodule AstMigrate do
 
   @doc """
   Apply a transformation rule to files and optionally commit the changes.
+
+  ## Options
+
+  - `:files` - List of file patterns to transform (default: ["lib/**/*.ex", "test/**/*.exs"])
+  - `:dry_run` - Preview changes without applying them (default: false)
+  - `:commit` - Commit message to use if changes are made (optional)
+
+  ## Returns
+
+  - `{:ok, result_map}` - Transformation completed successfully
+  - `{:error, reason}` - Transformation failed
+
+  The result map contains:
+  - `:rule` - The rule name that was applied
+  - `:files_processed` - Number of files that were processed
+  - `:files_changed` - Number of files that were actually modified
+  - `:commit_hash` - Git commit hash if changes were committed
   """
   @spec apply_rule(rule_name(), keyword()) :: {:ok, map()} | {:error, String.t()}
   def apply_rule(rule_name, opts \\ []) do
@@ -32,7 +70,7 @@ defmodule AstMigrate do
     )
 
     with {:ok, rule_module} <- get_rule_module(rule_name),
-         {:ok, files} <- get_target_files(opts),
+         {:ok, files} <- get_target_files(rule_module, opts),
          :ok <- validate_preconditions(rule_module, files),
          {:ok, results} <- apply_transformations(rule_module, files, opts),
          :ok <- maybe_commit_changes(results, opts) do
@@ -53,6 +91,7 @@ defmodule AstMigrate do
          rule: rule_name,
          files_processed: length(results.transformed_files),
          files_changed: length(results.changed_files),
+         changed_files: results.changed_files,
          commit_hash: results.commit_hash
        }}
     else
@@ -71,71 +110,39 @@ defmodule AstMigrate do
     end
   end
 
-  @doc "List available transformation rules."
+  @doc """
+  List available transformation rules.
+
+  Currently returns an empty list as no rules are implemented.
+  This is a clean foundation ready for future rules.
+  """
   @spec list_rules() :: [atom()]
   def list_rules do
-    [
-      :unit_test_improvements,
-      :timeline_namespace_fixes,
-      :aria_engine_namespace_cleanup,
-      :membrane_namespace_cleanup,
-      :state_module_conflict_resolution,
-      :timeline_module_references,
-      :state_struct_imports
-    ]
+    []
   end
 
-  @doc "Get information about a specific transformation rule."
-  @spec rule_info(rule_name()) :: {:ok, map()} | {:error, String.t()}
+  @doc """
+  Get information about a specific transformation rule.
+
+  Returns rule metadata including name, module, and description.
+  """
+  @spec rule_info(rule_name()) :: {:error, String.t()}
   def rule_info(rule_name) do
-    case get_rule_module(rule_name) do
-      {:ok, module} ->
-        {:ok,
-         %{
-           name: rule_name,
-           module: module,
-           description: module.description()
-         }}
-
-      error ->
-        error
-    end
+    get_rule_module(rule_name)
   end
 
-  defp get_rule_module(:unit_test_improvements) do
-    {:ok, Rules.UnitTestImprovements}
-  end
-
-  defp get_rule_module(:timeline_namespace_fixes) do
-    {:ok, Rules.TimelineNamespaceFixes}
-  end
-
-  defp get_rule_module(:aria_engine_namespace_cleanup) do
-    {:ok, Rules.AriaEngineNamespaceCleanup}
-  end
-
-  defp get_rule_module(:membrane_namespace_cleanup) do
-    {:ok, Rules.MembraneNamespaceCleanup}
-  end
-
-  defp get_rule_module(:state_module_conflict_resolution) do
-    {:ok, Rules.StateModuleConflictResolution}
-  end
-
-  defp get_rule_module(:timeline_module_references) do
-    {:ok, Rules.TimelineModuleReferences}
-  end
-
-  defp get_rule_module(:state_struct_imports) do
-    {:ok, Rules.StateStructImports}
-  end
+  # Private functions
 
   defp get_rule_module(rule_name) do
     {:error, "Unknown rule: #{rule_name}"}
   end
 
-  defp get_target_files(opts) do
-    patterns = Keyword.get(opts, :files, ["lib/**/*.ex", "test/**/*.exs"])
+  defp get_target_files(rule_module, opts) do
+    patterns =
+      case Keyword.get(opts, :files) do
+        nil -> rule_module.file_patterns()
+        custom_files -> custom_files
+      end
 
     # Expand patterns and resolve relative paths
     files =
@@ -151,12 +158,9 @@ defmodule AstMigrate do
 
         Path.wildcard(expanded_pattern)
       end)
-
       # Ensure all paths are absolute
       |> Enum.map(&Path.expand/1)
-
       # Remove duplicates
-
       |> Enum.uniq()
 
     Logger.debug("Target files identified",

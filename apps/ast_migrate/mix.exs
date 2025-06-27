@@ -39,6 +39,7 @@ defmodule AstMigrate.MixProject do
       {:jason, "~> 1.4"},
 
       # Development and testing tools
+      {:egit, "~> 0.1.9"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
