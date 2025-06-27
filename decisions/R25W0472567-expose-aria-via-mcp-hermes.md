@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0472567 -->
 
-
 ## Status
 
 **Paused** (June 20, 2025)  

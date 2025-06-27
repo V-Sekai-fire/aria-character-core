@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0667494 -->
 
-
 **Status:** Proposed  
 **Date:** June 20, 2025  
 **Priority:** HIGH  

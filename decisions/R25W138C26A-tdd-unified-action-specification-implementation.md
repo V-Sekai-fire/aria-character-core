@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W138C26A -->
 
-
 **Status:** Proposed  
 **Date:** 2025-06-25  
 **Priority:** HIGH - Implementation Strategy

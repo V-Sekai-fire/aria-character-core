@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W057B149 -->
 
-
 **Status:** Completed ~~(Temporary removal, restoration planned)~~
 **Date:** June 18, 2025
 **Completion Date:** June 18, 2025

@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W1110FC5 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/153-stn-fixed-point-constraint-prohibition.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

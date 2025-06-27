@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0013716 -->
 
-
 ## Status
 
 **Superseded by ADR-034: Definitive Temporal Planner Architecture**

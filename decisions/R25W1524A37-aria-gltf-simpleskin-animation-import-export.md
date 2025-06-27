@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W1524A37 -->
 
-
 **Status:** Merged into ADR-192  
 **Date:** 2025-06-27  
 **Priority:** HIGH

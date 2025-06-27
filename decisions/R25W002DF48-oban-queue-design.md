@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W002DF48 -->
 
-
 ## Status
 
 **Deprecated** - Replaced by ADR-032 (Membrane Workflow Migration)

@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0365EF2 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/075-complete-temporal-planning-solver.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

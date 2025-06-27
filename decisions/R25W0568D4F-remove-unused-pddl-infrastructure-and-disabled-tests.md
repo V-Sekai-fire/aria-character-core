@@ -8,7 +8,6 @@ completed: 2025-06-18
 
 <!-- @adr_serial R25W0568D4F -->
 
-
 ## Context
 
 Analysis of the codebase reveals significant unused infrastructure that adds complexity without providing value:

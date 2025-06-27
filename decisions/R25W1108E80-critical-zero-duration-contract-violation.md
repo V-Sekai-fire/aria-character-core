@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W1108E80 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/152-critical-zero-duration-contract-violation.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

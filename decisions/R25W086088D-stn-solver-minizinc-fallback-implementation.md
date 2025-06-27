@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W086088D -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/128-stn-solver-minizinc-fallback-implementation.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

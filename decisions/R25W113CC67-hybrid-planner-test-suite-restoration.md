@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W113CC67 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/155-hybrid-planner-test-suite-restoration.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

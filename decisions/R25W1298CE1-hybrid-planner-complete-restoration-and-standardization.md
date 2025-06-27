@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W1298CE1 -->
 
-
 **Status:** Active  
 **Date:** 2025-06-24  
 **Priority:** CRITICAL (Blocking ARC Prize work)  

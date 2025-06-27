@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W01659BE -->
 
-
 ## Status
 
 **Cancelled** - MCP integration is not being implemented

@@ -7,7 +7,6 @@ status: Completed
 
 <!-- @adr_serial R25W098A910 -->
 
-
 ## Context
 
 The codebase contains two modules that are effectively unused and contain only placeholder implementations:

@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W063FA55 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/106-canonical-time-unit-seconds-and-stn-units.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

@@ -8,7 +8,6 @@ completed: 2025-06-22
 
 <!-- @adr_serial R25W0329AE5 -->
 
-
 ## Context
 
 **Original Assumption (June 15, 2025):** The architecture included three separate applications: `aria_engine`, `aria_flow`, and `aria_queue` with unnecessary complexity and fragmented dependency graph.

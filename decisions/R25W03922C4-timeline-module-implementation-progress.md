@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W03922C4 -->
 
-
 **Status:** Active (Paused)  
 **Date:** June 15, 2025  
 **Extracted from:** ADR-075 Task 10, detailed in ADR-078

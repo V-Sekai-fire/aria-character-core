@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0206D9D -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/037-timeline-based-vs-durative-actions.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

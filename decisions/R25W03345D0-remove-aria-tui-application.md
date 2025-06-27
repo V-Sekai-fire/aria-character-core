@@ -7,7 +7,6 @@ status: completed
 
 <!-- @adr_serial R25W03345D0 -->
 
-
 ## Context
 
 The `aria_tui` application is no longer required for the project's core functionality. To simplify the architecture and reduce maintenance overhead, it will be removed.

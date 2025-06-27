@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W058D6B9 -->
 
-
 **Status:** Completed (June 18, 2025)
 
 ## Context

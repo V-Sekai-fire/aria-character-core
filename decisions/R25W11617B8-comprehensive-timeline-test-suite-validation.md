@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W11617B8 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/158-comprehensive-timeline-test-suite-validation.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

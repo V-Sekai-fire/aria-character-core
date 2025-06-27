@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W143C7C4 -->
 
-
 **Status:** Proposed  
 **Date:** 2025-06-25  
 **Priority:** HIGH - Developer Onboarding

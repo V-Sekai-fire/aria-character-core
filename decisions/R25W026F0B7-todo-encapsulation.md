@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W026F0B7 -->
 
-
 ## API Abstraction Issues
 
 ### High Priority

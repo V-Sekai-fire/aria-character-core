@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W03794DF -->
 
-
 - **Status:** Proposed
 - **Context:** The markdownlint pre-commit hook is consistently failing, preventing commits. The hook is unable to automatically fix the issues it detects, and manual fixes have been unsuccessful.
 - **Decision:** We will temporarily disable the markdownlint pre-commit hook to allow development to continue. A new task will be created to investigate and fix the root cause of the markdownlint failures.

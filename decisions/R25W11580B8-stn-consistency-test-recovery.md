@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W11580B8 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/157-stn-consistency-test-recovery.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

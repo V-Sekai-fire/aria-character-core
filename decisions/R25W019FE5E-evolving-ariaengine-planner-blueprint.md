@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W019FE5E -->
 
-
 ## Status
 
 **Deprecated** - Superseded by ADR-038: Timeline-Based Temporal Planner Implementation Plan

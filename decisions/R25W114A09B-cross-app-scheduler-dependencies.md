@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W114A09B -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/156-cross-app-scheduler-dependencies.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

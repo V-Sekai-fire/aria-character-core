@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W017DEAF -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/034-definitive-temporal-planner-architecture.md`  
 **Date:** 2025-06-14  
 **Moved:** 2025-06-23

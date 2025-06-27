@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0210AA3 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/038-timeline-based-temporal-planner-implementation.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0498AC9 -->
 
-
 **Status:** Obsolete - KHR System Deleted  
 **Date:** 2025-06-18  
 **Deletion Date:** 2025-06-18  

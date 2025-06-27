@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0015136 -->
 
-
 **Status:** Superseded → Decomposed (June 23, 2025)  
 **Date:** June 23, 2025  
 **Priority:** CRITICAL

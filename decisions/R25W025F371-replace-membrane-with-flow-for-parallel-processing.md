@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W025F371 -->
 
-
 ## Status
 
 **Accepted**

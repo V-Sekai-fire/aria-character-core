@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W034AB64 -->
 
-
 ## Project Burn Down Chart
 
 Visual representation of remaining work toward project completion:

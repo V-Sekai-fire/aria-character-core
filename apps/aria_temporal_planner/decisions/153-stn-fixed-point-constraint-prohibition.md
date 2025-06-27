@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0023016 -->
 
-
 **Status:** Active (Paused)  
 **Date:** June 23, 2025  
 **Priority:** CRITICAL

@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W065D930 -->
 
-
 **Status:** Active (Paused)  
 **Date:** June 20, 2025  
 **Priority:** HIGH - Critical Bug

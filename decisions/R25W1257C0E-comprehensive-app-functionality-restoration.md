@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W1257C0E -->
 
-
 **Status:** Tombstoned  
 **Date:** 2025-06-24  
 **Superseded by:** ADR-171

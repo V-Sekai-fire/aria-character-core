@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W023C3DB -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/041-temporal-solver-tech-stack-requirements.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

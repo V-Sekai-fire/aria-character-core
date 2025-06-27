@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0556B01 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/098-stn-timeline-encapsulation.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W064B8E2 -->
 
-
 **Status:** Proposed
 
 ## Context

@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W12421BC -->
 
-
 **Status:** Tombstoned  
 **Date:** 2025-06-24  
 **Superseded by:** ADR-172 series

@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W02297A7 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/040-temporal-constraint-solver-selection.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23

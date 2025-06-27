@@ -2,7 +2,6 @@
 
 <!-- @adr_serial R25W0773270 -->
 
-
 **Status:** Moved to `apps/aria_temporal_planner/decisions/119-stn-method-bridge-segmentation.md`  
 **Date:** Original Date  
 **Moved:** 2025-06-23
