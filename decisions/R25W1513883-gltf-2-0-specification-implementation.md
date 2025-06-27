@@ -380,27 +380,29 @@ aria_gltf_io → aria_gltf_core ← aria_gltf_geometry
 - [ ] Texture loading via `aria_gltf_images`
 - [ ] Material validation against glTF specification
 
-### App 6: `aria_gltf_io` - File Format I/O (LOW PRIORITY)
+### App 6: `aria_gltf_io` - File Format I/O (HIGHEST PRIORITY - EXPORT FOCUS)
 
 **Location**: `apps/aria_gltf_io/`
 **Dependencies**: `aria_gltf_core`, `aria_gltf_images`
 
-**Required Implementation**:
+**Required Implementation (Export-First Approach)**:
 
-- [ ] Create new Elixir application: `mix new apps/aria_gltf_io`
-- [ ] JSON glTF file parsing and validation
-- [ ] GLB binary format support (header, JSON chunk, binary chunk)
-- [ ] URI resolution (data URIs, relative paths, external files)
-- [ ] Export functionality for frame extraction
-- [ ] Comprehensive validation and error reporting
+- [ ] **PHASE 1: Basic Export** - JSON glTF file writing using existing Document.to_json/1
+- [ ] **PHASE 1: File Writing** - Save minimal valid .gltf files to disk
+- [ ] **PHASE 1: Minimal Scene Export** - Single mesh, single material export
+- [ ] **PHASE 2: Enhanced Export** - Multiple meshes, materials, textures
+- [ ] **PHASE 3: Import Support** - JSON glTF file parsing and validation
+- [ ] **PHASE 3: GLB Support** - Binary format support (header, JSON chunk, binary chunk)
+- [ ] **PHASE 3: URI Resolution** - Data URIs, relative paths, external files
 
-**Implementation Patterns**:
+**Implementation Patterns (Export-First)**:
 
-- [ ] Streaming binary data parsing for large files
-- [ ] Base64 data URI encoding/decoding
-- [ ] File format detection and validation
-- [ ] Export integration with `aria_gltf_images` for frame output
-- [ ] Comprehensive error handling with detailed context
+- [ ] **Document.to_json/1 integration** - Leverage existing serialization
+- [ ] **File system operations** - Reliable file writing with error handling
+- [ ] **Minimal scene construction** - Basic cube/triangle mesh generation
+- [ ] **Blender validation pipeline** - Automated import testing
+- [ ] **Export integration with `aria_gltf_images`** for frame output
+- [ ] **Comprehensive error handling** with detailed context
 
 ## Implementation Strategy
 
@@ -440,28 +442,33 @@ aria_gltf_io → aria_gltf_core ← aria_gltf_geometry
 3. Create file format parsing (JSON/GLB)
 4. Implement comprehensive validation and error reporting
 
-### Current Focus: Architecture Decision and Missing Components
+### Current Focus: Minimal Export Pipeline for Blender Validation
 
-**Immediate Priority: Resolve Architecture Approach**
+**Immediate Priority: End-to-End Export Capability**
 
-The current `aria_gltf` app is significantly more advanced than originally documented. Two viable paths forward:
+Focus on getting minimal glTF files exported and validated in Blender before tackling complex features. This provides immediate feedback on implementation correctness and establishes a working baseline.
 
-**Option A: Enhance Existing Single App**
-- Complete missing Animation Channel/Sampler modules
-- Add Nx/TorchX dependencies for tensor operations
-- Implement I/O system for JSON/GLB parsing
-- Add comprehensive validation framework
+**Phase 1: Minimal Export Pipeline (HIGHEST PRIORITY)**
+1. **Basic I/O System** - JSON glTF export functionality using existing Document.to_json/1
+2. **Minimal Scene Export** - Single mesh, single material, basic scene graph
+3. **File Writing** - Save valid .gltf files to disk
+4. **Blender Import Test** - Verify exported files load correctly in Blender
 
-**Option B: Extract to Multi-App Architecture**
-- Migrate existing comprehensive implementation to `aria_gltf_core`
-- Create specialized apps for geometry, animation, materials, images, I/O
-- Maintain current functionality while gaining architectural benefits
+**Phase 2: Enhanced Export (HIGH PRIORITY)**
+5. **Animation Channel/Sampler modules** - Complete missing animation components
+6. **Basic Animation Export** - Simple keyframe animations
+7. **Material Export Enhancement** - PBR materials with textures
 
-**Next Steps:**
-1. Decide on architecture approach (single vs. multi-app)
-2. Complete missing Animation Channel/Sampler modules
-3. Add tensor operation dependencies
-4. Implement SimpleSkin/SimpleMorph validation
+**Phase 3: Advanced Features (MEDIUM PRIORITY)**
+8. **SimpleSkin/SimpleMorph Support** - Complex animation validation
+9. **Tensor Operations** - Nx/TorchX integration for performance
+10. **Architecture Decision** - Single app vs. multi-app based on export experience
+
+**Blender Validation Checkpoints:**
+- [ ] Minimal scene (cube mesh) loads in Blender
+- [ ] Material properties display correctly
+- [ ] Animation plays back smoothly
+- [ ] Complex models (SimpleSkin/SimpleMorph) import successfully
 
 ## Success Criteria
 
