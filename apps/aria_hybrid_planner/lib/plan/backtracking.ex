@@ -2,7 +2,14 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Plan.Backtracking do
-  @moduledoc "Functions for handling backtracking and replanning in the solution tree.\n"
+  @moduledoc """
+  Simplified backtracking for planning-level method selection following IPyHOP pattern.
+
+  This module handles only planning-time backtracking for method selection.
+  Execution failures are handled at the coordinator level with simple blacklisting.
+
+  Aligned with ADR-195 Phase 4: Remove execution-time backtracking complexity.
+  """
   require Logger
   alias Plan.Core
   alias AriaEngine.State
@@ -240,162 +247,37 @@ defmodule Plan.Backtracking do
     {:ok, updated_tree}
   end
 
-  @spec backtrack_and_retry(
-          AriaEngine.Domain.Core.t(),
-          AriaEngine.State.t(),
-          solution_tree(),
-          node_id(),
-          integer(),
-          integer(),
-          integer()
-        ) :: {:ok, solution_tree()} | {:error, String.t()}
-  def backtrack_and_retry(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose) do
-    if verbose > 2 do
-      Logger.debug("Backtracking from failed node: #{failed_node_id}")
-    end
+  @doc """
+  Simple planning-level method blacklisting for IPyHOP pattern.
 
-    case solution_tree.nodes[failed_node_id] do
+  This replaces complex execution-time backtracking with simple method blacklisting
+  that is handled at the coordinator level during replanning.
+  """
+  @spec blacklist_method_for_node(solution_tree(), node_id(), String.t()) ::
+    {:ok, solution_tree()} | {:error, String.t()}
+  def blacklist_method_for_node(solution_tree, node_id, method_name) do
+    case solution_tree.nodes[node_id] do
       nil ->
-        {:error, "Failed node not found: #{failed_node_id}"}
+        {:error, "Node not found: #{node_id}"}
 
-      failed_node ->
-        handle_failed_node(
-          domain,
-          state,
-          solution_tree,
-          failed_node_id,
-          failed_node,
-          depth,
-          max_depth,
-          verbose
-        )
+      node ->
+        updated_blacklist = [method_name | node.blacklisted_methods] |> Enum.uniq()
+        updated_node = %{node | blacklisted_methods: updated_blacklist}
+        updated_tree = %{solution_tree | nodes: Map.put(solution_tree.nodes, node_id, updated_node)}
+        {:ok, updated_tree}
     end
   end
 
-  defp handle_failed_node(
-         domain,
-         state,
-         solution_tree,
-         failed_node_id,
-         failed_node,
-         depth,
-         max_depth,
-         verbose
-       ) do
-    case failed_node.parent_id do
-      nil ->
-        {:error, "Root node failed - no complete solution found"}
+  @doc """
+  Check if a method is blacklisted for a specific node.
 
-      _parent_id ->
-        try_alternatives_or_backtrack(
-          domain,
-          state,
-          solution_tree,
-          failed_node_id,
-          depth,
-          max_depth,
-          verbose
-        )
-    end
-  end
-
-  defp try_alternatives_or_backtrack(
-         domain,
-         state,
-         solution_tree,
-         failed_node_id,
-         depth,
-         max_depth,
-         verbose
-       ) do
-    task = solution_tree.nodes[failed_node_id].task
-
-    case task do
-      {task_name, _args} when is_binary(task_name) ->
-        handle_task_node_backtrack(
-          domain,
-          state,
-          solution_tree,
-          failed_node_id,
-          depth,
-          max_depth,
-          verbose
-        )
-
-      {_predicate, _subject, _fact_value} ->
-        handle_goal_node_backtrack(
-          domain,
-          state,
-          solution_tree,
-          failed_node_id,
-          depth,
-          max_depth,
-          verbose
-        )
-
-      _ ->
-        backtrack_up_tree(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
-    end
-  end
-
-  defp handle_task_node_backtrack(
-         domain,
-         state,
-         solution_tree,
-         failed_node_id,
-         depth,
-         max_depth,
-         verbose
-       ) do
-    case try_alternative_method_for_task(domain, solution_tree, failed_node_id, verbose) do
-      {:ok, new_tree} ->
-        {:ok, new_tree}
-
-      :no_alternatives ->
-        backtrack_up_tree(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  defp handle_goal_node_backtrack(
-         domain,
-         state,
-         solution_tree,
-         failed_node_id,
-         depth,
-         max_depth,
-         verbose
-       ) do
-    case try_alternative_method_for_task(domain, solution_tree, failed_node_id, verbose) do
-      {:ok, new_tree} ->
-        {:ok, new_tree}
-
-      :no_alternatives ->
-        backtrack_up_tree(domain, state, solution_tree, failed_node_id, depth, max_depth, verbose)
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  @spec backtrack_up_tree(
-          AriaEngine.Domain.Core.t(),
-          AriaEngine.State.t(),
-          solution_tree(),
-          node_id(),
-          integer(),
-          integer(),
-          integer()
-        ) :: {:ok, solution_tree()} | {:error, String.t()}
-  def backtrack_up_tree(domain, state, solution_tree, current_node_id, depth, max_depth, verbose) do
-    case solution_tree.nodes[current_node_id].parent_id do
-      nil ->
-        {:error, "No alternative methods available - no complete solution found"}
-
-      parent_id ->
-        backtrack_and_retry(domain, state, solution_tree, parent_id, depth, max_depth, verbose)
+  Used during planning to avoid trying methods that have already failed.
+  """
+  @spec method_blacklisted?(solution_tree(), node_id(), String.t()) :: boolean()
+  def method_blacklisted?(solution_tree, node_id, method_name) do
+    case solution_tree.nodes[node_id] do
+      nil -> false
+      node -> method_name in node.blacklisted_methods
     end
   end
 end

@@ -215,24 +215,35 @@ defmodule Plan.Core do
        ) do
     if verbose > 0 do
       debug_puts(
-        "PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion returned :failure, attempting backtrack."
+        "PLAN_DECOMPOSITION_LOOP: Node #{node_id} expansion returned :failure, attempting simplified backtrack."
       )
     end
 
-    case Backtracking.backtrack_and_retry(
-           domain,
-           current_state,
-           failed_tree,
-           node_id,
-           depth,
-           max_depth,
-           verbose
-         ) do
+    # Simplified IPyHOP-style backtracking: try alternative methods for the failed node
+    case Backtracking.try_alternative_method_for_task(domain, failed_tree, node_id, verbose) do
       {:ok, new_tree} ->
         handle_successful_backtrack(domain, current_state, new_tree, depth, max_depth, verbose)
 
+      :no_alternatives ->
+        # No more alternatives for this node - find parent and try alternatives there
+        case find_parent_for_backtrack(failed_tree, node_id) do
+          nil ->
+            handle_backtrack_error("No complete solution found - all alternatives exhausted", verbose)
+
+          parent_id ->
+            handle_expansion_failure(domain, current_state, failed_tree, parent_id, depth, max_depth, verbose)
+        end
+
       {:error, reason} ->
         handle_backtrack_error(reason, verbose)
+    end
+  end
+
+  # Find parent node for backtracking up the tree
+  defp find_parent_for_backtrack(solution_tree, node_id) do
+    case solution_tree.nodes[node_id] do
+      nil -> nil
+      node -> node.parent_id
     end
   end
 

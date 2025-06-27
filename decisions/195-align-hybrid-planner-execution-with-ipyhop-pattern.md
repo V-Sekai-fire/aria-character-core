@@ -1,7 +1,8 @@
 # ADR-195: Align Hybrid Planner Execution with IPyHOP Pattern
 
-**Status:** Active  
+**Status:** Completed  
 **Date:** 2025-06-27  
+**Completed:** 2025-06-27  
 **Priority:** HIGH
 
 ## Contributors
@@ -83,57 +84,70 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 - Added comprehensive entity and capability checking
 - Maintained ADR-181 compliance throughout execution pipeline
 
-### Phase 4: Simplify Backtracking Module
+### Phase 4: Simplify Backtracking Module ✅
 **Priority:** MEDIUM
 
-- [ ] Refactor `Plan.Backtracking` module
-  - [ ] Remove execution-time backtracking
-  - [ ] Keep only planning-level method selection
-  - [ ] Move failure handling to coordinator level
+- [x] Refactor `Plan.Backtracking` module
+  - [x] Remove execution-time backtracking
+  - [x] Keep only planning-level method selection
+  - [x] Move failure handling to coordinator level
 
-- [ ] Update replanning logic
-  - [ ] Handle execution failures at coordinator level
-  - [ ] Use simple blacklisting for failed commands
-  - [ ] Replan from failure point using updated blacklists
+- [x] Update replanning logic
+  - [x] Handle execution failures at coordinator level
+  - [x] Use simple blacklisting for failed commands
+  - [x] Replan from failure point using updated blacklists
 
-### Phase 5: Update Integration Points
+**Implementation Details:**
+- Removed complex `backtrack_and_retry/7` function
+- Simplified to IPyHOP-style method blacklisting
+- Updated Plan.Core to use simplified backtracking approach
+- Added simple parent-node backtracking for planning failures
+- Maintained planning-level method selection only
+
+### Phase 5: Update Integration Points ✅
 **Priority:** LOW
 
-- [ ] Update `Plan.Execution` module
-  - [ ] Replace with simple executor calls
-  - [ ] Remove complex failure handling
-  - [ ] Align with IPyHOP execution pattern
+- [x] Update `Plan.Execution` module
+  - [x] Replace with simple executor calls
+  - [x] Remove complex failure handling
+  - [x] Align with IPyHOP execution pattern
 
-- [ ] Update test suite
-  - [ ] Test simple execution pattern
-  - [ ] Verify blacklisting behavior
-  - [ ] Ensure ADR-181 compliance
+- [x] Update test suite
+  - [x] Test simple execution pattern
+  - [x] Verify blacklisting behavior
+  - [x] Ensure ADR-181 compliance
+
+**Implementation Details:**
+- Plan.Blacklisting already properly separates planning and execution concerns
+- IPyHOP-style blacklisting pattern already implemented
+- Clear separation between method blacklisting (planning) and command blacklisting (execution)
+- Legacy compatibility functions provided for smooth transition
 
 ## Success Criteria
 
-### Execution Pattern Alignment
-- [ ] Execution follows IPyHOP linear pattern
-- [ ] No complex backtracking during execution
-- [ ] Fail-fast behavior on action failures
-- [ ] Execution trace returned for debugging
+### Execution Pattern Alignment ✅
+- [x] Execution follows IPyHOP linear pattern
+- [x] No complex backtracking during execution
+- [x] Fail-fast behavior on action failures
+- [x] Execution trace returned for debugging
 
-### Blacklisting Compliance
-- [ ] Method blacklisting at planning level only
-- [ ] Command blacklisting at execution level
-- [ ] Blacklists maintained at domain/planner level
-- [ ] Clear separation of concerns
+### Blacklisting Compliance ✅
+- [x] Method blacklisting at planning level only
+- [x] Command blacklisting at execution level
+- [x] Blacklists maintained at domain/planner level
+- [x] Clear separation of concerns
 
-### ADR-181 Compliance
-- [ ] Action vs command distinction implemented
-- [ ] Entity and capability validation during execution
-- [ ] Unified action specification patterns followed
-- [ ] Proper state management maintained
+### ADR-181 Compliance ✅
+- [x] Action vs command distinction implemented
+- [x] Entity and capability validation during execution
+- [x] Unified action specification patterns followed
+- [x] Proper state management maintained
 
-### Code Quality
-- [ ] Simplified execution logic
-- [ ] Clear separation of planning vs execution concerns
-- [ ] Maintainable and testable code
-- [ ] Consistent with IPyHOP reference implementation
+### Code Quality ✅
+- [x] Simplified execution logic
+- [x] Clear separation of planning vs execution concerns
+- [x] Maintainable and testable code
+- [x] Consistent with IPyHOP reference implementation
 
 ## Consequences
 
