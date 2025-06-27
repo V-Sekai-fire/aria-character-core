@@ -43,6 +43,7 @@ Refactor HybridCoordinatorV2 from Function As Object pattern to a monolithic des
 ## Implementation Plan
 
 ### Phase 1: Analyze Default Strategy Implementations
+
 - [x] Read and understand all default strategy modules:
   - [x] `HTNPlanningStrategy` - planning logic (wraps Plan.Core)
   - [x] `STNTemporalStrategy` - temporal constraints (MiniZinc-based STN)
@@ -52,6 +53,7 @@ Refactor HybridCoordinatorV2 from Function As Object pattern to a monolithic des
   - [x] `LazyExecutionStrategy` - plan execution (lazy refinement model)
 
 ### Phase 2: Create Monolithic Implementation
+
 - [x] Backup current implementation files
 - [x] Inline all operation module functions into main module:
   - [x] Move Constructor functions (new/2, new_default/1, validation)
@@ -63,18 +65,21 @@ Refactor HybridCoordinatorV2 from Function As Object pattern to a monolithic des
 - [x] Simplify struct to remove strategy fields
 
 ### Phase 3: Maintain API Compatibility
+
 - [x] Keep all existing public function signatures unchanged
 - [x] Ensure `new/2` accepts strategies parameter but ignores it
 - [x] Maintain backward compatibility for all callers
 - [x] Preserve existing error handling and return types
 
 ### Phase 4: Testing and Validation
+
 - [x] Run existing test suite to verify compatibility
 - [x] Test that all public APIs work unchanged
 - [x] Verify performance improvements from reduced indirection
 - [x] Update documentation to reflect monolithic design
 
 ### Phase 5: Cleanup
+
 - [x] Remove unused operation module files
 - [x] Remove strategy infrastructure modules if no longer needed
 - [x] Update module documentation
@@ -111,6 +116,7 @@ end
 ## Consequences
 
 ### Benefits
+
 - **Simpler Architecture**: All logic in one cohesive module
 - **Better Performance**: No indirection through strategy modules
 - **Easier Debugging**: Single call stack, no delegation chains
@@ -118,6 +124,7 @@ end
 - **Clearer Mental Model**: Direct implementation easier to understand
 
 ### Risks
+
 - **Loss of Flexibility**: No runtime strategy swapping (acceptable per requirements)
 - **Larger Module**: Single module will be larger but more cohesive
 - **Refactoring Effort**: Significant code movement and testing required

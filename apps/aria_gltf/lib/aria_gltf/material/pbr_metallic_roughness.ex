@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaGltf.Material.PbrMetallicRoughness do
   @moduledoc """
   A set of parameter values that are used to define the metallic-roughness material model

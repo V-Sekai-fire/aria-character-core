@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngine.Membrane.Format.TestModule do
   alias AriaEngine.Membrane.Format.PlanningResult
 

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaGltf.Material.OcclusionTextureInfo do
   @moduledoc """
   Reference to a texture with occlusion texture specific properties.

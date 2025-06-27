@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaGltf.BufferView do
   @moduledoc """
   A view into a buffer generally representing a subset of the buffer.

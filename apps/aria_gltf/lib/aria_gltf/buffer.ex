@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaGltf.Buffer do
   @moduledoc """
   A buffer points to binary geometry, animation, or skins.

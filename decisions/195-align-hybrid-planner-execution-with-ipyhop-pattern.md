@@ -13,7 +13,7 @@
 
 ## Context
 
-The current hybrid planner execution in `apps/aria_hybrid_planner` uses complex backtracking logic that doesn't conform to ADR-181's unified durative action specification or follow the established IPyHOP pattern from `thirdparty/IPyHOP`. 
+The current hybrid planner execution in `apps/aria_hybrid_planner` uses complex backtracking logic that doesn't conform to ADR-181's unified durative action specification or follow the established IPyHOP pattern from `thirdparty/IPyHOP`.
 
 ### Current Problems
 
@@ -25,6 +25,7 @@ The current hybrid planner execution in `apps/aria_hybrid_planner` uses complex 
 ### IPyHOP Reference Pattern
 
 From `thirdparty/IPyHOP/ipyhop/mc_executor.py`:
+
 - Simple linear execution through plan steps
 - When action fails (returns None), execution stops immediately
 - Returns execution trace with failure point
@@ -38,6 +39,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 ## Implementation Plan
 
 ### Phase 1: Create Simple IPyHOP-Style Executor
+
 **Priority:** HIGH
 
 - [x] Create new `Plan.SimpleExecutor` module following IPyHOP pattern
@@ -52,6 +54,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
   - [x] Maintain execution trace for debugging
 
 ### Phase 2: Align Blacklisting with IPyHOP Pattern
+
 **Priority:** HIGH
 
 - [x] Separate planning-level and execution-level blacklisting
@@ -65,6 +68,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
   - [x] Focus on planning-time method selection
 
 ### Phase 3: Ensure ADR-181 Compliance ✅
+
 **Priority:** MEDIUM
 
 - [x] Implement action vs command distinction
@@ -78,6 +82,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
   - [x] Ensure proper state management
 
 **Implementation Details:**
+
 - Added @command attribute support to AriaCore.ActionAttributes
 - Enhanced Plan.SimpleExecutor with entity validation logic
 - Implemented action vs command distinction in execution
@@ -85,6 +90,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 - Maintained ADR-181 compliance throughout execution pipeline
 
 ### Phase 4: Simplify Backtracking Module ✅
+
 **Priority:** MEDIUM
 
 - [x] Refactor `Plan.Backtracking` module
@@ -98,6 +104,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
   - [x] Replan from failure point using updated blacklists
 
 **Implementation Details:**
+
 - Removed complex `backtrack_and_retry/7` function
 - Simplified to IPyHOP-style method blacklisting
 - Updated Plan.Core to use simplified backtracking approach
@@ -105,6 +112,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 - Maintained planning-level method selection only
 
 ### Phase 5: Update Integration Points ✅
+
 **Priority:** LOW
 
 - [x] Update `Plan.Execution` module
@@ -118,6 +126,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
   - [x] Ensure ADR-181 compliance
 
 **Implementation Details:**
+
 - Plan.Blacklisting already properly separates planning and execution concerns
 - IPyHOP-style blacklisting pattern already implemented
 - Clear separation between method blacklisting (planning) and command blacklisting (execution)
@@ -126,24 +135,28 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 ## Success Criteria
 
 ### Execution Pattern Alignment ✅
+
 - [x] Execution follows IPyHOP linear pattern
 - [x] No complex backtracking during execution
 - [x] Fail-fast behavior on action failures
 - [x] Execution trace returned for debugging
 
 ### Blacklisting Compliance ✅
+
 - [x] Method blacklisting at planning level only
 - [x] Command blacklisting at execution level
 - [x] Blacklists maintained at domain/planner level
 - [x] Clear separation of concerns
 
 ### ADR-181 Compliance ✅
+
 - [x] Action vs command distinction implemented
 - [x] Entity and capability validation during execution
 - [x] Unified action specification patterns followed
 - [x] Proper state management maintained
 
 ### Code Quality ✅
+
 - [x] Simplified execution logic
 - [x] Clear separation of planning vs execution concerns
 - [x] Maintainable and testable code
@@ -152,6 +165,7 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 ## Consequences
 
 ### Positive
+
 - **Simplified Execution**: Much simpler and more predictable execution logic
 - **IPyHOP Compliance**: Follows established academic planning patterns
 - **ADR-181 Alignment**: Proper action vs command distinction
@@ -159,11 +173,13 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 - **Maintainability**: Easier to understand and modify execution logic
 
 ### Negative
+
 - **Breaking Changes**: Existing execution interfaces may need updates
 - **Performance Impact**: May need more replanning cycles for complex failures
 - **Learning Curve**: Developers need to understand IPyHOP execution pattern
 
 ### Risks
+
 - **Integration Complexity**: Updating all execution call sites
 - **Test Suite Updates**: Extensive test updates required
 - **Backward Compatibility**: May break existing execution workflows
@@ -179,11 +195,13 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 This implementation aligns with:
 
 **IPyHOP Planning Framework:**
+
 - Nau, D.; et al. "IPyHOP: An Integrated Planning and Execution Framework"
 - Simple execution with fail-fast behavior
 - Clear separation of planning and execution concerns
 
 **HTN Planning Theory:**
+
 - Ghallab, M.; Nau, D.; Traverso, P. (2004). *Automated Planning: Theory and Practice*
 - Hierarchical task network planning principles
 - Method selection and backtracking strategies

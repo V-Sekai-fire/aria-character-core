@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaGltf.Accessor do
   @moduledoc """
   A typed view into a buffer view that contains raw binary data.

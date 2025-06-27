@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaGltf.Mesh do
   @moduledoc """
   A set of primitives to be rendered. Its global transform is defined by a node that references it.

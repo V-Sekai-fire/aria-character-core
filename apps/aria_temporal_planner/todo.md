@@ -5,21 +5,25 @@ I've analyzed the current `todo_item` implementation across the aria_hybrid_plan
 **Current `todo_item` definitions in aria_hybrid_planner:**
 
 1. **Plan.Core** (`apps/aria_hybrid_planner/lib/plan/core.ex`):
+
    ```elixir
    @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
    ```
 
 2. **Plan.NodeExpansion** (`apps/aria_hybrid_planner/lib/plan/node_expansion.ex`):
+
    ```elixir
    @type todo_item :: task() | goal() | Multigoal.t()
    ```
 
 3. **Plan.Blacklisting** (`apps/aria_hybrid_planner/lib/plan/blacklisting.ex`):
+
    ```elixir
    @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
    ```
 
 **AriaEngine.Core reference:**
+
 ```elixir
 @type todo_item :: Plan.todo_item()
 ```
@@ -27,13 +31,17 @@ I've analyzed the current `todo_item` implementation across the aria_hybrid_plan
 ## ADR-181 Compliance Issues
 
 ### Issue 1: Missing AriaEngine Namespace
+
 The current definitions use `Multigoal.t()` instead of `AriaEngine.Multigoal.t()` in some places, creating inconsistency.
 
 ### Issue 2: Inconsistent Type Definitions
+
 Different modules have slightly different `todo_item` definitions, which violates ADR-181's requirement for unified specifications.
 
 ### Issue 3: Missing ADR-181 Todo Item Types
+
 ADR-181 introduces several new todo item types that aren't reflected in the current definitions:
+
 - **Actions with temporal specifications** (duration, start, end)
 - **Commands** (execution-time logic)
 - **Task methods** (complex workflow decomposition)
@@ -44,11 +52,13 @@ ADR-181 introduces several new todo item types that aren't reflected in the curr
 ## Compliance Plan
 
 ### Phase 1: Standardize Current Types
+
 - Update all `todo_item` definitions to use consistent AriaEngine namespacing
 - Ensure all modules reference the same canonical type definition
 - Fix the `Multigoal.t()` vs `AriaEngine.Multigoal.t()` inconsistency
 
 ### Phase 2: Extend Type Definition for ADR-181
+
 Based on ADR-181's specification, the `todo_item` type should support:
 
 ```elixir
@@ -65,6 +75,7 @@ Based on ADR-181's specification, the `todo_item` type should support:
 ```
 
 ### Phase 3: Update Processing Logic
+
 - Update node expansion logic to handle new todo item types
 - Ensure blacklisting works with extended todo item types
 - Update execution logic to properly handle temporal specifications
