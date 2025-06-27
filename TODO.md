@@ -1,1 +1,0 @@
-1. Look for wasted code that can be trimmed for adr 181.
