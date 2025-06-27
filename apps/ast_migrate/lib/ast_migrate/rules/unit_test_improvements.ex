@@ -200,6 +200,7 @@ defmodule AstMigrate.Rules.UnitTestImprovements do
   defp transform_statement({{:., _, [_module, _function]}, _, _args} = function_call) do
     # This is a function call - add an assertion
     var_name = :result
+
     [
       {:=, [], [{var_name, [], nil}, function_call]},
       {:assert, [], [{var_name, [], nil}]}
@@ -211,7 +212,8 @@ defmodule AstMigrate.Rules.UnitTestImprovements do
   end
 
   # Generate a meaningful variable name based on the expression
-  defp generate_variable_name({{:., _, [_module, function_name]}, _, _args}) when is_atom(function_name) do
+  defp generate_variable_name({{:., _, [_module, function_name]}, _, _args})
+       when is_atom(function_name) do
     function_name
   end
 

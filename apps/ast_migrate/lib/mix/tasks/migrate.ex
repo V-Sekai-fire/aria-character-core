@@ -89,14 +89,15 @@ defmodule Mix.Tasks.Migrate do
       case AstMigrate.rule_info(rule_name) do
         {:ok, info} ->
           Mix.shell().info("  #{rule_name} - #{info.description}")
+
         {:error, _} ->
           Mix.shell().info("  #{rule_name} - No description available")
       end
     end)
   end
 
-  defp execute_migration(opts, files) do
-    rules = parse_rules(opts[:rules])
+  defp execute_migration(opts, args) do
+    {rules, files} = parse_rules_and_files(opts[:rules], args)
     dry_run = opts[:dry_run] || false
     verbose = opts[:verbose] || false
 
@@ -139,7 +140,29 @@ defmodule Mix.Tasks.Migrate do
     end
   end
 
+  defp parse_rules_and_files(rules_option, args) do
+    available_rules = AstMigrate.list_rules()
+
+    cond do
+      # If --rules option is provided, use it and treat args as files
+      rules_option != nil ->
+        rules = parse_rules(rules_option)
+        {rules, args}
+
+      # If first arg is a known rule name, treat it as rule and rest as files
+      length(args) > 0 and String.to_atom(hd(args)) in available_rules ->
+        rule_name = String.to_atom(hd(args))
+        files = tl(args)
+        {[rule_name], files}
+
+      # Otherwise, apply all rules to the provided files
+      true ->
+        {:all, args}
+    end
+  end
+
   defp parse_rules(nil), do: :all
+
   defp parse_rules(rules_string) do
     rules_string
     |> String.split(",")

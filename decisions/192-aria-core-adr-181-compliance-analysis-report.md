@@ -19,6 +19,7 @@ This report analyzes the current state of `aria_core` and provides a comprehensi
 ### Key Findings
 
 ✅ **Implemented Successfully:**
+
 - @action attribute processing system
 - Basic temporal specification support
 - Entity management framework
@@ -26,6 +27,7 @@ This report analyzes the current state of `aria_core` and provides a comprehensi
 - Restaurant domain example with proper ADR-181 patterns
 
 ❌ **Missing Critical Components:**
+
 - @command attribute support
 - @multigoal_method and @multitodo_method attributes
 - Complete temporal pattern validation (only 3 of 9 patterns implemented)
@@ -33,6 +35,7 @@ This report analyzes the current state of `aria_core` and provides a comprehensi
 - Goal format standardization enforcement
 
 ⚠️ **Partial Implementation Issues:**
+
 - Test failures indicate method metadata format inconsistencies
 - Temporal converter has incomplete validation logic
 - Missing integration with AriaEngine planning system
@@ -44,16 +47,19 @@ This report analyzes the current state of `aria_core` and provides a comprehensi
 ### Strengths
 
 **1. Solid Foundation Architecture**
+
 - Well-structured module hierarchy with clear separation of concerns
 - Sociable testing approach leveraging existing AriaCore systems
 - Comprehensive documentation and examples
 
 **2. Core Attribute System**
+
 - `@action` attributes fully implemented with duration and entity requirements
 - `@task_method` attributes working for workflow decomposition
 - `@unigoal_method` attributes implemented with predicate support
 
 **3. Supporting Systems**
+
 - Entity management with capabilities and type registration
 - Temporal interval processing with ISO 8601 support
 - State management with relational fact storage
@@ -73,6 +79,7 @@ This report analyzes the current state of `aria_core` and provides a comprehensi
 **2. Incomplete Temporal Pattern Support**
 
 Current: Only 3 of 9 ADR-181 temporal patterns implemented
+
 - ✅ Pattern 1: Instant action, anytime
 - ✅ Pattern 2: Floating duration  
 - ❌ Pattern 3: Deadline constraint
@@ -86,6 +93,7 @@ Current: Only 3 of 9 ADR-181 temporal patterns implemented
 **3. State Validation Non-Compliance**
 
 Current implementation uses complex state evaluation:
+
 ```elixir
 # Non-compliant - complex evaluation
 case AriaCore.State.Relational.get_fact(state, "ingredient_available", ingredient) do
@@ -95,6 +103,7 @@ end
 ```
 
 ADR-181 requires direct fact checking:
+
 ```elixir
 # Required - direct fact checking only
 AriaState.RelationalState.get_fact(state, predicate, subject)
@@ -103,6 +112,7 @@ AriaState.RelationalState.get_fact(state, predicate, subject)
 **4. Goal Format Inconsistencies**
 
 Mixed goal formats found in codebase:
+
 ```elixir
 # Non-compliant variations found
 {"ingredient_available", "tomato", true}  # ✅ Correct
@@ -111,6 +121,7 @@ Mixed goal formats found in codebase:
 ```
 
 ADR-181 requires ONLY:
+
 ```elixir
 {predicate, subject, value}  # ✅ ONLY this format allowed
 ```
@@ -122,34 +133,42 @@ ADR-181 requires ONLY:
 ### Current Test Status: 4 Failures
 
 **1. Method Metadata Format Error**
+
 ```
 Invalid method metadata format: [special_diet_method: %{}, rush_order_method: %{}, prepare_complete_meal_method: %{}]
 ```
+
 - **Issue:** Task methods storing empty maps instead of proper metadata
 - **Impact:** Domain validation failing
 - **Fix Required:** Update method metadata processing
 
 **2. Temporal Converter Logic Error**
+
 ```
 Expected: {"temperature", "oven", {:>=, 350}}
 Actual: {"oven", "temperature", {:>=, 350}}
 ```
+
 - **Issue:** Subject/predicate order inconsistency
 - **Impact:** Temporal condition conversion failing
 - **Fix Required:** Standardize goal format ordering
 
 **3. Domain Validation Missing**
+
 ```
 Module does not use AriaCore.Domain
 ```
+
 - **Issue:** Validation logic not recognizing valid domain modules
 - **Impact:** Doctest failures
 - **Fix Required:** Improve module validation logic
 
 **4. Domain Merging Logic**
+
 ```
 length(AriaCore.Domain.list_actions(unified)) > 1 === false
 ```
+
 - **Issue:** Domain merging not preserving all actions
 - **Impact:** Multi-domain scenarios failing
 - **Fix Required:** Fix domain merge algorithm
@@ -163,24 +182,28 @@ length(AriaCore.Domain.list_actions(unified)) > 1 === false
 **Priority: URGENT**
 
 1. **Fix Method Metadata Processing**
+
    ```elixir
    # Update ActionAttributes.__on_definition__ to store proper metadata
    Module.put_attribute(env.module, :method_metadata, {name, %{type: :task_method}})
    ```
 
 2. **Standardize Goal Format**
+
    ```elixir
    # Enforce {predicate, subject, value} format throughout
    # Update TemporalConverter to use consistent ordering
    ```
 
 3. **Fix Domain Validation Logic**
+
    ```elixir
    # Update UnifiedDomain.check_module_uses_domain/1
    # Add proper detection for domain modules
    ```
 
 4. **Fix Domain Merging**
+
    ```elixir
    # Debug and fix merge_two_domains/3 function
    # Ensure all actions are preserved during merge
@@ -191,6 +214,7 @@ length(AriaCore.Domain.list_actions(unified)) > 1 === false
 **Priority: HIGH**
 
 1. **Implement @command Attributes**
+
    ```elixir
    @command true
    @spec cook_meal_command(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
@@ -200,12 +224,14 @@ length(AriaCore.Domain.list_actions(unified)) > 1 === false
    ```
 
 2. **Implement @multigoal_method Attributes**
+
    ```elixir
    @multigoal_method true
    @spec optimize_cooking_batch(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()}
    ```
 
 3. **Implement @multitodo_method Attributes**
+
    ```elixir
    @multitodo_method true
    @spec optimize_cooking_sequence(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
@@ -222,6 +248,7 @@ length(AriaCore.Domain.list_actions(unified)) > 1 === false
    - Pattern 8: Constraint validation (`start` + `end` + `duration`)
 
 2. **Add Temporal Validation**
+
    ```elixir
    # Validate all 9 patterns in Temporal.Interval
    def validate_temporal_pattern(start, end, duration) do
@@ -230,6 +257,7 @@ length(AriaCore.Domain.list_actions(unified)) > 1 === false
    ```
 
 3. **Update Examples**
+
    ```elixir
    # Add examples for all temporal patterns in RestaurantDomain
    @action end: "2025-06-22T14:00:00-07:00", duration: "PT2H"  # Pattern 4
@@ -241,6 +269,7 @@ length(AriaCore.Domain.list_actions(unified)) > 1 === false
 **Priority: MEDIUM**
 
 1. **Replace Complex State Evaluation**
+
    ```elixir
    # Replace all complex case statements with direct fact checking
    # OLD: case AriaCore.State.Relational.get_fact(state, pred, subj) do
@@ -248,6 +277,7 @@ length(AriaCore.Domain.list_actions(unified)) > 1 === false
    ```
 
 2. **Standardize Goal Format Enforcement**
+
    ```elixir
    # Add validation to reject non-compliant goal formats
    def validate_goal({predicate, subject, value}) when is_binary(predicate) and is_binary(subject) do
@@ -310,32 +340,38 @@ length(AriaCore.Domain.list_actions(unified)) > 1 === false
 ## Success Criteria
 
 ### Phase 1 Success (Test Fixes)
+
 - [ ] All 43 doctests passing
 - [ ] All 23 unit tests passing
 - [ ] Zero test failures in `mix test`
 
 ### Phase 2 Success (Complete Attributes)
+
 - [ ] @command attributes fully implemented and tested
 - [ ] @multigoal_method attributes working with examples
 - [ ] @multitodo_method attributes working with examples
 - [ ] All 6 method types from ADR-181 supported
 
 ### Phase 3 Success (Temporal Patterns)
+
 - [ ] All 9 temporal patterns implemented and validated
 - [ ] Comprehensive temporal pattern test suite
 - [ ] Restaurant domain examples for each pattern
 
 ### Phase 4 Success (State Compliance)
+
 - [ ] All state validation uses direct fact checking
 - [ ] Goal format enforcement prevents non-compliant goals
 - [ ] State validation performance benchmarks met
 
 ### Phase 5 Success (Integration)
+
 - [ ] Full AriaEngine integration working
 - [ ] Complete documentation with migration guide
 - [ ] Performance benchmarks within acceptable ranges
 
 ### Overall Success (Full ADR-181 Compliance)
+
 - [ ] 100% compliance with ADR-181 specification
 - [ ] All examples working with real planning scenarios
 - [ ] Migration path for existing domains documented
@@ -346,6 +382,7 @@ length(AriaCore.Domain.list_actions(unified)) > 1 === false
 ## Resource Requirements
 
 ### Development Time Estimate
+
 - **Phase 1 (Critical Fixes):** 1-2 days
 - **Phase 2 (Missing Attributes):** 3-5 days  
 - **Phase 3 (Temporal Patterns):** 5-7 days
@@ -355,6 +392,7 @@ length(AriaCore.Domain.list_actions(unified)) > 1 === false
 **Total Estimated Time:** 14-21 days
 
 ### Dependencies
+
 - Access to AriaEngine planning system for integration testing
 - Performance testing environment for benchmarking
 - Documentation review and approval process

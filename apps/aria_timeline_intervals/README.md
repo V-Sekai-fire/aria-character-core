@@ -15,28 +15,33 @@ AriaTimelineIntervals provides a comprehensive set of tools for working with tem
 ## Key Features
 
 ### Interval Operations
+
 - Create intervals with DateTime precision and timezone support
 - Validate interval correctness and time ordering
 - Calculate durations in multiple time units
 - Check containment and overlap relationships
 
 ### Allen's Interval Algebra
+
 - All 13 Allen relations: before, after, meets, overlaps, during, contains, etc.
 - Temporal relationship detection between intervals
 - Support for complex temporal reasoning patterns
 
 ### Time Conversion
+
 - Convert between seconds, milliseconds, and DateTime formats
 - Maintain microsecond precision for accurate temporal calculations
 - Comprehensive error handling and validation
 
 ### Timeline Management
+
 - Build timelines from interval collections
 - Sort and validate intervals automatically
 - Merge multiple timelines with metadata preservation
 - Calculate timeline bounds and statistics
 
 ### Timeline Segmentation
+
 - Segment by fixed duration windows
 - Group overlapping intervals
 - Detect and analyze gaps between intervals

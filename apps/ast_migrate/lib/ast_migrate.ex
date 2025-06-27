@@ -74,7 +74,12 @@ defmodule AstMigrate do
   @doc "List available transformation rules."
   @spec list_rules() :: [atom()]
   def list_rules do
-    [:unit_test_improvements, :timeline_namespace_fixes]
+    [
+      :unit_test_improvements,
+      :timeline_namespace_fixes,
+      :aria_engine_namespace_cleanup,
+      :membrane_namespace_cleanup
+    ]
   end
 
   @doc "Get information about a specific transformation rule."
@@ -102,13 +107,42 @@ defmodule AstMigrate do
     {:ok, Rules.TimelineNamespaceFixes}
   end
 
+  defp get_rule_module(:aria_engine_namespace_cleanup) do
+    {:ok, Rules.AriaEngineNamespaceCleanup}
+  end
+
+  defp get_rule_module(:membrane_namespace_cleanup) do
+    {:ok, Rules.MembraneNamespaceCleanup}
+  end
+
   defp get_rule_module(rule_name) do
     {:error, "Unknown rule: #{rule_name}"}
   end
 
   defp get_target_files(opts) do
     patterns = Keyword.get(opts, :files, ["lib/**/*.ex", "test/**/*.exs"])
-    files = Enum.flat_map(patterns, &Path.wildcard/1)
+
+    # Expand patterns and resolve relative paths
+    files =
+      patterns
+      |> Enum.flat_map(fn pattern ->
+        # If pattern starts with ../, resolve it relative to current directory
+        expanded_pattern =
+          if String.starts_with?(pattern, "../") do
+            Path.expand(pattern)
+          else
+            pattern
+          end
+
+        Path.wildcard(expanded_pattern)
+      end)
+
+      # Ensure all paths are absolute
+      |> Enum.map(&Path.expand/1)
+
+      # Remove duplicates
+
+      |> Enum.uniq()
 
     Logger.debug("Target files identified",
       module: :ast_migrate,

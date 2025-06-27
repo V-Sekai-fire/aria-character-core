@@ -205,10 +205,10 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
   def datetime_from_naive_to_iso8601_rule do
     fn ast_node ->
       case ast_node do
-        # Match: DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
         {{:., _, [{:__aliases__, _, [:DateTime]}, :from_naive!]}, _,
          [
            {:sigil_N, _, [{_, _, [date_string]}, []]},
+           # Match: DateTime.from_naive!(~N[2025-01-01 10:00:00], "Etc/UTC")
            timezone_string
          ]} ->
           # Convert to ISO 8601 string literal
@@ -229,7 +229,6 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
       String.contains?(source_code, "DateTime.from_naive!")
   end
 
-
   @doc """
   Convert naive datetime string and timezone to ISO 8601 format.
   """
@@ -237,9 +236,10 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
     # Simple conversion for UTC timezone
     # Input: "2023-01-01 00:00:00"
     # Output: "2023-01-01T00:00:00Z"
-    iso_string = date_string
-    |> String.replace(" ", "T")
-    |> Kernel.<>("Z")
+    iso_string =
+      date_string
+      |> String.replace(" ", "T")
+      |> Kernel.<>("Z")
 
     # Return as string literal AST node
     iso_string
@@ -248,9 +248,10 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
   def convert_naive_to_iso8601(date_string, _other_timezone) do
     # For non-UTC timezones, we'll use a simplified approach
     # This could be enhanced to handle more timezone formats
-    iso_string = date_string
-    |> String.replace(" ", "T")
-    |> Kernel.<>("Z")
+    iso_string =
+      date_string
+      |> String.replace(" ", "T")
+      |> Kernel.<>("Z")
 
     # Return as string literal AST node
     iso_string
@@ -310,7 +311,6 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
   def plan_length_assertion_rule do
     fn ast_node ->
       case ast_node do
-        # Match: assert length(plan) > 0
         {:assert, meta,
          [
            {:>, op_meta,
@@ -318,6 +318,7 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
               {:length, length_meta, [plan_var]},
               0
             ]}
+           # Match: assert length(plan) > 0
          ]} ->
           # Replace with: assert map_size(plan.nodes) > 0
           new_call =
@@ -340,7 +341,6 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
   def plan_length_equality_assertion_rule do
     fn ast_node ->
       case ast_node do
-        # Match: assert length(plan) == N
         {:assert, meta,
          [
            {:==, op_meta,
@@ -348,6 +348,7 @@ defmodule Mix.Tasks.Migrate.AstTransformer do
               {:length, length_meta, [plan_var]},
               n
             ]}
+           # Match: assert length(plan) == N
          ]} ->
           # Replace with: assert map_size(plan.nodes) == N
           new_call =

@@ -86,11 +86,13 @@ defmodule AstMigrate.Rules.TimelineNamespaceFixes do
     files_with_references = Enum.filter(files, &has_aria_engine_timeline_references?/1)
 
     if length(files_with_references) > 0 do
-      Logger.info("Found #{length(files_with_references)} files with AriaEngine.Timeline references",
+      Logger.info(
+        "Found #{length(files_with_references)} files with AriaEngine.Timeline references",
         module: :ast_migrate_rules_timeline_namespace_fixes,
         operation: :validate_preconditions,
         files: files_with_references
       )
+
       :ok
     else
       {:error, "No files found with AriaEngine.Timeline references"}
@@ -176,42 +178,54 @@ defmodule AstMigrate.Rules.TimelineNamespaceFixes do
     case Sourceror.Zipper.node(zipper) do
       # Transform defmodule statements
       {:defmodule, meta, [{:__aliases__, alias_meta, [:AriaEngine, :Timeline | rest]}, body]} ->
-        new_alias = case rest do
-          [] -> {:__aliases__, alias_meta, [:Timeline]}
-          _ -> {:__aliases__, alias_meta, [:Timeline | rest]}
-        end
+        new_alias =
+          case rest do
+            [] -> {:__aliases__, alias_meta, [:Timeline]}
+            _ -> {:__aliases__, alias_meta, [:Timeline | rest]}
+          end
+
         Sourceror.Zipper.replace(zipper, {:defmodule, meta, [new_alias, body]})
 
       # Transform alias statements
       {:alias, meta, [{:__aliases__, alias_meta, [:AriaEngine, :Timeline | rest]} | alias_rest]} ->
-        new_alias = case rest do
-          [] -> {:__aliases__, alias_meta, [:Timeline]}
-          _ -> {:__aliases__, alias_meta, [:Timeline | rest]}
-        end
+        new_alias =
+          case rest do
+            [] -> {:__aliases__, alias_meta, [:Timeline]}
+            _ -> {:__aliases__, alias_meta, [:Timeline | rest]}
+          end
+
         Sourceror.Zipper.replace(zipper, {:alias, meta, [new_alias | alias_rest]})
 
       # Transform import statements
       {:import, meta, [{:__aliases__, alias_meta, [:AriaEngine, :Timeline | rest]} | import_rest]} ->
-        new_alias = case rest do
-          [] -> {:__aliases__, alias_meta, [:Timeline]}
-          _ -> {:__aliases__, alias_meta, [:Timeline | rest]}
-        end
+        new_alias =
+          case rest do
+            [] -> {:__aliases__, alias_meta, [:Timeline]}
+            _ -> {:__aliases__, alias_meta, [:Timeline | rest]}
+          end
+
         Sourceror.Zipper.replace(zipper, {:import, meta, [new_alias | import_rest]})
 
       # Transform doctest statements
-      {:doctest, meta, [{:__aliases__, alias_meta, [:AriaEngine, :Timeline | rest]} | doctest_rest]} ->
-        new_alias = case rest do
-          [] -> {:__aliases__, alias_meta, [:Timeline]}
-          _ -> {:__aliases__, alias_meta, [:Timeline | rest]}
-        end
+      {:doctest, meta,
+       [{:__aliases__, alias_meta, [:AriaEngine, :Timeline | rest]} | doctest_rest]} ->
+        new_alias =
+          case rest do
+            [] -> {:__aliases__, alias_meta, [:Timeline]}
+            _ -> {:__aliases__, alias_meta, [:Timeline | rest]}
+          end
+
         Sourceror.Zipper.replace(zipper, {:doctest, meta, [new_alias | doctest_rest]})
 
       # Transform qualified function calls
-      {{:., dot_meta, [{:__aliases__, alias_meta, [:AriaEngine, :Timeline | rest]}, func]}, call_meta, args} ->
-        new_alias = case rest do
-          [] -> {:__aliases__, alias_meta, [:Timeline]}
-          _ -> {:__aliases__, alias_meta, [:Timeline | rest]}
-        end
+      {{:., dot_meta, [{:__aliases__, alias_meta, [:AriaEngine, :Timeline | rest]}, func]},
+       call_meta, args} ->
+        new_alias =
+          case rest do
+            [] -> {:__aliases__, alias_meta, [:Timeline]}
+            _ -> {:__aliases__, alias_meta, [:Timeline | rest]}
+          end
+
         Sourceror.Zipper.replace(zipper, {{:., dot_meta, [new_alias, func]}, call_meta, args})
 
       # No transformation needed
