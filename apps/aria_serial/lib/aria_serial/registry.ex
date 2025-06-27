@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSerial.Registry do
+  @serial_number "R25W006REGX"
+
   @moduledoc """
   Serial number registry for Aria migration tools.
 

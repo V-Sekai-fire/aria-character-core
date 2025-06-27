@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSerial do
+  @serial_number "R25W001ARXA"
+
   @moduledoc """
   Documentation for `AriaSerial`.
   """

@@ -3,6 +3,14 @@
 
 defmodule AriaSerial.JsonStorage do
   @moduledoc """
+  Project file with serial number: R25W007JSXN
+
+  Decode: mix serial.decode R25W007JSXN
+  """
+
+  @serial_number "R25W007JSXN"
+
+  @moduledoc """
   JSON-based storage system for serial number registry data.
 
   Provides persistent storage for serial numbers organized by year, week, and factory.

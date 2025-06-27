@@ -2,9 +2,13 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSerial.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
+  @moduledoc """
+  Project file with serial number: R25W005APPL
+
+  Decode: mix serial.decode R25W005APPL
+  """
+
+  @serial_number "R25W005APPL"
 
   @doc "Returns the serial number for this module"
   def serial_number do

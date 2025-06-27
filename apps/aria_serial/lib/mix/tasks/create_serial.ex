@@ -3,6 +3,14 @@
 
 defmodule Mix.Tasks.Serial.Create do
   @moduledoc """
+  Project file with serial number: R25W004CREA
+
+  Decode: mix serial.decode R25W004CREA
+  """
+
+  @serial_number "R25W004CREA"
+
+  @moduledoc """
   Create new serial numbers for migration tools.
 
   ## Usage

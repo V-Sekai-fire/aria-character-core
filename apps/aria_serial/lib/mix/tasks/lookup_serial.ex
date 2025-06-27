@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Mix.Tasks.Serial.Lookup do
+  @serial_number "R25W003LXXK"
+
   @moduledoc """
   Look up serial numbers in the registry.
 
