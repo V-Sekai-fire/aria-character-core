@@ -245,8 +245,8 @@ aria_gltf_io → aria_gltf_core ← aria_gltf_geometry
 
 **Required Completion**:
 
-- [ ] Animation Channel and Sampler modules (referenced but missing)
-- [ ] Add Nx/TorchX dependencies for tensor operations
+- [x] Animation Channel and Sampler modules (referenced but missing) ✅
+- [x] Add Nx/TorchX dependencies for tensor operations ✅
 - [ ] Comprehensive JSON schema validation
 - [ ] Decide: Extract to separate apps OR enhance existing single app
 

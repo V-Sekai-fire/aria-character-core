@@ -39,6 +39,12 @@ defmodule AriaGltf.MixProject do
       # JSON parsing for glTF files
       {:jason, "~> 1.4"},
 
+      # Tensor operations for mesh transformations and image processing
+      {:nx, "~> 0.9"},
+
+      # Image format support (JPG/PNG read/write)
+      {:image, "~> 0.54"},
+
       # Development and testing
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
