@@ -68,6 +68,30 @@ Based on the specification analysis, our domain needs to implement:
 **Frame-Accurate Mesh State Calculation Pipeline:**
 The system must support precise calculation of mesh states at any given timestamp through efficient tensor operations across `aria_gltf_geometry`, `aria_gltf_animation`, and `aria_gltf_images`, enabling frame-accurate animation processing and visual export capabilities.
 
+**MANDATORY SAMPLE ASSET VALIDATION:**
+- **MUST validate against SimpleSkin.gltf**: https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/SimpleSkin/glTF-Embedded/SimpleSkin.gltf
+- **MUST validate against SimpleMorph.gltf**: https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/SimpleMorph/glTF-Embedded/SimpleMorph.gltf
+
+**Frame-Accurate Processing Requirements:**
+
+**SimpleSkin Joint Animation (via `aria_gltf_geometry` + `aria_gltf_animation`):**
+- **Precise joint matrix calculation**: Compute accurate 4x4 transformation matrices for each joint at any timestamp
+- **Multi-joint vertex skinning**: Handle vertices influenced by multiple joints with correct weight blending
+- **Sub-frame interpolation**: Support animation sampling between keyframes with temporal precision
+- **Bone hierarchy validation**: Maintain correct parent-child joint relationships during animation
+
+**SimpleMorph Target Blending (via `aria_gltf_geometry` + `aria_gltf_animation`):**
+- **Precise morph weight interpolation**: Calculate accurate morph target weights at any timestamp
+- **Vertex position blending**: Blend vertex positions between base mesh and morph targets
+- **Multi-target support**: Handle multiple simultaneous morph targets with weight normalization
+- **Facial expression accuracy**: Maintain precise control for character facial animations
+
+**Export and Validation Pipeline (via `aria_gltf_images`):**
+- **Frame extraction**: Export mesh states as images at arbitrary timestamps for validation
+- **Reference comparison**: Compare against known-good reference implementations
+- **Temporal consistency**: Ensure smooth animation without temporal artifacts or discontinuities
+- **Performance benchmarking**: Measure frame calculation performance for real-time applications
+
 ## Decision
 
 We will implement a comprehensive glTF 2.0 system using a **single responsibility app architecture** with six focused Elixir applications within the umbrella project. Each app handles a distinct aspect of glTF processing, enabling independent development, selective deployment, and clear separation of concerns.
@@ -176,12 +200,27 @@ aria_gltf_io → aria_gltf_core ← aria_gltf_geometry
 - [ ] Morph target support with weight management
 - [ ] Efficient tensor operations for mesh transformations
 
+**SimpleSkin.gltf Validation Requirements**:
+- [ ] Parse joint hierarchy and inverse bind matrices
+- [ ] Implement 4x4 joint transformation matrix calculation
+- [ ] Handle multi-joint vertex influences with weight blending
+- [ ] Validate joint parent-child relationships
+- [ ] Test frame-accurate joint matrix interpolation
+
+**SimpleMorph.gltf Validation Requirements**:
+- [ ] Parse morph target vertex position data
+- [ ] Implement morph target weight blending algorithms
+- [ ] Handle multiple simultaneous morph targets
+- [ ] Validate morph target weight normalization
+- [ ] Test frame-accurate morph weight interpolation
+
 **Implementation Patterns**:
 - [ ] Nx-based vertex data access patterns
 - [ ] GPU-accelerated mesh transformations via TorchX
 - [ ] Skin joint hierarchy validation
 - [ ] Morph target weight blending algorithms
 - [ ] Geometry validation and bounds checking
+- [ ] Frame-accurate state calculation for both skinning and morphing
 
 ### App 4: `aria_gltf_animation` - Animation System (MEDIUM PRIORITY)
 **Location**: `apps/aria_gltf_animation/`
@@ -195,12 +234,27 @@ aria_gltf_io → aria_gltf_core ← aria_gltf_geometry
 - [ ] Integration API with aria_timeline and ADR-181
 - [ ] Temporal coordination for frame-accurate playback
 
+**SimpleSkin.gltf Animation Requirements**:
+- [ ] Parse joint rotation/translation/scale animation channels
+- [ ] Implement quaternion SLERP for smooth joint rotations
+- [ ] Handle keyframe timing and interpolation for joint animations
+- [ ] Coordinate with ADR-181 for temporal planning integration
+- [ ] Test sub-frame accuracy for joint animation sampling
+
+**SimpleMorph.gltf Animation Requirements**:
+- [ ] Parse morph target weight animation channels
+- [ ] Implement linear interpolation for morph weights
+- [ ] Handle multiple morph target animations simultaneously
+- [ ] Validate weight normalization during animation
+- [ ] Test sub-frame accuracy for morph weight sampling
+
 **Implementation Patterns**:
 - [ ] Clean API for aria_timeline integration
 - [ ] Quaternion SLERP for rotation interpolation
 - [ ] Morph target weight animation
 - [ ] Animation data validation and optimization
 - [ ] Timeline-based animation control
+- [ ] Frame-accurate temporal sampling for both joint and morph animations
 
 ### App 5: `aria_gltf_materials` - Material & Texture System (MEDIUM PRIORITY)
 **Location**: `apps/aria_gltf_materials/`
@@ -298,11 +352,20 @@ Starting with creating the independent application structure and foundation data
 - [ ] Nx/TorchX integration for efficient tensor operations
 - [ ] Export functionality for frame extraction and texture processing
 
+**Frame-Accurate Sample Asset Validation:**
+- [ ] **SimpleSkin.gltf validation**: Successfully load, parse, and animate with frame-accurate joint transformations
+- [ ] **SimpleMorph.gltf validation**: Successfully load, parse, and animate with frame-accurate morph target blending
+- [ ] **Temporal precision testing**: Validate sub-frame accuracy for animation sampling between keyframes
+- [ ] **Export validation**: Export frame-accurate mesh states as images at arbitrary timestamps
+- [ ] **Reference comparison**: Compare results against known-good reference implementations
+- [ ] **Performance benchmarking**: Measure frame calculation performance for real-time applications
+
 **Quality Assurance:**
 - [ ] Maintain specification compliance for interoperability
 - [ ] Comprehensive test coverage with sample glTF files per app
 - [ ] Performance optimization for large assets and real-time processing
 - [ ] Clear documentation and usage examples for each app
+- [ ] Automated testing pipeline with SimpleSkin and SimpleMorph as canonical test cases
 
 ## Consequences
 
@@ -382,7 +445,17 @@ Starting with creating the independent application structure and foundation data
 
 ## References
 
+**glTF 2.0 Specification and Tools:**
 - [glTF 2.0 Specification](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html)
 - [glTF 2.0 JSON Schema](https://github.com/KhronosGroup/glTF/tree/master/specification/2.0/schema)
 - [glTF Sample Models](https://github.com/KhronosGroup/glTF-Sample-Models)
 - [Khronos glTF Validator](https://github.com/KhronosGroup/glTF-Validator)
+
+**Mandatory Sample Assets for Frame-Accurate Validation:**
+- [SimpleSkin.gltf](https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/SimpleSkin/glTF-Embedded/SimpleSkin.gltf) - Joint animation and skinning validation
+- [SimpleMorph.gltf](https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/SimpleMorph/glTF-Embedded/SimpleMorph.gltf) - Morph target blending validation
+
+**Technical Dependencies:**
+- [Nx Package](https://hex.pm/packages/nx) - Numerical computing for Elixir
+- [TorchX Package](https://hex.pm/packages/torchx) - GPU-accelerated tensor operations
+- [Image Package](https://hex.pm/packages/image) - JPG/PNG read/write operations
