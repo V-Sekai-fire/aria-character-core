@@ -49,16 +49,40 @@ Everything is an entity with capabilities:
 | 7 | ✅ | ✅ | ❌ | Fixed interval |
 | 8 | ✅ | ✅ | ✅ | **Constraint validation** (`start + duration = end`) |
 
-### Method Selection Guide
+### Method Types Overview
 
-| Method Type | Purpose | When to Use |
-|-------------|---------|-------------|
-| @action | Direct state transformations | @spec action_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} \| {:error, atom()} |
-| @command | Execution-time logic | @spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} \| {:error, atom()} |
-| @task_method | Break down complex workflows | @spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]} \| {:error, atom()} |
-| @unigoal_method | Handle single predicate goals | @type subject :: term() @type object :: term() @spec method_name(AriaState.t(), [subject(), object()]) :: {:ok, [AriaEngine.todo_item()]} \| {:error, atom()}` |
-| @multigoal_method | Optimize multiple goal solving | @spec multigoal_method(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} \| {:error, atom()} |
-| @multitodo_method | Optimize todo list processing | @spec multitodo_method(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} \| {:error, atom()} |
+The AriaEngine planner uses six types of methods for different purposes:
+
+- **@action** - Direct state changes (cooking, moving, etc.)
+- **@command** - Execution-time logic with failure handling
+- **@task_method** - Break complex goals into smaller steps
+- **@unigoal_method** - Handle single predicate goals like "location" or "status"
+- **@multigoal_method** - Optimize solving multiple goals together
+- **@multitodo_method** - Optimize processing lists of work items
+
+### Method Selection Guide (Quick Reference for Experienced Developers)
+
+*This table shows Elixir function signatures for each method type. If you're new to the system, skip to [Understanding Planning](#understanding-planning) first.*
+
+| Method Type | Purpose | Function Signature |
+|-------------|---------|-------------------|
+| @action | Direct state transformations | `@spec action_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} \| {:error, atom()}` |
+| @command | Execution-time logic | `@spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} \| {:error, atom()}` |
+| @task_method | Break down complex workflows | `@spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]} \| {:error, atom()}` |
+| @unigoal_method | Handle single predicate goals | `@spec method_name(AriaState.t(), [subject(), object()]) :: {:ok, [AriaEngine.todo_item()]} \| {:error, atom()}` |
+| @multigoal_method | Optimize multiple goal solving | `@spec multigoal_method(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} \| {:error, atom()}` |
+| @multitodo_method | Optimize todo list processing | `@spec multitodo_method(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} \| {:error, atom()}` |
+
+#### Component Breakdown
+
+**Key Elements in the Function Signatures:**
+
+- **`@spec`** - Elixir type specification that defines input and output types
+- **`AriaState.t()`** - The current world state containing all facts and entities
+- **`[term()]`** - List of parameters passed to the function (varies by method)
+- **`{:ok, result} | {:error, atom()}`** - Standard Elixir success/failure return pattern
+- **`AriaEngine.todo_item()`** - Work items that can be planned and executed by the system
+- **`subject()`, `object()`** - Type aliases for goal components (typically strings or atoms)
 
 ### Required Function Attributes
 
