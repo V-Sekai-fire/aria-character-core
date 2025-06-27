@@ -34,6 +34,17 @@ Based on the specification analysis, our domain needs to implement:
    - Texture mapping and sampling
    - Material property animation
 
+## Domain Architecture Requirements
+
+**MANDATORY DEPENDENCIES:**
+
+- **MUST use ADR-181** for unified durative action specification and temporal coordination
+- **MUST use aria_gltf for execution** with KHR_interactivity extensions
+- **MUST use Nx** (https://hex.pm/packages/nx) with `{:torchx, "~> 0.9"}` for efficient tensor operations in mesh transformations
+
+**Frame-Accurate Mesh State Calculation Pipeline:**
+The system must support precise calculation of mesh states at any given timestamp through efficient tensor operations, enabling frame-accurate animation and transformation processing.
+
 ## Decision
 
 We will implement a comprehensive glTF 2.0 parser and data structure system as an independent Elixir application (`aria_gltf`) within the umbrella project, focusing on the specification sections most relevant to character representation and animation.
@@ -216,6 +227,7 @@ Starting with creating the independent application structure and foundation data
 
 ## Related ADRs
 
+- **ADR-181**: Unified Durative Action Specification (MANDATORY - temporal planning foundation)
 - **ADR-129**: Aria Engine Plans glTF KHR Interactivity Implementation
 - **ADR-130**: glTF Scene Foundation Implementation Plan
 - **ADR-135**: TDD glTF Scene Foundation Implementation
