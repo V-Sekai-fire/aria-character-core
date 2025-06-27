@@ -25,7 +25,8 @@ defmodule AriaSerial.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:timex, "~> 3.7"}
+      {:timex, "~> 3.7"},
+      {:jason, "~> 1.4"}
     ]
   end
 end

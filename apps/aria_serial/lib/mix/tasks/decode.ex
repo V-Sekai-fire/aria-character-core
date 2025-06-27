@@ -46,7 +46,7 @@ defmodule Mix.Tasks.Serial.Decode do
   """
 
   use Mix.Task
-  alias Mix.Tasks.Serial.Registry
+  alias AriaSerial.Registry
 
   @shortdoc "Decode Aria project serial numbers"
 

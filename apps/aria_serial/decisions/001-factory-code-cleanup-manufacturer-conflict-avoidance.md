@@ -2,7 +2,7 @@
 
 ## Status
 
-Active (June 23, 2025)
+Completed (June 27, 2025)
 
 ## Context
 
@@ -52,9 +52,12 @@ The AriaSerial system uses single-letter factory codes in serial numbers to iden
 - [x] Update decode_serial.ex factory decode functions (uses registry)
 - [x] Fix unused variable warning in create_serial.ex
 - [x] Add support for 11-character legacy serials in decode_v1
-- [ ] Debug decode function hanging issue
-- [ ] Test the changes with existing serial numbers
-- [ ] Verify R25W001GLTL still decodes correctly
+- [x] Debug decode function hanging issue (resolved module conflict)
+- [x] Test the changes with existing serial numbers
+- [x] Verify R25W001GLTL still decodes correctly
+- [x] Remove duplicate registry module (Mix.Tasks.Serial.Registry)
+- [x] Fix module conflicts between decode.ex and decode_serial.ex
+- [x] Update all Mix tasks to use AriaSerial.Registry consistently
 
 ## Consequences
 
