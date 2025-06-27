@@ -1,8 +1,10 @@
 # AriaGltf TODO
 
+**ADR Reference:** R25W1513883 - Comprehensive glTF 2.0 Implementation with SimpleSkin/SimpleMorph Animation Support
+
 ## Completed ✅
 
-### Basic Export Functionality
+### Basic Export Functionality (Current aria_gltf app)
 - [x] Create AriaGltf.IO module for file operations
 - [x] Implement export_to_file/2 function
 - [x] Add validation for glTF documents before export
@@ -16,19 +18,27 @@
 - [x] Dependencies Updated (Nx, Image)
 - [x] ADR R25W1513883 Progress Updated
 
-### Core Foundation Modules (Existing)
-- [x] AriaGltf.Document - Root glTF document structure
+### Core Foundation Modules (Existing in aria_gltf app)
+- [x] AriaGltf.Document - Root glTF document structure with JSON parsing/serialization
 - [x] AriaGltf.Asset - Asset metadata and version info
 - [x] AriaGltf.Scene - Scene graph root nodes
 - [x] AriaGltf.Node - Scene graph nodes with transforms
 - [x] AriaGltf.Mesh - Geometry and primitive definitions
-- [x] AriaGltf.Material - Material properties and textures
+- [x] AriaGltf.Material - Material properties and textures with PBR support
 - [x] AriaGltf.Accessor - Data accessor definitions
 - [x] AriaGltf.Buffer - Raw binary data containers
 - [x] AriaGltf.BufferView - Buffer data views and layouts
 - [x] AriaGltf.TextureInfo - Texture coordinate mappings
+- [x] Application supervision tree and proper Elixir app structure
 
-## Next Steps / Future Work (Cold Boot Order)
+## Implementation Plan (Per ADR R25W1513883)
+
+### Architecture Decision: Single App vs Multi-App
+**Current Status:** Single `aria_gltf` app with comprehensive implementation
+**ADR Requirement:** Six-app architecture for single responsibility separation
+**Decision Point:** Evaluate after Phase 1 export pipeline completion
+
+## Next Steps / Future Work (Cold Boot Order per ADR R25W1513883)
 
 ### Phase 1: Complete Core Foundation (REQUIRED FIRST)
 **Priority: CRITICAL - These modules are referenced by Document but missing**
@@ -165,7 +175,77 @@
   - [ ] Cancellation support
   - [ ] Time estimation
 
-### Phase 8: Developer Experience and Integration
+### Phase 8: SimpleSkin/SimpleMorph Sample Validation (ADR REQUIREMENT)
+**Priority: HIGH - Mandatory validation per ADR R25W1513883**
+
+- [ ] **SimpleSkin.gltf Validation Requirements**
+  - [ ] Parse joint hierarchy and inverse bind matrices
+  - [ ] Implement 4x4 joint transformation matrix calculation
+  - [ ] Handle multi-joint vertex influences with weight blending
+  - [ ] Validate joint parent-child relationships
+  - [ ] Test frame-accurate joint matrix interpolation
+  - [ ] Validate against: https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/SimpleSkin/glTF-Embedded/SimpleSkin.gltf
+
+- [ ] **SimpleMorph.gltf Validation Requirements**
+  - [ ] Parse morph target vertex position data
+  - [ ] Implement morph target weight blending algorithms
+  - [ ] Handle multiple simultaneous morph targets
+  - [ ] Validate morph target weight normalization
+  - [ ] Test frame-accurate morph weight interpolation
+  - [ ] Validate against: https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/SimpleMorph/glTF-Embedded/SimpleMorph.gltf
+
+- [ ] **Frame-Accurate Processing Pipeline**
+  - [ ] Precise joint matrix calculation at any timestamp
+  - [ ] Multi-joint vertex skinning with correct weight blending
+  - [ ] Sub-frame interpolation with temporal precision
+  - [ ] Precise morph weight interpolation at any timestamp
+  - [ ] Vertex position blending between base mesh and morph targets
+  - [ ] Multi-target support with weight normalization
+
+- [ ] **Export and Validation Pipeline**
+  - [ ] Frame extraction: Export mesh states as images at arbitrary timestamps
+  - [ ] Reference comparison against known-good implementations
+  - [ ] Temporal consistency validation (smooth animation without artifacts)
+  - [ ] Performance benchmarking for real-time applications
+
+### Phase 9: Multi-App Architecture (ADR REQUIREMENT)
+**Priority: MEDIUM - Evaluate after Phase 1 completion**
+
+- [ ] **Architecture Decision Point**
+  - [ ] Evaluate single app vs six-app architecture based on export pipeline experience
+  - [ ] Document pros/cons of current single-app approach
+  - [ ] Plan migration strategy if multi-app architecture is chosen
+
+- [ ] **Potential App Separation (if chosen)**
+  - [ ] `aria_gltf_core` - Core data structures & validation
+  - [ ] `aria_gltf_images` - JPG/PNG read/write with :image package
+  - [ ] `aria_gltf_geometry` - Mesh processing with Nx/TorchX
+  - [ ] `aria_gltf_animation` - Animation system with R25W1398085 integration
+  - [ ] `aria_gltf_materials` - Material & texture system
+  - [ ] `aria_gltf_io` - File format I/O (JSON/GLB)
+
+### Phase 10: Integration Requirements (ADR REQUIREMENT)
+**Priority: HIGH - Required for system integration**
+
+- [ ] **R25W1398085 Integration**
+  - [ ] Temporal planning system integration API
+  - [ ] Unified durative action specification support
+  - [ ] Timeline-based animation control
+  - [ ] Frame-accurate temporal coordination
+
+- [ ] **Nx/TorchX Integration**
+  - [ ] Efficient tensor operations for mesh transformations
+  - [ ] GPU-accelerated processing via TorchX
+  - [ ] Memory-efficient binary handling
+  - [ ] Image data to tensor conversion
+
+- [ ] **Blender Validation Pipeline**
+  - [ ] Minimal scene (cube mesh) loads in Blender
+  - [ ] Material properties display correctly
+  - [ ] Animation plays back smoothly
+  - [ ] Complex models (SimpleSkin/SimpleMorph) import successfully
+
+### Phase 11: Developer Experience and Integration
 **Priority: LOW - Quality of life improvements**
 
 - [ ] **Debugging Utilities and Inspection Tools**
@@ -220,10 +300,77 @@
 
 **Phases 5-8 are Independent:** Once core I/O works, advanced features can be implemented in any order based on priority and need.
 
+## ADR Success Criteria (R25W1513883)
+
+### Multi-App Architecture Success Criteria
+- [ ] Six independent applications with single responsibilities
+- [ ] Clean API boundaries between apps with minimal coupling
+- [ ] Selective deployment capability (use only needed apps)
+- [ ] Independent development and testing of each app
+
+### Core Functionality Success Criteria
+- [ ] Parse and validate standard glTF 2.0 files via `aria_gltf_io`
+- [ ] Load character meshes with proper skinning data via `aria_gltf_geometry`
+- [ ] Animate characters using glTF animation data via `aria_gltf_animation`
+- [ ] Support PBR materials for realistic rendering via `aria_gltf_materials`
+- [ ] Handle JPG/PNG read/write operations via `aria_gltf_images`
+- [ ] Handle both JSON (.gltf) and binary (.glb) formats
+
+### Integration Requirements Success Criteria
+- [ ] Provide integration API for temporal planning systems (R25W1398085)
+- [ ] Frame-accurate mesh state calculation pipeline
+- [ ] Nx/TorchX integration for efficient tensor operations
+- [ ] Export functionality for frame extraction and texture processing
+
+### Frame-Accurate Sample Asset Validation Success Criteria
+- [ ] **SimpleSkin.gltf validation**: Successfully load, parse, and animate with frame-accurate joint transformations
+- [ ] **SimpleMorph.gltf validation**: Successfully load, parse, and animate with frame-accurate morph target blending
+- [ ] **Temporal precision testing**: Validate sub-frame accuracy for animation sampling between keyframes
+- [ ] **Export validation**: Export frame-accurate mesh states as images at arbitrary timestamps
+- [ ] **Reference comparison**: Compare results against known-good reference implementations
+- [ ] **Performance benchmarking**: Measure frame calculation performance for real-time applications
+
+### Quality Assurance Success Criteria
+- [ ] Maintain specification compliance for interoperability
+- [ ] Comprehensive test coverage with sample glTF files per app
+- [ ] Performance optimization for large assets and real-time processing
+- [ ] Clear documentation and usage examples for each app
+- [ ] Automated testing pipeline with SimpleSkin and SimpleMorph as canonical test cases
+
 ## Compilation Status
 ✅ All existing modules compile successfully
 ⚠️  Missing core modules cause warnings in Document.to_json/1 and from_json/1
 ✅ All tests passing (14/14) for implemented functionality
 🎯 Ready for Phase 1 implementation
 
-The aria_gltf app has solid foundation but requires Phase 1 completion before reliable import/export of real glTF files is possible.
+## ADR References and Dependencies
+
+**Primary ADR:** R25W1513883 - Comprehensive glTF 2.0 Implementation with SimpleSkin/SimpleMorph Animation Support
+
+**Related ADRs:**
+- **R25W1524A37**: SimpleSkin Animation Import/Export (MERGED INTO R25W1513883)
+- **R25W1398085**: Unified Durative Action Specification (MANDATORY - temporal planning foundation)
+- **R25W087E1AE**: Aria Engine Plans glTF KHR Interactivity Implementation
+- **R25W08877E1**: glTF Scene Foundation Implementation Plan
+- **R25W093B1C8**: TDD glTF Scene Foundation Implementation
+- **R25W094A7AF**: TDD glTF Core Data Structures
+- **R25W095BA8C**: TDD glTF Data Loading Parsing
+- **R25W0969BA8**: TDD glTF Scene Graph Logic
+- **R25W09751CC**: TDD glTF Mesh Processing
+
+**Technical Dependencies:**
+- [Nx Package](https://hex.pm/packages/nx) - Numerical computing for Elixir
+- [TorchX Package](https://hex.pm/packages/torchx) - GPU-accelerated tensor operations
+- [Image Package](https://hex.pm/packages/image) - JPG/PNG read/write operations
+
+**Mandatory Sample Assets:**
+- [SimpleSkin.gltf](https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/SimpleSkin/glTF-Embedded/SimpleSkin.gltf) - Joint animation and skinning validation
+- [SimpleMorph.gltf](https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/SimpleMorph/glTF-Embedded/SimpleMorph.gltf) - Morph target blending validation
+
+**glTF 2.0 Specification References:**
+- [glTF 2.0 Specification](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html)
+- [glTF 2.0 JSON Schema](https://github.com/KhronosGroup/glTF/tree/master/specification/2.0/schema)
+- [glTF Sample Models](https://github.com/KhronosGroup/glTF-Sample-Models)
+- [Khronos glTF Validator](https://github.com/KhronosGroup/glTF-Validator)
+
+The aria_gltf app has solid foundation but requires Phase 1 completion before reliable import/export of real glTF files is possible. All ADR requirements from R25W1513883 are now comprehensively covered in this implementation plan.
