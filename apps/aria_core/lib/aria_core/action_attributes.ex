@@ -47,16 +47,19 @@ defmodule AriaCore.ActionAttributes do
     quote do
       # Register all attributes as accumulating
       Module.register_attribute(__MODULE__, :action, accumulate: true)
+      Module.register_attribute(__MODULE__, :command, accumulate: true)
       Module.register_attribute(__MODULE__, :task_method, accumulate: true)
       Module.register_attribute(__MODULE__, :unigoal_method, accumulate: true)
 
       # Internal tracking attributes
       Module.register_attribute(__MODULE__, :action_metadata, accumulate: true)
+      Module.register_attribute(__MODULE__, :command_metadata, accumulate: true)
       Module.register_attribute(__MODULE__, :method_metadata, accumulate: true)
       Module.register_attribute(__MODULE__, :unigoal_metadata, accumulate: true)
 
       # Pending attributes (non-persistent)
       Module.register_attribute(__MODULE__, :pending_action_metadata, persist: false)
+      Module.register_attribute(__MODULE__, :pending_command_metadata, persist: false)
       Module.register_attribute(__MODULE__, :pending_task_metadata, persist: false)
       Module.register_attribute(__MODULE__, :pending_unigoal_metadata, persist: false)
 
@@ -94,6 +97,33 @@ defmodule AriaCore.ActionAttributes do
   """
   @spec action_attribute_docs() :: :ok
   def action_attribute_docs, do: :ok
+
+  @doc """
+  @command attribute documentation.
+
+  Commands are execution-time logic with failure handling according to ADR-181.
+  They are used during plan execution to handle real-world failures and provide
+  robust execution behavior.
+
+  ## Supported Attributes
+
+  - `duration`: ISO 8601 duration string or seconds (optional)
+  - `requires_entities`: List of entity requirements (optional)
+
+  ## Examples
+
+      @command true
+      def cook_meal_command(state, [meal_id]) do
+        case validate_cooking_equipment(state) do
+          :ok ->
+            perform_cooking(state, meal_id)
+          {:error, reason} ->
+            {:error, reason}
+        end
+      end
+  """
+  @spec command_attribute_docs() :: :ok
+  def command_attribute_docs, do: :ok
 
   @doc """
   @task_method attribute documentation.
@@ -183,6 +213,15 @@ defmodule AriaCore.ActionAttributes do
         Module.put_attribute(env.module, :action_metadata, {name, action_metadata})
     end
 
+    # Process @command attribute - consume by reading and transforming
+    case Module.get_attribute(env.module, :command) do
+      [] -> :ok
+      [command_metadata | _rest] = attrs ->
+        # Consume the attribute by assigning it (satisfies Elixir's "return" requirement)
+        _consumed_command_attrs = attrs
+        Module.put_attribute(env.module, :command_metadata, {name, command_metadata})
+    end
+
     # Process @task_method attribute - consume by reading and transforming
     # Handle both @task_method and @task_method <value> patterns
     task_attrs = Module.get_attribute(env.module, :task_method)
@@ -232,11 +271,13 @@ defmodule AriaCore.ActionAttributes do
   """
   defmacro __before_compile__(env) do
     actions = Module.get_attribute(env.module, :action_metadata) || []
+    commands = Module.get_attribute(env.module, :command_metadata) || []
     methods = Module.get_attribute(env.module, :method_metadata) || []
     unigoals = Module.get_attribute(env.module, :unigoal_metadata) || []
 
     quote do
       def __action_metadata__, do: unquote(Macro.escape(actions))
+      def __command_metadata__, do: unquote(Macro.escape(commands))
       def __method_metadata__, do: unquote(Macro.escape(methods))
       def __unigoal_metadata__, do: unquote(Macro.escape(unigoals))
 
@@ -257,9 +298,16 @@ defmodule AriaCore.ActionAttributes do
             AriaCore.Domain.add_action(acc, name, action_spec)
           end)
 
+        # Process commands using existing systems (SOCIABLE approach)
+        domain_with_commands =
+          Enum.reduce(__command_metadata__(), domain_with_actions, fn {name, metadata}, acc ->
+            command_spec = AriaCore.ActionAttributes.convert_command_metadata(metadata, name, __MODULE__)
+            AriaCore.Domain.add_action(acc, name, command_spec)
+          end)
+
         # Process methods using existing systems (SOCIABLE approach)
         domain_with_methods =
-          Enum.reduce(__method_metadata__(), domain_with_actions, fn {name, metadata}, acc ->
+          Enum.reduce(__method_metadata__(), domain_with_commands, fn {name, metadata}, acc ->
             method_spec = AriaCore.ActionAttributes.convert_method_metadata(metadata, name, __MODULE__)
             AriaCore.Domain.add_method(acc, name, method_spec)
           end)
@@ -295,6 +343,24 @@ defmodule AriaCore.ActionAttributes do
       preconditions: metadata[:preconditions] || [],
       effects: metadata[:effects] || [],
       action_fn: Function.capture(module, action_name, 2)
+    }
+  end
+
+  @doc """
+  Converts @command metadata to Domain action specification.
+
+  Commands are execution-time logic with failure handling according to ADR-181.
+  They use the same specification format as actions but are intended for execution.
+  """
+  @spec convert_command_metadata(action_metadata(), atom(), module()) :: map()
+  def convert_command_metadata(metadata, command_name, module) do
+    %{
+      duration: convert_duration(metadata[:duration]),
+      entity_requirements: convert_entity_requirements(metadata[:requires_entities] || []),
+      preconditions: metadata[:preconditions] || [],
+      effects: metadata[:effects] || [],
+      action_fn: Function.capture(module, command_name, 2),
+      command: true  # Mark as command for execution-time logic
     }
   end
 

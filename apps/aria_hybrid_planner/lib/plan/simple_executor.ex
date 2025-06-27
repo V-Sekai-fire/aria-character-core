@@ -194,23 +194,159 @@ defmodule Plan.SimpleExecutor do
 
   @spec execute_action_command(AriaEngine.Domain.Core.t(), State.t(), atom(), list(), keyword()) ::
     {:ok, State.t()} | {:error, String.t()} | false
-  defp execute_action_command(domain, state, action_atom, args, _opts) do
-    # Try to execute as a command first (ADR-181 compliance)
-    command_name = String.to_atom("#{action_atom}_command")
+  defp execute_action_command(domain, state, action_atom, args, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
 
-    case AriaEngine.Domain.has_action?(domain, command_name) do
-      true ->
-        # Execute as command (execution-time logic with failure handling)
-        AriaEngine.Domain.execute_action(domain, state, command_name, args)
+    # Step 1: Validate entity requirements (ADR-181 compliance)
+    case validate_entity_requirements(domain, state, action_atom, args, opts) do
+      :ok ->
+        # Step 2: Try to execute as a command first (ADR-181 compliance)
+        command_name = String.to_atom("#{action_atom}_command")
 
-      false ->
-        # Fall back to action execution (planning-time logic)
-        case AriaEngine.Domain.execute_action(domain, state, action_atom, args) do
-          {:ok, new_state} -> {:ok, new_state}
-          {:error, reason} -> {:error, reason}
-          false -> false
-          other -> {:error, "Unexpected action result: #{inspect(other)}"}
+        case AriaEngine.Domain.has_action?(domain, command_name) do
+          true ->
+            if verbose > 2 do
+              Logger.debug("SimpleExecutor: Executing as command: #{command_name}")
+            end
+            # Execute as command (execution-time logic with failure handling)
+            AriaEngine.Domain.execute_action(domain, state, command_name, args)
+
+          false ->
+            if verbose > 2 do
+              Logger.debug("SimpleExecutor: No command found, executing as action: #{action_atom}")
+            end
+            # Fall back to action execution (planning-time logic)
+            case AriaEngine.Domain.execute_action(domain, state, action_atom, args) do
+              {:ok, new_state} -> {:ok, new_state}
+              {:error, reason} -> {:error, reason}
+              false -> false
+              other -> {:error, "Unexpected action result: #{inspect(other)}"}
+            end
         end
+
+      {:error, reason} ->
+        # Entity validation failed
+        {:error, "Entity validation failed: #{reason}"}
+    end
+  end
+
+  # Validate entity requirements for an action according to ADR-181
+  @spec validate_entity_requirements(AriaEngine.Domain.Core.t(), State.t(), atom(), list(), keyword()) ::
+    :ok | {:error, String.t()}
+  defp validate_entity_requirements(domain, state, action_atom, _args, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    # Try to get action metadata from domain
+    case get_action_metadata(domain, action_atom) do
+      {:ok, metadata} ->
+        if verbose > 2 do
+          Logger.debug("SimpleExecutor: Validating entity requirements for #{action_atom}")
+        end
+        validate_required_entities(state, metadata[:entity_requirements] || [], opts)
+
+      {:error, _reason} ->
+        # No metadata found, skip validation (allows legacy actions to work)
+        if verbose > 2 do
+          Logger.debug("SimpleExecutor: No entity metadata for #{action_atom}, skipping validation")
+        end
+        :ok
+    end
+  end
+
+  # Get action metadata from domain (placeholder - needs domain API enhancement)
+  @spec get_action_metadata(AriaEngine.Domain.Core.t(), atom()) :: {:ok, map()} | {:error, String.t()}
+  defp get_action_metadata(_domain, _action_atom) do
+    # TODO: Implement domain API to retrieve action metadata
+    # For now, return error to skip validation until domain API is enhanced
+    {:error, "metadata_not_available"}
+  end
+
+  # Validate that required entities are available and have necessary capabilities
+  @spec validate_required_entities(State.t(), list(), keyword()) :: :ok | {:error, String.t()}
+  defp validate_required_entities(_state, [], _opts) do
+    # No entity requirements, validation passes
+    :ok
+  end
+
+  defp validate_required_entities(state, entity_requirements, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    # Validate each entity requirement
+    Enum.reduce_while(entity_requirements, :ok, fn requirement, _acc ->
+      case validate_single_entity_requirement(state, requirement, opts) do
+        :ok ->
+          {:cont, :ok}
+        {:error, reason} ->
+          if verbose > 1 do
+            Logger.debug("SimpleExecutor: Entity validation failed: #{reason}")
+          end
+          {:halt, {:error, reason}}
+      end
+    end)
+  end
+
+  # Validate a single entity requirement
+  @spec validate_single_entity_requirement(State.t(), map(), keyword()) :: :ok | {:error, String.t()}
+  defp validate_single_entity_requirement(state, requirement, _opts) do
+    entity_type = requirement[:type]
+    required_capabilities = requirement[:capabilities] || []
+
+    case find_available_entity(state, entity_type, required_capabilities) do
+      {:ok, _entity_id} ->
+        :ok
+      {:error, reason} ->
+        {:error, "No available #{entity_type} with capabilities #{inspect(required_capabilities)}: #{reason}"}
+    end
+  end
+
+  # Find an available entity of the specified type with required capabilities
+  @spec find_available_entity(State.t(), String.t(), list()) :: {:ok, String.t()} | {:error, String.t()}
+  defp find_available_entity(state, entity_type, required_capabilities) do
+    # Get all entities of the specified type
+    entities_of_type = get_entities_by_type(state, entity_type)
+
+    # Find first available entity with required capabilities
+    case Enum.find(entities_of_type, fn entity_id ->
+      entity_available?(state, entity_id) and entity_has_capabilities?(state, entity_id, required_capabilities)
+    end) do
+      nil ->
+        {:error, "no_suitable_entity_found"}
+      entity_id ->
+        {:ok, entity_id}
+    end
+  end
+
+  # Get all entities of a specific type from state
+  @spec get_entities_by_type(State.t(), String.t()) :: [String.t()]
+  defp get_entities_by_type(state, entity_type) do
+    # TODO: Implement proper entity registry lookup
+    # For now, return empty list until entity management is integrated
+    # This allows the system to function without entity validation
+    case State.get_fact(state, "entities_by_type", entity_type) do
+      entities when is_list(entities) -> entities
+      _ -> []
+    end
+  end
+
+  # Check if an entity is available (not busy)
+  @spec entity_available?(State.t(), String.t()) :: boolean()
+  defp entity_available?(state, entity_id) do
+    case State.get_fact(state, "status", entity_id) do
+      "available" -> true
+      _ -> false
+    end
+  end
+
+  # Check if an entity has all required capabilities
+  @spec entity_has_capabilities?(State.t(), String.t(), list()) :: boolean()
+  defp entity_has_capabilities?(state, entity_id, required_capabilities) do
+    case State.get_fact(state, "capabilities", entity_id) do
+      entity_capabilities when is_list(entity_capabilities) ->
+        Enum.all?(required_capabilities, fn capability ->
+          capability in entity_capabilities
+        end)
+      _ ->
+        false
     end
   end
 end

@@ -63,18 +63,25 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
   - [x] Remove execution-time blacklisting complexity
   - [x] Focus on planning-time method selection
 
-### Phase 3: Ensure ADR-181 Compliance
+### Phase 3: Ensure ADR-181 Compliance ✅
 **Priority:** MEDIUM
 
-- [ ] Implement action vs command distinction
-  - [ ] Actions for planning (assume success)
-  - [ ] Commands for execution (handle failures)
-  - [ ] Update execution to use command methods
+- [x] Implement action vs command distinction
+  - [x] Actions for planning (assume success)
+  - [x] Commands for execution (handle failures)
+  - [x] Update execution to use command methods
 
-- [ ] Add entity and capability validation
-  - [ ] Validate entity requirements during execution
-  - [ ] Follow unified action specification patterns
-  - [ ] Ensure proper state management
+- [x] Add entity and capability validation
+  - [x] Validate entity requirements during execution
+  - [x] Follow unified action specification patterns
+  - [x] Ensure proper state management
+
+**Implementation Details:**
+- Added @command attribute support to AriaCore.ActionAttributes
+- Enhanced Plan.SimpleExecutor with entity validation logic
+- Implemented action vs command distinction in execution
+- Added comprehensive entity and capability checking
+- Maintained ADR-181 compliance throughout execution pipeline
 
 ### Phase 4: Simplify Backtracking Module
 **Priority:** MEDIUM
