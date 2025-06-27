@@ -5,7 +5,7 @@ defmodule TemporalPlanner.STNPlanner do
   @moduledoc "STN-based hierarchical temporal planner for goal-level coordination.\n\nThis module is the top-level coordinator in the hierarchical STN composition:\nAction → Method → Goal. It handles goal decomposition, cross-method timeline\ncoordination, and reentrant execution with real-time constraint updates.\n\n## Hierarchical STN Architecture\n\nThe planner operates on three levels:\n1. **Actions**: Atomic temporal activities (STNAction)\n2. **Methods**: Grouped actions with decomposition patterns (STNMethod)  \n3. **Goals**: High-level objectives with method coordination (STNPlanner)\n\n## Non-temporal Bridge Integration\n\nThe planner handles non-temporal actions as natural segment boundaries:\n- **Decision points**: Choice nodes between method alternatives\n- **Condition checks**: State validation between temporal segments\n- **Resource allocation**: Instantaneous resource assignment/release\n\n## Parallel Segment Solving\n\nAchieves O(k * (n/k)³) complexity reduction through:\n- Independent method segment solving\n- Cross-segment timeline coordination\n- Parallel composition using STN boolean operations\n\n## Reentrant Execution\n\nSupports real-time replanning during execution:\n- Constraint tightening based on execution progress\n- Dynamic method alternative selection\n- Temporal consistency maintenance across plan updates\n"
   alias TemporalPlanner.STNMethod
   alias TemporalPlanner.STNAction
-  alias AriaTimeline.TimelineCore, {:as, Timeline}
+  alias AriaTimeline.TimelineCore, as: Timeline
   @type goal_id :: String.t()
   @type planning_strategy :: :sequential | :parallel | :hierarchical | :adaptive
   @type execution_status :: :planning | :executing | :completed | :failed | :replanning

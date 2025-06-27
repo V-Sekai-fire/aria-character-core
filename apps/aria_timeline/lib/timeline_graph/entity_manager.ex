@@ -3,8 +3,8 @@
 
 defmodule TimelineGraph.EntityManager do
   @moduledoc "Manages entity creation, capabilities, and basic timeline operations.\n\nThis module handles the core entity lifecycle within the TimelineGraph system,\nincluding entity creation with automatic timeline attachment, capability management,\nand entity property operations.\n"
+  alias AriaTimeline.TimelineCore, as: Timeline
   alias Timeline.AgentEntity
-  alias Timeline
   alias Timeline.Interval
   alias AriaEngine.State
   @type entity_id :: String.t()
