@@ -1,14 +1,61 @@
-# ADR-192: glTF 2.0 Specification Implementation
+# ADR-192: Comprehensive glTF 2.0 Implementation with SimpleSkin/SimpleMorph Animation Support
 
 **Status:** Active  
-**Date:** 2025-06-26  
+**Date:** 2025-06-26 (Updated: 2025-06-27)  
 **Priority:** HIGH
+
+**Note:** This ADR incorporates and supersedes ADR-193 (SimpleSkin Animation Import/Export) to provide unified glTF domain implementation.
 
 ## Context
 
 The aria-character-core system requires comprehensive glTF 2.0 support to enable 3D character representation, animation, and interactivity. The glTF 2.0 specification provides a standardized format for transmitting and loading 3D content, which is essential for our character system's visual representation and animation capabilities.
 
-Currently, we have a basic `gltf_interactivity_domain.ex` file that demonstrates some understanding of glTF concepts, but we need a complete implementation that covers the core parts of the glTF 2.0 specification that our domain uses.
+Currently, we have a basic `aria_gltf` app with core data structures implemented but lacks critical functionality for animation import/export and robust validation. This implementation must support both the SimpleSkin and SimpleMorph samples from glTF-Sample-Assets, which demonstrate vertex skinning with joint hierarchies, morph target animation (blend shapes), and combined animation workflows.
+
+### Current State Analysis
+
+**Existing Implementation (✅ Completed):**
+- Basic aria_gltf app structure with core data structures
+- Document, Asset, Buffer, BufferView, Accessor modules
+- Scene, Node, Mesh, Material system foundation
+- JSON serialization framework in Document module
+
+**Critical Missing Components (❌ Required):**
+- Animation system (channels, samplers, interpolation)
+- Skinning system (joints, inverse bind matrices, vertex weights)
+- I/O system for file import/export
+- Animation playback and frame extraction
+- Comprehensive validation and fuzzing framework
+
+### Requirements from SimpleSkin and SimpleMorph Samples
+
+**SimpleSkin Sample demonstrates:**
+- Vertex skinning with joint hierarchies
+- Animation channels targeting joint transformations
+- Inverse bind matrices for skin deformation
+- Timeline-based animation playback
+- Frame-accurate mesh state calculation
+
+**SimpleMorph Sample demonstrates:**
+- Morph targets (blend shapes) for mesh deformation
+- Weight-based blending between base mesh and morph targets
+- Animation of morph weights over time
+- Multiple simultaneous morph target blending
+
+**Combined Animation Requirements:**
+- Simultaneous skinning and morphing operations
+- Proper transformation order: Base Mesh → Morph Targets → Skinning → Final Mesh
+- Temporal synchronization of both animation types
+- Frame-accurate calculation of final vertex positions
+
+### ufbx Validation Standards
+
+ufbx achieves 95% branch coverage through:
+- Structured fuzzing for binary and ASCII formats
+- Semantic fuzzing for file modifications
+- Built-in fuzzing for byte modifications/truncation/out-of-memory
+- Validation against reference implementations
+- Extensive edge case testing
 
 ### Key Requirements from glTF 2.0 Specification
 
@@ -434,6 +481,7 @@ Starting with creating the independent application structure and foundation data
 
 ## Related ADRs
 
+- **ADR-193**: SimpleSkin Animation Import/Export (MERGED INTO this ADR - animation requirements incorporated)
 - **ADR-181**: Unified Durative Action Specification (MANDATORY - temporal planning foundation)
 - **ADR-129**: Aria Engine Plans glTF KHR Interactivity Implementation
 - **ADR-130**: glTF Scene Foundation Implementation Plan

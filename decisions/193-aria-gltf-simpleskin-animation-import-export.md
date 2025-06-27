@@ -1,8 +1,10 @@
 # ADR-193: aria_gltf SimpleSkin and SimpleMorph Animation Import/Export Implementation
 
-**Status:** Active  
+**Status:** Merged into ADR-192  
 **Date:** 2025-06-27  
 **Priority:** HIGH
+
+**→ MERGED INTO ADR-192**: This ADR has been incorporated into ADR-192 (Comprehensive glTF 2.0 Implementation) to resolve sequencing construction violations and provide unified glTF domain implementation.
 
 ## Domain Architecture Requirements
 
@@ -67,7 +69,9 @@ ufbx achieves 95% branch coverage through:
 
 ## Decision
 
-Implement comprehensive glTF animation import/export functionality in aria_gltf, focusing on SimpleSkin compatibility and ufbx-level validation robustness. This will transform aria_gltf from a basic data structure library into a full-featured glTF processor.
+**MERGED INTO ADR-192**: This decision has been incorporated into ADR-192's comprehensive glTF implementation plan to avoid sequencing construction violations where both ADRs attempted to modify the same existing `aria_gltf` app simultaneously.
+
+The animation requirements, SimpleSkin/SimpleMorph validation, and ufbx-level testing standards from this ADR are now part of ADR-192's unified implementation strategy.
 
 ## Implementation Plan
 
@@ -310,8 +314,8 @@ Starting with implementing the missing animation and skinning modules that are r
 
 ## Related ADRs
 
+- **ADR-192**: Comprehensive glTF 2.0 Implementation (MERGED INTO - contains all requirements from this ADR)
 - **ADR-181**: Unified Durative Action Specification (MANDATORY - temporal planning foundation)
-- **ADR-192**: glTF 2.0 Specification Implementation (foundation)
 - **ADR-129**: Aria Engine Plans glTF KHR Interactivity Implementation
 - **ADR-130**: glTF Scene Foundation Implementation Plan
 
