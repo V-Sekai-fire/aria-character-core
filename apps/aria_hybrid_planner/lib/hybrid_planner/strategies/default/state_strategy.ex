@@ -11,7 +11,7 @@ defmodule HybridPlanner.Strategies.Default.StateStrategy do
 
   @behaviour HybridPlanner.Strategies.StateStrategy
 
-  alias State
+  alias AriaEngine.State
   require Logger
 
   @impl true

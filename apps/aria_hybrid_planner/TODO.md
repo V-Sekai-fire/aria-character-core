@@ -1,0 +1,1 @@
+1. make HybridCoordinatorV2 monolithic rather than Function As Object https://martinfowler.com/bliki/FunctionAsObject.html
