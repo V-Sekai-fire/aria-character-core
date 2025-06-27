@@ -71,6 +71,7 @@ certs
 *.temp
 *.backup
 *.bak
+*.disabled
 *.orig
 *.old
 .DS_Store
