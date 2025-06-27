@@ -355,6 +355,40 @@ Capabilities are simple traits for flexible composition:
 :kitchen_equipment, :ingredient, :meeting_space  # Domain-specific
 ```
 
+### Todo Items vs Domain-Level Optimization Methods
+
+**Important Distinction:** Not all method types are todo_item types.
+
+**Todo Item Types (work items that can be planned and executed):**
+
+```elixir
+@type todo_item :: 
+  task() |                    # {task_name, args} - Composite workflows
+  goal() |                    # {predicate, subject, value} - State goals  
+  AriaEngine.Multigoal.t()    # Multiple coordinated goals
+```
+
+**Domain-Level Optimization Methods (NOT todo_items):**
+
+- **@multigoal_method** - Optimizes how multiple goals are solved together
+- **@multitodo_method** - Optimizes how todo lists are processed and ordered
+
+These optimization methods operate at the domain/planner level to improve efficiency and coordination, but they are not individual work items that get planned and executed. They are meta-methods that enhance the planning process itself.
+
+**Example:**
+
+```elixir
+# This IS a todo_item - can be planned and executed
+{:cook_meal, ["pasta"]}
+
+# This is NOT a todo_item - it's a domain optimization method
+@multitodo_method true
+def optimize_cooking_sequence(state, todo_list) do
+  # Reorders todo_list for better efficiency
+  {:ok, reordered_list}
+end
+```
+
 ---
 
 ## Implementation Guide

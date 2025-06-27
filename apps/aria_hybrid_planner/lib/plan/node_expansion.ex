@@ -7,7 +7,7 @@ defmodule Plan.NodeExpansion do
   require Logger
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
-  @type todo_item :: task() | goal() | Multigoal.t()
+  @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
   @type solution_node :: %{
@@ -172,7 +172,7 @@ defmodule Plan.NodeExpansion do
           AriaEngine.State.t(),
           solution_tree(),
           node_id(),
-          Multigoal.t(),
+          AriaEngine.Multigoal.t(),
           integer()
         ) :: {:ok, solution_tree()} | {:error, String.t()} | :failure
   def expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
