@@ -30,7 +30,7 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
     Temporal.Interval,
     State.Relational,
     UnifiedDomain,
-    Examples.RestaurantDomain
+    Examples.GltfInteractivityDomain
   }
 
   # Helper function for doctests
@@ -151,31 +151,25 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
 
   describe "Phase 3: Module-based Domain Creation" do
     test "creates domain from module with @action attributes" do
-      domain = UnifiedDomain.create_from_module(RestaurantDomain)
+      domain = UnifiedDomain.create_from_module(GltfInteractivityDomain)
 
       # Verify domain structure
       assert %AriaCore.Domain{} = domain
 
       # Should have actions from @action attributes
       actions = AriaCore.Domain.list_actions(domain)
-      assert :cook_soup in actions
-      assert :bake_bread_expert in actions
-      assert :bake_bread_intermediate in actions
-      assert :bake_bread_novice in actions
-      assert :prep_vegetables in actions
-      assert :quality_check in actions
-      assert :maintain_equipment_professional in actions
+      assert :move_node in actions
+      assert :start_animation in actions
+      assert :wait_time in actions
 
       # Should have methods from @task_method attributes
       methods = AriaCore.Domain.list_methods(domain)
-      assert :prepare_complete_meal_method in methods
-      assert :rush_order_method in methods
-      assert :special_diet_method in methods
+      assert :move_and_animate_method in methods
     end
 
     test "validates domain module configuration" do
       # Valid module should pass validation
-      assert :ok = UnifiedDomain.validate_domain_module(RestaurantDomain)
+      assert :ok = UnifiedDomain.validate_domain_module(GltfInteractivityDomain)
 
       # Invalid module should fail validation
       defmodule InvalidModule do
@@ -187,7 +181,7 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
 
     test "merges multiple domains correctly" do
       # Create two separate domains
-      domain1 = UnifiedDomain.create_from_module(RestaurantDomain)
+      domain1 = UnifiedDomain.create_from_module(GltfInteractivityDomain)
 
       defmodule TestDomain2 do
         use AriaCore.Domain
@@ -203,7 +197,7 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
 
       # Should contain actions from both domains
       actions = AriaCore.Domain.list_actions(merged)
-      assert :cook_soup in actions  # From RestaurantDomain
+      assert :move_node in actions  # From GltfInteractivityDomain
       assert :test_action in actions  # From TestDomain2
     end
   end
@@ -343,21 +337,21 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
   describe "Integration Testing" do
     test "complete workflow from module to execution" do
       # Create domain from module
-      domain = UnifiedDomain.create_from_module(RestaurantDomain)
+      domain = UnifiedDomain.create_from_module(GltfInteractivityDomain)
 
       # Set up initial state
-      state = RestaurantDomain.create_test_state()
+      state = GltfInteractivityDomain.create_simple_test_state()
 
       # Define goals
-      goals = RestaurantDomain.create_test_goals()
+      goals = GltfInteractivityDomain.create_simple_test_goals()
 
       # Verify domain has required actions
       actions = AriaCore.Domain.list_actions(domain)
-      assert :cook_soup in actions
+      assert :move_node in actions
 
       # Verify state has required facts
-      assert {:ok, "available"} = Relational.get_fact(state, "status", "chef_1")
-      assert {:ok, 350} = Relational.get_fact(state, "temperature", "oven_1")
+      assert {:ok, true} = Relational.get_fact(state, "node_exists", "cube_1")
+      assert {:ok, [0.0, 0.0, 0.0]} = Relational.get_fact(state, "node_position", "cube_1")
 
       # Verify goals are well-formed
       assert is_list(goals)
@@ -382,7 +376,7 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
       # Verify that new systems leverage existing AriaCore functionality
 
       # 1. ActionAttributes uses existing Domain.new()
-      domain_module = RestaurantDomain
+      domain_module = GltfInteractivityDomain
       base_domain = AriaCore.Domain.new(domain_module)
       assert %AriaCore.Domain{} = base_domain
 
@@ -399,7 +393,7 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
       assert %Relational{} = state
 
       # 5. UnifiedDomain bridges everything together
-      unified_domain = UnifiedDomain.create_from_module(RestaurantDomain)
+      unified_domain = UnifiedDomain.create_from_module(GltfInteractivityDomain)
       assert %AriaCore.Domain{} = unified_domain
 
       # All systems work together without reimplementing core functionality
