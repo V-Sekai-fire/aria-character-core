@@ -1,15 +1,14 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Info do
+defmodule AriaEngine.Info do
   @moduledoc "Provides functions for retrieving information and status from the Aria Engine.\n"
-  alias Core
-  alias PlannerAdapter
-  @type t :: Core.t()
-  @type status :: Core.status()
-  @type solution_tree :: Core.solution_tree()
-  @type plan_step :: Core.plan_step()
-  @type todo_item :: Core.todo_item()
+  alias AriaEngine.Core
+  @type t :: AriaEngine.Core.t()
+  @type status :: AriaEngine.Core.status()
+  @type solution_tree :: AriaEngine.Core.solution_tree()
+  @type plan_step :: AriaEngine.Core.plan_step()
+  @type todo_item :: AriaEngine.Core.todo_item()
   @doc "Gets the current status of the engine.\n"
   @spec get_status(t()) :: status()
   def get_status(%Core{status: status}) do

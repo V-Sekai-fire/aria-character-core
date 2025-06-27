@@ -24,7 +24,7 @@ defmodule HybridPlanner.Strategies.Default.LazyExecutionStrategy do
         nil ->
           {:error, "Domain required for execution but not provided in options"}
 
-        %Domain.Core{} = domain ->
+        %AriaEngine.Domain.Core{} = domain ->
           Logger.warning(
             "LazyExecutionStrategy: Plan.Core.run_lazy_refineahead/4 not yet implemented"
           )

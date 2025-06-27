@@ -1,8 +1,8 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule State do
-  @moduledoc "Represents the state of a planning problem using predicate-subject-fact triples.\n\nThis module provides functionality to manage world state using RDF-like triples,\nwhere each fact is represented as {predicate, subject} -> fact_value.\n\nExample:\n```elixir\nstate = AriaEngine.StateV2.new()\n|> AriaEngine.StateV2.set_fact(\"location\", \"player\", \"room1\")\n|> AriaEngine.StateV2.set_fact(\"has\", \"player\", \"sword\")\n\nAriaEngine.StateV2.get_fact(state, \"location\", \"player\")\n# => \"room1\"\n```\n"
+defmodule AriaEngine.State do
+  @moduledoc "Represents the state of a planning problem using predicate-subject-fact triples.\n\nThis module provides functionality to manage world state using RDF-like triples,\nwhere each fact is represented as {predicate, subject} -> fact_value.\n\nExample:\n```elixir\nstate = AriaEngine.State.new()\n|> AriaEngine.State.set_fact(\"location\", \"player\", \"room1\")\n|> AriaEngine.State.set_fact(\"has\", \"player\", \"sword\")\n\nAriaEngine.State.get_fact(state, \"location\", \"player\")\n# => \"room1\"\n```\n"
   @type predicate :: String.t()
   @type subject :: String.t()
   @type fact_value :: any()

@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Core do
+defmodule AriaEngine.Core do
   @moduledoc "Core components and types for the Aria Engine.\n"
   @type domain :: Domain.Core.t()
   @type state :: AriaEngine.State.t()

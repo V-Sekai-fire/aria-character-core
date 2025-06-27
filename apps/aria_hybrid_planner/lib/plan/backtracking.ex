@@ -26,10 +26,10 @@ defmodule Plan.Backtracking do
         }
   @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure
   @doc "Replan from a specific failure node in the solution tree.\n"
-  @spec replan(Domain.Core.t(), AriaEngine.State.t(), solution_tree(), node_id(), keyword()) ::
+  @spec replan(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), solution_tree(), node_id(), keyword()) ::
           replan_result()
   def replan(
-        %Domain.Core{} = domain,
+        %AriaEngine.Domain.Core{} = domain,
         %AriaEngine.State{} = state,
         solution_tree,
         fail_node_id,
@@ -104,7 +104,7 @@ defmodule Plan.Backtracking do
     end
   end
 
-  @spec try_alternative_method_for_task(Domain.Core.t(), solution_tree(), node_id(), integer()) ::
+  @spec try_alternative_method_for_task(AriaEngine.Domain.Core.t(), solution_tree(), node_id(), integer()) ::
           {:ok, solution_tree()} | :no_alternatives | {:error, String.t()}
   def try_alternative_method_for_task(domain, solution_tree, task_node_id, verbose) do
     case solution_tree.nodes[task_node_id] do
@@ -138,7 +138,7 @@ defmodule Plan.Backtracking do
 
   defp try_alternative_for_task(domain, solution_tree, task_node_id, node, task_name, verbose) do
     blacklisted_methods = update_blacklisted_methods(node)
-    all_methods = Domain.get_task_methods(domain, task_name)
+    all_methods = AriaEngine.Domain.get_task_methods(domain, task_name)
 
     case check_remaining_methods(all_methods, blacklisted_methods, task_name, verbose) do
       :no_alternatives ->
@@ -158,7 +158,7 @@ defmodule Plan.Backtracking do
 
   defp try_alternative_for_goal(domain, solution_tree, task_node_id, node, predicate, verbose) do
     blacklisted_methods = update_blacklisted_methods(node)
-    all_methods = Domain.get_unigoal_methods(domain, predicate)
+    all_methods = AriaEngine.Domain.get_unigoal_methods(domain, predicate)
 
     case check_remaining_methods(all_methods, blacklisted_methods, predicate, verbose) do
       :no_alternatives ->
@@ -229,7 +229,7 @@ defmodule Plan.Backtracking do
   end
 
   @spec backtrack_and_retry(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.State.t(),
           solution_tree(),
           node_id(),
@@ -369,7 +369,7 @@ defmodule Plan.Backtracking do
   end
 
   @spec backtrack_up_tree(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.State.t(),
           solution_tree(),
           node_id(),

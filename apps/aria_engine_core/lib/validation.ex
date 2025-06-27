@@ -1,14 +1,14 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Validation do
+defmodule AriaEngine.Validation do
   @moduledoc "Provides validation functions for the Aria Engine definition.\n"
-  alias Core
-  @type t :: Core.t()
-  @type todo_item :: Core.todo_item()
-  @type action_fn :: Core.action_fn()
-  @type task_method_fn :: Core.task_method_fn()
-  @type goal_method_fn :: Core.goal_method_fn()
+  alias AriaEngine.Core
+  @type t :: AriaEngine.Core.t()
+  @type todo_item :: AriaEngine.Core.todo_item()
+  @type action_fn :: AriaEngine.Core.action_fn()
+  @type task_method_fn :: AriaEngine.Core.task_method_fn()
+  @type goal_method_fn :: AriaEngine.Core.goal_method_fn()
   @doc "Validates the AriaEngine definition.\n"
   @spec validate(t()) :: :ok | {:error, [String.t()]}
   def validate(%Core{} = engine) do

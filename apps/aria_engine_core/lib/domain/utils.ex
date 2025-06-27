@@ -1,10 +1,9 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Domain.Utils do
+defmodule AriaEngine.Domain.Utils do
   @moduledoc "Domain utilities and helper functions.\n"
-  alias Actions
-  @type t :: Domain.Core.t()
+  @type t :: AriaEngine.Domain.Core.t()
   @type action_name :: atom()
   @type task_name :: String.t()
   @type method_name :: String.t()
@@ -56,22 +55,22 @@ defmodule Domain.Utils do
   @spec add_porcelain_actions(t()) :: t()
   def add_porcelain_actions(%{} = domain) do
     porcelain_actions = %{
-      execute_command: &Actions.execute_command/2,
-      copy_file: &Actions.copy_file/2,
-      move_file: &Actions.move_file/2,
-      create_directory: &Actions.create_directory/2,
-      remove_path: &Actions.remove_path/2,
-      download_file: &Actions.download_file/2,
-      change_permissions: &Actions.change_permissions/2
+      execute_command: &AriaEngine.Actions.execute_command/2,
+      copy_file: &AriaEngine.Actions.copy_file/2,
+      move_file: &AriaEngine.Actions.move_file/2,
+      create_directory: &AriaEngine.Actions.create_directory/2,
+      remove_path: &AriaEngine.Actions.remove_path/2,
+      download_file: &AriaEngine.Actions.download_file/2,
+      change_permissions: &AriaEngine.Actions.change_permissions/2
     }
 
-    Domain.Actions.add_actions(domain, porcelain_actions)
+    AriaEngine.Domain.Actions.add_actions(domain, porcelain_actions)
   end
 
   @doc "Creates a complete domain with all Porcelain-based actions and methods.\n\nThis is a convenience method for creating a fully-featured domain with basic actions.\nDomain-specific methods should be added by the respective domain modules.\n"
   @spec create_complete_domain(String.t()) :: t()
   def create_complete_domain(name \\ "complete") do
-    Domain.Core.new(name) |> add_porcelain_actions()
+    AriaEngine.Domain.Core.new(name) |> add_porcelain_actions()
   end
 
   @doc "Infers a method name from a function reference for tuple-based method storage.\n"

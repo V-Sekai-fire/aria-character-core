@@ -213,7 +213,7 @@ defmodule HybridPlanner.StrategyRegistry do
   end
 
   defp get_action_duration(action_name, domain) do
-    case Domain.get_action_metadata(domain, action_name) do
+    case AriaEngine.Domain.get_action_metadata(domain, action_name) do
       %{duration: %Timeline.Interval{} = interval} ->
         fixed_duration = Timeline.Interval.duration_ms(interval)
         {fixed_duration, fixed_duration}

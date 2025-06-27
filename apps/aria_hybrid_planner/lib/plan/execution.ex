@@ -37,10 +37,10 @@ defmodule Plan.Execution do
   end
 
   @doc "Run-Lazy-Refineahead: Execute plan with replanning on failure.\n"
-  @spec run_lazy_refineahead(Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) ::
+  @spec run_lazy_refineahead(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) ::
           {:ok, AriaEngine.State.t()} | {:error, String.t()}
   def run_lazy_refineahead(
-        %Domain.Core{} = domain,
+        %AriaEngine.Domain.Core{} = domain,
         %AriaEngine.State{} = initial_state,
         solution_tree,
         opts \\ []
@@ -56,7 +56,7 @@ defmodule Plan.Execution do
     run_execution_loop(domain, current_state, current_tree, opts)
   end
 
-  @spec run_execution_loop(Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) ::
+  @spec run_execution_loop(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) ::
           {:ok, AriaEngine.State.t()} | {:error, String.t()}
   defp run_execution_loop(domain, current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, Core.get_default_verbose())
@@ -70,7 +70,7 @@ defmodule Plan.Execution do
   end
 
   @spec execute_actions_lazily(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.State.t(),
           [plan_step()],
           solution_tree(),
@@ -95,7 +95,7 @@ defmodule Plan.Execution do
       debug_puts("Executing action: #{action_name}(#{inspect(args)})")
     end
 
-    case Domain.execute_action(domain, state, action_atom, args) do
+    case AriaEngine.Domain.execute_action(domain, state, action_atom, args) do
       {:ok, new_state} ->
         execute_actions_lazily(domain, new_state, remaining_actions, solution_tree, opts)
 

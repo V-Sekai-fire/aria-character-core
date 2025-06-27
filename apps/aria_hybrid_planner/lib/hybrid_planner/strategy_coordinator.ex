@@ -123,7 +123,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   end
 
   @doc "Coordinate planning using the composed function strategies.\n\nThis is where Function as Object shines - just call the functions in sequence.\n"
-  @spec coordinate(t(), Domain.Core.t(), AriaEngine.State.t(), [term()], keyword()) ::
+  @spec coordinate(t(), AriaEngine.Domain.Core.t(), AriaEngine.State.t(), [term()], keyword()) ::
           coordination_result()
   def coordinate(%__MODULE__{} = coordinator, domain, state, goals, opts \\ []) do
     with {:ok, plan} <-
@@ -147,7 +147,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   end
 
   @doc "Plan only (without execution) using the coordinator's strategies.\n"
-  @spec plan_only(t(), Domain.Core.t(), AriaEngine.State.t(), [term()], keyword()) ::
+  @spec plan_only(t(), AriaEngine.Domain.Core.t(), AriaEngine.State.t(), [term()], keyword()) ::
           {:ok, term()} | {:error, String.t()}
   def plan_only(%__MODULE__{} = coordinator, domain, state, goals, opts \\ []) do
     with {:ok, plan} <-
@@ -165,7 +165,7 @@ defmodule HybridPlanner.StrategyCoordinator do
   end
 
   @doc "Execute a pre-planned solution using the coordinator's execution strategy.\n"
-  @spec execute_only(t(), Domain.Core.t(), AriaEngine.State.t(), term(), keyword()) ::
+  @spec execute_only(t(), AriaEngine.Domain.Core.t(), AriaEngine.State.t(), term(), keyword()) ::
           {:ok, AriaEngine.State.t()} | {:error, String.t()}
   def execute_only(%__MODULE__{} = coordinator, domain, state, plan, opts \\ []) do
     call_with_middleware(
@@ -249,8 +249,8 @@ defmodule HybridPlanner.StrategyCoordinator do
   end
 
   @doc "Test if a coordinator is compatible with a domain (checks function signatures).\n"
-  @spec compatible_with_domain?(t(), Domain.Core.t()) :: boolean()
-  def compatible_with_domain?(%__MODULE__{} = coordinator, %Domain.Core{}) do
+  @spec compatible_with_domain?(t(), AriaEngine.Domain.Core.t()) :: boolean()
+  def compatible_with_domain?(%__MODULE__{} = coordinator, %AriaEngine.Domain.Core{}) do
     try do
       is_function(coordinator.planning_fn, 4) and is_function(coordinator.temporal_fn, 3) and
         is_function(coordinator.execution_fn, 4)

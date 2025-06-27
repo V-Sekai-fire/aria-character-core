@@ -8,7 +8,7 @@ defmodule Plan.Core do
   alias AriaEngine.Plan.Utils
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
-  @type todo_item :: task() | goal() | Multigoal.t()
+  @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
   @type solution_node :: %{
@@ -51,14 +51,14 @@ defmodule Plan.Core do
   end
 
   @doc "Main IPyHOP planning function that creates a solution tree to achieve the given todos.\n"
-  @spec plan(Domain.Core.t(), AriaEngine.State.t(), [todo_item()], keyword()) :: plan_result()
+  @spec plan(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), [todo_item()], keyword()) :: plan_result()
   def plan(domain, %AriaEngine.State{} = state, todos, opts \\ []) do
     opts = Keyword.put_new(opts, :replan_depth, @default_replan_depth)
     solution_tree = Utils.create_initial_solution_tree(todos, state)
     ipyhop(domain, state, solution_tree, opts)
   end
 
-  @spec ipyhop(Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) :: plan_result()
+  @spec ipyhop(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) :: plan_result()
   def ipyhop(domain, %AriaEngine.State{} = current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
     max_depth = Keyword.get(opts, :max_depth, @default_max_depth)
@@ -66,7 +66,7 @@ defmodule Plan.Core do
   end
 
   @spec plan_decomposition_loop(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.State.t(),
           solution_tree(),
           integer(),
@@ -281,7 +281,7 @@ defmodule Plan.Core do
   end
 
   @spec try_expand_node(
-          Domain.Core.t(),
+          AriaEngine.Domain.Core.t(),
           AriaEngine.State.t(),
           solution_tree(),
           node_id(),
@@ -327,7 +327,7 @@ defmodule Plan.Core do
           verbose
         )
 
-      %Multigoal{} = multigoal ->
+      %AriaEngine.Multigoal{} = multigoal ->
         NodeExpansion.expand_multigoal_node(
           domain,
           state,
@@ -346,10 +346,10 @@ defmodule Plan.Core do
     action_atom = String.to_atom(task_name)
 
     cond do
-      Domain.has_action?(domain, action_atom) ->
+      AriaEngine.Domain.has_action?(domain, action_atom) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
 
-      Domain.Core.get_durative_action(domain, action_atom) ->
+      AriaEngine.Domain.Core.get_durative_action(domain, action_atom) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
 
       true ->
@@ -367,10 +367,10 @@ defmodule Plan.Core do
 
   defp expand_atom_task(domain, solution_tree, node_id, action_name) do
     cond do
-      Domain.has_action?(domain, action_name) ->
+      AriaEngine.Domain.has_action?(domain, action_name) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
 
-      Domain.Core.get_durative_action(domain, action_name) ->
+      AriaEngine.Domain.Core.get_durative_action(domain, action_name) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
 
       true ->

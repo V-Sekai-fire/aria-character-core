@@ -1,15 +1,15 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Domain.Actions do
+defmodule AriaEngine.Domain.Actions do
   @moduledoc "Core action execution functions for domains.\n"
   alias AriaEngine.State
   require Logger
-  @type t :: Domain.Core.t()
+  @type t :: AriaEngine.Domain.Core.t()
   @type action_name :: atom()
   @type action_fn :: (AriaEngine.State.t(), list() -> AriaEngine.State.t() | false)
   @doc "Adds an action to the domain using the unified API.\n\nActions can be:\n- Functions (for instantaneous actions)\n- DurativeAction structs with duration = 0 (instantaneous actions)\n- DurativeAction structs with duration > 0 (durative actions)\n\nWhen an action is added, it also creates a corresponding task method\nso the action can be used directly in task decompositions.\n\nOptional `metadata` can be provided for the action, e.g., `duration: {min, max}`.\n"
-  @spec add_action(t(), action_name(), action_fn() | Domain.DurativeAction.t(), map()) :: t()
+  @spec add_action(t(), action_name(), action_fn() | AriaEngine.Domain.DurativeAction.t(), map()) :: t()
   def add_action(
         domain,
         name,
@@ -21,7 +21,7 @@ defmodule Domain.Actions do
       is_function(action_or_durative, 2) ->
         add_instantaneous_action(domain, name, action_or_durative, metadata)
 
-      match?(%Domain.DurativeAction{}, action_or_durative) ->
+      match?(%AriaEngine.Domain.DurativeAction{}, action_or_durative) ->
         case action_or_durative.duration do
           {:fixed, 0} ->
             add_instantaneous_action(domain, name, action_or_durative.action_fn, metadata)
@@ -127,7 +127,7 @@ defmodule Domain.Actions do
   def execute_action(%{} = domain, %AriaEngine.State{} = state, action_name, args) do
     case get_action(domain, action_name) do
       nil ->
-        case Domain.Core.get_durative_action(domain, action_name) do
+        case AriaEngine.Domain.Core.get_durative_action(domain, action_name) do
           nil ->
             false
 
@@ -150,7 +150,7 @@ defmodule Domain.Actions do
               %AriaEngine.State{} = new_state -> {:ok, new_state}
             end
 
-          match?(%Domain.DurativeAction{}, action_fn) ->
+          match?(%AriaEngine.Domain.DurativeAction{}, action_fn) ->
             if validate_durative_preconditions(action_fn, state) do
               case action_fn.action_fn.(state, args) do
                 false -> false
@@ -166,7 +166,7 @@ defmodule Domain.Actions do
     end
   end
 
-  @spec validate_durative_preconditions(Domain.DurativeAction.t(), AriaEngine.State.t()) ::
+  @spec validate_durative_preconditions(AriaEngine.Domain.DurativeAction.t(), AriaEngine.State.t()) ::
           boolean()
   defp validate_durative_preconditions(durative_action, state) do
     at_start_valid =

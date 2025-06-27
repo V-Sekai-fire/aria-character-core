@@ -1,9 +1,9 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule Domain.Methods do
+defmodule AriaEngine.Domain.Methods do
   @moduledoc "Handles method-related operations for the planning domain.\n"
-  @type t :: Domain.Core.t()
+  @type t :: AriaEngine.Domain.Core.t()
   @type task_name :: String.t()
   @type method_name :: String.t()
   @type task_method_fn :: (AriaEngine.State.t(), list() -> list() | false)
@@ -23,7 +23,7 @@ defmodule Domain.Methods do
   @spec add_task_method(t(), task_name(), task_method_fn()) :: t()
   def add_task_method(%{} = domain, task_name, method_fn)
       when is_binary(task_name) and is_function(method_fn, 2) do
-    method_name = Domain.Utils.infer_method_name(method_fn)
+    method_name = AriaEngine.Domain.Utils.infer_method_name(method_fn)
     add_task_method(domain, task_name, method_name, method_fn)
   end
 
@@ -37,7 +37,7 @@ defmodule Domain.Methods do
         add_task_method(acc_domain, task_name, method_name, method_fn)
 
       method_fn, acc_domain when is_function(method_fn, 2) ->
-        inferred_method_name = Domain.Utils.infer_method_name(method_fn)
+        inferred_method_name = AriaEngine.Domain.Utils.infer_method_name(method_fn)
         add_task_method(acc_domain, task_name, inferred_method_name, method_fn)
     end)
   end
@@ -56,7 +56,7 @@ defmodule Domain.Methods do
   @spec add_unigoal_method(t(), String.t(), goal_method_fn()) :: t()
   def add_unigoal_method(%{} = domain, goal_type, method_fn)
       when is_binary(goal_type) and is_function(method_fn, 2) do
-    method_name = Domain.Utils.infer_method_name(method_fn)
+    method_name = AriaEngine.Domain.Utils.infer_method_name(method_fn)
     add_unigoal_method(domain, goal_type, method_name, method_fn)
   end
 
@@ -79,7 +79,7 @@ defmodule Domain.Methods do
   @doc "Adds a multigoal method to the domain with automatic name inference.\n"
   @spec add_multigoal_method(t(), goal_method_fn()) :: t()
   def add_multigoal_method(%{} = domain, method_fn) when is_function(method_fn, 2) do
-    method_name = Domain.Utils.infer_method_name(method_fn)
+    method_name = AriaEngine.Domain.Utils.infer_method_name(method_fn)
     add_multigoal_method(domain, method_name, method_fn)
   end
 
