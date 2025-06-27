@@ -338,10 +338,11 @@
 - [ ] Automated testing pipeline with SimpleSkin and SimpleMorph as canonical test cases
 
 ## Compilation Status
-✅ All existing modules compile successfully
-⚠️  Missing core modules cause warnings in Document.to_json/1 and from_json/1
-✅ All tests passing (14/14) for implemented functionality
-🎯 Ready for Phase 1 implementation
+
+- ✅ All existing modules compile successfully
+- ⚠️  Missing core modules cause warnings in Document.to_json/1 and from_json/1
+- ✅ All tests passing (14/14) for implemented functionality
+- 🎯 Ready for Phase 1 implementation
 
 ## ADR References and Dependencies
 
