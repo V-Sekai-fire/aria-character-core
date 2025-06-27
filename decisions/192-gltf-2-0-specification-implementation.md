@@ -36,120 +36,208 @@ Based on the specification analysis, our domain needs to implement:
 
 ## Domain Architecture Requirements
 
-**MANDATORY DEPENDENCIES:**
+**MANDATORY DEPENDENCIES BY APP:**
 
+**`aria_gltf_core`:**
+- **MUST use** minimal dependencies (JSON parsing, validation only)
+- **MUST provide** foundational data structures for all other glTF apps
+
+**`aria_gltf_geometry`:**
 - **MUST use ADR-181** for unified durative action specification and temporal coordination
-- **MUST use aria_gltf for execution** with KHR_interactivity extensions
 - **MUST use Nx** (https://hex.pm/packages/nx) with `{:torchx, "~> 0.9"}` for efficient tensor operations in mesh transformations
+- **MUST depend on** `aria_gltf_core` for data structures
+
+**`aria_gltf_animation`:**
+- **MUST use ADR-181** for unified durative action specification and temporal coordination
+- **MUST integrate with** aria_timeline for temporal planning
+- **MUST depend on** `aria_gltf_core` for data structures
+
+**`aria_gltf_materials`:**
+- **MUST depend on** `aria_gltf_core` and `aria_gltf_images`
+- **SHOULD use Nx** for material property processing when applicable
+
+**`aria_gltf_images`:**
+- **MUST use** `:image` package (https://hex.pm/packages/image) for JPG/PNG read/write operations
+- **MUST use Nx** with `{:torchx, "~> 0.9"}` for image processing and tensor conversion
+- **MUST support** JPG and PNG format read/write with quality/compression control
+
+**`aria_gltf_io`:**
+- **MUST depend on** `aria_gltf_core` and `aria_gltf_images`
+- **MUST support** JSON (.gltf) and binary (.glb) format parsing and export
 
 **Frame-Accurate Mesh State Calculation Pipeline:**
-The system must support precise calculation of mesh states at any given timestamp through efficient tensor operations, enabling frame-accurate animation and transformation processing.
+The system must support precise calculation of mesh states at any given timestamp through efficient tensor operations across `aria_gltf_geometry`, `aria_gltf_animation`, and `aria_gltf_images`, enabling frame-accurate animation processing and visual export capabilities.
 
 ## Decision
 
-We will implement a comprehensive glTF 2.0 parser and data structure system as an independent Elixir application (`aria_gltf`) within the umbrella project, focusing on the specification sections most relevant to character representation and animation.
+We will implement a comprehensive glTF 2.0 system using a **single responsibility app architecture** with six focused Elixir applications within the umbrella project. Each app handles a distinct aspect of glTF processing, enabling independent development, selective deployment, and clear separation of concerns.
+
+### Single Responsibility Apps Architecture
+
+**1. `aria_gltf_core` - Core Data Structures & Validation**
+- **Responsibility**: glTF 2.0 specification data structures, JSON schema validation, core types
+- **Dependencies**: Minimal - only JSON parsing and validation libraries
+- **Why separate**: Pure data layer with no business logic, reusable across other glTF apps
+
+**2. `aria_gltf_geometry` - Mesh & Geometry Processing**
+- **Responsibility**: Mesh primitives, vertex attributes, skinning data, morph targets, tensor operations
+- **Dependencies**: `aria_gltf_core`, Nx, TorchX for efficient mesh transformations
+- **Why separate**: Computationally intensive, different performance characteristics, GPU optimization
+
+**3. `aria_gltf_animation` - Animation System**
+- **Responsibility**: Keyframe interpolation, animation channels/samplers, temporal coordination
+- **Dependencies**: `aria_gltf_core`, ADR-181 for temporal planning integration
+- **Why separate**: Temporal concerns, integration with aria_timeline, distinct from static geometry
+
+**4. `aria_gltf_materials` - Material & Texture System**
+- **Responsibility**: PBR materials, texture management, material property processing
+- **Dependencies**: `aria_gltf_core`, `aria_gltf_images` for texture loading
+- **Why separate**: Rendering concerns, different from geometry/animation, potential GPU integration
+
+**5. `aria_gltf_images` - Image Format Support**
+- **Responsibility**: JPG/PNG read/write, format conversion, Nx tensor integration
+- **Dependencies**: `:image` package, Nx, TorchX for image processing
+- **Why separate**: Image processing is computationally distinct, reusable across apps
+
+**6. `aria_gltf_io` - File Format I/O**
+- **Responsibility**: JSON/GLB parsing, URI resolution, file validation, export functionality
+- **Dependencies**: `aria_gltf_core`, `aria_gltf_images` for frame export
+- **Why separate**: I/O concerns, different error handling patterns, file system dependencies
+
+### App Dependency Flow
+```
+aria_gltf_io → aria_gltf_core ← aria_gltf_geometry
+                    ↑              ↑
+            aria_gltf_animation ← aria_gltf_materials
+                                        ↑
+                                aria_gltf_images
+```
 
 ### Implementation Approach
 
-1. **Independent App**: Create `apps/aria_gltf` as a standalone application
-2. **Modular Architecture**: Separate modules for each major glTF component within the app
-3. **Elixir-Native**: Use Elixir structs and pattern matching for type safety
-4. **Validation-First**: Implement strict validation according to the specification
-5. **Integration-Ready**: Design for seamless integration with existing temporal planning and animation systems
-6. **Clean Dependencies**: Minimal external dependencies, clear API boundaries
+1. **Single Responsibility**: Each app has one clear, well-defined purpose
+2. **Independent Development**: Teams can work on different apps simultaneously
+3. **Selective Deployment**: Only include needed apps (e.g., headless systems might skip materials)
+4. **Clean Dependencies**: Explicit app-to-app dependencies with clear APIs
+5. **Performance Optimization**: Each app optimized for its specific workload
+6. **Testing Isolation**: Easier to test and validate each component independently
 
 ## Implementation Plan
 
-### Phase 1: App Foundation and Core Data Structures (HIGH PRIORITY) ✅
-**App**: `apps/aria_gltf/`
-**Main Module**: `AriaGltf`
+### App 1: `aria_gltf_core` - Core Data Structures (HIGH PRIORITY) ✅
+**Location**: `apps/aria_gltf_core/`
+**Dependencies**: Minimal (JSON parsing, validation)
 
-**App Structure**:
-- [x] Create new Elixir application with `mix new apps/aria_gltf --app aria_gltf`
-- [x] Configure application dependencies and supervision tree
-- [x] Set up comprehensive test suite structure
-- [x] Add to umbrella project configuration
+**Current Status**: ✅ **PARTIALLY COMPLETED** - Existing `aria_gltf` app contains core structures
 
-**Core Data Structures** (`apps/aria_gltf/lib/aria_gltf/`):
-- [x] Asset metadata structure (`asset.ex`)
-- [x] Buffer and BufferView management (`buffer.ex`, `buffer_view.ex`)
-- [x] Accessor data type handling (`accessor.ex`)
-- [x] Scene and Node hierarchy (`scene.ex`, `node.ex`)
-- [x] Document root structure with JSON serialization (`document.ex`)
-- [x] Material system with PBR metallic-roughness (`material.ex`)
-- [x] Mesh primitives and attributes (`mesh.ex`)
-- [x] Texture reference structures (`texture_info.ex`)
+**Required Migration**:
+- [ ] Extract core data structures from existing `aria_gltf` app
+- [ ] Create new `aria_gltf_core` app with minimal dependencies
+- [ ] Migrate: Asset, Buffer, BufferView, Accessor, Scene, Node, Document structures
+- [ ] Add comprehensive JSON schema validation
+- [ ] Establish clean API boundaries for other apps
 
-**Implementation Patterns Needed**:
-- [x] JSON schema validation for glTF files
-- [x] Binary data parsing and alignment
-- [x] Index-based reference resolution
-- [x] Comprehensive error handling with custom error types
-- [x] Struct definitions with proper field types
-- [x] Data validation and type checking
+**Implementation Patterns**:
+- [x] Struct definitions with proper field types ✅
+- [x] Index-based reference resolution ✅
+- [ ] JSON schema validation framework
+- [ ] Comprehensive error handling with custom error types
+- [ ] Data validation and type checking
 
-**Status**: ✅ **COMPLETED** - All core data structures implemented and compiling successfully
+### App 2: `aria_gltf_images` - Image Format Support (HIGH PRIORITY)
+**Location**: `apps/aria_gltf_images/`
+**Dependencies**: `:image`, `nx`, `torchx`
 
-### Phase 2: Geometry and Mesh Processing (HIGH PRIORITY)
-**Module**: `apps/aria_gltf/lib/aria_gltf/geometry/`
+**Required Implementation**:
+- [ ] Create new Elixir application: `mix new apps/aria_gltf_images`
+- [ ] JPG/PNG read functionality using `:image` package
+- [ ] JPG/PNG write functionality with quality/compression control
+- [ ] Nx tensor conversion (image data ↔ tensors)
+- [ ] Format detection and validation
+- [ ] Memory-efficient binary handling
 
-**Missing/Required**:
-- [ ] Mesh primitive parsing (`mesh.ex`, `primitive.ex`)
+**Implementation Patterns**:
+- [ ] Direct binary to Nx tensor conversion
+- [ ] Quality/compression parameter handling
+- [ ] Format conversion between JPG/PNG
+- [ ] Error handling for corrupted/invalid images
+- [ ] Streaming support for large images
+
+### App 3: `aria_gltf_geometry` - Mesh & Geometry Processing (HIGH PRIORITY)
+**Location**: `apps/aria_gltf_geometry/`
+**Dependencies**: `aria_gltf_core`, `nx`, `torchx`
+
+**Required Implementation**:
+- [ ] Create new Elixir application: `mix new apps/aria_gltf_geometry`
+- [ ] Mesh primitive parsing and validation
 - [ ] Vertex attribute handling (POSITION, NORMAL, TEXCOORD, etc.)
-- [ ] Index buffer processing (`indices.ex`)
-- [ ] Skinning data structures (`skin.ex`)
-- [ ] Morph target support (`morph_target.ex`)
+- [ ] Index buffer processing with Nx tensors
+- [ ] Skinning data structures and joint hierarchy
+- [ ] Morph target support with weight management
+- [ ] Efficient tensor operations for mesh transformations
 
-**Implementation Patterns Needed**:
-- [ ] Efficient vertex data access patterns
+**Implementation Patterns**:
+- [ ] Nx-based vertex data access patterns
+- [ ] GPU-accelerated mesh transformations via TorchX
 - [ ] Skin joint hierarchy validation
-- [ ] Morph target weight management
+- [ ] Morph target weight blending algorithms
 - [ ] Geometry validation and bounds checking
 
-### Phase 3: Animation System Integration (MEDIUM PRIORITY)
-**Module**: `apps/aria_gltf/lib/aria_gltf/animation/`
+### App 4: `aria_gltf_animation` - Animation System (MEDIUM PRIORITY)
+**Location**: `apps/aria_gltf_animation/`
+**Dependencies**: `aria_gltf_core`, ADR-181, `aria_timeline`
 
-**Missing/Required**:
-- [ ] Animation channel and sampler structures (`channel.ex`, `sampler.ex`)
-- [ ] Keyframe interpolation (LINEAR, STEP, CUBICSPLINE) (`interpolation.ex`)
+**Required Implementation**:
+- [ ] Create new Elixir application: `mix new apps/aria_gltf_animation`
+- [ ] Animation channel and sampler structures
+- [ ] Keyframe interpolation (LINEAR, STEP, CUBICSPLINE)
 - [ ] Animation target validation (translation, rotation, scale, weights)
-- [ ] Integration API for external timeline systems
+- [ ] Integration API with aria_timeline and ADR-181
+- [ ] Temporal coordination for frame-accurate playback
 
-**Implementation Patterns Needed**:
+**Implementation Patterns**:
 - [ ] Clean API for aria_timeline integration
 - [ ] Quaternion SLERP for rotation interpolation
 - [ ] Morph target weight animation
 - [ ] Animation data validation and optimization
+- [ ] Timeline-based animation control
 
-### Phase 4: Material and Texture System (MEDIUM PRIORITY)
-**Module**: `apps/aria_gltf/lib/aria_gltf/material/`
+### App 5: `aria_gltf_materials` - Material & Texture System (MEDIUM PRIORITY)
+**Location**: `apps/aria_gltf_materials/`
+**Dependencies**: `aria_gltf_core`, `aria_gltf_images`
 
-**Missing/Required**:
-- [ ] PBR metallic-roughness material model (`pbr.ex`)
-- [ ] Texture and sampler management (`texture.ex`, `sampler.ex`)
-- [ ] Image loading and format support (`image.ex`)
-- [ ] Material property validation (`material.ex`)
+**Required Implementation**:
+- [ ] Create new Elixir application: `mix new apps/aria_gltf_materials`
+- [ ] PBR metallic-roughness material model
+- [ ] Texture and sampler management
+- [ ] Material property validation and processing
+- [ ] Integration with `aria_gltf_images` for texture loading
 
-**Implementation Patterns Needed**:
+**Implementation Patterns**:
 - [ ] Texture coordinate mapping
 - [ ] Material property interpolation
 - [ ] Alpha mode handling (OPAQUE, MASK, BLEND)
-- [ ] Image format detection and validation
+- [ ] Texture loading via `aria_gltf_images`
+- [ ] Material validation against glTF specification
 
-### Phase 5: File Format Support and I/O (LOW PRIORITY)
-**Module**: `apps/aria_gltf/lib/aria_gltf/io/`
+### App 6: `aria_gltf_io` - File Format I/O (LOW PRIORITY)
+**Location**: `apps/aria_gltf_io/`
+**Dependencies**: `aria_gltf_core`, `aria_gltf_images`
 
-**Missing/Required**:
-- [ ] JSON glTF file parsing (`parser.ex`)
-- [ ] GLB binary format support (`glb.ex`)
-- [ ] URI resolution (data URIs, relative paths) (`uri.ex`)
-- [ ] Validation and error reporting (`validator.ex`)
+**Required Implementation**:
+- [ ] Create new Elixir application: `mix new apps/aria_gltf_io`
+- [ ] JSON glTF file parsing and validation
+- [ ] GLB binary format support (header, JSON chunk, binary chunk)
+- [ ] URI resolution (data URIs, relative paths, external files)
+- [ ] Export functionality for frame extraction
+- [ ] Comprehensive validation and error reporting
 
-**Implementation Patterns Needed**:
-- [ ] Streaming binary data parsing
-- [ ] Base64 data URI decoding
-- [ ] Comprehensive error handling
+**Implementation Patterns**:
+- [ ] Streaming binary data parsing for large files
+- [ ] Base64 data URI encoding/decoding
 - [ ] File format detection and validation
+- [ ] Export integration with `aria_gltf_images` for frame output
+- [ ] Comprehensive error handling with detailed context
 
 ## Implementation Strategy
 
@@ -190,40 +278,96 @@ Starting with creating the independent application structure and foundation data
 
 ## Success Criteria
 
-- [ ] Independent `aria_gltf` application with clean API
-- [ ] Parse and validate standard glTF 2.0 files
-- [ ] Load character meshes with proper skinning data
-- [ ] Animate characters using glTF animation data
-- [ ] Provide integration API for temporal planning systems
-- [ ] Support PBR materials for realistic rendering
+**Multi-App Architecture:**
+- [ ] Six independent applications with single responsibilities
+- [ ] Clean API boundaries between apps with minimal coupling
+- [ ] Selective deployment capability (use only needed apps)
+- [ ] Independent development and testing of each app
+
+**Core Functionality:**
+- [ ] Parse and validate standard glTF 2.0 files via `aria_gltf_io`
+- [ ] Load character meshes with proper skinning data via `aria_gltf_geometry`
+- [ ] Animate characters using glTF animation data via `aria_gltf_animation`
+- [ ] Support PBR materials for realistic rendering via `aria_gltf_materials`
+- [ ] Handle JPG/PNG read/write operations via `aria_gltf_images`
 - [ ] Handle both JSON (.gltf) and binary (.glb) formats
+
+**Integration Requirements:**
+- [ ] Provide integration API for temporal planning systems (ADR-181)
+- [ ] Frame-accurate mesh state calculation pipeline
+- [ ] Nx/TorchX integration for efficient tensor operations
+- [ ] Export functionality for frame extraction and texture processing
+
+**Quality Assurance:**
 - [ ] Maintain specification compliance for interoperability
-- [ ] Comprehensive test coverage with sample glTF files
-- [ ] Clear documentation and usage examples
+- [ ] Comprehensive test coverage with sample glTF files per app
+- [ ] Performance optimization for large assets and real-time processing
+- [ ] Clear documentation and usage examples for each app
 
 ## Consequences
 
 ### Benefits
-- **Standardization**: Adopts industry-standard 3D format
-- **Interoperability**: Compatible with major 3D tools and engines
+
+**Single Responsibility Architecture:**
+- **Independent Development**: Teams can work on different apps simultaneously without conflicts
+- **Selective Deployment**: Only include needed apps (e.g., headless systems can skip materials/images)
+- **Testing Isolation**: Each app can be tested independently with focused test suites
+- **Clear Boundaries**: Well-defined responsibilities prevent feature creep and coupling
+- **Performance Optimization**: Each app optimized for its specific computational characteristics
+
+**Technical Advantages:**
+- **Standardization**: Adopts industry-standard 3D format with full specification compliance
+- **Interoperability**: Compatible with major 3D tools and engines (Blender, Unity, Unreal)
 - **Rich Animation**: Supports complex character animations and morph targets
-- **Future-Proof**: Extensible format with active development
-- **Modular Design**: Independent app allows for clean separation and reuse
-- **Integration**: Clean API for integration with temporal planning systems
-- **Maintainability**: Focused scope and clear boundaries
+- **Future-Proof**: Extensible format with active development and community support
+- **Tensor Integration**: Nx/TorchX integration enables GPU-accelerated processing
+- **Image Processing**: Native JPG/PNG support without external dependencies
+
+**Integration Benefits:**
+- **Temporal Coordination**: Clean integration with ADR-181 for frame-accurate processing
+- **Modular Reuse**: Apps can be reused across different projects and contexts
+- **API Clarity**: Each app provides focused, well-documented APIs
+- **Dependency Management**: Clear dependency chains prevent circular dependencies
 
 ### Risks
-- **Complexity**: glTF 2.0 is a comprehensive specification
-- **Performance**: Binary data processing may require optimization
-- **Memory Usage**: Large 3D assets may impact system resources
+
+**Architecture Complexity:**
+- **Multi-App Coordination**: Need to manage interactions between six separate applications
+- **API Design**: Requires careful design of inter-app communication patterns
+- **Deployment Complexity**: More apps to configure, deploy, and monitor
+- **Version Synchronization**: Need to coordinate versions across related apps
+
+**Technical Challenges:**
+- **Performance Overhead**: Inter-app communication may introduce latency
+- **Memory Usage**: Large 3D assets may impact system resources across multiple apps
 - **Validation Overhead**: Strict specification compliance adds processing cost
-- **Integration Complexity**: Need to design clean APIs for cross-app communication
+- **Integration Testing**: More complex integration testing across app boundaries
+
+**Implementation Risks:**
+- **Specification Complexity**: glTF 2.0 is a comprehensive specification with many edge cases
+- **Binary Data Processing**: Efficient handling of large binary assets requires optimization
+- **Tensor Operations**: GPU processing may require specialized knowledge and debugging
+- **Image Format Support**: Need to handle various image formats and quality settings
 
 ### Mitigation Strategies
-- Implement core features first, add advanced features incrementally
-- Use streaming and lazy loading for large assets
-- Implement comprehensive test coverage with specification examples
-- Profile and optimize critical data processing paths
+
+**Architecture Management:**
+- **Clear API Contracts**: Define explicit interfaces between apps with comprehensive documentation
+- **Incremental Implementation**: Start with core apps, add advanced features progressively
+- **Integration Testing**: Comprehensive test suites covering cross-app interactions
+- **Version Management**: Coordinated release cycles for related app updates
+
+**Performance Optimization:**
+- **Streaming Support**: Implement lazy loading and streaming for large assets
+- **Caching Strategies**: Cache frequently accessed data to reduce inter-app communication
+- **Profiling**: Regular performance profiling of critical data processing paths
+- **GPU Optimization**: Leverage TorchX for computationally intensive operations
+
+**Quality Assurance:**
+- **Specification Testing**: Test against official glTF sample models and validator
+- **Error Handling**: Comprehensive error handling with detailed context across all apps
+- **Documentation**: Clear usage examples and integration guides for each app
+- **Community Validation**: Leverage existing glTF tools for validation and compatibility testing
 
 ## Related ADRs
 
