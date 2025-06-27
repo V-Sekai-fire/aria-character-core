@@ -221,6 +221,93 @@ defmodule AriaCore.Examples.RestaurantDomain do
     |> AriaCore.State.Relational.set_fact("lunch_announced", "kitchen", true)
   end
 
+  # Additional actions referenced by new unigoal methods
+  @action duration: "PT2M",
+          requires_entities: [
+            %{type: "agent", capabilities: [:management]}
+          ]
+  def mark_chef_available(state, [chef_id]) do
+    state
+    |> AriaCore.State.Relational.set_fact("chef_status", chef_id, "available")
+    |> AriaCore.State.Relational.set_fact("current_task", chef_id, "none")
+  end
+
+  @action duration: "PT10M",
+          requires_entities: [
+            %{type: "equipment", capabilities: [:heating]}
+          ]
+  def heat_equipment(state, [equipment_id, target_temp]) do
+    state
+    |> AriaCore.State.Relational.set_fact("temperature", equipment_id, target_temp)
+    |> AriaCore.State.Relational.set_fact("heating_status", equipment_id, "active")
+  end
+
+  @action duration: "PT5M",
+          requires_entities: [
+            %{type: "agent", capabilities: [:inventory]}
+          ]
+  def retrieve_ingredient(state, [ingredient_id]) do
+    state
+    |> AriaCore.State.Relational.set_fact("ingredient_available", ingredient_id, true)
+    |> AriaCore.State.Relational.set_fact("ingredient_location", ingredient_id, "prep_area")
+    |> AriaCore.State.Relational.set_fact("retrieval_time", ingredient_id, DateTime.utc_now())
+  end
+
+  @action duration: "PT20M",
+          requires_entities: [
+            %{type: "agent", capabilities: [:cleaning]}
+          ]
+  def clean_workspace(state, [workspace_id]) do
+    state
+    |> AriaCore.State.Relational.set_fact("workspace_clean", workspace_id, true)
+    |> AriaCore.State.Relational.set_fact("last_cleaned", workspace_id, DateTime.utc_now())
+    |> AriaCore.State.Relational.set_fact("cleaning_status", workspace_id, "completed")
+  end
+
+  @action duration: "PT3M",
+          requires_entities: [
+            %{type: "agent", capabilities: [:order_management]}
+          ]
+  def complete_order(state, [order_id]) do
+    state
+    |> AriaCore.State.Relational.set_fact("order_status", order_id, "completed")
+    |> AriaCore.State.Relational.set_fact("completion_time", order_id, DateTime.utc_now())
+    |> AriaCore.State.Relational.set_fact("payment_processed", order_id, true)
+  end
+
+  @action duration: "PT1H",
+          requires_entities: [
+            %{type: "agent", capabilities: [:purchasing]}
+          ]
+  def restock_ingredient(state, [ingredient_id, target_level]) do
+    state
+    |> AriaCore.State.Relational.set_fact("inventory_level", ingredient_id, target_level)
+    |> AriaCore.State.Relational.set_fact("last_restocked", ingredient_id, Date.utc_today())
+    |> AriaCore.State.Relational.set_fact("restock_status", ingredient_id, "completed")
+  end
+
+  @action duration: "PT10M",
+          requires_entities: [
+            %{type: "agent", capabilities: [:table_service]}
+          ]
+  def prepare_table(state, [table_id]) do
+    state
+    |> AriaCore.State.Relational.set_fact("table_ready", table_id, true)
+    |> AriaCore.State.Relational.set_fact("table_status", table_id, "available")
+    |> AriaCore.State.Relational.set_fact("setup_time", table_id, DateTime.utc_now())
+  end
+
+  @action duration: "PT15M",
+          requires_entities: [
+            %{type: "agent", capabilities: [:scheduling]}
+          ]
+  def assign_staff_to_shift(state, [shift_id]) do
+    state
+    |> AriaCore.State.Relational.set_fact("shift_covered", shift_id, true)
+    |> AriaCore.State.Relational.set_fact("staff_assigned", shift_id, "confirmed")
+    |> AriaCore.State.Relational.set_fact("assignment_time", shift_id, DateTime.utc_now())
+  end
+
   # ============================================================================
   # UNIGOAL METHODS (SINGLE GOAL ACHIEVEMENT - ADR-181 COMPLIANT)
   # ============================================================================
@@ -446,6 +533,146 @@ defmodule AriaCore.Examples.RestaurantDomain do
     {:ok, [
       # Use the task method for dietary restrictions
       {:special_diet_method, [subject]}
+    ]}
+  end
+
+  # Unigoal method for chef status management
+  @unigoal_method predicate: "chef_status"
+  def chef_status_goal(_state, [subject, value]) when value == "available" do
+    {:ok, [
+      # Prerequisites to make chef available
+      {"current_task", subject, "none"},
+      {"break_time", subject, false},
+
+      # Action to mark chef as available
+      {:mark_chef_available, [subject]},
+
+      # Verification
+      {"chef_status", subject, "available"}
+    ]}
+  end
+
+  # Unigoal method for temperature control
+  @unigoal_method predicate: "temperature"
+  def temperature_goal(_state, [subject, value]) when is_tuple(value) and elem(value, 0) == :>= do
+    {_, target_temp} = value
+
+    {:ok, [
+      # Prerequisites
+      {"equipment_status", subject, "operational"},
+      {"power_supply", subject, "connected"},
+
+      # Action to heat equipment
+      {:heat_equipment, [subject, target_temp]},
+
+      # Verification
+      {"temperature", subject, {:>=, target_temp}}
+    ]}
+  end
+
+  # Unigoal method for ingredient availability
+  @unigoal_method predicate: "ingredient_available"
+  def ingredient_available_goal(_state, [subject, value]) when value == true do
+    {:ok, [
+      # Prerequisites
+      {"storage_location", subject, "known"},
+      {"expiry_date", subject, {:>, Date.utc_today()}},
+
+      # Action to retrieve ingredient
+      {:retrieve_ingredient, [subject]},
+
+      # Verification
+      {"ingredient_available", subject, true},
+      {"ingredient_location", subject, "prep_area"}
+    ]}
+  end
+
+  # Unigoal method for workspace cleanliness
+  @unigoal_method predicate: "workspace_clean"
+  def workspace_clean_goal(_state, [subject, value]) when value == true do
+    {:ok, [
+      # Prerequisites
+      {"cleaning_supplies", "available", true},
+      {"staff_member", "cleaner", "available"},
+
+      # Action to clean workspace
+      {:clean_workspace, [subject]},
+
+      # Verification
+      {"workspace_clean", subject, true},
+      {"last_cleaned", subject, DateTime.utc_now()}
+    ]}
+  end
+
+  # Unigoal method for order status tracking
+  @unigoal_method predicate: "order_status"
+  def order_status_goal(_state, [subject, value]) when value == "completed" do
+    {:ok, [
+      # Prerequisites
+      {"payment_received", subject, true},
+      {"meal_status", subject, "ready"},
+      {"customer_notified", subject, true},
+
+      # Action to complete order
+      {:complete_order, [subject]},
+
+      # Verification
+      {"order_status", subject, "completed"},
+      {"completion_time", subject, DateTime.utc_now()}
+    ]}
+  end
+
+  # Unigoal method for inventory management
+  @unigoal_method predicate: "inventory_level"
+  def inventory_level_goal(_state, [subject, value]) when is_tuple(value) and elem(value, 0) == :>= do
+    {_, target_level} = value
+
+    {:ok, [
+      # Prerequisites
+      {"supplier_contact", subject, "available"},
+      {"budget_approved", "purchasing", true},
+
+      # Action to restock
+      {:restock_ingredient, [subject, target_level]},
+
+      # Verification
+      {"inventory_level", subject, {:>=, target_level}},
+      {"last_restocked", subject, Date.utc_today()}
+    ]}
+  end
+
+  # Unigoal method for table readiness
+  @unigoal_method predicate: "table_ready"
+  def table_ready_goal(_state, [subject, value]) when value == true do
+    {:ok, [
+      # Prerequisites
+      {"table_clean", subject, true},
+      {"utensils_set", subject, true},
+      {"menu_placed", subject, true},
+
+      # Action to prepare table
+      {:prepare_table, [subject]},
+
+      # Verification
+      {"table_ready", subject, true},
+      {"table_status", subject, "available"}
+    ]}
+  end
+
+  # Unigoal method for staff scheduling
+  @unigoal_method predicate: "shift_covered"
+  def shift_covered_goal(_state, [subject, value]) when value == true do
+    {:ok, [
+      # Prerequisites
+      {"staff_available", "pool", {:>=, 1}},
+      {"shift_requirements", subject, "defined"},
+
+      # Action to assign staff
+      {:assign_staff_to_shift, [subject]},
+
+      # Verification
+      {"shift_covered", subject, true},
+      {"staff_assigned", subject, "confirmed"}
     ]}
   end
 
