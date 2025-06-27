@@ -1,7 +1,7 @@
 {
   "factory": "R",
-  "generated_at": "2025-06-27T14:21:55.583126Z",
-  "next_sequence": 157,
+  "generated_at": "2025-06-27T20:45:31.000000Z",
+  "next_sequence": 158,
   "serials": {
     "R25W0014110": {
       "created": "2025-06-23",
@@ -1249,6 +1249,14 @@
       "format": "v1",
       "purpose": "ADR: total order to partial order transformation",
       "sequence": 50,
+      "week": 26
+    },
+    "R25W157TXDX": {
+      "created": "2025-06-27",
+      "file": "todo.md",
+      "format": "v1",
+      "purpose": "AriaGltf TODO tracking document",
+      "sequence": 157,
       "week": 26
     }
   },
