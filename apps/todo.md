@@ -23,10 +23,12 @@ The `apps/todo.md` file serves as the central tracking document for umbrella app
 - **aria_core** - Has external API (`lib/aria_core.ex`), proper structure ✅
 - **aria_timeline** - Has external API (`lib/aria_timeline.ex`), proper structure ✅
 
+- **aria_storage** - Has external API (`lib/aria_storage.ex`), proper structure ✅
+- **aria_town** - Has external API (`lib/aria_town.ex`), proper structure ✅
+
 ### Needs External API (🔧)
 
-- **aria_storage** - Missing `lib/aria_storage.ex` external module
-- **aria_town** - Missing `lib/aria_town.ex` external module
+*All apps now have external APIs! 🎉*
 
 ### Cross-App Dependencies to Update (📋)
 
