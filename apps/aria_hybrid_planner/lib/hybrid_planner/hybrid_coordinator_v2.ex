@@ -36,6 +36,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   require Logger
   alias State
+  alias Plan.Utils
 
   defstruct [
     :metadata,
@@ -359,7 +360,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
       case Plan.Core.plan(domain, state, todos, opts) do
         {:ok, solution_tree} ->
           if verbose > 1 do
-            action_count = AriaEngine.Plan.Utils.plan_cost(solution_tree)
+            action_count = Utils.plan_cost(solution_tree)
             Logger.debug("HTN Planning: Planning successful with #{action_count} actions")
           end
           {:ok, solution_tree}
@@ -389,7 +390,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
       case AriaHybridPlanner.PlanCore.replan(domain, state, solution_tree, fail_node_id, opts) do
         {:ok, new_solution_tree} ->
           if verbose > 1 do
-            action_count = AriaEngine.Plan.Utils.plan_cost(new_solution_tree)
+            action_count = Utils.plan_cost(new_solution_tree)
             Logger.debug("HTN Replanning: Replanning successful with #{action_count} actions")
           end
           {:ok, new_solution_tree}
@@ -416,9 +417,9 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   defp htn_validate_plan(domain, initial_state, solution_tree) do
     try do
-      primitive_actions = AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
+      primitive_actions = Utils.get_primitive_actions_dfs(solution_tree)
 
-      case AriaEngine.Plan.Utils.validate_plan(domain, initial_state, primitive_actions) do
+      case Utils.validate_plan(domain, initial_state, primitive_actions) do
         {:ok, final_state} -> {:ok, final_state}
         {:error, reason} -> {:error, reason}
       end
@@ -515,7 +516,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do
-      action_count = AriaEngine.Plan.Utils.plan_cost(solution_tree)
+      action_count = Utils.plan_cost(solution_tree)
       Logger.debug("IPyHOP execution: Starting execution of plan with #{action_count} actions")
     end
 

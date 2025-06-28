@@ -4,8 +4,7 @@
 defmodule Plan.Core do
   @moduledoc "Core IPyHOP planning algorithm and decomposition loop.\n"
   require Logger
-  alias Plan.{NodeExpansion, Backtracking}
-  alias AriaEngine.Plan.Utils
+  alias Plan.{NodeExpansion, Backtracking, Utils}
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), State.fact_value()}
   @type todo_item :: task() | goal() | Multigoal.t()
@@ -51,7 +50,7 @@ defmodule Plan.Core do
   end
 
   @doc "Main IPyHOP planning function that creates a solution tree to achieve the given todos.\n"
-  @spec plan(AriaEngine.Domain.Core.t(), State.t(), [todo_item()], keyword()) ::
+  @spec plan(Domain.Core.t(), State.t(), [todo_item()], keyword()) ::
           plan_result()
   def plan(domain, state, todos, opts \\ []) do
     opts = Keyword.put_new(opts, :replan_depth, @default_replan_depth)
@@ -59,7 +58,7 @@ defmodule Plan.Core do
     ipyhop(domain, state, solution_tree, opts)
   end
 
-  @spec ipyhop(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), keyword()) ::
+  @spec ipyhop(Domain.Core.t(), State.t(), solution_tree(), keyword()) ::
           plan_result()
   def ipyhop(domain, current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
@@ -68,7 +67,7 @@ defmodule Plan.Core do
   end
 
   @spec plan_decomposition_loop(
-          AriaEngine.Domain.Core.t(),
+          Domain.Core.t(),
           State.t(),
           solution_tree(),
           integer(),
@@ -294,7 +293,7 @@ defmodule Plan.Core do
   end
 
   @spec try_expand_node(
-          AriaEngine.Domain.Core.t(),
+          Domain.Core.t(),
           State.t(),
           solution_tree(),
           node_id(),
@@ -359,10 +358,10 @@ defmodule Plan.Core do
     action_atom = String.to_atom(task_name)
 
     cond do
-      AriaEngine.Domain.has_action?(domain, action_atom) ->
+      Domain.Core.has_action?(domain, action_atom) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
 
-      AriaEngine.Domain.Core.get_durative_action(domain, action_atom) ->
+      Domain.Core.get_durative_action(domain, action_atom) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
 
       true ->
@@ -380,10 +379,10 @@ defmodule Plan.Core do
 
   defp expand_atom_task(domain, solution_tree, node_id, action_name) do
     cond do
-      AriaEngine.Domain.has_action?(domain, action_name) ->
+      Domain.Core.has_action?(domain, action_name) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: false)
 
-      AriaEngine.Domain.Core.get_durative_action(domain, action_name) ->
+      Domain.Core.get_durative_action(domain, action_name) ->
         NodeExpansion.mark_as_primitive(solution_tree, node_id, is_durative: true)
 
       true ->
