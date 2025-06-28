@@ -34,11 +34,14 @@ defmodule AriaEngineCore.Planner do
 
   require Logger
   alias AriaEngineCore.Plan
-  alias AriaHybridPlanner.Core, as: HybridCore
+
+  # Dependency injection for planner adapter
+  @planner_adapter Application.compile_env(:aria_engine_core, :planner_adapter,
+    AriaEngineCore.Adapters.HybridPlannerAdapter)
 
   # Type aliases matching ADR R25W1398085 specification
-  @type domain :: AriaEngine.Domain.t()
-  @type state :: AriaState.t()
+  @type domain :: AriaEngineCore.Domain.t()
+  @type state :: AriaEngineCore.State.t()
   @type todo_item :: AriaEngine.todo_item()
   @type solution_tree :: AriaEngineCore.Plan.solution_tree()
 
@@ -179,16 +182,16 @@ defmodule AriaEngineCore.Planner do
     # Extract goals from solution tree
     goals = Plan.get_goals_from_tree(solution_tree)
 
-    # Create hybrid planner coordinator
-    coordinator = HybridCore.new_coordinator()
+    # Create planner coordinator using injected adapter
+    coordinator = @planner_adapter.new_coordinator()
 
     # Convert domain to hybrid planner format if needed
     hybrid_domain = convert_domain_to_hybrid_format(domain)
 
-    Logger.debug("Using AriaHybridPlanner.Core for planning with #{length(goals)} goals")
+    Logger.debug("Using injected planner adapter for planning with #{length(goals)} goals")
 
-    # Use AriaHybridPlanner.Core for actual planning
-    case HybridCore.plan(coordinator, hybrid_domain, state, goals) do
+    # Use injected planner adapter for actual planning
+    case @planner_adapter.plan(coordinator, hybrid_domain, state, goals) do
       {:ok, hybrid_plan} ->
         # Convert hybrid plan back to solution tree format
         case convert_hybrid_plan_to_solution_tree(hybrid_plan, goals, state) do
@@ -200,7 +203,7 @@ defmodule AriaEngineCore.Planner do
             {:error, reason}
         end
       {:error, reason} ->
-        Logger.error("AriaHybridPlanner.Core planning failed: #{inspect(reason)}")
+        Logger.error("Planner adapter planning failed: #{inspect(reason)}")
         {:error, :planning_failed}
     end
   end
@@ -251,8 +254,8 @@ defmodule AriaEngineCore.Planner do
 
   @spec execute_single_action(domain(), state(), atom() | String.t(), list()) :: {:ok, state()} | {:error, atom()}
   defp execute_single_action(domain, state, action_name, args) do
-    # Use AriaHybridPlanner.Core for action execution
-    coordinator = HybridCore.new_coordinator()
+    # Use injected planner adapter for action execution
+    coordinator = @planner_adapter.new_coordinator()
     hybrid_domain = convert_domain_to_hybrid_format(domain)
 
     # Create a simple plan with just this action
@@ -262,7 +265,7 @@ defmodule AriaEngineCore.Planner do
       "args" => args
     }
 
-    case HybridCore.execute(coordinator, hybrid_domain, state, action_plan) do
+    case @planner_adapter.execute(coordinator, hybrid_domain, state, action_plan) do
       {:ok, new_state} ->
         Logger.debug("Action #{action_name} executed successfully")
         {:ok, new_state}

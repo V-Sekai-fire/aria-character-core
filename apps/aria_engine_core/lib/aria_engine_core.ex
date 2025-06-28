@@ -42,8 +42,8 @@ defmodule AriaEngineCore do
   """
 
   # Type aliases for external API matching ADR R25W1398085
-  @type domain :: AriaEngine.Domain.t()
-  @type state :: AriaState.t()
+  @type domain :: AriaEngineCore.Domain.t()
+  @type state :: AriaEngineCore.State.t()
   @type todo_item :: AriaEngine.todo_item()
   @type solution_tree :: AriaEngineCore.Plan.solution_tree()
 

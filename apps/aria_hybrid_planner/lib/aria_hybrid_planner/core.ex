@@ -72,8 +72,8 @@ defmodule AriaHybridPlanner.Core do
 
   # Import types from existing modules for compatibility
   alias HybridPlanner.HybridCoordinatorV2
-  alias AriaEngine.Domain.Core, as: Domain
-  alias AriaEngine.State
+  alias AriaEngineCore.Domain.Core, as: Domain
+  alias AriaEngineCore.State
 
   @type coordinator :: HybridCoordinatorV2.t()
   @type domain :: Domain.t()

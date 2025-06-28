@@ -15,7 +15,7 @@ defmodule Plan.Blacklisting do
 
 
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
+  @type goal :: {String.t(), String.t(), AriaEngineCore.State.fact_value()}
   @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
   @type plan_step :: {atom() | String.t(), list()}
   @type command :: plan_step()

@@ -422,9 +422,9 @@ defmodule AriaGltf.Material.PbrMetallicRoughness do
   # Helper functions
 
   defp put_if_present(map, _key, nil), do: map
-  defp put_if_present(map, _key, value, default) when value == default, do: map
-  defp put_if_present(map, key, value, transform_fn) when is_function(transform_fn, 1), do: Map.put(map, key, transform_fn.(value))
   defp put_if_present(map, key, value), do: Map.put(map, key, value)
+  defp put_if_present(map, key, value, transform_fn) when is_function(transform_fn, 1), do: Map.put(map, key, transform_fn.(value))
+  defp put_if_present(map, _key, value, default) when value == default, do: map
   defp put_if_present(map, key, value, _default), do: Map.put(map, key, value)
 
   defp parse_texture_info(nil), do: {:ok, nil}
@@ -531,10 +531,10 @@ defmodule AriaGltf.Material.NormalTextureInfo do
 
   # Helper functions
 
-  defp put_if_present(map, _key, nil), do: map
   defp put_if_present(map, _key, value, default) when value == default, do: map
-  defp put_if_present(map, key, value), do: Map.put(map, key, value)
   defp put_if_present(map, key, value, _default), do: Map.put(map, key, value)
+  defp put_if_present(map, _key, nil), do: map
+  defp put_if_present(map, key, value), do: Map.put(map, key, value)
 
   defp get_required_field(map, key) do
     case Map.get(map, key) do
@@ -641,8 +641,8 @@ defmodule AriaGltf.Material.OcclusionTextureInfo do
 
   # Helper functions
 
-  defp put_if_present(map, key, value), do: Map.put(map, key, value)
   defp put_if_present(map, _key, nil), do: map
+  defp put_if_present(map, key, value), do: Map.put(map, key, value)
   defp put_if_present(map, _key, value, default) when value == default, do: map
   defp put_if_present(map, key, value, _default), do: Map.put(map, key, value)
 

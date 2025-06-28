@@ -324,7 +324,7 @@ defmodule Plan.SimpleExecutor do
 
   # Check if an entity is available (not busy)
   @spec entity_available?(State.t(), String.t()) :: boolean()
-  defp entity_available?(state, entity_id) do
+  def entity_available?(state, entity_id) do
     case State.get_fact(state, "status", entity_id) do
       "available" -> true
       _ -> false
