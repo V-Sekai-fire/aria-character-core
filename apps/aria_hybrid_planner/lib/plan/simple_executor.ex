@@ -233,7 +233,7 @@ defmodule Plan.SimpleExecutor do
   # Validate entity requirements for an action according to ADR-181
   @spec validate_entity_requirements(Domain.Core.t(), State.t(), atom(), list(), keyword()) ::
     :ok | {:error, String.t()}
-  defp validate_entity_requirements(domain, state, action_atom, _args, opts) do
+  defp validate_entity_requirements(domain, _state, action_atom, _args, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     # Try to get action metadata from domain

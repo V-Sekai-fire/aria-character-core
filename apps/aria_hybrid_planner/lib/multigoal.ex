@@ -59,7 +59,7 @@ defmodule Multigoal do
     end
   end
 
-  defp goal_satisfied?(goal, _state) do
+  defp goal_satisfied?(_goal, _state) do
     # For other goal types, assume not satisfied for now
     # This can be extended based on actual goal formats used
     false

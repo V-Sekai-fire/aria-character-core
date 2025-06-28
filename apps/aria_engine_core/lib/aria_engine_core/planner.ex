@@ -35,7 +35,6 @@ defmodule AriaEngineCore.Planner do
   require Logger
   alias AriaEngineCore.Plan
   alias AriaHybridPlanner.Core, as: HybridCore
-  alias AriaEngine.Domain.Core, as: DomainCore
 
   # Type aliases matching ADR R25W1398085 specification
   @type domain :: AriaEngine.Domain.t()

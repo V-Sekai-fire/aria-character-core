@@ -133,7 +133,7 @@ defmodule Domain.Core do
   Add a task method to the domain.
   """
   @spec add_task_method(t(), String.t(), String.t(), function()) :: t()
-  def add_task_method(domain, task_name, method_name, method_func) do
+  def add_task_method(domain, task_name, method_name, _method_func) do
     current_methods = Map.get(domain.task_methods, task_name, [])
     updated_methods = [method_name | current_methods]
 
@@ -144,7 +144,7 @@ defmodule Domain.Core do
   Add a unigoal method to the domain.
   """
   @spec add_unigoal_method(t(), String.t(), String.t(), function()) :: t()
-  def add_unigoal_method(domain, predicate, method_name, method_func) do
+  def add_unigoal_method(domain, predicate, method_name, _method_func) do
     current_methods = Map.get(domain.unigoal_methods, predicate, [])
     updated_methods = [method_name | current_methods]
 

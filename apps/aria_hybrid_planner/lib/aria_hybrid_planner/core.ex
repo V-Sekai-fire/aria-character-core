@@ -416,7 +416,7 @@ defmodule AriaHybridPlanner.Core do
   """
   @spec plan_execute_with_recovery(coordinator(), domain(), state(), goals(), keyword()) :: execution_result()
   def plan_execute_with_recovery(coordinator, domain, state, goals, opts \\ []) do
-    max_attempts = Keyword.get(opts, :max_replan_attempts, 3)
+    _max_attempts = Keyword.get(opts, :max_replan_attempts, 3)
 
     case plan_and_execute(coordinator, domain, state, goals, opts) do
       {:ok, final_state} ->

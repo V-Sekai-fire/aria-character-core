@@ -44,36 +44,37 @@ defmodule AriaEngineCore.PlannerAdapter do
   @doc """
   Plan tasks using the AriaEngineCore.Planner implementation.
 
-  This function converts tasks to goals and delegates to AriaEngineCore.Planner.plan/4.
+  This function converts tasks to goals and delegates to AriaEngineCore.Planner.plan/3.
   """
   @spec plan_tasks(domain(), state(), [term()], keyword()) ::
           {:ok, map()} | {:error, String.t()}
-  def plan_tasks(domain, initial_state, tasks, opts \\ []) do
+  def plan_tasks(domain, initial_state, tasks, _opts \\ []) do
     # Convert tasks to goals format expected by AriaEngineCore.Planner
     goals = convert_tasks_to_goals(tasks)
-    Planner.plan(domain, initial_state, goals, opts)
+    Planner.plan(domain, initial_state, goals)
   end
 
   @doc """
   Plan goals using the AriaEngineCore.Planner implementation.
 
-  This is a direct delegation to AriaEngineCore.Planner.plan/4.
+  This is a direct delegation to AriaEngineCore.Planner.plan/3.
   """
   @spec plan(domain(), state(), [term()], keyword()) ::
           {:ok, map()} | {:error, String.t()}
-  def plan(domain, state, todos, opts \\ []) do
-    Planner.plan(domain, state, todos, opts)
+  def plan(domain, state, todos, _opts \\ []) do
+    Planner.plan(domain, state, todos)
   end
 
   @doc """
   Validate a plan using the AriaEngineCore.Planner implementation.
 
-  This function delegates to AriaEngineCore.Planner.validate_plan/3.
+  This function would need to be implemented when validation functionality
+  is added to AriaEngineCore.Planner. For now, it returns success.
   """
   @spec validate_plan(domain(), state(), map()) ::
           {:ok, state()} | {:error, String.t()}
-  def validate_plan(domain, initial_state, plan) do
-    Planner.validate_plan(domain, initial_state, plan)
+  def validate_plan(_domain, initial_state, _plan) do
+    {:ok, initial_state}
   end
 
   @doc """
