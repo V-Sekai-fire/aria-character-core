@@ -29,4 +29,27 @@ Git commits must always group related changes together that serve the same logic
 - Different timelines: Urgent fix + long-term refactoring
 - Independent changes: Multiple unrelated bug fixes in one commit
 
+**Implementation validation:**
+
+- **Compilation test:** All grouped changes should compile together successfully
+- **Functional coherence:** Changes should work together as a complete unit
+- **Rollback safety:** The entire commit should be safely revertible as one operation
+- **Clear narrative:** The commit message should naturally describe all included changes
+
+**Common grouping patterns:**
+
+- **Feature implementation:** New function + tests + documentation + integration
+- **Bug resolution:** Problem fix + test case + related cleanup
+- **Refactoring:** Code restructure + updated imports + test adjustments
+- **API changes:** Interface modification + implementation + caller updates
+- **Configuration updates:** Settings change + related code adjustments
+
+**Split indicators:**
+
+If you find yourself using "and" frequently in your commit message, consider whether the changes should be separate commits:
+
+- "Fix validation logic and add new feature" → Split into two commits
+- "Update tests and fix unrelated bug" → Split into two commits
+- "Refactor module and update documentation" → Usually one commit (related)
+
 This grouping is **mandatory** - commits that mix unrelated concerns must be split into separate, logically coherent commits.
