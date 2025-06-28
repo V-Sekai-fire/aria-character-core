@@ -22,6 +22,64 @@
 
 ---
 
+## Core Planning API
+
+### Primary Functions
+
+The AriaEngine provides two main planning functions with clean, simple return types:
+
+#### Planning Only
+```elixir
+@spec plan(domain(), state(), [goal()]) :: {:ok, solution_tree()} | {:error, String.t()}
+```
+
+Returns the complete solution tree containing:
+- Action sequences and hierarchical decomposition
+- Temporal constraints embedded in durative actions  
+- Metadata within the solution tree structure
+
+#### Planning + Execution with Recovery
+```elixir
+@spec run_lazy(domain(), state(), [goal()]) :: {:ok, final_state()} | {:error, String.t()}
+```
+
+Plans and executes goals with automatic failure recovery, returning the final state after successful execution.
+
+### Usage Examples
+
+**Planning Only (inspect/modify before execution):**
+```elixir
+case AriaEngineCore.plan(domain, state, goals) do
+  {:ok, solution_tree} ->
+    # Inspect solution tree, extract actions, check temporal constraints
+    Logger.info("Plan created with #{count_actions(solution_tree)} actions")
+    # Execute when ready
+    AriaEngineCore.execute(domain, state, solution_tree)
+  {:error, reason} ->
+    Logger.error("Planning failed: #{reason}")
+end
+```
+
+**Direct Planning + Execution:**
+```elixir
+case AriaEngineCore.run_lazy(domain, state, goals) do
+  {:ok, final_state} ->
+    Logger.info("Goals achieved successfully!")
+    final_state
+  {:error, reason} ->
+    Logger.error("Planning or execution failed: #{reason}")
+end
+```
+
+### Type Definitions
+
+```elixir
+@type solution_tree :: map()  # Complete planning result with actions, constraints, and metadata
+@type final_state :: AriaState.t()  # World state after successful execution
+```
+
+---
+
 ## Quick Reference
 
 ### Entity Model Summary
@@ -83,6 +141,20 @@ The AriaEngine planner uses six types of methods for different purposes:
 - **`{:ok, result} | {:error, atom()}`** - Standard Elixir success/failure return pattern
 - **`AriaEngine.todo_item()`** - Work items that can be planned and executed by the system
 - **`subject()`, `object()`** - Type aliases for goal components (typically strings or atoms)
+
+### Primary API Functions
+
+```elixir
+# Planning only - returns solution tree
+@spec plan(domain(), state(), [goal()]) :: {:ok, solution_tree()} | {:error, String.t()}
+
+# Planning + execution - returns final state  
+@spec run_lazy(domain(), state(), [goal()]) :: {:ok, final_state()} | {:error, String.t()}
+```
+
+**Key Types:**
+- `solution_tree()` - Complete planning result with actions, constraints, and metadata
+- `final_state()` - World state after successful execution
 
 ### Required Function Attributes
 
@@ -536,7 +608,7 @@ end
 
 ### Usage Patterns
 
-**Planning with Solution Tree:**
+**Planning Only (inspect before execution):**
 
 ```elixir
 domain = MyApp.Domains.CookingDomain.create_domain()
@@ -545,29 +617,49 @@ domain = MyApp.Domains.CookingDomain.create_domain()
 initial_state = AriaState.new()
 {:ok, state_with_entities} = setup_kitchen_scenario(initial_state, [])
 
-# Plan with goals
-{:ok, solution_tree, plan} = AriaEngine.plan_with_tree(domain, state_with_entities, [
+# Plan with goals - returns solution tree
+case AriaEngineCore.plan(domain, state_with_entities, [
   {:cook_meal, ["pasta"]},
   {"location", "chef_1", "kitchen"}
-])
+]) do
+  {:ok, solution_tree} ->
+    Logger.info("Plan created successfully")
+    # Inspect solution tree, then execute when ready
+    AriaEngineCore.execute(domain, state_with_entities, solution_tree)
+  {:error, reason} ->
+    Logger.error("Planning failed: #{reason}")
+end
+```
 
-# Execute with replanning on failure
-case AriaEngine.run_lazy_refineahead(domain, state_with_entities, solution_tree) do
-  {:ok, final_state} -> Logger.info("Execution completed")
-  {:error, reason} -> Logger.error("Execution failed: #{reason}")
+**Direct Planning + Execution:**
+
+```elixir
+# Plan and execute in one step with automatic failure recovery
+case AriaEngineCore.run_lazy(domain, state_with_entities, [
+  {:cook_meal, ["pasta"]},
+  {"location", "chef_1", "kitchen"}
+]) do
+  {:ok, final_state} -> 
+    Logger.info("Goals achieved successfully!")
+    final_state
+  {:error, reason} -> 
+    Logger.error("Planning or execution failed: #{reason}")
 end
 ```
 
 **Commands vs Actions:**
 
 ```elixir
-# Planning-time: Actions assume success
-{:ok, plan} = AriaEngine.plan(domain, state, [{:cook_meal, ["pasta"]}])
+# Planning-time: Actions assume success for planning purposes
+{:ok, solution_tree} = AriaEngineCore.plan(domain, state, [{:cook_meal, ["pasta"]}])
 
-# Execution-time: Commands handle failures
-case AriaEngine.execute_command(domain, state, :cook_meal_command, ["pasta"]) do
-  {:ok, new_state} -> Logger.info("Success")
-  {:error, :oven_malfunction} -> Logger.warn("Replanning needed")
+# Execution-time: Commands handle real-world failures
+@command true
+def cook_meal_command(state, [meal_id]) do
+  case attempt_cooking_with_failure_chance(state, meal_id) do
+    {:ok, new_state} -> {:ok, new_state}
+    {:error, :oven_malfunction} -> {:error, :oven_malfunction}  # Triggers replanning
+  end
 end
 ```
 
