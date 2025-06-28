@@ -5,8 +5,9 @@ The `apps/todo.md` file serves as the central tracking document for umbrella app
 ## Restructuring Progress
 
 ### Compliant Apps (✅)
+
 - **aria_serial** - Has external API (`lib/aria_serial.ex`), proper structure
-- **aria_membrane_pipeline** - Has external API (`lib/aria_membrane_pipeline.ex`), proper structure  
+- **aria_membrane_pipeline** - Has external API (`lib/aria_membrane_pipeline.ex`), proper structure
 - **aria_auth** - Has external API (`lib/aria_auth.ex`), proper structure
 - **aria_engine_core** - Has external API (`lib/aria_engine_core.ex`), proper structure
 - **aria_state** - Has external API (`lib/aria_state.ex`), proper structure
@@ -19,22 +20,25 @@ The `apps/todo.md` file serves as the central tracking document for umbrella app
 - **aria_minizinc_multiply** - Has external API (`lib/aria_minizinc_multiply.ex`), proper structure
 - **aria_minizinc_stn** - Has external API (`lib/aria_minizinc_stn.ex`), proper structure
 - **ast_migrate** - Has external API (`lib/ast_migrate.ex`), proper structure
+- **aria_core** - Has external API (`lib/aria_core.ex`), proper structure ✅
+- **aria_timeline** - Has external API (`lib/aria_timeline.ex`), proper structure ✅
 
 ### Needs External API (🔧)
-- **aria_core** - Missing `lib/aria_core.ex` external module
-- **aria_timeline** - Missing `lib/aria_timeline.ex` external module  
+
 - **aria_storage** - Missing `lib/aria_storage.ex` external module
 - **aria_town** - Missing `lib/aria_town.ex` external module
 
 ### Cross-App Dependencies to Update (📋)
+
 - Update AriaEngine calls to use AriaCore external API (once created)
-- Migrate AriaHybridPlanner to use AriaTimeline external API (once created)
+- Migrate AriaHybridPlanner to use AriaTimeline external API ✅ (API now available)
 - Review and update any direct internal module imports across apps
 - Ensure all cross-app communication goes through external APIs only
 
 ## Implementation Priority (Leaf Apps First)
 
 ### Phase 1: Infrastructure Apps (HIGH PRIORITY)
+
 These apps are dependencies for other apps and should be restructured first:
 
 1. **aria_core** - Core domain functionality, used by multiple apps
@@ -42,11 +46,13 @@ These apps are dependencies for other apps and should be restructured first:
 3. **aria_serial** - Already compliant ✅
 
 ### Phase 2: Storage and Data Apps (MEDIUM PRIORITY)
+
 4. **aria_storage** - Storage abstraction layer
-5. **aria_timeline** - Timeline functionality used by planners
+5. **aria_timeline** - Already compliant ✅
 6. **aria_timeline_intervals** - Already compliant ✅
 
 ### Phase 3: Planning and Execution Apps (MEDIUM PRIORITY)
+
 7. **aria_hybrid_planner** - Already compliant ✅
 8. **aria_engine_core** - Already compliant ✅
 9. **aria_minizinc_executor** - Already compliant ✅
@@ -55,6 +61,7 @@ These apps are dependencies for other apps and should be restructured first:
 12. **aria_minizinc_stn** - Already compliant ✅
 
 ### Phase 4: Application Layer Apps (LOW PRIORITY)
+
 13. **aria_town** - NPC and town management
 14. **aria_gltf** - Already compliant ✅
 15. **aria_auth** - Already compliant ✅
@@ -65,6 +72,7 @@ These apps are dependencies for other apps and should be restructured first:
 ## Standard Elixir App Pattern Requirements
 
 ### Mandatory App Structure
+
 ```
 apps/app_name/
 ├── lib/
@@ -78,6 +86,7 @@ apps/app_name/
 ```
 
 ### External Module Responsibilities
+
 - **Public API definition:** All functions that other apps need to call
 - **Documentation:** Clear module documentation with examples
 - **Delegation:** Delegate to internal modules for implementation
@@ -86,6 +95,7 @@ apps/app_name/
 ### Cross-App Communication Rules
 
 **FORBIDDEN patterns:**
+
 ```elixir
 # BAD: Direct import of internal modules from other apps
 alias AriaCore.Domain.SomeInternalModule
@@ -96,6 +106,7 @@ AriaCore.Domain.SomeInternalModule.private_function()
 ```
 
 **REQUIRED patterns:**
+
 ```elixir
 # GOOD: Only use external module APIs
 alias AriaCore
@@ -123,6 +134,7 @@ AriaEngine.execute_plan(plan)
 **Rationale:** aria_core is a foundational app that other apps depend on. Creating its external API first will establish the pattern and enable other apps to migrate their dependencies.
 
 **Next Steps:**
+
 1. Analyze aria_core internal modules to identify public functions
 2. Create `lib/aria_core.ex` with comprehensive external API
 3. Document the API with clear examples
@@ -140,6 +152,7 @@ AriaEngine.execute_plan(plan)
 ## Enforcement Rules
 
 **Code review requirements:**
+
 - **No internal module imports:** Cross-app imports must only use external modules
 - **API completeness:** External modules must provide all needed functionality
 - **Documentation quality:** External APIs must have clear documentation and examples
