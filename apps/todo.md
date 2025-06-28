@@ -32,10 +32,12 @@ The `apps/todo.md` file serves as the central tracking document for umbrella app
 
 ### Cross-App Dependencies to Update (📋)
 
-- Update AriaEngine calls to use AriaCore external API (once created)
+- Update AriaEngine calls to use AriaCore external API ✅ (API now available)
 - Migrate AriaHybridPlanner to use AriaTimeline external API ✅ (API now available)
 - Review and update any direct internal module imports across apps
 - Ensure all cross-app communication goes through external APIs only
+
+**Status:** All external APIs are now available for cross-app communication migration.
 
 ## Implementation Priority (Leaf Apps First)
 
@@ -131,17 +133,18 @@ AriaEngine.execute_plan(plan)
 6. **Remove internal imports:** Eliminate direct imports of internal modules
 7. **Update todo file:** Mark app as compliant and document API availability
 
-### Current Focus: aria_core External API Creation
+### Current Focus: Cross-App Dependency Migration
 
-**Rationale:** aria_core is a foundational app that other apps depend on. Creating its external API first will establish the pattern and enable other apps to migrate their dependencies.
+**Rationale:** All external APIs are now complete. The next phase is migrating cross-app dependencies to use external APIs exclusively instead of internal module imports.
 
 **Next Steps:**
 
-1. Analyze aria_core internal modules to identify public functions
-2. Create `lib/aria_core.ex` with comprehensive external API
-3. Document the API with clear examples
-4. Test the external API functionality
-5. Update dependent apps to use the new external API
+1. Audit all apps for direct internal module imports from other apps
+2. Replace internal imports with external API calls
+3. Remove any remaining `alias AppName.Internal.Module` patterns
+4. Ensure all cross-app communication uses `alias AppName` pattern
+5. Test that all functionality works through external APIs
+6. Update documentation to reflect the new API-based architecture
 
 ## Benefits
 
