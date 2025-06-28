@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaTimeline.TimelineCore.AgentEntity do
   @moduledoc """
   Mock implementation of AriaTimeline.TimelineCore.AgentEntity for compilation.

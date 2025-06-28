@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngineCore.Domain.Actions do
   @moduledoc """
   Mock implementation of AriaEngineCore.Domain.Actions for compilation.

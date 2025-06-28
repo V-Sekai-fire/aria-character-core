@@ -98,10 +98,12 @@ The AriaEngine planner uses six types of methods for different purposes:
 ```
 
 **Key Types:**
+
 - `solution_tree()` - Complete planning result with actions, constraints, and metadata
 - `final_state()` - World state after successful execution
 
 **API Design Rationale:**
+
 - `plan/3` only returns solution tree since planning doesn't modify state
 - `run_lazy/3` and `run_lazy_tree/3` return both final state and solution tree since execution modifies state
 

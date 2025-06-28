@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngineCore.Domain.Utils do
   @moduledoc """
   Mock implementation of AriaEngineCore.Domain.Utils for compilation.

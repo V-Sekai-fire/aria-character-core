@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaGltf.Image do
   @moduledoc """
   Mock implementation of AriaGltf.Image for compilation.

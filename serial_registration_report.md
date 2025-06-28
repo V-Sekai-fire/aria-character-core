@@ -10,15 +10,17 @@ All aria_serials have been successfully checked and registered. The verification
 ## Issues Found and Resolved
 
 ### 1. Missing Serial Registration: R25W159DECX ✅ FIXED
+
 - **File:** `decisions/R25W159DECX-port-v-sekai-many-bone-ik-nx-acceleration.md`
 - **Issue:** Serial was present in filename but not registered in JSON storage
-- **Resolution:** 
+- **Resolution:**
   - Generated proper serial using `mix serial.create`
   - Replaced placeholder `R25W159XXXX` with actual serial `R25W159DECX`
   - Added registration entry to `apps/aria_serial/priv/serial_data/2025/week_26/R_series.json`
   - Removed old placeholder file
 
 ### 2. Missing Serial Registration: R25W1652B8A ✅ FIXED
+
 - **File:** `decisions/R25W1652B8A-aria-hybrid-planner-unification.md`
 - **Issue:** Serial was present in filename but not registered in JSON storage
 - **Resolution:** Added registration entry to `apps/aria_serial/priv/serial_data/2025/week_26/R_series.json`
@@ -54,5 +56,6 @@ Orphaned registrations: 9
 ## Verification Command
 
 To re-verify serial registrations at any time:
+
 ```bash
 elixir verify_serial_registrations.exs

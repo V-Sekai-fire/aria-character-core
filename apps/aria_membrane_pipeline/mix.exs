@@ -31,15 +31,15 @@ defmodule AriaMembranePipeline.MixProject do
       {:aria_hybrid_planner, path: "../aria_hybrid_planner"},
       {:aria_minizinc_goal, path: "../aria_minizinc_goal"},
 
-      # Membrane Framework
-      {:membrane_core, "~> 1.0"},
-      {:membrane_file_plugin, "~> 0.17.0"},
-
       # External dependencies
       {:jason, "~> 1.4"},
       {:telemetry, "~> 1.2"},
       {:porcelain, "~> 2.0"},
-      {:mox, "~> 1.0", only: :test}
+
+      # Membrane Framework dependencies
+      {:membrane_core, "~> 1.0"},
+      {:membrane_file_plugin, "~> 0.17.0"},
+      {:membrane_hackney_plugin, "~> 0.11.0"}
     ]
   end
 end

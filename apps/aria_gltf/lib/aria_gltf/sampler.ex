@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaGltf.Sampler do
   @moduledoc """
   Mock implementation of AriaGltf.Sampler for compilation.

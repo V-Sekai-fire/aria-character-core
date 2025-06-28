@@ -59,7 +59,7 @@ defmodule AriaEngineCore.Behaviours.PlannerBehaviour do
 
       case MyPlannerAdapter.plan(coordinator, domain, state, goals) do
         {:ok, plan} -> IO.puts("Planning successful")
-        {:error, reason} -> IO.puts("Planning failed: #{reason}")
+        {:error, _reason} -> IO.puts("Planning failed")
       end
   """
   @callback plan(coordinator(), domain(), state(), goals()) :: {:ok, plan()} | {:error, atom()}
@@ -83,7 +83,7 @@ defmodule AriaEngineCore.Behaviours.PlannerBehaviour do
 
       case MyPlannerAdapter.execute(coordinator, domain, state, plan) do
         {:ok, final_state} -> IO.puts("Execution successful")
-        {:error, reason} -> IO.puts("Execution failed: #{reason}")
+        {:error, _reason} -> IO.puts("Execution failed")
       end
   """
   @callback execute(coordinator(), domain(), state(), plan()) :: {:ok, state()} | {:error, atom()}

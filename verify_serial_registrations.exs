@@ -1,5 +1,8 @@
 #!/usr/bin/env elixir
 
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 # Comprehensive Aria Serial Registration Verification Script
 # Checks all @serial_number declarations against JSON registry storage
 

@@ -2,97 +2,52 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Membrane.Format.PlanningParams do
-  @moduledoc "Membrane format for converted planning parameters.\n\nThis format represents the converted planning parameters that are ready\nfor execution by the HybridCoordinator. It contains the domain, state,\ngoals, and options needed for planning execution.\n"
-  defstruct [:domain, :state, :goals, :options, :request_id, :conversion_metadata]
+  @moduledoc """
+  Format definition for planning parameters flowing through the pipeline.
+
+  This format represents the transformed MCP request data that is ready
+  for processing by the hybrid planner.
+  """
 
   @type t :: %__MODULE__{
-          domain: AriaEngine.Domain.Core.t() | nil,
-          state: AriaEngine.State.t() | nil,
-          goals: [term()],
-          options: keyword(),
+          goal: String.t(),
+          context: map(),
+          constraints: list(),
           request_id: String.t(),
-          conversion_metadata: map()
+          timestamp: DateTime.t()
         }
-  @doc "Validates a planning params format structure.\n\n## Examples\n\n    iex> params = %Membrane.Format.PlanningParams{\n    ...>   domain: nil,\n    ...>   state: nil,\n    ...>   goals: [],\n    ...>   options: [],\n    ...>   request_id: \"req_123\",\n    ...>   conversion_metadata: %{}\n    ...> }\n    iex> Membrane.Format.PlanningParams.valid?(params)\n    true\n"
+
+  defstruct [
+    :goal,
+    :context,
+    :constraints,
+    :request_id,
+    :timestamp
+  ]
+
+  @doc """
+  Creates a new PlanningParams format struct.
+  """
+  @spec new(String.t(), map(), list(), String.t()) :: t()
+  def new(goal, context, constraints, request_id) do
+    %__MODULE__{
+      goal: goal,
+      context: context,
+      constraints: constraints,
+      request_id: request_id,
+      timestamp: DateTime.utc_now()
+    }
+  end
+
+  @doc """
+  Validates that the PlanningParams has all required fields.
+  """
   @spec valid?(t()) :: boolean()
   def valid?(%__MODULE__{} = params) do
-    is_list(params.goals) and is_list(params.options) and is_binary(params.request_id) and
-      is_map(params.conversion_metadata)
-  end
-
-  def valid?(_) do
-    false
-  end
-
-  @doc "Creates planning params from converted domain, state, and goals.\n\n## Examples\n\n    iex> metadata = %{converted_at: DateTime.utc_now()}\n    iex> params = Membrane.Format.PlanningParams.create(\n    ...>   nil, nil, [], [], \"req_123\", metadata\n    ...> )\n    iex> params.request_id\n    \"req_123\"\n"
-  @spec create(
-          AriaEngine.Domain.Core.t() | nil,
-          AriaEngine.State.t() | nil,
-          [term()],
-          keyword(),
-          String.t(),
-          map()
-        ) :: t()
-  def create(domain, state, goals, options, request_id, conversion_metadata) do
-    %__MODULE__{
-      domain: domain,
-      state: state,
-      goals: goals,
-      options: options,
-      request_id: request_id,
-      conversion_metadata: conversion_metadata
-    }
-  end
-
-  @doc "Creates error planning params when conversion fails.\n\n## Examples\n\n    iex> params = Membrane.Format.PlanningParams.create_error(\n    ...>   \"req_123\", \"Invalid input format\"\n    ...> )\n    iex> params.options[:error]\n    true\n"
-  @spec create_error(String.t(), String.t()) :: t()
-  def create_error(request_id, error_reason) do
-    %__MODULE__{
-      domain: nil,
-      state: nil,
-      goals: [],
-      options: [error: true],
-      request_id: request_id,
-      conversion_metadata: %{
-        error: true,
-        error_reason: error_reason,
-        converted_at: DateTime.utc_now()
-      }
-    }
-  end
-
-  @doc "Checks if the planning params represents an error state.\n\n## Examples\n\n    iex> params = Membrane.Format.PlanningParams.create_error(\n    ...>   \"req_123\", \"test error\"\n    ...> )\n    iex> Membrane.Format.PlanningParams.error?(params)\n    true\n"
-  @spec error?(t()) :: boolean()
-  def error?(%__MODULE__{options: options}) do
-    Keyword.get(options, :error, false)
-  end
-
-  @doc "Gets the error reason from error planning params.\n\n## Examples\n\n    iex> params = Membrane.Format.PlanningParams.create_error(\n    ...>   \"req_123\", \"test error\"\n    ...> )\n    iex> Membrane.Format.PlanningParams.error_reason(params)\n    \"test error\"\n"
-  @spec error_reason(t()) :: String.t() | nil
-  def error_reason(%__MODULE__{conversion_metadata: metadata}) do
-    Map.get(metadata, :error_reason)
-  end
-
-  @doc "Converts planning params to a map for serialization.\n"
-  @spec to_map(t()) :: map()
-  def to_map(%__MODULE__{} = params) do
-    %{
-      "domain" =>
-        if params.domain do
-          inspect(params.domain)
-        else
-          nil
-        end,
-      "state" =>
-        if params.state do
-          inspect(params.state)
-        else
-          nil
-        end,
-      "goals" => params.goals,
-      "options" => params.options,
-      "request_id" => params.request_id,
-      "conversion_metadata" => params.conversion_metadata
-    }
+    not is_nil(params.goal) and
+      not is_nil(params.context) and
+      not is_nil(params.constraints) and
+      not is_nil(params.request_id) and
+      not is_nil(params.timestamp)
   end
 end

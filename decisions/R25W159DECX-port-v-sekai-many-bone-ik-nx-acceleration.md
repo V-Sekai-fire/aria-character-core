@@ -249,11 +249,13 @@ apps/aria_many_bone_ik/
 ### Multi-Backend Nx Strategy
 
 **Backend Configuration:**
+
 - **TorchX**: Primary backend for GPU acceleration (CUDA/ROCm)
 - **EXLA**: XLA/TPU support for high-performance computing
 - **BinaryBackend**: CPU fallback for maximum compatibility
 
 **Runtime Backend Selection:**
+
 ```elixir
 # Automatic backend detection and selection
 backend = case Nx.default_backend() do
@@ -267,6 +269,7 @@ optimal_backend = AriaIK.Performance.select_optimal_backend(skeleton_complexity)
 ```
 
 **Graceful Degradation:**
+
 - GPU unavailable → Fall back to EXLA
 - EXLA unavailable → Fall back to BinaryBackend
 - Maintain functionality across all configurations
@@ -274,16 +277,19 @@ optimal_backend = AriaIK.Performance.select_optimal_backend(skeleton_complexity)
 ### Integration with aria_gltf
 
 **Export Pipeline:**
+
 ```
 IK Solution → Joint Matrices → AriaGltf.Skin → Animation Tracks → GLTF2 Export
 ```
 
 **Import Pipeline:**
+
 ```
 GLTF2 Import → AriaGltf.Skin → Joint Hierarchy → IK Chain Setup → Ready for Solving
 ```
 
 **Real-time Integration:**
+
 - Live IK solving feeds directly into aria_gltf export pipeline
 - Frame-accurate animation generation
 - Capsule visualization for debugging and constraint display
@@ -372,12 +378,14 @@ GLTF2 Import → AriaGltf.Skin → Joint Hierarchy → IK Chain Setup → Ready 
 ## Dependencies
 
 **External Dependencies:**
+
 - **Nx**: Numerical computing foundation
 - **TorchX**: GPU acceleration backend
 - **EXLA**: XLA/TPU optimization backend
 - **aria_gltf**: GLTF2 import/export integration
 
 **Reference Implementation:**
+
 - **V-Sekai many_bone_ik**: https://github.com/V-Sekai/many_bone_ik
 - **glTF Sample Assets**: SimpleSkin.gltf and SimpleMorph.gltf for validation
 

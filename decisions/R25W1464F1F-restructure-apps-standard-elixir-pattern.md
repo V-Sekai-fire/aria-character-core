@@ -53,11 +53,13 @@ Restructure all apps to follow the standard Elixir pattern:
 ## Implementation Plan
 
 ### Phase 1: Analyze Current Structure
+
 - [x] Identify all apps with mixed module patterns
 - [ ] Document current module dependencies
 - [ ] Create migration mapping for each app
 
 ### Phase 2: AriaEngineCore Restructuring
+
 - [ ] Move `aria_engine/domain.ex` → `aria_engine_core/domain.ex`
 - [ ] Move `aria_engine/state.ex` → `aria_engine_core/state.ex`
 - [ ] Update all import statements
@@ -65,15 +67,18 @@ Restructure all apps to follow the standard Elixir pattern:
 - [ ] Test compilation and functionality
 
 ### Phase 3: AriaGltf Restructuring
+
 - [ ] Verify AriaGltf follows standard pattern (appears correct)
 - [ ] Fix any inconsistencies found
 
 ### Phase 4: Other Apps
+
 - [ ] AriaHybridPlanner: Check for mixed patterns
 - [ ] AriaTimeline: Check for mixed patterns
 - [ ] All other apps: Systematic review and restructuring
 
 ### Phase 5: Validation
+
 - [ ] All apps compile successfully
 - [ ] All tests pass
 - [ ] No broken module references
@@ -82,12 +87,14 @@ Restructure all apps to follow the standard Elixir pattern:
 ## Module Migration Mapping
 
 ### AriaEngineCore
+
 ```
 aria_engine/domain.ex → aria_engine_core/domain.ex
 aria_engine/state.ex → aria_engine_core/state.ex
 ```
 
 ### Module Name Changes
+
 ```
 AriaEngine.Domain → AriaEngineCore.Domain
 AriaEngine.State → AriaEngineCore.State
@@ -104,14 +111,17 @@ AriaEngine.State → AriaEngineCore.State
 ## Risks and Mitigation
 
 ### Risk: Breaking Changes
+
 - **Impact**: Existing code may break due to module renames
 - **Mitigation**: Systematic find-and-replace with compilation verification
 
 ### Risk: Complex Dependencies
+
 - **Impact**: Apps may have circular or complex dependencies
 - **Mitigation**: Document dependencies before changes, update incrementally
 
 ### Risk: Test Failures
+
 - **Impact**: Tests may fail due to module path changes
 - **Mitigation**: Update test imports alongside module moves
 

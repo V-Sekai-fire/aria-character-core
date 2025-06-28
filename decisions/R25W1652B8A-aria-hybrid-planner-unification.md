@@ -60,6 +60,7 @@ Unify the `aria_hybrid_planner` app into a coherent, single-API architecture tha
 **Priority:** HIGH
 
 - [ ] Restructure modules into logical hierarchy:
+
   ```
   lib/aria_hybrid_planner/
   ├── core.ex                    # Main unified API
@@ -201,6 +202,7 @@ Following the "call site → leaf node testing pattern":
 ### ✅ **Completed Work**
 
 **Phase 1: Unified Core API**
+
 - ✅ Created `AriaHybridPlanner.Core` as single API entry point
 - ✅ Consolidated planning, execution, and replanning functions
 - ✅ Maintained backward compatibility with existing interfaces
@@ -209,6 +211,7 @@ Following the "call site → leaf node testing pattern":
 ### 🔧 **Current Work**
 
 **Phase 2: Module Reorganization**
+
 - 🔄 Restructuring module hierarchy
 - 🔄 Moving existing modules to new locations
 - 🔄 Updating internal references

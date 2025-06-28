@@ -2,10 +2,16 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Membrane.MCPSink do
-  @moduledoc "Membrane Sink element for MCP responses.\n\nThis sink receives processed MCP responses and can store them,\nlog them, or forward them to external systems.\n"
+  @moduledoc """
+  Production Membrane Sink element for MCP responses.
+
+  This sink receives processed MCP responses and can store them,
+  log them, or forward them to external systems.
+  """
   use Membrane.Sink
   require Logger
-  def_input_pad(:input, accepted_format: _any, flow_control: :auto)
+  alias Membrane.Format.MCPResponse
+  def_input_pad(:input, accepted_format: MCPResponse, flow_control: :manual)
 
   def_options(
     storage_mode: [

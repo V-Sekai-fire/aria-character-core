@@ -152,12 +152,14 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 ### R25W1398085 Compliance ⚠️
 
 **Partial Compliance Achieved:**
+
 - [x] Action vs command distinction implemented
 - [x] Basic entity and capability validation framework
 - [x] IPyHOP execution pattern alignment
 - [x] AriaCore.ActionAttributes integration
 
 **Critical Compliance Gaps:**
+
 - [ ] **Missing Method Types**: Only @action/@command implemented, missing:
   - [ ] @task_method support for complex workflow decomposition
   - [ ] @unigoal_method support for single predicate goals
@@ -227,6 +229,7 @@ This implementation aligns with:
 ### ✅ **Completed Work**
 
 **Core Architecture Implemented:**
+
 - `Plan.SimpleExecutor` module with IPyHOP-style linear execution
 - `Plan.Blacklisting` with proper planning/execution separation
 - `HybridCoordinatorV2` integration using new executor
@@ -234,6 +237,7 @@ This implementation aligns with:
 - `@command` attribute support in `AriaCore.ActionAttributes`
 
 **Major Features Working:**
+
 - Linear execution with fail-fast behavior
 - Execution trace generation for debugging
 - Method vs command blacklisting separation
@@ -241,6 +245,7 @@ This implementation aligns with:
 - Legacy compatibility maintained
 
 **Code Quality Fixes (2025-06-27):**
+
 - ✅ All compilation warnings resolved (commit 24f5e1f1)
 - ✅ Type violations in pattern matching fixed
 - ✅ Unused alias warnings eliminated across all modules
@@ -250,15 +255,18 @@ This implementation aligns with:
 ### ⚠️ **Outstanding Issues**
 
 **Incomplete Implementation:**
+
 - Entity validation has placeholder TODOs in `Plan.SimpleExecutor`
 - Domain API integration gaps (`get_action_metadata/2` always returns error)
 - Missing comprehensive test coverage for new execution pattern
 
 **Environmental Issues (Separate from Code):**
+
 - MiniZinc configuration issue (`--quiet` flag not recognized)
 - Test failures due to external tooling, not hybrid planner implementation
 
 **Specific Technical Debt:**
+
 ```elixir
 # In Plan.SimpleExecutor.get_action_metadata/2
 {:error, "metadata_not_available"}  # Always fails - needs domain API
@@ -373,6 +381,7 @@ This implementation aligns with:
 ### R25W1398085 Full Compliance ⚠️
 
 **Method Type Support:**
+
 - [ ] ~~@action method execution~~ ✅ **DONE**
 - [ ] ~~@command method execution~~ ✅ **DONE**
 - [ ] @task_method execution support
@@ -381,18 +390,21 @@ This implementation aligns with:
 - [ ] @multitodo_method execution support
 
 **Temporal Constraint Validation:**
+
 - [ ] All 8 temporal patterns from R25W1398085 supported
 - [ ] ISO 8601 duration and datetime parsing
 - [ ] Temporal constraint consistency validation
 - [ ] Execution-time temporal checking
 
 **Entity and State Compliance:**
+
 - [ ] Full entity registry integration with AriaCore.ActionAttributes
 - [ ] Capability-based validation during execution
 - [ ] Goal format validation (ONLY `{predicate, subject, value}`)
 - [ ] State validation using direct `AriaState.RelationalState.get_fact/3` calls
 
 **Domain Integration:**
+
 - [ ] Complete domain API integration (fix `get_action_metadata/2`)
 - [ ] Entity requirement validation against domain specifications
 - [ ] Proper entity lifecycle management during execution
