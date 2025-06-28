@@ -60,8 +60,9 @@ defmodule AriaEngine.Planner do
   """
   @spec run_lazy(domain(), state(), [goal()]) :: {:ok, state()} | {:error, String.t()}
   def run_lazy(domain, state, goals) do
-    # Delegate to aria_hybrid_planner implementation
-    Core.plan_execute_with_recovery(domain, state, goals, [], [])
+    # Create coordinator internally and delegate to aria_hybrid_planner implementation
+    coordinator = Core.new_coordinator()
+    Core.plan_execute_with_recovery(coordinator, domain, state, goals, [])
   end
 
   @doc """
@@ -89,8 +90,9 @@ defmodule AriaEngine.Planner do
   """
   @spec plan(domain(), state(), [goal()]) :: {:ok, plan()} | {:error, String.t()}
   def plan(domain, state, goals) do
-    # Delegate to aria_hybrid_planner implementation
-    case Core.plan(domain, state, goals, []) do
+    # Create coordinator internally and delegate to aria_hybrid_planner implementation
+    coordinator = Core.new_coordinator()
+    case Core.plan(coordinator, domain, state, goals, []) do
       {:ok, solution_tree} ->
         # Extract plan from solution tree
         plan = extract_plan_from_solution_tree(solution_tree)
