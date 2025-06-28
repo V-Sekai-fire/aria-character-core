@@ -42,8 +42,8 @@ defmodule Plan.Backtracking do
         ) ::
           replan_result()
   def replan(
-        %AriaEngine.Domain.Core{} = domain,
-        %AriaEngine.State{} = state,
+        %Domain.Core{} = domain,
+        state,
         solution_tree,
         fail_node_id,
         opts \\ []

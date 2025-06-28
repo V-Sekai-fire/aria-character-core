@@ -8,7 +8,7 @@ defmodule Plan.Core do
   alias AriaEngine.Plan.Utils
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), State.fact_value()}
-  @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
+  @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
   @type solution_node :: %{
@@ -340,7 +340,7 @@ defmodule Plan.Core do
           verbose
         )
 
-      %AriaEngine.Multigoal{} = multigoal ->
+      %Multigoal{} = multigoal ->
         NodeExpansion.expand_multigoal_node(
           domain,
           state,

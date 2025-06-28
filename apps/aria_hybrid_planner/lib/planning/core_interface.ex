@@ -4,7 +4,7 @@
 defmodule Planning.CoreInterface do
   @moduledoc "Replan from a failure point using HybridPlanner.HybridCoordinatorV2.\n"
   alias Planning.Internal
-  alias AriaEngine.Core
+  alias Core
   @type t :: Planning.HighLevel.t()
   @type solution_tree :: Core.solution_tree()
   @type plan_step :: Core.plan_step()
@@ -38,11 +38,11 @@ defmodule Planning.CoreInterface do
   end
 
   @doc "Replan from a failure point using HybridPlanner.HybridCoordinator.\n"
-  @spec replan(AriaEngine.Core.t(), String.t(), keyword()) ::
-          {:ok, AriaEngine.Core.t()} | {:error, String.t()}
+  @spec replan(Core.t(), String.t(), keyword()) ::
+          {:ok, Core.t()} | {:error, String.t()}
   def replan(engine, fail_node_id, opts \\ [])
 
-  def replan(%AriaEngine.Core{solution_tree: solution_tree} = engine, fail_node_id, opts)
+  def replan(%Core{solution_tree: solution_tree} = engine, fail_node_id, opts)
       when not is_nil(solution_tree) do
     domain_interface = Internal.to_planner_interface(engine)
 
@@ -57,19 +57,19 @@ defmodule Planning.CoreInterface do
     )
   end
 
-  def replan(%AriaEngine.Core{solution_tree: nil}, _fail_node_id, _opts) do
+  def replan(%Core{solution_tree: nil}, _fail_node_id, _opts) do
     {:error, "No solution tree available for replanning"}
   end
 
   @doc "Validate the current plan.\n"
-  @spec validate_plan(AriaEngine.Core.t()) :: {:ok, AriaEngine.Core.state()} | {:error, String.t()}
-  def validate_plan(%AriaEngine.Core{solution_tree: solution_tree} = engine)
+  @spec validate_plan(Core.t()) :: {:ok, map()} | {:error, String.t()}
+  def validate_plan(%Core{solution_tree: solution_tree} = engine)
       when not is_nil(solution_tree) do
     domain_interface = Internal.to_planner_interface(engine)
     AriaEngine.PlannerAdapter.validate_plan(domain_interface, engine.initial_state, solution_tree)
   end
 
-  def validate_plan(%AriaEngine.Core{solution_tree: nil}) do
+  def validate_plan(%Core{solution_tree: nil}) do
     {:error, "No solution tree available for validation"}
   end
 end

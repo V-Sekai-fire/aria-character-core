@@ -443,7 +443,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
     {predicate, subject, value}
   end
 
-  defp convert_goal_to_todo(%AriaEngine.Multigoal{} = multigoal) do
+  defp convert_goal_to_todo(%Multigoal{} = multigoal) do
     multigoal
   end
 
@@ -526,7 +526,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
         nil ->
           {:error, "Domain required for execution but not provided in options"}
 
-        %AriaEngine.Domain.Core{} = domain ->
+        %Domain.Core{} = domain ->
           # Extract primitive actions from solution tree
           primitive_actions = Plan.SimpleExecutor.extract_primitive_actions(solution_tree)
 
