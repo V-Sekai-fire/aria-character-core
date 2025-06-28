@@ -1,6 +1,6 @@
-# R25W159XXXX: Port V-Sekai Many Bone IK to Elixir with Multi-Backend Nx Acceleration and Real-time GLTF2 Integration
+# R25W159DECX: Port V-Sekai Many Bone IK to Elixir with Multi-Backend Nx Acceleration and Real-time GLTF2 Integration
 
-<!-- @aria_serial R25W159XXXX -->
+<!-- @adr_serial R25W159DECX -->
 
 **Status:** Active  
 **Date:** June 27, 2025  
