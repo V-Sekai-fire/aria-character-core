@@ -88,7 +88,7 @@ The AriaEngine planner uses six types of methods for different purposes:
 
 ```elixir
 # Planning only - returns solution tree
-@spec plan(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
+@spec plan(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, AriaEngineCore.Plan.solution_tree()} | {:error, atom()}
 
 # Planning + execution - returns final state  
 @spec run_lazy(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
@@ -100,6 +100,10 @@ The AriaEngine planner uses six types of methods for different purposes:
 **Key Types:**
 - `solution_tree()` - Complete planning result with actions, constraints, and metadata
 - `final_state()` - World state after successful execution
+
+**API Design Rationale:**
+- `plan/3` only returns solution tree since planning doesn't modify state
+- `run_lazy/3` and `run_lazy_tree/3` return both final state and solution tree since execution modifies state
 
 ### Required Function Attributes
 
@@ -563,7 +567,7 @@ case AriaEngineCore.plan(domain, state_with_entities, [
   {:cook_meal, ["pasta"]},
   {"location", "chef_1", "kitchen"}
 ]) do
-  {:ok, {final_state, solution_tree}} ->
+  {:ok, solution_tree} ->
     # Inspect the plan - check timing, resource allocation, etc.
     IO.inspect(solution_tree, label: "Generated Plan")
     
