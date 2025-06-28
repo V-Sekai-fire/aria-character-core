@@ -91,7 +91,7 @@ The AriaEngine planner uses six types of methods for different purposes:
 @spec plan(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
 
 # Planning + execution - returns final state  
-@spec run_lazy_plan(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
+@spec run_lazy(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
 
 # Take a pre-made plan and execute it.
 @spec run_lazy_tree(AriaEngine.Domain.t(), AriaState.t(), AriaEngineCore.Plan.solution_tree()) :: {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
@@ -553,42 +553,57 @@ end
 
 ### Usage Patterns
 
-**Planning Only (inspect before execution):**
+**"I want to see the plan before executing"**
+
+When you need to review, validate, or modify the plan before execution. Use this for complex scenarios, debugging, or when you need approval workflows.
 
 ```elixir
-domain = MyApp.Domains.CookingDomain.create_domain()
-
-# Set up entities
-initial_state = AriaState.new()
-{:ok, state_with_entities} = setup_kitchen_scenario(initial_state, [])
-
-# Plan with goals - returns solution tree
+# Create the plan first, inspect it, then decide whether to execute
 case AriaEngineCore.plan(domain, state_with_entities, [
   {:cook_meal, ["pasta"]},
   {"location", "chef_1", "kitchen"}
 ]) do
-  {:ok, solution_tree} ->
-    Logger.info("Plan created successfully")
-    # Inspect solution tree, then execute when ready
-    AriaEngineCore.execute(domain, state_with_entities, solution_tree)
+  {:ok, {final_state, solution_tree}} ->
+    # Inspect the plan - check timing, resource allocation, etc.
+    IO.inspect(solution_tree, label: "Generated Plan")
+    
+    # Execute when ready
+    AriaEngineCore.run_lazy_tree(domain, state_with_entities, solution_tree)
   {:error, reason} ->
     Logger.error("Planning failed: #{reason}")
 end
 ```
 
-**Direct Planning + Execution:**
+**"I want it done automatically"**
+
+When you just want to achieve your goals and don't care about planning details. Use this for simple goals, trusted domains, or production workflows.
 
 ```elixir
-# Plan and execute in one step with automatic failure recovery
+# Plan and execute in one step - fire and forget
 case AriaEngineCore.run_lazy(domain, state_with_entities, [
   {:cook_meal, ["pasta"]},
   {"location", "chef_1", "kitchen"}
 ]) do
-  {:ok, final_state} -> 
+  {:ok, {final_state, solution_tree}} -> 
     Logger.info("Goals achieved successfully!")
     final_state
   {:error, reason} -> 
     Logger.error("Planning or execution failed: #{reason}")
+end
+```
+
+**"I have a plan, just execute it"**
+
+When you already have a validated plan to execute. Use this for batch processing, pre-approved workflows, or plan reuse scenarios.
+
+```elixir
+# Execute a solution tree that was created and validated earlier
+case AriaEngineCore.run_lazy_tree(domain, state_with_entities, solution_tree) do
+  {:ok, {final_state, updated_tree}} -> 
+    Logger.info("Plan executed successfully!")
+    final_state
+  {:error, reason} -> 
+    Logger.error("Plan execution failed: #{reason}")
 end
 ```
 
