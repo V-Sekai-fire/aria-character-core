@@ -15,7 +15,7 @@ defmodule Plan.SimpleExecutor do
   """
 
   require Logger
-  alias AriaEngine.State
+  alias State
 
   @type plan_step :: {atom() | String.t(), list()}
   @type execution_trace_entry :: {plan_step() | nil, State.t() | nil}
@@ -74,7 +74,7 @@ defmodule Plan.SimpleExecutor do
       ]}
   """
   @spec execute(AriaEngine.Domain.Core.t(), State.t(), [plan_step()], keyword()) :: execution_result()
-  def execute(domain, %State{} = initial_state, plan, opts \\ []) do
+  def execute(domain, initial_state, plan, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if verbose > 1 do

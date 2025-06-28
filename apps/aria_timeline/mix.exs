@@ -32,8 +32,6 @@ defmodule AriaTimeline.MixProject do
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
       {:mox, "~> 1.0", only: :test},
 
-      # Core engine dependency for AriaEngine.State
-      {:aria_engine_core, path: "../aria_engine_core"},
       # STN solving functionality
       {:aria_minizinc_stn, path: "../aria_minizinc_stn"}
     ]

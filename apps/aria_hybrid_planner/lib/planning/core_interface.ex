@@ -12,7 +12,7 @@ defmodule Planning.CoreInterface do
   @doc "Simple planning interface - finds a plan to achieve the given todos.\n"
   @spec plan(AriaEngine.DomainBehaviour.t(), AriaEngine.Core.state(), [todo_item()], keyword()) ::
           {:ok, solution_tree()} | {:error, String.t()}
-  def plan(domain, %AriaEngine.State{} = state, todos, opts \\ []) do
+  def plan(domain, state, todos, opts \\ []) do
     # Note: AriaEngine.PlannerAdapter.plan currently only returns {:error, String.t()}
     # This is a stub implementation - full planning requires aria_hybrid_planner integration
     AriaEngine.PlannerAdapter.plan(domain, state, todos, opts)
@@ -26,14 +26,14 @@ defmodule Planning.CoreInterface do
           keyword()
         ) ::
           {:ok, solution_tree()} | {:error, String.t()}
-  def plan_with_tree(domain, %AriaEngine.State{} = state, todos, opts \\ []) do
+  def plan_with_tree(domain, state, todos, opts \\ []) do
     AriaEngine.PlannerAdapter.plan(domain, state, todos, opts)
   end
 
   @doc "Executes a plan step by step, returning the final state.\n"
   @spec execute_plan(AriaEngine.DomainBehaviour.t(), AriaEngine.Core.state(), [plan_step()]) ::
           {:ok, AriaEngine.Core.state()} | {:error, String.t()}
-  def execute_plan(domain, %AriaEngine.State{} = initial_state, plan) do
+  def execute_plan(domain, initial_state, plan) do
     AriaEngine.PlannerAdapter.validate_plan(domain, initial_state, plan)
   end
 
@@ -62,7 +62,7 @@ defmodule Planning.CoreInterface do
   end
 
   @doc "Validate the current plan.\n"
-  @spec validate_plan(AriaEngine.Core.t()) :: {:ok, AriaEngine.State.t()} | {:error, String.t()}
+  @spec validate_plan(AriaEngine.Core.t()) :: {:ok, AriaEngine.Core.state()} | {:error, String.t()}
   def validate_plan(%AriaEngine.Core{solution_tree: solution_tree} = engine)
       when not is_nil(solution_tree) do
     domain_interface = Internal.to_planner_interface(engine)

@@ -7,7 +7,7 @@ defmodule Plan.Core do
   alias Plan.{NodeExpansion, Backtracking}
   alias AriaEngine.Plan.Utils
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
+  @type goal :: {String.t(), String.t(), State.fact_value()}
   @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
@@ -16,7 +16,7 @@ defmodule Plan.Core do
           task: todo_item(),
           parent_id: node_id() | nil,
           children_ids: [node_id()],
-          state: AriaEngine.State.t() | nil,
+          state: State.t() | nil,
           visited: boolean(),
           expanded: boolean(),
           method_tried: String.t() | nil,
@@ -51,17 +51,17 @@ defmodule Plan.Core do
   end
 
   @doc "Main IPyHOP planning function that creates a solution tree to achieve the given todos.\n"
-  @spec plan(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), [todo_item()], keyword()) ::
+  @spec plan(AriaEngine.Domain.Core.t(), State.t(), [todo_item()], keyword()) ::
           plan_result()
-  def plan(domain, %AriaEngine.State{} = state, todos, opts \\ []) do
+  def plan(domain, state, todos, opts \\ []) do
     opts = Keyword.put_new(opts, :replan_depth, @default_replan_depth)
     solution_tree = Utils.create_initial_solution_tree(todos, state)
     ipyhop(domain, state, solution_tree, opts)
   end
 
-  @spec ipyhop(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), solution_tree(), keyword()) ::
+  @spec ipyhop(AriaEngine.Domain.Core.t(), State.t(), solution_tree(), keyword()) ::
           plan_result()
-  def ipyhop(domain, %AriaEngine.State{} = current_state, solution_tree, opts) do
+  def ipyhop(domain, current_state, solution_tree, opts) do
     verbose = Keyword.get(opts, :verbose, @default_verbose)
     max_depth = Keyword.get(opts, :max_depth, @default_max_depth)
     plan_decomposition_loop(domain, current_state, solution_tree, 0, max_depth, verbose)
@@ -69,7 +69,7 @@ defmodule Plan.Core do
 
   @spec plan_decomposition_loop(
           AriaEngine.Domain.Core.t(),
-          AriaEngine.State.t(),
+          State.t(),
           solution_tree(),
           integer(),
           integer(),
@@ -295,7 +295,7 @@ defmodule Plan.Core do
 
   @spec try_expand_node(
           AriaEngine.Domain.Core.t(),
-          AriaEngine.State.t(),
+          State.t(),
           solution_tree(),
           node_id(),
           integer()

@@ -6,7 +6,7 @@ defmodule TimelineGraph.EntityManager do
   alias AriaTimeline.TimelineCore, as: Timeline
   alias Timeline.AgentEntity
   alias Timeline.Interval
-  alias AriaEngine.State
+  alias Timeline.State
   @type entity_id :: String.t()
   @type lod_level :: :very_low | :low | :medium | :high | :ultra_high
   @type entity_timeline :: %{

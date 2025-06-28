@@ -27,12 +27,17 @@ defmodule AriaEngineCore.MixProject do
   defp deps do
     [
       # Internal dependencies
+      {:aria_hybrid_planner, path: "../aria_hybrid_planner"},
+      {:aria_timeline, path: "../aria_timeline"},
+      {:aria_minizinc_stn, path: "../aria_minizinc_stn"},
       {:aria_minizinc_goal, in_umbrella: true},
       # External dependencies
       {:jason, "~> 1.4"},
       {:libgraph, "~> 0.16"},
       {:porcelain, "~> 2.0"},
       {:timex, "~> 3.7"},
+      {:telemetry, "~> 1.0"},
+      {:mox, "~> 1.0", only: :test},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end
