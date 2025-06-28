@@ -134,6 +134,42 @@ defmodule AriaEngineCore do
   end
 
   @doc """
+  Get the domain type for external API compatibility.
+
+  Returns the domain type for use in external type specifications.
+
+  ## Examples
+
+      @type my_domain :: AriaEngineCore.domain()
+  """
+  @spec domain() :: module()
+  def domain, do: AriaEngineCore.Domain
+
+  @doc """
+  Get the state type for external API compatibility.
+
+  Returns the state type for use in external type specifications.
+
+  ## Examples
+
+      @type my_state :: AriaEngineCore.state()
+  """
+  @spec state() :: module()
+  def state, do: AriaEngineCore.State
+
+  @doc """
+  Get the todo_item type for external API compatibility.
+
+  Returns the todo_item type for use in external type specifications.
+
+  ## Examples
+
+      @type my_todo :: AriaEngineCore.todo_item()
+  """
+  @spec todo_item() :: module()
+  def todo_item, do: AriaEngine
+
+  @doc """
   Get the version of AriaEngine Core.
 
   ## Examples

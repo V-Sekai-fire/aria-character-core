@@ -72,12 +72,10 @@ defmodule AriaHybridPlanner.Core do
 
   # Import types from existing modules for compatibility
   alias HybridPlanner.HybridCoordinatorV2
-  alias AriaEngineCore.Domain.Core, as: Domain
-  alias AriaEngineCore.State
 
   @type coordinator :: HybridCoordinatorV2.t()
-  @type domain :: Domain.t()
-  @type state :: State.t()
+  @type domain :: AriaEngineCore.domain()
+  @type state :: AriaEngineCore.state()
   @type goals :: [term()]
   @type plan :: map()
   @type plan_result :: {:ok, plan()} | {:error, String.t()}
