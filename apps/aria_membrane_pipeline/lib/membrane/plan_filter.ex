@@ -14,8 +14,8 @@ defmodule Membrane.PlanFilter do
   alias Membrane.Format.{MCPRequest, PlanningParams}
   alias Membrane.Buffer
 
-  def_input_pad(:input, accepted_format: MCPRequest, flow_control: :manual)
-  def_output_pad(:output, accepted_format: PlanningParams, flow_control: :manual)
+  def_input_pad(:input, accepted_format: MCPRequest, flow_control: :manual, demand_unit: :buffers)
+  def_output_pad(:output, accepted_format: PlanningParams, flow_control: :manual, demand_unit: :buffers)
 
   def_options(
     telemetry_prefix: [

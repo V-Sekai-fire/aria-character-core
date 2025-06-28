@@ -17,8 +17,8 @@ defmodule Membrane.ResponseFilter do
   alias Membrane.Format.{PlanningResult, MCPResponse}
   alias Membrane.Buffer
 
-  def_input_pad(:input, accepted_format: PlanningResult, flow_control: :manual)
-  def_output_pad(:output, accepted_format: MCPResponse, flow_control: :manual)
+  def_input_pad(:input, accepted_format: PlanningResult, flow_control: :manual, demand_unit: :buffers)
+  def_output_pad(:output, accepted_format: MCPResponse, flow_control: :manual, demand_unit: :buffers)
 
   def_options(
     telemetry_prefix: [

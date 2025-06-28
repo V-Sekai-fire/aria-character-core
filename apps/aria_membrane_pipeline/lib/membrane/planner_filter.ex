@@ -16,8 +16,8 @@ defmodule Membrane.PlannerFilter do
   require Logger
   alias Membrane.Format.{PlanningParams, PlanningResult}
   alias Membrane.Buffer
-  def_input_pad(:input, accepted_format: PlanningParams, flow_control: :manual)
-  def_output_pad(:output, accepted_format: PlanningResult, flow_control: :manual)
+  def_input_pad(:input, accepted_format: PlanningParams, flow_control: :manual, demand_unit: :buffers)
+  def_output_pad(:output, accepted_format: PlanningResult, flow_control: :manual, demand_unit: :buffers)
 
   def_options(
     telemetry_prefix: [
