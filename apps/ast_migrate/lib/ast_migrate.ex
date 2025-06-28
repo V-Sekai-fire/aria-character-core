@@ -113,12 +113,12 @@ defmodule AstMigrate do
   @doc """
   List available transformation rules.
 
-  Currently returns an empty list as no rules are implemented.
-  This is a clean foundation ready for future rules.
+  Returns all available AST migration rules for cross-app dependency detection
+  and systematic code transformations.
   """
   @spec list_rules() :: [atom()]
   def list_rules do
-    []
+    [:cross_app_dependency_detector]
   end
 
   @doc """
@@ -134,7 +134,13 @@ defmodule AstMigrate do
   # Private functions
 
   defp get_rule_module(rule_name) do
-    {:error, "Unknown rule: #{rule_name}"}
+    case rule_name do
+      :cross_app_dependency_detector ->
+        {:ok, AstMigrate.Rules.CrossAppDependencyDetector}
+
+      _ ->
+        {:error, "Unknown rule: #{rule_name}"}
+    end
   end
 
   defp get_target_files(rule_module, opts) do

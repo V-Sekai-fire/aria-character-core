@@ -34,10 +34,17 @@ The `apps/todo.md` file serves as the central tracking document for umbrella app
 
 - Update AriaEngine calls to use AriaCore external API ✅ (API now available)
 - Migrate AriaHybridPlanner to use AriaTimeline external API ✅ (API now available)
-- Review and update any direct internal module imports across apps
+- **Fix AriaEngine.Timeline violations in aria_timeline** ✅ (Fixed timeline_builder.ex, interval_operations.ex)
+- **Fix AriaEngineCore violations in aria_hybrid_planner** ✅ (Fixed core.ex)
+- Review and update remaining direct internal module imports across apps
 - Ensure all cross-app communication goes through external APIs only
 
-**Status:** All external APIs are now available for cross-app communication migration.
+**Status:** Major cross-app dependency violations have been fixed. External APIs are available for all remaining migration work.
+
+**Recent Progress:**
+- Fixed `AriaEngine.Timeline.Interval` → `Timeline.Interval` in aria_timeline
+- Fixed `AriaEngine.Timeline.IntervalOperations` → `AriaTimeline` calls in timeline_builder.ex
+- Fixed `AriaEngineCore.Domain.Core` and `AriaEngineCore.State` → `AriaEngineCore` in aria_hybrid_planner
 
 ## Implementation Priority (Leaf Apps First)
 
