@@ -36,7 +36,7 @@ Everything is an entity with capabilities:
 %{type: "flour", capabilities: [:consumable]}
 ```
 
-### Temporal Patterns (9 Valid Combinations)
+### Temporal Patterns (8 Valid Combinations)
 
 | Pattern | start | end | duration | Semantics |
 |---------|-------|-----|----------|-----------|
