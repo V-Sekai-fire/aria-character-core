@@ -29,7 +29,6 @@ defmodule AriaMembranePipeline.MixProject do
       # Internal dependencies
       {:aria_engine_core, path: "../aria_engine_core"},
       {:aria_hybrid_planner, path: "../aria_hybrid_planner"},
-      {:aria_temporal_planner, path: "../aria_temporal_planner"},
       {:aria_minizinc_goal, path: "../aria_minizinc_goal"},
 
       # Membrane Framework

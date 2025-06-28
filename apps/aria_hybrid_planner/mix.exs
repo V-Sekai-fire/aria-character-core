@@ -28,12 +28,14 @@ defmodule AriaHybridPlanner.MixProject do
     [
       # Internal dependencies
       {:aria_engine_core, path: "../aria_engine_core"},
-      {:aria_temporal_planner, path: "../aria_temporal_planner"},
+      {:aria_timeline, path: "../aria_timeline"},
+      {:aria_minizinc_stn, path: "../aria_minizinc_stn"},
 
       # External dependencies
       {:libgraph, "~> 0.16"},
       {:jason, "~> 1.4"},
       {:telemetry, "~> 1.0"},
+      {:porcelain, "~> 2.0"},
       {:mox, "~> 1.0", only: :test}
     ]
   end
