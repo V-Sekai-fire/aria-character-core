@@ -5,7 +5,7 @@ defmodule AriaEngine.Timeline.TimelineBuilder do
   @moduledoc "Bridge builder pattern and fluent API for Timeline construction.\n\nThis module provides:\n- Bridge builder pattern functions\n- Auto-insertion logic and rules\n- Fluent API for timeline construction\n- Phase management and workflow helpers\n\nThe builder pattern allows for easy construction of complex timelines\nwith automatic bridge placement and validation.\n"
   alias Timeline.Bridge
   alias Timeline.Interval
-  alias AriaEngine.Timeline.IntervalOperations
+  alias AriaTimeline
 
   @type timeline :: %{
           intervals: %{Interval.id() => Interval.t()},
@@ -33,13 +33,13 @@ defmodule AriaEngine.Timeline.TimelineBuilder do
       last_bridge_time: nil
     }
 
-    IntervalOperations.new(metadata: metadata)
+    AriaTimeline.new(metadata: metadata)
   end
 
   @doc "Adds an interval to the timeline with automatic bridge insertion.\n\nIf auto_bridges is enabled, this will automatically insert bridges\nbased on the configured spacing rules.\n\n## Examples\n\n    iex> builder = AriaEngine.Timeline.Builder.new(auto_bridges: true, bridge_spacing: 1800)\n    iex> start_time = DateTime.from_naive!(2025-01-01T10:00:00Z, \"Etc/UTC\")\n    iex> end_time = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> interval =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    start_time,\n    end_time\n  )\n    iex> updated_builder = AriaEngine.Timeline.Builder.add_interval(builder, interval)\n    iex> map_size(updated_builder.intervals)\n    1\n\n"
   @spec add_interval(timeline(), Interval.t()) :: timeline()
   def add_interval(timeline, %Interval{} = interval) do
-    updated_timeline = IntervalOperations.add_interval(timeline, interval)
+    updated_timeline = AriaTimeline.add_interval(timeline, interval)
 
     if timeline.metadata[:auto_bridges] do
       insert_auto_bridges(updated_timeline, interval)
@@ -51,7 +51,7 @@ defmodule AriaEngine.Timeline.TimelineBuilder do
   @doc "Adds multiple intervals to the timeline with batch bridge insertion.\n\nMore efficient than calling add_interval/2 multiple times when adding\nmany intervals, as it can optimize bridge placement across all intervals.\n\n## Examples\n\n    iex> builder = AriaEngine.Timeline.Builder.new()\n    iex> start1 = DateTime.from_naive!(2025-01-01T10:00:00Z, \"Etc/UTC\")\n    iex> end1 = DateTime.from_naive!(~N[2025-01-01 11:00:00], \"Etc/UTC\")\n    iex> start2 = DateTime.from_naive!(~N[2025-01-01 12:00:00], \"Etc/UTC\")\n    iex> end2 = DateTime.from_naive!(~N[2025-01-01 13:00:00], \"Etc/UTC\")\n    iex> interval1 =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start1),\n    DateTime.to_iso8601(end1)\n  )\n    iex> interval2 =\n  AriaEngine.Timeline.Interval.new_fixed_schedule(\n    DateTime.to_iso8601(start2),\n    DateTime.to_iso8601(end2)\n  )\n    iex> updated_builder = AriaEngine.Timeline.Builder.add_intervals(builder, [interval1, interval2])\n    iex> map_size(updated_builder.intervals)\n    2\n\n"
   @spec add_intervals(timeline(), [Interval.t()]) :: timeline()
   def add_intervals(timeline, intervals) when is_list(intervals) do
-    updated_timeline = IntervalOperations.add_intervals(timeline, intervals)
+    updated_timeline = AriaTimeline.add_intervals(timeline, intervals)
 
     if timeline.metadata[:auto_bridges] do
       insert_batch_auto_bridges(updated_timeline, intervals)
