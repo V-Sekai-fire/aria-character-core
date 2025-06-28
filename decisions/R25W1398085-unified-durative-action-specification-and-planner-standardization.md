@@ -22,64 +22,6 @@
 
 ---
 
-## Core Planning API
-
-### Primary Functions
-
-The AriaEngine provides two main planning functions with clean, simple return types:
-
-#### Planning Only
-```elixir
-@spec plan(domain(), state(), [goal()]) :: {:ok, solution_tree()} | {:error, String.t()}
-```
-
-Returns the complete solution tree containing:
-- Action sequences and hierarchical decomposition
-- Temporal constraints embedded in durative actions  
-- Metadata within the solution tree structure
-
-#### Planning + Execution with Recovery
-```elixir
-@spec run_lazy(domain(), state(), [goal()]) :: {:ok, final_state()} | {:error, String.t()}
-```
-
-Plans and executes goals with automatic failure recovery, returning the final state after successful execution.
-
-### Usage Examples
-
-**Planning Only (inspect/modify before execution):**
-```elixir
-case AriaEngineCore.plan(domain, state, goals) do
-  {:ok, solution_tree} ->
-    # Inspect solution tree, extract actions, check temporal constraints
-    Logger.info("Plan created with #{count_actions(solution_tree)} actions")
-    # Execute when ready
-    AriaEngineCore.execute(domain, state, solution_tree)
-  {:error, reason} ->
-    Logger.error("Planning failed: #{reason}")
-end
-```
-
-**Direct Planning + Execution:**
-```elixir
-case AriaEngineCore.run_lazy(domain, state, goals) do
-  {:ok, final_state} ->
-    Logger.info("Goals achieved successfully!")
-    final_state
-  {:error, reason} ->
-    Logger.error("Planning or execution failed: #{reason}")
-end
-```
-
-### Type Definitions
-
-```elixir
-@type solution_tree :: map()  # Complete planning result with actions, constraints, and metadata
-@type final_state :: AriaState.t()  # World state after successful execution
-```
-
----
-
 ## Quick Reference
 
 ### Entity Model Summary
@@ -146,10 +88,13 @@ The AriaEngine planner uses six types of methods for different purposes:
 
 ```elixir
 # Planning only - returns solution tree
-@spec plan(domain(), state(), [goal()]) :: {:ok, solution_tree()} | {:error, String.t()}
+@spec plan(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
 
 # Planning + execution - returns final state  
-@spec run_lazy(domain(), state(), [goal()]) :: {:ok, final_state()} | {:error, String.t()}
+@spec run_lazy_plan(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
+
+# Take a pre-made plan and execute it.
+@spec run_lazy_tree(AriaEngine.Domain.t(), AriaState.t(), AriaEngineCore.Plan.solution_tree()) :: {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
 ```
 
 **Key Types:**
