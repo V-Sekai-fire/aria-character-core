@@ -37,19 +37,19 @@ defmodule HybridPlanner.DataStructures do
     @doc "Get statistics about the plan without exposing internal structure.\n"
     @spec get_statistics(t()) :: map()
     def get_statistics(%__MODULE__{internal_plan: plan}) do
-      AriaEngine.Plan.Utils.tree_stats(plan)
+      Plan.Utils.tree_stats(plan)
     end
 
     @doc "Get the cost (number of primitive actions) of the plan.\n"
     @spec get_cost(t()) :: non_neg_integer()
     def get_cost(%__MODULE__{internal_plan: plan}) do
-      AriaEngine.Plan.Utils.plan_cost(plan)
+      Plan.Utils.plan_cost(plan)
     end
 
     @doc "Get the primitive actions from the plan.\n"
     @spec get_actions(t()) :: [Plan.plan_step()]
     def get_actions(%__MODULE__{internal_plan: plan}) do
-      AriaEngine.Plan.Utils.get_primitive_actions_dfs(plan)
+      Plan.Utils.get_primitive_actions_dfs(plan)
     end
 
     @doc "Check if the plan has been temporally validated.\n"

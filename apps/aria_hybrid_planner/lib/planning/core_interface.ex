@@ -15,7 +15,8 @@ defmodule Planning.CoreInterface do
   def plan(domain, state, todos, opts \\ []) do
     # Note: AriaEngine.PlannerAdapter.plan currently only returns {:error, String.t()}
     # This is a stub implementation - full planning requires aria_hybrid_planner integration
-    AriaEngine.PlannerAdapter.plan(domain, state, todos, opts)
+    # TODO: Implement actual planning logic using aria_hybrid_planner
+    {:error, "Planning not yet implemented in self-contained mode"}
   end
 
   @doc "Advanced planning interface - returns the full solution tree.\n"
@@ -27,14 +28,16 @@ defmodule Planning.CoreInterface do
         ) ::
           {:ok, solution_tree()} | {:error, String.t()}
   def plan_with_tree(domain, state, todos, opts \\ []) do
-    AriaEngine.PlannerAdapter.plan(domain, state, todos, opts)
+    # TODO: Implement actual planning logic using aria_hybrid_planner
+    {:error, "Planning not yet implemented in self-contained mode"}
   end
 
   @doc "Executes a plan step by step, returning the final state.\n"
   @spec execute_plan(AriaEngine.DomainBehaviour.t(), AriaEngine.Core.state(), [plan_step()]) ::
           {:ok, AriaEngine.Core.state()} | {:error, String.t()}
   def execute_plan(domain, initial_state, plan) do
-    AriaEngine.PlannerAdapter.validate_plan(domain, initial_state, plan)
+    # TODO: Implement actual plan execution using aria_hybrid_planner
+    {:error, "Plan execution not yet implemented in self-contained mode"}
   end
 
   @doc "Replan from a failure point using HybridPlanner.HybridCoordinator.\n"
@@ -48,13 +51,8 @@ defmodule Planning.CoreInterface do
 
     # Note: AriaEngine.PlannerAdapter.replan currently only returns {:error, String.t()}
     # This is a stub implementation - full replanning requires aria_hybrid_planner integration
-    AriaEngine.PlannerAdapter.replan(
-      domain_interface,
-      engine.current_state,
-      solution_tree,
-      fail_node_id,
-      opts
-    )
+    # TODO: Implement actual replanning logic using aria_hybrid_planner
+    {:error, "Replanning not yet implemented in self-contained mode"}
   end
 
   def replan(%Core{solution_tree: nil}, _fail_node_id, _opts) do
@@ -66,7 +64,8 @@ defmodule Planning.CoreInterface do
   def validate_plan(%Core{solution_tree: solution_tree} = engine)
       when not is_nil(solution_tree) do
     domain_interface = Internal.to_planner_interface(engine)
-    AriaEngine.PlannerAdapter.validate_plan(domain_interface, engine.initial_state, solution_tree)
+    # TODO: Implement actual plan validation using aria_hybrid_planner
+    {:error, "Plan validation not yet implemented in self-contained mode"}
   end
 
   def validate_plan(%Core{solution_tree: nil}) do

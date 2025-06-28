@@ -73,7 +73,7 @@ defmodule Plan.SimpleExecutor do
         {{:move, ["agent1", "kitchen"]}, nil}  # nil indicates blacklist failure
       ]}
   """
-  @spec execute(AriaEngine.Domain.Core.t(), State.t(), [plan_step()], keyword()) :: execution_result()
+  @spec execute(Domain.Core.t(), State.t(), [plan_step()], keyword()) :: execution_result()
   def execute(domain, initial_state, plan, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
@@ -96,12 +96,12 @@ defmodule Plan.SimpleExecutor do
   """
   @spec extract_primitive_actions(map()) :: [plan_step()]
   def extract_primitive_actions(solution_tree) do
-    AriaEngine.Plan.Utils.get_primitive_actions_dfs(solution_tree)
+    Plan.Utils.get_primitive_actions_dfs(solution_tree)
   end
 
   # Private implementation functions
 
-  @spec execute_steps(AriaEngine.Domain.Core.t(), State.t(), [plan_step()], execution_trace(), keyword()) :: execution_result()
+  @spec execute_steps(Domain.Core.t(), State.t(), [plan_step()], execution_trace(), keyword()) :: execution_result()
   defp execute_steps(_domain, current_state, [], execution_trace, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
 
@@ -192,7 +192,7 @@ defmodule Plan.SimpleExecutor do
     end
   end
 
-  @spec execute_action_command(AriaEngine.Domain.Core.t(), State.t(), atom(), list(), keyword()) ::
+  @spec execute_action_command(Domain.Core.t(), State.t(), atom(), list(), keyword()) ::
     {:ok, State.t()} | {:error, String.t()} | false
   defp execute_action_command(domain, state, action_atom, args, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
@@ -203,20 +203,20 @@ defmodule Plan.SimpleExecutor do
         # Step 2: Try to execute as a command first (ADR-181 compliance)
         command_name = String.to_atom("#{action_atom}_command")
 
-        case AriaEngine.Domain.has_action?(domain, command_name) do
+        case Domain.Core.has_action?(domain, command_name) do
           true ->
             if verbose > 2 do
               Logger.debug("SimpleExecutor: Executing as command: #{command_name}")
             end
             # Execute as command (execution-time logic with failure handling)
-            AriaEngine.Domain.execute_action(domain, state, command_name, args)
+            Domain.Core.execute_action(domain, state, command_name, args)
 
           false ->
             if verbose > 2 do
               Logger.debug("SimpleExecutor: No command found, executing as action: #{action_atom}")
             end
             # Fall back to action execution (planning-time logic)
-            case AriaEngine.Domain.execute_action(domain, state, action_atom, args) do
+            case Domain.Core.execute_action(domain, state, action_atom, args) do
               {:ok, new_state} -> {:ok, new_state}
               {:error, reason} -> {:error, reason}
               false -> false
@@ -231,7 +231,7 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Validate entity requirements for an action according to ADR-181
-  @spec validate_entity_requirements(AriaEngine.Domain.Core.t(), State.t(), atom(), list(), keyword()) ::
+  @spec validate_entity_requirements(Domain.Core.t(), State.t(), atom(), list(), keyword()) ::
     :ok | {:error, String.t()}
   defp validate_entity_requirements(domain, state, action_atom, _args, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
@@ -248,7 +248,7 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Get action metadata from domain (placeholder - needs domain API enhancement)
-  @spec get_action_metadata(AriaEngine.Domain.Core.t(), atom()) :: {:ok, map()} | {:error, String.t()}
+  @spec get_action_metadata(Domain.Core.t(), atom()) :: {:ok, map()} | {:error, String.t()}
   defp get_action_metadata(_domain, _action_atom) do
     # TODO: Implement domain API to retrieve action metadata
     # For now, return error to skip validation until domain API is enhanced
