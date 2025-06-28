@@ -82,7 +82,7 @@ The AriaEngine planner uses six types of methods for different purposes:
 - **`[term()]`** - List of parameters passed to the function (varies by method)
 - **`{:ok, result} | {:error, atom()}`** - Standard Elixir success/failure return pattern
 - **`AriaEngine.todo_item()`** - Work items that can be planned and executed by the system
-- **`subject()`, `object()`** - Type aliases for goal components (typically strings or atoms)
+- **`subject()`, `value()`** - Type aliases for goal components (typically strings or atoms)
 
 ### Primary API Functions
 
@@ -369,7 +369,7 @@ end
 @spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 @type subject :: term()
-@type object :: term()
+@type value :: term()
 
 # Unigoal Methods
 @unigoal_method predicate: "is_predicate"
