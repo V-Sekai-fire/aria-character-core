@@ -88,7 +88,17 @@ Unify the `aria_hybrid_planner` app into a coherent, single-API architecture tha
 - [ ] Remove duplicate execution logic
 - [ ] Align with R25W1547587 (IPyHOP pattern compliance)
 
-### Phase 4: Integrate Temporal Planning
+### Phase 4: External API Migration ✅
+
+**Priority:** HIGH
+
+- [x] Create clean external API in `AriaEngine.Planner` ✅
+- [x] Implement R25W1398085 specification with `run_lazy` and `plan` functions ✅
+- [x] Update `AriaEngine.PlannerAdapter` to delegate to new API ✅
+- [x] Verify all external references use correct API ✅
+- [x] Test API accessibility and functionality ✅
+
+### Phase 5: Integrate Temporal Planning
 
 **Priority:** MEDIUM
 
@@ -97,7 +107,7 @@ Unify the `aria_hybrid_planner` app into a coherent, single-API architecture tha
 - [ ] Integrate with `aria_minizinc_stn` dependency
 - [ ] Ensure temporal planning follows unified patterns
 
-### Phase 5: Clean Up Legacy Code
+### Phase 6: Clean Up Legacy Code
 
 **Priority:** MEDIUM
 
@@ -106,7 +116,7 @@ Unify the `aria_hybrid_planner` app into a coherent, single-API architecture tha
 - [ ] Clean up test suite to match new structure
 - [ ] Update documentation and README
 
-### Phase 6: Validation and Testing
+### Phase 7: Validation and Testing
 
 **Priority:** HIGH
 
