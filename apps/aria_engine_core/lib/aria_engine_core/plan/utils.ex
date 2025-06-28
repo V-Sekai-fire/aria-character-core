@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Plan.Utils do
+defmodule AriaEngineCore.Plan.Utils do
   @moduledoc "Utility functions for IPyHOP planning.\n"
-  alias AriaEngine.State
+  alias AriaEngineCore.State
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), State.fact_value()}
-  @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
+  @type todo_item :: task() | goal() | AriaEngineCore.Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
   @type solution_node :: %{
@@ -118,11 +118,11 @@ defmodule AriaEngine.Plan.Utils do
     end
   end
 
-  @doc "Validates a plan by executing it step by step.\nFor compatibility with existing AriaEngine usage.\n"
-  @spec validate_plan(AriaEngine.Domain.Core.t(), State.t(), [plan_step()] | solution_tree()) ::
+  @doc "Validates a plan by executing it step by step.\nFor compatibility with existing AriaEngineCore usage.\n"
+  @spec validate_plan(AriaEngineCore.Domain.Core.t(), State.t(), [plan_step()] | solution_tree()) ::
           {:ok, State.t()} | {:error, String.t()}
   def validate_plan(
-        %AriaEngine.Domain.Core{} = domain,
+        %AriaEngineCore.Domain.Core{} = domain,
         %State{} = initial_state,
         %{root_id: _} = solution_tree
       ) do
@@ -130,7 +130,7 @@ defmodule AriaEngine.Plan.Utils do
     validate_plan(domain, initial_state, actions)
   end
 
-  def validate_plan(%AriaEngine.Domain.Core{} = domain, %State{} = initial_state, plan) when is_list(plan) do
+  def validate_plan(%AriaEngineCore.Domain.Core{} = domain, %State{} = initial_state, plan) when is_list(plan) do
     Enum.reduce_while(plan, {:ok, initial_state}, fn {action_name, args}, {:ok, state} ->
       action_atom =
         if is_binary(action_name) do
@@ -139,14 +139,14 @@ defmodule AriaEngine.Plan.Utils do
           action_name
         end
 
-      case AriaEngine.Domain.execute_action(domain, state, action_atom, args) do
+      case AriaEngineCore.Domain.execute_action(domain, state, action_atom, args) do
         false -> {:halt, {:error, "Action #{action_name} failed during validation"}}
         {:ok, %State{} = new_state} -> {:cont, {:ok, new_state}}
       end
     end)
   end
 
-  @doc "Estimates the cost of a plan (simple step count for now).\nFor compatibility with existing AriaEngine usage.\n"
+  @doc "Estimates the cost of a plan (simple step count for now).\nFor compatibility with existing AriaEngineCore usage.\n"
   @spec plan_cost([plan_step()] | solution_tree()) :: non_neg_integer()
   def plan_cost(%{root_id: _} = solution_tree) do
     actions = get_primitive_actions_dfs(solution_tree)

@@ -1,8 +1,8 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.State do
-  @moduledoc "Represents the state of a planning problem using predicate-subject-fact triples.\n\nThis module provides functionality to manage world state using RDF-like triples,\nwhere each fact is represented as {predicate, subject} -> fact_value.\n\nExample:\n```elixir\nstate = AriaEngine.State.new()\n|> AriaEngine.State.set_fact(\"location\", \"player\", \"room1\")\n|> AriaEngine.State.set_fact(\"has\", \"player\", \"sword\")\n\nAriaEngine.State.get_fact(state, \"location\", \"player\")\n# => \"room1\"\n```\n"
+defmodule AriaEngineCore.State do
+  @moduledoc "Represents the state of a planning problem using predicate-subject-fact triples.\n\nThis module provides functionality to manage world state using RDF-like triples,\nwhere each fact is represented as {predicate, subject} -> fact_value.\n\nExample:\n```elixir\nstate = AriaEngineCore.State.new()\n|> AriaEngineCore.State.set_fact(\"location\", \"player\", \"room1\")\n|> AriaEngineCore.State.set_fact(\"has\", \"player\", \"sword\")\n\nAriaEngineCore.State.get_fact(state, \"location\", \"player\")\n# => \"room1\"\n```\n"
   @type predicate :: String.t()
   @type subject :: String.t()
   @type fact_value :: any()
@@ -104,7 +104,7 @@ defmodule AriaEngine.State do
     end
   end
 
-  @doc "Evaluates existential quantifier: checks if there exists at least one subject \nthat matches the given predicate and fact_value pattern.\n\nExample:\n```elixir\n# Check if there exists any chair that is available\nAriaEngine.StateV2.exists?(state, \"status\", \"available\", &String.contains?(&1, \"chair\"))\n```\n"
+  @doc "Evaluates existential quantifier: checks if there exists at least one subject \nthat matches the given predicate and fact_value pattern.\n\nExample:\n```elixir\n# Check if there exists any chair that is available\nAriaEngineCore.State.exists?(state, \"status\", \"available\", &String.contains?(&1, \"chair\"))\n```\n"
   @spec exists?(t(), predicate(), fact_value(), (subject() -> boolean()) | nil) :: boolean()
   def exists?(%__MODULE__{data: data}, predicate, fact_value, subject_filter \\ nil) do
     data
@@ -121,7 +121,7 @@ defmodule AriaEngine.State do
     end)
   end
 
-  @doc "Evaluates universal quantifier: checks if all subjects matching the pattern\nhave the specified predicate and fact_value.\n\nExample:\n```elixir\n# Check if all doors are locked\nAriaEngine.StateV2.forall?(state, \"status\", \"locked\", &String.contains?(&1, \"door\"))\n```\n"
+  @doc "Evaluates universal quantifier: checks if all subjects matching the pattern\nhave the specified predicate and fact_value.\n\nExample:\n```elixir\n# Check if all doors are locked\nAriaEngineCore.State.forall?(state, \"status\", \"locked\", &String.contains?(&1, \"door\"))\n```\n"
   @spec forall?(t(), predicate(), fact_value(), (subject() -> boolean())) :: boolean()
   def forall?(%__MODULE__{data: data}, predicate, fact_value, subject_filter)
       when is_function(subject_filter, 1) do
@@ -141,7 +141,7 @@ defmodule AriaEngine.State do
     end
   end
 
-  @doc "Gets all subjects that have a specific predicate with a specific fact_value.\n\nExample:\n```elixir\n# Get all subjects with status \"available\"\nAriaEngine.StateV2.get_subjects_with_fact(state, \"status\", \"available\")\n# => [\"chair1\", \"chair3\", \"table2\"]\n```\n"
+  @doc "Gets all subjects that have a specific predicate with a specific fact_value.\n\nExample:\n```elixir\n# Get all subjects with status \"available\"\nAriaEngineCore.State.get_subjects_with_fact(state, \"status\", \"available\")\n# => [\"chair1\", \"chair3\", \"table2\"]\n```\n"
   @spec get_subjects_with_fact(t(), predicate(), fact_value()) :: [subject()]
   def get_subjects_with_fact(%__MODULE__{data: data}, predicate, fact_value) do
     data
@@ -149,7 +149,7 @@ defmodule AriaEngine.State do
     |> Enum.map(fn {{_pred, subj}, _val} -> subj end)
   end
 
-  @doc "Gets all subjects that match a predicate pattern, regardless of fact_value.\n\nExample:\n```elixir\n# Get all subjects that have a \"location\" predicate\nAriaEngine.StateV2.get_subjects_with_predicate(state, \"location\")\n# => [\"player\", \"npc1\", \"chest\"]\n```\n"
+  @doc "Gets all subjects that match a predicate pattern, regardless of fact_value.\n\nExample:\n```elixir\n# Get all subjects that have a \"location\" predicate\nAriaEngineCore.State.get_subjects_with_predicate(state, \"location\")\n# => [\"player\", \"npc1\", \"chest\"]\n```\n"
   @spec get_subjects_with_predicate(t(), predicate()) :: [subject()]
   def get_subjects_with_predicate(%__MODULE__{data: data}, predicate) do
     data
@@ -159,7 +159,7 @@ defmodule AriaEngine.State do
     |> Enum.uniq()
   end
 
-  @doc "Evaluates a quantified condition structure.\n\nSupports both existential and universal quantifiers with flexible condition patterns.\n\n## Condition Format\n```elixir\n# Existential quantifier\n{:exists, predicate, fact_value, subject_filter}\n\n# Universal quantifier  \n{:forall, predicate, fact_value, subject_filter}\n\n# Regular condition (backward compatibility)\n{predicate, subject, fact_value}\n```\n\n## Examples\n```elixir\n# Check if any chair is available\ncondition = {:exists, \"status\", \"available\", &String.contains?(&1, \"chair\")}\nAriaEngine.StateV2.evaluate_condition(state, condition)\n\n# Check if all doors are locked\ncondition = {:forall, \"status\", \"locked\", &String.contains?(&1, \"door\")}\nAriaEngine.StateV2.evaluate_condition(state, condition)\n\n# Regular condition check\ncondition = {\"location\", \"player\", \"room1\"}\nAriaEngine.StateV2.evaluate_condition(state, condition)\n```\n"
+  @doc "Evaluates a quantified condition structure.\n\nSupports both existential and universal quantifiers with flexible condition patterns.\n\n## Condition Format\n```elixir\n# Existential quantifier\n{:exists, predicate, fact_value, subject_filter}\n\n# Universal quantifier  \n{:forall, predicate, fact_value, subject_filter}\n\n# Regular condition (backward compatibility)\n{predicate, subject, fact_value}\n```\n\n## Examples\n```elixir\n# Check if any chair is available\ncondition = {:exists, \"status\", \"available\", &String.contains?(&1, \"chair\")}\nAriaEngineCore.State.evaluate_condition(state, condition)\n\n# Check if all doors are locked\ncondition = {:forall, \"status\", \"locked\", &String.contains?(&1, \"door\")}\nAriaEngineCore.State.evaluate_condition(state, condition)\n\n# Regular condition check\ncondition = {\"location\", \"player\", \"room1\"}\nAriaEngineCore.State.evaluate_condition(state, condition)\n```\n"
   @spec evaluate_condition(t(), tuple()) :: boolean()
   def evaluate_condition(state, condition)
 

@@ -11,14 +11,14 @@ defmodule AriaEngineCore do
   ## Quick Start
 
       # Plan and execute with intelligent recovery
-      {:ok, final_state} = AriaEngine.Planner.run_lazy(domain, state, goals)
+      {:ok, final_state} = AriaEngineCore.Planner.run_lazy(domain, state, goals)
       IO.puts("Success! Goals achieved.")
 
   ## Main Modules
 
-  - `AriaEngine.Planner` - Primary planning interface with `run_lazy/4` and `plan/4`
-  - `AriaEngine.Domain` - Domain definition and management
-  - `AriaEngine.State` - State representation and manipulation
+  - `AriaEngineCore.Planner` - Primary planning interface with `run_lazy/4` and `plan/4`
+  - `AriaEngineCore.Domain` - Domain definition and management
+  - `AriaEngineCore.State` - State representation and manipulation
 
   ## Features
 
@@ -28,7 +28,7 @@ defmodule AriaEngineCore do
   - **Validated Plans**: All output plans are guaranteed to be valid and executable
   - **Clean External API**: No configuration complexity exposed to users
 
-  For detailed usage, see `AriaEngine.Planner` documentation.
+  For detailed usage, see `AriaEngineCore.Planner` documentation.
   """
 
   @doc """

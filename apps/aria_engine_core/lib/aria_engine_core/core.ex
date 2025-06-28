@@ -1,19 +1,19 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Core do
+defmodule AriaEngineCore.Core do
   @moduledoc "Core components and types for the Aria Engine.\n"
-  @type domain :: Domain.Core.t()
-  @type state :: AriaEngine.State.t()
-  @type multigoal :: Multigoal.t()
-  @type solution_tree :: Plan.solution_tree()
-  @type plan_step :: Plan.plan_step()
-  @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
+  @type domain :: AriaEngineCore.Domain.Core.t()
+  @type state :: AriaEngineCore.State.t()
+  @type multigoal :: AriaEngineCore.Multigoal.t()
+  @type solution_tree :: AriaEngineCore.Plan.solution_tree()
+  @type plan_step :: AriaEngineCore.Plan.plan_step()
+  @type goal :: {String.t(), String.t(), AriaEngineCore.State.fact_value()}
   @type task :: {String.t(), list()}
-  @type todo_item :: Plan.todo_item()
-  @type action_fn :: (AriaEngine.State.t(), list() -> AriaEngine.State.t() | false)
-  @type task_method_fn :: (AriaEngine.State.t(), list() -> list() | false)
-  @type goal_method_fn :: (AriaEngine.State.t(), list() -> list() | false)
+  @type todo_item :: AriaEngineCore.Plan.todo_item()
+  @type action_fn :: (AriaEngineCore.State.t(), list() -> AriaEngineCore.State.t() | false)
+  @type task_method_fn :: (AriaEngineCore.State.t(), list() -> list() | false)
+  @type goal_method_fn :: (AriaEngineCore.State.t(), list() -> list() | false)
   @type status :: :pending | :planning | :executing | :completed | :failed | :cancelled
   @type plan_result :: {:ok, solution_tree()} | {:error, String.t()}
   @type execution_result :: {:ok, t()} | {:error, String.t()}
@@ -26,8 +26,8 @@ defmodule AriaEngine.Core do
           unigoal_methods: %{String.t() => [goal_method_fn()]},
           multigoal_methods: [goal_method_fn()],
           goals: [todo_item()],
-          current_state: AriaEngine.State.t(),
-          initial_state: AriaEngine.State.t(),
+          current_state: AriaEngineCore.State.t(),
+          initial_state: AriaEngineCore.State.t(),
           status: status(),
           solution_tree: solution_tree() | nil,
           progress: %{
@@ -68,7 +68,7 @@ defmodule AriaEngine.Core do
   @spec new(String.t(), map()) :: t()
   def new(id, definition \\ %{}) do
     now = DateTime.utc_now()
-    initial_state = Map.get(definition, :initial_state, AriaEngine.State.new())
+    initial_state = Map.get(definition, :initial_state, AriaEngineCore.State.new())
 
     %__MODULE__{
       id: id,

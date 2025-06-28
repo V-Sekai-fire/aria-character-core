@@ -1,14 +1,14 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Domain do
-  @moduledoc "Represents a planning domain in the GTPhop planner (Elixir port of GTPyhop).\n\nA domain contains:\n- Actions: Named functions that modify the world state\n- Task methods: Named functions that decompose tasks into subtasks\n- Unigoal methods: Named functions that achieve single goals\n- Multigoal methods: Named functions that achieve multiple goals simultaneously\n\nThis implementation aligns with GTPyhop's approach where:\n- Actions are stored as name -> function mappings\n- Methods are stored as task_name -> list of {name, function} tuples\n- Method names are preserved for logging, blacklisting, and error reporting\n\nExample:\n```elixir\ndomain = AriaEngine.Domain.new(\"logistics\")\n|> AriaEngine.Domain.add_action(:move, &move_action/2)\n|> AriaEngine.Domain.add_task_methods(\"transport\", [\n     {\"transport\", &transport_by_truck/2},\n     {\"transport\", &transport_by_plane/2}\n   ])\n```\n"
+defmodule AriaEngineCore.Domain do
+  @moduledoc "Represents a planning domain in the GTPhop planner (Elixir port of GTPyhop).\n\nA domain contains:\n- Actions: Named functions that modify the world state\n- Task methods: Named functions that decompose tasks into subtasks\n- Unigoal methods: Named functions that achieve single goals\n- Multigoal methods: Named functions that achieve multiple goals simultaneously\n\nThis implementation aligns with GTPyhop's approach where:\n- Actions are stored as name -> function mappings\n- Methods are stored as task_name -> list of {name, function} tuples\n- Method names are preserved for logging, blacklisting, and error reporting\n\nExample:\n```elixir\ndomain = AriaEngineCore.Domain.new(\"logistics\")\n|> AriaEngineCore.Domain.add_action(:move, &move_action/2)\n|> AriaEngineCore.Domain.add_task_methods(\"transport\", [\n     {\"transport\", &transport_by_truck/2},\n     {\"transport\", &transport_by_plane/2}\n   ])\n```\n"
   require Logger
-  alias AriaEngine.Domain.Core
-  alias AriaEngine.Domain.Actions
-  alias AriaEngine.Domain.Methods
-  alias AriaEngine.Domain.Utils
-  alias AriaEngine.Domain.BehaviourImpl
+  alias AriaEngineCore.Domain.Core
+  alias AriaEngineCore.Domain.Actions
+  alias AriaEngineCore.Domain.Methods
+  alias AriaEngineCore.Domain.Utils
+  alias AriaEngineCore.Domain.BehaviourImpl
   @type t :: Core.t()
   defdelegate new(name), to: Core
   defdelegate validate(domain), to: Core

@@ -1,19 +1,19 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.PlannerAdapter do
+defmodule AriaEngineCore.PlannerAdapter do
   @moduledoc """
   Adapter for PlannerAdapter functionality in aria_engine_core.
 
   This module provides the full planning functionality by delegating to
-  AriaEngine.Planner, which contains the real implementation migrated
+  AriaEngineCore.Planner, which contains the real implementation migrated
   from aria_hybrid_planner.
   """
 
-  alias AriaEngine.Plan.Utils
-  alias AriaEngine.Planner
-  alias AriaEngine.Domain
-  alias AriaEngine.State
+  alias AriaEngineCore.Plan.Utils
+  alias AriaEngineCore.Planner
+  alias AriaEngineCore.Domain
+  alias AriaEngineCore.State
 
   @type solution_tree :: Utils.solution_tree()
   @type plan_step :: Utils.plan_step()
@@ -42,22 +42,22 @@ defmodule AriaEngine.PlannerAdapter do
   end
 
   @doc """
-  Plan tasks using the AriaEngine.Planner implementation.
+  Plan tasks using the AriaEngineCore.Planner implementation.
 
-  This function converts tasks to goals and delegates to AriaEngine.Planner.plan/4.
+  This function converts tasks to goals and delegates to AriaEngineCore.Planner.plan/4.
   """
   @spec plan_tasks(domain(), state(), [term()], keyword()) ::
           {:ok, map()} | {:error, String.t()}
   def plan_tasks(domain, initial_state, tasks, opts \\ []) do
-    # Convert tasks to goals format expected by AriaEngine.Planner
+    # Convert tasks to goals format expected by AriaEngineCore.Planner
     goals = convert_tasks_to_goals(tasks)
     Planner.plan(domain, initial_state, goals, opts)
   end
 
   @doc """
-  Plan goals using the AriaEngine.Planner implementation.
+  Plan goals using the AriaEngineCore.Planner implementation.
 
-  This is a direct delegation to AriaEngine.Planner.plan/4.
+  This is a direct delegation to AriaEngineCore.Planner.plan/4.
   """
   @spec plan(domain(), state(), [term()], keyword()) ::
           {:ok, map()} | {:error, String.t()}
@@ -66,9 +66,9 @@ defmodule AriaEngine.PlannerAdapter do
   end
 
   @doc """
-  Validate a plan using the AriaEngine.Planner implementation.
+  Validate a plan using the AriaEngineCore.Planner implementation.
 
-  This function delegates to AriaEngine.Planner.validate_plan/3.
+  This function delegates to AriaEngineCore.Planner.validate_plan/3.
   """
   @spec validate_plan(domain(), state(), map()) ::
           {:ok, state()} | {:error, String.t()}
@@ -80,12 +80,12 @@ defmodule AriaEngine.PlannerAdapter do
   Replan from a failure point.
 
   This function would need to be implemented when replanning functionality
-  is added to AriaEngine.Planner. For now, it returns an error.
+  is added to AriaEngineCore.Planner. For now, it returns an error.
   """
   @spec replan(domain(), state(), solution_tree(), String.t(), keyword()) ::
           {:ok, map()} | {:error, String.t()} | :failure
   def replan(_domain, _state, _solution_tree, _fail_node_id, _opts) do
-    {:error, "Replanning functionality not yet implemented in AriaEngine.Planner"}
+    {:error, "Replanning functionality not yet implemented in AriaEngineCore.Planner"}
   end
 
   # ==================== PRIVATE HELPERS ====================

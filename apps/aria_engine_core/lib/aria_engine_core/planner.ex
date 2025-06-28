@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngine.Planner do
+defmodule AriaEngineCore.Planner do
   @moduledoc """
   Main external API for the Aria planning system following R25W1398085 specification.
 
@@ -12,10 +12,10 @@ defmodule AriaEngine.Planner do
   ## Basic Usage
 
       # Plan and execute with automatic recovery
-      {:ok, final_state} = AriaEngine.Planner.run_lazy(domain, state, goals)
+      {:ok, final_state} = AriaEngineCore.Planner.run_lazy(domain, state, goals)
 
       # Just planning, no execution
-      {:ok, plan} = AriaEngine.Planner.plan(domain, state, goals)
+      {:ok, plan} = AriaEngineCore.Planner.plan(domain, state, goals)
 
   ## API Functions
 
@@ -27,8 +27,8 @@ defmodule AriaEngine.Planner do
 
   alias AriaHybridPlanner.Core
 
-  @type domain :: AriaEngine.Domain.t()
-  @type state :: AriaEngine.State.t()
+  @type domain :: AriaEngineCore.Domain.t()
+  @type state :: AriaEngineCore.State.t()
   @type goal :: term()
   @type plan :: [term()]
 
@@ -55,7 +55,7 @@ defmodule AriaEngine.Planner do
       state = MyState.new()
       goals = [{:achieve, :goal1}, {:achieve, :goal2}]
 
-      {:ok, final_state} = AriaEngine.Planner.run_lazy(domain, state, goals)
+      {:ok, final_state} = AriaEngineCore.Planner.run_lazy(domain, state, goals)
       IO.puts("Goals achieved!")
   """
   @spec run_lazy(domain(), state(), [goal()]) :: {:ok, state()} | {:error, String.t()}
@@ -84,7 +84,7 @@ defmodule AriaEngine.Planner do
 
   ## Example
 
-      {:ok, plan} = AriaEngine.Planner.plan(domain, state, goals)
+      {:ok, plan} = AriaEngineCore.Planner.plan(domain, state, goals)
       IO.inspect(plan, label: "Generated plan")
       # Execute plan manually if needed
   """
