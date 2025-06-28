@@ -5,8 +5,8 @@ defmodule Plan.NodeExpansion do
   @moduledoc "Functions for expanding different types of nodes in the solution tree.\n"
   require Logger
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}
-  @type todo_item :: task() | goal() | AriaEngine.Multigoal.t()
+  @type goal :: {String.t(), String.t(), State.fact_value()}
+  @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
   @type solution_node :: %{
@@ -14,7 +14,7 @@ defmodule Plan.NodeExpansion do
           task: todo_item(),
           parent_id: node_id() | nil,
           children_ids: [node_id()],
-          state: AriaEngine.State.t() | nil,
+          state: State.t() | nil,
           visited: boolean(),
           expanded: boolean(),
           method_tried: String.t() | nil,
@@ -28,12 +28,12 @@ defmodule Plan.NodeExpansion do
           blacklisted_commands: MapSet.t(),
           goal_network: %{node_id() => [node_id()]}
         }
-  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], AriaEngine.State.t()) ::
+  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], State.t()) ::
           {:ok, solution_tree()}
   def expand_root_node(solution_tree, root_id, todos, state) do
     {new_tree, child_ids} =
       Enum.reduce(todos, {solution_tree, []}, fn todo, {tree, ids} ->
-        child_id = AriaEngine.Plan.Utils.generate_node_id()
+        child_id = Plan.Utils.generate_node_id()
 
         child_node = %{
           id: child_id,
@@ -45,7 +45,7 @@ defmodule Plan.NodeExpansion do
           expanded: false,
           method_tried: nil,
           blacklisted_methods: [],
-          is_primitive: AriaEngine.Plan.Utils.is_primitive_task?(todo),
+          is_primitive: Plan.Utils.is_primitive_task?(todo),
           is_durative: false
         }
 
@@ -61,7 +61,7 @@ defmodule Plan.NodeExpansion do
 
   @spec expand_task_node(
           Domain.Core.t(),
-          AriaEngine.State.t(),
+          State.t(),
           solution_tree(),
           node_id(),
           String.t(),
@@ -70,7 +70,7 @@ defmodule Plan.NodeExpansion do
         ) :: {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_task_node(domain, _state, solution_tree, node_id, task_name, args, verbose) do
     node = solution_tree.nodes[node_id]
-    methods = AriaEngine.Domain.get_task_methods(domain, task_name)
+    methods = Domain.Core.get_task_methods(domain, task_name)
 
     available_methods =
       Enum.reject(methods, fn {method_name, _method_fn} ->
@@ -128,12 +128,12 @@ defmodule Plan.NodeExpansion do
 
   @spec expand_goal_node(
           Domain.Core.t(),
-          AriaEngine.State.t(),
+          State.t(),
           solution_tree(),
           node_id(),
           String.t(),
           String.t(),
-          AriaEngine.State.fact_value(),
+          State.fact_value(),
           integer()
         ) :: {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_goal_node(
@@ -148,7 +148,7 @@ defmodule Plan.NodeExpansion do
       ) do
     node = solution_tree.nodes[node_id]
 
-    case AriaEngine.State.get_fact(node.state, subject, predicate) do
+    case State.get_fact(node.state, subject, predicate) do
       ^fact_value ->
         mark_goal_satisfied(solution_tree, node_id)
 
@@ -168,21 +168,21 @@ defmodule Plan.NodeExpansion do
 
   @spec expand_multigoal_node(
           Domain.Core.t(),
-          AriaEngine.State.t(),
+          State.t(),
           solution_tree(),
           node_id(),
-          AriaEngine.Multigoal.t(),
+          Multigoal.t(),
           integer()
         ) :: {:ok, solution_tree()} | {:error, String.t()} | :failure
   def expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
     node = solution_tree.nodes[node_id]
 
-    if AriaEngine.Multigoal.satisfied?(multigoal, node.state) do
+    if Multigoal.satisfied?(multigoal, node.state) do
       updated_node = %{node | expanded: true, is_primitive: true}
       final_tree = put_in(solution_tree.nodes[node_id], updated_node)
       {:ok, final_tree}
     else
-      unsatisfied = AriaEngine.Multigoal.unsatisfied_goals(multigoal, node.state)
+      unsatisfied = Multigoal.unsatisfied_goals(multigoal, node.state)
 
       if verbose > 2 do
         Logger.debug("Multigoal has #{length(unsatisfied)} unsatisfied goals")
@@ -190,8 +190,8 @@ defmodule Plan.NodeExpansion do
 
       {new_tree, child_ids} =
         Enum.reduce(unsatisfied, {solution_tree, []}, fn goal, {tree, ids} ->
-          child_id = AriaEngine.Plan.Utils.generate_node_id()
-          is_primitive = AriaEngine.Plan.Utils.is_primitive_task?(goal)
+          child_id = Plan.Utils.generate_node_id()
+          is_primitive = Plan.Utils.is_primitive_task?(goal)
 
           child_node = %{
             id: child_id,
@@ -251,7 +251,7 @@ defmodule Plan.NodeExpansion do
          verbose
        ) do
     node = solution_tree.nodes[node_id]
-    methods = AriaEngine.Domain.get_unigoal_methods(domain, predicate)
+    methods = Domain.Core.get_unigoal_methods(domain, predicate)
 
     available_methods =
       Enum.reject(methods, fn {method_name, _method_fn} ->
@@ -323,13 +323,13 @@ defmodule Plan.NodeExpansion do
       Logger.debug("Goal method returned multigoal with #{length(goals)} goals")
     end
 
-    multigoal_struct = AriaEngine.Multigoal.new(goals)
+    multigoal_struct = Multigoal.new(goals)
     expand_multigoal_node(domain, nil, solution_tree, node_id, multigoal_struct, verbose)
   end
 
   defp create_task_child_node(domain, parent_id, subtask, {tree, ids, current_state}, verbose) do
-    child_id = AriaEngine.Plan.Utils.generate_node_id()
-    is_primitive = AriaEngine.Plan.Utils.is_primitive_task?(subtask)
+    child_id = Plan.Utils.generate_node_id()
+    is_primitive = Plan.Utils.is_primitive_task?(subtask)
 
     child_state =
       if is_primitive do
@@ -363,8 +363,8 @@ defmodule Plan.NodeExpansion do
          {tree, ids, current_state, failed_so_far},
          verbose
        ) do
-    child_id = AriaEngine.Plan.Utils.generate_node_id()
-    is_primitive = AriaEngine.Plan.Utils.is_primitive_task?(subtask)
+    child_id = Plan.Utils.generate_node_id()
+    is_primitive = Plan.Utils.is_primitive_task?(subtask)
 
     is_durative =
       if is_primitive do
@@ -377,7 +377,7 @@ defmodule Plan.NodeExpansion do
             action_name
           end
 
-        AriaEngine.Domain.Core.get_durative_action(domain, action_atom) != nil
+        Domain.Core.get_durative_action(domain, action_atom) != nil
       else
         false
       end
@@ -417,7 +417,7 @@ defmodule Plan.NodeExpansion do
         action_name
       end
 
-    case AriaEngine.Domain.execute_action(domain, current_state, action_atom, args) do
+    case Domain.Core.execute_action(domain, current_state, action_atom, args) do
       {:ok, new_state} ->
         if verbose > 2 do
           Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
@@ -442,7 +442,7 @@ defmodule Plan.NodeExpansion do
         action_name
       end
 
-    case AriaEngine.Domain.execute_action(domain, current_state, action_atom, args) do
+    case Domain.Core.execute_action(domain, current_state, action_atom, args) do
       {:ok, new_state} ->
         if verbose > 2 do
           Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")

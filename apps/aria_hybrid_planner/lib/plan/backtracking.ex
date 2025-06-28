@@ -70,7 +70,7 @@ defmodule Plan.Backtracking do
             Logger.debug("Found responsible task node: #{task_node_id}")
           end
 
-          updated_tree = AriaEngine.Plan.Utils.update_cached_states(solution_tree, state)
+          updated_tree = Plan.Utils.update_cached_states(solution_tree, state)
 
           case try_alternative_method_for_task(domain, updated_tree, task_node_id, verbose) do
             {:ok, new_tree} -> Core.ipyhop(domain, state, new_tree, opts)
@@ -156,7 +156,7 @@ defmodule Plan.Backtracking do
 
   defp try_alternative_for_task(domain, solution_tree, task_node_id, node, task_name, verbose) do
     blacklisted_methods = update_blacklisted_methods(node)
-    all_methods = AriaEngine.Domain.get_task_methods(domain, task_name)
+    all_methods = Domain.Core.get_task_methods(domain, task_name)
 
     case check_remaining_methods(all_methods, blacklisted_methods, task_name, verbose) do
       :no_alternatives ->
@@ -176,7 +176,7 @@ defmodule Plan.Backtracking do
 
   defp try_alternative_for_goal(domain, solution_tree, task_node_id, node, predicate, verbose) do
     blacklisted_methods = update_blacklisted_methods(node)
-    all_methods = AriaEngine.Domain.get_unigoal_methods(domain, predicate)
+    all_methods = Domain.Core.get_unigoal_methods(domain, predicate)
 
     case check_remaining_methods(all_methods, blacklisted_methods, predicate, verbose) do
       :no_alternatives ->
@@ -240,7 +240,7 @@ defmodule Plan.Backtracking do
         blacklisted_methods: blacklisted_methods
     }
 
-    descendant_ids = AriaEngine.Plan.Utils.get_all_descendants(solution_tree, task_node_id)
+    descendant_ids = Plan.Utils.get_all_descendants(solution_tree, task_node_id)
     remaining_nodes = Map.drop(solution_tree.nodes, descendant_ids)
     updated_tree = %{solution_tree | nodes: Map.put(remaining_nodes, task_node_id, reset_node)}
     {:ok, updated_tree}
