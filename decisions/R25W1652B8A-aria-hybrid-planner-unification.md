@@ -44,14 +44,16 @@ Unify the `aria_hybrid_planner` app into a coherent, single-API architecture tha
 
 ## Implementation Plan
 
-### Phase 1: Create Unified Core API ✅
+### Phase 1: Dependency Reversal ✅
 
 **Priority:** HIGH
 
-- [x] Create new `AriaHybridPlanner.Core` module as the single API entry point
-- [x] Consolidate all planning functions into unified interface
-- [x] Maintain backward compatibility during transition
-- [x] Document the unified API clearly
+- [x] Update aria_engine_core/mix.exs to depend on aria_hybrid_planner ✅ (already done)
+- [x] Remove aria_engine_core dependency from aria_hybrid_planner/mix.exs ✅ (already done)
+- [x] Make aria_hybrid_planner self-contained by replacing all AriaEngine module references ✅
+- [x] Ensure aria_hybrid_planner compiles independently ✅
+- [x] Create local implementations of Domain.Core, Multigoal, State, and Plan.Utils ✅
+- [x] Replace all AriaEngine.PlannerAdapter calls with stub implementations ✅
 
 ### Phase 2: Reorganize Module Structure
 

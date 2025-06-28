@@ -11,12 +11,8 @@ defmodule AriaEngineCore do
   ## Quick Start
 
       # Plan and execute with intelligent recovery
-      case AriaEngine.Planner.run_lazy(domain, state, goals) do
-        {:ok, final_state} ->
-          IO.puts("Success! Goals achieved.")
-        {:error, reason} ->
-          IO.puts("Planning/execution failed: #{reason}")
-      end
+      {:ok, final_state} = AriaEngine.Planner.run_lazy(domain, state, goals)
+      IO.puts("Success! Goals achieved.")
 
   ## Main Modules
 
@@ -40,8 +36,7 @@ defmodule AriaEngineCore do
 
   ## Examples
 
-      version = AriaEngineCore.version()
-      IO.puts("AriaEngine Core version: #{version}")
+      IO.puts("AriaEngine Core version: #{AriaEngineCore.version()}")
   """
   @spec version() :: String.t()
   def version do
