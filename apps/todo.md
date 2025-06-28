@@ -1,0 +1,1 @@
+restructure `apps` to follow the standard Elixir pattern of an external module with inner modules.
