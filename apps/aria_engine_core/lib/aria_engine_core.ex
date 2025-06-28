@@ -11,12 +11,20 @@ defmodule AriaEngineCore do
   ## Quick Start
 
       # Plan and execute with intelligent recovery
-      {:ok, final_state} = AriaEngineCore.Planner.run_lazy(domain, state, goals)
+      {:ok, final_state} = AriaEngineCore.run_lazy(domain, state, goals)
       IO.puts("Success! Goals achieved.")
 
-  ## Main Modules
+      # Just planning, no execution
+      {:ok, plan} = AriaEngineCore.plan(domain, state, goals)
 
-  - `AriaEngineCore.Planner` - Primary planning interface with `run_lazy/4` and `plan/4`
+  ## Main API Functions
+
+  - `run_lazy/3` - Plan and execute with automatic recovery (recommended)
+  - `plan/3` - Just planning, no execution
+
+  ## Inner Modules
+
+  - `AriaEngineCore.Planner` - Primary planning interface implementation
   - `AriaEngineCore.Domain` - Domain definition and management
   - `AriaEngineCore.State` - State representation and manipulation
 
@@ -28,8 +36,30 @@ defmodule AriaEngineCore do
   - **Validated Plans**: All output plans are guaranteed to be valid and executable
   - **Clean External API**: No configuration complexity exposed to users
 
-  For detailed usage, see `AriaEngineCore.Planner` documentation.
+  ## Advanced Usage
+
+  For advanced usage, you can access the inner modules directly:
+
+      # Direct access to planner module
+      {:ok, final_state} = AriaEngineCore.Planner.run_lazy(domain, state, goals)
+
+      # Domain and state creation
+      domain = AriaEngineCore.Domain.new("my_domain")
+      state = AriaEngineCore.State.new()
   """
+
+  # Type aliases for the main API
+  @type domain :: AriaEngineCore.Domain.t()
+  @type state :: AriaEngineCore.State.t()
+  @type goal :: term()
+  @type plan :: [term()]
+
+  # Delegate primary planning functions to Planner module
+  defdelegate run_lazy(domain, state, goals), to: AriaEngineCore.Planner
+  defdelegate plan(domain, state, goals), to: AriaEngineCore.Planner
+
+  # Expose inner modules for advanced usage
+  alias AriaEngineCore.{Domain, State, Planner}
 
   @doc """
   Get the version of AriaEngine Core.

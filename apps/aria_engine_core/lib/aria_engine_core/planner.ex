@@ -3,18 +3,24 @@
 
 defmodule AriaEngineCore.Planner do
   @moduledoc """
-  Main external API for the Aria planning system following R25W1398085 specification.
+  Internal planning implementation for the Aria planning system.
 
-  This module provides a clean, GTpyHOP-style interface with intelligent recovery
-  for planning and execution. All implementation complexity is hidden behind
-  this simple API.
+  This module provides the core planning functionality that is exposed through
+  the main AriaEngineCore module. It implements the R25W1398085 specification
+  with a clean, GTpyHOP-style interface.
 
-  ## Basic Usage
+  ## Usage
 
-      # Plan and execute with automatic recovery
+  Most users should use the main AriaEngineCore module:
+
+      # Recommended usage
+      {:ok, final_state} = AriaEngineCore.run_lazy(domain, state, goals)
+      {:ok, plan} = AriaEngineCore.plan(domain, state, goals)
+
+  ## Direct Usage (Advanced)
+
+      # Direct access to this module
       {:ok, final_state} = AriaEngineCore.Planner.run_lazy(domain, state, goals)
-
-      # Just planning, no execution
       {:ok, plan} = AriaEngineCore.Planner.plan(domain, state, goals)
 
   ## API Functions
@@ -22,7 +28,7 @@ defmodule AriaEngineCore.Planner do
   - `run_lazy/3` - Plan and execute with recovery (recommended)
   - `plan/3` - Just planning, no execution
 
-  No configuration options are exposed - all complexity is handled internally.
+  All implementation complexity is handled internally.
   """
 
   alias AriaHybridPlanner.Core
