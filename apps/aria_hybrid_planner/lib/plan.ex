@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaHybridPlanner.PlanCore do
-  alias AriaEngine.State
 
   @moduledoc """
   Main Plan module that provides the public API for planning operations.

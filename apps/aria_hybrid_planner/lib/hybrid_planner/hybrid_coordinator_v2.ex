@@ -34,7 +34,6 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
       end
   """
 
-  alias AriaEngine.State
   require Logger
 
   defstruct [
@@ -88,8 +87,8 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   Plan goals using HTN planning with temporal constraint validation.
   """
   @spec plan(t(), Domain.Core.t(), AriaEngine.State.t(), [term()], keyword()) :: plan_result()
-  def plan(coordinator, domain, %AriaEngine.State{} = state, goals, opts \\ []) do
-    verbose = Keyword.get(opts, :verbose, 0)
+  def plan(_coordinator, domain, %AriaEngine.State{} = state, goals, opts \\ []) do
+    _verbose = Keyword.get(opts, :verbose, 0)
 
     log_progress("planning", %{status: "started", goals: length(goals), domain: domain.name}, opts)
 
@@ -117,14 +116,9 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
                       goals: goals,
                       domain_name: domain.name,
                       planning_time: System.system_time(:millisecond),
-                      coordinator_metadata: coordinator.metadata
+                      coordinator_metadata: %{implementation: :monolithic}
                     }
                   }}
-
-                {:ok, false} ->
-                  error_msg = "Temporal constraints are inconsistent"
-                  log_error(error_msg, %{phase: "temporal_validation"}, opts)
-                  {:error, error_msg}
 
                 {:error, reason} ->
                   log_error(reason, %{phase: "temporal_validation"}, opts)
@@ -185,7 +179,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   the IPyHOP pattern where blacklisted commands are checked during execution.
   """
   @spec execute(t(), Domain.Core.t(), AriaEngine.State.t(), map(), keyword()) :: execution_result()
-  def execute(coordinator, domain, %AriaEngine.State{} = initial_state, plan, opts \\ []) do
+  def execute(_coordinator, domain, %AriaEngine.State{} = initial_state, plan, opts \\ []) do
     log_progress("execution", %{status: "started"}, opts)
 
     try do
@@ -258,10 +252,6 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
                       metadata: replan_metadata
                     }}
 
-                  {:ok, false} ->
-                    error_msg = "Replanned temporal constraints are inconsistent"
-                    log_error(error_msg, %{phase: "replanning_temporal_validation"}, opts)
-                    {:error, error_msg}
 
                   {:error, reason} ->
                     log_error(reason, %{phase: "replanning_temporal_validation"}, opts)

@@ -13,7 +13,6 @@ defmodule Plan.Blacklisting do
   Based on IPyHOP's blacklisting approach from thirdparty/IPyHOP/ipyhop/planner.py
   """
 
-  alias AriaEngine.State
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), AriaEngine.State.fact_value()}

@@ -238,12 +238,6 @@ defmodule Plan.SimpleExecutor do
 
     # Try to get action metadata from domain
     case get_action_metadata(domain, action_atom) do
-      {:ok, metadata} ->
-        if verbose > 2 do
-          Logger.debug("SimpleExecutor: Validating entity requirements for #{action_atom}")
-        end
-        validate_required_entities(state, metadata[:entity_requirements] || [], opts)
-
       {:error, _reason} ->
         # No metadata found, skip validation (allows legacy actions to work)
         if verbose > 2 do

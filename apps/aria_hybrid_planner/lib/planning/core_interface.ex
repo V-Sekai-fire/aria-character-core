@@ -5,7 +5,6 @@ defmodule Planning.CoreInterface do
   @moduledoc "Replan from a failure point using HybridPlanner.HybridCoordinatorV2.\n"
   alias Planning.Internal
   alias AriaEngine.Core
-  alias AriaEngine.State
   @type t :: Planning.HighLevel.t()
   @type solution_tree :: Core.solution_tree()
   @type plan_step :: Core.plan_step()

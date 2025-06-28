@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Plan.NodeExpansion do
-  alias AriaEngine.State
   @moduledoc "Functions for expanding different types of nodes in the solution tree.\n"
   require Logger
   @type task :: {String.t(), list()}

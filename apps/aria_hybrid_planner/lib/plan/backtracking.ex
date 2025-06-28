@@ -12,7 +12,6 @@ defmodule Plan.Backtracking do
   """
   require Logger
   alias Plan.Core
-  alias AriaEngine.State
   @type node_id :: String.t()
   @type solution_node :: %{
           id: node_id(),
