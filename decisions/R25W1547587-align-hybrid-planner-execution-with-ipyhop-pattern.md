@@ -149,12 +149,24 @@ Align the hybrid planner execution with the IPyHOP pattern while ensuring compli
 - [x] Blacklists maintained at domain/planner level
 - [x] Clear separation of concerns
 
-### R25W1398085 Compliance ✅
+### R25W1398085 Compliance ⚠️
 
+**Partial Compliance Achieved:**
 - [x] Action vs command distinction implemented
-- [x] Entity and capability validation during execution
-- [x] Unified action specification patterns followed
-- [x] Proper state management maintained
+- [x] Basic entity and capability validation framework
+- [x] IPyHOP execution pattern alignment
+- [x] AriaCore.ActionAttributes integration
+
+**Critical Compliance Gaps:**
+- [ ] **Missing Method Types**: Only @action/@command implemented, missing:
+  - [ ] @task_method support for complex workflow decomposition
+  - [ ] @unigoal_method support for single predicate goals
+  - [ ] @multigoal_method support for multiple goal optimization
+  - [ ] @multitodo_method support for todo list optimization
+- [ ] **Incomplete Temporal Validation**: Missing support for R25W1398085's 8 temporal patterns
+- [ ] **Entity Registry Integration**: Placeholder implementation needs full R25W1398085 compliance
+- [ ] **Goal Format Validation**: Must enforce ONLY `{predicate, subject, value}` format
+- [ ] **State Validation Compliance**: Must use direct `AriaState.RelationalState.get_fact/3` calls
 
 ### Code Quality ✅
 
@@ -268,14 +280,77 @@ This implementation aligns with:
   - [ ] Test R25W1398085 compliance
   - [ ] Test failure scenarios and execution traces
 
-**Phase 7: Integration Verification** ⚠️
+**Phase 7: Complete R25W1398085 Method Type Support** ⚠️
+
+**Priority:** HIGH
+
+- [ ] Implement @task_method execution support
+  - [ ] Add task method execution in Plan.SimpleExecutor
+  - [ ] Handle todo_item decomposition and execution
+  - [ ] Support complex workflow execution patterns
+  - [ ] Validate task method return types
+
+- [ ] Implement @unigoal_method execution support
+  - [ ] Add unigoal method execution for single predicate goals
+  - [ ] Support `{predicate, subject, value}` goal format validation
+  - [ ] Handle goal achievement verification
+  - [ ] Integrate with AriaState.RelationalState.get_fact/3
+
+- [ ] Implement @multigoal_method execution support
+  - [ ] Add multigoal optimization during execution
+  - [ ] Support AriaEngine.Multigoal.t() handling
+  - [ ] Coordinate multiple goal execution
+  - [ ] Validate multigoal method return types
+
+- [ ] Implement @multitodo_method execution support
+  - [ ] Add todo list optimization during execution
+  - [ ] Support todo_item list processing
+  - [ ] Handle execution order optimization
+  - [ ] Validate multitodo method return types
+
+**Phase 8: Temporal Constraint Validation** ⚠️
+
+**Priority:** HIGH
+
+- [ ] Implement R25W1398085's 8 temporal patterns
+  - [ ] Pattern 1: Instant action validation
+  - [ ] Pattern 2: Floating duration validation
+  - [ ] Pattern 4: Calculated start (deadline) validation
+  - [ ] Pattern 6: Calculated end validation
+  - [ ] Pattern 7: Fixed interval validation
+  - [ ] Pattern 8: Constraint validation (start + duration = end)
+
+- [ ] Add ISO 8601 temporal parsing and validation
+  - [ ] Support duration parsing (PT2H format)
+  - [ ] Support datetime parsing with timezone
+  - [ ] Validate temporal constraint consistency
+  - [ ] Add temporal constraint checking during execution
+
+**Phase 9: Entity Registry Full Compliance** ⚠️
+
+**Priority:** MEDIUM
+
+- [ ] Complete entity registration pattern implementation
+  - [ ] Support all entity types from R25W1398085
+  - [ ] Implement capability-based validation
+  - [ ] Add entity requirement checking during execution
+  - [ ] Support entity status tracking
+
+- [ ] Integrate with AriaCore.ActionAttributes entity system
+  - [ ] Use create_entity_registry/1 function
+  - [ ] Support entity metadata extraction
+  - [ ] Validate entity requirements against domain
+  - [ ] Add proper entity lifecycle management
+
+**Phase 10: Integration Verification** ⚠️
 
 **Priority:** MEDIUM
 
 - [ ] Verify end-to-end execution workflows
-- [ ] Test with real domain implementations
-- [ ] Validate performance characteristics
-- [ ] Ensure backward compatibility
+- [ ] Test with real domain implementations using all 6 method types
+- [ ] Validate performance characteristics with temporal constraints
+- [ ] Ensure backward compatibility with existing domains
+- [ ] Test R25W1398085 compliance across all execution paths
 
 ## Success Criteria Updates
 
@@ -289,6 +364,46 @@ This implementation aligns with:
 - [ ] **NEW:** Complete entity validation implementation
 - [ ] **NEW:** Comprehensive test coverage
 
+### R25W1398085 Full Compliance ⚠️
+
+**Method Type Support:**
+- [ ] ~~@action method execution~~ ✅ **DONE**
+- [ ] ~~@command method execution~~ ✅ **DONE**
+- [ ] @task_method execution support
+- [ ] @unigoal_method execution support
+- [ ] @multigoal_method execution support
+- [ ] @multitodo_method execution support
+
+**Temporal Constraint Validation:**
+- [ ] All 8 temporal patterns from R25W1398085 supported
+- [ ] ISO 8601 duration and datetime parsing
+- [ ] Temporal constraint consistency validation
+- [ ] Execution-time temporal checking
+
+**Entity and State Compliance:**
+- [ ] Full entity registry integration with AriaCore.ActionAttributes
+- [ ] Capability-based validation during execution
+- [ ] Goal format validation (ONLY `{predicate, subject, value}`)
+- [ ] State validation using direct `AriaState.RelationalState.get_fact/3` calls
+
+**Domain Integration:**
+- [ ] Complete domain API integration (fix `get_action_metadata/2`)
+- [ ] Entity requirement validation against domain specifications
+- [ ] Proper entity lifecycle management during execution
+
 ## Current Focus
 
-**Immediate Priority:** Fix code quality issues and complete entity validation implementation to achieve true completion status.
+**Immediate Priority:** Complete R25W1398085 compliance by implementing missing method types and fixing domain API integration to achieve authoritative specification alignment.
+
+## Compliance Verification
+
+**Before marking this ADR as complete, verify:**
+
+1. **All 6 method types** from R25W1398085 are supported in execution
+2. **All 8 temporal patterns** are validated during execution
+3. **Entity registry integration** is complete and functional
+4. **Goal format validation** enforces R25W1398085 standards
+5. **Domain API integration** works without placeholder implementations
+6. **Comprehensive test coverage** validates all compliance requirements
+
+**Reference:** This ADR must achieve full compliance with R25W1398085 (Unified Durative Action Specification) before completion.
