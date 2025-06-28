@@ -169,6 +169,14 @@ defmodule AriaEngineCore do
   @spec todo_item() :: module()
   def todo_item, do: AriaEngine
 
+  # State Management API - Delegate to internal State module
+  defdelegate new_state(), to: AriaEngineCore.State, as: :new
+  defdelegate new_state(data), to: AriaEngineCore.State, as: :new
+  defdelegate get_fact(state, entity_id, property), to: AriaEngineCore.State
+  defdelegate set_fact(state, entity_id, property, value), to: AriaEngineCore.State
+  defdelegate has_fact?(state, entity_id, property), to: AriaEngineCore.State
+  defdelegate remove_fact(state, entity_id, property), to: AriaEngineCore.State
+
   @doc """
   Get the version of AriaEngine Core.
 
