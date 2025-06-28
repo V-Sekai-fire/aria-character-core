@@ -313,7 +313,7 @@ defmodule AriaGltf.Accessor do
     end
   end
 
-  defp validate_bounds(max, min, type) when is_list(max) or is_list(min) do
+  defp validate_bounds(max, min, _type) when is_list(max) or is_list(min) do
     {:error, "Both max and min must be provided together or both must be nil"}
   end
 
@@ -322,9 +322,9 @@ defmodule AriaGltf.Accessor do
   # Helper functions
 
   defp put_if_present(map, _key, nil), do: map
-  defp put_if_present(map, _key, value, default) when value == default, do: map
   defp put_if_present(map, key, value), do: Map.put(map, key, value)
   defp put_if_present(map, key, value, _default), do: Map.put(map, key, value)
+  defp put_if_present(map, _key, value, default) when value == default, do: map
 
   defp get_required_field(map, key) do
     case Map.get(map, key) do

@@ -34,6 +34,8 @@ defmodule AriaEngineCore.Planner do
 
   require Logger
   alias AriaEngineCore.Plan
+  alias AriaHybridPlanner.Core, as: HybridCore
+  alias AriaEngine.Domain.Core, as: DomainCore
 
   # Type aliases matching ADR R25W1398085 specification
   @type domain :: AriaEngine.Domain.t()
@@ -174,17 +176,34 @@ defmodule AriaEngineCore.Planner do
   # Private implementation functions
 
   @spec perform_planning(domain(), state(), solution_tree()) :: {:ok, solution_tree()} | {:error, atom()}
-  defp perform_planning(_domain, _state, solution_tree) do
-    # TODO: Implement actual planning logic
-    # This is a placeholder that returns the initial tree as "planned"
-    # Real implementation would:
-    # 1. Expand non-primitive tasks using domain methods
-    # 2. Resolve goals using domain goal methods
-    # 3. Handle temporal constraints and resource allocation
-    # 4. Build complete solution tree with all primitive actions
+  defp perform_planning(domain, state, solution_tree) do
+    # Extract goals from solution tree
+    goals = Plan.get_goals_from_tree(solution_tree)
 
-    Logger.warn("Planning implementation is placeholder - returning initial tree")
-    {:ok, solution_tree}
+    # Create hybrid planner coordinator
+    coordinator = HybridCore.new_coordinator()
+
+    # Convert domain to hybrid planner format if needed
+    hybrid_domain = convert_domain_to_hybrid_format(domain)
+
+    Logger.debug("Using AriaHybridPlanner.Core for planning with #{length(goals)} goals")
+
+    # Use AriaHybridPlanner.Core for actual planning
+    case HybridCore.plan(coordinator, hybrid_domain, state, goals) do
+      {:ok, hybrid_plan} ->
+        # Convert hybrid plan back to solution tree format
+        case convert_hybrid_plan_to_solution_tree(hybrid_plan, goals, state) do
+          {:ok, final_tree} ->
+            Logger.debug("Successfully converted hybrid plan to solution tree")
+            {:ok, final_tree}
+          {:error, reason} ->
+            Logger.error("Failed to convert hybrid plan: #{inspect(reason)}")
+            {:error, reason}
+        end
+      {:error, reason} ->
+        Logger.error("AriaHybridPlanner.Core planning failed: #{inspect(reason)}")
+        {:error, :planning_failed}
+    end
   end
 
   @spec execute_solution_tree(domain(), state(), solution_tree()) ::
@@ -232,16 +251,133 @@ defmodule AriaEngineCore.Planner do
   end
 
   @spec execute_single_action(domain(), state(), atom() | String.t(), list()) :: {:ok, state()} | {:error, atom()}
-  defp execute_single_action(_domain, state, _action_name, _args) do
-    # TODO: Implement actual single action execution
-    # This is a placeholder that returns the state unchanged
-    # Real implementation would:
-    # 1. Convert action_name to proper format
-    # 2. Look up action function in domain
-    # 3. Call action function with state and args
-    # 4. Return updated state or error
+  defp execute_single_action(domain, state, action_name, args) do
+    # Use AriaHybridPlanner.Core for action execution
+    coordinator = HybridCore.new_coordinator()
+    hybrid_domain = convert_domain_to_hybrid_format(domain)
 
-    Logger.warn("Action execution is placeholder - returning unchanged state")
-    {:ok, state}
+    # Create a simple plan with just this action
+    action_plan = %{
+      "type" => "action",
+      "name" => action_name,
+      "args" => args
+    }
+
+    case HybridCore.execute(coordinator, hybrid_domain, state, action_plan) do
+      {:ok, new_state} ->
+        Logger.debug("Action #{action_name} executed successfully")
+        {:ok, new_state}
+      {:error, reason} ->
+        Logger.error("Action #{action_name} execution failed: #{inspect(reason)}")
+        {:error, :action_execution_failed}
+    end
   end
+
+  # ==================== CONVERSION HELPERS ====================
+
+  @spec convert_domain_to_hybrid_format(domain()) :: any()
+  defp convert_domain_to_hybrid_format(domain) do
+    # For now, pass through the domain as-is
+    # AriaHybridPlanner.Core should be able to handle AriaEngine.Domain.t()
+    # If type conversion is needed, it would be implemented here
+    domain
+  end
+
+  @spec convert_hybrid_plan_to_solution_tree(map(), [todo_item()], state()) :: {:ok, solution_tree()} | {:error, atom()}
+  defp convert_hybrid_plan_to_solution_tree(hybrid_plan, goals, state) do
+    try do
+      # Extract actions from hybrid plan and convert to solution tree format
+      case extract_actions_from_hybrid_plan(hybrid_plan) do
+        {:ok, actions} ->
+          # Create solution tree with the extracted actions
+          solution_tree = Plan.create_solution_tree_from_actions(actions, goals, state)
+          {:ok, solution_tree}
+        {:error, reason} ->
+          {:error, reason}
+      end
+    rescue
+      error ->
+        Logger.error("Error converting hybrid plan to solution tree: #{inspect(error)}")
+        {:error, :conversion_failed}
+    end
+  end
+
+  @spec extract_actions_from_hybrid_plan(map()) :: {:ok, [Plan.plan_step()]} | {:error, atom()}
+  defp extract_actions_from_hybrid_plan(hybrid_plan) when is_map(hybrid_plan) do
+    try do
+      # Handle different hybrid plan formats
+      actions = case hybrid_plan do
+        %{"actions" => action_list} when is_list(action_list) ->
+          Enum.map(action_list, &convert_hybrid_action_to_plan_step/1)
+        %{"plan" => plan_data} ->
+          extract_actions_from_plan_data(plan_data)
+        _ ->
+          # Try to extract actions from the plan structure
+          extract_actions_recursive(hybrid_plan)
+      end
+
+      {:ok, actions}
+    rescue
+      error ->
+        Logger.error("Failed to extract actions from hybrid plan: #{inspect(error)}")
+        {:error, :action_extraction_failed}
+    end
+  end
+
+  defp extract_actions_from_hybrid_plan(_), do: {:error, :invalid_plan_format}
+
+  @spec convert_hybrid_action_to_plan_step(any()) :: Plan.plan_step()
+  defp convert_hybrid_action_to_plan_step(action) do
+    case action do
+      %{"name" => name, "args" => args} ->
+        {name, args}
+      {name, args} when is_binary(name) or is_atom(name) ->
+        {name, args}
+      name when is_binary(name) or is_atom(name) ->
+        {name, []}
+      _ ->
+        # Fallback for unknown formats
+        {"unknown_action", [action]}
+    end
+  end
+
+  @spec extract_actions_from_plan_data(any()) :: [Plan.plan_step()]
+  defp extract_actions_from_plan_data(plan_data) when is_list(plan_data) do
+    Enum.flat_map(plan_data, &extract_actions_recursive/1)
+  end
+
+  defp extract_actions_from_plan_data(plan_data) do
+    extract_actions_recursive(plan_data)
+  end
+
+  @spec extract_actions_recursive(any()) :: [Plan.plan_step()]
+  defp extract_actions_recursive(data) when is_map(data) do
+    case data do
+      %{"type" => "action", "name" => name, "args" => args} ->
+        [{name, args}]
+      %{"type" => "action", "name" => name} ->
+        [{name, []}]
+      %{"children" => children} when is_list(children) ->
+        Enum.flat_map(children, &extract_actions_recursive/1)
+      _ ->
+        # Look for any nested structures that might contain actions
+        data
+        |> Map.values()
+        |> Enum.flat_map(fn
+          value when is_list(value) -> Enum.flat_map(value, &extract_actions_recursive/1)
+          value when is_map(value) -> extract_actions_recursive(value)
+          _ -> []
+        end)
+    end
+  end
+
+  defp extract_actions_recursive(data) when is_list(data) do
+    Enum.flat_map(data, &extract_actions_recursive/1)
+  end
+
+  defp extract_actions_recursive({name, args}) when is_binary(name) or is_atom(name) do
+    [{name, args}]
+  end
+
+  defp extract_actions_recursive(_), do: []
 end

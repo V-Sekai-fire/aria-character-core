@@ -359,4 +359,98 @@ defmodule AriaEngineCore.Plan do
   def is_primitive_task?(_) do
     false
   end
+
+  @doc """
+  Extracts goals from a solution tree.
+
+  ## Parameters
+
+  - `solution_tree` - The solution tree to extract goals from
+
+  ## Returns
+
+  List of todo items representing the goals.
+  """
+  @spec get_goals_from_tree(solution_tree()) :: [todo_item()]
+  def get_goals_from_tree(solution_tree) do
+    case solution_tree.nodes[solution_tree.root_id] do
+      nil -> []
+      %{task: {:root, todos}} -> todos
+      %{task: task} -> [task]
+    end
+  end
+
+  @doc """
+  Creates a solution tree from a list of actions.
+
+  ## Parameters
+
+  - `actions` - List of plan steps (actions)
+  - `goals` - Original goals that led to these actions
+  - `state` - Initial state
+
+  ## Returns
+
+  A solution tree containing the actions as primitive nodes.
+  """
+  @spec create_solution_tree_from_actions([plan_step()], [todo_item()], State.t()) :: solution_tree()
+  def create_solution_tree_from_actions(actions, goals, state) do
+    root_id = generate_node_id()
+
+    # Create root node
+    root_node = %{
+      id: root_id,
+      task: {:root, goals},
+      parent_id: nil,
+      children_ids: [],
+      state: state,
+      visited: true,
+      expanded: true,
+      method_tried: "actions_from_hybrid_planner",
+      blacklisted_methods: [],
+      is_primitive: false,
+      is_durative: false
+    }
+
+    # Create action nodes
+    {action_nodes, action_ids} =
+      Enum.map_reduce(actions, [], fn {action_name, args}, acc_ids ->
+        node_id = generate_node_id()
+
+        action_node = %{
+          id: node_id,
+          task: {action_name, args},
+          parent_id: root_id,
+          children_ids: [],
+          state: state,
+          visited: true,
+          expanded: true,
+          method_tried: nil,
+          blacklisted_methods: [],
+          is_primitive: true,
+          is_durative: false
+        }
+
+        {action_node, [node_id | acc_ids]}
+      end)
+
+    # Reverse to maintain order
+    action_ids = Enum.reverse(action_ids)
+
+    # Update root node with children
+    root_node = %{root_node | children_ids: action_ids}
+
+    # Build nodes map
+    nodes =
+      [root_node | action_nodes]
+      |> Enum.map(fn node -> {node.id, node} end)
+      |> Map.new()
+
+    %{
+      root_id: root_id,
+      nodes: nodes,
+      blacklisted_commands: MapSet.new(),
+      goal_network: %{}
+    }
+  end
 end
