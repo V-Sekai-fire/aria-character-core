@@ -69,7 +69,7 @@ The AriaEngine planner uses six types of methods for different purposes:
 | @action | Direct state transformations | `@spec action_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} \| {:error, atom()}` |
 | @command | Execution-time logic | `@spec command_name(AriaState.t(), [term()]) :: {:ok, AriaState.t()} \| {:error, atom()}` |
 | @task_method | Break down complex workflows | `@spec task_name(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]} \| {:error, atom()}` |
-| @unigoal_method | Handle single predicate goals | `@spec method_name(AriaState.t(), [subject(), object()]) :: {:ok, [AriaEngine.todo_item()]} \| {:error, atom()}` |
+| @unigoal_method | Handle single predicate goals | `@spec method_name(AriaState.t(), {subject(), value()}) :: {:ok, [AriaEngine.todo_item()]} \| {:error, atom()}` |
 | @multigoal_method | Optimize multiple goal solving | `@spec multigoal_method(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} \| {:error, atom()}` |
 | @multitodo_method | Optimize todo list processing | `@spec multitodo_method(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} \| {:error, atom()}` |
 
@@ -159,16 +159,16 @@ The AriaEngine planner uses six types of methods for different purposes:
 ```elixir
 # Primary goal handling patterns
 @unigoal_method predicate: "location"
-@spec move_to_location(AriaState.t(), [subject(), value()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@spec move_to_location(AriaState.t(), {subject(), value()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 @unigoal_method predicate: "has_item"  
-@spec acquire_item(AriaState.t(), [subject(), value()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@spec acquire_item(AriaState.t(), {subject(), value()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 @unigoal_method predicate: "temperature"
-@spec set_temperature(AriaState.t(), [subject(), value()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@spec set_temperature(AriaState.t(), {subject(), value()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 @unigoal_method predicate: "status"
-@spec change_status(AriaState.t(), [subject(), value()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@spec change_status(AriaState.t(), {subject(), value()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 ```
 
 ### Multigoal Method Examples
@@ -373,7 +373,7 @@ end
 
 # Unigoal Methods
 @unigoal_method predicate: "is_predicate"
-@spec method_name(AriaState.t(), [subject(), object()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+@spec method_name(AriaState.t(), {subject(), value()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
 
 # Multigoal Methods
 @multigoal_method true
