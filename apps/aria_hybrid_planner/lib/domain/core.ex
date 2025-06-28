@@ -90,6 +90,14 @@ defmodule Domain.Core do
   end
 
   @doc """
+  Get all available task methods for a task (alias for get_methods).
+  """
+  @spec get_task_methods(t(), String.t()) :: [String.t()]
+  def get_task_methods(domain, task_name) do
+    get_methods(domain, task_name)
+  end
+
+  @doc """
   Get all available unigoal methods for a goal.
   """
   @spec get_unigoal_methods(t(), String.t()) :: [String.t()]
