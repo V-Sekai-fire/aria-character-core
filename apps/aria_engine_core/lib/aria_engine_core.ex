@@ -36,7 +36,8 @@ defmodule AriaEngineCore do
 
   ## Examples
 
-      IO.puts("AriaEngine Core version: #{AriaEngineCore.version()}")
+      iex> AriaEngineCore.version()
+      "0.1.0"
   """
   @spec version() :: String.t()
   def version do

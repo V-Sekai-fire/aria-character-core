@@ -56,20 +56,3 @@ defmodule Timeline.State do
     |> Map.new()
   end
 end
-
-# Create an alias for compatibility
-defmodule AriaEngine.State do
-  @moduledoc """
-  Compatibility alias for Timeline.State to avoid dependency cycles.
-
-  This module provides basic state functionality for timeline operations.
-  For full AriaEngine.State functionality, use the module from aria_engine_core.
-  """
-
-  defdelegate new(), to: Timeline.State
-  defdelegate new(data), to: Timeline.State
-  defdelegate get_fact(state, predicate, subject), to: Timeline.State
-  defdelegate set_fact(state, predicate, subject, fact_value), to: Timeline.State
-  defdelegate has_subject?(state, predicate, subject), to: Timeline.State
-  defdelegate get_properties(state, subject), to: Timeline.State
-end
