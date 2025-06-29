@@ -275,7 +275,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
 
 - [ ] **Skeleton Segmentation System**
   - [ ] Create `lib/aria_engine_core/ewbik/segmentation.ex`
-  - [ ] Implement bone chain dependency analysis using Phase 1 IKNode3D hierarchy
+  - [ ] Implement bone chain dependency analysis using Phase 1 Joint hierarchy
   - [ ] Create processing order determination
   - [ ] Handle multiple effector hierarchies
   - [ ] Segment validation and error handling
