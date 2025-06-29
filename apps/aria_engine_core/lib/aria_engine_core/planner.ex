@@ -278,13 +278,8 @@ defmodule AriaEngineCore.Planner do
     # 3. Handle failures and trigger replanning if needed
     # 4. Update state with action results
 
-    case execute_single_action(domain, state, action_name, args) do
-      {:ok, new_state} ->
-        execute_actions(domain, new_state, remaining_actions)
-      {:error, reason} ->
-        Logger.error("Action #{action_name} failed: #{inspect(reason)}")
-        {:error, reason}
-    end
+    {:ok, new_state} = execute_single_action(domain, state, action_name, args)
+    execute_actions(domain, new_state, remaining_actions)
   end
 
   @spec execute_single_action(domain(), state(), atom() | String.t(), list()) :: {:ok, state()}

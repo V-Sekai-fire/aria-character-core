@@ -172,10 +172,34 @@ defmodule AriaEngineCore do
   # State Management API - Delegate to internal State module
   defdelegate new_state(), to: AriaEngineCore.State, as: :new
   defdelegate new_state(data), to: AriaEngineCore.State, as: :new
-  defdelegate get_fact(state, entity_id, property), to: AriaEngineCore.State
-  defdelegate set_fact(state, entity_id, property, value), to: AriaEngineCore.State
-  defdelegate has_subject?(state, entity_id, property), to: AriaEngineCore.State
-  defdelegate remove_fact(state, entity_id, property), to: AriaEngineCore.State
+  defdelegate get_fact(state, predicate, subject), to: AriaEngineCore.State
+  defdelegate set_fact(state, predicate, subject, value), to: AriaEngineCore.State
+  defdelegate has_subject?(state, predicate, subject), to: AriaEngineCore.State
+  defdelegate remove_fact(state, predicate, subject), to: AriaEngineCore.State
+  defdelegate get_subjects_with_fact(state, predicate, value), to: AriaEngineCore.State
+
+  # Domain Management API - Delegate to internal Domain module
+  defdelegate get_task_methods(domain, task_name), to: AriaEngineCore.Domain
+  defdelegate get_unigoal_methods(domain, predicate), to: AriaEngineCore.Domain
+  defdelegate get_multigoal_methods(domain), to: AriaEngineCore.Domain
+  defdelegate get_multitodo_methods(domain), to: AriaEngineCore.Domain
+  defdelegate get_action_metadata(domain, action_name), to: AriaEngineCore.Domain
+  defdelegate get_entity_registry(domain), to: AriaEngineCore.Domain
+  defdelegate get_durative_action(domain, action_name), to: AriaEngineCore.Domain
+  defdelegate execute_action(domain, state, action_name, args), to: AriaEngineCore.Domain
+
+  # Solution Tree API - Delegate to internal modules
+  @doc """
+  Get the solution tree from the planner.
+
+  Returns the current solution tree if available.
+  """
+  @spec solution_tree() :: solution_tree() | nil
+  def solution_tree do
+    # This would typically be stored in process state or ETS
+    # For now, return nil as a placeholder
+    nil
+  end
 
   @doc """
   Get the version of AriaEngine Core.

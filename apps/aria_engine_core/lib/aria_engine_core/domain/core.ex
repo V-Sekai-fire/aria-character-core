@@ -103,7 +103,7 @@ defmodule AriaEngineCore.Domain.Core do
   # These functions should delegate to AriaCore.Domain
   @doc "Sets the entity registry for the domain.\n"
   @spec set_entity_registry(t(), map()) :: t()
-  def set_entity_registry(%__MODULE__{} = domain, registry) do
+  def set_entity_registry(%__MODULE__{} = domain, _registry) do
     # This function should ideally be handled by AriaCore.Domain
     # For now, we'll keep it as a no-op or raise an error if it's not meant to be here.
     # Given the current structure, it's likely that AriaEngineCore.Domain.Core
@@ -123,7 +123,7 @@ defmodule AriaEngineCore.Domain.Core do
 
   @doc "Sets the temporal specifications for the domain.\n"
   @spec set_temporal_specifications(t(), map()) :: t()
-  def set_temporal_specifications(%__MODULE__{} = domain, specs) do
+  def set_temporal_specifications(%__MODULE__{} = domain, _specs) do
     # This function should ideally be handled by AriaCore.Domain
     Logger.warning("AriaEngineCore.Domain.Core.set_temporal_specifications called. This should be handled by AriaCore.Domain.")
     domain
