@@ -75,6 +75,11 @@ defmodule AriaCore do
   defdelegate set_entity_registry(domain, registry), to: AriaCore.Domain
   defdelegate set_temporal_specifications(domain, specifications), to: AriaCore.Domain
 
+  # Planning and Execution API
+  defdelegate plan(domain, state, goals), to: AriaEngineCore, as: :plan
+  defdelegate run_lazy(domain, state, goals), to: AriaEngineCore, as: :run_lazy
+  defdelegate run_lazy_tree(domain, state, solution_tree), to: AriaEngineCore, as: :run_lazy_tree
+
   # Entity Management API
   defdelegate new_entity_registry(), to: AriaCore.Entity.Management, as: :new_registry
   defdelegate register_entity_type(registry, entity_spec), to: AriaCore.Entity.Management

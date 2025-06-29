@@ -119,6 +119,13 @@ defmodule AriaCore.Domain do
   end
 
   @doc """
+  Gets an action specification by name.
+  """
+  def get_action(%__MODULE__{} = domain, action_name) do
+    Map.get(domain.actions, action_name)
+  end
+
+  @doc """
   Gets a method specification by name.
   """
   def get_method(%__MODULE__{} = domain, method_name) do
