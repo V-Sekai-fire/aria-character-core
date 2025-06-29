@@ -52,18 +52,24 @@ defmodule AriaCore.ActionAttributes do
       Module.register_attribute(__MODULE__, :command, accumulate: true)
       Module.register_attribute(__MODULE__, :task_method, accumulate: true)
       Module.register_attribute(__MODULE__, :unigoal_method, accumulate: true)
+      Module.register_attribute(__MODULE__, :multigoal_method, accumulate: true)
+      Module.register_attribute(__MODULE__, :multitodo_method, accumulate: true)
 
       # Internal tracking attributes
       Module.register_attribute(__MODULE__, :action_metadata, accumulate: true)
       Module.register_attribute(__MODULE__, :command_metadata, accumulate: true)
       Module.register_attribute(__MODULE__, :method_metadata, accumulate: true)
       Module.register_attribute(__MODULE__, :unigoal_metadata, accumulate: true)
+      Module.register_attribute(__MODULE__, :multigoal_metadata, accumulate: true)
+      Module.register_attribute(__MODULE__, :multitodo_metadata, accumulate: true)
 
       # Pending attributes (non-persistent)
       Module.register_attribute(__MODULE__, :pending_action_metadata, persist: false)
       Module.register_attribute(__MODULE__, :pending_command_metadata, persist: false)
       Module.register_attribute(__MODULE__, :pending_task_metadata, persist: false)
       Module.register_attribute(__MODULE__, :pending_unigoal_metadata, persist: false)
+      Module.register_attribute(__MODULE__, :pending_multigoal_metadata, persist: false)
+      Module.register_attribute(__MODULE__, :pending_multitodo_metadata, persist: false)
 
       # Hook into compilation process
       @on_definition {AriaCore.ActionAttributes, :__on_definition__}
@@ -75,6 +81,38 @@ defmodule AriaCore.ActionAttributes do
   end
 
   # Documentation for supported attributes
+
+  @doc """
+  @multigoal_method attribute documentation.
+
+  Multigoal methods provide optimization strategies for achieving multiple goals simultaneously.
+
+  ## Examples
+
+      @multigoal_method true
+      def optimize_resource_allocation(state, multigoal) do
+        # Implementation to reorder or optimize goals
+        {:ok, multigoal}
+      end
+  """
+  @spec multigoal_method_attribute_docs() :: :ok
+  def multigoal_method_attribute_docs, do: :ok
+
+  @doc """
+  @multitodo_method attribute documentation.
+
+  Multitodo methods provide optimization strategies for processing lists of todo items.
+
+  ## Examples
+
+      @multitodo_method true
+      def reorder_tasks_for_efficiency(state, todo_list) do
+        # Implementation to reorder or optimize todo_list
+        {:ok, todo_list}
+      end
+  """
+  @spec multitodo_method_attribute_docs() :: :ok
+  def multitodo_method_attribute_docs, do: :ok
 
   @doc """
   @action attribute documentation.
@@ -222,6 +260,8 @@ defmodule AriaCore.ActionAttributes do
         # Consume the attribute by assigning it (satisfies Elixir's "return" requirement)
         _consumed_command_attrs = attrs
         Module.put_attribute(env.module, :command_metadata, {name, command_metadata})
+        # Clear the attribute to prevent accumulation
+        Module.delete_attribute(env.module, :command)
     end
 
     # Process @task_method attribute - consume by reading and transforming
@@ -260,6 +300,22 @@ defmodule AriaCore.ActionAttributes do
         Module.put_attribute(env.module, :unigoal_metadata, {name, unigoal_metadata})
     end
 
+    # Process @multigoal_method attribute - consume by reading and transforming
+    case Module.get_attribute(env.module, :multigoal_method) do
+      [] -> :ok
+      [multigoal_metadata | _rest] = attrs ->
+        _consumed_multigoal_attrs = attrs
+        Module.put_attribute(env.module, :multigoal_metadata, {name, multigoal_metadata})
+    end
+
+    # Process @multitodo_method attribute - consume by reading and transforming
+    case Module.get_attribute(env.module, :multitodo_method) do
+      [] -> :ok
+      [multitodo_metadata | _rest] = attrs ->
+        _consumed_multitodo_attrs = attrs
+        Module.put_attribute(env.module, :multitodo_metadata, {name, multitodo_metadata})
+    end
+
     # Continue with normal compilation
     :ok
   end
@@ -276,12 +332,16 @@ defmodule AriaCore.ActionAttributes do
     commands = Module.get_attribute(env.module, :command_metadata) || []
     methods = Module.get_attribute(env.module, :method_metadata) || []
     unigoals = Module.get_attribute(env.module, :unigoal_metadata) || []
+    multigoals = Module.get_attribute(env.module, :multigoal_metadata) || []
+    multitodos = Module.get_attribute(env.module, :multitodo_metadata) || []
 
     quote do
       def __action_metadata__, do: unquote(Macro.escape(actions))
       def __command_metadata__, do: unquote(Macro.escape(commands))
       def __method_metadata__, do: unquote(Macro.escape(methods))
       def __unigoal_metadata__, do: unquote(Macro.escape(unigoals))
+      def __multigoal_metadata__, do: unquote(Macro.escape(multigoals))
+      def __multitodo_metadata__, do: unquote(Macro.escape(multitodos))
 
       @doc """
       Creates a domain from the module's @action, @task_method, and @unigoal_method attributes.
@@ -321,9 +381,23 @@ defmodule AriaCore.ActionAttributes do
             Domain.add_unigoal_method(acc, name, unigoal_spec)
           end)
 
+        # Process multigoal methods using existing systems (SOCIABLE approach)
+        domain_with_multigoals =
+          Enum.reduce(__multigoal_metadata__(), domain_with_unigoals, fn {name, metadata}, acc ->
+            multigoal_spec = AriaCore.ActionAttributes.convert_multigoal_metadata(metadata, name, __MODULE__)
+            Domain.add_multigoal_method(acc, name, multigoal_spec)
+          end)
+
+        # Process multitodo methods using existing systems (SOCIABLE approach)
+        domain_with_multitodos =
+          Enum.reduce(__multitodo_metadata__(), domain_with_multigoals, fn {name, metadata}, acc ->
+            multitodo_spec = AriaCore.ActionAttributes.convert_multitodo_metadata(metadata, name, __MODULE__)
+            Domain.add_multitodo_method(acc, name, multitodo_spec)
+          end)
+
         # Set up entity registry (LEVERAGE existing entity system)
         entity_registry = AriaCore.ActionAttributes.create_entity_registry(__action_metadata__())
-        domain_with_entities = Domain.set_entity_registry(domain_with_unigoals, entity_registry)
+        domain_with_entities = Domain.set_entity_registry(domain_with_multitodos, entity_registry)
 
         # Set up temporal specifications (LEVERAGE existing temporal system)
         temporal_specs = AriaCore.ActionAttributes.create_temporal_specifications(__action_metadata__())
@@ -331,6 +405,26 @@ defmodule AriaCore.ActionAttributes do
         domain_with_temporal_specs
       end
     end
+  end
+
+  @doc """
+  Converts @multigoal_method metadata to Domain multigoal method specification.
+  """
+  @spec convert_multigoal_metadata(map(), atom(), module()) :: map()
+  def convert_multigoal_metadata(_metadata, method_name, module) do
+    %{
+      multigoal_fn: Function.capture(module, method_name, 2)
+    }
+  end
+
+  @doc """
+  Converts @multitodo_method metadata to Domain multitodo method specification.
+  """
+  @spec convert_multitodo_metadata(map(), atom(), module()) :: map()
+  def convert_multitodo_metadata(_metadata, method_name, module) do
+    %{
+      multitodo_fn: Function.capture(module, method_name, 2)
+    }
   end
 
   @doc """
