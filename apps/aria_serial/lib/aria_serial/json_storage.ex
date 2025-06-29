@@ -80,6 +80,27 @@ defmodule AriaSerial.JsonStorage do
   end
 
   @doc """
+  Atomically generate and register a new serial number.
+
+  This function ensures that a serial number is only generated if it can be
+  successfully written to the lookup storage. If the storage write fails,
+  no serial is generated and the sequence number is not consumed.
+  """
+  def generate_and_register_serial(year, week, factory, tool_code, file_info) do
+    with {:ok, data} <- load_week_data(year, week, factory),
+         sequence <- data["next_sequence"] || 1,
+         week_char <- AriaSerial.Registry.encode_week(week),
+         {:ok, serial} <- build_serial(factory, year, week_char, sequence, tool_code),
+         updated_data <- add_serial_to_data(data, serial, file_info),
+         :ok <- save_week_data(year, week, factory, updated_data) do
+      {:ok, serial}
+    else
+      {:error, reason} -> {:error, reason}
+      nil -> {:error, {:invalid_week, week}}
+    end
+  end
+
+  @doc """
   Look up a serial number in the registry.
   """
   def lookup_serial(serial) do
@@ -136,6 +157,13 @@ defmodule AriaSerial.JsonStorage do
   end
 
   # Private functions
+
+  defp build_serial(factory, year, week_char, sequence, tool_code) do
+    year_str = String.slice(to_string(year), -2, 2)
+    sequence_str = String.pad_leading(to_string(sequence), 3, "0")
+    serial = "#{factory}#{year_str}#{week_char}#{sequence_str}#{tool_code}"
+    {:ok, serial}
+  end
 
   defp get_file_path(year, week, factory) do
     week_str = String.pad_leading(to_string(week), 2, "0")

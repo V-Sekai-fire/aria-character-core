@@ -64,43 +64,47 @@ defmodule Mix.Tasks.Serial.Create do
     week = opts[:week] || current_week()
     year = current_year()
 
-    sequence = AriaSerial.Registry.next_sequence(week)
     tool_code = AriaSerial.Registry.generate_tool_code(filename)
-    week_char = AriaSerial.Registry.encode_week(week)
 
-    if week_char == nil do
-      Mix.shell().error("Error: Invalid week number #{week}")
-      System.halt(1)
+    # Create file info for registration
+    file_info = %{
+      "format" => "v1",
+      "file" => filename,
+      "purpose" => purpose,
+      "created" => Date.to_iso8601(Date.utc_today()),
+      "week" => week,
+      "sequence" => nil  # Will be set by atomic generation
+    }
+
+    case AriaSerial.JsonStorage.generate_and_register_serial(year, week, factory, tool_code, file_info) do
+      {:ok, serial} ->
+        # Parse the generated serial to get the sequence number
+        sequence = extract_sequence_from_serial(serial)
+
+        Mix.shell().info("Generated Serial Number: #{serial}")
+        Mix.shell().info("")
+        Mix.shell().info("Details:")
+        Mix.shell().info("  Factory:      #{factory} (#{decode_factory(factory)})")
+        Mix.shell().info("  Year:         #{year}")
+        Mix.shell().info("  Week:         #{week}")
+        Mix.shell().info("  Sequence:     #{sequence}")
+        Mix.shell().info("  Tool Code:    #{tool_code}")
+        Mix.shell().info("  File:         #{filename}")
+        Mix.shell().info("  Purpose:      #{purpose}")
+
+        if week == current_week() do
+          {start_date, end_date} = current_week_range()
+          Mix.shell().info("  Week Range:   #{start_date} to #{end_date}")
+        end
+
+        Mix.shell().info("")
+        Mix.shell().info("✅ Serial number generated and registered in lookup storage")
+        Mix.shell().info("Use 'mix serial.decode #{serial}' to decode this serial number.")
+
+      {:error, reason} ->
+        Mix.shell().error("❌ Failed to generate and register serial: #{inspect(reason)}")
+        System.halt(1)
     end
-
-    serial = "#{factory}#{String.slice(to_string(year), -2, 2)}#{week_char}#{String.pad_leading(to_string(sequence), 3, "0")}#{tool_code}"
-
-    Mix.shell().info("Generated Serial Number: #{serial}")
-    Mix.shell().info("")
-    Mix.shell().info("Details:")
-    Mix.shell().info("  Factory:      #{factory} (#{decode_factory(factory)})")
-    Mix.shell().info("  Year:         #{year}")
-    Mix.shell().info("  Week:         #{week}")
-    Mix.shell().info("  Sequence:     #{sequence}")
-    Mix.shell().info("  Tool Code:    #{tool_code}")
-    Mix.shell().info("  File:         #{filename}")
-    Mix.shell().info("  Purpose:      #{purpose}")
-
-    if week == current_week() do
-      {start_date, end_date} = current_week_range()
-      Mix.shell().info("  Week Range:   #{start_date} to #{end_date}")
-    end
-
-    Mix.shell().info("")
-    Mix.shell().info("Registry Entry (for manual addition):")
-    Mix.shell().info("\"#{serial}\" => %{")
-    Mix.shell().info("  format: :v1,")
-    Mix.shell().info("  file: \"#{filename}\",")
-    Mix.shell().info("  purpose: \"#{purpose}\",")
-    Mix.shell().info("  created: ~D[#{Date.to_string(Date.utc_today())}],")
-    Mix.shell().info("  week: #{week},")
-    Mix.shell().info("  sequence: #{sequence}")
-    Mix.shell().info("}")
   end
 
   defp current_week do
@@ -119,6 +123,14 @@ defmodule Mix.Tasks.Serial.Create do
     monday = Date.add(today, -days_since_monday)
     sunday = Date.add(monday, 6)
     {Date.to_string(monday), Date.to_string(sunday)}
+  end
+
+  defp extract_sequence_from_serial(serial) do
+    # Extract sequence from serial format: R25W001GLTL
+    # Sequence is characters 4-6 (positions 3-5, 0-indexed)
+    <<_factory::binary-size(1), _year::binary-size(2), _week::binary-size(1),
+      sequence::binary-size(3), _tool_code::binary>> = serial
+    String.to_integer(sequence)
   end
 
   defp decode_factory("R"), do: "Aria Character Core (R-series)"
