@@ -4,9 +4,109 @@
 
 **ADR Reference:** R25W1398085 - Unified Durative Action Specification and Planner Standardization
 
+## ⚠️ CRITICAL: Umbrella Workflow Enforcement
+
+**MANDATORY RULE: All Mix commands MUST be executed from umbrella root directory.**
+
+### Verification Commands
+
+Before running ANY Mix commands, verify your location:
+
+```bash
+pwd  # Should show /home/ernest.lee/Developer/aria-character-core (umbrella root)
+ls   # Should show apps/ directory and root mix.exs
+```
+
+### FORBIDDEN Patterns ❌
+
+```bash
+# NEVER do these operations:
+cd apps/aria_engine_core && mix compile
+cd apps/aria_timeline && mix test  
+cd apps/any_app && mix deps.get
+```
+
+**Why this breaks umbrella coordination:**
+
+- Creates conflicting lock files
+- Bypasses umbrella dependency coordination
+- Causes environment specification conflicts
+- Results in "dependency overriding" errors
+
+### REQUIRED Patterns ✅
+
+```bash
+# ALWAYS work from umbrella root:
+mix compile                           # Compiles all apps in dependency order
+mix test                             # Runs all tests across all apps
+mix test apps/aria_engine_core       # Tests specific app from root
+mix deps.get                         # Manages dependencies for entire umbrella
+mix deps.clean --all                 # Cleans all dependencies
+```
+
+### Emergency Recovery
+
+If umbrella gets broken by incorrect workflow:
+
+1. **Return to umbrella root:** `cd /home/ernest.lee/Developer/aria-character-core`
+2. **Clean everything:** `mix clean && mix deps.clean --all`
+3. **Remove broken artifacts:** `rm -rf _build deps`
+4. **Regenerate:** `mix deps.get && mix compile`
+
 ## Overview
 
 AriaEngineCore provides the foundational temporal planning and execution capabilities for the Aria system. This todo covers implementation of a comprehensive test domain that validates the R25W1398085 unified durative action specification using EWBIK (Entirely Wahba's-problem Based Inverse Kinematics) integrated with KHR Interactivity behavior graphs as a realistic testing scenario.
+
+## Current Umbrella Context
+
+**Umbrella Status:** ✅ Recovery Complete
+
+- ✅ **Emergency recovery executed:** Cleaned build artifacts, regenerated dependencies, all apps compile successfully
+- ❌ **aria_auth blocking issue:** Cyclic dependency preventing Tier 1 testing (`AriaAuth.Macaroons.ConfineUserString.__struct__/1` undefined)
+- 📍 **aria_engine_core position:** Tier 4 dependency (depends on aria_state, aria_timeline, minizinc apps)
+
+**Testing Dependencies for aria_engine_core:**
+
+- **Tier 1 Prerequisites:** aria_state (leaf dependency) - ⏳ Pending
+- **Tier 3 Prerequisites:** aria_timeline (timeline layer) - ⏳ Pending  
+- **Tier 2 Prerequisites:** aria_minizinc_stn, aria_minizinc_goal, aria_minizinc_executor - ⏳ Pending
+
+**Known Integration Issues:**
+
+- **Duration parsing bug:** `"PT1H"` (ISO 8601) incorrectly converted to `{:fixed, 1800}` instead of correct 3600 seconds - affects EWBIK temporal action patterns
+- **External API completeness:** Ensure aria_engine_core API follows umbrella external module standards
+
+## Testing Coordination
+
+**AriaEngineCore Testing Dependencies (Tier 4):**
+
+AriaEngineCore testing cannot proceed until successful completion of prerequisite tiers due to compilation dependencies:
+
+```bash
+# Testing sequence from umbrella root ONLY:
+# Tier 1: Leaf apps (no internal dependencies)
+mix test apps/aria_state          # ✅ Required for aria_engine_core
+mix test apps/aria_serial         # ⏳ Pending
+mix test apps/aria_storage        # ⏳ Pending
+
+# Tier 2: Single-dependency apps  
+mix test apps/aria_minizinc_stn        # ✅ Required for aria_engine_core  
+mix test apps/aria_minizinc_goal       # ✅ Required for aria_engine_core
+mix test apps/aria_minizinc_executor   # ✅ Required for aria_engine_core
+
+# Tier 3: Timeline layer
+mix test apps/aria_timeline       # ✅ Required for aria_engine_core
+
+# Tier 4: FINALLY can test aria_engine_core
+mix test apps/aria_engine_core    # ⏳ Blocked until prerequisites complete
+```
+
+**Systematic Testing Approach:**
+
+- **Fix aria_auth first:** Resolve cyclic dependency to unblock Tier 1 systematic testing
+- **Sequential testing:** Address each tier completely before proceeding to next
+- **Dependency-aware fixes:** Issues in lower tiers can cascade to aria_engine_core
+- **Integration validation:** Ensure EWBIK math modules work with umbrella dependencies
 
 ## Completed ✅
 
