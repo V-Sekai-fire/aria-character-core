@@ -31,7 +31,8 @@ defmodule AriaEngineCore.MixProject do
       {:aria_timeline, path: "../aria_timeline"},
       {:aria_minizinc_stn, path: "../aria_minizinc_stn"},
       {:aria_minizinc_goal, in_umbrella: true},
-      {:aria_minizinc_executor, in_umbrella: true, override: true},
+      {:aria_minizinc_executor, in_umbrella: true},
+      {:aria_hybrid_planner, in_umbrella: true},
       # External dependencies
       {:jason, "~> 1.4"},
       {:libgraph, "~> 0.16"},
