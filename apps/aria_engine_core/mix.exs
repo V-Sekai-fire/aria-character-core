@@ -14,9 +14,14 @@ defmodule AriaEngineCore.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps()
     ]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   def application do
     [
@@ -27,12 +32,11 @@ defmodule AriaEngineCore.MixProject do
   defp deps do
     [
       # Internal dependencies
-      {:aria_state, path: "../aria_state"},
-      {:aria_timeline, path: "../aria_timeline"},
-      {:aria_minizinc_stn, path: "../aria_minizinc_stn"},
+      {:aria_state, in_umbrella: true},
+      {:aria_timeline, in_umbrella: true},
+      {:aria_minizinc_stn, in_umbrella: true},
       {:aria_minizinc_goal, in_umbrella: true},
       {:aria_minizinc_executor, in_umbrella: true},
-      {:aria_hybrid_planner, in_umbrella: true},
       # External dependencies
       {:jason, "~> 1.4"},
       {:libgraph, "~> 0.16"},
