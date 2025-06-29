@@ -138,7 +138,8 @@ defmodule AriaCharacterCore.MixProject do
       {:aria_hybrid_planner, path: "apps/aria_hybrid_planner"},
       {:aria_membrane_pipeline, path: "apps/aria_membrane_pipeline"},
       {:aria_gltf, path: "apps/aria_gltf"},
-      {:ast_migrate, path: "apps/ast_migrate"}
+      {:ast_migrate, path: "apps/ast_migrate"},
+      {:aria_serial, path: "apps/aria_serial"},
     ]
   end
 

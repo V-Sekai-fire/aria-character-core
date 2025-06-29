@@ -1,7 +1,7 @@
 {
   "factory": "R",
   "generated_at": "2025-06-27T20:45:31.000000Z",
-  "next_sequence": 167,
+  "next_sequence": 168,
   "serials": {
     "R25W1073327": {
       "created": "2025-06-23",
@@ -497,6 +497,14 @@
       "format": "v1",
       "purpose": "ADR: enhanced heist scenario json solution analysis",
       "sequence": 141,
+      "week": 26
+    },
+    "R25W167DECX": {
+      "created": "2025-06-29",
+      "file": "decisions/aria-engine-core-ewbik-implementation.md",
+      "format": "v1",
+      "purpose": "AriaEngineCore EWBIK Implementation with Anti-Uncanny Valley Solutions",
+      "sequence": null,
       "week": 26
     },
     "R25W161ANXT": {
@@ -1332,7 +1340,7 @@
       "week": 26
     }
   },
-  "updated_at": "2025-06-29T00:42:13.757254Z",
+  "updated_at": "2025-06-29T21:52:14.502792Z",
   "week": 26,
   "year": 2025
 }
