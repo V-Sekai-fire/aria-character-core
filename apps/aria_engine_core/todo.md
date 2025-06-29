@@ -92,6 +92,42 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
   - [ ] Ancestor-descendant weight distribution
   - [ ] Ultimate vs intermediary target handling
 
+### Phase 2.5: Kusudama Constraint Visualization (HIGH PRIORITY)
+
+**Priority: HIGH - Visual debugging and constraint validation for EWBIK**
+
+- [ ] **Hybrid Skin + Morph Constraint Visualization**
+  - [ ] Create `lib/aria_engine_core/ewbik/constraint_visualization.ex`
+  - [ ] Implement constraint shell geometry generation for Kusudama cones
+  - [ ] Design constraint bone hierarchy for skinning constraint shells
+  - [ ] Create joint state morph targets for immediate visual feedback
+  - [ ] Real-time coordination between EWBIK solver and visualization system
+
+- [ ] **Constraint Shell Geometry System**
+  - [ ] Cone geometry generation algorithm for sequence cones
+  - [ ] Tangent cone connection mesh generation between sequence cones
+  - [ ] Twist limit cylindrical band visualization
+  - [ ] Dynamic mesh deformation based on constraint parameters
+  - [ ] Performance optimization for real-time constraint updates
+
+- [ ] **Joint State Morph Target System**
+  - [ ] Automated generation of constraint state morphs for character joints
+  - [ ] Morph weight calculation based on constraint proximity
+  - [ ] Temporal smoothing to avoid jarring visual transitions
+  - [ ] Integration with existing character mesh morph targets
+
+- [ ] **glTF Integration for Constraint Visualization**
+  - [ ] Constraint visualization node hierarchy within glTF scene structure
+  - [ ] KHR_animation_pointer usage for real-time constraint updates
+  - [ ] KHR_materials_variants for constraint state material switching
+  - [ ] Integration with KHR_interactivity behavior graphs for constraint control
+
+- [ ] **Visualization Coordination Pipeline**
+  - [ ] Data flow between Kusudama constraint evaluation and visualization
+  - [ ] Synchronization of constraint updates with visual feedback
+  - [ ] LOD system for constraint visualization (detailed vs simplified)
+  - [ ] Error handling when constraint evaluation fails
+
 ### Phase 3: EWBIK-Enhanced KHR Interactivity Test Domain (HIGH PRIORITY)
 
 **Priority: HIGH - Realistic IK testing with sophisticated constraint validation**
@@ -571,6 +607,69 @@ goals = [
 - [ ] 🔧 EWBIK algorithm implementation - Depends on math solvers
 - [ ] 📋 EWBIK-enhanced KHR Interactivity test domain - Planning complete
 - [ ] 🎯 Ready for Phase 1 EWBIK math solver implementation
+
+## Open Problems
+
+### Kusudama Constraint Visualization Challenges
+
+**Problem 1: Cone Geometry Generation Algorithm**
+- **Challenge:** Efficiently generate mesh geometry for arbitrary Kusudama cones with varying radii and orientations
+- **Unknown:** Optimal tessellation density for smooth cone visualization vs performance
+- **Research Needed:** Handling complex tangent cone connections between sequence cones without visual artifacts
+- **Edge Case:** Degenerate cone geometries and numerical stability in cone mesh generation
+
+**Problem 2: Constraint Bone Hierarchy Design**
+- **Challenge:** Optimal bone structure for skinning constraint shells without interfering with character skeleton
+- **Unknown:** Weight distribution strategy for smooth cone deformation under real-time constraint updates
+- **Research Needed:** Integration approach with existing character skeleton to avoid bone naming conflicts
+- **Performance Concern:** Minimizing bone hierarchy complexity while maintaining visual accuracy
+
+**Problem 3: Morph Target Creation Workflow**
+- **Challenge:** Automated generation of constraint state morphs for arbitrary character meshes
+- **Unknown:** Optimal number of morph targets vs visual clarity (normal/warning/violation/recovery states)
+- **Research Needed:** Temporal smoothing algorithms to avoid jarring visual transitions during constraint state changes
+- **Integration Issue:** Compatibility with existing character mesh morph targets and animation systems
+
+**Problem 4: Real-Time Performance Optimization**
+- **Challenge:** Balancing constraint visualization quality with real-time performance requirements
+- **Unknown:** Optimal LOD switching distances and simplification strategies for constraint shells
+- **Research Needed:** Update frequency optimization (when to recalculate vs interpolate constraint states)
+- **Memory Concern:** Efficient memory usage for complex multi-joint constraint scenarios with large bone hierarchies
+
+**Problem 5: glTF Integration Architecture**
+- **Challenge:** Constraint visualization node hierarchy organization within glTF scene structure
+- **Unknown:** Optimal usage pattern for KHR_animation_pointer with real-time constraint updates
+- **Research Needed:** Material switching performance for constraint state visualization using KHR_materials_variants
+- **Compatibility Issue:** Integration approach with KHR_interactivity behavior graphs for constraint control
+
+**Problem 6: EWBIK-Visualization Coordination**
+- **Challenge:** Efficient data flow between Kusudama constraint evaluation and visualization system
+- **Unknown:** Synchronization strategy to ensure constraint updates match visual feedback timing
+- **Research Needed:** Error handling approaches when constraint evaluation fails or produces invalid results
+- **Performance Trade-off:** Real-time constraint checking frequency vs computational cost
+
+**Problem 7: Mathematical Accuracy vs Visual Clarity**
+- **Challenge:** Ensuring constraint visualization accurately represents underlying mathematical constraints
+- **Unknown:** Validation methodology to verify visual representation matches Kusudama cone mathematics
+- **Research Needed:** Test scenarios for complex multi-joint constraint interactions and visual debugging
+- **User Experience:** Balancing mathematical precision with intuitive visual understanding
+
+### EWBIK Implementation Open Problems
+
+**Problem 8: QCP Algorithm Numerical Stability**
+- **Challenge:** Maintaining numerical precision during QCP characteristic polynomial solving
+- **Unknown:** Optimal handling of edge cases in quaternion optimization (near-singular matrices)
+- **Research Needed:** Performance vs accuracy trade-offs in iterative QCP solving
+
+**Problem 9: Multi-Effector Convergence Behavior**
+- **Challenge:** Ensuring consistent convergence in complex multi-effector scenarios
+- **Unknown:** Optimal iteration limits and dampening strategies for different scenarios
+- **Research Needed:** Graceful degradation when convergence fails or constraint violations occur
+
+**Problem 10: Constraint Visualization Testing Framework**
+- **Challenge:** Comprehensive testing methodology for constraint visualization accuracy
+- **Unknown:** Automated validation approaches for visual constraint representation
+- **Research Needed:** Performance benchmarking framework for real-time constraint visualization
 
 ## Notes
 
