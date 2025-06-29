@@ -30,13 +30,16 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
 
 ## Implementation Plan
 
-### Phase 0: KHR Interactivity Mathematical Primitives Foundation ✅ COMPLETED
+### Phase 0: KHR Interactivity Mathematical Primitives Foundation ✅ COMPLETED (June 29, 2025)
 
 **Priority: CRITICAL FOUNDATION - Mathematical bedrock for all EWBIK algorithms and test domain**
 
 All subsequent phases depend on these fundamental mathematical operations. These are pure mathematical functions that enable both EWBIK algorithms and the test domain to function properly.
 
 - [x] **KHR Interactivity Mathematical Primitives (Standards-Based)** ✅ COMPLETE (June 29, 2025)
+  - [x] All mathematical operations implemented following IEEE-754 standard
+  - [x] Complete primitives.ex module with comprehensive KHR Interactivity operations
+  - [x] Recorded Nx integration architectural decision (defer until after KHR compliance)
   - [x] Create `lib/aria_engine_core/math/vector3.ex` - Implements glTF KHR Interactivity `float3` operations
     - [x] Port `math/length` - Vector length using IEEE-754 hypot for numerical stability
     - [x] Port `math/normalize` - Vector normalization with validity checking  
@@ -788,6 +791,25 @@ goals = [
 - **Challenge:** Comprehensive testing methodology for constraint visualization accuracy
 - **Unknown:** Automated validation approaches for visual constraint representation
 - **Research Needed:** Performance benchmarking framework for real-time constraint visualization
+
+## Architectural Decisions
+
+### Nx Integration Decision (June 29, 2025)
+
+**Decision:** DEFER Nx integration until after KHR Interactivity specification compliance is established.
+
+**Rationale:**
+1. **Standards Compliance First**: KHR Interactivity spec defines exact behavior for mathematical operations, including specific IEEE-754 handling for NaN, infinity, and edge cases. Pure Elixir implementation ensures spec compliance.
+
+2. **Performance vs Correctness**: KHR Interactivity use case is primarily for individual node operations in behavior graphs, not bulk mathematical computations where Nx excels.
+
+3. **Dependency Complexity**: Adding Nx now would introduce complexity during core mathematical foundation establishment.
+
+4. **Testing Strategy**: Need thorough mathematical primitives testing against KHR spec before considering optimization layers.
+
+**Future Enhancement:** After KHR compliance verification, evaluate Nx integration as performance optimization for bulk operations while maintaining spec-compliant individual operation behavior.
+
+**Status:** Recorded in todo.md, pure Elixir implementation continues
 
 ## Notes
 
