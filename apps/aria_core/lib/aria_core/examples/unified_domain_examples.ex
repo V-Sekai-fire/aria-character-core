@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaCore.Examples.UnifiedDomainExamples do
   @moduledoc """
   Examples demonstrating the use of unified domain attributes.

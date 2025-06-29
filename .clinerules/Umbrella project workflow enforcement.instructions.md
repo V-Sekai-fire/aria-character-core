@@ -23,6 +23,7 @@ cd apps/any_app && mix deps.get
 ```
 
 **Why this breaks things:**
+
 - Creates conflicting lock files
 - Bypasses umbrella dependency coordination
 - Causes environment specification conflicts
@@ -45,6 +46,7 @@ mix deps.clean --all                 # Cleans all dependencies
 ## Specific workflows
 
 **Compilation:**
+
 ```bash
 # From umbrella root only
 mix compile
@@ -53,6 +55,7 @@ MIX_ENV=test mix compile
 ```
 
 **Testing:**
+
 ```bash
 # From umbrella root only
 mix test                             # All apps
@@ -61,6 +64,7 @@ mix test apps/aria_engine_core/test/specific_test.exs  # Specific test
 ```
 
 **Dependency management:**
+
 ```bash
 # From umbrella root only
 mix deps.get
@@ -69,6 +73,7 @@ mix deps.clean --all
 ```
 
 **Development workflow:**
+
 ```bash
 # From umbrella root only
 mix format
@@ -100,6 +105,7 @@ cd apps/aria_engine_core  # FORBIDDEN for Mix commands
 4. **Test compilation:** `mix compile`
 
 **Fix mix.exs files from umbrella root:**
+
 - Edit `apps/app_name/mix.exs` files directly
 - Ensure consistent dependency specifications
 - Remove conflicting environment specifications
@@ -127,6 +133,7 @@ cd apps/aria_engine_core  # FORBIDDEN for Mix commands
 This rule is **mandatory** - any Mix command execution from individual app directories is prohibited. Always verify you're in the umbrella root before running Mix commands.
 
 **Check your location:**
+
 ```bash
 pwd  # Should show umbrella root, not apps/app_name
 ls   # Should show apps/ directory and root mix.exs

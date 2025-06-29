@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngineCore.Math.Matrix4 do
   @moduledoc """
   Matrix4 mathematical operations implementing glTF KHR Interactivity `float4x4` matrix operations.

@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngineCore.Math.Vector3Test do
   use ExUnit.Case
   doctest AriaEngineCore.Math.Vector3

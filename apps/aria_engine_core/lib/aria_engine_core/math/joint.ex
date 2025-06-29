@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngineCore.Math.Joint do
   @moduledoc """
   Transform hierarchy management for EWBIK bone chains.

@@ -8,10 +8,10 @@ AI planning research project with working temporal scheduling and hybrid HTN+STN
 
 ## Current Status: Alpha Feature Complete
 
-- ✅ **Temporal Planning**: Feature complete with 382 passing tests, needs broader validation
-- ✅ **Scheduler Samples**: Working demonstrations with 3 core scheduling scenarios
-- ✅ **STN Constraints**: Simple Temporal Network solving with MiniZinc
-- 🧪 **Research Phase**: Algorithm validation and performance testing
+* ✅ **Temporal Planning**: Feature complete with 382 passing tests, needs broader validation
+* ✅ **Scheduler Samples**: Working demonstrations with 3 core scheduling scenarios
+* ✅ **STN Constraints**: Simple Temporal Network solving with MiniZinc
+* 🧪 **Research Phase**: Algorithm validation and performance testing
 
 ## Quick Start
 
@@ -26,9 +26,9 @@ mix schedule.samples  # Runs 3 core scheduling scenarios
 
 ## Core Capabilities
 
-- **Hybrid HTN+STN Planning**: Combines goal decomposition with temporal constraints
-- **Temporal Scheduling**: Resource and time management with ~~millisecond precision~~ (Replaced with configurable time units and LOD resolution v0.2.0)
-- ~~**MCP Integration**~~ (Removed in v0.2.0): Schedule activities interface for external tool access
+* **Hybrid HTN+STN Planning**: Combines goal decomposition with temporal constraints
+* **Temporal Scheduling**: Resource and time management with ~~millisecond precision~~ (Replaced with configurable time units and LOD resolution v0.2.0)
+* ~~**MCP Integration**~~ (Removed in v0.2.0): Schedule activities interface for external tool access
 
 ---
 
@@ -38,17 +38,17 @@ Aria Character Core is a research codebase for experimenting with AI planning, t
 
 ### Architecture Highlights
 
-- **HybridCoordinatorV2**: Multi-strategy planning system with STN, ~~Optimizer~~ (Proposed in ADR-109, not implemented), and Default strategies
-- **Timeline Module**: Complete temporal reasoning with Allen's Interval Algebra (IntervalRelations)
-- **MiniZinc Integration**: Constraint programming for Simple Temporal Network solving
-- **Strategy Pattern**: Extensible planning approaches for different problem types
+* **HybridCoordinatorV2**: Multi-strategy planning system with STN, ~~Optimizer~~ (Proposed in ADR-109, not implemented), and Default strategies
+* **Timeline Module**: Complete temporal reasoning with Allen's Interval Algebra (IntervalRelations)
+* **MiniZinc Integration**: Constraint programming for Simple Temporal Network solving
+* **Strategy Pattern**: Extensible planning approaches for different problem types
 
 ### Research Focus
 
-- **Temporal Constraint Solving**: Real-time scheduling with resource conflicts
-- **Parallel Processing**: Multi-agent coordination using ~~Flow-based systems~~ (Removed v0.2.0)
-- **Knowledge Representation**: RDF integration for decision-making; ~~SPARQL removed v0.2.0~~
-- **Performance Scaling**: Algorithm validation from single to massive agent populations
+* **Temporal Constraint Solving**: Real-time scheduling with resource conflicts
+* **Parallel Processing**: Multi-agent coordination using ~~Flow-based systems~~ (Removed v0.2.0)
+* **Knowledge Representation**: RDF integration for decision-making; ~~SPARQL removed v0.2.0~~
+* **Performance Scaling**: Algorithm validation from single to massive agent populations
 
 ## Development Status Matrix
 
@@ -86,36 +86,36 @@ Each demonstration showcases different aspects of temporal planning and constrai
 
 Based on ADR-117 (Temporal Planning Segment Closure), the project has successfully delivered:
 
-- **Production-Ready Temporal Constraint Solving**: Complete MiniZinc STN implementation
-- **Multi-Strategy Planning Architecture**: Extensible HybridCoordinatorV2 system
-- **Comprehensive Test Coverage**: 382 tests with 100% pass rate
-- **Real-Time Performance**: Millisecond precision with parallel processing capability
-- **Clean Architecture**: Strategy pattern with modular, maintainable components
+* **Production-Ready Temporal Constraint Solving**: Complete MiniZinc STN implementation
+* **Multi-Strategy Planning Architecture**: Extensible HybridCoordinatorV2 system
+* **Comprehensive Test Coverage**: 382 tests with 100% pass rate
+* **Real-Time Performance**: Millisecond precision with parallel processing capability
+* **Clean Architecture**: Strategy pattern with modular, maintainable components
 
 ## Development Priorities
 
 **Current Alpha Validation Focus:**
 
-- Broader algorithm testing across diverse scenarios
-- Performance benchmarking and optimization
-- Integration testing with external systems
-- Documentation and research publication preparation
+* Broader algorithm testing across diverse scenarios
+* Performance benchmarking and optimization
+* Integration testing with external systems
+* Documentation and research publication preparation
 
 **Future Development:**
 
-- Novel writing system integration
-- ~~Enhanced MCP server ecosystem~~ (Removed in v0.2.0)
-- Creative workflow optimization tools
-- Advanced temporal reasoning capabilities
+* Novel writing system integration
+* ~~Enhanced MCP server ecosystem~~ (Removed in v0.2.0)
+* Creative workflow optimization tools
+* Advanced temporal reasoning capabilities
 
 ## Contributing
 
 This is active research code focused on:
 
-- Algorithm implementation and validation
-- Performance testing and optimization
-- Test coverage expansion
-- Research documentation and publication
+* Algorithm implementation and validation
+* Performance testing and optimization
+* Test coverage expansion
+* Research documentation and publication
 
 See `mix.exs` for dependencies and development tools. Contributions should focus on experimental research, algorithm improvements, and comprehensive testing.
 

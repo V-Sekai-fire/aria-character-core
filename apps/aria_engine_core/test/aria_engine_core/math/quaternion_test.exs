@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngineCore.Math.QuaternionTest do
   use ExUnit.Case
   doctest AriaEngineCore.Math.Quaternion

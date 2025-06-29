@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngineCore.Math.Vector3 do
   @moduledoc """
   Vector3 mathematical operations implementing glTF KHR Interactivity `float3` operations.

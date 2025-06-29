@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngineCore.Math.Quaternion do
   @moduledoc """
   Quaternion mathematical operations implementing glTF KHR Interactivity `float4` quaternion operations.

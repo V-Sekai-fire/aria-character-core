@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaEngineCore.Math.Primitives do
   @moduledoc """
   KHR Interactivity mathematical primitives implementing the complete specification.
