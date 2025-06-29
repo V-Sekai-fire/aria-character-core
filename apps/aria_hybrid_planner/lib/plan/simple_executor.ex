@@ -15,14 +15,12 @@ defmodule Plan.SimpleExecutor do
   """
 
   require Logger
-  alias AriaEngineCore.State, as: State
-  alias AriaEngineCore.Domain
   alias Timex
 
   @type plan_step :: {atom() | String.t(), list()}
-  @type execution_trace_entry :: {plan_step() | nil, State.t() | nil}
+  @type execution_trace_entry :: {plan_step() | nil, map() | nil}
   @type execution_trace :: [execution_trace_entry()]
-  @type execution_result :: {:ok, State.t(), execution_trace()} | {:error, String.t(), execution_trace()}
+  @type execution_result :: {:ok, map(), execution_trace()} | {:error, String.t(), execution_trace()}
 
   @doc """
   Execute a plan using simple linear execution with fail-fast behavior.
@@ -53,7 +51,7 @@ defmodule Plan.SimpleExecutor do
   - `{:error, reason, execution_trace}` on failure (with trace up to failure point)
 
   """
-  @spec execute(Domain.Core.t(), State.t(), [plan_step()], keyword()) :: execution_result()
+  @spec execute(map(), map(), [plan_step()], keyword()) :: execution_result()
   def execute(domain, initial_state, plan, opts \\ []) do
     verbose = Keyword.get(opts, :verbose, 0)
 
@@ -81,7 +79,7 @@ defmodule Plan.SimpleExecutor do
 
   # Private implementation functions
 
-  @spec execute_steps(Domain.Core.t(), State.t(), [plan_step()], execution_trace(), keyword()) :: execution_result()
+  @spec execute_steps(map(), map(), [plan_step()], execution_trace(), keyword()) :: execution_result()
   defp execute_steps(_domain, current_state, [], execution_trace, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
 
@@ -172,8 +170,8 @@ defmodule Plan.SimpleExecutor do
     end
   end
 
-  @spec execute_action_command(Domain.Core.t(), State.t(), atom(), list(), keyword()) ::
-    {:ok, State.t()} | {:error, String.t()} | false
+  @spec execute_action_command(map(), map(), atom(), list(), keyword()) ::
+    {:ok, map()} | {:error, String.t()} | false
   defp execute_action_command(domain, state, action_atom, args, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
 
@@ -205,8 +203,8 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Dispatches execution based on the method type
-  @spec dispatch_method_execution(Domain.Core.t(), State.t(), atom(), list(), atom(), map(), keyword()) ::
-    {:ok, State.t()} | {:error, String.t()} | false
+  @spec dispatch_method_execution(map(), map(), atom(), list(), atom(), map(), keyword()) ::
+    {:ok, map()} | {:error, String.t()} | false
   defp dispatch_method_execution(domain, state, action_atom, args, method_type, metadata, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
 
@@ -215,14 +213,14 @@ defmodule Plan.SimpleExecutor do
         if verbose > 2 do
           Logger.debug("SimpleExecutor: Executing as action: #{action_atom}")
         end
-        Domain.execute_action(domain, state, action_atom, args)
+        AriaEngineCore.execute_action(domain, state, action_atom, args)
 
       :command ->
         command_name = String.to_atom("#{action_atom}_command")
         if verbose > 2 do
           Logger.debug("SimpleExecutor: Executing as command: #{command_name}")
         end
-        Domain.execute_action(domain, state, command_name, args)
+        AriaEngineCore.execute_action(domain, state, command_name, args)
 
       :task_method ->
         if verbose > 2 do
@@ -268,7 +266,7 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Validate entity requirements for an action according to ADR-181
-  @spec validate_entity_requirements(Domain.Core.t(), State.t(), atom(), list(), keyword()) ::
+  @spec validate_entity_requirements(map(), map(), atom(), list(), keyword()) ::
     :ok | {:error, String.t()}
   defp validate_entity_requirements(domain, state, action_atom, _args, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
@@ -280,7 +278,7 @@ defmodule Plan.SimpleExecutor do
     required_entities = Map.get(metadata, :requires_entities, [])
 
     # Get entity registry from domain
-    entity_registry = Domain.get_entity_registry(domain)
+    entity_registry = AriaEngineCore.get_entity_registry(domain)
 
     if verbose > 2 do
       Logger.debug("SimpleExecutor: Validating entity requirements for #{action_atom}: #{inspect(required_entities)}")
@@ -291,13 +289,13 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Get action metadata from domain
-  @spec get_action_metadata(Domain.Core.t(), atom()) :: map()
+  @spec get_action_metadata(map(), atom()) :: map()
   defp get_action_metadata(domain, action_atom) do
-    AriaEngineCore.Domain.get_action_metadata(domain, Atom.to_string(action_atom))
+    AriaEngineCore.get_action_metadata(domain, Atom.to_string(action_atom))
   end
 
   # Validate that required entities are available and have necessary capabilities
-  @spec validate_required_entities(State.t(), map(), list(), keyword()) :: :ok | {:error, String.t()}
+  @spec validate_required_entities(map(), map(), list(), keyword()) :: :ok | {:error, String.t()}
   defp validate_required_entities(_state, _entity_registry, [], _opts) do
     # No entity requirements, validation passes
     :ok
@@ -321,7 +319,7 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Validate a single entity requirement
-  @spec validate_single_entity_requirement(State.t(), map(), map(), keyword()) :: :ok | {:error, String.t()}
+  @spec validate_single_entity_requirement(map(), map(), map(), keyword()) :: :ok | {:error, String.t()}
   defp validate_single_entity_requirement(state, entity_registry, requirement, _opts) do
     entity_type = requirement[:type]
     required_capabilities = requirement[:capabilities] || []
@@ -348,7 +346,7 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Find an available entity of the specified type with required capabilities
-  @spec find_available_entity(State.t(), String.t(), list()) :: {:ok, String.t()} | {:error, String.t()}
+  @spec find_available_entity(map(), String.t(), list()) :: {:ok, String.t()} | {:error, String.t()}
   defp find_available_entity(state, entity_type, required_capabilities) do
     # Get all entities of the specified type
     entities_of_type = get_entities_by_type(state, entity_type)
@@ -365,24 +363,24 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Get all entities of a specific type from state
-  @spec get_entities_by_type(State.t(), String.t()) :: [String.t()]
+  @spec get_entities_by_type(map(), String.t()) :: [String.t()]
   defp get_entities_by_type(state, entity_type) do
     # Retrieve all entities of the specified type from the state
     # Assuming entities are stored as facts like: {"type", entity_id, entity_type}
     # We need to query for all subjects where predicate is "type" and value is entity_type
-    State.get_subjects_with_fact(state, "type", entity_type)
+    AriaEngineCore.get_subjects_with_fact(state, "type", entity_type)
   end
 
   # Check if an entity is available (not busy)
-  @spec entity_available?(State.t(), String.t()) :: boolean()
+  @spec entity_available?(map(), String.t()) :: boolean()
   def entity_available?(state, entity_id) do
-    State.has_subject?(state, "status", entity_id) and State.get_fact(state, "status", entity_id) == "available"
+    AriaEngineCore.has_subject?(state, "status", entity_id) and AriaEngineCore.get_fact(state, "status", entity_id) == "available"
   end
 
   # Check if an entity has all required capabilities
-  @spec entity_has_capabilities?(State.t(), String.t(), list()) :: boolean()
+  @spec entity_has_capabilities?(map(), String.t(), list()) :: boolean()
   defp entity_has_capabilities?(state, entity_id, required_capabilities) do
-    case State.get_fact(state, "capabilities", entity_id) do
+    case AriaEngineCore.get_fact(state, "capabilities", entity_id) do
       entity_capabilities when is_list(entity_capabilities) ->
         Enum.all?(required_capabilities, fn capability ->
           capability in entity_capabilities
@@ -509,11 +507,11 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Executes a task method
-  @spec execute_task_method(Domain.Core.t(), State.t(), atom(), list(), map(), keyword()) ::
-    {:ok, State.t()} | {:error, String.t()} | false
+  @spec execute_task_method(map(), map(), atom(), list(), map(), keyword()) ::
+    {:ok, map()} | {:error, String.t()} | false
   defp execute_task_method(domain, state, task_atom, args, _metadata, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
-    case Domain.get_task_methods(domain, task_atom) do
+    case AriaEngineCore.get_task_methods(domain, task_atom) do
       [] ->
         {:error, "Task method #{task_atom} not found"}
       methods ->
@@ -537,8 +535,8 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Executes a unigoal method
-  @spec execute_unigoal_method(Domain.Core.t(), State.t(), atom(), list(), map(), keyword()) ::
-    {:ok, State.t()} | {:error, String.t()} | false
+  @spec execute_unigoal_method(map(), map(), atom(), list(), map(), keyword()) ::
+    {:ok, map()} | {:error, String.t()} | false
   defp execute_unigoal_method(domain, state, unigoal_atom, args, metadata, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
     predicate = Map.get(metadata, :predicate)
@@ -549,7 +547,7 @@ defmodule Plan.SimpleExecutor do
     # Assuming args is in the format [subject, value] for unigoal
     case args do
       [subject, value] ->
-        case Domain.get_unigoal_methods(domain, predicate) do
+        case AriaEngineCore.get_unigoal_methods(domain, predicate) do
           [] ->
             {:error, "Unigoal method for predicate #{predicate} not found"}
           methods ->
@@ -573,11 +571,11 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Executes a multigoal method
-  @spec execute_multigoal_method(Domain.Core.t(), State.t(), atom(), list(), map(), keyword()) ::
-    {:ok, State.t()} | {:error, String.t()} | false
+  @spec execute_multigoal_method(map(), map(), atom(), list(), map(), keyword()) ::
+    {:ok, map()} | {:error, String.t()} | false
   defp execute_multigoal_method(domain, state, multigoal_atom, args, _metadata, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
-    case Domain.get_multigoal_methods(domain) do
+    case AriaEngineCore.get_multigoal_methods(domain) do
       [] ->
         {:error, "Multigoal method #{multigoal_atom} not found"}
       methods ->
@@ -603,11 +601,11 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Executes a multitodo method
-  @spec execute_multitodo_method(Domain.Core.t(), State.t(), atom(), list(), map(), keyword()) ::
-    {:ok, State.t()} | {:error, String.t()} | false
+  @spec execute_multitodo_method(map(), map(), atom(), list(), map(), keyword()) ::
+    {:ok, map()} | {:error, String.t()} | false
   defp execute_multitodo_method(domain, state, multitodo_atom, args, _metadata, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
-    case Domain.get_multitodo_methods(domain) do
+    case AriaEngineCore.get_multitodo_methods(domain) do
       [] ->
         {:error, "Multitodo method #{multitodo_atom} not found"}
       methods ->

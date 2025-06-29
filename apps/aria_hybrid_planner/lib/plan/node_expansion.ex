@@ -5,7 +5,7 @@ defmodule Plan.NodeExpansion do
   @moduledoc "Functions for expanding different types of nodes in the solution tree.\n"
   require Logger
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), State.fact_value()}
+  @type goal :: {String.t(), String.t(), any()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
@@ -14,7 +14,7 @@ defmodule Plan.NodeExpansion do
           task: todo_item(),
           parent_id: node_id() | nil,
           children_ids: [node_id()],
-          state: State.t() | nil,
+          state: map() | nil,
           visited: boolean(),
           expanded: boolean(),
           method_tried: String.t() | nil,
@@ -28,7 +28,7 @@ defmodule Plan.NodeExpansion do
           blacklisted_commands: MapSet.t(),
           goal_network: %{node_id() => [node_id()]}
         }
-  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], State.t()) ::
+  @spec expand_root_node(solution_tree(), node_id(), [todo_item()], map()) ::
           {:ok, solution_tree()}
   def expand_root_node(solution_tree, root_id, todos, state) do
     {new_tree, child_ids} =
@@ -60,8 +60,8 @@ defmodule Plan.NodeExpansion do
   end
 
   @spec expand_task_node(
-          Domain.Core.t(),
-          State.t(),
+          map(),
+          map(),
           solution_tree(),
           node_id(),
           String.t(),
@@ -70,7 +70,7 @@ defmodule Plan.NodeExpansion do
         ) :: {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_task_node(domain, _state, solution_tree, node_id, task_name, args, verbose) do
     node = solution_tree.nodes[node_id]
-    methods = Domain.Core.get_task_methods(domain, task_name)
+    methods = AriaEngineCore.get_task_methods(domain, task_name)
 
     available_methods =
       Enum.reject(methods, fn {method_name, _method_fn} ->
@@ -127,13 +127,13 @@ defmodule Plan.NodeExpansion do
   end
 
   @spec expand_goal_node(
-          Domain.Core.t(),
-          State.t(),
+          map(),
+          map(),
           solution_tree(),
           node_id(),
           String.t(),
           String.t(),
-          State.fact_value(),
+          any(),
           integer()
         ) :: {:ok, solution_tree()} | {:error, String.t()} | {:failure, solution_tree()}
   def expand_goal_node(
@@ -148,7 +148,7 @@ defmodule Plan.NodeExpansion do
       ) do
     node = solution_tree.nodes[node_id]
 
-    case State.get_fact(node.state, subject, predicate) do
+    case AriaEngineCore.get_fact(node.state, subject, predicate) do
       ^fact_value ->
         mark_goal_satisfied(solution_tree, node_id)
 
@@ -167,8 +167,8 @@ defmodule Plan.NodeExpansion do
   end
 
   @spec expand_multigoal_node(
-          Domain.Core.t(),
-          State.t(),
+          map(),
+          map(),
           solution_tree(),
           node_id(),
           Multigoal.t(),
@@ -251,7 +251,7 @@ defmodule Plan.NodeExpansion do
          verbose
        ) do
     node = solution_tree.nodes[node_id]
-    methods = Domain.Core.get_unigoal_methods(domain, predicate)
+    methods = AriaEngineCore.get_unigoal_methods(domain, predicate)
 
     available_methods =
       Enum.reject(methods, fn {method_name, _method_fn} ->
@@ -377,7 +377,7 @@ defmodule Plan.NodeExpansion do
             action_name
           end
 
-        Domain.Core.get_durative_action(domain, action_atom) != nil
+        AriaEngineCore.get_durative_action(domain, action_atom) != nil
       else
         false
       end
@@ -417,7 +417,7 @@ defmodule Plan.NodeExpansion do
         action_name
       end
 
-    case Domain.Core.execute_action(domain, current_state, action_atom, args) do
+    case AriaEngineCore.execute_action(domain, current_state, action_atom, args) do
       {:ok, new_state} ->
         if verbose > 2 do
           Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")
@@ -442,7 +442,7 @@ defmodule Plan.NodeExpansion do
         action_name
       end
 
-    case Domain.Core.execute_action(domain, current_state, action_atom, args) do
+    case AriaEngineCore.execute_action(domain, current_state, action_atom, args) do
       {:ok, new_state} ->
         if verbose > 2 do
           Logger.debug("Executed primitive action #{action_name}(#{inspect(args)}) successfully")

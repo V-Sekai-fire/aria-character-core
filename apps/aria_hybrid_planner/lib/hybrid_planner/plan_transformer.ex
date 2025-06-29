@@ -75,7 +75,7 @@ defmodule AriaEngine.HybridPlanner.PlanTransformer do
   @doc "Create initial state with entities and resources.\n"
   @spec create_initial_state(list(), list()) :: map()
   def create_initial_state(entities, resources) do
-    initial_state = AriaEngineCore.State.new()
+    initial_state = AriaEngineCore.new_state()
 
     state_with_entities =
       entities
@@ -85,10 +85,10 @@ defmodule AriaEngine.HybridPlanner.PlanTransformer do
         capabilities = Map.get(entity, :capabilities) || Map.get(entity, "capabilities", [])
 
         state
-        |> AriaEngineCore.State.set_fact(entity_id, "type", entity_type)
-        |> AriaEngineCore.State.set_fact(entity_id, "capabilities", capabilities)
-        |> AriaEngineCore.State.set_fact(entity_id, "available", true)
-        |> AriaEngineCore.State.set_fact(entity_id, "current_activity", nil)
+        |> AriaEngineCore.set_fact(entity_id, "type", entity_type)
+        |> AriaEngineCore.set_fact(entity_id, "capabilities", capabilities)
+        |> AriaEngineCore.set_fact(entity_id, "available", true)
+        |> AriaEngineCore.set_fact(entity_id, "current_activity", nil)
       end)
 
     resources
@@ -99,10 +99,10 @@ defmodule AriaEngine.HybridPlanner.PlanTransformer do
       current_usage = Map.get(resource, :current_usage) || Map.get(resource, "current_usage", 0)
 
       state
-      |> AriaEngineCore.State.set_fact(resource_id, "type", resource_type)
-      |> AriaEngineCore.State.set_fact(resource_id, "capacity", capacity)
-      |> AriaEngineCore.State.set_fact(resource_id, "current_usage", current_usage)
-      |> AriaEngineCore.State.set_fact(resource_id, "available", true)
+      |> AriaEngineCore.set_fact(resource_id, "type", resource_type)
+      |> AriaEngineCore.set_fact(resource_id, "capacity", capacity)
+      |> AriaEngineCore.set_fact(resource_id, "current_usage", current_usage)
+      |> AriaEngineCore.set_fact(resource_id, "available", true)
     end)
   end
 
@@ -138,9 +138,9 @@ defmodule AriaEngine.HybridPlanner.PlanTransformer do
 
     fn _args, state ->
       state
-      |> AriaEngineCore.State.set_fact(activity_id, "completed", true)
-      |> AriaEngineCore.State.set_fact(activity_id, "duration", duration)
-      |> AriaEngineCore.State.set_fact(activity_id, "execution_time", DateTime.utc_now())
+      |> AriaEngineCore.set_fact(activity_id, "completed", true)
+      |> AriaEngineCore.set_fact(activity_id, "duration", duration)
+      |> AriaEngineCore.set_fact(activity_id, "execution_time", DateTime.utc_now())
     end
   end
 
@@ -176,10 +176,10 @@ defmodule AriaEngine.HybridPlanner.PlanTransformer do
     capacity = Map.get(resource, :capacity) || Map.get(resource, "capacity", 1)
 
     fn _args, state ->
-      current_usage = AriaEngineCore.State.get_fact(state, resource_id, "current_usage") || 0
+      current_usage = AriaEngineCore.get_fact(state, resource_id, "current_usage") || 0
 
       if current_usage < capacity do
-        AriaEngineCore.State.set_fact(state, resource_id, "current_usage", current_usage + 1)
+        AriaEngineCore.set_fact(state, resource_id, "current_usage", current_usage + 1)
       else
         false
       end
@@ -190,10 +190,10 @@ defmodule AriaEngine.HybridPlanner.PlanTransformer do
     resource_id = Map.get(resource, :id) || Map.get(resource, "id")
 
     fn _args, state ->
-      current_usage = AriaEngineCore.State.get_fact(state, resource_id, "current_usage") || 0
+      current_usage = AriaEngineCore.get_fact(state, resource_id, "current_usage") || 0
 
       if current_usage > 0 do
-        AriaEngineCore.State.set_fact(state, resource_id, "current_usage", current_usage - 1)
+        AriaEngineCore.set_fact(state, resource_id, "current_usage", current_usage - 1)
       else
         state
       end
