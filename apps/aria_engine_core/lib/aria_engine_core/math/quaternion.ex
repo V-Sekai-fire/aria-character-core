@@ -377,6 +377,33 @@ defmodule AriaEngineCore.Math.Quaternion do
   end
 
   @doc """
+  Rotate a Vector3 by this quaternion.
+
+  Applies the rotation represented by the quaternion to a 3D vector.
+  Uses the efficient formula: v' = v + 2 * cross(q.xyz, cross(q.xyz, v) + q.w * v)
+
+  ## Examples
+
+      iex> AriaEngineCore.Math.Quaternion.rotate_vector({0.0, 0.0, 0.7071067811865475, 0.7071067811865476}, {1.0, 0.0, 0.0})
+      {0.0, 1.0, 0.0}
+  """
+  @spec rotate_vector(t(), Vector3.t()) :: Vector3.t()
+  def rotate_vector({qx, qy, qz, qw}, {vx, vy, vz}) do
+    # Quaternion vector part
+    q_vec = {qx, qy, qz}
+    v = {vx, vy, vz}
+
+    # v' = v + 2 * cross(q.xyz, cross(q.xyz, v) + q.w * v)
+    qw_v = Vector3.scale(v, qw)
+    cross1 = Vector3.cross(q_vec, v)
+    cross1_plus_qw_v = Vector3.add(cross1, qw_v)
+    cross2 = Vector3.cross(q_vec, cross1_plus_qw_v)
+    two_cross2 = Vector3.scale(cross2, 2.0)
+
+    Vector3.add(v, two_cross2)
+  end
+
+  @doc """
   Identity quaternion constant.
 
   ## Examples

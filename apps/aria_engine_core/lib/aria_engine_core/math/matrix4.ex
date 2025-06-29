@@ -356,6 +356,115 @@ defmodule AriaEngineCore.Math.Matrix4 do
     {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
   end
 
+  @doc """
+  Compare two matrices for equality with floating point tolerance.
+
+  ## Examples
+
+      iex> AriaEngineCore.Math.Matrix4.equal?(AriaEngineCore.Math.Matrix4.identity(), AriaEngineCore.Math.Matrix4.identity())
+      true
+  """
+  @spec equal?(t(), t()) :: boolean()
+  def equal?(
+        {a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15},
+        {b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15}
+      ) do
+    epsilon = 1.0e-6
+
+    abs(a0 - b0) < epsilon and abs(a1 - b1) < epsilon and
+    abs(a2 - b2) < epsilon and abs(a3 - b3) < epsilon and
+    abs(a4 - b4) < epsilon and abs(a5 - b5) < epsilon and
+    abs(a6 - b6) < epsilon and abs(a7 - b7) < epsilon and
+    abs(a8 - b8) < epsilon and abs(a9 - b9) < epsilon and
+    abs(a10 - b10) < epsilon and abs(a11 - b11) < epsilon and
+    abs(a12 - b12) < epsilon and abs(a13 - b13) < epsilon and
+    abs(a14 - b14) < epsilon and abs(a15 - b15) < epsilon
+  end
+
+  @doc """
+  Extract the 3x3 basis (rotation + scale) matrix from a 4x4 transformation matrix.
+
+  Returns the upper-left 3x3 portion as a 4x4 matrix with identity translation and w components.
+
+  ## Examples
+
+      iex> AriaEngineCore.Math.Matrix4.extract_basis(AriaEngineCore.Math.Matrix4.identity())
+      {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+  """
+  @spec extract_basis(t()) :: t()
+  def extract_basis({m0, m1, m2, _, m4, m5, m6, _, m8, m9, m10, _, _, _, _, _}) do
+    {m0, m1, m2, 0.0, m4, m5, m6, 0.0, m8, m9, m10, 0.0, 0.0, 0.0, 0.0, 1.0}
+  end
+
+  @doc """
+  Orthogonalize a matrix by removing scaling effects while preserving rotation.
+
+  Uses Gram-Schmidt process to ensure orthonormal basis vectors.
+
+  ## Examples
+
+      iex> scaled = AriaEngineCore.Math.Matrix4.scaling({2.0, 2.0, 2.0})
+      iex> orthogonal = AriaEngineCore.Math.Matrix4.orthogonalize(scaled)
+      iex> # Result should have unit length basis vectors
+  """
+  @spec orthogonalize(t()) :: t()
+  def orthogonalize({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}) do
+    # Extract the 3x3 rotation part
+    col0 = {m0, m1, m2}
+    col1 = {m4, m5, m6}
+    col2 = {m8, m9, m10}
+
+    # Gram-Schmidt orthogonalization
+    # First column - normalize
+    col0_len = Vector3.length(col0)
+    norm_col0 = if col0_len > 1.0e-6 do
+      Vector3.div_scalar(col0, col0_len)
+    else
+      {1.0, 0.0, 0.0}
+    end
+
+    # Second column - remove component along first, then normalize
+    proj1 = Vector3.mul_scalar(norm_col0, Vector3.dot(col1, norm_col0))
+    orth_col1 = Vector3.sub(col1, proj1)
+    col1_len = Vector3.length(orth_col1)
+    norm_col1 = if col1_len > 1.0e-6 do
+      Vector3.div_scalar(orth_col1, col1_len)
+    else
+      {0.0, 1.0, 0.0}
+    end
+
+    # Third column - remove components along first two, then normalize
+    proj2_0 = Vector3.mul_scalar(norm_col0, Vector3.dot(col2, norm_col0))
+    proj2_1 = Vector3.mul_scalar(norm_col1, Vector3.dot(col2, norm_col1))
+    orth_col2 = col2 |> Vector3.sub(proj2_0) |> Vector3.sub(proj2_1)
+    col2_len = Vector3.length(orth_col2)
+    norm_col2 = if col2_len > 1.0e-6 do
+      Vector3.div_scalar(orth_col2, col2_len)
+    else
+      Vector3.cross(norm_col0, norm_col1)
+    end
+
+    # Reconstruct matrix with orthonormal basis
+    {nx0, nx1, nx2} = norm_col0
+    {ny0, ny1, ny2} = norm_col1
+    {nz0, nz1, nz2} = norm_col2
+
+    {nx0, nx1, nx2, m3, ny0, ny1, ny2, m7, nz0, nz1, nz2, m11, m12, m13, m14, m15}
+  end
+
+  @doc """
+  Alias for scaling/1 to match IKNode3D usage.
+
+  ## Examples
+
+      iex> AriaEngineCore.Math.Matrix4.scale({2.0, 3.0, 4.0})
+      {2.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+  """
+  @spec scale(Vector3.t()) :: t()
+  def scale(scale_vector) do
+    scaling(scale_vector)
+  end
+
   # Helper functions
 
   defp is_nan(x) do

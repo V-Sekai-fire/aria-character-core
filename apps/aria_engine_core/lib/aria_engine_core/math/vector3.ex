@@ -342,6 +342,41 @@ defmodule AriaEngineCore.Math.Vector3 do
   @spec unit_z() :: t()
   def unit_z, do: {0.0, 0.0, 1.0}
 
+  @doc """
+  Scalar multiplication (alias for scale/2).
+
+  Multiplies vector by scalar value.
+
+  ## Examples
+
+      iex> AriaEngineCore.Math.Vector3.mul_scalar({1.0, 2.0, 3.0}, 2.0)
+      {2.0, 4.0, 6.0}
+  """
+  @spec mul_scalar(t(), float()) :: t()
+  def mul_scalar(vector, scalar) do
+    scale(vector, scalar)
+  end
+
+  @doc """
+  Scalar division.
+
+  Divides vector by scalar value.
+
+  ## Examples
+
+      iex> AriaEngineCore.Math.Vector3.div_scalar({2.0, 4.0, 6.0}, 2.0)
+      {1.0, 2.0, 3.0}
+  """
+  @spec div_scalar(t(), float()) :: t()
+  def div_scalar({x, y, z}, scalar) when is_number(scalar) and scalar != 0.0 do
+    {x / scalar, y / scalar, z / scalar}
+  end
+
+  def div_scalar({x, y, z}, 0.0) do
+    # Handle division by zero - return infinity or NaN as appropriate
+    {x / 0.0, y / 0.0, z / 0.0}
+  end
+
   # Helper functions
 
   defp is_nan(x) do
