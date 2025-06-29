@@ -4,6 +4,8 @@
 
 AI planning research project with working temporal scheduling and hybrid HTN+STN planning systems in Elixir.
 
+* R25W1398085: [Unified Durative Action Specification](decisions/R25W1398085-unified-durative-action-specification-and-planner-standardization.md)
+
 ## Current Status: Alpha Feature Complete
 
 - ✅ **Temporal Planning**: Feature complete with 382 passing tests, needs broader validation
