@@ -3,18 +3,18 @@
 
 defmodule AriaEngineCore do
   @moduledoc """
-  AriaEngineCore provides a unified interface for temporal planning and execution.
+  AriaEngineCore provides core temporal planning and execution capabilities.
 
-  This module serves as the main entry point for the Aria planning system,
-  offering both planning-only and planning-with-execution capabilities.
-  Implements the R25W1398085 unified durative action specification.
+  This module contains the underlying implementation for the Aria planning system.
+  For the primary API, please use `AriaEngine` module, which provides a unified
+  interface as specified in ADR R25W1398085.
 
-  ## Usage
+  ## Usage (Internal/Advanced)
 
-      # Plan and execute in one step
+      # Plan and execute in one step (use AriaEngine for external API)
       {:ok, {final_state, solution_tree}} = AriaEngineCore.run_lazy(domain, state, goals)
 
-      # Plan first, then execute separately
+      # Plan first, then execute separately (use AriaEngine for external API)
       {:ok, solution_tree} = AriaEngineCore.plan(domain, state, goals)
       {:ok, {final_state, updated_tree}} = AriaEngineCore.run_lazy_tree(domain, state, solution_tree)
 
@@ -29,12 +29,12 @@ defmodule AriaEngineCore do
   ## Types
 
   The module uses standardized types from the AriaEngine ecosystem:
-  - `AriaEngine.Domain.t()` - Domain definitions
+  - `AriaEngine.Domain.t()` - Domain definitions (use AriaEngine.Domain)
   - `AriaState.t()` - World state representation
-  - `AriaEngine.todo_item()` - Work items and goals
-  - `AriaEngineCore.Plan.solution_tree()` - Planning results
+  - `AriaEngine.todo_item()` - Work items and goals (use AriaEngine.todo_item)
+  - `AriaEngineCore.Plan.solution_tree()` - Planning results (use AriaEngine.solution_tree)
 
-  ## API Functions
+  ## API Functions (Internal/Advanced)
 
   - `plan/3` - Planning only, returns solution tree
   - `run_lazy/3` - Planning + execution, returns final state and solution tree
