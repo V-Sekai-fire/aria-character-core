@@ -136,12 +136,14 @@ AriaEngine.execute_plan(plan)
 **Priority order:**
 
 **For app restructuring (creating external APIs):**
+
 - Apps with no dependencies on other internal modules (leaf apps first)
 - Apps that are dependencies of other apps
 - Core infrastructure apps (aria_core, aria_state)
 - Higher-level apps that depend on multiple other apps
 
 **For external API completion (after all apps have external API files):**
+
 - Use AST migration tool to identify which external APIs have the most missing functions
 - Complete APIs based on actual cross-app usage patterns (biggest gaps first)
 - Prioritize by violation count rather than dependency hierarchy

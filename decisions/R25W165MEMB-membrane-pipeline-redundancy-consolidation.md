@@ -13,6 +13,7 @@ Analysis of the aria_membrane_pipeline app reveals significant redundancy in fil
 ### 1. Duplicate Response Transformation Logic
 
 **Files:**
+
 - `lib/membrane/response_filter.ex` - Converts PlanningResult to MCPResponse
 - `lib/membrane/planner_mcp_filter.ex` - Also converts PlanningResult to MCPResponse
 
@@ -21,6 +22,7 @@ Analysis of the aria_membrane_pipeline app reveals significant redundancy in fil
 ### 2. Overlapping Format Definitions
 
 **Files:**
+
 - `lib/membrane/format/planning_request.ex` - Contains domain, state, goals, options
 - `lib/membrane/format/planning_params.ex` - Contains goal, context, constraints
 
@@ -29,6 +31,7 @@ Analysis of the aria_membrane_pipeline app reveals significant redundancy in fil
 ### 3. Inconsistent Naming and Structure
 
 **Files:**
+
 - `lib/membrane/format/planning_response.ex` - Defines `Membrane.Format.PlanningResult` module
 
 **Issue:** File name suggests "response" but module name is "PlanningResult", creating naming confusion.
@@ -36,6 +39,7 @@ Analysis of the aria_membrane_pipeline app reveals significant redundancy in fil
 ### 4. Testing Component Duplication
 
 **Files:**
+
 - `lib/membrane/format_transformer_filter.ex` - Generic transformer with mock scenarios
 - `lib/membrane/pipeline_manager.ex` - Contains `Membrane.EchoFilter` for testing
 
@@ -44,6 +48,7 @@ Analysis of the aria_membrane_pipeline app reveals significant redundancy in fil
 ### 5. Specialized Filters in Core Pipeline
 
 **Files:**
+
 - `lib/membrane/minizinc_solver_filter.ex` - Widget assembly specific solver
 - `lib/membrane/testing_filter.ex` - Testing-specific functionality
 
@@ -54,26 +59,31 @@ Analysis of the aria_membrane_pipeline app reveals significant redundancy in fil
 Consolidate redundant elements to create a cleaner, more maintainable pipeline architecture:
 
 ### Phase 1: Response Filter Consolidation
+
 - [x] Merge `ResponseFilter` and `PlannerMCPFilter` into single `ResponseFilter`
 - [x] Preserve best features from both implementations
 - [x] Remove duplicate `planner_mcp_filter.ex`
 
 ### Phase 2: Format Standardization  
+
 - [x] Standardize on `PlanningParams` format (simpler, more focused)
 - [x] Remove `PlanningRequest` format
 - [x] Update all references to use `PlanningParams`
 
 ### Phase 3: Naming Consistency
+
 - [x] Rename `planning_response.ex` to `planning_result.ex` to match module name
 - [x] Or rename module to `PlanningResponse` to match file name
 - [x] Ensure consistent naming throughout pipeline
 
 ### Phase 4: Testing Consolidation
+
 - [x] Merge `FormatTransformerFilter` and `EchoFilter` into single testing component
 - [x] Create configurable testing filter with multiple scenarios
 - [x] Remove duplicate testing implementations
 
 ### Phase 5: Specialized Filter Extraction
+
 - [ ] Move `MinizincSolverFilter` to separate app if still needed
 - [ ] Remove testing-specific filters from core pipeline
 - [ ] Keep only essential pipeline filters
@@ -81,21 +91,25 @@ Consolidate redundant elements to create a cleaner, more maintainable pipeline a
 ## Implementation Plan
 
 ### Step 1: Analyze Current Usage
+
 1. Search codebase for references to redundant components
 2. Identify which implementations are actively used
 3. Document dependencies and integration points
 
 ### Step 2: Create Consolidated Components
+
 1. Design unified ResponseFilter with best features from both
 2. Standardize on PlanningParams format
 3. Create comprehensive testing filter
 
 ### Step 3: Update Pipeline Configuration
+
 1. Update pipeline manager to use consolidated components
 2. Remove references to deprecated filters
 3. Update documentation and examples
 
 ### Step 4: Remove Redundant Files
+
 1. Delete duplicate filter implementations
 2. Remove unused format definitions
 3. Clean up imports and references
@@ -113,6 +127,7 @@ Consolidate redundant elements to create a cleaner, more maintainable pipeline a
 ## Consequences
 
 **Positive:**
+
 - Reduced maintenance overhead
 - Clearer component responsibilities
 - Easier to understand pipeline flow
@@ -120,6 +135,7 @@ Consolidate redundant elements to create a cleaner, more maintainable pipeline a
 - Simplified testing and debugging
 
 **Negative:**
+
 - Requires careful migration to avoid breaking changes
 - May need to update external dependencies
 - Short-term development overhead for consolidation
@@ -133,15 +149,18 @@ Consolidate redundant elements to create a cleaner, more maintainable pipeline a
 ## Files Affected
 
 **To be consolidated:**
+
 - `lib/membrane/response_filter.ex`
 - `lib/membrane/planner_mcp_filter.ex`
 - `lib/membrane/format/planning_request.ex`
 - `lib/membrane/format_transformer_filter.ex`
 
 **To be removed:**
+
 - `lib/membrane/planner_mcp_filter.ex`
 - `lib/membrane/format/planning_request.ex`
 - `lib/membrane/minizinc_solver_filter.ex` (move to separate app)
 
 **To be renamed:**
+
 - `lib/membrane/format/planning_response.ex` → `planning_result.ex`

@@ -24,6 +24,7 @@ The AST migration tool has identified comprehensive cross-app dependency violati
 ### Example Violations
 
 From `apps/aria_hybrid_planner/lib/aria_hybrid_planner/core.ex`:
+
 ```elixir
 alias AriaEngineCore  # Should use AriaEngineCore external API
 @type domain :: AriaEngineCore.domain()  # Direct internal type usage
@@ -42,6 +43,7 @@ Implement systematic cross-app dependency migration using the `ast_migrate` tool
 ## Implementation Plan
 
 ### Phase 1: Comprehensive Violation Mapping (PRIORITY: HIGH)
+
 **Status:** ✅ Complete
 
 - [x] Use `ast_migrate` to identify all cross-app dependency patterns
@@ -50,6 +52,7 @@ Implement systematic cross-app dependency migration using the `ast_migrate` tool
 - [x] Quantify scope: 201 files with violations across all apps
 
 ### Phase 2: External API Audit and Completion (PRIORITY: HIGH)
+
 **Status:** 🔄 In Progress
 
 - [x] **Audit existing external APIs:** Check `lib/app_name.ex` files for completeness
@@ -59,36 +62,43 @@ Implement systematic cross-app dependency migration using the `ast_migrate` tool
 - [ ] **Document API coverage:** Ensure external APIs provide complete functionality
 
 **Key findings:**
+
 - `AriaEngineCore` - ✅ Added type accessor functions (`domain()`, `state()`, `todo_item()`)
 - `AriaTimeline` - ✅ Has comprehensive external API, missing some internal functions
 - `AriaCore` - ✅ Has comprehensive external API
 - `AriaHybridPlanner` - ✅ Fixed type usage to use external API properly
 
 **Compilation test results:**
+
 - ✅ AriaHybridPlanner compiles successfully with external API types
 - ⚠️ Many warnings about missing Timeline functions (need delegation implementation)
 
 ### Phase 3: Systematic Violation Fixing (PRIORITY: HIGH)
+
 **Status:** ⏳ Pending API completion
 
 **Fix by violation type (not by app):**
 
 #### Type A: Legacy Namespace Violations
+
 - [ ] **AriaEngine.Timeline.*** → `AriaTimeline` API calls
 - [ ] **AriaEngine.*** → `AriaEngineCore` API calls  
 - [ ] **AriaCore.*** → `AriaCore` API calls
 
 #### Type B: Internal Module Imports
+
 - [ ] **AriaTimeline.TimelineCore.*** → `AriaTimeline` API calls
 - [ ] **AriaEngineCore.*** direct usage → `AriaEngineCore` API calls
 - [ ] **Other internal imports** → appropriate external APIs
 
 #### Type C: Cross-App Type Dependencies
+
 - [ ] **AriaEngineCore.domain()** → `AriaEngineCore.domain_type()`
 - [ ] **AriaEngineCore.state()** → `AriaEngineCore.state_type()`
 - [ ] **Other type imports** → external API type functions
 
 ### Phase 4: Validation and Testing (PRIORITY: MEDIUM)
+
 **Status:** ⏳ Pending violation fixes
 
 - [ ] **Compilation verification:** All apps compile without errors
@@ -146,6 +156,7 @@ def domain_type, do: AppName.Internal.Domain
 **Risk:** Systematic changes across 201 files could introduce compilation errors or functional regressions.
 
 **Mitigation:**
+
 - Use AST-based transformations for accuracy
 - Fix violations by type to maintain consistency
 - Validate compilation after each violation type fix
@@ -156,6 +167,7 @@ def domain_type, do: AppName.Internal.Domain
 **Risk:** External APIs may not provide all functionality needed by dependent apps.
 
 **Mitigation:**
+
 - Complete API audit before fixing violations
 - Implement missing delegation functions systematically
 - Document API coverage and gaps clearly
@@ -166,6 +178,7 @@ def domain_type, do: AppName.Internal.Domain
 **Risk:** Additional delegation layers could impact performance.
 
 **Mitigation:**
+
 - Measure performance before and after migration
 - Optimize delegation patterns where needed
 - Consider inline delegation for performance-critical paths

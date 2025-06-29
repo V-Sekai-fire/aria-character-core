@@ -42,6 +42,7 @@ The `apps/todo.md` file serves as the central tracking document for umbrella app
 **Status:** Major cross-app dependency violations have been fixed. External APIs are available for all remaining migration work.
 
 **Recent Progress:**
+
 - Fixed `AriaEngine.Timeline.Interval` → `Timeline.Interval` in aria_timeline
 - Fixed `AriaEngine.Timeline.IntervalOperations` → `AriaTimeline` calls in timeline_builder.ex
 - Fixed `AriaEngineCore.Domain.Core` and `AriaEngineCore.State` → `AriaEngineCore` in aria_hybrid_planner
@@ -130,7 +131,7 @@ AriaEngine.execute_plan(plan)
 
 ## Implementation Process
 
-### For Each Non-Compliant App:
+### For Each Non-Compliant App
 
 1. **Create external module file:** Add `lib/app_name.ex` with public API
 2. **Identify public functions:** Determine which functions other apps need

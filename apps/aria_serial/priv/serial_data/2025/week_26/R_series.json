@@ -1,7 +1,7 @@
 {
   "factory": "R",
   "generated_at": "2025-06-27T20:45:31.000000Z",
-  "next_sequence": 163,
+  "next_sequence": 167,
   "serials": {
     "R25W1073327": {
       "created": "2025-06-23",
@@ -171,6 +171,14 @@
       "sequence": 57,
       "week": 26
     },
+    "R25W164MEMB": {
+      "created": "2025-06-29",
+      "file": "membrane-pipeline-production-restoration.md",
+      "format": "v1",
+      "purpose": "Membrane pipeline production restoration",
+      "sequence": null,
+      "week": 26
+    },
     "R25W159DECX": {
       "created": "2025-06-27",
       "file": "decisions/R25W159DECX-port-v-sekai-many-bone-ik-nx-acceleration.md",
@@ -329,6 +337,14 @@
       "format": "v1",
       "purpose": "ADR: integrate exhort or tools strategy",
       "sequence": 125,
+      "week": 26
+    },
+    "R25W165MEMB": {
+      "created": "2025-06-29",
+      "file": "membrane-pipeline-redundancy-consolidation.md",
+      "format": "v1",
+      "purpose": "Membrane pipeline redundancy consolidation",
+      "sequence": null,
       "week": 26
     },
     "R25W026F0B7": {
@@ -939,6 +955,14 @@
       "sequence": 49,
       "week": 26
     },
+    "R25W166REST": {
+      "created": "2025-06-29",
+      "file": "restructure-apps-standard-elixir-pattern.md",
+      "format": "v1",
+      "purpose": "Restructure apps to follow standard Elixir pattern",
+      "sequence": null,
+      "week": 26
+    },
     "R25W00787B6": {
       "created": "2025-06-14",
       "file": "R25W00787B6-weekend-implementation-scope.md",
@@ -1203,6 +1227,14 @@
       "sequence": 112,
       "week": 26
     },
+    "R25W163DXSC": {
+      "created": "2025-06-29",
+      "file": "disconnect-mcp-servers-and-maintain-paused-state.md",
+      "format": "v1",
+      "purpose": "MCP server disconnection and paused state maintenance",
+      "sequence": null,
+      "week": 26
+    },
     "R25W14702E9": {
       "created": "2025-06-25",
       "file": "R25W14702E9-practical-how-to-documentation.md",
@@ -1300,7 +1332,7 @@
       "week": 26
     }
   },
-  "updated_at": "2025-06-29T00:14:07.889877Z",
+  "updated_at": "2025-06-29T00:42:13.757254Z",
   "week": 26,
   "year": 2025
 }
