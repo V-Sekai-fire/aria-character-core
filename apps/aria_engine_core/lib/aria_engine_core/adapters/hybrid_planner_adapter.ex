@@ -33,11 +33,11 @@ defmodule AriaEngineCore.Adapters.HybridPlannerAdapter do
   alias AriaHybridPlanner.Core, as: HybridCore
 
   @impl AriaEngineCore.Behaviours.PlannerBehaviour
-  def new_coordinator do
+  def new_coordinator(opts \\ []) do
     Logger.debug("Creating new hybrid planner coordinator")
 
     try do
-      HybridCore.new_coordinator()
+      HybridCore.new_coordinator(opts)
     rescue
       error ->
         Logger.error("Failed to create hybrid coordinator: #{inspect(error)}")
@@ -46,11 +46,11 @@ defmodule AriaEngineCore.Adapters.HybridPlannerAdapter do
   end
 
   @impl AriaEngineCore.Behaviours.PlannerBehaviour
-  def plan(coordinator, domain, state, goals) do
+  def plan(coordinator, domain, state, goals, opts \\ []) do
     Logger.debug("Starting hybrid planning for #{length(goals)} goals")
 
     try do
-      case HybridCore.plan(coordinator, domain, state, goals) do
+      case HybridCore.plan(coordinator, domain, state, goals, opts) do
         {:ok, plan} ->
           Logger.debug("Hybrid planning completed successfully")
           {:ok, plan}
@@ -69,11 +69,11 @@ defmodule AriaEngineCore.Adapters.HybridPlannerAdapter do
   end
 
   @impl AriaEngineCore.Behaviours.PlannerBehaviour
-  def execute(coordinator, domain, state, plan) do
+  def execute(coordinator, domain, state, plan, opts \\ []) do
     Logger.debug("Starting hybrid plan execution")
 
     try do
-      case HybridCore.execute(coordinator, domain, state, plan) do
+      case HybridCore.execute(coordinator, domain, state, plan, opts) do
         {:ok, final_state} ->
           Logger.debug("Hybrid execution completed successfully")
           {:ok, final_state}

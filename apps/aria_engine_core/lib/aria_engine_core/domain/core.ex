@@ -21,7 +21,9 @@ defmodule AriaEngineCore.Domain.Core do
           task_methods: %{task_name() => [named_method()]},
           unigoal_methods: %{String.t() => [named_method()]},
           multigoal_methods: [named_method()],
-          durative_actions: %{durative_action_name() => durative_action()}
+          durative_actions: %{durative_action_name() => durative_action()},
+          entity_registry: map(),
+          temporal_specifications: map()
         }
   defstruct name: "",
             actions: %{},
@@ -29,7 +31,9 @@ defmodule AriaEngineCore.Domain.Core do
             task_methods: %{},
             unigoal_methods: %{},
             multigoal_methods: [],
-            durative_actions: %{}
+            durative_actions: %{},
+            entity_registry: %{},
+            temporal_specifications: %{}
 
   @doc "Creates a new planning domain.\n"
   @spec new(String.t()) :: t()
@@ -48,6 +52,8 @@ defmodule AriaEngineCore.Domain.Core do
       not is_map(domain.unigoal_methods) -> {:error, "Unigoal methods must be a map"}
       not is_list(domain.multigoal_methods) -> {:error, "Multigoal methods must be a list"}
       not is_map(domain.durative_actions) -> {:error, "Durative actions must be a map"}
+      not is_map(domain.entity_registry) -> {:error, "Entity registry must be a map"}
+      not is_map(domain.temporal_specifications) -> {:error, "Temporal specifications must be a map"}
       true -> {:ok, domain}
     end
   end
@@ -95,5 +101,29 @@ defmodule AriaEngineCore.Domain.Core do
   @spec get_durative_action(t(), durative_action_name()) :: durative_action() | nil
   def get_durative_action(%__MODULE__{durative_actions: durative_actions}, name) do
     Map.get(durative_actions, name)
+  end
+
+  @doc "Sets the entity registry for the domain.\n"
+  @spec set_entity_registry(t(), map()) :: t()
+  def set_entity_registry(%__MODULE__{} = domain, registry) do
+    %{domain | entity_registry: registry}
+  end
+
+  @doc "Retrieves the entity registry from the domain.\n"
+  @spec get_entity_registry(t()) :: map()
+  def get_entity_registry(%__MODULE__{entity_registry: registry}) do
+    registry
+  end
+
+  @doc "Sets the temporal specifications for the domain.\n"
+  @spec set_temporal_specifications(t(), map()) :: t()
+  def set_temporal_specifications(%__MODULE__{} = domain, specs) do
+    %{domain | temporal_specifications: specs}
+  end
+
+  @doc "Retrieves the temporal specifications from the domain.\n"
+  @spec get_temporal_specifications(t()) :: map()
+  def get_temporal_specifications(%__MODULE__{temporal_specifications: specs}) do
+    specs
   end
 end

@@ -11,7 +11,7 @@ defmodule Membrane.MCPSink do
   use Membrane.Sink
   require Logger
   alias Membrane.Format.MCPResponse
-  def_input_pad(:input, accepted_format: MCPResponse, flow_control: :manual)
+  def_input_pad(:input, accepted_format: MCPResponse, flow_control: :manual, demand_unit: :buffers)
 
   def_options(
     storage_mode: [

@@ -92,6 +92,25 @@ defmodule AriaEngineCore.Domain.Methods do
   end
 
   @doc """
+  Add multitodo method to a domain (3-arity version).
+  """
+  @spec add_multitodo_method(map(), String.t(), function()) :: map()
+  def add_multitodo_method(domain, method_name, method_fn) do
+    methods = Map.get(domain, :multitodo_methods, %{})
+    updated_methods = Map.put(methods, method_name, method_fn)
+    Map.put(domain, :multitodo_methods, updated_methods)
+  end
+
+  @doc """
+  Add multitodo method to a domain (2-arity version).
+  """
+  @spec add_multitodo_method(map(), function()) :: map()
+  def add_multitodo_method(domain, method_fn) do
+    method_name = "multitodo_method_#{System.unique_integer([:positive])}"
+    add_multitodo_method(domain, method_name, method_fn)
+  end
+
+  @doc """
   Get task methods for a specific task.
   """
   @spec get_task_methods(map(), String.t()) :: list()
@@ -120,6 +139,14 @@ defmodule AriaEngineCore.Domain.Methods do
   end
 
   @doc """
+  Get all multitodo methods.
+  """
+  @spec get_multitodo_methods(map()) :: map()
+  def get_multitodo_methods(domain) do
+    Map.get(domain, :multitodo_methods, %{})
+  end
+
+  @doc """
   Get goal methods for a specific predicate.
   """
   @spec get_goal_methods(map(), String.t()) :: map()
@@ -136,6 +163,7 @@ defmodule AriaEngineCore.Domain.Methods do
     all_methods = %{}
     |> Map.merge(Map.get(domain, :task_methods, %{}))
     |> Map.merge(Map.get(domain, :multigoal_methods, %{}))
+    |> Map.merge(Map.get(domain, :multitodo_methods, %{})) # Add multitodo methods
 
     # Also search unigoal methods
     unigoal_methods = Map.get(domain, :unigoal_methods, %{})
@@ -146,6 +174,28 @@ defmodule AriaEngineCore.Domain.Methods do
     all_methods
     |> Map.merge(unigoal_flat)
     |> Map.get(method_name)
+  end
+
+  @doc """
+  Adds a method to the domain based on its type.
+  This is a generic entry point for adding methods.
+  """
+  @spec add_method(map(), String.t(), map()) :: map()
+  def add_method(domain, method_name, %{type: :task_method, decomposition_fn: fn_val}) do
+    add_task_method(domain, method_name, fn_val)
+  end
+  def add_method(domain, method_name, %{type: :unigoal_method, predicate: predicate, goal_fn: fn_val}) do
+    add_unigoal_method(domain, predicate, method_name, fn_val)
+  end
+  def add_method(domain, method_name, %{type: :multigoal_method, goal_fn: fn_val}) do
+    add_multigoal_method(domain, method_name, fn_val)
+  end
+  def add_method(domain, method_name, %{type: :multitodo_method, todo_fn: fn_val}) do
+    add_multitodo_method(domain, method_name, fn_val)
+  end
+  def add_method(domain, method_name, _other) do
+    Logger.warn("Unsupported method type for #{method_name}. Method not added.")
+    domain
   end
 
   @doc """

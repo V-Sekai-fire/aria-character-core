@@ -174,7 +174,7 @@ defmodule AriaEngineCore do
   defdelegate new_state(data), to: AriaEngineCore.State, as: :new
   defdelegate get_fact(state, entity_id, property), to: AriaEngineCore.State
   defdelegate set_fact(state, entity_id, property, value), to: AriaEngineCore.State
-  defdelegate has_fact?(state, entity_id, property), to: AriaEngineCore.State
+  defdelegate has_subject?(state, entity_id, property), to: AriaEngineCore.State
   defdelegate remove_fact(state, entity_id, property), to: AriaEngineCore.State
 
   @doc """

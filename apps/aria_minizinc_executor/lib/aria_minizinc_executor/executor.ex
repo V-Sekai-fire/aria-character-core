@@ -159,7 +159,7 @@ defmodule AriaMinizincExecutor.Executor do
   end
 
   defp build_minizinc_args(model_file, opts) do
-    base_args = ["--canonicalize", "--quiet", "--no-output-comments", "--solver", opts[:solver], "--output-mode", opts[:output_mode]]
+    base_args = ["--canonicalize", "--no-output-comments", "--solver", opts[:solver], "--output-mode", opts[:output_mode]]
 
     objective_args =
       if opts[:output_mode] == "json" do

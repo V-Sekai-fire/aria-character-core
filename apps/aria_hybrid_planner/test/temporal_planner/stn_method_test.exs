@@ -5,7 +5,7 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNMethodTest do
   use ExUnit.Case, async: true
   alias AriaHybridPlanner.TemporalPlanner.STNMethod
   alias AriaHybridPlanner.TemporalPlanner.STNAction
-  alias AriaTimeline.TimelineCore, as: Timeline
+  alias Timeline
 
   describe("method creation") do
     test "creates method with sequential decomposition" do

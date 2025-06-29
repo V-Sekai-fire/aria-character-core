@@ -33,6 +33,8 @@ defmodule AriaCore.ActionAttributes do
   @type entity_requirement :: map()
   @type duration_spec :: AriaCore.Temporal.Interval.duration()
 
+  alias AriaEngineCore.Domain
+
   @doc """
   Enables @action attribute processing in a module.
 
@@ -289,43 +291,44 @@ defmodule AriaCore.ActionAttributes do
       """
       def create_domain() do
         # Start with base domain (LEVERAGE existing Domain.new)
-        domain = AriaCore.Domain.new(unquote(env.module))
+        domain = Domain.new(unquote(env.module))
 
         # Process actions using existing systems (SOCIABLE approach)
         domain_with_actions =
           Enum.reduce(__action_metadata__(), domain, fn {name, metadata}, acc ->
             action_spec = AriaCore.ActionAttributes.convert_action_metadata(metadata, name, __MODULE__)
-            AriaCore.Domain.add_action(acc, name, action_spec)
+            Domain.add_action(acc, name, action_spec)
           end)
 
         # Process commands using existing systems (SOCIABLE approach)
         domain_with_commands =
           Enum.reduce(__command_metadata__(), domain_with_actions, fn {name, metadata}, acc ->
             command_spec = AriaCore.ActionAttributes.convert_command_metadata(metadata, name, __MODULE__)
-            AriaCore.Domain.add_action(acc, name, command_spec)
+            Domain.add_action(acc, name, command_spec)
           end)
 
         # Process methods using existing systems (SOCIABLE approach)
         domain_with_methods =
           Enum.reduce(__method_metadata__(), domain_with_commands, fn {name, metadata}, acc ->
             method_spec = AriaCore.ActionAttributes.convert_method_metadata(metadata, name, __MODULE__)
-            AriaCore.Domain.add_method(acc, name, method_spec)
+            Domain.add_method(acc, name, method_spec)
           end)
 
         # Process unigoal methods using existing systems (SOCIABLE approach)
         domain_with_unigoals =
           Enum.reduce(__unigoal_metadata__(), domain_with_methods, fn {name, metadata}, acc ->
             unigoal_spec = AriaCore.ActionAttributes.convert_unigoal_metadata(metadata, name, __MODULE__)
-            AriaCore.Domain.add_unigoal_method(acc, name, unigoal_spec)
+            Domain.add_unigoal_method(acc, name, unigoal_spec)
           end)
 
         # Set up entity registry (LEVERAGE existing entity system)
         entity_registry = AriaCore.ActionAttributes.create_entity_registry(__action_metadata__())
-        domain_with_entities = AriaCore.Domain.set_entity_registry(domain_with_unigoals, entity_registry)
+        domain_with_entities = Domain.set_entity_registry(domain_with_unigoals, entity_registry)
 
         # Set up temporal specifications (LEVERAGE existing temporal system)
         temporal_specs = AriaCore.ActionAttributes.create_temporal_specifications(__action_metadata__())
-        AriaCore.Domain.set_temporal_specifications(domain_with_entities, temporal_specs)
+        domain_with_temporal_specs = Domain.set_temporal_specifications(domain_with_entities, temporal_specs)
+        domain_with_temporal_specs
       end
     end
   end

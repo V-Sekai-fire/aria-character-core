@@ -124,11 +124,11 @@ defmodule Membrane.PlannerFilter do
   end
 
   defp execute_planning_with_timeout(
-         %PlanningParams{options: [error: true]} = params,
+         %PlanningParams{conversion_metadata: %{error: true}} = params,
          _timeout_ms
        ) do
     error_reason =
-      get_in(params.conversion_metadata, [:error_reason]) || "Unknown conversion error"
+      Map.get(params.conversion_metadata, :error_reason) || "Unknown conversion error"
 
     {:error, "Planning skipped due to conversion error: #{error_reason}"}
   end

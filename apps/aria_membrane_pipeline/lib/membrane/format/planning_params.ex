@@ -14,7 +14,8 @@ defmodule Membrane.Format.PlanningParams do
           context: map(),
           constraints: list(),
           request_id: String.t(),
-          timestamp: DateTime.t()
+          timestamp: DateTime.t(),
+          conversion_metadata: map()
         }
 
   defstruct [
@@ -22,20 +23,22 @@ defmodule Membrane.Format.PlanningParams do
     :context,
     :constraints,
     :request_id,
-    :timestamp
+    :timestamp,
+    :conversion_metadata
   ]
 
   @doc """
   Creates a new PlanningParams format struct.
   """
-  @spec new(String.t(), map(), list(), String.t()) :: t()
-  def new(goal, context, constraints, request_id) do
+  @spec new(String.t(), map(), list(), String.t(), map()) :: t()
+  def new(goal, context, constraints, request_id, conversion_metadata \\ %{}) do
     %__MODULE__{
       goal: goal,
       context: context,
       constraints: constraints,
       request_id: request_id,
-      timestamp: DateTime.utc_now()
+      timestamp: DateTime.utc_now(),
+      conversion_metadata: conversion_metadata
     }
   end
 
@@ -48,6 +51,7 @@ defmodule Membrane.Format.PlanningParams do
       not is_nil(params.context) and
       not is_nil(params.constraints) and
       not is_nil(params.request_id) and
-      not is_nil(params.timestamp)
+      not is_nil(params.timestamp) and
+      not is_nil(params.conversion_metadata)
   end
 end
