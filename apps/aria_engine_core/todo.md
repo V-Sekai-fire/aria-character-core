@@ -162,6 +162,22 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
 
 **Priority: HIGH - Comprehensive EWBIK validation scenarios**
 
+- [ ] **glTF Sample Asset Style IK Test Cases**
+  - [ ] Create `SimpleIK.gltf` - Basic IK solving validation (similar to SimpleSkin.gltf/SimpleMorph.gltf)
+    - [ ] Single bone chain with 3 joints (shoulder → elbow → wrist)
+    - [ ] Single IK effector at wrist with position target
+    - [ ] Basic Kusudama constraint on elbow joint (simple cone limit)
+    - [ ] Embedded glTF with minimal geometry for visual validation
+    - [ ] KHR_interactivity behavior for effector target animation
+    - [ ] Test convergence with 5-10 iterations maximum
+    - [ ] Validate against known analytical IK solution
+  - [ ] Create `SimpleIKConstraints.gltf` - Kusudama constraint validation
+    - [ ] Two bone chain with shoulder joint constraint visualization
+    - [ ] Cone geometry showing valid movement region
+    - [ ] Morph targets for constraint violation feedback
+    - [ ] Animated effector target that tests constraint boundaries
+    - [ ] Visual validation of constraint enforcement vs violation
+
 - [ ] **Multi-Effector Coordination Tests**
   - [ ] Dual-hand reaching with motion propagation
   - [ ] Full-body IK with spine-to-limb influence
