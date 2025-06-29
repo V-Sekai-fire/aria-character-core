@@ -1,6 +1,6 @@
 # AriaCore: Unified Action Specification System
 
-This directory contains the complete implementation of the unified action specification system as defined in ADR-181, providing a clean, module-based approach to domain creation with automatic registration and temporal processing.
+This directory contains the complete implementation of the unified action specification system as defined in ADR R25W1398085, providing a clean, module-based approach to domain creation with automatic registration and temporal processing.
 
 ## Overview
 
@@ -10,7 +10,7 @@ AriaCore implements a **sociable testing approach** that leverages existing Aria
 
 ### Phase 1: Action Attributes Processing (`action_attributes.ex`)
 
-Processes `@action` and `@task_method` attributes from domain modules:
+Processes `@action`, `@command`, `@task_method`, `@unigoal_method`, `@multigoal_method`, and `@multitodo_method` attributes from domain modules:
 
 ```elixir
 @action duration: "PT2H",
@@ -18,7 +18,7 @@ Processes `@action` and `@task_method` attributes from domain modules:
         preconditions: [{"ingredient_available", "tomato", true}],
         effects: [{"meal_status", "soup", "ready"}]
 def cook_soup(state, [soup_id]) do
-  AriaCore.State.Relational.set_fact(state, "meal_status", soup_id, "ready")
+  AriaState.RelationalState.set_fact(state, "meal_status", soup_id, "ready")
 end
 ```
 
@@ -29,32 +29,7 @@ end
 - Temporal specifications generation from duration metadata
 - Integration with existing AriaCore.Domain system
 
-### Phase 2: Temporal Conditions Conversion (`temporal_converter.ex`)
-
-Converts complex durative actions with temporal conditions into simple actions plus task methods:
-
-```elixir
-# Durative action with at_start/over_all/at_end conditions
-durative_action = %{
-  conditions: %{
-    at_start: [{"oven", "temperature", {:>=, 350}}],
-    over_all: [{"oven", "status", "operational"}],
-    at_end: [{"meal", "quality", {:>=, 8}}]
-  }
-}
-
-# Converts to simple action + method decomposition
-{simple_action, method} = TemporalConverter.convert_durative_action(durative_action)
-```
-
-**Features:**
-
-- Preserves temporal semantics during conversion
-- Generates method decompositions that enforce temporal constraints
-- Validates conversion maintains action equivalence
-- Supports all 9 temporal patterns from ADR-181
-
-### Phase 3: Module-based Domain Creation (`unified_domain.ex`)
+### Phase 2: Module-based Domain Creation (`unified_domain.ex`)
 
 Creates fully functional domains from modules using the sociable testing approach:
 
@@ -63,7 +38,7 @@ Creates fully functional domains from modules using the sociable testing approac
 domain = AriaCore.UnifiedDomain.create_from_module(RestaurantDomain)
 
 # Domain is fully compatible with existing systems
-{:ok, plan} = AriaCore.plan(domain, initial_state, goals)
+{:ok, plan} = AriaEngineCore.plan(domain, initial_state, goals)
 ```
 
 **Features:**
@@ -72,6 +47,96 @@ domain = AriaCore.UnifiedDomain.create_from_module(RestaurantDomain)
 - Automatic entity registry setup from action requirements
 - Temporal specifications integration
 - Domain merging and validation capabilities
+
+## Method Types (R25W1398085 Specification)
+
+The AriaEngine planner uses six types of methods for different purposes:
+
+### @action - Direct State Changes
+
+```elixir
+@action duration: "PT2H",
+        requires_entities: [%{type: "agent", capabilities: [:cooking]}]
+def cook_meal(state, [meal_id]) do
+  state |> AriaState.RelationalState.set_fact("meal_status", meal_id, "ready")
+  {:ok, state}
+end
+```
+
+### @command - Execution-time Logic with Failure Handling
+
+```elixir
+@command true
+def cook_meal_command(state, [meal_id]) do
+  case attempt_cooking_with_failure_chance(state, meal_id) do
+    {:ok, new_state} -> {:ok, new_state}
+    {:error, reason} -> {:error, reason}
+  end
+end
+```
+
+### @task_method - Complex Workflow Decomposition
+
+```elixir
+@task_method true
+def prepare_complete_meal(state, [meal_id]) do
+  {:ok, [
+    {"ingredient_available", "main_ingredient", true},
+    {:prep_ingredients, [meal_id]},
+    {:cook_main_course, [meal_id]},
+    {:quality_check, [meal_id]},
+    {"meal_status", meal_id, "ready"}
+  ]}
+end
+```
+
+### @unigoal_method - Single Predicate Goal Handling
+
+```elixir
+@unigoal_method predicate: "location"
+def move_to_location(state, {subject, value}) do
+  {:ok, [
+    {"available", subject, true},
+    {:move_action, [subject, value]},
+    {"location", subject, value}
+  ]}
+end
+```
+
+### @multigoal_method - Multiple Goal Optimization
+
+```elixir
+@multigoal_method true
+def optimize_cooking_batch(state, multigoal) do
+  # Reorder or optimize goals for better efficiency
+  {:ok, optimized_multigoal}
+end
+```
+
+### @multitodo_method - Todo List Optimization
+
+```elixir
+@multitodo_method true
+def optimize_cooking_sequence(state, todo_list) do
+  # Reorder todo_list for better efficiency
+  {:ok, reordered_list}
+end
+```
+
+## Temporal Patterns Support (8 Valid Combinations)
+
+The system supports all 8 temporal patterns from R25W1398085:
+
+| Pattern | start | end | duration | Semantics |
+|---------|-------|-----|----------|-----------|
+| 1 | ❌ | ❌ | ❌ | Instant action, anytime |
+| 2 | ❌ | ❌ | ✅ | Floating duration |
+| 3 | ❌ | ✅ | ❌ | Deadline constraint |
+| 4 | ❌ | ✅ | ✅ | **Calculated start** (`start = end - duration`) |
+| 5 | ✅ | ❌ | ❌ | Open start |
+| 6 | ✅ | ❌ | ✅ | **Calculated end** (`end = start + duration`) |
+| 7 | ✅ | ✅ | ❌ | Fixed interval |
+| 8 | ✅ | ✅ | ✅ | **Constraint validation** (`start + duration = end`) |
 
 ## Supporting Systems
 
@@ -115,16 +180,32 @@ Relational state system using {predicate, subject, value} format:
 
 ```elixir
 # Create and manage state
-state = AriaCore.State.Relational.new()
-|> AriaCore.State.Relational.set_fact("status", "chef_1", "available")
-|> AriaCore.State.Relational.set_fact("temperature", "oven_1", 350)
+state = AriaState.RelationalState.new()
+|> AriaState.RelationalState.set_fact("status", "chef_1", "available")
+|> AriaState.RelationalState.set_fact("temperature", "oven_1", 350)
 
 # Goal satisfaction checking
 goals = [
   {"status", "chef_1", "available"},
   {"temperature", "oven_1", {:>=, 300}}
 ]
-assert AriaCore.State.Relational.satisfies_goals?(state, goals)
+assert AriaState.RelationalState.satisfies_goals?(state, goals)
+```
+
+## Primary API Functions (R25W1398085)
+
+```elixir
+# Planning only - returns solution tree
+@spec plan(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: 
+  {:ok, AriaEngineCore.Plan.solution_tree()} | {:error, atom()}
+
+# Planning + execution - returns final state  
+@spec run_lazy(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: 
+  {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
+
+# Take a pre-made plan and execute it
+@spec run_lazy_tree(AriaEngine.Domain.t(), AriaState.t(), AriaEngineCore.Plan.solution_tree()) :: 
+  {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
 ```
 
 ## Complete Example
@@ -142,8 +223,9 @@ defmodule AriaCore.Examples.RestaurantDomain do
           effects: [{"meal_status", "soup", "cooking"}]
   def cook_soup(state, [soup_id]) do
     state
-    |> AriaCore.State.Relational.set_fact("meal_status", soup_id, "cooking")
-    |> AriaCore.State.Relational.set_fact("chef_status", "chef_1", "busy")
+    |> AriaState.RelationalState.set_fact("meal_status", soup_id, "cooking")
+    |> AriaState.RelationalState.set_fact("chef_status", "chef_1", "busy")
+    {:ok, state}
   end
 
   # Complex action with conditional duration
@@ -158,11 +240,11 @@ defmodule AriaCore.Examples.RestaurantDomain do
           ]
   def bake_bread(state, [bread_id, chef_id, oven_id]) do
     # Implementation...
+    {:ok, state}
   end
 
   # Task method for complex goal decomposition
-  @task_method goal_pattern: {"meal_ready", :meal_id, true},
-               priority: 1
+  @task_method true
   def prepare_complete_meal_method(state, [meal_id]) do
     {:ok, [
       {"ingredient_available", "main_ingredient", true},
@@ -170,6 +252,16 @@ defmodule AriaCore.Examples.RestaurantDomain do
       {:cook_main_course, [meal_id]},
       {:quality_check, [meal_id]},
       {"meal_status", meal_id, "ready"}
+    ]}
+  end
+
+  # Unigoal method for location handling
+  @unigoal_method predicate: "location"
+  def move_to_location(state, {subject, value}) do
+    {:ok, [
+      {"available", subject, true},
+      {:move_action, [subject, value]},
+      {"location", subject, value}
     ]}
   end
 end
@@ -182,25 +274,39 @@ goals = RestaurantDomain.create_test_goals()
 # Ready for planning and execution with existing AriaCore systems
 ```
 
-## Temporal Patterns Support
+## Entity Model (Everything is an Entity)
 
-The system supports all 9 temporal patterns mentioned in ADR-181:
+Everything is an entity with capabilities:
 
-1. **Fixed duration**: `{:fixed, 3600}`
-2. **Variable duration**: `{:variable, {1800, 7200}}`
-3. **Conditional duration**: `{:conditional, conditions_map}`
-4. **Parallel execution**: `Interval.create_execution_pattern(:parallel, actions)`
-5. **Sequential execution**: `Interval.create_execution_pattern(:sequential, actions)`
-6. **Overlapping intervals**: `Interval.create_execution_pattern(:overlapping, actions)`
-7. **Deadline constraints**: `Interval.add_constraint(specs, action, {:deadline, datetime})`
-8. **Resource-dependent timing**: `{:resource_dependent, config}`
-9. **Temporal conditions**: Handled by `TemporalConverter` (at_start/over_all/at_end)
+```elixir
+# Entity types with capabilities
+%{type: "agent", capabilities: [:cooking, :menu_planning]}
+%{type: "oven", capabilities: [:heating, :baking]}
+%{type: "kitchen", capabilities: [:workspace]}
+%{type: "flour", capabilities: [:consumable]}
+```
+
+## Goal Format Standard
+
+**ONLY use this format:**
+
+```elixir
+{predicate, subject, value}  # ✅ CORRECT
+```
+
+## State Validation
+
+**ONLY use direct fact checking:**
+
+```elixir
+AriaState.RelationalState.get_fact(state, predicate, subject)  # ✅ CORRECT
+```
 
 ## Testing
 
 Comprehensive test suite in `test/aria_core/unified_action_specification_test.exs` validates:
 
-- All three implementation phases
+- All implementation phases
 - Integration between systems
 - Sociable testing approach verification
 - Error handling and edge cases
@@ -243,7 +349,7 @@ end
 domain = AriaCore.UnifiedDomain.create_from_module(MyDomain)
 
 # 3. Use with existing AriaCore systems
-{:ok, plan} = AriaCore.plan(domain, state, goals)
+{:ok, plan} = AriaEngineCore.plan(domain, state, goals)
 ```
 
 ### Multiple Domain Management
@@ -267,4 +373,4 @@ unified = AriaCore.UnifiedDomain.merge_domains([domain1, domain2])
 info = AriaCore.UnifiedDomain.get_domain_info(MyDomain)
 ```
 
-This implementation provides a complete, production-ready unified action specification system that maintains compatibility with existing AriaCore infrastructure while providing a clean, modern interface for domain development.
+This implementation provides a complete, production-ready unified action specification system that maintains compatibility with existing AriaCore infrastructure while providing a clean, modern interface for domain development according to R25W1398085 specification.
