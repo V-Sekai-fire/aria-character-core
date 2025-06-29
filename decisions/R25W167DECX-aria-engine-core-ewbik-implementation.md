@@ -414,14 +414,14 @@ All subsequent phases depend on these fundamental mathematical operations. These
 
 **glTF and KHR Extensions:**
 
-- Khronos Group. (2023). *glTF 2.0 Specification*. Retrieved from https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
-- Khronos Group. (2023). *KHR_interactivity Extension Specification*. Retrieved from https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_interactivity
-- Khronos Group. (2023). *KHR_animation_pointer Extension*. Retrieved from https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_animation_pointer
+- Khronos Group. (2023). *glTF 2.0 Specification*. Retrieved from <https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html>
+- Khronos Group. (2023). *KHR_interactivity Extension Specification*. Retrieved from <https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_interactivity>
+- Khronos Group. (2023). *KHR_animation_pointer Extension*. Retrieved from <https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_animation_pointer>
 
 **VRM Specification:**
 
-- VRM Consortium. (2023). *VRM 1.0 Specification*. Retrieved from https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_springBone-1.0
-- VRM Consortium. (2023). *VRMC_node_constraint-1.0 Specification*. Retrieved from https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_node_constraint-1.0
+- VRM Consortium. (2023). *VRM 1.0 Specification*. Retrieved from <https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_springBone-1.0>
+- VRM Consortium. (2023). *VRMC_node_constraint-1.0 Specification*. Retrieved from <https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_node_constraint-1.0>
 
 **IEEE Standards:**
 
@@ -429,12 +429,12 @@ All subsequent phases depend on these fundamental mathematical operations. These
 
 **Godot Engine References:**
 
-- Godot Engine Contributors. (2024). *Godot Engine Documentation - SkeletonProfileHumanoid*. Retrieved from https://docs.godotengine.org/en/stable/classes/class_skeletonprofilehumanoid.html
-- Godot Engine Contributors. (2024). *Godot Engine Documentation - Animation Retargeting*. Retrieved from https://docs.godotengine.org/en/stable/tutorials/animation/animation_tree.html
+- Godot Engine Contributors. (2024). *Godot Engine Documentation - SkeletonProfileHumanoid*. Retrieved from <https://docs.godotengine.org/en/stable/classes/class_skeletonprofilehumanoid.html>
+- Godot Engine Contributors. (2024). *Godot Engine Documentation - Animation Retargeting*. Retrieved from <https://docs.godotengine.org/en/stable/tutorials/animation/animation_tree.html>
 
 ### Open Source Implementations and Code References
 
 **Many Bone IK (EWBIK Reference Implementation):**
 
 - EGjoni. (2023). *Everything Will Be IK - Processing*. Retrieved from https://github.com/EGjoni/Everything-Will-Be-IK-Processing
-- V-Sekai. (2023). *Many Bone IK*. Retrieved from https://github.com/V
+- V-Sekai. (2023). *Many Bone IK*. Retrieved from <https://github.com/V](https://github.com/V-Sekai/many_bone_ik>
