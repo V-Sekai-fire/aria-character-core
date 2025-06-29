@@ -339,67 +339,93 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
 
 **Purpose:** Validate R25W1398085 unified durative action specification using production-quality EWBIK multi-effector inverse kinematics with sophisticated constraint handling.
 
-**EWBIK-Enhanced Core Entities (R25W1398085 Compliant):**
+**EWBIK-Enhanced Core Entities (glTF 2.0 Compliant):**
 
 ```elixir
-# EWBIK Skeleton Entity - manages entire bone hierarchy
-%{
-  type: :ewbik_skeleton,
-  id: "character_rig",
-  capabilities: [:multi_effector_solving, :kusudama_constraints, :motion_propagation],
-  properties: %{
-    default_damp: 0.08726646,  # 5 degrees in radians
-    iterations_per_frame: 15.0,
-    stabilization_passes: 0,
-    bone_hierarchy: %{
-      root: "pelvis",
-      chains: [
-        %{name: "left_arm", bones: ["left_shoulder", "left_elbow", "left_wrist", "left_hand"]},
-        %{name: "right_arm", bones: ["right_shoulder", "right_elbow", "right_wrist", "right_hand"]},
-        %{name: "spine", bones: ["pelvis", "spine1", "spine2", "chest", "neck", "head"]}
-      ]
-    }
-  }
-}
-
-# IK Effector Entity - end-effector with motion propagation
-%{
-  type: :ik_effector,
-  id: "left_hand_effector",
-  capabilities: [:position_target, :orientation_target, :priority_weighting],
-  properties: %{
-    bone_name: "left_hand",
-    motion_propagation_factor: 0.5,  # Ancestor influence
-    target_weight: 1.0,
-    priority: :high
-  }
-}
-
-# Kusudama Constraint Entity - cone-based joint limits
-%{
-  type: :kusudama_constraint,
-  id: "shoulder_constraint",
-  capabilities: [:cone_limits, :twist_limits, :continuous_boundaries],
-  properties: %{
-    bone_name: "left_shoulder",
-    limit_cones: [
-      %{center: [0, 1, 0], radius: 1.57},  # 90 degrees up
-      %{center: [1, 0, 0], radius: 0.785}, # 45 degrees forward
-      %{center: [0, 0, 1], radius: 1.047}  # 60 degrees right
-    ],
-    tangent_cones: [
-      %{center: [0.707, 0.707, 0], radius: 0.524}  # 30 degrees between up/forward
-    ],
-    twist_limits: %{min: -1.57, max: 1.57}  # ±90 degrees
-  }
-}
-
-# Scene Node Entity - still uses integer glTF node index
+# Scene Node Entity - glTF node index (pelvis root bone)
 %{
   type: :scene_node,
-  id: 0,  # Integer glTF node index per KHR Interactivity spec
-  capabilities: [:transform, :visibility, :animation_target, :ik_bone_target]
+  id: 0,  # Integer glTF node index (nodes[0] = pelvis)
+  capabilities: [:transform, :joint, :ik_target]
 }
+
+# Scene Node Entity - glTF node index (left shoulder bone)
+%{
+  type: :scene_node,
+  id: 5,  # Integer glTF node index (nodes[5] = left_shoulder)
+  capabilities: [:transform, :joint, :ik_target]
+}
+
+# Scene Node Entity - glTF node index (left hand bone)
+%{
+  type: :scene_node,
+  id: 8,  # Integer glTF node index (nodes[8] = left_hand)
+  capabilities: [:transform, :joint, :ik_effector]
+}
+
+# Skin Entity - glTF skin index for character skinning
+%{
+  type: :skin,
+  id: 0,  # Integer glTF skin index (skins[0] = character_skin)
+  capabilities: [:joint_hierarchy, :skinning]
+}
+
+# Mesh Entity - glTF mesh index for skinned character
+%{
+  type: :mesh,
+  id: 0,  # Integer glTF mesh index (meshes[0] = character_mesh)
+  capabilities: [:skinned_rendering, :morph_targets]
+}
+```
+
+**EWBIK Configuration in AriaState (Option A - Single Configuration Object):**
+
+```elixir
+# EWBIK solver configuration stored in planner state, not entity properties
+AriaState.set_fact(state, "character_rig", "ewbik_config", %{
+  default_damp: 0.08726646,  # 5 degrees in radians
+  iterations_per_frame: 15.0,
+  stabilization_passes: 0,
+  bone_node_mapping: %{
+    # Map semantic bone names to glTF node indices
+    "pelvis" => 0,
+    "left_shoulder" => 5,
+    "left_elbow" => 6,
+    "left_wrist" => 7,
+    "left_hand" => 8,
+    "right_shoulder" => 9,
+    "right_elbow" => 10,
+    "right_wrist" => 11,
+    "right_hand" => 12
+  },
+  bone_chains: [
+    %{name: "left_arm", node_indices: [5, 6, 7, 8]},  # glTF node indices
+    %{name: "right_arm", node_indices: [9, 10, 11, 12]},
+    %{name: "spine", node_indices: [0, 1, 2, 3, 4]}
+  ]
+})
+
+# IK effector configuration in planner state
+AriaState.set_fact(state, "left_hand_effector", "ik_config", %{
+  target_node_index: 8,  # glTF node index for left_hand
+  motion_propagation_factor: 0.5,
+  target_weight: 1.0,
+  priority: :high
+})
+
+# Kusudama constraint configuration in planner state
+AriaState.set_fact(state, "shoulder_constraint", "kusudama_config", %{
+  constrained_node_index: 5,  # glTF node index for left_shoulder
+  limit_cones: [
+    %{center: [0, 1, 0], radius: 1.57},  # 90 degrees up
+    %{center: [1, 0, 0], radius: 0.785}, # 45 degrees forward
+    %{center: [0, 0, 1], radius: 1.047}  # 60 degrees right
+  ],
+  tangent_cones: [
+    %{center: [0.707, 0.707, 0], radius: 0.524}  # 30 degrees between up/forward
+  ],
+  twist_limits: %{min: -1.57, max: 1.57}  # ±90 degrees
+})
 ```
 
 **EWBIK-Enhanced Temporal Patterns (Corrected for R25W1398085):**
@@ -447,11 +473,11 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
 ```elixir
 # @action - EWBIK parameter setting for planning-time reasoning
 @doc "Sets effector target state for EWBIK planning"
-@action duration: "PT3S", requires_entities: [%{type: :ik_effector, capabilities: [:position_target]}]
-def set_effector_target(state, [effector_id, target_pos, target_rot]) do
+@action duration: "PT3S", requires_entities: [%{type: :scene_node, capabilities: [:ik_effector]}]
+def set_effector_target(state, [effector_node_index, target_pos, target_rot]) do
   state 
-  |> AriaState.set_fact("effector_target_position", effector_id, target_pos)
-  |> AriaState.set_fact("effector_target_orientation", effector_id, target_rot)
+  |> AriaState.set_fact(effector_node_index, "effector_target_position", target_pos)
+  |> AriaState.set_fact(effector_node_index, "effector_target_orientation", target_rot)
   {:ok, state}
 end
 
@@ -492,11 +518,11 @@ end
 # @unigoal_method - Single effector target achievement through EWBIK
 @doc "Achieves specific effector position goals through EWBIK single-effector solving"
 @unigoal_method predicate: "effector_target_position"
-def achieve_effector_target(state, {effector_id, target_position}) do
+def achieve_effector_target(state, {effector_node_index, target_position}) do
   # Use EWBIK to solve for single effector while respecting all constraints
   {:ok, [
-    {:set_effector_target, [effector_id, target_position, :maintain_current_orientation]},
-    {:solve_single_effector_command, [effector_id, target_position]}
+    {:set_effector_target, [effector_node_index, target_position, :maintain_current_orientation]},
+    {:solve_single_effector_command, [effector_node_index, target_position]}
   ]}
 end
 
@@ -528,14 +554,14 @@ def optimize_ewbik_coordination(state, multigoal) do
 end
 ```
 
-**EWBIK Test Scenarios:**
+**EWBIK Test Scenarios (glTF 2.0 Compliant):**
 
 ```elixir
 # Scenario 1: Dual-hand coordination with motion propagation
 multigoal = %AriaEngine.Multigoal{
   goals: [
-    {"effector_target_position", "left_hand_effector", [0.3, 1.2, 0.4]},
-    {"effector_target_position", "right_hand_effector", [-0.3, 1.2, 0.4]},
+    {"effector_target_position", 8, [0.3, 1.2, 0.4]},    # glTF node 8 = left_hand
+    {"effector_target_position", 12, [-0.3, 1.2, 0.4]},  # glTF node 12 = right_hand
     {"kusudama_constraints_satisfied", "character_rig", "all_joints"}
   ],
   optimization: :minimize_joint_movement
@@ -544,17 +570,17 @@ multigoal = %AriaEngine.Multigoal{
 # Scenario 2: Hierarchical effector priorities (spine influences arms)
 multigoal = %AriaEngine.Multigoal{
   goals: [
-    {"effector_target_position", "spine_effector", [0, 1.5, 0]},  # High propagation
-    {"effector_target_position", "left_hand_effector", [0.5, 1.3, 0.2]},  # Lower propagation
+    {"effector_target_position", 4, [0, 1.5, 0]},      # glTF node 4 = head (spine effector)
+    {"effector_target_position", 8, [0.5, 1.3, 0.2]},  # glTF node 8 = left_hand
     {"motion_propagation_optimized", "character_rig", "hierarchical"}
   ]
 }
 
 # Scenario 3: Kusudama constraint testing with violation recovery
 goals = [
-  {"effector_target_position", "right_hand_effector", impossible_target_position},
-  {"kusudama_constraint_violation_check", "shoulder_joint", "cone_limits"},
-  {"kusudama_constraint_recovery", "shoulder_joint", "nearest_valid_orientation"}
+  {"effector_target_position", 12, impossible_target_position},  # glTF node 12 = right_hand
+  {"kusudama_constraint_violation_check", 9, "cone_limits"},     # glTF node 9 = right_shoulder
+  {"kusudama_constraint_recovery", 9, "nearest_valid_orientation"}  # glTF node 9 = right_shoulder
 ]
 ```
 
