@@ -6,7 +6,7 @@
 
 ## Overview
 
-AriaEngineCore provides the foundational temporal planning and execution capabilities for the Aria system. This todo covers implementation of a comprehensive test domain that validates the R25W1398085 unified durative action specification using KHR Interactivity behavior graphs as a realistic testing scenario.
+AriaEngineCore provides the foundational temporal planning and execution capabilities for the Aria system. This todo covers implementation of a comprehensive test domain that validates the R25W1398085 unified durative action specification using EWBIK (Entirely Wahba's-problem Based Inverse Kinematics) integrated with KHR Interactivity behavior graphs as a realistic testing scenario.
 
 ## Completed ✅
 
@@ -30,320 +30,513 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
 
 ## Implementation Plan
 
-### Phase 1: KHR Interactivity Test Domain Implementation (CRITICAL)
+### Phase 1: EWBIK Math Solver Ports (FOUNDATION - CRITICAL PRIORITY)
 
-**Priority: HIGH - Required for R25W1398085 validation**
+**Priority: CRITICAL - Mathematical foundation for all IK operations**
 
-- [ ] **KHR Interactivity Test Domain Module**
-  - [ ] Create `test/support/khr_interactivity_domain.ex`
-  - [ ] Entity definitions: nodes, cameras, animations, behavior_graphs
-  - [ ] Resource capabilities: transform, animation_control, event_trigger
-  - [ ] All 8 temporal patterns from R25W1398085 specification
+- [ ] **Quaternion Characteristic Polynomial (QCP) Algorithm Port**
+  - [ ] Create `lib/aria_engine_core/math/qcp.ex`
+  - [ ] Port `weighted_superpose/4` function from C++ implementation
+  - [ ] Implement inner product matrix calculation
+  - [ ] Implement characteristic polynomial solving for optimal quaternion
+  - [ ] Add numerical stability handling and edge case management
+  - [ ] Comprehensive test suite for QCP algorithm accuracy
 
-- [ ] **Entity-Based Resource Management**
-  - [ ] Node entities with transform capabilities
-  - [ ] Camera entities with view_control capabilities  
-  - [ ] Animation entities with playback_control capabilities
-  - [ ] Behavior graph entities with execution_control capabilities
-  - [ ] Resource conflict detection and resolution
+- [ ] **IKNode3D Hierarchy Management Port**
+  - [ ] Create `lib/aria_engine_core/math/ik_node_3d.ex`
+  - [ ] Port transform hierarchy management from C++
+  - [ ] Implement local/global coordinate space conversions
+  - [ ] Add transform propagation and dirty state tracking
+  - [ ] Support parent-child bone relationships
+  - [ ] Scale management and transform composition
 
-- [ ] **Temporal Action Patterns Implementation**
-  - [ ] **Pattern 1**: Instant actions (trigger_event, set_property)
-  - [ ] **Pattern 2**: Floating duration (play_animation, move_camera)
-  - [ ] **Pattern 3**: Fixed duration (wait, delay_execution)
-  - [ ] **Pattern 4**: Resource deadline (animation_by_time)
-  - [ ] **Pattern 5**: Start deadline (begin_sequence_by)
-  - [ ] **Pattern 6**: End deadline (complete_by)
-  - [ ] **Pattern 7**: Time window (execute_during)
-  - [ ] **Pattern 8**: Open intervals (continuous_monitoring)
+- [ ] **Supporting Mathematical Primitives**
+  - [ ] Create `lib/aria_engine_core/math/vector3.ex`
+  - [ ] Create `lib/aria_engine_core/math/quaternion.ex`
+  - [ ] Create `lib/aria_engine_core/math/transform3d.ex`
+  - [ ] Implement all mathematical operations needed by EWBIK
+  - [ ] Ensure numerical precision and stability
+  - [ ] Performance optimizations for real-time use
 
-### Phase 2: AriaGltf Mocking Strategy (HIGH PRIORITY)
+### Phase 2: EWBIK Algorithm Implementation (HIGH PRIORITY)
 
-**Priority: HIGH - Enables immediate testing without full glTF implementation**
+**Priority: HIGH - Core EWBIK solver for multi-effector coordination**
 
-- [ ] **Minimal Mock AriaGltf Modules**
-  - [ ] Create `test/support/mock_aria_gltf.ex`
-  - [ ] Mock AriaGltf.Document with basic structure
-  - [ ] Mock AriaGltf.Scene with node references
-  - [ ] Mock AriaGltf.Node with transform data
-  - [ ] Mock AriaGltf.Animation with basic timeline
+- [ ] **Skeleton Segmentation System**
+  - [ ] Create `lib/aria_engine_core/ewbik/segmentation.ex`
+  - [ ] Implement bone chain dependency analysis
+  - [ ] Create processing order determination
+  - [ ] Handle multiple effector hierarchies
+  - [ ] Segment validation and error handling
 
-- [ ] **Behavior Graph Mock Integration**
-  - [ ] Mock KHR_interactivity extension support
-  - [ ] Basic behavior graph node structure
-  - [ ] Event system mock implementation
-  - [ ] Variable and flow control mocks
+- [ ] **Multi-Effector EWBIK Solver**
+  - [ ] Create `lib/aria_engine_core/ewbik/solver.ex`
+  - [ ] Implement core EWBIK algorithm with QCP integration
+  - [ ] Multi-effector coordination with priority weighting
+  - [ ] Iterative solving with convergence criteria
+  - [ ] Dampening and stabilization pass implementation
+  - [ ] Performance budget management and early termination
 
-- [ ] **Integration Points for Future Connection**
-  - [ ] Clear interface boundaries for real AriaGltf
-  - [ ] Dependency injection patterns for easy replacement
-  - [ ] Version compatibility markers
-  - [ ] Migration path documentation
+- [ ] **Kusudama Constraint System**
+  - [ ] Create `lib/aria_engine_core/ewbik/kusudama.ex`
+  - [ ] Implement cone-based joint orientation constraints
+  - [ ] Continuous constraint boundary handling
+  - [ ] Sequence cone and tangent cone validation
+  - [ ] Twist limit enforcement
+  - [ ] Nearest valid orientation calculation
 
-### Phase 3: R25W1398085 Specification Validation (CRITICAL)
+- [ ] **Motion Propagation Management**
+  - [ ] Create `lib/aria_engine_core/ewbik/propagation.ex`
+  - [ ] Implement hierarchical effector influence calculation
+  - [ ] Motion propagation factor application
+  - [ ] Ancestor-descendant weight distribution
+  - [ ] Ultimate vs intermediary target handling
 
-**Priority: CRITICAL - Core requirement validation**
+### Phase 3: EWBIK-Enhanced KHR Interactivity Test Domain (HIGH PRIORITY)
 
-- [ ] **Method Type Implementation Validation**
-  - [ ] `@action` - Primitive operations (start_animation, set_transform)
-  - [ ] `@command` - High-level operations (play_sequence, setup_scene)
-  - [ ] `@task_method` - Task decomposition (complex_animation_sequence)
-  - [ ] `@unigoal_method` - Single goal achievement (achieve_camera_position)
-  - [ ] `@multigoal_method` - Multiple goal coordination (sync_animations)
-  - [ ] `@multitodo_method` - Mixed task handling (scene_state_management)
+**Priority: HIGH - Realistic IK testing with sophisticated constraint validation**
 
-- [ ] **Entity Resource Management Validation**
-  - [ ] Resource capability checking (can_animate, can_transform)
-  - [ ] Resource conflict detection (multiple animations on same node)
-  - [ ] Resource scheduling and allocation
-  - [ ] Resource cleanup and release
+- [ ] **EWBIK Entity Types for KHR Interactivity**
+  - [ ] Create `test/support/ewbik_khr_domain.ex`
+  - [ ] EWBIK skeleton entities with multi-effector support
+  - [ ] IK effector entities with motion propagation factors
+  - [ ] Kusudama constraint entities with cone definitions
+  - [ ] Bone hierarchy entities with transform management
+  - [ ] Integration with KHR Interactivity node system
 
-- [ ] **Temporal Constraint Testing**
-  - [ ] Duration constraint validation
-  - [ ] Deadline constraint enforcement
-  - [ ] Time window constraint checking
-  - [ ] Temporal dependency resolution
+- [ ] **Enhanced Temporal Action Patterns with EWBIK**
+  - [ ] **Pattern 1**: Instant IK solving (`solve_ik_instant`)
+  - [ ] **Pattern 2**: Floating duration IK solving (`solve_ik_over_time`) 
+  - [ ] **Pattern 3**: Fixed duration pose transitions (`transition_pose`)
+  - [ ] **Pattern 4**: Deadline-constrained reaching (`reach_target_by_deadline`)
+  - [ ] **Pattern 5**: Coordinated multi-effector starts (`begin_coordination_by`)
+  - [ ] **Pattern 6**: Timed pose sequences (`execute_pose_sequence_until`)
+  - [ ] **Pattern 7**: Constraint monitoring windows (`monitor_constraints_during`)
+  - [ ] **Pattern 8**: Continuous constraint validation (`validate_constraints_continuously`)
 
-### Phase 4: Test Suite Implementation (HIGH PRIORITY)
+- [ ] **EWBIK-Specific Method Types**
+  - [ ] `@action` - EWBIK state updates (set effector targets, constraint parameters)
+  - [ ] `@command` - Real IK solving execution with convergence handling
+  - [ ] `@task_method` - Complex multi-effector coordination workflows
+  - [ ] `@unigoal_method` - Single effector target achievement
+  - [ ] `@multigoal_method` - EWBIK-specific multi-effector optimization ONLY
+  - [ ] Conservative multigoal usage following R25W1398085 guidelines
 
-**Priority: HIGH - Comprehensive validation testing**
+### Phase 4: EWBIK Test Scenarios (HIGH PRIORITY)
 
-- [ ] **Domain Integration Tests**
-  - [ ] Create `test/aria_engine_core/khr_interactivity_test.exs`
-  - [ ] Test all temporal patterns with realistic scenarios
-  - [ ] Validate entity resource management
-  - [ ] Test method type implementations
+**Priority: HIGH - Comprehensive EWBIK validation scenarios**
 
-- [ ] **Specification Compliance Tests**
-  - [ ] R25W1398085 pattern compliance validation
-  - [ ] Entity capability enforcement testing
-  - [ ] Temporal constraint satisfaction testing
-  - [ ] Error handling and recovery testing
+- [ ] **Multi-Effector Coordination Tests**
+  - [ ] Dual-hand reaching with motion propagation
+  - [ ] Full-body IK with spine-to-limb influence
+  - [ ] Hierarchical effector priority testing
+  - [ ] Conflicting target resolution
+  - [ ] Weight distribution validation
 
-- [ ] **Integration Scenario Tests**
-  - [ ] Complex multi-entity scenarios
-  - [ ] Concurrent animation management
-  - [ ] Behavior graph execution flow
-  - [ ] Real-time constraint validation
+- [ ] **Kusudama Constraint Validation Tests**
+  - [ ] Cone limit enforcement scenarios
+  - [ ] Continuous boundary handling
+  - [ ] Constraint violation recovery
+  - [ ] Soft vs hard constraint boundaries
+  - [ ] Twist limit validation
 
-### Phase 5: Documentation and Examples (MEDIUM PRIORITY)
+- [ ] **Performance and Convergence Tests**
+  - [ ] Iteration limit testing
+  - [ ] Convergence criteria validation
+  - [ ] Dampening parameter effects
+  - [ ] Stabilization pass benefits
+  - [ ] Computational budget management
 
-**Priority: MEDIUM - Developer experience and adoption**
+- [ ] **Complex Integration Scenarios**
+  - [ ] Real-time constraint solving
+  - [ ] Dynamic effector target updates
+  - [ ] Temporal IK sequence coordination
+  - [ ] Error handling and graceful degradation
 
-- [ ] **KHR Interactivity Domain Documentation**
-  - [ ] Complete domain specification document
-  - [ ] Entity and resource documentation
-  - [ ] Temporal pattern usage examples
-  - [ ] Best practices and common patterns
+### Phase 5: R25W1398085 Specification Validation with EWBIK (CRITICAL)
 
-- [ ] **Integration Examples**
-  - [ ] Simple scene setup examples
-  - [ ] Animation coordination examples
-  - [ ] Behavior graph integration examples
-  - [ ] Error handling examples
+**Priority: CRITICAL - Core requirement validation with production-quality IK**
 
-- [ ] **API Usage Documentation**
-  - [ ] AriaEngineCore API usage with KHR domain
-  - [ ] Planning and execution workflows
-  - [ ] Debugging and troubleshooting guides
+- [ ] **Enhanced Method Type Implementation Validation**
+  - [ ] `@action` - EWBIK parameter setting (effector targets, weights, constraints)
+  - [ ] `@command` - EWBIK solving execution with failure modes
+  - [ ] `@task_method` - Complex IK workflow decomposition (full-body coordination)
+  - [ ] `@unigoal_method` - Single effector solving (achieve hand position)
+  - [ ] `@multigoal_method` - Multi-effector EWBIK coordination ONLY
+  - [ ] `@multitodo_method` - Mixed IK and non-IK task handling
 
-### Phase 6: Performance and Optimization (LOW PRIORITY)
+- [ ] **EWBIK Entity Resource Management Validation**
+  - [ ] Bone resource capability checking (can_be_ik_controlled)
+  - [ ] Effector resource conflict detection (multiple targets on same bone)
+  - [ ] Constraint resource allocation (Kusudama limit sharing)
+  - [ ] Hierarchical resource dependency management
+  - [ ] IK solving resource cleanup and state reset
 
-**Priority: LOW - Performance enhancements after core functionality**
+- [ ] **Advanced Temporal Constraint Testing with EWBIK**
+  - [ ] IK convergence time constraint validation
+  - [ ] Multi-phase IK sequence deadline enforcement
+  - [ ] Real-time constraint satisfaction with iteration limits
+  - [ ] Temporal dependency resolution in IK chains
+  - [ ] Performance degradation handling under time pressure
 
-- [ ] **Performance Benchmarking**
-  - [ ] Planning performance with complex scenarios
-  - [ ] Execution performance with many entities
-  - [ ] Memory usage optimization
-  - [ ] Concurrent execution performance
+### Phase 6: Mock AriaGltf Integration (MEDIUM PRIORITY)
 
-- [ ] **Optimization Implementation**
-  - [ ] Resource management optimization
-  - [ ] Temporal constraint solving optimization
-  - [ ] Memory pool management
-  - [ ] Execution pipeline optimization
+**Priority: MEDIUM - Enables immediate testing without full glTF implementation**
 
-### Phase 7: Real AriaGltf Integration (FUTURE)
+- [ ] **Enhanced Mock AriaGltf Modules for EWBIK**
+  - [ ] Create `test/support/mock_aria_gltf_ewbik.ex`
+  - [ ] Mock AriaGltf.Document with EWBIK skeleton structure
+  - [ ] Mock AriaGltf.Scene with bone hierarchy and effector references
+  - [ ] Mock AriaGltf.Node with transform data and constraint metadata
+  - [ ] Mock AriaGltf.Animation with EWBIK-aware keyframe support
+
+- [ ] **EWBIK-Enhanced Behavior Graph Mock Integration**
+  - [ ] Mock KHR_interactivity extension with IK behavior nodes
+  - [ ] EWBIK effector target behavior graph integration
+  - [ ] Constraint parameter behavior graph control
+  - [ ] IK solving trigger and coordination through behavior graphs
+  - [ ] Event system integration for IK completion/failure
+
+### Phase 7: Comprehensive Test Suite Implementation (HIGH PRIORITY)
+
+**Priority: HIGH - Comprehensive EWBIK and R25W1398085 validation**
+
+- [ ] **EWBIK Domain Integration Tests**
+  - [ ] Create `test/aria_engine_core/ewbik_khr_interactivity_test.exs`
+  - [ ] Test all temporal patterns with realistic IK scenarios
+  - [ ] Validate EWBIK entity resource management
+  - [ ] Test enhanced method type implementations with multi-effector solving
+
+- [ ] **EWBIK Algorithm Validation Tests**
+  - [ ] QCP algorithm accuracy tests with known solutions
+  - [ ] Multi-effector coordination correctness validation
+  - [ ] Kusudama constraint enforcement testing
+  - [ ] Motion propagation calculation verification
+  - [ ] Performance and convergence behavior testing
+
+- [ ] **Specification Compliance Tests with EWBIK**
+  - [ ] R25W1398085 pattern compliance with complex IK scenarios
+  - [ ] EWBIK entity capability enforcement testing
+  - [ ] Advanced temporal constraint satisfaction with IK solving
+  - [ ] Error handling and recovery testing for IK failures
+
+- [ ] **Production-Quality Integration Scenario Tests**
+  - [ ] Complex multi-entity EWBIK scenarios
+  - [ ] Concurrent multi-effector coordination
+  - [ ] Real-time constraint validation with performance limits
+  - [ ] Behavior graph execution flow with EWBIK integration
+
+### Phase 8: Documentation and Examples (MEDIUM PRIORITY)
+
+**Priority: MEDIUM - Developer experience and EWBIK adoption**
+
+- [ ] **EWBIK-Enhanced KHR Interactivity Domain Documentation**
+  - [ ] Complete EWBIK domain specification document
+  - [ ] EWBIK entity and resource documentation
+  - [ ] Multi-effector temporal pattern usage examples
+  - [ ] Kusudama constraint best practices and common patterns
+
+- [ ] **EWBIK Integration Examples**
+  - [ ] Simple IK setup examples with single effectors
+  - [ ] Multi-effector coordination examples
+  - [ ] Constraint definition and validation examples
+  - [ ] Behavior graph integration with EWBIK examples
+  - [ ] Error handling and performance optimization examples
+
+- [ ] **EWBIK API Usage Documentation**
+  - [ ] AriaEngineCore API usage with EWBIK domain
+  - [ ] IK planning and execution workflows
+  - [ ] EWBIK debugging and troubleshooting guides
+  - [ ] Performance tuning and optimization guides
+
+### Phase 9: Performance and Optimization (LOW PRIORITY)
+
+**Priority: LOW - Performance enhancements after core EWBIK functionality**
+
+- [ ] **EWBIK Performance Benchmarking**
+  - [ ] Multi-effector solving performance with complex scenarios
+  - [ ] Kusudama constraint checking performance optimization
+  - [ ] Memory usage optimization for large bone hierarchies
+  - [ ] Concurrent EWBIK execution performance analysis
+
+- [ ] **EWBIK Optimization Implementation**
+  - [ ] QCP algorithm optimization for repeated solving
+  - [ ] Constraint checking optimization and caching
+  - [ ] Memory pool management for IK solving
+  - [ ] EWBIK execution pipeline optimization
+
+### Phase 10: Real AriaGltf Integration (FUTURE)
 
 **Priority: FUTURE - After aria_gltf Phase 1 completion**
 
-- [ ] **Replace Mock Modules**
+- [ ] **Replace Mock Modules with Real EWBIK Integration**
   - [ ] Remove mock AriaGltf modules
-  - [ ] Integrate with real AriaGltf.Document
-  - [ ] Integrate with real AriaGltf.Animation
-  - [ ] Integrate with real behavior graph support
+  - [ ] Integrate with real AriaGltf.Document and skeleton data
+  - [ ] Integrate with real AriaGltf.Animation and EWBIK keyframes
+  - [ ] Integrate with real behavior graph support for IK coordination
 
-- [ ] **Enhanced KHR Interactivity Support**
-  - [ ] Full KHR_interactivity extension support
-  - [ ] Advanced behavior graph execution
-  - [ ] Real-time scene manipulation
-  - [ ] Performance optimization with real glTF data
+- [ ] **Enhanced KHR Interactivity Support with Real EWBIK**
+  - [ ] Full KHR_interactivity extension support with EWBIK nodes
+  - [ ] Advanced behavior graph execution with real-time IK solving
+  - [ ] Real-time scene manipulation with EWBIK constraint enforcement
+  - [ ] Performance optimization with real glTF data and EWBIK integration
 
-## Test Domain Specification
+## EWBIK Test Domain Specification
 
-### KHR Interactivity Test Domain
+### Enhanced KHR Interactivity Test Domain with EWBIK
 
-**Purpose:** Validate R25W1398085 unified durative action specification using realistic 3D scene management scenarios.
+**Purpose:** Validate R25W1398085 unified durative action specification using production-quality EWBIK multi-effector inverse kinematics with sophisticated constraint handling.
 
-**Core Entities (R25W1398085 Compliant):**
+**EWBIK-Enhanced Core Entities (R25W1398085 Compliant):**
 
 ```elixir
-# Entity Registration (for planning - stored in AriaState)
-# Scene Node Entity - uses integer glTF node index
+# EWBIK Skeleton Entity - manages entire bone hierarchy
+%{
+  type: :ewbik_skeleton,
+  id: "character_rig",
+  capabilities: [:multi_effector_solving, :kusudama_constraints, :motion_propagation],
+  properties: %{
+    default_damp: 0.08726646,  # 5 degrees in radians
+    iterations_per_frame: 15.0,
+    stabilization_passes: 0,
+    bone_hierarchy: %{
+      root: "pelvis",
+      chains: [
+        %{name: "left_arm", bones: ["left_shoulder", "left_elbow", "left_wrist", "left_hand"]},
+        %{name: "right_arm", bones: ["right_shoulder", "right_elbow", "right_wrist", "right_hand"]},
+        %{name: "spine", bones: ["pelvis", "spine1", "spine2", "chest", "neck", "head"]}
+      ]
+    }
+  }
+}
+
+# IK Effector Entity - end-effector with motion propagation
+%{
+  type: :ik_effector,
+  id: "left_hand_effector",
+  capabilities: [:position_target, :orientation_target, :priority_weighting],
+  properties: %{
+    bone_name: "left_hand",
+    motion_propagation_factor: 0.5,  # Ancestor influence
+    target_weight: 1.0,
+    priority: :high
+  }
+}
+
+# Kusudama Constraint Entity - cone-based joint limits
+%{
+  type: :kusudama_constraint,
+  id: "shoulder_constraint",
+  capabilities: [:cone_limits, :twist_limits, :continuous_boundaries],
+  properties: %{
+    bone_name: "left_shoulder",
+    limit_cones: [
+      %{center: [0, 1, 0], radius: 1.57},  # 90 degrees up
+      %{center: [1, 0, 0], radius: 0.785}, # 45 degrees forward
+      %{center: [0, 0, 1], radius: 1.047}  # 60 degrees right
+    ],
+    tangent_cones: [
+      %{center: [0.707, 0.707, 0], radius: 0.524}  # 30 degrees between up/forward
+    ],
+    twist_limits: %{min: -1.57, max: 1.57}  # ±90 degrees
+  }
+}
+
+# Scene Node Entity - still uses integer glTF node index
 %{
   type: :scene_node,
   id: 0,  # Integer glTF node index per KHR Interactivity spec
-  capabilities: [:transform, :visibility, :animation_target]
-}
-
-# Camera Entity - uses integer glTF camera index
-%{
-  type: :camera, 
-  id: 0,  # Integer glTF camera index
-  capabilities: [:view_control, :projection_control]
-}
-
-# Animation Entity - uses integer glTF animation index
-%{
-  type: :animation,
-  id: 0,  # Integer glTF animation index  
-  capabilities: [:playback_control, :time_control]
-}
-
-# Behavior Graph Entity - custom entity for KHR_interactivity
-%{
-  type: :behavior_graph,
-  id: "interaction_graph",  # String ID for custom entities
-  capabilities: [:execution_control, :event_handling]
+  capabilities: [:transform, :visibility, :animation_target, :ik_bone_target]
 }
 ```
 
-**State vs Scene Property Management:**
+**EWBIK-Enhanced Temporal Patterns (Corrected for R25W1398085):**
 
-```elixir
-# Planning State (@action methods modify AriaState facts)
-# Used for planning-time reasoning and constraint checking
-AriaState.set_fact(state, "node_status", 0, "animating")
-AriaState.set_fact(state, "target_position", 0, [1.0, 2.0, 3.0])
-AriaState.set_fact(state, "animation_playing", 0, true)
-AriaState.set_fact(state, "camera_mode", 0, "following")
-
-# Scene Properties (@command methods use pointer/set to modify glTF scene)
-# Direct manipulation of actual glTF document during execution
-# Uses KHR Interactivity JSON Pointer specification:
-# - "/nodes/0/translation" -> [1.0, 2.0, 3.0]
-# - "/nodes/0/rotation" -> [0.0, 0.0, 0.0, 1.0] 
-# - "/cameras/0/perspective/yfov" -> 0.785398
-# - "/animations/0/extensions/KHR_interactivity/isPlaying" -> true
-```
-
-**Sample Temporal Patterns (Corrected for R25W1398085):**
-
-1. **Pattern 1 - Instant Action**: 
+1. **Pattern 1 - Instant IK Solving**: 
    ```elixir
    @action true
-   def trigger_event(state, [graph_id, event_name])
+   def solve_ik_instant(state, [skeleton_id, effector_targets])
    ```
 
-2. **Pattern 2 - Floating Duration**: 
+2. **Pattern 2 - Floating Duration IK Solving**: 
    ```elixir
    @action duration: "PT5S"
-   def play_animation(state, [animation_id])
+   def solve_ik_over_time(state, [skeleton_id, start_pose, end_pose])
    ```
 
-3. **Pattern 4 - Calculated Start (Deadline)**:
+3. **Pattern 4 - Deadline-Constrained Reaching**:
    ```elixir
    @action end: "2025-06-29T14:00:00-07:00", duration: "PT2S"
-   def move_camera_to(state, [camera_id, target_position])
+   def reach_target_by_deadline(state, [effector_id, target_transform])
    ```
 
-4. **Pattern 6 - Calculated End**:
+4. **Pattern 6 - Timed Pose Sequences**:
    ```elixir
-   @action start: "2025-06-29T12:00:00-07:00", duration: "PT30S"
-   def begin_sequence(state, [animation_ids])
+   @action start: "2025-06-29T12:00:00-07:00", calculated_end: true
+   def execute_coordinated_pose_sequence(state, [skeleton_id, pose_keyframes])
    ```
 
-5. **Pattern 7 - Fixed Interval**:
+5. **Pattern 7 - Constraint Monitoring Windows**:
    ```elixir
    @action start: "2025-06-29T12:00:00-07:00", end: "2025-06-29T12:05:00-07:00"
-   def monitor_interaction(state, [node_id])
+   def monitor_kusudama_constraints(state, [skeleton_id, constraint_set])
    ```
 
-6. **Pattern 8 - Constraint Validation**:
+6. **Pattern 8 - Continuous Constraint Validation**:
    ```elixir
    @action start: "2025-06-29T12:00:00-07:00", 
            end: "2025-06-29T12:02:00-07:00", 
            duration: "PT2M"
-   def continuous_update(state, [entity_id])
+   def validate_constraints_continuously(state, [skeleton_id, validation_params])
    ```
 
-**Method Type Examples:**
+**EWBIK-Enhanced Method Type Examples:**
 
 ```elixir
-# @action - Planning-time state changes (modify AriaState)
-@doc "Transforms node position state for planning-time reasoning"
-@action duration: "PT3S", requires_entities: [%{type: :scene_node, capabilities: [:transform]}]
-def move_node(state, [node_id, target_pos]) do
-  state |> AriaState.set_fact("node_position", node_id, target_pos)
+# @action - EWBIK parameter setting for planning-time reasoning
+@doc "Sets effector target state for EWBIK planning"
+@action duration: "PT3S", requires_entities: [%{type: :ik_effector, capabilities: [:position_target]}]
+def set_effector_target(state, [effector_id, target_pos, target_rot]) do
+  state 
+  |> AriaState.set_fact("effector_target_position", effector_id, target_pos)
+  |> AriaState.set_fact("effector_target_orientation", effector_id, target_rot)
   {:ok, state}
 end
 
-# @command - Execution-time scene changes (modify glTF via pointers)
-@doc "Executes node movement with real glTF scene manipulation and failure handling"
+# @command - Real EWBIK solving execution with convergence handling
+@doc "Executes EWBIK multi-effector solving with failure modes and constraint validation"
 @command true  
-def move_node_command(state, [node_id, target_pos]) do
-  # Uses pointer/set with "/nodes/#{node_id}/translation" 
-  case apply_scene_transformation(node_id, :translation, target_pos) do
-    :ok -> {:ok, state}
-    {:error, reason} -> {:error, reason}
+def solve_multi_effector_command(state, [skeleton_id, effector_targets, constraints]) do
+  case AriaEngineCore.EWBIK.Solver.solve_multi_effector(skeleton_id, effector_targets, constraints) do
+    {:ok, bone_transforms, convergence_info} ->
+      # Apply transforms to actual scene
+      result = apply_bone_transforms(skeleton_id, bone_transforms)
+      {:ok, Map.put(state, :convergence_info, convergence_info)}
+    
+    {:error, :constraint_violation, violating_bones} ->
+      {:error, {:constraint_violation, violating_bones}}
+    
+    {:error, :convergence_failure, iterations_used} ->
+      {:error, {:convergence_failure, iterations_used}}
+    
+    {:error, reason} ->
+      {:error, reason}
   end
 end
 
-# @task_method - Complex workflow decomposition
-@doc "Decomposes complex scene setup into manageable planning steps"
+# @task_method - Complex multi-effector coordination workflow decomposition
+@doc "Decomposes complex full-body IK coordination into manageable EWBIK planning steps"
 @task_method true
-def setup_scene(state, [scene_config]) do
+def coordinate_full_body_ik(state, [skeleton_id, coordination_config]) do
   {:ok, [
-    {:register_entities, [scene_config.entities]},
-    {"camera_ready", 0, true},  # Goal: camera is ready
-    {:position_camera, [0, scene_config.camera_position]},
-    {"scene_status", "main", "ready"}  # Goal: scene is ready
+    {:register_effectors, [coordination_config.effectors]},
+    {:setup_kusudama_constraints, [coordination_config.constraints]},
+    {"effector_targets_set", skeleton_id, coordination_config.targets},  # Goal: all targets set
+    {:solve_multi_effector_command, [skeleton_id, coordination_config.targets, coordination_config.constraints]},
+    {"ik_solution_valid", skeleton_id, true}  # Goal: valid IK solution achieved
   ]}
 end
 
-# @unigoal_method - Single goal achievement  
-@doc "Achieves specific node position goals through movement actions"
-@unigoal_method predicate: "node_position"
-def achieve_node_position(state, {node_id, target_position}) do
+# @unigoal_method - Single effector target achievement through EWBIK
+@doc "Achieves specific effector position goals through EWBIK single-effector solving"
+@unigoal_method predicate: "effector_target_position"
+def achieve_effector_target(state, {effector_id, target_position}) do
+  # Use EWBIK to solve for single effector while respecting all constraints
   {:ok, [
-    {:move_node, [node_id, target_position]}
+    {:set_effector_target, [effector_id, target_position, :maintain_current_orientation]},
+    {:solve_single_effector_command, [effector_id, target_position]}
   ]}
 end
+
+# @multigoal_method - EWBIK-specific multi-effector optimization (CONSERVATIVE USAGE)
+@doc "Optimizes EWBIK multi-effector coordination - ONLY used for genuine EWBIK optimization scenarios"
+@multigoal_method true
+def optimize_ewbik_coordination(state, multigoal) do
+  # ONLY handle if this is specifically an EWBIK multi-effector problem
+  ewbik_goals = Enum.filter(multigoal.goals, fn
+    {"effector_target_position", _effector_id, _target} -> true
+    {"kusudama_constraints_satisfied", _skeleton_id, _constraint_set} -> true
+    _ -> false
+  end)
+  
+  cond do
+    # Only handle if we have multiple EWBIK effector goals (conservative usage)
+    length(ewbik_goals) >= 2 ->
+      case AriaEngineCore.EWBIK.Solver.solve_multi_effector_coordinated(state, ewbik_goals) do
+        {:ok, optimized_solution} -> 
+          {:ok, %{multigoal | goals: optimized_solution}}
+        {:error, reason} -> 
+          {:error, reason}
+      end
+    
+    # Not our domain - let default solvers handle it
+    true ->
+      {:error, :not_ewbik_multigoal}
+  end
+end
+```
+
+**EWBIK Test Scenarios:**
+
+```elixir
+# Scenario 1: Dual-hand coordination with motion propagation
+multigoal = %AriaEngine.Multigoal{
+  goals: [
+    {"effector_target_position", "left_hand_effector", [0.3, 1.2, 0.4]},
+    {"effector_target_position", "right_hand_effector", [-0.3, 1.2, 0.4]},
+    {"kusudama_constraints_satisfied", "character_rig", "all_joints"}
+  ],
+  optimization: :minimize_joint_movement
+}
+
+# Scenario 2: Hierarchical effector priorities (spine influences arms)
+multigoal = %AriaEngine.Multigoal{
+  goals: [
+    {"effector_target_position", "spine_effector", [0, 1.5, 0]},  # High propagation
+    {"effector_target_position", "left_hand_effector", [0.5, 1.3, 0.2]},  # Lower propagation
+    {"motion_propagation_optimized", "character_rig", "hierarchical"}
+  ]
+}
+
+# Scenario 3: Kusudama constraint testing with violation recovery
+goals = [
+  {"effector_target_position", "right_hand_effector", impossible_target_position},
+  {"kusudama_constraint_violation_check", "shoulder_joint", "cone_limits"},
+  {"kusudama_constraint_recovery", "shoulder_joint", "nearest_valid_orientation"}
+]
 ```
 
 ## Success Criteria
 
-### R25W1398085 Validation Success
+### EWBIK Implementation Success
 
-- [ ] All 8 temporal patterns implemented and tested
-- [ ] All 6 method types (@action, @command, etc.) validated
-- [ ] Entity-based resource management working correctly
-- [ ] Temporal constraints properly enforced
-- [ ] Complex multi-entity scenarios executing successfully
+- [ ] QCP algorithm port correctly solves Wahba's problem for optimal rotations
+- [ ] IKNode3D hierarchy management handles complex bone chains
+- [ ] EWBIK solver achieves multi-effector coordination with realistic constraints
+- [ ] Kusudama constraints provide continuous, natural joint limits
+- [ ] Motion propagation system creates realistic hierarchical influence
+
+### R25W1398085 Validation Success with EWBIK
+
+- [ ] All 8 temporal patterns implemented and tested with production-quality IK solving
+- [ ] All 6 method types (@action, @command, etc.) validated with complex multi-effector scenarios
+- [ ] EWBIK entity-based resource management working correctly with bone/effector conflicts
+- [ ] Advanced temporal constraints properly enforced with IK convergence considerations
+- [ ] Complex multi-entity EWBIK scenarios executing successfully with realistic performance
 
 ### Integration Success
 
-- [ ] Mock AriaGltf modules provide sufficient functionality for testing
-- [ ] Clear migration path to real AriaGltf implementation
-- [ ] Performance acceptable for development and testing
-- [ ] Test suite provides comprehensive coverage
+- [ ] Mock AriaGltf modules provide sufficient EWBIK functionality for testing
+- [ ] Clear migration path to real AriaGltf implementation with EWBIK support
+- [ ] Performance acceptable for development and testing of complex IK scenarios
+- [ ] Test suite provides comprehensive coverage of EWBIK capabilities
 
 ### Documentation Success
 
-- [ ] Clear examples of using AriaEngineCore with KHR domain
-- [ ] Comprehensive specification compliance documentation
-- [ ] Integration patterns documented for other domains
-- [ ] Troubleshooting and debugging guides available
+- [ ] Clear examples of using AriaEngineCore with EWBIK domain
+- [ ] Comprehensive specification compliance documentation with IK integration
+- [ ] EWBIK integration patterns documented for other domains
+- [ ] Troubleshooting and debugging guides for EWBIK-specific issues
 
 ## ADR References and Dependencies
 
@@ -360,23 +553,35 @@ end
 - AriaEngineCore.Domain - Domain definition framework
 - AriaEngineCore.Planner - Planning algorithm implementation
 
+**EWBIK Dependencies:**
+- **thirdparty/many_bone_ik** - Source for math algorithm ports
+- QCP Algorithm (C++ → Elixir port required)
+- IKNode3D Transform Hierarchy (C++ → Elixir port required)
+- Kusudama Constraint System (C++ → Elixir port required)
+
 **Mock Dependencies (Temporary):**
-- Mock AriaGltf.Document - Basic glTF document structure
-- Mock AriaGltf.Animation - Animation timeline support
-- Mock KHR_interactivity - Behavior graph framework
+- Mock AriaGltf.Document - Basic glTF document structure with EWBIK skeleton support
+- Mock AriaGltf.Animation - Animation timeline support with EWBIK keyframes
+- Mock KHR_interactivity - Behavior graph framework with EWBIK integration
 
 ## Implementation Status
 
 - [ ] ✅ AriaEngineCore external API complete and functional
-- [ ] 🔄 KHR Interactivity test domain - Ready for implementation
-- [ ] ⏳ AriaGltf mocking strategy - Awaiting implementation
-- [ ] 📋 R25W1398085 validation suite - Planning complete
-- [ ] 🎯 Ready for Phase 1 implementation
+- [ ] 🔄 EWBIK math solver ports - Critical foundation, ready for implementation
+- [ ] 🔧 EWBIK algorithm implementation - Depends on math solvers
+- [ ] 📋 EWBIK-enhanced KHR Interactivity test domain - Planning complete
+- [ ] 🎯 Ready for Phase 1 EWBIK math solver implementation
 
 ## Notes
 
-**Mock Strategy Rationale:** Creating minimal mock AriaGltf modules allows immediate R25W1398085 validation without waiting for aria_gltf Phase 1 completion. The mocks provide essential structures for testing while maintaining clear migration paths to real implementations.
+**EWBIK Integration Rationale:** Integrating production-quality EWBIK provides realistic multi-effector inverse kinematics testing that exercises the full complexity of R25W1398085 specification. The sophisticated constraint handling, multi-effector coordination, and hierarchical motion propagation create authentic scenarios for temporal planning validation.
 
-**Test Domain Choice:** KHR Interactivity provides an ideal test case because it combines temporal planning (animations, sequences) with resource management (nodes, cameras) and complex entity relationships (behavior graphs), thoroughly exercising the R25W1398085 specification.
+**Math Solver Port Priority:** The QCP algorithm and IKNode3D hierarchy management are critical foundations that must be ported first. Without these mathematical components, EWBIK integration would be superficial mocking rather than authentic production-quality testing.
 
-**Future Integration:** When aria_gltf completes Phase 1, the mock modules can be seamlessly replaced with real implementations, and the test domain can be enhanced with full glTF capabilities.
+**Conservative Multigoal Usage:** @multigoal_method usage follows R25W1398085 guidelines, only applied to genuine EWBIK multi-effector optimization scenarios where the mathematical properties of the problem specifically benefit from coordinated solving.
+
+**Mock Strategy Rationale:** Enhanced mock AriaGltf modules with EWBIK support allow immediate R25W1398085 validation with production-quality IK solving without waiting for aria_gltf Phase 1 completion. The mocks provide essential EWBIK structures while maintaining clear migration paths to real implementations.
+
+**Test Domain Enhancement:** EWBIK integration transforms the KHR Interactivity test domain from simple scene management to sophisticated character animation with realistic constraints, providing comprehensive validation of temporal planning with production-quality subsystems.
+
+**Future Integration:** When aria_gltf completes Phase 1, the enhanced mock modules can be seamlessly replaced with real implementations, and the EWBIK domain can be enhanced with full glTF capabilities including real skeleton data and animation timelines.
