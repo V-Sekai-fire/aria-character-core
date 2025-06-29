@@ -5,19 +5,18 @@ defmodule AriaAuth.MacaroonsTest do
   use ExUnit.Case, async: true
   alias AriaAuth.Macaroons
   alias AriaAuth.Accounts.User
-  alias Macaroons.{PermissionsCaveat, ConfineUserString}
   alias Macfly.Caveat.ValidityWindow
 
   describe("ConfineUserString caveat") do
     test "can build caveat with string user ID" do
       user_id = "test-user-123"
-      caveat = ConfineUserString.build(user_id)
-      assert %ConfineUserString{id: ^user_id} = caveat
+      caveat = AriaAuth.Macaroons.ConfineUserString.build(user_id)
+      assert %AriaAuth.Macaroons.ConfineUserString{id: ^user_id} = caveat
     end
 
     test "implements Macfly.Caveat protocol correctly" do
       user_id = "protocol-test-user"
-      caveat = ConfineUserString.build(user_id)
+      caveat = AriaAuth.Macaroons.ConfineUserString.build(user_id)
       assert Macfly.Caveat.name(caveat) == "ConfineUserString"
       assert Macfly.Caveat.type(caveat) == 101
       assert Macfly.Caveat.body(caveat) == [user_id]
@@ -25,14 +24,14 @@ defmodule AriaAuth.MacaroonsTest do
 
     test "can roundtrip through protocol body/from_body" do
       user_id = "roundtrip-user"
-      caveat = ConfineUserString.build(user_id)
+      caveat = AriaAuth.Macaroons.ConfineUserString.build(user_id)
       body = Macfly.Caveat.body(caveat)
       assert {:ok, reconstructed} = Macfly.Caveat.from_body(caveat, body, nil)
       assert reconstructed == caveat
     end
 
     test "from_body handles invalid format" do
-      caveat = ConfineUserString.build("test")
+      caveat = AriaAuth.Macaroons.ConfineUserString.build("test")
 
       assert {:error, "bad ConfineUserString format"} =
                Macfly.Caveat.from_body(caveat, ["invalid", "format"], nil)
@@ -42,19 +41,19 @@ defmodule AriaAuth.MacaroonsTest do
   describe("PermissionsCaveat") do
     test "can build permissions caveat with list of permissions" do
       permissions = ["read", "write", "admin"]
-      caveat = PermissionsCaveat.build(permissions)
-      assert %PermissionsCaveat{permissions: ^permissions} = caveat
+      caveat = AriaAuth.Macaroons.PermissionsCaveat.build(permissions)
+      assert %AriaAuth.Macaroons.PermissionsCaveat{permissions: ^permissions} = caveat
     end
 
     test "can build permissions caveat with empty list" do
       permissions = []
-      caveat = PermissionsCaveat.build(permissions)
-      assert %PermissionsCaveat{permissions: []} = caveat
+      caveat = AriaAuth.Macaroons.PermissionsCaveat.build(permissions)
+      assert %AriaAuth.Macaroons.PermissionsCaveat{permissions: []} = caveat
     end
 
     test "implements Macfly.Caveat protocol correctly" do
       permissions = ["user", "editor"]
-      caveat = PermissionsCaveat.build(permissions)
+      caveat = AriaAuth.Macaroons.PermissionsCaveat.build(permissions)
       assert Macfly.Caveat.name(caveat) == "PermissionsCaveat"
       assert Macfly.Caveat.type(caveat) == 100
       assert Macfly.Caveat.body(caveat) == [permissions]
@@ -62,14 +61,14 @@ defmodule AriaAuth.MacaroonsTest do
 
     test "can roundtrip through protocol body/from_body" do
       permissions = ["admin", "moderator"]
-      caveat = PermissionsCaveat.build(permissions)
+      caveat = AriaAuth.Macaroons.PermissionsCaveat.build(permissions)
       body = Macfly.Caveat.body(caveat)
       assert {:ok, reconstructed} = Macfly.Caveat.from_body(caveat, body, nil)
       assert reconstructed == caveat
     end
 
     test "from_body handles invalid format" do
-      caveat = PermissionsCaveat.build(["test"])
+      caveat = AriaAuth.Macaroons.PermissionsCaveat.build(["test"])
 
       assert {:error, "bad PermissionsCaveat format"} =
                Macfly.Caveat.from_body(caveat, "invalid", nil)
@@ -90,10 +89,10 @@ defmodule AriaAuth.MacaroonsTest do
       {:ok, [macaroon]} = Macfly.decode(token, options)
 
       user_caveat =
-        Enum.find(macaroon.caveats, fn caveat -> match?(%ConfineUserString{}, caveat) end)
+        Enum.find(macaroon.caveats, fn caveat -> match?(%AriaAuth.Macaroons.ConfineUserString{}, caveat) end)
 
       perms_caveat =
-        Enum.find(macaroon.caveats, fn caveat -> match?(%PermissionsCaveat{}, caveat) end)
+        Enum.find(macaroon.caveats, fn caveat -> match?(%AriaAuth.Macaroons.PermissionsCaveat{}, caveat) end)
 
       validity_caveat =
         Enum.find(macaroon.caveats, fn caveat -> match?(%ValidityWindow{}, caveat) end)
@@ -243,17 +242,17 @@ defmodule AriaAuth.MacaroonsTest do
       assert length(macaroon.caveats) == 3
       caveat_types = Enum.map(macaroon.caveats, & &1.__struct__)
       assert ValidityWindow in caveat_types
-      assert ConfineUserString in caveat_types
-      assert PermissionsCaveat in caveat_types
+      assert AriaAuth.Macaroons.ConfineUserString in caveat_types
+      assert AriaAuth.Macaroons.PermissionsCaveat in caveat_types
 
       user_caveat =
-        Enum.find(macaroon.caveats, fn caveat -> match?(%ConfineUserString{}, caveat) end)
+        Enum.find(macaroon.caveats, fn caveat -> match?(%AriaAuth.Macaroons.ConfineUserString{}, caveat) end)
 
       assert user_caveat != nil
       assert user_caveat.id == "debug-user-123"
 
       perms_caveat =
-        Enum.find(macaroon.caveats, fn caveat -> match?(%PermissionsCaveat{}, caveat) end)
+        Enum.find(macaroon.caveats, fn caveat -> match?(%AriaAuth.Macaroons.PermissionsCaveat{}, caveat) end)
 
       assert perms_caveat != nil
       assert perms_caveat.permissions == ["user", "editor"]
@@ -267,8 +266,8 @@ defmodule AriaAuth.MacaroonsTest do
     test "protocol implementations work correctly for all custom caveats" do
       user_id = "protocol-test-123"
       permissions = ["admin", "moderator"]
-      user_caveat = ConfineUserString.build(user_id)
-      perms_caveat = PermissionsCaveat.build(permissions)
+      user_caveat = AriaAuth.Macaroons.ConfineUserString.build(user_id)
+      perms_caveat = AriaAuth.Macaroons.PermissionsCaveat.build(permissions)
       validity_caveat = ValidityWindow.build(for: 3600)
       assert Macfly.Caveat.name(user_caveat) == "ConfineUserString"
       assert Macfly.Caveat.type(user_caveat) == 101
@@ -328,8 +327,8 @@ defmodule AriaAuth.MacaroonsTest do
         )
 
       {:ok, [macaroon]} = Macfly.decode(token, options)
-      user_caveat = Enum.find(macaroon.caveats, &match?(%ConfineUserString{}, &1))
-      perms_caveat = Enum.find(macaroon.caveats, &match?(%PermissionsCaveat{}, &1))
+      user_caveat = Enum.find(macaroon.caveats, &match?(%AriaAuth.Macaroons.ConfineUserString{}, &1))
+      perms_caveat = Enum.find(macaroon.caveats, &match?(%AriaAuth.Macaroons.PermissionsCaveat{}, &1))
       assert user_caveat.id == user.id
       assert perms_caveat.permissions == original_permissions
 
@@ -344,10 +343,10 @@ defmodule AriaAuth.MacaroonsTest do
   describe("debug script functionality migration") do
     test "step by step caveat creation and protocol verification" do
       test_user = %User{id: "test-user-123", email: "test@example.com", roles: ["user", "editor"]}
-      user_caveat = ConfineUserString.build(test_user.id)
-      assert %ConfineUserString{id: "test-user-123"} = user_caveat
-      perms_caveat = PermissionsCaveat.build(test_user.roles)
-      assert %PermissionsCaveat{permissions: ["user", "editor"]} = perms_caveat
+      user_caveat = AriaAuth.Macaroons.ConfineUserString.build(test_user.id)
+      assert %AriaAuth.Macaroons.ConfineUserString{id: "test-user-123"} = user_caveat
+      perms_caveat = AriaAuth.Macaroons.PermissionsCaveat.build(test_user.roles)
+      assert %AriaAuth.Macaroons.PermissionsCaveat{permissions: ["user", "editor"]} = perms_caveat
       validity_caveat = ValidityWindow.build(for: 3600)
       assert %ValidityWindow{} = validity_caveat
       assert Macfly.Caveat.name(user_caveat) == "ConfineUserString"
@@ -370,7 +369,7 @@ defmodule AriaAuth.MacaroonsTest do
       options =
         Macfly.Options.with_caveats(
           %Macfly.Options{},
-          [PermissionsCaveat, ConfineUserString]
+          [AriaAuth.Macaroons.PermissionsCaveat, AriaAuth.Macaroons.ConfineUserString]
         )
 
       assert {:ok, [macaroon]} = Macfly.decode(token, options)
@@ -383,17 +382,17 @@ defmodule AriaAuth.MacaroonsTest do
         end)
 
       assert ValidityWindow in caveat_types
-      assert ConfineUserString in caveat_types
-      assert PermissionsCaveat in caveat_types
+      assert AriaAuth.Macaroons.ConfineUserString in caveat_types
+      assert AriaAuth.Macaroons.PermissionsCaveat in caveat_types
 
       user_caveat =
-        Enum.find(macaroon.caveats, fn caveat -> match?(%ConfineUserString{}, caveat) end)
+        Enum.find(macaroon.caveats, fn caveat -> match?(%AriaAuth.Macaroons.ConfineUserString{}, caveat) end)
 
       assert user_caveat != nil
       assert user_caveat.id == "test-user-123"
 
       perms_caveat =
-        Enum.find(macaroon.caveats, fn caveat -> match?(%PermissionsCaveat{}, caveat) end)
+        Enum.find(macaroon.caveats, fn caveat -> match?(%AriaAuth.Macaroons.PermissionsCaveat{}, caveat) end)
 
       assert perms_caveat != nil
       assert perms_caveat.permissions == ["user", "editor"]
