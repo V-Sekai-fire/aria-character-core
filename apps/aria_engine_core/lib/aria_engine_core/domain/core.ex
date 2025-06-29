@@ -108,7 +108,7 @@ defmodule AriaEngineCore.Domain.Core do
     # For now, we'll keep it as a no-op or raise an error if it's not meant to be here.
     # Given the current structure, it's likely that AriaEngineCore.Domain.Core
     # should not be directly managing the entity registry.
-    Logger.warn("AriaEngineCore.Domain.Core.set_entity_registry called. This should be handled by AriaCore.Domain.")
+    Logger.warning("AriaEngineCore.Domain.Core.set_entity_registry called. This should be handled by AriaCore.Domain.")
     domain
   end
 
@@ -117,7 +117,7 @@ defmodule AriaEngineCore.Domain.Core do
   def get_entity_registry(%__MODULE__{} = _domain) do
     # This function should ideally be handled by AriaCore.Domain
     # For now, return an empty map or raise an error.
-    Logger.warn("AriaEngineCore.Domain.Core.get_entity_registry called. This should be handled by AriaCore.Domain.")
+    Logger.warning("AriaEngineCore.Domain.Core.get_entity_registry called. This should be handled by AriaCore.Domain.")
     %{}
   end
 
@@ -125,7 +125,7 @@ defmodule AriaEngineCore.Domain.Core do
   @spec set_temporal_specifications(t(), map()) :: t()
   def set_temporal_specifications(%__MODULE__{} = domain, specs) do
     # This function should ideally be handled by AriaCore.Domain
-    Logger.warn("AriaEngineCore.Domain.Core.set_temporal_specifications called. This should be handled by AriaCore.Domain.")
+    Logger.warning("AriaEngineCore.Domain.Core.set_temporal_specifications called. This should be handled by AriaCore.Domain.")
     domain
   end
 
@@ -133,7 +133,7 @@ defmodule AriaEngineCore.Domain.Core do
   @spec get_temporal_specifications(t()) :: map()
   def get_temporal_specifications(%__MODULE__{} = _domain) do
     # This function should ideally be handled by AriaCore.Domain
-    Logger.warn("AriaEngineCore.Domain.Core.get_temporal_specifications called. This should be handled by AriaCore.Domain.")
+    Logger.warning("AriaEngineCore.Domain.Core.get_temporal_specifications called. This should be handled by AriaCore.Domain.")
     %{}
   end
 end

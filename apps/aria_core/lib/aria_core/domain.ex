@@ -103,12 +103,30 @@ defmodule AriaCore.Domain do
   end
 
   @doc """
+  Gets the entity registry for the domain.
+
+  The entity registry manages entity types, capabilities, and allocation.
+  """
+  def get_entity_registry(%__MODULE__{} = domain) do
+    domain.entity_registry
+  end
+
+  @doc """
   Sets the temporal specifications for the domain.
 
   Temporal specifications define duration patterns and temporal constraints.
   """
   def set_temporal_specifications(%__MODULE__{} = domain, specifications) do
     %{domain | temporal_specifications: specifications}
+  end
+
+  @doc """
+  Gets the temporal specifications for the domain.
+
+  Temporal specifications define duration patterns and temporal constraints.
+  """
+  def get_temporal_specifications(%__MODULE__{} = domain) do
+    domain.temporal_specifications
   end
 
   @doc """

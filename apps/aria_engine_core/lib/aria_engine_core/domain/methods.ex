@@ -9,6 +9,8 @@ defmodule AriaEngineCore.Domain.Methods do
   Currently mocked with basic functionality to enable compilation.
   """
 
+  require Logger
+
   @doc """
   Add task methods to a domain.
   """
@@ -216,7 +218,7 @@ defmodule AriaEngineCore.Domain.Methods do
     add_multitodo_method(domain, method_name, fn_val)
   end
   def add_method(domain, method_name, _other) do
-    Logger.warn("Unsupported method type for #{method_name}. Method not added.")
+    Logger.warning("Unsupported method type for #{method_name}. Method not added.")
     domain
   end
 

@@ -9,7 +9,6 @@ defmodule AriaEngineCore.Domain do
   alias AriaEngineCore.Domain.Methods
   alias AriaEngineCore.Domain.Utils
   alias AriaEngineCore.Domain.BehaviourImpl
-  alias AriaCore.Domain, as: AriaCoreDomain # Alias to avoid conflict with AriaEngineCore.Domain
   @type t :: Core.t()
   defdelegate new(name), to: Core
   defdelegate validate(domain), to: Core
@@ -36,10 +35,10 @@ defmodule AriaEngineCore.Domain do
   defdelegate get_method(domain, method_name), to: Methods
   defdelegate has_task_methods?(domain, task_name), to: Methods
   defdelegate has_unigoal_methods?(domain, goal_type), to: Methods
-  defdelegate set_entity_registry(domain, registry), to: AriaCoreDomain
-  defdelegate get_entity_registry(domain), to: AriaCoreDomain
-  defdelegate set_temporal_specifications(domain, specs), to: AriaCoreDomain
-  defdelegate get_temporal_specifications(domain), to: AriaCoreDomain
+  defdelegate set_entity_registry(domain, registry), to: Core
+  defdelegate get_entity_registry(domain), to: Core
+  defdelegate set_temporal_specifications(domain, specs), to: Core
+  defdelegate get_temporal_specifications(domain), to: Core
 
   defdelegate verify_goal(state, method_name, state_var, args, desired_values, depth, verbose),
     to: Utils

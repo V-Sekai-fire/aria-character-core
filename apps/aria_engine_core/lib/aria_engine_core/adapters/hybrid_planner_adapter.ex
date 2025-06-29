@@ -30,14 +30,13 @@ defmodule AriaEngineCore.Adapters.HybridPlannerAdapter do
   @behaviour AriaEngineCore.Behaviours.PlannerBehaviour
 
   require Logger
-  alias AriaHybridPlanner.Core, as: HybridCore
 
   @impl AriaEngineCore.Behaviours.PlannerBehaviour
   def new_coordinator(opts \\ []) do
     Logger.debug("Creating new hybrid planner coordinator")
 
     try do
-      HybridCore.new_coordinator(opts)
+      hybrid_core_module().new_coordinator(opts)
     rescue
       error ->
         Logger.error("Failed to create hybrid coordinator: #{inspect(error)}")
@@ -50,12 +49,12 @@ defmodule AriaEngineCore.Adapters.HybridPlannerAdapter do
     Logger.debug("Starting hybrid planning for #{length(goals)} goals")
 
     try do
-      case HybridCore.plan(coordinator, domain, state, goals, opts) do
+      case hybrid_core_module().plan(coordinator, domain, state, goals, opts) do
         {:ok, plan} ->
           Logger.debug("Hybrid planning completed successfully")
           {:ok, plan}
         {:error, reason} ->
-          Logger.warn("Hybrid planning failed: #{inspect(reason)}")
+          Logger.warning("Hybrid planning failed: #{inspect(reason)}")
           {:error, reason}
         other ->
           Logger.error("Unexpected hybrid planning result: #{inspect(other)}")
@@ -73,12 +72,12 @@ defmodule AriaEngineCore.Adapters.HybridPlannerAdapter do
     Logger.debug("Starting hybrid plan execution")
 
     try do
-      case HybridCore.execute(coordinator, domain, state, plan, opts) do
+      case hybrid_core_module().execute(coordinator, domain, state, plan, opts) do
         {:ok, final_state} ->
           Logger.debug("Hybrid execution completed successfully")
           {:ok, final_state}
         {:error, reason} ->
-          Logger.warn("Hybrid execution failed: #{inspect(reason)}")
+          Logger.warning("Hybrid execution failed: #{inspect(reason)}")
           {:error, reason}
         other ->
           Logger.error("Unexpected hybrid execution result: #{inspect(other)}")
@@ -89,5 +88,10 @@ defmodule AriaEngineCore.Adapters.HybridPlannerAdapter do
         Logger.error("Hybrid execution error: #{inspect(error)}")
         {:error, :execution_exception}
     end
+  end
+
+  # Private helper function to get the hybrid core module at runtime
+  defp hybrid_core_module do
+    AriaHybridPlanner.Core
   end
 end
