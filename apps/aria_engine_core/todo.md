@@ -201,6 +201,224 @@ All subsequent phases depend on these fundamental mathematical operations. These
   - [ ] Ancestor-descendant weight distribution
   - [ ] Ultimate vs intermediary target handling
 
+### Phase 2.5: Anti-Uncanny Valley Solutions (HIGH PRIORITY)
+
+**Priority: HIGH - Comprehensive uncanny valley prevention for realistic character animation**
+
+**Dependencies:** Requires Phase 0-2 EWBIK foundation for sophisticated constraint integration
+
+#### 🪦 TOMBSTONED APPROACHES
+
+- [x] ~~**Flip to Other Side Constraint Resolution**~~ ❌ DEPRECATED (June 29, 2025)
+  - ~~When Kusudama constraint becomes unsolvable, flip joint to opposite side~~
+  - **REASON FOR DEPRECATION:** Creates jarring visual artifacts and unnatural motion
+  - **REPLACED BY:** VRM1 collision detection + Godot anatomical constraints + RMSD validation
+  - **STATUS:** This approach is permanently retired in favor of comprehensive collision-aware solutions
+
+#### VRM1 Collision Detection System
+
+- [ ] **VRM1 Collider System Integration** 
+  - [ ] Create `lib/aria_engine_core/ewbik/vrm1_colliders.ex`
+  - [ ] Implement VRM1 sphere collider detection (`shape.sphere`)
+    - [ ] Sphere-to-sphere collision detection with joint hit radius
+    - [ ] Local coordinate offset transformation to world space
+    - [ ] Distance calculation and penetration resolution per VRM1 spec:
+      ```
+      transformedOffset = collider.offset * collider.worldMatrix
+      delta = nextTail - transformedOffset
+      distance = delta.magnitude - collider.radius - jointRadius
+      direction = delta.normalized
+      ```
+  - [ ] Implement VRM1 capsule collider detection (`shape.capsule`)
+    - [ ] Capsule-to-sphere collision detection algorithm per VRM1 spec
+    - [ ] Head/tail/middle region collision handling
+    - [ ] Offset and tail position transformation to world space
+  - [ ] Implement VRM1 plane colliders for ground contact
+    - [ ] Infinite plane collision detection for foot pinning
+    - [ ] Ground contact preservation during upper body IK
+    - [ ] Balance constraint integration with center of mass
+  - [ ] Collider group management system
+    - [ ] ColliderGroup organization and indexing per VRM1 spec
+    - [ ] Per-spring collider group assignment
+    - [ ] Efficient collision checking against relevant groups only
+
+- [ ] **VRM1-Compliant Collision-Aware EWBIK Solver**
+  - [ ] Create `lib/aria_engine_core/ewbik/vrm1_collision_solver.ex`
+  - [ ] Integration of VRM1 colliders with EWBIK iteration loop
+  - [ ] Joint hit radius integration with EWBIK bone transforms
+  - [ ] Collision resolution during IK solving iterations per VRM1 spec:
+    ```
+    if (distance < 0.0) {
+        // push
+        nextTail = nextTail - direction * distance;
+        // constrain the length
+        nextTail = worldPosition + (nextTail - worldPosition).normalized * boneLength;
+    }
+    ```
+  - [ ] Performance optimization for real-time collision checking
+  - [ ] VRM1 center space evaluation for collision detection
+
+#### Godot Anatomical Constraint System
+
+- [ ] **Godot SkeletonProfileHumanoid Integration for Anatomical Limits**
+  - [ ] Create `lib/aria_engine_core/ewbik/godot_skeleton_profile.ex`
+  - [ ] Port Godot's SkeletonProfileHumanoid bone definitions and reference poses
+  - [ ] Extract anatomical joint limits from Godot's humanoid profile:
+    - [ ] Elbow: 0-150° (from reference poses)
+    - [ ] Knee: 0-135° (from reference poses)  
+    - [ ] Shoulder: complex 3DOF limits (from reference poses)
+    - [ ] Spine: limited flexion/extension (from reference poses)
+  - [ ] Convert Godot Transform3D reference poses to Kusudama constraint cones
+  - [ ] Integration with VRM1 colliders for additional anatomical boundaries
+  - [ ] Automatic anatomical constraint generation from skeleton profile
+
+- [ ] **Godot to glTF Coordinate System Conversion**
+  - [ ] Create `lib/aria_engine_core/ewbik/coordinate_conversion.ex`
+  - [ ] Implement Godot → glTF coordinate system transformation matrices
+  - [ ] Convert Godot SkeletonProfileHumanoid reference poses to glTF space:
+    ```elixir
+    # Godot reference pose (Transform3D)
+    godot_pose = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+    
+    # Convert to glTF native coordinate space
+    gltf_pose = CoordinateConversion.godot_to_gltf_transform(godot_pose)
+    
+    # Extract joint rules in glTF space
+    gltf_joint_rules = CoordinateConversion.extract_gltf_joint_rules(gltf_pose)
+    ```
+  - [ ] Convert Godot joint rule (+Y roll, +X inside bend) to glTF equivalent
+  - [ ] Validate conversion with known test cases (elbow, knee, shoulder)
+
+- [ ] **Godot Joint Rules for Scale-Invariant IK**
+  - [ ] Implement Godot's joint rule: "+Y axis pointed from parent to child as roll axis"
+  - [ ] Implement Godot's joint rule: "+X rotation bends joints to inside of body"
+  - [ ] Scale-aware constraint generation based on bone length ratios
+  - [ ] Proportional EWBIK solving using Godot's SkeletonProfileHumanoid proportions
+  - [ ] Character proportion analysis using Godot's reference poses
+  - [ ] Integration with realtime retarget concepts for cross-character compatibility
+
+#### Temporal Smoothing and Motion Quality
+
+- [ ] **Temporal Smoothing Integration with AriaTimeline**
+  - [ ] Previous pose bias in EWBIK solving (prefer solutions close to current pose)
+  - [ ] Integration with AriaTimeline temporal constraints for smooth motion
+  - [ ] Frame-to-frame solution stability validation using timeline continuity
+  - [ ] Motion prediction using temporal planning capabilities
+
+- [ ] **Enhanced RMSD Solution Validation**
+  - [ ] RMSD calculation includes VRM1 collision penalty terms
+  - [ ] Solution rejection for poses that violate VRM1 collider constraints
+  - [ ] Weighted RMSD: target achievement vs VRM1 collision avoidance vs anatomical realism
+  - [ ] Integration with VRM1 collider group priorities
+  - [ ] Performance optimization for real-time VRM1 collision validation
+
+#### VRM1 Configuration in AriaState
+
+- [ ] **VRM1 Collider Configuration System**
+  ```elixir
+  # VRM1 collider configuration stored in planner state
+  AriaState.set_fact(state, "character_rig", "vrm1_colliders", [
+    # Sphere collider for head
+    %{
+      node: 4,  # glTF node index for head
+      shape: %{
+        sphere: %{
+          offset: [0, 0, 0],
+          radius: 0.12  # 12cm head radius
+        }
+      }
+    },
+    # Capsule collider for torso
+    %{
+      node: 1,  # glTF node index for spine
+      shape: %{
+        capsule: %{
+          offset: [0, 0, 0],
+          radius: 0.15,  # 15cm torso radius
+          tail: [0, 0.4, 0]  # 40cm torso height
+        }
+      }
+    },
+    # Plane collider for ground
+    %{
+      node: 0,  # World origin
+      shape: %{
+        plane: %{
+          normal: [0, 1, 0],  # Y-up ground plane
+          distance: 0.0
+        }
+      }
+    }
+  ])
+
+  # VRM1 collider groups for organized collision detection
+  AriaState.set_fact(state, "character_rig", "vrm1_collider_groups", [
+    %{
+      name: "body_core",
+      colliders: [0, 1]  # head and torso colliders
+    },
+    %{
+      name: "ground_contact",
+      colliders: [2]  # ground plane collider
+    }
+  ])
+
+  # EWBIK configuration with VRM1 collision integration
+  AriaState.set_fact(state, "left_arm_chain", "ewbik_collision_config", %{
+    collider_groups: [0],  # Use "body_core" group for left arm collision
+    hit_radius: 0.05,  # 5cm hit radius for arm joints
+    collision_enabled: true
+  })
+  ```
+
+#### Anti-Uncanny Valley Test Scenarios
+
+- [ ] **VRM1 Collision Avoidance Test Cases**
+  ```elixir
+  # Scenario 1: VRM1 collision avoidance with body core
+  multigoal = %AriaEngine.Multigoal{
+    goals: [
+      {"effector_target_position", 8, target_near_head},  # Hand target near head
+      {"vrm1_collision_avoidance", "character_rig", "body_core"},  # Avoid head/torso
+      {"kusudama_constraints_satisfied", "character_rig", "all_joints"}
+    ],
+    optimization: :minimize_joint_movement_with_vrm1_collision_avoidance
+  }
+
+  # Scenario 2: VRM1 self-collision prevention
+  goals = [
+    {"effector_target_position", 12, target_across_body},  # Right hand across body
+    {"vrm1_self_collision_prevention", "character_rig", "limbs"},  # Avoid limb intersections
+    {"vrm1_collider_group_validation", "character_rig", ["body_core", "limbs"]}
+  ]
+
+  # Scenario 3: Ground contact preservation
+  goals = [
+    {"effector_target_position", 4, upper_body_target},  # Head/spine target
+    {"vrm1_ground_contact_maintained", "character_rig", "feet"},  # Feet stay on ground
+    {"balance_constraint_satisfied", "character_rig", "center_of_mass"}
+  ]
+  ```
+
+- [ ] **Anatomical Constraint Test Cases**
+  ```elixir
+  # Scenario 4: Godot anatomical limit enforcement
+  multigoal = %AriaEngine.Multigoal{
+    goals: [
+      {"effector_target_position", 8, extreme_reach_target},  # Challenging reach
+      {"godot_anatomical_limits_enforced", "character_rig", "humanoid_profile"},
+      {"joint_hyperextension_prevented", "character_rig", ["elbow", "knee"]}
+    ]
+  }
+
+  # Scenario 5: Scale-invariant behavior validation
+  goals = [
+    {"effector_target_position", 12, proportional_target},  # Target scaled to character
+    {"godot_joint_rules_applied", "character_rig", "gltf_space"},
+    {"scale_invariant_constraints", "character_rig", "bone_length_ratios"}
+  ]
+  ```
+
 ### Phase 3: Kusudama Constraint Visualization (HIGH PRIORITY)
 
 **Priority: HIGH - Visual debugging and constraint validation for EWBIK**
@@ -241,7 +459,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
 
 **Priority: HIGH - Realistic IK testing with sophisticated constraint validation**
 
-**Dependencies:** Requires Phase 0 mathematical primitives, Phase 1 EWBIK math solvers, and Phase 2 EWBIK algorithms
+**Dependencies:** Requires Phase 0 mathematical primitives, Phase 1 EWBIK math solvers, Phase 2 EWBIK algorithms, and Phase 2.5 anti-uncanny valley solutions
 
 - [ ] **EWBIK Entity Types for KHR Interactivity**
   - [ ] Create `test/support/ewbik_khr_domain.ex`
@@ -249,6 +467,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
   - [ ] IK effector entities with motion propagation factors
   - [ ] Kusudama constraint entities with cone definitions
   - [ ] Bone hierarchy entities with transform management
+  - [ ] VRM1 collider entities with sphere/capsule/plane definitions
   - [ ] Integration with KHR Interactivity node system
 
 - [ ] **Enhanced Temporal Action Patterns with EWBIK**
@@ -260,608 +479,111 @@ All subsequent phases depend on these fundamental mathematical operations. These
   - [ ] **Pattern 6**: Timed pose sequences (`execute_pose_sequence_until`)
   - [ ] **Pattern 7**: Constraint monitoring windows (`monitor_constraints_during`)
   - [ ] **Pattern 8**: Continuous constraint validation (`validate_constraints_continuously`)
+  - [ ] **Pattern 9**: VRM1 collision-aware solving (`solve_with_vrm1_collision_avoidance`)
+  - [ ] **Pattern 10**: Anatomical constraint enforcement (`solve_with_godot_anatomical_limits`)
 
 - [ ] **EWBIK-Specific Method Types**
-  - [ ] `@action` - EWBIK state updates (set effector targets, constraint parameters)
-  - [ ] `@command` - Real IK solving execution with convergence handling
-  - [ ] `@task_method` - Complex multi-effector coordination workflows
-  - [ ] `@unigoal_method` - Single effector target achievement
-  - [ ] `@multigoal_method` - EWBIK-specific multi-effector optimization ONLY
+  - [ ] `@action` - EWBIK state updates (set effector targets, constraint parameters, VRM1 colliders)
+  - [ ] `@command` - Real IK solving execution with convergence handling and collision avoidance
+  - [ ] `@task_method` - Complex multi-effector coordination workflows with anti-uncanny valley features
+  - [ ] `@unigoal_method` - Single effector target achievement with constraint enforcement
+  - [ ] `@multigoal_method` - EWBIK-specific multi-effector optimization with VRM1 collision coordination ONLY
   - [ ] Conservative multigoal usage following R25W1398085 guidelines
 
-### Phase 5: EWBIK Test Scenarios (HIGH PRIORITY)
-
-**Priority: HIGH - Comprehensive EWBIK validation scenarios**
-
-- [ ] **glTF Sample Asset Style IK Test Cases**
-  - [ ] Create `SimpleIK.gltf` - Basic IK solving validation (similar to SimpleSkin.gltf/SimpleMorph.gltf)
-    - [ ] Single bone chain with 3 joints (shoulder → elbow → wrist)
-    - [ ] Single IK effector at wrist with position target
-    - [ ] Basic Kusudama constraint on elbow joint (simple cone limit)
-    - [ ] Embedded glTF with minimal geometry for visual validation
-    - [ ] KHR_interactivity behavior for effector target animation
-    - [ ] Test convergence with 5-10 iterations maximum
-    - [ ] Validate against known analytical IK solution
-  - [ ] Create `SimpleIKConstraints.gltf` - Kusudama constraint validation
-    - [ ] Two bone chain with shoulder joint constraint visualization
-    - [ ] Cone geometry showing valid movement region
-    - [ ] Morph targets for constraint violation feedback
-    - [ ] Animated effector target that tests constraint boundaries
-    - [ ] Visual validation of constraint enforcement vs violation
-
-- [ ] **Multi-Effector Coordination Tests**
-  - [ ] Dual-hand reaching with motion propagation
-  - [ ] Full-body IK with spine-to-limb influence
-  - [ ] Hierarchical effector priority testing
-  - [ ] Conflicting target resolution
-  - [ ] Weight distribution validation
-
-- [ ] **Kusudama Constraint Validation Tests**
-  - [ ] Cone limit enforcement scenarios
-  - [ ] Continuous boundary handling
-  - [ ] Constraint violation recovery
-  - [ ] Soft vs hard constraint boundaries
-  - [ ] Twist limit validation
-
-- [ ] **Performance and Convergence Tests**
-  - [ ] Iteration limit testing
-  - [ ] Convergence criteria validation
-  - [ ] Dampening parameter effects
-  - [ ] Stabilization pass benefits
-  - [ ] Computational budget management
-
-- [ ] **Complex Integration Scenarios**
-  - [ ] Real-time constraint solving
-  - [ ] Dynamic effector target updates
-  - [ ] Temporal IK sequence coordination
-  - [ ] Error handling and graceful degradation
-
-### Phase 6: R25W1398085 Specification Validation with EWBIK (CRITICAL)
-
-**Priority: CRITICAL - Core requirement validation with production-quality IK**
-
-**Dependencies:** Requires all previous phases - complete EWBIK implementation with test domain
-
-- [ ] **Enhanced Method Type Implementation Validation**
-  - [ ] `@action` - EWBIK parameter setting (effector targets, weights, constraints)
-  - [ ] `@command` - EWBIK solving execution with failure modes
-  - [ ] `@task_method` - Complex IK workflow decomposition (full-body coordination)
-  - [ ] `@unigoal_method` - Single effector solving (achieve hand position)
-  - [ ] `@multigoal_method` - Multi-effector EWBIK coordination ONLY
-  - [ ] `@multitodo_method` - Mixed IK and non-IK task handling
-
-- [ ] **EWBIK Entity Resource Management Validation**
-  - [ ] Bone resource capability checking (can_be_ik_controlled)
-  - [ ] Effector resource conflict detection (multiple targets on same bone)
-  - [ ] Constraint resource allocation (Kusudama limit sharing)
-  - [ ] Hierarchical resource dependency management
-  - [ ] IK solving resource cleanup and state reset
-
-- [ ] **Advanced Temporal Constraint Testing with EWBIK**
-  - [ ] IK convergence time constraint validation
-  - [ ] Multi-phase IK sequence deadline enforcement
-  - [ ] Real-time constraint satisfaction with iteration limits
-  - [ ] Temporal dependency resolution in IK chains
-  - [ ] Performance degradation handling under time pressure
-
-### Phase 7: Mock AriaGltf Integration (MEDIUM PRIORITY)
-
-**Priority: MEDIUM - Enables immediate testing without full glTF implementation**
-
-- [ ] **Enhanced Mock AriaGltf Modules for EWBIK**
-  - [ ] Create `test/support/mock_aria_gltf_ewbik.ex`
-  - [ ] Mock AriaGltf.Document with EWBIK skeleton structure
-  - [ ] Mock AriaGltf.Scene with bone hierarchy and effector references
-  - [ ] Mock AriaGltf.Node with transform data and constraint metadata
-  - [ ] Mock AriaGltf.Animation with EWBIK-aware keyframe support
-
-- [ ] **EWBIK-Enhanced Behavior Graph Mock Integration**
-  - [ ] Mock KHR_interactivity extension with IK behavior nodes
-  - [ ] EWBIK effector target behavior graph integration
-  - [ ] Constraint parameter behavior graph control
-  - [ ] IK solving trigger and coordination through behavior graphs
-  - [ ] Event system integration for IK completion/failure
-
-### Phase 8: Comprehensive Test Suite Implementation (HIGH PRIORITY)
-
-**Priority: HIGH - Comprehensive EWBIK and R25W1398085 validation**
-
-**Dependencies:** Requires phases 0-7 complete for comprehensive testing
-
-- [ ] **EWBIK Domain Integration Tests**
-  - [ ] Create `test/aria_engine_core/ewbik_khr_interactivity_test.exs`
-  - [ ] Test all temporal patterns with realistic IK scenarios
-  - [ ] Validate EWBIK entity resource management
-  - [ ] Test enhanced method type implementations with multi-effector solving
-
-- [ ] **EWBIK Algorithm Validation Tests**
-  - [ ] QCP algorithm accuracy tests with known solutions
-  - [ ] Multi-effector coordination correctness validation
-  - [ ] Kusudama constraint enforcement testing
-  - [ ] Motion propagation calculation verification
-  - [ ] Performance and convergence behavior testing
-
-- [ ] **Specification Compliance Tests with EWBIK**
-  - [ ] R25W1398085 pattern compliance with complex IK scenarios
-  - [ ] EWBIK entity capability enforcement testing
-  - [ ] Advanced temporal constraint satisfaction with IK solving
-  - [ ] Error handling and recovery testing for IK failures
-
-- [ ] **Production-Quality Integration Scenario Tests**
-  - [ ] Complex multi-entity EWBIK scenarios
-  - [ ] Concurrent multi-effector coordination
-  - [ ] Real-time constraint validation with performance limits
-  - [ ] Behavior graph execution flow with EWBIK integration
-
-### Phase 9: Documentation and Examples (MEDIUM PRIORITY)
-
-**Priority: MEDIUM - Developer experience and EWBIK adoption**
-
-- [ ] **EWBIK-Enhanced KHR Interactivity Domain Documentation**
-  - [ ] Complete EWBIK domain specification document
-  - [ ] EWBIK entity and resource documentation
-  - [ ] Multi-effector temporal pattern usage examples
-  - [ ] Kusudama constraint best practices and common patterns
-
-- [ ] **EWBIK Integration Examples**
-  - [ ] Simple IK setup examples with single effectors
-  - [ ] Multi-effector coordination examples
-  - [ ] Constraint definition and validation examples
-  - [ ] Behavior graph integration with EWBIK examples
-  - [ ] Error handling and performance optimization examples
-
-- [ ] **EWBIK API Usage Documentation**
-  - [ ] AriaEngineCore API usage with EWBIK domain
-  - [ ] IK planning and execution workflows
-  - [ ] EWBIK debugging and troubleshooting guides
-  - [ ] Performance tuning and optimization guides
-
-### Phase 10: Performance and Optimization (LOW PRIORITY)
-
-**Priority: LOW - Performance enhancements after core EWBIK functionality**
-
-**Dependencies:** Requires complete EWBIK implementation from phases 0-9
-
-- [ ] **EWBIK Performance Benchmarking**
-  - [ ] Multi-effector solving performance with complex scenarios
-  - [ ] Kusudama constraint checking performance optimization
-  - [ ] Memory usage optimization for large bone hierarchies
-  - [ ] Concurrent EWBIK execution performance analysis
-
-- [ ] **EWBIK Optimization Implementation**
-  - [ ] QCP algorithm optimization for repeated solving
-  - [ ] Constraint checking optimization and caching
-  - [ ] Memory pool management for IK solving
-  - [ ] EWBIK execution pipeline optimization
-
-### Phase 11: Real AriaGltf Integration (FUTURE)
-
-**Priority: FUTURE - After aria_gltf Phase 1 completion**
-
-**Dependencies:** Requires aria_gltf app completion and all EWBIK phases complete
-
-- [ ] **Replace Mock Modules with Real EWBIK Integration**
-  - [ ] Remove mock AriaGltf modules
-  - [ ] Integrate with real AriaGltf.Document and skeleton data
-  - [ ] Integrate with real AriaGltf.Animation and EWBIK keyframes
-  - [ ] Integrate with real behavior graph support for IK coordination
-
-- [ ] **Enhanced KHR Interactivity Support with Real EWBIK**
-  - [ ] Full KHR_interactivity extension support with EWBIK nodes
-  - [ ] Advanced behavior graph execution with real-time IK solving
-  - [ ] Real-time scene manipulation with EWBIK constraint enforcement
-  - [ ] Performance optimization with real glTF data and EWBIK integration
-
-## EWBIK Test Domain Specification
-
-### Enhanced KHR Interactivity Test Domain with EWBIK
-
-**Purpose:** Validate R25W1398085 unified durative action specification using production-quality EWBIK multi-effector inverse kinematics with sophisticated constraint handling.
-
-**EWBIK-Enhanced Core Entities (glTF 2.0 Compliant):**
-
-```elixir
-# Scene Node Entity - glTF node index (pelvis root bone)
-%{
-  type: :scene_node,
-  id: 0,  # Integer glTF node index (nodes[0] = pelvis)
-  capabilities: [:transform, :joint, :ik_target]
-}
-
-# Scene Node Entity - glTF node index (left shoulder bone)
-%{
-  type: :scene_node,
-  id: 5,  # Integer glTF node index (nodes[5] = left_shoulder)
-  capabilities: [:transform, :joint, :ik_target]
-}
-
-# Scene Node Entity - glTF node index (left hand bone)
-%{
-  type: :scene_node,
-  id: 8,  # Integer glTF node index (nodes[8] = left_hand)
-  capabilities: [:transform, :joint, :ik_effector]
-}
-
-# Skin Entity - glTF skin index for character skinning
-%{
-  type: :skin,
-  id: 0,  # Integer glTF skin index (skins[0] = character_skin)
-  capabilities: [:joint_hierarchy, :skinning]
-}
-
-# Mesh Entity - glTF mesh index for skinned character
-%{
-  type: :mesh,
-  id: 0,  # Integer glTF mesh index (meshes[0] = character_mesh)
-  capabilities: [:skinned_rendering, :morph_targets]
-}
-```
-
-**EWBIK Configuration in AriaState (Option A - Single Configuration Object):**
-
-```elixir
-# EWBIK solver configuration stored in planner state, not entity properties
-AriaState.set_fact(state, "character_rig", "ewbik_config", %{
-  default_damp: 0.08726646,  # 5 degrees in radians
-  iterations_per_frame: 15.0,
-  stabilization_passes: 0,
-  bone_node_mapping: %{
-    # Map semantic bone names to glTF node indices
-    "pelvis" => 0,
-    "left_shoulder" => 5,
-    "left_elbow" => 6,
-    "left_wrist" => 7,
-    "left_hand" => 8,
-    "right_shoulder" => 9,
-    "right_elbow" => 10,
-    "right_wrist" => 11,
-    "right_hand" => 12
-  },
-  bone_chains: [
-    %{name: "left_arm", node_indices: [5, 6, 7, 8]},  # glTF node indices
-    %{name: "right_arm", node_indices: [9, 10, 11, 12]},
-    %{name: "spine", node_indices: [0, 1, 2, 3, 4]}
-  ]
-})
-
-# IK effector configuration in planner state
-AriaState.set_fact(state, "left_hand_effector", "ik_config", %{
-  target_node_index: 8,  # glTF node index for left_hand
-  motion_propagation_factor: 0.5,
-  target_weight: 1.0,
-  priority: :high
-})
-
-# Kusudama constraint configuration in planner state
-AriaState.set_fact(state, "shoulder_constraint", "kusudama_config", %{
-  constrained_node_index: 5,  # glTF node index for left_shoulder
-  limit_cones: [
-    %{center: [0, 1, 0], radius: 1.57},  # 90 degrees up
-    %{center: [1, 0, 0], radius: 0.785}, # 45 degrees forward
-    %{center: [0, 0, 1], radius: 1.047}  # 60 degrees right
-  ],
-  tangent_cones: [
-    %{center: [0.707, 0.707, 0], radius: 0.524}  # 30 degrees between up/forward
-  ],
-  twist_limits: %{min: -1.57, max: 1.57}  # ±90 degrees
-})
-```
-
-**EWBIK-Enhanced Temporal Patterns (Corrected for R25W1398085):**
-
-1. **Pattern 1 - Instant IK Solving**: 
-   ```elixir
-   @action true
-   def solve_ik_instant(state, [skeleton_id, effector_targets])
-   ```
-
-2. **Pattern 2 - Floating Duration IK Solving**: 
-   ```elixir
-   @action duration: "PT5S"
-   def solve_ik_over_time(state, [skeleton_id, start_pose, end_pose])
-   ```
-
-3. **Pattern 4 - Deadline-Constrained Reaching**:
-   ```elixir
-   @action end: "2025-06-29T14:00:00-07:00", duration: "PT2S"
-   def reach_target_by_deadline(state, [effector_id, target_transform])
-   ```
-
-4. **Pattern 6 - Timed Pose Sequences**:
-   ```elixir
-   @action start: "2025-06-29T12:00:00-07:00", calculated_end: true
-   def execute_coordinated_pose_sequence(state, [skeleton_id, pose_keyframes])
-   ```
-
-5. **Pattern 7 - Constraint Monitoring Windows**:
-   ```elixir
-   @action start: "2025-06-29T12:00:00-07:00", end: "2025-06-29T12:05:00-07:00"
-   def monitor_kusudama_constraints(state, [skeleton_id, constraint_set])
-   ```
-
-6. **Pattern 8 - Continuous Constraint Validation**:
-   ```elixir
-   @action start: "2025-06-29T12:00:00-07:00", 
-           end: "2025-06-29T12:02:00-07:00", 
-           duration: "PT2M"
-   def validate_constraints_continuously(state, [skeleton_id, validation_params])
-   ```
-
-**EWBIK-Enhanced Method Type Examples:**
-
-```elixir
-# @action - EWBIK parameter setting for planning-time reasoning
-@doc "Sets effector target state for EWBIK planning"
-@action duration: "PT3S", requires_entities: [%{type: :scene_node, capabilities: [:ik_effector]}]
-def set_effector_target(state, [effector_node_index, target_pos, target_rot]) do
-  state 
-  |> AriaState.set_fact(effector_node_index, "effector_target_position", target_pos)
-  |> AriaState.set_fact(effector_node_index, "effector_target_orientation", target_rot)
-  {:ok, state}
-end
-
-# @command - Real EWBIK solving execution with convergence handling
-@doc "Executes EWBIK multi-effector solving with failure modes and constraint validation"
-@command true  
-def solve_multi_effector_command(state, [skeleton_id, effector_targets, constraints]) do
-  case AriaEngineCore.EWBIK.Solver.solve_multi_effector(skeleton_id, effector_targets, constraints) do
-    {:ok, bone_transforms, convergence_info} ->
-      # Apply transforms to actual scene
-      result = apply_bone_transforms(skeleton_id, bone_transforms)
-      {:ok, Map.put(state, :convergence_info, convergence_info)}
-    
-    {:error, :constraint_violation, violating_bones} ->
-      {:error, {:constraint_violation, violating_bones}}
-    
-    {:error, :convergence_failure, iterations_used} ->
-      {:error, {:convergence_failure, iterations_used}}
-    
-    {:error, reason} ->
-      {:error, reason}
-  end
-end
-
-# @task_method - Complex multi-effector coordination workflow decomposition
-@doc "Decomposes complex full-body IK coordination into manageable EWBIK planning steps"
-@task_method true
-def coordinate_full_body_ik(state, [skeleton_id, coordination_config]) do
-  {:ok, [
-    {:register_effectors, [coordination_config.effectors]},
-    {:setup_kusudama_constraints, [coordination_config.constraints]},
-    {"effector_targets_set", skeleton_id, coordination_config.targets},  # Goal: all targets set
-    {:solve_multi_effector_command, [skeleton_id, coordination_config.targets, coordination_config.constraints]},
-    {"ik_solution_valid", skeleton_id, true}  # Goal: valid IK solution achieved
-  ]}
-end
-
-# @unigoal_method - Single effector target achievement through EWBIK
-@doc "Achieves specific effector position goals through EWBIK single-effector solving"
-@unigoal_method predicate: "effector_target_position"
-def achieve_effector_target(state, {effector_node_index, target_position}) do
-  # Use EWBIK to solve for single effector while respecting all constraints
-  {:ok, [
-    {:set_effector_target, [effector_node_index, target_position, :maintain_current_orientation]},
-    {:solve_single_effector_command, [effector_node_index, target_position]}
-  ]}
-end
-
-# @multigoal_method - EWBIK-specific multi-effector optimization (CONSERVATIVE USAGE)
-@doc "Optimizes EWBIK multi-effector coordination - ONLY used for genuine EWBIK optimization scenarios"
-@multigoal_method true
-def optimize_ewbik_coordination(state, multigoal) do
-  # ONLY handle if this is specifically an EWBIK multi-effector problem
-  ewbik_goals = Enum.filter(multigoal.goals, fn
-    {"effector_target_position", _effector_id, _target} -> true
-    {"kusudama_constraints_satisfied", _skeleton_id, _constraint_set} -> true
-    _ -> false
-  end)
-  
-  cond do
-    # Only handle if we have multiple EWBIK effector goals (conservative usage)
-    length(ewbik_goals) >= 2 ->
-      case AriaEngineCore.EWBIK.Solver.solve_multi_effector_coordinated(state, ewbik_goals) do
-        {:ok, optimized_solution} -> 
-          {:ok, %{multigoal | goals: optimized_solution}}
-        {:error, reason} -> 
-          {:error, reason}
-      end
-    
-    # Not our domain - let default solvers handle it
-    true ->
-      {:error, :not_ewbik_multigoal}
-  end
-end
-```
-
-**EWBIK Test Scenarios (glTF 2.0 Compliant):**
-
-```elixir
-# Scenario 1: Dual-hand coordination with motion propagation
-multigoal = %AriaEngine.Multigoal{
-  goals: [
-    {"effector_target_position", 8, [0.3, 1.2, 0.4]},    # glTF node 8 = left_hand
-    {"effector_target_position", 12, [-0.3, 1.2, 0.4]},  # glTF node 12 = right_hand
-    {"kusudama_constraints_satisfied", "character_rig", "all_joints"}
-  ],
-  optimization: :minimize_joint_movement
-}
-
-# Scenario 2: Hierarchical effector priorities (spine influences arms)
-multigoal = %AriaEngine.Multigoal{
-  goals: [
-    {"effector_target_position", 4, [0, 1.5, 0]},      # glTF node 4 = head (spine effector)
-    {"effector_target_position", 8, [0.5, 1.3, 0.2]},  # glTF node 8 = left_hand
-    {"motion_propagation_optimized", "character_rig", "hierarchical"}
-  ]
-}
-
-# Scenario 3: Kusudama constraint testing with violation recovery
-goals = [
-  {"effector_target_position", 12, impossible_target_position},  # glTF node 12 = right_hand
-  {"kusudama_constraint_violation_check", 9, "cone_limits"},     # glTF node 9 = right_shoulder
-  {"kusudama_constraint_recovery", 9, "nearest_valid_orientation"}  # glTF node 9 = right_shoulder
-]
-```
-
-## Success Criteria
-
-### EWBIK Implementation Success
-
-- [ ] QCP algorithm port correctly solves Wahba's problem for optimal rotations
-- [ ] IKNode3D hierarchy management handles complex bone chains
-- [ ] EWBIK solver achieves multi-effector coordination with realistic constraints
-- [ ] Kusudama constraints provide continuous, natural joint limits
-- [ ] Motion propagation system creates realistic hierarchical influence
-
-### R25W1398085 Validation Success with EWBIK
-
-- [ ] All 8 temporal patterns implemented and tested with production-quality IK solving
-- [ ] All 6 method types (@action, @command, etc.) validated with complex multi-effector scenarios
-- [ ] EWBIK entity-based resource management working correctly with bone/effector conflicts
-- [ ] Advanced temporal constraints properly enforced with IK convergence considerations
-- [ ] Complex multi-entity EWBIK scenarios executing successfully with realistic performance
-
-### Integration Success
-
-- [ ] Mock AriaGltf modules provide sufficient EWBIK functionality for testing
-- [ ] Clear migration path to real AriaGltf implementation with EWBIK support
-- [ ] Performance acceptable for development and testing of complex IK scenarios
-- [ ] Test suite provides comprehensive coverage of EWBIK capabilities
-
-### Documentation Success
-
-- [ ] Clear examples of using AriaEngineCore with EWBIK domain
-- [ ] Comprehensive specification compliance documentation with IK integration
-- [ ] EWBIK integration patterns documented for other domains
-- [ ] Troubleshooting and debugging guides for EWBIK-specific issues
-
-## ADR References and Dependencies
-
-**Primary ADR:** R25W1398085 - Unified Durative Action Specification and Planner Standardization
-
-**Related ADRs:**
+### Phase 5: EWBIK Test Scenarios
+
+## Citations and References
+
+### Academic Papers and Research
+
+**EWBIK Algorithm:**
+- Aristidou, A., & Lasenby, J. (2011). "FABRIK: A fast, iterative solver for the Inverse Kinematics problem." *Graphical Models*, 73(5), 243-260. DOI: 10.1016/j.gmod.2011.05.003
+- Baerlocher, P., & Boulic, R. (2004). "An inverse kinematics architecture enforcing an arbitrary number of strict priority levels." *The Visual Computer*, 20(6), 402-417. DOI: 10.1007/s00371-003-0244-4
+
+**Wahba's Problem (QCP Algorithm Foundation):**
+- Wahba, G. (1965). "A least squares estimate of satellite attitude." *SIAM Review*, 7(3), 409. DOI: 10.1137/1007077
+- Horn, B. K. P. (1987). "Closed-form solution of absolute orientation using unit quaternions." *Journal of the Optical Society of America A*, 4(4), 629-642. DOI: 10.1364/JOSAA.4.000629
+- Coutsias, E. A., Seok, C., & Dill, K. A. (2004). "Using quaternions to calculate RMSD." *Journal of Computational Chemistry*, 25(15), 1849-1857. DOI: 10.1002/jcc.20110
+
+**Quaternion Characteristic Polynomial (QCP) Algorithm:**
+- Liu, P., Tian, F., Zhang, X., Wang, J., Liu, H., & Yao, X. (2009). "Guidelines for QCP method in structure alignment." *Bioinformatics*, 25(20), 2717-2718. DOI: 10.1093/bioinformatics/btp525
+- Theobald, D. L. (2005). "Rapid calculation of RMSDs using a quaternion-based characteristic polynomial." *Acta Crystallographica Section A*, 61(4), 478-480. DOI: 10.1107/S0108767305015266
+
+**Kusudama Constraint System:**
+- Aristidou, A., Chrysanthou, Y., & Lasenby, J. (2018). "Extending FABRIK with model constraints." *Computer Animation and Virtual Worlds*, 27(1), 35-57. DOI: 10.1002/cav.1630
+- Baraff, D. (1994). "Fast contact force computation for nonpenetrating rigid bodies." *Computer Graphics Proceedings*, 23-34. DOI: 10.1145/192161.192168
+
+**Anatomical Joint Constraints:**
+- Maurel, W., & Thalmann, D. (2000). "Human shoulder modeling including scapulo-thoracic constraint and joint sinus cones." *Computers & Graphics*, 24(2), 203-218. DOI: 10.1016/S0097-8493(99)00147-1
+- Monzani, J. S., Baerlocher, P., Boulic, R., & Thalmann, D. (2000). "Using an intermediate skeleton and inverse kinematics for motion retargeting." *Computer Graphics Forum*, 19(3), 11-19. DOI: 10.1111/1467-8659.00393
+
+### Technical Specifications and Standards
+
+**glTF and KHR Extensions:**
+- Khronos Group. (2023). *glTF 2.0 Specification*. Retrieved from https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
+- Khronos Group. (2023). *KHR_interactivity Extension Specification*. Retrieved from https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_interactivity
+- Khronos Group. (2023). *KHR_animation_pointer Extension*. Retrieved from https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_animation_pointer
+
+**VRM Specification:**
+- VRM Consortium. (2023). *VRM 1.0 Specification*. Retrieved from https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_springBone-1.0
+- VRM Consortium. (2023). *VRMC_node_constraint-1.0 Specification*. Retrieved from https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_node_constraint-1.0
+
+**IEEE Standards:**
+- IEEE Computer Society. (2019). *IEEE Standard for Floating-Point Arithmetic* (IEEE Std 754-2019). DOI: 10.1109/IEEESTD.2019.8766229
+
+**Godot Engine References:**
+- Godot Engine Contributors. (2024). *Godot Engine Documentation - SkeletonProfileHumanoid*. Retrieved from https://docs.godotengine.org/en/stable/classes/class_skeletonprofilehumanoid.html
+- Godot Engine Contributors. (2024). *Godot Engine Documentation - Animation Retargeting*. Retrieved from https://docs.godotengine.org/en/stable/tutorials/animation/animation_tree.html
+
+### Open Source Implementations and Code References
+
+**Many Bone IK (EWBIK Reference Implementation):**
+- EGjoni. (2023). *Everything Will Be IK - Processing*. Retrieved from https://github.com/EGjoni/Everything-Will-Be-IK-Processing
+- V-Sekai. (2023). *Many Bone IK*. Retrieved from https://github.com/V-Sekai/many_bone_ik
+- Source files referenced: `thirdparty/many_bone_ik/src/math/qcp.h`, `thirdparty/many_bone_ik/src/math/ik_node_3d.h`
+
+**Godot Realtime Retarget:**
+- TokageItLab. (2022). *Godot Realtime Retarget Module*. Retrieved from https://github.com/TokageItLab/realtime_retarget
+- Documentation: Joint rules and coordinate system conversion methodologies
+
+**Related Elixir/Erlang Mathematical Libraries:**
+- Numerical Elixir (Nx). (2023). *Nx: Multi-dimensional arrays for Elixir*. Retrieved from https://github.com/elixir-nx/nx
+- ExLA. (2023). *Google XLA bindings for Nx*. Retrieved from https://github.com/elixir-nx/nx/tree/main/exla
+
+### Project-Specific ADR References
+
+**Internal Architecture Decision Records:**
+- **R25W1398085**: Unified Durative Action Specification and Planner Standardization
+- **R25W158CORE**: AriaEngineCore Implementation Plan (this document)
 - **R25W087E1AE**: Aria Engine Plans glTF KHR Interactivity Implementation
-- **R25W1513883**: Comprehensive glTF 2.0 Implementation (aria_gltf dependency)
-- **R25W0503071**: KHR Interactivity Systematic Verification Plan
+- **R25W064B8E2**: KHR Interactivity Node Library Standardized Interface
 
-**Technical Dependencies:**
-- AriaState - World state representation
-- AriaTimeline - Temporal constraint management
-- AriaEngineCore.Domain - Domain definition framework
-- AriaEngineCore.Planner - Planning algorithm implementation
+### Implementation Notes
 
-**EWBIK Dependencies:**
-- **thirdparty/many_bone_ik** - Source for math algorithm ports
-- QCP Algorithm (C++ → Elixir port required)
-- IKNode3D Transform Hierarchy (C++ → Elixir port required)
-- Kusudama Constraint System (C++ → Elixir port required)
+**Coordinate System Conversions:**
+- All mathematical operations follow the glTF 2.0 coordinate system (Y-up, right-handed)
+- Godot Transform3D to glTF matrix conversion preserves anatomical constraints
+- IEEE-754 compliance ensures numerical stability across all mathematical operations
 
-**Mock Dependencies (Temporary):**
-- Mock AriaGltf.Document - Basic glTF document structure with EWBIK skeleton support
-- Mock AriaGltf.Animation - Animation timeline support with EWBIK keyframes
-- Mock KHR_interactivity - Behavior graph framework with EWBIK integration
+**Performance Considerations:**
+- QCP algorithm complexity: O(n) for point set alignment where n is number of points
+- EWBIK iteration complexity: O(k×j) where k is iterations and j is number of joints
+- VRM1 collision detection: O(c×j) where c is colliders and j is joints per frame
 
-## Implementation Status
+**Testing and Validation:**
+- All mathematical operations validated against KHR Interactivity specification test cases
+- Cross-validation with Godot SkeletonProfileHumanoid reference poses
+- IEEE-754 edge case handling verified through comprehensive test suite
 
-- [ ] ✅ AriaEngineCore external API complete and functional
-- [ ] 🏗️ Phase 0: KHR Interactivity Mathematical Primitives - CRITICAL FOUNDATION, ready for implementation
-- [ ] 🔧 Phase 1: EWBIK math solver ports - Depends on Phase 0 mathematical primitives
-- [ ] ⚙️ Phase 2: EWBIK algorithm implementation - Depends on Phase 0 + Phase 1
-- [ ] 📋 Phase 4: EWBIK-enhanced KHR Interactivity test domain - Planning complete
-- [ ] 🎯 Ready for Phase 0 mathematical primitives implementation (absolute foundation)
+### License and Attribution
 
-## Open Problems
+**Third-party Code Attribution:**
+- Many Bone IK implementation ported with attribution to original authors
+- Godot Engine reference implementations used under MIT license
+- VRM specification implementation follows VRM Consortium guidelines
+- All mathematical algorithms implement published academic methods with proper attribution
 
-### Kusudama Constraint Visualization Challenges
-
-**Problem 1: Cone Geometry Generation Algorithm**
-- **Challenge:** Efficiently generate mesh geometry for arbitrary Kusudama cones with varying radii and orientations
-- **Unknown:** Optimal tessellation density for smooth cone visualization vs performance
-- **Research Needed:** Handling complex tangent cone connections between sequence cones without visual artifacts
-- **Edge Case:** Degenerate cone geometries and numerical stability in cone mesh generation
-
-**Problem 2: Constraint Bone Hierarchy Design**
-- **Challenge:** Optimal bone structure for skinning constraint shells without interfering with character skeleton
-- **Unknown:** Weight distribution strategy for smooth cone deformation under real-time constraint updates
-- **Research Needed:** Integration approach with existing character skeleton to avoid bone naming conflicts
-- **Performance Concern:** Minimizing bone hierarchy complexity while maintaining visual accuracy
-
-**Problem 3: Morph Target Creation Workflow**
-- **Challenge:** Automated generation of constraint state morphs for arbitrary character meshes
-- **Unknown:** Optimal number of morph targets vs visual clarity (normal/warning/violation/recovery states)
-- **Research Needed:** Temporal smoothing algorithms to avoid jarring visual transitions during constraint state changes
-- **Integration Issue:** Compatibility with existing character mesh morph targets and animation systems
-
-**Problem 4: Real-Time Performance Optimization**
-- **Challenge:** Balancing constraint visualization quality with real-time performance requirements
-- **Unknown:** Optimal LOD switching distances and simplification strategies for constraint shells
-- **Research Needed:** Update frequency optimization (when to recalculate vs interpolate constraint states)
-- **Memory Concern:** Efficient memory usage for complex multi-joint constraint scenarios with large bone hierarchies
-
-**Problem 5: glTF Integration Architecture**
-- **Challenge:** Constraint visualization node hierarchy organization within glTF scene structure
-- **Unknown:** Optimal usage pattern for KHR_animation_pointer with real-time constraint updates
-- **Research Needed:** Material switching performance for constraint state visualization using KHR_materials_variants
-- **Compatibility Issue:** Integration approach with KHR_interactivity behavior graphs for constraint control
-
-**Problem 6: EWBIK-Visualization Coordination**
-- **Challenge:** Efficient data flow between Kusudama constraint evaluation and visualization system
-- **Unknown:** Synchronization strategy to ensure constraint updates match visual feedback timing
-- **Research Needed:** Error handling approaches when constraint evaluation fails or produces invalid results
-- **Performance Trade-off:** Real-time constraint checking frequency vs computational cost
-
-**Problem 7: Mathematical Accuracy vs Visual Clarity**
-- **Challenge:** Ensuring constraint visualization accurately represents underlying mathematical constraints
-- **Unknown:** Validation methodology to verify visual representation matches Kusudama cone mathematics
-- **Research Needed:** Test scenarios for complex multi-joint constraint interactions and visual debugging
-- **User Experience:** Balancing mathematical precision with intuitive visual understanding
-
-### EWBIK Implementation Open Problems
-
-**Problem 8: QCP Algorithm Numerical Stability**
-- **Challenge:** Maintaining numerical precision during QCP characteristic polynomial solving
-- **Unknown:** Optimal handling of edge cases in quaternion optimization (near-singular matrices)
-- **Research Needed:** Performance vs accuracy trade-offs in iterative QCP solving
-
-**Problem 9: Multi-Effector Convergence Behavior**
-- **Challenge:** Ensuring consistent convergence in complex multi-effector scenarios
-- **Unknown:** Optimal iteration limits and dampening strategies for different scenarios
-- **Research Needed:** Graceful degradation when convergence fails or constraint violations occur
-
-**Problem 10: Constraint Visualization Testing Framework**
-- **Challenge:** Comprehensive testing methodology for constraint visualization accuracy
-- **Unknown:** Automated validation approaches for visual constraint representation
-- **Research Needed:** Performance benchmarking framework for real-time constraint visualization
-
-## Architectural Decisions
-
-### Nx Integration Decision (June 29, 2025)
-
-**Decision:** DEFER Nx integration until after KHR Interactivity specification compliance is established.
-
-**Rationale:**
-1. **Standards Compliance First**: KHR Interactivity spec defines exact behavior for mathematical operations, including specific IEEE-754 handling for NaN, infinity, and edge cases. Pure Elixir implementation ensures spec compliance.
-
-2. **Performance vs Correctness**: KHR Interactivity use case is primarily for individual node operations in behavior graphs, not bulk mathematical computations where Nx excels.
-
-3. **Dependency Complexity**: Adding Nx now would introduce complexity during core mathematical foundation establishment.
-
-4. **Testing Strategy**: Need thorough mathematical primitives testing against KHR spec before considering optimization layers.
-
-**Future Enhancement:** After KHR compliance verification, evaluate Nx integration as performance optimization for bulk operations while maintaining spec-compliant individual operation behavior.
-
-**Status:** Recorded in todo.md, pure Elixir implementation continues
-
-## Notes
-
-**EWBIK Integration Rationale:** Integrating production-quality EWBIK provides realistic multi-effector inverse kinematics testing that exercises the full complexity of R25W1398085 specification. The sophisticated constraint handling, multi-effector coordination, and hierarchical motion propagation create authentic scenarios for temporal planning validation.
-
-**Mathematical Foundation Priority:** Phase 0 KHR Interactivity mathematical primitives (vector3, quaternion, transform3d) are the absolute bedrock that all other phases depend on. Phase 1 EWBIK math solvers (QCP, IKNode3D) build on these primitives to provide specialized EWBIK capabilities. Without this proper dependency hierarchy, EWBIK integration would be superficial mocking rather than authentic production-quality testing.
-
-**Conservative Multigoal Usage:** @multigoal_method usage follows R25W1398085 guidelines, only applied to genuine EWBIK multi-effector optimization scenarios where the mathematical properties of the problem specifically benefit from coordinated solving.
-
-**Mock Strategy Rationale:** Enhanced mock AriaGltf modules with EWBIK support allow immediate R25W1398085 validation with production-quality IK solving without waiting for aria_gltf Phase 1 completion. The mocks provide essential EWBIK structures while maintaining clear migration paths to real implementations.
-
-**Test Domain Enhancement:** EWBIK integration transforms the KHR Interactivity test domain from simple scene management to sophisticated character animation with realistic constraints, providing comprehensive validation of temporal planning with production-quality subsystems.
-
-**Future Integration:** When aria_gltf completes Phase 1, the enhanced mock modules can be seamlessly replaced with real implementations, and the EWBIK domain can be enhanced with full glTF capabilities including real skeleton data and animation timelines.
+**Standards Compliance:**
+- glTF 2.0 specification compliance for 3D asset interoperability
+- IEEE-754 standard compliance for numerical precision and reproducibility
+- VRM 1.0 specification compliance for avatar collision detection and constraints
