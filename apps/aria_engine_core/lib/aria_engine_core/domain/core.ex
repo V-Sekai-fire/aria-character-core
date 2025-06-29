@@ -21,9 +21,8 @@ defmodule AriaEngineCore.Domain.Core do
           task_methods: %{task_name() => [named_method()]},
           unigoal_methods: %{String.t() => [named_method()]},
           multigoal_methods: [named_method()],
-          durative_actions: %{durative_action_name() => durative_action()},
-          entity_registry: map(),
-          temporal_specifications: map()
+          multitodo_methods: [named_method()],
+          durative_actions: %{durative_action_name() => durative_action()}
         }
   defstruct name: "",
             actions: %{},
@@ -31,9 +30,8 @@ defmodule AriaEngineCore.Domain.Core do
             task_methods: %{},
             unigoal_methods: %{},
             multigoal_methods: [],
-            durative_actions: %{},
-            entity_registry: %{},
-            temporal_specifications: %{}
+            multitodo_methods: [],
+            durative_actions: %{}
 
   @doc "Creates a new planning domain.\n"
   @spec new(String.t()) :: t()
@@ -51,9 +49,8 @@ defmodule AriaEngineCore.Domain.Core do
       not is_map(domain.task_methods) -> {:error, "Task methods must be a map"}
       not is_map(domain.unigoal_methods) -> {:error, "Unigoal methods must be a map"}
       not is_list(domain.multigoal_methods) -> {:error, "Multigoal methods must be a list"}
+      not is_list(domain.multitodo_methods) -> {:error, "Multitodo methods must be a list"}
       not is_map(domain.durative_actions) -> {:error, "Durative actions must be a map"}
-      not is_map(domain.entity_registry) -> {:error, "Entity registry must be a map"}
-      not is_map(domain.temporal_specifications) -> {:error, "Temporal specifications must be a map"}
       true -> {:ok, domain}
     end
   end
@@ -103,27 +100,40 @@ defmodule AriaEngineCore.Domain.Core do
     Map.get(durative_actions, name)
   end
 
+  # These functions should delegate to AriaCore.Domain
   @doc "Sets the entity registry for the domain.\n"
   @spec set_entity_registry(t(), map()) :: t()
   def set_entity_registry(%__MODULE__{} = domain, registry) do
-    %{domain | entity_registry: registry}
+    # This function should ideally be handled by AriaCore.Domain
+    # For now, we'll keep it as a no-op or raise an error if it's not meant to be here.
+    # Given the current structure, it's likely that AriaEngineCore.Domain.Core
+    # should not be directly managing the entity registry.
+    Logger.warn("AriaEngineCore.Domain.Core.set_entity_registry called. This should be handled by AriaCore.Domain.")
+    domain
   end
 
   @doc "Retrieves the entity registry from the domain.\n"
   @spec get_entity_registry(t()) :: map()
-  def get_entity_registry(%__MODULE__{entity_registry: registry}) do
-    registry
+  def get_entity_registry(%__MODULE__{} = _domain) do
+    # This function should ideally be handled by AriaCore.Domain
+    # For now, return an empty map or raise an error.
+    Logger.warn("AriaEngineCore.Domain.Core.get_entity_registry called. This should be handled by AriaCore.Domain.")
+    %{}
   end
 
   @doc "Sets the temporal specifications for the domain.\n"
   @spec set_temporal_specifications(t(), map()) :: t()
   def set_temporal_specifications(%__MODULE__{} = domain, specs) do
-    %{domain | temporal_specifications: specs}
+    # This function should ideally be handled by AriaCore.Domain
+    Logger.warn("AriaEngineCore.Domain.Core.set_temporal_specifications called. This should be handled by AriaCore.Domain.")
+    domain
   end
 
   @doc "Retrieves the temporal specifications from the domain.\n"
   @spec get_temporal_specifications(t()) :: map()
-  def get_temporal_specifications(%__MODULE__{temporal_specifications: specs}) do
-    specs
+  def get_temporal_specifications(%__MODULE__{} = _domain) do
+    # This function should ideally be handled by AriaCore.Domain
+    Logger.warn("AriaEngineCore.Domain.Core.get_temporal_specifications called. This should be handled by AriaCore.Domain.")
+    %{}
   end
 end

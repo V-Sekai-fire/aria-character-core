@@ -77,8 +77,8 @@ defmodule AriaEngineCore.Domain.Methods do
   """
   @spec add_multigoal_method(map(), String.t(), function()) :: map()
   def add_multigoal_method(domain, method_name, method_fn) do
-    methods = Map.get(domain, :multigoal_methods, %{})
-    updated_methods = Map.put(methods, method_name, method_fn)
+    methods = Map.get(domain, :multigoal_methods, [])
+    updated_methods = [{method_name, method_fn} | methods]
     Map.put(domain, :multigoal_methods, updated_methods)
   end
 
@@ -96,8 +96,8 @@ defmodule AriaEngineCore.Domain.Methods do
   """
   @spec add_multitodo_method(map(), String.t(), function()) :: map()
   def add_multitodo_method(domain, method_name, method_fn) do
-    methods = Map.get(domain, :multitodo_methods, %{})
-    updated_methods = Map.put(methods, method_name, method_fn)
+    methods = Map.get(domain, :multitodo_methods, [])
+    updated_methods = [{method_name, method_fn} | methods]
     Map.put(domain, :multitodo_methods, updated_methods)
   end
 
@@ -133,17 +133,17 @@ defmodule AriaEngineCore.Domain.Methods do
   @doc """
   Get all multigoal methods.
   """
-  @spec get_multigoal_methods(map()) :: map()
+  @spec get_multigoal_methods(map()) :: list()
   def get_multigoal_methods(domain) do
-    Map.get(domain, :multigoal_methods, %{})
+    Map.get(domain, :multigoal_methods, [])
   end
 
   @doc """
   Get all multitodo methods.
   """
-  @spec get_multitodo_methods(map()) :: map()
+  @spec get_multitodo_methods(map()) :: list()
   def get_multitodo_methods(domain) do
-    Map.get(domain, :multitodo_methods, %{})
+    Map.get(domain, :multitodo_methods, [])
   end
 
   @doc """
@@ -159,21 +159,43 @@ defmodule AriaEngineCore.Domain.Methods do
   """
   @spec get_method(map(), String.t()) :: function() | nil
   def get_method(domain, method_name) do
-    # Search through all method types
-    all_methods = %{}
-    |> Map.merge(Map.get(domain, :task_methods, %{}))
-    |> Map.merge(Map.get(domain, :multigoal_methods, %{}))
-    |> Map.merge(Map.get(domain, :multitodo_methods, %{})) # Add multitodo methods
-
-    # Also search unigoal methods
-    unigoal_methods = Map.get(domain, :unigoal_methods, %{})
-    unigoal_flat = Enum.reduce(unigoal_methods, %{}, fn {_goal_type, methods}, acc ->
-      Map.merge(acc, methods)
+    # Search through task methods (map of task_name -> list of {name, fn})
+    task_methods = Map.get(domain, :task_methods, %{})
+    task_result = Enum.find_value(task_methods, fn {_task_name, methods} ->
+      Enum.find_value(methods, fn {name, fn_val} ->
+        if name == method_name, do: fn_val, else: nil
+      end)
     end)
 
-    all_methods
-    |> Map.merge(unigoal_flat)
-    |> Map.get(method_name)
+    if task_result do
+      task_result
+    else
+      # Search through unigoal methods (map of goal_type -> map of name -> fn)
+      unigoal_methods = Map.get(domain, :unigoal_methods, %{})
+      unigoal_result = Enum.find_value(unigoal_methods, fn {_goal_type, methods} ->
+        Map.get(methods, method_name)
+      end)
+
+      if unigoal_result do
+        unigoal_result
+      else
+        # Search through multigoal methods (list of {name, fn})
+        multigoal_methods = Map.get(domain, :multigoal_methods, [])
+        multigoal_result = Enum.find_value(multigoal_methods, fn {name, fn_val} ->
+          if name == method_name, do: fn_val, else: nil
+        end)
+
+        if multigoal_result do
+          multigoal_result
+        else
+          # Search through multitodo methods (list of {name, fn})
+          multitodo_methods = Map.get(domain, :multitodo_methods, [])
+          Enum.find_value(multitodo_methods, fn {name, fn_val} ->
+            if name == method_name, do: fn_val, else: nil
+          end)
+        end
+      end
+    end
   end
 
   @doc """
@@ -187,10 +209,10 @@ defmodule AriaEngineCore.Domain.Methods do
   def add_method(domain, method_name, %{type: :unigoal_method, predicate: predicate, goal_fn: fn_val}) do
     add_unigoal_method(domain, predicate, method_name, fn_val)
   end
-  def add_method(domain, method_name, %{type: :multigoal_method, goal_fn: fn_val}) do
+  def add_method(domain, method_name, %{type: :multigoal_method, multigoal_fn: fn_val}) do
     add_multigoal_method(domain, method_name, fn_val)
   end
-  def add_method(domain, method_name, %{type: :multitodo_method, todo_fn: fn_val}) do
+  def add_method(domain, method_name, %{type: :multitodo_method, multitodo_fn: fn_val}) do
     add_multitodo_method(domain, method_name, fn_val)
   end
   def add_method(domain, method_name, _other) do

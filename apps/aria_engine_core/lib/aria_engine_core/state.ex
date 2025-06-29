@@ -49,6 +49,9 @@ defmodule AriaEngineCore.State do
     RelationalState.set_fact(state, predicate, subject, fact_value)
   end
 
+  defdelegate has_subject?(state, predicate, subject), to: RelationalState
+  defdelegate get_subjects_with_fact(state, predicate, fact_value), to: RelationalState
+
   @doc "Removes a triple from the state."
   @spec remove_fact(t(), predicate(), subject()) :: t()
   def remove_fact(state, predicate, subject) do
