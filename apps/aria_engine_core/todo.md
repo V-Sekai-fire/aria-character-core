@@ -50,13 +50,41 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
   - [ ] Support parent-child bone relationships
   - [ ] Scale management and transform composition
 
-- [ ] **Supporting Mathematical Primitives**
-  - [ ] Create `lib/aria_engine_core/math/vector3.ex`
-  - [ ] Create `lib/aria_engine_core/math/quaternion.ex`
-  - [ ] Create `lib/aria_engine_core/math/transform3d.ex`
-  - [ ] Implement all mathematical operations needed by EWBIK
-  - [ ] Ensure numerical precision and stability
-  - [ ] Performance optimizations for real-time use
+- [ ] **KHR Interactivity Mathematical Primitives (Standards-Based)**
+  - [ ] Create `lib/aria_engine_core/math/vector3.ex` - Implements glTF KHR Interactivity `float3` operations
+    - [ ] Port `math/length` - Vector length using IEEE-754 hypot for numerical stability
+    - [ ] Port `math/normalize` - Vector normalization with validity checking  
+    - [ ] Port `math/dot` - Component-wise dot product with NaN/infinity handling
+    - [ ] Port `math/cross` - 3D cross product following KHR spec
+    - [ ] Port `math/add`, `math/sub`, `math/mul` - Component-wise arithmetic
+    - [ ] Port `math/min`, `math/max`, `math/clamp` - Component-wise comparison operations
+  - [ ] Create `lib/aria_engine_core/math/quaternion.ex` - Implements glTF KHR Interactivity `float4` quaternion operations
+    - [ ] Port `math/quatConjugate` - Quaternion conjugation with sign handling
+    - [ ] Port `math/quatMul` - Quaternion multiplication following Hamilton product
+    - [ ] Port `math/quatAngleBetween` - Angle between quaternions (assumes unit quaternions)
+    - [ ] Port `math/quatFromAxisAngle` - Create quaternion from axis and angle (assumes unit axis)
+    - [ ] Port `math/quatToAxisAngle` - Decompose quaternion to axis and angle with threshold handling
+    - [ ] Port `math/quatFromDirections` - Create quaternion from two direction vectors (assumes unit vectors)
+    - [ ] Port `math/normalize` - Quaternion normalization with validity checking for unit quaternions
+  - [ ] Create `lib/aria_engine_core/math/transform3d.ex` - Implements glTF KHR Interactivity `float4x4` matrix operations
+    - [ ] Port `math/matmul` - Matrix multiplication following column-major order
+    - [ ] Port `math/transpose` - Matrix transpose operation
+    - [ ] Port `math/determinant` - Matrix determinant calculation with NaN/infinity handling
+    - [ ] Port `math/inverse` - Matrix inverse with validity checking and error handling
+    - [ ] Port `math/matCompose` - Compose 4x4 transform from TRS (translation, rotation, scale)
+    - [ ] Port `math/matDecompose` - Decompose 4x4 transform to TRS with validation
+    - [ ] Port `math/transform` - Vector transformation (float3/float4 by matrix)
+  - [ ] **Arithmetic and Utility Operations**
+    - [ ] Port `math/sin`, `math/cos`, `math/tan` - Trigonometric functions with special value handling
+    - [ ] Port `math/asin`, `math/acos`, `math/atan`, `math/atan2` - Inverse trigonometric functions
+    - [ ] Port `math/sqrt`, `math/abs`, `math/floor`, `math/ceil` - Mathematical utility functions
+    - [ ] Port `math/mix` - Linear interpolation operation for smooth blending
+    - [ ] All operations follow IEEE-754 standard for NaN, infinity, and special case handling
+  - [ ] **Standards Compliance and Testing**
+    - [ ] Ensure exact compliance with glTF KHR Interactivity mathematical specification
+    - [ ] Implement IEEE-754 numerical precision and stability requirements
+    - [ ] Performance optimizations while maintaining specification compliance
+    - [ ] Comprehensive test suite validating against KHR Interactivity test cases
 
 ### Phase 2: EWBIK Algorithm Implementation (HIGH PRIORITY)
 
