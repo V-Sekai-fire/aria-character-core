@@ -52,8 +52,20 @@ defmodule AriaEngineCore.Mocks.PlannerMockHelpers do
 
   @doc """
   Sets up a planning failure mock that returns an error.
+  For plan/3 only (1 coordinator call).
   """
   def setup_planning_failure_mock do
+    expect(PlannerMock, :new_coordinator, fn -> :mock_coordinator end)
+    expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
+      {:error, "Planning failed"}
+    end)
+  end
+
+  @doc """
+  Sets up a planning failure mock for run_lazy operations.
+  For run_lazy/3 (1 coordinator call, no execution).
+  """
+  def setup_planning_failure_mock_for_run_lazy do
     expect(PlannerMock, :new_coordinator, fn -> :mock_coordinator end)
     expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
       {:error, "Planning failed"}
@@ -165,8 +177,20 @@ defmodule AriaEngineCore.Mocks.PlannerMockHelpers do
 
   @doc """
   Sets up planning failure expectations with a specific reason.
+  For plan/3 only (1 coordinator call).
   """
   def expect_planning_failure(reason) do
+    expect(PlannerMock, :new_coordinator, fn -> :mock_coordinator end)
+    expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
+      {:error, reason}
+    end)
+  end
+
+  @doc """
+  Sets up planning failure expectations for run_lazy operations.
+  For run_lazy/3 (1 coordinator call, no execution).
+  """
+  def expect_planning_failure_for_run_lazy(reason) do
     expect(PlannerMock, :new_coordinator, fn -> :mock_coordinator end)
     expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
       {:error, reason}
@@ -239,5 +263,25 @@ defmodule AriaEngineCore.Mocks.PlannerMockHelpers do
           end)
       end
     end
+  end
+
+  @doc """
+  Sets up execution timeout mock for testing action execution failures.
+  """
+  def setup_execution_timeout_mock do
+    expect(PlannerMock, :new_coordinator, 2, fn -> :mock_coordinator end)
+    expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
+      {:ok, %{
+        "type" => "solution_tree",
+        "root_id" => "root",
+        "actions" => [
+          %{"name" => "action1", "args" => ["arg1"]},
+          %{"name" => "action2", "args" => ["arg2"]}
+        ]
+      }}
+    end)
+    expect(PlannerMock, :execute, fn _coordinator, _domain, _state, _solution_tree ->
+      {:error, :action_timeout}
+    end)
   end
 end

@@ -77,19 +77,15 @@ defmodule AriaEngineCore.PlannerTest do
     end
 
     test "planning failure prevents execution", %{domain: domain, state: state, goals: goals} do
-      expect_planning_failure(:insufficient_resources)
+      expect_planning_failure_for_run_lazy(:insufficient_resources)
 
       {:error, :planning_failed} = AriaEngineCore.Planner.run_lazy(domain, state, goals)
     end
 
     test "execution failure after successful planning", %{domain: domain, state: state, goals: goals} do
-      setup_successful_run_lazy_mock()
+      setup_execution_timeout_mock()
 
-      # Since we're using placeholder execution that always succeeds,
-      # this test should actually succeed for now
-      {:ok, {final_state, solution_tree}} = AriaEngineCore.Planner.run_lazy(domain, state, goals)
-      assert final_state != nil
-      assert solution_tree != nil
+      {:error, :action_timeout} = AriaEngineCore.Planner.run_lazy(domain, state, goals)
     end
   end
 
