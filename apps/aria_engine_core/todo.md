@@ -123,10 +123,73 @@ mix test apps/aria_engine_core    # ⏳ Blocked until prerequisites complete
 ### Internal Module Structure
 
 - [x] AriaEngineCore.Planner module integration
-- [x] AriaEngineCore.Domain module delegation
+- [x] AriaEngineCore.Domain module delegation (⚠️ Missing implementation - warnings present)
 - [x] AriaEngineCore.State module delegation
 - [x] AriaEngineCore.Plan module for solution trees
 - [x] Proper module documentation and examples
+
+### Known Issues Requiring Resolution
+
+- ⚠️ **AriaEngineCore.Domain module missing:** Multiple undefined function warnings for Domain functions
+- ⚠️ **Joint Registry failures:** All Joint tests failing due to Registry process not starting (`:noproc` errors)
+- ⚠️ **Doctest precision issues:** Minor floating-point precision mismatches in Matrix4 and Quaternion doctests
+- ⚠️ **Compilation warnings:** Unused variables and division by zero warnings in math modules
+- ⚠️ **AriaHybridPlanner dependency:** Missing AriaHybridPlanner.Core module causing adapter warnings
+
+## Critical Issues Requiring Immediate Resolution
+
+### Issue 1: Joint Registry System Failure (CRITICAL)
+
+**Problem:** All Joint tests failing with `:noproc` errors - Registry process not starting
+
+**Impact:** Blocks Phase 2 EWBIK implementation which depends on Joint hierarchy management
+
+**Root Cause:** `AriaEngineCore.Math.Joint.ensure_registry_with_timeout/0` failing to start Registry process
+
+**Required Fix:**
+```elixir
+# Current failing approach in Joint module:
+Registry.start_link(keys: :unique, name: @registry_name)
+
+# Needs proper supervision or alternative approach
+```
+
+**Test Evidence:** 20/20 Joint tests failing with identical error pattern:
+```
+** (MatchError) no match of right hand side value: {:error, {:joint_creation_failed, %ErlangError{original: :noproc, reason: nil}}}
+```
+
+### Issue 2: AriaEngineCore.Domain Module Missing (HIGH)
+
+**Problem:** Multiple undefined function warnings for Domain module functions
+
+**Impact:** External API delegation broken, affects umbrella integration
+
+**Missing Functions:**
+- `get_task_methods/2`, `get_unigoal_methods/2`, `get_multigoal_methods/1`
+- `get_multitodo_methods/1`, `get_action_metadata/2`, `get_entity_registry/1`
+- `get_durative_action/2`, `execute_action/4`
+
+**Required:** Implement `AriaEngineCore.Domain` module or update external API delegation
+
+### Issue 3: Doctest Precision Issues (MEDIUM)
+
+**Problem:** 3 failing doctests due to floating-point precision differences
+
+**Examples:**
+- Matrix4 inverse: `-0.0` vs `0.0` differences
+- Quaternion rotation: `2.220446049250313e-16` vs `0.0`
+- Matrix4 transpose: Integer vs float type mismatches
+
+**Required:** Update doctests with appropriate tolerance or fix precision handling
+
+### Issue 4: AriaHybridPlanner Dependency (MEDIUM)
+
+**Problem:** Missing `AriaHybridPlanner.Core` module causing adapter warnings
+
+**Impact:** Planner adapter functionality incomplete
+
+**Required:** Either implement missing module or update adapter to handle missing dependency gracefully
 
 ## Implementation Plan
 
@@ -190,11 +253,12 @@ All subsequent phases depend on these fundamental mathematical operations. These
 **✅ Phase 0 Completion Status:**
 
 - ✅ Vector3 module: IEEE-754 compliant length, normalize, dot, cross, arithmetic operations
-- ✅ Quaternion module: Hamilton product, axis-angle conversions, slerp, direction-based creation
+- ✅ Quaternion module: Hamilton product, axis-angle conversions, slerp, direction-based creation  
 - ✅ Matrix4 module: Column-major multiplication, TRS composition/decomposition, transform operations
-- ✅ Math module: Unified interface with comprehensive doctest coverage
-- ✅ All 18 doctests passing with proper IEEE-754 NaN/infinity handling
-- ✅ Committed: 870e281b "Implement KHR Interactivity mathematical primitives foundation"
+- ✅ Primitives module: Complete KHR Interactivity mathematical operations (constants, arithmetic, trigonometry, etc.)
+- ⚠️ **Doctest precision issues:** 3 failing doctests due to floating-point precision (-0.0 vs 0.0, minor numerical differences)
+- ✅ All core mathematical operations implemented and functional
+- ✅ IEEE-754 compliance implemented throughout math modules
 
 ### Phase 1: EWBIK Math Solver Ports ✅ COMPLETE (June 29, 2025)
 
@@ -257,21 +321,33 @@ All subsequent phases depend on these fundamental mathematical operations. These
   - [x] **Type Safety**: Complete @spec annotations and type validation
   - [x] **IEEE-754 Compliance**: All mathematical operations follow IEEE-754 standards
 
-**✅ Phase 1 Completion Status:**
+**⚠️ Phase 1 Partial Completion Status:**
 
-- ✅ QCP Module: Production-ready Wahba's problem solver with full numerical stability
-- ✅ Joint Module: Complete bone hierarchy management with transform validation
-- ✅ Integration: Seamless integration between QCP and Joint systems
-- ✅ Robustness: Full error handling, edge case coverage, and performance optimization
-- ✅ Testing: Comprehensive test suite with 100% coverage of critical paths
-- ✅ Production Ready: All modules meet production quality standards
-- ✅ Committed: Multiple commits with iterative refinement and validation
+- ✅ QCP Module: Production-ready Wahba's problem solver with comprehensive error handling and numerical stability
+- ⚠️ **Joint Module: Implementation complete but Registry system failing** 
+  - ✅ Complete bone hierarchy management with transform validation
+  - ✅ Parent-child relationships and coordinate space conversions
+  - ✅ Dirty state tracking and transform propagation
+  - ❌ **Registry system not starting:** All 20 Joint tests failing with `:noproc` errors
+  - ❌ **Registry initialization issues:** `ensure_registry_with_timeout/0` failing to start Registry process
+- ⚠️ **Integration Issues:** Joint Registry failures prevent full EWBIK integration testing
+- ✅ QCP algorithm fully functional and tested
+- ❌ **Testing Status:** Joint tests blocked by Registry process startup failures
 
-### Phase 2: EWBIK Algorithm Implementation (HIGH PRIORITY)
+### Phase 2: EWBIK Algorithm Implementation (BLOCKED - HIGH PRIORITY)
 
 **Priority: HIGH - Core EWBIK solver for multi-effector coordination**
 
-**Dependencies:** Requires Phase 0 mathematical primitives and Phase 1 specialized EWBIK math solvers
+**Dependencies:** ⚠️ **BLOCKED by Phase 1 Joint Registry issues** - Joint hierarchy management required for EWBIK
+
+**Current Blocker:** Joint Registry system failing to start, preventing bone hierarchy management needed for EWBIK algorithms.
+
+**Required Resolution Before Phase 2:**
+- ❌ Fix Joint Registry initialization in `AriaEngineCore.Math.Joint.ensure_registry_with_timeout/0`
+- ❌ Resolve `:noproc` errors in Joint test suite (20 failing tests)
+- ❌ Ensure Registry process starts correctly for bone hierarchy management
+
+**Phase 2 Implementation Plan (Pending Registry Fix):**
 
 - [ ] **Skeleton Segmentation System**
   - [ ] Create `lib/aria_engine_core/ewbik/segmentation.ex`
