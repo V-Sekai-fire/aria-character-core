@@ -71,7 +71,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
     - [x] **Matrix Combinations:** `math/combine2x2`, `math/combine3x3`, `math/combine4x4`, `math/extract2x2`, `math/extract3x3`, `math/extract4x4`
   - [x] Create `lib/aria_engine_core/math/vector3.ex` - Implements glTF KHR Interactivity `float3` operations
     - [x] Port `math/length` - Vector length using IEEE-754 hypot for numerical stability
-    - [x] Port `math/normalize` - Vector normalization with validity checking  
+    - [x] Port `math/normalize` - Vector normalization with validity checking
     - [x] Port `math/dot` - Component-wise dot product with NaN/infinity handling
     - [x] Port `math/cross` - 3D cross product following KHR spec
     - [x] Port `math/add`, `math/sub`, `math/mul` - Component-wise arithmetic
@@ -114,6 +114,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
 **Dependencies:** ✅ Phase 0 mathematical primitives (vector3, quaternion, matrix4 operations) COMPLETE
 
 - [x] **Phase 1A: Quaternion Characteristic Polynomial (QCP) Algorithm Port** ✅ COMPLETE
+
   - [x] Create `lib/aria_engine_core/math/qcp.ex` module structure
   - [x] Port `weighted_superpose/4` main public API function from C++ (`thirdparty/many_bone_ik/src/math/qcp.h`)
     - [x] Input: moved points, target points, weights, translate flag
@@ -139,6 +140,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
     - [x] Comprehensive test suite covering all mathematical edge cases
 
 - [x] **Phase 1B: Joint Hierarchy Management Port** ✅ COMPLETE (June 29, 2025)
+
   - [x] ✅ **RENAMED:** `ik_node_3d.ex` → `joint.ex` for cleaner API (June 29, 2025)
   - [x] Create `lib/aria_engine_core/math/joint.ex` with production-ready joint hierarchy
   - [x] Port transform hierarchy management from C++ using Phase 0 transform operations
@@ -185,6 +187,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
 **Dependencies:** Requires Phase 0 mathematical primitives and Phase 1 specialized EWBIK math solvers
 
 - [ ] **Skeleton Segmentation System**
+
   - [ ] Create `lib/aria_engine_core/ewbik/segmentation.ex`
   - [ ] Implement bone chain dependency analysis using Phase 1 IKNode3D hierarchy
   - [ ] Create processing order determination
@@ -192,6 +195,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
   - [ ] Segment validation and error handling
 
 - [ ] **Multi-Effector EWBIK Solver**
+
   - [ ] Create `lib/aria_engine_core/ewbik/solver.ex`
   - [ ] Implement core EWBIK algorithm with QCP integration from Phase 1
   - [ ] Multi-effector coordination with priority weighting
@@ -200,6 +204,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
   - [ ] Performance budget management and early termination
 
 - [ ] **Kusudama Constraint System**
+
   - [ ] Create `lib/aria_engine_core/ewbik/kusudama.ex`
   - [ ] Implement cone-based joint orientation constraints using Phase 0 quaternion operations
   - [ ] Continuous constraint boundary handling
@@ -223,6 +228,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
 #### VRM1 Collision Detection System
 
 - [ ] **VRM1 Collider System Integration**
+
   - [ ] Create `lib/aria_engine_core/ewbik/vrm1_colliders.ex`
   - [ ] Implement VRM1 sphere collider detection (`shape.sphere`)
   - [ ] Implement VRM1 capsule collider detection (`shape.capsule`)
@@ -240,6 +246,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
 #### Godot Anatomical Constraint System
 
 - [ ] **Godot SkeletonProfileHumanoid Integration for Anatomical Limits**
+
   - [ ] Create `lib/aria_engine_core/ewbik/godot_skeleton_profile.ex`
   - [ ] Port Godot's SkeletonProfileHumanoid bone definitions and reference poses
   - [ ] Extract anatomical joint limits from Godot's humanoid profile
@@ -248,6 +255,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
   - [ ] Automatic anatomical constraint generation from skeleton profile
 
 - [ ] **Godot to glTF Coordinate System Conversion**
+
   - [ ] Create `lib/aria_engine_core/ewbik/coordinate_conversion.ex`
   - [ ] Implement Godot → glTF coordinate system transformation matrices
   - [ ] Convert Godot SkeletonProfileHumanoid reference poses to glTF space
@@ -265,6 +273,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
 #### Temporal Smoothing and Motion Quality
 
 - [ ] **Temporal Smoothing Integration with AriaTimeline**
+
   - [ ] Previous pose bias in EWBIK solving (prefer solutions close to current pose)
   - [ ] Integration with AriaTimeline temporal constraints for smooth motion
   - [ ] Frame-to-frame solution stability validation using timeline continuity
@@ -295,6 +304,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
 **Dependencies:** Requires Phase 0 mathematical primitives, Phase 1 EWBIK math solvers, Phase 2 EWBIK algorithms, and Phase 2.5 anti-uncanny valley solutions
 
 - [ ] **EWBIK Entity Types for KHR Interactivity**
+
   - [ ] Create `test/support/ewbik_khr_domain.ex`
   - [ ] EWBIK skeleton entities with multi-effector support
   - [ ] IK effector entities with motion propagation factors
@@ -304,6 +314,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
   - [ ] Integration with KHR Interactivity node system
 
 - [ ] **Enhanced Temporal Action Patterns with EWBIK**
+
   - [ ] **Pattern 1**: Instant IK solving (`solve_ik_instant`)
   - [ ] **Pattern 2**: Floating duration IK solving (`solve_ik_over_time`)
   - [ ] **Pattern 3**: Fixed duration pose transitions (`transition_pose`)
@@ -326,21 +337,25 @@ All subsequent phases depend on these fundamental mathematical operations. These
 ## Success Criteria
 
 1. **Phase 0-1 Completion** ✅ ACHIEVED (June 29, 2025)
+
    - Mathematical foundation and specialized EWBIK math solvers fully operational
    - All 18 doctests passing with IEEE-754 compliance
    - Production-ready QCP and Joint modules with comprehensive error handling
 
 2. **Phase 2 Completion** (Target: Week 27)
+
    - EWBIK core algorithm fully functional with multi-effector coordination
    - Kusudama constraint system operational with cone-based joint limits
    - Motion propagation system working for hierarchical effector influence
 
 3. **Phase 2.5 Completion** (Target: Week 28)
+
    - VRM1 collision detection system operational
    - Godot anatomical constraint integration functional
    - Anti-uncanny valley solutions validated through test scenarios
 
 4. **Test Domain Validation** (Target: Week 29)
+
    - All 10 temporal action patterns implemented and tested
    - EWBIK-specific method types operational within unified durative action specification
    - Performance benchmarks met for real-time character animation
@@ -386,55 +401,117 @@ All subsequent phases depend on these fundamental mathematical operations. These
 
 **EWBIK Algorithm:**
 
-- Aristidou, A., & Lasenby, J. (2011). "FABRIK: A fast, iterative solver for the Inverse Kinematics problem." *Graphical Models*, 73(5), 243-260. DOI: 10.1016/j.gmod.2011.05.003
-- Baerlocher, P., & Boulic, R. (2004). "An inverse kinematics architecture enforcing an arbitrary number of strict priority levels." *The Visual Computer*, 20(6), 402-417. DOI: 10.1007/s00371-003-0244-4
+- Aristidou, A., & Lasenby, J. (2011). "FABRIK: A fast, iterative solver for the Inverse Kinematics problem." _Graphical Models_, 73(5), 243-260. DOI: 10.1016/j.gmod.2011.05.003
+- Baerlocher, P., & Boulic, R. (2004). "An inverse kinematics architecture enforcing an arbitrary number of strict priority levels." _The Visual Computer_, 20(6), 402-417. DOI: 10.1007/s00371-003-0244-4
 
 **Wahba's Problem (QCP Algorithm Foundation):**
 
-- Wahba, G. (1965). "A least squares estimate of satellite attitude." *SIAM Review*, 7(3), 409. DOI: 10.1137/1007077
-- Horn, B. K. P. (1987). "Closed-form solution of absolute orientation using unit quaternions." *Journal of the Optical Society of America A*, 4(4), 629-642. DOI: 10.1364/JOSAA.4.000629
-- Coutsias, E. A., Seok, C., & Dill, K. A. (2004). "Using quaternions to calculate RMSD." *Journal of Computational Chemistry*, 25(15), 1849-1857. DOI: 10.1002/jcc.20110
+- Wahba, G. (1965). "A least squares estimate of satellite attitude." _SIAM Review_, 7(3), 409. DOI: 10.1137/1007077
+- Horn, B. K. P. (1987). "Closed-form solution of absolute orientation using unit quaternions." _Journal of the Optical Society of America A_, 4(4), 629-642. DOI: 10.1364/JOSAA.4.000629
+- Coutsias, E. A., Seok, C., & Dill, K. A. (2004). "Using quaternions to calculate RMSD." _Journal of Computational Chemistry_, 25(15), 1849-1857. DOI: 10.1002/jcc.20110
 
 **Quaternion Characteristic Polynomial (QCP) Algorithm:**
 
-- Liu, P., Tian, F., Zhang, X., Wang, J., Liu, H., & Yao, X. (2009). "Guidelines for QCP method in structure alignment." *Bioinformatics*, 25(20), 2717-2718. DOI: 10.1093/bioinformatics/btp525
-- Theobald, D. L. (2005). "Rapid calculation of RMSDs using a quaternion-based characteristic polynomial." *Acta Crystallographica Section A*, 61(4), 478-480. DOI: 10.1107/S0108767305015266
+- Liu, P., Tian, F., Zhang, X., Wang, J., Liu, H., & Yao, X. (2009). "Guidelines for QCP method in structure alignment." _Bioinformatics_, 25(20), 2717-2718. DOI: 10.1093/bioinformatics/btp525
+- Theobald, D. L. (2005). "Rapid calculation of RMSDs using a quaternion-based characteristic polynomial." _Acta Crystallographica Section A_, 61(4), 478-480. DOI: 10.1107/S0108767305015266
 
 **Kusudama Constraint System:**
 
-- Aristidou, A., Chrysanthou, Y., & Lasenby, J. (2018). "Extending FABRIK with model constraints." *Computer Animation and Virtual Worlds*, 27(1), 35-57. DOI: 10.1002/cav.1630
-- Baraff, D. (1994). "Fast contact force computation for nonpenetrating rigid bodies." *Computer Graphics Proceedings*, 23-34. DOI: 10.1145/192161.192168
+- Aristidou, A., Chrysanthou, Y., & Lasenby, J. (2018). "Extending FABRIK with model constraints." _Computer Animation and Virtual Worlds_, 27(1), 35-57. DOI: 10.1002/cav.1630
+- Baraff, D. (1994). "Fast contact force computation for nonpenetrating rigid bodies." _Computer Graphics Proceedings_, 23-34. DOI: 10.1145/192161.192168
 
 **Anatomical Joint Constraints:**
 
-- Maurel, W., & Thalmann, D. (2000). "Human shoulder modeling including scapulo-thoracic constraint and joint sinus cones." *Computers & Graphics*, 24(2), 203-218. DOI: 10.1016/S0097-8493(99)00147-1
-- Monzani, J. S., Baerlocher, P., Boulic, R., & Thalmann, D. (2000). "Using an intermediate skeleton and inverse kinematics for motion retargeting." *Computer Graphics Forum*, 19(3), 11-19. DOI: 10.1111/1467-8659.00393
+- Maurel, W., & Thalmann, D. (2000). "Human shoulder modeling including scapulo-thoracic constraint and joint sinus cones." _Computers & Graphics_, 24(2), 203-218. DOI: 10.1016/S0097-8493(99)00147-1
+- Monzani, J. S., Baerlocher, P., Boulic, R., & Thalmann, D. (2000). "Using an intermediate skeleton and inverse kinematics for motion retargeting." _Computer Graphics Forum_, 19(3), 11-19. DOI: 10.1111/1467-8659.00393
+
+### Technical Specifications and Standards
+
+### Academic Papers and Research
+
+**EWBIK Algorithm:**
+
+- Aristidou, A., & Lasenby, J. (2011). "FABRIK: A fast, iterative solver for the Inverse Kinematics problem." _Graphical Models_, 73(5), 243-260. DOI: 10.1016/j.gmod.2011.05.003
+- Aristidou, A., & Lasenby, J. (2009). "Inverse kinematics: A review of existing techniques and introduction of a new fast iterative solver." _Technical Report CUED/F-INFENG/TR.632_, University of Cambridge. <https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-632.pdf>
+- Baerlocher, P., & Boulic, R. (2004). "An inverse kinematics architecture enforcing an arbitrary number of strict priority levels." _The Visual Computer_, 20(6), 402-417. DOI: 10.1007/s00371-003-0244-4
+- Multon, F., France, L., Cani-Gascuel, M. P., & Debunne, G. (1999). "Computer animation of human walking: A survey." _The Journal of Visualization and Computer Animation_, 10(1), 39-54. DOI: 10.1002/(SICI)1099-1778(199901/03)10:1<39::AID-VIS188>3.0.CO;2-2
+
+**Wahba's Problem (QCP Algorithm Foundation):**
+
+- Wahba, G. (1965). "A least squares estimate of satellite attitude." _SIAM Review_, 7(3), 409. DOI: 10.1137/1007077
+- Horn, B. K. P. (1987). "Closed-form solution of absolute orientation using unit quaternions." _Journal of the Optical Society of America A_, 4(4), 629-642. DOI: 10.1364/JOSAA.4.000629
+- Coutsias, E. A., Seok, C., & Dill, K. A. (2004). "Using quaternions to calculate RMSD." _Journal of Computational Chemistry_, 25(15), 1849-1857. DOI: 10.1002/jcc.20110
+- Kabsch, W. (1976). "A solution for the best rotation to relate two sets of vectors." _Acta Crystallographica Section A_, 32(5), 922-923. DOI: 10.1107/S0567739476001873
+
+**Quaternion Characteristic Polynomial (QCP) Algorithm:**
+
+- Liu, P., Tian, F., Zhang, X., Wang, J., Liu, H., & Yao, X. (2009). "Guidelines for QCP method in structure alignment." _Bioinformatics_, 25(20), 2717-2718. DOI: 10.1093/bioinformatics/btp525
+- Theobald, D. L. (2005). "Rapid calculation of RMSDs using a quaternion-based characteristic polynomial." _Acta Crystallographica Section A_, 61(4), 478-480. DOI: 10.1107/S0108767305015266
+- Kearsley, S. K. (1989). "On the orthogonal transformation used for structural comparisons." _Acta Crystallographica Section A_, 45(2), 208-210. DOI: 10.1107/S0108767388010128
+
+**Kusudama Constraint System:**
+
+- Aristidou, A., Chrysanthou, Y., & Lasenby, J. (2018). "Extending FABRIK with model constraints." _Computer Animation and Virtual Worlds_, 27(1), 35-57. DOI: 10.1002/cav.1630
+- Baraff, D. (1994). "Fast contact force computation for nonpenetrating rigid bodies." _Computer Graphics Proceedings_, 23-34. DOI: 10.1145/192161.192168
+- Zhao, J., & Badler, N. I. (1994). "Inverse kinematics positioning using nonlinear programming for highly articulated figures." _ACM Transactions on Graphics_, 13(4), 313-336. DOI: 10.1145/195826.195827
+
+**Anatomical Joint Constraints:**
+
+- Maurel, W., & Thalmann, D. (2000). "Human shoulder modeling including scapulo-thoracic constraint and joint sinus cones." _Computers & Graphics_, 24(2), 203-218. DOI: 10.1016/S0097-8493(99)00147-1
+- Monzani, J. S., Baerlocher, P., Boulic, R., & Thalmann, D. (2000). "Using an intermediate skeleton and inverse kinematics for motion retargeting." _Computer Graphics Forum_, 19(3), 11-19. DOI: 10.1111/1467-8659.00393
+- Kulpa, R., Multon, F., & Arnaldi, B. (2005). "Morphology-independent representation of motions for interactive human-like animation." _Computer Graphics Forum_, 24(3), 343-351. DOI: 10.1111/j.1467-8659.2005.00857.x
+- Yamane, K., & Nakamura, Y. (2003). "Natural motion animation through constraining and deconstraining at will." _IEEE Transactions on Visualization and Computer Graphics_, 9(3), 352-360. DOI: 10.1109/TVCG.2003.1207442
+
+**Collision Detection and Avoidance:**
+
+- Ericson, C. (2004). _Real-Time Collision Detection_. CRC Press. ISBN: 978-1558607323
+- Lin, M. C., & Gottschalk, S. (1998). "Collision detection between geometric models: A survey." _Proceedings of IMA Conference on Mathematics of Surfaces_, 602-608.
+- Redon, S., Kheddar, A., & Coquillart, S. (2002). "Fast continuous collision detection between rigid bodies." _Computer Graphics Forum_, 21(3), 279-287. DOI: 10.1111/1467-8659.00587
 
 ### Technical Specifications and Standards
 
 **glTF and KHR Extensions:**
 
-- Khronos Group. (2023). *glTF 2.0 Specification*. Retrieved from <https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html>
-- Khronos Group. (2023). *KHR_interactivity Extension Specification*. Retrieved from <https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_interactivity>
-- Khronos Group. (2023). *KHR_animation_pointer Extension*. Retrieved from <https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_animation_pointer>
+- Khronos Group. (2023). _glTF 2.0 Specification_. <https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html>
+- Khronos Group. (2023). _KHR_interactivity Extension Specification_. <https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_interactivity>
+- Khronos Group. (2023). _KHR_animation_pointer Extension_. <https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_animation_pointer>
+- Khronos Group. (2023). _KHR_materials_variants Extension_. <https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_variants>
+- Khronos Group. (2023). _glTF Extension Registry_. <https://github.com/KhronosGroup/glTF/tree/main/extensions>
 
 **VRM Specification:**
 
-- VRM Consortium. (2023). *VRM 1.0 Specification*. Retrieved from <https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_springBone-1.0>
-- VRM Consortium. (2023). *VRMC_node_constraint-1.0 Specification*. Retrieved from <https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_node_constraint-1.0>
+- VRM Consortium. (2023). _VRM 1.0 Specification_. <https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_springBone-1.0>
+- VRM Consortium. (2023). _VRMC_node_constraint-1.0 Specification_. <https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_node_constraint-1.0>
+- VRM Consortium. (2023). _VRMC_materials_mtoon-1.0 Specification_. <https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_materials_mtoon-1.0>
+- VRM Consortium. (2023). _VRMC_vrm-1.0 Core Specification_. <https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_vrm-1.0>
 
 **IEEE Standards:**
 
-- IEEE Computer Society. (2019). *IEEE Standard for Floating-Point Arithmetic* (IEEE Std 754-2019). DOI: 10.1109/IEEESTD.2019.8766229
+- IEEE Computer Society. (2019). _IEEE Standard for Floating-Point Arithmetic_ (IEEE Std 754-2019). DOI: 10.1109/IEEESTD.2019.8766229
+- IEEE Computer Society. (2008). _IEEE Standard for Software Configuration Management Plans_ (IEEE Std 828-2012). DOI: 10.1109/IEEESTD.2012.6170935
 
 **Godot Engine References:**
 
-- Godot Engine Contributors. (2024). *Godot Engine Documentation - SkeletonProfileHumanoid*. Retrieved from <https://docs.godotengine.org/en/stable/classes/class_skeletonprofilehumanoid.html>
-- Godot Engine Contributors. (2024). *Godot Engine Documentation - Animation Retargeting*. Retrieved from <https://docs.godotengine.org/en/stable/tutorials/animation/animation_tree.html>
+- Godot Engine Contributors. (2024). _Godot Engine Documentation - SkeletonProfileHumanoid_. <https://docs.godotengine.org/en/stable/classes/class_skeletonprofilehumanoid.html>
+- Godot Engine Contributors. (2024). _Godot Engine Documentation - Animation Retargeting_. <https://docs.godotengine.org/en/stable/tutorials/animation/animation_tree.html>
+- Godot Engine Contributors. (2024). _Godot Engine Documentation - IK and Constraints_. <https://docs.godotengine.org/en/stable/tutorials/animation/inverse_kinematics.html>
+- Godot Engine Contributors. (2024). _Godot Engine Documentation - SkeletonIK3D_. <https://docs.godotengine.org/en/stable/classes/class_skeletonik3d.html>
 
 ### Open Source Implementations and Code References
 
 **Many Bone IK (EWBIK Reference Implementation):**
 
-- EGjoni. (2023). *Everything Will Be IK - Processing*. Retrieved from https://github.com/EGjoni/Everything-Will-Be-IK-Processing
-- V-Sekai. (2023). *Many Bone IK*. Retrieved from <https://github.com/V](https://github.com/V-Sekai/many_bone_ik>
+- EGjoni. (2023). _Everything Will Be IK - Processing_. <https://github.com/EGjoni/Everything-Will-Be-IK-Processing>
+- V-Sekai. (2023). _Many Bone IK_. <https://github.com/V-Sekai/many_bone_ik>
+- EGjoni. (2023). _Everything Will Be IK - Java Implementation_. <https://github.com/EGjoni/Everything-Will-Be-IK>
+- Source files referenced: `thirdparty/many_bone_ik/src/math/qcp.h`, `thirdparty/many_bone_ik/src/math/ik_node_3d.h`
+
+**Godot Realtime Retarget:**
+
+- TokageItLab. (2022). _Godot Realtime Retarget Module_. <https://github.com/TokageItLab/realtime_retarget>
+- TokageItLab. (2023). _Godot Proposals - Animation Retargeting_. <https://github.com/godotengine/godot-proposals/issues/4510>
+- Documentation: Joint rules and coordinate system conversion methodologies
+
+**Related Elixir/Erlang Mathematical Libraries:**
+
+- Numerical Elixir (Nx). (2023). _Nx: Multi-dimensional arrays for Elixir_. <https://github.com/elixir-nx/nx>
