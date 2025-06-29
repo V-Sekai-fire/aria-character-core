@@ -118,16 +118,21 @@ The AriaEngine planner uses six types of methods for different purposes:
 @multitodo_method true
 ```
 
+**Documentation:** Use standard Elixir `@doc` attributes for all method documentation. This follows established Elixir patterns and integrates with ExDoc and IDE tooling.
+
 ### Action Method Examples
 
 ```elixir
 # Direct state transformations
+@doc "Transforms meal state from preparation to ready using cooking workflow"
 @action duration: "PT2H", requires_entities: [%{type: "agent", capabilities: [:cooking]}]
 @spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 
+@doc "Validates ingredient availability for meal preparation"
 @action true
 @spec check_ingredients(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 
+@doc "Scheduled preparation workflow with fixed timing constraints"
 @action start: "2025-06-22T10:00:00-07:00", duration: "PT1H"
 @spec scheduled_prep(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
 ```
