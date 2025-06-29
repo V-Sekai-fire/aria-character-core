@@ -219,11 +219,11 @@ defmodule AriaCore.UnifiedDomain do
 
     # Set up entity registry (LEVERAGE existing entity system)
     entity_registry = create_entity_registry_from_actions(actions)
-    domain_with_entities = AriaCore.Domain.set_entity_registry(domain_with_methods, entity_registry)
+    domain_with_entities = AriaEngineCore.Domain.set_entity_registry(domain_with_methods, entity_registry)
 
     # Set up temporal specifications (LEVERAGE existing temporal system)
     temporal_specs = create_temporal_specifications_from_actions(actions)
-    AriaCore.Domain.set_temporal_specifications(domain_with_entities, temporal_specs)
+    AriaEngineCore.Domain.set_temporal_specifications(domain_with_entities, temporal_specs)
   end
 
   defp get_action_metadata(domain_module) do

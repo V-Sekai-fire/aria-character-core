@@ -2,185 +2,140 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngineCore.State do
-  @moduledoc "Represents the state of a planning problem using predicate-subject-fact triples.\n\nThis module provides functionality to manage world state using RDF-like triples,\nwhere each fact is represented as {predicate, subject} -> fact_value.\n\nExample:\n```elixir\nstate = AriaEngineCore.State.new()\n|> AriaEngineCore.State.set_fact(\"location\", \"player\", \"room1\")\n|> AriaEngineCore.State.set_fact(\"has\", \"player\", \"sword\")\n\nAriaEngineCore.State.get_fact(state, \"location\", \"player\")\n# => \"room1\"\n```\n"
+  @moduledoc """
+  Represents the state of a planning problem using predicate-subject-fact triples.
+
+  This module provides functionality to manage world state by delegating to
+  `AriaState.RelationalState`, aligning with ADR R25W1398085.
+
+  ## Usage
+
+      # All functions delegate to AriaState.RelationalState
+      state = AriaEngineCore.State.new()
+      |> AriaEngineCore.State.set_fact("location", "player", "room1")
+      |> AriaEngineCore.State.set_fact("has", "player", "sword")
+
+      AriaEngineCore.State.get_fact(state, "location", "player")
+      # => "room1"
+  """
   @type predicate :: String.t()
   @type subject :: String.t()
   @type fact_value :: any()
-  @type triple_key :: {predicate(), subject()}
-  @type t :: %__MODULE__{data: %{triple_key() => fact_value()}}
-  defstruct data: %{}
-  @doc "Creates a new empty planning state.\n"
+  @type t :: AriaState.RelationalState.t()
+
+  alias AriaState.RelationalState
+
+  @doc "Creates a new empty planning state."
   @spec new() :: t()
   def new do
-    %__MODULE__{}
+    RelationalState.new()
   end
 
-  @doc "Creates a new planning state from a map of predicate-subject-object data.\n"
+  @doc "Creates a new planning state from a map of predicate-subject-fact data."
   @spec new(map()) :: t()
   def new(data) when is_map(data) do
-    %__MODULE__{data: data}
+    RelationalState.new(data)
   end
 
-  @doc "Gets the fact_value for a given predicate and subject.\nReturns nil if the triple doesn't exist.\n"
+  @doc "Gets the fact_value for a given predicate and subject. Returns nil if the triple doesn't exist."
   @spec get_fact(t(), predicate(), subject()) :: fact_value() | nil
-  def get_fact(%__MODULE__{data: data}, predicate, subject) do
-    Map.get(data, {predicate, subject})
+  def get_fact(state, predicate, subject) do
+    RelationalState.get_fact(state, predicate, subject)
   end
 
-  @doc "Sets the fact_value for a given predicate and subject.\n"
+  @doc "Sets the fact_value for a given predicate and subject."
   @spec set_fact(t(), predicate(), subject(), fact_value()) :: t()
-  def set_fact(%__MODULE__{data: data} = state, predicate, subject, fact_value) do
-    %{state | data: Map.put(data, {predicate, subject}, fact_value)}
+  def set_fact(state, predicate, subject, fact_value) do
+    RelationalState.set_fact(state, predicate, subject, fact_value)
   end
 
-  @doc "Removes a triple from the state.\n"
+  @doc "Removes a triple from the state."
   @spec remove_fact(t(), predicate(), subject()) :: t()
-  def remove_fact(%__MODULE__{data: data} = state, predicate, subject) do
-    %{state | data: Map.delete(data, {predicate, subject})}
+  def remove_fact(state, predicate, subject) do
+    RelationalState.remove_fact(state, predicate, subject)
   end
 
-  @doc "Checks if a subject has a given predicate with any object.\n"
+  @doc "Checks if a subject has a given predicate with any object."
   @spec has_subject?(t(), predicate(), subject()) :: boolean()
-  def has_subject?(%__MODULE__{data: data}, predicate, subject) do
-    Map.has_key?(data, {predicate, subject})
+  def has_subject?(state, predicate, subject) do
+    RelationalState.has_subject?(state, predicate, subject)
   end
 
-  @doc "Checks if a subject variable exists in any predicate.\n"
+  @doc "Checks if a subject variable exists in any predicate."
   @spec has_subject_variable?(t(), subject()) :: boolean()
-  def has_subject_variable?(%__MODULE__{data: data}, subject) do
-    data |> Map.keys() |> Enum.any?(fn {_predicate, subj} -> subj == subject end)
+  def has_subject_variable?(state, subject) do
+    RelationalState.has_subject_variable?(state, subject)
   end
 
-  @doc "Gets a list of all subjects that have properties.\n"
+  @doc "Gets a list of all subjects that have properties."
   @spec get_subjects(t()) :: [subject()]
-  def get_subjects(%__MODULE__{data: data}) do
-    data |> Map.keys() |> Enum.map(fn {_predicate, subject} -> subject end) |> Enum.uniq()
+  def get_subjects(state) do
+    RelationalState.get_subjects(state)
   end
 
-  @doc "Gets all predicates for a given subject.\n"
+  @doc "Gets all predicates for a given subject."
   @spec get_subject_properties(t(), subject()) :: [predicate()]
-  def get_subject_properties(%__MODULE__{data: data}, subject) do
-    data
-    |> Map.keys()
-    |> Enum.filter(fn {_predicate, subj} -> subj == subject end)
-    |> Enum.map(fn {predicate, _subj} -> predicate end)
+  def get_subject_properties(state, subject) do
+    RelationalState.get_subject_properties(state, subject)
   end
 
-  @doc "Gets all triples as a list of {predicate, subject, fact_value} tuples.\n"
+  @doc "Gets all triples as a list of {predicate, subject, fact_value} tuples."
   @spec to_triples(t()) :: [{predicate(), subject(), fact_value()}]
-  def to_triples(%__MODULE__{data: data}) do
-    Enum.map(data, fn {{predicate, subject}, fact_value} -> {predicate, subject, fact_value} end)
+  def to_triples(state) do
+    RelationalState.to_triples(state)
   end
 
-  @doc "Creates a state from a list of triples.\n"
+  @doc "Creates a state from a list of triples."
   @spec from_triples([{predicate(), subject(), fact_value()}]) :: t()
   def from_triples(triples) do
-    data =
-      triples
-      |> Enum.map(fn {predicate, subject, fact_value} -> {{predicate, subject}, fact_value} end)
-      |> Map.new()
-
-    %__MODULE__{data: data}
+    RelationalState.from_triples(triples)
   end
 
-  @doc "Merges two states, with the second state taking precedence for conflicts.\n"
+  @doc "Merges two states, with the second state taking precedence for conflicts."
   @spec merge(t(), t()) :: t()
-  def merge(%__MODULE__{data: data1}, %__MODULE__{data: data2}) do
-    %__MODULE__{data: Map.merge(data1, data2)}
+  def merge(state1, state2) do
+    RelationalState.merge(state1, state2)
   end
 
-  @doc "Returns a copy of the state with modified data.\n"
+  @doc "Returns a copy of the state with modified data."
   @spec copy(t()) :: t()
-  def copy(%__MODULE__{data: data}) do
-    %__MODULE__{data: Map.new(data)}
+  def copy(state) do
+    RelationalState.copy(state)
   end
 
-  @doc "Checks if the state matches a specific predicate, subject, and fact_value pattern.\n\nThis function is used by the planner to check if a goal condition is satisfied\nin the current state. It returns true if the state contains the specified triple.\n"
+  @doc "Checks if the state matches a specific predicate, subject, and fact_value pattern."
   @spec matches?(t(), predicate(), subject(), fact_value()) :: boolean()
-  def matches?(%__MODULE__{data: data}, predicate, subject, fact_value) do
-    case Map.get(data, {predicate, subject}) do
-      ^fact_value -> true
-      _ -> false
-    end
+  def matches?(state, predicate, subject, fact_value) do
+    RelationalState.matches?(state, predicate, subject, fact_value)
   end
 
-  @doc "Evaluates existential quantifier: checks if there exists at least one subject \nthat matches the given predicate and fact_value pattern.\n\nExample:\n```elixir\n# Check if there exists any chair that is available\nAriaEngineCore.State.exists?(state, \"status\", \"available\", &String.contains?(&1, \"chair\"))\n```\n"
+  @doc "Evaluates existential quantifier: checks if there exists at least one subject that matches the given predicate and fact_value pattern."
   @spec exists?(t(), predicate(), fact_value(), (subject() -> boolean()) | nil) :: boolean()
-  def exists?(%__MODULE__{data: data}, predicate, fact_value, subject_filter \\ nil) do
-    data
-    |> Enum.any?(fn
-      {{^predicate, subject}, ^fact_value} ->
-        case subject_filter do
-          nil -> true
-          filter_fn when is_function(filter_fn, 1) -> filter_fn.(subject)
-          _ -> false
-        end
-
-      _ ->
-        false
-    end)
+  def exists?(state, predicate, fact_value, subject_filter \\ nil) do
+    RelationalState.exists?(state, predicate, fact_value, subject_filter)
   end
 
-  @doc "Evaluates universal quantifier: checks if all subjects matching the pattern\nhave the specified predicate and fact_value.\n\nExample:\n```elixir\n# Check if all doors are locked\nAriaEngineCore.State.forall?(state, \"status\", \"locked\", &String.contains?(&1, \"door\"))\n```\n"
+  @doc "Evaluates universal quantifier: checks if all subjects matching the pattern have the specified predicate and fact_value."
   @spec forall?(t(), predicate(), fact_value(), (subject() -> boolean())) :: boolean()
-  def forall?(%__MODULE__{data: data}, predicate, fact_value, subject_filter)
-      when is_function(subject_filter, 1) do
-    matching_subjects =
-      data
-      |> Map.keys()
-      |> Enum.map(fn {_pred, subj} -> subj end)
-      |> Enum.uniq()
-      |> Enum.filter(subject_filter)
-
-    if Enum.empty?(matching_subjects) do
-      true
-    else
-      Enum.all?(matching_subjects, fn subject ->
-        matches?(%__MODULE__{data: data}, predicate, subject, fact_value)
-      end)
-    end
+  def forall?(state, predicate, fact_value, subject_filter) when is_function(subject_filter, 1) do
+    RelationalState.forall?(state, predicate, fact_value, subject_filter)
   end
 
-  @doc "Gets all subjects that have a specific predicate with a specific fact_value.\n\nExample:\n```elixir\n# Get all subjects with status \"available\"\nAriaEngineCore.State.get_subjects_with_fact(state, \"status\", \"available\")\n# => [\"chair1\", \"chair3\", \"table2\"]\n```\n"
+  @doc "Gets all subjects that have a specific predicate with a specific fact_value."
   @spec get_subjects_with_fact(t(), predicate(), fact_value()) :: [subject()]
-  def get_subjects_with_fact(%__MODULE__{data: data}, predicate, fact_value) do
-    data
-    |> Enum.filter(fn {{pred, _subj}, val} -> pred == predicate and val == fact_value end)
-    |> Enum.map(fn {{_pred, subj}, _val} -> subj end)
+  def get_subjects_with_fact(state, predicate, fact_value) do
+    RelationalState.get_subjects_with_fact(state, predicate, fact_value)
   end
 
-  @doc "Gets all subjects that match a predicate pattern, regardless of fact_value.\n\nExample:\n```elixir\n# Get all subjects that have a \"location\" predicate\nAriaEngineCore.State.get_subjects_with_predicate(state, \"location\")\n# => [\"player\", \"npc1\", \"chest\"]\n```\n"
+  @doc "Gets all subjects that match a predicate pattern, regardless of fact_value."
   @spec get_subjects_with_predicate(t(), predicate()) :: [subject()]
-  def get_subjects_with_predicate(%__MODULE__{data: data}, predicate) do
-    data
-    |> Map.keys()
-    |> Enum.filter(fn {pred, _subj} -> pred == predicate end)
-    |> Enum.map(fn {_pred, subj} -> subj end)
-    |> Enum.uniq()
+  def get_subjects_with_predicate(state, predicate) do
+    RelationalState.get_subjects_with_predicate(state, predicate)
   end
 
-  @doc "Evaluates a quantified condition structure.\n\nSupports both existential and universal quantifiers with flexible condition patterns.\n\n## Condition Format\n```elixir\n# Existential quantifier\n{:exists, predicate, fact_value, subject_filter}\n\n# Universal quantifier  \n{:forall, predicate, fact_value, subject_filter}\n\n# Regular condition (backward compatibility)\n{predicate, subject, fact_value}\n```\n\n## Examples\n```elixir\n# Check if any chair is available\ncondition = {:exists, \"status\", \"available\", &String.contains?(&1, \"chair\")}\nAriaEngineCore.State.evaluate_condition(state, condition)\n\n# Check if all doors are locked\ncondition = {:forall, \"status\", \"locked\", &String.contains?(&1, \"door\")}\nAriaEngineCore.State.evaluate_condition(state, condition)\n\n# Regular condition check\ncondition = {\"location\", \"player\", \"room1\"}\nAriaEngineCore.State.evaluate_condition(state, condition)\n```\n"
+  @doc "Evaluates a quantified condition structure."
   @spec evaluate_condition(t(), tuple()) :: boolean()
-  def evaluate_condition(state, condition)
-
-  def evaluate_condition(state, {:exists, predicate, fact_value, subject_filter}) do
-    exists?(state, predicate, fact_value, subject_filter)
-  end
-
-  def evaluate_condition(state, {:forall, predicate, fact_value, subject_filter}) do
-    forall?(state, predicate, fact_value, subject_filter)
-  end
-
-  def evaluate_condition(state, {predicate, subject, fact_value}) do
-    matches?(state, predicate, subject, fact_value)
-  end
-
-  def evaluate_condition(_state, condition) do
-    if Mix.env() == :dev or (Mix.env() == :test and ExUnit.configuration()[:trace]) do
-      require Logger
-      Logger.warning("Unknown condition format: #{inspect(condition)}")
-    end
-
-    false
+  def evaluate_condition(state, condition) do
+    RelationalState.evaluate_condition(state, condition)
   end
 end
